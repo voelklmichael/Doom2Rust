@@ -50,9 +50,6 @@ pub struct music_module_t {
     pub MusicIsPlaying: Option<unsafe fn() -> boolean>,
     pub Poll: Option<unsafe fn() -> ()>,
 }
-static mut sound_modules: [*mut sound_module_t; 1] =
-    [::core::ptr::null::<sound_module_t>() as *mut sound_module_t];
-
 pub struct ISoundState {
     pub snd_samplerate: i32,
     pub snd_cachesize: i32,
@@ -73,6 +70,10 @@ pub struct ISoundState {
     // sound support is ever added.
     pub use_libsamplerate: i32,
     pub libsamplerate_scale: f32,
+    // Always a single null entry -- see InitSfxModule, which never finds a
+    // real backend and always leaves sound_module null. Kept as-is (dead
+    // stub), same rationale as above, rather than deleted as a drive-by.
+    sound_modules: [*mut sound_module_t; 1],
 }
 
 impl ISoundState {
@@ -92,6 +93,7 @@ impl ISoundState {
             snd_mport: 0,
             use_libsamplerate: 0,
             libsamplerate_scale: 0.65,
+            sound_modules: [::core::ptr::null::<sound_module_t>() as *mut sound_module_t],
         }
     }
 }
@@ -114,18 +116,18 @@ unsafe fn InitSfxModule(state: &mut ISoundState, mut use_sfx_prefix: bool) {
     let mut i: i32 = 0;
     state.sound_module = ::core::ptr::null_mut::<sound_module_t>();
     i = 0 as i32;
-    while !sound_modules[i as usize].is_null() {
+    while !state.sound_modules[i as usize].is_null() {
         if SndDeviceInList(
             state.snd_sfxdevice as snddevice_t,
-            (*sound_modules[i as usize]).sound_devices,
-            (*sound_modules[i as usize]).num_sound_devices,
+            (*state.sound_modules[i as usize]).sound_devices,
+            (*state.sound_modules[i as usize]).num_sound_devices,
         ) {
-            if (*sound_modules[i as usize])
+            if (*state.sound_modules[i as usize])
                 .Init
                 .expect("non-null function pointer")(use_sfx_prefix as i32 as boolean)
                 != 0
             {
-                state.sound_module = sound_modules[i as usize];
+                state.sound_module = state.sound_modules[i as usize];
                 return;
             }
         }

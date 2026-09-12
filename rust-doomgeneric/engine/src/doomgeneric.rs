@@ -7,16 +7,16 @@ use crate::src::stdint_types::size_t;
 
 pub const DOOMGENERIC_RESX: i32 = 640;
 pub const DOOMGENERIC_RESY: i32 = 400;
-#[no_mangle]
-pub static mut DG_ScreenBuffer: *mut pixel_t = ::core::ptr::null::<pixel_t>() as *mut pixel_t;
 pub unsafe fn doomgeneric_Create(state: &mut GameState, args: Vec<String>) {
     state.m_argv.myargv = args
         .into_iter()
         .map(|arg| ::std::ffi::CString::new(arg).expect("argument contains a nul byte"))
         .collect();
     M_FindResponseFile(state);
-    DG_ScreenBuffer =
+    state.i_video.dg_screen_buffer =
         malloc((DOOMGENERIC_RESX * DOOMGENERIC_RESY * 4 as i32) as size_t) as *mut pixel_t;
-    state.platform.init(DG_ScreenBuffer, DOOMGENERIC_RESX, DOOMGENERIC_RESY);
+    state
+        .platform
+        .init(state.i_video.dg_screen_buffer, DOOMGENERIC_RESX, DOOMGENERIC_RESY);
     D_DoomMain(state);
 }

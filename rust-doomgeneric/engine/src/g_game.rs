@@ -38,7 +38,6 @@ use crate::src::f_finale::F_Responder;
 use crate::src::f_finale::F_StartFinale;
 use crate::src::f_finale::F_Ticker;
 use crate::src::game_state::GameState;
-use crate::src::hu_stuff::player_names;
 use crate::src::hu_stuff::HU_Responder;
 use crate::src::hu_stuff::HU_Ticker;
 use crate::src::hu_stuff::HU_dequeueChatChar;
@@ -1058,9 +1057,10 @@ pub unsafe fn G_Ticker(state: &mut GameState) {
                 && (state.d_loop.gametic >> 5 as i32) % MAXPLAYERS == i
                 && state.g_game.turbodetected[i as usize] != 0
             {
-                let player_name = ::std::ffi::CStr::from_ptr(player_names[i as usize])
-                    .to_string_lossy()
-                    .into_owned();
+                let player_name =
+                    ::std::ffi::CStr::from_ptr(state.hu_stuff.player_names[i as usize])
+                        .to_string_lossy()
+                        .into_owned();
                 state.g_game.players[state.g_game.consoleplayer as usize].message =
                     Some(format!("{} is turbo!", player_name));
                 state.g_game.turbodetected[i as usize] = false_0 as boolean;
