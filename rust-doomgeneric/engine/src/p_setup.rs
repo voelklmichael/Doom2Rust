@@ -17,7 +17,7 @@ use crate::src::p_mobj::mobj_t;
 use crate::src::p_mobj::P_SpawnMapThing;
 use crate::src::p_mobj::{
     degenmobj_t, line_s, line_t, mapthing_t, sector_t, subsector_s, subsector_t, thinker_s,
-    vertex_t, ThinkerFn, ST_HORIZONTAL, ST_NEGATIVE, ST_POSITIVE, ST_VERTICAL,
+    vertex_t, MobjId, ThinkerFn, ST_HORIZONTAL, ST_NEGATIVE, ST_POSITIVE, ST_VERTICAL,
 };
 use crate::src::p_spec::P_InitPicAnims;
 use crate::src::p_spec::P_SpawnSpecials;
@@ -122,7 +122,7 @@ pub struct PSetupState {
     pub blockmaplump: Vec<i16>,
     pub bmaporgx: fixed_t,
     pub bmaporgy: fixed_t,
-    pub blocklinks: Vec<*mut mobj_t>,
+    pub blocklinks: Vec<Option<MobjId>>,
     pub rejectmatrix: *mut byte,
     pub deathmatchstarts: [mapthing_t; 10],
     pub deathmatch_p: *mut mapthing_t,
@@ -694,10 +694,8 @@ pub unsafe fn P_LoadBlockMap(state: &mut GameState, mut lump: i32) {
     state.p_setup.bmaporgy = ((state.p_setup.blockmaplump[1] as i32) << FRACBITS) as fixed_t;
     state.p_setup.bmapwidth = state.p_setup.blockmaplump[2] as i32;
     state.p_setup.bmapheight = state.p_setup.blockmaplump[3] as i32;
-    state.p_setup.blocklinks = vec![
-        ::core::ptr::null_mut::<mobj_t>();
-        (state.p_setup.bmapwidth as usize) * (state.p_setup.bmapheight as usize)
-    ];
+    state.p_setup.blocklinks =
+        vec![None; (state.p_setup.bmapwidth as usize) * (state.p_setup.bmapheight as usize)];
 }
 pub unsafe fn P_GroupLines(state: &mut GameState) {
     let mut linebuffer: *mut *mut line_t = ::core::ptr::null_mut::<*mut line_t>();

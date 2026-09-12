@@ -11,7 +11,7 @@ use crate::src::m_fixed::FRACBITS;
 use crate::src::m_fixed::FRACUNIT;
 use crate::src::m_fixed::INT_MAX;
 use crate::src::p_mobj::{line_t, mapthing_t, sector_t};
-use crate::src::p_mobj::{mobj_s, mobj_t};
+use crate::src::p_mobj::mobj_t;
 use crate::src::p_mobj::{MobjId, MF_NOBLOCKMAP, MF_NOSECTOR};
 use crate::src::p_setup::SubsectorId;
 use crate::src::r_main::R_PointInSubsector;
@@ -437,11 +437,19 @@ pub unsafe fn P_UnsetThingPosition(state: &mut GameState, mut thing: *mut mobj_t
         }
     }
     if (*thing).flags & MF_NOBLOCKMAP as i32 == 0 {
-        if !(*thing).bnext.is_null() {
-            (*(*thing).bnext).bprev = (*thing).bprev;
+        if let Some(id) = (*thing).bnext {
+            let next = state
+                .p_mobj
+                .mobj_get(id)
+                .expect("blockmap-list bnext neighbor is always live");
+            (*next).bprev = (*thing).bprev;
         }
-        if !(*thing).bprev.is_null() {
-            (*(*thing).bprev).bnext = (*thing).bnext;
+        if let Some(id) = (*thing).bprev {
+            let prev = state
+                .p_mobj
+                .mobj_get(id)
+                .expect("blockmap-list bprev neighbor is always live");
+            (*prev).bnext = (*thing).bnext;
         } else {
             blockx = ((*thing).x - state.p_setup.bmaporgx >> MAPBLOCKSHIFT) as i32;
             blocky = ((*thing).y - state.p_setup.bmaporgy >> MAPBLOCKSHIFT) as i32;
@@ -450,12 +458,8 @@ pub unsafe fn P_UnsetThingPosition(state: &mut GameState, mut thing: *mut mobj_t
                 && blocky >= 0 as i32
                 && blocky < state.p_setup.bmapheight
             {
-                let ref mut fresh1 = *state
-                    .p_setup
-                    .blocklinks
-                    .as_mut_ptr()
-                    .offset((blocky * state.p_setup.bmapwidth + blockx) as isize);
-                *fresh1 = (*thing).bnext as *mut mobj_t;
+                state.p_setup.blocklinks[(blocky * state.p_setup.bmapwidth + blockx) as usize] =
+                    (*thing).bnext;
             }
         }
     }
@@ -465,7 +469,6 @@ pub unsafe fn P_SetThingPosition(state: &mut GameState, mut thing: *mut mobj_t) 
     let mut sec: *mut sector_t = ::core::ptr::null_mut::<sector_t>();
     let mut blockx: i32 = 0;
     let mut blocky: i32 = 0;
-    let mut link: *mut *mut mobj_t = ::core::ptr::null_mut::<*mut mobj_t>();
     ss = R_PointInSubsector(state, (*thing).x, (*thing).y);
     (*thing).subsector = ss;
     if (*thing).flags & MF_NOSECTOR as i32 == 0 {
@@ -489,20 +492,20 @@ pub unsafe fn P_SetThingPosition(state: &mut GameState, mut thing: *mut mobj_t) 
             && blocky >= 0 as i32
             && blocky < state.p_setup.bmapheight
         {
-            link = state
-                .p_setup
-                .blocklinks
-                .as_mut_ptr()
-                .offset((blocky * state.p_setup.bmapwidth + blockx) as isize);
-            (*thing).bprev = ::core::ptr::null_mut::<mobj_s>();
-            (*thing).bnext = *link as *mut mobj_s;
-            if !(*link).is_null() {
-                (**link).bprev = thing as *mut mobj_s;
+            let idx = (blocky * state.p_setup.bmapwidth + blockx) as usize;
+            (*thing).bprev = None;
+            (*thing).bnext = state.p_setup.blocklinks[idx];
+            if let Some(head_id) = state.p_setup.blocklinks[idx] {
+                let head = state
+                    .p_mobj
+                    .mobj_get(head_id)
+                    .expect("blockmap-list head is always live");
+                (*head).bprev = Some((*thing).id);
             }
-            *link = thing;
+            state.p_setup.blocklinks[idx] = Some((*thing).id);
         } else {
-            (*thing).bprev = ::core::ptr::null_mut::<mobj_s>();
-            (*thing).bnext = (*thing).bprev;
+            (*thing).bprev = None;
+            (*thing).bnext = None;
         }
     }
 }
@@ -540,21 +543,20 @@ pub unsafe fn P_BlockThingsIterator(
     mut y: i32,
     mut func: Option<unsafe fn(&mut GameState, MobjId) -> boolean>,
 ) -> bool {
-    let mut mobj: *mut mobj_t = ::core::ptr::null_mut::<mobj_t>();
     if x < 0 as i32 || y < 0 as i32 || x >= state.p_setup.bmapwidth || y >= state.p_setup.bmapheight
     {
         return true;
     }
-    mobj = *state
-        .p_setup
-        .blocklinks
-        .as_mut_ptr()
-        .offset((y * state.p_setup.bmapwidth + x) as isize);
-    while !mobj.is_null() {
-        if func.expect("non-null function pointer")(state, (*mobj).id) == 0 {
+    let mut cursor = state.p_setup.blocklinks[(y * state.p_setup.bmapwidth + x) as usize];
+    while let Some(id) = cursor {
+        let mobj = state
+            .p_mobj
+            .mobj_get(id)
+            .expect("blockmap-list entry is always live");
+        if func.expect("non-null function pointer")(state, id) == 0 {
             return false;
         }
-        mobj = (*mobj).bnext as *mut mobj_t;
+        cursor = (*mobj).bnext;
     }
     return true;
 }

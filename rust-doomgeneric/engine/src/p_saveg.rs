@@ -23,7 +23,7 @@ use crate::src::p_mobj::P_RemoveMobj;
 use crate::src::p_mobj::{
     line_t, mapthing_t, sector_t, thinker_s, thinker_t, SectorSpecial, ThinkerFn,
 };
-use crate::src::p_mobj::{mobj_s, mobj_t, pspdef_t};
+use crate::src::p_mobj::{mobj_t, pspdef_t};
 use crate::src::p_plats::plat_e;
 use crate::src::p_plats::plattype_e;
 use crate::src::p_plats::P_AddActivePlat;
@@ -253,8 +253,12 @@ unsafe fn saveg_read_mobj_t(state: &mut GameState, mut str: *mut mobj_t) {
     (*str).angle = saveg_read32(state) as angle_t;
     (*str).sprite = saveg_read32(state) as spritenum_t;
     (*str).frame = saveg_read32(state);
-    (*str).bnext = saveg_readp(state) as *mut mobj_s;
-    (*str).bprev = saveg_readp(state) as *mut mobj_s;
+    // P_SetThingPosition also fully rebuilds bnext/bprev from scratch --
+    // same dead-bytes treatment as snext/sprev above.
+    saveg_read32(state);
+    (*str).bnext = None;
+    saveg_read32(state);
+    (*str).bprev = None;
     saveg_read32(state);
     (*str).subsector = SubsectorId(0);
     (*str).floorz = saveg_read32(state) as fixed_t;
@@ -300,8 +304,8 @@ unsafe fn saveg_write_mobj_t(state: &mut GameState, mut str: *mut mobj_t) {
     saveg_write32(state, (*str).angle as i32);
     saveg_write32(state, (*str).sprite as i32);
     saveg_write32(state, (*str).frame);
-    saveg_writep(state, (*str).bnext as *mut ::core::ffi::c_void);
-    saveg_writep(state, (*str).bprev as *mut ::core::ffi::c_void);
+    saveg_write32(state, 0);
+    saveg_write32(state, 0);
     saveg_write32(state, 0);
     saveg_write32(state, (*str).floorz as i32);
     saveg_write32(state, (*str).ceilingz as i32);
