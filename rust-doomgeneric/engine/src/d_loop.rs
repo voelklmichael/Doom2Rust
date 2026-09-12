@@ -27,7 +27,7 @@ pub struct DLoopState {
     pub skiptics: i32,
     pub ticdup: i32,
     pub new_sync: bool,
-    pub loop_interface: *mut loop_interface_t,
+    pub loop_interface: loop_interface_t,
     pub local_playeringame: [boolean; 8],
     pub player_class: i32,
     pub lasttime: i32,
@@ -39,7 +39,7 @@ pub struct DLoopState {
 }
 
 impl DLoopState {
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         DLoopState {
             ticdata: [ticcmd_set_t {
                 cmds: [ticcmd_t {
@@ -62,7 +62,12 @@ impl DLoopState {
             skiptics: 0,
             ticdup: 0,
             new_sync: true,
-            loop_interface: ::core::ptr::null::<loop_interface_t>() as *mut loop_interface_t,
+            loop_interface: loop_interface_t {
+                ProcessEvents: None,
+                BuildTiccmd: None,
+                RunTic: None,
+                RunMenu: None,
+            },
             local_playeringame: [0; 8],
             player_class: 0,
             lasttime: 0,
@@ -155,11 +160,11 @@ unsafe fn BuildNewTic(state: &mut GameState) -> bool {
     };
     gameticdiv = state.d_loop.gametic / state.d_loop.ticdup;
     I_StartTic(state);
-    let process_events = (*state.d_loop.loop_interface)
+    let process_events = state.d_loop.loop_interface
         .ProcessEvents
         .expect("non-null function pointer");
     process_events(state);
-    let run_menu = (*state.d_loop.loop_interface)
+    let run_menu = state.d_loop.loop_interface
         .RunMenu
         .expect("non-null function pointer");
     run_menu(state);
@@ -181,7 +186,7 @@ unsafe fn BuildNewTic(state: &mut GameState) -> bool {
         0 as i32,
         ::core::mem::size_of::<ticcmd_t>() as size_t,
     );
-    let build_ticcmd = (*state.d_loop.loop_interface)
+    let build_ticcmd = state.d_loop.loop_interface
         .BuildTiccmd
         .expect("non-null function pointer");
     let maketic = state.d_loop.maketic;
@@ -422,7 +427,7 @@ pub unsafe fn TryRunTics(state: &mut GameState) {
                 &raw mut (*set).ingame as *mut boolean as *const ::core::ffi::c_void,
                 ::core::mem::size_of::<[boolean; 8]>() as size_t,
             );
-            let run_tic = (*state.d_loop.loop_interface)
+            let run_tic = state.d_loop.loop_interface
                 .RunTic
                 .expect("non-null function pointer");
             run_tic(
@@ -437,6 +442,6 @@ pub unsafe fn TryRunTics(state: &mut GameState) {
         NetUpdate(state);
     }
 }
-pub unsafe fn D_RegisterLoopCallbacks(state: &mut GameState, mut i: *mut loop_interface_t) {
+pub unsafe fn D_RegisterLoopCallbacks(state: &mut GameState, i: loop_interface_t) {
     state.d_loop.loop_interface = i;
 }

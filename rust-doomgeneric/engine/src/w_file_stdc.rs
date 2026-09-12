@@ -27,7 +27,7 @@ unsafe fn W_StdC_OpenFile(zone: &mut ZZoneState, path: &str) -> *mut wad_file_t 
         PU_STATIC as i32,
         ::core::ptr::null_mut::<::core::ffi::c_void>(),
     ) as *mut stdc_wad_file_t;
-    (*result).wad.file_class = &raw mut stdc_wad_file;
+    (*result).wad.file_class = STDC_WAD_FILE;
     (*result).wad.mapped = ::core::ptr::null_mut::<byte>();
     (*result).wad.length = length;
     (*result).fstream = Box::into_raw(Box::new(fstream));
@@ -52,7 +52,7 @@ pub unsafe fn W_StdC_Read(
     let slice = ::core::slice::from_raw_parts_mut(buffer as *mut u8, buffer_len as usize);
     fstream.read(slice).unwrap_or(0) as size_t
 }
-pub static mut stdc_wad_file: wad_file_class_t = wad_file_class_t {
+pub const STDC_WAD_FILE: wad_file_class_t = wad_file_class_t {
     OpenFile: Some(W_StdC_OpenFile as unsafe fn(&mut ZZoneState, &str) -> *mut wad_file_t),
     CloseFile: Some(W_StdC_CloseFile as unsafe fn(&mut ZZoneState, *mut wad_file_t) -> ()),
     Read: Some(
