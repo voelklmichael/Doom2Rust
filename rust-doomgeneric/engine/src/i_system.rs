@@ -6,7 +6,7 @@ use crate::src::stdint_types::byte;
 use crate::src::stdint_types::size_t;
 
 pub struct ISystemState {
-    pub exit_funcs: *mut atexit_listentry_t,
+    pub exit_funcs: Vec<atexit_listentry_t>,
     pub mem_dump_custom: [u8; 10],
     pub dos_mem_dump: *const u8,
     pub get_memory_value_firsttime: bool,
@@ -15,7 +15,7 @@ pub struct ISystemState {
 impl ISystemState {
     pub fn new() -> Self {
         ISystemState {
-            exit_funcs: ::core::ptr::null::<atexit_listentry_t>() as *mut atexit_listentry_t,
+            exit_funcs: Vec::new(),
             mem_dump_custom: [0; 10],
             dos_mem_dump: &raw const mem_dump_dos622 as *const u8,
             get_memory_value_firsttime: true,
@@ -26,22 +26,17 @@ impl ISystemState {
 pub type atexit_func_t = Option<unsafe fn(&mut GameState) -> ()>;
 pub type atexit_listentry_t = atexit_listentry_s;
 #[derive(Copy, Clone)]
-#[repr(C)]
 pub struct atexit_listentry_s {
     pub func: atexit_func_t,
     pub run_on_error: bool,
-    pub next: *mut atexit_listentry_t,
 }
 pub const DEFAULT_RAM: i32 = 6;
 pub const MIN_RAM: i32 = 6;
 pub unsafe fn I_AtExit(state: &mut ISystemState, mut func: atexit_func_t, mut run_on_error: bool) {
-    let mut entry: *mut atexit_listentry_t = ::core::ptr::null_mut::<atexit_listentry_t>();
-    entry =
-        malloc(::core::mem::size_of::<atexit_listentry_t>() as size_t) as *mut atexit_listentry_t;
-    (*entry).func = func;
-    (*entry).run_on_error = run_on_error;
-    (*entry).next = state.exit_funcs;
-    state.exit_funcs = entry;
+    state.exit_funcs.push(atexit_listentry_t {
+        func,
+        run_on_error,
+    });
 }
 pub unsafe fn I_Tactile() {}
 unsafe fn AutoAllocMemory(mut size: *mut i32, mut default_ram: i32, mut min_ram: i32) -> *mut byte {
@@ -100,11 +95,9 @@ pub unsafe fn I_ConsoleStdout() -> bool {
     return false;
 }
 pub unsafe fn I_Quit(state: &mut GameState) {
-    let mut entry: *mut atexit_listentry_t = ::core::ptr::null_mut::<atexit_listentry_t>();
-    entry = state.i_system.exit_funcs;
-    while !entry.is_null() {
-        (*entry).func.expect("non-null function pointer")(state);
-        entry = (*entry).next;
+    let entries = state.i_system.exit_funcs.clone();
+    for entry in entries.iter().rev() {
+        entry.func.expect("non-null function pointer")(state);
     }
 }
 pub unsafe fn I_Error(message: &str) -> ! {

@@ -190,11 +190,11 @@ impl GameState {
     }
 }
 
-// Self-referential pointers (e.g. sounds.S_sfx's one aliased entry) can only
-// be computed once the value is at its final, permanently-stable address --
-// i.e. here, not inside any XxxState::new(). Must run exactly once, right
-// after the GameState this reference points at is constructed and will never
-// move again.
+// Self-referential pointers (e.g. p_maputl's intercepts_overrun addresses)
+// can only be computed once the value is at its final, permanently-stable
+// address -- i.e. here, not inside any XxxState::new(). Must run exactly
+// once, right after the GameState this reference points at is constructed
+// and will never move again.
 pub fn finish_init(state: &mut GameState) {
     unsafe {
         state.sounds.fixup_self_links();

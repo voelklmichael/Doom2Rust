@@ -299,7 +299,7 @@ pub unsafe fn S_StartSound(
     }
     sfx =
         (&raw mut state.sounds.S_sfx as *mut sfxinfo_t).offset(sfx_id as isize) as *mut sfxinfo_t;
-    if !(*sfx).link.is_null() {
+    if (*sfx).link.is_some() {
         volume += (*sfx).volume;
         if volume < 1 as i32 {
             return;
@@ -370,7 +370,7 @@ pub unsafe fn S_UpdateSounds(state: &mut GameState, mut listener: *mut mobj_t) {
             if I_SoundIsPlaying(&mut state.i_sound, (*c).handle) {
                 volume = state.s_sound.snd_SfxVolume;
                 sep = NORM_SEP;
-                if !(*sfx).link.is_null() {
+                if (*sfx).link.is_some() {
                     volume += (*sfx).volume;
                     if volume < 1 as i32 {
                         S_StopChannel(state, cnum);
