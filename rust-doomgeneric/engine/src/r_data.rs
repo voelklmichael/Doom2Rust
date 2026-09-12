@@ -704,13 +704,14 @@ pub unsafe fn R_PrecacheLevel(state: &mut GameState) {
         0 as i32,
         state.r_things.numsprites as size_t,
     );
-    th = state.p_tick.thinkercap.next as *mut thinker_t;
-    while th != &raw mut state.p_tick.thinkercap {
+    let mut cursor = state.p_tick.head();
+    while let Some(id) = cursor {
+        th = state.p_tick.raw(id);
         if matches!((*th).function, ThinkerFn::Mobj(_)) {
             *spritepresent.offset((*(th as *mut mobj_t)).sprite as isize) =
                 1 as u8;
         }
-        th = (*th).next as *mut thinker_t;
+        cursor = state.p_tick.next(id);
     }
     state.r_data.spritememory = 0 as i32;
     i = 0 as i32;

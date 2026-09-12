@@ -10,65 +10,174 @@ use crate::src::p_spec::{ceiling_t, floormove_t, plat_t};
 use crate::src::p_user::P_PlayerThink;
 use crate::src::z_zone::Z_Free;
 
+// A handle into PTickState's own node table -- never constructed outside
+// this module, only handed out by head()/next() and walked by callers.
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+pub struct ThinkerId(u32);
+
+#[derive(Copy, Clone)]
+struct ThinkerNode {
+    prev: Option<ThinkerId>,
+    next: Option<ThinkerId>,
+    // Still points at the thinker's own Z_Malloc'd payload (mobj_t,
+    // vldoor_t, ceiling_t, ...) -- this table only externalizes the
+    // prev/next list bookkeeping, not the payload storage or the
+    // base-struct-downcast dispatch in P_RunThinkers below.
+    raw: *mut thinker_s,
+}
+
 pub struct PTickState {
     pub leveltime: i32,
-    pub thinkercap: thinker_t,
+    nodes: Vec<ThinkerNode>,
+    free_list: Vec<u32>,
+    head: Option<ThinkerId>,
+    tail: Option<ThinkerId>,
 }
 
 impl PTickState {
     pub const fn new() -> Self {
         PTickState {
             leveltime: 0,
-            thinkercap: thinker_s {
-                prev: ::core::ptr::null::<thinker_s>() as *mut thinker_s,
-                next: ::core::ptr::null::<thinker_s>() as *mut thinker_s,
-                function: ThinkerFn::Paused,
-            },
+            nodes: Vec::new(),
+            free_list: Vec::new(),
+            head: None,
+            tail: None,
         }
+    }
+
+    pub fn head(&self) -> Option<ThinkerId> {
+        self.head
+    }
+
+    pub fn next(&self, id: ThinkerId) -> Option<ThinkerId> {
+        self.nodes[id.0 as usize].next
+    }
+
+    pub fn raw(&self, id: ThinkerId) -> *mut thinker_t {
+        self.nodes[id.0 as usize].raw
     }
 }
 
 pub unsafe fn P_InitThinkers(state: &mut GameState) {
-    state.p_tick.thinkercap.next = &raw mut state.p_tick.thinkercap as *mut thinker_s;
-    state.p_tick.thinkercap.prev = state.p_tick.thinkercap.next;
+    state.p_tick.nodes.clear();
+    state.p_tick.free_list.clear();
+    state.p_tick.head = None;
+    state.p_tick.tail = None;
 }
+
 pub unsafe fn P_AddThinker(state: &mut GameState, mut thinker: *mut thinker_t) {
-    (*state.p_tick.thinkercap.prev).next = thinker as *mut thinker_s;
-    (*thinker).next = &raw mut state.p_tick.thinkercap as *mut thinker_s;
-    (*thinker).prev = state.p_tick.thinkercap.prev;
-    state.p_tick.thinkercap.prev = thinker as *mut thinker_s;
+    let id = if let Some(index) = state.p_tick.free_list.pop() {
+        state.p_tick.nodes[index as usize] = ThinkerNode {
+            prev: None,
+            next: None,
+            raw: thinker,
+        };
+        ThinkerId(index)
+    } else {
+        let index = state.p_tick.nodes.len() as u32;
+        state.p_tick.nodes.push(ThinkerNode {
+            prev: None,
+            next: None,
+            raw: thinker,
+        });
+        ThinkerId(index)
+    };
+    if let Some(tail_id) = state.p_tick.tail {
+        state.p_tick.nodes[tail_id.0 as usize].next = Some(id);
+        state.p_tick.nodes[id.0 as usize].prev = Some(tail_id);
+    } else {
+        state.p_tick.head = Some(id);
+    }
+    state.p_tick.tail = Some(id);
 }
+
 pub unsafe fn P_RemoveThinker(mut thinker: *mut thinker_t) {
     (*thinker).function = ThinkerFn::Removed;
 }
+
+// Unlinks a node from the externalized list (used only when P_RunThinkers
+// finds a ThinkerFn::Removed node to reap). Does not touch the payload
+// memory itself -- callers Z_Free that separately.
+unsafe fn P_UnlinkThinkerNode(state: &mut GameState, id: ThinkerId) {
+    let prev = state.p_tick.nodes[id.0 as usize].prev;
+    let next = state.p_tick.nodes[id.0 as usize].next;
+    match prev {
+        Some(p) => state.p_tick.nodes[p.0 as usize].next = next,
+        None => state.p_tick.head = next,
+    }
+    match next {
+        Some(n) => state.p_tick.nodes[n.0 as usize].prev = prev,
+        None => state.p_tick.tail = prev,
+    }
+    state.p_tick.free_list.push(id.0);
+}
+
 pub unsafe fn P_RunThinkers(state: &mut GameState) {
-    let mut currentthinker: *mut thinker_t = ::core::ptr::null_mut::<thinker_t>();
-    currentthinker = state.p_tick.thinkercap.next as *mut thinker_t;
-    while currentthinker != &raw mut state.p_tick.thinkercap {
+    let mut cursor = state.p_tick.head();
+    while let Some(id) = cursor {
+        let currentthinker = state.p_tick.raw(id);
+        let next;
         match (*currentthinker).function {
             ThinkerFn::Removed => {
-                (*(*currentthinker).next).prev = (*currentthinker).prev;
-                (*(*currentthinker).prev).next = (*currentthinker).next;
+                // Capture next before unlinking/freeing -- unlike the
+                // pointer-chasing version this replaces, `next` lives in our
+                // own node table, not inside the freed payload, so there's
+                // no use-after-free hazard either way, but this ordering
+                // matches the original semantics most directly.
+                next = state.p_tick.next(id);
+                P_UnlinkThinkerNode(state, id);
                 Z_Free(
                     &mut state.z_zone,
                     currentthinker as *mut ::core::ffi::c_void,
                 );
             }
-            ThinkerFn::Paused | ThinkerFn::Unresolved => {}
+            ThinkerFn::Paused | ThinkerFn::Unresolved => {
+                next = state.p_tick.next(id);
+            }
             ThinkerFn::Mobj(f) => {
                 let mobj_id = (*(currentthinker as *mut mobj_t)).id;
                 f(state, mobj_id);
+                // Read after the call, not before: a think function can spawn
+                // a new mobj (P_AddThinker appends at the tail), and if this
+                // node was previously the tail, that newly spawned thinker
+                // becomes reachable via .next immediately -- preserving
+                // vanilla's same-tick-think-on-spawn behavior.
+                next = state.p_tick.next(id);
             }
-            ThinkerFn::Ceiling(f) => f(state, currentthinker as *mut ceiling_t),
-            ThinkerFn::Door(f) => f(state, currentthinker as *mut vldoor_t),
-            ThinkerFn::Floor(f) => f(state, currentthinker as *mut floormove_t),
-            ThinkerFn::Plat(f) => f(state, currentthinker as *mut plat_t),
-            ThinkerFn::FireFlicker(f) => f(state, currentthinker as *mut fireflicker_t),
-            ThinkerFn::LightFlash(f) => f(state, currentthinker as *mut lightflash_t),
-            ThinkerFn::Strobe(f) => f(state, currentthinker as *mut strobe_t),
-            ThinkerFn::Glow(f) => f(state, currentthinker as *mut glow_t),
+            ThinkerFn::Ceiling(f) => {
+                f(state, currentthinker as *mut ceiling_t);
+                next = state.p_tick.next(id);
+            }
+            ThinkerFn::Door(f) => {
+                f(state, currentthinker as *mut vldoor_t);
+                next = state.p_tick.next(id);
+            }
+            ThinkerFn::Floor(f) => {
+                f(state, currentthinker as *mut floormove_t);
+                next = state.p_tick.next(id);
+            }
+            ThinkerFn::Plat(f) => {
+                f(state, currentthinker as *mut plat_t);
+                next = state.p_tick.next(id);
+            }
+            ThinkerFn::FireFlicker(f) => {
+                f(state, currentthinker as *mut fireflicker_t);
+                next = state.p_tick.next(id);
+            }
+            ThinkerFn::LightFlash(f) => {
+                f(state, currentthinker as *mut lightflash_t);
+                next = state.p_tick.next(id);
+            }
+            ThinkerFn::Strobe(f) => {
+                f(state, currentthinker as *mut strobe_t);
+                next = state.p_tick.next(id);
+            }
+            ThinkerFn::Glow(f) => {
+                f(state, currentthinker as *mut glow_t);
+                next = state.p_tick.next(id);
+            }
         }
-        currentthinker = (*currentthinker).next as *mut thinker_t;
+        cursor = next;
     }
 }
 pub unsafe fn P_Ticker(state: &mut GameState) {

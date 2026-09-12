@@ -40,9 +40,9 @@ pub unsafe fn EV_Teleport(
     i = 0 as i32;
     while i < state.p_setup.numsectors {
         if state.p_setup.sectors[i as usize].tag as i32 == tag {
-            thinker = state.p_tick.thinkercap.next as *mut thinker_t;
-            thinker = state.p_tick.thinkercap.next as *mut thinker_t;
-            while thinker != &raw mut state.p_tick.thinkercap {
+            let mut cursor = state.p_tick.head();
+            while let Some(id) = cursor {
+                thinker = state.p_tick.raw(id);
                 if matches!((*thinker).function, ThinkerFn::Mobj(_)) {
                     m = thinker as *mut mobj_t;
                     if !((*m).type_0 as u32 != MT_TELEPORTMAN as i32 as u32) {
@@ -91,7 +91,7 @@ pub unsafe fn EV_Teleport(
                         }
                     }
                 }
-                thinker = (*thinker).next as *mut thinker_t;
+                cursor = state.p_tick.next(id);
             }
         }
         i += 1;

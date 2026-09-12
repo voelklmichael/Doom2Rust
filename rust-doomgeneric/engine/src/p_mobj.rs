@@ -81,8 +81,6 @@ pub enum SectorSpecial {
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct thinker_s {
-    pub prev: *mut thinker_s,
-    pub next: *mut thinker_s,
     pub function: ThinkerFn,
 }
 pub type thinker_t = thinker_s;
@@ -1042,8 +1040,6 @@ impl PMobjState {
             free_list: Vec::new(),
             dummy_mobj: mobj_s {
                 thinker: thinker_s {
-                    prev: ::core::ptr::null::<thinker_s>() as *mut thinker_s,
-                    next: ::core::ptr::null::<thinker_s>() as *mut thinker_s,
                     function: ThinkerFn::Paused,
                 },
                 x: 0,

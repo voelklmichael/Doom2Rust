@@ -521,8 +521,9 @@ pub unsafe fn A_KeenDie(state: &mut GameState, id: MobjId) {
         validcount: 0,
     };
     A_Fall(state, (*mo).id);
-    th = state.p_tick.thinkercap.next as *mut thinker_t;
-    while th != &raw mut state.p_tick.thinkercap {
+    let mut cursor = state.p_tick.head();
+    while let Some(id) = cursor {
+        th = state.p_tick.raw(id);
         if matches!((*th).function, ThinkerFn::Mobj(_)) {
             mo2 = th as *mut mobj_t;
             if mo2 != mo && (*mo2).type_0 as u32 == (*mo).type_0 as u32 && (*mo2).health > 0 as i32
@@ -530,7 +531,7 @@ pub unsafe fn A_KeenDie(state: &mut GameState, id: MobjId) {
                 return;
             }
         }
-        th = (*th).next as *mut thinker_t;
+        cursor = state.p_tick.next(id);
     }
     junk.tag = 666 as i16;
     EV_DoDoor(state, &raw mut junk, vld_open);
@@ -1307,14 +1308,15 @@ pub unsafe fn A_PainShootSkull(state: &mut GameState, mut actor: *mut mobj_t, mu
     let mut count: i32 = 0;
     let mut currentthinker: *mut thinker_t = ::core::ptr::null_mut::<thinker_t>();
     count = 0 as i32;
-    currentthinker = state.p_tick.thinkercap.next as *mut thinker_t;
-    while currentthinker != &raw mut state.p_tick.thinkercap {
+    let mut cursor = state.p_tick.head();
+    while let Some(id) = cursor {
+        currentthinker = state.p_tick.raw(id);
         if matches!((*currentthinker).function, ThinkerFn::Mobj(_))
             && (*(currentthinker as *mut mobj_t)).type_0 as u32 == MT_SKULL as i32 as u32
         {
             count += 1;
         }
-        currentthinker = (*currentthinker).next as *mut thinker_t;
+        cursor = state.p_tick.next(id);
     }
     if count > 20 as i32 {
         return;
@@ -1479,8 +1481,9 @@ pub unsafe fn A_BossDeath(state: &mut GameState, id: MobjId) {
     if i == MAXPLAYERS {
         return;
     }
-    th = state.p_tick.thinkercap.next as *mut thinker_t;
-    while th != &raw mut state.p_tick.thinkercap {
+    let mut cursor = state.p_tick.head();
+    while let Some(id) = cursor {
+        th = state.p_tick.raw(id);
         if matches!((*th).function, ThinkerFn::Mobj(_)) {
             mo2 = th as *mut mobj_t;
             if mo2 != mo && (*mo2).type_0 as u32 == (*mo).type_0 as u32 && (*mo2).health > 0 as i32
@@ -1488,7 +1491,7 @@ pub unsafe fn A_BossDeath(state: &mut GameState, id: MobjId) {
                 return;
             }
         }
-        th = (*th).next as *mut thinker_t;
+        cursor = state.p_tick.next(id);
     }
     if state.doomstat.gamemode as u32 == commercial as i32 as u32 {
         if state.g_game.gamemap == 7 as i32 {
@@ -1594,9 +1597,9 @@ pub unsafe fn A_BrainAwake(state: &mut GameState, _id: MobjId) {
     let mut m: *mut mobj_t = ::core::ptr::null_mut::<mobj_t>();
     state.p_enemy.numbraintargets = 0 as i32;
     state.p_enemy.braintargeton = 0 as i32;
-    thinker = state.p_tick.thinkercap.next as *mut thinker_t;
-    thinker = state.p_tick.thinkercap.next as *mut thinker_t;
-    while thinker != &raw mut state.p_tick.thinkercap {
+    let mut cursor = state.p_tick.head();
+    while let Some(id) = cursor {
+        thinker = state.p_tick.raw(id);
         if matches!((*thinker).function, ThinkerFn::Mobj(_)) {
             m = thinker as *mut mobj_t;
             if (*m).type_0 as u32 == MT_BOSSTARGET as i32 as u32 {
@@ -1604,7 +1607,7 @@ pub unsafe fn A_BrainAwake(state: &mut GameState, _id: MobjId) {
                 state.p_enemy.numbraintargets += 1;
             }
         }
-        thinker = (*thinker).next as *mut thinker_t;
+        cursor = state.p_tick.next(id);
     }
     S_StartSound(state, NULL, sfx_bossit as i32);
 }

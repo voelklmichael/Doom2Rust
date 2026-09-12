@@ -85,8 +85,6 @@ pub const ZERO_SECTOR: sector_t = sector_t {
     blockbox: [0; 4],
     soundorg: degenmobj_t {
         thinker: thinker_s {
-            prev: ::core::ptr::null::<thinker_s>() as *mut thinker_s,
-            next: ::core::ptr::null::<thinker_s>() as *mut thinker_s,
             function: ThinkerFn::Paused,
         },
         x: 0,

@@ -21,7 +21,7 @@ use crate::src::p_mobj::mobjtype_t;
 use crate::src::p_mobj::spritenum_t;
 use crate::src::p_mobj::P_RemoveMobj;
 use crate::src::p_mobj::{
-    line_t, mapthing_t, sector_t, thinker_s, thinker_t, SectorSpecial, ThinkerFn,
+    line_t, mapthing_t, sector_t, thinker_t, SectorSpecial, ThinkerFn,
 };
 use crate::src::p_mobj::{mobj_t, pspdef_t};
 use crate::src::p_plats::plat_e;
@@ -227,13 +227,17 @@ unsafe fn saveg_write_actionf_t(state: &mut GameState, mut str: *mut ThinkerFn) 
     saveg_writep(state, word);
 }
 unsafe fn saveg_read_thinker_t(state: &mut GameState, mut str: *mut thinker_t) {
-    (*str).prev = saveg_readp(state) as *mut thinker_s;
-    (*str).next = saveg_readp(state) as *mut thinker_s;
+    // P_AddThinker (called after every payload type is reconstructed, in
+    // both P_UnArchiveThinkers and P_UnArchiveSpecials below) always rebuilds
+    // prev/next from scratch in PTickState's own node table, so these
+    // on-disk bytes are already dead -- discard.
+    saveg_read32(state);
+    saveg_read32(state);
     saveg_read_actionf_t(state, &raw mut (*str).function);
 }
 unsafe fn saveg_write_thinker_t(state: &mut GameState, mut str: *mut thinker_t) {
-    saveg_writep(state, (*str).prev as *mut ::core::ffi::c_void);
-    saveg_writep(state, (*str).next as *mut ::core::ffi::c_void);
+    saveg_write32(state, 0);
+    saveg_write32(state, 0);
     saveg_write_actionf_t(state, &raw mut (*str).function);
 }
 unsafe fn saveg_read_mobj_t(state: &mut GameState, mut str: *mut mobj_t) {
@@ -881,25 +885,30 @@ pub unsafe fn P_UnArchiveWorld(state: &mut GameState) {
 }
 pub unsafe fn P_ArchiveThinkers(state: &mut GameState) {
     let mut th: *mut thinker_t = ::core::ptr::null_mut::<thinker_t>();
-    th = state.p_tick.thinkercap.next as *mut thinker_t;
-    while th != &raw mut state.p_tick.thinkercap {
+    let mut cursor = state.p_tick.head();
+    while let Some(id) = cursor {
+        th = state.p_tick.raw(id);
         if matches!((*th).function, ThinkerFn::Mobj(_)) {
             saveg_write8(state, tc_mobj as i32 as byte);
             saveg_write_pad(state);
             saveg_write_mobj_t(state, th as *mut mobj_t);
         }
-        th = (*th).next as *mut thinker_t;
+        cursor = state.p_tick.next(id);
     }
     saveg_write8(state, tc_end as i32 as byte);
 }
 pub unsafe fn P_UnArchiveThinkers(state: &mut GameState) {
     let mut tclass: byte = 0;
-    let mut currentthinker: *mut thinker_t = ::core::ptr::null_mut::<thinker_t>();
-    let mut next: *mut thinker_t = ::core::ptr::null_mut::<thinker_t>();
+    let mut currentthinker: *mut thinker_t;
     let mut mobj: *mut mobj_t = ::core::ptr::null_mut::<mobj_t>();
-    currentthinker = state.p_tick.thinkercap.next as *mut thinker_t;
-    while currentthinker != &raw mut state.p_tick.thinkercap {
-        next = (*currentthinker).next as *mut thinker_t;
+    let mut cursor = state.p_tick.head();
+    while let Some(id) = cursor {
+        currentthinker = state.p_tick.raw(id);
+        // Unlike the raw-pointer version this replaces, `next` lives in our
+        // own node table, not inside the payload memory Z_Free/P_RemoveMobj
+        // below may free -- capturing it first just mirrors the original
+        // ordering, not a use-after-free workaround.
+        let next = state.p_tick.next(id);
         if matches!((*currentthinker).function, ThinkerFn::Mobj(_)) {
             P_RemoveMobj(state, currentthinker as *mut mobj_t);
         } else {
@@ -908,7 +917,7 @@ pub unsafe fn P_UnArchiveThinkers(state: &mut GameState) {
                 currentthinker as *mut ::core::ffi::c_void,
             );
         }
-        currentthinker = next;
+        cursor = next;
     }
     P_InitThinkers(state);
     loop {
@@ -950,8 +959,9 @@ pub static specials_e: C2RustUnnamed_5 = tc_ceiling;
 pub unsafe fn P_ArchiveSpecials(state: &mut GameState) {
     let mut th: *mut thinker_t = ::core::ptr::null_mut::<thinker_t>();
     let mut i: i32 = 0;
-    th = state.p_tick.thinkercap.next as *mut thinker_t;
-    while th != &raw mut state.p_tick.thinkercap {
+    let mut cursor = state.p_tick.head();
+    while let Some(id) = cursor {
+        th = state.p_tick.raw(id);
         match (*th).function {
             ThinkerFn::Paused => {
                 i = 0 as i32;
@@ -1004,7 +1014,7 @@ pub unsafe fn P_ArchiveSpecials(state: &mut GameState) {
             }
             _ => {}
         }
-        th = (*th).next as *mut thinker_t;
+        cursor = state.p_tick.next(id);
     }
     saveg_write8(state, tc_endspecials as i32 as byte);
 }
