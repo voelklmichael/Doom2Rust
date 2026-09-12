@@ -223,7 +223,7 @@ pub unsafe fn NetUpdate(state: &mut GameState) {
         i += 1;
     }
 }
-unsafe fn D_Disconnected() {
+fn D_Disconnected() {
     if drone {
         I_Error("Disconnected from server in drone mode.");
     }
@@ -251,7 +251,7 @@ pub unsafe fn D_ReceiveTic(
     }
     state.recvtic += 1;
 }
-pub unsafe fn D_StartGameLoop(state: &mut GameState) {
+pub fn D_StartGameLoop(state: &mut GameState) {
     state.d_loop.lasttime = GetAdjustedTime(state) / state.d_loop.ticdup;
 }
 pub unsafe fn D_StartNetGame(

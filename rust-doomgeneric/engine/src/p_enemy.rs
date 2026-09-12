@@ -1653,7 +1653,7 @@ pub unsafe fn A_BrainExplode(state: &mut GameState, id: MobjId) {
         (*th).tics = 1 as i32;
     }
 }
-pub unsafe fn A_BrainDie(state: &mut GameState, _id: MobjId) {
+pub fn A_BrainDie(state: &mut GameState, _id: MobjId) {
     G_ExitLevel(state);
 }
 pub unsafe fn A_BrainSpit(state: &mut GameState, id: MobjId) {

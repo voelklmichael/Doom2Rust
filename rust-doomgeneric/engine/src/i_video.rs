@@ -295,7 +295,7 @@ pub unsafe fn I_ShutdownGraphics(state: &mut GameState) {
         state.i_video.I_VideoBuffer as *mut ::core::ffi::c_void,
     );
 }
-pub unsafe fn I_StartTic(state: &mut GameState) {
+pub fn I_StartTic(state: &mut GameState) {
     I_GetEvent(state);
 }
 pub unsafe fn I_FinishUpdate(state: &mut GameState) {

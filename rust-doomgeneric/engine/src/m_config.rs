@@ -1870,7 +1870,7 @@ pub fn M_SetConfigFilenames(
     state.default_extra_config = extra_config;
 }
 pub fn M_SaveDefaults(_state: &mut GameState) {}
-pub unsafe fn M_SaveDefaultsAlternate(state: &mut GameState, main_0: &str, extra: &str) {
+pub fn M_SaveDefaultsAlternate(state: &mut GameState, main_0: &str, extra: &str) {
     let orig_main = state.m_config.doom_defaults.filename.clone();
     let orig_extra = state.m_config.extra_defaults.filename.clone();
     state.m_config.doom_defaults.filename = main_0.to_string();

@@ -466,7 +466,7 @@ fn WeaponSelectable(state: &mut GameState, mut weapon: weapontype_t) -> bool {
     }
     return true;
 }
-unsafe fn G_NextWeapon(state: &mut GameState, mut direction: i32) -> i32 {
+fn G_NextWeapon(state: &mut GameState, mut direction: i32) -> i32 {
     let mut weapon: weapontype_t = wp_fist;
     let mut start_i: i32 = 0;
     let mut i: i32 = 0;
@@ -1926,7 +1926,7 @@ pub unsafe fn G_RecordDemo(state: &mut GameState, name: &str) {
     state.g_game.demoend = state.g_game.demobuffer.offset(maxsize as isize);
     state.g_game.demorecording = true;
 }
-pub unsafe fn G_VanillaVersionCode(state: &mut DoomstatState) -> i32 {
+pub fn G_VanillaVersionCode(state: &mut DoomstatState) -> i32 {
     match state.gameversion as u32 {
         0 => {
             I_Error("Doom 1.2 does not have a version code!");

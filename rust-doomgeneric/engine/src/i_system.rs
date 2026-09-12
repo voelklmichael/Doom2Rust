@@ -82,7 +82,7 @@ pub fn I_PrintBanner(msg: &str) {
 pub fn I_PrintDivider() {
     println!("{}", "=".repeat(75));
 }
-pub unsafe fn I_PrintStartupBanner(gamedescription: &str) {
+pub fn I_PrintStartupBanner(gamedescription: &str) {
     I_PrintDivider();
     I_PrintBanner(gamedescription);
     I_PrintDivider();

@@ -130,7 +130,7 @@ fn dir_is_file(path: &str, filename: &str) -> bool {
         && path.as_bytes()[path.len() - filename.len() - 1] == DIR_SEPARATOR as u8
         && path[path.len() - filename.len()..].eq_ignore_ascii_case(filename)
 }
-unsafe fn check_directory_has_iwad(dir: &str, iwadname: &str) -> Option<String> {
+fn check_directory_has_iwad(dir: &str, iwadname: &str) -> Option<String> {
     if dir_is_file(dir, iwadname) && file_exists(dir) {
         return Some(dir.to_string());
     }
@@ -177,11 +177,11 @@ fn identify_iwad_by_name(name: &str, mask: i32) -> GameMission_t {
     }
     none
 }
-unsafe fn build_iwad_dir_list(state: &mut DIwadState) {
+fn build_iwad_dir_list(state: &mut DIwadState) {
     add_iwad_dir(state, FILES_DIR);
     state.iwad_dirs_built = true;
 }
-pub unsafe fn D_FindWADByName(state: &mut DIwadState, name: &str) -> Option<String> {
+pub fn D_FindWADByName(state: &mut DIwadState, name: &str) -> Option<String> {
     if file_exists(name) {
         return Some(name.to_string());
     }
@@ -197,7 +197,7 @@ pub unsafe fn D_FindWADByName(state: &mut DIwadState, name: &str) -> Option<Stri
     }
     None
 }
-pub unsafe fn D_TryFindWADByName(state: &mut DIwadState, filename: &str) -> String {
+pub fn D_TryFindWADByName(state: &mut DIwadState, filename: &str) -> String {
     D_FindWADByName(state, filename).unwrap_or_else(|| filename.to_string())
 }
 pub unsafe fn D_FindIWAD(state: &mut GameState, mask: i32, mission: *mut GameMission_t) -> String {

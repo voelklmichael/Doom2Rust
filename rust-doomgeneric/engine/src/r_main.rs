@@ -261,7 +261,7 @@ pub fn R_PointToAngle(state: &mut GameState, mut x: fixed_t, mut y: fixed_t) -> 
         }
     };
 }
-pub unsafe fn R_PointToAngle2(
+pub fn R_PointToAngle2(
     state: &mut GameState,
     mut x1: fixed_t,
     mut y1: fixed_t,

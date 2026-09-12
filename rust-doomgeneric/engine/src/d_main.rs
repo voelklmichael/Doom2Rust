@@ -519,7 +519,7 @@ pub unsafe fn D_DoomLoop(state: &mut GameState) {
     }
     doomgeneric_Tick(state);
 }
-pub unsafe fn D_PageTicker(state: &mut GameState) {
+pub fn D_PageTicker(state: &mut GameState) {
     state.d_main.pagetic -= 1;
     if state.d_main.pagetic < 0 as i32 {
         D_AdvanceDemo(state);
@@ -612,12 +612,12 @@ pub unsafe fn D_DoAdvanceDemo(state: &mut GameState) {
         state.d_main.pagename = "INTERPIC";
     }
 }
-pub unsafe fn D_StartTitle(state: &mut GameState) {
+pub fn D_StartTitle(state: &mut GameState) {
     state.g_game.gameaction = ga_nothing;
     state.d_main.demosequence = -(1 as i32);
     D_AdvanceDemo(state);
 }
-unsafe fn SetMissionForPackName(state: &mut GameState, pack_name: &str) {
+fn SetMissionForPackName(state: &mut GameState, pack_name: &str) {
     const packs: [C2RustUnnamed_3; 3] = [
         C2RustUnnamed_3 {
             name: "doom2",
@@ -790,7 +790,7 @@ pub fn PrintDehackedBanners() {
         i = i.wrapping_add(1);
     }
 }
-unsafe fn InitGameVersion(state: &mut GameState) {
+fn InitGameVersion(state: &mut GameState) {
     let mut p: i32 = 0;
     p = M_CheckParmWithArgs(state, "-gameversion", 1 as i32);
     if p != 0 {

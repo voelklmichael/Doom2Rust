@@ -738,7 +738,7 @@ pub fn AM_clearMarks(state: &mut GameState) {
     }
     state.am_map.markpointnum = 0 as i32;
 }
-pub unsafe fn AM_LevelInit(state: &mut GameState) {
+pub fn AM_LevelInit(state: &mut GameState) {
     state.am_map.leveljuststarted = 0 as i32;
     state.am_map.f_y = 0 as i32;
     state.am_map.f_x = state.am_map.f_y;
@@ -783,12 +783,12 @@ pub unsafe fn AM_Start(state: &mut GameState) {
     AM_initVariables(state);
     AM_loadPics(state);
 }
-pub unsafe fn AM_minOutWindowScale(state: &mut GameState) {
+pub fn AM_minOutWindowScale(state: &mut GameState) {
     state.am_map.scale_mtof = state.am_map.min_scale_mtof;
     state.am_map.scale_ftom = FixedDiv(FRACUNIT, state.am_map.scale_mtof);
     AM_activateNewScale(state);
 }
-pub unsafe fn AM_maxOutWindowScale(state: &mut GameState) {
+pub fn AM_maxOutWindowScale(state: &mut GameState) {
     state.am_map.scale_mtof = state.am_map.max_scale_mtof;
     state.am_map.scale_ftom = FixedDiv(FRACUNIT, state.am_map.scale_mtof);
     AM_activateNewScale(state);
@@ -915,7 +915,7 @@ pub unsafe fn AM_Responder(state: &mut GameState, mut ev: &event_t) -> bool {
     }
     return rc != 0;
 }
-pub unsafe fn AM_changeWindowScale(state: &mut GameState) {
+pub fn AM_changeWindowScale(state: &mut GameState) {
     state.am_map.scale_mtof = FixedMul(state.am_map.scale_mtof, state.am_map.mtof_zoommul);
     state.am_map.scale_ftom = FixedDiv(FRACUNIT, state.am_map.scale_mtof);
     if state.am_map.scale_mtof < state.am_map.min_scale_mtof {
