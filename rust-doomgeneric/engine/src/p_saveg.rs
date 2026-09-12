@@ -88,17 +88,17 @@ pub const SAVEGAME_EOF: i32 = 0x1d;
 pub const VERSIONSIZE: i32 = 16;
 #[no_mangle]
 pub static savegamelength: i32 = 0;
-pub unsafe fn P_TempSaveGameFile(state: &mut GameState) -> String {
+pub fn P_TempSaveGameFile(state: &mut GameState) -> String {
     if state.p_saveg.temp_savegame_filename.is_none() {
         state.p_saveg.temp_savegame_filename =
             Some(format!("{}temp.dsg", state.d_main.savegamedir));
     }
     state.p_saveg.temp_savegame_filename.clone().unwrap()
 }
-pub unsafe fn P_SaveGameFile(state: &mut GameState, slot: i32) -> String {
+pub fn P_SaveGameFile(state: &mut GameState, slot: i32) -> String {
     format!("{}doomsav{}.dsg", state.d_main.savegamedir, slot)
 }
-unsafe fn saveg_read8(state: &mut GameState) -> byte {
+fn saveg_read8(state: &mut GameState) -> byte {
     let mut result: [byte; 1] = [0];
     if state
         .p_saveg
@@ -116,7 +116,7 @@ unsafe fn saveg_read8(state: &mut GameState) -> byte {
     }
     return result[0];
 }
-unsafe fn saveg_write8(state: &mut GameState, value: byte) {
+fn saveg_write8(state: &mut GameState, value: byte) {
     if state
         .p_saveg
         .save_stream
@@ -132,17 +132,17 @@ unsafe fn saveg_write8(state: &mut GameState, value: byte) {
         }
     }
 }
-unsafe fn saveg_read16(state: &mut GameState) -> i16 {
+fn saveg_read16(state: &mut GameState) -> i16 {
     let mut result: i32 = 0;
     result = saveg_read8(state) as i32;
     result |= (saveg_read8(state) as i32) << 8 as i32;
     return result as i16;
 }
-unsafe fn saveg_write16(state: &mut GameState, mut value: i16) {
+fn saveg_write16(state: &mut GameState, mut value: i16) {
     saveg_write8(state, (value as i32 & 0xff as i32) as byte);
     saveg_write8(state, (value as i32 >> 8 as i32 & 0xff as i32) as byte);
 }
-unsafe fn saveg_read32(state: &mut GameState) -> i32 {
+fn saveg_read32(state: &mut GameState) -> i32 {
     let mut result: i32 = 0;
     result = saveg_read8(state) as i32;
     result |= (saveg_read8(state) as i32) << 8 as i32;
@@ -150,13 +150,13 @@ unsafe fn saveg_read32(state: &mut GameState) -> i32 {
     result |= (saveg_read8(state) as i32) << 24 as i32;
     return result;
 }
-unsafe fn saveg_write32(state: &mut GameState, mut value: i32) {
+fn saveg_write32(state: &mut GameState, mut value: i32) {
     saveg_write8(state, (value & 0xff as i32) as byte);
     saveg_write8(state, (value >> 8 as i32 & 0xff as i32) as byte);
     saveg_write8(state, (value >> 16 as i32 & 0xff as i32) as byte);
     saveg_write8(state, (value >> 24 as i32 & 0xff as i32) as byte);
 }
-unsafe fn saveg_read_pad(state: &mut GameState) {
+fn saveg_read_pad(state: &mut GameState) {
     let mut padding: i32 = 0;
     let mut i: i32 = 0;
     let pos = state
@@ -173,7 +173,7 @@ unsafe fn saveg_read_pad(state: &mut GameState) {
         i += 1;
     }
 }
-unsafe fn saveg_write_pad(state: &mut GameState) {
+fn saveg_write_pad(state: &mut GameState) {
     let mut padding: i32 = 0;
     let mut i: i32 = 0;
     let pos = state
@@ -682,7 +682,7 @@ unsafe fn saveg_write_glow_t(state: &mut GameState, mut str: *mut glow_t) {
     saveg_write32(state, (*str).maxlight);
     saveg_write32(state, (*str).direction);
 }
-pub unsafe fn P_WriteSaveGameHeader(state: &mut GameState, description: &str) {
+pub fn P_WriteSaveGameHeader(state: &mut GameState, description: &str) {
     let mut i: i32 = 0;
     for &b in description.as_bytes() {
         saveg_write8(state, b);
@@ -719,7 +719,7 @@ pub unsafe fn P_WriteSaveGameHeader(state: &mut GameState, description: &str) {
     );
     saveg_write8(state, (state.p_tick.leveltime & 0xff as i32) as byte);
 }
-pub unsafe fn P_ReadSaveGameHeader(state: &mut GameState) -> bool {
+pub fn P_ReadSaveGameHeader(state: &mut GameState) -> bool {
     let mut i: i32 = 0;
     let mut a: byte = 0;
     let mut b: byte = 0;
@@ -760,12 +760,12 @@ pub unsafe fn P_ReadSaveGameHeader(state: &mut GameState) -> bool {
     state.p_tick.leveltime = ((a as i32) << 16 as i32) + ((b as i32) << 8 as i32) + c as i32;
     return true;
 }
-pub unsafe fn P_ReadSaveGameEOF(state: &mut GameState) -> bool {
+pub fn P_ReadSaveGameEOF(state: &mut GameState) -> bool {
     let mut value: i32 = 0;
     value = saveg_read8(state) as i32;
     return value == SAVEGAME_EOF;
 }
-pub unsafe fn P_WriteSaveGameEOF(state: &mut GameState) {
+pub fn P_WriteSaveGameEOF(state: &mut GameState) {
     saveg_write8(state, SAVEGAME_EOF as byte);
 }
 pub unsafe fn P_ArchivePlayers(state: &mut GameState) {

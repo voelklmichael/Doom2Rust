@@ -295,7 +295,7 @@ pub unsafe fn I_ShutdownGraphics(state: &mut GameState) {
         state.i_video.I_VideoBuffer as *mut ::core::ffi::c_void,
     );
 }
-pub unsafe fn I_StartTic(state: &mut GameState) {
+pub fn I_StartTic(state: &mut GameState) {
     I_GetEvent(state);
 }
 pub unsafe fn I_FinishUpdate(state: &mut GameState) {
@@ -389,7 +389,7 @@ pub unsafe fn I_SetPalette(state: &mut GameState, mut palette: *mut byte) {
         i += 1;
     }
 }
-pub unsafe fn I_GetPaletteIndex(mut r: i32, mut g: i32, mut b: i32) -> i32 {
+pub fn I_GetPaletteIndex(mut r: i32, mut g: i32, mut b: i32) -> i32 {
     let mut best: i32 = 0;
     let mut best_diff: i32 = 0;
     let mut diff: i32 = 0;
@@ -417,7 +417,7 @@ pub unsafe fn I_GetPaletteIndex(mut r: i32, mut g: i32, mut b: i32) -> i32 {
     }
     return best;
 }
-pub unsafe fn I_SetWindowTitle(state: &mut GameState, title: &str) {
+pub fn I_SetWindowTitle(state: &mut GameState, title: &str) {
     state.platform.set_window_title(title);
 }
-pub unsafe fn I_SetGrabMouseCallback() {}
+pub fn I_SetGrabMouseCallback() {}

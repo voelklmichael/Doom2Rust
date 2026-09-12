@@ -51,4 +51,4 @@ pub unsafe fn StatCopy(state: &mut GameState, mut stats: *mut wbstartstruct_t) {
         state.statdump.num_captured_stats += 1;
     }
 }
-pub unsafe fn StatDump(_state: &mut GameState) {}
+pub fn StatDump(_state: &mut GameState) {}

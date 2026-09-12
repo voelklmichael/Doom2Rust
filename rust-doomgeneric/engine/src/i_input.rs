@@ -148,10 +148,10 @@ static shiftxform: [u8; 128] = [
     '~' as u8,
     127 as u8,
 ];
-unsafe fn TranslateKey(mut key: u8) -> u8 {
+fn TranslateKey(mut key: u8) -> u8 {
     return key;
 }
-unsafe fn GetTypedChar(state: &mut IInputState, mut key: u8) -> u8 {
+fn GetTypedChar(state: &mut IInputState, mut key: u8) -> u8 {
     key = TranslateKey(key);
     if state.shiftdown > 0 as i32 {
         if key as i32 >= 0 as i32 && (key as usize) < shiftxform.len() {
@@ -162,7 +162,7 @@ unsafe fn GetTypedChar(state: &mut IInputState, mut key: u8) -> u8 {
     }
     return key;
 }
-unsafe fn UpdateShiftStatus(state: &mut IInputState, mut pressed: i32, mut key: u8) {
+fn UpdateShiftStatus(state: &mut IInputState, mut pressed: i32, mut key: u8) {
     let mut change: i32 = 0;
     if pressed != 0 {
         change = 1 as i32;
@@ -173,7 +173,7 @@ unsafe fn UpdateShiftStatus(state: &mut IInputState, mut pressed: i32, mut key: 
         state.shiftdown += change;
     }
 }
-pub unsafe fn I_GetEvent(state: &mut GameState) {
+pub fn I_GetEvent(state: &mut GameState) {
     let mut event: event_t = event_t {
         type_0: ev_keydown,
         data1: 0,

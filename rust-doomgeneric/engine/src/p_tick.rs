@@ -58,7 +58,7 @@ impl PTickState {
     }
 }
 
-pub unsafe fn P_InitThinkers(state: &mut GameState) {
+pub fn P_InitThinkers(state: &mut GameState) {
     state.p_tick.nodes.clear();
     state.p_tick.free_list.clear();
     state.p_tick.head = None;
@@ -98,7 +98,7 @@ pub unsafe fn P_RemoveThinker(mut thinker: *mut thinker_t) {
 // Unlinks a node from the externalized list (used only when P_RunThinkers
 // finds a ThinkerFn::Removed node to reap). Does not touch the payload
 // memory itself -- callers Z_Free that separately.
-unsafe fn P_UnlinkThinkerNode(state: &mut GameState, id: ThinkerId) {
+fn P_UnlinkThinkerNode(state: &mut GameState, id: ThinkerId) {
     let prev = state.p_tick.nodes[id.0 as usize].prev;
     let next = state.p_tick.nodes[id.0 as usize].next;
     match prev {

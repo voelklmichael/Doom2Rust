@@ -143,7 +143,7 @@ pub const FF_FRAMEMASK: i32 = 0x7fff;
 pub const MAXVISSPRITES: i32 = 128;
 pub const MINZ: i32 = FRACUNIT * 4 as i32;
 pub const BASEYCENTER: i32 = 100;
-pub unsafe fn R_InstallSpriteLump(
+pub fn R_InstallSpriteLump(
     state: &mut GameState,
     mut lump: i32,
     mut frame: u32,

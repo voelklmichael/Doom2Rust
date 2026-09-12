@@ -217,7 +217,7 @@ pub unsafe fn W_AddFile(state: &mut GameState, filename: &str) -> *mut wad_file_
     }
     return wad_file;
 }
-pub unsafe fn W_NumLumps(state: &mut WWadState) -> i32 {
+pub fn W_NumLumps(state: &mut WWadState) -> i32 {
     return state.numlumps as i32;
 }
 /// Reads up to 8 bytes at `ptr` as a WAD lump name and converts it to an

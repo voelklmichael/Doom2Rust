@@ -121,7 +121,7 @@ pub unsafe fn V_CopyRect(
         height -= 1;
     }
 }
-pub unsafe fn V_SetPatchClipCallback(state: &mut GameState, mut func: vpatchclipfunc_t) {
+pub fn V_SetPatchClipCallback(state: &mut GameState, mut func: vpatchclipfunc_t) {
     state.v_video.patchclip_callback = func;
 }
 pub unsafe fn V_DrawPatch(state: &mut GameState, mut x: i32, mut y: i32, mut patch: *mut patch_t) {
@@ -635,7 +635,7 @@ pub unsafe fn V_DrawRawScreen(state: &mut VVideoState, mut raw: *mut byte) {
 pub unsafe fn V_UseBuffer(state: &mut VVideoState, mut buffer: *mut byte) {
     state.dest_screen = buffer;
 }
-pub unsafe fn V_RestoreBuffer(state: &mut GameState) {
+pub fn V_RestoreBuffer(state: &mut GameState) {
     state.v_video.dest_screen = state.i_video.I_VideoBuffer;
 }
 pub unsafe fn WritePCXfile(

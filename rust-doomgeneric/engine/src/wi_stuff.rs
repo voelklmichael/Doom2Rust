@@ -859,7 +859,7 @@ pub unsafe fn WI_slamBackground(state: &mut GameState) {
         state.wi_stuff.background,
     );
 }
-pub unsafe fn WI_Responder() -> bool {
+pub fn WI_Responder() -> bool {
     return false;
 }
 pub unsafe fn WI_drawLF(state: &mut GameState) {
@@ -1167,7 +1167,7 @@ pub unsafe fn WI_End(state: &mut GameState) {
     }
     WI_unloadData_0(state);
 }
-pub unsafe fn WI_initNoState(state: &mut GameState) {
+pub fn WI_initNoState(state: &mut GameState) {
     state.wi_stuff.state = NoState;
     state.wi_stuff.acceleratestage = 0 as i32;
     state.wi_stuff.cnt = 10 as i32;
@@ -2209,7 +2209,7 @@ pub unsafe fn WI_Start(state: &mut GameState, mut wbstartstruct: *mut wbstartstr
         WI_initStats(state);
     };
 }
-pub unsafe fn fixup_numanims(state: &mut GameState) {
+pub fn fixup_numanims(state: &mut GameState) {
     state.wi_stuff.NUMANIMS = [
         (::core::mem::size_of::<[anim_t; 10]>() as usize)
             .wrapping_div(::core::mem::size_of::<anim_t>() as usize) as i32,

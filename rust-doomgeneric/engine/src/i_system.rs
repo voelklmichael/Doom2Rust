@@ -32,13 +32,13 @@ pub struct atexit_listentry_s {
 }
 pub const DEFAULT_RAM: i32 = 6;
 pub const MIN_RAM: i32 = 6;
-pub unsafe fn I_AtExit(state: &mut ISystemState, mut func: atexit_func_t, mut run_on_error: bool) {
+pub fn I_AtExit(state: &mut ISystemState, mut func: atexit_func_t, mut run_on_error: bool) {
     state.exit_funcs.push(atexit_listentry_t {
         func,
         run_on_error,
     });
 }
-pub unsafe fn I_Tactile() {}
+pub fn I_Tactile() {}
 unsafe fn AutoAllocMemory(mut size: *mut i32, mut default_ram: i32, mut min_ram: i32) -> *mut byte {
     let mut zonemem: *mut byte = ::core::ptr::null_mut::<byte>();
     zonemem = ::core::ptr::null_mut::<byte>();
@@ -74,15 +74,15 @@ pub unsafe fn I_ZoneBase(state: &mut GameState, mut size: *mut i32) -> *mut byte
     println!("zone memory: {:p}, {:x} allocated for zone", zonemem, *size);
     return zonemem;
 }
-pub unsafe fn I_PrintBanner(msg: &str) {
+pub fn I_PrintBanner(msg: &str) {
     let spaces = 35usize.saturating_sub(msg.len() / 2);
     print!("{}", " ".repeat(spaces));
     println!("{}", msg);
 }
-pub unsafe fn I_PrintDivider() {
+pub fn I_PrintDivider() {
     println!("{}", "=".repeat(75));
 }
-pub unsafe fn I_PrintStartupBanner(gamedescription: &str) {
+pub fn I_PrintStartupBanner(gamedescription: &str) {
     I_PrintDivider();
     I_PrintBanner(gamedescription);
     I_PrintDivider();
@@ -91,16 +91,18 @@ pub unsafe fn I_PrintStartupBanner(gamedescription: &str) {
     );
     I_PrintDivider();
 }
-pub unsafe fn I_ConsoleStdout() -> bool {
+pub fn I_ConsoleStdout() -> bool {
     return false;
 }
-pub unsafe fn I_Quit(state: &mut GameState) {
+pub fn I_Quit(state: &mut GameState) {
     let entries = state.i_system.exit_funcs.clone();
     for entry in entries.iter().rev() {
-        entry.func.expect("non-null function pointer")(state);
+        unsafe {
+            entry.func.expect("non-null function pointer")(state);
+        }
     }
 }
-pub unsafe fn I_Error(message: &str) -> ! {
+pub fn I_Error(message: &str) -> ! {
     panic!("{}", message)
 }
 pub const DOS_MEM_DUMP_SIZE: i32 = 10;

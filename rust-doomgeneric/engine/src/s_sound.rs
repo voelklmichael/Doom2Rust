@@ -416,7 +416,7 @@ pub unsafe fn S_SetMusicVolume(state: &mut GameState, mut volume: i32) {
     }
     I_SetMusicVolume(&mut state.i_sound, volume);
 }
-pub unsafe fn S_SetSfxVolume(state: &mut GameState, mut volume: i32) {
+pub fn S_SetSfxVolume(state: &mut GameState, mut volume: i32) {
     if volume < 0 as i32 || volume > 127 as i32 {
         I_Error(&format!("Attempt to set sfx volume at {}", volume));
     }

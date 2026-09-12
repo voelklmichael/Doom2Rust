@@ -733,7 +733,7 @@ pub static read_e2: C2RustUnnamed_6 = rdthsempty2;
 pub static sound_e: C2RustUnnamed_7 = sfx_vol;
 #[no_mangle]
 pub static load_e: C2RustUnnamed_8 = load1;
-pub unsafe fn M_ReadSaveStrings(state: &mut GameState) {
+pub fn M_ReadSaveStrings(state: &mut GameState) {
     let mut i: i32 = 0;
     i = 0 as i32;
     while i < load_end as i32 {
@@ -786,7 +786,7 @@ pub unsafe fn M_DrawSaveLoadBorder(state: &mut GameState, mut x: i32, mut y: i32
     V_DrawPatchDirect(state, x, y + 7 as i32, __wcache925_21);
 }
 #[no_mangle]
-pub unsafe fn M_LoadSelect(state: &mut GameState, choice: i32) {
+pub fn M_LoadSelect(state: &mut GameState, choice: i32) {
     let savegame_file = P_SaveGameFile(state, choice);
     G_LoadGame(state, &savegame_file);
     M_ClearMenus(state);
@@ -828,7 +828,7 @@ pub unsafe fn M_DrawSave(state: &mut GameState) {
         M_WriteText(state, text_x, text_y, "_");
     }
 }
-pub unsafe fn M_DoSave(state: &mut GameState, mut slot: i32) {
+pub fn M_DoSave(state: &mut GameState, mut slot: i32) {
     let savegame_name = state.m_menu.savegamestrings[slot as usize].clone();
     G_SaveGame(state, slot, &savegame_name);
     M_ClearMenus(state);
@@ -837,7 +837,7 @@ pub unsafe fn M_DoSave(state: &mut GameState, mut slot: i32) {
     }
 }
 #[no_mangle]
-pub unsafe fn M_SaveSelect(state: &mut GameState, mut choice: i32) {
+pub fn M_SaveSelect(state: &mut GameState, mut choice: i32) {
     state.m_menu.saveStringEnter = 1 as i32;
     state.m_menu.saveSlot = choice;
     state.m_menu.saveOldString = state.m_menu.savegamestrings[choice as usize].clone();
@@ -903,7 +903,7 @@ pub unsafe fn M_QuickLoadResponse(state: &mut GameState, mut key: i32) {
         S_StartSound(state, NULL, sfx_swtchx as i32);
     }
 }
-pub unsafe fn M_QuickLoad(state: &mut GameState) {
+pub fn M_QuickLoad(state: &mut GameState) {
     if state.g_game.netgame {
         M_StartMessage(
             state,
@@ -991,7 +991,7 @@ pub unsafe fn M_Sound(state: &mut GameState, _choice: i32) {
     M_SetupNextMenu(state, menudef);
 }
 #[no_mangle]
-pub unsafe fn M_SfxVol(state: &mut GameState, mut choice: i32) {
+pub fn M_SfxVol(state: &mut GameState, mut choice: i32) {
     match choice {
         0 => {
             if state.s_sound.sfxVolume != 0 {
@@ -1065,7 +1065,7 @@ pub unsafe fn M_DrawEpisode(state: &mut GameState) {
     V_DrawPatchDirect(state, 54 as i32, 38 as i32, __wcache1286_13);
 }
 #[no_mangle]
-pub unsafe fn M_VerifyNightmare(state: &mut GameState, mut key: i32) {
+pub fn M_VerifyNightmare(state: &mut GameState, mut key: i32) {
     if key != state.m_controls.key_menu_confirm {
         return;
     }
@@ -1078,7 +1078,7 @@ pub unsafe fn M_VerifyNightmare(state: &mut GameState, mut key: i32) {
     M_ClearMenus(state);
 }
 #[no_mangle]
-pub unsafe fn M_ChooseSkill(state: &mut GameState, mut choice: i32) {
+pub fn M_ChooseSkill(state: &mut GameState, mut choice: i32) {
     if choice == nightmare as i32 {
         M_StartMessage(
             state,
@@ -1163,7 +1163,7 @@ pub unsafe fn M_Options(state: &mut GameState, _choice: i32) {
     M_SetupNextMenu(state, menudef);
 }
 #[no_mangle]
-pub unsafe fn M_ChangeMessages(state: &mut GameState, _choice: i32) {
+pub fn M_ChangeMessages(state: &mut GameState, _choice: i32) {
     state.m_menu.showMessages = 1 as i32 - state.m_menu.showMessages;
     if state.m_menu.showMessages == 0 {
         state.g_game.players[state.g_game.consoleplayer as usize].message =
@@ -1270,7 +1270,7 @@ pub unsafe fn M_QuitResponse(state: &mut GameState, mut key: i32) {
     }
     I_Quit(state);
 }
-unsafe fn M_SelectEndMessage(state: &mut GameState) -> &'static str {
+fn M_SelectEndMessage(state: &mut GameState) -> &'static str {
     let endmsg: &'static [&'static str; 8] =
         if (if state.doomstat.gamemission as u32 == pack_chex as i32 as u32 {
             doom as i32 as u32
@@ -1289,7 +1289,7 @@ unsafe fn M_SelectEndMessage(state: &mut GameState) -> &'static str {
     endmsg[(state.d_loop.gametic % NUM_QUITMESSAGES) as usize]
 }
 #[no_mangle]
-pub unsafe fn M_QuitDOOM(state: &mut GameState, _choice: i32) {
+pub fn M_QuitDOOM(state: &mut GameState, _choice: i32) {
     let msg = format!(
         "{}\n\n(press y to quit to dos.)",
         M_SelectEndMessage(state)
@@ -1298,7 +1298,7 @@ pub unsafe fn M_QuitDOOM(state: &mut GameState, _choice: i32) {
     M_StartMessage(state, &msg, routine, true);
 }
 #[no_mangle]
-pub unsafe fn M_ChangeSensitivity(state: &mut GameState, mut choice: i32) {
+pub fn M_ChangeSensitivity(state: &mut GameState, mut choice: i32) {
     match choice {
         0 => {
             if state.m_menu.mouseSensitivity != 0 {
@@ -1314,7 +1314,7 @@ pub unsafe fn M_ChangeSensitivity(state: &mut GameState, mut choice: i32) {
     };
 }
 #[no_mangle]
-pub unsafe fn M_ChangeDetail(state: &mut GameState, _choice: i32) {
+pub fn M_ChangeDetail(state: &mut GameState, _choice: i32) {
     state.m_menu.detailLevel = 1 as i32 - state.m_menu.detailLevel;
     let (screenblocks, detail_level) = (state.m_menu.screenblocks, state.m_menu.detailLevel);
     R_SetViewSize(state, screenblocks, detail_level);
@@ -1327,7 +1327,7 @@ pub unsafe fn M_ChangeDetail(state: &mut GameState, _choice: i32) {
     };
 }
 #[no_mangle]
-pub unsafe fn M_SizeDisplay(state: &mut GameState, mut choice: i32) {
+pub fn M_SizeDisplay(state: &mut GameState, mut choice: i32) {
     match choice {
         0 => {
             if state.m_menu.screenSize > 0 as i32 {
@@ -1389,7 +1389,7 @@ pub unsafe fn M_DrawSelCell(state: &mut GameState, mut menu: *mut menu_t, mut it
         __wcache1659_4,
     );
 }
-pub unsafe fn M_StartMessage(
+pub fn M_StartMessage(
     state: &mut GameState,
     string: &str,
     routine: Option<unsafe fn(&mut GameState, i32) -> ()>,
@@ -1402,7 +1402,7 @@ pub unsafe fn M_StartMessage(
     state.m_menu.messageNeedsInput = input;
     state.m_menu.menuactive = true;
 }
-pub unsafe fn M_StopMessage(state: &mut GameState) {
+pub fn M_StopMessage(state: &mut GameState) {
     state.m_menu.menuactive = state.m_menu.messageLastMenuActive != 0;
     state.m_menu.messageToPrint = 0 as i32;
 }
@@ -1457,7 +1457,7 @@ pub unsafe fn M_WriteText(state: &mut GameState, x: i32, y: i32, string: &str) {
         }
     }
 }
-unsafe fn IsNullKey(mut key: i32) -> bool {
+fn IsNullKey(mut key: i32) -> bool {
     return key == KEY_PAUSE || key == KEY_CAPSLOCK || key == KEY_SCRLCK || key == KEY_NUMLOCK;
 }
 pub unsafe fn M_Responder(state: &mut GameState, ev: &mut event_t) -> bool {
@@ -1939,14 +1939,14 @@ pub unsafe fn M_Drawer(state: &mut GameState) {
         __wcache2231_1,
     );
 }
-pub unsafe fn M_ClearMenus(state: &mut GameState) {
+pub fn M_ClearMenus(state: &mut GameState) {
     state.m_menu.menuactive = false;
 }
 pub unsafe fn M_SetupNextMenu(state: &mut GameState, mut menudef: *mut menu_t) {
     state.m_menu.currentMenu = menudef;
     state.m_menu.itemOn = (*state.m_menu.currentMenu).lastOn;
 }
-pub unsafe fn M_Ticker(state: &mut GameState) {
+pub fn M_Ticker(state: &mut GameState) {
     state.m_menu.skullAnimCounter -= 1;
     if state.m_menu.skullAnimCounter as i32 <= 0 as i32 {
         state.m_menu.whichSkull = (state.m_menu.whichSkull as i32 ^ 1 as i32) as i16;

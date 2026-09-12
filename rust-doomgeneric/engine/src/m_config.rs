@@ -1821,7 +1821,7 @@ static scantokey: [i32; 128] = [
     KEY_PRTSCR,
     0 as i32,
 ];
-unsafe fn ParseIntParameter(strparm: &str) -> i32 {
+fn ParseIntParameter(strparm: &str) -> i32 {
     let mut parm: i32 = 0;
     M_StrToInt(strparm, &mut parm);
     return parm;
@@ -1861,7 +1861,7 @@ unsafe fn SetVariable(mut def: *mut default_t, mut value: *mut ::core::ffi::c_ch
         _ => {}
     };
 }
-pub unsafe fn M_SetConfigFilenames(
+pub fn M_SetConfigFilenames(
     state: &mut MConfigState,
     main_config: &'static str,
     extra_config: &'static str,
@@ -1869,8 +1869,8 @@ pub unsafe fn M_SetConfigFilenames(
     state.default_main_config = main_config;
     state.default_extra_config = extra_config;
 }
-pub unsafe fn M_SaveDefaults(_state: &mut GameState) {}
-pub unsafe fn M_SaveDefaultsAlternate(state: &mut GameState, main_0: &str, extra: &str) {
+pub fn M_SaveDefaults(_state: &mut GameState) {}
+pub fn M_SaveDefaultsAlternate(state: &mut GameState, main_0: &str, extra: &str) {
     let orig_main = state.m_config.doom_defaults.filename.clone();
     let orig_extra = state.m_config.extra_defaults.filename.clone();
     state.m_config.doom_defaults.filename = main_0.to_string();
@@ -1879,7 +1879,7 @@ pub unsafe fn M_SaveDefaultsAlternate(state: &mut GameState, main_0: &str, extra
     state.m_config.doom_defaults.filename = orig_main;
     state.m_config.extra_defaults.filename = orig_extra;
 }
-pub unsafe fn M_LoadDefaults(state: &mut GameState) {
+pub fn M_LoadDefaults(state: &mut GameState) {
     let mut i: i32 = 0;
     i = M_CheckParmWithArgs(state, "-config", 1 as i32);
     if i != 0 {
@@ -1999,7 +1999,7 @@ pub unsafe fn M_GetFloatVariable(state: &mut MConfigState, name: &str) -> f32 {
 fn GetDefaultConfigDir() -> String {
     ".".to_string()
 }
-pub unsafe fn M_SetConfigDir(state: &mut MConfigState, dir: Option<&str>) {
+pub fn M_SetConfigDir(state: &mut MConfigState, dir: Option<&str>) {
     if let Some(dir) = dir {
         state.configdir = dir.to_string();
     } else {
@@ -2010,7 +2010,7 @@ pub unsafe fn M_SetConfigDir(state: &mut MConfigState, dir: Option<&str>) {
     }
     M_MakeDirectory(&state.configdir);
 }
-pub unsafe fn M_GetSaveGameDir(state: &mut MConfigState, _iwadname: &'static str) -> String {
+pub fn M_GetSaveGameDir(state: &mut MConfigState, _iwadname: &'static str) -> String {
     let savegamedir;
     if state.configdir.is_empty() {
         savegamedir = String::new();

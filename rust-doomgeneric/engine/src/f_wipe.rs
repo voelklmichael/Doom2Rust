@@ -115,7 +115,7 @@ pub unsafe fn wipe_doColorXForm(
     }
     return (!changed) as i32;
 }
-pub unsafe fn wipe_exitColorXForm(
+pub fn wipe_exitColorXForm(
     _state: &mut GameState,
     _width: i32,
     _height: i32,

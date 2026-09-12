@@ -136,7 +136,7 @@ pub const BACKUPTICS: i32 = 128;
 static localplayer: i32 = 0;
 #[no_mangle]
 pub static offsetms: fixed_t = 0;
-unsafe fn GetAdjustedTime(state: &mut GameState) -> i32 {
+fn GetAdjustedTime(state: &mut GameState) -> i32 {
     let mut time_ms: i32 = 0;
     time_ms = I_GetTimeMS(state);
     if state.d_loop.new_sync {
@@ -223,7 +223,7 @@ pub unsafe fn NetUpdate(state: &mut GameState) {
         i += 1;
     }
 }
-unsafe fn D_Disconnected() {
+fn D_Disconnected() {
     if drone {
         I_Error("Disconnected from server in drone mode.");
     }
@@ -251,7 +251,7 @@ pub unsafe fn D_ReceiveTic(
     }
     state.recvtic += 1;
 }
-pub unsafe fn D_StartGameLoop(state: &mut GameState) {
+pub fn D_StartGameLoop(state: &mut GameState) {
     state.d_loop.lasttime = GetAdjustedTime(state) / state.d_loop.ticdup;
 }
 pub unsafe fn D_StartNetGame(
@@ -276,13 +276,13 @@ pub unsafe fn D_InitNetGame(
     state.d_loop.player_class = (*connect_data).player_class;
     return result;
 }
-pub unsafe fn D_QuitNetGame(_state: &mut GameState) {}
-unsafe fn GetLowTic(state: &mut GameState) -> i32 {
+pub fn D_QuitNetGame(_state: &mut GameState) {}
+fn GetLowTic(state: &mut GameState) -> i32 {
     let mut lowtic: i32 = 0;
     lowtic = state.d_loop.maketic;
     return lowtic;
 }
-unsafe fn OldNetSync(state: &mut GameState) {
+fn OldNetSync(state: &mut GameState) {
     let mut i: u32 = 0;
     let mut keyplayer: i32 = -(1 as i32);
     state.d_loop.frameon += 1;
@@ -314,7 +314,7 @@ unsafe fn OldNetSync(state: &mut GameState) {
         }
     }
 }
-unsafe fn PlayersInGame(state: &mut GameState) -> bool {
+fn PlayersInGame(state: &mut GameState) -> bool {
     let mut result: bool = false;
     let mut i: u32 = 0;
     if net_client_connected {
@@ -442,6 +442,6 @@ pub unsafe fn TryRunTics(state: &mut GameState) {
         NetUpdate(state);
     }
 }
-pub unsafe fn D_RegisterLoopCallbacks(state: &mut GameState, i: loop_interface_t) {
+pub fn D_RegisterLoopCallbacks(state: &mut GameState, i: loop_interface_t) {
     state.d_loop.loop_interface = i;
 }

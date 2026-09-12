@@ -1402,7 +1402,7 @@ pub unsafe fn A_Explode(state: &mut GameState, id: MobjId) {
         .unwrap_or(::core::ptr::null_mut());
     P_RadiusAttack(state, thingy, target, 128 as i32);
 }
-unsafe fn CheckBossEnd(state: &mut GameState, mut motype: mobjtype_t) -> bool {
+fn CheckBossEnd(state: &mut GameState, mut motype: mobjtype_t) -> bool {
     if !state.doomstat.gameversion.is_ultimate_or_higher() {
         if state.g_game.gamemap != 8 as i32 {
             return false;
@@ -1653,7 +1653,7 @@ pub unsafe fn A_BrainExplode(state: &mut GameState, id: MobjId) {
         (*th).tics = 1 as i32;
     }
 }
-pub unsafe fn A_BrainDie(state: &mut GameState, _id: MobjId) {
+pub fn A_BrainDie(state: &mut GameState, _id: MobjId) {
     G_ExitLevel(state);
 }
 pub unsafe fn A_BrainSpit(state: &mut GameState, id: MobjId) {
