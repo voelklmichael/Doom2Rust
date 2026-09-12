@@ -44,7 +44,7 @@ pub struct lumpinfo_s {
     pub position: i32,
     pub size: i32,
     pub cache: *mut ::core::ffi::c_void,
-    pub next: *mut lumpinfo_t,
+    pub next: Option<u32>,
 }
 pub type lumpinfo_t = lumpinfo_s;
 #[derive(Copy, Clone)]
@@ -102,17 +102,9 @@ unsafe fn ExtendLumpInfo(state: &mut WWadState, mut newnumlumps: i32) {
                 &raw mut (*newlumpinfo.offset(i as isize)).cache,
             );
         }
-        if !(*state.lumpinfo.offset(i as isize))
-            .next
-            .is_null()
-        {
-            let mut nextlumpnum: i32 = (*state.lumpinfo.offset(i as isize))
-                .next
-                .offset_from(state.lumpinfo)
-                as i64 as i32;
-            let ref mut fresh0 = (*newlumpinfo.offset(i as isize)).next;
-            *fresh0 = newlumpinfo.offset(nextlumpnum as isize) as *mut lumpinfo_t;
-        }
+        // `.next` is an index into this same array, not an address, so the
+        // memcpy above already carried it over correctly -- no recompute
+        // needed (unlike when it was a raw pointer into the old allocation).
         i = i.wrapping_add(1);
     }
     if !state.lumpinfo.is_null() {
@@ -201,6 +193,13 @@ pub unsafe fn W_AddFile(state: &mut GameState, filename: &str) -> *mut wad_file_
         (*lump_p).size = (*filerover).size;
         (*lump_p).cache = NULL;
         (*lump_p).name = (*filerover).name;
+        // ExtendLumpInfo zero-fills newly grown slots via alloc_zeroed, which
+        // is only a valid `None` for a raw pointer field, not for an
+        // `Option<u32>` (no guaranteed all-zero niche) -- so every freshly
+        // extended record needs `.next` set explicitly here, before anything
+        // can read it. W_GenerateHashTable overwrites it again once a real
+        // chain is built.
+        (*lump_p).next = None;
         lump_p = lump_p.offset(1);
         filerover = filerover.offset(1);
         i = i.wrapping_add(1);
@@ -243,7 +242,10 @@ pub unsafe fn W_CheckNumForName(state: &mut WWadState, name: &str) -> i32 {
             if (*lump_p).name.eq_str_ignore_ascii_case(name) {
                 return lump_p.offset_from(state.lumpinfo) as i64 as i32;
             }
-            lump_p = (*lump_p).next;
+            lump_p = match (*lump_p).next {
+                Some(idx) => state.lumpinfo.offset(idx as isize),
+                None => ::core::ptr::null_mut(),
+            };
         }
     } else {
         i = state.numlumps.wrapping_sub(1 as u32) as i32;
@@ -387,8 +389,12 @@ pub unsafe fn W_GenerateHashTable(state: &mut GameState) {
                     .as_bytes(),
             )
             .wrapping_rem(state.w_wad.numlumps);
-            let ref mut fresh1 = (*state.w_wad.lumpinfo.offset(i as isize)).next;
-            *fresh1 = *state.w_wad.lumphash.offset(hash as isize);
+            let old_head = *state.w_wad.lumphash.offset(hash as isize);
+            (*state.w_wad.lumpinfo.offset(i as isize)).next = if old_head.is_null() {
+                None
+            } else {
+                Some(old_head.offset_from(state.w_wad.lumpinfo) as i64 as u32)
+            };
             let ref mut fresh2 = *state.w_wad.lumphash.offset(hash as isize);
             *fresh2 = state.w_wad.lumpinfo.offset(i as isize) as *mut lumpinfo_t;
             i = i.wrapping_add(1);
