@@ -37,7 +37,7 @@ pub struct RDataState {
     pub numspritelumps: i32,
     pub numtextures: i32,
     pub textures: Vec<*mut texture_t>,
-    pub textures_hashtable: Vec<*mut texture_t>,
+    pub textures_hashtable: Vec<Option<TextureId>>,
     pub texturewidthmask: Vec<i32>,
     pub textureheight: Vec<fixed_t>,
     pub texturecompositesize: Vec<i32>,
@@ -97,6 +97,10 @@ pub struct post_t {
 }
 pub type column_t = post_t;
 pub type texture_t = texture_s;
+
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+pub struct TextureId(pub u32);
+
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct texture_s {
@@ -104,7 +108,7 @@ pub struct texture_s {
     pub width: i16,
     pub height: i16,
     pub index: i32,
-    pub next: *mut texture_t,
+    pub next: Option<TextureId>,
     pub patchcount: i16,
     pub patches: [texpatch_t; 1],
 }
@@ -321,23 +325,31 @@ pub unsafe fn R_GetColumn(state: &mut GameState, mut tex: i32, mut col: i32) -> 
     return state.r_data.texturecomposite[tex as usize].offset(ofs as isize);
 }
 unsafe fn GenerateTextureHashTable(state: &mut GameState) {
-    let mut rover: *mut *mut texture_t = ::core::ptr::null_mut::<*mut texture_t>();
     let mut i: i32 = 0;
     let mut key: i32 = 0;
-    state.r_data.textures_hashtable =
-        vec![::core::ptr::null_mut::<texture_t>(); state.r_data.numtextures as usize];
+    state.r_data.textures_hashtable = vec![None; state.r_data.numtextures as usize];
     i = 0 as i32;
     while i < state.r_data.numtextures {
         (*state.r_data.textures[i as usize]).index = i;
+        (*state.r_data.textures[i as usize]).next = None;
         key = W_LumpNameHash((*state.r_data.textures[i as usize]).name.as_bytes())
             .wrapping_rem(state.r_data.numtextures as u32) as i32;
-        rover = &mut state.r_data.textures_hashtable[key as usize] as *mut *mut texture_t;
-        while !(*rover).is_null() {
-            rover = &raw mut (**rover).next;
+        // Walk to the end of the bucket's chain, appending there (matches
+        // the original pointer-to-pointer "rover" trick's tail-append order).
+        match state.r_data.textures_hashtable[key as usize] {
+            None => {
+                state.r_data.textures_hashtable[key as usize] = Some(TextureId(i as u32));
+            }
+            Some(mut cursor) => {
+                loop {
+                    match (*state.r_data.textures[cursor.0 as usize]).next {
+                        Some(next) => cursor = next,
+                        None => break,
+                    }
+                }
+                (*state.r_data.textures[cursor.0 as usize]).next = Some(TextureId(i as u32));
+            }
         }
-        let ref mut fresh3 = (*state.r_data.textures[i as usize]).next;
-        *fresh3 = ::core::ptr::null_mut::<texture_t>();
-        *rover = state.r_data.textures[i as usize];
         i += 1;
     }
 }
@@ -573,18 +585,18 @@ pub unsafe fn R_FlatNumForName(state: &mut GameState, name: &str) -> i32 {
     return i - state.r_data.firstflat;
 }
 pub unsafe fn R_CheckTextureNumForName(state: &mut RDataState, name: &str) -> i32 {
-    let mut texture: *mut texture_t = ::core::ptr::null_mut::<texture_t>();
     let mut key: i32 = 0;
     if name.as_bytes().first() == Some(&b'-') {
         return 0 as i32;
     }
     key = W_LumpNameHash(name.as_bytes()).wrapping_rem(state.numtextures as u32) as i32;
-    texture = state.textures_hashtable[key as usize];
-    while !texture.is_null() {
+    let mut cursor = state.textures_hashtable[key as usize];
+    while let Some(id) = cursor {
+        let texture = state.textures[id.0 as usize];
         if (*texture).name.eq_bytes_ignore_ascii_case(name.as_bytes()) {
             return (*texture).index;
         }
-        texture = (*texture).next;
+        cursor = (*texture).next;
     }
     return -(1 as i32);
 }
