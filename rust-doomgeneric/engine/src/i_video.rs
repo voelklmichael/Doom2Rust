@@ -1,8 +1,8 @@
 use crate::src::doomdef::boolean;
+use crate::src::doomdef::pixel_t;
 use crate::src::doomdef::NULL;
 use crate::src::doomdef::SCREENHEIGHT;
 use crate::src::doomdef::SCREENWIDTH;
-use crate::src::doomgeneric::DG_ScreenBuffer;
 use crate::src::doomgeneric::DOOMGENERIC_RESX;
 use crate::src::doomgeneric::DOOMGENERIC_RESY;
 use crate::src::game_state::GameState;
@@ -31,6 +31,10 @@ pub struct IVideoState {
     pub mouse_acceleration: f32,
     pub mouse_threshold: i32,
     pub usegamma: i32,
+    // The engine's own writable framebuffer, handed to the platform layer's
+    // init() once at startup -- the platform keeps its own independent
+    // handle into the same allocation for display/blit purposes.
+    pub dg_screen_buffer: *mut pixel_t,
 }
 
 impl IVideoState {
@@ -68,6 +72,7 @@ impl IVideoState {
             mouse_acceleration: 2.0f32,
             mouse_threshold: 10,
             usegamma: 0,
+            dg_screen_buffer: ::core::ptr::null::<pixel_t>() as *mut pixel_t,
         }
     }
 }
@@ -316,7 +321,7 @@ pub unsafe fn I_FinishUpdate(state: &mut GameState) {
         .wrapping_div(8 as uint32_t)
         .wrapping_sub(x_offset as uint32_t) as i32;
     line_in = state.i_video.I_VideoBuffer as *mut u8;
-    line_out = DG_ScreenBuffer as *mut u8;
+    line_out = state.i_video.dg_screen_buffer as *mut u8;
     y = SCREENHEIGHT;
     loop {
         let fresh3 = y;

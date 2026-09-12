@@ -47,6 +47,7 @@ pub struct HuStuffState {
     pub chat_macros: [&'static str; 10],
     pub hu_responder_altdown: bool,
     pub hu_responder_num_nobrainers: i32,
+    pub player_names: [*mut ::core::ffi::c_char; 4],
 }
 
 impl HuStuffState {
@@ -118,6 +119,12 @@ impl HuStuffState {
             ],
             hu_responder_altdown: false,
             hu_responder_num_nobrainers: 0,
+            player_names: [
+                HUSTR_PLRGREEN.as_ptr() as *mut ::core::ffi::c_char,
+                HUSTR_PLRINDIGO.as_ptr() as *mut ::core::ffi::c_char,
+                HUSTR_PLRBROWN.as_ptr() as *mut ::core::ffi::c_char,
+                HUSTR_PLRRED.as_ptr() as *mut ::core::ffi::c_char,
+            ],
         }
     }
 }
@@ -269,12 +276,6 @@ pub const HUSTR_PLRBROWN: FixedCStr<8> = FixedCStr(*b"Brown: \0");
 pub const HUSTR_PLRRED: FixedCStr<6> = FixedCStr(*b"Red: \0");
 pub const HU_TITLEX: i32 = 0;
 pub const HU_INPUTX: i32 = HU_MSGX;
-pub static mut player_names: [*mut ::core::ffi::c_char; 4] = [
-    HUSTR_PLRGREEN.as_ptr() as *mut ::core::ffi::c_char,
-    HUSTR_PLRINDIGO.as_ptr() as *mut ::core::ffi::c_char,
-    HUSTR_PLRBROWN.as_ptr() as *mut ::core::ffi::c_char,
-    HUSTR_PLRRED.as_ptr() as *mut ::core::ffi::c_char,
-];
 #[no_mangle]
 pub static chat_char: u8 = 0;
 const fn new_hu_itext_t() -> hu_itext_t {
@@ -492,7 +493,7 @@ pub unsafe fn HU_Ticker(state: &mut GameState) {
                             {
                                 HUlib_addMessageToSText(
                                     &raw mut state.hu_stuff.w_message,
-                                    player_names[i as usize],
+                                    state.hu_stuff.player_names[i as usize],
                                     &state.hu_stuff.w_inputbuffer[i as usize].l.l,
                                 );
                                 state.hu_stuff.message_nottobefuckedwith = true;

@@ -43,12 +43,15 @@ pub struct pcx_t {
     pub filler: [u8; 58],
     pub data: u8,
 }
-static mut patchclip_callback: vpatchclipfunc_t = None;
 pub struct VVideoState {
     pub tinttable: *mut byte,
     pub xlatab: *mut byte,
     pub dest_screen: *mut byte,
     pub dirtybox: [i32; 4],
+    // No caller anywhere in the repo ever invokes V_SetPatchClipCallback, so
+    // this is permanently None -- kept as-is (dead stub) rather than deleted
+    // as a drive-by, same rationale as other vestigial fields in this crate.
+    patchclip_callback: vpatchclipfunc_t,
 }
 impl VVideoState {
     pub const fn new() -> Self {
@@ -57,6 +60,7 @@ impl VVideoState {
             xlatab: ::core::ptr::null_mut::<byte>(),
             dest_screen: ::core::ptr::null_mut::<byte>(),
             dirtybox: [0; 4],
+            patchclip_callback: None,
         }
     }
 }
@@ -117,8 +121,8 @@ pub unsafe fn V_CopyRect(
         height -= 1;
     }
 }
-pub unsafe fn V_SetPatchClipCallback(mut func: vpatchclipfunc_t) {
-    patchclip_callback = func;
+pub unsafe fn V_SetPatchClipCallback(state: &mut GameState, mut func: vpatchclipfunc_t) {
+    state.v_video.patchclip_callback = func;
 }
 pub unsafe fn V_DrawPatch(state: &mut GameState, mut x: i32, mut y: i32, mut patch: *mut patch_t) {
     let mut count: i32 = 0;
@@ -130,8 +134,8 @@ pub unsafe fn V_DrawPatch(state: &mut GameState, mut x: i32, mut y: i32, mut pat
     let mut w: i32 = 0;
     y -= (*patch).topoffset as i32;
     x -= (*patch).leftoffset as i32;
-    if patchclip_callback.is_some() {
-        if patchclip_callback.expect("non-null function pointer")(patch, x, y) == 0 {
+    if state.v_video.patchclip_callback.is_some() {
+        if state.v_video.patchclip_callback.expect("non-null function pointer")(patch, x, y) == 0 {
             return;
         }
     }
@@ -201,8 +205,8 @@ pub unsafe fn V_DrawPatchFlipped(
     let mut w: i32 = 0;
     y -= (*patch).topoffset as i32;
     x -= (*patch).leftoffset as i32;
-    if patchclip_callback.is_some() {
-        if patchclip_callback.expect("non-null function pointer")(patch, x, y) == 0 {
+    if state.v_video.patchclip_callback.is_some() {
+        if state.v_video.patchclip_callback.expect("non-null function pointer")(patch, x, y) == 0 {
             return;
         }
     }
@@ -331,8 +335,8 @@ pub unsafe fn V_DrawXlaPatch(
     let mut w: i32 = 0;
     y -= (*patch).topoffset as i32;
     x -= (*patch).leftoffset as i32;
-    if patchclip_callback.is_some() {
-        if patchclip_callback.expect("non-null function pointer")(patch, x, y) == 0 {
+    if state.patchclip_callback.is_some() {
+        if state.patchclip_callback.expect("non-null function pointer")(patch, x, y) == 0 {
             return;
         }
     }
