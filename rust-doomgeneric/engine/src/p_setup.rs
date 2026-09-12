@@ -94,7 +94,7 @@ pub const ZERO_SECTOR: sector_t = sector_t {
         z: 0,
     },
     validcount: 0,
-    thinglist: ::core::ptr::null::<mobj_t>() as *mut mobj_t,
+    thinglist: None,
     specialdata: None,
     linecount: 0,
     lines: ::core::ptr::null::<*mut line_s>() as *mut *mut line_s,
@@ -410,7 +410,7 @@ pub unsafe fn P_LoadSectors(state: &mut GameState, mut lump: i32) {
         ss.lightlevel = (*ms).lightlevel;
         ss.special = (*ms).special;
         ss.tag = (*ms).tag;
-        ss.thinglist = ::core::ptr::null_mut::<mobj_t>();
+        ss.thinglist = None;
         i += 1;
         ms = ms.offset(1);
     }

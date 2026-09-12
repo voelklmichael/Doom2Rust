@@ -242,8 +242,14 @@ unsafe fn saveg_read_mobj_t(state: &mut GameState, mut str: *mut mobj_t) {
     (*str).x = saveg_read32(state) as fixed_t;
     (*str).y = saveg_read32(state) as fixed_t;
     (*str).z = saveg_read32(state) as fixed_t;
-    (*str).snext = saveg_readp(state) as *mut mobj_s;
-    (*str).sprev = saveg_readp(state) as *mut mobj_s;
+    // P_SetThingPosition (called on every reconstructed mobj right after this,
+    // see P_UnArchiveThinkers) fully rebuilds snext/sprev from scratch, so
+    // these on-disk bytes are already dead -- discard, same treatment as
+    // target/tracer's inert reads just below.
+    saveg_read32(state);
+    (*str).snext = None;
+    saveg_read32(state);
+    (*str).sprev = None;
     (*str).angle = saveg_read32(state) as angle_t;
     (*str).sprite = saveg_read32(state) as spritenum_t;
     (*str).frame = saveg_read32(state);
@@ -289,8 +295,8 @@ unsafe fn saveg_write_mobj_t(state: &mut GameState, mut str: *mut mobj_t) {
     saveg_write32(state, (*str).x as i32);
     saveg_write32(state, (*str).y as i32);
     saveg_write32(state, (*str).z as i32);
-    saveg_writep(state, (*str).snext as *mut ::core::ffi::c_void);
-    saveg_writep(state, (*str).sprev as *mut ::core::ffi::c_void);
+    saveg_write32(state, 0);
+    saveg_write32(state, 0);
     saveg_write32(state, (*str).angle as i32);
     saveg_write32(state, (*str).sprite as i32);
     saveg_write32(state, (*str).frame);

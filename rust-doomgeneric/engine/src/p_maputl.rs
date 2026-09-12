@@ -416,17 +416,24 @@ pub unsafe fn P_UnsetThingPosition(state: &mut GameState, mut thing: *mut mobj_t
     let mut blockx: i32 = 0;
     let mut blocky: i32 = 0;
     if (*thing).flags & MF_NOSECTOR as i32 == 0 {
-        if !(*thing).snext.is_null() {
-            (*(*thing).snext).sprev = (*thing).sprev;
+        if let Some(id) = (*thing).snext {
+            let next = state
+                .p_mobj
+                .mobj_get(id)
+                .expect("sector-list snext neighbor is always live");
+            (*next).sprev = (*thing).sprev;
         }
-        if !(*thing).sprev.is_null() {
-            (*(*thing).sprev).snext = (*thing).snext;
+        if let Some(id) = (*thing).sprev {
+            let prev = state
+                .p_mobj
+                .mobj_get(id)
+                .expect("sector-list sprev neighbor is always live");
+            (*prev).snext = (*thing).snext;
         } else {
             (*state
                 .p_setup
                 .sector_mut(state.p_setup.subsectors[(*thing).subsector.0 as usize].sector))
-            .thinglist =
-                (*thing).snext as *mut mobj_t;
+            .thinglist = (*thing).snext;
         }
     }
     if (*thing).flags & MF_NOBLOCKMAP as i32 == 0 {
@@ -463,12 +470,16 @@ pub unsafe fn P_SetThingPosition(state: &mut GameState, mut thing: *mut mobj_t) 
     (*thing).subsector = ss;
     if (*thing).flags & MF_NOSECTOR as i32 == 0 {
         sec = state.p_setup.sector_mut(state.p_setup.subsectors[ss.0 as usize].sector);
-        (*thing).sprev = ::core::ptr::null_mut::<mobj_s>();
-        (*thing).snext = (*sec).thinglist as *mut mobj_s;
-        if !(*sec).thinglist.is_null() {
-            (*(*sec).thinglist).sprev = thing as *mut mobj_s;
+        (*thing).sprev = None;
+        (*thing).snext = (*sec).thinglist;
+        if let Some(head_id) = (*sec).thinglist {
+            let head = state
+                .p_mobj
+                .mobj_get(head_id)
+                .expect("sector thinglist head is always live");
+            (*head).sprev = Some((*thing).id);
         }
-        (*sec).thinglist = thing;
+        (*sec).thinglist = Some((*thing).id);
     }
     if (*thing).flags & MF_NOBLOCKMAP as i32 == 0 {
         blockx = ((*thing).x - state.p_setup.bmaporgx >> MAPBLOCKSHIFT) as i32;

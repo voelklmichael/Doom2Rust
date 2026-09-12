@@ -1409,8 +1409,12 @@ pub unsafe fn AM_drawThings(state: &mut GameState, mut colors: i32) {
     let mut t: *mut mobj_t = ::core::ptr::null_mut::<mobj_t>();
     i = 0 as i32;
     while i < state.p_setup.numsectors {
-        t = state.p_setup.sectors[i as usize].thinglist;
-        while !t.is_null() {
+        let mut cursor = state.p_setup.sectors[i as usize].thinglist;
+        while let Some(id) = cursor {
+            t = state
+                .p_mobj
+                .mobj_get(id)
+                .expect("sector thinglist entry is always live");
             let lightlev = state.am_map.lightlev;
             AM_drawLineCharacter(
                 state,
@@ -1424,7 +1428,7 @@ pub unsafe fn AM_drawThings(state: &mut GameState, mut colors: i32) {
                 (*t).x,
                 (*t).y,
             );
-            t = (*t).snext as *mut mobj_t;
+            cursor = (*t).snext;
         }
         i += 1;
     }

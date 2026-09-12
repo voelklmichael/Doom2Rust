@@ -562,10 +562,14 @@ pub unsafe fn R_AddSprites(state: &mut GameState, mut sec: *mut sector_t) {
             &raw mut *(&raw mut state.r_main.scalelight as *mut [*mut lighttable_t; 48])
                 .offset(lightnum as isize) as *mut *mut lighttable_t;
     }
-    thing = (*sec).thinglist;
-    while !thing.is_null() {
+    let mut cursor = (*sec).thinglist;
+    while let Some(id) = cursor {
+        thing = state
+            .p_mobj
+            .mobj_get(id)
+            .expect("sector thinglist entry is always live");
         R_ProjectSprite(state, thing);
-        thing = (*thing).snext as *mut mobj_t;
+        cursor = (*thing).snext;
     }
 }
 pub unsafe fn R_DrawPSprite(state: &mut GameState, mut psp: *mut pspdef_t) {
