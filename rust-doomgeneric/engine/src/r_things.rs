@@ -13,7 +13,6 @@ use crate::src::m_fixed::FixedDiv;
 use crate::src::m_fixed::FixedMul;
 use crate::src::m_fixed::FRACBITS;
 use crate::src::m_fixed::FRACUNIT;
-use crate::src::m_fixed::INT_MAX;
 use crate::src::p_mobj::sector_t;
 use crate::src::p_mobj::{mobj_t, pspdef_t};
 use crate::src::p_mobj::{MF_SHADOW, MF_TRANSLATION, MF_TRANSSHIFT};
@@ -57,7 +56,7 @@ pub struct RThingsState {
     pub mceilingclip: *mut i16,
     pub spryscale: fixed_t,
     pub sprtopscreen: fixed_t,
-    pub vsprsortedhead: vissprite_t,
+    pub vissprite_order: Vec<usize>,
     pub clipbot: [i16; 320],
     pub cliptop: [i16; 320],
 }
@@ -80,8 +79,6 @@ impl RThingsState {
             maxframe: 0,
             spritename: "",
             vissprites: [vissprite_s {
-                prev: ::core::ptr::null::<vissprite_s>() as *mut vissprite_s,
-                next: ::core::ptr::null::<vissprite_s>() as *mut vissprite_s,
                 x1: 0,
                 x2: 0,
                 gx: 0,
@@ -98,8 +95,6 @@ impl RThingsState {
             }; 128],
             vissprite_p: ::core::ptr::null::<vissprite_t>() as *mut vissprite_t,
             overflowsprite: vissprite_s {
-                prev: ::core::ptr::null::<vissprite_s>() as *mut vissprite_s,
-                next: ::core::ptr::null::<vissprite_s>() as *mut vissprite_s,
                 x1: 0,
                 x2: 0,
                 gx: 0,
@@ -118,23 +113,7 @@ impl RThingsState {
             mceilingclip: ::core::ptr::null::<i16>() as *mut i16,
             spryscale: 0,
             sprtopscreen: 0,
-            vsprsortedhead: vissprite_s {
-                prev: ::core::ptr::null::<vissprite_s>() as *mut vissprite_s,
-                next: ::core::ptr::null::<vissprite_s>() as *mut vissprite_s,
-                x1: 0,
-                x2: 0,
-                gx: 0,
-                gy: 0,
-                gz: 0,
-                gzt: 0,
-                startfrac: 0,
-                scale: 0,
-                xiscale: 0,
-                texturemid: 0,
-                patch: 0,
-                colormap: ::core::ptr::null::<lighttable_t>() as *mut lighttable_t,
-                mobjflags: 0,
-            },
+            vissprite_order: Vec::new(),
             clipbot: [0; 320],
             cliptop: [0; 320],
         }
@@ -144,8 +123,6 @@ impl RThingsState {
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct vissprite_s {
-    pub prev: *mut vissprite_s,
-    pub next: *mut vissprite_s,
     pub x1: i32,
     pub x2: i32,
     pub gx: fixed_t,
@@ -601,8 +578,6 @@ pub unsafe fn R_DrawPSprite(state: &mut GameState, mut psp: *mut pspdef_t) {
     let mut flip: bool = false;
     let mut vis: *mut vissprite_t = ::core::ptr::null_mut::<vissprite_t>();
     let mut avis: vissprite_t = vissprite_s {
-        prev: ::core::ptr::null::<vissprite_s>() as *mut vissprite_s,
-        next: ::core::ptr::null::<vissprite_s>() as *mut vissprite_s,
         x1: 0,
         x2: 0,
         gx: 0,
@@ -727,72 +702,20 @@ pub unsafe fn R_DrawPlayerSprites(state: &mut GameState) {
     }
 }
 pub unsafe fn R_SortVisSprites(state: &mut GameState) {
-    let mut i: i32 = 0;
-    let mut count: i32 = 0;
-    let mut ds: *mut vissprite_t = ::core::ptr::null_mut::<vissprite_t>();
-    let mut best: *mut vissprite_t = ::core::ptr::null_mut::<vissprite_t>();
-    let mut unsorted: vissprite_t = vissprite_s {
-        prev: ::core::ptr::null::<vissprite_s>() as *mut vissprite_s,
-        next: ::core::ptr::null::<vissprite_s>() as *mut vissprite_s,
-        x1: 0,
-        x2: 0,
-        gx: 0,
-        gy: 0,
-        gz: 0,
-        gzt: 0,
-        startfrac: 0,
-        scale: 0,
-        xiscale: 0,
-        texturemid: 0,
-        patch: 0,
-        colormap: ::core::ptr::null::<lighttable_t>() as *mut lighttable_t,
-        mobjflags: 0,
-    };
-    let mut bestscale: fixed_t = 0;
-    count = state
+    let count = state
         .r_things
         .vissprite_p
         .offset_from(&raw mut state.r_things.vissprites as *mut vissprite_t) as i64
         as i32;
-    unsorted.prev = &raw mut unsorted as *mut vissprite_s;
-    unsorted.next = unsorted.prev;
-    if count == 0 {
-        return;
+    let mut order = core::mem::take(&mut state.r_things.vissprite_order);
+    order.clear();
+    if count > 0 {
+        order.extend(0..count as usize);
+        // Stable sort: preserves the original selection-sort's leftmost-first
+        // tie-break among vissprites sharing the same scale.
+        order.sort_by_key(|&i| state.r_things.vissprites[i].scale);
     }
-    ds = &raw mut state.r_things.vissprites as *mut vissprite_t;
-    while ds < state.r_things.vissprite_p {
-        (*ds).next = ds.offset(1 as i32 as isize) as *mut vissprite_s;
-        (*ds).prev = ds.offset(-(1 as i32 as isize)) as *mut vissprite_s;
-        ds = ds.offset(1);
-    }
-    state.r_things.vissprites[0 as i32 as usize].prev = &raw mut unsorted as *mut vissprite_s;
-    unsorted.next = (&raw mut state.r_things.vissprites as *mut vissprite_t)
-        .offset(0 as i32 as isize) as *mut vissprite_t as *mut vissprite_s;
-    let ref mut fresh0 = (*state.r_things.vissprite_p.offset(-(1 as i32 as isize))).next;
-    *fresh0 = &raw mut unsorted as *mut vissprite_s;
-    unsorted.prev = state.r_things.vissprite_p.offset(-(1 as i32 as isize)) as *mut vissprite_s;
-    state.r_things.vsprsortedhead.prev = &raw mut state.r_things.vsprsortedhead as *mut vissprite_s;
-    state.r_things.vsprsortedhead.next = state.r_things.vsprsortedhead.prev;
-    i = 0 as i32;
-    while i < count {
-        bestscale = INT_MAX as fixed_t;
-        best = unsorted.next as *mut vissprite_t;
-        ds = unsorted.next as *mut vissprite_t;
-        while ds != &raw mut unsorted {
-            if (*ds).scale < bestscale {
-                bestscale = (*ds).scale;
-                best = ds;
-            }
-            ds = (*ds).next as *mut vissprite_t;
-        }
-        (*(*best).next).prev = (*best).prev;
-        (*(*best).prev).next = (*best).next;
-        (*best).next = &raw mut state.r_things.vsprsortedhead as *mut vissprite_s;
-        (*best).prev = state.r_things.vsprsortedhead.prev;
-        (*state.r_things.vsprsortedhead.prev).next = best as *mut vissprite_s;
-        state.r_things.vsprsortedhead.prev = best as *mut vissprite_s;
-        i += 1;
-    }
+    state.r_things.vissprite_order = order;
 }
 pub unsafe fn R_DrawSprite(state: &mut GameState, mut spr: *mut vissprite_t) {
     let mut ds: *mut drawseg_t = ::core::ptr::null_mut::<drawseg_t>();
@@ -897,15 +820,14 @@ pub unsafe fn R_DrawSprite(state: &mut GameState, mut spr: *mut vissprite_t) {
     R_DrawVisSprite(state, spr);
 }
 pub unsafe fn R_DrawMasked(state: &mut GameState) {
-    let mut spr: *mut vissprite_t = ::core::ptr::null_mut::<vissprite_t>();
     let mut ds: *mut drawseg_t = ::core::ptr::null_mut::<drawseg_t>();
     R_SortVisSprites(state);
-    if state.r_things.vissprite_p > &raw mut state.r_things.vissprites as *mut vissprite_t {
-        spr = state.r_things.vsprsortedhead.next as *mut vissprite_t;
-        while spr != &raw mut state.r_things.vsprsortedhead {
-            R_DrawSprite(state, spr);
-            spr = (*spr).next as *mut vissprite_t;
-        }
+    let mut i = 0;
+    while i < state.r_things.vissprite_order.len() {
+        let idx = state.r_things.vissprite_order[i];
+        let spr = &raw mut state.r_things.vissprites[idx] as *mut vissprite_t;
+        R_DrawSprite(state, spr);
+        i += 1;
     }
     ds = state.r_bsp.ds_p.offset(-(1 as i32 as isize));
     while ds >= &raw mut state.r_bsp.drawsegs as *mut drawseg_t {
