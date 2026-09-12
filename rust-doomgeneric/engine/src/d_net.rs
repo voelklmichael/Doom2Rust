@@ -65,7 +65,7 @@ unsafe fn RunTic(state: &mut GameState, mut cmds: *mut ticcmd_t, mut ingame: *mu
     }
     G_Ticker(state);
 }
-static mut doom_loop_interface: loop_interface_t = loop_interface_t {
+const DOOM_LOOP_INTERFACE: loop_interface_t = loop_interface_t {
     ProcessEvents: Some(D_ProcessEvents as unsafe fn(&mut GameState) -> ()),
     BuildTiccmd: Some(G_BuildTiccmd as unsafe fn(&mut GameState, *mut ticcmd_t, i32) -> ()),
     RunTic: Some(RunTic as unsafe fn(&mut GameState, *mut ticcmd_t, *mut boolean) -> ()),
@@ -170,7 +170,7 @@ pub unsafe fn D_CheckNetGame(state: &mut GameState) {
     if state.g_game.netgame {
         state.d_main.autostart = true;
     }
-    D_RegisterLoopCallbacks(state, &raw mut doom_loop_interface);
+    D_RegisterLoopCallbacks(state, DOOM_LOOP_INTERFACE);
     SaveGameSettings(state, &raw mut settings);
     D_StartNetGame(state, &raw mut settings);
     LoadGameSettings(state, &raw mut settings);
