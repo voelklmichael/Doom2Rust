@@ -88,17 +88,17 @@ pub const SAVEGAME_EOF: i32 = 0x1d;
 pub const VERSIONSIZE: i32 = 16;
 #[no_mangle]
 pub static savegamelength: i32 = 0;
-pub unsafe fn P_TempSaveGameFile(state: &mut GameState) -> String {
+pub fn P_TempSaveGameFile(state: &mut GameState) -> String {
     if state.p_saveg.temp_savegame_filename.is_none() {
         state.p_saveg.temp_savegame_filename =
             Some(format!("{}temp.dsg", state.d_main.savegamedir));
     }
     state.p_saveg.temp_savegame_filename.clone().unwrap()
 }
-pub unsafe fn P_SaveGameFile(state: &mut GameState, slot: i32) -> String {
+pub fn P_SaveGameFile(state: &mut GameState, slot: i32) -> String {
     format!("{}doomsav{}.dsg", state.d_main.savegamedir, slot)
 }
-unsafe fn saveg_read8(state: &mut GameState) -> byte {
+fn saveg_read8(state: &mut GameState) -> byte {
     let mut result: [byte; 1] = [0];
     if state
         .p_saveg
@@ -116,7 +116,7 @@ unsafe fn saveg_read8(state: &mut GameState) -> byte {
     }
     return result[0];
 }
-unsafe fn saveg_write8(state: &mut GameState, value: byte) {
+fn saveg_write8(state: &mut GameState, value: byte) {
     if state
         .p_saveg
         .save_stream

@@ -216,7 +216,7 @@ pub unsafe fn R_PointOnSegSide(
     }
     return 1 as i32;
 }
-pub unsafe fn R_PointToAngle(state: &mut GameState, mut x: fixed_t, mut y: fixed_t) -> angle_t {
+pub fn R_PointToAngle(state: &mut GameState, mut x: fixed_t, mut y: fixed_t) -> angle_t {
     x -= state.r_main.viewx;
     y -= state.r_main.viewy;
     if x == 0 && y == 0 {
@@ -272,7 +272,7 @@ pub unsafe fn R_PointToAngle2(
     state.r_main.viewy = y1;
     return R_PointToAngle(state, x2, y2);
 }
-pub unsafe fn R_PointToDist(state: &mut GameState, mut x: fixed_t, mut y: fixed_t) -> fixed_t {
+pub fn R_PointToDist(state: &mut GameState, mut x: fixed_t, mut y: fixed_t) -> fixed_t {
     let mut angle: i32 = 0;
     let mut dx: fixed_t = 0;
     let mut dy: fixed_t = 0;
@@ -296,7 +296,7 @@ pub unsafe fn R_PointToDist(state: &mut GameState, mut x: fixed_t, mut y: fixed_
     dist = FixedDiv(dx, finesine[angle as usize]);
     return dist;
 }
-pub unsafe fn R_ScaleFromGlobalAngle(state: &mut GameState, mut visangle: angle_t) -> fixed_t {
+pub fn R_ScaleFromGlobalAngle(state: &mut GameState, mut visangle: angle_t) -> fixed_t {
     let mut scale: fixed_t = 0;
     let mut anglea: angle_t = 0;
     let mut angleb: angle_t = 0;
@@ -322,7 +322,7 @@ pub unsafe fn R_ScaleFromGlobalAngle(state: &mut GameState, mut visangle: angle_
     }
     return scale;
 }
-pub unsafe fn R_InitTextureMapping(state: &mut GameState) {
+pub fn R_InitTextureMapping(state: &mut GameState) {
     let mut i: i32 = 0;
     let mut x: i32 = 0;
     let mut t: i32 = 0;
@@ -402,7 +402,7 @@ pub unsafe fn R_InitLightTables(state: &mut GameState) {
         i += 1;
     }
 }
-pub unsafe fn R_SetViewSize(state: &mut GameState, mut blocks: i32, mut detail: i32) {
+pub fn R_SetViewSize(state: &mut GameState, mut blocks: i32, mut detail: i32) {
     state.r_main.setsizeneeded = true;
     state.r_main.setblocks = blocks;
     state.r_main.setdetail = detail;

@@ -474,7 +474,7 @@ pub unsafe fn D_BindVariables(state: &mut GameState) {
         i += 1;
     }
 }
-pub unsafe fn D_GrabMouseCallback(state: &mut GameState) -> boolean {
+pub fn D_GrabMouseCallback(state: &mut GameState) -> boolean {
     if drone {
         return false_0 as boolean;
     }
@@ -530,7 +530,7 @@ pub unsafe fn D_PageDrawer(state: &mut GameState) {
         W_CacheLumpName(state, state.d_main.pagename, PU_CACHE as i32) as *mut patch_t;
     V_DrawPatch(state, 0 as i32, 0 as i32, __wcache609_1);
 }
-pub unsafe fn D_AdvanceDemo(state: &mut GameState) {
+pub fn D_AdvanceDemo(state: &mut GameState) {
     state.d_main.advancedemo = true;
 }
 pub unsafe fn D_DoAdvanceDemo(state: &mut GameState) {
@@ -776,7 +776,7 @@ static copyright_banners: [&str; 3] = [
     "===========================================================================\n                 Commercial product - do not distribute!\n         Please report software piracy to the SPA: 1-800-388-PIR8\n===========================================================================\n",
     "===========================================================================\n                                Shareware!\n===========================================================================\n",
 ];
-pub unsafe fn PrintDehackedBanners() {
+pub fn PrintDehackedBanners() {
     let mut i: size_t = 0;
     i = 0 as size_t;
     while i < copyright_banners.len() as size_t {
@@ -844,7 +844,7 @@ unsafe fn InitGameVersion(state: &mut GameState) {
         state.doomstat.gamemission = doom2;
     }
 }
-pub unsafe fn PrintGameVersion(state: &mut GameState) {
+pub fn PrintGameVersion(state: &mut GameState) {
     if let Some(gv) = state
         .d_main
         .gameversions
@@ -857,7 +857,7 @@ pub unsafe fn PrintGameVersion(state: &mut GameState) {
         );
     }
 }
-unsafe fn D_Endoom(state: &mut GameState) {
+fn D_Endoom(state: &mut GameState) {
     if state.d_main.show_endoom == 0
         || !state.d_main.main_loop_started
         || state.i_video.screensaver_mode

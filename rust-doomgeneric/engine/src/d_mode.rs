@@ -294,13 +294,13 @@ pub fn D_ValidGameVersion(mut mission: GameMission_t, mut version: GameVersion) 
     }
     return false;
 }
-pub unsafe fn D_IsEpisodeMap(mut mission: GameMission_t) -> bool {
+pub fn D_IsEpisodeMap(mut mission: GameMission_t) -> bool {
     match mission as u32 {
         0 | 6 | 4 => return true,
         9 | 7 | 1 | 5 | 2 | 3 | 8 | _ => return false,
     };
 }
-pub unsafe fn D_GameMissionString(mission: GameMission_t) -> &'static str {
+pub fn D_GameMissionString(mission: GameMission_t) -> &'static str {
     match mission as u32 {
         0 => {
             return "doom";

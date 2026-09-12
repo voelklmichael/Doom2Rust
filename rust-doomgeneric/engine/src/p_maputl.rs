@@ -232,7 +232,7 @@ pub const MAXINTERCEPTS_ORIGINAL: i32 = 128;
 pub const PT_ADDLINES: i32 = 1;
 pub const PT_ADDTHINGS: i32 = 2;
 pub const PT_EARLYOUT: i32 = 4;
-pub unsafe fn P_AproxDistance(mut dx: fixed_t, mut dy: fixed_t) -> fixed_t {
+pub fn P_AproxDistance(mut dx: fixed_t, mut dy: fixed_t) -> fixed_t {
     dx = (dx as i32).abs() as fixed_t;
     dy = (dy as i32).abs() as fixed_t;
     if dx < dy {

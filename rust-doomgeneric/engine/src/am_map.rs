@@ -548,7 +548,7 @@ pub unsafe fn AM_getIslope(mut ml: *mut mline_t, mut is: *mut islope_t) {
         (*is).slp = FixedDiv(dy as fixed_t, dx as fixed_t);
     };
 }
-pub unsafe fn AM_activateNewScale(state: &mut GameState) {
+pub fn AM_activateNewScale(state: &mut GameState) {
     state.am_map.m_x += state.am_map.m_w as i32 / 2 as i32;
     state.am_map.m_y += state.am_map.m_h as i32 / 2 as i32;
     state.am_map.m_w = FixedMul(
@@ -564,7 +564,7 @@ pub unsafe fn AM_activateNewScale(state: &mut GameState) {
     state.am_map.m_x2 = state.am_map.m_x + state.am_map.m_w;
     state.am_map.m_y2 = state.am_map.m_y + state.am_map.m_h;
 }
-pub unsafe fn AM_saveScaleAndLoc(state: &mut GameState) {
+pub fn AM_saveScaleAndLoc(state: &mut GameState) {
     state.am_map.old_m_x = state.am_map.m_x;
     state.am_map.old_m_y = state.am_map.m_y;
     state.am_map.old_m_w = state.am_map.m_w;
@@ -587,14 +587,14 @@ pub unsafe fn AM_restoreScaleAndLoc(state: &mut GameState) {
     state.am_map.scale_mtof = FixedDiv((state.am_map.f_w as fixed_t) << FRACBITS, state.am_map.m_w);
     state.am_map.scale_ftom = FixedDiv(FRACUNIT, state.am_map.scale_mtof);
 }
-pub unsafe fn AM_addMark(state: &mut GameState) {
+pub fn AM_addMark(state: &mut GameState) {
     state.am_map.markpoints[state.am_map.markpointnum as usize].x =
         (state.am_map.m_x as i32 + state.am_map.m_w as i32 / 2 as i32) as fixed_t;
     state.am_map.markpoints[state.am_map.markpointnum as usize].y =
         (state.am_map.m_y as i32 + state.am_map.m_h as i32 / 2 as i32) as fixed_t;
     state.am_map.markpointnum = (state.am_map.markpointnum + 1 as i32) % AM_NUMMARKPOINTS;
 }
-pub unsafe fn AM_findMinMaxBoundaries(state: &mut GameState) {
+pub fn AM_findMinMaxBoundaries(state: &mut GameState) {
     let mut i: i32 = 0;
     let mut a: fixed_t = 0;
     let mut b: fixed_t = 0;
@@ -635,7 +635,7 @@ pub unsafe fn AM_findMinMaxBoundaries(state: &mut GameState) {
         2 as fixed_t * 16 as fixed_t * FRACUNIT,
     );
 }
-pub unsafe fn AM_changeWindowLoc(state: &mut GameState) {
+pub fn AM_changeWindowLoc(state: &mut GameState) {
     if state.am_map.m_paninc.x != 0 || state.am_map.m_paninc.y != 0 {
         state.am_map.followplayer = 0 as i32;
         state.am_map.f_oldloc.x = INT_MAX as fixed_t;
@@ -729,7 +729,7 @@ pub unsafe fn AM_unloadPics(state: &mut GameState) {
         i += 1;
     }
 }
-pub unsafe fn AM_clearMarks(state: &mut GameState) {
+pub fn AM_clearMarks(state: &mut GameState) {
     let mut i: i32 = 0;
     i = 0 as i32;
     while i < AM_NUMMARKPOINTS {
@@ -948,7 +948,7 @@ pub unsafe fn AM_doFollowPlayer(state: &mut GameState) {
         state.am_map.f_oldloc.y = (*(*state.g_game.player_mut(state.am_map.plr)).mo).y;
     }
 }
-pub unsafe fn AM_updateLightLev(state: &mut AmMapState) {
+pub fn AM_updateLightLev(state: &mut AmMapState) {
     const litelevels: [i32; 8] = [
         0 as i32, 4 as i32, 7 as i32, 10 as i32, 12 as i32, 14 as i32, 15 as i32, 15 as i32,
     ];

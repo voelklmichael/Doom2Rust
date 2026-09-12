@@ -432,7 +432,7 @@ pub unsafe fn G_CmdChecksum(mut cmd: *mut ticcmd_t) -> i32 {
     }
     return sum;
 }
-unsafe fn WeaponSelectable(state: &mut GameState, mut weapon: weapontype_t) -> bool {
+fn WeaponSelectable(state: &mut GameState, mut weapon: weapontype_t) -> bool {
     if weapon as u32 == wp_supershotgun as u32
         && (if state.doomstat.gamemission as u32 == pack_chex as u32 {
             doom as u32
@@ -1364,7 +1364,7 @@ pub unsafe fn G_DoReborn(state: &mut GameState, mut playernum: i32) {
         P_SpawnPlayer(state, spot);
     };
 }
-pub unsafe fn G_ScreenShot(state: &mut GameState) {
+pub fn G_ScreenShot(state: &mut GameState) {
     state.g_game.gameaction = ga_screenshot;
 }
 #[no_mangle]
@@ -1390,7 +1390,7 @@ pub static cpars: [i32; 32] = [
     420 as i32, 150 as i32, 210 as i32, 150 as i32, 240 as i32, 150 as i32, 180 as i32, 150 as i32,
     150 as i32, 300 as i32, 330 as i32, 420 as i32, 300 as i32, 180 as i32, 120 as i32, 30 as i32,
 ];
-pub unsafe fn G_ExitLevel(state: &mut GameState) {
+pub fn G_ExitLevel(state: &mut GameState) {
     state.g_game.secretexit = false;
     state.g_game.gameaction = ga_completed;
 }
@@ -1571,7 +1571,7 @@ pub unsafe fn G_DoWorldDone(state: &mut GameState) {
     state.g_game.gameaction = ga_nothing;
     state.g_game.viewactive = true;
 }
-pub unsafe fn G_LoadGame(state: &mut GameState, name: &str) {
+pub fn G_LoadGame(state: &mut GameState, name: &str) {
     state.g_game.savename = name.to_string();
     state.g_game.gameaction = ga_loadgame;
 }
@@ -1608,7 +1608,7 @@ pub unsafe fn G_DoLoadGame(state: &mut GameState) {
     }
     R_FillBackScreen(state);
 }
-pub unsafe fn G_SaveGame(
+pub fn G_SaveGame(
     state: &mut GameState,
     mut slot: i32,
     description: &str,
@@ -1668,7 +1668,7 @@ pub unsafe fn G_DoSaveGame(state: &mut GameState) {
         Some("game saved.".to_string());
     R_FillBackScreen(state);
 }
-pub unsafe fn G_DeferedInitNew(
+pub fn G_DeferedInitNew(
     state: &mut GameState,
     mut skill: skill_t,
     mut episode: i32,
@@ -1988,7 +1988,7 @@ pub unsafe fn G_DeferedPlayDemo(state: &mut GameState, mut name: *mut ::core::ff
     state.g_game.defdemoname = name;
     state.g_game.gameaction = ga_playdemo;
 }
-unsafe fn DemoVersionDescription(_state: &mut GameState, version: i32) -> String {
+fn DemoVersionDescription(_state: &mut GameState, version: i32) -> String {
     match version {
         104 => return "v1.4".to_string(),
         105 => return "v1.5".to_string(),

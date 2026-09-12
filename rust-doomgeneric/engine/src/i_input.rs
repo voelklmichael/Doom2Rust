@@ -148,7 +148,7 @@ static shiftxform: [u8; 128] = [
     '~' as u8,
     127 as u8,
 ];
-unsafe fn TranslateKey(mut key: u8) -> u8 {
+fn TranslateKey(mut key: u8) -> u8 {
     return key;
 }
 unsafe fn GetTypedChar(state: &mut IInputState, mut key: u8) -> u8 {
@@ -162,7 +162,7 @@ unsafe fn GetTypedChar(state: &mut IInputState, mut key: u8) -> u8 {
     }
     return key;
 }
-unsafe fn UpdateShiftStatus(state: &mut IInputState, mut pressed: i32, mut key: u8) {
+fn UpdateShiftStatus(state: &mut IInputState, mut pressed: i32, mut key: u8) {
     let mut change: i32 = 0;
     if pressed != 0 {
         change = 1 as i32;

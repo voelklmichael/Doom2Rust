@@ -119,10 +119,10 @@ impl DIwadState {
     }
 }
 
-unsafe fn file_exists(path: &str) -> bool {
+fn file_exists(path: &str) -> bool {
     M_FileExists(path)
 }
-unsafe fn add_iwad_dir(state: &mut DIwadState, dir: &str) {
+fn add_iwad_dir(state: &mut DIwadState, dir: &str) {
     state.iwad_dirs.push(dir.to_string());
 }
 fn dir_is_file(path: &str, filename: &str) -> bool {
@@ -237,7 +237,7 @@ pub unsafe fn D_FindAllIWADs(state: &mut DIwadState, mut mask: i32) -> *mut *con
     result.push(::core::ptr::null());
     Box::leak(result.into_boxed_slice()).as_mut_ptr()
 }
-pub unsafe fn D_SaveGameIWADName(gamemission: GameMission_t) -> &'static str {
+pub fn D_SaveGameIWADName(gamemission: GameMission_t) -> &'static str {
     for iwad in iwads.iter() {
         if gamemission == iwad.mission {
             return iwad.name;
@@ -256,7 +256,7 @@ pub unsafe fn D_SuggestIWADName(
     }
     ::std::ffi::CString::new("unknown.wad").unwrap().into_raw()
 }
-pub unsafe fn D_SuggestGameName(mission: GameMission_t, mode: GameMode_t) -> &'static str {
+pub fn D_SuggestGameName(mission: GameMission_t, mode: GameMode_t) -> &'static str {
     for iwad in iwads.iter() {
         if iwad.mission == mission && (mode == indetermined || iwad.mode == mode) {
             return iwad.description;

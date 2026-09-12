@@ -339,7 +339,7 @@ pub unsafe fn HU_Init(state: &mut GameState) {
         i += 1;
     }
 }
-pub unsafe fn HU_Stop(state: &mut GameState) {
+pub fn HU_Stop(state: &mut GameState) {
     state.hu_stuff.headsupactive = false;
 }
 pub unsafe fn HU_Start(state: &mut GameState) {
@@ -536,7 +536,7 @@ pub unsafe fn HU_queueChatChar(state: &mut GameState, c: u8) {
         state.hu_stuff.head = state.hu_stuff.head + 1 as i32 & QUEUESIZE - 1 as i32;
     };
 }
-pub unsafe fn HU_dequeueChatChar(state: &mut HuStuffState) -> u8 {
+pub fn HU_dequeueChatChar(state: &mut HuStuffState) -> u8 {
     let mut c: u8 = 0;
     if state.head != state.tail {
         c = state.chatchars[state.tail as usize];
