@@ -12,7 +12,7 @@ use crate::src::m_random::P_Random;
 use crate::src::p_ceilng::EV_CeilingCrushStop;
 use crate::src::p_ceilng::EV_DoCeiling;
 use crate::src::p_ceilng::{
-    ceiling_e, crushAndRaise, fastCrushAndRaise, lowerAndCrush, raiseToHighest, silentCrushAndRaise,
+    CeilingE,
 };
 use crate::src::p_doors::EV_DoDoor;
 use crate::src::p_doors::P_SpawnDoorCloseIn30;
@@ -156,7 +156,7 @@ pub struct plat_t {
 #[repr(C)]
 pub struct ceiling_t {
     pub thinker: thinker_t,
-    pub type_0: ceiling_e,
+    pub type_0: CeilingE,
     pub sector: SectorId,
     pub bottomheight: fixed_t,
     pub topheight: fixed_t,
@@ -619,7 +619,7 @@ pub unsafe fn P_CrossSpecialLine(
             (*line).special = 0 as i16;
         }
         6 => {
-            EV_DoCeiling(state, line, fastCrushAndRaise);
+            EV_DoCeiling(state, line, CeilingE::fastCrushAndRaise);
             (*line).special = 0 as i16;
         }
         8 => {
@@ -655,7 +655,7 @@ pub unsafe fn P_CrossSpecialLine(
             (*line).special = 0 as i16;
         }
         25 => {
-            EV_DoCeiling(state, line, crushAndRaise);
+            EV_DoCeiling(state, line, CeilingE::crushAndRaise);
             (*line).special = 0 as i16;
         }
         30 => {
@@ -683,12 +683,12 @@ pub unsafe fn P_CrossSpecialLine(
             (*line).special = 0 as i16;
         }
         40 => {
-            EV_DoCeiling(state, line, raiseToHighest);
+            EV_DoCeiling(state, line, CeilingE::raiseToHighest);
             EV_DoFloor(state, line, lowerFloorToLowest);
             (*line).special = 0 as i16;
         }
         44 => {
-            EV_DoCeiling(state, line, lowerAndCrush);
+            EV_DoCeiling(state, line, CeilingE::lowerAndCrush);
             (*line).special = 0 as i16;
         }
         52 => {
@@ -760,14 +760,14 @@ pub unsafe fn P_CrossSpecialLine(
             (*line).special = 0 as i16;
         }
         141 => {
-            EV_DoCeiling(state, line, silentCrushAndRaise);
+            EV_DoCeiling(state, line, CeilingE::silentCrushAndRaise);
             (*line).special = 0 as i16;
         }
         72 => {
-            EV_DoCeiling(state, line, lowerAndCrush);
+            EV_DoCeiling(state, line, CeilingE::lowerAndCrush);
         }
         73 => {
-            EV_DoCeiling(state, line, crushAndRaise);
+            EV_DoCeiling(state, line, CeilingE::crushAndRaise);
         }
         74 => {
             EV_CeilingCrushStop(&mut state.p_ceilng, line);
@@ -779,7 +779,7 @@ pub unsafe fn P_CrossSpecialLine(
             EV_DoDoor(state, line, VldoorE::vld_close30ThenOpen);
         }
         77 => {
-            EV_DoCeiling(state, line, fastCrushAndRaise);
+            EV_DoCeiling(state, line, CeilingE::fastCrushAndRaise);
         }
         79 => {
             EV_LightTurnOn(state, line, 35 as i32);

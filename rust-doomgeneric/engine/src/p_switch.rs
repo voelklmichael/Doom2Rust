@@ -5,7 +5,7 @@ use crate::src::g_game::G_SecretExitLevel;
 use crate::src::game_state::GameState;
 use crate::src::i_system::I_Error;
 use crate::src::p_ceilng::EV_DoCeiling;
-use crate::src::p_ceilng::{crushAndRaise, lowerToFloor};
+use crate::src::p_ceilng::CeilingE;
 use crate::src::p_doors::EV_DoDoor;
 use crate::src::p_doors::EV_DoLockedDoor;
 use crate::src::p_doors::EV_VerticalDoor;
@@ -561,7 +561,7 @@ pub unsafe fn P_UseSpecialLine(
             current_block_108 = 16981061190961355901;
         }
         41 => {
-            if EV_DoCeiling(state, line, lowerToFloor) != 0 {
+            if EV_DoCeiling(state, line, CeilingE::lowerToFloor) != 0 {
                 P_ChangeSwitchTexture(state, line, 0 as i32);
             }
             current_block_108 = 16981061190961355901;
@@ -573,7 +573,7 @@ pub unsafe fn P_UseSpecialLine(
             current_block_108 = 16981061190961355901;
         }
         49 => {
-            if EV_DoCeiling(state, line, crushAndRaise) != 0 {
+            if EV_DoCeiling(state, line, CeilingE::crushAndRaise) != 0 {
                 P_ChangeSwitchTexture(state, line, 0 as i32);
             }
             current_block_108 = 16981061190961355901;
@@ -668,7 +668,7 @@ pub unsafe fn P_UseSpecialLine(
             current_block_108 = 16981061190961355901;
         }
         43 => {
-            if EV_DoCeiling(state, line, lowerToFloor) != 0 {
+            if EV_DoCeiling(state, line, CeilingE::lowerToFloor) != 0 {
                 P_ChangeSwitchTexture(state, line, 1 as i32);
             }
             current_block_108 = 16981061190961355901;
