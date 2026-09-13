@@ -100,10 +100,11 @@ pub unsafe fn STlib_drawNum(state: &mut GameState, mut n: *mut st_number_t) {
     if (*n).y - ST_Y < 0 as i32 {
         I_Error("drawNum: n->y - ST_Y < 0");
     }
+    let st_backing_screen = state.st_stuff.st_backing_screen.as_mut_ptr();
     V_CopyRect(state,
         x,
         (*n).y - ST_Y,
-        state.st_stuff.st_backing_screen,
+        st_backing_screen,
         w * numdigits,
         h,
         x,
@@ -201,10 +202,11 @@ pub unsafe fn STlib_updateMultIcon(
             if y - ST_Y < 0 as i32 {
                 I_Error("updateMultIcon: y - ST_Y < 0");
             }
+            let st_backing_screen = state.st_stuff.st_backing_screen.as_mut_ptr();
             V_CopyRect(state,
                 x,
                 y - ST_Y,
-                state.st_stuff.st_backing_screen,
+                st_backing_screen,
                 w,
                 h,
                 x,
@@ -254,10 +256,11 @@ pub unsafe fn STlib_updateBinIcon(
         if *(*bi).val {
             V_DrawPatch(state, (*bi).x, (*bi).y, (*bi).p);
         } else {
+            let st_backing_screen = state.st_stuff.st_backing_screen.as_mut_ptr();
             V_CopyRect(state,
                 x,
                 y - ST_Y,
-                state.st_stuff.st_backing_screen,
+                st_backing_screen,
                 w,
                 h,
                 x,

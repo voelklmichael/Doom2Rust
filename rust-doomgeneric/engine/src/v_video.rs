@@ -15,6 +15,9 @@ use crate::src::r_data::column_t;
 use crate::src::stdint_types::size_t;
 use crate::src::stdint_types::{byte, uint8_t};
 use crate::src::w_wad::W_CacheLumpName;
+use crate::src::w_wad::W_CacheLumpNum;
+use crate::src::w_wad::W_GetNumForName;
+use crate::src::w_wad::W_LumpLength;
 use crate::src::z_zone::ZZoneState;
 use crate::src::z_zone::Z_Free;
 use crate::src::z_zone::Z_Malloc;
@@ -44,8 +47,8 @@ pub struct pcx_t {
     pub data: u8,
 }
 pub struct VVideoState {
-    pub tinttable: *mut byte,
-    pub xlatab: *mut byte,
+    pub tinttable: Vec<byte>,
+    pub xlatab: Vec<byte>,
     pub dest_screen: *mut byte,
     pub dirtybox: [i32; 4],
     // No caller anywhere in the repo ever invokes V_SetPatchClipCallback, so
@@ -56,8 +59,8 @@ pub struct VVideoState {
 impl VVideoState {
     pub const fn new() -> Self {
         VVideoState {
-            tinttable: ::core::ptr::null_mut::<byte>(),
-            xlatab: ::core::ptr::null_mut::<byte>(),
+            tinttable: Vec::new(),
+            xlatab: Vec::new(),
             dest_screen: ::core::ptr::null_mut::<byte>(),
             dirtybox: [0; 4],
             patchclip_callback: None,
@@ -306,9 +309,7 @@ pub unsafe fn V_DrawTLPatch(
                 }
                 let fresh5 = source;
                 source = source.offset(1);
-                *dest = *state
-                    .tinttable
-                    .offset((((*dest as i32) << 8 as i32) + *fresh5 as i32) as isize);
+                *dest = state.tinttable[(((*dest as i32) << 8 as i32) + *fresh5 as i32) as usize];
                 dest = dest.offset(SCREENWIDTH as isize);
             }
             column = (column as *mut byte)
@@ -360,9 +361,7 @@ pub unsafe fn V_DrawXlaPatch(
                 if !(fresh10 != 0) {
                     break;
                 }
-                *dest = *state
-                    .xlatab
-                    .offset((*dest as i32 + ((*source as i32) << 8 as i32)) as isize);
+                *dest = state.xlatab[(*dest as i32 + ((*source as i32) << 8 as i32)) as usize];
                 source = source.offset(1);
                 dest = dest.offset(SCREENWIDTH as isize);
             }
@@ -419,9 +418,7 @@ pub unsafe fn V_DrawAltTLPatch(
                 }
                 let fresh7 = source;
                 source = source.offset(1);
-                *dest = *state
-                    .tinttable
-                    .offset((((*dest as i32) << 8 as i32) + *fresh7 as i32) as isize);
+                *dest = state.tinttable[(((*dest as i32) << 8 as i32) + *fresh7 as i32) as usize];
                 dest = dest.offset(SCREENWIDTH as isize);
             }
             column = (column as *mut byte)
@@ -483,9 +480,7 @@ pub unsafe fn V_DrawShadowedPatch(
                 if !(fresh8 != 0) {
                     break;
                 }
-                *dest2 = *state
-                    .tinttable
-                    .offset(((*dest2 as i32) << 8 as i32) as isize);
+                *dest2 = state.tinttable[((*dest2 as i32) << 8 as i32) as usize];
                 dest2 = dest2.offset(SCREENWIDTH as isize);
                 let fresh9 = source;
                 source = source.offset(1);
@@ -503,10 +498,16 @@ pub unsafe fn V_DrawShadowedPatch(
     }
 }
 pub unsafe fn V_LoadTintTable(state: &mut GameState) {
-    state.v_video.tinttable = W_CacheLumpName(state, "TINTTAB", PU_STATIC as i32) as *mut byte;
+    let lumpnum = W_GetNumForName(&mut state.w_wad, "TINTTAB");
+    let lump_ptr = W_CacheLumpNum(state, lumpnum, PU_STATIC as i32) as *const byte;
+    let lumplen = W_LumpLength(&mut state.w_wad, lumpnum as u32) as usize;
+    state.v_video.tinttable = ::core::slice::from_raw_parts(lump_ptr, lumplen).to_vec();
 }
 pub unsafe fn V_LoadXlaTable(state: &mut GameState) {
-    state.v_video.xlatab = W_CacheLumpName(state, "XLATAB", PU_STATIC as i32) as *mut byte;
+    let lumpnum = W_GetNumForName(&mut state.w_wad, "XLATAB");
+    let lump_ptr = W_CacheLumpNum(state, lumpnum, PU_STATIC as i32) as *const byte;
+    let lumplen = W_LumpLength(&mut state.w_wad, lumpnum as u32) as usize;
+    state.v_video.xlatab = ::core::slice::from_raw_parts(lump_ptr, lumplen).to_vec();
 }
 pub unsafe fn V_DrawBlock(
     state: &mut GameState,
