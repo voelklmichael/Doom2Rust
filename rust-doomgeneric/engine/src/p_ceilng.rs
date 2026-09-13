@@ -12,6 +12,7 @@ use crate::src::p_spec::ceiling_t;
 use crate::src::p_spec::P_FindHighestCeilingSurrounding;
 use crate::src::p_spec::P_FindSectorFromLineTag;
 use crate::src::p_tick::P_AddThinker;
+use crate::src::p_tick::ThinkerKind;
 use crate::src::p_tick::P_RemoveThinker;
 use crate::src::s_sound::S_StartSound;
 use crate::src::s_sound::SoundOrigin;
@@ -187,7 +188,7 @@ pub unsafe fn EV_DoCeiling(
             PU_LEVSPEC as i32,
             ::core::ptr::null_mut::<::core::ffi::c_void>(),
         ) as *mut ceiling_t;
-        let ceiling_id = P_AddThinker(state, &raw mut (*ceiling).thinker);
+        let ceiling_id = P_AddThinker(state, &raw mut (*ceiling).thinker, ThinkerKind::Ceiling);
         (*sec).specialdata = Some(SectorSpecial::Ceiling(ceiling_id));
         (*ceiling).thinker.function = ThinkerFn::Ceiling(T_MoveCeiling);
         (*ceiling).sector = SectorId(secnum as u32);

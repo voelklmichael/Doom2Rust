@@ -8,6 +8,7 @@ use crate::src::p_spec::getNextSector;
 use crate::src::p_spec::P_FindMinSurroundingLight;
 use crate::src::p_spec::P_FindSectorFromLineTag;
 use crate::src::p_tick::P_AddThinker;
+use crate::src::p_tick::ThinkerKind;
 use crate::src::z_zone::Z_Malloc;
 use crate::src::z_zone::PU_LEVSPEC;
 
@@ -79,7 +80,7 @@ pub unsafe fn P_SpawnFireFlicker(state: &mut GameState, mut sector: SectorId) {
         PU_LEVSPEC as i32,
         ::core::ptr::null_mut::<::core::ffi::c_void>(),
     ) as *mut fireflicker_t;
-    P_AddThinker(state, &raw mut (*flick).thinker);
+    P_AddThinker(state, &raw mut (*flick).thinker, ThinkerKind::FireFlicker);
     (*flick).thinker.function = ThinkerFn::FireFlicker(T_FireFlicker);
     (*flick).sector = sector;
     (*flick).maxlight = (*sec).lightlevel as i32;
@@ -110,7 +111,7 @@ pub unsafe fn P_SpawnLightFlash(state: &mut GameState, mut sector: SectorId) {
         PU_LEVSPEC as i32,
         ::core::ptr::null_mut::<::core::ffi::c_void>(),
     ) as *mut lightflash_t;
-    P_AddThinker(state, &raw mut (*flash).thinker);
+    P_AddThinker(state, &raw mut (*flash).thinker, ThinkerKind::LightFlash);
     (*flash).thinker.function = ThinkerFn::LightFlash(T_LightFlash);
     (*flash).sector = sector;
     (*flash).maxlight = (*sec).lightlevel as i32;
@@ -147,7 +148,7 @@ pub unsafe fn P_SpawnStrobeFlash(
         PU_LEVSPEC as i32,
         ::core::ptr::null_mut::<::core::ffi::c_void>(),
     ) as *mut strobe_t;
-    P_AddThinker(state, &raw mut (*flash).thinker);
+    P_AddThinker(state, &raw mut (*flash).thinker, ThinkerKind::Strobe);
     (*flash).sector = sector;
     (*flash).darktime = fastOrSlow;
     (*flash).brighttime = STROBEBRIGHT;
@@ -266,7 +267,7 @@ pub unsafe fn P_SpawnGlowingLight(state: &mut GameState, mut sector: SectorId) {
         PU_LEVSPEC as i32,
         ::core::ptr::null_mut::<::core::ffi::c_void>(),
     ) as *mut glow_t;
-    P_AddThinker(state, &raw mut (*g).thinker);
+    P_AddThinker(state, &raw mut (*g).thinker, ThinkerKind::Glow);
     (*g).sector = sector;
     (*g).minlight = P_FindMinSurroundingLight(state, sec, (*sec).lightlevel as i32);
     (*g).maxlight = (*sec).lightlevel as i32;

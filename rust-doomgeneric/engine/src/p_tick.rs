@@ -15,6 +15,37 @@ use crate::src::z_zone::Z_Free;
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub struct ThinkerId(u32);
 
+// Mirrors ThinkerFn's payload-carrying variants. Every P_AddThinker caller
+// already knows its own concrete type and passes it explicitly -- this
+// can't be inferred from the thinker's `.function` value instead, because
+// every spawn site except P_SpawnMobj calls P_AddThinker *before* setting
+// `.function` to the concrete variant (confirmed by reading every call
+// site: p_ceilng.rs/p_doors.rs/p_floor.rs/p_spec.rs/p_lights.rs all add
+// first, assign `.function` a line or two later; only p_mobj.rs's
+// P_SpawnMobj assigns first). Since Z_Malloc doesn't zero memory, `.function`
+// is genuinely uninitialized garbage at add-time for those 8 types --
+// reading it to infer a discriminant would be undefined behavior, not just
+// a wrong answer (confirmed the hard way: an earlier version of this patch
+// tried exactly that and crashed on the very first Xvfb boot test with
+// "entered unreachable code", because the uninitialized bytes happened to
+// decode as ThinkerFn::Paused). This is the only place that can still tell
+// the reaper which per-type owning arena a Removed node's payload needs to
+// be released from (by the time a node reaches ThinkerFn::Removed,
+// `.function` no longer reveals which concrete type it was either --
+// P_RemoveThinker overwrites it).
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+pub enum ThinkerKind {
+    Mobj,
+    Ceiling,
+    Door,
+    Floor,
+    Plat,
+    FireFlicker,
+    LightFlash,
+    Strobe,
+    Glow,
+}
+
 #[derive(Copy, Clone)]
 struct ThinkerNode {
     prev: Option<ThinkerId>,
@@ -24,6 +55,7 @@ struct ThinkerNode {
     // prev/next list bookkeeping, not the payload storage or the
     // base-struct-downcast dispatch in P_RunThinkers below.
     raw: *mut thinker_s,
+    kind: ThinkerKind,
 }
 
 pub struct PTickState {
@@ -56,6 +88,10 @@ impl PTickState {
     pub fn raw(&self, id: ThinkerId) -> *mut thinker_t {
         self.nodes[id.0 as usize].raw
     }
+
+    pub fn kind(&self, id: ThinkerId) -> ThinkerKind {
+        self.nodes[id.0 as usize].kind
+    }
 }
 
 pub fn P_InitThinkers(state: &mut GameState) {
@@ -65,12 +101,17 @@ pub fn P_InitThinkers(state: &mut GameState) {
     state.p_tick.tail = None;
 }
 
-pub unsafe fn P_AddThinker(state: &mut GameState, mut thinker: *mut thinker_t) -> ThinkerId {
+pub unsafe fn P_AddThinker(
+    state: &mut GameState,
+    mut thinker: *mut thinker_t,
+    kind: ThinkerKind,
+) -> ThinkerId {
     let id = if let Some(index) = state.p_tick.free_list.pop() {
         state.p_tick.nodes[index as usize] = ThinkerNode {
             prev: None,
             next: None,
             raw: thinker,
+            kind,
         };
         ThinkerId(index)
     } else {
@@ -79,6 +120,7 @@ pub unsafe fn P_AddThinker(state: &mut GameState, mut thinker: *mut thinker_t) -
             prev: None,
             next: None,
             raw: thinker,
+            kind,
         });
         ThinkerId(index)
     };
@@ -126,11 +168,28 @@ pub unsafe fn P_RunThinkers(state: &mut GameState) {
                 // no use-after-free hazard either way, but this ordering
                 // matches the original semantics most directly.
                 next = state.p_tick.next(id);
+                let kind = state.p_tick.kind(id);
                 P_UnlinkThinkerNode(state, id);
-                Z_Free(
-                    &mut state.z_zone,
-                    currentthinker as *mut ::core::ffi::c_void,
-                );
+                // Every arm still frees the same way today (kind is not yet
+                // used to pick a different deallocation path) -- this match
+                // only proves the per-type dispatch is wired correctly
+                // before any arm's behavior actually diverges.
+                match kind {
+                    ThinkerKind::Mobj
+                    | ThinkerKind::Ceiling
+                    | ThinkerKind::Door
+                    | ThinkerKind::Floor
+                    | ThinkerKind::Plat
+                    | ThinkerKind::FireFlicker
+                    | ThinkerKind::LightFlash
+                    | ThinkerKind::Strobe
+                    | ThinkerKind::Glow => {
+                        Z_Free(
+                            &mut state.z_zone,
+                            currentthinker as *mut ::core::ffi::c_void,
+                        );
+                    }
+                }
             }
             ThinkerFn::Paused | ThinkerFn::Unresolved => {
                 next = state.p_tick.next(id);

@@ -17,6 +17,7 @@ use crate::src::p_spec::P_FindLowestFloorSurrounding;
 use crate::src::p_spec::P_FindNextHighestFloor;
 use crate::src::p_spec::P_FindSectorFromLineTag;
 use crate::src::p_tick::P_AddThinker;
+use crate::src::p_tick::ThinkerKind;
 use crate::src::p_tick::P_RemoveThinker;
 use crate::src::s_sound::S_StartSound;
 use crate::src::s_sound::SoundOrigin;
@@ -159,7 +160,7 @@ pub unsafe fn EV_DoPlat(
             PU_LEVSPEC as i32,
             ::core::ptr::null_mut::<::core::ffi::c_void>(),
         ) as *mut plat_t;
-        let plat_id = P_AddThinker(state, &raw mut (*plat).thinker);
+        let plat_id = P_AddThinker(state, &raw mut (*plat).thinker, ThinkerKind::Plat);
         (*plat).type_0 = type_0;
         (*plat).sector = SectorId(secnum as u32);
         (*sec).specialdata = Some(SectorSpecial::Plat(plat_id));
