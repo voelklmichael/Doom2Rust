@@ -42,10 +42,12 @@ pub const lowerFloor: floor_e = 0;
 pub type stair_e = u32;
 pub const turbo16: stair_e = 1;
 pub const build8: stair_e = 0;
-pub type result_e = u32;
-pub const pastdest: result_e = 2;
-pub const crushed: result_e = 1;
-pub const ok: result_e = 0;
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub enum ResultE {
+    ok = 0,
+    crushed = 1,
+    pastdest = 2,
+}
 pub const FLOORSPEED: i32 = FRACUNIT;
 pub unsafe fn T_MovePlane(
     state: &mut GameState,
@@ -55,7 +57,7 @@ pub unsafe fn T_MovePlane(
     mut crush: bool,
     mut floorOrCeiling: i32,
     mut direction: i32,
-) -> result_e {
+) -> ResultE {
     let mut flag: bool;
     let mut lastpos: fixed_t = 0;
     match floorOrCeiling {
@@ -69,7 +71,7 @@ pub unsafe fn T_MovePlane(
                         (*sector).floorheight = lastpos;
                         P_ChangeSector(state, sector, crush);
                     }
-                    return pastdest;
+                    return ResultE::pastdest;
                 } else {
                     lastpos = (*sector).floorheight;
                     (*sector).floorheight -= speed;
@@ -77,7 +79,7 @@ pub unsafe fn T_MovePlane(
                     if flag {
                         (*sector).floorheight = lastpos;
                         P_ChangeSector(state, sector, crush);
-                        return crushed;
+                        return ResultE::crushed;
                     }
                 }
             }
@@ -90,18 +92,18 @@ pub unsafe fn T_MovePlane(
                         (*sector).floorheight = lastpos;
                         P_ChangeSector(state, sector, crush);
                     }
-                    return pastdest;
+                    return ResultE::pastdest;
                 } else {
                     lastpos = (*sector).floorheight;
                     (*sector).floorheight += speed;
                     flag = P_ChangeSector(state, sector, crush);
                     if flag {
                         if crush {
-                            return crushed;
+                            return ResultE::crushed;
                         }
                         (*sector).floorheight = lastpos;
                         P_ChangeSector(state, sector, crush);
-                        return crushed;
+                        return ResultE::crushed;
                     }
                 }
             }
@@ -117,18 +119,18 @@ pub unsafe fn T_MovePlane(
                         (*sector).ceilingheight = lastpos;
                         P_ChangeSector(state, sector, crush);
                     }
-                    return pastdest;
+                    return ResultE::pastdest;
                 } else {
                     lastpos = (*sector).ceilingheight;
                     (*sector).ceilingheight -= speed;
                     flag = P_ChangeSector(state, sector, crush);
                     if flag {
                         if crush {
-                            return crushed;
+                            return ResultE::crushed;
                         }
                         (*sector).ceilingheight = lastpos;
                         P_ChangeSector(state, sector, crush);
-                        return crushed;
+                        return ResultE::crushed;
                     }
                 }
             }
@@ -141,7 +143,7 @@ pub unsafe fn T_MovePlane(
                         (*sector).ceilingheight = lastpos;
                         P_ChangeSector(state, sector, crush);
                     }
-                    return pastdest;
+                    return ResultE::pastdest;
                 } else {
                     lastpos = (*sector).ceilingheight;
                     (*sector).ceilingheight += speed;
@@ -152,10 +154,10 @@ pub unsafe fn T_MovePlane(
         },
         _ => {}
     }
-    return ok;
+    return ResultE::ok;
 }
 pub unsafe fn T_MoveFloor(state: &mut GameState, mut floor: *mut floormove_t) {
-    let mut res: result_e = ok;
+    let mut res: ResultE = ResultE::ok;
     let sec = state.p_setup.sector_mut((*floor).sector);
     res = T_MovePlane(
         state,
@@ -173,7 +175,7 @@ pub unsafe fn T_MoveFloor(state: &mut GameState, mut floor: *mut floormove_t) {
             sfx_stnmov as i32,
         );
     }
-    if res as u32 == pastdest as i32 as u32 {
+    if res == ResultE::pastdest {
         (*sec).specialdata = None;
         if (*floor).direction == 1 as i32 {
             match (*floor).type_0 as u32 {

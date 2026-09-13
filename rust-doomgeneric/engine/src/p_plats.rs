@@ -5,7 +5,7 @@ use crate::src::m_fixed::fixed_t;
 use crate::src::m_fixed::FRACUNIT;
 use crate::src::m_random::P_Random;
 use crate::src::p_floor::T_MovePlane;
-use crate::src::p_floor::{crushed, ok, pastdest, result_e};
+use crate::src::p_floor::ResultE;
 use crate::src::p_mobj::SectorSpecial;
 use crate::src::p_mobj::ThinkerFn;
 use crate::src::p_mobj::{line_t, sector_t};
@@ -49,7 +49,7 @@ impl PPlatsState {
 }
 
 pub unsafe fn T_PlatRaise(state: &mut GameState, mut plat: *mut plat_t) {
-    let mut res: result_e = ok;
+    let mut res: ResultE = ResultE::ok;
     let sec = state.p_setup.sector_mut((*plat).sector);
     match (*plat).status as u32 {
         0 => {
@@ -73,7 +73,7 @@ pub unsafe fn T_PlatRaise(state: &mut GameState, mut plat: *mut plat_t) {
                     );
                 }
             }
-            if res as u32 == crushed as i32 as u32 && !(*plat).crush {
+            if res == ResultE::crushed && !(*plat).crush {
                 (*plat).count = (*plat).wait;
                 (*plat).status = down;
                 S_StartSound(
@@ -81,7 +81,7 @@ pub unsafe fn T_PlatRaise(state: &mut GameState, mut plat: *mut plat_t) {
                     &raw mut (*sec).soundorg as *mut ::core::ffi::c_void,
                     sfx_pstart as i32,
                 );
-            } else if res as u32 == pastdest as i32 as u32 {
+            } else if res == ResultE::pastdest {
                 (*plat).count = (*plat).wait;
                 (*plat).status = waiting;
                 S_StartSound(
@@ -110,7 +110,7 @@ pub unsafe fn T_PlatRaise(state: &mut GameState, mut plat: *mut plat_t) {
                 0 as i32,
                 -(1 as i32),
             );
-            if res as u32 == pastdest as i32 as u32 {
+            if res == ResultE::pastdest {
                 (*plat).count = (*plat).wait;
                 (*plat).status = waiting;
                 S_StartSound(

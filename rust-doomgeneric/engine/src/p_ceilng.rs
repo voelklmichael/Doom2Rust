@@ -2,7 +2,7 @@ use crate::src::game_state::GameState;
 use crate::src::m_fixed::fixed_t;
 use crate::src::m_fixed::FRACUNIT;
 use crate::src::p_floor::T_MovePlane;
-use crate::src::p_floor::{crushed, ok, pastdest, result_e};
+use crate::src::p_floor::ResultE;
 use crate::src::p_mobj::SectorSpecial;
 use crate::src::p_mobj::ThinkerFn;
 use crate::src::p_mobj::{line_t, sector_t};
@@ -39,7 +39,7 @@ impl PCeilngState {
 }
 
 pub unsafe fn T_MoveCeiling(state: &mut GameState, mut ceiling: *mut ceiling_t) {
-    let mut res: result_e = ok;
+    let mut res: ResultE = ResultE::ok;
     let sec = state.p_setup.sector_mut((*ceiling).sector);
     match (*ceiling).direction {
         1 => {
@@ -64,7 +64,7 @@ pub unsafe fn T_MoveCeiling(state: &mut GameState, mut ceiling: *mut ceiling_t) 
                     }
                 }
             }
-            if res as u32 == pastdest as i32 as u32 {
+            if res == ResultE::pastdest {
                 let mut current_block_7: u64;
                 match (*ceiling).type_0 as u32 {
                     1 => {
@@ -116,7 +116,7 @@ pub unsafe fn T_MoveCeiling(state: &mut GameState, mut ceiling: *mut ceiling_t) 
                     }
                 }
             }
-            if res as u32 == pastdest as i32 as u32 {
+            if res == ResultE::pastdest {
                 let mut current_block_19: u64;
                 match (*ceiling).type_0 as u32 {
                     5 => {
@@ -154,7 +154,7 @@ pub unsafe fn T_MoveCeiling(state: &mut GameState, mut ceiling: *mut ceiling_t) 
                     }
                     _ => {}
                 }
-            } else if res as u32 == crushed as i32 as u32 {
+            } else if res == ResultE::crushed {
                 match (*ceiling).type_0 as u32 {
                     5 | 3 | 2 => {
                         (*ceiling).speed = (CEILSPEED / 8 as i32) as fixed_t;
