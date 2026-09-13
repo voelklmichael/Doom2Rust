@@ -199,7 +199,6 @@ pub fn finish_init(state: &mut GameState) {
     unsafe {
         state.sounds.fixup_self_links();
         fixup_intercepts_overrun(state);
-        state.m_config.fixup_defaults();
         state.m_controls.fixup_weapon_keys();
         state.m_menu.fixup_menu_links();
         state.m_menu.fixup_menu_routines();

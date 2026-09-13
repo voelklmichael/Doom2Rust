@@ -60,7 +60,7 @@ pub struct default_t {
 #[derive(Clone)]
 #[repr(C)]
 pub struct default_collection_t {
-    pub defaults: *mut default_t,
+    pub defaults: Vec<default_t>,
     pub numdefaults: i32,
     pub filename: String,
 }
@@ -74,19 +74,13 @@ pub struct MConfigState {
     configdir: String,
     default_main_config: &'static str,
     default_extra_config: &'static str,
-    doom_defaults_list: [default_t; 76],
     doom_defaults: default_collection_t,
-    extra_defaults_list: [default_t; 119],
     extra_defaults: default_collection_t,
 }
 
 impl MConfigState {
-    pub const fn new() -> Self {
-        MConfigState {
-            configdir: String::new(),
-            default_main_config: "",
-            default_extra_config: "",
-            doom_defaults_list: [
+    pub fn new() -> Self {
+        let doom_defaults_list = vec![
                 default_t {
                     name: "mouse_sensitivity",
                     location: None,
@@ -695,13 +689,9 @@ impl MConfigState {
                     original_translated: 0 as i32,
                     bound: false,
                 },
-            ],
-            doom_defaults: default_collection_t {
-                defaults: ::core::ptr::null::<default_t>() as *mut default_t,
-                numdefaults: 0,
-                filename: String::new(),
-            },
-            extra_defaults_list: [
+        ];
+        let doom_defaults_len = doom_defaults_list.len() as i32;
+        let extra_defaults_list = vec![
                 default_t {
                     name: "graphical_startup",
                     location: None,
@@ -1654,28 +1644,23 @@ impl MConfigState {
                     original_translated: 0 as i32,
                     bound: false,
                 },
-            ],
+        ];
+        let extra_defaults_len = extra_defaults_list.len() as i32;
+        MConfigState {
+            configdir: String::new(),
+            default_main_config: "",
+            default_extra_config: "",
+            doom_defaults: default_collection_t {
+                numdefaults: doom_defaults_len,
+                defaults: doom_defaults_list,
+                filename: String::new(),
+            },
             extra_defaults: default_collection_t {
-                defaults: ::core::ptr::null::<default_t>() as *mut default_t,
-                numdefaults: 0,
+                numdefaults: extra_defaults_len,
+                defaults: extra_defaults_list,
                 filename: String::new(),
             },
         }
-    }
-
-    // `doom_defaults`/`extra_defaults`'s `.defaults` must point at this same
-    // struct's own `_list` array field. That address isn't known until this
-    // value is at its final, permanently-stable 'static home (inside
-    // `GameState`, behind `Box::leak`) -- computing it inline above, during
-    // construction, would capture the address of a temporary that gets moved
-    // at least twice more before settling. Called once from `init_game_state`'s
-    // `finish_init`, same pattern as
-    // `sounds::fixup_self_links`/`p_maputl::fixup_intercepts_overrun`.
-    pub fn fixup_defaults(&mut self) {
-        self.doom_defaults.defaults = &raw mut self.doom_defaults_list as *mut default_t;
-        self.doom_defaults.numdefaults = self.doom_defaults_list.len() as i32;
-        self.extra_defaults.defaults = &raw mut self.extra_defaults_list as *mut default_t;
-        self.extra_defaults.numdefaults = self.extra_defaults_list.len() as i32;
     }
 }
 
@@ -1686,8 +1671,8 @@ unsafe fn SearchCollection(
     let mut i: i32 = 0;
     i = 0 as i32;
     while i < (*collection).numdefaults {
-        if (*(*collection).defaults.offset(i as isize)).name == name {
-            return (*collection).defaults.offset(i as isize) as *mut default_t;
+        if (*collection).defaults[i as usize].name == name {
+            return &raw mut (*collection).defaults[i as usize] as *mut default_t;
         }
         i += 1;
     }
