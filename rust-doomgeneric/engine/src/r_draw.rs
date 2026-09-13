@@ -211,11 +211,9 @@ pub unsafe fn R_DrawFuzzColumn(state: &mut GameState) {
     dest = state.r_draw.ylookup[state.r_draw.dc_yl as usize]
         .offset(state.r_draw.columnofs[state.r_draw.dc_x as usize] as isize);
     loop {
-        *dest = *state.r_data.colormaps.offset(
-            (6 as i32 * 256 as i32
-                + *dest.offset(fuzzoffset[state.r_draw.fuzzpos as usize] as isize) as i32)
-                as isize,
-        ) as byte;
+        *dest = state.r_data.colormaps[(6 as i32 * 256 as i32
+            + *dest.offset(fuzzoffset[state.r_draw.fuzzpos as usize] as isize) as i32)
+            as usize];
         state.r_draw.fuzzpos += 1;
         if state.r_draw.fuzzpos == FUZZTABLE {
             state.r_draw.fuzzpos = 0 as i32;
@@ -258,16 +256,12 @@ pub unsafe fn R_DrawFuzzColumnLow(state: &mut GameState) {
     dest2 = state.r_draw.ylookup[state.r_draw.dc_yl as usize]
         .offset(state.r_draw.columnofs[(x + 1 as i32) as usize] as isize);
     loop {
-        *dest = *state.r_data.colormaps.offset(
-            (6 as i32 * 256 as i32
-                + *dest.offset(fuzzoffset[state.r_draw.fuzzpos as usize] as isize) as i32)
-                as isize,
-        ) as byte;
-        *dest2 = *state.r_data.colormaps.offset(
-            (6 as i32 * 256 as i32
-                + *dest2.offset(fuzzoffset[state.r_draw.fuzzpos as usize] as isize) as i32)
-                as isize,
-        ) as byte;
+        *dest = state.r_data.colormaps[(6 as i32 * 256 as i32
+            + *dest.offset(fuzzoffset[state.r_draw.fuzzpos as usize] as isize) as i32)
+            as usize];
+        *dest2 = state.r_data.colormaps[(6 as i32 * 256 as i32
+            + *dest2.offset(fuzzoffset[state.r_draw.fuzzpos as usize] as isize) as i32)
+            as usize];
         state.r_draw.fuzzpos += 1;
         if state.r_draw.fuzzpos == FUZZTABLE {
             state.r_draw.fuzzpos = 0 as i32;

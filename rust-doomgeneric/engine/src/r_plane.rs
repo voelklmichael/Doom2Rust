@@ -336,7 +336,7 @@ pub unsafe fn R_DrawPlanes(state: &mut GameState) {
         if !((*pl).minx > (*pl).maxx) {
             if (*pl).picnum == state.r_sky.skyflatnum {
                 state.r_draw.dc_iscale = state.r_things.pspriteiscale >> state.r_main.detailshift;
-                state.r_draw.dc_colormap = state.r_data.colormaps;
+                state.r_draw.dc_colormap = state.r_data.colormaps.as_mut_ptr();
                 state.r_draw.dc_texturemid = state.r_sky.skytexturemid as fixed_t;
                 x = (*pl).minx;
                 while x <= (*pl).maxx {

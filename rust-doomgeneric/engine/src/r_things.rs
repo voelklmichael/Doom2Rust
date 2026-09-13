@@ -532,7 +532,7 @@ pub unsafe fn R_ProjectSprite(state: &mut GameState, mut thing: *mut mobj_t) {
     } else if !state.r_main.fixedcolormap.is_null() {
         (*vis).colormap = state.r_main.fixedcolormap;
     } else if (*thing).frame & FF_FULLBRIGHT != 0 {
-        (*vis).colormap = state.r_data.colormaps;
+        (*vis).colormap = state.r_data.colormaps.as_mut_ptr();
     } else {
         index = (xscale >> LIGHTSCALESHIFT - state.r_main.detailshift) as i32;
         if index >= MAXLIGHTSCALE {
@@ -660,7 +660,7 @@ pub unsafe fn R_DrawPSprite(state: &mut GameState, mut psp: *mut pspdef_t) {
     } else if !state.r_main.fixedcolormap.is_null() {
         (*vis).colormap = state.r_main.fixedcolormap;
     } else if (*psp_state).frame & FF_FULLBRIGHT != 0 {
-        (*vis).colormap = state.r_data.colormaps;
+        (*vis).colormap = state.r_data.colormaps.as_mut_ptr();
     } else {
         (*vis).colormap = *state
             .r_things
