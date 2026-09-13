@@ -30,7 +30,7 @@ pub struct WiStuffState {
     pub NUMANIMS: [i32; 4],
     pub acceleratestage: i32,
     pub me: i32,
-    pub state: stateenum_t,
+    pub state: StateEnum,
     pub wbs: *mut wbstartstruct_t,
     pub plrs: *mut wbplayerstruct_t,
     pub cnt: i32,
@@ -89,7 +89,7 @@ impl WiStuffState {
             ],
             epsd0animinfo: [
                 anim_t {
-                    type_0: ANIM_ALWAYS,
+                    type_0: AnimEnum::ANIM_ALWAYS,
                     period: 35 as i32 / 3 as i32,
                     nanims: 3 as i32,
                     loc: point_t {
@@ -109,7 +109,7 @@ impl WiStuffState {
                     state: 0 as i32,
                 },
                 anim_t {
-                    type_0: ANIM_ALWAYS,
+                    type_0: AnimEnum::ANIM_ALWAYS,
                     period: 35 as i32 / 3 as i32,
                     nanims: 3 as i32,
                     loc: point_t {
@@ -129,7 +129,7 @@ impl WiStuffState {
                     state: 0 as i32,
                 },
                 anim_t {
-                    type_0: ANIM_ALWAYS,
+                    type_0: AnimEnum::ANIM_ALWAYS,
                     period: 35 as i32 / 3 as i32,
                     nanims: 3 as i32,
                     loc: point_t {
@@ -149,7 +149,7 @@ impl WiStuffState {
                     state: 0 as i32,
                 },
                 anim_t {
-                    type_0: ANIM_ALWAYS,
+                    type_0: AnimEnum::ANIM_ALWAYS,
                     period: 35 as i32 / 3 as i32,
                     nanims: 3 as i32,
                     loc: point_t {
@@ -169,7 +169,7 @@ impl WiStuffState {
                     state: 0 as i32,
                 },
                 anim_t {
-                    type_0: ANIM_ALWAYS,
+                    type_0: AnimEnum::ANIM_ALWAYS,
                     period: 35 as i32 / 3 as i32,
                     nanims: 3 as i32,
                     loc: point_t {
@@ -189,7 +189,7 @@ impl WiStuffState {
                     state: 0 as i32,
                 },
                 anim_t {
-                    type_0: ANIM_ALWAYS,
+                    type_0: AnimEnum::ANIM_ALWAYS,
                     period: 35 as i32 / 3 as i32,
                     nanims: 3 as i32,
                     loc: point_t {
@@ -209,7 +209,7 @@ impl WiStuffState {
                     state: 0 as i32,
                 },
                 anim_t {
-                    type_0: ANIM_ALWAYS,
+                    type_0: AnimEnum::ANIM_ALWAYS,
                     period: 35 as i32 / 3 as i32,
                     nanims: 3 as i32,
                     loc: point_t {
@@ -229,7 +229,7 @@ impl WiStuffState {
                     state: 0 as i32,
                 },
                 anim_t {
-                    type_0: ANIM_ALWAYS,
+                    type_0: AnimEnum::ANIM_ALWAYS,
                     period: 35 as i32 / 3 as i32,
                     nanims: 3 as i32,
                     loc: point_t {
@@ -249,7 +249,7 @@ impl WiStuffState {
                     state: 0 as i32,
                 },
                 anim_t {
-                    type_0: ANIM_ALWAYS,
+                    type_0: AnimEnum::ANIM_ALWAYS,
                     period: 35 as i32 / 3 as i32,
                     nanims: 3 as i32,
                     loc: point_t {
@@ -269,7 +269,7 @@ impl WiStuffState {
                     state: 0 as i32,
                 },
                 anim_t {
-                    type_0: ANIM_ALWAYS,
+                    type_0: AnimEnum::ANIM_ALWAYS,
                     period: 35 as i32 / 3 as i32,
                     nanims: 3 as i32,
                     loc: point_t {
@@ -291,7 +291,7 @@ impl WiStuffState {
             ],
             epsd1animinfo: [
                 anim_t {
-                    type_0: ANIM_LEVEL,
+                    type_0: AnimEnum::ANIM_LEVEL,
                     period: 35 as i32 / 3 as i32,
                     nanims: 1 as i32,
                     loc: point_t {
@@ -311,7 +311,7 @@ impl WiStuffState {
                     state: 0 as i32,
                 },
                 anim_t {
-                    type_0: ANIM_LEVEL,
+                    type_0: AnimEnum::ANIM_LEVEL,
                     period: 35 as i32 / 3 as i32,
                     nanims: 1 as i32,
                     loc: point_t {
@@ -331,7 +331,7 @@ impl WiStuffState {
                     state: 0 as i32,
                 },
                 anim_t {
-                    type_0: ANIM_LEVEL,
+                    type_0: AnimEnum::ANIM_LEVEL,
                     period: 35 as i32 / 3 as i32,
                     nanims: 1 as i32,
                     loc: point_t {
@@ -351,7 +351,7 @@ impl WiStuffState {
                     state: 0 as i32,
                 },
                 anim_t {
-                    type_0: ANIM_LEVEL,
+                    type_0: AnimEnum::ANIM_LEVEL,
                     period: 35 as i32 / 3 as i32,
                     nanims: 1 as i32,
                     loc: point_t {
@@ -371,7 +371,7 @@ impl WiStuffState {
                     state: 0 as i32,
                 },
                 anim_t {
-                    type_0: ANIM_LEVEL,
+                    type_0: AnimEnum::ANIM_LEVEL,
                     period: 35 as i32 / 3 as i32,
                     nanims: 1 as i32,
                     loc: point_t {
@@ -391,7 +391,7 @@ impl WiStuffState {
                     state: 0 as i32,
                 },
                 anim_t {
-                    type_0: ANIM_LEVEL,
+                    type_0: AnimEnum::ANIM_LEVEL,
                     period: 35 as i32 / 3 as i32,
                     nanims: 1 as i32,
                     loc: point_t {
@@ -411,7 +411,7 @@ impl WiStuffState {
                     state: 0 as i32,
                 },
                 anim_t {
-                    type_0: ANIM_LEVEL,
+                    type_0: AnimEnum::ANIM_LEVEL,
                     period: 35 as i32 / 3 as i32,
                     nanims: 1 as i32,
                     loc: point_t {
@@ -431,7 +431,7 @@ impl WiStuffState {
                     state: 0 as i32,
                 },
                 anim_t {
-                    type_0: ANIM_LEVEL,
+                    type_0: AnimEnum::ANIM_LEVEL,
                     period: 35 as i32 / 3 as i32,
                     nanims: 3 as i32,
                     loc: point_t {
@@ -451,7 +451,7 @@ impl WiStuffState {
                     state: 0 as i32,
                 },
                 anim_t {
-                    type_0: ANIM_LEVEL,
+                    type_0: AnimEnum::ANIM_LEVEL,
                     period: 35 as i32 / 3 as i32,
                     nanims: 1 as i32,
                     loc: point_t {
@@ -473,7 +473,7 @@ impl WiStuffState {
             ],
             epsd2animinfo: [
                 anim_t {
-                    type_0: ANIM_ALWAYS,
+                    type_0: AnimEnum::ANIM_ALWAYS,
                     period: 35 as i32 / 3 as i32,
                     nanims: 3 as i32,
                     loc: point_t {
@@ -493,7 +493,7 @@ impl WiStuffState {
                     state: 0 as i32,
                 },
                 anim_t {
-                    type_0: ANIM_ALWAYS,
+                    type_0: AnimEnum::ANIM_ALWAYS,
                     period: 35 as i32 / 3 as i32,
                     nanims: 3 as i32,
                     loc: point_t {
@@ -513,7 +513,7 @@ impl WiStuffState {
                     state: 0 as i32,
                 },
                 anim_t {
-                    type_0: ANIM_ALWAYS,
+                    type_0: AnimEnum::ANIM_ALWAYS,
                     period: 35 as i32 / 3 as i32,
                     nanims: 3 as i32,
                     loc: point_t {
@@ -533,7 +533,7 @@ impl WiStuffState {
                     state: 0 as i32,
                 },
                 anim_t {
-                    type_0: ANIM_ALWAYS,
+                    type_0: AnimEnum::ANIM_ALWAYS,
                     period: 35 as i32 / 3 as i32,
                     nanims: 3 as i32,
                     loc: point_t {
@@ -553,7 +553,7 @@ impl WiStuffState {
                     state: 0 as i32,
                 },
                 anim_t {
-                    type_0: ANIM_ALWAYS,
+                    type_0: AnimEnum::ANIM_ALWAYS,
                     period: 35 as i32 / 3 as i32,
                     nanims: 3 as i32,
                     loc: point_t {
@@ -573,7 +573,7 @@ impl WiStuffState {
                     state: 0 as i32,
                 },
                 anim_t {
-                    type_0: ANIM_ALWAYS,
+                    type_0: AnimEnum::ANIM_ALWAYS,
                     period: 35 as i32 / 4 as i32,
                     nanims: 3 as i32,
                     loc: point_t {
@@ -596,7 +596,7 @@ impl WiStuffState {
             NUMANIMS: [0; 4],
             acceleratestage: 0,
             me: 0,
-            state: StatCount,
+            state: StateEnum::StatCount,
             wbs: ::core::ptr::null::<wbstartstruct_t>() as *mut wbstartstruct_t,
             plrs: ::core::ptr::null::<wbplayerstruct_t>() as *mut wbplayerstruct_t,
             cnt: 0,
@@ -688,14 +688,16 @@ pub struct wbstartstruct_t {
     pub pnum: i32,
     pub plyr: [wbplayerstruct_t; 4],
 }
-pub type stateenum_t = i32;
-pub const ShowNextLoc: stateenum_t = 1;
-pub const StatCount: stateenum_t = 0;
-pub const NoState: stateenum_t = -1;
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub enum StateEnum {
+    NoState = -1,
+    StatCount = 0,
+    ShowNextLoc = 1,
+}
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct anim_t {
-    pub type_0: animenum_t,
+    pub type_0: AnimEnum,
     pub period: i32,
     pub nanims: i32,
     pub loc: point_t,
@@ -713,10 +715,12 @@ pub struct point_t {
     pub x: i32,
     pub y: i32,
 }
-pub type animenum_t = u32;
-pub const ANIM_LEVEL: animenum_t = 2;
-pub const ANIM_RANDOM: animenum_t = 1;
-pub const ANIM_ALWAYS: animenum_t = 0;
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub enum AnimEnum {
+    ANIM_ALWAYS = 0,
+    ANIM_RANDOM = 1,
+    ANIM_LEVEL = 2,
+}
 pub const NUMMAPS: i32 = 9;
 pub const WI_TITLEY: i32 = 2;
 pub const WI_SPACINGY: i32 = 33;
@@ -986,15 +990,15 @@ pub unsafe fn WI_initAnimatedBack(state: &mut GameState) {
             .offset((*state.wi_stuff.wbs).epsd as isize))
         .offset(i as isize) as *mut anim_t;
         (*a).ctr = -(1 as i32);
-        if (*a).type_0 as u32 == ANIM_ALWAYS as i32 as u32 {
+        if (*a).type_0 == AnimEnum::ANIM_ALWAYS {
             (*a).nexttic =
                 state.wi_stuff.bcnt + 1 as i32 + M_Random(&mut state.m_random) % (*a).period;
-        } else if (*a).type_0 as u32 == ANIM_RANDOM as i32 as u32 {
+        } else if (*a).type_0 == AnimEnum::ANIM_RANDOM {
             (*a).nexttic = state.wi_stuff.bcnt
                 + 1 as i32
                 + (*a).data2
                 + M_Random(&mut state.m_random) % (*a).data1;
-        } else if (*a).type_0 as u32 == ANIM_LEVEL as i32 as u32 {
+        } else if (*a).type_0 == AnimEnum::ANIM_LEVEL {
             (*a).nexttic = state.wi_stuff.bcnt + 1 as i32;
         }
         i += 1;
@@ -1035,7 +1039,7 @@ pub unsafe fn WI_updateAnimatedBack(state: &mut GameState) {
                     }
                 }
                 2 => {
-                    if !(state.wi_stuff.state as i32 == StatCount as i32 && i == 7 as i32)
+                    if !(state.wi_stuff.state == StateEnum::StatCount && i == 7 as i32)
                         && (*state.wi_stuff.wbs).next == (*a).data1
                     {
                         (*a).ctr += 1;
@@ -1168,7 +1172,7 @@ pub unsafe fn WI_End(state: &mut GameState) {
     WI_unloadData_0(state);
 }
 pub fn WI_initNoState(state: &mut GameState) {
-    state.wi_stuff.state = NoState;
+    state.wi_stuff.state = StateEnum::NoState;
     state.wi_stuff.acceleratestage = 0 as i32;
     state.wi_stuff.cnt = 10 as i32;
 }
@@ -1180,7 +1184,7 @@ pub unsafe fn WI_updateNoState(state: &mut GameState) {
     }
 }
 pub unsafe fn WI_initShowNextLoc(state: &mut GameState) {
-    state.wi_stuff.state = ShowNextLoc;
+    state.wi_stuff.state = StateEnum::ShowNextLoc;
     state.wi_stuff.acceleratestage = 0 as i32;
     state.wi_stuff.cnt = SHOWNEXTLOCDELAY * TICRATE;
     WI_initAnimatedBack(state);
@@ -1251,7 +1255,7 @@ pub unsafe fn WI_fragSum(state: &mut GameState, mut playernum: i32) -> i32 {
 pub unsafe fn WI_initDeathmatchStats(state: &mut GameState) {
     let mut i: i32 = 0;
     let mut j: i32 = 0;
-    state.wi_stuff.state = StatCount;
+    state.wi_stuff.state = StateEnum::StatCount;
     state.wi_stuff.acceleratestage = 0 as i32;
     state.wi_stuff.dm_state = 1 as i32;
     state.wi_stuff.cnt_pause = TICRATE;
@@ -1452,7 +1456,7 @@ pub unsafe fn WI_drawDeathmatchStats(state: &mut GameState) {
 }
 pub unsafe fn WI_initNetgameStats(state: &mut GameState) {
     let mut i: i32 = 0;
-    state.wi_stuff.state = StatCount;
+    state.wi_stuff.state = StateEnum::StatCount;
     state.wi_stuff.acceleratestage = 0 as i32;
     state.wi_stuff.ng_state = 1 as i32;
     state.wi_stuff.cnt_pause = TICRATE;
@@ -1741,7 +1745,7 @@ pub unsafe fn WI_drawNetgameStats(state: &mut GameState) {
     }
 }
 pub unsafe fn WI_initStats(state: &mut GameState) {
-    state.wi_stuff.state = StatCount;
+    state.wi_stuff.state = StateEnum::StatCount;
     state.wi_stuff.acceleratestage = 0 as i32;
     state.wi_stuff.sp_state = 1 as i32;
     state.wi_stuff.cnt_secret[0 as i32 as usize] = -(1 as i32);
@@ -1981,8 +1985,8 @@ pub unsafe fn WI_Ticker(state: &mut GameState) {
         }
     }
     WI_checkForAccelerate(state);
-    match state.wi_stuff.state as i32 {
-        0 => {
+    match state.wi_stuff.state {
+        StateEnum::StatCount => {
             if state.g_game.deathmatch != 0 {
                 WI_updateDeathmatchStats(state);
             } else if state.g_game.netgame {
@@ -1991,13 +1995,12 @@ pub unsafe fn WI_Ticker(state: &mut GameState) {
                 WI_updateStats(state);
             }
         }
-        1 => {
+        StateEnum::ShowNextLoc => {
             WI_updateShowNextLoc(state);
         }
-        -1 => {
+        StateEnum::NoState => {
             WI_updateNoState(state);
         }
-        _ => {}
     };
 }
 unsafe fn WI_loadUnloadData(state: &mut GameState, mut callback: load_callback_t) {
@@ -2156,8 +2159,8 @@ unsafe fn WI_unloadCallback(state: &mut GameState, name: &str, variable: *mut *m
     *variable = ::core::ptr::null_mut::<patch_t>();
 }
 pub unsafe fn WI_Drawer(state: &mut GameState) {
-    match state.wi_stuff.state as i32 {
-        0 => {
+    match state.wi_stuff.state {
+        StateEnum::StatCount => {
             if state.g_game.deathmatch != 0 {
                 WI_drawDeathmatchStats(state);
             } else if state.g_game.netgame {
@@ -2166,13 +2169,12 @@ pub unsafe fn WI_Drawer(state: &mut GameState) {
                 WI_drawStats(state);
             }
         }
-        1 => {
+        StateEnum::ShowNextLoc => {
             WI_drawShowNextLoc(state);
         }
-        -1 => {
+        StateEnum::NoState => {
             WI_drawNoState(state);
         }
-        _ => {}
     };
 }
 pub unsafe fn WI_initVariables(state: &mut GameState, mut wbstartstruct: *mut wbstartstruct_t) {
