@@ -50,7 +50,7 @@ use crate::src::p_plats::{
 use crate::src::p_setup::LineId;
 use crate::src::p_setup::SectorId;
 use crate::src::p_setup::SideId;
-use crate::src::p_switch::bwhere_e;
+use crate::src::p_switch::BWhere;
 use crate::src::p_switch::P_ChangeSwitchTexture;
 use crate::src::p_telept::EV_Teleport;
 use crate::src::p_tick::P_AddThinker;
@@ -134,7 +134,7 @@ pub struct animdef_t {
 #[repr(C)]
 pub struct button_t {
     pub line: LineId,
-    pub where_0: bwhere_e,
+    pub where_0: BWhere,
     pub btexture: i32,
     pub btimer: i32,
     pub soundorg: SectorId,
@@ -1022,26 +1022,25 @@ pub unsafe fn P_UpdateSpecials(state: &mut GameState) {
             state.p_switch.buttonlist[i as usize].btimer -= 1;
             if state.p_switch.buttonlist[i as usize].btimer == 0 {
                 let button_line_id = state.p_switch.buttonlist[i as usize].line;
-                match state.p_switch.buttonlist[i as usize].where_0 as u32 {
-                    0 => {
+                match state.p_switch.buttonlist[i as usize].where_0 {
+                    BWhere::top => {
                         state.p_setup.sides[state.p_setup.lines[button_line_id.0 as usize].sidenum
                             [0 as i32 as usize]
                             as usize]
                             .toptexture = state.p_switch.buttonlist[i as usize].btexture as i16;
                     }
-                    1 => {
+                    BWhere::middle => {
                         state.p_setup.sides[state.p_setup.lines[button_line_id.0 as usize].sidenum
                             [0 as i32 as usize]
                             as usize]
                             .midtexture = state.p_switch.buttonlist[i as usize].btexture as i16;
                     }
-                    2 => {
+                    BWhere::bottom => {
                         state.p_setup.sides[state.p_setup.lines[button_line_id.0 as usize].sidenum
                             [0 as i32 as usize]
                             as usize]
                             .bottomtexture = state.p_switch.buttonlist[i as usize].btexture as i16;
                     }
-                    _ => {}
                 }
                 let soundorg = &raw mut (*state
                     .p_setup
