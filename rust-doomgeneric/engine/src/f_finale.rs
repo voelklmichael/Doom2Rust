@@ -42,10 +42,12 @@ use crate::src::w_wad::W_CacheLumpNum;
 use crate::src::w_wad::W_CacheLumpName;
 use crate::src::z_zone::{PU_CACHE, PU_LEVEL};
 use crate::src::mem_compat::memcpy;
-pub type finalestage_t = u32;
-pub const F_STAGE_CAST: finalestage_t = 2;
-pub const F_STAGE_ARTSCREEN: finalestage_t = 1;
-pub const F_STAGE_TEXT: finalestage_t = 0;
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub enum FinaleStage {
+    F_STAGE_TEXT = 0,
+    F_STAGE_ARTSCREEN = 1,
+    F_STAGE_CAST = 2,
+}
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct textscreen_t {
@@ -260,7 +262,7 @@ const INITIAL_TEXTSCREENS: [textscreen_t; 22] = [
 ];
 
 pub struct FFinaleState {
-    finalestage: finalestage_t,
+    finalestage: FinaleStage,
     finalecount: u32,
     textscreens: [textscreen_t; 22],
     finaletext: &'static str,
@@ -279,7 +281,7 @@ pub struct FFinaleState {
 impl FFinaleState {
     pub const fn new() -> Self {
         FFinaleState {
-            finalestage: F_STAGE_TEXT,
+            finalestage: FinaleStage::F_STAGE_TEXT,
             finalecount: 0,
             textscreens: INITIAL_TEXTSCREENS,
             finaletext: "",
@@ -358,11 +360,11 @@ pub unsafe fn F_StartFinale(state: &mut GameState) {
     }
     state.f_finale.finaletext = state.f_finale.finaletext;
     state.f_finale.finaleflat = state.f_finale.finaleflat;
-    state.f_finale.finalestage = F_STAGE_TEXT;
+    state.f_finale.finalestage = FinaleStage::F_STAGE_TEXT;
     state.f_finale.finalecount = 0 as u32;
 }
 pub unsafe fn F_Responder(state: &mut GameState, mut event: &event_t) -> bool {
-    if state.f_finale.finalestage as u32 == F_STAGE_CAST as i32 as u32 {
+    if state.f_finale.finalestage == FinaleStage::F_STAGE_CAST {
         return F_CastResponder(state, event);
     }
     return false;
@@ -388,21 +390,21 @@ pub unsafe fn F_Ticker(state: &mut GameState) {
         }
     }
     state.f_finale.finalecount = state.f_finale.finalecount.wrapping_add(1);
-    if state.f_finale.finalestage as u32 == F_STAGE_CAST as i32 as u32 {
+    if state.f_finale.finalestage == FinaleStage::F_STAGE_CAST {
         F_CastTicker(state);
         return;
     }
     if state.doomstat.gamemode as u32 == commercial as i32 as u32 {
         return;
     }
-    if state.f_finale.finalestage as u32 == F_STAGE_TEXT as i32 as u32
+    if state.f_finale.finalestage == FinaleStage::F_STAGE_TEXT
         && state.f_finale.finalecount as size_t
             > (state.f_finale.finaletext.len() as size_t)
                 .wrapping_mul(TEXTSPEED as size_t)
                 .wrapping_add(TEXTWAIT as size_t)
     {
         state.f_finale.finalecount = 0 as u32;
-        state.f_finale.finalestage = F_STAGE_ARTSCREEN;
+        state.f_finale.finalestage = FinaleStage::F_STAGE_ARTSCREEN;
         state.d_main.wipegamestate = GameScreenState::GS_WIPPED;
         if state.g_game.gameepisode == 3 as i32 {
             S_StartMusic(state, mus_bunny as i32);
@@ -571,7 +573,7 @@ pub unsafe fn F_StartCast(state: &mut GameState) {
     ) as *mut state_t;
     state.f_finale.casttics = (*state.f_finale.caststate).tics;
     state.f_finale.castdeath = false;
-    state.f_finale.finalestage = F_STAGE_CAST;
+    state.f_finale.finalestage = FinaleStage::F_STAGE_CAST;
     state.f_finale.castframes = 0 as i32;
     state.f_finale.castonmelee = 0 as i32;
     state.f_finale.castattacking = false;
@@ -1009,16 +1011,15 @@ unsafe fn F_ArtScreenDrawer(state: &mut GameState) {
     };
 }
 pub unsafe fn F_Drawer(state: &mut GameState) {
-    match state.f_finale.finalestage as u32 {
-        2 => {
+    match state.f_finale.finalestage {
+        FinaleStage::F_STAGE_CAST => {
             F_CastDrawer(state);
         }
-        0 => {
+        FinaleStage::F_STAGE_TEXT => {
             F_TextWrite(state);
         }
-        1 => {
+        FinaleStage::F_STAGE_ARTSCREEN => {
             F_ArtScreenDrawer(state);
         }
-        _ => {}
     };
 }
