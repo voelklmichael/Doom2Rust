@@ -5,7 +5,7 @@ use crate::src::hu_lib::patch_t;
 use crate::src::i_system::I_Error;
 use crate::src::w_wad::W_CacheLumpName;
 
-use crate::src::d_event::{ev_joystick, ev_keydown, ev_mouse, ev_quit};
+use crate::src::d_event::EvType;
 use crate::src::d_mode::{commercial, registered, retail, shareware};
 use crate::src::d_mode::{doom, doom2, pack_chex, pack_hacx};
 use crate::src::d_mode::{skill_t, GameVersion};
@@ -1465,8 +1465,8 @@ pub unsafe fn M_Responder(state: &mut GameState, ev: &mut event_t) -> bool {
     let mut key: i32 = 0;
     let mut i: i32 = 0;
     if state.g_game.testcontrols {
-        if (*ev).type_0 as u32 == ev_quit as i32 as u32
-            || (*ev).type_0 as u32 == ev_keydown as i32 as u32
+        if (*ev).type_0 == EvType::ev_quit
+            || (*ev).type_0 == EvType::ev_keydown
                 && ((*ev).data1 == state.m_controls.key_menu_activate
                     || (*ev).data1 == state.m_controls.key_menu_quit)
         {
@@ -1475,7 +1475,7 @@ pub unsafe fn M_Responder(state: &mut GameState, ev: &mut event_t) -> bool {
         }
         return false;
     }
-    if (*ev).type_0 as u32 == ev_quit as i32 as u32 {
+    if (*ev).type_0 == EvType::ev_quit {
         if state.m_menu.menuactive
             && state.m_menu.messageToPrint != 0
             && state.m_menu.messageRoutine
@@ -1491,7 +1491,7 @@ pub unsafe fn M_Responder(state: &mut GameState, ev: &mut event_t) -> bool {
     }
     ch = 0 as i32;
     key = -(1 as i32);
-    if (*ev).type_0 as u32 == ev_joystick as i32 as u32
+    if (*ev).type_0 == EvType::ev_joystick
         && state.m_menu.responder_joywait < I_GetTime(state)
     {
         if (*ev).data3 < 0 as i32 {
@@ -1522,7 +1522,7 @@ pub unsafe fn M_Responder(state: &mut GameState, ev: &mut event_t) -> bool {
             key = state.m_controls.key_menu_activate;
             state.m_menu.responder_joywait = I_GetTime(state) + 5 as i32;
         }
-    } else if (*ev).type_0 as u32 == ev_mouse as i32 as u32
+    } else if (*ev).type_0 == EvType::ev_mouse
         && state.m_menu.responder_mousewait < I_GetTime(state)
     {
         state.m_menu.responder_mousey += (*ev).data3;
@@ -1557,7 +1557,7 @@ pub unsafe fn M_Responder(state: &mut GameState, ev: &mut event_t) -> bool {
             key = state.m_controls.key_menu_back;
             state.m_menu.responder_mousewait = I_GetTime(state) + 15 as i32;
         }
-    } else if (*ev).type_0 as u32 == ev_keydown as i32 as u32 {
+    } else if (*ev).type_0 == EvType::ev_keydown {
         key = (*ev).data1;
         ch = (*ev).data2;
     }

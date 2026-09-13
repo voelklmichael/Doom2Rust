@@ -1,5 +1,5 @@
-use crate::src::d_event::ev_keydown;
 use crate::src::d_event::event_t;
+use crate::src::d_event::EvType;
 use crate::src::d_event::GameScreenState;
 use crate::src::d_event::{ga_nothing, ga_worlddone};
 use crate::src::d_mode::GameVersion;
@@ -784,7 +784,7 @@ pub unsafe fn F_CastTicker(state: &mut GameState) {
     }
 }
 pub unsafe fn F_CastResponder(state: &mut GameState, mut ev: &event_t) -> bool {
-    if ev.type_0 != ev_keydown as u32 {
+    if ev.type_0 != EvType::ev_keydown {
         return false;
     }
     if state.f_finale.castdeath {

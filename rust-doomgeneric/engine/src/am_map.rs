@@ -1,5 +1,5 @@
 use crate::src::d_event::event_t;
-use crate::src::d_event::{ev_keydown, ev_keyup};
+use crate::src::d_event::EvType;
 use crate::src::d_player::player_t;
 use crate::src::d_player::PlayerId;
 use crate::src::d_player::{pw_allmap, pw_invisibility};
@@ -662,7 +662,7 @@ pub fn AM_changeWindowLoc(state: &mut GameState) {
 pub unsafe fn AM_initVariables(state: &mut GameState) {
     let mut pnum: i32 = 0;
     const st_notify: event_t = event_t {
-        type_0: ev_keyup,
+        type_0: EvType::ev_keyup,
         data1: AM_MSGENTERED,
         data2: 0 as i32,
         data3: 0 as i32,
@@ -757,8 +757,8 @@ pub fn AM_LevelInit(state: &mut GameState) {
 }
 pub unsafe fn AM_Stop(state: &mut GameState) {
     const st_notify: event_t = event_t {
-        type_0: ev_keydown,
-        data1: ev_keyup as i32,
+        type_0: EvType::ev_keydown,
+        data1: EvType::ev_keyup as i32,
         data2: AM_MSGEXITED,
         data3: 0 as i32,
         data4: 0,
@@ -798,14 +798,14 @@ pub unsafe fn AM_Responder(state: &mut GameState, mut ev: &event_t) -> bool {
     let mut key: i32 = 0;
     rc = false_0;
     if !state.am_map.automapactive {
-        if (*ev).type_0 as u32 == ev_keydown as i32 as u32
+        if (*ev).type_0 == EvType::ev_keydown
             && (*ev).data1 == state.m_controls.key_map_toggle
         {
             AM_Start(state);
             state.g_game.viewactive = false;
             rc = true_0;
         }
-    } else if (*ev).type_0 as u32 == ev_keydown as i32 as u32 {
+    } else if (*ev).type_0 == EvType::ev_keydown {
         rc = true_0;
         key = (*ev).data1;
         if key == state.m_controls.key_map_east {
@@ -888,7 +888,7 @@ pub unsafe fn AM_Responder(state: &mut GameState, mut ev: &event_t) -> bool {
             rc = false_0;
             state.am_map.cheating = (state.am_map.cheating + 1 as i32) % 3 as i32;
         }
-    } else if (*ev).type_0 as u32 == ev_keyup as i32 as u32 {
+    } else if (*ev).type_0 == EvType::ev_keyup {
         rc = false_0;
         key = (*ev).data1;
         if key == state.m_controls.key_map_east {
