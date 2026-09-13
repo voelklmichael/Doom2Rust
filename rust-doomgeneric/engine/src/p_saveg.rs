@@ -1114,12 +1114,7 @@ pub unsafe fn P_UnArchiveSpecials(state: &mut GameState) {
             7 => return,
             0 => {
                 saveg_read_pad(state);
-                ceiling = Z_Malloc(
-                    &mut state.z_zone,
-                    ::core::mem::size_of::<ceiling_t>() as i32,
-                    PU_LEVEL as i32,
-                    NULL,
-                ) as *mut ceiling_t;
+                ceiling = state.p_ceilng.spawn(ceiling_t::default());
                 saveg_read_ceiling_t(state, ceiling);
                 if matches!((*ceiling).thinker.function, ThinkerFn::Unresolved) {
                     (*ceiling).thinker.function = ThinkerFn::Ceiling(T_MoveCeiling);
