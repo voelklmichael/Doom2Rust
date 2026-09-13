@@ -59,8 +59,8 @@ pub struct StStuffState {
     pub lu_palette: i32,
     pub st_clock: u32,
     pub st_msgcounter: i32,
-    pub st_chatstate: st_chatstateenum_t,
-    pub st_gamestate: st_stateenum_t,
+    pub st_chatstate: StChatStateEnum,
+    pub st_gamestate: StStateEnum,
     pub st_statusbaron: bool,
     pub st_chat: bool,
     pub st_oldchat: bool,
@@ -123,8 +123,8 @@ impl StStuffState {
             lu_palette: 0,
             st_clock: 0,
             st_msgcounter: 0,
-            st_chatstate: StartChatState,
-            st_gamestate: AutomapState,
+            st_chatstate: StChatStateEnum::StartChatState,
+            st_gamestate: StStateEnum::AutomapState,
             st_statusbaron: false,
             st_chat: false,
             st_oldchat: false,
@@ -342,13 +342,17 @@ impl StStuffState {
     }
 }
 
-pub type st_stateenum_t = u32;
-pub const FirstPersonState: st_stateenum_t = 1;
-pub const AutomapState: st_stateenum_t = 0;
-pub type st_chatstateenum_t = u32;
-pub const GetChatState: st_chatstateenum_t = 2;
-pub const WaitDestState: st_chatstateenum_t = 1;
-pub const StartChatState: st_chatstateenum_t = 0;
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub enum StStateEnum {
+    AutomapState = 0,
+    FirstPersonState = 1,
+}
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub enum StChatStateEnum {
+    StartChatState = 0,
+    WaitDestState = 1,
+    GetChatState = 2,
+}
 pub type load_callback_t = Option<unsafe fn(&mut GameState, &str, *mut *mut patch_t) -> ()>;
 pub const DEH_DEFAULT_GOD_MODE_HEALTH: i32 = 100;
 pub const DEH_DEFAULT_IDFA_ARMOR: i32 = 200;
@@ -460,11 +464,11 @@ pub unsafe fn ST_Responder(state: &mut GameState, mut ev: &event_t) -> bool {
     {
         match (*ev).data1 {
             AM_MSGENTERED => {
-                state.st_stuff.st_gamestate = AutomapState;
+                state.st_stuff.st_gamestate = StStateEnum::AutomapState;
                 state.st_stuff.st_firsttime = true;
             }
             AM_MSGEXITED => {
-                state.st_stuff.st_gamestate = FirstPersonState;
+                state.st_stuff.st_gamestate = StStateEnum::FirstPersonState;
             }
             _ => {}
         }
@@ -1122,8 +1126,8 @@ pub unsafe fn ST_initData(state: &mut GameState) {
     state.st_stuff.plyr = (&raw mut state.g_game.players as *mut player_t)
         .offset(state.g_game.consoleplayer as isize) as *mut player_t;
     state.st_stuff.st_clock = 0 as u32;
-    state.st_stuff.st_chatstate = StartChatState;
-    state.st_stuff.st_gamestate = FirstPersonState;
+    state.st_stuff.st_chatstate = StChatStateEnum::StartChatState;
+    state.st_stuff.st_gamestate = StStateEnum::FirstPersonState;
     state.st_stuff.st_statusbaron = true;
     state.st_stuff.st_chat = false;
     state.st_stuff.st_oldchat = state.st_stuff.st_chat;
