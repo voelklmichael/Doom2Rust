@@ -95,14 +95,14 @@ use crate::src::tables::ANG45;
 use crate::src::tables::ANGLETOFINESHIFT;
 use crate::src::v_video::V_ScreenShot;
 use crate::src::w_wad::{
-    wad_name8_to_string, W_CacheLumpName, W_CheckNumForName, W_ReleaseLumpName,
+    wad_name8_to_string, W_CacheLumpNum, W_CheckNumForName, W_GetNumForName, W_LumpLength,
+    W_ReleaseLumpName,
 };
 use crate::src::wi_stuff::WI_End;
 use crate::src::wi_stuff::WI_Start;
 use crate::src::wi_stuff::WI_Ticker;
 use crate::src::wi_stuff::{wbplayerstruct_t, wbstartstruct_t};
 use crate::src::z_zone::Z_CheckHeap;
-use crate::src::z_zone::Z_Free;
 use crate::src::z_zone::Z_Malloc;
 use crate::src::z_zone::PU_STATIC;
 use crate::src::mem_compat::{memcpy, memset};
@@ -142,7 +142,7 @@ pub struct GGameState {
     pub lowres_turn: bool,
     pub demoplayback: bool,
     pub netdemo: bool,
-    pub demobuffer: *mut byte,
+    pub demobuffer: Vec<byte>,
     pub demo_p: *mut byte,
     pub demoend: *mut byte,
     pub singledemo: bool,
@@ -276,7 +276,7 @@ impl GGameState {
             lowres_turn: false,
             demoplayback: false,
             netdemo: false,
-            demobuffer: ::core::ptr::null::<byte>() as *mut byte,
+            demobuffer: Vec::new(),
             demo_p: ::core::ptr::null::<byte>() as *mut byte,
             demoend: ::core::ptr::null::<byte>() as *mut byte,
             singledemo: false,
@@ -1824,32 +1824,21 @@ pub unsafe fn G_ReadDemoTiccmd(state: &mut GameState, mut cmd: *mut ticcmd_t) {
     (*cmd).buttons = *fresh23 as u8 as byte;
 }
 unsafe fn IncreaseDemoBuffer(state: &mut GameState) {
-    let mut current_length: i32 = 0;
-    let mut new_demobuffer: *mut byte = ::core::ptr::null_mut::<byte>();
-    let mut new_demop: *mut byte = ::core::ptr::null_mut::<byte>();
-    let mut new_length: i32 = 0;
-    current_length = state.g_game.demoend.offset_from(state.g_game.demobuffer) as i64 as i32;
-    new_length = current_length * 2 as i32;
-    new_demobuffer = Z_Malloc(
-        &mut state.z_zone,
-        new_length,
-        PU_STATIC as i32,
-        ::core::ptr::null_mut::<::core::ffi::c_void>(),
-    ) as *mut byte;
-    new_demop = new_demobuffer
-        .offset(state.g_game.demo_p.offset_from(state.g_game.demobuffer) as i64 as isize);
-    memcpy(
-        new_demobuffer as *mut ::core::ffi::c_void,
-        state.g_game.demobuffer as *const ::core::ffi::c_void,
-        current_length as size_t,
-    );
-    Z_Free(
-        &mut state.z_zone,
-        state.g_game.demobuffer as *mut ::core::ffi::c_void,
-    );
-    state.g_game.demobuffer = new_demobuffer;
-    state.g_game.demo_p = new_demop;
-    state.g_game.demoend = state.g_game.demobuffer.offset(new_length as isize);
+    let current_length =
+        state.g_game.demoend.offset_from(state.g_game.demobuffer.as_ptr()) as i64 as i32;
+    let new_length = current_length * 2 as i32;
+    let demo_p_offset = state.g_game.demo_p.offset_from(state.g_game.demobuffer.as_ptr());
+    state.g_game.demobuffer.resize(new_length as usize, 0);
+    state.g_game.demo_p = state
+        .g_game
+        .demobuffer
+        .as_mut_ptr()
+        .offset(demo_p_offset as isize);
+    state.g_game.demoend = state
+        .g_game
+        .demobuffer
+        .as_mut_ptr()
+        .offset(new_length as isize);
 }
 pub unsafe fn G_WriteDemoTiccmd(state: &mut GameState, mut cmd: *mut ticcmd_t) {
     let mut demo_start: *mut byte = ::core::ptr::null_mut::<byte>();
@@ -1915,9 +1904,8 @@ pub unsafe fn G_RecordDemo(state: &mut GameState, name: &str) {
             M_ArgvAtoi(&state.m_argv.myargv[(i + 1 as i32) as usize])
                 * 1024 as i32;
     }
-    state.g_game.demobuffer =
-        Z_Malloc(&mut state.z_zone, maxsize, PU_STATIC as i32, NULL) as *mut byte;
-    state.g_game.demoend = state.g_game.demobuffer.offset(maxsize as isize);
+    state.g_game.demobuffer = vec![0u8; maxsize as usize];
+    state.g_game.demoend = state.g_game.demobuffer.as_mut_ptr().offset(maxsize as isize);
     state.g_game.demorecording = true;
 }
 pub fn G_VanillaVersionCode(state: &mut DoomstatState) -> i32 {
@@ -1936,7 +1924,7 @@ pub unsafe fn G_BeginRecording(state: &mut GameState) {
     let mut i: i32 = 0;
     state.g_game.longtics = M_CheckParm(state, "-longtics") != 0 as i32;
     state.g_game.lowres_turn = !state.g_game.longtics;
-    state.g_game.demo_p = state.g_game.demobuffer;
+    state.g_game.demo_p = state.g_game.demobuffer.as_mut_ptr();
     if state.g_game.longtics {
         let fresh0 = state.g_game.demo_p;
         state.g_game.demo_p = state.g_game.demo_p.offset(1);
@@ -2005,11 +1993,12 @@ pub unsafe fn G_DoPlayDemo(state: &mut GameState) {
     let mut map: i32 = 0;
     let mut demoversion: i32 = 0;
     state.g_game.gameaction = GameAction::ga_nothing;
-    state.g_game.demo_p = W_CacheLumpName(state, 
-        &wad_name8_to_string(state.g_game.defdemoname),
-        PU_STATIC as i32,
-    ) as *mut byte;
-    state.g_game.demobuffer = state.g_game.demo_p;
+    let demo_lumpname = wad_name8_to_string(state.g_game.defdemoname);
+    let demo_lumpnum = W_GetNumForName(&mut state.w_wad, &demo_lumpname);
+    let demo_lump = W_CacheLumpNum(state, demo_lumpnum, PU_STATIC as i32) as *const byte;
+    let demo_lumplen = W_LumpLength(&mut state.w_wad, demo_lumpnum as u32) as usize;
+    state.g_game.demobuffer = ::core::slice::from_raw_parts(demo_lump, demo_lumplen).to_vec();
+    state.g_game.demo_p = state.g_game.demobuffer.as_mut_ptr();
     let fresh24 = state.g_game.demo_p;
     state.g_game.demo_p = state.g_game.demo_p.offset(1);
     demoversion = *fresh24 as i32;
@@ -2124,15 +2113,12 @@ pub unsafe fn G_CheckDemoStatus(state: &mut GameState) -> boolean {
         let fresh11 = state.g_game.demo_p;
         state.g_game.demo_p = state.g_game.demo_p.offset(1);
         *fresh11 = DEMOMARKER as byte;
-        let demo_len = state.g_game.demo_p.offset_from(state.g_game.demobuffer) as usize;
+        let demo_len = state.g_game.demo_p.offset_from(state.g_game.demobuffer.as_ptr()) as usize;
         M_WriteFile(
             &::std::ffi::CStr::from_ptr(state.g_game.demoname).to_string_lossy(),
-            ::core::slice::from_raw_parts(state.g_game.demobuffer, demo_len),
+            &state.g_game.demobuffer[..demo_len],
         );
-        Z_Free(
-            &mut state.z_zone,
-            state.g_game.demobuffer as *mut ::core::ffi::c_void,
-        );
+        state.g_game.demobuffer = Vec::new();
         state.g_game.demorecording = false;
         I_Error(&format!(
             "Demo {} recorded",

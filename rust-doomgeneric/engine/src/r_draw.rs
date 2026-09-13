@@ -1,5 +1,4 @@
 use crate::src::d_mode::GameMode_t;
-use crate::src::doomdef::NULL;
 use crate::src::doomdef::SCREENHEIGHT;
 use crate::src::doomdef::SCREENWIDTH;
 use crate::src::game_state::GameState;
@@ -15,7 +14,6 @@ use crate::src::v_video::V_MarkRect;
 use crate::src::v_video::V_RestoreBuffer;
 use crate::src::v_video::V_UseBuffer;
 use crate::src::w_wad::W_CacheLumpName;
-use crate::src::z_zone::Z_Free;
 use crate::src::z_zone::Z_Malloc;
 use crate::src::z_zone::{PU_CACHE, PU_STATIC};
 use crate::src::mem_compat::memcpy;
@@ -29,7 +27,7 @@ pub struct RDrawState {
     pub viewwindowy: i32,
     pub ylookup: [*mut byte; 832],
     pub columnofs: [i32; 1120],
-    pub background_buffer: *mut byte,
+    pub background_buffer: Option<Vec<byte>>,
     pub dc_colormap: *mut lighttable_t,
     pub dc_x: i32,
     pub dc_yl: i32,
@@ -64,7 +62,7 @@ impl RDrawState {
             viewwindowy: 0,
             ylookup: [::core::ptr::null::<byte>() as *mut byte; 832],
             columnofs: [0; 1120],
-            background_buffer: ::core::ptr::null::<byte>() as *mut byte,
+            background_buffer: None,
             dc_colormap: ::core::ptr::null::<lighttable_t>() as *mut lighttable_t,
             dc_x: 0,
             dc_yl: 0,
@@ -542,22 +540,12 @@ pub unsafe fn R_FillBackScreen(state: &mut GameState) {
     let name2: &str = "GRNROCK";
     let name: &str;
     if state.r_draw.scaledviewwidth == SCREENWIDTH {
-        if !state.r_draw.background_buffer.is_null() {
-            Z_Free(
-                &mut state.z_zone,
-                state.r_draw.background_buffer as *mut ::core::ffi::c_void,
-            );
-            state.r_draw.background_buffer = ::core::ptr::null_mut::<byte>();
-        }
+        state.r_draw.background_buffer = None;
         return;
     }
-    if state.r_draw.background_buffer.is_null() {
-        state.r_draw.background_buffer = Z_Malloc(
-            &mut state.z_zone,
-            SCREENWIDTH * (SCREENHEIGHT - SBARHEIGHT),
-            PU_STATIC as i32,
-            NULL,
-        ) as *mut byte;
+    if state.r_draw.background_buffer.is_none() {
+        state.r_draw.background_buffer =
+            Some(vec![0u8; (SCREENWIDTH * (SCREENHEIGHT - SBARHEIGHT)) as usize]);
     }
     if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 {
         name = name2;
@@ -565,7 +553,7 @@ pub unsafe fn R_FillBackScreen(state: &mut GameState) {
         name = name1;
     }
     src = W_CacheLumpName(state, name, PU_CACHE as i32) as *mut byte;
-    dest = state.r_draw.background_buffer;
+    dest = state.r_draw.background_buffer.as_mut().unwrap().as_mut_ptr();
     y = 0 as i32;
     while y < SCREENHEIGHT - SBARHEIGHT {
         x = 0 as i32;
@@ -588,7 +576,10 @@ pub unsafe fn R_FillBackScreen(state: &mut GameState) {
         }
         y += 1;
     }
-    V_UseBuffer(&mut state.v_video, state.r_draw.background_buffer);
+    V_UseBuffer(
+        &mut state.v_video,
+        state.r_draw.background_buffer.as_mut().unwrap().as_mut_ptr(),
+    );
     patch = W_CacheLumpName(state, "brdr_t", PU_CACHE as i32) as *mut patch_t;
     x = 0 as i32;
     while x < state.r_draw.scaledviewwidth {
@@ -656,10 +647,10 @@ pub unsafe fn R_FillBackScreen(state: &mut GameState) {
     V_RestoreBuffer(state);
 }
 pub unsafe fn R_VideoErase(state: &mut GameState, mut ofs: u32, mut count: i32) {
-    if !state.r_draw.background_buffer.is_null() {
+    if let Some(background_buffer) = &state.r_draw.background_buffer {
         memcpy(
             state.i_video.I_VideoBuffer.offset(ofs as isize) as *mut ::core::ffi::c_void,
-            state.r_draw.background_buffer.offset(ofs as isize) as *const ::core::ffi::c_void,
+            background_buffer.as_ptr().offset(ofs as isize) as *const ::core::ffi::c_void,
             count as size_t,
         );
     }
