@@ -219,8 +219,17 @@ allocator for lump data at all (the `mmap`'d-file fast path, and every downstrea
 caller's return-pointer usage, are unchanged). `W_ReleaseLumpNum`'s `Z_ChangeTag2` call
 was accordingly deleted (it had nothing left to do), and `Z_ChangeUser` — whose only real
 caller was this same cache's regrow-fixup path — was deleted from `z_zone.rs` entirely as
-dead code. No further observable behavior change beyond what this deviation already
-covers.
+dead code.
+
+**Follow-up 2 (2026-09-13, same day)**: `r_data.rs`'s texture composite cache
+(`RDataState.texturecomposite`) got the same treatment — `Vec<*mut byte>` changed to
+`Vec<Option<Box<[u8]>>>`, so `R_GenerateComposite` builds the composite in a local `Vec<u8>`
+and stores it once fully drawn instead of handing `Z_Malloc` a `user` back-pointer into the
+slot up front. This was the last real caller of `Z_ChangeTag2` project-wide, so it was
+deleted from `z_zone.rs` entirely as dead code too. `R_GetColumn`'s rendering-path read of
+this cache is unchanged in effect (same bytes, same offsets) — screenshot-diffed against
+unmodified `main` to confirm, given this feeds pixel data directly to the screen. No further
+observable behavior change beyond what this deviation already covers.
 
 ## Known bug (dormant): `snd_musiccmd`/`chatmacro*` config bindings can corrupt their own length field
 
