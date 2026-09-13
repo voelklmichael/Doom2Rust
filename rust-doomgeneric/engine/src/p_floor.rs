@@ -19,6 +19,7 @@ use crate::src::p_spec::P_FindNextHighestFloor;
 use crate::src::p_spec::P_FindSectorFromLineTag;
 use crate::src::p_spec::ML_TWOSIDED;
 use crate::src::p_tick::P_AddThinker;
+use crate::src::p_tick::ThinkerKind;
 use crate::src::p_tick::P_RemoveThinker;
 use crate::src::r_defs::side_t;
 use crate::src::s_sound::S_StartSound;
@@ -228,7 +229,7 @@ pub unsafe fn EV_DoFloor(
             PU_LEVSPEC as i32,
             ::core::ptr::null_mut::<::core::ffi::c_void>(),
         ) as *mut floormove_t;
-        let floor_id = P_AddThinker(state, &raw mut (*floor).thinker);
+        let floor_id = P_AddThinker(state, &raw mut (*floor).thinker, ThinkerKind::Floor);
         (*sec).specialdata = Some(SectorSpecial::Floor(floor_id));
         (*floor).thinker.function = ThinkerFn::Floor(T_MoveFloor);
         (*floor).type_0 = floortype;
@@ -426,7 +427,7 @@ pub unsafe fn EV_BuildStairs(
             PU_LEVSPEC as i32,
             ::core::ptr::null_mut::<::core::ffi::c_void>(),
         ) as *mut floormove_t;
-        let floor_id = P_AddThinker(state, &raw mut (*floor).thinker);
+        let floor_id = P_AddThinker(state, &raw mut (*floor).thinker, ThinkerKind::Floor);
         (*sec).specialdata = Some(SectorSpecial::Floor(floor_id));
         (*floor).thinker.function = ThinkerFn::Floor(T_MoveFloor);
         (*floor).direction = 1 as i32;
@@ -468,7 +469,7 @@ pub unsafe fn EV_BuildStairs(
                                     PU_LEVSPEC as i32,
                                     ::core::ptr::null_mut::<::core::ffi::c_void>(),
                                 ) as *mut floormove_t;
-                                let floor_id = P_AddThinker(state, &raw mut (*floor).thinker);
+                                let floor_id = P_AddThinker(state, &raw mut (*floor).thinker, ThinkerKind::Floor);
                                 (*sec).specialdata = Some(SectorSpecial::Floor(floor_id));
                                 (*floor).thinker.function = ThinkerFn::Floor(T_MoveFloor);
                                 (*floor).direction = 1 as i32;

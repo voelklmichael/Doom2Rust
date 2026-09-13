@@ -16,6 +16,7 @@ use crate::src::p_spec::P_FindLowestCeilingSurrounding;
 use crate::src::p_spec::P_FindSectorFromLineTag;
 use crate::src::p_spec::{ceiling_t, floormove_t, plat_t};
 use crate::src::p_tick::P_AddThinker;
+use crate::src::p_tick::ThinkerKind;
 use crate::src::p_tick::P_RemoveThinker;
 use crate::src::s_sound::S_StartSound;
 use crate::src::s_sound::SoundOrigin;
@@ -220,7 +221,7 @@ pub unsafe fn EV_DoDoor(state: &mut GameState, mut line: LineId, mut type_0: Vld
             PU_LEVSPEC as i32,
             ::core::ptr::null_mut::<::core::ffi::c_void>(),
         ) as *mut vldoor_t;
-        let door_id = P_AddThinker(state, &raw mut (*door).thinker);
+        let door_id = P_AddThinker(state, &raw mut (*door).thinker, ThinkerKind::Door);
         (*sec).specialdata = Some(SectorSpecial::Door(door_id));
         (*door).thinker.function = ThinkerFn::Door(T_VerticalDoor);
         (*door).sector = SectorId(secnum as u32);
@@ -386,7 +387,7 @@ pub unsafe fn EV_VerticalDoor(
         PU_LEVSPEC as i32,
         ::core::ptr::null_mut::<::core::ffi::c_void>(),
     ) as *mut vldoor_t;
-    let door_id = P_AddThinker(state, &raw mut (*door).thinker);
+    let door_id = P_AddThinker(state, &raw mut (*door).thinker, ThinkerKind::Door);
     (*sec).specialdata = Some(SectorSpecial::Door(door_id));
     (*door).thinker.function = ThinkerFn::Door(T_VerticalDoor);
     (*door).sector = door_sector_id;
@@ -424,7 +425,7 @@ pub unsafe fn P_SpawnDoorCloseIn30(state: &mut GameState, mut sector: SectorId) 
         PU_LEVSPEC as i32,
         ::core::ptr::null_mut::<::core::ffi::c_void>(),
     ) as *mut vldoor_t;
-    let door_id = P_AddThinker(state, &raw mut (*door).thinker);
+    let door_id = P_AddThinker(state, &raw mut (*door).thinker, ThinkerKind::Door);
     (*sec).specialdata = Some(SectorSpecial::Door(door_id));
     (*sec).special = 0 as i16;
     (*door).thinker.function = ThinkerFn::Door(T_VerticalDoor);
@@ -443,7 +444,7 @@ pub unsafe fn P_SpawnDoorRaiseIn5Mins(state: &mut GameState, mut sector: SectorI
         PU_LEVSPEC as i32,
         ::core::ptr::null_mut::<::core::ffi::c_void>(),
     ) as *mut vldoor_t;
-    let door_id = P_AddThinker(state, &raw mut (*door).thinker);
+    let door_id = P_AddThinker(state, &raw mut (*door).thinker, ThinkerKind::Door);
     (*sec).specialdata = Some(SectorSpecial::Door(door_id));
     (*sec).special = 0 as i16;
     (*door).thinker.function = ThinkerFn::Door(T_VerticalDoor);

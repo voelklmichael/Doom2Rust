@@ -31,6 +31,7 @@ use crate::src::p_pspr::P_SetupPsprites;
 use crate::src::p_setup::{LineId, SectorId, SubsectorId, VertexId};
 use crate::src::p_spec::{ceiling_t, floormove_t, plat_t};
 use crate::src::p_tick::P_AddThinker;
+use crate::src::p_tick::ThinkerKind;
 use crate::src::p_tick::P_RemoveThinker;
 use crate::src::p_tick::ThinkerId;
 use crate::src::p_user::VIEWHEIGHT;
@@ -3165,7 +3166,7 @@ pub unsafe fn P_SpawnMobj(
         (*mobj).z = z;
     }
     (*mobj).thinker.function = ThinkerFn::Mobj(P_MobjThinker);
-    P_AddThinker(state, &raw mut (*mobj).thinker);
+    P_AddThinker(state, &raw mut (*mobj).thinker, ThinkerKind::Mobj);
     return mobj;
 }
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Hash)]

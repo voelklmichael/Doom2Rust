@@ -49,6 +49,7 @@ use crate::src::p_switch::BWhere;
 use crate::src::p_switch::P_ChangeSwitchTexture;
 use crate::src::p_telept::EV_Teleport;
 use crate::src::p_tick::P_AddThinker;
+use crate::src::p_tick::ThinkerKind;
 use crate::src::r_data::R_CheckTextureNumForName;
 use crate::src::r_data::R_FlatNumForName;
 use crate::src::r_data::R_TextureNumForName;
@@ -1155,7 +1156,7 @@ pub unsafe fn EV_DoDonut(state: &mut GameState, mut line: LineId) -> i32 {
                         PU_LEVSPEC as i32,
                         ::core::ptr::null_mut::<::core::ffi::c_void>(),
                     ) as *mut floormove_t;
-                    let floor_id = P_AddThinker(state, &raw mut (*floor).thinker);
+                    let floor_id = P_AddThinker(state, &raw mut (*floor).thinker, ThinkerKind::Floor);
                     (*s2).specialdata = Some(SectorSpecial::Floor(floor_id));
                     (*floor).thinker.function = ThinkerFn::Floor(T_MoveFloor);
                     (*floor).type_0 = FloorE::donutRaise;
@@ -1172,7 +1173,7 @@ pub unsafe fn EV_DoDonut(state: &mut GameState, mut line: LineId) -> i32 {
                         PU_LEVSPEC as i32,
                         ::core::ptr::null_mut::<::core::ffi::c_void>(),
                     ) as *mut floormove_t;
-                    let floor_id = P_AddThinker(state, &raw mut (*floor).thinker);
+                    let floor_id = P_AddThinker(state, &raw mut (*floor).thinker, ThinkerKind::Floor);
                     (*s1).specialdata = Some(SectorSpecial::Floor(floor_id));
                     (*floor).thinker.function = ThinkerFn::Floor(T_MoveFloor);
                     (*floor).type_0 = FloorE::lowerFloor;

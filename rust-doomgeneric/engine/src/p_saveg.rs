@@ -31,6 +31,7 @@ use crate::src::p_setup::SideId;
 use crate::src::p_setup::SubsectorId;
 use crate::src::p_spec::{ceiling_t, floormove_t, plat_t};
 use crate::src::p_tick::P_AddThinker;
+use crate::src::p_tick::ThinkerKind;
 use crate::src::p_tick::P_InitThinkers;
 use crate::src::r_defs::side_t;
 use crate::src::stdint_types::byte;
@@ -1017,7 +1018,7 @@ pub unsafe fn P_UnArchiveThinkers(state: &mut GameState) {
                     .sector_mut(state.p_setup.subsectors[(*mobj).subsector.0 as usize].sector))
                 .ceilingheight;
                 (*mobj).thinker.function = ThinkerFn::Mobj(P_MobjThinker);
-                P_AddThinker(state, &raw mut (*mobj).thinker);
+                P_AddThinker(state, &raw mut (*mobj).thinker, ThinkerKind::Mobj);
             }
             _ => {
                 I_Error(&format!("Unknown tclass {} in savegame", tclass as i32,));
@@ -1114,7 +1115,7 @@ pub unsafe fn P_UnArchiveSpecials(state: &mut GameState) {
                 if matches!((*ceiling).thinker.function, ThinkerFn::Unresolved) {
                     (*ceiling).thinker.function = ThinkerFn::Ceiling(T_MoveCeiling);
                 }
-                let ceiling_id = P_AddThinker(state, &raw mut (*ceiling).thinker);
+                let ceiling_id = P_AddThinker(state, &raw mut (*ceiling).thinker, ThinkerKind::Ceiling);
                 (*state.p_setup.sector_mut((*ceiling).sector)).specialdata =
                     Some(SectorSpecial::Ceiling(ceiling_id));
                 P_AddActiveCeiling(&mut state.p_ceilng, ceiling);
@@ -1129,7 +1130,7 @@ pub unsafe fn P_UnArchiveSpecials(state: &mut GameState) {
                 ) as *mut vldoor_t;
                 saveg_read_vldoor_t(state, door);
                 (*door).thinker.function = ThinkerFn::Door(T_VerticalDoor);
-                let door_id = P_AddThinker(state, &raw mut (*door).thinker);
+                let door_id = P_AddThinker(state, &raw mut (*door).thinker, ThinkerKind::Door);
                 (*state.p_setup.sector_mut((*door).sector)).specialdata =
                     Some(SectorSpecial::Door(door_id));
             }
@@ -1143,7 +1144,7 @@ pub unsafe fn P_UnArchiveSpecials(state: &mut GameState) {
                 ) as *mut floormove_t;
                 saveg_read_floormove_t(state, floor);
                 (*floor).thinker.function = ThinkerFn::Floor(T_MoveFloor);
-                let floor_id = P_AddThinker(state, &raw mut (*floor).thinker);
+                let floor_id = P_AddThinker(state, &raw mut (*floor).thinker, ThinkerKind::Floor);
                 (*state.p_setup.sector_mut((*floor).sector)).specialdata =
                     Some(SectorSpecial::Floor(floor_id));
             }
@@ -1159,7 +1160,7 @@ pub unsafe fn P_UnArchiveSpecials(state: &mut GameState) {
                 if matches!((*plat).thinker.function, ThinkerFn::Unresolved) {
                     (*plat).thinker.function = ThinkerFn::Plat(T_PlatRaise);
                 }
-                let plat_id = P_AddThinker(state, &raw mut (*plat).thinker);
+                let plat_id = P_AddThinker(state, &raw mut (*plat).thinker, ThinkerKind::Plat);
                 (*state.p_setup.sector_mut((*plat).sector)).specialdata =
                     Some(SectorSpecial::Plat(plat_id));
                 P_AddActivePlat(&mut state.p_plats, plat);
@@ -1174,7 +1175,7 @@ pub unsafe fn P_UnArchiveSpecials(state: &mut GameState) {
                 ) as *mut lightflash_t;
                 saveg_read_lightflash_t(state, flash);
                 (*flash).thinker.function = ThinkerFn::LightFlash(T_LightFlash);
-                P_AddThinker(state, &raw mut (*flash).thinker);
+                P_AddThinker(state, &raw mut (*flash).thinker, ThinkerKind::LightFlash);
             }
             5 => {
                 saveg_read_pad(state);
@@ -1186,7 +1187,7 @@ pub unsafe fn P_UnArchiveSpecials(state: &mut GameState) {
                 ) as *mut strobe_t;
                 saveg_read_strobe_t(state, strobe);
                 (*strobe).thinker.function = ThinkerFn::Strobe(T_StrobeFlash);
-                P_AddThinker(state, &raw mut (*strobe).thinker);
+                P_AddThinker(state, &raw mut (*strobe).thinker, ThinkerKind::Strobe);
             }
             6 => {
                 saveg_read_pad(state);
@@ -1198,7 +1199,7 @@ pub unsafe fn P_UnArchiveSpecials(state: &mut GameState) {
                 ) as *mut glow_t;
                 saveg_read_glow_t(state, glow);
                 (*glow).thinker.function = ThinkerFn::Glow(T_Glow);
-                P_AddThinker(state, &raw mut (*glow).thinker);
+                P_AddThinker(state, &raw mut (*glow).thinker, ThinkerKind::Glow);
             }
             _ => {
                 I_Error(&format!(
