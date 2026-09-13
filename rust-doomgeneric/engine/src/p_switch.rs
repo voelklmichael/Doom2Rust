@@ -33,10 +33,12 @@ use crate::src::r_data::R_TextureNumForName;
 use crate::src::s_sound::S_StartSound;
 use crate::src::sounds::{sfx_swtchn, sfx_swtchx};
 
-pub type bwhere_e = u32;
-pub const bottom: bwhere_e = 2;
-pub const middle: bwhere_e = 1;
-pub const top: bwhere_e = 0;
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub enum BWhere {
+    top = 0,
+    middle = 1,
+    bottom = 2,
+}
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct switchlist_t {
@@ -267,7 +269,7 @@ impl PSwitchState {
             numswitches: 0,
             buttonlist: [button_t {
                 line: LineId(0),
-                where_0: top,
+                where_0: BWhere::top,
                 btexture: 0,
                 btimer: 0,
                 soundorg: SectorId(0),
@@ -317,7 +319,7 @@ pub unsafe fn P_InitSwitchList(state: &mut GameState) {
 pub unsafe fn P_StartButton(
     state: &mut GameState,
     mut line: *mut line_t,
-    mut w: bwhere_e,
+    mut w: BWhere,
     mut texture: i32,
     mut time: i32,
 ) {
@@ -380,7 +382,7 @@ pub unsafe fn P_ChangeSwitchTexture(
                 P_StartButton(
                     state,
                     line,
-                    top,
+                    BWhere::top,
                     state.p_switch.switchlist[i as usize],
                     BUTTONTIME,
                 );
@@ -398,7 +400,7 @@ pub unsafe fn P_ChangeSwitchTexture(
                 P_StartButton(
                     state,
                     line,
-                    middle,
+                    BWhere::middle,
                     state.p_switch.switchlist[i as usize],
                     BUTTONTIME,
                 );
@@ -416,7 +418,7 @@ pub unsafe fn P_ChangeSwitchTexture(
                 P_StartButton(
                     state,
                     line,
-                    bottom,
+                    BWhere::bottom,
                     state.p_switch.switchlist[i as usize],
                     BUTTONTIME,
                 );
