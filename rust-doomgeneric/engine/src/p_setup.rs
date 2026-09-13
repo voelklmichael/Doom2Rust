@@ -188,6 +188,9 @@ impl PSetupState {
     pub fn line_mut(&mut self, id: LineId) -> *mut line_t {
         &mut self.lines[id.0 as usize] as *mut line_t
     }
+    pub fn line(&self, id: LineId) -> line_t {
+        self.lines[id.0 as usize]
+    }
     pub fn seg_mut(&mut self, id: SegId) -> *mut seg_t {
         &mut self.segs[id.0 as usize] as *mut seg_t
     }

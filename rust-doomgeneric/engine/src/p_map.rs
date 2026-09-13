@@ -17,6 +17,7 @@ use crate::src::m_random::P_Random;
 use crate::src::p_inter::P_DamageMobj;
 use crate::src::p_inter::P_TouchSpecialThing;
 use crate::src::p_maputl::intercept_t;
+use crate::src::p_maputl::InterceptTarget;
 use crate::src::p_maputl::P_AproxDistance;
 use crate::src::p_maputl::P_BlockLinesIterator;
 use crate::src::p_maputl::P_BlockThingsIterator;
@@ -37,7 +38,7 @@ use crate::src::p_mobj::P_SpawnBlood;
 use crate::src::p_mobj::P_SpawnMobj;
 use crate::src::p_mobj::P_SpawnPuff;
 use crate::src::p_mobj::P_SubstNullMobj;
-use crate::src::p_mobj::{line_t, sector_t, SlopeType};
+use crate::src::p_mobj::{sector_t, SlopeType};
 use crate::src::p_mobj::{
     MF_DROPOFF, MF_DROPPED, MF_FLOAT, MF_MISSILE, MF_NOBLOOD, MF_NOCLIP, MF_PICKUP, MF_SHOOTABLE,
     MF_SKULLFLY, MF_SOLID, MF_SPECIAL, MF_TELEPORT,
@@ -48,6 +49,7 @@ use crate::src::p_spec::P_CrossSpecialLine;
 use crate::src::p_spec::P_ShootSpecialLine;
 use crate::src::p_spec::ML_TWOSIDED;
 use crate::src::p_switch::P_UseSpecialLine;
+use crate::src::p_setup::LineId;
 use crate::src::p_setup::SubsectorId;
 use crate::src::r_main::R_PointInSubsector;
 use crate::src::r_main::R_PointToAngle2;
@@ -69,13 +71,13 @@ pub struct PMapState {
     pub tmfloorz: fixed_t,
     pub tmceilingz: fixed_t,
     pub tmdropoffz: fixed_t,
-    pub ceilingline: *mut line_t,
-    pub spechit: [*mut line_t; 20],
+    pub ceilingline: Option<LineId>,
+    pub spechit: [LineId; 20],
     pub numspechit: i32,
     pub bestslidefrac: fixed_t,
     pub secondslidefrac: fixed_t,
-    pub bestslideline: *mut line_t,
-    pub secondslideline: *mut line_t,
+    pub bestslideline: LineId,
+    pub secondslideline: LineId,
     pub slidemo: *mut mobj_t,
     pub tmxmove: fixed_t,
     pub tmymove: fixed_t,
@@ -106,13 +108,13 @@ impl PMapState {
             tmfloorz: 0,
             tmceilingz: 0,
             tmdropoffz: 0,
-            ceilingline: ::core::ptr::null::<line_t>() as *mut line_t,
-            spechit: [::core::ptr::null::<line_t>() as *mut line_t; 20],
+            ceilingline: None,
+            spechit: [LineId(0); 20],
             numspechit: 0,
             bestslidefrac: 0,
             secondslidefrac: 0,
-            bestslideline: ::core::ptr::null::<line_t>() as *mut line_t,
-            secondslideline: ::core::ptr::null::<line_t>() as *mut line_t,
+            bestslideline: LineId(0),
+            secondslideline: LineId(0),
             slidemo: ::core::ptr::null::<mobj_t>() as *mut mobj_t,
             tmxmove: 0,
             tmymove: 0,
@@ -190,7 +192,7 @@ pub unsafe fn P_TeleportMove(
     state.p_map.tmbbox[BOXRIGHT as i32 as usize] = x + (*state.p_map.tmthing).radius;
     state.p_map.tmbbox[BOXLEFT as i32 as usize] = x - (*state.p_map.tmthing).radius;
     newsubsec = R_PointInSubsector(state, x, y);
-    state.p_map.ceilingline = ::core::ptr::null_mut::<line_t>();
+    state.p_map.ceilingline = None;
     state.p_map.tmdropoffz =
         (*state
             .p_setup
@@ -243,11 +245,12 @@ pub unsafe fn P_TeleportMove(
     return true;
 }
 #[no_mangle]
-pub unsafe fn PIT_CheckLine(state: &mut GameState, mut ld: *mut line_t) -> boolean {
-    if state.p_map.tmbbox[BOXRIGHT as i32 as usize] <= (*ld).bbox[BOXLEFT as i32 as usize]
-        || state.p_map.tmbbox[BOXLEFT as i32 as usize] >= (*ld).bbox[BOXRIGHT as i32 as usize]
-        || state.p_map.tmbbox[BOXTOP as i32 as usize] <= (*ld).bbox[BOXBOTTOM as i32 as usize]
-        || state.p_map.tmbbox[BOXBOTTOM as i32 as usize] >= (*ld).bbox[BOXTOP as i32 as usize]
+pub unsafe fn PIT_CheckLine(state: &mut GameState, mut ld: LineId) -> boolean {
+    let ldv = state.p_setup.line(ld);
+    if state.p_map.tmbbox[BOXRIGHT as i32 as usize] <= ldv.bbox[BOXLEFT as i32 as usize]
+        || state.p_map.tmbbox[BOXLEFT as i32 as usize] >= ldv.bbox[BOXRIGHT as i32 as usize]
+        || state.p_map.tmbbox[BOXTOP as i32 as usize] <= ldv.bbox[BOXBOTTOM as i32 as usize]
+        || state.p_map.tmbbox[BOXBOTTOM as i32 as usize] >= ldv.bbox[BOXTOP as i32 as usize]
     {
         return true_0 as boolean;
     }
@@ -255,21 +258,22 @@ pub unsafe fn PIT_CheckLine(state: &mut GameState, mut ld: *mut line_t) -> boole
     if P_BoxOnLineSide(state, tmbbox, ld) != -(1 as i32) {
         return true_0 as boolean;
     }
-    if (*ld).backsector.is_none() {
+    if ldv.backsector.is_none() {
         return false_0 as boolean;
     }
     if (*state.p_map.tmthing).flags & MF_MISSILE as i32 == 0 {
-        if (*ld).flags as i32 & ML_BLOCKING != 0 {
+        if ldv.flags as i32 & ML_BLOCKING != 0 {
             return false_0 as boolean;
         }
-        if (*state.p_map.tmthing).player.is_none() && (*ld).flags as i32 & ML_BLOCKMONSTERS != 0 {
+        if (*state.p_map.tmthing).player.is_none() && ldv.flags as i32 & ML_BLOCKMONSTERS != 0 {
             return false_0 as boolean;
         }
     }
-    P_LineOpening(state, ld);
+    let ld_ptr = state.p_setup.line_mut(ld);
+    P_LineOpening(state, ld_ptr);
     if state.p_maputl.opentop < state.p_map.tmceilingz {
         state.p_map.tmceilingz = state.p_maputl.opentop;
-        state.p_map.ceilingline = ld;
+        state.p_map.ceilingline = Some(ld);
     }
     if state.p_maputl.openbottom > state.p_map.tmfloorz {
         state.p_map.tmfloorz = state.p_maputl.openbottom;
@@ -277,7 +281,7 @@ pub unsafe fn PIT_CheckLine(state: &mut GameState, mut ld: *mut line_t) -> boole
     if state.p_maputl.lowfloor < state.p_map.tmdropoffz {
         state.p_map.tmdropoffz = state.p_maputl.lowfloor;
     }
-    if (*ld).special != 0 {
+    if ldv.special != 0 {
         state.p_map.spechit[state.p_map.numspechit as usize] = ld;
         state.p_map.numspechit += 1;
         if state.p_map.numspechit > MAXSPECIALCROSS_ORIGINAL {
@@ -392,7 +396,7 @@ pub unsafe fn P_CheckPosition(
     state.p_map.tmbbox[BOXRIGHT as i32 as usize] = x + (*state.p_map.tmthing).radius;
     state.p_map.tmbbox[BOXLEFT as i32 as usize] = x - (*state.p_map.tmthing).radius;
     newsubsec = R_PointInSubsector(state, x, y);
-    state.p_map.ceilingline = ::core::ptr::null_mut::<line_t>();
+    state.p_map.ceilingline = None;
     state.p_map.tmdropoffz =
         (*state
             .p_setup
@@ -455,7 +459,7 @@ pub unsafe fn P_CheckPosition(
                 state,
                 bx,
                 by,
-                Some(PIT_CheckLine as unsafe fn(&mut GameState, *mut line_t) -> boolean),
+                Some(PIT_CheckLine as unsafe fn(&mut GameState, LineId) -> boolean),
             ) {
                 return false;
             }
@@ -475,7 +479,7 @@ pub unsafe fn P_TryMove(
     let mut oldy: fixed_t = 0;
     let mut side: i32 = 0;
     let mut oldside: i32 = 0;
-    let mut ld: *mut line_t = ::core::ptr::null_mut::<line_t>();
+    let mut ld: LineId;
     state.p_map.floatok = false;
     if !P_CheckPosition(state, thing, x, y) {
         return false;
@@ -520,13 +524,8 @@ pub unsafe fn P_TryMove(
             side = P_PointOnLineSide(state, (*thing).x, (*thing).y, ld);
             oldside = P_PointOnLineSide(state, oldx, oldy, ld);
             if side != oldside {
-                if (*ld).special != 0 {
-                    P_CrossSpecialLine(
-                        state,
-                        ld.offset_from(state.p_setup.lines.as_ptr()) as i64 as i32,
-                        oldside,
-                        thing,
-                    );
+                if state.p_setup.line(ld).special != 0 {
+                    P_CrossSpecialLine(state, ld.0 as i32, oldside, thing);
                 }
             }
         }
@@ -549,23 +548,24 @@ pub unsafe fn P_ThingHeightClip(state: &mut GameState, mut thing: *mut mobj_t) -
     }
     return true;
 }
-pub unsafe fn P_HitSlideLine(state: &mut GameState, mut ld: *mut line_t) {
+pub unsafe fn P_HitSlideLine(state: &mut GameState, mut ld: LineId) {
     let mut side: i32 = 0;
     let mut lineangle: angle_t = 0;
     let mut moveangle: angle_t = 0;
     let mut deltaangle: angle_t = 0;
     let mut movelen: fixed_t = 0;
     let mut newlen: fixed_t = 0;
-    if (*ld).slopetype == SlopeType::ST_HORIZONTAL {
+    let ldv = state.p_setup.line(ld);
+    if ldv.slopetype == SlopeType::ST_HORIZONTAL {
         state.p_map.tmymove = 0 as i32 as fixed_t;
         return;
     }
-    if (*ld).slopetype == SlopeType::ST_VERTICAL {
+    if ldv.slopetype == SlopeType::ST_VERTICAL {
         state.p_map.tmxmove = 0 as i32 as fixed_t;
         return;
     }
     side = P_PointOnLineSide(state, (*state.p_map.slidemo).x, (*state.p_map.slidemo).y, ld);
-    lineangle = R_PointToAngle2(state, 0 as fixed_t, 0 as fixed_t, (*ld).dx, (*ld).dy);
+    lineangle = R_PointToAngle2(state, 0 as fixed_t, 0 as fixed_t, ldv.dx, ldv.dy);
     if side == 1 as i32 {
         lineangle = (lineangle as u32).wrapping_add(ANG180) as angle_t as angle_t;
     }
@@ -592,17 +592,18 @@ pub unsafe fn PTR_SlideTraverse(
     state: &mut GameState,
     mut in_0: *mut intercept_t,
 ) -> boolean {
-    let mut li: *mut line_t = ::core::ptr::null_mut::<line_t>();
-    if !(*in_0).isaline {
-        I_Error("PTR_SlideTraverse: not a line?");
-    }
-    li = (*in_0).d.line;
-    if (*li).flags as i32 & ML_TWOSIDED == 0 {
+    let li: LineId;
+    li = match (*in_0).target {
+        InterceptTarget::Line(id) => id,
+        InterceptTarget::Thing(_) => I_Error("PTR_SlideTraverse: not a line?"),
+    };
+    if state.p_setup.line(li).flags as i32 & ML_TWOSIDED == 0 {
         if P_PointOnLineSide(state, (*state.p_map.slidemo).x, (*state.p_map.slidemo).y, li) != 0 {
             return true_0 as boolean;
         }
     } else {
-        P_LineOpening(state, li);
+        let li_ptr = state.p_setup.line_mut(li);
+        P_LineOpening(state, li_ptr);
         if !(state.p_maputl.openrange < (*state.p_map.slidemo).height) {
             if !(state.p_maputl.opentop - (*state.p_map.slidemo).z < (*state.p_map.slidemo).height)
             {
@@ -729,34 +730,34 @@ pub unsafe fn PTR_AimTraverse(
     state: &mut GameState,
     mut in_0: *mut intercept_t,
 ) -> boolean {
-    let mut li: *mut line_t = ::core::ptr::null_mut::<line_t>();
     let mut th: *mut mobj_t = ::core::ptr::null_mut::<mobj_t>();
     let mut slope: fixed_t = 0;
     let mut thingtopslope: fixed_t = 0;
     let mut thingbottomslope: fixed_t = 0;
     let mut dist: fixed_t = 0;
-    if (*in_0).isaline {
-        li = (*in_0).d.line;
-        if (*li).flags as i32 & ML_TWOSIDED == 0 {
+    if let InterceptTarget::Line(li) = (*in_0).target {
+        let liv = state.p_setup.line(li);
+        if liv.flags as i32 & ML_TWOSIDED == 0 {
             return false_0 as boolean;
         }
-        P_LineOpening(state, li);
+        let li_ptr = state.p_setup.line_mut(li);
+        P_LineOpening(state, li_ptr);
         if state.p_maputl.openbottom >= state.p_maputl.opentop {
             return false_0 as boolean;
         }
         dist = FixedMul(state.p_map.attackrange, (*in_0).frac);
-        if (*li).backsector.is_none()
-            || (*state.p_setup.sector_mut((*li).frontsector.unwrap())).floorheight
-                != (*state.p_setup.sector_mut((*li).backsector.unwrap())).floorheight
+        if liv.backsector.is_none()
+            || (*state.p_setup.sector_mut(liv.frontsector.unwrap())).floorheight
+                != (*state.p_setup.sector_mut(liv.backsector.unwrap())).floorheight
         {
             slope = FixedDiv(state.p_maputl.openbottom - state.p_map.shootz, dist);
             if slope > state.p_sight.bottomslope {
                 state.p_sight.bottomslope = slope;
             }
         }
-        if (*li).backsector.is_none()
-            || (*state.p_setup.sector_mut((*li).frontsector.unwrap())).ceilingheight
-                != (*state.p_setup.sector_mut((*li).backsector.unwrap())).ceilingheight
+        if liv.backsector.is_none()
+            || (*state.p_setup.sector_mut(liv.frontsector.unwrap())).ceilingheight
+                != (*state.p_setup.sector_mut(liv.backsector.unwrap())).ceilingheight
         {
             slope = FixedDiv(state.p_maputl.opentop - state.p_map.shootz, dist);
             if slope < state.p_sight.topslope {
@@ -768,7 +769,10 @@ pub unsafe fn PTR_AimTraverse(
         }
         return true_0 as boolean;
     }
-    th = (*in_0).d.thing;
+    th = match (*in_0).target {
+        InterceptTarget::Thing(id) => state.p_mobj.mobj_get(id).unwrap(),
+        InterceptTarget::Line(_) => unreachable!(),
+    };
     if th == state.p_map.shootthing {
         return true_0 as boolean;
     }
@@ -804,21 +808,21 @@ pub unsafe fn PTR_ShootTraverse(
     let mut y: fixed_t = 0;
     let mut z: fixed_t = 0;
     let mut frac: fixed_t = 0;
-    let mut li: *mut line_t = ::core::ptr::null_mut::<line_t>();
     let mut th: *mut mobj_t = ::core::ptr::null_mut::<mobj_t>();
     let mut slope: fixed_t = 0;
     let mut dist: fixed_t = 0;
     let mut thingtopslope: fixed_t = 0;
     let mut thingbottomslope: fixed_t = 0;
-    if (*in_0).isaline {
-        li = (*in_0).d.line;
-        if (*li).special != 0 {
-            P_ShootSpecialLine(state, state.p_map.shootthing, li);
+    if let InterceptTarget::Line(li) = (*in_0).target {
+        if state.p_setup.line(li).special != 0 {
+            let li_ptr = state.p_setup.line_mut(li);
+            P_ShootSpecialLine(state, state.p_map.shootthing, li_ptr);
         }
-        if !((*li).flags as i32 & ML_TWOSIDED == 0) {
-            P_LineOpening(state, li);
+        if !(state.p_setup.line(li).flags as i32 & ML_TWOSIDED == 0) {
+            let li_ptr = state.p_setup.line_mut(li);
+            P_LineOpening(state, li_ptr);
             dist = FixedMul(state.p_map.attackrange, (*in_0).frac);
-            if (*li).backsector.is_none() {
+            if state.p_setup.line(li).backsector.is_none() {
                 slope = FixedDiv(state.p_maputl.openbottom - state.p_map.shootz, dist);
                 if slope > state.p_map.aimslope {
                     current_block = 15534775465039326179;
@@ -831,8 +835,8 @@ pub unsafe fn PTR_ShootTraverse(
                     }
                 }
             } else {
-                if (*state.p_setup.sector_mut((*li).frontsector.unwrap())).floorheight
-                    != (*state.p_setup.sector_mut((*li).backsector.unwrap())).floorheight
+                if (*state.p_setup.sector_mut(state.p_setup.line(li).frontsector.unwrap())).floorheight
+                    != (*state.p_setup.sector_mut(state.p_setup.line(li).backsector.unwrap())).floorheight
                 {
                     slope = FixedDiv(state.p_maputl.openbottom - state.p_map.shootz, dist);
                     if slope > state.p_map.aimslope {
@@ -846,8 +850,8 @@ pub unsafe fn PTR_ShootTraverse(
                 match current_block {
                     15534775465039326179 => {}
                     _ => {
-                        if (*state.p_setup.sector_mut((*li).frontsector.unwrap())).ceilingheight
-                            != (*state.p_setup.sector_mut((*li).backsector.unwrap())).ceilingheight
+                        if (*state.p_setup.sector_mut(state.p_setup.line(li).frontsector.unwrap())).ceilingheight
+                            != (*state.p_setup.sector_mut(state.p_setup.line(li).backsector.unwrap())).ceilingheight
                         {
                             slope = FixedDiv(state.p_maputl.opentop - state.p_map.shootz, dist);
                             if slope < state.p_map.aimslope {
@@ -874,14 +878,14 @@ pub unsafe fn PTR_ShootTraverse(
                 state.p_map.aimslope,
                 FixedMul(frac, state.p_map.attackrange),
             );
-        if (*state.p_setup.sector_mut((*li).frontsector.unwrap())).ceilingpic as i32
+        if (*state.p_setup.sector_mut(state.p_setup.line(li).frontsector.unwrap())).ceilingpic as i32
             == state.r_sky.skyflatnum
         {
-            if z > (*state.p_setup.sector_mut((*li).frontsector.unwrap())).ceilingheight {
+            if z > (*state.p_setup.sector_mut(state.p_setup.line(li).frontsector.unwrap())).ceilingheight {
                 return false_0 as boolean;
             }
-            if !(*li).backsector.is_none()
-                && (*state.p_setup.sector_mut((*li).backsector.unwrap())).ceilingpic as i32
+            if !state.p_setup.line(li).backsector.is_none()
+                && (*state.p_setup.sector_mut(state.p_setup.line(li).backsector.unwrap())).ceilingpic as i32
                     == state.r_sky.skyflatnum
             {
                 return false_0 as boolean;
@@ -890,7 +894,10 @@ pub unsafe fn PTR_ShootTraverse(
         P_SpawnPuff(state, x, y, z);
         return false_0 as boolean;
     } else {
-        th = (*in_0).d.thing;
+        th = match (*in_0).target {
+            InterceptTarget::Thing(id) => state.p_mobj.mobj_get(id).unwrap(),
+            InterceptTarget::Line(_) => unreachable!(),
+        };
         if th == state.p_map.shootthing {
             return true_0 as boolean;
         }
@@ -914,7 +921,7 @@ pub unsafe fn PTR_ShootTraverse(
                 state.p_map.aimslope,
                 FixedMul(frac, state.p_map.attackrange),
             );
-        if (*(*in_0).d.thing).flags & MF_NOBLOOD as i32 != 0 {
+        if (*th).flags & MF_NOBLOOD as i32 != 0 {
             P_SpawnPuff(state, x, y, z);
         } else {
             P_SpawnBlood(state, x, y, z, state.p_map.la_damage);
@@ -1001,8 +1008,13 @@ pub unsafe fn PTR_UseTraverse(
     mut in_0: *mut intercept_t,
 ) -> boolean {
     let mut side: i32 = 0;
-    if (*(*in_0).d.line).special == 0 {
-        P_LineOpening(state, (*in_0).d.line);
+    let li = match (*in_0).target {
+        InterceptTarget::Line(id) => id,
+        InterceptTarget::Thing(_) => unreachable!(),
+    };
+    if state.p_setup.line(li).special == 0 {
+        let li_ptr = state.p_setup.line_mut(li);
+        P_LineOpening(state, li_ptr);
         if state.p_maputl.openrange <= 0 as i32 {
             S_StartSound(
                 state,
@@ -1018,12 +1030,13 @@ pub unsafe fn PTR_UseTraverse(
         state,
         (*state.p_map.usething).x,
         (*state.p_map.usething).y,
-        (*in_0).d.line,
+        li,
     ) == 1 as i32
     {
         side = 1 as i32;
     }
-    P_UseSpecialLine(state, state.p_map.usething, (*in_0).d.line, side);
+    let li_ptr = state.p_setup.line_mut(li);
+    P_UseSpecialLine(state, state.p_map.usething, li_ptr, side);
     return false_0 as boolean;
 }
 pub unsafe fn P_UseLines(state: &mut GameState, mut player: *mut player_t) {
@@ -1189,7 +1202,7 @@ pub unsafe fn P_ChangeSector(
     }
     return state.p_map.nofit != 0;
 }
-unsafe fn SpechitOverrun(state: &mut GameState, mut ld: *mut line_t) {
+unsafe fn SpechitOverrun(state: &mut GameState, mut ld: LineId) {
     let mut addr: u32 = 0;
     if state.p_map.baseaddr == 0 as u32 {
         let mut p: i32 = 0;
@@ -1205,8 +1218,7 @@ unsafe fn SpechitOverrun(state: &mut GameState, mut ld: *mut line_t) {
             state.p_map.baseaddr = DEFAULT_SPECHIT_MAGIC as u32;
         }
     }
-    addr = (state.p_map.baseaddr as i64 + ld.offset_from(state.p_setup.lines.as_ptr()) as i64 * 0x3e as i64)
-        as u32;
+    addr = (state.p_map.baseaddr as i64 + ld.0 as i64 * 0x3e as i64) as u32;
     match state.p_map.numspechit {
         9 | 10 | 11 | 12 => {
             state.p_map.tmbbox[(state.p_map.numspechit - 9 as i32) as usize] = addr as fixed_t;

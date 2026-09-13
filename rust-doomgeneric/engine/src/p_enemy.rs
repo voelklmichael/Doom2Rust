@@ -40,6 +40,7 @@ use crate::src::p_mobj::{
     MF_AMBUSH, MF_CORPSE, MF_FLOAT, MF_INFLOAT, MF_JUSTATTACKED, MF_JUSTHIT, MF_SHADOW,
     MF_SHOOTABLE, MF_SKULLFLY, MF_SOLID,
 };
+use crate::src::p_setup::LineId;
 use crate::src::p_setup::SectorId;
 use crate::src::p_setup::VertexId;
 use crate::src::p_sight::P_CheckSight;
@@ -295,7 +296,7 @@ pub static yspeed: [fixed_t; 8] = [
 pub unsafe fn P_Move(state: &mut GameState, mut actor: *mut mobj_t) -> bool {
     let mut tryx: fixed_t = 0;
     let mut tryy: fixed_t = 0;
-    let mut ld: *mut line_t = ::core::ptr::null_mut::<line_t>();
+    let mut ld: LineId;
     let mut try_ok: bool;
     let mut good: bool;
     if (*actor).movedir == DirType::DI_NODIR as i32 {
@@ -329,7 +330,8 @@ pub unsafe fn P_Move(state: &mut GameState, mut actor: *mut mobj_t) -> bool {
                 break;
             }
             ld = state.p_map.spechit[state.p_map.numspechit as usize];
-            if P_UseSpecialLine(state, actor, ld, 0 as i32) {
+            let ld_ptr = state.p_setup.line_mut(ld);
+            if P_UseSpecialLine(state, actor, ld_ptr, 0 as i32) {
                 good = true;
             }
         }

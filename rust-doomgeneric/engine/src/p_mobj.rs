@@ -2895,14 +2895,12 @@ pub unsafe fn P_XYMovement(state: &mut GameState, mut mo: *mut mobj_t) {
             if (*mo).player.is_some() {
                 P_SlideMove(state, mo);
             } else if (*mo).flags & MF_MISSILE as i32 != 0 {
-                if !state.p_map.ceilingline.is_null()
-                    && (*state.p_map.ceilingline).backsector.is_some()
-                    && (*state
-                        .p_setup
-                        .sector_mut((*state.p_map.ceilingline).backsector.unwrap()))
-                    .ceilingpic as i32
-                        == state.r_sky.skyflatnum
-                {
+                if state.p_map.ceilingline.is_some_and(|ceilingline| {
+                    state.p_setup.line(ceilingline).backsector.is_some_and(|backsector| {
+                        (*state.p_setup.sector_mut(backsector)).ceilingpic as i32
+                            == state.r_sky.skyflatnum
+                    })
+                }) {
                     P_RemoveMobj(state, mo);
                     return;
                 }
@@ -3185,6 +3183,16 @@ pub unsafe fn P_SpawnMobj(
 pub struct MobjId {
     index: u32,
     generation: u32,
+}
+
+impl MobjId {
+    /// Exposes the raw arena slot index. Not meant for constructing or
+    /// comparing ids (generation is deliberately hidden for that) -- just
+    /// for callers that need a plain distinguishing number, e.g. the
+    /// vanilla-demo-compatibility overrun emulation in p_maputl.rs.
+    pub fn raw_index(&self) -> u32 {
+        self.index
+    }
 }
 
 #[derive(Copy, Clone)]
