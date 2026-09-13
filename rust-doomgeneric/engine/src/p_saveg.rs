@@ -10,7 +10,7 @@ use crate::src::g_game::G_VanillaVersionCode;
 use crate::src::i_system::I_Error;
 use std::io::{Read, Seek, Write};
 use crate::src::m_fixed::fixed_t;
-use crate::src::p_ceilng::ceiling_e;
+use crate::src::p_ceilng::CeilingE;
 use crate::src::p_ceilng::P_AddActiveCeiling;
 use crate::src::p_doors::VldoorE;
 use crate::src::p_doors::vldoor_t;
@@ -529,10 +529,21 @@ unsafe fn saveg_write_player_t(state: &mut GameState, mut str: *mut player_t) {
     }
     saveg_write32(state, (*str).didsecret as i32);
 }
+fn saveg_read_ceiling_e(state: &mut GameState) -> CeilingE {
+    match saveg_read32(state) {
+        0 => CeilingE::lowerToFloor,
+        1 => CeilingE::raiseToHighest,
+        2 => CeilingE::lowerAndCrush,
+        3 => CeilingE::crushAndRaise,
+        4 => CeilingE::fastCrushAndRaise,
+        5 => CeilingE::silentCrushAndRaise,
+        n => panic!("P_UnArchiveSpecials: invalid ceiling type {n} in savegame"),
+    }
+}
 unsafe fn saveg_read_ceiling_t(state: &mut GameState, mut str: *mut ceiling_t) {
     let mut sector: i32 = 0;
     saveg_read_thinker_t(state, &raw mut (*str).thinker);
-    (*str).type_0 = saveg_read32(state) as ceiling_e;
+    (*str).type_0 = saveg_read_ceiling_e(state);
     sector = saveg_read32(state);
     (*str).sector = SectorId(sector as u32);
     (*str).bottomheight = saveg_read32(state) as fixed_t;
