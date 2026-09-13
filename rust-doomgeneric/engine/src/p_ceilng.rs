@@ -5,7 +5,8 @@ use crate::src::p_floor::T_MovePlane;
 use crate::src::p_floor::ResultE;
 use crate::src::p_mobj::SectorSpecial;
 use crate::src::p_mobj::ThinkerFn;
-use crate::src::p_mobj::{line_t, sector_t};
+use crate::src::p_mobj::sector_t;
+use crate::src::p_setup::LineId;
 use crate::src::p_setup::SectorId;
 use crate::src::p_spec::ceiling_t;
 use crate::src::p_spec::P_FindHighestCeilingSurrounding;
@@ -13,6 +14,7 @@ use crate::src::p_spec::P_FindSectorFromLineTag;
 use crate::src::p_tick::P_AddThinker;
 use crate::src::p_tick::P_RemoveThinker;
 use crate::src::s_sound::S_StartSound;
+use crate::src::s_sound::SoundOrigin;
 use crate::src::sounds::{sfx_pstop, sfx_stnmov};
 use crate::src::z_zone::Z_Malloc;
 use crate::src::z_zone::PU_LEVSPEC;
@@ -58,11 +60,7 @@ pub unsafe fn T_MoveCeiling(state: &mut GameState, mut ceiling: *mut ceiling_t) 
                 match (*ceiling).type_0 {
                     CeilingE::silentCrushAndRaise => {}
                     _ => {
-                        S_StartSound(
-                            state,
-                            &raw mut (*sec).soundorg as *mut ::core::ffi::c_void,
-                            sfx_stnmov as i32,
-                        );
+                        S_StartSound(state, SoundOrigin::Sector((*ceiling).sector), sfx_stnmov as i32);
                     }
                 }
             }
@@ -74,11 +72,7 @@ pub unsafe fn T_MoveCeiling(state: &mut GameState, mut ceiling: *mut ceiling_t) 
                         current_block_7 = 10599921512955367680;
                     }
                     CeilingE::silentCrushAndRaise => {
-                        S_StartSound(
-                            state,
-                            &raw mut (*sec).soundorg as *mut ::core::ffi::c_void,
-                            sfx_pstop as i32,
-                        );
+                        S_StartSound(state, SoundOrigin::Sector((*ceiling).sector), sfx_pstop as i32);
                         current_block_7 = 16040908003852494439;
                     }
                     CeilingE::fastCrushAndRaise | CeilingE::crushAndRaise => {
@@ -110,11 +104,7 @@ pub unsafe fn T_MoveCeiling(state: &mut GameState, mut ceiling: *mut ceiling_t) 
                 match (*ceiling).type_0 {
                     CeilingE::silentCrushAndRaise => {}
                     _ => {
-                        S_StartSound(
-                            state,
-                            &raw mut (*sec).soundorg as *mut ::core::ffi::c_void,
-                            sfx_stnmov as i32,
-                        );
+                        S_StartSound(state, SoundOrigin::Sector((*ceiling).sector), sfx_stnmov as i32);
                     }
                 }
             }
@@ -122,11 +112,7 @@ pub unsafe fn T_MoveCeiling(state: &mut GameState, mut ceiling: *mut ceiling_t) 
                 let mut current_block_19: u64;
                 match (*ceiling).type_0 {
                     CeilingE::silentCrushAndRaise => {
-                        S_StartSound(
-                            state,
-                            &raw mut (*sec).soundorg as *mut ::core::ffi::c_void,
-                            sfx_pstop as i32,
-                        );
+                        S_StartSound(state, SoundOrigin::Sector((*ceiling).sector), sfx_pstop as i32);
                         current_block_19 = 3850642056257311267;
                     }
                     CeilingE::crushAndRaise => {
@@ -170,7 +156,7 @@ pub unsafe fn T_MoveCeiling(state: &mut GameState, mut ceiling: *mut ceiling_t) 
 }
 pub unsafe fn EV_DoCeiling(
     state: &mut GameState,
-    mut line: *mut line_t,
+    mut line: LineId,
     mut type_0: CeilingE,
 ) -> i32 {
     let mut secnum: i32 = 0;
@@ -181,7 +167,7 @@ pub unsafe fn EV_DoCeiling(
     rtn = 0 as i32;
     match type_0 {
         CeilingE::fastCrushAndRaise | CeilingE::silentCrushAndRaise | CeilingE::crushAndRaise => {
-            P_ActivateInStasisCeiling(&mut state.p_ceilng, line);
+            P_ActivateInStasisCeiling(&mut state.p_ceilng, state.p_setup.line(line).tag as i32);
         }
         _ => {}
     }
@@ -281,12 +267,12 @@ pub unsafe fn P_RemoveActiveCeiling(state: &mut GameState, mut c: *mut ceiling_t
         }
     }
 }
-pub unsafe fn P_ActivateInStasisCeiling(state: &mut PCeilngState, mut line: *mut line_t) {
+pub unsafe fn P_ActivateInStasisCeiling(state: &mut PCeilngState, mut tag: i32) {
     let mut i: i32 = 0;
     i = 0 as i32;
     while i < MAXCEILINGS {
         if !state.activeceilings[i as usize].is_null()
-            && (*state.activeceilings[i as usize]).tag == (*line).tag as i32
+            && (*state.activeceilings[i as usize]).tag == tag
             && (*state.activeceilings[i as usize]).direction == 0 as i32
         {
             (*state.activeceilings[i as usize]).direction =
@@ -297,14 +283,14 @@ pub unsafe fn P_ActivateInStasisCeiling(state: &mut PCeilngState, mut line: *mut
         i += 1;
     }
 }
-pub unsafe fn EV_CeilingCrushStop(state: &mut PCeilngState, mut line: *mut line_t) -> i32 {
+pub unsafe fn EV_CeilingCrushStop(state: &mut PCeilngState, mut tag: i32) -> i32 {
     let mut i: i32 = 0;
     let mut rtn: i32 = 0;
     rtn = 0 as i32;
     i = 0 as i32;
     while i < MAXCEILINGS {
         if !state.activeceilings[i as usize].is_null()
-            && (*state.activeceilings[i as usize]).tag == (*line).tag as i32
+            && (*state.activeceilings[i as usize]).tag == tag
             && (*state.activeceilings[i as usize]).direction != 0 as i32
         {
             (*state.activeceilings[i as usize]).olddirection =

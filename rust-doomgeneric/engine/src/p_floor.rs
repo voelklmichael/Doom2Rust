@@ -5,7 +5,8 @@ use crate::src::m_fixed::INT_MAX;
 use crate::src::p_map::P_ChangeSector;
 use crate::src::p_mobj::SectorSpecial;
 use crate::src::p_mobj::ThinkerFn;
-use crate::src::p_mobj::{line_t, sector_t};
+use crate::src::p_mobj::sector_t;
+use crate::src::p_setup::LineId;
 use crate::src::p_setup::SectorId;
 use crate::src::p_spec::floormove_t;
 use crate::src::p_spec::getSector;
@@ -21,6 +22,7 @@ use crate::src::p_tick::P_AddThinker;
 use crate::src::p_tick::P_RemoveThinker;
 use crate::src::r_defs::side_t;
 use crate::src::s_sound::S_StartSound;
+use crate::src::s_sound::SoundOrigin;
 use crate::src::sounds::{sfx_pstop, sfx_stnmov};
 use crate::src::z_zone::Z_Malloc;
 use crate::src::z_zone::PU_LEVSPEC;
@@ -173,11 +175,7 @@ pub unsafe fn T_MoveFloor(state: &mut GameState, mut floor: *mut floormove_t) {
         (*floor).direction,
     );
     if state.p_tick.leveltime & 7 as i32 == 0 {
-        S_StartSound(
-            state,
-            &raw mut (*sec).soundorg as *mut ::core::ffi::c_void,
-            sfx_stnmov as i32,
-        );
+        S_StartSound(state, SoundOrigin::Sector((*floor).sector), sfx_stnmov as i32);
     }
     if res == ResultE::pastdest {
         (*sec).specialdata = None;
@@ -199,16 +197,12 @@ pub unsafe fn T_MoveFloor(state: &mut GameState, mut floor: *mut floormove_t) {
             }
         }
         P_RemoveThinker(&raw mut (*floor).thinker);
-        S_StartSound(
-            state,
-            &raw mut (*sec).soundorg as *mut ::core::ffi::c_void,
-            sfx_pstop as i32,
-        );
+        S_StartSound(state, SoundOrigin::Sector((*floor).sector), sfx_pstop as i32);
     }
 }
 pub unsafe fn EV_DoFloor(
     state: &mut GameState,
-    mut line: *mut line_t,
+    mut line: LineId,
     mut floortype: FloorE,
 ) -> i32 {
     let mut secnum: i32 = 0;
@@ -308,7 +302,7 @@ pub unsafe fn EV_DoFloor(
                 (*floor).speed = FLOORSPEED as fixed_t;
                 (*floor).floordestheight =
                     ((*sec).floorheight as i32 + 24 as i32 * FRACUNIT) as fixed_t;
-                let fsec = state.p_setup.sector_mut((*line).frontsector.unwrap());
+                let fsec = state.p_setup.sector_mut(state.p_setup.line(line).frontsector.unwrap());
                 (*sec).floorpic = (*fsec).floorpic;
                 (*sec).special = (*fsec).special;
                 current_block_84 = 15514718523126015390;
@@ -399,7 +393,7 @@ pub unsafe fn EV_DoFloor(
 }
 pub unsafe fn EV_BuildStairs(
     state: &mut GameState,
-    mut line: *mut line_t,
+    mut line: LineId,
     mut type_0: StairE,
 ) -> i32 {
     let mut secnum: i32 = 0;
@@ -455,11 +449,12 @@ pub unsafe fn EV_BuildStairs(
             ok_0 = 0 as i32;
             i = 0 as i32;
             while i < (*sec).linecount {
-                if !((**(*sec).lines.offset(i as isize)).flags as i32 & ML_TWOSIDED == 0) {
-                    let front_id = (**(*sec).lines.offset(i as isize)).frontsector.unwrap();
+                let iline = state.p_setup.line((*sec).lines[i as usize]);
+                if !(iline.flags as i32 & ML_TWOSIDED == 0) {
+                    let front_id = iline.frontsector.unwrap();
                     newsecnum = front_id.0 as i32;
                     if !(secnum != newsecnum) {
-                        let back_id = (**(*sec).lines.offset(i as isize)).backsector.unwrap();
+                        let back_id = iline.backsector.unwrap();
                         newsecnum = back_id.0 as i32;
                         tsec = state.p_setup.sector_mut(back_id);
                         if !((*tsec).floorpic as i32 != texture) {

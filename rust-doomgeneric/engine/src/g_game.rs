@@ -21,7 +21,6 @@ use crate::src::d_ticcmd::{
     BTS_PAUSE, BTS_SAVEGAME, BTS_SAVEMASK, BTS_SAVESHIFT, BT_ATTACK, BT_CHANGE, BT_SPECIAL,
     BT_SPECIALMASK, BT_USE, BT_WEAPONSHIFT,
 };
-use crate::src::doomdef::boolean;
 use crate::src::doomdef::false_0;
 use crate::src::doomdef::true_0;
 use crate::src::doomdef::MAXPLAYERS;
@@ -82,6 +81,7 @@ use crate::src::r_main::R_PointInSubsector;
 use crate::src::s_sound::S_PauseSound;
 use crate::src::s_sound::S_ResumeSound;
 use crate::src::s_sound::S_StartSound;
+use crate::src::s_sound::SoundOrigin;
 use crate::src::sounds::sfx_telept;
 use crate::src::st_stuff::ST_Responder;
 use crate::src::st_stuff::ST_Ticker;
@@ -127,9 +127,9 @@ pub struct GGameState {
     pub viewactive: bool,
     pub deathmatch: i32,
     pub netgame: bool,
-    pub playeringame: [boolean; 4],
+    pub playeringame: [bool; 4],
     pub players: [player_t; 4],
-    pub turbodetected: [boolean; 4],
+    pub turbodetected: [bool; 4],
     pub consoleplayer: i32,
     pub displayplayer: i32,
     pub levelstarttic: i32,
@@ -154,23 +154,23 @@ pub struct GGameState {
     pub forwardmove: [fixed_t; 2],
     pub sidemove: [fixed_t; 2],
     pub next_weapon: i32,
-    pub gamekeydown: [boolean; 256],
+    pub gamekeydown: [bool; 256],
     pub turnheld: i32,
-    pub mousearray: [boolean; 9],
-    pub mousebuttons: *mut boolean,
+    pub mousearray: [bool; 9],
+    pub mousebuttons: *mut bool,
     pub mousex: i32,
     pub mousey: i32,
     pub dclicktime: i32,
-    pub dclickstate: boolean,
+    pub dclickstate: bool,
     pub dclicks: i32,
     pub dclicktime2: i32,
-    pub dclickstate2: boolean,
+    pub dclickstate2: bool,
     pub dclicks2: i32,
     pub joyxmove: i32,
     pub joyymove: i32,
     pub joystrafemove: i32,
-    pub joyarray: [boolean; 21],
-    pub joybuttons: *mut boolean,
+    pub joyarray: [bool; 21],
+    pub joybuttons: *mut bool,
     pub savegameslot: i32,
     pub savedescription: String,
     pub bodyque: [*mut mobj_t; 32],
@@ -187,7 +187,7 @@ pub struct GGameState {
 }
 
 const NEW_PLAYER: player_s = player_s {
-    mo: ::core::ptr::null::<mobj_t>() as *mut mobj_t,
+    mo: None,
     playerstate: PlayerState::PST_LIVE,
     cmd: ticcmd_t {
         forwardmove: 0,
@@ -261,9 +261,9 @@ impl GGameState {
             viewactive: false,
             deathmatch: 0,
             netgame: false,
-            playeringame: [0; 4],
+            playeringame: [false; 4],
             players: [NEW_PLAYER, NEW_PLAYER, NEW_PLAYER, NEW_PLAYER],
-            turbodetected: [0; 4],
+            turbodetected: [false; 4],
             consoleplayer: 0,
             displayplayer: 0,
             levelstarttic: 0,
@@ -308,23 +308,23 @@ impl GGameState {
             forwardmove: [0x19 as i32, 0x32 as i32],
             sidemove: [0x18 as i32, 0x28 as i32],
             next_weapon: 0,
-            gamekeydown: [0; 256],
+            gamekeydown: [false; 256],
             turnheld: 0,
-            mousearray: [0; 9],
-            mousebuttons: ::core::ptr::null::<boolean>() as *mut boolean,
+            mousearray: [false; 9],
+            mousebuttons: ::core::ptr::null::<bool>() as *mut bool,
             mousex: 0,
             mousey: 0,
             dclicktime: 0,
-            dclickstate: 0,
+            dclickstate: false,
             dclicks: 0,
             dclicktime2: 0,
-            dclickstate2: 0,
+            dclickstate2: false,
             dclicks2: 0,
             joyxmove: 0,
             joyymove: 0,
             joystrafemove: 0,
-            joyarray: [0; 21],
-            joybuttons: ::core::ptr::null::<boolean>() as *mut boolean,
+            joyarray: [false; 21],
+            joybuttons: ::core::ptr::null::<bool>() as *mut bool,
             savegameslot: 0,
             savedescription: String::new(),
             bodyque: [::core::ptr::null::<mobj_t>() as *mut mobj_t; 32],
@@ -346,8 +346,8 @@ impl GGameState {
     // array. Self-referential, so must run once the struct is at its final,
     // permanently-stable address -- see game_state::finish_init.
     pub fn fixup_button_pointers(&mut self) {
-        self.joybuttons = (&raw mut self.joyarray as *mut boolean).wrapping_offset(1);
-        self.mousebuttons = (&raw mut self.mousearray as *mut boolean).wrapping_offset(1);
+        self.joybuttons = (&raw mut self.joyarray as *mut bool).wrapping_offset(1);
+        self.mousebuttons = (&raw mut self.mousearray as *mut bool).wrapping_offset(1);
     }
 
     pub fn player_mut(&mut self, id: PlayerId) -> *mut player_t {
@@ -502,7 +502,7 @@ fn G_NextWeapon(state: &mut GameState, mut direction: i32) -> i32 {
 pub unsafe fn G_BuildTiccmd(state: &mut GameState, mut cmd: *mut ticcmd_t, mut maketic: i32) {
     let mut i: i32 = 0;
     let mut strafe: bool = false;
-    let mut bstrafe: boolean = 0;
+    let mut bstrafe: bool = false;
     let mut speed: i32 = 0;
     let mut tspeed: i32 = 0;
     let mut forward: i32 = 0;
@@ -514,31 +514,28 @@ pub unsafe fn G_BuildTiccmd(state: &mut GameState, mut cmd: *mut ticcmd_t, mut m
     );
     (*cmd).consistancy = state.g_game.consistancy[state.g_game.consoleplayer as usize]
         [(maketic % BACKUPTICS) as usize];
-    strafe = state.g_game.gamekeydown[state.m_controls.key_strafe as usize] != 0
+    strafe = state.g_game.gamekeydown[state.m_controls.key_strafe as usize]
         || *state
             .g_game
             .mousebuttons
             .offset(state.m_controls.mousebstrafe as isize)
-            != 0
         || *state
             .g_game
             .joybuttons
-            .offset(state.m_controls.joybstrafe as isize)
-            != 0;
+            .offset(state.m_controls.joybstrafe as isize);
     speed = (state.m_controls.key_speed >= NUMKEYS
         || state.m_controls.joybspeed >= MAX_JOY_BUTTONS
-        || state.g_game.gamekeydown[state.m_controls.key_speed as usize] != 0
+        || state.g_game.gamekeydown[state.m_controls.key_speed as usize]
         || *state
             .g_game
             .joybuttons
-            .offset(state.m_controls.joybspeed as isize)
-            != 0) as i32;
+            .offset(state.m_controls.joybspeed as isize)) as i32;
     side = 0 as i32;
     forward = side;
     if state.g_game.joyxmove < 0 as i32
         || state.g_game.joyxmove > 0 as i32
-        || state.g_game.gamekeydown[state.m_controls.key_right as usize] != 0
-        || state.g_game.gamekeydown[state.m_controls.key_left as usize] != 0
+        || state.g_game.gamekeydown[state.m_controls.key_right as usize]
+        || state.g_game.gamekeydown[state.m_controls.key_left as usize]
     {
         state.g_game.turnheld += state.d_loop.ticdup;
     } else {
@@ -550,10 +547,10 @@ pub unsafe fn G_BuildTiccmd(state: &mut GameState, mut cmd: *mut ticcmd_t, mut m
         tspeed = speed;
     }
     if strafe {
-        if state.g_game.gamekeydown[state.m_controls.key_right as usize] != 0 {
+        if state.g_game.gamekeydown[state.m_controls.key_right as usize] {
             side += state.g_game.sidemove[speed as usize] as i32;
         }
-        if state.g_game.gamekeydown[state.m_controls.key_left as usize] != 0 {
+        if state.g_game.gamekeydown[state.m_controls.key_left as usize] {
             side -= state.g_game.sidemove[speed as usize] as i32;
         }
         if state.g_game.joyxmove > 0 as i32 {
@@ -563,10 +560,10 @@ pub unsafe fn G_BuildTiccmd(state: &mut GameState, mut cmd: *mut ticcmd_t, mut m
             side -= state.g_game.sidemove[speed as usize] as i32;
         }
     } else {
-        if state.g_game.gamekeydown[state.m_controls.key_right as usize] != 0 {
+        if state.g_game.gamekeydown[state.m_controls.key_right as usize] {
             (*cmd).angleturn = ((*cmd).angleturn as i32 - angleturn[tspeed as usize] as i32) as i16;
         }
-        if state.g_game.gamekeydown[state.m_controls.key_left as usize] != 0 {
+        if state.g_game.gamekeydown[state.m_controls.key_left as usize] {
             (*cmd).angleturn = ((*cmd).angleturn as i32 + angleturn[tspeed as usize] as i32) as i16;
         }
         if state.g_game.joyxmove > 0 as i32 {
@@ -576,10 +573,10 @@ pub unsafe fn G_BuildTiccmd(state: &mut GameState, mut cmd: *mut ticcmd_t, mut m
             (*cmd).angleturn = ((*cmd).angleturn as i32 + angleturn[tspeed as usize] as i32) as i16;
         }
     }
-    if state.g_game.gamekeydown[state.m_controls.key_up as usize] != 0 {
+    if state.g_game.gamekeydown[state.m_controls.key_up as usize] {
         forward += state.g_game.forwardmove[speed as usize] as i32;
     }
-    if state.g_game.gamekeydown[state.m_controls.key_down as usize] != 0 {
+    if state.g_game.gamekeydown[state.m_controls.key_down as usize] {
         forward -= state.g_game.forwardmove[speed as usize] as i32;
     }
     if state.g_game.joyymove < 0 as i32 {
@@ -588,62 +585,54 @@ pub unsafe fn G_BuildTiccmd(state: &mut GameState, mut cmd: *mut ticcmd_t, mut m
     if state.g_game.joyymove > 0 as i32 {
         forward -= state.g_game.forwardmove[speed as usize] as i32;
     }
-    if state.g_game.gamekeydown[state.m_controls.key_strafeleft as usize] != 0
+    if state.g_game.gamekeydown[state.m_controls.key_strafeleft as usize]
         || *state
             .g_game
             .joybuttons
             .offset(state.m_controls.joybstrafeleft as isize)
-            != 0
         || *state
             .g_game
             .mousebuttons
             .offset(state.m_controls.mousebstrafeleft as isize)
-            != 0
         || state.g_game.joystrafemove < 0 as i32
     {
         side -= state.g_game.sidemove[speed as usize] as i32;
     }
-    if state.g_game.gamekeydown[state.m_controls.key_straferight as usize] != 0
+    if state.g_game.gamekeydown[state.m_controls.key_straferight as usize]
         || *state
             .g_game
             .joybuttons
             .offset(state.m_controls.joybstraferight as isize)
-            != 0
         || *state
             .g_game
             .mousebuttons
             .offset(state.m_controls.mousebstraferight as isize)
-            != 0
         || state.g_game.joystrafemove > 0 as i32
     {
         side += state.g_game.sidemove[speed as usize] as i32;
     }
     (*cmd).chatchar = HU_dequeueChatChar(&mut state.hu_stuff) as byte;
-    if state.g_game.gamekeydown[state.m_controls.key_fire as usize] != 0
+    if state.g_game.gamekeydown[state.m_controls.key_fire as usize]
         || *state
             .g_game
             .mousebuttons
             .offset(state.m_controls.mousebfire as isize)
-            != 0
         || *state
             .g_game
             .joybuttons
             .offset(state.m_controls.joybfire as isize)
-            != 0
     {
         (*cmd).buttons = ((*cmd).buttons as i32 | BT_ATTACK as i32) as byte;
     }
-    if state.g_game.gamekeydown[state.m_controls.key_use as usize] != 0
+    if state.g_game.gamekeydown[state.m_controls.key_use as usize]
         || *state
             .g_game
             .joybuttons
             .offset(state.m_controls.joybuse as isize)
-            != 0
         || *state
             .g_game
             .mousebuttons
             .offset(state.m_controls.mousebuse as isize)
-            != 0
     {
         (*cmd).buttons = ((*cmd).buttons as i32 | BT_USE as i32) as byte;
         state.g_game.dclicks = 0 as i32;
@@ -660,7 +649,7 @@ pub unsafe fn G_BuildTiccmd(state: &mut GameState, mut cmd: *mut ticcmd_t, mut m
                 .wrapping_div(::core::mem::size_of::<*mut i32>() as usize)
         {
             let mut key: i32 = *state.m_controls.weapon_keys[i as usize];
-            if state.g_game.gamekeydown[key as usize] != 0 {
+            if state.g_game.gamekeydown[key as usize] {
                 (*cmd).buttons = ((*cmd).buttons as i32 | BT_CHANGE as i32) as byte;
                 (*cmd).buttons = ((*cmd).buttons as i32 | i << BT_WEAPONSHIFT as i32) as byte;
                 break;
@@ -674,7 +663,6 @@ pub unsafe fn G_BuildTiccmd(state: &mut GameState, mut cmd: *mut ticcmd_t, mut m
         .g_game
         .mousebuttons
         .offset(state.m_controls.mousebforward as isize)
-        != 0
     {
         forward += state.g_game.forwardmove[speed as usize] as i32;
     }
@@ -682,7 +670,6 @@ pub unsafe fn G_BuildTiccmd(state: &mut GameState, mut cmd: *mut ticcmd_t, mut m
         .g_game
         .mousebuttons
         .offset(state.m_controls.mousebbackward as isize)
-        != 0
     {
         forward -= state.g_game.forwardmove[speed as usize] as i32;
     }
@@ -698,7 +685,7 @@ pub unsafe fn G_BuildTiccmd(state: &mut GameState, mut cmd: *mut ticcmd_t, mut m
                 .g_game
                 .mousebuttons
                 .offset(state.m_controls.mousebforward as isize);
-            if state.g_game.dclickstate != 0 {
+            if state.g_game.dclickstate {
                 state.g_game.dclicks += 1;
             }
             if state.g_game.dclicks == 2 as i32 {
@@ -711,22 +698,20 @@ pub unsafe fn G_BuildTiccmd(state: &mut GameState, mut cmd: *mut ticcmd_t, mut m
             state.g_game.dclicktime += state.d_loop.ticdup;
             if state.g_game.dclicktime > 20 as i32 {
                 state.g_game.dclicks = 0 as i32;
-                state.g_game.dclickstate = 0 as boolean;
+                state.g_game.dclickstate = false;
             }
         }
-        bstrafe = (*state
+        bstrafe = *state
             .g_game
             .mousebuttons
             .offset(state.m_controls.mousebstrafe as isize)
-            != 0
             || *state
                 .g_game
                 .joybuttons
-                .offset(state.m_controls.joybstrafe as isize)
-                != 0) as i32 as boolean;
+                .offset(state.m_controls.joybstrafe as isize);
         if bstrafe != state.g_game.dclickstate2 && state.g_game.dclicktime2 > 1 as i32 {
             state.g_game.dclickstate2 = bstrafe;
-            if state.g_game.dclickstate2 != 0 {
+            if state.g_game.dclickstate2 {
                 state.g_game.dclicks2 += 1;
             }
             if state.g_game.dclicks2 == 2 as i32 {
@@ -739,7 +724,7 @@ pub unsafe fn G_BuildTiccmd(state: &mut GameState, mut cmd: *mut ticcmd_t, mut m
             state.g_game.dclicktime2 += state.d_loop.ticdup;
             if state.g_game.dclicktime2 > 20 as i32 {
                 state.g_game.dclicks2 = 0 as i32;
-                state.g_game.dclickstate2 = 0 as boolean;
+                state.g_game.dclickstate2 = false;
             }
         }
     }
@@ -808,8 +793,8 @@ pub unsafe fn G_DoLoadLevel(state: &mut GameState) {
     state.g_game.gamestate = GameScreenState::GS_LEVEL;
     i = 0 as i32;
     while i < MAXPLAYERS {
-        state.g_game.turbodetected[i as usize] = false_0 as boolean;
-        if state.g_game.playeringame[i as usize] != 0
+        state.g_game.turbodetected[i as usize] = false;
+        if state.g_game.playeringame[i as usize]
             && state.g_game.players[i as usize].playerstate == PlayerState::PST_DEAD
         {
             state.g_game.players[i as usize].playerstate = PlayerState::PST_REBORN;
@@ -831,9 +816,9 @@ pub unsafe fn G_DoLoadLevel(state: &mut GameState) {
     state.g_game.gameaction = GameAction::ga_nothing;
     Z_CheckHeap(&mut state.z_zone);
     memset(
-        &raw mut state.g_game.gamekeydown as *mut boolean as *mut ::core::ffi::c_void,
+        &raw mut state.g_game.gamekeydown as *mut bool as *mut ::core::ffi::c_void,
         0 as i32,
-        ::core::mem::size_of::<[boolean; 256]>() as size_t,
+        ::core::mem::size_of::<[bool; 256]>() as size_t,
     );
     state.g_game.joystrafemove = 0 as i32;
     state.g_game.joyymove = state.g_game.joystrafemove;
@@ -844,14 +829,14 @@ pub unsafe fn G_DoLoadLevel(state: &mut GameState) {
     state.g_game.sendsave = state.g_game.paused;
     state.g_game.sendpause = state.g_game.sendsave;
     memset(
-        &raw mut state.g_game.mousearray as *mut boolean as *mut ::core::ffi::c_void,
+        &raw mut state.g_game.mousearray as *mut bool as *mut ::core::ffi::c_void,
         0 as i32,
-        ::core::mem::size_of::<[boolean; 9]>() as size_t,
+        ::core::mem::size_of::<[bool; 9]>() as size_t,
     );
     memset(
-        &raw mut state.g_game.joyarray as *mut boolean as *mut ::core::ffi::c_void,
+        &raw mut state.g_game.joyarray as *mut bool as *mut ::core::ffi::c_void,
         0 as i32,
-        ::core::mem::size_of::<[boolean; 21]>() as size_t,
+        ::core::mem::size_of::<[bool; 21]>() as size_t,
     );
     if state.g_game.testcontrols {
         state.g_game.players[state.g_game.consoleplayer as usize].message =
@@ -863,14 +848,14 @@ unsafe fn SetJoyButtons(state: &mut GameState, mut buttons_mask: u32) {
     i = 0 as i32;
     while i < MAX_JOY_BUTTONS {
         let mut button_on: i32 = (buttons_mask & ((1 as i32) << i) as u32 != 0 as u32) as i32;
-        if *state.g_game.joybuttons.offset(i as isize) == 0 && button_on != 0 {
+        if !*state.g_game.joybuttons.offset(i as isize) && button_on != 0 {
             if i == state.m_controls.joybprevweapon {
                 state.g_game.next_weapon = -(1 as i32);
             } else if i == state.m_controls.joybnextweapon {
                 state.g_game.next_weapon = 1 as i32;
             }
         }
-        *state.g_game.joybuttons.offset(i as isize) = button_on as boolean;
+        *state.g_game.joybuttons.offset(i as isize) = button_on != 0;
         i += 1;
     }
 }
@@ -879,14 +864,14 @@ unsafe fn SetMouseButtons(state: &mut GameState, mut buttons_mask: u32) {
     i = 0 as i32;
     while i < MAX_MOUSE_BUTTONS {
         let mut button_on: u32 = (buttons_mask & ((1 as i32) << i) as u32 != 0 as u32) as u32;
-        if *state.g_game.mousebuttons.offset(i as isize) == 0 && button_on != 0 {
+        if !*state.g_game.mousebuttons.offset(i as isize) && button_on != 0 {
             if i == state.m_controls.mousebprevweapon {
                 state.g_game.next_weapon = -(1 as i32);
             } else if i == state.m_controls.mousebnextweapon {
                 state.g_game.next_weapon = 1 as i32;
             }
         }
-        *state.g_game.mousebuttons.offset(i as isize) = button_on as boolean;
+        *state.g_game.mousebuttons.offset(i as isize) = button_on != 0;
         i += 1;
     }
 }
@@ -901,7 +886,7 @@ pub unsafe fn G_Responder(state: &mut GameState, mut ev: event_t) -> bool {
             if state.g_game.displayplayer == MAXPLAYERS {
                 state.g_game.displayplayer = 0 as i32;
             }
-            if !(state.g_game.playeringame[state.g_game.displayplayer as usize] == 0
+            if !(!state.g_game.playeringame[state.g_game.displayplayer as usize]
                 && state.g_game.displayplayer != state.g_game.consoleplayer)
             {
                 break;
@@ -951,13 +936,13 @@ pub unsafe fn G_Responder(state: &mut GameState, mut ev: event_t) -> bool {
             if ev.data1 == state.m_controls.key_pause {
                 state.g_game.sendpause = true;
             } else if ev.data1 < NUMKEYS {
-                state.g_game.gamekeydown[ev.data1 as usize] = true_0 as boolean;
+                state.g_game.gamekeydown[ev.data1 as usize] = true;
             }
             return true;
         }
         1 => {
             if ev.data1 < NUMKEYS {
-                state.g_game.gamekeydown[ev.data1 as usize] = false_0 as boolean;
+                state.g_game.gamekeydown[ev.data1 as usize] = false;
             }
             return false;
         }
@@ -984,7 +969,7 @@ pub unsafe fn G_Ticker(state: &mut GameState) {
     let mut cmd: *mut ticcmd_t = ::core::ptr::null_mut::<ticcmd_t>();
     i = 0 as i32;
     while i < MAXPLAYERS {
-        if state.g_game.playeringame[i as usize] != 0
+        if state.g_game.playeringame[i as usize]
             && state.g_game.players[i as usize].playerstate == PlayerState::PST_REBORN
         {
             G_DoReborn(state, i);
@@ -1029,7 +1014,7 @@ pub unsafe fn G_Ticker(state: &mut GameState) {
     buf = state.d_loop.gametic / state.d_loop.ticdup % BACKUPTICS;
     i = 0 as i32;
     while i < MAXPLAYERS {
-        if state.g_game.playeringame[i as usize] != 0 {
+        if state.g_game.playeringame[i as usize] {
             cmd =
                 &raw mut (*(&raw mut state.g_game.players as *mut player_t).offset(i as isize)).cmd;
             memcpy(
@@ -1045,11 +1030,11 @@ pub unsafe fn G_Ticker(state: &mut GameState) {
                 G_WriteDemoTiccmd(state, cmd);
             }
             if (*cmd).forwardmove as i32 > TURBOTHRESHOLD {
-                state.g_game.turbodetected[i as usize] = true_0 as boolean;
+                state.g_game.turbodetected[i as usize] = true;
             }
             if state.d_loop.gametic & 31 as i32 == 0 as i32
                 && (state.d_loop.gametic >> 5 as i32) % MAXPLAYERS == i
-                && state.g_game.turbodetected[i as usize] != 0
+                && state.g_game.turbodetected[i as usize]
             {
                 let player_name =
                     ::std::ffi::CStr::from_ptr(state.hu_stuff.player_names[i as usize])
@@ -1057,7 +1042,7 @@ pub unsafe fn G_Ticker(state: &mut GameState) {
                         .into_owned();
                 state.g_game.players[state.g_game.consoleplayer as usize].message =
                     Some(format!("{} is turbo!", player_name));
-                state.g_game.turbodetected[i as usize] = false_0 as boolean;
+                state.g_game.turbodetected[i as usize] = false;
             }
             if state.g_game.netgame
                 && !state.g_game.netdemo
@@ -1073,9 +1058,9 @@ pub unsafe fn G_Ticker(state: &mut GameState) {
                         state.g_game.consistancy[i as usize][buf as usize] as i32,
                     ));
                 }
-                if !state.g_game.players[i as usize].mo.is_null() {
-                    state.g_game.consistancy[i as usize][buf as usize] =
-                        (*state.g_game.players[i as usize].mo).x as byte;
+                if let Some(mo_id) = state.g_game.players[i as usize].mo {
+                    let mo = state.p_mobj.mobj_get(mo_id).unwrap();
+                    state.g_game.consistancy[i as usize][buf as usize] = (*mo).x as byte;
                 } else {
                     state.g_game.consistancy[i as usize][buf as usize] =
                         state.m_random.rndindex as byte;
@@ -1086,7 +1071,7 @@ pub unsafe fn G_Ticker(state: &mut GameState) {
     }
     i = 0 as i32;
     while i < MAXPLAYERS {
-        if state.g_game.playeringame[i as usize] != 0 {
+        if state.g_game.playeringame[i as usize] {
             if state.g_game.players[i as usize].cmd.buttons as i32 & BT_SPECIAL as i32 != 0 {
                 match state.g_game.players[i as usize].cmd.buttons as i32 & BT_SPECIALMASK as i32 {
                     1 => {
@@ -1141,9 +1126,9 @@ pub unsafe fn G_Ticker(state: &mut GameState) {
 pub unsafe fn G_InitPlayer(state: &mut GGameState, mut player: i32) {
     G_PlayerReborn(state, player);
 }
-pub unsafe fn G_PlayerFinishLevel(state: &mut GGameState, mut player: i32) {
+pub unsafe fn G_PlayerFinishLevel(state: &mut GameState, mut player: i32) {
     let mut p: *mut player_t = ::core::ptr::null_mut::<player_t>();
-    p = (&raw mut state.players as *mut player_t).offset(player as isize) as *mut player_t;
+    p = (&raw mut state.g_game.players as *mut player_t).offset(player as isize) as *mut player_t;
     memset(
         &raw mut (*p).powers as *mut i32 as *mut ::core::ffi::c_void,
         0 as i32,
@@ -1154,7 +1139,8 @@ pub unsafe fn G_PlayerFinishLevel(state: &mut GGameState, mut player: i32) {
         0 as i32,
         ::core::mem::size_of::<[bool; 6]>() as size_t,
     );
-    (*(*p).mo).flags &= !(MF_SHADOW as i32);
+    let mo = state.p_mobj.mobj_get((*p).mo.unwrap()).unwrap();
+    (*mo).flags &= !(MF_SHADOW as i32);
     (*p).extralight = 0 as i32;
     (*p).fixedcolormap = 0 as i32;
     (*p).damagecount = 0 as i32;
@@ -1217,11 +1203,15 @@ pub unsafe fn G_CheckSpot(
     let mut ss: SubsectorId = SubsectorId(0);
     let mut mo: *mut mobj_t = ::core::ptr::null_mut::<mobj_t>();
     let mut i: i32 = 0;
-    if state.g_game.players[playernum as usize].mo.is_null() {
+    if state.g_game.players[playernum as usize].mo.is_none() {
         i = 0 as i32;
         while i < playernum {
-            if (*state.g_game.players[i as usize].mo).x == ((*mthing).x as i32) << FRACBITS
-                && (*state.g_game.players[i as usize].mo).y == ((*mthing).y as i32) << FRACBITS
+            let other_mo = state
+                .p_mobj
+                .mobj_get(state.g_game.players[i as usize].mo.unwrap())
+                .unwrap();
+            if (*other_mo).x == ((*mthing).x as i32) << FRACBITS
+                && (*other_mo).y == ((*mthing).y as i32) << FRACBITS
             {
                 return false;
             }
@@ -1231,7 +1221,11 @@ pub unsafe fn G_CheckSpot(
     }
     x = (((*mthing).x as i32) << FRACBITS) as fixed_t;
     y = (((*mthing).y as i32) << FRACBITS) as fixed_t;
-    if !P_CheckPosition(state, state.g_game.players[playernum as usize].mo, x, y) {
+    let player_mo = state
+        .p_mobj
+        .mobj_get(state.g_game.players[playernum as usize].mo.unwrap())
+        .unwrap();
+    if !P_CheckPosition(state, player_mo, x, y) {
         return false;
     }
     if state.g_game.bodyqueslot >= BODYQUESIZE {
@@ -1240,8 +1234,11 @@ pub unsafe fn G_CheckSpot(
             state.g_game.bodyque[(state.g_game.bodyqueslot % BODYQUESIZE) as usize],
         );
     }
-    state.g_game.bodyque[(state.g_game.bodyqueslot % BODYQUESIZE) as usize] =
-        state.g_game.players[playernum as usize].mo;
+    let player_mo = state
+        .p_mobj
+        .mobj_get(state.g_game.players[playernum as usize].mo.unwrap())
+        .unwrap();
+    state.g_game.bodyque[(state.g_game.bodyqueslot % BODYQUESIZE) as usize] = player_mo;
     state.g_game.bodyqueslot += 1;
     ss = R_PointInSubsector(state, x, y);
     let mut xa: fixed_t = 0;
@@ -1283,11 +1280,7 @@ pub unsafe fn G_CheckSpot(
         MobjType::MT_TFOG,
     );
     if state.g_game.players[state.g_game.consoleplayer as usize].viewz != 1 as i32 {
-        S_StartSound(
-            state,
-            mo as *mut ::core::ffi::c_void,
-            sfx_telept as i32,
-        );
+        S_StartSound(state, SoundOrigin::Mobj((*(mo)).id), sfx_telept as i32);
     }
     return true;
 }
@@ -1326,7 +1319,11 @@ pub unsafe fn G_DoReborn(state: &mut GameState, mut playernum: i32) {
     if !state.g_game.netgame {
         state.g_game.gameaction = GameAction::ga_loadlevel;
     } else {
-        (*state.g_game.players[playernum as usize].mo).player = None;
+        let player_mo = state
+            .p_mobj
+            .mobj_get(state.g_game.players[playernum as usize].mo.unwrap())
+            .unwrap();
+        (*player_mo).player = None;
         if state.g_game.deathmatch != 0 {
             G_DeathMatchSpawnPlayer(state, playernum);
             return;
@@ -1403,8 +1400,8 @@ pub unsafe fn G_DoCompleted(state: &mut GameState) {
     state.g_game.gameaction = GameAction::ga_nothing;
     i = 0 as i32;
     while i < MAXPLAYERS {
-        if state.g_game.playeringame[i as usize] != 0 {
-            G_PlayerFinishLevel(&mut state.g_game, i);
+        if state.g_game.playeringame[i as usize] {
+            G_PlayerFinishLevel(state, i);
         }
         i += 1;
     }
@@ -1506,7 +1503,7 @@ pub unsafe fn G_DoCompleted(state: &mut GameState) {
     state.g_game.wminfo.pnum = state.g_game.consoleplayer;
     i = 0 as i32;
     while i < MAXPLAYERS {
-        state.g_game.wminfo.plyr[i as usize].in_0 = state.g_game.playeringame[i as usize] != 0;
+        state.g_game.wminfo.plyr[i as usize].in_0 = state.g_game.playeringame[i as usize];
         state.g_game.wminfo.plyr[i as usize].skills = state.g_game.players[i as usize].killcount;
         state.g_game.wminfo.plyr[i as usize].sitems = state.g_game.players[i as usize].itemcount;
         state.g_game.wminfo.plyr[i as usize].ssecret = state.g_game.players[i as usize].secretcount;
@@ -1678,7 +1675,7 @@ pub unsafe fn G_DoNewGame(state: &mut GameState) {
     state.g_game.netdemo = false;
     state.g_game.netgame = false;
     state.g_game.deathmatch = false_0;
-    state.g_game.playeringame[3 as i32 as usize] = 0 as boolean;
+    state.g_game.playeringame[3 as i32 as usize] = false;
     state.g_game.playeringame[2 as i32 as usize] = state.g_game.playeringame[3 as i32 as usize];
     state.g_game.playeringame[1 as i32 as usize] = state.g_game.playeringame[2 as i32 as usize];
     state.d_main.respawnparm = false;
@@ -1842,7 +1839,7 @@ unsafe fn IncreaseDemoBuffer(state: &mut GameState) {
 }
 pub unsafe fn G_WriteDemoTiccmd(state: &mut GameState, mut cmd: *mut ticcmd_t) {
     let mut demo_start: *mut byte = ::core::ptr::null_mut::<byte>();
-    if state.g_game.gamekeydown[state.m_controls.key_demo_quit as usize] != 0 {
+    if state.g_game.gamekeydown[state.m_controls.key_demo_quit as usize] {
         G_CheckDemoStatus(state);
     }
     demo_start = state.g_game.demo_p;
@@ -2042,10 +2039,10 @@ pub unsafe fn G_DoPlayDemo(state: &mut GameState) {
     while i < MAXPLAYERS {
         let fresh33 = state.g_game.demo_p;
         state.g_game.demo_p = state.g_game.demo_p.offset(1);
-        state.g_game.playeringame[i as usize] = *fresh33 as boolean;
+        state.g_game.playeringame[i as usize] = *fresh33 != 0;
         i += 1;
     }
-    if state.g_game.playeringame[1 as i32 as usize] != 0
+    if state.g_game.playeringame[1 as i32 as usize]
         || M_CheckParm(state, "-solo-net") > 0 as i32
         || M_CheckParm(state, "-netdemo") > 0 as i32
     {
@@ -2067,7 +2064,7 @@ pub unsafe fn G_TimeDemo(state: &mut GameState, mut name: *mut ::core::ffi::c_ch
     state.g_game.gameaction = GameAction::ga_playdemo;
 }
 #[no_mangle]
-pub unsafe fn G_CheckDemoStatus(state: &mut GameState) -> boolean {
+pub unsafe fn G_CheckDemoStatus(state: &mut GameState) -> bool {
     let mut endtime: i32 = 0;
     if state.g_game.timingdemo {
         let mut fps: f32 = 0.;
@@ -2093,7 +2090,7 @@ pub unsafe fn G_CheckDemoStatus(state: &mut GameState) -> boolean {
         state.g_game.netdemo = false;
         state.g_game.netgame = false;
         state.g_game.deathmatch = false_0;
-        state.g_game.playeringame[3 as i32 as usize] = 0 as boolean;
+        state.g_game.playeringame[3 as i32 as usize] = false;
         state.g_game.playeringame[2 as i32 as usize] =
             state.g_game.playeringame[3 as i32 as usize];
         state.g_game.playeringame[1 as i32 as usize] =
@@ -2107,7 +2104,7 @@ pub unsafe fn G_CheckDemoStatus(state: &mut GameState) -> boolean {
         } else {
             D_AdvanceDemo(state);
         }
-        return true_0 as boolean;
+        return true;
     }
     if state.g_game.demorecording {
         let fresh11 = state.g_game.demo_p;
@@ -2127,6 +2124,6 @@ pub unsafe fn G_CheckDemoStatus(state: &mut GameState) -> boolean {
                 .unwrap(),
         ));
     }
-    return false_0 as boolean;
+    return false;
 }
 pub const MAX_MOUSE_BUTTONS: i32 = 8;

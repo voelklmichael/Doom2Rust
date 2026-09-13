@@ -577,10 +577,10 @@ pub unsafe fn AM_restoreScaleAndLoc(state: &mut GameState) {
         state.am_map.m_x = state.am_map.old_m_x;
         state.am_map.m_y = state.am_map.old_m_y;
     } else {
-        state.am_map.m_x =
-            ((*(*state.g_game.player_mut(state.am_map.plr)).mo).x as i32 - state.am_map.m_w as i32 / 2 as i32) as fixed_t;
-        state.am_map.m_y =
-            ((*(*state.g_game.player_mut(state.am_map.plr)).mo).y as i32 - state.am_map.m_h as i32 / 2 as i32) as fixed_t;
+        let plr_mo_id = (*state.g_game.player_mut(state.am_map.plr)).mo.unwrap();
+        let plr_mo = state.p_mobj.mobj_get(plr_mo_id).unwrap();
+        state.am_map.m_x = ((*plr_mo).x as i32 - state.am_map.m_w as i32 / 2 as i32) as fixed_t;
+        state.am_map.m_y = ((*plr_mo).y as i32 - state.am_map.m_h as i32 / 2 as i32) as fixed_t;
     }
     state.am_map.m_x2 = state.am_map.m_x + state.am_map.m_w;
     state.am_map.m_y2 = state.am_map.m_y + state.am_map.m_h;
@@ -685,13 +685,13 @@ pub unsafe fn AM_initVariables(state: &mut GameState) {
         (state.am_map.f_h as fixed_t) << 16 as i32,
         state.am_map.scale_ftom,
     );
-    if state.g_game.playeringame[state.g_game.consoleplayer as usize] != 0 {
+    if state.g_game.playeringame[state.g_game.consoleplayer as usize] {
         state.am_map.plr = PlayerId(state.g_game.consoleplayer as u8);
     } else {
         state.am_map.plr = PlayerId(0);
         pnum = 0 as i32;
         while pnum < MAXPLAYERS {
-            if state.g_game.playeringame[pnum as usize] != 0 {
+            if state.g_game.playeringame[pnum as usize] {
                 state.am_map.plr = PlayerId(pnum as u8);
                 break;
             } else {
@@ -699,10 +699,10 @@ pub unsafe fn AM_initVariables(state: &mut GameState) {
             }
         }
     }
-    state.am_map.m_x =
-        ((*(*state.g_game.player_mut(state.am_map.plr)).mo).x as i32 - state.am_map.m_w as i32 / 2 as i32) as fixed_t;
-    state.am_map.m_y =
-        ((*(*state.g_game.player_mut(state.am_map.plr)).mo).y as i32 - state.am_map.m_h as i32 / 2 as i32) as fixed_t;
+    let plr_mo_id = (*state.g_game.player_mut(state.am_map.plr)).mo.unwrap();
+    let plr_mo = state.p_mobj.mobj_get(plr_mo_id).unwrap();
+    state.am_map.m_x = ((*plr_mo).x as i32 - state.am_map.m_w as i32 / 2 as i32) as fixed_t;
+    state.am_map.m_y = ((*plr_mo).y as i32 - state.am_map.m_h as i32 / 2 as i32) as fixed_t;
     AM_changeWindowLoc(state);
     state.am_map.old_m_x = state.am_map.m_x;
     state.am_map.old_m_y = state.am_map.m_y;
@@ -927,25 +927,23 @@ pub fn AM_changeWindowScale(state: &mut GameState) {
     };
 }
 pub unsafe fn AM_doFollowPlayer(state: &mut GameState) {
-    if state.am_map.f_oldloc.x != (*(*state.g_game.player_mut(state.am_map.plr)).mo).x
-        || state.am_map.f_oldloc.y != (*(*state.g_game.player_mut(state.am_map.plr)).mo).y
-    {
+    let plr_mo_id = (*state.g_game.player_mut(state.am_map.plr)).mo.unwrap();
+    let plr_mo = state.p_mobj.mobj_get(plr_mo_id).unwrap();
+    if state.am_map.f_oldloc.x != (*plr_mo).x || state.am_map.f_oldloc.y != (*plr_mo).y {
         state.am_map.m_x = (FixedMul(
-            (FixedMul((*(*state.g_game.player_mut(state.am_map.plr)).mo).x, state.am_map.scale_mtof) >> 16 as i32)
-                << 16 as i32,
+            (FixedMul((*plr_mo).x, state.am_map.scale_mtof) >> 16 as i32) << 16 as i32,
             state.am_map.scale_ftom,
         ) as i32
             - state.am_map.m_w as i32 / 2 as i32) as fixed_t;
         state.am_map.m_y = (FixedMul(
-            (FixedMul((*(*state.g_game.player_mut(state.am_map.plr)).mo).y, state.am_map.scale_mtof) >> 16 as i32)
-                << 16 as i32,
+            (FixedMul((*plr_mo).y, state.am_map.scale_mtof) >> 16 as i32) << 16 as i32,
             state.am_map.scale_ftom,
         ) as i32
             - state.am_map.m_h as i32 / 2 as i32) as fixed_t;
         state.am_map.m_x2 = state.am_map.m_x + state.am_map.m_w;
         state.am_map.m_y2 = state.am_map.m_y + state.am_map.m_h;
-        state.am_map.f_oldloc.x = (*(*state.g_game.player_mut(state.am_map.plr)).mo).x;
-        state.am_map.f_oldloc.y = (*(*state.g_game.player_mut(state.am_map.plr)).mo).y;
+        state.am_map.f_oldloc.x = (*plr_mo).x;
+        state.am_map.f_oldloc.y = (*plr_mo).y;
     }
 }
 pub fn AM_updateLightLev(state: &mut AmMapState) {
@@ -1343,7 +1341,8 @@ pub unsafe fn AM_drawPlayers(state: &mut GameState) {
     let mut their_color: i32 = -(1 as i32);
     let mut color: i32 = 0;
     if !state.g_game.netgame {
-        let plr_mo = (*state.g_game.player_mut(state.am_map.plr)).mo;
+        let plr_mo_id = (*state.g_game.player_mut(state.am_map.plr)).mo.unwrap();
+        let plr_mo = state.p_mobj.mobj_get(plr_mo_id).unwrap();
         if state.am_map.cheating != 0 {
             AM_drawLineCharacter(
                 state,
@@ -1381,12 +1380,13 @@ pub unsafe fn AM_drawPlayers(state: &mut GameState) {
             && !state.g_game.singledemo
             && PlayerId(i as u8) != state.am_map.plr)
         {
-            if !(state.g_game.playeringame[i as usize] == 0) {
+            if state.g_game.playeringame[i as usize] {
                 if (*p).powers[PowerType::pw_invisibility as i32 as usize] != 0 {
                     color = 246 as i32;
                 } else {
                     color = their_colors[their_color as usize];
                 }
+                let p_mo = state.p_mobj.mobj_get((*p).mo.unwrap()).unwrap();
                 AM_drawLineCharacter(
                     state,
                     &raw const player_arrow as *mut mline_t,
@@ -1394,10 +1394,10 @@ pub unsafe fn AM_drawPlayers(state: &mut GameState) {
                         .wrapping_div(::core::mem::size_of::<mline_t>() as usize)
                         as i32,
                     0 as fixed_t,
-                    (*(*p).mo).angle,
+                    (*p_mo).angle,
                     color,
-                    (*(*p).mo).x,
-                    (*(*p).mo).y,
+                    (*p_mo).x,
+                    (*p_mo).y,
                 );
             }
         }

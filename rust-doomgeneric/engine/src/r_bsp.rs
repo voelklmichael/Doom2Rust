@@ -5,9 +5,10 @@ use crate::src::m_fixed::fixed_t;
 use crate::src::p_mobj::subsector_t;
 use crate::src::p_setup::LineId;
 use crate::src::p_setup::SectorId;
+use crate::src::p_setup::SegId;
 use crate::src::p_setup::SideId;
 use crate::src::p_setup::SubsectorId;
-use crate::src::r_defs::{drawseg_s, drawseg_t, node_t, seg_t, visplane_t};
+use crate::src::r_defs::{drawseg_s, drawseg_t, node_t, visplane_t};
 use crate::src::r_main::R_PointOnSide;
 use crate::src::r_main::R_PointToAngle;
 use crate::src::r_plane::R_FindPlane;
@@ -19,7 +20,7 @@ use crate::src::tables::ANG90;
 use crate::src::tables::ANGLETOFINESHIFT;
 
 pub struct RBspState {
-    pub curline: *mut seg_t,
+    pub curline: SegId,
     pub sidedef: SideId,
     pub linedef: LineId,
     pub frontsector: Option<SectorId>,
@@ -33,13 +34,13 @@ pub struct RBspState {
 impl RBspState {
     pub const fn new() -> Self {
         RBspState {
-            curline: ::core::ptr::null::<seg_t>() as *mut seg_t,
+            curline: SegId(0),
             sidedef: SideId(0),
             linedef: LineId(0),
             frontsector: None,
             backsector: None,
             drawsegs: [drawseg_s {
-                curline: ::core::ptr::null::<seg_t>() as *mut seg_t,
+                curline: SegId(0),
                 x1: 0,
                 x2: 0,
                 scale1: 0,
@@ -173,7 +174,7 @@ pub unsafe fn R_ClearClipSegs(state: &mut GameState) {
     state.r_bsp.newend =
         (&raw mut state.r_bsp.solidsegs as *mut cliprange_t).offset(2 as i32 as isize);
 }
-pub unsafe fn R_AddLine(state: &mut GameState, mut line: *mut seg_t) {
+pub unsafe fn R_AddLine(state: &mut GameState, mut line: SegId) {
     let mut x1: i32 = 0;
     let mut x2: i32 = 0;
     let mut angle1: angle_t = 0;
@@ -181,8 +182,8 @@ pub unsafe fn R_AddLine(state: &mut GameState, mut line: *mut seg_t) {
     let mut span: angle_t = 0;
     let mut tspan: angle_t = 0;
     state.r_bsp.curline = line;
-    let line_v1 = state.p_setup.vertexes[(*line).v1.0 as usize];
-    let line_v2 = state.p_setup.vertexes[(*line).v2.0 as usize];
+    let line_v1 = state.p_setup.vertexes[state.p_setup.seg(line).v1.0 as usize];
+    let line_v2 = state.p_setup.vertexes[state.p_setup.seg(line).v2.0 as usize];
     angle1 = R_PointToAngle(state, line_v1.x, line_v1.y);
     angle2 = R_PointToAngle(state, line_v2.x, line_v2.y);
     span = angle1.wrapping_sub(angle2);
@@ -215,7 +216,7 @@ pub unsafe fn R_AddLine(state: &mut GameState, mut line: *mut seg_t) {
     if x1 == x2 {
         return;
     }
-    state.r_bsp.backsector = (*line).backsector;
+    state.r_bsp.backsector = state.p_setup.seg(line).backsector;
     if !state.r_bsp.backsector.is_none() {
         if !((*state.p_setup.sector_mut(state.r_bsp.backsector.unwrap())).ceilingheight
             <= (*state.p_setup.sector_mut(state.r_bsp.frontsector.unwrap())).floorheight
@@ -237,7 +238,8 @@ pub unsafe fn R_AddLine(state: &mut GameState, mut line: *mut seg_t) {
                         as i32
                         == (*state.p_setup.sector_mut(state.r_bsp.frontsector.unwrap())).lightlevel
                             as i32
-                    && (*state.p_setup.side_mut((*state.r_bsp.curline).sidedef)).midtexture as i32
+                    && (*state.p_setup.side_mut(state.p_setup.seg(state.r_bsp.curline).sidedef))
+                        .midtexture as i32
                         == 0 as i32
                 {
                     return;
@@ -342,7 +344,7 @@ pub unsafe fn R_CheckBBox(state: &mut GameState, mut bspcoord: *mut fixed_t) -> 
 }
 pub unsafe fn R_Subsector(state: &mut GameState, mut num: i32) {
     let mut count: i32 = 0;
-    let mut line: *mut seg_t = ::core::ptr::null_mut::<seg_t>();
+    let mut line: SegId;
     let mut sub: *mut subsector_t = ::core::ptr::null_mut::<subsector_t>();
     if num >= state.p_setup.numsubsectors {
         I_Error(&format!(
@@ -354,7 +356,7 @@ pub unsafe fn R_Subsector(state: &mut GameState, mut num: i32) {
     sub = state.p_setup.subsector_mut(SubsectorId(num as u32));
     state.r_bsp.frontsector = Some((*sub).sector);
     count = (*sub).numlines as i32;
-    line = state.p_setup.segs.as_mut_ptr().offset((*sub).firstline as isize);
+    line = SegId((*sub).firstline as u32);
     let frontsector = state.p_setup.sector_mut(state.r_bsp.frontsector.unwrap());
     if (*frontsector).floorheight < state.r_main.viewz {
         let (floorheight, floorpic, lightlevel) = (
@@ -386,7 +388,7 @@ pub unsafe fn R_Subsector(state: &mut GameState, mut num: i32) {
             break;
         }
         R_AddLine(state, line);
-        line = line.offset(1);
+        line = SegId(line.0 + 1);
     }
 }
 pub unsafe fn R_RenderBSPNode(state: &mut GameState, mut bspnum: i32) {

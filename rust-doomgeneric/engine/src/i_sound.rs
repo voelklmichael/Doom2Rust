@@ -1,7 +1,6 @@
 use crate::src::m_argv::M_CheckParm;
 use crate::src::m_config::M_BindVariable;
 
-use crate::src::doomdef::boolean;
 use crate::src::doomdef::NULL;
 use crate::src::game_state::GameState;
 use crate::src::sounds::sfxinfo_t;
@@ -40,14 +39,14 @@ fn snddevice_from_raw(v: i32) -> snddevice_t {
 pub struct sound_module_t {
     pub sound_devices: *mut snddevice_t,
     pub num_sound_devices: i32,
-    pub Init: Option<unsafe fn(boolean) -> boolean>,
+    pub Init: Option<unsafe fn(bool) -> bool>,
     pub Shutdown: Option<unsafe fn() -> ()>,
     pub GetSfxLumpNum: Option<unsafe fn(*mut sfxinfo_t) -> i32>,
     pub Update: Option<unsafe fn() -> ()>,
     pub UpdateSoundParams: Option<unsafe fn(i32, i32, i32) -> ()>,
     pub StartSound: Option<unsafe fn(*mut sfxinfo_t, i32, i32, i32) -> i32>,
     pub StopSound: Option<unsafe fn(i32) -> ()>,
-    pub SoundIsPlaying: Option<unsafe fn(i32) -> boolean>,
+    pub SoundIsPlaying: Option<unsafe fn(i32) -> bool>,
     pub CacheSounds: Option<unsafe fn(*mut sfxinfo_t, i32) -> ()>,
 }
 #[derive(Copy, Clone)]
@@ -55,7 +54,7 @@ pub struct sound_module_t {
 pub struct music_module_t {
     pub sound_devices: *mut snddevice_t,
     pub num_sound_devices: i32,
-    pub Init: Option<unsafe fn() -> boolean>,
+    pub Init: Option<unsafe fn() -> bool>,
     pub Shutdown: Option<unsafe fn() -> ()>,
     pub SetMusicVolume: Option<unsafe fn(i32) -> ()>,
     pub PauseMusic: Option<unsafe fn() -> ()>,
@@ -63,9 +62,9 @@ pub struct music_module_t {
     pub RegisterSong:
         Option<unsafe fn(*mut ::core::ffi::c_void, i32) -> *mut ::core::ffi::c_void>,
     pub UnRegisterSong: Option<unsafe fn(*mut ::core::ffi::c_void) -> ()>,
-    pub PlaySong: Option<unsafe fn(*mut ::core::ffi::c_void, boolean) -> ()>,
+    pub PlaySong: Option<unsafe fn(*mut ::core::ffi::c_void, bool) -> ()>,
     pub StopSong: Option<unsafe fn() -> ()>,
-    pub MusicIsPlaying: Option<unsafe fn() -> boolean>,
+    pub MusicIsPlaying: Option<unsafe fn() -> bool>,
     pub Poll: Option<unsafe fn() -> ()>,
 }
 pub struct ISoundState {
@@ -142,8 +141,7 @@ unsafe fn InitSfxModule(state: &mut ISoundState, mut use_sfx_prefix: bool) {
         ) {
             if (*state.sound_modules[i as usize])
                 .Init
-                .expect("non-null function pointer")(use_sfx_prefix as i32 as boolean)
-                != 0
+                .expect("non-null function pointer")(use_sfx_prefix)
             {
                 state.sound_module = state.sound_modules[i as usize];
                 return;
@@ -248,8 +246,7 @@ pub unsafe fn I_SoundIsPlaying(state: &mut ISoundState, mut channel: i32) -> boo
     if !state.sound_module.is_null() {
         return (*state.sound_module)
             .SoundIsPlaying
-            .expect("non-null function pointer")(channel)
-            != 0;
+            .expect("non-null function pointer")(channel);
     } else {
         return false;
     };
@@ -321,7 +318,7 @@ pub unsafe fn I_PlaySong(
     if !state.music_module.is_null() {
         (*state.music_module)
             .PlaySong
-            .expect("non-null function pointer")(handle, looping as i32 as boolean);
+            .expect("non-null function pointer")(handle, looping);
     }
 }
 pub unsafe fn I_StopSong(state: &mut ISoundState) {
@@ -335,8 +332,7 @@ pub unsafe fn I_MusicIsPlaying(state: &mut ISoundState) -> bool {
     if !state.music_module.is_null() {
         return (*state.music_module)
             .MusicIsPlaying
-            .expect("non-null function pointer")()
-            != 0;
+            .expect("non-null function pointer")();
     } else {
         return false;
     };

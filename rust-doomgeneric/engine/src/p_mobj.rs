@@ -28,7 +28,7 @@ use crate::src::p_maputl::P_AproxDistance;
 use crate::src::p_maputl::P_SetThingPosition;
 use crate::src::p_maputl::P_UnsetThingPosition;
 use crate::src::p_pspr::P_SetupPsprites;
-use crate::src::p_setup::{SectorId, SubsectorId, VertexId};
+use crate::src::p_setup::{LineId, SectorId, SubsectorId, VertexId};
 use crate::src::p_spec::{ceiling_t, floormove_t, plat_t};
 use crate::src::p_tick::P_AddThinker;
 use crate::src::p_tick::P_RemoveThinker;
@@ -37,6 +37,7 @@ use crate::src::r_main::R_PointInSubsector;
 use crate::src::r_main::R_PointToAngle2;
 use crate::src::s_sound::S_StartSound;
 use crate::src::s_sound::S_StopSound;
+use crate::src::s_sound::SoundOrigin;
 use crate::src::sounds::{sfx_itmbk, sfx_oof, sfx_telept};
 use crate::src::st_stuff::ST_Start;
 use crate::src::stdint_types::size_t;
@@ -2729,7 +2730,7 @@ pub struct subsector_s {
     pub numlines: i16,
     pub firstline: i16,
 }
-#[derive(Copy, Clone)]
+#[derive(Clone)]
 #[repr(C)]
 pub struct sector_t {
     pub floorheight: fixed_t,
@@ -2747,7 +2748,7 @@ pub struct sector_t {
     pub thinglist: Option<MobjId>,
     pub specialdata: Option<SectorSpecial>,
     pub linecount: i32,
-    pub lines: *mut *mut line_s,
+    pub lines: Vec<LineId>,
 }
 #[derive(Copy, Clone)]
 #[repr(C)]
@@ -2841,7 +2842,7 @@ pub unsafe fn P_ExplodeMissile(state: &mut GameState, mut mo: *mut mobj_t) {
     (*mo).flags &= !(MF_MISSILE as i32);
     let deathsound = (*state.info.mobjinfo_mut((*mo).type_0)).deathsound;
     if deathsound != 0 {
-        S_StartSound(state, mo as *mut ::core::ffi::c_void, deathsound);
+        S_StartSound(state, SoundOrigin::Mobj((*(mo)).id), deathsound);
     }
 }
 pub const STOPSPEED: i32 = 0x1000;
@@ -2895,14 +2896,12 @@ pub unsafe fn P_XYMovement(state: &mut GameState, mut mo: *mut mobj_t) {
             if (*mo).player.is_some() {
                 P_SlideMove(state, mo);
             } else if (*mo).flags & MF_MISSILE as i32 != 0 {
-                if !state.p_map.ceilingline.is_null()
-                    && (*state.p_map.ceilingline).backsector.is_some()
-                    && (*state
-                        .p_setup
-                        .sector_mut((*state.p_map.ceilingline).backsector.unwrap()))
-                    .ceilingpic as i32
-                        == state.r_sky.skyflatnum
-                {
+                if state.p_map.ceilingline.is_some_and(|ceilingline| {
+                    state.p_setup.line(ceilingline).backsector.is_some_and(|backsector| {
+                        (*state.p_setup.sector_mut(backsector)).ceilingpic as i32
+                            == state.r_sky.skyflatnum
+                    })
+                }) {
                     P_RemoveMobj(state, mo);
                     return;
                 }
@@ -2952,9 +2951,9 @@ pub unsafe fn P_XYMovement(state: &mut GameState, mut mo: *mut mobj_t) {
                 && (*player).cmd.sidemove as i32 == 0 as i32)
     {
         if !player.is_null()
-            && ((*(*player).mo).state.unwrap().0.wrapping_sub(StateNum::S_PLAY_RUN1 as u32)) < 4 as u32
+            && ((*mo).state.unwrap().0.wrapping_sub(StateNum::S_PLAY_RUN1 as u32)) < 4 as u32
         {
-            P_SetMobjState(state, (*player).mo, StateNum::S_PLAY);
+            P_SetMobjState(state, mo, StateNum::S_PLAY);
         }
         (*mo).momx = 0 as i32 as fixed_t;
         (*mo).momy = 0 as i32 as fixed_t;
@@ -2995,11 +2994,7 @@ pub unsafe fn P_ZMovement(state: &mut GameState, mut mo: *mut mobj_t) {
             if (*mo).player.is_some() && (*mo).momz < -GRAVITY * 8 as i32 {
                 (*state.g_game.player_mut((*mo).player.unwrap())).deltaviewheight =
                     (*mo).momz >> 3 as i32;
-                S_StartSound(
-                    state,
-                    mo as *mut ::core::ffi::c_void,
-                    sfx_oof as i32,
-                );
+                S_StartSound(state, SoundOrigin::Mobj((*(mo)).id), sfx_oof as i32);
             }
             (*mo).momz = 0 as i32 as fixed_t;
         }
@@ -3049,20 +3044,12 @@ pub unsafe fn P_NightmareRespawn(state: &mut GameState, mut mobj: *mut mobj_t) {
         .sector_mut(state.p_setup.subsectors[(*mobj).subsector.0 as usize].sector))
     .floorheight;
     mo = P_SpawnMobj(state, (*mobj).x, (*mobj).y, floorheight1, MobjType::MT_TFOG);
-    S_StartSound(
-        state,
-        mo as *mut ::core::ffi::c_void,
-        sfx_telept as i32,
-    );
+    S_StartSound(state, SoundOrigin::Mobj((*(mo)).id), sfx_telept as i32);
     ss = R_PointInSubsector(state, x, y);
     let floorheight2 =
         (*state.p_setup.sector_mut(state.p_setup.subsectors[ss.0 as usize].sector)).floorheight;
     mo = P_SpawnMobj(state, x, y, floorheight2, MobjType::MT_TFOG);
-    S_StartSound(
-        state,
-        mo as *mut ::core::ffi::c_void,
-        sfx_telept as i32,
-    );
+    S_StartSound(state, SoundOrigin::Mobj((*(mo)).id), sfx_telept as i32);
     mthing = &raw mut (*mobj).spawnpoint;
     if (*state.info.mobjinfo_mut((*mobj).type_0)).flags & MF_SPAWNCEILING as i32 != 0 {
         z = ONCEILINGZ as fixed_t;
@@ -3185,6 +3172,16 @@ pub unsafe fn P_SpawnMobj(
 pub struct MobjId {
     index: u32,
     generation: u32,
+}
+
+impl MobjId {
+    /// Exposes the raw arena slot index. Not meant for constructing or
+    /// comparing ids (generation is deliberately hidden for that) -- just
+    /// for callers that need a plain distinguishing number, e.g. the
+    /// vanilla-demo-compatibility overrun emulation in p_maputl.rs.
+    pub fn raw_index(&self) -> u32 {
+        self.index
+    }
 }
 
 #[derive(Copy, Clone)]
@@ -3338,7 +3335,7 @@ pub unsafe fn P_RemoveMobj(state: &mut GameState, mut mobj: *mut mobj_t) {
         }
     }
     P_UnsetThingPosition(state, mobj);
-    S_StopSound(state, mobj);
+    S_StopSound(state, SoundOrigin::Mobj((*mobj).id));
     P_RemoveThinker(mobj as *mut thinker_t);
 }
 pub unsafe fn P_RespawnSpecials(state: &mut GameState) {
@@ -3368,11 +3365,7 @@ pub unsafe fn P_RespawnSpecials(state: &mut GameState) {
     let floorheight =
         (*state.p_setup.sector_mut(state.p_setup.subsectors[ss.0 as usize].sector)).floorheight;
     mo = P_SpawnMobj(state, x, y, floorheight, MobjType::MT_IFOG);
-    S_StartSound(
-        state,
-        mo as *mut ::core::ffi::c_void,
-        sfx_itmbk as i32,
-    );
+    S_StartSound(state, SoundOrigin::Mobj((*(mo)).id), sfx_itmbk as i32);
     i = 0 as i32;
     while i < NUMMOBJTYPES as i32 {
         if (*mthing).type_0 as i32 == state.info.mobjinfo[i as usize].doomednum {
@@ -3400,7 +3393,7 @@ pub unsafe fn P_SpawnPlayer(state: &mut GameState, mut mthing: *mut mapthing_t) 
     if (*mthing).type_0 as i32 == 0 as i32 {
         return;
     }
-    if state.g_game.playeringame[((*mthing).type_0 as i32 - 1 as i32) as usize] == 0 {
+    if !state.g_game.playeringame[((*mthing).type_0 as i32 - 1 as i32) as usize] {
         return;
     }
     p = (&raw mut state.g_game.players as *mut player_t)
@@ -3418,7 +3411,7 @@ pub unsafe fn P_SpawnPlayer(state: &mut GameState, mut mthing: *mut mapthing_t) 
     (*mobj).angle = (ANG45 * ((*mthing).angle as i32 / 45 as i32)) as angle_t;
     (*mobj).player = Some(PlayerId(((*mthing).type_0 as i32 - 1 as i32) as u8));
     (*mobj).health = (*p).health;
-    (*p).mo = mobj;
+    (*p).mo = Some((*mobj).id);
     (*p).playerstate = PlayerState::PST_LIVE;
     (*p).refire = 0 as i32;
     (*p).message = None;
@@ -3607,7 +3600,7 @@ pub unsafe fn P_SpawnMissile(
     );
     let seesound = (*state.info.mobjinfo_mut((*th).type_0)).seesound;
     if seesound != 0 {
-        S_StartSound(state, th as *mut ::core::ffi::c_void, seesound);
+        S_StartSound(state, SoundOrigin::Mobj((*(th)).id), seesound);
     }
     (*th).target = Some((*source).id);
     an = R_PointToAngle2(state, (*source).x, (*source).y, (*dest).x, (*dest).y);
@@ -3642,14 +3635,14 @@ pub unsafe fn P_SpawnPlayerMissile(
     let mut slope: fixed_t = 0;
     an = (*source).angle;
     slope = P_AimLineAttack(state, source, an, 16 as fixed_t * 64 as fixed_t * FRACUNIT);
-    if state.p_map.linetarget.is_null() {
+    if state.p_map.linetarget.is_none() {
         an = an.wrapping_add(((1 as i32) << 26 as i32) as angle_t);
         slope = P_AimLineAttack(state, source, an, 16 as fixed_t * 64 as fixed_t * FRACUNIT);
-        if state.p_map.linetarget.is_null() {
+        if state.p_map.linetarget.is_none() {
             an = an.wrapping_sub(((2 as i32) << 26 as i32) as angle_t);
             slope = P_AimLineAttack(state, source, an, 16 as fixed_t * 64 as fixed_t * FRACUNIT);
         }
-        if state.p_map.linetarget.is_null() {
+        if state.p_map.linetarget.is_none() {
             an = (*source).angle;
             slope = 0 as i32 as fixed_t;
         }
@@ -3660,7 +3653,7 @@ pub unsafe fn P_SpawnPlayerMissile(
     th = P_SpawnMobj(state, x, y, z, type_0);
     let seesound = (*state.info.mobjinfo_mut((*th).type_0)).seesound;
     if seesound != 0 {
-        S_StartSound(state, th as *mut ::core::ffi::c_void, seesound);
+        S_StartSound(state, SoundOrigin::Mobj((*(th)).id), seesound);
     }
     (*th).target = Some((*source).id);
     (*th).angle = an;

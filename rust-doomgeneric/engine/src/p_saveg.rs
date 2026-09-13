@@ -5,7 +5,6 @@ use crate::src::d_player::NUMPSPRITES;
 use crate::src::d_player::{player_t, PlayerId, PlayerState};
 use crate::src::d_player::{weapontype_from_raw, NUMWEAPONS};
 use crate::src::d_ticcmd::ticcmd_t;
-use crate::src::doomdef::boolean;
 use crate::src::g_game::G_VanillaVersionCode;
 use crate::src::i_system::I_Error;
 use std::io::{Read, Seek, Write};
@@ -289,7 +288,6 @@ unsafe fn saveg_read_mobj_t(state: &mut GameState, mut str: *mut mobj_t) {
     if pl > 0 as i32 {
         let player_id = PlayerId((pl - 1 as i32) as u8);
         (*str).player = Some(player_id);
-        (*state.g_game.player_mut(player_id)).mo = str;
     } else {
         (*str).player = None;
     }
@@ -379,7 +377,8 @@ unsafe fn saveg_write_pspdef_t(state: &mut GameState, mut str: *mut pspdef_t) {
 }
 unsafe fn saveg_read_player_t(state: &mut GameState, mut str: *mut player_t) {
     let mut i: i32 = 0;
-    (*str).mo = saveg_readp(state) as *mut mobj_t;
+    // Placeholder value, discarded -- see saveg_write_player_t.
+    saveg_readp(state);
     (*str).playerstate = match saveg_read32(state) {
         0 => PlayerState::PST_LIVE,
         1 => PlayerState::PST_DEAD,
@@ -455,7 +454,10 @@ unsafe fn saveg_read_player_t(state: &mut GameState, mut str: *mut player_t) {
 }
 unsafe fn saveg_write_player_t(state: &mut GameState, mut str: *mut player_t) {
     let mut i: i32 = 0;
-    saveg_writep(state, (*str).mo as *mut ::core::ffi::c_void);
+    // The written value is a placeholder: on load it is immediately
+    // overwritten with null by P_UnArchivePlayers and then correctly
+    // restored from the mobj's own player backref in P_UnArchiveThinkers.
+    saveg_writep(state, ::core::ptr::null_mut());
     saveg_write32(state, (*str).playerstate as i32);
     saveg_write_ticcmd_t(state, &raw mut (*str).cmd);
     saveg_write32(state, (*str).viewz as i32);
@@ -817,7 +819,7 @@ pub fn P_ReadSaveGameHeader(state: &mut GameState) -> bool {
     state.g_game.gamemap = saveg_read8(state) as i32;
     i = 0 as i32;
     while i < MAXPLAYERS {
-        state.g_game.playeringame[i as usize] = saveg_read8(state) as boolean;
+        state.g_game.playeringame[i as usize] = saveg_read8(state) != 0;
         i += 1;
     }
     a = saveg_read8(state);
@@ -838,7 +840,7 @@ pub unsafe fn P_ArchivePlayers(state: &mut GameState) {
     let mut i: i32 = 0;
     i = 0 as i32;
     while i < MAXPLAYERS {
-        if !(state.g_game.playeringame[i as usize] == 0) {
+        if state.g_game.playeringame[i as usize] {
             saveg_write_pad(state);
             let player = (&raw mut state.g_game.players as *mut player_t).offset(i as isize)
                 as *mut player_t;
@@ -851,12 +853,12 @@ pub unsafe fn P_UnArchivePlayers(state: &mut GameState) {
     let mut i: i32 = 0;
     i = 0 as i32;
     while i < MAXPLAYERS {
-        if !(state.g_game.playeringame[i as usize] == 0) {
+        if state.g_game.playeringame[i as usize] {
             saveg_read_pad(state);
             let player = (&raw mut state.g_game.players as *mut player_t).offset(i as isize)
                 as *mut player_t;
             saveg_read_player_t(state, player);
-            state.g_game.players[i as usize].mo = ::core::ptr::null_mut::<mobj_t>();
+            state.g_game.players[i as usize].mo = None;
             state.g_game.players[i as usize].message = None;
             state.g_game.players[i as usize].attacker = None;
         }
@@ -1000,6 +1002,9 @@ pub unsafe fn P_UnArchiveThinkers(state: &mut GameState) {
                 ) as *mut mobj_t;
                 saveg_read_mobj_t(state, mobj);
                 (*mobj).id = state.p_mobj.register(mobj);
+                if let Some(player_id) = (*mobj).player {
+                    (*state.g_game.player_mut(player_id)).mo = Some((*mobj).id);
+                }
                 (*mobj).target = None;
                 (*mobj).tracer = None;
                 P_SetThingPosition(state, mobj);

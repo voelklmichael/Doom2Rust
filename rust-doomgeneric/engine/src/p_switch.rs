@@ -16,7 +16,6 @@ use crate::src::p_floor::StairE;
 use crate::src::p_floor::FloorE;
 use crate::src::p_lights::EV_LightTurnOn;
 use crate::src::p_mobj::mobj_t;
-use crate::src::p_mobj::line_t;
 use crate::src::p_setup::LineId;
 use crate::src::p_setup::SectorId;
 use crate::src::p_plats::EV_DoPlat;
@@ -26,6 +25,7 @@ use crate::src::p_spec::EV_DoDonut;
 use crate::src::p_spec::ML_SECRET;
 use crate::src::r_data::R_TextureNumForName;
 use crate::src::s_sound::S_StartSound;
+use crate::src::s_sound::SoundOrigin;
 use crate::src::sounds::{sfx_swtchn, sfx_swtchx};
 
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -313,17 +313,16 @@ pub unsafe fn P_InitSwitchList(state: &mut GameState) {
 }
 pub unsafe fn P_StartButton(
     state: &mut GameState,
-    mut line: *mut line_t,
+    mut line: LineId,
     mut w: BWhere,
     mut texture: i32,
     mut time: i32,
 ) {
     let mut i: i32 = 0;
-    let line_id = LineId(line.offset_from(state.p_setup.lines.as_ptr()) as u32);
     i = 0 as i32;
     while i < MAXBUTTONS {
         if state.p_switch.buttonlist[i as usize].btimer != 0
-            && state.p_switch.buttonlist[i as usize].line == line_id
+            && state.p_switch.buttonlist[i as usize].line == line
         {
             return;
         }
@@ -332,11 +331,12 @@ pub unsafe fn P_StartButton(
     i = 0 as i32;
     while i < MAXBUTTONS {
         if state.p_switch.buttonlist[i as usize].btimer == 0 {
-            state.p_switch.buttonlist[i as usize].line = line_id;
+            state.p_switch.buttonlist[i as usize].line = line;
             state.p_switch.buttonlist[i as usize].where_0 = w;
             state.p_switch.buttonlist[i as usize].btexture = texture;
             state.p_switch.buttonlist[i as usize].btimer = time;
-            state.p_switch.buttonlist[i as usize].soundorg = (*line).frontsector.unwrap();
+            state.p_switch.buttonlist[i as usize].soundorg =
+                state.p_setup.line(line).frontsector.unwrap();
             return;
         }
         i += 1;
@@ -345,7 +345,7 @@ pub unsafe fn P_StartButton(
 }
 pub unsafe fn P_ChangeSwitchTexture(
     state: &mut GameState,
-    mut line: *mut line_t,
+    mut line: LineId,
     mut useAgain: i32,
 ) {
     let mut texTop: i32 = 0;
@@ -354,24 +354,21 @@ pub unsafe fn P_ChangeSwitchTexture(
     let mut i: i32 = 0;
     let mut sound: i32 = 0;
     if useAgain == 0 {
-        (*line).special = 0 as i16;
+        (*state.p_setup.line_mut(line)).special = 0 as i16;
     }
-    texTop = state.p_setup.sides[(*line).sidenum[0 as i32 as usize] as usize].toptexture as i32;
-    texMid = state.p_setup.sides[(*line).sidenum[0 as i32 as usize] as usize].midtexture as i32;
-    texBot = state.p_setup.sides[(*line).sidenum[0 as i32 as usize] as usize].bottomtexture as i32;
+    let sidenum0 = state.p_setup.line(line).sidenum[0 as i32 as usize];
+    texTop = state.p_setup.sides[sidenum0 as usize].toptexture as i32;
+    texMid = state.p_setup.sides[sidenum0 as usize].midtexture as i32;
+    texBot = state.p_setup.sides[sidenum0 as usize].bottomtexture as i32;
     sound = sfx_swtchn as i32;
-    if (*line).special as i32 == 11 as i32 {
+    if state.p_setup.line(line).special as i32 == 11 as i32 {
         sound = sfx_swtchx as i32;
     }
     i = 0 as i32;
     while i < state.p_switch.numswitches * 2 as i32 {
         if state.p_switch.switchlist[i as usize] == texTop {
-            let soundorg = &raw mut (*state
-                .p_setup
-                .sector_mut(state.p_switch.buttonlist[0 as usize].soundorg))
-            .soundorg as *mut ::core::ffi::c_void;
-            S_StartSound(state, soundorg, sound);
-            state.p_setup.sides[(*line).sidenum[0 as i32 as usize] as usize].toptexture =
+            S_StartSound(state, SoundOrigin::Sector(state.p_switch.buttonlist[0 as usize].soundorg), sound);
+            state.p_setup.sides[sidenum0 as usize].toptexture =
                 state.p_switch.switchlist[(i ^ 1 as i32) as usize] as i16;
             if useAgain != 0 {
                 P_StartButton(
@@ -384,12 +381,8 @@ pub unsafe fn P_ChangeSwitchTexture(
             }
             return;
         } else if state.p_switch.switchlist[i as usize] == texMid {
-            let soundorg = &raw mut (*state
-                .p_setup
-                .sector_mut(state.p_switch.buttonlist[0 as usize].soundorg))
-            .soundorg as *mut ::core::ffi::c_void;
-            S_StartSound(state, soundorg, sound);
-            state.p_setup.sides[(*line).sidenum[0 as i32 as usize] as usize].midtexture =
+            S_StartSound(state, SoundOrigin::Sector(state.p_switch.buttonlist[0 as usize].soundorg), sound);
+            state.p_setup.sides[sidenum0 as usize].midtexture =
                 state.p_switch.switchlist[(i ^ 1 as i32) as usize] as i16;
             if useAgain != 0 {
                 P_StartButton(
@@ -402,12 +395,8 @@ pub unsafe fn P_ChangeSwitchTexture(
             }
             return;
         } else if state.p_switch.switchlist[i as usize] == texBot {
-            let soundorg = &raw mut (*state
-                .p_setup
-                .sector_mut(state.p_switch.buttonlist[0 as usize].soundorg))
-            .soundorg as *mut ::core::ffi::c_void;
-            S_StartSound(state, soundorg, sound);
-            state.p_setup.sides[(*line).sidenum[0 as i32 as usize] as usize].bottomtexture =
+            S_StartSound(state, SoundOrigin::Sector(state.p_switch.buttonlist[0 as usize].soundorg), sound);
+            state.p_setup.sides[sidenum0 as usize].bottomtexture =
                 state.p_switch.switchlist[(i ^ 1 as i32) as usize] as i16;
             if useAgain != 0 {
                 P_StartButton(
@@ -426,21 +415,22 @@ pub unsafe fn P_ChangeSwitchTexture(
 pub unsafe fn P_UseSpecialLine(
     state: &mut GameState,
     mut thing: *mut mobj_t,
-    mut line: *mut line_t,
+    mut line: LineId,
     mut side: i32,
 ) -> bool {
+    let linev = state.p_setup.line(line);
     if side != 0 {
-        match (*line).special as i32 {
+        match linev.special as i32 {
             124 => {}
             _ => return false,
         }
     }
     if (*thing).player.is_none() {
-        if (*line).flags as i32 & ML_SECRET != 0 {
+        if linev.flags as i32 & ML_SECRET != 0 {
             return false;
         }
         let mut current_block_6: u64;
-        match (*line).special as i32 {
+        match linev.special as i32 {
             1 => {
                 current_block_6 = 3640593987805443782;
             }
@@ -467,7 +457,7 @@ pub unsafe fn P_UseSpecialLine(
         }
     }
     let mut current_block_108: u64;
-    match (*line).special as i32 {
+    match linev.special as i32 {
         1 => {
             current_block_108 = 9599537275859496075;
         }

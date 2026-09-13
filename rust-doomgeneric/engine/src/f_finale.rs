@@ -7,7 +7,6 @@ use crate::src::d_mode::GameMode_t;
 use crate::src::d_mode::GameMission_t;
 use crate::src::doomdef::true_0;
 use crate::src::doomdef::MAXPLAYERS;
-use crate::src::doomdef::NULL;
 use crate::src::doomdef::SCREENHEIGHT;
 use crate::src::doomdef::SCREENWIDTH;
 use crate::src::game_state::GameState;
@@ -24,6 +23,7 @@ use crate::src::r_things::FF_FRAMEMASK;
 use crate::src::s_sound::S_ChangeMusic;
 use crate::src::s_sound::S_StartMusic;
 use crate::src::s_sound::S_StartSound;
+use crate::src::s_sound::SoundOrigin;
 use crate::src::sounds::{mus_bunny, mus_evil, mus_read_m, mus_victor};
 use crate::src::sounds::{
     sfx_claw, sfx_dshtgn, sfx_firsht, sfx_pistol, sfx_plasma, sfx_rlaunc, sfx_sgtatk, sfx_shotgn,
@@ -599,13 +599,9 @@ pub unsafe fn F_CastTicker(state: &mut GameState) {
             .seesound
             != 0
         {
-            S_StartSound(
-                state,
-                NULL,
-                state.info.mobjinfo
+            S_StartSound(state, SoundOrigin::None, state.info.mobjinfo
                     [state.f_finale.castorder[state.f_finale.castnum as usize].type_0 as usize]
-                    .seesound,
-            );
+                    .seesound);
         }
         state.f_finale.caststate = (&raw mut state.info.states as *mut state_t).offset(
             (*(&raw mut state.info.mobjinfo as *mut mobjinfo_t).offset(
@@ -684,7 +680,7 @@ pub unsafe fn F_CastTicker(state: &mut GameState) {
             }
         }
         if sfx != 0 {
-            S_StartSound(state, NULL, sfx);
+            S_StartSound(state, SoundOrigin::None, sfx);
         }
         current_block = 1356832168064818221;
     }
@@ -805,13 +801,9 @@ pub unsafe fn F_CastResponder(state: &mut GameState, mut ev: &event_t) -> bool {
         .deathsound
         != 0
     {
-        S_StartSound(
-            state,
-            NULL,
-            state.info.mobjinfo
+        S_StartSound(state, SoundOrigin::None, state.info.mobjinfo
                 [state.f_finale.castorder[state.f_finale.castnum as usize].type_0 as usize]
-                .deathsound,
-        );
+                .deathsound);
     }
     return true;
 }
@@ -965,7 +957,7 @@ pub unsafe fn F_BunnyScroll(state: &mut GameState) {
         stage = 6 as i32;
     }
     if stage > state.f_finale.laststage {
-        S_StartSound(state, NULL, sfx_pistol as i32);
+        S_StartSound(state, SoundOrigin::None, sfx_pistol as i32);
         state.f_finale.laststage = stage;
     }
     let name = format!("END{}", stage);

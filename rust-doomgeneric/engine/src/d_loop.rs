@@ -1,7 +1,4 @@
 use crate::src::d_ticcmd::BT_SPECIAL;
-use crate::src::doomdef::boolean;
-use crate::src::doomdef::false_0;
-use crate::src::doomdef::true_0;
 use crate::src::doomdef::TICRATE;
 use crate::src::dummy::drone;
 use crate::src::dummy::net_client_connected;
@@ -28,7 +25,7 @@ pub struct DLoopState {
     pub ticdup: i32,
     pub new_sync: bool,
     pub loop_interface: loop_interface_t,
-    pub local_playeringame: [boolean; 8],
+    pub local_playeringame: [bool; 8],
     pub player_class: i32,
     pub lasttime: i32,
     pub frameon: i32,
@@ -54,7 +51,7 @@ impl DLoopState {
                     lookfly: 0,
                     arti: 0,
                 }; 8],
-                ingame: [0; 8],
+                ingame: [false; 8],
             }; 128],
             maketic: 0,
             recvtic: 0,
@@ -68,7 +65,7 @@ impl DLoopState {
                 RunTic: None,
                 RunMenu: None,
             },
-            local_playeringame: [0; 8],
+            local_playeringame: [false; 8],
             player_class: 0,
             lasttime: 0,
             frameon: 0,
@@ -116,20 +113,20 @@ pub struct net_gamesettings_t {
     pub consoleplayer: i32,
     pub player_classes: [i32; 8],
 }
-pub type netgame_startup_callback_t = Option<unsafe fn(i32, i32) -> boolean>;
+pub type netgame_startup_callback_t = Option<unsafe fn(i32, i32) -> bool>;
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct loop_interface_t {
     pub ProcessEvents: Option<unsafe fn(&mut GameState) -> ()>,
     pub BuildTiccmd: Option<unsafe fn(&mut GameState, *mut ticcmd_t, i32) -> ()>,
-    pub RunTic: Option<unsafe fn(&mut GameState, *mut ticcmd_t, *mut boolean) -> ()>,
+    pub RunTic: Option<unsafe fn(&mut GameState, *mut ticcmd_t, *mut bool) -> ()>,
     pub RunMenu: Option<unsafe fn(&mut GameState) -> ()>,
 }
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct ticcmd_set_t {
     pub cmds: [ticcmd_t; 8],
-    pub ingame: [boolean; 8],
+    pub ingame: [bool; 8],
 }
 pub const NET_MAXPLAYERS: i32 = 8;
 pub const BACKUPTICS: i32 = 128;
@@ -194,7 +191,7 @@ unsafe fn BuildNewTic(state: &mut GameState) -> bool {
     state.d_loop.ticdata[(state.d_loop.maketic % BACKUPTICS) as usize].cmds[localplayer as usize] =
         cmd;
     state.d_loop.ticdata[(state.d_loop.maketic % BACKUPTICS) as usize].ingame
-        [localplayer as usize] = true_0 as boolean;
+        [localplayer as usize] = true;
     state.d_loop.maketic += 1;
     return true;
 }
@@ -232,7 +229,7 @@ fn D_Disconnected() {
 pub unsafe fn D_ReceiveTic(
     state: &mut DLoopState,
     mut ticcmds: *mut ticcmd_t,
-    mut players_mask: *mut boolean,
+    mut players_mask: *mut bool,
 ) {
     let mut i: i32 = 0;
     if ticcmds.is_null() && players_mask.is_null() {
@@ -288,7 +285,7 @@ fn OldNetSync(state: &mut GameState) {
     state.d_loop.frameon += 1;
     i = 0 as u32;
     while i < NET_MAXPLAYERS as u32 {
-        if state.d_loop.local_playeringame[i as usize] != 0 {
+        if state.d_loop.local_playeringame[i as usize] {
             keyplayer = i as i32;
             break;
         } else {
@@ -320,7 +317,7 @@ fn PlayersInGame(state: &mut GameState) -> bool {
     if net_client_connected {
         i = 0 as u32;
         while i < NET_MAXPLAYERS as u32 {
-            result = result || state.d_loop.local_playeringame[i as usize] != 0;
+            result = result || state.d_loop.local_playeringame[i as usize];
             i = i.wrapping_add(1);
         }
     }
@@ -347,7 +344,7 @@ unsafe fn SinglePlayerClear(mut set: *mut ticcmd_set_t) {
     i = 0 as u32;
     while i < NET_MAXPLAYERS as u32 {
         if i != localplayer as u32 {
-            (*set).ingame[i as usize] = false_0 as boolean;
+            (*set).ingame[i as usize] = false;
         }
         i = i.wrapping_add(1);
     }
@@ -422,10 +419,10 @@ pub unsafe fn TryRunTics(state: &mut GameState) {
                 I_Error("gametic>lowtic");
             }
             memcpy(
-                &raw mut state.d_loop.local_playeringame as *mut boolean
+                &raw mut state.d_loop.local_playeringame as *mut bool
                     as *mut ::core::ffi::c_void,
-                &raw mut (*set).ingame as *mut boolean as *const ::core::ffi::c_void,
-                ::core::mem::size_of::<[boolean; 8]>() as size_t,
+                &raw mut (*set).ingame as *mut bool as *const ::core::ffi::c_void,
+                ::core::mem::size_of::<[bool; 8]>() as size_t,
             );
             let run_tic = state.d_loop.loop_interface
                 .RunTic
@@ -433,7 +430,7 @@ pub unsafe fn TryRunTics(state: &mut GameState) {
             run_tic(
                 state,
                 &raw mut (*set).cmds as *mut ticcmd_t,
-                &raw mut (*set).ingame as *mut boolean,
+                &raw mut (*set).ingame as *mut bool,
             );
             state.d_loop.gametic += 1;
             TicdupSquash(set);

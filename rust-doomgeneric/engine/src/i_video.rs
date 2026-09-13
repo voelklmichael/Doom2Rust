@@ -1,4 +1,3 @@
-use crate::src::doomdef::boolean;
 use crate::src::doomdef::pixel_t;
 use crate::src::doomdef::SCREENHEIGHT;
 use crate::src::doomdef::SCREENWIDTH;
@@ -75,7 +74,7 @@ impl IVideoState {
 
 pub type __uint16_t = u16;
 pub type uint16_t = __uint16_t;
-pub type grabmouse_callback_t = Option<unsafe fn() -> boolean>;
+pub type grabmouse_callback_t = Option<unsafe fn() -> bool>;
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct FB_ScreenInfo {
