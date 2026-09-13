@@ -21,7 +21,7 @@ pub struct PMaputlState {
     pub openrange: fixed_t,
     pub lowfloor: fixed_t,
     pub intercepts: [intercept_t; 189],
-    pub intercept_p: *mut intercept_t,
+    pub intercept_p: usize,
     pub trace: divline_t,
     pub earlyout: bool,
     pub ptflags: i32,
@@ -38,7 +38,7 @@ impl PMaputlState {
                 frac: 0,
                 target: InterceptTarget::Line(LineId(0)),
             }; 189],
-            intercept_p: ::core::ptr::null::<intercept_t>() as *mut intercept_t,
+            intercept_p: 0,
             trace: divline_t {
                 x: 0,
                 y: 0,
@@ -601,16 +601,13 @@ pub unsafe fn PIT_AddLineIntercepts(
     if state.p_maputl.earlyout && frac < FRACUNIT && ldv.backsector.is_none() {
         return false;
     }
-    (*state.p_maputl.intercept_p).frac = frac;
-    (*state.p_maputl.intercept_p).target = InterceptTarget::Line(ld);
-    let num_intercepts = state
-        .p_maputl
-        .intercept_p
-        .offset_from(&raw mut state.p_maputl.intercepts as *mut intercept_t)
-        as i64 as i32;
-    let intercept_p = state.p_maputl.intercept_p;
+    let idx = state.p_maputl.intercept_p;
+    state.p_maputl.intercepts[idx].frac = frac;
+    state.p_maputl.intercepts[idx].target = InterceptTarget::Line(ld);
+    let num_intercepts = idx as i32;
+    let intercept_p = &raw mut state.p_maputl.intercepts[idx] as *mut intercept_t;
     InterceptsOverrun(state, num_intercepts, intercept_p);
-    state.p_maputl.intercept_p = state.p_maputl.intercept_p.offset(1);
+    state.p_maputl.intercept_p += 1;
     return true;
 }
 #[no_mangle]
@@ -658,16 +655,13 @@ pub unsafe fn PIT_AddThingIntercepts(
     if frac < 0 as i32 {
         return true;
     }
-    (*state.p_maputl.intercept_p).frac = frac;
-    (*state.p_maputl.intercept_p).target = InterceptTarget::Thing(thing_id);
-    let num_intercepts = state
-        .p_maputl
-        .intercept_p
-        .offset_from(&raw mut state.p_maputl.intercepts as *mut intercept_t)
-        as i64 as i32;
-    let intercept_p = state.p_maputl.intercept_p;
+    let idx = state.p_maputl.intercept_p;
+    state.p_maputl.intercepts[idx].frac = frac;
+    state.p_maputl.intercepts[idx].target = InterceptTarget::Thing(thing_id);
+    let num_intercepts = idx as i32;
+    let intercept_p = &raw mut state.p_maputl.intercepts[idx] as *mut intercept_t;
     InterceptsOverrun(state, num_intercepts, intercept_p);
-    state.p_maputl.intercept_p = state.p_maputl.intercept_p.offset(1);
+    state.p_maputl.intercept_p += 1;
     return true;
 }
 pub unsafe fn P_TraverseIntercepts(
@@ -677,13 +671,9 @@ pub unsafe fn P_TraverseIntercepts(
 ) -> bool {
     let mut count: i32 = 0;
     let mut dist: fixed_t = 0;
-    let mut scan: *mut intercept_t = ::core::ptr::null_mut::<intercept_t>();
+    let mut scan_idx: usize = 0;
     let mut in_0: *mut intercept_t = ::core::ptr::null_mut::<intercept_t>();
-    count = state
-        .p_maputl
-        .intercept_p
-        .offset_from(&raw mut state.p_maputl.intercepts as *mut intercept_t) as i64
-        as i32;
+    count = state.p_maputl.intercept_p as i32;
     in_0 = ::core::ptr::null_mut::<intercept_t>();
     loop {
         let fresh0 = count;
@@ -692,13 +682,13 @@ pub unsafe fn P_TraverseIntercepts(
             break;
         }
         dist = INT_MAX as fixed_t;
-        scan = &raw mut state.p_maputl.intercepts as *mut intercept_t;
-        while scan < state.p_maputl.intercept_p {
-            if (*scan).frac < dist {
-                dist = (*scan).frac;
-                in_0 = scan;
+        scan_idx = 0;
+        while scan_idx < state.p_maputl.intercept_p {
+            if state.p_maputl.intercepts[scan_idx].frac < dist {
+                dist = state.p_maputl.intercepts[scan_idx].frac;
+                in_0 = &raw mut state.p_maputl.intercepts[scan_idx] as *mut intercept_t;
             }
-            scan = scan.offset(1);
+            scan_idx += 1;
         }
         if dist > maxfrac {
             return true;
@@ -815,7 +805,7 @@ pub unsafe fn P_PathTraverse(
     let mut count: i32 = 0;
     state.p_maputl.earlyout = (flags & PT_EARLYOUT) != 0;
     state.r_main.validcount += 1;
-    state.p_maputl.intercept_p = &raw mut state.p_maputl.intercepts as *mut intercept_t;
+    state.p_maputl.intercept_p = 0;
     if x1 as i32 - state.p_setup.bmaporgx as i32 & MAPBLOCKSIZE - 1 as i32 == 0 as i32 {
         x1 += FRACUNIT;
     }

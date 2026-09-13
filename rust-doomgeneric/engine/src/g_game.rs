@@ -1288,11 +1288,7 @@ pub unsafe fn G_DeathMatchSpawnPlayer(state: &mut GameState, mut playernum: i32)
     let mut i: i32 = 0;
     let mut j: i32 = 0;
     let mut selections: i32 = 0;
-    selections = state
-        .p_setup
-        .deathmatch_p
-        .offset_from(&raw mut state.p_setup.deathmatchstarts as *mut mapthing_t)
-        as i64 as i32;
+    selections = state.p_setup.deathmatch_p as i32;
     if selections < 4 as i32 {
         I_Error(&format!("Only {} deathmatch spots, 4 required", selections));
     }
