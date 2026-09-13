@@ -170,13 +170,17 @@ pub unsafe fn P_RunThinkers(state: &mut GameState) {
                 next = state.p_tick.next(id);
                 let kind = state.p_tick.kind(id);
                 P_UnlinkThinkerNode(state, id);
-                // Every arm still frees the same way today (kind is not yet
-                // used to pick a different deallocation path) -- this match
-                // only proves the per-type dispatch is wired correctly
-                // before any arm's behavior actually diverges.
                 match kind {
-                    ThinkerKind::Mobj
-                    | ThinkerKind::Ceiling
+                    // mobj_t's memory is owned by PMobjState's arena now,
+                    // not the zone allocator -- deallocate() drops the
+                    // owning Box instead of Z_Free.
+                    ThinkerKind::Mobj => {
+                        let mobj_id = (*(currentthinker as *mut mobj_t)).id;
+                        state.p_mobj.deallocate(mobj_id);
+                    }
+                    // The remaining 8 kinds are still Z_Malloc'd individually
+                    // (converted one at a time in later phases).
+                    ThinkerKind::Ceiling
                     | ThinkerKind::Door
                     | ThinkerKind::Floor
                     | ThinkerKind::Plat

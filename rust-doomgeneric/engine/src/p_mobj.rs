@@ -1,7 +1,6 @@
 use crate::src::d_mode::SkillType;
 use crate::src::d_player::CF_NOMOMENTUM;
 use crate::src::doomdef::MAXPLAYERS;
-use crate::src::doomdef::NULL;
 use crate::src::doomdef::TICRATE;
 use crate::src::g_game::G_PlayerReborn;
 use crate::src::game_state::GameState;
@@ -48,9 +47,7 @@ use crate::src::tables::finecosine;
 use crate::src::tables::finesine;
 use crate::src::tables::ANG45;
 use crate::src::tables::ANGLETOFINESHIFT;
-use crate::src::z_zone::Z_Malloc;
-use crate::src::mem_compat::{memcpy, memset};
-use crate::src::z_zone::PU_LEVEL;
+use crate::src::mem_compat::memcpy;
 
 pub use crate::src::d_ticcmd::ticcmd_t;
 #[derive(Copy, Clone)]
@@ -3116,39 +3113,32 @@ pub unsafe fn P_SpawnMobj(
     mut z: fixed_t,
     mut type_0: MobjType,
 ) -> *mut mobj_t {
-    let mut mobj: *mut mobj_t = ::core::ptr::null_mut::<mobj_t>();
     let mut st: *mut state_t = ::core::ptr::null_mut::<state_t>();
     let mut info: *mut mobjinfo_t = ::core::ptr::null_mut::<mobjinfo_t>();
-    mobj = Z_Malloc(
-        &mut state.z_zone,
-        ::core::mem::size_of::<mobj_t>() as i32,
-        PU_LEVEL as i32,
-        NULL,
-    ) as *mut mobj_t;
-    memset(
-        mobj as *mut ::core::ffi::c_void,
-        0 as i32,
-        ::core::mem::size_of::<mobj_t>() as size_t,
-    );
+    // Built as a local value (starting from the same all-defaults template
+    // used for PMobjState::dummy_mobj) instead of Z_Malloc+memset(0)+fill
+    // through a raw pointer -- spawn() moves it onto the heap once fully
+    // populated below.
+    let mut value = state.p_mobj.dummy_mobj;
     info = state.info.mobjinfo_mut(type_0);
-    (*mobj).type_0 = type_0;
-    (*mobj).x = x;
-    (*mobj).y = y;
-    (*mobj).radius = (*info).radius as fixed_t;
-    (*mobj).height = (*info).height as fixed_t;
-    (*mobj).flags = (*info).flags;
-    (*mobj).health = (*info).spawnhealth;
+    value.type_0 = type_0;
+    value.x = x;
+    value.y = y;
+    value.radius = (*info).radius as fixed_t;
+    value.height = (*info).height as fixed_t;
+    value.flags = (*info).flags;
+    value.health = (*info).spawnhealth;
     if state.g_game.gameskill != SkillType::sk_nightmare {
-        (*mobj).reactiontime = (*info).reactiontime;
+        value.reactiontime = (*info).reactiontime;
     }
-    (*mobj).lastlook = P_Random(&mut state.m_random) % MAXPLAYERS;
+    value.lastlook = P_Random(&mut state.m_random) % MAXPLAYERS;
     let spawnstate_id = StateId((*info).spawnstate as u32);
     st = state.info.state_mut(spawnstate_id);
-    (*mobj).state = Some(spawnstate_id);
-    (*mobj).tics = (*st).tics;
-    (*mobj).sprite = (*st).sprite;
-    (*mobj).frame = (*st).frame;
-    (*mobj).id = state.p_mobj.register(mobj);
+    value.state = Some(spawnstate_id);
+    value.tics = (*st).tics;
+    value.sprite = (*st).sprite;
+    value.frame = (*st).frame;
+    let (_id, mobj) = state.p_mobj.spawn(value);
     P_SetThingPosition(state, mobj);
     (*mobj).floorz = (*state
         .p_setup
@@ -3186,10 +3176,16 @@ impl MobjId {
     }
 }
 
-#[derive(Copy, Clone)]
 struct MobjSlot {
     generation: u32,
-    ptr: Option<*mut mobj_t>,
+    // Owns the mobj's memory (unlike the raw pointer this replaces) -- see
+    // PMobjState::spawn/retire/deallocate for why retirement and
+    // deallocation are two separate steps despite that.
+    mobj: Option<Box<mobj_t>>,
+    // Set by retire() (mirrors the old ptr=None, but must NOT drop `mobj`
+    // yet -- see deallocate()); mobj_get() reports "gone" once this is
+    // true, matching the old ptr=None-based check exactly.
+    retired: bool,
 }
 
 pub struct PMobjState {
@@ -3207,38 +3203,63 @@ pub struct PMobjState {
 }
 
 impl PMobjState {
-    // Registers a freshly Z_Malloc'd, fully-live mobj and hands back a
-    // stable generation-checked handle. The only two call sites are
-    // P_SpawnMobj and p_saveg.rs's P_UnArchiveThinkers mobj-reconstruction
-    // branch -- the only two places that construct a mobj_t from scratch.
-    pub fn register(&mut self, ptr: *mut mobj_t) -> MobjId {
-        if let Some(index) = self.free_list.pop() {
+    // Takes a fully-constructed mobj_t *value*, moves it onto the heap (a
+    // fresh Box, not a Z_Malloc'd block), and hands back both a stable
+    // generation-checked handle and a raw pointer for the caller's
+    // remaining post-spawn field writes (P_SetThingPosition, floorz/
+    // ceilingz/z, thinker linkage -- exactly as before). The only two call
+    // sites are P_SpawnMobj and p_saveg.rs's P_UnArchiveThinkers
+    // mobj-reconstruction branch -- the only two places that construct a
+    // mobj_t from scratch.
+    pub fn spawn(&mut self, mut value: mobj_t) -> (MobjId, *mut mobj_t) {
+        let (index, generation) = if let Some(index) = self.free_list.pop() {
             let slot = &mut self.mobjs[index as usize];
             slot.generation = slot.generation.wrapping_add(1);
-            slot.ptr = Some(ptr);
-            return MobjId {
-                index,
-                generation: slot.generation,
-            };
-        }
-        let index = self.mobjs.len() as u32;
-        self.mobjs.push(MobjSlot {
-            generation: 0,
-            ptr: Some(ptr),
-        });
-        MobjId {
-            index,
-            generation: 0,
-        }
+            (index, slot.generation)
+        } else {
+            let index = self.mobjs.len() as u32;
+            self.mobjs.push(MobjSlot {
+                generation: 0,
+                mobj: None,
+                retired: false,
+            });
+            (index, 0)
+        };
+        let id = MobjId { index, generation };
+        value.id = id;
+        let mut boxed = Box::new(value);
+        let ptr = boxed.as_mut() as *mut mobj_t;
+        let slot = &mut self.mobjs[index as usize];
+        slot.mobj = Some(boxed);
+        slot.retired = false;
+        (id, ptr)
     }
 
-    // Logical removal: bumps the slot's generation and marks it free,
-    // without touching the backing memory (Z_Free of the mobj_t itself
-    // stays on P_RemoveThinker's existing deferred-free schedule).
+    // Logical removal: marks the slot retired so mobj_get() immediately
+    // reports "gone", without touching the backing memory yet. A slot's
+    // index is NOT reused (see deallocate()) until the memory is actually
+    // freed -- reusing it any earlier, now that the slot *owns* a Box
+    // instead of just remembering a Z_Malloc'd address, would drop (and so
+    // free) the old mobj's memory out from under whoever still holds its
+    // raw pointer (the reaper, mid-deferred-free-schedule; P_RemoveMobj's
+    // own remaining body, which keeps dereferencing its `mobj` parameter
+    // after calling retire()).
     pub fn retire(&mut self, id: MobjId) {
         if let Some(slot) = self.mobjs.get_mut(id.index as usize) {
             if slot.generation == id.generation {
-                slot.ptr = None;
+                slot.retired = true;
+            }
+        }
+    }
+
+    // Actually deallocates: drops the owning Box (freeing the memory) and
+    // only now returns the slot's index to the free list for reuse. Called
+    // from exactly the two places that used to Z_Free a mobj: P_RunThinkers'
+    // reaper, and P_UnArchiveThinkers' pre-load teardown loop.
+    pub fn deallocate(&mut self, id: MobjId) {
+        if let Some(slot) = self.mobjs.get_mut(id.index as usize) {
+            if slot.generation == id.generation {
+                slot.mobj = None;
                 self.free_list.push(id.index);
             }
         }
@@ -3251,8 +3272,9 @@ impl PMobjState {
     pub fn mobj_get(&self, id: MobjId) -> Option<*mut mobj_t> {
         self.mobjs
             .get(id.index as usize)
-            .filter(|slot| slot.generation == id.generation)
-            .and_then(|slot| slot.ptr)
+            .filter(|slot| slot.generation == id.generation && !slot.retired)
+            .and_then(|slot| slot.mobj.as_deref())
+            .map(|r| r as *const mobj_t as *mut mobj_t)
     }
 
     pub const fn new() -> Self {
