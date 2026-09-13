@@ -14,7 +14,7 @@ use crate::src::p_ceilng::P_AddActiveCeiling;
 use crate::src::p_doors::VldoorE;
 use crate::src::p_doors::vldoor_t;
 use crate::src::p_floor::FloorE;
-use crate::src::p_lights::{glow_t, lightflash_t, strobe_t};
+use crate::src::p_lights::{fireflicker_t, glow_t, lightflash_t, strobe_t};
 use crate::src::p_maputl::P_SetThingPosition;
 use crate::src::p_mobj::mobjtype_from_raw;
 use crate::src::p_mobj::spritenum_from_raw;
@@ -36,13 +36,9 @@ use crate::src::p_tick::P_InitThinkers;
 use crate::src::r_defs::side_t;
 use crate::src::stdint_types::byte;
 use crate::src::tables::angle_t;
-use crate::src::z_zone::Z_Free;
-use crate::src::z_zone::Z_Malloc;
-use crate::src::z_zone::PU_LEVEL;
 
 use crate::src::d_player::NUMAMMO;
 use crate::src::doomdef::MAXPLAYERS;
-use crate::src::doomdef::NULL;
 use crate::src::game_state::GameState;
 use crate::src::m_fixed::FRACBITS;
 use crate::src::m_menu::SAVESTRINGSIZE;
@@ -978,22 +974,40 @@ pub unsafe fn P_UnArchiveThinkers(state: &mut GameState) {
         // below may free -- capturing it first just mirrors the original
         // ordering, not a use-after-free workaround.
         let next = state.p_tick.next(id);
-        if matches!((*currentthinker).function, ThinkerFn::Mobj(_)) {
-            let mobj_id = (*(currentthinker as *mut mobj_t)).id;
-            P_RemoveMobj(state, currentthinker as *mut mobj_t);
-            // P_RemoveMobj only retires (see PMobjState::retire) -- it never
-            // itself frees the mobj's memory, and P_InitThinkers just below
-            // wipes PTickState before P_RunThinkers' reaper ever gets a
-            // chance to run on this now-Removed node, so nothing else was
-            // ever going to deallocate it. This call closes that gap (a
-            // pre-existing leak: every live mobj at the moment a savegame is
-            // loaded used to leak its Z_Malloc'd block).
-            state.p_mobj.deallocate(mobj_id);
-        } else {
-            Z_Free(
-                &mut state.z_zone,
-                currentthinker as *mut ::core::ffi::c_void,
-            );
+        // Dispatch on the node's recorded kind, not `.function` -- every
+        // payload type's memory is now owned by its own arena (mobj_t and
+        // all 8 thinker specials), not the zone allocator, so each needs
+        // its own dealloc/deallocate call, mirroring P_RunThinkers' reaper
+        // dispatch exactly. (`.function` is still live/intact at this point
+        // for the Mobj case specifically, which is why the original code
+        // could match on it directly -- but `kind` works uniformly for all
+        // 9 and doesn't depend on that.)
+        match state.p_tick.kind(id) {
+            ThinkerKind::Mobj => {
+                let mobj_id = (*(currentthinker as *mut mobj_t)).id;
+                P_RemoveMobj(state, currentthinker as *mut mobj_t);
+                // P_RemoveMobj only retires (see PMobjState::retire) -- it
+                // never itself frees the mobj's memory, and P_InitThinkers
+                // just below wipes PTickState before P_RunThinkers' reaper
+                // ever gets a chance to run on this now-Removed node, so
+                // nothing else was ever going to deallocate it. This call
+                // closes that gap (a pre-existing leak: every live mobj at
+                // the moment a savegame is loaded used to leak its
+                // Z_Malloc'd block).
+                state.p_mobj.deallocate(mobj_id);
+            }
+            ThinkerKind::Door => state.p_doors.dealloc(currentthinker as *mut vldoor_t),
+            ThinkerKind::Ceiling => state.p_ceilng.dealloc(currentthinker as *mut ceiling_t),
+            ThinkerKind::Plat => state.p_plats.dealloc(currentthinker as *mut plat_t),
+            ThinkerKind::Floor => state.p_spec.dealloc_floor(currentthinker as *mut floormove_t),
+            ThinkerKind::FireFlicker => state
+                .p_lights
+                .dealloc_fireflicker(currentthinker as *mut fireflicker_t),
+            ThinkerKind::LightFlash => state
+                .p_lights
+                .dealloc_lightflash(currentthinker as *mut lightflash_t),
+            ThinkerKind::Strobe => state.p_lights.dealloc_strobe(currentthinker as *mut strobe_t),
+            ThinkerKind::Glow => state.p_lights.dealloc_glow(currentthinker as *mut glow_t),
         }
         cursor = next;
     }
@@ -1156,36 +1170,21 @@ pub unsafe fn P_UnArchiveSpecials(state: &mut GameState) {
             }
             4 => {
                 saveg_read_pad(state);
-                flash = Z_Malloc(
-                    &mut state.z_zone,
-                    ::core::mem::size_of::<lightflash_t>() as i32,
-                    PU_LEVEL as i32,
-                    NULL,
-                ) as *mut lightflash_t;
+                flash = state.p_lights.spawn_lightflash(lightflash_t::default());
                 saveg_read_lightflash_t(state, flash);
                 (*flash).thinker.function = ThinkerFn::LightFlash(T_LightFlash);
                 P_AddThinker(state, &raw mut (*flash).thinker, ThinkerKind::LightFlash);
             }
             5 => {
                 saveg_read_pad(state);
-                strobe = Z_Malloc(
-                    &mut state.z_zone,
-                    ::core::mem::size_of::<strobe_t>() as i32,
-                    PU_LEVEL as i32,
-                    NULL,
-                ) as *mut strobe_t;
+                strobe = state.p_lights.spawn_strobe(strobe_t::default());
                 saveg_read_strobe_t(state, strobe);
                 (*strobe).thinker.function = ThinkerFn::Strobe(T_StrobeFlash);
                 P_AddThinker(state, &raw mut (*strobe).thinker, ThinkerKind::Strobe);
             }
             6 => {
                 saveg_read_pad(state);
-                glow = Z_Malloc(
-                    &mut state.z_zone,
-                    ::core::mem::size_of::<glow_t>() as i32,
-                    PU_LEVEL as i32,
-                    NULL,
-                ) as *mut glow_t;
+                glow = state.p_lights.spawn_glow(glow_t::default());
                 saveg_read_glow_t(state, glow);
                 (*glow).thinker.function = ThinkerFn::Glow(T_Glow);
                 P_AddThinker(state, &raw mut (*glow).thinker, ThinkerKind::Glow);

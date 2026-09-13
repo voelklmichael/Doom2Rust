@@ -9,8 +9,6 @@ use crate::src::p_spec::P_FindMinSurroundingLight;
 use crate::src::p_spec::P_FindSectorFromLineTag;
 use crate::src::p_tick::P_AddThinker;
 use crate::src::p_tick::ThinkerKind;
-use crate::src::z_zone::Z_Malloc;
-use crate::src::z_zone::PU_LEVSPEC;
 
 #[derive(Copy, Clone)]
 #[repr(C)]
@@ -20,6 +18,19 @@ pub struct fireflicker_t {
     pub count: i32,
     pub maxlight: i32,
     pub minlight: i32,
+}
+impl Default for fireflicker_t {
+    fn default() -> Self {
+        fireflicker_t {
+            thinker: thinker_t {
+                function: ThinkerFn::Unresolved,
+            },
+            sector: SectorId(0),
+            count: 0,
+            maxlight: 0,
+            minlight: 0,
+        }
+    }
 }
 #[derive(Copy, Clone)]
 #[repr(C)]
@@ -32,6 +43,21 @@ pub struct lightflash_t {
     pub maxtime: i32,
     pub mintime: i32,
 }
+impl Default for lightflash_t {
+    fn default() -> Self {
+        lightflash_t {
+            thinker: thinker_t {
+                function: ThinkerFn::Unresolved,
+            },
+            sector: SectorId(0),
+            count: 0,
+            maxlight: 0,
+            minlight: 0,
+            maxtime: 0,
+            mintime: 0,
+        }
+    }
+}
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct strobe_t {
@@ -43,6 +69,21 @@ pub struct strobe_t {
     pub darktime: i32,
     pub brighttime: i32,
 }
+impl Default for strobe_t {
+    fn default() -> Self {
+        strobe_t {
+            thinker: thinker_t {
+                function: ThinkerFn::Unresolved,
+            },
+            sector: SectorId(0),
+            count: 0,
+            minlight: 0,
+            maxlight: 0,
+            darktime: 0,
+            brighttime: 0,
+        }
+    }
+}
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct glow_t {
@@ -52,9 +93,79 @@ pub struct glow_t {
     pub maxlight: i32,
     pub direction: i32,
 }
+impl Default for glow_t {
+    fn default() -> Self {
+        glow_t {
+            thinker: thinker_t {
+                function: ThinkerFn::Unresolved,
+            },
+            sector: SectorId(0),
+            minlight: 0,
+            maxlight: 0,
+            direction: 0,
+        }
+    }
+}
 pub const GLOWSPEED: i32 = 8;
 pub const STROBEBRIGHT: i32 = 5;
 pub const SLOWDARK: i32 = 35;
+
+// None of these 4 types are looked up via a handle or an activeXXX-style
+// array like ceiling_t/plat_t/vldoor_t are -- only ever referenced by the
+// raw pointer handed back from spawn, exactly as today. Unlike those types
+// there was no existing per-module state struct here at all before this;
+// one small struct hosting all 4 arenas is simplest, matching how uniform
+// and small these types are (they were already batched into one phase for
+// the same reason).
+pub struct PLightsState {
+    fireflickers: Vec<Box<fireflicker_t>>,
+    lightflashes: Vec<Box<lightflash_t>>,
+    strobes: Vec<Box<strobe_t>>,
+    glows: Vec<Box<glow_t>>,
+}
+
+impl PLightsState {
+    pub const fn new() -> Self {
+        PLightsState {
+            fireflickers: Vec::new(),
+            lightflashes: Vec::new(),
+            strobes: Vec::new(),
+            glows: Vec::new(),
+        }
+    }
+
+    pub fn spawn_fireflicker(&mut self, value: fireflicker_t) -> *mut fireflicker_t {
+        self.fireflickers.push(Box::new(value));
+        self.fireflickers.last_mut().unwrap().as_mut()
+    }
+    pub fn dealloc_fireflicker(&mut self, ptr: *mut fireflicker_t) {
+        self.fireflickers.retain(|b| !::core::ptr::eq(b.as_ref(), ptr));
+    }
+
+    pub fn spawn_lightflash(&mut self, value: lightflash_t) -> *mut lightflash_t {
+        self.lightflashes.push(Box::new(value));
+        self.lightflashes.last_mut().unwrap().as_mut()
+    }
+    pub fn dealloc_lightflash(&mut self, ptr: *mut lightflash_t) {
+        self.lightflashes.retain(|b| !::core::ptr::eq(b.as_ref(), ptr));
+    }
+
+    pub fn spawn_strobe(&mut self, value: strobe_t) -> *mut strobe_t {
+        self.strobes.push(Box::new(value));
+        self.strobes.last_mut().unwrap().as_mut()
+    }
+    pub fn dealloc_strobe(&mut self, ptr: *mut strobe_t) {
+        self.strobes.retain(|b| !::core::ptr::eq(b.as_ref(), ptr));
+    }
+
+    pub fn spawn_glow(&mut self, value: glow_t) -> *mut glow_t {
+        self.glows.push(Box::new(value));
+        self.glows.last_mut().unwrap().as_mut()
+    }
+    pub fn dealloc_glow(&mut self, ptr: *mut glow_t) {
+        self.glows.retain(|b| !::core::ptr::eq(b.as_ref(), ptr));
+    }
+}
 pub unsafe fn T_FireFlicker(state: &mut GameState, mut flick: *mut fireflicker_t) {
     let mut amount: i32 = 0;
     (*flick).count -= 1;
@@ -74,12 +185,7 @@ pub unsafe fn P_SpawnFireFlicker(state: &mut GameState, mut sector: SectorId) {
     let mut flick: *mut fireflicker_t = ::core::ptr::null_mut::<fireflicker_t>();
     let sec = state.p_setup.sector_mut(sector);
     (*sec).special = 0 as i16;
-    flick = Z_Malloc(
-        &mut state.z_zone,
-        ::core::mem::size_of::<fireflicker_t>() as i32,
-        PU_LEVSPEC as i32,
-        ::core::ptr::null_mut::<::core::ffi::c_void>(),
-    ) as *mut fireflicker_t;
+    flick = state.p_lights.spawn_fireflicker(fireflicker_t::default());
     P_AddThinker(state, &raw mut (*flick).thinker, ThinkerKind::FireFlicker);
     (*flick).thinker.function = ThinkerFn::FireFlicker(T_FireFlicker);
     (*flick).sector = sector;
@@ -105,12 +211,7 @@ pub unsafe fn P_SpawnLightFlash(state: &mut GameState, mut sector: SectorId) {
     let mut flash: *mut lightflash_t = ::core::ptr::null_mut::<lightflash_t>();
     let sec = state.p_setup.sector_mut(sector);
     (*sec).special = 0 as i16;
-    flash = Z_Malloc(
-        &mut state.z_zone,
-        ::core::mem::size_of::<lightflash_t>() as i32,
-        PU_LEVSPEC as i32,
-        ::core::ptr::null_mut::<::core::ffi::c_void>(),
-    ) as *mut lightflash_t;
+    flash = state.p_lights.spawn_lightflash(lightflash_t::default());
     P_AddThinker(state, &raw mut (*flash).thinker, ThinkerKind::LightFlash);
     (*flash).thinker.function = ThinkerFn::LightFlash(T_LightFlash);
     (*flash).sector = sector;
@@ -142,12 +243,7 @@ pub unsafe fn P_SpawnStrobeFlash(
 ) {
     let mut flash: *mut strobe_t = ::core::ptr::null_mut::<strobe_t>();
     let sec = state.p_setup.sector_mut(sector);
-    flash = Z_Malloc(
-        &mut state.z_zone,
-        ::core::mem::size_of::<strobe_t>() as i32,
-        PU_LEVSPEC as i32,
-        ::core::ptr::null_mut::<::core::ffi::c_void>(),
-    ) as *mut strobe_t;
+    flash = state.p_lights.spawn_strobe(strobe_t::default());
     P_AddThinker(state, &raw mut (*flash).thinker, ThinkerKind::Strobe);
     (*flash).sector = sector;
     (*flash).darktime = fastOrSlow;
@@ -261,12 +357,7 @@ pub unsafe fn T_Glow(state: &mut GameState, mut g: *mut glow_t) {
 pub unsafe fn P_SpawnGlowingLight(state: &mut GameState, mut sector: SectorId) {
     let mut g: *mut glow_t = ::core::ptr::null_mut::<glow_t>();
     let sec = state.p_setup.sector_mut(sector);
-    g = Z_Malloc(
-        &mut state.z_zone,
-        ::core::mem::size_of::<glow_t>() as i32,
-        PU_LEVSPEC as i32,
-        ::core::ptr::null_mut::<::core::ffi::c_void>(),
-    ) as *mut glow_t;
+    g = state.p_lights.spawn_glow(glow_t::default());
     P_AddThinker(state, &raw mut (*g).thinker, ThinkerKind::Glow);
     (*g).sector = sector;
     (*g).minlight = P_FindMinSurroundingLight(state, sec, (*sec).lightlevel as i32);

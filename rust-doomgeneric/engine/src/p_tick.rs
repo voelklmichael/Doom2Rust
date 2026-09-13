@@ -8,7 +8,6 @@ use crate::src::p_mobj::{mobj_t, thinker_s, thinker_t, ThinkerFn};
 use crate::src::p_spec::P_UpdateSpecials;
 use crate::src::p_spec::{ceiling_t, floormove_t, plat_t};
 use crate::src::p_user::P_PlayerThink;
-use crate::src::z_zone::Z_Free;
 
 // A handle into PTickState's own node table -- never constructed outside
 // this module, only handed out by head()/next() and walked by callers.
@@ -140,7 +139,8 @@ pub unsafe fn P_RemoveThinker(mut thinker: *mut thinker_t) {
 
 // Unlinks a node from the externalized list (used only when P_RunThinkers
 // finds a ThinkerFn::Removed node to reap). Does not touch the payload
-// memory itself -- callers Z_Free that separately.
+// memory itself -- callers deallocate that separately (each payload type's
+// own arena now, no longer Z_Free).
 fn P_UnlinkThinkerNode(state: &mut GameState, id: ThinkerId) {
     let prev = state.p_tick.nodes[id.0 as usize].prev;
     let next = state.p_tick.nodes[id.0 as usize].next;
@@ -194,16 +194,23 @@ pub unsafe fn P_RunThinkers(state: &mut GameState) {
                     ThinkerKind::Floor => {
                         state.p_spec.dealloc_floor(currentthinker as *mut floormove_t);
                     }
-                    // The remaining 4 kinds are still Z_Malloc'd individually
-                    // (converted one at a time in later phases).
-                    ThinkerKind::FireFlicker
-                    | ThinkerKind::LightFlash
-                    | ThinkerKind::Strobe
-                    | ThinkerKind::Glow => {
-                        Z_Free(
-                            &mut state.z_zone,
-                            currentthinker as *mut ::core::ffi::c_void,
-                        );
+                    // All 4 remaining kinds' memory is owned by PLightsState's
+                    // arenas now -- this was the last phase of the track.
+                    ThinkerKind::FireFlicker => {
+                        state
+                            .p_lights
+                            .dealloc_fireflicker(currentthinker as *mut fireflicker_t);
+                    }
+                    ThinkerKind::LightFlash => {
+                        state
+                            .p_lights
+                            .dealloc_lightflash(currentthinker as *mut lightflash_t);
+                    }
+                    ThinkerKind::Strobe => {
+                        state.p_lights.dealloc_strobe(currentthinker as *mut strobe_t);
+                    }
+                    ThinkerKind::Glow => {
+                        state.p_lights.dealloc_glow(currentthinker as *mut glow_t);
                     }
                 }
             }
