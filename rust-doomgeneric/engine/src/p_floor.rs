@@ -39,9 +39,11 @@ pub const raiseFloor: floor_e = 3;
 pub const turboLower: floor_e = 2;
 pub const lowerFloorToLowest: floor_e = 1;
 pub const lowerFloor: floor_e = 0;
-pub type stair_e = u32;
-pub const turbo16: stair_e = 1;
-pub const build8: stair_e = 0;
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub enum StairE {
+    build8 = 0,
+    turbo16 = 1,
+}
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum ResultE {
     ok = 0,
@@ -396,7 +398,7 @@ pub unsafe fn EV_DoFloor(
 pub unsafe fn EV_BuildStairs(
     state: &mut GameState,
     mut line: *mut line_t,
-    mut type_0: stair_e,
+    mut type_0: StairE,
 ) -> i32 {
     let mut secnum: i32 = 0;
     let mut height: i32 = 0;
@@ -433,16 +435,15 @@ pub unsafe fn EV_BuildStairs(
         (*floor).thinker.function = ThinkerFn::Floor(T_MoveFloor);
         (*floor).direction = 1 as i32;
         (*floor).sector = SectorId(secnum as u32);
-        match type_0 as u32 {
-            0 => {
+        match type_0 {
+            StairE::build8 => {
                 speed = (FLOORSPEED / 4 as i32) as fixed_t;
                 stairsize = (8 as i32 * FRACUNIT) as fixed_t;
             }
-            1 => {
+            StairE::turbo16 => {
                 speed = (FLOORSPEED * 4 as i32) as fixed_t;
                 stairsize = (16 as i32 * FRACUNIT) as fixed_t;
             }
-            _ => {}
         }
         (*floor).speed = speed;
         height = ((*sec).floorheight + stairsize) as i32;

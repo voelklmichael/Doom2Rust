@@ -14,7 +14,7 @@ use crate::src::p_doors::{
 };
 use crate::src::p_floor::EV_BuildStairs;
 use crate::src::p_floor::EV_DoFloor;
-use crate::src::p_floor::{build8, turbo16};
+use crate::src::p_floor::StairE;
 use crate::src::p_floor::{
     lowerFloor, lowerFloorToLowest, raiseFloor, raiseFloor512, raiseFloorCrush,
     raiseFloorToNearest, raiseFloorTurbo, turboLower,
@@ -504,7 +504,7 @@ pub unsafe fn P_UseSpecialLine(
             current_block_108 = 6634390297149606533;
         }
         7 => {
-            if EV_BuildStairs(state, line, build8) != 0 {
+            if EV_BuildStairs(state, line, StairE::build8) != 0 {
                 P_ChangeSwitchTexture(state, line, 0 as i32);
             }
             current_block_108 = 16981061190961355901;
@@ -640,7 +640,7 @@ pub unsafe fn P_UseSpecialLine(
             current_block_108 = 16981061190961355901;
         }
         127 => {
-            if EV_BuildStairs(state, line, turbo16) != 0 {
+            if EV_BuildStairs(state, line, StairE::turbo16) != 0 {
                 P_ChangeSwitchTexture(state, line, 0 as i32);
             }
             current_block_108 = 16981061190961355901;

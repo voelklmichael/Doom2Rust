@@ -23,7 +23,7 @@ use crate::src::p_doors::{
 };
 use crate::src::p_floor::EV_BuildStairs;
 use crate::src::p_floor::EV_DoFloor;
-use crate::src::p_floor::{build8, turbo16};
+use crate::src::p_floor::StairE;
 use crate::src::p_floor::{
     donutRaise, floor_e, lowerAndChange, lowerFloor, lowerFloorToLowest, raiseFloor, raiseFloor24,
     raiseFloor24AndChange, raiseFloorCrush, raiseFloorToNearest, raiseFloorTurbo, raiseToTexture,
@@ -626,7 +626,7 @@ pub unsafe fn P_CrossSpecialLine(
             (*line).special = 0 as i16;
         }
         8 => {
-            EV_BuildStairs(state, line, build8);
+            EV_BuildStairs(state, line, StairE::build8);
             (*line).special = 0 as i16;
         }
         10 => {
@@ -734,7 +734,7 @@ pub unsafe fn P_CrossSpecialLine(
             (*line).special = 0 as i16;
         }
         100 => {
-            EV_BuildStairs(state, line, turbo16);
+            EV_BuildStairs(state, line, StairE::turbo16);
             (*line).special = 0 as i16;
         }
         110 => {
