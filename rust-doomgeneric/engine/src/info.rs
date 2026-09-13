@@ -16,24 +16,7 @@ use crate::src::p_mobj::{
     MF_NOCLIP, MF_NOGRAVITY, MF_NOSECTOR, MF_NOTDMATCH, MF_PICKUP, MF_SHADOW, MF_SHOOTABLE,
     MF_SOLID, MF_SPAWNCEILING, MF_SPECIAL,
 };
-use crate::src::p_mobj::{
-    SPR_AMMO, SPR_APBX, SPR_APLS, SPR_ARM1, SPR_ARM2, SPR_BAL1, SPR_BAL2, SPR_BAL7, SPR_BAR1,
-    SPR_BBRN, SPR_BEXP, SPR_BFE1, SPR_BFE2, SPR_BFGF, SPR_BFGG, SPR_BFS1, SPR_BFUG, SPR_BKEY,
-    SPR_BLUD, SPR_BON1, SPR_BON2, SPR_BOS2, SPR_BOSF, SPR_BOSS, SPR_BPAK, SPR_BROK, SPR_BRS1,
-    SPR_BSKU, SPR_BSPI, SPR_CAND, SPR_CBRA, SPR_CELL, SPR_CELP, SPR_CEYE, SPR_CHGF, SPR_CHGG,
-    SPR_CLIP, SPR_COL1, SPR_COL2, SPR_COL3, SPR_COL4, SPR_COL5, SPR_COL6, SPR_COLU, SPR_CPOS,
-    SPR_CSAW, SPR_CYBR, SPR_ELEC, SPR_FATB, SPR_FATT, SPR_FBXP, SPR_FCAN, SPR_FIRE, SPR_FSKU,
-    SPR_GOR1, SPR_GOR2, SPR_GOR3, SPR_GOR4, SPR_GOR5, SPR_HDB1, SPR_HDB2, SPR_HDB3, SPR_HDB4,
-    SPR_HDB5, SPR_HDB6, SPR_HEAD, SPR_IFOG, SPR_KEEN, SPR_LAUN, SPR_MANF, SPR_MEDI, SPR_MEGA,
-    SPR_MGUN, SPR_MISF, SPR_MISG, SPR_MISL, SPR_PAIN, SPR_PINS, SPR_PINV, SPR_PISF, SPR_PISG,
-    SPR_PLAS, SPR_PLAY, SPR_PLSE, SPR_PLSF, SPR_PLSG, SPR_PLSS, SPR_PMAP, SPR_POB1, SPR_POB2,
-    SPR_POL1, SPR_POL2, SPR_POL3, SPR_POL4, SPR_POL5, SPR_POL6, SPR_POSS, SPR_PSTR, SPR_PUFF,
-    SPR_PUNG, SPR_PVIS, SPR_RKEY, SPR_ROCK, SPR_RSKU, SPR_SARG, SPR_SAWG, SPR_SBOX, SPR_SGN2,
-    SPR_SHEL, SPR_SHOT, SPR_SHT2, SPR_SHTF, SPR_SHTG, SPR_SKEL, SPR_SKUL, SPR_SMBT, SPR_SMGT,
-    SPR_SMIT, SPR_SMRT, SPR_SMT2, SPR_SOUL, SPR_SPID, SPR_SPOS, SPR_SSWV, SPR_STIM, SPR_SUIT,
-    SPR_TBLU, SPR_TFOG, SPR_TGRN, SPR_TLMP, SPR_TLP2, SPR_TRE1, SPR_TRE2, SPR_TRED, SPR_TROO,
-    SPR_VILE, SPR_YKEY, SPR_YSKU,
-};
+use crate::src::p_mobj::SpriteNum;
 use crate::src::p_pspr::{
     A_BFGSpray, A_BFGsound, A_CheckReload, A_FireBFG, A_FireCGun, A_FireMissile, A_FirePistol,
     A_FirePlasma, A_FireShotgun, A_FireShotgun2, A_GunFlash, A_Light0, A_Light1, A_Light2, A_Lower,
@@ -212,7 +195,7 @@ impl InfoState {
             ],
             states: [
                 state_t {
-                    sprite: SPR_TROO,
+                    sprite: SpriteNum::SPR_TROO,
                     frame: 0 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -221,7 +204,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SHTG,
+                    sprite: SpriteNum::SPR_SHTG,
                     frame: 4 as i32,
                     tics: 0 as i32,
                     action: StateAction::Weapon(A_Light0),
@@ -230,7 +213,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PUNG,
+                    sprite: SpriteNum::SPR_PUNG,
                     frame: 0 as i32,
                     tics: 1 as i32,
                     action: StateAction::Weapon(A_WeaponReady),
@@ -239,7 +222,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PUNG,
+                    sprite: SpriteNum::SPR_PUNG,
                     frame: 0 as i32,
                     tics: 1 as i32,
                     action: StateAction::Weapon(A_Lower),
@@ -248,7 +231,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PUNG,
+                    sprite: SpriteNum::SPR_PUNG,
                     frame: 0 as i32,
                     tics: 1 as i32,
                     action: StateAction::Weapon(A_Raise),
@@ -257,7 +240,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PUNG,
+                    sprite: SpriteNum::SPR_PUNG,
                     frame: 1 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -266,7 +249,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PUNG,
+                    sprite: SpriteNum::SPR_PUNG,
                     frame: 2 as i32,
                     tics: 4 as i32,
                     action: StateAction::Weapon(A_Punch),
@@ -275,7 +258,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PUNG,
+                    sprite: SpriteNum::SPR_PUNG,
                     frame: 3 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -284,7 +267,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PUNG,
+                    sprite: SpriteNum::SPR_PUNG,
                     frame: 2 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -293,7 +276,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PUNG,
+                    sprite: SpriteNum::SPR_PUNG,
                     frame: 1 as i32,
                     tics: 5 as i32,
                     action: StateAction::Weapon(A_ReFire),
@@ -302,7 +285,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PISG,
+                    sprite: SpriteNum::SPR_PISG,
                     frame: 0 as i32,
                     tics: 1 as i32,
                     action: StateAction::Weapon(A_WeaponReady),
@@ -311,7 +294,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PISG,
+                    sprite: SpriteNum::SPR_PISG,
                     frame: 0 as i32,
                     tics: 1 as i32,
                     action: StateAction::Weapon(A_Lower),
@@ -320,7 +303,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PISG,
+                    sprite: SpriteNum::SPR_PISG,
                     frame: 0 as i32,
                     tics: 1 as i32,
                     action: StateAction::Weapon(A_Raise),
@@ -329,7 +312,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PISG,
+                    sprite: SpriteNum::SPR_PISG,
                     frame: 0 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -338,7 +321,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PISG,
+                    sprite: SpriteNum::SPR_PISG,
                     frame: 1 as i32,
                     tics: 6 as i32,
                     action: StateAction::Weapon(A_FirePistol),
@@ -347,7 +330,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PISG,
+                    sprite: SpriteNum::SPR_PISG,
                     frame: 2 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -356,7 +339,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PISG,
+                    sprite: SpriteNum::SPR_PISG,
                     frame: 1 as i32,
                     tics: 5 as i32,
                     action: StateAction::Weapon(A_ReFire),
@@ -365,7 +348,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PISF,
+                    sprite: SpriteNum::SPR_PISF,
                     frame: 32768 as i32,
                     tics: 7 as i32,
                     action: StateAction::Weapon(A_Light1),
@@ -374,7 +357,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SHTG,
+                    sprite: SpriteNum::SPR_SHTG,
                     frame: 0 as i32,
                     tics: 1 as i32,
                     action: StateAction::Weapon(A_WeaponReady),
@@ -383,7 +366,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SHTG,
+                    sprite: SpriteNum::SPR_SHTG,
                     frame: 0 as i32,
                     tics: 1 as i32,
                     action: StateAction::Weapon(A_Lower),
@@ -392,7 +375,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SHTG,
+                    sprite: SpriteNum::SPR_SHTG,
                     frame: 0 as i32,
                     tics: 1 as i32,
                     action: StateAction::Weapon(A_Raise),
@@ -401,7 +384,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SHTG,
+                    sprite: SpriteNum::SPR_SHTG,
                     frame: 0 as i32,
                     tics: 3 as i32,
                     action: StateAction::None,
@@ -410,7 +393,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SHTG,
+                    sprite: SpriteNum::SPR_SHTG,
                     frame: 0 as i32,
                     tics: 7 as i32,
                     action: StateAction::Weapon(A_FireShotgun),
@@ -419,7 +402,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SHTG,
+                    sprite: SpriteNum::SPR_SHTG,
                     frame: 1 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -428,7 +411,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SHTG,
+                    sprite: SpriteNum::SPR_SHTG,
                     frame: 2 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -437,7 +420,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SHTG,
+                    sprite: SpriteNum::SPR_SHTG,
                     frame: 3 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -446,7 +429,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SHTG,
+                    sprite: SpriteNum::SPR_SHTG,
                     frame: 2 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -455,7 +438,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SHTG,
+                    sprite: SpriteNum::SPR_SHTG,
                     frame: 1 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -464,7 +447,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SHTG,
+                    sprite: SpriteNum::SPR_SHTG,
                     frame: 0 as i32,
                     tics: 3 as i32,
                     action: StateAction::None,
@@ -473,7 +456,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SHTG,
+                    sprite: SpriteNum::SPR_SHTG,
                     frame: 0 as i32,
                     tics: 7 as i32,
                     action: StateAction::Weapon(A_ReFire),
@@ -482,7 +465,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SHTF,
+                    sprite: SpriteNum::SPR_SHTF,
                     frame: 32768 as i32,
                     tics: 4 as i32,
                     action: StateAction::Weapon(A_Light1),
@@ -491,7 +474,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SHTF,
+                    sprite: SpriteNum::SPR_SHTF,
                     frame: 32769 as i32,
                     tics: 3 as i32,
                     action: StateAction::Weapon(A_Light2),
@@ -500,7 +483,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SHT2,
+                    sprite: SpriteNum::SPR_SHT2,
                     frame: 0 as i32,
                     tics: 1 as i32,
                     action: StateAction::Weapon(A_WeaponReady),
@@ -509,7 +492,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SHT2,
+                    sprite: SpriteNum::SPR_SHT2,
                     frame: 0 as i32,
                     tics: 1 as i32,
                     action: StateAction::Weapon(A_Lower),
@@ -518,7 +501,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SHT2,
+                    sprite: SpriteNum::SPR_SHT2,
                     frame: 0 as i32,
                     tics: 1 as i32,
                     action: StateAction::Weapon(A_Raise),
@@ -527,7 +510,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SHT2,
+                    sprite: SpriteNum::SPR_SHT2,
                     frame: 0 as i32,
                     tics: 3 as i32,
                     action: StateAction::None,
@@ -536,7 +519,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SHT2,
+                    sprite: SpriteNum::SPR_SHT2,
                     frame: 0 as i32,
                     tics: 7 as i32,
                     action: StateAction::Weapon(A_FireShotgun2),
@@ -545,7 +528,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SHT2,
+                    sprite: SpriteNum::SPR_SHT2,
                     frame: 1 as i32,
                     tics: 7 as i32,
                     action: StateAction::None,
@@ -554,7 +537,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SHT2,
+                    sprite: SpriteNum::SPR_SHT2,
                     frame: 2 as i32,
                     tics: 7 as i32,
                     action: StateAction::Weapon(A_CheckReload),
@@ -563,7 +546,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SHT2,
+                    sprite: SpriteNum::SPR_SHT2,
                     frame: 3 as i32,
                     tics: 7 as i32,
                     action: StateAction::Weapon(A_OpenShotgun2),
@@ -572,7 +555,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SHT2,
+                    sprite: SpriteNum::SPR_SHT2,
                     frame: 4 as i32,
                     tics: 7 as i32,
                     action: StateAction::None,
@@ -581,7 +564,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SHT2,
+                    sprite: SpriteNum::SPR_SHT2,
                     frame: 5 as i32,
                     tics: 7 as i32,
                     action: StateAction::Weapon(A_LoadShotgun2),
@@ -590,7 +573,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SHT2,
+                    sprite: SpriteNum::SPR_SHT2,
                     frame: 6 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -599,7 +582,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SHT2,
+                    sprite: SpriteNum::SPR_SHT2,
                     frame: 7 as i32,
                     tics: 6 as i32,
                     action: StateAction::Weapon(A_CloseShotgun2),
@@ -608,7 +591,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SHT2,
+                    sprite: SpriteNum::SPR_SHT2,
                     frame: 0 as i32,
                     tics: 5 as i32,
                     action: StateAction::Weapon(A_ReFire),
@@ -617,7 +600,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SHT2,
+                    sprite: SpriteNum::SPR_SHT2,
                     frame: 1 as i32,
                     tics: 7 as i32,
                     action: StateAction::None,
@@ -626,7 +609,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SHT2,
+                    sprite: SpriteNum::SPR_SHT2,
                     frame: 0 as i32,
                     tics: 3 as i32,
                     action: StateAction::None,
@@ -635,7 +618,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SHT2,
+                    sprite: SpriteNum::SPR_SHT2,
                     frame: 32776 as i32,
                     tics: 5 as i32,
                     action: StateAction::Weapon(A_Light1),
@@ -644,7 +627,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SHT2,
+                    sprite: SpriteNum::SPR_SHT2,
                     frame: 32777 as i32,
                     tics: 4 as i32,
                     action: StateAction::Weapon(A_Light2),
@@ -653,7 +636,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CHGG,
+                    sprite: SpriteNum::SPR_CHGG,
                     frame: 0 as i32,
                     tics: 1 as i32,
                     action: StateAction::Weapon(A_WeaponReady),
@@ -662,7 +645,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CHGG,
+                    sprite: SpriteNum::SPR_CHGG,
                     frame: 0 as i32,
                     tics: 1 as i32,
                     action: StateAction::Weapon(A_Lower),
@@ -671,7 +654,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CHGG,
+                    sprite: SpriteNum::SPR_CHGG,
                     frame: 0 as i32,
                     tics: 1 as i32,
                     action: StateAction::Weapon(A_Raise),
@@ -680,7 +663,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CHGG,
+                    sprite: SpriteNum::SPR_CHGG,
                     frame: 0 as i32,
                     tics: 4 as i32,
                     action: StateAction::Weapon(A_FireCGun),
@@ -689,7 +672,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CHGG,
+                    sprite: SpriteNum::SPR_CHGG,
                     frame: 1 as i32,
                     tics: 4 as i32,
                     action: StateAction::Weapon(A_FireCGun),
@@ -698,7 +681,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CHGG,
+                    sprite: SpriteNum::SPR_CHGG,
                     frame: 1 as i32,
                     tics: 0 as i32,
                     action: StateAction::Weapon(A_ReFire),
@@ -707,7 +690,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CHGF,
+                    sprite: SpriteNum::SPR_CHGF,
                     frame: 32768 as i32,
                     tics: 5 as i32,
                     action: StateAction::Weapon(A_Light1),
@@ -716,7 +699,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CHGF,
+                    sprite: SpriteNum::SPR_CHGF,
                     frame: 32769 as i32,
                     tics: 5 as i32,
                     action: StateAction::Weapon(A_Light2),
@@ -725,7 +708,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_MISG,
+                    sprite: SpriteNum::SPR_MISG,
                     frame: 0 as i32,
                     tics: 1 as i32,
                     action: StateAction::Weapon(A_WeaponReady),
@@ -734,7 +717,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_MISG,
+                    sprite: SpriteNum::SPR_MISG,
                     frame: 0 as i32,
                     tics: 1 as i32,
                     action: StateAction::Weapon(A_Lower),
@@ -743,7 +726,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_MISG,
+                    sprite: SpriteNum::SPR_MISG,
                     frame: 0 as i32,
                     tics: 1 as i32,
                     action: StateAction::Weapon(A_Raise),
@@ -752,7 +735,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_MISG,
+                    sprite: SpriteNum::SPR_MISG,
                     frame: 1 as i32,
                     tics: 8 as i32,
                     action: StateAction::Weapon(A_GunFlash),
@@ -761,7 +744,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_MISG,
+                    sprite: SpriteNum::SPR_MISG,
                     frame: 1 as i32,
                     tics: 12 as i32,
                     action: StateAction::Weapon(A_FireMissile),
@@ -770,7 +753,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_MISG,
+                    sprite: SpriteNum::SPR_MISG,
                     frame: 1 as i32,
                     tics: 0 as i32,
                     action: StateAction::Weapon(A_ReFire),
@@ -779,7 +762,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_MISF,
+                    sprite: SpriteNum::SPR_MISF,
                     frame: 32768 as i32,
                     tics: 3 as i32,
                     action: StateAction::Weapon(A_Light1),
@@ -788,7 +771,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_MISF,
+                    sprite: SpriteNum::SPR_MISF,
                     frame: 32769 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -797,7 +780,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_MISF,
+                    sprite: SpriteNum::SPR_MISF,
                     frame: 32770 as i32,
                     tics: 4 as i32,
                     action: StateAction::Weapon(A_Light2),
@@ -806,7 +789,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_MISF,
+                    sprite: SpriteNum::SPR_MISF,
                     frame: 32771 as i32,
                     tics: 4 as i32,
                     action: StateAction::Weapon(A_Light2),
@@ -815,7 +798,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SAWG,
+                    sprite: SpriteNum::SPR_SAWG,
                     frame: 2 as i32,
                     tics: 4 as i32,
                     action: StateAction::Weapon(A_WeaponReady),
@@ -824,7 +807,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SAWG,
+                    sprite: SpriteNum::SPR_SAWG,
                     frame: 3 as i32,
                     tics: 4 as i32,
                     action: StateAction::Weapon(A_WeaponReady),
@@ -833,7 +816,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SAWG,
+                    sprite: SpriteNum::SPR_SAWG,
                     frame: 2 as i32,
                     tics: 1 as i32,
                     action: StateAction::Weapon(A_Lower),
@@ -842,7 +825,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SAWG,
+                    sprite: SpriteNum::SPR_SAWG,
                     frame: 2 as i32,
                     tics: 1 as i32,
                     action: StateAction::Weapon(A_Raise),
@@ -851,7 +834,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SAWG,
+                    sprite: SpriteNum::SPR_SAWG,
                     frame: 0 as i32,
                     tics: 4 as i32,
                     action: StateAction::Weapon(A_Saw),
@@ -860,7 +843,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SAWG,
+                    sprite: SpriteNum::SPR_SAWG,
                     frame: 1 as i32,
                     tics: 4 as i32,
                     action: StateAction::Weapon(A_Saw),
@@ -869,7 +852,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SAWG,
+                    sprite: SpriteNum::SPR_SAWG,
                     frame: 1 as i32,
                     tics: 0 as i32,
                     action: StateAction::Weapon(A_ReFire),
@@ -878,7 +861,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PLSG,
+                    sprite: SpriteNum::SPR_PLSG,
                     frame: 0 as i32,
                     tics: 1 as i32,
                     action: StateAction::Weapon(A_WeaponReady),
@@ -887,7 +870,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PLSG,
+                    sprite: SpriteNum::SPR_PLSG,
                     frame: 0 as i32,
                     tics: 1 as i32,
                     action: StateAction::Weapon(A_Lower),
@@ -896,7 +879,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PLSG,
+                    sprite: SpriteNum::SPR_PLSG,
                     frame: 0 as i32,
                     tics: 1 as i32,
                     action: StateAction::Weapon(A_Raise),
@@ -905,7 +888,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PLSG,
+                    sprite: SpriteNum::SPR_PLSG,
                     frame: 0 as i32,
                     tics: 3 as i32,
                     action: StateAction::Weapon(A_FirePlasma),
@@ -914,7 +897,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PLSG,
+                    sprite: SpriteNum::SPR_PLSG,
                     frame: 1 as i32,
                     tics: 20 as i32,
                     action: StateAction::Weapon(A_ReFire),
@@ -923,7 +906,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PLSF,
+                    sprite: SpriteNum::SPR_PLSF,
                     frame: 32768 as i32,
                     tics: 4 as i32,
                     action: StateAction::Weapon(A_Light1),
@@ -932,7 +915,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PLSF,
+                    sprite: SpriteNum::SPR_PLSF,
                     frame: 32769 as i32,
                     tics: 4 as i32,
                     action: StateAction::Weapon(A_Light1),
@@ -941,7 +924,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BFGG,
+                    sprite: SpriteNum::SPR_BFGG,
                     frame: 0 as i32,
                     tics: 1 as i32,
                     action: StateAction::Weapon(A_WeaponReady),
@@ -950,7 +933,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BFGG,
+                    sprite: SpriteNum::SPR_BFGG,
                     frame: 0 as i32,
                     tics: 1 as i32,
                     action: StateAction::Weapon(A_Lower),
@@ -959,7 +942,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BFGG,
+                    sprite: SpriteNum::SPR_BFGG,
                     frame: 0 as i32,
                     tics: 1 as i32,
                     action: StateAction::Weapon(A_Raise),
@@ -968,7 +951,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BFGG,
+                    sprite: SpriteNum::SPR_BFGG,
                     frame: 0 as i32,
                     tics: 20 as i32,
                     action: StateAction::Weapon(A_BFGsound),
@@ -977,7 +960,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BFGG,
+                    sprite: SpriteNum::SPR_BFGG,
                     frame: 1 as i32,
                     tics: 10 as i32,
                     action: StateAction::Weapon(A_GunFlash),
@@ -986,7 +969,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BFGG,
+                    sprite: SpriteNum::SPR_BFGG,
                     frame: 1 as i32,
                     tics: 10 as i32,
                     action: StateAction::Weapon(A_FireBFG),
@@ -995,7 +978,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BFGG,
+                    sprite: SpriteNum::SPR_BFGG,
                     frame: 1 as i32,
                     tics: 20 as i32,
                     action: StateAction::Weapon(A_ReFire),
@@ -1004,7 +987,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BFGF,
+                    sprite: SpriteNum::SPR_BFGF,
                     frame: 32768 as i32,
                     tics: 11 as i32,
                     action: StateAction::Weapon(A_Light1),
@@ -1013,7 +996,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BFGF,
+                    sprite: SpriteNum::SPR_BFGF,
                     frame: 32769 as i32,
                     tics: 6 as i32,
                     action: StateAction::Weapon(A_Light2),
@@ -1022,7 +1005,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BLUD,
+                    sprite: SpriteNum::SPR_BLUD,
                     frame: 2 as i32,
                     tics: 8 as i32,
                     action: StateAction::None,
@@ -1031,7 +1014,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BLUD,
+                    sprite: SpriteNum::SPR_BLUD,
                     frame: 1 as i32,
                     tics: 8 as i32,
                     action: StateAction::None,
@@ -1040,7 +1023,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BLUD,
+                    sprite: SpriteNum::SPR_BLUD,
                     frame: 0 as i32,
                     tics: 8 as i32,
                     action: StateAction::None,
@@ -1049,7 +1032,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PUFF,
+                    sprite: SpriteNum::SPR_PUFF,
                     frame: 32768 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -1058,7 +1041,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PUFF,
+                    sprite: SpriteNum::SPR_PUFF,
                     frame: 1 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -1067,7 +1050,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PUFF,
+                    sprite: SpriteNum::SPR_PUFF,
                     frame: 2 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -1076,7 +1059,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PUFF,
+                    sprite: SpriteNum::SPR_PUFF,
                     frame: 3 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -1085,7 +1068,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BAL1,
+                    sprite: SpriteNum::SPR_BAL1,
                     frame: 32768 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -1094,7 +1077,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BAL1,
+                    sprite: SpriteNum::SPR_BAL1,
                     frame: 32769 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -1103,7 +1086,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BAL1,
+                    sprite: SpriteNum::SPR_BAL1,
                     frame: 32770 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -1112,7 +1095,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BAL1,
+                    sprite: SpriteNum::SPR_BAL1,
                     frame: 32771 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -1121,7 +1104,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BAL1,
+                    sprite: SpriteNum::SPR_BAL1,
                     frame: 32772 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -1130,7 +1113,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BAL2,
+                    sprite: SpriteNum::SPR_BAL2,
                     frame: 32768 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -1139,7 +1122,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BAL2,
+                    sprite: SpriteNum::SPR_BAL2,
                     frame: 32769 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -1148,7 +1131,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BAL2,
+                    sprite: SpriteNum::SPR_BAL2,
                     frame: 32770 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -1157,7 +1140,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BAL2,
+                    sprite: SpriteNum::SPR_BAL2,
                     frame: 32771 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -1166,7 +1149,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BAL2,
+                    sprite: SpriteNum::SPR_BAL2,
                     frame: 32772 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -1175,7 +1158,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PLSS,
+                    sprite: SpriteNum::SPR_PLSS,
                     frame: 32768 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -1184,7 +1167,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PLSS,
+                    sprite: SpriteNum::SPR_PLSS,
                     frame: 32769 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -1193,7 +1176,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PLSE,
+                    sprite: SpriteNum::SPR_PLSE,
                     frame: 32768 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -1202,7 +1185,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PLSE,
+                    sprite: SpriteNum::SPR_PLSE,
                     frame: 32769 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -1211,7 +1194,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PLSE,
+                    sprite: SpriteNum::SPR_PLSE,
                     frame: 32770 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -1220,7 +1203,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PLSE,
+                    sprite: SpriteNum::SPR_PLSE,
                     frame: 32771 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -1229,7 +1212,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PLSE,
+                    sprite: SpriteNum::SPR_PLSE,
                     frame: 32772 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -1238,7 +1221,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_MISL,
+                    sprite: SpriteNum::SPR_MISL,
                     frame: 32768 as i32,
                     tics: 1 as i32,
                     action: StateAction::None,
@@ -1247,7 +1230,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BFS1,
+                    sprite: SpriteNum::SPR_BFS1,
                     frame: 32768 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -1256,7 +1239,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BFS1,
+                    sprite: SpriteNum::SPR_BFS1,
                     frame: 32769 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -1265,7 +1248,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BFE1,
+                    sprite: SpriteNum::SPR_BFE1,
                     frame: 32768 as i32,
                     tics: 8 as i32,
                     action: StateAction::None,
@@ -1274,7 +1257,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BFE1,
+                    sprite: SpriteNum::SPR_BFE1,
                     frame: 32769 as i32,
                     tics: 8 as i32,
                     action: StateAction::None,
@@ -1283,7 +1266,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BFE1,
+                    sprite: SpriteNum::SPR_BFE1,
                     frame: 32770 as i32,
                     tics: 8 as i32,
                     action: StateAction::Mobj(A_BFGSpray),
@@ -1292,7 +1275,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BFE1,
+                    sprite: SpriteNum::SPR_BFE1,
                     frame: 32771 as i32,
                     tics: 8 as i32,
                     action: StateAction::None,
@@ -1301,7 +1284,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BFE1,
+                    sprite: SpriteNum::SPR_BFE1,
                     frame: 32772 as i32,
                     tics: 8 as i32,
                     action: StateAction::None,
@@ -1310,7 +1293,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BFE1,
+                    sprite: SpriteNum::SPR_BFE1,
                     frame: 32773 as i32,
                     tics: 8 as i32,
                     action: StateAction::None,
@@ -1319,7 +1302,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BFE2,
+                    sprite: SpriteNum::SPR_BFE2,
                     frame: 32768 as i32,
                     tics: 8 as i32,
                     action: StateAction::None,
@@ -1328,7 +1311,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BFE2,
+                    sprite: SpriteNum::SPR_BFE2,
                     frame: 32769 as i32,
                     tics: 8 as i32,
                     action: StateAction::None,
@@ -1337,7 +1320,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BFE2,
+                    sprite: SpriteNum::SPR_BFE2,
                     frame: 32770 as i32,
                     tics: 8 as i32,
                     action: StateAction::None,
@@ -1346,7 +1329,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BFE2,
+                    sprite: SpriteNum::SPR_BFE2,
                     frame: 32771 as i32,
                     tics: 8 as i32,
                     action: StateAction::None,
@@ -1355,7 +1338,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_MISL,
+                    sprite: SpriteNum::SPR_MISL,
                     frame: 32769 as i32,
                     tics: 8 as i32,
                     action: StateAction::Mobj(A_Explode),
@@ -1364,7 +1347,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_MISL,
+                    sprite: SpriteNum::SPR_MISL,
                     frame: 32770 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -1373,7 +1356,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_MISL,
+                    sprite: SpriteNum::SPR_MISL,
                     frame: 32771 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -1382,7 +1365,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_TFOG,
+                    sprite: SpriteNum::SPR_TFOG,
                     frame: 32768 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -1391,7 +1374,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_TFOG,
+                    sprite: SpriteNum::SPR_TFOG,
                     frame: 32769 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -1400,7 +1383,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_TFOG,
+                    sprite: SpriteNum::SPR_TFOG,
                     frame: 32768 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -1409,7 +1392,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_TFOG,
+                    sprite: SpriteNum::SPR_TFOG,
                     frame: 32769 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -1418,7 +1401,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_TFOG,
+                    sprite: SpriteNum::SPR_TFOG,
                     frame: 32770 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -1427,7 +1410,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_TFOG,
+                    sprite: SpriteNum::SPR_TFOG,
                     frame: 32771 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -1436,7 +1419,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_TFOG,
+                    sprite: SpriteNum::SPR_TFOG,
                     frame: 32772 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -1445,7 +1428,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_TFOG,
+                    sprite: SpriteNum::SPR_TFOG,
                     frame: 32773 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -1454,7 +1437,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_TFOG,
+                    sprite: SpriteNum::SPR_TFOG,
                     frame: 32774 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -1463,7 +1446,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_TFOG,
+                    sprite: SpriteNum::SPR_TFOG,
                     frame: 32775 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -1472,7 +1455,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_TFOG,
+                    sprite: SpriteNum::SPR_TFOG,
                     frame: 32776 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -1481,7 +1464,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_TFOG,
+                    sprite: SpriteNum::SPR_TFOG,
                     frame: 32777 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -1490,7 +1473,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_IFOG,
+                    sprite: SpriteNum::SPR_IFOG,
                     frame: 32768 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -1499,7 +1482,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_IFOG,
+                    sprite: SpriteNum::SPR_IFOG,
                     frame: 32769 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -1508,7 +1491,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_IFOG,
+                    sprite: SpriteNum::SPR_IFOG,
                     frame: 32768 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -1517,7 +1500,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_IFOG,
+                    sprite: SpriteNum::SPR_IFOG,
                     frame: 32769 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -1526,7 +1509,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_IFOG,
+                    sprite: SpriteNum::SPR_IFOG,
                     frame: 32770 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -1535,7 +1518,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_IFOG,
+                    sprite: SpriteNum::SPR_IFOG,
                     frame: 32771 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -1544,7 +1527,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_IFOG,
+                    sprite: SpriteNum::SPR_IFOG,
                     frame: 32772 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -1553,7 +1536,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PLAY,
+                    sprite: SpriteNum::SPR_PLAY,
                     frame: 0 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -1562,7 +1545,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PLAY,
+                    sprite: SpriteNum::SPR_PLAY,
                     frame: 0 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -1571,7 +1554,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PLAY,
+                    sprite: SpriteNum::SPR_PLAY,
                     frame: 1 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -1580,7 +1563,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PLAY,
+                    sprite: SpriteNum::SPR_PLAY,
                     frame: 2 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -1589,7 +1572,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PLAY,
+                    sprite: SpriteNum::SPR_PLAY,
                     frame: 3 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -1598,7 +1581,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PLAY,
+                    sprite: SpriteNum::SPR_PLAY,
                     frame: 4 as i32,
                     tics: 12 as i32,
                     action: StateAction::None,
@@ -1607,7 +1590,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PLAY,
+                    sprite: SpriteNum::SPR_PLAY,
                     frame: 32773 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -1616,7 +1599,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PLAY,
+                    sprite: SpriteNum::SPR_PLAY,
                     frame: 6 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -1625,7 +1608,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PLAY,
+                    sprite: SpriteNum::SPR_PLAY,
                     frame: 6 as i32,
                     tics: 4 as i32,
                     action: StateAction::Mobj(A_Pain),
@@ -1634,7 +1617,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PLAY,
+                    sprite: SpriteNum::SPR_PLAY,
                     frame: 7 as i32,
                     tics: 10 as i32,
                     action: StateAction::None,
@@ -1643,7 +1626,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PLAY,
+                    sprite: SpriteNum::SPR_PLAY,
                     frame: 8 as i32,
                     tics: 10 as i32,
                     action: StateAction::Mobj(A_PlayerScream),
@@ -1652,7 +1635,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PLAY,
+                    sprite: SpriteNum::SPR_PLAY,
                     frame: 9 as i32,
                     tics: 10 as i32,
                     action: StateAction::Mobj(A_Fall),
@@ -1661,7 +1644,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PLAY,
+                    sprite: SpriteNum::SPR_PLAY,
                     frame: 10 as i32,
                     tics: 10 as i32,
                     action: StateAction::None,
@@ -1670,7 +1653,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PLAY,
+                    sprite: SpriteNum::SPR_PLAY,
                     frame: 11 as i32,
                     tics: 10 as i32,
                     action: StateAction::None,
@@ -1679,7 +1662,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PLAY,
+                    sprite: SpriteNum::SPR_PLAY,
                     frame: 12 as i32,
                     tics: 10 as i32,
                     action: StateAction::None,
@@ -1688,7 +1671,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PLAY,
+                    sprite: SpriteNum::SPR_PLAY,
                     frame: 13 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -1697,7 +1680,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PLAY,
+                    sprite: SpriteNum::SPR_PLAY,
                     frame: 14 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -1706,7 +1689,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PLAY,
+                    sprite: SpriteNum::SPR_PLAY,
                     frame: 15 as i32,
                     tics: 5 as i32,
                     action: StateAction::Mobj(A_XScream),
@@ -1715,7 +1698,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PLAY,
+                    sprite: SpriteNum::SPR_PLAY,
                     frame: 16 as i32,
                     tics: 5 as i32,
                     action: StateAction::Mobj(A_Fall),
@@ -1724,7 +1707,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PLAY,
+                    sprite: SpriteNum::SPR_PLAY,
                     frame: 17 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -1733,7 +1716,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PLAY,
+                    sprite: SpriteNum::SPR_PLAY,
                     frame: 18 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -1742,7 +1725,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PLAY,
+                    sprite: SpriteNum::SPR_PLAY,
                     frame: 19 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -1751,7 +1734,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PLAY,
+                    sprite: SpriteNum::SPR_PLAY,
                     frame: 20 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -1760,7 +1743,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PLAY,
+                    sprite: SpriteNum::SPR_PLAY,
                     frame: 21 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -1769,7 +1752,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PLAY,
+                    sprite: SpriteNum::SPR_PLAY,
                     frame: 22 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -1778,7 +1761,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_POSS,
+                    sprite: SpriteNum::SPR_POSS,
                     frame: 0 as i32,
                     tics: 10 as i32,
                     action: StateAction::Mobj(A_Look),
@@ -1787,7 +1770,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_POSS,
+                    sprite: SpriteNum::SPR_POSS,
                     frame: 1 as i32,
                     tics: 10 as i32,
                     action: StateAction::Mobj(A_Look),
@@ -1796,7 +1779,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_POSS,
+                    sprite: SpriteNum::SPR_POSS,
                     frame: 0 as i32,
                     tics: 4 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -1805,7 +1788,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_POSS,
+                    sprite: SpriteNum::SPR_POSS,
                     frame: 0 as i32,
                     tics: 4 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -1814,7 +1797,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_POSS,
+                    sprite: SpriteNum::SPR_POSS,
                     frame: 1 as i32,
                     tics: 4 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -1823,7 +1806,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_POSS,
+                    sprite: SpriteNum::SPR_POSS,
                     frame: 1 as i32,
                     tics: 4 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -1832,7 +1815,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_POSS,
+                    sprite: SpriteNum::SPR_POSS,
                     frame: 2 as i32,
                     tics: 4 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -1841,7 +1824,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_POSS,
+                    sprite: SpriteNum::SPR_POSS,
                     frame: 2 as i32,
                     tics: 4 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -1850,7 +1833,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_POSS,
+                    sprite: SpriteNum::SPR_POSS,
                     frame: 3 as i32,
                     tics: 4 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -1859,7 +1842,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_POSS,
+                    sprite: SpriteNum::SPR_POSS,
                     frame: 3 as i32,
                     tics: 4 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -1868,7 +1851,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_POSS,
+                    sprite: SpriteNum::SPR_POSS,
                     frame: 4 as i32,
                     tics: 10 as i32,
                     action: StateAction::Mobj(A_FaceTarget),
@@ -1877,7 +1860,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_POSS,
+                    sprite: SpriteNum::SPR_POSS,
                     frame: 5 as i32,
                     tics: 8 as i32,
                     action: StateAction::Mobj(A_PosAttack),
@@ -1886,7 +1869,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_POSS,
+                    sprite: SpriteNum::SPR_POSS,
                     frame: 4 as i32,
                     tics: 8 as i32,
                     action: StateAction::None,
@@ -1895,7 +1878,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_POSS,
+                    sprite: SpriteNum::SPR_POSS,
                     frame: 6 as i32,
                     tics: 3 as i32,
                     action: StateAction::None,
@@ -1904,7 +1887,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_POSS,
+                    sprite: SpriteNum::SPR_POSS,
                     frame: 6 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Pain),
@@ -1913,7 +1896,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_POSS,
+                    sprite: SpriteNum::SPR_POSS,
                     frame: 7 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -1922,7 +1905,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_POSS,
+                    sprite: SpriteNum::SPR_POSS,
                     frame: 8 as i32,
                     tics: 5 as i32,
                     action: StateAction::Mobj(A_Scream),
@@ -1931,7 +1914,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_POSS,
+                    sprite: SpriteNum::SPR_POSS,
                     frame: 9 as i32,
                     tics: 5 as i32,
                     action: StateAction::Mobj(A_Fall),
@@ -1940,7 +1923,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_POSS,
+                    sprite: SpriteNum::SPR_POSS,
                     frame: 10 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -1949,7 +1932,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_POSS,
+                    sprite: SpriteNum::SPR_POSS,
                     frame: 11 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -1958,7 +1941,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_POSS,
+                    sprite: SpriteNum::SPR_POSS,
                     frame: 12 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -1967,7 +1950,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_POSS,
+                    sprite: SpriteNum::SPR_POSS,
                     frame: 13 as i32,
                     tics: 5 as i32,
                     action: StateAction::Mobj(A_XScream),
@@ -1976,7 +1959,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_POSS,
+                    sprite: SpriteNum::SPR_POSS,
                     frame: 14 as i32,
                     tics: 5 as i32,
                     action: StateAction::Mobj(A_Fall),
@@ -1985,7 +1968,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_POSS,
+                    sprite: SpriteNum::SPR_POSS,
                     frame: 15 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -1994,7 +1977,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_POSS,
+                    sprite: SpriteNum::SPR_POSS,
                     frame: 16 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -2003,7 +1986,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_POSS,
+                    sprite: SpriteNum::SPR_POSS,
                     frame: 17 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -2012,7 +1995,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_POSS,
+                    sprite: SpriteNum::SPR_POSS,
                     frame: 18 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -2021,7 +2004,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_POSS,
+                    sprite: SpriteNum::SPR_POSS,
                     frame: 19 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -2030,7 +2013,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_POSS,
+                    sprite: SpriteNum::SPR_POSS,
                     frame: 20 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -2039,7 +2022,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_POSS,
+                    sprite: SpriteNum::SPR_POSS,
                     frame: 10 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -2048,7 +2031,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_POSS,
+                    sprite: SpriteNum::SPR_POSS,
                     frame: 9 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -2057,7 +2040,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_POSS,
+                    sprite: SpriteNum::SPR_POSS,
                     frame: 8 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -2066,7 +2049,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_POSS,
+                    sprite: SpriteNum::SPR_POSS,
                     frame: 7 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -2075,7 +2058,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SPOS,
+                    sprite: SpriteNum::SPR_SPOS,
                     frame: 0 as i32,
                     tics: 10 as i32,
                     action: StateAction::Mobj(A_Look),
@@ -2084,7 +2067,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SPOS,
+                    sprite: SpriteNum::SPR_SPOS,
                     frame: 1 as i32,
                     tics: 10 as i32,
                     action: StateAction::Mobj(A_Look),
@@ -2093,7 +2076,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SPOS,
+                    sprite: SpriteNum::SPR_SPOS,
                     frame: 0 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -2102,7 +2085,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SPOS,
+                    sprite: SpriteNum::SPR_SPOS,
                     frame: 0 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -2111,7 +2094,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SPOS,
+                    sprite: SpriteNum::SPR_SPOS,
                     frame: 1 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -2120,7 +2103,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SPOS,
+                    sprite: SpriteNum::SPR_SPOS,
                     frame: 1 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -2129,7 +2112,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SPOS,
+                    sprite: SpriteNum::SPR_SPOS,
                     frame: 2 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -2138,7 +2121,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SPOS,
+                    sprite: SpriteNum::SPR_SPOS,
                     frame: 2 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -2147,7 +2130,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SPOS,
+                    sprite: SpriteNum::SPR_SPOS,
                     frame: 3 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -2156,7 +2139,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SPOS,
+                    sprite: SpriteNum::SPR_SPOS,
                     frame: 3 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -2165,7 +2148,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SPOS,
+                    sprite: SpriteNum::SPR_SPOS,
                     frame: 4 as i32,
                     tics: 10 as i32,
                     action: StateAction::Mobj(A_FaceTarget),
@@ -2174,7 +2157,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SPOS,
+                    sprite: SpriteNum::SPR_SPOS,
                     frame: 32773 as i32,
                     tics: 10 as i32,
                     action: StateAction::Mobj(A_SPosAttack),
@@ -2183,7 +2166,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SPOS,
+                    sprite: SpriteNum::SPR_SPOS,
                     frame: 4 as i32,
                     tics: 10 as i32,
                     action: StateAction::None,
@@ -2192,7 +2175,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SPOS,
+                    sprite: SpriteNum::SPR_SPOS,
                     frame: 6 as i32,
                     tics: 3 as i32,
                     action: StateAction::None,
@@ -2201,7 +2184,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SPOS,
+                    sprite: SpriteNum::SPR_SPOS,
                     frame: 6 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Pain),
@@ -2210,7 +2193,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SPOS,
+                    sprite: SpriteNum::SPR_SPOS,
                     frame: 7 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -2219,7 +2202,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SPOS,
+                    sprite: SpriteNum::SPR_SPOS,
                     frame: 8 as i32,
                     tics: 5 as i32,
                     action: StateAction::Mobj(A_Scream),
@@ -2228,7 +2211,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SPOS,
+                    sprite: SpriteNum::SPR_SPOS,
                     frame: 9 as i32,
                     tics: 5 as i32,
                     action: StateAction::Mobj(A_Fall),
@@ -2237,7 +2220,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SPOS,
+                    sprite: SpriteNum::SPR_SPOS,
                     frame: 10 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -2246,7 +2229,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SPOS,
+                    sprite: SpriteNum::SPR_SPOS,
                     frame: 11 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -2255,7 +2238,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SPOS,
+                    sprite: SpriteNum::SPR_SPOS,
                     frame: 12 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -2264,7 +2247,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SPOS,
+                    sprite: SpriteNum::SPR_SPOS,
                     frame: 13 as i32,
                     tics: 5 as i32,
                     action: StateAction::Mobj(A_XScream),
@@ -2273,7 +2256,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SPOS,
+                    sprite: SpriteNum::SPR_SPOS,
                     frame: 14 as i32,
                     tics: 5 as i32,
                     action: StateAction::Mobj(A_Fall),
@@ -2282,7 +2265,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SPOS,
+                    sprite: SpriteNum::SPR_SPOS,
                     frame: 15 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -2291,7 +2274,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SPOS,
+                    sprite: SpriteNum::SPR_SPOS,
                     frame: 16 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -2300,7 +2283,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SPOS,
+                    sprite: SpriteNum::SPR_SPOS,
                     frame: 17 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -2309,7 +2292,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SPOS,
+                    sprite: SpriteNum::SPR_SPOS,
                     frame: 18 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -2318,7 +2301,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SPOS,
+                    sprite: SpriteNum::SPR_SPOS,
                     frame: 19 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -2327,7 +2310,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SPOS,
+                    sprite: SpriteNum::SPR_SPOS,
                     frame: 20 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -2336,7 +2319,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SPOS,
+                    sprite: SpriteNum::SPR_SPOS,
                     frame: 11 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -2345,7 +2328,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SPOS,
+                    sprite: SpriteNum::SPR_SPOS,
                     frame: 10 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -2354,7 +2337,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SPOS,
+                    sprite: SpriteNum::SPR_SPOS,
                     frame: 9 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -2363,7 +2346,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SPOS,
+                    sprite: SpriteNum::SPR_SPOS,
                     frame: 8 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -2372,7 +2355,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SPOS,
+                    sprite: SpriteNum::SPR_SPOS,
                     frame: 7 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -2381,7 +2364,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_VILE,
+                    sprite: SpriteNum::SPR_VILE,
                     frame: 0 as i32,
                     tics: 10 as i32,
                     action: StateAction::Mobj(A_Look),
@@ -2390,7 +2373,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_VILE,
+                    sprite: SpriteNum::SPR_VILE,
                     frame: 1 as i32,
                     tics: 10 as i32,
                     action: StateAction::Mobj(A_Look),
@@ -2399,7 +2382,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_VILE,
+                    sprite: SpriteNum::SPR_VILE,
                     frame: 0 as i32,
                     tics: 2 as i32,
                     action: StateAction::Mobj(A_VileChase),
@@ -2408,7 +2391,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_VILE,
+                    sprite: SpriteNum::SPR_VILE,
                     frame: 0 as i32,
                     tics: 2 as i32,
                     action: StateAction::Mobj(A_VileChase),
@@ -2417,7 +2400,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_VILE,
+                    sprite: SpriteNum::SPR_VILE,
                     frame: 1 as i32,
                     tics: 2 as i32,
                     action: StateAction::Mobj(A_VileChase),
@@ -2426,7 +2409,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_VILE,
+                    sprite: SpriteNum::SPR_VILE,
                     frame: 1 as i32,
                     tics: 2 as i32,
                     action: StateAction::Mobj(A_VileChase),
@@ -2435,7 +2418,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_VILE,
+                    sprite: SpriteNum::SPR_VILE,
                     frame: 2 as i32,
                     tics: 2 as i32,
                     action: StateAction::Mobj(A_VileChase),
@@ -2444,7 +2427,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_VILE,
+                    sprite: SpriteNum::SPR_VILE,
                     frame: 2 as i32,
                     tics: 2 as i32,
                     action: StateAction::Mobj(A_VileChase),
@@ -2453,7 +2436,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_VILE,
+                    sprite: SpriteNum::SPR_VILE,
                     frame: 3 as i32,
                     tics: 2 as i32,
                     action: StateAction::Mobj(A_VileChase),
@@ -2462,7 +2445,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_VILE,
+                    sprite: SpriteNum::SPR_VILE,
                     frame: 3 as i32,
                     tics: 2 as i32,
                     action: StateAction::Mobj(A_VileChase),
@@ -2471,7 +2454,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_VILE,
+                    sprite: SpriteNum::SPR_VILE,
                     frame: 4 as i32,
                     tics: 2 as i32,
                     action: StateAction::Mobj(A_VileChase),
@@ -2480,7 +2463,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_VILE,
+                    sprite: SpriteNum::SPR_VILE,
                     frame: 4 as i32,
                     tics: 2 as i32,
                     action: StateAction::Mobj(A_VileChase),
@@ -2489,7 +2472,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_VILE,
+                    sprite: SpriteNum::SPR_VILE,
                     frame: 5 as i32,
                     tics: 2 as i32,
                     action: StateAction::Mobj(A_VileChase),
@@ -2498,7 +2481,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_VILE,
+                    sprite: SpriteNum::SPR_VILE,
                     frame: 5 as i32,
                     tics: 2 as i32,
                     action: StateAction::Mobj(A_VileChase),
@@ -2507,7 +2490,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_VILE,
+                    sprite: SpriteNum::SPR_VILE,
                     frame: 32774 as i32,
                     tics: 0 as i32,
                     action: StateAction::Mobj(A_VileStart),
@@ -2516,7 +2499,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_VILE,
+                    sprite: SpriteNum::SPR_VILE,
                     frame: 32774 as i32,
                     tics: 10 as i32,
                     action: StateAction::Mobj(A_FaceTarget),
@@ -2525,7 +2508,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_VILE,
+                    sprite: SpriteNum::SPR_VILE,
                     frame: 32775 as i32,
                     tics: 8 as i32,
                     action: StateAction::Mobj(A_VileTarget),
@@ -2534,7 +2517,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_VILE,
+                    sprite: SpriteNum::SPR_VILE,
                     frame: 32776 as i32,
                     tics: 8 as i32,
                     action: StateAction::Mobj(A_FaceTarget),
@@ -2543,7 +2526,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_VILE,
+                    sprite: SpriteNum::SPR_VILE,
                     frame: 32777 as i32,
                     tics: 8 as i32,
                     action: StateAction::Mobj(A_FaceTarget),
@@ -2552,7 +2535,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_VILE,
+                    sprite: SpriteNum::SPR_VILE,
                     frame: 32778 as i32,
                     tics: 8 as i32,
                     action: StateAction::Mobj(A_FaceTarget),
@@ -2561,7 +2544,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_VILE,
+                    sprite: SpriteNum::SPR_VILE,
                     frame: 32779 as i32,
                     tics: 8 as i32,
                     action: StateAction::Mobj(A_FaceTarget),
@@ -2570,7 +2553,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_VILE,
+                    sprite: SpriteNum::SPR_VILE,
                     frame: 32780 as i32,
                     tics: 8 as i32,
                     action: StateAction::Mobj(A_FaceTarget),
@@ -2579,7 +2562,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_VILE,
+                    sprite: SpriteNum::SPR_VILE,
                     frame: 32781 as i32,
                     tics: 8 as i32,
                     action: StateAction::Mobj(A_FaceTarget),
@@ -2588,7 +2571,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_VILE,
+                    sprite: SpriteNum::SPR_VILE,
                     frame: 32782 as i32,
                     tics: 8 as i32,
                     action: StateAction::Mobj(A_VileAttack),
@@ -2597,7 +2580,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_VILE,
+                    sprite: SpriteNum::SPR_VILE,
                     frame: 32783 as i32,
                     tics: 20 as i32,
                     action: StateAction::None,
@@ -2606,7 +2589,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_VILE,
+                    sprite: SpriteNum::SPR_VILE,
                     frame: 32794 as i32,
                     tics: 10 as i32,
                     action: StateAction::None,
@@ -2615,7 +2598,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_VILE,
+                    sprite: SpriteNum::SPR_VILE,
                     frame: 32795 as i32,
                     tics: 10 as i32,
                     action: StateAction::None,
@@ -2624,7 +2607,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_VILE,
+                    sprite: SpriteNum::SPR_VILE,
                     frame: 32796 as i32,
                     tics: 10 as i32,
                     action: StateAction::None,
@@ -2633,7 +2616,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_VILE,
+                    sprite: SpriteNum::SPR_VILE,
                     frame: 16 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -2642,7 +2625,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_VILE,
+                    sprite: SpriteNum::SPR_VILE,
                     frame: 16 as i32,
                     tics: 5 as i32,
                     action: StateAction::Mobj(A_Pain),
@@ -2651,7 +2634,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_VILE,
+                    sprite: SpriteNum::SPR_VILE,
                     frame: 16 as i32,
                     tics: 7 as i32,
                     action: StateAction::None,
@@ -2660,7 +2643,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_VILE,
+                    sprite: SpriteNum::SPR_VILE,
                     frame: 17 as i32,
                     tics: 7 as i32,
                     action: StateAction::Mobj(A_Scream),
@@ -2669,7 +2652,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_VILE,
+                    sprite: SpriteNum::SPR_VILE,
                     frame: 18 as i32,
                     tics: 7 as i32,
                     action: StateAction::Mobj(A_Fall),
@@ -2678,7 +2661,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_VILE,
+                    sprite: SpriteNum::SPR_VILE,
                     frame: 19 as i32,
                     tics: 7 as i32,
                     action: StateAction::None,
@@ -2687,7 +2670,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_VILE,
+                    sprite: SpriteNum::SPR_VILE,
                     frame: 20 as i32,
                     tics: 7 as i32,
                     action: StateAction::None,
@@ -2696,7 +2679,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_VILE,
+                    sprite: SpriteNum::SPR_VILE,
                     frame: 21 as i32,
                     tics: 7 as i32,
                     action: StateAction::None,
@@ -2705,7 +2688,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_VILE,
+                    sprite: SpriteNum::SPR_VILE,
                     frame: 22 as i32,
                     tics: 7 as i32,
                     action: StateAction::None,
@@ -2714,7 +2697,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_VILE,
+                    sprite: SpriteNum::SPR_VILE,
                     frame: 23 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -2723,7 +2706,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_VILE,
+                    sprite: SpriteNum::SPR_VILE,
                     frame: 24 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -2732,7 +2715,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_VILE,
+                    sprite: SpriteNum::SPR_VILE,
                     frame: 25 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -2741,7 +2724,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FIRE,
+                    sprite: SpriteNum::SPR_FIRE,
                     frame: 32768 as i32,
                     tics: 2 as i32,
                     action: StateAction::Mobj(A_StartFire),
@@ -2750,7 +2733,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FIRE,
+                    sprite: SpriteNum::SPR_FIRE,
                     frame: 32769 as i32,
                     tics: 2 as i32,
                     action: StateAction::Mobj(A_Fire),
@@ -2759,7 +2742,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FIRE,
+                    sprite: SpriteNum::SPR_FIRE,
                     frame: 32768 as i32,
                     tics: 2 as i32,
                     action: StateAction::Mobj(A_Fire),
@@ -2768,7 +2751,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FIRE,
+                    sprite: SpriteNum::SPR_FIRE,
                     frame: 32769 as i32,
                     tics: 2 as i32,
                     action: StateAction::Mobj(A_Fire),
@@ -2777,7 +2760,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FIRE,
+                    sprite: SpriteNum::SPR_FIRE,
                     frame: 32770 as i32,
                     tics: 2 as i32,
                     action: StateAction::Mobj(A_FireCrackle),
@@ -2786,7 +2769,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FIRE,
+                    sprite: SpriteNum::SPR_FIRE,
                     frame: 32769 as i32,
                     tics: 2 as i32,
                     action: StateAction::Mobj(A_Fire),
@@ -2795,7 +2778,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FIRE,
+                    sprite: SpriteNum::SPR_FIRE,
                     frame: 32770 as i32,
                     tics: 2 as i32,
                     action: StateAction::Mobj(A_Fire),
@@ -2804,7 +2787,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FIRE,
+                    sprite: SpriteNum::SPR_FIRE,
                     frame: 32769 as i32,
                     tics: 2 as i32,
                     action: StateAction::Mobj(A_Fire),
@@ -2813,7 +2796,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FIRE,
+                    sprite: SpriteNum::SPR_FIRE,
                     frame: 32770 as i32,
                     tics: 2 as i32,
                     action: StateAction::Mobj(A_Fire),
@@ -2822,7 +2805,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FIRE,
+                    sprite: SpriteNum::SPR_FIRE,
                     frame: 32771 as i32,
                     tics: 2 as i32,
                     action: StateAction::Mobj(A_Fire),
@@ -2831,7 +2814,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FIRE,
+                    sprite: SpriteNum::SPR_FIRE,
                     frame: 32770 as i32,
                     tics: 2 as i32,
                     action: StateAction::Mobj(A_Fire),
@@ -2840,7 +2823,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FIRE,
+                    sprite: SpriteNum::SPR_FIRE,
                     frame: 32771 as i32,
                     tics: 2 as i32,
                     action: StateAction::Mobj(A_Fire),
@@ -2849,7 +2832,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FIRE,
+                    sprite: SpriteNum::SPR_FIRE,
                     frame: 32770 as i32,
                     tics: 2 as i32,
                     action: StateAction::Mobj(A_Fire),
@@ -2858,7 +2841,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FIRE,
+                    sprite: SpriteNum::SPR_FIRE,
                     frame: 32771 as i32,
                     tics: 2 as i32,
                     action: StateAction::Mobj(A_Fire),
@@ -2867,7 +2850,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FIRE,
+                    sprite: SpriteNum::SPR_FIRE,
                     frame: 32772 as i32,
                     tics: 2 as i32,
                     action: StateAction::Mobj(A_Fire),
@@ -2876,7 +2859,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FIRE,
+                    sprite: SpriteNum::SPR_FIRE,
                     frame: 32771 as i32,
                     tics: 2 as i32,
                     action: StateAction::Mobj(A_Fire),
@@ -2885,7 +2868,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FIRE,
+                    sprite: SpriteNum::SPR_FIRE,
                     frame: 32772 as i32,
                     tics: 2 as i32,
                     action: StateAction::Mobj(A_Fire),
@@ -2894,7 +2877,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FIRE,
+                    sprite: SpriteNum::SPR_FIRE,
                     frame: 32771 as i32,
                     tics: 2 as i32,
                     action: StateAction::Mobj(A_Fire),
@@ -2903,7 +2886,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FIRE,
+                    sprite: SpriteNum::SPR_FIRE,
                     frame: 32772 as i32,
                     tics: 2 as i32,
                     action: StateAction::Mobj(A_FireCrackle),
@@ -2912,7 +2895,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FIRE,
+                    sprite: SpriteNum::SPR_FIRE,
                     frame: 32773 as i32,
                     tics: 2 as i32,
                     action: StateAction::Mobj(A_Fire),
@@ -2921,7 +2904,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FIRE,
+                    sprite: SpriteNum::SPR_FIRE,
                     frame: 32772 as i32,
                     tics: 2 as i32,
                     action: StateAction::Mobj(A_Fire),
@@ -2930,7 +2913,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FIRE,
+                    sprite: SpriteNum::SPR_FIRE,
                     frame: 32773 as i32,
                     tics: 2 as i32,
                     action: StateAction::Mobj(A_Fire),
@@ -2939,7 +2922,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FIRE,
+                    sprite: SpriteNum::SPR_FIRE,
                     frame: 32772 as i32,
                     tics: 2 as i32,
                     action: StateAction::Mobj(A_Fire),
@@ -2948,7 +2931,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FIRE,
+                    sprite: SpriteNum::SPR_FIRE,
                     frame: 32773 as i32,
                     tics: 2 as i32,
                     action: StateAction::Mobj(A_Fire),
@@ -2957,7 +2940,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FIRE,
+                    sprite: SpriteNum::SPR_FIRE,
                     frame: 32774 as i32,
                     tics: 2 as i32,
                     action: StateAction::Mobj(A_Fire),
@@ -2966,7 +2949,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FIRE,
+                    sprite: SpriteNum::SPR_FIRE,
                     frame: 32775 as i32,
                     tics: 2 as i32,
                     action: StateAction::Mobj(A_Fire),
@@ -2975,7 +2958,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FIRE,
+                    sprite: SpriteNum::SPR_FIRE,
                     frame: 32774 as i32,
                     tics: 2 as i32,
                     action: StateAction::Mobj(A_Fire),
@@ -2984,7 +2967,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FIRE,
+                    sprite: SpriteNum::SPR_FIRE,
                     frame: 32775 as i32,
                     tics: 2 as i32,
                     action: StateAction::Mobj(A_Fire),
@@ -2993,7 +2976,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FIRE,
+                    sprite: SpriteNum::SPR_FIRE,
                     frame: 32774 as i32,
                     tics: 2 as i32,
                     action: StateAction::Mobj(A_Fire),
@@ -3002,7 +2985,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FIRE,
+                    sprite: SpriteNum::SPR_FIRE,
                     frame: 32775 as i32,
                     tics: 2 as i32,
                     action: StateAction::Mobj(A_Fire),
@@ -3011,7 +2994,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PUFF,
+                    sprite: SpriteNum::SPR_PUFF,
                     frame: 1 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -3020,7 +3003,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PUFF,
+                    sprite: SpriteNum::SPR_PUFF,
                     frame: 2 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -3029,7 +3012,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PUFF,
+                    sprite: SpriteNum::SPR_PUFF,
                     frame: 1 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -3038,7 +3021,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PUFF,
+                    sprite: SpriteNum::SPR_PUFF,
                     frame: 2 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -3047,7 +3030,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PUFF,
+                    sprite: SpriteNum::SPR_PUFF,
                     frame: 3 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -3056,7 +3039,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FATB,
+                    sprite: SpriteNum::SPR_FATB,
                     frame: 32768 as i32,
                     tics: 2 as i32,
                     action: StateAction::Mobj(A_Tracer),
@@ -3065,7 +3048,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FATB,
+                    sprite: SpriteNum::SPR_FATB,
                     frame: 32769 as i32,
                     tics: 2 as i32,
                     action: StateAction::Mobj(A_Tracer),
@@ -3074,7 +3057,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FBXP,
+                    sprite: SpriteNum::SPR_FBXP,
                     frame: 32768 as i32,
                     tics: 8 as i32,
                     action: StateAction::None,
@@ -3083,7 +3066,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FBXP,
+                    sprite: SpriteNum::SPR_FBXP,
                     frame: 32769 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -3092,7 +3075,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FBXP,
+                    sprite: SpriteNum::SPR_FBXP,
                     frame: 32770 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -3101,7 +3084,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SKEL,
+                    sprite: SpriteNum::SPR_SKEL,
                     frame: 0 as i32,
                     tics: 10 as i32,
                     action: StateAction::Mobj(A_Look),
@@ -3110,7 +3093,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SKEL,
+                    sprite: SpriteNum::SPR_SKEL,
                     frame: 1 as i32,
                     tics: 10 as i32,
                     action: StateAction::Mobj(A_Look),
@@ -3119,7 +3102,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SKEL,
+                    sprite: SpriteNum::SPR_SKEL,
                     frame: 0 as i32,
                     tics: 2 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -3128,7 +3111,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SKEL,
+                    sprite: SpriteNum::SPR_SKEL,
                     frame: 0 as i32,
                     tics: 2 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -3137,7 +3120,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SKEL,
+                    sprite: SpriteNum::SPR_SKEL,
                     frame: 1 as i32,
                     tics: 2 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -3146,7 +3129,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SKEL,
+                    sprite: SpriteNum::SPR_SKEL,
                     frame: 1 as i32,
                     tics: 2 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -3155,7 +3138,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SKEL,
+                    sprite: SpriteNum::SPR_SKEL,
                     frame: 2 as i32,
                     tics: 2 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -3164,7 +3147,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SKEL,
+                    sprite: SpriteNum::SPR_SKEL,
                     frame: 2 as i32,
                     tics: 2 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -3173,7 +3156,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SKEL,
+                    sprite: SpriteNum::SPR_SKEL,
                     frame: 3 as i32,
                     tics: 2 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -3182,7 +3165,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SKEL,
+                    sprite: SpriteNum::SPR_SKEL,
                     frame: 3 as i32,
                     tics: 2 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -3191,7 +3174,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SKEL,
+                    sprite: SpriteNum::SPR_SKEL,
                     frame: 4 as i32,
                     tics: 2 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -3200,7 +3183,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SKEL,
+                    sprite: SpriteNum::SPR_SKEL,
                     frame: 4 as i32,
                     tics: 2 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -3209,7 +3192,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SKEL,
+                    sprite: SpriteNum::SPR_SKEL,
                     frame: 5 as i32,
                     tics: 2 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -3218,7 +3201,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SKEL,
+                    sprite: SpriteNum::SPR_SKEL,
                     frame: 5 as i32,
                     tics: 2 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -3227,7 +3210,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SKEL,
+                    sprite: SpriteNum::SPR_SKEL,
                     frame: 6 as i32,
                     tics: 0 as i32,
                     action: StateAction::Mobj(A_FaceTarget),
@@ -3236,7 +3219,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SKEL,
+                    sprite: SpriteNum::SPR_SKEL,
                     frame: 6 as i32,
                     tics: 6 as i32,
                     action: StateAction::Mobj(A_SkelWhoosh),
@@ -3245,7 +3228,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SKEL,
+                    sprite: SpriteNum::SPR_SKEL,
                     frame: 7 as i32,
                     tics: 6 as i32,
                     action: StateAction::Mobj(A_FaceTarget),
@@ -3254,7 +3237,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SKEL,
+                    sprite: SpriteNum::SPR_SKEL,
                     frame: 8 as i32,
                     tics: 6 as i32,
                     action: StateAction::Mobj(A_SkelFist),
@@ -3263,7 +3246,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SKEL,
+                    sprite: SpriteNum::SPR_SKEL,
                     frame: 32777 as i32,
                     tics: 0 as i32,
                     action: StateAction::Mobj(A_FaceTarget),
@@ -3272,7 +3255,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SKEL,
+                    sprite: SpriteNum::SPR_SKEL,
                     frame: 32777 as i32,
                     tics: 10 as i32,
                     action: StateAction::Mobj(A_FaceTarget),
@@ -3281,7 +3264,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SKEL,
+                    sprite: SpriteNum::SPR_SKEL,
                     frame: 10 as i32,
                     tics: 10 as i32,
                     action: StateAction::Mobj(A_SkelMissile),
@@ -3290,7 +3273,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SKEL,
+                    sprite: SpriteNum::SPR_SKEL,
                     frame: 10 as i32,
                     tics: 10 as i32,
                     action: StateAction::Mobj(A_FaceTarget),
@@ -3299,7 +3282,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SKEL,
+                    sprite: SpriteNum::SPR_SKEL,
                     frame: 11 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -3308,7 +3291,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SKEL,
+                    sprite: SpriteNum::SPR_SKEL,
                     frame: 11 as i32,
                     tics: 5 as i32,
                     action: StateAction::Mobj(A_Pain),
@@ -3317,7 +3300,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SKEL,
+                    sprite: SpriteNum::SPR_SKEL,
                     frame: 11 as i32,
                     tics: 7 as i32,
                     action: StateAction::None,
@@ -3326,7 +3309,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SKEL,
+                    sprite: SpriteNum::SPR_SKEL,
                     frame: 12 as i32,
                     tics: 7 as i32,
                     action: StateAction::None,
@@ -3335,7 +3318,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SKEL,
+                    sprite: SpriteNum::SPR_SKEL,
                     frame: 13 as i32,
                     tics: 7 as i32,
                     action: StateAction::Mobj(A_Scream),
@@ -3344,7 +3327,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SKEL,
+                    sprite: SpriteNum::SPR_SKEL,
                     frame: 14 as i32,
                     tics: 7 as i32,
                     action: StateAction::Mobj(A_Fall),
@@ -3353,7 +3336,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SKEL,
+                    sprite: SpriteNum::SPR_SKEL,
                     frame: 15 as i32,
                     tics: 7 as i32,
                     action: StateAction::None,
@@ -3362,7 +3345,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SKEL,
+                    sprite: SpriteNum::SPR_SKEL,
                     frame: 16 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -3371,7 +3354,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SKEL,
+                    sprite: SpriteNum::SPR_SKEL,
                     frame: 16 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -3380,7 +3363,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SKEL,
+                    sprite: SpriteNum::SPR_SKEL,
                     frame: 15 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -3389,7 +3372,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SKEL,
+                    sprite: SpriteNum::SPR_SKEL,
                     frame: 14 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -3398,7 +3381,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SKEL,
+                    sprite: SpriteNum::SPR_SKEL,
                     frame: 13 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -3407,7 +3390,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SKEL,
+                    sprite: SpriteNum::SPR_SKEL,
                     frame: 12 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -3416,7 +3399,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SKEL,
+                    sprite: SpriteNum::SPR_SKEL,
                     frame: 11 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -3425,7 +3408,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_MANF,
+                    sprite: SpriteNum::SPR_MANF,
                     frame: 32768 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -3434,7 +3417,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_MANF,
+                    sprite: SpriteNum::SPR_MANF,
                     frame: 32769 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -3443,7 +3426,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_MISL,
+                    sprite: SpriteNum::SPR_MISL,
                     frame: 32769 as i32,
                     tics: 8 as i32,
                     action: StateAction::None,
@@ -3452,7 +3435,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_MISL,
+                    sprite: SpriteNum::SPR_MISL,
                     frame: 32770 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -3461,7 +3444,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_MISL,
+                    sprite: SpriteNum::SPR_MISL,
                     frame: 32771 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -3470,7 +3453,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FATT,
+                    sprite: SpriteNum::SPR_FATT,
                     frame: 0 as i32,
                     tics: 15 as i32,
                     action: StateAction::Mobj(A_Look),
@@ -3479,7 +3462,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FATT,
+                    sprite: SpriteNum::SPR_FATT,
                     frame: 1 as i32,
                     tics: 15 as i32,
                     action: StateAction::Mobj(A_Look),
@@ -3488,7 +3471,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FATT,
+                    sprite: SpriteNum::SPR_FATT,
                     frame: 0 as i32,
                     tics: 4 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -3497,7 +3480,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FATT,
+                    sprite: SpriteNum::SPR_FATT,
                     frame: 0 as i32,
                     tics: 4 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -3506,7 +3489,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FATT,
+                    sprite: SpriteNum::SPR_FATT,
                     frame: 1 as i32,
                     tics: 4 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -3515,7 +3498,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FATT,
+                    sprite: SpriteNum::SPR_FATT,
                     frame: 1 as i32,
                     tics: 4 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -3524,7 +3507,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FATT,
+                    sprite: SpriteNum::SPR_FATT,
                     frame: 2 as i32,
                     tics: 4 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -3533,7 +3516,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FATT,
+                    sprite: SpriteNum::SPR_FATT,
                     frame: 2 as i32,
                     tics: 4 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -3542,7 +3525,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FATT,
+                    sprite: SpriteNum::SPR_FATT,
                     frame: 3 as i32,
                     tics: 4 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -3551,7 +3534,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FATT,
+                    sprite: SpriteNum::SPR_FATT,
                     frame: 3 as i32,
                     tics: 4 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -3560,7 +3543,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FATT,
+                    sprite: SpriteNum::SPR_FATT,
                     frame: 4 as i32,
                     tics: 4 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -3569,7 +3552,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FATT,
+                    sprite: SpriteNum::SPR_FATT,
                     frame: 4 as i32,
                     tics: 4 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -3578,7 +3561,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FATT,
+                    sprite: SpriteNum::SPR_FATT,
                     frame: 5 as i32,
                     tics: 4 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -3587,7 +3570,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FATT,
+                    sprite: SpriteNum::SPR_FATT,
                     frame: 5 as i32,
                     tics: 4 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -3596,7 +3579,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FATT,
+                    sprite: SpriteNum::SPR_FATT,
                     frame: 6 as i32,
                     tics: 20 as i32,
                     action: StateAction::Mobj(A_FatRaise),
@@ -3605,7 +3588,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FATT,
+                    sprite: SpriteNum::SPR_FATT,
                     frame: 32775 as i32,
                     tics: 10 as i32,
                     action: StateAction::Mobj(A_FatAttack1),
@@ -3614,7 +3597,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FATT,
+                    sprite: SpriteNum::SPR_FATT,
                     frame: 8 as i32,
                     tics: 5 as i32,
                     action: StateAction::Mobj(A_FaceTarget),
@@ -3623,7 +3606,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FATT,
+                    sprite: SpriteNum::SPR_FATT,
                     frame: 6 as i32,
                     tics: 5 as i32,
                     action: StateAction::Mobj(A_FaceTarget),
@@ -3632,7 +3615,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FATT,
+                    sprite: SpriteNum::SPR_FATT,
                     frame: 32775 as i32,
                     tics: 10 as i32,
                     action: StateAction::Mobj(A_FatAttack2),
@@ -3641,7 +3624,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FATT,
+                    sprite: SpriteNum::SPR_FATT,
                     frame: 8 as i32,
                     tics: 5 as i32,
                     action: StateAction::Mobj(A_FaceTarget),
@@ -3650,7 +3633,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FATT,
+                    sprite: SpriteNum::SPR_FATT,
                     frame: 6 as i32,
                     tics: 5 as i32,
                     action: StateAction::Mobj(A_FaceTarget),
@@ -3659,7 +3642,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FATT,
+                    sprite: SpriteNum::SPR_FATT,
                     frame: 32775 as i32,
                     tics: 10 as i32,
                     action: StateAction::Mobj(A_FatAttack3),
@@ -3668,7 +3651,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FATT,
+                    sprite: SpriteNum::SPR_FATT,
                     frame: 8 as i32,
                     tics: 5 as i32,
                     action: StateAction::Mobj(A_FaceTarget),
@@ -3677,7 +3660,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FATT,
+                    sprite: SpriteNum::SPR_FATT,
                     frame: 6 as i32,
                     tics: 5 as i32,
                     action: StateAction::Mobj(A_FaceTarget),
@@ -3686,7 +3669,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FATT,
+                    sprite: SpriteNum::SPR_FATT,
                     frame: 9 as i32,
                     tics: 3 as i32,
                     action: StateAction::None,
@@ -3695,7 +3678,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FATT,
+                    sprite: SpriteNum::SPR_FATT,
                     frame: 9 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Pain),
@@ -3704,7 +3687,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FATT,
+                    sprite: SpriteNum::SPR_FATT,
                     frame: 10 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -3713,7 +3696,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FATT,
+                    sprite: SpriteNum::SPR_FATT,
                     frame: 11 as i32,
                     tics: 6 as i32,
                     action: StateAction::Mobj(A_Scream),
@@ -3722,7 +3705,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FATT,
+                    sprite: SpriteNum::SPR_FATT,
                     frame: 12 as i32,
                     tics: 6 as i32,
                     action: StateAction::Mobj(A_Fall),
@@ -3731,7 +3714,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FATT,
+                    sprite: SpriteNum::SPR_FATT,
                     frame: 13 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -3740,7 +3723,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FATT,
+                    sprite: SpriteNum::SPR_FATT,
                     frame: 14 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -3749,7 +3732,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FATT,
+                    sprite: SpriteNum::SPR_FATT,
                     frame: 15 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -3758,7 +3741,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FATT,
+                    sprite: SpriteNum::SPR_FATT,
                     frame: 16 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -3767,7 +3750,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FATT,
+                    sprite: SpriteNum::SPR_FATT,
                     frame: 17 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -3776,7 +3759,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FATT,
+                    sprite: SpriteNum::SPR_FATT,
                     frame: 18 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -3785,7 +3768,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FATT,
+                    sprite: SpriteNum::SPR_FATT,
                     frame: 19 as i32,
                     tics: -(1 as i32),
                     action: StateAction::Mobj(A_BossDeath),
@@ -3794,7 +3777,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FATT,
+                    sprite: SpriteNum::SPR_FATT,
                     frame: 17 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -3803,7 +3786,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FATT,
+                    sprite: SpriteNum::SPR_FATT,
                     frame: 16 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -3812,7 +3795,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FATT,
+                    sprite: SpriteNum::SPR_FATT,
                     frame: 15 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -3821,7 +3804,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FATT,
+                    sprite: SpriteNum::SPR_FATT,
                     frame: 14 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -3830,7 +3813,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FATT,
+                    sprite: SpriteNum::SPR_FATT,
                     frame: 13 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -3839,7 +3822,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FATT,
+                    sprite: SpriteNum::SPR_FATT,
                     frame: 12 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -3848,7 +3831,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FATT,
+                    sprite: SpriteNum::SPR_FATT,
                     frame: 11 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -3857,7 +3840,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FATT,
+                    sprite: SpriteNum::SPR_FATT,
                     frame: 10 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -3866,7 +3849,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CPOS,
+                    sprite: SpriteNum::SPR_CPOS,
                     frame: 0 as i32,
                     tics: 10 as i32,
                     action: StateAction::Mobj(A_Look),
@@ -3875,7 +3858,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CPOS,
+                    sprite: SpriteNum::SPR_CPOS,
                     frame: 1 as i32,
                     tics: 10 as i32,
                     action: StateAction::Mobj(A_Look),
@@ -3884,7 +3867,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CPOS,
+                    sprite: SpriteNum::SPR_CPOS,
                     frame: 0 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -3893,7 +3876,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CPOS,
+                    sprite: SpriteNum::SPR_CPOS,
                     frame: 0 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -3902,7 +3885,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CPOS,
+                    sprite: SpriteNum::SPR_CPOS,
                     frame: 1 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -3911,7 +3894,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CPOS,
+                    sprite: SpriteNum::SPR_CPOS,
                     frame: 1 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -3920,7 +3903,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CPOS,
+                    sprite: SpriteNum::SPR_CPOS,
                     frame: 2 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -3929,7 +3912,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CPOS,
+                    sprite: SpriteNum::SPR_CPOS,
                     frame: 2 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -3938,7 +3921,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CPOS,
+                    sprite: SpriteNum::SPR_CPOS,
                     frame: 3 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -3947,7 +3930,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CPOS,
+                    sprite: SpriteNum::SPR_CPOS,
                     frame: 3 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -3956,7 +3939,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CPOS,
+                    sprite: SpriteNum::SPR_CPOS,
                     frame: 4 as i32,
                     tics: 10 as i32,
                     action: StateAction::Mobj(A_FaceTarget),
@@ -3965,7 +3948,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CPOS,
+                    sprite: SpriteNum::SPR_CPOS,
                     frame: 32773 as i32,
                     tics: 4 as i32,
                     action: StateAction::Mobj(A_CPosAttack),
@@ -3974,7 +3957,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CPOS,
+                    sprite: SpriteNum::SPR_CPOS,
                     frame: 32772 as i32,
                     tics: 4 as i32,
                     action: StateAction::Mobj(A_CPosAttack),
@@ -3983,7 +3966,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CPOS,
+                    sprite: SpriteNum::SPR_CPOS,
                     frame: 5 as i32,
                     tics: 1 as i32,
                     action: StateAction::Mobj(A_CPosRefire),
@@ -3992,7 +3975,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CPOS,
+                    sprite: SpriteNum::SPR_CPOS,
                     frame: 6 as i32,
                     tics: 3 as i32,
                     action: StateAction::None,
@@ -4001,7 +3984,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CPOS,
+                    sprite: SpriteNum::SPR_CPOS,
                     frame: 6 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Pain),
@@ -4010,7 +3993,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CPOS,
+                    sprite: SpriteNum::SPR_CPOS,
                     frame: 7 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -4019,7 +4002,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CPOS,
+                    sprite: SpriteNum::SPR_CPOS,
                     frame: 8 as i32,
                     tics: 5 as i32,
                     action: StateAction::Mobj(A_Scream),
@@ -4028,7 +4011,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CPOS,
+                    sprite: SpriteNum::SPR_CPOS,
                     frame: 9 as i32,
                     tics: 5 as i32,
                     action: StateAction::Mobj(A_Fall),
@@ -4037,7 +4020,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CPOS,
+                    sprite: SpriteNum::SPR_CPOS,
                     frame: 10 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -4046,7 +4029,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CPOS,
+                    sprite: SpriteNum::SPR_CPOS,
                     frame: 11 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -4055,7 +4038,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CPOS,
+                    sprite: SpriteNum::SPR_CPOS,
                     frame: 12 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -4064,7 +4047,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CPOS,
+                    sprite: SpriteNum::SPR_CPOS,
                     frame: 13 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -4073,7 +4056,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CPOS,
+                    sprite: SpriteNum::SPR_CPOS,
                     frame: 14 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -4082,7 +4065,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CPOS,
+                    sprite: SpriteNum::SPR_CPOS,
                     frame: 15 as i32,
                     tics: 5 as i32,
                     action: StateAction::Mobj(A_XScream),
@@ -4091,7 +4074,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CPOS,
+                    sprite: SpriteNum::SPR_CPOS,
                     frame: 16 as i32,
                     tics: 5 as i32,
                     action: StateAction::Mobj(A_Fall),
@@ -4100,7 +4083,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CPOS,
+                    sprite: SpriteNum::SPR_CPOS,
                     frame: 17 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -4109,7 +4092,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CPOS,
+                    sprite: SpriteNum::SPR_CPOS,
                     frame: 18 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -4118,7 +4101,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CPOS,
+                    sprite: SpriteNum::SPR_CPOS,
                     frame: 19 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -4127,7 +4110,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CPOS,
+                    sprite: SpriteNum::SPR_CPOS,
                     frame: 13 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -4136,7 +4119,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CPOS,
+                    sprite: SpriteNum::SPR_CPOS,
                     frame: 12 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -4145,7 +4128,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CPOS,
+                    sprite: SpriteNum::SPR_CPOS,
                     frame: 11 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -4154,7 +4137,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CPOS,
+                    sprite: SpriteNum::SPR_CPOS,
                     frame: 10 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -4163,7 +4146,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CPOS,
+                    sprite: SpriteNum::SPR_CPOS,
                     frame: 9 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -4172,7 +4155,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CPOS,
+                    sprite: SpriteNum::SPR_CPOS,
                     frame: 8 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -4181,7 +4164,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CPOS,
+                    sprite: SpriteNum::SPR_CPOS,
                     frame: 7 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -4190,7 +4173,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_TROO,
+                    sprite: SpriteNum::SPR_TROO,
                     frame: 0 as i32,
                     tics: 10 as i32,
                     action: StateAction::Mobj(A_Look),
@@ -4199,7 +4182,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_TROO,
+                    sprite: SpriteNum::SPR_TROO,
                     frame: 1 as i32,
                     tics: 10 as i32,
                     action: StateAction::Mobj(A_Look),
@@ -4208,7 +4191,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_TROO,
+                    sprite: SpriteNum::SPR_TROO,
                     frame: 0 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -4217,7 +4200,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_TROO,
+                    sprite: SpriteNum::SPR_TROO,
                     frame: 0 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -4226,7 +4209,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_TROO,
+                    sprite: SpriteNum::SPR_TROO,
                     frame: 1 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -4235,7 +4218,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_TROO,
+                    sprite: SpriteNum::SPR_TROO,
                     frame: 1 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -4244,7 +4227,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_TROO,
+                    sprite: SpriteNum::SPR_TROO,
                     frame: 2 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -4253,7 +4236,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_TROO,
+                    sprite: SpriteNum::SPR_TROO,
                     frame: 2 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -4262,7 +4245,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_TROO,
+                    sprite: SpriteNum::SPR_TROO,
                     frame: 3 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -4271,7 +4254,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_TROO,
+                    sprite: SpriteNum::SPR_TROO,
                     frame: 3 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -4280,7 +4263,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_TROO,
+                    sprite: SpriteNum::SPR_TROO,
                     frame: 4 as i32,
                     tics: 8 as i32,
                     action: StateAction::Mobj(A_FaceTarget),
@@ -4289,7 +4272,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_TROO,
+                    sprite: SpriteNum::SPR_TROO,
                     frame: 5 as i32,
                     tics: 8 as i32,
                     action: StateAction::Mobj(A_FaceTarget),
@@ -4298,7 +4281,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_TROO,
+                    sprite: SpriteNum::SPR_TROO,
                     frame: 6 as i32,
                     tics: 6 as i32,
                     action: StateAction::Mobj(A_TroopAttack),
@@ -4307,7 +4290,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_TROO,
+                    sprite: SpriteNum::SPR_TROO,
                     frame: 7 as i32,
                     tics: 2 as i32,
                     action: StateAction::None,
@@ -4316,7 +4299,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_TROO,
+                    sprite: SpriteNum::SPR_TROO,
                     frame: 7 as i32,
                     tics: 2 as i32,
                     action: StateAction::Mobj(A_Pain),
@@ -4325,7 +4308,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_TROO,
+                    sprite: SpriteNum::SPR_TROO,
                     frame: 8 as i32,
                     tics: 8 as i32,
                     action: StateAction::None,
@@ -4334,7 +4317,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_TROO,
+                    sprite: SpriteNum::SPR_TROO,
                     frame: 9 as i32,
                     tics: 8 as i32,
                     action: StateAction::Mobj(A_Scream),
@@ -4343,7 +4326,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_TROO,
+                    sprite: SpriteNum::SPR_TROO,
                     frame: 10 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -4352,7 +4335,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_TROO,
+                    sprite: SpriteNum::SPR_TROO,
                     frame: 11 as i32,
                     tics: 6 as i32,
                     action: StateAction::Mobj(A_Fall),
@@ -4361,7 +4344,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_TROO,
+                    sprite: SpriteNum::SPR_TROO,
                     frame: 12 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -4370,7 +4353,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_TROO,
+                    sprite: SpriteNum::SPR_TROO,
                     frame: 13 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -4379,7 +4362,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_TROO,
+                    sprite: SpriteNum::SPR_TROO,
                     frame: 14 as i32,
                     tics: 5 as i32,
                     action: StateAction::Mobj(A_XScream),
@@ -4388,7 +4371,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_TROO,
+                    sprite: SpriteNum::SPR_TROO,
                     frame: 15 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -4397,7 +4380,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_TROO,
+                    sprite: SpriteNum::SPR_TROO,
                     frame: 16 as i32,
                     tics: 5 as i32,
                     action: StateAction::Mobj(A_Fall),
@@ -4406,7 +4389,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_TROO,
+                    sprite: SpriteNum::SPR_TROO,
                     frame: 17 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -4415,7 +4398,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_TROO,
+                    sprite: SpriteNum::SPR_TROO,
                     frame: 18 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -4424,7 +4407,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_TROO,
+                    sprite: SpriteNum::SPR_TROO,
                     frame: 19 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -4433,7 +4416,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_TROO,
+                    sprite: SpriteNum::SPR_TROO,
                     frame: 20 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -4442,7 +4425,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_TROO,
+                    sprite: SpriteNum::SPR_TROO,
                     frame: 12 as i32,
                     tics: 8 as i32,
                     action: StateAction::None,
@@ -4451,7 +4434,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_TROO,
+                    sprite: SpriteNum::SPR_TROO,
                     frame: 11 as i32,
                     tics: 8 as i32,
                     action: StateAction::None,
@@ -4460,7 +4443,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_TROO,
+                    sprite: SpriteNum::SPR_TROO,
                     frame: 10 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -4469,7 +4452,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_TROO,
+                    sprite: SpriteNum::SPR_TROO,
                     frame: 9 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -4478,7 +4461,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_TROO,
+                    sprite: SpriteNum::SPR_TROO,
                     frame: 8 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -4487,7 +4470,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SARG,
+                    sprite: SpriteNum::SPR_SARG,
                     frame: 0 as i32,
                     tics: 10 as i32,
                     action: StateAction::Mobj(A_Look),
@@ -4496,7 +4479,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SARG,
+                    sprite: SpriteNum::SPR_SARG,
                     frame: 1 as i32,
                     tics: 10 as i32,
                     action: StateAction::Mobj(A_Look),
@@ -4505,7 +4488,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SARG,
+                    sprite: SpriteNum::SPR_SARG,
                     frame: 0 as i32,
                     tics: 2 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -4514,7 +4497,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SARG,
+                    sprite: SpriteNum::SPR_SARG,
                     frame: 0 as i32,
                     tics: 2 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -4523,7 +4506,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SARG,
+                    sprite: SpriteNum::SPR_SARG,
                     frame: 1 as i32,
                     tics: 2 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -4532,7 +4515,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SARG,
+                    sprite: SpriteNum::SPR_SARG,
                     frame: 1 as i32,
                     tics: 2 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -4541,7 +4524,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SARG,
+                    sprite: SpriteNum::SPR_SARG,
                     frame: 2 as i32,
                     tics: 2 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -4550,7 +4533,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SARG,
+                    sprite: SpriteNum::SPR_SARG,
                     frame: 2 as i32,
                     tics: 2 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -4559,7 +4542,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SARG,
+                    sprite: SpriteNum::SPR_SARG,
                     frame: 3 as i32,
                     tics: 2 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -4568,7 +4551,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SARG,
+                    sprite: SpriteNum::SPR_SARG,
                     frame: 3 as i32,
                     tics: 2 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -4577,7 +4560,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SARG,
+                    sprite: SpriteNum::SPR_SARG,
                     frame: 4 as i32,
                     tics: 8 as i32,
                     action: StateAction::Mobj(A_FaceTarget),
@@ -4586,7 +4569,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SARG,
+                    sprite: SpriteNum::SPR_SARG,
                     frame: 5 as i32,
                     tics: 8 as i32,
                     action: StateAction::Mobj(A_FaceTarget),
@@ -4595,7 +4578,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SARG,
+                    sprite: SpriteNum::SPR_SARG,
                     frame: 6 as i32,
                     tics: 8 as i32,
                     action: StateAction::Mobj(A_SargAttack),
@@ -4604,7 +4587,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SARG,
+                    sprite: SpriteNum::SPR_SARG,
                     frame: 7 as i32,
                     tics: 2 as i32,
                     action: StateAction::None,
@@ -4613,7 +4596,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SARG,
+                    sprite: SpriteNum::SPR_SARG,
                     frame: 7 as i32,
                     tics: 2 as i32,
                     action: StateAction::Mobj(A_Pain),
@@ -4622,7 +4605,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SARG,
+                    sprite: SpriteNum::SPR_SARG,
                     frame: 8 as i32,
                     tics: 8 as i32,
                     action: StateAction::None,
@@ -4631,7 +4614,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SARG,
+                    sprite: SpriteNum::SPR_SARG,
                     frame: 9 as i32,
                     tics: 8 as i32,
                     action: StateAction::Mobj(A_Scream),
@@ -4640,7 +4623,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SARG,
+                    sprite: SpriteNum::SPR_SARG,
                     frame: 10 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -4649,7 +4632,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SARG,
+                    sprite: SpriteNum::SPR_SARG,
                     frame: 11 as i32,
                     tics: 4 as i32,
                     action: StateAction::Mobj(A_Fall),
@@ -4658,7 +4641,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SARG,
+                    sprite: SpriteNum::SPR_SARG,
                     frame: 12 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -4667,7 +4650,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SARG,
+                    sprite: SpriteNum::SPR_SARG,
                     frame: 13 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -4676,7 +4659,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SARG,
+                    sprite: SpriteNum::SPR_SARG,
                     frame: 13 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -4685,7 +4668,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SARG,
+                    sprite: SpriteNum::SPR_SARG,
                     frame: 12 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -4694,7 +4677,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SARG,
+                    sprite: SpriteNum::SPR_SARG,
                     frame: 11 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -4703,7 +4686,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SARG,
+                    sprite: SpriteNum::SPR_SARG,
                     frame: 10 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -4712,7 +4695,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SARG,
+                    sprite: SpriteNum::SPR_SARG,
                     frame: 9 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -4721,7 +4704,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SARG,
+                    sprite: SpriteNum::SPR_SARG,
                     frame: 8 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -4730,7 +4713,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_HEAD,
+                    sprite: SpriteNum::SPR_HEAD,
                     frame: 0 as i32,
                     tics: 10 as i32,
                     action: StateAction::Mobj(A_Look),
@@ -4739,7 +4722,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_HEAD,
+                    sprite: SpriteNum::SPR_HEAD,
                     frame: 0 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -4748,7 +4731,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_HEAD,
+                    sprite: SpriteNum::SPR_HEAD,
                     frame: 1 as i32,
                     tics: 5 as i32,
                     action: StateAction::Mobj(A_FaceTarget),
@@ -4757,7 +4740,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_HEAD,
+                    sprite: SpriteNum::SPR_HEAD,
                     frame: 2 as i32,
                     tics: 5 as i32,
                     action: StateAction::Mobj(A_FaceTarget),
@@ -4766,7 +4749,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_HEAD,
+                    sprite: SpriteNum::SPR_HEAD,
                     frame: 32771 as i32,
                     tics: 5 as i32,
                     action: StateAction::Mobj(A_HeadAttack),
@@ -4775,7 +4758,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_HEAD,
+                    sprite: SpriteNum::SPR_HEAD,
                     frame: 4 as i32,
                     tics: 3 as i32,
                     action: StateAction::None,
@@ -4784,7 +4767,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_HEAD,
+                    sprite: SpriteNum::SPR_HEAD,
                     frame: 4 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Pain),
@@ -4793,7 +4776,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_HEAD,
+                    sprite: SpriteNum::SPR_HEAD,
                     frame: 5 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -4802,7 +4785,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_HEAD,
+                    sprite: SpriteNum::SPR_HEAD,
                     frame: 6 as i32,
                     tics: 8 as i32,
                     action: StateAction::None,
@@ -4811,7 +4794,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_HEAD,
+                    sprite: SpriteNum::SPR_HEAD,
                     frame: 7 as i32,
                     tics: 8 as i32,
                     action: StateAction::Mobj(A_Scream),
@@ -4820,7 +4803,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_HEAD,
+                    sprite: SpriteNum::SPR_HEAD,
                     frame: 8 as i32,
                     tics: 8 as i32,
                     action: StateAction::None,
@@ -4829,7 +4812,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_HEAD,
+                    sprite: SpriteNum::SPR_HEAD,
                     frame: 9 as i32,
                     tics: 8 as i32,
                     action: StateAction::None,
@@ -4838,7 +4821,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_HEAD,
+                    sprite: SpriteNum::SPR_HEAD,
                     frame: 10 as i32,
                     tics: 8 as i32,
                     action: StateAction::Mobj(A_Fall),
@@ -4847,7 +4830,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_HEAD,
+                    sprite: SpriteNum::SPR_HEAD,
                     frame: 11 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -4856,7 +4839,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_HEAD,
+                    sprite: SpriteNum::SPR_HEAD,
                     frame: 11 as i32,
                     tics: 8 as i32,
                     action: StateAction::None,
@@ -4865,7 +4848,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_HEAD,
+                    sprite: SpriteNum::SPR_HEAD,
                     frame: 10 as i32,
                     tics: 8 as i32,
                     action: StateAction::None,
@@ -4874,7 +4857,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_HEAD,
+                    sprite: SpriteNum::SPR_HEAD,
                     frame: 9 as i32,
                     tics: 8 as i32,
                     action: StateAction::None,
@@ -4883,7 +4866,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_HEAD,
+                    sprite: SpriteNum::SPR_HEAD,
                     frame: 8 as i32,
                     tics: 8 as i32,
                     action: StateAction::None,
@@ -4892,7 +4875,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_HEAD,
+                    sprite: SpriteNum::SPR_HEAD,
                     frame: 7 as i32,
                     tics: 8 as i32,
                     action: StateAction::None,
@@ -4901,7 +4884,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_HEAD,
+                    sprite: SpriteNum::SPR_HEAD,
                     frame: 6 as i32,
                     tics: 8 as i32,
                     action: StateAction::None,
@@ -4910,7 +4893,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BAL7,
+                    sprite: SpriteNum::SPR_BAL7,
                     frame: 32768 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -4919,7 +4902,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BAL7,
+                    sprite: SpriteNum::SPR_BAL7,
                     frame: 32769 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -4928,7 +4911,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BAL7,
+                    sprite: SpriteNum::SPR_BAL7,
                     frame: 32770 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -4937,7 +4920,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BAL7,
+                    sprite: SpriteNum::SPR_BAL7,
                     frame: 32771 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -4946,7 +4929,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BAL7,
+                    sprite: SpriteNum::SPR_BAL7,
                     frame: 32772 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -4955,7 +4938,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BOSS,
+                    sprite: SpriteNum::SPR_BOSS,
                     frame: 0 as i32,
                     tics: 10 as i32,
                     action: StateAction::Mobj(A_Look),
@@ -4964,7 +4947,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BOSS,
+                    sprite: SpriteNum::SPR_BOSS,
                     frame: 1 as i32,
                     tics: 10 as i32,
                     action: StateAction::Mobj(A_Look),
@@ -4973,7 +4956,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BOSS,
+                    sprite: SpriteNum::SPR_BOSS,
                     frame: 0 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -4982,7 +4965,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BOSS,
+                    sprite: SpriteNum::SPR_BOSS,
                     frame: 0 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -4991,7 +4974,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BOSS,
+                    sprite: SpriteNum::SPR_BOSS,
                     frame: 1 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -5000,7 +4983,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BOSS,
+                    sprite: SpriteNum::SPR_BOSS,
                     frame: 1 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -5009,7 +4992,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BOSS,
+                    sprite: SpriteNum::SPR_BOSS,
                     frame: 2 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -5018,7 +5001,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BOSS,
+                    sprite: SpriteNum::SPR_BOSS,
                     frame: 2 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -5027,7 +5010,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BOSS,
+                    sprite: SpriteNum::SPR_BOSS,
                     frame: 3 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -5036,7 +5019,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BOSS,
+                    sprite: SpriteNum::SPR_BOSS,
                     frame: 3 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -5045,7 +5028,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BOSS,
+                    sprite: SpriteNum::SPR_BOSS,
                     frame: 4 as i32,
                     tics: 8 as i32,
                     action: StateAction::Mobj(A_FaceTarget),
@@ -5054,7 +5037,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BOSS,
+                    sprite: SpriteNum::SPR_BOSS,
                     frame: 5 as i32,
                     tics: 8 as i32,
                     action: StateAction::Mobj(A_FaceTarget),
@@ -5063,7 +5046,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BOSS,
+                    sprite: SpriteNum::SPR_BOSS,
                     frame: 6 as i32,
                     tics: 8 as i32,
                     action: StateAction::Mobj(A_BruisAttack),
@@ -5072,7 +5055,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BOSS,
+                    sprite: SpriteNum::SPR_BOSS,
                     frame: 7 as i32,
                     tics: 2 as i32,
                     action: StateAction::None,
@@ -5081,7 +5064,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BOSS,
+                    sprite: SpriteNum::SPR_BOSS,
                     frame: 7 as i32,
                     tics: 2 as i32,
                     action: StateAction::Mobj(A_Pain),
@@ -5090,7 +5073,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BOSS,
+                    sprite: SpriteNum::SPR_BOSS,
                     frame: 8 as i32,
                     tics: 8 as i32,
                     action: StateAction::None,
@@ -5099,7 +5082,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BOSS,
+                    sprite: SpriteNum::SPR_BOSS,
                     frame: 9 as i32,
                     tics: 8 as i32,
                     action: StateAction::Mobj(A_Scream),
@@ -5108,7 +5091,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BOSS,
+                    sprite: SpriteNum::SPR_BOSS,
                     frame: 10 as i32,
                     tics: 8 as i32,
                     action: StateAction::None,
@@ -5117,7 +5100,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BOSS,
+                    sprite: SpriteNum::SPR_BOSS,
                     frame: 11 as i32,
                     tics: 8 as i32,
                     action: StateAction::Mobj(A_Fall),
@@ -5126,7 +5109,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BOSS,
+                    sprite: SpriteNum::SPR_BOSS,
                     frame: 12 as i32,
                     tics: 8 as i32,
                     action: StateAction::None,
@@ -5135,7 +5118,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BOSS,
+                    sprite: SpriteNum::SPR_BOSS,
                     frame: 13 as i32,
                     tics: 8 as i32,
                     action: StateAction::None,
@@ -5144,7 +5127,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BOSS,
+                    sprite: SpriteNum::SPR_BOSS,
                     frame: 14 as i32,
                     tics: -(1 as i32),
                     action: StateAction::Mobj(A_BossDeath),
@@ -5153,7 +5136,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BOSS,
+                    sprite: SpriteNum::SPR_BOSS,
                     frame: 14 as i32,
                     tics: 8 as i32,
                     action: StateAction::None,
@@ -5162,7 +5145,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BOSS,
+                    sprite: SpriteNum::SPR_BOSS,
                     frame: 13 as i32,
                     tics: 8 as i32,
                     action: StateAction::None,
@@ -5171,7 +5154,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BOSS,
+                    sprite: SpriteNum::SPR_BOSS,
                     frame: 12 as i32,
                     tics: 8 as i32,
                     action: StateAction::None,
@@ -5180,7 +5163,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BOSS,
+                    sprite: SpriteNum::SPR_BOSS,
                     frame: 11 as i32,
                     tics: 8 as i32,
                     action: StateAction::None,
@@ -5189,7 +5172,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BOSS,
+                    sprite: SpriteNum::SPR_BOSS,
                     frame: 10 as i32,
                     tics: 8 as i32,
                     action: StateAction::None,
@@ -5198,7 +5181,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BOSS,
+                    sprite: SpriteNum::SPR_BOSS,
                     frame: 9 as i32,
                     tics: 8 as i32,
                     action: StateAction::None,
@@ -5207,7 +5190,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BOSS,
+                    sprite: SpriteNum::SPR_BOSS,
                     frame: 8 as i32,
                     tics: 8 as i32,
                     action: StateAction::None,
@@ -5216,7 +5199,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BOS2,
+                    sprite: SpriteNum::SPR_BOS2,
                     frame: 0 as i32,
                     tics: 10 as i32,
                     action: StateAction::Mobj(A_Look),
@@ -5225,7 +5208,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BOS2,
+                    sprite: SpriteNum::SPR_BOS2,
                     frame: 1 as i32,
                     tics: 10 as i32,
                     action: StateAction::Mobj(A_Look),
@@ -5234,7 +5217,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BOS2,
+                    sprite: SpriteNum::SPR_BOS2,
                     frame: 0 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -5243,7 +5226,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BOS2,
+                    sprite: SpriteNum::SPR_BOS2,
                     frame: 0 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -5252,7 +5235,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BOS2,
+                    sprite: SpriteNum::SPR_BOS2,
                     frame: 1 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -5261,7 +5244,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BOS2,
+                    sprite: SpriteNum::SPR_BOS2,
                     frame: 1 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -5270,7 +5253,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BOS2,
+                    sprite: SpriteNum::SPR_BOS2,
                     frame: 2 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -5279,7 +5262,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BOS2,
+                    sprite: SpriteNum::SPR_BOS2,
                     frame: 2 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -5288,7 +5271,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BOS2,
+                    sprite: SpriteNum::SPR_BOS2,
                     frame: 3 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -5297,7 +5280,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BOS2,
+                    sprite: SpriteNum::SPR_BOS2,
                     frame: 3 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -5306,7 +5289,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BOS2,
+                    sprite: SpriteNum::SPR_BOS2,
                     frame: 4 as i32,
                     tics: 8 as i32,
                     action: StateAction::Mobj(A_FaceTarget),
@@ -5315,7 +5298,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BOS2,
+                    sprite: SpriteNum::SPR_BOS2,
                     frame: 5 as i32,
                     tics: 8 as i32,
                     action: StateAction::Mobj(A_FaceTarget),
@@ -5324,7 +5307,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BOS2,
+                    sprite: SpriteNum::SPR_BOS2,
                     frame: 6 as i32,
                     tics: 8 as i32,
                     action: StateAction::Mobj(A_BruisAttack),
@@ -5333,7 +5316,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BOS2,
+                    sprite: SpriteNum::SPR_BOS2,
                     frame: 7 as i32,
                     tics: 2 as i32,
                     action: StateAction::None,
@@ -5342,7 +5325,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BOS2,
+                    sprite: SpriteNum::SPR_BOS2,
                     frame: 7 as i32,
                     tics: 2 as i32,
                     action: StateAction::Mobj(A_Pain),
@@ -5351,7 +5334,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BOS2,
+                    sprite: SpriteNum::SPR_BOS2,
                     frame: 8 as i32,
                     tics: 8 as i32,
                     action: StateAction::None,
@@ -5360,7 +5343,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BOS2,
+                    sprite: SpriteNum::SPR_BOS2,
                     frame: 9 as i32,
                     tics: 8 as i32,
                     action: StateAction::Mobj(A_Scream),
@@ -5369,7 +5352,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BOS2,
+                    sprite: SpriteNum::SPR_BOS2,
                     frame: 10 as i32,
                     tics: 8 as i32,
                     action: StateAction::None,
@@ -5378,7 +5361,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BOS2,
+                    sprite: SpriteNum::SPR_BOS2,
                     frame: 11 as i32,
                     tics: 8 as i32,
                     action: StateAction::Mobj(A_Fall),
@@ -5387,7 +5370,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BOS2,
+                    sprite: SpriteNum::SPR_BOS2,
                     frame: 12 as i32,
                     tics: 8 as i32,
                     action: StateAction::None,
@@ -5396,7 +5379,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BOS2,
+                    sprite: SpriteNum::SPR_BOS2,
                     frame: 13 as i32,
                     tics: 8 as i32,
                     action: StateAction::None,
@@ -5405,7 +5388,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BOS2,
+                    sprite: SpriteNum::SPR_BOS2,
                     frame: 14 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -5414,7 +5397,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BOS2,
+                    sprite: SpriteNum::SPR_BOS2,
                     frame: 14 as i32,
                     tics: 8 as i32,
                     action: StateAction::None,
@@ -5423,7 +5406,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BOS2,
+                    sprite: SpriteNum::SPR_BOS2,
                     frame: 13 as i32,
                     tics: 8 as i32,
                     action: StateAction::None,
@@ -5432,7 +5415,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BOS2,
+                    sprite: SpriteNum::SPR_BOS2,
                     frame: 12 as i32,
                     tics: 8 as i32,
                     action: StateAction::None,
@@ -5441,7 +5424,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BOS2,
+                    sprite: SpriteNum::SPR_BOS2,
                     frame: 11 as i32,
                     tics: 8 as i32,
                     action: StateAction::None,
@@ -5450,7 +5433,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BOS2,
+                    sprite: SpriteNum::SPR_BOS2,
                     frame: 10 as i32,
                     tics: 8 as i32,
                     action: StateAction::None,
@@ -5459,7 +5442,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BOS2,
+                    sprite: SpriteNum::SPR_BOS2,
                     frame: 9 as i32,
                     tics: 8 as i32,
                     action: StateAction::None,
@@ -5468,7 +5451,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BOS2,
+                    sprite: SpriteNum::SPR_BOS2,
                     frame: 8 as i32,
                     tics: 8 as i32,
                     action: StateAction::None,
@@ -5477,7 +5460,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SKUL,
+                    sprite: SpriteNum::SPR_SKUL,
                     frame: 32768 as i32,
                     tics: 10 as i32,
                     action: StateAction::Mobj(A_Look),
@@ -5486,7 +5469,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SKUL,
+                    sprite: SpriteNum::SPR_SKUL,
                     frame: 32769 as i32,
                     tics: 10 as i32,
                     action: StateAction::Mobj(A_Look),
@@ -5495,7 +5478,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SKUL,
+                    sprite: SpriteNum::SPR_SKUL,
                     frame: 32768 as i32,
                     tics: 6 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -5504,7 +5487,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SKUL,
+                    sprite: SpriteNum::SPR_SKUL,
                     frame: 32769 as i32,
                     tics: 6 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -5513,7 +5496,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SKUL,
+                    sprite: SpriteNum::SPR_SKUL,
                     frame: 32770 as i32,
                     tics: 10 as i32,
                     action: StateAction::Mobj(A_FaceTarget),
@@ -5522,7 +5505,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SKUL,
+                    sprite: SpriteNum::SPR_SKUL,
                     frame: 32771 as i32,
                     tics: 4 as i32,
                     action: StateAction::Mobj(A_SkullAttack),
@@ -5531,7 +5514,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SKUL,
+                    sprite: SpriteNum::SPR_SKUL,
                     frame: 32770 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -5540,7 +5523,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SKUL,
+                    sprite: SpriteNum::SPR_SKUL,
                     frame: 32771 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -5549,7 +5532,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SKUL,
+                    sprite: SpriteNum::SPR_SKUL,
                     frame: 32772 as i32,
                     tics: 3 as i32,
                     action: StateAction::None,
@@ -5558,7 +5541,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SKUL,
+                    sprite: SpriteNum::SPR_SKUL,
                     frame: 32772 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Pain),
@@ -5567,7 +5550,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SKUL,
+                    sprite: SpriteNum::SPR_SKUL,
                     frame: 32773 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -5576,7 +5559,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SKUL,
+                    sprite: SpriteNum::SPR_SKUL,
                     frame: 32774 as i32,
                     tics: 6 as i32,
                     action: StateAction::Mobj(A_Scream),
@@ -5585,7 +5568,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SKUL,
+                    sprite: SpriteNum::SPR_SKUL,
                     frame: 32775 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -5594,7 +5577,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SKUL,
+                    sprite: SpriteNum::SPR_SKUL,
                     frame: 32776 as i32,
                     tics: 6 as i32,
                     action: StateAction::Mobj(A_Fall),
@@ -5603,7 +5586,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SKUL,
+                    sprite: SpriteNum::SPR_SKUL,
                     frame: 9 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -5612,7 +5595,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SKUL,
+                    sprite: SpriteNum::SPR_SKUL,
                     frame: 10 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -5621,7 +5604,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SPID,
+                    sprite: SpriteNum::SPR_SPID,
                     frame: 0 as i32,
                     tics: 10 as i32,
                     action: StateAction::Mobj(A_Look),
@@ -5630,7 +5613,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SPID,
+                    sprite: SpriteNum::SPR_SPID,
                     frame: 1 as i32,
                     tics: 10 as i32,
                     action: StateAction::Mobj(A_Look),
@@ -5639,7 +5622,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SPID,
+                    sprite: SpriteNum::SPR_SPID,
                     frame: 0 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Metal),
@@ -5648,7 +5631,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SPID,
+                    sprite: SpriteNum::SPR_SPID,
                     frame: 0 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -5657,7 +5640,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SPID,
+                    sprite: SpriteNum::SPR_SPID,
                     frame: 1 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -5666,7 +5649,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SPID,
+                    sprite: SpriteNum::SPR_SPID,
                     frame: 1 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -5675,7 +5658,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SPID,
+                    sprite: SpriteNum::SPR_SPID,
                     frame: 2 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Metal),
@@ -5684,7 +5667,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SPID,
+                    sprite: SpriteNum::SPR_SPID,
                     frame: 2 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -5693,7 +5676,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SPID,
+                    sprite: SpriteNum::SPR_SPID,
                     frame: 3 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -5702,7 +5685,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SPID,
+                    sprite: SpriteNum::SPR_SPID,
                     frame: 3 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -5711,7 +5694,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SPID,
+                    sprite: SpriteNum::SPR_SPID,
                     frame: 4 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Metal),
@@ -5720,7 +5703,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SPID,
+                    sprite: SpriteNum::SPR_SPID,
                     frame: 4 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -5729,7 +5712,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SPID,
+                    sprite: SpriteNum::SPR_SPID,
                     frame: 5 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -5738,7 +5721,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SPID,
+                    sprite: SpriteNum::SPR_SPID,
                     frame: 5 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -5747,7 +5730,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SPID,
+                    sprite: SpriteNum::SPR_SPID,
                     frame: 32768 as i32,
                     tics: 20 as i32,
                     action: StateAction::Mobj(A_FaceTarget),
@@ -5756,7 +5739,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SPID,
+                    sprite: SpriteNum::SPR_SPID,
                     frame: 32774 as i32,
                     tics: 4 as i32,
                     action: StateAction::Mobj(A_SPosAttack),
@@ -5765,7 +5748,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SPID,
+                    sprite: SpriteNum::SPR_SPID,
                     frame: 32775 as i32,
                     tics: 4 as i32,
                     action: StateAction::Mobj(A_SPosAttack),
@@ -5774,7 +5757,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SPID,
+                    sprite: SpriteNum::SPR_SPID,
                     frame: 32775 as i32,
                     tics: 1 as i32,
                     action: StateAction::Mobj(A_SpidRefire),
@@ -5783,7 +5766,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SPID,
+                    sprite: SpriteNum::SPR_SPID,
                     frame: 8 as i32,
                     tics: 3 as i32,
                     action: StateAction::None,
@@ -5792,7 +5775,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SPID,
+                    sprite: SpriteNum::SPR_SPID,
                     frame: 8 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Pain),
@@ -5801,7 +5784,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SPID,
+                    sprite: SpriteNum::SPR_SPID,
                     frame: 9 as i32,
                     tics: 20 as i32,
                     action: StateAction::Mobj(A_Scream),
@@ -5810,7 +5793,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SPID,
+                    sprite: SpriteNum::SPR_SPID,
                     frame: 10 as i32,
                     tics: 10 as i32,
                     action: StateAction::Mobj(A_Fall),
@@ -5819,7 +5802,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SPID,
+                    sprite: SpriteNum::SPR_SPID,
                     frame: 11 as i32,
                     tics: 10 as i32,
                     action: StateAction::None,
@@ -5828,7 +5811,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SPID,
+                    sprite: SpriteNum::SPR_SPID,
                     frame: 12 as i32,
                     tics: 10 as i32,
                     action: StateAction::None,
@@ -5837,7 +5820,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SPID,
+                    sprite: SpriteNum::SPR_SPID,
                     frame: 13 as i32,
                     tics: 10 as i32,
                     action: StateAction::None,
@@ -5846,7 +5829,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SPID,
+                    sprite: SpriteNum::SPR_SPID,
                     frame: 14 as i32,
                     tics: 10 as i32,
                     action: StateAction::None,
@@ -5855,7 +5838,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SPID,
+                    sprite: SpriteNum::SPR_SPID,
                     frame: 15 as i32,
                     tics: 10 as i32,
                     action: StateAction::None,
@@ -5864,7 +5847,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SPID,
+                    sprite: SpriteNum::SPR_SPID,
                     frame: 16 as i32,
                     tics: 10 as i32,
                     action: StateAction::None,
@@ -5873,7 +5856,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SPID,
+                    sprite: SpriteNum::SPR_SPID,
                     frame: 17 as i32,
                     tics: 10 as i32,
                     action: StateAction::None,
@@ -5882,7 +5865,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SPID,
+                    sprite: SpriteNum::SPR_SPID,
                     frame: 18 as i32,
                     tics: 30 as i32,
                     action: StateAction::None,
@@ -5891,7 +5874,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SPID,
+                    sprite: SpriteNum::SPR_SPID,
                     frame: 18 as i32,
                     tics: -(1 as i32),
                     action: StateAction::Mobj(A_BossDeath),
@@ -5900,7 +5883,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BSPI,
+                    sprite: SpriteNum::SPR_BSPI,
                     frame: 0 as i32,
                     tics: 10 as i32,
                     action: StateAction::Mobj(A_Look),
@@ -5909,7 +5892,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BSPI,
+                    sprite: SpriteNum::SPR_BSPI,
                     frame: 1 as i32,
                     tics: 10 as i32,
                     action: StateAction::Mobj(A_Look),
@@ -5918,7 +5901,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BSPI,
+                    sprite: SpriteNum::SPR_BSPI,
                     frame: 0 as i32,
                     tics: 20 as i32,
                     action: StateAction::None,
@@ -5927,7 +5910,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BSPI,
+                    sprite: SpriteNum::SPR_BSPI,
                     frame: 0 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_BabyMetal),
@@ -5936,7 +5919,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BSPI,
+                    sprite: SpriteNum::SPR_BSPI,
                     frame: 0 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -5945,7 +5928,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BSPI,
+                    sprite: SpriteNum::SPR_BSPI,
                     frame: 1 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -5954,7 +5937,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BSPI,
+                    sprite: SpriteNum::SPR_BSPI,
                     frame: 1 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -5963,7 +5946,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BSPI,
+                    sprite: SpriteNum::SPR_BSPI,
                     frame: 2 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -5972,7 +5955,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BSPI,
+                    sprite: SpriteNum::SPR_BSPI,
                     frame: 2 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -5981,7 +5964,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BSPI,
+                    sprite: SpriteNum::SPR_BSPI,
                     frame: 3 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_BabyMetal),
@@ -5990,7 +5973,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BSPI,
+                    sprite: SpriteNum::SPR_BSPI,
                     frame: 3 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -5999,7 +5982,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BSPI,
+                    sprite: SpriteNum::SPR_BSPI,
                     frame: 4 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -6008,7 +5991,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BSPI,
+                    sprite: SpriteNum::SPR_BSPI,
                     frame: 4 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -6017,7 +6000,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BSPI,
+                    sprite: SpriteNum::SPR_BSPI,
                     frame: 5 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -6026,7 +6009,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BSPI,
+                    sprite: SpriteNum::SPR_BSPI,
                     frame: 5 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -6035,7 +6018,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BSPI,
+                    sprite: SpriteNum::SPR_BSPI,
                     frame: 32768 as i32,
                     tics: 20 as i32,
                     action: StateAction::Mobj(A_FaceTarget),
@@ -6044,7 +6027,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BSPI,
+                    sprite: SpriteNum::SPR_BSPI,
                     frame: 32774 as i32,
                     tics: 4 as i32,
                     action: StateAction::Mobj(A_BspiAttack),
@@ -6053,7 +6036,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BSPI,
+                    sprite: SpriteNum::SPR_BSPI,
                     frame: 32775 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -6062,7 +6045,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BSPI,
+                    sprite: SpriteNum::SPR_BSPI,
                     frame: 32775 as i32,
                     tics: 1 as i32,
                     action: StateAction::Mobj(A_SpidRefire),
@@ -6071,7 +6054,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BSPI,
+                    sprite: SpriteNum::SPR_BSPI,
                     frame: 8 as i32,
                     tics: 3 as i32,
                     action: StateAction::None,
@@ -6080,7 +6063,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BSPI,
+                    sprite: SpriteNum::SPR_BSPI,
                     frame: 8 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Pain),
@@ -6089,7 +6072,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BSPI,
+                    sprite: SpriteNum::SPR_BSPI,
                     frame: 9 as i32,
                     tics: 20 as i32,
                     action: StateAction::Mobj(A_Scream),
@@ -6098,7 +6081,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BSPI,
+                    sprite: SpriteNum::SPR_BSPI,
                     frame: 10 as i32,
                     tics: 7 as i32,
                     action: StateAction::Mobj(A_Fall),
@@ -6107,7 +6090,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BSPI,
+                    sprite: SpriteNum::SPR_BSPI,
                     frame: 11 as i32,
                     tics: 7 as i32,
                     action: StateAction::None,
@@ -6116,7 +6099,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BSPI,
+                    sprite: SpriteNum::SPR_BSPI,
                     frame: 12 as i32,
                     tics: 7 as i32,
                     action: StateAction::None,
@@ -6125,7 +6108,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BSPI,
+                    sprite: SpriteNum::SPR_BSPI,
                     frame: 13 as i32,
                     tics: 7 as i32,
                     action: StateAction::None,
@@ -6134,7 +6117,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BSPI,
+                    sprite: SpriteNum::SPR_BSPI,
                     frame: 14 as i32,
                     tics: 7 as i32,
                     action: StateAction::None,
@@ -6143,7 +6126,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BSPI,
+                    sprite: SpriteNum::SPR_BSPI,
                     frame: 15 as i32,
                     tics: -(1 as i32),
                     action: StateAction::Mobj(A_BossDeath),
@@ -6152,7 +6135,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BSPI,
+                    sprite: SpriteNum::SPR_BSPI,
                     frame: 15 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -6161,7 +6144,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BSPI,
+                    sprite: SpriteNum::SPR_BSPI,
                     frame: 14 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -6170,7 +6153,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BSPI,
+                    sprite: SpriteNum::SPR_BSPI,
                     frame: 13 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -6179,7 +6162,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BSPI,
+                    sprite: SpriteNum::SPR_BSPI,
                     frame: 12 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -6188,7 +6171,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BSPI,
+                    sprite: SpriteNum::SPR_BSPI,
                     frame: 11 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -6197,7 +6180,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BSPI,
+                    sprite: SpriteNum::SPR_BSPI,
                     frame: 10 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -6206,7 +6189,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BSPI,
+                    sprite: SpriteNum::SPR_BSPI,
                     frame: 9 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -6215,7 +6198,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_APLS,
+                    sprite: SpriteNum::SPR_APLS,
                     frame: 32768 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -6224,7 +6207,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_APLS,
+                    sprite: SpriteNum::SPR_APLS,
                     frame: 32769 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -6233,7 +6216,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_APBX,
+                    sprite: SpriteNum::SPR_APBX,
                     frame: 32768 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -6242,7 +6225,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_APBX,
+                    sprite: SpriteNum::SPR_APBX,
                     frame: 32769 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -6251,7 +6234,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_APBX,
+                    sprite: SpriteNum::SPR_APBX,
                     frame: 32770 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -6260,7 +6243,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_APBX,
+                    sprite: SpriteNum::SPR_APBX,
                     frame: 32771 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -6269,7 +6252,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_APBX,
+                    sprite: SpriteNum::SPR_APBX,
                     frame: 32772 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -6278,7 +6261,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CYBR,
+                    sprite: SpriteNum::SPR_CYBR,
                     frame: 0 as i32,
                     tics: 10 as i32,
                     action: StateAction::Mobj(A_Look),
@@ -6287,7 +6270,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CYBR,
+                    sprite: SpriteNum::SPR_CYBR,
                     frame: 1 as i32,
                     tics: 10 as i32,
                     action: StateAction::Mobj(A_Look),
@@ -6296,7 +6279,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CYBR,
+                    sprite: SpriteNum::SPR_CYBR,
                     frame: 0 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Hoof),
@@ -6305,7 +6288,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CYBR,
+                    sprite: SpriteNum::SPR_CYBR,
                     frame: 0 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -6314,7 +6297,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CYBR,
+                    sprite: SpriteNum::SPR_CYBR,
                     frame: 1 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -6323,7 +6306,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CYBR,
+                    sprite: SpriteNum::SPR_CYBR,
                     frame: 1 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -6332,7 +6315,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CYBR,
+                    sprite: SpriteNum::SPR_CYBR,
                     frame: 2 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -6341,7 +6324,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CYBR,
+                    sprite: SpriteNum::SPR_CYBR,
                     frame: 2 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -6350,7 +6333,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CYBR,
+                    sprite: SpriteNum::SPR_CYBR,
                     frame: 3 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Metal),
@@ -6359,7 +6342,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CYBR,
+                    sprite: SpriteNum::SPR_CYBR,
                     frame: 3 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -6368,7 +6351,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CYBR,
+                    sprite: SpriteNum::SPR_CYBR,
                     frame: 4 as i32,
                     tics: 6 as i32,
                     action: StateAction::Mobj(A_FaceTarget),
@@ -6377,7 +6360,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CYBR,
+                    sprite: SpriteNum::SPR_CYBR,
                     frame: 5 as i32,
                     tics: 12 as i32,
                     action: StateAction::Mobj(A_CyberAttack),
@@ -6386,7 +6369,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CYBR,
+                    sprite: SpriteNum::SPR_CYBR,
                     frame: 4 as i32,
                     tics: 12 as i32,
                     action: StateAction::Mobj(A_FaceTarget),
@@ -6395,7 +6378,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CYBR,
+                    sprite: SpriteNum::SPR_CYBR,
                     frame: 5 as i32,
                     tics: 12 as i32,
                     action: StateAction::Mobj(A_CyberAttack),
@@ -6404,7 +6387,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CYBR,
+                    sprite: SpriteNum::SPR_CYBR,
                     frame: 4 as i32,
                     tics: 12 as i32,
                     action: StateAction::Mobj(A_FaceTarget),
@@ -6413,7 +6396,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CYBR,
+                    sprite: SpriteNum::SPR_CYBR,
                     frame: 5 as i32,
                     tics: 12 as i32,
                     action: StateAction::Mobj(A_CyberAttack),
@@ -6422,7 +6405,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CYBR,
+                    sprite: SpriteNum::SPR_CYBR,
                     frame: 6 as i32,
                     tics: 10 as i32,
                     action: StateAction::Mobj(A_Pain),
@@ -6431,7 +6414,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CYBR,
+                    sprite: SpriteNum::SPR_CYBR,
                     frame: 7 as i32,
                     tics: 10 as i32,
                     action: StateAction::None,
@@ -6440,7 +6423,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CYBR,
+                    sprite: SpriteNum::SPR_CYBR,
                     frame: 8 as i32,
                     tics: 10 as i32,
                     action: StateAction::Mobj(A_Scream),
@@ -6449,7 +6432,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CYBR,
+                    sprite: SpriteNum::SPR_CYBR,
                     frame: 9 as i32,
                     tics: 10 as i32,
                     action: StateAction::None,
@@ -6458,7 +6441,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CYBR,
+                    sprite: SpriteNum::SPR_CYBR,
                     frame: 10 as i32,
                     tics: 10 as i32,
                     action: StateAction::None,
@@ -6467,7 +6450,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CYBR,
+                    sprite: SpriteNum::SPR_CYBR,
                     frame: 11 as i32,
                     tics: 10 as i32,
                     action: StateAction::None,
@@ -6476,7 +6459,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CYBR,
+                    sprite: SpriteNum::SPR_CYBR,
                     frame: 12 as i32,
                     tics: 10 as i32,
                     action: StateAction::Mobj(A_Fall),
@@ -6485,7 +6468,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CYBR,
+                    sprite: SpriteNum::SPR_CYBR,
                     frame: 13 as i32,
                     tics: 10 as i32,
                     action: StateAction::None,
@@ -6494,7 +6477,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CYBR,
+                    sprite: SpriteNum::SPR_CYBR,
                     frame: 14 as i32,
                     tics: 10 as i32,
                     action: StateAction::None,
@@ -6503,7 +6486,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CYBR,
+                    sprite: SpriteNum::SPR_CYBR,
                     frame: 15 as i32,
                     tics: 30 as i32,
                     action: StateAction::None,
@@ -6512,7 +6495,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CYBR,
+                    sprite: SpriteNum::SPR_CYBR,
                     frame: 15 as i32,
                     tics: -(1 as i32),
                     action: StateAction::Mobj(A_BossDeath),
@@ -6521,7 +6504,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PAIN,
+                    sprite: SpriteNum::SPR_PAIN,
                     frame: 0 as i32,
                     tics: 10 as i32,
                     action: StateAction::Mobj(A_Look),
@@ -6530,7 +6513,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PAIN,
+                    sprite: SpriteNum::SPR_PAIN,
                     frame: 0 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -6539,7 +6522,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PAIN,
+                    sprite: SpriteNum::SPR_PAIN,
                     frame: 0 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -6548,7 +6531,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PAIN,
+                    sprite: SpriteNum::SPR_PAIN,
                     frame: 1 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -6557,7 +6540,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PAIN,
+                    sprite: SpriteNum::SPR_PAIN,
                     frame: 1 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -6566,7 +6549,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PAIN,
+                    sprite: SpriteNum::SPR_PAIN,
                     frame: 2 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -6575,7 +6558,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PAIN,
+                    sprite: SpriteNum::SPR_PAIN,
                     frame: 2 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -6584,7 +6567,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PAIN,
+                    sprite: SpriteNum::SPR_PAIN,
                     frame: 3 as i32,
                     tics: 5 as i32,
                     action: StateAction::Mobj(A_FaceTarget),
@@ -6593,7 +6576,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PAIN,
+                    sprite: SpriteNum::SPR_PAIN,
                     frame: 4 as i32,
                     tics: 5 as i32,
                     action: StateAction::Mobj(A_FaceTarget),
@@ -6602,7 +6585,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PAIN,
+                    sprite: SpriteNum::SPR_PAIN,
                     frame: 32773 as i32,
                     tics: 5 as i32,
                     action: StateAction::Mobj(A_FaceTarget),
@@ -6611,7 +6594,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PAIN,
+                    sprite: SpriteNum::SPR_PAIN,
                     frame: 32773 as i32,
                     tics: 0 as i32,
                     action: StateAction::Mobj(A_PainAttack),
@@ -6620,7 +6603,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PAIN,
+                    sprite: SpriteNum::SPR_PAIN,
                     frame: 6 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -6629,7 +6612,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PAIN,
+                    sprite: SpriteNum::SPR_PAIN,
                     frame: 6 as i32,
                     tics: 6 as i32,
                     action: StateAction::Mobj(A_Pain),
@@ -6638,7 +6621,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PAIN,
+                    sprite: SpriteNum::SPR_PAIN,
                     frame: 32775 as i32,
                     tics: 8 as i32,
                     action: StateAction::None,
@@ -6647,7 +6630,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PAIN,
+                    sprite: SpriteNum::SPR_PAIN,
                     frame: 32776 as i32,
                     tics: 8 as i32,
                     action: StateAction::Mobj(A_Scream),
@@ -6656,7 +6639,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PAIN,
+                    sprite: SpriteNum::SPR_PAIN,
                     frame: 32777 as i32,
                     tics: 8 as i32,
                     action: StateAction::None,
@@ -6665,7 +6648,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PAIN,
+                    sprite: SpriteNum::SPR_PAIN,
                     frame: 32778 as i32,
                     tics: 8 as i32,
                     action: StateAction::None,
@@ -6674,7 +6657,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PAIN,
+                    sprite: SpriteNum::SPR_PAIN,
                     frame: 32779 as i32,
                     tics: 8 as i32,
                     action: StateAction::Mobj(A_PainDie),
@@ -6683,7 +6666,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PAIN,
+                    sprite: SpriteNum::SPR_PAIN,
                     frame: 32780 as i32,
                     tics: 8 as i32,
                     action: StateAction::None,
@@ -6692,7 +6675,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PAIN,
+                    sprite: SpriteNum::SPR_PAIN,
                     frame: 12 as i32,
                     tics: 8 as i32,
                     action: StateAction::None,
@@ -6701,7 +6684,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PAIN,
+                    sprite: SpriteNum::SPR_PAIN,
                     frame: 11 as i32,
                     tics: 8 as i32,
                     action: StateAction::None,
@@ -6710,7 +6693,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PAIN,
+                    sprite: SpriteNum::SPR_PAIN,
                     frame: 10 as i32,
                     tics: 8 as i32,
                     action: StateAction::None,
@@ -6719,7 +6702,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PAIN,
+                    sprite: SpriteNum::SPR_PAIN,
                     frame: 9 as i32,
                     tics: 8 as i32,
                     action: StateAction::None,
@@ -6728,7 +6711,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PAIN,
+                    sprite: SpriteNum::SPR_PAIN,
                     frame: 8 as i32,
                     tics: 8 as i32,
                     action: StateAction::None,
@@ -6737,7 +6720,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PAIN,
+                    sprite: SpriteNum::SPR_PAIN,
                     frame: 7 as i32,
                     tics: 8 as i32,
                     action: StateAction::None,
@@ -6746,7 +6729,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SSWV,
+                    sprite: SpriteNum::SPR_SSWV,
                     frame: 0 as i32,
                     tics: 10 as i32,
                     action: StateAction::Mobj(A_Look),
@@ -6755,7 +6738,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SSWV,
+                    sprite: SpriteNum::SPR_SSWV,
                     frame: 1 as i32,
                     tics: 10 as i32,
                     action: StateAction::Mobj(A_Look),
@@ -6764,7 +6747,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SSWV,
+                    sprite: SpriteNum::SPR_SSWV,
                     frame: 0 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -6773,7 +6756,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SSWV,
+                    sprite: SpriteNum::SPR_SSWV,
                     frame: 0 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -6782,7 +6765,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SSWV,
+                    sprite: SpriteNum::SPR_SSWV,
                     frame: 1 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -6791,7 +6774,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SSWV,
+                    sprite: SpriteNum::SPR_SSWV,
                     frame: 1 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -6800,7 +6783,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SSWV,
+                    sprite: SpriteNum::SPR_SSWV,
                     frame: 2 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -6809,7 +6792,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SSWV,
+                    sprite: SpriteNum::SPR_SSWV,
                     frame: 2 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -6818,7 +6801,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SSWV,
+                    sprite: SpriteNum::SPR_SSWV,
                     frame: 3 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -6827,7 +6810,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SSWV,
+                    sprite: SpriteNum::SPR_SSWV,
                     frame: 3 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Chase),
@@ -6836,7 +6819,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SSWV,
+                    sprite: SpriteNum::SPR_SSWV,
                     frame: 4 as i32,
                     tics: 10 as i32,
                     action: StateAction::Mobj(A_FaceTarget),
@@ -6845,7 +6828,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SSWV,
+                    sprite: SpriteNum::SPR_SSWV,
                     frame: 5 as i32,
                     tics: 10 as i32,
                     action: StateAction::Mobj(A_FaceTarget),
@@ -6854,7 +6837,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SSWV,
+                    sprite: SpriteNum::SPR_SSWV,
                     frame: 32774 as i32,
                     tics: 4 as i32,
                     action: StateAction::Mobj(A_CPosAttack),
@@ -6863,7 +6846,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SSWV,
+                    sprite: SpriteNum::SPR_SSWV,
                     frame: 5 as i32,
                     tics: 6 as i32,
                     action: StateAction::Mobj(A_FaceTarget),
@@ -6872,7 +6855,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SSWV,
+                    sprite: SpriteNum::SPR_SSWV,
                     frame: 32774 as i32,
                     tics: 4 as i32,
                     action: StateAction::Mobj(A_CPosAttack),
@@ -6881,7 +6864,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SSWV,
+                    sprite: SpriteNum::SPR_SSWV,
                     frame: 5 as i32,
                     tics: 1 as i32,
                     action: StateAction::Mobj(A_CPosRefire),
@@ -6890,7 +6873,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SSWV,
+                    sprite: SpriteNum::SPR_SSWV,
                     frame: 7 as i32,
                     tics: 3 as i32,
                     action: StateAction::None,
@@ -6899,7 +6882,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SSWV,
+                    sprite: SpriteNum::SPR_SSWV,
                     frame: 7 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_Pain),
@@ -6908,7 +6891,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SSWV,
+                    sprite: SpriteNum::SPR_SSWV,
                     frame: 8 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -6917,7 +6900,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SSWV,
+                    sprite: SpriteNum::SPR_SSWV,
                     frame: 9 as i32,
                     tics: 5 as i32,
                     action: StateAction::Mobj(A_Scream),
@@ -6926,7 +6909,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SSWV,
+                    sprite: SpriteNum::SPR_SSWV,
                     frame: 10 as i32,
                     tics: 5 as i32,
                     action: StateAction::Mobj(A_Fall),
@@ -6935,7 +6918,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SSWV,
+                    sprite: SpriteNum::SPR_SSWV,
                     frame: 11 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -6944,7 +6927,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SSWV,
+                    sprite: SpriteNum::SPR_SSWV,
                     frame: 12 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -6953,7 +6936,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SSWV,
+                    sprite: SpriteNum::SPR_SSWV,
                     frame: 13 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -6962,7 +6945,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SSWV,
+                    sprite: SpriteNum::SPR_SSWV,
                     frame: 14 as i32,
                     tics: 5 as i32,
                     action: StateAction::Mobj(A_XScream),
@@ -6971,7 +6954,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SSWV,
+                    sprite: SpriteNum::SPR_SSWV,
                     frame: 15 as i32,
                     tics: 5 as i32,
                     action: StateAction::Mobj(A_Fall),
@@ -6980,7 +6963,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SSWV,
+                    sprite: SpriteNum::SPR_SSWV,
                     frame: 16 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -6989,7 +6972,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SSWV,
+                    sprite: SpriteNum::SPR_SSWV,
                     frame: 17 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -6998,7 +6981,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SSWV,
+                    sprite: SpriteNum::SPR_SSWV,
                     frame: 18 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -7007,7 +6990,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SSWV,
+                    sprite: SpriteNum::SPR_SSWV,
                     frame: 19 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -7016,7 +6999,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SSWV,
+                    sprite: SpriteNum::SPR_SSWV,
                     frame: 20 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -7025,7 +7008,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SSWV,
+                    sprite: SpriteNum::SPR_SSWV,
                     frame: 21 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -7034,7 +7017,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SSWV,
+                    sprite: SpriteNum::SPR_SSWV,
                     frame: 12 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -7043,7 +7026,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SSWV,
+                    sprite: SpriteNum::SPR_SSWV,
                     frame: 11 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -7052,7 +7035,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SSWV,
+                    sprite: SpriteNum::SPR_SSWV,
                     frame: 10 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -7061,7 +7044,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SSWV,
+                    sprite: SpriteNum::SPR_SSWV,
                     frame: 9 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -7070,7 +7053,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SSWV,
+                    sprite: SpriteNum::SPR_SSWV,
                     frame: 8 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -7079,7 +7062,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_KEEN,
+                    sprite: SpriteNum::SPR_KEEN,
                     frame: 0 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -7088,7 +7071,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_KEEN,
+                    sprite: SpriteNum::SPR_KEEN,
                     frame: 0 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -7097,7 +7080,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_KEEN,
+                    sprite: SpriteNum::SPR_KEEN,
                     frame: 1 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -7106,7 +7089,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_KEEN,
+                    sprite: SpriteNum::SPR_KEEN,
                     frame: 2 as i32,
                     tics: 6 as i32,
                     action: StateAction::Mobj(A_Scream),
@@ -7115,7 +7098,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_KEEN,
+                    sprite: SpriteNum::SPR_KEEN,
                     frame: 3 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -7124,7 +7107,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_KEEN,
+                    sprite: SpriteNum::SPR_KEEN,
                     frame: 4 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -7133,7 +7116,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_KEEN,
+                    sprite: SpriteNum::SPR_KEEN,
                     frame: 5 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -7142,7 +7125,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_KEEN,
+                    sprite: SpriteNum::SPR_KEEN,
                     frame: 6 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -7151,7 +7134,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_KEEN,
+                    sprite: SpriteNum::SPR_KEEN,
                     frame: 7 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -7160,7 +7143,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_KEEN,
+                    sprite: SpriteNum::SPR_KEEN,
                     frame: 8 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -7169,7 +7152,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_KEEN,
+                    sprite: SpriteNum::SPR_KEEN,
                     frame: 9 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -7178,7 +7161,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_KEEN,
+                    sprite: SpriteNum::SPR_KEEN,
                     frame: 10 as i32,
                     tics: 6 as i32,
                     action: StateAction::Mobj(A_KeenDie),
@@ -7187,7 +7170,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_KEEN,
+                    sprite: SpriteNum::SPR_KEEN,
                     frame: 11 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -7196,7 +7179,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_KEEN,
+                    sprite: SpriteNum::SPR_KEEN,
                     frame: 12 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -7205,7 +7188,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_KEEN,
+                    sprite: SpriteNum::SPR_KEEN,
                     frame: 12 as i32,
                     tics: 8 as i32,
                     action: StateAction::Mobj(A_Pain),
@@ -7214,7 +7197,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BBRN,
+                    sprite: SpriteNum::SPR_BBRN,
                     frame: 0 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -7223,7 +7206,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BBRN,
+                    sprite: SpriteNum::SPR_BBRN,
                     frame: 1 as i32,
                     tics: 36 as i32,
                     action: StateAction::Mobj(A_BrainPain),
@@ -7232,7 +7215,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BBRN,
+                    sprite: SpriteNum::SPR_BBRN,
                     frame: 0 as i32,
                     tics: 100 as i32,
                     action: StateAction::Mobj(A_BrainScream),
@@ -7241,7 +7224,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BBRN,
+                    sprite: SpriteNum::SPR_BBRN,
                     frame: 0 as i32,
                     tics: 10 as i32,
                     action: StateAction::None,
@@ -7250,7 +7233,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BBRN,
+                    sprite: SpriteNum::SPR_BBRN,
                     frame: 0 as i32,
                     tics: 10 as i32,
                     action: StateAction::None,
@@ -7259,7 +7242,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BBRN,
+                    sprite: SpriteNum::SPR_BBRN,
                     frame: 0 as i32,
                     tics: -(1 as i32),
                     action: StateAction::Mobj(A_BrainDie),
@@ -7268,7 +7251,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SSWV,
+                    sprite: SpriteNum::SPR_SSWV,
                     frame: 0 as i32,
                     tics: 10 as i32,
                     action: StateAction::Mobj(A_Look),
@@ -7277,7 +7260,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SSWV,
+                    sprite: SpriteNum::SPR_SSWV,
                     frame: 0 as i32,
                     tics: 181 as i32,
                     action: StateAction::Mobj(A_BrainAwake),
@@ -7286,7 +7269,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SSWV,
+                    sprite: SpriteNum::SPR_SSWV,
                     frame: 0 as i32,
                     tics: 150 as i32,
                     action: StateAction::Mobj(A_BrainSpit),
@@ -7295,7 +7278,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BOSF,
+                    sprite: SpriteNum::SPR_BOSF,
                     frame: 32768 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_SpawnSound),
@@ -7304,7 +7287,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BOSF,
+                    sprite: SpriteNum::SPR_BOSF,
                     frame: 32769 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_SpawnFly),
@@ -7313,7 +7296,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BOSF,
+                    sprite: SpriteNum::SPR_BOSF,
                     frame: 32770 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_SpawnFly),
@@ -7322,7 +7305,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BOSF,
+                    sprite: SpriteNum::SPR_BOSF,
                     frame: 32771 as i32,
                     tics: 3 as i32,
                     action: StateAction::Mobj(A_SpawnFly),
@@ -7331,7 +7314,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FIRE,
+                    sprite: SpriteNum::SPR_FIRE,
                     frame: 32768 as i32,
                     tics: 4 as i32,
                     action: StateAction::Mobj(A_Fire),
@@ -7340,7 +7323,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FIRE,
+                    sprite: SpriteNum::SPR_FIRE,
                     frame: 32769 as i32,
                     tics: 4 as i32,
                     action: StateAction::Mobj(A_Fire),
@@ -7349,7 +7332,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FIRE,
+                    sprite: SpriteNum::SPR_FIRE,
                     frame: 32770 as i32,
                     tics: 4 as i32,
                     action: StateAction::Mobj(A_Fire),
@@ -7358,7 +7341,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FIRE,
+                    sprite: SpriteNum::SPR_FIRE,
                     frame: 32771 as i32,
                     tics: 4 as i32,
                     action: StateAction::Mobj(A_Fire),
@@ -7367,7 +7350,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FIRE,
+                    sprite: SpriteNum::SPR_FIRE,
                     frame: 32772 as i32,
                     tics: 4 as i32,
                     action: StateAction::Mobj(A_Fire),
@@ -7376,7 +7359,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FIRE,
+                    sprite: SpriteNum::SPR_FIRE,
                     frame: 32773 as i32,
                     tics: 4 as i32,
                     action: StateAction::Mobj(A_Fire),
@@ -7385,7 +7368,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FIRE,
+                    sprite: SpriteNum::SPR_FIRE,
                     frame: 32774 as i32,
                     tics: 4 as i32,
                     action: StateAction::Mobj(A_Fire),
@@ -7394,7 +7377,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FIRE,
+                    sprite: SpriteNum::SPR_FIRE,
                     frame: 32775 as i32,
                     tics: 4 as i32,
                     action: StateAction::Mobj(A_Fire),
@@ -7403,7 +7386,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_MISL,
+                    sprite: SpriteNum::SPR_MISL,
                     frame: 32769 as i32,
                     tics: 10 as i32,
                     action: StateAction::None,
@@ -7412,7 +7395,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_MISL,
+                    sprite: SpriteNum::SPR_MISL,
                     frame: 32770 as i32,
                     tics: 10 as i32,
                     action: StateAction::None,
@@ -7421,7 +7404,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_MISL,
+                    sprite: SpriteNum::SPR_MISL,
                     frame: 32771 as i32,
                     tics: 10 as i32,
                     action: StateAction::Mobj(A_BrainExplode),
@@ -7430,7 +7413,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_ARM1,
+                    sprite: SpriteNum::SPR_ARM1,
                     frame: 0 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -7439,7 +7422,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_ARM1,
+                    sprite: SpriteNum::SPR_ARM1,
                     frame: 32769 as i32,
                     tics: 7 as i32,
                     action: StateAction::None,
@@ -7448,7 +7431,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_ARM2,
+                    sprite: SpriteNum::SPR_ARM2,
                     frame: 0 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -7457,7 +7440,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_ARM2,
+                    sprite: SpriteNum::SPR_ARM2,
                     frame: 32769 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -7466,7 +7449,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BAR1,
+                    sprite: SpriteNum::SPR_BAR1,
                     frame: 0 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -7475,7 +7458,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BAR1,
+                    sprite: SpriteNum::SPR_BAR1,
                     frame: 1 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -7484,7 +7467,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BEXP,
+                    sprite: SpriteNum::SPR_BEXP,
                     frame: 32768 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -7493,7 +7476,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BEXP,
+                    sprite: SpriteNum::SPR_BEXP,
                     frame: 32769 as i32,
                     tics: 5 as i32,
                     action: StateAction::Mobj(A_Scream),
@@ -7502,7 +7485,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BEXP,
+                    sprite: SpriteNum::SPR_BEXP,
                     frame: 32770 as i32,
                     tics: 5 as i32,
                     action: StateAction::None,
@@ -7511,7 +7494,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BEXP,
+                    sprite: SpriteNum::SPR_BEXP,
                     frame: 32771 as i32,
                     tics: 10 as i32,
                     action: StateAction::Mobj(A_Explode),
@@ -7520,7 +7503,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BEXP,
+                    sprite: SpriteNum::SPR_BEXP,
                     frame: 32772 as i32,
                     tics: 10 as i32,
                     action: StateAction::None,
@@ -7529,7 +7512,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FCAN,
+                    sprite: SpriteNum::SPR_FCAN,
                     frame: 32768 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -7538,7 +7521,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FCAN,
+                    sprite: SpriteNum::SPR_FCAN,
                     frame: 32769 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -7547,7 +7530,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FCAN,
+                    sprite: SpriteNum::SPR_FCAN,
                     frame: 32770 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -7556,7 +7539,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BON1,
+                    sprite: SpriteNum::SPR_BON1,
                     frame: 0 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -7565,7 +7548,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BON1,
+                    sprite: SpriteNum::SPR_BON1,
                     frame: 1 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -7574,7 +7557,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BON1,
+                    sprite: SpriteNum::SPR_BON1,
                     frame: 2 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -7583,7 +7566,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BON1,
+                    sprite: SpriteNum::SPR_BON1,
                     frame: 3 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -7592,7 +7575,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BON1,
+                    sprite: SpriteNum::SPR_BON1,
                     frame: 2 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -7601,7 +7584,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BON1,
+                    sprite: SpriteNum::SPR_BON1,
                     frame: 1 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -7610,7 +7593,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BON2,
+                    sprite: SpriteNum::SPR_BON2,
                     frame: 0 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -7619,7 +7602,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BON2,
+                    sprite: SpriteNum::SPR_BON2,
                     frame: 1 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -7628,7 +7611,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BON2,
+                    sprite: SpriteNum::SPR_BON2,
                     frame: 2 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -7637,7 +7620,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BON2,
+                    sprite: SpriteNum::SPR_BON2,
                     frame: 3 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -7646,7 +7629,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BON2,
+                    sprite: SpriteNum::SPR_BON2,
                     frame: 2 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -7655,7 +7638,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BON2,
+                    sprite: SpriteNum::SPR_BON2,
                     frame: 1 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -7664,7 +7647,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BKEY,
+                    sprite: SpriteNum::SPR_BKEY,
                     frame: 0 as i32,
                     tics: 10 as i32,
                     action: StateAction::None,
@@ -7673,7 +7656,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BKEY,
+                    sprite: SpriteNum::SPR_BKEY,
                     frame: 32769 as i32,
                     tics: 10 as i32,
                     action: StateAction::None,
@@ -7682,7 +7665,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_RKEY,
+                    sprite: SpriteNum::SPR_RKEY,
                     frame: 0 as i32,
                     tics: 10 as i32,
                     action: StateAction::None,
@@ -7691,7 +7674,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_RKEY,
+                    sprite: SpriteNum::SPR_RKEY,
                     frame: 32769 as i32,
                     tics: 10 as i32,
                     action: StateAction::None,
@@ -7700,7 +7683,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_YKEY,
+                    sprite: SpriteNum::SPR_YKEY,
                     frame: 0 as i32,
                     tics: 10 as i32,
                     action: StateAction::None,
@@ -7709,7 +7692,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_YKEY,
+                    sprite: SpriteNum::SPR_YKEY,
                     frame: 32769 as i32,
                     tics: 10 as i32,
                     action: StateAction::None,
@@ -7718,7 +7701,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BSKU,
+                    sprite: SpriteNum::SPR_BSKU,
                     frame: 0 as i32,
                     tics: 10 as i32,
                     action: StateAction::None,
@@ -7727,7 +7710,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BSKU,
+                    sprite: SpriteNum::SPR_BSKU,
                     frame: 32769 as i32,
                     tics: 10 as i32,
                     action: StateAction::None,
@@ -7736,7 +7719,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_RSKU,
+                    sprite: SpriteNum::SPR_RSKU,
                     frame: 0 as i32,
                     tics: 10 as i32,
                     action: StateAction::None,
@@ -7745,7 +7728,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_RSKU,
+                    sprite: SpriteNum::SPR_RSKU,
                     frame: 32769 as i32,
                     tics: 10 as i32,
                     action: StateAction::None,
@@ -7754,7 +7737,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_YSKU,
+                    sprite: SpriteNum::SPR_YSKU,
                     frame: 0 as i32,
                     tics: 10 as i32,
                     action: StateAction::None,
@@ -7763,7 +7746,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_YSKU,
+                    sprite: SpriteNum::SPR_YSKU,
                     frame: 32769 as i32,
                     tics: 10 as i32,
                     action: StateAction::None,
@@ -7772,7 +7755,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_STIM,
+                    sprite: SpriteNum::SPR_STIM,
                     frame: 0 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -7781,7 +7764,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_MEDI,
+                    sprite: SpriteNum::SPR_MEDI,
                     frame: 0 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -7790,7 +7773,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SOUL,
+                    sprite: SpriteNum::SPR_SOUL,
                     frame: 32768 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -7799,7 +7782,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SOUL,
+                    sprite: SpriteNum::SPR_SOUL,
                     frame: 32769 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -7808,7 +7791,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SOUL,
+                    sprite: SpriteNum::SPR_SOUL,
                     frame: 32770 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -7817,7 +7800,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SOUL,
+                    sprite: SpriteNum::SPR_SOUL,
                     frame: 32771 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -7826,7 +7809,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SOUL,
+                    sprite: SpriteNum::SPR_SOUL,
                     frame: 32770 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -7835,7 +7818,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SOUL,
+                    sprite: SpriteNum::SPR_SOUL,
                     frame: 32769 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -7844,7 +7827,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PINV,
+                    sprite: SpriteNum::SPR_PINV,
                     frame: 32768 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -7853,7 +7836,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PINV,
+                    sprite: SpriteNum::SPR_PINV,
                     frame: 32769 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -7862,7 +7845,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PINV,
+                    sprite: SpriteNum::SPR_PINV,
                     frame: 32770 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -7871,7 +7854,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PINV,
+                    sprite: SpriteNum::SPR_PINV,
                     frame: 32771 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -7880,7 +7863,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PSTR,
+                    sprite: SpriteNum::SPR_PSTR,
                     frame: 32768 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -7889,7 +7872,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PINS,
+                    sprite: SpriteNum::SPR_PINS,
                     frame: 32768 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -7898,7 +7881,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PINS,
+                    sprite: SpriteNum::SPR_PINS,
                     frame: 32769 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -7907,7 +7890,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PINS,
+                    sprite: SpriteNum::SPR_PINS,
                     frame: 32770 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -7916,7 +7899,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PINS,
+                    sprite: SpriteNum::SPR_PINS,
                     frame: 32771 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -7925,7 +7908,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_MEGA,
+                    sprite: SpriteNum::SPR_MEGA,
                     frame: 32768 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -7934,7 +7917,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_MEGA,
+                    sprite: SpriteNum::SPR_MEGA,
                     frame: 32769 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -7943,7 +7926,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_MEGA,
+                    sprite: SpriteNum::SPR_MEGA,
                     frame: 32770 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -7952,7 +7935,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_MEGA,
+                    sprite: SpriteNum::SPR_MEGA,
                     frame: 32771 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -7961,7 +7944,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SUIT,
+                    sprite: SpriteNum::SPR_SUIT,
                     frame: 32768 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -7970,7 +7953,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PMAP,
+                    sprite: SpriteNum::SPR_PMAP,
                     frame: 32768 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -7979,7 +7962,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PMAP,
+                    sprite: SpriteNum::SPR_PMAP,
                     frame: 32769 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -7988,7 +7971,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PMAP,
+                    sprite: SpriteNum::SPR_PMAP,
                     frame: 32770 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -7997,7 +7980,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PMAP,
+                    sprite: SpriteNum::SPR_PMAP,
                     frame: 32771 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -8006,7 +7989,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PMAP,
+                    sprite: SpriteNum::SPR_PMAP,
                     frame: 32770 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -8015,7 +7998,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PMAP,
+                    sprite: SpriteNum::SPR_PMAP,
                     frame: 32769 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -8024,7 +8007,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PVIS,
+                    sprite: SpriteNum::SPR_PVIS,
                     frame: 32768 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -8033,7 +8016,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PVIS,
+                    sprite: SpriteNum::SPR_PVIS,
                     frame: 1 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -8042,7 +8025,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CLIP,
+                    sprite: SpriteNum::SPR_CLIP,
                     frame: 0 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -8051,7 +8034,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_AMMO,
+                    sprite: SpriteNum::SPR_AMMO,
                     frame: 0 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -8060,7 +8043,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_ROCK,
+                    sprite: SpriteNum::SPR_ROCK,
                     frame: 0 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -8069,7 +8052,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BROK,
+                    sprite: SpriteNum::SPR_BROK,
                     frame: 0 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -8078,7 +8061,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CELL,
+                    sprite: SpriteNum::SPR_CELL,
                     frame: 0 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -8087,7 +8070,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CELP,
+                    sprite: SpriteNum::SPR_CELP,
                     frame: 0 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -8096,7 +8079,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SHEL,
+                    sprite: SpriteNum::SPR_SHEL,
                     frame: 0 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -8105,7 +8088,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SBOX,
+                    sprite: SpriteNum::SPR_SBOX,
                     frame: 0 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -8114,7 +8097,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BPAK,
+                    sprite: SpriteNum::SPR_BPAK,
                     frame: 0 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -8123,7 +8106,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BFUG,
+                    sprite: SpriteNum::SPR_BFUG,
                     frame: 0 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -8132,7 +8115,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_MGUN,
+                    sprite: SpriteNum::SPR_MGUN,
                     frame: 0 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -8141,7 +8124,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CSAW,
+                    sprite: SpriteNum::SPR_CSAW,
                     frame: 0 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -8150,7 +8133,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_LAUN,
+                    sprite: SpriteNum::SPR_LAUN,
                     frame: 0 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -8159,7 +8142,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PLAS,
+                    sprite: SpriteNum::SPR_PLAS,
                     frame: 0 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -8168,7 +8151,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SHOT,
+                    sprite: SpriteNum::SPR_SHOT,
                     frame: 0 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -8177,7 +8160,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SGN2,
+                    sprite: SpriteNum::SPR_SGN2,
                     frame: 0 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -8186,7 +8169,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_COLU,
+                    sprite: SpriteNum::SPR_COLU,
                     frame: 32768 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -8195,7 +8178,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SMT2,
+                    sprite: SpriteNum::SPR_SMT2,
                     frame: 0 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -8204,7 +8187,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_GOR1,
+                    sprite: SpriteNum::SPR_GOR1,
                     frame: 0 as i32,
                     tics: 10 as i32,
                     action: StateAction::None,
@@ -8213,7 +8196,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_GOR1,
+                    sprite: SpriteNum::SPR_GOR1,
                     frame: 1 as i32,
                     tics: 15 as i32,
                     action: StateAction::None,
@@ -8222,7 +8205,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_GOR1,
+                    sprite: SpriteNum::SPR_GOR1,
                     frame: 2 as i32,
                     tics: 8 as i32,
                     action: StateAction::None,
@@ -8231,7 +8214,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_GOR1,
+                    sprite: SpriteNum::SPR_GOR1,
                     frame: 1 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -8240,7 +8223,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PLAY,
+                    sprite: SpriteNum::SPR_PLAY,
                     frame: 13 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -8249,7 +8232,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_PLAY,
+                    sprite: SpriteNum::SPR_PLAY,
                     frame: 18 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -8258,7 +8241,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_POL2,
+                    sprite: SpriteNum::SPR_POL2,
                     frame: 0 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -8267,7 +8250,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_POL5,
+                    sprite: SpriteNum::SPR_POL5,
                     frame: 0 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -8276,7 +8259,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_POL4,
+                    sprite: SpriteNum::SPR_POL4,
                     frame: 0 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -8285,7 +8268,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_POL3,
+                    sprite: SpriteNum::SPR_POL3,
                     frame: 32768 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -8294,7 +8277,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_POL3,
+                    sprite: SpriteNum::SPR_POL3,
                     frame: 32769 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -8303,7 +8286,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_POL1,
+                    sprite: SpriteNum::SPR_POL1,
                     frame: 0 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -8312,7 +8295,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_POL6,
+                    sprite: SpriteNum::SPR_POL6,
                     frame: 0 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -8321,7 +8304,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_POL6,
+                    sprite: SpriteNum::SPR_POL6,
                     frame: 1 as i32,
                     tics: 8 as i32,
                     action: StateAction::None,
@@ -8330,7 +8313,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_GOR2,
+                    sprite: SpriteNum::SPR_GOR2,
                     frame: 0 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -8339,7 +8322,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_GOR3,
+                    sprite: SpriteNum::SPR_GOR3,
                     frame: 0 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -8348,7 +8331,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_GOR4,
+                    sprite: SpriteNum::SPR_GOR4,
                     frame: 0 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -8357,7 +8340,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_GOR5,
+                    sprite: SpriteNum::SPR_GOR5,
                     frame: 0 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -8366,7 +8349,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SMIT,
+                    sprite: SpriteNum::SPR_SMIT,
                     frame: 0 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -8375,7 +8358,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_COL1,
+                    sprite: SpriteNum::SPR_COL1,
                     frame: 0 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -8384,7 +8367,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_COL2,
+                    sprite: SpriteNum::SPR_COL2,
                     frame: 0 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -8393,7 +8376,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_COL3,
+                    sprite: SpriteNum::SPR_COL3,
                     frame: 0 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -8402,7 +8385,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_COL4,
+                    sprite: SpriteNum::SPR_COL4,
                     frame: 0 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -8411,7 +8394,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CAND,
+                    sprite: SpriteNum::SPR_CAND,
                     frame: 32768 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -8420,7 +8403,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CBRA,
+                    sprite: SpriteNum::SPR_CBRA,
                     frame: 32768 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -8429,7 +8412,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_COL6,
+                    sprite: SpriteNum::SPR_COL6,
                     frame: 0 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -8438,7 +8421,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_TRE1,
+                    sprite: SpriteNum::SPR_TRE1,
                     frame: 0 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -8447,7 +8430,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_TRE2,
+                    sprite: SpriteNum::SPR_TRE2,
                     frame: 0 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -8456,7 +8439,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_ELEC,
+                    sprite: SpriteNum::SPR_ELEC,
                     frame: 0 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -8465,7 +8448,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CEYE,
+                    sprite: SpriteNum::SPR_CEYE,
                     frame: 32768 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -8474,7 +8457,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CEYE,
+                    sprite: SpriteNum::SPR_CEYE,
                     frame: 32769 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -8483,7 +8466,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CEYE,
+                    sprite: SpriteNum::SPR_CEYE,
                     frame: 32770 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -8492,7 +8475,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_CEYE,
+                    sprite: SpriteNum::SPR_CEYE,
                     frame: 32769 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -8501,7 +8484,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FSKU,
+                    sprite: SpriteNum::SPR_FSKU,
                     frame: 32768 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -8510,7 +8493,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FSKU,
+                    sprite: SpriteNum::SPR_FSKU,
                     frame: 32769 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -8519,7 +8502,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_FSKU,
+                    sprite: SpriteNum::SPR_FSKU,
                     frame: 32770 as i32,
                     tics: 6 as i32,
                     action: StateAction::None,
@@ -8528,7 +8511,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_COL5,
+                    sprite: SpriteNum::SPR_COL5,
                     frame: 0 as i32,
                     tics: 14 as i32,
                     action: StateAction::None,
@@ -8537,7 +8520,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_COL5,
+                    sprite: SpriteNum::SPR_COL5,
                     frame: 1 as i32,
                     tics: 14 as i32,
                     action: StateAction::None,
@@ -8546,7 +8529,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_TBLU,
+                    sprite: SpriteNum::SPR_TBLU,
                     frame: 32768 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -8555,7 +8538,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_TBLU,
+                    sprite: SpriteNum::SPR_TBLU,
                     frame: 32769 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -8564,7 +8547,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_TBLU,
+                    sprite: SpriteNum::SPR_TBLU,
                     frame: 32770 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -8573,7 +8556,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_TBLU,
+                    sprite: SpriteNum::SPR_TBLU,
                     frame: 32771 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -8582,7 +8565,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_TGRN,
+                    sprite: SpriteNum::SPR_TGRN,
                     frame: 32768 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -8591,7 +8574,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_TGRN,
+                    sprite: SpriteNum::SPR_TGRN,
                     frame: 32769 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -8600,7 +8583,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_TGRN,
+                    sprite: SpriteNum::SPR_TGRN,
                     frame: 32770 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -8609,7 +8592,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_TGRN,
+                    sprite: SpriteNum::SPR_TGRN,
                     frame: 32771 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -8618,7 +8601,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_TRED,
+                    sprite: SpriteNum::SPR_TRED,
                     frame: 32768 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -8627,7 +8610,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_TRED,
+                    sprite: SpriteNum::SPR_TRED,
                     frame: 32769 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -8636,7 +8619,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_TRED,
+                    sprite: SpriteNum::SPR_TRED,
                     frame: 32770 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -8645,7 +8628,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_TRED,
+                    sprite: SpriteNum::SPR_TRED,
                     frame: 32771 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -8654,7 +8637,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SMBT,
+                    sprite: SpriteNum::SPR_SMBT,
                     frame: 32768 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -8663,7 +8646,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SMBT,
+                    sprite: SpriteNum::SPR_SMBT,
                     frame: 32769 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -8672,7 +8655,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SMBT,
+                    sprite: SpriteNum::SPR_SMBT,
                     frame: 32770 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -8681,7 +8664,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SMBT,
+                    sprite: SpriteNum::SPR_SMBT,
                     frame: 32771 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -8690,7 +8673,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SMGT,
+                    sprite: SpriteNum::SPR_SMGT,
                     frame: 32768 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -8699,7 +8682,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SMGT,
+                    sprite: SpriteNum::SPR_SMGT,
                     frame: 32769 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -8708,7 +8691,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SMGT,
+                    sprite: SpriteNum::SPR_SMGT,
                     frame: 32770 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -8717,7 +8700,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SMGT,
+                    sprite: SpriteNum::SPR_SMGT,
                     frame: 32771 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -8726,7 +8709,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SMRT,
+                    sprite: SpriteNum::SPR_SMRT,
                     frame: 32768 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -8735,7 +8718,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SMRT,
+                    sprite: SpriteNum::SPR_SMRT,
                     frame: 32769 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -8744,7 +8727,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SMRT,
+                    sprite: SpriteNum::SPR_SMRT,
                     frame: 32770 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -8753,7 +8736,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_SMRT,
+                    sprite: SpriteNum::SPR_SMRT,
                     frame: 32771 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -8762,7 +8745,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_HDB1,
+                    sprite: SpriteNum::SPR_HDB1,
                     frame: 0 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -8771,7 +8754,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_HDB2,
+                    sprite: SpriteNum::SPR_HDB2,
                     frame: 0 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -8780,7 +8763,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_HDB3,
+                    sprite: SpriteNum::SPR_HDB3,
                     frame: 0 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -8789,7 +8772,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_HDB4,
+                    sprite: SpriteNum::SPR_HDB4,
                     frame: 0 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -8798,7 +8781,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_HDB5,
+                    sprite: SpriteNum::SPR_HDB5,
                     frame: 0 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -8807,7 +8790,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_HDB6,
+                    sprite: SpriteNum::SPR_HDB6,
                     frame: 0 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -8816,7 +8799,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_POB1,
+                    sprite: SpriteNum::SPR_POB1,
                     frame: 0 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -8825,7 +8808,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_POB2,
+                    sprite: SpriteNum::SPR_POB2,
                     frame: 0 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -8834,7 +8817,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_BRS1,
+                    sprite: SpriteNum::SPR_BRS1,
                     frame: 0 as i32,
                     tics: -(1 as i32),
                     action: StateAction::None,
@@ -8843,7 +8826,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_TLMP,
+                    sprite: SpriteNum::SPR_TLMP,
                     frame: 32768 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -8852,7 +8835,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_TLMP,
+                    sprite: SpriteNum::SPR_TLMP,
                     frame: 32769 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -8861,7 +8844,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_TLMP,
+                    sprite: SpriteNum::SPR_TLMP,
                     frame: 32770 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -8870,7 +8853,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_TLMP,
+                    sprite: SpriteNum::SPR_TLMP,
                     frame: 32771 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -8879,7 +8862,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_TLP2,
+                    sprite: SpriteNum::SPR_TLP2,
                     frame: 32768 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -8888,7 +8871,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_TLP2,
+                    sprite: SpriteNum::SPR_TLP2,
                     frame: 32769 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -8897,7 +8880,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_TLP2,
+                    sprite: SpriteNum::SPR_TLP2,
                     frame: 32770 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
@@ -8906,7 +8889,7 @@ impl InfoState {
                     misc2: 0 as i32,
                 },
                 state_t {
-                    sprite: SPR_TLP2,
+                    sprite: SpriteNum::SPR_TLP2,
                     frame: 32771 as i32,
                     tics: 4 as i32,
                     action: StateAction::None,
