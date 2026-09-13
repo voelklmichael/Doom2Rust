@@ -2,7 +2,6 @@ use crate::src::d_iwad::D_SuggestGameName;
 use crate::src::d_mode::GameMode_t;
 use crate::src::d_mode::D_GameMissionString;
 use crate::src::d_mode::GameMission_t;
-use crate::src::doomdef::NULL;
 use crate::src::fixed_cstr::FixedCStr;
 use crate::src::game_state::GameState;
 use crate::src::i_system::I_Error;
@@ -12,11 +11,9 @@ use crate::src::stdint_types::size_t;
 use crate::src::w_file::wad_file_t;
 use crate::src::w_file::W_OpenFile;
 use crate::src::w_file::W_Read;
-use crate::src::z_zone::Z_ChangeTag2;
-use crate::src::z_zone::Z_ChangeUser;
 use crate::src::z_zone::Z_Free;
 use crate::src::z_zone::Z_Malloc;
-use crate::src::z_zone::{PU_CACHE, PU_STATIC};
+use crate::src::z_zone::PU_STATIC;
 
 pub struct WWadState {
     pub lumpinfo: Vec<lumpinfo_t>,
@@ -34,14 +31,14 @@ impl WWadState {
     }
 }
 
-#[derive(Copy, Clone)]
+#[derive(Clone)]
 #[repr(C)]
 pub struct lumpinfo_s {
     pub name: FixedCStr<8>,
     pub wad_file: *mut wad_file_t,
     pub position: i32,
     pub size: i32,
-    pub cache: *mut ::core::ffi::c_void,
+    pub cache: Option<Box<[u8]>>,
     pub next: Option<u32>,
 }
 pub type lumpinfo_t = lumpinfo_s;
@@ -76,30 +73,26 @@ pub fn W_LumpNameHash(s: &[u8]) -> u32 {
     return result;
 }
 unsafe fn ExtendLumpInfo(state: &mut WWadState, mut newnumlumps: i32) {
-    let mut new_lumpinfo: Vec<lumpinfo_t> = vec![
-        lumpinfo_t {
+    // `cache` is now an owned `Box<[u8]>` (a separate heap allocation, not a
+    // zone block whose back-pointer needs fixing up), and `.next` is an
+    // index into this same array rather than an address -- so moving each
+    // kept entry into the new Vec carries both fields over correctly with
+    // no further fixup, unlike when `cache` was a raw zone pointer.
+    let keep = state.numlumps.min(newnumlumps as u32) as usize;
+    let mut old_lumpinfo = ::core::mem::take(&mut state.lumpinfo).into_iter();
+    let mut new_lumpinfo: Vec<lumpinfo_t> = Vec::with_capacity(newnumlumps as usize);
+    for _ in 0..keep {
+        new_lumpinfo.push(old_lumpinfo.next().unwrap());
+    }
+    while new_lumpinfo.len() < newnumlumps as usize {
+        new_lumpinfo.push(lumpinfo_t {
             name: FixedCStr([0; 8]),
             wad_file: ::core::ptr::null_mut(),
             position: 0,
             size: 0,
-            cache: ::core::ptr::null_mut(),
+            cache: None,
             next: None,
-        };
-        newnumlumps as usize
-    ];
-    let mut i: u32 = 0;
-    while i < state.numlumps && i < newnumlumps as u32 {
-        new_lumpinfo[i as usize] = state.lumpinfo[i as usize];
-        if !new_lumpinfo[i as usize].cache.is_null() {
-            Z_ChangeUser(
-                new_lumpinfo[i as usize].cache,
-                &raw mut new_lumpinfo[i as usize].cache,
-            );
-        }
-        // `.next` is an index into this same array, not an address, so the
-        // copy above already carried it over correctly -- no recompute
-        // needed (unlike when it was a raw pointer into the old allocation).
-        i = i.wrapping_add(1);
+        });
     }
     state.lumpinfo = new_lumpinfo;
     state.numlumps = newnumlumps as u32;
@@ -178,7 +171,7 @@ pub unsafe fn W_AddFile(state: &mut GameState, filename: &str) -> *mut wad_file_
         (*lump_p).wad_file = wad_file;
         (*lump_p).position = (*filerover).filepos;
         (*lump_p).size = (*filerover).size;
-        (*lump_p).cache = NULL;
+        (*lump_p).cache = None;
         (*lump_p).name = (*filerover).name;
         // ExtendLumpInfo already initializes every freshly grown slot's
         // `.next` to None, but W_GenerateHashTable overwrites it again once a
@@ -273,7 +266,7 @@ pub unsafe fn W_ReadLump(state: &mut WWadState, mut lump: u32, mut dest: *mut ::
 pub unsafe fn W_CacheLumpNum(
     state: &mut GameState,
     mut lumpnum: i32,
-    mut tag: i32,
+    _tag: i32,
 ) -> *mut ::core::ffi::c_void {
     let mut result: *mut byte = ::core::ptr::null_mut::<byte>();
     let mut lump: *mut lumpinfo_t = ::core::ptr::null_mut::<lumpinfo_t>();
@@ -283,24 +276,21 @@ pub unsafe fn W_CacheLumpNum(
     lump = state.w_wad.lumpinfo.as_mut_ptr().offset(lumpnum as isize);
     if !(*(*lump).wad_file).mapped.is_null() {
         result = (*(*lump).wad_file).mapped.offset((*lump).position as isize);
-    } else if !(*lump).cache.is_null() {
-        result = (*lump).cache as *mut byte;
-        Z_ChangeTag2(
-            (*lump).cache,
-            tag,
-            "w_wad.c",
-            410 as i32,
-        );
+    } else if let Some(cache) = (*lump).cache.as_mut() {
+        result = cache.as_mut_ptr();
     } else {
         let lumplen = W_LumpLength(&mut state.w_wad, lumpnum as u32);
-        (*lump).cache = Z_Malloc(
-            &mut state.z_zone,
-            lumplen,
-            tag,
-            &raw mut (*lump).cache as *mut ::core::ffi::c_void,
+        let mut buf = vec![0u8; lumplen as usize].into_boxed_slice();
+        W_ReadLump(
+            &mut state.w_wad,
+            lumpnum as u32,
+            buf.as_mut_ptr() as *mut ::core::ffi::c_void,
         );
-        W_ReadLump(&mut state.w_wad, lumpnum as u32, (*lump).cache);
-        result = (*lump).cache as *mut byte;
+        // `lump` was computed before this call; W_ReadLump only takes
+        // `&mut WWadState` and never touches `lumpinfo`'s length, so the
+        // Vec's backing store can't have moved underneath this pointer.
+        (*lump).cache = Some(buf);
+        result = (*lump).cache.as_mut().unwrap().as_mut_ptr();
     }
     return result as *mut ::core::ffi::c_void;
 }
@@ -313,18 +303,14 @@ pub unsafe fn W_CacheLumpName(
     return W_CacheLumpNum(state, lumpnum, tag);
 }
 pub unsafe fn W_ReleaseLumpNum(state: &mut WWadState, mut lumpnum: i32) {
-    let mut lump: *mut lumpinfo_t = ::core::ptr::null_mut::<lumpinfo_t>();
+    // Demoting a cached lump's tag back to PU_CACHE is inert now -- nothing
+    // purges cached blocks under memory pressure since the zone allocator
+    // moved to std::alloc (see docs/known-deviations.md); the owned cache
+    // buffer just stays cached until process exit either way. Kept as a
+    // bounds-checked no-op rather than deleted, matching this function's
+    // original validation behavior.
     if lumpnum as u32 >= state.numlumps {
         I_Error(&format!("W_ReleaseLumpNum: {} >= numlumps", lumpnum));
-    }
-    lump = state.lumpinfo.as_mut_ptr().offset(lumpnum as isize);
-    if (*(*lump).wad_file).mapped.is_null() {
-        Z_ChangeTag2(
-            (*lump).cache,
-            PU_CACHE as i32,
-            "w_wad.c",
-            461 as i32,
-        );
     }
 }
 pub unsafe fn W_ReleaseLumpName(state: &mut WWadState, name: &str) {
