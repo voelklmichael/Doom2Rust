@@ -1,4 +1,3 @@
-use crate::src::doomdef::NULL;
 use crate::src::doomdef::SCREENHEIGHT;
 use crate::src::doomdef::SCREENWIDTH;
 use crate::src::game_state::GameState;
@@ -17,11 +16,8 @@ use crate::src::w_wad::W_CacheLumpName;
 use crate::src::w_wad::W_CacheLumpNum;
 use crate::src::w_wad::W_GetNumForName;
 use crate::src::w_wad::W_LumpLength;
-use crate::src::z_zone::ZZoneState;
-use crate::src::z_zone::Z_Free;
-use crate::src::z_zone::Z_Malloc;
 use crate::src::z_zone::{PU_CACHE, PU_STATIC};
-use crate::src::mem_compat::{memcpy, memset};
+use crate::src::mem_compat::memcpy;
 
 pub type vpatchclipfunc_t = Option<unsafe fn(*mut patch_t, i32, i32) -> bool>;
 #[derive(Copy, Clone)]
@@ -642,7 +638,6 @@ pub fn V_RestoreBuffer(state: &mut GameState) {
     state.v_video.dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
 }
 pub unsafe fn WritePCXfile(
-    state: &mut ZZoneState,
     filename: &str,
     mut data: *mut byte,
     mut width: i32,
@@ -650,77 +645,57 @@ pub unsafe fn WritePCXfile(
     mut palette: *mut byte,
 ) {
     let mut i: i32 = 0;
-    let mut length: i32 = 0;
-    let mut pcx: *mut pcx_t = ::core::ptr::null_mut::<pcx_t>();
-    let mut pack: *mut byte = ::core::ptr::null_mut::<byte>();
-    pcx = Z_Malloc(
-        state,
-        width * height * 2 as i32 + 1000 as i32,
-        PU_STATIC as i32,
-        NULL,
-    ) as *mut pcx_t;
-    (*pcx).manufacturer = 0xa as u8;
-    (*pcx).version = 5 as u8;
-    (*pcx).encoding = 1 as u8;
-    (*pcx).bits_per_pixel = 8 as u8;
-    (*pcx).xmin = 0 as u16;
-    (*pcx).ymin = 0 as u16;
-    (*pcx).xmax = (width - 1 as i32) as i16 as u16;
-    (*pcx).ymax = (height - 1 as i32) as i16 as u16;
-    (*pcx).hres = width as i16 as u16;
-    (*pcx).vres = height as i16 as u16;
-    memset(
-        &raw mut (*pcx).palette as *mut u8 as *mut ::core::ffi::c_void,
-        0 as i32,
-        ::core::mem::size_of::<[u8; 48]>() as size_t,
-    );
-    (*pcx).color_planes = 1 as u8;
-    (*pcx).bytes_per_line = width as i16 as u16;
-    (*pcx).palette_type = 2 as i32 as i16 as u16;
-    memset(
-        &raw mut (*pcx).filler as *mut u8 as *mut ::core::ffi::c_void,
-        0 as i32,
-        ::core::mem::size_of::<[u8; 58]>() as size_t,
-    );
-    pack = &raw mut (*pcx).data as *mut byte;
+    // 128-byte on-disk PCX header, built as a plain local value instead of a
+    // Z_Malloc'd struct whose trailing `data: u8` field was a C flexible-
+    // array-member placeholder for the payload written past it.
+    let header = pcx_t {
+        manufacturer: 0xa as u8,
+        version: 5 as u8,
+        encoding: 1 as u8,
+        bits_per_pixel: 8 as u8,
+        xmin: 0 as u16,
+        ymin: 0 as u16,
+        xmax: (width - 1 as i32) as i16 as u16,
+        ymax: (height - 1 as i32) as i16 as u16,
+        hres: width as i16 as u16,
+        vres: height as i16 as u16,
+        palette: [0u8; 48],
+        reserved: 0,
+        color_planes: 1 as u8,
+        bytes_per_line: width as i16 as u16,
+        palette_type: 2 as i32 as i16 as u16,
+        filler: [0u8; 58],
+        data: 0,
+    };
+    let mut pack: Vec<u8> =
+        Vec::with_capacity((128 + width * height * 2 as i32 + 768 as i32 + 1 as i32) as usize);
+    pack.extend_from_slice(::core::slice::from_raw_parts(
+        &header as *const pcx_t as *const u8,
+        128,
+    ));
     i = 0 as i32;
     while i < width * height {
         if *data as i32 & 0xc0 as i32 != 0xc0 as i32 {
             let fresh14 = data;
             data = data.offset(1);
-            let fresh15 = pack;
-            pack = pack.offset(1);
-            *fresh15 = *fresh14;
+            pack.push(*fresh14);
         } else {
-            let fresh16 = pack;
-            pack = pack.offset(1);
-            *fresh16 = 0xc1 as byte;
+            pack.push(0xc1 as byte);
             let fresh17 = data;
             data = data.offset(1);
-            let fresh18 = pack;
-            pack = pack.offset(1);
-            *fresh18 = *fresh17;
+            pack.push(*fresh17);
         }
         i += 1;
     }
-    let fresh19 = pack;
-    pack = pack.offset(1);
-    *fresh19 = 0xc as byte;
+    pack.push(0xc as byte);
     i = 0 as i32;
     while i < 768 as i32 {
         let fresh20 = palette;
         palette = palette.offset(1);
-        let fresh21 = pack;
-        pack = pack.offset(1);
-        *fresh21 = *fresh20;
+        pack.push(*fresh20);
         i += 1;
     }
-    length = pack.offset_from(pcx as *mut byte) as i64 as i32;
-    M_WriteFile(
-        filename,
-        ::core::slice::from_raw_parts(pcx as *const u8, length as usize),
-    );
-    Z_Free(state, pcx as *mut ::core::ffi::c_void);
+    M_WriteFile(filename, &pack);
 }
 pub unsafe fn V_ScreenShot(state: &mut GameState) {
     let mut i = 0i32;
@@ -737,7 +712,6 @@ pub unsafe fn V_ScreenShot(state: &mut GameState) {
     }
     let __wcache747_1 = W_CacheLumpName(state, "PLAYPAL", PU_CACHE as i32) as *mut byte;
     WritePCXfile(
-        &mut state.z_zone,
         &lbmname,
         state.i_video.I_VideoBuffer.as_mut_ptr(),
         SCREENWIDTH,

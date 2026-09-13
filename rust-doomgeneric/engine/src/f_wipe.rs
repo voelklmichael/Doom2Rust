@@ -7,9 +7,6 @@ use crate::src::stdint_types::byte;
 use crate::src::stdint_types::size_t;
 use crate::src::v_video::V_DrawBlock;
 use crate::src::v_video::V_MarkRect;
-use crate::src::z_zone::Z_Free;
-use crate::src::z_zone::Z_Malloc;
-use crate::src::z_zone::PU_STATIC;
 use crate::src::mem_compat::memcpy;
 
 pub struct FWipeState {
@@ -32,36 +29,24 @@ impl FWipeState {
     }
 }
 
-pub unsafe fn wipe_shittyColMajorXform(
-    state: &mut GameState,
-    mut array: *mut i16,
-    mut width: i32,
-    mut height: i32,
-) {
+pub unsafe fn wipe_shittyColMajorXform(mut array: *mut i16, mut width: i32, mut height: i32) {
     let mut x: i32 = 0;
     let mut y_0: i32 = 0;
-    let mut dest: *mut i16 = ::core::ptr::null_mut::<i16>();
-    dest = Z_Malloc(
-        &mut state.z_zone,
-        width * height * 2 as i32,
-        PU_STATIC as i32,
-        ::core::ptr::null_mut::<::core::ffi::c_void>(),
-    ) as *mut i16;
+    let mut dest: Vec<i16> = vec![0i16; (width * height) as usize];
     y_0 = 0 as i32;
     while y_0 < height {
         x = 0 as i32;
         while x < width {
-            *dest.offset((x * height + y_0) as isize) = *array.offset((y_0 * width + x) as isize);
+            dest[(x * height + y_0) as usize] = *array.offset((y_0 * width + x) as isize);
             x += 1;
         }
         y_0 += 1;
     }
     memcpy(
         array as *mut ::core::ffi::c_void,
-        dest as *const ::core::ffi::c_void,
+        dest.as_ptr() as *const ::core::ffi::c_void,
         (width * height * 2 as i32) as size_t,
     );
-    Z_Free(&mut state.z_zone, dest as *mut ::core::ffi::c_void);
 }
 pub unsafe fn wipe_initColorXForm(
     state: &mut GameState,
@@ -136,9 +121,9 @@ pub unsafe fn wipe_initMelt(
         (width * height) as size_t,
     );
     let wipe_scr_start = state.f_wipe.wipe_scr_start.as_mut_ptr() as *mut i16;
-    wipe_shittyColMajorXform(state, wipe_scr_start, width / 2 as i32, height);
+    wipe_shittyColMajorXform(wipe_scr_start, width / 2 as i32, height);
     let wipe_scr_end = state.f_wipe.wipe_scr_end.as_mut_ptr() as *mut i16;
-    wipe_shittyColMajorXform(state, wipe_scr_end, width / 2 as i32, height);
+    wipe_shittyColMajorXform(wipe_scr_end, width / 2 as i32, height);
     state.f_wipe.y = vec![0i32; width as usize];
     state.f_wipe.y[0] = -(M_Random(&mut state.m_random) % 16 as i32);
     i = 1 as i32;

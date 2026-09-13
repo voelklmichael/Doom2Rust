@@ -4,7 +4,6 @@ use crate::src::d_ticcmd::{BT_ATTACK, BT_USE};
 use crate::src::doomdef::false_0;
 use crate::src::doomdef::true_0;
 use crate::src::doomdef::MAXPLAYERS;
-use crate::src::doomdef::NULL;
 use crate::src::doomdef::SCREENHEIGHT;
 use crate::src::doomdef::SCREENWIDTH;
 use crate::src::doomdef::TICRATE;
@@ -20,7 +19,6 @@ use crate::src::sounds::{sfx_barexp, sfx_pistol, sfx_pldeth, sfx_sgcock, sfx_slo
 use crate::src::st_stuff::load_callback_t;
 use crate::src::v_video::V_DrawPatch;
 use crate::src::w_wad::{W_CacheLumpName, W_CheckNumForName, W_ReleaseLumpName};
-use crate::src::z_zone::Z_Malloc;
 use crate::src::z_zone::PU_STATIC;
 
 pub struct WiStuffState {
@@ -67,7 +65,7 @@ pub struct WiStuffState {
     pub bstar: *mut patch_t,
     pub p: [*mut patch_t; 4],
     pub bp: [*mut patch_t; 4],
-    pub lnames: *mut *mut patch_t,
+    pub lnames: Vec<*mut patch_t>,
     pub background: *mut patch_t,
     pub snl_pointeron: bool,
     pub dm_state: i32,
@@ -640,7 +638,7 @@ impl WiStuffState {
             bstar: ::core::ptr::null::<patch_t>() as *mut patch_t,
             p: [::core::ptr::null::<patch_t>() as *mut patch_t; 4],
             bp: [::core::ptr::null::<patch_t>() as *mut patch_t; 4],
-            lnames: ::core::ptr::null::<*mut patch_t>() as *mut *mut patch_t,
+            lnames: Vec::new(),
             background: ::core::ptr::null::<patch_t>() as *mut patch_t,
             snl_pointeron: false,
             dm_state: 0,
@@ -868,28 +866,14 @@ pub unsafe fn WI_drawLF(state: &mut GameState) {
     if state.doomstat.gamemode as u32 != GameMode_t::commercial as i32 as u32
         || (*state.wi_stuff.wbs).last < state.wi_stuff.NUMCMAPS
     {
+        let last_patch = state.wi_stuff.lnames[(*state.wi_stuff.wbs).last as usize];
         V_DrawPatch(
             state,
-            (SCREENWIDTH
-                - (**state
-                    .wi_stuff
-                    .lnames
-                    .offset((*state.wi_stuff.wbs).last as isize))
-                .width as i32)
-                / 2 as i32,
+            (SCREENWIDTH - (*last_patch).width as i32) / 2 as i32,
             y,
-            *state
-                .wi_stuff
-                .lnames
-                .offset((*state.wi_stuff.wbs).last as isize),
+            last_patch,
         );
-        y += 5 as i32
-            * (**state
-                .wi_stuff
-                .lnames
-                .offset((*state.wi_stuff.wbs).last as isize))
-            .height as i32
-            / 4 as i32;
+        y += 5 as i32 * (*last_patch).height as i32 / 4 as i32;
         V_DrawPatch(
             state,
             (SCREENWIDTH - (*state.wi_stuff.finished).width as i32) / 2 as i32,
@@ -919,27 +903,13 @@ pub unsafe fn WI_drawEL(state: &mut GameState) {
         y,
         state.wi_stuff.entering,
     );
-    y += 5 as i32
-        * (**state
-            .wi_stuff
-            .lnames
-            .offset((*state.wi_stuff.wbs).next as isize))
-        .height as i32
-        / 4 as i32;
+    let next_patch = state.wi_stuff.lnames[(*state.wi_stuff.wbs).next as usize];
+    y += 5 as i32 * (*next_patch).height as i32 / 4 as i32;
     V_DrawPatch(
         state,
-        (SCREENWIDTH
-            - (**state
-                .wi_stuff
-                .lnames
-                .offset((*state.wi_stuff.wbs).next as isize))
-            .width as i32)
-            / 2 as i32,
+        (SCREENWIDTH - (*next_patch).width as i32) / 2 as i32,
         y,
-        *state
-            .wi_stuff
-            .lnames
-            .offset((*state.wi_stuff.wbs).next as isize),
+        next_patch,
     );
 }
 pub unsafe fn WI_drawOnLnode(state: &mut GameState, mut n: i32, mut c: *mut *mut patch_t) {
@@ -1902,14 +1872,14 @@ unsafe fn WI_loadUnloadData(state: &mut GameState, mut callback: load_callback_t
     if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 {
         i = 0 as i32;
         while i < state.wi_stuff.NUMCMAPS {
-            let cb_ptr = state.wi_stuff.lnames.offset(i as isize) as *mut *mut patch_t;
+            let cb_ptr = state.wi_stuff.lnames.as_mut_ptr().offset(i as isize) as *mut *mut patch_t;
             callback.expect("non-null function pointer")(state, &format!("CWILV{:02}", i,), cb_ptr);
             i += 1;
         }
     } else {
         i = 0 as i32;
         while i < NUMMAPS {
-            let cb_ptr = state.wi_stuff.lnames.offset(i as isize) as *mut *mut patch_t;
+            let cb_ptr = state.wi_stuff.lnames.as_mut_ptr().offset(i as isize) as *mut *mut patch_t;
             callback.expect("non-null function pointer")(
                 state,
                 &format!("WILV{}{}", (*state.wi_stuff.wbs).epsd, i,),
@@ -2032,20 +2002,10 @@ unsafe fn WI_loadCallback(state: &mut GameState, name: &str, variable: *mut *mut
 pub unsafe fn WI_loadData(state: &mut GameState) {
     if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 {
         state.wi_stuff.NUMCMAPS = 32 as i32;
-        state.wi_stuff.lnames = Z_Malloc(
-            &mut state.z_zone,
-            (::core::mem::size_of::<*mut patch_t>() as usize)
-                .wrapping_mul(state.wi_stuff.NUMCMAPS as usize) as i32,
-            PU_STATIC as i32,
-            NULL,
-        ) as *mut *mut patch_t;
+        state.wi_stuff.lnames =
+            vec![::core::ptr::null_mut::<patch_t>(); state.wi_stuff.NUMCMAPS as usize];
     } else {
-        state.wi_stuff.lnames = Z_Malloc(
-            &mut state.z_zone,
-            (::core::mem::size_of::<*mut patch_t>() as usize).wrapping_mul(NUMMAPS as usize) as i32,
-            PU_STATIC as i32,
-            NULL,
-        ) as *mut *mut patch_t;
+        state.wi_stuff.lnames = vec![::core::ptr::null_mut::<patch_t>(); NUMMAPS as usize];
     }
     WI_loadUnloadData(
         state,
