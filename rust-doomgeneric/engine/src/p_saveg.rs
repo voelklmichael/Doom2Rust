@@ -17,7 +17,7 @@ use crate::src::p_doors::vldoor_t;
 use crate::src::p_floor::FloorE;
 use crate::src::p_lights::{glow_t, lightflash_t, strobe_t};
 use crate::src::p_maputl::P_SetThingPosition;
-use crate::src::p_mobj::mobjtype_t;
+use crate::src::p_mobj::mobjtype_from_raw;
 use crate::src::p_mobj::spritenum_from_raw;
 use crate::src::p_mobj::P_RemoveMobj;
 use crate::src::p_mobj::{
@@ -273,7 +273,7 @@ unsafe fn saveg_read_mobj_t(state: &mut GameState, mut str: *mut mobj_t) {
     (*str).momy = saveg_read32(state) as fixed_t;
     (*str).momz = saveg_read32(state) as fixed_t;
     (*str).validcount = saveg_read32(state);
-    (*str).type_0 = saveg_read32(state) as mobjtype_t;
+    (*str).type_0 = mobjtype_from_raw(saveg_read32(state));
     saveg_read32(state);
     (*str).tics = saveg_read32(state);
     (*str).state = Some(StateId(saveg_read32(state) as u32));

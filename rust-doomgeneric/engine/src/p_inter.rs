@@ -22,9 +22,7 @@ use crate::src::p_mobj::P_RemoveMobj;
 use crate::src::p_mobj::P_SetMobjState;
 use crate::src::p_mobj::P_SpawnMobj;
 use crate::src::p_mobj::ONFLOORZ;
-use crate::src::p_mobj::{
-    mobjtype_t, MT_CHAINGUN, MT_CLIP, MT_PLAYER, MT_SHOTGUN, MT_SKULL, MT_VILE,
-};
+use crate::src::p_mobj::MobjType;
 use crate::src::p_mobj::{
     MF_CORPSE, MF_COUNTITEM, MF_COUNTKILL, MF_DROPOFF, MF_DROPPED, MF_FLOAT, MF_JUSTHIT, MF_NOCLIP,
     MF_NOGRAVITY, MF_SHADOW, MF_SHOOTABLE, MF_SKULLFLY, MF_SOLID,
@@ -581,10 +579,10 @@ pub unsafe fn P_TouchSpecialThing(
     }
 }
 pub unsafe fn P_KillMobj(state: &mut GameState, mut source: *mut mobj_t, mut target: *mut mobj_t) {
-    let mut item: mobjtype_t = MT_PLAYER;
+    let mut item: MobjType = MobjType::MT_PLAYER;
     let mut mo: *mut mobj_t = ::core::ptr::null_mut::<mobj_t>();
     (*target).flags &= !(MF_SHOOTABLE as i32 | MF_FLOAT as i32 | MF_SKULLFLY as i32);
-    if (*target).type_0 as u32 != MT_SKULL as i32 as u32 {
+    if (*target).type_0 as u32 != MobjType::MT_SKULL as i32 as u32 {
         (*target).flags &= !(MF_NOGRAVITY as i32);
     }
     (*target).flags |= MF_CORPSE as i32 | MF_DROPOFF as i32;
@@ -629,13 +627,13 @@ pub unsafe fn P_KillMobj(state: &mut GameState, mut source: *mut mobj_t, mut tar
     }
     match (*target).type_0 as u32 {
         23 | 1 => {
-            item = MT_CLIP;
+            item = MobjType::MT_CLIP;
         }
         2 => {
-            item = MT_SHOTGUN;
+            item = MobjType::MT_SHOTGUN;
         }
         10 => {
-            item = MT_CHAINGUN;
+            item = MobjType::MT_CHAINGUN;
         }
         _ => return,
     }
@@ -758,10 +756,10 @@ pub unsafe fn P_DamageMobj(
         P_SetMobjState(state, target, painstate);
     }
     (*target).reactiontime = 0 as i32;
-    if ((*target).threshold == 0 || (*target).type_0 as u32 == MT_VILE as i32 as u32)
+    if ((*target).threshold == 0 || (*target).type_0 as u32 == MobjType::MT_VILE as i32 as u32)
         && !source.is_null()
         && source != target
-        && (*source).type_0 as u32 != MT_VILE as i32 as u32
+        && (*source).type_0 as u32 != MobjType::MT_VILE as i32 as u32
     {
         (*target).target = Some((*source).id);
         (*target).threshold = BASETHRESHOLD;

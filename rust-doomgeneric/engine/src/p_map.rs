@@ -42,7 +42,7 @@ use crate::src::p_mobj::{
     MF_DROPOFF, MF_DROPPED, MF_FLOAT, MF_MISSILE, MF_NOBLOOD, MF_NOCLIP, MF_PICKUP, MF_SHOOTABLE,
     MF_SKULLFLY, MF_SOLID, MF_SPECIAL, MF_TELEPORT,
 };
-use crate::src::p_mobj::{MT_BLOOD, MT_BRUISER, MT_CYBORG, MT_KNIGHT, MT_PLAYER, MT_SPIDER};
+use crate::src::p_mobj::MobjType;
 use crate::src::p_sight::P_CheckSight;
 use crate::src::p_spec::P_CrossSpecialLine;
 use crate::src::p_spec::P_ShootSpecialLine;
@@ -335,15 +335,15 @@ pub unsafe fn PIT_CheckThing(state: &mut GameState, mut thing_id: MobjId) -> boo
             .and_then(|id| state.p_mobj.mobj_get(id));
         if tm_target.is_some()
             && ((*tm_target.unwrap()).type_0 as u32 == (*thing).type_0 as u32
-                || (*tm_target.unwrap()).type_0 as u32 == MT_KNIGHT as i32 as u32
-                    && (*thing).type_0 as u32 == MT_BRUISER as i32 as u32
-                || (*tm_target.unwrap()).type_0 as u32 == MT_BRUISER as i32 as u32
-                    && (*thing).type_0 as u32 == MT_KNIGHT as i32 as u32)
+                || (*tm_target.unwrap()).type_0 as u32 == MobjType::MT_KNIGHT as i32 as u32
+                    && (*thing).type_0 as u32 == MobjType::MT_BRUISER as i32 as u32
+                || (*tm_target.unwrap()).type_0 as u32 == MobjType::MT_BRUISER as i32 as u32
+                    && (*thing).type_0 as u32 == MobjType::MT_KNIGHT as i32 as u32)
         {
             if Some(thing) == tm_target {
                 return true_0 as boolean;
             }
-            if (*thing).type_0 as u32 != MT_PLAYER as i32 as u32 && deh_species_infighting == 0 {
+            if (*thing).type_0 as u32 != MobjType::MT_PLAYER as i32 as u32 && deh_species_infighting == 0 {
                 return false_0 as boolean;
             }
         }
@@ -1057,8 +1057,8 @@ pub unsafe fn PIT_RadiusAttack(state: &mut GameState, mut thing_id: MobjId) -> b
     if (*thing).flags & MF_SHOOTABLE as i32 == 0 {
         return true_0 as boolean;
     }
-    if (*thing).type_0 as u32 == MT_CYBORG as i32 as u32
-        || (*thing).type_0 as u32 == MT_SPIDER as i32 as u32
+    if (*thing).type_0 as u32 == MobjType::MT_CYBORG as i32 as u32
+        || (*thing).type_0 as u32 == MobjType::MT_SPIDER as i32 as u32
     {
         return true_0 as boolean;
     }
@@ -1155,7 +1155,7 @@ pub unsafe fn PIT_ChangeSector(state: &mut GameState, mut thing_id: MobjId) -> b
             (*thing).x,
             (*thing).y,
             (*thing).z + (*thing).height / 2 as fixed_t,
-            MT_BLOOD,
+            MobjType::MT_BLOOD,
         );
         (*mo).momx =
             (P_Random(&mut state.m_random) - P_Random(&mut state.m_random) << 12 as i32) as fixed_t;

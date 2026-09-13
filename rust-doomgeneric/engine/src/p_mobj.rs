@@ -2332,145 +2332,289 @@ pub struct state_t {
     pub misc1: i32,
     pub misc2: i32,
 }
-pub type mobjtype_t = u32;
-pub const NUMMOBJTYPES: mobjtype_t = 137;
-pub const MT_MISC86: mobjtype_t = 136;
-pub const MT_MISC85: mobjtype_t = 135;
-pub const MT_MISC84: mobjtype_t = 134;
-pub const MT_MISC83: mobjtype_t = 133;
-pub const MT_MISC82: mobjtype_t = 132;
-pub const MT_MISC81: mobjtype_t = 131;
-pub const MT_MISC80: mobjtype_t = 130;
-pub const MT_MISC79: mobjtype_t = 129;
-pub const MT_MISC78: mobjtype_t = 128;
-pub const MT_MISC77: mobjtype_t = 127;
-pub const MT_MISC76: mobjtype_t = 126;
-pub const MT_MISC75: mobjtype_t = 125;
-pub const MT_MISC74: mobjtype_t = 124;
-pub const MT_MISC73: mobjtype_t = 123;
-pub const MT_MISC72: mobjtype_t = 122;
-pub const MT_MISC71: mobjtype_t = 121;
-pub const MT_MISC70: mobjtype_t = 120;
-pub const MT_MISC69: mobjtype_t = 119;
-pub const MT_MISC68: mobjtype_t = 118;
-pub const MT_MISC67: mobjtype_t = 117;
-pub const MT_MISC66: mobjtype_t = 116;
-pub const MT_MISC65: mobjtype_t = 115;
-pub const MT_MISC64: mobjtype_t = 114;
-pub const MT_MISC63: mobjtype_t = 113;
-pub const MT_MISC62: mobjtype_t = 112;
-pub const MT_MISC61: mobjtype_t = 111;
-pub const MT_MISC60: mobjtype_t = 110;
-pub const MT_MISC59: mobjtype_t = 109;
-pub const MT_MISC58: mobjtype_t = 108;
-pub const MT_MISC57: mobjtype_t = 107;
-pub const MT_MISC56: mobjtype_t = 106;
-pub const MT_MISC55: mobjtype_t = 105;
-pub const MT_MISC54: mobjtype_t = 104;
-pub const MT_MISC53: mobjtype_t = 103;
-pub const MT_MISC52: mobjtype_t = 102;
-pub const MT_MISC51: mobjtype_t = 101;
-pub const MT_MISC50: mobjtype_t = 100;
-pub const MT_MISC49: mobjtype_t = 99;
-pub const MT_MISC48: mobjtype_t = 98;
-pub const MT_MISC47: mobjtype_t = 97;
-pub const MT_MISC46: mobjtype_t = 96;
-pub const MT_MISC45: mobjtype_t = 95;
-pub const MT_MISC44: mobjtype_t = 94;
-pub const MT_MISC43: mobjtype_t = 93;
-pub const MT_MISC42: mobjtype_t = 92;
-pub const MT_MISC41: mobjtype_t = 91;
-pub const MT_MISC40: mobjtype_t = 90;
-pub const MT_MISC39: mobjtype_t = 89;
-pub const MT_MISC38: mobjtype_t = 88;
-pub const MT_MISC37: mobjtype_t = 87;
-pub const MT_MISC36: mobjtype_t = 86;
-pub const MT_MISC35: mobjtype_t = 85;
-pub const MT_MISC34: mobjtype_t = 84;
-pub const MT_MISC33: mobjtype_t = 83;
-pub const MT_MISC32: mobjtype_t = 82;
-pub const MT_MISC31: mobjtype_t = 81;
-pub const MT_MISC30: mobjtype_t = 80;
-pub const MT_MISC29: mobjtype_t = 79;
-pub const MT_SUPERSHOTGUN: mobjtype_t = 78;
-pub const MT_SHOTGUN: mobjtype_t = 77;
-pub const MT_MISC28: mobjtype_t = 76;
-pub const MT_MISC27: mobjtype_t = 75;
-pub const MT_MISC26: mobjtype_t = 74;
-pub const MT_CHAINGUN: mobjtype_t = 73;
-pub const MT_MISC25: mobjtype_t = 72;
-pub const MT_MISC24: mobjtype_t = 71;
-pub const MT_MISC23: mobjtype_t = 70;
-pub const MT_MISC22: mobjtype_t = 69;
-pub const MT_MISC21: mobjtype_t = 68;
-pub const MT_MISC20: mobjtype_t = 67;
-pub const MT_MISC19: mobjtype_t = 66;
-pub const MT_MISC18: mobjtype_t = 65;
-pub const MT_MISC17: mobjtype_t = 64;
-pub const MT_CLIP: mobjtype_t = 63;
-pub const MT_MEGA: mobjtype_t = 62;
-pub const MT_MISC16: mobjtype_t = 61;
-pub const MT_MISC15: mobjtype_t = 60;
-pub const MT_MISC14: mobjtype_t = 59;
-pub const MT_INS: mobjtype_t = 58;
-pub const MT_MISC13: mobjtype_t = 57;
-pub const MT_INV: mobjtype_t = 56;
-pub const MT_MISC12: mobjtype_t = 55;
-pub const MT_MISC11: mobjtype_t = 54;
-pub const MT_MISC10: mobjtype_t = 53;
-pub const MT_MISC9: mobjtype_t = 52;
-pub const MT_MISC8: mobjtype_t = 51;
-pub const MT_MISC7: mobjtype_t = 50;
-pub const MT_MISC6: mobjtype_t = 49;
-pub const MT_MISC5: mobjtype_t = 48;
-pub const MT_MISC4: mobjtype_t = 47;
-pub const MT_MISC3: mobjtype_t = 46;
-pub const MT_MISC2: mobjtype_t = 45;
-pub const MT_MISC1: mobjtype_t = 44;
-pub const MT_MISC0: mobjtype_t = 43;
-pub const MT_EXTRABFG: mobjtype_t = 42;
-pub const MT_TELEPORTMAN: mobjtype_t = 41;
-pub const MT_IFOG: mobjtype_t = 40;
-pub const MT_TFOG: mobjtype_t = 39;
-pub const MT_BLOOD: mobjtype_t = 38;
-pub const MT_PUFF: mobjtype_t = 37;
-pub const MT_ARACHPLAZ: mobjtype_t = 36;
-pub const MT_BFG: mobjtype_t = 35;
-pub const MT_PLASMA: mobjtype_t = 34;
-pub const MT_ROCKET: mobjtype_t = 33;
-pub const MT_HEADSHOT: mobjtype_t = 32;
-pub const MT_TROOPSHOT: mobjtype_t = 31;
-pub const MT_BARREL: mobjtype_t = 30;
-pub const MT_SPAWNFIRE: mobjtype_t = 29;
-pub const MT_SPAWNSHOT: mobjtype_t = 28;
-pub const MT_BOSSTARGET: mobjtype_t = 27;
-pub const MT_BOSSSPIT: mobjtype_t = 26;
-pub const MT_BOSSBRAIN: mobjtype_t = 25;
-pub const MT_KEEN: mobjtype_t = 24;
-pub const MT_WOLFSS: mobjtype_t = 23;
-pub const MT_PAIN: mobjtype_t = 22;
-pub const MT_CYBORG: mobjtype_t = 21;
-pub const MT_BABY: mobjtype_t = 20;
-pub const MT_SPIDER: mobjtype_t = 19;
-pub const MT_SKULL: mobjtype_t = 18;
-pub const MT_KNIGHT: mobjtype_t = 17;
-pub const MT_BRUISERSHOT: mobjtype_t = 16;
-pub const MT_BRUISER: mobjtype_t = 15;
-pub const MT_HEAD: mobjtype_t = 14;
-pub const MT_SHADOWS: mobjtype_t = 13;
-pub const MT_SERGEANT: mobjtype_t = 12;
-pub const MT_TROOP: mobjtype_t = 11;
-pub const MT_CHAINGUY: mobjtype_t = 10;
-pub const MT_FATSHOT: mobjtype_t = 9;
-pub const MT_FATSO: mobjtype_t = 8;
-pub const MT_SMOKE: mobjtype_t = 7;
-pub const MT_TRACER: mobjtype_t = 6;
-pub const MT_UNDEAD: mobjtype_t = 5;
-pub const MT_FIRE: mobjtype_t = 4;
-pub const MT_VILE: mobjtype_t = 3;
-pub const MT_SHOTGUY: mobjtype_t = 2;
-pub const MT_POSSESSED: mobjtype_t = 1;
-pub const MT_PLAYER: mobjtype_t = 0;
+pub const NUMMOBJTYPES: i32 = 137;
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub enum MobjType {
+    MT_PLAYER = 0,
+    MT_POSSESSED = 1,
+    MT_SHOTGUY = 2,
+    MT_VILE = 3,
+    MT_FIRE = 4,
+    MT_UNDEAD = 5,
+    MT_TRACER = 6,
+    MT_SMOKE = 7,
+    MT_FATSO = 8,
+    MT_FATSHOT = 9,
+    MT_CHAINGUY = 10,
+    MT_TROOP = 11,
+    MT_SERGEANT = 12,
+    MT_SHADOWS = 13,
+    MT_HEAD = 14,
+    MT_BRUISER = 15,
+    MT_BRUISERSHOT = 16,
+    MT_KNIGHT = 17,
+    MT_SKULL = 18,
+    MT_SPIDER = 19,
+    MT_BABY = 20,
+    MT_CYBORG = 21,
+    MT_PAIN = 22,
+    MT_WOLFSS = 23,
+    MT_KEEN = 24,
+    MT_BOSSBRAIN = 25,
+    MT_BOSSSPIT = 26,
+    MT_BOSSTARGET = 27,
+    MT_SPAWNSHOT = 28,
+    MT_SPAWNFIRE = 29,
+    MT_BARREL = 30,
+    MT_TROOPSHOT = 31,
+    MT_HEADSHOT = 32,
+    MT_ROCKET = 33,
+    MT_PLASMA = 34,
+    MT_BFG = 35,
+    MT_ARACHPLAZ = 36,
+    MT_PUFF = 37,
+    MT_BLOOD = 38,
+    MT_TFOG = 39,
+    MT_IFOG = 40,
+    MT_TELEPORTMAN = 41,
+    MT_EXTRABFG = 42,
+    MT_MISC0 = 43,
+    MT_MISC1 = 44,
+    MT_MISC2 = 45,
+    MT_MISC3 = 46,
+    MT_MISC4 = 47,
+    MT_MISC5 = 48,
+    MT_MISC6 = 49,
+    MT_MISC7 = 50,
+    MT_MISC8 = 51,
+    MT_MISC9 = 52,
+    MT_MISC10 = 53,
+    MT_MISC11 = 54,
+    MT_MISC12 = 55,
+    MT_INV = 56,
+    MT_MISC13 = 57,
+    MT_INS = 58,
+    MT_MISC14 = 59,
+    MT_MISC15 = 60,
+    MT_MISC16 = 61,
+    MT_MEGA = 62,
+    MT_CLIP = 63,
+    MT_MISC17 = 64,
+    MT_MISC18 = 65,
+    MT_MISC19 = 66,
+    MT_MISC20 = 67,
+    MT_MISC21 = 68,
+    MT_MISC22 = 69,
+    MT_MISC23 = 70,
+    MT_MISC24 = 71,
+    MT_MISC25 = 72,
+    MT_CHAINGUN = 73,
+    MT_MISC26 = 74,
+    MT_MISC27 = 75,
+    MT_MISC28 = 76,
+    MT_SHOTGUN = 77,
+    MT_SUPERSHOTGUN = 78,
+    MT_MISC29 = 79,
+    MT_MISC30 = 80,
+    MT_MISC31 = 81,
+    MT_MISC32 = 82,
+    MT_MISC33 = 83,
+    MT_MISC34 = 84,
+    MT_MISC35 = 85,
+    MT_MISC36 = 86,
+    MT_MISC37 = 87,
+    MT_MISC38 = 88,
+    MT_MISC39 = 89,
+    MT_MISC40 = 90,
+    MT_MISC41 = 91,
+    MT_MISC42 = 92,
+    MT_MISC43 = 93,
+    MT_MISC44 = 94,
+    MT_MISC45 = 95,
+    MT_MISC46 = 96,
+    MT_MISC47 = 97,
+    MT_MISC48 = 98,
+    MT_MISC49 = 99,
+    MT_MISC50 = 100,
+    MT_MISC51 = 101,
+    MT_MISC52 = 102,
+    MT_MISC53 = 103,
+    MT_MISC54 = 104,
+    MT_MISC55 = 105,
+    MT_MISC56 = 106,
+    MT_MISC57 = 107,
+    MT_MISC58 = 108,
+    MT_MISC59 = 109,
+    MT_MISC60 = 110,
+    MT_MISC61 = 111,
+    MT_MISC62 = 112,
+    MT_MISC63 = 113,
+    MT_MISC64 = 114,
+    MT_MISC65 = 115,
+    MT_MISC66 = 116,
+    MT_MISC67 = 117,
+    MT_MISC68 = 118,
+    MT_MISC69 = 119,
+    MT_MISC70 = 120,
+    MT_MISC71 = 121,
+    MT_MISC72 = 122,
+    MT_MISC73 = 123,
+    MT_MISC74 = 124,
+    MT_MISC75 = 125,
+    MT_MISC76 = 126,
+    MT_MISC77 = 127,
+    MT_MISC78 = 128,
+    MT_MISC79 = 129,
+    MT_MISC80 = 130,
+    MT_MISC81 = 131,
+    MT_MISC82 = 132,
+    MT_MISC83 = 133,
+    MT_MISC84 = 134,
+    MT_MISC85 = 135,
+    MT_MISC86 = 136,
+}
+pub fn mobjtype_from_raw(v: i32) -> MobjType {
+    match v {
+        0 => MobjType::MT_PLAYER,
+        1 => MobjType::MT_POSSESSED,
+        2 => MobjType::MT_SHOTGUY,
+        3 => MobjType::MT_VILE,
+        4 => MobjType::MT_FIRE,
+        5 => MobjType::MT_UNDEAD,
+        6 => MobjType::MT_TRACER,
+        7 => MobjType::MT_SMOKE,
+        8 => MobjType::MT_FATSO,
+        9 => MobjType::MT_FATSHOT,
+        10 => MobjType::MT_CHAINGUY,
+        11 => MobjType::MT_TROOP,
+        12 => MobjType::MT_SERGEANT,
+        13 => MobjType::MT_SHADOWS,
+        14 => MobjType::MT_HEAD,
+        15 => MobjType::MT_BRUISER,
+        16 => MobjType::MT_BRUISERSHOT,
+        17 => MobjType::MT_KNIGHT,
+        18 => MobjType::MT_SKULL,
+        19 => MobjType::MT_SPIDER,
+        20 => MobjType::MT_BABY,
+        21 => MobjType::MT_CYBORG,
+        22 => MobjType::MT_PAIN,
+        23 => MobjType::MT_WOLFSS,
+        24 => MobjType::MT_KEEN,
+        25 => MobjType::MT_BOSSBRAIN,
+        26 => MobjType::MT_BOSSSPIT,
+        27 => MobjType::MT_BOSSTARGET,
+        28 => MobjType::MT_SPAWNSHOT,
+        29 => MobjType::MT_SPAWNFIRE,
+        30 => MobjType::MT_BARREL,
+        31 => MobjType::MT_TROOPSHOT,
+        32 => MobjType::MT_HEADSHOT,
+        33 => MobjType::MT_ROCKET,
+        34 => MobjType::MT_PLASMA,
+        35 => MobjType::MT_BFG,
+        36 => MobjType::MT_ARACHPLAZ,
+        37 => MobjType::MT_PUFF,
+        38 => MobjType::MT_BLOOD,
+        39 => MobjType::MT_TFOG,
+        40 => MobjType::MT_IFOG,
+        41 => MobjType::MT_TELEPORTMAN,
+        42 => MobjType::MT_EXTRABFG,
+        43 => MobjType::MT_MISC0,
+        44 => MobjType::MT_MISC1,
+        45 => MobjType::MT_MISC2,
+        46 => MobjType::MT_MISC3,
+        47 => MobjType::MT_MISC4,
+        48 => MobjType::MT_MISC5,
+        49 => MobjType::MT_MISC6,
+        50 => MobjType::MT_MISC7,
+        51 => MobjType::MT_MISC8,
+        52 => MobjType::MT_MISC9,
+        53 => MobjType::MT_MISC10,
+        54 => MobjType::MT_MISC11,
+        55 => MobjType::MT_MISC12,
+        56 => MobjType::MT_INV,
+        57 => MobjType::MT_MISC13,
+        58 => MobjType::MT_INS,
+        59 => MobjType::MT_MISC14,
+        60 => MobjType::MT_MISC15,
+        61 => MobjType::MT_MISC16,
+        62 => MobjType::MT_MEGA,
+        63 => MobjType::MT_CLIP,
+        64 => MobjType::MT_MISC17,
+        65 => MobjType::MT_MISC18,
+        66 => MobjType::MT_MISC19,
+        67 => MobjType::MT_MISC20,
+        68 => MobjType::MT_MISC21,
+        69 => MobjType::MT_MISC22,
+        70 => MobjType::MT_MISC23,
+        71 => MobjType::MT_MISC24,
+        72 => MobjType::MT_MISC25,
+        73 => MobjType::MT_CHAINGUN,
+        74 => MobjType::MT_MISC26,
+        75 => MobjType::MT_MISC27,
+        76 => MobjType::MT_MISC28,
+        77 => MobjType::MT_SHOTGUN,
+        78 => MobjType::MT_SUPERSHOTGUN,
+        79 => MobjType::MT_MISC29,
+        80 => MobjType::MT_MISC30,
+        81 => MobjType::MT_MISC31,
+        82 => MobjType::MT_MISC32,
+        83 => MobjType::MT_MISC33,
+        84 => MobjType::MT_MISC34,
+        85 => MobjType::MT_MISC35,
+        86 => MobjType::MT_MISC36,
+        87 => MobjType::MT_MISC37,
+        88 => MobjType::MT_MISC38,
+        89 => MobjType::MT_MISC39,
+        90 => MobjType::MT_MISC40,
+        91 => MobjType::MT_MISC41,
+        92 => MobjType::MT_MISC42,
+        93 => MobjType::MT_MISC43,
+        94 => MobjType::MT_MISC44,
+        95 => MobjType::MT_MISC45,
+        96 => MobjType::MT_MISC46,
+        97 => MobjType::MT_MISC47,
+        98 => MobjType::MT_MISC48,
+        99 => MobjType::MT_MISC49,
+        100 => MobjType::MT_MISC50,
+        101 => MobjType::MT_MISC51,
+        102 => MobjType::MT_MISC52,
+        103 => MobjType::MT_MISC53,
+        104 => MobjType::MT_MISC54,
+        105 => MobjType::MT_MISC55,
+        106 => MobjType::MT_MISC56,
+        107 => MobjType::MT_MISC57,
+        108 => MobjType::MT_MISC58,
+        109 => MobjType::MT_MISC59,
+        110 => MobjType::MT_MISC60,
+        111 => MobjType::MT_MISC61,
+        112 => MobjType::MT_MISC62,
+        113 => MobjType::MT_MISC63,
+        114 => MobjType::MT_MISC64,
+        115 => MobjType::MT_MISC65,
+        116 => MobjType::MT_MISC66,
+        117 => MobjType::MT_MISC67,
+        118 => MobjType::MT_MISC68,
+        119 => MobjType::MT_MISC69,
+        120 => MobjType::MT_MISC70,
+        121 => MobjType::MT_MISC71,
+        122 => MobjType::MT_MISC72,
+        123 => MobjType::MT_MISC73,
+        124 => MobjType::MT_MISC74,
+        125 => MobjType::MT_MISC75,
+        126 => MobjType::MT_MISC76,
+        127 => MobjType::MT_MISC77,
+        128 => MobjType::MT_MISC78,
+        129 => MobjType::MT_MISC79,
+        130 => MobjType::MT_MISC80,
+        131 => MobjType::MT_MISC81,
+        132 => MobjType::MT_MISC82,
+        133 => MobjType::MT_MISC83,
+        134 => MobjType::MT_MISC84,
+        135 => MobjType::MT_MISC85,
+        136 => MobjType::MT_MISC86,
+        n => panic!("invalid mobjtype {n}"),
+    }
+}
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct mobjinfo_t {
@@ -2550,7 +2694,7 @@ pub struct mobj_s {
     pub momy: fixed_t,
     pub momz: fixed_t,
     pub validcount: i32,
-    pub type_0: mobjtype_t,
+    pub type_0: MobjType,
     pub tics: i32,
     pub state: Option<StateId>,
     pub flags: i32,
@@ -2904,7 +3048,7 @@ pub unsafe fn P_NightmareRespawn(state: &mut GameState, mut mobj: *mut mobj_t) {
         .p_setup
         .sector_mut(state.p_setup.subsectors[(*mobj).subsector.0 as usize].sector))
     .floorheight;
-    mo = P_SpawnMobj(state, (*mobj).x, (*mobj).y, floorheight1, MT_TFOG);
+    mo = P_SpawnMobj(state, (*mobj).x, (*mobj).y, floorheight1, MobjType::MT_TFOG);
     S_StartSound(
         state,
         mo as *mut ::core::ffi::c_void,
@@ -2913,7 +3057,7 @@ pub unsafe fn P_NightmareRespawn(state: &mut GameState, mut mobj: *mut mobj_t) {
     ss = R_PointInSubsector(state, x, y);
     let floorheight2 =
         (*state.p_setup.sector_mut(state.p_setup.subsectors[ss.0 as usize].sector)).floorheight;
-    mo = P_SpawnMobj(state, x, y, floorheight2, MT_TFOG);
+    mo = P_SpawnMobj(state, x, y, floorheight2, MobjType::MT_TFOG);
     S_StartSound(
         state,
         mo as *mut ::core::ffi::c_void,
@@ -2981,7 +3125,7 @@ pub unsafe fn P_SpawnMobj(
     mut x: fixed_t,
     mut y: fixed_t,
     mut z: fixed_t,
-    mut type_0: mobjtype_t,
+    mut type_0: MobjType,
 ) -> *mut mobj_t {
     let mut mobj: *mut mobj_t = ::core::ptr::null_mut::<mobj_t>();
     let mut st: *mut state_t = ::core::ptr::null_mut::<state_t>();
@@ -3150,7 +3294,7 @@ impl PMobjState {
                 momy: 0,
                 momz: 0,
                 validcount: 0,
-                type_0: MT_PLAYER,
+                type_0: MobjType::MT_PLAYER,
                 tics: 0,
                 state: None,
                 flags: 0,
@@ -3183,8 +3327,8 @@ pub unsafe fn P_RemoveMobj(state: &mut GameState, mut mobj: *mut mobj_t) {
     state.p_mobj.retire((*mobj).id);
     if (*mobj).flags & MF_SPECIAL as i32 != 0
         && (*mobj).flags & MF_DROPPED as i32 == 0
-        && (*mobj).type_0 as u32 != MT_INV as i32 as u32
-        && (*mobj).type_0 as u32 != MT_INS as i32 as u32
+        && (*mobj).type_0 as u32 != MobjType::MT_INV as i32 as u32
+        && (*mobj).type_0 as u32 != MobjType::MT_INS as i32 as u32
     {
         state.p_mobj.itemrespawnque[state.p_mobj.iquehead as usize] = (*mobj).spawnpoint;
         state.p_mobj.itemrespawntime[state.p_mobj.iquehead as usize] = state.p_tick.leveltime;
@@ -3223,7 +3367,7 @@ pub unsafe fn P_RespawnSpecials(state: &mut GameState) {
     ss = R_PointInSubsector(state, x, y);
     let floorheight =
         (*state.p_setup.sector_mut(state.p_setup.subsectors[ss.0 as usize].sector)).floorheight;
-    mo = P_SpawnMobj(state, x, y, floorheight, MT_IFOG);
+    mo = P_SpawnMobj(state, x, y, floorheight, MobjType::MT_IFOG);
     S_StartSound(
         state,
         mo as *mut ::core::ffi::c_void,
@@ -3241,7 +3385,7 @@ pub unsafe fn P_RespawnSpecials(state: &mut GameState) {
     } else {
         z = ONFLOORZ as fixed_t;
     }
-    mo = P_SpawnMobj(state, x, y, z, i as mobjtype_t);
+    mo = P_SpawnMobj(state, x, y, z, mobjtype_from_raw(i));
     (*mo).spawnpoint = *mthing;
     (*mo).angle = (ANG45 * ((*mthing).angle as i32 / 45 as i32)) as angle_t;
     state.p_mobj.iquetail = state.p_mobj.iquetail + 1 as i32 & ITEMQUESIZE - 1 as i32;
@@ -3267,7 +3411,7 @@ pub unsafe fn P_SpawnPlayer(state: &mut GameState, mut mthing: *mut mapthing_t) 
     x = (((*mthing).x as i32) << FRACBITS) as fixed_t;
     y = (((*mthing).y as i32) << FRACBITS) as fixed_t;
     z = ONFLOORZ as fixed_t;
-    mobj = P_SpawnMobj(state, x, y, z, MT_PLAYER);
+    mobj = P_SpawnMobj(state, x, y, z, MobjType::MT_PLAYER);
     if (*mthing).type_0 as i32 > 1 as i32 {
         (*mobj).flags |= ((*mthing).type_0 as i32 - 1 as i32) << MF_TRANSSHIFT as i32;
     }
@@ -3361,7 +3505,7 @@ pub unsafe fn P_SpawnMapThing(state: &mut GameState, mut mthing: *mut mapthing_t
         return;
     }
     if state.d_main.nomonsters
-        && (i == MT_SKULL as i32
+        && (i == MobjType::MT_SKULL as i32
             || state.info.mobjinfo[i as usize].flags & MF_COUNTKILL as i32 != 0)
     {
         return;
@@ -3373,7 +3517,7 @@ pub unsafe fn P_SpawnMapThing(state: &mut GameState, mut mthing: *mut mapthing_t
     } else {
         z = ONFLOORZ as fixed_t;
     }
-    mobj = P_SpawnMobj(state, x, y, z, i as mobjtype_t);
+    mobj = P_SpawnMobj(state, x, y, z, mobjtype_from_raw(i));
     (*mobj).spawnpoint = *mthing;
     if (*mobj).tics > 0 as i32 {
         (*mobj).tics = 1 as i32 + P_Random(&mut state.m_random) % (*mobj).tics;
@@ -3392,7 +3536,7 @@ pub unsafe fn P_SpawnMapThing(state: &mut GameState, mut mthing: *mut mapthing_t
 pub unsafe fn P_SpawnPuff(state: &mut GameState, mut x: fixed_t, mut y: fixed_t, mut z: fixed_t) {
     let mut th: *mut mobj_t = ::core::ptr::null_mut::<mobj_t>();
     z += P_Random(&mut state.m_random) - P_Random(&mut state.m_random) << 10 as i32;
-    th = P_SpawnMobj(state, x, y, z, MT_PUFF);
+    th = P_SpawnMobj(state, x, y, z, MobjType::MT_PUFF);
     (*th).momz = FRACUNIT as fixed_t;
     (*th).tics -= P_Random(&mut state.m_random) & 3 as i32;
     if (*th).tics < 1 as i32 {
@@ -3411,7 +3555,7 @@ pub unsafe fn P_SpawnBlood(
 ) {
     let mut th: *mut mobj_t = ::core::ptr::null_mut::<mobj_t>();
     z += P_Random(&mut state.m_random) - P_Random(&mut state.m_random) << 10 as i32;
-    th = P_SpawnMobj(state, x, y, z, MT_BLOOD);
+    th = P_SpawnMobj(state, x, y, z, MobjType::MT_BLOOD);
     (*th).momz = (FRACUNIT * 2 as i32) as fixed_t;
     (*th).tics -= P_Random(&mut state.m_random) & 3 as i32;
     if (*th).tics < 1 as i32 {
@@ -3449,7 +3593,7 @@ pub unsafe fn P_SpawnMissile(
     state: &mut GameState,
     mut source: *mut mobj_t,
     mut dest: *mut mobj_t,
-    mut type_0: mobjtype_t,
+    mut type_0: MobjType,
 ) -> *mut mobj_t {
     let mut th: *mut mobj_t = ::core::ptr::null_mut::<mobj_t>();
     let mut an: angle_t = 0;
@@ -3488,7 +3632,7 @@ pub unsafe fn P_SpawnMissile(
 pub unsafe fn P_SpawnPlayerMissile(
     state: &mut GameState,
     mut source: *mut mobj_t,
-    mut type_0: mobjtype_t,
+    mut type_0: MobjType,
 ) {
     let mut th: *mut mobj_t = ::core::ptr::null_mut::<mobj_t>();
     let mut an: angle_t = 0;
