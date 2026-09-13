@@ -3,7 +3,7 @@ use crate::src::am_map::AM_Stop;
 use crate::src::am_map::AM_Ticker;
 use crate::src::d_event::event_t;
 use crate::src::d_event::GameScreenState;
-use crate::src::d_event::{ev_joystick, ev_keydown, ev_mouse};
+use crate::src::d_event::EvType;
 use crate::src::d_event::{
     ga_completed, ga_loadgame, ga_loadlevel, ga_newgame, ga_nothing, ga_playdemo, ga_savegame,
     ga_screenshot, ga_victory, ga_worlddone, gameaction_t,
@@ -898,7 +898,7 @@ unsafe fn SetMouseButtons(state: &mut GameState, mut buttons_mask: u32) {
 }
 pub unsafe fn G_Responder(state: &mut GameState, mut ev: event_t) -> bool {
     if state.g_game.gamestate == GameScreenState::GS_LEVEL
-        && ev.type_0 as u32 == ev_keydown as u32
+        && ev.type_0 == EvType::ev_keydown
         && ev.data1 == state.m_controls.key_spy
         && (state.g_game.singledemo || state.g_game.deathmatch == 0)
     {
@@ -919,9 +919,9 @@ pub unsafe fn G_Responder(state: &mut GameState, mut ev: event_t) -> bool {
         && !state.g_game.singledemo
         && (state.g_game.demoplayback || state.g_game.gamestate == GameScreenState::GS_DEMOSCREEN)
     {
-        if ev.type_0 == ev_keydown
-            || ev.type_0 == ev_mouse && ev.data1 != 0
-            || ev.type_0 == ev_joystick && ev.data1 != 0
+        if ev.type_0 == EvType::ev_keydown
+            || ev.type_0 == EvType::ev_mouse && ev.data1 != 0
+            || ev.type_0 == EvType::ev_joystick && ev.data1 != 0
         {
             M_StartControlPanel(state);
             return true;
@@ -944,12 +944,12 @@ pub unsafe fn G_Responder(state: &mut GameState, mut ev: event_t) -> bool {
             return true;
         }
     }
-    if state.g_game.testcontrols && ev.type_0 == ev_mouse {
+    if state.g_game.testcontrols && ev.type_0 == EvType::ev_mouse {
         state.g_game.testcontrols_mousespeed = (ev.data2).abs();
     }
-    if ev.type_0 == ev_keydown && ev.data1 == state.m_controls.key_prevweapon {
+    if ev.type_0 == EvType::ev_keydown && ev.data1 == state.m_controls.key_prevweapon {
         state.g_game.next_weapon = -1;
-    } else if ev.type_0 == ev_keydown && ev.data1 == state.m_controls.key_nextweapon {
+    } else if ev.type_0 == EvType::ev_keydown && ev.data1 == state.m_controls.key_nextweapon {
         state.g_game.next_weapon = 1;
     }
     match ev.type_0 as u32 {

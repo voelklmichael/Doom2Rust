@@ -17,16 +17,18 @@ pub enum GameScreenState {
     GS_DEMOSCREEN = 3,
     GS_WIPPED = 4294967295,
 }
-pub type evtype_t = u32;
-pub const ev_quit: evtype_t = 4;
-pub const ev_joystick: evtype_t = 3;
-pub const ev_mouse: evtype_t = 2;
-pub const ev_keyup: evtype_t = 1;
-pub const ev_keydown: evtype_t = 0;
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub enum EvType {
+    ev_keydown = 0,
+    ev_keyup = 1,
+    ev_mouse = 2,
+    ev_joystick = 3,
+    ev_quit = 4,
+}
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct event_t {
-    pub type_0: evtype_t,
+    pub type_0: EvType,
     pub data1: i32,
     pub data2: i32,
     pub data3: i32,
@@ -44,7 +46,7 @@ impl DEventState {
     pub const fn new() -> Self {
         DEventState {
             events: [event_t {
-                type_0: ev_keydown,
+                type_0: EvType::ev_keydown,
                 data1: 0,
                 data2: 0,
                 data3: 0,

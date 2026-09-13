@@ -1,5 +1,5 @@
-use crate::src::d_event::ev_keydown;
 use crate::src::d_event::event_t;
+use crate::src::d_event::EvType;
 use crate::src::d_mode::GameVersion;
 use crate::src::d_mode::commercial;
 use crate::src::d_mode::{doom, doom2, pack_chex, pack_hacx};
@@ -561,10 +561,10 @@ pub unsafe fn HU_Responder(state: &mut GameState, mut ev: &event_t) -> bool {
     if (*ev).data1 == KEY_RSHIFT {
         return false;
     } else if (*ev).data1 == KEY_RALT || (*ev).data1 == KEY_LALT {
-        state.hu_stuff.hu_responder_altdown = (*ev).type_0 as u32 == ev_keydown as i32 as u32;
+        state.hu_stuff.hu_responder_altdown = (*ev).type_0 == EvType::ev_keydown;
         return false;
     }
-    if (*ev).type_0 as u32 != ev_keydown as i32 as u32 {
+    if (*ev).type_0 != EvType::ev_keydown {
         return false;
     }
     if !state.hu_stuff.chat_on {

@@ -1,6 +1,6 @@
 use crate::src::am_map::{AM_MSGENTERED, AM_MSGEXITED, AM_MSGHEADER};
 use crate::src::d_event::event_t;
-use crate::src::d_event::{ev_keydown, ev_keyup};
+use crate::src::d_event::EvType;
 use crate::src::d_items::{weaponinfo, weaponinfo_t};
 use crate::src::d_mode::{commercial, registered, retail, shareware};
 use crate::src::d_mode::{doom, doom2, pack_chex, pack_hacx};
@@ -455,7 +455,7 @@ pub unsafe fn ST_refreshBackground(state: &mut GameState) {
 }
 pub unsafe fn ST_Responder(state: &mut GameState, mut ev: &event_t) -> bool {
     let mut i: i32 = 0;
-    if (*ev).type_0 as u32 == ev_keyup as i32 as u32
+    if (*ev).type_0 == EvType::ev_keyup
         && (*ev).data1 as u32 & 0xffff0000 as u32 == AM_MSGHEADER as u32
     {
         match (*ev).data1 {
@@ -468,7 +468,7 @@ pub unsafe fn ST_Responder(state: &mut GameState, mut ev: &event_t) -> bool {
             }
             _ => {}
         }
-    } else if (*ev).type_0 as u32 == ev_keydown as i32 as u32 {
+    } else if (*ev).type_0 == EvType::ev_keydown {
         if !state.g_game.netgame && state.g_game.gameskill as i32 != sk_nightmare as i32 {
             if cht_CheckCheat(
                 &raw mut state.st_stuff.cheat_god,
