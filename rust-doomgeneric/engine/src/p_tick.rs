@@ -186,10 +186,13 @@ pub unsafe fn P_RunThinkers(state: &mut GameState) {
                     ThinkerKind::Ceiling => {
                         state.p_ceilng.dealloc(currentthinker as *mut ceiling_t);
                     }
-                    // The remaining 6 kinds are still Z_Malloc'd individually
+                    // plat_t's memory is owned by PPlatsState's arena now.
+                    ThinkerKind::Plat => {
+                        state.p_plats.dealloc(currentthinker as *mut plat_t);
+                    }
+                    // The remaining 5 kinds are still Z_Malloc'd individually
                     // (converted one at a time in later phases).
                     ThinkerKind::Floor
-                    | ThinkerKind::Plat
                     | ThinkerKind::FireFlicker
                     | ThinkerKind::LightFlash
                     | ThinkerKind::Strobe

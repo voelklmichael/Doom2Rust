@@ -22,8 +22,6 @@ use crate::src::p_tick::P_RemoveThinker;
 use crate::src::s_sound::S_StartSound;
 use crate::src::s_sound::SoundOrigin;
 use crate::src::sounds::{sfx_pstart, sfx_pstop, sfx_stnmov};
-use crate::src::z_zone::Z_Malloc;
-use crate::src::z_zone::PU_LEVSPEC;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum PlatE {
@@ -45,13 +43,27 @@ pub const PLATSPEED: i32 = FRACUNIT;
 pub const MAXPLATS: i32 = 30;
 pub struct PPlatsState {
     pub activeplats: [*mut plat_t; 30],
+    plats: Vec<Box<plat_t>>,
 }
 
 impl PPlatsState {
     pub const fn new() -> Self {
         PPlatsState {
             activeplats: [::core::ptr::null::<plat_t>() as *mut plat_t; 30],
+            plats: Vec::new(),
         }
+    }
+
+    // Direct replacement for Z_Malloc(size_of::<plat_t>(), ...) -- see
+    // PDoorsState::spawn/dealloc (p_doors.rs) for why no generation-checked
+    // id or two-phase retire/deallocate split is needed here either.
+    pub fn spawn(&mut self, value: plat_t) -> *mut plat_t {
+        self.plats.push(Box::new(value));
+        self.plats.last_mut().unwrap().as_mut()
+    }
+
+    pub fn dealloc(&mut self, ptr: *mut plat_t) {
+        self.plats.retain(|b| !::core::ptr::eq(b.as_ref(), ptr));
     }
 }
 
@@ -154,12 +166,7 @@ pub unsafe fn EV_DoPlat(
             continue;
         }
         rtn = 1 as i32;
-        plat = Z_Malloc(
-            &mut state.z_zone,
-            ::core::mem::size_of::<plat_t>() as i32,
-            PU_LEVSPEC as i32,
-            ::core::ptr::null_mut::<::core::ffi::c_void>(),
-        ) as *mut plat_t;
+        plat = state.p_plats.spawn(plat_t::default());
         let plat_id = P_AddThinker(state, &raw mut (*plat).thinker, ThinkerKind::Plat);
         (*plat).type_0 = type_0;
         (*plat).sector = SectorId(secnum as u32);

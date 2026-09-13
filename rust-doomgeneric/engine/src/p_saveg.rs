@@ -1149,12 +1149,7 @@ pub unsafe fn P_UnArchiveSpecials(state: &mut GameState) {
             }
             3 => {
                 saveg_read_pad(state);
-                plat = Z_Malloc(
-                    &mut state.z_zone,
-                    ::core::mem::size_of::<plat_t>() as i32,
-                    PU_LEVEL as i32,
-                    NULL,
-                ) as *mut plat_t;
+                plat = state.p_plats.spawn(plat_t::default());
                 saveg_read_plat_t(state, plat);
                 if matches!((*plat).thinker.function, ThinkerFn::Unresolved) {
                     (*plat).thinker.function = ThinkerFn::Plat(T_PlatRaise);
