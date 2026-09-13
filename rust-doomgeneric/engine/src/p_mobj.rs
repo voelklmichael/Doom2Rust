@@ -1,4 +1,4 @@
-use crate::src::d_mode::{sk_baby, sk_nightmare};
+use crate::src::d_mode::SkillType;
 use crate::src::d_player::CF_NOMOMENTUM;
 use crate::src::doomdef::MAXPLAYERS;
 use crate::src::doomdef::NULL;
@@ -918,7 +918,7 @@ pub unsafe fn P_SpawnMobj(
     (*mobj).height = (*info).height as fixed_t;
     (*mobj).flags = (*info).flags;
     (*mobj).health = (*info).spawnhealth;
-    if state.g_game.gameskill as i32 != sk_nightmare as i32 {
+    if state.g_game.gameskill != SkillType::sk_nightmare {
         (*mobj).reactiontime = (*info).reactiontime;
     }
     (*mobj).lastlook = P_Random(&mut state.m_random) % MAXPLAYERS;
@@ -1243,9 +1243,9 @@ pub unsafe fn P_SpawnMapThing(state: &mut GameState, mut mthing: *mut mapthing_t
     if !state.g_game.netgame && (*mthing).options as i32 & 16 as i32 != 0 {
         return;
     }
-    if state.g_game.gameskill as i32 == sk_baby as i32 {
+    if state.g_game.gameskill == SkillType::sk_baby {
         bit = 1 as i32;
-    } else if state.g_game.gameskill as i32 == sk_nightmare as i32 {
+    } else if state.g_game.gameskill == SkillType::sk_nightmare {
         bit = 4 as i32;
     } else {
         bit = (1 as i32) << state.g_game.gameskill as i32 - 1 as i32;

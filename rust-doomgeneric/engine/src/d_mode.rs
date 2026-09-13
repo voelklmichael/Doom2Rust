@@ -1,10 +1,23 @@
-pub type skill_t = i32;
-pub const sk_nightmare: skill_t = 4;
-pub const sk_hard: skill_t = 3;
-pub const sk_medium: skill_t = 2;
-pub const sk_easy: skill_t = 1;
-pub const sk_baby: skill_t = 0;
-pub const sk_noitems: skill_t = -1;
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
+pub enum SkillType {
+    sk_noitems = -1,
+    sk_baby = 0,
+    sk_easy = 1,
+    sk_medium = 2,
+    sk_hard = 3,
+    sk_nightmare = 4,
+}
+pub fn skill_from_raw(v: i32) -> SkillType {
+    match v {
+        -1 => SkillType::sk_noitems,
+        0 => SkillType::sk_baby,
+        1 => SkillType::sk_easy,
+        2 => SkillType::sk_medium,
+        3 => SkillType::sk_hard,
+        4 => SkillType::sk_nightmare,
+        n => panic!("invalid skill level {n}"),
+    }
+}
 pub type GameMission_t = u32;
 pub const none: GameMission_t = 9;
 pub const strife: GameMission_t = 8;

@@ -1,4 +1,4 @@
-use crate::src::d_mode::skill_t;
+use crate::src::d_mode::skill_from_raw;
 use crate::src::d_player::NUMPOWERS;
 use crate::src::info::StateId;
 use crate::src::d_player::NUMPSPRITES;
@@ -812,7 +812,7 @@ pub fn P_ReadSaveGameHeader(state: &mut GameState) -> bool {
     if cstr_prefix(&read_vcheck) != cstr_prefix(&vcheck) {
         return false;
     }
-    state.g_game.gameskill = saveg_read8(state) as skill_t;
+    state.g_game.gameskill = skill_from_raw(saveg_read8(state) as i32);
     state.g_game.gameepisode = saveg_read8(state) as i32;
     state.g_game.gamemap = saveg_read8(state) as i32;
     i = 0 as i32;

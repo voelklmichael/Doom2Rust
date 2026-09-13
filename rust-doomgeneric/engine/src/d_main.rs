@@ -12,7 +12,7 @@ use crate::src::d_mode::{commercial, registered, retail, shareware};
 use crate::src::d_mode::{
     doom, doom2, none, pack_chex, pack_hacx, pack_plut, pack_tnt, GameMission_t,
 };
-use crate::src::d_mode::{sk_baby, sk_medium, skill_t};
+use crate::src::d_mode::{skill_from_raw, SkillType};
 use crate::src::d_net::D_CheckNetGame;
 use crate::src::d_net::D_ConnectNetGame;
 use crate::src::d_player::{PlayerId, PlayerState};
@@ -111,7 +111,7 @@ pub struct DMainState {
     pub nomonsters: bool,
     pub respawnparm: bool,
     pub fastparm: bool,
-    pub startskill: skill_t,
+    pub startskill: SkillType,
     pub startepisode: i32,
     pub startmap: i32,
     pub autostart: bool,
@@ -145,7 +145,7 @@ impl DMainState {
             nomonsters: false,
             respawnparm: false,
             fastparm: false,
-            startskill: sk_baby,
+            startskill: SkillType::sk_baby,
             startepisode: 0,
             startmap: 0,
             autostart: false,
@@ -1059,18 +1059,20 @@ pub unsafe fn D_DoomMain(state: &mut GameState) {
     I_InitSound(state, true);
     I_InitMusic(&mut state.i_sound);
     D_ConnectNetGame(state);
-    state.d_main.startskill = sk_medium;
+    state.d_main.startskill = SkillType::sk_medium;
     state.d_main.startepisode = 1 as i32;
     state.d_main.startmap = 1 as i32;
     state.d_main.autostart = false;
     p = M_CheckParmWithArgs(state, "-skill", 1 as i32);
     if p != 0 {
-        state.d_main.startskill = (state.m_argv.myargv[(p + 1 as i32) as usize]
-            .as_bytes()
-            .first()
-            .copied()
-            .unwrap_or(0) as i32
-            - '1' as i32) as skill_t;
+        state.d_main.startskill = skill_from_raw(
+            state.m_argv.myargv[(p + 1 as i32) as usize]
+                .as_bytes()
+                .first()
+                .copied()
+                .unwrap_or(0) as i32
+                - '1' as i32,
+        );
         state.d_main.autostart = true;
     }
     p = M_CheckParmWithArgs(state, "-episode", 1 as i32);

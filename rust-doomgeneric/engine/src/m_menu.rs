@@ -8,7 +8,7 @@ use crate::src::w_wad::W_CacheLumpName;
 use crate::src::d_event::EvType;
 use crate::src::d_mode::{commercial, registered, retail, shareware};
 use crate::src::d_mode::{doom, doom2, pack_chex, pack_hacx};
-use crate::src::d_mode::{skill_t, GameVersion};
+use crate::src::d_mode::{skill_from_raw, GameVersion};
 use crate::src::doomdef::NULL;
 use crate::src::doomdef::SCREENHEIGHT;
 use crate::src::doomdef::SCREENWIDTH;
@@ -1071,7 +1071,7 @@ pub fn M_VerifyNightmare(state: &mut GameState, mut key: i32) {
     }
     G_DeferedInitNew(
         state,
-        nightmare as i32 as skill_t,
+        skill_from_raw(nightmare as i32),
         state.m_menu.epi + 1 as i32,
         1 as i32,
     );
@@ -1090,7 +1090,7 @@ pub fn M_ChooseSkill(state: &mut GameState, mut choice: i32) {
     }
     G_DeferedInitNew(
         state,
-        choice as skill_t,
+        skill_from_raw(choice),
         state.m_menu.epi + 1 as i32,
         1 as i32,
     );
