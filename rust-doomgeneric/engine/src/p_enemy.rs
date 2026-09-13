@@ -10,7 +10,7 @@ use crate::src::m_random::P_Random;
 use crate::src::p_doors::EV_DoDoor;
 use crate::src::p_doors::VldoorE;
 use crate::src::p_floor::EV_DoFloor;
-use crate::src::p_floor::{lowerFloorToLowest, raiseToTexture};
+use crate::src::p_floor::FloorE;
 use crate::src::p_inter::P_DamageMobj;
 use crate::src::p_map::P_AimLineAttack;
 use crate::src::p_map::P_CheckPosition;
@@ -1497,12 +1497,12 @@ pub unsafe fn A_BossDeath(state: &mut GameState, id: MobjId) {
         if state.g_game.gamemap == 7 as i32 {
             if (*mo).type_0 as u32 == MT_FATSO as i32 as u32 {
                 junk.tag = 666 as i16;
-                EV_DoFloor(state, &raw mut junk, lowerFloorToLowest);
+                EV_DoFloor(state, &raw mut junk, FloorE::lowerFloorToLowest);
                 return;
             }
             if (*mo).type_0 as u32 == MT_BABY as i32 as u32 {
                 junk.tag = 667 as i16;
-                EV_DoFloor(state, &raw mut junk, raiseToTexture);
+                EV_DoFloor(state, &raw mut junk, FloorE::raiseToTexture);
                 return;
             }
         }
@@ -1510,7 +1510,7 @@ pub unsafe fn A_BossDeath(state: &mut GameState, id: MobjId) {
         match state.g_game.gameepisode {
             1 => {
                 junk.tag = 666 as i16;
-                EV_DoFloor(state, &raw mut junk, lowerFloorToLowest);
+                EV_DoFloor(state, &raw mut junk, FloorE::lowerFloorToLowest);
                 return;
             }
             4 => match state.g_game.gamemap {
@@ -1521,7 +1521,7 @@ pub unsafe fn A_BossDeath(state: &mut GameState, id: MobjId) {
                 }
                 8 => {
                     junk.tag = 666 as i16;
-                    EV_DoFloor(state, &raw mut junk, lowerFloorToLowest);
+                    EV_DoFloor(state, &raw mut junk, FloorE::lowerFloorToLowest);
                     return;
                 }
                 _ => {}

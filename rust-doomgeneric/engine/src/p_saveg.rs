@@ -14,7 +14,7 @@ use crate::src::p_ceilng::CeilingE;
 use crate::src::p_ceilng::P_AddActiveCeiling;
 use crate::src::p_doors::VldoorE;
 use crate::src::p_doors::vldoor_t;
-use crate::src::p_floor::floor_e;
+use crate::src::p_floor::FloorE;
 use crate::src::p_lights::{glow_t, lightflash_t, strobe_t};
 use crate::src::p_maputl::P_SetThingPosition;
 use crate::src::p_mobj::mobjtype_t;
@@ -601,10 +601,28 @@ unsafe fn saveg_write_vldoor_t(state: &mut GameState, mut str: *mut vldoor_t) {
     saveg_write32(state, (*str).topwait);
     saveg_write32(state, (*str).topcountdown);
 }
+fn saveg_read_floor_e(state: &mut GameState) -> FloorE {
+    match saveg_read32(state) {
+        0 => FloorE::lowerFloor,
+        1 => FloorE::lowerFloorToLowest,
+        2 => FloorE::turboLower,
+        3 => FloorE::raiseFloor,
+        4 => FloorE::raiseFloorToNearest,
+        5 => FloorE::raiseToTexture,
+        6 => FloorE::lowerAndChange,
+        7 => FloorE::raiseFloor24,
+        8 => FloorE::raiseFloor24AndChange,
+        9 => FloorE::raiseFloorCrush,
+        10 => FloorE::raiseFloorTurbo,
+        11 => FloorE::donutRaise,
+        12 => FloorE::raiseFloor512,
+        n => panic!("P_UnArchiveSpecials: invalid floor type {n} in savegame"),
+    }
+}
 unsafe fn saveg_read_floormove_t(state: &mut GameState, mut str: *mut floormove_t) {
     let mut sector: i32 = 0;
     saveg_read_thinker_t(state, &raw mut (*str).thinker);
-    (*str).type_0 = saveg_read32(state) as floor_e;
+    (*str).type_0 = saveg_read_floor_e(state);
     (*str).crush = saveg_read32(state) != 0;
     sector = saveg_read32(state);
     (*str).sector = SectorId(sector as u32);

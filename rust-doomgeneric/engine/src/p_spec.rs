@@ -24,9 +24,7 @@ use crate::src::p_floor::EV_BuildStairs;
 use crate::src::p_floor::EV_DoFloor;
 use crate::src::p_floor::StairE;
 use crate::src::p_floor::{
-    donutRaise, floor_e, lowerAndChange, lowerFloor, lowerFloorToLowest, raiseFloor, raiseFloor24,
-    raiseFloor24AndChange, raiseFloorCrush, raiseFloorToNearest, raiseFloorTurbo, raiseToTexture,
-    turboLower,
+    FloorE,
 };
 use crate::src::p_inter::P_DamageMobj;
 use crate::src::p_lights::EV_LightTurnOn;
@@ -170,7 +168,7 @@ pub struct ceiling_t {
 #[repr(C)]
 pub struct floormove_t {
     pub thinker: thinker_t,
-    pub type_0: floor_e,
+    pub type_0: FloorE,
     pub crush: bool,
     pub sector: SectorId,
     pub direction: i32,
@@ -615,7 +613,7 @@ pub unsafe fn P_CrossSpecialLine(
             (*line).special = 0 as i16;
         }
         5 => {
-            EV_DoFloor(state, line, raiseFloor);
+            EV_DoFloor(state, line, FloorE::raiseFloor);
             (*line).special = 0 as i16;
         }
         6 => {
@@ -647,7 +645,7 @@ pub unsafe fn P_CrossSpecialLine(
             (*line).special = 0 as i16;
         }
         19 => {
-            EV_DoFloor(state, line, lowerFloor);
+            EV_DoFloor(state, line, FloorE::lowerFloor);
             (*line).special = 0 as i16;
         }
         22 => {
@@ -659,7 +657,7 @@ pub unsafe fn P_CrossSpecialLine(
             (*line).special = 0 as i16;
         }
         30 => {
-            EV_DoFloor(state, line, raiseToTexture);
+            EV_DoFloor(state, line, FloorE::raiseToTexture);
             (*line).special = 0 as i16;
         }
         35 => {
@@ -667,15 +665,15 @@ pub unsafe fn P_CrossSpecialLine(
             (*line).special = 0 as i16;
         }
         36 => {
-            EV_DoFloor(state, line, turboLower);
+            EV_DoFloor(state, line, FloorE::turboLower);
             (*line).special = 0 as i16;
         }
         37 => {
-            EV_DoFloor(state, line, lowerAndChange);
+            EV_DoFloor(state, line, FloorE::lowerAndChange);
             (*line).special = 0 as i16;
         }
         38 => {
-            EV_DoFloor(state, line, lowerFloorToLowest);
+            EV_DoFloor(state, line, FloorE::lowerFloorToLowest);
             (*line).special = 0 as i16;
         }
         39 => {
@@ -684,7 +682,7 @@ pub unsafe fn P_CrossSpecialLine(
         }
         40 => {
             EV_DoCeiling(state, line, CeilingE::raiseToHighest);
-            EV_DoFloor(state, line, lowerFloorToLowest);
+            EV_DoFloor(state, line, FloorE::lowerFloorToLowest);
             (*line).special = 0 as i16;
         }
         44 => {
@@ -703,7 +701,7 @@ pub unsafe fn P_CrossSpecialLine(
             (*line).special = 0 as i16;
         }
         56 => {
-            EV_DoFloor(state, line, raiseFloorCrush);
+            EV_DoFloor(state, line, FloorE::raiseFloorCrush);
             (*line).special = 0 as i16;
         }
         57 => {
@@ -711,11 +709,11 @@ pub unsafe fn P_CrossSpecialLine(
             (*line).special = 0 as i16;
         }
         58 => {
-            EV_DoFloor(state, line, raiseFloor24);
+            EV_DoFloor(state, line, FloorE::raiseFloor24);
             (*line).special = 0 as i16;
         }
         59 => {
-            EV_DoFloor(state, line, raiseFloor24AndChange);
+            EV_DoFloor(state, line, FloorE::raiseFloor24AndChange);
             (*line).special = 0 as i16;
         }
         104 => {
@@ -739,7 +737,7 @@ pub unsafe fn P_CrossSpecialLine(
             (*line).special = 0 as i16;
         }
         119 => {
-            EV_DoFloor(state, line, raiseFloorToNearest);
+            EV_DoFloor(state, line, FloorE::raiseFloorToNearest);
             (*line).special = 0 as i16;
         }
         121 => {
@@ -756,7 +754,7 @@ pub unsafe fn P_CrossSpecialLine(
             }
         }
         130 => {
-            EV_DoFloor(state, line, raiseFloorTurbo);
+            EV_DoFloor(state, line, FloorE::raiseFloorTurbo);
             (*line).special = 0 as i16;
         }
         141 => {
@@ -791,13 +789,13 @@ pub unsafe fn P_CrossSpecialLine(
             EV_LightTurnOn(state, line, 255 as i32);
         }
         82 => {
-            EV_DoFloor(state, line, lowerFloorToLowest);
+            EV_DoFloor(state, line, FloorE::lowerFloorToLowest);
         }
         83 => {
-            EV_DoFloor(state, line, lowerFloor);
+            EV_DoFloor(state, line, FloorE::lowerFloor);
         }
         84 => {
-            EV_DoFloor(state, line, lowerAndChange);
+            EV_DoFloor(state, line, FloorE::lowerAndChange);
         }
         86 => {
             EV_DoDoor(state, line, VldoorE::vld_open);
@@ -815,28 +813,28 @@ pub unsafe fn P_CrossSpecialLine(
             EV_DoDoor(state, line, VldoorE::vld_normal);
         }
         91 => {
-            EV_DoFloor(state, line, raiseFloor);
+            EV_DoFloor(state, line, FloorE::raiseFloor);
         }
         92 => {
-            EV_DoFloor(state, line, raiseFloor24);
+            EV_DoFloor(state, line, FloorE::raiseFloor24);
         }
         93 => {
-            EV_DoFloor(state, line, raiseFloor24AndChange);
+            EV_DoFloor(state, line, FloorE::raiseFloor24AndChange);
         }
         94 => {
-            EV_DoFloor(state, line, raiseFloorCrush);
+            EV_DoFloor(state, line, FloorE::raiseFloorCrush);
         }
         95 => {
             EV_DoPlat(state, line, PlattypeE::raiseToNearestAndChange, 0 as i32);
         }
         96 => {
-            EV_DoFloor(state, line, raiseToTexture);
+            EV_DoFloor(state, line, FloorE::raiseToTexture);
         }
         97 => {
             EV_Teleport(state, line, side, thing);
         }
         98 => {
-            EV_DoFloor(state, line, turboLower);
+            EV_DoFloor(state, line, FloorE::turboLower);
         }
         105 => {
             EV_DoDoor(state, line, VldoorE::vld_blazeRaise);
@@ -856,10 +854,10 @@ pub unsafe fn P_CrossSpecialLine(
             }
         }
         128 => {
-            EV_DoFloor(state, line, raiseFloorToNearest);
+            EV_DoFloor(state, line, FloorE::raiseFloorToNearest);
         }
         129 => {
-            EV_DoFloor(state, line, raiseFloorTurbo);
+            EV_DoFloor(state, line, FloorE::raiseFloorTurbo);
         }
         _ => {}
     };
@@ -884,7 +882,7 @@ pub unsafe fn P_ShootSpecialLine(
     }
     match (*line).special as i32 {
         24 => {
-            EV_DoFloor(state, line, raiseFloor);
+            EV_DoFloor(state, line, FloorE::raiseFloor);
             P_ChangeSwitchTexture(state, line, 0 as i32);
         }
         46 => {
@@ -1152,7 +1150,7 @@ pub unsafe fn EV_DoDonut(state: &mut GameState, mut line: *mut line_t) -> i32 {
                     P_AddThinker(state, &raw mut (*floor).thinker);
                     (*s2).specialdata = Some(SectorSpecial::Floor(floor));
                     (*floor).thinker.function = ThinkerFn::Floor(T_MoveFloor);
-                    (*floor).type_0 = donutRaise;
+                    (*floor).type_0 = FloorE::donutRaise;
                     (*floor).crush = false;
                     (*floor).direction = 1 as i32;
                     (*floor).sector = s2_id;
@@ -1169,7 +1167,7 @@ pub unsafe fn EV_DoDonut(state: &mut GameState, mut line: *mut line_t) -> i32 {
                     P_AddThinker(state, &raw mut (*floor).thinker);
                     (*s1).specialdata = Some(SectorSpecial::Floor(floor));
                     (*floor).thinker.function = ThinkerFn::Floor(T_MoveFloor);
-                    (*floor).type_0 = lowerFloor;
+                    (*floor).type_0 = FloorE::lowerFloor;
                     (*floor).crush = false;
                     (*floor).direction = -(1 as i32);
                     (*floor).sector = SectorId(secnum as u32);
