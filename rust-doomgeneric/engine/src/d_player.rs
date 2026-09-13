@@ -20,22 +20,28 @@ pub fn ammotype_from_raw(v: i32) -> ammotype_t {
         n => panic!("invalid ammotype {n}"),
     }
 }
-pub type C2RustUnnamed_2 = u32;
-pub const NUMPSPRITES: C2RustUnnamed_2 = 2;
-pub const ps_flash: C2RustUnnamed_2 = 1;
-pub const ps_weapon: C2RustUnnamed_2 = 0;
-pub type C2RustUnnamed_3 = u32;
-pub const CF_NOMOMENTUM: C2RustUnnamed_3 = 4;
-pub const CF_GODMODE: C2RustUnnamed_3 = 2;
-pub const CF_NOCLIP: C2RustUnnamed_3 = 1;
-pub type C2RustUnnamed = u32;
-pub const NUMPOWERS: C2RustUnnamed = 6;
-pub const pw_infrared: C2RustUnnamed = 5;
-pub const pw_allmap: C2RustUnnamed = 4;
-pub const pw_ironfeet: C2RustUnnamed = 3;
-pub const pw_invisibility: C2RustUnnamed = 2;
-pub const pw_strength: C2RustUnnamed = 1;
-pub const pw_invulnerability: C2RustUnnamed = 0;
+pub const NUMPSPRITES: i32 = 2;
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub enum PSpriteNum {
+    ps_weapon = 0,
+    ps_flash = 1,
+}
+// CF_NOCLIP/CF_GODMODE/CF_NOMOMENTUM are bit flags (1/2/4) combined with
+// bitwise OR/AND/XOR into a single `cheats` field, not mutually-exclusive
+// enum variants - not a candidate for enum conversion.
+pub const CF_NOCLIP: i32 = 1;
+pub const CF_GODMODE: i32 = 2;
+pub const CF_NOMOMENTUM: i32 = 4;
+pub const NUMPOWERS: i32 = 6;
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub enum PowerType {
+    pw_invulnerability = 0,
+    pw_strength = 1,
+    pw_invisibility = 2,
+    pw_ironfeet = 3,
+    pw_allmap = 4,
+    pw_infrared = 5,
+}
 
 pub const NUMWEAPONS: i32 = 9;
 #[derive(Copy, Clone, PartialEq, Eq)]

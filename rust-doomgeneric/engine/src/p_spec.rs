@@ -1,5 +1,5 @@
 use crate::src::d_player::player_t;
-use crate::src::d_player::pw_ironfeet;
+use crate::src::d_player::PowerType;
 use crate::src::d_player::CF_GODMODE;
 use crate::src::fixed_cstr::FixedCStr;
 use crate::src::g_game::G_ExitLevel;
@@ -906,7 +906,7 @@ pub unsafe fn P_PlayerInSpecialSector(state: &mut GameState, mut player: *mut pl
     }
     match (*sector).special as i32 {
         5 => {
-            if (*player).powers[pw_ironfeet as i32 as usize] == 0 {
+            if (*player).powers[PowerType::pw_ironfeet as i32 as usize] == 0 {
                 if state.p_tick.leveltime & 0x1f as i32 == 0 {
                     P_DamageMobj(
                         state,
@@ -919,7 +919,7 @@ pub unsafe fn P_PlayerInSpecialSector(state: &mut GameState, mut player: *mut pl
             }
         }
         7 => {
-            if (*player).powers[pw_ironfeet as i32 as usize] == 0 {
+            if (*player).powers[PowerType::pw_ironfeet as i32 as usize] == 0 {
                 if state.p_tick.leveltime & 0x1f as i32 == 0 {
                     P_DamageMobj(
                         state,
@@ -932,7 +932,7 @@ pub unsafe fn P_PlayerInSpecialSector(state: &mut GameState, mut player: *mut pl
             }
         }
         16 | 4 => {
-            if (*player).powers[pw_ironfeet as i32 as usize] == 0
+            if (*player).powers[PowerType::pw_ironfeet as i32 as usize] == 0
                 || P_Random(&mut state.m_random) < 5 as i32
             {
                 if state.p_tick.leveltime & 0x1f as i32 == 0 {

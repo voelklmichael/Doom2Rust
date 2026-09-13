@@ -5,9 +5,7 @@ use crate::src::d_mode::SkillType;
 use crate::src::d_player::CF_GODMODE;
 use crate::src::d_player::{ammotype_from_raw, ammotype_t, NUMAMMO};
 use crate::src::d_player::{player_t, PlayerId, PlayerState};
-use crate::src::d_player::{
-    pw_allmap, pw_infrared, pw_invisibility, pw_invulnerability, pw_ironfeet, pw_strength,
-};
+use crate::src::d_player::PowerType;
 use crate::src::d_player::weapontype_t;
 use crate::src::doomdef::NULL;
 use crate::src::game_state::GameState;
@@ -224,24 +222,24 @@ pub unsafe fn P_GiveCard(mut player: *mut player_t, mut card: CardType) {
     (*player).cards[card as usize] = true;
 }
 pub unsafe fn P_GivePower(mut player: *mut player_t, mut power: i32) -> bool {
-    if power == pw_invulnerability as i32 {
+    if power == PowerType::pw_invulnerability as i32 {
         (*player).powers[power as usize] = INVULNTICS as i32;
         return true;
     }
-    if power == pw_invisibility as i32 {
+    if power == PowerType::pw_invisibility as i32 {
         (*player).powers[power as usize] = INVISTICS as i32;
         (*(*player).mo).flags |= MF_SHADOW as i32;
         return true;
     }
-    if power == pw_infrared as i32 {
+    if power == PowerType::pw_infrared as i32 {
         (*player).powers[power as usize] = INFRATICS as i32;
         return true;
     }
-    if power == pw_ironfeet as i32 {
+    if power == PowerType::pw_ironfeet as i32 {
         (*player).powers[power as usize] = IRONTICS as i32;
         return true;
     }
-    if power == pw_strength as i32 {
+    if power == PowerType::pw_strength as i32 {
         P_GiveBody(player, 100 as i32);
         (*player).powers[power as usize] = 1 as i32;
         return true;
@@ -391,14 +389,14 @@ pub unsafe fn P_TouchSpecialThing(
             }
         }
         71 => {
-            if !P_GivePower(player, pw_invulnerability as i32) {
+            if !P_GivePower(player, PowerType::pw_invulnerability as i32) {
                 return;
             }
             (*player).message = Some("Invulnerability!".to_string());
             sound = sfx_getpow as i32;
         }
         72 => {
-            if !P_GivePower(player, pw_strength as i32) {
+            if !P_GivePower(player, PowerType::pw_strength as i32) {
                 return;
             }
             (*player).message = Some("Berserk!".to_string());
@@ -408,28 +406,28 @@ pub unsafe fn P_TouchSpecialThing(
             sound = sfx_getpow as i32;
         }
         73 => {
-            if !P_GivePower(player, pw_invisibility as i32) {
+            if !P_GivePower(player, PowerType::pw_invisibility as i32) {
                 return;
             }
             (*player).message = Some("Partial Invisibility".to_string());
             sound = sfx_getpow as i32;
         }
         75 => {
-            if !P_GivePower(player, pw_ironfeet as i32) {
+            if !P_GivePower(player, PowerType::pw_ironfeet as i32) {
                 return;
             }
             (*player).message = Some("Radiation Shielding Suit".to_string());
             sound = sfx_getpow as i32;
         }
         76 => {
-            if !P_GivePower(player, pw_allmap as i32) {
+            if !P_GivePower(player, PowerType::pw_allmap as i32) {
                 return;
             }
             (*player).message = Some("Computer Area Map".to_string());
             sound = sfx_getpow as i32;
         }
         77 => {
-            if !P_GivePower(player, pw_infrared as i32) {
+            if !P_GivePower(player, PowerType::pw_infrared as i32) {
                 return;
             }
             (*player).message = Some("Light Amplification Visor".to_string());
@@ -714,7 +712,7 @@ pub unsafe fn P_DamageMobj(
         }
         if damage < 1000 as i32
             && ((*player).cheats & CF_GODMODE as i32 != 0
-                || (*player).powers[pw_invulnerability as i32 as usize] != 0)
+                || (*player).powers[PowerType::pw_invulnerability as i32 as usize] != 0)
         {
             return;
         }

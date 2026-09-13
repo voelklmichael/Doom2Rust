@@ -7,7 +7,7 @@ use crate::src::d_mode::GameMission_t;
 use crate::src::d_mode::{GameVersion, SkillType};
 use crate::src::d_player::player_t;
 use crate::src::d_player::{ammotype_t, NUMAMMO};
-use crate::src::d_player::{pw_invulnerability, pw_ironfeet, pw_strength};
+use crate::src::d_player::PowerType;
 use crate::src::d_player::{weapontype_t, NUMWEAPONS};
 use crate::src::d_player::{CF_GODMODE, CF_NOCLIP};
 use crate::src::doomdef::true_0;
@@ -619,7 +619,7 @@ pub unsafe fn ST_Responder(state: &mut GameState, mut ev: &event_t) -> bool {
                 {
                     if (*state.st_stuff.plyr).powers[i as usize] == 0 {
                         P_GivePower(state.st_stuff.plyr, i);
-                    } else if i != pw_strength as i32 {
+                    } else if i != PowerType::pw_strength as i32 {
                         (*state.st_stuff.plyr).powers[i as usize] = 1 as i32;
                     } else {
                         (*state.st_stuff.plyr).powers[i as usize] = 0 as i32;
@@ -641,7 +641,7 @@ pub unsafe fn ST_Responder(state: &mut GameState, mut ev: &event_t) -> bool {
             ) != 0
             {
                 (*state.st_stuff.plyr).weaponowned[weapontype_t::wp_chainsaw as i32 as usize] = true;
-                (*state.st_stuff.plyr).powers[pw_invulnerability as i32 as usize] = true_0;
+                (*state.st_stuff.plyr).powers[PowerType::pw_invulnerability as i32 as usize] = true_0;
                 (*state.st_stuff.plyr).message = Some("... doesn't suck - GM".to_string());
             } else if cht_CheckCheat(
                 &raw mut state.st_stuff.cheat_mypos,
@@ -837,7 +837,7 @@ pub unsafe fn ST_updateFaceWidget(state: &mut GameState) {
     }
     if state.st_stuff.st_updatefacewidget_priority < 5 as i32 {
         if (*state.st_stuff.plyr).cheats & CF_GODMODE as i32 != 0
-            || (*state.st_stuff.plyr).powers[pw_invulnerability as i32 as usize] != 0
+            || (*state.st_stuff.plyr).powers[PowerType::pw_invulnerability as i32 as usize] != 0
         {
             state.st_stuff.st_updatefacewidget_priority = 4 as i32;
             state.st_stuff.st_faceindex = ST_GODFACE;
@@ -915,8 +915,8 @@ pub unsafe fn ST_doPaletteStuff(state: &mut GameState) {
     let mut cnt: i32 = 0;
     let mut bzc: i32 = 0;
     cnt = (*state.st_stuff.plyr).damagecount;
-    if (*state.st_stuff.plyr).powers[pw_strength as i32 as usize] != 0 {
-        bzc = 12 as i32 - ((*state.st_stuff.plyr).powers[pw_strength as i32 as usize] >> 6 as i32);
+    if (*state.st_stuff.plyr).powers[PowerType::pw_strength as i32 as usize] != 0 {
+        bzc = 12 as i32 - ((*state.st_stuff.plyr).powers[PowerType::pw_strength as i32 as usize] >> 6 as i32);
         if bzc > cnt {
             cnt = bzc;
         }
@@ -933,8 +933,8 @@ pub unsafe fn ST_doPaletteStuff(state: &mut GameState) {
             palette = NUMBONUSPALS - 1 as i32;
         }
         palette += STARTBONUSPALS;
-    } else if (*state.st_stuff.plyr).powers[pw_ironfeet as i32 as usize] > 4 as i32 * 32 as i32
-        || (*state.st_stuff.plyr).powers[pw_ironfeet as i32 as usize] & 8 as i32 != 0
+    } else if (*state.st_stuff.plyr).powers[PowerType::pw_ironfeet as i32 as usize] > 4 as i32 * 32 as i32
+        || (*state.st_stuff.plyr).powers[PowerType::pw_ironfeet as i32 as usize] & 8 as i32 != 0
     {
         palette = RADIATIONPAL;
     } else {

@@ -12,7 +12,7 @@ use crate::src::d_mode::GameVersion;
 use crate::src::d_mode::GameMode_t;
 use crate::src::d_mode::GameMission_t;
 use crate::src::d_mode::{skill_from_raw, SkillType};
-use crate::src::d_player::pw_strength;
+use crate::src::d_player::PowerType;
 use crate::src::d_player::{ammotype_t, NUMAMMO};
 use crate::src::d_player::{player_s, player_t, PlayerId, PlayerState};
 use crate::src::d_player::weapontype_t;
@@ -453,7 +453,7 @@ fn WeaponSelectable(state: &mut GameState, mut weapon: weapontype_t) -> bool {
         && state.g_game.players[state.g_game.consoleplayer as usize].weaponowned
             [weapontype_t::wp_chainsaw as i32 as usize]
         && state.g_game.players[state.g_game.consoleplayer as usize].powers
-            [pw_strength as i32 as usize]
+            [PowerType::pw_strength as i32 as usize]
             == 0
     {
         return false;
