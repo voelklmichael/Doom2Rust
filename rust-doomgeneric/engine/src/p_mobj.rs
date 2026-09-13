@@ -3650,14 +3650,14 @@ pub unsafe fn P_SpawnPlayerMissile(
     let mut slope: fixed_t = 0;
     an = (*source).angle;
     slope = P_AimLineAttack(state, source, an, 16 as fixed_t * 64 as fixed_t * FRACUNIT);
-    if state.p_map.linetarget.is_null() {
+    if state.p_map.linetarget.is_none() {
         an = an.wrapping_add(((1 as i32) << 26 as i32) as angle_t);
         slope = P_AimLineAttack(state, source, an, 16 as fixed_t * 64 as fixed_t * FRACUNIT);
-        if state.p_map.linetarget.is_null() {
+        if state.p_map.linetarget.is_none() {
             an = an.wrapping_sub(((2 as i32) << 26 as i32) as angle_t);
             slope = P_AimLineAttack(state, source, an, 16 as fixed_t * 64 as fixed_t * FRACUNIT);
         }
-        if state.p_map.linetarget.is_null() {
+        if state.p_map.linetarget.is_none() {
             an = (*source).angle;
             slope = 0 as i32 as fixed_t;
         }

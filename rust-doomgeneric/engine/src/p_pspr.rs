@@ -320,7 +320,8 @@ pub unsafe fn A_Punch(state: &mut GameState, mut player: *mut player_t, _psp: *m
         slope as fixed_t,
         damage,
     );
-    if !state.p_map.linetarget.is_null() {
+    if let Some(linetarget) = state.p_map.linetarget {
+        let linetarget = state.p_mobj.mobj_get(linetarget).unwrap();
         S_StartSound(
             state,
             (*player).mo as *mut ::core::ffi::c_void,
@@ -330,8 +331,8 @@ pub unsafe fn A_Punch(state: &mut GameState, mut player: *mut player_t, _psp: *m
             state,
             (*(*player).mo).x,
             (*(*player).mo).y,
-            (*state.p_map.linetarget).x,
-            (*state.p_map.linetarget).y,
+            (*linetarget).x,
+            (*linetarget).y,
         );
     }
 }
@@ -353,7 +354,7 @@ pub unsafe fn A_Saw(state: &mut GameState, mut player: *mut player_t, _psp: *mut
         slope as fixed_t,
         damage,
     );
-    if state.p_map.linetarget.is_null() {
+    if state.p_map.linetarget.is_none() {
         S_StartSound(
             state,
             (*player).mo as *mut ::core::ffi::c_void,
@@ -366,12 +367,13 @@ pub unsafe fn A_Saw(state: &mut GameState, mut player: *mut player_t, _psp: *mut
         (*player).mo as *mut ::core::ffi::c_void,
         sfx_sawhit as i32,
     );
+    let linetarget = state.p_mobj.mobj_get(state.p_map.linetarget.unwrap()).unwrap();
     angle = R_PointToAngle2(
         state,
         (*(*player).mo).x,
         (*(*player).mo).y,
-        (*state.p_map.linetarget).x,
-        (*state.p_map.linetarget).y,
+        (*linetarget).x,
+        (*linetarget).y,
     );
     if angle.wrapping_sub((*(*player).mo).angle) > ANG180 {
         if (angle.wrapping_sub((*(*player).mo).angle) as i32) < -ANG90 / 20 as i32 {
@@ -439,11 +441,11 @@ pub unsafe fn P_BulletSlope(state: &mut GameState, mut mo: *mut mobj_t) {
     an = (*mo).angle;
     state.p_pspr.bulletslope =
         P_AimLineAttack(state, mo, an, 16 as fixed_t * 64 as fixed_t * FRACUNIT);
-    if state.p_map.linetarget.is_null() {
+    if state.p_map.linetarget.is_none() {
         an = an.wrapping_add(((1 as i32) << 26 as i32) as angle_t);
         state.p_pspr.bulletslope =
             P_AimLineAttack(state, mo, an, 16 as fixed_t * 64 as fixed_t * FRACUNIT);
-        if state.p_map.linetarget.is_null() {
+        if state.p_map.linetarget.is_none() {
             an = an.wrapping_sub(((2 as i32) << 26 as i32) as angle_t);
             state.p_pspr.bulletslope =
                 P_AimLineAttack(state, mo, an, 16 as fixed_t * 64 as fixed_t * FRACUNIT);
@@ -618,12 +620,13 @@ pub unsafe fn A_BFGSpray(state: &mut GameState, id: MobjId) {
             an,
             16 as fixed_t * 64 as fixed_t * FRACUNIT,
         );
-        if !state.p_map.linetarget.is_null() {
+        if let Some(linetarget) = state.p_map.linetarget {
+            let linetarget = state.p_mobj.mobj_get(linetarget).unwrap();
             P_SpawnMobj(
                 state,
-                (*state.p_map.linetarget).x,
-                (*state.p_map.linetarget).y,
-                (*state.p_map.linetarget).z + ((*state.p_map.linetarget).height >> 2 as i32),
+                (*linetarget).x,
+                (*linetarget).y,
+                (*linetarget).z + ((*linetarget).height >> 2 as i32),
                 MobjType::MT_EXTRABFG,
             );
             damage = 0 as i32;
@@ -632,7 +635,7 @@ pub unsafe fn A_BFGSpray(state: &mut GameState, id: MobjId) {
                 damage += (P_Random(&mut state.m_random) & 7 as i32) + 1 as i32;
                 j += 1;
             }
-            P_DamageMobj(state, state.p_map.linetarget, mo_target, mo_target, damage);
+            P_DamageMobj(state, linetarget, mo_target, mo_target, damage);
         }
         i += 1;
     }
