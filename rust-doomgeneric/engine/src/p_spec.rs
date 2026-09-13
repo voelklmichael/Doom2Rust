@@ -152,6 +152,29 @@ pub struct plat_t {
     pub tag: i32,
     pub type_0: PlattypeE,
 }
+// Placeholder passed to PPlatsState::spawn() -- every real field is set by
+// the caller within a few lines of spawn() returning (EV_DoPlat, and
+// p_saveg.rs's restore branch), so these values are never actually read.
+impl Default for plat_t {
+    fn default() -> Self {
+        plat_t {
+            thinker: thinker_t {
+                function: ThinkerFn::Unresolved,
+            },
+            sector: SectorId(0),
+            speed: 0,
+            low: 0,
+            high: 0,
+            wait: 0,
+            count: 0,
+            status: PlatE::up,
+            oldstatus: PlatE::up,
+            crush: false,
+            tag: 0,
+            type_0: PlattypeE::perpetualRaise,
+        }
+    }
+}
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct ceiling_t {
