@@ -1068,7 +1068,11 @@ pub unsafe fn PIT_RadiusAttack(state: &mut GameState, mut thing_id: MobjId) -> b
         return true_0 as boolean;
     }
     let bombspot = state.p_mobj.mobj_get(state.p_map.bombspot.unwrap()).unwrap();
-    let bombsource = state.p_mobj.mobj_get(state.p_map.bombsource.unwrap()).unwrap();
+    let bombsource = state
+        .p_map
+        .bombsource
+        .and_then(|id| state.p_mobj.mobj_get(id))
+        .unwrap_or(::core::ptr::null_mut());
     dx = ((*thing).x as i32 - (*bombspot).x as i32).abs() as fixed_t;
     dy = ((*thing).y as i32 - (*bombspot).y as i32).abs() as fixed_t;
     dist = if dx > dy { dx } else { dy };
@@ -1109,7 +1113,11 @@ pub unsafe fn P_RadiusAttack(
     xh = ((*spot).x + dist - state.p_setup.bmaporgx >> MAPBLOCKSHIFT) as i32;
     xl = ((*spot).x - dist - state.p_setup.bmaporgx >> MAPBLOCKSHIFT) as i32;
     state.p_map.bombspot = Some((*spot).id);
-    state.p_map.bombsource = Some((*source).id);
+    state.p_map.bombsource = if source.is_null() {
+        None
+    } else {
+        Some((*source).id)
+    };
     state.p_map.bombdamage = damage;
     y = yl;
     while y <= yh {
