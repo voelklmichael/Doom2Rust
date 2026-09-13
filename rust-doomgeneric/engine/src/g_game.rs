@@ -24,7 +24,6 @@ use crate::src::d_ticcmd::{
 use crate::src::doomdef::false_0;
 use crate::src::doomdef::true_0;
 use crate::src::doomdef::MAXPLAYERS;
-use crate::src::doomdef::NULL;
 use crate::src::doomdef::TICRATE;
 use crate::src::doomstat::DoomstatState;
 use crate::src::f_finale::F_Responder;
@@ -104,7 +103,6 @@ use crate::src::wi_stuff::WI_Start;
 use crate::src::wi_stuff::WI_Ticker;
 use crate::src::wi_stuff::{wbplayerstruct_t, wbstartstruct_t};
 use crate::src::z_zone::Z_CheckHeap;
-use crate::src::z_zone::Z_Malloc;
 use crate::src::z_zone::PU_STATIC;
 use std::io::Seek;
 
@@ -136,7 +134,7 @@ pub struct GGameState {
     pub totalsecret: i32,
     pub totalkills: i32,
     pub totalitems: i32,
-    pub demoname: *mut ::core::ffi::c_char,
+    pub demoname: String,
     pub demorecording: bool,
     pub longtics: bool,
     pub lowres_turn: bool,
@@ -270,7 +268,7 @@ impl GGameState {
             totalsecret: 0,
             totalkills: 0,
             totalitems: 0,
-            demoname: ::core::ptr::null::<::core::ffi::c_char>() as *mut ::core::ffi::c_char,
+            demoname: String::new(),
             demorecording: false,
             longtics: false,
             lowres_turn: false,
@@ -1882,21 +1880,7 @@ pub unsafe fn G_RecordDemo(state: &mut GameState, name: &str) {
     let mut i: i32 = 0;
     let mut maxsize: i32 = 0;
     state.g_game.usergame = false;
-    let demoname_full = format!("{}.lmp", name);
-    let demoname_bytes = demoname_full.as_bytes();
-    let demoname_size = (demoname_bytes.len() + 1) as size_t;
-    state.g_game.demoname = Z_Malloc(
-        &mut state.z_zone,
-        demoname_size as i32,
-        PU_STATIC as i32,
-        NULL,
-    ) as *mut ::core::ffi::c_char;
-    ::core::ptr::copy_nonoverlapping(
-        demoname_bytes.as_ptr(),
-        state.g_game.demoname as *mut u8,
-        demoname_bytes.len(),
-    );
-    *(state.g_game.demoname as *mut u8).add(demoname_bytes.len()) = 0;
+    state.g_game.demoname = format!("{}.lmp", name);
     maxsize = 0x20000 as i32;
     i = M_CheckParmWithArgs(state, "-maxdemo", 1 as i32);
     if i != 0 {
@@ -2120,17 +2104,12 @@ pub unsafe fn G_CheckDemoStatus(state: &mut GameState) -> bool {
             .demo_p
             .offset_from(state.g_game.demobuffer.as_ptr()) as usize;
         M_WriteFile(
-            &::std::ffi::CStr::from_ptr(state.g_game.demoname).to_string_lossy(),
+            &state.g_game.demoname,
             &state.g_game.demobuffer[..demo_len],
         );
         state.g_game.demobuffer = Vec::new();
         state.g_game.demorecording = false;
-        I_Error(&format!(
-            "Demo {} recorded",
-            ::std::ffi::CStr::from_ptr(state.g_game.demoname)
-                .to_str()
-                .unwrap(),
-        ));
+        I_Error(&format!("Demo {} recorded", state.g_game.demoname));
     }
     return false;
 }

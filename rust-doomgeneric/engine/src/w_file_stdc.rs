@@ -2,10 +2,7 @@ use crate::src::m_misc::M_FileLength;
 use crate::src::stdint_types::byte;
 use crate::src::stdint_types::size_t;
 use crate::src::w_file::{wad_file_class_t, wad_file_t};
-use crate::src::z_zone::Z_Free;
-use crate::src::z_zone::Z_Malloc;
 use crate::src::z_zone::ZZoneState;
-use crate::src::z_zone::PU_STATIC;
 use std::io::{Read, Seek, SeekFrom};
 
 #[derive(Copy, Clone)]
@@ -14,30 +11,26 @@ pub struct stdc_wad_file_t {
     pub wad: wad_file_t,
     pub fstream: *mut std::fs::File,
 }
-unsafe fn W_StdC_OpenFile(zone: &mut ZZoneState, path: &str) -> *mut wad_file_t {
-    let mut result: *mut stdc_wad_file_t = ::core::ptr::null_mut::<stdc_wad_file_t>();
+unsafe fn W_StdC_OpenFile(_zone: &mut ZZoneState, path: &str) -> *mut wad_file_t {
     let fstream = match std::fs::File::open(path) {
         Ok(fstream) => fstream,
         Err(_) => return ::core::ptr::null_mut::<wad_file_t>(),
     };
     let length = M_FileLength(&fstream) as u32;
-    result = Z_Malloc(
-        zone,
-        ::core::mem::size_of::<stdc_wad_file_t>() as i32,
-        PU_STATIC as i32,
-        ::core::ptr::null_mut::<::core::ffi::c_void>(),
-    ) as *mut stdc_wad_file_t;
-    (*result).wad.file_class = STDC_WAD_FILE;
-    (*result).wad.mapped = ::core::ptr::null_mut::<byte>();
-    (*result).wad.length = length;
-    (*result).fstream = Box::into_raw(Box::new(fstream));
+    let result = Box::into_raw(Box::new(stdc_wad_file_t {
+        wad: wad_file_t {
+            file_class: STDC_WAD_FILE,
+            mapped: ::core::ptr::null_mut::<byte>(),
+            length,
+        },
+        fstream: Box::into_raw(Box::new(fstream)),
+    }));
     return &raw mut (*result).wad;
 }
-unsafe fn W_StdC_CloseFile(zone: &mut ZZoneState, mut wad: *mut wad_file_t) {
-    let mut stdc_wad: *mut stdc_wad_file_t = ::core::ptr::null_mut::<stdc_wad_file_t>();
-    stdc_wad = wad as *mut stdc_wad_file_t;
+unsafe fn W_StdC_CloseFile(_zone: &mut ZZoneState, mut wad: *mut wad_file_t) {
+    let stdc_wad = wad as *mut stdc_wad_file_t;
     drop(Box::from_raw((*stdc_wad).fstream));
-    Z_Free(zone, stdc_wad as *mut ::core::ffi::c_void);
+    drop(Box::from_raw(stdc_wad));
 }
 pub unsafe fn W_StdC_Read(
     mut wad: *mut wad_file_t,
