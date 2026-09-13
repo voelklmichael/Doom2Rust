@@ -5,7 +5,7 @@ use crate::src::game_state::GameState;
 use crate::src::m_fixed::fixed_t;
 use crate::src::m_fixed::FRACUNIT;
 use crate::src::p_floor::T_MovePlane;
-use crate::src::p_floor::{crushed, ok, pastdest, result_e};
+use crate::src::p_floor::ResultE;
 use crate::src::p_inter::{
     it_bluecard, it_blueskull, it_redcard, it_redskull, it_yellowcard, it_yellowskull,
 };
@@ -45,7 +45,7 @@ pub struct vldoor_t {
 }
 pub const VDOORWAIT: i32 = 150;
 pub unsafe fn T_VerticalDoor(state: &mut GameState, mut door: *mut vldoor_t) {
-    let mut res: result_e = ok;
+    let mut res: ResultE = ResultE::ok;
     let sec = state.p_setup.sector_mut((*door).sector);
     match (*door).direction {
         0 => {
@@ -107,7 +107,7 @@ pub unsafe fn T_VerticalDoor(state: &mut GameState, mut door: *mut vldoor_t) {
                 1 as i32,
                 (*door).direction,
             );
-            if res as u32 == pastdest as i32 as u32 {
+            if res == ResultE::pastdest {
                 match (*door).type_0 as u32 {
                     5 | 7 => {
                         (*sec).specialdata = None;
@@ -128,7 +128,7 @@ pub unsafe fn T_VerticalDoor(state: &mut GameState, mut door: *mut vldoor_t) {
                     }
                     _ => {}
                 }
-            } else if res as u32 == crushed as i32 as u32 {
+            } else if res == ResultE::crushed {
                 match (*door).type_0 as u32 {
                     7 | 2 => {}
                     _ => {
@@ -152,7 +152,7 @@ pub unsafe fn T_VerticalDoor(state: &mut GameState, mut door: *mut vldoor_t) {
                 1 as i32,
                 (*door).direction,
             );
-            if res as u32 == pastdest as i32 as u32 {
+            if res == ResultE::pastdest {
                 match (*door).type_0 as u32 {
                     5 | 0 => {
                         (*door).direction = 0 as i32;
