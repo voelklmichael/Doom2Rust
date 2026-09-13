@@ -14,8 +14,7 @@ use crate::src::v_video::V_MarkRect;
 use crate::src::v_video::V_RestoreBuffer;
 use crate::src::v_video::V_UseBuffer;
 use crate::src::w_wad::W_CacheLumpName;
-use crate::src::z_zone::Z_Malloc;
-use crate::src::z_zone::{PU_CACHE, PU_STATIC};
+use crate::src::z_zone::PU_CACHE;
 use crate::src::mem_compat::memcpy;
 
 pub struct RDrawState {
@@ -38,7 +37,7 @@ pub struct RDrawState {
     pub dccount: i32,
     pub fuzzpos: i32,
     pub dc_translation: *mut byte,
-    pub translationtables: *mut byte,
+    pub translationtables: Vec<byte>,
     pub ds_y: i32,
     pub ds_x1: i32,
     pub ds_x2: i32,
@@ -73,7 +72,7 @@ impl RDrawState {
             dccount: 0,
             fuzzpos: 0,
             dc_translation: ::core::ptr::null::<byte>() as *mut byte,
-            translationtables: ::core::ptr::null::<byte>() as *mut byte,
+            translationtables: Vec::new(),
             ds_y: 0,
             ds_x1: 0,
             ds_x2: 0,
@@ -370,37 +369,21 @@ pub unsafe fn R_DrawTranslatedColumnLow(state: &mut GameState) {
 }
 pub unsafe fn R_InitTranslationTables(state: &mut GameState) {
     let mut i: i32 = 0;
-    state.r_draw.translationtables = Z_Malloc(
-        &mut state.z_zone,
-        256 as i32 * 3 as i32,
-        PU_STATIC as i32,
-        ::core::ptr::null_mut::<::core::ffi::c_void>(),
-    ) as *mut byte;
+    state.r_draw.translationtables = vec![0u8; 256 * 3];
     i = 0 as i32;
     while i < 256 as i32 {
         if i >= 0x70 as i32 && i <= 0x7f as i32 {
-            *state.r_draw.translationtables.offset(i as isize) =
-                (0x60 as i32 + (i & 0xf as i32)) as byte;
-            *state
-                .r_draw
-                .translationtables
-                .offset((i + 256 as i32) as isize) = (0x40 as i32 + (i & 0xf as i32)) as byte;
-            *state
-                .r_draw
-                .translationtables
-                .offset((i + 512 as i32) as isize) = (0x20 as i32 + (i & 0xf as i32)) as byte;
+            state.r_draw.translationtables[i as usize] = (0x60 as i32 + (i & 0xf as i32)) as byte;
+            state.r_draw.translationtables[(i + 256 as i32) as usize] =
+                (0x40 as i32 + (i & 0xf as i32)) as byte;
+            state.r_draw.translationtables[(i + 512 as i32) as usize] =
+                (0x20 as i32 + (i & 0xf as i32)) as byte;
         } else {
-            let ref mut fresh11 = *state
-                .r_draw
-                .translationtables
-                .offset((i + 512 as i32) as isize);
-            *fresh11 = i as byte;
-            let ref mut fresh12 = *state
-                .r_draw
-                .translationtables
-                .offset((i + 256 as i32) as isize);
-            *fresh12 = *fresh11;
-            *state.r_draw.translationtables.offset(i as isize) = *fresh12;
+            let fresh11 = i as byte;
+            state.r_draw.translationtables[(i + 512 as i32) as usize] = fresh11;
+            let fresh12 = fresh11;
+            state.r_draw.translationtables[(i + 256 as i32) as usize] = fresh12;
+            state.r_draw.translationtables[i as usize] = fresh12;
         }
         i += 1;
     }

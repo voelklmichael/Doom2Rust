@@ -376,6 +376,7 @@ pub unsafe fn R_DrawVisSprite(state: &mut GameState, mut vis: *mut vissprite_t) 
         state.r_draw.dc_translation = state
             .r_draw
             .translationtables
+            .as_mut_ptr()
             .offset(-(256 as i32 as isize))
             .offset(
                 (((*vis).mobjflags & MF_TRANSLATION as i32) >> MF_TRANSSHIFT as i32 - 8 as i32)
