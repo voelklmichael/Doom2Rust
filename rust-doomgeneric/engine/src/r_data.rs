@@ -18,7 +18,6 @@ use crate::src::w_wad::W_LumpNameHash;
 use crate::src::w_wad::{
     wad_name8_to_string, W_CacheLumpName, W_CheckNumForName, W_GetNumForName, W_ReleaseLumpName,
 };
-use crate::src::z_zone::Z_ChangeTag2;
 use crate::src::z_zone::Z_Malloc;
 use crate::src::z_zone::{PU_CACHE, PU_STATIC};
 use crate::src::mem_compat::memcpy;
@@ -41,7 +40,7 @@ pub struct RDataState {
     pub texturecompositesize: Vec<i32>,
     pub texturecolumnlump: Vec<*mut i16>,
     pub texturecolumnofs: Vec<*mut u16>,
-    pub texturecomposite: Vec<*mut byte>,
+    pub texturecomposite: Vec<Option<Box<[u8]>>>,
     pub flattranslation: Vec<i32>,
     pub texturetranslation: Vec<i32>,
     pub spritewidth: Vec<fixed_t>,
@@ -170,7 +169,6 @@ pub unsafe fn R_DrawColumnInCache(
     }
 }
 pub unsafe fn R_GenerateComposite(state: &mut GameState, mut texnum: i32) {
-    let mut block: *mut byte = ::core::ptr::null_mut::<byte>();
     let mut texture: *mut texture_t = ::core::ptr::null_mut::<texture_t>();
     let mut patch: *mut texpatch_t = ::core::ptr::null_mut::<texpatch_t>();
     let mut realpatch: *mut patch_t = ::core::ptr::null_mut::<patch_t>();
@@ -182,13 +180,13 @@ pub unsafe fn R_GenerateComposite(state: &mut GameState, mut texnum: i32) {
     let mut collump: *mut i16 = ::core::ptr::null_mut::<i16>();
     let mut colofs: *mut u16 = ::core::ptr::null_mut::<u16>();
     texture = state.r_data.textures[texnum as usize];
-    block = Z_Malloc(
-        &mut state.z_zone,
-        state.r_data.texturecompositesize[texnum as usize],
-        PU_STATIC as i32,
-        &mut state.r_data.texturecomposite[texnum as usize] as *mut *mut byte
-            as *mut ::core::ffi::c_void,
-    ) as *mut byte;
+    // Built locally and only stored into texturecomposite once fully drawn,
+    // unlike the old Z_Malloc user-backpointer trick which wrote the
+    // (still-empty) allocation into that slot immediately -- safe here
+    // since nothing re-enters this slot mid-loop (R_DrawColumnInCache is a
+    // plain column-copy routine, no recursion back into R_GetColumn).
+    let mut block: Vec<u8> =
+        vec![0u8; state.r_data.texturecompositesize[texnum as usize] as usize];
     collump = state.r_data.texturecolumnlump[texnum as usize];
     colofs = state.r_data.texturecolumnofs[texnum as usize];
     patch = &raw mut (*texture).patches as *mut texpatch_t;
@@ -214,7 +212,9 @@ pub unsafe fn R_GenerateComposite(state: &mut GameState, mut texnum: i32) {
                 ) as *mut column_t;
                 R_DrawColumnInCache(
                     patchcol,
-                    block.offset(*colofs.offset(x as isize) as i32 as isize),
+                    block
+                        .as_mut_ptr()
+                        .offset(*colofs.offset(x as isize) as i32 as isize),
                     (*patch).originy as i32,
                     (*texture).height as i32,
                 );
@@ -224,12 +224,7 @@ pub unsafe fn R_GenerateComposite(state: &mut GameState, mut texnum: i32) {
         i += 1;
         patch = patch.offset(1);
     }
-    Z_ChangeTag2(
-        block as *mut ::core::ffi::c_void,
-        PU_CACHE as i32,
-        "r_data.c",
-        286 as i32,
-    );
+    state.r_data.texturecomposite[texnum as usize] = Some(block.into_boxed_slice());
 }
 pub unsafe fn R_GenerateLookup(state: &mut GameState, mut texnum: i32) {
     let mut texture: *mut texture_t = ::core::ptr::null_mut::<texture_t>();
@@ -243,7 +238,7 @@ pub unsafe fn R_GenerateLookup(state: &mut GameState, mut texnum: i32) {
     let mut collump: *mut i16 = ::core::ptr::null_mut::<i16>();
     let mut colofs: *mut u16 = ::core::ptr::null_mut::<u16>();
     texture = state.r_data.textures[texnum as usize];
-    state.r_data.texturecomposite[texnum as usize] = ::core::ptr::null_mut::<byte>();
+    state.r_data.texturecomposite[texnum as usize] = None;
     state.r_data.texturecompositesize[texnum as usize] = 0 as i32;
     collump = state.r_data.texturecolumnlump[texnum as usize];
     colofs = state.r_data.texturecolumnofs[texnum as usize];
@@ -305,10 +300,14 @@ pub unsafe fn R_GetColumn(state: &mut GameState, mut tex: i32, mut col: i32) -> 
     if lump > 0 as i32 {
         return (W_CacheLumpNum(state, lump, PU_CACHE as i32) as *mut byte).offset(ofs as isize);
     }
-    if state.r_data.texturecomposite[tex as usize].is_null() {
+    if state.r_data.texturecomposite[tex as usize].is_none() {
         R_GenerateComposite(state, tex);
     }
-    return state.r_data.texturecomposite[tex as usize].offset(ofs as isize);
+    return state.r_data.texturecomposite[tex as usize]
+        .as_mut()
+        .unwrap()
+        .as_mut_ptr()
+        .offset(ofs as isize);
 }
 unsafe fn GenerateTextureHashTable(state: &mut GameState) {
     let mut i: i32 = 0;
@@ -397,8 +396,7 @@ pub unsafe fn R_InitTextures(state: &mut GameState) {
         vec![::core::ptr::null_mut::<i16>(); state.r_data.numtextures as usize];
     state.r_data.texturecolumnofs =
         vec![::core::ptr::null_mut::<u16>(); state.r_data.numtextures as usize];
-    state.r_data.texturecomposite =
-        vec![::core::ptr::null_mut::<byte>(); state.r_data.numtextures as usize];
+    state.r_data.texturecomposite = vec![None; state.r_data.numtextures as usize];
     state.r_data.texturecompositesize = vec![0 as i32; state.r_data.numtextures as usize];
     state.r_data.texturewidthmask = vec![0 as i32; state.r_data.numtextures as usize];
     state.r_data.textureheight = vec![0 as fixed_t; state.r_data.numtextures as usize];
