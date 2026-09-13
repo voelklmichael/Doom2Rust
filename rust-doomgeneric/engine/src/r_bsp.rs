@@ -400,7 +400,7 @@ pub unsafe fn R_RenderBSPNode(state: &mut GameState, mut bspnum: i32) {
         }
         return;
     }
-    bsp = state.p_setup.nodes.offset(bspnum as isize) as *mut node_t;
+    bsp = state.p_setup.nodes.as_mut_ptr().offset(bspnum as isize);
     side = R_PointOnSide(state.r_main.viewx, state.r_main.viewy, bsp);
     R_RenderBSPNode(state, (*bsp).children[side as usize] as i32);
     if R_CheckBBox(

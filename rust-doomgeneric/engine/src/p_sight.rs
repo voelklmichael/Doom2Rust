@@ -197,7 +197,7 @@ pub unsafe fn P_CrossBSPNode(state: &mut GameState, mut bspnum: i32) -> bool {
             return P_CrossSubsector(state, bspnum & !NF_SUBSECTOR);
         }
     }
-    bsp = state.p_setup.nodes.offset(bspnum as isize) as *mut node_t;
+    bsp = state.p_setup.nodes.as_mut_ptr().offset(bspnum as isize);
     side = P_DivlineSide(
         state.p_sight.strace.x,
         state.p_sight.strace.y,
@@ -229,7 +229,7 @@ pub unsafe fn P_CheckSight(
     pnum = s1 * state.p_setup.numsectors + s2;
     bytenum = pnum >> 3 as i32;
     bitnum = (1 as i32) << (pnum & 7 as i32);
-    if *state.p_setup.rejectmatrix.offset(bytenum as isize) as i32 & bitnum != 0 {
+    if state.p_setup.rejectmatrix[bytenum as usize] as i32 & bitnum != 0 {
         state.p_sight.sightcounts[0 as i32 as usize] += 1;
         return false;
     }

@@ -521,7 +521,7 @@ pub unsafe fn R_PointInSubsector(
     }
     nodenum = state.p_setup.numnodes - 1 as i32;
     while nodenum & NF_SUBSECTOR == 0 {
-        node = state.p_setup.nodes.offset(nodenum as isize) as *mut node_t;
+        node = state.p_setup.nodes.as_mut_ptr().offset(nodenum as isize);
         side = R_PointOnSide(x, y, node);
         nodenum = (*node).children[side as usize] as i32;
     }
