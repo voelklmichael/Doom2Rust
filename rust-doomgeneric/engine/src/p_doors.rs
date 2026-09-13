@@ -21,8 +21,6 @@ use crate::src::p_tick::P_RemoveThinker;
 use crate::src::s_sound::S_StartSound;
 use crate::src::s_sound::SoundOrigin;
 use crate::src::sounds::{sfx_bdcls, sfx_bdopn, sfx_dorcls, sfx_doropn, sfx_oof};
-use crate::src::z_zone::Z_Malloc;
-use crate::src::z_zone::PU_LEVSPEC;
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum VldoorE {
     vld_normal = 0,
@@ -46,6 +44,56 @@ pub struct vldoor_t {
     pub topwait: i32,
     pub topcountdown: i32,
 }
+// Every real field gets explicitly set by the caller within a few lines of
+// spawn() returning (confirmed by reading every spawn site below) -- this
+// placeholder's values are never read, only its shape matters.
+impl Default for vldoor_t {
+    fn default() -> Self {
+        vldoor_t {
+            thinker: thinker_t {
+                function: ThinkerFn::Unresolved,
+            },
+            type_0: VldoorE::vld_normal,
+            sector: SectorId(0),
+            topheight: 0,
+            speed: 0,
+            direction: 0,
+            topwait: 0,
+            topcountdown: 0,
+        }
+    }
+}
+
+pub struct PDoorsState {
+    doors: Vec<Box<vldoor_t>>,
+}
+
+impl PDoorsState {
+    pub const fn new() -> Self {
+        PDoorsState { doors: Vec::new() }
+    }
+
+    // Moves a fully-defaulted (then caller-filled) vldoor_t onto the heap
+    // and hands back a raw pointer -- the direct replacement for
+    // Z_Malloc(size_of::<vldoor_t>(), ...). Nothing looks a door up by
+    // handle (only by this raw pointer, or via the SectorSpecial/ThinkerId
+    // scheme already tracked separately in p_tick.rs), so unlike mobj_t
+    // there's no generation-checked id or two-phase retire/deallocate split
+    // needed here -- see PMobjState::spawn/retire/deallocate for why mobj_t
+    // needed that.
+    pub fn spawn(&mut self, value: vldoor_t) -> *mut vldoor_t {
+        self.doors.push(Box::new(value));
+        self.doors.last_mut().unwrap().as_mut()
+    }
+
+    // Called once, from P_RunThinkers' reaper, when a Door-kind thinker is
+    // reaped. A linear scan is fine -- concurrently active doors are always
+    // a handful, never remotely close to mobj_t's counts.
+    pub fn dealloc(&mut self, ptr: *mut vldoor_t) {
+        self.doors.retain(|b| !::core::ptr::eq(b.as_ref(), ptr));
+    }
+}
+
 pub const VDOORWAIT: i32 = 150;
 pub unsafe fn T_VerticalDoor(state: &mut GameState, mut door: *mut vldoor_t) {
     let mut res: ResultE = ResultE::ok;
@@ -215,12 +263,7 @@ pub unsafe fn EV_DoDoor(state: &mut GameState, mut line: LineId, mut type_0: Vld
             continue;
         }
         rtn = 1 as i32;
-        door = Z_Malloc(
-            &mut state.z_zone,
-            ::core::mem::size_of::<vldoor_t>() as i32,
-            PU_LEVSPEC as i32,
-            ::core::ptr::null_mut::<::core::ffi::c_void>(),
-        ) as *mut vldoor_t;
+        door = state.p_doors.spawn(vldoor_t::default());
         let door_id = P_AddThinker(state, &raw mut (*door).thinker, ThinkerKind::Door);
         (*sec).specialdata = Some(SectorSpecial::Door(door_id));
         (*door).thinker.function = ThinkerFn::Door(T_VerticalDoor);
@@ -381,12 +424,7 @@ pub unsafe fn EV_VerticalDoor(
             S_StartSound(state, SoundOrigin::Sector(door_sector_id), sfx_doropn as i32);
         }
     }
-    door = Z_Malloc(
-        &mut state.z_zone,
-        ::core::mem::size_of::<vldoor_t>() as i32,
-        PU_LEVSPEC as i32,
-        ::core::ptr::null_mut::<::core::ffi::c_void>(),
-    ) as *mut vldoor_t;
+    door = state.p_doors.spawn(vldoor_t::default());
     let door_id = P_AddThinker(state, &raw mut (*door).thinker, ThinkerKind::Door);
     (*sec).specialdata = Some(SectorSpecial::Door(door_id));
     (*door).thinker.function = ThinkerFn::Door(T_VerticalDoor);
@@ -419,12 +457,7 @@ pub unsafe fn EV_VerticalDoor(
 pub unsafe fn P_SpawnDoorCloseIn30(state: &mut GameState, mut sector: SectorId) {
     let mut door: *mut vldoor_t = ::core::ptr::null_mut::<vldoor_t>();
     let sec = state.p_setup.sector_mut(sector);
-    door = Z_Malloc(
-        &mut state.z_zone,
-        ::core::mem::size_of::<vldoor_t>() as i32,
-        PU_LEVSPEC as i32,
-        ::core::ptr::null_mut::<::core::ffi::c_void>(),
-    ) as *mut vldoor_t;
+    door = state.p_doors.spawn(vldoor_t::default());
     let door_id = P_AddThinker(state, &raw mut (*door).thinker, ThinkerKind::Door);
     (*sec).specialdata = Some(SectorSpecial::Door(door_id));
     (*sec).special = 0 as i16;
@@ -438,12 +471,7 @@ pub unsafe fn P_SpawnDoorCloseIn30(state: &mut GameState, mut sector: SectorId) 
 pub unsafe fn P_SpawnDoorRaiseIn5Mins(state: &mut GameState, mut sector: SectorId) {
     let mut door: *mut vldoor_t = ::core::ptr::null_mut::<vldoor_t>();
     let sec = state.p_setup.sector_mut(sector);
-    door = Z_Malloc(
-        &mut state.z_zone,
-        ::core::mem::size_of::<vldoor_t>() as i32,
-        PU_LEVSPEC as i32,
-        ::core::ptr::null_mut::<::core::ffi::c_void>(),
-    ) as *mut vldoor_t;
+    door = state.p_doors.spawn(vldoor_t::default());
     let door_id = P_AddThinker(state, &raw mut (*door).thinker, ThinkerKind::Door);
     (*sec).specialdata = Some(SectorSpecial::Door(door_id));
     (*sec).special = 0 as i16;

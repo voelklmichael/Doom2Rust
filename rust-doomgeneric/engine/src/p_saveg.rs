@@ -1131,12 +1131,7 @@ pub unsafe fn P_UnArchiveSpecials(state: &mut GameState) {
             }
             1 => {
                 saveg_read_pad(state);
-                door = Z_Malloc(
-                    &mut state.z_zone,
-                    ::core::mem::size_of::<vldoor_t>() as i32,
-                    PU_LEVEL as i32,
-                    NULL,
-                ) as *mut vldoor_t;
+                door = state.p_doors.spawn(vldoor_t::default());
                 saveg_read_vldoor_t(state, door);
                 (*door).thinker.function = ThinkerFn::Door(T_VerticalDoor);
                 let door_id = P_AddThinker(state, &raw mut (*door).thinker, ThinkerKind::Door);

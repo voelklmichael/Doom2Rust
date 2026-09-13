@@ -178,10 +178,13 @@ pub unsafe fn P_RunThinkers(state: &mut GameState) {
                         let mobj_id = (*(currentthinker as *mut mobj_t)).id;
                         state.p_mobj.deallocate(mobj_id);
                     }
-                    // The remaining 8 kinds are still Z_Malloc'd individually
+                    // vldoor_t's memory is owned by PDoorsState's arena now.
+                    ThinkerKind::Door => {
+                        state.p_doors.dealloc(currentthinker as *mut vldoor_t);
+                    }
+                    // The remaining 7 kinds are still Z_Malloc'd individually
                     // (converted one at a time in later phases).
                     ThinkerKind::Ceiling
-                    | ThinkerKind::Door
                     | ThinkerKind::Floor
                     | ThinkerKind::Plat
                     | ThinkerKind::FireFlicker

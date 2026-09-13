@@ -29,6 +29,7 @@ use crate::src::m_controls::MControlsState;
 use crate::src::m_menu::MMenuState;
 use crate::src::m_random::MRandomState;
 use crate::src::p_ceilng::PCeilngState;
+use crate::src::p_doors::PDoorsState;
 use crate::src::p_enemy::PEnemyState;
 use crate::src::p_map::PMapState;
 use crate::src::p_maputl::fixup_intercepts_overrun;
@@ -90,6 +91,7 @@ pub struct GameState {
     pub m_menu: MMenuState,
     pub m_random: MRandomState,
     pub p_ceilng: PCeilngState,
+    pub p_doors: PDoorsState,
     pub p_enemy: PEnemyState,
     pub p_map: PMapState,
     pub p_maputl: PMaputlState,
@@ -153,6 +155,7 @@ impl GameState {
             m_menu: MMenuState::new(),
             m_random: MRandomState::new(),
             p_ceilng: PCeilngState::new(),
+            p_doors: PDoorsState::new(),
             p_enemy: PEnemyState::new(),
             p_map: PMapState::new(),
             p_maputl: PMaputlState::new(),
