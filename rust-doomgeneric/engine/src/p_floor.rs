@@ -22,6 +22,7 @@ use crate::src::p_tick::P_AddThinker;
 use crate::src::p_tick::P_RemoveThinker;
 use crate::src::r_defs::side_t;
 use crate::src::s_sound::S_StartSound;
+use crate::src::s_sound::SoundOrigin;
 use crate::src::sounds::{sfx_pstop, sfx_stnmov};
 use crate::src::z_zone::Z_Malloc;
 use crate::src::z_zone::PU_LEVSPEC;
@@ -174,11 +175,7 @@ pub unsafe fn T_MoveFloor(state: &mut GameState, mut floor: *mut floormove_t) {
         (*floor).direction,
     );
     if state.p_tick.leveltime & 7 as i32 == 0 {
-        S_StartSound(
-            state,
-            &raw mut (*sec).soundorg as *mut ::core::ffi::c_void,
-            sfx_stnmov as i32,
-        );
+        S_StartSound(state, SoundOrigin::Sector((*floor).sector), sfx_stnmov as i32);
     }
     if res == ResultE::pastdest {
         (*sec).specialdata = None;
@@ -200,11 +197,7 @@ pub unsafe fn T_MoveFloor(state: &mut GameState, mut floor: *mut floormove_t) {
             }
         }
         P_RemoveThinker(&raw mut (*floor).thinker);
-        S_StartSound(
-            state,
-            &raw mut (*sec).soundorg as *mut ::core::ffi::c_void,
-            sfx_pstop as i32,
-        );
+        S_StartSound(state, SoundOrigin::Sector((*floor).sector), sfx_pstop as i32);
     }
 }
 pub unsafe fn EV_DoFloor(

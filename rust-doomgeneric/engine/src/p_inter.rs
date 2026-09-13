@@ -7,7 +7,6 @@ use crate::src::d_player::{ammotype_from_raw, ammotype_t, NUMAMMO};
 use crate::src::d_player::{player_t, PlayerId, PlayerState};
 use crate::src::d_player::PowerType;
 use crate::src::d_player::weapontype_t;
-use crate::src::doomdef::NULL;
 use crate::src::game_state::GameState;
 use crate::src::i_system::I_Error;
 use crate::src::i_system::I_Tactile;
@@ -30,6 +29,7 @@ use crate::src::p_mobj::{
 use crate::src::p_pspr::P_DropWeapon;
 use crate::src::r_main::R_PointToAngle2;
 use crate::src::s_sound::S_StartSound;
+use crate::src::s_sound::SoundOrigin;
 use crate::src::sounds::{sfx_getpow, sfx_itemup, sfx_wpnup};
 use crate::src::tables::finecosine;
 use crate::src::tables::finesine;
@@ -168,7 +168,7 @@ pub unsafe fn P_GiveWeapon(
             == (&raw mut state.g_game.players as *mut player_t)
                 .offset(state.g_game.consoleplayer as isize) as *mut player_t
         {
-            S_StartSound(state, NULL, sfx_wpnup as i32);
+            S_StartSound(state, SoundOrigin::None, sfx_wpnup as i32);
         }
         return false;
     }
@@ -575,7 +575,7 @@ pub unsafe fn P_TouchSpecialThing(
         == (&raw mut state.g_game.players as *mut player_t)
             .offset(state.g_game.consoleplayer as isize) as *mut player_t
     {
-        S_StartSound(state, NULL, sound);
+        S_StartSound(state, SoundOrigin::None, sound);
     }
 }
 pub unsafe fn P_KillMobj(state: &mut GameState, mut source: *mut mobj_t, mut target: *mut mobj_t) {

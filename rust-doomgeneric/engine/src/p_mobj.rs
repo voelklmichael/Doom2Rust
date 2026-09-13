@@ -37,6 +37,7 @@ use crate::src::r_main::R_PointInSubsector;
 use crate::src::r_main::R_PointToAngle2;
 use crate::src::s_sound::S_StartSound;
 use crate::src::s_sound::S_StopSound;
+use crate::src::s_sound::SoundOrigin;
 use crate::src::sounds::{sfx_itmbk, sfx_oof, sfx_telept};
 use crate::src::st_stuff::ST_Start;
 use crate::src::stdint_types::size_t;
@@ -2841,7 +2842,7 @@ pub unsafe fn P_ExplodeMissile(state: &mut GameState, mut mo: *mut mobj_t) {
     (*mo).flags &= !(MF_MISSILE as i32);
     let deathsound = (*state.info.mobjinfo_mut((*mo).type_0)).deathsound;
     if deathsound != 0 {
-        S_StartSound(state, mo as *mut ::core::ffi::c_void, deathsound);
+        S_StartSound(state, SoundOrigin::Mobj((*(mo)).id), deathsound);
     }
 }
 pub const STOPSPEED: i32 = 0x1000;
@@ -2993,11 +2994,7 @@ pub unsafe fn P_ZMovement(state: &mut GameState, mut mo: *mut mobj_t) {
             if (*mo).player.is_some() && (*mo).momz < -GRAVITY * 8 as i32 {
                 (*state.g_game.player_mut((*mo).player.unwrap())).deltaviewheight =
                     (*mo).momz >> 3 as i32;
-                S_StartSound(
-                    state,
-                    mo as *mut ::core::ffi::c_void,
-                    sfx_oof as i32,
-                );
+                S_StartSound(state, SoundOrigin::Mobj((*(mo)).id), sfx_oof as i32);
             }
             (*mo).momz = 0 as i32 as fixed_t;
         }
@@ -3047,20 +3044,12 @@ pub unsafe fn P_NightmareRespawn(state: &mut GameState, mut mobj: *mut mobj_t) {
         .sector_mut(state.p_setup.subsectors[(*mobj).subsector.0 as usize].sector))
     .floorheight;
     mo = P_SpawnMobj(state, (*mobj).x, (*mobj).y, floorheight1, MobjType::MT_TFOG);
-    S_StartSound(
-        state,
-        mo as *mut ::core::ffi::c_void,
-        sfx_telept as i32,
-    );
+    S_StartSound(state, SoundOrigin::Mobj((*(mo)).id), sfx_telept as i32);
     ss = R_PointInSubsector(state, x, y);
     let floorheight2 =
         (*state.p_setup.sector_mut(state.p_setup.subsectors[ss.0 as usize].sector)).floorheight;
     mo = P_SpawnMobj(state, x, y, floorheight2, MobjType::MT_TFOG);
-    S_StartSound(
-        state,
-        mo as *mut ::core::ffi::c_void,
-        sfx_telept as i32,
-    );
+    S_StartSound(state, SoundOrigin::Mobj((*(mo)).id), sfx_telept as i32);
     mthing = &raw mut (*mobj).spawnpoint;
     if (*state.info.mobjinfo_mut((*mobj).type_0)).flags & MF_SPAWNCEILING as i32 != 0 {
         z = ONCEILINGZ as fixed_t;
@@ -3346,7 +3335,7 @@ pub unsafe fn P_RemoveMobj(state: &mut GameState, mut mobj: *mut mobj_t) {
         }
     }
     P_UnsetThingPosition(state, mobj);
-    S_StopSound(state, mobj);
+    S_StopSound(state, SoundOrigin::Mobj((*mobj).id));
     P_RemoveThinker(mobj as *mut thinker_t);
 }
 pub unsafe fn P_RespawnSpecials(state: &mut GameState) {
@@ -3376,11 +3365,7 @@ pub unsafe fn P_RespawnSpecials(state: &mut GameState) {
     let floorheight =
         (*state.p_setup.sector_mut(state.p_setup.subsectors[ss.0 as usize].sector)).floorheight;
     mo = P_SpawnMobj(state, x, y, floorheight, MobjType::MT_IFOG);
-    S_StartSound(
-        state,
-        mo as *mut ::core::ffi::c_void,
-        sfx_itmbk as i32,
-    );
+    S_StartSound(state, SoundOrigin::Mobj((*(mo)).id), sfx_itmbk as i32);
     i = 0 as i32;
     while i < NUMMOBJTYPES as i32 {
         if (*mthing).type_0 as i32 == state.info.mobjinfo[i as usize].doomednum {
@@ -3615,7 +3600,7 @@ pub unsafe fn P_SpawnMissile(
     );
     let seesound = (*state.info.mobjinfo_mut((*th).type_0)).seesound;
     if seesound != 0 {
-        S_StartSound(state, th as *mut ::core::ffi::c_void, seesound);
+        S_StartSound(state, SoundOrigin::Mobj((*(th)).id), seesound);
     }
     (*th).target = Some((*source).id);
     an = R_PointToAngle2(state, (*source).x, (*source).y, (*dest).x, (*dest).y);
@@ -3668,7 +3653,7 @@ pub unsafe fn P_SpawnPlayerMissile(
     th = P_SpawnMobj(state, x, y, z, type_0);
     let seesound = (*state.info.mobjinfo_mut((*th).type_0)).seesound;
     if seesound != 0 {
-        S_StartSound(state, th as *mut ::core::ffi::c_void, seesound);
+        S_StartSound(state, SoundOrigin::Mobj((*(th)).id), seesound);
     }
     (*th).target = Some((*source).id);
     (*th).angle = an;

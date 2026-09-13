@@ -21,6 +21,7 @@ use crate::src::m_controls::KEY_ESCAPE;
 use crate::src::m_controls::KEY_RALT;
 use crate::src::m_controls::KEY_RSHIFT;
 use crate::src::s_sound::S_StartSound;
+use crate::src::s_sound::SoundOrigin;
 use crate::src::sounds::{sfx_radio, sfx_tink};
 use crate::src::stdint_types::byte;
 use crate::src::w_wad::W_CacheLumpName;
@@ -500,17 +501,9 @@ pub unsafe fn HU_Ticker(state: &mut GameState) {
                                 state.hu_stuff.message_on = true;
                                 state.hu_stuff.message_counter = HU_MSGTIMEOUT;
                                 if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 {
-                                    S_StartSound(
-                                        state,
-                                        ::core::ptr::null_mut::<::core::ffi::c_void>(),
-                                        sfx_radio as i32,
-                                    );
+                                    S_StartSound(state, SoundOrigin::None, sfx_radio as i32);
                                 } else {
-                                    S_StartSound(
-                                        state,
-                                        ::core::ptr::null_mut::<::core::ffi::c_void>(),
-                                        sfx_tink as i32,
-                                    );
+                                    S_StartSound(state, SoundOrigin::None, sfx_tink as i32);
                                 }
                             }
                             HUlib_resetIText(

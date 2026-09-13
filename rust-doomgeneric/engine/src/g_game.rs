@@ -82,6 +82,7 @@ use crate::src::r_main::R_PointInSubsector;
 use crate::src::s_sound::S_PauseSound;
 use crate::src::s_sound::S_ResumeSound;
 use crate::src::s_sound::S_StartSound;
+use crate::src::s_sound::SoundOrigin;
 use crate::src::sounds::sfx_telept;
 use crate::src::st_stuff::ST_Responder;
 use crate::src::st_stuff::ST_Ticker;
@@ -1283,11 +1284,7 @@ pub unsafe fn G_CheckSpot(
         MobjType::MT_TFOG,
     );
     if state.g_game.players[state.g_game.consoleplayer as usize].viewz != 1 as i32 {
-        S_StartSound(
-            state,
-            mo as *mut ::core::ffi::c_void,
-            sfx_telept as i32,
-        );
+        S_StartSound(state, SoundOrigin::Mobj((*(mo)).id), sfx_telept as i32);
     }
     return true;
 }

@@ -18,6 +18,8 @@ use crate::src::i_system::I_AtExit;
 use crate::src::i_system::I_Error;
 use crate::src::m_fixed::FixedMul;
 use crate::src::p_mobj::mobj_t;
+use crate::src::p_mobj::MobjId;
+use crate::src::p_setup::SectorId;
 use crate::src::r_main::R_PointToAngle2;
 use crate::src::tables::finesine;
 use crate::src::w_wad::W_CacheLumpNum;
@@ -69,11 +71,37 @@ impl SSoundState {
     }
 }
 
+/// Vanilla Doom's S_StartSound takes a `void *origin` that's really always
+/// either a `mobj_t*` or a `sector_t::soundorg` (a `degenmobj_t`, which
+/// shares the `{thinker, x, y, z}` prefix of mobj_t by construction) --
+/// callers rely on that layout pun to pass a sector's position as if it
+/// were a thing. This enum replaces the pun with an explicit tag.
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub enum SoundOrigin {
+    None,
+    Mobj(MobjId),
+    Sector(SectorId),
+}
+impl SoundOrigin {
+    unsafe fn xy(&self, state: &mut GameState) -> Option<(fixed_t, fixed_t)> {
+        match *self {
+            SoundOrigin::None => None,
+            SoundOrigin::Mobj(id) => {
+                let mo = state.p_mobj.mobj_get(id)?;
+                Some(((*mo).x, (*mo).y))
+            }
+            SoundOrigin::Sector(id) => {
+                let sec = state.p_setup.sector_mut(id);
+                Some(((*sec).soundorg.x, (*sec).soundorg.y))
+            }
+        }
+    }
+}
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct channel_t {
     pub sfxinfo: Option<SfxId>,
-    pub origin: *mut mobj_t,
+    pub origin: SoundOrigin,
     pub handle: i32,
 }
 pub const S_CLIPPING_DIST: i32 = 1200 * FRACUNIT;
@@ -99,8 +127,11 @@ pub unsafe fn S_Init(state: &mut GameState, mut sfxVolume_0: i32, mut musicVolum
     ) as *mut channel_t;
     i = 0 as i32;
     while i < state.s_sound.snd_channels {
-        let ref mut fresh0 = (*state.s_sound.channels.offset(i as isize)).sfxinfo;
-        *fresh0 = None;
+        (*state.s_sound.channels.offset(i as isize)).sfxinfo = None;
+        // Z_Malloc doesn't zero memory, and SoundOrigin (unlike the raw
+        // pointer this field used to be) has no valid all-zero-bytes
+        // representation -- every slot needs an explicit starting value.
+        (*state.s_sound.channels.offset(i as isize)).origin = SoundOrigin::None;
         i += 1;
     }
     state.s_sound.mus_paused = false;
@@ -175,7 +206,7 @@ pub unsafe fn S_Start(state: &mut GameState) {
     }
     S_ChangeMusic(state, mnum, true_0);
 }
-pub unsafe fn S_StopSound(state: &mut GameState, mut origin: *mut mobj_t) {
+pub unsafe fn S_StopSound(state: &mut GameState, mut origin: SoundOrigin) {
     let mut cnum: i32 = 0;
     cnum = 0 as i32;
     while cnum < state.s_sound.snd_channels {
@@ -191,7 +222,7 @@ pub unsafe fn S_StopSound(state: &mut GameState, mut origin: *mut mobj_t) {
         }
     }
 }
-unsafe fn S_GetChannel(state: &mut GameState, mut origin: *mut mobj_t, sfxinfo: SfxId) -> i32 {
+unsafe fn S_GetChannel(state: &mut GameState, mut origin: SoundOrigin, sfxinfo: SfxId) -> i32 {
     let mut cnum: i32 = 0;
     let mut c: *mut channel_t = ::core::ptr::null_mut::<channel_t>();
     cnum = 0 as i32;
@@ -202,7 +233,7 @@ unsafe fn S_GetChannel(state: &mut GameState, mut origin: *mut mobj_t, sfxinfo: 
         {
             break;
         }
-        if !origin.is_null() && (*state.s_sound.channels.offset(cnum as isize)).origin == origin {
+        if origin != SoundOrigin::None && (*state.s_sound.channels.offset(cnum as isize)).origin == origin {
             S_StopChannel(state, cnum);
             break;
         } else {
@@ -236,7 +267,7 @@ unsafe fn S_GetChannel(state: &mut GameState, mut origin: *mut mobj_t, sfxinfo: 
 unsafe fn S_AdjustSoundParams(
     state: &mut GameState,
     mut listener: *mut mobj_t,
-    mut source: *mut mobj_t,
+    mut source: SoundOrigin,
     mut vol: *mut i32,
     mut sep: *mut i32,
 ) -> i32 {
@@ -244,8 +275,9 @@ unsafe fn S_AdjustSoundParams(
     let mut adx: fixed_t = 0;
     let mut ady: fixed_t = 0;
     let mut angle: angle_t = 0;
-    adx = ((*listener).x as i32 - (*source).x as i32).abs() as fixed_t;
-    ady = ((*listener).y as i32 - (*source).y as i32).abs() as fixed_t;
+    let (source_x, source_y) = source.xy(state).expect("sound source is always resolvable here");
+    adx = ((*listener).x as i32 - source_x as i32).abs() as fixed_t;
+    ady = ((*listener).y as i32 - source_y as i32).abs() as fixed_t;
     approx_dist = adx + ady - ((if adx < ady { adx } else { ady }) >> 1 as i32);
     if state.g_game.gamemap != 8 as i32 && approx_dist > S_CLIPPING_DIST {
         return 0 as i32;
@@ -254,8 +286,8 @@ unsafe fn S_AdjustSoundParams(
         state,
         (*listener).x,
         (*listener).y,
-        (*source).x,
-        (*source).y,
+        source_x,
+        source_y,
     );
     if angle > (*listener).angle {
         angle = angle.wrapping_sub((*listener).angle);
@@ -283,16 +315,14 @@ unsafe fn S_AdjustSoundParams(
 }
 pub unsafe fn S_StartSound(
     state: &mut GameState,
-    mut origin_p: *mut ::core::ffi::c_void,
+    mut origin: SoundOrigin,
     mut sfx_id: i32,
 ) {
     let mut sfx: *mut sfxinfo_t = ::core::ptr::null_mut::<sfxinfo_t>();
-    let mut origin: *mut mobj_t = ::core::ptr::null_mut::<mobj_t>();
     let mut rc: i32 = 0;
     let mut sep: i32 = 0;
     let mut cnum: i32 = 0;
     let mut volume: i32 = 0;
-    origin = origin_p as *mut mobj_t;
     volume = state.s_sound.snd_SfxVolume;
     if sfx_id < 1 as i32 || sfx_id > NUMSFX as i32 {
         I_Error(&format!("Bad sfx #: {}", sfx_id));
@@ -308,12 +338,11 @@ pub unsafe fn S_StartSound(
             volume = state.s_sound.snd_SfxVolume;
         }
     }
-    if !origin.is_null()
-        && origin != state.g_game.players[state.g_game.consoleplayer as usize].mo
-    {
-        let listener = state.g_game.players[state.g_game.consoleplayer as usize].mo;
+    let listener = state.g_game.players[state.g_game.consoleplayer as usize].mo;
+    if origin != SoundOrigin::None && origin != SoundOrigin::Mobj((*listener).id) {
         rc = S_AdjustSoundParams(state, listener, origin, &raw mut volume, &raw mut sep);
-        if (*origin).x == (*listener).x && (*origin).y == (*listener).y {
+        let (origin_x, origin_y) = origin.xy(state).unwrap();
+        if origin_x == (*listener).x && origin_y == (*listener).y {
             sep = NORM_SEP;
         }
         if rc == 0 {
@@ -387,7 +416,9 @@ pub unsafe fn S_UpdateSounds(state: &mut GameState, mut listener: *mut mobj_t) {
                 match current_block_20 {
                     10680521327981672866 => {}
                     _ => {
-                        if !(*c).origin.is_null() && listener != (*c).origin {
+                        if (*c).origin != SoundOrigin::None
+                            && SoundOrigin::Mobj((*listener).id) != (*c).origin
+                        {
                             audible = S_AdjustSoundParams(
                                 state,
                                 listener,

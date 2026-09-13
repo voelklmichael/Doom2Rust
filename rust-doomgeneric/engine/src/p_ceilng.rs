@@ -14,6 +14,7 @@ use crate::src::p_spec::P_FindSectorFromLineTag;
 use crate::src::p_tick::P_AddThinker;
 use crate::src::p_tick::P_RemoveThinker;
 use crate::src::s_sound::S_StartSound;
+use crate::src::s_sound::SoundOrigin;
 use crate::src::sounds::{sfx_pstop, sfx_stnmov};
 use crate::src::z_zone::Z_Malloc;
 use crate::src::z_zone::PU_LEVSPEC;
@@ -59,11 +60,7 @@ pub unsafe fn T_MoveCeiling(state: &mut GameState, mut ceiling: *mut ceiling_t) 
                 match (*ceiling).type_0 {
                     CeilingE::silentCrushAndRaise => {}
                     _ => {
-                        S_StartSound(
-                            state,
-                            &raw mut (*sec).soundorg as *mut ::core::ffi::c_void,
-                            sfx_stnmov as i32,
-                        );
+                        S_StartSound(state, SoundOrigin::Sector((*ceiling).sector), sfx_stnmov as i32);
                     }
                 }
             }
@@ -75,11 +72,7 @@ pub unsafe fn T_MoveCeiling(state: &mut GameState, mut ceiling: *mut ceiling_t) 
                         current_block_7 = 10599921512955367680;
                     }
                     CeilingE::silentCrushAndRaise => {
-                        S_StartSound(
-                            state,
-                            &raw mut (*sec).soundorg as *mut ::core::ffi::c_void,
-                            sfx_pstop as i32,
-                        );
+                        S_StartSound(state, SoundOrigin::Sector((*ceiling).sector), sfx_pstop as i32);
                         current_block_7 = 16040908003852494439;
                     }
                     CeilingE::fastCrushAndRaise | CeilingE::crushAndRaise => {
@@ -111,11 +104,7 @@ pub unsafe fn T_MoveCeiling(state: &mut GameState, mut ceiling: *mut ceiling_t) 
                 match (*ceiling).type_0 {
                     CeilingE::silentCrushAndRaise => {}
                     _ => {
-                        S_StartSound(
-                            state,
-                            &raw mut (*sec).soundorg as *mut ::core::ffi::c_void,
-                            sfx_stnmov as i32,
-                        );
+                        S_StartSound(state, SoundOrigin::Sector((*ceiling).sector), sfx_stnmov as i32);
                     }
                 }
             }
@@ -123,11 +112,7 @@ pub unsafe fn T_MoveCeiling(state: &mut GameState, mut ceiling: *mut ceiling_t) 
                 let mut current_block_19: u64;
                 match (*ceiling).type_0 {
                     CeilingE::silentCrushAndRaise => {
-                        S_StartSound(
-                            state,
-                            &raw mut (*sec).soundorg as *mut ::core::ffi::c_void,
-                            sfx_pstop as i32,
-                        );
+                        S_StartSound(state, SoundOrigin::Sector((*ceiling).sector), sfx_pstop as i32);
                         current_block_19 = 3850642056257311267;
                     }
                     CeilingE::crushAndRaise => {

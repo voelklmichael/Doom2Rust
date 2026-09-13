@@ -54,6 +54,7 @@ use crate::src::p_setup::SubsectorId;
 use crate::src::r_main::R_PointInSubsector;
 use crate::src::r_main::R_PointToAngle2;
 use crate::src::s_sound::S_StartSound;
+use crate::src::s_sound::SoundOrigin;
 use crate::src::sounds::sfx_noway;
 use crate::src::tables::angle_t;
 use crate::src::tables::finecosine;
@@ -1011,11 +1012,7 @@ pub unsafe fn PTR_UseTraverse(
     if state.p_setup.line(li).special == 0 {
         P_LineOpening(state, li);
         if state.p_maputl.openrange <= 0 as i32 {
-            S_StartSound(
-                state,
-                usething as *mut ::core::ffi::c_void,
-                sfx_noway as i32,
-            );
+            S_StartSound(state, SoundOrigin::Mobj((*(usething)).id), sfx_noway as i32);
             return false_0 as boolean;
         }
         return true_0 as boolean;

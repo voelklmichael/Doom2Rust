@@ -54,6 +54,7 @@ use crate::src::r_data::R_FlatNumForName;
 use crate::src::r_data::R_TextureNumForName;
 use crate::src::r_defs::side_t;
 use crate::src::s_sound::S_StartSound;
+use crate::src::s_sound::SoundOrigin;
 use crate::src::sounds::sfx_swtchn;
 use crate::src::stdint_types::size_t;
 use crate::src::w_wad::W_CheckNumForName;
@@ -1043,11 +1044,11 @@ pub unsafe fn P_UpdateSpecials(state: &mut GameState) {
                             .bottomtexture = state.p_switch.buttonlist[i as usize].btexture as i16;
                     }
                 }
-                let soundorg = &raw mut (*state
-                    .p_setup
-                    .sector_mut(state.p_switch.buttonlist[i as usize].soundorg))
-                .soundorg as *mut ::core::ffi::c_void;
-                S_StartSound(state, soundorg, sfx_swtchn as i32);
+                S_StartSound(
+                    state,
+                    SoundOrigin::Sector(state.p_switch.buttonlist[i as usize].soundorg),
+                    sfx_swtchn as i32,
+                );
                 memset(
                     (&raw mut state.p_switch.buttonlist as *mut button_t).offset(i as isize)
                         as *mut button_t as *mut ::core::ffi::c_void,

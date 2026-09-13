@@ -25,6 +25,7 @@ use crate::src::p_spec::EV_DoDonut;
 use crate::src::p_spec::ML_SECRET;
 use crate::src::r_data::R_TextureNumForName;
 use crate::src::s_sound::S_StartSound;
+use crate::src::s_sound::SoundOrigin;
 use crate::src::sounds::{sfx_swtchn, sfx_swtchx};
 
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -366,11 +367,7 @@ pub unsafe fn P_ChangeSwitchTexture(
     i = 0 as i32;
     while i < state.p_switch.numswitches * 2 as i32 {
         if state.p_switch.switchlist[i as usize] == texTop {
-            let soundorg = &raw mut (*state
-                .p_setup
-                .sector_mut(state.p_switch.buttonlist[0 as usize].soundorg))
-            .soundorg as *mut ::core::ffi::c_void;
-            S_StartSound(state, soundorg, sound);
+            S_StartSound(state, SoundOrigin::Sector(state.p_switch.buttonlist[0 as usize].soundorg), sound);
             state.p_setup.sides[sidenum0 as usize].toptexture =
                 state.p_switch.switchlist[(i ^ 1 as i32) as usize] as i16;
             if useAgain != 0 {
@@ -384,11 +381,7 @@ pub unsafe fn P_ChangeSwitchTexture(
             }
             return;
         } else if state.p_switch.switchlist[i as usize] == texMid {
-            let soundorg = &raw mut (*state
-                .p_setup
-                .sector_mut(state.p_switch.buttonlist[0 as usize].soundorg))
-            .soundorg as *mut ::core::ffi::c_void;
-            S_StartSound(state, soundorg, sound);
+            S_StartSound(state, SoundOrigin::Sector(state.p_switch.buttonlist[0 as usize].soundorg), sound);
             state.p_setup.sides[sidenum0 as usize].midtexture =
                 state.p_switch.switchlist[(i ^ 1 as i32) as usize] as i16;
             if useAgain != 0 {
@@ -402,11 +395,7 @@ pub unsafe fn P_ChangeSwitchTexture(
             }
             return;
         } else if state.p_switch.switchlist[i as usize] == texBot {
-            let soundorg = &raw mut (*state
-                .p_setup
-                .sector_mut(state.p_switch.buttonlist[0 as usize].soundorg))
-            .soundorg as *mut ::core::ffi::c_void;
-            S_StartSound(state, soundorg, sound);
+            S_StartSound(state, SoundOrigin::Sector(state.p_switch.buttonlist[0 as usize].soundorg), sound);
             state.p_setup.sides[sidenum0 as usize].bottomtexture =
                 state.p_switch.switchlist[(i ^ 1 as i32) as usize] as i16;
             if useAgain != 0 {

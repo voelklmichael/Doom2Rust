@@ -11,6 +11,7 @@ use crate::src::p_mobj::MobjType;
 use crate::src::p_setup::LineId;
 use crate::src::p_setup::SectorId;
 use crate::src::s_sound::S_StartSound;
+use crate::src::s_sound::SoundOrigin;
 use crate::src::sounds::sfx_telept;
 use crate::src::tables::finecosine;
 use crate::src::tables::finesine;
@@ -63,11 +64,7 @@ pub unsafe fn EV_Teleport(
                                 (*thing_player).viewz = (*thing).z + (*thing_player).viewheight;
                             }
                             fog = P_SpawnMobj(state, oldx, oldy, oldz, MobjType::MT_TFOG);
-                            S_StartSound(
-                                state,
-                                fog as *mut ::core::ffi::c_void,
-                                sfx_telept as i32,
-                            );
+                            S_StartSound(state, SoundOrigin::Mobj((*(fog)).id), sfx_telept as i32);
                             an = ((*m).angle >> ANGLETOFINESHIFT) as u32;
                             fog = P_SpawnMobj(
                                 state,
@@ -76,11 +73,7 @@ pub unsafe fn EV_Teleport(
                                 (*thing).z,
                                 MobjType::MT_TFOG,
                             );
-                            S_StartSound(
-                                state,
-                                fog as *mut ::core::ffi::c_void,
-                                sfx_telept as i32,
-                            );
+                            S_StartSound(state, SoundOrigin::Mobj((*(fog)).id), sfx_telept as i32);
                             if (*thing).player.is_some() {
                                 (*thing).reactiontime = 18 as i32;
                             }
