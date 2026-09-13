@@ -481,8 +481,9 @@ pub unsafe fn ST_Responder(state: &mut GameState, mut ev: &event_t) -> bool {
             {
                 (*state.st_stuff.plyr).cheats ^= CF_GODMODE as i32;
                 if (*state.st_stuff.plyr).cheats & CF_GODMODE as i32 != 0 {
-                    if !(*state.st_stuff.plyr).mo.is_null() {
-                        (*(*state.st_stuff.plyr).mo).health = 100 as i32;
+                    if let Some(mo_id) = (*state.st_stuff.plyr).mo {
+                        let mo = state.p_mobj.mobj_get(mo_id).unwrap();
+                        (*mo).health = 100 as i32;
                     }
                     (*state.st_stuff.plyr).health = deh_god_mode_health;
                     (*state.st_stuff.plyr).message = Some("Degreelessness Mode On".to_string());
@@ -618,7 +619,7 @@ pub unsafe fn ST_Responder(state: &mut GameState, mut ev: &event_t) -> bool {
                 ) != 0
                 {
                     if (*state.st_stuff.plyr).powers[i as usize] == 0 {
-                        P_GivePower(state.st_stuff.plyr, i);
+                        P_GivePower(state, state.st_stuff.plyr, i);
                     } else if i != PowerType::pw_strength as i32 {
                         (*state.st_stuff.plyr).powers[i as usize] = 1 as i32;
                     } else {
@@ -648,11 +649,15 @@ pub unsafe fn ST_Responder(state: &mut GameState, mut ev: &event_t) -> bool {
                 (*ev).data2 as ::core::ffi::c_char,
             ) != 0
             {
+                let cp_mo_id = state.g_game.players[state.g_game.consoleplayer as usize]
+                    .mo
+                    .unwrap();
+                let cp_mo = state.p_mobj.mobj_get(cp_mo_id).unwrap();
                 (*state.st_stuff.plyr).message = Some(format!(
                     "ang=0x{:x};x,y=(0x{:x},0x{:x})",
-                    (*state.g_game.players[state.g_game.consoleplayer as usize].mo).angle,
-                    (*state.g_game.players[state.g_game.consoleplayer as usize].mo).x,
-                    (*state.g_game.players[state.g_game.consoleplayer as usize].mo).y,
+                    (*cp_mo).angle,
+                    (*cp_mo).x,
+                    (*cp_mo).y,
                 ));
             }
         }
@@ -762,23 +767,22 @@ pub unsafe fn ST_updateFaceWidget(state: &mut GameState) {
         }
     }
     if state.st_stuff.st_updatefacewidget_priority < 8 as i32 {
-        let plyr_attacker = (*state.st_stuff.plyr)
-            .attacker
-            .and_then(|id| state.p_mobj.mobj_get(id));
+        let plyr_attacker_id = (*state.st_stuff.plyr).attacker;
         if (*state.st_stuff.plyr).damagecount != 0
-            && plyr_attacker.is_some()
-            && plyr_attacker != Some((*state.st_stuff.plyr).mo)
+            && plyr_attacker_id.is_some()
+            && plyr_attacker_id != (*state.st_stuff.plyr).mo
         {
             state.st_stuff.st_updatefacewidget_priority = 7 as i32;
+            let plyr_mo = state
+                .p_mobj
+                .mobj_get((*state.st_stuff.plyr).mo.unwrap())
+                .unwrap();
             if (*state.st_stuff.plyr).health - state.st_stuff.st_oldhealth > ST_MUCHPAIN {
                 state.st_stuff.st_facecount = ST_TURNCOUNT;
                 state.st_stuff.st_faceindex = ST_calcPainOffset(state) + ST_OUCHOFFSET;
             } else {
-                let plyr_attacker = plyr_attacker.unwrap();
-                let (plyr_mo_x, plyr_mo_y) = (
-                    (*(*state.st_stuff.plyr).mo).x,
-                    (*(*state.st_stuff.plyr).mo).y,
-                );
+                let plyr_attacker = state.p_mobj.mobj_get(plyr_attacker_id.unwrap()).unwrap();
+                let (plyr_mo_x, plyr_mo_y) = ((*plyr_mo).x, (*plyr_mo).y);
                 badguyangle = R_PointToAngle2(
                     state,
                     plyr_mo_x,
@@ -786,11 +790,11 @@ pub unsafe fn ST_updateFaceWidget(state: &mut GameState) {
                     (*plyr_attacker).x,
                     (*plyr_attacker).y,
                 );
-                if badguyangle > (*(*state.st_stuff.plyr).mo).angle {
-                    diffang = badguyangle.wrapping_sub((*(*state.st_stuff.plyr).mo).angle);
+                if badguyangle > (*plyr_mo).angle {
+                    diffang = badguyangle.wrapping_sub((*plyr_mo).angle);
                     i = (diffang > ANG180) as i32;
                 } else {
-                    diffang = (*(*state.st_stuff.plyr).mo).angle.wrapping_sub(badguyangle);
+                    diffang = (*plyr_mo).angle.wrapping_sub(badguyangle);
                     i = (diffang <= ANG180) as i32;
                 }
                 state.st_stuff.st_facecount = ST_TURNCOUNT;

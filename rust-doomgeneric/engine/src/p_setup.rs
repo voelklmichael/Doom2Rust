@@ -13,7 +13,6 @@ use crate::src::m_fixed::FixedDiv;
 use crate::src::m_fixed::FRACBITS;
 use crate::src::m_fixed::FRACUNIT;
 use crate::src::p_maputl::MAPBLOCKSHIFT;
-use crate::src::p_mobj::mobj_t;
 use crate::src::p_mobj::P_SpawnMapThing;
 use crate::src::p_mobj::{
     degenmobj_t, line_s, line_t, mapthing_t, sector_t, subsector_s, subsector_t, thinker_s,
@@ -937,7 +936,7 @@ pub unsafe fn P_SetupLevel(state: &mut GameState, mut episode: i32, mut map: i32
         i = 0 as i32;
         while i < MAXPLAYERS {
             if state.g_game.playeringame[i as usize] != 0 {
-                state.g_game.players[i as usize].mo = ::core::ptr::null_mut::<mobj_t>();
+                state.g_game.players[i as usize].mo = None;
                 G_DeathMatchSpawnPlayer(state, i);
             }
             i += 1;

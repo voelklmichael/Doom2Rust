@@ -338,8 +338,12 @@ pub unsafe fn S_StartSound(
             volume = state.s_sound.snd_SfxVolume;
         }
     }
-    let listener = state.g_game.players[state.g_game.consoleplayer as usize].mo;
-    if origin != SoundOrigin::None && origin != SoundOrigin::Mobj((*listener).id) {
+    // listener_mo_id is only unwrapped when origin != None (short-circuit),
+    // matching the vanilla invariant that a non-null sound origin implies
+    // the console player's mobj already exists.
+    let listener_mo_id = state.g_game.players[state.g_game.consoleplayer as usize].mo;
+    if origin != SoundOrigin::None && origin != SoundOrigin::Mobj(listener_mo_id.unwrap()) {
+        let listener = state.p_mobj.mobj_get(listener_mo_id.unwrap()).unwrap();
         rc = S_AdjustSoundParams(state, listener, origin, &raw mut volume, &raw mut sep);
         let (origin_x, origin_y) = origin.xy(state).unwrap();
         if origin_x == (*listener).x && origin_y == (*listener).y {

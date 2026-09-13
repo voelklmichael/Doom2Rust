@@ -71,9 +71,9 @@ use crate::src::tables::ANG90;
 use crate::src::tables::ANGLETOFINESHIFT;
 
 pub struct PEnemyState {
-    pub soundtarget: *mut mobj_t,
-    pub corpsehit: *mut mobj_t,
-    pub vileobj: *mut mobj_t,
+    pub soundtarget: Option<MobjId>,
+    pub corpsehit: Option<MobjId>,
+    pub vileobj: Option<MobjId>,
     pub viletryx: fixed_t,
     pub viletryy: fixed_t,
     pub braintargets: [*mut mobj_t; 32],
@@ -85,9 +85,9 @@ pub struct PEnemyState {
 impl PEnemyState {
     pub const fn new() -> Self {
         PEnemyState {
-            soundtarget: ::core::ptr::null::<mobj_t>() as *mut mobj_t,
-            corpsehit: ::core::ptr::null::<mobj_t>() as *mut mobj_t,
-            vileobj: ::core::ptr::null::<mobj_t>() as *mut mobj_t,
+            soundtarget: None,
+            corpsehit: None,
+            vileobj: None,
             viletryx: 0,
             viletryy: 0,
             braintargets: [::core::ptr::null::<mobj_t>() as *mut mobj_t; 32],
@@ -158,12 +158,7 @@ pub unsafe fn P_RecursiveSound(
     }
     (*sec).validcount = state.r_main.validcount;
     (*sec).soundtraversed = soundblocks + 1 as i32;
-    let soundtarget_ptr = state.p_enemy.soundtarget;
-    (*sec).soundtarget = if soundtarget_ptr.is_null() {
-        None
-    } else {
-        Some((*soundtarget_ptr).id)
-    };
+    (*sec).soundtarget = state.p_enemy.soundtarget;
     i = 0 as i32;
     while i < (*sec).linecount {
         check = (*sec).lines[i as usize];
@@ -197,7 +192,7 @@ pub unsafe fn P_NoiseAlert(
     mut target: *mut mobj_t,
     mut emmiter: *mut mobj_t,
 ) {
-    state.p_enemy.soundtarget = target;
+    state.p_enemy.soundtarget = Some((*target).id);
     state.r_main.validcount += 1;
     let sec = state
         .p_setup
@@ -470,20 +465,21 @@ pub unsafe fn P_LookForPlayers(
             player = (&raw mut state.g_game.players as *mut player_t)
                 .offset((*actor).lastlook as isize) as *mut player_t;
             if !((*player).health <= 0 as i32) {
-                if P_CheckSight(state, actor, (*player).mo) {
+                let player_mo = state.p_mobj.mobj_get((*player).mo.unwrap()).unwrap();
+                if P_CheckSight(state, actor, player_mo) {
                     if !allaround {
                         an = R_PointToAngle2(
                             state,
                             (*actor).x,
                             (*actor).y,
-                            (*(*player).mo).x,
-                            (*(*player).mo).y,
+                            (*player_mo).x,
+                            (*player_mo).y,
                         )
                         .wrapping_sub((*actor).angle);
                         if an > ANG90 as angle_t && an < ANG270 {
                             dist = P_AproxDistance(
-                                (*(*player).mo).x - (*actor).x,
-                                (*(*player).mo).y - (*actor).y,
+                                (*player_mo).x - (*actor).x,
+                                (*player_mo).y - (*actor).y,
                             );
                             if dist > MELEERANGE {
                                 current_block_9 = 4644295000439058019;
@@ -499,7 +495,7 @@ pub unsafe fn P_LookForPlayers(
                     match current_block_9 {
                         4644295000439058019 => {}
                         _ => {
-                            (*actor).target = Some((*(*player).mo).id);
+                            (*actor).target = Some((*player_mo).id);
                             return true;
                         }
                     }
@@ -985,17 +981,12 @@ pub unsafe fn PIT_VileCheck(state: &mut GameState, mut thing_id: MobjId) -> bool
     {
         return true_0 as boolean;
     }
-    state.p_enemy.corpsehit = thing;
-    (*state.p_enemy.corpsehit).momy = 0 as i32 as fixed_t;
-    (*state.p_enemy.corpsehit).momx = (*state.p_enemy.corpsehit).momy;
-    (*state.p_enemy.corpsehit).height <<= 2 as i32;
-    check = P_CheckPosition(
-        state,
-        state.p_enemy.corpsehit,
-        (*state.p_enemy.corpsehit).x,
-        (*state.p_enemy.corpsehit).y,
-    );
-    (*state.p_enemy.corpsehit).height >>= 2 as i32;
+    state.p_enemy.corpsehit = Some((*thing).id);
+    (*thing).momy = 0 as i32 as fixed_t;
+    (*thing).momx = (*thing).momy;
+    (*thing).height <<= 2 as i32;
+    check = P_CheckPosition(state, thing, (*thing).x, (*thing).y);
+    (*thing).height >>= 2 as i32;
     if !check {
         return true_0 as boolean;
     }
@@ -1030,7 +1021,7 @@ pub unsafe fn A_VileChase(state: &mut GameState, id: MobjId) {
         yh = state.p_enemy.viletryy as i32 - state.p_setup.bmaporgy as i32
             + 32 as i32 * FRACUNIT * 2 as i32
             >> MAPBLOCKSHIFT;
-        state.p_enemy.vileobj = actor;
+        state.p_enemy.vileobj = Some((*actor).id);
         bx = xl;
         while bx <= xh {
             by = yl;
@@ -1041,22 +1032,20 @@ pub unsafe fn A_VileChase(state: &mut GameState, id: MobjId) {
                     by,
                     Some(PIT_VileCheck as unsafe fn(&mut GameState, MobjId) -> boolean),
                 ) {
+                    let corpsehit_id = state.p_enemy.corpsehit.unwrap();
+                    let corpsehit = state.p_mobj.mobj_get(corpsehit_id).unwrap();
                     temp = (*actor).target;
-                    (*actor).target = Some((*state.p_enemy.corpsehit).id);
+                    (*actor).target = Some(corpsehit_id);
                     A_FaceTarget(state, (*actor).id);
                     (*actor).target = temp;
                     P_SetMobjState(state, actor, StateNum::S_VILE_HEAL1);
-                    S_StartSound(state, SoundOrigin::Mobj((*(state.p_enemy.corpsehit)).id), sfx_slop as i32);
-                    info = state.info.mobjinfo_mut((*state.p_enemy.corpsehit).type_0);
-                    P_SetMobjState(
-                        state,
-                        state.p_enemy.corpsehit,
-                        (*info).raisestate,
-                    );
-                    (*state.p_enemy.corpsehit).height <<= 2 as i32;
-                    (*state.p_enemy.corpsehit).flags = (*info).flags;
-                    (*state.p_enemy.corpsehit).health = (*info).spawnhealth;
-                    (*state.p_enemy.corpsehit).target = None;
+                    S_StartSound(state, SoundOrigin::Mobj(corpsehit_id), sfx_slop as i32);
+                    info = state.info.mobjinfo_mut((*corpsehit).type_0);
+                    P_SetMobjState(state, corpsehit, (*info).raisestate);
+                    (*corpsehit).height <<= 2 as i32;
+                    (*corpsehit).flags = (*info).flags;
+                    (*corpsehit).health = (*info).spawnhealth;
+                    (*corpsehit).target = None;
                     return;
                 }
                 by += 1;
@@ -1473,21 +1462,21 @@ pub unsafe fn A_OpenShotgun2(
     mut player: *mut player_t,
     _psp: *mut pspdef_t,
 ) {
-    S_StartSound(state, SoundOrigin::Mobj((*((*player).mo)).id), sfx_dbopn as i32);
+    S_StartSound(state, SoundOrigin::Mobj((*player).mo.unwrap()), sfx_dbopn as i32);
 }
 pub unsafe fn A_LoadShotgun2(
     state: &mut GameState,
     mut player: *mut player_t,
     _psp: *mut pspdef_t,
 ) {
-    S_StartSound(state, SoundOrigin::Mobj((*((*player).mo)).id), sfx_dbload as i32);
+    S_StartSound(state, SoundOrigin::Mobj((*player).mo.unwrap()), sfx_dbload as i32);
 }
 pub unsafe fn A_CloseShotgun2(
     state: &mut GameState,
     mut player: *mut player_t,
     mut psp: *mut pspdef_t,
 ) {
-    S_StartSound(state, SoundOrigin::Mobj((*((*player).mo)).id), sfx_dbcls as i32);
+    S_StartSound(state, SoundOrigin::Mobj((*player).mo.unwrap()), sfx_dbcls as i32);
     A_ReFire(state, player, psp);
 }
 pub unsafe fn A_BrainAwake(state: &mut GameState, _id: MobjId) {

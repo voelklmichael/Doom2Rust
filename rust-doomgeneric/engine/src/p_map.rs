@@ -1036,10 +1036,11 @@ pub unsafe fn P_UseLines(state: &mut GameState, mut player: *mut player_t) {
     let mut y1: fixed_t = 0;
     let mut x2: fixed_t = 0;
     let mut y2: fixed_t = 0;
-    state.p_map.usething = Some((*(*player).mo).id);
-    angle = ((*(*player).mo).angle >> ANGLETOFINESHIFT) as i32;
-    x1 = (*(*player).mo).x;
-    y1 = (*(*player).mo).y;
+    state.p_map.usething = (*player).mo;
+    let player_mo = state.p_mobj.mobj_get((*player).mo.unwrap()).unwrap();
+    angle = ((*player_mo).angle >> ANGLETOFINESHIFT) as i32;
+    x1 = (*player_mo).x;
+    y1 = (*player_mo).y;
     x2 = x1 + (USERANGE >> FRACBITS) * finecosine[angle as isize];
     y2 = y1 + (USERANGE >> FRACBITS) * finesine[angle as usize];
     P_PathTraverse(

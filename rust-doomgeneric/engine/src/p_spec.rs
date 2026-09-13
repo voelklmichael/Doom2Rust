@@ -904,10 +904,11 @@ pub unsafe fn P_ShootSpecialLine(
 }
 pub unsafe fn P_PlayerInSpecialSector(state: &mut GameState, mut player: *mut player_t) {
     let mut sector: *mut sector_t = ::core::ptr::null_mut::<sector_t>();
+    let player_mo = state.p_mobj.mobj_get((*player).mo.unwrap()).unwrap();
     sector = state
         .p_setup
-        .sector_mut(state.p_setup.subsectors[(*(*player).mo).subsector.0 as usize].sector);
-    if (*(*player).mo).z != (*sector).floorheight {
+        .sector_mut(state.p_setup.subsectors[(*player_mo).subsector.0 as usize].sector);
+    if (*player_mo).z != (*sector).floorheight {
         return;
     }
     match (*sector).special as i32 {
@@ -916,7 +917,7 @@ pub unsafe fn P_PlayerInSpecialSector(state: &mut GameState, mut player: *mut pl
                 if state.p_tick.leveltime & 0x1f as i32 == 0 {
                     P_DamageMobj(
                         state,
-                        (*player).mo,
+                        player_mo,
                         ::core::ptr::null_mut::<mobj_t>(),
                         ::core::ptr::null_mut::<mobj_t>(),
                         10 as i32,
@@ -929,7 +930,7 @@ pub unsafe fn P_PlayerInSpecialSector(state: &mut GameState, mut player: *mut pl
                 if state.p_tick.leveltime & 0x1f as i32 == 0 {
                     P_DamageMobj(
                         state,
-                        (*player).mo,
+                        player_mo,
                         ::core::ptr::null_mut::<mobj_t>(),
                         ::core::ptr::null_mut::<mobj_t>(),
                         5 as i32,
@@ -944,7 +945,7 @@ pub unsafe fn P_PlayerInSpecialSector(state: &mut GameState, mut player: *mut pl
                 if state.p_tick.leveltime & 0x1f as i32 == 0 {
                     P_DamageMobj(
                         state,
-                        (*player).mo,
+                        player_mo,
                         ::core::ptr::null_mut::<mobj_t>(),
                         ::core::ptr::null_mut::<mobj_t>(),
                         20 as i32,
@@ -961,7 +962,7 @@ pub unsafe fn P_PlayerInSpecialSector(state: &mut GameState, mut player: *mut pl
             if state.p_tick.leveltime & 0x1f as i32 == 0 {
                 P_DamageMobj(
                     state,
-                    (*player).mo,
+                    player_mo,
                     ::core::ptr::null_mut::<mobj_t>(),
                     ::core::ptr::null_mut::<mobj_t>(),
                     20 as i32,

@@ -532,9 +532,10 @@ pub unsafe fn R_SetupFrame(state: &mut GameState, player_id: PlayerId) {
     let mut i: i32 = 0;
     let player = state.g_game.player_mut(player_id);
     state.r_main.viewplayer = player_id;
-    state.r_main.viewx = (*(*player).mo).x;
-    state.r_main.viewy = (*(*player).mo).y;
-    state.r_main.viewangle = (*(*player).mo)
+    let player_mo = state.p_mobj.mobj_get((*player).mo.unwrap()).unwrap();
+    state.r_main.viewx = (*player_mo).x;
+    state.r_main.viewy = (*player_mo).y;
+    state.r_main.viewangle = (*player_mo)
         .angle
         .wrapping_add(state.r_main.viewangleoffset as angle_t);
     state.r_main.extralight = (*player).extralight;

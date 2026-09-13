@@ -485,7 +485,11 @@ pub fn D_GrabMouseCallback(state: &mut GameState) -> boolean {
 }
 pub unsafe fn doomgeneric_Tick(state: &mut GameState) {
     TryRunTics(state);
-    let listener_mo = state.g_game.players[state.g_game.consoleplayer as usize].mo;
+    let listener_id = state.g_game.players[state.g_game.consoleplayer as usize].mo;
+    let listener_mo = match listener_id {
+        Some(id) => state.p_mobj.mobj_get(id).unwrap(),
+        None => ::core::ptr::null_mut(),
+    };
     S_UpdateSounds(state, listener_mo);
     if state.i_video.screenvisible {
         D_Display(state);

@@ -188,7 +188,7 @@ pub struct GGameState {
 }
 
 const NEW_PLAYER: player_s = player_s {
-    mo: ::core::ptr::null::<mobj_t>() as *mut mobj_t,
+    mo: None,
     playerstate: PlayerState::PST_LIVE,
     cmd: ticcmd_t {
         forwardmove: 0,
@@ -1074,9 +1074,9 @@ pub unsafe fn G_Ticker(state: &mut GameState) {
                         state.g_game.consistancy[i as usize][buf as usize] as i32,
                     ));
                 }
-                if !state.g_game.players[i as usize].mo.is_null() {
-                    state.g_game.consistancy[i as usize][buf as usize] =
-                        (*state.g_game.players[i as usize].mo).x as byte;
+                if let Some(mo_id) = state.g_game.players[i as usize].mo {
+                    let mo = state.p_mobj.mobj_get(mo_id).unwrap();
+                    state.g_game.consistancy[i as usize][buf as usize] = (*mo).x as byte;
                 } else {
                     state.g_game.consistancy[i as usize][buf as usize] =
                         state.m_random.rndindex as byte;
@@ -1142,9 +1142,9 @@ pub unsafe fn G_Ticker(state: &mut GameState) {
 pub unsafe fn G_InitPlayer(state: &mut GGameState, mut player: i32) {
     G_PlayerReborn(state, player);
 }
-pub unsafe fn G_PlayerFinishLevel(state: &mut GGameState, mut player: i32) {
+pub unsafe fn G_PlayerFinishLevel(state: &mut GameState, mut player: i32) {
     let mut p: *mut player_t = ::core::ptr::null_mut::<player_t>();
-    p = (&raw mut state.players as *mut player_t).offset(player as isize) as *mut player_t;
+    p = (&raw mut state.g_game.players as *mut player_t).offset(player as isize) as *mut player_t;
     memset(
         &raw mut (*p).powers as *mut i32 as *mut ::core::ffi::c_void,
         0 as i32,
@@ -1155,7 +1155,8 @@ pub unsafe fn G_PlayerFinishLevel(state: &mut GGameState, mut player: i32) {
         0 as i32,
         ::core::mem::size_of::<[bool; 6]>() as size_t,
     );
-    (*(*p).mo).flags &= !(MF_SHADOW as i32);
+    let mo = state.p_mobj.mobj_get((*p).mo.unwrap()).unwrap();
+    (*mo).flags &= !(MF_SHADOW as i32);
     (*p).extralight = 0 as i32;
     (*p).fixedcolormap = 0 as i32;
     (*p).damagecount = 0 as i32;
@@ -1218,11 +1219,15 @@ pub unsafe fn G_CheckSpot(
     let mut ss: SubsectorId = SubsectorId(0);
     let mut mo: *mut mobj_t = ::core::ptr::null_mut::<mobj_t>();
     let mut i: i32 = 0;
-    if state.g_game.players[playernum as usize].mo.is_null() {
+    if state.g_game.players[playernum as usize].mo.is_none() {
         i = 0 as i32;
         while i < playernum {
-            if (*state.g_game.players[i as usize].mo).x == ((*mthing).x as i32) << FRACBITS
-                && (*state.g_game.players[i as usize].mo).y == ((*mthing).y as i32) << FRACBITS
+            let other_mo = state
+                .p_mobj
+                .mobj_get(state.g_game.players[i as usize].mo.unwrap())
+                .unwrap();
+            if (*other_mo).x == ((*mthing).x as i32) << FRACBITS
+                && (*other_mo).y == ((*mthing).y as i32) << FRACBITS
             {
                 return false;
             }
@@ -1232,7 +1237,11 @@ pub unsafe fn G_CheckSpot(
     }
     x = (((*mthing).x as i32) << FRACBITS) as fixed_t;
     y = (((*mthing).y as i32) << FRACBITS) as fixed_t;
-    if !P_CheckPosition(state, state.g_game.players[playernum as usize].mo, x, y) {
+    let player_mo = state
+        .p_mobj
+        .mobj_get(state.g_game.players[playernum as usize].mo.unwrap())
+        .unwrap();
+    if !P_CheckPosition(state, player_mo, x, y) {
         return false;
     }
     if state.g_game.bodyqueslot >= BODYQUESIZE {
@@ -1241,8 +1250,11 @@ pub unsafe fn G_CheckSpot(
             state.g_game.bodyque[(state.g_game.bodyqueslot % BODYQUESIZE) as usize],
         );
     }
-    state.g_game.bodyque[(state.g_game.bodyqueslot % BODYQUESIZE) as usize] =
-        state.g_game.players[playernum as usize].mo;
+    let player_mo = state
+        .p_mobj
+        .mobj_get(state.g_game.players[playernum as usize].mo.unwrap())
+        .unwrap();
+    state.g_game.bodyque[(state.g_game.bodyqueslot % BODYQUESIZE) as usize] = player_mo;
     state.g_game.bodyqueslot += 1;
     ss = R_PointInSubsector(state, x, y);
     let mut xa: fixed_t = 0;
@@ -1323,7 +1335,11 @@ pub unsafe fn G_DoReborn(state: &mut GameState, mut playernum: i32) {
     if !state.g_game.netgame {
         state.g_game.gameaction = GameAction::ga_loadlevel;
     } else {
-        (*state.g_game.players[playernum as usize].mo).player = None;
+        let player_mo = state
+            .p_mobj
+            .mobj_get(state.g_game.players[playernum as usize].mo.unwrap())
+            .unwrap();
+        (*player_mo).player = None;
         if state.g_game.deathmatch != 0 {
             G_DeathMatchSpawnPlayer(state, playernum);
             return;
@@ -1401,7 +1417,7 @@ pub unsafe fn G_DoCompleted(state: &mut GameState) {
     i = 0 as i32;
     while i < MAXPLAYERS {
         if state.g_game.playeringame[i as usize] != 0 {
-            G_PlayerFinishLevel(&mut state.g_game, i);
+            G_PlayerFinishLevel(state, i);
         }
         i += 1;
     }

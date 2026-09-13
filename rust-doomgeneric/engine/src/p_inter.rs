@@ -190,7 +190,7 @@ pub unsafe fn P_GiveWeapon(
     }
     return gaveweapon || gaveammo;
 }
-pub unsafe fn P_GiveBody(mut player: *mut player_t, mut num: i32) -> bool {
+pub unsafe fn P_GiveBody(state: &mut GameState, mut player: *mut player_t, mut num: i32) -> bool {
     if (*player).health >= MAXHEALTH {
         return false;
     }
@@ -198,7 +198,8 @@ pub unsafe fn P_GiveBody(mut player: *mut player_t, mut num: i32) -> bool {
     if (*player).health > MAXHEALTH {
         (*player).health = MAXHEALTH;
     }
-    (*(*player).mo).health = (*player).health;
+    let player_mo = state.p_mobj.mobj_get((*player).mo.unwrap()).unwrap();
+    (*player_mo).health = (*player).health;
     return true;
 }
 pub unsafe fn P_GiveArmor(mut player: *mut player_t, mut armortype: i32) -> bool {
@@ -218,14 +219,15 @@ pub unsafe fn P_GiveCard(mut player: *mut player_t, mut card: CardType) {
     (*player).bonuscount = BONUSADD;
     (*player).cards[card as usize] = true;
 }
-pub unsafe fn P_GivePower(mut player: *mut player_t, mut power: i32) -> bool {
+pub unsafe fn P_GivePower(state: &mut GameState, mut player: *mut player_t, mut power: i32) -> bool {
     if power == PowerType::pw_invulnerability as i32 {
         (*player).powers[power as usize] = INVULNTICS as i32;
         return true;
     }
     if power == PowerType::pw_invisibility as i32 {
         (*player).powers[power as usize] = INVISTICS as i32;
-        (*(*player).mo).flags |= MF_SHADOW as i32;
+        let player_mo = state.p_mobj.mobj_get((*player).mo.unwrap()).unwrap();
+        (*player_mo).flags |= MF_SHADOW as i32;
         return true;
     }
     if power == PowerType::pw_infrared as i32 {
@@ -237,7 +239,7 @@ pub unsafe fn P_GivePower(mut player: *mut player_t, mut power: i32) -> bool {
         return true;
     }
     if power == PowerType::pw_strength as i32 {
-        P_GiveBody(player, 100 as i32);
+        P_GiveBody(state, player, 100 as i32);
         (*player).powers[power as usize] = 1 as i32;
         return true;
     }
@@ -283,7 +285,7 @@ pub unsafe fn P_TouchSpecialThing(
             if (*player).health > deh_max_health {
                 (*player).health = deh_max_health;
             }
-            (*(*player).mo).health = (*player).health;
+            (*toucher).health = (*player).health;
             (*player).message = Some("Picked up a health bonus.".to_string());
         }
         61 => {
@@ -301,7 +303,7 @@ pub unsafe fn P_TouchSpecialThing(
             if (*player).health > deh_max_soulsphere {
                 (*player).health = deh_max_soulsphere;
             }
-            (*(*player).mo).health = (*player).health;
+            (*toucher).health = (*player).health;
             (*player).message = Some("Supercharge!".to_string());
             sound = sfx_getpow as i32;
         }
@@ -310,7 +312,7 @@ pub unsafe fn P_TouchSpecialThing(
                 return;
             }
             (*player).health = deh_megasphere_health;
-            (*(*player).mo).health = (*player).health;
+            (*toucher).health = (*player).health;
             P_GiveArmor(player, 2 as i32);
             (*player).message = Some("MegaSphere!".to_string());
             sound = sfx_getpow as i32;
@@ -370,13 +372,13 @@ pub unsafe fn P_TouchSpecialThing(
             }
         }
         68 => {
-            if !P_GiveBody(player, 10 as i32) {
+            if !P_GiveBody(state, player, 10 as i32) {
                 return;
             }
             (*player).message = Some("Picked up a stimpack.".to_string());
         }
         69 => {
-            if !P_GiveBody(player, 25 as i32) {
+            if !P_GiveBody(state, player, 25 as i32) {
                 return;
             }
             if (*player).health < 25 as i32 {
@@ -386,14 +388,14 @@ pub unsafe fn P_TouchSpecialThing(
             }
         }
         71 => {
-            if !P_GivePower(player, PowerType::pw_invulnerability as i32) {
+            if !P_GivePower(state, player, PowerType::pw_invulnerability as i32) {
                 return;
             }
             (*player).message = Some("Invulnerability!".to_string());
             sound = sfx_getpow as i32;
         }
         72 => {
-            if !P_GivePower(player, PowerType::pw_strength as i32) {
+            if !P_GivePower(state, player, PowerType::pw_strength as i32) {
                 return;
             }
             (*player).message = Some("Berserk!".to_string());
@@ -403,28 +405,28 @@ pub unsafe fn P_TouchSpecialThing(
             sound = sfx_getpow as i32;
         }
         73 => {
-            if !P_GivePower(player, PowerType::pw_invisibility as i32) {
+            if !P_GivePower(state, player, PowerType::pw_invisibility as i32) {
                 return;
             }
             (*player).message = Some("Partial Invisibility".to_string());
             sound = sfx_getpow as i32;
         }
         75 => {
-            if !P_GivePower(player, PowerType::pw_ironfeet as i32) {
+            if !P_GivePower(state, player, PowerType::pw_ironfeet as i32) {
                 return;
             }
             (*player).message = Some("Radiation Shielding Suit".to_string());
             sound = sfx_getpow as i32;
         }
         76 => {
-            if !P_GivePower(player, PowerType::pw_allmap as i32) {
+            if !P_GivePower(state, player, PowerType::pw_allmap as i32) {
                 return;
             }
             (*player).message = Some("Computer Area Map".to_string());
             sound = sfx_getpow as i32;
         }
         77 => {
-            if !P_GivePower(player, PowerType::pw_infrared as i32) {
+            if !P_GivePower(state, player, PowerType::pw_infrared as i32) {
                 return;
             }
             (*player).message = Some("Light Amplification Visor".to_string());

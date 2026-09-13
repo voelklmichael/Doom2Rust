@@ -674,8 +674,9 @@ pub unsafe fn R_DrawPlayerSprites(state: &mut GameState) {
     let mut lightnum: i32 = 0;
     let mut psp: *mut pspdef_t = ::core::ptr::null_mut::<pspdef_t>();
     let viewplayer = state.g_game.player_mut(state.r_main.viewplayer);
+    let viewplayer_mo = state.p_mobj.mobj_get((*viewplayer).mo.unwrap()).unwrap();
     lightnum = ((*state.p_setup.sector_mut(
-        state.p_setup.subsectors[(*(*viewplayer).mo).subsector.0 as usize].sector,
+        state.p_setup.subsectors[(*viewplayer_mo).subsector.0 as usize].sector,
     ))
     .lightlevel as i32
         >> LIGHTSEGSHIFT)

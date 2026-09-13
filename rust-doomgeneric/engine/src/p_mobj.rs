@@ -2951,9 +2951,9 @@ pub unsafe fn P_XYMovement(state: &mut GameState, mut mo: *mut mobj_t) {
                 && (*player).cmd.sidemove as i32 == 0 as i32)
     {
         if !player.is_null()
-            && ((*(*player).mo).state.unwrap().0.wrapping_sub(StateNum::S_PLAY_RUN1 as u32)) < 4 as u32
+            && ((*mo).state.unwrap().0.wrapping_sub(StateNum::S_PLAY_RUN1 as u32)) < 4 as u32
         {
-            P_SetMobjState(state, (*player).mo, StateNum::S_PLAY);
+            P_SetMobjState(state, mo, StateNum::S_PLAY);
         }
         (*mo).momx = 0 as i32 as fixed_t;
         (*mo).momy = 0 as i32 as fixed_t;
@@ -3411,7 +3411,7 @@ pub unsafe fn P_SpawnPlayer(state: &mut GameState, mut mthing: *mut mapthing_t) 
     (*mobj).angle = (ANG45 * ((*mthing).angle as i32 / 45 as i32)) as angle_t;
     (*mobj).player = Some(PlayerId(((*mthing).type_0 as i32 - 1 as i32) as u8));
     (*mobj).health = (*p).health;
-    (*p).mo = mobj;
+    (*p).mo = Some((*mobj).id);
     (*p).playerstate = PlayerState::PST_LIVE;
     (*p).refire = 0 as i32;
     (*p).message = None;
