@@ -38,7 +38,7 @@ use crate::src::hu_stuff::HU_dequeueChatChar;
 use crate::src::i_system::I_Error;
 use crate::src::i_system::I_Quit;
 use crate::src::i_timer::I_GetTime;
-use crate::src::info::{S_SARG_PAIN2, S_SARG_RUN1};
+use crate::src::p_mobj::StateNum;
 use crate::src::m_argv::{M_ArgvAtoi, M_CheckParm, M_CheckParmWithArgs};
 use crate::src::m_fixed::fixed_t;
 use crate::src::m_fixed::FRACBITS;
@@ -1734,8 +1734,8 @@ pub unsafe fn G_InitNew(state: &mut GameState, mut skill: SkillType, mut episode
         || skill == SkillType::sk_nightmare
             && state.g_game.gameskill != SkillType::sk_nightmare
     {
-        i = S_SARG_RUN1 as i32;
-        while i <= S_SARG_PAIN2 as i32 {
+        i = StateNum::S_SARG_RUN1 as i32;
+        while i <= StateNum::S_SARG_PAIN2 as i32 {
             state.info.states[i as usize].tics >>= 1 as i32;
             i += 1;
         }
@@ -1745,8 +1745,8 @@ pub unsafe fn G_InitNew(state: &mut GameState, mut skill: SkillType, mut episode
     } else if skill != SkillType::sk_nightmare
         && state.g_game.gameskill == SkillType::sk_nightmare
     {
-        i = S_SARG_RUN1 as i32;
-        while i <= S_SARG_PAIN2 as i32 {
+        i = StateNum::S_SARG_RUN1 as i32;
+        while i <= StateNum::S_SARG_PAIN2 as i32 {
             state.info.states[i as usize].tics <<= 1 as i32;
             i += 1;
         }
