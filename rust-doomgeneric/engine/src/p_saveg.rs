@@ -974,12 +974,21 @@ pub unsafe fn P_UnArchiveThinkers(state: &mut GameState) {
     while let Some(id) = cursor {
         currentthinker = state.p_tick.raw(id);
         // Unlike the raw-pointer version this replaces, `next` lives in our
-        // own node table, not inside the payload memory Z_Free/P_RemoveMobj
+        // own node table, not inside the payload memory Z_Free/deallocate
         // below may free -- capturing it first just mirrors the original
         // ordering, not a use-after-free workaround.
         let next = state.p_tick.next(id);
         if matches!((*currentthinker).function, ThinkerFn::Mobj(_)) {
+            let mobj_id = (*(currentthinker as *mut mobj_t)).id;
             P_RemoveMobj(state, currentthinker as *mut mobj_t);
+            // P_RemoveMobj only retires (see PMobjState::retire) -- it never
+            // itself frees the mobj's memory, and P_InitThinkers just below
+            // wipes PTickState before P_RunThinkers' reaper ever gets a
+            // chance to run on this now-Removed node, so nothing else was
+            // ever going to deallocate it. This call closes that gap (a
+            // pre-existing leak: every live mobj at the moment a savegame is
+            // loaded used to leak its Z_Malloc'd block).
+            state.p_mobj.deallocate(mobj_id);
         } else {
             Z_Free(
                 &mut state.z_zone,
@@ -995,14 +1004,14 @@ pub unsafe fn P_UnArchiveThinkers(state: &mut GameState) {
             0 => return,
             1 => {
                 saveg_read_pad(state);
-                mobj = Z_Malloc(
-                    &mut state.z_zone,
-                    ::core::mem::size_of::<mobj_t>() as i32,
-                    PU_LEVEL as i32,
-                    NULL,
-                ) as *mut mobj_t;
+                // spawn() assigns a fresh MobjId and moves this placeholder
+                // onto the heap; saveg_read_mobj_t overwrites every field
+                // except `.id` (never part of the on-disk format), so the id
+                // spawn() just assigned survives the read untouched below.
+                let placeholder = state.p_mobj.dummy_mobj;
+                let (_id, new_mobj) = state.p_mobj.spawn(placeholder);
+                mobj = new_mobj;
                 saveg_read_mobj_t(state, mobj);
-                (*mobj).id = state.p_mobj.register(mobj);
                 if let Some(player_id) = (*mobj).player {
                     (*state.g_game.player_mut(player_id)).mo = Some((*mobj).id);
                 }
