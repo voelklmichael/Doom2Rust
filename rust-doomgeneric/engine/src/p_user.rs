@@ -3,9 +3,7 @@ use crate::src::d_player::{player_t, PlayerState};
 use crate::src::d_player::{
     pw_infrared, pw_invisibility, pw_invulnerability, pw_ironfeet, pw_strength,
 };
-use crate::src::d_player::{
-    weapontype_t, wp_bfg, wp_chainsaw, wp_fist, wp_plasma, wp_shotgun, wp_supershotgun,
-};
+use crate::src::d_player::{weapontype_from_raw, weapontype_t};
 use crate::src::d_player::{CF_NOCLIP, CF_NOMOMENTUM};
 use crate::src::d_ticcmd::ticcmd_t;
 use crate::src::d_ticcmd::{BT_CHANGE, BT_SPECIAL, BT_USE, BT_WEAPONMASK, BT_WEAPONSHIFT};
@@ -164,7 +162,7 @@ pub unsafe fn P_DeathThink(state: &mut GameState, mut player: *mut player_t) {
 }
 pub unsafe fn P_PlayerThink(state: &mut GameState, mut player: *mut player_t) {
     let mut cmd: *mut ticcmd_t = ::core::ptr::null_mut::<ticcmd_t>();
-    let mut newweapon: weapontype_t = wp_fist;
+    let mut newweapon: weapontype_t = weapontype_t::wp_fist;
     if (*player).cheats & CF_NOCLIP as i32 != 0 {
         (*(*player).mo).flags |= MF_NOCLIP as i32;
     } else {
@@ -199,27 +197,28 @@ pub unsafe fn P_PlayerThink(state: &mut GameState, mut player: *mut player_t) {
         (*cmd).buttons = 0 as byte;
     }
     if (*cmd).buttons as i32 & BT_CHANGE as i32 != 0 {
-        newweapon = (((*cmd).buttons as i32 & BT_WEAPONMASK as i32) >> BT_WEAPONSHIFT as i32)
-            as weapontype_t;
-        if newweapon as u32 == wp_fist as i32 as u32
-            && (*player).weaponowned[wp_chainsaw as i32 as usize]
-            && !((*player).readyweapon as u32 == wp_chainsaw as i32 as u32
+        newweapon = weapontype_from_raw(
+            ((*cmd).buttons as i32 & BT_WEAPONMASK as i32) >> BT_WEAPONSHIFT as i32,
+        );
+        if newweapon as u32 == weapontype_t::wp_fist as i32 as u32
+            && (*player).weaponowned[weapontype_t::wp_chainsaw as i32 as usize]
+            && !((*player).readyweapon as u32 == weapontype_t::wp_chainsaw as i32 as u32
                 && (*player).powers[pw_strength as i32 as usize] != 0)
         {
-            newweapon = wp_chainsaw;
+            newweapon = weapontype_t::wp_chainsaw;
         }
         if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32
-            && newweapon as u32 == wp_shotgun as i32 as u32
-            && (*player).weaponowned[wp_supershotgun as i32 as usize]
-            && (*player).readyweapon as u32 != wp_supershotgun as i32 as u32
+            && newweapon as u32 == weapontype_t::wp_shotgun as i32 as u32
+            && (*player).weaponowned[weapontype_t::wp_supershotgun as i32 as usize]
+            && (*player).readyweapon as u32 != weapontype_t::wp_supershotgun as i32 as u32
         {
-            newweapon = wp_supershotgun;
+            newweapon = weapontype_t::wp_supershotgun;
         }
         if (*player).weaponowned[newweapon as usize]
             && newweapon as u32 != (*player).readyweapon as u32
         {
-            if newweapon as u32 != wp_plasma as i32 as u32
-                && newweapon as u32 != wp_bfg as i32 as u32
+            if newweapon as u32 != weapontype_t::wp_plasma as i32 as u32
+                && newweapon as u32 != weapontype_t::wp_bfg as i32 as u32
                 || state.doomstat.gamemode as u32 != GameMode_t::shareware as i32 as u32
             {
                 (*player).pendingweapon = newweapon;

@@ -3,7 +3,7 @@ use crate::src::d_player::NUMPOWERS;
 use crate::src::info::StateId;
 use crate::src::d_player::NUMPSPRITES;
 use crate::src::d_player::{player_t, PlayerId, PlayerState};
-use crate::src::d_player::{weapontype_t, NUMWEAPONS};
+use crate::src::d_player::{weapontype_from_raw, NUMWEAPONS};
 use crate::src::d_ticcmd::ticcmd_t;
 use crate::src::doomdef::boolean;
 use crate::src::g_game::G_VanillaVersionCode;
@@ -410,8 +410,8 @@ unsafe fn saveg_read_player_t(state: &mut GameState, mut str: *mut player_t) {
         (*str).frags[i as usize] = saveg_read32(state);
         i += 1;
     }
-    (*str).readyweapon = saveg_read32(state) as weapontype_t;
-    (*str).pendingweapon = saveg_read32(state) as weapontype_t;
+    (*str).readyweapon = weapontype_from_raw(saveg_read32(state));
+    (*str).pendingweapon = weapontype_from_raw(saveg_read32(state));
     i = 0 as i32;
     while i < NUMWEAPONS as i32 {
         (*str).weaponowned[i as usize] = saveg_read32(state) != 0;

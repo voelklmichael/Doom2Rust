@@ -6,9 +6,9 @@ use crate::src::d_mode::GameMode_t;
 use crate::src::d_mode::GameMission_t;
 use crate::src::d_mode::{GameVersion, SkillType};
 use crate::src::d_player::player_t;
-use crate::src::d_player::{am_noammo, NUMAMMO};
+use crate::src::d_player::{ammotype_t, NUMAMMO};
 use crate::src::d_player::{pw_invulnerability, pw_ironfeet, pw_strength};
-use crate::src::d_player::{wp_chainsaw, NUMWEAPONS};
+use crate::src::d_player::{weapontype_t, NUMWEAPONS};
 use crate::src::d_player::{CF_GODMODE, CF_NOCLIP};
 use crate::src::doomdef::true_0;
 use crate::src::doomdef::MAXPLAYERS;
@@ -640,7 +640,7 @@ pub unsafe fn ST_Responder(state: &mut GameState, mut ev: &event_t) -> bool {
                 (*ev).data2 as ::core::ffi::c_char,
             ) != 0
             {
-                (*state.st_stuff.plyr).weaponowned[wp_chainsaw as i32 as usize] = true;
+                (*state.st_stuff.plyr).weaponowned[weapontype_t::wp_chainsaw as i32 as usize] = true;
                 (*state.st_stuff.plyr).powers[pw_invulnerability as i32 as usize] = true_0;
                 (*state.st_stuff.plyr).message = Some("... doesn't suck - GM".to_string());
             } else if cht_CheckCheat(
@@ -855,7 +855,7 @@ pub unsafe fn ST_updateFaceWidget(state: &mut GameState) {
 pub unsafe fn ST_updateWidgets(state: &mut GameState) {
     let mut i: i32 = 0;
     if weaponinfo[(*state.st_stuff.plyr).readyweapon as usize].ammo as u32
-        == am_noammo as i32 as u32
+        == ammotype_t::am_noammo as i32 as u32
     {
         state.st_stuff.w_ready.num = &raw mut state.st_stuff.st_updatewidgets_largeammo;
     } else {
