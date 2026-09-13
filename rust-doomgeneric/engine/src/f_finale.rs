@@ -15,7 +15,7 @@ use crate::src::hu_lib::patch_t;
 use crate::src::hu_stuff::HU_FONTSIZE;
 use crate::src::hu_stuff::HU_FONTSTART;
 use crate::src::i_video::IVideoState;
-use crate::src::info::{S_NULL, S_PLAY_ATK1};
+use crate::src::p_mobj::StateNum;
 use crate::src::p_mobj::{mobjinfo_t, state_t};
 use crate::src::p_mobj::{
     mobjtype_t, MT_BABY, MT_BRUISER, MT_CHAINGUY, MT_CYBORG, MT_FATSO, MT_HEAD, MT_KNIGHT, MT_PAIN,
@@ -588,7 +588,7 @@ pub unsafe fn F_CastTicker(state: &mut GameState) {
         return;
     }
     if (*state.f_finale.caststate).tics == -(1 as i32)
-        || (*state.f_finale.caststate).nextstate as u32 == S_NULL as i32 as u32
+        || (*state.f_finale.caststate).nextstate as u32 == StateNum::S_NULL as i32 as u32
     {
         state.f_finale.castnum += 1;
         state.f_finale.castdeath = false;
@@ -622,7 +622,7 @@ pub unsafe fn F_CastTicker(state: &mut GameState) {
         state.f_finale.castframes = 0 as i32;
         current_block = 1356832168064818221;
     } else if state.f_finale.caststate
-        == (&raw mut state.info.states as *mut state_t).offset(S_PLAY_ATK1 as i32 as isize)
+        == (&raw mut state.info.states as *mut state_t).offset(StateNum::S_PLAY_ATK1 as i32 as isize)
             as *mut state_t
     {
         current_block = 13354568087807251156;
@@ -717,7 +717,7 @@ pub unsafe fn F_CastTicker(state: &mut GameState) {
                 }
                 state.f_finale.castonmelee ^= 1 as i32;
                 if state.f_finale.caststate
-                    == (&raw mut state.info.states as *mut state_t).offset(S_NULL as i32 as isize)
+                    == (&raw mut state.info.states as *mut state_t).offset(StateNum::S_NULL as i32 as isize)
                         as *mut state_t
                 {
                     if state.f_finale.castonmelee != 0 {

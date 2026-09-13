@@ -4,7 +4,7 @@ use crate::src::doomdef::false_0;
 use crate::src::doomdef::true_0;
 use crate::src::game_state::GameState;
 use crate::src::i_system::I_Error;
-use crate::src::info::S_GIBS;
+use crate::src::p_mobj::StateNum;
 use crate::src::m_argv::M_CheckParmWithArgs;
 use crate::src::m_bbox::{BOXBOTTOM, BOXLEFT, BOXRIGHT, BOXTOP};
 use crate::src::m_fixed::fixed_t;
@@ -30,7 +30,6 @@ use crate::src::p_maputl::MAPBLOCKSHIFT;
 use crate::src::p_maputl::PT_ADDLINES;
 use crate::src::p_maputl::PT_ADDTHINGS;
 use crate::src::p_mobj::mobj_t;
-use crate::src::p_mobj::statenum_t;
 use crate::src::p_mobj::MobjId;
 use crate::src::p_mobj::P_RemoveMobj;
 use crate::src::p_mobj::P_SetMobjState;
@@ -320,7 +319,7 @@ pub unsafe fn PIT_CheckThing(state: &mut GameState, mut thing_id: MobjId) -> boo
         (*state.p_map.tmthing).momy = (*state.p_map.tmthing).momz;
         (*state.p_map.tmthing).momx = (*state.p_map.tmthing).momy;
         let spawnstate =
-            (*state.info.mobjinfo_mut((*state.p_map.tmthing).type_0)).spawnstate as statenum_t;
+            (*state.info.mobjinfo_mut((*state.p_map.tmthing).type_0)).spawnstate;
         P_SetMobjState(state, state.p_map.tmthing, spawnstate);
         return false_0 as boolean;
     }
@@ -1129,7 +1128,7 @@ pub unsafe fn PIT_ChangeSector(state: &mut GameState, mut thing_id: MobjId) -> b
         return true_0 as boolean;
     }
     if (*thing).health <= 0 as i32 {
-        P_SetMobjState(state, thing, S_GIBS);
+        P_SetMobjState(state, thing, StateNum::S_GIBS);
         (*thing).flags &= !(MF_SOLID as i32);
         (*thing).height = 0 as i32 as fixed_t;
         (*thing).radius = 0 as i32 as fixed_t;

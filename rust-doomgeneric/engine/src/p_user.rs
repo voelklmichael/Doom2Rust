@@ -8,7 +8,8 @@ use crate::src::d_ticcmd::{BT_CHANGE, BT_SPECIAL, BT_USE, BT_WEAPONMASK, BT_WEAP
 use crate::src::doomdef::false_0;
 use crate::src::doomdef::true_0;
 use crate::src::game_state::GameState;
-use crate::src::info::{StateId, S_PLAY, S_PLAY_RUN1};
+use crate::src::info::StateId;
+use crate::src::p_mobj::StateNum;
 use crate::src::m_fixed::fixed_t;
 use crate::src::m_fixed::FixedMul;
 use crate::src::m_fixed::FRACUNIT;
@@ -111,9 +112,9 @@ pub unsafe fn P_MovePlayer(state: &mut GameState, mut player: *mut player_t) {
         );
     }
     if ((*cmd).forwardmove as i32 != 0 || (*cmd).sidemove as i32 != 0)
-        && (*(*player).mo).state == Some(StateId(S_PLAY))
+        && (*(*player).mo).state == Some(StateId(StateNum::S_PLAY as u32))
     {
-        P_SetMobjState(state, (*player).mo, S_PLAY_RUN1);
+        P_SetMobjState(state, (*player).mo, StateNum::S_PLAY_RUN1);
     }
 }
 pub const ANG5: i32 = ANG90 / 18 as i32;

@@ -11,14 +11,13 @@ use crate::src::doomdef::NULL;
 use crate::src::game_state::GameState;
 use crate::src::i_system::I_Error;
 use crate::src::i_system::I_Tactile;
-use crate::src::info::S_NULL;
+use crate::src::p_mobj::StateNum;
 use crate::src::info::StateId;
 use crate::src::m_fixed::fixed_t;
 use crate::src::m_fixed::FixedMul;
 use crate::src::m_fixed::FRACUNIT;
 use crate::src::m_random::P_Random;
 use crate::src::p_mobj::mobj_t;
-use crate::src::p_mobj::statenum_t;
 use crate::src::p_mobj::P_RemoveMobj;
 use crate::src::p_mobj::P_SetMobjState;
 use crate::src::p_mobj::P_SpawnMobj;
@@ -614,11 +613,11 @@ pub unsafe fn P_KillMobj(state: &mut GameState, mut source: *mut mobj_t, mut tar
         }
     }
     let target_info = state.info.mobjinfo_mut((*target).type_0);
-    if (*target).health < -(*target_info).spawnhealth && (*target_info).xdeathstate != 0 {
-        let xdeathstate = (*target_info).xdeathstate as statenum_t;
+    if (*target).health < -(*target_info).spawnhealth && (*target_info).xdeathstate != StateNum::S_NULL {
+        let xdeathstate = (*target_info).xdeathstate;
         P_SetMobjState(state, target, xdeathstate);
     } else {
-        let deathstate = (*target_info).deathstate as statenum_t;
+        let deathstate = (*target_info).deathstate;
         P_SetMobjState(state, target, deathstate);
     }
     (*target).tics -= P_Random(&mut state.m_random) & 3 as i32;
@@ -755,7 +754,7 @@ pub unsafe fn P_DamageMobj(
         && (*target).flags & MF_SKULLFLY as i32 == 0
     {
         (*target).flags |= MF_JUSTHIT as i32;
-        let painstate = (*state.info.mobjinfo_mut((*target).type_0)).painstate as statenum_t;
+        let painstate = (*state.info.mobjinfo_mut((*target).type_0)).painstate;
         P_SetMobjState(state, target, painstate);
     }
     (*target).reactiontime = 0 as i32;
@@ -768,9 +767,9 @@ pub unsafe fn P_DamageMobj(
         (*target).threshold = BASETHRESHOLD;
         let target_info = state.info.mobjinfo_mut((*target).type_0);
         if (*target).state == Some(StateId((*target_info).spawnstate as u32))
-            && (*target_info).seestate != S_NULL as i32
+            && (*target_info).seestate != StateNum::S_NULL
         {
-            let seestate = (*target_info).seestate as statenum_t;
+            let seestate = (*target_info).seestate;
             P_SetMobjState(state, target, seestate);
         }
     }
