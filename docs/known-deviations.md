@@ -200,16 +200,27 @@ same-size mover/mobj structs coming and going).
 **What was given up**: `Z_Malloc` no longer tries to evict anything — if the system
 allocator itself returns null (genuine OOM), it calls `I_Error` immediately instead of
 first searching for something purgeable to reclaim. In practice this means WAD lumps
-cached via `W_CacheLumpNum` are never silently evicted and reloaded once loaded, and any
-existing `Z_ChangeTag2(ptr, PU_CACHE, ...)` calls (`W_ReleaseLumpNum`, `r_data.rs`'s patch
-composite step) still record `PU_CACHE` as a tag on the block's header, but tagging
-something `PU_CACHE` is now inert — it changes no observable behavior, since nothing ever
-scans for purgeable blocks anymore. Also removed as dead code in the same phase (all
-had zero callers): `Z_ClearZone`, `Z_DumpHeap`, `Z_FileDumpHeap`, `Z_FreeMemory`,
-`Z_ZoneSize`, and the `memzone_t`/`memblock_s` structs themselves. `I_ZoneBase`,
-`AutoAllocMemory`, and the `-mb` command-line option in `i_system.rs` are now vestigial
-(nothing calls `I_ZoneBase` anymore) but were left in place rather than bundled into this
-phase's diff.
+cached via `W_CacheLumpNum` are never silently evicted and reloaded once loaded, and (at
+the time of this phase) any existing `Z_ChangeTag2(ptr, PU_CACHE, ...)` calls
+(`W_ReleaseLumpNum`, `r_data.rs`'s patch composite step) still recorded `PU_CACHE` as a
+tag on the block's header, but tagging something `PU_CACHE` was already inert — it
+changed no observable behavior, since nothing ever scans for purgeable blocks anymore.
+Also removed as dead code in the same phase (all had zero callers): `Z_ClearZone`,
+`Z_DumpHeap`, `Z_FileDumpHeap`, `Z_FreeMemory`, `Z_ZoneSize`, and the
+`memzone_t`/`memblock_s` structs themselves. `I_ZoneBase`, `AutoAllocMemory`, and the
+`-mb` command-line option in `i_system.rs` are now vestigial (nothing calls
+`I_ZoneBase` anymore) but were left in place rather than bundled into this phase's diff.
+
+**Follow-up (2026-09-13, same day)**: since the tag/purge bookkeeping above was already
+fully inert, a later phase took it a step further for the WAD lump cache specifically —
+`lumpinfo_s.cache` changed from a zone-allocated `*mut c_void` to a plain owned
+`Option<Box<[u8]>>`, so `W_CacheLumpNum`/`W_ReleaseLumpNum` no longer call into the zone
+allocator for lump data at all (the `mmap`'d-file fast path, and every downstream
+caller's return-pointer usage, are unchanged). `W_ReleaseLumpNum`'s `Z_ChangeTag2` call
+was accordingly deleted (it had nothing left to do), and `Z_ChangeUser` — whose only real
+caller was this same cache's regrow-fixup path — was deleted from `z_zone.rs` entirely as
+dead code. No further observable behavior change beyond what this deviation already
+covers.
 
 ## Known bug (dormant): `snd_musiccmd`/`chatmacro*` config bindings can corrupt their own length field
 

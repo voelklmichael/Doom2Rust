@@ -36,7 +36,7 @@ struct BlockHeader {
 // bulk "free everything in this tag range" operation (Z_FreeTags, called
 // once per level load to tear down the previous level's dynamically
 // allocated thinkers/movers) and the heap sanity check. Individual
-// Z_Malloc/Z_Free/Z_ChangeTag/Z_ChangeUser never need to search it.
+// Z_Malloc/Z_Free/Z_ChangeTag never need to search it.
 pub struct ZZoneState {
     blocks: Vec<*mut BlockHeader>,
 }
@@ -156,16 +156,4 @@ pub unsafe fn Z_ChangeTag2(
         ));
     }
     (*header).tag = tag;
-}
-
-pub unsafe fn Z_ChangeUser(
-    mut ptr: *mut ::core::ffi::c_void,
-    mut user: *mut *mut ::core::ffi::c_void,
-) {
-    let header = header_of(ptr);
-    if (*header).id != ZONEID {
-        I_Error("Z_ChangeUser: Tried to change user for invalid block!");
-    }
-    (*header).user = user;
-    *user = ptr;
 }
