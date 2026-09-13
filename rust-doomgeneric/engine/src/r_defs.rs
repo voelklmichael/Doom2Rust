@@ -101,9 +101,8 @@ pub struct spriteframe_t {
     pub flip: [byte; 8],
 }
 
-#[derive(Copy, Clone)]
-#[repr(C)]
+#[derive(Clone)]
 pub struct spritedef_t {
     pub numframes: i32,
-    pub spriteframes: *mut spriteframe_t,
+    pub spriteframes: Vec<spriteframe_t>,
 }

@@ -1,7 +1,6 @@
 use crate::src::d_player::PowerType;
 use crate::src::d_player::NUMPSPRITES;
 use crate::src::r_defs::SpriteRotate;
-use crate::src::doomdef::NULL;
 use crate::src::doomdef::SCREENWIDTH;
 use crate::src::game_state::GameState;
 use crate::src::hu_lib::patch_t;
@@ -32,9 +31,8 @@ use crate::src::tables::angle_t;
 use crate::src::tables::ANG45;
 use crate::src::w_wad::W_CacheLumpNum;
 use crate::src::w_wad::W_GetNumForName;
-use crate::src::z_zone::Z_Malloc;
-use crate::src::z_zone::{PU_CACHE, PU_STATIC};
-use crate::src::mem_compat::{memcpy, memset};
+use crate::src::z_zone::PU_CACHE;
+use crate::src::mem_compat::memset;
 
 pub struct RThingsState {
     pub pspritescale: fixed_t,
@@ -42,7 +40,7 @@ pub struct RThingsState {
     pub spritelights: *mut *mut lighttable_t,
     pub negonearray: [i16; 320],
     pub screenheightarray: [i16; 320],
-    pub sprites: *mut spritedef_t,
+    pub sprites: Vec<spritedef_t>,
     pub numsprites: i32,
     pub sprtemp: [spriteframe_t; 29],
     pub maxframe: i32,
@@ -67,7 +65,7 @@ impl RThingsState {
             spritelights: ::core::ptr::null::<*mut lighttable_t>() as *mut *mut lighttable_t,
             negonearray: [0; 320],
             screenheightarray: [0; 320],
-            sprites: ::core::ptr::null::<spritedef_t>() as *mut spritedef_t,
+            sprites: Vec::new(),
             numsprites: 0,
             sprtemp: [spriteframe_t {
                 rotate: SpriteRotate::Unset,
@@ -216,13 +214,7 @@ pub unsafe fn R_InitSpriteDefs(state: &mut GameState, namelist: &[&'static str])
     if state.r_things.numsprites == 0 {
         return;
     }
-    state.r_things.sprites = Z_Malloc(
-        &mut state.z_zone,
-        (state.r_things.numsprites as usize)
-            .wrapping_mul(::core::mem::size_of::<spritedef_t>() as usize) as i32,
-        PU_STATIC as i32,
-        NULL,
-    ) as *mut spritedef_t;
+    state.r_things.sprites = Vec::with_capacity(state.r_things.numsprites as usize);
     start = state.r_data.firstspritelump - 1 as i32;
     end = state.r_data.lastspritelump + 1 as i32;
     i = 0 as i32;
@@ -265,7 +257,10 @@ pub unsafe fn R_InitSpriteDefs(state: &mut GameState, namelist: &[&'static str])
             l += 1;
         }
         if state.r_things.maxframe == -(1 as i32) {
-            (*state.r_things.sprites.offset(i as isize)).numframes = 0 as i32;
+            state.r_things.sprites.push(spritedef_t {
+                numframes: 0,
+                spriteframes: Vec::new(),
+            });
         } else {
             state.r_things.maxframe += 1;
             frame = 0 as i32;
@@ -297,23 +292,10 @@ pub unsafe fn R_InitSpriteDefs(state: &mut GameState, namelist: &[&'static str])
                 }
                 frame += 1;
             }
-            (*state.r_things.sprites.offset(i as isize)).numframes = state.r_things.maxframe;
-            let ref mut fresh1 = (*state.r_things.sprites.offset(i as isize)).spriteframes;
-            *fresh1 = Z_Malloc(
-                &mut state.z_zone,
-                (state.r_things.maxframe as usize)
-                    .wrapping_mul(::core::mem::size_of::<spriteframe_t>() as usize)
-                    as i32,
-                PU_STATIC as i32,
-                NULL,
-            ) as *mut spriteframe_t;
-            memcpy(
-                (*state.r_things.sprites.offset(i as isize)).spriteframes
-                    as *mut ::core::ffi::c_void,
-                &raw mut state.r_things.sprtemp as *mut spriteframe_t as *const ::core::ffi::c_void,
-                (state.r_things.maxframe as size_t)
-                    .wrapping_mul(::core::mem::size_of::<spriteframe_t>() as size_t),
-            );
+            state.r_things.sprites.push(spritedef_t {
+                numframes: state.r_things.maxframe,
+                spriteframes: state.r_things.sprtemp[..state.r_things.maxframe as usize].to_vec(),
+            });
         }
         i += 1;
     }
@@ -465,7 +447,7 @@ pub unsafe fn R_ProjectSprite(state: &mut GameState, mut thing: *mut mobj_t) {
             (*thing).sprite as u32,
         ));
     }
-    sprdef = state.r_things.sprites.offset((*thing).sprite as isize) as *mut spritedef_t;
+    sprdef = &raw mut state.r_things.sprites[(*thing).sprite as usize] as *mut spritedef_t;
     if (*thing).frame & FF_FRAMEMASK >= (*sprdef).numframes {
         I_Error(&format!(
             "R_ProjectSprite: invalid sprite frame {} : {} ",
@@ -473,9 +455,8 @@ pub unsafe fn R_ProjectSprite(state: &mut GameState, mut thing: *mut mobj_t) {
             (*thing).frame,
         ));
     }
-    sprframe = (*sprdef)
-        .spriteframes
-        .offset(((*thing).frame & FF_FRAMEMASK) as isize) as *mut spriteframe_t;
+    sprframe = &raw mut (*sprdef).spriteframes[((*thing).frame & FF_FRAMEMASK) as usize]
+        as *mut spriteframe_t;
     if (*sprframe).rotate != SpriteRotate::NonRotating {
         ang = R_PointToAngle(state, (*thing).x, (*thing).y);
         rot = (ang as u32)
@@ -601,7 +582,7 @@ pub unsafe fn R_DrawPSprite(state: &mut GameState, mut psp: *mut pspdef_t) {
             (*psp_state).sprite as u32,
         ));
     }
-    sprdef = state.r_things.sprites.offset((*psp_state).sprite as isize) as *mut spritedef_t;
+    sprdef = &raw mut state.r_things.sprites[(*psp_state).sprite as usize] as *mut spritedef_t;
     if (*psp_state).frame & FF_FRAMEMASK >= (*sprdef).numframes {
         I_Error(&format!(
             "R_ProjectSprite: invalid sprite frame {} : {} ",
@@ -609,9 +590,8 @@ pub unsafe fn R_DrawPSprite(state: &mut GameState, mut psp: *mut pspdef_t) {
             (*psp_state).frame,
         ));
     }
-    sprframe = (*sprdef)
-        .spriteframes
-        .offset(((*psp_state).frame & FF_FRAMEMASK) as isize) as *mut spriteframe_t;
+    sprframe = &raw mut (*sprdef).spriteframes[((*psp_state).frame & FF_FRAMEMASK) as usize]
+        as *mut spriteframe_t;
     lump = (*sprframe).lump[0 as i32 as usize] as i32;
     flip = (*sprframe).flip[0 as i32 as usize] != 0;
     tx = ((*psp).sx as i32 - 160 as i32 * FRACUNIT) as fixed_t;

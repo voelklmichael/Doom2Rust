@@ -720,10 +720,9 @@ pub unsafe fn R_PrecacheLevel(state: &mut GameState) {
     while i < state.r_things.numsprites {
         if !(*spritepresent.offset(i as isize) == 0) {
             j = 0 as i32;
-            while j < (*state.r_things.sprites.offset(i as isize)).numframes {
-                sf = (*state.r_things.sprites.offset(i as isize))
-                    .spriteframes
-                    .offset(j as isize) as *mut spriteframe_t;
+            while j < state.r_things.sprites[i as usize].numframes {
+                sf = &raw mut state.r_things.sprites[i as usize].spriteframes[j as usize]
+                    as *mut spriteframe_t;
                 k = 0 as i32;
                 while k < 8 as i32 {
                     lump = state.r_data.firstspritelump + (*sf).lump[k as usize] as i32;
