@@ -3,15 +3,12 @@ use crate::src::d_items::weaponinfo;
 use crate::src::d_mode::{GameMode_t, GameVersion};
 use crate::src::d_mode::SkillType;
 use crate::src::d_player::CF_GODMODE;
-use crate::src::d_player::{am_cell, am_clip, am_misl, am_noammo, am_shell, ammotype_t, NUMAMMO};
+use crate::src::d_player::{ammotype_from_raw, ammotype_t, NUMAMMO};
 use crate::src::d_player::{player_t, PlayerId, PlayerState};
 use crate::src::d_player::{
     pw_allmap, pw_infrared, pw_invisibility, pw_invulnerability, pw_ironfeet, pw_strength,
 };
-use crate::src::d_player::{
-    weapontype_t, wp_bfg, wp_chaingun, wp_chainsaw, wp_fist, wp_missile, wp_pistol, wp_plasma,
-    wp_shotgun, wp_supershotgun,
-};
+use crate::src::d_player::weapontype_t;
 use crate::src::doomdef::NULL;
 use crate::src::game_state::GameState;
 use crate::src::i_system::I_Error;
@@ -86,7 +83,7 @@ pub unsafe fn P_GiveAmmo(
     mut num: i32,
 ) -> bool {
     let mut oldammo: i32 = 0;
-    if ammo as u32 == am_noammo as i32 as u32 {
+    if ammo as u32 == ammotype_t::am_noammo as i32 as u32 {
         return false;
     }
     if ammo as u32 > NUMAMMO as i32 as u32 {
@@ -115,36 +112,36 @@ pub unsafe fn P_GiveAmmo(
     }
     match ammo as u32 {
         0 => {
-            if (*player).readyweapon as u32 == wp_fist as i32 as u32 {
-                if (*player).weaponowned[wp_chaingun as i32 as usize] {
-                    (*player).pendingweapon = wp_chaingun;
+            if (*player).readyweapon as u32 == weapontype_t::wp_fist as i32 as u32 {
+                if (*player).weaponowned[weapontype_t::wp_chaingun as i32 as usize] {
+                    (*player).pendingweapon = weapontype_t::wp_chaingun;
                 } else {
-                    (*player).pendingweapon = wp_pistol;
+                    (*player).pendingweapon = weapontype_t::wp_pistol;
                 }
             }
         }
         1 => {
-            if (*player).readyweapon as u32 == wp_fist as i32 as u32
-                || (*player).readyweapon as u32 == wp_pistol as i32 as u32
+            if (*player).readyweapon as u32 == weapontype_t::wp_fist as i32 as u32
+                || (*player).readyweapon as u32 == weapontype_t::wp_pistol as i32 as u32
             {
-                if (*player).weaponowned[wp_shotgun as i32 as usize] {
-                    (*player).pendingweapon = wp_shotgun;
+                if (*player).weaponowned[weapontype_t::wp_shotgun as i32 as usize] {
+                    (*player).pendingweapon = weapontype_t::wp_shotgun;
                 }
             }
         }
         2 => {
-            if (*player).readyweapon as u32 == wp_fist as i32 as u32
-                || (*player).readyweapon as u32 == wp_pistol as i32 as u32
+            if (*player).readyweapon as u32 == weapontype_t::wp_fist as i32 as u32
+                || (*player).readyweapon as u32 == weapontype_t::wp_pistol as i32 as u32
             {
-                if (*player).weaponowned[wp_plasma as i32 as usize] {
-                    (*player).pendingweapon = wp_plasma;
+                if (*player).weaponowned[weapontype_t::wp_plasma as i32 as usize] {
+                    (*player).pendingweapon = weapontype_t::wp_plasma;
                 }
             }
         }
         3 => {
-            if (*player).readyweapon as u32 == wp_fist as i32 as u32 {
-                if (*player).weaponowned[wp_missile as i32 as usize] {
-                    (*player).pendingweapon = wp_missile;
+            if (*player).readyweapon as u32 == weapontype_t::wp_fist as i32 as u32 {
+                if (*player).weaponowned[weapontype_t::wp_missile as i32 as usize] {
+                    (*player).pendingweapon = weapontype_t::wp_missile;
                 }
             }
         }
@@ -180,7 +177,7 @@ pub unsafe fn P_GiveWeapon(
         }
         return false;
     }
-    if weaponinfo[weapon as usize].ammo as u32 != am_noammo as i32 as u32 {
+    if weaponinfo[weapon as usize].ammo as u32 != ammotype_t::am_noammo as i32 as u32 {
         if dropped {
             gaveammo = P_GiveAmmo(state, player, weaponinfo[weapon as usize].ammo, 1 as i32);
         } else {
@@ -405,8 +402,8 @@ pub unsafe fn P_TouchSpecialThing(
                 return;
             }
             (*player).message = Some("Berserk!".to_string());
-            if (*player).readyweapon as u32 != wp_fist as i32 as u32 {
-                (*player).pendingweapon = wp_fist;
+            if (*player).readyweapon as u32 != weapontype_t::wp_fist as i32 as u32 {
+                (*player).pendingweapon = weapontype_t::wp_fist;
             }
             sound = sfx_getpow as i32;
         }
@@ -440,52 +437,52 @@ pub unsafe fn P_TouchSpecialThing(
         }
         78 => {
             if (*special).flags & MF_DROPPED as i32 != 0 {
-                if !P_GiveAmmo(state, player, am_clip, 0 as i32) {
+                if !P_GiveAmmo(state, player, ammotype_t::am_clip, 0 as i32) {
                     return;
                 }
-            } else if !P_GiveAmmo(state, player, am_clip, 1 as i32) {
+            } else if !P_GiveAmmo(state, player, ammotype_t::am_clip, 1 as i32) {
                 return;
             }
             (*player).message = Some("Picked up a clip.".to_string());
         }
         79 => {
-            if !P_GiveAmmo(state, player, am_clip, 5 as i32) {
+            if !P_GiveAmmo(state, player, ammotype_t::am_clip, 5 as i32) {
                 return;
             }
             (*player).message = Some("Picked up a box of bullets.".to_string());
         }
         80 => {
-            if !P_GiveAmmo(state, player, am_misl, 1 as i32) {
+            if !P_GiveAmmo(state, player, ammotype_t::am_misl, 1 as i32) {
                 return;
             }
             (*player).message = Some("Picked up a rocket.".to_string());
         }
         81 => {
-            if !P_GiveAmmo(state, player, am_misl, 5 as i32) {
+            if !P_GiveAmmo(state, player, ammotype_t::am_misl, 5 as i32) {
                 return;
             }
             (*player).message = Some("Picked up a box of rockets.".to_string());
         }
         82 => {
-            if !P_GiveAmmo(state, player, am_cell, 1 as i32) {
+            if !P_GiveAmmo(state, player, ammotype_t::am_cell, 1 as i32) {
                 return;
             }
             (*player).message = Some("Picked up an energy cell.".to_string());
         }
         83 => {
-            if !P_GiveAmmo(state, player, am_cell, 5 as i32) {
+            if !P_GiveAmmo(state, player, ammotype_t::am_cell, 5 as i32) {
                 return;
             }
             (*player).message = Some("Picked up an energy cell pack.".to_string());
         }
         84 => {
-            if !P_GiveAmmo(state, player, am_shell, 1 as i32) {
+            if !P_GiveAmmo(state, player, ammotype_t::am_shell, 1 as i32) {
                 return;
             }
             (*player).message = Some("Picked up 4 shotgun shells.".to_string());
         }
         85 => {
-            if !P_GiveAmmo(state, player, am_shell, 5 as i32) {
+            if !P_GiveAmmo(state, player, ammotype_t::am_shell, 5 as i32) {
                 return;
             }
             (*player).message = Some("Picked up a box of shotgun shells.".to_string());
@@ -501,13 +498,13 @@ pub unsafe fn P_TouchSpecialThing(
             }
             i = 0 as i32;
             while i < NUMAMMO as i32 {
-                P_GiveAmmo(state, player, i as ammotype_t, 1 as i32);
+                P_GiveAmmo(state, player, ammotype_from_raw(i), 1 as i32);
                 i += 1;
             }
             (*player).message = Some("Picked up a backpack full of ammo!".to_string());
         }
         87 => {
-            if !P_GiveWeapon(state, player, wp_bfg, false) {
+            if !P_GiveWeapon(state, player, weapontype_t::wp_bfg, false) {
                 return;
             }
             (*player).message = Some("You got the BFG9000!  Oh, yes.".to_string());
@@ -517,7 +514,7 @@ pub unsafe fn P_TouchSpecialThing(
             if !P_GiveWeapon(
                 state,
                 player,
-                wp_chaingun,
+                weapontype_t::wp_chaingun,
                 (*special).flags & MF_DROPPED as i32 != 0,
             ) {
                 return;
@@ -526,21 +523,21 @@ pub unsafe fn P_TouchSpecialThing(
             sound = sfx_wpnup as i32;
         }
         89 => {
-            if !P_GiveWeapon(state, player, wp_chainsaw, false) {
+            if !P_GiveWeapon(state, player, weapontype_t::wp_chainsaw, false) {
                 return;
             }
             (*player).message = Some("A chainsaw!  Find some meat!".to_string());
             sound = sfx_wpnup as i32;
         }
         90 => {
-            if !P_GiveWeapon(state, player, wp_missile, false) {
+            if !P_GiveWeapon(state, player, weapontype_t::wp_missile, false) {
                 return;
             }
             (*player).message = Some("You got the rocket launcher!".to_string());
             sound = sfx_wpnup as i32;
         }
         91 => {
-            if !P_GiveWeapon(state, player, wp_plasma, false) {
+            if !P_GiveWeapon(state, player, weapontype_t::wp_plasma, false) {
                 return;
             }
             (*player).message = Some("You got the plasma gun!".to_string());
@@ -550,7 +547,7 @@ pub unsafe fn P_TouchSpecialThing(
             if !P_GiveWeapon(
                 state,
                 player,
-                wp_shotgun,
+                weapontype_t::wp_shotgun,
                 (*special).flags & MF_DROPPED as i32 != 0,
             ) {
                 return;
@@ -562,7 +559,7 @@ pub unsafe fn P_TouchSpecialThing(
             if !P_GiveWeapon(
                 state,
                 player,
-                wp_supershotgun,
+                weapontype_t::wp_supershotgun,
                 (*special).flags & MF_DROPPED as i32 != 0,
             ) {
                 return;
@@ -683,7 +680,7 @@ pub unsafe fn P_DamageMobj(
         && (source.is_null()
             || (*source).player.is_none()
             || (*state.g_game.player_mut((*source).player.unwrap())).readyweapon as u32
-                != wp_chainsaw as i32 as u32)
+                != weapontype_t::wp_chainsaw as i32 as u32)
     {
         ang = R_PointToAngle2(
             state,

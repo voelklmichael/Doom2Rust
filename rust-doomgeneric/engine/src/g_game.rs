@@ -13,12 +13,9 @@ use crate::src::d_mode::GameMode_t;
 use crate::src::d_mode::GameMission_t;
 use crate::src::d_mode::{skill_from_raw, SkillType};
 use crate::src::d_player::pw_strength;
-use crate::src::d_player::{am_clip, NUMAMMO};
+use crate::src::d_player::{ammotype_t, NUMAMMO};
 use crate::src::d_player::{player_s, player_t, PlayerId, PlayerState};
-use crate::src::d_player::{
-    weapontype_t, wp_bfg, wp_chaingun, wp_chainsaw, wp_fist, wp_missile, wp_nochange, wp_pistol,
-    wp_plasma, wp_shotgun, wp_supershotgun,
-};
+use crate::src::d_player::weapontype_t;
 use crate::src::d_ticcmd::ticcmd_t;
 use crate::src::d_ticcmd::{
     BTS_PAUSE, BTS_SAVEGAME, BTS_SAVEMASK, BTS_SAVESHIFT, BT_ATTACK, BT_CHANGE, BT_SPECIAL,
@@ -215,8 +212,8 @@ const NEW_PLAYER: player_s = player_s {
     cards: [false; 6],
     backpack: false,
     frags: [0; 4],
-    readyweapon: wp_fist,
-    pendingweapon: wp_fist,
+    readyweapon: weapontype_t::wp_fist,
+    pendingweapon: weapontype_t::wp_fist,
     weaponowned: [false; 9],
     ammo: [0; 4],
     maxammo: [0; 4],
@@ -375,40 +372,40 @@ pub const TURBOTHRESHOLD: i32 = 0x32;
 pub static angleturn: [fixed_t; 3] = [640 as i32, 1280 as i32, 320 as i32];
 static weapon_order_table: [C2RustUnnamed_5; 9] = [
     C2RustUnnamed_5 {
-        weapon: wp_fist,
-        weapon_num: wp_fist,
+        weapon: weapontype_t::wp_fist,
+        weapon_num: weapontype_t::wp_fist,
     },
     C2RustUnnamed_5 {
-        weapon: wp_chainsaw,
-        weapon_num: wp_fist,
+        weapon: weapontype_t::wp_chainsaw,
+        weapon_num: weapontype_t::wp_fist,
     },
     C2RustUnnamed_5 {
-        weapon: wp_pistol,
-        weapon_num: wp_pistol,
+        weapon: weapontype_t::wp_pistol,
+        weapon_num: weapontype_t::wp_pistol,
     },
     C2RustUnnamed_5 {
-        weapon: wp_shotgun,
-        weapon_num: wp_shotgun,
+        weapon: weapontype_t::wp_shotgun,
+        weapon_num: weapontype_t::wp_shotgun,
     },
     C2RustUnnamed_5 {
-        weapon: wp_supershotgun,
-        weapon_num: wp_shotgun,
+        weapon: weapontype_t::wp_supershotgun,
+        weapon_num: weapontype_t::wp_shotgun,
     },
     C2RustUnnamed_5 {
-        weapon: wp_chaingun,
-        weapon_num: wp_chaingun,
+        weapon: weapontype_t::wp_chaingun,
+        weapon_num: weapontype_t::wp_chaingun,
     },
     C2RustUnnamed_5 {
-        weapon: wp_missile,
-        weapon_num: wp_missile,
+        weapon: weapontype_t::wp_missile,
+        weapon_num: weapontype_t::wp_missile,
     },
     C2RustUnnamed_5 {
-        weapon: wp_plasma,
-        weapon_num: wp_plasma,
+        weapon: weapontype_t::wp_plasma,
+        weapon_num: weapontype_t::wp_plasma,
     },
     C2RustUnnamed_5 {
-        weapon: wp_bfg,
-        weapon_num: wp_bfg,
+        weapon: weapontype_t::wp_bfg,
+        weapon_num: weapontype_t::wp_bfg,
     },
 ];
 pub const SLOWTURNTICS: i32 = 6;
@@ -430,7 +427,7 @@ pub unsafe fn G_CmdChecksum(mut cmd: *mut ticcmd_t) -> i32 {
     return sum;
 }
 fn WeaponSelectable(state: &mut GameState, mut weapon: weapontype_t) -> bool {
-    if weapon as u32 == wp_supershotgun as u32
+    if weapon as u32 == weapontype_t::wp_supershotgun as u32
         && (if state.doomstat.gamemission as u32 == GameMission_t::pack_chex as u32 {
             GameMission_t::doom as u32
         } else {
@@ -443,7 +440,7 @@ fn WeaponSelectable(state: &mut GameState, mut weapon: weapontype_t) -> bool {
     {
         return false;
     }
-    if (weapon as u32 == wp_plasma as u32 || weapon as u32 == wp_bfg as u32)
+    if (weapon as u32 == weapontype_t::wp_plasma as u32 || weapon as u32 == weapontype_t::wp_bfg as u32)
         && state.doomstat.gamemission as u32 == GameMission_t::doom as u32
         && state.doomstat.gamemode as u32 == GameMode_t::shareware as u32
     {
@@ -452,9 +449,9 @@ fn WeaponSelectable(state: &mut GameState, mut weapon: weapontype_t) -> bool {
     if !state.g_game.players[state.g_game.consoleplayer as usize].weaponowned[weapon as usize] {
         return false;
     }
-    if weapon as u32 == wp_fist as u32
+    if weapon as u32 == weapontype_t::wp_fist as u32
         && state.g_game.players[state.g_game.consoleplayer as usize].weaponowned
-            [wp_chainsaw as i32 as usize]
+            [weapontype_t::wp_chainsaw as i32 as usize]
         && state.g_game.players[state.g_game.consoleplayer as usize].powers
             [pw_strength as i32 as usize]
             == 0
@@ -464,11 +461,11 @@ fn WeaponSelectable(state: &mut GameState, mut weapon: weapontype_t) -> bool {
     return true;
 }
 fn G_NextWeapon(state: &mut GameState, mut direction: i32) -> i32 {
-    let mut weapon: weapontype_t = wp_fist;
+    let mut weapon: weapontype_t = weapontype_t::wp_fist;
     let mut start_i: i32 = 0;
     let mut i: i32 = 0;
     if state.g_game.players[state.g_game.consoleplayer as usize].pendingweapon as u32
-        == wp_nochange as u32
+        == weapontype_t::wp_nochange as u32
     {
         weapon = state.g_game.players[state.g_game.consoleplayer as usize].readyweapon;
     } else {
@@ -1199,11 +1196,11 @@ pub unsafe fn G_PlayerReborn(state: &mut GGameState, mut player: i32) {
     (*p).usedown = (*p).attackdown;
     (*p).playerstate = PlayerState::PST_LIVE;
     (*p).health = deh_initial_health;
-    (*p).pendingweapon = wp_pistol;
+    (*p).pendingweapon = weapontype_t::wp_pistol;
     (*p).readyweapon = (*p).pendingweapon;
-    (*p).weaponowned[wp_fist as i32 as usize] = true;
-    (*p).weaponowned[wp_pistol as i32 as usize] = true;
-    (*p).ammo[am_clip as i32 as usize] = deh_initial_bullets;
+    (*p).weaponowned[weapontype_t::wp_fist as i32 as usize] = true;
+    (*p).weaponowned[weapontype_t::wp_pistol as i32 as usize] = true;
+    (*p).ammo[ammotype_t::am_clip as i32 as usize] = deh_initial_bullets;
     i = 0 as i32;
     while i < NUMAMMO as i32 {
         (*p).maxammo[i as usize] = maxammo[i as usize];
