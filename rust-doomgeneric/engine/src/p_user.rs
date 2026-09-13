@@ -1,5 +1,5 @@
 use crate::src::d_mode::{commercial, shareware};
-use crate::src::d_player::{player_t, PST_DEAD, PST_LIVE, PST_REBORN};
+use crate::src::d_player::{player_t, PlayerState};
 use crate::src::d_player::{
     pw_infrared, pw_invisibility, pw_invulnerability, pw_ironfeet, pw_strength,
 };
@@ -69,7 +69,7 @@ pub unsafe fn P_CalcHeight(state: &mut GameState, mut player: *mut player_t) {
     }
     angle = FINEANGLES / 20 as i32 * state.p_tick.leveltime & FINEMASK;
     bob = FixedMul((*player).bob / 2 as fixed_t, finesine[angle as usize]);
-    if (*player).playerstate as u32 == PST_LIVE as i32 as u32 {
+    if (*player).playerstate == PlayerState::PST_LIVE {
         (*player).viewheight += (*player).deltaviewheight;
         if (*player).viewheight > VIEWHEIGHT {
             (*player).viewheight = VIEWHEIGHT as fixed_t;
@@ -159,7 +159,7 @@ pub unsafe fn P_DeathThink(state: &mut GameState, mut player: *mut player_t) {
         (*player).damagecount -= 1;
     }
     if (*player).cmd.buttons as i32 & BT_USE as i32 != 0 {
-        (*player).playerstate = PST_REBORN;
+        (*player).playerstate = PlayerState::PST_REBORN;
     }
 }
 pub unsafe fn P_PlayerThink(state: &mut GameState, mut player: *mut player_t) {
@@ -177,7 +177,7 @@ pub unsafe fn P_PlayerThink(state: &mut GameState, mut player: *mut player_t) {
         (*cmd).sidemove = 0 as i8;
         (*(*player).mo).flags &= !(MF_JUSTATTACKED as i32);
     }
-    if (*player).playerstate as u32 == PST_DEAD as i32 as u32 {
+    if (*player).playerstate == PlayerState::PST_DEAD {
         P_DeathThink(state, player);
         return;
     }

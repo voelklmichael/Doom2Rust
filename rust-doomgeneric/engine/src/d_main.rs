@@ -15,7 +15,7 @@ use crate::src::d_mode::{
 use crate::src::d_mode::{sk_baby, sk_medium, skill_t};
 use crate::src::d_net::D_CheckNetGame;
 use crate::src::d_net::D_ConnectNetGame;
-use crate::src::d_player::{PlayerId, PST_LIVE};
+use crate::src::d_player::{PlayerId, PlayerState};
 use crate::src::doomdef::boolean;
 use crate::src::doomdef::false_0;
 use crate::src::doomdef::MAXPLAYERS;
@@ -534,7 +534,7 @@ pub fn D_AdvanceDemo(state: &mut GameState) {
     state.d_main.advancedemo = true;
 }
 pub unsafe fn D_DoAdvanceDemo(state: &mut GameState) {
-    state.g_game.players[state.g_game.consoleplayer as usize].playerstate = PST_LIVE;
+    state.g_game.players[state.g_game.consoleplayer as usize].playerstate = PlayerState::PST_LIVE;
     state.d_main.advancedemo = false;
     state.g_game.usergame = false;
     state.g_game.paused = false;

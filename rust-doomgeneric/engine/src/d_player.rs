@@ -41,16 +41,18 @@ pub const wp_fist: weapontype_t = 0;
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub struct PlayerId(pub u8);
 
-pub type playerstate_t = u32;
-pub const PST_REBORN: playerstate_t = 2;
-pub const PST_DEAD: playerstate_t = 1;
-pub const PST_LIVE: playerstate_t = 0;
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub enum PlayerState {
+    PST_LIVE = 0,
+    PST_DEAD = 1,
+    PST_REBORN = 2,
+}
 
 #[derive(Clone)]
 #[repr(C)]
 pub struct player_s {
     pub mo: *mut mobj_t,
-    pub playerstate: playerstate_t,
+    pub playerstate: PlayerState,
     pub cmd: ticcmd_t,
     pub viewz: fixed_t,
     pub viewheight: fixed_t,

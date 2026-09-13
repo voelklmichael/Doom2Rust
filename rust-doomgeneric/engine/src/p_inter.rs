@@ -4,7 +4,7 @@ use crate::src::d_mode::{commercial, GameVersion};
 use crate::src::d_mode::{sk_baby, sk_nightmare};
 use crate::src::d_player::CF_GODMODE;
 use crate::src::d_player::{am_cell, am_clip, am_misl, am_noammo, am_shell, ammotype_t, NUMAMMO};
-use crate::src::d_player::{player_t, PlayerId, PST_DEAD};
+use crate::src::d_player::{player_t, PlayerId, PlayerState};
 use crate::src::d_player::{
     pw_allmap, pw_infrared, pw_invisibility, pw_invulnerability, pw_ironfeet, pw_strength,
 };
@@ -610,7 +610,7 @@ pub unsafe fn P_KillMobj(state: &mut GameState, mut source: *mut mobj_t, mut tar
             (*target_player).frags[target_player_id.0 as usize] += 1;
         }
         (*target).flags &= !(MF_SOLID as i32);
-        (*target_player).playerstate = PST_DEAD;
+        (*target_player).playerstate = PlayerState::PST_DEAD;
         P_DropWeapon(state, target_player);
         if target_player_id.0 as i32 == state.g_game.consoleplayer && state.am_map.automapactive {
             AM_Stop(state);
