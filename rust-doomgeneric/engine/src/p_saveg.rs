@@ -18,7 +18,7 @@ use crate::src::p_floor::FloorE;
 use crate::src::p_lights::{glow_t, lightflash_t, strobe_t};
 use crate::src::p_maputl::P_SetThingPosition;
 use crate::src::p_mobj::mobjtype_t;
-use crate::src::p_mobj::spritenum_t;
+use crate::src::p_mobj::spritenum_from_raw;
 use crate::src::p_mobj::P_RemoveMobj;
 use crate::src::p_mobj::{
     line_t, mapthing_t, sector_t, thinker_t, SectorSpecial, ThinkerFn,
@@ -255,7 +255,7 @@ unsafe fn saveg_read_mobj_t(state: &mut GameState, mut str: *mut mobj_t) {
     saveg_read32(state);
     (*str).sprev = None;
     (*str).angle = saveg_read32(state) as angle_t;
-    (*str).sprite = saveg_read32(state) as spritenum_t;
+    (*str).sprite = spritenum_from_raw(saveg_read32(state));
     (*str).frame = saveg_read32(state);
     // P_SetThingPosition also fully rebuilds bnext/bprev from scratch --
     // same dead-bytes treatment as snext/sprev above.
