@@ -1,6 +1,6 @@
 use crate::src::d_mode::GameVersion;
-use crate::src::d_mode::{doom, GameMission_t};
-use crate::src::d_mode::{indetermined, GameMode_t};
+use crate::src::d_mode::GameMission_t;
+use crate::src::d_mode::GameMode_t;
 pub struct DoomstatState {
     pub gamemode: GameMode_t,
     pub gamemission: GameMission_t,
@@ -11,8 +11,8 @@ pub struct DoomstatState {
 impl DoomstatState {
     pub const fn new() -> Self {
         DoomstatState {
-            gamemode: indetermined,
-            gamemission: doom,
+            gamemode: GameMode_t::indetermined,
+            gamemission: GameMission_t::doom,
             gameversion: GameVersion::final2,
             gamedescription: "",
             modifiedgame: false,

@@ -2,8 +2,8 @@ use crate::src::am_map::{AM_MSGENTERED, AM_MSGEXITED, AM_MSGHEADER};
 use crate::src::d_event::event_t;
 use crate::src::d_event::EvType;
 use crate::src::d_items::{weaponinfo, weaponinfo_t};
-use crate::src::d_mode::{commercial, registered, retail, shareware};
-use crate::src::d_mode::{doom, doom2, pack_chex, pack_hacx};
+use crate::src::d_mode::GameMode_t;
+use crate::src::d_mode::GameMission_t;
 use crate::src::d_mode::{GameVersion, SkillType};
 use crate::src::d_player::player_t;
 use crate::src::d_player::{am_noammo, NUMAMMO};
@@ -544,7 +544,7 @@ pub unsafe fn ST_Responder(state: &mut GameState, mut ev: &event_t) -> bool {
                     &raw mut state.st_stuff.cheat_mus,
                     &raw mut buf as *mut ::core::ffi::c_char,
                 );
-                if state.doomstat.gamemode as u32 == commercial as i32 as u32
+                if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32
                     || !state.doomstat.gameversion.is_ultimate_or_higher()
                 {
                     musnum = mus_runnin as i32
@@ -575,28 +575,28 @@ pub unsafe fn ST_Responder(state: &mut GameState, mut ev: &event_t) -> bool {
                         S_ChangeMusic(state, musnum, 1 as i32);
                     }
                 }
-            } else if (if state.doomstat.gamemission as u32 == pack_chex as i32 as u32 {
-                doom as i32 as u32
+            } else if (if state.doomstat.gamemission as u32 == GameMission_t::pack_chex as i32 as u32 {
+                GameMission_t::doom as i32 as u32
             } else {
-                if state.doomstat.gamemission as u32 == pack_hacx as i32 as u32 {
-                    doom2 as i32 as u32
+                if state.doomstat.gamemission as u32 == GameMission_t::pack_hacx as i32 as u32 {
+                    GameMission_t::doom2 as i32 as u32
                 } else {
                     state.doomstat.gamemission as u32
                 }
-            }) == doom as i32 as u32
+            }) == GameMission_t::doom as i32 as u32
                 && cht_CheckCheat(
                     &raw mut state.st_stuff.cheat_noclip,
                     (*ev).data2 as ::core::ffi::c_char,
                 ) != 0
-                || (if state.doomstat.gamemission as u32 == pack_chex as i32 as u32 {
-                    doom as i32 as u32
+                || (if state.doomstat.gamemission as u32 == GameMission_t::pack_chex as i32 as u32 {
+                    GameMission_t::doom as i32 as u32
                 } else {
-                    if state.doomstat.gamemission as u32 == pack_hacx as i32 as u32 {
-                        doom2 as i32 as u32
+                    if state.doomstat.gamemission as u32 == GameMission_t::pack_hacx as i32 as u32 {
+                        GameMission_t::doom2 as i32 as u32
                     } else {
                         state.doomstat.gamemission as u32
                     }
-                }) != doom as i32 as u32
+                }) != GameMission_t::doom as i32 as u32
                     && cht_CheckCheat(
                         &raw mut state.st_stuff.cheat_commercial_noclip,
                         (*ev).data2 as ::core::ffi::c_char,
@@ -669,7 +669,7 @@ pub unsafe fn ST_Responder(state: &mut GameState, mut ev: &event_t) -> bool {
                 &raw mut state.st_stuff.cheat_clev,
                 &raw mut buf_1 as *mut ::core::ffi::c_char,
             );
-            if state.doomstat.gamemode as u32 == commercial as i32 as u32 {
+            if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 {
                 epsd = 1 as i32;
                 map = (buf_1[0 as i32 as usize] as i32 - '0' as i32) * 10 as i32
                     + buf_1[1 as i32 as usize] as i32
@@ -687,22 +687,22 @@ pub unsafe fn ST_Responder(state: &mut GameState, mut ev: &event_t) -> bool {
             if map < 1 as i32 {
                 return false;
             }
-            if state.doomstat.gamemode as u32 == retail as i32 as u32
+            if state.doomstat.gamemode as u32 == GameMode_t::retail as i32 as u32
                 && (epsd > 4 as i32 || map > 9 as i32)
             {
                 return false;
             }
-            if state.doomstat.gamemode as u32 == registered as i32 as u32
+            if state.doomstat.gamemode as u32 == GameMode_t::registered as i32 as u32
                 && (epsd > 3 as i32 || map > 9 as i32)
             {
                 return false;
             }
-            if state.doomstat.gamemode as u32 == shareware as i32 as u32
+            if state.doomstat.gamemode as u32 == GameMode_t::shareware as i32 as u32
                 && (epsd > 1 as i32 || map > 9 as i32)
             {
                 return false;
             }
-            if state.doomstat.gamemode as u32 == commercial as i32 as u32
+            if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32
                 && (epsd > 1 as i32 || map > 40 as i32)
             {
                 return false;

@@ -26,7 +26,7 @@ use crate::src::w_wad::W_ReleaseLumpNum;
 use crate::src::w_wad::W_GetNumForName;
 use crate::src::z_zone::Z_Malloc;
 
-use crate::src::d_mode::commercial;
+use crate::src::d_mode::GameMode_t;
 use crate::src::doomdef::false_0;
 use crate::src::doomdef::true_0;
 use crate::src::doomdef::NULL;
@@ -150,7 +150,7 @@ pub unsafe fn S_Start(state: &mut GameState) {
         cnum += 1;
     }
     state.s_sound.mus_paused = false;
-    if state.doomstat.gamemode as u32 == commercial as i32 as u32 {
+    if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 {
         mnum = mus_runnin as i32 + state.g_game.gamemap - 1 as i32;
     } else {
         let mut spmus: [i32; 9] = [

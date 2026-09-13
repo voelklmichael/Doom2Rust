@@ -1,4 +1,4 @@
-use crate::src::d_mode::commercial;
+use crate::src::d_mode::GameMode_t;
 use crate::src::d_mode::SkillType;
 use crate::src::d_player::player_t;
 use crate::src::doomdef::boolean;
@@ -1471,7 +1471,7 @@ pub unsafe fn A_BossDeath(state: &mut GameState, id: MobjId) {
         validcount: 0,
     };
     let mut i: i32 = 0;
-    if state.doomstat.gamemode as u32 == commercial as i32 as u32 {
+    if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 {
         if state.g_game.gamemap != 7 as i32 {
             return;
         }
@@ -1507,7 +1507,7 @@ pub unsafe fn A_BossDeath(state: &mut GameState, id: MobjId) {
         }
         cursor = state.p_tick.next(id);
     }
-    if state.doomstat.gamemode as u32 == commercial as i32 as u32 {
+    if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 {
         if state.g_game.gamemap == 7 as i32 {
             if (*mo).type_0 as u32 == MT_FATSO as i32 as u32 {
                 junk.tag = 666 as i16;
@@ -1754,7 +1754,7 @@ pub unsafe fn A_SpawnFly(state: &mut GameState, id: MobjId) {
 pub unsafe fn A_PlayerScream(state: &mut GameState, id: MobjId) {
     let mo = state.p_mobj.mobj_get(id).unwrap();
     let mut sound: i32 = sfx_pldeth as i32;
-    if state.doomstat.gamemode as u32 == commercial as i32 as u32 && (*mo).health < -(50 as i32) {
+    if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 && (*mo).health < -(50 as i32) {
         sound = sfx_pdiehi as i32;
     }
     S_StartSound(state, mo as *mut ::core::ffi::c_void, sound);
