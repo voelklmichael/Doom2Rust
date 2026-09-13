@@ -102,8 +102,6 @@ use crate::src::wi_stuff::WI_End;
 use crate::src::wi_stuff::WI_Start;
 use crate::src::wi_stuff::WI_Ticker;
 use crate::src::wi_stuff::{wbplayerstruct_t, wbstartstruct_t};
-use crate::src::z_zone::Z_CheckHeap;
-use crate::src::z_zone::PU_STATIC;
 use std::io::Seek;
 
 pub struct GGameState {
@@ -809,7 +807,6 @@ pub unsafe fn G_DoLoadLevel(state: &mut GameState) {
     P_SetupLevel(state, state.g_game.gameepisode, state.g_game.gamemap);
     state.g_game.displayplayer = state.g_game.consoleplayer;
     state.g_game.gameaction = GameAction::ga_nothing;
-    Z_CheckHeap(&mut state.z_zone);
     memset(
         &raw mut state.g_game.gamekeydown as *mut bool as *mut ::core::ffi::c_void,
         0 as i32,
@@ -1985,7 +1982,7 @@ pub unsafe fn G_DoPlayDemo(state: &mut GameState) {
     state.g_game.gameaction = GameAction::ga_nothing;
     let demo_lumpname = wad_name8_to_string(state.g_game.defdemoname);
     let demo_lumpnum = W_GetNumForName(&mut state.w_wad, &demo_lumpname);
-    let demo_lump = W_CacheLumpNum(state, demo_lumpnum, PU_STATIC as i32) as *const byte;
+    let demo_lump = W_CacheLumpNum(state, demo_lumpnum) as *const byte;
     let demo_lumplen = W_LumpLength(&mut state.w_wad, demo_lumpnum as u32) as usize;
     state.g_game.demobuffer = ::core::slice::from_raw_parts(demo_lump, demo_lumplen).to_vec();
     state.g_game.demo_p = state.g_game.demobuffer.as_mut_ptr();

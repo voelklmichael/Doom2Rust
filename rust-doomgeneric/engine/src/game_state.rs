@@ -64,7 +64,6 @@ use crate::src::w_checksum::WChecksumState;
 use crate::src::w_file::WFileState;
 use crate::src::w_wad::WWadState;
 use crate::src::wi_stuff::{fixup_numanims, WiStuffState};
-use crate::src::z_zone::ZZoneState;
 
 pub struct GameState {
     pub am_map: AmMapState,
@@ -125,7 +124,6 @@ pub struct GameState {
     pub w_file: WFileState,
     pub w_wad: WWadState,
     pub wi_stuff: WiStuffState,
-    pub z_zone: ZZoneState,
     pub platform: Box<dyn DoomPlatform>,
 }
 
@@ -190,7 +188,6 @@ impl GameState {
             w_file: WFileState::new(),
             w_wad: WWadState::new(),
             wi_stuff: WiStuffState::new(),
-            z_zone: ZZoneState::new(),
             platform,
         }
     }

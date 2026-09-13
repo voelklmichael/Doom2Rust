@@ -5,7 +5,6 @@ use crate::src::st_stuff::ST_Y;
 use crate::src::v_video::V_CopyRect;
 use crate::src::v_video::V_DrawPatch;
 use crate::src::w_wad::W_CacheLumpName;
-use crate::src::z_zone::PU_STATIC;
 
 #[derive(Copy, Clone)]
 #[repr(C)]
@@ -60,7 +59,7 @@ impl StLibState {
 }
 
 pub unsafe fn STlib_init(state: &mut GameState) {
-    state.st_lib.sttminus = W_CacheLumpName(state, "STTMINUS", PU_STATIC as i32) as *mut patch_t;
+    state.st_lib.sttminus = W_CacheLumpName(state, "STTMINUS") as *mut patch_t;
 }
 pub unsafe fn STlib_initNum(
     mut n: *mut st_number_t,

@@ -21,7 +21,6 @@ use crate::src::tables::ANG90;
 use crate::src::tables::ANGLETOFINESHIFT;
 use crate::src::w_wad::W_CacheLumpNum;
 use crate::src::w_wad::W_ReleaseLumpNum;
-use crate::src::z_zone::PU_STATIC;
 use crate::src::mem_compat::memset;
 
 pub struct RPlaneState {
@@ -357,7 +356,7 @@ pub unsafe fn R_DrawPlanes(state: &mut GameState) {
             } else {
                 lumpnum = state.r_data.firstflat
                     + state.r_data.flattranslation[(*pl).picnum as usize];
-                state.r_draw.ds_source = W_CacheLumpNum(state, lumpnum, PU_STATIC as i32) as *mut byte;
+                state.r_draw.ds_source = W_CacheLumpNum(state, lumpnum) as *mut byte;
                 state.r_plane.planeheight =
                     ((*pl).height as i32 - state.r_main.viewz as i32).abs() as fixed_t;
                 light = ((*pl).lightlevel >> LIGHTSEGSHIFT) + state.r_main.extralight;

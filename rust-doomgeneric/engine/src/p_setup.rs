@@ -37,8 +37,6 @@ use crate::src::w_wad::W_LumpLength;
 use crate::src::w_wad::W_ReadLump;
 use crate::src::w_wad::W_ReleaseLumpNum;
 use crate::src::w_wad::W_GetNumForName;
-use crate::src::z_zone::Z_FreeTags;
-use crate::src::z_zone::{PU_LEVEL, PU_PURGELEVEL, PU_STATIC};
 use crate::src::mem_compat::memset;
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
@@ -302,7 +300,7 @@ pub unsafe fn P_LoadVertexes(state: &mut GameState, mut lump: i32) {
         as i32;
     state.p_setup.numvertexes = numvertexes;
     state.p_setup.vertexes = Vec::with_capacity(numvertexes as usize);
-    data = W_CacheLumpNum(state, lump, PU_STATIC as i32) as *mut byte;
+    data = W_CacheLumpNum(state, lump) as *mut byte;
     ml = data as *mut mapvertex_t;
     i = 0 as i32;
     while i < numvertexes {
@@ -349,7 +347,7 @@ pub unsafe fn P_LoadSegs(state: &mut GameState, mut lump: i32) {
         as i32;
     state.p_setup.numsegs = numsegs;
     state.p_setup.segs = Vec::with_capacity(numsegs as usize);
-    data = W_CacheLumpNum(state, lump, PU_STATIC as i32) as *mut byte;
+    data = W_CacheLumpNum(state, lump) as *mut byte;
     ml = data as *mut mapseg_t;
     i = 0 as i32;
     while i < numsegs {
@@ -397,7 +395,7 @@ pub unsafe fn P_LoadSubsectors(state: &mut GameState, mut lump: i32) {
         as i32;
     state.p_setup.numsubsectors = numsubsectors;
     state.p_setup.subsectors = Vec::with_capacity(numsubsectors as usize);
-    data = W_CacheLumpNum(state, lump, PU_STATIC as i32) as *mut byte;
+    data = W_CacheLumpNum(state, lump) as *mut byte;
     ms = data as *mut mapsubsector_t;
     i = 0 as i32;
     while i < numsubsectors {
@@ -419,7 +417,7 @@ pub unsafe fn P_LoadSectors(state: &mut GameState, mut lump: i32) {
         .wrapping_div(::core::mem::size_of::<mapsector_t>() as usize) as i32;
     state.p_setup.numsectors = numsectors;
     state.p_setup.sectors = vec![ZERO_SECTOR; numsectors as usize];
-    data = W_CacheLumpNum(state, lump, PU_STATIC as i32) as *mut byte;
+    data = W_CacheLumpNum(state, lump) as *mut byte;
     ms = data as *mut mapsector_t;
     i = 0 as i32;
     while i < numsectors {
@@ -459,7 +457,7 @@ pub unsafe fn P_LoadNodes(state: &mut GameState, mut lump: i32) {
         };
         state.p_setup.numnodes as usize
     ];
-    data = W_CacheLumpNum(state, lump, PU_STATIC as i32) as *mut byte;
+    data = W_CacheLumpNum(state, lump) as *mut byte;
     mn = data as *mut mapnode_t;
     i = 0 as i32;
     while i < state.p_setup.numnodes {
@@ -497,7 +495,7 @@ pub unsafe fn P_LoadThings(state: &mut GameState, mut lump: i32) {
     };
     let mut numthings: i32 = 0;
     let mut spawn: bool = false;
-    data = W_CacheLumpNum(state, lump, PU_STATIC as i32) as *mut byte;
+    data = W_CacheLumpNum(state, lump) as *mut byte;
     numthings = (W_LumpLength(&mut state.w_wad, lump as u32) as usize)
         .wrapping_div(::core::mem::size_of::<mapthing_t>() as usize) as i32;
     mt = data as *mut mapthing_t;
@@ -612,7 +610,7 @@ pub unsafe fn P_LoadLineDefs(state: &mut GameState, mut lump: i32) {
         .wrapping_div(::core::mem::size_of::<maplinedef_t>() as usize)
         as i32;
     state.p_setup.lines = vec![ZERO_LINE; state.p_setup.numlines as usize];
-    data = W_CacheLumpNum(state, lump, PU_STATIC as i32) as *mut byte;
+    data = W_CacheLumpNum(state, lump) as *mut byte;
     mld = data as *mut maplinedef_t;
     i = 0 as i32;
     while i < state.p_setup.numlines {
@@ -676,7 +674,7 @@ pub unsafe fn P_LoadSideDefs(state: &mut GameState, mut lump: i32) {
         .wrapping_div(::core::mem::size_of::<mapsidedef_t>() as usize) as i32;
     state.p_setup.numsides = numsides;
     state.p_setup.sides = Vec::with_capacity(numsides as usize);
-    data = W_CacheLumpNum(state, lump, PU_STATIC as i32) as *mut byte;
+    data = W_CacheLumpNum(state, lump) as *mut byte;
     msd = data as *mut mapsidedef_t;
     i = 0 as i32;
     while i < numsides {
@@ -868,7 +866,7 @@ unsafe fn P_LoadReject(state: &mut GameState, mut lumpnum: i32) {
     minlength = (state.p_setup.numsectors * state.p_setup.numsectors + 7 as i32) / 8 as i32;
     lumplen = W_LumpLength(&mut state.w_wad, lumpnum as u32);
     if lumplen >= minlength {
-        let lump_ptr = W_CacheLumpNum(state, lumpnum, PU_LEVEL as i32) as *const byte;
+        let lump_ptr = W_CacheLumpNum(state, lumpnum) as *const byte;
         state.p_setup.rejectmatrix =
             ::core::slice::from_raw_parts(lump_ptr, minlength as usize).to_vec();
     } else {
@@ -898,11 +896,6 @@ pub unsafe fn P_SetupLevel(state: &mut GameState, mut episode: i32, mut map: i32
     }
     state.g_game.players[state.g_game.consoleplayer as usize].viewz = 1 as i32 as fixed_t;
     S_Start(state);
-    Z_FreeTags(
-        &mut state.z_zone,
-        PU_LEVEL as i32,
-        PU_PURGELEVEL as i32 - 1 as i32,
-    );
     P_InitThinkers(state);
     let lumpname = if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 {
         if map < 10 as i32 {

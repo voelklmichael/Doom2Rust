@@ -32,7 +32,6 @@ use crate::src::tables::angle_t;
 use crate::src::tables::ANG45;
 use crate::src::w_wad::W_CacheLumpNum;
 use crate::src::w_wad::W_GetNumForName;
-use crate::src::z_zone::PU_CACHE;
 
 pub struct RThingsState {
     pub pspritescale: fixed_t,
@@ -365,9 +364,7 @@ pub unsafe fn R_DrawVisSprite(state: &mut GameState, mut vis: *mut vissprite_t) 
     let mut patch: *mut patch_t = ::core::ptr::null_mut::<patch_t>();
     patch = W_CacheLumpNum(
         state,
-        (*vis).patch + state.r_data.firstspritelump,
-        PU_CACHE as i32,
-    ) as *mut patch_t;
+        (*vis).patch + state.r_data.firstspritelump) as *mut patch_t;
     state.r_draw.dc_colormap = (*vis).colormap;
     if state.r_draw.dc_colormap.is_null() {
         state.r_main.colfunc = state.r_main.fuzzcolfunc;

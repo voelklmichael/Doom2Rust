@@ -97,8 +97,6 @@ use crate::src::w_wad::W_CheckCorrectIWAD;
 use crate::src::w_wad::W_GenerateHashTable;
 use crate::src::w_wad::{W_CacheLumpName, W_CheckNumForName};
 use crate::src::wi_stuff::WI_Drawer;
-use crate::src::z_zone::Z_Init;
-use crate::src::z_zone::PU_CACHE;
 
 pub struct DMainState {
     pub savegamedir: String,
@@ -317,7 +315,7 @@ pub unsafe fn D_Display(state: &mut GameState) {
     if state.g_game.gamestate as u32 != state.d_main.d_display_oldgamestate as u32
         && state.g_game.gamestate != GameScreenState::GS_LEVEL
     {
-        let __wcache387_3 = W_CacheLumpName(state, "PLAYPAL", PU_CACHE as i32) as *mut byte;
+        let __wcache387_3 = W_CacheLumpName(state, "PLAYPAL") as *mut byte;
         I_SetPalette(state, __wcache387_3);
     }
     if state.g_game.gamestate == GameScreenState::GS_LEVEL
@@ -355,7 +353,7 @@ pub unsafe fn D_Display(state: &mut GameState) {
         } else {
             y = state.r_draw.viewwindowy + 4 as i32;
         }
-        let __wcache429_2 = W_CacheLumpName(state, "M_PAUSE", PU_CACHE as i32) as *mut patch_t;
+        let __wcache429_2 = W_CacheLumpName(state, "M_PAUSE") as *mut patch_t;
         V_DrawPatchDirect(
             state,
             state.r_draw.viewwindowx + (state.r_draw.scaledviewwidth - 68 as i32) / 2 as i32,
@@ -521,7 +519,7 @@ pub fn D_PageTicker(state: &mut GameState) {
 }
 pub unsafe fn D_PageDrawer(state: &mut GameState) {
     let __wcache609_1 =
-        W_CacheLumpName(state, state.d_main.pagename, PU_CACHE as i32) as *mut patch_t;
+        W_CacheLumpName(state, state.d_main.pagename) as *mut patch_t;
     V_DrawPatch(state, 0 as i32, 0 as i32, __wcache609_1);
 }
 pub fn D_AdvanceDemo(state: &mut GameState) {
@@ -874,8 +872,6 @@ pub unsafe fn D_DoomMain(state: &mut GameState) {
         false,
     );
     I_PrintBanner(&PACKAGE_STRING.as_str());
-    println!("Z_Init: Init zone memory allocation daemon. ");
-    Z_Init(&mut state.z_zone);
     state.d_main.nomonsters = M_CheckParm(state, "-nomonsters") != 0;
     state.d_main.respawnparm = M_CheckParm(state, "-respawn") != 0;
     state.d_main.fastparm = M_CheckParm(state, "-fast") != 0;

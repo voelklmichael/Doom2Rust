@@ -18,7 +18,6 @@ use crate::src::w_wad::W_LumpNameHash;
 use crate::src::w_wad::{
     wad_name8_to_string, W_CacheLumpName, W_CheckNumForName, W_GetNumForName, W_ReleaseLumpName,
 };
-use crate::src::z_zone::{PU_CACHE, PU_STATIC};
 use crate::src::mem_compat::memcpy;
 
 pub struct RDataState {
@@ -194,7 +193,7 @@ pub unsafe fn R_GenerateComposite(state: &mut GameState, mut texnum: i32) {
     i = 0 as i32;
     patch = (*texture).patches.as_mut_ptr();
     while i < (*texture).patchcount as i32 {
-        realpatch = W_CacheLumpNum(state, (*patch).patch, PU_CACHE as i32) as *mut patch_t;
+        realpatch = W_CacheLumpNum(state, (*patch).patch) as *mut patch_t;
         x1 = (*patch).originx as i32;
         x2 = x1 + (*realpatch).width as i32;
         if x1 < 0 as i32 {
@@ -248,7 +247,7 @@ pub unsafe fn R_GenerateLookup(state: &mut GameState, mut texnum: i32) {
     i = 0 as i32;
     patch = (*texture).patches.as_mut_ptr();
     while i < (*texture).patchcount as i32 {
-        realpatch = W_CacheLumpNum(state, (*patch).patch, PU_CACHE as i32) as *mut patch_t;
+        realpatch = W_CacheLumpNum(state, (*patch).patch) as *mut patch_t;
         x1 = (*patch).originx as i32;
         x2 = x1 + (*realpatch).width as i32;
         if x1 < 0 as i32 {
@@ -299,7 +298,7 @@ pub unsafe fn R_GetColumn(state: &mut GameState, mut tex: i32, mut col: i32) -> 
     lump = state.r_data.texturecolumnlump[tex as usize][col as usize] as i32;
     ofs = state.r_data.texturecolumnofs[tex as usize][col as usize] as i32;
     if lump > 0 as i32 {
-        return (W_CacheLumpNum(state, lump, PU_CACHE as i32) as *mut byte).offset(ofs as isize);
+        return (W_CacheLumpNum(state, lump) as *mut byte).offset(ofs as isize);
     }
     if state.r_data.texturecomposite[tex as usize].is_none() {
         R_GenerateComposite(state, tex);
@@ -361,7 +360,7 @@ pub unsafe fn R_InitTextures(state: &mut GameState) {
     let mut temp1: i32 = 0;
     let mut temp2: i32 = 0;
     let mut temp3: i32 = 0;
-    names = W_CacheLumpName(state, "PNAMES", PU_STATIC as i32) as *mut u8;
+    names = W_CacheLumpName(state, "PNAMES") as *mut u8;
     nummappatches = *(names as *mut i32);
     name_p = names.offset(4 as i32 as isize);
     patchlookup = vec![0i32; nummappatches as usize];
@@ -374,14 +373,14 @@ pub unsafe fn R_InitTextures(state: &mut GameState) {
         i += 1;
     }
     W_ReleaseLumpName(&mut state.w_wad, "PNAMES");
-    maptex1 = W_CacheLumpName(state, "TEXTURE1", PU_STATIC as i32) as *mut i32;
+    maptex1 = W_CacheLumpName(state, "TEXTURE1") as *mut i32;
     maptex = maptex1;
     numtextures1 = *maptex;
     let texture1_lump = W_GetNumForName(&mut state.w_wad, "TEXTURE1") as u32;
     maxoff = W_LumpLength(&mut state.w_wad, texture1_lump);
     directory = maptex.offset(1 as i32 as isize);
     if W_CheckNumForName(&mut state.w_wad, "TEXTURE2") != -(1 as i32) {
-        maptex2 = W_CacheLumpName(state, "TEXTURE2", PU_STATIC as i32) as *mut i32;
+        maptex2 = W_CacheLumpName(state, "TEXTURE2") as *mut i32;
         numtextures2 = *maptex2;
         let texture2_lump = W_GetNumForName(&mut state.w_wad, "TEXTURE2") as u32;
         maxoff2 = W_LumpLength(&mut state.w_wad, texture2_lump);
@@ -526,7 +525,7 @@ pub unsafe fn R_InitSpriteLumps(state: &mut GameState) {
         if i & 63 as i32 == 0 {
             print!(".");
         }
-        patch = W_CacheLumpNum(state, state.r_data.firstspritelump + i, PU_CACHE as i32) as *mut patch_t;
+        patch = W_CacheLumpNum(state, state.r_data.firstspritelump + i) as *mut patch_t;
         state.r_data.spritewidth[i as usize] = (((*patch).width as i32) << FRACBITS) as fixed_t;
         state.r_data.spriteoffset[i as usize] =
             (((*patch).leftoffset as i32) << FRACBITS) as fixed_t;
@@ -538,7 +537,7 @@ pub unsafe fn R_InitSpriteLumps(state: &mut GameState) {
 pub unsafe fn R_InitColormaps(state: &mut GameState) {
     let mut lump: i32 = 0;
     lump = W_GetNumForName(&mut state.w_wad, "COLORMAP");
-    let lump_ptr = W_CacheLumpNum(state, lump, PU_STATIC as i32) as *const lighttable_t;
+    let lump_ptr = W_CacheLumpNum(state, lump) as *const lighttable_t;
     let lumplen = W_LumpLength(&mut state.w_wad, lump as u32) as usize;
     state.r_data.colormaps = ::core::slice::from_raw_parts(lump_ptr, lumplen).to_vec();
 }
@@ -610,7 +609,7 @@ pub unsafe fn R_PrecacheLevel(state: &mut GameState) {
         if flatpresent[i as usize] != 0 {
             lump = state.r_data.firstflat + i;
             state.r_data.flatmemory += state.w_wad.lumpinfo[lump as usize].size;
-            W_CacheLumpNum(state, lump, PU_CACHE as i32);
+            W_CacheLumpNum(state, lump);
         }
         i += 1;
     }
@@ -632,7 +631,7 @@ pub unsafe fn R_PrecacheLevel(state: &mut GameState) {
             while j < (*texture).patchcount as i32 {
                 lump = (*texture).patches[j as usize].patch;
                 state.r_data.texturememory += state.w_wad.lumpinfo[lump as usize].size;
-                W_CacheLumpNum(state, lump, PU_CACHE as i32);
+                W_CacheLumpNum(state, lump);
                 j += 1;
             }
         }
@@ -659,7 +658,7 @@ pub unsafe fn R_PrecacheLevel(state: &mut GameState) {
                 while k < 8 as i32 {
                     lump = state.r_data.firstspritelump + (*sf).lump[k as usize] as i32;
                     state.r_data.spritememory += state.w_wad.lumpinfo[lump as usize].size;
-                    W_CacheLumpNum(state, lump, PU_CACHE as i32);
+                    W_CacheLumpNum(state, lump);
                     k += 1;
                 }
                 j += 1;
