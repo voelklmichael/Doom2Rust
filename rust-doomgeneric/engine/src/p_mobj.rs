@@ -489,7 +489,7 @@ pub struct pspdef_t {
 }
 pub type mobj_t = mobj_s;
 pub use crate::src::d_player::{
-    player_s, player_t, playerstate_t, PlayerId, PST_DEAD, PST_LIVE, PST_REBORN,
+    player_s, player_t, PlayerId, PlayerState,
 };
 #[derive(Copy, Clone)]
 #[repr(C)]
@@ -1172,7 +1172,7 @@ pub unsafe fn P_SpawnPlayer(state: &mut GameState, mut mthing: *mut mapthing_t) 
     }
     p = (&raw mut state.g_game.players as *mut player_t)
         .offset(((*mthing).type_0 as i32 - 1 as i32) as isize) as *mut player_t;
-    if (*p).playerstate as u32 == PST_REBORN as i32 as u32 {
+    if (*p).playerstate == PlayerState::PST_REBORN {
         G_PlayerReborn(&mut state.g_game, (*mthing).type_0 as i32 - 1 as i32);
     }
     x = (((*mthing).x as i32) << FRACBITS) as fixed_t;
@@ -1186,7 +1186,7 @@ pub unsafe fn P_SpawnPlayer(state: &mut GameState, mut mthing: *mut mapthing_t) 
     (*mobj).player = Some(PlayerId(((*mthing).type_0 as i32 - 1 as i32) as u8));
     (*mobj).health = (*p).health;
     (*p).mo = mobj;
-    (*p).playerstate = PST_LIVE;
+    (*p).playerstate = PlayerState::PST_LIVE;
     (*p).refire = 0 as i32;
     (*p).message = None;
     (*p).damagecount = 0 as i32;

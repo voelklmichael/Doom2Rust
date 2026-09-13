@@ -14,7 +14,7 @@ use crate::src::d_mode::{doom, doom2, pack_chex, pack_hacx};
 use crate::src::d_mode::{sk_baby, sk_nightmare, skill_t};
 use crate::src::d_player::pw_strength;
 use crate::src::d_player::{am_clip, NUMAMMO};
-use crate::src::d_player::{player_s, player_t, PlayerId, PST_DEAD, PST_LIVE, PST_REBORN};
+use crate::src::d_player::{player_s, player_t, PlayerId, PlayerState};
 use crate::src::d_player::{
     weapontype_t, wp_bfg, wp_chaingun, wp_chainsaw, wp_fist, wp_missile, wp_nochange, wp_pistol,
     wp_plasma, wp_shotgun, wp_supershotgun,
@@ -191,7 +191,7 @@ pub struct GGameState {
 
 const NEW_PLAYER: player_s = player_s {
     mo: ::core::ptr::null::<mobj_t>() as *mut mobj_t,
-    playerstate: PST_LIVE,
+    playerstate: PlayerState::PST_LIVE,
     cmd: ticcmd_t {
         forwardmove: 0,
         sidemove: 0,
@@ -813,9 +813,9 @@ pub unsafe fn G_DoLoadLevel(state: &mut GameState) {
     while i < MAXPLAYERS {
         state.g_game.turbodetected[i as usize] = false_0 as boolean;
         if state.g_game.playeringame[i as usize] != 0
-            && state.g_game.players[i as usize].playerstate as u32 == PST_DEAD as u32
+            && state.g_game.players[i as usize].playerstate == PlayerState::PST_DEAD
         {
-            state.g_game.players[i as usize].playerstate = PST_REBORN;
+            state.g_game.players[i as usize].playerstate = PlayerState::PST_REBORN;
         }
         memset(
             &raw mut (*(&raw mut state.g_game.players as *mut player_t).offset(i as isize)).frags
@@ -988,7 +988,7 @@ pub unsafe fn G_Ticker(state: &mut GameState) {
     i = 0 as i32;
     while i < MAXPLAYERS {
         if state.g_game.playeringame[i as usize] != 0
-            && state.g_game.players[i as usize].playerstate as u32 == PST_REBORN as u32
+            && state.g_game.players[i as usize].playerstate == PlayerState::PST_REBORN
         {
             G_DoReborn(state, i);
         }
@@ -1197,7 +1197,7 @@ pub unsafe fn G_PlayerReborn(state: &mut GGameState, mut player: i32) {
     state.players[player as usize].secretcount = secretcount;
     (*p).attackdown = true_0;
     (*p).usedown = (*p).attackdown;
-    (*p).playerstate = PST_LIVE;
+    (*p).playerstate = PlayerState::PST_LIVE;
     (*p).health = deh_initial_health;
     (*p).pendingweapon = wp_pistol;
     (*p).readyweapon = (*p).pendingweapon;
@@ -1759,7 +1759,7 @@ pub unsafe fn G_InitNew(state: &mut GameState, mut skill: skill_t, mut episode: 
     }
     i = 0 as i32;
     while i < MAXPLAYERS {
-        state.g_game.players[i as usize].playerstate = PST_REBORN;
+        state.g_game.players[i as usize].playerstate = PlayerState::PST_REBORN;
         i += 1;
     }
     state.g_game.usergame = true;

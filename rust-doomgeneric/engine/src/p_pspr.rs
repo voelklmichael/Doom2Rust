@@ -2,7 +2,7 @@ use crate::src::d_items::weaponinfo;
 use crate::src::d_mode::{commercial, shareware};
 use crate::src::d_player::pw_strength;
 use crate::src::d_player::{am_cell, am_clip, am_misl, am_noammo, am_shell, ammotype_t, NUMAMMO};
-use crate::src::d_player::{player_t, PST_DEAD};
+use crate::src::d_player::{player_t, PlayerState};
 use crate::src::d_player::{ps_flash, ps_weapon, NUMPSPRITES};
 use crate::src::d_player::{
     wp_bfg, wp_chaingun, wp_chainsaw, wp_fist, wp_missile, wp_nochange, wp_pistol, wp_plasma,
@@ -273,7 +273,7 @@ pub unsafe fn A_Lower(state: &mut GameState, mut player: *mut player_t, mut psp:
     if (*psp).sy < 128 as i32 * FRACUNIT {
         return;
     }
-    if (*player).playerstate as u32 == PST_DEAD as i32 as u32 {
+    if (*player).playerstate == PlayerState::PST_DEAD {
         (*psp).sy = (128 as i32 * FRACUNIT) as fixed_t;
         return;
     }

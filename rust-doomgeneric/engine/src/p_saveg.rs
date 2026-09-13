@@ -2,7 +2,7 @@ use crate::src::d_mode::skill_t;
 use crate::src::d_player::NUMPOWERS;
 use crate::src::info::StateId;
 use crate::src::d_player::NUMPSPRITES;
-use crate::src::d_player::{player_t, playerstate_t, PlayerId};
+use crate::src::d_player::{player_t, PlayerId, PlayerState};
 use crate::src::d_player::{weapontype_t, NUMWEAPONS};
 use crate::src::d_ticcmd::ticcmd_t;
 use crate::src::doomdef::boolean;
@@ -380,7 +380,12 @@ unsafe fn saveg_write_pspdef_t(state: &mut GameState, mut str: *mut pspdef_t) {
 unsafe fn saveg_read_player_t(state: &mut GameState, mut str: *mut player_t) {
     let mut i: i32 = 0;
     (*str).mo = saveg_readp(state) as *mut mobj_t;
-    (*str).playerstate = saveg_read32(state) as playerstate_t;
+    (*str).playerstate = match saveg_read32(state) {
+        0 => PlayerState::PST_LIVE,
+        1 => PlayerState::PST_DEAD,
+        2 => PlayerState::PST_REBORN,
+        n => panic!("P_UnArchivePlayers: invalid playerstate {n} in savegame"),
+    };
     saveg_read_ticcmd_t(state, &raw mut (*str).cmd);
     (*str).viewz = saveg_read32(state) as fixed_t;
     (*str).viewheight = saveg_read32(state) as fixed_t;
