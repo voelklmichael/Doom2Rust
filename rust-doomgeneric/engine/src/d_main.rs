@@ -881,7 +881,7 @@ pub unsafe fn D_DoomMain(state: &mut GameState) {
     );
     I_PrintBanner(&PACKAGE_STRING.as_str());
     println!("Z_Init: Init zone memory allocation daemon. ");
-    Z_Init(state);
+    Z_Init(&mut state.z_zone);
     state.d_main.nomonsters = M_CheckParm(state, "-nomonsters") != 0;
     state.d_main.respawnparm = M_CheckParm(state, "-respawn") != 0;
     state.d_main.fastparm = M_CheckParm(state, "-fast") != 0;

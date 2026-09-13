@@ -1,8 +1,5 @@
-use crate::src::game_state::GameState;
 use crate::src::i_system::I_Error;
-use crate::src::i_system::I_ZoneBase;
-use crate::src::stdint_types::byte;
-use std::io::Write;
+use std::alloc::{alloc, dealloc, Layout};
 
 pub type C2RustUnnamed = u32;
 pub const PU_NUM_TAGS: C2RustUnnamed = 9;
@@ -14,333 +11,161 @@ pub const PU_FREE: C2RustUnnamed = 4;
 pub const PU_MUSIC: C2RustUnnamed = 3;
 pub const PU_SOUND: C2RustUnnamed = 2;
 pub const PU_STATIC: C2RustUnnamed = 1;
-#[derive(Copy, Clone)]
-#[repr(C)]
-pub struct memzone_t {
-    pub size: i32,
-    pub blocklist: memblock_t,
-    pub rover: *mut memblock_t,
-}
-pub type memblock_t = memblock_s;
-#[derive(Copy, Clone)]
-#[repr(C)]
-pub struct memblock_s {
-    pub size: i32,
-    pub user: *mut *mut ::core::ffi::c_void,
-    pub tag: i32,
-    pub id: i32,
-    pub next: *mut memblock_s,
-    pub prev: *mut memblock_s,
-}
+
 pub const MEM_ALIGN: usize = ::core::mem::size_of::<*mut ::core::ffi::c_void>();
 pub const ZONEID: i32 = 0x1d4a11;
-pub struct ZZoneState {
-    pub mainzone: *mut memzone_t,
+
+// One of these lives immediately before every payload this module hands
+// out, at `payload_ptr - size_of::<BlockHeader>()` rounded up to
+// `MEM_ALIGN` -- same "hidden header before the pointer" trick the original
+// zone allocator used, just no longer threaded into a single pre-sized
+// arena. `layout` is the exact Layout passed to `alloc`, kept around
+// because `dealloc` requires the identical size+align back.
+struct BlockHeader {
+    id: i32,
+    tag: i32,
+    user: *mut *mut ::core::ffi::c_void,
+    layout: Layout,
+    // Position of this header's pointer in ZZoneState.blocks, kept in sync
+    // by Z_Free's swap_remove so individual frees stay O(1) instead of a
+    // linear search through every live allocation.
+    registry_index: usize,
 }
+
+// Registry of every currently-live allocation's header, used only for the
+// bulk "free everything in this tag range" operation (Z_FreeTags, called
+// once per level load to tear down the previous level's dynamically
+// allocated thinkers/movers) and the heap sanity check. Individual
+// Z_Malloc/Z_Free/Z_ChangeTag/Z_ChangeUser never need to search it.
+pub struct ZZoneState {
+    blocks: Vec<*mut BlockHeader>,
+}
+
 impl ZZoneState {
     pub const fn new() -> Self {
-        ZZoneState {
-            mainzone: ::core::ptr::null_mut::<memzone_t>(),
-        }
+        ZZoneState { blocks: Vec::new() }
     }
 }
-pub unsafe fn Z_ClearZone(mut zone: *mut memzone_t) {
-    let mut block: *mut memblock_t = ::core::ptr::null_mut::<memblock_t>();
-    block = (zone as *mut byte).offset(::core::mem::size_of::<memzone_t>() as usize as isize)
-        as *mut memblock_t;
-    (*zone).blocklist.prev = block as *mut memblock_s;
-    (*zone).blocklist.next = (*zone).blocklist.prev;
-    (*zone).blocklist.user = zone as *mut ::core::ffi::c_void as *mut *mut ::core::ffi::c_void;
-    (*zone).blocklist.tag = PU_STATIC as i32;
-    (*zone).rover = block;
-    (*block).next = &raw mut (*zone).blocklist as *mut memblock_s;
-    (*block).prev = (*block).next;
-    (*block).tag = PU_FREE as i32;
-    (*block).size =
-        ((*zone).size as usize).wrapping_sub(::core::mem::size_of::<memzone_t>() as usize) as i32;
+
+unsafe fn header_layout_for(payload_size: usize) -> (Layout, usize) {
+    let header_layout = Layout::new::<BlockHeader>();
+    let payload_layout = Layout::from_size_align(payload_size, MEM_ALIGN)
+        .unwrap_or_else(|_| I_Error("Z_Malloc: invalid allocation size"));
+    header_layout
+        .extend(payload_layout)
+        .unwrap_or_else(|_| I_Error("Z_Malloc: allocation size overflow"))
 }
-pub unsafe fn Z_Init(state: &mut GameState) {
-    let mut block: *mut memblock_t = ::core::ptr::null_mut::<memblock_t>();
-    let mut size: i32 = 0;
-    state.z_zone.mainzone = I_ZoneBase(state, &raw mut size) as *mut memzone_t;
-    (*state.z_zone.mainzone).size = size;
-    block = (state.z_zone.mainzone as *mut byte)
-        .offset(::core::mem::size_of::<memzone_t>() as usize as isize)
-        as *mut memblock_t;
-    (*state.z_zone.mainzone).blocklist.prev = block as *mut memblock_s;
-    (*state.z_zone.mainzone).blocklist.next = (*state.z_zone.mainzone).blocklist.prev;
-    (*state.z_zone.mainzone).blocklist.user =
-        state.z_zone.mainzone as *mut ::core::ffi::c_void as *mut *mut ::core::ffi::c_void;
-    (*state.z_zone.mainzone).blocklist.tag = PU_STATIC as i32;
-    (*state.z_zone.mainzone).rover = block;
-    (*block).next = &raw mut (*state.z_zone.mainzone).blocklist as *mut memblock_s;
-    (*block).prev = (*block).next;
-    (*block).tag = PU_FREE as i32;
-    (*block).size = ((*state.z_zone.mainzone).size as usize)
-        .wrapping_sub(::core::mem::size_of::<memzone_t>() as usize) as i32;
+
+unsafe fn header_of(ptr: *mut ::core::ffi::c_void) -> *mut BlockHeader {
+    let (_, payload_offset) = header_layout_for(0);
+    (ptr as *mut u8).sub(payload_offset) as *mut BlockHeader
 }
+
+unsafe fn payload_of(header: *mut BlockHeader) -> *mut ::core::ffi::c_void {
+    let (_, payload_offset) = header_layout_for(0);
+    (header as *mut u8).add(payload_offset) as *mut ::core::ffi::c_void
+}
+
+pub unsafe fn Z_Init(state: &mut ZZoneState) {
+    state.blocks.clear();
+}
+
 pub unsafe fn Z_Free(state: &mut ZZoneState, mut ptr: *mut ::core::ffi::c_void) {
-    let mut block: *mut memblock_t = ::core::ptr::null_mut::<memblock_t>();
-    let mut other: *mut memblock_t = ::core::ptr::null_mut::<memblock_t>();
-    block = (ptr as *mut byte).offset(-(::core::mem::size_of::<memblock_t>() as usize as isize))
-        as *mut memblock_t;
-    if (*block).id != ZONEID {
+    let header = header_of(ptr);
+    if (*header).id != ZONEID {
         I_Error("Z_Free: freed a pointer without ZONEID");
     }
-    if (*block).tag != PU_FREE as i32 && !(*block).user.is_null() {
-        *(*block).user = ::core::ptr::null_mut::<::core::ffi::c_void>();
+    if !(*header).user.is_null() {
+        *(*header).user = ::core::ptr::null_mut::<::core::ffi::c_void>();
     }
-    (*block).tag = PU_FREE as i32;
-    (*block).user = ::core::ptr::null_mut::<*mut ::core::ffi::c_void>();
-    (*block).id = 0 as i32;
-    other = (*block).prev as *mut memblock_t;
-    if (*other).tag == PU_FREE as i32 {
-        (*other).size += (*block).size;
-        (*other).next = (*block).next;
-        (*(*other).next).prev = other as *mut memblock_s;
-        if block == (*state.mainzone).rover {
-            (*state.mainzone).rover = other;
-        }
-        block = other;
+    let layout = (*header).layout;
+    let index = (*header).registry_index;
+    state.blocks.swap_remove(index);
+    if index < state.blocks.len() {
+        (*state.blocks[index]).registry_index = index;
     }
-    other = (*block).next as *mut memblock_t;
-    if (*other).tag == PU_FREE as i32 {
-        (*block).size += (*other).size;
-        (*block).next = (*other).next;
-        (*(*block).next).prev = block as *mut memblock_s;
-        if other == (*state.mainzone).rover {
-            (*state.mainzone).rover = block;
-        }
-    }
+    dealloc(header as *mut u8, layout);
 }
-pub const MINFRAGMENT: i32 = 64;
+
 pub unsafe fn Z_Malloc(
     state: &mut ZZoneState,
     mut size: i32,
     mut tag: i32,
     mut user: *mut ::core::ffi::c_void,
 ) -> *mut ::core::ffi::c_void {
-    let mut extra: i32 = 0;
-    let mut start: *mut memblock_t = ::core::ptr::null_mut::<memblock_t>();
-    let mut rover: *mut memblock_t = ::core::ptr::null_mut::<memblock_t>();
-    let mut newblock: *mut memblock_t = ::core::ptr::null_mut::<memblock_t>();
-    let mut base: *mut memblock_t = ::core::ptr::null_mut::<memblock_t>();
-    let mut result: *mut ::core::ffi::c_void = ::core::ptr::null_mut::<::core::ffi::c_void>();
-    size = ((size as usize)
-        .wrapping_add(MEM_ALIGN)
-        .wrapping_sub(1 as usize)
-        & !MEM_ALIGN.wrapping_sub(1 as usize)) as i32;
-    size = (size as u64).wrapping_add(::core::mem::size_of::<memblock_t>() as usize as u64) as i32
-        as i32;
-    base = (*state.mainzone).rover;
-    if (*(*base).prev).tag == PU_FREE as i32 {
-        base = (*base).prev as *mut memblock_t;
-    }
-    rover = base;
-    start = (*base).prev as *mut memblock_t;
-    loop {
-        if rover == start {
-            I_Error(&format!("Z_Malloc: failed on allocation of {} bytes", size));
-        }
-        if (*rover).tag != PU_FREE as i32 {
-            if (*rover).tag < PU_PURGELEVEL as i32 {
-                rover = (*rover).next as *mut memblock_t;
-                base = rover;
-            } else {
-                base = (*base).prev as *mut memblock_t;
-                Z_Free(
-                    state,
-                    (rover as *mut byte)
-                        .offset(::core::mem::size_of::<memblock_t>() as usize as isize)
-                        as *mut ::core::ffi::c_void,
-                );
-                base = (*base).next as *mut memblock_t;
-                rover = (*base).next as *mut memblock_t;
-            }
-        } else {
-            rover = (*rover).next as *mut memblock_t;
-        }
-        if !((*base).tag != PU_FREE as i32 || (*base).size < size) {
-            break;
-        }
-    }
-    extra = (*base).size - size;
-    if extra > MINFRAGMENT {
-        newblock = (base as *mut byte).offset(size as isize) as *mut memblock_t;
-        (*newblock).size = extra;
-        (*newblock).tag = PU_FREE as i32;
-        (*newblock).user = ::core::ptr::null_mut::<*mut ::core::ffi::c_void>();
-        (*newblock).prev = base as *mut memblock_s;
-        (*newblock).next = (*base).next;
-        (*(*newblock).next).prev = newblock as *mut memblock_s;
-        (*base).next = newblock as *mut memblock_s;
-        (*base).size = size;
-    }
     if user.is_null() && tag >= PU_PURGELEVEL as i32 {
         I_Error("Z_Malloc: an owner is required for purgable blocks");
     }
-    (*base).user = user as *mut *mut ::core::ffi::c_void;
-    (*base).tag = tag;
-    result = (base as *mut byte).offset(::core::mem::size_of::<memblock_t>() as usize as isize)
-        as *mut ::core::ffi::c_void;
-    if !(*base).user.is_null() {
-        *(*base).user = result;
+    let (layout, payload_offset) = header_layout_for(size.max(0) as usize);
+    let base = alloc(layout);
+    if base.is_null() {
+        I_Error(&format!("Z_Malloc: failed on allocation of {} bytes", size));
     }
-    (*state.mainzone).rover = (*base).next as *mut memblock_t;
-    (*base).id = ZONEID;
+    let header = base as *mut BlockHeader;
+    let index = state.blocks.len();
+    (*header).id = ZONEID;
+    (*header).tag = tag;
+    (*header).user = user as *mut *mut ::core::ffi::c_void;
+    (*header).layout = layout;
+    (*header).registry_index = index;
+    state.blocks.push(header);
+    let result = base.add(payload_offset) as *mut ::core::ffi::c_void;
+    if !(*header).user.is_null() {
+        *(*header).user = result;
+    }
     return result;
 }
+
 pub unsafe fn Z_FreeTags(state: &mut ZZoneState, mut lowtag: i32, mut hightag: i32) {
-    let mut block: *mut memblock_t = ::core::ptr::null_mut::<memblock_t>();
-    let mut next: *mut memblock_t = ::core::ptr::null_mut::<memblock_t>();
-    block = (*state.mainzone).blocklist.next as *mut memblock_t;
-    while block != &raw mut (*state.mainzone).blocklist {
-        next = (*block).next as *mut memblock_t;
-        if !((*block).tag == PU_FREE as i32) {
-            if (*block).tag >= lowtag && (*block).tag <= hightag {
-                Z_Free(
-                    state,
-                    (block as *mut byte)
-                        .offset(::core::mem::size_of::<memblock_t>() as usize as isize)
-                        as *mut ::core::ffi::c_void,
-                );
-            }
-        }
-        block = next;
+    let matching: Vec<*mut ::core::ffi::c_void> = state
+        .blocks
+        .iter()
+        .filter(|h| (***h).tag >= lowtag && (***h).tag <= hightag)
+        .map(|h| payload_of(*h))
+        .collect();
+    for ptr in matching {
+        Z_Free(state, ptr);
     }
 }
-pub unsafe fn Z_DumpHeap(state: &mut ZZoneState, mut lowtag: i32, mut hightag: i32) {
-    let mut block: *mut memblock_t = ::core::ptr::null_mut::<memblock_t>();
-    println!(
-        "zone size: {}  location: {:p}",
-        (*state.mainzone).size,
-        state.mainzone,
-    );
-    println!("tag range: {} to {}", lowtag, hightag);
-    block = (*state.mainzone).blocklist.next as *mut memblock_t;
-    loop {
-        if (*block).tag >= lowtag && (*block).tag <= hightag {
-            println!(
-                "block:{:p}    size:{:7}    user:{:p}    tag:{:3}",
-                block,
-                (*block).size,
-                (*block).user,
-                (*block).tag,
-            );
-        }
-        if (*block).next == &raw mut (*state.mainzone).blocklist {
-            break;
-        }
-        if (block as *mut byte).offset((*block).size as isize) != (*block).next as *mut byte {
-            println!("ERROR: block size does not touch the next block");
-        }
-        if (*(*block).next).prev != block {
-            println!("ERROR: next block doesn't have proper back link");
-        }
-        if (*block).tag == PU_FREE as i32 && (*(*block).next).tag == PU_FREE as i32 {
-            println!("ERROR: two consecutive free blocks");
-        }
-        block = (*block).next as *mut memblock_t;
-    }
-}
-pub unsafe fn Z_FileDumpHeap(state: &mut ZZoneState, f: &mut impl Write) {
-    let mut block: *mut memblock_t = ::core::ptr::null_mut::<memblock_t>();
-    let _ = write!(
-        f,
-        "zone size: {}  location: {:p}\n",
-        (*state.mainzone).size,
-        state.mainzone,
-    );
-    block = (*state.mainzone).blocklist.next as *mut memblock_t;
-    loop {
-        let _ = write!(
-            f,
-            "block:{:p}    size:{:7}    user:{:p}    tag:{:3}\n",
-            block,
-            (*block).size,
-            (*block).user,
-            (*block).tag,
-        );
-        if (*block).next == &raw mut (*state.mainzone).blocklist {
-            break;
-        }
-        if (block as *mut byte).offset((*block).size as isize) != (*block).next as *mut byte {
-            let _ = write!(f, "ERROR: block size does not touch the next block\n");
-        }
-        if (*(*block).next).prev != block {
-            let _ = write!(f, "ERROR: next block doesn't have proper back link\n");
-        }
-        if (*block).tag == PU_FREE as i32 && (*(*block).next).tag == PU_FREE as i32 {
-            let _ = write!(f, "ERROR: two consecutive free blocks\n");
-        }
-        block = (*block).next as *mut memblock_t;
-    }
-}
+
 pub unsafe fn Z_CheckHeap(state: &mut ZZoneState) {
-    let mut block: *mut memblock_t = ::core::ptr::null_mut::<memblock_t>();
-    block = (*state.mainzone).blocklist.next as *mut memblock_t;
-    while !((*block).next == &raw mut (*state.mainzone).blocklist) {
-        if (block as *mut byte).offset((*block).size as isize) != (*block).next as *mut byte {
-            I_Error("Z_CheckHeap: block size does not touch the next block\n");
+    for &header in &state.blocks {
+        if (*header).id != ZONEID {
+            I_Error("Z_CheckHeap: block without a ZONEID\n");
         }
-        if (*(*block).next).prev != block {
-            I_Error("Z_CheckHeap: next block doesn't have proper back link\n");
-        }
-        if (*block).tag == PU_FREE as i32 && (*(*block).next).tag == PU_FREE as i32 {
-            I_Error("Z_CheckHeap: two consecutive free blocks\n");
-        }
-        block = (*block).next as *mut memblock_t;
     }
 }
+
 pub unsafe fn Z_ChangeTag2(
     mut ptr: *mut ::core::ffi::c_void,
     mut tag: i32,
     file: &str,
     mut line: i32,
 ) {
-    let mut block: *mut memblock_t = ::core::ptr::null_mut::<memblock_t>();
-    block = (ptr as *mut byte).offset(-(::core::mem::size_of::<memblock_t>() as usize as isize))
-        as *mut memblock_t;
-    if (*block).id != ZONEID {
+    let header = header_of(ptr);
+    if (*header).id != ZONEID {
         I_Error(&format!(
             "{}:{}: Z_ChangeTag: block without a ZONEID!",
             file, line,
         ));
     }
-    if tag >= PU_PURGELEVEL as i32 && (*block).user.is_null() {
+    if tag >= PU_PURGELEVEL as i32 && (*header).user.is_null() {
         I_Error(&format!(
             "{}:{}: Z_ChangeTag: an owner is required for purgable blocks",
             file, line,
         ));
     }
-    (*block).tag = tag;
+    (*header).tag = tag;
 }
+
 pub unsafe fn Z_ChangeUser(
     mut ptr: *mut ::core::ffi::c_void,
     mut user: *mut *mut ::core::ffi::c_void,
 ) {
-    let mut block: *mut memblock_t = ::core::ptr::null_mut::<memblock_t>();
-    block = (ptr as *mut byte).offset(-(::core::mem::size_of::<memblock_t>() as usize as isize))
-        as *mut memblock_t;
-    if (*block).id != ZONEID {
+    let header = header_of(ptr);
+    if (*header).id != ZONEID {
         I_Error("Z_ChangeUser: Tried to change user for invalid block!");
     }
-    (*block).user = user;
+    (*header).user = user;
     *user = ptr;
-}
-pub unsafe fn Z_FreeMemory(state: &mut ZZoneState) -> i32 {
-    let mut block: *mut memblock_t = ::core::ptr::null_mut::<memblock_t>();
-    let mut free: i32 = 0;
-    free = 0 as i32;
-    block = (*state.mainzone).blocklist.next as *mut memblock_t;
-    while block != &raw mut (*state.mainzone).blocklist {
-        if (*block).tag == PU_FREE as i32 || (*block).tag >= PU_PURGELEVEL as i32 {
-            free += (*block).size;
-        }
-        block = (*block).next as *mut memblock_t;
-    }
-    return free;
-}
-pub unsafe fn Z_ZoneSize(state: &mut ZZoneState) -> u32 {
-    return (*state.mainzone).size as u32;
 }
