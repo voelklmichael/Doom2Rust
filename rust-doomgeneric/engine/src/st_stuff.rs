@@ -49,11 +49,10 @@ use crate::src::v_video::V_RestoreBuffer;
 use crate::src::v_video::V_UseBuffer;
 use crate::src::w_wad::W_CacheLumpNum;
 use crate::src::w_wad::{W_CacheLumpName, W_GetNumForName, W_ReleaseLumpName};
-use crate::src::z_zone::Z_Malloc;
 use crate::src::z_zone::{PU_CACHE, PU_STATIC};
 
 pub struct StStuffState {
-    pub st_backing_screen: *mut byte,
+    pub st_backing_screen: Vec<byte>,
     pub plyr: *mut player_t,
     pub st_firsttime: bool,
     pub lu_palette: i32,
@@ -117,7 +116,7 @@ pub struct StStuffState {
 impl StStuffState {
     pub const fn new() -> Self {
         StStuffState {
-            st_backing_screen: ::core::ptr::null::<byte>() as *mut byte,
+            st_backing_screen: Vec::new(),
             plyr: ::core::ptr::null::<player_t>() as *mut player_t,
             st_firsttime: false,
             lu_palette: 0,
@@ -440,16 +439,17 @@ pub const ST_MAXAMMO3X: i32 = 314;
 pub const ST_MAXAMMO3Y: i32 = 185;
 pub unsafe fn ST_refreshBackground(state: &mut GameState) {
     if state.st_stuff.st_statusbaron {
-        V_UseBuffer(&mut state.v_video, state.st_stuff.st_backing_screen);
+        V_UseBuffer(&mut state.v_video, state.st_stuff.st_backing_screen.as_mut_ptr());
         V_DrawPatch(state, ST_X, 0 as i32, state.st_stuff.sbar);
         if state.g_game.netgame {
             V_DrawPatch(state, ST_FX, 0 as i32, state.st_stuff.faceback);
         }
         V_RestoreBuffer(state);
+        let st_backing_screen = state.st_stuff.st_backing_screen.as_mut_ptr();
         V_CopyRect(state,
             ST_X,
             0 as i32,
-            state.st_stuff.st_backing_screen,
+            st_backing_screen,
             ST_WIDTH,
             ST_HEIGHT,
             ST_X,
@@ -1349,12 +1349,7 @@ pub unsafe fn ST_Stop(state: &mut GameState) {
 }
 pub unsafe fn ST_Init(state: &mut GameState) {
     ST_loadData(state);
-    state.st_stuff.st_backing_screen = Z_Malloc(
-        &mut state.z_zone,
-        ST_WIDTH * ST_HEIGHT,
-        PU_STATIC as i32,
-        ::core::ptr::null_mut::<::core::ffi::c_void>(),
-    ) as *mut byte;
+    state.st_stuff.st_backing_screen = vec![0u8; (ST_WIDTH * ST_HEIGHT) as usize];
 }
 pub unsafe fn fixup_cheat_sequences(state: &mut GameState) {
     state.st_stuff.cheat_clev = cheatseq_t {
