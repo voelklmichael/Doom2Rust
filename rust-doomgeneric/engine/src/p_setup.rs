@@ -636,29 +636,29 @@ pub unsafe fn P_LoadLineDefs(state: &mut GameState, mut lump: i32) {
             (*ld).slopetype = SlopeType::ST_NEGATIVE;
         }
         if (*v1).x < (*v2).x {
-            (*ld).bbox[BOXLEFT as i32 as usize] = (*v1).x;
-            (*ld).bbox[BOXRIGHT as i32 as usize] = (*v2).x;
+            (*ld).bbox[BOXLEFT as usize] = (*v1).x;
+            (*ld).bbox[BOXRIGHT as usize] = (*v2).x;
         } else {
-            (*ld).bbox[BOXLEFT as i32 as usize] = (*v2).x;
-            (*ld).bbox[BOXRIGHT as i32 as usize] = (*v1).x;
+            (*ld).bbox[BOXLEFT as usize] = (*v2).x;
+            (*ld).bbox[BOXRIGHT as usize] = (*v1).x;
         }
         if (*v1).y < (*v2).y {
-            (*ld).bbox[BOXBOTTOM as i32 as usize] = (*v1).y;
-            (*ld).bbox[BOXTOP as i32 as usize] = (*v2).y;
+            (*ld).bbox[BOXBOTTOM as usize] = (*v1).y;
+            (*ld).bbox[BOXTOP as usize] = (*v2).y;
         } else {
-            (*ld).bbox[BOXBOTTOM as i32 as usize] = (*v2).y;
-            (*ld).bbox[BOXTOP as i32 as usize] = (*v1).y;
+            (*ld).bbox[BOXBOTTOM as usize] = (*v2).y;
+            (*ld).bbox[BOXTOP as usize] = (*v1).y;
         }
-        (*ld).sidenum[0 as i32 as usize] = (*mld).sidenum[0 as i32 as usize];
-        (*ld).sidenum[1 as i32 as usize] = (*mld).sidenum[1 as i32 as usize];
-        if (*ld).sidenum[0 as i32 as usize] as i32 != -(1 as i32) {
-            let side_sector = state.p_setup.sides[(*ld).sidenum[0 as i32 as usize] as usize].sector;
+        (*ld).sidenum[0 as usize] = (*mld).sidenum[0 as usize];
+        (*ld).sidenum[1 as usize] = (*mld).sidenum[1 as usize];
+        if (*ld).sidenum[0 as usize] as i32 != -(1 as i32) {
+            let side_sector = state.p_setup.sides[(*ld).sidenum[0 as usize] as usize].sector;
             (*ld).frontsector = Some(side_sector);
         } else {
             (*ld).frontsector = None;
         }
-        if (*ld).sidenum[1 as i32 as usize] as i32 != -(1 as i32) {
-            let side_sector = state.p_setup.sides[(*ld).sidenum[1 as i32 as usize] as usize].sector;
+        if (*ld).sidenum[1 as usize] as i32 != -(1 as i32) {
+            let side_sector = state.p_setup.sides[(*ld).sidenum[1 as usize] as usize].sector;
             (*ld).backsector = Some(side_sector);
         } else {
             (*ld).backsector = None;
@@ -789,24 +789,24 @@ pub unsafe fn P_GroupLines(state: &mut GameState) {
             M_AddToBox(&raw mut bbox as *mut fixed_t, li_v2.x, li_v2.y);
             j += 1;
         }
-        (*sector).soundorg.x = ((bbox[BOXRIGHT as i32 as usize] + bbox[BOXLEFT as i32 as usize])
+        (*sector).soundorg.x = ((bbox[BOXRIGHT as usize] + bbox[BOXLEFT as usize])
             / 2 as i32) as fixed_t;
-        (*sector).soundorg.y = ((bbox[BOXTOP as i32 as usize] + bbox[BOXBOTTOM as i32 as usize])
+        (*sector).soundorg.y = ((bbox[BOXTOP as usize] + bbox[BOXBOTTOM as usize])
             / 2 as i32) as fixed_t;
-        block = bbox[BOXTOP as i32 as usize] - state.p_setup.bmaporgy as i32 + 32 as i32 * FRACUNIT
+        block = bbox[BOXTOP as usize] - state.p_setup.bmaporgy as i32 + 32 as i32 * FRACUNIT
             >> MAPBLOCKSHIFT;
         block = if block >= state.p_setup.bmapheight {
             state.p_setup.bmapheight - 1 as i32
         } else {
             block
         };
-        (*sector).blockbox[BOXTOP as i32 as usize] = block;
+        (*sector).blockbox[BOXTOP as usize] = block;
         block =
-            bbox[BOXBOTTOM as i32 as usize] - state.p_setup.bmaporgy as i32 - 32 as i32 * FRACUNIT
+            bbox[BOXBOTTOM as usize] - state.p_setup.bmaporgy as i32 - 32 as i32 * FRACUNIT
                 >> MAPBLOCKSHIFT;
         block = if block < 0 as i32 { 0 as i32 } else { block };
-        (*sector).blockbox[BOXBOTTOM as i32 as usize] = block;
-        block = bbox[BOXRIGHT as i32 as usize] - state.p_setup.bmaporgx as i32
+        (*sector).blockbox[BOXBOTTOM as usize] = block;
+        block = bbox[BOXRIGHT as usize] - state.p_setup.bmaporgx as i32
             + 32 as i32 * FRACUNIT
             >> MAPBLOCKSHIFT;
         block = if block >= state.p_setup.bmapwidth {
@@ -814,12 +814,12 @@ pub unsafe fn P_GroupLines(state: &mut GameState) {
         } else {
             block
         };
-        (*sector).blockbox[BOXRIGHT as i32 as usize] = block;
+        (*sector).blockbox[BOXRIGHT as usize] = block;
         block =
-            bbox[BOXLEFT as i32 as usize] - state.p_setup.bmaporgx as i32 - 32 as i32 * FRACUNIT
+            bbox[BOXLEFT as usize] - state.p_setup.bmaporgx as i32 - 32 as i32 * FRACUNIT
                 >> MAPBLOCKSHIFT;
         block = if block < 0 as i32 { 0 as i32 } else { block };
-        (*sector).blockbox[BOXLEFT as i32 as usize] = block;
+        (*sector).blockbox[BOXLEFT as usize] = block;
         i += 1;
     }
 }

@@ -232,9 +232,9 @@ pub unsafe fn R_InitSpriteDefs(state: &mut GameState, namelist: &[&'static str])
                 .name
                 .eq_bytes_ignore_ascii_case_n(state.r_things.spritename.as_bytes(), 4)
             {
-                frame = state.w_wad.lumpinfo[l as usize].name[4 as i32 as usize] as i32
+                frame = state.w_wad.lumpinfo[l as usize].name[4 as usize] as i32
                     - 'A' as i32;
-                rotation = state.w_wad.lumpinfo[l as usize].name[5 as i32 as usize]
+                rotation = state.w_wad.lumpinfo[l as usize].name[5 as usize]
                     as i32
                     - '0' as i32;
                 if state.doomstat.modifiedgame {
@@ -244,11 +244,11 @@ pub unsafe fn R_InitSpriteDefs(state: &mut GameState, namelist: &[&'static str])
                     patched = l;
                 }
                 R_InstallSpriteLump(state, patched, frame as u32, rotation as u32, false);
-                if state.w_wad.lumpinfo[l as usize].name[6 as i32 as usize] != 0 {
-                    frame = state.w_wad.lumpinfo[l as usize].name[6 as i32 as usize]
+                if state.w_wad.lumpinfo[l as usize].name[6 as usize] != 0 {
+                    frame = state.w_wad.lumpinfo[l as usize].name[6 as usize]
                         as i32
                         - 'A' as i32;
-                    rotation = state.w_wad.lumpinfo[l as usize].name[7 as i32 as usize]
+                    rotation = state.w_wad.lumpinfo[l as usize].name[7 as usize]
                         as i32
                         - '0' as i32;
                     R_InstallSpriteLump(state, l, frame as u32, rotation as u32, true);
@@ -466,8 +466,8 @@ pub unsafe fn R_ProjectSprite(state: &mut GameState, mut thing: *mut mobj_t) {
         lump = (*sprframe).lump[rot as usize] as i32;
         flip = (*sprframe).flip[rot as usize] != 0;
     } else {
-        lump = (*sprframe).lump[0 as i32 as usize] as i32;
-        flip = (*sprframe).flip[0 as i32 as usize] != 0;
+        lump = (*sprframe).lump[0 as usize] as i32;
+        flip = (*sprframe).flip[0 as usize] != 0;
     }
     tx -= state.r_data.spriteoffset[lump as usize];
     x1 = (state.r_main.centerxfrac + FixedMul(tx, xscale) >> FRACBITS) as i32;
@@ -592,8 +592,8 @@ pub unsafe fn R_DrawPSprite(state: &mut GameState, mut psp: *mut pspdef_t) {
     }
     sprframe = &raw mut (*sprdef).spriteframes[((*psp_state).frame & FF_FRAMEMASK) as usize]
         as *mut spriteframe_t;
-    lump = (*sprframe).lump[0 as i32 as usize] as i32;
-    flip = (*sprframe).flip[0 as i32 as usize] != 0;
+    lump = (*sprframe).lump[0 as usize] as i32;
+    flip = (*sprframe).flip[0 as usize] != 0;
     tx = ((*psp).sx as i32 - 160 as i32 * FRACUNIT) as fixed_t;
     tx -= state.r_data.spriteoffset[lump as usize];
     x1 = (state.r_main.centerxfrac + FixedMul(tx, state.r_things.pspritescale) >> FRACBITS) as i32;
@@ -631,8 +631,8 @@ pub unsafe fn R_DrawPSprite(state: &mut GameState, mut psp: *mut pspdef_t) {
     }
     (*vis).patch = lump;
     let viewplayer = state.g_game.player_mut(state.r_main.viewplayer);
-    if (*viewplayer).powers[PowerType::pw_invisibility as i32 as usize] > 4 as i32 * 32 as i32
-        || (*viewplayer).powers[PowerType::pw_invisibility as i32 as usize] & 8 as i32 != 0
+    if (*viewplayer).powers[PowerType::pw_invisibility as usize] > 4 as i32 * 32 as i32
+        || (*viewplayer).powers[PowerType::pw_invisibility as usize] & 8 as i32 != 0
     {
         (*vis).colormap = ::core::ptr::null_mut::<lighttable_t>();
     } else if !state.r_main.fixedcolormap.is_null() {

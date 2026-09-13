@@ -118,7 +118,7 @@ pub unsafe fn P_BringUpWeapon(state: &mut GameState, mut player: *mut player_t) 
     }
     newstate = weaponinfo[(*player).pendingweapon as usize].upstate;
     (*player).pendingweapon = weapontype_t::wp_nochange;
-    (*player).psprites[PSpriteNum::ps_weapon as i32 as usize].sy = (128 as i32 * FRACUNIT) as fixed_t;
+    (*player).psprites[PSpriteNum::ps_weapon as usize].sy = (128 as i32 * FRACUNIT) as fixed_t;
     P_SetPsprite(state, player, PSpriteNum::ps_weapon as i32, newstate);
 }
 pub unsafe fn P_CheckAmmo(state: &mut GameState, mut player: *mut player_t) -> bool {
@@ -136,34 +136,34 @@ pub unsafe fn P_CheckAmmo(state: &mut GameState, mut player: *mut player_t) -> b
         return true;
     }
     loop {
-        if (*player).weaponowned[weapontype_t::wp_plasma as i32 as usize]
-            && (*player).ammo[ammotype_t::am_cell as i32 as usize] != 0
+        if (*player).weaponowned[weapontype_t::wp_plasma as usize]
+            && (*player).ammo[ammotype_t::am_cell as usize] != 0
             && state.doomstat.gamemode as u32 != GameMode_t::shareware as i32 as u32
         {
             (*player).pendingweapon = weapontype_t::wp_plasma;
-        } else if (*player).weaponowned[weapontype_t::wp_supershotgun as i32 as usize]
-            && (*player).ammo[ammotype_t::am_shell as i32 as usize] > 2 as i32
+        } else if (*player).weaponowned[weapontype_t::wp_supershotgun as usize]
+            && (*player).ammo[ammotype_t::am_shell as usize] > 2 as i32
             && state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32
         {
             (*player).pendingweapon = weapontype_t::wp_supershotgun;
-        } else if (*player).weaponowned[weapontype_t::wp_chaingun as i32 as usize]
-            && (*player).ammo[ammotype_t::am_clip as i32 as usize] != 0
+        } else if (*player).weaponowned[weapontype_t::wp_chaingun as usize]
+            && (*player).ammo[ammotype_t::am_clip as usize] != 0
         {
             (*player).pendingweapon = weapontype_t::wp_chaingun;
-        } else if (*player).weaponowned[weapontype_t::wp_shotgun as i32 as usize]
-            && (*player).ammo[ammotype_t::am_shell as i32 as usize] != 0
+        } else if (*player).weaponowned[weapontype_t::wp_shotgun as usize]
+            && (*player).ammo[ammotype_t::am_shell as usize] != 0
         {
             (*player).pendingweapon = weapontype_t::wp_shotgun;
-        } else if (*player).ammo[ammotype_t::am_clip as i32 as usize] != 0 {
+        } else if (*player).ammo[ammotype_t::am_clip as usize] != 0 {
             (*player).pendingweapon = weapontype_t::wp_pistol;
-        } else if (*player).weaponowned[weapontype_t::wp_chainsaw as i32 as usize] {
+        } else if (*player).weaponowned[weapontype_t::wp_chainsaw as usize] {
             (*player).pendingweapon = weapontype_t::wp_chainsaw;
-        } else if (*player).weaponowned[weapontype_t::wp_missile as i32 as usize]
-            && (*player).ammo[ammotype_t::am_misl as i32 as usize] != 0
+        } else if (*player).weaponowned[weapontype_t::wp_missile as usize]
+            && (*player).ammo[ammotype_t::am_misl as usize] != 0
         {
             (*player).pendingweapon = weapontype_t::wp_missile;
-        } else if (*player).weaponowned[weapontype_t::wp_bfg as i32 as usize]
-            && (*player).ammo[ammotype_t::am_cell as i32 as usize] > 40 as i32
+        } else if (*player).weaponowned[weapontype_t::wp_bfg as usize]
+            && (*player).ammo[ammotype_t::am_cell as usize] > 40 as i32
             && state.doomstat.gamemode as u32 != GameMode_t::shareware as i32 as u32
         {
             (*player).pendingweapon = weapontype_t::wp_bfg;
@@ -302,7 +302,7 @@ pub unsafe fn A_Punch(state: &mut GameState, mut player: *mut player_t, _psp: *m
     let mut damage: i32 = 0;
     let mut slope: i32 = 0;
     damage = (P_Random(&mut state.m_random) % 10 as i32 + 1 as i32) << 1 as i32;
-    if (*player).powers[PowerType::pw_strength as i32 as usize] != 0 {
+    if (*player).powers[PowerType::pw_strength as usize] != 0 {
         damage *= 10 as i32;
     }
     angle = (*player_mo).angle;
@@ -652,8 +652,8 @@ pub unsafe fn P_MovePsprites(state: &mut GameState, mut player: *mut player_t) {
         i += 1;
         psp = psp.offset(1);
     }
-    (*player).psprites[PSpriteNum::ps_flash as i32 as usize].sx =
-        (*player).psprites[PSpriteNum::ps_weapon as i32 as usize].sx;
-    (*player).psprites[PSpriteNum::ps_flash as i32 as usize].sy =
-        (*player).psprites[PSpriteNum::ps_weapon as i32 as usize].sy;
+    (*player).psprites[PSpriteNum::ps_flash as usize].sx =
+        (*player).psprites[PSpriteNum::ps_weapon as usize].sx;
+    (*player).psprites[PSpriteNum::ps_flash as usize].sy =
+        (*player).psprites[PSpriteNum::ps_weapon as usize].sy;
 }

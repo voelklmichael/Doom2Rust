@@ -180,10 +180,10 @@ pub unsafe fn P_TeleportMove(
     state.p_map.tmflags = (*thing).flags;
     state.p_map.tmx = x;
     state.p_map.tmy = y;
-    state.p_map.tmbbox[BOXTOP as i32 as usize] = y + (*thing).radius;
-    state.p_map.tmbbox[BOXBOTTOM as i32 as usize] = y - (*thing).radius;
-    state.p_map.tmbbox[BOXRIGHT as i32 as usize] = x + (*thing).radius;
-    state.p_map.tmbbox[BOXLEFT as i32 as usize] = x - (*thing).radius;
+    state.p_map.tmbbox[BOXTOP as usize] = y + (*thing).radius;
+    state.p_map.tmbbox[BOXBOTTOM as usize] = y - (*thing).radius;
+    state.p_map.tmbbox[BOXRIGHT as usize] = x + (*thing).radius;
+    state.p_map.tmbbox[BOXLEFT as usize] = x - (*thing).radius;
     newsubsec = R_PointInSubsector(state, x, y);
     state.p_map.ceilingline = None;
     state.p_map.tmdropoffz =
@@ -199,18 +199,18 @@ pub unsafe fn P_TeleportMove(
         .ceilingheight;
     state.r_main.validcount += 1;
     state.p_map.numspechit = 0 as i32;
-    xl = state.p_map.tmbbox[BOXLEFT as i32 as usize]
+    xl = state.p_map.tmbbox[BOXLEFT as usize]
         - state.p_setup.bmaporgx as i32
         - 32 as i32 * FRACUNIT
         >> MAPBLOCKSHIFT;
-    xh = state.p_map.tmbbox[BOXRIGHT as i32 as usize] - state.p_setup.bmaporgx as i32
+    xh = state.p_map.tmbbox[BOXRIGHT as usize] - state.p_setup.bmaporgx as i32
         + 32 as i32 * FRACUNIT
         >> MAPBLOCKSHIFT;
-    yl = state.p_map.tmbbox[BOXBOTTOM as i32 as usize]
+    yl = state.p_map.tmbbox[BOXBOTTOM as usize]
         - state.p_setup.bmaporgy as i32
         - 32 as i32 * FRACUNIT
         >> MAPBLOCKSHIFT;
-    yh = state.p_map.tmbbox[BOXTOP as i32 as usize] - state.p_setup.bmaporgy as i32
+    yh = state.p_map.tmbbox[BOXTOP as usize] - state.p_setup.bmaporgy as i32
         + 32 as i32 * FRACUNIT
         >> MAPBLOCKSHIFT;
     bx = xl;
@@ -240,10 +240,10 @@ pub unsafe fn P_TeleportMove(
 #[no_mangle]
 pub unsafe fn PIT_CheckLine(state: &mut GameState, mut ld: LineId) -> bool {
     let ldv = state.p_setup.line(ld);
-    if state.p_map.tmbbox[BOXRIGHT as i32 as usize] <= ldv.bbox[BOXLEFT as i32 as usize]
-        || state.p_map.tmbbox[BOXLEFT as i32 as usize] >= ldv.bbox[BOXRIGHT as i32 as usize]
-        || state.p_map.tmbbox[BOXTOP as i32 as usize] <= ldv.bbox[BOXBOTTOM as i32 as usize]
-        || state.p_map.tmbbox[BOXBOTTOM as i32 as usize] >= ldv.bbox[BOXTOP as i32 as usize]
+    if state.p_map.tmbbox[BOXRIGHT as usize] <= ldv.bbox[BOXLEFT as usize]
+        || state.p_map.tmbbox[BOXLEFT as usize] >= ldv.bbox[BOXRIGHT as usize]
+        || state.p_map.tmbbox[BOXTOP as usize] <= ldv.bbox[BOXBOTTOM as usize]
+        || state.p_map.tmbbox[BOXBOTTOM as usize] >= ldv.bbox[BOXTOP as usize]
     {
         return true;
     }
@@ -385,10 +385,10 @@ pub unsafe fn P_CheckPosition(
     state.p_map.tmflags = (*thing).flags;
     state.p_map.tmx = x;
     state.p_map.tmy = y;
-    state.p_map.tmbbox[BOXTOP as i32 as usize] = y + (*thing).radius;
-    state.p_map.tmbbox[BOXBOTTOM as i32 as usize] = y - (*thing).radius;
-    state.p_map.tmbbox[BOXRIGHT as i32 as usize] = x + (*thing).radius;
-    state.p_map.tmbbox[BOXLEFT as i32 as usize] = x - (*thing).radius;
+    state.p_map.tmbbox[BOXTOP as usize] = y + (*thing).radius;
+    state.p_map.tmbbox[BOXBOTTOM as usize] = y - (*thing).radius;
+    state.p_map.tmbbox[BOXRIGHT as usize] = x + (*thing).radius;
+    state.p_map.tmbbox[BOXLEFT as usize] = x - (*thing).radius;
     newsubsec = R_PointInSubsector(state, x, y);
     state.p_map.ceilingline = None;
     state.p_map.tmdropoffz =
@@ -407,18 +407,18 @@ pub unsafe fn P_CheckPosition(
     if state.p_map.tmflags & MF_NOCLIP as i32 != 0 {
         return true;
     }
-    xl = state.p_map.tmbbox[BOXLEFT as i32 as usize]
+    xl = state.p_map.tmbbox[BOXLEFT as usize]
         - state.p_setup.bmaporgx as i32
         - 32 as i32 * FRACUNIT
         >> MAPBLOCKSHIFT;
-    xh = state.p_map.tmbbox[BOXRIGHT as i32 as usize] - state.p_setup.bmaporgx as i32
+    xh = state.p_map.tmbbox[BOXRIGHT as usize] - state.p_setup.bmaporgx as i32
         + 32 as i32 * FRACUNIT
         >> MAPBLOCKSHIFT;
-    yl = state.p_map.tmbbox[BOXBOTTOM as i32 as usize]
+    yl = state.p_map.tmbbox[BOXBOTTOM as usize]
         - state.p_setup.bmaporgy as i32
         - 32 as i32 * FRACUNIT
         >> MAPBLOCKSHIFT;
-    yh = state.p_map.tmbbox[BOXTOP as i32 as usize] - state.p_setup.bmaporgy as i32
+    yh = state.p_map.tmbbox[BOXTOP as usize] - state.p_setup.bmaporgy as i32
         + 32 as i32 * FRACUNIT
         >> MAPBLOCKSHIFT;
     bx = xl;
@@ -437,13 +437,13 @@ pub unsafe fn P_CheckPosition(
         }
         bx += 1;
     }
-    xl = (state.p_map.tmbbox[BOXLEFT as i32 as usize] - state.p_setup.bmaporgx >> MAPBLOCKSHIFT)
+    xl = (state.p_map.tmbbox[BOXLEFT as usize] - state.p_setup.bmaporgx >> MAPBLOCKSHIFT)
         as i32;
-    xh = (state.p_map.tmbbox[BOXRIGHT as i32 as usize] - state.p_setup.bmaporgx >> MAPBLOCKSHIFT)
+    xh = (state.p_map.tmbbox[BOXRIGHT as usize] - state.p_setup.bmaporgx >> MAPBLOCKSHIFT)
         as i32;
-    yl = (state.p_map.tmbbox[BOXBOTTOM as i32 as usize] - state.p_setup.bmaporgy >> MAPBLOCKSHIFT)
+    yl = (state.p_map.tmbbox[BOXBOTTOM as usize] - state.p_setup.bmaporgy >> MAPBLOCKSHIFT)
         as i32;
-    yh = (state.p_map.tmbbox[BOXTOP as i32 as usize] - state.p_setup.bmaporgy >> MAPBLOCKSHIFT)
+    yh = (state.p_map.tmbbox[BOXTOP as usize] - state.p_setup.bmaporgy >> MAPBLOCKSHIFT)
         as i32;
     bx = xl;
     while bx <= xh {
@@ -1184,10 +1184,10 @@ pub unsafe fn P_ChangeSector(
     let mut y: i32 = 0;
     state.p_map.nofit = false;
     state.p_map.crushchange = crunch;
-    x = (*sector).blockbox[BOXLEFT as i32 as usize];
-    while x <= (*sector).blockbox[BOXRIGHT as i32 as usize] {
-        y = (*sector).blockbox[BOXBOTTOM as i32 as usize];
-        while y <= (*sector).blockbox[BOXTOP as i32 as usize] {
+    x = (*sector).blockbox[BOXLEFT as usize];
+    while x <= (*sector).blockbox[BOXRIGHT as usize] {
+        y = (*sector).blockbox[BOXBOTTOM as usize];
+        while y <= (*sector).blockbox[BOXTOP as usize] {
             P_BlockThingsIterator(
                 state,
                 x,

@@ -389,7 +389,7 @@ pub unsafe fn P_LineOpening(state: &mut GameState, mut linedef: LineId) {
     let mut front: *mut sector_t = ::core::ptr::null_mut::<sector_t>();
     let mut back: *mut sector_t = ::core::ptr::null_mut::<sector_t>();
     let linedefv = state.p_setup.line(linedef);
-    if linedefv.sidenum[1 as i32 as usize] as i32 == -(1 as i32) {
+    if linedefv.sidenum[1 as usize] as i32 == -(1 as i32) {
         state.p_maputl.openrange = 0 as i32 as fixed_t;
         return;
     }

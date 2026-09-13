@@ -163,13 +163,13 @@ pub unsafe fn P_RecursiveSound(
         if !(checkv.flags as i32 & ML_TWOSIDED == 0) {
             P_LineOpening(state, check);
             if !(state.p_maputl.openrange <= 0 as i32) {
-                let other_id = if state.p_setup.sides[checkv.sidenum[0 as i32 as usize] as usize]
+                let other_id = if state.p_setup.sides[checkv.sidenum[0 as usize] as usize]
                     .sector
                     == sec_id
                 {
-                    state.p_setup.sides[checkv.sidenum[1 as i32 as usize] as usize].sector
+                    state.p_setup.sides[checkv.sidenum[1 as usize] as usize].sector
                 } else {
-                    state.p_setup.sides[checkv.sidenum[0 as i32 as usize] as usize].sector
+                    state.p_setup.sides[checkv.sidenum[0 as usize] as usize].sector
                 };
                 other = state.p_setup.sector_mut(other_id);
                 if checkv.flags as i32 & ML_SOUNDBLOCK != 0 {
@@ -358,21 +358,21 @@ pub unsafe fn P_NewChaseDir(state: &mut GameState, mut actor: *mut mobj_t) {
     deltax = (*target).x - (*actor).x;
     deltay = (*target).y - (*actor).y;
     if deltax > 10 as i32 * FRACUNIT {
-        d[1 as i32 as usize] = DirType::DI_EAST;
+        d[1 as usize] = DirType::DI_EAST;
     } else if deltax < -(10 as i32) * FRACUNIT {
-        d[1 as i32 as usize] = DirType::DI_WEST;
+        d[1 as usize] = DirType::DI_WEST;
     } else {
-        d[1 as i32 as usize] = DirType::DI_NODIR;
+        d[1 as usize] = DirType::DI_NODIR;
     }
     if deltay < -(10 as i32) * FRACUNIT {
-        d[2 as i32 as usize] = DirType::DI_SOUTH;
+        d[2 as usize] = DirType::DI_SOUTH;
     } else if deltay > 10 as i32 * FRACUNIT {
-        d[2 as i32 as usize] = DirType::DI_NORTH;
+        d[2 as usize] = DirType::DI_NORTH;
     } else {
-        d[2 as i32 as usize] = DirType::DI_NODIR;
+        d[2 as usize] = DirType::DI_NODIR;
     }
-    if d[1 as i32 as usize] != DirType::DI_NODIR
-        && d[2 as i32 as usize] != DirType::DI_NODIR
+    if d[1 as usize] != DirType::DI_NODIR
+        && d[2 as usize] != DirType::DI_NODIR
     {
         (*actor).movedir = diags
             [((((deltay < 0 as i32) as i32) << 1 as i32) + (deltax > 0 as i32) as i32) as usize]
@@ -384,20 +384,20 @@ pub unsafe fn P_NewChaseDir(state: &mut GameState, mut actor: *mut mobj_t) {
     if P_Random(&mut state.m_random) > 200 as i32 || (deltay as i32).abs() > (deltax as i32).abs() {
         d.swap(1, 2);
     }
-    if d[1 as i32 as usize] == turnaround {
-        d[1 as i32 as usize] = DirType::DI_NODIR;
+    if d[1 as usize] == turnaround {
+        d[1 as usize] = DirType::DI_NODIR;
     }
-    if d[2 as i32 as usize] == turnaround {
-        d[2 as i32 as usize] = DirType::DI_NODIR;
+    if d[2 as usize] == turnaround {
+        d[2 as usize] = DirType::DI_NODIR;
     }
-    if d[1 as i32 as usize] != DirType::DI_NODIR {
-        (*actor).movedir = d[1 as i32 as usize] as i32;
+    if d[1 as usize] != DirType::DI_NODIR {
+        (*actor).movedir = d[1 as usize] as i32;
         if P_TryWalk(state, actor) {
             return;
         }
     }
-    if d[2 as i32 as usize] != DirType::DI_NODIR {
-        (*actor).movedir = d[2 as i32 as usize] as i32;
+    if d[2 as usize] != DirType::DI_NODIR {
+        (*actor).movedir = d[2 as usize] as i32;
         if P_TryWalk(state, actor) {
             return;
         }
@@ -972,7 +972,7 @@ pub unsafe fn PIT_VileCheck(state: &mut GameState, mut thing_id: MobjId) -> bool
     if (*state.info.mobjinfo_mut((*thing).type_0)).raisestate == StateNum::S_NULL {
         return true;
     }
-    maxdist = (*state.info.mobjinfo_mut((*thing).type_0)).radius + state.info.mobjinfo[MobjType::MT_VILE as i32 as usize].radius;
+    maxdist = (*state.info.mobjinfo_mut((*thing).type_0)).radius + state.info.mobjinfo[MobjType::MT_VILE as usize].radius;
     if ((*thing).x as i32 - state.p_enemy.viletryx as i32).abs() > maxdist
         || ((*thing).y as i32 - state.p_enemy.viletryy as i32).abs() > maxdist
     {
@@ -1251,7 +1251,7 @@ pub unsafe fn A_PainShootSkull(state: &mut GameState, mut actor: *mut mobj_t, mu
     an = angle >> ANGLETOFINESHIFT;
     prestep = 4 as i32 * FRACUNIT
         + 3 as i32
-            * ((*state.info.mobjinfo_mut((*actor).type_0)).radius + state.info.mobjinfo[MobjType::MT_SKULL as i32 as usize].radius)
+            * ((*state.info.mobjinfo_mut((*actor).type_0)).radius + state.info.mobjinfo[MobjType::MT_SKULL as usize].radius)
             / 2 as i32;
     x = (*actor).x + FixedMul(prestep as fixed_t, finecosine[an as isize]);
     y = (*actor).y + FixedMul(prestep as fixed_t, finesine[an as usize]);

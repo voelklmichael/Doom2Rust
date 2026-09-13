@@ -451,9 +451,9 @@ fn WeaponSelectable(state: &mut GameState, mut weapon: weapontype_t) -> bool {
     }
     if weapon as u32 == weapontype_t::wp_fist as u32
         && state.g_game.players[state.g_game.consoleplayer as usize].weaponowned
-            [weapontype_t::wp_chainsaw as i32 as usize]
+            [weapontype_t::wp_chainsaw as usize]
         && state.g_game.players[state.g_game.consoleplayer as usize].powers
-            [PowerType::pw_strength as i32 as usize]
+            [PowerType::pw_strength as usize]
             == 0
     {
         return false;
@@ -739,15 +739,15 @@ pub unsafe fn G_BuildTiccmd(state: &mut GameState, mut cmd: *mut ticcmd_t, mut m
     }
     state.g_game.mousey = 0 as i32;
     state.g_game.mousex = state.g_game.mousey;
-    if forward > state.g_game.forwardmove[1 as i32 as usize] {
-        forward = state.g_game.forwardmove[1 as i32 as usize] as i32;
-    } else if forward < -state.g_game.forwardmove[1 as i32 as usize] {
-        forward = -state.g_game.forwardmove[1 as i32 as usize] as i32;
+    if forward > state.g_game.forwardmove[1 as usize] {
+        forward = state.g_game.forwardmove[1 as usize] as i32;
+    } else if forward < -state.g_game.forwardmove[1 as usize] {
+        forward = -state.g_game.forwardmove[1 as usize] as i32;
     }
-    if side > state.g_game.forwardmove[1 as i32 as usize] {
-        side = state.g_game.forwardmove[1 as i32 as usize] as i32;
-    } else if side < -state.g_game.forwardmove[1 as i32 as usize] {
-        side = -state.g_game.forwardmove[1 as i32 as usize] as i32;
+    if side > state.g_game.forwardmove[1 as usize] {
+        side = state.g_game.forwardmove[1 as usize] as i32;
+    } else if side < -state.g_game.forwardmove[1 as usize] {
+        side = -state.g_game.forwardmove[1 as usize] as i32;
     }
     (*cmd).forwardmove = ((*cmd).forwardmove as i32 + forward) as i8;
     (*cmd).sidemove = ((*cmd).sidemove as i32 + side) as i8;
@@ -1184,9 +1184,9 @@ pub unsafe fn G_PlayerReborn(state: &mut GGameState, mut player: i32) {
     (*p).health = deh_initial_health;
     (*p).pendingweapon = weapontype_t::wp_pistol;
     (*p).readyweapon = (*p).pendingweapon;
-    (*p).weaponowned[weapontype_t::wp_fist as i32 as usize] = true;
-    (*p).weaponowned[weapontype_t::wp_pistol as i32 as usize] = true;
-    (*p).ammo[ammotype_t::am_clip as i32 as usize] = deh_initial_bullets;
+    (*p).weaponowned[weapontype_t::wp_fist as usize] = true;
+    (*p).weaponowned[weapontype_t::wp_pistol as usize] = true;
+    (*p).ammo[ammotype_t::am_clip as usize] = deh_initial_bullets;
     i = 0 as i32;
     while i < NUMAMMO as i32 {
         (*p).maxammo[i as usize] = maxammo[i as usize];
@@ -1247,20 +1247,20 @@ pub unsafe fn G_CheckSpot(
     an = (ANG45 >> ANGLETOFINESHIFT) * ((*mthing).angle as i32 / 45 as i32);
     match an {
         4096 => {
-            xa = finetangent[2048 as i32 as usize];
-            ya = finetangent[0 as i32 as usize];
+            xa = finetangent[2048 as usize];
+            ya = finetangent[0 as usize];
         }
         5120 => {
-            xa = finetangent[3072 as i32 as usize];
-            ya = finetangent[1024 as i32 as usize];
+            xa = finetangent[3072 as usize];
+            ya = finetangent[1024 as usize];
         }
         6144 => {
-            xa = finesine[0 as i32 as usize];
-            ya = finetangent[2048 as i32 as usize];
+            xa = finesine[0 as usize];
+            ya = finetangent[2048 as usize];
         }
         7168 => {
-            xa = finesine[1024 as i32 as usize];
-            ya = finetangent[3072 as i32 as usize];
+            xa = finesine[1024 as usize];
+            ya = finetangent[3072 as usize];
         }
         0 | 1024 | 2048 | 3072 => {
             xa = finecosine[an as isize];
@@ -1671,9 +1671,9 @@ pub unsafe fn G_DoNewGame(state: &mut GameState) {
     state.g_game.netdemo = false;
     state.g_game.netgame = false;
     state.g_game.deathmatch = false_0;
-    state.g_game.playeringame[3 as i32 as usize] = false;
-    state.g_game.playeringame[2 as i32 as usize] = state.g_game.playeringame[3 as i32 as usize];
-    state.g_game.playeringame[1 as i32 as usize] = state.g_game.playeringame[2 as i32 as usize];
+    state.g_game.playeringame[3 as usize] = false;
+    state.g_game.playeringame[2 as usize] = state.g_game.playeringame[3 as usize];
+    state.g_game.playeringame[1 as usize] = state.g_game.playeringame[2 as usize];
     state.d_main.respawnparm = false;
     state.d_main.fastparm = false;
     state.d_main.nomonsters = false;
@@ -1732,9 +1732,9 @@ pub unsafe fn G_InitNew(state: &mut GameState, mut skill: SkillType, mut episode
             state.info.states[i as usize].tics >>= 1 as i32;
             i += 1;
         }
-        state.info.mobjinfo[MobjType::MT_BRUISERSHOT as i32 as usize].speed = 20 as i32 * FRACUNIT;
-        state.info.mobjinfo[MobjType::MT_HEADSHOT as i32 as usize].speed = 20 as i32 * FRACUNIT;
-        state.info.mobjinfo[MobjType::MT_TROOPSHOT as i32 as usize].speed = 20 as i32 * FRACUNIT;
+        state.info.mobjinfo[MobjType::MT_BRUISERSHOT as usize].speed = 20 as i32 * FRACUNIT;
+        state.info.mobjinfo[MobjType::MT_HEADSHOT as usize].speed = 20 as i32 * FRACUNIT;
+        state.info.mobjinfo[MobjType::MT_TROOPSHOT as usize].speed = 20 as i32 * FRACUNIT;
     } else if skill != SkillType::sk_nightmare
         && state.g_game.gameskill == SkillType::sk_nightmare
     {
@@ -1743,9 +1743,9 @@ pub unsafe fn G_InitNew(state: &mut GameState, mut skill: SkillType, mut episode
             state.info.states[i as usize].tics <<= 1 as i32;
             i += 1;
         }
-        state.info.mobjinfo[MobjType::MT_BRUISERSHOT as i32 as usize].speed = 15 as i32 * FRACUNIT;
-        state.info.mobjinfo[MobjType::MT_HEADSHOT as i32 as usize].speed = 10 as i32 * FRACUNIT;
-        state.info.mobjinfo[MobjType::MT_TROOPSHOT as i32 as usize].speed = 10 as i32 * FRACUNIT;
+        state.info.mobjinfo[MobjType::MT_BRUISERSHOT as usize].speed = 15 as i32 * FRACUNIT;
+        state.info.mobjinfo[MobjType::MT_HEADSHOT as usize].speed = 10 as i32 * FRACUNIT;
+        state.info.mobjinfo[MobjType::MT_TROOPSHOT as usize].speed = 10 as i32 * FRACUNIT;
     }
     i = 0 as i32;
     while i < MAXPLAYERS {
@@ -2038,7 +2038,7 @@ pub unsafe fn G_DoPlayDemo(state: &mut GameState) {
         state.g_game.playeringame[i as usize] = *fresh33 != 0;
         i += 1;
     }
-    if state.g_game.playeringame[1 as i32 as usize]
+    if state.g_game.playeringame[1 as usize]
         || M_CheckParm(state, "-solo-net") > 0 as i32
         || M_CheckParm(state, "-netdemo") > 0 as i32
     {
@@ -2086,11 +2086,11 @@ pub unsafe fn G_CheckDemoStatus(state: &mut GameState) -> bool {
         state.g_game.netdemo = false;
         state.g_game.netgame = false;
         state.g_game.deathmatch = false_0;
-        state.g_game.playeringame[3 as i32 as usize] = false;
-        state.g_game.playeringame[2 as i32 as usize] =
-            state.g_game.playeringame[3 as i32 as usize];
-        state.g_game.playeringame[1 as i32 as usize] =
-            state.g_game.playeringame[2 as i32 as usize];
+        state.g_game.playeringame[3 as usize] = false;
+        state.g_game.playeringame[2 as usize] =
+            state.g_game.playeringame[3 as usize];
+        state.g_game.playeringame[1 as usize] =
+            state.g_game.playeringame[2 as usize];
         state.d_main.respawnparm = false;
         state.d_main.fastparm = false;
         state.d_main.nomonsters = false;

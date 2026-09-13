@@ -549,12 +549,12 @@ pub unsafe fn ST_Responder(state: &mut GameState, mut ev: &event_t) -> bool {
                     || !state.doomstat.gameversion.is_ultimate_or_higher()
                 {
                     musnum = mus_runnin as i32
-                        + (buf[0 as i32 as usize] as i32 - '0' as i32) * 10 as i32
-                        + buf[1 as i32 as usize] as i32
+                        + (buf[0 as usize] as i32 - '0' as i32) * 10 as i32
+                        + buf[1 as usize] as i32
                         - '0' as i32
                         - 1 as i32;
-                    if (buf[0 as i32 as usize] as i32 - '0' as i32) * 10 as i32
-                        + buf[1 as i32 as usize] as i32
+                    if (buf[0 as usize] as i32 - '0' as i32) * 10 as i32
+                        + buf[1 as usize] as i32
                         - '0' as i32
                         > 35 as i32
                     {
@@ -564,10 +564,10 @@ pub unsafe fn ST_Responder(state: &mut GameState, mut ev: &event_t) -> bool {
                     }
                 } else {
                     musnum = mus_e1m1 as i32
-                        + (buf[0 as i32 as usize] as i32 - '1' as i32) * 9 as i32
-                        + (buf[1 as i32 as usize] as i32 - '1' as i32);
-                    if (buf[0 as i32 as usize] as i32 - '1' as i32) * 9 as i32
-                        + buf[1 as i32 as usize] as i32
+                        + (buf[0 as usize] as i32 - '1' as i32) * 9 as i32
+                        + (buf[1 as usize] as i32 - '1' as i32);
+                    if (buf[0 as usize] as i32 - '1' as i32) * 9 as i32
+                        + buf[1 as usize] as i32
                         - '1' as i32
                         > 31 as i32
                     {
@@ -642,8 +642,8 @@ pub unsafe fn ST_Responder(state: &mut GameState, mut ev: &event_t) -> bool {
                 (*ev).data2 as ::core::ffi::c_char,
             ) != 0
             {
-                (*state.g_game.player_mut(state.st_stuff.plyr)).weaponowned[weapontype_t::wp_chainsaw as i32 as usize] = true;
-                (*state.g_game.player_mut(state.st_stuff.plyr)).powers[PowerType::pw_invulnerability as i32 as usize] = true_0;
+                (*state.g_game.player_mut(state.st_stuff.plyr)).weaponowned[weapontype_t::wp_chainsaw as usize] = true;
+                (*state.g_game.player_mut(state.st_stuff.plyr)).powers[PowerType::pw_invulnerability as usize] = true_0;
                 (*state.g_game.player_mut(state.st_stuff.plyr)).message = Some("... doesn't suck - GM".to_string());
             } else if cht_CheckCheat(
                 &raw mut state.st_stuff.cheat_mypos,
@@ -677,12 +677,12 @@ pub unsafe fn ST_Responder(state: &mut GameState, mut ev: &event_t) -> bool {
             );
             if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 {
                 epsd = 1 as i32;
-                map = (buf_1[0 as i32 as usize] as i32 - '0' as i32) * 10 as i32
-                    + buf_1[1 as i32 as usize] as i32
+                map = (buf_1[0 as usize] as i32 - '0' as i32) * 10 as i32
+                    + buf_1[1 as usize] as i32
                     - '0' as i32;
             } else {
-                epsd = buf_1[0 as i32 as usize] as i32 - '0' as i32;
-                map = buf_1[1 as i32 as usize] as i32 - '0' as i32;
+                epsd = buf_1[0 as usize] as i32 - '0' as i32;
+                map = buf_1[1 as usize] as i32 - '0' as i32;
             }
             if state.doomstat.gameversion == GameVersion::chex {
                 epsd = 1 as i32;
@@ -842,7 +842,7 @@ pub unsafe fn ST_updateFaceWidget(state: &mut GameState) {
     }
     if state.st_stuff.st_updatefacewidget_priority < 5 as i32 {
         if (*state.g_game.player_mut(state.st_stuff.plyr)).cheats & CF_GODMODE as i32 != 0
-            || (*state.g_game.player_mut(state.st_stuff.plyr)).powers[PowerType::pw_invulnerability as i32 as usize] != 0
+            || (*state.g_game.player_mut(state.st_stuff.plyr)).powers[PowerType::pw_invulnerability as usize] != 0
         {
             state.st_stuff.st_updatefacewidget_priority = 4 as i32;
             state.st_stuff.st_faceindex = ST_GODFACE;
@@ -920,8 +920,8 @@ pub unsafe fn ST_doPaletteStuff(state: &mut GameState) {
     let mut cnt: i32 = 0;
     let mut bzc: i32 = 0;
     cnt = (*state.g_game.player_mut(state.st_stuff.plyr)).damagecount;
-    if (*state.g_game.player_mut(state.st_stuff.plyr)).powers[PowerType::pw_strength as i32 as usize] != 0 {
-        bzc = 12 as i32 - ((*state.g_game.player_mut(state.st_stuff.plyr)).powers[PowerType::pw_strength as i32 as usize] >> 6 as i32);
+    if (*state.g_game.player_mut(state.st_stuff.plyr)).powers[PowerType::pw_strength as usize] != 0 {
+        bzc = 12 as i32 - ((*state.g_game.player_mut(state.st_stuff.plyr)).powers[PowerType::pw_strength as usize] >> 6 as i32);
         if bzc > cnt {
             cnt = bzc;
         }
@@ -938,8 +938,8 @@ pub unsafe fn ST_doPaletteStuff(state: &mut GameState) {
             palette = NUMBONUSPALS - 1 as i32;
         }
         palette += STARTBONUSPALS;
-    } else if (*state.g_game.player_mut(state.st_stuff.plyr)).powers[PowerType::pw_ironfeet as i32 as usize] > 4 as i32 * 32 as i32
-        || (*state.g_game.player_mut(state.st_stuff.plyr)).powers[PowerType::pw_ironfeet as i32 as usize] & 8 as i32 != 0
+    } else if (*state.g_game.player_mut(state.st_stuff.plyr)).powers[PowerType::pw_ironfeet as usize] > 4 as i32 * 32 as i32
+        || (*state.g_game.player_mut(state.st_stuff.plyr)).powers[PowerType::pw_ironfeet as usize] & 8 as i32 != 0
     {
         palette = RADIATIONPAL;
     } else {
@@ -1048,7 +1048,7 @@ unsafe fn ST_loadUnloadGraphics(state: &mut GameState, mut callback: load_callba
                 as *mut *mut patch_t)
                 .offset(0 as i32 as isize) as *mut *mut patch_t;
         callback.expect("non-null function pointer")(state, &format!("STGNUM{}", i + 2 as i32,), cb_ptr);
-        state.st_stuff.arms[i as usize][1 as i32 as usize] =
+        state.st_stuff.arms[i as usize][1 as usize] =
             state.st_stuff.shortnum[(i + 2 as i32) as usize];
         i += 1;
     }

@@ -1,15 +1,15 @@
 use crate::src::am_map::AM_Drawer;
 use crate::src::d_event::D_PopEvent;
-use crate::src::d_event::GameScreenState;
 use crate::src::d_event::GameAction;
+use crate::src::d_event::GameScreenState;
 use crate::src::d_iwad::D_FindIWAD;
 use crate::src::d_iwad::D_SaveGameIWADName;
 use crate::src::d_loop::D_StartGameLoop;
 use crate::src::d_loop::NetUpdate;
 use crate::src::d_loop::TryRunTics;
-use crate::src::d_mode::GameVersion;
-use crate::src::d_mode::GameMode_t;
 use crate::src::d_mode::GameMission_t;
+use crate::src::d_mode::GameMode_t;
+use crate::src::d_mode::GameVersion;
 use crate::src::d_mode::{skill_from_raw, SkillType};
 use crate::src::d_net::D_CheckNetGame;
 use crate::src::d_net::D_ConnectNetGame;
@@ -381,13 +381,7 @@ pub unsafe fn D_Display(state: &mut GameState) {
             }
         }
         wipestart = nowtime;
-        done = wipe_ScreenWipe(
-            state,
-            wipe_Melt as i32,
-            SCREENWIDTH,
-            SCREENHEIGHT,
-            tics,
-        ) != 0;
+        done = wipe_ScreenWipe(state, wipe_Melt as i32, SCREENWIDTH, SCREENHEIGHT, tics) != 0;
         M_Drawer(state);
         I_FinishUpdate(state);
         if done {
@@ -404,10 +398,10 @@ pub unsafe fn D_BindVariables(state: &mut GameState) {
     M_BindMapControls(state);
     M_BindMenuControls(state);
     M_BindChatControls(state, MAXPLAYERS as u32);
-    state.m_controls.key_multi_msgplayer[0 as i32 as usize] = HUSTR_KEYGREEN;
-    state.m_controls.key_multi_msgplayer[1 as i32 as usize] = HUSTR_KEYINDIGO;
-    state.m_controls.key_multi_msgplayer[2 as i32 as usize] = HUSTR_KEYBROWN;
-    state.m_controls.key_multi_msgplayer[3 as i32 as usize] = HUSTR_KEYRED;
+    state.m_controls.key_multi_msgplayer[0 as usize] = HUSTR_KEYGREEN;
+    state.m_controls.key_multi_msgplayer[1 as usize] = HUSTR_KEYINDIGO;
+    state.m_controls.key_multi_msgplayer[2 as usize] = HUSTR_KEYBROWN;
+    state.m_controls.key_multi_msgplayer[3 as usize] = HUSTR_KEYRED;
     M_BindVariable(
         &mut state.m_config,
         "mouse_sensitivity",
@@ -909,14 +903,12 @@ pub unsafe fn D_DoomMain(state: &mut GameState) {
             scale = 400 as i32;
         }
         println!("turbo scale: {}%", scale);
-        state.g_game.forwardmove[0 as i32 as usize] =
-            state.g_game.forwardmove[0 as i32 as usize] * scale / 100 as i32;
-        state.g_game.forwardmove[1 as i32 as usize] =
-            state.g_game.forwardmove[1 as i32 as usize] * scale / 100 as i32;
-        state.g_game.sidemove[0 as i32 as usize] =
-            state.g_game.sidemove[0 as i32 as usize] * scale / 100 as i32;
-        state.g_game.sidemove[1 as i32 as usize] =
-            state.g_game.sidemove[1 as i32 as usize] * scale / 100 as i32;
+        state.g_game.forwardmove[0 as usize] =
+            state.g_game.forwardmove[0 as usize] * scale / 100 as i32;
+        state.g_game.forwardmove[1 as usize] =
+            state.g_game.forwardmove[1 as usize] * scale / 100 as i32;
+        state.g_game.sidemove[0 as usize] = state.g_game.sidemove[0 as usize] * scale / 100 as i32;
+        state.g_game.sidemove[1 as usize] = state.g_game.sidemove[1 as usize] * scale / 100 as i32;
     }
     println!("V_Init: allocate screens.");
     println!("M_LoadDefaults: Load system defaults.");
@@ -972,9 +964,8 @@ pub unsafe fn D_DoomMain(state: &mut GameState) {
             file = format!("{}.lmp", arg);
         }
         if D_AddFile(state, &file) {
-            let name = &state.w_wad.lumpinfo
-                [state.w_wad.numlumps.wrapping_sub(1 as u32) as usize]
-                .name;
+            let name =
+                &state.w_wad.lumpinfo[state.w_wad.numlumps.wrapping_sub(1 as u32) as usize].name;
             let len = name.len().min(demolumpname.len() - 1);
             for i in 0..len {
                 demolumpname[i] = name.as_bytes()[i] as ::core::ffi::c_char;
@@ -1039,7 +1030,9 @@ pub unsafe fn D_DoomMain(state: &mut GameState) {
             }
         }
     }
-    if W_CheckNumForName(&mut state.w_wad, "SS_START") >= 0 as i32 || W_CheckNumForName(&mut state.w_wad, "FF_END") >= 0 as i32 {
+    if W_CheckNumForName(&mut state.w_wad, "SS_START") >= 0 as i32
+        || W_CheckNumForName(&mut state.w_wad, "FF_END") >= 0 as i32
+    {
         I_PrintDivider();
         println!(
             " WARNING: The loaded WAD file contains modified sprites or\n floor textures.  You may want to use the '-merge' command\n line option instead of '-file'."
@@ -1047,7 +1040,9 @@ pub unsafe fn D_DoomMain(state: &mut GameState) {
     }
     I_PrintStartupBanner(state.doomstat.gamedescription);
     PrintDehackedBanners();
-    if W_CheckNumForName(&mut state.w_wad, "FREEDOOM") >= 0 as i32 && W_CheckNumForName(&mut state.w_wad, "FREEDM") < 0 as i32 {
+    if W_CheckNumForName(&mut state.w_wad, "FREEDOOM") >= 0 as i32
+        && W_CheckNumForName(&mut state.w_wad, "FREEDM") < 0 as i32
+    {
         println!(
             " WARNING: You are playing using one of the Freedoom IWAD\n files, which might not work in this port. See this page\n for more information on how to play using Freedoom:\n   http://www.chocolate-doom.org/wiki/index.php/Freedoom"
         );

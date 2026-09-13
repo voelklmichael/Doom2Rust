@@ -1413,7 +1413,7 @@ pub unsafe fn M_StringWidth(state: &mut GameState, string: &str) -> i32 {
 }
 pub unsafe fn M_StringHeight(state: &mut GameState, string: &str) -> i32 {
     let mut h: i32 = 0;
-    let height: i32 = (*state.hu_stuff.hu_font[0 as i32 as usize]).height as i32;
+    let height: i32 = (*state.hu_stuff.hu_font[0 as usize]).height as i32;
     h = height;
     for b in string.bytes() {
         if b == b'\n' {
@@ -1887,7 +1887,7 @@ pub unsafe fn M_Drawer(state: &mut GameState) {
                 line,
             );
             state.m_menu.drawer_y = (state.m_menu.drawer_y as i32
-                + (*state.hu_stuff.hu_font[0 as i32 as usize]).height as i32)
+                + (*state.hu_stuff.hu_font[0 as usize]).height as i32)
                 as i16;
         }
         return;
@@ -1958,8 +1958,8 @@ pub unsafe fn M_Init(state: &mut GameState) {
     state.m_menu.quickSaveSlot = -(1 as i32);
     match state.doomstat.gamemode as u32 {
         2 => {
-            state.m_menu.menus.MainMenu[readthis as i32 as usize] =
-                state.m_menu.menus.MainMenu[quitdoom as i32 as usize];
+            state.m_menu.menus.MainMenu[readthis as usize] =
+                state.m_menu.menus.MainMenu[quitdoom as usize];
             state.m_menu.defs.MainDef.numitems -= 1;
             state.m_menu.defs.MainDef.y = (state.m_menu.defs.MainDef.y as i32 + 8 as i32) as i16;
             state.m_menu.defs.NewDef.prevMenu = &raw mut state.m_menu.defs.MainDef as *mut menu_s;

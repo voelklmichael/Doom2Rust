@@ -491,7 +491,7 @@ pub unsafe fn P_FindNextHighestFloor(
     if h == 0 {
         return currentheight as fixed_t;
     }
-    min = heightlist[0 as i32 as usize] as i32;
+    min = heightlist[0 as usize] as i32;
     i = 1 as i32;
     while i < h {
         if heightlist[i as usize] < min {
@@ -916,7 +916,7 @@ pub unsafe fn P_PlayerInSpecialSector(state: &mut GameState, mut player: *mut pl
     }
     match (*sector).special as i32 {
         5 => {
-            if (*player).powers[PowerType::pw_ironfeet as i32 as usize] == 0 {
+            if (*player).powers[PowerType::pw_ironfeet as usize] == 0 {
                 if state.p_tick.leveltime & 0x1f as i32 == 0 {
                     P_DamageMobj(
                         state,
@@ -929,7 +929,7 @@ pub unsafe fn P_PlayerInSpecialSector(state: &mut GameState, mut player: *mut pl
             }
         }
         7 => {
-            if (*player).powers[PowerType::pw_ironfeet as i32 as usize] == 0 {
+            if (*player).powers[PowerType::pw_ironfeet as usize] == 0 {
                 if state.p_tick.leveltime & 0x1f as i32 == 0 {
                     P_DamageMobj(
                         state,
@@ -942,7 +942,7 @@ pub unsafe fn P_PlayerInSpecialSector(state: &mut GameState, mut player: *mut pl
             }
         }
         16 | 4 => {
-            if (*player).powers[PowerType::pw_ironfeet as i32 as usize] == 0
+            if (*player).powers[PowerType::pw_ironfeet as usize] == 0
                 || P_Random(&mut state.m_random) < 5 as i32
             {
                 if state.p_tick.leveltime & 0x1f as i32 == 0 {
@@ -1015,7 +1015,7 @@ pub unsafe fn P_UpdateSpecials(state: &mut GameState) {
         match linev.special as i32 {
             48 => {
                 let ref mut fresh0 =
-                    state.p_setup.sides[linev.sidenum[0 as i32 as usize] as usize].textureoffset;
+                    state.p_setup.sides[linev.sidenum[0 as usize] as usize].textureoffset;
                 *fresh0 += FRACUNIT;
             }
             _ => {}
@@ -1031,19 +1031,19 @@ pub unsafe fn P_UpdateSpecials(state: &mut GameState) {
                 match state.p_switch.buttonlist[i as usize].where_0 {
                     BWhere::top => {
                         state.p_setup.sides[state.p_setup.lines[button_line_id.0 as usize].sidenum
-                            [0 as i32 as usize]
+                            [0 as usize]
                             as usize]
                             .toptexture = state.p_switch.buttonlist[i as usize].btexture as i16;
                     }
                     BWhere::middle => {
                         state.p_setup.sides[state.p_setup.lines[button_line_id.0 as usize].sidenum
-                            [0 as i32 as usize]
+                            [0 as usize]
                             as usize]
                             .midtexture = state.p_switch.buttonlist[i as usize].btexture as i16;
                     }
                     BWhere::bottom => {
                         state.p_setup.sides[state.p_setup.lines[button_line_id.0 as usize].sidenum
-                            [0 as i32 as usize]
+                            [0 as usize]
                             as usize]
                             .bottomtexture = state.p_switch.buttonlist[i as usize].btexture as i16;
                     }

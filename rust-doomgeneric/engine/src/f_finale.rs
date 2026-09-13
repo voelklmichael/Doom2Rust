@@ -1,10 +1,10 @@
 use crate::src::d_event::event_t;
 use crate::src::d_event::EvType;
-use crate::src::d_event::GameScreenState;
 use crate::src::d_event::GameAction;
-use crate::src::d_mode::GameVersion;
-use crate::src::d_mode::GameMode_t;
+use crate::src::d_event::GameScreenState;
 use crate::src::d_mode::GameMission_t;
+use crate::src::d_mode::GameMode_t;
+use crate::src::d_mode::GameVersion;
 use crate::src::doomdef::true_0;
 use crate::src::doomdef::MAXPLAYERS;
 use crate::src::doomdef::SCREENHEIGHT;
@@ -14,9 +14,10 @@ use crate::src::hu_lib::patch_t;
 use crate::src::hu_stuff::HU_FONTSIZE;
 use crate::src::hu_stuff::HU_FONTSTART;
 use crate::src::i_video::IVideoState;
+use crate::src::mem_compat::memcpy;
+use crate::src::p_mobj::MobjType;
 use crate::src::p_mobj::StateNum;
 use crate::src::p_mobj::{mobjinfo_t, state_t};
-use crate::src::p_mobj::MobjType;
 use crate::src::r_data::column_t;
 use crate::src::r_defs::{spritedef_t, spriteframe_t};
 use crate::src::r_things::FF_FRAMEMASK;
@@ -34,10 +35,9 @@ use crate::src::stdint_types::size_t;
 use crate::src::v_video::V_DrawPatch;
 use crate::src::v_video::V_DrawPatchFlipped;
 use crate::src::v_video::V_MarkRect;
-use crate::src::w_wad::W_CacheLumpNum;
 use crate::src::w_wad::W_CacheLumpName;
+use crate::src::w_wad::W_CacheLumpNum;
 use crate::src::z_zone::{PU_CACHE, PU_LEVEL};
-use crate::src::mem_compat::memcpy;
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum FinaleStage {
     F_STAGE_TEXT = 0,
@@ -441,12 +441,7 @@ pub unsafe fn F_TextWrite(state: &mut GameState) {
         }
         y += 1;
     }
-    V_MarkRect(state,
-        0 as i32,
-        0 as i32,
-        SCREENWIDTH,
-        SCREENHEIGHT,
-    );
+    V_MarkRect(state, 0 as i32, 0 as i32, SCREENWIDTH, SCREENHEIGHT);
     cx = 10 as i32;
     cy = 10 as i32;
     let mut chars = state.f_finale.finaletext.bytes();
@@ -471,11 +466,7 @@ pub unsafe fn F_TextWrite(state: &mut GameState) {
                 if cx + w > SCREENWIDTH {
                     break;
                 }
-                V_DrawPatch(state,
-                    cx,
-                    cy,
-                    state.hu_stuff.hu_font[c as usize],
-                );
+                V_DrawPatch(state, cx, cy, state.hu_stuff.hu_font[c as usize]);
                 cx += w;
             }
         }
@@ -599,9 +590,13 @@ pub unsafe fn F_CastTicker(state: &mut GameState) {
             .seesound
             != 0
         {
-            S_StartSound(state, SoundOrigin::None, state.info.mobjinfo
+            S_StartSound(
+                state,
+                SoundOrigin::None,
+                state.info.mobjinfo
                     [state.f_finale.castorder[state.f_finale.castnum as usize].type_0 as usize]
-                    .seesound);
+                    .seesound,
+            );
         }
         state.f_finale.caststate = (&raw mut state.info.states as *mut state_t).offset(
             (*(&raw mut state.info.mobjinfo as *mut mobjinfo_t).offset(
@@ -614,8 +609,8 @@ pub unsafe fn F_CastTicker(state: &mut GameState) {
         state.f_finale.castframes = 0 as i32;
         current_block = 1356832168064818221;
     } else if state.f_finale.caststate
-        == (&raw mut state.info.states as *mut state_t).offset(StateNum::S_PLAY_ATK1 as i32 as isize)
-            as *mut state_t
+        == (&raw mut state.info.states as *mut state_t)
+            .offset(StateNum::S_PLAY_ATK1 as i32 as isize) as *mut state_t
     {
         current_block = 13354568087807251156;
     } else {
@@ -709,7 +704,8 @@ pub unsafe fn F_CastTicker(state: &mut GameState) {
                 }
                 state.f_finale.castonmelee ^= 1 as i32;
                 if state.f_finale.caststate
-                    == (&raw mut state.info.states as *mut state_t).offset(StateNum::S_NULL as i32 as isize)
+                    == (&raw mut state.info.states as *mut state_t)
+                        .offset(StateNum::S_NULL as i32 as isize)
                         as *mut state_t
                 {
                     if state.f_finale.castonmelee != 0 {
@@ -801,9 +797,13 @@ pub unsafe fn F_CastResponder(state: &mut GameState, mut ev: &event_t) -> bool {
         .deathsound
         != 0
     {
-        S_StartSound(state, SoundOrigin::None, state.info.mobjinfo
+        S_StartSound(
+            state,
+            SoundOrigin::None,
+            state.info.mobjinfo
                 [state.f_finale.castorder[state.f_finale.castnum as usize].type_0 as usize]
-                .deathsound);
+                .deathsound,
+        );
     }
     return true;
 }
@@ -828,11 +828,7 @@ pub unsafe fn F_CastPrint(state: &mut GameState, text: &str) {
             cx += 4 as i32;
         } else {
             w = (*state.hu_stuff.hu_font[c as usize]).width as i32;
-            V_DrawPatch(state,
-                cx,
-                180 as i32,
-                state.hu_stuff.hu_font[c as usize],
-            );
+            V_DrawPatch(state, cx, 180 as i32, state.hu_stuff.hu_font[c as usize]);
             cx += w;
         }
     }
@@ -844,11 +840,7 @@ pub unsafe fn F_CastDrawer(state: &mut GameState) {
     let mut flip: bool = false;
     let mut patch: *mut patch_t = ::core::ptr::null_mut::<patch_t>();
     let __wcache865_4 = W_CacheLumpName(state, "BOSSBACK", PU_CACHE as i32) as *mut patch_t;
-    V_DrawPatch(state,
-        0 as i32,
-        0 as i32,
-        __wcache865_4,
-    );
+    V_DrawPatch(state, 0 as i32, 0 as i32, __wcache865_4);
     let cast_name = state.f_finale.castorder[state.f_finale.castnum as usize]
         .name
         .unwrap();
@@ -858,9 +850,10 @@ pub unsafe fn F_CastDrawer(state: &mut GameState) {
     sprframe = &raw mut (*sprdef).spriteframes
         [((*state.f_finale.caststate).frame & FF_FRAMEMASK) as usize]
         as *mut spriteframe_t;
-    lump = (*sprframe).lump[0 as i32 as usize] as i32;
-    flip = (*sprframe).flip[0 as i32 as usize] != 0;
-    patch = W_CacheLumpNum(state, lump + state.r_data.firstspritelump, PU_CACHE as i32) as *mut patch_t;
+    lump = (*sprframe).lump[0 as usize] as i32;
+    flip = (*sprframe).flip[0 as usize] != 0;
+    patch =
+        W_CacheLumpNum(state, lump + state.r_data.firstspritelump, PU_CACHE as i32) as *mut patch_t;
     if flip {
         V_DrawPatchFlipped(state, 160 as i32, 170 as i32, patch);
     } else {
@@ -910,12 +903,7 @@ pub unsafe fn F_BunnyScroll(state: &mut GameState) {
     let mut stage: i32 = 0;
     p1 = W_CacheLumpName(state, "PFUB2", PU_LEVEL as i32) as *mut patch_t;
     p2 = W_CacheLumpName(state, "PFUB1", PU_LEVEL as i32) as *mut patch_t;
-    V_MarkRect(state,
-        0 as i32,
-        0 as i32,
-        SCREENWIDTH,
-        SCREENHEIGHT,
-    );
+    V_MarkRect(state, 0 as i32, 0 as i32, SCREENWIDTH, SCREENHEIGHT);
     scrolled = 320 as i32 - (state.f_finale.finalecount as i32 - 230 as i32) / 2 as i32;
     if scrolled > 320 as i32 {
         scrolled = 320 as i32;
@@ -937,7 +925,8 @@ pub unsafe fn F_BunnyScroll(state: &mut GameState) {
     }
     if state.f_finale.finalecount < 1180 as u32 {
         let __wcache963_3 = W_CacheLumpName(state, "END0", PU_CACHE as i32) as *mut patch_t;
-        V_DrawPatch(state,
+        V_DrawPatch(
+            state,
             (SCREENWIDTH - 13 as i32 * 8 as i32) / 2 as i32,
             (SCREENHEIGHT - 8 as i32 * 8 as i32) / 2 as i32,
             __wcache963_3,
@@ -959,7 +948,8 @@ pub unsafe fn F_BunnyScroll(state: &mut GameState) {
     }
     let name = format!("END{}", stage);
     let __wcache990_2 = W_CacheLumpName(state, &name, PU_CACHE as i32) as *mut patch_t;
-    V_DrawPatch(state,
+    V_DrawPatch(
+        state,
         (SCREENWIDTH - 13 as i32 * 8 as i32) / 2 as i32,
         (SCREENHEIGHT - 8 as i32 * 8 as i32) / 2 as i32,
         __wcache990_2,
@@ -986,13 +976,8 @@ unsafe fn F_ArtScreenDrawer(state: &mut GameState) {
             }
             _ => return,
         }
-        let __wcache1026_1 =
-            W_CacheLumpName(state, lumpname, PU_CACHE as i32) as *mut patch_t;
-        V_DrawPatch(state,
-            0 as i32,
-            0 as i32,
-            __wcache1026_1,
-        );
+        let __wcache1026_1 = W_CacheLumpName(state, lumpname, PU_CACHE as i32) as *mut patch_t;
+        V_DrawPatch(state, 0 as i32, 0 as i32, __wcache1026_1);
     };
 }
 pub unsafe fn F_Drawer(state: &mut GameState) {

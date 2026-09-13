@@ -61,82 +61,82 @@ unsafe fn Transform(mut hd: *mut sha1_context_t, mut data: *mut byte) {
     e = (e as i64
         + ((a << 5 as i32 | a >> 32 as i32 - 5 as i32).wrapping_add(d ^ b & (c ^ d)) as i64
             + 0x5a827999 as i64
-            + x[0 as i32 as usize] as i64)) as uint32_t;
+            + x[0 as usize] as i64)) as uint32_t;
     b = b << 30 as i32 | b >> 32 as i32 - 30 as i32;
     d = (d as i64
         + ((e << 5 as i32 | e >> 32 as i32 - 5 as i32).wrapping_add(c ^ a & (b ^ c)) as i64
             + 0x5a827999 as i64
-            + x[1 as i32 as usize] as i64)) as uint32_t;
+            + x[1 as usize] as i64)) as uint32_t;
     a = a << 30 as i32 | a >> 32 as i32 - 30 as i32;
     c = (c as i64
         + ((d << 5 as i32 | d >> 32 as i32 - 5 as i32).wrapping_add(b ^ e & (a ^ b)) as i64
             + 0x5a827999 as i64
-            + x[2 as i32 as usize] as i64)) as uint32_t;
+            + x[2 as usize] as i64)) as uint32_t;
     e = e << 30 as i32 | e >> 32 as i32 - 30 as i32;
     b = (b as i64
         + ((c << 5 as i32 | c >> 32 as i32 - 5 as i32).wrapping_add(a ^ d & (e ^ a)) as i64
             + 0x5a827999 as i64
-            + x[3 as i32 as usize] as i64)) as uint32_t;
+            + x[3 as usize] as i64)) as uint32_t;
     d = d << 30 as i32 | d >> 32 as i32 - 30 as i32;
     a = (a as i64
         + ((b << 5 as i32 | b >> 32 as i32 - 5 as i32).wrapping_add(e ^ c & (d ^ e)) as i64
             + 0x5a827999 as i64
-            + x[4 as i32 as usize] as i64)) as uint32_t;
+            + x[4 as usize] as i64)) as uint32_t;
     c = c << 30 as i32 | c >> 32 as i32 - 30 as i32;
     e = (e as i64
         + ((a << 5 as i32 | a >> 32 as i32 - 5 as i32).wrapping_add(d ^ b & (c ^ d)) as i64
             + 0x5a827999 as i64
-            + x[5 as i32 as usize] as i64)) as uint32_t;
+            + x[5 as usize] as i64)) as uint32_t;
     b = b << 30 as i32 | b >> 32 as i32 - 30 as i32;
     d = (d as i64
         + ((e << 5 as i32 | e >> 32 as i32 - 5 as i32).wrapping_add(c ^ a & (b ^ c)) as i64
             + 0x5a827999 as i64
-            + x[6 as i32 as usize] as i64)) as uint32_t;
+            + x[6 as usize] as i64)) as uint32_t;
     a = a << 30 as i32 | a >> 32 as i32 - 30 as i32;
     c = (c as i64
         + ((d << 5 as i32 | d >> 32 as i32 - 5 as i32).wrapping_add(b ^ e & (a ^ b)) as i64
             + 0x5a827999 as i64
-            + x[7 as i32 as usize] as i64)) as uint32_t;
+            + x[7 as usize] as i64)) as uint32_t;
     e = e << 30 as i32 | e >> 32 as i32 - 30 as i32;
     b = (b as i64
         + ((c << 5 as i32 | c >> 32 as i32 - 5 as i32).wrapping_add(a ^ d & (e ^ a)) as i64
             + 0x5a827999 as i64
-            + x[8 as i32 as usize] as i64)) as uint32_t;
+            + x[8 as usize] as i64)) as uint32_t;
     d = d << 30 as i32 | d >> 32 as i32 - 30 as i32;
     a = (a as i64
         + ((b << 5 as i32 | b >> 32 as i32 - 5 as i32).wrapping_add(e ^ c & (d ^ e)) as i64
             + 0x5a827999 as i64
-            + x[9 as i32 as usize] as i64)) as uint32_t;
+            + x[9 as usize] as i64)) as uint32_t;
     c = c << 30 as i32 | c >> 32 as i32 - 30 as i32;
     e = (e as i64
         + ((a << 5 as i32 | a >> 32 as i32 - 5 as i32).wrapping_add(d ^ b & (c ^ d)) as i64
             + 0x5a827999 as i64
-            + x[10 as i32 as usize] as i64)) as uint32_t;
+            + x[10 as usize] as i64)) as uint32_t;
     b = b << 30 as i32 | b >> 32 as i32 - 30 as i32;
     d = (d as i64
         + ((e << 5 as i32 | e >> 32 as i32 - 5 as i32).wrapping_add(c ^ a & (b ^ c)) as i64
             + 0x5a827999 as i64
-            + x[11 as i32 as usize] as i64)) as uint32_t;
+            + x[11 as usize] as i64)) as uint32_t;
     a = a << 30 as i32 | a >> 32 as i32 - 30 as i32;
     c = (c as i64
         + ((d << 5 as i32 | d >> 32 as i32 - 5 as i32).wrapping_add(b ^ e & (a ^ b)) as i64
             + 0x5a827999 as i64
-            + x[12 as i32 as usize] as i64)) as uint32_t;
+            + x[12 as usize] as i64)) as uint32_t;
     e = e << 30 as i32 | e >> 32 as i32 - 30 as i32;
     b = (b as i64
         + ((c << 5 as i32 | c >> 32 as i32 - 5 as i32).wrapping_add(a ^ d & (e ^ a)) as i64
             + 0x5a827999 as i64
-            + x[13 as i32 as usize] as i64)) as uint32_t;
+            + x[13 as usize] as i64)) as uint32_t;
     d = d << 30 as i32 | d >> 32 as i32 - 30 as i32;
     a = (a as i64
         + ((b << 5 as i32 | b >> 32 as i32 - 5 as i32).wrapping_add(e ^ c & (d ^ e)) as i64
             + 0x5a827999 as i64
-            + x[14 as i32 as usize] as i64)) as uint32_t;
+            + x[14 as usize] as i64)) as uint32_t;
     c = c << 30 as i32 | c >> 32 as i32 - 30 as i32;
     e = (e as i64
         + ((a << 5 as i32 | a >> 32 as i32 - 5 as i32).wrapping_add(d ^ b & (c ^ d)) as i64
             + 0x5a827999 as i64
-            + x[15 as i32 as usize] as i64)) as uint32_t;
+            + x[15 as usize] as i64)) as uint32_t;
     b = b << 30 as i32 | b >> 32 as i32 - 30 as i32;
     tm = x[(16 as i32 & 0xf as i32) as usize]
         ^ x[(16 as i32 - 14 as i32 & 0xf as i32) as usize]
@@ -866,14 +866,14 @@ pub unsafe fn SHA1_Final(mut digest: *mut byte, mut hd: *mut sha1_context_t) {
             56 as size_t,
         );
     }
-    (*hd).buf[56 as i32 as usize] = (msb >> 24 as i32) as byte;
-    (*hd).buf[57 as i32 as usize] = (msb >> 16 as i32) as byte;
-    (*hd).buf[58 as i32 as usize] = (msb >> 8 as i32) as byte;
-    (*hd).buf[59 as i32 as usize] = msb as byte;
-    (*hd).buf[60 as i32 as usize] = (lsb >> 24 as i32) as byte;
-    (*hd).buf[61 as i32 as usize] = (lsb >> 16 as i32) as byte;
-    (*hd).buf[62 as i32 as usize] = (lsb >> 8 as i32) as byte;
-    (*hd).buf[63 as i32 as usize] = lsb as byte;
+    (*hd).buf[56 as usize] = (msb >> 24 as i32) as byte;
+    (*hd).buf[57 as usize] = (msb >> 16 as i32) as byte;
+    (*hd).buf[58 as usize] = (msb >> 8 as i32) as byte;
+    (*hd).buf[59 as usize] = msb as byte;
+    (*hd).buf[60 as usize] = (lsb >> 24 as i32) as byte;
+    (*hd).buf[61 as usize] = (lsb >> 16 as i32) as byte;
+    (*hd).buf[62 as usize] = (lsb >> 8 as i32) as byte;
+    (*hd).buf[63 as usize] = lsb as byte;
     Transform(hd, &raw mut (*hd).buf as *mut byte);
     p = &raw mut (*hd).buf as *mut byte;
     let fresh12 = p;
@@ -944,10 +944,10 @@ pub unsafe fn SHA1_Final(mut digest: *mut byte, mut hd: *mut sha1_context_t) {
 }
 pub unsafe fn SHA1_UpdateInt32(mut context: *mut sha1_context_t, mut val: u32) {
     let mut buf: [byte; 4] = [0; 4];
-    buf[0 as i32 as usize] = (val >> 24 as i32 & 0xff as u32) as byte;
-    buf[1 as i32 as usize] = (val >> 16 as i32 & 0xff as u32) as byte;
-    buf[2 as i32 as usize] = (val >> 8 as i32 & 0xff as u32) as byte;
-    buf[3 as i32 as usize] = (val & 0xff as u32) as byte;
+    buf[0 as usize] = (val >> 24 as i32 & 0xff as u32) as byte;
+    buf[1 as usize] = (val >> 16 as i32 & 0xff as u32) as byte;
+    buf[2 as usize] = (val >> 8 as i32 & 0xff as u32) as byte;
+    buf[3 as usize] = (val & 0xff as u32) as byte;
     SHA1_Update(context, &raw mut buf as *mut byte, 4 as size_t);
 }
 pub unsafe fn SHA1_UpdateString(

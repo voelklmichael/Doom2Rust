@@ -257,7 +257,7 @@ pub unsafe fn D_StartNetGame(
 ) {
     (*settings).consoleplayer = 0 as i32;
     (*settings).num_players = 1 as i32;
-    (*settings).player_classes[0 as i32 as usize] = state.d_loop.player_class;
+    (*settings).player_classes[0 as usize] = state.d_loop.player_class;
     (*settings).new_sync = 0 as i32;
     (*settings).extratics = 1 as i32;
     (*settings).ticdup = 1 as i32;
@@ -302,10 +302,10 @@ fn OldNetSync(state: &mut GameState) {
         state.d_loop.frameskip[(state.d_loop.frameon & 3 as i32) as usize] =
             (state.d_loop.oldnettics > state.d_loop.recvtic) as i32;
         state.d_loop.oldnettics = state.d_loop.maketic;
-        if state.d_loop.frameskip[0 as i32 as usize] != 0
-            && state.d_loop.frameskip[1 as i32 as usize] != 0
-            && state.d_loop.frameskip[2 as i32 as usize] != 0
-            && state.d_loop.frameskip[3 as i32 as usize] != 0
+        if state.d_loop.frameskip[0 as usize] != 0
+            && state.d_loop.frameskip[1 as usize] != 0
+            && state.d_loop.frameskip[2 as usize] != 0
+            && state.d_loop.frameskip[3 as usize] != 0
         {
             state.d_loop.skiptics = 1 as i32;
         }

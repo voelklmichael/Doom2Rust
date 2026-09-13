@@ -356,7 +356,7 @@ pub unsafe fn P_ChangeSwitchTexture(
     if useAgain == 0 {
         (*state.p_setup.line_mut(line)).special = 0 as i16;
     }
-    let sidenum0 = state.p_setup.line(line).sidenum[0 as i32 as usize];
+    let sidenum0 = state.p_setup.line(line).sidenum[0 as usize];
     texTop = state.p_setup.sides[sidenum0 as usize].toptexture as i32;
     texMid = state.p_setup.sides[sidenum0 as usize].midtexture as i32;
     texBot = state.p_setup.sides[sidenum0 as usize].bottomtexture as i32;

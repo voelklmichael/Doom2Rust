@@ -206,15 +206,15 @@ pub unsafe fn P_PlayerThink(state: &mut GameState, mut player: *mut player_t) {
             ((*cmd).buttons as i32 & BT_WEAPONMASK as i32) >> BT_WEAPONSHIFT as i32,
         );
         if newweapon as u32 == weapontype_t::wp_fist as i32 as u32
-            && (*player).weaponowned[weapontype_t::wp_chainsaw as i32 as usize]
+            && (*player).weaponowned[weapontype_t::wp_chainsaw as usize]
             && !((*player).readyweapon as u32 == weapontype_t::wp_chainsaw as i32 as u32
-                && (*player).powers[PowerType::pw_strength as i32 as usize] != 0)
+                && (*player).powers[PowerType::pw_strength as usize] != 0)
         {
             newweapon = weapontype_t::wp_chainsaw;
         }
         if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32
             && newweapon as u32 == weapontype_t::wp_shotgun as i32 as u32
-            && (*player).weaponowned[weapontype_t::wp_supershotgun as i32 as usize]
+            && (*player).weaponowned[weapontype_t::wp_supershotgun as usize]
             && (*player).readyweapon as u32 != weapontype_t::wp_supershotgun as i32 as u32
         {
             newweapon = weapontype_t::wp_supershotgun;
@@ -239,23 +239,23 @@ pub unsafe fn P_PlayerThink(state: &mut GameState, mut player: *mut player_t) {
         (*player).usedown = false_0;
     }
     P_MovePsprites(state, player);
-    if (*player).powers[PowerType::pw_strength as i32 as usize] != 0 {
-        (*player).powers[PowerType::pw_strength as i32 as usize] += 1;
+    if (*player).powers[PowerType::pw_strength as usize] != 0 {
+        (*player).powers[PowerType::pw_strength as usize] += 1;
     }
-    if (*player).powers[PowerType::pw_invulnerability as i32 as usize] != 0 {
-        (*player).powers[PowerType::pw_invulnerability as i32 as usize] -= 1;
+    if (*player).powers[PowerType::pw_invulnerability as usize] != 0 {
+        (*player).powers[PowerType::pw_invulnerability as usize] -= 1;
     }
-    if (*player).powers[PowerType::pw_invisibility as i32 as usize] != 0 {
-        (*player).powers[PowerType::pw_invisibility as i32 as usize] -= 1;
-        if (*player).powers[PowerType::pw_invisibility as i32 as usize] == 0 {
+    if (*player).powers[PowerType::pw_invisibility as usize] != 0 {
+        (*player).powers[PowerType::pw_invisibility as usize] -= 1;
+        if (*player).powers[PowerType::pw_invisibility as usize] == 0 {
             (*player_mo).flags &= !(MF_SHADOW as i32);
         }
     }
-    if (*player).powers[PowerType::pw_infrared as i32 as usize] != 0 {
-        (*player).powers[PowerType::pw_infrared as i32 as usize] -= 1;
+    if (*player).powers[PowerType::pw_infrared as usize] != 0 {
+        (*player).powers[PowerType::pw_infrared as usize] -= 1;
     }
-    if (*player).powers[PowerType::pw_ironfeet as i32 as usize] != 0 {
-        (*player).powers[PowerType::pw_ironfeet as i32 as usize] -= 1;
+    if (*player).powers[PowerType::pw_ironfeet as usize] != 0 {
+        (*player).powers[PowerType::pw_ironfeet as usize] -= 1;
     }
     if (*player).damagecount != 0 {
         (*player).damagecount -= 1;
@@ -263,17 +263,17 @@ pub unsafe fn P_PlayerThink(state: &mut GameState, mut player: *mut player_t) {
     if (*player).bonuscount != 0 {
         (*player).bonuscount -= 1;
     }
-    if (*player).powers[PowerType::pw_invulnerability as i32 as usize] != 0 {
-        if (*player).powers[PowerType::pw_invulnerability as i32 as usize] > 4 as i32 * 32 as i32
-            || (*player).powers[PowerType::pw_invulnerability as i32 as usize] & 8 as i32 != 0
+    if (*player).powers[PowerType::pw_invulnerability as usize] != 0 {
+        if (*player).powers[PowerType::pw_invulnerability as usize] > 4 as i32 * 32 as i32
+            || (*player).powers[PowerType::pw_invulnerability as usize] & 8 as i32 != 0
         {
             (*player).fixedcolormap = INVERSECOLORMAP;
         } else {
             (*player).fixedcolormap = 0 as i32;
         }
-    } else if (*player).powers[PowerType::pw_infrared as i32 as usize] != 0 {
-        if (*player).powers[PowerType::pw_infrared as i32 as usize] > 4 as i32 * 32 as i32
-            || (*player).powers[PowerType::pw_infrared as i32 as usize] & 8 as i32 != 0
+    } else if (*player).powers[PowerType::pw_infrared as usize] != 0 {
+        if (*player).powers[PowerType::pw_infrared as usize] > 4 as i32 * 32 as i32
+            || (*player).powers[PowerType::pw_infrared as usize] & 8 as i32 != 0
         {
             (*player).fixedcolormap = 1 as i32;
         } else {

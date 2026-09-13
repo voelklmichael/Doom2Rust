@@ -370,7 +370,7 @@ pub fn R_InitTextureMapping(state: &mut GameState) {
         }
         i += 1;
     }
-    state.r_main.clipangle = state.r_main.xtoviewangle[0 as i32 as usize];
+    state.r_main.clipangle = state.r_main.xtoviewangle[0 as usize];
 }
 pub const DISTMAP: i32 = 2;
 pub unsafe fn R_InitLightTables(state: &mut GameState) {
