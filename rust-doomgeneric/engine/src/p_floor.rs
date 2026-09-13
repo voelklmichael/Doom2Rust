@@ -228,8 +228,8 @@ pub unsafe fn EV_DoFloor(
             PU_LEVSPEC as i32,
             ::core::ptr::null_mut::<::core::ffi::c_void>(),
         ) as *mut floormove_t;
-        P_AddThinker(state, &raw mut (*floor).thinker);
-        (*sec).specialdata = Some(SectorSpecial::Floor(floor));
+        let floor_id = P_AddThinker(state, &raw mut (*floor).thinker);
+        (*sec).specialdata = Some(SectorSpecial::Floor(floor_id));
         (*floor).thinker.function = ThinkerFn::Floor(T_MoveFloor);
         (*floor).type_0 = floortype;
         (*floor).crush = false;
@@ -426,8 +426,8 @@ pub unsafe fn EV_BuildStairs(
             PU_LEVSPEC as i32,
             ::core::ptr::null_mut::<::core::ffi::c_void>(),
         ) as *mut floormove_t;
-        P_AddThinker(state, &raw mut (*floor).thinker);
-        (*sec).specialdata = Some(SectorSpecial::Floor(floor));
+        let floor_id = P_AddThinker(state, &raw mut (*floor).thinker);
+        (*sec).specialdata = Some(SectorSpecial::Floor(floor_id));
         (*floor).thinker.function = ThinkerFn::Floor(T_MoveFloor);
         (*floor).direction = 1 as i32;
         (*floor).sector = SectorId(secnum as u32);
@@ -468,8 +468,8 @@ pub unsafe fn EV_BuildStairs(
                                     PU_LEVSPEC as i32,
                                     ::core::ptr::null_mut::<::core::ffi::c_void>(),
                                 ) as *mut floormove_t;
-                                P_AddThinker(state, &raw mut (*floor).thinker);
-                                (*sec).specialdata = Some(SectorSpecial::Floor(floor));
+                                let floor_id = P_AddThinker(state, &raw mut (*floor).thinker);
+                                (*sec).specialdata = Some(SectorSpecial::Floor(floor_id));
                                 (*floor).thinker.function = ThinkerFn::Floor(T_MoveFloor);
                                 (*floor).direction = 1 as i32;
                                 (*floor).sector = SectorId(secnum as u32);

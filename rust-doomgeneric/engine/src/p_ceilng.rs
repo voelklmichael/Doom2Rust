@@ -187,8 +187,8 @@ pub unsafe fn EV_DoCeiling(
             PU_LEVSPEC as i32,
             ::core::ptr::null_mut::<::core::ffi::c_void>(),
         ) as *mut ceiling_t;
-        P_AddThinker(state, &raw mut (*ceiling).thinker);
-        (*sec).specialdata = Some(SectorSpecial::Ceiling(ceiling));
+        let ceiling_id = P_AddThinker(state, &raw mut (*ceiling).thinker);
+        (*sec).specialdata = Some(SectorSpecial::Ceiling(ceiling_id));
         (*ceiling).thinker.function = ThinkerFn::Ceiling(T_MoveCeiling);
         (*ceiling).sector = SectorId(secnum as u32);
         (*ceiling).crush = false;

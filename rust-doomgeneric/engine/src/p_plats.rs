@@ -159,10 +159,10 @@ pub unsafe fn EV_DoPlat(
             PU_LEVSPEC as i32,
             ::core::ptr::null_mut::<::core::ffi::c_void>(),
         ) as *mut plat_t;
-        P_AddThinker(state, &raw mut (*plat).thinker);
+        let plat_id = P_AddThinker(state, &raw mut (*plat).thinker);
         (*plat).type_0 = type_0;
         (*plat).sector = SectorId(secnum as u32);
-        (*sec).specialdata = Some(SectorSpecial::Plat(plat));
+        (*sec).specialdata = Some(SectorSpecial::Plat(plat_id));
         (*plat).thinker.function = ThinkerFn::Plat(T_PlatRaise);
         (*plat).crush = false;
         (*plat).tag = linev.tag as i32;

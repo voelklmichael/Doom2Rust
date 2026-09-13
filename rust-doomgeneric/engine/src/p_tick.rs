@@ -65,7 +65,7 @@ pub fn P_InitThinkers(state: &mut GameState) {
     state.p_tick.tail = None;
 }
 
-pub unsafe fn P_AddThinker(state: &mut GameState, mut thinker: *mut thinker_t) {
+pub unsafe fn P_AddThinker(state: &mut GameState, mut thinker: *mut thinker_t) -> ThinkerId {
     let id = if let Some(index) = state.p_tick.free_list.pop() {
         state.p_tick.nodes[index as usize] = ThinkerNode {
             prev: None,
@@ -89,6 +89,7 @@ pub unsafe fn P_AddThinker(state: &mut GameState, mut thinker: *mut thinker_t) {
         state.p_tick.head = Some(id);
     }
     state.p_tick.tail = Some(id);
+    id
 }
 
 pub unsafe fn P_RemoveThinker(mut thinker: *mut thinker_t) {

@@ -32,6 +32,7 @@ use crate::src::p_setup::{LineId, SectorId, SubsectorId, VertexId};
 use crate::src::p_spec::{ceiling_t, floormove_t, plat_t};
 use crate::src::p_tick::P_AddThinker;
 use crate::src::p_tick::P_RemoveThinker;
+use crate::src::p_tick::ThinkerId;
 use crate::src::p_user::VIEWHEIGHT;
 use crate::src::r_main::R_PointInSubsector;
 use crate::src::r_main::R_PointToAngle2;
@@ -74,10 +75,10 @@ pub enum ThinkerFn {
 }
 #[derive(Copy, Clone)]
 pub enum SectorSpecial {
-    Door(*mut vldoor_t),
-    Ceiling(*mut ceiling_t),
-    Floor(*mut floormove_t),
-    Plat(*mut plat_t),
+    Door(ThinkerId),
+    Ceiling(ThinkerId),
+    Floor(ThinkerId),
+    Plat(ThinkerId),
 }
 #[derive(Copy, Clone)]
 #[repr(C)]
