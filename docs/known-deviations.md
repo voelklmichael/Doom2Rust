@@ -167,6 +167,50 @@ end state for the common case (something ends up set to `-1`), but reached throu
 one consistent, type-checked path instead of two different ones depending on
 whether the coincidental pre-check happened to trip first.
 
+## `z_zone.rs`: the zone allocator no longer purges `PU_CACHE` blocks under memory pressure (2026-09-13)
+
+**What changed**: Doom's zone allocator (`Z_Malloc`/`Z_Free`/`Z_FreeTags`/`Z_ChangeTag`)
+managed one fixed-size arena (`memzone_t`, ~600KB by default, `-mb` to resize) as a
+single hand-rolled coalescing free-list: every allocation lived inside that one block,
+addressed via manual pointer arithmetic and an intrusive `memblock_s.next/prev` chain.
+Critically, `Z_Malloc` **actively evicted** other allocations when it couldn't find enough
+contiguous free space: it walked the free list looking for any block tagged
+`PU_CACHE`/`>= PU_PURGELEVEL` and force-freed it (via `Z_Free`, which also null'd out that
+block's owner through the `user: *mut *mut c_void` back-pointer) to make room. This is how
+vanilla Doom kept its WAD lump cache (`lumpinfo_s.cache`, populated by
+`W_CacheLumpNum`) bounded on 90s-era hardware — texture/sprite/sound data silently got
+evicted and transparently reloaded from the WAD file the next time it was needed.
+
+The allocator now uses `std::alloc::{alloc, dealloc}` for each allocation individually
+(still with a small header — id/tag/user/`Layout` — placed immediately before the
+returned pointer, same "hidden header" trick as before, just no longer threaded into one
+shared arena), plus a `Vec<*mut BlockHeader>` registry used only for `Z_FreeTags`'
+bulk-free-by-tag-range operation (called once per level load, to free the previous
+level's thinkers/movers in one shot) and a basic heap sanity check. Every external
+function signature is unchanged — all ~50 `Z_Malloc`/`Z_Free` call sites across the
+codebase needed no changes at all.
+
+**Why**: the fixed-size arena and its eviction dance exist purely to survive an
+artificially small memory budget that has no reason to exist in a modern process — the
+game's total dynamic allocation across a level is a tiny fraction of what a contemporary
+machine has to spare. `std::alloc` is fast, well-tested, and doesn't fragment the way a
+bump-and-coalesce free list does under Doom's allocation pattern (many small
+same-size mover/mobj structs coming and going).
+
+**What was given up**: `Z_Malloc` no longer tries to evict anything — if the system
+allocator itself returns null (genuine OOM), it calls `I_Error` immediately instead of
+first searching for something purgeable to reclaim. In practice this means WAD lumps
+cached via `W_CacheLumpNum` are never silently evicted and reloaded once loaded, and any
+existing `Z_ChangeTag2(ptr, PU_CACHE, ...)` calls (`W_ReleaseLumpNum`, `r_data.rs`'s patch
+composite step) still record `PU_CACHE` as a tag on the block's header, but tagging
+something `PU_CACHE` is now inert — it changes no observable behavior, since nothing ever
+scans for purgeable blocks anymore. Also removed as dead code in the same phase (all
+had zero callers): `Z_ClearZone`, `Z_DumpHeap`, `Z_FileDumpHeap`, `Z_FreeMemory`,
+`Z_ZoneSize`, and the `memzone_t`/`memblock_s` structs themselves. `I_ZoneBase`,
+`AutoAllocMemory`, and the `-mb` command-line option in `i_system.rs` are now vestigial
+(nothing calls `I_ZoneBase` anymore) but were left in place rather than bundled into this
+phase's diff.
+
 ## Known bug (dormant): `snd_musiccmd`/`chatmacro*` config bindings can corrupt their own length field
 
 **What's wrong**: `i_sound.rs`'s `ISoundState.snd_musiccmd` field is typed
