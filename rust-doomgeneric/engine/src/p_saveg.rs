@@ -24,8 +24,8 @@ use crate::src::p_mobj::{
     line_t, mapthing_t, sector_t, thinker_t, SectorSpecial, ThinkerFn,
 };
 use crate::src::p_mobj::{mobj_t, pspdef_t};
-use crate::src::p_plats::plat_e;
-use crate::src::p_plats::plattype_e;
+use crate::src::p_plats::PlatE;
+use crate::src::p_plats::PlattypeE;
 use crate::src::p_plats::P_AddActivePlat;
 use crate::src::p_setup::SectorId;
 use crate::src::p_setup::SideId;
@@ -601,6 +601,25 @@ unsafe fn saveg_write_floormove_t(state: &mut GameState, mut str: *mut floormove
     saveg_write32(state, (*str).floordestheight as i32);
     saveg_write32(state, (*str).speed as i32);
 }
+fn saveg_read_plat_e(state: &mut GameState) -> PlatE {
+    match saveg_read32(state) {
+        0 => PlatE::up,
+        1 => PlatE::down,
+        2 => PlatE::waiting,
+        3 => PlatE::in_stasis,
+        n => panic!("P_UnArchiveSpecials: invalid plat status {n} in savegame"),
+    }
+}
+fn saveg_read_plattype_e(state: &mut GameState) -> PlattypeE {
+    match saveg_read32(state) {
+        0 => PlattypeE::perpetualRaise,
+        1 => PlattypeE::downWaitUpStay,
+        2 => PlattypeE::raiseAndChange,
+        3 => PlattypeE::raiseToNearestAndChange,
+        4 => PlattypeE::blazeDWUS,
+        n => panic!("P_UnArchiveSpecials: invalid plat type {n} in savegame"),
+    }
+}
 unsafe fn saveg_read_plat_t(state: &mut GameState, mut str: *mut plat_t) {
     let mut sector: i32 = 0;
     saveg_read_thinker_t(state, &raw mut (*str).thinker);
@@ -611,11 +630,11 @@ unsafe fn saveg_read_plat_t(state: &mut GameState, mut str: *mut plat_t) {
     (*str).high = saveg_read32(state) as fixed_t;
     (*str).wait = saveg_read32(state);
     (*str).count = saveg_read32(state);
-    (*str).status = saveg_read32(state) as plat_e;
-    (*str).oldstatus = saveg_read32(state) as plat_e;
+    (*str).status = saveg_read_plat_e(state);
+    (*str).oldstatus = saveg_read_plat_e(state);
     (*str).crush = saveg_read32(state) != 0;
     (*str).tag = saveg_read32(state);
-    (*str).type_0 = saveg_read32(state) as plattype_e;
+    (*str).type_0 = saveg_read_plattype_e(state);
 }
 unsafe fn saveg_write_plat_t(state: &mut GameState, mut str: *mut plat_t) {
     saveg_write_thinker_t(state, &raw mut (*str).thinker);

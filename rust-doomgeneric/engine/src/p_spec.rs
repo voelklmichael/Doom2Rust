@@ -41,12 +41,10 @@ use crate::src::p_mobj::mobj_t;
 use crate::src::p_mobj::SectorSpecial;
 use crate::src::p_mobj::ThinkerFn;
 use crate::src::p_mobj::{line_t, sector_t, thinker_t};
-use crate::src::p_plats::plat_e;
 use crate::src::p_plats::EV_DoPlat;
 use crate::src::p_plats::EV_StopPlat;
-use crate::src::p_plats::{
-    blazeDWUS, downWaitUpStay, perpetualRaise, plattype_e, raiseToNearestAndChange,
-};
+use crate::src::p_plats::PlatE;
+use crate::src::p_plats::PlattypeE;
 use crate::src::p_setup::LineId;
 use crate::src::p_setup::SectorId;
 use crate::src::p_setup::SideId;
@@ -149,11 +147,11 @@ pub struct plat_t {
     pub high: fixed_t,
     pub wait: i32,
     pub count: i32,
-    pub status: plat_e,
-    pub oldstatus: plat_e,
+    pub status: PlatE,
+    pub oldstatus: PlatE,
     pub crush: bool,
     pub tag: i32,
-    pub type_0: plattype_e,
+    pub type_0: PlattypeE,
 }
 #[derive(Copy, Clone)]
 #[repr(C)]
@@ -630,7 +628,7 @@ pub unsafe fn P_CrossSpecialLine(
             (*line).special = 0 as i16;
         }
         10 => {
-            EV_DoPlat(state, line, downWaitUpStay, 0 as i32);
+            EV_DoPlat(state, line, PlattypeE::downWaitUpStay, 0 as i32);
             (*line).special = 0 as i16;
         }
         12 => {
@@ -654,7 +652,7 @@ pub unsafe fn P_CrossSpecialLine(
             (*line).special = 0 as i16;
         }
         22 => {
-            EV_DoPlat(state, line, raiseToNearestAndChange, 0 as i32);
+            EV_DoPlat(state, line, PlattypeE::raiseToNearestAndChange, 0 as i32);
             (*line).special = 0 as i16;
         }
         25 => {
@@ -698,7 +696,7 @@ pub unsafe fn P_CrossSpecialLine(
             G_ExitLevel(state);
         }
         53 => {
-            EV_DoPlat(state, line, perpetualRaise, 0 as i32);
+            EV_DoPlat(state, line, PlattypeE::perpetualRaise, 0 as i32);
             (*line).special = 0 as i16;
         }
         54 => {
@@ -746,7 +744,7 @@ pub unsafe fn P_CrossSpecialLine(
             (*line).special = 0 as i16;
         }
         121 => {
-            EV_DoPlat(state, line, blazeDWUS, 0 as i32);
+            EV_DoPlat(state, line, PlattypeE::blazeDWUS, 0 as i32);
             (*line).special = 0 as i16;
         }
         124 => {
@@ -806,10 +804,10 @@ pub unsafe fn P_CrossSpecialLine(
             EV_DoDoor(state, line, vld_open);
         }
         87 => {
-            EV_DoPlat(state, line, perpetualRaise, 0 as i32);
+            EV_DoPlat(state, line, PlattypeE::perpetualRaise, 0 as i32);
         }
         88 => {
-            EV_DoPlat(state, line, downWaitUpStay, 0 as i32);
+            EV_DoPlat(state, line, PlattypeE::downWaitUpStay, 0 as i32);
         }
         89 => {
             EV_StopPlat(&mut state.p_plats, line);
@@ -830,7 +828,7 @@ pub unsafe fn P_CrossSpecialLine(
             EV_DoFloor(state, line, raiseFloorCrush);
         }
         95 => {
-            EV_DoPlat(state, line, raiseToNearestAndChange, 0 as i32);
+            EV_DoPlat(state, line, PlattypeE::raiseToNearestAndChange, 0 as i32);
         }
         96 => {
             EV_DoFloor(state, line, raiseToTexture);
@@ -851,7 +849,7 @@ pub unsafe fn P_CrossSpecialLine(
             EV_DoDoor(state, line, vld_blazeClose);
         }
         120 => {
-            EV_DoPlat(state, line, blazeDWUS, 0 as i32);
+            EV_DoPlat(state, line, PlattypeE::blazeDWUS, 0 as i32);
         }
         126 => {
             if (*thing).player.is_none() {
@@ -895,7 +893,7 @@ pub unsafe fn P_ShootSpecialLine(
             P_ChangeSwitchTexture(state, line, 1 as i32);
         }
         47 => {
-            EV_DoPlat(state, line, raiseToNearestAndChange, 0 as i32);
+            EV_DoPlat(state, line, PlattypeE::raiseToNearestAndChange, 0 as i32);
             P_ChangeSwitchTexture(state, line, 0 as i32);
         }
         _ => {}

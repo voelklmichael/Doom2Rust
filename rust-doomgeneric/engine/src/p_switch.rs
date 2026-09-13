@@ -25,7 +25,7 @@ use crate::src::p_mobj::line_t;
 use crate::src::p_setup::LineId;
 use crate::src::p_setup::SectorId;
 use crate::src::p_plats::EV_DoPlat;
-use crate::src::p_plats::{blazeDWUS, downWaitUpStay, raiseAndChange, raiseToNearestAndChange};
+use crate::src::p_plats::PlattypeE;
 use crate::src::p_spec::button_t;
 use crate::src::p_spec::EV_DoDonut;
 use crate::src::p_spec::ML_SECRET;
@@ -521,13 +521,13 @@ pub unsafe fn P_UseSpecialLine(
             current_block_108 = 16981061190961355901;
         }
         14 => {
-            if EV_DoPlat(state, line, raiseAndChange, 32 as i32) != 0 {
+            if EV_DoPlat(state, line, PlattypeE::raiseAndChange, 32 as i32) != 0 {
                 P_ChangeSwitchTexture(state, line, 0 as i32);
             }
             current_block_108 = 16981061190961355901;
         }
         15 => {
-            if EV_DoPlat(state, line, raiseAndChange, 24 as i32) != 0 {
+            if EV_DoPlat(state, line, PlattypeE::raiseAndChange, 24 as i32) != 0 {
                 P_ChangeSwitchTexture(state, line, 0 as i32);
             }
             current_block_108 = 16981061190961355901;
@@ -539,13 +539,13 @@ pub unsafe fn P_UseSpecialLine(
             current_block_108 = 16981061190961355901;
         }
         20 => {
-            if EV_DoPlat(state, line, raiseToNearestAndChange, 0 as i32) != 0 {
+            if EV_DoPlat(state, line, PlattypeE::raiseToNearestAndChange, 0 as i32) != 0 {
                 P_ChangeSwitchTexture(state, line, 0 as i32);
             }
             current_block_108 = 16981061190961355901;
         }
         21 => {
-            if EV_DoPlat(state, line, downWaitUpStay, 0 as i32) != 0 {
+            if EV_DoPlat(state, line, PlattypeE::downWaitUpStay, 0 as i32) != 0 {
                 P_ChangeSwitchTexture(state, line, 0 as i32);
             }
             current_block_108 = 16981061190961355901;
@@ -634,7 +634,7 @@ pub unsafe fn P_UseSpecialLine(
             current_block_108 = 16981061190961355901;
         }
         122 => {
-            if EV_DoPlat(state, line, blazeDWUS, 0 as i32) != 0 {
+            if EV_DoPlat(state, line, PlattypeE::blazeDWUS, 0 as i32) != 0 {
                 P_ChangeSwitchTexture(state, line, 0 as i32);
             }
             current_block_108 = 16981061190961355901;
@@ -694,7 +694,7 @@ pub unsafe fn P_UseSpecialLine(
             current_block_108 = 16981061190961355901;
         }
         62 => {
-            if EV_DoPlat(state, line, downWaitUpStay, 1 as i32) != 0 {
+            if EV_DoPlat(state, line, PlattypeE::downWaitUpStay, 1 as i32) != 0 {
                 P_ChangeSwitchTexture(state, line, 1 as i32);
             }
             current_block_108 = 16981061190961355901;
@@ -712,13 +712,13 @@ pub unsafe fn P_UseSpecialLine(
             current_block_108 = 16981061190961355901;
         }
         66 => {
-            if EV_DoPlat(state, line, raiseAndChange, 24 as i32) != 0 {
+            if EV_DoPlat(state, line, PlattypeE::raiseAndChange, 24 as i32) != 0 {
                 P_ChangeSwitchTexture(state, line, 1 as i32);
             }
             current_block_108 = 16981061190961355901;
         }
         67 => {
-            if EV_DoPlat(state, line, raiseAndChange, 32 as i32) != 0 {
+            if EV_DoPlat(state, line, PlattypeE::raiseAndChange, 32 as i32) != 0 {
                 P_ChangeSwitchTexture(state, line, 1 as i32);
             }
             current_block_108 = 16981061190961355901;
@@ -730,7 +730,7 @@ pub unsafe fn P_UseSpecialLine(
             current_block_108 = 16981061190961355901;
         }
         68 => {
-            if EV_DoPlat(state, line, raiseToNearestAndChange, 0 as i32) != 0 {
+            if EV_DoPlat(state, line, PlattypeE::raiseToNearestAndChange, 0 as i32) != 0 {
                 P_ChangeSwitchTexture(state, line, 1 as i32);
             }
             current_block_108 = 16981061190961355901;
@@ -766,7 +766,7 @@ pub unsafe fn P_UseSpecialLine(
             current_block_108 = 16981061190961355901;
         }
         123 => {
-            if EV_DoPlat(state, line, blazeDWUS, 0 as i32) != 0 {
+            if EV_DoPlat(state, line, PlattypeE::blazeDWUS, 0 as i32) != 0 {
                 P_ChangeSwitchTexture(state, line, 1 as i32);
             }
             current_block_108 = 16981061190961355901;
