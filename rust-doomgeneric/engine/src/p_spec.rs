@@ -77,7 +77,7 @@ use crate::src::p_switch::MAXBUTTONS;
 
 pub struct PSpecState {
     pub anims: [anim_t; 32],
-    pub lastanim: *mut anim_t,
+    pub lastanim: usize,
     pub levelTimer: bool,
     pub levelTimeCount: i32,
     pub numlinespecials: i16,
@@ -97,7 +97,7 @@ impl PSpecState {
                 numpics: 0,
                 speed: 0,
             }; 32],
-            lastanim: ::core::ptr::null::<anim_t>() as *mut anim_t,
+            lastanim: 0,
             levelTimer: false,
             levelTimeCount: 0,
             numlinespecials: 0,
@@ -324,41 +324,44 @@ pub static animdefs: [animdef_t; 23] = [
 pub const MAXLINEANIMS: i32 = 64;
 pub unsafe fn P_InitPicAnims(state: &mut GameState) {
     let mut i: i32 = 0;
-    state.p_spec.lastanim = &raw mut state.p_spec.anims as *mut anim_t;
+    state.p_spec.lastanim = 0;
     let mut current_block_13: u64;
     i = 0 as i32;
     while animdefs[i as usize].istexture != -(1 as i32) {
         let startname = animdefs[i as usize].startname.as_str();
         let endname = animdefs[i as usize].endname.as_str();
+        let anim = &mut state.p_spec.anims[state.p_spec.lastanim];
         if animdefs[i as usize].istexture != 0 {
             if R_CheckTextureNumForName(&mut state.r_data, &startname) == -(1 as i32) {
                 current_block_13 = 12237857397564741460;
             } else {
-                (*state.p_spec.lastanim).picnum = R_TextureNumForName(&mut state.r_data, &endname);
-                (*state.p_spec.lastanim).basepic =
-                    R_TextureNumForName(&mut state.r_data, &startname);
+                anim.picnum = R_TextureNumForName(&mut state.r_data, &endname);
+                anim.basepic = R_TextureNumForName(&mut state.r_data, &startname);
                 current_block_13 = 11650488183268122163;
             }
         } else if W_CheckNumForName(&mut state.w_wad, &startname) == -(1 as i32) {
             current_block_13 = 12237857397564741460;
         } else {
-            (*state.p_spec.lastanim).picnum = R_FlatNumForName(state, &endname);
-            (*state.p_spec.lastanim).basepic = R_FlatNumForName(state, &startname);
+            let picnum = R_FlatNumForName(state, &endname);
+            let basepic = R_FlatNumForName(state, &startname);
+            let anim = &mut state.p_spec.anims[state.p_spec.lastanim];
+            anim.picnum = picnum;
+            anim.basepic = basepic;
             current_block_13 = 11650488183268122163;
         }
         match current_block_13 {
             11650488183268122163 => {
-                (*state.p_spec.lastanim).istexture = animdefs[i as usize].istexture != 0;
-                (*state.p_spec.lastanim).numpics =
-                    (*state.p_spec.lastanim).picnum - (*state.p_spec.lastanim).basepic + 1 as i32;
-                if (*state.p_spec.lastanim).numpics < 2 as i32 {
+                let anim = &mut state.p_spec.anims[state.p_spec.lastanim];
+                anim.istexture = animdefs[i as usize].istexture != 0;
+                anim.numpics = anim.picnum - anim.basepic + 1 as i32;
+                if anim.numpics < 2 as i32 {
                     I_Error(&format!(
                         "P_InitPicAnims: bad cycle from {} to {}",
                         startname, endname,
                     ));
                 }
-                (*state.p_spec.lastanim).speed = animdefs[i as usize].speed;
-                state.p_spec.lastanim = state.p_spec.lastanim.offset(1);
+                anim.speed = animdefs[i as usize].speed;
+                state.p_spec.lastanim += 1;
             }
             _ => {}
         }
@@ -981,7 +984,6 @@ pub unsafe fn P_PlayerInSpecialSector(state: &mut GameState, mut player: *mut pl
     };
 }
 pub unsafe fn P_UpdateSpecials(state: &mut GameState) {
-    let mut anim: *mut anim_t = ::core::ptr::null_mut::<anim_t>();
     let mut pic: i32 = 0;
     let mut i: i32 = 0;
     let mut line: LineId;
@@ -991,19 +993,20 @@ pub unsafe fn P_UpdateSpecials(state: &mut GameState) {
             G_ExitLevel(state);
         }
     }
-    anim = &raw mut state.p_spec.anims as *mut anim_t;
-    while anim < state.p_spec.lastanim {
-        i = (*anim).basepic;
-        while i < (*anim).basepic + (*anim).numpics {
-            pic = (*anim).basepic + (state.p_tick.leveltime / (*anim).speed + i) % (*anim).numpics;
-            if (*anim).istexture {
+    let mut anim_idx: usize = 0;
+    while anim_idx < state.p_spec.lastanim {
+        let anim = &state.p_spec.anims[anim_idx];
+        i = anim.basepic;
+        while i < anim.basepic + anim.numpics {
+            pic = anim.basepic + (state.p_tick.leveltime / anim.speed + i) % anim.numpics;
+            if anim.istexture {
                 state.r_data.texturetranslation[i as usize] = pic;
             } else {
                 state.r_data.flattranslation[i as usize] = pic;
             }
             i += 1;
         }
-        anim = anim.offset(1);
+        anim_idx += 1;
     }
     i = 0 as i32;
     while i < state.p_spec.numlinespecials as i32 {

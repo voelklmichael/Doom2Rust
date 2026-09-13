@@ -121,7 +121,7 @@ pub struct PSetupState {
     pub blocklinks: Vec<Option<MobjId>>,
     pub rejectmatrix: Vec<byte>,
     pub deathmatchstarts: [mapthing_t; 10],
-    pub deathmatch_p: *mut mapthing_t,
+    pub deathmatch_p: usize,
     pub playerstarts: [mapthing_t; 4],
     pub null_sector_id: Option<SectorId>,
     pub junk_line_id: Option<LineId>,
@@ -160,7 +160,7 @@ impl PSetupState {
                 type_0: 0,
                 options: 0,
             }; 10],
-            deathmatch_p: ::core::ptr::null::<mapthing_t>() as *mut mapthing_t,
+            deathmatch_p: 0,
             playerstarts: [mapthing_t {
                 x: 0,
                 y: 0,
@@ -930,7 +930,7 @@ pub unsafe fn P_SetupLevel(state: &mut GameState, mut episode: i32, mut map: i32
     P_GroupLines(state);
     P_LoadReject(state, lumpnum + ML_REJECT as i32);
     state.g_game.bodyqueslot = 0 as i32;
-    state.p_setup.deathmatch_p = &raw mut state.p_setup.deathmatchstarts as *mut mapthing_t;
+    state.p_setup.deathmatch_p = 0;
     P_LoadThings(state, lumpnum + ML_THINGS as i32);
     if state.g_game.deathmatch != 0 {
         i = 0 as i32;

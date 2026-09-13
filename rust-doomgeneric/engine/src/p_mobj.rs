@@ -3441,16 +3441,14 @@ pub unsafe fn P_SpawnMapThing(state: &mut GameState, mut mthing: *mut mapthing_t
     let mut y: fixed_t = 0;
     let mut z: fixed_t = 0;
     if (*mthing).type_0 as i32 == 11 as i32 {
-        if state.p_setup.deathmatch_p
-            < (&raw mut state.p_setup.deathmatchstarts as *mut mapthing_t)
-                .offset(10 as i32 as isize) as *mut mapthing_t
-        {
+        if state.p_setup.deathmatch_p < 10 {
+            let idx = state.p_setup.deathmatch_p;
             memcpy(
-                state.p_setup.deathmatch_p as *mut ::core::ffi::c_void,
+                &raw mut state.p_setup.deathmatchstarts[idx] as *mut ::core::ffi::c_void,
                 mthing as *const ::core::ffi::c_void,
                 ::core::mem::size_of::<mapthing_t>() as size_t,
             );
-            state.p_setup.deathmatch_p = state.p_setup.deathmatch_p.offset(1);
+            state.p_setup.deathmatch_p += 1;
         }
         return;
     }
