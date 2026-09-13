@@ -8,7 +8,8 @@ use crate::src::p_floor::T_MovePlane;
 use crate::src::p_floor::ResultE;
 use crate::src::p_mobj::SectorSpecial;
 use crate::src::p_mobj::ThinkerFn;
-use crate::src::p_mobj::{line_t, sector_t};
+use crate::src::p_mobj::sector_t;
+use crate::src::p_setup::LineId;
 use crate::src::p_setup::SectorId;
 use crate::src::p_spec::plat_t;
 use crate::src::p_spec::P_FindHighestFloorSurrounding;
@@ -144,7 +145,7 @@ pub unsafe fn T_PlatRaise(state: &mut GameState, mut plat: *mut plat_t) {
 }
 pub unsafe fn EV_DoPlat(
     state: &mut GameState,
-    mut line: *mut line_t,
+    mut line: LineId,
     mut type_0: PlattypeE,
     mut amount: i32,
 ) -> i32 {
@@ -152,11 +153,12 @@ pub unsafe fn EV_DoPlat(
     let mut secnum: i32 = 0;
     let mut rtn: i32 = 0;
     let mut sec: *mut sector_t = ::core::ptr::null_mut::<sector_t>();
+    let linev = state.p_setup.line(line);
     secnum = -(1 as i32);
     rtn = 0 as i32;
     match type_0 {
         PlattypeE::perpetualRaise => {
-            P_ActivateInStasis(&mut state.p_plats, (*line).tag as i32);
+            P_ActivateInStasis(&mut state.p_plats, linev.tag as i32);
         }
         _ => {}
     }
@@ -182,12 +184,12 @@ pub unsafe fn EV_DoPlat(
         (*sec).specialdata = Some(SectorSpecial::Plat(plat));
         (*plat).thinker.function = ThinkerFn::Plat(T_PlatRaise);
         (*plat).crush = false;
-        (*plat).tag = (*line).tag as i32;
+        (*plat).tag = linev.tag as i32;
         match type_0 {
             PlattypeE::raiseToNearestAndChange => {
                 (*plat).speed = (PLATSPEED / 2 as i32) as fixed_t;
                 let neighbor_sector_id =
-                    state.p_setup.sides[(*line).sidenum[0 as i32 as usize] as usize].sector;
+                    state.p_setup.sides[linev.sidenum[0 as i32 as usize] as usize].sector;
                 (*sec).floorpic = (*state.p_setup.sector_mut(neighbor_sector_id)).floorpic;
                 (*plat).high = P_FindNextHighestFloor(state, sec, (*sec).floorheight as i32);
                 (*plat).wait = 0 as i32;
@@ -202,7 +204,7 @@ pub unsafe fn EV_DoPlat(
             PlattypeE::raiseAndChange => {
                 (*plat).speed = (PLATSPEED / 2 as i32) as fixed_t;
                 let neighbor_sector_id =
-                    state.p_setup.sides[(*line).sidenum[0 as i32 as usize] as usize].sector;
+                    state.p_setup.sides[linev.sidenum[0 as i32 as usize] as usize].sector;
                 (*sec).floorpic = (*state.p_setup.sector_mut(neighbor_sector_id)).floorpic;
                 (*plat).high = ((*sec).floorheight as i32 + amount * FRACUNIT) as fixed_t;
                 (*plat).wait = 0 as i32;
@@ -284,13 +286,13 @@ pub unsafe fn P_ActivateInStasis(state: &mut PPlatsState, mut tag: i32) {
         i += 1;
     }
 }
-pub unsafe fn EV_StopPlat(state: &mut PPlatsState, mut line: *mut line_t) {
+pub unsafe fn EV_StopPlat(state: &mut PPlatsState, mut tag: i32) {
     let mut j: i32 = 0;
     j = 0 as i32;
     while j < MAXPLATS {
         if !state.activeplats[j as usize].is_null()
             && (*state.activeplats[j as usize]).status != PlatE::in_stasis
-            && (*state.activeplats[j as usize]).tag == (*line).tag as i32
+            && (*state.activeplats[j as usize]).tag == tag
         {
             (*state.activeplats[j as usize]).oldstatus = (*state.activeplats[j as usize]).status;
             (*state.activeplats[j as usize]).status = PlatE::in_stasis;

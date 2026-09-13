@@ -10,7 +10,8 @@ use crate::src::p_inter::CardType;
 use crate::src::p_mobj::mobj_t;
 use crate::src::p_mobj::SectorSpecial;
 use crate::src::p_mobj::ThinkerFn;
-use crate::src::p_mobj::{line_t, sector_t, thinker_t};
+use crate::src::p_mobj::{sector_t, thinker_t};
+use crate::src::p_setup::LineId;
 use crate::src::p_setup::SectorId;
 use crate::src::p_spec::P_FindLowestCeilingSurrounding;
 use crate::src::p_spec::P_FindSectorFromLineTag;
@@ -171,7 +172,7 @@ pub unsafe fn T_VerticalDoor(state: &mut GameState, mut door: *mut vldoor_t) {
 }
 pub unsafe fn EV_DoLockedDoor(
     state: &mut GameState,
-    mut line: *mut line_t,
+    mut line: LineId,
     mut type_0: VldoorE,
     mut thing: *mut mobj_t,
 ) -> i32 {
@@ -181,7 +182,7 @@ pub unsafe fn EV_DoLockedDoor(
         return 0 as i32;
     }
     p = state.g_game.player_mut(thing_player.unwrap());
-    match (*line).special as i32 {
+    match state.p_setup.line(line).special as i32 {
         99 | 133 => {
             if p.is_null() {
                 return 0 as i32;
@@ -219,7 +220,7 @@ pub unsafe fn EV_DoLockedDoor(
     }
     return EV_DoDoor(state, line, type_0);
 }
-pub unsafe fn EV_DoDoor(state: &mut GameState, mut line: *mut line_t, mut type_0: VldoorE) -> i32 {
+pub unsafe fn EV_DoDoor(state: &mut GameState, mut line: LineId, mut type_0: VldoorE) -> i32 {
     let mut secnum: i32 = 0;
     let mut rtn: i32 = 0;
     let mut sec: *mut sector_t = ::core::ptr::null_mut::<sector_t>();
@@ -312,7 +313,7 @@ pub unsafe fn EV_DoDoor(state: &mut GameState, mut line: *mut line_t, mut type_0
 }
 pub unsafe fn EV_VerticalDoor(
     state: &mut GameState,
-    mut line: *mut line_t,
+    mut line: LineId,
     mut thing: *mut mobj_t,
 ) {
     let mut player: *mut player_t = ::core::ptr::null_mut::<player_t>();
@@ -324,7 +325,8 @@ pub unsafe fn EV_VerticalDoor(
         Some(id) => state.g_game.player_mut(id),
         None => ::core::ptr::null_mut::<player_t>(),
     };
-    match (*line).special as i32 {
+    let linev = state.p_setup.line(line);
+    match linev.special as i32 {
         26 | 32 => {
             if player.is_null() {
                 return;
@@ -364,10 +366,10 @@ pub unsafe fn EV_VerticalDoor(
         _ => {}
     }
     let door_sector_id =
-        state.p_setup.sides[(*line).sidenum[(side ^ 1 as i32) as usize] as usize].sector;
+        state.p_setup.sides[linev.sidenum[(side ^ 1 as i32) as usize] as usize].sector;
     sec = state.p_setup.sector_mut(door_sector_id);
     if let Some(special) = (*sec).specialdata {
-        match (*line).special as i32 {
+        match linev.special as i32 {
             1 | 26 | 27 | 28 | 117 => {
                 match special {
                     SectorSpecial::Door(d) => {
@@ -407,7 +409,7 @@ pub unsafe fn EV_VerticalDoor(
             _ => {}
         }
     }
-    match (*line).special as i32 {
+    match linev.special as i32 {
         117 | 118 => {
             S_StartSound(
                 state,
@@ -443,13 +445,13 @@ pub unsafe fn EV_VerticalDoor(
     (*door).direction = 1 as i32;
     (*door).speed = (FRACUNIT * 2 as i32) as fixed_t;
     (*door).topwait = VDOORWAIT;
-    match (*line).special as i32 {
+    match linev.special as i32 {
         1 | 26 | 27 | 28 => {
             (*door).type_0 = VldoorE::vld_normal;
         }
         31 | 32 | 33 | 34 => {
             (*door).type_0 = VldoorE::vld_open;
-            (*line).special = 0 as i16;
+            (*state.p_setup.line_mut(line)).special = 0 as i16;
         }
         117 => {
             (*door).type_0 = VldoorE::vld_blazeRaise;
@@ -457,7 +459,7 @@ pub unsafe fn EV_VerticalDoor(
         }
         118 => {
             (*door).type_0 = VldoorE::vld_blazeOpen;
-            (*line).special = 0 as i16;
+            (*state.p_setup.line_mut(line)).special = 0 as i16;
             (*door).speed = (FRACUNIT * 2 as i32 * 4 as i32) as fixed_t;
         }
         _ => {}

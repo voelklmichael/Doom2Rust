@@ -1,7 +1,8 @@
 use crate::src::game_state::GameState;
 use crate::src::m_random::P_Random;
 use crate::src::p_mobj::ThinkerFn;
-use crate::src::p_mobj::{line_t, sector_t, thinker_t};
+use crate::src::p_mobj::{sector_t, thinker_t};
+use crate::src::p_setup::LineId;
 use crate::src::p_setup::SectorId;
 use crate::src::p_spec::getNextSector;
 use crate::src::p_spec::P_FindMinSurroundingLight;
@@ -163,7 +164,7 @@ pub unsafe fn P_SpawnStrobeFlash(
         (*flash).count = 1 as i32;
     };
 }
-pub unsafe fn EV_StartLightStrobing(state: &mut GameState, mut line: *mut line_t) {
+pub unsafe fn EV_StartLightStrobing(state: &mut GameState, mut line: LineId) {
     let mut secnum: i32 = 0;
     secnum = -(1 as i32);
     loop {
@@ -178,21 +179,22 @@ pub unsafe fn EV_StartLightStrobing(state: &mut GameState, mut line: *mut line_t
         P_SpawnStrobeFlash(state, SectorId(secnum as u32), SLOWDARK, 0 as i32);
     }
 }
-pub unsafe fn EV_TurnTagLightsOff(state: &mut GameState, mut line: *mut line_t) {
+pub unsafe fn EV_TurnTagLightsOff(state: &mut GameState, mut line: LineId) {
     let mut i: i32 = 0;
     let mut j: i32 = 0;
     let mut min: i32 = 0;
     let mut sector: *mut sector_t = ::core::ptr::null_mut::<sector_t>();
     let mut tsec: *mut sector_t = ::core::ptr::null_mut::<sector_t>();
-    let mut templine: *mut line_t = ::core::ptr::null_mut::<line_t>();
+    let mut templine: LineId;
+    let line_tag = state.p_setup.line(line).tag;
     j = 0 as i32;
     while j < state.p_setup.numsectors {
         sector = state.p_setup.sector_mut(SectorId(j as u32));
-        if (*sector).tag as i32 == (*line).tag as i32 {
+        if (*sector).tag as i32 == line_tag as i32 {
             min = (*sector).lightlevel as i32;
             i = 0 as i32;
             while i < (*sector).linecount {
-                templine = *(*sector).lines.offset(i as isize) as *mut line_t;
+                templine = (*sector).lines[i as usize];
                 tsec = getNextSector(state, templine, sector);
                 if !tsec.is_null() {
                     if ((*tsec).lightlevel as i32) < min {
@@ -206,20 +208,21 @@ pub unsafe fn EV_TurnTagLightsOff(state: &mut GameState, mut line: *mut line_t) 
         j += 1;
     }
 }
-pub unsafe fn EV_LightTurnOn(state: &mut GameState, mut line: *mut line_t, mut bright: i32) {
+pub unsafe fn EV_LightTurnOn(state: &mut GameState, mut line: LineId, mut bright: i32) {
     let mut i: i32 = 0;
     let mut j: i32 = 0;
     let mut sector: *mut sector_t = ::core::ptr::null_mut::<sector_t>();
     let mut temp: *mut sector_t = ::core::ptr::null_mut::<sector_t>();
-    let mut templine: *mut line_t = ::core::ptr::null_mut::<line_t>();
+    let mut templine: LineId;
+    let line_tag = state.p_setup.line(line).tag;
     i = 0 as i32;
     while i < state.p_setup.numsectors {
         sector = state.p_setup.sector_mut(SectorId(i as u32));
-        if (*sector).tag as i32 == (*line).tag as i32 {
+        if (*sector).tag as i32 == line_tag as i32 {
             if bright == 0 {
                 j = 0 as i32;
                 while j < (*sector).linecount {
-                    templine = *(*sector).lines.offset(j as isize) as *mut line_t;
+                    templine = (*sector).lines[j as usize];
                     temp = getNextSector(state, templine, sector);
                     if !temp.is_null() {
                         if (*temp).lightlevel as i32 > bright {

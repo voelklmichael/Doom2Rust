@@ -30,9 +30,7 @@ use crate::src::p_mobj::P_SpawnMissile;
 use crate::src::p_mobj::P_SpawnMobj;
 use crate::src::p_mobj::P_SpawnPuff;
 use crate::src::p_mobj::P_SubstNullMobj;
-use crate::src::p_mobj::{
-    line_s, line_t, mobjinfo_t, sector_t, thinker_t, SlopeType,
-};
+use crate::src::p_mobj::{mobjinfo_t, sector_t, thinker_t};
 use crate::src::p_mobj::{mobj_t, pspdef_t};
 use crate::src::p_mobj::MobjType;
 use crate::src::p_mobj::ThinkerFn;
@@ -42,7 +40,6 @@ use crate::src::p_mobj::{
 };
 use crate::src::p_setup::LineId;
 use crate::src::p_setup::SectorId;
-use crate::src::p_setup::VertexId;
 use crate::src::p_sight::P_CheckSight;
 use crate::src::p_switch::P_UseSpecialLine;
 use crate::src::r_main::R_PointToAngle2;
@@ -151,7 +148,7 @@ pub unsafe fn P_RecursiveSound(
     mut soundblocks: i32,
 ) {
     let mut i: i32 = 0;
-    let mut check: *mut line_t = ::core::ptr::null_mut::<line_t>();
+    let mut check: LineId;
     let mut other: *mut sector_t = ::core::ptr::null_mut::<sector_t>();
     let sec_id = SectorId(sec.offset_from(state.p_setup.sectors.as_mut_ptr()) as i64 as u32);
     if (*sec).validcount == state.r_main.validcount
@@ -169,20 +166,21 @@ pub unsafe fn P_RecursiveSound(
     };
     i = 0 as i32;
     while i < (*sec).linecount {
-        check = *(*sec).lines.offset(i as isize) as *mut line_t;
-        if !((*check).flags as i32 & ML_TWOSIDED == 0) {
+        check = (*sec).lines[i as usize];
+        let checkv = state.p_setup.line(check);
+        if !(checkv.flags as i32 & ML_TWOSIDED == 0) {
             P_LineOpening(state, check);
             if !(state.p_maputl.openrange <= 0 as i32) {
-                let other_id = if state.p_setup.sides[(*check).sidenum[0 as i32 as usize] as usize]
+                let other_id = if state.p_setup.sides[checkv.sidenum[0 as i32 as usize] as usize]
                     .sector
                     == sec_id
                 {
-                    state.p_setup.sides[(*check).sidenum[1 as i32 as usize] as usize].sector
+                    state.p_setup.sides[checkv.sidenum[1 as i32 as usize] as usize].sector
                 } else {
-                    state.p_setup.sides[(*check).sidenum[0 as i32 as usize] as usize].sector
+                    state.p_setup.sides[checkv.sidenum[0 as i32 as usize] as usize].sector
                 };
                 other = state.p_setup.sector_mut(other_id);
-                if (*check).flags as i32 & ML_SOUNDBLOCK != 0 {
+                if checkv.flags as i32 & ML_SOUNDBLOCK != 0 {
                     if soundblocks == 0 {
                         P_RecursiveSound(state, other, 1 as i32);
                     }
@@ -330,8 +328,7 @@ pub unsafe fn P_Move(state: &mut GameState, mut actor: *mut mobj_t) -> bool {
                 break;
             }
             ld = state.p_map.spechit[state.p_map.numspechit as usize];
-            let ld_ptr = state.p_setup.line_mut(ld);
-            if P_UseSpecialLine(state, actor, ld_ptr, 0 as i32) {
+            if P_UseSpecialLine(state, actor, ld, 0 as i32) {
                 good = true;
             }
         }
@@ -516,21 +513,6 @@ pub unsafe fn A_KeenDie(state: &mut GameState, id: MobjId) {
     let mo = state.p_mobj.mobj_get(id).unwrap();
     let mut th: *mut thinker_t = ::core::ptr::null_mut::<thinker_t>();
     let mut mo2: *mut mobj_t = ::core::ptr::null_mut::<mobj_t>();
-    let mut junk: line_t = line_s {
-        v1: VertexId(0),
-        v2: VertexId(0),
-        dx: 0,
-        dy: 0,
-        flags: 0,
-        special: 0,
-        tag: 0,
-        sidenum: [0; 2],
-        bbox: [0; 4],
-        slopetype: SlopeType::ST_HORIZONTAL,
-        frontsector: None,
-        backsector: None,
-        validcount: 0,
-    };
     A_Fall(state, (*mo).id);
     let mut cursor = state.p_tick.head();
     while let Some(id) = cursor {
@@ -544,8 +526,8 @@ pub unsafe fn A_KeenDie(state: &mut GameState, id: MobjId) {
         }
         cursor = state.p_tick.next(id);
     }
-    junk.tag = 666 as i16;
-    EV_DoDoor(state, &raw mut junk, VldoorE::vld_open);
+    let junk = state.p_setup.junk_line(666 as i16);
+    EV_DoDoor(state, junk, VldoorE::vld_open);
 }
 pub unsafe fn A_Look(state: &mut GameState, id: MobjId) {
     let actor = state.p_mobj.mobj_get(id).unwrap();
@@ -1452,21 +1434,6 @@ pub unsafe fn A_BossDeath(state: &mut GameState, id: MobjId) {
     let mo = state.p_mobj.mobj_get(id).unwrap();
     let mut th: *mut thinker_t = ::core::ptr::null_mut::<thinker_t>();
     let mut mo2: *mut mobj_t = ::core::ptr::null_mut::<mobj_t>();
-    let mut junk: line_t = line_s {
-        v1: VertexId(0),
-        v2: VertexId(0),
-        dx: 0,
-        dy: 0,
-        flags: 0,
-        special: 0,
-        tag: 0,
-        sidenum: [0; 2],
-        bbox: [0; 4],
-        slopetype: SlopeType::ST_HORIZONTAL,
-        frontsector: None,
-        backsector: None,
-        validcount: 0,
-    };
     let mut i: i32 = 0;
     if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 {
         if state.g_game.gamemap != 7 as i32 {
@@ -1507,32 +1474,32 @@ pub unsafe fn A_BossDeath(state: &mut GameState, id: MobjId) {
     if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 {
         if state.g_game.gamemap == 7 as i32 {
             if (*mo).type_0 as u32 == MobjType::MT_FATSO as i32 as u32 {
-                junk.tag = 666 as i16;
-                EV_DoFloor(state, &raw mut junk, FloorE::lowerFloorToLowest);
+                let junk = state.p_setup.junk_line(666 as i16);
+                EV_DoFloor(state, junk, FloorE::lowerFloorToLowest);
                 return;
             }
             if (*mo).type_0 as u32 == MobjType::MT_BABY as i32 as u32 {
-                junk.tag = 667 as i16;
-                EV_DoFloor(state, &raw mut junk, FloorE::raiseToTexture);
+                let junk = state.p_setup.junk_line(667 as i16);
+                EV_DoFloor(state, junk, FloorE::raiseToTexture);
                 return;
             }
         }
     } else {
         match state.g_game.gameepisode {
             1 => {
-                junk.tag = 666 as i16;
-                EV_DoFloor(state, &raw mut junk, FloorE::lowerFloorToLowest);
+                let junk = state.p_setup.junk_line(666 as i16);
+                EV_DoFloor(state, junk, FloorE::lowerFloorToLowest);
                 return;
             }
             4 => match state.g_game.gamemap {
                 6 => {
-                    junk.tag = 666 as i16;
-                    EV_DoDoor(state, &raw mut junk, VldoorE::vld_blazeOpen);
+                    let junk = state.p_setup.junk_line(666 as i16);
+                    EV_DoDoor(state, junk, VldoorE::vld_blazeOpen);
                     return;
                 }
                 8 => {
-                    junk.tag = 666 as i16;
-                    EV_DoFloor(state, &raw mut junk, FloorE::lowerFloorToLowest);
+                    let junk = state.p_setup.junk_line(666 as i16);
+                    EV_DoFloor(state, junk, FloorE::lowerFloorToLowest);
                     return;
                 }
                 _ => {}

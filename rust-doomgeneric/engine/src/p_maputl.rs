@@ -10,7 +10,7 @@ use crate::src::m_fixed::FixedMul;
 use crate::src::m_fixed::FRACBITS;
 use crate::src::m_fixed::FRACUNIT;
 use crate::src::m_fixed::INT_MAX;
-use crate::src::p_mobj::{line_t, mapthing_t, sector_t};
+use crate::src::p_mobj::{mapthing_t, sector_t};
 use crate::src::p_mobj::mobj_t;
 use crate::src::p_mobj::{MobjId, MF_NOBLOCKMAP, MF_NOSECTOR};
 use crate::src::p_setup::LineId;
@@ -388,15 +388,16 @@ pub unsafe fn P_InterceptVector(mut v2: *mut divline_t, mut v1: *mut divline_t) 
     frac = FixedDiv(num, den);
     return frac;
 }
-pub unsafe fn P_LineOpening(state: &mut GameState, mut linedef: *mut line_t) {
+pub unsafe fn P_LineOpening(state: &mut GameState, mut linedef: LineId) {
     let mut front: *mut sector_t = ::core::ptr::null_mut::<sector_t>();
     let mut back: *mut sector_t = ::core::ptr::null_mut::<sector_t>();
-    if (*linedef).sidenum[1 as i32 as usize] as i32 == -(1 as i32) {
+    let linedefv = state.p_setup.line(linedef);
+    if linedefv.sidenum[1 as i32 as usize] as i32 == -(1 as i32) {
         state.p_maputl.openrange = 0 as i32 as fixed_t;
         return;
     }
-    front = state.p_setup.sector_mut((*linedef).frontsector.unwrap());
-    back = state.p_setup.sector_mut((*linedef).backsector.unwrap());
+    front = state.p_setup.sector_mut(linedefv.frontsector.unwrap());
+    back = state.p_setup.sector_mut(linedefv.backsector.unwrap());
     if (*front).ceilingheight < (*back).ceilingheight {
         state.p_maputl.opentop = (*front).ceilingheight;
     } else {

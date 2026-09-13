@@ -269,8 +269,7 @@ pub unsafe fn PIT_CheckLine(state: &mut GameState, mut ld: LineId) -> boolean {
             return false_0 as boolean;
         }
     }
-    let ld_ptr = state.p_setup.line_mut(ld);
-    P_LineOpening(state, ld_ptr);
+    P_LineOpening(state, ld);
     if state.p_maputl.opentop < state.p_map.tmceilingz {
         state.p_map.tmceilingz = state.p_maputl.opentop;
         state.p_map.ceilingline = Some(ld);
@@ -602,8 +601,7 @@ pub unsafe fn PTR_SlideTraverse(
             return true_0 as boolean;
         }
     } else {
-        let li_ptr = state.p_setup.line_mut(li);
-        P_LineOpening(state, li_ptr);
+        P_LineOpening(state, li);
         if !(state.p_maputl.openrange < (*state.p_map.slidemo).height) {
             if !(state.p_maputl.opentop - (*state.p_map.slidemo).z < (*state.p_map.slidemo).height)
             {
@@ -740,8 +738,7 @@ pub unsafe fn PTR_AimTraverse(
         if liv.flags as i32 & ML_TWOSIDED == 0 {
             return false_0 as boolean;
         }
-        let li_ptr = state.p_setup.line_mut(li);
-        P_LineOpening(state, li_ptr);
+        P_LineOpening(state, li);
         if state.p_maputl.openbottom >= state.p_maputl.opentop {
             return false_0 as boolean;
         }
@@ -815,12 +812,10 @@ pub unsafe fn PTR_ShootTraverse(
     let mut thingbottomslope: fixed_t = 0;
     if let InterceptTarget::Line(li) = (*in_0).target {
         if state.p_setup.line(li).special != 0 {
-            let li_ptr = state.p_setup.line_mut(li);
-            P_ShootSpecialLine(state, state.p_map.shootthing, li_ptr);
+            P_ShootSpecialLine(state, state.p_map.shootthing, li);
         }
         if !(state.p_setup.line(li).flags as i32 & ML_TWOSIDED == 0) {
-            let li_ptr = state.p_setup.line_mut(li);
-            P_LineOpening(state, li_ptr);
+            P_LineOpening(state, li);
             dist = FixedMul(state.p_map.attackrange, (*in_0).frac);
             if state.p_setup.line(li).backsector.is_none() {
                 slope = FixedDiv(state.p_maputl.openbottom - state.p_map.shootz, dist);
@@ -1013,8 +1008,7 @@ pub unsafe fn PTR_UseTraverse(
         InterceptTarget::Thing(_) => unreachable!(),
     };
     if state.p_setup.line(li).special == 0 {
-        let li_ptr = state.p_setup.line_mut(li);
-        P_LineOpening(state, li_ptr);
+        P_LineOpening(state, li);
         if state.p_maputl.openrange <= 0 as i32 {
             S_StartSound(
                 state,
@@ -1035,8 +1029,7 @@ pub unsafe fn PTR_UseTraverse(
     {
         side = 1 as i32;
     }
-    let li_ptr = state.p_setup.line_mut(li);
-    P_UseSpecialLine(state, state.p_map.usething, li_ptr, side);
+    P_UseSpecialLine(state, state.p_map.usething, li, side);
     return false_0 as boolean;
 }
 pub unsafe fn P_UseLines(state: &mut GameState, mut player: *mut player_t) {

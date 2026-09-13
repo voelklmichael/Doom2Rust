@@ -6,8 +6,9 @@ use crate::src::p_mobj::mobj_t;
 use crate::src::p_mobj::P_SpawnMobj;
 use crate::src::p_mobj::ThinkerFn;
 use crate::src::p_mobj::MF_MISSILE;
-use crate::src::p_mobj::{line_t, thinker_t};
+use crate::src::p_mobj::thinker_t;
 use crate::src::p_mobj::MobjType;
+use crate::src::p_setup::LineId;
 use crate::src::p_setup::SectorId;
 use crate::src::s_sound::S_StartSound;
 use crate::src::sounds::sfx_telept;
@@ -16,7 +17,7 @@ use crate::src::tables::finesine;
 use crate::src::tables::ANGLETOFINESHIFT;
 pub unsafe fn EV_Teleport(
     state: &mut GameState,
-    mut line: *mut line_t,
+    mut line: LineId,
     mut side: i32,
     mut thing: *mut mobj_t,
 ) -> i32 {
@@ -36,7 +37,7 @@ pub unsafe fn EV_Teleport(
     if side == 1 as i32 {
         return 0 as i32;
     }
-    tag = (*line).tag as i32;
+    tag = state.p_setup.line(line).tag as i32;
     i = 0 as i32;
     while i < state.p_setup.numsectors {
         if state.p_setup.sectors[i as usize].tag as i32 == tag {

@@ -39,7 +39,6 @@ use crate::src::w_wad::W_ReadLump;
 use crate::src::w_wad::W_ReleaseLumpNum;
 use crate::src::w_wad::W_GetNumForName;
 use crate::src::z_zone::Z_FreeTags;
-use crate::src::z_zone::Z_Malloc;
 use crate::src::z_zone::{PU_LEVEL, PU_PURGELEVEL, PU_STATIC};
 use crate::src::mem_compat::memset;
 
@@ -95,7 +94,7 @@ pub const ZERO_SECTOR: sector_t = sector_t {
     thinglist: None,
     specialdata: None,
     linecount: 0,
-    lines: ::core::ptr::null::<*mut line_s>() as *mut *mut line_s,
+    lines: Vec::new(),
 };
 
 pub struct PSetupState {
@@ -126,6 +125,7 @@ pub struct PSetupState {
     pub deathmatch_p: *mut mapthing_t,
     pub playerstarts: [mapthing_t; 4],
     pub null_sector_id: Option<SectorId>,
+    pub junk_line_id: Option<LineId>,
 }
 
 impl PSetupState {
@@ -170,6 +170,7 @@ impl PSetupState {
                 options: 0,
             }; 4],
             null_sector_id: None,
+            junk_line_id: None,
         }
     }
 
@@ -190,6 +191,25 @@ impl PSetupState {
     }
     pub fn line(&self, id: LineId) -> line_t {
         self.lines[id.0 as usize]
+    }
+    /// Returns a `LineId` for a scratch line that isn't part of the map,
+    /// with only `.tag` set -- for vanilla Doom's "tag 666/667 boss death
+    /// trigger" idiom, which calls EV_DoDoor/EV_DoFloor with a fabricated
+    /// line that exists only to carry a tag for P_FindSectorFromLineTag to
+    /// match against. One slot is reused across all such calls; they never
+    /// overlap (each EV_* call fully finishes before the next one reuses it).
+    pub fn junk_line(&mut self, tag: i16) -> LineId {
+        let id = match self.junk_line_id {
+            Some(id) => id,
+            None => {
+                let id = LineId(self.lines.len() as u32);
+                self.lines.push(ZERO_LINE);
+                self.junk_line_id = Some(id);
+                id
+            }
+        };
+        self.lines[id.0 as usize].tag = tag;
+        id
     }
     pub fn seg_mut(&mut self, id: SegId) -> *mut seg_t {
         &mut self.segs[id.0 as usize] as *mut seg_t
@@ -704,67 +724,53 @@ pub unsafe fn P_LoadBlockMap(state: &mut GameState, mut lump: i32) {
         vec![None; (state.p_setup.bmapwidth as usize) * (state.p_setup.bmapheight as usize)];
 }
 pub unsafe fn P_GroupLines(state: &mut GameState) {
-    let mut linebuffer: *mut *mut line_t = ::core::ptr::null_mut::<*mut line_t>();
     let mut i: i32 = 0;
     let mut j: i32 = 0;
-    let mut li: *mut line_t = ::core::ptr::null_mut::<line_t>();
     let mut sector: *mut sector_t = ::core::ptr::null_mut::<sector_t>();
-    let mut seg: *mut seg_t = ::core::ptr::null_mut::<seg_t>();
     let mut bbox: [fixed_t; 4] = [0; 4];
     let mut block: i32 = 0;
     i = 0 as i32;
     while i < state.p_setup.numsubsectors {
         let firstline = state.p_setup.subsectors[i as usize].firstline;
-        seg = state.p_setup.segs.as_mut_ptr().offset(firstline as isize);
-        let seg_sidedef = (*seg).sidedef;
+        let seg_sidedef = state.p_setup.segs[firstline as usize].sidedef;
         state.p_setup.subsectors[i as usize].sector =
             state.p_setup.sides[seg_sidedef.0 as usize].sector;
         i += 1;
     }
-    li = state.p_setup.lines.as_mut_ptr();
     state.p_setup.totallines = 0 as i32;
     i = 0 as i32;
     while i < state.p_setup.numlines {
         state.p_setup.totallines += 1;
-        let front_id = (*li).frontsector.unwrap();
+        let li = state.p_setup.lines[i as usize];
+        let front_id = li.frontsector.unwrap();
         (*state.p_setup.sector_mut(front_id)).linecount += 1;
-        if (*li).backsector.is_some() && (*li).backsector != (*li).frontsector {
-            let back_id = (*li).backsector.unwrap();
+        if li.backsector.is_some() && li.backsector != li.frontsector {
+            let back_id = li.backsector.unwrap();
             (*state.p_setup.sector_mut(back_id)).linecount += 1;
             state.p_setup.totallines += 1;
         }
         i += 1;
-        li = li.offset(1);
     }
-    linebuffer = Z_Malloc(
-        &mut state.z_zone,
-        (state.p_setup.totallines as usize)
-            .wrapping_mul(::core::mem::size_of::<*mut line_t>() as usize) as i32,
-        PU_LEVEL as i32,
-        ::core::ptr::null_mut::<::core::ffi::c_void>(),
-    ) as *mut *mut line_t;
     i = 0 as i32;
     while i < state.p_setup.numsectors {
         let sec = &mut state.p_setup.sectors[i as usize];
-        sec.lines = linebuffer as *mut *mut line_s;
-        linebuffer = linebuffer.offset(sec.linecount as isize);
+        sec.lines = Vec::with_capacity(sec.linecount as usize);
         sec.linecount = 0 as i32;
         i += 1;
     }
     i = 0 as i32;
     while i < state.p_setup.numlines {
-        li = state.p_setup.lines.as_mut_ptr().offset(i as isize);
-        if let Some(front_id) = (*li).frontsector {
+        let li_id = LineId(i as u32);
+        let li = state.p_setup.lines[i as usize];
+        if let Some(front_id) = li.frontsector {
             sector = state.p_setup.sector_mut(front_id);
-            let ref mut fresh1 = *(*sector).lines.offset((*sector).linecount as isize);
-            *fresh1 = li as *mut line_s;
+            (*sector).lines.push(li_id);
             (*sector).linecount += 1;
         }
-        if let Some(back_id) = (*li).backsector {
-            if (*li).frontsector != (*li).backsector {
+        if let Some(back_id) = li.backsector {
+            if li.frontsector != li.backsector {
                 sector = state.p_setup.sector_mut(back_id);
-                let ref mut fresh2 = *(*sector).lines.offset((*sector).linecount as isize);
-                *fresh2 = li as *mut line_s;
+                (*sector).lines.push(li_id);
                 (*sector).linecount += 1;
             }
         }
@@ -776,9 +782,10 @@ pub unsafe fn P_GroupLines(state: &mut GameState) {
         M_ClearBox(&raw mut bbox as *mut fixed_t);
         j = 0 as i32;
         while j < (*sector).linecount {
-            li = *(*sector).lines.offset(j as isize) as *mut line_t;
-            let li_v1 = state.p_setup.vertexes[(*li).v1.0 as usize];
-            let li_v2 = state.p_setup.vertexes[(*li).v2.0 as usize];
+            let li_id = (*sector).lines[j as usize];
+            let li = state.p_setup.line(li_id);
+            let li_v1 = state.p_setup.vertexes[li.v1.0 as usize];
+            let li_v2 = state.p_setup.vertexes[li.v2.0 as usize];
             M_AddToBox(&raw mut bbox as *mut fixed_t, li_v1.x, li_v1.y);
             M_AddToBox(&raw mut bbox as *mut fixed_t, li_v2.x, li_v2.y);
             j += 1;
