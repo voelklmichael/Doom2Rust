@@ -1,6 +1,6 @@
 use crate::src::am_map::AM_Stop;
 use crate::src::d_items::weaponinfo;
-use crate::src::d_mode::{commercial, GameVersion};
+use crate::src::d_mode::{GameMode_t, GameVersion};
 use crate::src::d_mode::SkillType;
 use crate::src::d_player::CF_GODMODE;
 use crate::src::d_player::{am_cell, am_clip, am_misl, am_noammo, am_shell, ammotype_t, NUMAMMO};
@@ -314,7 +314,7 @@ pub unsafe fn P_TouchSpecialThing(
             sound = sfx_getpow as i32;
         }
         74 => {
-            if state.doomstat.gamemode as u32 != commercial as i32 as u32 {
+            if state.doomstat.gamemode as u32 != GameMode_t::commercial as i32 as u32 {
                 return;
             }
             (*player).health = deh_megasphere_health;

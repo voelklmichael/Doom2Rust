@@ -1,8 +1,5 @@
-use crate::src::d_mode::{commercial, indetermined, retail, shareware, GameMode_t};
-use crate::src::d_mode::{
-    doom, doom2, heretic, hexen, none, pack_chex, pack_hacx, pack_plut, pack_tnt, strife,
-    GameMission_t,
-};
+use crate::src::d_mode::GameMode_t;
+use crate::src::d_mode::GameMission_t;
 use crate::src::game_state::GameState;
 use crate::src::i_system::I_Error;
 use crate::src::m_argv::M_CheckParmWithArgs;
@@ -20,86 +17,86 @@ pub const DIR_SEPARATOR_S: &str = "/";
 static iwads: [iwad_t; 14] = [
     iwad_t {
         name: "doom2.wad",
-        mission: doom2,
-        mode: commercial,
+        mission: GameMission_t::doom2,
+        mode: GameMode_t::commercial,
         description: "Doom II",
     },
     iwad_t {
         name: "plutonia.wad",
-        mission: pack_plut,
-        mode: commercial,
+        mission: GameMission_t::pack_plut,
+        mode: GameMode_t::commercial,
         description: "Final Doom: Plutonia Experiment",
     },
     iwad_t {
         name: "tnt.wad",
-        mission: pack_tnt,
-        mode: commercial,
+        mission: GameMission_t::pack_tnt,
+        mode: GameMode_t::commercial,
         description: "Final Doom: TNT: Evilution",
     },
     iwad_t {
         name: "doom.wad",
-        mission: doom,
-        mode: retail,
+        mission: GameMission_t::doom,
+        mode: GameMode_t::retail,
         description: "Doom",
     },
     iwad_t {
         name: "doom1.wad",
-        mission: doom,
-        mode: shareware,
+        mission: GameMission_t::doom,
+        mode: GameMode_t::shareware,
         description: "Doom Shareware",
     },
     iwad_t {
         name: "chex.wad",
-        mission: pack_chex,
-        mode: shareware,
+        mission: GameMission_t::pack_chex,
+        mode: GameMode_t::shareware,
         description: "Chex Quest",
     },
     iwad_t {
         name: "hacx.wad",
-        mission: pack_hacx,
-        mode: commercial,
+        mission: GameMission_t::pack_hacx,
+        mode: GameMode_t::commercial,
         description: "Hacx",
     },
     iwad_t {
         name: "freedm.wad",
-        mission: doom2,
-        mode: commercial,
+        mission: GameMission_t::doom2,
+        mode: GameMode_t::commercial,
         description: "FreeDM",
     },
     iwad_t {
         name: "freedoom2.wad",
-        mission: doom2,
-        mode: commercial,
+        mission: GameMission_t::doom2,
+        mode: GameMode_t::commercial,
         description: "Freedoom: Phase 2",
     },
     iwad_t {
         name: "freedoom1.wad",
-        mission: doom,
-        mode: retail,
+        mission: GameMission_t::doom,
+        mode: GameMode_t::retail,
         description: "Freedoom: Phase 1",
     },
     iwad_t {
         name: "heretic.wad",
-        mission: heretic,
-        mode: retail,
+        mission: GameMission_t::heretic,
+        mode: GameMode_t::retail,
         description: "Heretic",
     },
     iwad_t {
         name: "heretic1.wad",
-        mission: heretic,
-        mode: shareware,
+        mission: GameMission_t::heretic,
+        mode: GameMode_t::shareware,
         description: "Heretic Shareware",
     },
     iwad_t {
         name: "hexen.wad",
-        mission: hexen,
-        mode: commercial,
+        mission: GameMission_t::hexen,
+        mode: GameMode_t::commercial,
         description: "Hexen",
     },
     iwad_t {
         name: "strife1.wad",
-        mission: strife,
-        mode: commercial,
+        mission: GameMission_t::strife,
+        mode: GameMode_t::commercial,
         description: "Strife",
     },
 ];
@@ -152,7 +149,7 @@ unsafe fn search_directory_for_iwad(
     mission: *mut GameMission_t,
 ) -> Option<String> {
     for iwad in iwads.iter() {
-        if (1 as i32) << iwad.mission & mask == 0 as i32 {
+        if (1 as i32) << iwad.mission as i32 & mask == 0 as i32 {
             continue;
         }
         if let Some(filename) = check_directory_has_iwad(dir, iwad.name) {
@@ -168,14 +165,14 @@ fn identify_iwad_by_name(name: &str, mask: i32) -> GameMission_t {
         None => name,
     };
     for iwad in iwads.iter() {
-        if (1 as i32) << iwad.mission & mask == 0 as i32 {
+        if (1 as i32) << iwad.mission as i32 & mask == 0 as i32 {
             continue;
         }
         if name.eq_ignore_ascii_case(iwad.name) {
             return iwad.mission;
         }
     }
-    none
+    GameMission_t::none
 }
 fn build_iwad_dir_list(state: &mut DIwadState) {
     add_iwad_dir(state, FILES_DIR);
@@ -227,7 +224,7 @@ pub unsafe fn D_FindIWAD(state: &mut GameState, mask: i32, mission: *mut GameMis
 pub unsafe fn D_FindAllIWADs(state: &mut DIwadState, mut mask: i32) -> *mut *const iwad_t {
     let mut result: Vec<*const iwad_t> = Vec::new();
     for iwad in iwads.iter() {
-        if (1 as i32) << iwad.mission & mask == 0 as i32 {
+        if (1 as i32) << iwad.mission as i32 & mask == 0 as i32 {
             continue;
         }
         if D_FindWADByName(state, iwad.name).is_some() {
@@ -258,7 +255,7 @@ pub unsafe fn D_SuggestIWADName(
 }
 pub fn D_SuggestGameName(mission: GameMission_t, mode: GameMode_t) -> &'static str {
     for iwad in iwads.iter() {
-        if iwad.mission == mission && (mode == indetermined || iwad.mode == mode) {
+        if iwad.mission == mission && (mode == GameMode_t::indetermined || iwad.mode == mode) {
             return iwad.description;
         }
     }

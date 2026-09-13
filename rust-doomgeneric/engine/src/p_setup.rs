@@ -1,4 +1,4 @@
-use crate::src::d_mode::commercial;
+use crate::src::d_mode::GameMode_t;
 use crate::src::doomdef::MAXPLAYERS;
 use crate::src::fixed_cstr::FixedCStr;
 use crate::src::g_game::G_DeathMatchSpawnPlayer;
@@ -477,7 +477,7 @@ pub unsafe fn P_LoadThings(state: &mut GameState, mut lump: i32) {
     i = 0 as i32;
     while i < numthings {
         spawn = true;
-        if state.doomstat.gamemode as u32 != commercial as i32 as u32 {
+        if state.doomstat.gamemode as u32 != GameMode_t::commercial as i32 as u32 {
             let mut current_block_5: u64;
             match (*mt).type_0 as i32 {
                 64 => {
@@ -896,7 +896,7 @@ pub unsafe fn P_SetupLevel(state: &mut GameState, mut episode: i32, mut map: i32
         PU_PURGELEVEL as i32 - 1 as i32,
     );
     P_InitThinkers(state);
-    let lumpname = if state.doomstat.gamemode as u32 == commercial as i32 as u32 {
+    let lumpname = if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 {
         if map < 10 as i32 {
             format!("map0{}", map)
         } else {

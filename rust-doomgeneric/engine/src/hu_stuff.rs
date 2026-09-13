@@ -1,8 +1,8 @@
 use crate::src::d_event::event_t;
 use crate::src::d_event::EvType;
 use crate::src::d_mode::GameVersion;
-use crate::src::d_mode::commercial;
-use crate::src::d_mode::{doom, doom2, pack_chex, pack_hacx};
+use crate::src::d_mode::GameMode_t;
+use crate::src::d_mode::GameMission_t;
 use crate::src::d_player::PlayerId;
 use crate::src::fixed_cstr::FixedCStr;
 use crate::src::doomdef::boolean;
@@ -369,10 +369,10 @@ pub unsafe fn HU_Start(state: &mut GameState) {
         &raw mut state.hu_stuff.hu_font as *mut *mut patch_t,
         HU_FONTSTART,
     );
-    match if state.doomstat.gamemission as u32 == pack_chex as i32 as u32 {
-        doom as i32 as u32
-    } else if state.doomstat.gamemission as u32 == pack_hacx as i32 as u32 {
-        doom2 as i32 as u32
+    match if state.doomstat.gamemission as u32 == GameMission_t::pack_chex as i32 as u32 {
+        GameMission_t::doom as i32 as u32
+    } else if state.doomstat.gamemission as u32 == GameMission_t::pack_hacx as i32 as u32 {
+        GameMission_t::doom2 as i32 as u32
     } else {
         state.doomstat.gamemission as u32
     } {
@@ -499,7 +499,7 @@ pub unsafe fn HU_Ticker(state: &mut GameState) {
                                 state.hu_stuff.message_nottobefuckedwith = true;
                                 state.hu_stuff.message_on = true;
                                 state.hu_stuff.message_counter = HU_MSGTIMEOUT;
-                                if state.doomstat.gamemode as u32 == commercial as i32 as u32 {
+                                if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 {
                                     S_StartSound(
                                         state,
                                         ::core::ptr::null_mut::<::core::ffi::c_void>(),

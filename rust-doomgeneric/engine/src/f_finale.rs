@@ -3,8 +3,8 @@ use crate::src::d_event::EvType;
 use crate::src::d_event::GameScreenState;
 use crate::src::d_event::GameAction;
 use crate::src::d_mode::GameVersion;
-use crate::src::d_mode::{commercial, retail};
-use crate::src::d_mode::{doom, doom2, pack_chex, pack_hacx, pack_plut, pack_tnt, GameMission_t};
+use crate::src::d_mode::GameMode_t;
+use crate::src::d_mode::GameMission_t;
 use crate::src::doomdef::true_0;
 use crate::src::doomdef::MAXPLAYERS;
 use crate::src::doomdef::NULL;
@@ -106,154 +106,154 @@ pub const TEXTSPEED: i32 = 3;
 pub const TEXTWAIT: i32 = 250;
 const INITIAL_TEXTSCREENS: [textscreen_t; 22] = [
     textscreen_t {
-        mission: doom,
+        mission: GameMission_t::doom,
         episode: 1 as i32,
         level: 8 as i32,
         background: "FLOOR4_8",
         text: E1TEXT,
     },
     textscreen_t {
-        mission: doom,
+        mission: GameMission_t::doom,
         episode: 2 as i32,
         level: 8 as i32,
         background: "SFLR6_1",
         text: E2TEXT,
     },
     textscreen_t {
-        mission: doom,
+        mission: GameMission_t::doom,
         episode: 3 as i32,
         level: 8 as i32,
         background: "MFLR8_4",
         text: E3TEXT,
     },
     textscreen_t {
-        mission: doom,
+        mission: GameMission_t::doom,
         episode: 4 as i32,
         level: 8 as i32,
         background: "MFLR8_3",
         text: E4TEXT,
     },
     textscreen_t {
-        mission: doom2,
+        mission: GameMission_t::doom2,
         episode: 1 as i32,
         level: 6 as i32,
         background: "SLIME16",
         text: C1TEXT,
     },
     textscreen_t {
-        mission: doom2,
+        mission: GameMission_t::doom2,
         episode: 1 as i32,
         level: 11 as i32,
         background: "RROCK14",
         text: C2TEXT,
     },
     textscreen_t {
-        mission: doom2,
+        mission: GameMission_t::doom2,
         episode: 1 as i32,
         level: 20 as i32,
         background: "RROCK07",
         text: C3TEXT,
     },
     textscreen_t {
-        mission: doom2,
+        mission: GameMission_t::doom2,
         episode: 1 as i32,
         level: 30 as i32,
         background: "RROCK17",
         text: C4TEXT,
     },
     textscreen_t {
-        mission: doom2,
+        mission: GameMission_t::doom2,
         episode: 1 as i32,
         level: 15 as i32,
         background: "RROCK13",
         text: C5TEXT,
     },
     textscreen_t {
-        mission: doom2,
+        mission: GameMission_t::doom2,
         episode: 1 as i32,
         level: 31 as i32,
         background: "RROCK19",
         text: C6TEXT,
     },
     textscreen_t {
-        mission: pack_tnt,
+        mission: GameMission_t::pack_tnt,
         episode: 1 as i32,
         level: 6 as i32,
         background: "SLIME16",
         text: T1TEXT,
     },
     textscreen_t {
-        mission: pack_tnt,
+        mission: GameMission_t::pack_tnt,
         episode: 1 as i32,
         level: 11 as i32,
         background: "RROCK14",
         text: T2TEXT,
     },
     textscreen_t {
-        mission: pack_tnt,
+        mission: GameMission_t::pack_tnt,
         episode: 1 as i32,
         level: 20 as i32,
         background: "RROCK07",
         text: T3TEXT,
     },
     textscreen_t {
-        mission: pack_tnt,
+        mission: GameMission_t::pack_tnt,
         episode: 1 as i32,
         level: 30 as i32,
         background: "RROCK17",
         text: T4TEXT,
     },
     textscreen_t {
-        mission: pack_tnt,
+        mission: GameMission_t::pack_tnt,
         episode: 1 as i32,
         level: 15 as i32,
         background: "RROCK13",
         text: T5TEXT,
     },
     textscreen_t {
-        mission: pack_tnt,
+        mission: GameMission_t::pack_tnt,
         episode: 1 as i32,
         level: 31 as i32,
         background: "RROCK19",
         text: T6TEXT,
     },
     textscreen_t {
-        mission: pack_plut,
+        mission: GameMission_t::pack_plut,
         episode: 1 as i32,
         level: 6 as i32,
         background: "SLIME16",
         text: P1TEXT,
     },
     textscreen_t {
-        mission: pack_plut,
+        mission: GameMission_t::pack_plut,
         episode: 1 as i32,
         level: 11 as i32,
         background: "RROCK14",
         text: P2TEXT,
     },
     textscreen_t {
-        mission: pack_plut,
+        mission: GameMission_t::pack_plut,
         episode: 1 as i32,
         level: 20 as i32,
         background: "RROCK07",
         text: P3TEXT,
     },
     textscreen_t {
-        mission: pack_plut,
+        mission: GameMission_t::pack_plut,
         episode: 1 as i32,
         level: 30 as i32,
         background: "RROCK17",
         text: P4TEXT,
     },
     textscreen_t {
-        mission: pack_plut,
+        mission: GameMission_t::pack_plut,
         episode: 1 as i32,
         level: 15 as i32,
         background: "RROCK13",
         text: P5TEXT,
     },
     textscreen_t {
-        mission: pack_plut,
+        mission: GameMission_t::pack_plut,
         episode: 1 as i32,
         level: 31 as i32,
         background: "RROCK19",
@@ -305,15 +305,15 @@ pub unsafe fn F_StartFinale(state: &mut GameState) {
     state.g_game.gamestate = GameScreenState::GS_FINALE;
     state.g_game.viewactive = false;
     state.am_map.automapactive = false;
-    if (if state.doomstat.gamemission as u32 == pack_chex as i32 as u32 {
-        doom as i32 as u32
+    if (if state.doomstat.gamemission as u32 == GameMission_t::pack_chex as i32 as u32 {
+        GameMission_t::doom as i32 as u32
     } else {
-        if state.doomstat.gamemission as u32 == pack_hacx as i32 as u32 {
-            doom2 as i32 as u32
+        if state.doomstat.gamemission as u32 == GameMission_t::pack_hacx as i32 as u32 {
+            GameMission_t::doom2 as i32 as u32
         } else {
             state.doomstat.gamemission as u32
         }
-    }) == doom as i32 as u32
+    }) == GameMission_t::doom as i32 as u32
     {
         S_ChangeMusic(state, mus_victor as i32, true_0);
     } else {
@@ -328,28 +328,28 @@ pub unsafe fn F_StartFinale(state: &mut GameState) {
             as *mut textscreen_t)
             .offset(i as isize) as *mut textscreen_t;
         if state.doomstat.gameversion == GameVersion::chex
-            && (*screen).mission as u32 == doom as i32 as u32
+            && (*screen).mission as u32 == GameMission_t::doom as i32 as u32
         {
             (*screen).level = 5 as i32;
         }
-        if (if state.doomstat.gamemission as u32 == pack_chex as i32 as u32 {
-            doom as i32 as u32
+        if (if state.doomstat.gamemission as u32 == GameMission_t::pack_chex as i32 as u32 {
+            GameMission_t::doom as i32 as u32
         } else {
-            if state.doomstat.gamemission as u32 == pack_hacx as i32 as u32 {
-                doom2 as i32 as u32
+            if state.doomstat.gamemission as u32 == GameMission_t::pack_hacx as i32 as u32 {
+                GameMission_t::doom2 as i32 as u32
             } else {
                 state.doomstat.gamemission as u32
             }
         }) == (*screen).mission as u32
-            && ((if state.doomstat.gamemission as u32 == pack_chex as i32 as u32 {
-                doom as i32 as u32
+            && ((if state.doomstat.gamemission as u32 == GameMission_t::pack_chex as i32 as u32 {
+                GameMission_t::doom as i32 as u32
             } else {
-                if state.doomstat.gamemission as u32 == pack_hacx as i32 as u32 {
-                    doom2 as i32 as u32
+                if state.doomstat.gamemission as u32 == GameMission_t::pack_hacx as i32 as u32 {
+                    GameMission_t::doom2 as i32 as u32
                 } else {
                     state.doomstat.gamemission as u32
                 }
-            }) != doom as i32 as u32
+            }) != GameMission_t::doom as i32 as u32
                 || state.g_game.gameepisode == (*screen).episode)
             && state.g_game.gamemap == (*screen).level
         {
@@ -371,7 +371,7 @@ pub unsafe fn F_Responder(state: &mut GameState, mut event: &event_t) -> bool {
 }
 pub unsafe fn F_Ticker(state: &mut GameState) {
     let mut i: size_t = 0;
-    if state.doomstat.gamemode as u32 == commercial as i32 as u32
+    if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32
         && state.f_finale.finalecount > 50 as u32
     {
         i = 0 as size_t;
@@ -394,7 +394,7 @@ pub unsafe fn F_Ticker(state: &mut GameState) {
         F_CastTicker(state);
         return;
     }
-    if state.doomstat.gamemode as u32 == commercial as i32 as u32 {
+    if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 {
         return;
     }
     if state.f_finale.finalestage == FinaleStage::F_STAGE_TEXT
@@ -987,7 +987,7 @@ unsafe fn F_ArtScreenDrawer(state: &mut GameState) {
     } else {
         match state.g_game.gameepisode {
             1 => {
-                if state.doomstat.gamemode as u32 == retail as i32 as u32 {
+                if state.doomstat.gamemode as u32 == GameMode_t::retail as i32 as u32 {
                     lumpname = "CREDIT";
                 } else {
                     lumpname = "HELP2";

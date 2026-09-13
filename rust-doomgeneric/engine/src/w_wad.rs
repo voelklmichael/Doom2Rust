@@ -1,7 +1,7 @@
 use crate::src::d_iwad::D_SuggestGameName;
-use crate::src::d_mode::indetermined;
+use crate::src::d_mode::GameMode_t;
 use crate::src::d_mode::D_GameMissionString;
-use crate::src::d_mode::{doom, heretic, hexen, strife, GameMission_t};
+use crate::src::d_mode::GameMission_t;
 use crate::src::doomdef::NULL;
 use crate::src::fixed_cstr::FixedCStr;
 use crate::src::game_state::GameState;
@@ -403,19 +403,19 @@ pub unsafe fn W_GenerateHashTable(state: &mut GameState) {
 }
 static unique_lumps: [C2RustUnnamed_0; 4] = [
     C2RustUnnamed_0 {
-        mission: doom,
+        mission: GameMission_t::doom,
         lumpname: "POSSA1",
     },
     C2RustUnnamed_0 {
-        mission: heretic,
+        mission: GameMission_t::heretic,
         lumpname: "IMPXA1",
     },
     C2RustUnnamed_0 {
-        mission: hexen,
+        mission: GameMission_t::hexen,
         lumpname: "ETTNA1",
     },
     C2RustUnnamed_0 {
-        mission: strife,
+        mission: GameMission_t::strife,
         lumpname: "AGRDA1",
     },
 ];
@@ -432,7 +432,7 @@ pub unsafe fn W_CheckCorrectIWAD(state: &mut WWadState, mut mission: GameMission
             if lumpnum >= 0 as i32 {
                 I_Error(&format!(
                     "\nYou are trying to use a {} IWAD file with the {}{} binary.\nThis isn't going to work.\nYou probably want to use the {}{} binary.",
-                    D_SuggestGameName(unique_lumps[i as usize].mission, indetermined),
+                    D_SuggestGameName(unique_lumps[i as usize].mission, GameMode_t::indetermined),
                     PROGRAM_PREFIX.as_str(),
                     D_GameMissionString(mission),
                     PROGRAM_PREFIX.as_str(),
