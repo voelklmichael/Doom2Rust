@@ -59,8 +59,6 @@ use crate::src::s_sound::SoundOrigin;
 use crate::src::sounds::sfx_swtchn;
 use crate::src::stdint_types::size_t;
 use crate::src::w_wad::W_CheckNumForName;
-use crate::src::z_zone::Z_Malloc;
-use crate::src::z_zone::PU_LEVSPEC;
 use crate::src::mem_compat::memset;
 
 use crate::src::doomdef::false_0;
@@ -86,6 +84,7 @@ pub struct PSpecState {
     pub donut_overrun_first: i32,
     pub donut_overrun_tmp_s3_floorheight: i32,
     pub donut_overrun_tmp_s3_floorpic: i32,
+    floors: Vec<Box<floormove_t>>,
 }
 
 impl PSpecState {
@@ -106,7 +105,23 @@ impl PSpecState {
             donut_overrun_first: 1,
             donut_overrun_tmp_s3_floorheight: 0,
             donut_overrun_tmp_s3_floorpic: 0,
+            floors: Vec::new(),
         }
+    }
+
+    // Direct replacement for Z_Malloc(size_of::<floormove_t>(), ...) -- see
+    // PDoorsState::spawn/dealloc (p_doors.rs) for why no generation-checked
+    // id or two-phase retire/deallocate split is needed here either. Lives
+    // on PSpecState (rather than a new PFloorState) because floormove_t
+    // itself is defined here, and both p_floor.rs and this file's own
+    // donut-overrun special case construct one.
+    pub fn spawn_floor(&mut self, value: floormove_t) -> *mut floormove_t {
+        self.floors.push(Box::new(value));
+        self.floors.last_mut().unwrap().as_mut()
+    }
+
+    pub fn dealloc_floor(&mut self, ptr: *mut floormove_t) {
+        self.floors.retain(|b| !::core::ptr::eq(b.as_ref(), ptr));
     }
 }
 
@@ -222,6 +237,27 @@ pub struct floormove_t {
     pub texture: i16,
     pub floordestheight: fixed_t,
     pub speed: fixed_t,
+}
+// Placeholder passed to PSpecState::spawn_floor() -- every real field is set
+// by the caller within a few lines of spawn() returning (EV_DoFloor,
+// EV_BuildStairs x2, the donut-overrun sites below, and p_saveg.rs's
+// restore branch), so these values are never actually read.
+impl Default for floormove_t {
+    fn default() -> Self {
+        floormove_t {
+            thinker: thinker_t {
+                function: ThinkerFn::Unresolved,
+            },
+            type_0: FloorE::lowerFloor,
+            crush: false,
+            sector: SectorId(0),
+            direction: 0,
+            newspecial: 0,
+            texture: 0,
+            floordestheight: 0,
+            speed: 0,
+        }
+    }
 }
 pub const ML_TWOSIDED: i32 = 4;
 pub const FASTDARK: i32 = 15;
@@ -1194,12 +1230,7 @@ pub unsafe fn EV_DoDonut(state: &mut GameState, mut line: LineId) -> i32 {
                         s3_floorheight = (*s3).floorheight;
                         s3_floorpic = (*s3).floorpic;
                     }
-                    floor = Z_Malloc(
-                        &mut state.z_zone,
-                        ::core::mem::size_of::<floormove_t>() as i32,
-                        PU_LEVSPEC as i32,
-                        ::core::ptr::null_mut::<::core::ffi::c_void>(),
-                    ) as *mut floormove_t;
+                    floor = state.p_spec.spawn_floor(floormove_t::default());
                     let floor_id = P_AddThinker(state, &raw mut (*floor).thinker, ThinkerKind::Floor);
                     (*s2).specialdata = Some(SectorSpecial::Floor(floor_id));
                     (*floor).thinker.function = ThinkerFn::Floor(T_MoveFloor);
@@ -1211,12 +1242,7 @@ pub unsafe fn EV_DoDonut(state: &mut GameState, mut line: LineId) -> i32 {
                     (*floor).texture = s3_floorpic;
                     (*floor).newspecial = 0 as i32;
                     (*floor).floordestheight = s3_floorheight;
-                    floor = Z_Malloc(
-                        &mut state.z_zone,
-                        ::core::mem::size_of::<floormove_t>() as i32,
-                        PU_LEVSPEC as i32,
-                        ::core::ptr::null_mut::<::core::ffi::c_void>(),
-                    ) as *mut floormove_t;
+                    floor = state.p_spec.spawn_floor(floormove_t::default());
                     let floor_id = P_AddThinker(state, &raw mut (*floor).thinker, ThinkerKind::Floor);
                     (*s1).specialdata = Some(SectorSpecial::Floor(floor_id));
                     (*floor).thinker.function = ThinkerFn::Floor(T_MoveFloor);

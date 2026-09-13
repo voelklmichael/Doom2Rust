@@ -190,10 +190,13 @@ pub unsafe fn P_RunThinkers(state: &mut GameState) {
                     ThinkerKind::Plat => {
                         state.p_plats.dealloc(currentthinker as *mut plat_t);
                     }
-                    // The remaining 5 kinds are still Z_Malloc'd individually
+                    // floormove_t's memory is owned by PSpecState's arena now.
+                    ThinkerKind::Floor => {
+                        state.p_spec.dealloc_floor(currentthinker as *mut floormove_t);
+                    }
+                    // The remaining 4 kinds are still Z_Malloc'd individually
                     // (converted one at a time in later phases).
-                    ThinkerKind::Floor
-                    | ThinkerKind::FireFlicker
+                    ThinkerKind::FireFlicker
                     | ThinkerKind::LightFlash
                     | ThinkerKind::Strobe
                     | ThinkerKind::Glow => {
