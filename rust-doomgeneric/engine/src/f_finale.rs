@@ -17,11 +17,7 @@ use crate::src::hu_stuff::HU_FONTSTART;
 use crate::src::i_video::IVideoState;
 use crate::src::p_mobj::StateNum;
 use crate::src::p_mobj::{mobjinfo_t, state_t};
-use crate::src::p_mobj::{
-    mobjtype_t, MT_BABY, MT_BRUISER, MT_CHAINGUY, MT_CYBORG, MT_FATSO, MT_HEAD, MT_KNIGHT, MT_PAIN,
-    MT_PLAYER, MT_POSSESSED, MT_SERGEANT, MT_SHOTGUY, MT_SKULL, MT_SPIDER, MT_TROOP, MT_UNDEAD,
-    MT_VILE,
-};
+use crate::src::p_mobj::MobjType;
 use crate::src::r_data::column_t;
 use crate::src::r_defs::{spritedef_t, spriteframe_t};
 use crate::src::r_things::FF_FRAMEMASK;
@@ -61,7 +57,7 @@ pub struct textscreen_t {
 #[repr(C)]
 pub struct castinfo_t {
     pub name: Option<&'static str>,
-    pub type_0: mobjtype_t,
+    pub type_0: MobjType,
 }
 pub const E1TEXT: &str = "Once you beat the big badasses and\nclean out the moon base you're supposed\nto win, aren't you? Aren't you? Where's\nyour fat reward and ticket home? What\nthe hell is this? It's not supposed to\nend this way!\n\nIt stinks like rotten meat, but looks\nlike the lost Deimos base.  Looks like\nyou're stuck on The Shores of Hell.\nThe only way out is through.\n\nTo continue the DOOM experience, play\nThe Shores of Hell and its amazing\nsequel, Inferno!\n";
 pub const E2TEXT: &str = "You've done it! The hideous cyber-\ndemon lord that ruled the lost Deimos\nmoon base has been slain and you\nare triumphant! But ... where are\nyou? You clamber to the edge of the\nmoon and look down to see the awful\ntruth.\n\nDeimos floats above Hell itself!\nYou've never heard of anyone escaping\nfrom Hell, but you'll make the bastards\nsorry they ever heard of you! Quickly,\nyou rappel down to  the surface of\nHell.\n\nNow, it's on to the final chapter of\nDOOM! -- Inferno.";
@@ -489,75 +485,75 @@ pub unsafe fn F_TextWrite(state: &mut GameState) {
 const INITIAL_CASTORDER: [castinfo_t; 18] = [
     castinfo_t {
         name: Some(CC_ZOMBIE),
-        type_0: MT_POSSESSED,
+        type_0: MobjType::MT_POSSESSED,
     },
     castinfo_t {
         name: Some(CC_SHOTGUN),
-        type_0: MT_SHOTGUY,
+        type_0: MobjType::MT_SHOTGUY,
     },
     castinfo_t {
         name: Some(CC_HEAVY),
-        type_0: MT_CHAINGUY,
+        type_0: MobjType::MT_CHAINGUY,
     },
     castinfo_t {
         name: Some(CC_IMP),
-        type_0: MT_TROOP,
+        type_0: MobjType::MT_TROOP,
     },
     castinfo_t {
         name: Some(CC_DEMON),
-        type_0: MT_SERGEANT,
+        type_0: MobjType::MT_SERGEANT,
     },
     castinfo_t {
         name: Some(CC_LOST),
-        type_0: MT_SKULL,
+        type_0: MobjType::MT_SKULL,
     },
     castinfo_t {
         name: Some(CC_CACO),
-        type_0: MT_HEAD,
+        type_0: MobjType::MT_HEAD,
     },
     castinfo_t {
         name: Some(CC_HELL),
-        type_0: MT_KNIGHT,
+        type_0: MobjType::MT_KNIGHT,
     },
     castinfo_t {
         name: Some(CC_BARON),
-        type_0: MT_BRUISER,
+        type_0: MobjType::MT_BRUISER,
     },
     castinfo_t {
         name: Some(CC_ARACH),
-        type_0: MT_BABY,
+        type_0: MobjType::MT_BABY,
     },
     castinfo_t {
         name: Some(CC_PAIN),
-        type_0: MT_PAIN,
+        type_0: MobjType::MT_PAIN,
     },
     castinfo_t {
         name: Some(CC_REVEN),
-        type_0: MT_UNDEAD,
+        type_0: MobjType::MT_UNDEAD,
     },
     castinfo_t {
         name: Some(CC_MANCU),
-        type_0: MT_FATSO,
+        type_0: MobjType::MT_FATSO,
     },
     castinfo_t {
         name: Some(CC_ARCH),
-        type_0: MT_VILE,
+        type_0: MobjType::MT_VILE,
     },
     castinfo_t {
         name: Some(CC_SPIDER),
-        type_0: MT_SPIDER,
+        type_0: MobjType::MT_SPIDER,
     },
     castinfo_t {
         name: Some(CC_CYBER),
-        type_0: MT_CYBORG,
+        type_0: MobjType::MT_CYBORG,
     },
     castinfo_t {
         name: Some(CC_HERO),
-        type_0: MT_PLAYER,
+        type_0: MobjType::MT_PLAYER,
     },
     castinfo_t {
         name: None,
-        type_0: MT_PLAYER,
+        type_0: MobjType::MT_PLAYER,
     },
 ];
 pub unsafe fn F_StartCast(state: &mut GameState) {

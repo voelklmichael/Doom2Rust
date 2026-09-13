@@ -29,7 +29,7 @@ use crate::src::p_mobj::P_SpawnPlayerMissile;
 use crate::src::p_mobj::MF_JUSTATTACKED;
 use crate::src::p_mobj::{mobj_t, pspdef_t};
 use crate::src::p_mobj::{state_t, StateAction};
-use crate::src::p_mobj::{MT_BFG, MT_EXTRABFG, MT_PLASMA, MT_ROCKET};
+use crate::src::p_mobj::MobjType;
 use crate::src::r_main::R_PointToAngle2;
 use crate::src::s_sound::S_StartSound;
 use crate::src::sounds::{
@@ -407,7 +407,7 @@ pub unsafe fn A_FireMissile(
         weaponinfo[(*player).readyweapon as usize].ammo as i32,
         1 as i32,
     );
-    P_SpawnPlayerMissile(state, (*player).mo, MT_ROCKET);
+    P_SpawnPlayerMissile(state, (*player).mo, MobjType::MT_ROCKET);
 }
 pub unsafe fn A_FireBFG(state: &mut GameState, mut player: *mut player_t, _psp: *mut pspdef_t) {
     DecreaseAmmo(
@@ -415,7 +415,7 @@ pub unsafe fn A_FireBFG(state: &mut GameState, mut player: *mut player_t, _psp: 
         weaponinfo[(*player).readyweapon as usize].ammo as i32,
         deh_bfg_cells_per_shot,
     );
-    P_SpawnPlayerMissile(state, (*player).mo, MT_BFG);
+    P_SpawnPlayerMissile(state, (*player).mo, MobjType::MT_BFG);
 }
 pub unsafe fn A_FirePlasma(
     state: &mut GameState,
@@ -432,7 +432,7 @@ pub unsafe fn A_FirePlasma(
             + (P_Random(&mut state.m_random) & 1 as i32),
     );
     P_SetPsprite(state, player, PSpriteNum::ps_flash as i32, flashstate);
-    P_SpawnPlayerMissile(state, (*player).mo, MT_PLASMA);
+    P_SpawnPlayerMissile(state, (*player).mo, MobjType::MT_PLASMA);
 }
 pub unsafe fn P_BulletSlope(state: &mut GameState, mut mo: *mut mobj_t) {
     let mut an: angle_t = 0;
@@ -624,7 +624,7 @@ pub unsafe fn A_BFGSpray(state: &mut GameState, id: MobjId) {
                 (*state.p_map.linetarget).x,
                 (*state.p_map.linetarget).y,
                 (*state.p_map.linetarget).z + ((*state.p_map.linetarget).height >> 2 as i32),
-                MT_EXTRABFG,
+                MobjType::MT_EXTRABFG,
             );
             damage = 0 as i32;
             j = 0 as i32;

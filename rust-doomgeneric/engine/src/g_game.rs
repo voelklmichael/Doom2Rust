@@ -56,7 +56,7 @@ use crate::src::p_mobj::P_SpawnPlayer;
 use crate::src::p_mobj::MF_SHADOW;
 use crate::src::p_mobj::mapthing_t;
 use crate::src::p_mobj::{mobj_t, pspdef_t};
-use crate::src::p_mobj::{MT_BRUISERSHOT, MT_HEADSHOT, MT_TFOG, MT_TROOPSHOT};
+use crate::src::p_mobj::MobjType;
 use crate::src::p_saveg::P_ArchivePlayers;
 use crate::src::p_saveg::P_ArchiveSpecials;
 use crate::src::p_saveg::P_ArchiveThinkers;
@@ -1280,7 +1280,7 @@ pub unsafe fn G_CheckSpot(
         x + 20 as fixed_t * xa,
         y + 20 as fixed_t * ya,
         floorheight,
-        MT_TFOG,
+        MobjType::MT_TFOG,
     );
     if state.g_game.players[state.g_game.consoleplayer as usize].viewz != 1 as i32 {
         S_StartSound(
@@ -1739,9 +1739,9 @@ pub unsafe fn G_InitNew(state: &mut GameState, mut skill: SkillType, mut episode
             state.info.states[i as usize].tics >>= 1 as i32;
             i += 1;
         }
-        state.info.mobjinfo[MT_BRUISERSHOT as i32 as usize].speed = 20 as i32 * FRACUNIT;
-        state.info.mobjinfo[MT_HEADSHOT as i32 as usize].speed = 20 as i32 * FRACUNIT;
-        state.info.mobjinfo[MT_TROOPSHOT as i32 as usize].speed = 20 as i32 * FRACUNIT;
+        state.info.mobjinfo[MobjType::MT_BRUISERSHOT as i32 as usize].speed = 20 as i32 * FRACUNIT;
+        state.info.mobjinfo[MobjType::MT_HEADSHOT as i32 as usize].speed = 20 as i32 * FRACUNIT;
+        state.info.mobjinfo[MobjType::MT_TROOPSHOT as i32 as usize].speed = 20 as i32 * FRACUNIT;
     } else if skill != SkillType::sk_nightmare
         && state.g_game.gameskill == SkillType::sk_nightmare
     {
@@ -1750,9 +1750,9 @@ pub unsafe fn G_InitNew(state: &mut GameState, mut skill: SkillType, mut episode
             state.info.states[i as usize].tics <<= 1 as i32;
             i += 1;
         }
-        state.info.mobjinfo[MT_BRUISERSHOT as i32 as usize].speed = 15 as i32 * FRACUNIT;
-        state.info.mobjinfo[MT_HEADSHOT as i32 as usize].speed = 10 as i32 * FRACUNIT;
-        state.info.mobjinfo[MT_TROOPSHOT as i32 as usize].speed = 10 as i32 * FRACUNIT;
+        state.info.mobjinfo[MobjType::MT_BRUISERSHOT as i32 as usize].speed = 15 as i32 * FRACUNIT;
+        state.info.mobjinfo[MobjType::MT_HEADSHOT as i32 as usize].speed = 10 as i32 * FRACUNIT;
+        state.info.mobjinfo[MobjType::MT_TROOPSHOT as i32 as usize].speed = 10 as i32 * FRACUNIT;
     }
     i = 0 as i32;
     while i < MAXPLAYERS {

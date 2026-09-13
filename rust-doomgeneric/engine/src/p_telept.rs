@@ -7,7 +7,7 @@ use crate::src::p_mobj::P_SpawnMobj;
 use crate::src::p_mobj::ThinkerFn;
 use crate::src::p_mobj::MF_MISSILE;
 use crate::src::p_mobj::{line_t, thinker_t};
-use crate::src::p_mobj::{MT_TELEPORTMAN, MT_TFOG};
+use crate::src::p_mobj::MobjType;
 use crate::src::p_setup::SectorId;
 use crate::src::s_sound::S_StartSound;
 use crate::src::sounds::sfx_telept;
@@ -45,7 +45,7 @@ pub unsafe fn EV_Teleport(
                 thinker = state.p_tick.raw(id);
                 if matches!((*thinker).function, ThinkerFn::Mobj(_)) {
                     m = thinker as *mut mobj_t;
-                    if !((*m).type_0 as u32 != MT_TELEPORTMAN as i32 as u32) {
+                    if !((*m).type_0 as u32 != MobjType::MT_TELEPORTMAN as i32 as u32) {
                         sector = state.p_setup.subsectors[(*m).subsector.0 as usize].sector;
                         if !(sector.0 != i as u32) {
                             oldx = (*thing).x;
@@ -61,7 +61,7 @@ pub unsafe fn EV_Teleport(
                                 let thing_player = state.g_game.player_mut(thing_player);
                                 (*thing_player).viewz = (*thing).z + (*thing_player).viewheight;
                             }
-                            fog = P_SpawnMobj(state, oldx, oldy, oldz, MT_TFOG);
+                            fog = P_SpawnMobj(state, oldx, oldy, oldz, MobjType::MT_TFOG);
                             S_StartSound(
                                 state,
                                 fog as *mut ::core::ffi::c_void,
@@ -73,7 +73,7 @@ pub unsafe fn EV_Teleport(
                                 (*m).x + 20 as fixed_t * finecosine[an as isize],
                                 (*m).y + 20 as fixed_t * finesine[an as usize],
                                 (*thing).z,
-                                MT_TFOG,
+                                MobjType::MT_TFOG,
                             );
                             S_StartSound(
                                 state,
