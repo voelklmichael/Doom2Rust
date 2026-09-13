@@ -5,18 +5,36 @@ use crate::src::doomdef::boolean;
 use crate::src::doomdef::NULL;
 use crate::src::game_state::GameState;
 use crate::src::sounds::sfxinfo_t;
-pub type snddevice_t = u32;
-pub const SNDDEVICE_CD: snddevice_t = 10;
-pub const SNDDEVICE_AWE32: snddevice_t = 9;
-pub const SNDDEVICE_GENMIDI: snddevice_t = 8;
-pub const SNDDEVICE_SOUNDCANVAS: snddevice_t = 7;
-pub const SNDDEVICE_WAVEBLASTER: snddevice_t = 6;
-pub const SNDDEVICE_GUS: snddevice_t = 5;
-pub const SNDDEVICE_PAS: snddevice_t = 4;
-pub const SNDDEVICE_SB: snddevice_t = 3;
-pub const SNDDEVICE_ADLIB: snddevice_t = 2;
-pub const SNDDEVICE_PCSPEAKER: snddevice_t = 1;
-pub const SNDDEVICE_NONE: snddevice_t = 0;
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub enum snddevice_t {
+    SNDDEVICE_NONE = 0,
+    SNDDEVICE_PCSPEAKER = 1,
+    SNDDEVICE_ADLIB = 2,
+    SNDDEVICE_SB = 3,
+    SNDDEVICE_PAS = 4,
+    SNDDEVICE_GUS = 5,
+    SNDDEVICE_WAVEBLASTER = 6,
+    SNDDEVICE_SOUNDCANVAS = 7,
+    SNDDEVICE_GENMIDI = 8,
+    SNDDEVICE_AWE32 = 9,
+    SNDDEVICE_CD = 10,
+}
+fn snddevice_from_raw(v: i32) -> snddevice_t {
+    match v {
+        0 => snddevice_t::SNDDEVICE_NONE,
+        1 => snddevice_t::SNDDEVICE_PCSPEAKER,
+        2 => snddevice_t::SNDDEVICE_ADLIB,
+        3 => snddevice_t::SNDDEVICE_SB,
+        4 => snddevice_t::SNDDEVICE_PAS,
+        5 => snddevice_t::SNDDEVICE_GUS,
+        6 => snddevice_t::SNDDEVICE_WAVEBLASTER,
+        7 => snddevice_t::SNDDEVICE_SOUNDCANVAS,
+        8 => snddevice_t::SNDDEVICE_GENMIDI,
+        9 => snddevice_t::SNDDEVICE_AWE32,
+        10 => snddevice_t::SNDDEVICE_CD,
+        n => panic!("invalid snddevice {n}"),
+    }
+}
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct sound_module_t {
@@ -85,8 +103,8 @@ impl ISoundState {
             snd_musiccmd: None,
             sound_module: ::core::ptr::null::<sound_module_t>() as *mut sound_module_t,
             music_module: ::core::ptr::null::<music_module_t>() as *mut music_module_t,
-            snd_musicdevice: SNDDEVICE_SB as i32,
-            snd_sfxdevice: SNDDEVICE_SB as i32,
+            snd_musicdevice: snddevice_t::SNDDEVICE_SB as i32,
+            snd_sfxdevice: snddevice_t::SNDDEVICE_SB as i32,
             snd_sbport: 0,
             snd_sbirq: 0,
             snd_sbdma: 0,
@@ -118,7 +136,7 @@ unsafe fn InitSfxModule(state: &mut ISoundState, mut use_sfx_prefix: bool) {
     i = 0 as i32;
     while !state.sound_modules[i as usize].is_null() {
         if SndDeviceInList(
-            state.snd_sfxdevice as snddevice_t,
+            snddevice_from_raw(state.snd_sfxdevice),
             (*state.sound_modules[i as usize]).sound_devices,
             (*state.sound_modules[i as usize]).num_sound_devices,
         ) {

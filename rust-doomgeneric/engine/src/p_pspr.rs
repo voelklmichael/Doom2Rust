@@ -1,13 +1,10 @@
 use crate::src::d_items::weaponinfo;
-use crate::src::d_mode::{commercial, shareware};
+use crate::src::d_mode::GameMode_t;
 use crate::src::d_player::pw_strength;
-use crate::src::d_player::{am_cell, am_clip, am_misl, am_noammo, am_shell, ammotype_t, NUMAMMO};
-use crate::src::d_player::{player_t, PST_DEAD};
+use crate::src::d_player::{ammotype_t, NUMAMMO};
+use crate::src::d_player::{player_t, PlayerState};
 use crate::src::d_player::{ps_flash, ps_weapon, NUMPSPRITES};
-use crate::src::d_player::{
-    wp_bfg, wp_chaingun, wp_chainsaw, wp_fist, wp_missile, wp_nochange, wp_pistol, wp_plasma,
-    wp_shotgun, wp_supershotgun,
-};
+use crate::src::d_player::weapontype_t;
 use crate::src::d_ticcmd::BT_ATTACK;
 use crate::src::doomdef::false_0;
 use crate::src::doomdef::true_0;
@@ -112,10 +109,10 @@ pub unsafe fn P_CalcSwing(state: &mut GameState, mut player: *mut player_t) {
 }
 pub unsafe fn P_BringUpWeapon(state: &mut GameState, mut player: *mut player_t) {
     let mut newstate: statenum_t = S_NULL;
-    if (*player).pendingweapon as u32 == wp_nochange as i32 as u32 {
+    if (*player).pendingweapon as u32 == weapontype_t::wp_nochange as i32 as u32 {
         (*player).pendingweapon = (*player).readyweapon;
     }
-    if (*player).pendingweapon as u32 == wp_chainsaw as i32 as u32 {
+    if (*player).pendingweapon as u32 == weapontype_t::wp_chainsaw as i32 as u32 {
         S_StartSound(
             state,
             (*player).mo as *mut ::core::ffi::c_void,
@@ -123,60 +120,60 @@ pub unsafe fn P_BringUpWeapon(state: &mut GameState, mut player: *mut player_t) 
         );
     }
     newstate = weaponinfo[(*player).pendingweapon as usize].upstate as statenum_t;
-    (*player).pendingweapon = wp_nochange;
+    (*player).pendingweapon = weapontype_t::wp_nochange;
     (*player).psprites[ps_weapon as i32 as usize].sy = (128 as i32 * FRACUNIT) as fixed_t;
     P_SetPsprite(state, player, ps_weapon as i32, newstate);
 }
 pub unsafe fn P_CheckAmmo(state: &mut GameState, mut player: *mut player_t) -> bool {
-    let mut ammo: ammotype_t = am_clip;
+    let mut ammo: ammotype_t = ammotype_t::am_clip;
     let mut count: i32 = 0;
     ammo = weaponinfo[(*player).readyweapon as usize].ammo;
-    if (*player).readyweapon as u32 == wp_bfg as i32 as u32 {
+    if (*player).readyweapon as u32 == weapontype_t::wp_bfg as i32 as u32 {
         count = deh_bfg_cells_per_shot;
-    } else if (*player).readyweapon as u32 == wp_supershotgun as i32 as u32 {
+    } else if (*player).readyweapon as u32 == weapontype_t::wp_supershotgun as i32 as u32 {
         count = 2 as i32;
     } else {
         count = 1 as i32;
     }
-    if ammo as u32 == am_noammo as i32 as u32 || (*player).ammo[ammo as usize] >= count {
+    if ammo as u32 == ammotype_t::am_noammo as i32 as u32 || (*player).ammo[ammo as usize] >= count {
         return true;
     }
     loop {
-        if (*player).weaponowned[wp_plasma as i32 as usize]
-            && (*player).ammo[am_cell as i32 as usize] != 0
-            && state.doomstat.gamemode as u32 != shareware as i32 as u32
+        if (*player).weaponowned[weapontype_t::wp_plasma as i32 as usize]
+            && (*player).ammo[ammotype_t::am_cell as i32 as usize] != 0
+            && state.doomstat.gamemode as u32 != GameMode_t::shareware as i32 as u32
         {
-            (*player).pendingweapon = wp_plasma;
-        } else if (*player).weaponowned[wp_supershotgun as i32 as usize]
-            && (*player).ammo[am_shell as i32 as usize] > 2 as i32
-            && state.doomstat.gamemode as u32 == commercial as i32 as u32
+            (*player).pendingweapon = weapontype_t::wp_plasma;
+        } else if (*player).weaponowned[weapontype_t::wp_supershotgun as i32 as usize]
+            && (*player).ammo[ammotype_t::am_shell as i32 as usize] > 2 as i32
+            && state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32
         {
-            (*player).pendingweapon = wp_supershotgun;
-        } else if (*player).weaponowned[wp_chaingun as i32 as usize]
-            && (*player).ammo[am_clip as i32 as usize] != 0
+            (*player).pendingweapon = weapontype_t::wp_supershotgun;
+        } else if (*player).weaponowned[weapontype_t::wp_chaingun as i32 as usize]
+            && (*player).ammo[ammotype_t::am_clip as i32 as usize] != 0
         {
-            (*player).pendingweapon = wp_chaingun;
-        } else if (*player).weaponowned[wp_shotgun as i32 as usize]
-            && (*player).ammo[am_shell as i32 as usize] != 0
+            (*player).pendingweapon = weapontype_t::wp_chaingun;
+        } else if (*player).weaponowned[weapontype_t::wp_shotgun as i32 as usize]
+            && (*player).ammo[ammotype_t::am_shell as i32 as usize] != 0
         {
-            (*player).pendingweapon = wp_shotgun;
-        } else if (*player).ammo[am_clip as i32 as usize] != 0 {
-            (*player).pendingweapon = wp_pistol;
-        } else if (*player).weaponowned[wp_chainsaw as i32 as usize] {
-            (*player).pendingweapon = wp_chainsaw;
-        } else if (*player).weaponowned[wp_missile as i32 as usize]
-            && (*player).ammo[am_misl as i32 as usize] != 0
+            (*player).pendingweapon = weapontype_t::wp_shotgun;
+        } else if (*player).ammo[ammotype_t::am_clip as i32 as usize] != 0 {
+            (*player).pendingweapon = weapontype_t::wp_pistol;
+        } else if (*player).weaponowned[weapontype_t::wp_chainsaw as i32 as usize] {
+            (*player).pendingweapon = weapontype_t::wp_chainsaw;
+        } else if (*player).weaponowned[weapontype_t::wp_missile as i32 as usize]
+            && (*player).ammo[ammotype_t::am_misl as i32 as usize] != 0
         {
-            (*player).pendingweapon = wp_missile;
-        } else if (*player).weaponowned[wp_bfg as i32 as usize]
-            && (*player).ammo[am_cell as i32 as usize] > 40 as i32
-            && state.doomstat.gamemode as u32 != shareware as i32 as u32
+            (*player).pendingweapon = weapontype_t::wp_missile;
+        } else if (*player).weaponowned[weapontype_t::wp_bfg as i32 as usize]
+            && (*player).ammo[ammotype_t::am_cell as i32 as usize] > 40 as i32
+            && state.doomstat.gamemode as u32 != GameMode_t::shareware as i32 as u32
         {
-            (*player).pendingweapon = wp_bfg;
+            (*player).pendingweapon = weapontype_t::wp_bfg;
         } else {
-            (*player).pendingweapon = wp_fist;
+            (*player).pendingweapon = weapontype_t::wp_fist;
         }
-        if !((*player).pendingweapon as u32 == wp_nochange as i32 as u32) {
+        if !((*player).pendingweapon as u32 == weapontype_t::wp_nochange as i32 as u32) {
             break;
         }
     }
@@ -218,7 +215,7 @@ pub unsafe fn A_WeaponReady(
     {
         P_SetMobjState(state, (*player).mo, S_PLAY);
     }
-    if (*player).readyweapon as u32 == wp_chainsaw as i32 as u32
+    if (*player).readyweapon as u32 == weapontype_t::wp_chainsaw as i32 as u32
         && (*psp).state == Some(StateId(S_SAW))
     {
         S_StartSound(
@@ -227,15 +224,15 @@ pub unsafe fn A_WeaponReady(
             sfx_sawidl as i32,
         );
     }
-    if (*player).pendingweapon as u32 != wp_nochange as i32 as u32 || (*player).health == 0 {
+    if (*player).pendingweapon as u32 != weapontype_t::wp_nochange as i32 as u32 || (*player).health == 0 {
         newstate = weaponinfo[(*player).readyweapon as usize].downstate as statenum_t;
         P_SetPsprite(state, player, ps_weapon as i32, newstate);
         return;
     }
     if (*player).cmd.buttons as i32 & BT_ATTACK as i32 != 0 {
         if (*player).attackdown == 0
-            || (*player).readyweapon as u32 != wp_missile as i32 as u32
-                && (*player).readyweapon as u32 != wp_bfg as i32 as u32
+            || (*player).readyweapon as u32 != weapontype_t::wp_missile as i32 as u32
+                && (*player).readyweapon as u32 != weapontype_t::wp_bfg as i32 as u32
         {
             (*player).attackdown = true_0;
             P_FireWeapon(state, player);
@@ -251,7 +248,7 @@ pub unsafe fn A_WeaponReady(
 }
 pub unsafe fn A_ReFire(state: &mut GameState, mut player: *mut player_t, _psp: *mut pspdef_t) {
     if (*player).cmd.buttons as i32 & BT_ATTACK as i32 != 0
-        && (*player).pendingweapon as u32 == wp_nochange as i32 as u32
+        && (*player).pendingweapon as u32 == weapontype_t::wp_nochange as i32 as u32
         && (*player).health != 0
     {
         (*player).refire += 1;
@@ -273,7 +270,7 @@ pub unsafe fn A_Lower(state: &mut GameState, mut player: *mut player_t, mut psp:
     if (*psp).sy < 128 as i32 * FRACUNIT {
         return;
     }
-    if (*player).playerstate as u32 == PST_DEAD as i32 as u32 {
+    if (*player).playerstate == PlayerState::PST_DEAD {
         (*psp).sy = (128 as i32 * FRACUNIT) as fixed_t;
         return;
     }

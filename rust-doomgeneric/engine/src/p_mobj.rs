@@ -1,4 +1,4 @@
-use crate::src::d_mode::{sk_baby, sk_nightmare};
+use crate::src::d_mode::SkillType;
 use crate::src::d_player::CF_NOMOMENTUM;
 use crate::src::doomdef::MAXPLAYERS;
 use crate::src::doomdef::NULL;
@@ -489,7 +489,7 @@ pub struct pspdef_t {
 }
 pub type mobj_t = mobj_s;
 pub use crate::src::d_player::{
-    player_s, player_t, playerstate_t, PlayerId, PST_DEAD, PST_LIVE, PST_REBORN,
+    player_s, player_t, PlayerId, PlayerState,
 };
 #[derive(Copy, Clone)]
 #[repr(C)]
@@ -530,16 +530,18 @@ pub struct line_s {
     pub tag: i16,
     pub sidenum: [i16; 2],
     pub bbox: [fixed_t; 4],
-    pub slopetype: slopetype_t,
+    pub slopetype: SlopeType,
     pub frontsector: Option<SectorId>,
     pub backsector: Option<SectorId>,
     pub validcount: i32,
 }
-pub type slopetype_t = u32;
-pub const ST_NEGATIVE: slopetype_t = 3;
-pub const ST_POSITIVE: slopetype_t = 2;
-pub const ST_VERTICAL: slopetype_t = 1;
-pub const ST_HORIZONTAL: slopetype_t = 0;
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub enum SlopeType {
+    ST_HORIZONTAL = 0,
+    ST_VERTICAL = 1,
+    ST_POSITIVE = 2,
+    ST_NEGATIVE = 3,
+}
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct vertex_t {
@@ -916,7 +918,7 @@ pub unsafe fn P_SpawnMobj(
     (*mobj).height = (*info).height as fixed_t;
     (*mobj).flags = (*info).flags;
     (*mobj).health = (*info).spawnhealth;
-    if state.g_game.gameskill as i32 != sk_nightmare as i32 {
+    if state.g_game.gameskill != SkillType::sk_nightmare {
         (*mobj).reactiontime = (*info).reactiontime;
     }
     (*mobj).lastlook = P_Random(&mut state.m_random) % MAXPLAYERS;
@@ -1172,7 +1174,7 @@ pub unsafe fn P_SpawnPlayer(state: &mut GameState, mut mthing: *mut mapthing_t) 
     }
     p = (&raw mut state.g_game.players as *mut player_t)
         .offset(((*mthing).type_0 as i32 - 1 as i32) as isize) as *mut player_t;
-    if (*p).playerstate as u32 == PST_REBORN as i32 as u32 {
+    if (*p).playerstate == PlayerState::PST_REBORN {
         G_PlayerReborn(&mut state.g_game, (*mthing).type_0 as i32 - 1 as i32);
     }
     x = (((*mthing).x as i32) << FRACBITS) as fixed_t;
@@ -1186,7 +1188,7 @@ pub unsafe fn P_SpawnPlayer(state: &mut GameState, mut mthing: *mut mapthing_t) 
     (*mobj).player = Some(PlayerId(((*mthing).type_0 as i32 - 1 as i32) as u8));
     (*mobj).health = (*p).health;
     (*p).mo = mobj;
-    (*p).playerstate = PST_LIVE;
+    (*p).playerstate = PlayerState::PST_LIVE;
     (*p).refire = 0 as i32;
     (*p).message = None;
     (*p).damagecount = 0 as i32;
@@ -1241,9 +1243,9 @@ pub unsafe fn P_SpawnMapThing(state: &mut GameState, mut mthing: *mut mapthing_t
     if !state.g_game.netgame && (*mthing).options as i32 & 16 as i32 != 0 {
         return;
     }
-    if state.g_game.gameskill as i32 == sk_baby as i32 {
+    if state.g_game.gameskill == SkillType::sk_baby {
         bit = 1 as i32;
-    } else if state.g_game.gameskill as i32 == sk_nightmare as i32 {
+    } else if state.g_game.gameskill == SkillType::sk_nightmare {
         bit = 4 as i32;
     } else {
         bit = (1 as i32) << state.g_game.gameskill as i32 - 1 as i32;

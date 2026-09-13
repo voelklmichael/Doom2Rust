@@ -1,17 +1,14 @@
 use crate::src::am_map::AM_Stop;
 use crate::src::d_items::weaponinfo;
-use crate::src::d_mode::{commercial, GameVersion};
-use crate::src::d_mode::{sk_baby, sk_nightmare};
+use crate::src::d_mode::{GameMode_t, GameVersion};
+use crate::src::d_mode::SkillType;
 use crate::src::d_player::CF_GODMODE;
-use crate::src::d_player::{am_cell, am_clip, am_misl, am_noammo, am_shell, ammotype_t, NUMAMMO};
-use crate::src::d_player::{player_t, PlayerId, PST_DEAD};
+use crate::src::d_player::{ammotype_from_raw, ammotype_t, NUMAMMO};
+use crate::src::d_player::{player_t, PlayerId, PlayerState};
 use crate::src::d_player::{
     pw_allmap, pw_infrared, pw_invisibility, pw_invulnerability, pw_ironfeet, pw_strength,
 };
-use crate::src::d_player::{
-    weapontype_t, wp_bfg, wp_chaingun, wp_chainsaw, wp_fist, wp_missile, wp_pistol, wp_plasma,
-    wp_shotgun, wp_supershotgun,
-};
+use crate::src::d_player::weapontype_t;
 use crate::src::doomdef::NULL;
 use crate::src::game_state::GameState;
 use crate::src::i_system::I_Error;
@@ -44,14 +41,16 @@ use crate::src::tables::finesine;
 use crate::src::tables::ANG180;
 use crate::src::tables::ANGLETOFINESHIFT;
 
-pub type card_t = u32;
-pub const NUMCARDS: card_t = 6;
-pub const it_redskull: card_t = 5;
-pub const it_yellowskull: card_t = 4;
-pub const it_blueskull: card_t = 3;
-pub const it_redcard: card_t = 2;
-pub const it_yellowcard: card_t = 1;
-pub const it_bluecard: card_t = 0;
+pub const NUMCARDS: i32 = 6;
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub enum CardType {
+    it_bluecard = 0,
+    it_yellowcard = 1,
+    it_redcard = 2,
+    it_blueskull = 3,
+    it_yellowskull = 4,
+    it_redskull = 5,
+}
 pub type C2RustUnnamed_0 = u32;
 pub const IRONTICS: C2RustUnnamed_0 = 2100;
 pub const INFRATICS: C2RustUnnamed_0 = 4200;
@@ -84,7 +83,7 @@ pub unsafe fn P_GiveAmmo(
     mut num: i32,
 ) -> bool {
     let mut oldammo: i32 = 0;
-    if ammo as u32 == am_noammo as i32 as u32 {
+    if ammo as u32 == ammotype_t::am_noammo as i32 as u32 {
         return false;
     }
     if ammo as u32 > NUMAMMO as i32 as u32 {
@@ -98,8 +97,8 @@ pub unsafe fn P_GiveAmmo(
     } else {
         num = clipammo[ammo as usize] / 2 as i32;
     }
-    if state.g_game.gameskill as i32 == sk_baby as i32
-        || state.g_game.gameskill as i32 == sk_nightmare as i32
+    if state.g_game.gameskill == SkillType::sk_baby
+        || state.g_game.gameskill == SkillType::sk_nightmare
     {
         num <<= 1 as i32;
     }
@@ -113,36 +112,36 @@ pub unsafe fn P_GiveAmmo(
     }
     match ammo as u32 {
         0 => {
-            if (*player).readyweapon as u32 == wp_fist as i32 as u32 {
-                if (*player).weaponowned[wp_chaingun as i32 as usize] {
-                    (*player).pendingweapon = wp_chaingun;
+            if (*player).readyweapon as u32 == weapontype_t::wp_fist as i32 as u32 {
+                if (*player).weaponowned[weapontype_t::wp_chaingun as i32 as usize] {
+                    (*player).pendingweapon = weapontype_t::wp_chaingun;
                 } else {
-                    (*player).pendingweapon = wp_pistol;
+                    (*player).pendingweapon = weapontype_t::wp_pistol;
                 }
             }
         }
         1 => {
-            if (*player).readyweapon as u32 == wp_fist as i32 as u32
-                || (*player).readyweapon as u32 == wp_pistol as i32 as u32
+            if (*player).readyweapon as u32 == weapontype_t::wp_fist as i32 as u32
+                || (*player).readyweapon as u32 == weapontype_t::wp_pistol as i32 as u32
             {
-                if (*player).weaponowned[wp_shotgun as i32 as usize] {
-                    (*player).pendingweapon = wp_shotgun;
+                if (*player).weaponowned[weapontype_t::wp_shotgun as i32 as usize] {
+                    (*player).pendingweapon = weapontype_t::wp_shotgun;
                 }
             }
         }
         2 => {
-            if (*player).readyweapon as u32 == wp_fist as i32 as u32
-                || (*player).readyweapon as u32 == wp_pistol as i32 as u32
+            if (*player).readyweapon as u32 == weapontype_t::wp_fist as i32 as u32
+                || (*player).readyweapon as u32 == weapontype_t::wp_pistol as i32 as u32
             {
-                if (*player).weaponowned[wp_plasma as i32 as usize] {
-                    (*player).pendingweapon = wp_plasma;
+                if (*player).weaponowned[weapontype_t::wp_plasma as i32 as usize] {
+                    (*player).pendingweapon = weapontype_t::wp_plasma;
                 }
             }
         }
         3 => {
-            if (*player).readyweapon as u32 == wp_fist as i32 as u32 {
-                if (*player).weaponowned[wp_missile as i32 as usize] {
-                    (*player).pendingweapon = wp_missile;
+            if (*player).readyweapon as u32 == weapontype_t::wp_fist as i32 as u32 {
+                if (*player).weaponowned[weapontype_t::wp_missile as i32 as usize] {
+                    (*player).pendingweapon = weapontype_t::wp_missile;
                 }
             }
         }
@@ -178,7 +177,7 @@ pub unsafe fn P_GiveWeapon(
         }
         return false;
     }
-    if weaponinfo[weapon as usize].ammo as u32 != am_noammo as i32 as u32 {
+    if weaponinfo[weapon as usize].ammo as u32 != ammotype_t::am_noammo as i32 as u32 {
         if dropped {
             gaveammo = P_GiveAmmo(state, player, weaponinfo[weapon as usize].ammo, 1 as i32);
         } else {
@@ -217,7 +216,7 @@ pub unsafe fn P_GiveArmor(mut player: *mut player_t, mut armortype: i32) -> bool
     (*player).armorpoints = hits;
     return true;
 }
-pub unsafe fn P_GiveCard(mut player: *mut player_t, mut card: card_t) {
+pub unsafe fn P_GiveCard(mut player: *mut player_t, mut card: CardType) {
     if (*player).cards[card as usize] {
         return;
     }
@@ -312,7 +311,7 @@ pub unsafe fn P_TouchSpecialThing(
             sound = sfx_getpow as i32;
         }
         74 => {
-            if state.doomstat.gamemode as u32 != commercial as i32 as u32 {
+            if state.doomstat.gamemode as u32 != GameMode_t::commercial as i32 as u32 {
                 return;
             }
             (*player).health = deh_megasphere_health;
@@ -322,55 +321,55 @@ pub unsafe fn P_TouchSpecialThing(
             sound = sfx_getpow as i32;
         }
         62 => {
-            if !(*player).cards[it_bluecard as i32 as usize] {
+            if !(*player).cards[CardType::it_bluecard as i32 as usize] {
                 (*player).message = Some("Picked up a blue keycard.".to_string());
             }
-            P_GiveCard(player, it_bluecard);
+            P_GiveCard(player, CardType::it_bluecard);
             if state.g_game.netgame {
                 return;
             }
         }
         64 => {
-            if !(*player).cards[it_yellowcard as i32 as usize] {
+            if !(*player).cards[CardType::it_yellowcard as i32 as usize] {
                 (*player).message = Some("Picked up a yellow keycard.".to_string());
             }
-            P_GiveCard(player, it_yellowcard);
+            P_GiveCard(player, CardType::it_yellowcard);
             if state.g_game.netgame {
                 return;
             }
         }
         63 => {
-            if !(*player).cards[it_redcard as i32 as usize] {
+            if !(*player).cards[CardType::it_redcard as i32 as usize] {
                 (*player).message = Some("Picked up a red keycard.".to_string());
             }
-            P_GiveCard(player, it_redcard);
+            P_GiveCard(player, CardType::it_redcard);
             if state.g_game.netgame {
                 return;
             }
         }
         65 => {
-            if !(*player).cards[it_blueskull as i32 as usize] {
+            if !(*player).cards[CardType::it_blueskull as i32 as usize] {
                 (*player).message = Some("Picked up a blue skull key.".to_string());
             }
-            P_GiveCard(player, it_blueskull);
+            P_GiveCard(player, CardType::it_blueskull);
             if state.g_game.netgame {
                 return;
             }
         }
         67 => {
-            if !(*player).cards[it_yellowskull as i32 as usize] {
+            if !(*player).cards[CardType::it_yellowskull as i32 as usize] {
                 (*player).message = Some("Picked up a yellow skull key.".to_string());
             }
-            P_GiveCard(player, it_yellowskull);
+            P_GiveCard(player, CardType::it_yellowskull);
             if state.g_game.netgame {
                 return;
             }
         }
         66 => {
-            if !(*player).cards[it_redskull as i32 as usize] {
+            if !(*player).cards[CardType::it_redskull as i32 as usize] {
                 (*player).message = Some("Picked up a red skull key.".to_string());
             }
-            P_GiveCard(player, it_redskull);
+            P_GiveCard(player, CardType::it_redskull);
             if state.g_game.netgame {
                 return;
             }
@@ -403,8 +402,8 @@ pub unsafe fn P_TouchSpecialThing(
                 return;
             }
             (*player).message = Some("Berserk!".to_string());
-            if (*player).readyweapon as u32 != wp_fist as i32 as u32 {
-                (*player).pendingweapon = wp_fist;
+            if (*player).readyweapon as u32 != weapontype_t::wp_fist as i32 as u32 {
+                (*player).pendingweapon = weapontype_t::wp_fist;
             }
             sound = sfx_getpow as i32;
         }
@@ -438,52 +437,52 @@ pub unsafe fn P_TouchSpecialThing(
         }
         78 => {
             if (*special).flags & MF_DROPPED as i32 != 0 {
-                if !P_GiveAmmo(state, player, am_clip, 0 as i32) {
+                if !P_GiveAmmo(state, player, ammotype_t::am_clip, 0 as i32) {
                     return;
                 }
-            } else if !P_GiveAmmo(state, player, am_clip, 1 as i32) {
+            } else if !P_GiveAmmo(state, player, ammotype_t::am_clip, 1 as i32) {
                 return;
             }
             (*player).message = Some("Picked up a clip.".to_string());
         }
         79 => {
-            if !P_GiveAmmo(state, player, am_clip, 5 as i32) {
+            if !P_GiveAmmo(state, player, ammotype_t::am_clip, 5 as i32) {
                 return;
             }
             (*player).message = Some("Picked up a box of bullets.".to_string());
         }
         80 => {
-            if !P_GiveAmmo(state, player, am_misl, 1 as i32) {
+            if !P_GiveAmmo(state, player, ammotype_t::am_misl, 1 as i32) {
                 return;
             }
             (*player).message = Some("Picked up a rocket.".to_string());
         }
         81 => {
-            if !P_GiveAmmo(state, player, am_misl, 5 as i32) {
+            if !P_GiveAmmo(state, player, ammotype_t::am_misl, 5 as i32) {
                 return;
             }
             (*player).message = Some("Picked up a box of rockets.".to_string());
         }
         82 => {
-            if !P_GiveAmmo(state, player, am_cell, 1 as i32) {
+            if !P_GiveAmmo(state, player, ammotype_t::am_cell, 1 as i32) {
                 return;
             }
             (*player).message = Some("Picked up an energy cell.".to_string());
         }
         83 => {
-            if !P_GiveAmmo(state, player, am_cell, 5 as i32) {
+            if !P_GiveAmmo(state, player, ammotype_t::am_cell, 5 as i32) {
                 return;
             }
             (*player).message = Some("Picked up an energy cell pack.".to_string());
         }
         84 => {
-            if !P_GiveAmmo(state, player, am_shell, 1 as i32) {
+            if !P_GiveAmmo(state, player, ammotype_t::am_shell, 1 as i32) {
                 return;
             }
             (*player).message = Some("Picked up 4 shotgun shells.".to_string());
         }
         85 => {
-            if !P_GiveAmmo(state, player, am_shell, 5 as i32) {
+            if !P_GiveAmmo(state, player, ammotype_t::am_shell, 5 as i32) {
                 return;
             }
             (*player).message = Some("Picked up a box of shotgun shells.".to_string());
@@ -499,13 +498,13 @@ pub unsafe fn P_TouchSpecialThing(
             }
             i = 0 as i32;
             while i < NUMAMMO as i32 {
-                P_GiveAmmo(state, player, i as ammotype_t, 1 as i32);
+                P_GiveAmmo(state, player, ammotype_from_raw(i), 1 as i32);
                 i += 1;
             }
             (*player).message = Some("Picked up a backpack full of ammo!".to_string());
         }
         87 => {
-            if !P_GiveWeapon(state, player, wp_bfg, false) {
+            if !P_GiveWeapon(state, player, weapontype_t::wp_bfg, false) {
                 return;
             }
             (*player).message = Some("You got the BFG9000!  Oh, yes.".to_string());
@@ -515,7 +514,7 @@ pub unsafe fn P_TouchSpecialThing(
             if !P_GiveWeapon(
                 state,
                 player,
-                wp_chaingun,
+                weapontype_t::wp_chaingun,
                 (*special).flags & MF_DROPPED as i32 != 0,
             ) {
                 return;
@@ -524,21 +523,21 @@ pub unsafe fn P_TouchSpecialThing(
             sound = sfx_wpnup as i32;
         }
         89 => {
-            if !P_GiveWeapon(state, player, wp_chainsaw, false) {
+            if !P_GiveWeapon(state, player, weapontype_t::wp_chainsaw, false) {
                 return;
             }
             (*player).message = Some("A chainsaw!  Find some meat!".to_string());
             sound = sfx_wpnup as i32;
         }
         90 => {
-            if !P_GiveWeapon(state, player, wp_missile, false) {
+            if !P_GiveWeapon(state, player, weapontype_t::wp_missile, false) {
                 return;
             }
             (*player).message = Some("You got the rocket launcher!".to_string());
             sound = sfx_wpnup as i32;
         }
         91 => {
-            if !P_GiveWeapon(state, player, wp_plasma, false) {
+            if !P_GiveWeapon(state, player, weapontype_t::wp_plasma, false) {
                 return;
             }
             (*player).message = Some("You got the plasma gun!".to_string());
@@ -548,7 +547,7 @@ pub unsafe fn P_TouchSpecialThing(
             if !P_GiveWeapon(
                 state,
                 player,
-                wp_shotgun,
+                weapontype_t::wp_shotgun,
                 (*special).flags & MF_DROPPED as i32 != 0,
             ) {
                 return;
@@ -560,7 +559,7 @@ pub unsafe fn P_TouchSpecialThing(
             if !P_GiveWeapon(
                 state,
                 player,
-                wp_supershotgun,
+                weapontype_t::wp_supershotgun,
                 (*special).flags & MF_DROPPED as i32 != 0,
             ) {
                 return;
@@ -610,7 +609,7 @@ pub unsafe fn P_KillMobj(state: &mut GameState, mut source: *mut mobj_t, mut tar
             (*target_player).frags[target_player_id.0 as usize] += 1;
         }
         (*target).flags &= !(MF_SOLID as i32);
-        (*target_player).playerstate = PST_DEAD;
+        (*target_player).playerstate = PlayerState::PST_DEAD;
         P_DropWeapon(state, target_player);
         if target_player_id.0 as i32 == state.g_game.consoleplayer && state.am_map.automapactive {
             AM_Stop(state);
@@ -673,7 +672,7 @@ pub unsafe fn P_DamageMobj(
         Some(id) => state.g_game.player_mut(id),
         None => ::core::ptr::null_mut::<player_t>(),
     };
-    if !player.is_null() && state.g_game.gameskill as i32 == sk_baby as i32 {
+    if !player.is_null() && state.g_game.gameskill == SkillType::sk_baby {
         damage >>= 1 as i32;
     }
     if !inflictor.is_null()
@@ -681,7 +680,7 @@ pub unsafe fn P_DamageMobj(
         && (source.is_null()
             || (*source).player.is_none()
             || (*state.g_game.player_mut((*source).player.unwrap())).readyweapon as u32
-                != wp_chainsaw as i32 as u32)
+                != weapontype_t::wp_chainsaw as i32 as u32)
     {
         ang = R_PointToAngle2(
             state,

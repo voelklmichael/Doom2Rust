@@ -2,7 +2,7 @@ use crate::src::game_state::GameState;
 use crate::src::m_fixed::fixed_t;
 use crate::src::m_fixed::FRACUNIT;
 use crate::src::p_floor::T_MovePlane;
-use crate::src::p_floor::{crushed, ok, pastdest, result_e};
+use crate::src::p_floor::ResultE;
 use crate::src::p_mobj::SectorSpecial;
 use crate::src::p_mobj::ThinkerFn;
 use crate::src::p_mobj::{line_t, sector_t};
@@ -17,13 +17,15 @@ use crate::src::sounds::{sfx_pstop, sfx_stnmov};
 use crate::src::z_zone::Z_Malloc;
 use crate::src::z_zone::PU_LEVSPEC;
 
-pub type ceiling_e = u32;
-pub const silentCrushAndRaise: ceiling_e = 5;
-pub const fastCrushAndRaise: ceiling_e = 4;
-pub const crushAndRaise: ceiling_e = 3;
-pub const lowerAndCrush: ceiling_e = 2;
-pub const raiseToHighest: ceiling_e = 1;
-pub const lowerToFloor: ceiling_e = 0;
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub enum CeilingE {
+    lowerToFloor = 0,
+    raiseToHighest = 1,
+    lowerAndCrush = 2,
+    crushAndRaise = 3,
+    fastCrushAndRaise = 4,
+    silentCrushAndRaise = 5,
+}
 pub const CEILSPEED: i32 = FRACUNIT;
 pub const MAXCEILINGS: i32 = 30;
 pub struct PCeilngState {
@@ -39,7 +41,7 @@ impl PCeilngState {
 }
 
 pub unsafe fn T_MoveCeiling(state: &mut GameState, mut ceiling: *mut ceiling_t) {
-    let mut res: result_e = ok;
+    let mut res: ResultE = ResultE::ok;
     let sec = state.p_setup.sector_mut((*ceiling).sector);
     match (*ceiling).direction {
         1 => {
@@ -53,8 +55,8 @@ pub unsafe fn T_MoveCeiling(state: &mut GameState, mut ceiling: *mut ceiling_t) 
                 (*ceiling).direction,
             );
             if state.p_tick.leveltime & 7 as i32 == 0 {
-                match (*ceiling).type_0 as u32 {
-                    5 => {}
+                match (*ceiling).type_0 {
+                    CeilingE::silentCrushAndRaise => {}
                     _ => {
                         S_StartSound(
                             state,
@@ -64,14 +66,14 @@ pub unsafe fn T_MoveCeiling(state: &mut GameState, mut ceiling: *mut ceiling_t) 
                     }
                 }
             }
-            if res as u32 == pastdest as i32 as u32 {
+            if res == ResultE::pastdest {
                 let mut current_block_7: u64;
-                match (*ceiling).type_0 as u32 {
-                    1 => {
+                match (*ceiling).type_0 {
+                    CeilingE::raiseToHighest => {
                         P_RemoveActiveCeiling(state, ceiling);
                         current_block_7 = 10599921512955367680;
                     }
-                    5 => {
+                    CeilingE::silentCrushAndRaise => {
                         S_StartSound(
                             state,
                             &raw mut (*sec).soundorg as *mut ::core::ffi::c_void,
@@ -79,7 +81,7 @@ pub unsafe fn T_MoveCeiling(state: &mut GameState, mut ceiling: *mut ceiling_t) 
                         );
                         current_block_7 = 16040908003852494439;
                     }
-                    4 | 3 => {
+                    CeilingE::fastCrushAndRaise | CeilingE::crushAndRaise => {
                         current_block_7 = 16040908003852494439;
                     }
                     _ => {
@@ -105,8 +107,8 @@ pub unsafe fn T_MoveCeiling(state: &mut GameState, mut ceiling: *mut ceiling_t) 
                 (*ceiling).direction,
             );
             if state.p_tick.leveltime & 7 as i32 == 0 {
-                match (*ceiling).type_0 as u32 {
-                    5 => {}
+                match (*ceiling).type_0 {
+                    CeilingE::silentCrushAndRaise => {}
                     _ => {
                         S_StartSound(
                             state,
@@ -116,10 +118,10 @@ pub unsafe fn T_MoveCeiling(state: &mut GameState, mut ceiling: *mut ceiling_t) 
                     }
                 }
             }
-            if res as u32 == pastdest as i32 as u32 {
+            if res == ResultE::pastdest {
                 let mut current_block_19: u64;
-                match (*ceiling).type_0 as u32 {
-                    5 => {
+                match (*ceiling).type_0 {
+                    CeilingE::silentCrushAndRaise => {
                         S_StartSound(
                             state,
                             &raw mut (*sec).soundorg as *mut ::core::ffi::c_void,
@@ -127,13 +129,13 @@ pub unsafe fn T_MoveCeiling(state: &mut GameState, mut ceiling: *mut ceiling_t) 
                         );
                         current_block_19 = 3850642056257311267;
                     }
-                    3 => {
+                    CeilingE::crushAndRaise => {
                         current_block_19 = 3850642056257311267;
                     }
-                    4 => {
+                    CeilingE::fastCrushAndRaise => {
                         current_block_19 = 14600216857840559743;
                     }
-                    2 | 0 => {
+                    CeilingE::lowerAndCrush | CeilingE::lowerToFloor => {
                         P_RemoveActiveCeiling(state, ceiling);
                         current_block_19 = 16924917904204750491;
                     }
@@ -154,9 +156,9 @@ pub unsafe fn T_MoveCeiling(state: &mut GameState, mut ceiling: *mut ceiling_t) 
                     }
                     _ => {}
                 }
-            } else if res as u32 == crushed as i32 as u32 {
-                match (*ceiling).type_0 as u32 {
-                    5 | 3 | 2 => {
+            } else if res == ResultE::crushed {
+                match (*ceiling).type_0 {
+                    CeilingE::silentCrushAndRaise | CeilingE::crushAndRaise | CeilingE::lowerAndCrush => {
                         (*ceiling).speed = (CEILSPEED / 8 as i32) as fixed_t;
                     }
                     _ => {}
@@ -169,7 +171,7 @@ pub unsafe fn T_MoveCeiling(state: &mut GameState, mut ceiling: *mut ceiling_t) 
 pub unsafe fn EV_DoCeiling(
     state: &mut GameState,
     mut line: *mut line_t,
-    mut type_0: ceiling_e,
+    mut type_0: CeilingE,
 ) -> i32 {
     let mut secnum: i32 = 0;
     let mut rtn: i32 = 0;
@@ -177,8 +179,8 @@ pub unsafe fn EV_DoCeiling(
     let mut ceiling: *mut ceiling_t = ::core::ptr::null_mut::<ceiling_t>();
     secnum = -(1 as i32);
     rtn = 0 as i32;
-    match type_0 as u32 {
-        4 | 5 | 3 => {
+    match type_0 {
+        CeilingE::fastCrushAndRaise | CeilingE::silentCrushAndRaise | CeilingE::crushAndRaise => {
             P_ActivateInStasisCeiling(&mut state.p_ceilng, line);
         }
         _ => {}
@@ -205,8 +207,8 @@ pub unsafe fn EV_DoCeiling(
         (*ceiling).sector = SectorId(secnum as u32);
         (*ceiling).crush = false;
         let mut current_block_26: u64;
-        match type_0 as u32 {
-            4 => {
+        match type_0 {
+            CeilingE::fastCrushAndRaise => {
                 (*ceiling).crush = true;
                 (*ceiling).topheight = (*sec).ceilingheight;
                 (*ceiling).bottomheight =
@@ -215,28 +217,25 @@ pub unsafe fn EV_DoCeiling(
                 (*ceiling).speed = (CEILSPEED * 2 as i32) as fixed_t;
                 current_block_26 = 7056779235015430508;
             }
-            5 | 3 => {
+            CeilingE::silentCrushAndRaise | CeilingE::crushAndRaise => {
                 (*ceiling).crush = true;
                 (*ceiling).topheight = (*sec).ceilingheight;
                 current_block_26 = 6994972524166957283;
             }
-            2 | 0 => {
+            CeilingE::lowerAndCrush | CeilingE::lowerToFloor => {
                 current_block_26 = 6994972524166957283;
             }
-            1 => {
+            CeilingE::raiseToHighest => {
                 (*ceiling).topheight = P_FindHighestCeilingSurrounding(state, sec);
                 (*ceiling).direction = 1 as i32;
                 (*ceiling).speed = CEILSPEED as fixed_t;
-                current_block_26 = 7056779235015430508;
-            }
-            _ => {
                 current_block_26 = 7056779235015430508;
             }
         }
         match current_block_26 {
             6994972524166957283 => {
                 (*ceiling).bottomheight = (*sec).floorheight;
-                if type_0 as u32 != lowerToFloor as i32 as u32 {
+                if type_0 != CeilingE::lowerToFloor {
                     (*ceiling).bottomheight += 8 as i32 * FRACUNIT;
                 }
                 (*ceiling).direction = -(1 as i32);

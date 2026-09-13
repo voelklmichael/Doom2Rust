@@ -1,20 +1,20 @@
-use crate::src::d_mode::skill_t;
+use crate::src::d_mode::skill_from_raw;
 use crate::src::d_player::NUMPOWERS;
 use crate::src::info::StateId;
 use crate::src::d_player::NUMPSPRITES;
-use crate::src::d_player::{player_t, playerstate_t, PlayerId};
-use crate::src::d_player::{weapontype_t, NUMWEAPONS};
+use crate::src::d_player::{player_t, PlayerId, PlayerState};
+use crate::src::d_player::{weapontype_from_raw, NUMWEAPONS};
 use crate::src::d_ticcmd::ticcmd_t;
 use crate::src::doomdef::boolean;
 use crate::src::g_game::G_VanillaVersionCode;
 use crate::src::i_system::I_Error;
 use std::io::{Read, Seek, Write};
 use crate::src::m_fixed::fixed_t;
-use crate::src::p_ceilng::ceiling_e;
+use crate::src::p_ceilng::CeilingE;
 use crate::src::p_ceilng::P_AddActiveCeiling;
-use crate::src::p_doors::vldoor_e;
+use crate::src::p_doors::VldoorE;
 use crate::src::p_doors::vldoor_t;
-use crate::src::p_floor::floor_e;
+use crate::src::p_floor::FloorE;
 use crate::src::p_lights::{glow_t, lightflash_t, strobe_t};
 use crate::src::p_maputl::P_SetThingPosition;
 use crate::src::p_mobj::mobjtype_t;
@@ -24,8 +24,8 @@ use crate::src::p_mobj::{
     line_t, mapthing_t, sector_t, thinker_t, SectorSpecial, ThinkerFn,
 };
 use crate::src::p_mobj::{mobj_t, pspdef_t};
-use crate::src::p_plats::plat_e;
-use crate::src::p_plats::plattype_e;
+use crate::src::p_plats::PlatE;
+use crate::src::p_plats::PlattypeE;
 use crate::src::p_plats::P_AddActivePlat;
 use crate::src::p_setup::SectorId;
 use crate::src::p_setup::SideId;
@@ -380,7 +380,12 @@ unsafe fn saveg_write_pspdef_t(state: &mut GameState, mut str: *mut pspdef_t) {
 unsafe fn saveg_read_player_t(state: &mut GameState, mut str: *mut player_t) {
     let mut i: i32 = 0;
     (*str).mo = saveg_readp(state) as *mut mobj_t;
-    (*str).playerstate = saveg_read32(state) as playerstate_t;
+    (*str).playerstate = match saveg_read32(state) {
+        0 => PlayerState::PST_LIVE,
+        1 => PlayerState::PST_DEAD,
+        2 => PlayerState::PST_REBORN,
+        n => panic!("P_UnArchivePlayers: invalid playerstate {n} in savegame"),
+    };
     saveg_read_ticcmd_t(state, &raw mut (*str).cmd);
     (*str).viewz = saveg_read32(state) as fixed_t;
     (*str).viewheight = saveg_read32(state) as fixed_t;
@@ -405,8 +410,8 @@ unsafe fn saveg_read_player_t(state: &mut GameState, mut str: *mut player_t) {
         (*str).frags[i as usize] = saveg_read32(state);
         i += 1;
     }
-    (*str).readyweapon = saveg_read32(state) as weapontype_t;
-    (*str).pendingweapon = saveg_read32(state) as weapontype_t;
+    (*str).readyweapon = weapontype_from_raw(saveg_read32(state));
+    (*str).pendingweapon = weapontype_from_raw(saveg_read32(state));
     i = 0 as i32;
     while i < NUMWEAPONS as i32 {
         (*str).weaponowned[i as usize] = saveg_read32(state) != 0;
@@ -524,10 +529,21 @@ unsafe fn saveg_write_player_t(state: &mut GameState, mut str: *mut player_t) {
     }
     saveg_write32(state, (*str).didsecret as i32);
 }
+fn saveg_read_ceiling_e(state: &mut GameState) -> CeilingE {
+    match saveg_read32(state) {
+        0 => CeilingE::lowerToFloor,
+        1 => CeilingE::raiseToHighest,
+        2 => CeilingE::lowerAndCrush,
+        3 => CeilingE::crushAndRaise,
+        4 => CeilingE::fastCrushAndRaise,
+        5 => CeilingE::silentCrushAndRaise,
+        n => panic!("P_UnArchiveSpecials: invalid ceiling type {n} in savegame"),
+    }
+}
 unsafe fn saveg_read_ceiling_t(state: &mut GameState, mut str: *mut ceiling_t) {
     let mut sector: i32 = 0;
     saveg_read_thinker_t(state, &raw mut (*str).thinker);
-    (*str).type_0 = saveg_read32(state) as ceiling_e;
+    (*str).type_0 = saveg_read_ceiling_e(state);
     sector = saveg_read32(state);
     (*str).sector = SectorId(sector as u32);
     (*str).bottomheight = saveg_read32(state) as fixed_t;
@@ -550,10 +566,23 @@ unsafe fn saveg_write_ceiling_t(state: &mut GameState, mut str: *mut ceiling_t) 
     saveg_write32(state, (*str).tag);
     saveg_write32(state, (*str).olddirection);
 }
+fn saveg_read_vldoor_e(state: &mut GameState) -> VldoorE {
+    match saveg_read32(state) {
+        0 => VldoorE::vld_normal,
+        1 => VldoorE::vld_close30ThenOpen,
+        2 => VldoorE::vld_close,
+        3 => VldoorE::vld_open,
+        4 => VldoorE::vld_raiseIn5Mins,
+        5 => VldoorE::vld_blazeRaise,
+        6 => VldoorE::vld_blazeOpen,
+        7 => VldoorE::vld_blazeClose,
+        n => panic!("P_UnArchiveSpecials: invalid door type {n} in savegame"),
+    }
+}
 unsafe fn saveg_read_vldoor_t(state: &mut GameState, mut str: *mut vldoor_t) {
     let mut sector: i32 = 0;
     saveg_read_thinker_t(state, &raw mut (*str).thinker);
-    (*str).type_0 = saveg_read32(state) as vldoor_e;
+    (*str).type_0 = saveg_read_vldoor_e(state);
     sector = saveg_read32(state);
     (*str).sector = SectorId(sector as u32);
     (*str).topheight = saveg_read32(state) as fixed_t;
@@ -572,10 +601,28 @@ unsafe fn saveg_write_vldoor_t(state: &mut GameState, mut str: *mut vldoor_t) {
     saveg_write32(state, (*str).topwait);
     saveg_write32(state, (*str).topcountdown);
 }
+fn saveg_read_floor_e(state: &mut GameState) -> FloorE {
+    match saveg_read32(state) {
+        0 => FloorE::lowerFloor,
+        1 => FloorE::lowerFloorToLowest,
+        2 => FloorE::turboLower,
+        3 => FloorE::raiseFloor,
+        4 => FloorE::raiseFloorToNearest,
+        5 => FloorE::raiseToTexture,
+        6 => FloorE::lowerAndChange,
+        7 => FloorE::raiseFloor24,
+        8 => FloorE::raiseFloor24AndChange,
+        9 => FloorE::raiseFloorCrush,
+        10 => FloorE::raiseFloorTurbo,
+        11 => FloorE::donutRaise,
+        12 => FloorE::raiseFloor512,
+        n => panic!("P_UnArchiveSpecials: invalid floor type {n} in savegame"),
+    }
+}
 unsafe fn saveg_read_floormove_t(state: &mut GameState, mut str: *mut floormove_t) {
     let mut sector: i32 = 0;
     saveg_read_thinker_t(state, &raw mut (*str).thinker);
-    (*str).type_0 = saveg_read32(state) as floor_e;
+    (*str).type_0 = saveg_read_floor_e(state);
     (*str).crush = saveg_read32(state) != 0;
     sector = saveg_read32(state);
     (*str).sector = SectorId(sector as u32);
@@ -596,6 +643,25 @@ unsafe fn saveg_write_floormove_t(state: &mut GameState, mut str: *mut floormove
     saveg_write32(state, (*str).floordestheight as i32);
     saveg_write32(state, (*str).speed as i32);
 }
+fn saveg_read_plat_e(state: &mut GameState) -> PlatE {
+    match saveg_read32(state) {
+        0 => PlatE::up,
+        1 => PlatE::down,
+        2 => PlatE::waiting,
+        3 => PlatE::in_stasis,
+        n => panic!("P_UnArchiveSpecials: invalid plat status {n} in savegame"),
+    }
+}
+fn saveg_read_plattype_e(state: &mut GameState) -> PlattypeE {
+    match saveg_read32(state) {
+        0 => PlattypeE::perpetualRaise,
+        1 => PlattypeE::downWaitUpStay,
+        2 => PlattypeE::raiseAndChange,
+        3 => PlattypeE::raiseToNearestAndChange,
+        4 => PlattypeE::blazeDWUS,
+        n => panic!("P_UnArchiveSpecials: invalid plat type {n} in savegame"),
+    }
+}
 unsafe fn saveg_read_plat_t(state: &mut GameState, mut str: *mut plat_t) {
     let mut sector: i32 = 0;
     saveg_read_thinker_t(state, &raw mut (*str).thinker);
@@ -606,11 +672,11 @@ unsafe fn saveg_read_plat_t(state: &mut GameState, mut str: *mut plat_t) {
     (*str).high = saveg_read32(state) as fixed_t;
     (*str).wait = saveg_read32(state);
     (*str).count = saveg_read32(state);
-    (*str).status = saveg_read32(state) as plat_e;
-    (*str).oldstatus = saveg_read32(state) as plat_e;
+    (*str).status = saveg_read_plat_e(state);
+    (*str).oldstatus = saveg_read_plat_e(state);
     (*str).crush = saveg_read32(state) != 0;
     (*str).tag = saveg_read32(state);
-    (*str).type_0 = saveg_read32(state) as plattype_e;
+    (*str).type_0 = saveg_read_plattype_e(state);
 }
 unsafe fn saveg_write_plat_t(state: &mut GameState, mut str: *mut plat_t) {
     saveg_write_thinker_t(state, &raw mut (*str).thinker);
@@ -746,7 +812,7 @@ pub fn P_ReadSaveGameHeader(state: &mut GameState) -> bool {
     if cstr_prefix(&read_vcheck) != cstr_prefix(&vcheck) {
         return false;
     }
-    state.g_game.gameskill = saveg_read8(state) as skill_t;
+    state.g_game.gameskill = skill_from_raw(saveg_read8(state) as i32);
     state.g_game.gameepisode = saveg_read8(state) as i32;
     state.g_game.gamemap = saveg_read8(state) as i32;
     i = 0 as i32;

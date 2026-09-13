@@ -26,12 +26,12 @@ use crate::src::w_wad::W_ReleaseLumpNum;
 use crate::src::w_wad::W_GetNumForName;
 use crate::src::z_zone::Z_Malloc;
 
-use crate::src::d_mode::commercial;
+use crate::src::d_mode::GameMode_t;
 use crate::src::doomdef::false_0;
 use crate::src::doomdef::true_0;
 use crate::src::doomdef::NULL;
 use crate::src::game_state::GameState;
-use crate::src::i_sound::{SNDDEVICE_ADLIB, SNDDEVICE_SB};
+use crate::src::i_sound::snddevice_t;
 use crate::src::m_fixed::fixed_t;
 use crate::src::m_fixed::FRACBITS;
 use crate::src::m_fixed::FRACUNIT;
@@ -150,7 +150,7 @@ pub unsafe fn S_Start(state: &mut GameState) {
         cnum += 1;
     }
     state.s_sound.mus_paused = false;
-    if state.doomstat.gamemode as u32 == commercial as i32 as u32 {
+    if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 {
         mnum = mus_runnin as i32 + state.g_game.gamemap - 1 as i32;
     } else {
         let mut spmus: [i32; 9] = [
@@ -429,8 +429,8 @@ pub unsafe fn S_ChangeMusic(state: &mut GameState, mut musicnum: i32, mut loopin
     let mut music: *mut musicinfo_t = ::core::ptr::null_mut::<musicinfo_t>();
     let mut handle: *mut ::core::ffi::c_void = ::core::ptr::null_mut::<::core::ffi::c_void>();
     if musicnum == mus_intro as i32
-        && (state.i_sound.snd_musicdevice == SNDDEVICE_ADLIB as i32
-            || state.i_sound.snd_musicdevice == SNDDEVICE_SB as i32)
+        && (state.i_sound.snd_musicdevice == snddevice_t::SNDDEVICE_ADLIB as i32
+            || state.i_sound.snd_musicdevice == snddevice_t::SNDDEVICE_SB as i32)
     {
         musicnum = mus_introa as i32;
     }

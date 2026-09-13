@@ -1,5 +1,5 @@
-use crate::src::d_mode::commercial;
-use crate::src::d_mode::{sk_easy, sk_nightmare};
+use crate::src::d_mode::GameMode_t;
+use crate::src::d_mode::SkillType;
 use crate::src::d_player::player_t;
 use crate::src::doomdef::boolean;
 use crate::src::g_game::G_ExitLevel;
@@ -8,9 +8,9 @@ use crate::src::m_fixed::fixed_t;
 use crate::src::m_fixed::FixedMul;
 use crate::src::m_random::P_Random;
 use crate::src::p_doors::EV_DoDoor;
-use crate::src::p_doors::{vld_blazeOpen, vld_open};
+use crate::src::p_doors::VldoorE;
 use crate::src::p_floor::EV_DoFloor;
-use crate::src::p_floor::{lowerFloorToLowest, raiseToTexture};
+use crate::src::p_floor::FloorE;
 use crate::src::p_inter::P_DamageMobj;
 use crate::src::p_map::P_AimLineAttack;
 use crate::src::p_map::P_CheckPosition;
@@ -31,7 +31,7 @@ use crate::src::p_mobj::P_SpawnMobj;
 use crate::src::p_mobj::P_SpawnPuff;
 use crate::src::p_mobj::P_SubstNullMobj;
 use crate::src::p_mobj::{
-    line_s, line_t, mobjinfo_t, sector_t, thinker_t, ST_HORIZONTAL,
+    line_s, line_t, mobjinfo_t, sector_t, thinker_t, SlopeType,
 };
 use crate::src::p_mobj::{mobj_t, pspdef_t};
 use crate::src::p_mobj::{
@@ -105,34 +105,50 @@ impl PEnemyState {
     }
 }
 
-pub type dirtype_t = u32;
-pub const NUMDIRS: dirtype_t = 9;
-pub const DI_NODIR: dirtype_t = 8;
-pub const DI_SOUTHEAST: dirtype_t = 7;
-pub const DI_SOUTH: dirtype_t = 6;
-pub const DI_SOUTHWEST: dirtype_t = 5;
-pub const DI_WEST: dirtype_t = 4;
-pub const DI_NORTHWEST: dirtype_t = 3;
-pub const DI_NORTH: dirtype_t = 2;
-pub const DI_NORTHEAST: dirtype_t = 1;
-pub const DI_EAST: dirtype_t = 0;
+pub const NUMDIRS: i32 = 9;
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub enum DirType {
+    DI_EAST = 0,
+    DI_NORTHEAST = 1,
+    DI_NORTH = 2,
+    DI_NORTHWEST = 3,
+    DI_WEST = 4,
+    DI_SOUTHWEST = 5,
+    DI_SOUTH = 6,
+    DI_SOUTHEAST = 7,
+    DI_NODIR = 8,
+}
+fn dirtype_from_movedir(movedir: i32) -> DirType {
+    match movedir {
+        0 => DirType::DI_EAST,
+        1 => DirType::DI_NORTHEAST,
+        2 => DirType::DI_NORTH,
+        3 => DirType::DI_NORTHWEST,
+        4 => DirType::DI_WEST,
+        5 => DirType::DI_SOUTHWEST,
+        6 => DirType::DI_SOUTH,
+        7 => DirType::DI_SOUTHEAST,
+        8 => DirType::DI_NODIR,
+        n => panic!("P_NewChaseDir: invalid movedir {n}"),
+    }
+}
 pub const ML_SOUNDBLOCK: i32 = 64;
 pub const MELEERANGE: i32 = 64 * FRACUNIT;
 pub const MISSILERANGE: i32 = 32 * 64 as i32 * FRACUNIT;
 #[no_mangle]
-pub static opposite: [dirtype_t; 9] = [
-    DI_WEST,
-    DI_SOUTHWEST,
-    DI_SOUTH,
-    DI_SOUTHEAST,
-    DI_EAST,
-    DI_NORTHEAST,
-    DI_NORTH,
-    DI_NORTHWEST,
-    DI_NODIR,
+pub static opposite: [DirType; 9] = [
+    DirType::DI_WEST,
+    DirType::DI_SOUTHWEST,
+    DirType::DI_SOUTH,
+    DirType::DI_SOUTHEAST,
+    DirType::DI_EAST,
+    DirType::DI_NORTHEAST,
+    DirType::DI_NORTH,
+    DirType::DI_NORTHWEST,
+    DirType::DI_NODIR,
 ];
 #[no_mangle]
-pub static diags: [dirtype_t; 4] = [DI_NORTHWEST, DI_NORTHEAST, DI_SOUTHWEST, DI_SOUTHEAST];
+pub static diags: [DirType; 4] = [DirType::DI_NORTHWEST, DirType::DI_NORTHEAST, DirType::DI_SOUTHWEST, DirType::DI_SOUTHEAST];
 pub unsafe fn P_RecursiveSound(
     state: &mut GameState,
     mut sec: *mut sector_t,
@@ -287,7 +303,7 @@ pub unsafe fn P_Move(state: &mut GameState, mut actor: *mut mobj_t) -> bool {
     let mut ld: *mut line_t = ::core::ptr::null_mut::<line_t>();
     let mut try_ok: bool;
     let mut good: bool;
-    if (*actor).movedir == DI_NODIR as i32 {
+    if (*actor).movedir == DirType::DI_NODIR as i32 {
         return false;
     }
     if (*actor).movedir as u32 >= 8 as u32 {
@@ -309,7 +325,7 @@ pub unsafe fn P_Move(state: &mut GameState, mut actor: *mut mobj_t) -> bool {
         if state.p_map.numspechit == 0 {
             return false;
         }
-        (*actor).movedir = DI_NODIR as i32;
+        (*actor).movedir = DirType::DI_NODIR as i32;
         good = false;
         loop {
             let fresh0 = state.p_map.numspechit;
@@ -341,36 +357,36 @@ pub unsafe fn P_TryWalk(state: &mut GameState, mut actor: *mut mobj_t) -> bool {
 pub unsafe fn P_NewChaseDir(state: &mut GameState, mut actor: *mut mobj_t) {
     let mut deltax: fixed_t = 0;
     let mut deltay: fixed_t = 0;
-    let mut d: [dirtype_t; 3] = [DI_EAST; 3];
+    let mut d: [DirType; 3] = [DirType::DI_EAST; 3];
     let mut tdir: i32 = 0;
-    let mut olddir: dirtype_t = DI_EAST;
-    let mut turnaround: dirtype_t = DI_EAST;
+    let mut olddir: DirType;
+    let mut turnaround: DirType;
     let target = match (*actor).target.and_then(|id| state.p_mobj.mobj_get(id)) {
         Some(target) => target,
         None => {
             I_Error("P_NewChaseDir: called with no target");
         }
     };
-    olddir = (*actor).movedir as dirtype_t;
+    olddir = dirtype_from_movedir((*actor).movedir);
     turnaround = opposite[olddir as usize];
     deltax = (*target).x - (*actor).x;
     deltay = (*target).y - (*actor).y;
     if deltax > 10 as i32 * FRACUNIT {
-        d[1 as i32 as usize] = DI_EAST;
+        d[1 as i32 as usize] = DirType::DI_EAST;
     } else if deltax < -(10 as i32) * FRACUNIT {
-        d[1 as i32 as usize] = DI_WEST;
+        d[1 as i32 as usize] = DirType::DI_WEST;
     } else {
-        d[1 as i32 as usize] = DI_NODIR;
+        d[1 as i32 as usize] = DirType::DI_NODIR;
     }
     if deltay < -(10 as i32) * FRACUNIT {
-        d[2 as i32 as usize] = DI_SOUTH;
+        d[2 as i32 as usize] = DirType::DI_SOUTH;
     } else if deltay > 10 as i32 * FRACUNIT {
-        d[2 as i32 as usize] = DI_NORTH;
+        d[2 as i32 as usize] = DirType::DI_NORTH;
     } else {
-        d[2 as i32 as usize] = DI_NODIR;
+        d[2 as i32 as usize] = DirType::DI_NODIR;
     }
-    if d[1 as i32 as usize] as u32 != DI_NODIR as i32 as u32
-        && d[2 as i32 as usize] as u32 != DI_NODIR as i32 as u32
+    if d[1 as i32 as usize] != DirType::DI_NODIR
+        && d[2 as i32 as usize] != DirType::DI_NODIR
     {
         (*actor).movedir = diags
             [((((deltay < 0 as i32) as i32) << 1 as i32) + (deltax > 0 as i32) as i32) as usize]
@@ -380,37 +396,35 @@ pub unsafe fn P_NewChaseDir(state: &mut GameState, mut actor: *mut mobj_t) {
         }
     }
     if P_Random(&mut state.m_random) > 200 as i32 || (deltay as i32).abs() > (deltax as i32).abs() {
-        tdir = d[1 as i32 as usize] as i32;
-        d[1 as i32 as usize] = d[2 as i32 as usize];
-        d[2 as i32 as usize] = tdir as dirtype_t;
+        d.swap(1, 2);
     }
-    if d[1 as i32 as usize] as u32 == turnaround as u32 {
-        d[1 as i32 as usize] = DI_NODIR;
+    if d[1 as i32 as usize] == turnaround {
+        d[1 as i32 as usize] = DirType::DI_NODIR;
     }
-    if d[2 as i32 as usize] as u32 == turnaround as u32 {
-        d[2 as i32 as usize] = DI_NODIR;
+    if d[2 as i32 as usize] == turnaround {
+        d[2 as i32 as usize] = DirType::DI_NODIR;
     }
-    if d[1 as i32 as usize] as u32 != DI_NODIR as i32 as u32 {
+    if d[1 as i32 as usize] != DirType::DI_NODIR {
         (*actor).movedir = d[1 as i32 as usize] as i32;
         if P_TryWalk(state, actor) {
             return;
         }
     }
-    if d[2 as i32 as usize] as u32 != DI_NODIR as i32 as u32 {
+    if d[2 as i32 as usize] != DirType::DI_NODIR {
         (*actor).movedir = d[2 as i32 as usize] as i32;
         if P_TryWalk(state, actor) {
             return;
         }
     }
-    if olddir as u32 != DI_NODIR as i32 as u32 {
+    if olddir != DirType::DI_NODIR {
         (*actor).movedir = olddir as i32;
         if P_TryWalk(state, actor) {
             return;
         }
     }
     if P_Random(&mut state.m_random) & 1 as i32 != 0 {
-        tdir = DI_EAST as i32;
-        while tdir <= DI_SOUTHEAST as i32 {
+        tdir = DirType::DI_EAST as i32;
+        while tdir <= DirType::DI_SOUTHEAST as i32 {
             if tdir != turnaround as i32 {
                 (*actor).movedir = tdir;
                 if P_TryWalk(state, actor) {
@@ -420,8 +434,8 @@ pub unsafe fn P_NewChaseDir(state: &mut GameState, mut actor: *mut mobj_t) {
             tdir += 1;
         }
     } else {
-        tdir = DI_SOUTHEAST as i32;
-        while tdir != DI_EAST as i32 - 1 as i32 {
+        tdir = DirType::DI_SOUTHEAST as i32;
+        while tdir != DirType::DI_EAST as i32 - 1 as i32 {
             if tdir != turnaround as i32 {
                 (*actor).movedir = tdir;
                 if P_TryWalk(state, actor) {
@@ -431,13 +445,13 @@ pub unsafe fn P_NewChaseDir(state: &mut GameState, mut actor: *mut mobj_t) {
             tdir -= 1;
         }
     }
-    if turnaround as u32 != DI_NODIR as i32 as u32 {
+    if turnaround != DirType::DI_NODIR {
         (*actor).movedir = turnaround as i32;
         if P_TryWalk(state, actor) {
             return;
         }
     }
-    (*actor).movedir = DI_NODIR as i32;
+    (*actor).movedir = DirType::DI_NODIR as i32;
 }
 pub unsafe fn P_LookForPlayers(
     state: &mut GameState,
@@ -515,7 +529,7 @@ pub unsafe fn A_KeenDie(state: &mut GameState, id: MobjId) {
         tag: 0,
         sidenum: [0; 2],
         bbox: [0; 4],
-        slopetype: ST_HORIZONTAL,
+        slopetype: SlopeType::ST_HORIZONTAL,
         frontsector: None,
         backsector: None,
         validcount: 0,
@@ -534,7 +548,7 @@ pub unsafe fn A_KeenDie(state: &mut GameState, id: MobjId) {
         cursor = state.p_tick.next(id);
     }
     junk.tag = 666 as i16;
-    EV_DoDoor(state, &raw mut junk, vld_open);
+    EV_DoDoor(state, &raw mut junk, VldoorE::vld_open);
 }
 pub unsafe fn A_Look(state: &mut GameState, id: MobjId) {
     let actor = state.p_mobj.mobj_get(id).unwrap();
@@ -628,7 +642,7 @@ pub unsafe fn A_Chase(state: &mut GameState, id: MobjId) {
     }
     if (*actor).flags & MF_JUSTATTACKED as i32 != 0 {
         (*actor).flags &= !(MF_JUSTATTACKED as i32);
-        if state.g_game.gameskill as i32 != sk_nightmare as i32 && !state.d_main.fastparm {
+        if state.g_game.gameskill != SkillType::sk_nightmare && !state.d_main.fastparm {
             P_NewChaseDir(state, actor);
         }
         return;
@@ -644,7 +658,7 @@ pub unsafe fn A_Chase(state: &mut GameState, id: MobjId) {
         return;
     }
     if (*state.info.mobjinfo_mut((*actor).type_0)).missilestate != 0 {
-        if !((state.g_game.gameskill as i32) < sk_nightmare as i32
+        if !(state.g_game.gameskill < SkillType::sk_nightmare
             && !state.d_main.fastparm
             && (*actor).movecount != 0)
         {
@@ -1046,7 +1060,7 @@ pub unsafe fn A_VileChase(state: &mut GameState, id: MobjId) {
     let mut by: i32 = 0;
     let mut info: *mut mobjinfo_t = ::core::ptr::null_mut::<mobjinfo_t>();
     let mut temp: Option<MobjId> = None;
-    if (*actor).movedir != DI_NODIR as i32 {
+    if (*actor).movedir != DirType::DI_NODIR as i32 {
         state.p_enemy.viletryx =
             (*actor).x + (*state.info.mobjinfo_mut((*actor).type_0)).speed as fixed_t * xspeed[(*actor).movedir as usize];
         state.p_enemy.viletryy =
@@ -1451,13 +1465,13 @@ pub unsafe fn A_BossDeath(state: &mut GameState, id: MobjId) {
         tag: 0,
         sidenum: [0; 2],
         bbox: [0; 4],
-        slopetype: ST_HORIZONTAL,
+        slopetype: SlopeType::ST_HORIZONTAL,
         frontsector: None,
         backsector: None,
         validcount: 0,
     };
     let mut i: i32 = 0;
-    if state.doomstat.gamemode as u32 == commercial as i32 as u32 {
+    if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 {
         if state.g_game.gamemap != 7 as i32 {
             return;
         }
@@ -1493,16 +1507,16 @@ pub unsafe fn A_BossDeath(state: &mut GameState, id: MobjId) {
         }
         cursor = state.p_tick.next(id);
     }
-    if state.doomstat.gamemode as u32 == commercial as i32 as u32 {
+    if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 {
         if state.g_game.gamemap == 7 as i32 {
             if (*mo).type_0 as u32 == MT_FATSO as i32 as u32 {
                 junk.tag = 666 as i16;
-                EV_DoFloor(state, &raw mut junk, lowerFloorToLowest);
+                EV_DoFloor(state, &raw mut junk, FloorE::lowerFloorToLowest);
                 return;
             }
             if (*mo).type_0 as u32 == MT_BABY as i32 as u32 {
                 junk.tag = 667 as i16;
-                EV_DoFloor(state, &raw mut junk, raiseToTexture);
+                EV_DoFloor(state, &raw mut junk, FloorE::raiseToTexture);
                 return;
             }
         }
@@ -1510,18 +1524,18 @@ pub unsafe fn A_BossDeath(state: &mut GameState, id: MobjId) {
         match state.g_game.gameepisode {
             1 => {
                 junk.tag = 666 as i16;
-                EV_DoFloor(state, &raw mut junk, lowerFloorToLowest);
+                EV_DoFloor(state, &raw mut junk, FloorE::lowerFloorToLowest);
                 return;
             }
             4 => match state.g_game.gamemap {
                 6 => {
                     junk.tag = 666 as i16;
-                    EV_DoDoor(state, &raw mut junk, vld_blazeOpen);
+                    EV_DoDoor(state, &raw mut junk, VldoorE::vld_blazeOpen);
                     return;
                 }
                 8 => {
                     junk.tag = 666 as i16;
-                    EV_DoFloor(state, &raw mut junk, lowerFloorToLowest);
+                    EV_DoFloor(state, &raw mut junk, FloorE::lowerFloorToLowest);
                     return;
                 }
                 _ => {}
@@ -1662,7 +1676,7 @@ pub unsafe fn A_BrainSpit(state: &mut GameState, id: MobjId) {
     let mut newmobj: *mut mobj_t = ::core::ptr::null_mut::<mobj_t>();
     let state = state;
     state.p_enemy.easy ^= 1 as i32;
-    if state.g_game.gameskill as i32 <= sk_easy as i32 && state.p_enemy.easy == 0 {
+    if state.g_game.gameskill <= SkillType::sk_easy && state.p_enemy.easy == 0 {
         return;
     }
     targ = state.p_enemy.braintargets[state.p_enemy.braintargeton as usize];
@@ -1740,7 +1754,7 @@ pub unsafe fn A_SpawnFly(state: &mut GameState, id: MobjId) {
 pub unsafe fn A_PlayerScream(state: &mut GameState, id: MobjId) {
     let mo = state.p_mobj.mobj_get(id).unwrap();
     let mut sound: i32 = sfx_pldeth as i32;
-    if state.doomstat.gamemode as u32 == commercial as i32 as u32 && (*mo).health < -(50 as i32) {
+    if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 && (*mo).health < -(50 as i32) {
         sound = sfx_pdiehi as i32;
     }
     S_StartSound(state, mo as *mut ::core::ffi::c_void, sound);

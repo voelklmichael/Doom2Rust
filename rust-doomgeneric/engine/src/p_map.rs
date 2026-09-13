@@ -38,7 +38,7 @@ use crate::src::p_mobj::P_SpawnBlood;
 use crate::src::p_mobj::P_SpawnMobj;
 use crate::src::p_mobj::P_SpawnPuff;
 use crate::src::p_mobj::P_SubstNullMobj;
-use crate::src::p_mobj::{line_t, sector_t, ST_HORIZONTAL, ST_VERTICAL};
+use crate::src::p_mobj::{line_t, sector_t, SlopeType};
 use crate::src::p_mobj::{
     MF_DROPOFF, MF_DROPPED, MF_FLOAT, MF_MISSILE, MF_NOBLOOD, MF_NOCLIP, MF_PICKUP, MF_SHOOTABLE,
     MF_SKULLFLY, MF_SOLID, MF_SPECIAL, MF_TELEPORT,
@@ -557,11 +557,11 @@ pub unsafe fn P_HitSlideLine(state: &mut GameState, mut ld: *mut line_t) {
     let mut deltaangle: angle_t = 0;
     let mut movelen: fixed_t = 0;
     let mut newlen: fixed_t = 0;
-    if (*ld).slopetype as u32 == ST_HORIZONTAL as i32 as u32 {
+    if (*ld).slopetype == SlopeType::ST_HORIZONTAL {
         state.p_map.tmymove = 0 as i32 as fixed_t;
         return;
     }
-    if (*ld).slopetype as u32 == ST_VERTICAL as i32 as u32 {
+    if (*ld).slopetype == SlopeType::ST_VERTICAL {
         state.p_map.tmxmove = 0 as i32 as fixed_t;
         return;
     }

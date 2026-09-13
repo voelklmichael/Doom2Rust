@@ -3,7 +3,7 @@ use crate::src::d_loop::D_RegisterLoopCallbacks;
 use crate::src::d_loop::D_StartNetGame;
 use crate::src::d_loop::{loop_interface_t, net_connect_data_t, net_gamesettings_t};
 use crate::src::d_main::D_DoAdvanceDemo;
-use crate::src::d_mode::skill_t;
+use crate::src::d_mode::skill_from_raw;
 use crate::src::d_player::player_t;
 use crate::src::d_ticcmd::ticcmd_t;
 use crate::src::doomdef::boolean;
@@ -76,7 +76,7 @@ unsafe fn LoadGameSettings(state: &mut GameState, mut settings: *mut net_gameset
     state.g_game.deathmatch = (*settings).deathmatch;
     state.d_main.startepisode = (*settings).episode;
     state.d_main.startmap = (*settings).map;
-    state.d_main.startskill = (*settings).skill as skill_t;
+    state.d_main.startskill = skill_from_raw((*settings).skill);
     state.d_main.startloadgame = (*settings).loadgame;
     state.g_game.lowres_turn = (*settings).lowres_turn != 0;
     state.d_main.nomonsters = (*settings).nomonsters != 0;

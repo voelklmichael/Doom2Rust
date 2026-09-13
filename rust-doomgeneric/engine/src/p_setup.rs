@@ -1,4 +1,4 @@
-use crate::src::d_mode::commercial;
+use crate::src::d_mode::GameMode_t;
 use crate::src::doomdef::MAXPLAYERS;
 use crate::src::fixed_cstr::FixedCStr;
 use crate::src::g_game::G_DeathMatchSpawnPlayer;
@@ -17,7 +17,7 @@ use crate::src::p_mobj::mobj_t;
 use crate::src::p_mobj::P_SpawnMapThing;
 use crate::src::p_mobj::{
     degenmobj_t, line_s, line_t, mapthing_t, sector_t, subsector_s, subsector_t, thinker_s,
-    vertex_t, MobjId, ThinkerFn, ST_HORIZONTAL, ST_NEGATIVE, ST_POSITIVE, ST_VERTICAL,
+    vertex_t, MobjId, ThinkerFn, SlopeType,
 };
 use crate::src::p_spec::P_InitPicAnims;
 use crate::src::p_spec::P_SpawnSpecials;
@@ -66,7 +66,7 @@ pub const ZERO_LINE: line_s = line_s {
     tag: 0,
     sidenum: [0; 2],
     bbox: [0; 4],
-    slopetype: ST_HORIZONTAL,
+    slopetype: SlopeType::ST_HORIZONTAL,
     frontsector: None,
     backsector: None,
     validcount: 0,
@@ -477,7 +477,7 @@ pub unsafe fn P_LoadThings(state: &mut GameState, mut lump: i32) {
     i = 0 as i32;
     while i < numthings {
         spawn = true;
-        if state.doomstat.gamemode as u32 != commercial as i32 as u32 {
+        if state.doomstat.gamemode as u32 != GameMode_t::commercial as i32 as u32 {
             let mut current_block_5: u64;
             match (*mt).type_0 as i32 {
                 64 => {
@@ -600,13 +600,13 @@ pub unsafe fn P_LoadLineDefs(state: &mut GameState, mut lump: i32) {
         (*ld).dx = (*v2).x - (*v1).x;
         (*ld).dy = (*v2).y - (*v1).y;
         if (*ld).dx == 0 {
-            (*ld).slopetype = ST_VERTICAL;
+            (*ld).slopetype = SlopeType::ST_VERTICAL;
         } else if (*ld).dy == 0 {
-            (*ld).slopetype = ST_HORIZONTAL;
+            (*ld).slopetype = SlopeType::ST_HORIZONTAL;
         } else if FixedDiv((*ld).dy, (*ld).dx) > 0 as i32 {
-            (*ld).slopetype = ST_POSITIVE;
+            (*ld).slopetype = SlopeType::ST_POSITIVE;
         } else {
-            (*ld).slopetype = ST_NEGATIVE;
+            (*ld).slopetype = SlopeType::ST_NEGATIVE;
         }
         if (*v1).x < (*v2).x {
             (*ld).bbox[BOXLEFT as i32 as usize] = (*v1).x;
@@ -896,7 +896,7 @@ pub unsafe fn P_SetupLevel(state: &mut GameState, mut episode: i32, mut map: i32
         PU_PURGELEVEL as i32 - 1 as i32,
     );
     P_InitThinkers(state);
-    let lumpname = if state.doomstat.gamemode as u32 == commercial as i32 as u32 {
+    let lumpname = if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 {
         if map < 10 as i32 {
             format!("map0{}", map)
         } else {

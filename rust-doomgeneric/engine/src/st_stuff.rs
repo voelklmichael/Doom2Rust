@@ -2,13 +2,13 @@ use crate::src::am_map::{AM_MSGENTERED, AM_MSGEXITED, AM_MSGHEADER};
 use crate::src::d_event::event_t;
 use crate::src::d_event::EvType;
 use crate::src::d_items::{weaponinfo, weaponinfo_t};
-use crate::src::d_mode::{commercial, registered, retail, shareware};
-use crate::src::d_mode::{doom, doom2, pack_chex, pack_hacx};
-use crate::src::d_mode::{sk_nightmare, GameVersion};
+use crate::src::d_mode::GameMode_t;
+use crate::src::d_mode::GameMission_t;
+use crate::src::d_mode::{GameVersion, SkillType};
 use crate::src::d_player::player_t;
-use crate::src::d_player::{am_noammo, NUMAMMO};
+use crate::src::d_player::{ammotype_t, NUMAMMO};
 use crate::src::d_player::{pw_invulnerability, pw_ironfeet, pw_strength};
-use crate::src::d_player::{wp_chainsaw, NUMWEAPONS};
+use crate::src::d_player::{weapontype_t, NUMWEAPONS};
 use crate::src::d_player::{CF_GODMODE, CF_NOCLIP};
 use crate::src::doomdef::true_0;
 use crate::src::doomdef::MAXPLAYERS;
@@ -59,8 +59,8 @@ pub struct StStuffState {
     pub lu_palette: i32,
     pub st_clock: u32,
     pub st_msgcounter: i32,
-    pub st_chatstate: st_chatstateenum_t,
-    pub st_gamestate: st_stateenum_t,
+    pub st_chatstate: StChatStateEnum,
+    pub st_gamestate: StStateEnum,
     pub st_statusbaron: bool,
     pub st_chat: bool,
     pub st_oldchat: bool,
@@ -123,8 +123,8 @@ impl StStuffState {
             lu_palette: 0,
             st_clock: 0,
             st_msgcounter: 0,
-            st_chatstate: StartChatState,
-            st_gamestate: AutomapState,
+            st_chatstate: StChatStateEnum::StartChatState,
+            st_gamestate: StStateEnum::AutomapState,
             st_statusbaron: false,
             st_chat: false,
             st_oldchat: false,
@@ -342,13 +342,17 @@ impl StStuffState {
     }
 }
 
-pub type st_stateenum_t = u32;
-pub const FirstPersonState: st_stateenum_t = 1;
-pub const AutomapState: st_stateenum_t = 0;
-pub type st_chatstateenum_t = u32;
-pub const GetChatState: st_chatstateenum_t = 2;
-pub const WaitDestState: st_chatstateenum_t = 1;
-pub const StartChatState: st_chatstateenum_t = 0;
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub enum StStateEnum {
+    AutomapState = 0,
+    FirstPersonState = 1,
+}
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub enum StChatStateEnum {
+    StartChatState = 0,
+    WaitDestState = 1,
+    GetChatState = 2,
+}
 pub type load_callback_t = Option<unsafe fn(&mut GameState, &str, *mut *mut patch_t) -> ()>;
 pub const DEH_DEFAULT_GOD_MODE_HEALTH: i32 = 100;
 pub const DEH_DEFAULT_IDFA_ARMOR: i32 = 200;
@@ -460,16 +464,16 @@ pub unsafe fn ST_Responder(state: &mut GameState, mut ev: &event_t) -> bool {
     {
         match (*ev).data1 {
             AM_MSGENTERED => {
-                state.st_stuff.st_gamestate = AutomapState;
+                state.st_stuff.st_gamestate = StStateEnum::AutomapState;
                 state.st_stuff.st_firsttime = true;
             }
             AM_MSGEXITED => {
-                state.st_stuff.st_gamestate = FirstPersonState;
+                state.st_stuff.st_gamestate = StStateEnum::FirstPersonState;
             }
             _ => {}
         }
     } else if (*ev).type_0 == EvType::ev_keydown {
-        if !state.g_game.netgame && state.g_game.gameskill as i32 != sk_nightmare as i32 {
+        if !state.g_game.netgame && state.g_game.gameskill != SkillType::sk_nightmare {
             if cht_CheckCheat(
                 &raw mut state.st_stuff.cheat_god,
                 (*ev).data2 as ::core::ffi::c_char,
@@ -540,7 +544,7 @@ pub unsafe fn ST_Responder(state: &mut GameState, mut ev: &event_t) -> bool {
                     &raw mut state.st_stuff.cheat_mus,
                     &raw mut buf as *mut ::core::ffi::c_char,
                 );
-                if state.doomstat.gamemode as u32 == commercial as i32 as u32
+                if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32
                     || !state.doomstat.gameversion.is_ultimate_or_higher()
                 {
                     musnum = mus_runnin as i32
@@ -571,28 +575,28 @@ pub unsafe fn ST_Responder(state: &mut GameState, mut ev: &event_t) -> bool {
                         S_ChangeMusic(state, musnum, 1 as i32);
                     }
                 }
-            } else if (if state.doomstat.gamemission as u32 == pack_chex as i32 as u32 {
-                doom as i32 as u32
+            } else if (if state.doomstat.gamemission as u32 == GameMission_t::pack_chex as i32 as u32 {
+                GameMission_t::doom as i32 as u32
             } else {
-                if state.doomstat.gamemission as u32 == pack_hacx as i32 as u32 {
-                    doom2 as i32 as u32
+                if state.doomstat.gamemission as u32 == GameMission_t::pack_hacx as i32 as u32 {
+                    GameMission_t::doom2 as i32 as u32
                 } else {
                     state.doomstat.gamemission as u32
                 }
-            }) == doom as i32 as u32
+            }) == GameMission_t::doom as i32 as u32
                 && cht_CheckCheat(
                     &raw mut state.st_stuff.cheat_noclip,
                     (*ev).data2 as ::core::ffi::c_char,
                 ) != 0
-                || (if state.doomstat.gamemission as u32 == pack_chex as i32 as u32 {
-                    doom as i32 as u32
+                || (if state.doomstat.gamemission as u32 == GameMission_t::pack_chex as i32 as u32 {
+                    GameMission_t::doom as i32 as u32
                 } else {
-                    if state.doomstat.gamemission as u32 == pack_hacx as i32 as u32 {
-                        doom2 as i32 as u32
+                    if state.doomstat.gamemission as u32 == GameMission_t::pack_hacx as i32 as u32 {
+                        GameMission_t::doom2 as i32 as u32
                     } else {
                         state.doomstat.gamemission as u32
                     }
-                }) != doom as i32 as u32
+                }) != GameMission_t::doom as i32 as u32
                     && cht_CheckCheat(
                         &raw mut state.st_stuff.cheat_commercial_noclip,
                         (*ev).data2 as ::core::ffi::c_char,
@@ -636,7 +640,7 @@ pub unsafe fn ST_Responder(state: &mut GameState, mut ev: &event_t) -> bool {
                 (*ev).data2 as ::core::ffi::c_char,
             ) != 0
             {
-                (*state.st_stuff.plyr).weaponowned[wp_chainsaw as i32 as usize] = true;
+                (*state.st_stuff.plyr).weaponowned[weapontype_t::wp_chainsaw as i32 as usize] = true;
                 (*state.st_stuff.plyr).powers[pw_invulnerability as i32 as usize] = true_0;
                 (*state.st_stuff.plyr).message = Some("... doesn't suck - GM".to_string());
             } else if cht_CheckCheat(
@@ -665,7 +669,7 @@ pub unsafe fn ST_Responder(state: &mut GameState, mut ev: &event_t) -> bool {
                 &raw mut state.st_stuff.cheat_clev,
                 &raw mut buf_1 as *mut ::core::ffi::c_char,
             );
-            if state.doomstat.gamemode as u32 == commercial as i32 as u32 {
+            if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 {
                 epsd = 1 as i32;
                 map = (buf_1[0 as i32 as usize] as i32 - '0' as i32) * 10 as i32
                     + buf_1[1 as i32 as usize] as i32
@@ -683,22 +687,22 @@ pub unsafe fn ST_Responder(state: &mut GameState, mut ev: &event_t) -> bool {
             if map < 1 as i32 {
                 return false;
             }
-            if state.doomstat.gamemode as u32 == retail as i32 as u32
+            if state.doomstat.gamemode as u32 == GameMode_t::retail as i32 as u32
                 && (epsd > 4 as i32 || map > 9 as i32)
             {
                 return false;
             }
-            if state.doomstat.gamemode as u32 == registered as i32 as u32
+            if state.doomstat.gamemode as u32 == GameMode_t::registered as i32 as u32
                 && (epsd > 3 as i32 || map > 9 as i32)
             {
                 return false;
             }
-            if state.doomstat.gamemode as u32 == shareware as i32 as u32
+            if state.doomstat.gamemode as u32 == GameMode_t::shareware as i32 as u32
                 && (epsd > 1 as i32 || map > 9 as i32)
             {
                 return false;
             }
-            if state.doomstat.gamemode as u32 == commercial as i32 as u32
+            if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32
                 && (epsd > 1 as i32 || map > 40 as i32)
             {
                 return false;
@@ -851,7 +855,7 @@ pub unsafe fn ST_updateFaceWidget(state: &mut GameState) {
 pub unsafe fn ST_updateWidgets(state: &mut GameState) {
     let mut i: i32 = 0;
     if weaponinfo[(*state.st_stuff.plyr).readyweapon as usize].ammo as u32
-        == am_noammo as i32 as u32
+        == ammotype_t::am_noammo as i32 as u32
     {
         state.st_stuff.w_ready.num = &raw mut state.st_stuff.st_updatewidgets_largeammo;
     } else {
@@ -1122,8 +1126,8 @@ pub unsafe fn ST_initData(state: &mut GameState) {
     state.st_stuff.plyr = (&raw mut state.g_game.players as *mut player_t)
         .offset(state.g_game.consoleplayer as isize) as *mut player_t;
     state.st_stuff.st_clock = 0 as u32;
-    state.st_stuff.st_chatstate = StartChatState;
-    state.st_stuff.st_gamestate = FirstPersonState;
+    state.st_stuff.st_chatstate = StChatStateEnum::StartChatState;
+    state.st_stuff.st_gamestate = StStateEnum::FirstPersonState;
     state.st_stuff.st_statusbaron = true;
     state.st_stuff.st_chat = false;
     state.st_stuff.st_oldchat = state.st_stuff.st_chat;
