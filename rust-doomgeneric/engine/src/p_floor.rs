@@ -25,20 +25,22 @@ use crate::src::sounds::{sfx_pstop, sfx_stnmov};
 use crate::src::z_zone::Z_Malloc;
 use crate::src::z_zone::PU_LEVSPEC;
 
-pub type floor_e = u32;
-pub const raiseFloor512: floor_e = 12;
-pub const donutRaise: floor_e = 11;
-pub const raiseFloorTurbo: floor_e = 10;
-pub const raiseFloorCrush: floor_e = 9;
-pub const raiseFloor24AndChange: floor_e = 8;
-pub const raiseFloor24: floor_e = 7;
-pub const lowerAndChange: floor_e = 6;
-pub const raiseToTexture: floor_e = 5;
-pub const raiseFloorToNearest: floor_e = 4;
-pub const raiseFloor: floor_e = 3;
-pub const turboLower: floor_e = 2;
-pub const lowerFloorToLowest: floor_e = 1;
-pub const lowerFloor: floor_e = 0;
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub enum FloorE {
+    lowerFloor = 0,
+    lowerFloorToLowest = 1,
+    turboLower = 2,
+    raiseFloor = 3,
+    raiseFloorToNearest = 4,
+    raiseToTexture = 5,
+    lowerAndChange = 6,
+    raiseFloor24 = 7,
+    raiseFloor24AndChange = 8,
+    raiseFloorCrush = 9,
+    raiseFloorTurbo = 10,
+    donutRaise = 11,
+    raiseFloor512 = 12,
+}
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum StairE {
     build8 = 0,
@@ -180,16 +182,16 @@ pub unsafe fn T_MoveFloor(state: &mut GameState, mut floor: *mut floormove_t) {
     if res == ResultE::pastdest {
         (*sec).specialdata = None;
         if (*floor).direction == 1 as i32 {
-            match (*floor).type_0 as u32 {
-                11 => {
+            match (*floor).type_0 {
+                FloorE::donutRaise => {
                     (*sec).special = (*floor).newspecial as i16;
                     (*sec).floorpic = (*floor).texture;
                 }
                 _ => {}
             }
         } else if (*floor).direction == -(1 as i32) {
-            match (*floor).type_0 as u32 {
-                6 => {
+            match (*floor).type_0 {
+                FloorE::lowerAndChange => {
                     (*sec).special = (*floor).newspecial as i16;
                     (*sec).floorpic = (*floor).texture;
                 }
@@ -207,7 +209,7 @@ pub unsafe fn T_MoveFloor(state: &mut GameState, mut floor: *mut floormove_t) {
 pub unsafe fn EV_DoFloor(
     state: &mut GameState,
     mut line: *mut line_t,
-    mut floortype: floor_e,
+    mut floortype: FloorE,
 ) -> i32 {
     let mut secnum: i32 = 0;
     let mut rtn: i32 = 0;
@@ -238,22 +240,22 @@ pub unsafe fn EV_DoFloor(
         (*floor).type_0 = floortype;
         (*floor).crush = false;
         let mut current_block_84: u64;
-        match floortype as u32 {
-            0 => {
+        match floortype {
+            FloorE::lowerFloor => {
                 (*floor).direction = -(1 as i32);
                 (*floor).sector = SectorId(secnum as u32);
                 (*floor).speed = FLOORSPEED as fixed_t;
                 (*floor).floordestheight = P_FindHighestFloorSurrounding(state, sec);
                 current_block_84 = 15514718523126015390;
             }
-            1 => {
+            FloorE::lowerFloorToLowest => {
                 (*floor).direction = -(1 as i32);
                 (*floor).sector = SectorId(secnum as u32);
                 (*floor).speed = FLOORSPEED as fixed_t;
                 (*floor).floordestheight = P_FindLowestFloorSurrounding(state, sec);
                 current_block_84 = 15514718523126015390;
             }
-            2 => {
+            FloorE::turboLower => {
                 (*floor).direction = -(1 as i32);
                 (*floor).sector = SectorId(secnum as u32);
                 (*floor).speed = (FLOORSPEED * 4 as i32) as fixed_t;
@@ -263,28 +265,28 @@ pub unsafe fn EV_DoFloor(
                 }
                 current_block_84 = 15514718523126015390;
             }
-            9 => {
+            FloorE::raiseFloorCrush => {
                 (*floor).crush = true;
                 current_block_84 = 7690836263840410806;
             }
-            3 => {
+            FloorE::raiseFloor => {
                 current_block_84 = 7690836263840410806;
             }
-            10 => {
+            FloorE::raiseFloorTurbo => {
                 (*floor).direction = 1 as i32;
                 (*floor).sector = SectorId(secnum as u32);
                 (*floor).speed = (FLOORSPEED * 4 as i32) as fixed_t;
                 (*floor).floordestheight = P_FindNextHighestFloor(state, sec, (*sec).floorheight as i32);
                 current_block_84 = 15514718523126015390;
             }
-            4 => {
+            FloorE::raiseFloorToNearest => {
                 (*floor).direction = 1 as i32;
                 (*floor).sector = SectorId(secnum as u32);
                 (*floor).speed = FLOORSPEED as fixed_t;
                 (*floor).floordestheight = P_FindNextHighestFloor(state, sec, (*sec).floorheight as i32);
                 current_block_84 = 15514718523126015390;
             }
-            7 => {
+            FloorE::raiseFloor24 => {
                 (*floor).direction = 1 as i32;
                 (*floor).sector = SectorId(secnum as u32);
                 (*floor).speed = FLOORSPEED as fixed_t;
@@ -292,7 +294,7 @@ pub unsafe fn EV_DoFloor(
                     ((*sec).floorheight as i32 + 24 as i32 * FRACUNIT) as fixed_t;
                 current_block_84 = 15514718523126015390;
             }
-            12 => {
+            FloorE::raiseFloor512 => {
                 (*floor).direction = 1 as i32;
                 (*floor).sector = SectorId(secnum as u32);
                 (*floor).speed = FLOORSPEED as fixed_t;
@@ -300,7 +302,7 @@ pub unsafe fn EV_DoFloor(
                     ((*sec).floorheight as i32 + 512 as i32 * FRACUNIT) as fixed_t;
                 current_block_84 = 15514718523126015390;
             }
-            8 => {
+            FloorE::raiseFloor24AndChange => {
                 (*floor).direction = 1 as i32;
                 (*floor).sector = SectorId(secnum as u32);
                 (*floor).speed = FLOORSPEED as fixed_t;
@@ -311,7 +313,7 @@ pub unsafe fn EV_DoFloor(
                 (*sec).special = (*fsec).special;
                 current_block_84 = 15514718523126015390;
             }
-            5 => {
+            FloorE::raiseToTexture => {
                 let mut minsize: i32 = INT_MAX;
                 let mut side: *mut side_t = ::core::ptr::null_mut::<side_t>();
                 (*floor).direction = 1 as i32;
@@ -344,7 +346,7 @@ pub unsafe fn EV_DoFloor(
                 (*floor).floordestheight = ((*sec).floorheight as i32 + minsize) as fixed_t;
                 current_block_84 = 15514718523126015390;
             }
-            6 => {
+            FloorE::lowerAndChange => {
                 (*floor).direction = -(1 as i32);
                 (*floor).sector = SectorId(secnum as u32);
                 (*floor).speed = FLOORSPEED as fixed_t;
@@ -388,7 +390,7 @@ pub unsafe fn EV_DoFloor(
                 }
                 (*floor).floordestheight -= 8 as i32
                     * FRACUNIT
-                    * (floortype as u32 == raiseFloorCrush as i32 as u32) as i32;
+                    * (floortype == FloorE::raiseFloorCrush) as i32;
             }
             _ => {}
         }
