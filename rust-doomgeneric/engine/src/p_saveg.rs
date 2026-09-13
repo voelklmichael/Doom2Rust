@@ -12,7 +12,7 @@ use std::io::{Read, Seek, Write};
 use crate::src::m_fixed::fixed_t;
 use crate::src::p_ceilng::ceiling_e;
 use crate::src::p_ceilng::P_AddActiveCeiling;
-use crate::src::p_doors::vldoor_e;
+use crate::src::p_doors::VldoorE;
 use crate::src::p_doors::vldoor_t;
 use crate::src::p_floor::floor_e;
 use crate::src::p_lights::{glow_t, lightflash_t, strobe_t};
@@ -555,10 +555,23 @@ unsafe fn saveg_write_ceiling_t(state: &mut GameState, mut str: *mut ceiling_t) 
     saveg_write32(state, (*str).tag);
     saveg_write32(state, (*str).olddirection);
 }
+fn saveg_read_vldoor_e(state: &mut GameState) -> VldoorE {
+    match saveg_read32(state) {
+        0 => VldoorE::vld_normal,
+        1 => VldoorE::vld_close30ThenOpen,
+        2 => VldoorE::vld_close,
+        3 => VldoorE::vld_open,
+        4 => VldoorE::vld_raiseIn5Mins,
+        5 => VldoorE::vld_blazeRaise,
+        6 => VldoorE::vld_blazeOpen,
+        7 => VldoorE::vld_blazeClose,
+        n => panic!("P_UnArchiveSpecials: invalid door type {n} in savegame"),
+    }
+}
 unsafe fn saveg_read_vldoor_t(state: &mut GameState, mut str: *mut vldoor_t) {
     let mut sector: i32 = 0;
     saveg_read_thinker_t(state, &raw mut (*str).thinker);
-    (*str).type_0 = saveg_read32(state) as vldoor_e;
+    (*str).type_0 = saveg_read_vldoor_e(state);
     sector = saveg_read32(state);
     (*str).sector = SectorId(sector as u32);
     (*str).topheight = saveg_read32(state) as fixed_t;

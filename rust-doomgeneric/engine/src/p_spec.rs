@@ -18,8 +18,7 @@ use crate::src::p_doors::EV_DoDoor;
 use crate::src::p_doors::P_SpawnDoorCloseIn30;
 use crate::src::p_doors::P_SpawnDoorRaiseIn5Mins;
 use crate::src::p_doors::{
-    vld_blazeClose, vld_blazeOpen, vld_blazeRaise, vld_close, vld_close30ThenOpen, vld_normal,
-    vld_open,
+    VldoorE,
 };
 use crate::src::p_floor::EV_BuildStairs;
 use crate::src::p_floor::EV_DoFloor;
@@ -604,15 +603,15 @@ pub unsafe fn P_CrossSpecialLine(
     }
     match (*line).special as i32 {
         2 => {
-            EV_DoDoor(state, line, vld_open);
+            EV_DoDoor(state, line, VldoorE::vld_open);
             (*line).special = 0 as i16;
         }
         3 => {
-            EV_DoDoor(state, line, vld_close);
+            EV_DoDoor(state, line, VldoorE::vld_close);
             (*line).special = 0 as i16;
         }
         4 => {
-            EV_DoDoor(state, line, vld_normal);
+            EV_DoDoor(state, line, VldoorE::vld_normal);
             (*line).special = 0 as i16;
         }
         5 => {
@@ -640,7 +639,7 @@ pub unsafe fn P_CrossSpecialLine(
             (*line).special = 0 as i16;
         }
         16 => {
-            EV_DoDoor(state, line, vld_close30ThenOpen);
+            EV_DoDoor(state, line, VldoorE::vld_close30ThenOpen);
             (*line).special = 0 as i16;
         }
         17 => {
@@ -724,11 +723,11 @@ pub unsafe fn P_CrossSpecialLine(
             (*line).special = 0 as i16;
         }
         108 => {
-            EV_DoDoor(state, line, vld_blazeRaise);
+            EV_DoDoor(state, line, VldoorE::vld_blazeRaise);
             (*line).special = 0 as i16;
         }
         109 => {
-            EV_DoDoor(state, line, vld_blazeOpen);
+            EV_DoDoor(state, line, VldoorE::vld_blazeOpen);
             (*line).special = 0 as i16;
         }
         100 => {
@@ -736,7 +735,7 @@ pub unsafe fn P_CrossSpecialLine(
             (*line).special = 0 as i16;
         }
         110 => {
-            EV_DoDoor(state, line, vld_blazeClose);
+            EV_DoDoor(state, line, VldoorE::vld_blazeClose);
             (*line).special = 0 as i16;
         }
         119 => {
@@ -774,10 +773,10 @@ pub unsafe fn P_CrossSpecialLine(
             EV_CeilingCrushStop(&mut state.p_ceilng, line);
         }
         75 => {
-            EV_DoDoor(state, line, vld_close);
+            EV_DoDoor(state, line, VldoorE::vld_close);
         }
         76 => {
-            EV_DoDoor(state, line, vld_close30ThenOpen);
+            EV_DoDoor(state, line, VldoorE::vld_close30ThenOpen);
         }
         77 => {
             EV_DoCeiling(state, line, fastCrushAndRaise);
@@ -801,7 +800,7 @@ pub unsafe fn P_CrossSpecialLine(
             EV_DoFloor(state, line, lowerAndChange);
         }
         86 => {
-            EV_DoDoor(state, line, vld_open);
+            EV_DoDoor(state, line, VldoorE::vld_open);
         }
         87 => {
             EV_DoPlat(state, line, PlattypeE::perpetualRaise, 0 as i32);
@@ -813,7 +812,7 @@ pub unsafe fn P_CrossSpecialLine(
             EV_StopPlat(&mut state.p_plats, line);
         }
         90 => {
-            EV_DoDoor(state, line, vld_normal);
+            EV_DoDoor(state, line, VldoorE::vld_normal);
         }
         91 => {
             EV_DoFloor(state, line, raiseFloor);
@@ -840,13 +839,13 @@ pub unsafe fn P_CrossSpecialLine(
             EV_DoFloor(state, line, turboLower);
         }
         105 => {
-            EV_DoDoor(state, line, vld_blazeRaise);
+            EV_DoDoor(state, line, VldoorE::vld_blazeRaise);
         }
         106 => {
-            EV_DoDoor(state, line, vld_blazeOpen);
+            EV_DoDoor(state, line, VldoorE::vld_blazeOpen);
         }
         107 => {
-            EV_DoDoor(state, line, vld_blazeClose);
+            EV_DoDoor(state, line, VldoorE::vld_blazeClose);
         }
         120 => {
             EV_DoPlat(state, line, PlattypeE::blazeDWUS, 0 as i32);
@@ -889,7 +888,7 @@ pub unsafe fn P_ShootSpecialLine(
             P_ChangeSwitchTexture(state, line, 0 as i32);
         }
         46 => {
-            EV_DoDoor(state, line, vld_open);
+            EV_DoDoor(state, line, VldoorE::vld_open);
             P_ChangeSwitchTexture(state, line, 1 as i32);
         }
         47 => {
