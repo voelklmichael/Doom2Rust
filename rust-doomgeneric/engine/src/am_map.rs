@@ -669,7 +669,7 @@ pub unsafe fn AM_initVariables(state: &mut GameState) {
         data4: 0,
     };
     state.am_map.automapactive = true;
-    state.am_map.fb = state.i_video.I_VideoBuffer;
+    state.am_map.fb = state.i_video.I_VideoBuffer.as_mut_ptr();
     state.am_map.f_oldloc.x = INT_MAX as fixed_t;
     state.am_map.amclock = 0 as i32;
     state.am_map.lightlev = 0 as i32;

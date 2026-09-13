@@ -270,7 +270,7 @@ pub unsafe fn wipe_ScreenWipe(
     ];
     if !state.f_wipe.go {
         state.f_wipe.go = true;
-        state.f_wipe.wipe_scr = state.i_video.I_VideoBuffer;
+        state.f_wipe.wipe_scr = state.i_video.I_VideoBuffer.as_mut_ptr();
         let init_fn = wipes[(wipeno * 3 as i32) as usize].expect("non-null function pointer");
         init_fn(state, width, height, ticks);
     }
