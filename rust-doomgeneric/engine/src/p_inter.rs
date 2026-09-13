@@ -44,14 +44,16 @@ use crate::src::tables::finesine;
 use crate::src::tables::ANG180;
 use crate::src::tables::ANGLETOFINESHIFT;
 
-pub type card_t = u32;
-pub const NUMCARDS: card_t = 6;
-pub const it_redskull: card_t = 5;
-pub const it_yellowskull: card_t = 4;
-pub const it_blueskull: card_t = 3;
-pub const it_redcard: card_t = 2;
-pub const it_yellowcard: card_t = 1;
-pub const it_bluecard: card_t = 0;
+pub const NUMCARDS: i32 = 6;
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub enum CardType {
+    it_bluecard = 0,
+    it_yellowcard = 1,
+    it_redcard = 2,
+    it_blueskull = 3,
+    it_yellowskull = 4,
+    it_redskull = 5,
+}
 pub type C2RustUnnamed_0 = u32;
 pub const IRONTICS: C2RustUnnamed_0 = 2100;
 pub const INFRATICS: C2RustUnnamed_0 = 4200;
@@ -217,7 +219,7 @@ pub unsafe fn P_GiveArmor(mut player: *mut player_t, mut armortype: i32) -> bool
     (*player).armorpoints = hits;
     return true;
 }
-pub unsafe fn P_GiveCard(mut player: *mut player_t, mut card: card_t) {
+pub unsafe fn P_GiveCard(mut player: *mut player_t, mut card: CardType) {
     if (*player).cards[card as usize] {
         return;
     }
@@ -322,55 +324,55 @@ pub unsafe fn P_TouchSpecialThing(
             sound = sfx_getpow as i32;
         }
         62 => {
-            if !(*player).cards[it_bluecard as i32 as usize] {
+            if !(*player).cards[CardType::it_bluecard as i32 as usize] {
                 (*player).message = Some("Picked up a blue keycard.".to_string());
             }
-            P_GiveCard(player, it_bluecard);
+            P_GiveCard(player, CardType::it_bluecard);
             if state.g_game.netgame {
                 return;
             }
         }
         64 => {
-            if !(*player).cards[it_yellowcard as i32 as usize] {
+            if !(*player).cards[CardType::it_yellowcard as i32 as usize] {
                 (*player).message = Some("Picked up a yellow keycard.".to_string());
             }
-            P_GiveCard(player, it_yellowcard);
+            P_GiveCard(player, CardType::it_yellowcard);
             if state.g_game.netgame {
                 return;
             }
         }
         63 => {
-            if !(*player).cards[it_redcard as i32 as usize] {
+            if !(*player).cards[CardType::it_redcard as i32 as usize] {
                 (*player).message = Some("Picked up a red keycard.".to_string());
             }
-            P_GiveCard(player, it_redcard);
+            P_GiveCard(player, CardType::it_redcard);
             if state.g_game.netgame {
                 return;
             }
         }
         65 => {
-            if !(*player).cards[it_blueskull as i32 as usize] {
+            if !(*player).cards[CardType::it_blueskull as i32 as usize] {
                 (*player).message = Some("Picked up a blue skull key.".to_string());
             }
-            P_GiveCard(player, it_blueskull);
+            P_GiveCard(player, CardType::it_blueskull);
             if state.g_game.netgame {
                 return;
             }
         }
         67 => {
-            if !(*player).cards[it_yellowskull as i32 as usize] {
+            if !(*player).cards[CardType::it_yellowskull as i32 as usize] {
                 (*player).message = Some("Picked up a yellow skull key.".to_string());
             }
-            P_GiveCard(player, it_yellowskull);
+            P_GiveCard(player, CardType::it_yellowskull);
             if state.g_game.netgame {
                 return;
             }
         }
         66 => {
-            if !(*player).cards[it_redskull as i32 as usize] {
+            if !(*player).cards[CardType::it_redskull as i32 as usize] {
                 (*player).message = Some("Picked up a red skull key.".to_string());
             }
-            P_GiveCard(player, it_redskull);
+            P_GiveCard(player, CardType::it_redskull);
             if state.g_game.netgame {
                 return;
             }

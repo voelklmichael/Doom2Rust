@@ -6,9 +6,7 @@ use crate::src::m_fixed::fixed_t;
 use crate::src::m_fixed::FRACUNIT;
 use crate::src::p_floor::T_MovePlane;
 use crate::src::p_floor::ResultE;
-use crate::src::p_inter::{
-    it_bluecard, it_blueskull, it_redcard, it_redskull, it_yellowcard, it_yellowskull,
-};
+use crate::src::p_inter::CardType;
 use crate::src::p_mobj::mobj_t;
 use crate::src::p_mobj::SectorSpecial;
 use crate::src::p_mobj::ThinkerFn;
@@ -188,7 +186,7 @@ pub unsafe fn EV_DoLockedDoor(
             if p.is_null() {
                 return 0 as i32;
             }
-            if !(*p).cards[it_bluecard as i32 as usize] && !(*p).cards[it_blueskull as i32 as usize]
+            if !(*p).cards[CardType::it_bluecard as i32 as usize] && !(*p).cards[CardType::it_blueskull as i32 as usize]
             {
                 (*p).message = Some("You need a blue key to activate this object".to_string());
                 S_StartSound(state, NULL, sfx_oof as i32);
@@ -199,7 +197,7 @@ pub unsafe fn EV_DoLockedDoor(
             if p.is_null() {
                 return 0 as i32;
             }
-            if !(*p).cards[it_redcard as i32 as usize] && !(*p).cards[it_redskull as i32 as usize] {
+            if !(*p).cards[CardType::it_redcard as i32 as usize] && !(*p).cards[CardType::it_redskull as i32 as usize] {
                 (*p).message = Some("You need a red key to activate this object".to_string());
                 S_StartSound(state, NULL, sfx_oof as i32);
                 return 0 as i32;
@@ -209,8 +207,8 @@ pub unsafe fn EV_DoLockedDoor(
             if p.is_null() {
                 return 0 as i32;
             }
-            if !(*p).cards[it_yellowcard as i32 as usize]
-                && !(*p).cards[it_yellowskull as i32 as usize]
+            if !(*p).cards[CardType::it_yellowcard as i32 as usize]
+                && !(*p).cards[CardType::it_yellowskull as i32 as usize]
             {
                 (*p).message = Some("You need a yellow key to activate this object".to_string());
                 S_StartSound(state, NULL, sfx_oof as i32);
@@ -331,8 +329,8 @@ pub unsafe fn EV_VerticalDoor(
             if player.is_null() {
                 return;
             }
-            if !(*player).cards[it_bluecard as i32 as usize]
-                && !(*player).cards[it_blueskull as i32 as usize]
+            if !(*player).cards[CardType::it_bluecard as i32 as usize]
+                && !(*player).cards[CardType::it_blueskull as i32 as usize]
             {
                 (*player).message = Some("You need a blue key to open this door".to_string());
                 S_StartSound(state, NULL, sfx_oof as i32);
@@ -343,8 +341,8 @@ pub unsafe fn EV_VerticalDoor(
             if player.is_null() {
                 return;
             }
-            if !(*player).cards[it_yellowcard as i32 as usize]
-                && !(*player).cards[it_yellowskull as i32 as usize]
+            if !(*player).cards[CardType::it_yellowcard as i32 as usize]
+                && !(*player).cards[CardType::it_yellowskull as i32 as usize]
             {
                 (*player).message = Some("You need a yellow key to open this door".to_string());
                 S_StartSound(state, NULL, sfx_oof as i32);
@@ -355,8 +353,8 @@ pub unsafe fn EV_VerticalDoor(
             if player.is_null() {
                 return;
             }
-            if !(*player).cards[it_redcard as i32 as usize]
-                && !(*player).cards[it_redskull as i32 as usize]
+            if !(*player).cards[CardType::it_redcard as i32 as usize]
+                && !(*player).cards[CardType::it_redskull as i32 as usize]
             {
                 (*player).message = Some("You need a red key to open this door".to_string());
                 S_StartSound(state, NULL, sfx_oof as i32);
