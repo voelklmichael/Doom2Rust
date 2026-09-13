@@ -1245,7 +1245,7 @@ pub unsafe fn WI_fragSum(state: &mut GameState, mut playernum: i32) -> i32 {
     let mut frags_0: i32 = 0 as i32;
     i = 0 as i32;
     while i < MAXPLAYERS {
-        if state.g_game.playeringame[i as usize] != 0 && i != playernum {
+        if state.g_game.playeringame[i as usize] && i != playernum {
             frags_0 += (*state.wi_stuff.plrs.offset(playernum as isize)).frags[i as usize];
         }
         i += 1;
@@ -1262,10 +1262,10 @@ pub unsafe fn WI_initDeathmatchStats(state: &mut GameState) {
     state.wi_stuff.cnt_pause = TICRATE;
     i = 0 as i32;
     while i < MAXPLAYERS {
-        if state.g_game.playeringame[i as usize] != 0 {
+        if state.g_game.playeringame[i as usize] {
             j = 0 as i32;
             while j < MAXPLAYERS {
-                if state.g_game.playeringame[j as usize] != 0 {
+                if state.g_game.playeringame[j as usize] {
                     state.wi_stuff.dm_frags[i as usize][j as usize] = 0 as i32;
                 }
                 j += 1;
@@ -1285,10 +1285,10 @@ pub unsafe fn WI_updateDeathmatchStats(state: &mut GameState) {
         state.wi_stuff.acceleratestage = 0 as i32;
         i = 0 as i32;
         while i < MAXPLAYERS {
-            if state.g_game.playeringame[i as usize] != 0 {
+            if state.g_game.playeringame[i as usize] {
                 j = 0 as i32;
                 while j < MAXPLAYERS {
-                    if state.g_game.playeringame[j as usize] != 0 {
+                    if state.g_game.playeringame[j as usize] {
                         state.wi_stuff.dm_frags[i as usize][j as usize] =
                             (*state.wi_stuff.plrs.offset(i as isize)).frags[j as usize];
                     }
@@ -1308,10 +1308,10 @@ pub unsafe fn WI_updateDeathmatchStats(state: &mut GameState) {
         stillticking = false;
         i = 0 as i32;
         while i < MAXPLAYERS {
-            if state.g_game.playeringame[i as usize] != 0 {
+            if state.g_game.playeringame[i as usize] {
                 j = 0 as i32;
                 while j < MAXPLAYERS {
-                    if state.g_game.playeringame[j as usize] != 0
+                    if state.g_game.playeringame[j as usize]
                         && state.wi_stuff.dm_frags[i as usize][j as usize]
                             != (*state.wi_stuff.plrs.offset(i as isize)).frags[j as usize]
                     {
@@ -1389,7 +1389,7 @@ pub unsafe fn WI_drawDeathmatchStats(state: &mut GameState) {
     y = DM_MATRIXY;
     i = 0 as i32;
     while i < MAXPLAYERS {
-        if state.g_game.playeringame[i as usize] != 0 {
+        if state.g_game.playeringame[i as usize] {
             V_DrawPatch(state,
                 x - (*state.wi_stuff.p[i as usize]).width as i32 / 2 as i32,
                 DM_MATRIXY - WI_SPACINGY,
@@ -1422,10 +1422,10 @@ pub unsafe fn WI_drawDeathmatchStats(state: &mut GameState) {
     i = 0 as i32;
     while i < MAXPLAYERS {
         x = DM_MATRIXX + DM_SPACINGX;
-        if state.g_game.playeringame[i as usize] != 0 {
+        if state.g_game.playeringame[i as usize] {
             j = 0 as i32;
             while j < MAXPLAYERS {
-                if state.g_game.playeringame[j as usize] != 0 {
+                if state.g_game.playeringame[j as usize] {
                     let dm_frags = state.wi_stuff.dm_frags[i as usize][j as usize];
                     WI_drawNum(state, x + w, y, dm_frags, 2 as i32);
                 }
@@ -1447,7 +1447,7 @@ pub unsafe fn WI_initNetgameStats(state: &mut GameState) {
     state.wi_stuff.cnt_pause = TICRATE;
     i = 0 as i32;
     while i < MAXPLAYERS {
-        if !(state.g_game.playeringame[i as usize] == 0) {
+        if state.g_game.playeringame[i as usize] {
             state.wi_stuff.cnt_frags[i as usize] = 0 as i32;
             state.wi_stuff.cnt_secret[i as usize] = state.wi_stuff.cnt_frags[i as usize];
             state.wi_stuff.cnt_items[i as usize] = state.wi_stuff.cnt_secret[i as usize];
@@ -1469,7 +1469,7 @@ pub unsafe fn WI_updateNetgameStats(state: &mut GameState) {
         state.wi_stuff.acceleratestage = 0 as i32;
         i = 0 as i32;
         while i < MAXPLAYERS {
-            if !(state.g_game.playeringame[i as usize] == 0) {
+            if state.g_game.playeringame[i as usize] {
                 state.wi_stuff.cnt_kills[i as usize] =
                     (*state.wi_stuff.plrs.offset(i as isize)).skills * 100 as i32
                         / (*state.wi_stuff.wbs).maxkills;
@@ -1495,7 +1495,7 @@ pub unsafe fn WI_updateNetgameStats(state: &mut GameState) {
         stillticking = false;
         i = 0 as i32;
         while i < MAXPLAYERS {
-            if !(state.g_game.playeringame[i as usize] == 0) {
+            if state.g_game.playeringame[i as usize] {
                 state.wi_stuff.cnt_kills[i as usize] += 2 as i32;
                 if state.wi_stuff.cnt_kills[i as usize]
                     >= (*state.wi_stuff.plrs.offset(i as isize)).skills * 100 as i32
@@ -1521,7 +1521,7 @@ pub unsafe fn WI_updateNetgameStats(state: &mut GameState) {
         stillticking = false;
         i = 0 as i32;
         while i < MAXPLAYERS {
-            if !(state.g_game.playeringame[i as usize] == 0) {
+            if state.g_game.playeringame[i as usize] {
                 state.wi_stuff.cnt_items[i as usize] += 2 as i32;
                 if state.wi_stuff.cnt_items[i as usize]
                     >= (*state.wi_stuff.plrs.offset(i as isize)).sitems * 100 as i32
@@ -1547,7 +1547,7 @@ pub unsafe fn WI_updateNetgameStats(state: &mut GameState) {
         stillticking = false;
         i = 0 as i32;
         while i < MAXPLAYERS {
-            if !(state.g_game.playeringame[i as usize] == 0) {
+            if state.g_game.playeringame[i as usize] {
                 state.wi_stuff.cnt_secret[i as usize] += 2 as i32;
                 if state.wi_stuff.cnt_secret[i as usize]
                     >= (*state.wi_stuff.plrs.offset(i as isize)).ssecret * 100 as i32
@@ -1573,7 +1573,7 @@ pub unsafe fn WI_updateNetgameStats(state: &mut GameState) {
         stillticking = false;
         i = 0 as i32;
         while i < MAXPLAYERS {
-            if !(state.g_game.playeringame[i as usize] == 0) {
+            if state.g_game.playeringame[i as usize] {
                 state.wi_stuff.cnt_frags[i as usize] += 1 as i32;
                 fsum = WI_fragSum(state, i);
                 if state.wi_stuff.cnt_frags[i as usize] >= fsum {
@@ -1654,7 +1654,7 @@ pub unsafe fn WI_drawNetgameStats(state: &mut GameState) {
     y = NG_STATSY + (*state.wi_stuff.kills).height as i32;
     i = 0 as i32;
     while i < MAXPLAYERS {
-        if !(state.g_game.playeringame[i as usize] == 0) {
+        if state.g_game.playeringame[i as usize] {
             x = 32 as i32
                 + (*state.wi_stuff.star).width as i32 / 2 as i32
                 + 32 as i32 * (state.wi_stuff.dofrags == 0) as i32;
@@ -1858,7 +1858,7 @@ pub unsafe fn WI_checkForAccelerate(state: &mut GameState) {
     i = 0 as i32;
     player = &raw mut state.g_game.players as *mut player_t;
     while i < MAXPLAYERS {
-        if state.g_game.playeringame[i as usize] != 0 {
+        if state.g_game.playeringame[i as usize] {
             if (*player).cmd.buttons as i32 & BT_ATTACK as i32 != 0 {
                 if (*player).attackdown == 0 {
                     state.wi_stuff.acceleratestage = 1 as i32;

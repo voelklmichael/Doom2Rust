@@ -1,6 +1,3 @@
-use crate::src::doomdef::boolean;
-use crate::src::doomdef::false_0;
-use crate::src::doomdef::true_0;
 use crate::src::doomdef::NULL;
 use crate::src::game_state::GameState;
 use crate::src::m_bbox::{BOXBOTTOM, BOXLEFT, BOXRIGHT, BOXTOP};
@@ -212,7 +209,7 @@ pub struct intercept_t {
     pub frac: fixed_t,
     pub target: InterceptTarget,
 }
-pub type traverser_t = Option<unsafe fn(&mut GameState, *mut intercept_t) -> boolean>;
+pub type traverser_t = Option<unsafe fn(&mut GameState, *mut intercept_t) -> bool>;
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct intercepts_overrun_t {
@@ -513,7 +510,7 @@ pub unsafe fn P_BlockLinesIterator(
     state: &mut GameState,
     mut x: i32,
     mut y: i32,
-    mut func: Option<unsafe fn(&mut GameState, LineId) -> boolean>,
+    mut func: Option<unsafe fn(&mut GameState, LineId) -> bool>,
 ) -> bool {
     let mut offset: i32 = 0;
     let mut list: *mut i16 = ::core::ptr::null_mut::<i16>();
@@ -529,7 +526,7 @@ pub unsafe fn P_BlockLinesIterator(
         ld = LineId(*list as u32);
         if !(state.p_setup.line(ld).validcount == state.r_main.validcount) {
             (*state.p_setup.line_mut(ld)).validcount = state.r_main.validcount;
-            if func.expect("non-null function pointer")(state, ld) == 0 {
+            if !func.expect("non-null function pointer")(state, ld) {
                 return false;
             }
         }
@@ -541,7 +538,7 @@ pub unsafe fn P_BlockThingsIterator(
     state: &mut GameState,
     mut x: i32,
     mut y: i32,
-    mut func: Option<unsafe fn(&mut GameState, MobjId) -> boolean>,
+    mut func: Option<unsafe fn(&mut GameState, MobjId) -> bool>,
 ) -> bool {
     if x < 0 as i32 || y < 0 as i32 || x >= state.p_setup.bmapwidth || y >= state.p_setup.bmapheight
     {
@@ -553,7 +550,7 @@ pub unsafe fn P_BlockThingsIterator(
             .p_mobj
             .mobj_get(id)
             .expect("blockmap-list entry is always live");
-        if func.expect("non-null function pointer")(state, id) == 0 {
+        if !func.expect("non-null function pointer")(state, id) {
             return false;
         }
         cursor = (*mobj).bnext;
@@ -564,7 +561,7 @@ pub unsafe fn P_BlockThingsIterator(
 pub unsafe fn PIT_AddLineIntercepts(
     state: &mut GameState,
     mut ld: LineId,
-) -> boolean {
+) -> bool {
     let mut s1: i32 = 0;
     let mut s2: i32 = 0;
     let mut frac: fixed_t = 0;
@@ -594,15 +591,15 @@ pub unsafe fn PIT_AddLineIntercepts(
         );
     }
     if s1 == s2 {
-        return true_0 as boolean;
+        return true;
     }
     P_MakeDivline(state, ld, &raw mut dl);
     frac = P_InterceptVector(&raw mut state.p_maputl.trace, &raw mut dl);
     if frac < 0 as i32 {
-        return true_0 as boolean;
+        return true;
     }
     if state.p_maputl.earlyout && frac < FRACUNIT && ldv.backsector.is_none() {
-        return false_0 as boolean;
+        return false;
     }
     (*state.p_maputl.intercept_p).frac = frac;
     (*state.p_maputl.intercept_p).target = InterceptTarget::Line(ld);
@@ -614,13 +611,13 @@ pub unsafe fn PIT_AddLineIntercepts(
     let intercept_p = state.p_maputl.intercept_p;
     InterceptsOverrun(state, num_intercepts, intercept_p);
     state.p_maputl.intercept_p = state.p_maputl.intercept_p.offset(1);
-    return true_0 as boolean;
+    return true;
 }
 #[no_mangle]
 pub unsafe fn PIT_AddThingIntercepts(
     state: &mut GameState,
     mut thing_id: MobjId,
-) -> boolean {
+) -> bool {
     let thing = state.p_mobj.mobj_get(thing_id).unwrap();
     let mut x1: fixed_t = 0;
     let mut y1: fixed_t = 0;
@@ -651,7 +648,7 @@ pub unsafe fn PIT_AddThingIntercepts(
     s1 = P_PointOnDivlineSide(x1, y1, &raw mut state.p_maputl.trace);
     s2 = P_PointOnDivlineSide(x2, y2, &raw mut state.p_maputl.trace);
     if s1 == s2 {
-        return true_0 as boolean;
+        return true;
     }
     dl.x = x1;
     dl.y = y1;
@@ -659,7 +656,7 @@ pub unsafe fn PIT_AddThingIntercepts(
     dl.dy = y2 - y1;
     frac = P_InterceptVector(&raw mut state.p_maputl.trace, &raw mut dl);
     if frac < 0 as i32 {
-        return true_0 as boolean;
+        return true;
     }
     (*state.p_maputl.intercept_p).frac = frac;
     (*state.p_maputl.intercept_p).target = InterceptTarget::Thing(thing_id);
@@ -671,7 +668,7 @@ pub unsafe fn PIT_AddThingIntercepts(
     let intercept_p = state.p_maputl.intercept_p;
     InterceptsOverrun(state, num_intercepts, intercept_p);
     state.p_maputl.intercept_p = state.p_maputl.intercept_p.offset(1);
-    return true_0 as boolean;
+    return true;
 }
 pub unsafe fn P_TraverseIntercepts(
     state: &mut GameState,
@@ -706,7 +703,7 @@ pub unsafe fn P_TraverseIntercepts(
         if dist > maxfrac {
             return true;
         }
-        if func.expect("non-null function pointer")(state, in_0) == 0 {
+        if !func.expect("non-null function pointer")(state, in_0) {
             return false;
         }
         (*in_0).frac = INT_MAX as fixed_t;
@@ -800,7 +797,7 @@ pub unsafe fn P_PathTraverse(
     mut x2: fixed_t,
     mut y2: fixed_t,
     mut flags: i32,
-    mut trav: Option<unsafe fn(&mut GameState, *mut intercept_t) -> boolean>,
+    mut trav: Option<unsafe fn(&mut GameState, *mut intercept_t) -> bool>,
 ) -> bool {
     let mut xt1: fixed_t = 0;
     let mut yt1: fixed_t = 0;
@@ -876,7 +873,7 @@ pub unsafe fn P_PathTraverse(
                 mapy,
                 Some(
                     PIT_AddLineIntercepts
-                        as unsafe fn(&mut GameState, LineId) -> boolean,
+                        as unsafe fn(&mut GameState, LineId) -> bool,
                 ),
             ) {
                 return false;
@@ -889,7 +886,7 @@ pub unsafe fn P_PathTraverse(
                 mapy,
                 Some(
                     PIT_AddThingIntercepts
-                        as unsafe fn(&mut GameState, MobjId) -> boolean,
+                        as unsafe fn(&mut GameState, MobjId) -> bool,
                 ),
             ) {
                 return false;

@@ -14,8 +14,6 @@ use crate::src::d_mode::{skill_from_raw, SkillType};
 use crate::src::d_net::D_CheckNetGame;
 use crate::src::d_net::D_ConnectNetGame;
 use crate::src::d_player::{PlayerId, PlayerState};
-use crate::src::doomdef::boolean;
-use crate::src::doomdef::false_0;
 use crate::src::doomdef::MAXPLAYERS;
 use crate::src::doomdef::NULL;
 use crate::src::doomdef::SCREENHEIGHT;
@@ -472,16 +470,16 @@ pub unsafe fn D_BindVariables(state: &mut GameState) {
         i += 1;
     }
 }
-pub fn D_GrabMouseCallback(state: &mut GameState) -> boolean {
+pub fn D_GrabMouseCallback(state: &mut GameState) -> bool {
     if drone {
-        return false_0 as boolean;
+        return false;
     }
     if state.m_menu.menuactive || state.g_game.paused {
-        return false_0 as boolean;
+        return false;
     }
-    return (state.g_game.gamestate == GameScreenState::GS_LEVEL
+    return state.g_game.gamestate == GameScreenState::GS_LEVEL
         && !state.g_game.demoplayback
-        && !state.d_main.advancedemo) as i32 as boolean;
+        && !state.d_main.advancedemo;
 }
 pub unsafe fn doomgeneric_Tick(state: &mut GameState) {
     TryRunTics(state);

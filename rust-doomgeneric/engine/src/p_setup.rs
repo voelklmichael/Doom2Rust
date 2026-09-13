@@ -935,7 +935,7 @@ pub unsafe fn P_SetupLevel(state: &mut GameState, mut episode: i32, mut map: i32
     if state.g_game.deathmatch != 0 {
         i = 0 as i32;
         while i < MAXPLAYERS {
-            if state.g_game.playeringame[i as usize] != 0 {
+            if state.g_game.playeringame[i as usize] {
                 state.g_game.players[i as usize].mo = None;
                 G_DeathMatchSpawnPlayer(state, i);
             }

@@ -1,7 +1,6 @@
 use crate::src::d_mode::GameMode_t;
 use crate::src::d_mode::SkillType;
 use crate::src::d_player::player_t;
-use crate::src::doomdef::boolean;
 use crate::src::g_game::G_ExitLevel;
 use crate::src::i_system::I_Error;
 use crate::src::m_fixed::fixed_t;
@@ -55,8 +54,6 @@ use crate::src::tables::angle_t;
 use crate::src::tables::finecosine;
 use crate::src::tables::finesine;
 
-use crate::src::doomdef::false_0;
-use crate::src::doomdef::true_0;
 use crate::src::doomdef::MAXPLAYERS;
 use crate::src::game_state::GameState;
 use crate::src::p_mobj::StateNum;
@@ -456,7 +453,7 @@ pub unsafe fn P_LookForPlayers(
     stop = (*actor).lastlook - 1 as i32 & 3 as i32;
     let mut current_block_9: u64;
     loop {
-        if !(state.g_game.playeringame[(*actor).lastlook as usize] == 0) {
+        if state.g_game.playeringame[(*actor).lastlook as usize] {
             let fresh1 = c;
             c = c + 1;
             if fresh1 == 2 as i32 || (*actor).lastlook == stop {
@@ -962,24 +959,24 @@ pub unsafe fn A_SkelFist(state: &mut GameState, id: MobjId) {
     }
 }
 #[no_mangle]
-pub unsafe fn PIT_VileCheck(state: &mut GameState, mut thing_id: MobjId) -> boolean {
+pub unsafe fn PIT_VileCheck(state: &mut GameState, mut thing_id: MobjId) -> bool {
     let thing = state.p_mobj.mobj_get(thing_id).unwrap();
     let mut maxdist: i32 = 0;
     let mut check: bool = false;
     if (*thing).flags & MF_CORPSE as i32 == 0 {
-        return true_0 as boolean;
+        return true;
     }
     if (*thing).tics != -(1 as i32) {
-        return true_0 as boolean;
+        return true;
     }
     if (*state.info.mobjinfo_mut((*thing).type_0)).raisestate == StateNum::S_NULL {
-        return true_0 as boolean;
+        return true;
     }
     maxdist = (*state.info.mobjinfo_mut((*thing).type_0)).radius + state.info.mobjinfo[MobjType::MT_VILE as i32 as usize].radius;
     if ((*thing).x as i32 - state.p_enemy.viletryx as i32).abs() > maxdist
         || ((*thing).y as i32 - state.p_enemy.viletryy as i32).abs() > maxdist
     {
-        return true_0 as boolean;
+        return true;
     }
     state.p_enemy.corpsehit = Some((*thing).id);
     (*thing).momy = 0 as i32 as fixed_t;
@@ -988,9 +985,9 @@ pub unsafe fn PIT_VileCheck(state: &mut GameState, mut thing_id: MobjId) -> bool
     check = P_CheckPosition(state, thing, (*thing).x, (*thing).y);
     (*thing).height >>= 2 as i32;
     if !check {
-        return true_0 as boolean;
+        return true;
     }
-    return false_0 as boolean;
+    return false;
 }
 pub unsafe fn A_VileChase(state: &mut GameState, id: MobjId) {
     let actor = state.p_mobj.mobj_get(id).unwrap();
@@ -1030,7 +1027,7 @@ pub unsafe fn A_VileChase(state: &mut GameState, id: MobjId) {
                     state,
                     bx,
                     by,
-                    Some(PIT_VileCheck as unsafe fn(&mut GameState, MobjId) -> boolean),
+                    Some(PIT_VileCheck as unsafe fn(&mut GameState, MobjId) -> bool),
                 ) {
                     let corpsehit_id = state.p_enemy.corpsehit.unwrap();
                     let corpsehit = state.p_mobj.mobj_get(corpsehit_id).unwrap();
@@ -1382,7 +1379,7 @@ pub unsafe fn A_BossDeath(state: &mut GameState, id: MobjId) {
     }
     i = 0 as i32;
     while i < MAXPLAYERS {
-        if state.g_game.playeringame[i as usize] != 0
+        if state.g_game.playeringame[i as usize]
             && state.g_game.players[i as usize].health > 0 as i32
         {
             break;

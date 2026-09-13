@@ -1,4 +1,3 @@
-use crate::src::doomdef::boolean;
 use crate::src::doomdef::NULL;
 use crate::src::doomdef::SCREENHEIGHT;
 use crate::src::doomdef::SCREENWIDTH;
@@ -24,7 +23,7 @@ use crate::src::z_zone::Z_Malloc;
 use crate::src::z_zone::{PU_CACHE, PU_STATIC};
 use crate::src::mem_compat::{memcpy, memset};
 
-pub type vpatchclipfunc_t = Option<unsafe fn(*mut patch_t, i32, i32) -> boolean>;
+pub type vpatchclipfunc_t = Option<unsafe fn(*mut patch_t, i32, i32) -> bool>;
 #[derive(Copy, Clone)]
 #[repr(C, packed)]
 pub struct pcx_t {
@@ -138,7 +137,7 @@ pub unsafe fn V_DrawPatch(state: &mut GameState, mut x: i32, mut y: i32, mut pat
     y -= (*patch).topoffset as i32;
     x -= (*patch).leftoffset as i32;
     if state.v_video.patchclip_callback.is_some() {
-        if state.v_video.patchclip_callback.expect("non-null function pointer")(patch, x, y) == 0 {
+        if !state.v_video.patchclip_callback.expect("non-null function pointer")(patch, x, y) {
             return;
         }
     }
@@ -209,7 +208,7 @@ pub unsafe fn V_DrawPatchFlipped(
     y -= (*patch).topoffset as i32;
     x -= (*patch).leftoffset as i32;
     if state.v_video.patchclip_callback.is_some() {
-        if state.v_video.patchclip_callback.expect("non-null function pointer")(patch, x, y) == 0 {
+        if !state.v_video.patchclip_callback.expect("non-null function pointer")(patch, x, y) {
             return;
         }
     }
@@ -337,7 +336,7 @@ pub unsafe fn V_DrawXlaPatch(
     y -= (*patch).topoffset as i32;
     x -= (*patch).leftoffset as i32;
     if state.patchclip_callback.is_some() {
-        if state.patchclip_callback.expect("non-null function pointer")(patch, x, y) == 0 {
+        if !state.patchclip_callback.expect("non-null function pointer")(patch, x, y) {
             return;
         }
     }

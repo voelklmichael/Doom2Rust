@@ -1,5 +1,3 @@
-use crate::src::doomdef::boolean;
-use crate::src::doomdef::false_0;
 use crate::src::doomdef::true_0;
 use crate::src::doomdef::SCREENWIDTH;
 use crate::src::game_state::GameState;
@@ -58,13 +56,13 @@ pub unsafe fn HUlib_initTextLine(
     (*t).sc = sc;
     HUlib_clearTextLine(t);
 }
-pub unsafe fn HUlib_addCharToTextLine(t: *mut hu_textline_t, ch: u8) -> boolean {
+pub unsafe fn HUlib_addCharToTextLine(t: *mut hu_textline_t, ch: u8) -> bool {
     if (*t).l.len() as i32 == HU_MAXLINELENGTH {
-        return false_0 as boolean;
+        return false;
     } else {
         (*t).l.push(ch as char);
         (*t).needsupdate = 4 as i32;
-        return true_0 as boolean;
+        return true;
     };
 }
 pub unsafe fn HUlib_delCharFromTextLine(mut t: *mut hu_textline_t) -> bool {
@@ -79,7 +77,7 @@ pub unsafe fn HUlib_delCharFromTextLine(mut t: *mut hu_textline_t) -> bool {
 pub unsafe fn HUlib_drawTextLine(
     state: &mut GameState,
     mut l: *mut hu_textline_t,
-    mut drawcursor: boolean,
+    mut drawcursor: bool,
 ) {
     let mut i: i32 = 0;
     let mut w: i32 = 0;
@@ -109,7 +107,7 @@ pub unsafe fn HUlib_drawTextLine(
         }
         i += 1;
     }
-    if drawcursor != 0
+    if drawcursor
         && x + (**(*l).f.offset(('_' as i32 - (*l).sc) as isize)).width as i32 <= SCREENWIDTH
     {
         V_DrawPatchDirect(
@@ -230,7 +228,7 @@ pub unsafe fn HUlib_drawSText(
             idx += (*s).h;
         }
         l = (&raw mut (*s).l as *mut hu_textline_t).offset(idx as isize) as *mut hu_textline_t;
-        HUlib_drawTextLine(state, l, false_0 as boolean);
+        HUlib_drawTextLine(state, l, false);
         i += 1;
     }
 }
@@ -282,16 +280,16 @@ pub unsafe fn HUlib_addPrefixToIText(it: *mut hu_itext_t, s: &str) {
     }
     (*it).lm = (*it).l.l.len() as i32;
 }
-pub unsafe fn HUlib_keyInIText(mut it: *mut hu_itext_t, mut ch: u8) -> boolean {
+pub unsafe fn HUlib_keyInIText(mut it: *mut hu_itext_t, mut ch: u8) -> bool {
     ch = ch.to_ascii_uppercase();
     if ch as i32 >= ' ' as i32 && ch as i32 <= '_' as i32 {
         HUlib_addCharToTextLine(&raw mut (*it).l, ch);
     } else if ch as i32 == KEY_BACKSPACE {
         HUlib_delCharFromIText(it);
     } else if ch as i32 != KEY_ENTER {
-        return false_0 as boolean;
+        return false;
     }
-    return true_0 as boolean;
+    return true;
 }
 pub unsafe fn HUlib_drawIText(
     state: &mut GameState,
@@ -301,7 +299,7 @@ pub unsafe fn HUlib_drawIText(
     if !*(*it).on {
         return;
     }
-    HUlib_drawTextLine(state, l, true_0 as boolean);
+    HUlib_drawTextLine(state, l, true);
 }
 pub unsafe fn HUlib_eraseIText(state: &mut GameState, mut it: *mut hu_itext_t) {
     if (*it).laston && !*(*it).on {

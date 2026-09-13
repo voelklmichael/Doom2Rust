@@ -685,13 +685,13 @@ pub unsafe fn AM_initVariables(state: &mut GameState) {
         (state.am_map.f_h as fixed_t) << 16 as i32,
         state.am_map.scale_ftom,
     );
-    if state.g_game.playeringame[state.g_game.consoleplayer as usize] != 0 {
+    if state.g_game.playeringame[state.g_game.consoleplayer as usize] {
         state.am_map.plr = PlayerId(state.g_game.consoleplayer as u8);
     } else {
         state.am_map.plr = PlayerId(0);
         pnum = 0 as i32;
         while pnum < MAXPLAYERS {
-            if state.g_game.playeringame[pnum as usize] != 0 {
+            if state.g_game.playeringame[pnum as usize] {
                 state.am_map.plr = PlayerId(pnum as u8);
                 break;
             } else {
@@ -1380,7 +1380,7 @@ pub unsafe fn AM_drawPlayers(state: &mut GameState) {
             && !state.g_game.singledemo
             && PlayerId(i as u8) != state.am_map.plr)
         {
-            if !(state.g_game.playeringame[i as usize] == 0) {
+            if state.g_game.playeringame[i as usize] {
                 if (*p).powers[PowerType::pw_invisibility as i32 as usize] != 0 {
                     color = 246 as i32;
                 } else {

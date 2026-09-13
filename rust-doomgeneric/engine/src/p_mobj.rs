@@ -3393,7 +3393,7 @@ pub unsafe fn P_SpawnPlayer(state: &mut GameState, mut mthing: *mut mapthing_t) 
     if (*mthing).type_0 as i32 == 0 as i32 {
         return;
     }
-    if state.g_game.playeringame[((*mthing).type_0 as i32 - 1 as i32) as usize] == 0 {
+    if !state.g_game.playeringame[((*mthing).type_0 as i32 - 1 as i32) as usize] {
         return;
     }
     p = (&raw mut state.g_game.players as *mut player_t)

@@ -6,7 +6,6 @@ use crate::src::d_main::D_DoAdvanceDemo;
 use crate::src::d_mode::skill_from_raw;
 use crate::src::d_player::player_t;
 use crate::src::d_ticcmd::ticcmd_t;
-use crate::src::doomdef::boolean;
 use crate::src::g_game::G_CheckDemoStatus;
 use crate::src::g_game::G_Ticker;
 use crate::src::m_argv::M_CheckParm;
@@ -38,20 +37,20 @@ impl DNetState {
 unsafe fn PlayerQuitGame(state: &mut GameState, mut player: *mut player_t) {
     let mut player_num: u32 = 0;
     player_num = player.offset_from(&raw mut state.g_game.players as *mut player_t) as i64 as u32;
-    state.g_game.playeringame[player_num as usize] = false_0 as boolean;
+    state.g_game.playeringame[player_num as usize] = false;
     state.g_game.players[state.g_game.consoleplayer as usize].message =
         Some(format!("Player {} left the game", player_num + 1));
     if state.g_game.demorecording {
         G_CheckDemoStatus(state);
     }
 }
-unsafe fn RunTic(state: &mut GameState, mut cmds: *mut ticcmd_t, mut ingame: *mut boolean) {
+unsafe fn RunTic(state: &mut GameState, mut cmds: *mut ticcmd_t, mut ingame: *mut bool) {
     let mut i: u32 = 0;
     i = 0 as u32;
     while i < MAXPLAYERS as u32 {
         if !state.g_game.demoplayback
-            && state.g_game.playeringame[i as usize] != 0
-            && *ingame.offset(i as isize) == 0
+            && state.g_game.playeringame[i as usize]
+            && !*ingame.offset(i as isize)
         {
             let quitter = (&raw mut state.g_game.players as *mut player_t).offset(i as isize)
                 as *mut player_t;
@@ -68,7 +67,7 @@ unsafe fn RunTic(state: &mut GameState, mut cmds: *mut ticcmd_t, mut ingame: *mu
 const DOOM_LOOP_INTERFACE: loop_interface_t = loop_interface_t {
     ProcessEvents: Some(D_ProcessEvents as unsafe fn(&mut GameState) -> ()),
     BuildTiccmd: Some(G_BuildTiccmd as unsafe fn(&mut GameState, *mut ticcmd_t, i32) -> ()),
-    RunTic: Some(RunTic as unsafe fn(&mut GameState, *mut ticcmd_t, *mut boolean) -> ()),
+    RunTic: Some(RunTic as unsafe fn(&mut GameState, *mut ticcmd_t, *mut bool) -> ()),
     RunMenu: Some(M_Ticker as unsafe fn(&mut GameState) -> ()),
 };
 unsafe fn LoadGameSettings(state: &mut GameState, mut settings: *mut net_gamesettings_t) {
@@ -91,8 +90,7 @@ unsafe fn LoadGameSettings(state: &mut GameState, mut settings: *mut net_gameset
     }
     i = 0 as u32;
     while i < MAXPLAYERS as u32 {
-        state.g_game.playeringame[i as usize] =
-            (i < (*settings).num_players as u32) as i32 as boolean;
+        state.g_game.playeringame[i as usize] = i < (*settings).num_players as u32;
         i = i.wrapping_add(1);
     }
 }

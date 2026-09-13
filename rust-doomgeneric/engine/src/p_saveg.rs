@@ -5,7 +5,6 @@ use crate::src::d_player::NUMPSPRITES;
 use crate::src::d_player::{player_t, PlayerId, PlayerState};
 use crate::src::d_player::{weapontype_from_raw, NUMWEAPONS};
 use crate::src::d_ticcmd::ticcmd_t;
-use crate::src::doomdef::boolean;
 use crate::src::g_game::G_VanillaVersionCode;
 use crate::src::i_system::I_Error;
 use std::io::{Read, Seek, Write};
@@ -820,7 +819,7 @@ pub fn P_ReadSaveGameHeader(state: &mut GameState) -> bool {
     state.g_game.gamemap = saveg_read8(state) as i32;
     i = 0 as i32;
     while i < MAXPLAYERS {
-        state.g_game.playeringame[i as usize] = saveg_read8(state) as boolean;
+        state.g_game.playeringame[i as usize] = saveg_read8(state) != 0;
         i += 1;
     }
     a = saveg_read8(state);
@@ -841,7 +840,7 @@ pub unsafe fn P_ArchivePlayers(state: &mut GameState) {
     let mut i: i32 = 0;
     i = 0 as i32;
     while i < MAXPLAYERS {
-        if !(state.g_game.playeringame[i as usize] == 0) {
+        if state.g_game.playeringame[i as usize] {
             saveg_write_pad(state);
             let player = (&raw mut state.g_game.players as *mut player_t).offset(i as isize)
                 as *mut player_t;
@@ -854,7 +853,7 @@ pub unsafe fn P_UnArchivePlayers(state: &mut GameState) {
     let mut i: i32 = 0;
     i = 0 as i32;
     while i < MAXPLAYERS {
-        if !(state.g_game.playeringame[i as usize] == 0) {
+        if state.g_game.playeringame[i as usize] {
             saveg_read_pad(state);
             let player = (&raw mut state.g_game.players as *mut player_t).offset(i as isize)
                 as *mut player_t;
