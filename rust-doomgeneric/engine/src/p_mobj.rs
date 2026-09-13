@@ -530,16 +530,18 @@ pub struct line_s {
     pub tag: i16,
     pub sidenum: [i16; 2],
     pub bbox: [fixed_t; 4],
-    pub slopetype: slopetype_t,
+    pub slopetype: SlopeType,
     pub frontsector: Option<SectorId>,
     pub backsector: Option<SectorId>,
     pub validcount: i32,
 }
-pub type slopetype_t = u32;
-pub const ST_NEGATIVE: slopetype_t = 3;
-pub const ST_POSITIVE: slopetype_t = 2;
-pub const ST_VERTICAL: slopetype_t = 1;
-pub const ST_HORIZONTAL: slopetype_t = 0;
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub enum SlopeType {
+    ST_HORIZONTAL = 0,
+    ST_VERTICAL = 1,
+    ST_POSITIVE = 2,
+    ST_NEGATIVE = 3,
+}
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct vertex_t {

@@ -31,7 +31,7 @@ use crate::src::p_mobj::P_SpawnMobj;
 use crate::src::p_mobj::P_SpawnPuff;
 use crate::src::p_mobj::P_SubstNullMobj;
 use crate::src::p_mobj::{
-    line_s, line_t, mobjinfo_t, sector_t, thinker_t, ST_HORIZONTAL,
+    line_s, line_t, mobjinfo_t, sector_t, thinker_t, SlopeType,
 };
 use crate::src::p_mobj::{mobj_t, pspdef_t};
 use crate::src::p_mobj::{
@@ -515,7 +515,7 @@ pub unsafe fn A_KeenDie(state: &mut GameState, id: MobjId) {
         tag: 0,
         sidenum: [0; 2],
         bbox: [0; 4],
-        slopetype: ST_HORIZONTAL,
+        slopetype: SlopeType::ST_HORIZONTAL,
         frontsector: None,
         backsector: None,
         validcount: 0,
@@ -1451,7 +1451,7 @@ pub unsafe fn A_BossDeath(state: &mut GameState, id: MobjId) {
         tag: 0,
         sidenum: [0; 2],
         bbox: [0; 4],
-        slopetype: ST_HORIZONTAL,
+        slopetype: SlopeType::ST_HORIZONTAL,
         frontsector: None,
         backsector: None,
         validcount: 0,
