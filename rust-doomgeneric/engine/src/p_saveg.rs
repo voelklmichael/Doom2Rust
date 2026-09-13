@@ -1135,12 +1135,7 @@ pub unsafe fn P_UnArchiveSpecials(state: &mut GameState) {
             }
             2 => {
                 saveg_read_pad(state);
-                floor = Z_Malloc(
-                    &mut state.z_zone,
-                    ::core::mem::size_of::<floormove_t>() as i32,
-                    PU_LEVEL as i32,
-                    NULL,
-                ) as *mut floormove_t;
+                floor = state.p_spec.spawn_floor(floormove_t::default());
                 saveg_read_floormove_t(state, floor);
                 (*floor).thinker.function = ThinkerFn::Floor(T_MoveFloor);
                 let floor_id = P_AddThinker(state, &raw mut (*floor).thinker, ThinkerKind::Floor);

@@ -25,8 +25,6 @@ use crate::src::r_defs::side_t;
 use crate::src::s_sound::S_StartSound;
 use crate::src::s_sound::SoundOrigin;
 use crate::src::sounds::{sfx_pstop, sfx_stnmov};
-use crate::src::z_zone::Z_Malloc;
-use crate::src::z_zone::PU_LEVSPEC;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum FloorE {
@@ -223,12 +221,7 @@ pub unsafe fn EV_DoFloor(
             continue;
         }
         rtn = 1 as i32;
-        floor = Z_Malloc(
-            &mut state.z_zone,
-            ::core::mem::size_of::<floormove_t>() as i32,
-            PU_LEVSPEC as i32,
-            ::core::ptr::null_mut::<::core::ffi::c_void>(),
-        ) as *mut floormove_t;
+        floor = state.p_spec.spawn_floor(floormove_t::default());
         let floor_id = P_AddThinker(state, &raw mut (*floor).thinker, ThinkerKind::Floor);
         (*sec).specialdata = Some(SectorSpecial::Floor(floor_id));
         (*floor).thinker.function = ThinkerFn::Floor(T_MoveFloor);
@@ -421,12 +414,7 @@ pub unsafe fn EV_BuildStairs(
             continue;
         }
         rtn = 1 as i32;
-        floor = Z_Malloc(
-            &mut state.z_zone,
-            ::core::mem::size_of::<floormove_t>() as i32,
-            PU_LEVSPEC as i32,
-            ::core::ptr::null_mut::<::core::ffi::c_void>(),
-        ) as *mut floormove_t;
+        floor = state.p_spec.spawn_floor(floormove_t::default());
         let floor_id = P_AddThinker(state, &raw mut (*floor).thinker, ThinkerKind::Floor);
         (*sec).specialdata = Some(SectorSpecial::Floor(floor_id));
         (*floor).thinker.function = ThinkerFn::Floor(T_MoveFloor);
@@ -463,12 +451,7 @@ pub unsafe fn EV_BuildStairs(
                             if (*tsec).specialdata.is_none() {
                                 sec = tsec;
                                 secnum = newsecnum;
-                                floor = Z_Malloc(
-                                    &mut state.z_zone,
-                                    ::core::mem::size_of::<floormove_t>() as i32,
-                                    PU_LEVSPEC as i32,
-                                    ::core::ptr::null_mut::<::core::ffi::c_void>(),
-                                ) as *mut floormove_t;
+                                floor = state.p_spec.spawn_floor(floormove_t::default());
                                 let floor_id = P_AddThinker(state, &raw mut (*floor).thinker, ThinkerKind::Floor);
                                 (*sec).specialdata = Some(SectorSpecial::Floor(floor_id));
                                 (*floor).thinker.function = ThinkerFn::Floor(T_MoveFloor);
