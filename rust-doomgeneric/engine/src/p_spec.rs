@@ -166,6 +166,27 @@ pub struct ceiling_t {
     pub tag: i32,
     pub olddirection: i32,
 }
+// Placeholder passed to PCeilngState::spawn() -- every real field is set by
+// the caller within a few lines of spawn() returning (EV_DoCeiling, and
+// p_saveg.rs's restore branch), so these values are never actually read.
+impl Default for ceiling_t {
+    fn default() -> Self {
+        ceiling_t {
+            thinker: thinker_t {
+                function: ThinkerFn::Unresolved,
+            },
+            type_0: CeilingE::lowerToFloor,
+            sector: SectorId(0),
+            bottomheight: 0,
+            topheight: 0,
+            speed: 0,
+            crush: false,
+            direction: 0,
+            tag: 0,
+            olddirection: 0,
+        }
+    }
+}
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct floormove_t {

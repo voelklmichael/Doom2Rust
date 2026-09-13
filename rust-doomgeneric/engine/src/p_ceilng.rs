@@ -17,8 +17,6 @@ use crate::src::p_tick::P_RemoveThinker;
 use crate::src::s_sound::S_StartSound;
 use crate::src::s_sound::SoundOrigin;
 use crate::src::sounds::{sfx_pstop, sfx_stnmov};
-use crate::src::z_zone::Z_Malloc;
-use crate::src::z_zone::PU_LEVSPEC;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum CeilingE {
@@ -33,13 +31,27 @@ pub const CEILSPEED: i32 = FRACUNIT;
 pub const MAXCEILINGS: i32 = 30;
 pub struct PCeilngState {
     pub activeceilings: [*mut ceiling_t; 30],
+    ceilings: Vec<Box<ceiling_t>>,
 }
 
 impl PCeilngState {
     pub const fn new() -> Self {
         PCeilngState {
             activeceilings: [::core::ptr::null::<ceiling_t>() as *mut ceiling_t; 30],
+            ceilings: Vec::new(),
         }
+    }
+
+    // Direct replacement for Z_Malloc(size_of::<ceiling_t>(), ...) -- see
+    // PDoorsState::spawn/dealloc (p_doors.rs) for why no generation-checked
+    // id or two-phase retire/deallocate split is needed here either.
+    pub fn spawn(&mut self, value: ceiling_t) -> *mut ceiling_t {
+        self.ceilings.push(Box::new(value));
+        self.ceilings.last_mut().unwrap().as_mut()
+    }
+
+    pub fn dealloc(&mut self, ptr: *mut ceiling_t) {
+        self.ceilings.retain(|b| !::core::ptr::eq(b.as_ref(), ptr));
     }
 }
 
@@ -182,12 +194,7 @@ pub unsafe fn EV_DoCeiling(
             continue;
         }
         rtn = 1 as i32;
-        ceiling = Z_Malloc(
-            &mut state.z_zone,
-            ::core::mem::size_of::<ceiling_t>() as i32,
-            PU_LEVSPEC as i32,
-            ::core::ptr::null_mut::<::core::ffi::c_void>(),
-        ) as *mut ceiling_t;
+        ceiling = state.p_ceilng.spawn(ceiling_t::default());
         let ceiling_id = P_AddThinker(state, &raw mut (*ceiling).thinker, ThinkerKind::Ceiling);
         (*sec).specialdata = Some(SectorSpecial::Ceiling(ceiling_id));
         (*ceiling).thinker.function = ThinkerFn::Ceiling(T_MoveCeiling);
