@@ -4,10 +4,7 @@ use crate::src::am_map::AM_Ticker;
 use crate::src::d_event::event_t;
 use crate::src::d_event::GameScreenState;
 use crate::src::d_event::EvType;
-use crate::src::d_event::{
-    ga_completed, ga_loadgame, ga_loadlevel, ga_newgame, ga_nothing, ga_playdemo, ga_savegame,
-    ga_screenshot, ga_victory, ga_worlddone, gameaction_t,
-};
+use crate::src::d_event::GameAction;
 use crate::src::d_loop::BACKUPTICS;
 use crate::src::d_main::D_AdvanceDemo;
 use crate::src::d_main::D_PageTicker;
@@ -116,7 +113,7 @@ use std::io::Seek;
 
 pub struct GGameState {
     pub oldgamestate: GameScreenState,
-    pub gameaction: gameaction_t,
+    pub gameaction: GameAction,
     pub gamestate: GameScreenState,
     pub gameskill: skill_t,
     pub respawnmonsters: bool,
@@ -250,7 +247,7 @@ impl GGameState {
     pub const fn new() -> Self {
         GGameState {
             oldgamestate: GameScreenState::GS_LEVEL,
-            gameaction: ga_nothing,
+            gameaction: GameAction::ga_nothing,
             gamestate: GameScreenState::GS_LEVEL,
             gameskill: sk_baby,
             respawnmonsters: false,
@@ -834,7 +831,7 @@ pub unsafe fn G_DoLoadLevel(state: &mut GameState) {
         state.g_game.gamemap,
     );
     state.g_game.displayplayer = state.g_game.consoleplayer;
-    state.g_game.gameaction = ga_nothing;
+    state.g_game.gameaction = GameAction::ga_nothing;
     Z_CheckHeap(&mut state.z_zone);
     memset(
         &raw mut state.g_game.gamekeydown as *mut boolean as *mut ::core::ffi::c_void,
@@ -915,7 +912,7 @@ pub unsafe fn G_Responder(state: &mut GameState, mut ev: event_t) -> bool {
         }
         return true;
     }
-    if state.g_game.gameaction == ga_nothing
+    if state.g_game.gameaction == GameAction::ga_nothing
         && !state.g_game.singledemo
         && (state.g_game.demoplayback || state.g_game.gamestate == GameScreenState::GS_DEMOSCREEN)
     {
@@ -997,39 +994,39 @@ pub unsafe fn G_Ticker(state: &mut GameState) {
         }
         i += 1;
     }
-    while state.g_game.gameaction as u32 != ga_nothing as u32 {
-        match state.g_game.gameaction as u32 {
-            1 => {
+    while state.g_game.gameaction != GameAction::ga_nothing {
+        match state.g_game.gameaction {
+            GameAction::ga_loadlevel => {
                 G_DoLoadLevel(state);
             }
-            2 => {
+            GameAction::ga_newgame => {
                 G_DoNewGame(state);
             }
-            3 => {
+            GameAction::ga_loadgame => {
                 G_DoLoadGame(state);
             }
-            4 => {
+            GameAction::ga_savegame => {
                 G_DoSaveGame(state);
             }
-            5 => {
+            GameAction::ga_playdemo => {
                 G_DoPlayDemo(state);
             }
-            6 => {
+            GameAction::ga_completed => {
                 G_DoCompleted(state);
             }
-            7 => {
+            GameAction::ga_victory => {
                 F_StartFinale(state);
             }
-            8 => {
+            GameAction::ga_worlddone => {
                 G_DoWorldDone(state);
             }
-            9 => {
+            GameAction::ga_screenshot => {
                 V_ScreenShot(state);
                 state.g_game.players[state.g_game.consoleplayer as usize].message =
                     Some("screen shot".to_string());
-                state.g_game.gameaction = ga_nothing;
+                state.g_game.gameaction = GameAction::ga_nothing;
             }
-            0 | _ => {}
+            GameAction::ga_nothing => {}
         }
     }
     buf = state.d_loop.gametic / state.d_loop.ticdup % BACKUPTICS;
@@ -1111,7 +1108,7 @@ pub unsafe fn G_Ticker(state: &mut GameState) {
                             as i32
                             & BTS_SAVEMASK as i32)
                             >> BTS_SAVESHIFT as i32;
-                        state.g_game.gameaction = ga_savegame;
+                        state.g_game.gameaction = GameAction::ga_savegame;
                     }
                     _ => {}
                 }
@@ -1330,7 +1327,7 @@ pub unsafe fn G_DeathMatchSpawnPlayer(state: &mut GameState, mut playernum: i32)
 pub unsafe fn G_DoReborn(state: &mut GameState, mut playernum: i32) {
     let mut i: i32 = 0;
     if !state.g_game.netgame {
-        state.g_game.gameaction = ga_loadlevel;
+        state.g_game.gameaction = GameAction::ga_loadlevel;
     } else {
         (*state.g_game.players[playernum as usize].mo).player = None;
         if state.g_game.deathmatch != 0 {
@@ -1365,7 +1362,7 @@ pub unsafe fn G_DoReborn(state: &mut GameState, mut playernum: i32) {
     };
 }
 pub fn G_ScreenShot(state: &mut GameState) {
-    state.g_game.gameaction = ga_screenshot;
+    state.g_game.gameaction = GameAction::ga_screenshot;
 }
 #[no_mangle]
 pub static pars: [[i32; 10]; 4] = [
@@ -1392,7 +1389,7 @@ pub static cpars: [i32; 32] = [
 ];
 pub fn G_ExitLevel(state: &mut GameState) {
     state.g_game.secretexit = false;
-    state.g_game.gameaction = ga_completed;
+    state.g_game.gameaction = GameAction::ga_completed;
 }
 pub unsafe fn G_SecretExitLevel(state: &mut GameState) {
     if state.doomstat.gamemode as u32 == commercial as u32
@@ -1402,11 +1399,11 @@ pub unsafe fn G_SecretExitLevel(state: &mut GameState) {
     } else {
         state.g_game.secretexit = true;
     }
-    state.g_game.gameaction = ga_completed;
+    state.g_game.gameaction = GameAction::ga_completed;
 }
 pub unsafe fn G_DoCompleted(state: &mut GameState) {
     let mut i: i32 = 0;
-    state.g_game.gameaction = ga_nothing;
+    state.g_game.gameaction = GameAction::ga_nothing;
     i = 0 as i32;
     while i < MAXPLAYERS {
         if state.g_game.playeringame[i as usize] != 0 {
@@ -1420,13 +1417,13 @@ pub unsafe fn G_DoCompleted(state: &mut GameState) {
     if state.doomstat.gamemode as u32 != commercial as u32 {
         if state.doomstat.gameversion == GameVersion::chex {
             if state.g_game.gamemap == 5 as i32 {
-                state.g_game.gameaction = ga_victory;
+                state.g_game.gameaction = GameAction::ga_victory;
                 return;
             }
         } else {
             match state.g_game.gamemap {
                 8 => {
-                    state.g_game.gameaction = ga_victory;
+                    state.g_game.gameaction = GameAction::ga_victory;
                     return;
                 }
                 9 => {
@@ -1441,7 +1438,7 @@ pub unsafe fn G_DoCompleted(state: &mut GameState) {
         }
     }
     if state.g_game.gamemap == 8 as i32 && state.doomstat.gamemode as u32 != commercial as u32 {
-        state.g_game.gameaction = ga_victory;
+        state.g_game.gameaction = GameAction::ga_victory;
         return;
     }
     if state.g_game.gamemap == 9 as i32 && state.doomstat.gamemode as u32 != commercial as u32 {
@@ -1535,7 +1532,7 @@ pub unsafe fn G_DoCompleted(state: &mut GameState) {
     WI_Start(state, wminfo);
 }
 pub unsafe fn G_WorldDone(state: &mut GameState) {
-    state.g_game.gameaction = ga_worlddone;
+    state.g_game.gameaction = GameAction::ga_worlddone;
     if state.g_game.secretexit {
         state.g_game.players[state.g_game.consoleplayer as usize].didsecret = true;
     }
@@ -1568,16 +1565,16 @@ pub unsafe fn G_DoWorldDone(state: &mut GameState) {
     state.g_game.gamestate = GameScreenState::GS_LEVEL;
     state.g_game.gamemap = state.g_game.wminfo.next + 1 as i32;
     G_DoLoadLevel(state);
-    state.g_game.gameaction = ga_nothing;
+    state.g_game.gameaction = GameAction::ga_nothing;
     state.g_game.viewactive = true;
 }
 pub fn G_LoadGame(state: &mut GameState, name: &str) {
     state.g_game.savename = name.to_string();
-    state.g_game.gameaction = ga_loadgame;
+    state.g_game.gameaction = GameAction::ga_loadgame;
 }
 pub unsafe fn G_DoLoadGame(state: &mut GameState) {
     let mut savedleveltime: i32 = 0;
-    state.g_game.gameaction = ga_nothing;
+    state.g_game.gameaction = GameAction::ga_nothing;
     state.p_saveg.save_stream = std::fs::File::open(&state.g_game.savename).ok();
     if state.p_saveg.save_stream.is_none() {
         return;
@@ -1662,7 +1659,7 @@ pub unsafe fn G_DoSaveGame(state: &mut GameState) {
     }
     let _ = std::fs::remove_file(&savegame_file);
     let _ = std::fs::rename(&temp_savegame_file, &savegame_file);
-    state.g_game.gameaction = ga_nothing;
+    state.g_game.gameaction = GameAction::ga_nothing;
     state.g_game.savedescription.clear();
     state.g_game.players[state.g_game.consoleplayer as usize].message =
         Some("game saved.".to_string());
@@ -1677,7 +1674,7 @@ pub fn G_DeferedInitNew(
     state.g_game.d_skill = skill;
     state.g_game.d_episode = episode;
     state.g_game.d_map = map;
-    state.g_game.gameaction = ga_newgame;
+    state.g_game.gameaction = GameAction::ga_newgame;
 }
 pub unsafe fn G_DoNewGame(state: &mut GameState) {
     state.g_game.demoplayback = false;
@@ -1697,7 +1694,7 @@ pub unsafe fn G_DoNewGame(state: &mut GameState) {
         state.g_game.d_map,
     );
     G_InitNew(state, d_skill, d_episode, d_map);
-    state.g_game.gameaction = ga_nothing;
+    state.g_game.gameaction = GameAction::ga_nothing;
 }
 pub unsafe fn G_InitNew(state: &mut GameState, mut skill: skill_t, mut episode: i32, mut map: i32) {
     let skytexturename: &str;
@@ -1986,7 +1983,7 @@ pub unsafe fn G_BeginRecording(state: &mut GameState) {
 }
 pub unsafe fn G_DeferedPlayDemo(state: &mut GameState, mut name: *mut ::core::ffi::c_char) {
     state.g_game.defdemoname = name;
-    state.g_game.gameaction = ga_playdemo;
+    state.g_game.gameaction = GameAction::ga_playdemo;
 }
 fn DemoVersionDescription(_state: &mut GameState, version: i32) -> String {
     match version {
@@ -2010,7 +2007,7 @@ pub unsafe fn G_DoPlayDemo(state: &mut GameState) {
     let mut episode: i32 = 0;
     let mut map: i32 = 0;
     let mut demoversion: i32 = 0;
-    state.g_game.gameaction = ga_nothing;
+    state.g_game.gameaction = GameAction::ga_nothing;
     state.g_game.demo_p = W_CacheLumpName(state, 
         &wad_name8_to_string(state.g_game.defdemoname),
         PU_STATIC as i32,
@@ -2081,7 +2078,7 @@ pub unsafe fn G_TimeDemo(state: &mut GameState, mut name: *mut ::core::ffi::c_ch
     state.g_game.timingdemo = true;
     state.d_loop.singletics = true;
     state.g_game.defdemoname = name;
-    state.g_game.gameaction = ga_playdemo;
+    state.g_game.gameaction = GameAction::ga_playdemo;
 }
 #[no_mangle]
 pub unsafe fn G_CheckDemoStatus(state: &mut GameState) -> boolean {
