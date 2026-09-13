@@ -14,6 +14,7 @@ use crate::src::p_setup::LineId;
 use crate::src::p_setup::SectorId;
 use crate::src::p_spec::P_FindLowestCeilingSurrounding;
 use crate::src::p_spec::P_FindSectorFromLineTag;
+use crate::src::p_spec::{ceiling_t, floormove_t, plat_t};
 use crate::src::p_tick::P_AddThinker;
 use crate::src::p_tick::P_RemoveThinker;
 use crate::src::s_sound::S_StartSound;
@@ -219,8 +220,8 @@ pub unsafe fn EV_DoDoor(state: &mut GameState, mut line: LineId, mut type_0: Vld
             PU_LEVSPEC as i32,
             ::core::ptr::null_mut::<::core::ffi::c_void>(),
         ) as *mut vldoor_t;
-        P_AddThinker(state, &raw mut (*door).thinker);
-        (*sec).specialdata = Some(SectorSpecial::Door(door));
+        let door_id = P_AddThinker(state, &raw mut (*door).thinker);
+        (*sec).specialdata = Some(SectorSpecial::Door(door_id));
         (*door).thinker.function = ThinkerFn::Door(T_VerticalDoor);
         (*door).sector = SectorId(secnum as u32);
         (*door).type_0 = type_0;
@@ -328,8 +329,8 @@ pub unsafe fn EV_VerticalDoor(
         match linev.special as i32 {
             1 | 26 | 27 | 28 | 117 => {
                 match special {
-                    SectorSpecial::Door(d) => {
-                        door = d;
+                    SectorSpecial::Door(id) => {
+                        door = state.p_tick.raw(id) as *mut vldoor_t;
                         if (*door).direction == -(1 as i32) {
                             (*door).direction = 1 as i32;
                         } else {
@@ -339,24 +340,27 @@ pub unsafe fn EV_VerticalDoor(
                             (*door).direction = -(1 as i32);
                         }
                     }
-                    SectorSpecial::Plat(plat) => {
+                    SectorSpecial::Plat(id) => {
                         if (*thing).player.is_none() {
                             return;
                         }
+                        let plat = state.p_tick.raw(id) as *mut plat_t;
                         (*plat).wait = -(1 as i32);
                     }
-                    SectorSpecial::Ceiling(ceiling) => {
+                    SectorSpecial::Ceiling(id) => {
                         if (*thing).player.is_none() {
                             return;
                         }
                         eprintln!("EV_VerticalDoor: Tried to close something that wasn't a door.");
+                        let ceiling = state.p_tick.raw(id) as *mut ceiling_t;
                         (*ceiling).direction = -(1 as i32);
                     }
-                    SectorSpecial::Floor(floor) => {
+                    SectorSpecial::Floor(id) => {
                         if (*thing).player.is_none() {
                             return;
                         }
                         eprintln!("EV_VerticalDoor: Tried to close something that wasn't a door.");
+                        let floor = state.p_tick.raw(id) as *mut floormove_t;
                         (*floor).direction = -(1 as i32);
                     }
                 }
@@ -382,8 +386,8 @@ pub unsafe fn EV_VerticalDoor(
         PU_LEVSPEC as i32,
         ::core::ptr::null_mut::<::core::ffi::c_void>(),
     ) as *mut vldoor_t;
-    P_AddThinker(state, &raw mut (*door).thinker);
-    (*sec).specialdata = Some(SectorSpecial::Door(door));
+    let door_id = P_AddThinker(state, &raw mut (*door).thinker);
+    (*sec).specialdata = Some(SectorSpecial::Door(door_id));
     (*door).thinker.function = ThinkerFn::Door(T_VerticalDoor);
     (*door).sector = door_sector_id;
     (*door).direction = 1 as i32;
@@ -420,8 +424,8 @@ pub unsafe fn P_SpawnDoorCloseIn30(state: &mut GameState, mut sector: SectorId) 
         PU_LEVSPEC as i32,
         ::core::ptr::null_mut::<::core::ffi::c_void>(),
     ) as *mut vldoor_t;
-    P_AddThinker(state, &raw mut (*door).thinker);
-    (*sec).specialdata = Some(SectorSpecial::Door(door));
+    let door_id = P_AddThinker(state, &raw mut (*door).thinker);
+    (*sec).specialdata = Some(SectorSpecial::Door(door_id));
     (*sec).special = 0 as i16;
     (*door).thinker.function = ThinkerFn::Door(T_VerticalDoor);
     (*door).sector = sector;
@@ -439,8 +443,8 @@ pub unsafe fn P_SpawnDoorRaiseIn5Mins(state: &mut GameState, mut sector: SectorI
         PU_LEVSPEC as i32,
         ::core::ptr::null_mut::<::core::ffi::c_void>(),
     ) as *mut vldoor_t;
-    P_AddThinker(state, &raw mut (*door).thinker);
-    (*sec).specialdata = Some(SectorSpecial::Door(door));
+    let door_id = P_AddThinker(state, &raw mut (*door).thinker);
+    (*sec).specialdata = Some(SectorSpecial::Door(door_id));
     (*sec).special = 0 as i16;
     (*door).thinker.function = ThinkerFn::Door(T_VerticalDoor);
     (*door).sector = sector;
