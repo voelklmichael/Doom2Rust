@@ -1,4 +1,3 @@
-use crate::src::doomdef::NULL;
 use crate::src::doomdef::SCREENHEIGHT;
 use crate::src::doomdef::SCREENWIDTH;
 use crate::src::game_state::GameState;
@@ -15,20 +14,20 @@ use crate::src::mem_compat::memcpy;
 
 pub struct FWipeState {
     pub go: bool,
-    pub wipe_scr_start: *mut byte,
-    pub wipe_scr_end: *mut byte,
+    pub wipe_scr_start: Vec<byte>,
+    pub wipe_scr_end: Vec<byte>,
     pub wipe_scr: *mut byte,
-    pub y: *mut i32,
+    pub y: Vec<i32>,
 }
 
 impl FWipeState {
     pub const fn new() -> Self {
         FWipeState {
             go: false,
-            wipe_scr_start: ::core::ptr::null::<byte>() as *mut byte,
-            wipe_scr_end: ::core::ptr::null::<byte>() as *mut byte,
+            wipe_scr_start: Vec::new(),
+            wipe_scr_end: Vec::new(),
             wipe_scr: ::core::ptr::null::<byte>() as *mut byte,
-            y: ::core::ptr::null::<i32>() as *mut i32,
+            y: Vec::new(),
         }
     }
 }
@@ -72,7 +71,7 @@ pub unsafe fn wipe_initColorXForm(
 ) -> i32 {
     memcpy(
         state.f_wipe.wipe_scr as *mut ::core::ffi::c_void,
-        state.f_wipe.wipe_scr_start as *const ::core::ffi::c_void,
+        state.f_wipe.wipe_scr_start.as_ptr() as *const ::core::ffi::c_void,
         (width * height) as size_t,
     );
     return 0 as i32;
@@ -89,7 +88,7 @@ pub unsafe fn wipe_doColorXForm(
     let mut newval: i32 = 0;
     changed = false;
     w = state.f_wipe.wipe_scr;
-    e = state.f_wipe.wipe_scr_end;
+    e = state.f_wipe.wipe_scr_end.as_mut_ptr();
     while w != state.f_wipe.wipe_scr.offset((width * height) as isize) {
         if *w as i32 != *e as i32 {
             if *w as i32 > *e as i32 {
@@ -133,28 +132,23 @@ pub unsafe fn wipe_initMelt(
     let mut r: i32 = 0;
     memcpy(
         state.f_wipe.wipe_scr as *mut ::core::ffi::c_void,
-        state.f_wipe.wipe_scr_start as *const ::core::ffi::c_void,
+        state.f_wipe.wipe_scr_start.as_ptr() as *const ::core::ffi::c_void,
         (width * height) as size_t,
     );
-    let wipe_scr_start = state.f_wipe.wipe_scr_start as *mut i16;
+    let wipe_scr_start = state.f_wipe.wipe_scr_start.as_mut_ptr() as *mut i16;
     wipe_shittyColMajorXform(state, wipe_scr_start, width / 2 as i32, height);
-    let wipe_scr_end = state.f_wipe.wipe_scr_end as *mut i16;
+    let wipe_scr_end = state.f_wipe.wipe_scr_end.as_mut_ptr() as *mut i16;
     wipe_shittyColMajorXform(state, wipe_scr_end, width / 2 as i32, height);
-    state.f_wipe.y = Z_Malloc(
-        &mut state.z_zone,
-        (width as usize).wrapping_mul(::core::mem::size_of::<i32>() as usize) as i32,
-        PU_STATIC as i32,
-        ::core::ptr::null_mut::<::core::ffi::c_void>(),
-    ) as *mut i32;
-    *state.f_wipe.y.offset(0 as i32 as isize) = -(M_Random(&mut state.m_random) % 16 as i32);
+    state.f_wipe.y = vec![0i32; width as usize];
+    state.f_wipe.y[0] = -(M_Random(&mut state.m_random) % 16 as i32);
     i = 1 as i32;
     while i < width {
         r = M_Random(&mut state.m_random) % 3 as i32 - 1 as i32;
-        *state.f_wipe.y.offset(i as isize) = *state.f_wipe.y.offset((i - 1 as i32) as isize) + r;
-        if *state.f_wipe.y.offset(i as isize) > 0 as i32 {
-            *state.f_wipe.y.offset(i as isize) = 0 as i32;
-        } else if *state.f_wipe.y.offset(i as isize) == -(16 as i32) {
-            *state.f_wipe.y.offset(i as isize) = -(15 as i32);
+        state.f_wipe.y[i as usize] = state.f_wipe.y[(i - 1 as i32) as usize] + r;
+        if state.f_wipe.y[i as usize] > 0 as i32 {
+            state.f_wipe.y[i as usize] = 0 as i32;
+        } else if state.f_wipe.y[i as usize] == -(16 as i32) {
+            state.f_wipe.y[i as usize] = -(15 as i32);
         }
         i += 1;
     }
@@ -182,25 +176,22 @@ pub unsafe fn wipe_doMelt(
         }
         i = 0 as i32;
         while i < width {
-            if *state.f_wipe.y.offset(i as isize) < 0 as i32 {
-                let ref mut fresh1 = *state.f_wipe.y.offset(i as isize);
-                *fresh1 += 1;
+            if state.f_wipe.y[i as usize] < 0 as i32 {
+                state.f_wipe.y[i as usize] += 1;
                 done = false;
-            } else if *state.f_wipe.y.offset(i as isize) < height {
-                dy = if *state.f_wipe.y.offset(i as isize) < 16 as i32 {
-                    *state.f_wipe.y.offset(i as isize) + 1 as i32
+            } else if state.f_wipe.y[i as usize] < height {
+                dy = if state.f_wipe.y[i as usize] < 16 as i32 {
+                    state.f_wipe.y[i as usize] + 1 as i32
                 } else {
                     8 as i32
                 };
-                if *state.f_wipe.y.offset(i as isize) + dy >= height {
-                    dy = height - *state.f_wipe.y.offset(i as isize);
+                if state.f_wipe.y[i as usize] + dy >= height {
+                    dy = height - state.f_wipe.y[i as usize];
                 }
-                s = (state.f_wipe.wipe_scr_end as *mut i16)
-                    .offset((i * height + *state.f_wipe.y.offset(i as isize)) as isize)
-                    as *mut i16;
+                s = (state.f_wipe.wipe_scr_end.as_mut_ptr() as *mut i16)
+                    .offset((i * height + state.f_wipe.y[i as usize]) as isize);
                 d = (state.f_wipe.wipe_scr as *mut i16)
-                    .offset((*state.f_wipe.y.offset(i as isize) * width + i) as isize)
-                    as *mut i16;
+                    .offset((state.f_wipe.y[i as usize] * width + i) as isize);
                 idx = 0 as i32;
                 j = dy;
                 while j != 0 {
@@ -210,14 +201,12 @@ pub unsafe fn wipe_doMelt(
                     idx += width;
                     j -= 1;
                 }
-                *state.f_wipe.y.offset(i as isize) += dy;
-                s = (state.f_wipe.wipe_scr_start as *mut i16).offset((i * height) as isize)
-                    as *mut i16;
+                state.f_wipe.y[i as usize] += dy;
+                s = (state.f_wipe.wipe_scr_start.as_mut_ptr() as *mut i16).offset((i * height) as isize);
                 d = (state.f_wipe.wipe_scr as *mut i16)
-                    .offset((*state.f_wipe.y.offset(i as isize) * width + i) as isize)
-                    as *mut i16;
+                    .offset((state.f_wipe.y[i as usize] * width + i) as isize);
                 idx = 0 as i32;
-                j = height - *state.f_wipe.y.offset(i as isize);
+                j = height - state.f_wipe.y[i as usize];
                 while j != 0 {
                     let fresh3 = s;
                     s = s.offset(1);
@@ -238,28 +227,15 @@ pub unsafe fn wipe_exitMelt(
     _height: i32,
     _ticks: i32,
 ) -> i32 {
-    Z_Free(
-        &mut state.z_zone,
-        state.f_wipe.y as *mut ::core::ffi::c_void,
-    );
-    Z_Free(
-        &mut state.z_zone,
-        state.f_wipe.wipe_scr_start as *mut ::core::ffi::c_void,
-    );
-    Z_Free(
-        &mut state.z_zone,
-        state.f_wipe.wipe_scr_end as *mut ::core::ffi::c_void,
-    );
+    state.f_wipe.y = Vec::new();
+    state.f_wipe.wipe_scr_start = Vec::new();
+    state.f_wipe.wipe_scr_end = Vec::new();
     return 0 as i32;
 }
 pub unsafe fn wipe_StartScreen(state: &mut GameState) -> i32 {
-    state.f_wipe.wipe_scr_start = Z_Malloc(
-        &mut state.z_zone,
-        SCREENWIDTH * SCREENHEIGHT,
-        PU_STATIC as i32,
-        NULL,
-    ) as *mut byte;
-    I_ReadScreen(state, state.f_wipe.wipe_scr_start);
+    state.f_wipe.wipe_scr_start = vec![0u8; (SCREENWIDTH * SCREENHEIGHT) as usize];
+    let wipe_scr_start = state.f_wipe.wipe_scr_start.as_mut_ptr();
+    I_ReadScreen(state, wipe_scr_start);
     return 0 as i32;
 }
 pub unsafe fn wipe_EndScreen(
@@ -269,20 +245,11 @@ pub unsafe fn wipe_EndScreen(
     mut width: i32,
     mut height: i32,
 ) -> i32 {
-    state.f_wipe.wipe_scr_end = Z_Malloc(
-        &mut state.z_zone,
-        SCREENWIDTH * SCREENHEIGHT,
-        PU_STATIC as i32,
-        NULL,
-    ) as *mut byte;
-    I_ReadScreen(state, state.f_wipe.wipe_scr_end);
-    V_DrawBlock(state,
-        x,
-        y_0,
-        width,
-        height,
-        state.f_wipe.wipe_scr_start,
-    );
+    state.f_wipe.wipe_scr_end = vec![0u8; (SCREENWIDTH * SCREENHEIGHT) as usize];
+    let wipe_scr_end = state.f_wipe.wipe_scr_end.as_mut_ptr();
+    I_ReadScreen(state, wipe_scr_end);
+    let wipe_scr_start = state.f_wipe.wipe_scr_start.as_mut_ptr();
+    V_DrawBlock(state, x, y_0, width, height, wipe_scr_start);
     return 0 as i32;
 }
 pub unsafe fn wipe_ScreenWipe(
