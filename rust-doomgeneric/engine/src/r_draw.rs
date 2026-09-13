@@ -520,6 +520,7 @@ pub unsafe fn R_InitBuffer(state: &mut GameState, mut width: i32, mut height: i3
         state.r_draw.ylookup[i as usize] = state
             .i_video
             .I_VideoBuffer
+            .as_mut_ptr()
             .offset(((i + state.r_draw.viewwindowy) * SCREENWIDTH) as isize);
         i += 1;
     }
@@ -643,7 +644,7 @@ pub unsafe fn R_FillBackScreen(state: &mut GameState) {
 pub unsafe fn R_VideoErase(state: &mut GameState, mut ofs: u32, mut count: i32) {
     if let Some(background_buffer) = &state.r_draw.background_buffer {
         memcpy(
-            state.i_video.I_VideoBuffer.offset(ofs as isize) as *mut ::core::ffi::c_void,
+            state.i_video.I_VideoBuffer.as_mut_ptr().offset(ofs as isize) as *mut ::core::ffi::c_void,
             background_buffer.as_ptr().offset(ofs as isize) as *const ::core::ffi::c_void,
             count as size_t,
         );

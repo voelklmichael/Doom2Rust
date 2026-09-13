@@ -65,7 +65,7 @@ impl VVideoState {
     }
 }
 pub unsafe fn V_MarkRect(state: &mut GameState, mut x: i32, mut y: i32, mut width: i32, mut height: i32) {
-    if state.v_video.dest_screen == state.i_video.I_VideoBuffer {
+    if state.v_video.dest_screen == state.i_video.I_VideoBuffer.as_mut_ptr() {
         M_AddToBox(
             &raw mut state.v_video.dirtybox as *mut fixed_t,
             x as fixed_t,
@@ -555,6 +555,7 @@ pub unsafe fn V_DrawFilledBox(
     let mut y1: i32 = 0;
     buf = state
         .I_VideoBuffer
+        .as_mut_ptr()
         .offset((SCREENWIDTH * y) as isize)
         .offset(x as isize) as *mut uint8_t;
     y1 = 0 as i32;
@@ -582,6 +583,7 @@ pub unsafe fn V_DrawHorizLine(
     let mut x1: i32 = 0;
     buf = state
         .I_VideoBuffer
+        .as_mut_ptr()
         .offset((SCREENWIDTH * y) as isize)
         .offset(x as isize) as *mut uint8_t;
     x1 = 0 as i32;
@@ -603,6 +605,7 @@ pub unsafe fn V_DrawVertLine(
     let mut y1: i32 = 0;
     buf = state
         .I_VideoBuffer
+        .as_mut_ptr()
         .offset((SCREENWIDTH * y) as isize)
         .offset(x as isize) as *mut uint8_t;
     y1 = 0 as i32;
@@ -636,7 +639,7 @@ pub unsafe fn V_UseBuffer(state: &mut VVideoState, mut buffer: *mut byte) {
     state.dest_screen = buffer;
 }
 pub fn V_RestoreBuffer(state: &mut GameState) {
-    state.v_video.dest_screen = state.i_video.I_VideoBuffer;
+    state.v_video.dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
 }
 pub unsafe fn WritePCXfile(
     state: &mut ZZoneState,
@@ -736,7 +739,7 @@ pub unsafe fn V_ScreenShot(state: &mut GameState) {
     WritePCXfile(
         &mut state.z_zone,
         &lbmname,
-        state.i_video.I_VideoBuffer,
+        state.i_video.I_VideoBuffer.as_mut_ptr(),
         SCREENWIDTH,
         SCREENHEIGHT,
         __wcache747_1,

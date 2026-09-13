@@ -418,7 +418,7 @@ pub unsafe fn F_TextWrite(state: &mut GameState) {
     let mut cx: i32 = 0;
     let mut cy: i32 = 0;
     src = W_CacheLumpName(state, state.f_finale.finaleflat, PU_CACHE as i32) as *mut byte;
-    dest = state.i_video.I_VideoBuffer;
+    dest = state.i_video.I_VideoBuffer.as_mut_ptr();
     y = 0 as i32;
     while y < SCREENHEIGHT {
         x = 0 as i32;
@@ -892,7 +892,7 @@ pub unsafe fn F_DrawPatchCol(
     column = (patch as *mut byte)
         .offset(*(&raw const (*patch).columnofs as *const i32).offset(col as isize) as isize)
         as *mut column_t;
-    desttop = state.I_VideoBuffer.offset(x as isize);
+    desttop = state.I_VideoBuffer.as_mut_ptr().offset(x as isize);
     while (*column).topdelta as i32 != 0xff as i32 {
         source = (column as *mut byte).offset(3 as i32 as isize);
         dest = desttop.offset(((*column).topdelta as i32 * SCREENWIDTH) as isize);

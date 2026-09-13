@@ -1,6 +1,5 @@
 use crate::src::doomdef::boolean;
 use crate::src::doomdef::pixel_t;
-use crate::src::doomdef::NULL;
 use crate::src::doomdef::SCREENHEIGHT;
 use crate::src::doomdef::SCREENWIDTH;
 use crate::src::doomgeneric::DOOMGENERIC_RESX;
@@ -14,9 +13,6 @@ use crate::src::stdint_types::size_t;
 use crate::src::stdint_types::uint32_t;
 use crate::src::stdint_types::{byte, uint8_t};
 use crate::src::tables::gammatable;
-use crate::src::z_zone::Z_Free;
-use crate::src::z_zone::Z_Malloc;
-use crate::src::z_zone::PU_STATIC;
 use ::c2rust_bitfields;
 use crate::src::mem_compat::{memcpy, memset};
 
@@ -25,7 +21,7 @@ pub struct IVideoState {
     pub fb_scaling: i32,
     pub usemouse: i32,
     pub colors: [color; 256],
-    pub I_VideoBuffer: *mut byte,
+    pub I_VideoBuffer: Vec<byte>,
     pub screensaver_mode: bool,
     pub screenvisible: bool,
     pub mouse_acceleration: f32,
@@ -66,7 +62,7 @@ impl IVideoState {
             fb_scaling: 1,
             usemouse: 0,
             colors: [color { b_g_r_a: [0; 4] }; 256],
-            I_VideoBuffer: ::core::ptr::null::<byte>() as *mut byte,
+            I_VideoBuffer: Vec::new(),
             screensaver_mode: false,
             screenvisible: false,
             mouse_acceleration: 2.0f32,
@@ -281,19 +277,11 @@ pub unsafe fn I_InitGraphics(state: &mut GameState) {
         }
         println!("I_InitGraphics: Auto-scaling factor: {}", state.i_video.fb_scaling);
     }
-    state.i_video.I_VideoBuffer = Z_Malloc(
-        &mut state.z_zone,
-        SCREENWIDTH * SCREENHEIGHT,
-        PU_STATIC as i32,
-        NULL,
-    ) as *mut byte;
+    state.i_video.I_VideoBuffer = vec![0u8; (SCREENWIDTH * SCREENHEIGHT) as usize];
     state.i_video.screenvisible = true;
 }
 pub unsafe fn I_ShutdownGraphics(state: &mut GameState) {
-    Z_Free(
-        &mut state.z_zone,
-        state.i_video.I_VideoBuffer as *mut ::core::ffi::c_void,
-    );
+    state.i_video.I_VideoBuffer = Vec::new();
 }
 pub fn I_StartTic(state: &mut GameState) {
     I_GetEvent(state);
@@ -320,7 +308,7 @@ pub unsafe fn I_FinishUpdate(state: &mut GameState) {
         .wrapping_mul(state.i_video.s_Fb.bits_per_pixel)
         .wrapping_div(8 as uint32_t)
         .wrapping_sub(x_offset as uint32_t) as i32;
-    line_in = state.i_video.I_VideoBuffer as *mut u8;
+    line_in = state.i_video.I_VideoBuffer.as_mut_ptr() as *mut u8;
     line_out = state.i_video.dg_screen_buffer.as_mut_ptr() as *mut u8;
     y = SCREENHEIGHT;
     loop {
@@ -359,7 +347,7 @@ pub unsafe fn I_FinishUpdate(state: &mut GameState) {
 pub unsafe fn I_ReadScreen(state: &mut GameState, mut scr: *mut byte) {
     memcpy(
         scr as *mut ::core::ffi::c_void,
-        state.i_video.I_VideoBuffer as *const ::core::ffi::c_void,
+        state.i_video.I_VideoBuffer.as_ptr() as *const ::core::ffi::c_void,
         (SCREENWIDTH * SCREENHEIGHT) as size_t,
     );
 }
