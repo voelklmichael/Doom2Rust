@@ -853,13 +853,10 @@ pub unsafe fn F_CastDrawer(state: &mut GameState) {
         .name
         .unwrap();
     F_CastPrint(state, cast_name);
-    sprdef = state
-        .r_things
-        .sprites
-        .offset((*state.f_finale.caststate).sprite as isize) as *mut spritedef_t;
-    sprframe = (*sprdef)
-        .spriteframes
-        .offset(((*state.f_finale.caststate).frame & FF_FRAMEMASK) as isize)
+    sprdef = &raw mut state.r_things.sprites[(*state.f_finale.caststate).sprite as usize]
+        as *mut spritedef_t;
+    sprframe = &raw mut (*sprdef).spriteframes
+        [((*state.f_finale.caststate).frame & FF_FRAMEMASK) as usize]
         as *mut spriteframe_t;
     lump = (*sprframe).lump[0 as i32 as usize] as i32;
     flip = (*sprframe).flip[0 as i32 as usize] != 0;
