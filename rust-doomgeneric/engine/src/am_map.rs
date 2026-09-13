@@ -2,7 +2,7 @@ use crate::src::d_event::event_t;
 use crate::src::d_event::EvType;
 use crate::src::d_player::player_t;
 use crate::src::d_player::PlayerId;
-use crate::src::d_player::{pw_allmap, pw_invisibility};
+use crate::src::d_player::PowerType;
 use crate::src::doomdef::false_0;
 use crate::src::doomdef::true_0;
 use crate::src::doomdef::MAXPLAYERS;
@@ -1277,7 +1277,7 @@ pub unsafe fn AM_drawWalls(state: &mut GameState) {
                     AM_drawMline(state, &raw mut l, TSWALLCOLORS + lightlev);
                 }
             }
-        } else if (*state.g_game.player_mut(state.am_map.plr)).powers[pw_allmap as i32 as usize] != 0 {
+        } else if (*state.g_game.player_mut(state.am_map.plr)).powers[PowerType::pw_allmap as i32 as usize] != 0 {
             if (*li).flags as i32 & LINE_NEVERSEE == 0 {
                 AM_drawMline(state, &raw mut l, GRAYS + 3 as i32);
             }
@@ -1382,7 +1382,7 @@ pub unsafe fn AM_drawPlayers(state: &mut GameState) {
             && PlayerId(i as u8) != state.am_map.plr)
         {
             if !(state.g_game.playeringame[i as usize] == 0) {
-                if (*p).powers[pw_invisibility as i32 as usize] != 0 {
+                if (*p).powers[PowerType::pw_invisibility as i32 as usize] != 0 {
                     color = 246 as i32;
                 } else {
                     color = their_colors[their_color as usize];

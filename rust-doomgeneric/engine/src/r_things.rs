@@ -1,4 +1,4 @@
-use crate::src::d_player::pw_invisibility;
+use crate::src::d_player::PowerType;
 use crate::src::d_player::NUMPSPRITES;
 use crate::src::doomdef::boolean;
 use crate::src::doomdef::false_0;
@@ -653,8 +653,8 @@ pub unsafe fn R_DrawPSprite(state: &mut GameState, mut psp: *mut pspdef_t) {
     }
     (*vis).patch = lump;
     let viewplayer = state.g_game.player_mut(state.r_main.viewplayer);
-    if (*viewplayer).powers[pw_invisibility as i32 as usize] > 4 as i32 * 32 as i32
-        || (*viewplayer).powers[pw_invisibility as i32 as usize] & 8 as i32 != 0
+    if (*viewplayer).powers[PowerType::pw_invisibility as i32 as usize] > 4 as i32 * 32 as i32
+        || (*viewplayer).powers[PowerType::pw_invisibility as i32 as usize] & 8 as i32 != 0
     {
         (*vis).colormap = ::core::ptr::null_mut::<lighttable_t>();
     } else if !state.r_main.fixedcolormap.is_null() {
