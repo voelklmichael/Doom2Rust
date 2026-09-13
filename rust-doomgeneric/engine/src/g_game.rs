@@ -2,20 +2,20 @@ use crate::src::am_map::AM_Responder;
 use crate::src::am_map::AM_Stop;
 use crate::src::am_map::AM_Ticker;
 use crate::src::d_event::event_t;
-use crate::src::d_event::GameScreenState;
 use crate::src::d_event::EvType;
 use crate::src::d_event::GameAction;
+use crate::src::d_event::GameScreenState;
 use crate::src::d_loop::BACKUPTICS;
 use crate::src::d_main::D_AdvanceDemo;
 use crate::src::d_main::D_PageTicker;
-use crate::src::d_mode::GameVersion;
-use crate::src::d_mode::GameMode_t;
 use crate::src::d_mode::GameMission_t;
+use crate::src::d_mode::GameMode_t;
+use crate::src::d_mode::GameVersion;
 use crate::src::d_mode::{skill_from_raw, SkillType};
+use crate::src::d_player::weapontype_t;
 use crate::src::d_player::PowerType;
 use crate::src::d_player::{ammotype_t, NUMAMMO};
 use crate::src::d_player::{player_s, player_t, PlayerId, PlayerState};
-use crate::src::d_player::weapontype_t;
 use crate::src::d_ticcmd::ticcmd_t;
 use crate::src::d_ticcmd::{
     BTS_PAUSE, BTS_SAVEGAME, BTS_SAVEMASK, BTS_SAVESHIFT, BT_ATTACK, BT_CHANGE, BT_SPECIAL,
@@ -37,7 +37,6 @@ use crate::src::hu_stuff::HU_dequeueChatChar;
 use crate::src::i_system::I_Error;
 use crate::src::i_system::I_Quit;
 use crate::src::i_timer::I_GetTime;
-use crate::src::p_mobj::StateNum;
 use crate::src::m_argv::{M_ArgvAtoi, M_CheckParm, M_CheckParmWithArgs};
 use crate::src::m_fixed::fixed_t;
 use crate::src::m_fixed::FRACBITS;
@@ -47,15 +46,17 @@ use crate::src::m_misc::M_TempFile;
 use crate::src::m_misc::M_WriteFile;
 use crate::src::m_random::M_ClearRandom;
 use crate::src::m_random::P_Random;
+use crate::src::mem_compat::{memcpy, memset};
 use crate::src::p_inter::maxammo;
 use crate::src::p_map::P_CheckPosition;
+use crate::src::p_mobj::mapthing_t;
+use crate::src::p_mobj::MobjType;
 use crate::src::p_mobj::P_RemoveMobj;
 use crate::src::p_mobj::P_SpawnMobj;
 use crate::src::p_mobj::P_SpawnPlayer;
+use crate::src::p_mobj::StateNum;
 use crate::src::p_mobj::MF_SHADOW;
-use crate::src::p_mobj::mapthing_t;
 use crate::src::p_mobj::{mobj_t, pspdef_t};
-use crate::src::p_mobj::MobjType;
 use crate::src::p_saveg::P_ArchivePlayers;
 use crate::src::p_saveg::P_ArchiveSpecials;
 use crate::src::p_saveg::P_ArchiveThinkers;
@@ -105,7 +106,6 @@ use crate::src::wi_stuff::{wbplayerstruct_t, wbstartstruct_t};
 use crate::src::z_zone::Z_CheckHeap;
 use crate::src::z_zone::Z_Malloc;
 use crate::src::z_zone::PU_STATIC;
-use crate::src::mem_compat::{memcpy, memset};
 use std::io::Seek;
 
 pub struct GGameState {
@@ -440,7 +440,8 @@ fn WeaponSelectable(state: &mut GameState, mut weapon: weapontype_t) -> bool {
     {
         return false;
     }
-    if (weapon as u32 == weapontype_t::wp_plasma as u32 || weapon as u32 == weapontype_t::wp_bfg as u32)
+    if (weapon as u32 == weapontype_t::wp_plasma as u32
+        || weapon as u32 == weapontype_t::wp_bfg as u32)
         && state.doomstat.gamemission as u32 == GameMission_t::doom as u32
         && state.doomstat.gamemode as u32 == GameMode_t::shareware as u32
     {
@@ -739,15 +740,15 @@ pub unsafe fn G_BuildTiccmd(state: &mut GameState, mut cmd: *mut ticcmd_t, mut m
     }
     state.g_game.mousey = 0 as i32;
     state.g_game.mousex = state.g_game.mousey;
-    if forward > state.g_game.forwardmove[1 as usize] {
-        forward = state.g_game.forwardmove[1 as usize] as i32;
-    } else if forward < -state.g_game.forwardmove[1 as usize] {
-        forward = -state.g_game.forwardmove[1 as usize] as i32;
+    if forward > state.g_game.forwardmove[1] {
+        forward = state.g_game.forwardmove[1] as i32;
+    } else if forward < -state.g_game.forwardmove[1] {
+        forward = -state.g_game.forwardmove[1] as i32;
     }
-    if side > state.g_game.forwardmove[1 as usize] {
-        side = state.g_game.forwardmove[1 as usize] as i32;
-    } else if side < -state.g_game.forwardmove[1 as usize] {
-        side = -state.g_game.forwardmove[1 as usize] as i32;
+    if side > state.g_game.forwardmove[1] {
+        side = state.g_game.forwardmove[1] as i32;
+    } else if side < -state.g_game.forwardmove[1] {
+        side = -state.g_game.forwardmove[1] as i32;
     }
     (*cmd).forwardmove = ((*cmd).forwardmove as i32 + forward) as i8;
     (*cmd).sidemove = ((*cmd).sidemove as i32 + side) as i8;
@@ -807,11 +808,7 @@ pub unsafe fn G_DoLoadLevel(state: &mut GameState) {
         );
         i += 1;
     }
-    P_SetupLevel(
-        state,
-        state.g_game.gameepisode,
-        state.g_game.gamemap,
-    );
+    P_SetupLevel(state, state.g_game.gameepisode, state.g_game.gamemap);
     state.g_game.displayplayer = state.g_game.consoleplayer;
     state.g_game.gameaction = GameAction::ga_nothing;
     Z_CheckHeap(&mut state.z_zone);
@@ -1247,20 +1244,20 @@ pub unsafe fn G_CheckSpot(
     an = (ANG45 >> ANGLETOFINESHIFT) * ((*mthing).angle as i32 / 45 as i32);
     match an {
         4096 => {
-            xa = finetangent[2048 as usize];
-            ya = finetangent[0 as usize];
+            xa = finetangent[2048];
+            ya = finetangent[0];
         }
         5120 => {
-            xa = finetangent[3072 as usize];
-            ya = finetangent[1024 as usize];
+            xa = finetangent[3072];
+            ya = finetangent[1024];
         }
         6144 => {
-            xa = finesine[0 as usize];
-            ya = finetangent[2048 as usize];
+            xa = finesine[0];
+            ya = finetangent[2048];
         }
         7168 => {
-            xa = finesine[1024 as usize];
-            ya = finetangent[3072 as usize];
+            xa = finesine[1024];
+            ya = finetangent[3072];
         }
         0 | 1024 | 2048 | 3072 => {
             xa = finecosine[an as isize];
@@ -1270,8 +1267,10 @@ pub unsafe fn G_CheckSpot(
             I_Error(&format!("G_CheckSpot: unexpected angle {}\n", an));
         }
     }
-    let floorheight =
-        (*state.p_setup.sector_mut(state.p_setup.subsectors[ss.0 as usize].sector)).floorheight;
+    let floorheight = (*state
+        .p_setup
+        .sector_mut(state.p_setup.subsectors[ss.0 as usize].sector))
+    .floorheight;
     mo = P_SpawnMobj(
         state,
         x + 20 as fixed_t * xa,
@@ -1427,11 +1426,15 @@ pub unsafe fn G_DoCompleted(state: &mut GameState) {
             }
         }
     }
-    if state.g_game.gamemap == 8 as i32 && state.doomstat.gamemode as u32 != GameMode_t::commercial as u32 {
+    if state.g_game.gamemap == 8 as i32
+        && state.doomstat.gamemode as u32 != GameMode_t::commercial as u32
+    {
         state.g_game.gameaction = GameAction::ga_victory;
         return;
     }
-    if state.g_game.gamemap == 9 as i32 && state.doomstat.gamemode as u32 != GameMode_t::commercial as u32 {
+    if state.g_game.gamemap == 9 as i32
+        && state.doomstat.gamemode as u32 != GameMode_t::commercial as u32
+    {
         i = 0 as i32;
         while i < MAXPLAYERS {
             state.g_game.players[i as usize].didsecret = true;
@@ -1595,11 +1598,7 @@ pub unsafe fn G_DoLoadGame(state: &mut GameState) {
     }
     R_FillBackScreen(state);
 }
-pub fn G_SaveGame(
-    state: &mut GameState,
-    mut slot: i32,
-    description: &str,
-) {
+pub fn G_SaveGame(state: &mut GameState, mut slot: i32, description: &str) {
     state.g_game.savegameslot = slot;
     state.g_game.savedescription = description.to_string();
     state.g_game.sendsave = true;
@@ -1671,9 +1670,9 @@ pub unsafe fn G_DoNewGame(state: &mut GameState) {
     state.g_game.netdemo = false;
     state.g_game.netgame = false;
     state.g_game.deathmatch = false_0;
-    state.g_game.playeringame[3 as usize] = false;
-    state.g_game.playeringame[2 as usize] = state.g_game.playeringame[3 as usize];
-    state.g_game.playeringame[1 as usize] = state.g_game.playeringame[2 as usize];
+    state.g_game.playeringame[3] = false;
+    state.g_game.playeringame[2] = state.g_game.playeringame[3];
+    state.g_game.playeringame[1] = state.g_game.playeringame[2];
     state.d_main.respawnparm = false;
     state.d_main.fastparm = false;
     state.d_main.nomonsters = false;
@@ -1686,7 +1685,12 @@ pub unsafe fn G_DoNewGame(state: &mut GameState) {
     G_InitNew(state, d_skill, d_episode, d_map);
     state.g_game.gameaction = GameAction::ga_nothing;
 }
-pub unsafe fn G_InitNew(state: &mut GameState, mut skill: SkillType, mut episode: i32, mut map: i32) {
+pub unsafe fn G_InitNew(
+    state: &mut GameState,
+    mut skill: SkillType,
+    mut episode: i32,
+    mut map: i32,
+) {
     let skytexturename: &str;
     let mut i: i32 = 0;
     if state.g_game.paused {
@@ -1724,8 +1728,7 @@ pub unsafe fn G_InitNew(state: &mut GameState, mut skill: SkillType, mut episode
         state.g_game.respawnmonsters = false;
     }
     if state.d_main.fastparm
-        || skill == SkillType::sk_nightmare
-            && state.g_game.gameskill != SkillType::sk_nightmare
+        || skill == SkillType::sk_nightmare && state.g_game.gameskill != SkillType::sk_nightmare
     {
         i = StateNum::S_SARG_RUN1 as i32;
         while i <= StateNum::S_SARG_PAIN2 as i32 {
@@ -1735,8 +1738,7 @@ pub unsafe fn G_InitNew(state: &mut GameState, mut skill: SkillType, mut episode
         state.info.mobjinfo[MobjType::MT_BRUISERSHOT as usize].speed = 20 as i32 * FRACUNIT;
         state.info.mobjinfo[MobjType::MT_HEADSHOT as usize].speed = 20 as i32 * FRACUNIT;
         state.info.mobjinfo[MobjType::MT_TROOPSHOT as usize].speed = 20 as i32 * FRACUNIT;
-    } else if skill != SkillType::sk_nightmare
-        && state.g_game.gameskill == SkillType::sk_nightmare
+    } else if skill != SkillType::sk_nightmare && state.g_game.gameskill == SkillType::sk_nightmare
     {
         i = StateNum::S_SARG_RUN1 as i32;
         while i <= StateNum::S_SARG_PAIN2 as i32 {
@@ -1817,10 +1819,15 @@ pub unsafe fn G_ReadDemoTiccmd(state: &mut GameState, mut cmd: *mut ticcmd_t) {
     (*cmd).buttons = *fresh23 as u8 as byte;
 }
 unsafe fn IncreaseDemoBuffer(state: &mut GameState) {
-    let current_length =
-        state.g_game.demoend.offset_from(state.g_game.demobuffer.as_ptr()) as i64 as i32;
+    let current_length = state
+        .g_game
+        .demoend
+        .offset_from(state.g_game.demobuffer.as_ptr()) as i64 as i32;
     let new_length = current_length * 2 as i32;
-    let demo_p_offset = state.g_game.demo_p.offset_from(state.g_game.demobuffer.as_ptr());
+    let demo_p_offset = state
+        .g_game
+        .demo_p
+        .offset_from(state.g_game.demobuffer.as_ptr());
     state.g_game.demobuffer.resize(new_length as usize, 0);
     state.g_game.demo_p = state
         .g_game
@@ -1893,12 +1900,14 @@ pub unsafe fn G_RecordDemo(state: &mut GameState, name: &str) {
     maxsize = 0x20000 as i32;
     i = M_CheckParmWithArgs(state, "-maxdemo", 1 as i32);
     if i != 0 {
-        maxsize =
-            M_ArgvAtoi(&state.m_argv.myargv[(i + 1 as i32) as usize])
-                * 1024 as i32;
+        maxsize = M_ArgvAtoi(&state.m_argv.myargv[(i + 1 as i32) as usize]) * 1024 as i32;
     }
     state.g_game.demobuffer = vec![0u8; maxsize as usize];
-    state.g_game.demoend = state.g_game.demobuffer.as_mut_ptr().offset(maxsize as isize);
+    state.g_game.demoend = state
+        .g_game
+        .demobuffer
+        .as_mut_ptr()
+        .offset(maxsize as isize);
     state.g_game.demorecording = true;
 }
 pub fn G_VanillaVersionCode(state: &mut DoomstatState) -> i32 {
@@ -1976,7 +1985,11 @@ fn DemoVersionDescription(_state: &mut GameState, version: i32) -> String {
     if version >= 0 as i32 && version <= 4 as i32 {
         "v1.0/v1.1/v1.2".to_string()
     } else {
-        format!("{}.{} (unknown)", version / 100 as i32, version % 100 as i32)
+        format!(
+            "{}.{} (unknown)",
+            version / 100 as i32,
+            version % 100 as i32
+        )
     }
 }
 pub unsafe fn G_DoPlayDemo(state: &mut GameState) {
@@ -2038,7 +2051,7 @@ pub unsafe fn G_DoPlayDemo(state: &mut GameState) {
         state.g_game.playeringame[i as usize] = *fresh33 != 0;
         i += 1;
     }
-    if state.g_game.playeringame[1 as usize]
+    if state.g_game.playeringame[1]
         || M_CheckParm(state, "-solo-net") > 0 as i32
         || M_CheckParm(state, "-netdemo") > 0 as i32
     {
@@ -2072,9 +2085,7 @@ pub unsafe fn G_CheckDemoStatus(state: &mut GameState) -> bool {
         state.g_game.demoplayback = false;
         I_Error(&format!(
             "timed {} gametics in {} realtics ({:.6} fps)",
-            state.d_loop.gametic,
-            realtics,
-            fps as f64,
+            state.d_loop.gametic, realtics, fps as f64,
         ));
     }
     if state.g_game.demoplayback {
@@ -2086,11 +2097,9 @@ pub unsafe fn G_CheckDemoStatus(state: &mut GameState) -> bool {
         state.g_game.netdemo = false;
         state.g_game.netgame = false;
         state.g_game.deathmatch = false_0;
-        state.g_game.playeringame[3 as usize] = false;
-        state.g_game.playeringame[2 as usize] =
-            state.g_game.playeringame[3 as usize];
-        state.g_game.playeringame[1 as usize] =
-            state.g_game.playeringame[2 as usize];
+        state.g_game.playeringame[3] = false;
+        state.g_game.playeringame[2] = state.g_game.playeringame[3];
+        state.g_game.playeringame[1] = state.g_game.playeringame[2];
         state.d_main.respawnparm = false;
         state.d_main.fastparm = false;
         state.d_main.nomonsters = false;
@@ -2106,7 +2115,10 @@ pub unsafe fn G_CheckDemoStatus(state: &mut GameState) -> bool {
         let fresh11 = state.g_game.demo_p;
         state.g_game.demo_p = state.g_game.demo_p.offset(1);
         *fresh11 = DEMOMARKER as byte;
-        let demo_len = state.g_game.demo_p.offset_from(state.g_game.demobuffer.as_ptr()) as usize;
+        let demo_len = state
+            .g_game
+            .demo_p
+            .offset_from(state.g_game.demobuffer.as_ptr()) as usize;
         M_WriteFile(
             &::std::ffi::CStr::from_ptr(state.g_game.demoname).to_string_lossy(),
             &state.g_game.demobuffer[..demo_len],

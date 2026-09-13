@@ -230,10 +230,10 @@ pub unsafe fn P_CheckSight(
     bytenum = pnum >> 3 as i32;
     bitnum = (1 as i32) << (pnum & 7 as i32);
     if state.p_setup.rejectmatrix[bytenum as usize] as i32 & bitnum != 0 {
-        state.p_sight.sightcounts[0 as usize] += 1;
+        state.p_sight.sightcounts[0] += 1;
         return false;
     }
-    state.p_sight.sightcounts[1 as usize] += 1;
+    state.p_sight.sightcounts[1] += 1;
     state.r_main.validcount += 1;
     state.p_sight.sightzstart = (*t1).z + (*t1).height - ((*t1).height >> 2 as i32);
     state.p_sight.topslope = (*t2).z + (*t2).height - state.p_sight.sightzstart;

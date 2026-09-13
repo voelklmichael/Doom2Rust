@@ -398,10 +398,10 @@ pub unsafe fn D_BindVariables(state: &mut GameState) {
     M_BindMapControls(state);
     M_BindMenuControls(state);
     M_BindChatControls(state, MAXPLAYERS as u32);
-    state.m_controls.key_multi_msgplayer[0 as usize] = HUSTR_KEYGREEN;
-    state.m_controls.key_multi_msgplayer[1 as usize] = HUSTR_KEYINDIGO;
-    state.m_controls.key_multi_msgplayer[2 as usize] = HUSTR_KEYBROWN;
-    state.m_controls.key_multi_msgplayer[3 as usize] = HUSTR_KEYRED;
+    state.m_controls.key_multi_msgplayer[0] = HUSTR_KEYGREEN;
+    state.m_controls.key_multi_msgplayer[1] = HUSTR_KEYINDIGO;
+    state.m_controls.key_multi_msgplayer[2] = HUSTR_KEYBROWN;
+    state.m_controls.key_multi_msgplayer[3] = HUSTR_KEYRED;
     M_BindVariable(
         &mut state.m_config,
         "mouse_sensitivity",
@@ -903,12 +903,10 @@ pub unsafe fn D_DoomMain(state: &mut GameState) {
             scale = 400 as i32;
         }
         println!("turbo scale: {}%", scale);
-        state.g_game.forwardmove[0 as usize] =
-            state.g_game.forwardmove[0 as usize] * scale / 100 as i32;
-        state.g_game.forwardmove[1 as usize] =
-            state.g_game.forwardmove[1 as usize] * scale / 100 as i32;
-        state.g_game.sidemove[0 as usize] = state.g_game.sidemove[0 as usize] * scale / 100 as i32;
-        state.g_game.sidemove[1 as usize] = state.g_game.sidemove[1 as usize] * scale / 100 as i32;
+        state.g_game.forwardmove[0] = state.g_game.forwardmove[0] * scale / 100 as i32;
+        state.g_game.forwardmove[1] = state.g_game.forwardmove[1] * scale / 100 as i32;
+        state.g_game.sidemove[0] = state.g_game.sidemove[0] * scale / 100 as i32;
+        state.g_game.sidemove[1] = state.g_game.sidemove[1] * scale / 100 as i32;
     }
     println!("V_Init: allocate screens.");
     println!("M_LoadDefaults: Load system defaults.");

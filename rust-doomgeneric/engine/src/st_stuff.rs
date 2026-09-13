@@ -549,12 +549,12 @@ pub unsafe fn ST_Responder(state: &mut GameState, mut ev: &event_t) -> bool {
                     || !state.doomstat.gameversion.is_ultimate_or_higher()
                 {
                     musnum = mus_runnin as i32
-                        + (buf[0 as usize] as i32 - '0' as i32) * 10 as i32
-                        + buf[1 as usize] as i32
+                        + (buf[0] as i32 - '0' as i32) * 10 as i32
+                        + buf[1] as i32
                         - '0' as i32
                         - 1 as i32;
-                    if (buf[0 as usize] as i32 - '0' as i32) * 10 as i32
-                        + buf[1 as usize] as i32
+                    if (buf[0] as i32 - '0' as i32) * 10 as i32
+                        + buf[1] as i32
                         - '0' as i32
                         > 35 as i32
                     {
@@ -564,10 +564,10 @@ pub unsafe fn ST_Responder(state: &mut GameState, mut ev: &event_t) -> bool {
                     }
                 } else {
                     musnum = mus_e1m1 as i32
-                        + (buf[0 as usize] as i32 - '1' as i32) * 9 as i32
-                        + (buf[1 as usize] as i32 - '1' as i32);
-                    if (buf[0 as usize] as i32 - '1' as i32) * 9 as i32
-                        + buf[1 as usize] as i32
+                        + (buf[0] as i32 - '1' as i32) * 9 as i32
+                        + (buf[1] as i32 - '1' as i32);
+                    if (buf[0] as i32 - '1' as i32) * 9 as i32
+                        + buf[1] as i32
                         - '1' as i32
                         > 31 as i32
                     {
@@ -677,12 +677,12 @@ pub unsafe fn ST_Responder(state: &mut GameState, mut ev: &event_t) -> bool {
             );
             if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 {
                 epsd = 1 as i32;
-                map = (buf_1[0 as usize] as i32 - '0' as i32) * 10 as i32
-                    + buf_1[1 as usize] as i32
+                map = (buf_1[0] as i32 - '0' as i32) * 10 as i32
+                    + buf_1[1] as i32
                     - '0' as i32;
             } else {
-                epsd = buf_1[0 as usize] as i32 - '0' as i32;
-                map = buf_1[1 as usize] as i32 - '0' as i32;
+                epsd = buf_1[0] as i32 - '0' as i32;
+                map = buf_1[1] as i32 - '0' as i32;
             }
             if state.doomstat.gameversion == GameVersion::chex {
                 epsd = 1 as i32;
@@ -1048,7 +1048,7 @@ unsafe fn ST_loadUnloadGraphics(state: &mut GameState, mut callback: load_callba
                 as *mut *mut patch_t)
                 .offset(0 as i32 as isize) as *mut *mut patch_t;
         callback.expect("non-null function pointer")(state, &format!("STGNUM{}", i + 2 as i32,), cb_ptr);
-        state.st_stuff.arms[i as usize][1 as usize] =
+        state.st_stuff.arms[i as usize][1] =
             state.st_stuff.shortnum[(i + 2 as i32) as usize];
         i += 1;
     }

@@ -491,7 +491,7 @@ pub unsafe fn P_FindNextHighestFloor(
     if h == 0 {
         return currentheight as fixed_t;
     }
-    min = heightlist[0 as usize] as i32;
+    min = heightlist[0] as i32;
     i = 1 as i32;
     while i < h {
         if heightlist[i as usize] < min {
@@ -1015,7 +1015,7 @@ pub unsafe fn P_UpdateSpecials(state: &mut GameState) {
         match linev.special as i32 {
             48 => {
                 let ref mut fresh0 =
-                    state.p_setup.sides[linev.sidenum[0 as usize] as usize].textureoffset;
+                    state.p_setup.sides[linev.sidenum[0] as usize].textureoffset;
                 *fresh0 += FRACUNIT;
             }
             _ => {}
@@ -1031,19 +1031,19 @@ pub unsafe fn P_UpdateSpecials(state: &mut GameState) {
                 match state.p_switch.buttonlist[i as usize].where_0 {
                     BWhere::top => {
                         state.p_setup.sides[state.p_setup.lines[button_line_id.0 as usize].sidenum
-                            [0 as usize]
+                            [0]
                             as usize]
                             .toptexture = state.p_switch.buttonlist[i as usize].btexture as i16;
                     }
                     BWhere::middle => {
                         state.p_setup.sides[state.p_setup.lines[button_line_id.0 as usize].sidenum
-                            [0 as usize]
+                            [0]
                             as usize]
                             .midtexture = state.p_switch.buttonlist[i as usize].btexture as i16;
                     }
                     BWhere::bottom => {
                         state.p_setup.sides[state.p_setup.lines[button_line_id.0 as usize].sidenum
-                            [0 as usize]
+                            [0]
                             as usize]
                             .bottomtexture = state.p_switch.buttonlist[i as usize].btexture as i16;
                     }
@@ -1122,7 +1122,7 @@ pub unsafe fn EV_DoDonut(state: &mut GameState, mut line: LineId) -> i32 {
             continue;
         }
         rtn = 1 as i32;
-        s2 = getNextSector(state, (*s1).lines[0 as usize], s1);
+        s2 = getNextSector(state, (*s1).lines[0], s1);
         if s2.is_null() {
             eprintln!(
                 "EV_DoDonut: linedef had no second sidedef! Unexpected behavior may occur in Vanilla Doom. "

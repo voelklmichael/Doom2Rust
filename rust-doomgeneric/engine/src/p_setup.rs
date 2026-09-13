@@ -649,16 +649,16 @@ pub unsafe fn P_LoadLineDefs(state: &mut GameState, mut lump: i32) {
             (*ld).bbox[BOXBOTTOM as usize] = (*v2).y;
             (*ld).bbox[BOXTOP as usize] = (*v1).y;
         }
-        (*ld).sidenum[0 as usize] = (*mld).sidenum[0 as usize];
-        (*ld).sidenum[1 as usize] = (*mld).sidenum[1 as usize];
-        if (*ld).sidenum[0 as usize] as i32 != -(1 as i32) {
-            let side_sector = state.p_setup.sides[(*ld).sidenum[0 as usize] as usize].sector;
+        (*ld).sidenum[0] = (*mld).sidenum[0];
+        (*ld).sidenum[1] = (*mld).sidenum[1];
+        if (*ld).sidenum[0] as i32 != -(1 as i32) {
+            let side_sector = state.p_setup.sides[(*ld).sidenum[0] as usize].sector;
             (*ld).frontsector = Some(side_sector);
         } else {
             (*ld).frontsector = None;
         }
-        if (*ld).sidenum[1 as usize] as i32 != -(1 as i32) {
-            let side_sector = state.p_setup.sides[(*ld).sidenum[1 as usize] as usize].sector;
+        if (*ld).sidenum[1] as i32 != -(1 as i32) {
+            let side_sector = state.p_setup.sides[(*ld).sidenum[1] as usize].sector;
             (*ld).backsector = Some(side_sector);
         } else {
             (*ld).backsector = None;

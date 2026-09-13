@@ -364,7 +364,7 @@ pub unsafe fn HU_Start(state: &mut GameState) {
     HUlib_initTextLine(
         &raw mut state.hu_stuff.w_title,
         HU_TITLEX,
-        167 as i32 - (*state.hu_stuff.hu_font[0 as usize]).height as i32,
+        167 as i32 - (*state.hu_stuff.hu_font[0]).height as i32,
         &raw mut state.hu_stuff.hu_font as *mut *mut patch_t,
         HU_FONTSTART,
     );
@@ -403,7 +403,7 @@ pub unsafe fn HU_Start(state: &mut GameState) {
         HU_INPUTX,
         HU_MSGY
             + HU_MSGHEIGHT
-                * ((*state.hu_stuff.hu_font[0 as usize]).height as i32 + 1 as i32),
+                * ((*state.hu_stuff.hu_font[0]).height as i32 + 1 as i32),
         &raw mut state.hu_stuff.hu_font as *mut *mut patch_t,
         HU_FONTSTART,
         &raw mut state.hu_stuff.chat_on,

@@ -167,10 +167,10 @@ pub unsafe fn R_ClipPassWallSegment(state: &mut GameState, mut first: i32, mut l
     R_StoreWallRange(state, (*start).last + 1 as i32, last);
 }
 pub unsafe fn R_ClearClipSegs(state: &mut GameState) {
-    state.r_bsp.solidsegs[0 as usize].first = -(0x7fffffff as i32);
-    state.r_bsp.solidsegs[0 as usize].last = -(1 as i32);
-    state.r_bsp.solidsegs[1 as usize].first = state.r_draw.viewwidth;
-    state.r_bsp.solidsegs[1 as usize].last = 0x7fffffff as i32;
+    state.r_bsp.solidsegs[0].first = -(0x7fffffff as i32);
+    state.r_bsp.solidsegs[0].last = -(1 as i32);
+    state.r_bsp.solidsegs[1].first = state.r_draw.viewwidth;
+    state.r_bsp.solidsegs[1].last = 0x7fffffff as i32;
     state.r_bsp.newend =
         (&raw mut state.r_bsp.solidsegs as *mut cliprange_t).offset(2 as i32 as isize);
 }
@@ -238,8 +238,10 @@ pub unsafe fn R_AddLine(state: &mut GameState, mut line: SegId) {
                         as i32
                         == (*state.p_setup.sector_mut(state.r_bsp.frontsector.unwrap())).lightlevel
                             as i32
-                    && (*state.p_setup.side_mut(state.p_setup.seg(state.r_bsp.curline).sidedef))
-                        .midtexture as i32
+                    && (*state
+                        .p_setup
+                        .side_mut(state.p_setup.seg(state.r_bsp.curline).sidedef))
+                    .midtexture as i32
                         == 0 as i32
                 {
                     return;
@@ -299,10 +301,10 @@ pub unsafe fn R_CheckBBox(state: &mut GameState, mut bspcoord: *mut fixed_t) -> 
     if boxpos == 5 as i32 {
         return true;
     }
-    x1 = *bspcoord.offset(checkcoord[boxpos as usize][0 as usize] as isize);
-    y1 = *bspcoord.offset(checkcoord[boxpos as usize][1 as usize] as isize);
-    x2 = *bspcoord.offset(checkcoord[boxpos as usize][2 as usize] as isize);
-    y2 = *bspcoord.offset(checkcoord[boxpos as usize][3 as usize] as isize);
+    x1 = *bspcoord.offset(checkcoord[boxpos as usize][0] as isize);
+    y1 = *bspcoord.offset(checkcoord[boxpos as usize][1] as isize);
+    x2 = *bspcoord.offset(checkcoord[boxpos as usize][2] as isize);
+    y2 = *bspcoord.offset(checkcoord[boxpos as usize][3] as isize);
     angle1 = R_PointToAngle(state, x1, y1).wrapping_sub(state.r_main.viewangle);
     angle2 = R_PointToAngle(state, x2, y2).wrapping_sub(state.r_main.viewangle);
     span = angle1.wrapping_sub(angle2);

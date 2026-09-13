@@ -1413,7 +1413,7 @@ pub unsafe fn M_StringWidth(state: &mut GameState, string: &str) -> i32 {
 }
 pub unsafe fn M_StringHeight(state: &mut GameState, string: &str) -> i32 {
     let mut h: i32 = 0;
-    let height: i32 = (*state.hu_stuff.hu_font[0 as usize]).height as i32;
+    let height: i32 = (*state.hu_stuff.hu_font[0]).height as i32;
     h = height;
     for b in string.bytes() {
         if b == b'\n' {
@@ -1887,7 +1887,7 @@ pub unsafe fn M_Drawer(state: &mut GameState) {
                 line,
             );
             state.m_menu.drawer_y = (state.m_menu.drawer_y as i32
-                + (*state.hu_stuff.hu_font[0 as usize]).height as i32)
+                + (*state.hu_stuff.hu_font[0]).height as i32)
                 as i16;
         }
         return;

@@ -1,6 +1,5 @@
 use crate::src::d_player::PowerType;
 use crate::src::d_player::NUMPSPRITES;
-use crate::src::r_defs::SpriteRotate;
 use crate::src::doomdef::SCREENWIDTH;
 use crate::src::game_state::GameState;
 use crate::src::hu_lib::patch_t;
@@ -10,11 +9,13 @@ use crate::src::m_fixed::FixedDiv;
 use crate::src::m_fixed::FixedMul;
 use crate::src::m_fixed::FRACBITS;
 use crate::src::m_fixed::FRACUNIT;
+use crate::src::mem_compat::memset;
 use crate::src::p_mobj::sector_t;
 use crate::src::p_mobj::{mobj_t, pspdef_t};
 use crate::src::p_mobj::{MF_SHADOW, MF_TRANSLATION, MF_TRANSSHIFT};
 use crate::src::r_data::column_t;
 use crate::src::r_defs::lighttable_t;
+use crate::src::r_defs::SpriteRotate;
 use crate::src::r_defs::{drawseg_t, spritedef_t, spriteframe_t};
 use crate::src::r_main::R_PointOnSegSide;
 use crate::src::r_main::R_PointToAngle;
@@ -32,7 +33,6 @@ use crate::src::tables::ANG45;
 use crate::src::w_wad::W_CacheLumpNum;
 use crate::src::w_wad::W_GetNumForName;
 use crate::src::z_zone::PU_CACHE;
-use crate::src::mem_compat::memset;
 
 pub struct RThingsState {
     pub pspritescale: fixed_t,
@@ -232,11 +232,8 @@ pub unsafe fn R_InitSpriteDefs(state: &mut GameState, namelist: &[&'static str])
                 .name
                 .eq_bytes_ignore_ascii_case_n(state.r_things.spritename.as_bytes(), 4)
             {
-                frame = state.w_wad.lumpinfo[l as usize].name[4 as usize] as i32
-                    - 'A' as i32;
-                rotation = state.w_wad.lumpinfo[l as usize].name[5 as usize]
-                    as i32
-                    - '0' as i32;
+                frame = state.w_wad.lumpinfo[l as usize].name[4] as i32 - 'A' as i32;
+                rotation = state.w_wad.lumpinfo[l as usize].name[5] as i32 - '0' as i32;
                 if state.doomstat.modifiedgame {
                     let sprite_name = state.w_wad.lumpinfo[l as usize].name;
                     patched = W_GetNumForName(&mut state.w_wad, &sprite_name.as_str());
@@ -244,13 +241,9 @@ pub unsafe fn R_InitSpriteDefs(state: &mut GameState, namelist: &[&'static str])
                     patched = l;
                 }
                 R_InstallSpriteLump(state, patched, frame as u32, rotation as u32, false);
-                if state.w_wad.lumpinfo[l as usize].name[6 as usize] != 0 {
-                    frame = state.w_wad.lumpinfo[l as usize].name[6 as usize]
-                        as i32
-                        - 'A' as i32;
-                    rotation = state.w_wad.lumpinfo[l as usize].name[7 as usize]
-                        as i32
-                        - '0' as i32;
+                if state.w_wad.lumpinfo[l as usize].name[6] != 0 {
+                    frame = state.w_wad.lumpinfo[l as usize].name[6] as i32 - 'A' as i32;
+                    rotation = state.w_wad.lumpinfo[l as usize].name[7] as i32 - '0' as i32;
                     R_InstallSpriteLump(state, l, frame as u32, rotation as u32, true);
                 }
             }
@@ -370,8 +363,11 @@ pub unsafe fn R_DrawVisSprite(state: &mut GameState, mut vis: *mut vissprite_t) 
     let mut texturecolumn: i32 = 0;
     let mut frac: fixed_t = 0;
     let mut patch: *mut patch_t = ::core::ptr::null_mut::<patch_t>();
-    patch = W_CacheLumpNum(state, (*vis).patch + state.r_data.firstspritelump, PU_CACHE as i32)
-        as *mut patch_t;
+    patch = W_CacheLumpNum(
+        state,
+        (*vis).patch + state.r_data.firstspritelump,
+        PU_CACHE as i32,
+    ) as *mut patch_t;
     state.r_draw.dc_colormap = (*vis).colormap;
     if state.r_draw.dc_colormap.is_null() {
         state.r_main.colfunc = state.r_main.fuzzcolfunc;
@@ -466,8 +462,8 @@ pub unsafe fn R_ProjectSprite(state: &mut GameState, mut thing: *mut mobj_t) {
         lump = (*sprframe).lump[rot as usize] as i32;
         flip = (*sprframe).flip[rot as usize] != 0;
     } else {
-        lump = (*sprframe).lump[0 as usize] as i32;
-        flip = (*sprframe).flip[0 as usize] != 0;
+        lump = (*sprframe).lump[0] as i32;
+        flip = (*sprframe).flip[0] != 0;
     }
     tx -= state.r_data.spriteoffset[lump as usize];
     x1 = (state.r_main.centerxfrac + FixedMul(tx, xscale) >> FRACBITS) as i32;
@@ -495,8 +491,7 @@ pub unsafe fn R_ProjectSprite(state: &mut GameState, mut thing: *mut mobj_t) {
     };
     iscale = FixedDiv(FRACUNIT, xscale);
     if flip {
-        (*vis).startfrac =
-            (state.r_data.spritewidth[lump as usize] as i32 - 1 as i32) as fixed_t;
+        (*vis).startfrac = (state.r_data.spritewidth[lump as usize] as i32 - 1 as i32) as fixed_t;
         (*vis).xiscale = -iscale;
     } else {
         (*vis).startfrac = 0 as i32 as fixed_t;
@@ -592,8 +587,8 @@ pub unsafe fn R_DrawPSprite(state: &mut GameState, mut psp: *mut pspdef_t) {
     }
     sprframe = &raw mut (*sprdef).spriteframes[((*psp_state).frame & FF_FRAMEMASK) as usize]
         as *mut spriteframe_t;
-    lump = (*sprframe).lump[0 as usize] as i32;
-    flip = (*sprframe).flip[0 as usize] != 0;
+    lump = (*sprframe).lump[0] as i32;
+    flip = (*sprframe).flip[0] != 0;
     tx = ((*psp).sx as i32 - 160 as i32 * FRACUNIT) as fixed_t;
     tx -= state.r_data.spriteoffset[lump as usize];
     x1 = (state.r_main.centerxfrac + FixedMul(tx, state.r_things.pspritescale) >> FRACBITS) as i32;
@@ -620,8 +615,7 @@ pub unsafe fn R_DrawPSprite(state: &mut GameState, mut psp: *mut pspdef_t) {
     (*vis).scale = state.r_things.pspritescale << state.r_main.detailshift;
     if flip {
         (*vis).xiscale = -state.r_things.pspriteiscale;
-        (*vis).startfrac =
-            (state.r_data.spritewidth[lump as usize] as i32 - 1 as i32) as fixed_t;
+        (*vis).startfrac = (state.r_data.spritewidth[lump as usize] as i32 - 1 as i32) as fixed_t;
     } else {
         (*vis).xiscale = state.r_things.pspriteiscale;
         (*vis).startfrac = 0 as i32 as fixed_t;
@@ -653,9 +647,9 @@ pub unsafe fn R_DrawPlayerSprites(state: &mut GameState) {
     let mut psp: *mut pspdef_t = ::core::ptr::null_mut::<pspdef_t>();
     let viewplayer = state.g_game.player_mut(state.r_main.viewplayer);
     let viewplayer_mo = state.p_mobj.mobj_get((*viewplayer).mo.unwrap()).unwrap();
-    lightnum = ((*state.p_setup.sector_mut(
-        state.p_setup.subsectors[(*viewplayer_mo).subsector.0 as usize].sector,
-    ))
+    lightnum = ((*state
+        .p_setup
+        .sector_mut(state.p_setup.subsectors[(*viewplayer_mo).subsector.0 as usize].sector))
     .lightlevel as i32
         >> LIGHTSEGSHIFT)
         + state.r_main.extralight;

@@ -7,8 +7,8 @@ use crate::src::m_fixed::FixedMul;
 use crate::src::m_fixed::FRACBITS;
 use crate::src::m_fixed::FRACUNIT;
 use crate::src::m_fixed::INT_MAX;
-use crate::src::p_mobj::{mapthing_t, sector_t};
 use crate::src::p_mobj::mobj_t;
+use crate::src::p_mobj::{mapthing_t, sector_t};
 use crate::src::p_mobj::{MobjId, MF_NOBLOCKMAP, MF_NOSECTOR};
 use crate::src::p_setup::LineId;
 use crate::src::p_setup::SubsectorId;
@@ -389,7 +389,7 @@ pub unsafe fn P_LineOpening(state: &mut GameState, mut linedef: LineId) {
     let mut front: *mut sector_t = ::core::ptr::null_mut::<sector_t>();
     let mut back: *mut sector_t = ::core::ptr::null_mut::<sector_t>();
     let linedefv = state.p_setup.line(linedef);
-    if linedefv.sidenum[1 as usize] as i32 == -(1 as i32) {
+    if linedefv.sidenum[1] as i32 == -(1 as i32) {
         state.p_maputl.openrange = 0 as i32 as fixed_t;
         return;
     }
@@ -469,7 +469,9 @@ pub unsafe fn P_SetThingPosition(state: &mut GameState, mut thing: *mut mobj_t) 
     ss = R_PointInSubsector(state, (*thing).x, (*thing).y);
     (*thing).subsector = ss;
     if (*thing).flags & MF_NOSECTOR as i32 == 0 {
-        sec = state.p_setup.sector_mut(state.p_setup.subsectors[ss.0 as usize].sector);
+        sec = state
+            .p_setup
+            .sector_mut(state.p_setup.subsectors[ss.0 as usize].sector);
         (*thing).sprev = None;
         (*thing).snext = (*sec).thinglist;
         if let Some(head_id) = (*sec).thinglist {
@@ -521,7 +523,11 @@ pub unsafe fn P_BlockLinesIterator(
     }
     offset = y * state.p_setup.bmapwidth + x;
     offset = *state.p_setup.blockmap.offset(offset as isize) as i32;
-    list = state.p_setup.blockmaplump.as_mut_ptr().offset(offset as isize);
+    list = state
+        .p_setup
+        .blockmaplump
+        .as_mut_ptr()
+        .offset(offset as isize);
     while *list as i32 != -(1 as i32) {
         ld = LineId(*list as u32);
         if !(state.p_setup.line(ld).validcount == state.r_main.validcount) {
@@ -558,10 +564,7 @@ pub unsafe fn P_BlockThingsIterator(
     return true;
 }
 #[no_mangle]
-pub unsafe fn PIT_AddLineIntercepts(
-    state: &mut GameState,
-    mut ld: LineId,
-) -> bool {
+pub unsafe fn PIT_AddLineIntercepts(state: &mut GameState, mut ld: LineId) -> bool {
     let mut s1: i32 = 0;
     let mut s2: i32 = 0;
     let mut frac: fixed_t = 0;
@@ -611,10 +614,7 @@ pub unsafe fn PIT_AddLineIntercepts(
     return true;
 }
 #[no_mangle]
-pub unsafe fn PIT_AddThingIntercepts(
-    state: &mut GameState,
-    mut thing_id: MobjId,
-) -> bool {
+pub unsafe fn PIT_AddThingIntercepts(state: &mut GameState, mut thing_id: MobjId) -> bool {
     let thing = state.p_mobj.mobj_get(thing_id).unwrap();
     let mut x1: fixed_t = 0;
     let mut y1: fixed_t = 0;
@@ -861,10 +861,7 @@ pub unsafe fn P_PathTraverse(
                 state,
                 mapx,
                 mapy,
-                Some(
-                    PIT_AddLineIntercepts
-                        as unsafe fn(&mut GameState, LineId) -> bool,
-                ),
+                Some(PIT_AddLineIntercepts as unsafe fn(&mut GameState, LineId) -> bool),
             ) {
                 return false;
             }
@@ -874,10 +871,7 @@ pub unsafe fn P_PathTraverse(
                 state,
                 mapx,
                 mapy,
-                Some(
-                    PIT_AddThingIntercepts
-                        as unsafe fn(&mut GameState, MobjId) -> bool,
-                ),
+                Some(PIT_AddThingIntercepts as unsafe fn(&mut GameState, MobjId) -> bool),
             ) {
                 return false;
             }

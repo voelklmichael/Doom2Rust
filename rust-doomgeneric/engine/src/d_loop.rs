@@ -11,10 +11,10 @@ use crate::src::i_timer::I_Sleep;
 use crate::src::i_video::I_StartTic;
 use crate::src::m_fixed::fixed_t;
 use crate::src::m_fixed::FRACUNIT;
+use crate::src::mem_compat::{memcpy, memset};
 use crate::src::sha1::sha1_digest_t;
 use crate::src::stdint_types::byte;
 use crate::src::stdint_types::size_t;
-use crate::src::mem_compat::{memcpy, memset};
 
 pub struct DLoopState {
     pub ticdata: [ticcmd_set_t; 128],
@@ -157,11 +157,15 @@ unsafe fn BuildNewTic(state: &mut GameState) -> bool {
     };
     gameticdiv = state.d_loop.gametic / state.d_loop.ticdup;
     I_StartTic(state);
-    let process_events = state.d_loop.loop_interface
+    let process_events = state
+        .d_loop
+        .loop_interface
         .ProcessEvents
         .expect("non-null function pointer");
     process_events(state);
-    let run_menu = state.d_loop.loop_interface
+    let run_menu = state
+        .d_loop
+        .loop_interface
         .RunMenu
         .expect("non-null function pointer");
     run_menu(state);
@@ -183,7 +187,9 @@ unsafe fn BuildNewTic(state: &mut GameState) -> bool {
         0 as i32,
         ::core::mem::size_of::<ticcmd_t>() as size_t,
     );
-    let build_ticcmd = state.d_loop.loop_interface
+    let build_ticcmd = state
+        .d_loop
+        .loop_interface
         .BuildTiccmd
         .expect("non-null function pointer");
     let maketic = state.d_loop.maketic;
@@ -251,13 +257,10 @@ pub unsafe fn D_ReceiveTic(
 pub fn D_StartGameLoop(state: &mut GameState) {
     state.d_loop.lasttime = GetAdjustedTime(state) / state.d_loop.ticdup;
 }
-pub unsafe fn D_StartNetGame(
-    state: &mut GameState,
-    mut settings: *mut net_gamesettings_t,
-) {
+pub unsafe fn D_StartNetGame(state: &mut GameState, mut settings: *mut net_gamesettings_t) {
     (*settings).consoleplayer = 0 as i32;
     (*settings).num_players = 1 as i32;
-    (*settings).player_classes[0 as usize] = state.d_loop.player_class;
+    (*settings).player_classes[0] = state.d_loop.player_class;
     (*settings).new_sync = 0 as i32;
     (*settings).extratics = 1 as i32;
     (*settings).ticdup = 1 as i32;
@@ -269,7 +272,11 @@ pub unsafe fn D_InitNetGame(
     mut connect_data: *mut net_connect_data_t,
 ) -> bool {
     let mut result: bool = false;
-    I_AtExit(&mut state.i_system, Some(D_QuitNetGame as unsafe fn(&mut GameState) -> ()), true);
+    I_AtExit(
+        &mut state.i_system,
+        Some(D_QuitNetGame as unsafe fn(&mut GameState) -> ()),
+        true,
+    );
     state.d_loop.player_class = (*connect_data).player_class;
     return result;
 }
@@ -302,10 +309,10 @@ fn OldNetSync(state: &mut GameState) {
         state.d_loop.frameskip[(state.d_loop.frameon & 3 as i32) as usize] =
             (state.d_loop.oldnettics > state.d_loop.recvtic) as i32;
         state.d_loop.oldnettics = state.d_loop.maketic;
-        if state.d_loop.frameskip[0 as usize] != 0
-            && state.d_loop.frameskip[1 as usize] != 0
-            && state.d_loop.frameskip[2 as usize] != 0
-            && state.d_loop.frameskip[3 as usize] != 0
+        if state.d_loop.frameskip[0] != 0
+            && state.d_loop.frameskip[1] != 0
+            && state.d_loop.frameskip[2] != 0
+            && state.d_loop.frameskip[3] != 0
         {
             state.d_loop.skiptics = 1 as i32;
         }
@@ -419,12 +426,13 @@ pub unsafe fn TryRunTics(state: &mut GameState) {
                 I_Error("gametic>lowtic");
             }
             memcpy(
-                &raw mut state.d_loop.local_playeringame as *mut bool
-                    as *mut ::core::ffi::c_void,
+                &raw mut state.d_loop.local_playeringame as *mut bool as *mut ::core::ffi::c_void,
                 &raw mut (*set).ingame as *mut bool as *const ::core::ffi::c_void,
                 ::core::mem::size_of::<[bool; 8]>() as size_t,
             );
-            let run_tic = state.d_loop.loop_interface
+            let run_tic = state
+                .d_loop
+                .loop_interface
                 .RunTic
                 .expect("non-null function pointer");
             run_tic(

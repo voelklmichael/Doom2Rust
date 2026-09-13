@@ -850,8 +850,8 @@ pub unsafe fn F_CastDrawer(state: &mut GameState) {
     sprframe = &raw mut (*sprdef).spriteframes
         [((*state.f_finale.caststate).frame & FF_FRAMEMASK) as usize]
         as *mut spriteframe_t;
-    lump = (*sprframe).lump[0 as usize] as i32;
-    flip = (*sprframe).flip[0 as usize] != 0;
+    lump = (*sprframe).lump[0] as i32;
+    flip = (*sprframe).flip[0] != 0;
     patch =
         W_CacheLumpNum(state, lump + state.r_data.firstspritelump, PU_CACHE as i32) as *mut patch_t;
     if flip {

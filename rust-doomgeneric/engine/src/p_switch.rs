@@ -356,7 +356,7 @@ pub unsafe fn P_ChangeSwitchTexture(
     if useAgain == 0 {
         (*state.p_setup.line_mut(line)).special = 0 as i16;
     }
-    let sidenum0 = state.p_setup.line(line).sidenum[0 as usize];
+    let sidenum0 = state.p_setup.line(line).sidenum[0];
     texTop = state.p_setup.sides[sidenum0 as usize].toptexture as i32;
     texMid = state.p_setup.sides[sidenum0 as usize].midtexture as i32;
     texBot = state.p_setup.sides[sidenum0 as usize].bottomtexture as i32;
@@ -367,7 +367,7 @@ pub unsafe fn P_ChangeSwitchTexture(
     i = 0 as i32;
     while i < state.p_switch.numswitches * 2 as i32 {
         if state.p_switch.switchlist[i as usize] == texTop {
-            S_StartSound(state, SoundOrigin::Sector(state.p_switch.buttonlist[0 as usize].soundorg), sound);
+            S_StartSound(state, SoundOrigin::Sector(state.p_switch.buttonlist[0].soundorg), sound);
             state.p_setup.sides[sidenum0 as usize].toptexture =
                 state.p_switch.switchlist[(i ^ 1 as i32) as usize] as i16;
             if useAgain != 0 {
@@ -381,7 +381,7 @@ pub unsafe fn P_ChangeSwitchTexture(
             }
             return;
         } else if state.p_switch.switchlist[i as usize] == texMid {
-            S_StartSound(state, SoundOrigin::Sector(state.p_switch.buttonlist[0 as usize].soundorg), sound);
+            S_StartSound(state, SoundOrigin::Sector(state.p_switch.buttonlist[0].soundorg), sound);
             state.p_setup.sides[sidenum0 as usize].midtexture =
                 state.p_switch.switchlist[(i ^ 1 as i32) as usize] as i16;
             if useAgain != 0 {
@@ -395,7 +395,7 @@ pub unsafe fn P_ChangeSwitchTexture(
             }
             return;
         } else if state.p_switch.switchlist[i as usize] == texBot {
-            S_StartSound(state, SoundOrigin::Sector(state.p_switch.buttonlist[0 as usize].soundorg), sound);
+            S_StartSound(state, SoundOrigin::Sector(state.p_switch.buttonlist[0].soundorg), sound);
             state.p_setup.sides[sidenum0 as usize].bottomtexture =
                 state.p_switch.switchlist[(i ^ 1 as i32) as usize] as i16;
             if useAgain != 0 {

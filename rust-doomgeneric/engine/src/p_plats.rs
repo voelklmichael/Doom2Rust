@@ -170,7 +170,7 @@ pub unsafe fn EV_DoPlat(
             PlattypeE::raiseToNearestAndChange => {
                 (*plat).speed = (PLATSPEED / 2 as i32) as fixed_t;
                 let neighbor_sector_id =
-                    state.p_setup.sides[linev.sidenum[0 as usize] as usize].sector;
+                    state.p_setup.sides[linev.sidenum[0] as usize].sector;
                 (*sec).floorpic = (*state.p_setup.sector_mut(neighbor_sector_id)).floorpic;
                 (*plat).high = P_FindNextHighestFloor(state, sec, (*sec).floorheight as i32);
                 (*plat).wait = 0 as i32;
@@ -181,7 +181,7 @@ pub unsafe fn EV_DoPlat(
             PlattypeE::raiseAndChange => {
                 (*plat).speed = (PLATSPEED / 2 as i32) as fixed_t;
                 let neighbor_sector_id =
-                    state.p_setup.sides[linev.sidenum[0 as usize] as usize].sector;
+                    state.p_setup.sides[linev.sidenum[0] as usize].sector;
                 (*sec).floorpic = (*state.p_setup.sector_mut(neighbor_sector_id)).floorpic;
                 (*plat).high = ((*sec).floorheight as i32 + amount * FRACUNIT) as fixed_t;
                 (*plat).wait = 0 as i32;
