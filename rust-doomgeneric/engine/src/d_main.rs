@@ -647,13 +647,13 @@ pub unsafe fn D_IdentifyVersion(state: &mut GameState) {
         let mut i: u32 = 0;
         i = 0 as u32;
         while i < state.w_wad.numlumps {
-            if (*state.w_wad.lumpinfo.offset(i as isize))
+            if state.w_wad.lumpinfo[i as usize]
                 .name
                 .eq_str_ignore_ascii_case("MAP01")
             {
                 state.doomstat.gamemission = GameMission_t::doom2;
                 break;
-            } else if (*state.w_wad.lumpinfo.offset(i as isize))
+            } else if state.w_wad.lumpinfo[i as usize]
                 .name
                 .eq_str_ignore_ascii_case("E1M1")
             {
@@ -970,10 +970,8 @@ pub unsafe fn D_DoomMain(state: &mut GameState) {
             file = format!("{}.lmp", arg);
         }
         if D_AddFile(state, &file) {
-            let name = &(*state
-                .w_wad
-                .lumpinfo
-                .offset(state.w_wad.numlumps.wrapping_sub(1 as u32) as isize))
+            let name = &state.w_wad.lumpinfo
+                [state.w_wad.numlumps.wrapping_sub(1 as u32) as usize]
                 .name;
             let len = name.len().min(demolumpname.len() - 1);
             for i in 0..len {
