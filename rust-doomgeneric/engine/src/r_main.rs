@@ -396,7 +396,7 @@ pub unsafe fn R_InitLightTables(state: &mut GameState) {
                 level = NUMCOLORMAPS - 1 as i32;
             }
             state.r_main.zlight[i as usize][j as usize] =
-                state.r_data.colormaps.offset((level * 256 as i32) as isize);
+                state.r_data.colormaps.as_mut_ptr().offset((level * 256 as i32) as isize);
             j += 1;
         }
         i += 1;
@@ -488,7 +488,7 @@ pub unsafe fn R_ExecuteSetViewSize(state: &mut GameState) {
                 level = NUMCOLORMAPS - 1 as i32;
             }
             state.r_main.scalelight[i as usize][j as usize] =
-                state.r_data.colormaps.offset((level * 256 as i32) as isize);
+                state.r_data.colormaps.as_mut_ptr().offset((level * 256 as i32) as isize);
             j += 1;
         }
         i += 1;
@@ -542,7 +542,7 @@ pub unsafe fn R_SetupFrame(state: &mut GameState, player_id: PlayerId) {
     state.r_main.viewcos = finecosine[(state.r_main.viewangle >> ANGLETOFINESHIFT) as isize];
     state.r_main.sscount = 0 as i32;
     if (*player).fixedcolormap != 0 {
-        state.r_main.fixedcolormap = state.r_data.colormaps.offset(
+        state.r_main.fixedcolormap = state.r_data.colormaps.as_mut_ptr().offset(
             (((*player).fixedcolormap * 256 as i32) as usize)
                 .wrapping_mul(::core::mem::size_of::<lighttable_t>() as usize) as isize,
         );

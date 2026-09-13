@@ -49,7 +49,7 @@ pub struct RDataState {
     pub spritewidth: Vec<fixed_t>,
     pub spriteoffset: Vec<fixed_t>,
     pub spritetopoffset: Vec<fixed_t>,
-    pub colormaps: *mut lighttable_t,
+    pub colormaps: Vec<lighttable_t>,
     pub flatmemory: i32,
     pub texturememory: i32,
     pub spritememory: i32,
@@ -81,7 +81,7 @@ impl RDataState {
             spritewidth: Vec::new(),
             spriteoffset: Vec::new(),
             spritetopoffset: Vec::new(),
-            colormaps: ::core::ptr::null::<lighttable_t>() as *mut lighttable_t,
+            colormaps: Vec::new(),
             flatmemory: 0,
             texturememory: 0,
             spritememory: 0,
@@ -565,7 +565,9 @@ pub unsafe fn R_InitSpriteLumps(state: &mut GameState) {
 pub unsafe fn R_InitColormaps(state: &mut GameState) {
     let mut lump: i32 = 0;
     lump = W_GetNumForName(&mut state.w_wad, "COLORMAP");
-    state.r_data.colormaps = W_CacheLumpNum(state, lump, PU_STATIC as i32) as *mut lighttable_t;
+    let lump_ptr = W_CacheLumpNum(state, lump, PU_STATIC as i32) as *const lighttable_t;
+    let lumplen = W_LumpLength(&mut state.w_wad, lump as u32) as usize;
+    state.r_data.colormaps = ::core::slice::from_raw_parts(lump_ptr, lumplen).to_vec();
 }
 pub unsafe fn R_InitData(state: &mut GameState) {
     R_InitTextures(state);
