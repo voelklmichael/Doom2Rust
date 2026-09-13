@@ -1,7 +1,7 @@
 use crate::src::am_map::AM_Drawer;
 use crate::src::d_event::D_PopEvent;
 use crate::src::d_event::GameScreenState;
-use crate::src::d_event::{ga_loadgame, ga_nothing, ga_playdemo};
+use crate::src::d_event::GameAction;
 use crate::src::d_iwad::D_FindIWAD;
 use crate::src::d_iwad::D_SaveGameIWADName;
 use crate::src::d_loop::D_StartGameLoop;
@@ -496,7 +496,7 @@ pub unsafe fn doomgeneric_Tick(state: &mut GameState) {
 pub unsafe fn D_DoomLoop(state: &mut GameState) {
     if state.d_main.bfgedition
         && (state.g_game.demorecording
-            || state.g_game.gameaction as u32 == ga_playdemo as i32 as u32
+            || state.g_game.gameaction == GameAction::ga_playdemo
             || state.g_game.netgame)
     {
         println!(
@@ -538,7 +538,7 @@ pub unsafe fn D_DoAdvanceDemo(state: &mut GameState) {
     state.d_main.advancedemo = false;
     state.g_game.usergame = false;
     state.g_game.paused = false;
-    state.g_game.gameaction = ga_nothing;
+    state.g_game.gameaction = GameAction::ga_nothing;
     if [GameVersion::ultimate, GameVersion::r#final].contains(&state.doomstat.gameversion) {
         state.d_main.demosequence = (state.d_main.demosequence + 1 as i32) % 7 as i32;
     } else {
@@ -613,7 +613,7 @@ pub unsafe fn D_DoAdvanceDemo(state: &mut GameState) {
     }
 }
 pub fn D_StartTitle(state: &mut GameState) {
-    state.g_game.gameaction = ga_nothing;
+    state.g_game.gameaction = GameAction::ga_nothing;
     state.d_main.demosequence = -(1 as i32);
     D_AdvanceDemo(state);
 }
@@ -1189,7 +1189,7 @@ pub unsafe fn D_DoomMain(state: &mut GameState) {
         let savegame_file = P_SaveGameFile(state, state.d_main.startloadgame);
         G_LoadGame(state, &savegame_file);
     }
-    if state.g_game.gameaction as u32 != ga_loadgame as i32 as u32 {
+    if state.g_game.gameaction != GameAction::ga_loadgame {
         if state.d_main.autostart || state.g_game.netgame {
             let (startskill, startepisode, startmap) = (
                 state.d_main.startskill,

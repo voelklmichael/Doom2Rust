@@ -1,14 +1,16 @@
-pub type gameaction_t = u32;
-pub const ga_screenshot: gameaction_t = 9;
-pub const ga_worlddone: gameaction_t = 8;
-pub const ga_victory: gameaction_t = 7;
-pub const ga_completed: gameaction_t = 6;
-pub const ga_playdemo: gameaction_t = 5;
-pub const ga_savegame: gameaction_t = 4;
-pub const ga_loadgame: gameaction_t = 3;
-pub const ga_newgame: gameaction_t = 2;
-pub const ga_loadlevel: gameaction_t = 1;
-pub const ga_nothing: gameaction_t = 0;
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub enum GameAction {
+    ga_nothing = 0,
+    ga_loadlevel = 1,
+    ga_newgame = 2,
+    ga_loadgame = 3,
+    ga_savegame = 4,
+    ga_playdemo = 5,
+    ga_completed = 6,
+    ga_victory = 7,
+    ga_worlddone = 8,
+    ga_screenshot = 9,
+}
 #[derive(Copy, Clone, PartialEq)]
 pub enum GameScreenState {
     GS_LEVEL = 0,

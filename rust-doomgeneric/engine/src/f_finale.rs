@@ -1,7 +1,7 @@
 use crate::src::d_event::event_t;
 use crate::src::d_event::EvType;
 use crate::src::d_event::GameScreenState;
-use crate::src::d_event::{ga_nothing, ga_worlddone};
+use crate::src::d_event::GameAction;
 use crate::src::d_mode::GameVersion;
 use crate::src::d_mode::{commercial, retail};
 use crate::src::d_mode::{doom, doom2, pack_chex, pack_hacx, pack_plut, pack_tnt, GameMission_t};
@@ -299,7 +299,7 @@ impl FFinaleState {
 
 pub unsafe fn F_StartFinale(state: &mut GameState) {
     let mut i: size_t = 0;
-    state.g_game.gameaction = ga_nothing;
+    state.g_game.gameaction = GameAction::ga_nothing;
     state.g_game.gamestate = GameScreenState::GS_FINALE;
     state.g_game.viewactive = false;
     state.am_map.automapactive = false;
@@ -383,7 +383,7 @@ pub unsafe fn F_Ticker(state: &mut GameState) {
             if state.g_game.gamemap == 30 as i32 {
                 F_StartCast(state);
             } else {
-                state.g_game.gameaction = ga_worlddone;
+                state.g_game.gameaction = GameAction::ga_worlddone;
             }
         }
     }
