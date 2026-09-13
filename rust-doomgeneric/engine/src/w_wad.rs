@@ -11,9 +11,6 @@ use crate::src::stdint_types::size_t;
 use crate::src::w_file::wad_file_t;
 use crate::src::w_file::W_OpenFile;
 use crate::src::w_file::W_Read;
-use crate::src::z_zone::Z_Free;
-use crate::src::z_zone::Z_Malloc;
-use crate::src::z_zone::PU_STATIC;
 
 pub struct WWadState {
     pub lumpinfo: Vec<lumpinfo_t>,
@@ -108,8 +105,10 @@ pub unsafe fn W_AddFile(state: &mut GameState, filename: &str) -> *mut wad_file_
     let mut wad_file: *mut wad_file_t = ::core::ptr::null_mut::<wad_file_t>();
     let mut length: i32 = 0;
     let mut startlump: i32 = 0;
-    let mut fileinfo: *mut filelump_t = ::core::ptr::null_mut::<filelump_t>();
-    let mut filerover: *mut filelump_t = ::core::ptr::null_mut::<filelump_t>();
+    // Scratch WAD-directory buffer -- built and consumed entirely within
+    // this function, so a plain owned Vec replaces the old
+    // Z_Malloc-then-Z_Free-at-the-end pair with no lifetime change.
+    let fileinfo: Vec<filelump_t>;
     let mut newnumlumps: i32 = 0;
     wad_file = W_OpenFile(state, filename);
     if wad_file.is_null() {
@@ -119,15 +118,13 @@ pub unsafe fn W_AddFile(state: &mut GameState, filename: &str) -> *mut wad_file_
     newnumlumps = state.w_wad.numlumps as i32;
     let is_wad = filename.len() >= 3 && filename[filename.len() - 3..].eq_ignore_ascii_case("wad");
     if !is_wad {
-        fileinfo = Z_Malloc(
-            &mut state.z_zone,
-            ::core::mem::size_of::<filelump_t>() as i32,
-            PU_STATIC as i32,
-            ::core::ptr::null_mut::<::core::ffi::c_void>(),
-        ) as *mut filelump_t;
-        (*fileinfo).filepos = 0 as i32;
-        (*fileinfo).size = (*wad_file).length as i32;
-        M_ExtractFileBase(filename, &mut (*fileinfo).name);
+        let mut single = filelump_t {
+            filepos: 0 as i32,
+            size: (*wad_file).length as i32,
+            name: FixedCStr([0; 8]),
+        };
+        M_ExtractFileBase(filename, &mut single.name);
+        fileinfo = vec![single];
         newnumlumps += 1;
     } else {
         W_Read(
@@ -148,42 +145,41 @@ pub unsafe fn W_AddFile(state: &mut GameState, filename: &str) -> *mut wad_file_
         header.infotableofs = header.infotableofs;
         length = (header.numlumps as usize)
             .wrapping_mul(::core::mem::size_of::<filelump_t>() as usize) as i32;
-        fileinfo = Z_Malloc(
-            &mut state.z_zone,
-            length,
-            PU_STATIC as i32,
-            ::core::ptr::null_mut::<::core::ffi::c_void>(),
-        ) as *mut filelump_t;
+        let mut buf = vec![
+            filelump_t {
+                filepos: 0,
+                size: 0,
+                name: FixedCStr([0; 8]),
+            };
+            header.numlumps as usize
+        ];
         W_Read(
             wad_file,
             header.infotableofs as u32,
-            fileinfo as *mut ::core::ffi::c_void,
+            buf.as_mut_ptr() as *mut ::core::ffi::c_void,
             length as size_t,
         );
+        fileinfo = buf;
         newnumlumps += header.numlumps;
     }
     startlump = state.w_wad.numlumps as i32;
     ExtendLumpInfo(&mut state.w_wad, newnumlumps);
     lump_p = state.w_wad.lumpinfo.as_mut_ptr().offset(startlump as isize);
-    filerover = fileinfo;
     i = startlump as u32;
+    let mut fi: usize = 0;
     while i < state.w_wad.numlumps {
         (*lump_p).wad_file = wad_file;
-        (*lump_p).position = (*filerover).filepos;
-        (*lump_p).size = (*filerover).size;
+        (*lump_p).position = fileinfo[fi].filepos;
+        (*lump_p).size = fileinfo[fi].size;
         (*lump_p).cache = None;
-        (*lump_p).name = (*filerover).name;
+        (*lump_p).name = fileinfo[fi].name;
         // ExtendLumpInfo already initializes every freshly grown slot's
         // `.next` to None, but W_GenerateHashTable overwrites it again once a
         // real chain is built, so no need to touch it here.
         lump_p = lump_p.offset(1);
-        filerover = filerover.offset(1);
+        fi += 1;
         i = i.wrapping_add(1);
     }
-    Z_Free(
-        &mut state.z_zone,
-        fileinfo as *mut ::core::ffi::c_void,
-    );
     state.w_wad.lumphash = Vec::new();
     return wad_file;
 }
