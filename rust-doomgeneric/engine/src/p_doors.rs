@@ -22,20 +22,22 @@ use crate::src::s_sound::S_StartSound;
 use crate::src::sounds::{sfx_bdcls, sfx_bdopn, sfx_dorcls, sfx_doropn, sfx_oof};
 use crate::src::z_zone::Z_Malloc;
 use crate::src::z_zone::PU_LEVSPEC;
-pub type vldoor_e = u32;
-pub const vld_blazeClose: vldoor_e = 7;
-pub const vld_blazeOpen: vldoor_e = 6;
-pub const vld_blazeRaise: vldoor_e = 5;
-pub const vld_raiseIn5Mins: vldoor_e = 4;
-pub const vld_open: vldoor_e = 3;
-pub const vld_close: vldoor_e = 2;
-pub const vld_close30ThenOpen: vldoor_e = 1;
-pub const vld_normal: vldoor_e = 0;
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub enum VldoorE {
+    vld_normal = 0,
+    vld_close30ThenOpen = 1,
+    vld_close = 2,
+    vld_open = 3,
+    vld_raiseIn5Mins = 4,
+    vld_blazeRaise = 5,
+    vld_blazeOpen = 6,
+    vld_blazeClose = 7,
+}
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct vldoor_t {
     pub thinker: thinker_t,
-    pub type_0: vldoor_e,
+    pub type_0: VldoorE,
     pub sector: SectorId,
     pub topheight: fixed_t,
     pub speed: fixed_t,
@@ -51,8 +53,8 @@ pub unsafe fn T_VerticalDoor(state: &mut GameState, mut door: *mut vldoor_t) {
         0 => {
             (*door).topcountdown -= 1;
             if (*door).topcountdown == 0 {
-                match (*door).type_0 as u32 {
-                    5 => {
+                match (*door).type_0 {
+                    VldoorE::vld_blazeRaise => {
                         (*door).direction = -(1 as i32);
                         S_StartSound(
                             state,
@@ -60,7 +62,7 @@ pub unsafe fn T_VerticalDoor(state: &mut GameState, mut door: *mut vldoor_t) {
                             sfx_bdcls as i32,
                         );
                     }
-                    0 => {
+                    VldoorE::vld_normal => {
                         (*door).direction = -(1 as i32);
                         S_StartSound(
                             state,
@@ -68,7 +70,7 @@ pub unsafe fn T_VerticalDoor(state: &mut GameState, mut door: *mut vldoor_t) {
                             sfx_dorcls as i32,
                         );
                     }
-                    1 => {
+                    VldoorE::vld_close30ThenOpen => {
                         (*door).direction = 1 as i32;
                         S_StartSound(
                             state,
@@ -83,10 +85,10 @@ pub unsafe fn T_VerticalDoor(state: &mut GameState, mut door: *mut vldoor_t) {
         2 => {
             (*door).topcountdown -= 1;
             if (*door).topcountdown == 0 {
-                match (*door).type_0 as u32 {
-                    4 => {
+                match (*door).type_0 {
+                    VldoorE::vld_raiseIn5Mins => {
                         (*door).direction = 1 as i32;
-                        (*door).type_0 = vld_normal;
+                        (*door).type_0 = VldoorE::vld_normal;
                         S_StartSound(
                             state,
                             &raw mut (*sec).soundorg as *mut ::core::ffi::c_void,
@@ -108,8 +110,8 @@ pub unsafe fn T_VerticalDoor(state: &mut GameState, mut door: *mut vldoor_t) {
                 (*door).direction,
             );
             if res == ResultE::pastdest {
-                match (*door).type_0 as u32 {
-                    5 | 7 => {
+                match (*door).type_0 {
+                    VldoorE::vld_blazeRaise | VldoorE::vld_blazeClose => {
                         (*sec).specialdata = None;
                         P_RemoveThinker(&raw mut (*door).thinker);
                         S_StartSound(
@@ -118,19 +120,19 @@ pub unsafe fn T_VerticalDoor(state: &mut GameState, mut door: *mut vldoor_t) {
                             sfx_bdcls as i32,
                         );
                     }
-                    0 | 2 => {
+                    VldoorE::vld_normal | VldoorE::vld_close => {
                         (*sec).specialdata = None;
                         P_RemoveThinker(&raw mut (*door).thinker);
                     }
-                    1 => {
+                    VldoorE::vld_close30ThenOpen => {
                         (*door).direction = 0 as i32;
                         (*door).topcountdown = TICRATE * 30 as i32;
                     }
                     _ => {}
                 }
             } else if res == ResultE::crushed {
-                match (*door).type_0 as u32 {
-                    7 | 2 => {}
+                match (*door).type_0 {
+                    VldoorE::vld_blazeClose | VldoorE::vld_close => {}
                     _ => {
                         (*door).direction = 1 as i32;
                         S_StartSound(
@@ -153,12 +155,12 @@ pub unsafe fn T_VerticalDoor(state: &mut GameState, mut door: *mut vldoor_t) {
                 (*door).direction,
             );
             if res == ResultE::pastdest {
-                match (*door).type_0 as u32 {
-                    5 | 0 => {
+                match (*door).type_0 {
+                    VldoorE::vld_blazeRaise | VldoorE::vld_normal => {
                         (*door).direction = 0 as i32;
                         (*door).topcountdown = (*door).topwait;
                     }
-                    1 | 6 | 3 => {
+                    VldoorE::vld_close30ThenOpen | VldoorE::vld_blazeOpen | VldoorE::vld_open => {
                         (*sec).specialdata = None;
                         P_RemoveThinker(&raw mut (*door).thinker);
                     }
@@ -172,7 +174,7 @@ pub unsafe fn T_VerticalDoor(state: &mut GameState, mut door: *mut vldoor_t) {
 pub unsafe fn EV_DoLockedDoor(
     state: &mut GameState,
     mut line: *mut line_t,
-    mut type_0: vldoor_e,
+    mut type_0: VldoorE,
     mut thing: *mut mobj_t,
 ) -> i32 {
     let mut p: *mut player_t = ::core::ptr::null_mut::<player_t>();
@@ -219,7 +221,7 @@ pub unsafe fn EV_DoLockedDoor(
     }
     return EV_DoDoor(state, line, type_0);
 }
-pub unsafe fn EV_DoDoor(state: &mut GameState, mut line: *mut line_t, mut type_0: vldoor_e) -> i32 {
+pub unsafe fn EV_DoDoor(state: &mut GameState, mut line: *mut line_t, mut type_0: VldoorE) -> i32 {
     let mut secnum: i32 = 0;
     let mut rtn: i32 = 0;
     let mut sec: *mut sector_t = ::core::ptr::null_mut::<sector_t>();
@@ -249,8 +251,8 @@ pub unsafe fn EV_DoDoor(state: &mut GameState, mut line: *mut line_t, mut type_0
         (*door).type_0 = type_0;
         (*door).topwait = VDOORWAIT;
         (*door).speed = (FRACUNIT * 2 as i32) as fixed_t;
-        match type_0 as u32 {
-            7 => {
+        match type_0 {
+            VldoorE::vld_blazeClose => {
                 (*door).topheight = P_FindLowestCeilingSurrounding(state, sec);
                 (*door).topheight -= 4 as i32 * FRACUNIT;
                 (*door).direction = -(1 as i32);
@@ -261,7 +263,7 @@ pub unsafe fn EV_DoDoor(state: &mut GameState, mut line: *mut line_t, mut type_0
                     sfx_bdcls as i32,
                 );
             }
-            2 => {
+            VldoorE::vld_close => {
                 (*door).topheight = P_FindLowestCeilingSurrounding(state, sec);
                 (*door).topheight -= 4 as i32 * FRACUNIT;
                 (*door).direction = -(1 as i32);
@@ -271,7 +273,7 @@ pub unsafe fn EV_DoDoor(state: &mut GameState, mut line: *mut line_t, mut type_0
                     sfx_dorcls as i32,
                 );
             }
-            1 => {
+            VldoorE::vld_close30ThenOpen => {
                 (*door).topheight = (*sec).ceilingheight;
                 (*door).direction = -(1 as i32);
                 S_StartSound(
@@ -280,7 +282,7 @@ pub unsafe fn EV_DoDoor(state: &mut GameState, mut line: *mut line_t, mut type_0
                     sfx_dorcls as i32,
                 );
             }
-            5 | 6 => {
+            VldoorE::vld_blazeRaise | VldoorE::vld_blazeOpen => {
                 (*door).direction = 1 as i32;
                 (*door).topheight = P_FindLowestCeilingSurrounding(state, sec);
                 (*door).topheight -= 4 as i32 * FRACUNIT;
@@ -293,7 +295,7 @@ pub unsafe fn EV_DoDoor(state: &mut GameState, mut line: *mut line_t, mut type_0
                     );
                 }
             }
-            0 | 3 => {
+            VldoorE::vld_normal | VldoorE::vld_open => {
                 (*door).direction = 1 as i32;
                 (*door).topheight = P_FindLowestCeilingSurrounding(state, sec);
                 (*door).topheight -= 4 as i32 * FRACUNIT;
@@ -445,18 +447,18 @@ pub unsafe fn EV_VerticalDoor(
     (*door).topwait = VDOORWAIT;
     match (*line).special as i32 {
         1 | 26 | 27 | 28 => {
-            (*door).type_0 = vld_normal;
+            (*door).type_0 = VldoorE::vld_normal;
         }
         31 | 32 | 33 | 34 => {
-            (*door).type_0 = vld_open;
+            (*door).type_0 = VldoorE::vld_open;
             (*line).special = 0 as i16;
         }
         117 => {
-            (*door).type_0 = vld_blazeRaise;
+            (*door).type_0 = VldoorE::vld_blazeRaise;
             (*door).speed = (FRACUNIT * 2 as i32 * 4 as i32) as fixed_t;
         }
         118 => {
-            (*door).type_0 = vld_blazeOpen;
+            (*door).type_0 = VldoorE::vld_blazeOpen;
             (*line).special = 0 as i16;
             (*door).speed = (FRACUNIT * 2 as i32 * 4 as i32) as fixed_t;
         }
@@ -480,7 +482,7 @@ pub unsafe fn P_SpawnDoorCloseIn30(state: &mut GameState, mut sector: SectorId) 
     (*door).thinker.function = ThinkerFn::Door(T_VerticalDoor);
     (*door).sector = sector;
     (*door).direction = 0 as i32;
-    (*door).type_0 = vld_normal;
+    (*door).type_0 = VldoorE::vld_normal;
     (*door).speed = (FRACUNIT * 2 as i32) as fixed_t;
     (*door).topcountdown = 30 as i32 * TICRATE;
 }
@@ -499,7 +501,7 @@ pub unsafe fn P_SpawnDoorRaiseIn5Mins(state: &mut GameState, mut sector: SectorI
     (*door).thinker.function = ThinkerFn::Door(T_VerticalDoor);
     (*door).sector = sector;
     (*door).direction = 2 as i32;
-    (*door).type_0 = vld_raiseIn5Mins;
+    (*door).type_0 = VldoorE::vld_raiseIn5Mins;
     (*door).speed = (FRACUNIT * 2 as i32) as fixed_t;
     (*door).topheight = P_FindLowestCeilingSurrounding(state, sec);
     (*door).topheight -= 4 as i32 * FRACUNIT;

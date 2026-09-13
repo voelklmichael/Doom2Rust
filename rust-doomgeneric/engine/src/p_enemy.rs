@@ -8,7 +8,7 @@ use crate::src::m_fixed::fixed_t;
 use crate::src::m_fixed::FixedMul;
 use crate::src::m_random::P_Random;
 use crate::src::p_doors::EV_DoDoor;
-use crate::src::p_doors::{vld_blazeOpen, vld_open};
+use crate::src::p_doors::VldoorE;
 use crate::src::p_floor::EV_DoFloor;
 use crate::src::p_floor::{lowerFloorToLowest, raiseToTexture};
 use crate::src::p_inter::P_DamageMobj;
@@ -534,7 +534,7 @@ pub unsafe fn A_KeenDie(state: &mut GameState, id: MobjId) {
         cursor = state.p_tick.next(id);
     }
     junk.tag = 666 as i16;
-    EV_DoDoor(state, &raw mut junk, vld_open);
+    EV_DoDoor(state, &raw mut junk, VldoorE::vld_open);
 }
 pub unsafe fn A_Look(state: &mut GameState, id: MobjId) {
     let actor = state.p_mobj.mobj_get(id).unwrap();
@@ -1516,7 +1516,7 @@ pub unsafe fn A_BossDeath(state: &mut GameState, id: MobjId) {
             4 => match state.g_game.gamemap {
                 6 => {
                     junk.tag = 666 as i16;
-                    EV_DoDoor(state, &raw mut junk, vld_blazeOpen);
+                    EV_DoDoor(state, &raw mut junk, VldoorE::vld_blazeOpen);
                     return;
                 }
                 8 => {
