@@ -1,5 +1,5 @@
 use crate::src::d_mode::commercial;
-use crate::src::d_mode::{sk_easy, sk_nightmare};
+use crate::src::d_mode::SkillType;
 use crate::src::d_player::player_t;
 use crate::src::doomdef::boolean;
 use crate::src::g_game::G_ExitLevel;
@@ -642,7 +642,7 @@ pub unsafe fn A_Chase(state: &mut GameState, id: MobjId) {
     }
     if (*actor).flags & MF_JUSTATTACKED as i32 != 0 {
         (*actor).flags &= !(MF_JUSTATTACKED as i32);
-        if state.g_game.gameskill as i32 != sk_nightmare as i32 && !state.d_main.fastparm {
+        if state.g_game.gameskill != SkillType::sk_nightmare && !state.d_main.fastparm {
             P_NewChaseDir(state, actor);
         }
         return;
@@ -658,7 +658,7 @@ pub unsafe fn A_Chase(state: &mut GameState, id: MobjId) {
         return;
     }
     if (*state.info.mobjinfo_mut((*actor).type_0)).missilestate != 0 {
-        if !((state.g_game.gameskill as i32) < sk_nightmare as i32
+        if !(state.g_game.gameskill < SkillType::sk_nightmare
             && !state.d_main.fastparm
             && (*actor).movecount != 0)
         {
@@ -1676,7 +1676,7 @@ pub unsafe fn A_BrainSpit(state: &mut GameState, id: MobjId) {
     let mut newmobj: *mut mobj_t = ::core::ptr::null_mut::<mobj_t>();
     let state = state;
     state.p_enemy.easy ^= 1 as i32;
-    if state.g_game.gameskill as i32 <= sk_easy as i32 && state.p_enemy.easy == 0 {
+    if state.g_game.gameskill <= SkillType::sk_easy && state.p_enemy.easy == 0 {
         return;
     }
     targ = state.p_enemy.braintargets[state.p_enemy.braintargeton as usize];

@@ -4,7 +4,7 @@ use crate::src::d_event::EvType;
 use crate::src::d_items::{weaponinfo, weaponinfo_t};
 use crate::src::d_mode::{commercial, registered, retail, shareware};
 use crate::src::d_mode::{doom, doom2, pack_chex, pack_hacx};
-use crate::src::d_mode::{sk_nightmare, GameVersion};
+use crate::src::d_mode::{GameVersion, SkillType};
 use crate::src::d_player::player_t;
 use crate::src::d_player::{am_noammo, NUMAMMO};
 use crate::src::d_player::{pw_invulnerability, pw_ironfeet, pw_strength};
@@ -473,7 +473,7 @@ pub unsafe fn ST_Responder(state: &mut GameState, mut ev: &event_t) -> bool {
             _ => {}
         }
     } else if (*ev).type_0 == EvType::ev_keydown {
-        if !state.g_game.netgame && state.g_game.gameskill as i32 != sk_nightmare as i32 {
+        if !state.g_game.netgame && state.g_game.gameskill != SkillType::sk_nightmare {
             if cht_CheckCheat(
                 &raw mut state.st_stuff.cheat_god,
                 (*ev).data2 as ::core::ffi::c_char,

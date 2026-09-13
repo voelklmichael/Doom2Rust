@@ -11,7 +11,7 @@ use crate::src::d_main::D_PageTicker;
 use crate::src::d_mode::GameVersion;
 use crate::src::d_mode::{commercial, shareware};
 use crate::src::d_mode::{doom, doom2, pack_chex, pack_hacx};
-use crate::src::d_mode::{sk_baby, sk_nightmare, skill_t};
+use crate::src::d_mode::{skill_from_raw, SkillType};
 use crate::src::d_player::pw_strength;
 use crate::src::d_player::{am_clip, NUMAMMO};
 use crate::src::d_player::{player_s, player_t, PlayerId, PlayerState};
@@ -115,7 +115,7 @@ pub struct GGameState {
     pub oldgamestate: GameScreenState,
     pub gameaction: GameAction,
     pub gamestate: GameScreenState,
-    pub gameskill: skill_t,
+    pub gameskill: SkillType,
     pub respawnmonsters: bool,
     pub gameepisode: i32,
     pub gamemap: i32,
@@ -182,7 +182,7 @@ pub struct GGameState {
     pub vanilla_demo_limit: i32,
     pub secretexit: bool,
     pub savename: String,
-    pub d_skill: skill_t,
+    pub d_skill: SkillType,
     pub d_episode: i32,
     pub d_map: i32,
     pub defdemoname: *mut ::core::ffi::c_char,
@@ -249,7 +249,7 @@ impl GGameState {
             oldgamestate: GameScreenState::GS_LEVEL,
             gameaction: GameAction::ga_nothing,
             gamestate: GameScreenState::GS_LEVEL,
-            gameskill: sk_baby,
+            gameskill: SkillType::sk_baby,
             respawnmonsters: false,
             gameepisode: 0,
             gamemap: 0,
@@ -336,7 +336,7 @@ impl GGameState {
             vanilla_demo_limit: 1,
             secretexit: false,
             savename: String::new(),
-            d_skill: sk_baby,
+            d_skill: SkillType::sk_baby,
             d_episode: 0,
             d_map: 0,
             defdemoname: ::core::ptr::null::<::core::ffi::c_char>() as *mut ::core::ffi::c_char,
@@ -1667,7 +1667,7 @@ pub unsafe fn G_DoSaveGame(state: &mut GameState) {
 }
 pub fn G_DeferedInitNew(
     state: &mut GameState,
-    mut skill: skill_t,
+    mut skill: SkillType,
     mut episode: i32,
     mut map: i32,
 ) {
@@ -1696,15 +1696,15 @@ pub unsafe fn G_DoNewGame(state: &mut GameState) {
     G_InitNew(state, d_skill, d_episode, d_map);
     state.g_game.gameaction = GameAction::ga_nothing;
 }
-pub unsafe fn G_InitNew(state: &mut GameState, mut skill: skill_t, mut episode: i32, mut map: i32) {
+pub unsafe fn G_InitNew(state: &mut GameState, mut skill: SkillType, mut episode: i32, mut map: i32) {
     let skytexturename: &str;
     let mut i: i32 = 0;
     if state.g_game.paused {
         state.g_game.paused = false;
         S_ResumeSound(state);
     }
-    if skill as i32 > sk_nightmare as i32 {
-        skill = sk_nightmare;
+    if skill > SkillType::sk_nightmare {
+        skill = SkillType::sk_nightmare;
     }
     if state.doomstat.gameversion.is_ultimate_or_higher() {
         if episode == 0 as i32 {
@@ -1728,14 +1728,14 @@ pub unsafe fn G_InitNew(state: &mut GameState, mut skill: skill_t, mut episode: 
         map = 9 as i32;
     }
     M_ClearRandom(&mut state.m_random);
-    if skill as i32 == sk_nightmare as i32 || state.d_main.respawnparm {
+    if skill == SkillType::sk_nightmare || state.d_main.respawnparm {
         state.g_game.respawnmonsters = true;
     } else {
         state.g_game.respawnmonsters = false;
     }
     if state.d_main.fastparm
-        || skill as i32 == sk_nightmare as i32
-            && state.g_game.gameskill as i32 != sk_nightmare as i32
+        || skill == SkillType::sk_nightmare
+            && state.g_game.gameskill != SkillType::sk_nightmare
     {
         i = S_SARG_RUN1 as i32;
         while i <= S_SARG_PAIN2 as i32 {
@@ -1745,8 +1745,8 @@ pub unsafe fn G_InitNew(state: &mut GameState, mut skill: skill_t, mut episode: 
         state.info.mobjinfo[MT_BRUISERSHOT as i32 as usize].speed = 20 as i32 * FRACUNIT;
         state.info.mobjinfo[MT_HEADSHOT as i32 as usize].speed = 20 as i32 * FRACUNIT;
         state.info.mobjinfo[MT_TROOPSHOT as i32 as usize].speed = 20 as i32 * FRACUNIT;
-    } else if skill as i32 != sk_nightmare as i32
-        && state.g_game.gameskill as i32 == sk_nightmare as i32
+    } else if skill != SkillType::sk_nightmare
+        && state.g_game.gameskill == SkillType::sk_nightmare
     {
         i = S_SARG_RUN1 as i32;
         while i <= S_SARG_PAIN2 as i32 {
@@ -2002,7 +2002,7 @@ fn DemoVersionDescription(_state: &mut GameState, version: i32) -> String {
     }
 }
 pub unsafe fn G_DoPlayDemo(state: &mut GameState) {
-    let mut skill: skill_t = sk_baby;
+    let mut skill: SkillType = SkillType::sk_baby;
     let mut i: i32 = 0;
     let mut episode: i32 = 0;
     let mut map: i32 = 0;
@@ -2030,7 +2030,7 @@ pub unsafe fn G_DoPlayDemo(state: &mut GameState) {
     }
     let fresh25 = state.g_game.demo_p;
     state.g_game.demo_p = state.g_game.demo_p.offset(1);
-    skill = *fresh25 as skill_t;
+    skill = skill_from_raw(*fresh25 as i32);
     let fresh26 = state.g_game.demo_p;
     state.g_game.demo_p = state.g_game.demo_p.offset(1);
     episode = *fresh26 as i32;

@@ -1,7 +1,7 @@
 use crate::src::am_map::AM_Stop;
 use crate::src::d_items::weaponinfo;
 use crate::src::d_mode::{commercial, GameVersion};
-use crate::src::d_mode::{sk_baby, sk_nightmare};
+use crate::src::d_mode::SkillType;
 use crate::src::d_player::CF_GODMODE;
 use crate::src::d_player::{am_cell, am_clip, am_misl, am_noammo, am_shell, ammotype_t, NUMAMMO};
 use crate::src::d_player::{player_t, PlayerId, PlayerState};
@@ -100,8 +100,8 @@ pub unsafe fn P_GiveAmmo(
     } else {
         num = clipammo[ammo as usize] / 2 as i32;
     }
-    if state.g_game.gameskill as i32 == sk_baby as i32
-        || state.g_game.gameskill as i32 == sk_nightmare as i32
+    if state.g_game.gameskill == SkillType::sk_baby
+        || state.g_game.gameskill == SkillType::sk_nightmare
     {
         num <<= 1 as i32;
     }
@@ -675,7 +675,7 @@ pub unsafe fn P_DamageMobj(
         Some(id) => state.g_game.player_mut(id),
         None => ::core::ptr::null_mut::<player_t>(),
     };
-    if !player.is_null() && state.g_game.gameskill as i32 == sk_baby as i32 {
+    if !player.is_null() && state.g_game.gameskill == SkillType::sk_baby {
         damage >>= 1 as i32;
     }
     if !inflictor.is_null()
