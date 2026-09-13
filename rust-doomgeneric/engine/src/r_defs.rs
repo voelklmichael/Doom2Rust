@@ -1,4 +1,3 @@
-use crate::src::doomdef::boolean;
 use crate::src::m_fixed::fixed_t;
 use crate::src::p_setup::LineId;
 use crate::src::p_setup::SectorId;
@@ -78,10 +77,26 @@ pub struct visplane_t {
     pub pad4: byte,
 }
 
+// #[repr(i32)] with these exact discriminant values is load-bearing, not
+// just documentation: R_InitSpriteDefs bulk-initializes a whole array of
+// spriteframe_t via a raw memset(..., -1, ...) rather than setting `rotate`
+// field-by-field, relying on the resulting all-0xff bytes being a valid
+// `SpriteRotate` bit pattern. That only holds because -1 is this enum's
+// actual `Unset` discriminant under repr(i32) -- changing these values (or
+// dropping the repr) would make that memset produce an invalid/UB enum
+// value instead of `Unset`.
+#[derive(Copy, Clone, PartialEq, Eq)]
+#[repr(i32)]
+pub enum SpriteRotate {
+    Unset = -1,
+    NonRotating = 0,
+    Rotating = 1,
+}
+
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct spriteframe_t {
-    pub rotate: boolean,
+    pub rotate: SpriteRotate,
     pub lump: [i16; 8],
     pub flip: [byte; 8],
 }

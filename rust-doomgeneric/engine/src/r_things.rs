@@ -1,8 +1,6 @@
 use crate::src::d_player::PowerType;
 use crate::src::d_player::NUMPSPRITES;
-use crate::src::doomdef::boolean;
-use crate::src::doomdef::false_0;
-use crate::src::doomdef::true_0;
+use crate::src::r_defs::SpriteRotate;
 use crate::src::doomdef::NULL;
 use crate::src::doomdef::SCREENWIDTH;
 use crate::src::game_state::GameState;
@@ -72,7 +70,7 @@ impl RThingsState {
             sprites: ::core::ptr::null::<spritedef_t>() as *mut spritedef_t,
             numsprites: 0,
             sprtemp: [spriteframe_t {
-                rotate: 0,
+                rotate: SpriteRotate::Unset,
                 lump: [0; 8],
                 flip: [0; 8],
             }; 29],
@@ -161,21 +159,21 @@ pub fn R_InstallSpriteLump(
         state.r_things.maxframe = frame as i32;
     }
     if rotation == 0 as u32 {
-        if state.r_things.sprtemp[frame as usize].rotate == false_0 as boolean {
+        if state.r_things.sprtemp[frame as usize].rotate == SpriteRotate::NonRotating {
             I_Error(&format!(
                 "R_InitSprites: Sprite {} frame {} has multip rot=0 lump",
                 state.r_things.spritename,
                 ('A' as i32 as u32).wrapping_add(frame) as u8 as char,
             ));
         }
-        if state.r_things.sprtemp[frame as usize].rotate == true_0 as boolean {
+        if state.r_things.sprtemp[frame as usize].rotate == SpriteRotate::Rotating {
             I_Error(&format!(
                 "R_InitSprites: Sprite {} frame {} has rotations and a rot=0 lump",
                 state.r_things.spritename,
                 ('A' as i32 as u32).wrapping_add(frame) as u8 as char,
             ));
         }
-        state.r_things.sprtemp[frame as usize].rotate = false_0 as boolean;
+        state.r_things.sprtemp[frame as usize].rotate = SpriteRotate::NonRotating;
         r = 0 as i32;
         while r < 8 as i32 {
             state.r_things.sprtemp[frame as usize].lump[r as usize] =
@@ -185,14 +183,14 @@ pub fn R_InstallSpriteLump(
         }
         return;
     }
-    if state.r_things.sprtemp[frame as usize].rotate == false_0 as boolean {
+    if state.r_things.sprtemp[frame as usize].rotate == SpriteRotate::NonRotating {
         I_Error(&format!(
             "R_InitSprites: Sprite {} frame {} has rotations and a rot=0 lump",
             state.r_things.spritename,
             ('A' as i32 as u32).wrapping_add(frame) as u8 as char,
         ));
     }
-    state.r_things.sprtemp[frame as usize].rotate = true_0 as boolean;
+    state.r_things.sprtemp[frame as usize].rotate = SpriteRotate::Rotating;
     rotation = rotation.wrapping_sub(1);
     if state.r_things.sprtemp[frame as usize].lump[rotation as usize] as i32 != -(1 as i32) {
         I_Error(&format!(
@@ -478,7 +476,7 @@ pub unsafe fn R_ProjectSprite(state: &mut GameState, mut thing: *mut mobj_t) {
     sprframe = (*sprdef)
         .spriteframes
         .offset(((*thing).frame & FF_FRAMEMASK) as isize) as *mut spriteframe_t;
-    if (*sprframe).rotate != 0 {
+    if (*sprframe).rotate != SpriteRotate::NonRotating {
         ang = R_PointToAngle(state, (*thing).x, (*thing).y);
         rot = (ang as u32)
             .wrapping_sub((*thing).angle as u32)
