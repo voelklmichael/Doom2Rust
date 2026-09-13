@@ -2,6 +2,7 @@ use crate::src::doomdef::boolean;
 use crate::src::m_fixed::fixed_t;
 use crate::src::p_setup::LineId;
 use crate::src::p_setup::SectorId;
+use crate::src::p_setup::SegId;
 use crate::src::p_setup::SideId;
 use crate::src::p_setup::VertexId;
 use crate::src::stdint_types::byte;
@@ -46,7 +47,7 @@ pub struct node_t {
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct drawseg_s {
-    pub curline: *mut seg_t,
+    pub curline: SegId,
     pub x1: i32,
     pub x2: i32,
     pub scale1: fixed_t,

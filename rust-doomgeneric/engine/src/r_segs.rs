@@ -122,15 +122,16 @@ pub unsafe fn R_RenderMaskedSegRange(
     let mut lightnum: i32 = 0;
     let mut texnum: i32 = 0;
     state.r_bsp.curline = (*ds).curline;
-    state.r_bsp.frontsector = (*state.r_bsp.curline).frontsector;
-    state.r_bsp.backsector = (*state.r_bsp.curline).backsector;
+    state.r_bsp.frontsector = state.p_setup.seg(state.r_bsp.curline).frontsector;
+    state.r_bsp.backsector = state.p_setup.seg(state.r_bsp.curline).backsector;
     texnum = state.r_data.texturetranslation
-        [(*state.p_setup.side_mut((*state.r_bsp.curline).sidedef)).midtexture as usize];
+        [(*state.p_setup.side_mut(state.p_setup.seg(state.r_bsp.curline).sidedef)).midtexture
+            as usize];
     lightnum = ((*state.p_setup.sector_mut(state.r_bsp.frontsector.unwrap())).lightlevel as i32
         >> LIGHTSEGSHIFT)
         + state.r_main.extralight;
-    let curline_v1 = state.p_setup.vertexes[(*state.r_bsp.curline).v1.0 as usize];
-    let curline_v2 = state.p_setup.vertexes[(*state.r_bsp.curline).v2.0 as usize];
+    let curline_v1 = state.p_setup.vertexes[state.p_setup.seg(state.r_bsp.curline).v1.0 as usize];
+    let curline_v2 = state.p_setup.vertexes[state.p_setup.seg(state.r_bsp.curline).v2.0 as usize];
     if curline_v1.y == curline_v2.y {
         lightnum -= 1;
     } else if curline_v1.x == curline_v2.x {
@@ -155,7 +156,9 @@ pub unsafe fn R_RenderMaskedSegRange(
         (*ds).scale1 + (x1 as fixed_t - (*ds).x1 as fixed_t) * state.r_segs.rw_scalestep;
     state.r_things.mfloorclip = (*ds).sprbottomclip;
     state.r_things.mceilingclip = (*ds).sprtopclip;
-    if (*state.p_setup.line_mut((*state.r_bsp.curline).linedef)).flags as i32 & ML_DONTPEGBOTTOM != 0
+    if (*state.p_setup.line_mut(state.p_setup.seg(state.r_bsp.curline).linedef)).flags as i32
+        & ML_DONTPEGBOTTOM
+        != 0
     {
         state.r_draw.dc_texturemid =
             if (*state.p_setup.sector_mut(state.r_bsp.frontsector.unwrap())).floorheight
@@ -180,7 +183,7 @@ pub unsafe fn R_RenderMaskedSegRange(
         state.r_draw.dc_texturemid = state.r_draw.dc_texturemid - state.r_main.viewz;
     }
     state.r_draw.dc_texturemid +=
-        (*state.p_setup.side_mut((*state.r_bsp.curline).sidedef)).rowoffset;
+        (*state.p_setup.side_mut(state.p_setup.seg(state.r_bsp.curline).sidedef)).rowoffset;
     if !state.r_main.fixedcolormap.is_null() {
         state.r_draw.dc_colormap = state.r_main.fixedcolormap;
     }
@@ -363,11 +366,15 @@ pub unsafe fn R_StoreWallRange(state: &mut GameState, mut start: i32, mut stop: 
     if start >= state.r_draw.viewwidth || start > stop {
         I_Error(&format!("Bad R_RenderWallRange: {} to {}", start, stop));
     }
-    state.r_bsp.sidedef = (*state.r_bsp.curline).sidedef;
-    state.r_bsp.linedef = (*state.r_bsp.curline).linedef;
+    state.r_bsp.sidedef = state.p_setup.seg(state.r_bsp.curline).sidedef;
+    state.r_bsp.linedef = state.p_setup.seg(state.r_bsp.curline).linedef;
     (*state.p_setup.line_mut(state.r_bsp.linedef)).flags =
         ((*state.p_setup.line_mut(state.r_bsp.linedef)).flags as i32 | ML_MAPPED) as i16;
-    state.r_segs.rw_normalangle = (*state.r_bsp.curline).angle.wrapping_add(ANG90 as angle_t);
+    state.r_segs.rw_normalangle = state
+        .p_setup
+        .seg(state.r_bsp.curline)
+        .angle
+        .wrapping_add(ANG90 as angle_t);
     offsetangle = (state
         .r_segs
         .rw_normalangle
@@ -377,7 +384,7 @@ pub unsafe fn R_StoreWallRange(state: &mut GameState, mut start: i32, mut stop: 
         offsetangle = ANG90 as angle_t;
     }
     distangle = (ANG90 as angle_t).wrapping_sub(offsetangle);
-    let curline_v1 = state.p_setup.vertexes[(*state.r_bsp.curline).v1.0 as usize];
+    let curline_v1 = state.p_setup.vertexes[state.p_setup.seg(state.r_bsp.curline).v1.0 as usize];
     let (v1x, v1y) = (curline_v1.x, curline_v1.y);
     hyp = R_PointToDist(state, v1x, v1y);
     sineval = finesine[(distangle >> ANGLETOFINESHIFT) as usize];
@@ -583,7 +590,7 @@ pub unsafe fn R_StoreWallRange(state: &mut GameState, mut start: i32, mut stop: 
             state.r_segs.rw_offset = -state.r_segs.rw_offset;
         }
         state.r_segs.rw_offset += (*state.p_setup.side_mut(state.r_bsp.sidedef)).textureoffset
-            + (*state.r_bsp.curline).offset;
+            + state.p_setup.seg(state.r_bsp.curline).offset;
         state.r_segs.rw_centerangle = (ANG90 as angle_t)
             .wrapping_add(state.r_main.viewangle)
             .wrapping_sub(state.r_segs.rw_normalangle);
@@ -592,8 +599,8 @@ pub unsafe fn R_StoreWallRange(state: &mut GameState, mut start: i32, mut stop: 
                 as i32
                 >> LIGHTSEGSHIFT)
                 + state.r_main.extralight;
-            let curline_v1 = state.p_setup.vertexes[(*state.r_bsp.curline).v1.0 as usize];
-            let curline_v2 = state.p_setup.vertexes[(*state.r_bsp.curline).v2.0 as usize];
+            let curline_v1 = state.p_setup.vertexes[state.p_setup.seg(state.r_bsp.curline).v1.0 as usize];
+            let curline_v2 = state.p_setup.vertexes[state.p_setup.seg(state.r_bsp.curline).v2.0 as usize];
             if curline_v1.y == curline_v2.y {
                 lightnum -= 1;
             } else if curline_v1.x == curline_v2.x {

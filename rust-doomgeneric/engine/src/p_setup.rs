@@ -191,6 +191,9 @@ impl PSetupState {
     pub fn seg_mut(&mut self, id: SegId) -> *mut seg_t {
         &mut self.segs[id.0 as usize] as *mut seg_t
     }
+    pub fn seg(&self, id: SegId) -> seg_t {
+        self.segs[id.0 as usize]
+    }
 }
 
 pub type C2RustUnnamed_1 = u32;

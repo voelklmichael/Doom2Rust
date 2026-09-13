@@ -9,6 +9,7 @@ use crate::src::m_fixed::FixedDiv;
 use crate::src::m_fixed::FixedMul;
 use crate::src::m_fixed::FRACBITS;
 use crate::src::m_fixed::FRACUNIT;
+use crate::src::p_setup::SegId;
 use crate::src::p_setup::SubsectorId;
 use crate::src::r_bsp::R_ClearClipSegs;
 use crate::src::r_bsp::R_ClearDrawSegs;
@@ -16,7 +17,7 @@ use crate::src::r_bsp::R_RenderBSPNode;
 use crate::src::r_bsp::NF_SUBSECTOR;
 use crate::src::r_data::R_InitData;
 use crate::src::r_defs::lighttable_t;
-use crate::src::r_defs::{node_t, seg_t};
+use crate::src::r_defs::node_t;
 use crate::src::r_draw::R_InitBuffer;
 use crate::src::r_draw::R_InitTranslationTables;
 use crate::src::r_draw::{
@@ -173,7 +174,7 @@ pub unsafe fn R_PointOnSegSide(
     state: &mut GameState,
     mut x: fixed_t,
     mut y: fixed_t,
-    mut line: *mut seg_t,
+    mut line: SegId,
 ) -> i32 {
     let mut lx: fixed_t = 0;
     let mut ly: fixed_t = 0;
@@ -183,8 +184,8 @@ pub unsafe fn R_PointOnSegSide(
     let mut dy: fixed_t = 0;
     let mut left: fixed_t = 0;
     let mut right: fixed_t = 0;
-    let line_v1 = state.p_setup.vertexes[(*line).v1.0 as usize];
-    let line_v2 = state.p_setup.vertexes[(*line).v2.0 as usize];
+    let line_v1 = state.p_setup.vertexes[state.p_setup.seg(line).v1.0 as usize];
+    let line_v2 = state.p_setup.vertexes[state.p_setup.seg(line).v2.0 as usize];
     lx = line_v1.x;
     ly = line_v1.y;
     ldx = line_v2.x - lx;
