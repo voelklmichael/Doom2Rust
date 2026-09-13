@@ -238,27 +238,27 @@ pub unsafe fn R_InitSpriteDefs(state: &mut GameState, namelist: &[&'static str])
         state.r_things.maxframe = -(1 as i32);
         l = start + 1 as i32;
         while l < end {
-            if (*state.w_wad.lumpinfo.offset(l as isize))
+            if state.w_wad.lumpinfo[l as usize]
                 .name
                 .eq_bytes_ignore_ascii_case_n(state.r_things.spritename.as_bytes(), 4)
             {
-                frame = (*state.w_wad.lumpinfo.offset(l as isize)).name[4 as i32 as usize] as i32
+                frame = state.w_wad.lumpinfo[l as usize].name[4 as i32 as usize] as i32
                     - 'A' as i32;
-                rotation = (*state.w_wad.lumpinfo.offset(l as isize)).name[5 as i32 as usize]
+                rotation = state.w_wad.lumpinfo[l as usize].name[5 as i32 as usize]
                     as i32
                     - '0' as i32;
                 if state.doomstat.modifiedgame {
-                    let sprite_name = (*state.w_wad.lumpinfo.offset(l as isize)).name;
+                    let sprite_name = state.w_wad.lumpinfo[l as usize].name;
                     patched = W_GetNumForName(&mut state.w_wad, &sprite_name.as_str());
                 } else {
                     patched = l;
                 }
                 R_InstallSpriteLump(state, patched, frame as u32, rotation as u32, false);
-                if (*state.w_wad.lumpinfo.offset(l as isize)).name[6 as i32 as usize] != 0 {
-                    frame = (*state.w_wad.lumpinfo.offset(l as isize)).name[6 as i32 as usize]
+                if state.w_wad.lumpinfo[l as usize].name[6 as i32 as usize] != 0 {
+                    frame = state.w_wad.lumpinfo[l as usize].name[6 as i32 as usize]
                         as i32
                         - 'A' as i32;
-                    rotation = (*state.w_wad.lumpinfo.offset(l as isize)).name[7 as i32 as usize]
+                    rotation = state.w_wad.lumpinfo[l as usize].name[7 as i32 as usize]
                         as i32
                         - '0' as i32;
                     R_InstallSpriteLump(state, l, frame as u32, rotation as u32, true);

@@ -648,7 +648,7 @@ pub unsafe fn R_PrecacheLevel(state: &mut GameState) {
     while i < state.r_data.numflats {
         if *flatpresent.offset(i as isize) != 0 {
             lump = state.r_data.firstflat + i;
-            state.r_data.flatmemory += (*state.w_wad.lumpinfo.offset(lump as isize)).size;
+            state.r_data.flatmemory += state.w_wad.lumpinfo[lump as usize].size;
             W_CacheLumpNum(state, lump, PU_CACHE as i32);
         }
         i += 1;
@@ -684,7 +684,7 @@ pub unsafe fn R_PrecacheLevel(state: &mut GameState) {
             j = 0 as i32;
             while j < (*texture).patchcount as i32 {
                 lump = (*(&raw mut (*texture).patches as *mut texpatch_t).offset(j as isize)).patch;
-                state.r_data.texturememory += (*state.w_wad.lumpinfo.offset(lump as isize)).size;
+                state.r_data.texturememory += state.w_wad.lumpinfo[lump as usize].size;
                 W_CacheLumpNum(state, lump, PU_CACHE as i32);
                 j += 1;
             }
@@ -727,7 +727,7 @@ pub unsafe fn R_PrecacheLevel(state: &mut GameState) {
                 k = 0 as i32;
                 while k < 8 as i32 {
                     lump = state.r_data.firstspritelump + (*sf).lump[k as usize] as i32;
-                    state.r_data.spritememory += (*state.w_wad.lumpinfo.offset(lump as isize)).size;
+                    state.r_data.spritememory += state.w_wad.lumpinfo[lump as usize].size;
                     W_CacheLumpNum(state, lump, PU_CACHE as i32);
                     k += 1;
                 }
