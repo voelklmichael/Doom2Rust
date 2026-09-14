@@ -18,7 +18,6 @@ use crate::m_fixed::FixedMul;
 use crate::m_fixed::FRACBITS;
 use crate::m_fixed::FRACUNIT;
 use crate::m_fixed::INT_MAX;
-use crate::mem_compat::memset;
 use crate::p_maputl::MAPBLOCKUNITS;
 use crate::p_mobj::mobj_t;
 use crate::p_spec::ML_MAPPED;
@@ -44,7 +43,6 @@ pub struct AmMapState {
     pub f_w: i32,
     pub f_h: i32,
     pub lightlev: i32,
-    pub fb: *mut byte,
     pub amclock: i32,
     pub m_paninc: mpoint_t,
     pub mtof_zoommul: fixed_t,
@@ -99,7 +97,6 @@ impl AmMapState {
             f_w: 0,
             f_h: 0,
             lightlev: 0,
-            fb: ::core::ptr::null::<byte>() as *mut byte,
             amclock: 0,
             m_paninc: mpoint_t { x: 0, y: 0 },
             mtof_zoommul: 0,
@@ -664,7 +661,6 @@ pub unsafe fn AM_initVariables(state: &mut GameState) {
         data4: 0,
     };
     state.am_map.automapactive = true;
-    state.am_map.fb = state.i_video.I_VideoBuffer.as_mut_ptr();
     state.am_map.f_oldloc.x = INT_MAX as fixed_t;
     state.am_map.amclock = 0 as i32;
     state.am_map.lightlev = 0 as i32;
@@ -974,11 +970,8 @@ pub fn AM_Ticker(state: &mut GameState) {
     }
 }
 pub unsafe fn AM_clearFB(state: &mut GameState, mut color: i32) {
-    memset(
-        state.am_map.fb as *mut ::core::ffi::c_void,
-        color,
-        (state.am_map.f_w * state.am_map.f_h) as size_t,
-    );
+    let len = (state.am_map.f_w * state.am_map.f_h) as usize;
+    state.i_video.I_VideoBuffer[..len].fill(color as byte);
 }
 pub unsafe fn AM_clipMline(
     state: &mut GameState,
@@ -1154,7 +1147,7 @@ pub unsafe fn AM_drawFline(state: &mut GameState, mut fl: *mut fline_t, mut colo
     if ax > ay {
         d = ay - ax / 2 as i32;
         loop {
-            *state.am_map.fb.offset((y * state.am_map.f_w + x) as isize) = color as byte;
+            state.i_video.I_VideoBuffer[(y * state.am_map.f_w + x) as usize] = color as byte;
             if x == (*fl).b.x {
                 return;
             }
@@ -1168,7 +1161,7 @@ pub unsafe fn AM_drawFline(state: &mut GameState, mut fl: *mut fline_t, mut colo
     } else {
         d = ax - ay / 2 as i32;
         loop {
-            *state.am_map.fb.offset((y * state.am_map.f_w + x) as isize) = color as byte;
+            state.i_video.I_VideoBuffer[(y * state.am_map.f_w + x) as usize] = color as byte;
             if y == (*fl).b.y {
                 return;
             }
@@ -1464,11 +1457,8 @@ pub fn AM_drawMarks(state: &mut GameState) {
     }
 }
 pub unsafe fn AM_drawCrosshair(state: &mut GameState, mut color: i32) {
-    *state
-        .am_map
-        .fb
-        .offset((state.am_map.f_w * (state.am_map.f_h + 1 as i32) / 2 as i32) as isize) =
-        color as byte;
+    let idx = (state.am_map.f_w * (state.am_map.f_h + 1 as i32) / 2 as i32) as usize;
+    state.i_video.I_VideoBuffer[idx] = color as byte;
 }
 pub fn AM_Drawer(state: &mut GameState) {
     if !state.am_map.automapactive {
