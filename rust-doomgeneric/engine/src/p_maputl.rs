@@ -266,19 +266,15 @@ pub fn P_PointOnLineSide(
     }
     return 1 as i32;
 }
-pub unsafe fn P_BoxOnLineSide(
-    state: &mut GameState,
-    mut tmbox: *mut fixed_t,
-    mut ld: LineId,
-) -> i32 {
+pub fn P_BoxOnLineSide(state: &mut GameState, tmbox: [fixed_t; 4], mut ld: LineId) -> i32 {
     let mut p1: i32 = 0 as i32;
     let mut p2: i32 = 0 as i32;
     let ldv = state.p_setup.line(ld);
     match ldv.slopetype as u32 {
         0 => {
             let ld_v1 = state.p_setup.vertexes[ldv.v1.0 as usize];
-            p1 = (*tmbox.offset(BOXTOP as i32 as isize) > ld_v1.y) as i32;
-            p2 = (*tmbox.offset(BOXBOTTOM as i32 as isize) > ld_v1.y) as i32;
+            p1 = (tmbox[BOXTOP as usize] > ld_v1.y) as i32;
+            p2 = (tmbox[BOXBOTTOM as usize] > ld_v1.y) as i32;
             if ldv.dx < 0 as i32 {
                 p1 ^= 1 as i32;
                 p2 ^= 1 as i32;
@@ -286,40 +282,30 @@ pub unsafe fn P_BoxOnLineSide(
         }
         1 => {
             let ld_v1 = state.p_setup.vertexes[ldv.v1.0 as usize];
-            p1 = (*tmbox.offset(BOXRIGHT as i32 as isize) < ld_v1.x) as i32;
-            p2 = (*tmbox.offset(BOXLEFT as i32 as isize) < ld_v1.x) as i32;
+            p1 = (tmbox[BOXRIGHT as usize] < ld_v1.x) as i32;
+            p2 = (tmbox[BOXLEFT as usize] < ld_v1.x) as i32;
             if ldv.dy < 0 as i32 {
                 p1 ^= 1 as i32;
                 p2 ^= 1 as i32;
             }
         }
         2 => {
-            p1 = P_PointOnLineSide(
-                state,
-                *tmbox.offset(BOXLEFT as i32 as isize),
-                *tmbox.offset(BOXTOP as i32 as isize),
-                ld,
-            );
+            p1 = P_PointOnLineSide(state, tmbox[BOXLEFT as usize], tmbox[BOXTOP as usize], ld);
             p2 = P_PointOnLineSide(
                 state,
-                *tmbox.offset(BOXRIGHT as i32 as isize),
-                *tmbox.offset(BOXBOTTOM as i32 as isize),
+                tmbox[BOXRIGHT as usize],
+                tmbox[BOXBOTTOM as usize],
                 ld,
             );
         }
         3 => {
             p1 = P_PointOnLineSide(
                 state,
-                *tmbox.offset(BOXRIGHT as i32 as isize),
-                *tmbox.offset(BOXTOP as i32 as isize),
+                tmbox[BOXRIGHT as usize],
+                tmbox[BOXTOP as usize],
                 ld,
             );
-            p2 = P_PointOnLineSide(
-                state,
-                *tmbox.offset(BOXLEFT as i32 as isize),
-                *tmbox.offset(BOXBOTTOM as i32 as isize),
-                ld,
-            );
+            p2 = P_PointOnLineSide(state, tmbox[BOXLEFT as usize], tmbox[BOXBOTTOM as usize], ld);
         }
         _ => {}
     }

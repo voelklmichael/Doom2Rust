@@ -52,8 +52,7 @@ unsafe fn RunTic(state: &mut GameState, mut cmds: *mut ticcmd_t, mut ingame: *mu
             && state.g_game.playeringame[i as usize]
             && !*ingame.offset(i as isize)
         {
-            let quitter = (&raw mut state.g_game.players as *mut player_t).offset(i as isize)
-                as *mut player_t;
+            let quitter: *mut player_t = &mut state.g_game.players[i as usize];
             PlayerQuitGame(state, quitter);
         }
         i = i.wrapping_add(1);

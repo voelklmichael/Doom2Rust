@@ -455,8 +455,7 @@ pub unsafe fn P_LookForPlayers(
             if fresh1 == 2 as i32 || (*actor).lastlook == stop {
                 return false;
             }
-            player = (&raw mut state.g_game.players as *mut player_t)
-                .offset((*actor).lastlook as isize) as *mut player_t;
+            player = &mut state.g_game.players[(*actor).lastlook as usize];
             if !((*player).health <= 0 as i32) {
                 let player_mo = state.p_mobj.mobj_get((*player).mo.unwrap()).unwrap();
                 if P_CheckSight(state, actor, player_mo) {

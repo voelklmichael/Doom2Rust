@@ -245,7 +245,7 @@ pub unsafe fn PIT_CheckLine(state: &mut GameState, mut ld: LineId) -> bool {
     {
         return true;
     }
-    let tmbbox = &raw mut state.p_map.tmbbox as *mut fixed_t;
+    let tmbbox = state.p_map.tmbbox;
     if P_BoxOnLineSide(state, tmbbox, ld) != -(1 as i32) {
         return true;
     }

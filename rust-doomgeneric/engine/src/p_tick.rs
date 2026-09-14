@@ -278,8 +278,7 @@ pub unsafe fn P_Ticker(state: &mut GameState) {
     i = 0 as i32;
     while i < MAXPLAYERS {
         if state.g_game.playeringame[i as usize] {
-            let player = (&raw mut state.g_game.players as *mut player_t).offset(i as isize)
-                as *mut player_t;
+            let player: *mut player_t = &mut state.g_game.players[i as usize];
             P_PlayerThink(state, player);
         }
         i += 1;
