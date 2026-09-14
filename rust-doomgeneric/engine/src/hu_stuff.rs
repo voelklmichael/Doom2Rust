@@ -42,7 +42,7 @@ pub struct HuStuffState {
     pub chatchars: [u8; 128],
     pub head: i32,
     pub tail: i32,
-    pub chat_macros: [&'static str; 10],
+    pub chat_macros: [Option<&'static str>; 10],
     pub hu_responder_altdown: bool,
     pub hu_responder_num_nobrainers: i32,
     pub player_names: [*mut ::core::ffi::c_char; 4],
@@ -104,16 +104,16 @@ impl HuStuffState {
             head: 0,
             tail: 0,
             chat_macros: [
-                "No",
-                "I'm ready to kick butt!",
-                "I'm OK.",
-                "I'm not looking too good!",
-                "Help!",
-                "You suck!",
-                "Next time, scumbag...",
-                "Come here!",
-                "I'll take care of it.",
-                "Yes",
+                Some("No"),
+                Some("I'm ready to kick butt!"),
+                Some("I'm OK."),
+                Some("I'm not looking too good!"),
+                Some("Help!"),
+                Some("You suck!"),
+                Some("Next time, scumbag..."),
+                Some("Come here!"),
+                Some("I'll take care of it."),
+                Some("Yes"),
             ],
             hu_responder_altdown: false,
             hu_responder_num_nobrainers: 0,
@@ -602,7 +602,7 @@ pub unsafe fn HU_Responder(state: &mut GameState, mut ev: &event_t) -> bool {
         if c as i32 > 9 as i32 {
             return false;
         }
-        let macromessage = state.hu_stuff.chat_macros[c as usize];
+        let macromessage = state.hu_stuff.chat_macros[c as usize].unwrap_or("");
         HU_queueChatChar(state, KEY_ENTER as u8);
         for b in macromessage.bytes() {
             HU_queueChatChar(state, b);

@@ -1,5 +1,6 @@
 use crate::m_argv::M_CheckParm;
-use crate::m_config::M_BindVariable;
+use crate::m_config::M_BindVariable_int;
+use crate::m_config::M_BindVariable_string;
 
 use crate::doomdef::NULL;
 use crate::game_state::GameState;
@@ -339,55 +340,55 @@ pub unsafe fn I_MusicIsPlaying(state: &mut ISoundState) -> bool {
         return false;
     };
 }
-pub unsafe fn I_BindSoundVariables(state: &mut GameState) {
-    M_BindVariable(
+pub fn I_BindSoundVariables(state: &mut GameState) {
+    M_BindVariable_int(
         &mut state.m_config,
         "snd_musicdevice",
-        &raw mut state.i_sound.snd_musicdevice as *mut ::core::ffi::c_void,
+        &mut state.i_sound.snd_musicdevice,
     );
-    M_BindVariable(
+    M_BindVariable_int(
         &mut state.m_config,
         "snd_sfxdevice",
-        &raw mut state.i_sound.snd_sfxdevice as *mut ::core::ffi::c_void,
+        &mut state.i_sound.snd_sfxdevice,
     );
-    M_BindVariable(
+    M_BindVariable_int(
         &mut state.m_config,
         "snd_sbport",
-        &raw mut state.i_sound.snd_sbport as *mut ::core::ffi::c_void,
+        &mut state.i_sound.snd_sbport,
     );
-    M_BindVariable(
+    M_BindVariable_int(
         &mut state.m_config,
         "snd_sbirq",
-        &raw mut state.i_sound.snd_sbirq as *mut ::core::ffi::c_void,
+        &mut state.i_sound.snd_sbirq,
     );
-    M_BindVariable(
+    M_BindVariable_int(
         &mut state.m_config,
         "snd_sbdma",
-        &raw mut state.i_sound.snd_sbdma as *mut ::core::ffi::c_void,
+        &mut state.i_sound.snd_sbdma,
     );
-    M_BindVariable(
+    M_BindVariable_int(
         &mut state.m_config,
         "snd_mport",
-        &raw mut state.i_sound.snd_mport as *mut ::core::ffi::c_void,
+        &mut state.i_sound.snd_mport,
     );
-    M_BindVariable(
+    M_BindVariable_int(
         &mut state.m_config,
         "snd_maxslicetime_ms",
-        &raw mut state.i_sound.snd_maxslicetime_ms as *mut ::core::ffi::c_void,
+        &mut state.i_sound.snd_maxslicetime_ms,
     );
-    M_BindVariable(
+    M_BindVariable_string(
         &mut state.m_config,
         "snd_musiccmd",
-        &raw mut state.i_sound.snd_musiccmd as *mut ::core::ffi::c_void,
+        &mut state.i_sound.snd_musiccmd,
     );
-    M_BindVariable(
+    M_BindVariable_int(
         &mut state.m_config,
         "snd_samplerate",
-        &raw mut state.i_sound.snd_samplerate as *mut ::core::ffi::c_void,
+        &mut state.i_sound.snd_samplerate,
     );
-    M_BindVariable(
+    M_BindVariable_int(
         &mut state.m_config,
         "snd_cachesize",
-        &raw mut state.i_sound.snd_cachesize as *mut ::core::ffi::c_void,
+        &mut state.i_sound.snd_cachesize,
     );
 }
