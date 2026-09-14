@@ -54,7 +54,8 @@ use crate::i_video::I_SetGrabMouseCallback;
 use crate::i_video::I_SetPalette;
 use crate::i_video::I_SetWindowTitle;
 use crate::m_argv::{M_ArgvAtoi, M_CheckParm, M_CheckParmWithArgs};
-use crate::m_config::M_BindVariable;
+use crate::m_config::M_BindVariable_int;
+use crate::m_config::M_BindVariable_string;
 use crate::m_config::M_GetSaveGameDir;
 use crate::m_config::M_LoadDefaults;
 use crate::m_config::M_SaveDefaults;
@@ -385,7 +386,7 @@ pub unsafe fn D_Display(state: &mut GameState) {
         }
     }
 }
-pub unsafe fn D_BindVariables(state: &mut GameState) {
+pub fn D_BindVariables(state: &mut GameState) {
     let mut i: i32 = 0;
     I_BindJoystickVariables(state);
     I_BindSoundVariables(state);
@@ -398,64 +399,63 @@ pub unsafe fn D_BindVariables(state: &mut GameState) {
     state.m_controls.key_multi_msgplayer[1] = HUSTR_KEYINDIGO;
     state.m_controls.key_multi_msgplayer[2] = HUSTR_KEYBROWN;
     state.m_controls.key_multi_msgplayer[3] = HUSTR_KEYRED;
-    M_BindVariable(
+    M_BindVariable_int(
         &mut state.m_config,
         "mouse_sensitivity",
-        &raw mut state.m_menu.mouseSensitivity as *mut ::core::ffi::c_void,
+        &mut state.m_menu.mouseSensitivity,
     );
-    M_BindVariable(
+    M_BindVariable_int(
         &mut state.m_config,
         "sfx_volume",
-        &raw mut state.s_sound.sfxVolume as *mut ::core::ffi::c_void,
+        &mut state.s_sound.sfxVolume,
     );
-    M_BindVariable(
+    M_BindVariable_int(
         &mut state.m_config,
         "music_volume",
-        &raw mut state.s_sound.musicVolume as *mut ::core::ffi::c_void,
+        &mut state.s_sound.musicVolume,
     );
-    M_BindVariable(
+    M_BindVariable_int(
         &mut state.m_config,
         "show_messages",
-        &raw mut state.m_menu.showMessages as *mut ::core::ffi::c_void,
+        &mut state.m_menu.showMessages,
     );
-    M_BindVariable(
+    M_BindVariable_int(
         &mut state.m_config,
         "screenblocks",
-        &raw mut state.m_menu.screenblocks as *mut ::core::ffi::c_void,
+        &mut state.m_menu.screenblocks,
     );
-    M_BindVariable(
+    M_BindVariable_int(
         &mut state.m_config,
         "detaillevel",
-        &raw mut state.m_menu.detailLevel as *mut ::core::ffi::c_void,
+        &mut state.m_menu.detailLevel,
     );
-    M_BindVariable(
+    M_BindVariable_int(
         &mut state.m_config,
         "snd_channels",
-        &raw mut state.s_sound.snd_channels as *mut ::core::ffi::c_void,
+        &mut state.s_sound.snd_channels,
     );
-    M_BindVariable(
+    M_BindVariable_int(
         &mut state.m_config,
         "vanilla_savegame_limit",
-        &raw mut state.g_game.vanilla_savegame_limit as *mut ::core::ffi::c_void,
+        &mut state.g_game.vanilla_savegame_limit,
     );
-    M_BindVariable(
+    M_BindVariable_int(
         &mut state.m_config,
         "vanilla_demo_limit",
-        &raw mut state.g_game.vanilla_demo_limit as *mut ::core::ffi::c_void,
+        &mut state.g_game.vanilla_demo_limit,
     );
-    M_BindVariable(
+    M_BindVariable_int(
         &mut state.m_config,
         "show_endoom",
-        &raw mut state.d_main.show_endoom as *mut ::core::ffi::c_void,
+        &mut state.d_main.show_endoom,
     );
     i = 0 as i32;
     while i < 10 as i32 {
         let name = format!("chatmacro{}", i);
-        M_BindVariable(
+        M_BindVariable_string(
             &mut state.m_config,
             &name,
-            &raw mut state.hu_stuff.chat_macros[i as usize] as *mut &'static str
-                as *mut ::core::ffi::c_void,
+            &mut state.hu_stuff.chat_macros[i as usize],
         );
         i += 1;
     }

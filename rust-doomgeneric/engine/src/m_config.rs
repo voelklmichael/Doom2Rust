@@ -41,14 +41,11 @@ pub enum DefaultType {
     DEFAULT_FLOAT = 3,
     DEFAULT_KEY = 4,
 }
-#[derive(Copy, Clone)]
 pub enum DefaultLocation {
-    Int(*mut i32),
-    Float(*mut f32),
-    Str(*mut *mut ::core::ffi::c_char),
+    Int(&'static mut i32),
+    Float(&'static mut f32),
+    Str(&'static mut Option<&'static str>),
 }
-#[derive(Copy, Clone)]
-#[repr(C)]
 pub struct default_t {
     pub name: &'static str,
     pub location: Option<DefaultLocation>,
@@ -57,8 +54,6 @@ pub struct default_t {
     pub original_translated: i32,
     pub bound: bool,
 }
-#[derive(Clone)]
-#[repr(C)]
 pub struct default_collection_t {
     pub defaults: Vec<default_t>,
     pub numdefaults: i32,
@@ -1664,19 +1659,17 @@ impl MConfigState {
     }
 }
 
-unsafe fn SearchCollection(
-    mut collection: *mut default_collection_t,
+fn SearchCollection<'a>(
+    mut collection: &'a mut default_collection_t,
     name: &str,
-) -> *mut default_t {
-    let mut i: i32 = 0;
-    i = 0 as i32;
-    while i < (*collection).numdefaults {
-        if (*collection).defaults[i as usize].name == name {
-            return &raw mut (*collection).defaults[i as usize] as *mut default_t;
+) -> Option<&'a mut default_t> {
+    for entry in &mut collection.defaults {
+        if entry.name == name {
+            return Some(entry);
         }
-        i += 1;
     }
-    return ::core::ptr::null_mut::<default_t>();
+
+    None
 }
 static scantokey: [i32; 128] = [
     0 as i32,
@@ -1813,36 +1806,34 @@ fn ParseIntParameter(strparm: &str) -> i32 {
     M_StrToInt(strparm, &mut parm);
     return parm;
 }
-unsafe fn SetVariable(mut def: *mut default_t, mut value: *mut ::core::ffi::c_char) {
-    let mut intparm: i32 = 0;
-    match (*def).type_0 {
+fn SetVariable(def: &mut default_t, value: &str) {
+    match def.type_0 {
         DefaultType::DEFAULT_STRING => {
-            if let Some(DefaultLocation::Str(loc)) = (*def).location {
-                *loc = ::std::ffi::CStr::from_ptr(value).to_owned().into_raw();
+            if let Some(DefaultLocation::Str(loc)) = &mut def.location {
+                **loc = Some(Box::leak(value.to_string().into_boxed_str()));
             }
         }
         DefaultType::DEFAULT_INT | DefaultType::DEFAULT_INT_HEX => {
-            if let Some(DefaultLocation::Int(loc)) = (*def).location {
-                *loc = ParseIntParameter(::std::ffi::CStr::from_ptr(value).to_str().unwrap());
+            if let Some(DefaultLocation::Int(loc)) = &mut def.location {
+                **loc = ParseIntParameter(value);
             }
         }
         DefaultType::DEFAULT_KEY => {
-            intparm = ParseIntParameter(::std::ffi::CStr::from_ptr(value).to_str().unwrap());
-            (*def).untranslated = intparm;
+            let mut intparm = ParseIntParameter(value);
+            def.untranslated = intparm;
             if intparm >= 0 as i32 && intparm < 128 as i32 {
                 intparm = scantokey[intparm as usize];
             } else {
                 intparm = 0 as i32;
             }
-            (*def).original_translated = intparm;
-            if let Some(DefaultLocation::Int(loc)) = (*def).location {
-                *loc = intparm;
+            def.original_translated = intparm;
+            if let Some(DefaultLocation::Int(loc)) = &mut def.location {
+                **loc = intparm;
             }
         }
         DefaultType::DEFAULT_FLOAT => {
-            let value_str = ::std::ffi::CStr::from_ptr(value).to_str().unwrap();
-            if let Some(DefaultLocation::Float(loc)) = (*def).location {
-                *loc = value_str.trim().parse::<f64>().unwrap_or(0.0) as f32;
+            if let Some(DefaultLocation::Float(loc)) = &mut def.location {
+                **loc = value.trim().parse::<f64>().unwrap_or(0.0) as f32;
             }
         }
     };
@@ -1898,84 +1889,107 @@ pub fn M_LoadDefaults(state: &mut GameState) {
         );
     }
 }
-unsafe fn GetDefaultForName(state: &mut MConfigState, name: &str) -> *mut default_t {
-    let mut result: *mut default_t = ::core::ptr::null_mut::<default_t>();
-    result = SearchCollection(&raw mut state.doom_defaults, name);
-    if result.is_null() {
-        result = SearchCollection(&raw mut state.extra_defaults, name);
+fn GetDefaultForName<'a>(state: &'a mut MConfigState, name: &str) -> &'a mut default_t {
+    let mut result = SearchCollection(&mut state.doom_defaults, name);
+    if result.is_none() {
+        result = SearchCollection(&mut state.extra_defaults, name);
     }
-    if result.is_null() {
+    if let Some(result) = result {
+        return result;
+    } else {
         I_Error(&format!("Unknown configuration variable: '{}'", name));
     }
-    return result;
 }
-pub unsafe fn M_BindVariable(
+// SAFETY invariant relied on below (all three M_BindVariable_* functions):
+// `location` is always reached through the process's single `Box::leak`'d
+// `GameState`, so it's genuinely `'static` even though the plain `&mut
+// GameState` parameter type used pervasively across this engine can't prove
+// that at any individual call site -- promoting it here, once, centralizes
+// that one unsafe step instead of threading a `&'static mut GameState` bound
+// through every caller up the chain (matches the invariant already relied on
+// for `wad_file_t`/`W_OpenFile` etc.).
+pub fn M_BindVariable_int(state: &mut MConfigState, name: &str, location: &mut i32) {
+    let location: &'static mut i32 = unsafe { &mut *(location as *mut i32) };
+    let variable = GetDefaultForName(state, name);
+    match variable.type_0 {
+        DefaultType::DEFAULT_INT | DefaultType::DEFAULT_INT_HEX | DefaultType::DEFAULT_KEY => {}
+        _ => I_Error(&format!(
+            "M_BindVariable_int: '{}' is not an int/key variable",
+            name
+        )),
+    }
+    variable.location = Some(DefaultLocation::Int(location));
+    variable.bound = true;
+}
+pub fn M_BindVariable_f32(state: &mut MConfigState, name: &str, location: &mut f32) {
+    let location: &'static mut f32 = unsafe { &mut *(location as *mut f32) };
+    let variable = GetDefaultForName(state, name);
+    if variable.type_0 != DefaultType::DEFAULT_FLOAT {
+        I_Error(&format!(
+            "M_BindVariable_f32: '{}' is not a float variable",
+            name
+        ));
+    }
+    variable.location = Some(DefaultLocation::Float(location));
+    variable.bound = true;
+}
+pub fn M_BindVariable_string(
     state: &mut MConfigState,
     name: &str,
-    mut location: *mut ::core::ffi::c_void,
+    location: &mut Option<&'static str>,
 ) {
-    let mut variable: *mut default_t = ::core::ptr::null_mut::<default_t>();
-    variable = GetDefaultForName(state, name);
-    (*variable).location = Some(match (*variable).type_0 {
-        DefaultType::DEFAULT_STRING => {
-            DefaultLocation::Str(location as *mut *mut ::core::ffi::c_char)
-        }
-        DefaultType::DEFAULT_FLOAT => DefaultLocation::Float(location as *mut f32),
-        _ => DefaultLocation::Int(location as *mut i32),
-    });
-    (*variable).bound = true;
+    let location: &'static mut Option<&'static str> =
+        unsafe { &mut *(location as *mut Option<&'static str>) };
+    let variable = GetDefaultForName(state, name);
+    if variable.type_0 != DefaultType::DEFAULT_STRING {
+        I_Error(&format!(
+            "M_BindVariable_string: '{}' is not a string variable",
+            name
+        ));
+    }
+    variable.location = Some(DefaultLocation::Str(location));
+    variable.bound = true;
 }
-pub unsafe fn M_SetVariable(
-    state: &mut MConfigState,
-    name: &str,
-    mut value: *mut ::core::ffi::c_char,
-) -> bool {
-    let mut variable: *mut default_t = ::core::ptr::null_mut::<default_t>();
-    variable = GetDefaultForName(state, name);
-    if variable.is_null() || !(*variable).bound {
+pub fn M_SetVariable(state: &mut MConfigState, name: &str, value: &str) -> bool {
+    let variable = GetDefaultForName(state, name);
+    if !variable.bound {
         return false;
     }
     SetVariable(variable, value);
-    return true;
+    true
 }
-pub unsafe fn M_GetIntVariable(state: &mut MConfigState, name: &str) -> i32 {
-    let mut variable: *mut default_t = ::core::ptr::null_mut::<default_t>();
-    variable = GetDefaultForName(state, name);
-    if variable.is_null()
-        || !(*variable).bound
-        || (*variable).type_0 != DefaultType::DEFAULT_INT
-            && (*variable).type_0 != DefaultType::DEFAULT_INT_HEX
+pub fn M_GetIntVariable(state: &mut MConfigState, name: &str) -> i32 {
+    let variable = GetDefaultForName(state, name);
+    if !variable.bound
+        || (variable.type_0 != DefaultType::DEFAULT_INT
+            && variable.type_0 != DefaultType::DEFAULT_INT_HEX)
     {
         return 0 as i32;
     }
-    return match (*variable).location {
-        Some(DefaultLocation::Int(loc)) => *loc,
+    match &variable.location {
+        Some(DefaultLocation::Int(loc)) => **loc,
         _ => 0 as i32,
-    };
-}
-pub unsafe fn M_GetStrVariable(state: &mut MConfigState, name: &str) -> *const ::core::ffi::c_char {
-    let mut variable: *mut default_t = ::core::ptr::null_mut::<default_t>();
-    variable = GetDefaultForName(state, name);
-    if variable.is_null() || !(*variable).bound || (*variable).type_0 != DefaultType::DEFAULT_STRING
-    {
-        return ::core::ptr::null::<::core::ffi::c_char>();
     }
-    return match (*variable).location {
-        Some(DefaultLocation::Str(loc)) => *loc as *const ::core::ffi::c_char,
-        _ => ::core::ptr::null::<::core::ffi::c_char>(),
-    };
 }
-pub unsafe fn M_GetFloatVariable(state: &mut MConfigState, name: &str) -> f32 {
-    let mut variable: *mut default_t = ::core::ptr::null_mut::<default_t>();
-    variable = GetDefaultForName(state, name);
-    if variable.is_null() || !(*variable).bound || (*variable).type_0 != DefaultType::DEFAULT_FLOAT
-    {
+pub fn M_GetStrVariable(state: &mut MConfigState, name: &str) -> Option<&'static str> {
+    let variable = GetDefaultForName(state, name);
+    if !variable.bound || variable.type_0 != DefaultType::DEFAULT_STRING {
+        return None;
+    }
+    match &variable.location {
+        Some(DefaultLocation::Str(loc)) => **loc,
+        _ => None,
+    }
+}
+pub fn M_GetFloatVariable(state: &mut MConfigState, name: &str) -> f32 {
+    let variable = GetDefaultForName(state, name);
+    if !variable.bound || variable.type_0 != DefaultType::DEFAULT_FLOAT {
         return 0 as i32 as f32;
     }
-    return match (*variable).location {
-        Some(DefaultLocation::Float(loc)) => *loc,
+    match &variable.location {
+        Some(DefaultLocation::Float(loc)) => **loc,
         _ => 0 as i32 as f32,
-    };
+    }
 }
 fn GetDefaultConfigDir() -> String {
     ".".to_string()
