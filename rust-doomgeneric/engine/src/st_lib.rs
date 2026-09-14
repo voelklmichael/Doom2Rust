@@ -1,10 +1,10 @@
 use crate::game_state::GameState;
-use crate::hu_lib::patch_t;
 use crate::i_system::I_Error;
 use crate::st_stuff::ST_Y;
+use crate::v_video::V_CachePatchNum;
 use crate::v_video::V_CopyRect;
 use crate::v_video::V_DrawPatch;
-use crate::w_wad::W_CacheLumpName;
+use crate::w_wad::{W_CacheLumpNum, W_GetNumForName};
 
 #[derive(Copy, Clone)]
 #[repr(C)]
@@ -15,14 +15,14 @@ pub struct st_number_t {
     pub oldnum: i32,
     pub num: *mut i32,
     pub on: *mut bool,
-    pub p: *mut *mut patch_t,
+    pub p: *mut i32,
     pub data: i32,
 }
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct st_percent_t {
     pub n: st_number_t,
-    pub p: *mut patch_t,
+    pub p: i32,
 }
 #[derive(Copy, Clone)]
 #[repr(C)]
@@ -32,7 +32,7 @@ pub struct st_multicon_t {
     pub oldinum: i32,
     pub inum: *mut i32,
     pub on: *mut bool,
-    pub p: *mut *mut patch_t,
+    pub p: *mut i32,
     pub data: i32,
 }
 #[derive(Copy, Clone)]
@@ -43,29 +43,29 @@ pub struct st_binicon_t {
     pub oldval: bool,
     pub val: *mut bool,
     pub on: *mut bool,
-    pub p: *mut patch_t,
+    pub p: i32,
     pub data: i32,
 }
 pub struct StLibState {
-    sttminus: *mut patch_t,
+    sttminus: i32,
 }
 
 impl StLibState {
     pub const fn new() -> Self {
-        StLibState {
-            sttminus: ::core::ptr::null::<patch_t>() as *mut patch_t,
-        }
+        StLibState { sttminus: -1 }
     }
 }
 
 pub unsafe fn STlib_init(state: &mut GameState) {
-    state.st_lib.sttminus = W_CacheLumpName(state, "STTMINUS") as *mut patch_t;
+    let lumpnum = W_GetNumForName(&mut state.w_wad, "STTMINUS");
+    W_CacheLumpNum(state, lumpnum);
+    state.st_lib.sttminus = lumpnum;
 }
 pub unsafe fn STlib_initNum(
     mut n: *mut st_number_t,
     mut x: i32,
     mut y: i32,
-    mut pl: *mut *mut patch_t,
+    mut pl: *mut i32,
     mut num: *mut i32,
     mut on: *mut bool,
     mut width: i32,
@@ -81,8 +81,9 @@ pub unsafe fn STlib_initNum(
 pub unsafe fn STlib_drawNum(state: &mut GameState, mut n: *mut st_number_t) {
     let mut numdigits: i32 = (*n).width;
     let mut num: i32 = *(*n).num;
-    let mut w: i32 = (**(*n).p.offset(0 as i32 as isize)).width as i32;
-    let mut h: i32 = (**(*n).p.offset(0 as i32 as isize)).height as i32;
+    let zero_patch = V_CachePatchNum(state, *(*n).p.offset(0 as i32 as isize));
+    let mut w: i32 = (*zero_patch).width as i32;
+    let mut h: i32 = (*zero_patch).height as i32;
     let mut x: i32 = (*n).x;
     let mut neg: i32 = 0;
     (*n).oldnum = *(*n).num;
@@ -117,7 +118,7 @@ pub unsafe fn STlib_drawNum(state: &mut GameState, mut n: *mut st_number_t) {
         V_DrawPatch(state,
             x - w,
             (*n).y,
-            *(*n).p.offset(0 as i32 as isize),
+            zero_patch,
         );
     }
     while num != 0 && {
@@ -126,18 +127,20 @@ pub unsafe fn STlib_drawNum(state: &mut GameState, mut n: *mut st_number_t) {
         fresh0 != 0
     } {
         x -= w;
+        let digit_patch = V_CachePatchNum(state, *(*n).p.offset((num % 10 as i32) as isize));
         V_DrawPatch(state,
             x,
             (*n).y,
-            *(*n).p.offset((num % 10 as i32) as isize),
+            digit_patch,
         );
         num /= 10 as i32;
     }
     if neg != 0 {
+        let patch = V_CachePatchNum(state, state.st_lib.sttminus);
         V_DrawPatch(state,
             x - 8 as i32,
             (*n).y,
-            state.st_lib.sttminus,
+            patch,
         );
     }
 }
@@ -150,10 +153,10 @@ pub unsafe fn STlib_initPercent(
     mut p: *mut st_percent_t,
     mut x: i32,
     mut y: i32,
-    mut pl: *mut *mut patch_t,
+    mut pl: *mut i32,
     mut num: *mut i32,
     mut on: *mut bool,
-    mut percent: *mut patch_t,
+    mut percent: i32,
 ) {
     STlib_initNum(&raw mut (*p).n, x, y, pl, num, on, 3 as i32);
     (*p).p = percent;
@@ -164,7 +167,8 @@ pub unsafe fn STlib_updatePercent(
     mut refresh: i32,
 ) {
     if refresh != 0 && *(*per).n.on {
-        V_DrawPatch(state, (*per).n.x, (*per).n.y, (*per).p);
+        let patch = V_CachePatchNum(state, (*per).p);
+        V_DrawPatch(state, (*per).n.x, (*per).n.y, patch);
     }
     STlib_updateNum(state, &raw mut (*per).n);
 }
@@ -172,7 +176,7 @@ pub unsafe fn STlib_initMultIcon(
     mut i: *mut st_multicon_t,
     mut x: i32,
     mut y: i32,
-    mut il: *mut *mut patch_t,
+    mut il: *mut i32,
     mut inum: *mut i32,
     mut on: *mut bool,
 ) {
@@ -194,10 +198,11 @@ pub unsafe fn STlib_updateMultIcon(
     let mut y: i32 = 0;
     if *(*mi).on && ((*mi).oldinum != *(*mi).inum || refresh) && *(*mi).inum != -(1 as i32) {
         if (*mi).oldinum != -(1 as i32) {
-            x = (*mi).x - (**(*mi).p.offset((*mi).oldinum as isize)).leftoffset as i32;
-            y = (*mi).y - (**(*mi).p.offset((*mi).oldinum as isize)).topoffset as i32;
-            w = (**(*mi).p.offset((*mi).oldinum as isize)).width as i32;
-            h = (**(*mi).p.offset((*mi).oldinum as isize)).height as i32;
+            let old_patch = V_CachePatchNum(state, *(*mi).p.offset((*mi).oldinum as isize));
+            x = (*mi).x - (*old_patch).leftoffset as i32;
+            y = (*mi).y - (*old_patch).topoffset as i32;
+            w = (*old_patch).width as i32;
+            h = (*old_patch).height as i32;
             if y - ST_Y < 0 as i32 {
                 I_Error("updateMultIcon: y - ST_Y < 0");
             }
@@ -212,10 +217,11 @@ pub unsafe fn STlib_updateMultIcon(
                 y,
             );
         }
+        let new_patch = V_CachePatchNum(state, *(*mi).p.offset(*(*mi).inum as isize));
         V_DrawPatch(state,
             (*mi).x,
             (*mi).y,
-            *(*mi).p.offset(*(*mi).inum as isize),
+            new_patch,
         );
         (*mi).oldinum = *(*mi).inum;
     }
@@ -224,7 +230,7 @@ pub unsafe fn STlib_initBinIcon(
     mut b: *mut st_binicon_t,
     mut x: i32,
     mut y: i32,
-    mut i: *mut patch_t,
+    mut i: i32,
     mut val: *mut bool,
     mut on: *mut bool,
 ) {
@@ -245,15 +251,16 @@ pub unsafe fn STlib_updateBinIcon(
     let mut w: i32 = 0;
     let mut h: i32 = 0;
     if *(*bi).on && ((*bi).oldval != *(*bi).val || refresh) {
-        x = (*bi).x - (*(*bi).p).leftoffset as i32;
-        y = (*bi).y - (*(*bi).p).topoffset as i32;
-        w = (*(*bi).p).width as i32;
-        h = (*(*bi).p).height as i32;
+        let patch = V_CachePatchNum(state, (*bi).p);
+        x = (*bi).x - (*patch).leftoffset as i32;
+        y = (*bi).y - (*patch).topoffset as i32;
+        w = (*patch).width as i32;
+        h = (*patch).height as i32;
         if y - ST_Y < 0 as i32 {
             I_Error("updateBinIcon: y - ST_Y < 0");
         }
         if *(*bi).val {
-            V_DrawPatch(state, (*bi).x, (*bi).y, (*bi).p);
+            V_DrawPatch(state, (*bi).x, (*bi).y, patch);
         } else {
             let st_backing_screen = state.st_stuff.st_backing_screen.as_mut_ptr();
             V_CopyRect(state,
