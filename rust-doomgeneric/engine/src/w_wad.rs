@@ -80,7 +80,7 @@ pub fn W_AddFile(state: &mut GameState, filename: &str) -> Option<&'static wad_f
     // this function, so a plain owned Vec replaces the old
     // Z_Malloc-then-Z_Free-at-the-end pair with no lifetime change.
     let fileinfo: Vec<filelump_t>;
-    let wad_file = match W_OpenFile(state, filename) {
+    let wad_file = match W_OpenFile(filename) {
         Some(wad_file) => wad_file,
         None => {
             println!(" couldn't open {}", filename);
@@ -207,9 +207,7 @@ pub fn W_CacheLumpNum(state: &mut GameState, lumpnum: i32) -> *mut ::core::ffi::
         I_Error(&format!("W_CacheLumpNum: {} >= numlumps", lumpnum));
     }
     let lump = &mut state.w_wad.lumpinfo[lumpnum as usize];
-    let result: *mut byte = if let Some(mapped) = lump.wad_file.mapped {
-        mapped[lump.position as usize..].as_ptr() as *mut byte
-    } else if let Some(cache) = lump.cache.as_mut() {
+    let result: *mut byte = if let Some(cache) = lump.cache.as_mut() {
         cache.as_mut_ptr()
     } else {
         let lumplen = W_LumpLength(&mut state.w_wad, lumpnum as u32);
