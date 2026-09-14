@@ -235,13 +235,13 @@ pub const HUSTR_KEYGREEN: i32 = 'g' as i32;
 pub const HUSTR_KEYINDIGO: i32 = 'i' as i32;
 pub const HUSTR_KEYBROWN: i32 = 'b' as i32;
 pub const HUSTR_KEYRED: i32 = 'r' as i32;
-pub unsafe fn D_ProcessEvents(state: &mut GameState) {
+pub fn D_ProcessEvents(state: &mut GameState) {
     if state.d_main.storedemo {
         return;
     }
     loop {
         let Some( mut ev) = D_PopEvent(&mut state.d_event) else {break;};
-        if M_Responder(state, &mut ev) {
+        if unsafe { M_Responder(state, &mut ev) } {
             continue;
         }
         G_Responder(state, ev);
@@ -473,19 +473,19 @@ pub fn D_GrabMouseCallback(state: &mut GameState) -> bool {
         && !state.g_game.demoplayback
         && !state.d_main.advancedemo;
 }
-pub unsafe fn doomgeneric_Tick(state: &mut GameState) {
-    TryRunTics(state);
+pub fn doomgeneric_Tick(state: &mut GameState) {
+    unsafe { TryRunTics(state) };
     let listener_id = state.g_game.players[state.g_game.consoleplayer as usize].mo;
     let listener_mo = match listener_id {
         Some(id) => state.p_mobj.mobj_get(id).unwrap(),
         None => ::core::ptr::null_mut(),
     };
-    S_UpdateSounds(state, listener_mo);
+    unsafe { S_UpdateSounds(state, listener_mo) };
     if state.i_video.screenvisible {
-        D_Display(state);
+        unsafe { D_Display(state) };
     }
 }
-pub unsafe fn D_DoomLoop(state: &mut GameState) {
+pub fn D_DoomLoop(state: &mut GameState) {
     if state.d_main.bfgedition
         && (state.g_game.demorecording
             || state.g_game.gameaction == GameAction::ga_playdemo
@@ -496,15 +496,15 @@ pub unsafe fn D_DoomLoop(state: &mut GameState) {
         );
     }
     if state.g_game.demorecording {
-        G_BeginRecording(state);
+        unsafe { G_BeginRecording(state) };
     }
     state.d_main.main_loop_started = true;
-    TryRunTics(state);
+    unsafe { TryRunTics(state) };
     I_SetWindowTitle(state, state.doomstat.gamedescription);
     I_SetGrabMouseCallback();
-    I_InitGraphics(state);
+    unsafe { I_InitGraphics(state) };
     V_RestoreBuffer(state);
-    R_ExecuteSetViewSize(state);
+    unsafe { R_ExecuteSetViewSize(state) };
     D_StartGameLoop(state);
     if state.g_game.testcontrols {
         state.d_main.wipegamestate = state.g_game.gamestate;
@@ -858,8 +858,8 @@ fn D_Endoom(state: &mut GameState) {
     }
     std::process::exit(0);
 }
-unsafe fn D_QuitCheckDemoStatus(state: &mut GameState) {
-    G_CheckDemoStatus(state);
+fn D_QuitCheckDemoStatus(state: &mut GameState) {
+    unsafe { G_CheckDemoStatus(state) };
 }
 pub unsafe fn D_DoomMain(state: &mut GameState) {
     let mut p: i32 = 0;

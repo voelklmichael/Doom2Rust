@@ -150,14 +150,14 @@ unsafe fn InitSfxModule(state: &mut ISoundState, mut use_sfx_prefix: bool) {
         i += 1;
     }
 }
-pub unsafe fn I_InitSound(state: &mut GameState, mut use_sfx_prefix: bool) {
+pub fn I_InitSound(state: &mut GameState, mut use_sfx_prefix: bool) {
     let mut nosound: bool = false;
     let mut nosfx: bool = false;
     nosound = M_CheckParm(state, "-nosound") > 0 as i32;
     nosfx = M_CheckParm(state, "-nosfx") > 0 as i32;
     if !nosound && !state.i_video.screensaver_mode {
         if !nosfx {
-            InitSfxModule(&mut state.i_sound, use_sfx_prefix);
+            unsafe { InitSfxModule(&mut state.i_sound, use_sfx_prefix) };
         }
     }
 }

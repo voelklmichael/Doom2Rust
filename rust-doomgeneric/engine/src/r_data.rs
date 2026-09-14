@@ -541,14 +541,14 @@ pub unsafe fn R_InitColormaps(state: &mut GameState) {
     let lumplen = W_LumpLength(&mut state.w_wad, lump as u32) as usize;
     state.r_data.colormaps = ::core::slice::from_raw_parts(lump_ptr, lumplen).to_vec();
 }
-pub unsafe fn R_InitData(state: &mut GameState) {
-    R_InitTextures(state);
+pub fn R_InitData(state: &mut GameState) {
+    unsafe { R_InitTextures(state) };
     print!(".");
     R_InitFlats(state);
     print!(".");
-    R_InitSpriteLumps(state);
+    unsafe { R_InitSpriteLumps(state) };
     print!(".");
-    R_InitColormaps(state);
+    unsafe { R_InitColormaps(state) };
 }
 pub fn R_FlatNumForName(state: &mut GameState, name: &str) -> i32 {
     let mut i: i32 = 0;
@@ -574,9 +574,9 @@ pub unsafe fn R_CheckTextureNumForName(state: &mut RDataState, name: &str) -> i3
     }
     return -(1 as i32);
 }
-pub unsafe fn R_TextureNumForName(state: &mut RDataState, name: &str) -> i32 {
+pub fn R_TextureNumForName(state: &mut RDataState, name: &str) -> i32 {
     let mut i: i32 = 0;
-    i = R_CheckTextureNumForName(state, name);
+    i = unsafe { R_CheckTextureNumForName(state, name) };
     if i == -(1 as i32) {
         I_Error(&format!("R_TextureNumForName: {} not found", name));
     }

@@ -866,7 +866,7 @@ unsafe fn SetMouseButtons(state: &mut GameState, mut buttons_mask: u32) {
         i += 1;
     }
 }
-pub unsafe fn G_Responder(state: &mut GameState, mut ev: event_t) -> bool {
+pub fn G_Responder(state: &mut GameState, mut ev: event_t) -> bool {
     if state.g_game.gamestate == GameScreenState::GS_LEVEL
         && ev.type_0 == EvType::ev_keydown
         && ev.data1 == state.m_controls.key_spy
@@ -893,19 +893,19 @@ pub unsafe fn G_Responder(state: &mut GameState, mut ev: event_t) -> bool {
             || ev.type_0 == EvType::ev_mouse && ev.data1 != 0
             || ev.type_0 == EvType::ev_joystick && ev.data1 != 0
         {
-            M_StartControlPanel(state);
+            unsafe { M_StartControlPanel(state) };
             return true;
         }
         return false;
     }
     if state.g_game.gamestate == GameScreenState::GS_LEVEL {
-        if HU_Responder(state, &ev) {
+        if unsafe { HU_Responder(state, &ev) } {
             return true;
         }
-        if ST_Responder(state, &ev) {
+        if unsafe { ST_Responder(state, &ev) } {
             return true;
         }
-        if AM_Responder(state, &ev) {
+        if unsafe { AM_Responder(state, &ev) } {
             return true;
         }
     }
@@ -938,13 +938,13 @@ pub unsafe fn G_Responder(state: &mut GameState, mut ev: event_t) -> bool {
             return false;
         }
         2 => {
-            SetMouseButtons(state, ev.data1 as u32);
+            unsafe { SetMouseButtons(state, ev.data1 as u32) };
             state.g_game.mousex = ev.data2 * (state.m_menu.mouseSensitivity + 5 as i32) / 10 as i32;
             state.g_game.mousey = ev.data3 * (state.m_menu.mouseSensitivity + 5 as i32) / 10 as i32;
             return true;
         }
         3 => {
-            SetJoyButtons(state, ev.data1 as u32);
+            unsafe { SetJoyButtons(state, ev.data1 as u32) };
             state.g_game.joyxmove = ev.data2;
             state.g_game.joyymove = ev.data3;
             state.g_game.joystrafemove = ev.data4;
@@ -1114,8 +1114,8 @@ pub unsafe fn G_Ticker(state: &mut GameState) {
         _ => {}
     };
 }
-pub unsafe fn G_InitPlayer(state: &mut GGameState, mut player: i32) {
-    G_PlayerReborn(state, player);
+pub fn G_InitPlayer(state: &mut GGameState, mut player: i32) {
+    unsafe { G_PlayerReborn(state, player) };
 }
 pub unsafe fn G_PlayerFinishLevel(state: &mut GameState, mut player: i32) {
     let mut p: *mut player_t = ::core::ptr::null_mut::<player_t>();
@@ -1516,7 +1516,7 @@ pub unsafe fn G_DoCompleted(state: &mut GameState) {
     StatCopy(state, wminfo);
     WI_Start(state, wminfo);
 }
-pub unsafe fn G_WorldDone(state: &mut GameState) {
+pub fn G_WorldDone(state: &mut GameState) {
     state.g_game.gameaction = GameAction::ga_worlddone;
     if state.g_game.secretexit {
         state.g_game.players[state.g_game.consoleplayer as usize].didsecret = true;
@@ -1540,16 +1540,16 @@ pub unsafe fn G_WorldDone(state: &mut GameState) {
         }
         match current_block_3 {
             9744923308842414524 => {
-                F_StartFinale(state);
+                unsafe { F_StartFinale(state) };
             }
             _ => {}
         }
     }
 }
-pub unsafe fn G_DoWorldDone(state: &mut GameState) {
+pub fn G_DoWorldDone(state: &mut GameState) {
     state.g_game.gamestate = GameScreenState::GS_LEVEL;
     state.g_game.gamemap = state.g_game.wminfo.next + 1 as i32;
-    G_DoLoadLevel(state);
+    unsafe { G_DoLoadLevel(state) };
     state.g_game.gameaction = GameAction::ga_nothing;
     state.g_game.viewactive = true;
 }
@@ -1557,7 +1557,7 @@ pub fn G_LoadGame(state: &mut GameState, name: &str) {
     state.g_game.savename = name.to_string();
     state.g_game.gameaction = GameAction::ga_loadgame;
 }
-pub unsafe fn G_DoLoadGame(state: &mut GameState) {
+pub fn G_DoLoadGame(state: &mut GameState) {
     let mut savedleveltime: i32 = 0;
     state.g_game.gameaction = GameAction::ga_nothing;
     state.p_saveg.save_stream = std::fs::File::open(&state.g_game.savename).ok();
@@ -1577,25 +1577,25 @@ pub unsafe fn G_DoLoadGame(state: &mut GameState) {
     );
     G_InitNew(state, skill, episode, map);
     state.p_tick.leveltime = savedleveltime;
-    P_UnArchivePlayers(state);
-    P_UnArchiveWorld(state);
-    P_UnArchiveThinkers(state);
-    P_UnArchiveSpecials(state);
+    unsafe { P_UnArchivePlayers(state) };
+    unsafe { P_UnArchiveWorld(state) };
+    unsafe { P_UnArchiveThinkers(state) };
+    unsafe { P_UnArchiveSpecials(state) };
     if !P_ReadSaveGameEOF(state) {
         I_Error("Bad savegame");
     }
     state.p_saveg.save_stream = None;
     if state.r_main.setsizeneeded {
-        R_ExecuteSetViewSize(state);
+        unsafe { R_ExecuteSetViewSize(state) };
     }
-    R_FillBackScreen(state);
+    unsafe { R_FillBackScreen(state) };
 }
 pub fn G_SaveGame(state: &mut GameState, mut slot: i32, description: &str) {
     state.g_game.savegameslot = slot;
     state.g_game.savedescription = description.to_string();
     state.g_game.sendsave = true;
 }
-pub unsafe fn G_DoSaveGame(state: &mut GameState) {
+pub fn G_DoSaveGame(state: &mut GameState) {
     let mut recovery_savegame_file: Option<String> = None;
     let temp_savegame_file = P_TempSaveGameFile(state);
     let savegame_file = P_SaveGameFile(state, state.g_game.savegameslot);
@@ -1614,10 +1614,10 @@ pub unsafe fn G_DoSaveGame(state: &mut GameState) {
     state.p_saveg.savegame_error = false;
     let savedescription = state.g_game.savedescription.clone();
     P_WriteSaveGameHeader(state, &savedescription);
-    P_ArchivePlayers(state);
-    P_ArchiveWorld(state);
-    P_ArchiveThinkers(state);
-    P_ArchiveSpecials(state);
+    unsafe { P_ArchivePlayers(state) };
+    unsafe { P_ArchiveWorld(state) };
+    unsafe { P_ArchiveThinkers(state) };
+    unsafe { P_ArchiveSpecials(state) };
     P_WriteSaveGameEOF(state);
     if state.g_game.vanilla_savegame_limit != 0
         && state
@@ -1644,7 +1644,7 @@ pub unsafe fn G_DoSaveGame(state: &mut GameState) {
     state.g_game.savedescription.clear();
     state.g_game.players[state.g_game.consoleplayer as usize].message =
         Some("game saved.".to_string());
-    R_FillBackScreen(state);
+    unsafe { R_FillBackScreen(state) };
 }
 pub fn G_DeferedInitNew(
     state: &mut GameState,
@@ -1657,7 +1657,7 @@ pub fn G_DeferedInitNew(
     state.g_game.d_map = map;
     state.g_game.gameaction = GameAction::ga_newgame;
 }
-pub unsafe fn G_DoNewGame(state: &mut GameState) {
+pub fn G_DoNewGame(state: &mut GameState) {
     state.g_game.demoplayback = false;
     state.g_game.netdemo = false;
     state.g_game.netgame = false;
@@ -1677,7 +1677,7 @@ pub unsafe fn G_DoNewGame(state: &mut GameState) {
     G_InitNew(state, d_skill, d_episode, d_map);
     state.g_game.gameaction = GameAction::ga_nothing;
 }
-pub unsafe fn G_InitNew(
+pub fn G_InitNew(
     state: &mut GameState,
     mut skill: SkillType,
     mut episode: i32,
@@ -1780,7 +1780,7 @@ pub unsafe fn G_InitNew(
         }
     }
     state.r_sky.skytexture = R_TextureNumForName(&mut state.r_data, skytexturename);
-    G_DoLoadLevel(state);
+    unsafe { G_DoLoadLevel(state) };
 }
 pub const DEMOMARKER: i32 = 0x80;
 pub unsafe fn G_ReadDemoTiccmd(state: &mut GameState, mut cmd: *mut ticcmd_t) {

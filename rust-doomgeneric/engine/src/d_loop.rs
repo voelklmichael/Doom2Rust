@@ -200,7 +200,7 @@ unsafe fn BuildNewTic(state: &mut GameState) -> bool {
     state.d_loop.maketic += 1;
     return true;
 }
-pub unsafe fn NetUpdate(state: &mut GameState) {
+pub fn NetUpdate(state: &mut GameState) {
     let mut nowtime: i32 = 0;
     let mut newtics: i32 = 0;
     let mut i: i32 = 0;
@@ -219,7 +219,7 @@ pub unsafe fn NetUpdate(state: &mut GameState) {
     }
     i = 0 as i32;
     while i < newtics {
-        if !BuildNewTic(state) {
+        if !unsafe { BuildNewTic(state) } {
             break;
         }
         i += 1;

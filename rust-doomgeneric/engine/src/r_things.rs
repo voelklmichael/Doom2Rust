@@ -293,14 +293,14 @@ pub unsafe fn R_InitSpriteDefs(state: &mut GameState, namelist: &[&'static str])
     }
 }
 pub static newvissprite: i32 = 0;
-pub unsafe fn R_InitSprites(state: &mut GameState, namelist: &[&'static str]) {
+pub fn R_InitSprites(state: &mut GameState, namelist: &[&'static str]) {
     let mut i: i32 = 0;
     i = 0 as i32;
     while i < SCREENWIDTH {
         state.r_things.negonearray[i as usize] = -(1 as i32) as i16;
         i += 1;
     }
-    R_InitSpriteDefs(state, namelist);
+    unsafe { R_InitSpriteDefs(state, namelist) };
 }
 pub unsafe fn R_ClearSprites(state: &mut GameState) {
     state.r_things.vissprite_p = &raw mut state.r_things.vissprites as *mut vissprite_t;

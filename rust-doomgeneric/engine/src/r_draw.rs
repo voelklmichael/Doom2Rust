@@ -630,7 +630,7 @@ pub unsafe fn R_VideoErase(state: &mut GameState, mut ofs: u32, mut count: i32) 
         );
     }
 }
-pub unsafe fn R_DrawViewBorder(state: &mut GameState) {
+pub fn R_DrawViewBorder(state: &mut GameState) {
     let mut top: i32 = 0;
     let mut side: i32 = 0;
     let mut ofs: i32 = 0;
@@ -640,21 +640,21 @@ pub unsafe fn R_DrawViewBorder(state: &mut GameState) {
     }
     top = (SCREENHEIGHT - SBARHEIGHT - state.r_draw.viewheight) / 2 as i32;
     side = (SCREENWIDTH - state.r_draw.scaledviewwidth) / 2 as i32;
-    R_VideoErase(state, 0 as u32, top * SCREENWIDTH + side);
+    unsafe { R_VideoErase(state, 0 as u32, top * SCREENWIDTH + side) };
     ofs = (state.r_draw.viewheight + top) * SCREENWIDTH - side;
-    R_VideoErase(state, ofs as u32, top * SCREENWIDTH + side);
+    unsafe { R_VideoErase(state, ofs as u32, top * SCREENWIDTH + side) };
     ofs = top * SCREENWIDTH + SCREENWIDTH - side;
     side <<= 1 as i32;
     i = 1 as i32;
     while i < state.r_draw.viewheight {
-        R_VideoErase(state, ofs as u32, side);
+        unsafe { R_VideoErase(state, ofs as u32, side) };
         ofs += SCREENWIDTH;
         i += 1;
     }
-    V_MarkRect(state,
+    unsafe { V_MarkRect(state,
         0 as i32,
         0 as i32,
         SCREENWIDTH,
         SCREENHEIGHT - SBARHEIGHT,
-    );
+    ) };
 }

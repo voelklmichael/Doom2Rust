@@ -358,13 +358,13 @@ pub unsafe fn F_StartFinale(state: &mut GameState) {
     state.f_finale.finalestage = FinaleStage::F_STAGE_TEXT;
     state.f_finale.finalecount = 0 as u32;
 }
-pub unsafe fn F_Responder(state: &mut GameState, mut event: &event_t) -> bool {
+pub fn F_Responder(state: &mut GameState, mut event: &event_t) -> bool {
     if state.f_finale.finalestage == FinaleStage::F_STAGE_CAST {
-        return F_CastResponder(state, event);
+        return unsafe { F_CastResponder(state, event) };
     }
     return false;
 }
-pub unsafe fn F_Ticker(state: &mut GameState) {
+pub fn F_Ticker(state: &mut GameState) {
     let mut i: size_t = 0;
     if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32
         && state.f_finale.finalecount > 50 as u32
@@ -378,7 +378,7 @@ pub unsafe fn F_Ticker(state: &mut GameState) {
         }
         if i < MAXPLAYERS as size_t {
             if state.g_game.gamemap == 30 as i32 {
-                F_StartCast(state);
+                unsafe { F_StartCast(state) };
             } else {
                 state.g_game.gameaction = GameAction::ga_worlddone;
             }
@@ -386,7 +386,7 @@ pub unsafe fn F_Ticker(state: &mut GameState) {
     }
     state.f_finale.finalecount = state.f_finale.finalecount.wrapping_add(1);
     if state.f_finale.finalestage == FinaleStage::F_STAGE_CAST {
-        F_CastTicker(state);
+        unsafe { F_CastTicker(state) };
         return;
     }
     if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 {
@@ -979,16 +979,16 @@ unsafe fn F_ArtScreenDrawer(state: &mut GameState) {
         V_DrawPatch(state, 0 as i32, 0 as i32, __wcache1026_1);
     };
 }
-pub unsafe fn F_Drawer(state: &mut GameState) {
+pub fn F_Drawer(state: &mut GameState) {
     match state.f_finale.finalestage {
         FinaleStage::F_STAGE_CAST => {
-            F_CastDrawer(state);
+            unsafe { F_CastDrawer(state) };
         }
         FinaleStage::F_STAGE_TEXT => {
-            F_TextWrite(state);
+            unsafe { F_TextWrite(state) };
         }
         FinaleStage::F_STAGE_ARTSCREEN => {
-            F_ArtScreenDrawer(state);
+            unsafe { F_ArtScreenDrawer(state) };
         }
     };
 }

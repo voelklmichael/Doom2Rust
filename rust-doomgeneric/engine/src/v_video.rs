@@ -251,13 +251,13 @@ pub unsafe fn V_DrawPatchFlipped(
         desttop = desttop.offset(1);
     }
 }
-pub unsafe fn V_DrawPatchDirect(
+pub fn V_DrawPatchDirect(
     state: &mut GameState,
     mut x: i32,
     mut y: i32,
     mut patch: *mut patch_t,
 ) {
-    V_DrawPatch(state, x, y, patch);
+    unsafe { V_DrawPatch(state, x, y, patch) };
 }
 pub unsafe fn V_DrawTLPatch(
     state: &mut VVideoState,
@@ -610,7 +610,7 @@ pub unsafe fn V_DrawVertLine(
         y1 += 1;
     }
 }
-pub unsafe fn V_DrawBox(
+pub fn V_DrawBox(
     state: &mut IVideoState,
     mut x: i32,
     mut y: i32,
@@ -618,10 +618,10 @@ pub unsafe fn V_DrawBox(
     mut h: i32,
     mut c: i32,
 ) {
-    V_DrawHorizLine(state, x, y, w, c);
-    V_DrawHorizLine(state, x, y + h - 1 as i32, w, c);
-    V_DrawVertLine(state, x, y, h, c);
-    V_DrawVertLine(state, x + w - 1 as i32, y, h, c);
+    unsafe { V_DrawHorizLine(state, x, y, w, c) };
+    unsafe { V_DrawHorizLine(state, x, y + h - 1 as i32, w, c) };
+    unsafe { V_DrawVertLine(state, x, y, h, c) };
+    unsafe { V_DrawVertLine(state, x + w - 1 as i32, y, h, c) };
 }
 pub unsafe fn V_DrawRawScreen(state: &mut VVideoState, mut raw: *mut byte) {
     memcpy(
@@ -720,7 +720,7 @@ pub unsafe fn V_ScreenShot(state: &mut GameState) {
 }
 pub const MOUSE_SPEED_BOX_WIDTH: i32 = 120;
 pub const MOUSE_SPEED_BOX_HEIGHT: i32 = 9;
-pub unsafe fn V_DrawMouseSpeedBox(state: &mut IVideoState, mut speed: i32) {
+pub fn V_DrawMouseSpeedBox(state: &mut IVideoState, mut speed: i32) {
     let mut bgcolor: i32 = 0;
     let mut bordercolor: i32 = 0;
     let mut red: i32 = 0;
@@ -743,14 +743,14 @@ pub unsafe fn V_DrawMouseSpeedBox(state: &mut IVideoState, mut speed: i32) {
     }
     box_x = SCREENWIDTH - MOUSE_SPEED_BOX_WIDTH - 10 as i32;
     box_y = 15 as i32;
-    V_DrawFilledBox(
+    unsafe { V_DrawFilledBox(
         state,
         box_x,
         box_y,
         MOUSE_SPEED_BOX_WIDTH,
         MOUSE_SPEED_BOX_HEIGHT,
         bgcolor,
-    );
+    ) };
     V_DrawBox(
         state,
         box_x,
@@ -771,42 +771,42 @@ pub unsafe fn V_DrawMouseSpeedBox(state: &mut IVideoState, mut speed: i32) {
     if linelen > MOUSE_SPEED_BOX_WIDTH - 1 as i32 {
         linelen = MOUSE_SPEED_BOX_WIDTH - 1 as i32;
     }
-    V_DrawHorizLine(
+    unsafe { V_DrawHorizLine(
         state,
         box_x + 1 as i32,
         box_y + 4 as i32,
         MOUSE_SPEED_BOX_WIDTH - 2 as i32,
         black,
-    );
+    ) };
     if linelen < redline_x {
-        V_DrawHorizLine(
+        unsafe { V_DrawHorizLine(
             state,
             box_x + 1 as i32,
             box_y + MOUSE_SPEED_BOX_HEIGHT / 2 as i32,
             linelen,
             white,
-        );
+        ) };
     } else {
-        V_DrawHorizLine(
+        unsafe { V_DrawHorizLine(
             state,
             box_x + 1 as i32,
             box_y + MOUSE_SPEED_BOX_HEIGHT / 2 as i32,
             redline_x,
             white,
-        );
-        V_DrawHorizLine(
+        ) };
+        unsafe { V_DrawHorizLine(
             state,
             box_x + redline_x,
             box_y + MOUSE_SPEED_BOX_HEIGHT / 2 as i32,
             linelen - redline_x,
             yellow,
-        );
+        ) };
     }
-    V_DrawVertLine(
+    unsafe { V_DrawVertLine(
         state,
         box_x + redline_x,
         box_y + 1 as i32,
         MOUSE_SPEED_BOX_HEIGHT - 2 as i32,
         red,
-    );
+    ) };
 }

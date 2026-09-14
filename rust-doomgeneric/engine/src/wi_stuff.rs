@@ -854,8 +854,8 @@ static lnodes: [[point_t; 9]; 4] = [
     [point_t { x: 0, y: 0 }; 9],
 ];
 pub const SHOWNEXTLOCDELAY: i32 = 4;
-pub unsafe fn WI_slamBackground(state: &mut GameState) {
-    V_DrawPatch(state, 0 as i32, 0 as i32, state.wi_stuff.background);
+pub fn WI_slamBackground(state: &mut GameState) {
+    unsafe { V_DrawPatch(state, 0 as i32, 0 as i32, state.wi_stuff.background) };
 }
 pub fn WI_Responder() -> bool {
     return false;
@@ -1091,12 +1091,12 @@ pub unsafe fn WI_drawNum(
     }
     return x;
 }
-pub unsafe fn WI_drawPercent(state: &mut GameState, mut x: i32, mut y: i32, mut p_0: i32) {
+pub fn WI_drawPercent(state: &mut GameState, mut x: i32, mut y: i32, mut p_0: i32) {
     if p_0 < 0 as i32 {
         return;
     }
-    V_DrawPatch(state, x, y, state.wi_stuff.percent);
-    WI_drawNum(state, x, y, p_0, -(1 as i32));
+    unsafe { V_DrawPatch(state, x, y, state.wi_stuff.percent) };
+    unsafe { WI_drawNum(state, x, y, p_0, -(1 as i32)) };
 }
 pub unsafe fn WI_drawTime(state: &mut GameState, mut x: i32, mut y: i32, mut t: i32) {
     let mut div: i32 = 0;
@@ -1140,21 +1140,21 @@ pub fn WI_initNoState(state: &mut GameState) {
     state.wi_stuff.acceleratestage = 0 as i32;
     state.wi_stuff.cnt = 10 as i32;
 }
-pub unsafe fn WI_updateNoState(state: &mut GameState) {
-    WI_updateAnimatedBack(state);
+pub fn WI_updateNoState(state: &mut GameState) {
+    unsafe { WI_updateAnimatedBack(state) };
     state.wi_stuff.cnt -= 1;
     if state.wi_stuff.cnt == 0 {
         G_WorldDone(state);
     }
 }
-pub unsafe fn WI_initShowNextLoc(state: &mut GameState) {
+pub fn WI_initShowNextLoc(state: &mut GameState) {
     state.wi_stuff.state = StateEnum::ShowNextLoc;
     state.wi_stuff.acceleratestage = 0 as i32;
     state.wi_stuff.cnt = SHOWNEXTLOCDELAY * TICRATE;
-    WI_initAnimatedBack(state);
+    unsafe { WI_initAnimatedBack(state) };
 }
-pub unsafe fn WI_updateShowNextLoc(state: &mut GameState) {
-    WI_updateAnimatedBack(state);
+pub fn WI_updateShowNextLoc(state: &mut GameState) {
+    unsafe { WI_updateAnimatedBack(state) };
     state.wi_stuff.cnt -= 1;
     if state.wi_stuff.cnt == 0 || state.wi_stuff.acceleratestage != 0 {
         WI_initNoState(state);
@@ -1199,9 +1199,9 @@ pub unsafe fn WI_drawShowNextLoc(state: &mut GameState) {
         WI_drawEL(state);
     }
 }
-pub unsafe fn WI_drawNoState(state: &mut GameState) {
+pub fn WI_drawNoState(state: &mut GameState) {
     state.wi_stuff.snl_pointeron = true;
-    WI_drawShowNextLoc(state);
+    unsafe { WI_drawShowNextLoc(state) };
 }
 pub unsafe fn WI_fragSum(state: &mut GameState, mut playernum: i32) -> i32 {
     let mut i: i32 = 0;
@@ -1216,7 +1216,7 @@ pub unsafe fn WI_fragSum(state: &mut GameState, mut playernum: i32) -> i32 {
     frags_0 -= (*state.wi_stuff.plrs.offset(playernum as isize)).frags[playernum as usize];
     return frags_0;
 }
-pub unsafe fn WI_initDeathmatchStats(state: &mut GameState) {
+pub fn WI_initDeathmatchStats(state: &mut GameState) {
     let mut i: i32 = 0;
     let mut j: i32 = 0;
     state.wi_stuff.state = StateEnum::StatCount;
@@ -1237,7 +1237,7 @@ pub unsafe fn WI_initDeathmatchStats(state: &mut GameState) {
         }
         i += 1;
     }
-    WI_initAnimatedBack(state);
+    unsafe { WI_initAnimatedBack(state) };
 }
 pub unsafe fn WI_updateDeathmatchStats(state: &mut GameState) {
     let mut i: i32 = 0;
@@ -1399,7 +1399,7 @@ pub unsafe fn WI_drawDeathmatchStats(state: &mut GameState) {
         i += 1;
     }
 }
-pub unsafe fn WI_initNetgameStats(state: &mut GameState) {
+pub fn WI_initNetgameStats(state: &mut GameState) {
     let mut i: i32 = 0;
     state.wi_stuff.state = StateEnum::StatCount;
     state.wi_stuff.acceleratestage = 0 as i32;
@@ -1412,13 +1412,13 @@ pub unsafe fn WI_initNetgameStats(state: &mut GameState) {
             state.wi_stuff.cnt_secret[i as usize] = state.wi_stuff.cnt_frags[i as usize];
             state.wi_stuff.cnt_items[i as usize] = state.wi_stuff.cnt_secret[i as usize];
             state.wi_stuff.cnt_kills[i as usize] = state.wi_stuff.cnt_items[i as usize];
-            let fragsum = WI_fragSum(state, i);
+            let fragsum = unsafe { WI_fragSum(state, i) };
             state.wi_stuff.dofrags += fragsum;
         }
         i += 1;
     }
     state.wi_stuff.dofrags = (state.wi_stuff.dofrags != 0) as i32;
-    WI_initAnimatedBack(state);
+    unsafe { WI_initAnimatedBack(state) };
 }
 pub unsafe fn WI_updateNetgameStats(state: &mut GameState) {
     let mut i: i32 = 0;
@@ -1655,7 +1655,7 @@ pub unsafe fn WI_drawNetgameStats(state: &mut GameState) {
         i += 1;
     }
 }
-pub unsafe fn WI_initStats(state: &mut GameState) {
+pub fn WI_initStats(state: &mut GameState) {
     state.wi_stuff.state = StateEnum::StatCount;
     state.wi_stuff.acceleratestage = 0 as i32;
     state.wi_stuff.sp_state = 1 as i32;
@@ -1665,7 +1665,7 @@ pub unsafe fn WI_initStats(state: &mut GameState) {
     state.wi_stuff.cnt_par = -(1 as i32);
     state.wi_stuff.cnt_time = state.wi_stuff.cnt_par;
     state.wi_stuff.cnt_pause = TICRATE;
-    WI_initAnimatedBack(state);
+    unsafe { WI_initAnimatedBack(state) };
 }
 pub unsafe fn WI_updateStats(state: &mut GameState) {
     WI_updateAnimatedBack(state);
@@ -1836,24 +1836,24 @@ pub unsafe fn WI_checkForAccelerate(state: &mut GameState) {
         player = player.offset(1);
     }
 }
-pub unsafe fn WI_Ticker(state: &mut GameState) {
+pub fn WI_Ticker(state: &mut GameState) {
     state.wi_stuff.bcnt += 1;
     if state.wi_stuff.bcnt == 1 as i32 {
         if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 {
-            S_ChangeMusic(state, mus_dm2int as i32, true_0);
+            unsafe { S_ChangeMusic(state, mus_dm2int as i32, true_0) };
         } else {
-            S_ChangeMusic(state, mus_inter as i32, true_0);
+            unsafe { S_ChangeMusic(state, mus_inter as i32, true_0) };
         }
     }
-    WI_checkForAccelerate(state);
+    unsafe { WI_checkForAccelerate(state) };
     match state.wi_stuff.state {
         StateEnum::StatCount => {
             if state.g_game.deathmatch != 0 {
-                WI_updateDeathmatchStats(state);
+                unsafe { WI_updateDeathmatchStats(state) };
             } else if state.g_game.netgame {
-                WI_updateNetgameStats(state);
+                unsafe { WI_updateNetgameStats(state) };
             } else {
-                WI_updateStats(state);
+                unsafe { WI_updateStats(state) };
             }
         }
         StateEnum::ShowNextLoc => {
@@ -2019,19 +2019,19 @@ fn WI_unloadCallback(state: &mut GameState, name: &str, variable: *mut *mut patc
         *variable = ::core::ptr::null_mut::<patch_t>();
     }
 }
-pub unsafe fn WI_Drawer(state: &mut GameState) {
+pub fn WI_Drawer(state: &mut GameState) {
     match state.wi_stuff.state {
         StateEnum::StatCount => {
             if state.g_game.deathmatch != 0 {
-                WI_drawDeathmatchStats(state);
+                unsafe { WI_drawDeathmatchStats(state) };
             } else if state.g_game.netgame {
-                WI_drawNetgameStats(state);
+                unsafe { WI_drawNetgameStats(state) };
             } else {
-                WI_drawStats(state);
+                unsafe { WI_drawStats(state) };
             }
         }
         StateEnum::ShowNextLoc => {
-            WI_drawShowNextLoc(state);
+            unsafe { WI_drawShowNextLoc(state) };
         }
         StateEnum::NoState => {
             WI_drawNoState(state);
@@ -2061,9 +2061,9 @@ pub unsafe fn WI_initVariables(state: &mut GameState, mut wbstartstruct: *mut wb
         }
     }
 }
-pub unsafe fn WI_Start(state: &mut GameState, mut wbstartstruct: *mut wbstartstruct_t) {
-    WI_initVariables(state, wbstartstruct);
-    WI_loadData(state);
+pub fn WI_Start(state: &mut GameState, mut wbstartstruct: *mut wbstartstruct_t) {
+    unsafe { WI_initVariables(state, wbstartstruct) };
+    unsafe { WI_loadData(state) };
     if state.g_game.deathmatch != 0 {
         WI_initDeathmatchStats(state);
     } else if state.g_game.netgame {

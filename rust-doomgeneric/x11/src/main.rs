@@ -1090,10 +1090,8 @@ impl DoomPlatform for X11Platform {
 
 pub fn main() {
     let state = init_game_state(Box::new(X11Platform::new()));
-    unsafe {
-        ::rust_doomgeneric::doomgeneric::doomgeneric_Create(state, ::std::env::args().collect());
-        loop {
-            doomgeneric_Tick(state);
-        }
+    ::rust_doomgeneric::doomgeneric::doomgeneric_Create(state, ::std::env::args().collect());
+    loop {
+        doomgeneric_Tick(state);
     }
 }

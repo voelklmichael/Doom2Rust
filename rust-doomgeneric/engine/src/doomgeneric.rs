@@ -5,7 +5,7 @@ use crate::m_argv::M_FindResponseFile;
 
 pub const DOOMGENERIC_RESX: i32 = 640;
 pub const DOOMGENERIC_RESY: i32 = 400;
-pub unsafe fn doomgeneric_Create(state: &mut GameState, args: Vec<String>) {
+pub fn doomgeneric_Create(state: &mut GameState, args: Vec<String>) {
     state.m_argv.myargv = args
         .into_iter()
         .map(|arg| ::std::ffi::CString::new(arg).expect("argument contains a nul byte"))
@@ -17,5 +17,5 @@ pub unsafe fn doomgeneric_Create(state: &mut GameState, args: Vec<String>) {
         DOOMGENERIC_RESX,
         DOOMGENERIC_RESY,
     );
-    D_DoomMain(state);
+    unsafe { D_DoomMain(state) };
 }

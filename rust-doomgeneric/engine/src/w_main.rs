@@ -3,7 +3,7 @@ use crate::game_state::GameState;
 use crate::m_argv::M_CheckParmWithArgs;
 use crate::w_wad::W_AddFile;
 
-pub unsafe fn W_ParseCommandLine(state: &mut GameState) -> bool {
+pub fn W_ParseCommandLine(state: &mut GameState) -> bool {
     let mut modifiedgame: bool = false;
     let mut p: i32 = 0;
     p = M_CheckParmWithArgs(state, "-file", 1 as i32);
@@ -21,7 +21,7 @@ pub unsafe fn W_ParseCommandLine(state: &mut GameState) -> bool {
                 state.m_argv.myargv[p as usize].to_str().unwrap(),
             );
             println!(" adding {}", filename);
-            W_AddFile(state, &filename);
+            unsafe { W_AddFile(state, &filename) };
         }
     }
     return modifiedgame;
