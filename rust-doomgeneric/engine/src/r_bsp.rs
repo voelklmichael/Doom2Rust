@@ -2,7 +2,7 @@ use crate::game_state::GameState;
 use crate::i_system::I_Error;
 use crate::m_bbox::{BOXBOTTOM, BOXLEFT, BOXRIGHT, BOXTOP};
 use crate::m_fixed::fixed_t;
-use crate::p_mobj::subsector_t;
+use crate::p_mobj::sector_t;
 use crate::p_setup::LineId;
 use crate::p_setup::SectorId;
 use crate::p_setup::SegId;
@@ -346,7 +346,6 @@ pub unsafe fn R_CheckBBox(state: &mut GameState, mut bspcoord: *mut fixed_t) -> 
 pub unsafe fn R_Subsector(state: &mut GameState, mut num: i32) {
     let mut count: i32 = 0;
     let mut line: SegId;
-    let mut sub: *mut subsector_t = ::core::ptr::null_mut::<subsector_t>();
     if num >= state.p_setup.numsubsectors {
         I_Error(&format!(
             "R_Subsector: ss {} with numss = {}",
@@ -354,11 +353,11 @@ pub unsafe fn R_Subsector(state: &mut GameState, mut num: i32) {
         ));
     }
     state.r_main.sscount += 1;
-    sub = state.p_setup.subsector_mut(SubsectorId(num as u32));
-    state.r_bsp.frontsector = Some((*sub).sector);
-    count = (*sub).numlines as i32;
-    line = SegId((*sub).firstline as u32);
-    let frontsector = state.p_setup.sector_mut(state.r_bsp.frontsector.unwrap());
+    let sub = state.p_setup.subsector(SubsectorId(num as u32));
+    state.r_bsp.frontsector = Some(sub.sector);
+    count = sub.numlines as i32;
+    line = SegId(sub.firstline as u32);
+    let frontsector: *mut sector_t = state.p_setup.sector_mut(state.r_bsp.frontsector.unwrap());
     if (*frontsector).floorheight < state.r_main.viewz {
         let (floorheight, floorpic, lightlevel) = (
             (*frontsector).floorheight,

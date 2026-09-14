@@ -69,7 +69,7 @@ impl PPlatsState {
 
 pub unsafe fn T_PlatRaise(state: &mut GameState, mut plat: *mut plat_t) {
     let mut res: ResultE = ResultE::ok;
-    let sec = state.p_setup.sector_mut((*plat).sector);
+    let sec: *mut sector_t = state.p_setup.sector_mut((*plat).sector);
     match (*plat).status {
         PlatE::up => {
             res = T_MovePlane(

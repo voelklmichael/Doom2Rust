@@ -171,20 +171,20 @@ impl PSetupState {
         }
     }
 
-    pub fn sector_mut(&mut self, id: SectorId) -> *mut sector_t {
-        &mut self.sectors[id.0 as usize] as *mut sector_t
+    pub fn sector_mut(&mut self, id: SectorId) -> &mut sector_t {
+        &mut self.sectors[id.0 as usize]
     }
-    pub fn side_mut(&mut self, id: SideId) -> *mut side_t {
-        &mut self.sides[id.0 as usize] as *mut side_t
+    pub fn side_mut(&mut self, id: SideId) -> &mut side_t {
+        &mut self.sides[id.0 as usize]
     }
-    pub fn subsector_mut(&mut self, id: SubsectorId) -> *mut subsector_t {
-        &mut self.subsectors[id.0 as usize] as *mut subsector_t
+    pub fn subsector(&self, id: SubsectorId) -> subsector_t {
+        self.subsectors[id.0 as usize]
     }
-    pub fn vertex_mut(&mut self, id: VertexId) -> *mut vertex_t {
-        &mut self.vertexes[id.0 as usize] as *mut vertex_t
+    pub fn vertex(&self, id: VertexId) -> vertex_t {
+        self.vertexes[id.0 as usize]
     }
-    pub fn line_mut(&mut self, id: LineId) -> *mut line_t {
-        &mut self.lines[id.0 as usize] as *mut line_t
+    pub fn line_mut(&mut self, id: LineId) -> &mut line_t {
+        &mut self.lines[id.0 as usize]
     }
     pub fn line(&self, id: LineId) -> line_t {
         self.lines[id.0 as usize]
@@ -208,8 +208,8 @@ impl PSetupState {
         self.lines[id.0 as usize].tag = tag;
         id
     }
-    pub fn seg_mut(&mut self, id: SegId) -> *mut seg_t {
-        &mut self.segs[id.0 as usize] as *mut seg_t
+    pub fn seg_mut(&mut self, id: SegId) -> &mut seg_t {
+        &mut self.segs[id.0 as usize]
     }
     pub fn seg(&self, id: SegId) -> seg_t {
         self.segs[id.0 as usize]
@@ -604,8 +604,6 @@ pub unsafe fn P_LoadLineDefs(state: &mut GameState, mut lump: i32) {
     let mut i: i32 = 0;
     let mut mld: *mut maplinedef_t = ::core::ptr::null_mut::<maplinedef_t>();
     let mut ld: *mut line_t = ::core::ptr::null_mut::<line_t>();
-    let mut v1: *mut vertex_t = ::core::ptr::null_mut::<vertex_t>();
-    let mut v2: *mut vertex_t = ::core::ptr::null_mut::<vertex_t>();
     state.p_setup.numlines = (W_LumpLength(&mut state.w_wad, lump as u32) as usize)
         .wrapping_div(::core::mem::size_of::<maplinedef_t>() as usize)
         as i32;
@@ -619,11 +617,11 @@ pub unsafe fn P_LoadLineDefs(state: &mut GameState, mut lump: i32) {
         (*ld).special = (*mld).special;
         (*ld).tag = (*mld).tag;
         (*ld).v1 = VertexId((*mld).v1 as u32);
-        v1 = state.p_setup.vertex_mut((*ld).v1);
+        let v1 = state.p_setup.vertex((*ld).v1);
         (*ld).v2 = VertexId((*mld).v2 as u32);
-        v2 = state.p_setup.vertex_mut((*ld).v2);
-        (*ld).dx = (*v2).x - (*v1).x;
-        (*ld).dy = (*v2).y - (*v1).y;
+        let v2 = state.p_setup.vertex((*ld).v2);
+        (*ld).dx = v2.x - v1.x;
+        (*ld).dy = v2.y - v1.y;
         if (*ld).dx == 0 {
             (*ld).slopetype = SlopeType::ST_VERTICAL;
         } else if (*ld).dy == 0 {
@@ -633,19 +631,19 @@ pub unsafe fn P_LoadLineDefs(state: &mut GameState, mut lump: i32) {
         } else {
             (*ld).slopetype = SlopeType::ST_NEGATIVE;
         }
-        if (*v1).x < (*v2).x {
-            (*ld).bbox[BOXLEFT as usize] = (*v1).x;
-            (*ld).bbox[BOXRIGHT as usize] = (*v2).x;
+        if v1.x < v2.x {
+            (*ld).bbox[BOXLEFT as usize] = v1.x;
+            (*ld).bbox[BOXRIGHT as usize] = v2.x;
         } else {
-            (*ld).bbox[BOXLEFT as usize] = (*v2).x;
-            (*ld).bbox[BOXRIGHT as usize] = (*v1).x;
+            (*ld).bbox[BOXLEFT as usize] = v2.x;
+            (*ld).bbox[BOXRIGHT as usize] = v1.x;
         }
-        if (*v1).y < (*v2).y {
-            (*ld).bbox[BOXBOTTOM as usize] = (*v1).y;
-            (*ld).bbox[BOXTOP as usize] = (*v2).y;
+        if v1.y < v2.y {
+            (*ld).bbox[BOXBOTTOM as usize] = v1.y;
+            (*ld).bbox[BOXTOP as usize] = v2.y;
         } else {
-            (*ld).bbox[BOXBOTTOM as usize] = (*v2).y;
-            (*ld).bbox[BOXTOP as usize] = (*v1).y;
+            (*ld).bbox[BOXBOTTOM as usize] = v2.y;
+            (*ld).bbox[BOXTOP as usize] = v1.y;
         }
         (*ld).sidenum[0] = (*mld).sidenum[0];
         (*ld).sidenum[1] = (*mld).sidenum[1];

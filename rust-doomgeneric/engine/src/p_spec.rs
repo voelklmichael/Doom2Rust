@@ -485,7 +485,7 @@ pub fn getNextSector(
     if linev.flags as i32 & ML_TWOSIDED == 0 {
         return ::core::ptr::null_mut::<sector_t>();
     }
-    let front = state.p_setup.sector_mut(linev.frontsector.unwrap());
+    let front: *mut sector_t = state.p_setup.sector_mut(linev.frontsector.unwrap());
     if front == sec {
         return match linev.backsector {
             Some(id) => state.p_setup.sector_mut(id),

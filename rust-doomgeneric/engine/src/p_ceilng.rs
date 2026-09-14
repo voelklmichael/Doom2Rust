@@ -57,7 +57,7 @@ impl PCeilngState {
 
 pub unsafe fn T_MoveCeiling(state: &mut GameState, mut ceiling: *mut ceiling_t) {
     let mut res: ResultE = ResultE::ok;
-    let sec = state.p_setup.sector_mut((*ceiling).sector);
+    let sec: *mut sector_t = state.p_setup.sector_mut((*ceiling).sector);
     match (*ceiling).direction {
         1 => {
             res = T_MovePlane(
