@@ -274,7 +274,6 @@ pub const HUSTR_PLRBROWN: FixedCStr<8> = FixedCStr(*b"Brown: \0");
 pub const HUSTR_PLRRED: FixedCStr<6> = FixedCStr(*b"Red: \0");
 pub const HU_TITLEX: i32 = 0;
 pub const HU_INPUTX: i32 = HU_MSGX;
-#[no_mangle]
 pub static chat_char: u8 = 0;
 const fn new_hu_itext_t() -> hu_itext_t {
     hu_itext_t {

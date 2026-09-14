@@ -18,6 +18,7 @@ use crate::m_fixed::FixedMul;
 use crate::m_fixed::FRACBITS;
 use crate::m_fixed::FRACUNIT;
 use crate::m_fixed::INT_MAX;
+use crate::mem_compat::memset;
 use crate::p_maputl::MAPBLOCKUNITS;
 use crate::p_mobj::mobj_t;
 use crate::p_spec::ML_MAPPED;
@@ -32,7 +33,6 @@ use crate::tables::ANGLETOFINESHIFT;
 use crate::v_video::V_DrawPatch;
 use crate::v_video::V_MarkRect;
 use crate::w_wad::{W_CacheLumpName, W_ReleaseLumpName};
-use crate::mem_compat::memset;
 
 pub struct AmMapState {
     pub cheating: i32,
@@ -224,7 +224,6 @@ pub const M_ZOOMIN: i32 = (1.02f64 * FRACUNIT as f64) as i32;
 pub const M_ZOOMOUT: i32 = (FRACUNIT as f64 / 1.02f64) as i32;
 pub const LINE_NEVERSEE: i32 = ML_DONTDRAW;
 pub const R_0: i32 = 8 * 16 as i32 * FRACUNIT / 7 as i32;
-#[no_mangle]
 pub static player_arrow: [mline_t; 7] = [
     mline_t {
         a: mpoint_t {
@@ -298,7 +297,6 @@ pub static player_arrow: [mline_t; 7] = [
     },
 ];
 pub const R_1: i32 = 8 * 16 as i32 * FRACUNIT / 7 as i32;
-#[no_mangle]
 pub static cheat_player_arrow: [mline_t; 16] = [
     mline_t {
         a: mpoint_t {
@@ -462,7 +460,6 @@ pub static cheat_player_arrow: [mline_t; 16] = [
     },
 ];
 pub const R_2: i32 = (1 as i32) << FRACBITS;
-#[no_mangle]
 pub static triangle_guy: [mline_t; 3] = [
     mline_t {
         a: mpoint_t {
@@ -496,7 +493,6 @@ pub static triangle_guy: [mline_t; 3] = [
     },
 ];
 pub const R: i32 = (1 as i32) << FRACBITS;
-#[no_mangle]
 pub static thintriangle_guy: [mline_t; 3] = [
     mline_t {
         a: mpoint_t {
@@ -714,8 +710,7 @@ pub unsafe fn AM_loadPics(state: &mut GameState) {
     i = 0 as i32;
     while i < 10 as i32 {
         let namebuf = format!("AMMNUM{}", i);
-        state.am_map.marknums[i as usize] =
-            W_CacheLumpName(state, &namebuf) as *mut patch_t;
+        state.am_map.marknums[i as usize] = W_CacheLumpName(state, &namebuf) as *mut patch_t;
         i += 1;
     }
 }
@@ -797,9 +792,7 @@ pub unsafe fn AM_Responder(state: &mut GameState, mut ev: &event_t) -> bool {
     let mut key: i32 = 0;
     rc = false_0;
     if !state.am_map.automapactive {
-        if (*ev).type_0 == EvType::ev_keydown
-            && (*ev).data1 == state.m_controls.key_map_toggle
-        {
+        if (*ev).type_0 == EvType::ev_keydown && (*ev).data1 == state.m_controls.key_map_toggle {
             AM_Start(state);
             state.g_game.viewactive = false;
             rc = true_0;
@@ -857,9 +850,11 @@ pub unsafe fn AM_Responder(state: &mut GameState, mut ev: &event_t) -> bool {
             state.am_map.followplayer = (state.am_map.followplayer == 0) as i32;
             state.am_map.f_oldloc.x = INT_MAX as fixed_t;
             if state.am_map.followplayer != 0 {
-                (*state.g_game.player_mut(state.am_map.plr)).message = Some("Follow Mode ON".to_string());
+                (*state.g_game.player_mut(state.am_map.plr)).message =
+                    Some("Follow Mode ON".to_string());
             } else {
-                (*state.g_game.player_mut(state.am_map.plr)).message = Some("Follow Mode OFF".to_string());
+                (*state.g_game.player_mut(state.am_map.plr)).message =
+                    Some("Follow Mode OFF".to_string());
             }
         } else if key == state.m_controls.key_map_grid {
             state.am_map.grid = (state.am_map.grid == 0) as i32;
@@ -874,7 +869,8 @@ pub unsafe fn AM_Responder(state: &mut GameState, mut ev: &event_t) -> bool {
             AM_addMark(state);
         } else if key == state.m_controls.key_map_clearmark {
             AM_clearMarks(state);
-            (*state.g_game.player_mut(state.am_map.plr)).message = Some("All Marks Cleared".to_string());
+            (*state.g_game.player_mut(state.am_map.plr)).message =
+                Some("All Marks Cleared".to_string());
         } else {
             rc = false_0;
         }
@@ -1274,7 +1270,9 @@ pub unsafe fn AM_drawWalls(state: &mut GameState) {
                     AM_drawMline(state, &raw mut l, TSWALLCOLORS + lightlev);
                 }
             }
-        } else if (*state.g_game.player_mut(state.am_map.plr)).powers[PowerType::pw_allmap as usize] != 0 {
+        } else if (*state.g_game.player_mut(state.am_map.plr)).powers[PowerType::pw_allmap as usize]
+            != 0
+        {
             if (*li).flags as i32 & LINE_NEVERSEE == 0 {
                 AM_drawMline(state, &raw mut l, GRAYS + 3 as i32);
             }
@@ -1459,11 +1457,7 @@ pub unsafe fn AM_drawMarks(state: &mut GameState) {
                 && fy >= state.am_map.f_y
                 && fy <= state.am_map.f_h - h
             {
-                V_DrawPatch(state,
-                    fx,
-                    fy,
-                    state.am_map.marknums[i as usize],
-                );
+                V_DrawPatch(state, fx, fy, state.am_map.marknums[i as usize]);
             }
         }
         i += 1;

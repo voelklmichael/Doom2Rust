@@ -1,41 +1,39 @@
 use crate::d_mode::skill_from_raw;
 use crate::d_player::NUMPOWERS;
-use crate::info::StateId;
 use crate::d_player::NUMPSPRITES;
 use crate::d_player::{player_t, PlayerId, PlayerState};
 use crate::d_player::{weapontype_from_raw, NUMWEAPONS};
 use crate::d_ticcmd::ticcmd_t;
 use crate::g_game::G_VanillaVersionCode;
 use crate::i_system::I_Error;
-use std::io::{Read, Seek, Write};
+use crate::info::StateId;
 use crate::m_fixed::fixed_t;
 use crate::p_ceilng::CeilingE;
 use crate::p_ceilng::P_AddActiveCeiling;
-use crate::p_doors::VldoorE;
 use crate::p_doors::vldoor_t;
+use crate::p_doors::VldoorE;
 use crate::p_floor::FloorE;
 use crate::p_lights::{fireflicker_t, glow_t, lightflash_t, strobe_t};
 use crate::p_maputl::P_SetThingPosition;
 use crate::p_mobj::mobjtype_from_raw;
 use crate::p_mobj::spritenum_from_raw;
 use crate::p_mobj::P_RemoveMobj;
-use crate::p_mobj::{
-    line_t, mapthing_t, sector_t, thinker_t, SectorSpecial, ThinkerFn,
-};
+use crate::p_mobj::{line_t, mapthing_t, sector_t, thinker_t, SectorSpecial, ThinkerFn};
 use crate::p_mobj::{mobj_t, pspdef_t};
+use crate::p_plats::P_AddActivePlat;
 use crate::p_plats::PlatE;
 use crate::p_plats::PlattypeE;
-use crate::p_plats::P_AddActivePlat;
 use crate::p_setup::SectorId;
 use crate::p_setup::SideId;
 use crate::p_setup::SubsectorId;
 use crate::p_spec::{ceiling_t, floormove_t, plat_t};
 use crate::p_tick::P_AddThinker;
-use crate::p_tick::ThinkerKind;
 use crate::p_tick::P_InitThinkers;
+use crate::p_tick::ThinkerKind;
 use crate::r_defs::side_t;
 use crate::stdint_types::byte;
 use crate::tables::angle_t;
+use std::io::{Read, Seek, Write};
 
 use crate::d_player::NUMAMMO;
 use crate::doomdef::MAXPLAYERS;
@@ -82,7 +80,6 @@ pub type C2RustUnnamed_4 = u32;
 pub type C2RustUnnamed_5 = u32;
 pub const SAVEGAME_EOF: i32 = 0x1d;
 pub const VERSIONSIZE: i32 = 16;
-#[no_mangle]
 pub static savegamelength: i32 = 0;
 pub fn P_TempSaveGameFile(state: &mut GameState) -> String {
     if state.p_saveg.temp_savegame_filename.is_none() {
@@ -999,14 +996,18 @@ pub unsafe fn P_UnArchiveThinkers(state: &mut GameState) {
             ThinkerKind::Door => state.p_doors.dealloc(currentthinker as *mut vldoor_t),
             ThinkerKind::Ceiling => state.p_ceilng.dealloc(currentthinker as *mut ceiling_t),
             ThinkerKind::Plat => state.p_plats.dealloc(currentthinker as *mut plat_t),
-            ThinkerKind::Floor => state.p_spec.dealloc_floor(currentthinker as *mut floormove_t),
+            ThinkerKind::Floor => state
+                .p_spec
+                .dealloc_floor(currentthinker as *mut floormove_t),
             ThinkerKind::FireFlicker => state
                 .p_lights
                 .dealloc_fireflicker(currentthinker as *mut fireflicker_t),
             ThinkerKind::LightFlash => state
                 .p_lights
                 .dealloc_lightflash(currentthinker as *mut lightflash_t),
-            ThinkerKind::Strobe => state.p_lights.dealloc_strobe(currentthinker as *mut strobe_t),
+            ThinkerKind::Strobe => state
+                .p_lights
+                .dealloc_strobe(currentthinker as *mut strobe_t),
             ThinkerKind::Glow => state.p_lights.dealloc_glow(currentthinker as *mut glow_t),
         }
         cursor = next;
@@ -1049,7 +1050,6 @@ pub unsafe fn P_UnArchiveThinkers(state: &mut GameState) {
         }
     }
 }
-#[no_mangle]
 pub static specials_e: C2RustUnnamed_5 = tc_ceiling;
 pub unsafe fn P_ArchiveSpecials(state: &mut GameState) {
     let mut th: *mut thinker_t = ::core::ptr::null_mut::<thinker_t>();
@@ -1133,7 +1133,8 @@ pub unsafe fn P_UnArchiveSpecials(state: &mut GameState) {
                 if matches!((*ceiling).thinker.function, ThinkerFn::Unresolved) {
                     (*ceiling).thinker.function = ThinkerFn::Ceiling(T_MoveCeiling);
                 }
-                let ceiling_id = P_AddThinker(state, &raw mut (*ceiling).thinker, ThinkerKind::Ceiling);
+                let ceiling_id =
+                    P_AddThinker(state, &raw mut (*ceiling).thinker, ThinkerKind::Ceiling);
                 (*state.p_setup.sector_mut((*ceiling).sector)).specialdata =
                     Some(SectorSpecial::Ceiling(ceiling_id));
                 P_AddActiveCeiling(&mut state.p_ceilng, ceiling);

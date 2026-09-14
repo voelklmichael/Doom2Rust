@@ -10,7 +10,6 @@ pub struct weaponinfo_t {
     pub atkstate: StateNum,
     pub flashstate: StateNum,
 }
-#[no_mangle]
 pub static weaponinfo: [weaponinfo_t; 9] = [
     weaponinfo_t {
         ammo: ammotype_t::am_noammo,

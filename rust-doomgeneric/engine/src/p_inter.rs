@@ -69,7 +69,6 @@ pub const MAXHEALTH: i32 = 100;
 pub const BASETHRESHOLD: i32 = 100;
 pub const BONUSADD: i32 = 6;
 pub static maxammo: [i32; 4] = [200 as i32, 50 as i32, 300 as i32, 50 as i32];
-#[no_mangle]
 pub static clipammo: [i32; 4] = [10 as i32, 4 as i32, 20 as i32, 1 as i32];
 pub unsafe fn P_GiveAmmo(
     state: &mut GameState,

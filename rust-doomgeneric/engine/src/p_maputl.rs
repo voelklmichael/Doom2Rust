@@ -563,7 +563,6 @@ pub unsafe fn P_BlockThingsIterator(
     }
     return true;
 }
-#[no_mangle]
 pub unsafe fn PIT_AddLineIntercepts(state: &mut GameState, mut ld: LineId) -> bool {
     let mut s1: i32 = 0;
     let mut s2: i32 = 0;
@@ -613,7 +612,6 @@ pub unsafe fn PIT_AddLineIntercepts(state: &mut GameState, mut ld: LineId) -> bo
     state.p_maputl.intercept_p += 1;
     return true;
 }
-#[no_mangle]
 pub unsafe fn PIT_AddThingIntercepts(state: &mut GameState, mut thing_id: MobjId) -> bool {
     let thing = state.p_mobj.mobj_get(thing_id).unwrap();
     let mut x1: fixed_t = 0;

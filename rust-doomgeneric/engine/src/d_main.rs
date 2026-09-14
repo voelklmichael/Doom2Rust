@@ -755,7 +755,6 @@ pub unsafe fn D_SetGameDescription(state: &mut GameState) {
         state.doomstat.gamedescription = "DOOM 2: TNT - Evilution";
     }
 }
-#[no_mangle]
 pub static title: [::core::ffi::c_char; 128] = [0; 128];
 unsafe fn D_AddFile(state: &mut GameState, filename: &str) -> bool {
     let mut handle: *mut wad_file_t = ::core::ptr::null_mut::<wad_file_t>();

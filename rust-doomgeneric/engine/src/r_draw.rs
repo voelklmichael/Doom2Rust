@@ -87,7 +87,6 @@ impl RDrawState {
 }
 
 pub const SBARHEIGHT: i32 = 32;
-#[no_mangle]
 pub static translations: [[byte; 256]; 3] = [[0; 256]; 3];
 pub unsafe fn R_DrawColumn(state: &mut GameState) {
     let mut count: i32 = 0;
@@ -176,7 +175,6 @@ pub unsafe fn R_DrawColumnLow(state: &mut GameState) {
 }
 pub const FUZZTABLE: i32 = 50;
 pub const FUZZOFF: i32 = 320;
-#[no_mangle]
 pub static fuzzoffset: [i32; 50] = [
     FUZZOFF, -FUZZOFF, FUZZOFF, -FUZZOFF, FUZZOFF, FUZZOFF, -FUZZOFF, FUZZOFF, FUZZOFF, -FUZZOFF,
     FUZZOFF, FUZZOFF, FUZZOFF, -FUZZOFF, FUZZOFF, FUZZOFF, FUZZOFF, -FUZZOFF, -FUZZOFF, -FUZZOFF,

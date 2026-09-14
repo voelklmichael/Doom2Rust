@@ -140,7 +140,6 @@ pub const ML_BLOCKMONSTERS: i32 = 2;
 pub const USERANGE: i32 = 64 * FRACUNIT;
 pub const MAXSPECIALCROSS_ORIGINAL: i32 = 8;
 pub const DEFAULT_SPECHIT_MAGIC: i32 = 0x1c09c98;
-#[no_mangle]
 pub unsafe fn PIT_StompThing(state: &mut GameState, mut thing_id: MobjId) -> bool {
     let thing = state.p_mobj.mobj_get(thing_id).unwrap();
     let tmthing = state.p_mobj.mobj_get(state.p_map.tmthing.unwrap()).unwrap();
@@ -237,7 +236,6 @@ pub unsafe fn P_TeleportMove(
     P_SetThingPosition(state, thing);
     return true;
 }
-#[no_mangle]
 pub unsafe fn PIT_CheckLine(state: &mut GameState, mut ld: LineId) -> bool {
     let ldv = state.p_setup.line(ld);
     if state.p_map.tmbbox[BOXRIGHT as usize] <= ldv.bbox[BOXLEFT as usize]
@@ -283,7 +281,6 @@ pub unsafe fn PIT_CheckLine(state: &mut GameState, mut ld: LineId) -> bool {
     }
     return true;
 }
-#[no_mangle]
 pub unsafe fn PIT_CheckThing(state: &mut GameState, mut thing_id: MobjId) -> bool {
     let thing = state.p_mobj.mobj_get(thing_id).unwrap();
     let tmthing = state.p_mobj.mobj_get(state.p_map.tmthing.unwrap()).unwrap();
@@ -582,7 +579,6 @@ pub unsafe fn P_HitSlideLine(state: &mut GameState, mut ld: LineId) {
     state.p_map.tmxmove = FixedMul(newlen, finecosine[lineangle as isize]);
     state.p_map.tmymove = FixedMul(newlen, finesine[lineangle as usize]);
 }
-#[no_mangle]
 pub unsafe fn PTR_SlideTraverse(
     state: &mut GameState,
     mut in_0: *mut intercept_t,
@@ -720,7 +716,6 @@ pub unsafe fn P_SlideMove(state: &mut GameState, mut mo: *mut mobj_t) {
         P_TryMove(state, mo, (*mo).x + (*mo).momx, (*mo).y);
     }
 }
-#[no_mangle]
 pub unsafe fn PTR_AimTraverse(
     state: &mut GameState,
     mut in_0: *mut intercept_t,
@@ -792,7 +787,6 @@ pub unsafe fn PTR_AimTraverse(
     state.p_map.linetarget = Some((*th).id);
     return false;
 }
-#[no_mangle]
 pub unsafe fn PTR_ShootTraverse(
     state: &mut GameState,
     mut in_0: *mut intercept_t,
@@ -995,7 +989,6 @@ pub unsafe fn P_LineAttack(
         ),
     );
 }
-#[no_mangle]
 pub unsafe fn PTR_UseTraverse(
     state: &mut GameState,
     mut in_0: *mut intercept_t,
@@ -1050,7 +1043,6 @@ pub unsafe fn P_UseLines(state: &mut GameState, mut player: *mut player_t) {
         Some(PTR_UseTraverse as unsafe fn(&mut GameState, *mut intercept_t) -> bool),
     );
 }
-#[no_mangle]
 pub unsafe fn PIT_RadiusAttack(state: &mut GameState, mut thing_id: MobjId) -> bool {
     let thing = state.p_mobj.mobj_get(thing_id).unwrap();
     let mut dx: fixed_t = 0;
@@ -1131,7 +1123,6 @@ pub unsafe fn P_RadiusAttack(
         y += 1;
     }
 }
-#[no_mangle]
 pub unsafe fn PIT_ChangeSector(state: &mut GameState, mut thing_id: MobjId) -> bool {
     let thing = state.p_mobj.mobj_get(thing_id).unwrap();
     let mut mo: *mut mobj_t = ::core::ptr::null_mut::<mobj_t>();

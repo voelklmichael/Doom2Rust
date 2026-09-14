@@ -131,7 +131,6 @@ pub struct ticcmd_set_t {
 pub const NET_MAXPLAYERS: i32 = 8;
 pub const BACKUPTICS: i32 = 128;
 static localplayer: i32 = 0;
-#[no_mangle]
 pub static offsetms: fixed_t = 0;
 fn GetAdjustedTime(state: &mut GameState) -> i32 {
     let mut time_ms: i32 = 0;

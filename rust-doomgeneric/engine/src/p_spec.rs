@@ -261,7 +261,6 @@ impl Default for floormove_t {
 }
 pub const ML_TWOSIDED: i32 = 4;
 pub const FASTDARK: i32 = 15;
-#[no_mangle]
 pub static animdefs: [animdef_t; 23] = [
     animdef_t {
         istexture: false_0,

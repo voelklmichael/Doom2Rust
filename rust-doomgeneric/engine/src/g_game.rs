@@ -364,7 +364,6 @@ pub const deh_initial_bullets: i32 = DEH_DEFAULT_INITIAL_BULLETS;
 pub const DOOM_191_VERSION: i32 = 111;
 pub const SAVEGAMESIZE: i32 = 0x2c000;
 pub const TURBOTHRESHOLD: i32 = 0x32;
-#[no_mangle]
 pub static angleturn: [fixed_t; 3] = [640 as i32, 1280 as i32, 320 as i32];
 static weapon_order_table: [C2RustUnnamed_5; 9] = [
     C2RustUnnamed_5 {
@@ -1348,7 +1347,6 @@ pub unsafe fn G_DoReborn(state: &mut GameState, mut playernum: i32) {
 pub fn G_ScreenShot(state: &mut GameState) {
     state.g_game.gameaction = GameAction::ga_screenshot;
 }
-#[no_mangle]
 pub static pars: [[i32; 10]; 4] = [
     [0 as i32; 10],
     [
@@ -1364,7 +1362,6 @@ pub static pars: [[i32; 10]; 4] = [
         30 as i32, 135 as i32,
     ],
 ];
-#[no_mangle]
 pub static cpars: [i32; 32] = [
     30 as i32, 90 as i32, 120 as i32, 120 as i32, 90 as i32, 150 as i32, 120 as i32, 120 as i32,
     270 as i32, 90 as i32, 210 as i32, 150 as i32, 150 as i32, 150 as i32, 210 as i32, 150 as i32,
@@ -2053,7 +2050,6 @@ pub unsafe fn G_TimeDemo(state: &mut GameState, mut name: *mut ::core::ffi::c_ch
     state.g_game.defdemoname = name;
     state.g_game.gameaction = GameAction::ga_playdemo;
 }
-#[no_mangle]
 pub unsafe fn G_CheckDemoStatus(state: &mut GameState) -> bool {
     let mut endtime: i32 = 0;
     if state.g_game.timingdemo {

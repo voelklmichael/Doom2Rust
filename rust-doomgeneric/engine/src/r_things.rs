@@ -292,7 +292,6 @@ pub unsafe fn R_InitSpriteDefs(state: &mut GameState, namelist: &[&'static str])
         i += 1;
     }
 }
-#[no_mangle]
 pub static newvissprite: i32 = 0;
 pub unsafe fn R_InitSprites(state: &mut GameState, namelist: &[&'static str]) {
     let mut i: i32 = 0;

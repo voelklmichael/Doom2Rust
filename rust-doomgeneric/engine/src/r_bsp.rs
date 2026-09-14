@@ -253,7 +253,6 @@ pub unsafe fn R_AddLine(state: &mut GameState, mut line: SegId) {
     }
     R_ClipSolidWallSegment(state, x1, x2 - 1 as i32);
 }
-#[no_mangle]
 pub static checkcoord: [[i32; 4]; 12] = [
     [3 as i32, 0 as i32, 2 as i32, 1 as i32],
     [3 as i32, 0 as i32, 2 as i32, 0 as i32],

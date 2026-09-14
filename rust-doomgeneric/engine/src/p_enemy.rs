@@ -125,7 +125,6 @@ fn dirtype_from_movedir(movedir: i32) -> DirType {
 pub const ML_SOUNDBLOCK: i32 = 64;
 pub const MELEERANGE: i32 = 64 * FRACUNIT;
 pub const MISSILERANGE: i32 = 32 * 64 as i32 * FRACUNIT;
-#[no_mangle]
 pub static opposite: [DirType; 9] = [
     DirType::DI_WEST,
     DirType::DI_SOUTHWEST,
@@ -137,7 +136,6 @@ pub static opposite: [DirType; 9] = [
     DirType::DI_NORTHWEST,
     DirType::DI_NODIR,
 ];
-#[no_mangle]
 pub static diags: [DirType; 4] = [DirType::DI_NORTHWEST, DirType::DI_NORTHEAST, DirType::DI_SOUTHWEST, DirType::DI_SOUTHEAST];
 pub unsafe fn P_RecursiveSound(
     state: &mut GameState,
@@ -261,7 +259,6 @@ pub unsafe fn P_CheckMissileRange(state: &mut GameState, mut actor: *mut mobj_t)
     }
     return true;
 }
-#[no_mangle]
 pub static xspeed: [fixed_t; 8] = [
     FRACUNIT,
     47000 as i32,
@@ -272,7 +269,6 @@ pub static xspeed: [fixed_t; 8] = [
     0 as i32,
     47000 as i32,
 ];
-#[no_mangle]
 pub static yspeed: [fixed_t; 8] = [
     0 as i32,
     47000 as i32,
@@ -872,7 +868,6 @@ pub unsafe fn A_SkelMissile(state: &mut GameState, id: MobjId) {
     (*mo).y += (*mo).momy;
     (*mo).tracer = (*actor).target;
 }
-#[no_mangle]
 pub static TRACEANGLE: i32 = 0xc000000;
 pub unsafe fn A_Tracer(state: &mut GameState, id: MobjId) {
     let actor = state.p_mobj.mobj_get(id).unwrap();
@@ -958,7 +953,6 @@ pub unsafe fn A_SkelFist(state: &mut GameState, id: MobjId) {
         P_DamageMobj(state, target, actor, actor, damage);
     }
 }
-#[no_mangle]
 pub unsafe fn PIT_VileCheck(state: &mut GameState, mut thing_id: MobjId) -> bool {
     let thing = state.p_mobj.mobj_get(thing_id).unwrap();
     let mut maxdist: i32 = 0;
