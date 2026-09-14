@@ -40,6 +40,7 @@ use crate::sounds::{
     sfx_swtchn, sfx_swtchx, sfx_telept, sfx_vilact,
 };
 use crate::stdint_types::byte;
+use crate::v_video::V_CachePatchNum;
 use crate::v_video::V_DrawPatchDirect;
 
 pub struct MMenuDefsHolder {
@@ -1356,14 +1357,14 @@ pub unsafe fn M_StringWidth(state: &mut GameState, string: &str) -> i32 {
         if c < 0 as i32 || c >= HU_FONTSIZE {
             w += 4 as i32;
         } else {
-            w += (*state.hu_stuff.hu_font[c as usize]).width as i32;
+            w += (*V_CachePatchNum(state, state.hu_stuff.hu_font[c as usize])).width as i32;
         }
     }
     return w;
 }
 pub unsafe fn M_StringHeight(state: &mut GameState, string: &str) -> i32 {
     let mut h: i32 = 0;
-    let height: i32 = (*state.hu_stuff.hu_font[0]).height as i32;
+    let height: i32 = (*V_CachePatchNum(state, state.hu_stuff.hu_font[0])).height as i32;
     h = height;
     for b in string.bytes() {
         if b == b'\n' {
@@ -1389,11 +1390,12 @@ pub unsafe fn M_WriteText(state: &mut GameState, x: i32, y: i32, string: &str) {
             if c < 0 as i32 || c >= HU_FONTSIZE {
                 cx += 4 as i32;
             } else {
-                w = (*state.hu_stuff.hu_font[c as usize]).width as i32;
+                let font_patch = V_CachePatchNum(state, state.hu_stuff.hu_font[c as usize]);
+                w = (*font_patch).width as i32;
                 if cx + w > SCREENWIDTH {
                     break 'outer;
                 }
-                V_DrawPatchDirect(state, cx, cy, state.hu_stuff.hu_font[c as usize]);
+                V_DrawPatchDirect(state, cx, cy, font_patch);
                 cx += w;
             }
         }
@@ -1837,7 +1839,7 @@ pub unsafe fn M_Drawer(state: &mut GameState) {
                 line,
             );
             state.m_menu.drawer_y = (state.m_menu.drawer_y as i32
-                + (*state.hu_stuff.hu_font[0]).height as i32)
+                + (*V_CachePatchNum(state, state.hu_stuff.hu_font[0])).height as i32)
                 as i16;
         }
         return;
