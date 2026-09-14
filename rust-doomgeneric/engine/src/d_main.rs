@@ -918,7 +918,7 @@ pub unsafe fn D_DoomMain(state: &mut GameState) {
             | (1 as i32) << GameMission_t::pack_plut as i32
             | (1 as i32) << GameMission_t::pack_chex as i32
             | (1 as i32) << GameMission_t::pack_hacx as i32,
-        &raw mut gamemission_out,
+        &mut gamemission_out,
     );
     state.doomstat.gamemission = gamemission_out;
     if state.d_main.iwadfile.is_empty() {
