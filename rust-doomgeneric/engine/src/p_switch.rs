@@ -273,7 +273,7 @@ impl PSwitchState {
     }
 }
 
-pub unsafe fn P_InitSwitchList(state: &mut GameState) {
+pub fn P_InitSwitchList(state: &mut GameState) {
     let mut i: i32 = 0;
     let mut index: i32 = 0;
     let mut episode: i32 = 0;

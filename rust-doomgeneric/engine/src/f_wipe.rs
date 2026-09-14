@@ -208,13 +208,13 @@ pub fn wipe_exitMelt(state: &mut GameState, _width: i32, _height: i32, _ticks: i
     state.f_wipe.wipe_scr_end = Vec::new();
     return 0 as i32;
 }
-pub unsafe fn wipe_StartScreen(state: &mut GameState) -> i32 {
+pub fn wipe_StartScreen(state: &mut GameState) -> i32 {
     state.f_wipe.wipe_scr_start = vec![0u8; (SCREENWIDTH * SCREENHEIGHT) as usize];
     let wipe_scr_start = state.f_wipe.wipe_scr_start.as_mut_ptr();
-    I_ReadScreen(state, wipe_scr_start);
+    unsafe { I_ReadScreen(state, wipe_scr_start) };
     return 0 as i32;
 }
-pub unsafe fn wipe_EndScreen(
+pub fn wipe_EndScreen(
     state: &mut GameState,
     mut x: i32,
     mut y_0: i32,
@@ -223,12 +223,12 @@ pub unsafe fn wipe_EndScreen(
 ) -> i32 {
     state.f_wipe.wipe_scr_end = vec![0u8; (SCREENWIDTH * SCREENHEIGHT) as usize];
     let wipe_scr_end = state.f_wipe.wipe_scr_end.as_mut_ptr();
-    I_ReadScreen(state, wipe_scr_end);
+    unsafe { I_ReadScreen(state, wipe_scr_end) };
     let wipe_scr_start = state.f_wipe.wipe_scr_start.as_mut_ptr();
-    V_DrawBlock(state, x, y_0, width, height, wipe_scr_start);
+    unsafe { V_DrawBlock(state, x, y_0, width, height, wipe_scr_start) };
     return 0 as i32;
 }
-pub unsafe fn wipe_ScreenWipe(
+pub fn wipe_ScreenWipe(
     state: &mut GameState,
     mut wipeno: i32,
     mut width: i32,
@@ -248,16 +248,16 @@ pub unsafe fn wipe_ScreenWipe(
         state.f_wipe.go = true;
         state.f_wipe.wipe_scr = state.i_video.I_VideoBuffer.as_mut_ptr();
         let init_fn = wipes[(wipeno * 3 as i32) as usize].expect("non-null function pointer");
-        init_fn(state, width, height, ticks);
+        unsafe { init_fn(state, width, height, ticks) };
     }
-    V_MarkRect(state, 0 as i32, 0 as i32, width, height);
+    unsafe { V_MarkRect(state, 0 as i32, 0 as i32, width, height) };
     let do_fn = wipes[(wipeno * 3 as i32 + 1 as i32) as usize].expect("non-null function pointer");
-    rc = do_fn(state, width, height, ticks);
+    rc = unsafe { do_fn(state, width, height, ticks) };
     if rc != 0 {
         state.f_wipe.go = false;
         let exit_fn =
             wipes[(wipeno * 3 as i32 + 2 as i32) as usize].expect("non-null function pointer");
-        exit_fn(state, width, height, ticks);
+        unsafe { exit_fn(state, width, height, ticks) };
     }
     return (!state.f_wipe.go) as i32;
 }

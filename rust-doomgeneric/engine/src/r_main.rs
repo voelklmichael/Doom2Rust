@@ -495,14 +495,14 @@ pub unsafe fn R_ExecuteSetViewSize(state: &mut GameState) {
         i += 1;
     }
 }
-pub unsafe fn R_Init(state: &mut GameState) {
+pub fn R_Init(state: &mut GameState) {
     R_InitData(state);
     print!(".");
     print!(".");
     let (screenblocks, detail_level) = (state.m_menu.screenblocks, state.m_menu.detailLevel);
     R_SetViewSize(state, screenblocks, detail_level);
     print!(".");
-    R_InitLightTables(state);
+    unsafe { R_InitLightTables(state) };
     print!(".");
     R_InitSkyMap(state);
     R_InitTranslationTables(state);
@@ -560,19 +560,19 @@ pub unsafe fn R_SetupFrame(state: &mut GameState, player_id: PlayerId) {
     state.r_main.framecount += 1;
     state.r_main.validcount += 1;
 }
-pub unsafe fn R_RenderPlayerView(state: &mut GameState, player_id: PlayerId) {
-    R_SetupFrame(state, player_id);
-    R_ClearClipSegs(state);
-    R_ClearDrawSegs(state);
-    R_ClearPlanes(state);
-    R_ClearSprites(state);
+pub fn R_RenderPlayerView(state: &mut GameState, player_id: PlayerId) {
+    unsafe { R_SetupFrame(state, player_id) };
+    unsafe { R_ClearClipSegs(state) };
+    unsafe { R_ClearDrawSegs(state) };
+    unsafe { R_ClearPlanes(state) };
+    unsafe { R_ClearSprites(state) };
     NetUpdate(state);
     let root_bspnum = state.p_setup.numnodes - 1 as i32;
-    R_RenderBSPNode(state, root_bspnum);
+    unsafe { R_RenderBSPNode(state, root_bspnum) };
     NetUpdate(state);
-    R_DrawPlanes(state);
+    unsafe { R_DrawPlanes(state) };
     NetUpdate(state);
-    R_DrawMasked(state);
+    unsafe { R_DrawMasked(state) };
     NetUpdate(state);
 }
 pub const LIGHTLEVELS: i32 = 16;

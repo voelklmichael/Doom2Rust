@@ -436,16 +436,16 @@ pub const ST_MAXAMMO2Y: i32 = 191;
 pub const ST_MAXAMMO3WIDTH: i32 = ST_MAXAMMO0WIDTH;
 pub const ST_MAXAMMO3X: i32 = 314;
 pub const ST_MAXAMMO3Y: i32 = 185;
-pub unsafe fn ST_refreshBackground(state: &mut GameState) {
+pub fn ST_refreshBackground(state: &mut GameState) {
     if state.st_stuff.st_statusbaron {
         V_UseBuffer(&mut state.v_video, state.st_stuff.st_backing_screen.as_mut_ptr());
-        V_DrawPatch(state, ST_X, 0 as i32, state.st_stuff.sbar);
+        unsafe { V_DrawPatch(state, ST_X, 0 as i32, state.st_stuff.sbar) };
         if state.g_game.netgame {
-            V_DrawPatch(state, ST_FX, 0 as i32, state.st_stuff.faceback);
+            unsafe { V_DrawPatch(state, ST_FX, 0 as i32, state.st_stuff.faceback) };
         }
         V_RestoreBuffer(state);
         let st_backing_screen = state.st_stuff.st_backing_screen.as_mut_ptr();
-        V_CopyRect(state,
+        unsafe { V_CopyRect(state,
             ST_X,
             0 as i32,
             st_backing_screen,
@@ -453,7 +453,7 @@ pub unsafe fn ST_refreshBackground(state: &mut GameState) {
             ST_HEIGHT,
             ST_X,
             ST_Y,
-        );
+        ) };
     }
 }
 pub unsafe fn ST_Responder(state: &mut GameState, mut ev: &event_t) -> bool {
@@ -998,18 +998,18 @@ pub unsafe fn ST_drawWidgets(state: &mut GameState, mut refresh: bool) {
     let w_frags = &raw mut state.st_stuff.w_frags;
     STlib_updateNum(state, w_frags);
 }
-pub unsafe fn ST_doRefresh(state: &mut GameState) {
+pub fn ST_doRefresh(state: &mut GameState) {
     state.st_stuff.st_firsttime = false;
     ST_refreshBackground(state);
-    ST_drawWidgets(state, true);
+    unsafe { ST_drawWidgets(state, true) };
 }
-pub unsafe fn ST_diffDraw(state: &mut GameState) {
-    ST_drawWidgets(state, false);
+pub fn ST_diffDraw(state: &mut GameState) {
+    unsafe { ST_drawWidgets(state, false) };
 }
-pub unsafe fn ST_Drawer(state: &mut GameState, mut fullscreen: bool, mut refresh: bool) {
+pub fn ST_Drawer(state: &mut GameState, mut fullscreen: bool, mut refresh: bool) {
     state.st_stuff.st_statusbaron = !fullscreen || state.am_map.automapactive;
     state.st_stuff.st_firsttime = state.st_stuff.st_firsttime || refresh;
-    ST_doPaletteStuff(state);
+    unsafe { ST_doPaletteStuff(state) };
     if state.st_stuff.st_firsttime {
         ST_doRefresh(state);
     } else {
@@ -1107,9 +1107,9 @@ pub unsafe fn ST_loadGraphics(state: &mut GameState) {
         Some(ST_loadCallback as unsafe fn(&mut GameState, &str, *mut *mut patch_t) -> ()),
     );
 }
-pub unsafe fn ST_loadData(state: &mut GameState) {
+pub fn ST_loadData(state: &mut GameState) {
     state.st_stuff.lu_palette = W_GetNumForName(&mut state.w_wad, "PLAYPAL");
-    ST_loadGraphics(state);
+    unsafe { ST_loadGraphics(state) };
 }
 fn ST_unloadCallback(state: &mut GameState, lumpname: &str, variable: *mut *mut patch_t) {
     unsafe {
@@ -1123,8 +1123,8 @@ pub unsafe fn ST_unloadGraphics(state: &mut GameState) {
         Some(ST_unloadCallback as unsafe fn(&mut GameState, &str, *mut *mut patch_t) -> ()),
     );
 }
-pub unsafe fn ST_unloadData(state: &mut GameState) {
-    ST_unloadGraphics(state);
+pub fn ST_unloadData(state: &mut GameState) {
+    unsafe { ST_unloadGraphics(state) };
 }
 pub unsafe fn ST_initData(state: &mut GameState) {
     let mut i: i32 = 0;
@@ -1333,12 +1333,12 @@ pub unsafe fn ST_createWidgets(state: &mut GameState) {
         ST_MAXAMMO3WIDTH,
     );
 }
-pub unsafe fn ST_Start(state: &mut GameState) {
+pub fn ST_Start(state: &mut GameState) {
     if !state.st_stuff.st_stopped {
-        ST_Stop(state);
+        unsafe { ST_Stop(state) };
     }
-    ST_initData(state);
-    ST_createWidgets(state);
+    unsafe { ST_initData(state) };
+    unsafe { ST_createWidgets(state) };
     state.st_stuff.st_stopped = false;
 }
 pub unsafe fn ST_Stop(state: &mut GameState) {
@@ -1352,7 +1352,7 @@ pub unsafe fn ST_Stop(state: &mut GameState) {
     );
     state.st_stuff.st_stopped = true;
 }
-pub unsafe fn ST_Init(state: &mut GameState) {
+pub fn ST_Init(state: &mut GameState) {
     ST_loadData(state);
     state.st_stuff.st_backing_screen = vec![0u8; (ST_WIDTH * ST_HEIGHT) as usize];
 }

@@ -1489,8 +1489,8 @@ pub unsafe fn A_BrainAwake(state: &mut GameState, _id: MobjId) {
     }
     S_StartSound(state, SoundOrigin::None, sfx_bossit as i32);
 }
-pub unsafe fn A_BrainPain(state: &mut GameState, _id: MobjId) {
-    S_StartSound(state, SoundOrigin::None, sfx_bospn as i32);
+pub fn A_BrainPain(state: &mut GameState, _id: MobjId) {
+    unsafe { S_StartSound(state, SoundOrigin::None, sfx_bospn as i32) };
 }
 pub unsafe fn A_BrainScream(state: &mut GameState, id: MobjId) {
     let mo = state.p_mobj.mobj_get(id).unwrap();

@@ -289,12 +289,12 @@ pub unsafe fn W_CacheLumpNum(
     }
     return result as *mut ::core::ffi::c_void;
 }
-pub unsafe fn W_CacheLumpName(
+pub fn W_CacheLumpName(
     state: &mut GameState,
     name: &str,
 ) -> *mut ::core::ffi::c_void {
     let lumpnum = W_GetNumForName(&mut state.w_wad, name);
-    return W_CacheLumpNum(state, lumpnum);
+    return unsafe { W_CacheLumpNum(state, lumpnum) };
 }
 pub fn W_ReleaseLumpNum(state: &mut WWadState, mut lumpnum: i32) {
     // Releasing a cached lump is a no-op now -- nothing purges cached blocks

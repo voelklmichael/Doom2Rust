@@ -879,7 +879,7 @@ unsafe fn P_LoadReject(state: &mut GameState, mut lumpnum: i32) {
         PadRejectArray(state, pad_ptr, (minlength - lumplen) as u32);
     };
 }
-pub unsafe fn P_SetupLevel(state: &mut GameState, mut episode: i32, mut map: i32) {
+pub fn P_SetupLevel(state: &mut GameState, mut episode: i32, mut map: i32) {
     let mut i: i32 = 0;
     let mut lumpnum: i32 = 0;
     state.g_game.wminfo.maxfrags = 0 as i32;
@@ -895,7 +895,7 @@ pub unsafe fn P_SetupLevel(state: &mut GameState, mut episode: i32, mut map: i32
         i += 1;
     }
     state.g_game.players[state.g_game.consoleplayer as usize].viewz = 1 as i32 as fixed_t;
-    S_Start(state);
+    unsafe { S_Start(state) };
     P_InitThinkers(state);
     let lumpname = if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 {
         if map < 10 as i32 {
@@ -912,25 +912,25 @@ pub unsafe fn P_SetupLevel(state: &mut GameState, mut episode: i32, mut map: i32
     };
     lumpnum = W_GetNumForName(&mut state.w_wad, &lumpname);
     state.p_tick.leveltime = 0 as i32;
-    P_LoadBlockMap(state, lumpnum + ML_BLOCKMAP as i32);
-    P_LoadVertexes(state, lumpnum + ML_VERTEXES as i32);
-    P_LoadSectors(state, lumpnum + ML_SECTORS as i32);
-    P_LoadSideDefs(state, lumpnum + ML_SIDEDEFS as i32);
-    P_LoadLineDefs(state, lumpnum + ML_LINEDEFS as i32);
-    P_LoadSubsectors(state, lumpnum + ML_SSECTORS as i32);
-    P_LoadNodes(state, lumpnum + ML_NODES as i32);
-    P_LoadSegs(state, lumpnum + ML_SEGS as i32);
-    P_GroupLines(state);
-    P_LoadReject(state, lumpnum + ML_REJECT as i32);
+    unsafe { P_LoadBlockMap(state, lumpnum + ML_BLOCKMAP as i32) };
+    unsafe { P_LoadVertexes(state, lumpnum + ML_VERTEXES as i32) };
+    unsafe { P_LoadSectors(state, lumpnum + ML_SECTORS as i32) };
+    unsafe { P_LoadSideDefs(state, lumpnum + ML_SIDEDEFS as i32) };
+    unsafe { P_LoadLineDefs(state, lumpnum + ML_LINEDEFS as i32) };
+    unsafe { P_LoadSubsectors(state, lumpnum + ML_SSECTORS as i32) };
+    unsafe { P_LoadNodes(state, lumpnum + ML_NODES as i32) };
+    unsafe { P_LoadSegs(state, lumpnum + ML_SEGS as i32) };
+    unsafe { P_GroupLines(state) };
+    unsafe { P_LoadReject(state, lumpnum + ML_REJECT as i32) };
     state.g_game.bodyqueslot = 0 as i32;
     state.p_setup.deathmatch_p = 0;
-    P_LoadThings(state, lumpnum + ML_THINGS as i32);
+    unsafe { P_LoadThings(state, lumpnum + ML_THINGS as i32) };
     if state.g_game.deathmatch != 0 {
         i = 0 as i32;
         while i < MAXPLAYERS {
             if state.g_game.playeringame[i as usize] {
                 state.g_game.players[i as usize].mo = None;
-                G_DeathMatchSpawnPlayer(state, i);
+                unsafe { G_DeathMatchSpawnPlayer(state, i) };
             }
             i += 1;
         }
@@ -938,12 +938,12 @@ pub unsafe fn P_SetupLevel(state: &mut GameState, mut episode: i32, mut map: i32
     let gs = state;
     gs.p_mobj.iquetail = 0 as i32;
     gs.p_mobj.iquehead = gs.p_mobj.iquetail;
-    P_SpawnSpecials(gs);
+    unsafe { P_SpawnSpecials(gs) };
     if gs.g_game.precache {
-        R_PrecacheLevel(gs);
+        unsafe { R_PrecacheLevel(gs) };
     }
 }
-pub unsafe fn P_Init(state: &mut GameState) {
+pub fn P_Init(state: &mut GameState) {
     P_InitSwitchList(state);
     P_InitPicAnims(state);
     let sprnames = state.info.sprnames;

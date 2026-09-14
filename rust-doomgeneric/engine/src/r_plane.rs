@@ -253,7 +253,7 @@ pub unsafe fn R_CheckPlane(
     );
     return pl;
 }
-pub unsafe fn R_MakeSpans(
+pub fn R_MakeSpans(
     state: &mut GameState,
     mut x: i32,
     mut t1: i32,
@@ -263,12 +263,12 @@ pub unsafe fn R_MakeSpans(
 ) {
     while t1 < t2 && t1 <= b1 {
         let spanstart_t1 = state.r_plane.spanstart[t1 as usize];
-        R_MapPlane(state, t1, spanstart_t1, x - 1 as i32);
+        unsafe { R_MapPlane(state, t1, spanstart_t1, x - 1 as i32) };
         t1 += 1;
     }
     while b1 > b2 && b1 >= t1 {
         let spanstart_b1 = state.r_plane.spanstart[b1 as usize];
-        R_MapPlane(state, b1, spanstart_b1, x - 1 as i32);
+        unsafe { R_MapPlane(state, b1, spanstart_b1, x - 1 as i32) };
         b1 -= 1;
     }
     while t2 < t1 && t2 <= b2 {

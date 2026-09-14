@@ -253,12 +253,12 @@ pub unsafe fn A_ReFire(state: &mut GameState, mut player: *mut player_t, _psp: *
         P_CheckAmmo(state, player);
     };
 }
-pub unsafe fn A_CheckReload(
+pub fn A_CheckReload(
     state: &mut GameState,
     mut player: *mut player_t,
     _psp: *mut pspdef_t,
 ) {
-    P_CheckAmmo(state, player);
+    unsafe { P_CheckAmmo(state, player) };
 }
 pub unsafe fn A_Lower(state: &mut GameState, mut player: *mut player_t, mut psp: *mut pspdef_t) {
     (*psp).sy += FRACUNIT * 6 as i32;

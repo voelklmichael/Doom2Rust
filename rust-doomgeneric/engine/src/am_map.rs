@@ -749,7 +749,7 @@ pub fn AM_LevelInit(state: &mut GameState) {
     }
     state.am_map.scale_ftom = FixedDiv(FRACUNIT, state.am_map.scale_mtof);
 }
-pub unsafe fn AM_Stop(state: &mut GameState) {
+pub fn AM_Stop(state: &mut GameState) {
     const st_notify: event_t = event_t {
         type_0: EvType::ev_keydown,
         data1: EvType::ev_keyup as i32,
@@ -759,10 +759,10 @@ pub unsafe fn AM_Stop(state: &mut GameState) {
     };
     AM_unloadPics(state);
     state.am_map.automapactive = false;
-    ST_Responder(state, &st_notify);
+    unsafe { ST_Responder(state, &st_notify) };
     state.am_map.stopped = true;
 }
-pub unsafe fn AM_Start(state: &mut GameState) {
+pub fn AM_Start(state: &mut GameState) {
     if !state.am_map.stopped {
         AM_Stop(state);
     }
@@ -774,8 +774,8 @@ pub unsafe fn AM_Start(state: &mut GameState) {
         state.am_map.am_start_lastlevel = state.g_game.gamemap;
         state.am_map.am_start_lastepisode = state.g_game.gameepisode;
     }
-    AM_initVariables(state);
-    AM_loadPics(state);
+    unsafe { AM_initVariables(state) };
+    unsafe { AM_loadPics(state) };
 }
 pub fn AM_minOutWindowScale(state: &mut GameState) {
     state.am_map.scale_mtof = state.am_map.min_scale_mtof;
@@ -958,13 +958,13 @@ pub fn AM_updateLightLev(state: &mut AmMapState) {
         state.am_updatelightlev_nexttic = state.amclock + 6 as i32 - state.amclock % 6 as i32;
     }
 }
-pub unsafe fn AM_Ticker(state: &mut GameState) {
+pub fn AM_Ticker(state: &mut GameState) {
     if !state.am_map.automapactive {
         return;
     }
     state.am_map.amclock += 1;
     if state.am_map.followplayer != 0 {
-        AM_doFollowPlayer(state);
+        unsafe { AM_doFollowPlayer(state) };
     }
     if state.am_map.ftom_zoommul != FRACUNIT {
         AM_changeWindowScale(state);
@@ -1430,7 +1430,7 @@ pub unsafe fn AM_drawThings(state: &mut GameState, mut colors: i32) {
         i += 1;
     }
 }
-pub unsafe fn AM_drawMarks(state: &mut GameState) {
+pub fn AM_drawMarks(state: &mut GameState) {
     let mut i: i32 = 0;
     let mut fx: i32 = 0;
     let mut fy: i32 = 0;
@@ -1457,7 +1457,7 @@ pub unsafe fn AM_drawMarks(state: &mut GameState) {
                 && fy >= state.am_map.f_y
                 && fy <= state.am_map.f_h - h
             {
-                V_DrawPatch(state, fx, fy, state.am_map.marknums[i as usize]);
+                unsafe { V_DrawPatch(state, fx, fy, state.am_map.marknums[i as usize]) };
             }
         }
         i += 1;
@@ -1470,20 +1470,20 @@ pub unsafe fn AM_drawCrosshair(state: &mut GameState, mut color: i32) {
         .offset((state.am_map.f_w * (state.am_map.f_h + 1 as i32) / 2 as i32) as isize) =
         color as byte;
 }
-pub unsafe fn AM_Drawer(state: &mut GameState) {
+pub fn AM_Drawer(state: &mut GameState) {
     if !state.am_map.automapactive {
         return;
     }
-    AM_clearFB(state, BACKGROUND);
+    unsafe { AM_clearFB(state, BACKGROUND) };
     if state.am_map.grid != 0 {
-        AM_drawGrid(state, GRIDCOLORS);
+        unsafe { AM_drawGrid(state, GRIDCOLORS) };
     }
-    AM_drawWalls(state);
-    AM_drawPlayers(state);
+    unsafe { AM_drawWalls(state) };
+    unsafe { AM_drawPlayers(state) };
     if state.am_map.cheating == 2 as i32 {
-        AM_drawThings(state, THINGCOLORS);
+        unsafe { AM_drawThings(state, THINGCOLORS) };
     }
-    AM_drawCrosshair(state, XHAIRCOLORS);
+    unsafe { AM_drawCrosshair(state, XHAIRCOLORS) };
     AM_drawMarks(state);
     let (f_x, f_y, f_w, f_h) = (
         state.am_map.f_x,
@@ -1491,5 +1491,5 @@ pub unsafe fn AM_Drawer(state: &mut GameState) {
         state.am_map.f_w,
         state.am_map.f_h,
     );
-    V_MarkRect(state, f_x, f_y, f_w, f_h);
+    unsafe { V_MarkRect(state, f_x, f_y, f_w, f_h) };
 }

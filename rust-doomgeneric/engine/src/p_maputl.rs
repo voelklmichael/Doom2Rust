@@ -778,7 +778,7 @@ unsafe fn InterceptsOverrun(
     InterceptsMemoryOverrun(state, location + 4 as i32, isaline as i32);
     InterceptsMemoryOverrun(state, location + 8 as i32, target_value);
 }
-pub unsafe fn P_PathTraverse(
+pub fn P_PathTraverse(
     state: &mut GameState,
     mut x1: fixed_t,
     mut y1: fixed_t,
@@ -855,22 +855,22 @@ pub unsafe fn P_PathTraverse(
     count = 0 as i32;
     while count < 64 as i32 {
         if flags & PT_ADDLINES != 0 {
-            if !P_BlockLinesIterator(
+            if !unsafe { P_BlockLinesIterator(
                 state,
                 mapx,
                 mapy,
                 Some(PIT_AddLineIntercepts as unsafe fn(&mut GameState, LineId) -> bool),
-            ) {
+            ) } {
                 return false;
             }
         }
         if flags & PT_ADDTHINGS != 0 {
-            if !P_BlockThingsIterator(
+            if !unsafe { P_BlockThingsIterator(
                 state,
                 mapx,
                 mapy,
                 Some(PIT_AddThingIntercepts as unsafe fn(&mut GameState, MobjId) -> bool),
-            ) {
+            ) } {
                 return false;
             }
         }
@@ -886,5 +886,5 @@ pub unsafe fn P_PathTraverse(
         }
         count += 1;
     }
-    return P_TraverseIntercepts(state, trav as traverser_t, FRACUNIT);
+    return unsafe { P_TraverseIntercepts(state, trav as traverser_t, FRACUNIT) };
 }
