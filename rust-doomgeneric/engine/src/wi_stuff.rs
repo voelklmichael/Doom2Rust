@@ -16,8 +16,9 @@ use crate::s_sound::SoundOrigin;
 use crate::sounds::{mus_dm2int, mus_inter};
 use crate::sounds::{sfx_barexp, sfx_pistol, sfx_pldeth, sfx_sgcock, sfx_slop};
 use crate::st_stuff::load_callback_t;
+use crate::v_video::V_CachePatchNum;
 use crate::v_video::V_DrawPatch;
-use crate::w_wad::{W_CacheLumpName, W_CheckNumForName, W_ReleaseLumpName};
+use crate::w_wad::{W_CacheLumpNum, W_CheckNumForName, W_GetNumForName, W_ReleaseLumpName};
 
 pub struct WiStuffState {
     pub anims: [*mut anim_t; 4],
@@ -40,31 +41,31 @@ pub struct WiStuffState {
     pub cnt_par: i32,
     pub cnt_pause: i32,
     pub NUMCMAPS: i32,
-    pub yah: [*mut patch_t; 3],
-    pub splat: [*mut patch_t; 2],
-    pub percent: *mut patch_t,
-    pub colon: *mut patch_t,
-    pub num: [*mut patch_t; 10],
-    pub wiminus: *mut patch_t,
-    pub finished: *mut patch_t,
-    pub entering: *mut patch_t,
-    pub sp_secret: *mut patch_t,
-    pub kills: *mut patch_t,
-    pub secret: *mut patch_t,
-    pub items: *mut patch_t,
-    pub frags: *mut patch_t,
-    pub timepatch: *mut patch_t,
-    pub par: *mut patch_t,
-    pub sucks: *mut patch_t,
-    pub killers: *mut patch_t,
-    pub victims: *mut patch_t,
-    pub total: *mut patch_t,
-    pub star: *mut patch_t,
-    pub bstar: *mut patch_t,
-    pub p: [*mut patch_t; 4],
-    pub bp: [*mut patch_t; 4],
-    pub lnames: Vec<*mut patch_t>,
-    pub background: *mut patch_t,
+    pub yah: [i32; 3],
+    pub splat: [i32; 2],
+    pub percent: i32,
+    pub colon: i32,
+    pub num: [i32; 10],
+    pub wiminus: i32,
+    pub finished: i32,
+    pub entering: i32,
+    pub sp_secret: i32,
+    pub kills: i32,
+    pub secret: i32,
+    pub items: i32,
+    pub frags: i32,
+    pub timepatch: i32,
+    pub par: i32,
+    pub sucks: i32,
+    pub killers: i32,
+    pub victims: i32,
+    pub total: i32,
+    pub star: i32,
+    pub bstar: i32,
+    pub p: [i32; 4],
+    pub bp: [i32; 4],
+    pub lnames: Vec<i32>,
+    pub background: i32,
     pub snl_pointeron: bool,
     pub dm_state: i32,
     pub dm_frags: [[i32; 4]; 4],
@@ -96,9 +97,9 @@ impl WiStuffState {
                     data1: 0 as i32,
                     data2: 0 as i32,
                     p: [
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
+                        -1,
+                        -1,
+                        -1,
                     ],
                     nexttic: 0 as i32,
                     lastdrawn: 0 as i32,
@@ -116,9 +117,9 @@ impl WiStuffState {
                     data1: 0 as i32,
                     data2: 0 as i32,
                     p: [
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
+                        -1,
+                        -1,
+                        -1,
                     ],
                     nexttic: 0 as i32,
                     lastdrawn: 0 as i32,
@@ -136,9 +137,9 @@ impl WiStuffState {
                     data1: 0 as i32,
                     data2: 0 as i32,
                     p: [
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
+                        -1,
+                        -1,
+                        -1,
                     ],
                     nexttic: 0 as i32,
                     lastdrawn: 0 as i32,
@@ -156,9 +157,9 @@ impl WiStuffState {
                     data1: 0 as i32,
                     data2: 0 as i32,
                     p: [
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
+                        -1,
+                        -1,
+                        -1,
                     ],
                     nexttic: 0 as i32,
                     lastdrawn: 0 as i32,
@@ -176,9 +177,9 @@ impl WiStuffState {
                     data1: 0 as i32,
                     data2: 0 as i32,
                     p: [
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
+                        -1,
+                        -1,
+                        -1,
                     ],
                     nexttic: 0 as i32,
                     lastdrawn: 0 as i32,
@@ -196,9 +197,9 @@ impl WiStuffState {
                     data1: 0 as i32,
                     data2: 0 as i32,
                     p: [
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
+                        -1,
+                        -1,
+                        -1,
                     ],
                     nexttic: 0 as i32,
                     lastdrawn: 0 as i32,
@@ -216,9 +217,9 @@ impl WiStuffState {
                     data1: 0 as i32,
                     data2: 0 as i32,
                     p: [
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
+                        -1,
+                        -1,
+                        -1,
                     ],
                     nexttic: 0 as i32,
                     lastdrawn: 0 as i32,
@@ -236,9 +237,9 @@ impl WiStuffState {
                     data1: 0 as i32,
                     data2: 0 as i32,
                     p: [
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
+                        -1,
+                        -1,
+                        -1,
                     ],
                     nexttic: 0 as i32,
                     lastdrawn: 0 as i32,
@@ -256,9 +257,9 @@ impl WiStuffState {
                     data1: 0 as i32,
                     data2: 0 as i32,
                     p: [
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
+                        -1,
+                        -1,
+                        -1,
                     ],
                     nexttic: 0 as i32,
                     lastdrawn: 0 as i32,
@@ -276,9 +277,9 @@ impl WiStuffState {
                     data1: 0 as i32,
                     data2: 0 as i32,
                     p: [
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
+                        -1,
+                        -1,
+                        -1,
                     ],
                     nexttic: 0 as i32,
                     lastdrawn: 0 as i32,
@@ -298,9 +299,9 @@ impl WiStuffState {
                     data1: 1 as i32,
                     data2: 0 as i32,
                     p: [
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
+                        -1,
+                        -1,
+                        -1,
                     ],
                     nexttic: 0 as i32,
                     lastdrawn: 0 as i32,
@@ -318,9 +319,9 @@ impl WiStuffState {
                     data1: 2 as i32,
                     data2: 0 as i32,
                     p: [
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
+                        -1,
+                        -1,
+                        -1,
                     ],
                     nexttic: 0 as i32,
                     lastdrawn: 0 as i32,
@@ -338,9 +339,9 @@ impl WiStuffState {
                     data1: 3 as i32,
                     data2: 0 as i32,
                     p: [
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
+                        -1,
+                        -1,
+                        -1,
                     ],
                     nexttic: 0 as i32,
                     lastdrawn: 0 as i32,
@@ -358,9 +359,9 @@ impl WiStuffState {
                     data1: 4 as i32,
                     data2: 0 as i32,
                     p: [
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
+                        -1,
+                        -1,
+                        -1,
                     ],
                     nexttic: 0 as i32,
                     lastdrawn: 0 as i32,
@@ -378,9 +379,9 @@ impl WiStuffState {
                     data1: 5 as i32,
                     data2: 0 as i32,
                     p: [
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
+                        -1,
+                        -1,
+                        -1,
                     ],
                     nexttic: 0 as i32,
                     lastdrawn: 0 as i32,
@@ -398,9 +399,9 @@ impl WiStuffState {
                     data1: 6 as i32,
                     data2: 0 as i32,
                     p: [
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
+                        -1,
+                        -1,
+                        -1,
                     ],
                     nexttic: 0 as i32,
                     lastdrawn: 0 as i32,
@@ -418,9 +419,9 @@ impl WiStuffState {
                     data1: 7 as i32,
                     data2: 0 as i32,
                     p: [
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
+                        -1,
+                        -1,
+                        -1,
                     ],
                     nexttic: 0 as i32,
                     lastdrawn: 0 as i32,
@@ -438,9 +439,9 @@ impl WiStuffState {
                     data1: 8 as i32,
                     data2: 0 as i32,
                     p: [
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
+                        -1,
+                        -1,
+                        -1,
                     ],
                     nexttic: 0 as i32,
                     lastdrawn: 0 as i32,
@@ -458,9 +459,9 @@ impl WiStuffState {
                     data1: 8 as i32,
                     data2: 0 as i32,
                     p: [
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
+                        -1,
+                        -1,
+                        -1,
                     ],
                     nexttic: 0 as i32,
                     lastdrawn: 0 as i32,
@@ -480,9 +481,9 @@ impl WiStuffState {
                     data1: 0 as i32,
                     data2: 0 as i32,
                     p: [
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
+                        -1,
+                        -1,
+                        -1,
                     ],
                     nexttic: 0 as i32,
                     lastdrawn: 0 as i32,
@@ -500,9 +501,9 @@ impl WiStuffState {
                     data1: 0 as i32,
                     data2: 0 as i32,
                     p: [
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
+                        -1,
+                        -1,
+                        -1,
                     ],
                     nexttic: 0 as i32,
                     lastdrawn: 0 as i32,
@@ -520,9 +521,9 @@ impl WiStuffState {
                     data1: 0 as i32,
                     data2: 0 as i32,
                     p: [
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
+                        -1,
+                        -1,
+                        -1,
                     ],
                     nexttic: 0 as i32,
                     lastdrawn: 0 as i32,
@@ -540,9 +541,9 @@ impl WiStuffState {
                     data1: 0 as i32,
                     data2: 0 as i32,
                     p: [
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
+                        -1,
+                        -1,
+                        -1,
                     ],
                     nexttic: 0 as i32,
                     lastdrawn: 0 as i32,
@@ -560,9 +561,9 @@ impl WiStuffState {
                     data1: 0 as i32,
                     data2: 0 as i32,
                     p: [
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
+                        -1,
+                        -1,
+                        -1,
                     ],
                     nexttic: 0 as i32,
                     lastdrawn: 0 as i32,
@@ -580,9 +581,9 @@ impl WiStuffState {
                     data1: 0 as i32,
                     data2: 0 as i32,
                     p: [
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
-                        ::core::ptr::null::<patch_t>() as *mut patch_t,
+                        -1,
+                        -1,
+                        -1,
                     ],
                     nexttic: 0 as i32,
                     lastdrawn: 0 as i32,
@@ -607,37 +608,37 @@ impl WiStuffState {
             cnt_pause: 0,
             NUMCMAPS: 0,
             yah: [
-                ::core::ptr::null::<patch_t>() as *mut patch_t,
-                ::core::ptr::null::<patch_t>() as *mut patch_t,
-                ::core::ptr::null::<patch_t>() as *mut patch_t,
+                -1,
+                -1,
+                -1,
             ],
             splat: [
-                ::core::ptr::null::<patch_t>() as *mut patch_t,
-                ::core::ptr::null::<patch_t>() as *mut patch_t,
+                -1,
+                -1,
             ],
-            percent: ::core::ptr::null::<patch_t>() as *mut patch_t,
-            colon: ::core::ptr::null::<patch_t>() as *mut patch_t,
-            num: [::core::ptr::null::<patch_t>() as *mut patch_t; 10],
-            wiminus: ::core::ptr::null::<patch_t>() as *mut patch_t,
-            finished: ::core::ptr::null::<patch_t>() as *mut patch_t,
-            entering: ::core::ptr::null::<patch_t>() as *mut patch_t,
-            sp_secret: ::core::ptr::null::<patch_t>() as *mut patch_t,
-            kills: ::core::ptr::null::<patch_t>() as *mut patch_t,
-            secret: ::core::ptr::null::<patch_t>() as *mut patch_t,
-            items: ::core::ptr::null::<patch_t>() as *mut patch_t,
-            frags: ::core::ptr::null::<patch_t>() as *mut patch_t,
-            timepatch: ::core::ptr::null::<patch_t>() as *mut patch_t,
-            par: ::core::ptr::null::<patch_t>() as *mut patch_t,
-            sucks: ::core::ptr::null::<patch_t>() as *mut patch_t,
-            killers: ::core::ptr::null::<patch_t>() as *mut patch_t,
-            victims: ::core::ptr::null::<patch_t>() as *mut patch_t,
-            total: ::core::ptr::null::<patch_t>() as *mut patch_t,
-            star: ::core::ptr::null::<patch_t>() as *mut patch_t,
-            bstar: ::core::ptr::null::<patch_t>() as *mut patch_t,
-            p: [::core::ptr::null::<patch_t>() as *mut patch_t; 4],
-            bp: [::core::ptr::null::<patch_t>() as *mut patch_t; 4],
+            percent: -1,
+            colon: -1,
+            num: [-1; 10],
+            wiminus: -1,
+            finished: -1,
+            entering: -1,
+            sp_secret: -1,
+            kills: -1,
+            secret: -1,
+            items: -1,
+            frags: -1,
+            timepatch: -1,
+            par: -1,
+            sucks: -1,
+            killers: -1,
+            victims: -1,
+            total: -1,
+            star: -1,
+            bstar: -1,
+            p: [-1; 4],
+            bp: [-1; 4],
             lnames: Vec::new(),
-            background: ::core::ptr::null::<patch_t>() as *mut patch_t,
+            background: -1,
             snl_pointeron: false,
             dm_state: 0,
             dm_frags: [[0; 4]; 4],
@@ -700,7 +701,7 @@ pub struct anim_t {
     pub loc: point_t,
     pub data1: i32,
     pub data2: i32,
-    pub p: [*mut patch_t; 3],
+    pub p: [i32; 3],
     pub nexttic: i32,
     pub lastdrawn: i32,
     pub ctr: i32,
@@ -854,7 +855,8 @@ static lnodes: [[point_t; 9]; 4] = [
 ];
 pub const SHOWNEXTLOCDELAY: i32 = 4;
 pub fn WI_slamBackground(state: &mut GameState) {
-    unsafe { V_DrawPatch(state, 0 as i32, 0 as i32, state.wi_stuff.background) };
+    let patch = V_CachePatchNum(state, state.wi_stuff.background);
+    unsafe { V_DrawPatch(state, 0 as i32, 0 as i32, patch) };
 }
 pub fn WI_Responder() -> bool {
     return false;
@@ -864,7 +866,8 @@ pub unsafe fn WI_drawLF(state: &mut GameState) {
     if state.doomstat.gamemode as u32 != GameMode_t::commercial as i32 as u32
         || (*state.wi_stuff.wbs).last < state.wi_stuff.NUMCMAPS
     {
-        let last_patch = state.wi_stuff.lnames[(*state.wi_stuff.wbs).last as usize];
+        let last_lump = state.wi_stuff.lnames[(*state.wi_stuff.wbs).last as usize];
+        let last_patch = V_CachePatchNum(state, last_lump);
         V_DrawPatch(
             state,
             (SCREENWIDTH - (*last_patch).width as i32) / 2 as i32,
@@ -872,11 +875,12 @@ pub unsafe fn WI_drawLF(state: &mut GameState) {
             last_patch,
         );
         y += 5 as i32 * (*last_patch).height as i32 / 4 as i32;
+        let finished_patch = V_CachePatchNum(state, state.wi_stuff.finished);
         V_DrawPatch(
             state,
-            (SCREENWIDTH - (*state.wi_stuff.finished).width as i32) / 2 as i32,
+            (SCREENWIDTH - (*finished_patch).width as i32) / 2 as i32,
             y,
-            state.wi_stuff.finished,
+            finished_patch,
         );
     } else if !((*state.wi_stuff.wbs).last == state.wi_stuff.NUMCMAPS) {
         if (*state.wi_stuff.wbs).last > state.wi_stuff.NUMCMAPS {
@@ -895,13 +899,15 @@ pub unsafe fn WI_drawLF(state: &mut GameState) {
 }
 pub unsafe fn WI_drawEL(state: &mut GameState) {
     let mut y: i32 = WI_TITLEY;
+    let entering_patch = V_CachePatchNum(state, state.wi_stuff.entering);
     V_DrawPatch(
         state,
-        (SCREENWIDTH - (*state.wi_stuff.entering).width as i32) / 2 as i32,
+        (SCREENWIDTH - (*entering_patch).width as i32) / 2 as i32,
         y,
-        state.wi_stuff.entering,
+        entering_patch,
     );
-    let next_patch = state.wi_stuff.lnames[(*state.wi_stuff.wbs).next as usize];
+    let next_lump = state.wi_stuff.lnames[(*state.wi_stuff.wbs).next as usize];
+    let next_patch = V_CachePatchNum(state, next_lump);
     y += 5 as i32 * (*next_patch).height as i32 / 4 as i32;
     V_DrawPatch(
         state,
@@ -910,7 +916,7 @@ pub unsafe fn WI_drawEL(state: &mut GameState) {
         next_patch,
     );
 }
-pub unsafe fn WI_drawOnLnode(state: &mut GameState, mut n: i32, mut c: *mut *mut patch_t) {
+pub unsafe fn WI_drawOnLnode(state: &mut GameState, mut n: i32, mut c: *mut i32) {
     let mut i: i32 = 0;
     let mut left: i32 = 0;
     let mut top: i32 = 0;
@@ -919,27 +925,29 @@ pub unsafe fn WI_drawOnLnode(state: &mut GameState, mut n: i32, mut c: *mut *mut
     let mut fits: bool = false;
     i = 0 as i32;
     loop {
+        let patch = V_CachePatchNum(state, *c.offset(i as isize));
         left = lnodes[(*state.wi_stuff.wbs).epsd as usize][n as usize].x
-            - (**c.offset(i as isize)).leftoffset as i32;
+            - (*patch).leftoffset as i32;
         top = lnodes[(*state.wi_stuff.wbs).epsd as usize][n as usize].y
-            - (**c.offset(i as isize)).topoffset as i32;
-        right = left + (**c.offset(i as isize)).width as i32;
-        bottom = top + (**c.offset(i as isize)).height as i32;
+            - (*patch).topoffset as i32;
+        right = left + (*patch).width as i32;
+        bottom = top + (*patch).height as i32;
         if left >= 0 as i32 && right < SCREENWIDTH && top >= 0 as i32 && bottom < SCREENHEIGHT {
             fits = true;
         } else {
             i += 1;
         }
-        if !(!fits && i != 2 as i32 && !(*c.offset(i as isize)).is_null()) {
+        if !(!fits && i != 2 as i32 && *c.offset(i as isize) != -1) {
             break;
         }
     }
     if fits && i < 2 as i32 {
+        let patch = V_CachePatchNum(state, *c.offset(i as isize));
         V_DrawPatch(
             state,
             lnodes[(*state.wi_stuff.wbs).epsd as usize][n as usize].x,
             lnodes[(*state.wi_stuff.wbs).epsd as usize][n as usize].y,
-            *c.offset(i as isize),
+            patch,
         );
     } else {
         print!("Could not place patch on level {}", n + 1 as i32);
@@ -1040,7 +1048,8 @@ pub unsafe fn WI_drawAnimatedBack(state: &mut GameState) {
             .offset((*state.wi_stuff.wbs).epsd as isize))
         .offset(i as isize) as *mut anim_t;
         if (*a).ctr >= 0 as i32 {
-            V_DrawPatch(state, (*a).loc.x, (*a).loc.y, (*a).p[(*a).ctr as usize]);
+            let patch = V_CachePatchNum(state, (*a).p[(*a).ctr as usize]);
+            V_DrawPatch(state, (*a).loc.x, (*a).loc.y, patch);
         }
         i += 1;
     }
@@ -1052,7 +1061,8 @@ pub unsafe fn WI_drawNum(
     mut n: i32,
     mut digits: i32,
 ) -> i32 {
-    let mut fontwidth: i32 = (*state.wi_stuff.num[0]).width as i32;
+    let zero_patch = V_CachePatchNum(state, state.wi_stuff.num[0]);
+    let mut fontwidth: i32 = (*zero_patch).width as i32;
     let mut neg: i32 = 0;
     let mut temp: i32 = 0;
     if digits < 0 as i32 {
@@ -1081,12 +1091,14 @@ pub unsafe fn WI_drawNum(
             break;
         }
         x -= fontwidth;
-        V_DrawPatch(state, x, y, state.wi_stuff.num[(n % 10 as i32) as usize]);
+        let digit_patch = V_CachePatchNum(state, state.wi_stuff.num[(n % 10 as i32) as usize]);
+        V_DrawPatch(state, x, y, digit_patch);
         n /= 10 as i32;
     }
     if neg != 0 {
         x -= 8 as i32;
-        V_DrawPatch(state, x, y, state.wi_stuff.wiminus);
+        let minus_patch = V_CachePatchNum(state, state.wi_stuff.wiminus);
+        V_DrawPatch(state, x, y, minus_patch);
     }
     return x;
 }
@@ -1094,7 +1106,8 @@ pub fn WI_drawPercent(state: &mut GameState, mut x: i32, mut y: i32, mut p_0: i3
     if p_0 < 0 as i32 {
         return;
     }
-    unsafe { V_DrawPatch(state, x, y, state.wi_stuff.percent) };
+    let percent_patch = V_CachePatchNum(state, state.wi_stuff.percent);
+    unsafe { V_DrawPatch(state, x, y, percent_patch) };
     unsafe { WI_drawNum(state, x, y, p_0, -(1 as i32)) };
 }
 pub unsafe fn WI_drawTime(state: &mut GameState, mut x: i32, mut y: i32, mut t: i32) {
@@ -1107,21 +1120,23 @@ pub unsafe fn WI_drawTime(state: &mut GameState, mut x: i32, mut y: i32, mut t: 
         div = 1 as i32;
         loop {
             n = t / div % 60 as i32;
-            x = WI_drawNum(state, x, y, n, 2 as i32) - (*state.wi_stuff.colon).width as i32;
+            let colon_patch = V_CachePatchNum(state, state.wi_stuff.colon);
+            x = WI_drawNum(state, x, y, n, 2 as i32) - (*colon_patch).width as i32;
             div *= 60 as i32;
             if div == 60 as i32 || t / div != 0 {
-                V_DrawPatch(state, x, y, state.wi_stuff.colon);
+                V_DrawPatch(state, x, y, colon_patch);
             }
             if !(t / div != 0) {
                 break;
             }
         }
     } else {
+        let sucks_patch = V_CachePatchNum(state, state.wi_stuff.sucks);
         V_DrawPatch(
             state,
-            x - (*state.wi_stuff.sucks).width as i32,
+            x - (*sucks_patch).width as i32,
             y,
-            state.wi_stuff.sucks,
+            sucks_patch,
         );
     };
 }
@@ -1129,7 +1144,7 @@ pub unsafe fn WI_End(state: &mut GameState) {
     pub unsafe fn WI_unloadData_0(state: &mut GameState) {
         WI_loadUnloadData(
             state,
-            Some(WI_unloadCallback as unsafe fn(&mut GameState, &str, *mut *mut patch_t) -> ()),
+            Some(WI_unloadCallback as unsafe fn(&mut GameState, &str, *mut i32) -> ()),
         );
     }
     WI_unloadData_0(state);
@@ -1178,17 +1193,17 @@ pub unsafe fn WI_drawShowNextLoc(state: &mut GameState) {
         };
         i = 0 as i32;
         while i <= last {
-            let splat = &raw mut state.wi_stuff.splat as *mut *mut patch_t;
+            let splat = &raw mut state.wi_stuff.splat as *mut i32;
             WI_drawOnLnode(state, i, splat);
             i += 1;
         }
         if (*state.wi_stuff.wbs).didsecret {
-            let splat = &raw mut state.wi_stuff.splat as *mut *mut patch_t;
+            let splat = &raw mut state.wi_stuff.splat as *mut i32;
             WI_drawOnLnode(state, 8 as i32, splat);
         }
         if state.wi_stuff.snl_pointeron {
             let next = (*state.wi_stuff.wbs).next;
-            let yah = &raw mut state.wi_stuff.yah as *mut *mut patch_t;
+            let yah = &raw mut state.wi_stuff.yah as *mut i32;
             WI_drawOnLnode(state, next, yah);
         }
     }
@@ -1332,43 +1347,49 @@ pub unsafe fn WI_drawDeathmatchStats(state: &mut GameState) {
     WI_slamBackground(state);
     WI_drawAnimatedBack(state);
     WI_drawLF(state);
+    let total_patch = V_CachePatchNum(state, state.wi_stuff.total);
     V_DrawPatch(
         state,
-        DM_TOTALSX - (*state.wi_stuff.total).width as i32 / 2 as i32,
+        DM_TOTALSX - (*total_patch).width as i32 / 2 as i32,
         DM_MATRIXY - WI_SPACINGY + 10 as i32,
-        state.wi_stuff.total,
+        total_patch,
     );
-    V_DrawPatch(state, DM_KILLERSX, DM_KILLERSY, state.wi_stuff.killers);
-    V_DrawPatch(state, DM_VICTIMSX, DM_VICTIMSY, state.wi_stuff.victims);
+    let killers_patch = V_CachePatchNum(state, state.wi_stuff.killers);
+    V_DrawPatch(state, DM_KILLERSX, DM_KILLERSY, killers_patch);
+    let victims_patch = V_CachePatchNum(state, state.wi_stuff.victims);
+    V_DrawPatch(state, DM_VICTIMSX, DM_VICTIMSY, victims_patch);
     x = DM_MATRIXX + DM_SPACINGX;
     y = DM_MATRIXY;
     i = 0 as i32;
     while i < MAXPLAYERS {
         if state.g_game.playeringame[i as usize] {
+            let p_patch = V_CachePatchNum(state, state.wi_stuff.p[i as usize]);
             V_DrawPatch(
                 state,
-                x - (*state.wi_stuff.p[i as usize]).width as i32 / 2 as i32,
+                x - (*p_patch).width as i32 / 2 as i32,
                 DM_MATRIXY - WI_SPACINGY,
-                state.wi_stuff.p[i as usize],
+                p_patch,
             );
             V_DrawPatch(
                 state,
-                DM_MATRIXX - (*state.wi_stuff.p[i as usize]).width as i32 / 2 as i32,
+                DM_MATRIXX - (*p_patch).width as i32 / 2 as i32,
                 y,
-                state.wi_stuff.p[i as usize],
+                p_patch,
             );
             if i == state.wi_stuff.me {
+                let bstar_patch = V_CachePatchNum(state, state.wi_stuff.bstar);
                 V_DrawPatch(
                     state,
-                    x - (*state.wi_stuff.p[i as usize]).width as i32 / 2 as i32,
+                    x - (*p_patch).width as i32 / 2 as i32,
                     DM_MATRIXY - WI_SPACINGY,
-                    state.wi_stuff.bstar,
+                    bstar_patch,
                 );
+                let star_patch = V_CachePatchNum(state, state.wi_stuff.star);
                 V_DrawPatch(
                     state,
-                    DM_MATRIXX - (*state.wi_stuff.p[i as usize]).width as i32 / 2 as i32,
+                    DM_MATRIXX - (*p_patch).width as i32 / 2 as i32,
                     y,
-                    state.wi_stuff.star,
+                    star_patch,
                 );
             }
         }
@@ -1377,7 +1398,8 @@ pub unsafe fn WI_drawDeathmatchStats(state: &mut GameState) {
         i += 1;
     }
     y = DM_MATRIXY + 10 as i32;
-    w = (*state.wi_stuff.num[0]).width as i32;
+    let zero_patch = V_CachePatchNum(state, state.wi_stuff.num[0]);
+    w = (*zero_patch).width as i32;
     i = 0 as i32;
     while i < MAXPLAYERS {
         x = DM_MATRIXX + DM_SPACINGX;
@@ -1568,71 +1590,79 @@ pub unsafe fn WI_drawNetgameStats(state: &mut GameState) {
     let mut i: i32 = 0;
     let mut x: i32 = 0;
     let mut y: i32 = 0;
-    let mut pwidth: i32 = (*state.wi_stuff.percent).width as i32;
+    let percent_patch = V_CachePatchNum(state, state.wi_stuff.percent);
+    let mut pwidth: i32 = (*percent_patch).width as i32;
     WI_slamBackground(state);
     WI_drawAnimatedBack(state);
     WI_drawLF(state);
+    let star_patch = V_CachePatchNum(state, state.wi_stuff.star);
+    let star_width = (*star_patch).width as i32;
+    let kills_patch = V_CachePatchNum(state, state.wi_stuff.kills);
     V_DrawPatch(
         state,
         32 as i32
-            + (*state.wi_stuff.star).width as i32 / 2 as i32
+            + star_width / 2 as i32
             + 32 as i32 * (state.wi_stuff.dofrags == 0) as i32
             + NG_SPACINGX
-            - (*state.wi_stuff.kills).width as i32,
+            - (*kills_patch).width as i32,
         NG_STATSY,
-        state.wi_stuff.kills,
+        kills_patch,
     );
+    let items_patch = V_CachePatchNum(state, state.wi_stuff.items);
     V_DrawPatch(
         state,
         32 as i32
-            + (*state.wi_stuff.star).width as i32 / 2 as i32
+            + star_width / 2 as i32
             + 32 as i32 * (state.wi_stuff.dofrags == 0) as i32
             + 2 as i32 * NG_SPACINGX
-            - (*state.wi_stuff.items).width as i32,
+            - (*items_patch).width as i32,
         NG_STATSY,
-        state.wi_stuff.items,
+        items_patch,
     );
+    let secret_patch = V_CachePatchNum(state, state.wi_stuff.secret);
     V_DrawPatch(
         state,
         32 as i32
-            + (*state.wi_stuff.star).width as i32 / 2 as i32
+            + star_width / 2 as i32
             + 32 as i32 * (state.wi_stuff.dofrags == 0) as i32
             + 3 as i32 * NG_SPACINGX
-            - (*state.wi_stuff.secret).width as i32,
+            - (*secret_patch).width as i32,
         NG_STATSY,
-        state.wi_stuff.secret,
+        secret_patch,
     );
     if state.wi_stuff.dofrags != 0 {
+        let frags_patch = V_CachePatchNum(state, state.wi_stuff.frags);
         V_DrawPatch(
             state,
             32 as i32
-                + (*state.wi_stuff.star).width as i32 / 2 as i32
+                + star_width / 2 as i32
                 + 32 as i32 * (state.wi_stuff.dofrags == 0) as i32
                 + 4 as i32 * NG_SPACINGX
-                - (*state.wi_stuff.frags).width as i32,
+                - (*frags_patch).width as i32,
             NG_STATSY,
-            state.wi_stuff.frags,
+            frags_patch,
         );
     }
-    y = NG_STATSY + (*state.wi_stuff.kills).height as i32;
+    y = NG_STATSY + (*kills_patch).height as i32;
     i = 0 as i32;
     while i < MAXPLAYERS {
         if state.g_game.playeringame[i as usize] {
             x = 32 as i32
-                + (*state.wi_stuff.star).width as i32 / 2 as i32
+                + star_width / 2 as i32
                 + 32 as i32 * (state.wi_stuff.dofrags == 0) as i32;
+            let p_patch = V_CachePatchNum(state, state.wi_stuff.p[i as usize]);
             V_DrawPatch(
                 state,
-                x - (*state.wi_stuff.p[i as usize]).width as i32,
+                x - (*p_patch).width as i32,
                 y,
-                state.wi_stuff.p[i as usize],
+                p_patch,
             );
             if i == state.wi_stuff.me {
                 V_DrawPatch(
                     state,
-                    x - (*state.wi_stuff.p[i as usize]).width as i32,
+                    x - (*p_patch).width as i32,
                     y,
-                    state.wi_stuff.star,
+                    star_patch,
                 );
             }
             x += NG_SPACINGX;
@@ -1770,21 +1800,25 @@ pub unsafe fn WI_updateStats(state: &mut GameState) {
 }
 pub unsafe fn WI_drawStats(state: &mut GameState) {
     let mut lh: i32 = 0;
-    lh = 3 as i32 * (*state.wi_stuff.num[0]).height as i32 / 2 as i32;
+    let zero_patch = V_CachePatchNum(state, state.wi_stuff.num[0]);
+    lh = 3 as i32 * (*zero_patch).height as i32 / 2 as i32;
     WI_slamBackground(state);
     WI_drawAnimatedBack(state);
     WI_drawLF(state);
-    V_DrawPatch(state, SP_STATSX, SP_STATSY, state.wi_stuff.kills);
+    let kills_patch = V_CachePatchNum(state, state.wi_stuff.kills);
+    V_DrawPatch(state, SP_STATSX, SP_STATSY, kills_patch);
     let cnt_kills = state.wi_stuff.cnt_kills[0];
     WI_drawPercent(state, SCREENWIDTH - SP_STATSX, SP_STATSY, cnt_kills);
-    V_DrawPatch(state, SP_STATSX, SP_STATSY + lh, state.wi_stuff.items);
+    let items_patch = V_CachePatchNum(state, state.wi_stuff.items);
+    V_DrawPatch(state, SP_STATSX, SP_STATSY + lh, items_patch);
     let cnt_items = state.wi_stuff.cnt_items[0];
     WI_drawPercent(state, SCREENWIDTH - SP_STATSX, SP_STATSY + lh, cnt_items);
+    let sp_secret_patch = V_CachePatchNum(state, state.wi_stuff.sp_secret);
     V_DrawPatch(
         state,
         SP_STATSX,
         SP_STATSY + 2 as i32 * lh,
-        state.wi_stuff.sp_secret,
+        sp_secret_patch,
     );
     let cnt_secret = state.wi_stuff.cnt_secret[0];
     WI_drawPercent(
@@ -1793,15 +1827,17 @@ pub unsafe fn WI_drawStats(state: &mut GameState) {
         SP_STATSY + 2 as i32 * lh,
         cnt_secret,
     );
-    V_DrawPatch(state, SP_TIMEX, SP_TIMEY, state.wi_stuff.timepatch);
+    let timepatch_patch = V_CachePatchNum(state, state.wi_stuff.timepatch);
+    V_DrawPatch(state, SP_TIMEX, SP_TIMEY, timepatch_patch);
     let cnt_time = state.wi_stuff.cnt_time;
     WI_drawTime(state, SCREENWIDTH / 2 as i32 - SP_TIMEX, SP_TIMEY, cnt_time);
     if (*state.wi_stuff.wbs).epsd < 3 as i32 {
+        let par_patch = V_CachePatchNum(state, state.wi_stuff.par);
         V_DrawPatch(
             state,
             SCREENWIDTH / 2 as i32 + SP_TIMEX,
             SP_TIMEY,
-            state.wi_stuff.par,
+            par_patch,
         );
         let cnt_par = state.wi_stuff.cnt_par;
         WI_drawTime(state, SCREENWIDTH - SP_TIMEX, SP_TIMEY, cnt_par);
@@ -1868,14 +1904,14 @@ unsafe fn WI_loadUnloadData(state: &mut GameState, mut callback: load_callback_t
     if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 {
         i = 0 as i32;
         while i < state.wi_stuff.NUMCMAPS {
-            let cb_ptr = state.wi_stuff.lnames.as_mut_ptr().offset(i as isize) as *mut *mut patch_t;
+            let cb_ptr = state.wi_stuff.lnames.as_mut_ptr().offset(i as isize) as *mut i32;
             callback.expect("non-null function pointer")(state, &format!("CWILV{:02}", i,), cb_ptr);
             i += 1;
         }
     } else {
         i = 0 as i32;
         while i < NUMMAPS {
-            let cb_ptr = state.wi_stuff.lnames.as_mut_ptr().offset(i as isize) as *mut *mut patch_t;
+            let cb_ptr = state.wi_stuff.lnames.as_mut_ptr().offset(i as isize) as *mut i32;
             callback.expect("non-null function pointer")(
                 state,
                 &format!("WILV{}{}", (*state.wi_stuff.wbs).epsd, i,),
@@ -1883,14 +1919,14 @@ unsafe fn WI_loadUnloadData(state: &mut GameState, mut callback: load_callback_t
             );
             i += 1;
         }
-        let cb_ptr = (&raw mut state.wi_stuff.yah as *mut *mut patch_t).offset(0 as i32 as isize)
-            as *mut *mut patch_t;
+        let cb_ptr = (&raw mut state.wi_stuff.yah as *mut i32).offset(0 as i32 as isize)
+            as *mut i32;
         callback.expect("non-null function pointer")(state, "WIURH0", cb_ptr);
-        let cb_ptr = (&raw mut state.wi_stuff.yah as *mut *mut patch_t).offset(1 as i32 as isize)
-            as *mut *mut patch_t;
+        let cb_ptr = (&raw mut state.wi_stuff.yah as *mut i32).offset(1 as i32 as isize)
+            as *mut i32;
         callback.expect("non-null function pointer")(state, "WIURH1", cb_ptr);
-        let cb_ptr = (&raw mut state.wi_stuff.splat as *mut *mut patch_t).offset(0 as i32 as isize)
-            as *mut *mut patch_t;
+        let cb_ptr = (&raw mut state.wi_stuff.splat as *mut i32).offset(0 as i32 as isize)
+            as *mut i32;
         callback.expect("non-null function pointer")(state, "WISPLAT", cb_ptr);
         if (*state.wi_stuff.wbs).epsd < 3 as i32 {
             j = 0 as i32;
@@ -1904,8 +1940,8 @@ unsafe fn WI_loadUnloadData(state: &mut GameState, mut callback: load_callback_t
                         callback.expect("non-null function pointer")(
                             state,
                             &format!("WIA{}{:02}{:02}", (*state.wi_stuff.wbs).epsd, j, i,),
-                            (&raw mut (*a).p as *mut *mut patch_t).offset(i as isize)
-                                as *mut *mut patch_t,
+                            (&raw mut (*a).p as *mut i32).offset(i as isize)
+                                as *mut i32,
                         );
                     } else {
                         (*a).p[i as usize] =
@@ -1921,8 +1957,8 @@ unsafe fn WI_loadUnloadData(state: &mut GameState, mut callback: load_callback_t
     callback.expect("non-null function pointer")(state, "WIMINUS", cb_ptr);
     i = 0 as i32;
     while i < 10 as i32 {
-        let cb_ptr = (&raw mut state.wi_stuff.num as *mut *mut patch_t).offset(i as isize)
-            as *mut *mut patch_t;
+        let cb_ptr = (&raw mut state.wi_stuff.num as *mut i32).offset(i as isize)
+            as *mut i32;
         callback.expect("non-null function pointer")(state, &format!("WINUM{}", i,), cb_ptr);
         i += 1;
     }
@@ -1968,11 +2004,11 @@ unsafe fn WI_loadUnloadData(state: &mut GameState, mut callback: load_callback_t
     callback.expect("non-null function pointer")(state, "WIMSTT", cb_ptr);
     i = 0 as i32;
     while i < MAXPLAYERS {
-        let cb_ptr = (&raw mut state.wi_stuff.p as *mut *mut patch_t).offset(i as isize)
-            as *mut *mut patch_t;
+        let cb_ptr = (&raw mut state.wi_stuff.p as *mut i32).offset(i as isize)
+            as *mut i32;
         callback.expect("non-null function pointer")(state, &format!("STPB{}", i,), cb_ptr);
-        let cb_ptr = (&raw mut state.wi_stuff.bp as *mut *mut patch_t).offset(i as isize)
-            as *mut *mut patch_t;
+        let cb_ptr = (&raw mut state.wi_stuff.bp as *mut i32).offset(i as isize)
+            as *mut i32;
         callback.expect("non-null function pointer")(
             state,
             &format!("WIBP{}", i + 1 as i32,),
@@ -1992,28 +2028,33 @@ unsafe fn WI_loadUnloadData(state: &mut GameState, mut callback: load_callback_t
     let cb_ptr = &raw mut state.wi_stuff.background;
     callback.expect("non-null function pointer")(state, &name, cb_ptr);
 }
-unsafe fn WI_loadCallback(state: &mut GameState, name: &str, variable: *mut *mut patch_t) {
-    *variable = W_CacheLumpName(state, name) as *mut patch_t;
+unsafe fn WI_loadCallback(state: &mut GameState, name: &str, variable: *mut i32) {
+    let lumpnum = W_GetNumForName(&mut state.w_wad, name);
+    W_CacheLumpNum(state, lumpnum);
+    *variable = lumpnum;
 }
 pub unsafe fn WI_loadData(state: &mut GameState) {
     if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 {
         state.wi_stuff.NUMCMAPS = 32 as i32;
-        state.wi_stuff.lnames =
-            vec![::core::ptr::null_mut::<patch_t>(); state.wi_stuff.NUMCMAPS as usize];
+        state.wi_stuff.lnames = vec![-1; state.wi_stuff.NUMCMAPS as usize];
     } else {
-        state.wi_stuff.lnames = vec![::core::ptr::null_mut::<patch_t>(); NUMMAPS as usize];
+        state.wi_stuff.lnames = vec![-1; NUMMAPS as usize];
     }
     WI_loadUnloadData(
         state,
-        Some(WI_loadCallback as unsafe fn(&mut GameState, &str, *mut *mut patch_t) -> ()),
+        Some(WI_loadCallback as unsafe fn(&mut GameState, &str, *mut i32) -> ()),
     );
-    state.wi_stuff.star = W_CacheLumpName(state, "STFST01") as *mut patch_t;
-    state.wi_stuff.bstar = W_CacheLumpName(state, "STFDEAD0") as *mut patch_t;
+    let star_lump = W_GetNumForName(&mut state.w_wad, "STFST01");
+    W_CacheLumpNum(state, star_lump);
+    state.wi_stuff.star = star_lump;
+    let bstar_lump = W_GetNumForName(&mut state.w_wad, "STFDEAD0");
+    W_CacheLumpNum(state, bstar_lump);
+    state.wi_stuff.bstar = bstar_lump;
 }
-fn WI_unloadCallback(state: &mut GameState, name: &str, variable: *mut *mut patch_t) {
+fn WI_unloadCallback(state: &mut GameState, name: &str, variable: *mut i32) {
     unsafe {
         W_ReleaseLumpName(&mut state.w_wad, name);
-        *variable = ::core::ptr::null_mut::<patch_t>();
+        *variable = -1;
     }
 }
 pub fn WI_Drawer(state: &mut GameState) {

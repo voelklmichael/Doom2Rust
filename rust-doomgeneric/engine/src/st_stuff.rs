@@ -17,7 +17,6 @@ use crate::doomdef::SCREENWIDTH;
 use crate::doomdef::TICRATE;
 use crate::g_game::G_DeferedInitNew;
 use crate::game_state::GameState;
-use crate::hu_lib::patch_t;
 use crate::i_video::I_SetPalette;
 use crate::m_cheat::cheatseq_t;
 use crate::m_cheat::cht_CheckCheat;
@@ -43,12 +42,13 @@ use crate::stdint_types::size_t;
 use crate::tables::angle_t;
 use crate::tables::ANG180;
 use crate::tables::ANG45;
+use crate::v_video::V_CachePatchNum;
 use crate::v_video::V_CopyRect;
 use crate::v_video::V_DrawPatch;
 use crate::v_video::V_RestoreBuffer;
 use crate::v_video::V_UseBuffer;
 use crate::w_wad::W_CacheLumpNum;
-use crate::w_wad::{W_CacheLumpName, W_GetNumForName, W_ReleaseLumpName};
+use crate::w_wad::{W_GetNumForName, W_ReleaseLumpName};
 
 pub struct StStuffState {
     pub st_backing_screen: Vec<byte>,
@@ -66,15 +66,15 @@ pub struct StStuffState {
     pub st_notdeathmatch: bool,
     pub st_armson: bool,
     pub st_fragson: bool,
-    pub sbar: *mut patch_t,
-    pub tallnum: [*mut patch_t; 10],
-    pub tallpercent: *mut patch_t,
-    pub shortnum: [*mut patch_t; 10],
-    pub keys: [*mut patch_t; 6],
-    pub faces: [*mut patch_t; 42],
-    pub faceback: *mut patch_t,
-    pub armsbg: *mut patch_t,
-    pub arms: [[*mut patch_t; 2]; 6],
+    pub sbar: i32,
+    pub tallnum: [i32; 10],
+    pub tallpercent: i32,
+    pub shortnum: [i32; 10],
+    pub keys: [i32; 6],
+    pub faces: [i32; 42],
+    pub faceback: i32,
+    pub armsbg: i32,
+    pub arms: [[i32; 2]; 6],
     pub w_ready: st_number_t,
     pub w_frags: st_number_t,
     pub w_health: st_percent_t,
@@ -130,15 +130,15 @@ impl StStuffState {
             st_notdeathmatch: false,
             st_armson: false,
             st_fragson: false,
-            sbar: ::core::ptr::null::<patch_t>() as *mut patch_t,
-            tallnum: [::core::ptr::null::<patch_t>() as *mut patch_t; 10],
-            tallpercent: ::core::ptr::null::<patch_t>() as *mut patch_t,
-            shortnum: [::core::ptr::null::<patch_t>() as *mut patch_t; 10],
-            keys: [::core::ptr::null::<patch_t>() as *mut patch_t; 6],
-            faces: [::core::ptr::null::<patch_t>() as *mut patch_t; 42],
-            faceback: ::core::ptr::null::<patch_t>() as *mut patch_t,
-            armsbg: ::core::ptr::null::<patch_t>() as *mut patch_t,
-            arms: [[::core::ptr::null::<patch_t>() as *mut patch_t; 2]; 6],
+            sbar: -1,
+            tallnum: [-1; 10],
+            tallpercent: -1,
+            shortnum: [-1; 10],
+            keys: [-1; 6],
+            faces: [-1; 42],
+            faceback: -1,
+            armsbg: -1,
+            arms: [[-1; 2]; 6],
             w_ready: st_number_t {
                 x: 0,
                 y: 0,
@@ -146,7 +146,7 @@ impl StStuffState {
                 oldnum: 0,
                 num: ::core::ptr::null::<i32>() as *mut i32,
                 on: ::core::ptr::null::<bool>() as *mut bool,
-                p: ::core::ptr::null::<*mut patch_t>() as *mut *mut patch_t,
+                p: ::core::ptr::null_mut::<i32>(),
                 data: 0,
             },
             w_frags: st_number_t {
@@ -156,7 +156,7 @@ impl StStuffState {
                 oldnum: 0,
                 num: ::core::ptr::null::<i32>() as *mut i32,
                 on: ::core::ptr::null::<bool>() as *mut bool,
-                p: ::core::ptr::null::<*mut patch_t>() as *mut *mut patch_t,
+                p: ::core::ptr::null_mut::<i32>(),
                 data: 0,
             },
             w_health: st_percent_t {
@@ -167,10 +167,10 @@ impl StStuffState {
                     oldnum: 0,
                     num: ::core::ptr::null::<i32>() as *mut i32,
                     on: ::core::ptr::null::<bool>() as *mut bool,
-                    p: ::core::ptr::null::<*mut patch_t>() as *mut *mut patch_t,
+                    p: ::core::ptr::null_mut::<i32>(),
                     data: 0,
                 },
-                p: ::core::ptr::null::<patch_t>() as *mut patch_t,
+                p: -1,
             },
             w_armsbg: st_binicon_t {
                 x: 0,
@@ -178,7 +178,7 @@ impl StStuffState {
                 oldval: false,
                 val: ::core::ptr::null::<bool>() as *mut bool,
                 on: ::core::ptr::null::<bool>() as *mut bool,
-                p: ::core::ptr::null::<patch_t>() as *mut patch_t,
+                p: -1,
                 data: 0,
             },
             w_arms_owned: [0; 6],
@@ -188,7 +188,7 @@ impl StStuffState {
                 oldinum: 0,
                 inum: ::core::ptr::null::<i32>() as *mut i32,
                 on: ::core::ptr::null::<bool>() as *mut bool,
-                p: ::core::ptr::null::<*mut patch_t>() as *mut *mut patch_t,
+                p: ::core::ptr::null_mut::<i32>(),
                 data: 0,
             }; 6],
             w_faces: st_multicon_t {
@@ -197,7 +197,7 @@ impl StStuffState {
                 oldinum: 0,
                 inum: ::core::ptr::null::<i32>() as *mut i32,
                 on: ::core::ptr::null::<bool>() as *mut bool,
-                p: ::core::ptr::null::<*mut patch_t>() as *mut *mut patch_t,
+                p: ::core::ptr::null_mut::<i32>(),
                 data: 0,
             },
             w_keyboxes: [st_multicon_t {
@@ -206,7 +206,7 @@ impl StStuffState {
                 oldinum: 0,
                 inum: ::core::ptr::null::<i32>() as *mut i32,
                 on: ::core::ptr::null::<bool>() as *mut bool,
-                p: ::core::ptr::null::<*mut patch_t>() as *mut *mut patch_t,
+                p: ::core::ptr::null_mut::<i32>(),
                 data: 0,
             }; 3],
             w_armor: st_percent_t {
@@ -217,10 +217,10 @@ impl StStuffState {
                     oldnum: 0,
                     num: ::core::ptr::null::<i32>() as *mut i32,
                     on: ::core::ptr::null::<bool>() as *mut bool,
-                    p: ::core::ptr::null::<*mut patch_t>() as *mut *mut patch_t,
+                    p: ::core::ptr::null_mut::<i32>(),
                     data: 0,
                 },
-                p: ::core::ptr::null::<patch_t>() as *mut patch_t,
+                p: -1,
             },
             w_ammo: [st_number_t {
                 x: 0,
@@ -229,7 +229,7 @@ impl StStuffState {
                 oldnum: 0,
                 num: ::core::ptr::null::<i32>() as *mut i32,
                 on: ::core::ptr::null::<bool>() as *mut bool,
-                p: ::core::ptr::null::<*mut patch_t>() as *mut *mut patch_t,
+                p: ::core::ptr::null_mut::<i32>(),
                 data: 0,
             }; 4],
             w_maxammo: [st_number_t {
@@ -239,7 +239,7 @@ impl StStuffState {
                 oldnum: 0,
                 num: ::core::ptr::null::<i32>() as *mut i32,
                 on: ::core::ptr::null::<bool>() as *mut bool,
-                p: ::core::ptr::null::<*mut patch_t>() as *mut *mut patch_t,
+                p: ::core::ptr::null_mut::<i32>(),
                 data: 0,
             }; 4],
             st_fragscount: 0,
@@ -351,7 +351,7 @@ pub enum StChatStateEnum {
     WaitDestState = 1,
     GetChatState = 2,
 }
-pub type load_callback_t = Option<unsafe fn(&mut GameState, &str, *mut *mut patch_t) -> ()>;
+pub type load_callback_t = Option<unsafe fn(&mut GameState, &str, *mut i32) -> ()>;
 pub const DEH_DEFAULT_GOD_MODE_HEALTH: i32 = 100;
 pub const DEH_DEFAULT_IDFA_ARMOR: i32 = 200;
 pub const DEH_DEFAULT_IDFA_ARMOR_CLASS: i32 = 2;
@@ -439,9 +439,11 @@ pub const ST_MAXAMMO3Y: i32 = 185;
 pub fn ST_refreshBackground(state: &mut GameState) {
     if state.st_stuff.st_statusbaron {
         V_UseBuffer(&mut state.v_video, state.st_stuff.st_backing_screen.as_mut_ptr());
-        unsafe { V_DrawPatch(state, ST_X, 0 as i32, state.st_stuff.sbar) };
+        let sbar_patch = V_CachePatchNum(state, state.st_stuff.sbar);
+        unsafe { V_DrawPatch(state, ST_X, 0 as i32, sbar_patch) };
         if state.g_game.netgame {
-            unsafe { V_DrawPatch(state, ST_FX, 0 as i32, state.st_stuff.faceback) };
+            let faceback_patch = V_CachePatchNum(state, state.st_stuff.faceback);
+            unsafe { V_DrawPatch(state, ST_FX, 0 as i32, faceback_patch) };
         }
         V_RestoreBuffer(state);
         let st_backing_screen = state.st_stuff.st_backing_screen.as_mut_ptr();
@@ -1022,11 +1024,11 @@ unsafe fn ST_loadUnloadGraphics(state: &mut GameState, mut callback: load_callba
     let mut facenum: i32 = 0;
     i = 0 as i32;
     while i < 10 as i32 {
-        let cb_ptr = (&raw mut state.st_stuff.tallnum as *mut *mut patch_t).offset(i as isize)
-                as *mut *mut patch_t;
+        let cb_ptr = (&raw mut state.st_stuff.tallnum as *mut i32).offset(i as isize)
+                as *mut i32;
         callback.expect("non-null function pointer")(state, &format!("STTNUM{}", i,), cb_ptr);
-        let cb_ptr = (&raw mut state.st_stuff.shortnum as *mut *mut patch_t).offset(i as isize)
-                as *mut *mut patch_t;
+        let cb_ptr = (&raw mut state.st_stuff.shortnum as *mut i32).offset(i as isize)
+                as *mut i32;
         callback.expect("non-null function pointer")(state, &format!("STYSNUM{}", i,), cb_ptr);
         i += 1;
     }
@@ -1034,8 +1036,8 @@ unsafe fn ST_loadUnloadGraphics(state: &mut GameState, mut callback: load_callba
     callback.expect("non-null function pointer")(state, "STTPRCNT", cb_ptr);
     i = 0 as i32;
     while i < NUMCARDS as i32 {
-        let cb_ptr = (&raw mut state.st_stuff.keys as *mut *mut patch_t).offset(i as isize)
-                as *mut *mut patch_t;
+        let cb_ptr = (&raw mut state.st_stuff.keys as *mut i32).offset(i as isize)
+                as *mut i32;
         callback.expect("non-null function pointer")(state, &format!("STKEYS{}", i,), cb_ptr);
         i += 1;
     }
@@ -1043,9 +1045,9 @@ unsafe fn ST_loadUnloadGraphics(state: &mut GameState, mut callback: load_callba
     callback.expect("non-null function pointer")(state, "STARMS", cb_ptr);
     i = 0 as i32;
     while i < 6 as i32 {
-        let cb_ptr = (&raw mut *(&raw mut state.st_stuff.arms as *mut [*mut patch_t; 2]).offset(i as isize)
-                as *mut *mut patch_t)
-                .offset(0 as i32 as isize) as *mut *mut patch_t;
+        let cb_ptr = (&raw mut *(&raw mut state.st_stuff.arms as *mut [i32; 2]).offset(i as isize)
+                as *mut i32)
+                .offset(0 as i32 as isize) as *mut i32;
         callback.expect("non-null function pointer")(state, &format!("STGNUM{}", i + 2 as i32,), cb_ptr);
         state.st_stuff.arms[i as usize][1] =
             state.st_stuff.shortnum[(i + 2 as i32) as usize];
@@ -1060,67 +1062,69 @@ unsafe fn ST_loadUnloadGraphics(state: &mut GameState, mut callback: load_callba
     while i < ST_NUMPAINFACES {
         j = 0 as i32;
         while j < ST_NUMSTRAIGHTFACES {
-            let cb_ptr = (&raw mut state.st_stuff.faces as *mut *mut patch_t).offset(facenum as isize)
-                    as *mut *mut patch_t;
+            let cb_ptr = (&raw mut state.st_stuff.faces as *mut i32).offset(facenum as isize)
+                    as *mut i32;
             callback.expect("non-null function pointer")(state, &format!("STFST{}{}", i,
                 j,), cb_ptr);
             facenum += 1;
             j += 1;
         }
-        let cb_ptr = (&raw mut state.st_stuff.faces as *mut *mut patch_t).offset(facenum as isize)
-                as *mut *mut patch_t;
+        let cb_ptr = (&raw mut state.st_stuff.faces as *mut i32).offset(facenum as isize)
+                as *mut i32;
         callback.expect("non-null function pointer")(state, &format!("STFTR{}0", i,), cb_ptr);
         facenum += 1;
-        let cb_ptr = (&raw mut state.st_stuff.faces as *mut *mut patch_t).offset(facenum as isize)
-                as *mut *mut patch_t;
+        let cb_ptr = (&raw mut state.st_stuff.faces as *mut i32).offset(facenum as isize)
+                as *mut i32;
         callback.expect("non-null function pointer")(state, &format!("STFTL{}0", i,), cb_ptr);
         facenum += 1;
-        let cb_ptr = (&raw mut state.st_stuff.faces as *mut *mut patch_t).offset(facenum as isize)
-                as *mut *mut patch_t;
+        let cb_ptr = (&raw mut state.st_stuff.faces as *mut i32).offset(facenum as isize)
+                as *mut i32;
         callback.expect("non-null function pointer")(state, &format!("STFOUCH{}", i,), cb_ptr);
         facenum += 1;
-        let cb_ptr = (&raw mut state.st_stuff.faces as *mut *mut patch_t).offset(facenum as isize)
-                as *mut *mut patch_t;
+        let cb_ptr = (&raw mut state.st_stuff.faces as *mut i32).offset(facenum as isize)
+                as *mut i32;
         callback.expect("non-null function pointer")(state, &format!("STFEVL{}", i,), cb_ptr);
         facenum += 1;
-        let cb_ptr = (&raw mut state.st_stuff.faces as *mut *mut patch_t).offset(facenum as isize)
-                as *mut *mut patch_t;
+        let cb_ptr = (&raw mut state.st_stuff.faces as *mut i32).offset(facenum as isize)
+                as *mut i32;
         callback.expect("non-null function pointer")(state, &format!("STFKILL{}", i,), cb_ptr);
         facenum += 1;
         i += 1;
     }
-    let cb_ptr = (&raw mut state.st_stuff.faces as *mut *mut patch_t).offset(facenum as isize)
-            as *mut *mut patch_t;
+    let cb_ptr = (&raw mut state.st_stuff.faces as *mut i32).offset(facenum as isize)
+            as *mut i32;
     callback.expect("non-null function pointer")(state, "STFGOD0", cb_ptr);
     facenum += 1;
-    let cb_ptr = (&raw mut state.st_stuff.faces as *mut *mut patch_t).offset(facenum as isize)
-            as *mut *mut patch_t;
+    let cb_ptr = (&raw mut state.st_stuff.faces as *mut i32).offset(facenum as isize)
+            as *mut i32;
     callback.expect("non-null function pointer")(state, "STFDEAD0", cb_ptr);
     facenum += 1;
 }
-unsafe fn ST_loadCallback(state: &mut GameState, lumpname: &str, variable: *mut *mut patch_t) {
-    *variable = W_CacheLumpName(state, lumpname) as *mut patch_t;
+unsafe fn ST_loadCallback(state: &mut GameState, lumpname: &str, variable: *mut i32) {
+    let lumpnum = W_GetNumForName(&mut state.w_wad, lumpname);
+    W_CacheLumpNum(state, lumpnum);
+    *variable = lumpnum;
 }
 pub unsafe fn ST_loadGraphics(state: &mut GameState) {
     ST_loadUnloadGraphics(
         state,
-        Some(ST_loadCallback as unsafe fn(&mut GameState, &str, *mut *mut patch_t) -> ()),
+        Some(ST_loadCallback as unsafe fn(&mut GameState, &str, *mut i32) -> ()),
     );
 }
 pub fn ST_loadData(state: &mut GameState) {
     state.st_stuff.lu_palette = W_GetNumForName(&mut state.w_wad, "PLAYPAL");
     unsafe { ST_loadGraphics(state) };
 }
-fn ST_unloadCallback(state: &mut GameState, lumpname: &str, variable: *mut *mut patch_t) {
+fn ST_unloadCallback(state: &mut GameState, lumpname: &str, variable: *mut i32) {
     unsafe {
         W_ReleaseLumpName(&mut state.w_wad, lumpname);
-        *variable = ::core::ptr::null_mut::<patch_t>();
+        *variable = -1;
     }
 }
 pub unsafe fn ST_unloadGraphics(state: &mut GameState) {
     ST_loadUnloadGraphics(
         state,
-        Some(ST_unloadCallback as unsafe fn(&mut GameState, &str, *mut *mut patch_t) -> ()),
+        Some(ST_unloadCallback as unsafe fn(&mut GameState, &str, *mut i32) -> ()),
     );
 }
 pub fn ST_unloadData(state: &mut GameState) {
@@ -1158,7 +1162,7 @@ pub unsafe fn ST_createWidgets(state: &mut GameState) {
         &raw mut state.st_stuff.w_ready,
         ST_AMMOX,
         ST_AMMOY,
-        &raw mut state.st_stuff.tallnum as *mut *mut patch_t,
+        &raw mut state.st_stuff.tallnum as *mut i32,
         (&raw mut (*state.g_game.player_mut(state.st_stuff.plyr)).ammo as *mut i32).offset(
             (*(&raw const weaponinfo as *mut weaponinfo_t)
                 .offset((*state.g_game.player_mut(state.st_stuff.plyr)).readyweapon as isize))
@@ -1172,7 +1176,7 @@ pub unsafe fn ST_createWidgets(state: &mut GameState) {
         &raw mut state.st_stuff.w_health,
         ST_HEALTHX,
         ST_HEALTHY,
-        &raw mut state.st_stuff.tallnum as *mut *mut patch_t,
+        &raw mut state.st_stuff.tallnum as *mut i32,
         &raw mut (*state.g_game.player_mut(state.st_stuff.plyr)).health,
         &raw mut state.st_stuff.st_statusbaron,
         state.st_stuff.tallpercent,
@@ -1192,8 +1196,8 @@ pub unsafe fn ST_createWidgets(state: &mut GameState) {
                 as *mut st_multicon_t,
             ST_ARMSX + i % 3 as i32 * ST_ARMSXSPACE,
             ST_ARMSY + i / 3 as i32 * ST_ARMSYSPACE,
-            &raw mut *(&raw mut state.st_stuff.arms as *mut [*mut patch_t; 2]).offset(i as isize)
-                as *mut *mut patch_t,
+            &raw mut *(&raw mut state.st_stuff.arms as *mut [i32; 2]).offset(i as isize)
+                as *mut i32,
             (&raw mut state.st_stuff.w_arms_owned as *mut i32).offset(i as isize),
             &raw mut state.st_stuff.st_armson,
         );
@@ -1203,7 +1207,7 @@ pub unsafe fn ST_createWidgets(state: &mut GameState) {
         &raw mut state.st_stuff.w_frags,
         ST_FRAGSX,
         ST_FRAGSY,
-        &raw mut state.st_stuff.tallnum as *mut *mut patch_t,
+        &raw mut state.st_stuff.tallnum as *mut i32,
         &raw mut state.st_stuff.st_fragscount,
         &raw mut state.st_stuff.st_fragson,
         ST_FRAGSWIDTH,
@@ -1212,7 +1216,7 @@ pub unsafe fn ST_createWidgets(state: &mut GameState) {
         &raw mut state.st_stuff.w_faces,
         ST_FACESX,
         ST_FACESY,
-        &raw mut state.st_stuff.faces as *mut *mut patch_t,
+        &raw mut state.st_stuff.faces as *mut i32,
         &raw mut state.st_stuff.st_faceindex,
         &raw mut state.st_stuff.st_statusbaron,
     );
@@ -1220,7 +1224,7 @@ pub unsafe fn ST_createWidgets(state: &mut GameState) {
         &raw mut state.st_stuff.w_armor,
         ST_ARMORX,
         ST_ARMORY,
-        &raw mut state.st_stuff.tallnum as *mut *mut patch_t,
+        &raw mut state.st_stuff.tallnum as *mut i32,
         &raw mut (*state.g_game.player_mut(state.st_stuff.plyr)).armorpoints,
         &raw mut state.st_stuff.st_statusbaron,
         state.st_stuff.tallpercent,
@@ -1230,7 +1234,7 @@ pub unsafe fn ST_createWidgets(state: &mut GameState) {
             as *mut st_multicon_t,
         ST_KEY0X,
         ST_KEY0Y,
-        &raw mut state.st_stuff.keys as *mut *mut patch_t,
+        &raw mut state.st_stuff.keys as *mut i32,
         (&raw mut state.st_stuff.keyboxes as *mut i32).offset(0 as i32 as isize) as *mut i32,
         &raw mut state.st_stuff.st_statusbaron,
     );
@@ -1239,7 +1243,7 @@ pub unsafe fn ST_createWidgets(state: &mut GameState) {
             as *mut st_multicon_t,
         ST_KEY1X,
         ST_KEY1Y,
-        &raw mut state.st_stuff.keys as *mut *mut patch_t,
+        &raw mut state.st_stuff.keys as *mut i32,
         (&raw mut state.st_stuff.keyboxes as *mut i32).offset(1 as i32 as isize) as *mut i32,
         &raw mut state.st_stuff.st_statusbaron,
     );
@@ -1248,7 +1252,7 @@ pub unsafe fn ST_createWidgets(state: &mut GameState) {
             as *mut st_multicon_t,
         ST_KEY2X,
         ST_KEY2Y,
-        &raw mut state.st_stuff.keys as *mut *mut patch_t,
+        &raw mut state.st_stuff.keys as *mut i32,
         (&raw mut state.st_stuff.keyboxes as *mut i32).offset(2 as i32 as isize) as *mut i32,
         &raw mut state.st_stuff.st_statusbaron,
     );
@@ -1257,7 +1261,7 @@ pub unsafe fn ST_createWidgets(state: &mut GameState) {
             as *mut st_number_t,
         ST_AMMO0X,
         ST_AMMO0Y,
-        &raw mut state.st_stuff.shortnum as *mut *mut patch_t,
+        &raw mut state.st_stuff.shortnum as *mut i32,
         (&raw mut (*state.g_game.player_mut(state.st_stuff.plyr)).ammo as *mut i32).offset(0 as i32 as isize) as *mut i32,
         &raw mut state.st_stuff.st_statusbaron,
         ST_AMMO0WIDTH,
@@ -1267,7 +1271,7 @@ pub unsafe fn ST_createWidgets(state: &mut GameState) {
             as *mut st_number_t,
         ST_AMMO1X,
         ST_AMMO1Y,
-        &raw mut state.st_stuff.shortnum as *mut *mut patch_t,
+        &raw mut state.st_stuff.shortnum as *mut i32,
         (&raw mut (*state.g_game.player_mut(state.st_stuff.plyr)).ammo as *mut i32).offset(1 as i32 as isize) as *mut i32,
         &raw mut state.st_stuff.st_statusbaron,
         ST_AMMO1WIDTH,
@@ -1277,7 +1281,7 @@ pub unsafe fn ST_createWidgets(state: &mut GameState) {
             as *mut st_number_t,
         ST_AMMO2X,
         ST_AMMO2Y,
-        &raw mut state.st_stuff.shortnum as *mut *mut patch_t,
+        &raw mut state.st_stuff.shortnum as *mut i32,
         (&raw mut (*state.g_game.player_mut(state.st_stuff.plyr)).ammo as *mut i32).offset(2 as i32 as isize) as *mut i32,
         &raw mut state.st_stuff.st_statusbaron,
         ST_AMMO2WIDTH,
@@ -1287,7 +1291,7 @@ pub unsafe fn ST_createWidgets(state: &mut GameState) {
             as *mut st_number_t,
         ST_AMMO3X,
         ST_AMMO3Y,
-        &raw mut state.st_stuff.shortnum as *mut *mut patch_t,
+        &raw mut state.st_stuff.shortnum as *mut i32,
         (&raw mut (*state.g_game.player_mut(state.st_stuff.plyr)).ammo as *mut i32).offset(3 as i32 as isize) as *mut i32,
         &raw mut state.st_stuff.st_statusbaron,
         ST_AMMO3WIDTH,
@@ -1297,7 +1301,7 @@ pub unsafe fn ST_createWidgets(state: &mut GameState) {
             as *mut st_number_t,
         ST_MAXAMMO0X,
         ST_MAXAMMO0Y,
-        &raw mut state.st_stuff.shortnum as *mut *mut patch_t,
+        &raw mut state.st_stuff.shortnum as *mut i32,
         (&raw mut (*state.g_game.player_mut(state.st_stuff.plyr)).maxammo as *mut i32).offset(0 as i32 as isize) as *mut i32,
         &raw mut state.st_stuff.st_statusbaron,
         ST_MAXAMMO0WIDTH,
@@ -1307,7 +1311,7 @@ pub unsafe fn ST_createWidgets(state: &mut GameState) {
             as *mut st_number_t,
         ST_MAXAMMO1X,
         ST_MAXAMMO1Y,
-        &raw mut state.st_stuff.shortnum as *mut *mut patch_t,
+        &raw mut state.st_stuff.shortnum as *mut i32,
         (&raw mut (*state.g_game.player_mut(state.st_stuff.plyr)).maxammo as *mut i32).offset(1 as i32 as isize) as *mut i32,
         &raw mut state.st_stuff.st_statusbaron,
         ST_MAXAMMO1WIDTH,
@@ -1317,7 +1321,7 @@ pub unsafe fn ST_createWidgets(state: &mut GameState) {
             as *mut st_number_t,
         ST_MAXAMMO2X,
         ST_MAXAMMO2Y,
-        &raw mut state.st_stuff.shortnum as *mut *mut patch_t,
+        &raw mut state.st_stuff.shortnum as *mut i32,
         (&raw mut (*state.g_game.player_mut(state.st_stuff.plyr)).maxammo as *mut i32).offset(2 as i32 as isize) as *mut i32,
         &raw mut state.st_stuff.st_statusbaron,
         ST_MAXAMMO2WIDTH,
@@ -1327,7 +1331,7 @@ pub unsafe fn ST_createWidgets(state: &mut GameState) {
             as *mut st_number_t,
         ST_MAXAMMO3X,
         ST_MAXAMMO3Y,
-        &raw mut state.st_stuff.shortnum as *mut *mut patch_t,
+        &raw mut state.st_stuff.shortnum as *mut i32,
         (&raw mut (*state.g_game.player_mut(state.st_stuff.plyr)).maxammo as *mut i32).offset(3 as i32 as isize) as *mut i32,
         &raw mut state.st_stuff.st_statusbaron,
         ST_MAXAMMO3WIDTH,

@@ -121,6 +121,12 @@ pub unsafe fn V_CopyRect(
 pub fn V_SetPatchClipCallback(state: &mut GameState, mut func: vpatchclipfunc_t) {
     state.v_video.patchclip_callback = func;
 }
+/// Resolves a WAD lump number (as stored by the patch-lumpnum conversion
+/// track) to its cached patch data. Cheap and idempotent: the lump cache
+/// never evicts, so this is just a lookup after the first call.
+pub fn V_CachePatchNum(state: &mut GameState, lumpnum: i32) -> *mut patch_t {
+    W_CacheLumpNum(state, lumpnum) as *mut patch_t
+}
 pub unsafe fn V_DrawPatch(state: &mut GameState, mut x: i32, mut y: i32, mut patch: *mut patch_t) {
     let mut count: i32 = 0;
     let mut col: i32 = 0;
