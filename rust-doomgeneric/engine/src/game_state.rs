@@ -61,7 +61,6 @@ use crate::st_stuff::{fixup_cheat_sequences, StStuffState};
 use crate::statdump::StatDumpState;
 use crate::v_video::VVideoState;
 use crate::w_checksum::WChecksumState;
-use crate::w_file::WFileState;
 use crate::w_wad::WWadState;
 use crate::wi_stuff::{fixup_numanims, WiStuffState};
 
@@ -121,7 +120,6 @@ pub struct GameState {
     pub statdump: StatDumpState,
     pub v_video: VVideoState,
     pub w_checksum: WChecksumState,
-    pub w_file: WFileState,
     pub w_wad: WWadState,
     pub wi_stuff: WiStuffState,
     pub platform: Box<dyn DoomPlatform>,
@@ -185,7 +183,6 @@ impl GameState {
             statdump: StatDumpState::new(),
             v_video: VVideoState::new(),
             w_checksum: WChecksumState::new(),
-            w_file: WFileState::new(),
             w_wad: WWadState::new(),
             wi_stuff: WiStuffState::new(),
             platform,

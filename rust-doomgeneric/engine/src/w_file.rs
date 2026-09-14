@@ -1,71 +1,21 @@
-use crate::game_state::GameState;
-use crate::m_argv::M_CheckParm;
-use crate::stdint_types::byte;
+use crate::m_misc::M_FileLength;
 use crate::stdint_types::size_t;
-use crate::w_file_stdc::STDC_WAD_FILE;
+use std::os::unix::fs::FileExt;
 
-#[derive(Copy, Clone)]
-#[repr(C)]
 pub struct _wad_file_s {
-    pub file_class: wad_file_class_t,
-    pub mapped: Option<&'static [byte]>,
+    file: std::fs::File,
     pub length: u32,
-}
-#[derive(Copy, Clone)]
-#[repr(C)]
-pub struct wad_file_class_t {
-    pub OpenFile: Option<unsafe fn(&str) -> *mut wad_file_t>,
-    pub CloseFile: Option<unsafe fn(*mut wad_file_t) -> ()>,
-    pub Read: Option<unsafe fn(*mut wad_file_t, u32, *mut ::core::ffi::c_void, size_t) -> size_t>,
 }
 pub type wad_file_t = _wad_file_s;
 
-pub struct WFileState {
-    wad_file_classes: [wad_file_class_t; 1],
-}
-
-impl WFileState {
-    pub const fn new() -> Self {
-        WFileState {
-            wad_file_classes: [STDC_WAD_FILE],
-        }
-    }
-}
-
-// SAFETY invariant relied on below: `W_CloseFile` has no callers anywhere in
-// the engine, so every `wad_file_t` a class's `OpenFile` hands back lives for
-// the rest of the process -- turning the raw pointer into `&'static` just
-// makes that existing fact visible to the type system.
-pub fn W_OpenFile(state: &mut GameState, path: &str) -> Option<&'static wad_file_t> {
-    let mut result: *mut wad_file_t = ::core::ptr::null_mut::<wad_file_t>();
-    let mut i: i32 = 0;
-    if M_CheckParm(state, "-mmap") == 0 {
-        result = unsafe { STDC_WAD_FILE.OpenFile.expect("non-null function pointer")(path) };
-    } else {
-        i = 0 as i32;
-        while (i as usize) < state.w_file.wad_file_classes.len() {
-            result = unsafe {
-                state.w_file.wad_file_classes[i as usize]
-                    .OpenFile
-                    .expect("non-null function pointer")(path)
-            };
-            if !result.is_null() {
-                break;
-            }
-            i += 1;
-        }
-    }
-    if result.is_null() {
-        None
-    } else {
-        Some(unsafe { &*result })
-    }
-}
-pub unsafe fn W_CloseFile(mut wad: *mut wad_file_t) {
-    (*wad)
-        .file_class
-        .CloseFile
-        .expect("non-null function pointer")(wad);
+// SAFETY invariant relied on below: nothing in this codebase ever closes a
+// wad_file_t once opened, so every one returned here lives for the rest of
+// the process -- Box::leak just makes that existing fact visible to the type
+// system, matching how `lumpinfo_t.wad_file` already stores it as `&'static`.
+pub fn W_OpenFile(path: &str) -> Option<&'static wad_file_t> {
+    let file = std::fs::File::open(path).ok()?;
+    let length = M_FileLength(&file) as u32;
+    Some(Box::leak(Box::new(wad_file_t { file, length })))
 }
 // `buffer`/`buffer_len` are a raw pointer-and-length pair by nature (a
 // destination byte buffer for a `read`-style call) -- unrelated to the
@@ -77,8 +27,6 @@ pub fn W_Read(
     buffer: *mut ::core::ffi::c_void,
     buffer_len: size_t,
 ) -> size_t {
-    let wad_ptr = wad as *const wad_file_t as *mut wad_file_t;
-    unsafe {
-        wad.file_class.Read.expect("non-null function pointer")(wad_ptr, offset, buffer, buffer_len)
-    }
+    let slice = unsafe { ::core::slice::from_raw_parts_mut(buffer as *mut u8, buffer_len as usize) };
+    wad.file.read_at(slice, offset as u64).unwrap_or(0) as size_t
 }
