@@ -1,5 +1,4 @@
 use crate::m_misc::M_FileLength;
-use crate::stdint_types::byte;
 use crate::stdint_types::size_t;
 use crate::w_file::{wad_file_class_t, wad_file_t};
 use std::io::{Read, Seek, SeekFrom};
@@ -19,7 +18,7 @@ unsafe fn W_StdC_OpenFile(path: &str) -> *mut wad_file_t {
     let result = Box::into_raw(Box::new(stdc_wad_file_t {
         wad: wad_file_t {
             file_class: STDC_WAD_FILE,
-            mapped: ::core::ptr::null_mut::<byte>(),
+            mapped: None,
             length,
         },
         fstream: Box::into_raw(Box::new(fstream)),
