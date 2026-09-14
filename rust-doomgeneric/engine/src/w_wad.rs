@@ -7,7 +7,6 @@ use crate::game_state::GameState;
 use crate::i_system::I_Error;
 use crate::m_misc::M_ExtractFileBase;
 use crate::stdint_types::byte;
-use crate::stdint_types::size_t;
 use crate::w_file::wad_file_t;
 use crate::w_file::W_OpenFile;
 use crate::w_file::W_Read;
@@ -70,12 +69,6 @@ pub fn W_LumpNameHash(s: &[u8]) -> u32 {
     return result;
 }
 pub fn W_AddFile(state: &mut GameState, filename: &str) -> Option<&'static wad_file_t> {
-    let mut header: wadinfo_t = wadinfo_t {
-        identification: FixedCStr([0; 4]),
-        numlumps: 0,
-        infotableofs: 0,
-    };
-    let mut length: i32 = 0;
     // Scratch WAD-directory buffer -- built and consumed entirely within
     // this function, so a plain owned Vec replaces the old
     // Z_Malloc-then-Z_Free-at-the-end pair with no lifetime change.
@@ -97,12 +90,13 @@ pub fn W_AddFile(state: &mut GameState, filename: &str) -> Option<&'static wad_f
         M_ExtractFileBase(filename, &mut single.name);
         fileinfo = vec![single];
     } else {
-        W_Read(
-            wad_file,
-            0 as u32,
-            &raw mut header as *mut ::core::ffi::c_void,
-            ::core::mem::size_of::<wadinfo_t>() as size_t,
-        );
+        let mut header_buf = [0u8; ::core::mem::size_of::<wadinfo_t>()];
+        W_Read(wad_file, 0 as u32, &mut header_buf);
+        let header = wadinfo_t {
+            identification: FixedCStr::from_bytes(&header_buf[0..4]),
+            numlumps: i32::from_le_bytes(header_buf[4..8].try_into().unwrap()),
+            infotableofs: i32::from_le_bytes(header_buf[8..12].try_into().unwrap()),
+        };
         if header.identification.0 != *b"IWAD" {
             if header.identification.0 != *b"PWAD" {
                 I_Error(&format!(
@@ -111,25 +105,17 @@ pub fn W_AddFile(state: &mut GameState, filename: &str) -> Option<&'static wad_f
                 ));
             }
         }
-        header.numlumps = header.numlumps;
-        header.infotableofs = header.infotableofs;
-        length = (header.numlumps as usize)
-            .wrapping_mul(::core::mem::size_of::<filelump_t>() as usize) as i32;
-        let mut buf = vec![
-            filelump_t {
-                filepos: 0,
-                size: 0,
-                name: FixedCStr([0; 8]),
-            };
-            header.numlumps as usize
-        ];
-        W_Read(
-            wad_file,
-            header.infotableofs as u32,
-            buf.as_mut_ptr() as *mut ::core::ffi::c_void,
-            length as size_t,
-        );
-        fileinfo = buf;
+        let mut dir_buf =
+            vec![0u8; (header.numlumps as usize) * ::core::mem::size_of::<filelump_t>()];
+        W_Read(wad_file, header.infotableofs as u32, &mut dir_buf);
+        fileinfo = dir_buf
+            .chunks_exact(::core::mem::size_of::<filelump_t>())
+            .map(|c| filelump_t {
+                filepos: i32::from_le_bytes(c[0..4].try_into().unwrap()),
+                size: i32::from_le_bytes(c[4..8].try_into().unwrap()),
+                name: FixedCStr::from_bytes(&c[8..16]),
+            })
+            .collect();
     }
     state
         .w_wad
@@ -189,12 +175,12 @@ pub fn W_LumpLength(state: &mut WWadState, lump: u32) -> i32 {
     }
     return state.lumpinfo[lump as usize].size;
 }
-pub fn W_ReadLump(state: &mut WWadState, lump: u32, dest: *mut ::core::ffi::c_void) {
+pub fn W_ReadLump(state: &mut WWadState, lump: u32, dest: &mut [u8]) {
     if lump >= state.numlumps {
         I_Error(&format!("W_ReadLump: {} >= numlumps", lump));
     }
     let l = &state.lumpinfo[lump as usize];
-    let c = W_Read(l.wad_file, l.position as u32, dest, l.size as size_t) as i32;
+    let c = W_Read(l.wad_file, l.position as u32, dest) as i32;
     if c < l.size {
         I_Error(&format!(
             "W_ReadLump: only read {} of {} on lump {}",
@@ -212,11 +198,7 @@ pub fn W_CacheLumpNum(state: &mut GameState, lumpnum: i32) -> *mut ::core::ffi::
     } else {
         let lumplen = W_LumpLength(&mut state.w_wad, lumpnum as u32);
         let mut buf = vec![0u8; lumplen as usize].into_boxed_slice();
-        W_ReadLump(
-            &mut state.w_wad,
-            lumpnum as u32,
-            buf.as_mut_ptr() as *mut ::core::ffi::c_void,
-        );
+        W_ReadLump(&mut state.w_wad, lumpnum as u32, &mut buf);
         let lump = &mut state.w_wad.lumpinfo[lumpnum as usize];
         lump.cache = Some(buf);
         lump.cache.as_mut().unwrap().as_mut_ptr()

@@ -17,16 +17,6 @@ pub fn W_OpenFile(path: &str) -> Option<&'static wad_file_t> {
     let length = M_FileLength(&file) as u32;
     Some(Box::leak(Box::new(wad_file_t { file, length })))
 }
-// `buffer`/`buffer_len` are a raw pointer-and-length pair by nature (a
-// destination byte buffer for a `read`-style call) -- unrelated to the
-// `wad_file_t` reference-safety this pass is about, and out of scope here.
-#[allow(clippy::not_unsafe_ptr_arg_deref)]
-pub fn W_Read(
-    wad: &wad_file_t,
-    offset: u32,
-    buffer: *mut ::core::ffi::c_void,
-    buffer_len: size_t,
-) -> size_t {
-    let slice = unsafe { ::core::slice::from_raw_parts_mut(buffer as *mut u8, buffer_len as usize) };
-    wad.file.read_at(slice, offset as u64).unwrap_or(0) as size_t
+pub fn W_Read(wad: &wad_file_t, offset: u32, buffer: &mut [u8]) -> size_t {
+    wad.file.read_at(buffer, offset as u64).unwrap_or(0) as size_t
 }

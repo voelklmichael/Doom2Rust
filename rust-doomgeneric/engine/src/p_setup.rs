@@ -694,23 +694,15 @@ pub unsafe fn P_LoadSideDefs(state: &mut GameState, mut lump: i32) {
     W_ReleaseLumpNum(&mut state.w_wad, lump);
 }
 pub unsafe fn P_LoadBlockMap(state: &mut GameState, mut lump: i32) {
-    let mut i: i32 = 0;
-    let mut count: i32 = 0;
     let mut lumplen: i32 = 0;
     lumplen = W_LumpLength(&mut state.w_wad, lump as u32);
-    count = lumplen / 2 as i32;
-    state.p_setup.blockmaplump = vec![0 as i16; count as usize];
-    W_ReadLump(
-        &mut state.w_wad,
-        lump as u32,
-        state.p_setup.blockmaplump.as_mut_ptr() as *mut ::core::ffi::c_void,
-    );
+    let mut raw = vec![0u8; lumplen as usize];
+    W_ReadLump(&mut state.w_wad, lump as u32, &mut raw);
+    state.p_setup.blockmaplump = raw
+        .chunks_exact(2)
+        .map(|c| i16::from_le_bytes([c[0], c[1]]))
+        .collect();
     state.p_setup.blockmap = state.p_setup.blockmaplump.as_mut_ptr().offset(4 as i32 as isize);
-    i = 0 as i32;
-    while i < count {
-        state.p_setup.blockmaplump[i as usize] = state.p_setup.blockmaplump[i as usize];
-        i += 1;
-    }
     state.p_setup.bmaporgx = ((state.p_setup.blockmaplump[0] as i32) << FRACBITS) as fixed_t;
     state.p_setup.bmaporgy = ((state.p_setup.blockmaplump[1] as i32) << FRACBITS) as fixed_t;
     state.p_setup.bmapwidth = state.p_setup.blockmaplump[2] as i32;
@@ -869,10 +861,7 @@ unsafe fn P_LoadReject(state: &mut GameState, mut lumpnum: i32) {
             ::core::slice::from_raw_parts(lump_ptr, minlength as usize).to_vec();
     } else {
         state.p_setup.rejectmatrix = vec![0u8; minlength as usize];
-        W_ReadLump(&mut state.w_wad,
-            lumpnum as u32,
-            state.p_setup.rejectmatrix.as_mut_ptr() as *mut ::core::ffi::c_void,
-        );
+        W_ReadLump(&mut state.w_wad, lumpnum as u32, &mut state.p_setup.rejectmatrix);
         let pad_ptr = state.p_setup.rejectmatrix.as_mut_ptr().offset(lumplen as isize);
         PadRejectArray(state, pad_ptr, (minlength - lumplen) as u32);
     };
