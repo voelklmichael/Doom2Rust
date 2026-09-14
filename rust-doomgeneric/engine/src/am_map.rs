@@ -31,7 +31,7 @@ use crate::tables::finesine;
 use crate::tables::ANGLETOFINESHIFT;
 use crate::v_video::V_DrawPatch;
 use crate::v_video::V_MarkRect;
-use crate::w_wad::{W_CacheLumpName, W_ReleaseLumpName};
+use crate::w_wad::{W_CacheLumpNum, W_GetNumForName, W_ReleaseLumpNum};
 
 pub struct AmMapState {
     pub cheating: i32,
@@ -71,7 +71,7 @@ pub struct AmMapState {
     pub scale_mtof: fixed_t,
     pub scale_ftom: fixed_t,
     pub plr: PlayerId,
-    pub marknums: [*mut patch_t; 10],
+    pub marknums: [i32; 10],
     pub markpoints: [mpoint_t; 10],
     pub markpointnum: i32,
     pub followplayer: i32,
@@ -125,7 +125,7 @@ impl AmMapState {
             scale_mtof: INITSCALEMTOF as fixed_t,
             scale_ftom: 0,
             plr: PlayerId(0),
-            marknums: [::core::ptr::null::<patch_t>() as *mut patch_t; 10],
+            marknums: [-1; 10],
             markpoints: [mpoint_t { x: 0, y: 0 }; 10],
             markpointnum: 0,
             followplayer: 1,
@@ -706,7 +706,9 @@ pub unsafe fn AM_loadPics(state: &mut GameState) {
     i = 0 as i32;
     while i < 10 as i32 {
         let namebuf = format!("AMMNUM{}", i);
-        state.am_map.marknums[i as usize] = W_CacheLumpName(state, &namebuf) as *mut patch_t;
+        let lumpnum = W_GetNumForName(&mut state.w_wad, &namebuf);
+        W_CacheLumpNum(state, lumpnum);
+        state.am_map.marknums[i as usize] = lumpnum;
         i += 1;
     }
 }
@@ -714,8 +716,7 @@ pub fn AM_unloadPics(state: &mut GameState) {
     let mut i: i32 = 0;
     i = 0 as i32;
     while i < 10 as i32 {
-        let namebuf = format!("AMMNUM{}", i);
-        W_ReleaseLumpName(&mut state.w_wad, &namebuf);
+        W_ReleaseLumpNum(&mut state.w_wad, state.am_map.marknums[i as usize]);
         i += 1;
     }
 }
@@ -1450,7 +1451,9 @@ pub fn AM_drawMarks(state: &mut GameState) {
                 && fy >= state.am_map.f_y
                 && fy <= state.am_map.f_h - h
             {
-                unsafe { V_DrawPatch(state, fx, fy, state.am_map.marknums[i as usize]) };
+                let lumpnum = state.am_map.marknums[i as usize];
+                let patch = W_CacheLumpNum(state, lumpnum) as *mut patch_t;
+                unsafe { V_DrawPatch(state, fx, fy, patch) };
             }
         }
         i += 1;
