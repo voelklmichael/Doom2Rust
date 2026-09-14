@@ -476,7 +476,7 @@ pub unsafe fn twoSided(state: &mut GameState, mut sector: i32, mut line: i32) ->
     let line_id = (*sec).lines[line as usize];
     return state.p_setup.line(line_id).flags as i32 & ML_TWOSIDED;
 }
-pub unsafe fn getNextSector(
+pub fn getNextSector(
     state: &mut GameState,
     mut line: LineId,
     mut sec: *mut sector_t,
@@ -623,7 +623,7 @@ pub unsafe fn P_FindHighestCeilingSurrounding(
     }
     return height;
 }
-pub unsafe fn P_FindSectorFromLineTag(
+pub fn P_FindSectorFromLineTag(
     state: &mut GameState,
     mut line: LineId,
     mut start: i32,
@@ -1146,7 +1146,7 @@ pub unsafe fn P_UpdateSpecials(state: &mut GameState) {
 }
 pub const DONUT_FLOORHEIGHT_DEFAULT: i32 = 0;
 pub const DONUT_FLOORPIC_DEFAULT: i32 = 0x16;
-unsafe fn DonutOverrun(
+fn DonutOverrun(
     state: &mut GameState,
     mut s3_floorheight: *mut fixed_t,
     mut s3_floorpic: *mut i16,
@@ -1177,8 +1177,10 @@ unsafe fn DonutOverrun(
             }
         }
     }
-    *s3_floorheight = state.p_spec.donut_overrun_tmp_s3_floorheight;
-    *s3_floorpic = state.p_spec.donut_overrun_tmp_s3_floorpic as i16;
+    unsafe {
+        *s3_floorheight = state.p_spec.donut_overrun_tmp_s3_floorheight;
+        *s3_floorpic = state.p_spec.donut_overrun_tmp_s3_floorpic as i16;
+    }
 }
 pub unsafe fn EV_DoDonut(state: &mut GameState, mut line: LineId) -> i32 {
     let mut s1: *mut sector_t = ::core::ptr::null_mut::<sector_t>();

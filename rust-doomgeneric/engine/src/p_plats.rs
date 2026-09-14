@@ -270,7 +270,7 @@ pub unsafe fn EV_StopPlat(state: &mut PPlatsState, mut tag: i32) {
         j += 1;
     }
 }
-pub unsafe fn P_AddActivePlat(state: &mut PPlatsState, mut plat: *mut plat_t) {
+pub fn P_AddActivePlat(state: &mut PPlatsState, mut plat: *mut plat_t) {
     let mut i: i32 = 0;
     i = 0 as i32;
     while i < MAXPLATS {

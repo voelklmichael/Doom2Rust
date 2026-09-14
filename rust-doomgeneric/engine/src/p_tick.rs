@@ -100,7 +100,7 @@ pub fn P_InitThinkers(state: &mut GameState) {
     state.p_tick.tail = None;
 }
 
-pub unsafe fn P_AddThinker(
+pub fn P_AddThinker(
     state: &mut GameState,
     mut thinker: *mut thinker_t,
     kind: ThinkerKind,

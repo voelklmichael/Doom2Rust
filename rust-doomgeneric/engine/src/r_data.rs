@@ -498,7 +498,7 @@ pub unsafe fn R_InitTextures(state: &mut GameState) {
     }
     GenerateTextureHashTable(state);
 }
-pub unsafe fn R_InitFlats(state: &mut GameState) {
+pub fn R_InitFlats(state: &mut GameState) {
     let mut i: i32 = 0;
     state.r_data.firstflat = W_GetNumForName(&mut state.w_wad, "F_START") + 1 as i32;
     state.r_data.lastflat = W_GetNumForName(&mut state.w_wad, "F_END") - 1 as i32;
@@ -550,7 +550,7 @@ pub unsafe fn R_InitData(state: &mut GameState) {
     print!(".");
     R_InitColormaps(state);
 }
-pub unsafe fn R_FlatNumForName(state: &mut GameState, name: &str) -> i32 {
+pub fn R_FlatNumForName(state: &mut GameState, name: &str) -> i32 {
     let mut i: i32 = 0;
     i = W_CheckNumForName(&mut state.w_wad, name);
     if i == -(1 as i32) {

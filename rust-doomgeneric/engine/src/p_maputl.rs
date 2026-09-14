@@ -233,7 +233,7 @@ pub fn P_AproxDistance(mut dx: fixed_t, mut dy: fixed_t) -> fixed_t {
     }
     return dx + dy - (dy >> 1 as i32);
 }
-pub unsafe fn P_PointOnLineSide(
+pub fn P_PointOnLineSide(
     state: &mut GameState,
     mut x: fixed_t,
     mut y: fixed_t,

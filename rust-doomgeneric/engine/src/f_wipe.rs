@@ -202,7 +202,7 @@ pub unsafe fn wipe_doMelt(
     }
     return done as i32;
 }
-pub unsafe fn wipe_exitMelt(state: &mut GameState, _width: i32, _height: i32, _ticks: i32) -> i32 {
+pub fn wipe_exitMelt(state: &mut GameState, _width: i32, _height: i32, _ticks: i32) -> i32 {
     state.f_wipe.y = Vec::new();
     state.f_wipe.wipe_scr_start = Vec::new();
     state.f_wipe.wipe_scr_end = Vec::new();

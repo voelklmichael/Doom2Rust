@@ -143,7 +143,7 @@ fn check_directory_has_iwad(dir: &str, iwadname: &str) -> Option<String> {
         None
     }
 }
-unsafe fn search_directory_for_iwad(
+fn search_directory_for_iwad(
     dir: &str,
     mask: i32,
     mission: *mut GameMission_t,
@@ -153,7 +153,9 @@ unsafe fn search_directory_for_iwad(
             continue;
         }
         if let Some(filename) = check_directory_has_iwad(dir, iwad.name) {
-            *mission = iwad.mission;
+            unsafe {
+                *mission = iwad.mission;
+            }
             return Some(filename);
         }
     }
@@ -197,7 +199,7 @@ pub fn D_FindWADByName(state: &mut DIwadState, name: &str) -> Option<String> {
 pub fn D_TryFindWADByName(state: &mut DIwadState, filename: &str) -> String {
     D_FindWADByName(state, filename).unwrap_or_else(|| filename.to_string())
 }
-pub unsafe fn D_FindIWAD(state: &mut GameState, mask: i32, mission: *mut GameMission_t) -> String {
+pub fn D_FindIWAD(state: &mut GameState, mask: i32, mission: *mut GameMission_t) -> String {
     let iwadparm = M_CheckParmWithArgs(state, "-iwad", 1 as i32);
     if iwadparm != 0 {
         let iwadfile = state.m_argv.myargv[(iwadparm + 1 as i32) as usize]
@@ -208,7 +210,9 @@ pub unsafe fn D_FindIWAD(state: &mut GameState, mask: i32, mission: *mut GameMis
         let Some(result) = result else {
             I_Error(&format!("IWAD file '{}' not found!", iwadfile));
         };
-        *mission = identify_iwad_by_name(&result, mask);
+        unsafe {
+            *mission = identify_iwad_by_name(&result, mask);
+        }
         result
     } else {
         println!("-iwad not specified, trying a few iwad names");
@@ -242,7 +246,7 @@ pub fn D_SaveGameIWADName(gamemission: GameMission_t) -> &'static str {
     }
     "unknown.wad"
 }
-pub unsafe fn D_SuggestIWADName(
+pub fn D_SuggestIWADName(
     mut mission: GameMission_t,
     mut mode: GameMode_t,
 ) -> *mut ::core::ffi::c_char {

@@ -1372,7 +1372,7 @@ pub fn G_ExitLevel(state: &mut GameState) {
     state.g_game.secretexit = false;
     state.g_game.gameaction = GameAction::ga_completed;
 }
-pub unsafe fn G_SecretExitLevel(state: &mut GameState) {
+pub fn G_SecretExitLevel(state: &mut GameState) {
     if state.doomstat.gamemode as u32 == GameMode_t::commercial as u32
         && W_CheckNumForName(&mut state.w_wad, "map31") < 0 as i32
     {
@@ -1946,7 +1946,7 @@ pub unsafe fn G_BeginRecording(state: &mut GameState) {
         i += 1;
     }
 }
-pub unsafe fn G_DeferedPlayDemo(state: &mut GameState, mut name: *mut ::core::ffi::c_char) {
+pub fn G_DeferedPlayDemo(state: &mut GameState, mut name: *mut ::core::ffi::c_char) {
     state.g_game.defdemoname = name;
     state.g_game.gameaction = GameAction::ga_playdemo;
 }
@@ -2043,7 +2043,7 @@ pub unsafe fn G_DoPlayDemo(state: &mut GameState) {
     state.g_game.usergame = false;
     state.g_game.demoplayback = true;
 }
-pub unsafe fn G_TimeDemo(state: &mut GameState, mut name: *mut ::core::ffi::c_char) {
+pub fn G_TimeDemo(state: &mut GameState, mut name: *mut ::core::ffi::c_char) {
     state.g_game.nodrawers = M_CheckParm(state, "-nodraw") != 0;
     state.g_game.timingdemo = true;
     state.d_loop.singletics = true;

@@ -194,16 +194,18 @@ pub unsafe fn I_UpdateSound(state: &mut ISoundState) {
             .expect("non-null function pointer")();
     }
 }
-unsafe fn CheckVolumeSeparation(mut vol: *mut i32, mut sep: *mut i32) {
-    if *sep < 0 as i32 {
-        *sep = 0 as i32;
-    } else if *sep > 254 as i32 {
-        *sep = 254 as i32;
-    }
-    if *vol < 0 as i32 {
-        *vol = 0 as i32;
-    } else if *vol > 127 as i32 {
-        *vol = 127 as i32;
+fn CheckVolumeSeparation(mut vol: *mut i32, mut sep: *mut i32) {
+    unsafe {
+        if *sep < 0 as i32 {
+            *sep = 0 as i32;
+        } else if *sep > 254 as i32 {
+            *sep = 254 as i32;
+        }
+        if *vol < 0 as i32 {
+            *vol = 0 as i32;
+        } else if *vol > 127 as i32 {
+            *vol = 127 as i32;
+        }
     }
 }
 pub unsafe fn I_UpdateSoundParams(

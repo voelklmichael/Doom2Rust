@@ -243,7 +243,7 @@ pub unsafe fn EV_DoCeiling(
     }
     return rtn;
 }
-pub unsafe fn P_AddActiveCeiling(state: &mut PCeilngState, mut c: *mut ceiling_t) {
+pub fn P_AddActiveCeiling(state: &mut PCeilngState, mut c: *mut ceiling_t) {
     let mut i: i32 = 0;
     i = 0 as i32;
     while i < MAXCEILINGS {

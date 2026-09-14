@@ -630,7 +630,7 @@ pub unsafe fn V_DrawRawScreen(state: &mut VVideoState, mut raw: *mut byte) {
         (SCREENWIDTH * SCREENHEIGHT) as size_t,
     );
 }
-pub unsafe fn V_UseBuffer(state: &mut VVideoState, mut buffer: *mut byte) {
+pub fn V_UseBuffer(state: &mut VVideoState, mut buffer: *mut byte) {
     state.dest_screen = buffer;
 }
 pub fn V_RestoreBuffer(state: &mut GameState) {

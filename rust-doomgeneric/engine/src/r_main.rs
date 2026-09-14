@@ -170,7 +170,7 @@ pub unsafe fn R_PointOnSide(mut x: fixed_t, mut y: fixed_t, mut node: *mut node_
     }
     return 1 as i32;
 }
-pub unsafe fn R_PointOnSegSide(
+pub fn R_PointOnSegSide(
     state: &mut GameState,
     mut x: fixed_t,
     mut y: fixed_t,

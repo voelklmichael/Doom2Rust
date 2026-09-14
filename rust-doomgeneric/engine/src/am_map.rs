@@ -714,7 +714,7 @@ pub unsafe fn AM_loadPics(state: &mut GameState) {
         i += 1;
     }
 }
-pub unsafe fn AM_unloadPics(state: &mut GameState) {
+pub fn AM_unloadPics(state: &mut GameState) {
     let mut i: i32 = 0;
     i = 0 as i32;
     while i < 10 as i32 {

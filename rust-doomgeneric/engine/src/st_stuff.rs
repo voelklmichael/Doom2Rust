@@ -1111,9 +1111,11 @@ pub unsafe fn ST_loadData(state: &mut GameState) {
     state.st_stuff.lu_palette = W_GetNumForName(&mut state.w_wad, "PLAYPAL");
     ST_loadGraphics(state);
 }
-unsafe fn ST_unloadCallback(state: &mut GameState, lumpname: &str, variable: *mut *mut patch_t) {
-    W_ReleaseLumpName(&mut state.w_wad, lumpname);
-    *variable = ::core::ptr::null_mut::<patch_t>();
+fn ST_unloadCallback(state: &mut GameState, lumpname: &str, variable: *mut *mut patch_t) {
+    unsafe {
+        W_ReleaseLumpName(&mut state.w_wad, lumpname);
+        *variable = ::core::ptr::null_mut::<patch_t>();
+    }
 }
 pub unsafe fn ST_unloadGraphics(state: &mut GameState) {
     ST_loadUnloadGraphics(

@@ -69,7 +69,7 @@ pub fn W_LumpNameHash(s: &[u8]) -> u32 {
     }
     return result;
 }
-unsafe fn ExtendLumpInfo(state: &mut WWadState, mut newnumlumps: i32) {
+fn ExtendLumpInfo(state: &mut WWadState, mut newnumlumps: i32) {
     // `cache` is now an owned `Box<[u8]>` (a separate heap allocation, not a
     // zone block whose back-pointer needs fixing up), and `.next` is an
     // index into this same array rather than an address -- so moving each
@@ -197,7 +197,7 @@ pub unsafe fn wad_name8_to_string(ptr: *const ::core::ffi::c_char) -> String {
     let len = bytes.iter().position(|&b| b == 0).unwrap_or(8);
     String::from_utf8_lossy(&bytes[..len]).into_owned()
 }
-pub unsafe fn W_CheckNumForName(state: &mut WWadState, name: &str) -> i32 {
+pub fn W_CheckNumForName(state: &mut WWadState, name: &str) -> i32 {
     let mut i: i32 = 0;
     if !state.lumphash.is_empty() {
         let mut hash: u32 = 0;
@@ -223,7 +223,7 @@ pub unsafe fn W_CheckNumForName(state: &mut WWadState, name: &str) -> i32 {
     }
     return -(1 as i32);
 }
-pub unsafe fn W_GetNumForName(state: &mut WWadState, name: &str) -> i32 {
+pub fn W_GetNumForName(state: &mut WWadState, name: &str) -> i32 {
     let mut i: i32 = 0;
     i = W_CheckNumForName(state, name);
     if i < 0 as i32 {
@@ -231,7 +231,7 @@ pub unsafe fn W_GetNumForName(state: &mut WWadState, name: &str) -> i32 {
     }
     return i;
 }
-pub unsafe fn W_LumpLength(state: &mut WWadState, mut lump: u32) -> i32 {
+pub fn W_LumpLength(state: &mut WWadState, mut lump: u32) -> i32 {
     if lump >= state.numlumps {
         I_Error(&format!("W_LumpLength: {} >= numlumps", lump));
     }
@@ -296,7 +296,7 @@ pub unsafe fn W_CacheLumpName(
     let lumpnum = W_GetNumForName(&mut state.w_wad, name);
     return W_CacheLumpNum(state, lumpnum);
 }
-pub unsafe fn W_ReleaseLumpNum(state: &mut WWadState, mut lumpnum: i32) {
+pub fn W_ReleaseLumpNum(state: &mut WWadState, mut lumpnum: i32) {
     // Releasing a cached lump is a no-op now -- nothing purges cached blocks
     // under memory pressure since the zone allocator was removed entirely;
     // the owned cache buffer just stays cached until process exit either
@@ -306,11 +306,11 @@ pub unsafe fn W_ReleaseLumpNum(state: &mut WWadState, mut lumpnum: i32) {
         I_Error(&format!("W_ReleaseLumpNum: {} >= numlumps", lumpnum));
     }
 }
-pub unsafe fn W_ReleaseLumpName(state: &mut WWadState, name: &str) {
+pub fn W_ReleaseLumpName(state: &mut WWadState, name: &str) {
     let lumpnum = W_GetNumForName(state, name);
     W_ReleaseLumpNum(state, lumpnum);
 }
-pub unsafe fn W_GenerateHashTable(state: &mut GameState) {
+pub fn W_GenerateHashTable(state: &mut GameState) {
     let mut i: u32 = 0;
     state.w_wad.lumphash = Vec::new();
     if state.w_wad.numlumps > 0 as u32 {
@@ -345,7 +345,7 @@ static unique_lumps: [C2RustUnnamed_0; 4] = [
         lumpname: "AGRDA1",
     },
 ];
-pub unsafe fn W_CheckCorrectIWAD(state: &mut WWadState, mut mission: GameMission_t) {
+pub fn W_CheckCorrectIWAD(state: &mut WWadState, mut mission: GameMission_t) {
     let mut i: i32 = 0;
     let mut lumpnum: i32 = 0;
     i = 0 as i32;
