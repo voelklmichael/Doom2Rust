@@ -306,7 +306,7 @@ pub unsafe fn I_InitGraphics(state: &mut GameState) {
     state.i_video.I_VideoBuffer = vec![0u8; (SCREENWIDTH * SCREENHEIGHT) as usize];
     state.i_video.screenvisible = true;
 }
-pub unsafe fn I_ShutdownGraphics(state: &mut GameState) {
+pub fn I_ShutdownGraphics(state: &mut GameState) {
     state.i_video.I_VideoBuffer = Vec::new();
 }
 pub fn I_StartTic(state: &mut GameState) {

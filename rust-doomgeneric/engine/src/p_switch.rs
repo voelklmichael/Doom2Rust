@@ -311,7 +311,7 @@ pub unsafe fn P_InitSwitchList(state: &mut GameState) {
         }
     }
 }
-pub unsafe fn P_StartButton(
+pub fn P_StartButton(
     state: &mut GameState,
     mut line: LineId,
     mut w: BWhere,

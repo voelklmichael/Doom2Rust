@@ -2013,9 +2013,11 @@ pub unsafe fn WI_loadData(state: &mut GameState) {
     state.wi_stuff.star = W_CacheLumpName(state, "STFST01") as *mut patch_t;
     state.wi_stuff.bstar = W_CacheLumpName(state, "STFDEAD0") as *mut patch_t;
 }
-unsafe fn WI_unloadCallback(state: &mut GameState, name: &str, variable: *mut *mut patch_t) {
-    W_ReleaseLumpName(&mut state.w_wad, name);
-    *variable = ::core::ptr::null_mut::<patch_t>();
+fn WI_unloadCallback(state: &mut GameState, name: &str, variable: *mut *mut patch_t) {
+    unsafe {
+        W_ReleaseLumpName(&mut state.w_wad, name);
+        *variable = ::core::ptr::null_mut::<patch_t>();
+    }
 }
 pub unsafe fn WI_Drawer(state: &mut GameState) {
     match state.wi_stuff.state {

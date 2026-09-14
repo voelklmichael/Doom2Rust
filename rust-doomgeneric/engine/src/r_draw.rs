@@ -364,7 +364,7 @@ pub unsafe fn R_DrawTranslatedColumnLow(state: &mut GameState) {
         }
     }
 }
-pub unsafe fn R_InitTranslationTables(state: &mut GameState) {
+pub fn R_InitTranslationTables(state: &mut GameState) {
     let mut i: i32 = 0;
     state.r_draw.translationtables = vec![0u8; 256 * 3];
     i = 0 as i32;

@@ -636,7 +636,7 @@ fn SetMissionForPackName(state: &mut GameState, pack_name: &str) {
     }
     I_Error(&format!("Unknown mission pack name: {}", pack_name));
 }
-pub unsafe fn D_IdentifyVersion(state: &mut GameState) {
+pub fn D_IdentifyVersion(state: &mut GameState) {
     if state.doomstat.gamemission as u32 == GameMission_t::none as i32 as u32 {
         let mut i: u32 = 0;
         i = 0 as u32;
@@ -691,7 +691,7 @@ pub unsafe fn D_IdentifyVersion(state: &mut GameState) {
         }
     };
 }
-pub unsafe fn D_SetGameDescription(state: &mut GameState) {
+pub fn D_SetGameDescription(state: &mut GameState) {
     let mut is_freedoom: bool = W_CheckNumForName(&mut state.w_wad, "FREEDOOM") >= 0 as i32;
     let mut is_freedm: bool = W_CheckNumForName(&mut state.w_wad, "FREEDM") >= 0 as i32;
     state.doomstat.gamedescription = "Unknown";
@@ -756,10 +756,10 @@ pub unsafe fn D_SetGameDescription(state: &mut GameState) {
     }
 }
 pub static title: [::core::ffi::c_char; 128] = [0; 128];
-unsafe fn D_AddFile(state: &mut GameState, filename: &str) -> bool {
+fn D_AddFile(state: &mut GameState, filename: &str) -> bool {
     let mut handle: *mut wad_file_t = ::core::ptr::null_mut::<wad_file_t>();
     println!(" adding {}", filename);
-    handle = W_AddFile(state, filename);
+    handle = unsafe { W_AddFile(state, filename) };
     return handle != NULL as *mut wad_file_t;
 }
 static copyright_banners: [&str; 3] = [

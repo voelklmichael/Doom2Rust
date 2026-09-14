@@ -186,7 +186,7 @@ fn saveg_write_pad(state: &mut GameState) {
 unsafe fn saveg_readp(state: &mut GameState) -> *mut ::core::ffi::c_void {
     return saveg_read32(state) as intptr_t as *mut ::core::ffi::c_void;
 }
-unsafe fn saveg_writep(state: &mut GameState, mut p: *mut ::core::ffi::c_void) {
+fn saveg_writep(state: &mut GameState, mut p: *mut ::core::ffi::c_void) {
     saveg_write32(state, p as intptr_t as i32);
 }
 unsafe fn saveg_read_mapthing_t(state: &mut GameState, mut str: *mut mapthing_t) {

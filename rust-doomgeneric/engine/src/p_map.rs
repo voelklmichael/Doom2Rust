@@ -1191,7 +1191,7 @@ pub unsafe fn P_ChangeSector(
     }
     return state.p_map.nofit;
 }
-unsafe fn SpechitOverrun(state: &mut GameState, mut ld: LineId) {
+fn SpechitOverrun(state: &mut GameState, mut ld: LineId) {
     let mut addr: u32 = 0;
     if state.p_map.baseaddr == 0 as u32 {
         let mut p: i32 = 0;
