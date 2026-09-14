@@ -63,7 +63,9 @@
       "Bash(cargo test*)",
       "Bash(git worktree list*)",
       "Bash(git merge-base*)",
-      "Bash(cd /home/michael/doom_v5/rust-doomgeneric/src*)"
+      "Bash(cd /home/michael/doom_v5/rust-doomgeneric/src*)",
+      "Bash(import *)",
+      "Bash(/home/michael/doom_v5/rust-doomgeneric/target/*)"
     ]
   }
 }
