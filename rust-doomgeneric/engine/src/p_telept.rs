@@ -1,21 +1,21 @@
-use crate::src::d_mode::GameVersion;
-use crate::src::game_state::GameState;
-use crate::src::m_fixed::fixed_t;
-use crate::src::p_map::P_TeleportMove;
-use crate::src::p_mobj::mobj_t;
-use crate::src::p_mobj::P_SpawnMobj;
-use crate::src::p_mobj::ThinkerFn;
-use crate::src::p_mobj::MF_MISSILE;
-use crate::src::p_mobj::thinker_t;
-use crate::src::p_mobj::MobjType;
-use crate::src::p_setup::LineId;
-use crate::src::p_setup::SectorId;
-use crate::src::s_sound::S_StartSound;
-use crate::src::s_sound::SoundOrigin;
-use crate::src::sounds::sfx_telept;
-use crate::src::tables::finecosine;
-use crate::src::tables::finesine;
-use crate::src::tables::ANGLETOFINESHIFT;
+use crate::d_mode::GameVersion;
+use crate::game_state::GameState;
+use crate::m_fixed::fixed_t;
+use crate::p_map::P_TeleportMove;
+use crate::p_mobj::mobj_t;
+use crate::p_mobj::P_SpawnMobj;
+use crate::p_mobj::ThinkerFn;
+use crate::p_mobj::MF_MISSILE;
+use crate::p_mobj::thinker_t;
+use crate::p_mobj::MobjType;
+use crate::p_setup::LineId;
+use crate::p_setup::SectorId;
+use crate::s_sound::S_StartSound;
+use crate::s_sound::SoundOrigin;
+use crate::sounds::sfx_telept;
+use crate::tables::finecosine;
+use crate::tables::finesine;
+use crate::tables::ANGLETOFINESHIFT;
 pub unsafe fn EV_Teleport(
     state: &mut GameState,
     mut line: LineId,

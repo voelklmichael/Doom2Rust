@@ -1,4 +1,4 @@
-use crate::src::game_state::GameState;
+use crate::game_state::GameState;
 
 pub struct MArgvState {
     pub myargv: Vec<::std::ffi::CString>,

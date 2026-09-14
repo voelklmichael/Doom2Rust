@@ -1,28 +1,28 @@
-use crate::src::d_event::event_t;
-use crate::src::d_event::EvType;
-use crate::src::d_mode::GameVersion;
-use crate::src::d_mode::GameMode_t;
-use crate::src::d_mode::GameMission_t;
-use crate::src::d_player::PlayerId;
-use crate::src::fixed_cstr::FixedCStr;
-use crate::src::doomdef::MAXPLAYERS;
-use crate::src::doomdef::TICRATE;
-use crate::src::game_state::GameState;
-use crate::src::hu_lib::{
+use crate::d_event::event_t;
+use crate::d_event::EvType;
+use crate::d_mode::GameVersion;
+use crate::d_mode::GameMode_t;
+use crate::d_mode::GameMission_t;
+use crate::d_player::PlayerId;
+use crate::fixed_cstr::FixedCStr;
+use crate::doomdef::MAXPLAYERS;
+use crate::doomdef::TICRATE;
+use crate::game_state::GameState;
+use crate::hu_lib::{
     hu_itext_t, hu_stext_t, hu_textline_t, patch_t, HUlib_addCharToTextLine,
     HUlib_addMessageToSText, HUlib_drawIText, HUlib_drawSText, HUlib_drawTextLine,
     HUlib_eraseIText, HUlib_eraseSText, HUlib_eraseTextLine, HUlib_initIText, HUlib_initSText,
     HUlib_initTextLine, HUlib_keyInIText, HUlib_resetIText,
 };
-use crate::src::m_controls::KEY_ENTER;
-use crate::src::m_controls::KEY_ESCAPE;
-use crate::src::m_controls::KEY_RALT;
-use crate::src::m_controls::KEY_RSHIFT;
-use crate::src::s_sound::S_StartSound;
-use crate::src::s_sound::SoundOrigin;
-use crate::src::sounds::{sfx_radio, sfx_tink};
-use crate::src::stdint_types::byte;
-use crate::src::w_wad::W_CacheLumpName;
+use crate::m_controls::KEY_ENTER;
+use crate::m_controls::KEY_ESCAPE;
+use crate::m_controls::KEY_RALT;
+use crate::m_controls::KEY_RSHIFT;
+use crate::s_sound::S_StartSound;
+use crate::s_sound::SoundOrigin;
+use crate::sounds::{sfx_radio, sfx_tink};
+use crate::stdint_types::byte;
+use crate::w_wad::W_CacheLumpName;
 
 pub struct HuStuffState {
     pub plr: PlayerId,

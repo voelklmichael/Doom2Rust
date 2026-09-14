@@ -1,4 +1,4 @@
-use crate::src::fixed_cstr::FixedCStr;
+use crate::fixed_cstr::FixedCStr;
 use std::io::Write;
 pub const EISDIR: i32 = 21;
 pub const DIR_SEPARATOR: i32 = '/' as i32;

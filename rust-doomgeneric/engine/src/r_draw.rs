@@ -1,20 +1,20 @@
-use crate::src::d_mode::GameMode_t;
-use crate::src::doomdef::SCREENHEIGHT;
-use crate::src::doomdef::SCREENWIDTH;
-use crate::src::game_state::GameState;
-use crate::src::hu_lib::patch_t;
-use crate::src::i_system::I_Error;
-use crate::src::m_fixed::fixed_t;
-use crate::src::m_fixed::FRACBITS;
-use crate::src::r_defs::lighttable_t;
-use crate::src::stdint_types::byte;
-use crate::src::stdint_types::size_t;
-use crate::src::v_video::V_DrawPatch;
-use crate::src::v_video::V_MarkRect;
-use crate::src::v_video::V_RestoreBuffer;
-use crate::src::v_video::V_UseBuffer;
-use crate::src::w_wad::W_CacheLumpName;
-use crate::src::mem_compat::memcpy;
+use crate::d_mode::GameMode_t;
+use crate::doomdef::SCREENHEIGHT;
+use crate::doomdef::SCREENWIDTH;
+use crate::game_state::GameState;
+use crate::hu_lib::patch_t;
+use crate::i_system::I_Error;
+use crate::m_fixed::fixed_t;
+use crate::m_fixed::FRACBITS;
+use crate::r_defs::lighttable_t;
+use crate::stdint_types::byte;
+use crate::stdint_types::size_t;
+use crate::v_video::V_DrawPatch;
+use crate::v_video::V_MarkRect;
+use crate::v_video::V_RestoreBuffer;
+use crate::v_video::V_UseBuffer;
+use crate::w_wad::W_CacheLumpName;
+use crate::mem_compat::memcpy;
 
 pub struct RDrawState {
     pub viewimage: *mut byte,

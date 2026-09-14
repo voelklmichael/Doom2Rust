@@ -1,19 +1,18 @@
-use crate::src::doomdef::pixel_t;
-use crate::src::doomdef::SCREENHEIGHT;
-use crate::src::doomdef::SCREENWIDTH;
-use crate::src::doomgeneric::DOOMGENERIC_RESX;
-use crate::src::doomgeneric::DOOMGENERIC_RESY;
-use crate::src::game_state::GameState;
-use crate::src::i_input::I_GetEvent;
-use crate::src::i_system::I_Error;
-use crate::src::m_argv::{M_ArgvAtoi, M_CheckParmWithArgs};
-use crate::src::m_fixed::INT_MAX;
-use crate::src::stdint_types::size_t;
-use crate::src::stdint_types::uint32_t;
-use crate::src::stdint_types::{byte, uint8_t};
-use crate::src::tables::gammatable;
-use ::c2rust_bitfields;
-use crate::src::mem_compat::{memcpy, memset};
+use crate::doomdef::pixel_t;
+use crate::doomdef::SCREENHEIGHT;
+use crate::doomdef::SCREENWIDTH;
+use crate::doomgeneric::DOOMGENERIC_RESX;
+use crate::doomgeneric::DOOMGENERIC_RESY;
+use crate::game_state::GameState;
+use crate::i_input::I_GetEvent;
+use crate::i_system::I_Error;
+use crate::m_argv::{M_ArgvAtoi, M_CheckParmWithArgs};
+use crate::m_fixed::INT_MAX;
+use crate::mem_compat::{memcpy, memset};
+use crate::stdint_types::size_t;
+use crate::stdint_types::uint32_t;
+use crate::stdint_types::{byte, uint8_t};
+use crate::tables::gammatable;
 
 pub struct IVideoState {
     pub s_Fb: FB_ScreenInfo,
@@ -94,14 +93,36 @@ pub struct FB_BitField {
     pub offset: uint32_t,
     pub length: uint32_t,
 }
-#[derive(Copy, Clone, BitfieldStruct)]
+#[derive(Copy, Clone)]
 #[repr(C)]
 pub struct color {
-    #[bitfield(name = "b", ty = "uint32_t", bits = "0..=7")]
-    #[bitfield(name = "g", ty = "uint32_t", bits = "8..=15")]
-    #[bitfield(name = "r", ty = "uint32_t", bits = "16..=23")]
-    #[bitfield(name = "a", ty = "uint32_t", bits = "24..=31")]
     pub b_g_r_a: [u8; 4],
+}
+impl color {
+    pub fn r(&self) -> u8 {
+        self.b_g_r_a[2]
+    }
+    pub fn g(&self) -> u8 {
+        self.b_g_r_a[1]
+    }
+    pub fn b(&self) -> u8 {
+        self.b_g_r_a[0]
+    }
+    pub fn a(&self) -> u8 {
+        self.b_g_r_a[3]
+    }
+    pub fn set_r(&mut self, value: u32) {
+        self.b_g_r_a[2] = value as u8;
+    }
+    pub fn set_g(&mut self, value: u32) {
+        self.b_g_r_a[1] = value as u8;
+    }
+    pub fn set_b(&mut self, value: u32) {
+        self.b_g_r_a[0] = value as u8;
+    }
+    pub fn set_a(&mut self, value: u32) {
+        self.b_g_r_a[3] = value as u8;
+    }
 }
 #[derive(Copy, Clone)]
 #[repr(C)]
@@ -253,7 +274,10 @@ pub unsafe fn I_InitGraphics(state: &mut GameState) {
     if i > 0 as i32 {
         i = M_ArgvAtoi(&state.m_argv.myargv[(i + 1 as i32) as usize]);
         state.i_video.fb_scaling = i;
-        println!("I_InitGraphics: Scaling factor: {}", state.i_video.fb_scaling);
+        println!(
+            "I_InitGraphics: Scaling factor: {}",
+            state.i_video.fb_scaling
+        );
     } else {
         state.i_video.fb_scaling = state
             .i_video
@@ -274,7 +298,10 @@ pub unsafe fn I_InitGraphics(state: &mut GameState) {
                 .wrapping_div(SCREENHEIGHT as uint32_t)
                 as i32;
         }
-        println!("I_InitGraphics: Auto-scaling factor: {}", state.i_video.fb_scaling);
+        println!(
+            "I_InitGraphics: Auto-scaling factor: {}",
+            state.i_video.fb_scaling
+        );
     }
     state.i_video.I_VideoBuffer = vec![0u8; (SCREENWIDTH * SCREENHEIGHT) as usize];
     state.i_video.screenvisible = true;

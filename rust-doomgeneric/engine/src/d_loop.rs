@@ -1,20 +1,20 @@
-use crate::src::d_ticcmd::BT_SPECIAL;
-use crate::src::doomdef::TICRATE;
-use crate::src::dummy::drone;
-use crate::src::dummy::net_client_connected;
-use crate::src::game_state::GameState;
-use crate::src::i_system::I_AtExit;
-use crate::src::i_system::I_Error;
-use crate::src::i_timer::I_GetTime;
-use crate::src::i_timer::I_GetTimeMS;
-use crate::src::i_timer::I_Sleep;
-use crate::src::i_video::I_StartTic;
-use crate::src::m_fixed::fixed_t;
-use crate::src::m_fixed::FRACUNIT;
-use crate::src::mem_compat::{memcpy, memset};
-use crate::src::sha1::sha1_digest_t;
-use crate::src::stdint_types::byte;
-use crate::src::stdint_types::size_t;
+use crate::d_ticcmd::BT_SPECIAL;
+use crate::doomdef::TICRATE;
+use crate::dummy::drone;
+use crate::dummy::net_client_connected;
+use crate::game_state::GameState;
+use crate::i_system::I_AtExit;
+use crate::i_system::I_Error;
+use crate::i_timer::I_GetTime;
+use crate::i_timer::I_GetTimeMS;
+use crate::i_timer::I_Sleep;
+use crate::i_video::I_StartTic;
+use crate::m_fixed::fixed_t;
+use crate::m_fixed::FRACUNIT;
+use crate::mem_compat::{memcpy, memset};
+use crate::sha1::sha1_digest_t;
+use crate::stdint_types::byte;
+use crate::stdint_types::size_t;
 
 pub struct DLoopState {
     pub ticdata: [ticcmd_set_t; 128],
@@ -77,7 +77,7 @@ impl DLoopState {
     }
 }
 
-pub use crate::src::d_ticcmd::ticcmd_t;
+pub use crate::d_ticcmd::ticcmd_t;
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct net_connect_data_t {

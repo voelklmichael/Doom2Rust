@@ -1,42 +1,42 @@
-use crate::src::d_event::event_t;
-use crate::src::d_event::EvType;
-use crate::src::d_event::GameAction;
-use crate::src::d_event::GameScreenState;
-use crate::src::d_mode::GameMission_t;
-use crate::src::d_mode::GameMode_t;
-use crate::src::d_mode::GameVersion;
-use crate::src::doomdef::true_0;
-use crate::src::doomdef::MAXPLAYERS;
-use crate::src::doomdef::SCREENHEIGHT;
-use crate::src::doomdef::SCREENWIDTH;
-use crate::src::game_state::GameState;
-use crate::src::hu_lib::patch_t;
-use crate::src::hu_stuff::HU_FONTSIZE;
-use crate::src::hu_stuff::HU_FONTSTART;
-use crate::src::i_video::IVideoState;
-use crate::src::mem_compat::memcpy;
-use crate::src::p_mobj::MobjType;
-use crate::src::p_mobj::StateNum;
-use crate::src::p_mobj::{mobjinfo_t, state_t};
-use crate::src::r_data::column_t;
-use crate::src::r_defs::{spritedef_t, spriteframe_t};
-use crate::src::r_things::FF_FRAMEMASK;
-use crate::src::s_sound::S_ChangeMusic;
-use crate::src::s_sound::S_StartMusic;
-use crate::src::s_sound::S_StartSound;
-use crate::src::s_sound::SoundOrigin;
-use crate::src::sounds::{mus_bunny, mus_evil, mus_read_m, mus_victor};
-use crate::src::sounds::{
+use crate::d_event::event_t;
+use crate::d_event::EvType;
+use crate::d_event::GameAction;
+use crate::d_event::GameScreenState;
+use crate::d_mode::GameMission_t;
+use crate::d_mode::GameMode_t;
+use crate::d_mode::GameVersion;
+use crate::doomdef::true_0;
+use crate::doomdef::MAXPLAYERS;
+use crate::doomdef::SCREENHEIGHT;
+use crate::doomdef::SCREENWIDTH;
+use crate::game_state::GameState;
+use crate::hu_lib::patch_t;
+use crate::hu_stuff::HU_FONTSIZE;
+use crate::hu_stuff::HU_FONTSTART;
+use crate::i_video::IVideoState;
+use crate::mem_compat::memcpy;
+use crate::p_mobj::MobjType;
+use crate::p_mobj::StateNum;
+use crate::p_mobj::{mobjinfo_t, state_t};
+use crate::r_data::column_t;
+use crate::r_defs::{spritedef_t, spriteframe_t};
+use crate::r_things::FF_FRAMEMASK;
+use crate::s_sound::S_ChangeMusic;
+use crate::s_sound::S_StartMusic;
+use crate::s_sound::S_StartSound;
+use crate::s_sound::SoundOrigin;
+use crate::sounds::{mus_bunny, mus_evil, mus_read_m, mus_victor};
+use crate::sounds::{
     sfx_claw, sfx_dshtgn, sfx_firsht, sfx_pistol, sfx_plasma, sfx_rlaunc, sfx_sgtatk, sfx_shotgn,
     sfx_skeatk, sfx_skepch, sfx_skeswg, sfx_sklatk, sfx_vilatk,
 };
-use crate::src::stdint_types::byte;
-use crate::src::stdint_types::size_t;
-use crate::src::v_video::V_DrawPatch;
-use crate::src::v_video::V_DrawPatchFlipped;
-use crate::src::v_video::V_MarkRect;
-use crate::src::w_wad::W_CacheLumpName;
-use crate::src::w_wad::W_CacheLumpNum;
+use crate::stdint_types::byte;
+use crate::stdint_types::size_t;
+use crate::v_video::V_DrawPatch;
+use crate::v_video::V_DrawPatchFlipped;
+use crate::v_video::V_MarkRect;
+use crate::w_wad::W_CacheLumpName;
+use crate::w_wad::W_CacheLumpNum;
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum FinaleStage {
     F_STAGE_TEXT = 0,

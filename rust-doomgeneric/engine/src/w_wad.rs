@@ -1,16 +1,16 @@
-use crate::src::d_iwad::D_SuggestGameName;
-use crate::src::d_mode::GameMode_t;
-use crate::src::d_mode::D_GameMissionString;
-use crate::src::d_mode::GameMission_t;
-use crate::src::fixed_cstr::FixedCStr;
-use crate::src::game_state::GameState;
-use crate::src::i_system::I_Error;
-use crate::src::m_misc::M_ExtractFileBase;
-use crate::src::stdint_types::byte;
-use crate::src::stdint_types::size_t;
-use crate::src::w_file::wad_file_t;
-use crate::src::w_file::W_OpenFile;
-use crate::src::w_file::W_Read;
+use crate::d_iwad::D_SuggestGameName;
+use crate::d_mode::GameMode_t;
+use crate::d_mode::D_GameMissionString;
+use crate::d_mode::GameMission_t;
+use crate::fixed_cstr::FixedCStr;
+use crate::game_state::GameState;
+use crate::i_system::I_Error;
+use crate::m_misc::M_ExtractFileBase;
+use crate::stdint_types::byte;
+use crate::stdint_types::size_t;
+use crate::w_file::wad_file_t;
+use crate::w_file::W_OpenFile;
+use crate::w_file::W_Read;
 
 pub struct WWadState {
     pub lumpinfo: Vec<lumpinfo_t>,

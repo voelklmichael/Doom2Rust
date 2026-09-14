@@ -1,9 +1,9 @@
-use crate::src::d_mode::GameMode_t;
-use crate::src::d_mode::GameMission_t;
-use crate::src::game_state::GameState;
-use crate::src::i_system::I_Error;
-use crate::src::m_argv::M_CheckParmWithArgs;
-use crate::src::m_misc::M_FileExists;
+use crate::d_mode::GameMode_t;
+use crate::d_mode::GameMission_t;
+use crate::game_state::GameState;
+use crate::i_system::I_Error;
+use crate::m_argv::M_CheckParmWithArgs;
+use crate::m_misc::M_FileExists;
 #[derive(Copy, Clone)]
 pub struct iwad_t {
     pub name: &'static str,

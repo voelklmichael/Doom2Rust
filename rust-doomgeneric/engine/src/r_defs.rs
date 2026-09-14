@@ -1,11 +1,11 @@
-use crate::src::m_fixed::fixed_t;
-use crate::src::p_setup::LineId;
-use crate::src::p_setup::SectorId;
-use crate::src::p_setup::SegId;
-use crate::src::p_setup::SideId;
-use crate::src::p_setup::VertexId;
-use crate::src::stdint_types::byte;
-use crate::src::tables::angle_t;
+use crate::m_fixed::fixed_t;
+use crate::p_setup::LineId;
+use crate::p_setup::SectorId;
+use crate::p_setup::SegId;
+use crate::p_setup::SideId;
+use crate::p_setup::VertexId;
+use crate::stdint_types::byte;
+use crate::tables::angle_t;
 pub type lighttable_t = byte;
 
 #[derive(Copy, Clone)]

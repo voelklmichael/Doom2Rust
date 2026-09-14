@@ -1,14 +1,14 @@
-use crate::src::game_state::GameState;
-use crate::src::m_random::P_Random;
-use crate::src::p_mobj::ThinkerFn;
-use crate::src::p_mobj::{sector_t, thinker_t};
-use crate::src::p_setup::LineId;
-use crate::src::p_setup::SectorId;
-use crate::src::p_spec::getNextSector;
-use crate::src::p_spec::P_FindMinSurroundingLight;
-use crate::src::p_spec::P_FindSectorFromLineTag;
-use crate::src::p_tick::P_AddThinker;
-use crate::src::p_tick::ThinkerKind;
+use crate::game_state::GameState;
+use crate::m_random::P_Random;
+use crate::p_mobj::ThinkerFn;
+use crate::p_mobj::{sector_t, thinker_t};
+use crate::p_setup::LineId;
+use crate::p_setup::SectorId;
+use crate::p_spec::getNextSector;
+use crate::p_spec::P_FindMinSurroundingLight;
+use crate::p_spec::P_FindSectorFromLineTag;
+use crate::p_tick::P_AddThinker;
+use crate::p_tick::ThinkerKind;
 
 #[derive(Copy, Clone)]
 #[repr(C)]

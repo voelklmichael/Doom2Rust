@@ -1,6 +1,6 @@
-use crate::src::doomdef::TICRATE;
-use crate::src::game_state::GameState;
-use crate::src::stdint_types::uint32_t;
+use crate::doomdef::TICRATE;
+use crate::game_state::GameState;
+use crate::stdint_types::uint32_t;
 pub struct ITimerState {
     basetime: uint32_t,
 }

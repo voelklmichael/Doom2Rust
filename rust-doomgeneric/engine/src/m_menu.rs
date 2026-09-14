@@ -1,46 +1,46 @@
-use crate::src::d_event::{event_t, GameScreenState};
-use crate::src::d_main::D_StartTitle;
-use crate::src::dstrings::{doom1_endmsg, doom2_endmsg};
-use crate::src::hu_lib::patch_t;
-use crate::src::i_system::I_Error;
-use crate::src::w_wad::W_CacheLumpName;
+use crate::d_event::{event_t, GameScreenState};
+use crate::d_main::D_StartTitle;
+use crate::dstrings::{doom1_endmsg, doom2_endmsg};
+use crate::hu_lib::patch_t;
+use crate::i_system::I_Error;
+use crate::w_wad::W_CacheLumpName;
 
-use crate::src::d_event::EvType;
-use crate::src::d_mode::GameMode_t;
-use crate::src::d_mode::GameMission_t;
-use crate::src::d_mode::{skill_from_raw, GameVersion};
-use crate::src::doomdef::SCREENHEIGHT;
-use crate::src::doomdef::SCREENWIDTH;
-use crate::src::fixed_cstr::FixedCStr;
-use crate::src::g_game::G_DeferedInitNew;
-use crate::src::g_game::G_LoadGame;
-use crate::src::g_game::G_SaveGame;
-use crate::src::g_game::G_ScreenShot;
-use crate::src::game_state::GameState;
-use crate::src::hu_stuff::HU_FONTSIZE;
-use crate::src::hu_stuff::HU_FONTSTART;
-use crate::src::i_system::I_Quit;
-use crate::src::i_timer::I_GetTime;
-use crate::src::i_video::I_SetPalette;
-use crate::src::m_controls::KEY_BACKSPACE;
-use crate::src::m_controls::KEY_CAPSLOCK;
-use crate::src::m_controls::KEY_ENTER;
-use crate::src::m_controls::KEY_ESCAPE;
-use crate::src::m_controls::KEY_PAUSE;
-use crate::src::m_controls::KEY_SCRLCK;
-use crate::src::p_saveg::P_SaveGameFile;
-use crate::src::r_main::R_SetViewSize;
-use crate::src::s_sound::S_SetMusicVolume;
-use crate::src::s_sound::S_SetSfxVolume;
-use crate::src::s_sound::S_StartSound;
-use crate::src::s_sound::SoundOrigin;
-use crate::src::sounds::{
+use crate::d_event::EvType;
+use crate::d_mode::GameMode_t;
+use crate::d_mode::GameMission_t;
+use crate::d_mode::{skill_from_raw, GameVersion};
+use crate::doomdef::SCREENHEIGHT;
+use crate::doomdef::SCREENWIDTH;
+use crate::fixed_cstr::FixedCStr;
+use crate::g_game::G_DeferedInitNew;
+use crate::g_game::G_LoadGame;
+use crate::g_game::G_SaveGame;
+use crate::g_game::G_ScreenShot;
+use crate::game_state::GameState;
+use crate::hu_stuff::HU_FONTSIZE;
+use crate::hu_stuff::HU_FONTSTART;
+use crate::i_system::I_Quit;
+use crate::i_timer::I_GetTime;
+use crate::i_video::I_SetPalette;
+use crate::m_controls::KEY_BACKSPACE;
+use crate::m_controls::KEY_CAPSLOCK;
+use crate::m_controls::KEY_ENTER;
+use crate::m_controls::KEY_ESCAPE;
+use crate::m_controls::KEY_PAUSE;
+use crate::m_controls::KEY_SCRLCK;
+use crate::p_saveg::P_SaveGameFile;
+use crate::r_main::R_SetViewSize;
+use crate::s_sound::S_SetMusicVolume;
+use crate::s_sound::S_SetSfxVolume;
+use crate::s_sound::S_StartSound;
+use crate::s_sound::SoundOrigin;
+use crate::sounds::{
     sfx_boscub, sfx_bspact, sfx_dmpain, sfx_getpow, sfx_kntdth, sfx_oof, sfx_pistol, sfx_pldeth,
     sfx_popain, sfx_posit1, sfx_posit3, sfx_pstop, sfx_sgtatk, sfx_skeswg, sfx_slop, sfx_stnmov,
     sfx_swtchn, sfx_swtchx, sfx_telept, sfx_vilact,
 };
-use crate::src::stdint_types::byte;
-use crate::src::v_video::V_DrawPatchDirect;
+use crate::stdint_types::byte;
+use crate::v_video::V_DrawPatchDirect;
 
 pub struct MMenuDefsHolder {
     pub MainDef: menu_t,

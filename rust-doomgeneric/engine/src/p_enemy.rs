@@ -1,71 +1,71 @@
-use crate::src::d_mode::GameMode_t;
-use crate::src::d_mode::SkillType;
-use crate::src::d_player::player_t;
-use crate::src::g_game::G_ExitLevel;
-use crate::src::i_system::I_Error;
-use crate::src::m_fixed::fixed_t;
-use crate::src::m_fixed::FixedMul;
-use crate::src::m_random::P_Random;
-use crate::src::p_doors::EV_DoDoor;
-use crate::src::p_doors::VldoorE;
-use crate::src::p_floor::EV_DoFloor;
-use crate::src::p_floor::FloorE;
-use crate::src::p_inter::P_DamageMobj;
-use crate::src::p_map::P_AimLineAttack;
-use crate::src::p_map::P_CheckPosition;
-use crate::src::p_map::P_LineAttack;
-use crate::src::p_map::P_RadiusAttack;
-use crate::src::p_map::P_TeleportMove;
-use crate::src::p_map::P_TryMove;
-use crate::src::p_maputl::P_AproxDistance;
-use crate::src::p_maputl::P_BlockThingsIterator;
-use crate::src::p_maputl::P_LineOpening;
-use crate::src::p_maputl::P_SetThingPosition;
-use crate::src::p_maputl::P_UnsetThingPosition;
-use crate::src::p_mobj::MobjId;
-use crate::src::p_mobj::P_RemoveMobj;
-use crate::src::p_mobj::P_SetMobjState;
-use crate::src::p_mobj::P_SpawnMissile;
-use crate::src::p_mobj::P_SpawnMobj;
-use crate::src::p_mobj::P_SpawnPuff;
-use crate::src::p_mobj::P_SubstNullMobj;
-use crate::src::p_mobj::{mobjinfo_t, sector_t, thinker_t};
-use crate::src::p_mobj::{mobj_t, pspdef_t};
-use crate::src::p_mobj::MobjType;
-use crate::src::p_mobj::ThinkerFn;
-use crate::src::p_mobj::{
+use crate::d_mode::GameMode_t;
+use crate::d_mode::SkillType;
+use crate::d_player::player_t;
+use crate::g_game::G_ExitLevel;
+use crate::i_system::I_Error;
+use crate::m_fixed::fixed_t;
+use crate::m_fixed::FixedMul;
+use crate::m_random::P_Random;
+use crate::p_doors::EV_DoDoor;
+use crate::p_doors::VldoorE;
+use crate::p_floor::EV_DoFloor;
+use crate::p_floor::FloorE;
+use crate::p_inter::P_DamageMobj;
+use crate::p_map::P_AimLineAttack;
+use crate::p_map::P_CheckPosition;
+use crate::p_map::P_LineAttack;
+use crate::p_map::P_RadiusAttack;
+use crate::p_map::P_TeleportMove;
+use crate::p_map::P_TryMove;
+use crate::p_maputl::P_AproxDistance;
+use crate::p_maputl::P_BlockThingsIterator;
+use crate::p_maputl::P_LineOpening;
+use crate::p_maputl::P_SetThingPosition;
+use crate::p_maputl::P_UnsetThingPosition;
+use crate::p_mobj::MobjId;
+use crate::p_mobj::P_RemoveMobj;
+use crate::p_mobj::P_SetMobjState;
+use crate::p_mobj::P_SpawnMissile;
+use crate::p_mobj::P_SpawnMobj;
+use crate::p_mobj::P_SpawnPuff;
+use crate::p_mobj::P_SubstNullMobj;
+use crate::p_mobj::{mobjinfo_t, sector_t, thinker_t};
+use crate::p_mobj::{mobj_t, pspdef_t};
+use crate::p_mobj::MobjType;
+use crate::p_mobj::ThinkerFn;
+use crate::p_mobj::{
     MF_AMBUSH, MF_CORPSE, MF_FLOAT, MF_INFLOAT, MF_JUSTATTACKED, MF_JUSTHIT, MF_SHADOW,
     MF_SHOOTABLE, MF_SKULLFLY, MF_SOLID,
 };
-use crate::src::p_setup::LineId;
-use crate::src::p_setup::SectorId;
-use crate::src::p_sight::P_CheckSight;
-use crate::src::p_switch::P_UseSpecialLine;
-use crate::src::r_main::R_PointToAngle2;
-use crate::src::s_sound::S_StartSound;
-use crate::src::s_sound::SoundOrigin;
-use crate::src::sounds::{
+use crate::p_setup::LineId;
+use crate::p_setup::SectorId;
+use crate::p_sight::P_CheckSight;
+use crate::p_switch::P_UseSpecialLine;
+use crate::r_main::R_PointToAngle2;
+use crate::s_sound::S_StartSound;
+use crate::s_sound::SoundOrigin;
+use crate::sounds::{
     sfx_barexp, sfx_bgdth1, sfx_bgsit1, sfx_boscub, sfx_bosdth, sfx_bospit, sfx_bospn, sfx_bossit,
     sfx_bspwlk, sfx_claw, sfx_dbcls, sfx_dbload, sfx_dbopn, sfx_flame, sfx_flamst, sfx_hoof,
     sfx_manatk, sfx_metal, sfx_pdiehi, sfx_pistol, sfx_pldeth, sfx_podth1, sfx_posit1, sfx_shotgn,
     sfx_skepch, sfx_skeswg, sfx_slop, sfx_telept, sfx_vilatk,
 };
-use crate::src::tables::angle_t;
-use crate::src::tables::finecosine;
-use crate::src::tables::finesine;
+use crate::tables::angle_t;
+use crate::tables::finecosine;
+use crate::tables::finesine;
 
-use crate::src::doomdef::MAXPLAYERS;
-use crate::src::game_state::GameState;
-use crate::src::p_mobj::StateNum;
-use crate::src::m_fixed::FRACUNIT;
-use crate::src::p_maputl::MAPBLOCKSHIFT;
-use crate::src::p_mobj::FLOATSPEED;
-use crate::src::p_pspr::A_ReFire;
-use crate::src::p_spec::ML_TWOSIDED;
-use crate::src::tables::ANG180;
-use crate::src::tables::ANG270;
-use crate::src::tables::ANG90;
-use crate::src::tables::ANGLETOFINESHIFT;
+use crate::doomdef::MAXPLAYERS;
+use crate::game_state::GameState;
+use crate::p_mobj::StateNum;
+use crate::m_fixed::FRACUNIT;
+use crate::p_maputl::MAPBLOCKSHIFT;
+use crate::p_mobj::FLOATSPEED;
+use crate::p_pspr::A_ReFire;
+use crate::p_spec::ML_TWOSIDED;
+use crate::tables::ANG180;
+use crate::tables::ANG270;
+use crate::tables::ANG90;
+use crate::tables::ANGLETOFINESHIFT;
 
 pub struct PEnemyState {
     pub soundtarget: Option<MobjId>,

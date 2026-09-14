@@ -1,24 +1,24 @@
-use crate::src::fixed_cstr::FixedCStr;
-use crate::src::game_state::GameState;
-use crate::src::hu_lib::patch_t;
-use crate::src::i_system::I_ConsoleStdout;
-use crate::src::i_system::I_Error;
-use crate::src::m_fixed::fixed_t;
-use crate::src::m_fixed::FRACBITS;
-use crate::src::p_mobj::mobj_t;
-use crate::src::p_mobj::thinker_t;
-use crate::src::p_mobj::ThinkerFn;
-use crate::src::r_defs::lighttable_t;
-use crate::src::r_defs::spriteframe_t;
-use crate::src::stdint_types::byte;
-use crate::src::stdint_types::size_t;
-use crate::src::w_wad::W_CacheLumpNum;
-use crate::src::w_wad::W_LumpLength;
-use crate::src::w_wad::W_LumpNameHash;
-use crate::src::w_wad::{
+use crate::fixed_cstr::FixedCStr;
+use crate::game_state::GameState;
+use crate::hu_lib::patch_t;
+use crate::i_system::I_ConsoleStdout;
+use crate::i_system::I_Error;
+use crate::m_fixed::fixed_t;
+use crate::m_fixed::FRACBITS;
+use crate::p_mobj::mobj_t;
+use crate::p_mobj::thinker_t;
+use crate::p_mobj::ThinkerFn;
+use crate::r_defs::lighttable_t;
+use crate::r_defs::spriteframe_t;
+use crate::stdint_types::byte;
+use crate::stdint_types::size_t;
+use crate::w_wad::W_CacheLumpNum;
+use crate::w_wad::W_LumpLength;
+use crate::w_wad::W_LumpNameHash;
+use crate::w_wad::{
     wad_name8_to_string, W_CacheLumpName, W_CheckNumForName, W_GetNumForName, W_ReleaseLumpName,
 };
-use crate::src::mem_compat::memcpy;
+use crate::mem_compat::memcpy;
 
 pub struct RDataState {
     pub firstflat: i32,

@@ -1,15 +1,7 @@
 [package]
 name = "rust_doomgeneric"
-authors = ["C2Rust"]
+authors = ["michaelvoelkl@zoho.com"]
 version = "0.0.0"
 publish = false
 edition = "2021"
 autobins = false
-
-[lib]
-name = "rust_doomgeneric"
-path = "lib.rs"
-crate-type = ["rlib"]
-
-[dependencies]
-c2rust-bitfields = "0.22.1"

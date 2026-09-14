@@ -1,24 +1,24 @@
-use crate::src::d_mode::GameMode_t;
-use crate::src::d_player::player_t;
-use crate::src::d_ticcmd::{BT_ATTACK, BT_USE};
-use crate::src::doomdef::false_0;
-use crate::src::doomdef::true_0;
-use crate::src::doomdef::MAXPLAYERS;
-use crate::src::doomdef::SCREENHEIGHT;
-use crate::src::doomdef::SCREENWIDTH;
-use crate::src::doomdef::TICRATE;
-use crate::src::g_game::G_WorldDone;
-use crate::src::game_state::GameState;
-use crate::src::hu_lib::patch_t;
-use crate::src::m_random::M_Random;
-use crate::src::s_sound::S_ChangeMusic;
-use crate::src::s_sound::S_StartSound;
-use crate::src::s_sound::SoundOrigin;
-use crate::src::sounds::{mus_dm2int, mus_inter};
-use crate::src::sounds::{sfx_barexp, sfx_pistol, sfx_pldeth, sfx_sgcock, sfx_slop};
-use crate::src::st_stuff::load_callback_t;
-use crate::src::v_video::V_DrawPatch;
-use crate::src::w_wad::{W_CacheLumpName, W_CheckNumForName, W_ReleaseLumpName};
+use crate::d_mode::GameMode_t;
+use crate::d_player::player_t;
+use crate::d_ticcmd::{BT_ATTACK, BT_USE};
+use crate::doomdef::false_0;
+use crate::doomdef::true_0;
+use crate::doomdef::MAXPLAYERS;
+use crate::doomdef::SCREENHEIGHT;
+use crate::doomdef::SCREENWIDTH;
+use crate::doomdef::TICRATE;
+use crate::g_game::G_WorldDone;
+use crate::game_state::GameState;
+use crate::hu_lib::patch_t;
+use crate::m_random::M_Random;
+use crate::s_sound::S_ChangeMusic;
+use crate::s_sound::S_StartSound;
+use crate::s_sound::SoundOrigin;
+use crate::sounds::{mus_dm2int, mus_inter};
+use crate::sounds::{sfx_barexp, sfx_pistol, sfx_pldeth, sfx_sgcock, sfx_slop};
+use crate::st_stuff::load_callback_t;
+use crate::v_video::V_DrawPatch;
+use crate::w_wad::{W_CacheLumpName, W_CheckNumForName, W_ReleaseLumpName};
 
 pub struct WiStuffState {
     pub anims: [*mut anim_t; 4],

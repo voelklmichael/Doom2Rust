@@ -1,13 +1,13 @@
-use crate::src::d_player::player_t;
-use crate::src::doomdef::MAXPLAYERS;
-use crate::src::game_state::GameState;
-use crate::src::p_doors::vldoor_t;
-use crate::src::p_lights::{fireflicker_t, glow_t, lightflash_t, strobe_t};
-use crate::src::p_mobj::P_RespawnSpecials;
-use crate::src::p_mobj::{mobj_t, thinker_s, thinker_t, ThinkerFn};
-use crate::src::p_spec::P_UpdateSpecials;
-use crate::src::p_spec::{ceiling_t, floormove_t, plat_t};
-use crate::src::p_user::P_PlayerThink;
+use crate::d_player::player_t;
+use crate::doomdef::MAXPLAYERS;
+use crate::game_state::GameState;
+use crate::p_doors::vldoor_t;
+use crate::p_lights::{fireflicker_t, glow_t, lightflash_t, strobe_t};
+use crate::p_mobj::P_RespawnSpecials;
+use crate::p_mobj::{mobj_t, thinker_s, thinker_t, ThinkerFn};
+use crate::p_spec::P_UpdateSpecials;
+use crate::p_spec::{ceiling_t, floormove_t, plat_t};
+use crate::p_user::P_PlayerThink;
 
 // A handle into PTickState's own node table -- never constructed outside
 // this module, only handed out by head()/next() and walked by callers.

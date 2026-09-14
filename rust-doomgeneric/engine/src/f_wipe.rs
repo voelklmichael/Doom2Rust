@@ -1,13 +1,13 @@
-use crate::src::doomdef::SCREENHEIGHT;
-use crate::src::doomdef::SCREENWIDTH;
-use crate::src::game_state::GameState;
-use crate::src::i_video::I_ReadScreen;
-use crate::src::m_random::M_Random;
-use crate::src::stdint_types::byte;
-use crate::src::stdint_types::size_t;
-use crate::src::v_video::V_DrawBlock;
-use crate::src::v_video::V_MarkRect;
-use crate::src::mem_compat::memcpy;
+use crate::doomdef::SCREENHEIGHT;
+use crate::doomdef::SCREENWIDTH;
+use crate::game_state::GameState;
+use crate::i_video::I_ReadScreen;
+use crate::m_random::M_Random;
+use crate::mem_compat::memcpy;
+use crate::stdint_types::byte;
+use crate::stdint_types::size_t;
+use crate::v_video::V_DrawBlock;
+use crate::v_video::V_MarkRect;
 
 pub struct FWipeState {
     pub go: bool,
@@ -99,12 +99,7 @@ pub unsafe fn wipe_doColorXForm(
     }
     return (!changed) as i32;
 }
-pub fn wipe_exitColorXForm(
-    _state: &mut GameState,
-    _width: i32,
-    _height: i32,
-    _ticks: i32,
-) -> i32 {
+pub fn wipe_exitColorXForm(_state: &mut GameState, _width: i32, _height: i32, _ticks: i32) -> i32 {
     return 0 as i32;
 }
 pub unsafe fn wipe_initMelt(
@@ -187,7 +182,8 @@ pub unsafe fn wipe_doMelt(
                     j -= 1;
                 }
                 state.f_wipe.y[i as usize] += dy;
-                s = (state.f_wipe.wipe_scr_start.as_mut_ptr() as *mut i16).offset((i * height) as isize);
+                s = (state.f_wipe.wipe_scr_start.as_mut_ptr() as *mut i16)
+                    .offset((i * height) as isize);
                 d = (state.f_wipe.wipe_scr as *mut i16)
                     .offset((state.f_wipe.y[i as usize] * width + i) as isize);
                 idx = 0 as i32;
@@ -206,12 +202,7 @@ pub unsafe fn wipe_doMelt(
     }
     return done as i32;
 }
-pub unsafe fn wipe_exitMelt(
-    state: &mut GameState,
-    _width: i32,
-    _height: i32,
-    _ticks: i32,
-) -> i32 {
+pub unsafe fn wipe_exitMelt(state: &mut GameState, _width: i32, _height: i32, _ticks: i32) -> i32 {
     state.f_wipe.y = Vec::new();
     state.f_wipe.wipe_scr_start = Vec::new();
     state.f_wipe.wipe_scr_end = Vec::new();

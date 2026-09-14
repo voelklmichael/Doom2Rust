@@ -1,5 +1,5 @@
-use crate::src::m_fixed::fixed_t;
-use crate::src::stdint_types::byte;
+use crate::m_fixed::fixed_t;
+use crate::stdint_types::byte;
 pub type angle_t = u32;
 pub const FINEANGLES: i32 = 8192;
 pub const SLOPERANGE: i32 = 2048;

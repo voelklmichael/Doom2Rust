@@ -1,9 +1,9 @@
-use crate::src::m_argv::M_CheckParm;
-use crate::src::m_config::M_BindVariable;
+use crate::m_argv::M_CheckParm;
+use crate::m_config::M_BindVariable;
 
-use crate::src::doomdef::NULL;
-use crate::src::game_state::GameState;
-use crate::src::sounds::sfxinfo_t;
+use crate::doomdef::NULL;
+use crate::game_state::GameState;
+use crate::sounds::sfxinfo_t;
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum snddevice_t {
     SNDDEVICE_NONE = 0,

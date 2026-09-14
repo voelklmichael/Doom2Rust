@@ -1,23 +1,23 @@
-use crate::src::game_state::GameState;
-use crate::src::i_system::I_Error;
-use crate::src::m_bbox::{BOXBOTTOM, BOXLEFT, BOXRIGHT, BOXTOP};
-use crate::src::m_fixed::fixed_t;
-use crate::src::p_mobj::subsector_t;
-use crate::src::p_setup::LineId;
-use crate::src::p_setup::SectorId;
-use crate::src::p_setup::SegId;
-use crate::src::p_setup::SideId;
-use crate::src::p_setup::SubsectorId;
-use crate::src::r_defs::{drawseg_s, drawseg_t, node_t, visplane_t};
-use crate::src::r_main::R_PointOnSide;
-use crate::src::r_main::R_PointToAngle;
-use crate::src::r_plane::R_FindPlane;
-use crate::src::r_segs::R_StoreWallRange;
-use crate::src::r_things::R_AddSprites;
-use crate::src::tables::angle_t;
-use crate::src::tables::ANG180;
-use crate::src::tables::ANG90;
-use crate::src::tables::ANGLETOFINESHIFT;
+use crate::game_state::GameState;
+use crate::i_system::I_Error;
+use crate::m_bbox::{BOXBOTTOM, BOXLEFT, BOXRIGHT, BOXTOP};
+use crate::m_fixed::fixed_t;
+use crate::p_mobj::subsector_t;
+use crate::p_setup::LineId;
+use crate::p_setup::SectorId;
+use crate::p_setup::SegId;
+use crate::p_setup::SideId;
+use crate::p_setup::SubsectorId;
+use crate::r_defs::{drawseg_s, drawseg_t, node_t, visplane_t};
+use crate::r_main::R_PointOnSide;
+use crate::r_main::R_PointToAngle;
+use crate::r_plane::R_FindPlane;
+use crate::r_segs::R_StoreWallRange;
+use crate::r_things::R_AddSprites;
+use crate::tables::angle_t;
+use crate::tables::ANG180;
+use crate::tables::ANG90;
+use crate::tables::ANGLETOFINESHIFT;
 
 pub struct RBspState {
     pub curline: SegId,

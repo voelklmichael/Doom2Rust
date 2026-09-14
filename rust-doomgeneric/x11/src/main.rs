@@ -9,9 +9,9 @@
 #![feature(extern_types, raw_ref_op)]
 #[allow(unused_imports)]
 use ::rust_doomgeneric;
-use ::rust_doomgeneric::src::d_main::doomgeneric_Tick;
-use ::rust_doomgeneric::src::game_state::init_game_state;
-use ::rust_doomgeneric::src::platform::DoomPlatform;
+use ::rust_doomgeneric::d_main::doomgeneric_Tick;
+use ::rust_doomgeneric::game_state::init_game_state;
+use ::rust_doomgeneric::platform::DoomPlatform;
 use libc::memset;
 extern "C" {
     pub type _XDisplay;
@@ -1091,10 +1091,7 @@ impl DoomPlatform for X11Platform {
 pub fn main() {
     let state = init_game_state(Box::new(X11Platform::new()));
     unsafe {
-        ::rust_doomgeneric::src::doomgeneric::doomgeneric_Create(
-            state,
-            ::std::env::args().collect(),
-        );
+        ::rust_doomgeneric::doomgeneric::doomgeneric_Create(state, ::std::env::args().collect());
         loop {
             doomgeneric_Tick(state);
         }

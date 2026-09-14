@@ -1,7 +1,7 @@
-use crate::src::d_iwad::D_TryFindWADByName;
-use crate::src::game_state::GameState;
-use crate::src::m_argv::M_CheckParmWithArgs;
-use crate::src::w_wad::W_AddFile;
+use crate::d_iwad::D_TryFindWADByName;
+use crate::game_state::GameState;
+use crate::m_argv::M_CheckParmWithArgs;
+use crate::w_wad::W_AddFile;
 
 pub unsafe fn W_ParseCommandLine(state: &mut GameState) -> bool {
     let mut modifiedgame: bool = false;

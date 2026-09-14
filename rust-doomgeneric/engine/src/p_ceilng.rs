@@ -1,22 +1,22 @@
-use crate::src::game_state::GameState;
-use crate::src::m_fixed::fixed_t;
-use crate::src::m_fixed::FRACUNIT;
-use crate::src::p_floor::T_MovePlane;
-use crate::src::p_floor::ResultE;
-use crate::src::p_mobj::SectorSpecial;
-use crate::src::p_mobj::ThinkerFn;
-use crate::src::p_mobj::sector_t;
-use crate::src::p_setup::LineId;
-use crate::src::p_setup::SectorId;
-use crate::src::p_spec::ceiling_t;
-use crate::src::p_spec::P_FindHighestCeilingSurrounding;
-use crate::src::p_spec::P_FindSectorFromLineTag;
-use crate::src::p_tick::P_AddThinker;
-use crate::src::p_tick::ThinkerKind;
-use crate::src::p_tick::P_RemoveThinker;
-use crate::src::s_sound::S_StartSound;
-use crate::src::s_sound::SoundOrigin;
-use crate::src::sounds::{sfx_pstop, sfx_stnmov};
+use crate::game_state::GameState;
+use crate::m_fixed::fixed_t;
+use crate::m_fixed::FRACUNIT;
+use crate::p_floor::T_MovePlane;
+use crate::p_floor::ResultE;
+use crate::p_mobj::SectorSpecial;
+use crate::p_mobj::ThinkerFn;
+use crate::p_mobj::sector_t;
+use crate::p_setup::LineId;
+use crate::p_setup::SectorId;
+use crate::p_spec::ceiling_t;
+use crate::p_spec::P_FindHighestCeilingSurrounding;
+use crate::p_spec::P_FindSectorFromLineTag;
+use crate::p_tick::P_AddThinker;
+use crate::p_tick::ThinkerKind;
+use crate::p_tick::P_RemoveThinker;
+use crate::s_sound::S_StartSound;
+use crate::s_sound::SoundOrigin;
+use crate::sounds::{sfx_pstop, sfx_stnmov};
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum CeilingE {

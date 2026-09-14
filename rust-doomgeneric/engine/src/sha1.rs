@@ -1,7 +1,7 @@
-use crate::src::mem_compat::{memcpy, memset};
-use crate::src::stdint_types::byte;
-use crate::src::stdint_types::size_t;
-use crate::src::stdint_types::uint32_t;
+use crate::mem_compat::{memcpy, memset};
+use crate::stdint_types::byte;
+use crate::stdint_types::size_t;
+use crate::stdint_types::uint32_t;
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct sha1_context_s {

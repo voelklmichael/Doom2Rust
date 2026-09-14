@@ -1,40 +1,40 @@
-use crate::src::am_map::AM_Stop;
-use crate::src::d_items::weaponinfo;
-use crate::src::d_mode::{GameMode_t, GameVersion};
-use crate::src::d_mode::SkillType;
-use crate::src::d_player::CF_GODMODE;
-use crate::src::d_player::{ammotype_from_raw, ammotype_t, NUMAMMO};
-use crate::src::d_player::{player_t, PlayerId, PlayerState};
-use crate::src::d_player::PowerType;
-use crate::src::d_player::weapontype_t;
-use crate::src::game_state::GameState;
-use crate::src::i_system::I_Error;
-use crate::src::i_system::I_Tactile;
-use crate::src::p_mobj::StateNum;
-use crate::src::info::StateId;
-use crate::src::m_fixed::fixed_t;
-use crate::src::m_fixed::FixedMul;
-use crate::src::m_fixed::FRACUNIT;
-use crate::src::m_random::P_Random;
-use crate::src::p_mobj::mobj_t;
-use crate::src::p_mobj::P_RemoveMobj;
-use crate::src::p_mobj::P_SetMobjState;
-use crate::src::p_mobj::P_SpawnMobj;
-use crate::src::p_mobj::ONFLOORZ;
-use crate::src::p_mobj::MobjType;
-use crate::src::p_mobj::{
+use crate::am_map::AM_Stop;
+use crate::d_items::weaponinfo;
+use crate::d_mode::{GameMode_t, GameVersion};
+use crate::d_mode::SkillType;
+use crate::d_player::CF_GODMODE;
+use crate::d_player::{ammotype_from_raw, ammotype_t, NUMAMMO};
+use crate::d_player::{player_t, PlayerId, PlayerState};
+use crate::d_player::PowerType;
+use crate::d_player::weapontype_t;
+use crate::game_state::GameState;
+use crate::i_system::I_Error;
+use crate::i_system::I_Tactile;
+use crate::p_mobj::StateNum;
+use crate::info::StateId;
+use crate::m_fixed::fixed_t;
+use crate::m_fixed::FixedMul;
+use crate::m_fixed::FRACUNIT;
+use crate::m_random::P_Random;
+use crate::p_mobj::mobj_t;
+use crate::p_mobj::P_RemoveMobj;
+use crate::p_mobj::P_SetMobjState;
+use crate::p_mobj::P_SpawnMobj;
+use crate::p_mobj::ONFLOORZ;
+use crate::p_mobj::MobjType;
+use crate::p_mobj::{
     MF_CORPSE, MF_COUNTITEM, MF_COUNTKILL, MF_DROPOFF, MF_DROPPED, MF_FLOAT, MF_JUSTHIT, MF_NOCLIP,
     MF_NOGRAVITY, MF_SHADOW, MF_SHOOTABLE, MF_SKULLFLY, MF_SOLID,
 };
-use crate::src::p_pspr::P_DropWeapon;
-use crate::src::r_main::R_PointToAngle2;
-use crate::src::s_sound::S_StartSound;
-use crate::src::s_sound::SoundOrigin;
-use crate::src::sounds::{sfx_getpow, sfx_itemup, sfx_wpnup};
-use crate::src::tables::finecosine;
-use crate::src::tables::finesine;
-use crate::src::tables::ANG180;
-use crate::src::tables::ANGLETOFINESHIFT;
+use crate::p_pspr::P_DropWeapon;
+use crate::r_main::R_PointToAngle2;
+use crate::s_sound::S_StartSound;
+use crate::s_sound::SoundOrigin;
+use crate::sounds::{sfx_getpow, sfx_itemup, sfx_wpnup};
+use crate::tables::finecosine;
+use crate::tables::finesine;
+use crate::tables::ANG180;
+use crate::tables::ANGLETOFINESHIFT;
 
 pub const NUMCARDS: i32 = 6;
 #[derive(Copy, Clone, PartialEq, Eq)]

@@ -1,5 +1,5 @@
-use crate::src::d_player::ammotype_t;
-use crate::src::p_mobj::StateNum;
+use crate::d_player::ammotype_t;
+use crate::p_mobj::StateNum;
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct weaponinfo_t {

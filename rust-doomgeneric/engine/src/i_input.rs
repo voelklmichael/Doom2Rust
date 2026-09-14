@@ -1,8 +1,8 @@
-use crate::src::d_event::event_t;
-use crate::src::d_event::D_PostEvent;
-use crate::src::d_event::EvType;
-use crate::src::game_state::GameState;
-use crate::src::m_controls::KEY_RSHIFT;
+use crate::d_event::event_t;
+use crate::d_event::D_PostEvent;
+use crate::d_event::EvType;
+use crate::game_state::GameState;
+use crate::m_controls::KEY_RSHIFT;
 
 pub struct IInputState {
     pub vanilla_keyboard_mapping: i32,

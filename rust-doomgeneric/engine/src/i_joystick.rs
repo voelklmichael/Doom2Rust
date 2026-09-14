@@ -1,5 +1,5 @@
-use crate::src::game_state::GameState;
-use crate::src::m_config::M_BindVariable;
+use crate::game_state::GameState;
+use crate::m_config::M_BindVariable;
 
 pub const NUM_VIRTUAL_BUTTONS: i32 = 10;
 

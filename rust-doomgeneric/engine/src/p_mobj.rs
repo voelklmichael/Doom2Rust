@@ -1,55 +1,55 @@
-use crate::src::d_mode::SkillType;
-use crate::src::d_player::CF_NOMOMENTUM;
-use crate::src::doomdef::MAXPLAYERS;
-use crate::src::doomdef::TICRATE;
-use crate::src::g_game::G_PlayerReborn;
-use crate::src::game_state::GameState;
-use crate::src::hu_stuff::HU_Start;
-use crate::src::i_system::I_Error;
+use crate::d_mode::SkillType;
+use crate::d_player::CF_NOMOMENTUM;
+use crate::doomdef::MAXPLAYERS;
+use crate::doomdef::TICRATE;
+use crate::g_game::G_PlayerReborn;
+use crate::game_state::GameState;
+use crate::hu_stuff::HU_Start;
+use crate::i_system::I_Error;
 
-use crate::src::info::StateId;
-use crate::src::m_fixed::fixed_t;
-use crate::src::m_fixed::FixedMul;
-use crate::src::m_fixed::FRACBITS;
-use crate::src::m_fixed::FRACUNIT;
-use crate::src::m_fixed::INT_MAX;
-use crate::src::m_fixed::INT_MIN;
-use crate::src::m_random::P_Random;
-use crate::src::p_doors::vldoor_t;
-use crate::src::p_enemy::MELEERANGE;
-use crate::src::p_inter::NUMCARDS;
-use crate::src::p_lights::{fireflicker_t, glow_t, lightflash_t, strobe_t};
-use crate::src::p_map::P_AimLineAttack;
-use crate::src::p_map::P_CheckPosition;
-use crate::src::p_map::P_SlideMove;
-use crate::src::p_map::P_TryMove;
-use crate::src::p_maputl::P_AproxDistance;
-use crate::src::p_maputl::P_SetThingPosition;
-use crate::src::p_maputl::P_UnsetThingPosition;
-use crate::src::p_pspr::P_SetupPsprites;
-use crate::src::p_setup::{LineId, SectorId, SubsectorId, VertexId};
-use crate::src::p_spec::{ceiling_t, floormove_t, plat_t};
-use crate::src::p_tick::P_AddThinker;
-use crate::src::p_tick::ThinkerKind;
-use crate::src::p_tick::P_RemoveThinker;
-use crate::src::p_tick::ThinkerId;
-use crate::src::p_user::VIEWHEIGHT;
-use crate::src::r_main::R_PointInSubsector;
-use crate::src::r_main::R_PointToAngle2;
-use crate::src::s_sound::S_StartSound;
-use crate::src::s_sound::S_StopSound;
-use crate::src::s_sound::SoundOrigin;
-use crate::src::sounds::{sfx_itmbk, sfx_oof, sfx_telept};
-use crate::src::st_stuff::ST_Start;
-use crate::src::stdint_types::size_t;
-use crate::src::tables::angle_t;
-use crate::src::tables::finecosine;
-use crate::src::tables::finesine;
-use crate::src::tables::ANG45;
-use crate::src::tables::ANGLETOFINESHIFT;
-use crate::src::mem_compat::memcpy;
+use crate::info::StateId;
+use crate::m_fixed::fixed_t;
+use crate::m_fixed::FixedMul;
+use crate::m_fixed::FRACBITS;
+use crate::m_fixed::FRACUNIT;
+use crate::m_fixed::INT_MAX;
+use crate::m_fixed::INT_MIN;
+use crate::m_random::P_Random;
+use crate::p_doors::vldoor_t;
+use crate::p_enemy::MELEERANGE;
+use crate::p_inter::NUMCARDS;
+use crate::p_lights::{fireflicker_t, glow_t, lightflash_t, strobe_t};
+use crate::p_map::P_AimLineAttack;
+use crate::p_map::P_CheckPosition;
+use crate::p_map::P_SlideMove;
+use crate::p_map::P_TryMove;
+use crate::p_maputl::P_AproxDistance;
+use crate::p_maputl::P_SetThingPosition;
+use crate::p_maputl::P_UnsetThingPosition;
+use crate::p_pspr::P_SetupPsprites;
+use crate::p_setup::{LineId, SectorId, SubsectorId, VertexId};
+use crate::p_spec::{ceiling_t, floormove_t, plat_t};
+use crate::p_tick::P_AddThinker;
+use crate::p_tick::ThinkerKind;
+use crate::p_tick::P_RemoveThinker;
+use crate::p_tick::ThinkerId;
+use crate::p_user::VIEWHEIGHT;
+use crate::r_main::R_PointInSubsector;
+use crate::r_main::R_PointToAngle2;
+use crate::s_sound::S_StartSound;
+use crate::s_sound::S_StopSound;
+use crate::s_sound::SoundOrigin;
+use crate::sounds::{sfx_itmbk, sfx_oof, sfx_telept};
+use crate::st_stuff::ST_Start;
+use crate::stdint_types::size_t;
+use crate::tables::angle_t;
+use crate::tables::finecosine;
+use crate::tables::finesine;
+use crate::tables::ANG45;
+use crate::tables::ANGLETOFINESHIFT;
+use crate::mem_compat::memcpy;
 
-pub use crate::src::d_ticcmd::ticcmd_t;
+pub use crate::d_ticcmd::ticcmd_t;
 #[derive(Copy, Clone)]
 pub enum StateAction {
     None,
@@ -2719,7 +2719,7 @@ pub struct pspdef_t {
     pub sy: fixed_t,
 }
 pub type mobj_t = mobj_s;
-pub use crate::src::d_player::{
+pub use crate::d_player::{
     player_s, player_t, PlayerId, PlayerState,
 };
 #[derive(Copy, Clone)]

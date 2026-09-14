@@ -1,45 +1,45 @@
-use crate::src::d_loop::NetUpdate;
-use crate::src::d_player::PlayerId;
-use crate::src::doomdef::SCREENHEIGHT;
-use crate::src::doomdef::SCREENWIDTH;
-use crate::src::game_state::GameState;
-use crate::src::m_bbox::{BOXBOTTOM, BOXLEFT, BOXRIGHT, BOXTOP};
-use crate::src::m_fixed::fixed_t;
-use crate::src::m_fixed::FixedDiv;
-use crate::src::m_fixed::FixedMul;
-use crate::src::m_fixed::FRACBITS;
-use crate::src::m_fixed::FRACUNIT;
-use crate::src::p_setup::SegId;
-use crate::src::p_setup::SubsectorId;
-use crate::src::r_bsp::R_ClearClipSegs;
-use crate::src::r_bsp::R_ClearDrawSegs;
-use crate::src::r_bsp::R_RenderBSPNode;
-use crate::src::r_bsp::NF_SUBSECTOR;
-use crate::src::r_data::R_InitData;
-use crate::src::r_defs::lighttable_t;
-use crate::src::r_defs::node_t;
-use crate::src::r_draw::R_InitBuffer;
-use crate::src::r_draw::R_InitTranslationTables;
-use crate::src::r_draw::{
+use crate::d_loop::NetUpdate;
+use crate::d_player::PlayerId;
+use crate::doomdef::SCREENHEIGHT;
+use crate::doomdef::SCREENWIDTH;
+use crate::game_state::GameState;
+use crate::m_bbox::{BOXBOTTOM, BOXLEFT, BOXRIGHT, BOXTOP};
+use crate::m_fixed::fixed_t;
+use crate::m_fixed::FixedDiv;
+use crate::m_fixed::FixedMul;
+use crate::m_fixed::FRACBITS;
+use crate::m_fixed::FRACUNIT;
+use crate::p_setup::SegId;
+use crate::p_setup::SubsectorId;
+use crate::r_bsp::R_ClearClipSegs;
+use crate::r_bsp::R_ClearDrawSegs;
+use crate::r_bsp::R_RenderBSPNode;
+use crate::r_bsp::NF_SUBSECTOR;
+use crate::r_data::R_InitData;
+use crate::r_defs::lighttable_t;
+use crate::r_defs::node_t;
+use crate::r_draw::R_InitBuffer;
+use crate::r_draw::R_InitTranslationTables;
+use crate::r_draw::{
     R_DrawColumn, R_DrawColumnLow, R_DrawFuzzColumn, R_DrawFuzzColumnLow, R_DrawSpan,
     R_DrawSpanLow, R_DrawTranslatedColumn, R_DrawTranslatedColumnLow,
 };
-use crate::src::r_plane::R_ClearPlanes;
-use crate::src::r_plane::R_DrawPlanes;
-use crate::src::r_sky::R_InitSkyMap;
-use crate::src::r_things::R_ClearSprites;
-use crate::src::r_things::R_DrawMasked;
-use crate::src::tables::angle_t;
-use crate::src::tables::finecosine;
-use crate::src::tables::finesine;
-use crate::src::tables::finetangent;
-use crate::src::tables::tantoangle;
-use crate::src::tables::SlopeDiv;
-use crate::src::tables::ANG180;
-use crate::src::tables::ANG270;
-use crate::src::tables::ANG90;
-use crate::src::tables::ANGLETOFINESHIFT;
-use crate::src::tables::FINEANGLES;
+use crate::r_plane::R_ClearPlanes;
+use crate::r_plane::R_DrawPlanes;
+use crate::r_sky::R_InitSkyMap;
+use crate::r_things::R_ClearSprites;
+use crate::r_things::R_DrawMasked;
+use crate::tables::angle_t;
+use crate::tables::finecosine;
+use crate::tables::finesine;
+use crate::tables::finetangent;
+use crate::tables::tantoangle;
+use crate::tables::SlopeDiv;
+use crate::tables::ANG180;
+use crate::tables::ANG270;
+use crate::tables::ANG90;
+use crate::tables::ANGLETOFINESHIFT;
+use crate::tables::FINEANGLES;
 
 pub struct RMainState {
     pub viewangleoffset: i32,

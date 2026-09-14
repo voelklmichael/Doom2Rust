@@ -1,7 +1,7 @@
 //! Drop-in replacements for the handful of libc memory primitives the
 //! transpiled code still calls, implemented on top of `core`/`std` instead
 //! of linking against libc.
-use crate::src::stdint_types::size_t;
+use crate::stdint_types::size_t;
 use std::alloc::Layout;
 
 pub unsafe fn memcpy(

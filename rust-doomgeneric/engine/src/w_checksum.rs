@@ -1,10 +1,10 @@
-use crate::src::game_state::GameState;
-use crate::src::sha1::{
+use crate::game_state::GameState;
+use crate::sha1::{
     sha1_context_s, sha1_context_t, SHA1_Final, SHA1_Init, SHA1_UpdateInt32, SHA1_UpdateString,
 };
-use crate::src::stdint_types::byte;
-use crate::src::w_file::wad_file_t;
-use crate::src::w_wad::lumpinfo_t;
+use crate::stdint_types::byte;
+use crate::w_file::wad_file_t;
+use crate::w_wad::lumpinfo_t;
 use std::alloc::{alloc, realloc, Layout};
 pub struct WChecksumState {
     open_wadfiles: *mut *mut wad_file_t,

@@ -1,18 +1,18 @@
-use crate::src::doomdef::NULL;
-use crate::src::game_state::GameState;
-use crate::src::m_bbox::{BOXBOTTOM, BOXLEFT, BOXRIGHT, BOXTOP};
-use crate::src::m_fixed::fixed_t;
-use crate::src::m_fixed::FixedDiv;
-use crate::src::m_fixed::FixedMul;
-use crate::src::m_fixed::FRACBITS;
-use crate::src::m_fixed::FRACUNIT;
-use crate::src::m_fixed::INT_MAX;
-use crate::src::p_mobj::mobj_t;
-use crate::src::p_mobj::{mapthing_t, sector_t};
-use crate::src::p_mobj::{MobjId, MF_NOBLOCKMAP, MF_NOSECTOR};
-use crate::src::p_setup::LineId;
-use crate::src::p_setup::SubsectorId;
-use crate::src::r_main::R_PointInSubsector;
+use crate::doomdef::NULL;
+use crate::game_state::GameState;
+use crate::m_bbox::{BOXBOTTOM, BOXLEFT, BOXRIGHT, BOXTOP};
+use crate::m_fixed::fixed_t;
+use crate::m_fixed::FixedDiv;
+use crate::m_fixed::FixedMul;
+use crate::m_fixed::FRACBITS;
+use crate::m_fixed::FRACUNIT;
+use crate::m_fixed::INT_MAX;
+use crate::p_mobj::mobj_t;
+use crate::p_mobj::{mapthing_t, sector_t};
+use crate::p_mobj::{MobjId, MF_NOBLOCKMAP, MF_NOSECTOR};
+use crate::p_setup::LineId;
+use crate::p_setup::SubsectorId;
+use crate::r_main::R_PointInSubsector;
 
 pub struct PMaputlState {
     pub intercepts_overrun: [intercepts_overrun_t; 23],

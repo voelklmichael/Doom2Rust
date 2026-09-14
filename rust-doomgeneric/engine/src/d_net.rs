@@ -1,27 +1,27 @@
-use crate::src::d_loop::D_InitNetGame;
-use crate::src::d_loop::D_RegisterLoopCallbacks;
-use crate::src::d_loop::D_StartNetGame;
-use crate::src::d_loop::{loop_interface_t, net_connect_data_t, net_gamesettings_t};
-use crate::src::d_main::D_DoAdvanceDemo;
-use crate::src::d_mode::skill_from_raw;
-use crate::src::d_player::player_t;
-use crate::src::d_ticcmd::ticcmd_t;
-use crate::src::g_game::G_CheckDemoStatus;
-use crate::src::g_game::G_Ticker;
-use crate::src::m_argv::M_CheckParm;
-use crate::src::stdint_types::byte;
-use crate::src::w_checksum::W_Checksum;
-use crate::src::w_wad::W_CheckNumForName;
+use crate::d_loop::D_InitNetGame;
+use crate::d_loop::D_RegisterLoopCallbacks;
+use crate::d_loop::D_StartNetGame;
+use crate::d_loop::{loop_interface_t, net_connect_data_t, net_gamesettings_t};
+use crate::d_main::D_DoAdvanceDemo;
+use crate::d_mode::skill_from_raw;
+use crate::d_player::player_t;
+use crate::d_ticcmd::ticcmd_t;
+use crate::g_game::G_CheckDemoStatus;
+use crate::g_game::G_Ticker;
+use crate::m_argv::M_CheckParm;
+use crate::stdint_types::byte;
+use crate::w_checksum::W_Checksum;
+use crate::w_wad::W_CheckNumForName;
 
-use crate::src::d_main::D_ProcessEvents;
-use crate::src::doomdef::false_0;
-use crate::src::doomdef::true_0;
-use crate::src::doomdef::MAXPLAYERS;
-use crate::src::g_game::G_BuildTiccmd;
-use crate::src::game_state::GameState;
-use crate::src::m_menu::M_Ticker;
-use crate::src::tables::ANG270;
-use crate::src::tables::ANG90;
+use crate::d_main::D_ProcessEvents;
+use crate::doomdef::false_0;
+use crate::doomdef::true_0;
+use crate::doomdef::MAXPLAYERS;
+use crate::g_game::G_BuildTiccmd;
+use crate::game_state::GameState;
+use crate::m_menu::M_Ticker;
+use crate::tables::ANG270;
+use crate::tables::ANG90;
 pub struct DNetState {
     pub netcmds: *mut ticcmd_t,
 }

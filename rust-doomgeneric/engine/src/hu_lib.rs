@@ -1,10 +1,10 @@
-use crate::src::doomdef::true_0;
-use crate::src::doomdef::SCREENWIDTH;
-use crate::src::game_state::GameState;
-use crate::src::m_controls::KEY_BACKSPACE;
-use crate::src::m_controls::KEY_ENTER;
-use crate::src::r_draw::R_VideoErase;
-use crate::src::v_video::V_DrawPatchDirect;
+use crate::doomdef::true_0;
+use crate::doomdef::SCREENWIDTH;
+use crate::game_state::GameState;
+use crate::m_controls::KEY_BACKSPACE;
+use crate::m_controls::KEY_ENTER;
+use crate::r_draw::R_VideoErase;
+use crate::v_video::V_DrawPatchDirect;
 #[derive(Copy, Clone)]
 #[repr(C, packed)]
 pub struct patch_t {

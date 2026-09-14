@@ -1,8 +1,8 @@
-use crate::src::game_state::GameState;
-use crate::src::m_argv::M_CheckParm;
-use crate::src::stdint_types::byte;
-use crate::src::stdint_types::size_t;
-use crate::src::w_file_stdc::STDC_WAD_FILE;
+use crate::game_state::GameState;
+use crate::m_argv::M_CheckParm;
+use crate::stdint_types::byte;
+use crate::stdint_types::size_t;
+use crate::w_file_stdc::STDC_WAD_FILE;
 
 #[derive(Copy, Clone)]
 #[repr(C)]

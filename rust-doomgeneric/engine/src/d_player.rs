@@ -1,6 +1,6 @@
-use crate::src::d_ticcmd::ticcmd_t;
-use crate::src::m_fixed::fixed_t;
-use crate::src::p_mobj::{pspdef_t, MobjId};
+use crate::d_ticcmd::ticcmd_t;
+use crate::m_fixed::fixed_t;
+use crate::p_mobj::{pspdef_t, MobjId};
 pub const NUMAMMO: i32 = 4;
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum ammotype_t {

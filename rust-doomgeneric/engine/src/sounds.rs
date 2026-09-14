@@ -1,5 +1,5 @@
-use crate::src::doomdef::NULL;
-use crate::src::fixed_cstr::FixedCStr;
+use crate::doomdef::NULL;
+use crate::fixed_cstr::FixedCStr;
 pub type C2RustUnnamed_0 = u32;
 pub const NUMMUSIC: C2RustUnnamed_0 = 68;
 pub const mus_dm2int: C2RustUnnamed_0 = 67;

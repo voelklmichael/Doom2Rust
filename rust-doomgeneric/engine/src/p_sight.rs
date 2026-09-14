@@ -1,16 +1,16 @@
-use crate::src::game_state::GameState;
-use crate::src::i_system::I_Error;
-use crate::src::m_fixed::fixed_t;
-use crate::src::m_fixed::FixedDiv;
-use crate::src::m_fixed::FixedMul;
-use crate::src::m_fixed::FRACBITS;
-use crate::src::p_maputl::divline_t;
-use crate::src::p_mobj::mobj_t;
-use crate::src::p_mobj::{line_t, sector_t, subsector_t, vertex_t};
-use crate::src::p_setup::SubsectorId;
-use crate::src::p_spec::ML_TWOSIDED;
-use crate::src::r_bsp::NF_SUBSECTOR;
-use crate::src::r_defs::{node_t, seg_t};
+use crate::game_state::GameState;
+use crate::i_system::I_Error;
+use crate::m_fixed::fixed_t;
+use crate::m_fixed::FixedDiv;
+use crate::m_fixed::FixedMul;
+use crate::m_fixed::FRACBITS;
+use crate::p_maputl::divline_t;
+use crate::p_mobj::mobj_t;
+use crate::p_mobj::{line_t, sector_t, subsector_t, vertex_t};
+use crate::p_setup::SubsectorId;
+use crate::p_spec::ML_TWOSIDED;
+use crate::r_bsp::NF_SUBSECTOR;
+use crate::r_defs::{node_t, seg_t};
 
 pub struct PSightState {
     sightzstart: fixed_t,

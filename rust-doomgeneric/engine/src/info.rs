@@ -1,5 +1,5 @@
-use crate::src::m_fixed::FRACUNIT;
-use crate::src::p_enemy::{
+use crate::m_fixed::FRACUNIT;
+use crate::p_enemy::{
     A_BabyMetal, A_BossDeath, A_BrainAwake, A_BrainDie, A_BrainExplode, A_BrainPain, A_BrainScream,
     A_BrainSpit, A_BruisAttack, A_BspiAttack, A_CPosAttack, A_CPosRefire, A_Chase, A_CloseShotgun2,
     A_CyberAttack, A_Explode, A_FaceTarget, A_Fall, A_FatAttack1, A_FatAttack2, A_FatAttack3,
@@ -9,20 +9,20 @@ use crate::src::p_enemy::{
     A_SpawnFly, A_SpawnSound, A_SpidRefire, A_StartFire, A_Tracer, A_TroopAttack, A_VileAttack,
     A_VileChase, A_VileStart, A_VileTarget, A_XScream,
 };
-use crate::src::p_mobj::StateNum;
-use crate::src::p_mobj::{mobjinfo_t, state_t, MobjType, StateAction};
-use crate::src::p_mobj::{
+use crate::p_mobj::StateNum;
+use crate::p_mobj::{mobjinfo_t, state_t, MobjType, StateAction};
+use crate::p_mobj::{
     MF_COUNTITEM, MF_COUNTKILL, MF_DROPOFF, MF_FLOAT, MF_MISSILE, MF_NOBLOCKMAP, MF_NOBLOOD,
     MF_NOCLIP, MF_NOGRAVITY, MF_NOSECTOR, MF_NOTDMATCH, MF_PICKUP, MF_SHADOW, MF_SHOOTABLE,
     MF_SOLID, MF_SPAWNCEILING, MF_SPECIAL,
 };
-use crate::src::p_mobj::SpriteNum;
-use crate::src::p_pspr::{
+use crate::p_mobj::SpriteNum;
+use crate::p_pspr::{
     A_BFGSpray, A_BFGsound, A_CheckReload, A_FireBFG, A_FireCGun, A_FireMissile, A_FirePistol,
     A_FirePlasma, A_FireShotgun, A_FireShotgun2, A_GunFlash, A_Light0, A_Light1, A_Light2, A_Lower,
     A_Punch, A_Raise, A_ReFire, A_Saw, A_WeaponReady,
 };
-use crate::src::sounds::{
+use crate::sounds::{
     sfx_None, sfx_barexp, sfx_bgact, sfx_bgdth1, sfx_bgsit1, sfx_bosdth, sfx_bospit, sfx_bospn,
     sfx_brsdth, sfx_brssit, sfx_bspact, sfx_bspdth, sfx_bspsit, sfx_cacdth, sfx_cacsit, sfx_cybdth,
     sfx_cybsit, sfx_dmact, sfx_dmpain, sfx_firsht, sfx_firxpl, sfx_keendt, sfx_keenpn, sfx_kntdth,

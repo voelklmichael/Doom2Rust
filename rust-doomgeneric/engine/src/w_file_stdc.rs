@@ -1,7 +1,7 @@
-use crate::src::m_misc::M_FileLength;
-use crate::src::stdint_types::byte;
-use crate::src::stdint_types::size_t;
-use crate::src::w_file::{wad_file_class_t, wad_file_t};
+use crate::m_misc::M_FileLength;
+use crate::stdint_types::byte;
+use crate::stdint_types::size_t;
+use crate::w_file::{wad_file_class_t, wad_file_t};
 use std::io::{Read, Seek, SeekFrom};
 
 #[derive(Copy, Clone)]

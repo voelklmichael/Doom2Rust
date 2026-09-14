@@ -1,4 +1,4 @@
-use crate::src::doomdef::pixel_t;
+use crate::doomdef::pixel_t;
 
 pub trait DoomPlatform {
     /// Called once before the game loop starts. `screen_buffer` points to

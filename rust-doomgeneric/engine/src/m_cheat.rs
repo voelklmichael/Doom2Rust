@@ -1,7 +1,7 @@
-use crate::src::doomdef::false_0;
-use crate::src::doomdef::true_0;
-use crate::src::stdint_types::size_t;
-use crate::src::mem_compat::memcpy;
+use crate::doomdef::false_0;
+use crate::doomdef::true_0;
+use crate::stdint_types::size_t;
+use crate::mem_compat::memcpy;
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct cheatseq_t {

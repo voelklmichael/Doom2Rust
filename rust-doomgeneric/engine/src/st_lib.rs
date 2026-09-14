@@ -1,10 +1,10 @@
-use crate::src::game_state::GameState;
-use crate::src::hu_lib::patch_t;
-use crate::src::i_system::I_Error;
-use crate::src::st_stuff::ST_Y;
-use crate::src::v_video::V_CopyRect;
-use crate::src::v_video::V_DrawPatch;
-use crate::src::w_wad::W_CacheLumpName;
+use crate::game_state::GameState;
+use crate::hu_lib::patch_t;
+use crate::i_system::I_Error;
+use crate::st_stuff::ST_Y;
+use crate::v_video::V_CopyRect;
+use crate::v_video::V_DrawPatch;
+use crate::w_wad::W_CacheLumpName;
 
 #[derive(Copy, Clone)]
 #[repr(C)]

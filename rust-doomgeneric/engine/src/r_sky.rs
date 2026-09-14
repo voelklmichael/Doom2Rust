@@ -1,5 +1,5 @@
-use crate::src::game_state::GameState;
-use crate::src::m_fixed::FRACUNIT;
+use crate::game_state::GameState;
+use crate::m_fixed::FRACUNIT;
 
 pub struct RSkyState {
     pub skyflatnum: i32,
