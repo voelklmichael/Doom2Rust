@@ -94,10 +94,8 @@ use crate::tables::finetangent;
 use crate::tables::ANG45;
 use crate::tables::ANGLETOFINESHIFT;
 use crate::v_video::V_ScreenShot;
-use crate::w_wad::{
-    wad_name8_to_string, W_CacheLumpNum, W_CheckNumForName, W_GetNumForName, W_LumpLength,
-    W_ReleaseLumpName,
-};
+use crate::fixed_cstr::wad_name8_to_string;
+use crate::w_wad::{W_CacheLumpNum, W_CheckNumForName, W_GetNumForName, W_LumpLength, W_ReleaseLumpName};
 use crate::wi_stuff::WI_End;
 use crate::wi_stuff::WI_Start;
 use crate::wi_stuff::WI_Ticker;

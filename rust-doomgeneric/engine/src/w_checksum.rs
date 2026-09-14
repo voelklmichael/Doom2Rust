@@ -20,7 +20,8 @@ impl WChecksumState {
     }
 }
 
-unsafe fn GetFileNumber(state: &mut WChecksumState, mut handle: *mut wad_file_t) -> i32 {
+unsafe fn GetFileNumber(state: &mut WChecksumState, handle: &'static wad_file_t) -> i32 {
+    let handle = handle as *const wad_file_t as *mut wad_file_t;
     let mut i: i32 = 0;
     let mut result: i32 = 0;
     i = 0 as i32;

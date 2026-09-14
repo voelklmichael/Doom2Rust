@@ -15,7 +15,6 @@ use crate::d_net::D_CheckNetGame;
 use crate::d_net::D_ConnectNetGame;
 use crate::d_player::{PlayerId, PlayerState};
 use crate::doomdef::MAXPLAYERS;
-use crate::doomdef::NULL;
 use crate::doomdef::SCREENHEIGHT;
 use crate::doomdef::SCREENWIDTH;
 use crate::doomdef::TICRATE;
@@ -90,7 +89,6 @@ use crate::v_video::V_DrawMouseSpeedBox;
 use crate::v_video::V_DrawPatch;
 use crate::v_video::V_DrawPatchDirect;
 use crate::v_video::V_RestoreBuffer;
-use crate::w_file::wad_file_t;
 use crate::w_main::W_ParseCommandLine;
 use crate::w_wad::W_AddFile;
 use crate::w_wad::W_CheckCorrectIWAD;
@@ -757,10 +755,8 @@ pub fn D_SetGameDescription(state: &mut GameState) {
 }
 pub static title: [::core::ffi::c_char; 128] = [0; 128];
 fn D_AddFile(state: &mut GameState, filename: &str) -> bool {
-    let mut handle: *mut wad_file_t = ::core::ptr::null_mut::<wad_file_t>();
     println!(" adding {}", filename);
-    handle = unsafe { W_AddFile(state, filename) };
-    return handle != NULL as *mut wad_file_t;
+    W_AddFile(state, filename).is_some()
 }
 static copyright_banners: [&str; 3] = [
     "===========================================================================\nATTENTION:  This version of DOOM has been modified.  If you would like to\nget a copy of the original game, call 1-800-IDGAMES or see the readme file.\n        You will not receive technical support for modified games.\n                      press enter to continue\n===========================================================================\n",

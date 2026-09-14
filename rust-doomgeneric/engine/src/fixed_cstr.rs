@@ -128,3 +128,16 @@ impl<const N: usize> Default for FixedCStr<N> {
         FixedCStr([0u8; N])
     }
 }
+
+/// Reads up to 8 bytes at `ptr` as a fixed-width name and converts it to an
+/// owned `String`, stopping at the first nul (if any). This mirrors
+/// `FixedCStr<8>::as_str`, but for callers that only have a raw C-string
+/// pointer (not yet converted to `FixedCStr`) rather than a byte array --
+/// unlike `CStr::from_ptr`, this never reads past the 8th byte; invalid UTF-8
+/// is lossily replaced rather than panicking, since arbitrary WAD/PWAD data is
+/// not guaranteed to be valid UTF-8 (or even ASCII).
+pub unsafe fn wad_name8_to_string(ptr: *const ::core::ffi::c_char) -> String {
+    let bytes = ::core::slice::from_raw_parts(ptr as *const u8, 8);
+    let len = bytes.iter().position(|&b| b == 0).unwrap_or(8);
+    String::from_utf8_lossy(&bytes[..len]).into_owned()
+}
