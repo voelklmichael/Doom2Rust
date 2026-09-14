@@ -189,7 +189,7 @@ pub unsafe fn P_NoiseAlert(
 ) {
     state.p_enemy.soundtarget = Some((*target).id);
     state.r_main.validcount += 1;
-    let sec = state
+    let sec: *mut sector_t = state
         .p_setup
         .sector_mut(state.p_setup.subsectors[(*emmiter).subsector.0 as usize].sector);
     P_RecursiveSound(state, sec, 0 as i32);

@@ -183,7 +183,7 @@ pub unsafe fn T_FireFlicker(state: &mut GameState, mut flick: *mut fireflicker_t
 }
 pub unsafe fn P_SpawnFireFlicker(state: &mut GameState, mut sector: SectorId) {
     let mut flick: *mut fireflicker_t = ::core::ptr::null_mut::<fireflicker_t>();
-    let sec = state.p_setup.sector_mut(sector);
+    let sec: *mut sector_t = state.p_setup.sector_mut(sector);
     (*sec).special = 0 as i16;
     flick = state.p_lights.spawn_fireflicker(fireflicker_t::default());
     P_AddThinker(state, &raw mut (*flick).thinker, ThinkerKind::FireFlicker);
@@ -209,7 +209,7 @@ pub unsafe fn T_LightFlash(state: &mut GameState, mut flash: *mut lightflash_t) 
 }
 pub unsafe fn P_SpawnLightFlash(state: &mut GameState, mut sector: SectorId) {
     let mut flash: *mut lightflash_t = ::core::ptr::null_mut::<lightflash_t>();
-    let sec = state.p_setup.sector_mut(sector);
+    let sec: *mut sector_t = state.p_setup.sector_mut(sector);
     (*sec).special = 0 as i16;
     flash = state.p_lights.spawn_lightflash(lightflash_t::default());
     P_AddThinker(state, &raw mut (*flash).thinker, ThinkerKind::LightFlash);
@@ -242,7 +242,7 @@ pub unsafe fn P_SpawnStrobeFlash(
     mut inSync: i32,
 ) {
     let mut flash: *mut strobe_t = ::core::ptr::null_mut::<strobe_t>();
-    let sec = state.p_setup.sector_mut(sector);
+    let sec: *mut sector_t = state.p_setup.sector_mut(sector);
     flash = state.p_lights.spawn_strobe(strobe_t::default());
     P_AddThinker(state, &raw mut (*flash).thinker, ThinkerKind::Strobe);
     (*flash).sector = sector;
@@ -356,7 +356,7 @@ pub unsafe fn T_Glow(state: &mut GameState, mut g: *mut glow_t) {
 }
 pub unsafe fn P_SpawnGlowingLight(state: &mut GameState, mut sector: SectorId) {
     let mut g: *mut glow_t = ::core::ptr::null_mut::<glow_t>();
-    let sec = state.p_setup.sector_mut(sector);
+    let sec: *mut sector_t = state.p_setup.sector_mut(sector);
     g = state.p_lights.spawn_glow(glow_t::default());
     P_AddThinker(state, &raw mut (*g).thinker, ThinkerKind::Glow);
     (*g).sector = sector;

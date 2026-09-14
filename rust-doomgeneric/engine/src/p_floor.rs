@@ -163,7 +163,7 @@ pub unsafe fn T_MovePlane(
 }
 pub unsafe fn T_MoveFloor(state: &mut GameState, mut floor: *mut floormove_t) {
     let mut res: ResultE = ResultE::ok;
-    let sec = state.p_setup.sector_mut((*floor).sector);
+    let sec: *mut sector_t = state.p_setup.sector_mut((*floor).sector);
     res = T_MovePlane(
         state,
         sec,

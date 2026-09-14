@@ -6,7 +6,7 @@ use crate::m_fixed::FixedMul;
 use crate::m_fixed::FRACBITS;
 use crate::p_maputl::divline_t;
 use crate::p_mobj::mobj_t;
-use crate::p_mobj::{line_t, sector_t, subsector_t, vertex_t};
+use crate::p_mobj::{line_t, sector_t};
 use crate::p_setup::SubsectorId;
 use crate::p_spec::ML_TWOSIDED;
 use crate::r_bsp::NF_SUBSECTOR;
@@ -94,7 +94,6 @@ pub unsafe fn P_CrossSubsector(state: &mut GameState, mut num: i32) -> bool {
     let mut s1: i32 = 0;
     let mut s2: i32 = 0;
     let mut count: i32 = 0;
-    let mut sub: *mut subsector_t = ::core::ptr::null_mut::<subsector_t>();
     let mut front: *mut sector_t = ::core::ptr::null_mut::<sector_t>();
     let mut back: *mut sector_t = ::core::ptr::null_mut::<sector_t>();
     let mut opentop: fixed_t = 0;
@@ -105,8 +104,6 @@ pub unsafe fn P_CrossSubsector(state: &mut GameState, mut num: i32) -> bool {
         dx: 0,
         dy: 0,
     };
-    let mut v1: *mut vertex_t = ::core::ptr::null_mut::<vertex_t>();
-    let mut v2: *mut vertex_t = ::core::ptr::null_mut::<vertex_t>();
     let mut frac: fixed_t = 0;
     let mut slope: fixed_t = 0;
     if num >= state.p_setup.numsubsectors {
@@ -115,22 +112,22 @@ pub unsafe fn P_CrossSubsector(state: &mut GameState, mut num: i32) -> bool {
             num, state.p_setup.numsubsectors
         ));
     }
-    sub = state.p_setup.subsector_mut(SubsectorId(num as u32));
-    count = (*sub).numlines as i32;
-    seg = state.p_setup.segs.as_mut_ptr().offset((*sub).firstline as isize);
+    let sub = state.p_setup.subsector(SubsectorId(num as u32));
+    count = sub.numlines as i32;
+    seg = state.p_setup.segs.as_mut_ptr().offset(sub.firstline as isize);
     while count != 0 {
         line = state.p_setup.line_mut((*seg).linedef);
         if !((*line).validcount == state.r_main.validcount) {
             (*line).validcount = state.r_main.validcount;
-            v1 = state.p_setup.vertex_mut((*line).v1);
-            v2 = state.p_setup.vertex_mut((*line).v2);
-            s1 = P_DivlineSide((*v1).x, (*v1).y, &raw mut state.p_sight.strace);
-            s2 = P_DivlineSide((*v2).x, (*v2).y, &raw mut state.p_sight.strace);
+            let v1 = state.p_setup.vertex((*line).v1);
+            let v2 = state.p_setup.vertex((*line).v2);
+            s1 = P_DivlineSide(v1.x, v1.y, &raw mut state.p_sight.strace);
+            s2 = P_DivlineSide(v2.x, v2.y, &raw mut state.p_sight.strace);
             if !(s1 == s2) {
-                divl.x = (*v1).x;
-                divl.y = (*v1).y;
-                divl.dx = (*v2).x - (*v1).x;
-                divl.dy = (*v2).y - (*v1).y;
+                divl.x = v1.x;
+                divl.y = v1.y;
+                divl.dx = v2.x - v1.x;
+                divl.dy = v2.y - v1.y;
                 s1 = P_DivlineSide(
                     state.p_sight.strace.x,
                     state.p_sight.strace.y,

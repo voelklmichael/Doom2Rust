@@ -97,7 +97,7 @@ impl PDoorsState {
 pub const VDOORWAIT: i32 = 150;
 pub unsafe fn T_VerticalDoor(state: &mut GameState, mut door: *mut vldoor_t) {
     let mut res: ResultE = ResultE::ok;
-    let sec = state.p_setup.sector_mut((*door).sector);
+    let sec: *mut sector_t = state.p_setup.sector_mut((*door).sector);
     match (*door).direction {
         0 => {
             (*door).topcountdown -= 1;
@@ -456,7 +456,7 @@ pub unsafe fn EV_VerticalDoor(
 }
 pub unsafe fn P_SpawnDoorCloseIn30(state: &mut GameState, mut sector: SectorId) {
     let mut door: *mut vldoor_t = ::core::ptr::null_mut::<vldoor_t>();
-    let sec = state.p_setup.sector_mut(sector);
+    let sec: *mut sector_t = state.p_setup.sector_mut(sector);
     door = state.p_doors.spawn(vldoor_t::default());
     let door_id = P_AddThinker(state, &raw mut (*door).thinker, ThinkerKind::Door);
     (*sec).specialdata = Some(SectorSpecial::Door(door_id));
@@ -470,7 +470,7 @@ pub unsafe fn P_SpawnDoorCloseIn30(state: &mut GameState, mut sector: SectorId) 
 }
 pub unsafe fn P_SpawnDoorRaiseIn5Mins(state: &mut GameState, mut sector: SectorId) {
     let mut door: *mut vldoor_t = ::core::ptr::null_mut::<vldoor_t>();
-    let sec = state.p_setup.sector_mut(sector);
+    let sec: *mut sector_t = state.p_setup.sector_mut(sector);
     door = state.p_doors.spawn(vldoor_t::default());
     let door_id = P_AddThinker(state, &raw mut (*door).thinker, ThinkerKind::Door);
     (*sec).specialdata = Some(SectorSpecial::Door(door_id));
