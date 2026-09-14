@@ -9,7 +9,7 @@ use crate::doomdef::MAXPLAYERS;
 use crate::doomdef::TICRATE;
 use crate::game_state::GameState;
 use crate::hu_lib::{
-    hu_itext_t, hu_stext_t, hu_textline_t, patch_t, HUlib_addCharToTextLine,
+    hu_itext_t, hu_stext_t, hu_textline_t, HUlib_addCharToTextLine,
     HUlib_addMessageToSText, HUlib_drawIText, HUlib_drawSText, HUlib_drawTextLine,
     HUlib_eraseIText, HUlib_eraseSText, HUlib_eraseTextLine, HUlib_initIText, HUlib_initSText,
     HUlib_initTextLine, HUlib_keyInIText, HUlib_resetIText,
@@ -22,11 +22,12 @@ use crate::s_sound::S_StartSound;
 use crate::s_sound::SoundOrigin;
 use crate::sounds::{sfx_radio, sfx_tink};
 use crate::stdint_types::byte;
-use crate::w_wad::W_CacheLumpName;
+use crate::v_video::V_CachePatchNum;
+use crate::w_wad::{W_CacheLumpNum, W_GetNumForName};
 
 pub struct HuStuffState {
     pub plr: PlayerId,
-    pub hu_font: [*mut patch_t; 63],
+    pub hu_font: [i32; 63],
     pub w_title: hu_textline_t,
     pub chat_on: bool,
     pub w_chat: hu_itext_t,
@@ -52,11 +53,11 @@ impl HuStuffState {
     pub const fn new() -> Self {
         HuStuffState {
             plr: PlayerId(0),
-            hu_font: [::core::ptr::null::<patch_t>() as *mut patch_t; 63],
+            hu_font: [-1; 63],
             w_title: hu_textline_t {
                 x: 0,
                 y: 0,
-                f: ::core::ptr::null::<*mut patch_t>() as *mut *mut patch_t,
+                f: ::core::ptr::null_mut::<i32>(),
                 sc: 0,
                 l: String::new(),
                 needsupdate: 0,
@@ -66,7 +67,7 @@ impl HuStuffState {
                 l: hu_textline_t {
                     x: 0,
                     y: 0,
-                    f: ::core::ptr::null::<*mut patch_t>() as *mut *mut patch_t,
+                    f: ::core::ptr::null_mut::<i32>(),
                     sc: 0,
                     l: String::new(),
                     needsupdate: 0,
@@ -280,7 +281,7 @@ const fn new_hu_itext_t() -> hu_itext_t {
         l: hu_textline_t {
             x: 0,
             y: 0,
-            f: ::core::ptr::null::<*mut patch_t>() as *mut *mut patch_t,
+            f: ::core::ptr::null_mut::<i32>(),
             sc: 0,
             l: String::new(),
             needsupdate: 0,
@@ -294,7 +295,7 @@ const fn new_hu_textline_t() -> hu_textline_t {
     hu_textline_t {
         x: 0,
         y: 0,
-        f: ::core::ptr::null::<*mut patch_t>() as *mut *mut patch_t,
+        f: ::core::ptr::null_mut::<i32>(),
         sc: 0,
         l: String::new(),
         needsupdate: 0,
@@ -331,8 +332,9 @@ pub unsafe fn HU_Init(state: &mut GameState) {
         let fresh0 = j;
         j = j + 1;
         let buffer = format!("STCFN{:03}", fresh0);
-        state.hu_stuff.hu_font[i as usize] =
-            W_CacheLumpName(state, &buffer) as *mut patch_t;
+        let lumpnum = W_GetNumForName(&mut state.w_wad, &buffer);
+        W_CacheLumpNum(state, lumpnum);
+        state.hu_stuff.hu_font[i as usize] = lumpnum;
         i += 1;
     }
 }
@@ -350,20 +352,25 @@ pub unsafe fn HU_Start(state: &mut GameState) {
     state.hu_stuff.message_dontfuckwithme = false;
     state.hu_stuff.message_nottobefuckedwith = false;
     state.hu_stuff.chat_on = false;
+    let hu_font0_height = (*V_CachePatchNum(state, state.hu_stuff.hu_font[0])).height as i32;
+    let w_message = &raw mut state.hu_stuff.w_message;
+    let hu_font_ptr = &raw mut state.hu_stuff.hu_font as *mut i32;
+    let message_on = &raw mut state.hu_stuff.message_on;
     HUlib_initSText(
-        &raw mut state.hu_stuff.w_message,
+        state,
+        w_message,
         HU_MSGX,
         HU_MSGY,
         HU_MSGHEIGHT,
-        &raw mut state.hu_stuff.hu_font as *mut *mut patch_t,
+        hu_font_ptr,
         HU_FONTSTART,
-        &raw mut state.hu_stuff.message_on,
+        message_on,
     );
     HUlib_initTextLine(
         &raw mut state.hu_stuff.w_title,
         HU_TITLEX,
-        167 as i32 - (*state.hu_stuff.hu_font[0]).height as i32,
-        &raw mut state.hu_stuff.hu_font as *mut *mut patch_t,
+        167 as i32 - hu_font0_height,
+        hu_font_ptr,
         HU_FONTSTART,
     );
     match if state.doomstat.gamemission as u32 == GameMission_t::pack_chex as i32 as u32 {
@@ -399,10 +406,8 @@ pub unsafe fn HU_Start(state: &mut GameState) {
     HUlib_initIText(
         &raw mut state.hu_stuff.w_chat,
         HU_INPUTX,
-        HU_MSGY
-            + HU_MSGHEIGHT
-                * ((*state.hu_stuff.hu_font[0]).height as i32 + 1 as i32),
-        &raw mut state.hu_stuff.hu_font as *mut *mut patch_t,
+        HU_MSGY + HU_MSGHEIGHT * (hu_font0_height + 1 as i32),
+        hu_font_ptr,
         HU_FONTSTART,
         &raw mut state.hu_stuff.chat_on,
     );
@@ -413,7 +418,7 @@ pub unsafe fn HU_Start(state: &mut GameState) {
                 as *mut hu_itext_t,
             0 as i32,
             0 as i32,
-            ::core::ptr::null_mut::<*mut patch_t>(),
+            ::core::ptr::null_mut::<i32>(),
             0 as i32,
             &raw mut state.hu_stuff.always_off,
         );

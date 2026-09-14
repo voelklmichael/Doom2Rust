@@ -4,6 +4,7 @@ use crate::game_state::GameState;
 use crate::m_controls::KEY_BACKSPACE;
 use crate::m_controls::KEY_ENTER;
 use crate::r_draw::R_VideoErase;
+use crate::v_video::V_CachePatchNum;
 use crate::v_video::V_DrawPatchDirect;
 #[derive(Copy, Clone)]
 #[repr(C, packed)]
@@ -18,7 +19,7 @@ pub struct patch_t {
 pub struct hu_textline_t {
     pub x: i32,
     pub y: i32,
-    pub f: *mut *mut patch_t,
+    pub f: *mut i32,
     pub sc: i32,
     pub l: String,
     pub needsupdate: i32,
@@ -47,7 +48,7 @@ pub unsafe fn HUlib_initTextLine(
     mut t: *mut hu_textline_t,
     mut x: i32,
     mut y: i32,
-    mut f: *mut *mut patch_t,
+    mut f: *mut i32,
     mut sc: i32,
 ) {
     (*t).x = x;
@@ -88,7 +89,8 @@ pub unsafe fn HUlib_drawTextLine(
     while i < (*l).l.len() as i32 {
         c = (*l).l.as_bytes()[i as usize].to_ascii_uppercase();
         if c as i32 != ' ' as i32 && c as i32 >= (*l).sc && c as i32 <= '_' as i32 {
-            w = (**(*l).f.offset((c as i32 - (*l).sc) as isize)).width as i32;
+            let patch = V_CachePatchNum(state, *(*l).f.offset((c as i32 - (*l).sc) as isize));
+            w = (*patch).width as i32;
             if x + w > SCREENWIDTH {
                 break;
             }
@@ -96,7 +98,7 @@ pub unsafe fn HUlib_drawTextLine(
                 state,
                 x,
                 (*l).y,
-                *(*l).f.offset((c as i32 - (*l).sc) as isize),
+                patch,
             );
             x += w;
         } else {
@@ -107,15 +109,16 @@ pub unsafe fn HUlib_drawTextLine(
         }
         i += 1;
     }
-    if drawcursor
-        && x + (**(*l).f.offset(('_' as i32 - (*l).sc) as isize)).width as i32 <= SCREENWIDTH
-    {
-        V_DrawPatchDirect(
-            state,
-            x,
-            (*l).y,
-            *(*l).f.offset(('_' as i32 - (*l).sc) as isize),
-        );
+    if drawcursor {
+        let cursor_patch = V_CachePatchNum(state, *(*l).f.offset(('_' as i32 - (*l).sc) as isize));
+        if x + (*cursor_patch).width as i32 <= SCREENWIDTH {
+            V_DrawPatchDirect(
+                state,
+                x,
+                (*l).y,
+                cursor_patch,
+            );
+        }
     }
 }
 pub unsafe fn HUlib_eraseTextLine(state: &mut GameState, mut l: *mut hu_textline_t) {
@@ -123,7 +126,8 @@ pub unsafe fn HUlib_eraseTextLine(state: &mut GameState, mut l: *mut hu_textline
     let mut y: i32 = 0;
     let mut yoffset: i32 = 0;
     if !state.am_map.automapactive && state.r_draw.viewwindowx != 0 && (*l).needsupdate != 0 {
-        lh = (**(*l).f.offset(0 as i32 as isize)).height as i32 + 1 as i32;
+        let patch = V_CachePatchNum(state, *(*l).f.offset(0 as i32 as isize));
+        lh = (*patch).height as i32 + 1 as i32;
         y = (*l).y;
         yoffset = y * SCREENWIDTH;
         while y < (*l).y + lh {
@@ -147,11 +151,12 @@ pub unsafe fn HUlib_eraseTextLine(state: &mut GameState, mut l: *mut hu_textline
     }
 }
 pub unsafe fn HUlib_initSText(
+    state: &mut GameState,
     mut s: *mut hu_stext_t,
     mut x: i32,
     mut y: i32,
     mut h: i32,
-    mut font: *mut *mut patch_t,
+    mut font: *mut i32,
     mut startchar: i32,
     mut on: *mut bool,
 ) {
@@ -160,12 +165,14 @@ pub unsafe fn HUlib_initSText(
     (*s).on = on;
     (*s).laston = true;
     (*s).cl = 0 as i32;
+    let font0_patch = V_CachePatchNum(state, *font.offset(0 as i32 as isize));
+    let font0_height = (*font0_patch).height as i32;
     i = 0 as i32;
     while i < h {
         HUlib_initTextLine(
             (&raw mut (*s).l as *mut hu_textline_t).offset(i as isize) as *mut hu_textline_t,
             x,
-            y - i * ((**font.offset(0 as i32 as isize)).height as i32 + 1 as i32),
+            y - i * (font0_height + 1 as i32),
             font,
             startchar,
         );
@@ -251,7 +258,7 @@ pub unsafe fn HUlib_initIText(
     mut it: *mut hu_itext_t,
     mut x: i32,
     mut y: i32,
-    mut font: *mut *mut patch_t,
+    mut font: *mut i32,
     mut startchar: i32,
     mut on: *mut bool,
 ) {
