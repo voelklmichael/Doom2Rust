@@ -31,7 +31,6 @@ pub struct HuStuffState {
     pub w_title: hu_textline_t,
     pub chat_on: bool,
     pub w_chat: hu_itext_t,
-    pub always_off: bool,
     pub chat_dest: [u8; 4],
     pub w_inputbuffer: [hu_itext_t; 4],
     pub message_on: bool,
@@ -73,10 +72,8 @@ impl HuStuffState {
                     needsupdate: 0,
                 },
                 lm: 0,
-                on: ::core::ptr::null::<bool>() as *mut bool,
                 laston: false,
             },
-            always_off: false,
             chat_dest: [0; 4],
             w_inputbuffer: [
                 new_hu_itext_t(),
@@ -96,7 +93,6 @@ impl HuStuffState {
                 ],
                 h: 0,
                 cl: 0,
-                on: ::core::ptr::null::<bool>() as *mut bool,
                 laston: false,
             },
             message_counter: 0,
@@ -287,7 +283,6 @@ const fn new_hu_itext_t() -> hu_itext_t {
             needsupdate: 0,
         },
         lm: 0,
-        on: ::core::ptr::null::<bool>() as *mut bool,
         laston: false,
     }
 }
@@ -355,7 +350,6 @@ pub unsafe fn HU_Start(state: &mut GameState) {
     let hu_font0_height = (*V_CachePatchNum(state, state.hu_stuff.hu_font[0])).height as i32;
     let w_message = &raw mut state.hu_stuff.w_message;
     let hu_font_ptr = &raw mut state.hu_stuff.hu_font as *mut i32;
-    let message_on = &raw mut state.hu_stuff.message_on;
     HUlib_initSText(
         state,
         w_message,
@@ -364,7 +358,6 @@ pub unsafe fn HU_Start(state: &mut GameState) {
         HU_MSGHEIGHT,
         hu_font_ptr,
         HU_FONTSTART,
-        message_on,
     );
     HUlib_initTextLine(
         &raw mut state.hu_stuff.w_title,
@@ -409,7 +402,6 @@ pub unsafe fn HU_Start(state: &mut GameState) {
         HU_MSGY + HU_MSGHEIGHT * (hu_font0_height + 1 as i32),
         hu_font_ptr,
         HU_FONTSTART,
-        &raw mut state.hu_stuff.chat_on,
     );
     i = 0 as i32;
     while i < MAXPLAYERS {
@@ -420,7 +412,6 @@ pub unsafe fn HU_Start(state: &mut GameState) {
             0 as i32,
             ::core::ptr::null_mut::<i32>(),
             0 as i32,
-            &raw mut state.hu_stuff.always_off,
         );
         i += 1;
     }
@@ -428,9 +419,11 @@ pub unsafe fn HU_Start(state: &mut GameState) {
 }
 pub unsafe fn HU_Drawer(state: &mut GameState) {
     let w_message = &raw mut state.hu_stuff.w_message;
-    HUlib_drawSText(state, w_message);
+    let message_on = state.hu_stuff.message_on;
+    HUlib_drawSText(state, w_message, message_on);
     let w_chat = &raw mut state.hu_stuff.w_chat;
-    HUlib_drawIText(state, w_chat);
+    let chat_on = state.hu_stuff.chat_on;
+    HUlib_drawIText(state, w_chat, chat_on);
     if state.am_map.automapactive {
         let w_title = &raw mut state.hu_stuff.w_title;
         HUlib_drawTextLine(state, w_title, false);
@@ -438,9 +431,11 @@ pub unsafe fn HU_Drawer(state: &mut GameState) {
 }
 pub unsafe fn HU_Erase(state: &mut GameState) {
     let w_message = &raw mut state.hu_stuff.w_message;
-    HUlib_eraseSText(state, w_message);
+    let message_on = state.hu_stuff.message_on;
+    HUlib_eraseSText(state, w_message, message_on);
     let w_chat = &raw mut state.hu_stuff.w_chat;
-    HUlib_eraseIText(state, w_chat);
+    let chat_on = state.hu_stuff.chat_on;
+    HUlib_eraseIText(state, w_chat, chat_on);
     let w_title = &raw mut state.hu_stuff.w_title;
     HUlib_eraseTextLine(state, w_title);
 }
