@@ -43,7 +43,6 @@ use crate::src::sounds::{
 use crate::src::sounds::{musicinfo_t, sfxinfo_t, SfxId};
 use crate::src::tables::angle_t;
 use crate::src::tables::ANGLETOFINESHIFT;
-use crate::src::z_zone::PU_STATIC;
 
 pub struct SSoundState {
     pub channels: Vec<channel_t>,
@@ -473,7 +472,7 @@ pub unsafe fn S_ChangeMusic(state: &mut GameState, mut musicnum: i32, mut loopin
         let namebuf = format!("d_{}", (*music).name.as_str());
         (*music).lumpnum = W_GetNumForName(&mut state.w_wad, &namebuf);
     }
-    (*music).data = W_CacheLumpNum(state, (*music).lumpnum, PU_STATIC as i32);
+    (*music).data = W_CacheLumpNum(state, (*music).lumpnum);
     let lumplen = W_LumpLength(&mut state.w_wad, (*music).lumpnum as u32);
     handle = I_RegisterSong(&mut state.i_sound, (*music).data, lumplen);
     (*music).handle = handle;

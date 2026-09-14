@@ -18,8 +18,6 @@ use crate::src::w_wad::W_LumpNameHash;
 use crate::src::w_wad::{
     wad_name8_to_string, W_CacheLumpName, W_CheckNumForName, W_GetNumForName, W_ReleaseLumpName,
 };
-use crate::src::z_zone::Z_Malloc;
-use crate::src::z_zone::{PU_CACHE, PU_STATIC};
 use crate::src::mem_compat::memcpy;
 
 pub struct RDataState {
@@ -33,13 +31,13 @@ pub struct RDataState {
     pub lastspritelump: i32,
     pub numspritelumps: i32,
     pub numtextures: i32,
-    pub textures: Vec<*mut texture_t>,
+    pub textures: Vec<Box<texture_t>>,
     pub textures_hashtable: Vec<Option<TextureId>>,
     pub texturewidthmask: Vec<i32>,
     pub textureheight: Vec<fixed_t>,
     pub texturecompositesize: Vec<i32>,
-    pub texturecolumnlump: Vec<*mut i16>,
-    pub texturecolumnofs: Vec<*mut u16>,
+    pub texturecolumnlump: Vec<Vec<i16>>,
+    pub texturecolumnofs: Vec<Vec<u16>>,
     pub texturecomposite: Vec<Option<Box<[u8]>>>,
     pub flattranslation: Vec<i32>,
     pub texturetranslation: Vec<i32>,
@@ -98,8 +96,10 @@ pub type texture_t = texture_s;
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub struct TextureId(pub u32);
 
-#[derive(Copy, Clone)]
-#[repr(C)]
+// No longer Copy/Clone: `patches` owns a Vec instead of being a C flexible
+// array member -- confirmed nothing copies a texture_t by value anywhere,
+// only ever accessed through the owning Vec<Box<texture_t>> in
+// RDataState.textures or a raw pointer derived from it.
 pub struct texture_s {
     pub name: FixedCStr<8>,
     pub width: i16,
@@ -107,7 +107,7 @@ pub struct texture_s {
     pub index: i32,
     pub next: Option<TextureId>,
     pub patchcount: i16,
-    pub patches: [texpatch_t; 1],
+    pub patches: Vec<texpatch_t>,
 }
 #[derive(Copy, Clone)]
 #[repr(C)]
@@ -179,7 +179,7 @@ pub unsafe fn R_GenerateComposite(state: &mut GameState, mut texnum: i32) {
     let mut patchcol: *mut column_t = ::core::ptr::null_mut::<column_t>();
     let mut collump: *mut i16 = ::core::ptr::null_mut::<i16>();
     let mut colofs: *mut u16 = ::core::ptr::null_mut::<u16>();
-    texture = state.r_data.textures[texnum as usize];
+    texture = state.r_data.textures[texnum as usize].as_mut() as *mut texture_t;
     // Built locally and only stored into texturecomposite once fully drawn,
     // unlike the old Z_Malloc user-backpointer trick which wrote the
     // (still-empty) allocation into that slot immediately -- safe here
@@ -187,13 +187,13 @@ pub unsafe fn R_GenerateComposite(state: &mut GameState, mut texnum: i32) {
     // plain column-copy routine, no recursion back into R_GetColumn).
     let mut block: Vec<u8> =
         vec![0u8; state.r_data.texturecompositesize[texnum as usize] as usize];
-    collump = state.r_data.texturecolumnlump[texnum as usize];
-    colofs = state.r_data.texturecolumnofs[texnum as usize];
-    patch = &raw mut (*texture).patches as *mut texpatch_t;
+    collump = state.r_data.texturecolumnlump[texnum as usize].as_mut_ptr();
+    colofs = state.r_data.texturecolumnofs[texnum as usize].as_mut_ptr();
+    patch = (*texture).patches.as_mut_ptr();
     i = 0 as i32;
-    patch = &raw mut (*texture).patches as *mut texpatch_t;
+    patch = (*texture).patches.as_mut_ptr();
     while i < (*texture).patchcount as i32 {
-        realpatch = W_CacheLumpNum(state, (*patch).patch, PU_CACHE as i32) as *mut patch_t;
+        realpatch = W_CacheLumpNum(state, (*patch).patch) as *mut patch_t;
         x1 = (*patch).originx as i32;
         x2 = x1 + (*realpatch).width as i32;
         if x1 < 0 as i32 {
@@ -237,17 +237,17 @@ pub unsafe fn R_GenerateLookup(state: &mut GameState, mut texnum: i32) {
     let mut i: i32 = 0;
     let mut collump: *mut i16 = ::core::ptr::null_mut::<i16>();
     let mut colofs: *mut u16 = ::core::ptr::null_mut::<u16>();
-    texture = state.r_data.textures[texnum as usize];
+    texture = state.r_data.textures[texnum as usize].as_mut() as *mut texture_t;
     state.r_data.texturecomposite[texnum as usize] = None;
     state.r_data.texturecompositesize[texnum as usize] = 0 as i32;
-    collump = state.r_data.texturecolumnlump[texnum as usize];
-    colofs = state.r_data.texturecolumnofs[texnum as usize];
+    collump = state.r_data.texturecolumnlump[texnum as usize].as_mut_ptr();
+    colofs = state.r_data.texturecolumnofs[texnum as usize].as_mut_ptr();
     patchcount = vec![0u8; (*texture).width as usize];
-    patch = &raw mut (*texture).patches as *mut texpatch_t;
+    patch = (*texture).patches.as_mut_ptr();
     i = 0 as i32;
-    patch = &raw mut (*texture).patches as *mut texpatch_t;
+    patch = (*texture).patches.as_mut_ptr();
     while i < (*texture).patchcount as i32 {
-        realpatch = W_CacheLumpNum(state, (*patch).patch, PU_CACHE as i32) as *mut patch_t;
+        realpatch = W_CacheLumpNum(state, (*patch).patch) as *mut patch_t;
         x1 = (*patch).originx as i32;
         x2 = x1 + (*realpatch).width as i32;
         if x1 < 0 as i32 {
@@ -295,10 +295,10 @@ pub unsafe fn R_GetColumn(state: &mut GameState, mut tex: i32, mut col: i32) -> 
     let mut lump: i32 = 0;
     let mut ofs: i32 = 0;
     col &= state.r_data.texturewidthmask[tex as usize];
-    lump = *state.r_data.texturecolumnlump[tex as usize].offset(col as isize) as i32;
-    ofs = *state.r_data.texturecolumnofs[tex as usize].offset(col as isize) as i32;
+    lump = state.r_data.texturecolumnlump[tex as usize][col as usize] as i32;
+    ofs = state.r_data.texturecolumnofs[tex as usize][col as usize] as i32;
     if lump > 0 as i32 {
-        return (W_CacheLumpNum(state, lump, PU_CACHE as i32) as *mut byte).offset(ofs as isize);
+        return (W_CacheLumpNum(state, lump) as *mut byte).offset(ofs as isize);
     }
     if state.r_data.texturecomposite[tex as usize].is_none() {
         R_GenerateComposite(state, tex);
@@ -342,7 +342,6 @@ pub unsafe fn R_InitTextures(state: &mut GameState) {
     let mut mtexture: *mut maptexture_t = ::core::ptr::null_mut::<maptexture_t>();
     let mut texture: *mut texture_t = ::core::ptr::null_mut::<texture_t>();
     let mut mpatch: *mut mappatch_t = ::core::ptr::null_mut::<mappatch_t>();
-    let mut patch: *mut texpatch_t = ::core::ptr::null_mut::<texpatch_t>();
     let mut i: i32 = 0;
     let mut j: i32 = 0;
     let mut maptex: *mut i32 = ::core::ptr::null_mut::<i32>();
@@ -361,7 +360,7 @@ pub unsafe fn R_InitTextures(state: &mut GameState) {
     let mut temp1: i32 = 0;
     let mut temp2: i32 = 0;
     let mut temp3: i32 = 0;
-    names = W_CacheLumpName(state, "PNAMES", PU_STATIC as i32) as *mut u8;
+    names = W_CacheLumpName(state, "PNAMES") as *mut u8;
     nummappatches = *(names as *mut i32);
     name_p = names.offset(4 as i32 as isize);
     patchlookup = vec![0i32; nummappatches as usize];
@@ -374,14 +373,14 @@ pub unsafe fn R_InitTextures(state: &mut GameState) {
         i += 1;
     }
     W_ReleaseLumpName(&mut state.w_wad, "PNAMES");
-    maptex1 = W_CacheLumpName(state, "TEXTURE1", PU_STATIC as i32) as *mut i32;
+    maptex1 = W_CacheLumpName(state, "TEXTURE1") as *mut i32;
     maptex = maptex1;
     numtextures1 = *maptex;
     let texture1_lump = W_GetNumForName(&mut state.w_wad, "TEXTURE1") as u32;
     maxoff = W_LumpLength(&mut state.w_wad, texture1_lump);
     directory = maptex.offset(1 as i32 as isize);
     if W_CheckNumForName(&mut state.w_wad, "TEXTURE2") != -(1 as i32) {
-        maptex2 = W_CacheLumpName(state, "TEXTURE2", PU_STATIC as i32) as *mut i32;
+        maptex2 = W_CacheLumpName(state, "TEXTURE2") as *mut i32;
         numtextures2 = *maptex2;
         let texture2_lump = W_GetNumForName(&mut state.w_wad, "TEXTURE2") as u32;
         maxoff2 = W_LumpLength(&mut state.w_wad, texture2_lump);
@@ -391,11 +390,15 @@ pub unsafe fn R_InitTextures(state: &mut GameState) {
         maxoff2 = 0 as i32;
     }
     state.r_data.numtextures = numtextures1 + numtextures2;
-    state.r_data.textures = vec![::core::ptr::null_mut::<texture_t>(); state.r_data.numtextures as usize];
-    state.r_data.texturecolumnlump =
-        vec![::core::ptr::null_mut::<i16>(); state.r_data.numtextures as usize];
-    state.r_data.texturecolumnofs =
-        vec![::core::ptr::null_mut::<u16>(); state.r_data.numtextures as usize];
+    // textures/texturecolumnlump/texturecolumnofs are built via push() in
+    // the loop below instead of pre-sized-then-indexed -- the loop always
+    // assigns index i on iteration i, strictly in order, so there's no need
+    // for a placeholder value (unlike a raw Z_Malloc'd null pointer, an
+    // owned Vec<Box<texture_t>>/Vec<Vec<_>> has no cheap "empty" placeholder
+    // worth inventing just to pre-size).
+    state.r_data.textures = Vec::with_capacity(state.r_data.numtextures as usize);
+    state.r_data.texturecolumnlump = Vec::with_capacity(state.r_data.numtextures as usize);
+    state.r_data.texturecolumnofs = Vec::with_capacity(state.r_data.numtextures as usize);
     state.r_data.texturecomposite = vec![None; state.r_data.numtextures as usize];
     state.r_data.texturecompositesize = vec![0 as i32; state.r_data.numtextures as usize];
     state.r_data.texturewidthmask = vec![0 as i32; state.r_data.numtextures as usize];
@@ -433,51 +436,42 @@ pub unsafe fn R_InitTextures(state: &mut GameState) {
             I_Error("R_InitTextures: bad texture directory");
         }
         mtexture = (maptex as *mut byte).offset(offset as isize) as *mut maptexture_t;
-        state.r_data.textures[i as usize] = Z_Malloc(
-            &mut state.z_zone,
-            (::core::mem::size_of::<texture_t>() as usize).wrapping_add(
-                (::core::mem::size_of::<texpatch_t>() as usize)
-                    .wrapping_mul(((*mtexture).patchcount as i32 - 1 as i32) as usize),
-            ) as i32,
-            PU_STATIC as i32,
-            ::core::ptr::null_mut::<::core::ffi::c_void>(),
-        ) as *mut texture_t;
-        texture = state.r_data.textures[i as usize];
-        (*texture).width = (*mtexture).width;
-        (*texture).height = (*mtexture).height;
-        (*texture).patchcount = (*mtexture).patchcount;
-        (*texture).name = (*mtexture).name;
+        // patches is built directly as a Vec (pushed patchcount times below)
+        // instead of over-allocating size_of::<texture_t>() +
+        // size_of::<texpatch_t>()*(patchcount-1) raw bytes for a C flexible
+        // array member tail.
+        let mut patches: Vec<texpatch_t> = Vec::with_capacity((*mtexture).patchcount.max(0) as usize);
         mpatch = (&raw mut (*mtexture).patches as *mut mappatch_t).offset(0 as i32 as isize)
             as *mut mappatch_t;
-        patch = (&raw mut (*texture).patches as *mut texpatch_t).offset(0 as i32 as isize)
-            as *mut texpatch_t;
         j = 0 as i32;
-        while j < (*texture).patchcount as i32 {
-            (*patch).originx = (*mpatch).originx;
-            (*patch).originy = (*mpatch).originy;
-            (*patch).patch = patchlookup[(*mpatch).patch as usize];
-            if (*patch).patch == -(1 as i32) {
+        while j < (*mtexture).patchcount as i32 {
+            let patch_entry = texpatch_t {
+                originx: (*mpatch).originx,
+                originy: (*mpatch).originy,
+                patch: patchlookup[(*mpatch).patch as usize],
+            };
+            if patch_entry.patch == -(1 as i32) {
                 I_Error(&format!(
                     "R_InitTextures: Missing patch in texture {}",
-                    (*texture).name.as_str(),
+                    (*mtexture).name.as_str(),
                 ));
             }
+            patches.push(patch_entry);
             j += 1;
             mpatch = mpatch.offset(1);
-            patch = patch.offset(1);
         }
-        state.r_data.texturecolumnlump[i as usize] = Z_Malloc(
-            &mut state.z_zone,
-            ((*texture).width as usize).wrapping_mul(::core::mem::size_of::<i16>() as usize) as i32,
-            PU_STATIC as i32,
-            ::core::ptr::null_mut::<::core::ffi::c_void>(),
-        ) as *mut i16;
-        state.r_data.texturecolumnofs[i as usize] = Z_Malloc(
-            &mut state.z_zone,
-            ((*texture).width as usize).wrapping_mul(::core::mem::size_of::<u16>() as usize) as i32,
-            PU_STATIC as i32,
-            ::core::ptr::null_mut::<::core::ffi::c_void>(),
-        ) as *mut u16;
+        state.r_data.textures.push(Box::new(texture_t {
+            name: (*mtexture).name,
+            width: (*mtexture).width,
+            height: (*mtexture).height,
+            index: 0,
+            next: None,
+            patchcount: (*mtexture).patchcount,
+            patches,
+        }));
+        texture = state.r_data.textures[i as usize].as_mut() as *mut texture_t;
+        state.r_data.texturecolumnlump.push(vec![0i16; (*texture).width as usize]);
+        state.r_data.texturecolumnofs.push(vec![0u16; (*texture).width as usize]);
         j = 1 as i32;
         while j * 2 as i32 <= (*texture).width as i32 {
             j <<= 1 as i32;
@@ -531,7 +525,7 @@ pub unsafe fn R_InitSpriteLumps(state: &mut GameState) {
         if i & 63 as i32 == 0 {
             print!(".");
         }
-        patch = W_CacheLumpNum(state, state.r_data.firstspritelump + i, PU_CACHE as i32) as *mut patch_t;
+        patch = W_CacheLumpNum(state, state.r_data.firstspritelump + i) as *mut patch_t;
         state.r_data.spritewidth[i as usize] = (((*patch).width as i32) << FRACBITS) as fixed_t;
         state.r_data.spriteoffset[i as usize] =
             (((*patch).leftoffset as i32) << FRACBITS) as fixed_t;
@@ -543,7 +537,7 @@ pub unsafe fn R_InitSpriteLumps(state: &mut GameState) {
 pub unsafe fn R_InitColormaps(state: &mut GameState) {
     let mut lump: i32 = 0;
     lump = W_GetNumForName(&mut state.w_wad, "COLORMAP");
-    let lump_ptr = W_CacheLumpNum(state, lump, PU_STATIC as i32) as *const lighttable_t;
+    let lump_ptr = W_CacheLumpNum(state, lump) as *const lighttable_t;
     let lumplen = W_LumpLength(&mut state.w_wad, lump as u32) as usize;
     state.r_data.colormaps = ::core::slice::from_raw_parts(lump_ptr, lumplen).to_vec();
 }
@@ -572,7 +566,7 @@ pub unsafe fn R_CheckTextureNumForName(state: &mut RDataState, name: &str) -> i3
     key = W_LumpNameHash(name.as_bytes()).wrapping_rem(state.numtextures as u32) as i32;
     let mut cursor = state.textures_hashtable[key as usize];
     while let Some(id) = cursor {
-        let texture = state.textures[id.0 as usize];
+        let texture = state.textures[id.0 as usize].as_mut() as *mut texture_t;
         if (*texture).name.eq_bytes_ignore_ascii_case(name.as_bytes()) {
             return (*texture).index;
         }
@@ -615,7 +609,7 @@ pub unsafe fn R_PrecacheLevel(state: &mut GameState) {
         if flatpresent[i as usize] != 0 {
             lump = state.r_data.firstflat + i;
             state.r_data.flatmemory += state.w_wad.lumpinfo[lump as usize].size;
-            W_CacheLumpNum(state, lump, PU_CACHE as i32);
+            W_CacheLumpNum(state, lump);
         }
         i += 1;
     }
@@ -632,12 +626,12 @@ pub unsafe fn R_PrecacheLevel(state: &mut GameState) {
     i = 0 as i32;
     while i < state.r_data.numtextures {
         if texturepresent[i as usize] != 0 {
-            texture = state.r_data.textures[i as usize];
+            texture = state.r_data.textures[i as usize].as_mut() as *mut texture_t;
             j = 0 as i32;
             while j < (*texture).patchcount as i32 {
-                lump = (*(&raw mut (*texture).patches as *mut texpatch_t).offset(j as isize)).patch;
+                lump = (*texture).patches[j as usize].patch;
                 state.r_data.texturememory += state.w_wad.lumpinfo[lump as usize].size;
-                W_CacheLumpNum(state, lump, PU_CACHE as i32);
+                W_CacheLumpNum(state, lump);
                 j += 1;
             }
         }
@@ -664,7 +658,7 @@ pub unsafe fn R_PrecacheLevel(state: &mut GameState) {
                 while k < 8 as i32 {
                     lump = state.r_data.firstspritelump + (*sf).lump[k as usize] as i32;
                     state.r_data.spritememory += state.w_wad.lumpinfo[lump as usize].size;
-                    W_CacheLumpNum(state, lump, PU_CACHE as i32);
+                    W_CacheLumpNum(state, lump);
                     k += 1;
                 }
                 j += 1;

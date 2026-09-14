@@ -262,7 +262,6 @@ pub unsafe fn W_ReadLump(state: &mut WWadState, mut lump: u32, mut dest: *mut ::
 pub unsafe fn W_CacheLumpNum(
     state: &mut GameState,
     mut lumpnum: i32,
-    _tag: i32,
 ) -> *mut ::core::ffi::c_void {
     let mut result: *mut byte = ::core::ptr::null_mut::<byte>();
     let mut lump: *mut lumpinfo_t = ::core::ptr::null_mut::<lumpinfo_t>();
@@ -293,18 +292,16 @@ pub unsafe fn W_CacheLumpNum(
 pub unsafe fn W_CacheLumpName(
     state: &mut GameState,
     name: &str,
-    mut tag: i32,
 ) -> *mut ::core::ffi::c_void {
     let lumpnum = W_GetNumForName(&mut state.w_wad, name);
-    return W_CacheLumpNum(state, lumpnum, tag);
+    return W_CacheLumpNum(state, lumpnum);
 }
 pub unsafe fn W_ReleaseLumpNum(state: &mut WWadState, mut lumpnum: i32) {
-    // Demoting a cached lump's tag back to PU_CACHE is inert now -- nothing
-    // purges cached blocks under memory pressure since the zone allocator
-    // moved to std::alloc (see docs/known-deviations.md); the owned cache
-    // buffer just stays cached until process exit either way. Kept as a
-    // bounds-checked no-op rather than deleted, matching this function's
-    // original validation behavior.
+    // Releasing a cached lump is a no-op now -- nothing purges cached blocks
+    // under memory pressure since the zone allocator was removed entirely;
+    // the owned cache buffer just stays cached until process exit either
+    // way. Kept as a bounds-checked no-op rather than deleted, matching this
+    // function's original validation behavior.
     if lumpnum as u32 >= state.numlumps {
         I_Error(&format!("W_ReleaseLumpNum: {} >= numlumps", lumpnum));
     }

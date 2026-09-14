@@ -16,7 +16,6 @@ use crate::src::w_wad::W_CacheLumpName;
 use crate::src::w_wad::W_CacheLumpNum;
 use crate::src::w_wad::W_GetNumForName;
 use crate::src::w_wad::W_LumpLength;
-use crate::src::z_zone::{PU_CACHE, PU_STATIC};
 use crate::src::mem_compat::memcpy;
 
 pub type vpatchclipfunc_t = Option<unsafe fn(*mut patch_t, i32, i32) -> bool>;
@@ -494,13 +493,13 @@ pub unsafe fn V_DrawShadowedPatch(
 }
 pub unsafe fn V_LoadTintTable(state: &mut GameState) {
     let lumpnum = W_GetNumForName(&mut state.w_wad, "TINTTAB");
-    let lump_ptr = W_CacheLumpNum(state, lumpnum, PU_STATIC as i32) as *const byte;
+    let lump_ptr = W_CacheLumpNum(state, lumpnum) as *const byte;
     let lumplen = W_LumpLength(&mut state.w_wad, lumpnum as u32) as usize;
     state.v_video.tinttable = ::core::slice::from_raw_parts(lump_ptr, lumplen).to_vec();
 }
 pub unsafe fn V_LoadXlaTable(state: &mut GameState) {
     let lumpnum = W_GetNumForName(&mut state.w_wad, "XLATAB");
-    let lump_ptr = W_CacheLumpNum(state, lumpnum, PU_STATIC as i32) as *const byte;
+    let lump_ptr = W_CacheLumpNum(state, lumpnum) as *const byte;
     let lumplen = W_LumpLength(&mut state.w_wad, lumpnum as u32) as usize;
     state.v_video.xlatab = ::core::slice::from_raw_parts(lump_ptr, lumplen).to_vec();
 }
@@ -710,7 +709,7 @@ pub unsafe fn V_ScreenShot(state: &mut GameState) {
     if i == 100 as i32 {
         I_Error("V_ScreenShot: Couldn't create a PCX");
     }
-    let __wcache747_1 = W_CacheLumpName(state, "PLAYPAL", PU_CACHE as i32) as *mut byte;
+    let __wcache747_1 = W_CacheLumpName(state, "PLAYPAL") as *mut byte;
     WritePCXfile(
         &lbmname,
         state.i_video.I_VideoBuffer.as_mut_ptr(),

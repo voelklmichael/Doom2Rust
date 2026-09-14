@@ -96,5 +96,4 @@ pub mod src {
     pub mod w_main;
     pub mod w_wad;
     pub mod wi_stuff;
-    pub mod z_zone;
 } // mod src

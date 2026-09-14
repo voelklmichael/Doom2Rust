@@ -49,7 +49,6 @@ use crate::src::v_video::V_RestoreBuffer;
 use crate::src::v_video::V_UseBuffer;
 use crate::src::w_wad::W_CacheLumpNum;
 use crate::src::w_wad::{W_CacheLumpName, W_GetNumForName, W_ReleaseLumpName};
-use crate::src::z_zone::{PU_CACHE, PU_STATIC};
 
 pub struct StStuffState {
     pub st_backing_screen: Vec<byte>,
@@ -953,7 +952,7 @@ pub unsafe fn ST_doPaletteStuff(state: &mut GameState) {
     }
     if palette != state.st_stuff.st_palette {
         state.st_stuff.st_palette = palette;
-        pal = (W_CacheLumpNum(state, state.st_stuff.lu_palette, PU_CACHE as i32) as *mut byte)
+        pal = (W_CacheLumpNum(state, state.st_stuff.lu_palette) as *mut byte)
             .offset((palette * 768 as i32) as isize);
         I_SetPalette(state, pal);
     }
@@ -1100,7 +1099,7 @@ unsafe fn ST_loadUnloadGraphics(state: &mut GameState, mut callback: load_callba
     facenum += 1;
 }
 unsafe fn ST_loadCallback(state: &mut GameState, lumpname: &str, variable: *mut *mut patch_t) {
-    *variable = W_CacheLumpName(state, lumpname, PU_STATIC as i32) as *mut patch_t;
+    *variable = W_CacheLumpName(state, lumpname) as *mut patch_t;
 }
 pub unsafe fn ST_loadGraphics(state: &mut GameState) {
     ST_loadUnloadGraphics(
@@ -1344,7 +1343,7 @@ pub unsafe fn ST_Stop(state: &mut GameState) {
     if state.st_stuff.st_stopped {
         return;
     }
-    let __wcache1480_1 = W_CacheLumpNum(state, state.st_stuff.lu_palette, PU_CACHE as i32) as *mut byte;
+    let __wcache1480_1 = W_CacheLumpNum(state, state.st_stuff.lu_palette) as *mut byte;
     I_SetPalette(
         state,
         __wcache1480_1,

@@ -19,7 +19,6 @@ use crate::src::sounds::{sfx_barexp, sfx_pistol, sfx_pldeth, sfx_sgcock, sfx_slo
 use crate::src::st_stuff::load_callback_t;
 use crate::src::v_video::V_DrawPatch;
 use crate::src::w_wad::{W_CacheLumpName, W_CheckNumForName, W_ReleaseLumpName};
-use crate::src::z_zone::PU_STATIC;
 
 pub struct WiStuffState {
     pub anims: [*mut anim_t; 4],
@@ -1997,7 +1996,7 @@ unsafe fn WI_loadUnloadData(state: &mut GameState, mut callback: load_callback_t
     callback.expect("non-null function pointer")(state, &name, cb_ptr);
 }
 unsafe fn WI_loadCallback(state: &mut GameState, name: &str, variable: *mut *mut patch_t) {
-    *variable = W_CacheLumpName(state, name, PU_STATIC as i32) as *mut patch_t;
+    *variable = W_CacheLumpName(state, name) as *mut patch_t;
 }
 pub unsafe fn WI_loadData(state: &mut GameState) {
     if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 {
@@ -2011,8 +2010,8 @@ pub unsafe fn WI_loadData(state: &mut GameState) {
         state,
         Some(WI_loadCallback as unsafe fn(&mut GameState, &str, *mut *mut patch_t) -> ()),
     );
-    state.wi_stuff.star = W_CacheLumpName(state, "STFST01", PU_STATIC as i32) as *mut patch_t;
-    state.wi_stuff.bstar = W_CacheLumpName(state, "STFDEAD0", PU_STATIC as i32) as *mut patch_t;
+    state.wi_stuff.star = W_CacheLumpName(state, "STFST01") as *mut patch_t;
+    state.wi_stuff.bstar = W_CacheLumpName(state, "STFDEAD0") as *mut patch_t;
 }
 unsafe fn WI_unloadCallback(state: &mut GameState, name: &str, variable: *mut *mut patch_t) {
     W_ReleaseLumpName(&mut state.w_wad, name);

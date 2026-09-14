@@ -32,7 +32,6 @@ use crate::src::tables::ANGLETOFINESHIFT;
 use crate::src::v_video::V_DrawPatch;
 use crate::src::v_video::V_MarkRect;
 use crate::src::w_wad::{W_CacheLumpName, W_ReleaseLumpName};
-use crate::src::z_zone::PU_STATIC;
 use crate::src::mem_compat::memset;
 
 pub struct AmMapState {
@@ -716,7 +715,7 @@ pub unsafe fn AM_loadPics(state: &mut GameState) {
     while i < 10 as i32 {
         let namebuf = format!("AMMNUM{}", i);
         state.am_map.marknums[i as usize] =
-            W_CacheLumpName(state, &namebuf, PU_STATIC as i32) as *mut patch_t;
+            W_CacheLumpName(state, &namebuf) as *mut patch_t;
         i += 1;
     }
 }

@@ -23,7 +23,6 @@ use crate::src::s_sound::SoundOrigin;
 use crate::src::sounds::{sfx_radio, sfx_tink};
 use crate::src::stdint_types::byte;
 use crate::src::w_wad::W_CacheLumpName;
-use crate::src::z_zone::PU_STATIC;
 
 pub struct HuStuffState {
     pub plr: PlayerId,
@@ -334,7 +333,7 @@ pub unsafe fn HU_Init(state: &mut GameState) {
         j = j + 1;
         let buffer = format!("STCFN{:03}", fresh0);
         state.hu_stuff.hu_font[i as usize] =
-            W_CacheLumpName(state, &buffer, PU_STATIC as i32) as *mut patch_t;
+            W_CacheLumpName(state, &buffer) as *mut patch_t;
         i += 1;
     }
 }
