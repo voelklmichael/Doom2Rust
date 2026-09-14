@@ -552,7 +552,7 @@ pub unsafe fn D_DoAdvanceDemo(state: &mut GameState) {
         1 => {
             G_DeferedPlayDemo(
                 state,
-                b"demo1\0" as *const u8 as *const ::core::ffi::c_char as *mut ::core::ffi::c_char,
+                FixedCStr::new("demo1"),
             );
         }
         2 => {
@@ -563,7 +563,7 @@ pub unsafe fn D_DoAdvanceDemo(state: &mut GameState) {
         3 => {
             G_DeferedPlayDemo(
                 state,
-                b"demo2\0" as *const u8 as *const ::core::ffi::c_char as *mut ::core::ffi::c_char,
+                FixedCStr::new("demo2"),
             );
         }
         4 => {
@@ -584,13 +584,13 @@ pub unsafe fn D_DoAdvanceDemo(state: &mut GameState) {
         5 => {
             G_DeferedPlayDemo(
                 state,
-                b"demo3\0" as *const u8 as *const ::core::ffi::c_char as *mut ::core::ffi::c_char,
+                FixedCStr::new("demo3"),
             );
         }
         6 => {
             G_DeferedPlayDemo(
                 state,
-                b"demo4\0" as *const u8 as *const ::core::ffi::c_char as *mut ::core::ffi::c_char,
+                FixedCStr::new("demo4"),
             );
         }
         _ => {}
@@ -860,7 +860,7 @@ fn D_QuitCheckDemoStatus(state: &mut GameState) {
 pub unsafe fn D_DoomMain(state: &mut GameState) {
     let mut p: i32 = 0;
     let mut file: String = String::new();
-    let mut demolumpname: [::core::ffi::c_char; 9] = [0; 9];
+    let mut demolumpname: FixedCStr<8> = FixedCStr::from_array([0; 8]);
     I_AtExit(
         &mut state.i_system,
         Some(D_Endoom as unsafe fn(&mut GameState) -> ()),
@@ -953,18 +953,11 @@ pub unsafe fn D_DoomMain(state: &mut GameState) {
             file = format!("{}.lmp", arg);
         }
         if D_AddFile(state, &file) {
-            let name =
-                &state.w_wad.lumpinfo[state.w_wad.numlumps.wrapping_sub(1 as u32) as usize].name;
-            let len = name.len().min(demolumpname.len() - 1);
-            for i in 0..len {
-                demolumpname[i] = name.as_bytes()[i] as ::core::ffi::c_char;
-            }
+            demolumpname =
+                state.w_wad.lumpinfo[state.w_wad.numlumps.wrapping_sub(1 as u32) as usize].name;
         } else {
             let src_bytes = state.m_argv.myargv[(p + 1 as i32) as usize].as_bytes();
-            let len = src_bytes.len().min(demolumpname.len() - 1);
-            for i in 0..len {
-                demolumpname[i] = src_bytes[i] as ::core::ffi::c_char;
-            }
+            demolumpname = FixedCStr::from_bytes(src_bytes);
         }
         println!("Playing demo {}.", file);
     }
@@ -1159,13 +1152,13 @@ pub unsafe fn D_DoomMain(state: &mut GameState) {
     p = M_CheckParmWithArgs(state, "-playdemo", 1 as i32);
     if p != 0 {
         state.g_game.singledemo = true;
-        G_DeferedPlayDemo(state, &raw mut demolumpname as *mut ::core::ffi::c_char);
+        G_DeferedPlayDemo(state, demolumpname);
         D_DoomLoop(state);
         return;
     }
     p = M_CheckParmWithArgs(state, "-timedemo", 1 as i32);
     if p != 0 {
-        G_TimeDemo(state, &raw mut demolumpname as *mut ::core::ffi::c_char);
+        G_TimeDemo(state, demolumpname);
         D_DoomLoop(state);
         return;
     }
