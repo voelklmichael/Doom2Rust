@@ -182,7 +182,7 @@ pub fn R_GenerateComposite(state: &mut GameState, texnum: i32) {
         // columnofs entries) -- decoded field-by-field below instead of via
         // pointer-cast, same reasoning as R_InitTextures's maptexture_t.
         let realpatch_len = W_LumpLength(&mut state.w_wad, tex_patch.patch as u32) as usize;
-        let realpatch_ptr = unsafe { W_CacheLumpNum(state, tex_patch.patch) } as *const u8;
+        let realpatch_ptr = W_CacheLumpNum(state, tex_patch.patch) as *const u8;
         let realpatch = unsafe { ::core::slice::from_raw_parts(realpatch_ptr, realpatch_len) };
         let realpatch_width = i16::from_le_bytes(realpatch[0..2].try_into().unwrap()) as i32;
         x1 = tex_patch.originx as i32;
@@ -232,7 +232,7 @@ pub fn R_GenerateLookup(state: &mut GameState, texnum: i32) {
     while i < texture_patchcount {
         let tex_patch = state.r_data.textures[texnum as usize].patches[i as usize];
         let realpatch_len = W_LumpLength(&mut state.w_wad, tex_patch.patch as u32) as usize;
-        let realpatch_ptr = unsafe { W_CacheLumpNum(state, tex_patch.patch) } as *const u8;
+        let realpatch_ptr = W_CacheLumpNum(state, tex_patch.patch) as *const u8;
         let realpatch = unsafe { ::core::slice::from_raw_parts(realpatch_ptr, realpatch_len) };
         let realpatch_width = i16::from_le_bytes(realpatch[0..2].try_into().unwrap()) as i32;
         x1 = tex_patch.originx as i32;
@@ -540,7 +540,7 @@ pub fn R_InitSpriteLumps(state: &mut GameState) {
         // this loop body doesn't need to know the lump's true length (the
         // header is always present regardless of `width`, unlike
         // `columnofs`, which is a true flexible-array tail elsewhere).
-        let lump_ptr = unsafe { W_CacheLumpNum(state, state.r_data.firstspritelump + i) } as *const u8;
+        let lump_ptr = W_CacheLumpNum(state, state.r_data.firstspritelump + i) as *const u8;
         let header = unsafe { ::core::slice::from_raw_parts(lump_ptr, 8) };
         let width = i16::from_le_bytes(header[0..2].try_into().unwrap());
         let leftoffset = i16::from_le_bytes(header[4..6].try_into().unwrap());
@@ -554,7 +554,7 @@ pub fn R_InitSpriteLumps(state: &mut GameState) {
 pub fn R_InitColormaps(state: &mut GameState) {
     let mut lump: i32 = 0;
     lump = W_GetNumForName(&mut state.w_wad, "COLORMAP");
-    let lump_ptr = unsafe { W_CacheLumpNum(state, lump) } as *const lighttable_t;
+    let lump_ptr = W_CacheLumpNum(state, lump) as *const lighttable_t;
     let lumplen = W_LumpLength(&mut state.w_wad, lump as u32) as usize;
     state.r_data.colormaps = unsafe { ::core::slice::from_raw_parts(lump_ptr, lumplen) }.to_vec();
 }

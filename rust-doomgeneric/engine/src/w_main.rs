@@ -21,7 +21,7 @@ pub fn W_ParseCommandLine(state: &mut GameState) -> bool {
                 state.m_argv.myargv[p as usize].to_str().unwrap(),
             );
             println!(" adding {}", filename);
-            unsafe { W_AddFile(state, &filename) };
+            W_AddFile(state, &filename);
         }
     }
     return modifiedgame;
