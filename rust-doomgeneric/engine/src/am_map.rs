@@ -1372,7 +1372,7 @@ pub unsafe fn AM_drawPlayers(state: &mut GameState) {
     i = 0 as i32;
     while i < MAXPLAYERS {
         their_color += 1;
-        p = (&raw mut state.g_game.players as *mut player_t).offset(i as isize) as *mut player_t;
+        p = &mut state.g_game.players[i as usize];
         if !(state.g_game.deathmatch != 0
             && !state.g_game.singledemo
             && PlayerId(i as u8) != state.am_map.plr)
@@ -1491,5 +1491,5 @@ pub fn AM_Drawer(state: &mut GameState) {
         state.am_map.f_w,
         state.am_map.f_h,
     );
-    unsafe { V_MarkRect(state, f_x, f_y, f_w, f_h) };
+    V_MarkRect(state, f_x, f_y, f_w, f_h);
 }

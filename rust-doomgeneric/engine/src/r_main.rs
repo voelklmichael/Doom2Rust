@@ -124,18 +124,18 @@ impl RMainState {
 pub const SLOPEBITS: i32 = 11;
 pub const DBITS: i32 = FRACBITS - SLOPEBITS;
 pub const FIELDOFVIEW: i32 = 2048;
-pub unsafe fn R_AddPointToBox(mut x: i32, mut y: i32, mut box_0: *mut fixed_t) {
-    if x < *box_0.offset(BOXLEFT as i32 as isize) {
-        *box_0.offset(BOXLEFT as i32 as isize) = x as fixed_t;
+pub fn R_AddPointToBox(x: i32, y: i32, box_0: &mut [fixed_t; 4]) {
+    if x < box_0[BOXLEFT as usize] {
+        box_0[BOXLEFT as usize] = x as fixed_t;
     }
-    if x > *box_0.offset(BOXRIGHT as i32 as isize) {
-        *box_0.offset(BOXRIGHT as i32 as isize) = x as fixed_t;
+    if x > box_0[BOXRIGHT as usize] {
+        box_0[BOXRIGHT as usize] = x as fixed_t;
     }
-    if y < *box_0.offset(BOXBOTTOM as i32 as isize) {
-        *box_0.offset(BOXBOTTOM as i32 as isize) = y as fixed_t;
+    if y < box_0[BOXBOTTOM as usize] {
+        box_0[BOXBOTTOM as usize] = y as fixed_t;
     }
-    if y > *box_0.offset(BOXTOP as i32 as isize) {
-        *box_0.offset(BOXTOP as i32 as isize) = y as fixed_t;
+    if y > box_0[BOXTOP as usize] {
+        box_0[BOXTOP as usize] = y as fixed_t;
     }
 }
 pub unsafe fn R_PointOnSide(mut x: fixed_t, mut y: fixed_t, mut node: *mut node_t) -> i32 {

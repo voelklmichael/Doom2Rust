@@ -250,7 +250,7 @@ pub fn wipe_ScreenWipe(
         let init_fn = wipes[(wipeno * 3 as i32) as usize].expect("non-null function pointer");
         unsafe { init_fn(state, width, height, ticks) };
     }
-    unsafe { V_MarkRect(state, 0 as i32, 0 as i32, width, height) };
+    V_MarkRect(state, 0 as i32, 0 as i32, width, height);
     let do_fn = wipes[(wipeno * 3 as i32 + 1 as i32) as usize].expect("non-null function pointer");
     rc = unsafe { do_fn(state, width, height, ticks) };
     if rc != 0 {

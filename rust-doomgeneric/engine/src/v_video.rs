@@ -61,15 +61,15 @@ impl VVideoState {
         }
     }
 }
-pub unsafe fn V_MarkRect(state: &mut GameState, mut x: i32, mut y: i32, mut width: i32, mut height: i32) {
+pub fn V_MarkRect(state: &mut GameState, mut x: i32, mut y: i32, mut width: i32, mut height: i32) {
     if state.v_video.dest_screen == state.i_video.I_VideoBuffer.as_mut_ptr() {
         M_AddToBox(
-            &raw mut state.v_video.dirtybox as *mut fixed_t,
+            &mut state.v_video.dirtybox,
             x as fixed_t,
             y as fixed_t,
         );
         M_AddToBox(
-            &raw mut state.v_video.dirtybox as *mut fixed_t,
+            &mut state.v_video.dirtybox,
             x as fixed_t + width as fixed_t - 1 as fixed_t,
             y as fixed_t + height as fixed_t - 1 as fixed_t,
         );

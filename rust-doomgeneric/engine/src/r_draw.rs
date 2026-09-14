@@ -651,10 +651,10 @@ pub fn R_DrawViewBorder(state: &mut GameState) {
         ofs += SCREENWIDTH;
         i += 1;
     }
-    unsafe { V_MarkRect(state,
+    V_MarkRect(state,
         0 as i32,
         0 as i32,
         SCREENWIDTH,
         SCREENHEIGHT - SBARHEIGHT,
-    ) };
+    );
 }

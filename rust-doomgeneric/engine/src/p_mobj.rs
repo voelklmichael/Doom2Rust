@@ -3420,8 +3420,7 @@ pub unsafe fn P_SpawnPlayer(state: &mut GameState, mut mthing: *mut mapthing_t) 
     if !state.g_game.playeringame[((*mthing).type_0 as i32 - 1 as i32) as usize] {
         return;
     }
-    p = (&raw mut state.g_game.players as *mut player_t)
-        .offset(((*mthing).type_0 as i32 - 1 as i32) as isize) as *mut player_t;
+    p = &mut state.g_game.players[((*mthing).type_0 as i32 - 1 as i32) as usize];
     if (*p).playerstate == PlayerState::PST_REBORN {
         G_PlayerReborn(&mut state.g_game, (*mthing).type_0 as i32 - 1 as i32);
     }

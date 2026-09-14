@@ -164,8 +164,7 @@ pub unsafe fn P_GiveWeapon(
         }
         (*player).pendingweapon = weapon;
         if player
-            == (&raw mut state.g_game.players as *mut player_t)
-                .offset(state.g_game.consoleplayer as isize) as *mut player_t
+            == &mut state.g_game.players[state.g_game.consoleplayer as usize] as *mut player_t
         {
             S_StartSound(state, SoundOrigin::None, sfx_wpnup as i32);
         }
@@ -572,10 +571,7 @@ pub unsafe fn P_TouchSpecialThing(
     }
     P_RemoveMobj(state, special);
     (*player).bonuscount += BONUSADD;
-    if player
-        == (&raw mut state.g_game.players as *mut player_t)
-            .offset(state.g_game.consoleplayer as isize) as *mut player_t
-    {
+    if player == &mut state.g_game.players[state.g_game.consoleplayer as usize] as *mut player_t {
         S_StartSound(state, SoundOrigin::None, sound);
     }
 }

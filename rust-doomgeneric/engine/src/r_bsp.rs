@@ -267,7 +267,7 @@ pub static checkcoord: [[i32; 4]; 12] = [
     [2 as i32, 1 as i32, 3 as i32, 0 as i32],
     [0; 4],
 ];
-pub unsafe fn R_CheckBBox(state: &mut GameState, mut bspcoord: *mut fixed_t) -> bool {
+pub unsafe fn R_CheckBBox(state: &mut GameState, bspcoord: [fixed_t; 4]) -> bool {
     let mut boxx: i32 = 0;
     let mut boxy: i32 = 0;
     let mut boxpos: i32 = 0;
@@ -282,16 +282,16 @@ pub unsafe fn R_CheckBBox(state: &mut GameState, mut bspcoord: *mut fixed_t) -> 
     let mut start: *mut cliprange_t = ::core::ptr::null_mut::<cliprange_t>();
     let mut sx1: i32 = 0;
     let mut sx2: i32 = 0;
-    if state.r_main.viewx <= *bspcoord.offset(BOXLEFT as i32 as isize) {
+    if state.r_main.viewx <= bspcoord[BOXLEFT as usize] {
         boxx = 0 as i32;
-    } else if state.r_main.viewx < *bspcoord.offset(BOXRIGHT as i32 as isize) {
+    } else if state.r_main.viewx < bspcoord[BOXRIGHT as usize] {
         boxx = 1 as i32;
     } else {
         boxx = 2 as i32;
     }
-    if state.r_main.viewy >= *bspcoord.offset(BOXTOP as i32 as isize) {
+    if state.r_main.viewy >= bspcoord[BOXTOP as usize] {
         boxy = 0 as i32;
-    } else if state.r_main.viewy > *bspcoord.offset(BOXBOTTOM as i32 as isize) {
+    } else if state.r_main.viewy > bspcoord[BOXBOTTOM as usize] {
         boxy = 1 as i32;
     } else {
         boxy = 2 as i32;
@@ -300,10 +300,10 @@ pub unsafe fn R_CheckBBox(state: &mut GameState, mut bspcoord: *mut fixed_t) -> 
     if boxpos == 5 as i32 {
         return true;
     }
-    x1 = *bspcoord.offset(checkcoord[boxpos as usize][0] as isize);
-    y1 = *bspcoord.offset(checkcoord[boxpos as usize][1] as isize);
-    x2 = *bspcoord.offset(checkcoord[boxpos as usize][2] as isize);
-    y2 = *bspcoord.offset(checkcoord[boxpos as usize][3] as isize);
+    x1 = bspcoord[checkcoord[boxpos as usize][0] as usize];
+    y1 = bspcoord[checkcoord[boxpos as usize][1] as usize];
+    x2 = bspcoord[checkcoord[boxpos as usize][2] as usize];
+    y2 = bspcoord[checkcoord[boxpos as usize][3] as usize];
     angle1 = R_PointToAngle(state, x1, y1).wrapping_sub(state.r_main.viewangle);
     angle2 = R_PointToAngle(state, x2, y2).wrapping_sub(state.r_main.viewangle);
     span = angle1.wrapping_sub(angle2);
@@ -405,11 +405,7 @@ pub unsafe fn R_RenderBSPNode(state: &mut GameState, mut bspnum: i32) {
     bsp = state.p_setup.nodes.as_mut_ptr().offset(bspnum as isize);
     side = R_PointOnSide(state.r_main.viewx, state.r_main.viewy, bsp);
     R_RenderBSPNode(state, (*bsp).children[side as usize] as i32);
-    if R_CheckBBox(
-        state,
-        &raw mut *(&raw mut (*bsp).bbox as *mut [fixed_t; 4]).offset((side ^ 1 as i32) as isize)
-            as *mut fixed_t,
-    ) {
+    if R_CheckBBox(state, (*bsp).bbox[(side ^ 1 as i32) as usize]) {
         R_RenderBSPNode(state, (*bsp).children[(side ^ 1 as i32) as usize] as i32);
     }
 }

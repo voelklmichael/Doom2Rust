@@ -1,5 +1,4 @@
 use crate::d_mode::GameMode_t;
-use crate::d_player::player_t;
 use crate::d_ticcmd::{BT_ATTACK, BT_USE};
 use crate::doomdef::false_0;
 use crate::doomdef::true_0;
@@ -1808,32 +1807,30 @@ pub unsafe fn WI_drawStats(state: &mut GameState) {
         WI_drawTime(state, SCREENWIDTH - SP_TIMEX, SP_TIMEY, cnt_par);
     }
 }
-pub unsafe fn WI_checkForAccelerate(state: &mut GameState) {
+pub fn WI_checkForAccelerate(state: &mut GameState) {
     let mut i: i32 = 0;
-    let mut player: *mut player_t = ::core::ptr::null_mut::<player_t>();
-    i = 0 as i32;
-    player = &raw mut state.g_game.players as *mut player_t;
     while i < MAXPLAYERS {
         if state.g_game.playeringame[i as usize] {
-            if (*player).cmd.buttons as i32 & BT_ATTACK as i32 != 0 {
-                if (*player).attackdown == 0 {
+            let player = &state.g_game.players[i as usize];
+            if player.cmd.buttons as i32 & BT_ATTACK as i32 != 0 {
+                if player.attackdown == 0 {
                     state.wi_stuff.acceleratestage = 1 as i32;
                 }
-                (*player).attackdown = true_0;
+                state.g_game.players[i as usize].attackdown = true_0;
             } else {
-                (*player).attackdown = false_0;
+                state.g_game.players[i as usize].attackdown = false_0;
             }
-            if (*player).cmd.buttons as i32 & BT_USE as i32 != 0 {
-                if (*player).usedown == 0 {
+            let player = &state.g_game.players[i as usize];
+            if player.cmd.buttons as i32 & BT_USE as i32 != 0 {
+                if player.usedown == 0 {
                     state.wi_stuff.acceleratestage = 1 as i32;
                 }
-                (*player).usedown = true_0;
+                state.g_game.players[i as usize].usedown = true_0;
             } else {
-                (*player).usedown = false_0;
+                state.g_game.players[i as usize].usedown = false_0;
             }
         }
         i += 1;
-        player = player.offset(1);
     }
 }
 pub fn WI_Ticker(state: &mut GameState) {
@@ -1845,7 +1842,7 @@ pub fn WI_Ticker(state: &mut GameState) {
             unsafe { S_ChangeMusic(state, mus_inter as i32, true_0) };
         }
     }
-    unsafe { WI_checkForAccelerate(state) };
+    WI_checkForAccelerate(state);
     match state.wi_stuff.state {
         StateEnum::StatCount => {
             if state.g_game.deathmatch != 0 {

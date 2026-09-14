@@ -774,15 +774,15 @@ pub unsafe fn P_GroupLines(state: &mut GameState) {
     i = 0 as i32;
     while i < state.p_setup.numsectors {
         sector = &mut state.p_setup.sectors[i as usize] as *mut sector_t;
-        M_ClearBox(&raw mut bbox as *mut fixed_t);
+        M_ClearBox(&mut bbox);
         j = 0 as i32;
         while j < (*sector).linecount {
             let li_id = (*sector).lines[j as usize];
             let li = state.p_setup.line(li_id);
             let li_v1 = state.p_setup.vertexes[li.v1.0 as usize];
             let li_v2 = state.p_setup.vertexes[li.v2.0 as usize];
-            M_AddToBox(&raw mut bbox as *mut fixed_t, li_v1.x, li_v1.y);
-            M_AddToBox(&raw mut bbox as *mut fixed_t, li_v2.x, li_v2.y);
+            M_AddToBox(&mut bbox, li_v1.x, li_v1.y);
+            M_AddToBox(&mut bbox, li_v2.x, li_v2.y);
             j += 1;
         }
         (*sector).soundorg.x = ((bbox[BOXRIGHT as usize] + bbox[BOXLEFT as usize])

@@ -836,8 +836,7 @@ pub unsafe fn P_ArchivePlayers(state: &mut GameState) {
     while i < MAXPLAYERS {
         if state.g_game.playeringame[i as usize] {
             saveg_write_pad(state);
-            let player = (&raw mut state.g_game.players as *mut player_t).offset(i as isize)
-                as *mut player_t;
+            let player: *mut player_t = &mut state.g_game.players[i as usize];
             saveg_write_player_t(state, player);
         }
         i += 1;
@@ -849,8 +848,7 @@ pub unsafe fn P_UnArchivePlayers(state: &mut GameState) {
     while i < MAXPLAYERS {
         if state.g_game.playeringame[i as usize] {
             saveg_read_pad(state);
-            let player = (&raw mut state.g_game.players as *mut player_t).offset(i as isize)
-                as *mut player_t;
+            let player: *mut player_t = &mut state.g_game.players[i as usize];
             saveg_read_player_t(state, player);
             state.g_game.players[i as usize].mo = None;
             state.g_game.players[i as usize].message = None;
