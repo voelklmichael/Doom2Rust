@@ -412,7 +412,7 @@ pub fn P_InitPicAnims(state: &mut GameState) {
         let endname = animdefs[i as usize].endname.as_str();
         let anim = &mut state.p_spec.anims[state.p_spec.lastanim];
         if animdefs[i as usize].istexture != 0 {
-            if unsafe { R_CheckTextureNumForName(&mut state.r_data, &startname) } == -(1 as i32) {
+            if R_CheckTextureNumForName(&mut state.r_data, &startname) == -(1 as i32) {
                 current_block_13 = 12237857397564741460;
             } else {
                 anim.picnum = R_TextureNumForName(&mut state.r_data, &endname);
