@@ -22,18 +22,6 @@ use crate::game_state::GameState;
 use crate::m_menu::M_Ticker;
 use crate::tables::ANG270;
 use crate::tables::ANG90;
-pub struct DNetState {
-    pub netcmds: *mut ticcmd_t,
-}
-
-impl DNetState {
-    pub const fn new() -> Self {
-        DNetState {
-            netcmds: ::core::ptr::null::<ticcmd_t>() as *mut ticcmd_t,
-        }
-    }
-}
-
 unsafe fn PlayerQuitGame(state: &mut GameState, mut player: *mut player_t) {
     let mut player_num: u32 = 0;
     player_num = player.offset_from(&raw mut state.g_game.players as *mut player_t) as i64 as u32;
@@ -57,11 +45,10 @@ unsafe fn RunTic(state: &mut GameState, mut cmds: *mut ticcmd_t, mut ingame: *mu
         }
         i = i.wrapping_add(1);
     }
-    state.d_net.netcmds = cmds;
     if state.d_main.advancedemo {
         D_DoAdvanceDemo(state);
     }
-    G_Ticker(state);
+    G_Ticker(state, cmds);
 }
 const DOOM_LOOP_INTERFACE: loop_interface_t = loop_interface_t {
     ProcessEvents: Some(D_ProcessEvents as unsafe fn(&mut GameState) -> ()),

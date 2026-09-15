@@ -898,7 +898,7 @@ pub fn G_Responder(state: &mut GameState, mut ev: event_t) -> bool {
     }
     return false;
 }
-pub unsafe fn G_Ticker(state: &mut GameState) {
+pub unsafe fn G_Ticker(state: &mut GameState, netcmds: *mut ticcmd_t) {
     let mut i: i32 = 0;
     let mut buf: i32 = 0;
     let mut cmd: *mut ticcmd_t = ::core::ptr::null_mut::<ticcmd_t>();
@@ -953,7 +953,7 @@ pub unsafe fn G_Ticker(state: &mut GameState) {
             cmd = &raw mut state.g_game.players[i as usize].cmd;
             memcpy(
                 cmd as *mut ::core::ffi::c_void,
-                state.d_net.netcmds.offset(i as isize) as *mut ticcmd_t
+                netcmds.offset(i as isize) as *mut ticcmd_t
                     as *const ::core::ffi::c_void,
                 ::core::mem::size_of::<ticcmd_t>() as size_t,
             );
