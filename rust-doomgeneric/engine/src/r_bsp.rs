@@ -8,7 +8,7 @@ use crate::p_setup::SectorId;
 use crate::p_setup::SegId;
 use crate::p_setup::SideId;
 use crate::p_setup::SubsectorId;
-use crate::r_defs::{drawseg_s, drawseg_t, node_t, visplane_t};
+use crate::r_defs::{drawseg_s, drawseg_t, node_t};
 use crate::r_main::R_PointOnSide;
 use crate::r_main::R_PointToAngle;
 use crate::r_plane::R_FindPlane;
@@ -26,8 +26,8 @@ pub struct RBspState {
     pub frontsector: Option<SectorId>,
     pub backsector: Option<SectorId>,
     pub drawsegs: [drawseg_t; 256],
-    pub ds_p: *mut drawseg_t,
-    pub newend: *mut cliprange_t,
+    pub ds_p: usize,
+    pub newend: usize,
     pub solidsegs: [cliprange_t; 32],
 }
 
@@ -49,12 +49,12 @@ impl RBspState {
                 silhouette: 0,
                 bsilheight: 0,
                 tsilheight: 0,
-                sprtopclip: ::core::ptr::null::<i16>() as *mut i16,
-                sprbottomclip: ::core::ptr::null::<i16>() as *mut i16,
-                maskedtexturecol: ::core::ptr::null::<i16>() as *mut i16,
+                sprtopclip: None,
+                sprbottomclip: None,
+                maskedtexturecol: None,
             }; 256],
-            ds_p: ::core::ptr::null::<drawseg_t>() as *mut drawseg_t,
-            newend: ::core::ptr::null::<cliprange_t>() as *mut cliprange_t,
+            ds_p: 0,
+            newend: 0,
             solidsegs: [cliprange_t { first: 0, last: 0 }; 32],
         }
     }
@@ -68,21 +68,22 @@ pub struct cliprange_t {
 }
 pub const NF_SUBSECTOR: i32 = 0x8000;
 pub unsafe fn R_ClearDrawSegs(state: &mut GameState) {
-    state.r_bsp.ds_p = &raw mut state.r_bsp.drawsegs as *mut drawseg_t;
+    state.r_bsp.ds_p = 0;
 }
 pub unsafe fn R_ClipSolidWallSegment(state: &mut GameState, mut first: i32, mut last: i32) {
     let mut current_block: u64;
     let mut next: *mut cliprange_t = ::core::ptr::null_mut::<cliprange_t>();
     let mut start: *mut cliprange_t = ::core::ptr::null_mut::<cliprange_t>();
-    start = &raw mut state.r_bsp.solidsegs as *mut cliprange_t;
+    let base = &raw mut state.r_bsp.solidsegs as *mut cliprange_t;
+    start = base;
     while (*start).last < first - 1 as i32 {
         start = start.offset(1);
     }
     if first < (*start).first {
         if last < (*start).first - 1 as i32 {
             R_StoreWallRange(state, first, last);
-            next = state.r_bsp.newend;
-            state.r_bsp.newend = state.r_bsp.newend.offset(1);
+            next = base.add(state.r_bsp.newend);
+            state.r_bsp.newend += 1;
             while next != start {
                 *next = *next.offset(-(1 as i32 as isize));
                 next = next.offset(-1);
@@ -129,13 +130,13 @@ pub unsafe fn R_ClipSolidWallSegment(state: &mut GameState, mut first: i32, mut 
     loop {
         let fresh0 = next;
         next = next.offset(1);
-        if !(fresh0 != state.r_bsp.newend) {
+        if !(fresh0 != base.add(state.r_bsp.newend)) {
             break;
         }
         start = start.offset(1);
         *start = *next;
     }
-    state.r_bsp.newend = start.offset(1 as i32 as isize);
+    state.r_bsp.newend = start.offset(1 as i32 as isize).offset_from(base) as usize;
 }
 pub unsafe fn R_ClipPassWallSegment(state: &mut GameState, mut first: i32, mut last: i32) {
     let mut start: *mut cliprange_t = ::core::ptr::null_mut::<cliprange_t>();
@@ -171,8 +172,7 @@ pub unsafe fn R_ClearClipSegs(state: &mut GameState) {
     state.r_bsp.solidsegs[0].last = -(1 as i32);
     state.r_bsp.solidsegs[1].first = state.r_draw.viewwidth;
     state.r_bsp.solidsegs[1].last = 0x7fffffff as i32;
-    state.r_bsp.newend =
-        (&raw mut state.r_bsp.solidsegs as *mut cliprange_t).offset(2 as i32 as isize);
+    state.r_bsp.newend = 2;
 }
 pub unsafe fn R_AddLine(state: &mut GameState, mut line: SegId) {
     let mut x1: i32 = 0;
@@ -364,9 +364,9 @@ pub unsafe fn R_Subsector(state: &mut GameState, mut num: i32) {
             (*frontsector).floorpic as i32,
             (*frontsector).lightlevel as i32,
         );
-        state.r_plane.floorplane = R_FindPlane(state, floorheight, floorpic, lightlevel);
+        state.r_plane.floorplane = Some(R_FindPlane(state, floorheight, floorpic, lightlevel));
     } else {
-        state.r_plane.floorplane = ::core::ptr::null_mut::<visplane_t>();
+        state.r_plane.floorplane = None;
     }
     if (*frontsector).ceilingheight > state.r_main.viewz
         || (*frontsector).ceilingpic as i32 == state.r_sky.skyflatnum
@@ -376,9 +376,9 @@ pub unsafe fn R_Subsector(state: &mut GameState, mut num: i32) {
             (*frontsector).ceilingpic as i32,
             (*frontsector).lightlevel as i32,
         );
-        state.r_plane.ceilingplane = R_FindPlane(state, ceilingheight, ceilingpic, lightlevel);
+        state.r_plane.ceilingplane = Some(R_FindPlane(state, ceilingheight, ceilingpic, lightlevel));
     } else {
-        state.r_plane.ceilingplane = ::core::ptr::null_mut::<visplane_t>();
+        state.r_plane.ceilingplane = None;
     }
     R_AddSprites(state, frontsector);
     loop {

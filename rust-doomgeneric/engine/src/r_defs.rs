@@ -1,3 +1,4 @@
+use crate::game_state::GameState;
 use crate::m_fixed::fixed_t;
 use crate::p_setup::LineId;
 use crate::p_setup::SectorId;
@@ -7,6 +8,37 @@ use crate::p_setup::VertexId;
 use crate::stdint_types::byte;
 use crate::tables::angle_t;
 pub type lighttable_t = byte;
+
+// A sprite/wall vertical-clip array, always one of these fixed i16 arrays --
+// never an independently-allocated buffer. `Openings(i)` is an index into
+// r_plane's openings scratch array (i can be used as a base that, added to
+// an in-range screen x, is always non-negative even though the base itself
+// may briefly go negative, mirroring the original `lastopening.offset(-start)`
+// pointer arithmetic).
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub enum ClipArray {
+    Openings(isize),
+    ScreenHeightArray,
+    NegOneArray,
+    ClipBot,
+    ClipTop,
+}
+
+impl ClipArray {
+    pub unsafe fn resolve(self, state: &mut GameState) -> *mut i16 {
+        match self {
+            ClipArray::Openings(offset) => {
+                (&raw mut state.r_plane.openings as *mut i16).offset(offset)
+            }
+            ClipArray::ScreenHeightArray => {
+                &raw mut state.r_things.screenheightarray as *mut i16
+            }
+            ClipArray::NegOneArray => &raw mut state.r_things.negonearray as *mut i16,
+            ClipArray::ClipBot => &raw mut state.r_things.clipbot as *mut i16,
+            ClipArray::ClipTop => &raw mut state.r_things.cliptop as *mut i16,
+        }
+    }
+}
 
 #[derive(Copy, Clone)]
 #[repr(C)]
@@ -55,9 +87,9 @@ pub struct drawseg_s {
     pub silhouette: i32,
     pub bsilheight: fixed_t,
     pub tsilheight: fixed_t,
-    pub sprtopclip: *mut i16,
-    pub sprbottomclip: *mut i16,
-    pub maskedtexturecol: *mut i16,
+    pub sprtopclip: Option<ClipArray>,
+    pub sprbottomclip: Option<ClipArray>,
+    pub maskedtexturecol: Option<ClipArray>,
 }
 pub type drawseg_t = drawseg_s;
 

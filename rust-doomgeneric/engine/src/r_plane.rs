@@ -5,7 +5,7 @@ use crate::m_fixed::fixed_t;
 use crate::m_fixed::FixedDiv;
 use crate::m_fixed::FixedMul;
 use crate::r_data::R_GetColumn;
-use crate::r_defs::{drawseg_t, visplane_t};
+use crate::r_defs::visplane_t;
 use crate::r_main::LIGHTLEVELS;
 use crate::r_main::LIGHTSEGSHIFT;
 use crate::r_main::LIGHTZSHIFT;
@@ -26,11 +26,11 @@ pub struct RPlaneState {
     pub floorfunc: planefunction_t,
     pub ceilingfunc: planefunction_t,
     pub visplanes: [visplane_t; 128],
-    pub lastvisplane: *mut visplane_t,
-    pub floorplane: *mut visplane_t,
-    pub ceilingplane: *mut visplane_t,
+    pub lastvisplane: usize,
+    pub floorplane: Option<usize>,
+    pub ceilingplane: Option<usize>,
     pub openings: [i16; 20480],
-    pub lastopening: *mut i16,
+    pub lastopening: usize,
     pub floorclip: [i16; 320],
     pub ceilingclip: [i16; 320],
     pub spanstart: [i32; 200],
@@ -65,11 +65,11 @@ impl RPlaneState {
                 bottom: [0; 320],
                 pad4: 0,
             }; 128],
-            lastvisplane: ::core::ptr::null::<visplane_t>() as *mut visplane_t,
-            floorplane: ::core::ptr::null::<visplane_t>() as *mut visplane_t,
-            ceilingplane: ::core::ptr::null::<visplane_t>() as *mut visplane_t,
+            lastvisplane: 0,
+            floorplane: None,
+            ceilingplane: None,
             openings: [0; 20480],
-            lastopening: ::core::ptr::null::<i16>() as *mut i16,
+            lastopening: 0,
             floorclip: [0; 320],
             ceilingclip: [0; 320],
             spanstart: [0; 200],
@@ -144,8 +144,8 @@ pub unsafe fn R_ClearPlanes(state: &mut GameState) {
         state.r_plane.ceilingclip[i as usize] = -(1 as i32) as i16;
         i += 1;
     }
-    state.r_plane.lastvisplane = &raw mut state.r_plane.visplanes as *mut visplane_t;
-    state.r_plane.lastopening = &raw mut state.r_plane.openings as *mut i16;
+    state.r_plane.lastvisplane = 0;
+    state.r_plane.lastopening = 0;
     memset(
         &raw mut state.r_plane.cachedheight as *mut fixed_t as *mut ::core::ffi::c_void,
         0 as i32,
@@ -160,41 +160,34 @@ pub unsafe fn R_FindPlane(
     mut height: fixed_t,
     mut picnum: i32,
     mut lightlevel: i32,
-) -> *mut visplane_t {
-    let mut check: *mut visplane_t = ::core::ptr::null_mut::<visplane_t>();
+) -> usize {
+    let mut check: usize = 0;
     if picnum == state.r_sky.skyflatnum {
         height = 0 as i32 as fixed_t;
         lightlevel = 0 as i32;
     }
-    check = &raw mut state.r_plane.visplanes as *mut visplane_t;
     while check < state.r_plane.lastvisplane {
-        if height == (*check).height
-            && picnum == (*check).picnum
-            && lightlevel == (*check).lightlevel
-        {
+        let pl = state.r_plane.visplanes[check];
+        if height == pl.height && picnum == pl.picnum && lightlevel == pl.lightlevel {
             break;
         }
-        check = check.offset(1);
+        check += 1;
     }
     if check < state.r_plane.lastvisplane {
         return check;
     }
-    if state
-        .r_plane
-        .lastvisplane
-        .offset_from(&raw mut state.r_plane.visplanes as *mut visplane_t) as i64
-        == MAXVISPLANES as i64
-    {
+    if state.r_plane.lastvisplane == MAXVISPLANES as usize {
         I_Error("R_FindPlane: no more visplanes");
     }
-    state.r_plane.lastvisplane = state.r_plane.lastvisplane.offset(1);
-    (*check).height = height;
-    (*check).picnum = picnum;
-    (*check).lightlevel = lightlevel;
-    (*check).minx = SCREENWIDTH;
-    (*check).maxx = -(1 as i32);
+    state.r_plane.lastvisplane += 1;
+    let pl = &raw mut state.r_plane.visplanes[check];
+    (*pl).height = height;
+    (*pl).picnum = picnum;
+    (*pl).lightlevel = lightlevel;
+    (*pl).minx = SCREENWIDTH;
+    (*pl).maxx = -(1 as i32);
     memset(
-        &raw mut (*check).top as *mut byte as *mut ::core::ffi::c_void,
+        &raw mut (*pl).top as *mut byte as *mut ::core::ffi::c_void,
         0xff as i32,
         ::core::mem::size_of::<[byte; 320]>() as size_t,
     );
@@ -202,51 +195,54 @@ pub unsafe fn R_FindPlane(
 }
 pub unsafe fn R_CheckPlane(
     state: &mut GameState,
-    mut pl: *mut visplane_t,
+    mut pl: usize,
     mut start: i32,
     mut stop: i32,
-) -> *mut visplane_t {
+) -> usize {
     let mut intrl: i32 = 0;
     let mut intrh: i32 = 0;
     let mut unionl: i32 = 0;
     let mut unionh: i32 = 0;
     let mut x: i32 = 0;
-    if start < (*pl).minx {
-        intrl = (*pl).minx;
+    let plv = &raw mut state.r_plane.visplanes[pl];
+    if start < (*plv).minx {
+        intrl = (*plv).minx;
         unionl = start;
     } else {
-        unionl = (*pl).minx;
+        unionl = (*plv).minx;
         intrl = start;
     }
-    if stop > (*pl).maxx {
-        intrh = (*pl).maxx;
+    if stop > (*plv).maxx {
+        intrh = (*plv).maxx;
         unionh = stop;
     } else {
-        unionh = (*pl).maxx;
+        unionh = (*plv).maxx;
         intrh = stop;
     }
     x = intrl;
     while x <= intrh {
-        if (*pl).top[x as usize] as i32 != 0xff as i32 {
+        if (*plv).top[x as usize] as i32 != 0xff as i32 {
             break;
         }
         x += 1;
     }
     if x > intrh {
-        (*pl).minx = unionl;
-        (*pl).maxx = unionh;
+        (*plv).minx = unionl;
+        (*plv).maxx = unionh;
         return pl;
     }
-    (*state.r_plane.lastvisplane).height = (*pl).height;
-    (*state.r_plane.lastvisplane).picnum = (*pl).picnum;
-    (*state.r_plane.lastvisplane).lightlevel = (*pl).lightlevel;
+    let (height, picnum, lightlevel) = ((*plv).height, (*plv).picnum, (*plv).lightlevel);
     let fresh0 = state.r_plane.lastvisplane;
-    state.r_plane.lastvisplane = state.r_plane.lastvisplane.offset(1);
+    state.r_plane.visplanes[fresh0].height = height;
+    state.r_plane.visplanes[fresh0].picnum = picnum;
+    state.r_plane.visplanes[fresh0].lightlevel = lightlevel;
+    state.r_plane.lastvisplane += 1;
     pl = fresh0;
-    (*pl).minx = start;
-    (*pl).maxx = stop;
+    let plv = &raw mut state.r_plane.visplanes[pl];
+    (*plv).minx = start;
+    (*plv).maxx = stop;
     memset(
-        &raw mut (*pl).top as *mut byte as *mut ::core::ffi::c_void,
+        &raw mut (*plv).top as *mut byte as *mut ::core::ffi::c_void,
         0xff as i32,
         ::core::mem::size_of::<[byte; 320]>() as size_t,
     );
@@ -280,66 +276,42 @@ pub fn R_MakeSpans(
     }
 }
 pub unsafe fn R_DrawPlanes(state: &mut GameState) {
-    let mut pl: *mut visplane_t = ::core::ptr::null_mut::<visplane_t>();
+    let mut pl: usize = 0;
     let mut light: i32 = 0;
     let mut x: i32 = 0;
     let mut stop: i32 = 0;
     let mut angle: i32 = 0;
     let mut lumpnum: i32 = 0;
-    if state
-        .r_bsp
-        .ds_p
-        .offset_from(&raw mut state.r_bsp.drawsegs as *mut drawseg_t) as i64
-        > MAXDRAWSEGS as i64
-    {
+    if state.r_bsp.ds_p as i64 > MAXDRAWSEGS as i64 {
         I_Error(&format!(
             "R_DrawPlanes: drawsegs overflow ({})",
-            state
-                .r_bsp
-                .ds_p
-                .offset_from(&raw mut state.r_bsp.drawsegs as *mut drawseg_t) as i64,
+            state.r_bsp.ds_p as i64,
         ));
     }
-    if state
-        .r_plane
-        .lastvisplane
-        .offset_from(&raw mut state.r_plane.visplanes as *mut visplane_t) as i64
-        > MAXVISPLANES as i64
-    {
+    if state.r_plane.lastvisplane as i64 > MAXVISPLANES as i64 {
         I_Error(&format!(
             "R_DrawPlanes: visplane overflow ({})",
-            state
-                .r_plane
-                .lastvisplane
-                .offset_from(&raw mut state.r_plane.visplanes as *mut visplane_t)
-                as i64,
+            state.r_plane.lastvisplane as i64,
         ));
     }
-    if state
-        .r_plane
-        .lastopening
-        .offset_from(&raw mut state.r_plane.openings as *mut i16) as i64
-        > (SCREENWIDTH * 64 as i32) as i64
-    {
+    if state.r_plane.lastopening as i64 > (SCREENWIDTH * 64 as i32) as i64 {
         I_Error(&format!(
             "R_DrawPlanes: opening overflow ({})",
-            state
-                .r_plane
-                .lastopening
-                .offset_from(&raw mut state.r_plane.openings as *mut i16) as i64,
+            state.r_plane.lastopening as i64,
         ));
     }
-    pl = &raw mut state.r_plane.visplanes as *mut visplane_t;
+    pl = 0;
     while pl < state.r_plane.lastvisplane {
-        if !((*pl).minx > (*pl).maxx) {
-            if (*pl).picnum == state.r_sky.skyflatnum {
+        let plv = &raw mut state.r_plane.visplanes[pl];
+        if !((*plv).minx > (*plv).maxx) {
+            if (*plv).picnum == state.r_sky.skyflatnum {
                 state.r_draw.dc_iscale = state.r_things.pspriteiscale >> state.r_main.detailshift;
                 state.r_draw.dc_colormap = Some(0);
                 state.r_draw.dc_texturemid = state.r_sky.skytexturemid as fixed_t;
-                x = (*pl).minx;
-                while x <= (*pl).maxx {
-                    state.r_draw.dc_yl = (*pl).top[x as usize] as i32;
-                    state.r_draw.dc_yh = (*pl).bottom[x as usize] as i32;
+                x = (*plv).minx;
+                while x <= (*plv).maxx {
+                    state.r_draw.dc_yl = (*plv).top[x as usize] as i32;
+                    state.r_draw.dc_yh = (*plv).bottom[x as usize] as i32;
                     if state.r_draw.dc_yl <= state.r_draw.dc_yh {
                         angle = (state
                             .r_main
@@ -354,11 +326,11 @@ pub unsafe fn R_DrawPlanes(state: &mut GameState) {
                 }
             } else {
                 lumpnum = state.r_data.firstflat
-                    + state.r_data.flattranslation[(*pl).picnum as usize];
+                    + state.r_data.flattranslation[(*plv).picnum as usize];
                 state.r_draw.ds_source = W_CacheLumpNum(state, lumpnum) as *mut byte;
                 state.r_plane.planeheight =
-                    ((*pl).height as i32 - state.r_main.viewz as i32).abs() as fixed_t;
-                light = ((*pl).lightlevel >> LIGHTSEGSHIFT) + state.r_main.extralight;
+                    ((*plv).height as i32 - state.r_main.viewz as i32).abs() as fixed_t;
+                light = ((*plv).lightlevel >> LIGHTSEGSHIFT) + state.r_main.extralight;
                 if light >= LIGHTLEVELS {
                     light = LIGHTLEVELS - 1 as i32;
                 }
@@ -366,28 +338,28 @@ pub unsafe fn R_DrawPlanes(state: &mut GameState) {
                     light = 0 as i32;
                 }
                 state.r_plane.planezlight = light as usize;
-                *(&raw mut (*pl).top as *mut byte).offset(((*pl).maxx + 1 as i32) as isize) =
+                *(&raw mut (*plv).top as *mut byte).offset(((*plv).maxx + 1 as i32) as isize) =
                     0xff as byte;
-                *(&raw mut (*pl).top as *mut byte).offset(((*pl).minx - 1 as i32) as isize) =
+                *(&raw mut (*plv).top as *mut byte).offset(((*plv).minx - 1 as i32) as isize) =
                     0xff as byte;
-                stop = (*pl).maxx + 1 as i32;
-                x = (*pl).minx;
+                stop = (*plv).maxx + 1 as i32;
+                x = (*plv).minx;
                 while x <= stop {
                     R_MakeSpans(
                         state,
                         x,
-                        *(&raw const (*pl).top as *const byte).offset((x - 1 as i32) as isize)
+                        *(&raw const (*plv).top as *const byte).offset((x - 1 as i32) as isize)
                             as i32,
-                        *(&raw const (*pl).bottom as *const byte).offset((x - 1 as i32) as isize)
+                        *(&raw const (*plv).bottom as *const byte).offset((x - 1 as i32) as isize)
                             as i32,
-                        *(&raw const (*pl).top as *const byte).offset(x as isize) as i32,
-                        *(&raw const (*pl).bottom as *const byte).offset(x as isize) as i32,
+                        *(&raw const (*plv).top as *const byte).offset(x as isize) as i32,
+                        *(&raw const (*plv).bottom as *const byte).offset(x as isize) as i32,
                     );
                     x += 1;
                 }
                 W_ReleaseLumpNum(&mut state.w_wad, lumpnum);
             }
         }
-        pl = pl.offset(1);
+        pl += 1;
     }
 }
