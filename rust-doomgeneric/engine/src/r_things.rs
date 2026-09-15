@@ -14,9 +14,10 @@ use crate::p_mobj::sector_t;
 use crate::p_mobj::{mobj_t, pspdef_t};
 use crate::p_mobj::{MF_SHADOW, MF_TRANSLATION, MF_TRANSSHIFT};
 use crate::r_data::column_t;
-use crate::r_defs::lighttable_t;
 use crate::r_defs::SpriteRotate;
 use crate::r_defs::{drawseg_t, spritedef_t, spriteframe_t};
+use crate::r_main::ColormapId;
+use crate::r_main::LightRow48;
 use crate::r_main::R_PointOnSegSide;
 use crate::r_main::R_PointToAngle;
 use crate::r_main::LIGHTLEVELS;
@@ -36,7 +37,7 @@ use crate::w_wad::W_GetNumForName;
 pub struct RThingsState {
     pub pspritescale: fixed_t,
     pub pspriteiscale: fixed_t,
-    pub spritelights: *mut *mut lighttable_t,
+    pub spritelights: LightRow48,
     pub negonearray: [i16; 320],
     pub screenheightarray: [i16; 320],
     pub sprites: Vec<spritedef_t>,
@@ -61,7 +62,7 @@ impl RThingsState {
         RThingsState {
             pspritescale: 0,
             pspriteiscale: 0,
-            spritelights: ::core::ptr::null::<*mut lighttable_t>() as *mut *mut lighttable_t,
+            spritelights: LightRow48::Normal(0),
             negonearray: [0; 320],
             screenheightarray: [0; 320],
             sprites: Vec::new(),
@@ -85,7 +86,7 @@ impl RThingsState {
                 xiscale: 0,
                 texturemid: 0,
                 patch: 0,
-                colormap: ::core::ptr::null::<lighttable_t>() as *mut lighttable_t,
+                colormap: None,
                 mobjflags: 0,
             }; 128],
             vissprite_p: ::core::ptr::null::<vissprite_t>() as *mut vissprite_t,
@@ -101,7 +102,7 @@ impl RThingsState {
                 xiscale: 0,
                 texturemid: 0,
                 patch: 0,
-                colormap: ::core::ptr::null::<lighttable_t>() as *mut lighttable_t,
+                colormap: None,
                 mobjflags: 0,
             },
             mfloorclip: ::core::ptr::null::<i16>() as *mut i16,
@@ -129,7 +130,7 @@ pub struct vissprite_s {
     pub xiscale: fixed_t,
     pub texturemid: fixed_t,
     pub patch: i32,
-    pub colormap: *mut lighttable_t,
+    pub colormap: Option<ColormapId>,
     pub mobjflags: i32,
 }
 pub type vissprite_t = vissprite_s;
@@ -365,7 +366,7 @@ pub unsafe fn R_DrawVisSprite(state: &mut GameState, mut vis: *mut vissprite_t) 
         state,
         (*vis).patch + state.r_data.firstspritelump) as *mut patch_t;
     state.r_draw.dc_colormap = (*vis).colormap;
-    if state.r_draw.dc_colormap.is_null() {
+    if state.r_draw.dc_colormap.is_none() {
         state.r_main.colfunc = state.r_main.fuzzcolfunc;
     } else if (*vis).mobjflags & MF_TRANSLATION as i32 != 0 {
         state.r_main.colfunc = state.r_main.transcolfunc;
@@ -499,17 +500,18 @@ pub unsafe fn R_ProjectSprite(state: &mut GameState, mut thing: *mut mobj_t) {
     }
     (*vis).patch = lump;
     if (*thing).flags & MF_SHADOW as i32 != 0 {
-        (*vis).colormap = ::core::ptr::null_mut::<lighttable_t>();
-    } else if !state.r_main.fixedcolormap.is_null() {
-        (*vis).colormap = state.r_main.fixedcolormap;
+        (*vis).colormap = None;
+    } else if let Some(colormap) = state.r_main.fixedcolormap {
+        (*vis).colormap = Some(colormap);
     } else if (*thing).frame & FF_FULLBRIGHT != 0 {
-        (*vis).colormap = state.r_data.colormaps.as_mut_ptr();
+        (*vis).colormap = Some(0);
     } else {
         index = (xscale >> LIGHTSCALESHIFT - state.r_main.detailshift) as i32;
         if index >= MAXLIGHTSCALE {
             index = MAXLIGHTSCALE - 1 as i32;
         }
-        (*vis).colormap = *state.r_things.spritelights.offset(index as isize);
+        (*vis).colormap =
+            Some(state.r_main.light_row48(state.r_things.spritelights)[index as usize]);
     };
 }
 pub unsafe fn R_AddSprites(state: &mut GameState, mut sec: *mut sector_t) {
@@ -521,17 +523,11 @@ pub unsafe fn R_AddSprites(state: &mut GameState, mut sec: *mut sector_t) {
     (*sec).validcount = state.r_main.validcount;
     lightnum = ((*sec).lightlevel as i32 >> LIGHTSEGSHIFT) + state.r_main.extralight;
     if lightnum < 0 as i32 {
-        state.r_things.spritelights =
-            &raw mut *(&raw mut state.r_main.scalelight as *mut [*mut lighttable_t; 48])
-                .offset(0 as i32 as isize) as *mut *mut lighttable_t;
+        state.r_things.spritelights = LightRow48::Normal(0);
     } else if lightnum >= LIGHTLEVELS {
-        state.r_things.spritelights =
-            &raw mut *(&raw mut state.r_main.scalelight as *mut [*mut lighttable_t; 48])
-                .offset((LIGHTLEVELS - 1 as i32) as isize) as *mut *mut lighttable_t;
+        state.r_things.spritelights = LightRow48::Normal((LIGHTLEVELS - 1 as i32) as usize);
     } else {
-        state.r_things.spritelights =
-            &raw mut *(&raw mut state.r_main.scalelight as *mut [*mut lighttable_t; 48])
-                .offset(lightnum as isize) as *mut *mut lighttable_t;
+        state.r_things.spritelights = LightRow48::Normal(lightnum as usize);
     }
     let mut cursor = (*sec).thinglist;
     while let Some(id) = cursor {
@@ -564,7 +560,7 @@ pub unsafe fn R_DrawPSprite(state: &mut GameState, mut psp: *mut pspdef_t) {
         xiscale: 0,
         texturemid: 0,
         patch: 0,
-        colormap: ::core::ptr::null::<lighttable_t>() as *mut lighttable_t,
+        colormap: None,
         mobjflags: 0,
     };
     let psp_state = state.info.state_mut((*psp).state.unwrap());
@@ -625,16 +621,16 @@ pub unsafe fn R_DrawPSprite(state: &mut GameState, mut psp: *mut pspdef_t) {
     if (*viewplayer).powers[PowerType::pw_invisibility as usize] > 4 as i32 * 32 as i32
         || (*viewplayer).powers[PowerType::pw_invisibility as usize] & 8 as i32 != 0
     {
-        (*vis).colormap = ::core::ptr::null_mut::<lighttable_t>();
-    } else if !state.r_main.fixedcolormap.is_null() {
-        (*vis).colormap = state.r_main.fixedcolormap;
+        (*vis).colormap = None;
+    } else if let Some(colormap) = state.r_main.fixedcolormap {
+        (*vis).colormap = Some(colormap);
     } else if (*psp_state).frame & FF_FULLBRIGHT != 0 {
-        (*vis).colormap = state.r_data.colormaps.as_mut_ptr();
+        (*vis).colormap = Some(0);
     } else {
-        (*vis).colormap = *state
-            .r_things
-            .spritelights
-            .offset((MAXLIGHTSCALE - 1 as i32) as isize);
+        (*vis).colormap = Some(
+            state.r_main.light_row48(state.r_things.spritelights)
+                [(MAXLIGHTSCALE - 1 as i32) as usize],
+        );
     }
     R_DrawVisSprite(state, vis);
 }
@@ -651,17 +647,11 @@ pub unsafe fn R_DrawPlayerSprites(state: &mut GameState) {
         >> LIGHTSEGSHIFT)
         + state.r_main.extralight;
     if lightnum < 0 as i32 {
-        state.r_things.spritelights =
-            &raw mut *(&raw mut state.r_main.scalelight as *mut [*mut lighttable_t; 48])
-                .offset(0 as i32 as isize) as *mut *mut lighttable_t;
+        state.r_things.spritelights = LightRow48::Normal(0);
     } else if lightnum >= LIGHTLEVELS {
-        state.r_things.spritelights =
-            &raw mut *(&raw mut state.r_main.scalelight as *mut [*mut lighttable_t; 48])
-                .offset((LIGHTLEVELS - 1 as i32) as isize) as *mut *mut lighttable_t;
+        state.r_things.spritelights = LightRow48::Normal((LIGHTLEVELS - 1 as i32) as usize);
     } else {
-        state.r_things.spritelights =
-            &raw mut *(&raw mut state.r_main.scalelight as *mut [*mut lighttable_t; 48])
-                .offset(lightnum as isize) as *mut *mut lighttable_t;
+        state.r_things.spritelights = LightRow48::Normal(lightnum as usize);
     }
     state.r_things.mfloorclip = &raw mut state.r_things.screenheightarray as *mut i16;
     state.r_things.mceilingclip = &raw mut state.r_things.negonearray as *mut i16;

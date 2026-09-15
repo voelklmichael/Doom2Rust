@@ -5,7 +5,6 @@ use crate::m_fixed::fixed_t;
 use crate::m_fixed::FixedDiv;
 use crate::m_fixed::FixedMul;
 use crate::r_data::R_GetColumn;
-use crate::r_defs::lighttable_t;
 use crate::r_defs::{drawseg_t, visplane_t};
 use crate::r_main::LIGHTLEVELS;
 use crate::r_main::LIGHTSEGSHIFT;
@@ -36,7 +35,7 @@ pub struct RPlaneState {
     pub ceilingclip: [i16; 320],
     pub spanstart: [i32; 200],
     pub spanstop: [i32; 200],
-    pub planezlight: *mut *mut lighttable_t,
+    pub planezlight: usize,
     pub planeheight: fixed_t,
     pub yslope: [fixed_t; 200],
     pub distscale: [fixed_t; 320],
@@ -75,7 +74,7 @@ impl RPlaneState {
             ceilingclip: [0; 320],
             spanstart: [0; 200],
             spanstop: [0; 200],
-            planezlight: ::core::ptr::null::<*mut lighttable_t>() as *mut *mut lighttable_t,
+            planezlight: 0,
             planeheight: 0,
             yslope: [0; 200],
             distscale: [0; 320],
@@ -122,14 +121,14 @@ pub unsafe fn R_MapPlane(state: &mut GameState, mut y: i32, mut x1: i32, mut x2:
         >> ANGLETOFINESHIFT;
     state.r_draw.ds_xfrac = state.r_main.viewx + FixedMul(finecosine[angle as isize], length);
     state.r_draw.ds_yfrac = -state.r_main.viewy - FixedMul(finesine[angle as usize], length);
-    if !state.r_main.fixedcolormap.is_null() {
-        state.r_draw.ds_colormap = state.r_main.fixedcolormap;
+    if let Some(colormap) = state.r_main.fixedcolormap {
+        state.r_draw.ds_colormap = colormap;
     } else {
         index = (distance >> LIGHTZSHIFT) as u32;
         if index >= MAXLIGHTZ as u32 {
             index = (MAXLIGHTZ - 1 as i32) as u32;
         }
-        state.r_draw.ds_colormap = *state.r_plane.planezlight.offset(index as isize);
+        state.r_draw.ds_colormap = state.r_main.zlight[state.r_plane.planezlight][index as usize];
     }
     state.r_draw.ds_y = y;
     state.r_draw.ds_x1 = x1;
@@ -335,7 +334,7 @@ pub unsafe fn R_DrawPlanes(state: &mut GameState) {
         if !((*pl).minx > (*pl).maxx) {
             if (*pl).picnum == state.r_sky.skyflatnum {
                 state.r_draw.dc_iscale = state.r_things.pspriteiscale >> state.r_main.detailshift;
-                state.r_draw.dc_colormap = state.r_data.colormaps.as_mut_ptr();
+                state.r_draw.dc_colormap = Some(0);
                 state.r_draw.dc_texturemid = state.r_sky.skytexturemid as fixed_t;
                 x = (*pl).minx;
                 while x <= (*pl).maxx {
@@ -366,9 +365,7 @@ pub unsafe fn R_DrawPlanes(state: &mut GameState) {
                 if light < 0 as i32 {
                     light = 0 as i32;
                 }
-                state.r_plane.planezlight =
-                    &raw mut *(&raw mut state.r_main.zlight as *mut [*mut lighttable_t; 128])
-                        .offset(light as isize) as *mut *mut lighttable_t;
+                state.r_plane.planezlight = light as usize;
                 *(&raw mut (*pl).top as *mut byte).offset(((*pl).maxx + 1 as i32) as isize) =
                     0xff as byte;
                 *(&raw mut (*pl).top as *mut byte).offset(((*pl).minx - 1 as i32) as isize) =
