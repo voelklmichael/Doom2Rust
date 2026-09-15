@@ -370,15 +370,9 @@ pub unsafe fn R_DrawVisSprite(state: &mut GameState, mut vis: *mut vissprite_t) 
         state.r_main.colfunc = state.r_main.fuzzcolfunc;
     } else if (*vis).mobjflags & MF_TRANSLATION as i32 != 0 {
         state.r_main.colfunc = state.r_main.transcolfunc;
-        state.r_draw.dc_translation = state
-            .r_draw
-            .translationtables
-            .as_mut_ptr()
-            .offset(-(256 as i32 as isize))
-            .offset(
-                (((*vis).mobjflags & MF_TRANSLATION as i32) >> MF_TRANSSHIFT as i32 - 8 as i32)
-                    as isize,
-            );
+        state.r_draw.dc_translation = (((*vis).mobjflags & MF_TRANSLATION as i32)
+            >> MF_TRANSSHIFT as i32 - 8 as i32) as usize
+            - 256;
     }
     state.r_draw.dc_iscale = (((*vis).xiscale as i32).abs() >> state.r_main.detailshift) as fixed_t;
     state.r_draw.dc_texturemid = (*vis).texturemid;
