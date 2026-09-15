@@ -4,6 +4,7 @@ use crate::i_system::I_Error;
 use crate::m_fixed::fixed_t;
 use crate::m_fixed::FixedDiv;
 use crate::m_fixed::FixedMul;
+use crate::mem_compat::memset;
 use crate::r_data::R_GetColumn;
 use crate::r_defs::visplane_t;
 use crate::r_main::LIGHTLEVELS;
@@ -20,7 +21,6 @@ use crate::tables::ANG90;
 use crate::tables::ANGLETOFINESHIFT;
 use crate::w_wad::W_CacheLumpNum;
 use crate::w_wad::W_ReleaseLumpNum;
-use crate::mem_compat::memset;
 
 pub struct RPlaneState {
     pub floorfunc: planefunction_t,
@@ -325,11 +325,10 @@ pub unsafe fn R_DrawPlanes(state: &mut GameState) {
                     x += 1;
                 }
             } else {
-                lumpnum = state.r_data.firstflat
-                    + state.r_data.flattranslation[(*plv).picnum as usize];
+                lumpnum =
+                    state.r_data.firstflat + state.r_data.flattranslation[(*plv).picnum as usize];
                 state.r_draw.ds_source = W_CacheLumpNum(state, lumpnum) as *mut byte;
-                state.r_plane.planeheight =
-                    ((*plv).height - state.r_main.viewz).abs() as fixed_t;
+                state.r_plane.planeheight = ((*plv).height - state.r_main.viewz).abs() as fixed_t;
                 light = ((*plv).lightlevel >> LIGHTSEGSHIFT) + state.r_main.extralight;
                 if light >= LIGHTLEVELS {
                     light = LIGHTLEVELS - 1_i32;
@@ -348,8 +347,7 @@ pub unsafe fn R_DrawPlanes(state: &mut GameState) {
                     R_MakeSpans(
                         state,
                         x,
-                        *(&raw const (*plv).top as *const byte).offset((x - 1_i32) as isize)
-                            as i32,
+                        *(&raw const (*plv).top as *const byte).offset((x - 1_i32) as isize) as i32,
                         *(&raw const (*plv).bottom as *const byte).offset((x - 1_i32) as isize)
                             as i32,
                         *(&raw const (*plv).top as *const byte).offset(x as isize) as i32,

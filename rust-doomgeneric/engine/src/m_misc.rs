@@ -27,9 +27,7 @@ pub fn M_TempFile(s: &str) -> String {
     format!("/tmp{}{}", DIR_SEPARATOR_S, s)
 }
 fn m_strtoint_digit_prefix(s: &str, radix: u32) -> Option<i32> {
-    let end = s
-        .find(|c: char| !c.is_digit(radix))
-        .unwrap_or(s.len());
+    let end = s.find(|c: char| !c.is_digit(radix)).unwrap_or(s.len());
     if end == 0 {
         None
     } else {
@@ -74,7 +72,10 @@ pub fn M_ExtractFileBase(path: &str, dest: &mut FixedCStr<8>) {
     for &b in base.as_bytes() {
         if length >= 8 {
             let truncated = String::from_utf8_lossy(&buf[..length.min(8)]);
-            println!("Warning: Truncated '{}' lump name to '{:.8}'.", filename, truncated);
+            println!(
+                "Warning: Truncated '{}' lump name to '{:.8}'.",
+                filename, truncated
+            );
             break;
         }
         buf[length] = b.to_ascii_uppercase();

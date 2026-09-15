@@ -114,7 +114,11 @@ pub unsafe fn P_CrossSubsector(state: &mut GameState, mut num: i32) -> bool {
     }
     let sub = state.p_setup.subsector(SubsectorId(num as u32));
     count = sub.numlines as i32;
-    seg = state.p_setup.segs.as_mut_ptr().offset(sub.firstline as isize);
+    seg = state
+        .p_setup
+        .segs
+        .as_mut_ptr()
+        .offset(sub.firstline as isize);
     while count != 0 {
         line = state.p_setup.line_mut((*seg).linedef);
         if (*line).validcount != state.r_main.validcount {
@@ -221,8 +225,12 @@ pub unsafe fn P_CheckSight(
     let mut pnum: i32 = 0;
     let mut bytenum: i32 = 0;
     let mut bitnum: i32 = 0;
-    s1 = state.p_setup.subsectors[(*t1).subsector.0 as usize].sector.0 as i32;
-    s2 = state.p_setup.subsectors[(*t2).subsector.0 as usize].sector.0 as i32;
+    s1 = state.p_setup.subsectors[(*t1).subsector.0 as usize]
+        .sector
+        .0 as i32;
+    s2 = state.p_setup.subsectors[(*t2).subsector.0 as usize]
+        .sector
+        .0 as i32;
     pnum = s1 * state.p_setup.numsectors + s2;
     bytenum = pnum >> 3_i32;
     bitnum = 1_i32 << (pnum & 7_i32);

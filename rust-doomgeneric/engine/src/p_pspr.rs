@@ -1,15 +1,14 @@
 use crate::d_items::weaponinfo;
 use crate::d_mode::GameMode_t;
+use crate::d_player::weapontype_t;
 use crate::d_player::PowerType;
 use crate::d_player::{ammotype_t, NUMAMMO};
 use crate::d_player::{player_t, PlayerState};
 use crate::d_player::{PSpriteNum, NUMPSPRITES};
-use crate::d_player::weapontype_t;
 use crate::d_ticcmd::BT_ATTACK;
 use crate::doomdef::false_0;
 use crate::doomdef::true_0;
 use crate::game_state::GameState;
-use crate::p_mobj::{statenum_from_raw, StateNum};
 use crate::info::StateId;
 use crate::m_fixed::fixed_t;
 use crate::m_fixed::FixedMul;
@@ -23,13 +22,14 @@ use crate::p_inter::P_DamageMobj;
 use crate::p_map::P_AimLineAttack;
 use crate::p_map::P_LineAttack;
 use crate::p_mobj::MobjId;
+use crate::p_mobj::MobjType;
 use crate::p_mobj::P_SetMobjState;
 use crate::p_mobj::P_SpawnMobj;
 use crate::p_mobj::P_SpawnPlayerMissile;
 use crate::p_mobj::MF_JUSTATTACKED;
 use crate::p_mobj::{mobj_t, pspdef_t};
 use crate::p_mobj::{state_t, StateAction};
-use crate::p_mobj::MobjType;
+use crate::p_mobj::{statenum_from_raw, StateNum};
 use crate::r_main::R_PointToAngle2;
 use crate::s_sound::S_StartSound;
 use crate::s_sound::SoundOrigin;
@@ -114,7 +114,11 @@ pub unsafe fn P_BringUpWeapon(state: &mut GameState, mut player: *mut player_t) 
         (*player).pendingweapon = (*player).readyweapon;
     }
     if (*player).pendingweapon as u32 == weapontype_t::wp_chainsaw as i32 as u32 {
-        S_StartSound(state, SoundOrigin::Mobj((*(player_mo)).id), sfx_sawup as i32);
+        S_StartSound(
+            state,
+            SoundOrigin::Mobj((*(player_mo)).id),
+            sfx_sawup as i32,
+        );
     }
     newstate = weaponinfo[(*player).pendingweapon as usize].upstate;
     (*player).pendingweapon = weapontype_t::wp_nochange;
@@ -132,7 +136,8 @@ pub unsafe fn P_CheckAmmo(state: &mut GameState, mut player: *mut player_t) -> b
     } else {
         count = 1_i32;
     }
-    if ammo as u32 == ammotype_t::am_noammo as i32 as u32 || (*player).ammo[ammo as usize] >= count {
+    if ammo as u32 == ammotype_t::am_noammo as i32 as u32 || (*player).ammo[ammo as usize] >= count
+    {
         return true;
     }
     loop {
@@ -217,9 +222,15 @@ pub unsafe fn A_WeaponReady(
     if (*player).readyweapon as u32 == weapontype_t::wp_chainsaw as i32 as u32
         && (*psp).state == Some(StateId(StateNum::S_SAW as u32))
     {
-        S_StartSound(state, SoundOrigin::Mobj((*(player_mo)).id), sfx_sawidl as i32);
+        S_StartSound(
+            state,
+            SoundOrigin::Mobj((*(player_mo)).id),
+            sfx_sawidl as i32,
+        );
     }
-    if (*player).pendingweapon as u32 != weapontype_t::wp_nochange as i32 as u32 || (*player).health == 0 {
+    if (*player).pendingweapon as u32 != weapontype_t::wp_nochange as i32 as u32
+        || (*player).health == 0
+    {
         newstate = weaponinfo[(*player).readyweapon as usize].downstate;
         P_SetPsprite(state, player, PSpriteNum::ps_weapon as i32, newstate);
         return;
@@ -253,11 +264,7 @@ pub unsafe fn A_ReFire(state: &mut GameState, mut player: *mut player_t, _psp: *
         P_CheckAmmo(state, player);
     };
 }
-pub fn A_CheckReload(
-    state: &mut GameState,
-    mut player: *mut player_t,
-    _psp: *mut pspdef_t,
-) {
+pub fn A_CheckReload(state: &mut GameState, mut player: *mut player_t, _psp: *mut pspdef_t) {
     unsafe { P_CheckAmmo(state, player) };
 }
 pub unsafe fn A_Lower(state: &mut GameState, mut player: *mut player_t, mut psp: *mut pspdef_t) {
@@ -270,7 +277,12 @@ pub unsafe fn A_Lower(state: &mut GameState, mut player: *mut player_t, mut psp:
         return;
     }
     if (*player).health == 0 {
-        P_SetPsprite(state, player, PSpriteNum::ps_weapon as i32, StateNum::S_NULL);
+        P_SetPsprite(
+            state,
+            player,
+            PSpriteNum::ps_weapon as i32,
+            StateNum::S_NULL,
+        );
         return;
     }
     (*player).readyweapon = (*player).pendingweapon;
@@ -320,7 +332,11 @@ pub unsafe fn A_Punch(state: &mut GameState, mut player: *mut player_t, _psp: *m
     );
     if let Some(linetarget) = state.p_map.linetarget {
         let linetarget = state.p_mobj.mobj_get(linetarget).unwrap();
-        S_StartSound(state, SoundOrigin::Mobj((*(player_mo)).id), sfx_punch as i32);
+        S_StartSound(
+            state,
+            SoundOrigin::Mobj((*(player_mo)).id),
+            sfx_punch as i32,
+        );
         (*player_mo).angle = R_PointToAngle2(
             state,
             (*player_mo).x,
@@ -350,11 +366,22 @@ pub unsafe fn A_Saw(state: &mut GameState, mut player: *mut player_t, _psp: *mut
         damage,
     );
     if state.p_map.linetarget.is_none() {
-        S_StartSound(state, SoundOrigin::Mobj((*(player_mo)).id), sfx_sawful as i32);
+        S_StartSound(
+            state,
+            SoundOrigin::Mobj((*(player_mo)).id),
+            sfx_sawful as i32,
+        );
         return;
     }
-    S_StartSound(state, SoundOrigin::Mobj((*(player_mo)).id), sfx_sawhit as i32);
-    let linetarget = state.p_mobj.mobj_get(state.p_map.linetarget.unwrap()).unwrap();
+    S_StartSound(
+        state,
+        SoundOrigin::Mobj((*(player_mo)).id),
+        sfx_sawhit as i32,
+    );
+    let linetarget = state
+        .p_mobj
+        .mobj_get(state.p_map.linetarget.unwrap())
+        .unwrap();
     angle = R_PointToAngle2(
         state,
         (*player_mo).x,
@@ -366,16 +393,12 @@ pub unsafe fn A_Saw(state: &mut GameState, mut player: *mut player_t, _psp: *mut
         if (angle.wrapping_sub((*player_mo).angle) as i32) < -ANG90 / 20_i32 {
             (*player_mo).angle = angle.wrapping_add((ANG90 / 21_i32) as angle_t);
         } else {
-            (*player_mo).angle = (*player_mo)
-                .angle
-                .wrapping_sub((ANG90 / 20_i32) as angle_t);
+            (*player_mo).angle = (*player_mo).angle.wrapping_sub((ANG90 / 20_i32) as angle_t);
         }
     } else if angle.wrapping_sub((*player_mo).angle) > (ANG90 / 20_i32) as angle_t {
         (*player_mo).angle = angle.wrapping_sub((ANG90 / 21_i32) as angle_t);
     } else {
-        (*player_mo).angle = (*player_mo)
-            .angle
-            .wrapping_add((ANG90 / 20_i32) as angle_t);
+        (*player_mo).angle = (*player_mo).angle.wrapping_add((ANG90 / 20_i32) as angle_t);
     }
     (*player_mo).flags |= MF_JUSTATTACKED as i32;
 }
@@ -386,11 +409,7 @@ unsafe fn DecreaseAmmo(mut player: *mut player_t, mut ammonum: i32, mut amount: 
         (*player).maxammo[(ammonum - NUMAMMO) as usize] -= amount;
     };
 }
-pub unsafe fn A_FireMissile(
-    state: &mut GameState,
-    mut player: *mut player_t,
-    _psp: *mut pspdef_t,
-) {
+pub unsafe fn A_FireMissile(state: &mut GameState, mut player: *mut player_t, _psp: *mut pspdef_t) {
     let player_mo = state.p_mobj.mobj_get((*player).mo.unwrap()).unwrap();
     DecreaseAmmo(
         player,
@@ -408,11 +427,7 @@ pub unsafe fn A_FireBFG(state: &mut GameState, mut player: *mut player_t, _psp: 
     );
     P_SpawnPlayerMissile(state, player_mo, MobjType::MT_BFG);
 }
-pub unsafe fn A_FirePlasma(
-    state: &mut GameState,
-    mut player: *mut player_t,
-    _psp: *mut pspdef_t,
-) {
+pub unsafe fn A_FirePlasma(state: &mut GameState, mut player: *mut player_t, _psp: *mut pspdef_t) {
     let player_mo = state.p_mobj.mobj_get((*player).mo.unwrap()).unwrap();
     DecreaseAmmo(
         player,
@@ -455,13 +470,13 @@ pub unsafe fn P_GunShot(state: &mut GameState, mut mo: *mut mobj_t, mut accurate
     let bulletslope = state.p_pspr.bulletslope;
     P_LineAttack(state, mo, angle, MISSILERANGE, bulletslope, damage);
 }
-pub unsafe fn A_FirePistol(
-    state: &mut GameState,
-    mut player: *mut player_t,
-    _psp: *mut pspdef_t,
-) {
+pub unsafe fn A_FirePistol(state: &mut GameState, mut player: *mut player_t, _psp: *mut pspdef_t) {
     let player_mo = state.p_mobj.mobj_get((*player).mo.unwrap()).unwrap();
-    S_StartSound(state, SoundOrigin::Mobj((*(player_mo)).id), sfx_pistol as i32);
+    S_StartSound(
+        state,
+        SoundOrigin::Mobj((*(player_mo)).id),
+        sfx_pistol as i32,
+    );
     P_SetMobjState(state, player_mo, StateNum::S_PLAY_ATK2);
     DecreaseAmmo(
         player,
@@ -477,14 +492,14 @@ pub unsafe fn A_FirePistol(
     P_BulletSlope(state, player_mo);
     P_GunShot(state, player_mo, (*player).refire == 0);
 }
-pub unsafe fn A_FireShotgun(
-    state: &mut GameState,
-    mut player: *mut player_t,
-    _psp: *mut pspdef_t,
-) {
+pub unsafe fn A_FireShotgun(state: &mut GameState, mut player: *mut player_t, _psp: *mut pspdef_t) {
     let player_mo = state.p_mobj.mobj_get((*player).mo.unwrap()).unwrap();
     let mut i: i32 = 0;
-    S_StartSound(state, SoundOrigin::Mobj((*(player_mo)).id), sfx_shotgn as i32);
+    S_StartSound(
+        state,
+        SoundOrigin::Mobj((*(player_mo)).id),
+        sfx_shotgn as i32,
+    );
     P_SetMobjState(state, player_mo, StateNum::S_PLAY_ATK2);
     DecreaseAmmo(
         player,
@@ -513,7 +528,11 @@ pub unsafe fn A_FireShotgun2(
     let mut i: i32 = 0;
     let mut angle: angle_t = 0;
     let mut damage: i32 = 0;
-    S_StartSound(state, SoundOrigin::Mobj((*(player_mo)).id), sfx_dshtgn as i32);
+    S_StartSound(
+        state,
+        SoundOrigin::Mobj((*(player_mo)).id),
+        sfx_dshtgn as i32,
+    );
     P_SetMobjState(state, player_mo, StateNum::S_PLAY_ATK2);
     DecreaseAmmo(
         player,
@@ -544,7 +563,11 @@ pub unsafe fn A_FireShotgun2(
 }
 pub unsafe fn A_FireCGun(state: &mut GameState, mut player: *mut player_t, mut psp: *mut pspdef_t) {
     let player_mo = state.p_mobj.mobj_get((*player).mo.unwrap()).unwrap();
-    S_StartSound(state, SoundOrigin::Mobj((*(player_mo)).id), sfx_pistol as i32);
+    S_StartSound(
+        state,
+        SoundOrigin::Mobj((*(player_mo)).id),
+        sfx_pistol as i32,
+    );
     if (*player).ammo[weaponinfo[(*player).readyweapon as usize].ammo as usize] == 0 {
         return;
     }

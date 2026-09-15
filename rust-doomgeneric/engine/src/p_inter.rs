@@ -1,27 +1,27 @@
 use crate::am_map::AM_Stop;
 use crate::d_items::weaponinfo;
-use crate::d_mode::{GameMode_t, GameVersion};
 use crate::d_mode::SkillType;
+use crate::d_mode::{GameMode_t, GameVersion};
+use crate::d_player::weapontype_t;
+use crate::d_player::PowerType;
 use crate::d_player::CF_GODMODE;
 use crate::d_player::{ammotype_from_raw, ammotype_t, NUMAMMO};
 use crate::d_player::{player_t, PlayerId, PlayerState};
-use crate::d_player::PowerType;
-use crate::d_player::weapontype_t;
 use crate::game_state::GameState;
 use crate::i_system::I_Error;
 use crate::i_system::I_Tactile;
-use crate::p_mobj::StateNum;
 use crate::info::StateId;
 use crate::m_fixed::fixed_t;
 use crate::m_fixed::FixedMul;
 use crate::m_fixed::FRACUNIT;
 use crate::m_random::P_Random;
 use crate::p_mobj::mobj_t;
+use crate::p_mobj::MobjType;
 use crate::p_mobj::P_RemoveMobj;
 use crate::p_mobj::P_SetMobjState;
 use crate::p_mobj::P_SpawnMobj;
+use crate::p_mobj::StateNum;
 use crate::p_mobj::ONFLOORZ;
-use crate::p_mobj::MobjType;
 use crate::p_mobj::{
     MF_CORPSE, MF_COUNTITEM, MF_COUNTKILL, MF_DROPOFF, MF_DROPPED, MF_FLOAT, MF_JUSTHIT, MF_NOCLIP,
     MF_NOGRAVITY, MF_SHADOW, MF_SHOOTABLE, MF_SKULLFLY, MF_SOLID,
@@ -115,17 +115,25 @@ pub unsafe fn P_GiveAmmo(
             }
         }
         1 => {
-            if ((*player).readyweapon as u32 == weapontype_t::wp_fist as i32 as u32 || (*player).readyweapon as u32 == weapontype_t::wp_pistol as i32 as u32) && (*player).weaponowned[weapontype_t::wp_shotgun as usize] {
+            if ((*player).readyweapon as u32 == weapontype_t::wp_fist as i32 as u32
+                || (*player).readyweapon as u32 == weapontype_t::wp_pistol as i32 as u32)
+                && (*player).weaponowned[weapontype_t::wp_shotgun as usize]
+            {
                 (*player).pendingweapon = weapontype_t::wp_shotgun;
             }
         }
         2 => {
-            if ((*player).readyweapon as u32 == weapontype_t::wp_fist as i32 as u32 || (*player).readyweapon as u32 == weapontype_t::wp_pistol as i32 as u32) && (*player).weaponowned[weapontype_t::wp_plasma as usize] {
+            if ((*player).readyweapon as u32 == weapontype_t::wp_fist as i32 as u32
+                || (*player).readyweapon as u32 == weapontype_t::wp_pistol as i32 as u32)
+                && (*player).weaponowned[weapontype_t::wp_plasma as usize]
+            {
                 (*player).pendingweapon = weapontype_t::wp_plasma;
             }
         }
         3 => {
-            if (*player).readyweapon as u32 == weapontype_t::wp_fist as i32 as u32 && (*player).weaponowned[weapontype_t::wp_missile as usize] {
+            if (*player).readyweapon as u32 == weapontype_t::wp_fist as i32 as u32
+                && (*player).weaponowned[weapontype_t::wp_missile as usize]
+            {
                 (*player).pendingweapon = weapontype_t::wp_missile;
             }
         }
@@ -153,8 +161,7 @@ pub unsafe fn P_GiveWeapon(
             P_GiveAmmo(state, player, weaponinfo[weapon as usize].ammo, 2_i32);
         }
         (*player).pendingweapon = weapon;
-        if player
-            == &mut state.g_game.players[state.g_game.consoleplayer as usize] as *mut player_t
+        if player == &mut state.g_game.players[state.g_game.consoleplayer as usize] as *mut player_t
         {
             S_StartSound(state, SoundOrigin::None, sfx_wpnup as i32);
         }
@@ -207,7 +214,11 @@ pub unsafe fn P_GiveCard(mut player: *mut player_t, mut card: CardType) {
     (*player).bonuscount = BONUSADD;
     (*player).cards[card as usize] = true;
 }
-pub unsafe fn P_GivePower(state: &mut GameState, mut player: *mut player_t, mut power: i32) -> bool {
+pub unsafe fn P_GivePower(
+    state: &mut GameState,
+    mut player: *mut player_t,
+    mut power: i32,
+) -> bool {
     if power == PowerType::pw_invulnerability as i32 {
         (*player).powers[power as usize] = INVULNTICS as i32;
         return true;
@@ -598,7 +609,9 @@ pub unsafe fn P_KillMobj(state: &mut GameState, mut source: *mut mobj_t, mut tar
         }
     }
     let target_info = state.info.mobjinfo_mut((*target).type_0);
-    if (*target).health < -(*target_info).spawnhealth && (*target_info).xdeathstate != StateNum::S_NULL {
+    if (*target).health < -(*target_info).spawnhealth
+        && (*target_info).xdeathstate != StateNum::S_NULL
+    {
         let xdeathstate = (*target_info).xdeathstate;
         P_SetMobjState(state, target, xdeathstate);
     } else {
@@ -671,7 +684,8 @@ pub unsafe fn P_DamageMobj(
             (*target).x,
             (*target).y,
         );
-        thrust = (damage * (FRACUNIT >> 3_i32) * 100_i32 / (*state.info.mobjinfo_mut((*target).type_0)).mass) as fixed_t;
+        thrust = (damage * (FRACUNIT >> 3_i32) * 100_i32
+            / (*state.info.mobjinfo_mut((*target).type_0)).mass) as fixed_t;
         if damage < 40_i32
             && damage > (*target).health
             && (*target).z - (*inflictor).z > 64_i32 * FRACUNIT
@@ -688,7 +702,7 @@ pub unsafe fn P_DamageMobj(
         if state
             .p_setup
             .sector_mut(state.p_setup.subsectors[(*target).subsector.0 as usize].sector)
-        .special as i32
+            .special as i32
             == 11_i32
             && damage >= (*target).health
         {

@@ -635,18 +635,14 @@ pub fn AM_changeWindowLoc(state: &mut GameState) {
     state.am_map.m_x += state.am_map.m_paninc.x;
     state.am_map.m_y += state.am_map.m_paninc.y;
     if state.am_map.m_x + state.am_map.m_w / 2_i32 > state.am_map.max_x {
-        state.am_map.m_x =
-            (state.am_map.max_x - state.am_map.m_w / 2_i32) as fixed_t;
+        state.am_map.m_x = (state.am_map.max_x - state.am_map.m_w / 2_i32) as fixed_t;
     } else if (state.am_map.m_x + state.am_map.m_w / 2_i32) < state.am_map.min_x {
-        state.am_map.m_x =
-            (state.am_map.min_x - state.am_map.m_w / 2_i32) as fixed_t;
+        state.am_map.m_x = (state.am_map.min_x - state.am_map.m_w / 2_i32) as fixed_t;
     }
     if state.am_map.m_y + state.am_map.m_h / 2_i32 > state.am_map.max_y {
-        state.am_map.m_y =
-            (state.am_map.max_y - state.am_map.m_h / 2_i32) as fixed_t;
+        state.am_map.m_y = (state.am_map.max_y - state.am_map.m_h / 2_i32) as fixed_t;
     } else if (state.am_map.m_y + state.am_map.m_h / 2_i32) < state.am_map.min_y {
-        state.am_map.m_y =
-            (state.am_map.min_y - state.am_map.m_h / 2_i32) as fixed_t;
+        state.am_map.m_y = (state.am_map.min_y - state.am_map.m_h / 2_i32) as fixed_t;
     }
     state.am_map.m_x2 = state.am_map.m_x + state.am_map.m_w;
     state.am_map.m_y2 = state.am_map.m_y + state.am_map.m_h;
@@ -939,16 +935,13 @@ pub unsafe fn AM_doFollowPlayer(state: &mut GameState) {
     }
 }
 pub fn AM_updateLightLev(state: &mut AmMapState) {
-    const litelevels: [i32; 8] = [
-        0_i32, 4_i32, 7_i32, 10_i32, 12_i32, 14_i32, 15_i32, 15_i32,
-    ];
+    const litelevels: [i32; 8] = [0_i32, 4_i32, 7_i32, 10_i32, 12_i32, 14_i32, 15_i32, 15_i32];
     if state.amclock > state.am_updatelightlev_nexttic {
         let fresh1 = state.am_updatelightlev_litelevelscnt;
         state.am_updatelightlev_litelevelscnt += 1;
         state.lightlev = litelevels[fresh1 as usize];
         if state.am_updatelightlev_litelevelscnt as usize
-            == ::core::mem::size_of::<[i32; 8]>()
-                .wrapping_div(::core::mem::size_of::<i32>())
+            == ::core::mem::size_of::<[i32; 8]>().wrapping_div(::core::mem::size_of::<i32>())
         {
             state.am_updatelightlev_litelevelscnt = 0_i32;
         }
@@ -1252,12 +1245,24 @@ pub unsafe fn AM_drawWalls(state: &mut GameState) {
                     } else {
                         AM_drawMline(state, &raw mut l, WALLCOLORS + lightlev);
                     }
-                } else if state.p_setup.sector_mut((*li).backsector.unwrap()).floorheight
-                    != state.p_setup.sector_mut((*li).frontsector.unwrap()).floorheight
+                } else if state
+                    .p_setup
+                    .sector_mut((*li).backsector.unwrap())
+                    .floorheight
+                    != state
+                        .p_setup
+                        .sector_mut((*li).frontsector.unwrap())
+                        .floorheight
                 {
                     AM_drawMline(state, &raw mut l, FDWALLCOLORS + lightlev);
-                } else if state.p_setup.sector_mut((*li).backsector.unwrap()).ceilingheight
-                    != state.p_setup.sector_mut((*li).frontsector.unwrap()).ceilingheight
+                } else if state
+                    .p_setup
+                    .sector_mut((*li).backsector.unwrap())
+                    .ceilingheight
+                    != state
+                        .p_setup
+                        .sector_mut((*li).frontsector.unwrap())
+                        .ceilingheight
                 {
                     AM_drawMline(state, &raw mut l, CDWALLCOLORS + lightlev);
                 } else if state.am_map.cheating != 0 {
@@ -1339,8 +1344,7 @@ pub unsafe fn AM_drawPlayers(state: &mut GameState) {
                 state,
                 &raw const cheat_player_arrow as *mut mline_t,
                 ::core::mem::size_of::<[mline_t; 16]>()
-                    .wrapping_div(::core::mem::size_of::<mline_t>())
-                    as i32,
+                    .wrapping_div(::core::mem::size_of::<mline_t>()) as i32,
                 0 as fixed_t,
                 (*plr_mo).angle,
                 WHITE,
@@ -1352,8 +1356,7 @@ pub unsafe fn AM_drawPlayers(state: &mut GameState) {
                 state,
                 &raw const player_arrow as *mut mline_t,
                 ::core::mem::size_of::<[mline_t; 7]>()
-                    .wrapping_div(::core::mem::size_of::<mline_t>())
-                    as i32,
+                    .wrapping_div(::core::mem::size_of::<mline_t>()) as i32,
                 0 as fixed_t,
                 (*plr_mo).angle,
                 WHITE,
@@ -1382,8 +1385,7 @@ pub unsafe fn AM_drawPlayers(state: &mut GameState) {
                     state,
                     &raw const player_arrow as *mut mline_t,
                     ::core::mem::size_of::<[mline_t; 7]>()
-                        .wrapping_div(::core::mem::size_of::<mline_t>())
-                        as i32,
+                        .wrapping_div(::core::mem::size_of::<mline_t>()) as i32,
                     0 as fixed_t,
                     (*p_mo).angle,
                     color,
@@ -1411,8 +1413,7 @@ pub unsafe fn AM_drawThings(state: &mut GameState, mut colors: i32) {
                 state,
                 &raw const thintriangle_guy as *mut mline_t,
                 ::core::mem::size_of::<[mline_t; 3]>()
-                    .wrapping_div(::core::mem::size_of::<mline_t>())
-                    as i32,
+                    .wrapping_div(::core::mem::size_of::<mline_t>()) as i32,
                 (16 as fixed_t) << FRACBITS,
                 (*t).angle,
                 colors + lightlev,

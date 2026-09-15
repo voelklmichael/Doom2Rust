@@ -267,8 +267,7 @@ pub fn R_PointToAngle(state: &mut GameState, mut x: fixed_t, mut y: fixed_t) -> 
                     .wrapping_sub(1 as angle_t)
                     .wrapping_sub(tantoangle[SlopeDiv(y as u32, x as u32) as usize])
             } else {
-                (ANG90 as angle_t)
-                    .wrapping_add(tantoangle[SlopeDiv(x as u32, y as u32) as usize])
+                (ANG90 as angle_t).wrapping_add(tantoangle[SlopeDiv(x as u32, y as u32) as usize])
             }
         } else {
             y = -y;
@@ -476,8 +475,7 @@ pub unsafe fn R_ExecuteSetViewSize(state: &mut GameState) {
     }
     i = 0_i32;
     while i < state.r_draw.viewheight {
-        dy = (((i - state.r_draw.viewheight / 2_i32) << FRACBITS) + FRACUNIT / 2_i32)
-            as fixed_t;
+        dy = (((i - state.r_draw.viewheight / 2_i32) << FRACBITS) + FRACUNIT / 2_i32) as fixed_t;
         dy = dy.abs() as fixed_t;
         state.r_plane.yslope[i as usize] = FixedDiv(
             ((state.r_draw.viewwidth as fixed_t) << state.r_main.detailshift) / 2 as fixed_t

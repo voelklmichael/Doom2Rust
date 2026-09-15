@@ -14,8 +14,8 @@ use crate::p_mobj::sector_t;
 use crate::p_mobj::{mobj_t, pspdef_t};
 use crate::p_mobj::{MF_SHADOW, MF_TRANSLATION, MF_TRANSSHIFT};
 use crate::r_data::column_t;
-use crate::r_defs::SpriteRotate;
 use crate::r_defs::ClipArray;
+use crate::r_defs::SpriteRotate;
 use crate::r_defs::{drawseg_t, spritedef_t, spriteframe_t};
 use crate::r_main::ColormapId;
 use crate::r_main::LightRow48;
@@ -323,8 +323,8 @@ pub unsafe fn R_DrawMaskedColumn(state: &mut GameState, mut column: *mut column_
     let mfloorclip = state.r_things.mfloorclip.unwrap().resolve(state);
     let mceilingclip = state.r_things.mceilingclip.unwrap().resolve(state);
     while (*column).topdelta as i32 != 0xff_i32 {
-        topscreen = state.r_things.sprtopscreen
-            + state.r_things.spryscale * (*column).topdelta as i32;
+        topscreen =
+            state.r_things.sprtopscreen + state.r_things.spryscale * (*column).topdelta as i32;
         bottomscreen = topscreen + state.r_things.spryscale * (*column).length as i32;
         state.r_draw.dc_yl = topscreen + FRACUNIT - 1_i32 >> FRACBITS;
         state.r_draw.dc_yh = bottomscreen - 1_i32 >> FRACBITS;
@@ -332,8 +332,7 @@ pub unsafe fn R_DrawMaskedColumn(state: &mut GameState, mut column: *mut column_
             state.r_draw.dc_yh = *mfloorclip.offset(state.r_draw.dc_x as isize) as i32 - 1_i32;
         }
         if state.r_draw.dc_yl <= *mceilingclip.offset(state.r_draw.dc_x as isize) as i32 {
-            state.r_draw.dc_yl =
-                *mceilingclip.offset(state.r_draw.dc_x as isize) as i32 + 1_i32;
+            state.r_draw.dc_yl = *mceilingclip.offset(state.r_draw.dc_x as isize) as i32 + 1_i32;
         }
         if state.r_draw.dc_yl <= state.r_draw.dc_yh {
             state.r_draw.dc_source = (column as *mut byte).offset(3_i32 as isize);
@@ -352,9 +351,7 @@ pub unsafe fn R_DrawVisSprite(state: &mut GameState, mut vis: *mut vissprite_t) 
     let mut texturecolumn: i32 = 0;
     let mut frac: fixed_t = 0;
     let mut patch: *mut patch_t = ::core::ptr::null_mut::<patch_t>();
-    patch = W_CacheLumpNum(
-        state,
-        (*vis).patch + state.r_data.firstspritelump) as *mut patch_t;
+    patch = W_CacheLumpNum(state, (*vis).patch + state.r_data.firstspritelump) as *mut patch_t;
     state.r_draw.dc_colormap = (*vis).colormap;
     if state.r_draw.dc_colormap.is_none() {
         state.r_main.colfunc = state.r_main.fuzzcolfunc;
@@ -573,9 +570,7 @@ pub unsafe fn R_DrawPSprite(state: &mut GameState, mut psp: *mut pspdef_t) {
         return;
     }
     tx += state.r_data.spritewidth[lump as usize];
-    x2 = (state.r_main.centerxfrac + FixedMul(tx, state.r_things.pspritescale)
-        >> FRACBITS)
-        - 1_i32;
+    x2 = (state.r_main.centerxfrac + FixedMul(tx, state.r_things.pspritescale) >> FRACBITS) - 1_i32;
     if x2 < 0_i32 {
         return;
     }
@@ -612,8 +607,7 @@ pub unsafe fn R_DrawPSprite(state: &mut GameState, mut psp: *mut pspdef_t) {
         (*vis).colormap = Some(0);
     } else {
         (*vis).colormap = Some(
-            state.r_main.light_row48(state.r_things.spritelights)
-                [(MAXLIGHTSCALE - 1_i32) as usize],
+            state.r_main.light_row48(state.r_things.spritelights)[(MAXLIGHTSCALE - 1_i32) as usize],
         );
     }
     R_DrawVisSprite(state, vis);
@@ -627,7 +621,7 @@ pub unsafe fn R_DrawPlayerSprites(state: &mut GameState) {
     lightnum = (state
         .p_setup
         .sector_mut(state.p_setup.subsectors[(*viewplayer_mo).subsector.0 as usize].sector)
-    .lightlevel as i32
+        .lightlevel as i32
         >> LIGHTSEGSHIFT)
         + state.r_main.extralight;
     if lightnum < 0_i32 {

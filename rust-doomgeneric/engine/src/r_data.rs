@@ -169,8 +169,7 @@ pub fn R_GenerateComposite(state: &mut GameState, texnum: i32) {
     // (still-empty) allocation into that slot immediately -- safe here
     // since nothing re-enters this slot mid-loop (R_DrawColumnInCache is a
     // plain column-copy routine, no recursion back into R_GetColumn).
-    let mut block: Vec<u8> =
-        vec![0u8; state.r_data.texturecompositesize[texnum as usize] as usize];
+    let mut block: Vec<u8> = vec![0u8; state.r_data.texturecompositesize[texnum as usize] as usize];
     let texture_patchcount = state.r_data.textures[texnum as usize].patchcount as i32;
     let texture_width = state.r_data.textures[texnum as usize].width as i32;
     let texture_height = state.r_data.textures[texnum as usize].height as i32;
@@ -201,8 +200,7 @@ pub fn R_GenerateComposite(state: &mut GameState, texnum: i32) {
                 let columnofs =
                     i32::from_le_bytes(realpatch[colofs_off..colofs_off + 4].try_into().unwrap());
                 let patchcol = &realpatch[columnofs as usize..];
-                let cache_off =
-                    state.r_data.texturecolumnofs[texnum as usize][x as usize] as usize;
+                let cache_off = state.r_data.texturecolumnofs[texnum as usize][x as usize] as usize;
                 R_DrawColumnInCache(
                     patchcol,
                     &mut block[cache_off..],
@@ -251,8 +249,7 @@ pub fn R_GenerateLookup(state: &mut GameState, texnum: i32) {
             let colofs_off = (8 + (x - x1) * 4) as usize;
             let columnofs =
                 i32::from_le_bytes(realpatch[colofs_off..colofs_off + 4].try_into().unwrap());
-            state.r_data.texturecolumnofs[texnum as usize][x as usize] =
-                (columnofs + 3_i32) as u16;
+            state.r_data.texturecolumnofs[texnum as usize][x as usize] = (columnofs + 3_i32) as u16;
             x += 1;
         }
         i += 1;
@@ -270,9 +267,7 @@ pub fn R_GenerateLookup(state: &mut GameState, texnum: i32) {
             state.r_data.texturecolumnlump[texnum as usize][x as usize] = -1_i32 as i16;
             state.r_data.texturecolumnofs[texnum as usize][x as usize] =
                 state.r_data.texturecompositesize[texnum as usize] as u16;
-            if state.r_data.texturecompositesize[texnum as usize]
-                > 0x10000_i32 - texture_height
-            {
+            if state.r_data.texturecompositesize[texnum as usize] > 0x10000_i32 - texture_height {
                 I_Error(&format!("R_GenerateLookup: texture {} is >64k", texnum));
             }
             state.r_data.texturecompositesize[texnum as usize] += texture_height;
@@ -400,8 +395,7 @@ pub unsafe fn R_InitTextures(state: &mut GameState) {
     state.r_data.textureheight = vec![0 as fixed_t; state.r_data.numtextures as usize];
     temp1 = W_GetNumForName(&mut state.w_wad, "S_START");
     temp2 = W_GetNumForName(&mut state.w_wad, "S_END") - 1_i32;
-    temp3 = (temp2 - temp1 + 63_i32) / 64_i32
-        + (state.r_data.numtextures + 63_i32) / 64_i32;
+    temp3 = (temp2 - temp1 + 63_i32) / 64_i32 + (state.r_data.numtextures + 63_i32) / 64_i32;
     if I_ConsoleStdout() {
         print!("[");
         i = 0_i32;
@@ -480,8 +474,14 @@ pub unsafe fn R_InitTextures(state: &mut GameState) {
         }));
         let texture_width = state.r_data.textures[i as usize].width;
         let texture_height = state.r_data.textures[i as usize].height;
-        state.r_data.texturecolumnlump.push(vec![0i16; texture_width as usize]);
-        state.r_data.texturecolumnofs.push(vec![0u16; texture_width as usize]);
+        state
+            .r_data
+            .texturecolumnlump
+            .push(vec![0i16; texture_width as usize]);
+        state
+            .r_data
+            .texturecolumnofs
+            .push(vec![0u16; texture_width as usize]);
         j = 1_i32;
         while j * 2_i32 <= texture_width as i32 {
             j <<= 1_i32;

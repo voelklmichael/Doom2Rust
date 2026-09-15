@@ -27,8 +27,7 @@ impl IJoystickState {
             joystick_strafe_axis: -1,
             joystick_strafe_invert: 0,
             joystick_physical_buttons: [
-                0_i32, 1_i32, 2_i32, 3_i32, 4_i32, 5_i32, 6_i32, 7_i32,
-                8_i32, 9_i32,
+                0_i32, 1_i32, 2_i32, 3_i32, 4_i32, 5_i32, 6_i32, 7_i32, 8_i32, 9_i32,
             ],
         }
     }

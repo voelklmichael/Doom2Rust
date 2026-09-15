@@ -4,22 +4,22 @@ use crate::g_game::G_ExitLevel;
 use crate::g_game::G_SecretExitLevel;
 use crate::game_state::GameState;
 use crate::i_system::I_Error;
-use crate::p_ceilng::EV_DoCeiling;
 use crate::p_ceilng::CeilingE;
+use crate::p_ceilng::EV_DoCeiling;
 use crate::p_doors::EV_DoDoor;
 use crate::p_doors::EV_DoLockedDoor;
 use crate::p_doors::EV_VerticalDoor;
 use crate::p_doors::VldoorE;
 use crate::p_floor::EV_BuildStairs;
 use crate::p_floor::EV_DoFloor;
-use crate::p_floor::StairE;
 use crate::p_floor::FloorE;
+use crate::p_floor::StairE;
 use crate::p_lights::EV_LightTurnOn;
 use crate::p_mobj::mobj_t;
-use crate::p_setup::LineId;
-use crate::p_setup::SectorId;
 use crate::p_plats::EV_DoPlat;
 use crate::p_plats::PlattypeE;
+use crate::p_setup::LineId;
+use crate::p_setup::SectorId;
 use crate::p_spec::button_t;
 use crate::p_spec::EV_DoDonut;
 use crate::p_spec::ML_SECRET;
@@ -343,11 +343,7 @@ pub fn P_StartButton(
     }
     I_Error("P_StartButton: no button slots left!");
 }
-pub unsafe fn P_ChangeSwitchTexture(
-    state: &mut GameState,
-    mut line: LineId,
-    mut useAgain: i32,
-) {
+pub unsafe fn P_ChangeSwitchTexture(state: &mut GameState, mut line: LineId, mut useAgain: i32) {
     let mut texTop: i32 = 0;
     let mut texMid: i32 = 0;
     let mut texBot: i32 = 0;
@@ -367,7 +363,11 @@ pub unsafe fn P_ChangeSwitchTexture(
     i = 0_i32;
     while i < state.p_switch.numswitches * 2_i32 {
         if state.p_switch.switchlist[i as usize] == texTop {
-            S_StartSound(state, SoundOrigin::Sector(state.p_switch.buttonlist[0].soundorg), sound);
+            S_StartSound(
+                state,
+                SoundOrigin::Sector(state.p_switch.buttonlist[0].soundorg),
+                sound,
+            );
             state.p_setup.sides[sidenum0 as usize].toptexture =
                 state.p_switch.switchlist[(i ^ 1_i32) as usize] as i16;
             if useAgain != 0 {
@@ -381,7 +381,11 @@ pub unsafe fn P_ChangeSwitchTexture(
             }
             return;
         } else if state.p_switch.switchlist[i as usize] == texMid {
-            S_StartSound(state, SoundOrigin::Sector(state.p_switch.buttonlist[0].soundorg), sound);
+            S_StartSound(
+                state,
+                SoundOrigin::Sector(state.p_switch.buttonlist[0].soundorg),
+                sound,
+            );
             state.p_setup.sides[sidenum0 as usize].midtexture =
                 state.p_switch.switchlist[(i ^ 1_i32) as usize] as i16;
             if useAgain != 0 {
@@ -395,7 +399,11 @@ pub unsafe fn P_ChangeSwitchTexture(
             }
             return;
         } else if state.p_switch.switchlist[i as usize] == texBot {
-            S_StartSound(state, SoundOrigin::Sector(state.p_switch.buttonlist[0].soundorg), sound);
+            S_StartSound(
+                state,
+                SoundOrigin::Sector(state.p_switch.buttonlist[0].soundorg),
+                sound,
+            );
             state.p_setup.sides[sidenum0 as usize].bottomtexture =
                 state.p_switch.switchlist[(i ^ 1_i32) as usize] as i16;
             if useAgain != 0 {

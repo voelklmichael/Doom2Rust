@@ -85,12 +85,7 @@ pub unsafe fn HUlib_drawTextLine(
             if x + w > SCREENWIDTH {
                 break;
             }
-            V_DrawPatchDirect(
-                state,
-                x,
-                (*l).y,
-                patch,
-            );
+            V_DrawPatchDirect(state, x, (*l).y, patch);
             x += w;
         } else {
             x += 4_i32;
@@ -104,12 +99,7 @@ pub unsafe fn HUlib_drawTextLine(
         let cursor_glyph = state.hu_stuff.hu_font[('_' as i32 - (*l).sc) as usize];
         let cursor_patch = V_CachePatchNum(state, cursor_glyph);
         if x + (*cursor_patch).width as i32 <= SCREENWIDTH {
-            V_DrawPatchDirect(
-                state,
-                x,
-                (*l).y,
-                cursor_patch,
-            );
+            V_DrawPatchDirect(state, x, (*l).y, cursor_patch);
         }
     }
 }
@@ -202,11 +192,7 @@ pub unsafe fn HUlib_addMessageToSText(mut s: *mut hu_stext_t, prefix: Option<&st
         );
     }
 }
-pub unsafe fn HUlib_drawSText(
-    state: &mut GameState,
-    mut s: *mut hu_stext_t,
-    on: bool,
-) {
+pub unsafe fn HUlib_drawSText(state: &mut GameState, mut s: *mut hu_stext_t, on: bool) {
     let mut i: i32 = 0;
     let mut idx: i32 = 0;
     let mut l: *mut hu_textline_t = ::core::ptr::null_mut::<hu_textline_t>();
@@ -275,11 +261,7 @@ pub unsafe fn HUlib_keyInIText(mut it: *mut hu_itext_t, mut ch: u8) -> bool {
     }
     true
 }
-pub unsafe fn HUlib_drawIText(
-    state: &mut GameState,
-    mut it: *mut hu_itext_t,
-    on: bool,
-) {
+pub unsafe fn HUlib_drawIText(state: &mut GameState, mut it: *mut hu_itext_t, on: bool) {
     let mut l: *mut hu_textline_t = &raw mut (*it).l;
     if !on {
         return;

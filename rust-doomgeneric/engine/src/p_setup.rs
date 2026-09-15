@@ -12,11 +12,12 @@ use crate::m_fixed::fixed_t;
 use crate::m_fixed::FixedDiv;
 use crate::m_fixed::FRACBITS;
 use crate::m_fixed::FRACUNIT;
+use crate::mem_compat::memset;
 use crate::p_maputl::MAPBLOCKSHIFT;
 use crate::p_mobj::P_SpawnMapThing;
 use crate::p_mobj::{
     degenmobj_t, line_s, line_t, mapthing_t, sector_t, subsector_s, subsector_t, thinker_s,
-    vertex_t, MobjId, ThinkerFn, SlopeType,
+    vertex_t, MobjId, SlopeType, ThinkerFn,
 };
 use crate::p_spec::P_InitPicAnims;
 use crate::p_spec::P_SpawnSpecials;
@@ -33,11 +34,10 @@ use crate::stdint_types::byte;
 use crate::stdint_types::size_t;
 use crate::tables::angle_t;
 use crate::w_wad::W_CacheLumpNum;
+use crate::w_wad::W_GetNumForName;
 use crate::w_wad::W_LumpLength;
 use crate::w_wad::W_ReadLump;
 use crate::w_wad::W_ReleaseLumpNum;
-use crate::w_wad::W_GetNumForName;
-use crate::mem_compat::memset;
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub struct SectorId(pub u32);
@@ -294,8 +294,7 @@ pub unsafe fn P_LoadVertexes(state: &mut GameState, mut lump: i32) {
     let mut i: i32 = 0;
     let mut ml: *mut mapvertex_t = ::core::ptr::null_mut::<mapvertex_t>();
     let numvertexes = (W_LumpLength(&mut state.w_wad, lump as u32) as usize)
-        .wrapping_div(::core::mem::size_of::<mapvertex_t>())
-        as i32;
+        .wrapping_div(::core::mem::size_of::<mapvertex_t>()) as i32;
     state.p_setup.numvertexes = numvertexes;
     state.p_setup.vertexes = Vec::with_capacity(numvertexes as usize);
     data = W_CacheLumpNum(state, lump) as *mut byte;
@@ -341,8 +340,7 @@ pub unsafe fn P_LoadSegs(state: &mut GameState, mut lump: i32) {
     let mut side: i32 = 0;
     let mut sidenum: i32 = 0;
     let numsegs = (W_LumpLength(&mut state.w_wad, lump as u32) as usize)
-        .wrapping_div(::core::mem::size_of::<mapseg_t>())
-        as i32;
+        .wrapping_div(::core::mem::size_of::<mapseg_t>()) as i32;
     state.p_setup.numsegs = numsegs;
     state.p_setup.segs = Vec::with_capacity(numsegs as usize);
     data = W_CacheLumpNum(state, lump) as *mut byte;
@@ -389,8 +387,7 @@ pub unsafe fn P_LoadSubsectors(state: &mut GameState, mut lump: i32) {
     let mut i: i32 = 0;
     let mut ms: *mut mapsubsector_t = ::core::ptr::null_mut::<mapsubsector_t>();
     let numsubsectors = (W_LumpLength(&mut state.w_wad, lump as u32) as usize)
-        .wrapping_div(::core::mem::size_of::<mapsubsector_t>())
-        as i32;
+        .wrapping_div(::core::mem::size_of::<mapsubsector_t>()) as i32;
     state.p_setup.numsubsectors = numsubsectors;
     state.p_setup.subsectors = Vec::with_capacity(numsubsectors as usize);
     data = W_CacheLumpNum(state, lump) as *mut byte;
@@ -442,8 +439,7 @@ pub unsafe fn P_LoadNodes(state: &mut GameState, mut lump: i32) {
     let mut k: i32 = 0;
     let mut mn: *mut mapnode_t = ::core::ptr::null_mut::<mapnode_t>();
     state.p_setup.numnodes = (W_LumpLength(&mut state.w_wad, lump as u32) as usize)
-        .wrapping_div(::core::mem::size_of::<mapnode_t>())
-        as i32;
+        .wrapping_div(::core::mem::size_of::<mapnode_t>()) as i32;
     state.p_setup.nodes = vec![
         node_t {
             x: 0,
@@ -603,8 +599,7 @@ pub unsafe fn P_LoadLineDefs(state: &mut GameState, mut lump: i32) {
     let mut mld: *mut maplinedef_t = ::core::ptr::null_mut::<maplinedef_t>();
     let mut ld: *mut line_t = ::core::ptr::null_mut::<line_t>();
     state.p_setup.numlines = (W_LumpLength(&mut state.w_wad, lump as u32) as usize)
-        .wrapping_div(::core::mem::size_of::<maplinedef_t>())
-        as i32;
+        .wrapping_div(::core::mem::size_of::<maplinedef_t>()) as i32;
     state.p_setup.lines = vec![ZERO_LINE; state.p_setup.numlines as usize];
     data = W_CacheLumpNum(state, lump) as *mut byte;
     mld = data as *mut maplinedef_t;
@@ -677,12 +672,10 @@ pub unsafe fn P_LoadSideDefs(state: &mut GameState, mut lump: i32) {
         let sd = side_t {
             textureoffset: (((*msd).textureoffset as i32) << FRACBITS) as fixed_t,
             rowoffset: (((*msd).rowoffset as i32) << FRACBITS) as fixed_t,
-            toptexture: R_TextureNumForName(&mut state.r_data, &(*msd).toptexture.as_str())
-                as i16,
+            toptexture: R_TextureNumForName(&mut state.r_data, &(*msd).toptexture.as_str()) as i16,
             bottomtexture: R_TextureNumForName(&mut state.r_data, &(*msd).bottomtexture.as_str())
                 as i16,
-            midtexture: R_TextureNumForName(&mut state.r_data, &(*msd).midtexture.as_str())
-                as i16,
+            midtexture: R_TextureNumForName(&mut state.r_data, &(*msd).midtexture.as_str()) as i16,
             sector: SectorId((*msd).sector as u32),
         };
         state.p_setup.sides.push(sd);
@@ -774,12 +767,11 @@ pub unsafe fn P_GroupLines(state: &mut GameState) {
             M_AddToBox(&mut bbox, li_v2.x, li_v2.y);
             j += 1;
         }
-        (*sector).soundorg.x = ((bbox[BOXRIGHT as usize] + bbox[BOXLEFT as usize])
-            / 2_i32) as fixed_t;
-        (*sector).soundorg.y = ((bbox[BOXTOP as usize] + bbox[BOXBOTTOM as usize])
-            / 2_i32) as fixed_t;
-        block = bbox[BOXTOP as usize] - state.p_setup.bmaporgy + 32_i32 * FRACUNIT
-            >> MAPBLOCKSHIFT;
+        (*sector).soundorg.x =
+            ((bbox[BOXRIGHT as usize] + bbox[BOXLEFT as usize]) / 2_i32) as fixed_t;
+        (*sector).soundorg.y =
+            ((bbox[BOXTOP as usize] + bbox[BOXBOTTOM as usize]) / 2_i32) as fixed_t;
+        block = bbox[BOXTOP as usize] - state.p_setup.bmaporgy + 32_i32 * FRACUNIT >> MAPBLOCKSHIFT;
         block = if block >= state.p_setup.bmapheight {
             state.p_setup.bmapheight - 1_i32
         } else {
@@ -787,13 +779,11 @@ pub unsafe fn P_GroupLines(state: &mut GameState) {
         };
         (*sector).blockbox[BOXTOP as usize] = block;
         block =
-            bbox[BOXBOTTOM as usize] - state.p_setup.bmaporgy - 32_i32 * FRACUNIT
-                >> MAPBLOCKSHIFT;
+            bbox[BOXBOTTOM as usize] - state.p_setup.bmaporgy - 32_i32 * FRACUNIT >> MAPBLOCKSHIFT;
         block = if block < 0_i32 { 0_i32 } else { block };
         (*sector).blockbox[BOXBOTTOM as usize] = block;
-        block = bbox[BOXRIGHT as usize] - state.p_setup.bmaporgx
-            + 32_i32 * FRACUNIT
-            >> MAPBLOCKSHIFT;
+        block =
+            bbox[BOXRIGHT as usize] - state.p_setup.bmaporgx + 32_i32 * FRACUNIT >> MAPBLOCKSHIFT;
         block = if block >= state.p_setup.bmapwidth {
             state.p_setup.bmapwidth - 1_i32
         } else {
@@ -801,8 +791,7 @@ pub unsafe fn P_GroupLines(state: &mut GameState) {
         };
         (*sector).blockbox[BOXRIGHT as usize] = block;
         block =
-            bbox[BOXLEFT as usize] - state.p_setup.bmaporgx - 32_i32 * FRACUNIT
-                >> MAPBLOCKSHIFT;
+            bbox[BOXLEFT as usize] - state.p_setup.bmaporgx - 32_i32 * FRACUNIT >> MAPBLOCKSHIFT;
         block = if block < 0_i32 { 0_i32 } else { block };
         (*sector).blockbox[BOXLEFT as usize] = block;
         i += 1;
@@ -840,8 +829,7 @@ unsafe fn PadRejectArray(state: &mut GameState, mut array: *mut byte, mut len: u
             padvalue = 0xf00_u32;
         }
         memset(
-            array.offset(::core::mem::size_of::<[u32; 4]>() as isize)
-                as *mut ::core::ffi::c_void,
+            array.offset(::core::mem::size_of::<[u32; 4]>() as isize) as *mut ::core::ffi::c_void,
             padvalue as i32,
             (len as size_t).wrapping_sub(::core::mem::size_of::<[u32; 4]>() as size_t),
         );
@@ -858,8 +846,16 @@ unsafe fn P_LoadReject(state: &mut GameState, mut lumpnum: i32) {
             ::core::slice::from_raw_parts(lump_ptr, minlength as usize).to_vec();
     } else {
         state.p_setup.rejectmatrix = vec![0u8; minlength as usize];
-        W_ReadLump(&mut state.w_wad, lumpnum as u32, &mut state.p_setup.rejectmatrix);
-        let pad_ptr = state.p_setup.rejectmatrix.as_mut_ptr().offset(lumplen as isize);
+        W_ReadLump(
+            &mut state.w_wad,
+            lumpnum as u32,
+            &mut state.p_setup.rejectmatrix,
+        );
+        let pad_ptr = state
+            .p_setup
+            .rejectmatrix
+            .as_mut_ptr()
+            .offset(lumplen as isize);
         PadRejectArray(state, pad_ptr, (minlength - lumplen) as u32);
     };
 }

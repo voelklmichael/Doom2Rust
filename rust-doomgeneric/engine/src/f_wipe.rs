@@ -253,8 +253,7 @@ pub fn wipe_ScreenWipe(
     rc = unsafe { do_fn(state, width, height, ticks) };
     if rc != 0 {
         state.f_wipe.go = false;
-        let exit_fn =
-            wipes[(wipeno * 3_i32 + 2_i32) as usize].expect("non-null function pointer");
+        let exit_fn = wipes[(wipeno * 3_i32 + 2_i32) as usize].expect("non-null function pointer");
         unsafe { exit_fn(state, width, height, ticks) };
     }
     (!state.f_wipe.go) as i32

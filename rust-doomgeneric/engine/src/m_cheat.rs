@@ -1,7 +1,7 @@
 use crate::doomdef::false_0;
 use crate::doomdef::true_0;
-use crate::stdint_types::size_t;
 use crate::mem_compat::memcpy;
+use crate::stdint_types::size_t;
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct cheatseq_t {
@@ -13,7 +13,10 @@ pub struct cheatseq_t {
     pub parameter_buf: [::core::ffi::c_char; 5],
 }
 fn cheat_sequence_len(sequence: &[::core::ffi::c_char; 25]) -> size_t {
-    sequence.iter().position(|&c| c == 0).unwrap_or(sequence.len())
+    sequence
+        .iter()
+        .position(|&c| c == 0)
+        .unwrap_or(sequence.len())
 }
 pub unsafe fn cht_CheckCheat(mut cht: *mut cheatseq_t, mut key: ::core::ffi::c_char) -> i32 {
     if (*cht).parameter_chars > 0_i32 && cheat_sequence_len(&(*cht).sequence) < (*cht).sequence_len

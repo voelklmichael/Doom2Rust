@@ -29,6 +29,7 @@ use crate::doomstat::DoomstatState;
 use crate::f_finale::F_Responder;
 use crate::f_finale::F_StartFinale;
 use crate::f_finale::F_Ticker;
+use crate::fixed_cstr::FixedCStr;
 use crate::game_state::GameState;
 use crate::hu_stuff::HU_Responder;
 use crate::hu_stuff::HU_Ticker;
@@ -96,8 +97,9 @@ use crate::tables::finetangent;
 use crate::tables::ANG45;
 use crate::tables::ANGLETOFINESHIFT;
 use crate::v_video::V_ScreenShot;
-use crate::fixed_cstr::FixedCStr;
-use crate::w_wad::{W_CacheLumpNum, W_CheckNumForName, W_GetNumForName, W_LumpLength, W_ReleaseLumpName};
+use crate::w_wad::{
+    W_CacheLumpNum, W_CheckNumForName, W_GetNumForName, W_LumpLength, W_ReleaseLumpName,
+};
 use crate::wi_stuff::WI_End;
 use crate::wi_stuff::WI_Start;
 use crate::wi_stuff::WI_Ticker;
@@ -409,10 +411,9 @@ pub unsafe fn G_CmdChecksum(mut cmd: *mut ticcmd_t) -> i32 {
     let mut i: size_t = 0;
     let mut sum: i32 = 0_i32;
     i = 0 as size_t;
-    while i
-        < ::core::mem::size_of::<ticcmd_t>()
-            .wrapping_div(4_usize)
-            .wrapping_sub(1_usize)
+    while i < ::core::mem::size_of::<ticcmd_t>()
+        .wrapping_div(4_usize)
+        .wrapping_sub(1_usize)
     {
         sum += *(cmd as *mut i32).add(i);
         i = i.wrapping_add(1);
@@ -616,12 +617,10 @@ pub unsafe fn G_BuildTiccmd(state: &mut GameState, mut cmd: *mut ticcmd_t, mut m
         }
     }
     state.g_game.next_weapon = 0_i32;
-    if state.g_game.mousearray[(state.m_controls.mousebforward + 1) as usize]
-    {
+    if state.g_game.mousearray[(state.m_controls.mousebforward + 1) as usize] {
         forward += state.g_game.forwardmove[speed as usize];
     }
-    if state.g_game.mousearray[(state.m_controls.mousebbackward + 1) as usize]
-    {
+    if state.g_game.mousearray[(state.m_controls.mousebbackward + 1) as usize] {
         forward -= state.g_game.forwardmove[speed as usize];
     }
     if state.m_controls.dclick_use != 0 {
@@ -629,7 +628,8 @@ pub unsafe fn G_BuildTiccmd(state: &mut GameState, mut cmd: *mut ticcmd_t, mut m
             != state.g_game.dclickstate
             && state.g_game.dclicktime > 1_i32
         {
-            state.g_game.dclickstate = state.g_game.mousearray[(state.m_controls.mousebforward + 1) as usize];
+            state.g_game.dclickstate =
+                state.g_game.mousearray[(state.m_controls.mousebforward + 1) as usize];
             if state.g_game.dclickstate {
                 state.g_game.dclicks += 1;
             }
@@ -949,8 +949,7 @@ pub unsafe fn G_Ticker(state: &mut GameState, netcmds: *mut ticcmd_t) {
             cmd = &raw mut state.g_game.players[i as usize].cmd;
             memcpy(
                 cmd as *mut ::core::ffi::c_void,
-                netcmds.offset(i as isize) as *mut ticcmd_t
-                    as *const ::core::ffi::c_void,
+                netcmds.offset(i as isize) as *mut ticcmd_t as *const ::core::ffi::c_void,
                 ::core::mem::size_of::<ticcmd_t>() as size_t,
             );
             if state.g_game.demoplayback {
@@ -998,7 +997,9 @@ pub unsafe fn G_Ticker(state: &mut GameState, netcmds: *mut ticcmd_t) {
     }
     i = 0_i32;
     while i < MAXPLAYERS {
-        if state.g_game.playeringame[i as usize] && state.g_game.players[i as usize].cmd.buttons as i32 & BT_SPECIAL as i32 != 0 {
+        if state.g_game.playeringame[i as usize]
+            && state.g_game.players[i as usize].cmd.buttons as i32 & BT_SPECIAL as i32 != 0
+        {
             match state.g_game.players[i as usize].cmd.buttons as i32 & BT_SPECIALMASK as i32 {
                 1 => {
                     state.g_game.paused = !state.g_game.paused;
@@ -1012,10 +1013,9 @@ pub unsafe fn G_Ticker(state: &mut GameState, netcmds: *mut ticcmd_t) {
                     if state.g_game.savedescription.is_empty() {
                         state.g_game.savedescription = "NET GAME".to_string();
                     }
-                    state.g_game.savegameslot = (state.g_game.players[i as usize].cmd.buttons
-                        as i32
-                        & BTS_SAVEMASK as i32)
-                        >> BTS_SAVESHIFT as i32;
+                    state.g_game.savegameslot =
+                        (state.g_game.players[i as usize].cmd.buttons as i32 & BTS_SAVEMASK as i32)
+                            >> BTS_SAVESHIFT as i32;
                     state.g_game.gameaction = GameAction::ga_savegame;
                 }
                 _ => {}
@@ -1152,7 +1152,8 @@ pub unsafe fn G_CheckSpot(
         return false;
     }
     if state.g_game.bodyqueslot >= BODYQUESIZE {
-        let old_id = state.g_game.bodyque[(state.g_game.bodyqueslot % BODYQUESIZE) as usize].unwrap();
+        let old_id =
+            state.g_game.bodyque[(state.g_game.bodyqueslot % BODYQUESIZE) as usize].unwrap();
         let old_mo = state.p_mobj.mobj_get(old_id).unwrap();
         P_RemoveMobj(state, old_mo);
     }
@@ -1192,7 +1193,7 @@ pub unsafe fn G_CheckSpot(
     let floorheight = state
         .p_setup
         .sector_mut(state.p_setup.subsectors[ss.0 as usize].sector)
-    .floorheight;
+        .floorheight;
     mo = P_SpawnMobj(
         state,
         x + 20 as fixed_t * xa,
@@ -1278,23 +1279,20 @@ pub fn G_ScreenShot(state: &mut GameState) {
 pub static pars: [[i32; 10]; 4] = [
     [0_i32; 10],
     [
-        0_i32, 30_i32, 75_i32, 120_i32, 90_i32, 165_i32, 180_i32, 180_i32,
-        30_i32, 165_i32,
+        0_i32, 30_i32, 75_i32, 120_i32, 90_i32, 165_i32, 180_i32, 180_i32, 30_i32, 165_i32,
     ],
     [
-        0_i32, 90_i32, 90_i32, 90_i32, 120_i32, 90_i32, 360_i32, 240_i32,
-        30_i32, 170_i32,
+        0_i32, 90_i32, 90_i32, 90_i32, 120_i32, 90_i32, 360_i32, 240_i32, 30_i32, 170_i32,
     ],
     [
-        0_i32, 90_i32, 45_i32, 90_i32, 150_i32, 90_i32, 90_i32, 165_i32,
-        30_i32, 135_i32,
+        0_i32, 90_i32, 45_i32, 90_i32, 150_i32, 90_i32, 90_i32, 165_i32, 30_i32, 135_i32,
     ],
 ];
 pub static cpars: [i32; 32] = [
-    30_i32, 90_i32, 120_i32, 120_i32, 90_i32, 150_i32, 120_i32, 120_i32,
-    270_i32, 90_i32, 210_i32, 150_i32, 150_i32, 150_i32, 210_i32, 150_i32,
-    420_i32, 150_i32, 210_i32, 150_i32, 240_i32, 150_i32, 180_i32, 150_i32,
-    150_i32, 300_i32, 330_i32, 420_i32, 300_i32, 180_i32, 120_i32, 30_i32,
+    30_i32, 90_i32, 120_i32, 120_i32, 90_i32, 150_i32, 120_i32, 120_i32, 270_i32, 90_i32, 210_i32,
+    150_i32, 150_i32, 150_i32, 210_i32, 150_i32, 420_i32, 150_i32, 210_i32, 150_i32, 240_i32,
+    150_i32, 180_i32, 150_i32, 150_i32, 300_i32, 330_i32, 420_i32, 300_i32, 180_i32, 120_i32,
+    30_i32,
 ];
 pub fn G_ExitLevel(state: &mut GameState) {
     state.g_game.secretexit = false;
@@ -1604,12 +1602,7 @@ pub fn G_DoNewGame(state: &mut GameState) {
     G_InitNew(state, d_skill, d_episode, d_map);
     state.g_game.gameaction = GameAction::ga_nothing;
 }
-pub fn G_InitNew(
-    state: &mut GameState,
-    mut skill: SkillType,
-    mut episode: i32,
-    mut map: i32,
-) {
+pub fn G_InitNew(state: &mut GameState, mut skill: SkillType, mut episode: i32, mut map: i32) {
     let skytexturename: &str;
     let mut i: i32 = 0;
     if state.g_game.paused {
@@ -1740,10 +1733,16 @@ pub unsafe fn G_WriteDemoTiccmd(state: &mut GameState, mut cmd: *mut ticcmd_t) {
     state.g_game.demo_write_byte((*cmd).forwardmove as byte);
     state.g_game.demo_write_byte((*cmd).sidemove as byte);
     if state.g_game.longtics {
-        state.g_game.demo_write_byte(((*cmd).angleturn as i32 & 0xff_i32) as byte);
-        state.g_game.demo_write_byte(((*cmd).angleturn as i32 >> 8_i32 & 0xff_i32) as byte);
+        state
+            .g_game
+            .demo_write_byte(((*cmd).angleturn as i32 & 0xff_i32) as byte);
+        state
+            .g_game
+            .demo_write_byte(((*cmd).angleturn as i32 >> 8_i32 & 0xff_i32) as byte);
     } else {
-        state.g_game.demo_write_byte(((*cmd).angleturn as i32 >> 8_i32) as byte);
+        state
+            .g_game
+            .demo_write_byte(((*cmd).angleturn as i32 >> 8_i32) as byte);
     }
     state.g_game.demo_write_byte((*cmd).buttons);
     state.g_game.demo_p = demo_start;
@@ -1795,13 +1794,23 @@ pub unsafe fn G_BeginRecording(state: &mut GameState) {
         state.g_game.demo_write_byte(version);
     }
     state.g_game.demo_write_byte(state.g_game.gameskill as byte);
-    state.g_game.demo_write_byte(state.g_game.gameepisode as byte);
+    state
+        .g_game
+        .demo_write_byte(state.g_game.gameepisode as byte);
     state.g_game.demo_write_byte(state.g_game.gamemap as byte);
-    state.g_game.demo_write_byte(state.g_game.deathmatch as byte);
-    state.g_game.demo_write_byte(state.d_main.respawnparm as byte);
+    state
+        .g_game
+        .demo_write_byte(state.g_game.deathmatch as byte);
+    state
+        .g_game
+        .demo_write_byte(state.d_main.respawnparm as byte);
     state.g_game.demo_write_byte(state.d_main.fastparm as byte);
-    state.g_game.demo_write_byte(state.d_main.nomonsters as byte);
-    state.g_game.demo_write_byte(state.g_game.consoleplayer as byte);
+    state
+        .g_game
+        .demo_write_byte(state.d_main.nomonsters as byte);
+    state
+        .g_game
+        .demo_write_byte(state.g_game.consoleplayer as byte);
     i = 0_i32;
     while i < MAXPLAYERS {
         let b = state.g_game.playeringame[i as usize] as byte;
@@ -1826,11 +1835,7 @@ fn DemoVersionDescription(_state: &mut GameState, version: i32) -> String {
     if version >= 0_i32 && version <= 4_i32 {
         "v1.0/v1.1/v1.2".to_string()
     } else {
-        format!(
-            "{}.{} (unknown)",
-            version / 100_i32,
-            version % 100_i32
-        )
+        format!("{}.{} (unknown)", version / 100_i32, version % 100_i32)
     }
 }
 pub unsafe fn G_DoPlayDemo(state: &mut GameState) {
@@ -1909,10 +1914,7 @@ pub unsafe fn G_CheckDemoStatus(state: &mut GameState) -> bool {
         ));
     }
     if state.g_game.demoplayback {
-        W_ReleaseLumpName(
-            &mut state.w_wad,
-            &state.g_game.defdemoname.as_str(),
-        );
+        W_ReleaseLumpName(&mut state.w_wad, &state.g_game.defdemoname.as_str());
         state.g_game.demoplayback = false;
         state.g_game.netdemo = false;
         state.g_game.netgame = false;
@@ -1934,10 +1936,7 @@ pub unsafe fn G_CheckDemoStatus(state: &mut GameState) -> bool {
     if state.g_game.demorecording {
         state.g_game.demo_write_byte(DEMOMARKER as byte);
         let demo_len = state.g_game.demo_p;
-        M_WriteFile(
-            &state.g_game.demoname,
-            &state.g_game.demobuffer[..demo_len],
-        );
+        M_WriteFile(&state.g_game.demoname, &state.g_game.demobuffer[..demo_len]);
         state.g_game.demobuffer = Vec::new();
         state.g_game.demorecording = false;
         I_Error(&format!("Demo {} recorded", state.g_game.demoname));

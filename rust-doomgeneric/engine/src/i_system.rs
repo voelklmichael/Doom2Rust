@@ -50,10 +50,9 @@ pub struct atexit_listentry_s {
 pub const DEFAULT_RAM: i32 = 6;
 pub const MIN_RAM: i32 = 6;
 pub fn I_AtExit(state: &mut ISystemState, mut func: atexit_func_t, mut run_on_error: bool) {
-    state.exit_funcs.push(atexit_listentry_t {
-        func,
-        run_on_error,
-    });
+    state
+        .exit_funcs
+        .push(atexit_listentry_t { func, run_on_error });
 }
 pub fn I_Tactile() {}
 unsafe fn AutoAllocMemory(mut size: *mut i32, mut default_ram: i32, mut min_ram: i32) -> *mut byte {
@@ -198,10 +197,7 @@ pub unsafe fn I_GetMemoryValue(
                     {
                         break;
                     }
-                    M_StrToInt(
-                        state.m_argv.myargv[p as usize].to_str().unwrap(),
-                        &mut val,
-                    );
+                    M_StrToInt(state.m_argv.myargv[p as usize].to_str().unwrap(), &mut val);
                     let fresh0 = i;
                     i += 1;
                     state.i_system.mem_dump_custom[fresh0 as usize] = val as u8;

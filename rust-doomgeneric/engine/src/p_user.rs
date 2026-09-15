@@ -1,6 +1,6 @@
 use crate::d_mode::GameMode_t;
-use crate::d_player::{player_t, PlayerState};
 use crate::d_player::PowerType;
+use crate::d_player::{player_t, PlayerState};
 use crate::d_player::{weapontype_from_raw, weapontype_t};
 use crate::d_player::{CF_NOCLIP, CF_NOMOMENTUM};
 use crate::d_ticcmd::ticcmd_t;
@@ -9,12 +9,12 @@ use crate::doomdef::false_0;
 use crate::doomdef::true_0;
 use crate::game_state::GameState;
 use crate::info::StateId;
-use crate::p_mobj::{mobj_t, StateNum};
 use crate::m_fixed::fixed_t;
 use crate::m_fixed::FixedMul;
 use crate::m_fixed::FRACUNIT;
 use crate::p_map::P_UseLines;
 use crate::p_mobj::P_SetMobjState;
+use crate::p_mobj::{mobj_t, StateNum};
 use crate::p_mobj::{MF_JUSTATTACKED, MF_NOCLIP, MF_SHADOW};
 use crate::p_pspr::P_MovePsprites;
 use crate::p_spec::P_PlayerInSpecialSector;
@@ -135,10 +135,7 @@ pub unsafe fn P_DeathThink(state: &mut GameState, mut player: *mut player_t) {
     state.p_user.onground = (*player_mo).z <= (*player_mo).floorz;
     P_CalcHeight(state, player);
     if (*player).attacker.is_some() && (*player).attacker != (*player).mo {
-        let attacker = state
-            .p_mobj
-            .mobj_get((*player).attacker.unwrap())
-            .unwrap();
+        let attacker = state.p_mobj.mobj_get((*player).attacker.unwrap()).unwrap();
         angle = R_PointToAngle2(
             state,
             (*player_mo).x,
@@ -190,10 +187,10 @@ pub unsafe fn P_PlayerThink(state: &mut GameState, mut player: *mut player_t) {
         P_MovePlayer(state, player);
     }
     P_CalcHeight(state, player);
-    if state.p_setup.sector_mut(
-        state.p_setup.subsectors[(*player_mo).subsector.0 as usize].sector,
-    )
-    .special
+    if state
+        .p_setup
+        .sector_mut(state.p_setup.subsectors[(*player_mo).subsector.0 as usize].sector)
+        .special
         != 0
     {
         P_PlayerInSpecialSector(state, player);
@@ -219,8 +216,12 @@ pub unsafe fn P_PlayerThink(state: &mut GameState, mut player: *mut player_t) {
         {
             newweapon = weapontype_t::wp_supershotgun;
         }
-        if (*player).weaponowned[newweapon as usize] && newweapon as u32 != (*player).readyweapon as u32 && (newweapon as u32 != weapontype_t::wp_plasma as i32 as u32
-                && newweapon as u32 != weapontype_t::wp_bfg as i32 as u32 || state.doomstat.gamemode as u32 != GameMode_t::shareware as i32 as u32) {
+        if (*player).weaponowned[newweapon as usize]
+            && newweapon as u32 != (*player).readyweapon as u32
+            && (newweapon as u32 != weapontype_t::wp_plasma as i32 as u32
+                && newweapon as u32 != weapontype_t::wp_bfg as i32 as u32
+                || state.doomstat.gamemode as u32 != GameMode_t::shareware as i32 as u32)
+        {
             (*player).pendingweapon = newweapon;
         }
     }

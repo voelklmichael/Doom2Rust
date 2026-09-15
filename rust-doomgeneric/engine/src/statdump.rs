@@ -1,8 +1,8 @@
 use crate::game_state::GameState;
 use crate::m_argv::M_ParmExists;
+use crate::mem_compat::memcpy;
 use crate::stdint_types::size_t;
 use crate::wi_stuff::{wbplayerstruct_t, wbstartstruct_t};
-use crate::mem_compat::memcpy;
 pub const MAX_CAPTURES: i32 = 32;
 
 pub struct StatDumpState {
@@ -43,8 +43,8 @@ pub unsafe fn StatCopy(state: &mut GameState, mut stats: *mut wbstartstruct_t) {
     if M_ParmExists(state, "-statdump") && state.statdump.num_captured_stats < MAX_CAPTURES {
         memcpy(
             (&raw mut state.statdump.captured_stats as *mut wbstartstruct_t)
-                .offset(state.statdump.num_captured_stats as isize) as *mut wbstartstruct_t
-                as *mut ::core::ffi::c_void,
+                .offset(state.statdump.num_captured_stats as isize)
+                as *mut wbstartstruct_t as *mut ::core::ffi::c_void,
             stats as *const ::core::ffi::c_void,
             ::core::mem::size_of::<wbstartstruct_t>() as size_t,
         );

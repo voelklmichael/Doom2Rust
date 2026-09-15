@@ -9,6 +9,7 @@ use crate::m_bbox::M_AddToBox;
 use crate::m_fixed::fixed_t;
 use crate::m_misc::M_FileExists;
 use crate::m_misc::M_WriteFile;
+use crate::mem_compat::memcpy;
 use crate::r_data::column_t;
 use crate::stdint_types::size_t;
 use crate::stdint_types::{byte, uint8_t};
@@ -16,7 +17,6 @@ use crate::w_wad::W_CacheLumpName;
 use crate::w_wad::W_CacheLumpNum;
 use crate::w_wad::W_GetNumForName;
 use crate::w_wad::W_LumpLength;
-use crate::mem_compat::memcpy;
 
 pub type vpatchclipfunc_t = Option<unsafe fn(*mut patch_t, i32, i32) -> bool>;
 #[derive(Copy, Clone)]
@@ -63,11 +63,7 @@ impl VVideoState {
 }
 pub fn V_MarkRect(state: &mut GameState, mut x: i32, mut y: i32, mut width: i32, mut height: i32) {
     if state.v_video.dest_screen == state.i_video.I_VideoBuffer.as_mut_ptr() {
-        M_AddToBox(
-            &mut state.v_video.dirtybox,
-            x as fixed_t,
-            y as fixed_t,
-        );
+        M_AddToBox(&mut state.v_video.dirtybox, x as fixed_t, y as fixed_t);
         M_AddToBox(
             &mut state.v_video.dirtybox,
             x as fixed_t + width as fixed_t - 1 as fixed_t,
@@ -137,7 +133,12 @@ pub unsafe fn V_DrawPatch(state: &mut GameState, mut x: i32, mut y: i32, mut pat
     let mut w: i32 = 0;
     y -= (*patch).topoffset as i32;
     x -= (*patch).leftoffset as i32;
-    if state.v_video.patchclip_callback.is_some() && !state.v_video.patchclip_callback.expect("non-null function pointer")(patch, x, y) {
+    if state.v_video.patchclip_callback.is_some()
+        && !state
+            .v_video
+            .patchclip_callback
+            .expect("non-null function pointer")(patch, x, y)
+    {
         return;
     }
     if x < 0_i32
@@ -206,7 +207,12 @@ pub unsafe fn V_DrawPatchFlipped(
     let mut w: i32 = 0;
     y -= (*patch).topoffset as i32;
     x -= (*patch).leftoffset as i32;
-    if state.v_video.patchclip_callback.is_some() && !state.v_video.patchclip_callback.expect("non-null function pointer")(patch, x, y) {
+    if state.v_video.patchclip_callback.is_some()
+        && !state
+            .v_video
+            .patchclip_callback
+            .expect("non-null function pointer")(patch, x, y)
+    {
         return;
     }
     if x < 0_i32
@@ -253,12 +259,7 @@ pub unsafe fn V_DrawPatchFlipped(
         desttop = desttop.offset(1);
     }
 }
-pub fn V_DrawPatchDirect(
-    state: &mut GameState,
-    mut x: i32,
-    mut y: i32,
-    mut patch: *mut patch_t,
-) {
+pub fn V_DrawPatchDirect(state: &mut GameState, mut x: i32, mut y: i32, mut patch: *mut patch_t) {
     unsafe { V_DrawPatch(state, x, y, patch) };
 }
 pub unsafe fn V_DrawTLPatch(
@@ -332,7 +333,9 @@ pub unsafe fn V_DrawXlaPatch(
     let mut w: i32 = 0;
     y -= (*patch).topoffset as i32;
     x -= (*patch).leftoffset as i32;
-    if state.patchclip_callback.is_some() && !state.patchclip_callback.expect("non-null function pointer")(patch, x, y) {
+    if state.patchclip_callback.is_some()
+        && !state.patchclip_callback.expect("non-null function pointer")(patch, x, y)
+    {
         return;
     }
     col = 0_i32;
@@ -743,14 +746,16 @@ pub fn V_DrawMouseSpeedBox(state: &mut IVideoState, mut speed: i32) {
     }
     box_x = SCREENWIDTH - MOUSE_SPEED_BOX_WIDTH - 10_i32;
     box_y = 15_i32;
-    unsafe { V_DrawFilledBox(
-        state,
-        box_x,
-        box_y,
-        MOUSE_SPEED_BOX_WIDTH,
-        MOUSE_SPEED_BOX_HEIGHT,
-        bgcolor,
-    ) };
+    unsafe {
+        V_DrawFilledBox(
+            state,
+            box_x,
+            box_y,
+            MOUSE_SPEED_BOX_WIDTH,
+            MOUSE_SPEED_BOX_HEIGHT,
+            bgcolor,
+        )
+    };
     V_DrawBox(
         state,
         box_x,
@@ -771,42 +776,52 @@ pub fn V_DrawMouseSpeedBox(state: &mut IVideoState, mut speed: i32) {
     if linelen > MOUSE_SPEED_BOX_WIDTH - 1_i32 {
         linelen = MOUSE_SPEED_BOX_WIDTH - 1_i32;
     }
-    unsafe { V_DrawHorizLine(
-        state,
-        box_x + 1_i32,
-        box_y + 4_i32,
-        MOUSE_SPEED_BOX_WIDTH - 2_i32,
-        black,
-    ) };
+    unsafe {
+        V_DrawHorizLine(
+            state,
+            box_x + 1_i32,
+            box_y + 4_i32,
+            MOUSE_SPEED_BOX_WIDTH - 2_i32,
+            black,
+        )
+    };
     if linelen < redline_x {
-        unsafe { V_DrawHorizLine(
-            state,
-            box_x + 1_i32,
-            box_y + MOUSE_SPEED_BOX_HEIGHT / 2_i32,
-            linelen,
-            white,
-        ) };
+        unsafe {
+            V_DrawHorizLine(
+                state,
+                box_x + 1_i32,
+                box_y + MOUSE_SPEED_BOX_HEIGHT / 2_i32,
+                linelen,
+                white,
+            )
+        };
     } else {
-        unsafe { V_DrawHorizLine(
-            state,
-            box_x + 1_i32,
-            box_y + MOUSE_SPEED_BOX_HEIGHT / 2_i32,
-            redline_x,
-            white,
-        ) };
-        unsafe { V_DrawHorizLine(
+        unsafe {
+            V_DrawHorizLine(
+                state,
+                box_x + 1_i32,
+                box_y + MOUSE_SPEED_BOX_HEIGHT / 2_i32,
+                redline_x,
+                white,
+            )
+        };
+        unsafe {
+            V_DrawHorizLine(
+                state,
+                box_x + redline_x,
+                box_y + MOUSE_SPEED_BOX_HEIGHT / 2_i32,
+                linelen - redline_x,
+                yellow,
+            )
+        };
+    }
+    unsafe {
+        V_DrawVertLine(
             state,
             box_x + redline_x,
-            box_y + MOUSE_SPEED_BOX_HEIGHT / 2_i32,
-            linelen - redline_x,
-            yellow,
-        ) };
-    }
-    unsafe { V_DrawVertLine(
-        state,
-        box_x + redline_x,
-        box_y + 1_i32,
-        MOUSE_SPEED_BOX_HEIGHT - 2_i32,
-        red,
-    ) };
+            box_y + 1_i32,
+            MOUSE_SPEED_BOX_HEIGHT - 2_i32,
+            red,
+        )
+    };
 }

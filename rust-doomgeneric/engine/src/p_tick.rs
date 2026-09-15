@@ -192,7 +192,9 @@ pub unsafe fn P_RunThinkers(state: &mut GameState) {
                     }
                     // floormove_t's memory is owned by PSpecState's arena now.
                     ThinkerKind::Floor => {
-                        state.p_spec.dealloc_floor(currentthinker as *mut floormove_t);
+                        state
+                            .p_spec
+                            .dealloc_floor(currentthinker as *mut floormove_t);
                     }
                     // All 4 remaining kinds' memory is owned by PLightsState's
                     // arenas now -- this was the last phase of the track.
@@ -207,7 +209,9 @@ pub unsafe fn P_RunThinkers(state: &mut GameState) {
                             .dealloc_lightflash(currentthinker as *mut lightflash_t);
                     }
                     ThinkerKind::Strobe => {
-                        state.p_lights.dealloc_strobe(currentthinker as *mut strobe_t);
+                        state
+                            .p_lights
+                            .dealloc_strobe(currentthinker as *mut strobe_t);
                     }
                     ThinkerKind::Glow => {
                         state.p_lights.dealloc_glow(currentthinker as *mut glow_t);

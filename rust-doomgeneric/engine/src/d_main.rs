@@ -239,7 +239,9 @@ pub fn D_ProcessEvents(state: &mut GameState) {
         return;
     }
     loop {
-        let Some( mut ev) = D_PopEvent(&mut state.d_event) else {break;};
+        let Some(mut ev) = D_PopEvent(&mut state.d_event) else {
+            break;
+        };
         if unsafe { M_Responder(state, &mut ev) } {
             continue;
         }
@@ -278,9 +280,7 @@ pub unsafe fn D_Display(state: &mut GameState) {
                 if state.am_map.automapactive {
                     AM_Drawer(state);
                 }
-                if wipe
-                    || state.r_draw.viewheight != 200_i32 && state.d_main.d_display_fullscreen
-                {
+                if wipe || state.r_draw.viewheight != 200_i32 && state.d_main.d_display_fullscreen {
                     redrawsbar = true;
                 }
                 if state.d_main.d_display_inhelpscreensstate && !state.m_menu.inhelpscreens {
@@ -516,8 +516,7 @@ pub fn D_PageTicker(state: &mut GameState) {
     }
 }
 pub unsafe fn D_PageDrawer(state: &mut GameState) {
-    let __wcache609_1 =
-        W_CacheLumpName(state, state.d_main.pagename) as *mut patch_t;
+    let __wcache609_1 = W_CacheLumpName(state, state.d_main.pagename) as *mut patch_t;
     V_DrawPatch(state, 0_i32, 0_i32, __wcache609_1);
 }
 pub fn D_AdvanceDemo(state: &mut GameState) {
@@ -550,10 +549,7 @@ pub unsafe fn D_DoAdvanceDemo(state: &mut GameState) {
             }
         }
         1 => {
-            G_DeferedPlayDemo(
-                state,
-                FixedCStr::new("demo1"),
-            );
+            G_DeferedPlayDemo(state, FixedCStr::new("demo1"));
         }
         2 => {
             state.d_main.pagetic = 200_i32;
@@ -561,10 +557,7 @@ pub unsafe fn D_DoAdvanceDemo(state: &mut GameState) {
             state.d_main.pagename = "CREDIT";
         }
         3 => {
-            G_DeferedPlayDemo(
-                state,
-                FixedCStr::new("demo2"),
-            );
+            G_DeferedPlayDemo(state, FixedCStr::new("demo2"));
         }
         4 => {
             state.g_game.gamestate = GameScreenState::GS_DEMOSCREEN;
@@ -582,16 +575,10 @@ pub unsafe fn D_DoAdvanceDemo(state: &mut GameState) {
             }
         }
         5 => {
-            G_DeferedPlayDemo(
-                state,
-                FixedCStr::new("demo3"),
-            );
+            G_DeferedPlayDemo(state, FixedCStr::new("demo3"));
         }
         6 => {
-            G_DeferedPlayDemo(
-                state,
-                FixedCStr::new("demo4"),
-            );
+            G_DeferedPlayDemo(state, FixedCStr::new("demo4"));
         }
         _ => {}
     }
@@ -786,9 +773,7 @@ fn InitGameVersion(state: &mut GameState) {
             }
             I_Error(&format!(
                 "Unknown game version '{}'",
-                state.m_argv.myargv[(p + 1_i32) as usize]
-                    .to_str()
-                    .unwrap(),
+                state.m_argv.myargv[(p + 1_i32) as usize].to_str().unwrap(),
             ));
         }
     } else if state.doomstat.gamemission as u32 == GameMission_t::pack_chex as i32 as u32 {
@@ -934,9 +919,7 @@ pub unsafe fn D_DoomMain(state: &mut GameState) {
         p = M_CheckParmWithArgs(state, "-timedemo", 1_i32);
     }
     if p != 0 {
-        let arg = state.m_argv.myargv[(p + 1_i32) as usize]
-            .to_str()
-            .unwrap();
+        let arg = state.m_argv.myargv[(p + 1_i32) as usize].to_str().unwrap();
         if M_StringEndsWith(arg, ".lmp") {
             file = arg.to_string();
         } else {

@@ -3,9 +3,9 @@ use crate::m_fixed::fixed_t;
 use crate::m_fixed::FRACUNIT;
 use crate::m_fixed::INT_MAX;
 use crate::p_map::P_ChangeSector;
+use crate::p_mobj::sector_t;
 use crate::p_mobj::SectorSpecial;
 use crate::p_mobj::ThinkerFn;
-use crate::p_mobj::sector_t;
 use crate::p_setup::LineId;
 use crate::p_setup::SectorId;
 use crate::p_spec::floormove_t;
@@ -19,8 +19,8 @@ use crate::p_spec::P_FindNextHighestFloor;
 use crate::p_spec::P_FindSectorFromLineTag;
 use crate::p_spec::ML_TWOSIDED;
 use crate::p_tick::P_AddThinker;
-use crate::p_tick::ThinkerKind;
 use crate::p_tick::P_RemoveThinker;
+use crate::p_tick::ThinkerKind;
 use crate::r_defs::side_t;
 use crate::s_sound::S_StartSound;
 use crate::s_sound::SoundOrigin;
@@ -174,7 +174,11 @@ pub unsafe fn T_MoveFloor(state: &mut GameState, mut floor: *mut floormove_t) {
         (*floor).direction,
     );
     if state.p_tick.leveltime & 7_i32 == 0 {
-        S_StartSound(state, SoundOrigin::Sector((*floor).sector), sfx_stnmov as i32);
+        S_StartSound(
+            state,
+            SoundOrigin::Sector((*floor).sector),
+            sfx_stnmov as i32,
+        );
     }
     if res == ResultE::pastdest {
         (*sec).specialdata = None;
@@ -196,14 +200,14 @@ pub unsafe fn T_MoveFloor(state: &mut GameState, mut floor: *mut floormove_t) {
             }
         }
         P_RemoveThinker(&raw mut (*floor).thinker);
-        S_StartSound(state, SoundOrigin::Sector((*floor).sector), sfx_pstop as i32);
+        S_StartSound(
+            state,
+            SoundOrigin::Sector((*floor).sector),
+            sfx_pstop as i32,
+        );
     }
 }
-pub unsafe fn EV_DoFloor(
-    state: &mut GameState,
-    mut line: LineId,
-    mut floortype: FloorE,
-) -> i32 {
+pub unsafe fn EV_DoFloor(state: &mut GameState, mut line: LineId, mut floortype: FloorE) -> i32 {
     let mut secnum: i32 = 0;
     let mut rtn: i32 = 0;
     let mut i: i32 = 0;
@@ -278,25 +282,24 @@ pub unsafe fn EV_DoFloor(
                 (*floor).direction = 1_i32;
                 (*floor).sector = SectorId(secnum as u32);
                 (*floor).speed = FLOORSPEED as fixed_t;
-                (*floor).floordestheight =
-                    ((*sec).floorheight + 24_i32 * FRACUNIT) as fixed_t;
+                (*floor).floordestheight = ((*sec).floorheight + 24_i32 * FRACUNIT) as fixed_t;
                 current_block_84 = 15514718523126015390;
             }
             FloorE::raiseFloor512 => {
                 (*floor).direction = 1_i32;
                 (*floor).sector = SectorId(secnum as u32);
                 (*floor).speed = FLOORSPEED as fixed_t;
-                (*floor).floordestheight =
-                    ((*sec).floorheight + 512_i32 * FRACUNIT) as fixed_t;
+                (*floor).floordestheight = ((*sec).floorheight + 512_i32 * FRACUNIT) as fixed_t;
                 current_block_84 = 15514718523126015390;
             }
             FloorE::raiseFloor24AndChange => {
                 (*floor).direction = 1_i32;
                 (*floor).sector = SectorId(secnum as u32);
                 (*floor).speed = FLOORSPEED as fixed_t;
-                (*floor).floordestheight =
-                    ((*sec).floorheight + 24_i32 * FRACUNIT) as fixed_t;
-                let fsec = state.p_setup.sector_mut(state.p_setup.line(line).frontsector.unwrap());
+                (*floor).floordestheight = ((*sec).floorheight + 24_i32 * FRACUNIT) as fixed_t;
+                let fsec = state
+                    .p_setup
+                    .sector_mut(state.p_setup.line(line).frontsector.unwrap());
                 (*sec).floorpic = fsec.floorpic;
                 (*sec).special = fsec.special;
                 current_block_84 = 15514718523126015390;
@@ -374,20 +377,15 @@ pub unsafe fn EV_DoFloor(
                 if (*floor).floordestheight > (*sec).ceilingheight {
                     (*floor).floordestheight = (*sec).ceilingheight;
                 }
-                (*floor).floordestheight -= 8_i32
-                    * FRACUNIT
-                    * (floortype == FloorE::raiseFloorCrush) as i32;
+                (*floor).floordestheight -=
+                    8_i32 * FRACUNIT * (floortype == FloorE::raiseFloorCrush) as i32;
             }
             _ => {}
         }
     }
     rtn
 }
-pub unsafe fn EV_BuildStairs(
-    state: &mut GameState,
-    mut line: LineId,
-    mut type_0: StairE,
-) -> i32 {
+pub unsafe fn EV_BuildStairs(state: &mut GameState, mut line: LineId, mut type_0: StairE) -> i32 {
     let mut secnum: i32 = 0;
     let mut height: i32 = 0;
     let mut i: i32 = 0;
@@ -450,7 +448,11 @@ pub unsafe fn EV_BuildStairs(
                                 sec = tsec;
                                 secnum = newsecnum;
                                 floor = state.p_spec.spawn_floor(floormove_t::default());
-                                let floor_id = P_AddThinker(state, &raw mut (*floor).thinker, ThinkerKind::Floor);
+                                let floor_id = P_AddThinker(
+                                    state,
+                                    &raw mut (*floor).thinker,
+                                    ThinkerKind::Floor,
+                                );
                                 (*sec).specialdata = Some(SectorSpecial::Floor(floor_id));
                                 (*floor).thinker.function = ThinkerFn::Floor(T_MoveFloor);
                                 (*floor).direction = 1_i32;

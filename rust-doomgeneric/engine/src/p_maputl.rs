@@ -299,13 +299,13 @@ pub fn P_BoxOnLineSide(state: &mut GameState, tmbox: [fixed_t; 4], mut ld: LineI
             );
         }
         3 => {
-            p1 = P_PointOnLineSide(
+            p1 = P_PointOnLineSide(state, tmbox[BOXRIGHT as usize], tmbox[BOXTOP as usize], ld);
+            p2 = P_PointOnLineSide(
                 state,
-                tmbox[BOXRIGHT as usize],
-                tmbox[BOXTOP as usize],
+                tmbox[BOXLEFT as usize],
+                tmbox[BOXBOTTOM as usize],
                 ld,
             );
-            p2 = P_PointOnLineSide(state, tmbox[BOXLEFT as usize], tmbox[BOXBOTTOM as usize], ld);
         }
         _ => {}
     }
@@ -416,7 +416,7 @@ pub unsafe fn P_UnsetThingPosition(state: &mut GameState, mut thing: *mut mobj_t
             state
                 .p_setup
                 .sector_mut(state.p_setup.subsectors[(*thing).subsector.0 as usize].sector)
-            .thinglist = (*thing).snext;
+                .thinglist = (*thing).snext;
         }
     }
     if (*thing).flags & MF_NOBLOCKMAP as i32 == 0 {
@@ -503,8 +503,7 @@ pub unsafe fn P_BlockLinesIterator(
     let mut offset: i32 = 0;
     let mut list: *mut i16 = ::core::ptr::null_mut::<i16>();
     let mut ld: LineId;
-    if x < 0_i32 || y < 0_i32 || x >= state.p_setup.bmapwidth || y >= state.p_setup.bmapheight
-    {
+    if x < 0_i32 || y < 0_i32 || x >= state.p_setup.bmapwidth || y >= state.p_setup.bmapheight {
         return true;
     }
     offset = y * state.p_setup.bmapwidth + x;
@@ -532,8 +531,7 @@ pub unsafe fn P_BlockThingsIterator(
     mut y: i32,
     mut func: Option<unsafe fn(&mut GameState, MobjId) -> bool>,
 ) -> bool {
-    if x < 0_i32 || y < 0_i32 || x >= state.p_setup.bmapwidth || y >= state.p_setup.bmapheight
-    {
+    if x < 0_i32 || y < 0_i32 || x >= state.p_setup.bmapwidth || y >= state.p_setup.bmapheight {
         return true;
     }
     let mut cursor = state.p_setup.blocklinks[(y * state.p_setup.bmapwidth + x) as usize];
@@ -840,20 +838,28 @@ pub fn P_PathTraverse(
     mapy = yt1;
     count = 0_i32;
     while count < 64_i32 {
-        if flags & PT_ADDLINES != 0 && !unsafe { P_BlockLinesIterator(
-                state,
-                mapx,
-                mapy,
-                Some(PIT_AddLineIntercepts as unsafe fn(&mut GameState, LineId) -> bool),
-            ) } {
+        if flags & PT_ADDLINES != 0
+            && !unsafe {
+                P_BlockLinesIterator(
+                    state,
+                    mapx,
+                    mapy,
+                    Some(PIT_AddLineIntercepts as unsafe fn(&mut GameState, LineId) -> bool),
+                )
+            }
+        {
             return false;
         }
-        if flags & PT_ADDTHINGS != 0 && !unsafe { P_BlockThingsIterator(
-                state,
-                mapx,
-                mapy,
-                Some(PIT_AddThingIntercepts as unsafe fn(&mut GameState, MobjId) -> bool),
-            ) } {
+        if flags & PT_ADDTHINGS != 0
+            && !unsafe {
+                P_BlockThingsIterator(
+                    state,
+                    mapx,
+                    mapy,
+                    Some(PIT_AddThingIntercepts as unsafe fn(&mut GameState, MobjId) -> bool),
+                )
+            }
+        {
             return false;
         }
         if mapx == xt2 && mapy == yt2 {

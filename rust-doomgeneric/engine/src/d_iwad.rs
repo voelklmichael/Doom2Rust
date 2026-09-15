@@ -1,5 +1,5 @@
-use crate::d_mode::GameMode_t;
 use crate::d_mode::GameMission_t;
+use crate::d_mode::GameMode_t;
 use crate::game_state::GameState;
 use crate::i_system::I_Error;
 use crate::m_argv::M_CheckParmWithArgs;
@@ -143,11 +143,7 @@ fn check_directory_has_iwad(dir: &str, iwadname: &str) -> Option<String> {
         None
     }
 }
-fn search_directory_for_iwad(
-    dir: &str,
-    mask: i32,
-    mission: &mut GameMission_t,
-) -> Option<String> {
+fn search_directory_for_iwad(dir: &str, mask: i32, mission: &mut GameMission_t) -> Option<String> {
     for iwad in iwads.iter() {
         if 1_i32 << iwad.mission as i32 & mask == 0_i32 {
             continue;

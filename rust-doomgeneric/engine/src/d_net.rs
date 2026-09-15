@@ -91,8 +91,8 @@ unsafe fn SaveGameSettings(state: &mut GameState, mut settings: *mut net_gameset
     (*settings).fast_monsters = state.d_main.fastparm as i32;
     (*settings).respawn_monsters = state.d_main.respawnparm as i32;
     (*settings).timelimit = state.g_game.timelimit;
-    (*settings).lowres_turn = (M_CheckParm(state, "-record") > 0_i32
-        && M_CheckParm(state, "-longtics") == 0_i32) as i32;
+    (*settings).lowres_turn =
+        (M_CheckParm(state, "-record") > 0_i32 && M_CheckParm(state, "-longtics") == 0_i32) as i32;
 }
 unsafe fn InitConnectData(state: &mut GameState, mut connect_data: *mut net_connect_data_t) {
     (*connect_data).max_players = MAXPLAYERS;
@@ -107,8 +107,8 @@ unsafe fn InitConnectData(state: &mut GameState, mut connect_data: *mut net_conn
     }
     (*connect_data).gamemode = state.doomstat.gamemode as i32;
     (*connect_data).gamemission = state.doomstat.gamemission as i32;
-    (*connect_data).lowres_turn = (M_CheckParm(state, "-record") > 0_i32
-        && M_CheckParm(state, "-longtics") == 0_i32) as i32;
+    (*connect_data).lowres_turn =
+        (M_CheckParm(state, "-record") > 0_i32 && M_CheckParm(state, "-longtics") == 0_i32) as i32;
     W_Checksum(state, &raw mut (*connect_data).wad_sha1sum as *mut byte);
     (*connect_data).is_freedoom = (W_CheckNumForName(&mut state.w_wad, "FREEDOOM") >= 0_i32) as i32;
 }

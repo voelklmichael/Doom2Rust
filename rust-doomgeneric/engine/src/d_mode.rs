@@ -325,35 +325,15 @@ pub fn D_IsEpisodeMap(mut mission: GameMission_t) -> bool {
 }
 pub fn D_GameMissionString(mission: GameMission_t) -> &'static str {
     match mission {
-        GameMission_t::doom => {
-            "doom"
-        }
-        GameMission_t::doom2 => {
-            "doom2"
-        }
-        GameMission_t::pack_tnt => {
-            "tnt"
-        }
-        GameMission_t::pack_plut => {
-            "plutonia"
-        }
-        GameMission_t::pack_hacx => {
-            "hacx"
-        }
-        GameMission_t::pack_chex => {
-            "chex"
-        }
-        GameMission_t::heretic => {
-            "heretic"
-        }
-        GameMission_t::hexen => {
-            "hexen"
-        }
-        GameMission_t::strife => {
-            "strife"
-        }
-        GameMission_t::none => {
-            "none"
-        }
+        GameMission_t::doom => "doom",
+        GameMission_t::doom2 => "doom2",
+        GameMission_t::pack_tnt => "tnt",
+        GameMission_t::pack_plut => "plutonia",
+        GameMission_t::pack_hacx => "hacx",
+        GameMission_t::pack_chex => "chex",
+        GameMission_t::heretic => "heretic",
+        GameMission_t::hexen => "hexen",
+        GameMission_t::strife => "strife",
+        GameMission_t::none => "none",
     }
 }

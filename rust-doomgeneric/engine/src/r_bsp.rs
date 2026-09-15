@@ -218,30 +218,68 @@ pub unsafe fn R_AddLine(state: &mut GameState, mut line: SegId) {
     }
     state.r_bsp.backsector = state.p_setup.seg(line).backsector;
     if state.r_bsp.backsector.is_some() {
-        if !(state.p_setup.sector_mut(state.r_bsp.backsector.unwrap()).ceilingheight
-            <= state.p_setup.sector_mut(state.r_bsp.frontsector.unwrap()).floorheight
-            || state.p_setup.sector_mut(state.r_bsp.backsector.unwrap()).floorheight
-                >= state.p_setup.sector_mut(state.r_bsp.frontsector.unwrap()).ceilingheight)
+        if !(state
+            .p_setup
+            .sector_mut(state.r_bsp.backsector.unwrap())
+            .ceilingheight
+            <= state
+                .p_setup
+                .sector_mut(state.r_bsp.frontsector.unwrap())
+                .floorheight
+            || state
+                .p_setup
+                .sector_mut(state.r_bsp.backsector.unwrap())
+                .floorheight
+                >= state
+                    .p_setup
+                    .sector_mut(state.r_bsp.frontsector.unwrap())
+                    .ceilingheight)
         {
-            if !(state.p_setup.sector_mut(state.r_bsp.backsector.unwrap()).ceilingheight
-                != state.p_setup.sector_mut(state.r_bsp.frontsector.unwrap()).ceilingheight
-                || state.p_setup.sector_mut(state.r_bsp.backsector.unwrap()).floorheight
-                    != state.p_setup.sector_mut(state.r_bsp.frontsector.unwrap()).floorheight)
+            if !(state
+                .p_setup
+                .sector_mut(state.r_bsp.backsector.unwrap())
+                .ceilingheight
+                != state
+                    .p_setup
+                    .sector_mut(state.r_bsp.frontsector.unwrap())
+                    .ceilingheight
+                || state
+                    .p_setup
+                    .sector_mut(state.r_bsp.backsector.unwrap())
+                    .floorheight
+                    != state
+                        .p_setup
+                        .sector_mut(state.r_bsp.frontsector.unwrap())
+                        .floorheight)
             {
-                if state.p_setup.sector_mut(state.r_bsp.backsector.unwrap()).ceilingpic as i32
-                    == state.p_setup.sector_mut(state.r_bsp.frontsector.unwrap()).ceilingpic
-                        as i32
-                    && state.p_setup.sector_mut(state.r_bsp.backsector.unwrap()).floorpic as i32
-                        == state.p_setup.sector_mut(state.r_bsp.frontsector.unwrap()).floorpic
-                            as i32
-                    && state.p_setup.sector_mut(state.r_bsp.backsector.unwrap()).lightlevel
-                        as i32
-                        == state.p_setup.sector_mut(state.r_bsp.frontsector.unwrap()).lightlevel
-                            as i32
+                if state
+                    .p_setup
+                    .sector_mut(state.r_bsp.backsector.unwrap())
+                    .ceilingpic as i32
+                    == state
+                        .p_setup
+                        .sector_mut(state.r_bsp.frontsector.unwrap())
+                        .ceilingpic as i32
+                    && state
+                        .p_setup
+                        .sector_mut(state.r_bsp.backsector.unwrap())
+                        .floorpic as i32
+                        == state
+                            .p_setup
+                            .sector_mut(state.r_bsp.frontsector.unwrap())
+                            .floorpic as i32
+                    && state
+                        .p_setup
+                        .sector_mut(state.r_bsp.backsector.unwrap())
+                        .lightlevel as i32
+                        == state
+                            .p_setup
+                            .sector_mut(state.r_bsp.frontsector.unwrap())
+                            .lightlevel as i32
                     && state
                         .p_setup
                         .side_mut(state.p_setup.seg(state.r_bsp.curline).sidedef)
-                    .midtexture as i32
+                        .midtexture as i32
                         == 0_i32
                 {
                     return;
@@ -376,7 +414,8 @@ pub unsafe fn R_Subsector(state: &mut GameState, mut num: i32) {
             (*frontsector).ceilingpic as i32,
             (*frontsector).lightlevel as i32,
         );
-        state.r_plane.ceilingplane = Some(R_FindPlane(state, ceilingheight, ceilingpic, lightlevel));
+        state.r_plane.ceilingplane =
+            Some(R_FindPlane(state, ceilingheight, ceilingpic, lightlevel));
     } else {
         state.r_plane.ceilingplane = None;
     }

@@ -99,7 +99,10 @@ fn saveg_read8(state: &mut GameState) -> byte {
         .as_mut()
         .unwrap()
         .read(&mut result)
-        .unwrap_or(0) < 1 && !state.p_saveg.savegame_error {
+        .unwrap_or(0)
+        < 1
+        && !state.p_saveg.savegame_error
+    {
         eprintln!("saveg_read8: Unexpected end of file while reading save game");
         state.p_saveg.savegame_error = true;
     }
@@ -112,7 +115,10 @@ fn saveg_write8(state: &mut GameState, value: byte) {
         .as_mut()
         .unwrap()
         .write(&[value])
-        .unwrap_or(0) < 1 && !state.p_saveg.savegame_error {
+        .unwrap_or(0)
+        < 1
+        && !state.p_saveg.savegame_error
+    {
         eprintln!("saveg_write8: Error while writing save game");
         state.p_saveg.savegame_error = true;
     }
@@ -763,14 +769,8 @@ pub fn P_WriteSaveGameHeader(state: &mut GameState, description: &str) {
         saveg_write8(state, state.g_game.playeringame[i as usize] as byte);
         i += 1;
     }
-    saveg_write8(
-        state,
-        (state.p_tick.leveltime >> 16_i32 & 0xff_i32) as byte,
-    );
-    saveg_write8(
-        state,
-        (state.p_tick.leveltime >> 8_i32 & 0xff_i32) as byte,
-    );
+    saveg_write8(state, (state.p_tick.leveltime >> 16_i32 & 0xff_i32) as byte);
+    saveg_write8(state, (state.p_tick.leveltime >> 8_i32 & 0xff_i32) as byte);
     saveg_write8(state, (state.p_tick.leveltime & 0xff_i32) as byte);
 }
 pub fn P_ReadSaveGameHeader(state: &mut GameState) -> bool {
@@ -1026,11 +1026,11 @@ pub unsafe fn P_UnArchiveThinkers(state: &mut GameState) {
                 (*mobj).floorz = state
                     .p_setup
                     .sector_mut(state.p_setup.subsectors[(*mobj).subsector.0 as usize].sector)
-                .floorheight;
+                    .floorheight;
                 (*mobj).ceilingz = state
                     .p_setup
                     .sector_mut(state.p_setup.subsectors[(*mobj).subsector.0 as usize].sector)
-                .ceilingheight;
+                    .ceilingheight;
                 (*mobj).thinker.function = ThinkerFn::Mobj(P_MobjThinker);
                 P_AddThinker(state, &raw mut (*mobj).thinker, ThinkerKind::Mobj);
             }

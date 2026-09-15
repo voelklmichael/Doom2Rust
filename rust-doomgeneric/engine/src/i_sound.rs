@@ -119,8 +119,10 @@ fn InitSfxModule(state: &mut ISoundState, use_sfx_prefix: bool) {
         let Some(module) = state.sound_modules[i] else {
             break;
         };
-        if SndDeviceInList(snddevice_from_raw(state.snd_sfxdevice), module.sound_devices)
-            && (module.Init.expect("non-null function pointer"))(use_sfx_prefix)
+        if SndDeviceInList(
+            snddevice_from_raw(state.snd_sfxdevice),
+            module.sound_devices,
+        ) && (module.Init.expect("non-null function pointer"))(use_sfx_prefix)
         {
             state.sound_module = Some(module);
             return;

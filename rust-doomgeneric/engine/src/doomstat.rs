@@ -1,6 +1,6 @@
-use crate::d_mode::GameVersion;
 use crate::d_mode::GameMission_t;
 use crate::d_mode::GameMode_t;
+use crate::d_mode::GameVersion;
 pub struct DoomstatState {
     pub gamemode: GameMode_t,
     pub gamemission: GameMission_t,

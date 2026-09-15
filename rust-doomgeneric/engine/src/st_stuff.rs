@@ -2,12 +2,12 @@ use crate::am_map::{AM_MSGENTERED, AM_MSGEXITED, AM_MSGHEADER};
 use crate::d_event::event_t;
 use crate::d_event::EvType;
 use crate::d_items::weaponinfo;
-use crate::d_mode::GameMode_t;
 use crate::d_mode::GameMission_t;
+use crate::d_mode::GameMode_t;
 use crate::d_mode::{GameVersion, SkillType};
 use crate::d_player::PlayerId;
-use crate::d_player::{ammotype_t, NUMAMMO};
 use crate::d_player::PowerType;
+use crate::d_player::{ammotype_t, NUMAMMO};
 use crate::d_player::{weapontype_t, NUMWEAPONS};
 use crate::d_player::{CF_GODMODE, CF_NOCLIP};
 use crate::doomdef::true_0;
@@ -36,8 +36,8 @@ use crate::st_lib::STlib_updateBinIcon;
 use crate::st_lib::STlib_updateMultIcon;
 use crate::st_lib::STlib_updateNum;
 use crate::st_lib::STlib_updatePercent;
-use crate::st_lib::{st_binicon_t, st_multicon_t, st_number_t, st_percent_t};
 use crate::st_lib::StDigitSet;
+use crate::st_lib::{st_binicon_t, st_multicon_t, st_number_t, st_percent_t};
 use crate::stdint_types::byte;
 use crate::stdint_types::size_t;
 use crate::tables::angle_t;
@@ -161,7 +161,7 @@ impl StStuffState {
                     y: 0,
                     width: 0,
                     oldnum: 0,
-                            p: StDigitSet::TallNum,
+                    p: StDigitSet::TallNum,
                     data: 0,
                 },
                 p: -1,
@@ -201,7 +201,7 @@ impl StStuffState {
                     y: 0,
                     width: 0,
                     oldnum: 0,
-                            p: StDigitSet::TallNum,
+                    p: StDigitSet::TallNum,
                     data: 0,
                 },
                 p: -1,
@@ -427,7 +427,10 @@ pub const ST_MAXAMMO3X: i32 = 314;
 pub const ST_MAXAMMO3Y: i32 = 185;
 pub fn ST_refreshBackground(state: &mut GameState) {
     if state.st_stuff.st_statusbaron {
-        V_UseBuffer(&mut state.v_video, state.st_stuff.st_backing_screen.as_mut_ptr());
+        V_UseBuffer(
+            &mut state.v_video,
+            state.st_stuff.st_backing_screen.as_mut_ptr(),
+        );
         let sbar_patch = V_CachePatchNum(state, state.st_stuff.sbar);
         unsafe { V_DrawPatch(state, ST_X, 0_i32, sbar_patch) };
         if state.g_game.netgame {
@@ -436,22 +439,23 @@ pub fn ST_refreshBackground(state: &mut GameState) {
         }
         V_RestoreBuffer(state);
         let st_backing_screen = state.st_stuff.st_backing_screen.as_mut_ptr();
-        unsafe { V_CopyRect(state,
-            ST_X,
-            0_i32,
-            st_backing_screen,
-            ST_WIDTH,
-            ST_HEIGHT,
-            ST_X,
-            ST_Y,
-        ) };
+        unsafe {
+            V_CopyRect(
+                state,
+                ST_X,
+                0_i32,
+                st_backing_screen,
+                ST_WIDTH,
+                ST_HEIGHT,
+                ST_X,
+                ST_Y,
+            )
+        };
     }
 }
 pub unsafe fn ST_Responder(state: &mut GameState, mut ev: &event_t) -> bool {
     let mut i: i32 = 0;
-    if ev.type_0 == EvType::ev_keyup
-        && ev.data1 as u32 & 0xffff0000_u32 == AM_MSGHEADER as u32
-    {
+    if ev.type_0 == EvType::ev_keyup && ev.data1 as u32 & 0xffff0000_u32 == AM_MSGHEADER as u32 {
         match ev.data1 {
             AM_MSGENTERED => {
                 state.st_stuff.st_gamestate = StStateEnum::AutomapState;
@@ -476,9 +480,11 @@ pub unsafe fn ST_Responder(state: &mut GameState, mut ev: &event_t) -> bool {
                         (*mo).health = 100_i32;
                     }
                     (*state.g_game.player_mut(state.st_stuff.plyr)).health = deh_god_mode_health;
-                    (*state.g_game.player_mut(state.st_stuff.plyr)).message = Some("Degreelessness Mode On".to_string());
+                    (*state.g_game.player_mut(state.st_stuff.plyr)).message =
+                        Some("Degreelessness Mode On".to_string());
                 } else {
-                    (*state.g_game.player_mut(state.st_stuff.plyr)).message = Some("Degreelessness Mode Off".to_string());
+                    (*state.g_game.player_mut(state.st_stuff.plyr)).message =
+                        Some("Degreelessness Mode Off".to_string());
                 }
             } else if cht_CheckCheat(
                 &raw mut state.st_stuff.cheat_ammonokey,
@@ -498,7 +504,8 @@ pub unsafe fn ST_Responder(state: &mut GameState, mut ev: &event_t) -> bool {
                         (*state.g_game.player_mut(state.st_stuff.plyr)).maxammo[i as usize];
                     i += 1;
                 }
-                (*state.g_game.player_mut(state.st_stuff.plyr)).message = Some("Ammo (no keys) Added".to_string());
+                (*state.g_game.player_mut(state.st_stuff.plyr)).message =
+                    Some("Ammo (no keys) Added".to_string());
             } else if cht_CheckCheat(
                 &raw mut state.st_stuff.cheat_ammo,
                 ev.data2 as ::core::ffi::c_char,
@@ -522,7 +529,8 @@ pub unsafe fn ST_Responder(state: &mut GameState, mut ev: &event_t) -> bool {
                     (*state.g_game.player_mut(state.st_stuff.plyr)).cards[i as usize] = true;
                     i += 1;
                 }
-                (*state.g_game.player_mut(state.st_stuff.plyr)).message = Some("Very Happy Ammo Added".to_string());
+                (*state.g_game.player_mut(state.st_stuff.plyr)).message =
+                    Some("Very Happy Ammo Added".to_string());
             } else if cht_CheckCheat(
                 &raw mut state.st_stuff.cheat_mus,
                 ev.data2 as ::core::ffi::c_char,
@@ -530,7 +538,8 @@ pub unsafe fn ST_Responder(state: &mut GameState, mut ev: &event_t) -> bool {
             {
                 let mut buf: [::core::ffi::c_char; 3] = [0; 3];
                 let mut musnum: i32 = 0;
-                (*state.g_game.player_mut(state.st_stuff.plyr)).message = Some("Music Change".to_string());
+                (*state.g_game.player_mut(state.st_stuff.plyr)).message =
+                    Some("Music Change".to_string());
                 cht_GetParam(
                     &raw mut state.st_stuff.cheat_mus,
                     &raw mut buf as *mut ::core::ffi::c_char,
@@ -538,17 +547,13 @@ pub unsafe fn ST_Responder(state: &mut GameState, mut ev: &event_t) -> bool {
                 if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32
                     || !state.doomstat.gameversion.is_ultimate_or_higher()
                 {
-                    musnum = mus_runnin as i32
-                        + (buf[0] as i32 - '0' as i32) * 10_i32
-                        + buf[1] as i32
-                        - '0' as i32
-                        - 1_i32;
-                    if (buf[0] as i32 - '0' as i32) * 10_i32
-                        + buf[1] as i32
-                        - '0' as i32
-                        > 35_i32
-                    {
-                        (*state.g_game.player_mut(state.st_stuff.plyr)).message = Some("IMPOSSIBLE SELECTION".to_string());
+                    musnum =
+                        mus_runnin as i32 + (buf[0] as i32 - '0' as i32) * 10_i32 + buf[1] as i32
+                            - '0' as i32
+                            - 1_i32;
+                    if (buf[0] as i32 - '0' as i32) * 10_i32 + buf[1] as i32 - '0' as i32 > 35_i32 {
+                        (*state.g_game.player_mut(state.st_stuff.plyr)).message =
+                            Some("IMPOSSIBLE SELECTION".to_string());
                     } else {
                         S_ChangeMusic(state, musnum, 1_i32);
                     }
@@ -556,17 +561,16 @@ pub unsafe fn ST_Responder(state: &mut GameState, mut ev: &event_t) -> bool {
                     musnum = mus_e1m1 as i32
                         + (buf[0] as i32 - '1' as i32) * 9_i32
                         + (buf[1] as i32 - '1' as i32);
-                    if (buf[0] as i32 - '1' as i32) * 9_i32
-                        + buf[1] as i32
-                        - '1' as i32
-                        > 31_i32
-                    {
-                        (*state.g_game.player_mut(state.st_stuff.plyr)).message = Some("IMPOSSIBLE SELECTION".to_string());
+                    if (buf[0] as i32 - '1' as i32) * 9_i32 + buf[1] as i32 - '1' as i32 > 31_i32 {
+                        (*state.g_game.player_mut(state.st_stuff.plyr)).message =
+                            Some("IMPOSSIBLE SELECTION".to_string());
                     } else {
                         S_ChangeMusic(state, musnum, 1_i32);
                     }
                 }
-            } else if (if state.doomstat.gamemission as u32 == GameMission_t::pack_chex as i32 as u32 {
+            } else if (if state.doomstat.gamemission as u32
+                == GameMission_t::pack_chex as i32 as u32
+            {
                 GameMission_t::doom as i32 as u32
             } else if state.doomstat.gamemission as u32 == GameMission_t::pack_hacx as i32 as u32 {
                 GameMission_t::doom2 as i32 as u32
@@ -579,7 +583,9 @@ pub unsafe fn ST_Responder(state: &mut GameState, mut ev: &event_t) -> bool {
                 ) != 0
                 || (if state.doomstat.gamemission as u32 == GameMission_t::pack_chex as i32 as u32 {
                     GameMission_t::doom as i32 as u32
-                } else if state.doomstat.gamemission as u32 == GameMission_t::pack_hacx as i32 as u32 {
+                } else if state.doomstat.gamemission as u32
+                    == GameMission_t::pack_hacx as i32 as u32
+                {
                     GameMission_t::doom2 as i32 as u32
                 } else {
                     state.doomstat.gamemission as u32
@@ -591,9 +597,11 @@ pub unsafe fn ST_Responder(state: &mut GameState, mut ev: &event_t) -> bool {
             {
                 (*state.g_game.player_mut(state.st_stuff.plyr)).cheats ^= CF_NOCLIP;
                 if (*state.g_game.player_mut(state.st_stuff.plyr)).cheats & CF_NOCLIP != 0 {
-                    (*state.g_game.player_mut(state.st_stuff.plyr)).message = Some("No Clipping Mode ON".to_string());
+                    (*state.g_game.player_mut(state.st_stuff.plyr)).message =
+                        Some("No Clipping Mode ON".to_string());
                 } else {
-                    (*state.g_game.player_mut(state.st_stuff.plyr)).message = Some("No Clipping Mode OFF".to_string());
+                    (*state.g_game.player_mut(state.st_stuff.plyr)).message =
+                        Some("No Clipping Mode OFF".to_string());
                 }
             }
             i = 0_i32;
@@ -612,7 +620,8 @@ pub unsafe fn ST_Responder(state: &mut GameState, mut ev: &event_t) -> bool {
                     } else {
                         (*state.g_game.player_mut(state.st_stuff.plyr)).powers[i as usize] = 0_i32;
                     }
-                    (*state.g_game.player_mut(state.st_stuff.plyr)).message = Some("Power-up Toggled".to_string());
+                    (*state.g_game.player_mut(state.st_stuff.plyr)).message =
+                        Some("Power-up Toggled".to_string());
                 }
                 i += 1;
             }
@@ -622,15 +631,19 @@ pub unsafe fn ST_Responder(state: &mut GameState, mut ev: &event_t) -> bool {
                 ev.data2 as ::core::ffi::c_char,
             ) != 0
             {
-                (*state.g_game.player_mut(state.st_stuff.plyr)).message = Some("inVuln, Str, Inviso, Rad, Allmap, or Lite-amp".to_string());
+                (*state.g_game.player_mut(state.st_stuff.plyr)).message =
+                    Some("inVuln, Str, Inviso, Rad, Allmap, or Lite-amp".to_string());
             } else if cht_CheckCheat(
                 &raw mut state.st_stuff.cheat_choppers,
                 ev.data2 as ::core::ffi::c_char,
             ) != 0
             {
-                (*state.g_game.player_mut(state.st_stuff.plyr)).weaponowned[weapontype_t::wp_chainsaw as usize] = true;
-                (*state.g_game.player_mut(state.st_stuff.plyr)).powers[PowerType::pw_invulnerability as usize] = true_0;
-                (*state.g_game.player_mut(state.st_stuff.plyr)).message = Some("... doesn't suck - GM".to_string());
+                (*state.g_game.player_mut(state.st_stuff.plyr)).weaponowned
+                    [weapontype_t::wp_chainsaw as usize] = true;
+                (*state.g_game.player_mut(state.st_stuff.plyr)).powers
+                    [PowerType::pw_invulnerability as usize] = true_0;
+                (*state.g_game.player_mut(state.st_stuff.plyr)).message =
+                    Some("... doesn't suck - GM".to_string());
             } else if cht_CheckCheat(
                 &raw mut state.st_stuff.cheat_mypos,
                 ev.data2 as ::core::ffi::c_char,
@@ -663,9 +676,7 @@ pub unsafe fn ST_Responder(state: &mut GameState, mut ev: &event_t) -> bool {
             );
             if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 {
                 epsd = 1_i32;
-                map = (buf_1[0] as i32 - '0' as i32) * 10_i32
-                    + buf_1[1] as i32
-                    - '0' as i32;
+                map = (buf_1[0] as i32 - '0' as i32) * 10_i32 + buf_1[1] as i32 - '0' as i32;
             } else {
                 epsd = buf_1[0] as i32 - '0' as i32;
                 map = buf_1[1] as i32 - '0' as i32;
@@ -699,7 +710,8 @@ pub unsafe fn ST_Responder(state: &mut GameState, mut ev: &event_t) -> bool {
             {
                 return false;
             }
-            (*state.g_game.player_mut(state.st_stuff.plyr)).message = Some("Changing Level...".to_string());
+            (*state.g_game.player_mut(state.st_stuff.plyr)).message =
+                Some("Changing Level...".to_string());
             let gameskill = state.g_game.gameskill;
             G_DeferedInitNew(state, gameskill, epsd, map);
         }
@@ -764,7 +776,9 @@ pub unsafe fn ST_updateFaceWidget(state: &mut GameState) {
                 .p_mobj
                 .mobj_get((*state.g_game.player_mut(state.st_stuff.plyr)).mo.unwrap())
                 .unwrap();
-            if (*state.g_game.player_mut(state.st_stuff.plyr)).health - state.st_stuff.st_oldhealth > ST_MUCHPAIN {
+            if (*state.g_game.player_mut(state.st_stuff.plyr)).health - state.st_stuff.st_oldhealth
+                > ST_MUCHPAIN
+            {
                 state.st_stuff.st_facecount = ST_TURNCOUNT;
                 state.st_stuff.st_faceindex = ST_calcPainOffset(state) + ST_OUCHOFFSET;
             } else {
@@ -798,7 +812,9 @@ pub unsafe fn ST_updateFaceWidget(state: &mut GameState) {
     }
     if state.st_stuff.st_updatefacewidget_priority < 7_i32 {
         if (*state.g_game.player_mut(state.st_stuff.plyr)).damagecount != 0 {
-            if (*state.g_game.player_mut(state.st_stuff.plyr)).health - state.st_stuff.st_oldhealth > ST_MUCHPAIN {
+            if (*state.g_game.player_mut(state.st_stuff.plyr)).health - state.st_stuff.st_oldhealth
+                > ST_MUCHPAIN
+            {
                 state.st_stuff.st_updatefacewidget_priority = 7_i32;
                 state.st_stuff.st_facecount = ST_TURNCOUNT;
                 state.st_stuff.st_faceindex = ST_calcPainOffset(state) + ST_OUCHOFFSET;
@@ -828,7 +844,9 @@ pub unsafe fn ST_updateFaceWidget(state: &mut GameState) {
     }
     if state.st_stuff.st_updatefacewidget_priority < 5_i32 {
         if (*state.g_game.player_mut(state.st_stuff.plyr)).cheats & CF_GODMODE != 0
-            || (*state.g_game.player_mut(state.st_stuff.plyr)).powers[PowerType::pw_invulnerability as usize] != 0
+            || (*state.g_game.player_mut(state.st_stuff.plyr)).powers
+                [PowerType::pw_invulnerability as usize]
+                != 0
         {
             state.st_stuff.st_updatefacewidget_priority = 4_i32;
             state.st_stuff.st_faceindex = ST_GODFACE;
@@ -845,20 +863,23 @@ pub unsafe fn ST_updateFaceWidget(state: &mut GameState) {
 }
 pub unsafe fn ST_updateWidgets(state: &mut GameState) {
     let mut i: i32 = 0;
-    state.st_stuff.w_ready.data = (*state.g_game.player_mut(state.st_stuff.plyr)).readyweapon as i32;
+    state.st_stuff.w_ready.data =
+        (*state.g_game.player_mut(state.st_stuff.plyr)).readyweapon as i32;
     i = 0_i32;
     while i < 6_i32 {
-        state.st_stuff.w_arms_owned[i as usize] =
-            (*state.g_game.player_mut(state.st_stuff.plyr)).weaponowned[(i + 1_i32) as usize] as i32;
+        state.st_stuff.w_arms_owned[i as usize] = (*state.g_game.player_mut(state.st_stuff.plyr))
+            .weaponowned[(i + 1_i32) as usize]
+            as i32;
         i += 1;
     }
     i = 0_i32;
     while i < 3_i32 {
-        state.st_stuff.keyboxes[i as usize] = if (*state.g_game.player_mut(state.st_stuff.plyr)).cards[i as usize] {
-            i
-        } else {
-            -1_i32
-        };
+        state.st_stuff.keyboxes[i as usize] =
+            if (*state.g_game.player_mut(state.st_stuff.plyr)).cards[i as usize] {
+                i
+            } else {
+                -1_i32
+            };
         if (*state.g_game.player_mut(state.st_stuff.plyr)).cards[(i + 3_i32) as usize] {
             state.st_stuff.keyboxes[i as usize] = i + 3_i32;
         }
@@ -872,9 +893,11 @@ pub unsafe fn ST_updateWidgets(state: &mut GameState) {
     i = 0_i32;
     while i < MAXPLAYERS {
         if i != state.g_game.consoleplayer {
-            state.st_stuff.st_fragscount += (*state.g_game.player_mut(state.st_stuff.plyr)).frags[i as usize];
+            state.st_stuff.st_fragscount +=
+                (*state.g_game.player_mut(state.st_stuff.plyr)).frags[i as usize];
         } else {
-            state.st_stuff.st_fragscount -= (*state.g_game.player_mut(state.st_stuff.plyr)).frags[i as usize];
+            state.st_stuff.st_fragscount -=
+                (*state.g_game.player_mut(state.st_stuff.plyr)).frags[i as usize];
         }
         i += 1;
     }
@@ -895,8 +918,12 @@ pub unsafe fn ST_doPaletteStuff(state: &mut GameState) {
     let mut cnt: i32 = 0;
     let mut bzc: i32 = 0;
     cnt = (*state.g_game.player_mut(state.st_stuff.plyr)).damagecount;
-    if (*state.g_game.player_mut(state.st_stuff.plyr)).powers[PowerType::pw_strength as usize] != 0 {
-        bzc = 12_i32 - ((*state.g_game.player_mut(state.st_stuff.plyr)).powers[PowerType::pw_strength as usize] >> 6_i32);
+    if (*state.g_game.player_mut(state.st_stuff.plyr)).powers[PowerType::pw_strength as usize] != 0
+    {
+        bzc = 12_i32
+            - ((*state.g_game.player_mut(state.st_stuff.plyr)).powers
+                [PowerType::pw_strength as usize]
+                >> 6_i32);
         if bzc > cnt {
             cnt = bzc;
         }
@@ -913,8 +940,12 @@ pub unsafe fn ST_doPaletteStuff(state: &mut GameState) {
             palette = NUMBONUSPALS - 1_i32;
         }
         palette += STARTBONUSPALS;
-    } else if (*state.g_game.player_mut(state.st_stuff.plyr)).powers[PowerType::pw_ironfeet as usize] > 4_i32 * 32_i32
-        || (*state.g_game.player_mut(state.st_stuff.plyr)).powers[PowerType::pw_ironfeet as usize] & 8_i32 != 0
+    } else if (*state.g_game.player_mut(state.st_stuff.plyr)).powers
+        [PowerType::pw_ironfeet as usize]
+        > 4_i32 * 32_i32
+        || (*state.g_game.player_mut(state.st_stuff.plyr)).powers[PowerType::pw_ironfeet as usize]
+            & 8_i32
+            != 0
     {
         palette = RADIATIONPAL;
     } else {
@@ -937,7 +968,8 @@ pub unsafe fn ST_drawWidgets(state: &mut GameState, mut refresh: bool) {
     state.st_stuff.st_armson = state.st_stuff.st_statusbaron && state.g_game.deathmatch == 0;
     state.st_stuff.st_fragson = state.g_game.deathmatch != 0 && state.st_stuff.st_statusbaron;
     let statusbaron = state.st_stuff.st_statusbaron;
-    let ready_weapon_ammo = weaponinfo[(*state.g_game.player_mut(state.st_stuff.plyr)).readyweapon as usize].ammo;
+    let ready_weapon_ammo =
+        weaponinfo[(*state.g_game.player_mut(state.st_stuff.plyr)).readyweapon as usize].ammo;
     let ready_ammo_num = if ready_weapon_ammo as u32 == ammotype_t::am_noammo as i32 as u32 {
         1994_i32
     } else {
@@ -1015,11 +1047,9 @@ unsafe fn ST_loadUnloadGraphics(state: &mut GameState, mut callback: load_callba
     let mut facenum: i32 = 0;
     i = 0_i32;
     while i < 10_i32 {
-        let cb_ptr = (&raw mut state.st_stuff.tallnum as *mut i32).offset(i as isize)
-                as *mut i32;
+        let cb_ptr = (&raw mut state.st_stuff.tallnum as *mut i32).offset(i as isize) as *mut i32;
         callback.expect("non-null function pointer")(state, &format!("STTNUM{}", i,), cb_ptr);
-        let cb_ptr = (&raw mut state.st_stuff.shortnum as *mut i32).offset(i as isize)
-                as *mut i32;
+        let cb_ptr = (&raw mut state.st_stuff.shortnum as *mut i32).offset(i as isize) as *mut i32;
         callback.expect("non-null function pointer")(state, &format!("STYSNUM{}", i,), cb_ptr);
         i += 1;
     }
@@ -1027,8 +1057,7 @@ unsafe fn ST_loadUnloadGraphics(state: &mut GameState, mut callback: load_callba
     callback.expect("non-null function pointer")(state, "STTPRCNT", cb_ptr);
     i = 0_i32;
     while i < NUMCARDS {
-        let cb_ptr = (&raw mut state.st_stuff.keys as *mut i32).offset(i as isize)
-                as *mut i32;
+        let cb_ptr = (&raw mut state.st_stuff.keys as *mut i32).offset(i as isize) as *mut i32;
         callback.expect("non-null function pointer")(state, &format!("STKEYS{}", i,), cb_ptr);
         i += 1;
     }
@@ -1037,15 +1066,22 @@ unsafe fn ST_loadUnloadGraphics(state: &mut GameState, mut callback: load_callba
     i = 0_i32;
     while i < 6_i32 {
         let cb_ptr = (&raw mut *(&raw mut state.st_stuff.arms as *mut [i32; 2]).offset(i as isize)
-                as *mut i32)
-                .offset(0_i32 as isize) as *mut i32;
-        callback.expect("non-null function pointer")(state, &format!("STGNUM{}", i + 2_i32,), cb_ptr);
-        state.st_stuff.arms[i as usize][1] =
-            state.st_stuff.shortnum[(i + 2_i32) as usize];
+            as *mut i32)
+            .offset(0_i32 as isize) as *mut i32;
+        callback.expect("non-null function pointer")(
+            state,
+            &format!("STGNUM{}", i + 2_i32,),
+            cb_ptr,
+        );
+        state.st_stuff.arms[i as usize][1] = state.st_stuff.shortnum[(i + 2_i32) as usize];
         i += 1;
     }
     let cb_ptr = &raw mut state.st_stuff.faceback;
-    callback.expect("non-null function pointer")(state, &format!("STFB{}", state.g_game.consoleplayer,), cb_ptr);
+    callback.expect("non-null function pointer")(
+        state,
+        &format!("STFB{}", state.g_game.consoleplayer,),
+        cb_ptr,
+    );
     let cb_ptr = &raw mut state.st_stuff.sbar;
     callback.expect("non-null function pointer")(state, "STBAR", cb_ptr);
     facenum = 0_i32;
@@ -1053,41 +1089,42 @@ unsafe fn ST_loadUnloadGraphics(state: &mut GameState, mut callback: load_callba
     while i < ST_NUMPAINFACES {
         j = 0_i32;
         while j < ST_NUMSTRAIGHTFACES {
-            let cb_ptr = (&raw mut state.st_stuff.faces as *mut i32).offset(facenum as isize)
-                    as *mut i32;
-            callback.expect("non-null function pointer")(state, &format!("STFST{}{}", i,
-                j,), cb_ptr);
+            let cb_ptr =
+                (&raw mut state.st_stuff.faces as *mut i32).offset(facenum as isize) as *mut i32;
+            callback.expect("non-null function pointer")(
+                state,
+                &format!("STFST{}{}", i, j,),
+                cb_ptr,
+            );
             facenum += 1;
             j += 1;
         }
-        let cb_ptr = (&raw mut state.st_stuff.faces as *mut i32).offset(facenum as isize)
-                as *mut i32;
+        let cb_ptr =
+            (&raw mut state.st_stuff.faces as *mut i32).offset(facenum as isize) as *mut i32;
         callback.expect("non-null function pointer")(state, &format!("STFTR{}0", i,), cb_ptr);
         facenum += 1;
-        let cb_ptr = (&raw mut state.st_stuff.faces as *mut i32).offset(facenum as isize)
-                as *mut i32;
+        let cb_ptr =
+            (&raw mut state.st_stuff.faces as *mut i32).offset(facenum as isize) as *mut i32;
         callback.expect("non-null function pointer")(state, &format!("STFTL{}0", i,), cb_ptr);
         facenum += 1;
-        let cb_ptr = (&raw mut state.st_stuff.faces as *mut i32).offset(facenum as isize)
-                as *mut i32;
+        let cb_ptr =
+            (&raw mut state.st_stuff.faces as *mut i32).offset(facenum as isize) as *mut i32;
         callback.expect("non-null function pointer")(state, &format!("STFOUCH{}", i,), cb_ptr);
         facenum += 1;
-        let cb_ptr = (&raw mut state.st_stuff.faces as *mut i32).offset(facenum as isize)
-                as *mut i32;
+        let cb_ptr =
+            (&raw mut state.st_stuff.faces as *mut i32).offset(facenum as isize) as *mut i32;
         callback.expect("non-null function pointer")(state, &format!("STFEVL{}", i,), cb_ptr);
         facenum += 1;
-        let cb_ptr = (&raw mut state.st_stuff.faces as *mut i32).offset(facenum as isize)
-                as *mut i32;
+        let cb_ptr =
+            (&raw mut state.st_stuff.faces as *mut i32).offset(facenum as isize) as *mut i32;
         callback.expect("non-null function pointer")(state, &format!("STFKILL{}", i,), cb_ptr);
         facenum += 1;
         i += 1;
     }
-    let cb_ptr = (&raw mut state.st_stuff.faces as *mut i32).offset(facenum as isize)
-            as *mut i32;
+    let cb_ptr = (&raw mut state.st_stuff.faces as *mut i32).offset(facenum as isize) as *mut i32;
     callback.expect("non-null function pointer")(state, "STFGOD0", cb_ptr);
     facenum += 1;
-    let cb_ptr = (&raw mut state.st_stuff.faces as *mut i32).offset(facenum as isize)
-            as *mut i32;
+    let cb_ptr = (&raw mut state.st_stuff.faces as *mut i32).offset(facenum as isize) as *mut i32;
     callback.expect("non-null function pointer")(state, "STFDEAD0", cb_ptr);
     facenum += 1;
 }
@@ -1137,7 +1174,8 @@ pub unsafe fn ST_initData(state: &mut GameState) {
     state.st_stuff.st_oldhealth = -1_i32;
     i = 0_i32;
     while i < NUMWEAPONS {
-        state.st_stuff.oldweaponsowned[i as usize] = (*state.g_game.player_mut(state.st_stuff.plyr)).weaponowned[i as usize];
+        state.st_stuff.oldweaponsowned[i as usize] =
+            (*state.g_game.player_mut(state.st_stuff.plyr)).weaponowned[i as usize];
         i += 1;
     }
     i = 0_i32;
@@ -1156,7 +1194,8 @@ pub unsafe fn ST_createWidgets(state: &mut GameState) {
         StDigitSet::TallNum,
         ST_AMMOWIDTH,
     );
-    state.st_stuff.w_ready.data = (*state.g_game.player_mut(state.st_stuff.plyr)).readyweapon as i32;
+    state.st_stuff.w_ready.data =
+        (*state.g_game.player_mut(state.st_stuff.plyr)).readyweapon as i32;
     STlib_initPercent(
         &raw mut state.st_stuff.w_health,
         ST_HEALTHX,
@@ -1300,10 +1339,7 @@ pub unsafe fn ST_Stop(state: &mut GameState) {
         return;
     }
     let __wcache1480_1 = W_CacheLumpNum(state, state.st_stuff.lu_palette) as *mut byte;
-    I_SetPalette(
-        state,
-        __wcache1480_1,
-    );
+    I_SetPalette(state, __wcache1480_1);
     state.st_stuff.st_stopped = true;
 }
 pub fn ST_Init(state: &mut GameState) {

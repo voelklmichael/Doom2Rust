@@ -30,9 +30,7 @@ impl ClipArray {
             ClipArray::Openings(offset) => {
                 (&raw mut state.r_plane.openings as *mut i16).offset(offset)
             }
-            ClipArray::ScreenHeightArray => {
-                &raw mut state.r_things.screenheightarray as *mut i16
-            }
+            ClipArray::ScreenHeightArray => &raw mut state.r_things.screenheightarray as *mut i16,
             ClipArray::NegOneArray => &raw mut state.r_things.negonearray as *mut i16,
             ClipArray::ClipBot => &raw mut state.r_things.clipbot as *mut i16,
             ClipArray::ClipTop => &raw mut state.r_things.cliptop as *mut i16,

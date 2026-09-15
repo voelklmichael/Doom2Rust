@@ -6,8 +6,8 @@ use crate::i_system::I_Error;
 use crate::w_wad::W_CacheLumpName;
 
 use crate::d_event::EvType;
-use crate::d_mode::GameMode_t;
 use crate::d_mode::GameMission_t;
+use crate::d_mode::GameMode_t;
 use crate::d_mode::{skill_from_raw, GameVersion};
 use crate::doomdef::SCREENHEIGHT;
 use crate::doomdef::SCREENWIDTH;
@@ -968,8 +968,11 @@ pub fn M_ChooseSkill(state: &mut GameState, mut choice: i32) {
 }
 pub fn M_Episode(state: &mut GameState, mut choice: i32) {
     if state.doomstat.gamemode as u32 == GameMode_t::shareware as i32 as u32 && choice != 0 {
-        M_StartMessage(state, 
-            "this is the shareware version of doom.\n\nyou need to order the entire trilogy.\n\npress a key.",
+        M_StartMessage(
+            state,
+            "this is the shareware version of doom.\n\n\
+                        you need to order the entire trilogy.\n\n\
+                        press a key.",
             None,
             false,
         );
@@ -990,18 +993,16 @@ static msgNames: [&str; 2] = ["M_MSGOFF", "M_MSGON"];
 pub unsafe fn M_DrawOptions(state: &mut GameState) {
     let __wcache1358_12 = W_CacheLumpName(state, "M_OPTTTL") as *mut patch_t;
     V_DrawPatchDirect(state, 108_i32, 15_i32, __wcache1358_12);
-    let __wcache1364_11 = W_CacheLumpName(
-        state,
-        detailNames[state.m_menu.detailLevel as usize]) as *mut patch_t;
+    let __wcache1364_11 =
+        W_CacheLumpName(state, detailNames[state.m_menu.detailLevel as usize]) as *mut patch_t;
     V_DrawPatchDirect(
         state,
         state.m_menu.defs.OptionsDef.x as i32 + 175_i32,
         state.m_menu.defs.OptionsDef.y as i32 + LINEHEIGHT * detail as i32,
         __wcache1364_11,
     );
-    let __wcache1373_10 = W_CacheLumpName(
-        state,
-        msgNames[state.m_menu.showMessages as usize]) as *mut patch_t;
+    let __wcache1373_10 =
+        W_CacheLumpName(state, msgNames[state.m_menu.showMessages as usize]) as *mut patch_t;
     V_DrawPatchDirect(
         state,
         state.m_menu.defs.OptionsDef.x as i32 + 120_i32,
@@ -1110,9 +1111,21 @@ pub fn M_QuitResponse(state: &mut GameState, mut key: i32) {
     }
     if !state.g_game.netgame {
         if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 {
-            unsafe { S_StartSound(state, SoundOrigin::None, quitsounds2[(state.d_loop.gametic >> 2_i32 & 7_i32) as usize]) };
+            unsafe {
+                S_StartSound(
+                    state,
+                    SoundOrigin::None,
+                    quitsounds2[(state.d_loop.gametic >> 2_i32 & 7_i32) as usize],
+                )
+            };
         } else {
-            unsafe { S_StartSound(state, SoundOrigin::None, quitsounds[(state.d_loop.gametic >> 2_i32 & 7_i32) as usize]) };
+            unsafe {
+                S_StartSound(
+                    state,
+                    SoundOrigin::None,
+                    quitsounds[(state.d_loop.gametic >> 2_i32 & 7_i32) as usize],
+                )
+            };
         }
     }
     I_Quit(state);
@@ -1134,10 +1147,7 @@ fn M_SelectEndMessage(state: &mut GameState) -> &'static str {
     endmsg[(state.d_loop.gametic % NUM_QUITMESSAGES) as usize]
 }
 pub fn M_QuitDOOM(state: &mut GameState, _choice: i32) {
-    let msg = format!(
-        "{}\n\n(press y to quit to dos.)",
-        M_SelectEndMessage(state)
-    );
+    let msg = format!("{}\n\n(press y to quit to dos.)", M_SelectEndMessage(state));
     let routine = Some(M_QuitResponse as fn(&mut GameState, i32));
     M_StartMessage(state, &msg, routine, true);
 }
@@ -1328,8 +1338,7 @@ pub unsafe fn M_Responder(state: &mut GameState, ev: &mut event_t) -> bool {
     if ev.type_0 == EvType::ev_quit {
         if state.m_menu.menuactive
             && state.m_menu.messageToPrint != 0
-            && state.m_menu.messageRoutine
-                == Some(M_QuitResponse as fn(&mut GameState, i32))
+            && state.m_menu.messageRoutine == Some(M_QuitResponse as fn(&mut GameState, i32))
         {
             let key_menu_confirm = state.m_controls.key_menu_confirm;
             M_QuitResponse(state, key_menu_confirm);
@@ -1341,9 +1350,7 @@ pub unsafe fn M_Responder(state: &mut GameState, ev: &mut event_t) -> bool {
     }
     ch = 0_i32;
     key = -1_i32;
-    if ev.type_0 == EvType::ev_joystick
-        && state.m_menu.responder_joywait < I_GetTime(state)
-    {
+    if ev.type_0 == EvType::ev_joystick && state.m_menu.responder_joywait < I_GetTime(state) {
         if ev.data3 < 0_i32 {
             key = state.m_controls.key_menu_up;
             state.m_menu.responder_joywait = I_GetTime(state) + 5_i32;
@@ -1372,9 +1379,7 @@ pub unsafe fn M_Responder(state: &mut GameState, ev: &mut event_t) -> bool {
             key = state.m_controls.key_menu_activate;
             state.m_menu.responder_joywait = I_GetTime(state) + 5_i32;
         }
-    } else if ev.type_0 == EvType::ev_mouse
-        && state.m_menu.responder_mousewait < I_GetTime(state)
-    {
+    } else if ev.type_0 == EvType::ev_mouse && state.m_menu.responder_mousewait < I_GetTime(state) {
         state.m_menu.responder_mousey += ev.data3;
         if state.m_menu.responder_mousey < state.m_menu.responder_lasty - 30_i32 {
             key = state.m_controls.key_menu_down;
@@ -1460,9 +1465,12 @@ pub unsafe fn M_Responder(state: &mut GameState, ev: &mut event_t) -> bool {
         return true;
     }
     if state.m_menu.messageToPrint != 0 {
-        if state.m_menu.messageNeedsInput && key != ' ' as i32
-                && key != KEY_ESCAPE
-                && key != state.m_controls.key_menu_confirm && key != state.m_controls.key_menu_abort {
+        if state.m_menu.messageNeedsInput
+            && key != ' ' as i32
+            && key != KEY_ESCAPE
+            && key != state.m_controls.key_menu_confirm
+            && key != state.m_controls.key_menu_abort
+        {
             return false;
         }
         state.m_menu.menuactive = state.m_menu.messageLastMenuActive != 0;
@@ -1570,16 +1578,13 @@ pub unsafe fn M_Responder(state: &mut GameState, ev: &mut event_t) -> bool {
     }
     if key == state.m_controls.key_menu_down {
         loop {
-            if state.m_menu.itemOn as i32 + 1_i32 > state.m_menu.current().numitems as i32 - 1_i32
-            {
+            if state.m_menu.itemOn as i32 + 1_i32 > state.m_menu.current().numitems as i32 - 1_i32 {
                 state.m_menu.itemOn = 0_i16;
             } else {
                 state.m_menu.itemOn += 1;
             }
             S_StartSound(state, SoundOrigin::None, sfx_pstop as i32);
-            if state.m_menu.current().items[state.m_menu.itemOn as usize].status as i32
-                != -1_i32
-            {
+            if state.m_menu.current().items[state.m_menu.itemOn as usize].status as i32 != -1_i32 {
                 break;
             }
         }
@@ -1592,9 +1597,7 @@ pub unsafe fn M_Responder(state: &mut GameState, ev: &mut event_t) -> bool {
                 state.m_menu.itemOn -= 1;
             }
             S_StartSound(state, SoundOrigin::None, sfx_pstop as i32);
-            if state.m_menu.current().items[state.m_menu.itemOn as usize].status as i32
-                != -1_i32
-            {
+            if state.m_menu.current().items[state.m_menu.itemOn as usize].status as i32 != -1_i32 {
                 break;
             }
         }
@@ -1711,8 +1714,7 @@ pub unsafe fn M_Drawer(state: &mut GameState) {
     while i < max {
         let item_name = state.m_menu.current().items[i as usize].name;
         if !item_name.is_empty() {
-            let __wcache2221_2 =
-                W_CacheLumpName(state, &item_name.as_str()) as *mut patch_t;
+            let __wcache2221_2 = W_CacheLumpName(state, &item_name.as_str()) as *mut patch_t;
             V_DrawPatchDirect(
                 state,
                 state.m_menu.drawer_x as i32,
@@ -1723,9 +1725,8 @@ pub unsafe fn M_Drawer(state: &mut GameState) {
         state.m_menu.drawer_y = (state.m_menu.drawer_y as i32 + LINEHEIGHT) as i16;
         i = i.wrapping_add(1);
     }
-    let __wcache2231_1 = W_CacheLumpName(
-        state,
-        skullName[state.m_menu.whichSkull as usize]) as *mut patch_t;
+    let __wcache2231_1 =
+        W_CacheLumpName(state, skullName[state.m_menu.whichSkull as usize]) as *mut patch_t;
     V_DrawPatchDirect(
         state,
         state.m_menu.drawer_x as i32 + SKULLXOFF,

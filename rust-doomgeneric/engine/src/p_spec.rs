@@ -9,23 +9,18 @@ use crate::m_argv::M_CheckParmWithArgs;
 use crate::m_fixed::fixed_t;
 use crate::m_misc::M_StrToInt;
 use crate::m_random::P_Random;
+use crate::mem_compat::memset;
+use crate::p_ceilng::CeilingE;
 use crate::p_ceilng::EV_CeilingCrushStop;
 use crate::p_ceilng::EV_DoCeiling;
-use crate::p_ceilng::{
-    CeilingE,
-};
 use crate::p_doors::EV_DoDoor;
 use crate::p_doors::P_SpawnDoorCloseIn30;
 use crate::p_doors::P_SpawnDoorRaiseIn5Mins;
-use crate::p_doors::{
-    VldoorE,
-};
+use crate::p_doors::VldoorE;
 use crate::p_floor::EV_BuildStairs;
 use crate::p_floor::EV_DoFloor;
+use crate::p_floor::FloorE;
 use crate::p_floor::StairE;
-use crate::p_floor::{
-    FloorE,
-};
 use crate::p_inter::P_DamageMobj;
 use crate::p_lights::EV_LightTurnOn;
 use crate::p_lights::EV_StartLightStrobing;
@@ -59,7 +54,6 @@ use crate::s_sound::SoundOrigin;
 use crate::sounds::sfx_swtchn;
 use crate::stdint_types::size_t;
 use crate::w_wad::W_CheckNumForName;
-use crate::mem_compat::memset;
 
 use crate::doomdef::false_0;
 use crate::doomdef::true_0;
@@ -615,11 +609,7 @@ pub unsafe fn P_FindHighestCeilingSurrounding(
     }
     height
 }
-pub fn P_FindSectorFromLineTag(
-    state: &mut GameState,
-    mut line: LineId,
-    mut start: i32,
-) -> i32 {
+pub fn P_FindSectorFromLineTag(state: &mut GameState, mut line: LineId, mut start: i32) -> i32 {
     let mut i: i32 = 0;
     let line_tag = state.p_setup.line(line).tag;
     i = start + 1_i32;
@@ -940,11 +930,7 @@ pub unsafe fn P_CrossSpecialLine(
         _ => {}
     };
 }
-pub unsafe fn P_ShootSpecialLine(
-    state: &mut GameState,
-    mut thing: *mut mobj_t,
-    mut line: LineId,
-) {
+pub unsafe fn P_ShootSpecialLine(state: &mut GameState, mut thing: *mut mobj_t, mut line: LineId) {
     let mut ok: i32 = 0;
     let special = state.p_setup.line(line).special;
     if (*thing).player.is_none() {
@@ -1099,21 +1085,18 @@ pub unsafe fn P_UpdateSpecials(state: &mut GameState) {
                 let button_line_id = state.p_switch.buttonlist[i as usize].line;
                 match state.p_switch.buttonlist[i as usize].where_0 {
                     BWhere::top => {
-                        state.p_setup.sides[state.p_setup.lines[button_line_id.0 as usize].sidenum
-                            [0]
-                            as usize]
+                        state.p_setup.sides
+                            [state.p_setup.lines[button_line_id.0 as usize].sidenum[0] as usize]
                             .toptexture = state.p_switch.buttonlist[i as usize].btexture as i16;
                     }
                     BWhere::middle => {
-                        state.p_setup.sides[state.p_setup.lines[button_line_id.0 as usize].sidenum
-                            [0]
-                            as usize]
+                        state.p_setup.sides
+                            [state.p_setup.lines[button_line_id.0 as usize].sidenum[0] as usize]
                             .midtexture = state.p_switch.buttonlist[i as usize].btexture as i16;
                     }
                     BWhere::bottom => {
-                        state.p_setup.sides[state.p_setup.lines[button_line_id.0 as usize].sidenum
-                            [0]
-                            as usize]
+                        state.p_setup.sides
+                            [state.p_setup.lines[button_line_id.0 as usize].sidenum[0] as usize]
                             .bottomtexture = state.p_switch.buttonlist[i as usize].btexture as i16;
                     }
                 }
@@ -1221,7 +1204,8 @@ pub unsafe fn EV_DoDonut(state: &mut GameState, mut line: LineId) -> i32 {
                         s3_floorpic = (*s3).floorpic;
                     }
                     floor = state.p_spec.spawn_floor(floormove_t::default());
-                    let floor_id = P_AddThinker(state, &raw mut (*floor).thinker, ThinkerKind::Floor);
+                    let floor_id =
+                        P_AddThinker(state, &raw mut (*floor).thinker, ThinkerKind::Floor);
                     (*s2).specialdata = Some(SectorSpecial::Floor(floor_id));
                     (*floor).thinker.function = ThinkerFn::Floor(T_MoveFloor);
                     (*floor).type_0 = FloorE::donutRaise;
@@ -1233,7 +1217,8 @@ pub unsafe fn EV_DoDonut(state: &mut GameState, mut line: LineId) -> i32 {
                     (*floor).newspecial = 0_i32;
                     (*floor).floordestheight = s3_floorheight;
                     floor = state.p_spec.spawn_floor(floormove_t::default());
-                    let floor_id = P_AddThinker(state, &raw mut (*floor).thinker, ThinkerKind::Floor);
+                    let floor_id =
+                        P_AddThinker(state, &raw mut (*floor).thinker, ThinkerKind::Floor);
                     (*s1).specialdata = Some(SectorSpecial::Floor(floor_id));
                     (*floor).thinker.function = ThinkerFn::Floor(T_MoveFloor);
                     (*floor).type_0 = FloorE::lowerFloor;

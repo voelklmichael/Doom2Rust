@@ -1,7 +1,7 @@
 use crate::d_iwad::D_SuggestGameName;
-use crate::d_mode::GameMode_t;
 use crate::d_mode::D_GameMissionString;
 use crate::d_mode::GameMission_t;
+use crate::d_mode::GameMode_t;
 use crate::fixed_cstr::FixedCStr;
 use crate::game_state::GameState;
 use crate::i_system::I_Error;
@@ -140,7 +140,10 @@ pub fn W_CheckNumForName(state: &mut WWadState, name: &str) -> i32 {
         hash = W_LumpNameHash(name.as_bytes()).wrapping_rem(state.numlumps);
         let mut cur = state.lumphash[hash as usize];
         while let Some(idx) = cur {
-            if state.lumpinfo[idx as usize].name.eq_str_ignore_ascii_case(name) {
+            if state.lumpinfo[idx as usize]
+                .name
+                .eq_str_ignore_ascii_case(name)
+            {
                 return idx as i32;
             }
             cur = state.lumpinfo[idx as usize].next;
