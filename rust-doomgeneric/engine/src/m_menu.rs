@@ -517,8 +517,7 @@ impl MMenuState {
     // only known once this value is at its final, permanently-stable
     // 'static address (inside GameState, behind Box::leak). Called once
     // from `init_game_state`'s `finish_init`, same pattern as
-    // `sounds::fixup_self_links`/
-    // `p_maputl::fixup_intercepts_overrun`/`m_controls::fixup_weapon_keys`.
+    // `sounds::fixup_self_links`/`p_maputl::fixup_intercepts_overrun`.
     pub fn fixup_menu_routines(&mut self) {
         self.defs.MainDef.routine =
             Some(M_DrawMainMenu as unsafe fn(&mut GameState) -> ());

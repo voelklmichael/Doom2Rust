@@ -111,7 +111,6 @@ pub struct MControlsState {
     pub joybnextweapon: i32,
     pub joybmenu: i32,
     pub dclick_use: i32,
-    pub weapon_keys: [*mut i32; 8],
 }
 
 impl MControlsState {
@@ -226,26 +225,20 @@ impl MControlsState {
             joybnextweapon: -1,
             joybmenu: -1,
             dclick_use: 1,
-            weapon_keys: [::core::ptr::null_mut::<i32>(); 8],
         }
     }
 
-    // weapon_keys records the addresses of this same struct's own
-    // key_weapon1..8 fields -- only known once this value is at its final,
-    // permanently-stable 'static address (inside GameState, behind
-    // Box::leak). Called once from `init_game_state`'s `finish_init`, same
-    // pattern as `sounds::fixup_self_links`/`p_maputl::fixup_intercepts_overrun`.
-    pub fn fixup_weapon_keys(&mut self) {
-        self.weapon_keys = [
-            &raw mut self.key_weapon1,
-            &raw mut self.key_weapon2,
-            &raw mut self.key_weapon3,
-            &raw mut self.key_weapon4,
-            &raw mut self.key_weapon5,
-            &raw mut self.key_weapon6,
-            &raw mut self.key_weapon7,
-            &raw mut self.key_weapon8,
-        ];
+    pub const fn weapon_keys(&self) -> [i32; 8] {
+        [
+            self.key_weapon1,
+            self.key_weapon2,
+            self.key_weapon3,
+            self.key_weapon4,
+            self.key_weapon5,
+            self.key_weapon6,
+            self.key_weapon7,
+            self.key_weapon8,
+        ]
     }
 }
 

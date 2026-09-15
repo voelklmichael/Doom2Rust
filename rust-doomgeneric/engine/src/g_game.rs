@@ -604,12 +604,10 @@ pub unsafe fn G_BuildTiccmd(state: &mut GameState, mut cmd: *mut ticcmd_t, mut m
         (*cmd).buttons = ((*cmd).buttons as i32 | BT_CHANGE as i32) as byte;
         (*cmd).buttons = ((*cmd).buttons as i32 | i << BT_WEAPONSHIFT as i32) as byte;
     } else {
+        let weapon_keys = state.m_controls.weapon_keys();
         i = 0 as i32;
-        while (i as usize)
-            < (::core::mem::size_of::<[*mut i32; 8]>() as usize)
-                .wrapping_div(::core::mem::size_of::<*mut i32>() as usize)
-        {
-            let mut key: i32 = *state.m_controls.weapon_keys[i as usize];
+        while (i as usize) < weapon_keys.len() {
+            let key: i32 = weapon_keys[i as usize];
             if state.g_game.gamekeydown[key as usize] {
                 (*cmd).buttons = ((*cmd).buttons as i32 | BT_CHANGE as i32) as byte;
                 (*cmd).buttons = ((*cmd).buttons as i32 | i << BT_WEAPONSHIFT as i32) as byte;
