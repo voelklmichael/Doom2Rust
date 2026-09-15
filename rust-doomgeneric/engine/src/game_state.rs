@@ -204,7 +204,6 @@ pub fn finish_init(state: &mut GameState) {
     unsafe {
         state.sounds.fixup_self_links();
         fixup_intercepts_overrun(state);
-        state.wi_stuff.fixup_anims();
         fixup_cheat_sequences(state);
         fixup_numanims(state);
     }

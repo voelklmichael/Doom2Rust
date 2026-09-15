@@ -21,7 +21,6 @@ use crate::v_video::V_DrawPatch;
 use crate::w_wad::{W_CacheLumpNum, W_CheckNumForName, W_GetNumForName, W_ReleaseLumpName};
 
 pub struct WiStuffState {
-    pub anims: [*mut anim_t; 4],
     pub epsd0animinfo: [anim_t; 10],
     pub epsd1animinfo: [anim_t; 9],
     pub epsd2animinfo: [anim_t; 6],
@@ -77,12 +76,6 @@ pub struct WiStuffState {
 impl WiStuffState {
     pub const fn new() -> Self {
         WiStuffState {
-            anims: [
-                ::core::ptr::null_mut::<anim_t>(),
-                ::core::ptr::null_mut::<anim_t>(),
-                ::core::ptr::null_mut::<anim_t>(),
-                ::core::ptr::null_mut::<anim_t>(),
-            ],
             epsd0animinfo: [
                 anim_t {
                     type_0: AnimEnum::ANIM_ALWAYS,
@@ -539,13 +532,13 @@ impl WiStuffState {
         }
     }
 
-    pub fn fixup_anims(&mut self) {
-        self.anims = [
-            &raw mut self.epsd0animinfo as *mut anim_t,
-            &raw mut self.epsd1animinfo as *mut anim_t,
-            &raw mut self.epsd2animinfo as *mut anim_t,
-            ::core::ptr::null_mut::<anim_t>(),
-        ];
+    pub fn anims(&mut self) -> [&mut [anim_t]; 4] {
+        [
+            &mut self.epsd0animinfo,
+            &mut self.epsd1animinfo,
+            &mut self.epsd2animinfo,
+            &mut [],
+        ]
     }
 }
 
@@ -852,9 +845,8 @@ pub unsafe fn WI_initAnimatedBack(state: &mut GameState) {
     }
     i = 0_i32;
     while i < state.wi_stuff.NUMANIMS[state.wbs().epsd as usize] {
-        a = (*(&raw mut state.wi_stuff.anims as *mut *mut anim_t)
-            .offset(state.wbs().epsd as isize))
-        .offset(i as isize) as *mut anim_t;
+        let index = state.wbs().epsd as usize;
+        a = (&mut state.wi_stuff.anims()[index][i as usize]) as *mut anim_t;
         (*a).ctr = -1_i32;
         if (*a).type_0 == AnimEnum::ANIM_ALWAYS {
             (*a).nexttic =
@@ -881,9 +873,8 @@ pub unsafe fn WI_updateAnimatedBack(state: &mut GameState) {
     }
     i = 0_i32;
     while i < state.wi_stuff.NUMANIMS[state.wbs().epsd as usize] {
-        a = (*(&raw mut state.wi_stuff.anims as *mut *mut anim_t)
-            .offset(state.wbs().epsd as isize))
-        .offset(i as isize) as *mut anim_t;
+        let index = state.wbs().epsd as usize;
+        a = (&mut state.wi_stuff.anims()[index][i as usize]) as *mut anim_t;
         if state.wi_stuff.bcnt == (*a).nexttic {
             match (*a).type_0 as u32 {
                 0 => {
@@ -932,9 +923,8 @@ pub unsafe fn WI_drawAnimatedBack(state: &mut GameState) {
     }
     i = 0_i32;
     while i < state.wi_stuff.NUMANIMS[state.wbs().epsd as usize] {
-        a = (*(&raw mut state.wi_stuff.anims as *mut *mut anim_t)
-            .offset(state.wbs().epsd as isize))
-        .offset(i as isize) as *mut anim_t;
+        let index = state.wbs().epsd as usize;
+        a = (&mut state.wi_stuff.anims()[index][i as usize]) as *mut anim_t;
         if (*a).ctr >= 0_i32 {
             let patch = V_CachePatchNum(state, (*a).p[(*a).ctr as usize]);
             V_DrawPatch(state, (*a).loc.x, (*a).loc.y, patch);
@@ -1759,9 +1749,8 @@ unsafe fn WI_loadUnloadData(state: &mut GameState, mut callback: load_callback_t
         if state.wbs().epsd < 3_i32 {
             j = 0_i32;
             while j < state.wi_stuff.NUMANIMS[state.wbs().epsd as usize] {
-                a = (*(&raw mut state.wi_stuff.anims as *mut *mut anim_t)
-                    .offset(state.wbs().epsd as isize))
-                .offset(j as isize) as *mut anim_t;
+                let index = state.wbs().epsd as usize;
+                a = (&mut state.wi_stuff.anims()[index][i as usize]) as *mut anim_t;
                 i = 0_i32;
                 while i < (*a).nanims {
                     if state.wbs().epsd != 1_i32 || j != 8_i32 {
@@ -1772,8 +1761,7 @@ unsafe fn WI_loadUnloadData(state: &mut GameState, mut callback: load_callback_t
                             (&raw mut (*a).p as *mut i32).offset(i as isize) as *mut i32,
                         );
                     } else {
-                        (*a).p[i as usize] =
-                            (*state.wi_stuff.anims[1].offset(4_i32 as isize)).p[i as usize];
+                        (*a).p[i as usize] = state.wi_stuff.anims()[1][4].p[i as usize];
                     }
                     i += 1;
                 }
