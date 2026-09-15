@@ -17,13 +17,12 @@ use crate::w_wad::W_CacheLumpName;
 use crate::mem_compat::memcpy;
 
 pub struct RDrawState {
-    pub viewimage: *mut byte,
     pub viewwidth: i32,
     pub scaledviewwidth: i32,
     pub viewheight: i32,
     pub viewwindowx: i32,
     pub viewwindowy: i32,
-    pub ylookup: [*mut byte; 832],
+    pub ylookup: [usize; 832],
     pub columnofs: [i32; 1120],
     pub background_buffer: Option<Vec<byte>>,
     pub dc_colormap: Option<ColormapId>,
@@ -35,7 +34,7 @@ pub struct RDrawState {
     pub dc_source: *mut byte,
     pub dccount: i32,
     pub fuzzpos: i32,
-    pub dc_translation: *mut byte,
+    pub dc_translation: usize,
     pub translationtables: Vec<byte>,
     pub ds_y: i32,
     pub ds_x1: i32,
@@ -52,13 +51,12 @@ pub struct RDrawState {
 impl RDrawState {
     pub const fn new() -> Self {
         RDrawState {
-            viewimage: ::core::ptr::null::<byte>() as *mut byte,
             viewwidth: 0,
             scaledviewwidth: 0,
             viewheight: 0,
             viewwindowx: 0,
             viewwindowy: 0,
-            ylookup: [::core::ptr::null::<byte>() as *mut byte; 832],
+            ylookup: [0; 832],
             columnofs: [0; 1120],
             background_buffer: None,
             dc_colormap: None,
@@ -70,7 +68,7 @@ impl RDrawState {
             dc_source: ::core::ptr::null::<byte>() as *mut byte,
             dccount: 0,
             fuzzpos: 0,
-            dc_translation: ::core::ptr::null::<byte>() as *mut byte,
+            dc_translation: 0,
             translationtables: Vec::new(),
             ds_y: 0,
             ds_x1: 0,
@@ -106,8 +104,9 @@ pub unsafe fn R_DrawColumn(state: &mut GameState) {
             state.r_draw.dc_yl, state.r_draw.dc_yh, state.r_draw.dc_x
         ));
     }
-    dest = state.r_draw.ylookup[state.r_draw.dc_yl as usize]
-        .offset(state.r_draw.columnofs[state.r_draw.dc_x as usize] as isize);
+    dest = state.i_video.I_VideoBuffer.as_mut_ptr().offset(
+        (state.r_draw.ylookup[state.r_draw.dc_yl as usize] + state.r_draw.columnofs[state.r_draw.dc_x as usize] as usize) as isize,
+    );
     fracstep = state.r_draw.dc_iscale;
     frac = state.r_draw.dc_texturemid
         + (state.r_draw.dc_yl as fixed_t - state.r_main.centery as fixed_t) * fracstep;
@@ -148,10 +147,12 @@ pub unsafe fn R_DrawColumnLow(state: &mut GameState) {
         ));
     }
     x = state.r_draw.dc_x << 1 as i32;
-    dest = state.r_draw.ylookup[state.r_draw.dc_yl as usize]
-        .offset(state.r_draw.columnofs[x as usize] as isize);
-    dest2 = state.r_draw.ylookup[state.r_draw.dc_yl as usize]
-        .offset(state.r_draw.columnofs[(x + 1 as i32) as usize] as isize);
+    dest = state.i_video.I_VideoBuffer.as_mut_ptr().offset(
+        (state.r_draw.ylookup[state.r_draw.dc_yl as usize] + state.r_draw.columnofs[x as usize] as usize) as isize,
+    );
+    dest2 = state.i_video.I_VideoBuffer.as_mut_ptr().offset(
+        (state.r_draw.ylookup[state.r_draw.dc_yl as usize] + state.r_draw.columnofs[(x + 1 as i32) as usize] as usize) as isize,
+    );
     fracstep = state.r_draw.dc_iscale;
     frac = state.r_draw.dc_texturemid
         + (state.r_draw.dc_yl as fixed_t - state.r_main.centery as fixed_t) * fracstep;
@@ -204,8 +205,9 @@ pub unsafe fn R_DrawFuzzColumn(state: &mut GameState) {
             state.r_draw.dc_yl, state.r_draw.dc_yh, state.r_draw.dc_x
         ));
     }
-    dest = state.r_draw.ylookup[state.r_draw.dc_yl as usize]
-        .offset(state.r_draw.columnofs[state.r_draw.dc_x as usize] as isize);
+    dest = state.i_video.I_VideoBuffer.as_mut_ptr().offset(
+        (state.r_draw.ylookup[state.r_draw.dc_yl as usize] + state.r_draw.columnofs[state.r_draw.dc_x as usize] as usize) as isize,
+    );
     loop {
         *dest = state.r_data.colormaps[(6 as i32 * 256 as i32
             + *dest.offset(fuzzoffset[state.r_draw.fuzzpos as usize] as isize) as i32)
@@ -247,10 +249,12 @@ pub unsafe fn R_DrawFuzzColumnLow(state: &mut GameState) {
             state.r_draw.dc_yl, state.r_draw.dc_yh, state.r_draw.dc_x
         ));
     }
-    dest = state.r_draw.ylookup[state.r_draw.dc_yl as usize]
-        .offset(state.r_draw.columnofs[x as usize] as isize);
-    dest2 = state.r_draw.ylookup[state.r_draw.dc_yl as usize]
-        .offset(state.r_draw.columnofs[(x + 1 as i32) as usize] as isize);
+    dest = state.i_video.I_VideoBuffer.as_mut_ptr().offset(
+        (state.r_draw.ylookup[state.r_draw.dc_yl as usize] + state.r_draw.columnofs[x as usize] as usize) as isize,
+    );
+    dest2 = state.i_video.I_VideoBuffer.as_mut_ptr().offset(
+        (state.r_draw.ylookup[state.r_draw.dc_yl as usize] + state.r_draw.columnofs[(x + 1 as i32) as usize] as usize) as isize,
+    );
     loop {
         *dest = state.r_data.colormaps[(6 as i32 * 256 as i32
             + *dest.offset(fuzzoffset[state.r_draw.fuzzpos as usize] as isize) as i32)
@@ -289,16 +293,15 @@ pub unsafe fn R_DrawTranslatedColumn(state: &mut GameState) {
             state.r_draw.dc_yl, state.r_draw.dc_yh, state.r_draw.dc_x
         ));
     }
-    dest = state.r_draw.ylookup[state.r_draw.dc_yl as usize]
-        .offset(state.r_draw.columnofs[state.r_draw.dc_x as usize] as isize);
+    dest = state.i_video.I_VideoBuffer.as_mut_ptr().offset(
+        (state.r_draw.ylookup[state.r_draw.dc_yl as usize] + state.r_draw.columnofs[state.r_draw.dc_x as usize] as usize) as isize,
+    );
     fracstep = state.r_draw.dc_iscale;
     frac = state.r_draw.dc_texturemid
         + (state.r_draw.dc_yl as fixed_t - state.r_main.centery as fixed_t) * fracstep;
     loop {
-        let src_pixel = *state
-            .r_draw
-            .dc_translation
-            .offset(*state.r_draw.dc_source.offset((frac >> FRACBITS) as isize) as isize);
+        let raw_pixel = *state.r_draw.dc_source.offset((frac >> FRACBITS) as isize);
+        let src_pixel = state.r_draw.translationtables[state.r_draw.dc_translation + raw_pixel as usize];
         *dest = state.r_data.colormaps
             [(state.r_draw.dc_colormap.unwrap() * 256 + src_pixel as i32) as usize];
         dest = dest.offset(SCREENWIDTH as isize);
@@ -331,18 +334,18 @@ pub unsafe fn R_DrawTranslatedColumnLow(state: &mut GameState) {
             state.r_draw.dc_yl, state.r_draw.dc_yh, x
         ));
     }
-    dest = state.r_draw.ylookup[state.r_draw.dc_yl as usize]
-        .offset(state.r_draw.columnofs[x as usize] as isize);
-    dest2 = state.r_draw.ylookup[state.r_draw.dc_yl as usize]
-        .offset(state.r_draw.columnofs[(x + 1 as i32) as usize] as isize);
+    dest = state.i_video.I_VideoBuffer.as_mut_ptr().offset(
+        (state.r_draw.ylookup[state.r_draw.dc_yl as usize] + state.r_draw.columnofs[x as usize] as usize) as isize,
+    );
+    dest2 = state.i_video.I_VideoBuffer.as_mut_ptr().offset(
+        (state.r_draw.ylookup[state.r_draw.dc_yl as usize] + state.r_draw.columnofs[(x + 1 as i32) as usize] as usize) as isize,
+    );
     fracstep = state.r_draw.dc_iscale;
     frac = state.r_draw.dc_texturemid
         + (state.r_draw.dc_yl as fixed_t - state.r_main.centery as fixed_t) * fracstep;
     loop {
-        let src_pixel = *state
-            .r_draw
-            .dc_translation
-            .offset(*state.r_draw.dc_source.offset((frac >> FRACBITS) as isize) as isize);
+        let raw_pixel = *state.r_draw.dc_source.offset((frac >> FRACBITS) as isize);
+        let src_pixel = state.r_draw.translationtables[state.r_draw.dc_translation + raw_pixel as usize];
         let colormap = state.r_draw.dc_colormap.unwrap();
         *dest = state.r_data.colormaps[(colormap * 256 + src_pixel as i32) as usize];
         *dest2 = state.r_data.colormaps[(colormap * 256 + src_pixel as i32) as usize];
@@ -399,8 +402,9 @@ pub unsafe fn R_DrawSpan(state: &mut GameState) {
         | (state.r_draw.ds_yfrac as i32 >> 6 as i32 & 0xffff as i32) as u32;
     step = (state.r_draw.ds_xstep << 10 as i32) as u32 & 0xffff0000 as u32
         | (state.r_draw.ds_ystep as i32 >> 6 as i32 & 0xffff as i32) as u32;
-    dest = state.r_draw.ylookup[state.r_draw.ds_y as usize]
-        .offset(state.r_draw.columnofs[state.r_draw.ds_x1 as usize] as isize);
+    dest = state.i_video.I_VideoBuffer.as_mut_ptr().offset(
+        (state.r_draw.ylookup[state.r_draw.ds_y as usize] + state.r_draw.columnofs[state.r_draw.ds_x1 as usize] as usize) as isize,
+    );
     count = state.r_draw.ds_x2 - state.r_draw.ds_x1;
     loop {
         ytemp = position >> 4 as i32 & 0xfc0 as u32;
@@ -443,8 +447,9 @@ pub unsafe fn R_DrawSpanLow(state: &mut GameState) {
     count = state.r_draw.ds_x2 - state.r_draw.ds_x1;
     state.r_draw.ds_x1 <<= 1 as i32;
     state.r_draw.ds_x2 <<= 1 as i32;
-    dest = state.r_draw.ylookup[state.r_draw.ds_y as usize]
-        .offset(state.r_draw.columnofs[state.r_draw.ds_x1 as usize] as isize);
+    dest = state.i_video.I_VideoBuffer.as_mut_ptr().offset(
+        (state.r_draw.ylookup[state.r_draw.ds_y as usize] + state.r_draw.columnofs[state.r_draw.ds_x1 as usize] as usize) as isize,
+    );
     loop {
         ytemp = position >> 4 as i32 & 0xfc0 as u32;
         xtemp = position >> 26 as i32;
@@ -479,11 +484,8 @@ pub unsafe fn R_InitBuffer(state: &mut GameState, mut width: i32, mut height: i3
     }
     i = 0 as i32;
     while i < height {
-        state.r_draw.ylookup[i as usize] = state
-            .i_video
-            .I_VideoBuffer
-            .as_mut_ptr()
-            .offset(((i + state.r_draw.viewwindowy) * SCREENWIDTH) as isize);
+        state.r_draw.ylookup[i as usize] =
+            ((i + state.r_draw.viewwindowy) * SCREENWIDTH) as usize;
         i += 1;
     }
 }
