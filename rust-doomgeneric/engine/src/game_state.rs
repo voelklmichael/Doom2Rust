@@ -9,7 +9,6 @@ use crate::d_event::DEventState;
 use crate::d_iwad::DIwadState;
 use crate::d_loop::DLoopState;
 use crate::d_main::DMainState;
-use crate::d_net::DNetState;
 use crate::doomstat::DoomstatState;
 use crate::f_finale::FFinaleState;
 use crate::f_wipe::FWipeState;
@@ -70,7 +69,6 @@ pub struct GameState {
     pub d_iwad: DIwadState,
     pub d_loop: DLoopState,
     pub d_main: DMainState,
-    pub d_net: DNetState,
     pub doomstat: DoomstatState,
     pub f_finale: FFinaleState,
     pub f_wipe: FWipeState,
@@ -133,7 +131,6 @@ impl GameState {
             d_iwad: DIwadState::new(),
             d_loop: DLoopState::new(),
             d_main: DMainState::new(),
-            d_net: DNetState::new(),
             doomstat: DoomstatState::new(),
             f_finale: FFinaleState::new(),
             f_wipe: FWipeState::new(),
