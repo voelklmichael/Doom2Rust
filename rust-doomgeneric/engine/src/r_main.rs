@@ -16,7 +16,6 @@ use crate::r_bsp::R_ClearDrawSegs;
 use crate::r_bsp::R_RenderBSPNode;
 use crate::r_bsp::NF_SUBSECTOR;
 use crate::r_data::R_InitData;
-use crate::r_defs::lighttable_t;
 use crate::r_defs::node_t;
 use crate::r_draw::R_InitBuffer;
 use crate::r_draw::R_InitTranslationTables;
@@ -41,10 +40,24 @@ use crate::tables::ANG90;
 use crate::tables::ANGLETOFINESHIFT;
 use crate::tables::FINEANGLES;
 
+// A colormap is identified by its row index into r_data.colormaps (each row
+// is 256 bytes) rather than a raw pointer into that Vec.
+pub type ColormapId = i32;
+
+// scalelight/zlight rows are picked by light level (see R_ExecuteSetViewSize/
+// R_InitLightTables); walllights/spritelights instead reference *which* row
+// to use, since R_SetupFrame can redirect them at scalelightfixed when the
+// player has a fixed colormap active (invulnerability/light-amp goggles).
+#[derive(Copy, Clone)]
+pub enum LightRow48 {
+    Normal(usize),
+    Fixed,
+}
+
 pub struct RMainState {
     pub viewangleoffset: i32,
     pub validcount: i32,
-    pub fixedcolormap: *mut lighttable_t,
+    pub fixedcolormap: Option<ColormapId>,
     pub centerx: i32,
     pub centery: i32,
     pub centerxfrac: fixed_t,
@@ -65,9 +78,9 @@ pub struct RMainState {
     pub clipangle: angle_t,
     pub viewangletox: [i32; 4096],
     pub xtoviewangle: [angle_t; 321],
-    pub scalelight: [[*mut lighttable_t; 48]; 16],
-    pub scalelightfixed: [*mut lighttable_t; 48],
-    pub zlight: [[*mut lighttable_t; 128]; 16],
+    pub scalelight: [[ColormapId; 48]; 16],
+    pub scalelightfixed: [ColormapId; 48],
+    pub zlight: [[ColormapId; 128]; 16],
     pub extralight: i32,
     pub colfunc: Option<unsafe fn(&mut GameState) -> ()>,
     pub basecolfunc: Option<unsafe fn(&mut GameState) -> ()>,
@@ -84,7 +97,7 @@ impl RMainState {
         RMainState {
             viewangleoffset: 0,
             validcount: 1,
-            fixedcolormap: ::core::ptr::null::<lighttable_t>() as *mut lighttable_t,
+            fixedcolormap: None,
             centerx: 0,
             centery: 0,
             centerxfrac: 0,
@@ -105,9 +118,9 @@ impl RMainState {
             clipangle: 0,
             viewangletox: [0; 4096],
             xtoviewangle: [0; 321],
-            scalelight: [[::core::ptr::null::<lighttable_t>() as *mut lighttable_t; 48]; 16],
-            scalelightfixed: [::core::ptr::null::<lighttable_t>() as *mut lighttable_t; 48],
-            zlight: [[::core::ptr::null::<lighttable_t>() as *mut lighttable_t; 128]; 16],
+            scalelight: [[0; 48]; 16],
+            scalelightfixed: [0; 48],
+            zlight: [[0; 128]; 16],
             extralight: 0,
             colfunc: None,
             basecolfunc: None,
@@ -117,6 +130,13 @@ impl RMainState {
             setsizeneeded: false,
             setblocks: 0,
             setdetail: 0,
+        }
+    }
+
+    pub fn light_row48(&self, row: LightRow48) -> &[ColormapId; 48] {
+        match row {
+            LightRow48::Normal(i) => &self.scalelight[i],
+            LightRow48::Fixed => &self.scalelightfixed,
         }
     }
 }
@@ -396,8 +416,7 @@ pub unsafe fn R_InitLightTables(state: &mut GameState) {
             if level >= NUMCOLORMAPS {
                 level = NUMCOLORMAPS - 1 as i32;
             }
-            state.r_main.zlight[i as usize][j as usize] =
-                state.r_data.colormaps.as_mut_ptr().offset((level * 256 as i32) as isize);
+            state.r_main.zlight[i as usize][j as usize] = level;
             j += 1;
         }
         i += 1;
@@ -488,8 +507,7 @@ pub unsafe fn R_ExecuteSetViewSize(state: &mut GameState) {
             if level >= NUMCOLORMAPS {
                 level = NUMCOLORMAPS - 1 as i32;
             }
-            state.r_main.scalelight[i as usize][j as usize] =
-                state.r_data.colormaps.as_mut_ptr().offset((level * 256 as i32) as isize);
+            state.r_main.scalelight[i as usize][j as usize] = level;
             j += 1;
         }
         i += 1;
@@ -544,18 +562,16 @@ pub unsafe fn R_SetupFrame(state: &mut GameState, player_id: PlayerId) {
     state.r_main.viewcos = finecosine[(state.r_main.viewangle >> ANGLETOFINESHIFT) as isize];
     state.r_main.sscount = 0 as i32;
     if (*player).fixedcolormap != 0 {
-        state.r_main.fixedcolormap = state.r_data.colormaps.as_mut_ptr().offset(
-            (((*player).fixedcolormap * 256 as i32) as usize)
-                .wrapping_mul(::core::mem::size_of::<lighttable_t>() as usize) as isize,
-        );
-        state.r_segs.walllights = &raw mut state.r_main.scalelightfixed as *mut *mut lighttable_t;
+        let colormap = (*player).fixedcolormap;
+        state.r_main.fixedcolormap = Some(colormap);
+        state.r_segs.walllights = LightRow48::Fixed;
         i = 0 as i32;
         while i < MAXLIGHTSCALE {
-            state.r_main.scalelightfixed[i as usize] = state.r_main.fixedcolormap;
+            state.r_main.scalelightfixed[i as usize] = colormap;
             i += 1;
         }
     } else {
-        state.r_main.fixedcolormap = ::core::ptr::null_mut::<lighttable_t>();
+        state.r_main.fixedcolormap = None;
     }
     state.r_main.framecount += 1;
     state.r_main.validcount += 1;

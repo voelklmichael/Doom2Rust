@@ -6,7 +6,7 @@ use crate::hu_lib::patch_t;
 use crate::i_system::I_Error;
 use crate::m_fixed::fixed_t;
 use crate::m_fixed::FRACBITS;
-use crate::r_defs::lighttable_t;
+use crate::r_main::ColormapId;
 use crate::stdint_types::byte;
 use crate::stdint_types::size_t;
 use crate::v_video::V_DrawPatch;
@@ -26,7 +26,7 @@ pub struct RDrawState {
     pub ylookup: [*mut byte; 832],
     pub columnofs: [i32; 1120],
     pub background_buffer: Option<Vec<byte>>,
-    pub dc_colormap: *mut lighttable_t,
+    pub dc_colormap: Option<ColormapId>,
     pub dc_x: i32,
     pub dc_yl: i32,
     pub dc_yh: i32,
@@ -40,7 +40,7 @@ pub struct RDrawState {
     pub ds_y: i32,
     pub ds_x1: i32,
     pub ds_x2: i32,
-    pub ds_colormap: *mut lighttable_t,
+    pub ds_colormap: ColormapId,
     pub ds_xfrac: fixed_t,
     pub ds_yfrac: fixed_t,
     pub ds_xstep: fixed_t,
@@ -61,7 +61,7 @@ impl RDrawState {
             ylookup: [::core::ptr::null::<byte>() as *mut byte; 832],
             columnofs: [0; 1120],
             background_buffer: None,
-            dc_colormap: ::core::ptr::null::<lighttable_t>() as *mut lighttable_t,
+            dc_colormap: None,
             dc_x: 0,
             dc_yl: 0,
             dc_yh: 0,
@@ -75,7 +75,7 @@ impl RDrawState {
             ds_y: 0,
             ds_x1: 0,
             ds_x2: 0,
-            ds_colormap: ::core::ptr::null::<lighttable_t>() as *mut lighttable_t,
+            ds_colormap: 0,
             ds_xfrac: 0,
             ds_yfrac: 0,
             ds_xstep: 0,
@@ -112,12 +112,12 @@ pub unsafe fn R_DrawColumn(state: &mut GameState) {
     frac = state.r_draw.dc_texturemid
         + (state.r_draw.dc_yl as fixed_t - state.r_main.centery as fixed_t) * fracstep;
     loop {
-        *dest = *state.r_draw.dc_colormap.offset(
-            *state
-                .r_draw
-                .dc_source
-                .offset((frac as i32 >> FRACBITS & 127 as i32) as isize) as isize,
-        ) as byte;
+        let src_pixel = *state
+            .r_draw
+            .dc_source
+            .offset((frac as i32 >> FRACBITS & 127 as i32) as isize);
+        *dest = state.r_data.colormaps
+            [(state.r_draw.dc_colormap.unwrap() * 256 + src_pixel as i32) as usize];
         dest = dest.offset(SCREENWIDTH as isize);
         frac += fracstep;
         let fresh0 = count;
@@ -156,12 +156,12 @@ pub unsafe fn R_DrawColumnLow(state: &mut GameState) {
     frac = state.r_draw.dc_texturemid
         + (state.r_draw.dc_yl as fixed_t - state.r_main.centery as fixed_t) * fracstep;
     loop {
-        *dest = *state.r_draw.dc_colormap.offset(
-            *state
-                .r_draw
-                .dc_source
-                .offset((frac as i32 >> FRACBITS & 127 as i32) as isize) as isize,
-        ) as byte;
+        let src_pixel = *state
+            .r_draw
+            .dc_source
+            .offset((frac as i32 >> FRACBITS & 127 as i32) as isize);
+        *dest = state.r_data.colormaps
+            [(state.r_draw.dc_colormap.unwrap() * 256 + src_pixel as i32) as usize];
         *dest2 = *dest;
         dest = dest.offset(SCREENWIDTH as isize);
         dest2 = dest2.offset(SCREENWIDTH as isize);
@@ -295,13 +295,12 @@ pub unsafe fn R_DrawTranslatedColumn(state: &mut GameState) {
     frac = state.r_draw.dc_texturemid
         + (state.r_draw.dc_yl as fixed_t - state.r_main.centery as fixed_t) * fracstep;
     loop {
-        *dest = *state.r_draw.dc_colormap.offset(
-            *state
-                .r_draw
-                .dc_translation
-                .offset(*state.r_draw.dc_source.offset((frac >> FRACBITS) as isize) as isize)
-                as isize,
-        ) as byte;
+        let src_pixel = *state
+            .r_draw
+            .dc_translation
+            .offset(*state.r_draw.dc_source.offset((frac >> FRACBITS) as isize) as isize);
+        *dest = state.r_data.colormaps
+            [(state.r_draw.dc_colormap.unwrap() * 256 + src_pixel as i32) as usize];
         dest = dest.offset(SCREENWIDTH as isize);
         frac += fracstep;
         let fresh4 = count;
@@ -340,20 +339,13 @@ pub unsafe fn R_DrawTranslatedColumnLow(state: &mut GameState) {
     frac = state.r_draw.dc_texturemid
         + (state.r_draw.dc_yl as fixed_t - state.r_main.centery as fixed_t) * fracstep;
     loop {
-        *dest = *state.r_draw.dc_colormap.offset(
-            *state
-                .r_draw
-                .dc_translation
-                .offset(*state.r_draw.dc_source.offset((frac >> FRACBITS) as isize) as isize)
-                as isize,
-        ) as byte;
-        *dest2 = *state.r_draw.dc_colormap.offset(
-            *state
-                .r_draw
-                .dc_translation
-                .offset(*state.r_draw.dc_source.offset((frac >> FRACBITS) as isize) as isize)
-                as isize,
-        ) as byte;
+        let src_pixel = *state
+            .r_draw
+            .dc_translation
+            .offset(*state.r_draw.dc_source.offset((frac >> FRACBITS) as isize) as isize);
+        let colormap = state.r_draw.dc_colormap.unwrap();
+        *dest = state.r_data.colormaps[(colormap * 256 + src_pixel as i32) as usize];
+        *dest2 = state.r_data.colormaps[(colormap * 256 + src_pixel as i32) as usize];
         dest = dest.offset(SCREENWIDTH as isize);
         dest2 = dest2.offset(SCREENWIDTH as isize);
         frac += fracstep;
@@ -416,11 +408,8 @@ pub unsafe fn R_DrawSpan(state: &mut GameState) {
         spot = (xtemp | ytemp) as i32;
         let fresh6 = dest;
         dest = dest.offset(1);
-        *fresh6 = *state
-            .r_draw
-            .ds_colormap
-            .offset(*state.r_draw.ds_source.offset(spot as isize) as isize)
-            as byte;
+        let src_pixel = *state.r_draw.ds_source.offset(spot as isize);
+        *fresh6 = state.r_data.colormaps[(state.r_draw.ds_colormap * 256 + src_pixel as i32) as usize];
         position = position.wrapping_add(step);
         let fresh7 = count;
         count = count - 1;
@@ -462,18 +451,11 @@ pub unsafe fn R_DrawSpanLow(state: &mut GameState) {
         spot = (xtemp | ytemp) as i32;
         let fresh8 = dest;
         dest = dest.offset(1);
-        *fresh8 = *state
-            .r_draw
-            .ds_colormap
-            .offset(*state.r_draw.ds_source.offset(spot as isize) as isize)
-            as byte;
+        let src_pixel = *state.r_draw.ds_source.offset(spot as isize);
+        *fresh8 = state.r_data.colormaps[(state.r_draw.ds_colormap * 256 + src_pixel as i32) as usize];
         let fresh9 = dest;
         dest = dest.offset(1);
-        *fresh9 = *state
-            .r_draw
-            .ds_colormap
-            .offset(*state.r_draw.ds_source.offset(spot as isize) as isize)
-            as byte;
+        *fresh9 = state.r_data.colormaps[(state.r_draw.ds_colormap * 256 + src_pixel as i32) as usize];
         position = position.wrapping_add(step);
         let fresh10 = count;
         count = count - 1;

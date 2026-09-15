@@ -9,7 +9,7 @@ use crate::p_spec::ML_MAPPED;
 use crate::r_data::column_t;
 use crate::r_data::R_GetColumn;
 use crate::r_defs::drawseg_t;
-use crate::r_defs::lighttable_t;
+use crate::r_main::LightRow48;
 use crate::r_main::R_PointToDist;
 use crate::r_main::R_ScaleFromGlobalAngle;
 use crate::r_main::LIGHTLEVELS;
@@ -60,7 +60,7 @@ pub struct RSegsState {
     pub topstep: fixed_t,
     pub bottomfrac: fixed_t,
     pub bottomstep: fixed_t,
-    pub walllights: *mut *mut lighttable_t,
+    pub walllights: LightRow48,
     pub maskedtexturecol: *mut i16,
 }
 
@@ -98,7 +98,7 @@ impl RSegsState {
             topstep: 0,
             bottomfrac: 0,
             bottomstep: 0,
-            walllights: ::core::ptr::null::<*mut lighttable_t>() as *mut *mut lighttable_t,
+            walllights: LightRow48::Normal(0),
             maskedtexturecol: ::core::ptr::null::<i16>() as *mut i16,
         }
     }
@@ -138,17 +138,11 @@ pub unsafe fn R_RenderMaskedSegRange(
         lightnum += 1;
     }
     if lightnum < 0 as i32 {
-        state.r_segs.walllights = &raw mut *(&raw mut state.r_main.scalelight
-            as *mut [*mut lighttable_t; 48])
-            .offset(0 as i32 as isize) as *mut *mut lighttable_t;
+        state.r_segs.walllights = LightRow48::Normal(0);
     } else if lightnum >= LIGHTLEVELS {
-        state.r_segs.walllights =
-            &raw mut *(&raw mut state.r_main.scalelight as *mut [*mut lighttable_t; 48])
-                .offset((LIGHTLEVELS - 1 as i32) as isize) as *mut *mut lighttable_t;
+        state.r_segs.walllights = LightRow48::Normal((LIGHTLEVELS - 1 as i32) as usize);
     } else {
-        state.r_segs.walllights = &raw mut *(&raw mut state.r_main.scalelight
-            as *mut [*mut lighttable_t; 48])
-            .offset(lightnum as isize) as *mut *mut lighttable_t;
+        state.r_segs.walllights = LightRow48::Normal(lightnum as usize);
     }
     state.r_segs.maskedtexturecol = (*ds).maskedtexturecol;
     state.r_segs.rw_scalestep = (*ds).scalestep;
@@ -184,7 +178,7 @@ pub unsafe fn R_RenderMaskedSegRange(
     }
     state.r_draw.dc_texturemid +=
         (*state.p_setup.side_mut(state.p_setup.seg(state.r_bsp.curline).sidedef)).rowoffset;
-    if !state.r_main.fixedcolormap.is_null() {
+    if state.r_main.fixedcolormap.is_some() {
         state.r_draw.dc_colormap = state.r_main.fixedcolormap;
     }
     state.r_draw.dc_x = x1;
@@ -195,12 +189,13 @@ pub unsafe fn R_RenderMaskedSegRange(
             .offset(state.r_draw.dc_x as isize) as i32
             != SHRT_MAX
         {
-            if state.r_main.fixedcolormap.is_null() {
+            if state.r_main.fixedcolormap.is_none() {
                 index = (state.r_things.spryscale >> LIGHTSCALESHIFT) as u32;
                 if index >= MAXLIGHTSCALE as u32 {
                     index = (MAXLIGHTSCALE - 1 as i32) as u32;
                 }
-                state.r_draw.dc_colormap = *state.r_segs.walllights.offset(index as isize);
+                state.r_draw.dc_colormap =
+                    Some(state.r_main.light_row48(state.r_segs.walllights)[index as usize]);
             }
             state.r_things.sprtopscreen = state.r_main.centeryfrac
                 - FixedMul(state.r_draw.dc_texturemid, state.r_things.spryscale);
@@ -280,7 +275,8 @@ pub unsafe fn R_RenderSegLoop(state: &mut GameState) {
             if index >= MAXLIGHTSCALE as u32 {
                 index = (MAXLIGHTSCALE - 1 as i32) as u32;
             }
-            state.r_draw.dc_colormap = *state.r_segs.walllights.offset(index as isize);
+            state.r_draw.dc_colormap =
+                Some(state.r_main.light_row48(state.r_segs.walllights)[index as usize]);
             state.r_draw.dc_x = state.r_segs.rw_x;
             state.r_draw.dc_iscale =
                 (0xffffffff as u32).wrapping_div(state.r_segs.rw_scale as u32) as fixed_t;
@@ -594,7 +590,7 @@ pub unsafe fn R_StoreWallRange(state: &mut GameState, mut start: i32, mut stop: 
         state.r_segs.rw_centerangle = (ANG90 as angle_t)
             .wrapping_add(state.r_main.viewangle)
             .wrapping_sub(state.r_segs.rw_normalangle);
-        if state.r_main.fixedcolormap.is_null() {
+        if state.r_main.fixedcolormap.is_none() {
             lightnum = ((*state.p_setup.sector_mut(state.r_bsp.frontsector.unwrap())).lightlevel
                 as i32
                 >> LIGHTSEGSHIFT)
@@ -607,18 +603,11 @@ pub unsafe fn R_StoreWallRange(state: &mut GameState, mut start: i32, mut stop: 
                 lightnum += 1;
             }
             if lightnum < 0 as i32 {
-                state.r_segs.walllights =
-                    &raw mut *(&raw mut state.r_main.scalelight as *mut [*mut lighttable_t; 48])
-                        .offset(0 as i32 as isize) as *mut *mut lighttable_t;
+                state.r_segs.walllights = LightRow48::Normal(0);
             } else if lightnum >= LIGHTLEVELS {
-                state.r_segs.walllights = &raw mut *(&raw mut state.r_main.scalelight
-                    as *mut [*mut lighttable_t; 48])
-                    .offset((LIGHTLEVELS - 1 as i32) as isize)
-                    as *mut *mut lighttable_t;
+                state.r_segs.walllights = LightRow48::Normal((LIGHTLEVELS - 1 as i32) as usize);
             } else {
-                state.r_segs.walllights =
-                    &raw mut *(&raw mut state.r_main.scalelight as *mut [*mut lighttable_t; 48])
-                        .offset(lightnum as isize) as *mut *mut lighttable_t;
+                state.r_segs.walllights = LightRow48::Normal(lightnum as usize);
             }
         }
     }
