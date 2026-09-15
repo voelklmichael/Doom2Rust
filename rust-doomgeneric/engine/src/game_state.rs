@@ -203,7 +203,6 @@ pub fn finish_init(state: &mut GameState) {
         state.m_menu.fixup_menu_links();
         state.m_menu.fixup_menu_routines();
         state.wi_stuff.fixup_anims();
-        state.g_game.fixup_button_pointers();
         fixup_cheat_sequences(state);
         fixup_numanims(state);
     }

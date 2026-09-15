@@ -49,6 +49,7 @@ use crate::mem_compat::{memcpy, memset};
 use crate::p_inter::maxammo;
 use crate::p_map::P_CheckPosition;
 use crate::p_mobj::mapthing_t;
+use crate::p_mobj::MobjId;
 use crate::p_mobj::MobjType;
 use crate::p_mobj::P_RemoveMobj;
 use crate::p_mobj::P_SpawnMobj;
@@ -94,7 +95,7 @@ use crate::tables::finetangent;
 use crate::tables::ANG45;
 use crate::tables::ANGLETOFINESHIFT;
 use crate::v_video::V_ScreenShot;
-use crate::fixed_cstr::wad_name8_to_string;
+use crate::fixed_cstr::FixedCStr;
 use crate::w_wad::{W_CacheLumpNum, W_CheckNumForName, W_GetNumForName, W_LumpLength, W_ReleaseLumpName};
 use crate::wi_stuff::WI_End;
 use crate::wi_stuff::WI_Start;
@@ -137,8 +138,8 @@ pub struct GGameState {
     pub demoplayback: bool,
     pub netdemo: bool,
     pub demobuffer: Vec<byte>,
-    pub demo_p: *mut byte,
-    pub demoend: *mut byte,
+    pub demo_p: usize,
+    pub demoend: usize,
     pub singledemo: bool,
     pub precache: bool,
     pub testcontrols: bool,
@@ -151,7 +152,6 @@ pub struct GGameState {
     pub gamekeydown: [bool; 256],
     pub turnheld: i32,
     pub mousearray: [bool; 9],
-    pub mousebuttons: *mut bool,
     pub mousex: i32,
     pub mousey: i32,
     pub dclicktime: i32,
@@ -164,10 +164,9 @@ pub struct GGameState {
     pub joyymove: i32,
     pub joystrafemove: i32,
     pub joyarray: [bool; 21],
-    pub joybuttons: *mut bool,
     pub savegameslot: i32,
     pub savedescription: String,
-    pub bodyque: [*mut mobj_t; 32],
+    pub bodyque: [Option<MobjId>; 32],
     pub bodyqueslot: i32,
     pub vanilla_savegame_limit: i32,
     pub vanilla_demo_limit: i32,
@@ -176,7 +175,7 @@ pub struct GGameState {
     pub d_skill: SkillType,
     pub d_episode: i32,
     pub d_map: i32,
-    pub defdemoname: *mut ::core::ffi::c_char,
+    pub defdemoname: FixedCStr<8>,
     pub g_build_ticcmd_carry: i16,
 }
 
@@ -271,8 +270,8 @@ impl GGameState {
             demoplayback: false,
             netdemo: false,
             demobuffer: Vec::new(),
-            demo_p: ::core::ptr::null::<byte>() as *mut byte,
-            demoend: ::core::ptr::null::<byte>() as *mut byte,
+            demo_p: 0,
+            demoend: 0,
             singledemo: false,
             precache: true,
             testcontrols: false,
@@ -305,7 +304,6 @@ impl GGameState {
             gamekeydown: [false; 256],
             turnheld: 0,
             mousearray: [false; 9],
-            mousebuttons: ::core::ptr::null::<bool>() as *mut bool,
             mousex: 0,
             mousey: 0,
             dclicktime: 0,
@@ -318,10 +316,9 @@ impl GGameState {
             joyymove: 0,
             joystrafemove: 0,
             joyarray: [false; 21],
-            joybuttons: ::core::ptr::null::<bool>() as *mut bool,
             savegameslot: 0,
             savedescription: String::new(),
-            bodyque: [::core::ptr::null::<mobj_t>() as *mut mobj_t; 32],
+            bodyque: [None; 32],
             bodyqueslot: 0,
             vanilla_savegame_limit: 1,
             vanilla_demo_limit: 1,
@@ -330,22 +327,24 @@ impl GGameState {
             d_skill: SkillType::sk_baby,
             d_episode: 0,
             d_map: 0,
-            defdemoname: ::core::ptr::null::<::core::ffi::c_char>() as *mut ::core::ffi::c_char,
+            defdemoname: FixedCStr::from_array([0; 8]),
             g_build_ticcmd_carry: 0,
         }
     }
 
-    // joyarray[0]/mousearray[0] are unused (mirrors the original C, where
-    // index 0 is reserved); joybuttons/mousebuttons alias the rest of the
-    // array. Self-referential, so must run once the struct is at its final,
-    // permanently-stable address -- see game_state::finish_init.
-    pub fn fixup_button_pointers(&mut self) {
-        self.joybuttons = (&raw mut self.joyarray as *mut bool).wrapping_offset(1);
-        self.mousebuttons = (&raw mut self.mousearray as *mut bool).wrapping_offset(1);
-    }
-
     pub fn player_mut(&mut self, id: PlayerId) -> *mut player_t {
         &mut self.players[id.0 as usize] as *mut player_t
+    }
+
+    fn demo_read_byte(&mut self) -> byte {
+        let b = self.demobuffer[self.demo_p];
+        self.demo_p += 1;
+        b
+    }
+
+    fn demo_write_byte(&mut self, b: byte) {
+        self.demobuffer[self.demo_p] = b;
+        self.demo_p += 1;
     }
 }
 
@@ -509,21 +508,12 @@ pub unsafe fn G_BuildTiccmd(state: &mut GameState, mut cmd: *mut ticcmd_t, mut m
     (*cmd).consistancy = state.g_game.consistancy[state.g_game.consoleplayer as usize]
         [(maketic % BACKUPTICS) as usize];
     strafe = state.g_game.gamekeydown[state.m_controls.key_strafe as usize]
-        || *state
-            .g_game
-            .mousebuttons
-            .offset(state.m_controls.mousebstrafe as isize)
-        || *state
-            .g_game
-            .joybuttons
-            .offset(state.m_controls.joybstrafe as isize);
+        || state.g_game.mousearray[(state.m_controls.mousebstrafe + 1) as usize]
+        || state.g_game.joyarray[(state.m_controls.joybstrafe + 1) as usize];
     speed = (state.m_controls.key_speed >= NUMKEYS
         || state.m_controls.joybspeed >= MAX_JOY_BUTTONS
         || state.g_game.gamekeydown[state.m_controls.key_speed as usize]
-        || *state
-            .g_game
-            .joybuttons
-            .offset(state.m_controls.joybspeed as isize)) as i32;
+        || state.g_game.joyarray[(state.m_controls.joybspeed + 1) as usize]) as i32;
     side = 0 as i32;
     forward = side;
     if state.g_game.joyxmove < 0 as i32
@@ -580,53 +570,29 @@ pub unsafe fn G_BuildTiccmd(state: &mut GameState, mut cmd: *mut ticcmd_t, mut m
         forward -= state.g_game.forwardmove[speed as usize] as i32;
     }
     if state.g_game.gamekeydown[state.m_controls.key_strafeleft as usize]
-        || *state
-            .g_game
-            .joybuttons
-            .offset(state.m_controls.joybstrafeleft as isize)
-        || *state
-            .g_game
-            .mousebuttons
-            .offset(state.m_controls.mousebstrafeleft as isize)
+        || state.g_game.joyarray[(state.m_controls.joybstrafeleft + 1) as usize]
+        || state.g_game.mousearray[(state.m_controls.mousebstrafeleft + 1) as usize]
         || state.g_game.joystrafemove < 0 as i32
     {
         side -= state.g_game.sidemove[speed as usize] as i32;
     }
     if state.g_game.gamekeydown[state.m_controls.key_straferight as usize]
-        || *state
-            .g_game
-            .joybuttons
-            .offset(state.m_controls.joybstraferight as isize)
-        || *state
-            .g_game
-            .mousebuttons
-            .offset(state.m_controls.mousebstraferight as isize)
+        || state.g_game.joyarray[(state.m_controls.joybstraferight + 1) as usize]
+        || state.g_game.mousearray[(state.m_controls.mousebstraferight + 1) as usize]
         || state.g_game.joystrafemove > 0 as i32
     {
         side += state.g_game.sidemove[speed as usize] as i32;
     }
     (*cmd).chatchar = HU_dequeueChatChar(&mut state.hu_stuff) as byte;
     if state.g_game.gamekeydown[state.m_controls.key_fire as usize]
-        || *state
-            .g_game
-            .mousebuttons
-            .offset(state.m_controls.mousebfire as isize)
-        || *state
-            .g_game
-            .joybuttons
-            .offset(state.m_controls.joybfire as isize)
+        || state.g_game.mousearray[(state.m_controls.mousebfire + 1) as usize]
+        || state.g_game.joyarray[(state.m_controls.joybfire + 1) as usize]
     {
         (*cmd).buttons = ((*cmd).buttons as i32 | BT_ATTACK as i32) as byte;
     }
     if state.g_game.gamekeydown[state.m_controls.key_use as usize]
-        || *state
-            .g_game
-            .joybuttons
-            .offset(state.m_controls.joybuse as isize)
-        || *state
-            .g_game
-            .mousebuttons
-            .offset(state.m_controls.mousebuse as isize)
+        || state.g_game.joyarray[(state.m_controls.joybuse + 1) as usize]
+        || state.g_game.mousearray[(state.m_controls.mousebuse + 1) as usize]
     {
         (*cmd).buttons = ((*cmd).buttons as i32 | BT_USE as i32) as byte;
         state.g_game.dclicks = 0 as i32;
@@ -653,32 +619,20 @@ pub unsafe fn G_BuildTiccmd(state: &mut GameState, mut cmd: *mut ticcmd_t, mut m
         }
     }
     state.g_game.next_weapon = 0 as i32;
-    if *state
-        .g_game
-        .mousebuttons
-        .offset(state.m_controls.mousebforward as isize)
+    if state.g_game.mousearray[(state.m_controls.mousebforward + 1) as usize]
     {
         forward += state.g_game.forwardmove[speed as usize] as i32;
     }
-    if *state
-        .g_game
-        .mousebuttons
-        .offset(state.m_controls.mousebbackward as isize)
+    if state.g_game.mousearray[(state.m_controls.mousebbackward + 1) as usize]
     {
         forward -= state.g_game.forwardmove[speed as usize] as i32;
     }
     if state.m_controls.dclick_use != 0 {
-        if *state
-            .g_game
-            .mousebuttons
-            .offset(state.m_controls.mousebforward as isize)
+        if state.g_game.mousearray[(state.m_controls.mousebforward + 1) as usize]
             != state.g_game.dclickstate
             && state.g_game.dclicktime > 1 as i32
         {
-            state.g_game.dclickstate = *state
-                .g_game
-                .mousebuttons
-                .offset(state.m_controls.mousebforward as isize);
+            state.g_game.dclickstate = state.g_game.mousearray[(state.m_controls.mousebforward + 1) as usize];
             if state.g_game.dclickstate {
                 state.g_game.dclicks += 1;
             }
@@ -695,14 +649,8 @@ pub unsafe fn G_BuildTiccmd(state: &mut GameState, mut cmd: *mut ticcmd_t, mut m
                 state.g_game.dclickstate = false;
             }
         }
-        bstrafe = *state
-            .g_game
-            .mousebuttons
-            .offset(state.m_controls.mousebstrafe as isize)
-            || *state
-                .g_game
-                .joybuttons
-                .offset(state.m_controls.joybstrafe as isize);
+        bstrafe = state.g_game.mousearray[(state.m_controls.mousebstrafe + 1) as usize]
+            || state.g_game.joyarray[(state.m_controls.joybstrafe + 1) as usize];
         if bstrafe != state.g_game.dclickstate2 && state.g_game.dclicktime2 > 1 as i32 {
             state.g_game.dclickstate2 = bstrafe;
             if state.g_game.dclickstate2 {
@@ -836,14 +784,14 @@ unsafe fn SetJoyButtons(state: &mut GameState, mut buttons_mask: u32) {
     i = 0 as i32;
     while i < MAX_JOY_BUTTONS {
         let mut button_on: i32 = (buttons_mask & ((1 as i32) << i) as u32 != 0 as u32) as i32;
-        if !*state.g_game.joybuttons.offset(i as isize) && button_on != 0 {
+        if !state.g_game.joyarray[(i + 1) as usize] && button_on != 0 {
             if i == state.m_controls.joybprevweapon {
                 state.g_game.next_weapon = -(1 as i32);
             } else if i == state.m_controls.joybnextweapon {
                 state.g_game.next_weapon = 1 as i32;
             }
         }
-        *state.g_game.joybuttons.offset(i as isize) = button_on != 0;
+        state.g_game.joyarray[(i + 1) as usize] = button_on != 0;
         i += 1;
     }
 }
@@ -852,14 +800,14 @@ unsafe fn SetMouseButtons(state: &mut GameState, mut buttons_mask: u32) {
     i = 0 as i32;
     while i < MAX_MOUSE_BUTTONS {
         let mut button_on: u32 = (buttons_mask & ((1 as i32) << i) as u32 != 0 as u32) as u32;
-        if !*state.g_game.mousebuttons.offset(i as isize) && button_on != 0 {
+        if !state.g_game.mousearray[(i + 1) as usize] && button_on != 0 {
             if i == state.m_controls.mousebprevweapon {
                 state.g_game.next_weapon = -(1 as i32);
             } else if i == state.m_controls.mousebnextweapon {
                 state.g_game.next_weapon = 1 as i32;
             }
         }
-        *state.g_game.mousebuttons.offset(i as isize) = button_on != 0;
+        state.g_game.mousearray[(i + 1) as usize] = button_on != 0;
         i += 1;
     }
 }
@@ -1214,16 +1162,12 @@ pub unsafe fn G_CheckSpot(
         return false;
     }
     if state.g_game.bodyqueslot >= BODYQUESIZE {
-        P_RemoveMobj(
-            state,
-            state.g_game.bodyque[(state.g_game.bodyqueslot % BODYQUESIZE) as usize],
-        );
+        let old_id = state.g_game.bodyque[(state.g_game.bodyqueslot % BODYQUESIZE) as usize].unwrap();
+        let old_mo = state.p_mobj.mobj_get(old_id).unwrap();
+        P_RemoveMobj(state, old_mo);
     }
-    let player_mo = state
-        .p_mobj
-        .mobj_get(state.g_game.players[playernum as usize].mo.unwrap())
-        .unwrap();
-    state.g_game.bodyque[(state.g_game.bodyqueslot % BODYQUESIZE) as usize] = player_mo;
+    let player_mo_id = state.g_game.players[playernum as usize].mo;
+    state.g_game.bodyque[(state.g_game.bodyqueslot % BODYQUESIZE) as usize] = player_mo_id;
     state.g_game.bodyqueslot += 1;
     ss = R_PointInSubsector(state, x, y);
     let mut xa: fixed_t = 0;
@@ -1777,83 +1721,43 @@ pub fn G_InitNew(
 }
 pub const DEMOMARKER: i32 = 0x80;
 pub unsafe fn G_ReadDemoTiccmd(state: &mut GameState, mut cmd: *mut ticcmd_t) {
-    if *state.g_game.demo_p as i32 == DEMOMARKER {
+    if state.g_game.demobuffer[state.g_game.demo_p] as i32 == DEMOMARKER {
         G_CheckDemoStatus(state);
         return;
     }
-    let fresh18 = state.g_game.demo_p;
-    state.g_game.demo_p = state.g_game.demo_p.offset(1);
-    (*cmd).forwardmove = *fresh18 as i8;
-    let fresh19 = state.g_game.demo_p;
-    state.g_game.demo_p = state.g_game.demo_p.offset(1);
-    (*cmd).sidemove = *fresh19 as i8;
+    (*cmd).forwardmove = state.g_game.demo_read_byte() as i8;
+    (*cmd).sidemove = state.g_game.demo_read_byte() as i8;
     if state.g_game.longtics {
-        let fresh20 = state.g_game.demo_p;
-        state.g_game.demo_p = state.g_game.demo_p.offset(1);
-        (*cmd).angleturn = *fresh20 as i16;
-        let fresh21 = state.g_game.demo_p;
-        state.g_game.demo_p = state.g_game.demo_p.offset(1);
-        (*cmd).angleturn = ((*cmd).angleturn as i32 | (*fresh21 as i32) << 8 as i32) as i16;
+        (*cmd).angleturn = state.g_game.demo_read_byte() as i16;
+        let hi = state.g_game.demo_read_byte();
+        (*cmd).angleturn = ((*cmd).angleturn as i32 | (hi as i32) << 8 as i32) as i16;
     } else {
-        let fresh22 = state.g_game.demo_p;
-        state.g_game.demo_p = state.g_game.demo_p.offset(1);
-        (*cmd).angleturn = ((*fresh22 as u8 as i32) << 8 as i32) as i16;
+        let hi = state.g_game.demo_read_byte();
+        (*cmd).angleturn = ((hi as u8 as i32) << 8 as i32) as i16;
     }
-    let fresh23 = state.g_game.demo_p;
-    state.g_game.demo_p = state.g_game.demo_p.offset(1);
-    (*cmd).buttons = *fresh23 as u8 as byte;
+    (*cmd).buttons = state.g_game.demo_read_byte() as u8 as byte;
 }
 unsafe fn IncreaseDemoBuffer(state: &mut GameState) {
-    let current_length = state
-        .g_game
-        .demoend
-        .offset_from(state.g_game.demobuffer.as_ptr()) as i64 as i32;
-    let new_length = current_length * 2 as i32;
-    let demo_p_offset = state
-        .g_game
-        .demo_p
-        .offset_from(state.g_game.demobuffer.as_ptr());
-    state.g_game.demobuffer.resize(new_length as usize, 0);
-    state.g_game.demo_p = state
-        .g_game
-        .demobuffer
-        .as_mut_ptr()
-        .offset(demo_p_offset as isize);
-    state.g_game.demoend = state
-        .g_game
-        .demobuffer
-        .as_mut_ptr()
-        .offset(new_length as isize);
+    let new_length = state.g_game.demoend * 2 as usize;
+    state.g_game.demobuffer.resize(new_length, 0);
+    state.g_game.demoend = new_length;
 }
 pub unsafe fn G_WriteDemoTiccmd(state: &mut GameState, mut cmd: *mut ticcmd_t) {
-    let mut demo_start: *mut byte = ::core::ptr::null_mut::<byte>();
     if state.g_game.gamekeydown[state.m_controls.key_demo_quit as usize] {
         G_CheckDemoStatus(state);
     }
-    demo_start = state.g_game.demo_p;
-    let fresh12 = state.g_game.demo_p;
-    state.g_game.demo_p = state.g_game.demo_p.offset(1);
-    *fresh12 = (*cmd).forwardmove as byte;
-    let fresh13 = state.g_game.demo_p;
-    state.g_game.demo_p = state.g_game.demo_p.offset(1);
-    *fresh13 = (*cmd).sidemove as byte;
+    let demo_start = state.g_game.demo_p;
+    state.g_game.demo_write_byte((*cmd).forwardmove as byte);
+    state.g_game.demo_write_byte((*cmd).sidemove as byte);
     if state.g_game.longtics {
-        let fresh14 = state.g_game.demo_p;
-        state.g_game.demo_p = state.g_game.demo_p.offset(1);
-        *fresh14 = ((*cmd).angleturn as i32 & 0xff as i32) as byte;
-        let fresh15 = state.g_game.demo_p;
-        state.g_game.demo_p = state.g_game.demo_p.offset(1);
-        *fresh15 = ((*cmd).angleturn as i32 >> 8 as i32 & 0xff as i32) as byte;
+        state.g_game.demo_write_byte(((*cmd).angleturn as i32 & 0xff as i32) as byte);
+        state.g_game.demo_write_byte(((*cmd).angleturn as i32 >> 8 as i32 & 0xff as i32) as byte);
     } else {
-        let fresh16 = state.g_game.demo_p;
-        state.g_game.demo_p = state.g_game.demo_p.offset(1);
-        *fresh16 = ((*cmd).angleturn as i32 >> 8 as i32) as byte;
+        state.g_game.demo_write_byte(((*cmd).angleturn as i32 >> 8 as i32) as byte);
     }
-    let fresh17 = state.g_game.demo_p;
-    state.g_game.demo_p = state.g_game.demo_p.offset(1);
-    *fresh17 = (*cmd).buttons;
+    state.g_game.demo_write_byte((*cmd).buttons);
     state.g_game.demo_p = demo_start;
-    if state.g_game.demo_p > state.g_game.demoend.offset(-(16 as i32 as isize)) {
+    if state.g_game.demo_p > state.g_game.demoend.saturating_sub(16) {
         if state.g_game.vanilla_demo_limit != 0 {
             G_CheckDemoStatus(state);
             return;
@@ -1874,11 +1778,7 @@ pub unsafe fn G_RecordDemo(state: &mut GameState, name: &str) {
         maxsize = M_ArgvAtoi(&state.m_argv.myargv[(i + 1 as i32) as usize]) * 1024 as i32;
     }
     state.g_game.demobuffer = vec![0u8; maxsize as usize];
-    state.g_game.demoend = state
-        .g_game
-        .demobuffer
-        .as_mut_ptr()
-        .offset(maxsize as isize);
+    state.g_game.demoend = maxsize as usize;
     state.g_game.demorecording = true;
 }
 pub fn G_VanillaVersionCode(state: &mut DoomstatState) -> i32 {
@@ -1897,49 +1797,29 @@ pub unsafe fn G_BeginRecording(state: &mut GameState) {
     let mut i: i32 = 0;
     state.g_game.longtics = M_CheckParm(state, "-longtics") != 0 as i32;
     state.g_game.lowres_turn = !state.g_game.longtics;
-    state.g_game.demo_p = state.g_game.demobuffer.as_mut_ptr();
+    state.g_game.demo_p = 0;
     if state.g_game.longtics {
-        let fresh0 = state.g_game.demo_p;
-        state.g_game.demo_p = state.g_game.demo_p.offset(1);
-        *fresh0 = DOOM_191_VERSION as byte;
+        state.g_game.demo_write_byte(DOOM_191_VERSION as byte);
     } else {
-        let fresh1 = state.g_game.demo_p;
-        state.g_game.demo_p = state.g_game.demo_p.offset(1);
-        *fresh1 = G_VanillaVersionCode(&mut state.doomstat) as byte;
+        let version = G_VanillaVersionCode(&mut state.doomstat) as byte;
+        state.g_game.demo_write_byte(version);
     }
-    let fresh2 = state.g_game.demo_p;
-    state.g_game.demo_p = state.g_game.demo_p.offset(1);
-    *fresh2 = state.g_game.gameskill as byte;
-    let fresh3 = state.g_game.demo_p;
-    state.g_game.demo_p = state.g_game.demo_p.offset(1);
-    *fresh3 = state.g_game.gameepisode as byte;
-    let fresh4 = state.g_game.demo_p;
-    state.g_game.demo_p = state.g_game.demo_p.offset(1);
-    *fresh4 = state.g_game.gamemap as byte;
-    let fresh5 = state.g_game.demo_p;
-    state.g_game.demo_p = state.g_game.demo_p.offset(1);
-    *fresh5 = state.g_game.deathmatch as byte;
-    let fresh6 = state.g_game.demo_p;
-    state.g_game.demo_p = state.g_game.demo_p.offset(1);
-    *fresh6 = state.d_main.respawnparm as byte;
-    let fresh7 = state.g_game.demo_p;
-    state.g_game.demo_p = state.g_game.demo_p.offset(1);
-    *fresh7 = state.d_main.fastparm as byte;
-    let fresh8 = state.g_game.demo_p;
-    state.g_game.demo_p = state.g_game.demo_p.offset(1);
-    *fresh8 = state.d_main.nomonsters as byte;
-    let fresh9 = state.g_game.demo_p;
-    state.g_game.demo_p = state.g_game.demo_p.offset(1);
-    *fresh9 = state.g_game.consoleplayer as byte;
+    state.g_game.demo_write_byte(state.g_game.gameskill as byte);
+    state.g_game.demo_write_byte(state.g_game.gameepisode as byte);
+    state.g_game.demo_write_byte(state.g_game.gamemap as byte);
+    state.g_game.demo_write_byte(state.g_game.deathmatch as byte);
+    state.g_game.demo_write_byte(state.d_main.respawnparm as byte);
+    state.g_game.demo_write_byte(state.d_main.fastparm as byte);
+    state.g_game.demo_write_byte(state.d_main.nomonsters as byte);
+    state.g_game.demo_write_byte(state.g_game.consoleplayer as byte);
     i = 0 as i32;
     while i < MAXPLAYERS {
-        let fresh10 = state.g_game.demo_p;
-        state.g_game.demo_p = state.g_game.demo_p.offset(1);
-        *fresh10 = state.g_game.playeringame[i as usize] as byte;
+        let b = state.g_game.playeringame[i as usize] as byte;
+        state.g_game.demo_write_byte(b);
         i += 1;
     }
 }
-pub fn G_DeferedPlayDemo(state: &mut GameState, mut name: *mut ::core::ffi::c_char) {
+pub fn G_DeferedPlayDemo(state: &mut GameState, name: FixedCStr<8>) {
     state.g_game.defdemoname = name;
     state.g_game.gameaction = GameAction::ga_playdemo;
 }
@@ -1970,15 +1850,13 @@ pub unsafe fn G_DoPlayDemo(state: &mut GameState) {
     let mut map: i32 = 0;
     let mut demoversion: i32 = 0;
     state.g_game.gameaction = GameAction::ga_nothing;
-    let demo_lumpname = wad_name8_to_string(state.g_game.defdemoname);
+    let demo_lumpname = state.g_game.defdemoname.as_str().into_owned();
     let demo_lumpnum = W_GetNumForName(&mut state.w_wad, &demo_lumpname);
     let demo_lump = W_CacheLumpNum(state, demo_lumpnum) as *const byte;
     let demo_lumplen = W_LumpLength(&mut state.w_wad, demo_lumpnum as u32) as usize;
     state.g_game.demobuffer = ::core::slice::from_raw_parts(demo_lump, demo_lumplen).to_vec();
-    state.g_game.demo_p = state.g_game.demobuffer.as_mut_ptr();
-    let fresh24 = state.g_game.demo_p;
-    state.g_game.demo_p = state.g_game.demo_p.offset(1);
-    demoversion = *fresh24 as i32;
+    state.g_game.demo_p = 0;
+    demoversion = state.g_game.demo_read_byte() as i32;
     if demoversion == G_VanillaVersionCode(&mut state.doomstat) {
         state.g_game.longtics = false;
     } else if demoversion == DOOM_191_VERSION {
@@ -1991,35 +1869,17 @@ pub unsafe fn G_DoPlayDemo(state: &mut GameState) {
             DemoVersionDescription(state, demoversion),
         );
     }
-    let fresh25 = state.g_game.demo_p;
-    state.g_game.demo_p = state.g_game.demo_p.offset(1);
-    skill = skill_from_raw(*fresh25 as i32);
-    let fresh26 = state.g_game.demo_p;
-    state.g_game.demo_p = state.g_game.demo_p.offset(1);
-    episode = *fresh26 as i32;
-    let fresh27 = state.g_game.demo_p;
-    state.g_game.demo_p = state.g_game.demo_p.offset(1);
-    map = *fresh27 as i32;
-    let fresh28 = state.g_game.demo_p;
-    state.g_game.demo_p = state.g_game.demo_p.offset(1);
-    state.g_game.deathmatch = *fresh28 as i32;
-    let fresh29 = state.g_game.demo_p;
-    state.g_game.demo_p = state.g_game.demo_p.offset(1);
-    state.d_main.respawnparm = *fresh29 != 0;
-    let fresh30 = state.g_game.demo_p;
-    state.g_game.demo_p = state.g_game.demo_p.offset(1);
-    state.d_main.fastparm = *fresh30 != 0;
-    let fresh31 = state.g_game.demo_p;
-    state.g_game.demo_p = state.g_game.demo_p.offset(1);
-    state.d_main.nomonsters = *fresh31 != 0;
-    let fresh32 = state.g_game.demo_p;
-    state.g_game.demo_p = state.g_game.demo_p.offset(1);
-    state.g_game.consoleplayer = *fresh32 as i32;
+    skill = skill_from_raw(state.g_game.demo_read_byte() as i32);
+    episode = state.g_game.demo_read_byte() as i32;
+    map = state.g_game.demo_read_byte() as i32;
+    state.g_game.deathmatch = state.g_game.demo_read_byte() as i32;
+    state.d_main.respawnparm = state.g_game.demo_read_byte() != 0;
+    state.d_main.fastparm = state.g_game.demo_read_byte() != 0;
+    state.d_main.nomonsters = state.g_game.demo_read_byte() != 0;
+    state.g_game.consoleplayer = state.g_game.demo_read_byte() as i32;
     i = 0 as i32;
     while i < MAXPLAYERS {
-        let fresh33 = state.g_game.demo_p;
-        state.g_game.demo_p = state.g_game.demo_p.offset(1);
-        state.g_game.playeringame[i as usize] = *fresh33 != 0;
+        state.g_game.playeringame[i as usize] = state.g_game.demo_read_byte() != 0;
         i += 1;
     }
     if state.g_game.playeringame[1]
@@ -2036,7 +1896,7 @@ pub unsafe fn G_DoPlayDemo(state: &mut GameState) {
     state.g_game.usergame = false;
     state.g_game.demoplayback = true;
 }
-pub fn G_TimeDemo(state: &mut GameState, mut name: *mut ::core::ffi::c_char) {
+pub fn G_TimeDemo(state: &mut GameState, name: FixedCStr<8>) {
     state.g_game.nodrawers = M_CheckParm(state, "-nodraw") != 0;
     state.g_game.timingdemo = true;
     state.d_loop.singletics = true;
@@ -2061,7 +1921,7 @@ pub unsafe fn G_CheckDemoStatus(state: &mut GameState) -> bool {
     if state.g_game.demoplayback {
         W_ReleaseLumpName(
             &mut state.w_wad,
-            &wad_name8_to_string(state.g_game.defdemoname),
+            &state.g_game.defdemoname.as_str(),
         );
         state.g_game.demoplayback = false;
         state.g_game.netdemo = false;
@@ -2082,13 +1942,8 @@ pub unsafe fn G_CheckDemoStatus(state: &mut GameState) -> bool {
         return true;
     }
     if state.g_game.demorecording {
-        let fresh11 = state.g_game.demo_p;
-        state.g_game.demo_p = state.g_game.demo_p.offset(1);
-        *fresh11 = DEMOMARKER as byte;
-        let demo_len = state
-            .g_game
-            .demo_p
-            .offset_from(state.g_game.demobuffer.as_ptr()) as usize;
+        state.g_game.demo_write_byte(DEMOMARKER as byte);
+        let demo_len = state.g_game.demo_p;
         M_WriteFile(
             &state.g_game.demoname,
             &state.g_game.demobuffer[..demo_len],
