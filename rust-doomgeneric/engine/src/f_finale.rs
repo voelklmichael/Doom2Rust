@@ -14,10 +14,10 @@ use crate::hu_lib::patch_t;
 use crate::hu_stuff::HU_FONTSIZE;
 use crate::hu_stuff::HU_FONTSTART;
 use crate::i_video::IVideoState;
+use crate::info::StateId;
 use crate::mem_compat::memcpy;
 use crate::p_mobj::MobjType;
 use crate::p_mobj::StateNum;
-use crate::p_mobj::{mobjinfo_t, state_t};
 use crate::r_data::column_t;
 use crate::r_defs::{spritedef_t, spriteframe_t};
 use crate::r_things::FF_FRAMEMASK;
@@ -266,7 +266,7 @@ pub struct FFinaleState {
     castorder: [castinfo_t; 18],
     castnum: i32,
     casttics: i32,
-    caststate: *mut state_t,
+    caststate: Option<StateId>,
     castdeath: bool,
     castframes: i32,
     castonmelee: i32,
@@ -285,7 +285,7 @@ impl FFinaleState {
             castorder: INITIAL_CASTORDER,
             castnum: 0,
             casttics: 0,
-            caststate: ::core::ptr::null::<state_t>() as *mut state_t,
+            caststate: None,
             castdeath: false,
             castframes: 0,
             castonmelee: 0,
@@ -551,15 +551,9 @@ const INITIAL_CASTORDER: [castinfo_t; 18] = [
 pub unsafe fn F_StartCast(state: &mut GameState) {
     state.d_main.wipegamestate = GameScreenState::GS_WIPPED;
     state.f_finale.castnum = 0 as i32;
-    state.f_finale.caststate = (&raw mut state.info.states as *mut state_t).offset(
-        (*(&raw mut state.info.mobjinfo as *mut mobjinfo_t).offset(
-            (*(&raw mut state.f_finale.castorder as *mut castinfo_t)
-                .offset(state.f_finale.castnum as isize))
-            .type_0 as isize,
-        ))
-        .seestate as isize,
-    ) as *mut state_t;
-    state.f_finale.casttics = (*state.f_finale.caststate).tics;
+    let cast_type = state.f_finale.castorder[state.f_finale.castnum as usize].type_0;
+    state.f_finale.caststate = Some(StateId(state.info.mobjinfo[cast_type as usize].seestate as u32));
+    state.f_finale.casttics = (*state.info.state_mut(state.f_finale.caststate.unwrap())).tics;
     state.f_finale.castdeath = false;
     state.f_finale.finalestage = FinaleStage::F_STAGE_CAST;
     state.f_finale.castframes = 0 as i32;
@@ -575,8 +569,9 @@ pub unsafe fn F_CastTicker(state: &mut GameState) {
     if state.f_finale.casttics > 0 as i32 {
         return;
     }
-    if (*state.f_finale.caststate).tics == -(1 as i32)
-        || (*state.f_finale.caststate).nextstate as u32 == StateNum::S_NULL as i32 as u32
+    let cur_caststate = state.info.state_mut(state.f_finale.caststate.unwrap());
+    if (*cur_caststate).tics == -(1 as i32)
+        || (*cur_caststate).nextstate as u32 == StateNum::S_NULL as i32 as u32
     {
         state.f_finale.castnum += 1;
         state.f_finale.castdeath = false;
@@ -599,25 +594,16 @@ pub unsafe fn F_CastTicker(state: &mut GameState) {
                     .seesound,
             );
         }
-        state.f_finale.caststate = (&raw mut state.info.states as *mut state_t).offset(
-            (*(&raw mut state.info.mobjinfo as *mut mobjinfo_t).offset(
-                (*(&raw mut state.f_finale.castorder as *mut castinfo_t)
-                    .offset(state.f_finale.castnum as isize))
-                .type_0 as isize,
-            ))
-            .seestate as isize,
-        ) as *mut state_t;
+        let cast_type = state.f_finale.castorder[state.f_finale.castnum as usize].type_0;
+        state.f_finale.caststate =
+            Some(StateId(state.info.mobjinfo[cast_type as usize].seestate as u32));
         state.f_finale.castframes = 0 as i32;
         current_block = 1356832168064818221;
-    } else if state.f_finale.caststate
-        == (&raw mut state.info.states as *mut state_t)
-            .offset(StateNum::S_PLAY_ATK1 as i32 as isize) as *mut state_t
-    {
+    } else if state.f_finale.caststate == Some(StateId(StateNum::S_PLAY_ATK1 as u32)) {
         current_block = 13354568087807251156;
     } else {
-        st = (*state.f_finale.caststate).nextstate as i32;
-        state.f_finale.caststate =
-            (&raw mut state.info.states as *mut state_t).offset(st as isize) as *mut state_t;
+        st = (*cur_caststate).nextstate as i32;
+        state.f_finale.caststate = Some(StateId(st as u32));
         state.f_finale.castframes += 1;
         match st {
             154 => {
@@ -682,67 +668,27 @@ pub unsafe fn F_CastTicker(state: &mut GameState) {
     }
     match current_block {
         1356832168064818221 => {
+            let cast_type = state.f_finale.castorder[state.f_finale.castnum as usize].type_0;
+            let cast_info = state.info.mobjinfo[cast_type as usize];
             if state.f_finale.castframes == 12 as i32 {
                 state.f_finale.castattacking = true;
                 if state.f_finale.castonmelee != 0 {
-                    state.f_finale.caststate = (&raw mut state.info.states as *mut state_t).offset(
-                        (*(&raw mut state.info.mobjinfo as *mut mobjinfo_t).offset(
-                            (*(&raw mut state.f_finale.castorder as *mut castinfo_t)
-                                .offset(state.f_finale.castnum as isize))
-                            .type_0 as isize,
-                        ))
-                        .meleestate as isize,
-                    ) as *mut state_t;
+                    state.f_finale.caststate = Some(StateId(cast_info.meleestate as u32));
                 } else {
-                    state.f_finale.caststate = (&raw mut state.info.states as *mut state_t).offset(
-                        (*(&raw mut state.info.mobjinfo as *mut mobjinfo_t).offset(
-                            (*(&raw mut state.f_finale.castorder as *mut castinfo_t)
-                                .offset(state.f_finale.castnum as isize))
-                            .type_0 as isize,
-                        ))
-                        .missilestate as isize,
-                    ) as *mut state_t;
+                    state.f_finale.caststate = Some(StateId(cast_info.missilestate as u32));
                 }
                 state.f_finale.castonmelee ^= 1 as i32;
-                if state.f_finale.caststate
-                    == (&raw mut state.info.states as *mut state_t)
-                        .offset(StateNum::S_NULL as i32 as isize)
-                        as *mut state_t
-                {
+                if state.f_finale.caststate == Some(StateId(StateNum::S_NULL as u32)) {
                     if state.f_finale.castonmelee != 0 {
-                        state.f_finale.caststate = (&raw mut state.info.states as *mut state_t)
-                            .offset(
-                                (*(&raw mut state.info.mobjinfo as *mut mobjinfo_t).offset(
-                                    (*(&raw mut state.f_finale.castorder as *mut castinfo_t)
-                                        .offset(state.f_finale.castnum as isize))
-                                    .type_0 as isize,
-                                ))
-                                .meleestate as isize,
-                            ) as *mut state_t;
+                        state.f_finale.caststate = Some(StateId(cast_info.meleestate as u32));
                     } else {
-                        state.f_finale.caststate = (&raw mut state.info.states as *mut state_t)
-                            .offset(
-                                (*(&raw mut state.info.mobjinfo as *mut mobjinfo_t).offset(
-                                    (*(&raw mut state.f_finale.castorder as *mut castinfo_t)
-                                        .offset(state.f_finale.castnum as isize))
-                                    .type_0 as isize,
-                                ))
-                                .missilestate as isize,
-                            ) as *mut state_t;
+                        state.f_finale.caststate = Some(StateId(cast_info.missilestate as u32));
                     }
                 }
             }
             if state.f_finale.castattacking {
                 if state.f_finale.castframes == 24 as i32
-                    || state.f_finale.caststate
-                        == (&raw mut state.info.states as *mut state_t).offset(
-                            (*(&raw mut state.info.mobjinfo as *mut mobjinfo_t).offset(
-                                (*(&raw mut state.f_finale.castorder as *mut castinfo_t)
-                                    .offset(state.f_finale.castnum as isize))
-                                .type_0 as isize,
-                            ))
-                            .seestate as isize,
-                        ) as *mut state_t
+                    || state.f_finale.caststate == Some(StateId(cast_info.seestate as u32))
                 {
                     current_block = 13354568087807251156;
                 } else {
@@ -758,18 +704,13 @@ pub unsafe fn F_CastTicker(state: &mut GameState) {
         13354568087807251156 => {
             state.f_finale.castattacking = false;
             state.f_finale.castframes = 0 as i32;
-            state.f_finale.caststate = (&raw mut state.info.states as *mut state_t).offset(
-                (*(&raw mut state.info.mobjinfo as *mut mobjinfo_t).offset(
-                    (*(&raw mut state.f_finale.castorder as *mut castinfo_t)
-                        .offset(state.f_finale.castnum as isize))
-                    .type_0 as isize,
-                ))
-                .seestate as isize,
-            ) as *mut state_t;
+            let cast_type = state.f_finale.castorder[state.f_finale.castnum as usize].type_0;
+            state.f_finale.caststate =
+                Some(StateId(state.info.mobjinfo[cast_type as usize].seestate as u32));
         }
         _ => {}
     }
-    state.f_finale.casttics = (*state.f_finale.caststate).tics;
+    state.f_finale.casttics = (*state.info.state_mut(state.f_finale.caststate.unwrap())).tics;
     if state.f_finale.casttics == -(1 as i32) {
         state.f_finale.casttics = 15 as i32;
     }
@@ -782,15 +723,9 @@ pub unsafe fn F_CastResponder(state: &mut GameState, mut ev: &event_t) -> bool {
         return true;
     }
     state.f_finale.castdeath = true;
-    state.f_finale.caststate = (&raw mut state.info.states as *mut state_t).offset(
-        (*(&raw mut state.info.mobjinfo as *mut mobjinfo_t).offset(
-            (*(&raw mut state.f_finale.castorder as *mut castinfo_t)
-                .offset(state.f_finale.castnum as isize))
-            .type_0 as isize,
-        ))
-        .deathstate as isize,
-    ) as *mut state_t;
-    state.f_finale.casttics = (*state.f_finale.caststate).tics;
+    let cast_type = state.f_finale.castorder[state.f_finale.castnum as usize].type_0;
+    state.f_finale.caststate = Some(StateId(state.info.mobjinfo[cast_type as usize].deathstate as u32));
+    state.f_finale.casttics = (*state.info.state_mut(state.f_finale.caststate.unwrap())).tics;
     state.f_finale.castframes = 0 as i32;
     state.f_finale.castattacking = false;
     if state.info.mobjinfo
@@ -847,10 +782,9 @@ pub unsafe fn F_CastDrawer(state: &mut GameState) {
         .name
         .unwrap();
     F_CastPrint(state, cast_name);
-    sprdef = &raw mut state.r_things.sprites[(*state.f_finale.caststate).sprite as usize]
-        as *mut spritedef_t;
-    sprframe = &raw mut (*sprdef).spriteframes
-        [((*state.f_finale.caststate).frame & FF_FRAMEMASK) as usize]
+    let cur_caststate = state.info.state_mut(state.f_finale.caststate.unwrap());
+    sprdef = &raw mut state.r_things.sprites[(*cur_caststate).sprite as usize] as *mut spritedef_t;
+    sprframe = &raw mut (*sprdef).spriteframes[((*cur_caststate).frame & FF_FRAMEMASK) as usize]
         as *mut spriteframe_t;
     lump = (*sprframe).lump[0] as i32;
     flip = (*sprframe).flip[0] != 0;
