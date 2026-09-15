@@ -1004,16 +1004,16 @@ pub unsafe fn AM_clipMline(
     if outcode1 & outcode2 != 0 {
         return false;
     }
-    (*fl).a.x = (state.am_map.f_x as fixed_t
-        + (FixedMul((*ml).a.x - state.am_map.m_x, state.am_map.scale_mtof) >> 16_i32));
-    (*fl).a.y = (state.am_map.f_y as fixed_t
+    (*fl).a.x = state.am_map.f_x as fixed_t
+        + (FixedMul((*ml).a.x - state.am_map.m_x, state.am_map.scale_mtof) >> 16_i32);
+    (*fl).a.y = state.am_map.f_y as fixed_t
         + (state.am_map.f_h as fixed_t
-            - (FixedMul((*ml).a.y - state.am_map.m_y, state.am_map.scale_mtof) >> 16_i32)));
-    (*fl).b.x = (state.am_map.f_x as fixed_t
-        + (FixedMul((*ml).b.x - state.am_map.m_x, state.am_map.scale_mtof) >> 16_i32));
-    (*fl).b.y = (state.am_map.f_y as fixed_t
+            - (FixedMul((*ml).a.y - state.am_map.m_y, state.am_map.scale_mtof) >> 16_i32));
+    (*fl).b.x = state.am_map.f_x as fixed_t
+        + (FixedMul((*ml).b.x - state.am_map.m_x, state.am_map.scale_mtof) >> 16_i32);
+    (*fl).b.y = state.am_map.f_y as fixed_t
         + (state.am_map.f_h as fixed_t
-            - (FixedMul((*ml).b.y - state.am_map.m_y, state.am_map.scale_mtof) >> 16_i32)));
+            - (FixedMul((*ml).b.y - state.am_map.m_y, state.am_map.scale_mtof) >> 16_i32));
     outcode1 = 0_i32;
     if (*fl).a.y < 0_i32 {
         outcode1 |= TOP as i32;
@@ -1425,17 +1425,17 @@ pub fn AM_drawMarks(state: &mut GameState) {
         if state.am_map.markpoints[i as usize].x != -1_i32 {
             w = 5_i32;
             h = 6_i32;
-            fx = (state.am_map.f_x as fixed_t
+            fx = state.am_map.f_x as fixed_t
                 + (FixedMul(
                     state.am_map.markpoints[i as usize].x - state.am_map.m_x,
                     state.am_map.scale_mtof,
-                ) >> 16_i32));
-            fy = (state.am_map.f_y as fixed_t
+                ) >> 16_i32);
+            fy = state.am_map.f_y as fixed_t
                 + (state.am_map.f_h as fixed_t
                     - (FixedMul(
                         state.am_map.markpoints[i as usize].y - state.am_map.m_y,
                         state.am_map.scale_mtof,
-                    ) >> 16_i32)));
+                    ) >> 16_i32));
             if fx >= state.am_map.f_x
                 && fx <= state.am_map.f_w - w
                 && fy >= state.am_map.f_y

@@ -152,8 +152,8 @@ pub unsafe fn R_DrawColumnLow(state: &mut GameState) {
         state.r_draw.ylookup[state.r_draw.dc_yl as usize]
             + state.r_draw.columnofs[x as usize] as usize,
     );
-    dest2 = state.i_video.I_VideoBuffer.as_mut_ptr().add((state.r_draw.ylookup[state.r_draw.dc_yl as usize]
-            + state.r_draw.columnofs[(x + 1_i32) as usize] as usize));
+    dest2 = state.i_video.I_VideoBuffer.as_mut_ptr().add(state.r_draw.ylookup[state.r_draw.dc_yl as usize]
+            + state.r_draw.columnofs[(x + 1_i32) as usize] as usize);
     fracstep = state.r_draw.dc_iscale;
     frac = state.r_draw.dc_texturemid
         + (state.r_draw.dc_yl as fixed_t - state.r_main.centery as fixed_t) * fracstep;
@@ -255,8 +255,8 @@ pub unsafe fn R_DrawFuzzColumnLow(state: &mut GameState) {
         state.r_draw.ylookup[state.r_draw.dc_yl as usize]
             + state.r_draw.columnofs[x as usize] as usize,
     );
-    dest2 = state.i_video.I_VideoBuffer.as_mut_ptr().add((state.r_draw.ylookup[state.r_draw.dc_yl as usize]
-            + state.r_draw.columnofs[(x + 1_i32) as usize] as usize));
+    dest2 = state.i_video.I_VideoBuffer.as_mut_ptr().add(state.r_draw.ylookup[state.r_draw.dc_yl as usize]
+            + state.r_draw.columnofs[(x + 1_i32) as usize] as usize);
     loop {
         *dest = state.r_data.colormaps[(6_i32 * 256_i32
             + *dest.offset(fuzzoffset[state.r_draw.fuzzpos as usize] as isize) as i32)
@@ -342,8 +342,8 @@ pub unsafe fn R_DrawTranslatedColumnLow(state: &mut GameState) {
         state.r_draw.ylookup[state.r_draw.dc_yl as usize]
             + state.r_draw.columnofs[x as usize] as usize,
     );
-    dest2 = state.i_video.I_VideoBuffer.as_mut_ptr().add((state.r_draw.ylookup[state.r_draw.dc_yl as usize]
-            + state.r_draw.columnofs[(x + 1_i32) as usize] as usize));
+    dest2 = state.i_video.I_VideoBuffer.as_mut_ptr().add(state.r_draw.ylookup[state.r_draw.dc_yl as usize]
+            + state.r_draw.columnofs[(x + 1_i32) as usize] as usize);
     fracstep = state.r_draw.dc_iscale;
     frac = state.r_draw.dc_texturemid
         + (state.r_draw.dc_yl as fixed_t - state.r_main.centery as fixed_t) * fracstep;

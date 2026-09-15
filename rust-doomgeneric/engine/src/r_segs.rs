@@ -432,16 +432,16 @@ pub unsafe fn R_StoreWallRange(state: &mut GameState, mut start: i32, mut stop: 
         state.r_bsp.drawsegs[state.r_bsp.ds_p].scale2 =
             state.r_bsp.drawsegs[state.r_bsp.ds_p].scale1;
     }
-    state.r_segs.worldtop = (state
+    state.r_segs.worldtop = state
         .p_setup
         .sector_mut(state.r_bsp.frontsector.unwrap())
         .ceilingheight
-        - state.r_main.viewz);
-    state.r_segs.worldbottom = (state
+        - state.r_main.viewz;
+    state.r_segs.worldbottom = state
         .p_setup
         .sector_mut(state.r_bsp.frontsector.unwrap())
         .floorheight
-        - state.r_main.viewz);
+        - state.r_main.viewz;
     state.r_segs.maskedtexture = false;
     state.r_segs.bottomtexture = state.r_segs.maskedtexture as i32;
     state.r_segs.toptexture = state.r_segs.bottomtexture;
@@ -546,16 +546,16 @@ pub unsafe fn R_StoreWallRange(state: &mut GameState, mut start: i32, mut stop: 
             state.r_bsp.drawsegs[state.r_bsp.ds_p].tsilheight = INT_MIN as fixed_t;
             state.r_bsp.drawsegs[state.r_bsp.ds_p].silhouette |= SIL_TOP;
         }
-        state.r_segs.worldhigh = (state
+        state.r_segs.worldhigh = state
             .p_setup
             .sector_mut(state.r_bsp.backsector.unwrap())
             .ceilingheight
-            - state.r_main.viewz);
-        state.r_segs.worldlow = (state
+            - state.r_main.viewz;
+        state.r_segs.worldlow = state
             .p_setup
             .sector_mut(state.r_bsp.backsector.unwrap())
             .floorheight
-            - state.r_main.viewz);
+            - state.r_main.viewz;
         if state
             .p_setup
             .sector_mut(state.r_bsp.frontsector.unwrap())
