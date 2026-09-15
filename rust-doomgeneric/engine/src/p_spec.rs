@@ -785,7 +785,7 @@ pub unsafe fn P_CrossSpecialLine(
             (*state.p_setup.line_mut(line)).special = 0 as i16;
         }
         54 => {
-            EV_StopPlat(&mut state.p_plats, state.p_setup.line(line).tag as i32);
+            EV_StopPlat(state, state.p_setup.line(line).tag as i32);
             (*state.p_setup.line_mut(line)).special = 0 as i16;
         }
         56 => {
@@ -895,7 +895,7 @@ pub unsafe fn P_CrossSpecialLine(
             EV_DoPlat(state, line, PlattypeE::downWaitUpStay, 0 as i32);
         }
         89 => {
-            EV_StopPlat(&mut state.p_plats, state.p_setup.line(line).tag as i32);
+            EV_StopPlat(state, state.p_setup.line(line).tag as i32);
         }
         90 => {
             EV_DoDoor(state, line, VldoorE::vld_normal);
@@ -1337,7 +1337,7 @@ pub unsafe fn P_SpawnSpecials(state: &mut GameState) {
     }
     i = 0 as i32;
     while i < MAXPLATS {
-        state.p_plats.activeplats[i as usize] = ::core::ptr::null_mut::<plat_t>();
+        state.p_plats.activeplats[i as usize] = None;
         i += 1;
     }
     i = 0 as i32;

@@ -1165,7 +1165,7 @@ pub unsafe fn P_UnArchiveSpecials(state: &mut GameState) {
                 let plat_id = P_AddThinker(state, &raw mut (*plat).thinker, ThinkerKind::Plat);
                 (*state.p_setup.sector_mut((*plat).sector)).specialdata =
                     Some(SectorSpecial::Plat(plat_id));
-                P_AddActivePlat(&mut state.p_plats, plat);
+                P_AddActivePlat(&mut state.p_plats, plat_id);
             }
             4 => {
                 saveg_read_pad(state);

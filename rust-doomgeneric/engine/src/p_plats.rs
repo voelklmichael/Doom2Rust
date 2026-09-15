@@ -17,6 +17,7 @@ use crate::p_spec::P_FindLowestFloorSurrounding;
 use crate::p_spec::P_FindNextHighestFloor;
 use crate::p_spec::P_FindSectorFromLineTag;
 use crate::p_tick::P_AddThinker;
+use crate::p_tick::ThinkerId;
 use crate::p_tick::ThinkerKind;
 use crate::p_tick::P_RemoveThinker;
 use crate::s_sound::S_StartSound;
@@ -42,14 +43,14 @@ pub const PLATWAIT: i32 = 3;
 pub const PLATSPEED: i32 = FRACUNIT;
 pub const MAXPLATS: i32 = 30;
 pub struct PPlatsState {
-    pub activeplats: [*mut plat_t; 30],
+    pub activeplats: [Option<ThinkerId>; 30],
     plats: Vec<Box<plat_t>>,
 }
 
 impl PPlatsState {
     pub const fn new() -> Self {
         PPlatsState {
-            activeplats: [::core::ptr::null::<plat_t>() as *mut plat_t; 30],
+            activeplats: [None; 30],
             plats: Vec::new(),
         }
     }
@@ -152,7 +153,7 @@ pub unsafe fn EV_DoPlat(
     rtn = 0 as i32;
     match type_0 {
         PlattypeE::perpetualRaise => {
-            P_ActivateInStasis(&mut state.p_plats, linev.tag as i32);
+            P_ActivateInStasis(state, linev.tag as i32);
         }
         _ => {}
     }
@@ -237,45 +238,45 @@ pub unsafe fn EV_DoPlat(
                 S_StartSound(state, SoundOrigin::Sector(SectorId(secnum as u32)), sfx_pstart as i32);
             }
         }
-        P_AddActivePlat(&mut state.p_plats, plat);
+        P_AddActivePlat(&mut state.p_plats, plat_id);
     }
     return rtn;
 }
-pub unsafe fn P_ActivateInStasis(state: &mut PPlatsState, mut tag: i32) {
+pub unsafe fn P_ActivateInStasis(state: &mut GameState, mut tag: i32) {
     let mut i: i32 = 0;
     i = 0 as i32;
     while i < MAXPLATS {
-        if !state.activeplats[i as usize].is_null()
-            && (*state.activeplats[i as usize]).tag == tag
-            && (*state.activeplats[i as usize]).status == PlatE::in_stasis
-        {
-            (*state.activeplats[i as usize]).status = (*state.activeplats[i as usize]).oldstatus;
-            (*state.activeplats[i as usize]).thinker.function = ThinkerFn::Plat(T_PlatRaise);
+        if let Some(id) = state.p_plats.activeplats[i as usize] {
+            let plat = state.p_tick.raw(id) as *mut plat_t;
+            if (*plat).tag == tag && (*plat).status == PlatE::in_stasis {
+                (*plat).status = (*plat).oldstatus;
+                (*plat).thinker.function = ThinkerFn::Plat(T_PlatRaise);
+            }
         }
         i += 1;
     }
 }
-pub unsafe fn EV_StopPlat(state: &mut PPlatsState, mut tag: i32) {
+pub unsafe fn EV_StopPlat(state: &mut GameState, mut tag: i32) {
     let mut j: i32 = 0;
     j = 0 as i32;
     while j < MAXPLATS {
-        if !state.activeplats[j as usize].is_null()
-            && (*state.activeplats[j as usize]).status != PlatE::in_stasis
-            && (*state.activeplats[j as usize]).tag == tag
-        {
-            (*state.activeplats[j as usize]).oldstatus = (*state.activeplats[j as usize]).status;
-            (*state.activeplats[j as usize]).status = PlatE::in_stasis;
-            (*state.activeplats[j as usize]).thinker.function = ThinkerFn::Paused;
+        if let Some(id) = state.p_plats.activeplats[j as usize] {
+            let plat = state.p_tick.raw(id) as *mut plat_t;
+            if (*plat).status != PlatE::in_stasis && (*plat).tag == tag {
+                (*plat).oldstatus = (*plat).status;
+                (*plat).status = PlatE::in_stasis;
+                (*plat).thinker.function = ThinkerFn::Paused;
+            }
         }
         j += 1;
     }
 }
-pub fn P_AddActivePlat(state: &mut PPlatsState, mut plat: *mut plat_t) {
+pub fn P_AddActivePlat(state: &mut PPlatsState, id: ThinkerId) {
     let mut i: i32 = 0;
     i = 0 as i32;
     while i < MAXPLATS {
-        if state.activeplats[i as usize].is_null() {
-            state.activeplats[i as usize] = plat;
+        if state.activeplats[i as usize].is_none() {
+            state.activeplats[i as usize] = Some(id);
             return;
         }
         i += 1;
@@ -286,18 +287,13 @@ pub unsafe fn P_RemoveActivePlat(state: &mut GameState, mut plat: *mut plat_t) {
     let mut i: i32 = 0;
     i = 0 as i32;
     while i < MAXPLATS {
-        if plat == state.p_plats.activeplats[i as usize] {
-            (*state
-                .p_setup
-                .sector_mut((*state.p_plats.activeplats[i as usize]).sector))
-            .specialdata = None;
-            P_RemoveThinker(
-                &raw mut (**(&raw mut state.p_plats.activeplats as *mut *mut plat_t)
-                    .offset(i as isize))
-                .thinker,
-            );
-            state.p_plats.activeplats[i as usize] = ::core::ptr::null_mut::<plat_t>();
-            return;
+        if let Some(id) = state.p_plats.activeplats[i as usize] {
+            if state.p_tick.raw(id) as *mut plat_t == plat {
+                (*state.p_setup.sector_mut((*plat).sector)).specialdata = None;
+                P_RemoveThinker(&raw mut (*plat).thinker);
+                state.p_plats.activeplats[i as usize] = None;
+                return;
+            }
         }
         i += 1;
     }
