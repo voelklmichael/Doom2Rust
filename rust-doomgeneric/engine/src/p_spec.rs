@@ -793,7 +793,7 @@ pub unsafe fn P_CrossSpecialLine(
             (*state.p_setup.line_mut(line)).special = 0 as i16;
         }
         57 => {
-            EV_CeilingCrushStop(&mut state.p_ceilng, state.p_setup.line(line).tag as i32);
+            EV_CeilingCrushStop(state, state.p_setup.line(line).tag as i32);
             (*state.p_setup.line_mut(line)).special = 0 as i16;
         }
         58 => {
@@ -856,7 +856,7 @@ pub unsafe fn P_CrossSpecialLine(
             EV_DoCeiling(state, line, CeilingE::crushAndRaise);
         }
         74 => {
-            EV_CeilingCrushStop(&mut state.p_ceilng, state.p_setup.line(line).tag as i32);
+            EV_CeilingCrushStop(state, state.p_setup.line(line).tag as i32);
         }
         75 => {
             EV_DoDoor(state, line, VldoorE::vld_close);
@@ -1332,7 +1332,7 @@ pub unsafe fn P_SpawnSpecials(state: &mut GameState) {
     }
     i = 0 as i32;
     while i < MAXCEILINGS {
-        state.p_ceilng.activeceilings[i as usize] = ::core::ptr::null_mut::<ceiling_t>();
+        state.p_ceilng.activeceilings[i as usize] = None;
         i += 1;
     }
     i = 0 as i32;

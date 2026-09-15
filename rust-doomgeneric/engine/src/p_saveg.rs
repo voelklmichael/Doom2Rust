@@ -1059,7 +1059,7 @@ pub unsafe fn P_ArchiveSpecials(state: &mut GameState) {
             ThinkerFn::Paused => {
                 i = 0 as i32;
                 while i < MAXCEILINGS {
-                    if state.p_ceilng.activeceilings[i as usize] == th as *mut ceiling_t {
+                    if state.p_ceilng.activeceilings[i as usize] == Some(id) {
                         break;
                     }
                     i += 1;
@@ -1135,7 +1135,7 @@ pub unsafe fn P_UnArchiveSpecials(state: &mut GameState) {
                     P_AddThinker(state, &raw mut (*ceiling).thinker, ThinkerKind::Ceiling);
                 (*state.p_setup.sector_mut((*ceiling).sector)).specialdata =
                     Some(SectorSpecial::Ceiling(ceiling_id));
-                P_AddActiveCeiling(&mut state.p_ceilng, ceiling);
+                P_AddActiveCeiling(&mut state.p_ceilng, ceiling_id);
             }
             1 => {
                 saveg_read_pad(state);
