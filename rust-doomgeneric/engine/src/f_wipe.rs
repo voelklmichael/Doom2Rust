@@ -13,7 +13,6 @@ pub struct FWipeState {
     pub go: bool,
     pub wipe_scr_start: Vec<byte>,
     pub wipe_scr_end: Vec<byte>,
-    pub wipe_scr: *mut byte,
     pub y: Vec<i32>,
 }
 
@@ -23,7 +22,6 @@ impl FWipeState {
             go: false,
             wipe_scr_start: Vec::new(),
             wipe_scr_end: Vec::new(),
-            wipe_scr: ::core::ptr::null::<byte>() as *mut byte,
             y: Vec::new(),
         }
     }
@@ -55,7 +53,7 @@ pub unsafe fn wipe_initColorXForm(
     _ticks: i32,
 ) -> i32 {
     memcpy(
-        state.f_wipe.wipe_scr as *mut ::core::ffi::c_void,
+        state.i_video.I_VideoBuffer.as_mut_ptr() as *mut ::core::ffi::c_void,
         state.f_wipe.wipe_scr_start.as_ptr() as *const ::core::ffi::c_void,
         (width * height) as size_t,
     );
@@ -72,9 +70,10 @@ pub unsafe fn wipe_doColorXForm(
     let mut e: *mut byte = ::core::ptr::null_mut::<byte>();
     let mut newval: i32 = 0;
     changed = false;
-    w = state.f_wipe.wipe_scr;
+    let wipe_scr = state.i_video.I_VideoBuffer.as_mut_ptr();
+    w = wipe_scr;
     e = state.f_wipe.wipe_scr_end.as_mut_ptr();
-    while w != state.f_wipe.wipe_scr.offset((width * height) as isize) {
+    while w != wipe_scr.offset((width * height) as isize) {
         if *w as i32 != *e as i32 {
             if *w as i32 > *e as i32 {
                 newval = *w as i32 - ticks;
@@ -111,7 +110,7 @@ pub unsafe fn wipe_initMelt(
     let mut i: i32 = 0;
     let mut r: i32 = 0;
     memcpy(
-        state.f_wipe.wipe_scr as *mut ::core::ffi::c_void,
+        state.i_video.I_VideoBuffer.as_mut_ptr() as *mut ::core::ffi::c_void,
         state.f_wipe.wipe_scr_start.as_ptr() as *const ::core::ffi::c_void,
         (width * height) as size_t,
     );
@@ -170,7 +169,7 @@ pub unsafe fn wipe_doMelt(
                 }
                 s = (state.f_wipe.wipe_scr_end.as_mut_ptr() as *mut i16)
                     .offset((i * height + state.f_wipe.y[i as usize]) as isize);
-                d = (state.f_wipe.wipe_scr as *mut i16)
+                d = (state.i_video.I_VideoBuffer.as_mut_ptr() as *mut i16)
                     .offset((state.f_wipe.y[i as usize] * width + i) as isize);
                 idx = 0 as i32;
                 j = dy;
@@ -184,7 +183,7 @@ pub unsafe fn wipe_doMelt(
                 state.f_wipe.y[i as usize] += dy;
                 s = (state.f_wipe.wipe_scr_start.as_mut_ptr() as *mut i16)
                     .offset((i * height) as isize);
-                d = (state.f_wipe.wipe_scr as *mut i16)
+                d = (state.i_video.I_VideoBuffer.as_mut_ptr() as *mut i16)
                     .offset((state.f_wipe.y[i as usize] * width + i) as isize);
                 idx = 0 as i32;
                 j = height - state.f_wipe.y[i as usize];
@@ -246,7 +245,6 @@ pub fn wipe_ScreenWipe(
     ];
     if !state.f_wipe.go {
         state.f_wipe.go = true;
-        state.f_wipe.wipe_scr = state.i_video.I_VideoBuffer.as_mut_ptr();
         let init_fn = wipes[(wipeno * 3 as i32) as usize].expect("non-null function pointer");
         unsafe { init_fn(state, width, height, ticks) };
     }
