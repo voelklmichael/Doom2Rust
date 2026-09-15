@@ -96,11 +96,7 @@ impl WiStuffState {
                     },
                     data1: 0_i32,
                     data2: 0_i32,
-                    p: [
-                        -1,
-                        -1,
-                        -1,
-                    ],
+                    p: [-1, -1, -1],
                     nexttic: 0_i32,
                     lastdrawn: 0_i32,
                     ctr: 0_i32,
@@ -116,11 +112,7 @@ impl WiStuffState {
                     },
                     data1: 0_i32,
                     data2: 0_i32,
-                    p: [
-                        -1,
-                        -1,
-                        -1,
-                    ],
+                    p: [-1, -1, -1],
                     nexttic: 0_i32,
                     lastdrawn: 0_i32,
                     ctr: 0_i32,
@@ -136,11 +128,7 @@ impl WiStuffState {
                     },
                     data1: 0_i32,
                     data2: 0_i32,
-                    p: [
-                        -1,
-                        -1,
-                        -1,
-                    ],
+                    p: [-1, -1, -1],
                     nexttic: 0_i32,
                     lastdrawn: 0_i32,
                     ctr: 0_i32,
@@ -156,11 +144,7 @@ impl WiStuffState {
                     },
                     data1: 0_i32,
                     data2: 0_i32,
-                    p: [
-                        -1,
-                        -1,
-                        -1,
-                    ],
+                    p: [-1, -1, -1],
                     nexttic: 0_i32,
                     lastdrawn: 0_i32,
                     ctr: 0_i32,
@@ -176,11 +160,7 @@ impl WiStuffState {
                     },
                     data1: 0_i32,
                     data2: 0_i32,
-                    p: [
-                        -1,
-                        -1,
-                        -1,
-                    ],
+                    p: [-1, -1, -1],
                     nexttic: 0_i32,
                     lastdrawn: 0_i32,
                     ctr: 0_i32,
@@ -196,11 +176,7 @@ impl WiStuffState {
                     },
                     data1: 0_i32,
                     data2: 0_i32,
-                    p: [
-                        -1,
-                        -1,
-                        -1,
-                    ],
+                    p: [-1, -1, -1],
                     nexttic: 0_i32,
                     lastdrawn: 0_i32,
                     ctr: 0_i32,
@@ -216,11 +192,7 @@ impl WiStuffState {
                     },
                     data1: 0_i32,
                     data2: 0_i32,
-                    p: [
-                        -1,
-                        -1,
-                        -1,
-                    ],
+                    p: [-1, -1, -1],
                     nexttic: 0_i32,
                     lastdrawn: 0_i32,
                     ctr: 0_i32,
@@ -236,11 +208,7 @@ impl WiStuffState {
                     },
                     data1: 0_i32,
                     data2: 0_i32,
-                    p: [
-                        -1,
-                        -1,
-                        -1,
-                    ],
+                    p: [-1, -1, -1],
                     nexttic: 0_i32,
                     lastdrawn: 0_i32,
                     ctr: 0_i32,
@@ -256,11 +224,7 @@ impl WiStuffState {
                     },
                     data1: 0_i32,
                     data2: 0_i32,
-                    p: [
-                        -1,
-                        -1,
-                        -1,
-                    ],
+                    p: [-1, -1, -1],
                     nexttic: 0_i32,
                     lastdrawn: 0_i32,
                     ctr: 0_i32,
@@ -276,11 +240,7 @@ impl WiStuffState {
                     },
                     data1: 0_i32,
                     data2: 0_i32,
-                    p: [
-                        -1,
-                        -1,
-                        -1,
-                    ],
+                    p: [-1, -1, -1],
                     nexttic: 0_i32,
                     lastdrawn: 0_i32,
                     ctr: 0_i32,
@@ -298,11 +258,7 @@ impl WiStuffState {
                     },
                     data1: 1_i32,
                     data2: 0_i32,
-                    p: [
-                        -1,
-                        -1,
-                        -1,
-                    ],
+                    p: [-1, -1, -1],
                     nexttic: 0_i32,
                     lastdrawn: 0_i32,
                     ctr: 0_i32,
@@ -318,11 +274,7 @@ impl WiStuffState {
                     },
                     data1: 2_i32,
                     data2: 0_i32,
-                    p: [
-                        -1,
-                        -1,
-                        -1,
-                    ],
+                    p: [-1, -1, -1],
                     nexttic: 0_i32,
                     lastdrawn: 0_i32,
                     ctr: 0_i32,
@@ -338,11 +290,7 @@ impl WiStuffState {
                     },
                     data1: 3_i32,
                     data2: 0_i32,
-                    p: [
-                        -1,
-                        -1,
-                        -1,
-                    ],
+                    p: [-1, -1, -1],
                     nexttic: 0_i32,
                     lastdrawn: 0_i32,
                     ctr: 0_i32,
@@ -358,11 +306,7 @@ impl WiStuffState {
                     },
                     data1: 4_i32,
                     data2: 0_i32,
-                    p: [
-                        -1,
-                        -1,
-                        -1,
-                    ],
+                    p: [-1, -1, -1],
                     nexttic: 0_i32,
                     lastdrawn: 0_i32,
                     ctr: 0_i32,
@@ -378,11 +322,7 @@ impl WiStuffState {
                     },
                     data1: 5_i32,
                     data2: 0_i32,
-                    p: [
-                        -1,
-                        -1,
-                        -1,
-                    ],
+                    p: [-1, -1, -1],
                     nexttic: 0_i32,
                     lastdrawn: 0_i32,
                     ctr: 0_i32,
@@ -398,11 +338,7 @@ impl WiStuffState {
                     },
                     data1: 6_i32,
                     data2: 0_i32,
-                    p: [
-                        -1,
-                        -1,
-                        -1,
-                    ],
+                    p: [-1, -1, -1],
                     nexttic: 0_i32,
                     lastdrawn: 0_i32,
                     ctr: 0_i32,
@@ -418,11 +354,7 @@ impl WiStuffState {
                     },
                     data1: 7_i32,
                     data2: 0_i32,
-                    p: [
-                        -1,
-                        -1,
-                        -1,
-                    ],
+                    p: [-1, -1, -1],
                     nexttic: 0_i32,
                     lastdrawn: 0_i32,
                     ctr: 0_i32,
@@ -438,11 +370,7 @@ impl WiStuffState {
                     },
                     data1: 8_i32,
                     data2: 0_i32,
-                    p: [
-                        -1,
-                        -1,
-                        -1,
-                    ],
+                    p: [-1, -1, -1],
                     nexttic: 0_i32,
                     lastdrawn: 0_i32,
                     ctr: 0_i32,
@@ -458,11 +386,7 @@ impl WiStuffState {
                     },
                     data1: 8_i32,
                     data2: 0_i32,
-                    p: [
-                        -1,
-                        -1,
-                        -1,
-                    ],
+                    p: [-1, -1, -1],
                     nexttic: 0_i32,
                     lastdrawn: 0_i32,
                     ctr: 0_i32,
@@ -480,11 +404,7 @@ impl WiStuffState {
                     },
                     data1: 0_i32,
                     data2: 0_i32,
-                    p: [
-                        -1,
-                        -1,
-                        -1,
-                    ],
+                    p: [-1, -1, -1],
                     nexttic: 0_i32,
                     lastdrawn: 0_i32,
                     ctr: 0_i32,
@@ -500,11 +420,7 @@ impl WiStuffState {
                     },
                     data1: 0_i32,
                     data2: 0_i32,
-                    p: [
-                        -1,
-                        -1,
-                        -1,
-                    ],
+                    p: [-1, -1, -1],
                     nexttic: 0_i32,
                     lastdrawn: 0_i32,
                     ctr: 0_i32,
@@ -520,11 +436,7 @@ impl WiStuffState {
                     },
                     data1: 0_i32,
                     data2: 0_i32,
-                    p: [
-                        -1,
-                        -1,
-                        -1,
-                    ],
+                    p: [-1, -1, -1],
                     nexttic: 0_i32,
                     lastdrawn: 0_i32,
                     ctr: 0_i32,
@@ -540,11 +452,7 @@ impl WiStuffState {
                     },
                     data1: 0_i32,
                     data2: 0_i32,
-                    p: [
-                        -1,
-                        -1,
-                        -1,
-                    ],
+                    p: [-1, -1, -1],
                     nexttic: 0_i32,
                     lastdrawn: 0_i32,
                     ctr: 0_i32,
@@ -560,11 +468,7 @@ impl WiStuffState {
                     },
                     data1: 0_i32,
                     data2: 0_i32,
-                    p: [
-                        -1,
-                        -1,
-                        -1,
-                    ],
+                    p: [-1, -1, -1],
                     nexttic: 0_i32,
                     lastdrawn: 0_i32,
                     ctr: 0_i32,
@@ -580,11 +484,7 @@ impl WiStuffState {
                     },
                     data1: 0_i32,
                     data2: 0_i32,
-                    p: [
-                        -1,
-                        -1,
-                        -1,
-                    ],
+                    p: [-1, -1, -1],
                     nexttic: 0_i32,
                     lastdrawn: 0_i32,
                     ctr: 0_i32,
@@ -607,15 +507,8 @@ impl WiStuffState {
             cnt_par: 0,
             cnt_pause: 0,
             NUMCMAPS: 0,
-            yah: [
-                -1,
-                -1,
-                -1,
-            ],
-            splat: [
-                -1,
-                -1,
-            ],
+            yah: [-1, -1, -1],
+            splat: [-1, -1],
             percent: -1,
             colon: -1,
             num: [-1; 10],
@@ -889,9 +782,7 @@ pub unsafe fn WI_drawLF(state: &mut GameState) {
                 height: SCREENHEIGHT as i16,
                 leftoffset: 1_i16,
                 topoffset: 1_i16,
-                columnofs: [
-                    0_i32, 0_i32, 0_i32, 0_i32, 0_i32, 0_i32, 0_i32, 0_i32,
-                ],
+                columnofs: [0_i32, 0_i32, 0_i32, 0_i32, 0_i32, 0_i32, 0_i32, 0_i32],
             };
             V_DrawPatch(state, 0_i32, y, &raw mut tmp);
         }
@@ -926,10 +817,9 @@ pub unsafe fn WI_drawOnLnode(state: &mut GameState, mut n: i32, mut c: *mut i32)
     i = 0_i32;
     loop {
         let patch = V_CachePatchNum(state, *c.offset(i as isize));
-        left = lnodes[(*state.wi_stuff.wbs).epsd as usize][n as usize].x
-            - (*patch).leftoffset as i32;
-        top = lnodes[(*state.wi_stuff.wbs).epsd as usize][n as usize].y
-            - (*patch).topoffset as i32;
+        left =
+            lnodes[(*state.wi_stuff.wbs).epsd as usize][n as usize].x - (*patch).leftoffset as i32;
+        top = lnodes[(*state.wi_stuff.wbs).epsd as usize][n as usize].y - (*patch).topoffset as i32;
         right = left + (*patch).width as i32;
         bottom = top + (*patch).height as i32;
         if left >= 0_i32 && right < SCREENWIDTH && top >= 0_i32 && bottom < SCREENHEIGHT {
@@ -1132,12 +1022,7 @@ pub unsafe fn WI_drawTime(state: &mut GameState, mut x: i32, mut y: i32, mut t: 
         }
     } else {
         let sucks_patch = V_CachePatchNum(state, state.wi_stuff.sucks);
-        V_DrawPatch(
-            state,
-            x - (*sucks_patch).width as i32,
-            y,
-            sucks_patch,
-        );
+        V_DrawPatch(state, x - (*sucks_patch).width as i32, y, sucks_patch);
     };
 }
 pub unsafe fn WI_End(state: &mut GameState) {
@@ -1600,10 +1485,7 @@ pub unsafe fn WI_drawNetgameStats(state: &mut GameState) {
     let kills_patch = V_CachePatchNum(state, state.wi_stuff.kills);
     V_DrawPatch(
         state,
-        32_i32
-            + star_width / 2_i32
-            + 32_i32 * (state.wi_stuff.dofrags == 0) as i32
-            + NG_SPACINGX
+        32_i32 + star_width / 2_i32 + 32_i32 * (state.wi_stuff.dofrags == 0) as i32 + NG_SPACINGX
             - (*kills_patch).width as i32,
         NG_STATSY,
         kills_patch,
@@ -1647,23 +1529,11 @@ pub unsafe fn WI_drawNetgameStats(state: &mut GameState) {
     i = 0_i32;
     while i < MAXPLAYERS {
         if state.g_game.playeringame[i as usize] {
-            x = 32_i32
-                + star_width / 2_i32
-                + 32_i32 * (state.wi_stuff.dofrags == 0) as i32;
+            x = 32_i32 + star_width / 2_i32 + 32_i32 * (state.wi_stuff.dofrags == 0) as i32;
             let p_patch = V_CachePatchNum(state, state.wi_stuff.p[i as usize]);
-            V_DrawPatch(
-                state,
-                x - (*p_patch).width as i32,
-                y,
-                p_patch,
-            );
+            V_DrawPatch(state, x - (*p_patch).width as i32, y, p_patch);
             if i == state.wi_stuff.me {
-                V_DrawPatch(
-                    state,
-                    x - (*p_patch).width as i32,
-                    y,
-                    star_patch,
-                );
+                V_DrawPatch(state, x - (*p_patch).width as i32, y, star_patch);
             }
             x += NG_SPACINGX;
             let cnt_kills = state.wi_stuff.cnt_kills[i as usize];
@@ -1814,12 +1684,7 @@ pub unsafe fn WI_drawStats(state: &mut GameState) {
     let cnt_items = state.wi_stuff.cnt_items[0];
     WI_drawPercent(state, SCREENWIDTH - SP_STATSX, SP_STATSY + lh, cnt_items);
     let sp_secret_patch = V_CachePatchNum(state, state.wi_stuff.sp_secret);
-    V_DrawPatch(
-        state,
-        SP_STATSX,
-        SP_STATSY + 2_i32 * lh,
-        sp_secret_patch,
-    );
+    V_DrawPatch(state, SP_STATSX, SP_STATSY + 2_i32 * lh, sp_secret_patch);
     let cnt_secret = state.wi_stuff.cnt_secret[0];
     WI_drawPercent(
         state,
@@ -1833,12 +1698,7 @@ pub unsafe fn WI_drawStats(state: &mut GameState) {
     WI_drawTime(state, SCREENWIDTH / 2_i32 - SP_TIMEX, SP_TIMEY, cnt_time);
     if (*state.wi_stuff.wbs).epsd < 3_i32 {
         let par_patch = V_CachePatchNum(state, state.wi_stuff.par);
-        V_DrawPatch(
-            state,
-            SCREENWIDTH / 2_i32 + SP_TIMEX,
-            SP_TIMEY,
-            par_patch,
-        );
+        V_DrawPatch(state, SCREENWIDTH / 2_i32 + SP_TIMEX, SP_TIMEY, par_patch);
         let cnt_par = state.wi_stuff.cnt_par;
         WI_drawTime(state, SCREENWIDTH - SP_TIMEX, SP_TIMEY, cnt_par);
     }
@@ -1919,14 +1779,11 @@ unsafe fn WI_loadUnloadData(state: &mut GameState, mut callback: load_callback_t
             );
             i += 1;
         }
-        let cb_ptr = (&raw mut state.wi_stuff.yah as *mut i32).offset(0_i32 as isize)
-            as *mut i32;
+        let cb_ptr = (&raw mut state.wi_stuff.yah as *mut i32).offset(0_i32 as isize) as *mut i32;
         callback.expect("non-null function pointer")(state, "WIURH0", cb_ptr);
-        let cb_ptr = (&raw mut state.wi_stuff.yah as *mut i32).offset(1_i32 as isize)
-            as *mut i32;
+        let cb_ptr = (&raw mut state.wi_stuff.yah as *mut i32).offset(1_i32 as isize) as *mut i32;
         callback.expect("non-null function pointer")(state, "WIURH1", cb_ptr);
-        let cb_ptr = (&raw mut state.wi_stuff.splat as *mut i32).offset(0_i32 as isize)
-            as *mut i32;
+        let cb_ptr = (&raw mut state.wi_stuff.splat as *mut i32).offset(0_i32 as isize) as *mut i32;
         callback.expect("non-null function pointer")(state, "WISPLAT", cb_ptr);
         if (*state.wi_stuff.wbs).epsd < 3_i32 {
             j = 0_i32;
@@ -1940,8 +1797,7 @@ unsafe fn WI_loadUnloadData(state: &mut GameState, mut callback: load_callback_t
                         callback.expect("non-null function pointer")(
                             state,
                             &format!("WIA{}{:02}{:02}", (*state.wi_stuff.wbs).epsd, j, i,),
-                            (&raw mut (*a).p as *mut i32).offset(i as isize)
-                                as *mut i32,
+                            (&raw mut (*a).p as *mut i32).offset(i as isize) as *mut i32,
                         );
                     } else {
                         (*a).p[i as usize] =
@@ -1957,8 +1813,7 @@ unsafe fn WI_loadUnloadData(state: &mut GameState, mut callback: load_callback_t
     callback.expect("non-null function pointer")(state, "WIMINUS", cb_ptr);
     i = 0_i32;
     while i < 10_i32 {
-        let cb_ptr = (&raw mut state.wi_stuff.num as *mut i32).offset(i as isize)
-            as *mut i32;
+        let cb_ptr = (&raw mut state.wi_stuff.num as *mut i32).offset(i as isize) as *mut i32;
         callback.expect("non-null function pointer")(state, &format!("WINUM{}", i,), cb_ptr);
         i += 1;
     }
@@ -2004,23 +1859,15 @@ unsafe fn WI_loadUnloadData(state: &mut GameState, mut callback: load_callback_t
     callback.expect("non-null function pointer")(state, "WIMSTT", cb_ptr);
     i = 0_i32;
     while i < MAXPLAYERS {
-        let cb_ptr = (&raw mut state.wi_stuff.p as *mut i32).offset(i as isize)
-            as *mut i32;
+        let cb_ptr = (&raw mut state.wi_stuff.p as *mut i32).offset(i as isize) as *mut i32;
         callback.expect("non-null function pointer")(state, &format!("STPB{}", i,), cb_ptr);
-        let cb_ptr = (&raw mut state.wi_stuff.bp as *mut i32).offset(i as isize)
-            as *mut i32;
-        callback.expect("non-null function pointer")(
-            state,
-            &format!("WIBP{}", i + 1_i32,),
-            cb_ptr,
-        );
+        let cb_ptr = (&raw mut state.wi_stuff.bp as *mut i32).offset(i as isize) as *mut i32;
+        callback.expect("non-null function pointer")(state, &format!("WIBP{}", i + 1_i32,), cb_ptr);
         i += 1;
     }
-    let name = if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 {
+    let name = if state.doomstat.gamemode == GameMode_t::commercial {
         "INTERPIC".to_string()
-    } else if state.doomstat.gamemode as u32 == GameMode_t::retail as i32 as u32
-        && (*state.wi_stuff.wbs).epsd == 3_i32
-    {
+    } else if state.doomstat.gamemode == GameMode_t::retail && (*state.wi_stuff.wbs).epsd == 3_i32 {
         "INTERPIC".to_string()
     } else {
         format!("WIMAP{}", (*state.wi_stuff.wbs).epsd)
@@ -2034,8 +1881,8 @@ unsafe fn WI_loadCallback(state: &mut GameState, name: &str, variable: *mut i32)
     *variable = lumpnum;
 }
 pub unsafe fn WI_loadData(state: &mut GameState) {
-    if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 {
-        state.wi_stuff.NUMCMAPS = 32_i32;
+    if state.doomstat.gamemode == GameMode_t::commercial {
+        state.wi_stuff.NUMCMAPS = 32;
         state.wi_stuff.lnames = vec![-1; state.wi_stuff.NUMCMAPS as usize];
     } else {
         state.wi_stuff.lnames = vec![-1; NUMMAPS as usize];
@@ -2112,12 +1959,10 @@ pub fn WI_Start(state: &mut GameState, mut wbstartstruct: *mut wbstartstruct_t) 
 }
 pub fn fixup_numanims(state: &mut GameState) {
     state.wi_stuff.NUMANIMS = [
-        ::core::mem::size_of::<[anim_t; 10]>()
-            .wrapping_div(::core::mem::size_of::<anim_t>()) as i32,
-        ::core::mem::size_of::<[anim_t; 9]>()
-            .wrapping_div(::core::mem::size_of::<anim_t>()) as i32,
-        ::core::mem::size_of::<[anim_t; 6]>()
-            .wrapping_div(::core::mem::size_of::<anim_t>()) as i32,
+        ::core::mem::size_of::<[anim_t; 10]>().wrapping_div(::core::mem::size_of::<anim_t>())
+            as i32,
+        ::core::mem::size_of::<[anim_t; 9]>().wrapping_div(::core::mem::size_of::<anim_t>()) as i32,
+        ::core::mem::size_of::<[anim_t; 6]>().wrapping_div(::core::mem::size_of::<anim_t>()) as i32,
         0,
     ];
 }
