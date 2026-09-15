@@ -40,7 +40,7 @@ use crate::sounds::{
     mus_None, mus_e1m1, mus_e1m5, mus_e1m9, mus_e2m4, mus_e2m5, mus_e2m6, mus_e2m7, mus_e3m2,
     mus_e3m3, mus_e3m4, mus_intro, mus_introa, mus_runnin, NUMMUSIC,
 };
-use crate::sounds::{musicinfo_t, sfxinfo_t, SfxId};
+use crate::sounds::{sfxinfo_t, SfxId};
 use crate::tables::angle_t;
 use crate::tables::ANGLETOFINESHIFT;
 
@@ -50,7 +50,7 @@ pub struct SSoundState {
     pub musicVolume: i32,
     pub snd_SfxVolume: i32,
     pub mus_paused: bool,
-    pub mus_playing: *mut musicinfo_t,
+    pub mus_playing: Option<i32>,
     pub snd_channels: i32,
 }
 
@@ -62,7 +62,7 @@ impl SSoundState {
             musicVolume: 8,
             snd_SfxVolume: 0,
             mus_paused: false,
-            mus_playing: ::core::ptr::null::<musicinfo_t>() as *mut musicinfo_t,
+            mus_playing: None,
             snd_channels: 8,
         }
     }
@@ -361,13 +361,13 @@ pub unsafe fn S_StartSound(
         I_StartSound(&mut state.i_sound, sfx, cnum, volume, sep);
 }
 pub fn S_PauseSound(state: &mut GameState) {
-    if !state.s_sound.mus_playing.is_null() && !state.s_sound.mus_paused {
+    if state.s_sound.mus_playing.is_some() && !state.s_sound.mus_paused {
         I_PauseSong(&mut state.i_sound);
         state.s_sound.mus_paused = true;
     }
 }
 pub fn S_ResumeSound(state: &mut GameState) {
-    if !state.s_sound.mus_playing.is_null() && state.s_sound.mus_paused {
+    if state.s_sound.mus_playing.is_some() && state.s_sound.mus_paused {
         I_ResumeSong(&mut state.i_sound);
         state.s_sound.mus_paused = false;
     }
@@ -450,7 +450,6 @@ pub fn S_StartMusic(state: &mut GameState, mut m_id: i32) {
     unsafe { S_ChangeMusic(state, m_id, false_0) };
 }
 pub unsafe fn S_ChangeMusic(state: &mut GameState, mut musicnum: i32, mut looping: i32) {
-    let mut music: *mut musicinfo_t = ::core::ptr::null_mut::<musicinfo_t>();
     let mut handle: *mut ::core::ffi::c_void = ::core::ptr::null_mut::<::core::ffi::c_void>();
     if musicnum == mus_intro as i32
         && (state.i_sound.snd_musicdevice == snddevice_t::SNDDEVICE_ADLIB as i32
@@ -460,14 +459,12 @@ pub unsafe fn S_ChangeMusic(state: &mut GameState, mut musicnum: i32, mut loopin
     }
     if musicnum <= mus_None as i32 || musicnum >= NUMMUSIC as i32 {
         I_Error(&format!("Bad music number {}", musicnum));
-    } else {
-        music = (&raw mut state.sounds.S_music as *mut musicinfo_t).offset(musicnum as isize)
-            as *mut musicinfo_t;
     }
-    if state.s_sound.mus_playing == music {
+    if state.s_sound.mus_playing == Some(musicnum) {
         return;
     }
     S_StopMusic(state);
+    let music = &raw mut state.sounds.S_music[musicnum as usize];
     if (*music).lumpnum == 0 {
         let namebuf = format!("d_{}", (*music).name.as_str());
         (*music).lumpnum = W_GetNumForName(&mut state.w_wad, &namebuf);
@@ -477,20 +474,21 @@ pub unsafe fn S_ChangeMusic(state: &mut GameState, mut musicnum: i32, mut loopin
     handle = I_RegisterSong(&mut state.i_sound, (*music).data, lumplen);
     (*music).handle = handle;
     I_PlaySong(&mut state.i_sound, handle, looping != 0);
-    state.s_sound.mus_playing = music;
+    state.s_sound.mus_playing = Some(musicnum);
 }
 pub fn S_MusicPlaying(state: &mut GameState) -> bool {
     return I_MusicIsPlaying(&mut state.i_sound);
 }
 pub unsafe fn S_StopMusic(state: &mut GameState) {
-    if !state.s_sound.mus_playing.is_null() {
+    if let Some(musicnum) = state.s_sound.mus_playing {
         if state.s_sound.mus_paused {
             I_ResumeSong(&mut state.i_sound);
         }
         I_StopSong(&mut state.i_sound);
-        I_UnRegisterSong(&mut state.i_sound, (*state.s_sound.mus_playing).handle);
-        W_ReleaseLumpNum(&mut state.w_wad, (*state.s_sound.mus_playing).lumpnum);
-        (*state.s_sound.mus_playing).data = NULL;
-        state.s_sound.mus_playing = ::core::ptr::null_mut::<musicinfo_t>();
+        let music = &raw mut state.sounds.S_music[musicnum as usize];
+        I_UnRegisterSong(&mut state.i_sound, (*music).handle);
+        W_ReleaseLumpNum(&mut state.w_wad, (*music).lumpnum);
+        (*music).data = NULL;
+        state.s_sound.mus_playing = None;
     }
 }
