@@ -19,7 +19,6 @@ pub struct patch_t {
 pub struct hu_textline_t {
     pub x: i32,
     pub y: i32,
-    pub f: *mut i32,
     pub sc: i32,
     pub l: String,
     pub needsupdate: i32,
@@ -42,16 +41,9 @@ pub unsafe fn HUlib_clearTextLine(mut t: *mut hu_textline_t) {
     (*t).l.clear();
     (*t).needsupdate = true_0;
 }
-pub unsafe fn HUlib_initTextLine(
-    mut t: *mut hu_textline_t,
-    mut x: i32,
-    mut y: i32,
-    mut f: *mut i32,
-    mut sc: i32,
-) {
+pub unsafe fn HUlib_initTextLine(mut t: *mut hu_textline_t, mut x: i32, mut y: i32, mut sc: i32) {
     (*t).x = x;
     (*t).y = y;
-    (*t).f = f;
     (*t).sc = sc;
     HUlib_clearTextLine(t);
 }
@@ -87,7 +79,8 @@ pub unsafe fn HUlib_drawTextLine(
     while i < (*l).l.len() as i32 {
         c = (*l).l.as_bytes()[i as usize].to_ascii_uppercase();
         if c as i32 != ' ' as i32 && c as i32 >= (*l).sc && c as i32 <= '_' as i32 {
-            let patch = V_CachePatchNum(state, *(*l).f.offset((c as i32 - (*l).sc) as isize));
+            let glyph = state.hu_stuff.hu_font[(c as i32 - (*l).sc) as usize];
+            let patch = V_CachePatchNum(state, glyph);
             w = (*patch).width as i32;
             if x + w > SCREENWIDTH {
                 break;
@@ -108,7 +101,8 @@ pub unsafe fn HUlib_drawTextLine(
         i += 1;
     }
     if drawcursor {
-        let cursor_patch = V_CachePatchNum(state, *(*l).f.offset(('_' as i32 - (*l).sc) as isize));
+        let cursor_glyph = state.hu_stuff.hu_font[('_' as i32 - (*l).sc) as usize];
+        let cursor_patch = V_CachePatchNum(state, cursor_glyph);
         if x + (*cursor_patch).width as i32 <= SCREENWIDTH {
             V_DrawPatchDirect(
                 state,
@@ -124,7 +118,8 @@ pub unsafe fn HUlib_eraseTextLine(state: &mut GameState, mut l: *mut hu_textline
     let mut y: i32 = 0;
     let mut yoffset: i32 = 0;
     if !state.am_map.automapactive && state.r_draw.viewwindowx != 0 && (*l).needsupdate != 0 {
-        let patch = V_CachePatchNum(state, *(*l).f.offset(0 as i32 as isize));
+        let glyph = state.hu_stuff.hu_font[0];
+        let patch = V_CachePatchNum(state, glyph);
         lh = (*patch).height as i32 + 1 as i32;
         y = (*l).y;
         yoffset = y * SCREENWIDTH;
@@ -154,14 +149,14 @@ pub unsafe fn HUlib_initSText(
     mut x: i32,
     mut y: i32,
     mut h: i32,
-    mut font: *mut i32,
     mut startchar: i32,
 ) {
     let mut i: i32 = 0;
     (*s).h = h;
     (*s).laston = true;
     (*s).cl = 0 as i32;
-    let font0_patch = V_CachePatchNum(state, *font.offset(0 as i32 as isize));
+    let glyph = state.hu_stuff.hu_font[0];
+    let font0_patch = V_CachePatchNum(state, glyph);
     let font0_height = (*font0_patch).height as i32;
     i = 0 as i32;
     while i < h {
@@ -169,7 +164,6 @@ pub unsafe fn HUlib_initSText(
             (&raw mut (*s).l as *mut hu_textline_t).offset(i as isize) as *mut hu_textline_t,
             x,
             y - i * (font0_height + 1 as i32),
-            font,
             startchar,
         );
         i += 1;
@@ -251,16 +245,10 @@ pub unsafe fn HUlib_eraseSText(state: &mut GameState, mut s: *mut hu_stext_t, on
     }
     (*s).laston = on;
 }
-pub unsafe fn HUlib_initIText(
-    mut it: *mut hu_itext_t,
-    mut x: i32,
-    mut y: i32,
-    mut font: *mut i32,
-    mut startchar: i32,
-) {
+pub unsafe fn HUlib_initIText(mut it: *mut hu_itext_t, mut x: i32, mut y: i32, mut startchar: i32) {
     (*it).lm = 0 as i32;
     (*it).laston = true;
-    HUlib_initTextLine(&raw mut (*it).l, x, y, font, startchar);
+    HUlib_initTextLine(&raw mut (*it).l, x, y, startchar);
 }
 pub unsafe fn HUlib_delCharFromIText(mut it: *mut hu_itext_t) {
     if (*it).l.l.len() as i32 != (*it).lm {
