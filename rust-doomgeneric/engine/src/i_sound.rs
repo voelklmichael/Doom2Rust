@@ -36,45 +36,40 @@ fn snddevice_from_raw(v: i32) -> snddevice_t {
     }
 }
 #[derive(Copy, Clone)]
-#[repr(C)]
 pub struct sound_module_t {
-    pub sound_devices: *mut snddevice_t,
-    pub num_sound_devices: i32,
-    pub Init: Option<unsafe fn(bool) -> bool>,
-    pub Shutdown: Option<unsafe fn() -> ()>,
-    pub GetSfxLumpNum: Option<unsafe fn(*mut sfxinfo_t) -> i32>,
-    pub Update: Option<unsafe fn() -> ()>,
-    pub UpdateSoundParams: Option<unsafe fn(i32, i32, i32) -> ()>,
-    pub StartSound: Option<unsafe fn(*mut sfxinfo_t, i32, i32, i32) -> i32>,
-    pub StopSound: Option<unsafe fn(i32) -> ()>,
-    pub SoundIsPlaying: Option<unsafe fn(i32) -> bool>,
-    pub CacheSounds: Option<unsafe fn(*mut sfxinfo_t, i32) -> ()>,
+    pub sound_devices: &'static [snddevice_t],
+    pub Init: Option<fn(bool) -> bool>,
+    pub Shutdown: Option<fn()>,
+    pub GetSfxLumpNum: Option<fn(*mut sfxinfo_t) -> i32>,
+    pub Update: Option<fn()>,
+    pub UpdateSoundParams: Option<fn(i32, i32, i32)>,
+    pub StartSound: Option<fn(*mut sfxinfo_t, i32, i32, i32) -> i32>,
+    pub StopSound: Option<fn(i32)>,
+    pub SoundIsPlaying: Option<fn(i32) -> bool>,
+    pub CacheSounds: Option<fn(*mut sfxinfo_t, i32)>,
 }
 #[derive(Copy, Clone)]
-#[repr(C)]
 pub struct music_module_t {
-    pub sound_devices: *mut snddevice_t,
-    pub num_sound_devices: i32,
-    pub Init: Option<unsafe fn() -> bool>,
-    pub Shutdown: Option<unsafe fn() -> ()>,
-    pub SetMusicVolume: Option<unsafe fn(i32) -> ()>,
-    pub PauseMusic: Option<unsafe fn() -> ()>,
-    pub ResumeMusic: Option<unsafe fn() -> ()>,
-    pub RegisterSong:
-        Option<unsafe fn(*mut ::core::ffi::c_void, i32) -> *mut ::core::ffi::c_void>,
-    pub UnRegisterSong: Option<unsafe fn(*mut ::core::ffi::c_void) -> ()>,
-    pub PlaySong: Option<unsafe fn(*mut ::core::ffi::c_void, bool) -> ()>,
-    pub StopSong: Option<unsafe fn() -> ()>,
-    pub MusicIsPlaying: Option<unsafe fn() -> bool>,
-    pub Poll: Option<unsafe fn() -> ()>,
+    pub sound_devices: &'static [snddevice_t],
+    pub Init: Option<fn() -> bool>,
+    pub Shutdown: Option<fn()>,
+    pub SetMusicVolume: Option<fn(i32)>,
+    pub PauseMusic: Option<fn()>,
+    pub ResumeMusic: Option<fn()>,
+    pub RegisterSong: Option<fn(*mut ::core::ffi::c_void, i32) -> *mut ::core::ffi::c_void>,
+    pub UnRegisterSong: Option<fn(*mut ::core::ffi::c_void)>,
+    pub PlaySong: Option<fn(*mut ::core::ffi::c_void, bool)>,
+    pub StopSong: Option<fn()>,
+    pub MusicIsPlaying: Option<fn() -> bool>,
+    pub Poll: Option<fn()>,
 }
 pub struct ISoundState {
     pub snd_samplerate: i32,
     pub snd_cachesize: i32,
     pub snd_maxslicetime_ms: i32,
     pub snd_musiccmd: Option<&'static str>,
-    sound_module: *mut sound_module_t,
-    music_module: *mut music_module_t,
+    sound_module: Option<&'static sound_module_t>,
+    music_module: Option<&'static music_module_t>,
     pub snd_musicdevice: i32,
     pub snd_sfxdevice: i32,
     snd_sbport: i32,
@@ -88,10 +83,10 @@ pub struct ISoundState {
     // sound support is ever added.
     pub use_libsamplerate: i32,
     pub libsamplerate_scale: f32,
-    // Always a single null entry -- see InitSfxModule, which never finds a
-    // real backend and always leaves sound_module null. Kept as-is (dead
+    // Always a single None entry -- see InitSfxModule, which never finds a
+    // real backend and always leaves sound_module None. Kept as-is (dead
     // stub), same rationale as above, rather than deleted as a drive-by.
-    sound_modules: [*mut sound_module_t; 1],
+    sound_modules: [Option<&'static sound_module_t>; 1],
 }
 
 impl ISoundState {
@@ -101,8 +96,8 @@ impl ISoundState {
             snd_cachesize: 64 * 1024 * 1024,
             snd_maxslicetime_ms: 28,
             snd_musiccmd: None,
-            sound_module: ::core::ptr::null::<sound_module_t>() as *mut sound_module_t,
-            music_module: ::core::ptr::null::<music_module_t>() as *mut music_module_t,
+            sound_module: None,
+            music_module: None,
             snd_musicdevice: snddevice_t::SNDDEVICE_SB as i32,
             snd_sfxdevice: snddevice_t::SNDDEVICE_SB as i32,
             snd_sbport: 0,
@@ -111,44 +106,25 @@ impl ISoundState {
             snd_mport: 0,
             use_libsamplerate: 0,
             libsamplerate_scale: 0.65,
-            sound_modules: [::core::ptr::null::<sound_module_t>() as *mut sound_module_t],
+            sound_modules: [None],
         }
     }
 }
-unsafe fn SndDeviceInList(
-    mut device: snddevice_t,
-    mut list: *mut snddevice_t,
-    mut len: i32,
-) -> bool {
-    let mut i: i32 = 0;
-    i = 0 as i32;
-    while i < len {
-        if device as u32 == *list.offset(i as isize) as u32 {
-            return true;
-        }
-        i += 1;
-    }
-    return false;
+fn SndDeviceInList(device: snddevice_t, list: &[snddevice_t]) -> bool {
+    list.contains(&device)
 }
-unsafe fn InitSfxModule(state: &mut ISoundState, mut use_sfx_prefix: bool) {
-    let mut i: i32 = 0;
-    state.sound_module = ::core::ptr::null_mut::<sound_module_t>();
-    i = 0 as i32;
-    while !state.sound_modules[i as usize].is_null() {
-        if SndDeviceInList(
-            snddevice_from_raw(state.snd_sfxdevice),
-            (*state.sound_modules[i as usize]).sound_devices,
-            (*state.sound_modules[i as usize]).num_sound_devices,
-        ) {
-            if (*state.sound_modules[i as usize])
-                .Init
-                .expect("non-null function pointer")(use_sfx_prefix)
-            {
-                state.sound_module = state.sound_modules[i as usize];
-                return;
-            }
+fn InitSfxModule(state: &mut ISoundState, use_sfx_prefix: bool) {
+    state.sound_module = None;
+    for i in 0..state.sound_modules.len() {
+        let Some(module) = state.sound_modules[i] else {
+            break;
+        };
+        if SndDeviceInList(snddevice_from_raw(state.snd_sfxdevice), module.sound_devices)
+            && (module.Init.expect("non-null function pointer"))(use_sfx_prefix)
+        {
+            state.sound_module = Some(module);
+            return;
         }
-        i += 1;
     }
 }
 pub fn I_InitSound(state: &mut GameState, mut use_sfx_prefix: bool) {
@@ -158,41 +134,32 @@ pub fn I_InitSound(state: &mut GameState, mut use_sfx_prefix: bool) {
     nosfx = M_CheckParm(state, "-nosfx") > 0 as i32;
     if !nosound && !state.i_video.screensaver_mode {
         if !nosfx {
-            unsafe { InitSfxModule(&mut state.i_sound, use_sfx_prefix) };
+            InitSfxModule(&mut state.i_sound, use_sfx_prefix);
         }
     }
 }
-pub unsafe fn I_ShutdownSound(state: &mut ISoundState) {
-    if !state.sound_module.is_null() {
-        (*state.sound_module)
-            .Shutdown
-            .expect("non-null function pointer")();
+pub fn I_ShutdownSound(state: &mut ISoundState) {
+    if let Some(module) = state.sound_module {
+        (module.Shutdown.expect("non-null function pointer"))();
     }
-    if !state.music_module.is_null() {
-        (*state.music_module)
-            .Shutdown
-            .expect("non-null function pointer")();
+    if let Some(module) = state.music_module {
+        (module.Shutdown.expect("non-null function pointer"))();
     }
 }
-pub unsafe fn I_GetSfxLumpNum(state: &mut ISoundState, mut sfxinfo: *mut sfxinfo_t) -> i32 {
-    if !state.sound_module.is_null() {
-        return (*state.sound_module)
-            .GetSfxLumpNum
-            .expect("non-null function pointer")(sfxinfo);
-    } else {
-        return 0 as i32;
-    };
-}
-pub unsafe fn I_UpdateSound(state: &mut ISoundState) {
-    if !state.sound_module.is_null() {
-        (*state.sound_module)
-            .Update
-            .expect("non-null function pointer")();
+pub fn I_GetSfxLumpNum(state: &mut ISoundState, sfxinfo: *mut sfxinfo_t) -> i32 {
+    match state.sound_module {
+        Some(module) => (module.GetSfxLumpNum.expect("non-null function pointer"))(sfxinfo),
+        None => 0 as i32,
     }
-    if !state.music_module.is_null() && (*state.music_module).Poll.is_some() {
-        (*state.music_module)
-            .Poll
-            .expect("non-null function pointer")();
+}
+pub fn I_UpdateSound(state: &mut ISoundState) {
+    if let Some(module) = state.sound_module {
+        (module.Update.expect("non-null function pointer"))();
+    }
+    if let Some(module) = state.music_module {
+        if let Some(poll) = module.Poll {
+            poll();
+        }
     }
 }
 fn CheckVolumeSeparation(mut vol: *mut i32, mut sep: *mut i32) {
@@ -209,136 +176,95 @@ fn CheckVolumeSeparation(mut vol: *mut i32, mut sep: *mut i32) {
         }
     }
 }
-pub unsafe fn I_UpdateSoundParams(
-    state: &mut ISoundState,
-    mut channel: i32,
-    mut vol: i32,
-    mut sep: i32,
-) {
-    if !state.sound_module.is_null() {
+pub fn I_UpdateSoundParams(state: &mut ISoundState, channel: i32, mut vol: i32, mut sep: i32) {
+    if let Some(module) = state.sound_module {
         CheckVolumeSeparation(&raw mut vol, &raw mut sep);
-        (*state.sound_module)
-            .UpdateSoundParams
-            .expect("non-null function pointer")(channel, vol, sep);
+        (module.UpdateSoundParams.expect("non-null function pointer"))(channel, vol, sep);
     }
 }
-pub unsafe fn I_StartSound(
+pub fn I_StartSound(
     state: &mut ISoundState,
-    mut sfxinfo: *mut sfxinfo_t,
-    mut channel: i32,
+    sfxinfo: *mut sfxinfo_t,
+    channel: i32,
     mut vol: i32,
     mut sep: i32,
 ) -> i32 {
-    if !state.sound_module.is_null() {
-        CheckVolumeSeparation(&raw mut vol, &raw mut sep);
-        return (*state.sound_module)
-            .StartSound
-            .expect("non-null function pointer")(sfxinfo, channel, vol, sep);
-    } else {
-        return 0 as i32;
-    };
-}
-pub unsafe fn I_StopSound(state: &mut ISoundState, mut channel: i32) {
-    if !state.sound_module.is_null() {
-        (*state.sound_module)
-            .StopSound
-            .expect("non-null function pointer")(channel);
+    match state.sound_module {
+        Some(module) => {
+            CheckVolumeSeparation(&raw mut vol, &raw mut sep);
+            (module.StartSound.expect("non-null function pointer"))(sfxinfo, channel, vol, sep)
+        }
+        None => 0 as i32,
     }
 }
-pub unsafe fn I_SoundIsPlaying(state: &mut ISoundState, mut channel: i32) -> bool {
-    if !state.sound_module.is_null() {
-        return (*state.sound_module)
-            .SoundIsPlaying
-            .expect("non-null function pointer")(channel);
-    } else {
-        return false;
-    };
+pub fn I_StopSound(state: &mut ISoundState, channel: i32) {
+    if let Some(module) = state.sound_module {
+        (module.StopSound.expect("non-null function pointer"))(channel);
+    }
 }
-pub unsafe fn I_PrecacheSounds(
+pub fn I_SoundIsPlaying(state: &mut ISoundState, channel: i32) -> bool {
+    match state.sound_module {
+        Some(module) => (module.SoundIsPlaying.expect("non-null function pointer"))(channel),
+        None => false,
+    }
+}
+pub fn I_PrecacheSounds(state: &mut ISoundState, sounds: *mut sfxinfo_t, num_sounds: i32) {
+    if let Some(module) = state.sound_module {
+        if let Some(cache_sounds) = module.CacheSounds {
+            cache_sounds(sounds, num_sounds);
+        }
+    }
+}
+pub fn I_InitMusic(state: &mut ISoundState) {
+    if let Some(module) = state.music_module {
+        (module.Init.expect("non-null function pointer"))();
+    }
+}
+pub fn I_SetMusicVolume(state: &mut ISoundState, volume: i32) {
+    if let Some(module) = state.music_module {
+        (module.SetMusicVolume.expect("non-null function pointer"))(volume);
+    }
+}
+pub fn I_PauseSong(state: &mut ISoundState) {
+    if let Some(module) = state.music_module {
+        (module.PauseMusic.expect("non-null function pointer"))();
+    }
+}
+pub fn I_ResumeSong(state: &mut ISoundState) {
+    if let Some(module) = state.music_module {
+        (module.ResumeMusic.expect("non-null function pointer"))();
+    }
+}
+pub fn I_RegisterSong(
     state: &mut ISoundState,
-    mut sounds: *mut sfxinfo_t,
-    mut num_sounds: i32,
-) {
-    if !state.sound_module.is_null() && (*state.sound_module).CacheSounds.is_some() {
-        (*state.sound_module)
-            .CacheSounds
-            .expect("non-null function pointer")(sounds, num_sounds);
-    }
-}
-pub unsafe fn I_InitMusic(state: &mut ISoundState) {
-    if !state.music_module.is_null() {
-        (*state.music_module)
-            .Init
-            .expect("non-null function pointer")();
-    }
-}
-pub unsafe fn I_SetMusicVolume(state: &mut ISoundState, mut volume: i32) {
-    if !state.music_module.is_null() {
-        (*state.music_module)
-            .SetMusicVolume
-            .expect("non-null function pointer")(volume);
-    }
-}
-pub unsafe fn I_PauseSong(state: &mut ISoundState) {
-    if !state.music_module.is_null() {
-        (*state.music_module)
-            .PauseMusic
-            .expect("non-null function pointer")();
-    }
-}
-pub unsafe fn I_ResumeSong(state: &mut ISoundState) {
-    if !state.music_module.is_null() {
-        (*state.music_module)
-            .ResumeMusic
-            .expect("non-null function pointer")();
-    }
-}
-pub unsafe fn I_RegisterSong(
-    state: &mut ISoundState,
-    mut data: *mut ::core::ffi::c_void,
-    mut len: i32,
+    data: *mut ::core::ffi::c_void,
+    len: i32,
 ) -> *mut ::core::ffi::c_void {
-    if !state.music_module.is_null() {
-        return (*state.music_module)
-            .RegisterSong
-            .expect("non-null function pointer")(data, len);
-    } else {
-        return NULL;
-    };
-}
-pub unsafe fn I_UnRegisterSong(state: &mut ISoundState, mut handle: *mut ::core::ffi::c_void) {
-    if !state.music_module.is_null() {
-        (*state.music_module)
-            .UnRegisterSong
-            .expect("non-null function pointer")(handle);
+    match state.music_module {
+        Some(module) => (module.RegisterSong.expect("non-null function pointer"))(data, len),
+        None => NULL,
     }
 }
-pub unsafe fn I_PlaySong(
-    state: &mut ISoundState,
-    mut handle: *mut ::core::ffi::c_void,
-    mut looping: bool,
-) {
-    if !state.music_module.is_null() {
-        (*state.music_module)
-            .PlaySong
-            .expect("non-null function pointer")(handle, looping);
+pub fn I_UnRegisterSong(state: &mut ISoundState, handle: *mut ::core::ffi::c_void) {
+    if let Some(module) = state.music_module {
+        (module.UnRegisterSong.expect("non-null function pointer"))(handle);
     }
 }
-pub unsafe fn I_StopSong(state: &mut ISoundState) {
-    if !state.music_module.is_null() {
-        (*state.music_module)
-            .StopSong
-            .expect("non-null function pointer")();
+pub fn I_PlaySong(state: &mut ISoundState, handle: *mut ::core::ffi::c_void, looping: bool) {
+    if let Some(module) = state.music_module {
+        (module.PlaySong.expect("non-null function pointer"))(handle, looping);
     }
 }
-pub unsafe fn I_MusicIsPlaying(state: &mut ISoundState) -> bool {
-    if !state.music_module.is_null() {
-        return (*state.music_module)
-            .MusicIsPlaying
-            .expect("non-null function pointer")();
-    } else {
-        return false;
-    };
+pub fn I_StopSong(state: &mut ISoundState) {
+    if let Some(module) = state.music_module {
+        (module.StopSong.expect("non-null function pointer"))();
+    }
+}
+pub fn I_MusicIsPlaying(state: &mut ISoundState) -> bool {
+    match state.music_module {
+        Some(module) => (module.MusicIsPlaying.expect("non-null function pointer"))(),
+        None => false,
+    }
 }
 pub fn I_BindSoundVariables(state: &mut GameState) {
     M_BindVariable_int(

@@ -135,7 +135,7 @@ pub unsafe fn S_Init(state: &mut GameState, mut sfxVolume_0: i32, mut musicVolum
     I_AtExit(&mut state.i_system, Some(S_Shutdown as unsafe fn(&mut GameState) -> ()), true);
 }
 pub fn S_Shutdown(state: &mut GameState) {
-    unsafe { I_ShutdownSound(&mut state.i_sound) };
+    I_ShutdownSound(&mut state.i_sound);
 }
 unsafe fn S_StopChannel(state: &mut GameState, mut cnum: i32) {
     let mut i: i32 = 0;
@@ -362,13 +362,13 @@ pub unsafe fn S_StartSound(
 }
 pub fn S_PauseSound(state: &mut GameState) {
     if !state.s_sound.mus_playing.is_null() && !state.s_sound.mus_paused {
-        unsafe { I_PauseSong(&mut state.i_sound) };
+        I_PauseSong(&mut state.i_sound);
         state.s_sound.mus_paused = true;
     }
 }
 pub fn S_ResumeSound(state: &mut GameState) {
     if !state.s_sound.mus_playing.is_null() && state.s_sound.mus_paused {
-        unsafe { I_ResumeSong(&mut state.i_sound) };
+        I_ResumeSong(&mut state.i_sound);
         state.s_sound.mus_paused = false;
     }
 }
@@ -438,7 +438,7 @@ pub fn S_SetMusicVolume(state: &mut GameState, mut volume: i32) {
     if volume < 0 as i32 || volume > 127 as i32 {
         I_Error(&format!("Attempt to set music volume at {}", volume));
     }
-    unsafe { I_SetMusicVolume(&mut state.i_sound, volume) };
+    I_SetMusicVolume(&mut state.i_sound, volume);
 }
 pub fn S_SetSfxVolume(state: &mut GameState, mut volume: i32) {
     if volume < 0 as i32 || volume > 127 as i32 {
@@ -480,7 +480,7 @@ pub unsafe fn S_ChangeMusic(state: &mut GameState, mut musicnum: i32, mut loopin
     state.s_sound.mus_playing = music;
 }
 pub fn S_MusicPlaying(state: &mut GameState) -> bool {
-    return unsafe { I_MusicIsPlaying(&mut state.i_sound) };
+    return I_MusicIsPlaying(&mut state.i_sound);
 }
 pub unsafe fn S_StopMusic(state: &mut GameState) {
     if !state.s_sound.mus_playing.is_null() {
