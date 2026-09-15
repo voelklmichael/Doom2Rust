@@ -508,7 +508,7 @@ pub unsafe fn P_BlockLinesIterator(
         return true;
     }
     offset = y * state.p_setup.bmapwidth + x;
-    offset = *state.p_setup.blockmap.offset(offset as isize) as i32;
+    offset = state.p_setup.blockmaplump[(4 + offset) as usize] as i32;
     list = state
         .p_setup
         .blockmaplump

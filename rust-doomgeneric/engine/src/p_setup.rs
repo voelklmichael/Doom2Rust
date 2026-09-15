@@ -112,7 +112,6 @@ pub struct PSetupState {
     pub totallines: i32,
     pub bmapwidth: i32,
     pub bmapheight: i32,
-    pub blockmap: *mut i16,
     pub blockmaplump: Vec<i16>,
     pub bmaporgx: fixed_t,
     pub bmaporgy: fixed_t,
@@ -145,7 +144,6 @@ impl PSetupState {
             totallines: 0,
             bmapwidth: 0,
             bmapheight: 0,
-            blockmap: ::core::ptr::null::<i16>() as *mut i16,
             blockmaplump: Vec::new(),
             bmaporgx: 0,
             bmaporgy: 0,
@@ -702,7 +700,6 @@ pub unsafe fn P_LoadBlockMap(state: &mut GameState, mut lump: i32) {
         .chunks_exact(2)
         .map(|c| i16::from_le_bytes([c[0], c[1]]))
         .collect();
-    state.p_setup.blockmap = state.p_setup.blockmaplump.as_mut_ptr().offset(4 as i32 as isize);
     state.p_setup.bmaporgx = ((state.p_setup.blockmaplump[0] as i32) << FRACBITS) as fixed_t;
     state.p_setup.bmaporgy = ((state.p_setup.blockmaplump[1] as i32) << FRACBITS) as fixed_t;
     state.p_setup.bmapwidth = state.p_setup.blockmaplump[2] as i32;
