@@ -73,7 +73,7 @@ pub struct PEnemyState {
     pub vileobj: Option<MobjId>,
     pub viletryx: fixed_t,
     pub viletryy: fixed_t,
-    pub braintargets: [*mut mobj_t; 32],
+    pub braintargets: [Option<MobjId>; 32],
     pub numbraintargets: i32,
     pub braintargeton: i32,
     pub easy: i32,
@@ -87,7 +87,7 @@ impl PEnemyState {
             vileobj: None,
             viletryx: 0,
             viletryy: 0,
-            braintargets: [::core::ptr::null::<mobj_t>() as *mut mobj_t; 32],
+            braintargets: [None; 32],
             numbraintargets: 0,
             braintargeton: 0,
             easy: 0,
@@ -1480,7 +1480,7 @@ pub unsafe fn A_BrainAwake(state: &mut GameState, _id: MobjId) {
         if matches!((*thinker).function, ThinkerFn::Mobj(_)) {
             m = thinker as *mut mobj_t;
             if (*m).type_0 as u32 == MobjType::MT_BOSSTARGET as i32 as u32 {
-                state.p_enemy.braintargets[state.p_enemy.numbraintargets as usize] = m;
+                state.p_enemy.braintargets[state.p_enemy.numbraintargets as usize] = Some((*m).id);
                 state.p_enemy.numbraintargets += 1;
             }
         }
@@ -1542,7 +1542,8 @@ pub unsafe fn A_BrainSpit(state: &mut GameState, id: MobjId) {
     if state.g_game.gameskill <= SkillType::sk_easy && state.p_enemy.easy == 0 {
         return;
     }
-    targ = state.p_enemy.braintargets[state.p_enemy.braintargeton as usize];
+    let targ_id = state.p_enemy.braintargets[state.p_enemy.braintargeton as usize].unwrap();
+    targ = state.p_mobj.mobj_get(targ_id).unwrap();
     state.p_enemy.braintargeton =
         (state.p_enemy.braintargeton + 1 as i32) % state.p_enemy.numbraintargets;
     newmobj = P_SpawnMissile(state, mo, targ, MobjType::MT_SPAWNSHOT);
