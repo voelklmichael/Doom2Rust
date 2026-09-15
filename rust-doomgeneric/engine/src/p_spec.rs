@@ -266,139 +266,139 @@ pub static animdefs: [animdef_t; 23] = [
         istexture: false_0,
         endname: FixedCStr(*b"NUKAGE3\0\0"),
         startname: FixedCStr(*b"NUKAGE1\0\0"),
-        speed: 8 as i32,
+        speed: 8_i32,
     },
     animdef_t {
         istexture: false_0,
         endname: FixedCStr(*b"FWATER4\0\0"),
         startname: FixedCStr(*b"FWATER1\0\0"),
-        speed: 8 as i32,
+        speed: 8_i32,
     },
     animdef_t {
         istexture: false_0,
         endname: FixedCStr(*b"SWATER4\0\0"),
         startname: FixedCStr(*b"SWATER1\0\0"),
-        speed: 8 as i32,
+        speed: 8_i32,
     },
     animdef_t {
         istexture: false_0,
         endname: FixedCStr(*b"LAVA4\0\0\0\0"),
         startname: FixedCStr(*b"LAVA1\0\0\0\0"),
-        speed: 8 as i32,
+        speed: 8_i32,
     },
     animdef_t {
         istexture: false_0,
         endname: FixedCStr(*b"BLOOD3\0\0\0"),
         startname: FixedCStr(*b"BLOOD1\0\0\0"),
-        speed: 8 as i32,
+        speed: 8_i32,
     },
     animdef_t {
         istexture: false_0,
         endname: FixedCStr(*b"RROCK08\0\0"),
         startname: FixedCStr(*b"RROCK05\0\0"),
-        speed: 8 as i32,
+        speed: 8_i32,
     },
     animdef_t {
         istexture: false_0,
         endname: FixedCStr(*b"SLIME04\0\0"),
         startname: FixedCStr(*b"SLIME01\0\0"),
-        speed: 8 as i32,
+        speed: 8_i32,
     },
     animdef_t {
         istexture: false_0,
         endname: FixedCStr(*b"SLIME08\0\0"),
         startname: FixedCStr(*b"SLIME05\0\0"),
-        speed: 8 as i32,
+        speed: 8_i32,
     },
     animdef_t {
         istexture: false_0,
         endname: FixedCStr(*b"SLIME12\0\0"),
         startname: FixedCStr(*b"SLIME09\0\0"),
-        speed: 8 as i32,
+        speed: 8_i32,
     },
     animdef_t {
         istexture: true_0,
         endname: FixedCStr(*b"BLODGR4\0\0"),
         startname: FixedCStr(*b"BLODGR1\0\0"),
-        speed: 8 as i32,
+        speed: 8_i32,
     },
     animdef_t {
         istexture: true_0,
         endname: FixedCStr(*b"SLADRIP3\0"),
         startname: FixedCStr(*b"SLADRIP1\0"),
-        speed: 8 as i32,
+        speed: 8_i32,
     },
     animdef_t {
         istexture: true_0,
         endname: FixedCStr(*b"BLODRIP4\0"),
         startname: FixedCStr(*b"BLODRIP1\0"),
-        speed: 8 as i32,
+        speed: 8_i32,
     },
     animdef_t {
         istexture: true_0,
         endname: FixedCStr(*b"FIREWALL\0"),
         startname: FixedCStr(*b"FIREWALA\0"),
-        speed: 8 as i32,
+        speed: 8_i32,
     },
     animdef_t {
         istexture: true_0,
         endname: FixedCStr(*b"GSTFONT3\0"),
         startname: FixedCStr(*b"GSTFONT1\0"),
-        speed: 8 as i32,
+        speed: 8_i32,
     },
     animdef_t {
         istexture: true_0,
         endname: FixedCStr(*b"FIRELAVA\0"),
         startname: FixedCStr(*b"FIRELAV3\0"),
-        speed: 8 as i32,
+        speed: 8_i32,
     },
     animdef_t {
         istexture: true_0,
         endname: FixedCStr(*b"FIREMAG3\0"),
         startname: FixedCStr(*b"FIREMAG1\0"),
-        speed: 8 as i32,
+        speed: 8_i32,
     },
     animdef_t {
         istexture: true_0,
         endname: FixedCStr(*b"FIREBLU2\0"),
         startname: FixedCStr(*b"FIREBLU1\0"),
-        speed: 8 as i32,
+        speed: 8_i32,
     },
     animdef_t {
         istexture: true_0,
         endname: FixedCStr(*b"ROCKRED3\0"),
         startname: FixedCStr(*b"ROCKRED1\0"),
-        speed: 8 as i32,
+        speed: 8_i32,
     },
     animdef_t {
         istexture: true_0,
         endname: FixedCStr(*b"BFALL4\0\0\0"),
         startname: FixedCStr(*b"BFALL1\0\0\0"),
-        speed: 8 as i32,
+        speed: 8_i32,
     },
     animdef_t {
         istexture: true_0,
         endname: FixedCStr(*b"SFALL4\0\0\0"),
         startname: FixedCStr(*b"SFALL1\0\0\0"),
-        speed: 8 as i32,
+        speed: 8_i32,
     },
     animdef_t {
         istexture: true_0,
         endname: FixedCStr(*b"WFALL4\0\0\0"),
         startname: FixedCStr(*b"WFALL1\0\0\0"),
-        speed: 8 as i32,
+        speed: 8_i32,
     },
     animdef_t {
         istexture: true_0,
         endname: FixedCStr(*b"DBRAIN4\0\0"),
         startname: FixedCStr(*b"DBRAIN1\0\0"),
-        speed: 8 as i32,
+        speed: 8_i32,
     },
     animdef_t {
-        istexture: -(1 as i32),
+        istexture: -1_i32,
         endname: FixedCStr(*b"\0\0\0\0\0\0\0\0\0"),
         startname: FixedCStr(*b"\0\0\0\0\0\0\0\0\0"),
-        speed: 0 as i32,
+        speed: 0_i32,
     },
 ];
 pub const MAXLINEANIMS: i32 = 64;
@@ -406,20 +406,20 @@ pub fn P_InitPicAnims(state: &mut GameState) {
     let mut i: i32 = 0;
     state.p_spec.lastanim = 0;
     let mut current_block_13: u64;
-    i = 0 as i32;
-    while animdefs[i as usize].istexture != -(1 as i32) {
+    i = 0_i32;
+    while animdefs[i as usize].istexture != -1_i32 {
         let startname = animdefs[i as usize].startname.as_str();
         let endname = animdefs[i as usize].endname.as_str();
         let anim = &mut state.p_spec.anims[state.p_spec.lastanim];
         if animdefs[i as usize].istexture != 0 {
-            if R_CheckTextureNumForName(&mut state.r_data, &startname) == -(1 as i32) {
+            if R_CheckTextureNumForName(&mut state.r_data, &startname) == -1_i32 {
                 current_block_13 = 12237857397564741460;
             } else {
                 anim.picnum = R_TextureNumForName(&mut state.r_data, &endname);
                 anim.basepic = R_TextureNumForName(&mut state.r_data, &startname);
                 current_block_13 = 11650488183268122163;
             }
-        } else if W_CheckNumForName(&mut state.w_wad, &startname) == -(1 as i32) {
+        } else if W_CheckNumForName(&mut state.w_wad, &startname) == -1_i32 {
             current_block_13 = 12237857397564741460;
         } else {
             let picnum = R_FlatNumForName(state, &endname);
@@ -433,8 +433,8 @@ pub fn P_InitPicAnims(state: &mut GameState) {
             11650488183268122163 => {
                 let anim = &mut state.p_spec.anims[state.p_spec.lastanim];
                 anim.istexture = animdefs[i as usize].istexture != 0;
-                anim.numpics = anim.picnum - anim.basepic + 1 as i32;
-                if anim.numpics < 2 as i32 {
+                anim.numpics = anim.picnum - anim.basepic + 1_i32;
+                if anim.numpics < 2_i32 {
                     I_Error(&format!(
                         "P_InitPicAnims: bad cycle from {} to {}",
                         startname, endname,
@@ -455,7 +455,7 @@ pub unsafe fn getSide(
     mut side: i32,
 ) -> *mut side_t {
     let sec = state.p_setup.sector_mut(SectorId(currentSector as u32));
-    let line_id = (*sec).lines[line as usize];
+    let line_id = sec.lines[line as usize];
     let sidenum = state.p_setup.line(line_id).sidenum[side as usize];
     return state.p_setup.side_mut(SideId(sidenum as u32));
 }
@@ -466,15 +466,15 @@ pub unsafe fn getSector(
     mut side: i32,
 ) -> *mut sector_t {
     let sec = state.p_setup.sector_mut(SectorId(currentSector as u32));
-    let line_id = (*sec).lines[line as usize];
+    let line_id = sec.lines[line as usize];
     let sidenum = state.p_setup.line(line_id).sidenum[side as usize];
     let sector_id = state.p_setup.sides[sidenum as usize].sector;
     return state.p_setup.sector_mut(sector_id);
 }
 pub unsafe fn twoSided(state: &mut GameState, mut sector: i32, mut line: i32) -> i32 {
     let sec = state.p_setup.sector_mut(SectorId(sector as u32));
-    let line_id = (*sec).lines[line as usize];
-    return state.p_setup.line(line_id).flags as i32 & ML_TWOSIDED;
+    let line_id = sec.lines[line as usize];
+    state.p_setup.line(line_id).flags as i32 & ML_TWOSIDED
 }
 pub fn getNextSector(
     state: &mut GameState,
@@ -492,7 +492,7 @@ pub fn getNextSector(
             None => ::core::ptr::null_mut::<sector_t>(),
         };
     }
-    return front;
+    front
 }
 pub unsafe fn P_FindLowestFloorSurrounding(
     state: &mut GameState,
@@ -502,18 +502,16 @@ pub unsafe fn P_FindLowestFloorSurrounding(
     let mut check: LineId;
     let mut other: *mut sector_t = ::core::ptr::null_mut::<sector_t>();
     let mut floor: fixed_t = (*sec).floorheight;
-    i = 0 as i32;
+    i = 0_i32;
     while i < (*sec).linecount {
         check = (*sec).lines[i as usize];
         other = getNextSector(state, check, sec);
-        if !other.is_null() {
-            if (*other).floorheight < floor {
-                floor = (*other).floorheight;
-            }
+        if !other.is_null() && (*other).floorheight < floor {
+            floor = (*other).floorheight;
         }
         i += 1;
     }
-    return floor;
+    floor
 }
 pub unsafe fn P_FindHighestFloorSurrounding(
     state: &mut GameState,
@@ -523,18 +521,16 @@ pub unsafe fn P_FindHighestFloorSurrounding(
     let mut check: LineId;
     let mut other: *mut sector_t = ::core::ptr::null_mut::<sector_t>();
     let mut floor: fixed_t = -(500 as fixed_t) * FRACUNIT;
-    i = 0 as i32;
+    i = 0_i32;
     while i < (*sec).linecount {
         check = (*sec).lines[i as usize];
         other = getNextSector(state, check, sec);
-        if !other.is_null() {
-            if (*other).floorheight > floor {
-                floor = (*other).floorheight;
-            }
+        if !other.is_null() && (*other).floorheight > floor {
+            floor = (*other).floorheight;
         }
         i += 1;
     }
-    return floor;
+    floor
 }
 pub const MAX_ADJOINING_SECTORS: i32 = 20;
 pub unsafe fn P_FindNextHighestFloor(
@@ -549,20 +545,20 @@ pub unsafe fn P_FindNextHighestFloor(
     let mut other: *mut sector_t = ::core::ptr::null_mut::<sector_t>();
     let mut height: fixed_t = currentheight as fixed_t;
     let mut heightlist: [fixed_t; 22] = [0; 22];
-    i = 0 as i32;
-    h = 0 as i32;
+    i = 0_i32;
+    h = 0_i32;
     while i < (*sec).linecount {
         check = (*sec).lines[i as usize];
         other = getNextSector(state, check, sec);
         if !other.is_null() {
             if (*other).floorheight > height {
-                if h == MAX_ADJOINING_SECTORS + 1 as i32 {
+                if h == MAX_ADJOINING_SECTORS + 1_i32 {
                     height = (*other).floorheight;
-                } else if h == MAX_ADJOINING_SECTORS + 2 as i32 {
+                } else if h == MAX_ADJOINING_SECTORS + 2_i32 {
                     I_Error("Sector with more than 22 adjoining sectors. Vanilla will crash here");
                 }
                 let fresh1 = h;
-                h = h + 1;
+                h += 1;
                 heightlist[fresh1 as usize] = (*other).floorheight;
             }
         }
@@ -571,15 +567,15 @@ pub unsafe fn P_FindNextHighestFloor(
     if h == 0 {
         return currentheight as fixed_t;
     }
-    min = heightlist[0] as i32;
-    i = 1 as i32;
+    min = heightlist[0];
+    i = 1_i32;
     while i < h {
         if heightlist[i as usize] < min {
-            min = heightlist[i as usize] as i32;
+            min = heightlist[i as usize];
         }
         i += 1;
     }
-    return min as fixed_t;
+    min as fixed_t
 }
 pub unsafe fn P_FindLowestCeilingSurrounding(
     state: &mut GameState,
@@ -589,18 +585,16 @@ pub unsafe fn P_FindLowestCeilingSurrounding(
     let mut check: LineId;
     let mut other: *mut sector_t = ::core::ptr::null_mut::<sector_t>();
     let mut height: fixed_t = INT_MAX;
-    i = 0 as i32;
+    i = 0_i32;
     while i < (*sec).linecount {
         check = (*sec).lines[i as usize];
         other = getNextSector(state, check, sec);
-        if !other.is_null() {
-            if (*other).ceilingheight < height {
-                height = (*other).ceilingheight;
-            }
+        if !other.is_null() && (*other).ceilingheight < height {
+            height = (*other).ceilingheight;
         }
         i += 1;
     }
-    return height;
+    height
 }
 pub unsafe fn P_FindHighestCeilingSurrounding(
     state: &mut GameState,
@@ -610,18 +604,16 @@ pub unsafe fn P_FindHighestCeilingSurrounding(
     let mut check: LineId;
     let mut other: *mut sector_t = ::core::ptr::null_mut::<sector_t>();
     let mut height: fixed_t = 0 as fixed_t;
-    i = 0 as i32;
+    i = 0_i32;
     while i < (*sec).linecount {
         check = (*sec).lines[i as usize];
         other = getNextSector(state, check, sec);
-        if !other.is_null() {
-            if (*other).ceilingheight > height {
-                height = (*other).ceilingheight;
-            }
+        if !other.is_null() && (*other).ceilingheight > height {
+            height = (*other).ceilingheight;
         }
         i += 1;
     }
-    return height;
+    height
 }
 pub fn P_FindSectorFromLineTag(
     state: &mut GameState,
@@ -630,14 +622,14 @@ pub fn P_FindSectorFromLineTag(
 ) -> i32 {
     let mut i: i32 = 0;
     let line_tag = state.p_setup.line(line).tag;
-    i = start + 1 as i32;
+    i = start + 1_i32;
     while i < state.p_setup.numsectors {
         if state.p_setup.sectors[i as usize].tag as i32 == line_tag as i32 {
             return i;
         }
         i += 1;
     }
-    return -(1 as i32);
+    return -1_i32;
 }
 pub unsafe fn P_FindMinSurroundingLight(
     state: &mut GameState,
@@ -649,18 +641,16 @@ pub unsafe fn P_FindMinSurroundingLight(
     let mut line: LineId;
     let mut check: *mut sector_t = ::core::ptr::null_mut::<sector_t>();
     min = max;
-    i = 0 as i32;
+    i = 0_i32;
     while i < (*sector).linecount {
         line = (*sector).lines[i as usize];
         check = getNextSector(state, line, sector);
-        if !check.is_null() {
-            if ((*check).lightlevel as i32) < min {
-                min = (*check).lightlevel as i32;
-            }
+        if !check.is_null() && ((*check).lightlevel as i32) < min {
+            min = (*check).lightlevel as i32;
         }
         i += 1;
     }
-    return min;
+    min
 }
 pub unsafe fn P_CrossSpecialLine(
     state: &mut GameState,
@@ -676,10 +666,10 @@ pub unsafe fn P_CrossSpecialLine(
             33 | 34 | 35 | 31 | 32 | 16 => return,
             _ => {}
         }
-        ok = 0 as i32;
+        ok = 0_i32;
         match special as i32 {
             39 | 97 | 125 | 126 | 4 | 10 | 88 => {
-                ok = 1 as i32;
+                ok = 1_i32;
             }
             _ => {}
         }
@@ -690,147 +680,147 @@ pub unsafe fn P_CrossSpecialLine(
     match special as i32 {
         2 => {
             EV_DoDoor(state, line, VldoorE::vld_open);
-            (*state.p_setup.line_mut(line)).special = 0 as i16;
+            state.p_setup.line_mut(line).special = 0_i16;
         }
         3 => {
             EV_DoDoor(state, line, VldoorE::vld_close);
-            (*state.p_setup.line_mut(line)).special = 0 as i16;
+            state.p_setup.line_mut(line).special = 0_i16;
         }
         4 => {
             EV_DoDoor(state, line, VldoorE::vld_normal);
-            (*state.p_setup.line_mut(line)).special = 0 as i16;
+            state.p_setup.line_mut(line).special = 0_i16;
         }
         5 => {
             EV_DoFloor(state, line, FloorE::raiseFloor);
-            (*state.p_setup.line_mut(line)).special = 0 as i16;
+            state.p_setup.line_mut(line).special = 0_i16;
         }
         6 => {
             EV_DoCeiling(state, line, CeilingE::fastCrushAndRaise);
-            (*state.p_setup.line_mut(line)).special = 0 as i16;
+            state.p_setup.line_mut(line).special = 0_i16;
         }
         8 => {
             EV_BuildStairs(state, line, StairE::build8);
-            (*state.p_setup.line_mut(line)).special = 0 as i16;
+            state.p_setup.line_mut(line).special = 0_i16;
         }
         10 => {
-            EV_DoPlat(state, line, PlattypeE::downWaitUpStay, 0 as i32);
-            (*state.p_setup.line_mut(line)).special = 0 as i16;
+            EV_DoPlat(state, line, PlattypeE::downWaitUpStay, 0_i32);
+            state.p_setup.line_mut(line).special = 0_i16;
         }
         12 => {
-            EV_LightTurnOn(state, line, 0 as i32);
-            (*state.p_setup.line_mut(line)).special = 0 as i16;
+            EV_LightTurnOn(state, line, 0_i32);
+            state.p_setup.line_mut(line).special = 0_i16;
         }
         13 => {
-            EV_LightTurnOn(state, line, 255 as i32);
-            (*state.p_setup.line_mut(line)).special = 0 as i16;
+            EV_LightTurnOn(state, line, 255_i32);
+            state.p_setup.line_mut(line).special = 0_i16;
         }
         16 => {
             EV_DoDoor(state, line, VldoorE::vld_close30ThenOpen);
-            (*state.p_setup.line_mut(line)).special = 0 as i16;
+            state.p_setup.line_mut(line).special = 0_i16;
         }
         17 => {
             EV_StartLightStrobing(state, line);
-            (*state.p_setup.line_mut(line)).special = 0 as i16;
+            state.p_setup.line_mut(line).special = 0_i16;
         }
         19 => {
             EV_DoFloor(state, line, FloorE::lowerFloor);
-            (*state.p_setup.line_mut(line)).special = 0 as i16;
+            state.p_setup.line_mut(line).special = 0_i16;
         }
         22 => {
-            EV_DoPlat(state, line, PlattypeE::raiseToNearestAndChange, 0 as i32);
-            (*state.p_setup.line_mut(line)).special = 0 as i16;
+            EV_DoPlat(state, line, PlattypeE::raiseToNearestAndChange, 0_i32);
+            state.p_setup.line_mut(line).special = 0_i16;
         }
         25 => {
             EV_DoCeiling(state, line, CeilingE::crushAndRaise);
-            (*state.p_setup.line_mut(line)).special = 0 as i16;
+            state.p_setup.line_mut(line).special = 0_i16;
         }
         30 => {
             EV_DoFloor(state, line, FloorE::raiseToTexture);
-            (*state.p_setup.line_mut(line)).special = 0 as i16;
+            state.p_setup.line_mut(line).special = 0_i16;
         }
         35 => {
-            EV_LightTurnOn(state, line, 35 as i32);
-            (*state.p_setup.line_mut(line)).special = 0 as i16;
+            EV_LightTurnOn(state, line, 35_i32);
+            state.p_setup.line_mut(line).special = 0_i16;
         }
         36 => {
             EV_DoFloor(state, line, FloorE::turboLower);
-            (*state.p_setup.line_mut(line)).special = 0 as i16;
+            state.p_setup.line_mut(line).special = 0_i16;
         }
         37 => {
             EV_DoFloor(state, line, FloorE::lowerAndChange);
-            (*state.p_setup.line_mut(line)).special = 0 as i16;
+            state.p_setup.line_mut(line).special = 0_i16;
         }
         38 => {
             EV_DoFloor(state, line, FloorE::lowerFloorToLowest);
-            (*state.p_setup.line_mut(line)).special = 0 as i16;
+            state.p_setup.line_mut(line).special = 0_i16;
         }
         39 => {
             EV_Teleport(state, line, side, thing);
-            (*state.p_setup.line_mut(line)).special = 0 as i16;
+            state.p_setup.line_mut(line).special = 0_i16;
         }
         40 => {
             EV_DoCeiling(state, line, CeilingE::raiseToHighest);
             EV_DoFloor(state, line, FloorE::lowerFloorToLowest);
-            (*state.p_setup.line_mut(line)).special = 0 as i16;
+            state.p_setup.line_mut(line).special = 0_i16;
         }
         44 => {
             EV_DoCeiling(state, line, CeilingE::lowerAndCrush);
-            (*state.p_setup.line_mut(line)).special = 0 as i16;
+            state.p_setup.line_mut(line).special = 0_i16;
         }
         52 => {
             G_ExitLevel(state);
         }
         53 => {
-            EV_DoPlat(state, line, PlattypeE::perpetualRaise, 0 as i32);
-            (*state.p_setup.line_mut(line)).special = 0 as i16;
+            EV_DoPlat(state, line, PlattypeE::perpetualRaise, 0_i32);
+            state.p_setup.line_mut(line).special = 0_i16;
         }
         54 => {
             EV_StopPlat(state, state.p_setup.line(line).tag as i32);
-            (*state.p_setup.line_mut(line)).special = 0 as i16;
+            state.p_setup.line_mut(line).special = 0_i16;
         }
         56 => {
             EV_DoFloor(state, line, FloorE::raiseFloorCrush);
-            (*state.p_setup.line_mut(line)).special = 0 as i16;
+            state.p_setup.line_mut(line).special = 0_i16;
         }
         57 => {
             EV_CeilingCrushStop(state, state.p_setup.line(line).tag as i32);
-            (*state.p_setup.line_mut(line)).special = 0 as i16;
+            state.p_setup.line_mut(line).special = 0_i16;
         }
         58 => {
             EV_DoFloor(state, line, FloorE::raiseFloor24);
-            (*state.p_setup.line_mut(line)).special = 0 as i16;
+            state.p_setup.line_mut(line).special = 0_i16;
         }
         59 => {
             EV_DoFloor(state, line, FloorE::raiseFloor24AndChange);
-            (*state.p_setup.line_mut(line)).special = 0 as i16;
+            state.p_setup.line_mut(line).special = 0_i16;
         }
         104 => {
             EV_TurnTagLightsOff(state, line);
-            (*state.p_setup.line_mut(line)).special = 0 as i16;
+            state.p_setup.line_mut(line).special = 0_i16;
         }
         108 => {
             EV_DoDoor(state, line, VldoorE::vld_blazeRaise);
-            (*state.p_setup.line_mut(line)).special = 0 as i16;
+            state.p_setup.line_mut(line).special = 0_i16;
         }
         109 => {
             EV_DoDoor(state, line, VldoorE::vld_blazeOpen);
-            (*state.p_setup.line_mut(line)).special = 0 as i16;
+            state.p_setup.line_mut(line).special = 0_i16;
         }
         100 => {
             EV_BuildStairs(state, line, StairE::turbo16);
-            (*state.p_setup.line_mut(line)).special = 0 as i16;
+            state.p_setup.line_mut(line).special = 0_i16;
         }
         110 => {
             EV_DoDoor(state, line, VldoorE::vld_blazeClose);
-            (*state.p_setup.line_mut(line)).special = 0 as i16;
+            state.p_setup.line_mut(line).special = 0_i16;
         }
         119 => {
             EV_DoFloor(state, line, FloorE::raiseFloorToNearest);
-            (*state.p_setup.line_mut(line)).special = 0 as i16;
+            state.p_setup.line_mut(line).special = 0_i16;
         }
         121 => {
-            EV_DoPlat(state, line, PlattypeE::blazeDWUS, 0 as i32);
-            (*state.p_setup.line_mut(line)).special = 0 as i16;
+            EV_DoPlat(state, line, PlattypeE::blazeDWUS, 0_i32);
+            state.p_setup.line_mut(line).special = 0_i16;
         }
         124 => {
             G_SecretExitLevel(state);
@@ -838,16 +828,16 @@ pub unsafe fn P_CrossSpecialLine(
         125 => {
             if (*thing).player.is_none() {
                 EV_Teleport(state, line, side, thing);
-                (*state.p_setup.line_mut(line)).special = 0 as i16;
+                state.p_setup.line_mut(line).special = 0_i16;
             }
         }
         130 => {
             EV_DoFloor(state, line, FloorE::raiseFloorTurbo);
-            (*state.p_setup.line_mut(line)).special = 0 as i16;
+            state.p_setup.line_mut(line).special = 0_i16;
         }
         141 => {
             EV_DoCeiling(state, line, CeilingE::silentCrushAndRaise);
-            (*state.p_setup.line_mut(line)).special = 0 as i16;
+            state.p_setup.line_mut(line).special = 0_i16;
         }
         72 => {
             EV_DoCeiling(state, line, CeilingE::lowerAndCrush);
@@ -868,13 +858,13 @@ pub unsafe fn P_CrossSpecialLine(
             EV_DoCeiling(state, line, CeilingE::fastCrushAndRaise);
         }
         79 => {
-            EV_LightTurnOn(state, line, 35 as i32);
+            EV_LightTurnOn(state, line, 35_i32);
         }
         80 => {
-            EV_LightTurnOn(state, line, 0 as i32);
+            EV_LightTurnOn(state, line, 0_i32);
         }
         81 => {
-            EV_LightTurnOn(state, line, 255 as i32);
+            EV_LightTurnOn(state, line, 255_i32);
         }
         82 => {
             EV_DoFloor(state, line, FloorE::lowerFloorToLowest);
@@ -889,10 +879,10 @@ pub unsafe fn P_CrossSpecialLine(
             EV_DoDoor(state, line, VldoorE::vld_open);
         }
         87 => {
-            EV_DoPlat(state, line, PlattypeE::perpetualRaise, 0 as i32);
+            EV_DoPlat(state, line, PlattypeE::perpetualRaise, 0_i32);
         }
         88 => {
-            EV_DoPlat(state, line, PlattypeE::downWaitUpStay, 0 as i32);
+            EV_DoPlat(state, line, PlattypeE::downWaitUpStay, 0_i32);
         }
         89 => {
             EV_StopPlat(state, state.p_setup.line(line).tag as i32);
@@ -913,7 +903,7 @@ pub unsafe fn P_CrossSpecialLine(
             EV_DoFloor(state, line, FloorE::raiseFloorCrush);
         }
         95 => {
-            EV_DoPlat(state, line, PlattypeE::raiseToNearestAndChange, 0 as i32);
+            EV_DoPlat(state, line, PlattypeE::raiseToNearestAndChange, 0_i32);
         }
         96 => {
             EV_DoFloor(state, line, FloorE::raiseToTexture);
@@ -934,7 +924,7 @@ pub unsafe fn P_CrossSpecialLine(
             EV_DoDoor(state, line, VldoorE::vld_blazeClose);
         }
         120 => {
-            EV_DoPlat(state, line, PlattypeE::blazeDWUS, 0 as i32);
+            EV_DoPlat(state, line, PlattypeE::blazeDWUS, 0_i32);
         }
         126 => {
             if (*thing).player.is_none() {
@@ -958,10 +948,10 @@ pub unsafe fn P_ShootSpecialLine(
     let mut ok: i32 = 0;
     let special = state.p_setup.line(line).special;
     if (*thing).player.is_none() {
-        ok = 0 as i32;
+        ok = 0_i32;
         match special as i32 {
             46 => {
-                ok = 1 as i32;
+                ok = 1_i32;
             }
             _ => {}
         }
@@ -972,15 +962,15 @@ pub unsafe fn P_ShootSpecialLine(
     match special as i32 {
         24 => {
             EV_DoFloor(state, line, FloorE::raiseFloor);
-            P_ChangeSwitchTexture(state, line, 0 as i32);
+            P_ChangeSwitchTexture(state, line, 0_i32);
         }
         46 => {
             EV_DoDoor(state, line, VldoorE::vld_open);
-            P_ChangeSwitchTexture(state, line, 1 as i32);
+            P_ChangeSwitchTexture(state, line, 1_i32);
         }
         47 => {
-            EV_DoPlat(state, line, PlattypeE::raiseToNearestAndChange, 0 as i32);
-            P_ChangeSwitchTexture(state, line, 0 as i32);
+            EV_DoPlat(state, line, PlattypeE::raiseToNearestAndChange, 0_i32);
+            P_ChangeSwitchTexture(state, line, 0_i32);
         }
         _ => {}
     };
@@ -997,61 +987,61 @@ pub unsafe fn P_PlayerInSpecialSector(state: &mut GameState, mut player: *mut pl
     match (*sector).special as i32 {
         5 => {
             if (*player).powers[PowerType::pw_ironfeet as usize] == 0 {
-                if state.p_tick.leveltime & 0x1f as i32 == 0 {
+                if state.p_tick.leveltime & 0x1f_i32 == 0 {
                     P_DamageMobj(
                         state,
                         player_mo,
                         ::core::ptr::null_mut::<mobj_t>(),
                         ::core::ptr::null_mut::<mobj_t>(),
-                        10 as i32,
+                        10_i32,
                     );
                 }
             }
         }
         7 => {
             if (*player).powers[PowerType::pw_ironfeet as usize] == 0 {
-                if state.p_tick.leveltime & 0x1f as i32 == 0 {
+                if state.p_tick.leveltime & 0x1f_i32 == 0 {
                     P_DamageMobj(
                         state,
                         player_mo,
                         ::core::ptr::null_mut::<mobj_t>(),
                         ::core::ptr::null_mut::<mobj_t>(),
-                        5 as i32,
+                        5_i32,
                     );
                 }
             }
         }
         16 | 4 => {
             if (*player).powers[PowerType::pw_ironfeet as usize] == 0
-                || P_Random(&mut state.m_random) < 5 as i32
+                || P_Random(&mut state.m_random) < 5_i32
             {
-                if state.p_tick.leveltime & 0x1f as i32 == 0 {
+                if state.p_tick.leveltime & 0x1f_i32 == 0 {
                     P_DamageMobj(
                         state,
                         player_mo,
                         ::core::ptr::null_mut::<mobj_t>(),
                         ::core::ptr::null_mut::<mobj_t>(),
-                        20 as i32,
+                        20_i32,
                     );
                 }
             }
         }
         9 => {
             (*player).secretcount += 1;
-            (*sector).special = 0 as i16;
+            (*sector).special = 0_i16;
         }
         11 => {
-            (*player).cheats &= !(CF_GODMODE as i32);
-            if state.p_tick.leveltime & 0x1f as i32 == 0 {
+            (*player).cheats &= !CF_GODMODE;
+            if state.p_tick.leveltime & 0x1f_i32 == 0 {
                 P_DamageMobj(
                     state,
                     player_mo,
                     ::core::ptr::null_mut::<mobj_t>(),
                     ::core::ptr::null_mut::<mobj_t>(),
-                    20 as i32,
+                    20_i32,
                 );
             }
-            if (*player).health <= 10 as i32 {
+            if (*player).health <= 10_i32 {
                 G_ExitLevel(state);
             }
         }
@@ -1088,21 +1078,20 @@ pub unsafe fn P_UpdateSpecials(state: &mut GameState) {
         }
         anim_idx += 1;
     }
-    i = 0 as i32;
+    i = 0_i32;
     while i < state.p_spec.numlinespecials as i32 {
         line = state.p_spec.linespeciallist[i as usize];
         let linev = state.p_setup.line(line);
         match linev.special as i32 {
             48 => {
-                let ref mut fresh0 =
-                    state.p_setup.sides[linev.sidenum[0] as usize].textureoffset;
+                let fresh0 = &mut state.p_setup.sides[linev.sidenum[0] as usize].textureoffset;
                 *fresh0 += FRACUNIT;
             }
             _ => {}
         }
         i += 1;
     }
-    i = 0 as i32;
+    i = 0_i32;
     while i < MAXBUTTONS {
         if state.p_switch.buttonlist[i as usize].btimer != 0 {
             state.p_switch.buttonlist[i as usize].btimer -= 1;
@@ -1136,7 +1125,7 @@ pub unsafe fn P_UpdateSpecials(state: &mut GameState) {
                 memset(
                     (&raw mut state.p_switch.buttonlist as *mut button_t).offset(i as isize)
                         as *mut button_t as *mut ::core::ffi::c_void,
-                    0 as i32,
+                    0_i32,
                     ::core::mem::size_of::<button_t>() as size_t,
                 );
             }
@@ -1154,17 +1143,17 @@ fn DonutOverrun(
     let state = state;
     if state.p_spec.donut_overrun_first != 0 {
         let mut p: i32 = 0;
-        state.p_spec.donut_overrun_first = 0 as i32;
+        state.p_spec.donut_overrun_first = 0_i32;
         state.p_spec.donut_overrun_tmp_s3_floorheight = DONUT_FLOORHEIGHT_DEFAULT;
         state.p_spec.donut_overrun_tmp_s3_floorpic = DONUT_FLOORPIC_DEFAULT;
-        p = M_CheckParmWithArgs(state, "-donut", 2 as i32);
-        if p > 0 as i32 {
+        p = M_CheckParmWithArgs(state, "-donut", 2_i32);
+        if p > 0_i32 {
             M_StrToInt(
-                state.m_argv.myargv[(p + 1 as i32) as usize].to_str().unwrap(),
+                state.m_argv.myargv[(p + 1_i32) as usize].to_str().unwrap(),
                 &mut state.p_spec.donut_overrun_tmp_s3_floorheight,
             );
             M_StrToInt(
-                state.m_argv.myargv[(p + 2 as i32) as usize].to_str().unwrap(),
+                state.m_argv.myargv[(p + 2_i32) as usize].to_str().unwrap(),
                 &mut state.p_spec.donut_overrun_tmp_s3_floorpic,
             );
             if state.p_spec.donut_overrun_tmp_s3_floorpic >= state.r_data.numflats {
@@ -1192,18 +1181,18 @@ pub unsafe fn EV_DoDonut(state: &mut GameState, mut line: LineId) -> i32 {
     let mut floor: *mut floormove_t = ::core::ptr::null_mut::<floormove_t>();
     let mut s3_floorheight: fixed_t = 0;
     let mut s3_floorpic: i16 = 0;
-    secnum = -(1 as i32);
-    rtn = 0 as i32;
+    secnum = -1_i32;
+    rtn = 0_i32;
     loop {
         secnum = P_FindSectorFromLineTag(state, line, secnum);
-        if !(secnum >= 0 as i32) {
+        if !(secnum >= 0_i32) {
             break;
         }
         s1 = state.p_setup.sector_mut(SectorId(secnum as u32));
         if (*s1).specialdata.is_some() {
             continue;
         }
-        rtn = 1 as i32;
+        rtn = 1_i32;
         s2 = getNextSector(state, (*s1).lines[0], s1);
         if s2.is_null() {
             eprintln!(
@@ -1212,7 +1201,7 @@ pub unsafe fn EV_DoDonut(state: &mut GameState, mut line: LineId) -> i32 {
             break;
         } else {
             let s2_id = SectorId(s2.offset_from(state.p_setup.sectors.as_mut_ptr()) as i64 as u32);
-            i = 0 as i32;
+            i = 0_i32;
             while i < (*s2).linecount {
                 let s2_line_id = (*s2).lines[i as usize];
                 s3 = match state.p_setup.line(s2_line_id).backsector {
@@ -1237,11 +1226,11 @@ pub unsafe fn EV_DoDonut(state: &mut GameState, mut line: LineId) -> i32 {
                     (*floor).thinker.function = ThinkerFn::Floor(T_MoveFloor);
                     (*floor).type_0 = FloorE::donutRaise;
                     (*floor).crush = false;
-                    (*floor).direction = 1 as i32;
+                    (*floor).direction = 1_i32;
                     (*floor).sector = s2_id;
-                    (*floor).speed = (FLOORSPEED / 2 as i32) as fixed_t;
+                    (*floor).speed = (FLOORSPEED / 2_i32) as fixed_t;
                     (*floor).texture = s3_floorpic;
-                    (*floor).newspecial = 0 as i32;
+                    (*floor).newspecial = 0_i32;
                     (*floor).floordestheight = s3_floorheight;
                     floor = state.p_spec.spawn_floor(floormove_t::default());
                     let floor_id = P_AddThinker(state, &raw mut (*floor).thinker, ThinkerKind::Floor);
@@ -1249,44 +1238,44 @@ pub unsafe fn EV_DoDonut(state: &mut GameState, mut line: LineId) -> i32 {
                     (*floor).thinker.function = ThinkerFn::Floor(T_MoveFloor);
                     (*floor).type_0 = FloorE::lowerFloor;
                     (*floor).crush = false;
-                    (*floor).direction = -(1 as i32);
+                    (*floor).direction = -1_i32;
                     (*floor).sector = SectorId(secnum as u32);
-                    (*floor).speed = (FLOORSPEED / 2 as i32) as fixed_t;
+                    (*floor).speed = (FLOORSPEED / 2_i32) as fixed_t;
                     (*floor).floordestheight = s3_floorheight;
                     break;
                 }
             }
         }
     }
-    return rtn;
+    rtn
 }
 pub unsafe fn P_SpawnSpecials(state: &mut GameState) {
     let mut sector: *mut sector_t = ::core::ptr::null_mut::<sector_t>();
     let mut i: i32 = 0;
-    if state.g_game.timelimit > 0 as i32 && state.g_game.deathmatch != 0 {
+    if state.g_game.timelimit > 0_i32 && state.g_game.deathmatch != 0 {
         state.p_spec.levelTimer = true;
-        state.p_spec.levelTimeCount = state.g_game.timelimit * 60 as i32 * TICRATE;
+        state.p_spec.levelTimeCount = state.g_game.timelimit * 60_i32 * TICRATE;
     } else {
         state.p_spec.levelTimer = false;
     }
-    i = 0 as i32;
+    i = 0_i32;
     while i < state.p_setup.numsectors {
         let secid = SectorId(i as u32);
         sector = state.p_setup.sector_mut(secid);
-        if !((*sector).special == 0) {
+        if (*sector).special != 0 {
             match (*sector).special as i32 {
                 1 => {
                     P_SpawnLightFlash(state, secid);
                 }
                 2 => {
-                    P_SpawnStrobeFlash(state, secid, FASTDARK, 0 as i32);
+                    P_SpawnStrobeFlash(state, secid, FASTDARK, 0_i32);
                 }
                 3 => {
-                    P_SpawnStrobeFlash(state, secid, SLOWDARK, 0 as i32);
+                    P_SpawnStrobeFlash(state, secid, SLOWDARK, 0_i32);
                 }
                 4 => {
-                    P_SpawnStrobeFlash(state, secid, FASTDARK, 0 as i32);
-                    (*sector).special = 4 as i16;
+                    P_SpawnStrobeFlash(state, secid, FASTDARK, 0_i32);
+                    (*sector).special = 4_i16;
                 }
                 8 => {
                     P_SpawnGlowingLight(state, secid);
@@ -1298,10 +1287,10 @@ pub unsafe fn P_SpawnSpecials(state: &mut GameState) {
                     P_SpawnDoorCloseIn30(state, secid);
                 }
                 12 => {
-                    P_SpawnStrobeFlash(state, secid, SLOWDARK, 1 as i32);
+                    P_SpawnStrobeFlash(state, secid, SLOWDARK, 1_i32);
                 }
                 13 => {
-                    P_SpawnStrobeFlash(state, secid, FASTDARK, 1 as i32);
+                    P_SpawnStrobeFlash(state, secid, FASTDARK, 1_i32);
                 }
                 14 => {
                     P_SpawnDoorRaiseIn5Mins(state, secid);
@@ -1314,8 +1303,8 @@ pub unsafe fn P_SpawnSpecials(state: &mut GameState) {
         }
         i += 1;
     }
-    state.p_spec.numlinespecials = 0 as i16;
-    i = 0 as i32;
+    state.p_spec.numlinespecials = 0_i16;
+    i = 0_i32;
     while i < state.p_setup.numlines {
         match state.p_setup.lines[i as usize].special as i32 {
             48 => {
@@ -1330,22 +1319,22 @@ pub unsafe fn P_SpawnSpecials(state: &mut GameState) {
         }
         i += 1;
     }
-    i = 0 as i32;
+    i = 0_i32;
     while i < MAXCEILINGS {
         state.p_ceilng.activeceilings[i as usize] = None;
         i += 1;
     }
-    i = 0 as i32;
+    i = 0_i32;
     while i < MAXPLATS {
         state.p_plats.activeplats[i as usize] = None;
         i += 1;
     }
-    i = 0 as i32;
+    i = 0_i32;
     while i < MAXBUTTONS {
         memset(
             (&raw mut state.p_switch.buttonlist as *mut button_t).offset(i as isize)
                 as *mut button_t as *mut ::core::ffi::c_void,
-            0 as i32,
+            0_i32,
             ::core::mem::size_of::<button_t>() as size_t,
         );
         i += 1;

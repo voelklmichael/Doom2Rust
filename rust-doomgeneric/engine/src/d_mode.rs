@@ -114,88 +114,88 @@ static valid_modes: [C2RustUnnamed; 13] = [
     C2RustUnnamed {
         mission: GameMission_t::pack_chex,
         mode: GameMode_t::shareware,
-        episode: 1 as i32,
-        map: 5 as i32,
+        episode: 1_i32,
+        map: 5_i32,
     },
     C2RustUnnamed {
         mission: GameMission_t::doom,
         mode: GameMode_t::shareware,
-        episode: 1 as i32,
-        map: 9 as i32,
+        episode: 1_i32,
+        map: 9_i32,
     },
     C2RustUnnamed {
         mission: GameMission_t::doom,
         mode: GameMode_t::registered,
-        episode: 3 as i32,
-        map: 9 as i32,
+        episode: 3_i32,
+        map: 9_i32,
     },
     C2RustUnnamed {
         mission: GameMission_t::doom,
         mode: GameMode_t::retail,
-        episode: 4 as i32,
-        map: 9 as i32,
+        episode: 4_i32,
+        map: 9_i32,
     },
     C2RustUnnamed {
         mission: GameMission_t::doom2,
         mode: GameMode_t::commercial,
-        episode: 1 as i32,
-        map: 32 as i32,
+        episode: 1_i32,
+        map: 32_i32,
     },
     C2RustUnnamed {
         mission: GameMission_t::pack_tnt,
         mode: GameMode_t::commercial,
-        episode: 1 as i32,
-        map: 32 as i32,
+        episode: 1_i32,
+        map: 32_i32,
     },
     C2RustUnnamed {
         mission: GameMission_t::pack_plut,
         mode: GameMode_t::commercial,
-        episode: 1 as i32,
-        map: 32 as i32,
+        episode: 1_i32,
+        map: 32_i32,
     },
     C2RustUnnamed {
         mission: GameMission_t::pack_hacx,
         mode: GameMode_t::commercial,
-        episode: 1 as i32,
-        map: 32 as i32,
+        episode: 1_i32,
+        map: 32_i32,
     },
     C2RustUnnamed {
         mission: GameMission_t::heretic,
         mode: GameMode_t::shareware,
-        episode: 1 as i32,
-        map: 9 as i32,
+        episode: 1_i32,
+        map: 9_i32,
     },
     C2RustUnnamed {
         mission: GameMission_t::heretic,
         mode: GameMode_t::registered,
-        episode: 3 as i32,
-        map: 9 as i32,
+        episode: 3_i32,
+        map: 9_i32,
     },
     C2RustUnnamed {
         mission: GameMission_t::heretic,
         mode: GameMode_t::retail,
-        episode: 5 as i32,
-        map: 9 as i32,
+        episode: 5_i32,
+        map: 9_i32,
     },
     C2RustUnnamed {
         mission: GameMission_t::hexen,
         mode: GameMode_t::commercial,
-        episode: 1 as i32,
-        map: 60 as i32,
+        episode: 1_i32,
+        map: 60_i32,
     },
     C2RustUnnamed {
         mission: GameMission_t::strife,
         mode: GameMode_t::commercial,
-        episode: 1 as i32,
-        map: 34 as i32,
+        episode: 1_i32,
+        map: 34_i32,
     },
 ];
 pub fn D_ValidGameMode(mut mission: GameMission_t, mut mode: GameMode_t) -> bool {
     let mut i: i32 = 0;
-    i = 0 as i32;
+    i = 0_i32;
     while (i as usize)
-        < (::core::mem::size_of::<[C2RustUnnamed; 13]>() as usize)
-            .wrapping_div(::core::mem::size_of::<C2RustUnnamed>() as usize)
+        < ::core::mem::size_of::<[C2RustUnnamed; 13]>()
+            .wrapping_div(::core::mem::size_of::<C2RustUnnamed>())
     {
         if valid_modes[i as usize].mode as u32 == mode as u32
             && valid_modes[i as usize].mission as u32 == mission as u32
@@ -204,7 +204,7 @@ pub fn D_ValidGameMode(mut mission: GameMission_t, mut mode: GameMode_t) -> bool
         }
         i += 1;
     }
-    return false;
+    false
 }
 pub fn D_ValidEpisodeMap(
     mut mission: GameMission_t,
@@ -214,36 +214,36 @@ pub fn D_ValidEpisodeMap(
 ) -> bool {
     let mut i: i32 = 0;
     if mission as u32 == GameMission_t::heretic as i32 as u32 {
-        if mode as u32 == GameMode_t::retail as i32 as u32 && episode == 6 as i32 {
-            return map >= 1 as i32 && map <= 3 as i32;
-        } else if mode as u32 == GameMode_t::registered as i32 as u32 && episode == 4 as i32 {
-            return map == 1 as i32;
+        if mode as u32 == GameMode_t::retail as i32 as u32 && episode == 6_i32 {
+            return map >= 1_i32 && map <= 3_i32;
+        } else if mode as u32 == GameMode_t::registered as i32 as u32 && episode == 4_i32 {
+            return map == 1_i32;
         }
     }
-    i = 0 as i32;
+    i = 0_i32;
     while (i as usize)
-        < (::core::mem::size_of::<[C2RustUnnamed; 13]>() as usize)
-            .wrapping_div(::core::mem::size_of::<C2RustUnnamed>() as usize)
+        < ::core::mem::size_of::<[C2RustUnnamed; 13]>()
+            .wrapping_div(::core::mem::size_of::<C2RustUnnamed>())
     {
         if mission as u32 == valid_modes[i as usize].mission as u32
             && mode as u32 == valid_modes[i as usize].mode as u32
         {
-            return episode >= 1 as i32
+            return episode >= 1_i32
                 && episode <= valid_modes[i as usize].episode
-                && map >= 1 as i32
+                && map >= 1_i32
                 && map <= valid_modes[i as usize].map;
         }
         i += 1;
     }
-    return false;
+    false
 }
 pub fn D_GetNumEpisodes(mut mission: GameMission_t, mut mode: GameMode_t) -> i32 {
     let mut episode: i32 = 0;
-    episode = 1 as i32;
-    while D_ValidEpisodeMap(mission, mode, episode, 1 as i32) {
+    episode = 1_i32;
+    while D_ValidEpisodeMap(mission, mode, episode, 1_i32) {
         episode += 1;
     }
-    return episode - 1 as i32;
+    return episode - 1_i32;
 }
 static valid_versions: [C2RustUnnamed_0; 10] = [
     C2RustUnnamed_0 {
@@ -297,10 +297,10 @@ pub fn D_ValidGameVersion(mut mission: GameMission_t, mut version: GameVersion) 
     {
         mission = GameMission_t::doom;
     }
-    i = 0 as i32;
+    i = 0_i32;
     while (i as usize)
-        < (::core::mem::size_of::<[C2RustUnnamed_0; 10]>() as usize)
-            .wrapping_div(::core::mem::size_of::<C2RustUnnamed_0>() as usize)
+        < ::core::mem::size_of::<[C2RustUnnamed_0; 10]>()
+            .wrapping_div(::core::mem::size_of::<C2RustUnnamed_0>())
     {
         if valid_versions[i as usize].mission as u32 == mission as u32
             && valid_versions[i as usize].version as u32 == version as u32
@@ -309,51 +309,51 @@ pub fn D_ValidGameVersion(mut mission: GameMission_t, mut version: GameVersion) 
         }
         i += 1;
     }
-    return false;
+    false
 }
 pub fn D_IsEpisodeMap(mut mission: GameMission_t) -> bool {
     match mission {
-        GameMission_t::doom | GameMission_t::heretic | GameMission_t::pack_chex => return true,
+        GameMission_t::doom | GameMission_t::heretic | GameMission_t::pack_chex => true,
         GameMission_t::none
         | GameMission_t::hexen
         | GameMission_t::doom2
         | GameMission_t::pack_hacx
         | GameMission_t::pack_tnt
         | GameMission_t::pack_plut
-        | GameMission_t::strife => return false,
-    };
+        | GameMission_t::strife => false,
+    }
 }
 pub fn D_GameMissionString(mission: GameMission_t) -> &'static str {
     match mission {
         GameMission_t::doom => {
-            return "doom";
+            "doom"
         }
         GameMission_t::doom2 => {
-            return "doom2";
+            "doom2"
         }
         GameMission_t::pack_tnt => {
-            return "tnt";
+            "tnt"
         }
         GameMission_t::pack_plut => {
-            return "plutonia";
+            "plutonia"
         }
         GameMission_t::pack_hacx => {
-            return "hacx";
+            "hacx"
         }
         GameMission_t::pack_chex => {
-            return "chex";
+            "chex"
         }
         GameMission_t::heretic => {
-            return "heretic";
+            "heretic"
         }
         GameMission_t::hexen => {
-            return "hexen";
+            "hexen"
         }
         GameMission_t::strife => {
-            return "strife";
+            "strife"
         }
         GameMission_t::none => {
-            return "none";
+            "none"
         }
-    };
+    }
 }

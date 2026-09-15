@@ -6,15 +6,15 @@ pub const SLOPERANGE: i32 = 2048;
 pub fn SlopeDiv(mut num: u32, mut den: u32) -> i32 {
     let mut ans: u32 = 0;
     if den < 512 {
-        return SLOPERANGE;
+        SLOPERANGE
     } else {
         ans = (num << 3).wrapping_div(den >> 8);
         if ans <= SLOPERANGE as u32 {
-            return ans as i32;
+            ans as i32
         } else {
-            return SLOPERANGE;
+            SLOPERANGE
         }
-    };
+    }
 }
 pub static finetangent: [i32; 4096] = [
     -170910304, -56965752, -34178904, -24413316, -18988036, -15535599, -13145455, -11392683,
@@ -1515,4 +1515,4 @@ pub const ANG180: u32 = 0x80000000;
 pub const ANG90: i32 = 0x40000000;
 pub const ANG270: u32 = 0xc0000000;
 pub const ANG45: i32 = 0x20000000;
-pub const FINEMASK: i32 = FINEANGLES - 1 as i32;
+pub const FINEMASK: i32 = FINEANGLES - 1_i32;

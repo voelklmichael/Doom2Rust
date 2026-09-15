@@ -70,7 +70,7 @@ pub unsafe fn STlib_init(state: &mut GameState) {
 pub unsafe fn STlib_initNum(mut n: *mut st_number_t, mut x: i32, mut y: i32, pl: StDigitSet, mut width: i32) {
     (*n).x = x;
     (*n).y = y;
-    (*n).oldnum = 0 as i32;
+    (*n).oldnum = 0_i32;
     (*n).width = width;
     (*n).p = pl;
 }
@@ -83,17 +83,17 @@ pub unsafe fn STlib_drawNum(state: &mut GameState, mut n: *mut st_number_t, mut 
     let mut x: i32 = (*n).x;
     let mut neg: i32 = 0;
     (*n).oldnum = num;
-    neg = (num < 0 as i32) as i32;
+    neg = (num < 0_i32) as i32;
     if neg != 0 {
-        if numdigits == 2 as i32 && num < -(9 as i32) {
-            num = -(9 as i32);
-        } else if numdigits == 3 as i32 && num < -(99 as i32) {
-            num = -(99 as i32);
+        if numdigits == 2_i32 && num < -9_i32 {
+            num = -9_i32;
+        } else if numdigits == 3_i32 && num < -99_i32 {
+            num = -99_i32;
         }
         num = -num;
     }
     x = (*n).x - numdigits * w;
-    if (*n).y - ST_Y < 0 as i32 {
+    if (*n).y - ST_Y < 0_i32 {
         I_Error("drawNum: n->y - ST_Y < 0");
     }
     let st_backing_screen = state.st_stuff.st_backing_screen.as_mut_ptr();
@@ -106,7 +106,7 @@ pub unsafe fn STlib_drawNum(state: &mut GameState, mut n: *mut st_number_t, mut 
         x,
         (*n).y,
     );
-    if num == 1994 as i32 {
+    if num == 1994_i32 {
         return;
     }
     x = (*n).x;
@@ -119,23 +119,23 @@ pub unsafe fn STlib_drawNum(state: &mut GameState, mut n: *mut st_number_t, mut 
     }
     while num != 0 && {
         let fresh0 = numdigits;
-        numdigits = numdigits - 1;
+        numdigits -= 1;
         fresh0 != 0
     } {
         x -= w;
-        let digit_lump = state.st_stuff.digit_set((*n).p)[(num % 10 as i32) as usize];
+        let digit_lump = state.st_stuff.digit_set((*n).p)[(num % 10_i32) as usize];
         let digit_patch = V_CachePatchNum(state, digit_lump);
         V_DrawPatch(state,
             x,
             (*n).y,
             digit_patch,
         );
-        num /= 10 as i32;
+        num /= 10_i32;
     }
     if neg != 0 {
         let patch = V_CachePatchNum(state, state.st_lib.sttminus);
         V_DrawPatch(state,
-            x - 8 as i32,
+            x - 8_i32,
             (*n).y,
             patch,
         );
@@ -153,7 +153,7 @@ pub unsafe fn STlib_initPercent(
     pl: StDigitSet,
     mut percent: i32,
 ) {
-    STlib_initNum(&raw mut (*p).n, x, y, pl, 3 as i32);
+    STlib_initNum(&raw mut (*p).n, x, y, pl, 3_i32);
     (*p).p = percent;
 }
 pub unsafe fn STlib_updatePercent(
@@ -172,7 +172,7 @@ pub unsafe fn STlib_updatePercent(
 pub unsafe fn STlib_initMultIcon(mut i: *mut st_multicon_t, mut x: i32, mut y: i32, il: StDigitSet) {
     (*i).x = x;
     (*i).y = y;
-    (*i).oldinum = -(1 as i32);
+    (*i).oldinum = -1_i32;
     (*i).p = il;
 }
 pub unsafe fn STlib_updateMultIcon(
@@ -186,15 +186,15 @@ pub unsafe fn STlib_updateMultIcon(
     let mut h: i32 = 0;
     let mut x: i32 = 0;
     let mut y: i32 = 0;
-    if on && ((*mi).oldinum != inum || refresh) && inum != -(1 as i32) {
-        if (*mi).oldinum != -(1 as i32) {
+    if on && ((*mi).oldinum != inum || refresh) && inum != -1_i32 {
+        if (*mi).oldinum != -1_i32 {
             let old_lump = state.st_stuff.digit_set((*mi).p)[(*mi).oldinum as usize];
             let old_patch = V_CachePatchNum(state, old_lump);
             x = (*mi).x - (*old_patch).leftoffset as i32;
             y = (*mi).y - (*old_patch).topoffset as i32;
             w = (*old_patch).width as i32;
             h = (*old_patch).height as i32;
-            if y - ST_Y < 0 as i32 {
+            if y - ST_Y < 0_i32 {
                 I_Error("updateMultIcon: y - ST_Y < 0");
             }
             let st_backing_screen = state.st_stuff.st_backing_screen.as_mut_ptr();
@@ -241,7 +241,7 @@ pub unsafe fn STlib_updateBinIcon(
         y = (*bi).y - (*patch).topoffset as i32;
         w = (*patch).width as i32;
         h = (*patch).height as i32;
-        if y - ST_Y < 0 as i32 {
+        if y - ST_Y < 0_i32 {
             I_Error("updateBinIcon: y - ST_Y < 0");
         }
         if val {

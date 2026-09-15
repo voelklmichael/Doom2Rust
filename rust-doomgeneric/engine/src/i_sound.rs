@@ -130,12 +130,10 @@ fn InitSfxModule(state: &mut ISoundState, use_sfx_prefix: bool) {
 pub fn I_InitSound(state: &mut GameState, mut use_sfx_prefix: bool) {
     let mut nosound: bool = false;
     let mut nosfx: bool = false;
-    nosound = M_CheckParm(state, "-nosound") > 0 as i32;
-    nosfx = M_CheckParm(state, "-nosfx") > 0 as i32;
-    if !nosound && !state.i_video.screensaver_mode {
-        if !nosfx {
-            InitSfxModule(&mut state.i_sound, use_sfx_prefix);
-        }
+    nosound = M_CheckParm(state, "-nosound") > 0_i32;
+    nosfx = M_CheckParm(state, "-nosfx") > 0_i32;
+    if !nosound && !state.i_video.screensaver_mode && !nosfx {
+        InitSfxModule(&mut state.i_sound, use_sfx_prefix);
     }
 }
 pub fn I_ShutdownSound(state: &mut ISoundState) {
@@ -149,7 +147,7 @@ pub fn I_ShutdownSound(state: &mut ISoundState) {
 pub fn I_GetSfxLumpNum(state: &mut ISoundState, sfxinfo: *mut sfxinfo_t) -> i32 {
     match state.sound_module {
         Some(module) => (module.GetSfxLumpNum.expect("non-null function pointer"))(sfxinfo),
-        None => 0 as i32,
+        None => 0_i32,
     }
 }
 pub fn I_UpdateSound(state: &mut ISoundState) {
@@ -164,15 +162,15 @@ pub fn I_UpdateSound(state: &mut ISoundState) {
 }
 fn CheckVolumeSeparation(mut vol: *mut i32, mut sep: *mut i32) {
     unsafe {
-        if *sep < 0 as i32 {
-            *sep = 0 as i32;
-        } else if *sep > 254 as i32 {
-            *sep = 254 as i32;
+        if *sep < 0_i32 {
+            *sep = 0_i32;
+        } else if *sep > 254_i32 {
+            *sep = 254_i32;
         }
-        if *vol < 0 as i32 {
-            *vol = 0 as i32;
-        } else if *vol > 127 as i32 {
-            *vol = 127 as i32;
+        if *vol < 0_i32 {
+            *vol = 0_i32;
+        } else if *vol > 127_i32 {
+            *vol = 127_i32;
         }
     }
 }
@@ -194,7 +192,7 @@ pub fn I_StartSound(
             CheckVolumeSeparation(&raw mut vol, &raw mut sep);
             (module.StartSound.expect("non-null function pointer"))(sfxinfo, channel, vol, sep)
         }
-        None => 0 as i32,
+        None => 0_i32,
     }
 }
 pub fn I_StopSound(state: &mut ISoundState, channel: i32) {

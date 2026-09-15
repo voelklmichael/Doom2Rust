@@ -76,79 +76,79 @@ impl MMenuDefsHolder {
                 prevMenu: None,
                 items: vec![
                     menuitem_t {
-                        status: 1 as i16,
+                        status: 1_i16,
                         name: FixedCStr(*b"M_NGAME\0\0\0"),
                         routine: Some(M_NewGame as fn(&mut GameState, i32)),
-                        alphaKey: 'n' as u8,
+                        alphaKey: b'n',
                     },
                     menuitem_t {
-                        status: 1 as i16,
+                        status: 1_i16,
                         name: FixedCStr(*b"M_OPTION\0\0"),
                         routine: Some(M_Options as fn(&mut GameState, i32)),
-                        alphaKey: 'o' as u8,
+                        alphaKey: b'o',
                     },
                     menuitem_t {
-                        status: 1 as i16,
+                        status: 1_i16,
                         name: FixedCStr(*b"M_LOADG\0\0\0"),
                         routine: Some(M_LoadGame as fn(&mut GameState, i32)),
-                        alphaKey: 'l' as u8,
+                        alphaKey: b'l',
                     },
                     menuitem_t {
-                        status: 1 as i16,
+                        status: 1_i16,
                         name: FixedCStr(*b"M_SAVEG\0\0\0"),
                         routine: Some(M_SaveGame as fn(&mut GameState, i32)),
-                        alphaKey: 's' as u8,
+                        alphaKey: b's',
                     },
                     menuitem_t {
-                        status: 1 as i16,
+                        status: 1_i16,
                         name: FixedCStr(*b"M_RDTHIS\0\0"),
                         routine: Some(M_ReadThis as fn(&mut GameState, i32)),
-                        alphaKey: 'r' as u8,
+                        alphaKey: b'r',
                     },
                     menuitem_t {
-                        status: 1 as i16,
+                        status: 1_i16,
                         name: FixedCStr(*b"M_QUITG\0\0\0"),
                         routine: Some(M_QuitDOOM as fn(&mut GameState, i32)),
-                        alphaKey: 'q' as u8,
+                        alphaKey: b'q',
                     },
                 ],
                 routine: Some(M_DrawMainMenu as unsafe fn(&mut GameState) -> ()),
-                x: 97 as i16,
-                y: 64 as i16,
-                lastOn: 0 as i16,
+                x: 97_i16,
+                y: 64_i16,
+                lastOn: 0_i16,
             },
             EpiDef: menu_s {
                 numitems: ep_end as i32 as i16,
                 prevMenu: Some(MenuId::Main),
                 items: vec![
                     menuitem_t {
-                        status: 1 as i16,
+                        status: 1_i16,
                         name: FixedCStr(*b"M_EPI1\0\0\0\0"),
                         routine: Some(M_Episode as fn(&mut GameState, i32)),
-                        alphaKey: 'k' as u8,
+                        alphaKey: b'k',
                     },
                     menuitem_t {
-                        status: 1 as i16,
+                        status: 1_i16,
                         name: FixedCStr(*b"M_EPI2\0\0\0\0"),
                         routine: Some(M_Episode as fn(&mut GameState, i32)),
-                        alphaKey: 't' as u8,
+                        alphaKey: b't',
                     },
                     menuitem_t {
-                        status: 1 as i16,
+                        status: 1_i16,
                         name: FixedCStr(*b"M_EPI3\0\0\0\0"),
                         routine: Some(M_Episode as fn(&mut GameState, i32)),
-                        alphaKey: 'i' as u8,
+                        alphaKey: b'i',
                     },
                     menuitem_t {
-                        status: 1 as i16,
+                        status: 1_i16,
                         name: FixedCStr(*b"M_EPI4\0\0\0\0"),
                         routine: Some(M_Episode as fn(&mut GameState, i32)),
-                        alphaKey: 't' as u8,
+                        alphaKey: b't',
                     },
                 ],
                 routine: Some(M_DrawEpisode as unsafe fn(&mut GameState) -> ()),
-                x: 48 as i16,
-                y: 63 as i16,
+                x: 48_i16,
+                y: 63_i16,
                 lastOn: ep1 as i32 as i16,
             },
             NewDef: menu_s {
@@ -156,39 +156,39 @@ impl MMenuDefsHolder {
                 prevMenu: Some(MenuId::Epi),
                 items: vec![
                     menuitem_t {
-                        status: 1 as i16,
+                        status: 1_i16,
                         name: FixedCStr(*b"M_JKILL\0\0\0"),
                         routine: Some(M_ChooseSkill as fn(&mut GameState, i32)),
-                        alphaKey: 'i' as u8,
+                        alphaKey: b'i',
                     },
                     menuitem_t {
-                        status: 1 as i16,
+                        status: 1_i16,
                         name: FixedCStr(*b"M_ROUGH\0\0\0"),
                         routine: Some(M_ChooseSkill as fn(&mut GameState, i32)),
-                        alphaKey: 'h' as u8,
+                        alphaKey: b'h',
                     },
                     menuitem_t {
-                        status: 1 as i16,
+                        status: 1_i16,
                         name: FixedCStr(*b"M_HURT\0\0\0\0"),
                         routine: Some(M_ChooseSkill as fn(&mut GameState, i32)),
-                        alphaKey: 'h' as u8,
+                        alphaKey: b'h',
                     },
                     menuitem_t {
-                        status: 1 as i16,
+                        status: 1_i16,
                         name: FixedCStr(*b"M_ULTRA\0\0\0"),
                         routine: Some(M_ChooseSkill as fn(&mut GameState, i32)),
-                        alphaKey: 'u' as u8,
+                        alphaKey: b'u',
                     },
                     menuitem_t {
-                        status: 1 as i16,
+                        status: 1_i16,
                         name: FixedCStr(*b"M_NMARE\0\0\0"),
                         routine: Some(M_ChooseSkill as fn(&mut GameState, i32)),
-                        alphaKey: 'n' as u8,
+                        alphaKey: b'n',
                     },
                 ],
                 routine: Some(M_DrawNewGame as unsafe fn(&mut GameState) -> ()),
-                x: 48 as i16,
-                y: 63 as i16,
+                x: 48_i16,
+                y: 63_i16,
                 lastOn: hurtme as i32 as i16,
             },
             OptionsDef: menu_s {
@@ -196,212 +196,212 @@ impl MMenuDefsHolder {
                 prevMenu: Some(MenuId::Main),
                 items: vec![
                     menuitem_t {
-                        status: 1 as i16,
+                        status: 1_i16,
                         name: FixedCStr(*b"M_ENDGAM\0\0"),
                         routine: Some(M_EndGame as fn(&mut GameState, i32)),
-                        alphaKey: 'e' as u8,
+                        alphaKey: b'e',
                     },
                     menuitem_t {
-                        status: 1 as i16,
+                        status: 1_i16,
                         name: FixedCStr(*b"M_MESSG\0\0\0"),
                         routine: Some(M_ChangeMessages as fn(&mut GameState, i32)),
-                        alphaKey: 'm' as u8,
+                        alphaKey: b'm',
                     },
                     menuitem_t {
-                        status: 1 as i16,
+                        status: 1_i16,
                         name: FixedCStr(*b"M_DETAIL\0\0"),
                         routine: Some(M_ChangeDetail as fn(&mut GameState, i32)),
-                        alphaKey: 'g' as u8,
+                        alphaKey: b'g',
                     },
                     menuitem_t {
-                        status: 2 as i16,
+                        status: 2_i16,
                         name: FixedCStr(*b"M_SCRNSZ\0\0"),
                         routine: Some(M_SizeDisplay as fn(&mut GameState, i32)),
-                        alphaKey: 's' as u8,
+                        alphaKey: b's',
                     },
                     menuitem_t {
-                        status: -(1 as i32) as i16,
+                        status: -1_i32 as i16,
                         name: FixedCStr(*b"\0\0\0\0\0\0\0\0\0\0"),
                         routine: None,
-                        alphaKey: '\0' as u8,
+                        alphaKey: b'\0',
                     },
                     menuitem_t {
-                        status: 2 as i16,
+                        status: 2_i16,
                         name: FixedCStr(*b"M_MSENS\0\0\0"),
                         routine: Some(M_ChangeSensitivity as fn(&mut GameState, i32)),
-                        alphaKey: 'm' as u8,
+                        alphaKey: b'm',
                     },
                     menuitem_t {
-                        status: -(1 as i32) as i16,
+                        status: -1_i32 as i16,
                         name: FixedCStr(*b"\0\0\0\0\0\0\0\0\0\0"),
                         routine: None,
-                        alphaKey: '\0' as u8,
+                        alphaKey: b'\0',
                     },
                     menuitem_t {
-                        status: 1 as i16,
+                        status: 1_i16,
                         name: FixedCStr(*b"M_SVOL\0\0\0\0"),
                         routine: Some(M_Sound as fn(&mut GameState, i32)),
-                        alphaKey: 's' as u8,
+                        alphaKey: b's',
                     },
                 ],
                 routine: Some(M_DrawOptions as unsafe fn(&mut GameState) -> ()),
-                x: 60 as i16,
-                y: 37 as i16,
-                lastOn: 0 as i16,
+                x: 60_i16,
+                y: 37_i16,
+                lastOn: 0_i16,
             },
             ReadDef1: menu_s {
                 numitems: read1_end as i32 as i16,
                 prevMenu: Some(MenuId::Main),
                 items: vec![menuitem_t {
-                    status: 1 as i16,
+                    status: 1_i16,
                     name: FixedCStr(*b"\0\0\0\0\0\0\0\0\0\0"),
                     routine: Some(M_ReadThis2 as fn(&mut GameState, i32)),
-                    alphaKey: 0 as u8,
+                    alphaKey: 0_u8,
                 }],
                 routine: Some(M_DrawReadThis1 as unsafe fn(&mut GameState) -> ()),
-                x: 280 as i16,
-                y: 185 as i16,
-                lastOn: 0 as i16,
+                x: 280_i16,
+                y: 185_i16,
+                lastOn: 0_i16,
             },
             ReadDef2: menu_s {
                 numitems: read2_end as i32 as i16,
                 prevMenu: Some(MenuId::Read1),
                 items: vec![menuitem_t {
-                    status: 1 as i16,
+                    status: 1_i16,
                     name: FixedCStr(*b"\0\0\0\0\0\0\0\0\0\0"),
                     routine: Some(M_FinishReadThis as fn(&mut GameState, i32)),
-                    alphaKey: 0 as u8,
+                    alphaKey: 0_u8,
                 }],
                 routine: Some(M_DrawReadThis2 as unsafe fn(&mut GameState) -> ()),
-                x: 330 as i16,
-                y: 175 as i16,
-                lastOn: 0 as i16,
+                x: 330_i16,
+                y: 175_i16,
+                lastOn: 0_i16,
             },
             SoundDef: menu_s {
                 numitems: sound_end as i32 as i16,
                 prevMenu: Some(MenuId::Options),
                 items: vec![
                     menuitem_t {
-                        status: 2 as i16,
+                        status: 2_i16,
                         name: FixedCStr(*b"M_SFXVOL\0\0"),
                         routine: Some(M_SfxVol as fn(&mut GameState, i32)),
-                        alphaKey: 's' as u8,
+                        alphaKey: b's',
                     },
                     menuitem_t {
-                        status: -(1 as i32) as i16,
+                        status: -1_i32 as i16,
                         name: FixedCStr(*b"\0\0\0\0\0\0\0\0\0\0"),
                         routine: None,
-                        alphaKey: '\0' as u8,
+                        alphaKey: b'\0',
                     },
                     menuitem_t {
-                        status: 2 as i16,
+                        status: 2_i16,
                         name: FixedCStr(*b"M_MUSVOL\0\0"),
                         routine: Some(M_MusicVol as fn(&mut GameState, i32)),
-                        alphaKey: 'm' as u8,
+                        alphaKey: b'm',
                     },
                     menuitem_t {
-                        status: -(1 as i32) as i16,
+                        status: -1_i32 as i16,
                         name: FixedCStr(*b"\0\0\0\0\0\0\0\0\0\0"),
                         routine: None,
-                        alphaKey: '\0' as u8,
+                        alphaKey: b'\0',
                     },
                 ],
                 routine: Some(M_DrawSound as unsafe fn(&mut GameState) -> ()),
-                x: 80 as i16,
-                y: 64 as i16,
-                lastOn: 0 as i16,
+                x: 80_i16,
+                y: 64_i16,
+                lastOn: 0_i16,
             },
             LoadDef: menu_s {
                 numitems: load_end as i32 as i16,
                 prevMenu: Some(MenuId::Main),
                 items: vec![
                     menuitem_t {
-                        status: 1 as i16,
+                        status: 1_i16,
                         name: FixedCStr(*b"\0\0\0\0\0\0\0\0\0\0"),
                         routine: Some(M_LoadSelect as fn(&mut GameState, i32)),
-                        alphaKey: '1' as u8,
+                        alphaKey: b'1',
                     },
                     menuitem_t {
-                        status: 1 as i16,
+                        status: 1_i16,
                         name: FixedCStr(*b"\0\0\0\0\0\0\0\0\0\0"),
                         routine: Some(M_LoadSelect as fn(&mut GameState, i32)),
-                        alphaKey: '2' as u8,
+                        alphaKey: b'2',
                     },
                     menuitem_t {
-                        status: 1 as i16,
+                        status: 1_i16,
                         name: FixedCStr(*b"\0\0\0\0\0\0\0\0\0\0"),
                         routine: Some(M_LoadSelect as fn(&mut GameState, i32)),
-                        alphaKey: '3' as u8,
+                        alphaKey: b'3',
                     },
                     menuitem_t {
-                        status: 1 as i16,
+                        status: 1_i16,
                         name: FixedCStr(*b"\0\0\0\0\0\0\0\0\0\0"),
                         routine: Some(M_LoadSelect as fn(&mut GameState, i32)),
-                        alphaKey: '4' as u8,
+                        alphaKey: b'4',
                     },
                     menuitem_t {
-                        status: 1 as i16,
+                        status: 1_i16,
                         name: FixedCStr(*b"\0\0\0\0\0\0\0\0\0\0"),
                         routine: Some(M_LoadSelect as fn(&mut GameState, i32)),
-                        alphaKey: '5' as u8,
+                        alphaKey: b'5',
                     },
                     menuitem_t {
-                        status: 1 as i16,
+                        status: 1_i16,
                         name: FixedCStr(*b"\0\0\0\0\0\0\0\0\0\0"),
                         routine: Some(M_LoadSelect as fn(&mut GameState, i32)),
-                        alphaKey: '6' as u8,
+                        alphaKey: b'6',
                     },
                 ],
                 routine: Some(M_DrawLoad as unsafe fn(&mut GameState) -> ()),
-                x: 80 as i16,
-                y: 54 as i16,
-                lastOn: 0 as i16,
+                x: 80_i16,
+                y: 54_i16,
+                lastOn: 0_i16,
             },
             SaveDef: menu_s {
                 numitems: load_end as i32 as i16,
                 prevMenu: Some(MenuId::Main),
                 items: vec![
                     menuitem_t {
-                        status: 1 as i16,
+                        status: 1_i16,
                         name: FixedCStr(*b"\0\0\0\0\0\0\0\0\0\0"),
                         routine: Some(M_SaveSelect as fn(&mut GameState, i32)),
-                        alphaKey: '1' as u8,
+                        alphaKey: b'1',
                     },
                     menuitem_t {
-                        status: 1 as i16,
+                        status: 1_i16,
                         name: FixedCStr(*b"\0\0\0\0\0\0\0\0\0\0"),
                         routine: Some(M_SaveSelect as fn(&mut GameState, i32)),
-                        alphaKey: '2' as u8,
+                        alphaKey: b'2',
                     },
                     menuitem_t {
-                        status: 1 as i16,
+                        status: 1_i16,
                         name: FixedCStr(*b"\0\0\0\0\0\0\0\0\0\0"),
                         routine: Some(M_SaveSelect as fn(&mut GameState, i32)),
-                        alphaKey: '3' as u8,
+                        alphaKey: b'3',
                     },
                     menuitem_t {
-                        status: 1 as i16,
+                        status: 1_i16,
                         name: FixedCStr(*b"\0\0\0\0\0\0\0\0\0\0"),
                         routine: Some(M_SaveSelect as fn(&mut GameState, i32)),
-                        alphaKey: '4' as u8,
+                        alphaKey: b'4',
                     },
                     menuitem_t {
-                        status: 1 as i16,
+                        status: 1_i16,
                         name: FixedCStr(*b"\0\0\0\0\0\0\0\0\0\0"),
                         routine: Some(M_SaveSelect as fn(&mut GameState, i32)),
-                        alphaKey: '5' as u8,
+                        alphaKey: b'5',
                     },
                     menuitem_t {
-                        status: 1 as i16,
+                        status: 1_i16,
                         name: FixedCStr(*b"\0\0\0\0\0\0\0\0\0\0"),
                         routine: Some(M_SaveSelect as fn(&mut GameState, i32)),
-                        alphaKey: '6' as u8,
+                        alphaKey: b'6',
                     },
                 ],
                 routine: Some(M_DrawSave as unsafe fn(&mut GameState) -> ()),
-                x: 80 as i16,
-                y: 54 as i16,
-                lastOn: 0 as i16,
+                x: 80_i16,
+                y: 54_i16,
+                lastOn: 0_i16,
             },
         }
     }
@@ -602,7 +602,7 @@ pub const load4: C2RustUnnamed_8 = 3;
 pub const load3: C2RustUnnamed_8 = 2;
 pub const load2: C2RustUnnamed_8 = 1;
 pub const load1: C2RustUnnamed_8 = 0;
-pub const KEY_NUMLOCK: i32 = 0x80 + 0x45 as i32;
+pub const KEY_NUMLOCK: i32 = 0x80 + 0x45_i32;
 pub const GAMMALVL0: &str = "Gamma correction OFF\0";
 pub const GAMMALVL1: &str = "Gamma correction level 1\0";
 pub const GAMMALVL2: &str = "Gamma correction level 2\0";
@@ -612,7 +612,7 @@ pub const EMPTYSTRING: &str = "empty slot\0";
 pub const NUM_QUITMESSAGES: i32 = 8;
 pub const SAVESTRINGSIZE: i32 = 24;
 pub static gammamsg: [&str; 5] = [GAMMALVL0, GAMMALVL1, GAMMALVL2, GAMMALVL3, GAMMALVL4];
-pub const SKULLXOFF: i32 = -(32 as i32);
+pub const SKULLXOFF: i32 = -32_i32;
 pub const LINEHEIGHT: i32 = 16;
 pub static skullName: [&str; 2] = ["M_SKULL1", "M_SKULL2"];
 pub static main_e: C2RustUnnamed_1 = newgame;
@@ -625,14 +625,14 @@ pub static sound_e: C2RustUnnamed_7 = sfx_vol;
 pub static load_e: C2RustUnnamed_8 = load1;
 pub fn M_ReadSaveStrings(state: &mut GameState) {
     let mut i: i32 = 0;
-    i = 0 as i32;
+    i = 0_i32;
     while i < load_end as i32 {
         let savegame_file = P_SaveGameFile(state, i);
         match std::fs::File::open(&savegame_file) {
             Err(_) => {
                 state.m_menu.savegamestrings[i as usize] =
                     EMPTYSTRING.trim_end_matches('\0').to_string();
-                state.m_menu.defs.LoadDef.items[i as usize].status = 0 as i16;
+                state.m_menu.defs.LoadDef.items[i as usize].status = 0_i16;
             }
             Ok(mut handle) => {
                 let mut buf: [u8; SAVESTRINGSIZE as usize] = [0; SAVESTRINGSIZE as usize];
@@ -640,7 +640,7 @@ pub fn M_ReadSaveStrings(state: &mut GameState) {
                 let len = buf.iter().position(|&b| b == 0).unwrap_or(buf.len());
                 state.m_menu.savegamestrings[i as usize] =
                     String::from_utf8_lossy(&buf[..len]).into_owned();
-                state.m_menu.defs.LoadDef.items[i as usize].status = 1 as i16;
+                state.m_menu.defs.LoadDef.items[i as usize].status = 1_i16;
             }
         }
         i += 1;
@@ -649,8 +649,8 @@ pub fn M_ReadSaveStrings(state: &mut GameState) {
 pub unsafe fn M_DrawLoad(state: &mut GameState) {
     let mut i: i32 = 0;
     let __wcache890_24 = W_CacheLumpName(state, "M_LOADG") as *mut patch_t;
-    V_DrawPatchDirect(state, 72 as i32, 28 as i32, __wcache890_24);
-    i = 0 as i32;
+    V_DrawPatchDirect(state, 72_i32, 28_i32, __wcache890_24);
+    i = 0_i32;
     while i < load_end as i32 {
         let loaddef_x = state.m_menu.defs.LoadDef.x as i32;
         let loaddef_y = state.m_menu.defs.LoadDef.y as i32 + LINEHEIGHT * i;
@@ -663,16 +663,16 @@ pub unsafe fn M_DrawLoad(state: &mut GameState) {
 pub unsafe fn M_DrawSaveLoadBorder(state: &mut GameState, mut x: i32, mut y: i32) {
     let mut i: i32 = 0;
     let __wcache908_23 = W_CacheLumpName(state, "M_LSLEFT") as *mut patch_t;
-    V_DrawPatchDirect(state, x - 8 as i32, y + 7 as i32, __wcache908_23);
-    i = 0 as i32;
-    while i < 24 as i32 {
+    V_DrawPatchDirect(state, x - 8_i32, y + 7_i32, __wcache908_23);
+    i = 0_i32;
+    while i < 24_i32 {
         let __wcache916_22 = W_CacheLumpName(state, "M_LSCNTR") as *mut patch_t;
-        V_DrawPatchDirect(state, x, y + 7 as i32, __wcache916_22);
-        x += 8 as i32;
+        V_DrawPatchDirect(state, x, y + 7_i32, __wcache916_22);
+        x += 8_i32;
         i += 1;
     }
     let __wcache925_21 = W_CacheLumpName(state, "M_LSRGHT") as *mut patch_t;
-    V_DrawPatchDirect(state, x, y + 7 as i32, __wcache925_21);
+    V_DrawPatchDirect(state, x, y + 7_i32, __wcache925_21);
 }
 pub fn M_LoadSelect(state: &mut GameState, choice: i32) {
     let savegame_file = P_SaveGameFile(state, choice);
@@ -696,8 +696,8 @@ pub fn M_LoadGame(state: &mut GameState, _choice: i32) {
 pub unsafe fn M_DrawSave(state: &mut GameState) {
     let mut i: i32 = 0;
     let __wcache961_20 = W_CacheLumpName(state, "M_SAVEG") as *mut patch_t;
-    V_DrawPatchDirect(state, 72 as i32, 28 as i32, __wcache961_20);
-    i = 0 as i32;
+    V_DrawPatchDirect(state, 72_i32, 28_i32, __wcache961_20);
+    i = 0_i32;
     while i < load_end as i32 {
         let loaddef_x = state.m_menu.defs.LoadDef.x as i32;
         let loaddef_y = state.m_menu.defs.LoadDef.y as i32 + LINEHEIGHT * i;
@@ -718,12 +718,12 @@ pub fn M_DoSave(state: &mut GameState, mut slot: i32) {
     let savegame_name = state.m_menu.savegamestrings[slot as usize].clone();
     G_SaveGame(state, slot, &savegame_name);
     M_ClearMenus(state);
-    if state.m_menu.quickSaveSlot == -(2 as i32) {
+    if state.m_menu.quickSaveSlot == -2_i32 {
         state.m_menu.quickSaveSlot = slot;
     }
 }
 pub fn M_SaveSelect(state: &mut GameState, mut choice: i32) {
-    state.m_menu.saveStringEnter = 1 as i32;
+    state.m_menu.saveStringEnter = 1_i32;
     state.m_menu.saveSlot = choice;
     state.m_menu.saveOldString = state.m_menu.savegamestrings[choice as usize].clone();
     if state.m_menu.savegamestrings[choice as usize] == EMPTYSTRING.trim_end_matches('\0') {
@@ -763,12 +763,12 @@ pub unsafe fn M_QuickSave(state: &mut GameState) {
     if state.g_game.gamestate != GameScreenState::GS_LEVEL {
         return;
     }
-    if state.m_menu.quickSaveSlot < 0 as i32 {
+    if state.m_menu.quickSaveSlot < 0_i32 {
         M_StartControlPanel(state);
         M_ReadSaveStrings(state);
         let menudef = MenuId::Save;
         M_SetupNextMenu(state, menudef);
-        state.m_menu.quickSaveSlot = -(2 as i32);
+        state.m_menu.quickSaveSlot = -2_i32;
         return;
     }
     let msg = format!(
@@ -795,7 +795,7 @@ pub fn M_QuickLoad(state: &mut GameState) {
         );
         return;
     }
-    if state.m_menu.quickSaveSlot < 0 as i32 {
+    if state.m_menu.quickSaveSlot < 0_i32 {
         M_StartMessage(
             state,
             "you haven't picked a quicksave slot yet!\n\npress a key.",
@@ -813,19 +813,19 @@ pub fn M_QuickLoad(state: &mut GameState) {
 }
 pub unsafe fn M_DrawReadThis1(state: &mut GameState) {
     let mut lumpname: &str = "CREDIT";
-    let mut skullx: i32 = 330 as i32;
-    let mut skully: i32 = 175 as i32;
+    let mut skullx: i32 = 330_i32;
+    let mut skully: i32 = 175_i32;
     state.m_menu.inhelpscreens = true;
     match state.doomstat.gameversion as u32 {
         1 | 2 | 3 | 4 | 5 => {
             if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 {
                 lumpname = "HELP";
-                skullx = 330 as i32;
-                skully = 165 as i32;
+                skullx = 330_i32;
+                skully = 165_i32;
             } else {
                 lumpname = "HELP2";
-                skullx = 280 as i32;
-                skully = 185 as i32;
+                skullx = 280_i32;
+                skully = 185_i32;
             }
         }
         6 | 9 => {
@@ -839,30 +839,30 @@ pub unsafe fn M_DrawReadThis1(state: &mut GameState) {
         }
     }
     let __wcache1158_19 = W_CacheLumpName(state, lumpname) as *mut patch_t;
-    V_DrawPatchDirect(state, 0 as i32, 0 as i32, __wcache1158_19);
+    V_DrawPatchDirect(state, 0_i32, 0_i32, __wcache1158_19);
     state.m_menu.defs.ReadDef1.x = skullx as i16;
     state.m_menu.defs.ReadDef1.y = skully as i16;
 }
 pub unsafe fn M_DrawReadThis2(state: &mut GameState) {
     state.m_menu.inhelpscreens = true;
     let __wcache1170_18 = W_CacheLumpName(state, "HELP1") as *mut patch_t;
-    V_DrawPatchDirect(state, 0 as i32, 0 as i32, __wcache1170_18);
+    V_DrawPatchDirect(state, 0_i32, 0_i32, __wcache1170_18);
 }
 pub unsafe fn M_DrawSound(state: &mut GameState) {
     let __wcache1179_17 = W_CacheLumpName(state, "M_SVOL") as *mut patch_t;
-    V_DrawPatchDirect(state, 60 as i32, 38 as i32, __wcache1179_17);
+    V_DrawPatchDirect(state, 60_i32, 38_i32, __wcache1179_17);
     let (x, y, vol) = (
         state.m_menu.defs.SoundDef.x as i32,
-        state.m_menu.defs.SoundDef.y as i32 + LINEHEIGHT * (sfx_vol as i32 + 1 as i32),
+        state.m_menu.defs.SoundDef.y as i32 + LINEHEIGHT * (sfx_vol as i32 + 1_i32),
         state.s_sound.sfxVolume,
     );
-    M_DrawThermo(state, x, y, 16 as i32, vol);
+    M_DrawThermo(state, x, y, 16_i32, vol);
     let (x, y, vol) = (
         state.m_menu.defs.SoundDef.x as i32,
-        state.m_menu.defs.SoundDef.y as i32 + LINEHEIGHT * (music_vol as i32 + 1 as i32),
+        state.m_menu.defs.SoundDef.y as i32 + LINEHEIGHT * (music_vol as i32 + 1_i32),
         state.s_sound.musicVolume,
     );
-    M_DrawThermo(state, x, y, 16 as i32, vol);
+    M_DrawThermo(state, x, y, 16_i32, vol);
 }
 pub fn M_Sound(state: &mut GameState, _choice: i32) {
     let menudef = MenuId::Sound;
@@ -876,13 +876,13 @@ pub fn M_SfxVol(state: &mut GameState, mut choice: i32) {
             }
         }
         1 => {
-            if state.s_sound.sfxVolume < 15 as i32 {
+            if state.s_sound.sfxVolume < 15_i32 {
                 state.s_sound.sfxVolume += 1;
             }
         }
         _ => {}
     }
-    let sfx_volume = state.s_sound.sfxVolume * 8 as i32;
+    let sfx_volume = state.s_sound.sfxVolume * 8_i32;
     S_SetSfxVolume(state, sfx_volume);
 }
 pub fn M_MusicVol(state: &mut GameState, mut choice: i32) {
@@ -893,24 +893,24 @@ pub fn M_MusicVol(state: &mut GameState, mut choice: i32) {
             }
         }
         1 => {
-            if state.s_sound.musicVolume < 15 as i32 {
+            if state.s_sound.musicVolume < 15_i32 {
                 state.s_sound.musicVolume += 1;
             }
         }
         _ => {}
     }
-    let music_volume = state.s_sound.musicVolume * 8 as i32;
+    let music_volume = state.s_sound.musicVolume * 8_i32;
     S_SetMusicVolume(state, music_volume);
 }
 pub unsafe fn M_DrawMainMenu(state: &mut GameState) {
     let __wcache1241_16 = W_CacheLumpName(state, "M_DOOM") as *mut patch_t;
-    V_DrawPatchDirect(state, 94 as i32, 2 as i32, __wcache1241_16);
+    V_DrawPatchDirect(state, 94_i32, 2_i32, __wcache1241_16);
 }
 pub unsafe fn M_DrawNewGame(state: &mut GameState) {
     let __wcache1250_15 = W_CacheLumpName(state, "M_NEWG") as *mut patch_t;
-    V_DrawPatchDirect(state, 96 as i32, 14 as i32, __wcache1250_15);
+    V_DrawPatchDirect(state, 96_i32, 14_i32, __wcache1250_15);
     let __wcache1256_14 = W_CacheLumpName(state, "M_SKILL") as *mut patch_t;
-    V_DrawPatchDirect(state, 54 as i32, 38 as i32, __wcache1256_14);
+    V_DrawPatchDirect(state, 54_i32, 38_i32, __wcache1256_14);
 }
 pub fn M_NewGame(state: &mut GameState, _choice: i32) {
     if state.g_game.netgame && !state.g_game.demoplayback {
@@ -934,7 +934,7 @@ pub fn M_NewGame(state: &mut GameState, _choice: i32) {
 }
 pub unsafe fn M_DrawEpisode(state: &mut GameState) {
     let __wcache1286_13 = W_CacheLumpName(state, "M_EPISOD") as *mut patch_t;
-    V_DrawPatchDirect(state, 54 as i32, 38 as i32, __wcache1286_13);
+    V_DrawPatchDirect(state, 54_i32, 38_i32, __wcache1286_13);
 }
 pub fn M_VerifyNightmare(state: &mut GameState, mut key: i32) {
     if key != state.m_controls.key_menu_confirm {
@@ -943,8 +943,8 @@ pub fn M_VerifyNightmare(state: &mut GameState, mut key: i32) {
     G_DeferedInitNew(
         state,
         skill_from_raw(nightmare as i32),
-        state.m_menu.epi + 1 as i32,
-        1 as i32,
+        state.m_menu.epi + 1_i32,
+        1_i32,
     );
     M_ClearMenus(state);
 }
@@ -961,8 +961,8 @@ pub fn M_ChooseSkill(state: &mut GameState, mut choice: i32) {
     G_DeferedInitNew(
         state,
         skill_from_raw(choice),
-        state.m_menu.epi + 1 as i32,
-        1 as i32,
+        state.m_menu.epi + 1_i32,
+        1_i32,
     );
     M_ClearMenus(state);
 }
@@ -977,9 +977,9 @@ pub fn M_Episode(state: &mut GameState, mut choice: i32) {
         M_SetupNextMenu(state, menudef);
         return;
     }
-    if state.doomstat.gamemode as u32 == GameMode_t::registered as i32 as u32 && choice > 2 as i32 {
+    if state.doomstat.gamemode as u32 == GameMode_t::registered as i32 as u32 && choice > 2_i32 {
         eprintln!("M_Episode: 4th episode requires UltimateDOOM");
-        choice = 0 as i32;
+        choice = 0_i32;
     }
     state.m_menu.epi = choice;
     let menudef = MenuId::New;
@@ -989,13 +989,13 @@ static detailNames: [&str; 2] = ["M_GDHIGH", "M_GDLOW"];
 static msgNames: [&str; 2] = ["M_MSGOFF", "M_MSGON"];
 pub unsafe fn M_DrawOptions(state: &mut GameState) {
     let __wcache1358_12 = W_CacheLumpName(state, "M_OPTTTL") as *mut patch_t;
-    V_DrawPatchDirect(state, 108 as i32, 15 as i32, __wcache1358_12);
+    V_DrawPatchDirect(state, 108_i32, 15_i32, __wcache1358_12);
     let __wcache1364_11 = W_CacheLumpName(
         state,
         detailNames[state.m_menu.detailLevel as usize]) as *mut patch_t;
     V_DrawPatchDirect(
         state,
-        state.m_menu.defs.OptionsDef.x as i32 + 175 as i32,
+        state.m_menu.defs.OptionsDef.x as i32 + 175_i32,
         state.m_menu.defs.OptionsDef.y as i32 + LINEHEIGHT * detail as i32,
         __wcache1364_11,
     );
@@ -1004,29 +1004,29 @@ pub unsafe fn M_DrawOptions(state: &mut GameState) {
         msgNames[state.m_menu.showMessages as usize]) as *mut patch_t;
     V_DrawPatchDirect(
         state,
-        state.m_menu.defs.OptionsDef.x as i32 + 120 as i32,
+        state.m_menu.defs.OptionsDef.x as i32 + 120_i32,
         state.m_menu.defs.OptionsDef.y as i32 + LINEHEIGHT * messages as i32,
         __wcache1373_10,
     );
     let (x, y, sens) = (
         state.m_menu.defs.OptionsDef.x as i32,
-        state.m_menu.defs.OptionsDef.y as i32 + LINEHEIGHT * (mousesens as i32 + 1 as i32),
+        state.m_menu.defs.OptionsDef.y as i32 + LINEHEIGHT * (mousesens as i32 + 1_i32),
         state.m_menu.mouseSensitivity,
     );
-    M_DrawThermo(state, x, y, 10 as i32, sens);
+    M_DrawThermo(state, x, y, 10_i32, sens);
     let (x, y, sz) = (
         state.m_menu.defs.OptionsDef.x as i32,
-        state.m_menu.defs.OptionsDef.y as i32 + LINEHEIGHT * (scrnsize as i32 + 1 as i32),
+        state.m_menu.defs.OptionsDef.y as i32 + LINEHEIGHT * (scrnsize as i32 + 1_i32),
         state.m_menu.screenSize,
     );
-    M_DrawThermo(state, x, y, 9 as i32, sz);
+    M_DrawThermo(state, x, y, 9_i32, sz);
 }
 pub fn M_Options(state: &mut GameState, _choice: i32) {
     let menudef = MenuId::Options;
     M_SetupNextMenu(state, menudef);
 }
 pub fn M_ChangeMessages(state: &mut GameState, _choice: i32) {
-    state.m_menu.showMessages = 1 as i32 - state.m_menu.showMessages;
+    state.m_menu.showMessages = 1_i32 - state.m_menu.showMessages;
     if state.m_menu.showMessages == 0 {
         state.g_game.players[state.g_game.consoleplayer as usize].message =
             Some("Messages OFF".to_string());
@@ -1077,7 +1077,7 @@ pub fn M_ReadThis2(state: &mut GameState, _choice: i32) {
         let menudef = MenuId::Read2;
         M_SetupNextMenu(state, menudef);
     } else {
-        M_FinishReadThis(state, 0 as i32);
+        M_FinishReadThis(state, 0_i32);
     };
 }
 pub fn M_FinishReadThis(state: &mut GameState, _choice: i32) {
@@ -1110,9 +1110,9 @@ pub fn M_QuitResponse(state: &mut GameState, mut key: i32) {
     }
     if !state.g_game.netgame {
         if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 {
-            unsafe { S_StartSound(state, SoundOrigin::None, quitsounds2[(state.d_loop.gametic >> 2 as i32 & 7 as i32) as usize]) };
+            unsafe { S_StartSound(state, SoundOrigin::None, quitsounds2[(state.d_loop.gametic >> 2_i32 & 7_i32) as usize]) };
         } else {
-            unsafe { S_StartSound(state, SoundOrigin::None, quitsounds[(state.d_loop.gametic >> 2 as i32 & 7 as i32) as usize]) };
+            unsafe { S_StartSound(state, SoundOrigin::None, quitsounds[(state.d_loop.gametic >> 2_i32 & 7_i32) as usize]) };
         }
     }
     I_Quit(state);
@@ -1121,12 +1121,10 @@ fn M_SelectEndMessage(state: &mut GameState) -> &'static str {
     let endmsg: &'static [&'static str; 8] =
         if (if state.doomstat.gamemission as u32 == GameMission_t::pack_chex as i32 as u32 {
             GameMission_t::doom as i32 as u32
+        } else if state.doomstat.gamemission as u32 == GameMission_t::pack_hacx as i32 as u32 {
+            GameMission_t::doom2 as i32 as u32
         } else {
-            if state.doomstat.gamemission as u32 == GameMission_t::pack_hacx as i32 as u32 {
-                GameMission_t::doom2 as i32 as u32
-            } else {
-                state.doomstat.gamemission as u32
-            }
+            state.doomstat.gamemission as u32
         }) == GameMission_t::doom as i32 as u32
         {
             &doom1_endmsg
@@ -1151,7 +1149,7 @@ pub fn M_ChangeSensitivity(state: &mut GameState, mut choice: i32) {
             }
         }
         1 => {
-            if state.m_menu.mouseSensitivity < 9 as i32 {
+            if state.m_menu.mouseSensitivity < 9_i32 {
                 state.m_menu.mouseSensitivity += 1;
             }
         }
@@ -1159,7 +1157,7 @@ pub fn M_ChangeSensitivity(state: &mut GameState, mut choice: i32) {
     };
 }
 pub fn M_ChangeDetail(state: &mut GameState, _choice: i32) {
-    state.m_menu.detailLevel = 1 as i32 - state.m_menu.detailLevel;
+    state.m_menu.detailLevel = 1_i32 - state.m_menu.detailLevel;
     let (screenblocks, detail_level) = (state.m_menu.screenblocks, state.m_menu.detailLevel);
     R_SetViewSize(state, screenblocks, detail_level);
     if state.m_menu.detailLevel == 0 {
@@ -1173,13 +1171,13 @@ pub fn M_ChangeDetail(state: &mut GameState, _choice: i32) {
 pub fn M_SizeDisplay(state: &mut GameState, mut choice: i32) {
     match choice {
         0 => {
-            if state.m_menu.screenSize > 0 as i32 {
+            if state.m_menu.screenSize > 0_i32 {
                 state.m_menu.screenblocks -= 1;
                 state.m_menu.screenSize -= 1;
             }
         }
         1 => {
-            if state.m_menu.screenSize < 8 as i32 {
+            if state.m_menu.screenSize < 8_i32 {
                 state.m_menu.screenblocks += 1;
                 state.m_menu.screenSize += 1;
             }
@@ -1201,18 +1199,18 @@ pub unsafe fn M_DrawThermo(
     xx = x;
     let __wcache1619_9 = W_CacheLumpName(state, "M_THERML") as *mut patch_t;
     V_DrawPatchDirect(state, xx, y, __wcache1619_9);
-    xx += 8 as i32;
-    i = 0 as i32;
+    xx += 8_i32;
+    i = 0_i32;
     while i < thermWidth {
         let __wcache1628_8 = W_CacheLumpName(state, "M_THERMM") as *mut patch_t;
         V_DrawPatchDirect(state, xx, y, __wcache1628_8);
-        xx += 8 as i32;
+        xx += 8_i32;
         i += 1;
     }
     let __wcache1637_7 = W_CacheLumpName(state, "M_THERMR") as *mut patch_t;
     V_DrawPatchDirect(state, xx, y, __wcache1637_7);
     let __wcache1643_6 = W_CacheLumpName(state, "M_THERMO") as *mut patch_t;
-    V_DrawPatchDirect(state, x + 8 as i32 + thermDot * 8 as i32, y, __wcache1643_6);
+    V_DrawPatchDirect(state, x + 8_i32 + thermDot * 8_i32, y, __wcache1643_6);
 }
 pub unsafe fn M_DrawEmptyCell(state: &mut GameState, menu: MenuId, mut item: i32) {
     let (x, y) = {
@@ -1222,8 +1220,8 @@ pub unsafe fn M_DrawEmptyCell(state: &mut GameState, menu: MenuId, mut item: i32
     let __wcache1651_5 = W_CacheLumpName(state, "M_CELL1") as *mut patch_t;
     V_DrawPatchDirect(
         state,
-        x as i32 - 10 as i32,
-        y as i32 + item * LINEHEIGHT - 1 as i32,
+        x as i32 - 10_i32,
+        y as i32 + item * LINEHEIGHT - 1_i32,
         __wcache1651_5,
     );
 }
@@ -1235,8 +1233,8 @@ pub unsafe fn M_DrawSelCell(state: &mut GameState, menu: MenuId, mut item: i32) 
     let __wcache1659_4 = W_CacheLumpName(state, "M_CELL2") as *mut patch_t;
     V_DrawPatchDirect(
         state,
-        x as i32 - 10 as i32,
-        y as i32 + item * LINEHEIGHT - 1 as i32,
+        x as i32 - 10_i32,
+        y as i32 + item * LINEHEIGHT - 1_i32,
         __wcache1659_4,
     );
 }
@@ -1247,7 +1245,7 @@ pub fn M_StartMessage(
     mut input: bool,
 ) {
     state.m_menu.messageLastMenuActive = state.m_menu.menuactive as i32;
-    state.m_menu.messageToPrint = 1 as i32;
+    state.m_menu.messageToPrint = 1_i32;
     state.m_menu.messageString = string.to_string();
     state.m_menu.messageRoutine = routine;
     state.m_menu.messageNeedsInput = input;
@@ -1255,20 +1253,20 @@ pub fn M_StartMessage(
 }
 pub fn M_StopMessage(state: &mut GameState) {
     state.m_menu.menuactive = state.m_menu.messageLastMenuActive != 0;
-    state.m_menu.messageToPrint = 0 as i32;
+    state.m_menu.messageToPrint = 0_i32;
 }
 pub unsafe fn M_StringWidth(state: &mut GameState, string: &str) -> i32 {
-    let mut w: i32 = 0 as i32;
+    let mut w: i32 = 0_i32;
     let mut c: i32 = 0;
     for b in string.bytes() {
         c = b.to_ascii_uppercase() as i32 - HU_FONTSTART;
-        if c < 0 as i32 || c >= HU_FONTSIZE {
-            w += 4 as i32;
+        if c < 0_i32 || c >= HU_FONTSIZE {
+            w += 4_i32;
         } else {
             w += (*V_CachePatchNum(state, state.hu_stuff.hu_font[c as usize])).width as i32;
         }
     }
-    return w;
+    w
 }
 pub unsafe fn M_StringHeight(state: &mut GameState, string: &str) -> i32 {
     let mut h: i32 = 0;
@@ -1279,7 +1277,7 @@ pub unsafe fn M_StringHeight(state: &mut GameState, string: &str) -> i32 {
             h += height;
         }
     }
-    return h;
+    h
 }
 pub unsafe fn M_WriteText(state: &mut GameState, x: i32, y: i32, string: &str) {
     let mut w: i32 = 0;
@@ -1292,11 +1290,11 @@ pub unsafe fn M_WriteText(state: &mut GameState, x: i32, y: i32, string: &str) {
         c = b as i32;
         if c == '\n' as i32 {
             cx = x;
-            cy += 12 as i32;
+            cy += 12_i32;
         } else {
             c = (c as u8).to_ascii_uppercase() as i32 - HU_FONTSTART;
-            if c < 0 as i32 || c >= HU_FONTSIZE {
-                cx += 4 as i32;
+            if c < 0_i32 || c >= HU_FONTSIZE {
+                cx += 4_i32;
             } else {
                 let font_patch = V_CachePatchNum(state, state.hu_stuff.hu_font[c as usize]);
                 w = (*font_patch).width as i32;
@@ -1310,24 +1308,24 @@ pub unsafe fn M_WriteText(state: &mut GameState, x: i32, y: i32, string: &str) {
     }
 }
 fn IsNullKey(mut key: i32) -> bool {
-    return key == KEY_PAUSE || key == KEY_CAPSLOCK || key == KEY_SCRLCK || key == KEY_NUMLOCK;
+    key == KEY_PAUSE || key == KEY_CAPSLOCK || key == KEY_SCRLCK || key == KEY_NUMLOCK
 }
 pub unsafe fn M_Responder(state: &mut GameState, ev: &mut event_t) -> bool {
     let mut ch: i32 = 0;
     let mut key: i32 = 0;
     let mut i: i32 = 0;
     if state.g_game.testcontrols {
-        if (*ev).type_0 == EvType::ev_quit
-            || (*ev).type_0 == EvType::ev_keydown
-                && ((*ev).data1 == state.m_controls.key_menu_activate
-                    || (*ev).data1 == state.m_controls.key_menu_quit)
+        if ev.type_0 == EvType::ev_quit
+            || ev.type_0 == EvType::ev_keydown
+                && (ev.data1 == state.m_controls.key_menu_activate
+                    || ev.data1 == state.m_controls.key_menu_quit)
         {
             I_Quit(state);
             return true;
         }
         return false;
     }
-    if (*ev).type_0 == EvType::ev_quit {
+    if ev.type_0 == EvType::ev_quit {
         if state.m_menu.menuactive
             && state.m_menu.messageToPrint != 0
             && state.m_menu.messageRoutine
@@ -1337,101 +1335,101 @@ pub unsafe fn M_Responder(state: &mut GameState, ev: &mut event_t) -> bool {
             M_QuitResponse(state, key_menu_confirm);
         } else {
             S_StartSound(state, SoundOrigin::None, sfx_swtchn as i32);
-            M_QuitDOOM(state, 0 as i32);
+            M_QuitDOOM(state, 0_i32);
         }
         return true;
     }
-    ch = 0 as i32;
-    key = -(1 as i32);
-    if (*ev).type_0 == EvType::ev_joystick
+    ch = 0_i32;
+    key = -1_i32;
+    if ev.type_0 == EvType::ev_joystick
         && state.m_menu.responder_joywait < I_GetTime(state)
     {
-        if (*ev).data3 < 0 as i32 {
+        if ev.data3 < 0_i32 {
             key = state.m_controls.key_menu_up;
-            state.m_menu.responder_joywait = I_GetTime(state) + 5 as i32;
-        } else if (*ev).data3 > 0 as i32 {
+            state.m_menu.responder_joywait = I_GetTime(state) + 5_i32;
+        } else if ev.data3 > 0_i32 {
             key = state.m_controls.key_menu_down;
-            state.m_menu.responder_joywait = I_GetTime(state) + 5 as i32;
+            state.m_menu.responder_joywait = I_GetTime(state) + 5_i32;
         }
-        if (*ev).data2 < 0 as i32 {
+        if ev.data2 < 0_i32 {
             key = state.m_controls.key_menu_left;
-            state.m_menu.responder_joywait = I_GetTime(state) + 2 as i32;
-        } else if (*ev).data2 > 0 as i32 {
+            state.m_menu.responder_joywait = I_GetTime(state) + 2_i32;
+        } else if ev.data2 > 0_i32 {
             key = state.m_controls.key_menu_right;
-            state.m_menu.responder_joywait = I_GetTime(state) + 2 as i32;
+            state.m_menu.responder_joywait = I_GetTime(state) + 2_i32;
         }
-        if (*ev).data1 & 1 as i32 != 0 {
+        if ev.data1 & 1_i32 != 0 {
             key = state.m_controls.key_menu_forward;
-            state.m_menu.responder_joywait = I_GetTime(state) + 5 as i32;
+            state.m_menu.responder_joywait = I_GetTime(state) + 5_i32;
         }
-        if (*ev).data1 & 2 as i32 != 0 {
+        if ev.data1 & 2_i32 != 0 {
             key = state.m_controls.key_menu_back;
-            state.m_menu.responder_joywait = I_GetTime(state) + 5 as i32;
+            state.m_menu.responder_joywait = I_GetTime(state) + 5_i32;
         }
-        if state.m_controls.joybmenu >= 0 as i32
-            && (*ev).data1 & (1 as i32) << state.m_controls.joybmenu != 0 as i32
+        if state.m_controls.joybmenu >= 0_i32
+            && ev.data1 & 1_i32 << state.m_controls.joybmenu != 0_i32
         {
             key = state.m_controls.key_menu_activate;
-            state.m_menu.responder_joywait = I_GetTime(state) + 5 as i32;
+            state.m_menu.responder_joywait = I_GetTime(state) + 5_i32;
         }
-    } else if (*ev).type_0 == EvType::ev_mouse
+    } else if ev.type_0 == EvType::ev_mouse
         && state.m_menu.responder_mousewait < I_GetTime(state)
     {
-        state.m_menu.responder_mousey += (*ev).data3;
-        if state.m_menu.responder_mousey < state.m_menu.responder_lasty - 30 as i32 {
+        state.m_menu.responder_mousey += ev.data3;
+        if state.m_menu.responder_mousey < state.m_menu.responder_lasty - 30_i32 {
             key = state.m_controls.key_menu_down;
-            state.m_menu.responder_mousewait = I_GetTime(state) + 5 as i32;
-            state.m_menu.responder_lasty -= 30 as i32;
+            state.m_menu.responder_mousewait = I_GetTime(state) + 5_i32;
+            state.m_menu.responder_lasty -= 30_i32;
             state.m_menu.responder_mousey = state.m_menu.responder_lasty;
-        } else if state.m_menu.responder_mousey > state.m_menu.responder_lasty + 30 as i32 {
+        } else if state.m_menu.responder_mousey > state.m_menu.responder_lasty + 30_i32 {
             key = state.m_controls.key_menu_up;
-            state.m_menu.responder_mousewait = I_GetTime(state) + 5 as i32;
-            state.m_menu.responder_lasty += 30 as i32;
+            state.m_menu.responder_mousewait = I_GetTime(state) + 5_i32;
+            state.m_menu.responder_lasty += 30_i32;
             state.m_menu.responder_mousey = state.m_menu.responder_lasty;
         }
-        state.m_menu.responder_mousex += (*ev).data2;
-        if state.m_menu.responder_mousex < state.m_menu.responder_lastx - 30 as i32 {
+        state.m_menu.responder_mousex += ev.data2;
+        if state.m_menu.responder_mousex < state.m_menu.responder_lastx - 30_i32 {
             key = state.m_controls.key_menu_left;
-            state.m_menu.responder_mousewait = I_GetTime(state) + 5 as i32;
-            state.m_menu.responder_lastx -= 30 as i32;
+            state.m_menu.responder_mousewait = I_GetTime(state) + 5_i32;
+            state.m_menu.responder_lastx -= 30_i32;
             state.m_menu.responder_mousex = state.m_menu.responder_lastx;
-        } else if state.m_menu.responder_mousex > state.m_menu.responder_lastx + 30 as i32 {
+        } else if state.m_menu.responder_mousex > state.m_menu.responder_lastx + 30_i32 {
             key = state.m_controls.key_menu_right;
-            state.m_menu.responder_mousewait = I_GetTime(state) + 5 as i32;
-            state.m_menu.responder_lastx += 30 as i32;
+            state.m_menu.responder_mousewait = I_GetTime(state) + 5_i32;
+            state.m_menu.responder_lastx += 30_i32;
             state.m_menu.responder_mousex = state.m_menu.responder_lastx;
         }
-        if (*ev).data1 & 1 as i32 != 0 {
+        if ev.data1 & 1_i32 != 0 {
             key = state.m_controls.key_menu_forward;
-            state.m_menu.responder_mousewait = I_GetTime(state) + 15 as i32;
+            state.m_menu.responder_mousewait = I_GetTime(state) + 15_i32;
         }
-        if (*ev).data1 & 2 as i32 != 0 {
+        if ev.data1 & 2_i32 != 0 {
             key = state.m_controls.key_menu_back;
-            state.m_menu.responder_mousewait = I_GetTime(state) + 15 as i32;
+            state.m_menu.responder_mousewait = I_GetTime(state) + 15_i32;
         }
-    } else if (*ev).type_0 == EvType::ev_keydown {
-        key = (*ev).data1;
-        ch = (*ev).data2;
+    } else if ev.type_0 == EvType::ev_keydown {
+        key = ev.data1;
+        ch = ev.data2;
     }
-    if key == -(1 as i32) {
+    if key == -1_i32 {
         return false;
     }
     if state.m_menu.saveStringEnter != 0 {
         match key {
             KEY_BACKSPACE => {
-                if state.m_menu.saveCharIndex > 0 as i32 {
+                if state.m_menu.saveCharIndex > 0_i32 {
                     state.m_menu.saveCharIndex -= 1;
                     state.m_menu.savegamestrings[state.m_menu.saveSlot as usize]
                         .truncate(state.m_menu.saveCharIndex as usize);
                 }
             }
             KEY_ESCAPE => {
-                state.m_menu.saveStringEnter = 0 as i32;
+                state.m_menu.saveStringEnter = 0_i32;
                 state.m_menu.savegamestrings[state.m_menu.saveSlot as usize] =
                     state.m_menu.saveOldString.clone();
             }
             KEY_ENTER => {
-                state.m_menu.saveStringEnter = 0 as i32;
+                state.m_menu.saveStringEnter = 0_i32;
                 if !state.m_menu.savegamestrings[state.m_menu.saveSlot as usize].is_empty() {
                     let save_slot = state.m_menu.saveSlot;
                     M_DoSave(state, save_slot);
@@ -1443,14 +1441,14 @@ pub unsafe fn M_Responder(state: &mut GameState, ev: &mut event_t) -> bool {
                 }
                 ch = (ch as u8).to_ascii_uppercase() as i32;
                 if !(ch != ' ' as i32
-                    && (ch - HU_FONTSTART < 0 as i32 || ch - HU_FONTSTART >= HU_FONTSIZE))
+                    && (ch - HU_FONTSTART < 0_i32 || ch - HU_FONTSTART >= HU_FONTSIZE))
                 {
                     let savestr =
                         state.m_menu.savegamestrings[state.m_menu.saveSlot as usize].clone();
-                    if ch >= 32 as i32
-                        && ch <= 127 as i32
-                        && state.m_menu.saveCharIndex < SAVESTRINGSIZE - 1 as i32
-                        && M_StringWidth(state, &savestr) < (SAVESTRINGSIZE - 2 as i32) * 8 as i32
+                    if ch >= 32_i32
+                        && ch <= 127_i32
+                        && state.m_menu.saveCharIndex < SAVESTRINGSIZE - 1_i32
+                        && M_StringWidth(state, &savestr) < (SAVESTRINGSIZE - 2_i32) * 8_i32
                     {
                         state.m_menu.saveCharIndex += 1;
                         state.m_menu.savegamestrings[state.m_menu.saveSlot as usize]
@@ -1462,17 +1460,13 @@ pub unsafe fn M_Responder(state: &mut GameState, ev: &mut event_t) -> bool {
         return true;
     }
     if state.m_menu.messageToPrint != 0 {
-        if state.m_menu.messageNeedsInput {
-            if key != ' ' as i32
+        if state.m_menu.messageNeedsInput && key != ' ' as i32
                 && key != KEY_ESCAPE
-                && key != state.m_controls.key_menu_confirm
-                && key != state.m_controls.key_menu_abort
-            {
-                return false;
-            }
+                && key != state.m_controls.key_menu_confirm && key != state.m_controls.key_menu_abort {
+            return false;
         }
         state.m_menu.menuactive = state.m_menu.messageLastMenuActive != 0;
-        state.m_menu.messageToPrint = 0 as i32;
+        state.m_menu.messageToPrint = 0_i32;
         if state.m_menu.messageRoutine.is_some() {
             state
                 .m_menu
@@ -1484,7 +1478,7 @@ pub unsafe fn M_Responder(state: &mut GameState, ev: &mut event_t) -> bool {
         return true;
     }
     if state.d_main.devparm && key == state.m_controls.key_menu_help
-        || key != 0 as i32 && key == state.m_controls.key_menu_screenshot
+        || key != 0_i32 && key == state.m_controls.key_menu_screenshot
     {
         G_ScreenShot(state);
         return true;
@@ -1494,14 +1488,14 @@ pub unsafe fn M_Responder(state: &mut GameState, ev: &mut event_t) -> bool {
             if state.am_map.automapactive || state.hu_stuff.chat_on {
                 return false;
             }
-            M_SizeDisplay(state, 0 as i32);
+            M_SizeDisplay(state, 0_i32);
             S_StartSound(state, SoundOrigin::None, sfx_stnmov as i32);
             return true;
         } else if key == state.m_controls.key_menu_incscreen {
             if state.am_map.automapactive || state.hu_stuff.chat_on {
                 return false;
             }
-            M_SizeDisplay(state, 1 as i32);
+            M_SizeDisplay(state, 1_i32);
             S_StartSound(state, SoundOrigin::None, sfx_stnmov as i32);
             return true;
         } else if key == state.m_controls.key_menu_help {
@@ -1511,18 +1505,18 @@ pub unsafe fn M_Responder(state: &mut GameState, ev: &mut event_t) -> bool {
             } else {
                 state.m_menu.currentMenu = MenuId::Read1;
             }
-            state.m_menu.itemOn = 0 as i16;
+            state.m_menu.itemOn = 0_i16;
             S_StartSound(state, SoundOrigin::None, sfx_swtchn as i32);
             return true;
         } else if key == state.m_controls.key_menu_save {
             M_StartControlPanel(state);
             S_StartSound(state, SoundOrigin::None, sfx_swtchn as i32);
-            M_SaveGame(state, 0 as i32);
+            M_SaveGame(state, 0_i32);
             return true;
         } else if key == state.m_controls.key_menu_load {
             M_StartControlPanel(state);
             S_StartSound(state, SoundOrigin::None, sfx_swtchn as i32);
-            M_LoadGame(state, 0 as i32);
+            M_LoadGame(state, 0_i32);
             return true;
         } else if key == state.m_controls.key_menu_volume {
             M_StartControlPanel(state);
@@ -1531,7 +1525,7 @@ pub unsafe fn M_Responder(state: &mut GameState, ev: &mut event_t) -> bool {
             S_StartSound(state, SoundOrigin::None, sfx_swtchn as i32);
             return true;
         } else if key == state.m_controls.key_menu_detail {
-            M_ChangeDetail(state, 0 as i32);
+            M_ChangeDetail(state, 0_i32);
             S_StartSound(state, SoundOrigin::None, sfx_swtchn as i32);
             return true;
         } else if key == state.m_controls.key_menu_qsave {
@@ -1540,10 +1534,10 @@ pub unsafe fn M_Responder(state: &mut GameState, ev: &mut event_t) -> bool {
             return true;
         } else if key == state.m_controls.key_menu_endgame {
             S_StartSound(state, SoundOrigin::None, sfx_swtchn as i32);
-            M_EndGame(state, 0 as i32);
+            M_EndGame(state, 0_i32);
             return true;
         } else if key == state.m_controls.key_menu_messages {
-            M_ChangeMessages(state, 0 as i32);
+            M_ChangeMessages(state, 0_i32);
             S_StartSound(state, SoundOrigin::None, sfx_swtchn as i32);
             return true;
         } else if key == state.m_controls.key_menu_qload {
@@ -1552,12 +1546,12 @@ pub unsafe fn M_Responder(state: &mut GameState, ev: &mut event_t) -> bool {
             return true;
         } else if key == state.m_controls.key_menu_quit {
             S_StartSound(state, SoundOrigin::None, sfx_swtchn as i32);
-            M_QuitDOOM(state, 0 as i32);
+            M_QuitDOOM(state, 0_i32);
             return true;
         } else if key == state.m_controls.key_menu_gamma {
             state.i_video.usegamma += 1;
-            if state.i_video.usegamma > 4 as i32 {
-                state.i_video.usegamma = 0 as i32;
+            if state.i_video.usegamma > 4_i32 {
+                state.i_video.usegamma = 0_i32;
             }
             state.g_game.players[state.g_game.consoleplayer as usize].message =
                 Some(gammamsg[state.i_video.usegamma as usize].to_string());
@@ -1576,15 +1570,15 @@ pub unsafe fn M_Responder(state: &mut GameState, ev: &mut event_t) -> bool {
     }
     if key == state.m_controls.key_menu_down {
         loop {
-            if state.m_menu.itemOn as i32 + 1 as i32 > state.m_menu.current().numitems as i32 - 1 as i32
+            if state.m_menu.itemOn as i32 + 1_i32 > state.m_menu.current().numitems as i32 - 1_i32
             {
-                state.m_menu.itemOn = 0 as i16;
+                state.m_menu.itemOn = 0_i16;
             } else {
                 state.m_menu.itemOn += 1;
             }
             S_StartSound(state, SoundOrigin::None, sfx_pstop as i32);
             if state.m_menu.current().items[state.m_menu.itemOn as usize].status as i32
-                != -(1 as i32)
+                != -1_i32
             {
                 break;
             }
@@ -1593,13 +1587,13 @@ pub unsafe fn M_Responder(state: &mut GameState, ev: &mut event_t) -> bool {
     } else if key == state.m_controls.key_menu_up {
         loop {
             if state.m_menu.itemOn == 0 {
-                state.m_menu.itemOn = (state.m_menu.current().numitems as i32 - 1 as i32) as i16;
+                state.m_menu.itemOn = (state.m_menu.current().numitems as i32 - 1_i32) as i16;
             } else {
                 state.m_menu.itemOn -= 1;
             }
             S_StartSound(state, SoundOrigin::None, sfx_pstop as i32);
             if state.m_menu.current().items[state.m_menu.itemOn as usize].status as i32
-                != -(1 as i32)
+                != -1_i32
             {
                 break;
             }
@@ -1607,16 +1601,16 @@ pub unsafe fn M_Responder(state: &mut GameState, ev: &mut event_t) -> bool {
         return true;
     } else if key == state.m_controls.key_menu_left {
         let item = state.m_menu.current().items[state.m_menu.itemOn as usize];
-        if item.routine.is_some() && item.status as i32 == 2 as i32 {
+        if item.routine.is_some() && item.status as i32 == 2_i32 {
             S_StartSound(state, SoundOrigin::None, sfx_stnmov as i32);
-            item.routine.expect("non-null function pointer")(state, 0 as i32);
+            item.routine.expect("non-null function pointer")(state, 0_i32);
         }
         return true;
     } else if key == state.m_controls.key_menu_right {
         let item = state.m_menu.current().items[state.m_menu.itemOn as usize];
-        if item.routine.is_some() && item.status as i32 == 2 as i32 {
+        if item.routine.is_some() && item.status as i32 == 2_i32 {
             S_StartSound(state, SoundOrigin::None, sfx_stnmov as i32);
-            item.routine.expect("non-null function pointer")(state, 1 as i32);
+            item.routine.expect("non-null function pointer")(state, 1_i32);
         }
         return true;
     } else if key == state.m_controls.key_menu_forward {
@@ -1624,8 +1618,8 @@ pub unsafe fn M_Responder(state: &mut GameState, ev: &mut event_t) -> bool {
         if item.routine.is_some() && item.status as i32 != 0 {
             let item_on = state.m_menu.itemOn;
             state.m_menu.current_mut().lastOn = item_on;
-            if item.status as i32 == 2 as i32 {
-                item.routine.expect("non-null function pointer")(state, 1 as i32);
+            if item.status as i32 == 2_i32 {
+                item.routine.expect("non-null function pointer")(state, 1_i32);
                 S_StartSound(state, SoundOrigin::None, sfx_stnmov as i32);
             } else {
                 let item_on = state.m_menu.itemOn as i32;
@@ -1649,8 +1643,8 @@ pub unsafe fn M_Responder(state: &mut GameState, ev: &mut event_t) -> bool {
             S_StartSound(state, SoundOrigin::None, sfx_swtchn as i32);
         }
         return true;
-    } else if ch != 0 as i32 || IsNullKey(key) {
-        i = state.m_menu.itemOn as i32 + 1 as i32;
+    } else if ch != 0_i32 || IsNullKey(key) {
+        i = state.m_menu.itemOn as i32 + 1_i32;
         while i < state.m_menu.current().numitems as i32 {
             if state.m_menu.current().items[i as usize].alphaKey as i32 == ch {
                 state.m_menu.itemOn = i as i16;
@@ -1659,7 +1653,7 @@ pub unsafe fn M_Responder(state: &mut GameState, ev: &mut event_t) -> bool {
             }
             i += 1;
         }
-        i = 0 as i32;
+        i = 0_i32;
         while i <= state.m_menu.itemOn as i32 {
             if state.m_menu.current().items[i as usize].alphaKey as i32 == ch {
                 state.m_menu.itemOn = i as i16;
@@ -1669,7 +1663,7 @@ pub unsafe fn M_Responder(state: &mut GameState, ev: &mut event_t) -> bool {
             i += 1;
         }
     }
-    return false;
+    false
 }
 pub unsafe fn M_StartControlPanel(state: &mut GameState) {
     if state.m_menu.menuactive {
@@ -1686,11 +1680,11 @@ pub unsafe fn M_Drawer(state: &mut GameState) {
     if state.m_menu.messageToPrint != 0 {
         let message_string = state.m_menu.messageString.clone();
         state.m_menu.drawer_y =
-            (SCREENHEIGHT / 2 as i32 - M_StringHeight(state, &message_string) / 2 as i32) as i16;
+            (SCREENHEIGHT / 2_i32 - M_StringHeight(state, &message_string) / 2_i32) as i16;
         for line in message_string.split('\n') {
             let line = if line.len() > 79 { &line[..79] } else { line };
             state.m_menu.drawer_x =
-                (SCREENWIDTH / 2 as i32 - M_StringWidth(state, line) / 2 as i32) as i16;
+                (SCREENWIDTH / 2_i32 - M_StringWidth(state, line) / 2_i32) as i16;
             M_WriteText(
                 state,
                 state.m_menu.drawer_x as i32,
@@ -1713,7 +1707,7 @@ pub unsafe fn M_Drawer(state: &mut GameState) {
     state.m_menu.drawer_x = state.m_menu.current().x;
     state.m_menu.drawer_y = state.m_menu.current().y;
     max = state.m_menu.current().numitems as u32;
-    i = 0 as u32;
+    i = 0_u32;
     while i < max {
         let item_name = state.m_menu.current().items[i as usize].name;
         if !item_name.is_empty() {
@@ -1735,7 +1729,7 @@ pub unsafe fn M_Drawer(state: &mut GameState) {
     V_DrawPatchDirect(
         state,
         state.m_menu.drawer_x as i32 + SKULLXOFF,
-        state.m_menu.current().y as i32 - 5 as i32 + state.m_menu.itemOn as i32 * LINEHEIGHT,
+        state.m_menu.current().y as i32 - 5_i32 + state.m_menu.itemOn as i32 * LINEHEIGHT,
         __wcache2231_1,
     );
 }
@@ -1748,28 +1742,28 @@ pub fn M_SetupNextMenu(state: &mut GameState, menudef: MenuId) {
 }
 pub fn M_Ticker(state: &mut GameState) {
     state.m_menu.skullAnimCounter -= 1;
-    if state.m_menu.skullAnimCounter as i32 <= 0 as i32 {
-        state.m_menu.whichSkull = (state.m_menu.whichSkull as i32 ^ 1 as i32) as i16;
-        state.m_menu.skullAnimCounter = 8 as i16;
+    if state.m_menu.skullAnimCounter as i32 <= 0_i32 {
+        state.m_menu.whichSkull = (state.m_menu.whichSkull as i32 ^ 1_i32) as i16;
+        state.m_menu.skullAnimCounter = 8_i16;
     }
 }
 pub unsafe fn M_Init(state: &mut GameState) {
     state.m_menu.currentMenu = MenuId::Main;
     state.m_menu.menuactive = false;
     state.m_menu.itemOn = state.m_menu.current().lastOn;
-    state.m_menu.whichSkull = 0 as i16;
-    state.m_menu.skullAnimCounter = 10 as i16;
-    state.m_menu.screenSize = state.m_menu.screenblocks - 3 as i32;
-    state.m_menu.messageToPrint = 0 as i32;
+    state.m_menu.whichSkull = 0_i16;
+    state.m_menu.skullAnimCounter = 10_i16;
+    state.m_menu.screenSize = state.m_menu.screenblocks - 3_i32;
+    state.m_menu.messageToPrint = 0_i32;
     state.m_menu.messageString = String::new();
     state.m_menu.messageLastMenuActive = state.m_menu.menuactive as i32;
-    state.m_menu.quickSaveSlot = -(1 as i32);
+    state.m_menu.quickSaveSlot = -1_i32;
     match state.doomstat.gamemode as u32 {
         2 => {
             state.m_menu.defs.MainDef.items[readthis as usize] =
-                state.m_menu.defs.MainDef.items[quitdoom as usize].clone();
+                state.m_menu.defs.MainDef.items[quitdoom as usize];
             state.m_menu.defs.MainDef.numitems -= 1;
-            state.m_menu.defs.MainDef.y = (state.m_menu.defs.MainDef.y as i32 + 8 as i32) as i16;
+            state.m_menu.defs.MainDef.y = (state.m_menu.defs.MainDef.y as i32 + 8_i32) as i16;
             state.m_menu.defs.NewDef.prevMenu = Some(MenuId::Main);
         }
         0 => {}

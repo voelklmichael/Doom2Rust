@@ -24,7 +24,7 @@ unsafe fn GetFileNumber(state: &mut WChecksumState, handle: &'static wad_file_t)
     let handle = handle as *const wad_file_t as *mut wad_file_t;
     let mut i: i32 = 0;
     let mut result: i32 = 0;
-    i = 0 as i32;
+    i = 0_i32;
     while i < state.num_open_wadfiles {
         if *state.open_wadfiles.offset(i as isize) == handle {
             return i;
@@ -44,11 +44,11 @@ unsafe fn GetFileNumber(state: &mut WChecksumState, handle: &'static wad_file_t)
             new_layout.size(),
         )
     } as *mut *mut wad_file_t;
-    let ref mut fresh0 = *state.open_wadfiles.offset(state.num_open_wadfiles as isize);
+    let fresh0 = &mut (*state.open_wadfiles.offset(state.num_open_wadfiles as isize));
     *fresh0 = handle;
     result = state.num_open_wadfiles;
     state.num_open_wadfiles += 1;
-    return result;
+    result
 }
 unsafe fn ChecksumAddLump(
     state: &mut WChecksumState,
@@ -76,8 +76,8 @@ pub unsafe fn W_Checksum(state: &mut GameState, mut digest: *mut byte) {
     };
     let mut i: u32 = 0;
     SHA1_Init(&raw mut sha1_context);
-    state.w_checksum.num_open_wadfiles = 0 as i32;
-    i = 0 as u32;
+    state.w_checksum.num_open_wadfiles = 0_i32;
+    i = 0_u32;
     while i < state.w_wad.numlumps {
         let lump = state.w_wad.lumpinfo.as_mut_ptr().offset(i as isize);
         ChecksumAddLump(&mut state.w_checksum, &raw mut sha1_context, lump);

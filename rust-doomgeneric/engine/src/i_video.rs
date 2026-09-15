@@ -144,15 +144,15 @@ pub unsafe fn cmap_to_rgb565(
     let mut r: uint16_t = 0;
     let mut g: uint16_t = 0;
     let mut b: uint16_t = 0;
-    i = 0 as i32;
+    i = 0_i32;
     while i < in_pixels {
         c = state.i_video.colors[*in_0 as usize];
-        r = (((c.r() as i32 >> 3 as i32) as uint16_t as i32) << 11 as i32) as uint16_t;
-        g = (((c.g() as i32 >> 2 as i32) as uint16_t as i32) << 5 as i32) as uint16_t;
-        b = (((c.b() as i32 >> 3 as i32) as uint16_t as i32) << 0 as i32) as uint16_t;
+        r = (((c.r() as i32 >> 3_i32) as uint16_t as i32) << 11_i32) as uint16_t;
+        g = (((c.g() as i32 >> 2_i32) as uint16_t as i32) << 5_i32) as uint16_t;
+        b = (((c.b() as i32 >> 3_i32) as uint16_t as i32) << 0_i32) as uint16_t;
         *out = (r as i32 | g as i32 | b as i32) as uint16_t;
         in_0 = in_0.offset(1);
-        j = 0 as i32;
+        j = 0_i32;
         while j < state.i_video.fb_scaling {
             out = out.offset(1);
             j += 1;
@@ -170,27 +170,27 @@ pub unsafe fn cmap_to_fb(
     let mut k: i32 = 0;
     let mut c: color = color { b_g_r_a: [0; 4] };
     let mut pix: uint32_t = 0;
-    i = 0 as i32;
+    i = 0_i32;
     while i < in_pixels {
         c = state.i_video.colors[*in_0 as usize];
         if state.i_video.s_Fb.bits_per_pixel == 16 as uint32_t {
-            let mut p: uint16_t = ((c.r() as i32 & 0xf8 as i32) << 8 as i32
-                | (c.g() as i32 & 0xfc as i32) << 3 as i32
-                | c.b() as i32 >> 3 as i32) as uint16_t;
-            k = 0 as i32;
+            let mut p: uint16_t = ((c.r() as i32 & 0xf8_i32) << 8_i32
+                | (c.g() as i32 & 0xfc_i32) << 3_i32
+                | c.b() as i32 >> 3_i32) as uint16_t;
+            k = 0_i32;
             while k < state.i_video.fb_scaling {
                 *(out as *mut uint16_t) = p;
-                out = out.offset(2 as i32 as isize);
+                out = out.offset(2_i32 as isize);
                 k += 1;
             }
         } else if state.i_video.s_Fb.bits_per_pixel == 32 as uint32_t {
             pix = ((c.r() as i32) << state.i_video.s_Fb.red.offset
                 | (c.g() as i32) << state.i_video.s_Fb.green.offset
                 | (c.b() as i32) << state.i_video.s_Fb.blue.offset) as uint32_t;
-            k = 0 as i32;
+            k = 0_i32;
             while k < state.i_video.fb_scaling {
                 *(out as *mut uint32_t) = pix;
-                out = out.offset(4 as i32 as isize);
+                out = out.offset(4_i32 as isize);
                 k += 1;
             }
         } else {
@@ -209,16 +209,16 @@ pub unsafe fn I_InitGraphics(state: &mut GameState) {
     let mut mode: &str = "";
     memset(
         &raw mut state.i_video.s_Fb as *mut ::core::ffi::c_void,
-        0 as i32,
+        0_i32,
         ::core::mem::size_of::<FB_ScreenInfo>() as size_t,
     );
     state.i_video.s_Fb.xres = DOOMGENERIC_RESX as uint32_t;
     state.i_video.s_Fb.yres = DOOMGENERIC_RESY as uint32_t;
     state.i_video.s_Fb.xres_virtual = state.i_video.s_Fb.xres;
     state.i_video.s_Fb.yres_virtual = state.i_video.s_Fb.yres;
-    gfxmodeparm = M_CheckParmWithArgs(state, "-gfxmode", 1 as i32);
+    gfxmodeparm = M_CheckParmWithArgs(state, "-gfxmode", 1_i32);
     if gfxmodeparm != 0 {
-        mode = state.m_argv.myargv[(gfxmodeparm + 1 as i32) as usize]
+        mode = state.m_argv.myargv[(gfxmodeparm + 1_i32) as usize]
             .to_str()
             .unwrap();
     } else {
@@ -270,9 +270,9 @@ pub unsafe fn I_InitGraphics(state: &mut GameState) {
         "I_InitGraphics: DOOM screen size: w x h: {} x {}",
         SCREENWIDTH, SCREENHEIGHT,
     );
-    i = M_CheckParmWithArgs(state, "-scaling", 1 as i32);
-    if i > 0 as i32 {
-        i = M_ArgvAtoi(&state.m_argv.myargv[(i + 1 as i32) as usize]);
+    i = M_CheckParmWithArgs(state, "-scaling", 1_i32);
+    if i > 0_i32 {
+        i = M_ArgvAtoi(&state.m_argv.myargv[(i + 1_i32) as usize]);
         state.i_video.fb_scaling = i;
         println!(
             "I_InitGraphics: Scaling factor: {}",
@@ -339,12 +339,12 @@ pub unsafe fn I_FinishUpdate(state: &mut GameState) {
     y = SCREENHEIGHT;
     loop {
         let fresh3 = y;
-        y = y - 1;
-        if !(fresh3 != 0) {
+        y -= 1;
+        if fresh3 == 0 {
             break;
         }
         let mut i: i32 = 0;
-        i = 0 as i32;
+        i = 0_i32;
         while i < state.i_video.fb_scaling {
             line_out = line_out.offset(x_offset as isize);
             cmap_to_fb(
@@ -379,8 +379,8 @@ pub unsafe fn I_ReadScreen(state: &mut GameState, mut scr: *mut byte) {
 }
 pub unsafe fn I_SetPalette(state: &mut GameState, mut palette: *mut byte) {
     let mut i: i32 = 0;
-    i = 0 as i32;
-    while i < 256 as i32 {
+    i = 0_i32;
+    while i < 256_i32 {
         state.i_video.colors[i as usize].set_a(0 as uint32_t as uint32_t);
         let mut rhs = {
             let fresh0 = palette;
@@ -410,13 +410,13 @@ pub fn I_GetPaletteIndex(mut r: i32, mut g: i32, mut b: i32) -> i32 {
     let mut i: i32 = 0;
     let mut color: col_t = col_t { r: 0, g: 0, b: 0 };
     println!("I_GetPaletteIndex");
-    best = 0 as i32;
+    best = 0_i32;
     best_diff = INT_MAX;
-    i = 0 as i32;
-    while i < 256 as i32 {
-        color.r = ((0xf800 as i32 & rgb565_palette[i as usize] as i32) >> 11 as i32) as byte;
-        color.g = ((0x7e0 as i32 & rgb565_palette[i as usize] as i32) >> 5 as i32) as byte;
-        color.b = (0x1f as i32 & rgb565_palette[i as usize] as i32) as byte;
+    i = 0_i32;
+    while i < 256_i32 {
+        color.r = ((0xf800_i32 & rgb565_palette[i as usize] as i32) >> 11_i32) as byte;
+        color.g = ((0x7e0_i32 & rgb565_palette[i as usize] as i32) >> 5_i32) as byte;
+        color.b = (0x1f_i32 & rgb565_palette[i as usize] as i32) as byte;
         diff = (r - color.r as i32) * (r - color.r as i32)
             + (g - color.g as i32) * (g - color.g as i32)
             + (b - color.b as i32) * (b - color.b as i32);
@@ -424,12 +424,12 @@ pub fn I_GetPaletteIndex(mut r: i32, mut g: i32, mut b: i32) -> i32 {
             best = i;
             best_diff = diff;
         }
-        if diff == 0 as i32 {
+        if diff == 0_i32 {
             break;
         }
         i += 1;
     }
-    return best;
+    best
 }
 pub fn I_SetWindowTitle(state: &mut GameState, title: &str) {
     state.platform.set_window_title(title);

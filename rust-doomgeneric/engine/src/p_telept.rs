@@ -33,13 +33,13 @@ pub unsafe fn EV_Teleport(
     let mut oldy: fixed_t = 0;
     let mut oldz: fixed_t = 0;
     if (*thing).flags & MF_MISSILE as i32 != 0 {
-        return 0 as i32;
+        return 0_i32;
     }
-    if side == 1 as i32 {
-        return 0 as i32;
+    if side == 1_i32 {
+        return 0_i32;
     }
     tag = state.p_setup.line(line).tag as i32;
-    i = 0 as i32;
+    i = 0_i32;
     while i < state.p_setup.numsectors {
         if state.p_setup.sectors[i as usize].tag as i32 == tag {
             let mut cursor = state.p_tick.head();
@@ -47,14 +47,14 @@ pub unsafe fn EV_Teleport(
                 thinker = state.p_tick.raw(id);
                 if matches!((*thinker).function, ThinkerFn::Mobj(_)) {
                     m = thinker as *mut mobj_t;
-                    if !((*m).type_0 as u32 != MobjType::MT_TELEPORTMAN as i32 as u32) {
+                    if (*m).type_0 as u32 == MobjType::MT_TELEPORTMAN as i32 as u32 {
                         sector = state.p_setup.subsectors[(*m).subsector.0 as usize].sector;
-                        if !(sector.0 != i as u32) {
+                        if sector.0 == i as u32 {
                             oldx = (*thing).x;
                             oldy = (*thing).y;
                             oldz = (*thing).z;
                             if !P_TeleportMove(state, thing, (*m).x, (*m).y) {
-                                return 0 as i32;
+                                return 0_i32;
                             }
                             if state.doomstat.gameversion != GameVersion::r#final {
                                 (*thing).z = (*thing).floorz;
@@ -65,7 +65,7 @@ pub unsafe fn EV_Teleport(
                             }
                             fog = P_SpawnMobj(state, oldx, oldy, oldz, MobjType::MT_TFOG);
                             S_StartSound(state, SoundOrigin::Mobj((*(fog)).id), sfx_telept as i32);
-                            an = ((*m).angle >> ANGLETOFINESHIFT) as u32;
+                            an = ((*m).angle >> ANGLETOFINESHIFT);
                             fog = P_SpawnMobj(
                                 state,
                                 (*m).x + 20 as fixed_t * finecosine[an as isize],
@@ -75,13 +75,13 @@ pub unsafe fn EV_Teleport(
                             );
                             S_StartSound(state, SoundOrigin::Mobj((*(fog)).id), sfx_telept as i32);
                             if (*thing).player.is_some() {
-                                (*thing).reactiontime = 18 as i32;
+                                (*thing).reactiontime = 18_i32;
                             }
                             (*thing).angle = (*m).angle;
-                            (*thing).momz = 0 as i32 as fixed_t;
+                            (*thing).momz = 0_i32 as fixed_t;
                             (*thing).momy = (*thing).momz;
                             (*thing).momx = (*thing).momy;
-                            return 1 as i32;
+                            return 1_i32;
                         }
                     }
                 }
@@ -90,5 +90,5 @@ pub unsafe fn EV_Teleport(
         }
         i += 1;
     }
-    return 0 as i32;
+    return 0_i32;
 }

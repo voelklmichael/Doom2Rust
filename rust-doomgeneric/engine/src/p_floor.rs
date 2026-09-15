@@ -159,7 +159,7 @@ pub unsafe fn T_MovePlane(
         },
         _ => {}
     }
-    return ResultE::ok;
+    ResultE::ok
 }
 pub unsafe fn T_MoveFloor(state: &mut GameState, mut floor: *mut floormove_t) {
     let mut res: ResultE = ResultE::ok;
@@ -170,15 +170,15 @@ pub unsafe fn T_MoveFloor(state: &mut GameState, mut floor: *mut floormove_t) {
         (*floor).speed,
         (*floor).floordestheight,
         (*floor).crush,
-        0 as i32,
+        0_i32,
         (*floor).direction,
     );
-    if state.p_tick.leveltime & 7 as i32 == 0 {
+    if state.p_tick.leveltime & 7_i32 == 0 {
         S_StartSound(state, SoundOrigin::Sector((*floor).sector), sfx_stnmov as i32);
     }
     if res == ResultE::pastdest {
         (*sec).specialdata = None;
-        if (*floor).direction == 1 as i32 {
+        if (*floor).direction == 1_i32 {
             match (*floor).type_0 {
                 FloorE::donutRaise => {
                     (*sec).special = (*floor).newspecial as i16;
@@ -186,7 +186,7 @@ pub unsafe fn T_MoveFloor(state: &mut GameState, mut floor: *mut floormove_t) {
                 }
                 _ => {}
             }
-        } else if (*floor).direction == -(1 as i32) {
+        } else if (*floor).direction == -1_i32 {
             match (*floor).type_0 {
                 FloorE::lowerAndChange => {
                     (*sec).special = (*floor).newspecial as i16;
@@ -209,18 +209,18 @@ pub unsafe fn EV_DoFloor(
     let mut i: i32 = 0;
     let mut sec: *mut sector_t = ::core::ptr::null_mut::<sector_t>();
     let mut floor: *mut floormove_t = ::core::ptr::null_mut::<floormove_t>();
-    secnum = -(1 as i32);
-    rtn = 0 as i32;
+    secnum = -1_i32;
+    rtn = 0_i32;
     loop {
         secnum = P_FindSectorFromLineTag(state, line, secnum);
-        if !(secnum >= 0 as i32) {
+        if !(secnum >= 0_i32) {
             break;
         }
         sec = state.p_setup.sector_mut(SectorId(secnum as u32));
         if (*sec).specialdata.is_some() {
             continue;
         }
-        rtn = 1 as i32;
+        rtn = 1_i32;
         floor = state.p_spec.spawn_floor(floormove_t::default());
         let floor_id = P_AddThinker(state, &raw mut (*floor).thinker, ThinkerKind::Floor);
         (*sec).specialdata = Some(SectorSpecial::Floor(floor_id));
@@ -230,26 +230,26 @@ pub unsafe fn EV_DoFloor(
         let mut current_block_84: u64;
         match floortype {
             FloorE::lowerFloor => {
-                (*floor).direction = -(1 as i32);
+                (*floor).direction = -1_i32;
                 (*floor).sector = SectorId(secnum as u32);
                 (*floor).speed = FLOORSPEED as fixed_t;
                 (*floor).floordestheight = P_FindHighestFloorSurrounding(state, sec);
                 current_block_84 = 15514718523126015390;
             }
             FloorE::lowerFloorToLowest => {
-                (*floor).direction = -(1 as i32);
+                (*floor).direction = -1_i32;
                 (*floor).sector = SectorId(secnum as u32);
                 (*floor).speed = FLOORSPEED as fixed_t;
                 (*floor).floordestheight = P_FindLowestFloorSurrounding(state, sec);
                 current_block_84 = 15514718523126015390;
             }
             FloorE::turboLower => {
-                (*floor).direction = -(1 as i32);
+                (*floor).direction = -1_i32;
                 (*floor).sector = SectorId(secnum as u32);
-                (*floor).speed = (FLOORSPEED * 4 as i32) as fixed_t;
+                (*floor).speed = (FLOORSPEED * 4_i32) as fixed_t;
                 (*floor).floordestheight = P_FindHighestFloorSurrounding(state, sec);
                 if (*floor).floordestheight != (*sec).floorheight {
-                    (*floor).floordestheight += 8 as i32 * FRACUNIT;
+                    (*floor).floordestheight += 8_i32 * FRACUNIT;
                 }
                 current_block_84 = 15514718523126015390;
             }
@@ -261,97 +261,95 @@ pub unsafe fn EV_DoFloor(
                 current_block_84 = 7690836263840410806;
             }
             FloorE::raiseFloorTurbo => {
-                (*floor).direction = 1 as i32;
+                (*floor).direction = 1_i32;
                 (*floor).sector = SectorId(secnum as u32);
-                (*floor).speed = (FLOORSPEED * 4 as i32) as fixed_t;
-                (*floor).floordestheight = P_FindNextHighestFloor(state, sec, (*sec).floorheight as i32);
+                (*floor).speed = (FLOORSPEED * 4_i32) as fixed_t;
+                (*floor).floordestheight = P_FindNextHighestFloor(state, sec, (*sec).floorheight);
                 current_block_84 = 15514718523126015390;
             }
             FloorE::raiseFloorToNearest => {
-                (*floor).direction = 1 as i32;
+                (*floor).direction = 1_i32;
                 (*floor).sector = SectorId(secnum as u32);
                 (*floor).speed = FLOORSPEED as fixed_t;
-                (*floor).floordestheight = P_FindNextHighestFloor(state, sec, (*sec).floorheight as i32);
+                (*floor).floordestheight = P_FindNextHighestFloor(state, sec, (*sec).floorheight);
                 current_block_84 = 15514718523126015390;
             }
             FloorE::raiseFloor24 => {
-                (*floor).direction = 1 as i32;
+                (*floor).direction = 1_i32;
                 (*floor).sector = SectorId(secnum as u32);
                 (*floor).speed = FLOORSPEED as fixed_t;
                 (*floor).floordestheight =
-                    ((*sec).floorheight as i32 + 24 as i32 * FRACUNIT) as fixed_t;
+                    ((*sec).floorheight + 24_i32 * FRACUNIT) as fixed_t;
                 current_block_84 = 15514718523126015390;
             }
             FloorE::raiseFloor512 => {
-                (*floor).direction = 1 as i32;
+                (*floor).direction = 1_i32;
                 (*floor).sector = SectorId(secnum as u32);
                 (*floor).speed = FLOORSPEED as fixed_t;
                 (*floor).floordestheight =
-                    ((*sec).floorheight as i32 + 512 as i32 * FRACUNIT) as fixed_t;
+                    ((*sec).floorheight + 512_i32 * FRACUNIT) as fixed_t;
                 current_block_84 = 15514718523126015390;
             }
             FloorE::raiseFloor24AndChange => {
-                (*floor).direction = 1 as i32;
+                (*floor).direction = 1_i32;
                 (*floor).sector = SectorId(secnum as u32);
                 (*floor).speed = FLOORSPEED as fixed_t;
                 (*floor).floordestheight =
-                    ((*sec).floorheight as i32 + 24 as i32 * FRACUNIT) as fixed_t;
+                    ((*sec).floorheight + 24_i32 * FRACUNIT) as fixed_t;
                 let fsec = state.p_setup.sector_mut(state.p_setup.line(line).frontsector.unwrap());
-                (*sec).floorpic = (*fsec).floorpic;
-                (*sec).special = (*fsec).special;
+                (*sec).floorpic = fsec.floorpic;
+                (*sec).special = fsec.special;
                 current_block_84 = 15514718523126015390;
             }
             FloorE::raiseToTexture => {
                 let mut minsize: i32 = INT_MAX;
                 let mut side: *mut side_t = ::core::ptr::null_mut::<side_t>();
-                (*floor).direction = 1 as i32;
+                (*floor).direction = 1_i32;
                 (*floor).sector = SectorId(secnum as u32);
                 (*floor).speed = FLOORSPEED as fixed_t;
-                i = 0 as i32;
+                i = 0_i32;
                 while i < (*sec).linecount {
                     if twoSided(state, secnum, i) != 0 {
-                        side = getSide(state, secnum, i, 0 as i32);
-                        if (*side).bottomtexture as i32 >= 0 as i32 {
+                        side = getSide(state, secnum, i, 0_i32);
+                        if (*side).bottomtexture as i32 >= 0_i32 {
                             if state.r_data.textureheight[(*side).bottomtexture as usize] < minsize
                             {
                                 minsize =
-                                    state.r_data.textureheight[(*side).bottomtexture as usize]
-                                        as i32;
+                                    state.r_data.textureheight[(*side).bottomtexture as usize];
                             }
                         }
-                        side = getSide(state, secnum, i, 1 as i32);
-                        if (*side).bottomtexture as i32 >= 0 as i32 {
+                        side = getSide(state, secnum, i, 1_i32);
+                        if (*side).bottomtexture as i32 >= 0_i32 {
                             if state.r_data.textureheight[(*side).bottomtexture as usize] < minsize
                             {
                                 minsize =
-                                    state.r_data.textureheight[(*side).bottomtexture as usize]
-                                        as i32;
+                                    state.r_data.textureheight[(*side).bottomtexture as usize];
                             }
                         }
                     }
                     i += 1;
                 }
-                (*floor).floordestheight = ((*sec).floorheight as i32 + minsize) as fixed_t;
+                (*floor).floordestheight = ((*sec).floorheight + minsize) as fixed_t;
                 current_block_84 = 15514718523126015390;
             }
             FloorE::lowerAndChange => {
-                (*floor).direction = -(1 as i32);
+                (*floor).direction = -1_i32;
                 (*floor).sector = SectorId(secnum as u32);
                 (*floor).speed = FLOORSPEED as fixed_t;
                 (*floor).floordestheight = P_FindLowestFloorSurrounding(state, sec);
                 (*floor).texture = (*sec).floorpic;
-                i = 0 as i32;
+                i = 0_i32;
                 while i < (*sec).linecount {
                     if twoSided(state, secnum, i) != 0 {
-                        if (*getSide(state, secnum, i, 0 as i32)).sector.0 == secnum as u32 {
-                            sec = getSector(state, secnum, i, 1 as i32);
+                        if (*getSide(state, secnum, i, 0_i32)).sector.0 == secnum as u32 {
+                            sec = getSector(state, secnum, i, 1_i32);
                             if (*sec).floorheight == (*floor).floordestheight {
                                 (*floor).texture = (*sec).floorpic;
                                 (*floor).newspecial = (*sec).special as i32;
                                 break;
                             }
                         } else {
-                            sec = getSector(state, secnum, i, 0 as i32);
+                            sec = getSector(state, secnum, i, 0_i32);
                             if (*sec).floorheight == (*floor).floordestheight {
                                 (*floor).texture = (*sec).floorpic;
                                 (*floor).newspecial = (*sec).special as i32;
@@ -369,21 +367,21 @@ pub unsafe fn EV_DoFloor(
         }
         match current_block_84 {
             7690836263840410806 => {
-                (*floor).direction = 1 as i32;
+                (*floor).direction = 1_i32;
                 (*floor).sector = SectorId(secnum as u32);
                 (*floor).speed = FLOORSPEED as fixed_t;
                 (*floor).floordestheight = P_FindLowestCeilingSurrounding(state, sec);
                 if (*floor).floordestheight > (*sec).ceilingheight {
                     (*floor).floordestheight = (*sec).ceilingheight;
                 }
-                (*floor).floordestheight -= 8 as i32
+                (*floor).floordestheight -= 8_i32
                     * FRACUNIT
                     * (floortype == FloorE::raiseFloorCrush) as i32;
             }
             _ => {}
         }
     }
-    return rtn;
+    rtn
 }
 pub unsafe fn EV_BuildStairs(
     state: &mut GameState,
@@ -402,52 +400,52 @@ pub unsafe fn EV_BuildStairs(
     let mut floor: *mut floormove_t = ::core::ptr::null_mut::<floormove_t>();
     let mut stairsize: fixed_t = 0 as fixed_t;
     let mut speed: fixed_t = 0 as fixed_t;
-    secnum = -(1 as i32);
-    rtn = 0 as i32;
+    secnum = -1_i32;
+    rtn = 0_i32;
     loop {
         secnum = P_FindSectorFromLineTag(state, line, secnum);
-        if !(secnum >= 0 as i32) {
+        if !(secnum >= 0_i32) {
             break;
         }
         sec = state.p_setup.sector_mut(SectorId(secnum as u32));
         if (*sec).specialdata.is_some() {
             continue;
         }
-        rtn = 1 as i32;
+        rtn = 1_i32;
         floor = state.p_spec.spawn_floor(floormove_t::default());
         let floor_id = P_AddThinker(state, &raw mut (*floor).thinker, ThinkerKind::Floor);
         (*sec).specialdata = Some(SectorSpecial::Floor(floor_id));
         (*floor).thinker.function = ThinkerFn::Floor(T_MoveFloor);
-        (*floor).direction = 1 as i32;
+        (*floor).direction = 1_i32;
         (*floor).sector = SectorId(secnum as u32);
         match type_0 {
             StairE::build8 => {
-                speed = (FLOORSPEED / 4 as i32) as fixed_t;
-                stairsize = (8 as i32 * FRACUNIT) as fixed_t;
+                speed = (FLOORSPEED / 4_i32) as fixed_t;
+                stairsize = (8_i32 * FRACUNIT) as fixed_t;
             }
             StairE::turbo16 => {
-                speed = (FLOORSPEED * 4 as i32) as fixed_t;
-                stairsize = (16 as i32 * FRACUNIT) as fixed_t;
+                speed = (FLOORSPEED * 4_i32) as fixed_t;
+                stairsize = (16_i32 * FRACUNIT) as fixed_t;
             }
         }
         (*floor).speed = speed;
-        height = ((*sec).floorheight + stairsize) as i32;
+        height = ((*sec).floorheight + stairsize);
         (*floor).floordestheight = height as fixed_t;
         texture = (*sec).floorpic as i32;
         loop {
-            ok_0 = 0 as i32;
-            i = 0 as i32;
+            ok_0 = 0_i32;
+            i = 0_i32;
             while i < (*sec).linecount {
                 let iline = state.p_setup.line((*sec).lines[i as usize]);
-                if !(iline.flags as i32 & ML_TWOSIDED == 0) {
+                if iline.flags as i32 & ML_TWOSIDED != 0 {
                     let front_id = iline.frontsector.unwrap();
                     newsecnum = front_id.0 as i32;
-                    if !(secnum != newsecnum) {
+                    if secnum == newsecnum {
                         let back_id = iline.backsector.unwrap();
                         newsecnum = back_id.0 as i32;
                         tsec = state.p_setup.sector_mut(back_id);
-                        if !((*tsec).floorpic as i32 != texture) {
-                            height += stairsize as i32;
+                        if (*tsec).floorpic as i32 == texture {
+                            height += stairsize;
                             if (*tsec).specialdata.is_none() {
                                 sec = tsec;
                                 secnum = newsecnum;
@@ -455,11 +453,11 @@ pub unsafe fn EV_BuildStairs(
                                 let floor_id = P_AddThinker(state, &raw mut (*floor).thinker, ThinkerKind::Floor);
                                 (*sec).specialdata = Some(SectorSpecial::Floor(floor_id));
                                 (*floor).thinker.function = ThinkerFn::Floor(T_MoveFloor);
-                                (*floor).direction = 1 as i32;
+                                (*floor).direction = 1_i32;
                                 (*floor).sector = SectorId(secnum as u32);
                                 (*floor).speed = speed;
                                 (*floor).floordestheight = height as fixed_t;
-                                ok_0 = 1 as i32;
+                                ok_0 = 1_i32;
                                 break;
                             }
                         }
@@ -467,10 +465,10 @@ pub unsafe fn EV_BuildStairs(
                 }
                 i += 1;
             }
-            if !(ok_0 != 0) {
+            if ok_0 == 0 {
                 break;
             }
         }
     }
-    return rtn;
+    rtn
 }

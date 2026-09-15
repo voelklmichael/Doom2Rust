@@ -27,8 +27,8 @@ impl IJoystickState {
             joystick_strafe_axis: -1,
             joystick_strafe_invert: 0,
             joystick_physical_buttons: [
-                0 as i32, 1 as i32, 2 as i32, 3 as i32, 4 as i32, 5 as i32, 6 as i32, 7 as i32,
-                8 as i32, 9 as i32,
+                0_i32, 1_i32, 2_i32, 3_i32, 4_i32, 5_i32, 6_i32, 7_i32,
+                8_i32, 9_i32,
             ],
         }
     }
@@ -76,7 +76,7 @@ pub fn I_BindJoystickVariables(state: &mut GameState) {
         "joystick_strafe_invert",
         &mut state.i_joystick.joystick_strafe_invert,
     );
-    i = 0 as i32;
+    i = 0_i32;
     while i < NUM_VIRTUAL_BUTTONS {
         let name = format!("joystick_physical_button{}", i);
         M_BindVariable_int(

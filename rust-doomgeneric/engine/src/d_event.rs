@@ -68,8 +68,8 @@ pub fn D_PopEvent(state: &mut DEventState) -> Option<event_t> {
     if state.eventtail == state.eventhead {
         return None;
     }
-    let event = state.events[state.eventtail].clone();
+    let event = state.events[state.eventtail];
 
     state.eventtail = (state.eventtail + 1) % MAXEVENTS;
-    return Some(event);
+    Some(event)
 }

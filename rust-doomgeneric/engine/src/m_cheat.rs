@@ -16,17 +16,17 @@ fn cheat_sequence_len(sequence: &[::core::ffi::c_char; 25]) -> size_t {
     sequence.iter().position(|&c| c == 0).unwrap_or(sequence.len())
 }
 pub unsafe fn cht_CheckCheat(mut cht: *mut cheatseq_t, mut key: ::core::ffi::c_char) -> i32 {
-    if (*cht).parameter_chars > 0 as i32 && cheat_sequence_len(&(*cht).sequence) < (*cht).sequence_len
+    if (*cht).parameter_chars > 0_i32 && cheat_sequence_len(&(*cht).sequence) < (*cht).sequence_len
     {
         return false_0;
     }
     if (*cht).chars_read < cheat_sequence_len(&(*cht).sequence) {
-        if key as i32 == (*cht).sequence[(*cht).chars_read as usize] as i32 {
+        if key as i32 == (*cht).sequence[(*cht).chars_read] as i32 {
             (*cht).chars_read = (*cht).chars_read.wrapping_add(1);
         } else {
             (*cht).chars_read = 0 as size_t;
         }
-        (*cht).param_chars_read = 0 as i32;
+        (*cht).param_chars_read = 0_i32;
     } else if (*cht).param_chars_read < (*cht).parameter_chars {
         (*cht).parameter_buf[(*cht).param_chars_read as usize] = key;
         (*cht).param_chars_read += 1;
@@ -34,11 +34,11 @@ pub unsafe fn cht_CheckCheat(mut cht: *mut cheatseq_t, mut key: ::core::ffi::c_c
     if (*cht).chars_read >= cheat_sequence_len(&(*cht).sequence)
         && (*cht).param_chars_read >= (*cht).parameter_chars
     {
-        (*cht).param_chars_read = 0 as i32;
+        (*cht).param_chars_read = 0_i32;
         (*cht).chars_read = (*cht).param_chars_read as size_t;
         return true_0;
     }
-    return false_0;
+    false_0
 }
 pub unsafe fn cht_GetParam(mut cht: *mut cheatseq_t, mut buffer: *mut ::core::ffi::c_char) {
     memcpy(

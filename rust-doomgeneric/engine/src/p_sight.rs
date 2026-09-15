@@ -47,46 +47,46 @@ pub unsafe fn P_DivlineSide(mut x: fixed_t, mut y: fixed_t, mut node: *mut divli
     let mut right: fixed_t = 0;
     if (*node).dx == 0 {
         if x == (*node).x {
-            return 2 as i32;
+            return 2_i32;
         }
         if x <= (*node).x {
-            return ((*node).dy > 0 as i32) as i32;
+            return ((*node).dy > 0_i32) as i32;
         }
-        return ((*node).dy < 0 as i32) as i32;
+        return ((*node).dy < 0_i32) as i32;
     }
     if (*node).dy == 0 {
         if x == (*node).y {
-            return 2 as i32;
+            return 2_i32;
         }
         if y <= (*node).y {
-            return ((*node).dx < 0 as i32) as i32;
+            return ((*node).dx < 0_i32) as i32;
         }
-        return ((*node).dx > 0 as i32) as i32;
+        return ((*node).dx > 0_i32) as i32;
     }
     dx = x - (*node).x;
     dy = y - (*node).y;
     left = ((*node).dy >> FRACBITS) * (dx >> FRACBITS);
     right = (dy >> FRACBITS) * ((*node).dx >> FRACBITS);
     if right < left {
-        return 0 as i32;
+        return 0_i32;
     }
     if left == right {
-        return 2 as i32;
+        return 2_i32;
     }
-    return 1 as i32;
+    return 1_i32;
 }
 pub unsafe fn P_InterceptVector2(mut v2: *mut divline_t, mut v1: *mut divline_t) -> fixed_t {
     let mut frac: fixed_t = 0;
     let mut num: fixed_t = 0;
     let mut den: fixed_t = 0;
-    den = FixedMul((*v1).dy >> 8 as i32, (*v2).dx) - FixedMul((*v1).dx >> 8 as i32, (*v2).dy);
-    if den == 0 as i32 {
+    den = FixedMul((*v1).dy >> 8_i32, (*v2).dx) - FixedMul((*v1).dx >> 8_i32, (*v2).dy);
+    if den == 0_i32 {
         return 0 as fixed_t;
     }
-    num = FixedMul((*v1).x - (*v2).x >> 8 as i32, (*v1).dy)
-        + FixedMul((*v2).y - (*v1).y >> 8 as i32, (*v1).dx);
+    num = FixedMul((*v1).x - (*v2).x >> 8_i32, (*v1).dy)
+        + FixedMul((*v2).y - (*v1).y >> 8_i32, (*v1).dx);
     frac = FixedDiv(num, den);
-    return frac;
+    frac
 }
 pub unsafe fn P_CrossSubsector(state: &mut GameState, mut num: i32) -> bool {
     let mut seg: *mut seg_t = ::core::ptr::null_mut::<seg_t>();
@@ -117,13 +117,13 @@ pub unsafe fn P_CrossSubsector(state: &mut GameState, mut num: i32) -> bool {
     seg = state.p_setup.segs.as_mut_ptr().offset(sub.firstline as isize);
     while count != 0 {
         line = state.p_setup.line_mut((*seg).linedef);
-        if !((*line).validcount == state.r_main.validcount) {
+        if (*line).validcount != state.r_main.validcount {
             (*line).validcount = state.r_main.validcount;
             let v1 = state.p_setup.vertex((*line).v1);
             let v2 = state.p_setup.vertex((*line).v2);
             s1 = P_DivlineSide(v1.x, v1.y, &raw mut state.p_sight.strace);
             s2 = P_DivlineSide(v2.x, v2.y, &raw mut state.p_sight.strace);
-            if !(s1 == s2) {
+            if s1 != s2 {
                 divl.x = v1.x;
                 divl.y = v1.y;
                 divl.dx = v2.x - v1.x;
@@ -134,7 +134,7 @@ pub unsafe fn P_CrossSubsector(state: &mut GameState, mut num: i32) -> bool {
                     &raw mut divl,
                 );
                 s2 = P_DivlineSide(state.p_sight.t2x, state.p_sight.t2y, &raw mut divl);
-                if !(s1 == s2) {
+                if s1 != s2 {
                     if (*line).backsector.is_none() {
                         return false;
                     }
@@ -182,14 +182,14 @@ pub unsafe fn P_CrossSubsector(state: &mut GameState, mut num: i32) -> bool {
         seg = seg.offset(1);
         count -= 1;
     }
-    return true;
+    true
 }
 pub unsafe fn P_CrossBSPNode(state: &mut GameState, mut bspnum: i32) -> bool {
     let mut bsp: *mut node_t = ::core::ptr::null_mut::<node_t>();
     let mut side: i32 = 0;
     if bspnum & NF_SUBSECTOR != 0 {
-        if bspnum == -(1 as i32) {
-            return P_CrossSubsector(state, 0 as i32);
+        if bspnum == -1_i32 {
+            return P_CrossSubsector(state, 0_i32);
         } else {
             return P_CrossSubsector(state, bspnum & !NF_SUBSECTOR);
         }
@@ -200,8 +200,8 @@ pub unsafe fn P_CrossBSPNode(state: &mut GameState, mut bspnum: i32) -> bool {
         state.p_sight.strace.y,
         bsp as *mut divline_t,
     );
-    if side == 2 as i32 {
-        side = 0 as i32;
+    if side == 2_i32 {
+        side = 0_i32;
     }
     if !P_CrossBSPNode(state, (*bsp).children[side as usize] as i32) {
         return false;
@@ -209,7 +209,7 @@ pub unsafe fn P_CrossBSPNode(state: &mut GameState, mut bspnum: i32) -> bool {
     if side == P_DivlineSide(state.p_sight.t2x, state.p_sight.t2y, bsp as *mut divline_t) {
         return true;
     }
-    return P_CrossBSPNode(state, (*bsp).children[(side ^ 1 as i32) as usize] as i32);
+    return P_CrossBSPNode(state, (*bsp).children[(side ^ 1_i32) as usize] as i32);
 }
 pub unsafe fn P_CheckSight(
     state: &mut GameState,
@@ -224,15 +224,15 @@ pub unsafe fn P_CheckSight(
     s1 = state.p_setup.subsectors[(*t1).subsector.0 as usize].sector.0 as i32;
     s2 = state.p_setup.subsectors[(*t2).subsector.0 as usize].sector.0 as i32;
     pnum = s1 * state.p_setup.numsectors + s2;
-    bytenum = pnum >> 3 as i32;
-    bitnum = (1 as i32) << (pnum & 7 as i32);
+    bytenum = pnum >> 3_i32;
+    bitnum = 1_i32 << (pnum & 7_i32);
     if state.p_setup.rejectmatrix[bytenum as usize] as i32 & bitnum != 0 {
         state.p_sight.sightcounts[0] += 1;
         return false;
     }
     state.p_sight.sightcounts[1] += 1;
     state.r_main.validcount += 1;
-    state.p_sight.sightzstart = (*t1).z + (*t1).height - ((*t1).height >> 2 as i32);
+    state.p_sight.sightzstart = (*t1).z + (*t1).height - ((*t1).height >> 2_i32);
     state.p_sight.topslope = (*t2).z + (*t2).height - state.p_sight.sightzstart;
     state.p_sight.bottomslope = (*t2).z - state.p_sight.sightzstart;
     state.p_sight.strace.x = (*t1).x;
@@ -241,5 +241,5 @@ pub unsafe fn P_CheckSight(
     state.p_sight.t2y = (*t2).y;
     state.p_sight.strace.dx = (*t2).x - (*t1).x;
     state.p_sight.strace.dy = (*t2).y - (*t1).y;
-    return P_CrossBSPNode(state, state.p_setup.numnodes - 1 as i32);
+    return P_CrossBSPNode(state, state.p_setup.numnodes - 1_i32);
 }

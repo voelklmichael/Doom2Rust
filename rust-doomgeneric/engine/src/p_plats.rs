@@ -44,8 +44,7 @@ pub const PLATSPEED: i32 = FRACUNIT;
 pub const MAXPLATS: i32 = 30;
 pub struct PPlatsState {
     pub activeplats: [Option<ThinkerId>; 30],
-    plats: Vec<Box<plat_t>>,
-}
+    pub plats: Vec<Box<plat_t>>,}
 
 impl PPlatsState {
     pub const fn new() -> Self {
@@ -79,13 +78,13 @@ pub unsafe fn T_PlatRaise(state: &mut GameState, mut plat: *mut plat_t) {
                 (*plat).speed,
                 (*plat).high,
                 (*plat).crush,
-                0 as i32,
-                1 as i32,
+                0_i32,
+                1_i32,
             );
             if (*plat).type_0 == PlattypeE::raiseAndChange
                 || (*plat).type_0 == PlattypeE::raiseToNearestAndChange
             {
-                if state.p_tick.leveltime & 7 as i32 == 0 {
+                if state.p_tick.leveltime & 7_i32 == 0 {
                     S_StartSound(state, SoundOrigin::Sector((*plat).sector), sfx_stnmov as i32);
                 }
             }
@@ -115,8 +114,8 @@ pub unsafe fn T_PlatRaise(state: &mut GameState, mut plat: *mut plat_t) {
                 (*plat).speed,
                 (*plat).low,
                 false,
-                0 as i32,
-                -(1 as i32),
+                0_i32,
+                -1_i32,
             );
             if res == ResultE::pastdest {
                 (*plat).count = (*plat).wait;
@@ -149,8 +148,8 @@ pub unsafe fn EV_DoPlat(
     let mut rtn: i32 = 0;
     let mut sec: *mut sector_t = ::core::ptr::null_mut::<sector_t>();
     let linev = state.p_setup.line(line);
-    secnum = -(1 as i32);
-    rtn = 0 as i32;
+    secnum = -1_i32;
+    rtn = 0_i32;
     match type_0 {
         PlattypeE::perpetualRaise => {
             P_ActivateInStasis(state, linev.tag as i32);
@@ -159,14 +158,14 @@ pub unsafe fn EV_DoPlat(
     }
     loop {
         secnum = P_FindSectorFromLineTag(state, line, secnum);
-        if !(secnum >= 0 as i32) {
+        if !(secnum >= 0_i32) {
             break;
         }
         sec = state.p_setup.sector_mut(SectorId(secnum as u32));
         if (*sec).specialdata.is_some() {
             continue;
         }
-        rtn = 1 as i32;
+        rtn = 1_i32;
         plat = state.p_plats.spawn(plat_t::default());
         let plat_id = P_AddThinker(state, &raw mut (*plat).thinker, ThinkerKind::Plat);
         (*plat).type_0 = type_0;
@@ -177,28 +176,28 @@ pub unsafe fn EV_DoPlat(
         (*plat).tag = linev.tag as i32;
         match type_0 {
             PlattypeE::raiseToNearestAndChange => {
-                (*plat).speed = (PLATSPEED / 2 as i32) as fixed_t;
+                (*plat).speed = (PLATSPEED / 2_i32) as fixed_t;
                 let neighbor_sector_id =
                     state.p_setup.sides[linev.sidenum[0] as usize].sector;
-                (*sec).floorpic = (*state.p_setup.sector_mut(neighbor_sector_id)).floorpic;
-                (*plat).high = P_FindNextHighestFloor(state, sec, (*sec).floorheight as i32);
-                (*plat).wait = 0 as i32;
+                (*sec).floorpic = state.p_setup.sector_mut(neighbor_sector_id).floorpic;
+                (*plat).high = P_FindNextHighestFloor(state, sec, (*sec).floorheight);
+                (*plat).wait = 0_i32;
                 (*plat).status = PlatE::up;
-                (*sec).special = 0 as i16;
+                (*sec).special = 0_i16;
                 S_StartSound(state, SoundOrigin::Sector(SectorId(secnum as u32)), sfx_stnmov as i32);
             }
             PlattypeE::raiseAndChange => {
-                (*plat).speed = (PLATSPEED / 2 as i32) as fixed_t;
+                (*plat).speed = (PLATSPEED / 2_i32) as fixed_t;
                 let neighbor_sector_id =
                     state.p_setup.sides[linev.sidenum[0] as usize].sector;
-                (*sec).floorpic = (*state.p_setup.sector_mut(neighbor_sector_id)).floorpic;
-                (*plat).high = ((*sec).floorheight as i32 + amount * FRACUNIT) as fixed_t;
-                (*plat).wait = 0 as i32;
+                (*sec).floorpic = state.p_setup.sector_mut(neighbor_sector_id).floorpic;
+                (*plat).high = ((*sec).floorheight + amount * FRACUNIT) as fixed_t;
+                (*plat).wait = 0_i32;
                 (*plat).status = PlatE::up;
                 S_StartSound(state, SoundOrigin::Sector(SectorId(secnum as u32)), sfx_stnmov as i32);
             }
             PlattypeE::downWaitUpStay => {
-                (*plat).speed = (PLATSPEED * 4 as i32) as fixed_t;
+                (*plat).speed = (PLATSPEED * 4_i32) as fixed_t;
                 (*plat).low = P_FindLowestFloorSurrounding(state, sec);
                 if (*plat).low > (*sec).floorheight {
                     (*plat).low = (*sec).floorheight;
@@ -209,7 +208,7 @@ pub unsafe fn EV_DoPlat(
                 S_StartSound(state, SoundOrigin::Sector(SectorId(secnum as u32)), sfx_pstart as i32);
             }
             PlattypeE::blazeDWUS => {
-                (*plat).speed = (PLATSPEED * 8 as i32) as fixed_t;
+                (*plat).speed = (PLATSPEED * 8_i32) as fixed_t;
                 (*plat).low = P_FindLowestFloorSurrounding(state, sec);
                 if (*plat).low > (*sec).floorheight {
                     (*plat).low = (*sec).floorheight;
@@ -230,7 +229,7 @@ pub unsafe fn EV_DoPlat(
                     (*plat).high = (*sec).floorheight;
                 }
                 (*plat).wait = TICRATE * PLATWAIT;
-                (*plat).status = if P_Random(&mut state.m_random) & 1 as i32 != 0 {
+                (*plat).status = if P_Random(&mut state.m_random) & 1_i32 != 0 {
                     PlatE::down
                 } else {
                     PlatE::up
@@ -240,11 +239,11 @@ pub unsafe fn EV_DoPlat(
         }
         P_AddActivePlat(&mut state.p_plats, plat_id);
     }
-    return rtn;
+    rtn
 }
 pub unsafe fn P_ActivateInStasis(state: &mut GameState, mut tag: i32) {
     let mut i: i32 = 0;
-    i = 0 as i32;
+    i = 0_i32;
     while i < MAXPLATS {
         if let Some(id) = state.p_plats.activeplats[i as usize] {
             let plat = state.p_tick.raw(id) as *mut plat_t;
@@ -258,7 +257,7 @@ pub unsafe fn P_ActivateInStasis(state: &mut GameState, mut tag: i32) {
 }
 pub unsafe fn EV_StopPlat(state: &mut GameState, mut tag: i32) {
     let mut j: i32 = 0;
-    j = 0 as i32;
+    j = 0_i32;
     while j < MAXPLATS {
         if let Some(id) = state.p_plats.activeplats[j as usize] {
             let plat = state.p_tick.raw(id) as *mut plat_t;
@@ -273,7 +272,7 @@ pub unsafe fn EV_StopPlat(state: &mut GameState, mut tag: i32) {
 }
 pub fn P_AddActivePlat(state: &mut PPlatsState, id: ThinkerId) {
     let mut i: i32 = 0;
-    i = 0 as i32;
+    i = 0_i32;
     while i < MAXPLATS {
         if state.activeplats[i as usize].is_none() {
             state.activeplats[i as usize] = Some(id);
@@ -285,11 +284,11 @@ pub fn P_AddActivePlat(state: &mut PPlatsState, id: ThinkerId) {
 }
 pub unsafe fn P_RemoveActivePlat(state: &mut GameState, mut plat: *mut plat_t) {
     let mut i: i32 = 0;
-    i = 0 as i32;
+    i = 0_i32;
     while i < MAXPLATS {
         if let Some(id) = state.p_plats.activeplats[i as usize] {
             if state.p_tick.raw(id) as *mut plat_t == plat {
-                (*state.p_setup.sector_mut((*plat).sector)).specialdata = None;
+                state.p_setup.sector_mut((*plat).sector).specialdata = None;
                 P_RemoveThinker(&raw mut (*plat).thinker);
                 state.p_plats.activeplats[i as usize] = None;
                 return;
