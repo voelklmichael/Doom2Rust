@@ -190,20 +190,14 @@ pub unsafe fn HUlib_addLineToSText(mut s: *mut hu_stext_t) {
         i += 1;
     }
 }
-pub unsafe fn HUlib_addMessageToSText(
-    mut s: *mut hu_stext_t,
-    mut prefix: *mut ::core::ffi::c_char,
-    msg: &str,
-) {
+pub unsafe fn HUlib_addMessageToSText(mut s: *mut hu_stext_t, prefix: Option<&str>, msg: &str) {
     HUlib_addLineToSText(s);
-    if !prefix.is_null() {
-        while *prefix != 0 {
-            let fresh1 = prefix;
-            prefix = prefix.offset(1);
+    if let Some(prefix) = prefix {
+        for b in prefix.bytes() {
             HUlib_addCharToTextLine(
                 (&raw mut (*s).l as *mut hu_textline_t).offset((*s).cl as isize)
                     as *mut hu_textline_t,
-                *fresh1 as u8,
+                b,
             );
         }
     }

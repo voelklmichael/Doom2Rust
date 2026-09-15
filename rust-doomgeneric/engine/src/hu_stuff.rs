@@ -4,7 +4,6 @@ use crate::d_mode::GameVersion;
 use crate::d_mode::GameMode_t;
 use crate::d_mode::GameMission_t;
 use crate::d_player::PlayerId;
-use crate::fixed_cstr::FixedCStr;
 use crate::doomdef::MAXPLAYERS;
 use crate::doomdef::TICRATE;
 use crate::game_state::GameState;
@@ -45,7 +44,6 @@ pub struct HuStuffState {
     pub chat_macros: [Option<&'static str>; 10],
     pub hu_responder_altdown: bool,
     pub hu_responder_num_nobrainers: i32,
-    pub player_names: [*mut ::core::ffi::c_char; 4],
 }
 
 impl HuStuffState {
@@ -114,12 +112,6 @@ impl HuStuffState {
             ],
             hu_responder_altdown: false,
             hu_responder_num_nobrainers: 0,
-            player_names: [
-                HUSTR_PLRGREEN.as_ptr() as *mut ::core::ffi::c_char,
-                HUSTR_PLRINDIGO.as_ptr() as *mut ::core::ffi::c_char,
-                HUSTR_PLRBROWN.as_ptr() as *mut ::core::ffi::c_char,
-                HUSTR_PLRRED.as_ptr() as *mut ::core::ffi::c_char,
-            ],
         }
     }
 }
@@ -265,10 +257,7 @@ pub const THUSTR_29: &str = "level 29: river styx";
 pub const THUSTR_30: &str = "level 30: last call";
 pub const THUSTR_31: &str = "level 31: pharaoh";
 pub const THUSTR_32: &str = "level 32: caribbean";
-pub const HUSTR_PLRGREEN: FixedCStr<8> = FixedCStr(*b"Green: \0");
-pub const HUSTR_PLRINDIGO: FixedCStr<9> = FixedCStr(*b"Indigo: \0");
-pub const HUSTR_PLRBROWN: FixedCStr<8> = FixedCStr(*b"Brown: \0");
-pub const HUSTR_PLRRED: FixedCStr<6> = FixedCStr(*b"Red: \0");
+pub const PLAYER_NAMES: [&str; 4] = ["Green: ", "Indigo: ", "Brown: ", "Red: "];
 pub const HU_TITLEX: i32 = 0;
 pub const HU_INPUTX: i32 = HU_MSGX;
 pub static chat_char: u8 = 0;
@@ -456,7 +445,7 @@ pub unsafe fn HU_Ticker(state: &mut GameState) {
         {
             HUlib_addMessageToSText(
                 &raw mut state.hu_stuff.w_message,
-                ::core::ptr::null_mut::<::core::ffi::c_char>(),
+                None,
                 (*state.g_game.player_mut(state.hu_stuff.plr)).message.as_deref().unwrap(),
             );
             (*state.g_game.player_mut(state.hu_stuff.plr)).message = None;
@@ -490,7 +479,7 @@ pub unsafe fn HU_Ticker(state: &mut GameState) {
                             {
                                 HUlib_addMessageToSText(
                                     &raw mut state.hu_stuff.w_message,
-                                    state.hu_stuff.player_names[i as usize],
+                                    Some(PLAYER_NAMES[i as usize]),
                                     &state.hu_stuff.w_inputbuffer[i as usize].l.l,
                                 );
                                 state.hu_stuff.message_nottobefuckedwith = true;
