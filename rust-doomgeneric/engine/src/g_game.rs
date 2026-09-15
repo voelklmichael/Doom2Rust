@@ -1437,9 +1437,8 @@ pub unsafe fn G_DoCompleted(state: &mut GameState) {
     state.g_game.gamestate = GameScreenState::GS_INTERMISSION;
     state.g_game.viewactive = false;
     state.am_map.automapactive = false;
-    let wminfo = &raw mut state.g_game.wminfo;
-    StatCopy(state, wminfo);
-    WI_Start(state, wminfo);
+    StatCopy(state);
+    WI_Start(state);
 }
 pub fn G_WorldDone(state: &mut GameState) {
     state.g_game.gameaction = GameAction::ga_worlddone;

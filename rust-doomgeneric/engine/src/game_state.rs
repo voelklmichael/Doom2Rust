@@ -185,6 +185,14 @@ impl GameState {
             platform,
         }
     }
+
+    pub fn wbs(&mut self) -> &mut crate::wi_stuff::wbstartstruct_t {
+        &mut self.g_game.wminfo
+    }
+
+    pub fn plyr_index(&mut self, index: i32) -> &mut crate::wi_stuff::wbplayerstruct_t {
+        &mut self.g_game.wminfo.plyr[index as usize]
+    }
 }
 
 // Self-referential pointers (e.g. p_maputl's intercepts_overrun addresses)

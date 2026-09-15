@@ -39,15 +39,10 @@ impl StatDumpState {
     }
 }
 
-pub unsafe fn StatCopy(state: &mut GameState, mut stats: *mut wbstartstruct_t) {
+pub fn StatCopy(state: &mut GameState) {
     if M_ParmExists(state, "-statdump") && state.statdump.num_captured_stats < MAX_CAPTURES {
-        memcpy(
-            (&raw mut state.statdump.captured_stats as *mut wbstartstruct_t)
-                .offset(state.statdump.num_captured_stats as isize)
-                as *mut wbstartstruct_t as *mut ::core::ffi::c_void,
-            stats as *const ::core::ffi::c_void,
-            ::core::mem::size_of::<wbstartstruct_t>() as size_t,
-        );
+        state.statdump.captured_stats[state.statdump.num_captured_stats as usize] =
+            state.g_game.wminfo;
         state.statdump.num_captured_stats += 1;
     }
 }
