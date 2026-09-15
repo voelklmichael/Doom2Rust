@@ -33,6 +33,7 @@ use crate::game_state::GameState;
 use crate::hu_stuff::HU_Responder;
 use crate::hu_stuff::HU_Ticker;
 use crate::hu_stuff::HU_dequeueChatChar;
+use crate::hu_stuff::PLAYER_NAMES;
 use crate::i_system::I_Error;
 use crate::i_system::I_Quit;
 use crate::i_timer::I_GetTime;
@@ -971,10 +972,7 @@ pub unsafe fn G_Ticker(state: &mut GameState) {
                 && (state.d_loop.gametic >> 5 as i32) % MAXPLAYERS == i
                 && state.g_game.turbodetected[i as usize]
             {
-                let player_name =
-                    ::std::ffi::CStr::from_ptr(state.hu_stuff.player_names[i as usize])
-                        .to_string_lossy()
-                        .into_owned();
+                let player_name = PLAYER_NAMES[i as usize];
                 state.g_game.players[state.g_game.consoleplayer as usize].message =
                     Some(format!("{} is turbo!", player_name));
                 state.g_game.turbodetected[i as usize] = false;
