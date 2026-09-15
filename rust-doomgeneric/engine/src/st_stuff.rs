@@ -7,7 +7,7 @@ use crate::d_mode::GameMode_t;
 use crate::d_mode::{GameVersion, SkillType};
 use crate::d_player::PlayerId;
 use crate::d_player::PowerType;
-use crate::d_player::{ammotype_t, NUMAMMO};
+use crate::d_player::{ammotype_t, player_t, NUMAMMO};
 use crate::d_player::{weapontype_t, NUMWEAPONS};
 use crate::d_player::{CF_GODMODE, CF_NOCLIP};
 use crate::doomdef::true_0;
@@ -613,7 +613,8 @@ pub unsafe fn ST_Responder(state: &mut GameState, mut ev: &event_t) -> bool {
                 ) != 0
                 {
                     if (*state.g_game.player_mut(state.st_stuff.plyr)).powers[i as usize] == 0 {
-                        let plyr_ptr = state.g_game.player_mut(state.st_stuff.plyr);
+                        let plyr_ptr =
+                            state.g_game.player_mut(state.st_stuff.plyr) as *mut player_t;
                         P_GivePower(state, plyr_ptr, i);
                     } else if i != PowerType::pw_strength as i32 {
                         (*state.g_game.player_mut(state.st_stuff.plyr)).powers[i as usize] = 1_i32;
@@ -737,12 +738,16 @@ pub unsafe fn ST_updateFaceWidget(state: &mut GameState) {
     let mut badguyangle: angle_t = 0;
     let mut diffang: angle_t = 0;
     let mut doevilgrin: bool = false;
-    if state.st_stuff.st_updatefacewidget_priority < 10_i32 && (*state.g_game.player_mut(state.st_stuff.plyr)).health == 0 {
+    if state.st_stuff.st_updatefacewidget_priority < 10_i32
+        && (*state.g_game.player_mut(state.st_stuff.plyr)).health == 0
+    {
         state.st_stuff.st_updatefacewidget_priority = 9_i32;
         state.st_stuff.st_faceindex = ST_DEADFACE;
         state.st_stuff.st_facecount = 1_i32;
     }
-    if state.st_stuff.st_updatefacewidget_priority < 9_i32 && (*state.g_game.player_mut(state.st_stuff.plyr)).bonuscount != 0 {
+    if state.st_stuff.st_updatefacewidget_priority < 9_i32
+        && (*state.g_game.player_mut(state.st_stuff.plyr)).bonuscount != 0
+    {
         doevilgrin = false;
         i = 0_i32;
         while i < NUMWEAPONS {
@@ -806,7 +811,9 @@ pub unsafe fn ST_updateFaceWidget(state: &mut GameState) {
             }
         }
     }
-    if state.st_stuff.st_updatefacewidget_priority < 7_i32 && (*state.g_game.player_mut(state.st_stuff.plyr)).damagecount != 0 {
+    if state.st_stuff.st_updatefacewidget_priority < 7_i32
+        && (*state.g_game.player_mut(state.st_stuff.plyr)).damagecount != 0
+    {
         if (*state.g_game.player_mut(state.st_stuff.plyr)).health - state.st_stuff.st_oldhealth
             > ST_MUCHPAIN
         {
@@ -836,9 +843,12 @@ pub unsafe fn ST_updateFaceWidget(state: &mut GameState) {
             state.st_stuff.st_updatefacewidget_lastattackdown = -1_i32;
         }
     }
-    if state.st_stuff.st_updatefacewidget_priority < 5_i32 && ((*state.g_game.player_mut(state.st_stuff.plyr)).cheats & CF_GODMODE != 0 || (*state.g_game.player_mut(state.st_stuff.plyr)).powers
+    if state.st_stuff.st_updatefacewidget_priority < 5_i32
+        && ((*state.g_game.player_mut(state.st_stuff.plyr)).cheats & CF_GODMODE != 0
+            || (*state.g_game.player_mut(state.st_stuff.plyr)).powers
                 [PowerType::pw_invulnerability as usize]
-                != 0) {
+                != 0)
+    {
         state.st_stuff.st_updatefacewidget_priority = 4_i32;
         state.st_stuff.st_faceindex = ST_GODFACE;
         state.st_stuff.st_facecount = 1_i32;

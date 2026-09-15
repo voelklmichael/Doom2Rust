@@ -569,7 +569,7 @@ pub unsafe fn AM_restoreScaleAndLoc(state: &mut GameState) {
         state.am_map.m_x = state.am_map.old_m_x;
         state.am_map.m_y = state.am_map.old_m_y;
     } else {
-        let plr_mo_id = (*state.g_game.player_mut(state.am_map.plr)).mo.unwrap();
+        let plr_mo_id = state.g_game.player_mut(state.am_map.plr).mo.unwrap();
         let plr_mo = state.p_mobj.mobj_get(plr_mo_id).unwrap();
         state.am_map.m_x = ((*plr_mo).x - state.am_map.m_w / 2_i32) as fixed_t;
         state.am_map.m_y = ((*plr_mo).y - state.am_map.m_h / 2_i32) as fixed_t;
@@ -921,13 +921,11 @@ pub unsafe fn AM_doFollowPlayer(state: &mut GameState) {
         state.am_map.m_x = (FixedMul(
             (FixedMul((*plr_mo).x, state.am_map.scale_mtof) >> 16_i32) << 16_i32,
             state.am_map.scale_ftom,
-        )
-            - state.am_map.m_w / 2_i32) as fixed_t;
+        ) - state.am_map.m_w / 2_i32) as fixed_t;
         state.am_map.m_y = (FixedMul(
             (FixedMul((*plr_mo).y, state.am_map.scale_mtof) >> 16_i32) << 16_i32,
             state.am_map.scale_ftom,
-        )
-            - state.am_map.m_h / 2_i32) as fixed_t;
+        ) - state.am_map.m_h / 2_i32) as fixed_t;
         state.am_map.m_x2 = state.am_map.m_x + state.am_map.m_w;
         state.am_map.m_y2 = state.am_map.m_y + state.am_map.m_h;
         state.am_map.f_oldloc.x = (*plr_mo).x;
@@ -1265,7 +1263,10 @@ pub unsafe fn AM_drawWalls(state: &mut GameState) {
                     AM_drawMline(state, &raw mut l, TSWALLCOLORS + lightlev);
                 }
             }
-        } else if (*state.g_game.player_mut(state.am_map.plr)).powers[PowerType::pw_allmap as usize] != 0 && (*li).flags as i32 & LINE_NEVERSEE == 0 {
+        } else if (*state.g_game.player_mut(state.am_map.plr)).powers[PowerType::pw_allmap as usize]
+            != 0
+            && (*li).flags as i32 & LINE_NEVERSEE == 0
+        {
             AM_drawMline(state, &raw mut l, GRAYS + 3_i32);
         }
         i += 1;
@@ -1364,7 +1365,9 @@ pub unsafe fn AM_drawPlayers(state: &mut GameState) {
         p = &mut state.g_game.players[i as usize];
         if !(state.g_game.deathmatch != 0
             && !state.g_game.singledemo
-            && PlayerId(i as u8) != state.am_map.plr) && state.g_game.playeringame[i as usize] {
+            && PlayerId(i as u8) != state.am_map.plr)
+            && state.g_game.playeringame[i as usize]
+        {
             if (*p).powers[PowerType::pw_invisibility as usize] != 0 {
                 color = 246_i32;
             } else {

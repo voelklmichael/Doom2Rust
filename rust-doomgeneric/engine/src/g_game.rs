@@ -335,8 +335,8 @@ impl GGameState {
         }
     }
 
-    pub fn player_mut(&mut self, id: PlayerId) -> *mut player_t {
-        &mut self.players[id.0 as usize] as *mut player_t
+    pub fn player_mut(&mut self, id: PlayerId) -> &mut player_t {
+        &mut self.players[id.0 as usize]
     }
 
     fn demo_read_byte(&mut self) -> byte {

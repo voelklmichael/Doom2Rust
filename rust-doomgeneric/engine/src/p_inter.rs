@@ -597,7 +597,7 @@ pub unsafe fn P_KillMobj(state: &mut GameState, mut source: *mut mobj_t, mut tar
         state.g_game.players[0].killcount += 1;
     }
     if let Some(target_player_id) = (*target).player {
-        let target_player = state.g_game.player_mut(target_player_id);
+        let target_player = state.g_game.player_mut(target_player_id) as *mut player_t;
         if source.is_null() {
             (*target_player).frags[target_player_id.0 as usize] += 1;
         }
