@@ -56,7 +56,6 @@ impl HuStuffState {
             w_title: hu_textline_t {
                 x: 0,
                 y: 0,
-                f: ::core::ptr::null_mut::<i32>(),
                 sc: 0,
                 l: String::new(),
                 needsupdate: 0,
@@ -66,7 +65,6 @@ impl HuStuffState {
                 l: hu_textline_t {
                     x: 0,
                     y: 0,
-                    f: ::core::ptr::null_mut::<i32>(),
                     sc: 0,
                     l: String::new(),
                     needsupdate: 0,
@@ -277,7 +275,6 @@ const fn new_hu_itext_t() -> hu_itext_t {
         l: hu_textline_t {
             x: 0,
             y: 0,
-            f: ::core::ptr::null_mut::<i32>(),
             sc: 0,
             l: String::new(),
             needsupdate: 0,
@@ -290,7 +287,6 @@ const fn new_hu_textline_t() -> hu_textline_t {
     hu_textline_t {
         x: 0,
         y: 0,
-        f: ::core::ptr::null_mut::<i32>(),
         sc: 0,
         l: String::new(),
         needsupdate: 0,
@@ -349,21 +345,18 @@ pub unsafe fn HU_Start(state: &mut GameState) {
     state.hu_stuff.chat_on = false;
     let hu_font0_height = (*V_CachePatchNum(state, state.hu_stuff.hu_font[0])).height as i32;
     let w_message = &raw mut state.hu_stuff.w_message;
-    let hu_font_ptr = &raw mut state.hu_stuff.hu_font as *mut i32;
     HUlib_initSText(
         state,
         w_message,
         HU_MSGX,
         HU_MSGY,
         HU_MSGHEIGHT,
-        hu_font_ptr,
         HU_FONTSTART,
     );
     HUlib_initTextLine(
         &raw mut state.hu_stuff.w_title,
         HU_TITLEX,
         167 as i32 - hu_font0_height,
-        hu_font_ptr,
         HU_FONTSTART,
     );
     match if state.doomstat.gamemission as u32 == GameMission_t::pack_chex as i32 as u32 {
@@ -400,7 +393,6 @@ pub unsafe fn HU_Start(state: &mut GameState) {
         &raw mut state.hu_stuff.w_chat,
         HU_INPUTX,
         HU_MSGY + HU_MSGHEIGHT * (hu_font0_height + 1 as i32),
-        hu_font_ptr,
         HU_FONTSTART,
     );
     i = 0 as i32;
@@ -410,7 +402,6 @@ pub unsafe fn HU_Start(state: &mut GameState) {
                 as *mut hu_itext_t,
             0 as i32,
             0 as i32,
-            ::core::ptr::null_mut::<i32>(),
             0 as i32,
         );
         i += 1;
