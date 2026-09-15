@@ -12,6 +12,7 @@ use crate::p_spec::ceiling_t;
 use crate::p_spec::P_FindHighestCeilingSurrounding;
 use crate::p_spec::P_FindSectorFromLineTag;
 use crate::p_tick::P_AddThinker;
+use crate::p_tick::ThinkerId;
 use crate::p_tick::ThinkerKind;
 use crate::p_tick::P_RemoveThinker;
 use crate::s_sound::S_StartSound;
@@ -30,14 +31,14 @@ pub enum CeilingE {
 pub const CEILSPEED: i32 = FRACUNIT;
 pub const MAXCEILINGS: i32 = 30;
 pub struct PCeilngState {
-    pub activeceilings: [*mut ceiling_t; 30],
+    pub activeceilings: [Option<ThinkerId>; 30],
     ceilings: Vec<Box<ceiling_t>>,
 }
 
 impl PCeilngState {
     pub const fn new() -> Self {
         PCeilngState {
-            activeceilings: [::core::ptr::null::<ceiling_t>() as *mut ceiling_t; 30],
+            activeceilings: [None; 30],
             ceilings: Vec::new(),
         }
     }
@@ -180,7 +181,7 @@ pub unsafe fn EV_DoCeiling(
     rtn = 0 as i32;
     match type_0 {
         CeilingE::fastCrushAndRaise | CeilingE::silentCrushAndRaise | CeilingE::crushAndRaise => {
-            P_ActivateInStasisCeiling(&mut state.p_ceilng, state.p_setup.line(line).tag as i32);
+            P_ActivateInStasisCeiling(state, state.p_setup.line(line).tag as i32);
         }
         _ => {}
     }
@@ -239,16 +240,16 @@ pub unsafe fn EV_DoCeiling(
         }
         (*ceiling).tag = (*sec).tag as i32;
         (*ceiling).type_0 = type_0;
-        P_AddActiveCeiling(&mut state.p_ceilng, ceiling);
+        P_AddActiveCeiling(&mut state.p_ceilng, ceiling_id);
     }
     return rtn;
 }
-pub fn P_AddActiveCeiling(state: &mut PCeilngState, mut c: *mut ceiling_t) {
+pub fn P_AddActiveCeiling(state: &mut PCeilngState, id: ThinkerId) {
     let mut i: i32 = 0;
     i = 0 as i32;
     while i < MAXCEILINGS {
-        if state.activeceilings[i as usize].is_null() {
-            state.activeceilings[i as usize] = c;
+        if state.activeceilings[i as usize].is_none() {
+            state.activeceilings[i as usize] = Some(id);
             return;
         }
         i += 1;
@@ -258,54 +259,45 @@ pub unsafe fn P_RemoveActiveCeiling(state: &mut GameState, mut c: *mut ceiling_t
     let mut i: i32 = 0;
     i = 0 as i32;
     while i < MAXCEILINGS {
-        if state.p_ceilng.activeceilings[i as usize] == c {
-            (*state
-                .p_setup
-                .sector_mut((*state.p_ceilng.activeceilings[i as usize]).sector))
-            .specialdata = None;
-            P_RemoveThinker(
-                &raw mut (**(&raw mut state.p_ceilng.activeceilings as *mut *mut ceiling_t)
-                    .offset(i as isize))
-                .thinker,
-            );
-            state.p_ceilng.activeceilings[i as usize] = ::core::ptr::null_mut::<ceiling_t>();
-            break;
-        } else {
-            i += 1;
-        }
-    }
-}
-pub unsafe fn P_ActivateInStasisCeiling(state: &mut PCeilngState, mut tag: i32) {
-    let mut i: i32 = 0;
-    i = 0 as i32;
-    while i < MAXCEILINGS {
-        if !state.activeceilings[i as usize].is_null()
-            && (*state.activeceilings[i as usize]).tag == tag
-            && (*state.activeceilings[i as usize]).direction == 0 as i32
-        {
-            (*state.activeceilings[i as usize]).direction =
-                (*state.activeceilings[i as usize]).olddirection;
-            (*state.activeceilings[i as usize]).thinker.function =
-                ThinkerFn::Ceiling(T_MoveCeiling);
+        if let Some(id) = state.p_ceilng.activeceilings[i as usize] {
+            if state.p_tick.raw(id) as *mut ceiling_t == c {
+                (*state.p_setup.sector_mut((*c).sector)).specialdata = None;
+                P_RemoveThinker(&raw mut (*c).thinker);
+                state.p_ceilng.activeceilings[i as usize] = None;
+                break;
+            }
         }
         i += 1;
     }
 }
-pub unsafe fn EV_CeilingCrushStop(state: &mut PCeilngState, mut tag: i32) -> i32 {
+pub unsafe fn P_ActivateInStasisCeiling(state: &mut GameState, mut tag: i32) {
+    let mut i: i32 = 0;
+    i = 0 as i32;
+    while i < MAXCEILINGS {
+        if let Some(id) = state.p_ceilng.activeceilings[i as usize] {
+            let ceiling = state.p_tick.raw(id) as *mut ceiling_t;
+            if (*ceiling).tag == tag && (*ceiling).direction == 0 as i32 {
+                (*ceiling).direction = (*ceiling).olddirection;
+                (*ceiling).thinker.function = ThinkerFn::Ceiling(T_MoveCeiling);
+            }
+        }
+        i += 1;
+    }
+}
+pub unsafe fn EV_CeilingCrushStop(state: &mut GameState, mut tag: i32) -> i32 {
     let mut i: i32 = 0;
     let mut rtn: i32 = 0;
     rtn = 0 as i32;
     i = 0 as i32;
     while i < MAXCEILINGS {
-        if !state.activeceilings[i as usize].is_null()
-            && (*state.activeceilings[i as usize]).tag == tag
-            && (*state.activeceilings[i as usize]).direction != 0 as i32
-        {
-            (*state.activeceilings[i as usize]).olddirection =
-                (*state.activeceilings[i as usize]).direction;
-            (*state.activeceilings[i as usize]).thinker.function = ThinkerFn::Paused;
-            (*state.activeceilings[i as usize]).direction = 0 as i32;
-            rtn = 1 as i32;
+        if let Some(id) = state.p_ceilng.activeceilings[i as usize] {
+            let ceiling = state.p_tick.raw(id) as *mut ceiling_t;
+            if (*ceiling).tag == tag && (*ceiling).direction != 0 as i32 {
+                (*ceiling).olddirection = (*ceiling).direction;
+                (*ceiling).thinker.function = ThinkerFn::Paused;
+                (*ceiling).direction = 0 as i32;
+                rtn = 1 as i32;
+            }
         }
         i += 1;
     }
