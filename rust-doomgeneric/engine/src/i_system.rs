@@ -5,10 +5,18 @@ use crate::mem_compat::malloc;
 use crate::stdint_types::byte;
 use crate::stdint_types::size_t;
 
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum DosMemDump {
+    Dos622,
+    Win98,
+    DosBox,
+    Custom,
+}
+
 pub struct ISystemState {
     pub exit_funcs: Vec<atexit_listentry_t>,
     pub mem_dump_custom: [u8; 10],
-    pub dos_mem_dump: *const u8,
+    pub dos_mem_dump: DosMemDump,
     pub get_memory_value_firsttime: bool,
 }
 
@@ -17,8 +25,17 @@ impl ISystemState {
         ISystemState {
             exit_funcs: Vec::new(),
             mem_dump_custom: [0; 10],
-            dos_mem_dump: &raw const mem_dump_dos622 as *const u8,
+            dos_mem_dump: DosMemDump::Dos622,
             get_memory_value_firsttime: true,
+        }
+    }
+
+    fn dos_mem_dump_bytes(&self) -> &[u8; 10] {
+        match self.dos_mem_dump {
+            DosMemDump::Dos622 => &mem_dump_dos622,
+            DosMemDump::Win98 => &mem_dump_win98,
+            DosMemDump::DosBox => &mem_dump_dosbox,
+            DosMemDump::Custom => &self.mem_dump_custom,
         }
     }
 }
@@ -160,18 +177,18 @@ pub unsafe fn I_GetMemoryValue(
                 .as_bytes()
                 .eq_ignore_ascii_case(b"dos622")
             {
-                state.i_system.dos_mem_dump = &raw const mem_dump_dos622 as *const u8;
+                state.i_system.dos_mem_dump = DosMemDump::Dos622;
             }
             if state.m_argv.myargv[(p + 1 as i32) as usize]
                 .as_bytes()
                 .eq_ignore_ascii_case(b"dos71")
             {
-                state.i_system.dos_mem_dump = &raw const mem_dump_win98 as *const u8;
+                state.i_system.dos_mem_dump = DosMemDump::Win98;
             } else if state.m_argv.myargv[(p + 1 as i32) as usize]
                 .as_bytes()
                 .eq_ignore_ascii_case(b"dosbox")
             {
-                state.i_system.dos_mem_dump = &raw const mem_dump_dosbox as *const u8;
+                state.i_system.dos_mem_dump = DosMemDump::DosBox;
             } else {
                 i = 0 as i32;
                 while i < DOS_MEM_DUMP_SIZE {
@@ -190,41 +207,26 @@ pub unsafe fn I_GetMemoryValue(
                     state.i_system.mem_dump_custom[fresh0 as usize] = val as u8;
                     i += 1;
                 }
-                state.i_system.dos_mem_dump = &raw mut state.i_system.mem_dump_custom as *mut u8;
+                state.i_system.dos_mem_dump = DosMemDump::Custom;
             }
         }
     }
+    let dump = state.i_system.dos_mem_dump_bytes();
+    let offset = offset as usize;
     match size {
         1 => {
-            *(value as *mut u8) = *state.i_system.dos_mem_dump.offset(offset as isize);
+            *(value as *mut u8) = dump[offset];
             return true;
         }
         2 => {
-            *(value as *mut u16) = (*state.i_system.dos_mem_dump.offset(offset as isize) as i32
-                | (*state
-                    .i_system
-                    .dos_mem_dump
-                    .offset(offset.wrapping_add(1 as u32) as isize) as i32)
-                    << 8 as i32) as u16;
+            *(value as *mut u16) = dump[offset] as u16 | (dump[offset + 1] as u16) << 8;
             return true;
         }
         4 => {
-            *(value as *mut u32) = (*state.i_system.dos_mem_dump.offset(offset as isize) as i32
-                | (*state
-                    .i_system
-                    .dos_mem_dump
-                    .offset(offset.wrapping_add(1 as u32) as isize) as i32)
-                    << 8 as i32
-                | (*state
-                    .i_system
-                    .dos_mem_dump
-                    .offset(offset.wrapping_add(2 as u32) as isize) as i32)
-                    << 16 as i32
-                | (*state
-                    .i_system
-                    .dos_mem_dump
-                    .offset(offset.wrapping_add(3 as u32) as isize) as i32)
-                    << 24 as i32) as u32;
+            *(value as *mut u32) = dump[offset] as u32
+                | (dump[offset + 1] as u32) << 8
+                | (dump[offset + 2] as u32) << 16
+                | (dump[offset + 3] as u32) << 24;
             return true;
         }
         _ => {}
