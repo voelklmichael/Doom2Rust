@@ -15,6 +15,7 @@ use crate::p_mobj::{mobj_t, pspdef_t};
 use crate::p_mobj::{MF_SHADOW, MF_TRANSLATION, MF_TRANSSHIFT};
 use crate::r_data::column_t;
 use crate::r_defs::SpriteRotate;
+use crate::r_defs::ClipArray;
 use crate::r_defs::{drawseg_t, spritedef_t, spriteframe_t};
 use crate::r_main::ColormapId;
 use crate::r_main::LightRow48;
@@ -46,10 +47,10 @@ pub struct RThingsState {
     pub maxframe: i32,
     pub spritename: &'static str,
     pub vissprites: [vissprite_t; 128],
-    pub vissprite_p: *mut vissprite_t,
+    pub vissprite_p: usize,
     pub overflowsprite: vissprite_t,
-    pub mfloorclip: *mut i16,
-    pub mceilingclip: *mut i16,
+    pub mfloorclip: Option<ClipArray>,
+    pub mceilingclip: Option<ClipArray>,
     pub spryscale: fixed_t,
     pub sprtopscreen: fixed_t,
     pub vissprite_order: Vec<usize>,
@@ -89,7 +90,7 @@ impl RThingsState {
                 colormap: None,
                 mobjflags: 0,
             }; 128],
-            vissprite_p: ::core::ptr::null::<vissprite_t>() as *mut vissprite_t,
+            vissprite_p: 0,
             overflowsprite: vissprite_s {
                 x1: 0,
                 x2: 0,
@@ -105,8 +106,8 @@ impl RThingsState {
                 colormap: None,
                 mobjflags: 0,
             },
-            mfloorclip: ::core::ptr::null::<i16>() as *mut i16,
-            mceilingclip: ::core::ptr::null::<i16>() as *mut i16,
+            mfloorclip: None,
+            mceilingclip: None,
             spryscale: 0,
             sprtopscreen: 0,
             vissprite_order: Vec::new(),
@@ -304,46 +305,35 @@ pub fn R_InitSprites(state: &mut GameState, namelist: &[&'static str]) {
     unsafe { R_InitSpriteDefs(state, namelist) };
 }
 pub unsafe fn R_ClearSprites(state: &mut GameState) {
-    state.r_things.vissprite_p = &raw mut state.r_things.vissprites as *mut vissprite_t;
+    state.r_things.vissprite_p = 0;
 }
 pub unsafe fn R_NewVisSprite(state: &mut GameState) -> *mut vissprite_t {
-    if state.r_things.vissprite_p
-        == (&raw mut state.r_things.vissprites as *mut vissprite_t).offset(MAXVISSPRITES as isize)
-            as *mut vissprite_t
-    {
+    if state.r_things.vissprite_p == MAXVISSPRITES as usize {
         return &raw mut state.r_things.overflowsprite;
     }
-    state.r_things.vissprite_p = state.r_things.vissprite_p.offset(1);
-    return state.r_things.vissprite_p.offset(-(1 as i32 as isize));
+    let vis = &raw mut state.r_things.vissprites[state.r_things.vissprite_p] as *mut vissprite_t;
+    state.r_things.vissprite_p += 1;
+    vis
 }
 pub unsafe fn R_DrawMaskedColumn(state: &mut GameState, mut column: *mut column_t) {
     let mut topscreen: i32 = 0;
     let mut bottomscreen: i32 = 0;
     let mut basetexturemid: fixed_t = 0;
     basetexturemid = state.r_draw.dc_texturemid;
+    let mfloorclip = state.r_things.mfloorclip.unwrap().resolve(state);
+    let mceilingclip = state.r_things.mceilingclip.unwrap().resolve(state);
     while (*column).topdelta as i32 != 0xff as i32 {
         topscreen = state.r_things.sprtopscreen as i32
             + state.r_things.spryscale as i32 * (*column).topdelta as i32;
         bottomscreen = topscreen + state.r_things.spryscale as i32 * (*column).length as i32;
         state.r_draw.dc_yl = topscreen + FRACUNIT - 1 as i32 >> FRACBITS;
         state.r_draw.dc_yh = bottomscreen - 1 as i32 >> FRACBITS;
-        if state.r_draw.dc_yh
-            >= *state.r_things.mfloorclip.offset(state.r_draw.dc_x as isize) as i32
-        {
-            state.r_draw.dc_yh =
-                *state.r_things.mfloorclip.offset(state.r_draw.dc_x as isize) as i32 - 1 as i32;
+        if state.r_draw.dc_yh >= *mfloorclip.offset(state.r_draw.dc_x as isize) as i32 {
+            state.r_draw.dc_yh = *mfloorclip.offset(state.r_draw.dc_x as isize) as i32 - 1 as i32;
         }
-        if state.r_draw.dc_yl
-            <= *state
-                .r_things
-                .mceilingclip
-                .offset(state.r_draw.dc_x as isize) as i32
-        {
-            state.r_draw.dc_yl = *state
-                .r_things
-                .mceilingclip
-                .offset(state.r_draw.dc_x as isize) as i32
-                + 1 as i32;
+        if state.r_draw.dc_yl <= *mceilingclip.offset(state.r_draw.dc_x as isize) as i32 {
+            state.r_draw.dc_yl =
+                *mceilingclip.offset(state.r_draw.dc_x as isize) as i32 + 1 as i32;
         }
         if state.r_draw.dc_yl <= state.r_draw.dc_yh {
             state.r_draw.dc_source = (column as *mut byte).offset(3 as i32 as isize);
@@ -647,8 +637,8 @@ pub unsafe fn R_DrawPlayerSprites(state: &mut GameState) {
     } else {
         state.r_things.spritelights = LightRow48::Normal(lightnum as usize);
     }
-    state.r_things.mfloorclip = &raw mut state.r_things.screenheightarray as *mut i16;
-    state.r_things.mceilingclip = &raw mut state.r_things.negonearray as *mut i16;
+    state.r_things.mfloorclip = Some(ClipArray::ScreenHeightArray);
+    state.r_things.mceilingclip = Some(ClipArray::NegOneArray);
     i = 0 as i32;
     psp = &raw mut (*viewplayer).psprites as *mut pspdef_t;
     while i < NUMPSPRITES as i32 {
@@ -660,11 +650,7 @@ pub unsafe fn R_DrawPlayerSprites(state: &mut GameState) {
     }
 }
 pub unsafe fn R_SortVisSprites(state: &mut GameState) {
-    let count = state
-        .r_things
-        .vissprite_p
-        .offset_from(&raw mut state.r_things.vissprites as *mut vissprite_t) as i64
-        as i32;
+    let count = state.r_things.vissprite_p as i32;
     let mut order = core::mem::take(&mut state.r_things.vissprite_order);
     order.clear();
     if count > 0 {
@@ -689,11 +675,12 @@ pub unsafe fn R_DrawSprite(state: &mut GameState, mut spr: *mut vissprite_t) {
         state.r_things.clipbot[x as usize] = state.r_things.cliptop[x as usize];
         x += 1;
     }
-    ds = state.r_bsp.ds_p.offset(-(1 as i32 as isize));
-    while ds >= &raw mut state.r_bsp.drawsegs as *mut drawseg_t {
+    let mut ds_idx: isize = state.r_bsp.ds_p as isize - 1;
+    while ds_idx >= 0 {
+        ds = &raw mut state.r_bsp.drawsegs[ds_idx as usize] as *mut drawseg_t;
         if !((*ds).x1 > (*spr).x2
             || (*ds).x2 < (*spr).x1
-            || (*ds).silhouette == 0 && (*ds).maskedtexturecol.is_null())
+            || (*ds).silhouette == 0 && (*ds).maskedtexturecol.is_none())
         {
             r1 = if (*ds).x1 < (*spr).x1 {
                 (*spr).x1
@@ -716,7 +703,7 @@ pub unsafe fn R_DrawSprite(state: &mut GameState, mut spr: *mut vissprite_t) {
                 || lowscale < (*spr).scale
                     && R_PointOnSegSide(state, (*spr).gx, (*spr).gy, (*ds).curline) == 0
             {
-                if !(*ds).maskedtexturecol.is_null() {
+                if !(*ds).maskedtexturecol.is_none() {
                     R_RenderMaskedSegRange(state, ds, r1, r2);
                 }
             } else {
@@ -728,40 +715,40 @@ pub unsafe fn R_DrawSprite(state: &mut GameState, mut spr: *mut vissprite_t) {
                     silhouette &= !SIL_TOP;
                 }
                 if silhouette == 1 as i32 {
+                    let sprbottomclip = (*ds).sprbottomclip.unwrap().resolve(state);
                     x = r1;
                     while x <= r2 {
                         if state.r_things.clipbot[x as usize] as i32 == -(2 as i32) {
-                            state.r_things.clipbot[x as usize] =
-                                *(*ds).sprbottomclip.offset(x as isize);
+                            state.r_things.clipbot[x as usize] = *sprbottomclip.offset(x as isize);
                         }
                         x += 1;
                     }
                 } else if silhouette == 2 as i32 {
+                    let sprtopclip = (*ds).sprtopclip.unwrap().resolve(state);
                     x = r1;
                     while x <= r2 {
                         if state.r_things.cliptop[x as usize] as i32 == -(2 as i32) {
-                            state.r_things.cliptop[x as usize] =
-                                *(*ds).sprtopclip.offset(x as isize);
+                            state.r_things.cliptop[x as usize] = *sprtopclip.offset(x as isize);
                         }
                         x += 1;
                     }
                 } else if silhouette == 3 as i32 {
+                    let sprbottomclip = (*ds).sprbottomclip.unwrap().resolve(state);
+                    let sprtopclip = (*ds).sprtopclip.unwrap().resolve(state);
                     x = r1;
                     while x <= r2 {
                         if state.r_things.clipbot[x as usize] as i32 == -(2 as i32) {
-                            state.r_things.clipbot[x as usize] =
-                                *(*ds).sprbottomclip.offset(x as isize);
+                            state.r_things.clipbot[x as usize] = *sprbottomclip.offset(x as isize);
                         }
                         if state.r_things.cliptop[x as usize] as i32 == -(2 as i32) {
-                            state.r_things.cliptop[x as usize] =
-                                *(*ds).sprtopclip.offset(x as isize);
+                            state.r_things.cliptop[x as usize] = *sprtopclip.offset(x as isize);
                         }
                         x += 1;
                     }
                 }
             }
         }
-        ds = ds.offset(-1);
+        ds_idx -= 1;
     }
     x = (*spr).x1;
     while x <= (*spr).x2 {
@@ -773,8 +760,8 @@ pub unsafe fn R_DrawSprite(state: &mut GameState, mut spr: *mut vissprite_t) {
         }
         x += 1;
     }
-    state.r_things.mfloorclip = &raw mut state.r_things.clipbot as *mut i16;
-    state.r_things.mceilingclip = &raw mut state.r_things.cliptop as *mut i16;
+    state.r_things.mfloorclip = Some(ClipArray::ClipBot);
+    state.r_things.mceilingclip = Some(ClipArray::ClipTop);
     R_DrawVisSprite(state, spr);
 }
 pub unsafe fn R_DrawMasked(state: &mut GameState) {
@@ -787,12 +774,13 @@ pub unsafe fn R_DrawMasked(state: &mut GameState) {
         R_DrawSprite(state, spr);
         i += 1;
     }
-    ds = state.r_bsp.ds_p.offset(-(1 as i32 as isize));
-    while ds >= &raw mut state.r_bsp.drawsegs as *mut drawseg_t {
-        if !(*ds).maskedtexturecol.is_null() {
+    let mut ds_idx: isize = state.r_bsp.ds_p as isize - 1;
+    while ds_idx >= 0 {
+        ds = &raw mut state.r_bsp.drawsegs[ds_idx as usize] as *mut drawseg_t;
+        if !(*ds).maskedtexturecol.is_none() {
             R_RenderMaskedSegRange(state, ds, (*ds).x1, (*ds).x2);
         }
-        ds = ds.offset(-1);
+        ds_idx -= 1;
     }
     if state.r_main.viewangleoffset == 0 {
         R_DrawPlayerSprites(state);

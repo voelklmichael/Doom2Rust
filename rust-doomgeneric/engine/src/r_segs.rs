@@ -9,6 +9,7 @@ use crate::p_spec::ML_MAPPED;
 use crate::r_data::column_t;
 use crate::r_data::R_GetColumn;
 use crate::r_defs::drawseg_t;
+use crate::r_defs::ClipArray;
 use crate::r_main::LightRow48;
 use crate::r_main::R_PointToDist;
 use crate::r_main::R_ScaleFromGlobalAngle;
@@ -61,7 +62,7 @@ pub struct RSegsState {
     pub bottomfrac: fixed_t,
     pub bottomstep: fixed_t,
     pub walllights: LightRow48,
-    pub maskedtexturecol: *mut i16,
+    pub maskedtexturecol: Option<ClipArray>,
 }
 
 impl RSegsState {
@@ -99,7 +100,7 @@ impl RSegsState {
             bottomfrac: 0,
             bottomstep: 0,
             walllights: LightRow48::Normal(0),
-            maskedtexturecol: ::core::ptr::null::<i16>() as *mut i16,
+            maskedtexturecol: None,
         }
     }
 }
@@ -181,14 +182,10 @@ pub unsafe fn R_RenderMaskedSegRange(
     if state.r_main.fixedcolormap.is_some() {
         state.r_draw.dc_colormap = state.r_main.fixedcolormap;
     }
+    let maskedtexturecol = state.r_segs.maskedtexturecol.unwrap().resolve(state);
     state.r_draw.dc_x = x1;
     while state.r_draw.dc_x <= x2 {
-        if *state
-            .r_segs
-            .maskedtexturecol
-            .offset(state.r_draw.dc_x as isize) as i32
-            != SHRT_MAX
-        {
+        if *maskedtexturecol.offset(state.r_draw.dc_x as isize) as i32 != SHRT_MAX {
             if state.r_main.fixedcolormap.is_none() {
                 index = (state.r_things.spryscale >> LIGHTSCALESHIFT) as u32;
                 if index >= MAXLIGHTSCALE as u32 {
@@ -204,17 +201,11 @@ pub unsafe fn R_RenderMaskedSegRange(
             col = R_GetColumn(
                 state,
                 texnum,
-                *state
-                    .r_segs
-                    .maskedtexturecol
-                    .offset(state.r_draw.dc_x as isize) as i32,
+                *maskedtexturecol.offset(state.r_draw.dc_x as isize) as i32,
             )
             .offset(-(3 as i32 as isize)) as *mut column_t;
             R_DrawMaskedColumn(state, col);
-            *state
-                .r_segs
-                .maskedtexturecol
-                .offset(state.r_draw.dc_x as isize) = SHRT_MAX as i16;
+            *maskedtexturecol.offset(state.r_draw.dc_x as isize) = SHRT_MAX as i16;
         }
         state.r_things.spryscale += state.r_segs.rw_scalestep;
         state.r_draw.dc_x += 1;
@@ -243,8 +234,10 @@ pub unsafe fn R_RenderSegLoop(state: &mut GameState) {
                 bottom = state.r_plane.floorclip[state.r_segs.rw_x as usize] as i32 - 1 as i32;
             }
             if top <= bottom {
-                (*state.r_plane.ceilingplane).top[state.r_segs.rw_x as usize] = top as byte;
-                (*state.r_plane.ceilingplane).bottom[state.r_segs.rw_x as usize] = bottom as byte;
+                let ceilingplane = state.r_plane.ceilingplane.unwrap();
+                state.r_plane.visplanes[ceilingplane].top[state.r_segs.rw_x as usize] = top as byte;
+                state.r_plane.visplanes[ceilingplane].bottom[state.r_segs.rw_x as usize] =
+                    bottom as byte;
             }
         }
         yh = (state.r_segs.bottomfrac >> HEIGHTBITS) as i32;
@@ -258,8 +251,10 @@ pub unsafe fn R_RenderSegLoop(state: &mut GameState) {
                 top = state.r_plane.ceilingclip[state.r_segs.rw_x as usize] as i32 + 1 as i32;
             }
             if top <= bottom {
-                (*state.r_plane.floorplane).top[state.r_segs.rw_x as usize] = top as byte;
-                (*state.r_plane.floorplane).bottom[state.r_segs.rw_x as usize] = bottom as byte;
+                let floorplane = state.r_plane.floorplane.unwrap();
+                state.r_plane.visplanes[floorplane].top[state.r_segs.rw_x as usize] = top as byte;
+                state.r_plane.visplanes[floorplane].bottom[state.r_segs.rw_x as usize] =
+                    bottom as byte;
             }
         }
         if state.r_segs.segtextured {
@@ -334,10 +329,8 @@ pub unsafe fn R_RenderSegLoop(state: &mut GameState) {
                 state.r_plane.floorclip[state.r_segs.rw_x as usize] = (yh + 1 as i32) as i16;
             }
             if state.r_segs.maskedtexture {
-                *state
-                    .r_segs
-                    .maskedtexturecol
-                    .offset(state.r_segs.rw_x as isize) = texturecolumn as i16;
+                let maskedtexturecol = state.r_segs.maskedtexturecol.unwrap().resolve(state);
+                *maskedtexturecol.offset(state.r_segs.rw_x as isize) = texturecolumn as i16;
             }
         }
         state.r_segs.rw_scale += state.r_segs.rw_scalestep;
@@ -353,10 +346,7 @@ pub unsafe fn R_StoreWallRange(state: &mut GameState, mut start: i32, mut stop: 
     let mut offsetangle: angle_t = 0;
     let mut vtop: fixed_t = 0;
     let mut lightnum: i32 = 0;
-    if state.r_bsp.ds_p
-        == (&raw mut state.r_bsp.drawsegs as *mut drawseg_t).offset(MAXDRAWSEGS as isize)
-            as *mut drawseg_t
-    {
+    if state.r_bsp.ds_p == MAXDRAWSEGS as usize {
         return;
     }
     if start >= state.r_draw.viewwidth || start > stop {
@@ -386,30 +376,30 @@ pub unsafe fn R_StoreWallRange(state: &mut GameState, mut start: i32, mut stop: 
     sineval = finesine[(distangle >> ANGLETOFINESHIFT) as usize];
     state.r_segs.rw_distance = FixedMul(hyp, sineval);
     state.r_segs.rw_x = start;
-    (*state.r_bsp.ds_p).x1 = state.r_segs.rw_x;
-    (*state.r_bsp.ds_p).x2 = stop;
-    (*state.r_bsp.ds_p).curline = state.r_bsp.curline;
+    state.r_bsp.drawsegs[state.r_bsp.ds_p].x1 = state.r_segs.rw_x;
+    state.r_bsp.drawsegs[state.r_bsp.ds_p].x2 = stop;
+    state.r_bsp.drawsegs[state.r_bsp.ds_p].curline = state.r_bsp.curline;
     state.r_segs.rw_stopx = stop + 1 as i32;
     let angle1 = state
         .r_main
         .viewangle
         .wrapping_add(state.r_main.xtoviewangle[start as usize]);
     state.r_segs.rw_scale = R_ScaleFromGlobalAngle(state, angle1);
-    (*state.r_bsp.ds_p).scale1 = state.r_segs.rw_scale;
+    state.r_bsp.drawsegs[state.r_bsp.ds_p].scale1 = state.r_segs.rw_scale;
     if stop > start {
-        (*state.r_bsp.ds_p).scale2 = {
+        state.r_bsp.drawsegs[state.r_bsp.ds_p].scale2 = {
             let angle2 = state
                 .r_main
                 .viewangle
                 .wrapping_add(state.r_main.xtoviewangle[stop as usize]);
             R_ScaleFromGlobalAngle(state, angle2)
         };
-        state.r_segs.rw_scalestep = (((*state.r_bsp.ds_p).scale2 as i32
+        state.r_segs.rw_scalestep = ((state.r_bsp.drawsegs[state.r_bsp.ds_p].scale2 as i32
             - state.r_segs.rw_scale as i32)
             / (stop - start)) as fixed_t;
-        (*state.r_bsp.ds_p).scalestep = state.r_segs.rw_scalestep;
+        state.r_bsp.drawsegs[state.r_bsp.ds_p].scalestep = state.r_segs.rw_scalestep;
     } else {
-        (*state.r_bsp.ds_p).scale2 = (*state.r_bsp.ds_p).scale1;
+        state.r_bsp.drawsegs[state.r_bsp.ds_p].scale2 = state.r_bsp.drawsegs[state.r_bsp.ds_p].scale1;
     }
     state.r_segs.worldtop = ((*state.p_setup.sector_mut(state.r_bsp.frontsector.unwrap()))
         .ceilingheight
@@ -421,7 +411,7 @@ pub unsafe fn R_StoreWallRange(state: &mut GameState, mut start: i32, mut stop: 
     state.r_segs.bottomtexture = state.r_segs.maskedtexture as i32;
     state.r_segs.toptexture = state.r_segs.bottomtexture;
     state.r_segs.midtexture = state.r_segs.toptexture;
-    (*state.r_bsp.ds_p).maskedtexturecol = ::core::ptr::null_mut::<i16>();
+    state.r_bsp.drawsegs[state.r_bsp.ds_p].maskedtexturecol = None;
     if state.r_bsp.backsector.is_none() {
         state.r_segs.midtexture = state.r_data.texturetranslation
             [(*state.p_setup.side_mut(state.r_bsp.sidedef)).midtexture as usize];
@@ -436,52 +426,52 @@ pub unsafe fn R_StoreWallRange(state: &mut GameState, mut start: i32, mut stop: 
             state.r_segs.rw_midtexturemid = state.r_segs.worldtop as fixed_t;
         }
         state.r_segs.rw_midtexturemid += (*state.p_setup.side_mut(state.r_bsp.sidedef)).rowoffset;
-        (*state.r_bsp.ds_p).silhouette = SIL_BOTH;
-        (*state.r_bsp.ds_p).sprtopclip = &raw mut state.r_things.screenheightarray as *mut i16;
-        (*state.r_bsp.ds_p).sprbottomclip = &raw mut state.r_things.negonearray as *mut i16;
-        (*state.r_bsp.ds_p).bsilheight = INT_MAX as fixed_t;
-        (*state.r_bsp.ds_p).tsilheight = INT_MIN as fixed_t;
+        state.r_bsp.drawsegs[state.r_bsp.ds_p].silhouette = SIL_BOTH;
+        state.r_bsp.drawsegs[state.r_bsp.ds_p].sprtopclip = Some(ClipArray::ScreenHeightArray);
+        state.r_bsp.drawsegs[state.r_bsp.ds_p].sprbottomclip = Some(ClipArray::NegOneArray);
+        state.r_bsp.drawsegs[state.r_bsp.ds_p].bsilheight = INT_MAX as fixed_t;
+        state.r_bsp.drawsegs[state.r_bsp.ds_p].tsilheight = INT_MIN as fixed_t;
     } else {
-        (*state.r_bsp.ds_p).sprbottomclip = ::core::ptr::null_mut::<i16>();
-        (*state.r_bsp.ds_p).sprtopclip = (*state.r_bsp.ds_p).sprbottomclip;
-        (*state.r_bsp.ds_p).silhouette = 0 as i32;
+        state.r_bsp.drawsegs[state.r_bsp.ds_p].sprbottomclip = None;
+        state.r_bsp.drawsegs[state.r_bsp.ds_p].sprtopclip = state.r_bsp.drawsegs[state.r_bsp.ds_p].sprbottomclip;
+        state.r_bsp.drawsegs[state.r_bsp.ds_p].silhouette = 0 as i32;
         if (*state.p_setup.sector_mut(state.r_bsp.frontsector.unwrap())).floorheight
             > (*state.p_setup.sector_mut(state.r_bsp.backsector.unwrap())).floorheight
         {
-            (*state.r_bsp.ds_p).silhouette = SIL_BOTTOM;
-            (*state.r_bsp.ds_p).bsilheight =
+            state.r_bsp.drawsegs[state.r_bsp.ds_p].silhouette = SIL_BOTTOM;
+            state.r_bsp.drawsegs[state.r_bsp.ds_p].bsilheight =
                 (*state.p_setup.sector_mut(state.r_bsp.frontsector.unwrap())).floorheight;
         } else if (*state.p_setup.sector_mut(state.r_bsp.backsector.unwrap())).floorheight
             > state.r_main.viewz
         {
-            (*state.r_bsp.ds_p).silhouette = SIL_BOTTOM;
-            (*state.r_bsp.ds_p).bsilheight = INT_MAX as fixed_t;
+            state.r_bsp.drawsegs[state.r_bsp.ds_p].silhouette = SIL_BOTTOM;
+            state.r_bsp.drawsegs[state.r_bsp.ds_p].bsilheight = INT_MAX as fixed_t;
         }
         if (*state.p_setup.sector_mut(state.r_bsp.frontsector.unwrap())).ceilingheight
             < (*state.p_setup.sector_mut(state.r_bsp.backsector.unwrap())).ceilingheight
         {
-            (*state.r_bsp.ds_p).silhouette |= SIL_TOP;
-            (*state.r_bsp.ds_p).tsilheight =
+            state.r_bsp.drawsegs[state.r_bsp.ds_p].silhouette |= SIL_TOP;
+            state.r_bsp.drawsegs[state.r_bsp.ds_p].tsilheight =
                 (*state.p_setup.sector_mut(state.r_bsp.frontsector.unwrap())).ceilingheight;
         } else if (*state.p_setup.sector_mut(state.r_bsp.backsector.unwrap())).ceilingheight
             < state.r_main.viewz
         {
-            (*state.r_bsp.ds_p).silhouette |= SIL_TOP;
-            (*state.r_bsp.ds_p).tsilheight = INT_MIN as fixed_t;
+            state.r_bsp.drawsegs[state.r_bsp.ds_p].silhouette |= SIL_TOP;
+            state.r_bsp.drawsegs[state.r_bsp.ds_p].tsilheight = INT_MIN as fixed_t;
         }
         if (*state.p_setup.sector_mut(state.r_bsp.backsector.unwrap())).ceilingheight
             <= (*state.p_setup.sector_mut(state.r_bsp.frontsector.unwrap())).floorheight
         {
-            (*state.r_bsp.ds_p).sprbottomclip = &raw mut state.r_things.negonearray as *mut i16;
-            (*state.r_bsp.ds_p).bsilheight = INT_MAX as fixed_t;
-            (*state.r_bsp.ds_p).silhouette |= SIL_BOTTOM;
+            state.r_bsp.drawsegs[state.r_bsp.ds_p].sprbottomclip = Some(ClipArray::NegOneArray);
+            state.r_bsp.drawsegs[state.r_bsp.ds_p].bsilheight = INT_MAX as fixed_t;
+            state.r_bsp.drawsegs[state.r_bsp.ds_p].silhouette |= SIL_BOTTOM;
         }
         if (*state.p_setup.sector_mut(state.r_bsp.backsector.unwrap())).floorheight
             >= (*state.p_setup.sector_mut(state.r_bsp.frontsector.unwrap())).ceilingheight
         {
-            (*state.r_bsp.ds_p).sprtopclip = &raw mut state.r_things.screenheightarray as *mut i16;
-            (*state.r_bsp.ds_p).tsilheight = INT_MIN as fixed_t;
-            (*state.r_bsp.ds_p).silhouette |= SIL_TOP;
+            state.r_bsp.drawsegs[state.r_bsp.ds_p].sprtopclip = Some(ClipArray::ScreenHeightArray);
+            state.r_bsp.drawsegs[state.r_bsp.ds_p].tsilheight = INT_MIN as fixed_t;
+            state.r_bsp.drawsegs[state.r_bsp.ds_p].silhouette |= SIL_TOP;
         }
         state.r_segs.worldhigh = ((*state.p_setup.sector_mut(state.r_bsp.backsector.unwrap()))
             .ceilingheight
@@ -550,15 +540,12 @@ pub unsafe fn R_StoreWallRange(state: &mut GameState, mut start: i32, mut stop: 
             (*state.p_setup.side_mut(state.r_bsp.sidedef)).rowoffset;
         if (*state.p_setup.side_mut(state.r_bsp.sidedef)).midtexture != 0 {
             state.r_segs.maskedtexture = true;
-            state.r_segs.maskedtexturecol = state
-                .r_plane
-                .lastopening
-                .offset(-(state.r_segs.rw_x as isize));
-            (*state.r_bsp.ds_p).maskedtexturecol = state.r_segs.maskedtexturecol;
-            state.r_plane.lastopening = state
-                .r_plane
-                .lastopening
-                .offset((state.r_segs.rw_stopx - state.r_segs.rw_x) as isize);
+            state.r_segs.maskedtexturecol = Some(ClipArray::Openings(
+                state.r_plane.lastopening as isize - state.r_segs.rw_x as isize,
+            ));
+            state.r_bsp.drawsegs[state.r_bsp.ds_p].maskedtexturecol = state.r_segs.maskedtexturecol;
+            state.r_plane.lastopening +=
+                (state.r_segs.rw_stopx - state.r_segs.rw_x) as usize;
         }
     }
     state.r_segs.segtextured =
@@ -652,59 +639,59 @@ pub unsafe fn R_StoreWallRange(state: &mut GameState, mut start: i32, mut stop: 
     }
     if state.r_segs.markceiling {
         let (ceilingplane, rw_x, rw_stopx_1) = (
-            state.r_plane.ceilingplane,
+            state.r_plane.ceilingplane.unwrap(),
             state.r_segs.rw_x,
             state.r_segs.rw_stopx - 1 as i32,
         );
-        state.r_plane.ceilingplane = R_CheckPlane(state, ceilingplane, rw_x, rw_stopx_1);
+        state.r_plane.ceilingplane = Some(R_CheckPlane(state, ceilingplane, rw_x, rw_stopx_1));
     }
     if state.r_segs.markfloor {
         let (floorplane, rw_x2, rw_stopx_2) = (
-            state.r_plane.floorplane,
+            state.r_plane.floorplane.unwrap(),
             state.r_segs.rw_x,
             state.r_segs.rw_stopx - 1 as i32,
         );
-        state.r_plane.floorplane = R_CheckPlane(state, floorplane, rw_x2, rw_stopx_2);
+        state.r_plane.floorplane = Some(R_CheckPlane(state, floorplane, rw_x2, rw_stopx_2));
     }
     R_RenderSegLoop(state);
-    if ((*state.r_bsp.ds_p).silhouette & SIL_TOP != 0 || state.r_segs.maskedtexture)
-        && (*state.r_bsp.ds_p).sprtopclip.is_null()
+    if (state.r_bsp.drawsegs[state.r_bsp.ds_p].silhouette & SIL_TOP != 0 || state.r_segs.maskedtexture)
+        && state.r_bsp.drawsegs[state.r_bsp.ds_p].sprtopclip.is_none()
     {
         memcpy(
-            state.r_plane.lastopening as *mut ::core::ffi::c_void,
+            (&raw mut state.r_plane.openings as *mut i16).add(state.r_plane.lastopening)
+                as *mut ::core::ffi::c_void,
             (&raw mut state.r_plane.ceilingclip as *mut i16).offset(start as isize)
                 as *const ::core::ffi::c_void,
             (2 as i32 * (state.r_segs.rw_stopx - start)) as size_t,
         );
-        (*state.r_bsp.ds_p).sprtopclip = state.r_plane.lastopening.offset(-(start as isize));
-        state.r_plane.lastopening = state
-            .r_plane
-            .lastopening
-            .offset((state.r_segs.rw_stopx - start) as isize);
+        state.r_bsp.drawsegs[state.r_bsp.ds_p].sprtopclip = Some(ClipArray::Openings(
+            state.r_plane.lastopening as isize - start as isize,
+        ));
+        state.r_plane.lastopening += (state.r_segs.rw_stopx - start) as usize;
     }
-    if ((*state.r_bsp.ds_p).silhouette & SIL_BOTTOM != 0 || state.r_segs.maskedtexture)
-        && (*state.r_bsp.ds_p).sprbottomclip.is_null()
+    if (state.r_bsp.drawsegs[state.r_bsp.ds_p].silhouette & SIL_BOTTOM != 0 || state.r_segs.maskedtexture)
+        && state.r_bsp.drawsegs[state.r_bsp.ds_p].sprbottomclip.is_none()
     {
         memcpy(
-            state.r_plane.lastopening as *mut ::core::ffi::c_void,
+            (&raw mut state.r_plane.openings as *mut i16).add(state.r_plane.lastopening)
+                as *mut ::core::ffi::c_void,
             (&raw mut state.r_plane.floorclip as *mut i16).offset(start as isize)
                 as *const ::core::ffi::c_void,
             (2 as i32 * (state.r_segs.rw_stopx - start)) as size_t,
         );
-        (*state.r_bsp.ds_p).sprbottomclip = state.r_plane.lastopening.offset(-(start as isize));
-        state.r_plane.lastopening = state
-            .r_plane
-            .lastopening
-            .offset((state.r_segs.rw_stopx - start) as isize);
+        state.r_bsp.drawsegs[state.r_bsp.ds_p].sprbottomclip = Some(ClipArray::Openings(
+            state.r_plane.lastopening as isize - start as isize,
+        ));
+        state.r_plane.lastopening += (state.r_segs.rw_stopx - start) as usize;
     }
-    if state.r_segs.maskedtexture && (*state.r_bsp.ds_p).silhouette & SIL_TOP == 0 {
-        (*state.r_bsp.ds_p).silhouette |= SIL_TOP;
-        (*state.r_bsp.ds_p).tsilheight = INT_MIN as fixed_t;
+    if state.r_segs.maskedtexture && state.r_bsp.drawsegs[state.r_bsp.ds_p].silhouette & SIL_TOP == 0 {
+        state.r_bsp.drawsegs[state.r_bsp.ds_p].silhouette |= SIL_TOP;
+        state.r_bsp.drawsegs[state.r_bsp.ds_p].tsilheight = INT_MIN as fixed_t;
     }
-    if state.r_segs.maskedtexture && (*state.r_bsp.ds_p).silhouette & SIL_BOTTOM == 0 {
-        (*state.r_bsp.ds_p).silhouette |= SIL_BOTTOM;
-        (*state.r_bsp.ds_p).bsilheight = INT_MAX as fixed_t;
+    if state.r_segs.maskedtexture && state.r_bsp.drawsegs[state.r_bsp.ds_p].silhouette & SIL_BOTTOM == 0 {
+        state.r_bsp.drawsegs[state.r_bsp.ds_p].silhouette |= SIL_BOTTOM;
+        state.r_bsp.drawsegs[state.r_bsp.ds_p].bsilheight = INT_MAX as fixed_t;
     }
-    state.r_bsp.ds_p = state.r_bsp.ds_p.offset(1);
+    state.r_bsp.ds_p += 1;
 }
 pub const __SHRT_MAX__: i32 = 32767;
