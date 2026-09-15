@@ -188,7 +188,7 @@ pub unsafe fn R_PointOnSide(mut x: fixed_t, mut y: fixed_t, mut node: *mut node_
     if right < left {
         return 0_i32;
     }
-    return 1_i32;
+    1_i32
 }
 pub fn R_PointOnSegSide(
     state: &mut GameState,
@@ -235,7 +235,7 @@ pub fn R_PointOnSegSide(
     if right < left {
         return 0_i32;
     }
-    return 1_i32;
+    1_i32
 }
 pub fn R_PointToAngle(state: &mut GameState, mut x: fixed_t, mut y: fixed_t) -> angle_t {
     x -= state.r_main.viewx;
@@ -248,8 +248,8 @@ pub fn R_PointToAngle(state: &mut GameState, mut x: fixed_t, mut y: fixed_t) -> 
             if x > y {
                 tantoangle[SlopeDiv(y as u32, x as u32) as usize]
             } else {
-                return ((ANG90 - 1_i32) as angle_t)
-                    .wrapping_sub(tantoangle[SlopeDiv(x as u32, y as u32) as usize]);
+                ((ANG90 - 1_i32) as angle_t)
+                    .wrapping_sub(tantoangle[SlopeDiv(x as u32, y as u32) as usize])
             }
         } else {
             y = -y;
@@ -359,7 +359,7 @@ pub fn R_InitTextureMapping(state: &mut GameState) {
             t = state.r_draw.viewwidth + 1_i32;
         } else {
             t = FixedMul(finetangent[i as usize], focallength);
-            t = state.r_main.centerxfrac - t + FRACUNIT - 1_i32 >> FRACBITS;
+            t = (state.r_main.centerxfrac - t + FRACUNIT - 1_i32) >> FRACBITS;
             if t < -1_i32 {
                 t = -1_i32;
             } else if t > state.r_draw.viewwidth + 1_i32 {
@@ -439,7 +439,7 @@ pub unsafe fn R_ExecuteSetViewSize(state: &mut GameState) {
         state.r_draw.viewheight = SCREENHEIGHT;
     } else {
         state.r_draw.scaledviewwidth = state.r_main.setblocks * 32_i32;
-        state.r_draw.viewheight = state.r_main.setblocks * 168_i32 / 10_i32 & !7_i32;
+        state.r_draw.viewheight = (state.r_main.setblocks * 168_i32 / 10_i32) & !7_i32;
     }
     state.r_main.detailshift = state.r_main.setdetail;
     state.r_draw.viewwidth = state.r_draw.scaledviewwidth >> state.r_main.detailshift;

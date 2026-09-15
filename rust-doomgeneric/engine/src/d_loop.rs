@@ -138,7 +138,7 @@ fn GetAdjustedTime(state: &mut GameState) -> i32 {
     if state.d_loop.new_sync {
         time_ms += offsetms / FRACUNIT;
     }
-    return time_ms * TICRATE / 1000_i32;
+    time_ms * TICRATE / 1000_i32
 }
 unsafe fn BuildNewTic(state: &mut GameState) -> bool {
     let mut gameticdiv: i32 = 0;

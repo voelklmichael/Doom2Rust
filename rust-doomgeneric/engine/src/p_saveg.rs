@@ -875,7 +875,7 @@ pub unsafe fn P_ArchiveWorld(state: &mut GameState) {
         saveg_write16(state, (*li).tag);
         j = 0_i32;
         while j < 2_i32 {
-            if !((*li).sidenum[j as usize] as i32 == -1_i32) {
+            if (*li).sidenum[j as usize] as i32 != -1_i32 {
                 si = state.p_setup.side_mut(SideId(
                     *(&raw mut (*li).sidenum as *mut i16).offset(j as isize) as u32,
                 ));
@@ -919,7 +919,7 @@ pub unsafe fn P_UnArchiveWorld(state: &mut GameState) {
         (*li).tag = saveg_read16(state);
         j = 0_i32;
         while j < 2_i32 {
-            if !((*li).sidenum[j as usize] as i32 == -1_i32) {
+            if (*li).sidenum[j as usize] as i32 != -1_i32 {
                 si = state.p_setup.side_mut(SideId(
                     *(&raw mut (*li).sidenum as *mut i16).offset(j as isize) as u32,
                 ));

@@ -22,13 +22,13 @@ pub fn M_CheckParmWithArgs(state: &mut GameState, check: &str, mut num_args: i32
         }
         i += 1;
     }
-    return 0_i32;
+    0_i32
 }
 pub fn M_ParmExists(state: &mut GameState, check: &str) -> bool {
-    return M_CheckParm(state, check) != 0_i32;
+    M_CheckParm(state, check) != 0_i32
 }
 pub fn M_CheckParm(state: &mut GameState, check: &str) -> i32 {
-    return M_CheckParmWithArgs(state, check, 0_i32);
+    M_CheckParmWithArgs(state, check, 0_i32)
 }
 pub fn M_FindResponseFile(state: &mut GameState) {
     let mut i: i32 = 1_i32;

@@ -268,7 +268,7 @@ pub unsafe fn EV_StartLightStrobing(state: &mut GameState, mut line: LineId) {
     secnum = -1_i32;
     loop {
         secnum = P_FindSectorFromLineTag(state, line, secnum);
-        if !(secnum >= 0_i32) {
+        if secnum < 0_i32 {
             break;
         }
         let sec = state.p_setup.sector_mut(SectorId(secnum as u32));

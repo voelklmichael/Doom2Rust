@@ -373,7 +373,7 @@ pub unsafe fn D_Display(state: &mut GameState) {
             nowtime = I_GetTime(state);
             tics = nowtime - wipestart;
             I_Sleep(state, 1_i32);
-            if !(tics <= 0_i32) {
+            if tics > 0_i32 {
                 break;
             }
         }

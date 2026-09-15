@@ -753,9 +753,9 @@ pub fn WI_Responder() -> bool {
 pub unsafe fn WI_drawLF(state: &mut GameState) {
     let mut y: i32 = WI_TITLEY;
     if state.doomstat.gamemode as u32 != GameMode_t::commercial as i32 as u32
-        || (*state.wbs()).last < state.wi_stuff.NUMCMAPS
+        || state.wbs().last < state.wi_stuff.NUMCMAPS
     {
-        let index = (*state.wbs()).last as usize;
+        let index = state.wbs().last as usize;
         let last_lump = state.wi_stuff.lnames[index];
         let last_patch = V_CachePatchNum(state, last_lump);
         V_DrawPatch(
@@ -772,8 +772,8 @@ pub unsafe fn WI_drawLF(state: &mut GameState) {
             y,
             finished_patch,
         );
-    } else if (*state.wbs()).last != state.wi_stuff.NUMCMAPS {
-        if (*state.wbs()).last > state.wi_stuff.NUMCMAPS {
+    } else if state.wbs().last != state.wi_stuff.NUMCMAPS {
+        if state.wbs().last > state.wi_stuff.NUMCMAPS {
             let mut tmp: patch_t = patch_t {
                 width: SCREENWIDTH as i16,
                 height: SCREENHEIGHT as i16,
@@ -794,7 +794,7 @@ pub unsafe fn WI_drawEL(state: &mut GameState) {
         y,
         entering_patch,
     );
-    let index = (*state.wbs()).next as usize;
+    let index = state.wbs().next as usize;
     let next_lump = state.wi_stuff.lnames[index];
     let next_patch = V_CachePatchNum(state, next_lump);
     y += 5_i32 * (*next_patch).height as i32 / 4_i32;
@@ -815,8 +815,8 @@ pub unsafe fn WI_drawOnLnode(state: &mut GameState, mut n: i32, mut c: *mut i32)
     i = 0_i32;
     loop {
         let patch = V_CachePatchNum(state, *c.offset(i as isize));
-        left = lnodes[(*state.wbs()).epsd as usize][n as usize].x - (*patch).leftoffset as i32;
-        top = lnodes[(*state.wbs()).epsd as usize][n as usize].y - (*patch).topoffset as i32;
+        left = lnodes[state.wbs().epsd as usize][n as usize].x - (*patch).leftoffset as i32;
+        top = lnodes[state.wbs().epsd as usize][n as usize].y - (*patch).topoffset as i32;
         right = left + (*patch).width as i32;
         bottom = top + (*patch).height as i32;
         if left >= 0_i32 && right < SCREENWIDTH && top >= 0_i32 && bottom < SCREENHEIGHT {
@@ -830,7 +830,7 @@ pub unsafe fn WI_drawOnLnode(state: &mut GameState, mut n: i32, mut c: *mut i32)
     }
     if fits && i < 2_i32 {
         let patch = V_CachePatchNum(state, *c.offset(i as isize));
-        let index = (*state.wbs()).epsd as usize;
+        let index = state.wbs().epsd as usize;
         V_DrawPatch(
             state,
             lnodes[index][n as usize].x,
@@ -847,13 +847,13 @@ pub unsafe fn WI_initAnimatedBack(state: &mut GameState) {
     if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 {
         return;
     }
-    if (*state.wbs()).epsd > 2_i32 {
+    if state.wbs().epsd > 2_i32 {
         return;
     }
     i = 0_i32;
-    while i < state.wi_stuff.NUMANIMS[(*state.wbs()).epsd as usize] {
+    while i < state.wi_stuff.NUMANIMS[state.wbs().epsd as usize] {
         a = (*(&raw mut state.wi_stuff.anims as *mut *mut anim_t)
-            .offset((*state.wbs()).epsd as isize))
+            .offset(state.wbs().epsd as isize))
         .offset(i as isize) as *mut anim_t;
         (*a).ctr = -1_i32;
         if (*a).type_0 == AnimEnum::ANIM_ALWAYS {
@@ -876,13 +876,13 @@ pub unsafe fn WI_updateAnimatedBack(state: &mut GameState) {
     if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 {
         return;
     }
-    if (*state.wbs()).epsd > 2_i32 {
+    if state.wbs().epsd > 2_i32 {
         return;
     }
     i = 0_i32;
-    while i < state.wi_stuff.NUMANIMS[(*state.wbs()).epsd as usize] {
+    while i < state.wi_stuff.NUMANIMS[state.wbs().epsd as usize] {
         a = (*(&raw mut state.wi_stuff.anims as *mut *mut anim_t)
-            .offset((*state.wbs()).epsd as isize))
+            .offset(state.wbs().epsd as isize))
         .offset(i as isize) as *mut anim_t;
         if state.wi_stuff.bcnt == (*a).nexttic {
             match (*a).type_0 as u32 {
@@ -906,7 +906,7 @@ pub unsafe fn WI_updateAnimatedBack(state: &mut GameState) {
                 }
                 2 => {
                     if !(state.wi_stuff.state == StateEnum::StatCount && i == 7_i32)
-                        && (*state.wbs()).next == (*a).data1
+                        && state.wbs().next == (*a).data1
                     {
                         (*a).ctr += 1;
                         if (*a).ctr == (*a).nanims {
@@ -927,13 +927,13 @@ pub unsafe fn WI_drawAnimatedBack(state: &mut GameState) {
     if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 {
         return;
     }
-    if (*state.wbs()).epsd > 2_i32 {
+    if state.wbs().epsd > 2_i32 {
         return;
     }
     i = 0_i32;
-    while i < state.wi_stuff.NUMANIMS[(*state.wbs()).epsd as usize] {
+    while i < state.wi_stuff.NUMANIMS[state.wbs().epsd as usize] {
         a = (*(&raw mut state.wi_stuff.anims as *mut *mut anim_t)
-            .offset((*state.wbs()).epsd as isize))
+            .offset(state.wbs().epsd as isize))
         .offset(i as isize) as *mut anim_t;
         if (*a).ctr >= 0_i32 {
             let patch = V_CachePatchNum(state, (*a).p[(*a).ctr as usize]);
@@ -1065,14 +1065,14 @@ pub unsafe fn WI_drawShowNextLoc(state: &mut GameState) {
     WI_slamBackground(state);
     WI_drawAnimatedBack(state);
     if state.doomstat.gamemode as u32 != GameMode_t::commercial as i32 as u32 {
-        if (*state.wbs()).epsd > 2_i32 {
+        if state.wbs().epsd > 2_i32 {
             WI_drawEL(state);
             return;
         }
-        last = if (*state.wbs()).last == 8_i32 {
-            (*state.wbs()).next - 1_i32
+        last = if state.wbs().last == 8_i32 {
+            state.wbs().next - 1_i32
         } else {
-            (*state.wbs()).last
+            state.wbs().last
         };
         i = 0_i32;
         while i <= last {
@@ -1080,18 +1080,18 @@ pub unsafe fn WI_drawShowNextLoc(state: &mut GameState) {
             WI_drawOnLnode(state, i, splat);
             i += 1;
         }
-        if (*state.wbs()).didsecret {
+        if state.wbs().didsecret {
             let splat = &raw mut state.wi_stuff.splat as *mut i32;
             WI_drawOnLnode(state, 8_i32, splat);
         }
         if state.wi_stuff.snl_pointeron {
-            let next = (*state.wbs()).next;
+            let next = state.wbs().next;
             let yah = &raw mut state.wi_stuff.yah as *mut i32;
             WI_drawOnLnode(state, next, yah);
         }
     }
     if state.doomstat.gamemode as u32 != GameMode_t::commercial as i32 as u32
-        || (*state.wbs()).next != 30_i32
+        || state.wbs().next != 30_i32
     {
         WI_drawEL(state);
     }
@@ -1335,11 +1335,11 @@ pub unsafe fn WI_updateNetgameStats(state: &mut GameState) {
         while i < MAXPLAYERS {
             if state.g_game.playeringame[i as usize] {
                 state.wi_stuff.cnt_kills[i as usize] =
-                    state.plyr_index(i).skills * 100_i32 / (*state.wbs()).maxkills;
+                    state.plyr_index(i).skills * 100_i32 / state.wbs().maxkills;
                 state.wi_stuff.cnt_items[i as usize] =
-                    state.plyr_index(i).sitems * 100_i32 / (*state.wbs()).maxitems;
+                    state.plyr_index(i).sitems * 100_i32 / state.wbs().maxitems;
                 state.wi_stuff.cnt_secret[i as usize] =
-                    state.plyr_index(i).ssecret * 100_i32 / (*state.wbs()).maxsecret;
+                    state.plyr_index(i).ssecret * 100_i32 / state.wbs().maxsecret;
                 if state.wi_stuff.dofrags != 0 {
                     state.wi_stuff.cnt_frags[i as usize] = WI_fragSum(state, i);
                 }
@@ -1359,10 +1359,10 @@ pub unsafe fn WI_updateNetgameStats(state: &mut GameState) {
             if state.g_game.playeringame[i as usize] {
                 state.wi_stuff.cnt_kills[i as usize] += 2_i32;
                 if state.wi_stuff.cnt_kills[i as usize]
-                    >= state.plyr_index(i).skills * 100_i32 / (*state.wbs()).maxkills
+                    >= state.plyr_index(i).skills * 100_i32 / state.wbs().maxkills
                 {
                     state.wi_stuff.cnt_kills[i as usize] =
-                        state.plyr_index(i).skills * 100_i32 / (*state.wbs()).maxkills;
+                        state.plyr_index(i).skills * 100_i32 / state.wbs().maxkills;
                 } else {
                     stillticking = true;
                 }
@@ -1383,10 +1383,10 @@ pub unsafe fn WI_updateNetgameStats(state: &mut GameState) {
             if state.g_game.playeringame[i as usize] {
                 state.wi_stuff.cnt_items[i as usize] += 2_i32;
                 if state.wi_stuff.cnt_items[i as usize]
-                    >= state.plyr_index(i).sitems * 100_i32 / (*state.wbs()).maxitems
+                    >= state.plyr_index(i).sitems * 100_i32 / state.wbs().maxitems
                 {
                     state.wi_stuff.cnt_items[i as usize] =
-                        state.plyr_index(i).sitems * 100_i32 / (*state.wbs()).maxitems;
+                        state.plyr_index(i).sitems * 100_i32 / state.wbs().maxitems;
                 } else {
                     stillticking = true;
                 }
@@ -1407,10 +1407,10 @@ pub unsafe fn WI_updateNetgameStats(state: &mut GameState) {
             if state.g_game.playeringame[i as usize] {
                 state.wi_stuff.cnt_secret[i as usize] += 2_i32;
                 if state.wi_stuff.cnt_secret[i as usize]
-                    >= state.plyr_index(i).ssecret * 100_i32 / (*state.wbs()).maxsecret
+                    >= state.plyr_index(i).ssecret * 100_i32 / state.wbs().maxsecret
                 {
                     state.wi_stuff.cnt_secret[i as usize] =
-                        state.plyr_index(i).ssecret * 100_i32 / (*state.wbs()).maxsecret;
+                        state.plyr_index(i).ssecret * 100_i32 / state.wbs().maxsecret;
                 } else {
                     stillticking = true;
                 }
@@ -1560,13 +1560,13 @@ pub unsafe fn WI_updateStats(state: &mut GameState) {
     if state.wi_stuff.acceleratestage != 0 && state.wi_stuff.sp_state != 10_i32 {
         state.wi_stuff.acceleratestage = 0_i32;
         state.wi_stuff.cnt_kills[0] =
-            (*state.plyr_index(state.wi_stuff.me)).skills * 100_i32 / (*state.wbs()).maxkills;
+            state.plyr_index(state.wi_stuff.me).skills * 100_i32 / state.wbs().maxkills;
         state.wi_stuff.cnt_items[0] =
-            (*state.plyr_index(state.wi_stuff.me)).sitems * 100_i32 / (*state.wbs()).maxitems;
+            state.plyr_index(state.wi_stuff.me).sitems * 100_i32 / state.wbs().maxitems;
         state.wi_stuff.cnt_secret[0] =
-            (*state.plyr_index(state.wi_stuff.me)).ssecret * 100_i32 / (*state.wbs()).maxsecret;
-        state.wi_stuff.cnt_time = (*state.plyr_index(state.wi_stuff.me)).stime / TICRATE;
-        state.wi_stuff.cnt_par = (*state.wbs()).partime / TICRATE;
+            state.plyr_index(state.wi_stuff.me).ssecret * 100_i32 / state.wbs().maxsecret;
+        state.wi_stuff.cnt_time = state.plyr_index(state.wi_stuff.me).stime / TICRATE;
+        state.wi_stuff.cnt_par = state.wbs().partime / TICRATE;
         S_StartSound(state, SoundOrigin::None, sfx_barexp as i32);
         state.wi_stuff.sp_state = 10_i32;
     }
@@ -1576,10 +1576,10 @@ pub unsafe fn WI_updateStats(state: &mut GameState) {
             S_StartSound(state, SoundOrigin::None, sfx_pistol as i32);
         }
         if state.wi_stuff.cnt_kills[0]
-            >= (*state.plyr_index(state.wi_stuff.me)).skills * 100_i32 / (*state.wbs()).maxkills
+            >= state.plyr_index(state.wi_stuff.me).skills * 100_i32 / state.wbs().maxkills
         {
             state.wi_stuff.cnt_kills[0] =
-                (*state.plyr_index(state.wi_stuff.me)).skills * 100_i32 / (*state.wbs()).maxkills;
+                state.plyr_index(state.wi_stuff.me).skills * 100_i32 / state.wbs().maxkills;
             S_StartSound(state, SoundOrigin::None, sfx_barexp as i32);
             state.wi_stuff.sp_state += 1;
         }
@@ -1589,10 +1589,10 @@ pub unsafe fn WI_updateStats(state: &mut GameState) {
             S_StartSound(state, SoundOrigin::None, sfx_pistol as i32);
         }
         if state.wi_stuff.cnt_items[0]
-            >= (*state.plyr_index(state.wi_stuff.me)).sitems * 100_i32 / (*state.wbs()).maxitems
+            >= state.plyr_index(state.wi_stuff.me).sitems * 100_i32 / state.wbs().maxitems
         {
             state.wi_stuff.cnt_items[0] =
-                (*state.plyr_index(state.wi_stuff.me)).sitems * 100_i32 / (*state.wbs()).maxitems;
+                state.plyr_index(state.wi_stuff.me).sitems * 100_i32 / state.wbs().maxitems;
             S_StartSound(state, SoundOrigin::None, sfx_barexp as i32);
             state.wi_stuff.sp_state += 1;
         }
@@ -1602,10 +1602,10 @@ pub unsafe fn WI_updateStats(state: &mut GameState) {
             S_StartSound(state, SoundOrigin::None, sfx_pistol as i32);
         }
         if state.wi_stuff.cnt_secret[0]
-            >= (*state.plyr_index(state.wi_stuff.me)).ssecret * 100_i32 / (*state.wbs()).maxsecret
+            >= state.plyr_index(state.wi_stuff.me).ssecret * 100_i32 / state.wbs().maxsecret
         {
             state.wi_stuff.cnt_secret[0] =
-                (*state.plyr_index(state.wi_stuff.me)).ssecret * 100_i32 / (*state.wbs()).maxsecret;
+                state.plyr_index(state.wi_stuff.me).ssecret * 100_i32 / state.wbs().maxsecret;
             S_StartSound(state, SoundOrigin::None, sfx_barexp as i32);
             state.wi_stuff.sp_state += 1;
         }
@@ -1614,13 +1614,13 @@ pub unsafe fn WI_updateStats(state: &mut GameState) {
             S_StartSound(state, SoundOrigin::None, sfx_pistol as i32);
         }
         state.wi_stuff.cnt_time += 3_i32;
-        if state.wi_stuff.cnt_time >= (*state.plyr_index(state.wi_stuff.me)).stime / TICRATE {
-            state.wi_stuff.cnt_time = (*state.plyr_index(state.wi_stuff.me)).stime / TICRATE;
+        if state.wi_stuff.cnt_time >= state.plyr_index(state.wi_stuff.me).stime / TICRATE {
+            state.wi_stuff.cnt_time = state.plyr_index(state.wi_stuff.me).stime / TICRATE;
         }
         state.wi_stuff.cnt_par += 3_i32;
-        if state.wi_stuff.cnt_par >= (*state.wbs()).partime / TICRATE {
-            state.wi_stuff.cnt_par = (*state.wbs()).partime / TICRATE;
-            if state.wi_stuff.cnt_time >= (*state.plyr_index(state.wi_stuff.me)).stime / TICRATE {
+        if state.wi_stuff.cnt_par >= state.wbs().partime / TICRATE {
+            state.wi_stuff.cnt_par = state.wbs().partime / TICRATE;
+            if state.wi_stuff.cnt_time >= state.plyr_index(state.wi_stuff.me).stime / TICRATE {
                 S_StartSound(state, SoundOrigin::None, sfx_barexp as i32);
                 state.wi_stuff.sp_state += 1;
             }
@@ -1670,7 +1670,7 @@ pub unsafe fn WI_drawStats(state: &mut GameState) {
     V_DrawPatch(state, SP_TIMEX, SP_TIMEY, timepatch_patch);
     let cnt_time = state.wi_stuff.cnt_time;
     WI_drawTime(state, SCREENWIDTH / 2_i32 - SP_TIMEX, SP_TIMEY, cnt_time);
-    if (*state.wbs()).epsd < 3_i32 {
+    if state.wbs().epsd < 3_i32 {
         let par_patch = V_CachePatchNum(state, state.wi_stuff.par);
         V_DrawPatch(state, SCREENWIDTH / 2_i32 + SP_TIMEX, SP_TIMEY, par_patch);
         let cnt_par = state.wi_stuff.cnt_par;
@@ -1746,8 +1746,8 @@ unsafe fn WI_loadUnloadData(state: &mut GameState, mut callback: load_callback_t
         i = 0_i32;
         while i < NUMMAPS {
             let cb_ptr = state.wi_stuff.lnames.as_mut_ptr().offset(i as isize) as *mut i32;
-            let s = &format!("WILV{}{}", (*state.wbs()).epsd, i,);
-            callback.expect("non-null function pointer")(state, &s, cb_ptr);
+            let s = &format!("WILV{}{}", state.wbs().epsd, i,);
+            callback.expect("non-null function pointer")(state, s, cb_ptr);
             i += 1;
         }
         let cb_ptr = (&raw mut state.wi_stuff.yah as *mut i32).offset(0_i32 as isize) as *mut i32;
@@ -1756,16 +1756,16 @@ unsafe fn WI_loadUnloadData(state: &mut GameState, mut callback: load_callback_t
         callback.expect("non-null function pointer")(state, "WIURH1", cb_ptr);
         let cb_ptr = (&raw mut state.wi_stuff.splat as *mut i32).offset(0_i32 as isize) as *mut i32;
         callback.expect("non-null function pointer")(state, "WISPLAT", cb_ptr);
-        if (*state.wbs()).epsd < 3_i32 {
+        if state.wbs().epsd < 3_i32 {
             j = 0_i32;
-            while j < state.wi_stuff.NUMANIMS[(*state.wbs()).epsd as usize] {
+            while j < state.wi_stuff.NUMANIMS[state.wbs().epsd as usize] {
                 a = (*(&raw mut state.wi_stuff.anims as *mut *mut anim_t)
-                    .offset((*state.wbs()).epsd as isize))
+                    .offset(state.wbs().epsd as isize))
                 .offset(j as isize) as *mut anim_t;
                 i = 0_i32;
                 while i < (*a).nanims {
-                    if (*state.wbs()).epsd != 1_i32 || j != 8_i32 {
-                        let s = format!("WIA{}{:02}{:02}", (*state.wbs()).epsd, j, i,);
+                    if state.wbs().epsd != 1_i32 || j != 8_i32 {
+                        let s = format!("WIA{}{:02}{:02}", state.wbs().epsd, j, i,);
                         callback.expect("non-null function pointer")(
                             state,
                             &s,
@@ -1839,10 +1839,10 @@ unsafe fn WI_loadUnloadData(state: &mut GameState, mut callback: load_callback_t
     }
     let name = if state.doomstat.gamemode == GameMode_t::commercial {
         "INTERPIC".to_string()
-    } else if state.doomstat.gamemode == GameMode_t::retail && (*state.wbs()).epsd == 3_i32 {
+    } else if state.doomstat.gamemode == GameMode_t::retail && state.wbs().epsd == 3_i32 {
         "INTERPIC".to_string()
     } else {
-        format!("WIMAP{}", (*state.wbs()).epsd)
+        format!("WIMAP{}", state.wbs().epsd)
     };
     let cb_ptr = &raw mut state.wi_stuff.background;
     callback.expect("non-null function pointer")(state, &name, cb_ptr);
@@ -1900,7 +1900,7 @@ pub unsafe fn WI_initVariables(state: &mut GameState) {
     state.wi_stuff.bcnt = 0_i32;
     state.wi_stuff.cnt = state.wi_stuff.bcnt;
     state.wi_stuff.firstrefresh = 1_i32;
-    state.wi_stuff.me = (*state.wbs()).pnum;
+    state.wi_stuff.me = state.wbs().pnum;
     if state.wbs().maxkills == 0 {
         state.wbs().maxkills = 1;
     }
@@ -1910,10 +1910,8 @@ pub unsafe fn WI_initVariables(state: &mut GameState) {
     if state.wbs().maxsecret == 0 {
         state.wbs().maxsecret = 1_i32;
     }
-    if state.doomstat.gamemode != GameMode_t::retail {
-        if state.wbs().epsd > 2_i32 {
-            state.wbs().epsd -= 3_i32;
-        }
+    if state.doomstat.gamemode != GameMode_t::retail && state.wbs().epsd > 2_i32 {
+        state.wbs().epsd -= 3_i32;
     }
 }
 pub fn WI_Start(state: &mut GameState) {

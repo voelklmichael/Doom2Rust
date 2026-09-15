@@ -741,7 +741,7 @@ pub fn V_DrawMouseSpeedBox(state: &mut IVideoState, mut speed: i32) {
     black = I_GetPaletteIndex(0_i32, 0_i32, 0_i32);
     yellow = I_GetPaletteIndex(0xff_i32, 0xff_i32, 0_i32);
     white = I_GetPaletteIndex(0xff_i32, 0xff_i32, 0xff_i32);
-    if state.usemouse == 0 || ((state.mouse_acceleration - 1_i32 as f32) as f64).abs() < 0.01f64 {
+    if state.usemouse == 0 || ((state.mouse_acceleration - 1_f32) as f64).abs() < 0.01f64 {
         return;
     }
     box_x = SCREENWIDTH - MOUSE_SPEED_BOX_WIDTH - 10_i32;

@@ -326,8 +326,8 @@ pub unsafe fn R_DrawMaskedColumn(state: &mut GameState, mut column: *mut column_
         topscreen =
             state.r_things.sprtopscreen + state.r_things.spryscale * (*column).topdelta as i32;
         bottomscreen = topscreen + state.r_things.spryscale * (*column).length as i32;
-        state.r_draw.dc_yl = topscreen + FRACUNIT - 1_i32 >> FRACBITS;
-        state.r_draw.dc_yh = bottomscreen - 1_i32 >> FRACBITS;
+        state.r_draw.dc_yl = (topscreen + FRACUNIT - 1_i32) >> FRACBITS;
+        state.r_draw.dc_yh = (bottomscreen - 1_i32) >> FRACBITS;
         if state.r_draw.dc_yh >= *mfloorclip.offset(state.r_draw.dc_x as isize) as i32 {
             state.r_draw.dc_yh = *mfloorclip.offset(state.r_draw.dc_x as isize) as i32 - 1_i32;
         }
@@ -357,8 +357,7 @@ pub unsafe fn R_DrawVisSprite(state: &mut GameState, mut vis: *mut vissprite_t) 
         state.r_main.colfunc = state.r_main.fuzzcolfunc;
     } else if (*vis).mobjflags & MF_TRANSLATION as i32 != 0 {
         state.r_main.colfunc = state.r_main.transcolfunc;
-        state.r_draw.dc_translation = (((*vis).mobjflags & MF_TRANSLATION as i32)
-            >> MF_TRANSSHIFT as i32 - 8_i32) as usize
+        state.r_draw.dc_translation = (((*vis).mobjflags & MF_TRANSLATION as i32) >> (MF_TRANSSHIFT as i32 - 8_i32)) as usize
             - 256;
     }
     state.r_draw.dc_iscale = ((*vis).xiscale.abs() >> state.r_main.detailshift) as fixed_t;
@@ -369,7 +368,7 @@ pub unsafe fn R_DrawVisSprite(state: &mut GameState, mut vis: *mut vissprite_t) 
         state.r_main.centeryfrac - FixedMul(state.r_draw.dc_texturemid, state.r_things.spryscale);
     state.r_draw.dc_x = (*vis).x1;
     while state.r_draw.dc_x <= (*vis).x2 {
-        texturecolumn = (frac >> FRACBITS);
+        texturecolumn = frac >> FRACBITS;
         if texturecolumn < 0_i32 || texturecolumn >= (*patch).width as i32 {
             I_Error("R_DrawSpriteRange: bad texturecolumn");
         }
@@ -445,12 +444,12 @@ pub unsafe fn R_ProjectSprite(state: &mut GameState, mut thing: *mut mobj_t) {
         flip = (*sprframe).flip[0] != 0;
     }
     tx -= state.r_data.spriteoffset[lump as usize];
-    x1 = (state.r_main.centerxfrac + FixedMul(tx, xscale) >> FRACBITS);
+    x1 = (state.r_main.centerxfrac + FixedMul(tx, xscale)) >> FRACBITS;
     if x1 > state.r_draw.viewwidth {
         return;
     }
     tx += state.r_data.spritewidth[lump as usize];
-    x2 = (state.r_main.centerxfrac + FixedMul(tx, xscale) >> FRACBITS) - 1_i32;
+    x2 = ((state.r_main.centerxfrac + FixedMul(tx, xscale)) >> FRACBITS) - 1_i32;
     if x2 < 0_i32 {
         return;
     }
@@ -487,7 +486,7 @@ pub unsafe fn R_ProjectSprite(state: &mut GameState, mut thing: *mut mobj_t) {
     } else if (*thing).frame & FF_FULLBRIGHT != 0 {
         (*vis).colormap = Some(0);
     } else {
-        index = (xscale >> LIGHTSCALESHIFT - state.r_main.detailshift);
+        index = xscale >> (LIGHTSCALESHIFT - state.r_main.detailshift);
         if index >= MAXLIGHTSCALE {
             index = MAXLIGHTSCALE - 1_i32;
         }
@@ -565,12 +564,12 @@ pub unsafe fn R_DrawPSprite(state: &mut GameState, mut psp: *mut pspdef_t) {
     flip = (*sprframe).flip[0] != 0;
     tx = ((*psp).sx - 160_i32 * FRACUNIT) as fixed_t;
     tx -= state.r_data.spriteoffset[lump as usize];
-    x1 = (state.r_main.centerxfrac + FixedMul(tx, state.r_things.pspritescale) >> FRACBITS);
+    x1 = (state.r_main.centerxfrac + FixedMul(tx, state.r_things.pspritescale)) >> FRACBITS;
     if x1 > state.r_draw.viewwidth {
         return;
     }
     tx += state.r_data.spritewidth[lump as usize];
-    x2 = (state.r_main.centerxfrac + FixedMul(tx, state.r_things.pspritescale) >> FRACBITS) - 1_i32;
+    x2 = ((state.r_main.centerxfrac + FixedMul(tx, state.r_things.pspritescale)) >> FRACBITS) - 1_i32;
     if x2 < 0_i32 {
         return;
     }

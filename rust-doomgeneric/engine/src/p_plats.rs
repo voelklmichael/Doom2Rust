@@ -82,16 +82,12 @@ pub unsafe fn T_PlatRaise(state: &mut GameState, mut plat: *mut plat_t) {
                 0_i32,
                 1_i32,
             );
-            if (*plat).type_0 == PlattypeE::raiseAndChange
-                || (*plat).type_0 == PlattypeE::raiseToNearestAndChange
-            {
-                if state.p_tick.leveltime & 7_i32 == 0 {
-                    S_StartSound(
-                        state,
-                        SoundOrigin::Sector((*plat).sector),
-                        sfx_stnmov as i32,
-                    );
-                }
+            if ((*plat).type_0 == PlattypeE::raiseAndChange || (*plat).type_0 == PlattypeE::raiseToNearestAndChange) && state.p_tick.leveltime & 7_i32 == 0 {
+                S_StartSound(
+                    state,
+                    SoundOrigin::Sector((*plat).sector),
+                    sfx_stnmov as i32,
+                );
             }
             if res == ResultE::crushed && !(*plat).crush {
                 (*plat).count = (*plat).wait;
@@ -163,7 +159,7 @@ pub unsafe fn EV_DoPlat(
     }
     loop {
         secnum = P_FindSectorFromLineTag(state, line, secnum);
-        if !(secnum >= 0_i32) {
+        if secnum < 0_i32 {
             break;
         }
         sec = state.p_setup.sector_mut(SectorId(secnum as u32));

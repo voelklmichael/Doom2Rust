@@ -254,7 +254,7 @@ pub unsafe fn R_RenderSegLoop(state: &mut GameState) {
     let mut top: i32 = 0;
     let mut bottom: i32 = 0;
     while state.r_segs.rw_x < state.r_segs.rw_stopx {
-        yl = state.r_segs.topfrac + HEIGHTUNIT - 1_i32 >> HEIGHTBITS;
+        yl = (state.r_segs.topfrac + HEIGHTUNIT - 1_i32) >> HEIGHTBITS;
         if yl < state.r_plane.ceilingclip[state.r_segs.rw_x as usize] as i32 + 1_i32 {
             yl = state.r_plane.ceilingclip[state.r_segs.rw_x as usize] as i32 + 1_i32;
         }
@@ -271,7 +271,7 @@ pub unsafe fn R_RenderSegLoop(state: &mut GameState) {
                     bottom as byte;
             }
         }
-        yh = (state.r_segs.bottomfrac >> HEIGHTBITS);
+        yh = state.r_segs.bottomfrac >> HEIGHTBITS;
         if yh >= state.r_plane.floorclip[state.r_segs.rw_x as usize] as i32 {
             yh = state.r_plane.floorclip[state.r_segs.rw_x as usize] as i32 - 1_i32;
         }
@@ -319,7 +319,7 @@ pub unsafe fn R_RenderSegLoop(state: &mut GameState) {
             state.r_plane.floorclip[state.r_segs.rw_x as usize] = -1_i32 as i16;
         } else {
             if state.r_segs.toptexture != 0 {
-                mid = (state.r_segs.pixhigh >> HEIGHTBITS);
+                mid = state.r_segs.pixhigh >> HEIGHTBITS;
                 state.r_segs.pixhigh += state.r_segs.pixhighstep;
                 if mid >= state.r_plane.floorclip[state.r_segs.rw_x as usize] as i32 {
                     mid = state.r_plane.floorclip[state.r_segs.rw_x as usize] as i32 - 1_i32;
@@ -339,7 +339,7 @@ pub unsafe fn R_RenderSegLoop(state: &mut GameState) {
                 state.r_plane.ceilingclip[state.r_segs.rw_x as usize] = (yl - 1_i32) as i16;
             }
             if state.r_segs.bottomtexture != 0 {
-                mid = state.r_segs.pixlow + HEIGHTUNIT - 1_i32 >> HEIGHTBITS;
+                mid = (state.r_segs.pixlow + HEIGHTUNIT - 1_i32) >> HEIGHTBITS;
                 state.r_segs.pixlow += state.r_segs.pixlowstep;
                 if mid <= state.r_plane.ceilingclip[state.r_segs.rw_x as usize] as i32 {
                     mid = state.r_plane.ceilingclip[state.r_segs.rw_x as usize] as i32 + 1_i32;
@@ -436,12 +436,12 @@ pub unsafe fn R_StoreWallRange(state: &mut GameState, mut start: i32, mut stop: 
         .p_setup
         .sector_mut(state.r_bsp.frontsector.unwrap())
         .ceilingheight
-        - state.r_main.viewz) as i32;
+        - state.r_main.viewz);
     state.r_segs.worldbottom = (state
         .p_setup
         .sector_mut(state.r_bsp.frontsector.unwrap())
         .floorheight
-        - state.r_main.viewz) as i32;
+        - state.r_main.viewz);
     state.r_segs.maskedtexture = false;
     state.r_segs.bottomtexture = state.r_segs.maskedtexture as i32;
     state.r_segs.toptexture = state.r_segs.bottomtexture;
@@ -550,12 +550,12 @@ pub unsafe fn R_StoreWallRange(state: &mut GameState, mut start: i32, mut stop: 
             .p_setup
             .sector_mut(state.r_bsp.backsector.unwrap())
             .ceilingheight
-            - state.r_main.viewz) as i32;
+            - state.r_main.viewz);
         state.r_segs.worldlow = (state
             .p_setup
             .sector_mut(state.r_bsp.backsector.unwrap())
             .floorheight
-            - state.r_main.viewz) as i32;
+            - state.r_main.viewz);
         if state
             .p_setup
             .sector_mut(state.r_bsp.frontsector.unwrap())

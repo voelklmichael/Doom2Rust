@@ -149,7 +149,7 @@ pub unsafe fn cmap_to_rgb565(
         c = state.i_video.colors[*in_0 as usize];
         r = (((c.r() as i32 >> 3_i32) as uint16_t as i32) << 11_i32) as uint16_t;
         g = (((c.g() as i32 >> 2_i32) as uint16_t as i32) << 5_i32) as uint16_t;
-        b = (((c.b() as i32 >> 3_i32) as uint16_t as i32) << 0_i32) as uint16_t;
+        b = ((c.b() as i32 >> 3_i32) as uint16_t as i32) as uint16_t;
         *out = (r as i32 | g as i32 | b as i32) as uint16_t;
         in_0 = in_0.offset(1);
         j = 0_i32;

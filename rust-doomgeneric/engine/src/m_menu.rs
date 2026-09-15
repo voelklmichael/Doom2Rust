@@ -1270,7 +1270,7 @@ pub unsafe fn M_StringWidth(state: &mut GameState, string: &str) -> i32 {
     let mut c: i32 = 0;
     for b in string.bytes() {
         c = b.to_ascii_uppercase() as i32 - HU_FONTSTART;
-        if c < 0_i32 || c >= HU_FONTSIZE {
+        if !(0_i32..HU_FONTSIZE).contains(&c) {
             w += 4_i32;
         } else {
             w += (*V_CachePatchNum(state, state.hu_stuff.hu_font[c as usize])).width as i32;
@@ -1303,7 +1303,7 @@ pub unsafe fn M_WriteText(state: &mut GameState, x: i32, y: i32, string: &str) {
             cy += 12_i32;
         } else {
             c = (c as u8).to_ascii_uppercase() as i32 - HU_FONTSTART;
-            if c < 0_i32 || c >= HU_FONTSIZE {
+            if !(0_i32..HU_FONTSIZE).contains(&c) {
                 cx += 4_i32;
             } else {
                 let font_patch = V_CachePatchNum(state, state.hu_stuff.hu_font[c as usize]);
@@ -1450,8 +1450,7 @@ pub unsafe fn M_Responder(state: &mut GameState, ev: &mut event_t) -> bool {
                 {
                     let savestr =
                         state.m_menu.savegamestrings[state.m_menu.saveSlot as usize].clone();
-                    if ch >= 32_i32
-                        && ch <= 127_i32
+                    if (32_i32..=127_i32).contains(&ch)
                         && state.m_menu.saveCharIndex < SAVESTRINGSIZE - 1_i32
                         && M_StringWidth(state, &savestr) < (SAVESTRINGSIZE - 2_i32) * 8_i32
                     {

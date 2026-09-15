@@ -102,9 +102,9 @@ pub unsafe fn P_CalcSwing(state: &mut GameState, mut player: *mut player_t) {
     let mut swing: fixed_t = 0;
     let mut angle: i32 = 0;
     swing = (*player).bob;
-    angle = FINEANGLES / 70_i32 * state.p_tick.leveltime & FINEMASK;
+    angle = (FINEANGLES / 70_i32 * state.p_tick.leveltime) & FINEMASK;
     state.p_pspr.swingx = FixedMul(swing, finesine[angle as usize]);
-    angle = FINEANGLES / 70_i32 * state.p_tick.leveltime + FINEANGLES / 2_i32 & FINEMASK;
+    angle = (FINEANGLES / 70_i32 * state.p_tick.leveltime + FINEANGLES / 2_i32) & FINEMASK;
     state.p_pspr.swingy = -FixedMul(state.p_pspr.swingx, finesine[angle as usize]);
 }
 pub unsafe fn P_BringUpWeapon(state: &mut GameState, mut player: *mut player_t) {
@@ -247,7 +247,7 @@ pub unsafe fn A_WeaponReady(
     } else {
         (*player).attackdown = false_0;
     }
-    angle = 128_i32 * state.p_tick.leveltime & FINEMASK;
+    angle = (128_i32 * state.p_tick.leveltime) & FINEMASK;
     (*psp).sx = FRACUNIT + FixedMul((*player).bob, finecosine[angle as isize]);
     angle &= FINEANGLES / 2_i32 - 1_i32;
     (*psp).sy = 32 as fixed_t * FRACUNIT + FixedMul((*player).bob, finesine[angle as usize]);
@@ -319,7 +319,7 @@ pub unsafe fn A_Punch(state: &mut GameState, mut player: *mut player_t, _psp: *m
     }
     angle = (*player_mo).angle;
     angle = angle.wrapping_add(
-        (P_Random(&mut state.m_random) - P_Random(&mut state.m_random) << 18_i32) as angle_t,
+        ((P_Random(&mut state.m_random) - P_Random(&mut state.m_random)) << 18_i32) as angle_t,
     );
     slope = P_AimLineAttack(state, player_mo, angle, MELEERANGE);
     P_LineAttack(
@@ -354,7 +354,7 @@ pub unsafe fn A_Saw(state: &mut GameState, mut player: *mut player_t, _psp: *mut
     damage = 2_i32 * (P_Random(&mut state.m_random) % 10_i32 + 1_i32);
     angle = (*player_mo).angle;
     angle = angle.wrapping_add(
-        (P_Random(&mut state.m_random) - P_Random(&mut state.m_random) << 18_i32) as angle_t,
+        ((P_Random(&mut state.m_random) - P_Random(&mut state.m_random)) << 18_i32) as angle_t,
     );
     slope = P_AimLineAttack(state, player_mo, angle, MELEERANGE + 1 as fixed_t);
     P_LineAttack(
@@ -464,7 +464,7 @@ pub unsafe fn P_GunShot(state: &mut GameState, mut mo: *mut mobj_t, mut accurate
     angle = (*mo).angle;
     if !accurate {
         angle = angle.wrapping_add(
-            (P_Random(&mut state.m_random) - P_Random(&mut state.m_random) << 18_i32) as angle_t,
+            ((P_Random(&mut state.m_random) - P_Random(&mut state.m_random)) << 18_i32) as angle_t,
         );
     }
     let bulletslope = state.p_pspr.bulletslope;
@@ -551,7 +551,7 @@ pub unsafe fn A_FireShotgun2(
         damage = 5_i32 * (P_Random(&mut state.m_random) % 3_i32 + 1_i32);
         angle = (*player_mo).angle;
         angle = angle.wrapping_add(
-            (P_Random(&mut state.m_random) - P_Random(&mut state.m_random) << 19_i32) as angle_t,
+            ((P_Random(&mut state.m_random) - P_Random(&mut state.m_random)) << 19_i32) as angle_t,
         );
         let slope = state.p_pspr.bulletslope
             + ((P_Random(&mut state.m_random) as fixed_t
@@ -663,13 +663,11 @@ pub unsafe fn P_MovePsprites(state: &mut GameState, mut player: *mut player_t) {
     i = 0_i32;
     while i < NUMPSPRITES {
         psp_state = (*psp).state;
-        if psp_state.is_some() {
-            if (*psp).tics != -1_i32 {
-                (*psp).tics -= 1;
-                if (*psp).tics == 0 {
-                    let nextstate = (*state.info.state_mut(psp_state.unwrap())).nextstate;
-                    P_SetPsprite(state, player, i, nextstate);
-                }
+        if psp_state.is_some() && (*psp).tics != -1_i32 {
+            (*psp).tics -= 1;
+            if (*psp).tics == 0 {
+                let nextstate = (*state.info.state_mut(psp_state.unwrap())).nextstate;
+                P_SetPsprite(state, player, i, nextstate);
             }
         }
         i += 1;

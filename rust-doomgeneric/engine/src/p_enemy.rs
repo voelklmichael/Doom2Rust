@@ -164,7 +164,7 @@ pub unsafe fn P_RecursiveSound(
         let checkv = state.p_setup.line(check);
         if checkv.flags as i32 & ML_TWOSIDED != 0 {
             P_LineOpening(state, check);
-            if !(state.p_maputl.openrange <= 0_i32) {
+            if state.p_maputl.openrange > 0_i32 {
                 let other_id = if state.p_setup.sides[checkv.sidenum[0] as usize].sector == sec_id {
                     state.p_setup.sides[checkv.sidenum[1] as usize].sector
                 } else {
@@ -232,10 +232,8 @@ pub unsafe fn P_CheckMissileRange(state: &mut GameState, mut actor: *mut mobj_t)
         dist -= 128_i32 * FRACUNIT;
     }
     dist >>= 16_i32;
-    if (*actor).type_0 as u32 == MobjType::MT_VILE as i32 as u32 {
-        if dist > 14_i32 * 64_i32 {
-            return false;
-        }
+    if (*actor).type_0 as u32 == MobjType::MT_VILE as i32 as u32 && dist > 14_i32 * 64_i32 {
+        return false;
     }
     if (*actor).type_0 as u32 == MobjType::MT_UNDEAD as i32 as u32 {
         if dist < 196_i32 {
@@ -434,7 +432,7 @@ pub unsafe fn P_LookForPlayers(
     let mut an: angle_t = 0;
     let mut dist: fixed_t = 0;
     c = 0_i32;
-    stop = (*actor).lastlook - 1_i32 & 3_i32;
+    stop = ((*actor).lastlook - 1_i32) & 3_i32;
     let mut current_block_9: u64;
     loop {
         if state.g_game.playeringame[(*actor).lastlook as usize] {
@@ -444,7 +442,7 @@ pub unsafe fn P_LookForPlayers(
                 return false;
             }
             player = &mut state.g_game.players[(*actor).lastlook as usize];
-            if !((*player).health <= 0_i32) {
+            if (*player).health > 0_i32 {
                 let player_mo = state.p_mobj.mobj_get((*player).mo.unwrap()).unwrap();
                 if P_CheckSight(state, actor, player_mo) {
                     if !allaround {
@@ -482,7 +480,7 @@ pub unsafe fn P_LookForPlayers(
                 }
             }
         }
-        (*actor).lastlook = (*actor).lastlook + 1_i32 & 3_i32;
+        (*actor).lastlook = ((*actor).lastlook + 1_i32) & 3_i32;
     }
 }
 pub unsafe fn A_KeenDie(state: &mut GameState, id: MobjId) {
@@ -611,17 +609,13 @@ pub unsafe fn A_Chase(state: &mut GameState, id: MobjId) {
         P_SetMobjState(state, actor, meleestate);
         return;
     }
-    if (*state.info.mobjinfo_mut((*actor).type_0)).missilestate != StateNum::S_NULL {
-        if !(state.g_game.gameskill < SkillType::sk_nightmare
+    if (*state.info.mobjinfo_mut((*actor).type_0)).missilestate != StateNum::S_NULL && !(state.g_game.gameskill < SkillType::sk_nightmare
             && !state.d_main.fastparm
-            && (*actor).movecount != 0)
-            && P_CheckMissileRange(state, actor)
-        {
-            let missilestate = (*state.info.mobjinfo_mut((*actor).type_0)).missilestate;
-            P_SetMobjState(state, actor, missilestate);
-            (*actor).flags |= MF_JUSTATTACKED as i32;
-            return;
-        }
+            && (*actor).movecount != 0) && P_CheckMissileRange(state, actor) {
+        let missilestate = (*state.info.mobjinfo_mut((*actor).type_0)).missilestate;
+        P_SetMobjState(state, actor, missilestate);
+        (*actor).flags |= MF_JUSTATTACKED as i32;
+        return;
     }
     if state.g_game.netgame
         && (*actor).threshold == 0
@@ -649,7 +643,7 @@ pub unsafe fn A_FaceTarget(state: &mut GameState, id: MobjId) {
     (*actor).angle = R_PointToAngle2(state, (*actor).x, (*actor).y, (*target).x, (*target).y);
     if (*target).flags & MF_SHADOW as i32 != 0 {
         (*actor).angle = (*actor).angle.wrapping_add(
-            (P_Random(&mut state.m_random) - P_Random(&mut state.m_random) << 21_i32) as angle_t,
+            ((P_Random(&mut state.m_random) - P_Random(&mut state.m_random)) << 21_i32) as angle_t,
         );
     }
 }
@@ -665,7 +659,7 @@ pub unsafe fn A_PosAttack(state: &mut GameState, id: MobjId) {
     angle = (*actor).angle as i32;
     slope = P_AimLineAttack(state, actor, angle as angle_t, MISSILERANGE);
     S_StartSound(state, SoundOrigin::Mobj((*(actor)).id), sfx_pistol as i32);
-    angle += P_Random(&mut state.m_random) - P_Random(&mut state.m_random) << 20_i32;
+    angle += (P_Random(&mut state.m_random) - P_Random(&mut state.m_random)) << 20_i32;
     damage = (P_Random(&mut state.m_random) % 5_i32 + 1_i32) * 3_i32;
     P_LineAttack(
         state,
@@ -692,7 +686,7 @@ pub unsafe fn A_SPosAttack(state: &mut GameState, id: MobjId) {
     slope = P_AimLineAttack(state, actor, bangle as angle_t, MISSILERANGE);
     i = 0_i32;
     while i < 3_i32 {
-        angle = bangle + (P_Random(&mut state.m_random) - P_Random(&mut state.m_random) << 20_i32);
+        angle = bangle + ((P_Random(&mut state.m_random) - P_Random(&mut state.m_random)) << 20_i32);
         damage = (P_Random(&mut state.m_random) % 5_i32 + 1_i32) * 3_i32;
         P_LineAttack(
             state,
@@ -718,7 +712,7 @@ pub unsafe fn A_CPosAttack(state: &mut GameState, id: MobjId) {
     A_FaceTarget(state, (*actor).id);
     bangle = (*actor).angle as i32;
     slope = P_AimLineAttack(state, actor, bangle as angle_t, MISSILERANGE);
-    angle = bangle + (P_Random(&mut state.m_random) - P_Random(&mut state.m_random) << 20_i32);
+    angle = bangle + ((P_Random(&mut state.m_random) - P_Random(&mut state.m_random)) << 20_i32);
     damage = (P_Random(&mut state.m_random) % 5_i32 + 1_i32) * 3_i32;
     P_LineAttack(
         state,
@@ -987,14 +981,10 @@ pub unsafe fn A_VileChase(state: &mut GameState, id: MobjId) {
         state.p_enemy.viletryy = (*actor).y
             + (*state.info.mobjinfo_mut((*actor).type_0)).speed as fixed_t
                 * yspeed[(*actor).movedir as usize];
-        xl = state.p_enemy.viletryx - state.p_setup.bmaporgx - 32_i32 * FRACUNIT * 2_i32
-            >> MAPBLOCKSHIFT;
-        xh = state.p_enemy.viletryx - state.p_setup.bmaporgx + 32_i32 * FRACUNIT * 2_i32
-            >> MAPBLOCKSHIFT;
-        yl = state.p_enemy.viletryy - state.p_setup.bmaporgy - 32_i32 * FRACUNIT * 2_i32
-            >> MAPBLOCKSHIFT;
-        yh = state.p_enemy.viletryy - state.p_setup.bmaporgy + 32_i32 * FRACUNIT * 2_i32
-            >> MAPBLOCKSHIFT;
+        xl = (state.p_enemy.viletryx - state.p_setup.bmaporgx - 32_i32 * FRACUNIT * 2_i32) >> MAPBLOCKSHIFT;
+        xh = (state.p_enemy.viletryx - state.p_setup.bmaporgx + 32_i32 * FRACUNIT * 2_i32) >> MAPBLOCKSHIFT;
+        yl = (state.p_enemy.viletryy - state.p_setup.bmaporgy - 32_i32 * FRACUNIT * 2_i32) >> MAPBLOCKSHIFT;
+        yh = (state.p_enemy.viletryy - state.p_setup.bmaporgy + 32_i32 * FRACUNIT * 2_i32) >> MAPBLOCKSHIFT;
         state.p_enemy.vileobj = Some((*actor).id);
         bx = xl;
         while bx <= xh {
@@ -1063,7 +1053,7 @@ pub unsafe fn A_Fire(state: &mut GameState, id: MobjId) {
     if !P_CheckSight(state, target, dest) {
         return;
     }
-    an = ((*dest).angle >> ANGLETOFINESHIFT);
+    an = (*dest).angle >> ANGLETOFINESHIFT;
     P_UnsetThingPosition(state, actor);
     (*actor).x = (*dest).x + FixedMul(24 as fixed_t * FRACUNIT, finecosine[an as isize]);
     (*actor).y = (*dest).y + FixedMul(24 as fixed_t * FRACUNIT, finesine[an as usize]);
@@ -1346,25 +1336,25 @@ fn CheckBossEnd(state: &mut GameState, mut motype: MobjType) -> bool {
     } else {
         match state.g_game.gameepisode {
             1 => {
-                return state.g_game.gamemap == 8_i32
-                    && motype as u32 == MobjType::MT_BRUISER as i32 as u32;
+                state.g_game.gamemap == 8_i32
+                    && motype as u32 == MobjType::MT_BRUISER as i32 as u32
             }
             2 => {
-                return state.g_game.gamemap == 8_i32
-                    && motype as u32 == MobjType::MT_CYBORG as i32 as u32;
+                state.g_game.gamemap == 8_i32
+                    && motype as u32 == MobjType::MT_CYBORG as i32 as u32
             }
             3 => {
-                return state.g_game.gamemap == 8_i32
-                    && motype as u32 == MobjType::MT_SPIDER as i32 as u32;
+                state.g_game.gamemap == 8_i32
+                    && motype as u32 == MobjType::MT_SPIDER as i32 as u32
             }
             4 => {
-                return state.g_game.gamemap == 6_i32
+                state.g_game.gamemap == 6_i32
                     && motype as u32 == MobjType::MT_CYBORG as i32 as u32
                     || state.g_game.gamemap == 8_i32
-                        && motype as u32 == MobjType::MT_SPIDER as i32 as u32;
+                        && motype as u32 == MobjType::MT_SPIDER as i32 as u32
             }
             _ => {
-                return state.g_game.gamemap == 8_i32;
+                state.g_game.gamemap == 8_i32
             }
         }
     }

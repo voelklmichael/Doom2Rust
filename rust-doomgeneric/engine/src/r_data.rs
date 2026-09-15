@@ -195,7 +195,7 @@ pub fn R_GenerateComposite(state: &mut GameState, texnum: i32) {
             x2 = texture_width;
         }
         while x < x2 {
-            if !(state.r_data.texturecolumnlump[texnum as usize][x as usize] as i32 >= 0_i32) {
+            if (state.r_data.texturecolumnlump[texnum as usize][x as usize] as i32) < 0_i32 {
                 let colofs_off = (8 + (x - x1) * 4) as usize;
                 let columnofs =
                     i32::from_le_bytes(realpatch[colofs_off..colofs_off + 4].try_into().unwrap());
@@ -589,7 +589,7 @@ pub fn R_CheckTextureNumForName(state: &RDataState, name: &str) -> i32 {
         }
         cursor = texture.next;
     }
-    return -1_i32;
+    -1_i32
 }
 pub fn R_TextureNumForName(state: &mut RDataState, name: &str) -> i32 {
     let mut i: i32 = 0;

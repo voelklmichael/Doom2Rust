@@ -544,17 +544,15 @@ pub unsafe fn P_FindNextHighestFloor(
     while i < (*sec).linecount {
         check = (*sec).lines[i as usize];
         other = getNextSector(state, check, sec);
-        if !other.is_null() {
-            if (*other).floorheight > height {
-                if h == MAX_ADJOINING_SECTORS + 1_i32 {
-                    height = (*other).floorheight;
-                } else if h == MAX_ADJOINING_SECTORS + 2_i32 {
-                    I_Error("Sector with more than 22 adjoining sectors. Vanilla will crash here");
-                }
-                let fresh1 = h;
-                h += 1;
-                heightlist[fresh1 as usize] = (*other).floorheight;
+        if !other.is_null() && (*other).floorheight > height {
+            if h == MAX_ADJOINING_SECTORS + 1_i32 {
+                height = (*other).floorheight;
+            } else if h == MAX_ADJOINING_SECTORS + 2_i32 {
+                I_Error("Sector with more than 22 adjoining sectors. Vanilla will crash here");
             }
+            let fresh1 = h;
+            h += 1;
+            heightlist[fresh1 as usize] = (*other).floorheight;
         }
         i += 1;
     }
@@ -619,7 +617,7 @@ pub fn P_FindSectorFromLineTag(state: &mut GameState, mut line: LineId, mut star
         }
         i += 1;
     }
-    return -1_i32;
+    -1_i32
 }
 pub unsafe fn P_FindMinSurroundingLight(
     state: &mut GameState,
@@ -972,44 +970,43 @@ pub unsafe fn P_PlayerInSpecialSector(state: &mut GameState, mut player: *mut pl
     }
     match (*sector).special as i32 {
         5 => {
-            if (*player).powers[PowerType::pw_ironfeet as usize] == 0 {
-                if state.p_tick.leveltime & 0x1f_i32 == 0 {
-                    P_DamageMobj(
-                        state,
-                        player_mo,
-                        ::core::ptr::null_mut::<mobj_t>(),
-                        ::core::ptr::null_mut::<mobj_t>(),
-                        10_i32,
-                    );
-                }
+            if (*player).powers[PowerType::pw_ironfeet as usize] == 0
+                && state.p_tick.leveltime & 0x1f_i32 == 0
+            {
+                P_DamageMobj(
+                    state,
+                    player_mo,
+                    ::core::ptr::null_mut::<mobj_t>(),
+                    ::core::ptr::null_mut::<mobj_t>(),
+                    10_i32,
+                );
             }
         }
         7 => {
-            if (*player).powers[PowerType::pw_ironfeet as usize] == 0 {
-                if state.p_tick.leveltime & 0x1f_i32 == 0 {
-                    P_DamageMobj(
-                        state,
-                        player_mo,
-                        ::core::ptr::null_mut::<mobj_t>(),
-                        ::core::ptr::null_mut::<mobj_t>(),
-                        5_i32,
-                    );
-                }
+            if (*player).powers[PowerType::pw_ironfeet as usize] == 0
+                && state.p_tick.leveltime & 0x1f_i32 == 0
+            {
+                P_DamageMobj(
+                    state,
+                    player_mo,
+                    ::core::ptr::null_mut::<mobj_t>(),
+                    ::core::ptr::null_mut::<mobj_t>(),
+                    5_i32,
+                );
             }
         }
         16 | 4 => {
-            if (*player).powers[PowerType::pw_ironfeet as usize] == 0
-                || P_Random(&mut state.m_random) < 5_i32
+            if ((*player).powers[PowerType::pw_ironfeet as usize] == 0
+                || P_Random(&mut state.m_random) < 5_i32)
+                && state.p_tick.leveltime & 0x1f_i32 == 0
             {
-                if state.p_tick.leveltime & 0x1f_i32 == 0 {
-                    P_DamageMobj(
-                        state,
-                        player_mo,
-                        ::core::ptr::null_mut::<mobj_t>(),
-                        ::core::ptr::null_mut::<mobj_t>(),
-                        20_i32,
-                    );
-                }
+                P_DamageMobj(
+                    state,
+                    player_mo,
+                    ::core::ptr::null_mut::<mobj_t>(),
+                    ::core::ptr::null_mut::<mobj_t>(),
+                    20_i32,
+                );
             }
         }
         9 => {
@@ -1168,7 +1165,7 @@ pub unsafe fn EV_DoDonut(state: &mut GameState, mut line: LineId) -> i32 {
     rtn = 0_i32;
     loop {
         secnum = P_FindSectorFromLineTag(state, line, secnum);
-        if !(secnum >= 0_i32) {
+        if secnum < 0_i32 {
             break;
         }
         s1 = state.p_setup.sector_mut(SectorId(secnum as u32));

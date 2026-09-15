@@ -59,725 +59,725 @@ unsafe fn Transform(mut hd: *mut sha1_context_t, mut data: *mut byte) {
         p2 = p2.offset(4_i32 as isize);
     }
     e = (e as i64
-        + ((a << 5_i32 | a >> 32_i32 - 5_i32).wrapping_add(d ^ b & (c ^ d)) as i64
+        + ((a << 5_i32 | a >> (32_i32 - 5_i32)).wrapping_add(d ^ b & (c ^ d)) as i64
             + 0x5a827999_i64
             + x[0] as i64)) as uint32_t;
-    b = b << 30_i32 | b >> 32_i32 - 30_i32;
+    b = b << 30_i32 | b >> (32_i32 - 30_i32);
     d = (d as i64
-        + ((e << 5_i32 | e >> 32_i32 - 5_i32).wrapping_add(c ^ a & (b ^ c)) as i64
+        + ((e << 5_i32 | e >> (32_i32 - 5_i32)).wrapping_add(c ^ a & (b ^ c)) as i64
             + 0x5a827999_i64
             + x[1] as i64)) as uint32_t;
-    a = a << 30_i32 | a >> 32_i32 - 30_i32;
+    a = a << 30_i32 | a >> (32_i32 - 30_i32);
     c = (c as i64
-        + ((d << 5_i32 | d >> 32_i32 - 5_i32).wrapping_add(b ^ e & (a ^ b)) as i64
+        + ((d << 5_i32 | d >> (32_i32 - 5_i32)).wrapping_add(b ^ e & (a ^ b)) as i64
             + 0x5a827999_i64
             + x[2] as i64)) as uint32_t;
-    e = e << 30_i32 | e >> 32_i32 - 30_i32;
+    e = e << 30_i32 | e >> (32_i32 - 30_i32);
     b = (b as i64
-        + ((c << 5_i32 | c >> 32_i32 - 5_i32).wrapping_add(a ^ d & (e ^ a)) as i64
+        + ((c << 5_i32 | c >> (32_i32 - 5_i32)).wrapping_add(a ^ d & (e ^ a)) as i64
             + 0x5a827999_i64
             + x[3] as i64)) as uint32_t;
-    d = d << 30_i32 | d >> 32_i32 - 30_i32;
+    d = d << 30_i32 | d >> (32_i32 - 30_i32);
     a = (a as i64
-        + ((b << 5_i32 | b >> 32_i32 - 5_i32).wrapping_add(e ^ c & (d ^ e)) as i64
+        + ((b << 5_i32 | b >> (32_i32 - 5_i32)).wrapping_add(e ^ c & (d ^ e)) as i64
             + 0x5a827999_i64
             + x[4] as i64)) as uint32_t;
-    c = c << 30_i32 | c >> 32_i32 - 30_i32;
+    c = c << 30_i32 | c >> (32_i32 - 30_i32);
     e = (e as i64
-        + ((a << 5_i32 | a >> 32_i32 - 5_i32).wrapping_add(d ^ b & (c ^ d)) as i64
+        + ((a << 5_i32 | a >> (32_i32 - 5_i32)).wrapping_add(d ^ b & (c ^ d)) as i64
             + 0x5a827999_i64
             + x[5] as i64)) as uint32_t;
-    b = b << 30_i32 | b >> 32_i32 - 30_i32;
+    b = b << 30_i32 | b >> (32_i32 - 30_i32);
     d = (d as i64
-        + ((e << 5_i32 | e >> 32_i32 - 5_i32).wrapping_add(c ^ a & (b ^ c)) as i64
+        + ((e << 5_i32 | e >> (32_i32 - 5_i32)).wrapping_add(c ^ a & (b ^ c)) as i64
             + 0x5a827999_i64
             + x[6] as i64)) as uint32_t;
-    a = a << 30_i32 | a >> 32_i32 - 30_i32;
+    a = a << 30_i32 | a >> (32_i32 - 30_i32);
     c = (c as i64
-        + ((d << 5_i32 | d >> 32_i32 - 5_i32).wrapping_add(b ^ e & (a ^ b)) as i64
+        + ((d << 5_i32 | d >> (32_i32 - 5_i32)).wrapping_add(b ^ e & (a ^ b)) as i64
             + 0x5a827999_i64
             + x[7] as i64)) as uint32_t;
-    e = e << 30_i32 | e >> 32_i32 - 30_i32;
+    e = e << 30_i32 | e >> (32_i32 - 30_i32);
     b = (b as i64
-        + ((c << 5_i32 | c >> 32_i32 - 5_i32).wrapping_add(a ^ d & (e ^ a)) as i64
+        + ((c << 5_i32 | c >> (32_i32 - 5_i32)).wrapping_add(a ^ d & (e ^ a)) as i64
             + 0x5a827999_i64
             + x[8] as i64)) as uint32_t;
-    d = d << 30_i32 | d >> 32_i32 - 30_i32;
+    d = d << 30_i32 | d >> (32_i32 - 30_i32);
     a = (a as i64
-        + ((b << 5_i32 | b >> 32_i32 - 5_i32).wrapping_add(e ^ c & (d ^ e)) as i64
+        + ((b << 5_i32 | b >> (32_i32 - 5_i32)).wrapping_add(e ^ c & (d ^ e)) as i64
             + 0x5a827999_i64
             + x[9] as i64)) as uint32_t;
-    c = c << 30_i32 | c >> 32_i32 - 30_i32;
+    c = c << 30_i32 | c >> (32_i32 - 30_i32);
     e = (e as i64
-        + ((a << 5_i32 | a >> 32_i32 - 5_i32).wrapping_add(d ^ b & (c ^ d)) as i64
+        + ((a << 5_i32 | a >> (32_i32 - 5_i32)).wrapping_add(d ^ b & (c ^ d)) as i64
             + 0x5a827999_i64
             + x[10] as i64)) as uint32_t;
-    b = b << 30_i32 | b >> 32_i32 - 30_i32;
+    b = b << 30_i32 | b >> (32_i32 - 30_i32);
     d = (d as i64
-        + ((e << 5_i32 | e >> 32_i32 - 5_i32).wrapping_add(c ^ a & (b ^ c)) as i64
+        + ((e << 5_i32 | e >> (32_i32 - 5_i32)).wrapping_add(c ^ a & (b ^ c)) as i64
             + 0x5a827999_i64
             + x[11] as i64)) as uint32_t;
-    a = a << 30_i32 | a >> 32_i32 - 30_i32;
+    a = a << 30_i32 | a >> (32_i32 - 30_i32);
     c = (c as i64
-        + ((d << 5_i32 | d >> 32_i32 - 5_i32).wrapping_add(b ^ e & (a ^ b)) as i64
+        + ((d << 5_i32 | d >> (32_i32 - 5_i32)).wrapping_add(b ^ e & (a ^ b)) as i64
             + 0x5a827999_i64
             + x[12] as i64)) as uint32_t;
-    e = e << 30_i32 | e >> 32_i32 - 30_i32;
+    e = e << 30_i32 | e >> (32_i32 - 30_i32);
     b = (b as i64
-        + ((c << 5_i32 | c >> 32_i32 - 5_i32).wrapping_add(a ^ d & (e ^ a)) as i64
+        + ((c << 5_i32 | c >> (32_i32 - 5_i32)).wrapping_add(a ^ d & (e ^ a)) as i64
             + 0x5a827999_i64
             + x[13] as i64)) as uint32_t;
-    d = d << 30_i32 | d >> 32_i32 - 30_i32;
+    d = d << 30_i32 | d >> (32_i32 - 30_i32);
     a = (a as i64
-        + ((b << 5_i32 | b >> 32_i32 - 5_i32).wrapping_add(e ^ c & (d ^ e)) as i64
+        + ((b << 5_i32 | b >> (32_i32 - 5_i32)).wrapping_add(e ^ c & (d ^ e)) as i64
             + 0x5a827999_i64
             + x[14] as i64)) as uint32_t;
-    c = c << 30_i32 | c >> 32_i32 - 30_i32;
+    c = c << 30_i32 | c >> (32_i32 - 30_i32);
     e = (e as i64
-        + ((a << 5_i32 | a >> 32_i32 - 5_i32).wrapping_add(d ^ b & (c ^ d)) as i64
+        + ((a << 5_i32 | a >> (32_i32 - 5_i32)).wrapping_add(d ^ b & (c ^ d)) as i64
             + 0x5a827999_i64
             + x[15] as i64)) as uint32_t;
-    b = b << 30_i32 | b >> 32_i32 - 30_i32;
+    b = b << 30_i32 | b >> (32_i32 - 30_i32);
     tm = x[(16_i32 & 0xf_i32) as usize]
-        ^ x[(16_i32 - 14_i32 & 0xf_i32) as usize]
-        ^ x[(16_i32 - 8_i32 & 0xf_i32) as usize]
-        ^ x[(16_i32 - 3_i32 & 0xf_i32) as usize];
-    x[(16_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> 32_i32 - 1_i32;
+        ^ x[((16_i32 - 14_i32) & 0xf_i32) as usize]
+        ^ x[((16_i32 - 8_i32) & 0xf_i32) as usize]
+        ^ x[((16_i32 - 3_i32) & 0xf_i32) as usize];
+    x[(16_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> (32_i32 - 1_i32);
     d = (d as i64
-        + ((e << 5_i32 | e >> 32_i32 - 5_i32).wrapping_add(c ^ a & (b ^ c)) as i64
+        + ((e << 5_i32 | e >> (32_i32 - 5_i32)).wrapping_add(c ^ a & (b ^ c)) as i64
             + 0x5a827999_i64
             + x[(16_i32 & 0xf_i32) as usize] as i64)) as uint32_t;
-    a = a << 30_i32 | a >> 32_i32 - 30_i32;
+    a = a << 30_i32 | a >> (32_i32 - 30_i32);
     tm = x[(17_i32 & 0xf_i32) as usize]
-        ^ x[(17_i32 - 14_i32 & 0xf_i32) as usize]
-        ^ x[(17_i32 - 8_i32 & 0xf_i32) as usize]
-        ^ x[(17_i32 - 3_i32 & 0xf_i32) as usize];
-    x[(17_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> 32_i32 - 1_i32;
+        ^ x[((17_i32 - 14_i32) & 0xf_i32) as usize]
+        ^ x[((17_i32 - 8_i32) & 0xf_i32) as usize]
+        ^ x[((17_i32 - 3_i32) & 0xf_i32) as usize];
+    x[(17_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> (32_i32 - 1_i32);
     c = (c as i64
-        + ((d << 5_i32 | d >> 32_i32 - 5_i32).wrapping_add(b ^ e & (a ^ b)) as i64
+        + ((d << 5_i32 | d >> (32_i32 - 5_i32)).wrapping_add(b ^ e & (a ^ b)) as i64
             + 0x5a827999_i64
             + x[(17_i32 & 0xf_i32) as usize] as i64)) as uint32_t;
-    e = e << 30_i32 | e >> 32_i32 - 30_i32;
+    e = e << 30_i32 | e >> (32_i32 - 30_i32);
     tm = x[(18_i32 & 0xf_i32) as usize]
-        ^ x[(18_i32 - 14_i32 & 0xf_i32) as usize]
-        ^ x[(18_i32 - 8_i32 & 0xf_i32) as usize]
-        ^ x[(18_i32 - 3_i32 & 0xf_i32) as usize];
-    x[(18_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> 32_i32 - 1_i32;
+        ^ x[((18_i32 - 14_i32) & 0xf_i32) as usize]
+        ^ x[((18_i32 - 8_i32) & 0xf_i32) as usize]
+        ^ x[((18_i32 - 3_i32) & 0xf_i32) as usize];
+    x[(18_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> (32_i32 - 1_i32);
     b = (b as i64
-        + ((c << 5_i32 | c >> 32_i32 - 5_i32).wrapping_add(a ^ d & (e ^ a)) as i64
+        + ((c << 5_i32 | c >> (32_i32 - 5_i32)).wrapping_add(a ^ d & (e ^ a)) as i64
             + 0x5a827999_i64
             + x[(18_i32 & 0xf_i32) as usize] as i64)) as uint32_t;
-    d = d << 30_i32 | d >> 32_i32 - 30_i32;
+    d = d << 30_i32 | d >> (32_i32 - 30_i32);
     tm = x[(19_i32 & 0xf_i32) as usize]
-        ^ x[(19_i32 - 14_i32 & 0xf_i32) as usize]
-        ^ x[(19_i32 - 8_i32 & 0xf_i32) as usize]
-        ^ x[(19_i32 - 3_i32 & 0xf_i32) as usize];
-    x[(19_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> 32_i32 - 1_i32;
+        ^ x[((19_i32 - 14_i32) & 0xf_i32) as usize]
+        ^ x[((19_i32 - 8_i32) & 0xf_i32) as usize]
+        ^ x[((19_i32 - 3_i32) & 0xf_i32) as usize];
+    x[(19_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> (32_i32 - 1_i32);
     a = (a as i64
-        + ((b << 5_i32 | b >> 32_i32 - 5_i32).wrapping_add(e ^ c & (d ^ e)) as i64
+        + ((b << 5_i32 | b >> (32_i32 - 5_i32)).wrapping_add(e ^ c & (d ^ e)) as i64
             + 0x5a827999_i64
             + x[(19_i32 & 0xf_i32) as usize] as i64)) as uint32_t;
-    c = c << 30_i32 | c >> 32_i32 - 30_i32;
+    c = c << 30_i32 | c >> (32_i32 - 30_i32);
     tm = x[(20_i32 & 0xf_i32) as usize]
-        ^ x[(20_i32 - 14_i32 & 0xf_i32) as usize]
-        ^ x[(20_i32 - 8_i32 & 0xf_i32) as usize]
-        ^ x[(20_i32 - 3_i32 & 0xf_i32) as usize];
-    x[(20_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> 32_i32 - 1_i32;
+        ^ x[((20_i32 - 14_i32) & 0xf_i32) as usize]
+        ^ x[((20_i32 - 8_i32) & 0xf_i32) as usize]
+        ^ x[((20_i32 - 3_i32) & 0xf_i32) as usize];
+    x[(20_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> (32_i32 - 1_i32);
     e = (e as i64
-        + ((a << 5_i32 | a >> 32_i32 - 5_i32).wrapping_add(b ^ c ^ d) as i64
+        + ((a << 5_i32 | a >> (32_i32 - 5_i32)).wrapping_add(b ^ c ^ d) as i64
             + 0x6ed9eba1_i64
             + x[(20_i32 & 0xf_i32) as usize] as i64)) as uint32_t;
-    b = b << 30_i32 | b >> 32_i32 - 30_i32;
+    b = b << 30_i32 | b >> (32_i32 - 30_i32);
     tm = x[(21_i32 & 0xf_i32) as usize]
-        ^ x[(21_i32 - 14_i32 & 0xf_i32) as usize]
-        ^ x[(21_i32 - 8_i32 & 0xf_i32) as usize]
-        ^ x[(21_i32 - 3_i32 & 0xf_i32) as usize];
-    x[(21_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> 32_i32 - 1_i32;
+        ^ x[((21_i32 - 14_i32) & 0xf_i32) as usize]
+        ^ x[((21_i32 - 8_i32) & 0xf_i32) as usize]
+        ^ x[((21_i32 - 3_i32) & 0xf_i32) as usize];
+    x[(21_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> (32_i32 - 1_i32);
     d = (d as i64
-        + ((e << 5_i32 | e >> 32_i32 - 5_i32).wrapping_add(a ^ b ^ c) as i64
+        + ((e << 5_i32 | e >> (32_i32 - 5_i32)).wrapping_add(a ^ b ^ c) as i64
             + 0x6ed9eba1_i64
             + x[(21_i32 & 0xf_i32) as usize] as i64)) as uint32_t;
-    a = a << 30_i32 | a >> 32_i32 - 30_i32;
+    a = a << 30_i32 | a >> (32_i32 - 30_i32);
     tm = x[(22_i32 & 0xf_i32) as usize]
-        ^ x[(22_i32 - 14_i32 & 0xf_i32) as usize]
-        ^ x[(22_i32 - 8_i32 & 0xf_i32) as usize]
-        ^ x[(22_i32 - 3_i32 & 0xf_i32) as usize];
-    x[(22_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> 32_i32 - 1_i32;
+        ^ x[((22_i32 - 14_i32) & 0xf_i32) as usize]
+        ^ x[((22_i32 - 8_i32) & 0xf_i32) as usize]
+        ^ x[((22_i32 - 3_i32) & 0xf_i32) as usize];
+    x[(22_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> (32_i32 - 1_i32);
     c = (c as i64
-        + ((d << 5_i32 | d >> 32_i32 - 5_i32).wrapping_add(e ^ a ^ b) as i64
+        + ((d << 5_i32 | d >> (32_i32 - 5_i32)).wrapping_add(e ^ a ^ b) as i64
             + 0x6ed9eba1_i64
             + x[(22_i32 & 0xf_i32) as usize] as i64)) as uint32_t;
-    e = e << 30_i32 | e >> 32_i32 - 30_i32;
+    e = e << 30_i32 | e >> (32_i32 - 30_i32);
     tm = x[(23_i32 & 0xf_i32) as usize]
-        ^ x[(23_i32 - 14_i32 & 0xf_i32) as usize]
-        ^ x[(23_i32 - 8_i32 & 0xf_i32) as usize]
-        ^ x[(23_i32 - 3_i32 & 0xf_i32) as usize];
-    x[(23_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> 32_i32 - 1_i32;
+        ^ x[((23_i32 - 14_i32) & 0xf_i32) as usize]
+        ^ x[((23_i32 - 8_i32) & 0xf_i32) as usize]
+        ^ x[((23_i32 - 3_i32) & 0xf_i32) as usize];
+    x[(23_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> (32_i32 - 1_i32);
     b = (b as i64
-        + ((c << 5_i32 | c >> 32_i32 - 5_i32).wrapping_add(d ^ e ^ a) as i64
+        + ((c << 5_i32 | c >> (32_i32 - 5_i32)).wrapping_add(d ^ e ^ a) as i64
             + 0x6ed9eba1_i64
             + x[(23_i32 & 0xf_i32) as usize] as i64)) as uint32_t;
-    d = d << 30_i32 | d >> 32_i32 - 30_i32;
+    d = d << 30_i32 | d >> (32_i32 - 30_i32);
     tm = x[(24_i32 & 0xf_i32) as usize]
-        ^ x[(24_i32 - 14_i32 & 0xf_i32) as usize]
-        ^ x[(24_i32 - 8_i32 & 0xf_i32) as usize]
-        ^ x[(24_i32 - 3_i32 & 0xf_i32) as usize];
-    x[(24_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> 32_i32 - 1_i32;
+        ^ x[((24_i32 - 14_i32) & 0xf_i32) as usize]
+        ^ x[((24_i32 - 8_i32) & 0xf_i32) as usize]
+        ^ x[((24_i32 - 3_i32) & 0xf_i32) as usize];
+    x[(24_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> (32_i32 - 1_i32);
     a = (a as i64
-        + ((b << 5_i32 | b >> 32_i32 - 5_i32).wrapping_add(c ^ d ^ e) as i64
+        + ((b << 5_i32 | b >> (32_i32 - 5_i32)).wrapping_add(c ^ d ^ e) as i64
             + 0x6ed9eba1_i64
             + x[(24_i32 & 0xf_i32) as usize] as i64)) as uint32_t;
-    c = c << 30_i32 | c >> 32_i32 - 30_i32;
+    c = c << 30_i32 | c >> (32_i32 - 30_i32);
     tm = x[(25_i32 & 0xf_i32) as usize]
-        ^ x[(25_i32 - 14_i32 & 0xf_i32) as usize]
-        ^ x[(25_i32 - 8_i32 & 0xf_i32) as usize]
-        ^ x[(25_i32 - 3_i32 & 0xf_i32) as usize];
-    x[(25_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> 32_i32 - 1_i32;
+        ^ x[((25_i32 - 14_i32) & 0xf_i32) as usize]
+        ^ x[((25_i32 - 8_i32) & 0xf_i32) as usize]
+        ^ x[((25_i32 - 3_i32) & 0xf_i32) as usize];
+    x[(25_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> (32_i32 - 1_i32);
     e = (e as i64
-        + ((a << 5_i32 | a >> 32_i32 - 5_i32).wrapping_add(b ^ c ^ d) as i64
+        + ((a << 5_i32 | a >> (32_i32 - 5_i32)).wrapping_add(b ^ c ^ d) as i64
             + 0x6ed9eba1_i64
             + x[(25_i32 & 0xf_i32) as usize] as i64)) as uint32_t;
-    b = b << 30_i32 | b >> 32_i32 - 30_i32;
+    b = b << 30_i32 | b >> (32_i32 - 30_i32);
     tm = x[(26_i32 & 0xf_i32) as usize]
-        ^ x[(26_i32 - 14_i32 & 0xf_i32) as usize]
-        ^ x[(26_i32 - 8_i32 & 0xf_i32) as usize]
-        ^ x[(26_i32 - 3_i32 & 0xf_i32) as usize];
-    x[(26_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> 32_i32 - 1_i32;
+        ^ x[((26_i32 - 14_i32) & 0xf_i32) as usize]
+        ^ x[((26_i32 - 8_i32) & 0xf_i32) as usize]
+        ^ x[((26_i32 - 3_i32) & 0xf_i32) as usize];
+    x[(26_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> (32_i32 - 1_i32);
     d = (d as i64
-        + ((e << 5_i32 | e >> 32_i32 - 5_i32).wrapping_add(a ^ b ^ c) as i64
+        + ((e << 5_i32 | e >> (32_i32 - 5_i32)).wrapping_add(a ^ b ^ c) as i64
             + 0x6ed9eba1_i64
             + x[(26_i32 & 0xf_i32) as usize] as i64)) as uint32_t;
-    a = a << 30_i32 | a >> 32_i32 - 30_i32;
+    a = a << 30_i32 | a >> (32_i32 - 30_i32);
     tm = x[(27_i32 & 0xf_i32) as usize]
-        ^ x[(27_i32 - 14_i32 & 0xf_i32) as usize]
-        ^ x[(27_i32 - 8_i32 & 0xf_i32) as usize]
-        ^ x[(27_i32 - 3_i32 & 0xf_i32) as usize];
-    x[(27_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> 32_i32 - 1_i32;
+        ^ x[((27_i32 - 14_i32) & 0xf_i32) as usize]
+        ^ x[((27_i32 - 8_i32) & 0xf_i32) as usize]
+        ^ x[((27_i32 - 3_i32) & 0xf_i32) as usize];
+    x[(27_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> (32_i32 - 1_i32);
     c = (c as i64
-        + ((d << 5_i32 | d >> 32_i32 - 5_i32).wrapping_add(e ^ a ^ b) as i64
+        + ((d << 5_i32 | d >> (32_i32 - 5_i32)).wrapping_add(e ^ a ^ b) as i64
             + 0x6ed9eba1_i64
             + x[(27_i32 & 0xf_i32) as usize] as i64)) as uint32_t;
-    e = e << 30_i32 | e >> 32_i32 - 30_i32;
+    e = e << 30_i32 | e >> (32_i32 - 30_i32);
     tm = x[(28_i32 & 0xf_i32) as usize]
-        ^ x[(28_i32 - 14_i32 & 0xf_i32) as usize]
-        ^ x[(28_i32 - 8_i32 & 0xf_i32) as usize]
-        ^ x[(28_i32 - 3_i32 & 0xf_i32) as usize];
-    x[(28_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> 32_i32 - 1_i32;
+        ^ x[((28_i32 - 14_i32) & 0xf_i32) as usize]
+        ^ x[((28_i32 - 8_i32) & 0xf_i32) as usize]
+        ^ x[((28_i32 - 3_i32) & 0xf_i32) as usize];
+    x[(28_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> (32_i32 - 1_i32);
     b = (b as i64
-        + ((c << 5_i32 | c >> 32_i32 - 5_i32).wrapping_add(d ^ e ^ a) as i64
+        + ((c << 5_i32 | c >> (32_i32 - 5_i32)).wrapping_add(d ^ e ^ a) as i64
             + 0x6ed9eba1_i64
             + x[(28_i32 & 0xf_i32) as usize] as i64)) as uint32_t;
-    d = d << 30_i32 | d >> 32_i32 - 30_i32;
+    d = d << 30_i32 | d >> (32_i32 - 30_i32);
     tm = x[(29_i32 & 0xf_i32) as usize]
-        ^ x[(29_i32 - 14_i32 & 0xf_i32) as usize]
-        ^ x[(29_i32 - 8_i32 & 0xf_i32) as usize]
-        ^ x[(29_i32 - 3_i32 & 0xf_i32) as usize];
-    x[(29_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> 32_i32 - 1_i32;
+        ^ x[((29_i32 - 14_i32) & 0xf_i32) as usize]
+        ^ x[((29_i32 - 8_i32) & 0xf_i32) as usize]
+        ^ x[((29_i32 - 3_i32) & 0xf_i32) as usize];
+    x[(29_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> (32_i32 - 1_i32);
     a = (a as i64
-        + ((b << 5_i32 | b >> 32_i32 - 5_i32).wrapping_add(c ^ d ^ e) as i64
+        + ((b << 5_i32 | b >> (32_i32 - 5_i32)).wrapping_add(c ^ d ^ e) as i64
             + 0x6ed9eba1_i64
             + x[(29_i32 & 0xf_i32) as usize] as i64)) as uint32_t;
-    c = c << 30_i32 | c >> 32_i32 - 30_i32;
+    c = c << 30_i32 | c >> (32_i32 - 30_i32);
     tm = x[(30_i32 & 0xf_i32) as usize]
-        ^ x[(30_i32 - 14_i32 & 0xf_i32) as usize]
-        ^ x[(30_i32 - 8_i32 & 0xf_i32) as usize]
-        ^ x[(30_i32 - 3_i32 & 0xf_i32) as usize];
-    x[(30_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> 32_i32 - 1_i32;
+        ^ x[((30_i32 - 14_i32) & 0xf_i32) as usize]
+        ^ x[((30_i32 - 8_i32) & 0xf_i32) as usize]
+        ^ x[((30_i32 - 3_i32) & 0xf_i32) as usize];
+    x[(30_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> (32_i32 - 1_i32);
     e = (e as i64
-        + ((a << 5_i32 | a >> 32_i32 - 5_i32).wrapping_add(b ^ c ^ d) as i64
+        + ((a << 5_i32 | a >> (32_i32 - 5_i32)).wrapping_add(b ^ c ^ d) as i64
             + 0x6ed9eba1_i64
             + x[(30_i32 & 0xf_i32) as usize] as i64)) as uint32_t;
-    b = b << 30_i32 | b >> 32_i32 - 30_i32;
+    b = b << 30_i32 | b >> (32_i32 - 30_i32);
     tm = x[(31_i32 & 0xf_i32) as usize]
-        ^ x[(31_i32 - 14_i32 & 0xf_i32) as usize]
-        ^ x[(31_i32 - 8_i32 & 0xf_i32) as usize]
-        ^ x[(31_i32 - 3_i32 & 0xf_i32) as usize];
-    x[(31_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> 32_i32 - 1_i32;
+        ^ x[((31_i32 - 14_i32) & 0xf_i32) as usize]
+        ^ x[((31_i32 - 8_i32) & 0xf_i32) as usize]
+        ^ x[((31_i32 - 3_i32) & 0xf_i32) as usize];
+    x[(31_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> (32_i32 - 1_i32);
     d = (d as i64
-        + ((e << 5_i32 | e >> 32_i32 - 5_i32).wrapping_add(a ^ b ^ c) as i64
+        + ((e << 5_i32 | e >> (32_i32 - 5_i32)).wrapping_add(a ^ b ^ c) as i64
             + 0x6ed9eba1_i64
             + x[(31_i32 & 0xf_i32) as usize] as i64)) as uint32_t;
-    a = a << 30_i32 | a >> 32_i32 - 30_i32;
+    a = a << 30_i32 | a >> (32_i32 - 30_i32);
     tm = x[(32_i32 & 0xf_i32) as usize]
-        ^ x[(32_i32 - 14_i32 & 0xf_i32) as usize]
-        ^ x[(32_i32 - 8_i32 & 0xf_i32) as usize]
-        ^ x[(32_i32 - 3_i32 & 0xf_i32) as usize];
-    x[(32_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> 32_i32 - 1_i32;
+        ^ x[((32_i32 - 14_i32) & 0xf_i32) as usize]
+        ^ x[((32_i32 - 8_i32) & 0xf_i32) as usize]
+        ^ x[((32_i32 - 3_i32) & 0xf_i32) as usize];
+    x[(32_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> (32_i32 - 1_i32);
     c = (c as i64
-        + ((d << 5_i32 | d >> 32_i32 - 5_i32).wrapping_add(e ^ a ^ b) as i64
+        + ((d << 5_i32 | d >> (32_i32 - 5_i32)).wrapping_add(e ^ a ^ b) as i64
             + 0x6ed9eba1_i64
             + x[(32_i32 & 0xf_i32) as usize] as i64)) as uint32_t;
-    e = e << 30_i32 | e >> 32_i32 - 30_i32;
+    e = e << 30_i32 | e >> (32_i32 - 30_i32);
     tm = x[(33_i32 & 0xf_i32) as usize]
-        ^ x[(33_i32 - 14_i32 & 0xf_i32) as usize]
-        ^ x[(33_i32 - 8_i32 & 0xf_i32) as usize]
-        ^ x[(33_i32 - 3_i32 & 0xf_i32) as usize];
-    x[(33_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> 32_i32 - 1_i32;
+        ^ x[((33_i32 - 14_i32) & 0xf_i32) as usize]
+        ^ x[((33_i32 - 8_i32) & 0xf_i32) as usize]
+        ^ x[((33_i32 - 3_i32) & 0xf_i32) as usize];
+    x[(33_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> (32_i32 - 1_i32);
     b = (b as i64
-        + ((c << 5_i32 | c >> 32_i32 - 5_i32).wrapping_add(d ^ e ^ a) as i64
+        + ((c << 5_i32 | c >> (32_i32 - 5_i32)).wrapping_add(d ^ e ^ a) as i64
             + 0x6ed9eba1_i64
             + x[(33_i32 & 0xf_i32) as usize] as i64)) as uint32_t;
-    d = d << 30_i32 | d >> 32_i32 - 30_i32;
+    d = d << 30_i32 | d >> (32_i32 - 30_i32);
     tm = x[(34_i32 & 0xf_i32) as usize]
-        ^ x[(34_i32 - 14_i32 & 0xf_i32) as usize]
-        ^ x[(34_i32 - 8_i32 & 0xf_i32) as usize]
-        ^ x[(34_i32 - 3_i32 & 0xf_i32) as usize];
-    x[(34_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> 32_i32 - 1_i32;
+        ^ x[((34_i32 - 14_i32) & 0xf_i32) as usize]
+        ^ x[((34_i32 - 8_i32) & 0xf_i32) as usize]
+        ^ x[((34_i32 - 3_i32) & 0xf_i32) as usize];
+    x[(34_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> (32_i32 - 1_i32);
     a = (a as i64
-        + ((b << 5_i32 | b >> 32_i32 - 5_i32).wrapping_add(c ^ d ^ e) as i64
+        + ((b << 5_i32 | b >> (32_i32 - 5_i32)).wrapping_add(c ^ d ^ e) as i64
             + 0x6ed9eba1_i64
             + x[(34_i32 & 0xf_i32) as usize] as i64)) as uint32_t;
-    c = c << 30_i32 | c >> 32_i32 - 30_i32;
+    c = c << 30_i32 | c >> (32_i32 - 30_i32);
     tm = x[(35_i32 & 0xf_i32) as usize]
-        ^ x[(35_i32 - 14_i32 & 0xf_i32) as usize]
-        ^ x[(35_i32 - 8_i32 & 0xf_i32) as usize]
-        ^ x[(35_i32 - 3_i32 & 0xf_i32) as usize];
-    x[(35_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> 32_i32 - 1_i32;
+        ^ x[((35_i32 - 14_i32) & 0xf_i32) as usize]
+        ^ x[((35_i32 - 8_i32) & 0xf_i32) as usize]
+        ^ x[((35_i32 - 3_i32) & 0xf_i32) as usize];
+    x[(35_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> (32_i32 - 1_i32);
     e = (e as i64
-        + ((a << 5_i32 | a >> 32_i32 - 5_i32).wrapping_add(b ^ c ^ d) as i64
+        + ((a << 5_i32 | a >> (32_i32 - 5_i32)).wrapping_add(b ^ c ^ d) as i64
             + 0x6ed9eba1_i64
             + x[(35_i32 & 0xf_i32) as usize] as i64)) as uint32_t;
-    b = b << 30_i32 | b >> 32_i32 - 30_i32;
+    b = b << 30_i32 | b >> (32_i32 - 30_i32);
     tm = x[(36_i32 & 0xf_i32) as usize]
-        ^ x[(36_i32 - 14_i32 & 0xf_i32) as usize]
-        ^ x[(36_i32 - 8_i32 & 0xf_i32) as usize]
-        ^ x[(36_i32 - 3_i32 & 0xf_i32) as usize];
-    x[(36_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> 32_i32 - 1_i32;
+        ^ x[((36_i32 - 14_i32) & 0xf_i32) as usize]
+        ^ x[((36_i32 - 8_i32) & 0xf_i32) as usize]
+        ^ x[((36_i32 - 3_i32) & 0xf_i32) as usize];
+    x[(36_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> (32_i32 - 1_i32);
     d = (d as i64
-        + ((e << 5_i32 | e >> 32_i32 - 5_i32).wrapping_add(a ^ b ^ c) as i64
+        + ((e << 5_i32 | e >> (32_i32 - 5_i32)).wrapping_add(a ^ b ^ c) as i64
             + 0x6ed9eba1_i64
             + x[(36_i32 & 0xf_i32) as usize] as i64)) as uint32_t;
-    a = a << 30_i32 | a >> 32_i32 - 30_i32;
+    a = a << 30_i32 | a >> (32_i32 - 30_i32);
     tm = x[(37_i32 & 0xf_i32) as usize]
-        ^ x[(37_i32 - 14_i32 & 0xf_i32) as usize]
-        ^ x[(37_i32 - 8_i32 & 0xf_i32) as usize]
-        ^ x[(37_i32 - 3_i32 & 0xf_i32) as usize];
-    x[(37_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> 32_i32 - 1_i32;
+        ^ x[((37_i32 - 14_i32) & 0xf_i32) as usize]
+        ^ x[((37_i32 - 8_i32) & 0xf_i32) as usize]
+        ^ x[((37_i32 - 3_i32) & 0xf_i32) as usize];
+    x[(37_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> (32_i32 - 1_i32);
     c = (c as i64
-        + ((d << 5_i32 | d >> 32_i32 - 5_i32).wrapping_add(e ^ a ^ b) as i64
+        + ((d << 5_i32 | d >> (32_i32 - 5_i32)).wrapping_add(e ^ a ^ b) as i64
             + 0x6ed9eba1_i64
             + x[(37_i32 & 0xf_i32) as usize] as i64)) as uint32_t;
-    e = e << 30_i32 | e >> 32_i32 - 30_i32;
+    e = e << 30_i32 | e >> (32_i32 - 30_i32);
     tm = x[(38_i32 & 0xf_i32) as usize]
-        ^ x[(38_i32 - 14_i32 & 0xf_i32) as usize]
-        ^ x[(38_i32 - 8_i32 & 0xf_i32) as usize]
-        ^ x[(38_i32 - 3_i32 & 0xf_i32) as usize];
-    x[(38_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> 32_i32 - 1_i32;
+        ^ x[((38_i32 - 14_i32) & 0xf_i32) as usize]
+        ^ x[((38_i32 - 8_i32) & 0xf_i32) as usize]
+        ^ x[((38_i32 - 3_i32) & 0xf_i32) as usize];
+    x[(38_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> (32_i32 - 1_i32);
     b = (b as i64
-        + ((c << 5_i32 | c >> 32_i32 - 5_i32).wrapping_add(d ^ e ^ a) as i64
+        + ((c << 5_i32 | c >> (32_i32 - 5_i32)).wrapping_add(d ^ e ^ a) as i64
             + 0x6ed9eba1_i64
             + x[(38_i32 & 0xf_i32) as usize] as i64)) as uint32_t;
-    d = d << 30_i32 | d >> 32_i32 - 30_i32;
+    d = d << 30_i32 | d >> (32_i32 - 30_i32);
     tm = x[(39_i32 & 0xf_i32) as usize]
-        ^ x[(39_i32 - 14_i32 & 0xf_i32) as usize]
-        ^ x[(39_i32 - 8_i32 & 0xf_i32) as usize]
-        ^ x[(39_i32 - 3_i32 & 0xf_i32) as usize];
-    x[(39_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> 32_i32 - 1_i32;
+        ^ x[((39_i32 - 14_i32) & 0xf_i32) as usize]
+        ^ x[((39_i32 - 8_i32) & 0xf_i32) as usize]
+        ^ x[((39_i32 - 3_i32) & 0xf_i32) as usize];
+    x[(39_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> (32_i32 - 1_i32);
     a = (a as i64
-        + ((b << 5_i32 | b >> 32_i32 - 5_i32).wrapping_add(c ^ d ^ e) as i64
+        + ((b << 5_i32 | b >> (32_i32 - 5_i32)).wrapping_add(c ^ d ^ e) as i64
             + 0x6ed9eba1_i64
             + x[(39_i32 & 0xf_i32) as usize] as i64)) as uint32_t;
-    c = c << 30_i32 | c >> 32_i32 - 30_i32;
+    c = c << 30_i32 | c >> (32_i32 - 30_i32);
     tm = x[(40_i32 & 0xf_i32) as usize]
-        ^ x[(40_i32 - 14_i32 & 0xf_i32) as usize]
-        ^ x[(40_i32 - 8_i32 & 0xf_i32) as usize]
-        ^ x[(40_i32 - 3_i32 & 0xf_i32) as usize];
-    x[(40_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> 32_i32 - 1_i32;
+        ^ x[((40_i32 - 14_i32) & 0xf_i32) as usize]
+        ^ x[((40_i32 - 8_i32) & 0xf_i32) as usize]
+        ^ x[((40_i32 - 3_i32) & 0xf_i32) as usize];
+    x[(40_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> (32_i32 - 1_i32);
     e = (e as i64
-        + ((a << 5_i32 | a >> 32_i32 - 5_i32).wrapping_add(b & c | d & (b | c)) as i64
+        + ((a << 5_i32 | a >> (32_i32 - 5_i32)).wrapping_add(b & c | d & (b | c)) as i64
             + 0x8f1bbcdc_i64
             + x[(40_i32 & 0xf_i32) as usize] as i64)) as uint32_t;
-    b = b << 30_i32 | b >> 32_i32 - 30_i32;
+    b = b << 30_i32 | b >> (32_i32 - 30_i32);
     tm = x[(41_i32 & 0xf_i32) as usize]
-        ^ x[(41_i32 - 14_i32 & 0xf_i32) as usize]
-        ^ x[(41_i32 - 8_i32 & 0xf_i32) as usize]
-        ^ x[(41_i32 - 3_i32 & 0xf_i32) as usize];
-    x[(41_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> 32_i32 - 1_i32;
+        ^ x[((41_i32 - 14_i32) & 0xf_i32) as usize]
+        ^ x[((41_i32 - 8_i32) & 0xf_i32) as usize]
+        ^ x[((41_i32 - 3_i32) & 0xf_i32) as usize];
+    x[(41_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> (32_i32 - 1_i32);
     d = (d as i64
-        + ((e << 5_i32 | e >> 32_i32 - 5_i32).wrapping_add(a & b | c & (a | b)) as i64
+        + ((e << 5_i32 | e >> (32_i32 - 5_i32)).wrapping_add(a & b | c & (a | b)) as i64
             + 0x8f1bbcdc_i64
             + x[(41_i32 & 0xf_i32) as usize] as i64)) as uint32_t;
-    a = a << 30_i32 | a >> 32_i32 - 30_i32;
+    a = a << 30_i32 | a >> (32_i32 - 30_i32);
     tm = x[(42_i32 & 0xf_i32) as usize]
-        ^ x[(42_i32 - 14_i32 & 0xf_i32) as usize]
-        ^ x[(42_i32 - 8_i32 & 0xf_i32) as usize]
-        ^ x[(42_i32 - 3_i32 & 0xf_i32) as usize];
-    x[(42_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> 32_i32 - 1_i32;
+        ^ x[((42_i32 - 14_i32) & 0xf_i32) as usize]
+        ^ x[((42_i32 - 8_i32) & 0xf_i32) as usize]
+        ^ x[((42_i32 - 3_i32) & 0xf_i32) as usize];
+    x[(42_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> (32_i32 - 1_i32);
     c = (c as i64
-        + ((d << 5_i32 | d >> 32_i32 - 5_i32).wrapping_add(e & a | b & (e | a)) as i64
+        + ((d << 5_i32 | d >> (32_i32 - 5_i32)).wrapping_add(e & a | b & (e | a)) as i64
             + 0x8f1bbcdc_i64
             + x[(42_i32 & 0xf_i32) as usize] as i64)) as uint32_t;
-    e = e << 30_i32 | e >> 32_i32 - 30_i32;
+    e = e << 30_i32 | e >> (32_i32 - 30_i32);
     tm = x[(43_i32 & 0xf_i32) as usize]
-        ^ x[(43_i32 - 14_i32 & 0xf_i32) as usize]
-        ^ x[(43_i32 - 8_i32 & 0xf_i32) as usize]
-        ^ x[(43_i32 - 3_i32 & 0xf_i32) as usize];
-    x[(43_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> 32_i32 - 1_i32;
+        ^ x[((43_i32 - 14_i32) & 0xf_i32) as usize]
+        ^ x[((43_i32 - 8_i32) & 0xf_i32) as usize]
+        ^ x[((43_i32 - 3_i32) & 0xf_i32) as usize];
+    x[(43_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> (32_i32 - 1_i32);
     b = (b as i64
-        + ((c << 5_i32 | c >> 32_i32 - 5_i32).wrapping_add(d & e | a & (d | e)) as i64
+        + ((c << 5_i32 | c >> (32_i32 - 5_i32)).wrapping_add(d & e | a & (d | e)) as i64
             + 0x8f1bbcdc_i64
             + x[(43_i32 & 0xf_i32) as usize] as i64)) as uint32_t;
-    d = d << 30_i32 | d >> 32_i32 - 30_i32;
+    d = d << 30_i32 | d >> (32_i32 - 30_i32);
     tm = x[(44_i32 & 0xf_i32) as usize]
-        ^ x[(44_i32 - 14_i32 & 0xf_i32) as usize]
-        ^ x[(44_i32 - 8_i32 & 0xf_i32) as usize]
-        ^ x[(44_i32 - 3_i32 & 0xf_i32) as usize];
-    x[(44_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> 32_i32 - 1_i32;
+        ^ x[((44_i32 - 14_i32) & 0xf_i32) as usize]
+        ^ x[((44_i32 - 8_i32) & 0xf_i32) as usize]
+        ^ x[((44_i32 - 3_i32) & 0xf_i32) as usize];
+    x[(44_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> (32_i32 - 1_i32);
     a = (a as i64
-        + ((b << 5_i32 | b >> 32_i32 - 5_i32).wrapping_add(c & d | e & (c | d)) as i64
+        + ((b << 5_i32 | b >> (32_i32 - 5_i32)).wrapping_add(c & d | e & (c | d)) as i64
             + 0x8f1bbcdc_i64
             + x[(44_i32 & 0xf_i32) as usize] as i64)) as uint32_t;
-    c = c << 30_i32 | c >> 32_i32 - 30_i32;
+    c = c << 30_i32 | c >> (32_i32 - 30_i32);
     tm = x[(45_i32 & 0xf_i32) as usize]
-        ^ x[(45_i32 - 14_i32 & 0xf_i32) as usize]
-        ^ x[(45_i32 - 8_i32 & 0xf_i32) as usize]
-        ^ x[(45_i32 - 3_i32 & 0xf_i32) as usize];
-    x[(45_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> 32_i32 - 1_i32;
+        ^ x[((45_i32 - 14_i32) & 0xf_i32) as usize]
+        ^ x[((45_i32 - 8_i32) & 0xf_i32) as usize]
+        ^ x[((45_i32 - 3_i32) & 0xf_i32) as usize];
+    x[(45_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> (32_i32 - 1_i32);
     e = (e as i64
-        + ((a << 5_i32 | a >> 32_i32 - 5_i32).wrapping_add(b & c | d & (b | c)) as i64
+        + ((a << 5_i32 | a >> (32_i32 - 5_i32)).wrapping_add(b & c | d & (b | c)) as i64
             + 0x8f1bbcdc_i64
             + x[(45_i32 & 0xf_i32) as usize] as i64)) as uint32_t;
-    b = b << 30_i32 | b >> 32_i32 - 30_i32;
+    b = b << 30_i32 | b >> (32_i32 - 30_i32);
     tm = x[(46_i32 & 0xf_i32) as usize]
-        ^ x[(46_i32 - 14_i32 & 0xf_i32) as usize]
-        ^ x[(46_i32 - 8_i32 & 0xf_i32) as usize]
-        ^ x[(46_i32 - 3_i32 & 0xf_i32) as usize];
-    x[(46_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> 32_i32 - 1_i32;
+        ^ x[((46_i32 - 14_i32) & 0xf_i32) as usize]
+        ^ x[((46_i32 - 8_i32) & 0xf_i32) as usize]
+        ^ x[((46_i32 - 3_i32) & 0xf_i32) as usize];
+    x[(46_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> (32_i32 - 1_i32);
     d = (d as i64
-        + ((e << 5_i32 | e >> 32_i32 - 5_i32).wrapping_add(a & b | c & (a | b)) as i64
+        + ((e << 5_i32 | e >> (32_i32 - 5_i32)).wrapping_add(a & b | c & (a | b)) as i64
             + 0x8f1bbcdc_i64
             + x[(46_i32 & 0xf_i32) as usize] as i64)) as uint32_t;
-    a = a << 30_i32 | a >> 32_i32 - 30_i32;
+    a = a << 30_i32 | a >> (32_i32 - 30_i32);
     tm = x[(47_i32 & 0xf_i32) as usize]
-        ^ x[(47_i32 - 14_i32 & 0xf_i32) as usize]
-        ^ x[(47_i32 - 8_i32 & 0xf_i32) as usize]
-        ^ x[(47_i32 - 3_i32 & 0xf_i32) as usize];
-    x[(47_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> 32_i32 - 1_i32;
+        ^ x[((47_i32 - 14_i32) & 0xf_i32) as usize]
+        ^ x[((47_i32 - 8_i32) & 0xf_i32) as usize]
+        ^ x[((47_i32 - 3_i32) & 0xf_i32) as usize];
+    x[(47_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> (32_i32 - 1_i32);
     c = (c as i64
-        + ((d << 5_i32 | d >> 32_i32 - 5_i32).wrapping_add(e & a | b & (e | a)) as i64
+        + ((d << 5_i32 | d >> (32_i32 - 5_i32)).wrapping_add(e & a | b & (e | a)) as i64
             + 0x8f1bbcdc_i64
             + x[(47_i32 & 0xf_i32) as usize] as i64)) as uint32_t;
-    e = e << 30_i32 | e >> 32_i32 - 30_i32;
+    e = e << 30_i32 | e >> (32_i32 - 30_i32);
     tm = x[(48_i32 & 0xf_i32) as usize]
-        ^ x[(48_i32 - 14_i32 & 0xf_i32) as usize]
-        ^ x[(48_i32 - 8_i32 & 0xf_i32) as usize]
-        ^ x[(48_i32 - 3_i32 & 0xf_i32) as usize];
-    x[(48_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> 32_i32 - 1_i32;
+        ^ x[((48_i32 - 14_i32) & 0xf_i32) as usize]
+        ^ x[((48_i32 - 8_i32) & 0xf_i32) as usize]
+        ^ x[((48_i32 - 3_i32) & 0xf_i32) as usize];
+    x[(48_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> (32_i32 - 1_i32);
     b = (b as i64
-        + ((c << 5_i32 | c >> 32_i32 - 5_i32).wrapping_add(d & e | a & (d | e)) as i64
+        + ((c << 5_i32 | c >> (32_i32 - 5_i32)).wrapping_add(d & e | a & (d | e)) as i64
             + 0x8f1bbcdc_i64
             + x[(48_i32 & 0xf_i32) as usize] as i64)) as uint32_t;
-    d = d << 30_i32 | d >> 32_i32 - 30_i32;
+    d = d << 30_i32 | d >> (32_i32 - 30_i32);
     tm = x[(49_i32 & 0xf_i32) as usize]
-        ^ x[(49_i32 - 14_i32 & 0xf_i32) as usize]
-        ^ x[(49_i32 - 8_i32 & 0xf_i32) as usize]
-        ^ x[(49_i32 - 3_i32 & 0xf_i32) as usize];
-    x[(49_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> 32_i32 - 1_i32;
+        ^ x[((49_i32 - 14_i32) & 0xf_i32) as usize]
+        ^ x[((49_i32 - 8_i32) & 0xf_i32) as usize]
+        ^ x[((49_i32 - 3_i32) & 0xf_i32) as usize];
+    x[(49_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> (32_i32 - 1_i32);
     a = (a as i64
-        + ((b << 5_i32 | b >> 32_i32 - 5_i32).wrapping_add(c & d | e & (c | d)) as i64
+        + ((b << 5_i32 | b >> (32_i32 - 5_i32)).wrapping_add(c & d | e & (c | d)) as i64
             + 0x8f1bbcdc_i64
             + x[(49_i32 & 0xf_i32) as usize] as i64)) as uint32_t;
-    c = c << 30_i32 | c >> 32_i32 - 30_i32;
+    c = c << 30_i32 | c >> (32_i32 - 30_i32);
     tm = x[(50_i32 & 0xf_i32) as usize]
-        ^ x[(50_i32 - 14_i32 & 0xf_i32) as usize]
-        ^ x[(50_i32 - 8_i32 & 0xf_i32) as usize]
-        ^ x[(50_i32 - 3_i32 & 0xf_i32) as usize];
-    x[(50_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> 32_i32 - 1_i32;
+        ^ x[((50_i32 - 14_i32) & 0xf_i32) as usize]
+        ^ x[((50_i32 - 8_i32) & 0xf_i32) as usize]
+        ^ x[((50_i32 - 3_i32) & 0xf_i32) as usize];
+    x[(50_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> (32_i32 - 1_i32);
     e = (e as i64
-        + ((a << 5_i32 | a >> 32_i32 - 5_i32).wrapping_add(b & c | d & (b | c)) as i64
+        + ((a << 5_i32 | a >> (32_i32 - 5_i32)).wrapping_add(b & c | d & (b | c)) as i64
             + 0x8f1bbcdc_i64
             + x[(50_i32 & 0xf_i32) as usize] as i64)) as uint32_t;
-    b = b << 30_i32 | b >> 32_i32 - 30_i32;
+    b = b << 30_i32 | b >> (32_i32 - 30_i32);
     tm = x[(51_i32 & 0xf_i32) as usize]
-        ^ x[(51_i32 - 14_i32 & 0xf_i32) as usize]
-        ^ x[(51_i32 - 8_i32 & 0xf_i32) as usize]
-        ^ x[(51_i32 - 3_i32 & 0xf_i32) as usize];
-    x[(51_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> 32_i32 - 1_i32;
+        ^ x[((51_i32 - 14_i32) & 0xf_i32) as usize]
+        ^ x[((51_i32 - 8_i32) & 0xf_i32) as usize]
+        ^ x[((51_i32 - 3_i32) & 0xf_i32) as usize];
+    x[(51_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> (32_i32 - 1_i32);
     d = (d as i64
-        + ((e << 5_i32 | e >> 32_i32 - 5_i32).wrapping_add(a & b | c & (a | b)) as i64
+        + ((e << 5_i32 | e >> (32_i32 - 5_i32)).wrapping_add(a & b | c & (a | b)) as i64
             + 0x8f1bbcdc_i64
             + x[(51_i32 & 0xf_i32) as usize] as i64)) as uint32_t;
-    a = a << 30_i32 | a >> 32_i32 - 30_i32;
+    a = a << 30_i32 | a >> (32_i32 - 30_i32);
     tm = x[(52_i32 & 0xf_i32) as usize]
-        ^ x[(52_i32 - 14_i32 & 0xf_i32) as usize]
-        ^ x[(52_i32 - 8_i32 & 0xf_i32) as usize]
-        ^ x[(52_i32 - 3_i32 & 0xf_i32) as usize];
-    x[(52_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> 32_i32 - 1_i32;
+        ^ x[((52_i32 - 14_i32) & 0xf_i32) as usize]
+        ^ x[((52_i32 - 8_i32) & 0xf_i32) as usize]
+        ^ x[((52_i32 - 3_i32) & 0xf_i32) as usize];
+    x[(52_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> (32_i32 - 1_i32);
     c = (c as i64
-        + ((d << 5_i32 | d >> 32_i32 - 5_i32).wrapping_add(e & a | b & (e | a)) as i64
+        + ((d << 5_i32 | d >> (32_i32 - 5_i32)).wrapping_add(e & a | b & (e | a)) as i64
             + 0x8f1bbcdc_i64
             + x[(52_i32 & 0xf_i32) as usize] as i64)) as uint32_t;
-    e = e << 30_i32 | e >> 32_i32 - 30_i32;
+    e = e << 30_i32 | e >> (32_i32 - 30_i32);
     tm = x[(53_i32 & 0xf_i32) as usize]
-        ^ x[(53_i32 - 14_i32 & 0xf_i32) as usize]
-        ^ x[(53_i32 - 8_i32 & 0xf_i32) as usize]
-        ^ x[(53_i32 - 3_i32 & 0xf_i32) as usize];
-    x[(53_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> 32_i32 - 1_i32;
+        ^ x[((53_i32 - 14_i32) & 0xf_i32) as usize]
+        ^ x[((53_i32 - 8_i32) & 0xf_i32) as usize]
+        ^ x[((53_i32 - 3_i32) & 0xf_i32) as usize];
+    x[(53_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> (32_i32 - 1_i32);
     b = (b as i64
-        + ((c << 5_i32 | c >> 32_i32 - 5_i32).wrapping_add(d & e | a & (d | e)) as i64
+        + ((c << 5_i32 | c >> (32_i32 - 5_i32)).wrapping_add(d & e | a & (d | e)) as i64
             + 0x8f1bbcdc_i64
             + x[(53_i32 & 0xf_i32) as usize] as i64)) as uint32_t;
-    d = d << 30_i32 | d >> 32_i32 - 30_i32;
+    d = d << 30_i32 | d >> (32_i32 - 30_i32);
     tm = x[(54_i32 & 0xf_i32) as usize]
-        ^ x[(54_i32 - 14_i32 & 0xf_i32) as usize]
-        ^ x[(54_i32 - 8_i32 & 0xf_i32) as usize]
-        ^ x[(54_i32 - 3_i32 & 0xf_i32) as usize];
-    x[(54_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> 32_i32 - 1_i32;
+        ^ x[((54_i32 - 14_i32) & 0xf_i32) as usize]
+        ^ x[((54_i32 - 8_i32) & 0xf_i32) as usize]
+        ^ x[((54_i32 - 3_i32) & 0xf_i32) as usize];
+    x[(54_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> (32_i32 - 1_i32);
     a = (a as i64
-        + ((b << 5_i32 | b >> 32_i32 - 5_i32).wrapping_add(c & d | e & (c | d)) as i64
+        + ((b << 5_i32 | b >> (32_i32 - 5_i32)).wrapping_add(c & d | e & (c | d)) as i64
             + 0x8f1bbcdc_i64
             + x[(54_i32 & 0xf_i32) as usize] as i64)) as uint32_t;
-    c = c << 30_i32 | c >> 32_i32 - 30_i32;
+    c = c << 30_i32 | c >> (32_i32 - 30_i32);
     tm = x[(55_i32 & 0xf_i32) as usize]
-        ^ x[(55_i32 - 14_i32 & 0xf_i32) as usize]
-        ^ x[(55_i32 - 8_i32 & 0xf_i32) as usize]
-        ^ x[(55_i32 - 3_i32 & 0xf_i32) as usize];
-    x[(55_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> 32_i32 - 1_i32;
+        ^ x[((55_i32 - 14_i32) & 0xf_i32) as usize]
+        ^ x[((55_i32 - 8_i32) & 0xf_i32) as usize]
+        ^ x[((55_i32 - 3_i32) & 0xf_i32) as usize];
+    x[(55_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> (32_i32 - 1_i32);
     e = (e as i64
-        + ((a << 5_i32 | a >> 32_i32 - 5_i32).wrapping_add(b & c | d & (b | c)) as i64
+        + ((a << 5_i32 | a >> (32_i32 - 5_i32)).wrapping_add(b & c | d & (b | c)) as i64
             + 0x8f1bbcdc_i64
             + x[(55_i32 & 0xf_i32) as usize] as i64)) as uint32_t;
-    b = b << 30_i32 | b >> 32_i32 - 30_i32;
+    b = b << 30_i32 | b >> (32_i32 - 30_i32);
     tm = x[(56_i32 & 0xf_i32) as usize]
-        ^ x[(56_i32 - 14_i32 & 0xf_i32) as usize]
-        ^ x[(56_i32 - 8_i32 & 0xf_i32) as usize]
-        ^ x[(56_i32 - 3_i32 & 0xf_i32) as usize];
-    x[(56_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> 32_i32 - 1_i32;
+        ^ x[((56_i32 - 14_i32) & 0xf_i32) as usize]
+        ^ x[((56_i32 - 8_i32) & 0xf_i32) as usize]
+        ^ x[((56_i32 - 3_i32) & 0xf_i32) as usize];
+    x[(56_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> (32_i32 - 1_i32);
     d = (d as i64
-        + ((e << 5_i32 | e >> 32_i32 - 5_i32).wrapping_add(a & b | c & (a | b)) as i64
+        + ((e << 5_i32 | e >> (32_i32 - 5_i32)).wrapping_add(a & b | c & (a | b)) as i64
             + 0x8f1bbcdc_i64
             + x[(56_i32 & 0xf_i32) as usize] as i64)) as uint32_t;
-    a = a << 30_i32 | a >> 32_i32 - 30_i32;
+    a = a << 30_i32 | a >> (32_i32 - 30_i32);
     tm = x[(57_i32 & 0xf_i32) as usize]
-        ^ x[(57_i32 - 14_i32 & 0xf_i32) as usize]
-        ^ x[(57_i32 - 8_i32 & 0xf_i32) as usize]
-        ^ x[(57_i32 - 3_i32 & 0xf_i32) as usize];
-    x[(57_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> 32_i32 - 1_i32;
+        ^ x[((57_i32 - 14_i32) & 0xf_i32) as usize]
+        ^ x[((57_i32 - 8_i32) & 0xf_i32) as usize]
+        ^ x[((57_i32 - 3_i32) & 0xf_i32) as usize];
+    x[(57_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> (32_i32 - 1_i32);
     c = (c as i64
-        + ((d << 5_i32 | d >> 32_i32 - 5_i32).wrapping_add(e & a | b & (e | a)) as i64
+        + ((d << 5_i32 | d >> (32_i32 - 5_i32)).wrapping_add(e & a | b & (e | a)) as i64
             + 0x8f1bbcdc_i64
             + x[(57_i32 & 0xf_i32) as usize] as i64)) as uint32_t;
-    e = e << 30_i32 | e >> 32_i32 - 30_i32;
+    e = e << 30_i32 | e >> (32_i32 - 30_i32);
     tm = x[(58_i32 & 0xf_i32) as usize]
-        ^ x[(58_i32 - 14_i32 & 0xf_i32) as usize]
-        ^ x[(58_i32 - 8_i32 & 0xf_i32) as usize]
-        ^ x[(58_i32 - 3_i32 & 0xf_i32) as usize];
-    x[(58_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> 32_i32 - 1_i32;
+        ^ x[((58_i32 - 14_i32) & 0xf_i32) as usize]
+        ^ x[((58_i32 - 8_i32) & 0xf_i32) as usize]
+        ^ x[((58_i32 - 3_i32) & 0xf_i32) as usize];
+    x[(58_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> (32_i32 - 1_i32);
     b = (b as i64
-        + ((c << 5_i32 | c >> 32_i32 - 5_i32).wrapping_add(d & e | a & (d | e)) as i64
+        + ((c << 5_i32 | c >> (32_i32 - 5_i32)).wrapping_add(d & e | a & (d | e)) as i64
             + 0x8f1bbcdc_i64
             + x[(58_i32 & 0xf_i32) as usize] as i64)) as uint32_t;
-    d = d << 30_i32 | d >> 32_i32 - 30_i32;
+    d = d << 30_i32 | d >> (32_i32 - 30_i32);
     tm = x[(59_i32 & 0xf_i32) as usize]
-        ^ x[(59_i32 - 14_i32 & 0xf_i32) as usize]
-        ^ x[(59_i32 - 8_i32 & 0xf_i32) as usize]
-        ^ x[(59_i32 - 3_i32 & 0xf_i32) as usize];
-    x[(59_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> 32_i32 - 1_i32;
+        ^ x[((59_i32 - 14_i32) & 0xf_i32) as usize]
+        ^ x[((59_i32 - 8_i32) & 0xf_i32) as usize]
+        ^ x[((59_i32 - 3_i32) & 0xf_i32) as usize];
+    x[(59_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> (32_i32 - 1_i32);
     a = (a as i64
-        + ((b << 5_i32 | b >> 32_i32 - 5_i32).wrapping_add(c & d | e & (c | d)) as i64
+        + ((b << 5_i32 | b >> (32_i32 - 5_i32)).wrapping_add(c & d | e & (c | d)) as i64
             + 0x8f1bbcdc_i64
             + x[(59_i32 & 0xf_i32) as usize] as i64)) as uint32_t;
-    c = c << 30_i32 | c >> 32_i32 - 30_i32;
+    c = c << 30_i32 | c >> (32_i32 - 30_i32);
     tm = x[(60_i32 & 0xf_i32) as usize]
-        ^ x[(60_i32 - 14_i32 & 0xf_i32) as usize]
-        ^ x[(60_i32 - 8_i32 & 0xf_i32) as usize]
-        ^ x[(60_i32 - 3_i32 & 0xf_i32) as usize];
-    x[(60_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> 32_i32 - 1_i32;
+        ^ x[((60_i32 - 14_i32) & 0xf_i32) as usize]
+        ^ x[((60_i32 - 8_i32) & 0xf_i32) as usize]
+        ^ x[((60_i32 - 3_i32) & 0xf_i32) as usize];
+    x[(60_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> (32_i32 - 1_i32);
     e = (e as i64
-        + ((a << 5_i32 | a >> 32_i32 - 5_i32).wrapping_add(b ^ c ^ d) as i64
+        + ((a << 5_i32 | a >> (32_i32 - 5_i32)).wrapping_add(b ^ c ^ d) as i64
             + 0xca62c1d6_i64
             + x[(60_i32 & 0xf_i32) as usize] as i64)) as uint32_t;
-    b = b << 30_i32 | b >> 32_i32 - 30_i32;
+    b = b << 30_i32 | b >> (32_i32 - 30_i32);
     tm = x[(61_i32 & 0xf_i32) as usize]
-        ^ x[(61_i32 - 14_i32 & 0xf_i32) as usize]
-        ^ x[(61_i32 - 8_i32 & 0xf_i32) as usize]
-        ^ x[(61_i32 - 3_i32 & 0xf_i32) as usize];
-    x[(61_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> 32_i32 - 1_i32;
+        ^ x[((61_i32 - 14_i32) & 0xf_i32) as usize]
+        ^ x[((61_i32 - 8_i32) & 0xf_i32) as usize]
+        ^ x[((61_i32 - 3_i32) & 0xf_i32) as usize];
+    x[(61_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> (32_i32 - 1_i32);
     d = (d as i64
-        + ((e << 5_i32 | e >> 32_i32 - 5_i32).wrapping_add(a ^ b ^ c) as i64
+        + ((e << 5_i32 | e >> (32_i32 - 5_i32)).wrapping_add(a ^ b ^ c) as i64
             + 0xca62c1d6_i64
             + x[(61_i32 & 0xf_i32) as usize] as i64)) as uint32_t;
-    a = a << 30_i32 | a >> 32_i32 - 30_i32;
+    a = a << 30_i32 | a >> (32_i32 - 30_i32);
     tm = x[(62_i32 & 0xf_i32) as usize]
-        ^ x[(62_i32 - 14_i32 & 0xf_i32) as usize]
-        ^ x[(62_i32 - 8_i32 & 0xf_i32) as usize]
-        ^ x[(62_i32 - 3_i32 & 0xf_i32) as usize];
-    x[(62_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> 32_i32 - 1_i32;
+        ^ x[((62_i32 - 14_i32) & 0xf_i32) as usize]
+        ^ x[((62_i32 - 8_i32) & 0xf_i32) as usize]
+        ^ x[((62_i32 - 3_i32) & 0xf_i32) as usize];
+    x[(62_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> (32_i32 - 1_i32);
     c = (c as i64
-        + ((d << 5_i32 | d >> 32_i32 - 5_i32).wrapping_add(e ^ a ^ b) as i64
+        + ((d << 5_i32 | d >> (32_i32 - 5_i32)).wrapping_add(e ^ a ^ b) as i64
             + 0xca62c1d6_i64
             + x[(62_i32 & 0xf_i32) as usize] as i64)) as uint32_t;
-    e = e << 30_i32 | e >> 32_i32 - 30_i32;
+    e = e << 30_i32 | e >> (32_i32 - 30_i32);
     tm = x[(63_i32 & 0xf_i32) as usize]
-        ^ x[(63_i32 - 14_i32 & 0xf_i32) as usize]
-        ^ x[(63_i32 - 8_i32 & 0xf_i32) as usize]
-        ^ x[(63_i32 - 3_i32 & 0xf_i32) as usize];
-    x[(63_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> 32_i32 - 1_i32;
+        ^ x[((63_i32 - 14_i32) & 0xf_i32) as usize]
+        ^ x[((63_i32 - 8_i32) & 0xf_i32) as usize]
+        ^ x[((63_i32 - 3_i32) & 0xf_i32) as usize];
+    x[(63_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> (32_i32 - 1_i32);
     b = (b as i64
-        + ((c << 5_i32 | c >> 32_i32 - 5_i32).wrapping_add(d ^ e ^ a) as i64
+        + ((c << 5_i32 | c >> (32_i32 - 5_i32)).wrapping_add(d ^ e ^ a) as i64
             + 0xca62c1d6_i64
             + x[(63_i32 & 0xf_i32) as usize] as i64)) as uint32_t;
-    d = d << 30_i32 | d >> 32_i32 - 30_i32;
+    d = d << 30_i32 | d >> (32_i32 - 30_i32);
     tm = x[(64_i32 & 0xf_i32) as usize]
-        ^ x[(64_i32 - 14_i32 & 0xf_i32) as usize]
-        ^ x[(64_i32 - 8_i32 & 0xf_i32) as usize]
-        ^ x[(64_i32 - 3_i32 & 0xf_i32) as usize];
-    x[(64_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> 32_i32 - 1_i32;
+        ^ x[((64_i32 - 14_i32) & 0xf_i32) as usize]
+        ^ x[((64_i32 - 8_i32) & 0xf_i32) as usize]
+        ^ x[((64_i32 - 3_i32) & 0xf_i32) as usize];
+    x[(64_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> (32_i32 - 1_i32);
     a = (a as i64
-        + ((b << 5_i32 | b >> 32_i32 - 5_i32).wrapping_add(c ^ d ^ e) as i64
+        + ((b << 5_i32 | b >> (32_i32 - 5_i32)).wrapping_add(c ^ d ^ e) as i64
             + 0xca62c1d6_i64
             + x[(64_i32 & 0xf_i32) as usize] as i64)) as uint32_t;
-    c = c << 30_i32 | c >> 32_i32 - 30_i32;
+    c = c << 30_i32 | c >> (32_i32 - 30_i32);
     tm = x[(65_i32 & 0xf_i32) as usize]
-        ^ x[(65_i32 - 14_i32 & 0xf_i32) as usize]
-        ^ x[(65_i32 - 8_i32 & 0xf_i32) as usize]
-        ^ x[(65_i32 - 3_i32 & 0xf_i32) as usize];
-    x[(65_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> 32_i32 - 1_i32;
+        ^ x[((65_i32 - 14_i32) & 0xf_i32) as usize]
+        ^ x[((65_i32 - 8_i32) & 0xf_i32) as usize]
+        ^ x[((65_i32 - 3_i32) & 0xf_i32) as usize];
+    x[(65_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> (32_i32 - 1_i32);
     e = (e as i64
-        + ((a << 5_i32 | a >> 32_i32 - 5_i32).wrapping_add(b ^ c ^ d) as i64
+        + ((a << 5_i32 | a >> (32_i32 - 5_i32)).wrapping_add(b ^ c ^ d) as i64
             + 0xca62c1d6_i64
             + x[(65_i32 & 0xf_i32) as usize] as i64)) as uint32_t;
-    b = b << 30_i32 | b >> 32_i32 - 30_i32;
+    b = b << 30_i32 | b >> (32_i32 - 30_i32);
     tm = x[(66_i32 & 0xf_i32) as usize]
-        ^ x[(66_i32 - 14_i32 & 0xf_i32) as usize]
-        ^ x[(66_i32 - 8_i32 & 0xf_i32) as usize]
-        ^ x[(66_i32 - 3_i32 & 0xf_i32) as usize];
-    x[(66_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> 32_i32 - 1_i32;
+        ^ x[((66_i32 - 14_i32) & 0xf_i32) as usize]
+        ^ x[((66_i32 - 8_i32) & 0xf_i32) as usize]
+        ^ x[((66_i32 - 3_i32) & 0xf_i32) as usize];
+    x[(66_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> (32_i32 - 1_i32);
     d = (d as i64
-        + ((e << 5_i32 | e >> 32_i32 - 5_i32).wrapping_add(a ^ b ^ c) as i64
+        + ((e << 5_i32 | e >> (32_i32 - 5_i32)).wrapping_add(a ^ b ^ c) as i64
             + 0xca62c1d6_i64
             + x[(66_i32 & 0xf_i32) as usize] as i64)) as uint32_t;
-    a = a << 30_i32 | a >> 32_i32 - 30_i32;
+    a = a << 30_i32 | a >> (32_i32 - 30_i32);
     tm = x[(67_i32 & 0xf_i32) as usize]
-        ^ x[(67_i32 - 14_i32 & 0xf_i32) as usize]
-        ^ x[(67_i32 - 8_i32 & 0xf_i32) as usize]
-        ^ x[(67_i32 - 3_i32 & 0xf_i32) as usize];
-    x[(67_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> 32_i32 - 1_i32;
+        ^ x[((67_i32 - 14_i32) & 0xf_i32) as usize]
+        ^ x[((67_i32 - 8_i32) & 0xf_i32) as usize]
+        ^ x[((67_i32 - 3_i32) & 0xf_i32) as usize];
+    x[(67_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> (32_i32 - 1_i32);
     c = (c as i64
-        + ((d << 5_i32 | d >> 32_i32 - 5_i32).wrapping_add(e ^ a ^ b) as i64
+        + ((d << 5_i32 | d >> (32_i32 - 5_i32)).wrapping_add(e ^ a ^ b) as i64
             + 0xca62c1d6_i64
             + x[(67_i32 & 0xf_i32) as usize] as i64)) as uint32_t;
-    e = e << 30_i32 | e >> 32_i32 - 30_i32;
+    e = e << 30_i32 | e >> (32_i32 - 30_i32);
     tm = x[(68_i32 & 0xf_i32) as usize]
-        ^ x[(68_i32 - 14_i32 & 0xf_i32) as usize]
-        ^ x[(68_i32 - 8_i32 & 0xf_i32) as usize]
-        ^ x[(68_i32 - 3_i32 & 0xf_i32) as usize];
-    x[(68_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> 32_i32 - 1_i32;
+        ^ x[((68_i32 - 14_i32) & 0xf_i32) as usize]
+        ^ x[((68_i32 - 8_i32) & 0xf_i32) as usize]
+        ^ x[((68_i32 - 3_i32) & 0xf_i32) as usize];
+    x[(68_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> (32_i32 - 1_i32);
     b = (b as i64
-        + ((c << 5_i32 | c >> 32_i32 - 5_i32).wrapping_add(d ^ e ^ a) as i64
+        + ((c << 5_i32 | c >> (32_i32 - 5_i32)).wrapping_add(d ^ e ^ a) as i64
             + 0xca62c1d6_i64
             + x[(68_i32 & 0xf_i32) as usize] as i64)) as uint32_t;
-    d = d << 30_i32 | d >> 32_i32 - 30_i32;
+    d = d << 30_i32 | d >> (32_i32 - 30_i32);
     tm = x[(69_i32 & 0xf_i32) as usize]
-        ^ x[(69_i32 - 14_i32 & 0xf_i32) as usize]
-        ^ x[(69_i32 - 8_i32 & 0xf_i32) as usize]
-        ^ x[(69_i32 - 3_i32 & 0xf_i32) as usize];
-    x[(69_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> 32_i32 - 1_i32;
+        ^ x[((69_i32 - 14_i32) & 0xf_i32) as usize]
+        ^ x[((69_i32 - 8_i32) & 0xf_i32) as usize]
+        ^ x[((69_i32 - 3_i32) & 0xf_i32) as usize];
+    x[(69_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> (32_i32 - 1_i32);
     a = (a as i64
-        + ((b << 5_i32 | b >> 32_i32 - 5_i32).wrapping_add(c ^ d ^ e) as i64
+        + ((b << 5_i32 | b >> (32_i32 - 5_i32)).wrapping_add(c ^ d ^ e) as i64
             + 0xca62c1d6_i64
             + x[(69_i32 & 0xf_i32) as usize] as i64)) as uint32_t;
-    c = c << 30_i32 | c >> 32_i32 - 30_i32;
+    c = c << 30_i32 | c >> (32_i32 - 30_i32);
     tm = x[(70_i32 & 0xf_i32) as usize]
-        ^ x[(70_i32 - 14_i32 & 0xf_i32) as usize]
-        ^ x[(70_i32 - 8_i32 & 0xf_i32) as usize]
-        ^ x[(70_i32 - 3_i32 & 0xf_i32) as usize];
-    x[(70_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> 32_i32 - 1_i32;
+        ^ x[((70_i32 - 14_i32) & 0xf_i32) as usize]
+        ^ x[((70_i32 - 8_i32) & 0xf_i32) as usize]
+        ^ x[((70_i32 - 3_i32) & 0xf_i32) as usize];
+    x[(70_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> (32_i32 - 1_i32);
     e = (e as i64
-        + ((a << 5_i32 | a >> 32_i32 - 5_i32).wrapping_add(b ^ c ^ d) as i64
+        + ((a << 5_i32 | a >> (32_i32 - 5_i32)).wrapping_add(b ^ c ^ d) as i64
             + 0xca62c1d6_i64
             + x[(70_i32 & 0xf_i32) as usize] as i64)) as uint32_t;
-    b = b << 30_i32 | b >> 32_i32 - 30_i32;
+    b = b << 30_i32 | b >> (32_i32 - 30_i32);
     tm = x[(71_i32 & 0xf_i32) as usize]
-        ^ x[(71_i32 - 14_i32 & 0xf_i32) as usize]
-        ^ x[(71_i32 - 8_i32 & 0xf_i32) as usize]
-        ^ x[(71_i32 - 3_i32 & 0xf_i32) as usize];
-    x[(71_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> 32_i32 - 1_i32;
+        ^ x[((71_i32 - 14_i32) & 0xf_i32) as usize]
+        ^ x[((71_i32 - 8_i32) & 0xf_i32) as usize]
+        ^ x[((71_i32 - 3_i32) & 0xf_i32) as usize];
+    x[(71_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> (32_i32 - 1_i32);
     d = (d as i64
-        + ((e << 5_i32 | e >> 32_i32 - 5_i32).wrapping_add(a ^ b ^ c) as i64
+        + ((e << 5_i32 | e >> (32_i32 - 5_i32)).wrapping_add(a ^ b ^ c) as i64
             + 0xca62c1d6_i64
             + x[(71_i32 & 0xf_i32) as usize] as i64)) as uint32_t;
-    a = a << 30_i32 | a >> 32_i32 - 30_i32;
+    a = a << 30_i32 | a >> (32_i32 - 30_i32);
     tm = x[(72_i32 & 0xf_i32) as usize]
-        ^ x[(72_i32 - 14_i32 & 0xf_i32) as usize]
-        ^ x[(72_i32 - 8_i32 & 0xf_i32) as usize]
-        ^ x[(72_i32 - 3_i32 & 0xf_i32) as usize];
-    x[(72_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> 32_i32 - 1_i32;
+        ^ x[((72_i32 - 14_i32) & 0xf_i32) as usize]
+        ^ x[((72_i32 - 8_i32) & 0xf_i32) as usize]
+        ^ x[((72_i32 - 3_i32) & 0xf_i32) as usize];
+    x[(72_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> (32_i32 - 1_i32);
     c = (c as i64
-        + ((d << 5_i32 | d >> 32_i32 - 5_i32).wrapping_add(e ^ a ^ b) as i64
+        + ((d << 5_i32 | d >> (32_i32 - 5_i32)).wrapping_add(e ^ a ^ b) as i64
             + 0xca62c1d6_i64
             + x[(72_i32 & 0xf_i32) as usize] as i64)) as uint32_t;
-    e = e << 30_i32 | e >> 32_i32 - 30_i32;
+    e = e << 30_i32 | e >> (32_i32 - 30_i32);
     tm = x[(73_i32 & 0xf_i32) as usize]
-        ^ x[(73_i32 - 14_i32 & 0xf_i32) as usize]
-        ^ x[(73_i32 - 8_i32 & 0xf_i32) as usize]
-        ^ x[(73_i32 - 3_i32 & 0xf_i32) as usize];
-    x[(73_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> 32_i32 - 1_i32;
+        ^ x[((73_i32 - 14_i32) & 0xf_i32) as usize]
+        ^ x[((73_i32 - 8_i32) & 0xf_i32) as usize]
+        ^ x[((73_i32 - 3_i32) & 0xf_i32) as usize];
+    x[(73_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> (32_i32 - 1_i32);
     b = (b as i64
-        + ((c << 5_i32 | c >> 32_i32 - 5_i32).wrapping_add(d ^ e ^ a) as i64
+        + ((c << 5_i32 | c >> (32_i32 - 5_i32)).wrapping_add(d ^ e ^ a) as i64
             + 0xca62c1d6_i64
             + x[(73_i32 & 0xf_i32) as usize] as i64)) as uint32_t;
-    d = d << 30_i32 | d >> 32_i32 - 30_i32;
+    d = d << 30_i32 | d >> (32_i32 - 30_i32);
     tm = x[(74_i32 & 0xf_i32) as usize]
-        ^ x[(74_i32 - 14_i32 & 0xf_i32) as usize]
-        ^ x[(74_i32 - 8_i32 & 0xf_i32) as usize]
-        ^ x[(74_i32 - 3_i32 & 0xf_i32) as usize];
-    x[(74_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> 32_i32 - 1_i32;
+        ^ x[((74_i32 - 14_i32) & 0xf_i32) as usize]
+        ^ x[((74_i32 - 8_i32) & 0xf_i32) as usize]
+        ^ x[((74_i32 - 3_i32) & 0xf_i32) as usize];
+    x[(74_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> (32_i32 - 1_i32);
     a = (a as i64
-        + ((b << 5_i32 | b >> 32_i32 - 5_i32).wrapping_add(c ^ d ^ e) as i64
+        + ((b << 5_i32 | b >> (32_i32 - 5_i32)).wrapping_add(c ^ d ^ e) as i64
             + 0xca62c1d6_i64
             + x[(74_i32 & 0xf_i32) as usize] as i64)) as uint32_t;
-    c = c << 30_i32 | c >> 32_i32 - 30_i32;
+    c = c << 30_i32 | c >> (32_i32 - 30_i32);
     tm = x[(75_i32 & 0xf_i32) as usize]
-        ^ x[(75_i32 - 14_i32 & 0xf_i32) as usize]
-        ^ x[(75_i32 - 8_i32 & 0xf_i32) as usize]
-        ^ x[(75_i32 - 3_i32 & 0xf_i32) as usize];
-    x[(75_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> 32_i32 - 1_i32;
+        ^ x[((75_i32 - 14_i32) & 0xf_i32) as usize]
+        ^ x[((75_i32 - 8_i32) & 0xf_i32) as usize]
+        ^ x[((75_i32 - 3_i32) & 0xf_i32) as usize];
+    x[(75_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> (32_i32 - 1_i32);
     e = (e as i64
-        + ((a << 5_i32 | a >> 32_i32 - 5_i32).wrapping_add(b ^ c ^ d) as i64
+        + ((a << 5_i32 | a >> (32_i32 - 5_i32)).wrapping_add(b ^ c ^ d) as i64
             + 0xca62c1d6_i64
             + x[(75_i32 & 0xf_i32) as usize] as i64)) as uint32_t;
-    b = b << 30_i32 | b >> 32_i32 - 30_i32;
+    b = b << 30_i32 | b >> (32_i32 - 30_i32);
     tm = x[(76_i32 & 0xf_i32) as usize]
-        ^ x[(76_i32 - 14_i32 & 0xf_i32) as usize]
-        ^ x[(76_i32 - 8_i32 & 0xf_i32) as usize]
-        ^ x[(76_i32 - 3_i32 & 0xf_i32) as usize];
-    x[(76_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> 32_i32 - 1_i32;
+        ^ x[((76_i32 - 14_i32) & 0xf_i32) as usize]
+        ^ x[((76_i32 - 8_i32) & 0xf_i32) as usize]
+        ^ x[((76_i32 - 3_i32) & 0xf_i32) as usize];
+    x[(76_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> (32_i32 - 1_i32);
     d = (d as i64
-        + ((e << 5_i32 | e >> 32_i32 - 5_i32).wrapping_add(a ^ b ^ c) as i64
+        + ((e << 5_i32 | e >> (32_i32 - 5_i32)).wrapping_add(a ^ b ^ c) as i64
             + 0xca62c1d6_i64
             + x[(76_i32 & 0xf_i32) as usize] as i64)) as uint32_t;
-    a = a << 30_i32 | a >> 32_i32 - 30_i32;
+    a = a << 30_i32 | a >> (32_i32 - 30_i32);
     tm = x[(77_i32 & 0xf_i32) as usize]
-        ^ x[(77_i32 - 14_i32 & 0xf_i32) as usize]
-        ^ x[(77_i32 - 8_i32 & 0xf_i32) as usize]
-        ^ x[(77_i32 - 3_i32 & 0xf_i32) as usize];
-    x[(77_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> 32_i32 - 1_i32;
+        ^ x[((77_i32 - 14_i32) & 0xf_i32) as usize]
+        ^ x[((77_i32 - 8_i32) & 0xf_i32) as usize]
+        ^ x[((77_i32 - 3_i32) & 0xf_i32) as usize];
+    x[(77_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> (32_i32 - 1_i32);
     c = (c as i64
-        + ((d << 5_i32 | d >> 32_i32 - 5_i32).wrapping_add(e ^ a ^ b) as i64
+        + ((d << 5_i32 | d >> (32_i32 - 5_i32)).wrapping_add(e ^ a ^ b) as i64
             + 0xca62c1d6_i64
             + x[(77_i32 & 0xf_i32) as usize] as i64)) as uint32_t;
-    e = e << 30_i32 | e >> 32_i32 - 30_i32;
+    e = e << 30_i32 | e >> (32_i32 - 30_i32);
     tm = x[(78_i32 & 0xf_i32) as usize]
-        ^ x[(78_i32 - 14_i32 & 0xf_i32) as usize]
-        ^ x[(78_i32 - 8_i32 & 0xf_i32) as usize]
-        ^ x[(78_i32 - 3_i32 & 0xf_i32) as usize];
-    x[(78_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> 32_i32 - 1_i32;
+        ^ x[((78_i32 - 14_i32) & 0xf_i32) as usize]
+        ^ x[((78_i32 - 8_i32) & 0xf_i32) as usize]
+        ^ x[((78_i32 - 3_i32) & 0xf_i32) as usize];
+    x[(78_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> (32_i32 - 1_i32);
     b = (b as i64
-        + ((c << 5_i32 | c >> 32_i32 - 5_i32).wrapping_add(d ^ e ^ a) as i64
+        + ((c << 5_i32 | c >> (32_i32 - 5_i32)).wrapping_add(d ^ e ^ a) as i64
             + 0xca62c1d6_i64
             + x[(78_i32 & 0xf_i32) as usize] as i64)) as uint32_t;
-    d = d << 30_i32 | d >> 32_i32 - 30_i32;
+    d = d << 30_i32 | d >> (32_i32 - 30_i32);
     tm = x[(79_i32 & 0xf_i32) as usize]
-        ^ x[(79_i32 - 14_i32 & 0xf_i32) as usize]
-        ^ x[(79_i32 - 8_i32 & 0xf_i32) as usize]
-        ^ x[(79_i32 - 3_i32 & 0xf_i32) as usize];
-    x[(79_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> 32_i32 - 1_i32;
+        ^ x[((79_i32 - 14_i32) & 0xf_i32) as usize]
+        ^ x[((79_i32 - 8_i32) & 0xf_i32) as usize]
+        ^ x[((79_i32 - 3_i32) & 0xf_i32) as usize];
+    x[(79_i32 & 0xf_i32) as usize] = tm << 1_i32 | tm >> (32_i32 - 1_i32);
     a = (a as i64
-        + ((b << 5_i32 | b >> 32_i32 - 5_i32).wrapping_add(c ^ d ^ e) as i64
+        + ((b << 5_i32 | b >> (32_i32 - 5_i32)).wrapping_add(c ^ d ^ e) as i64
             + 0xca62c1d6_i64
             + x[(79_i32 & 0xf_i32) as usize] as i64)) as uint32_t;
-    c = c << 30_i32 | c >> 32_i32 - 30_i32;
+    c = c << 30_i32 | c >> (32_i32 - 30_i32);
     (*hd).h0 = (*hd).h0.wrapping_add(a);
     (*hd).h1 = (*hd).h1.wrapping_add(b);
     (*hd).h2 = (*hd).h2.wrapping_add(c);

@@ -451,7 +451,7 @@ pub unsafe fn F_TextWrite(state: &mut GameState) {
             cy += 11_i32;
         } else {
             c = (c as u8).to_ascii_uppercase() as i32 - HU_FONTSTART;
-            if c < 0_i32 || c > HU_FONTSIZE {
+            if !(0_i32..=HU_FONTSIZE).contains(&c) {
                 cx += 4_i32;
             } else {
                 let font_patch = V_CachePatchNum(state, state.hu_stuff.hu_font[c as usize]);
@@ -748,7 +748,7 @@ pub unsafe fn F_CastPrint(state: &mut GameState, text: &str) {
     let mut width: i32 = 0;
     for b in text.bytes() {
         c = b.to_ascii_uppercase() as i32 - HU_FONTSTART;
-        if c < 0_i32 || c > HU_FONTSIZE {
+        if !(0_i32..=HU_FONTSIZE).contains(&c) {
             width += 4_i32;
         } else {
             w = (*V_CachePatchNum(state, state.hu_stuff.hu_font[c as usize])).width as i32;
@@ -758,7 +758,7 @@ pub unsafe fn F_CastPrint(state: &mut GameState, text: &str) {
     cx = 160_i32 - width / 2_i32;
     for b in text.bytes() {
         c = b.to_ascii_uppercase() as i32 - HU_FONTSTART;
-        if c < 0_i32 || c > HU_FONTSIZE {
+        if !(0_i32..=HU_FONTSIZE).contains(&c) {
             cx += 4_i32;
         } else {
             let font_patch = V_CachePatchNum(state, state.hu_stuff.hu_font[c as usize]);

@@ -289,7 +289,7 @@ unsafe fn S_AdjustSoundParams(
         angle = angle.wrapping_add((0xffffffff as angle_t).wrapping_sub((*listener).angle));
     }
     angle >>= ANGLETOFINESHIFT;
-    *sep = (128 as fixed_t - (FixedMul(S_STEREO_SWING, finesine[angle as usize]) >> FRACBITS));
+    *sep = 128 as fixed_t - (FixedMul(S_STEREO_SWING, finesine[angle as usize]) >> FRACBITS);
     if approx_dist < S_CLOSE_DIST {
         *vol = state.s_sound.snd_SfxVolume;
     } else if state.g_game.gamemap == 8_i32 {
@@ -297,13 +297,13 @@ unsafe fn S_AdjustSoundParams(
             approx_dist = S_CLIPPING_DIST as fixed_t;
         }
         *vol = 15_i32
-            + (state.s_sound.snd_SfxVolume - 15_i32) * (S_CLIPPING_DIST - approx_dist >> FRACBITS)
+            + (state.s_sound.snd_SfxVolume - 15_i32) * ((S_CLIPPING_DIST - approx_dist) >> FRACBITS)
                 / S_ATTENUATOR;
     } else {
-        *vol = state.s_sound.snd_SfxVolume * (S_CLIPPING_DIST - approx_dist >> FRACBITS)
+        *vol = state.s_sound.snd_SfxVolume * ((S_CLIPPING_DIST - approx_dist) >> FRACBITS)
             / S_ATTENUATOR;
     }
-    return (*vol > 0_i32) as i32;
+    (*vol > 0_i32) as i32
 }
 pub unsafe fn S_StartSound(state: &mut GameState, mut origin: SoundOrigin, mut sfx_id: i32) {
     let mut sfx: *mut sfxinfo_t = ::core::ptr::null_mut::<sfxinfo_t>();
@@ -433,13 +433,13 @@ pub unsafe fn S_UpdateSounds(state: &mut GameState, mut listener: *mut mobj_t) {
     }
 }
 pub fn S_SetMusicVolume(state: &mut GameState, mut volume: i32) {
-    if volume < 0_i32 || volume > 127_i32 {
+    if !(0_i32..=127_i32).contains(&volume) {
         I_Error(&format!("Attempt to set music volume at {}", volume));
     }
     I_SetMusicVolume(&mut state.i_sound, volume);
 }
 pub fn S_SetSfxVolume(state: &mut GameState, mut volume: i32) {
-    if volume < 0_i32 || volume > 127_i32 {
+    if !(0_i32..=127_i32).contains(&volume) {
         I_Error(&format!("Attempt to set sfx volume at {}", volume));
     }
     state.s_sound.snd_SfxVolume = volume;

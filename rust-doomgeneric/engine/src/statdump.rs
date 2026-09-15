@@ -1,7 +1,7 @@
 use crate::game_state::GameState;
 use crate::m_argv::M_ParmExists;
-use crate::mem_compat::memcpy;
-use crate::stdint_types::size_t;
+
+
 use crate::wi_stuff::{wbplayerstruct_t, wbstartstruct_t};
 pub const MAX_CAPTURES: i32 = 32;
 

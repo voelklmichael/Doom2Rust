@@ -100,7 +100,7 @@ pub unsafe fn R_ClipSolidWallSegment(state: &mut GameState, mut first: i32, mut 
     }
     next = start;
     loop {
-        if !(last >= (*next.offset(1_i32 as isize)).first - 1_i32) {
+        if last < (*next.offset(1_i32 as isize)).first - 1_i32 {
             current_block = 224731115979188411;
             break;
         }
@@ -250,9 +250,7 @@ pub unsafe fn R_AddLine(state: &mut GameState, mut line: SegId) {
                     != state
                         .p_setup
                         .sector_mut(state.r_bsp.frontsector.unwrap())
-                        .floorheight)
-            {
-                if state
+                        .floorheight) && state
                     .p_setup
                     .sector_mut(state.r_bsp.backsector.unwrap())
                     .ceilingpic as i32
@@ -275,15 +273,12 @@ pub unsafe fn R_AddLine(state: &mut GameState, mut line: SegId) {
                         == state
                             .p_setup
                             .sector_mut(state.r_bsp.frontsector.unwrap())
-                            .lightlevel as i32
-                    && state
+                            .lightlevel as i32 && state
                         .p_setup
                         .side_mut(state.p_setup.seg(state.r_bsp.curline).sidedef)
                         .midtexture as i32
-                        == 0_i32
-                {
-                    return;
-                }
+                        == 0_i32 {
+                return;
             }
             R_ClipPassWallSegment(state, x1, x2 - 1_i32);
             return;

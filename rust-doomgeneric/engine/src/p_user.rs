@@ -65,7 +65,7 @@ pub unsafe fn P_CalcHeight(state: &mut GameState, mut player: *mut player_t) {
         (*player).viewz = (*player_mo).z + (*player).viewheight;
         return;
     }
-    angle = FINEANGLES / 20_i32 * state.p_tick.leveltime & FINEMASK;
+    angle = (FINEANGLES / 20_i32 * state.p_tick.leveltime) & FINEMASK;
     bob = FixedMul((*player).bob / 2 as fixed_t, finesine[angle as usize]);
     if (*player).playerstate == PlayerState::PST_LIVE {
         (*player).viewheight += (*player).deltaviewheight;

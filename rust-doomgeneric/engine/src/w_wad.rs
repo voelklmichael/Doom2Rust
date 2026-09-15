@@ -160,7 +160,7 @@ pub fn W_CheckNumForName(state: &mut WWadState, name: &str) -> i32 {
             i -= 1;
         }
     }
-    return -1_i32;
+    -1_i32
 }
 pub fn W_GetNumForName(state: &mut WWadState, name: &str) -> i32 {
     let mut i: i32 = 0;

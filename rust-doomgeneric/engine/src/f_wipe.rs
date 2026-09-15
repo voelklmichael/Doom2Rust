@@ -57,7 +57,7 @@ pub unsafe fn wipe_initColorXForm(
         state.f_wipe.wipe_scr_start.as_ptr() as *const ::core::ffi::c_void,
         (width * height) as size_t,
     );
-    return 0_i32;
+    0_i32
 }
 pub unsafe fn wipe_doColorXForm(
     state: &mut GameState,
@@ -99,7 +99,7 @@ pub unsafe fn wipe_doColorXForm(
     (!changed) as i32
 }
 pub fn wipe_exitColorXForm(_state: &mut GameState, _width: i32, _height: i32, _ticks: i32) -> i32 {
-    return 0_i32;
+    0_i32
 }
 pub unsafe fn wipe_initMelt(
     state: &mut GameState,
@@ -131,7 +131,7 @@ pub unsafe fn wipe_initMelt(
         }
         i += 1;
     }
-    return 0_i32;
+    0_i32
 }
 pub unsafe fn wipe_doMelt(
     state: &mut GameState,
@@ -205,13 +205,13 @@ pub fn wipe_exitMelt(state: &mut GameState, _width: i32, _height: i32, _ticks: i
     state.f_wipe.y = Vec::new();
     state.f_wipe.wipe_scr_start = Vec::new();
     state.f_wipe.wipe_scr_end = Vec::new();
-    return 0_i32;
+    0_i32
 }
 pub fn wipe_StartScreen(state: &mut GameState) -> i32 {
     state.f_wipe.wipe_scr_start = vec![0u8; (SCREENWIDTH * SCREENHEIGHT) as usize];
     let wipe_scr_start = state.f_wipe.wipe_scr_start.as_mut_ptr();
     unsafe { I_ReadScreen(state, wipe_scr_start) };
-    return 0_i32;
+    0_i32
 }
 pub fn wipe_EndScreen(
     state: &mut GameState,
@@ -225,7 +225,7 @@ pub fn wipe_EndScreen(
     unsafe { I_ReadScreen(state, wipe_scr_end) };
     let wipe_scr_start = state.f_wipe.wipe_scr_start.as_mut_ptr();
     unsafe { V_DrawBlock(state, x, y_0, width, height, wipe_scr_start) };
-    return 0_i32;
+    0_i32
 }
 pub fn wipe_ScreenWipe(
     state: &mut GameState,

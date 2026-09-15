@@ -527,8 +527,8 @@ static finit_height: i32 = SCREENHEIGHT - 32;
 pub unsafe fn AM_getIslope(mut ml: *mut mline_t, mut is: *mut islope_t) {
     let mut dx: i32 = 0;
     let mut dy: i32 = 0;
-    dy = ((*ml).a.y - (*ml).b.y);
-    dx = ((*ml).b.x - (*ml).a.x);
+    dy = (*ml).a.y - (*ml).b.y;
+    dx = (*ml).b.x - (*ml).a.x;
     if dy == 0 {
         (*is).islp = (if dx < 0_i32 { -INT_MAX } else { INT_MAX }) as fixed_t;
     } else {
@@ -921,12 +921,12 @@ pub unsafe fn AM_doFollowPlayer(state: &mut GameState) {
         state.am_map.m_x = (FixedMul(
             (FixedMul((*plr_mo).x, state.am_map.scale_mtof) >> 16_i32) << 16_i32,
             state.am_map.scale_ftom,
-        ) as i32
+        )
             - state.am_map.m_w / 2_i32) as fixed_t;
         state.am_map.m_y = (FixedMul(
             (FixedMul((*plr_mo).y, state.am_map.scale_mtof) >> 16_i32) << 16_i32,
             state.am_map.scale_ftom,
-        ) as i32
+        )
             - state.am_map.m_h / 2_i32) as fixed_t;
         state.am_map.m_x2 = state.am_map.m_x + state.am_map.m_w;
         state.am_map.m_y2 = state.am_map.m_y + state.am_map.m_h;
@@ -1005,19 +1005,15 @@ pub unsafe fn AM_clipMline(
         return false;
     }
     (*fl).a.x = (state.am_map.f_x as fixed_t
-        + (FixedMul((*ml).a.x - state.am_map.m_x, state.am_map.scale_mtof) >> 16_i32))
-        as i32;
+        + (FixedMul((*ml).a.x - state.am_map.m_x, state.am_map.scale_mtof) >> 16_i32));
     (*fl).a.y = (state.am_map.f_y as fixed_t
         + (state.am_map.f_h as fixed_t
-            - (FixedMul((*ml).a.y - state.am_map.m_y, state.am_map.scale_mtof) >> 16_i32)))
-        as i32;
+            - (FixedMul((*ml).a.y - state.am_map.m_y, state.am_map.scale_mtof) >> 16_i32)));
     (*fl).b.x = (state.am_map.f_x as fixed_t
-        + (FixedMul((*ml).b.x - state.am_map.m_x, state.am_map.scale_mtof) >> 16_i32))
-        as i32;
+        + (FixedMul((*ml).b.x - state.am_map.m_x, state.am_map.scale_mtof) >> 16_i32));
     (*fl).b.y = (state.am_map.f_y as fixed_t
         + (state.am_map.f_h as fixed_t
-            - (FixedMul((*ml).b.y - state.am_map.m_y, state.am_map.scale_mtof) >> 16_i32)))
-        as i32;
+            - (FixedMul((*ml).b.y - state.am_map.m_y, state.am_map.scale_mtof) >> 16_i32)));
     outcode1 = 0_i32;
     if (*fl).a.y < 0_i32 {
         outcode1 |= TOP as i32;
@@ -1269,12 +1265,8 @@ pub unsafe fn AM_drawWalls(state: &mut GameState) {
                     AM_drawMline(state, &raw mut l, TSWALLCOLORS + lightlev);
                 }
             }
-        } else if (*state.g_game.player_mut(state.am_map.plr)).powers[PowerType::pw_allmap as usize]
-            != 0
-        {
-            if (*li).flags as i32 & LINE_NEVERSEE == 0 {
-                AM_drawMline(state, &raw mut l, GRAYS + 3_i32);
-            }
+        } else if (*state.g_game.player_mut(state.am_map.plr)).powers[PowerType::pw_allmap as usize] != 0 && (*li).flags as i32 & LINE_NEVERSEE == 0 {
+            AM_drawMline(state, &raw mut l, GRAYS + 3_i32);
         }
         i += 1;
     }
@@ -1372,27 +1364,24 @@ pub unsafe fn AM_drawPlayers(state: &mut GameState) {
         p = &mut state.g_game.players[i as usize];
         if !(state.g_game.deathmatch != 0
             && !state.g_game.singledemo
-            && PlayerId(i as u8) != state.am_map.plr)
-        {
-            if state.g_game.playeringame[i as usize] {
-                if (*p).powers[PowerType::pw_invisibility as usize] != 0 {
-                    color = 246_i32;
-                } else {
-                    color = their_colors[their_color as usize];
-                }
-                let p_mo = state.p_mobj.mobj_get((*p).mo.unwrap()).unwrap();
-                AM_drawLineCharacter(
-                    state,
-                    &raw const player_arrow as *mut mline_t,
-                    ::core::mem::size_of::<[mline_t; 7]>()
-                        .wrapping_div(::core::mem::size_of::<mline_t>()) as i32,
-                    0 as fixed_t,
-                    (*p_mo).angle,
-                    color,
-                    (*p_mo).x,
-                    (*p_mo).y,
-                );
+            && PlayerId(i as u8) != state.am_map.plr) && state.g_game.playeringame[i as usize] {
+            if (*p).powers[PowerType::pw_invisibility as usize] != 0 {
+                color = 246_i32;
+            } else {
+                color = their_colors[their_color as usize];
             }
+            let p_mo = state.p_mobj.mobj_get((*p).mo.unwrap()).unwrap();
+            AM_drawLineCharacter(
+                state,
+                &raw const player_arrow as *mut mline_t,
+                ::core::mem::size_of::<[mline_t; 7]>()
+                    .wrapping_div(::core::mem::size_of::<mline_t>()) as i32,
+                0 as fixed_t,
+                (*p_mo).angle,
+                color,
+                (*p_mo).x,
+                (*p_mo).y,
+            );
         }
         i += 1;
     }
@@ -1440,13 +1429,13 @@ pub fn AM_drawMarks(state: &mut GameState) {
                 + (FixedMul(
                     state.am_map.markpoints[i as usize].x - state.am_map.m_x,
                     state.am_map.scale_mtof,
-                ) >> 16_i32)) as i32;
+                ) >> 16_i32));
             fy = (state.am_map.f_y as fixed_t
                 + (state.am_map.f_h as fixed_t
                     - (FixedMul(
                         state.am_map.markpoints[i as usize].y - state.am_map.m_y,
                         state.am_map.scale_mtof,
-                    ) >> 16_i32))) as i32;
+                    ) >> 16_i32)));
             if fx >= state.am_map.f_x
                 && fx <= state.am_map.f_w - w
                 && fy >= state.am_map.f_y

@@ -737,32 +737,28 @@ pub unsafe fn ST_updateFaceWidget(state: &mut GameState) {
     let mut badguyangle: angle_t = 0;
     let mut diffang: angle_t = 0;
     let mut doevilgrin: bool = false;
-    if state.st_stuff.st_updatefacewidget_priority < 10_i32 {
-        if (*state.g_game.player_mut(state.st_stuff.plyr)).health == 0 {
-            state.st_stuff.st_updatefacewidget_priority = 9_i32;
-            state.st_stuff.st_faceindex = ST_DEADFACE;
-            state.st_stuff.st_facecount = 1_i32;
-        }
+    if state.st_stuff.st_updatefacewidget_priority < 10_i32 && (*state.g_game.player_mut(state.st_stuff.plyr)).health == 0 {
+        state.st_stuff.st_updatefacewidget_priority = 9_i32;
+        state.st_stuff.st_faceindex = ST_DEADFACE;
+        state.st_stuff.st_facecount = 1_i32;
     }
-    if state.st_stuff.st_updatefacewidget_priority < 9_i32 {
-        if (*state.g_game.player_mut(state.st_stuff.plyr)).bonuscount != 0 {
-            doevilgrin = false;
-            i = 0_i32;
-            while i < NUMWEAPONS {
-                if state.st_stuff.oldweaponsowned[i as usize]
-                    != (*state.g_game.player_mut(state.st_stuff.plyr)).weaponowned[i as usize]
-                {
-                    doevilgrin = true;
-                    state.st_stuff.oldweaponsowned[i as usize] =
-                        (*state.g_game.player_mut(state.st_stuff.plyr)).weaponowned[i as usize];
-                }
-                i += 1;
+    if state.st_stuff.st_updatefacewidget_priority < 9_i32 && (*state.g_game.player_mut(state.st_stuff.plyr)).bonuscount != 0 {
+        doevilgrin = false;
+        i = 0_i32;
+        while i < NUMWEAPONS {
+            if state.st_stuff.oldweaponsowned[i as usize]
+                != (*state.g_game.player_mut(state.st_stuff.plyr)).weaponowned[i as usize]
+            {
+                doevilgrin = true;
+                state.st_stuff.oldweaponsowned[i as usize] =
+                    (*state.g_game.player_mut(state.st_stuff.plyr)).weaponowned[i as usize];
             }
-            if doevilgrin {
-                state.st_stuff.st_updatefacewidget_priority = 8_i32;
-                state.st_stuff.st_facecount = ST_EVILGRINCOUNT;
-                state.st_stuff.st_faceindex = ST_calcPainOffset(state) + ST_EVILGRINOFFSET;
-            }
+            i += 1;
+        }
+        if doevilgrin {
+            state.st_stuff.st_updatefacewidget_priority = 8_i32;
+            state.st_stuff.st_facecount = ST_EVILGRINCOUNT;
+            state.st_stuff.st_faceindex = ST_calcPainOffset(state) + ST_EVILGRINOFFSET;
         }
     }
     if state.st_stuff.st_updatefacewidget_priority < 8_i32 {
@@ -810,19 +806,17 @@ pub unsafe fn ST_updateFaceWidget(state: &mut GameState) {
             }
         }
     }
-    if state.st_stuff.st_updatefacewidget_priority < 7_i32 {
-        if (*state.g_game.player_mut(state.st_stuff.plyr)).damagecount != 0 {
-            if (*state.g_game.player_mut(state.st_stuff.plyr)).health - state.st_stuff.st_oldhealth
-                > ST_MUCHPAIN
-            {
-                state.st_stuff.st_updatefacewidget_priority = 7_i32;
-                state.st_stuff.st_facecount = ST_TURNCOUNT;
-                state.st_stuff.st_faceindex = ST_calcPainOffset(state) + ST_OUCHOFFSET;
-            } else {
-                state.st_stuff.st_updatefacewidget_priority = 6_i32;
-                state.st_stuff.st_facecount = ST_TURNCOUNT;
-                state.st_stuff.st_faceindex = ST_calcPainOffset(state) + ST_RAMPAGEOFFSET;
-            }
+    if state.st_stuff.st_updatefacewidget_priority < 7_i32 && (*state.g_game.player_mut(state.st_stuff.plyr)).damagecount != 0 {
+        if (*state.g_game.player_mut(state.st_stuff.plyr)).health - state.st_stuff.st_oldhealth
+            > ST_MUCHPAIN
+        {
+            state.st_stuff.st_updatefacewidget_priority = 7_i32;
+            state.st_stuff.st_facecount = ST_TURNCOUNT;
+            state.st_stuff.st_faceindex = ST_calcPainOffset(state) + ST_OUCHOFFSET;
+        } else {
+            state.st_stuff.st_updatefacewidget_priority = 6_i32;
+            state.st_stuff.st_facecount = ST_TURNCOUNT;
+            state.st_stuff.st_faceindex = ST_calcPainOffset(state) + ST_RAMPAGEOFFSET;
         }
     }
     if state.st_stuff.st_updatefacewidget_priority < 6_i32 {
@@ -842,16 +836,12 @@ pub unsafe fn ST_updateFaceWidget(state: &mut GameState) {
             state.st_stuff.st_updatefacewidget_lastattackdown = -1_i32;
         }
     }
-    if state.st_stuff.st_updatefacewidget_priority < 5_i32 {
-        if (*state.g_game.player_mut(state.st_stuff.plyr)).cheats & CF_GODMODE != 0
-            || (*state.g_game.player_mut(state.st_stuff.plyr)).powers
+    if state.st_stuff.st_updatefacewidget_priority < 5_i32 && ((*state.g_game.player_mut(state.st_stuff.plyr)).cheats & CF_GODMODE != 0 || (*state.g_game.player_mut(state.st_stuff.plyr)).powers
                 [PowerType::pw_invulnerability as usize]
-                != 0
-        {
-            state.st_stuff.st_updatefacewidget_priority = 4_i32;
-            state.st_stuff.st_faceindex = ST_GODFACE;
-            state.st_stuff.st_facecount = 1_i32;
-        }
+                != 0) {
+        state.st_stuff.st_updatefacewidget_priority = 4_i32;
+        state.st_stuff.st_faceindex = ST_GODFACE;
+        state.st_stuff.st_facecount = 1_i32;
     }
     if state.st_stuff.st_facecount == 0 {
         state.st_stuff.st_faceindex =
@@ -929,13 +919,13 @@ pub unsafe fn ST_doPaletteStuff(state: &mut GameState) {
         }
     }
     if cnt != 0 {
-        palette = cnt + 7_i32 >> 3_i32;
+        palette = (cnt + 7_i32) >> 3_i32;
         if palette >= NUMREDPALS {
             palette = NUMREDPALS - 1_i32;
         }
         palette += STARTREDPALS;
     } else if (*state.g_game.player_mut(state.st_stuff.plyr)).bonuscount != 0 {
-        palette = (*state.g_game.player_mut(state.st_stuff.plyr)).bonuscount + 7_i32 >> 3_i32;
+        palette = ((*state.g_game.player_mut(state.st_stuff.plyr)).bonuscount + 7_i32) >> 3_i32;
         if palette >= NUMBONUSPALS {
             palette = NUMBONUSPALS - 1_i32;
         }

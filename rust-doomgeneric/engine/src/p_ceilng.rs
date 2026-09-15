@@ -201,7 +201,7 @@ pub unsafe fn EV_DoCeiling(state: &mut GameState, mut line: LineId, mut type_0: 
     }
     loop {
         secnum = P_FindSectorFromLineTag(state, line, secnum);
-        if !(secnum >= 0_i32) {
+        if secnum < 0_i32 {
             break;
         }
         sec = state.p_setup.sector_mut(SectorId(secnum as u32));

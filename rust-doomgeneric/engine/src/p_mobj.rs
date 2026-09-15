@@ -2928,19 +2928,13 @@ pub unsafe fn P_XYMovement(state: &mut GameState, mut mo: *mut mobj_t) {
         return;
     }
     if (*mo).flags & MF_CORPSE as i32 != 0 {
-        if (*mo).momx > FRACUNIT / 4_i32
+        if ((*mo).momx > FRACUNIT / 4_i32
             || (*mo).momx < -FRACUNIT / 4_i32
-            || (*mo).momy > FRACUNIT / 4_i32
-            || (*mo).momy < -FRACUNIT / 4_i32
-        {
-            if (*mo).floorz
-                != state
+            || (*mo).momy > FRACUNIT / 4_i32 || (*mo).momy < -FRACUNIT / 4_i32) && (*mo).floorz != state
                     .p_setup
                     .sector_mut(state.p_setup.subsectors[(*mo).subsector.0 as usize].sector)
-                    .floorheight
-            {
-                return;
-            }
+                    .floorheight {
+            return;
         }
     }
     if (*mo).momx > -STOPSPEED
@@ -2973,20 +2967,18 @@ pub unsafe fn P_ZMovement(state: &mut GameState, mut mo: *mut mobj_t) {
     if (*mo).player.is_some() && (*mo).z < (*mo).floorz {
         let mo_player = state.g_game.player_mut((*mo).player.unwrap());
         (*mo_player).viewheight -= (*mo).floorz - (*mo).z;
-        (*mo_player).deltaviewheight = VIEWHEIGHT - (*mo_player).viewheight >> 3_i32;
+        (*mo_player).deltaviewheight = (VIEWHEIGHT - (*mo_player).viewheight) >> 3_i32;
     }
     (*mo).z += (*mo).momz;
     let mo_target = (*mo).target.and_then(|id| state.p_mobj.mobj_get(id));
-    if (*mo).flags & MF_FLOAT as i32 != 0 && mo_target.is_some() {
-        if (*mo).flags & MF_SKULLFLY as i32 == 0 && (*mo).flags & MF_INFLOAT as i32 == 0 {
-            let target = mo_target.unwrap();
-            dist = P_AproxDistance((*mo).x - (*target).x, (*mo).y - (*target).y);
-            delta = (*target).z + ((*mo).height >> 1_i32) - (*mo).z;
-            if delta < 0_i32 && dist < -(delta * 3_i32) {
-                (*mo).z -= FLOATSPEED;
-            } else if delta > 0_i32 && dist < delta * 3_i32 {
-                (*mo).z += FLOATSPEED;
-            }
+    if (*mo).flags & MF_FLOAT as i32 != 0 && mo_target.is_some() && (*mo).flags & MF_SKULLFLY as i32 == 0 && (*mo).flags & MF_INFLOAT as i32 == 0 {
+        let target = mo_target.unwrap();
+        dist = P_AproxDistance((*mo).x - (*target).x, (*mo).y - (*target).y);
+        delta = (*target).z + ((*mo).height >> 1_i32) - (*mo).z;
+        if delta < 0_i32 && dist < -(delta * 3_i32) {
+            (*mo).z -= FLOATSPEED;
+        } else if delta > 0_i32 && dist < delta * 3_i32 {
+            (*mo).z += FLOATSPEED;
         }
     }
     if (*mo).z <= (*mo).floorz {
@@ -3359,9 +3351,9 @@ pub unsafe fn P_RemoveMobj(state: &mut GameState, mut mobj: *mut mobj_t) {
     {
         state.p_mobj.itemrespawnque[state.p_mobj.iquehead as usize] = (*mobj).spawnpoint;
         state.p_mobj.itemrespawntime[state.p_mobj.iquehead as usize] = state.p_tick.leveltime;
-        state.p_mobj.iquehead = state.p_mobj.iquehead + 1_i32 & ITEMQUESIZE - 1_i32;
+        state.p_mobj.iquehead = (state.p_mobj.iquehead + 1_i32) & (ITEMQUESIZE - 1_i32);
         if state.p_mobj.iquehead == state.p_mobj.iquetail {
-            state.p_mobj.iquetail = state.p_mobj.iquetail + 1_i32 & ITEMQUESIZE - 1_i32;
+            state.p_mobj.iquetail = (state.p_mobj.iquetail + 1_i32) & (ITEMQUESIZE - 1_i32);
         }
     }
     P_UnsetThingPosition(state, mobj);
@@ -3413,7 +3405,7 @@ pub unsafe fn P_RespawnSpecials(state: &mut GameState) {
     mo = P_SpawnMobj(state, x, y, z, mobjtype_from_raw(i));
     (*mo).spawnpoint = *mthing;
     (*mo).angle = (ANG45 * ((*mthing).angle as i32 / 45_i32)) as angle_t;
-    state.p_mobj.iquetail = state.p_mobj.iquetail + 1_i32 & ITEMQUESIZE - 1_i32;
+    state.p_mobj.iquetail = (state.p_mobj.iquetail + 1_i32) & (ITEMQUESIZE - 1_i32);
 }
 pub unsafe fn P_SpawnPlayer(state: &mut GameState, mut mthing: *mut mapthing_t) {
     let mut p: *mut player_t = ::core::ptr::null_mut::<player_t>();
@@ -3501,7 +3493,7 @@ pub unsafe fn P_SpawnMapThing(state: &mut GameState, mut mthing: *mut mapthing_t
     } else if state.g_game.gameskill == SkillType::sk_nightmare {
         bit = 4_i32;
     } else {
-        bit = 1_i32 << state.g_game.gameskill as i32 - 1_i32;
+        bit = 1_i32 << (state.g_game.gameskill as i32 - 1_i32);
     }
     if (*mthing).options as i32 & bit == 0 {
         return;
@@ -3557,7 +3549,7 @@ pub unsafe fn P_SpawnMapThing(state: &mut GameState, mut mthing: *mut mapthing_t
 }
 pub unsafe fn P_SpawnPuff(state: &mut GameState, mut x: fixed_t, mut y: fixed_t, mut z: fixed_t) {
     let mut th: *mut mobj_t = ::core::ptr::null_mut::<mobj_t>();
-    z += P_Random(&mut state.m_random) - P_Random(&mut state.m_random) << 10_i32;
+    z += (P_Random(&mut state.m_random) - P_Random(&mut state.m_random)) << 10_i32;
     th = P_SpawnMobj(state, x, y, z, MobjType::MT_PUFF);
     (*th).momz = FRACUNIT as fixed_t;
     (*th).tics -= P_Random(&mut state.m_random) & 3_i32;
@@ -3576,14 +3568,14 @@ pub unsafe fn P_SpawnBlood(
     mut damage: i32,
 ) {
     let mut th: *mut mobj_t = ::core::ptr::null_mut::<mobj_t>();
-    z += P_Random(&mut state.m_random) - P_Random(&mut state.m_random) << 10_i32;
+    z += (P_Random(&mut state.m_random) - P_Random(&mut state.m_random)) << 10_i32;
     th = P_SpawnMobj(state, x, y, z, MobjType::MT_BLOOD);
     (*th).momz = (FRACUNIT * 2_i32) as fixed_t;
     (*th).tics -= P_Random(&mut state.m_random) & 3_i32;
     if (*th).tics < 1_i32 {
         (*th).tics = 1_i32;
     }
-    if damage <= 12_i32 && damage >= 9_i32 {
+    if (9_i32..=12_i32).contains(&damage) {
         P_SetMobjState(state, th, StateNum::S_BLOOD2);
     } else if damage < 9_i32 {
         P_SetMobjState(state, th, StateNum::S_BLOOD3);
@@ -3635,7 +3627,7 @@ pub unsafe fn P_SpawnMissile(
     an = R_PointToAngle2(state, (*source).x, (*source).y, (*dest).x, (*dest).y);
     if (*dest).flags & MF_SHADOW as i32 != 0 {
         an = an.wrapping_add(
-            (P_Random(&mut state.m_random) - P_Random(&mut state.m_random) << 20_i32) as angle_t,
+            ((P_Random(&mut state.m_random) - P_Random(&mut state.m_random)) << 20_i32) as angle_t,
         );
     }
     (*th).angle = an;

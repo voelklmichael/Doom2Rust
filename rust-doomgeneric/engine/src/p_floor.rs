@@ -217,7 +217,7 @@ pub unsafe fn EV_DoFloor(state: &mut GameState, mut line: LineId, mut floortype:
     rtn = 0_i32;
     loop {
         secnum = P_FindSectorFromLineTag(state, line, secnum);
-        if !(secnum >= 0_i32) {
+        if secnum < 0_i32 {
             break;
         }
         sec = state.p_setup.sector_mut(SectorId(secnum as u32));
@@ -314,20 +314,14 @@ pub unsafe fn EV_DoFloor(state: &mut GameState, mut line: LineId, mut floortype:
                 while i < (*sec).linecount {
                     if twoSided(state, secnum, i) != 0 {
                         side = getSide(state, secnum, i, 0_i32);
-                        if (*side).bottomtexture as i32 >= 0_i32 {
-                            if state.r_data.textureheight[(*side).bottomtexture as usize] < minsize
-                            {
-                                minsize =
-                                    state.r_data.textureheight[(*side).bottomtexture as usize];
-                            }
+                        if (*side).bottomtexture as i32 >= 0_i32 && state.r_data.textureheight[(*side).bottomtexture as usize] < minsize {
+                            minsize =
+                                state.r_data.textureheight[(*side).bottomtexture as usize];
                         }
                         side = getSide(state, secnum, i, 1_i32);
-                        if (*side).bottomtexture as i32 >= 0_i32 {
-                            if state.r_data.textureheight[(*side).bottomtexture as usize] < minsize
-                            {
-                                minsize =
-                                    state.r_data.textureheight[(*side).bottomtexture as usize];
-                            }
+                        if (*side).bottomtexture as i32 >= 0_i32 && state.r_data.textureheight[(*side).bottomtexture as usize] < minsize {
+                            minsize =
+                                state.r_data.textureheight[(*side).bottomtexture as usize];
                         }
                     }
                     i += 1;
@@ -402,7 +396,7 @@ pub unsafe fn EV_BuildStairs(state: &mut GameState, mut line: LineId, mut type_0
     rtn = 0_i32;
     loop {
         secnum = P_FindSectorFromLineTag(state, line, secnum);
-        if !(secnum >= 0_i32) {
+        if secnum < 0_i32 {
             break;
         }
         sec = state.p_setup.sector_mut(SectorId(secnum as u32));
@@ -427,7 +421,7 @@ pub unsafe fn EV_BuildStairs(state: &mut GameState, mut line: LineId, mut type_0
             }
         }
         (*floor).speed = speed;
-        height = ((*sec).floorheight + stairsize);
+        height = (*sec).floorheight + stairsize;
         (*floor).floordestheight = height as fixed_t;
         texture = (*sec).floorpic as i32;
         loop {

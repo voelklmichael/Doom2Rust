@@ -516,8 +516,7 @@ pub unsafe fn G_BuildTiccmd(state: &mut GameState, mut cmd: *mut ticcmd_t, mut m
         || state.g_game.joyarray[(state.m_controls.joybspeed + 1) as usize]) as i32;
     side = 0_i32;
     forward = side;
-    if state.g_game.joyxmove < 0_i32
-        || state.g_game.joyxmove > 0_i32
+    if state.g_game.joyxmove != 0_i32
         || state.g_game.gamekeydown[state.m_controls.key_right as usize]
         || state.g_game.gamekeydown[state.m_controls.key_left as usize]
     {
@@ -704,7 +703,7 @@ pub unsafe fn G_BuildTiccmd(state: &mut GameState, mut cmd: *mut ticcmd_t, mut m
         let mut desired_angleturn: i16 = 0;
         desired_angleturn =
             ((*cmd).angleturn as i32 + state.g_game.g_build_ticcmd_carry as i32) as i16;
-        (*cmd).angleturn = (desired_angleturn as i32 + 128_i32 & 0xff00_i32) as i16;
+        (*cmd).angleturn = ((desired_angleturn as i32 + 128_i32) & 0xff00_i32) as i16;
         state.g_game.g_build_ticcmd_carry =
             (desired_angleturn as i32 - (*cmd).angleturn as i32) as i16;
     }
@@ -1779,7 +1778,7 @@ pub fn G_VanillaVersionCode(state: &mut DoomstatState) -> i32 {
         3 => return 108_i32,
         4 | _ => return 109_i32,
     }
-    return 106_i32;
+    106_i32
 }
 pub unsafe fn G_BeginRecording(state: &mut GameState) {
     let mut i: i32 = 0;
@@ -1831,7 +1830,7 @@ fn DemoVersionDescription(_state: &mut GameState, version: i32) -> String {
         109 => return "v1.9".to_string(),
         _ => {}
     }
-    if version >= 0_i32 && version <= 4_i32 {
+    if (0_i32..=4_i32).contains(&version) {
         "v1.0/v1.1/v1.2".to_string()
     } else {
         format!("{}.{} (unknown)", version / 100_i32, version % 100_i32)

@@ -215,7 +215,7 @@ pub fn D_ValidEpisodeMap(
     let mut i: i32 = 0;
     if mission as u32 == GameMission_t::heretic as i32 as u32 {
         if mode as u32 == GameMode_t::retail as i32 as u32 && episode == 6_i32 {
-            return map >= 1_i32 && map <= 3_i32;
+            return (1_i32..=3_i32).contains(&map);
         } else if mode as u32 == GameMode_t::registered as i32 as u32 && episode == 4_i32 {
             return map == 1_i32;
         }
@@ -243,7 +243,7 @@ pub fn D_GetNumEpisodes(mut mission: GameMission_t, mut mode: GameMode_t) -> i32
     while D_ValidEpisodeMap(mission, mode, episode, 1_i32) {
         episode += 1;
     }
-    return episode - 1_i32;
+    episode - 1_i32
 }
 static valid_versions: [C2RustUnnamed_0; 10] = [
     C2RustUnnamed_0 {

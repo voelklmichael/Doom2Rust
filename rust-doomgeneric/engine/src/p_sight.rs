@@ -73,7 +73,7 @@ pub unsafe fn P_DivlineSide(mut x: fixed_t, mut y: fixed_t, mut node: *mut divli
     if left == right {
         return 2_i32;
     }
-    return 1_i32;
+    1_i32
 }
 pub unsafe fn P_InterceptVector2(mut v2: *mut divline_t, mut v1: *mut divline_t) -> fixed_t {
     let mut frac: fixed_t = 0;
@@ -83,8 +83,8 @@ pub unsafe fn P_InterceptVector2(mut v2: *mut divline_t, mut v1: *mut divline_t)
     if den == 0_i32 {
         return 0 as fixed_t;
     }
-    num = FixedMul((*v1).x - (*v2).x >> 8_i32, (*v1).dy)
-        + FixedMul((*v2).y - (*v1).y >> 8_i32, (*v1).dx);
+    num = FixedMul(((*v1).x - (*v2).x) >> 8_i32, (*v1).dy)
+        + FixedMul(((*v2).y - (*v1).y) >> 8_i32, (*v1).dx);
     frac = FixedDiv(num, den);
     frac
 }
@@ -213,7 +213,7 @@ pub unsafe fn P_CrossBSPNode(state: &mut GameState, mut bspnum: i32) -> bool {
     if side == P_DivlineSide(state.p_sight.t2x, state.p_sight.t2y, bsp as *mut divline_t) {
         return true;
     }
-    return P_CrossBSPNode(state, (*bsp).children[(side ^ 1_i32) as usize] as i32);
+    P_CrossBSPNode(state, (*bsp).children[(side ^ 1_i32) as usize] as i32)
 }
 pub unsafe fn P_CheckSight(
     state: &mut GameState,
@@ -249,5 +249,5 @@ pub unsafe fn P_CheckSight(
     state.p_sight.t2y = (*t2).y;
     state.p_sight.strace.dx = (*t2).x - (*t1).x;
     state.p_sight.strace.dy = (*t2).y - (*t1).y;
-    return P_CrossBSPNode(state, state.p_setup.numnodes - 1_i32);
+    P_CrossBSPNode(state, state.p_setup.numnodes - 1_i32)
 }

@@ -196,14 +196,10 @@ pub unsafe fn P_TeleportMove(
         .ceilingheight;
     state.r_main.validcount += 1;
     state.p_map.numspechit = 0_i32;
-    xl = state.p_map.tmbbox[BOXLEFT as usize] - state.p_setup.bmaporgx - 32_i32 * FRACUNIT
-        >> MAPBLOCKSHIFT;
-    xh = state.p_map.tmbbox[BOXRIGHT as usize] - state.p_setup.bmaporgx + 32_i32 * FRACUNIT
-        >> MAPBLOCKSHIFT;
-    yl = state.p_map.tmbbox[BOXBOTTOM as usize] - state.p_setup.bmaporgy - 32_i32 * FRACUNIT
-        >> MAPBLOCKSHIFT;
-    yh = state.p_map.tmbbox[BOXTOP as usize] - state.p_setup.bmaporgy + 32_i32 * FRACUNIT
-        >> MAPBLOCKSHIFT;
+    xl = (state.p_map.tmbbox[BOXLEFT as usize] - state.p_setup.bmaporgx - 32_i32 * FRACUNIT) >> MAPBLOCKSHIFT;
+    xh = (state.p_map.tmbbox[BOXRIGHT as usize] - state.p_setup.bmaporgx + 32_i32 * FRACUNIT) >> MAPBLOCKSHIFT;
+    yl = (state.p_map.tmbbox[BOXBOTTOM as usize] - state.p_setup.bmaporgy - 32_i32 * FRACUNIT) >> MAPBLOCKSHIFT;
+    yh = (state.p_map.tmbbox[BOXTOP as usize] - state.p_setup.bmaporgy + 32_i32 * FRACUNIT) >> MAPBLOCKSHIFT;
     bx = xl;
     while bx <= xh {
         by = yl;
@@ -387,14 +383,10 @@ pub unsafe fn P_CheckPosition(
     if state.p_map.tmflags & MF_NOCLIP as i32 != 0 {
         return true;
     }
-    xl = state.p_map.tmbbox[BOXLEFT as usize] - state.p_setup.bmaporgx - 32_i32 * FRACUNIT
-        >> MAPBLOCKSHIFT;
-    xh = state.p_map.tmbbox[BOXRIGHT as usize] - state.p_setup.bmaporgx + 32_i32 * FRACUNIT
-        >> MAPBLOCKSHIFT;
-    yl = state.p_map.tmbbox[BOXBOTTOM as usize] - state.p_setup.bmaporgy - 32_i32 * FRACUNIT
-        >> MAPBLOCKSHIFT;
-    yh = state.p_map.tmbbox[BOXTOP as usize] - state.p_setup.bmaporgy + 32_i32 * FRACUNIT
-        >> MAPBLOCKSHIFT;
+    xl = (state.p_map.tmbbox[BOXLEFT as usize] - state.p_setup.bmaporgx - 32_i32 * FRACUNIT) >> MAPBLOCKSHIFT;
+    xh = (state.p_map.tmbbox[BOXRIGHT as usize] - state.p_setup.bmaporgx + 32_i32 * FRACUNIT) >> MAPBLOCKSHIFT;
+    yl = (state.p_map.tmbbox[BOXBOTTOM as usize] - state.p_setup.bmaporgy - 32_i32 * FRACUNIT) >> MAPBLOCKSHIFT;
+    yh = (state.p_map.tmbbox[BOXTOP as usize] - state.p_setup.bmaporgy + 32_i32 * FRACUNIT) >> MAPBLOCKSHIFT;
     bx = xl;
     while bx <= xh {
         by = yl;
@@ -411,10 +403,10 @@ pub unsafe fn P_CheckPosition(
         }
         bx += 1;
     }
-    xl = (state.p_map.tmbbox[BOXLEFT as usize] - state.p_setup.bmaporgx >> MAPBLOCKSHIFT);
-    xh = (state.p_map.tmbbox[BOXRIGHT as usize] - state.p_setup.bmaporgx >> MAPBLOCKSHIFT);
-    yl = (state.p_map.tmbbox[BOXBOTTOM as usize] - state.p_setup.bmaporgy >> MAPBLOCKSHIFT);
-    yh = (state.p_map.tmbbox[BOXTOP as usize] - state.p_setup.bmaporgy >> MAPBLOCKSHIFT);
+    xl = (state.p_map.tmbbox[BOXLEFT as usize] - state.p_setup.bmaporgx) >> MAPBLOCKSHIFT;
+    xh = (state.p_map.tmbbox[BOXRIGHT as usize] - state.p_setup.bmaporgx) >> MAPBLOCKSHIFT;
+    yl = (state.p_map.tmbbox[BOXBOTTOM as usize] - state.p_setup.bmaporgy) >> MAPBLOCKSHIFT;
+    yh = (state.p_map.tmbbox[BOXTOP as usize] - state.p_setup.bmaporgy) >> MAPBLOCKSHIFT;
     bx = xl;
     while bx <= xh {
         by = yl;
@@ -564,7 +556,7 @@ pub unsafe fn PTR_SlideTraverse(state: &mut GameState, mut in_0: *mut intercept_
         P_LineOpening(state, li);
         if state.p_maputl.openrange >= (*slidemo).height {
             if state.p_maputl.opentop - (*slidemo).z >= (*slidemo).height {
-                if !(state.p_maputl.openbottom - (*slidemo).z > 24_i32 * FRACUNIT) {
+                if state.p_maputl.openbottom - (*slidemo).z <= 24_i32 * FRACUNIT {
                     return true;
                 }
             }
@@ -1070,11 +1062,11 @@ pub unsafe fn P_RadiusAttack(
     let mut yl: i32 = 0;
     let mut yh: i32 = 0;
     let mut dist: fixed_t = 0;
-    dist = (damage + 32_i32 * FRACUNIT << FRACBITS) as fixed_t;
-    yh = ((*spot).y + dist - state.p_setup.bmaporgy >> MAPBLOCKSHIFT);
-    yl = ((*spot).y - dist - state.p_setup.bmaporgy >> MAPBLOCKSHIFT);
-    xh = ((*spot).x + dist - state.p_setup.bmaporgx >> MAPBLOCKSHIFT);
-    xl = ((*spot).x - dist - state.p_setup.bmaporgx >> MAPBLOCKSHIFT);
+    dist = ((damage + 32_i32 * FRACUNIT) << FRACBITS) as fixed_t;
+    yh = ((*spot).y + dist - state.p_setup.bmaporgy) >> MAPBLOCKSHIFT;
+    yl = ((*spot).y - dist - state.p_setup.bmaporgy) >> MAPBLOCKSHIFT;
+    xh = ((*spot).x + dist - state.p_setup.bmaporgx) >> MAPBLOCKSHIFT;
+    xl = ((*spot).x - dist - state.p_setup.bmaporgx) >> MAPBLOCKSHIFT;
     state.p_map.bombspot = Some((*spot).id);
     state.p_map.bombsource = if source.is_null() {
         None
@@ -1134,9 +1126,9 @@ pub unsafe fn PIT_ChangeSector(state: &mut GameState, mut thing_id: MobjId) -> b
             MobjType::MT_BLOOD,
         );
         (*mo).momx =
-            (P_Random(&mut state.m_random) - P_Random(&mut state.m_random) << 12_i32) as fixed_t;
+            ((P_Random(&mut state.m_random) - P_Random(&mut state.m_random)) << 12_i32) as fixed_t;
         (*mo).momy =
-            (P_Random(&mut state.m_random) - P_Random(&mut state.m_random) << 12_i32) as fixed_t;
+            ((P_Random(&mut state.m_random) - P_Random(&mut state.m_random)) << 12_i32) as fixed_t;
     }
     true
 }

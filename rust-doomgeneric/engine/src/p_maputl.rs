@@ -231,7 +231,7 @@ pub fn P_AproxDistance(mut dx: fixed_t, mut dy: fixed_t) -> fixed_t {
     if dx < dy {
         return dx + dy - (dx >> 1_i32);
     }
-    return dx + dy - (dy >> 1_i32);
+    dx + dy - (dy >> 1_i32)
 }
 pub fn P_PointOnLineSide(
     state: &mut GameState,
@@ -264,7 +264,7 @@ pub fn P_PointOnLineSide(
     if right < left {
         return 0_i32;
     }
-    return 1_i32;
+    1_i32
 }
 pub fn P_BoxOnLineSide(state: &mut GameState, tmbox: [fixed_t; 4], mut ld: LineId) -> i32 {
     let mut p1: i32 = 0_i32;
@@ -312,7 +312,7 @@ pub fn P_BoxOnLineSide(state: &mut GameState, tmbox: [fixed_t; 4], mut ld: LineI
     if p1 == p2 {
         return p1;
     }
-    return -1_i32;
+    -1_i32
 }
 pub unsafe fn P_PointOnDivlineSide(
     mut x: fixed_t,
@@ -348,7 +348,7 @@ pub unsafe fn P_PointOnDivlineSide(
     if right < left {
         return 0_i32;
     }
-    return 1_i32;
+    1_i32
 }
 pub unsafe fn P_MakeDivline(state: &mut GameState, mut li: LineId, mut dl: *mut divline_t) {
     let li = state.p_setup.line(li);
@@ -366,8 +366,8 @@ pub unsafe fn P_InterceptVector(mut v2: *mut divline_t, mut v1: *mut divline_t) 
     if den == 0_i32 {
         return 0 as fixed_t;
     }
-    num = FixedMul((*v1).x - (*v2).x >> 8_i32, (*v1).dy)
-        + FixedMul((*v2).y - (*v1).y >> 8_i32, (*v1).dx);
+    num = FixedMul(((*v1).x - (*v2).x) >> 8_i32, (*v1).dy)
+        + FixedMul(((*v2).y - (*v1).y) >> 8_i32, (*v1).dx);
     frac = FixedDiv(num, den);
     frac
 }
@@ -434,8 +434,8 @@ pub unsafe fn P_UnsetThingPosition(state: &mut GameState, mut thing: *mut mobj_t
                 .expect("blockmap-list bprev neighbor is always live");
             (*prev).bnext = (*thing).bnext;
         } else {
-            blockx = ((*thing).x - state.p_setup.bmaporgx >> MAPBLOCKSHIFT);
-            blocky = ((*thing).y - state.p_setup.bmaporgy >> MAPBLOCKSHIFT);
+            blockx = ((*thing).x - state.p_setup.bmaporgx) >> MAPBLOCKSHIFT;
+            blocky = ((*thing).y - state.p_setup.bmaporgy) >> MAPBLOCKSHIFT;
             if blockx >= 0_i32
                 && blockx < state.p_setup.bmapwidth
                 && blocky >= 0_i32
@@ -470,8 +470,8 @@ pub unsafe fn P_SetThingPosition(state: &mut GameState, mut thing: *mut mobj_t) 
         (*sec).thinglist = Some((*thing).id);
     }
     if (*thing).flags & MF_NOBLOCKMAP as i32 == 0 {
-        blockx = ((*thing).x - state.p_setup.bmaporgx >> MAPBLOCKSHIFT);
-        blocky = ((*thing).y - state.p_setup.bmaporgy >> MAPBLOCKSHIFT);
+        blockx = ((*thing).x - state.p_setup.bmaporgx) >> MAPBLOCKSHIFT;
+        blocky = ((*thing).y - state.p_setup.bmaporgy) >> MAPBLOCKSHIFT;
         if blockx >= 0_i32
             && blockx < state.p_setup.bmapwidth
             && blocky >= 0_i32
@@ -788,10 +788,10 @@ pub fn P_PathTraverse(
     state.p_maputl.earlyout = (flags & PT_EARLYOUT) != 0;
     state.r_main.validcount += 1;
     state.p_maputl.intercept_p = 0;
-    if x1 - state.p_setup.bmaporgx & MAPBLOCKSIZE - 1_i32 == 0_i32 {
+    if (x1 - state.p_setup.bmaporgx) & (MAPBLOCKSIZE - 1_i32) == 0_i32 {
         x1 += FRACUNIT;
     }
-    if y1 - state.p_setup.bmaporgy & MAPBLOCKSIZE - 1_i32 == 0_i32 {
+    if (y1 - state.p_setup.bmaporgy) & (MAPBLOCKSIZE - 1_i32) == 0_i32 {
         y1 += FRACUNIT;
     }
     state.p_maputl.trace.x = x1;
@@ -808,11 +808,11 @@ pub fn P_PathTraverse(
     yt2 = y2 >> MAPBLOCKSHIFT;
     if xt2 > xt1 {
         mapxstep = 1_i32;
-        partial = (FRACUNIT - (x1 >> MAPBTOFRAC & FRACUNIT - 1_i32)) as fixed_t;
+        partial = (FRACUNIT - (x1 >> MAPBTOFRAC & (FRACUNIT - 1_i32))) as fixed_t;
         ystep = FixedDiv(y2 - y1, (x2 - x1).abs() as fixed_t);
     } else if xt2 < xt1 {
         mapxstep = -1_i32;
-        partial = (x1 >> MAPBTOFRAC & FRACUNIT - 1_i32) as fixed_t;
+        partial = (x1 >> MAPBTOFRAC & (FRACUNIT - 1_i32)) as fixed_t;
         ystep = FixedDiv(y2 - y1, (x2 - x1).abs() as fixed_t);
     } else {
         mapxstep = 0_i32;
@@ -822,11 +822,11 @@ pub fn P_PathTraverse(
     yintercept = (y1 >> MAPBTOFRAC) + FixedMul(partial, ystep);
     if yt2 > yt1 {
         mapystep = 1_i32;
-        partial = (FRACUNIT - (y1 >> MAPBTOFRAC & FRACUNIT - 1_i32)) as fixed_t;
+        partial = (FRACUNIT - (y1 >> MAPBTOFRAC & (FRACUNIT - 1_i32))) as fixed_t;
         xstep = FixedDiv(x2 - x1, (y2 - y1).abs() as fixed_t);
     } else if yt2 < yt1 {
         mapystep = -1_i32;
-        partial = (y1 >> MAPBTOFRAC & FRACUNIT - 1_i32) as fixed_t;
+        partial = (y1 >> MAPBTOFRAC & (FRACUNIT - 1_i32)) as fixed_t;
         xstep = FixedDiv(x2 - x1, (y2 - y1).abs() as fixed_t);
     } else {
         mapystep = 0_i32;

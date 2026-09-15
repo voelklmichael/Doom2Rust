@@ -771,7 +771,7 @@ pub unsafe fn P_GroupLines(state: &mut GameState) {
             ((bbox[BOXRIGHT as usize] + bbox[BOXLEFT as usize]) / 2_i32) as fixed_t;
         (*sector).soundorg.y =
             ((bbox[BOXTOP as usize] + bbox[BOXBOTTOM as usize]) / 2_i32) as fixed_t;
-        block = bbox[BOXTOP as usize] - state.p_setup.bmaporgy + 32_i32 * FRACUNIT >> MAPBLOCKSHIFT;
+        block = (bbox[BOXTOP as usize] - state.p_setup.bmaporgy + 32_i32 * FRACUNIT) >> MAPBLOCKSHIFT;
         block = if block >= state.p_setup.bmapheight {
             state.p_setup.bmapheight - 1_i32
         } else {
@@ -779,11 +779,11 @@ pub unsafe fn P_GroupLines(state: &mut GameState) {
         };
         (*sector).blockbox[BOXTOP as usize] = block;
         block =
-            bbox[BOXBOTTOM as usize] - state.p_setup.bmaporgy - 32_i32 * FRACUNIT >> MAPBLOCKSHIFT;
+            (bbox[BOXBOTTOM as usize] - state.p_setup.bmaporgy - 32_i32 * FRACUNIT) >> MAPBLOCKSHIFT;
         block = if block < 0_i32 { 0_i32 } else { block };
         (*sector).blockbox[BOXBOTTOM as usize] = block;
         block =
-            bbox[BOXRIGHT as usize] - state.p_setup.bmaporgx + 32_i32 * FRACUNIT >> MAPBLOCKSHIFT;
+            (bbox[BOXRIGHT as usize] - state.p_setup.bmaporgx + 32_i32 * FRACUNIT) >> MAPBLOCKSHIFT;
         block = if block >= state.p_setup.bmapwidth {
             state.p_setup.bmapwidth - 1_i32
         } else {
@@ -791,7 +791,7 @@ pub unsafe fn P_GroupLines(state: &mut GameState) {
         };
         (*sector).blockbox[BOXRIGHT as usize] = block;
         block =
-            bbox[BOXLEFT as usize] - state.p_setup.bmaporgx - 32_i32 * FRACUNIT >> MAPBLOCKSHIFT;
+            (bbox[BOXLEFT as usize] - state.p_setup.bmaporgx - 32_i32 * FRACUNIT) >> MAPBLOCKSHIFT;
         block = if block < 0_i32 { 0_i32 } else { block };
         (*sector).blockbox[BOXLEFT as usize] = block;
         i += 1;
@@ -803,7 +803,7 @@ unsafe fn PadRejectArray(state: &mut GameState, mut array: *mut byte, mut len: u
     let mut dest: *mut byte = ::core::ptr::null_mut::<byte>();
     let mut padvalue: u32 = 0;
     let mut rejectpad: [u32; 4] = [
-        ((state.p_setup.totallines * 4_i32 + 3_i32 & !3_i32) + 24_i32) as u32,
+        (((state.p_setup.totallines * 4_i32 + 3_i32) & !3_i32) + 24_i32) as u32,
         0_i32 as u32,
         50_i32 as u32,
         0x1d4a11_i32 as u32,
@@ -829,7 +829,7 @@ unsafe fn PadRejectArray(state: &mut GameState, mut array: *mut byte, mut len: u
             padvalue = 0xf00_u32;
         }
         memset(
-            array.offset(::core::mem::size_of::<[u32; 4]>() as isize) as *mut ::core::ffi::c_void,
+            array.add(::core::mem::size_of::<[u32; 4]>()) as *mut ::core::ffi::c_void,
             padvalue as i32,
             (len as size_t).wrapping_sub(::core::mem::size_of::<[u32; 4]>() as size_t),
         );

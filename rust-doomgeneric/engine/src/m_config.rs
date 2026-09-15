@@ -1821,7 +1821,7 @@ fn SetVariable(def: &mut default_t, value: &str) {
         DefaultType::DEFAULT_KEY => {
             let mut intparm = ParseIntParameter(value);
             def.untranslated = intparm;
-            if intparm >= 0_i32 && intparm < 128_i32 {
+            if (0_i32..128_i32).contains(&intparm) {
                 intparm = scantokey[intparm as usize];
             } else {
                 intparm = 0_i32;

@@ -65,7 +65,7 @@ pub unsafe fn EV_Teleport(
                             }
                             fog = P_SpawnMobj(state, oldx, oldy, oldz, MobjType::MT_TFOG);
                             S_StartSound(state, SoundOrigin::Mobj((*(fog)).id), sfx_telept as i32);
-                            an = ((*m).angle >> ANGLETOFINESHIFT);
+                            an = (*m).angle >> ANGLETOFINESHIFT;
                             fog = P_SpawnMobj(
                                 state,
                                 (*m).x + 20 as fixed_t * finecosine[an as isize],
@@ -90,5 +90,5 @@ pub unsafe fn EV_Teleport(
         }
         i += 1;
     }
-    return 0_i32;
+    0_i32
 }
