@@ -37,6 +37,7 @@ use crate::st_lib::STlib_updateMultIcon;
 use crate::st_lib::STlib_updateNum;
 use crate::st_lib::STlib_updatePercent;
 use crate::st_lib::{st_binicon_t, st_multicon_t, st_number_t, st_percent_t};
+use crate::st_lib::StDigitSet;
 use crate::stdint_types::byte;
 use crate::stdint_types::size_t;
 use crate::tables::angle_t;
@@ -143,7 +144,7 @@ impl StStuffState {
                 y: 0,
                 width: 0,
                 oldnum: 0,
-                p: ::core::ptr::null_mut::<i32>(),
+                p: StDigitSet::TallNum,
                 data: 0,
             },
             w_frags: st_number_t {
@@ -151,7 +152,7 @@ impl StStuffState {
                 y: 0,
                 width: 0,
                 oldnum: 0,
-                p: ::core::ptr::null_mut::<i32>(),
+                p: StDigitSet::TallNum,
                 data: 0,
             },
             w_health: st_percent_t {
@@ -160,7 +161,7 @@ impl StStuffState {
                     y: 0,
                     width: 0,
                     oldnum: 0,
-                            p: ::core::ptr::null_mut::<i32>(),
+                            p: StDigitSet::TallNum,
                     data: 0,
                 },
                 p: -1,
@@ -177,21 +178,21 @@ impl StStuffState {
                 x: 0,
                 y: 0,
                 oldinum: 0,
-                p: ::core::ptr::null_mut::<i32>(),
+                p: StDigitSet::TallNum,
                 data: 0,
             }; 6],
             w_faces: st_multicon_t {
                 x: 0,
                 y: 0,
                 oldinum: 0,
-                p: ::core::ptr::null_mut::<i32>(),
+                p: StDigitSet::TallNum,
                 data: 0,
             },
             w_keyboxes: [st_multicon_t {
                 x: 0,
                 y: 0,
                 oldinum: 0,
-                p: ::core::ptr::null_mut::<i32>(),
+                p: StDigitSet::TallNum,
                 data: 0,
             }; 3],
             w_armor: st_percent_t {
@@ -200,7 +201,7 @@ impl StStuffState {
                     y: 0,
                     width: 0,
                     oldnum: 0,
-                            p: ::core::ptr::null_mut::<i32>(),
+                            p: StDigitSet::TallNum,
                     data: 0,
                 },
                 p: -1,
@@ -210,7 +211,7 @@ impl StStuffState {
                 y: 0,
                 width: 0,
                 oldnum: 0,
-                p: ::core::ptr::null_mut::<i32>(),
+                p: StDigitSet::TallNum,
                 data: 0,
             }; 4],
             w_maxammo: [st_number_t {
@@ -218,7 +219,7 @@ impl StStuffState {
                 y: 0,
                 width: 0,
                 oldnum: 0,
-                p: ::core::ptr::null_mut::<i32>(),
+                p: StDigitSet::TallNum,
                 data: 0,
             }; 4],
             st_fragscount: 0,
@@ -314,6 +315,16 @@ impl StStuffState {
             st_updatefacewidget_priority: 0,
             st_palette: 0,
             st_stopped: true,
+        }
+    }
+
+    pub fn digit_set(&self, id: StDigitSet) -> &[i32] {
+        match id {
+            StDigitSet::TallNum => &self.tallnum,
+            StDigitSet::ShortNum => &self.shortnum,
+            StDigitSet::Faces => &self.faces,
+            StDigitSet::Arms(i) => &self.arms[i],
+            StDigitSet::Keys => &self.keys,
         }
     }
 }
@@ -1147,7 +1158,7 @@ pub unsafe fn ST_createWidgets(state: &mut GameState) {
         &raw mut state.st_stuff.w_ready,
         ST_AMMOX,
         ST_AMMOY,
-        &raw mut state.st_stuff.tallnum as *mut i32,
+        StDigitSet::TallNum,
         ST_AMMOWIDTH,
     );
     state.st_stuff.w_ready.data = (*state.g_game.player_mut(state.st_stuff.plyr)).readyweapon as i32;
@@ -1155,7 +1166,7 @@ pub unsafe fn ST_createWidgets(state: &mut GameState) {
         &raw mut state.st_stuff.w_health,
         ST_HEALTHX,
         ST_HEALTHY,
-        &raw mut state.st_stuff.tallnum as *mut i32,
+        StDigitSet::TallNum,
         state.st_stuff.tallpercent,
     );
     STlib_initBinIcon(
@@ -1171,8 +1182,7 @@ pub unsafe fn ST_createWidgets(state: &mut GameState) {
                 as *mut st_multicon_t,
             ST_ARMSX + i % 3 as i32 * ST_ARMSXSPACE,
             ST_ARMSY + i / 3 as i32 * ST_ARMSYSPACE,
-            &raw mut *(&raw mut state.st_stuff.arms as *mut [i32; 2]).offset(i as isize)
-                as *mut i32,
+            StDigitSet::Arms(i as usize),
         );
         i += 1;
     }
@@ -1180,20 +1190,20 @@ pub unsafe fn ST_createWidgets(state: &mut GameState) {
         &raw mut state.st_stuff.w_frags,
         ST_FRAGSX,
         ST_FRAGSY,
-        &raw mut state.st_stuff.tallnum as *mut i32,
+        StDigitSet::TallNum,
         ST_FRAGSWIDTH,
     );
     STlib_initMultIcon(
         &raw mut state.st_stuff.w_faces,
         ST_FACESX,
         ST_FACESY,
-        &raw mut state.st_stuff.faces as *mut i32,
+        StDigitSet::Faces,
     );
     STlib_initPercent(
         &raw mut state.st_stuff.w_armor,
         ST_ARMORX,
         ST_ARMORY,
-        &raw mut state.st_stuff.tallnum as *mut i32,
+        StDigitSet::TallNum,
         state.st_stuff.tallpercent,
     );
     STlib_initMultIcon(
@@ -1201,28 +1211,28 @@ pub unsafe fn ST_createWidgets(state: &mut GameState) {
             as *mut st_multicon_t,
         ST_KEY0X,
         ST_KEY0Y,
-        &raw mut state.st_stuff.keys as *mut i32,
+        StDigitSet::Keys,
     );
     STlib_initMultIcon(
         (&raw mut state.st_stuff.w_keyboxes as *mut st_multicon_t).offset(1 as i32 as isize)
             as *mut st_multicon_t,
         ST_KEY1X,
         ST_KEY1Y,
-        &raw mut state.st_stuff.keys as *mut i32,
+        StDigitSet::Keys,
     );
     STlib_initMultIcon(
         (&raw mut state.st_stuff.w_keyboxes as *mut st_multicon_t).offset(2 as i32 as isize)
             as *mut st_multicon_t,
         ST_KEY2X,
         ST_KEY2Y,
-        &raw mut state.st_stuff.keys as *mut i32,
+        StDigitSet::Keys,
     );
     STlib_initNum(
         (&raw mut state.st_stuff.w_ammo as *mut st_number_t).offset(0 as i32 as isize)
             as *mut st_number_t,
         ST_AMMO0X,
         ST_AMMO0Y,
-        &raw mut state.st_stuff.shortnum as *mut i32,
+        StDigitSet::ShortNum,
         ST_AMMO0WIDTH,
     );
     STlib_initNum(
@@ -1230,7 +1240,7 @@ pub unsafe fn ST_createWidgets(state: &mut GameState) {
             as *mut st_number_t,
         ST_AMMO1X,
         ST_AMMO1Y,
-        &raw mut state.st_stuff.shortnum as *mut i32,
+        StDigitSet::ShortNum,
         ST_AMMO1WIDTH,
     );
     STlib_initNum(
@@ -1238,7 +1248,7 @@ pub unsafe fn ST_createWidgets(state: &mut GameState) {
             as *mut st_number_t,
         ST_AMMO2X,
         ST_AMMO2Y,
-        &raw mut state.st_stuff.shortnum as *mut i32,
+        StDigitSet::ShortNum,
         ST_AMMO2WIDTH,
     );
     STlib_initNum(
@@ -1246,7 +1256,7 @@ pub unsafe fn ST_createWidgets(state: &mut GameState) {
             as *mut st_number_t,
         ST_AMMO3X,
         ST_AMMO3Y,
-        &raw mut state.st_stuff.shortnum as *mut i32,
+        StDigitSet::ShortNum,
         ST_AMMO3WIDTH,
     );
     STlib_initNum(
@@ -1254,7 +1264,7 @@ pub unsafe fn ST_createWidgets(state: &mut GameState) {
             as *mut st_number_t,
         ST_MAXAMMO0X,
         ST_MAXAMMO0Y,
-        &raw mut state.st_stuff.shortnum as *mut i32,
+        StDigitSet::ShortNum,
         ST_MAXAMMO0WIDTH,
     );
     STlib_initNum(
@@ -1262,7 +1272,7 @@ pub unsafe fn ST_createWidgets(state: &mut GameState) {
             as *mut st_number_t,
         ST_MAXAMMO1X,
         ST_MAXAMMO1Y,
-        &raw mut state.st_stuff.shortnum as *mut i32,
+        StDigitSet::ShortNum,
         ST_MAXAMMO1WIDTH,
     );
     STlib_initNum(
@@ -1270,7 +1280,7 @@ pub unsafe fn ST_createWidgets(state: &mut GameState) {
             as *mut st_number_t,
         ST_MAXAMMO2X,
         ST_MAXAMMO2Y,
-        &raw mut state.st_stuff.shortnum as *mut i32,
+        StDigitSet::ShortNum,
         ST_MAXAMMO2WIDTH,
     );
     STlib_initNum(
@@ -1278,7 +1288,7 @@ pub unsafe fn ST_createWidgets(state: &mut GameState) {
             as *mut st_number_t,
         ST_MAXAMMO3X,
         ST_MAXAMMO3Y,
-        &raw mut state.st_stuff.shortnum as *mut i32,
+        StDigitSet::ShortNum,
         ST_MAXAMMO3WIDTH,
     );
 }

@@ -6,6 +6,18 @@ use crate::v_video::V_CopyRect;
 use crate::v_video::V_DrawPatch;
 use crate::w_wad::{W_CacheLumpNum, W_GetNumForName};
 
+// Identifies one of StStuffState's own fixed lump-number arrays -- always
+// what a raw `*mut i32` used to point at here (tallnum/shortnum/faces/keys,
+// or one weapon's 2-element on/off pair within arms). Resolved back to a
+// slice via StStuffState::digit_set.
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub enum StDigitSet {
+    TallNum,
+    ShortNum,
+    Faces,
+    Arms(usize),
+    Keys,
+}
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct st_number_t {
@@ -13,7 +25,7 @@ pub struct st_number_t {
     pub y: i32,
     pub width: i32,
     pub oldnum: i32,
-    pub p: *mut i32,
+    pub p: StDigitSet,
     pub data: i32,
 }
 #[derive(Copy, Clone)]
@@ -28,7 +40,7 @@ pub struct st_multicon_t {
     pub x: i32,
     pub y: i32,
     pub oldinum: i32,
-    pub p: *mut i32,
+    pub p: StDigitSet,
     pub data: i32,
 }
 #[derive(Copy, Clone)]
@@ -55,7 +67,7 @@ pub unsafe fn STlib_init(state: &mut GameState) {
     W_CacheLumpNum(state, lumpnum);
     state.st_lib.sttminus = lumpnum;
 }
-pub unsafe fn STlib_initNum(mut n: *mut st_number_t, mut x: i32, mut y: i32, mut pl: *mut i32, mut width: i32) {
+pub unsafe fn STlib_initNum(mut n: *mut st_number_t, mut x: i32, mut y: i32, pl: StDigitSet, mut width: i32) {
     (*n).x = x;
     (*n).y = y;
     (*n).oldnum = 0 as i32;
@@ -64,7 +76,8 @@ pub unsafe fn STlib_initNum(mut n: *mut st_number_t, mut x: i32, mut y: i32, mut
 }
 pub unsafe fn STlib_drawNum(state: &mut GameState, mut n: *mut st_number_t, mut num: i32) {
     let mut numdigits: i32 = (*n).width;
-    let zero_patch = V_CachePatchNum(state, *(*n).p.offset(0 as i32 as isize));
+    let zero_lump = state.st_stuff.digit_set((*n).p)[0];
+    let zero_patch = V_CachePatchNum(state, zero_lump);
     let mut w: i32 = (*zero_patch).width as i32;
     let mut h: i32 = (*zero_patch).height as i32;
     let mut x: i32 = (*n).x;
@@ -110,7 +123,8 @@ pub unsafe fn STlib_drawNum(state: &mut GameState, mut n: *mut st_number_t, mut 
         fresh0 != 0
     } {
         x -= w;
-        let digit_patch = V_CachePatchNum(state, *(*n).p.offset((num % 10 as i32) as isize));
+        let digit_lump = state.st_stuff.digit_set((*n).p)[(num % 10 as i32) as usize];
+        let digit_patch = V_CachePatchNum(state, digit_lump);
         V_DrawPatch(state,
             x,
             (*n).y,
@@ -136,7 +150,7 @@ pub unsafe fn STlib_initPercent(
     mut p: *mut st_percent_t,
     mut x: i32,
     mut y: i32,
-    mut pl: *mut i32,
+    pl: StDigitSet,
     mut percent: i32,
 ) {
     STlib_initNum(&raw mut (*p).n, x, y, pl, 3 as i32);
@@ -155,7 +169,7 @@ pub unsafe fn STlib_updatePercent(
     }
     STlib_updateNum(state, &raw mut (*per).n, num, on);
 }
-pub unsafe fn STlib_initMultIcon(mut i: *mut st_multicon_t, mut x: i32, mut y: i32, mut il: *mut i32) {
+pub unsafe fn STlib_initMultIcon(mut i: *mut st_multicon_t, mut x: i32, mut y: i32, il: StDigitSet) {
     (*i).x = x;
     (*i).y = y;
     (*i).oldinum = -(1 as i32);
@@ -174,7 +188,8 @@ pub unsafe fn STlib_updateMultIcon(
     let mut y: i32 = 0;
     if on && ((*mi).oldinum != inum || refresh) && inum != -(1 as i32) {
         if (*mi).oldinum != -(1 as i32) {
-            let old_patch = V_CachePatchNum(state, *(*mi).p.offset((*mi).oldinum as isize));
+            let old_lump = state.st_stuff.digit_set((*mi).p)[(*mi).oldinum as usize];
+            let old_patch = V_CachePatchNum(state, old_lump);
             x = (*mi).x - (*old_patch).leftoffset as i32;
             y = (*mi).y - (*old_patch).topoffset as i32;
             w = (*old_patch).width as i32;
@@ -193,7 +208,8 @@ pub unsafe fn STlib_updateMultIcon(
                 y,
             );
         }
-        let new_patch = V_CachePatchNum(state, *(*mi).p.offset(inum as isize));
+        let new_lump = state.st_stuff.digit_set((*mi).p)[inum as usize];
+        let new_patch = V_CachePatchNum(state, new_lump);
         V_DrawPatch(state,
             (*mi).x,
             (*mi).y,
