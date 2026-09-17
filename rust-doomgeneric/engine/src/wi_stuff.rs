@@ -1750,7 +1750,7 @@ unsafe fn WI_loadUnloadData(state: &mut GameState, mut callback: load_callback_t
             j = 0_i32;
             while j < state.wi_stuff.NUMANIMS[state.wbs().epsd as usize] {
                 let index = state.wbs().epsd as usize;
-                a = (&mut state.wi_stuff.anims()[index][i as usize]) as *mut anim_t;
+                a = (&mut state.wi_stuff.anims()[index][j as usize]) as *mut anim_t;
                 i = 0_i32;
                 while i < (*a).nanims {
                     if state.wbs().epsd != 1_i32 || j != 8_i32 {
