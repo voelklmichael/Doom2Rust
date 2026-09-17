@@ -112,7 +112,7 @@ impl MMenuDefsHolder {
                         alphaKey: b'q',
                     },
                 ],
-                routine: Some(M_DrawMainMenu as unsafe fn(&mut GameState) -> ()),
+                routine: Some(M_DrawMainMenu as fn(&mut GameState) -> ()),
                 x: 97_i16,
                 y: 64_i16,
                 lastOn: 0_i16,
@@ -146,7 +146,7 @@ impl MMenuDefsHolder {
                         alphaKey: b't',
                     },
                 ],
-                routine: Some(M_DrawEpisode as unsafe fn(&mut GameState) -> ()),
+                routine: Some(M_DrawEpisode as fn(&mut GameState) -> ()),
                 x: 48_i16,
                 y: 63_i16,
                 lastOn: ep1 as i32 as i16,
@@ -186,7 +186,7 @@ impl MMenuDefsHolder {
                         alphaKey: b'n',
                     },
                 ],
-                routine: Some(M_DrawNewGame as unsafe fn(&mut GameState) -> ()),
+                routine: Some(M_DrawNewGame as fn(&mut GameState) -> ()),
                 x: 48_i16,
                 y: 63_i16,
                 lastOn: hurtme as i32 as i16,
@@ -244,7 +244,7 @@ impl MMenuDefsHolder {
                         alphaKey: b's',
                     },
                 ],
-                routine: Some(M_DrawOptions as unsafe fn(&mut GameState) -> ()),
+                routine: Some(M_DrawOptions as fn(&mut GameState) -> ()),
                 x: 60_i16,
                 y: 37_i16,
                 lastOn: 0_i16,
@@ -258,7 +258,7 @@ impl MMenuDefsHolder {
                     routine: Some(M_ReadThis2 as fn(&mut GameState, i32)),
                     alphaKey: 0_u8,
                 }],
-                routine: Some(M_DrawReadThis1 as unsafe fn(&mut GameState) -> ()),
+                routine: Some(M_DrawReadThis1 as fn(&mut GameState) -> ()),
                 x: 280_i16,
                 y: 185_i16,
                 lastOn: 0_i16,
@@ -272,7 +272,7 @@ impl MMenuDefsHolder {
                     routine: Some(M_FinishReadThis as fn(&mut GameState, i32)),
                     alphaKey: 0_u8,
                 }],
-                routine: Some(M_DrawReadThis2 as unsafe fn(&mut GameState) -> ()),
+                routine: Some(M_DrawReadThis2 as fn(&mut GameState) -> ()),
                 x: 330_i16,
                 y: 175_i16,
                 lastOn: 0_i16,
@@ -306,7 +306,7 @@ impl MMenuDefsHolder {
                         alphaKey: b'\0',
                     },
                 ],
-                routine: Some(M_DrawSound as unsafe fn(&mut GameState) -> ()),
+                routine: Some(M_DrawSound as fn(&mut GameState) -> ()),
                 x: 80_i16,
                 y: 64_i16,
                 lastOn: 0_i16,
@@ -352,7 +352,7 @@ impl MMenuDefsHolder {
                         alphaKey: b'6',
                     },
                 ],
-                routine: Some(M_DrawLoad as unsafe fn(&mut GameState) -> ()),
+                routine: Some(M_DrawLoad as fn(&mut GameState) -> ()),
                 x: 80_i16,
                 y: 54_i16,
                 lastOn: 0_i16,
@@ -398,7 +398,7 @@ impl MMenuDefsHolder {
                         alphaKey: b'6',
                     },
                 ],
-                routine: Some(M_DrawSave as unsafe fn(&mut GameState) -> ()),
+                routine: Some(M_DrawSave as fn(&mut GameState) -> ()),
                 x: 80_i16,
                 y: 54_i16,
                 lastOn: 0_i16,
@@ -546,7 +546,7 @@ pub struct menu_s {
     pub numitems: i16,
     pub prevMenu: Option<MenuId>,
     pub items: Vec<menuitem_t>,
-    pub routine: Option<unsafe fn(&mut GameState) -> ()>,
+    pub routine: Option<fn(&mut GameState) -> ()>,
     pub x: i16,
     pub y: i16,
     pub lastOn: i16,
@@ -646,7 +646,7 @@ pub fn M_ReadSaveStrings(state: &mut GameState) {
         i += 1;
     }
 }
-pub unsafe fn M_DrawLoad(state: &mut GameState) {
+pub fn M_DrawLoad(state: &mut GameState) {
     let mut i: i32 = 0;
     let __wcache890_24 = W_CacheLumpName(state, "M_LOADG") as *mut patch_t;
     let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
@@ -661,7 +661,7 @@ pub unsafe fn M_DrawLoad(state: &mut GameState) {
         i += 1;
     }
 }
-pub unsafe fn M_DrawSaveLoadBorder(state: &mut GameState, mut x: i32, mut y: i32) {
+pub fn M_DrawSaveLoadBorder(state: &mut GameState, mut x: i32, mut y: i32) {
     let mut i: i32 = 0;
     let __wcache908_23 = W_CacheLumpName(state, "M_LSLEFT") as *mut patch_t;
     let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
@@ -697,7 +697,7 @@ pub fn M_LoadGame(state: &mut GameState, _choice: i32) {
     M_SetupNextMenu(state, menudef);
     M_ReadSaveStrings(state);
 }
-pub unsafe fn M_DrawSave(state: &mut GameState) {
+pub fn M_DrawSave(state: &mut GameState) {
     let mut i: i32 = 0;
     let __wcache961_20 = W_CacheLumpName(state, "M_SAVEG") as *mut patch_t;
     let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
@@ -816,7 +816,7 @@ pub fn M_QuickLoad(state: &mut GameState) {
     let routine = Some(M_QuickLoadResponse as fn(&mut GameState, i32));
     M_StartMessage(state, &msg, routine, true);
 }
-pub unsafe fn M_DrawReadThis1(state: &mut GameState) {
+pub fn M_DrawReadThis1(state: &mut GameState) {
     let mut lumpname: &str = "CREDIT";
     let mut skullx: i32 = 330_i32;
     let mut skully: i32 = 175_i32;
@@ -849,13 +849,13 @@ pub unsafe fn M_DrawReadThis1(state: &mut GameState) {
     state.m_menu.defs.ReadDef1.x = skullx as i16;
     state.m_menu.defs.ReadDef1.y = skully as i16;
 }
-pub unsafe fn M_DrawReadThis2(state: &mut GameState) {
+pub fn M_DrawReadThis2(state: &mut GameState) {
     state.m_menu.inhelpscreens = true;
     let __wcache1170_18 = W_CacheLumpName(state, "HELP1") as *mut patch_t;
     let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
     V_DrawPatchDirect(state, dest_screen, 0_i32, 0_i32, __wcache1170_18);
 }
-pub unsafe fn M_DrawSound(state: &mut GameState) {
+pub fn M_DrawSound(state: &mut GameState) {
     let __wcache1179_17 = W_CacheLumpName(state, "M_SVOL") as *mut patch_t;
     let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
     V_DrawPatchDirect(state, dest_screen, 60_i32, 38_i32, __wcache1179_17);
@@ -910,12 +910,12 @@ pub fn M_MusicVol(state: &mut GameState, mut choice: i32) {
     let music_volume = state.s_sound.musicVolume * 8_i32;
     S_SetMusicVolume(state, music_volume);
 }
-pub unsafe fn M_DrawMainMenu(state: &mut GameState) {
+pub fn M_DrawMainMenu(state: &mut GameState) {
     let __wcache1241_16 = W_CacheLumpName(state, "M_DOOM") as *mut patch_t;
     let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
     V_DrawPatchDirect(state, dest_screen, 94_i32, 2_i32, __wcache1241_16);
 }
-pub unsafe fn M_DrawNewGame(state: &mut GameState) {
+pub fn M_DrawNewGame(state: &mut GameState) {
     let __wcache1250_15 = W_CacheLumpName(state, "M_NEWG") as *mut patch_t;
     let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
     V_DrawPatchDirect(state, dest_screen, 96_i32, 14_i32, __wcache1250_15);
@@ -943,7 +943,7 @@ pub fn M_NewGame(state: &mut GameState, _choice: i32) {
         M_SetupNextMenu(state, menudef);
     };
 }
-pub unsafe fn M_DrawEpisode(state: &mut GameState) {
+pub fn M_DrawEpisode(state: &mut GameState) {
     let __wcache1286_13 = W_CacheLumpName(state, "M_EPISOD") as *mut patch_t;
     let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
     V_DrawPatchDirect(state, dest_screen, 54_i32, 38_i32, __wcache1286_13);
@@ -1002,7 +1002,7 @@ pub fn M_Episode(state: &mut GameState, mut choice: i32) {
 }
 static detailNames: [&str; 2] = ["M_GDHIGH", "M_GDLOW"];
 static msgNames: [&str; 2] = ["M_MSGOFF", "M_MSGON"];
-pub unsafe fn M_DrawOptions(state: &mut GameState) {
+pub fn M_DrawOptions(state: &mut GameState) {
     let __wcache1358_12 = W_CacheLumpName(state, "M_OPTTTL") as *mut patch_t;
     let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
     V_DrawPatchDirect(state, dest_screen, 108_i32, 15_i32, __wcache1358_12);
@@ -1214,7 +1214,7 @@ pub fn M_SizeDisplay(state: &mut GameState, mut choice: i32) {
     let (screenblocks, detail_level) = (state.m_menu.screenblocks, state.m_menu.detailLevel);
     R_SetViewSize(state, screenblocks, detail_level);
 }
-pub unsafe fn M_DrawThermo(
+pub fn M_DrawThermo(
     state: &mut GameState,
     mut x: i32,
     mut y: i32,
@@ -1296,7 +1296,7 @@ pub fn M_StopMessage(state: &mut GameState) {
     state.m_menu.menuactive = state.m_menu.messageLastMenuActive != 0;
     state.m_menu.messageToPrint = 0_i32;
 }
-pub unsafe fn M_StringWidth(state: &mut GameState, string: &str) -> i32 {
+pub fn M_StringWidth(state: &mut GameState, string: &str) -> i32 {
     let mut w: i32 = 0_i32;
     let mut c: i32 = 0;
     for b in string.bytes() {
@@ -1304,7 +1304,8 @@ pub unsafe fn M_StringWidth(state: &mut GameState, string: &str) -> i32 {
         if !(0_i32..HU_FONTSIZE).contains(&c) {
             w += 4_i32;
         } else {
-            w += (*V_CachePatchNum(state, state.hu_stuff.hu_font[c as usize])).width as i32;
+            let font_patch = V_CachePatchNum(state, state.hu_stuff.hu_font[c as usize]);
+            w += unsafe { (*font_patch).width as i32 };
         }
     }
     w
@@ -1320,7 +1321,7 @@ pub unsafe fn M_StringHeight(state: &mut GameState, string: &str) -> i32 {
     }
     h
 }
-pub unsafe fn M_WriteText(state: &mut GameState, x: i32, y: i32, string: &str) {
+pub fn M_WriteText(state: &mut GameState, x: i32, y: i32, string: &str) {
     let mut w: i32 = 0;
     let mut c: i32 = 0;
     let mut cx: i32 = 0;
@@ -1338,7 +1339,7 @@ pub unsafe fn M_WriteText(state: &mut GameState, x: i32, y: i32, string: &str) {
                 cx += 4_i32;
             } else {
                 let font_patch = V_CachePatchNum(state, state.hu_stuff.hu_font[c as usize]);
-                w = (*font_patch).width as i32;
+                w = unsafe { (*font_patch).width as i32 };
                 if cx + w > SCREENWIDTH {
                     break 'outer;
                 }
