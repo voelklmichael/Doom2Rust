@@ -8,6 +8,7 @@ use crate::p_mobj::mobj_t;
 use crate::p_mobj::thinker_t;
 use crate::p_mobj::ThinkerFn;
 use crate::p_tick::P_ThinkerRaw;
+use crate::r_draw::ColumnSource;
 use crate::r_defs::lighttable_t;
 use crate::stdint_types::byte;
 use crate::w_wad::W_CacheLumpNum;
@@ -276,23 +277,26 @@ pub fn R_GenerateLookup(state: &mut GameState, texnum: i32) {
         x += 1;
     }
 }
-pub unsafe fn R_GetColumn(state: &mut GameState, mut tex: i32, mut col: i32) -> *mut byte {
+pub unsafe fn R_GetColumn(state: &mut GameState, mut tex: i32, mut col: i32) -> ColumnSource {
     let mut lump: i32 = 0;
     let mut ofs: i32 = 0;
     col &= state.r_data.texturewidthmask[tex as usize];
     lump = state.r_data.texturecolumnlump[tex as usize][col as usize] as i32;
     ofs = state.r_data.texturecolumnofs[tex as usize][col as usize] as i32;
     if lump > 0_i32 {
-        return (W_CacheLumpNum(state, lump) as *mut byte).offset(ofs as isize);
+        W_CacheLumpNum(state, lump);
+        return ColumnSource::Lump {
+            lump,
+            offset: ofs as usize,
+        };
     }
     if state.r_data.texturecomposite[tex as usize].is_none() {
         R_GenerateComposite(state, tex);
     }
-    return state.r_data.texturecomposite[tex as usize]
-        .as_mut()
-        .unwrap()
-        .as_mut_ptr()
-        .offset(ofs as isize);
+    return ColumnSource::Composite {
+        tex,
+        offset: ofs as usize,
+    };
 }
 fn GenerateTextureHashTable(state: &mut GameState) {
     let mut i: i32 = 0;

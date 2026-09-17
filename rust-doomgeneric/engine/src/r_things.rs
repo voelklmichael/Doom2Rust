@@ -13,10 +13,10 @@ use crate::mem_compat::memset;
 use crate::p_mobj::sector_t;
 use crate::p_mobj::{mobj_t, pspdef_t};
 use crate::p_mobj::{MF_SHADOW, MF_TRANSLATION, MF_TRANSSHIFT};
-use crate::r_data::column_t;
 use crate::r_defs::ClipArray;
 use crate::r_defs::SpriteRotate;
 use crate::r_defs::{drawseg_t, spritedef_t, spriteframe_t};
+use crate::r_draw::{advance_source, read_source, ColumnSource};
 use crate::r_main::ColormapId;
 use crate::r_main::LightRow48;
 use crate::r_main::R_PointOnSegSide;
@@ -315,17 +315,21 @@ pub unsafe fn R_NewVisSprite(state: &mut GameState) -> *mut vissprite_t {
     state.r_things.vissprite_p += 1;
     vis
 }
-pub unsafe fn R_DrawMaskedColumn(state: &mut GameState, mut column: *mut column_t) {
+pub unsafe fn R_DrawMaskedColumn(state: &mut GameState, mut post: ColumnSource) {
     let mut topscreen: i32 = 0;
     let mut bottomscreen: i32 = 0;
     let mut basetexturemid: fixed_t = 0;
     basetexturemid = state.r_draw.dc_texturemid;
     let mfloorclip = state.r_things.mfloorclip.unwrap().resolve(state);
     let mceilingclip = state.r_things.mceilingclip.unwrap().resolve(state);
-    while (*column).topdelta as i32 != 0xff_i32 {
-        topscreen =
-            state.r_things.sprtopscreen + state.r_things.spryscale * (*column).topdelta as i32;
-        bottomscreen = topscreen + state.r_things.spryscale * (*column).length as i32;
+    loop {
+        let topdelta = read_source(state, post, 0);
+        if topdelta as i32 == 0xff_i32 {
+            break;
+        }
+        let length = read_source(state, post, 1);
+        topscreen = state.r_things.sprtopscreen + state.r_things.spryscale * topdelta as i32;
+        bottomscreen = topscreen + state.r_things.spryscale * length as i32;
         state.r_draw.dc_yl = (topscreen + FRACUNIT - 1_i32) >> FRACBITS;
         state.r_draw.dc_yh = (bottomscreen - 1_i32) >> FRACBITS;
         if state.r_draw.dc_yh >= *mfloorclip.offset(state.r_draw.dc_x as isize) as i32 {
@@ -335,23 +339,21 @@ pub unsafe fn R_DrawMaskedColumn(state: &mut GameState, mut column: *mut column_
             state.r_draw.dc_yl = *mceilingclip.offset(state.r_draw.dc_x as isize) as i32 + 1_i32;
         }
         if state.r_draw.dc_yl <= state.r_draw.dc_yh {
-            state.r_draw.dc_source = (column as *mut byte).offset(3_i32 as isize);
+            state.r_draw.dc_source = Some(advance_source(post, 3));
             state.r_draw.dc_texturemid =
-                (basetexturemid - (((*column).topdelta as i32) << FRACBITS)) as fixed_t;
+                (basetexturemid - ((topdelta as i32) << FRACBITS)) as fixed_t;
             state.r_main.colfunc.expect("non-null function pointer")(state);
         }
-        column = (column as *mut byte)
-            .offset((*column).length as i32 as isize)
-            .offset(4_i32 as isize) as *mut column_t;
+        post = advance_source(post, length as usize + 4);
     }
     state.r_draw.dc_texturemid = basetexturemid;
 }
 pub unsafe fn R_DrawVisSprite(state: &mut GameState, mut vis: *mut vissprite_t) {
-    let mut column: *mut column_t = ::core::ptr::null_mut::<column_t>();
     let mut texturecolumn: i32 = 0;
     let mut frac: fixed_t = 0;
     let mut patch: *mut patch_t = ::core::ptr::null_mut::<patch_t>();
-    patch = W_CacheLumpNum(state, (*vis).patch + state.r_data.firstspritelump) as *mut patch_t;
+    let sprite_lump = (*vis).patch + state.r_data.firstspritelump;
+    patch = W_CacheLumpNum(state, sprite_lump) as *mut patch_t;
     state.r_draw.dc_colormap = (*vis).colormap;
     if state.r_draw.dc_colormap.is_none() {
         state.r_main.colfunc = state.r_main.fuzzcolfunc;
@@ -372,10 +374,15 @@ pub unsafe fn R_DrawVisSprite(state: &mut GameState, mut vis: *mut vissprite_t) 
         if texturecolumn < 0_i32 || texturecolumn >= (*patch).width as i32 {
             I_Error("R_DrawSpriteRange: bad texturecolumn");
         }
-        column = (patch as *mut byte).offset(
-            *(&raw const (*patch).columnofs as *const i32).offset(texturecolumn as isize) as isize,
-        ) as *mut column_t;
-        R_DrawMaskedColumn(state, column);
+        let column_offset = *(&raw const (*patch).columnofs as *const i32)
+            .offset(texturecolumn as isize) as usize;
+        R_DrawMaskedColumn(
+            state,
+            ColumnSource::Lump {
+                lump: sprite_lump,
+                offset: column_offset,
+            },
+        );
         state.r_draw.dc_x += 1;
         frac += (*vis).xiscale;
     }
