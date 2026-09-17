@@ -10,6 +10,7 @@ use crate::p_mobj::ThinkerFn;
 use crate::p_mobj::MF_MISSILE;
 use crate::p_setup::LineId;
 use crate::p_setup::SectorId;
+use crate::p_tick::P_ThinkerRaw;
 use crate::s_sound::S_StartSound;
 use crate::s_sound::SoundOrigin;
 use crate::sounds::sfx_telept;
@@ -44,7 +45,7 @@ pub unsafe fn EV_Teleport(
         if state.p_setup.sectors[i as usize].tag as i32 == tag {
             let mut cursor = state.p_tick.head();
             while let Some(id) = cursor {
-                thinker = state.p_tick.raw(id);
+                thinker = P_ThinkerRaw(state, id);
                 if matches!((*thinker).function, ThinkerFn::Mobj(_)) {
                     m = thinker as *mut mobj_t;
                     if (*m).type_0 as u32 == MobjType::MT_TELEPORTMAN as i32 as u32 {

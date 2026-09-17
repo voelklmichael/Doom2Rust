@@ -21,6 +21,7 @@ use crate::p_spec::ML_TWOSIDED;
 use crate::p_tick::P_AddThinker;
 use crate::p_tick::P_RemoveThinker;
 use crate::p_tick::ThinkerKind;
+use crate::p_tick::ThinkerPayload;
 use crate::r_defs::side_t;
 use crate::s_sound::S_StartSound;
 use crate::s_sound::SoundOrigin;
@@ -226,7 +227,7 @@ pub unsafe fn EV_DoFloor(state: &mut GameState, mut line: LineId, mut floortype:
         }
         rtn = 1_i32;
         floor = state.p_spec.spawn_floor(floormove_t::default());
-        let floor_id = P_AddThinker(state, &raw mut (*floor).thinker, ThinkerKind::Floor);
+        let floor_id = P_AddThinker(state, ThinkerPayload::Raw(&raw mut (*floor).thinker), ThinkerKind::Floor);
         (*sec).specialdata = Some(SectorSpecial::Floor(floor_id));
         (*floor).thinker.function = ThinkerFn::Floor(T_MoveFloor);
         (*floor).type_0 = floortype;
@@ -405,7 +406,7 @@ pub unsafe fn EV_BuildStairs(state: &mut GameState, mut line: LineId, mut type_0
         }
         rtn = 1_i32;
         floor = state.p_spec.spawn_floor(floormove_t::default());
-        let floor_id = P_AddThinker(state, &raw mut (*floor).thinker, ThinkerKind::Floor);
+        let floor_id = P_AddThinker(state, ThinkerPayload::Raw(&raw mut (*floor).thinker), ThinkerKind::Floor);
         (*sec).specialdata = Some(SectorSpecial::Floor(floor_id));
         (*floor).thinker.function = ThinkerFn::Floor(T_MoveFloor);
         (*floor).direction = 1_i32;
@@ -444,7 +445,7 @@ pub unsafe fn EV_BuildStairs(state: &mut GameState, mut line: LineId, mut type_0
                                 floor = state.p_spec.spawn_floor(floormove_t::default());
                                 let floor_id = P_AddThinker(
                                     state,
-                                    &raw mut (*floor).thinker,
+                                    ThinkerPayload::Raw(&raw mut (*floor).thinker),
                                     ThinkerKind::Floor,
                                 );
                                 (*sec).specialdata = Some(SectorSpecial::Floor(floor_id));

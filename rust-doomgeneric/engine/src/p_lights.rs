@@ -9,6 +9,7 @@ use crate::p_spec::P_FindMinSurroundingLight;
 use crate::p_spec::P_FindSectorFromLineTag;
 use crate::p_tick::P_AddThinker;
 use crate::p_tick::ThinkerKind;
+use crate::p_tick::ThinkerPayload;
 
 #[derive(Copy, Clone)]
 #[repr(C)]
@@ -188,7 +189,7 @@ pub unsafe fn P_SpawnFireFlicker(state: &mut GameState, mut sector: SectorId) {
     let sec: *mut sector_t = state.p_setup.sector_mut(sector);
     (*sec).special = 0_i16;
     flick = state.p_lights.spawn_fireflicker(fireflicker_t::default());
-    P_AddThinker(state, &raw mut (*flick).thinker, ThinkerKind::FireFlicker);
+    P_AddThinker(state, ThinkerPayload::Raw(&raw mut (*flick).thinker), ThinkerKind::FireFlicker);
     (*flick).thinker.function = ThinkerFn::FireFlicker(T_FireFlicker);
     (*flick).sector = sector;
     (*flick).maxlight = (*sec).lightlevel as i32;
@@ -214,7 +215,7 @@ pub unsafe fn P_SpawnLightFlash(state: &mut GameState, mut sector: SectorId) {
     let sec: *mut sector_t = state.p_setup.sector_mut(sector);
     (*sec).special = 0_i16;
     flash = state.p_lights.spawn_lightflash(lightflash_t::default());
-    P_AddThinker(state, &raw mut (*flash).thinker, ThinkerKind::LightFlash);
+    P_AddThinker(state, ThinkerPayload::Raw(&raw mut (*flash).thinker), ThinkerKind::LightFlash);
     (*flash).thinker.function = ThinkerFn::LightFlash(T_LightFlash);
     (*flash).sector = sector;
     (*flash).maxlight = (*sec).lightlevel as i32;
@@ -246,7 +247,7 @@ pub unsafe fn P_SpawnStrobeFlash(
     let mut flash: *mut strobe_t = ::core::ptr::null_mut::<strobe_t>();
     let sec: *mut sector_t = state.p_setup.sector_mut(sector);
     flash = state.p_lights.spawn_strobe(strobe_t::default());
-    P_AddThinker(state, &raw mut (*flash).thinker, ThinkerKind::Strobe);
+    P_AddThinker(state, ThinkerPayload::Raw(&raw mut (*flash).thinker), ThinkerKind::Strobe);
     (*flash).sector = sector;
     (*flash).darktime = fastOrSlow;
     (*flash).brighttime = STROBEBRIGHT;
@@ -356,7 +357,7 @@ pub unsafe fn P_SpawnGlowingLight(state: &mut GameState, mut sector: SectorId) {
     let mut g: *mut glow_t = ::core::ptr::null_mut::<glow_t>();
     let sec: *mut sector_t = state.p_setup.sector_mut(sector);
     g = state.p_lights.spawn_glow(glow_t::default());
-    P_AddThinker(state, &raw mut (*g).thinker, ThinkerKind::Glow);
+    P_AddThinker(state, ThinkerPayload::Raw(&raw mut (*g).thinker), ThinkerKind::Glow);
     (*g).sector = sector;
     (*g).minlight = P_FindMinSurroundingLight(state, sec, (*sec).lightlevel as i32);
     (*g).maxlight = (*sec).lightlevel as i32;

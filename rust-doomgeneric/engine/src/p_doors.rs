@@ -17,7 +17,9 @@ use crate::p_spec::P_FindSectorFromLineTag;
 use crate::p_spec::{ceiling_t, floormove_t, plat_t};
 use crate::p_tick::P_AddThinker;
 use crate::p_tick::P_RemoveThinker;
+use crate::p_tick::P_ThinkerRaw;
 use crate::p_tick::ThinkerKind;
+use crate::p_tick::ThinkerPayload;
 use crate::s_sound::S_StartSound;
 use crate::s_sound::SoundOrigin;
 use crate::sounds::{sfx_bdcls, sfx_bdopn, sfx_dorcls, sfx_doropn, sfx_oof};
@@ -64,33 +66,80 @@ impl Default for vldoor_t {
     }
 }
 
+// Generation-checked handle into PDoorsState's arena -- mirrors MobjId.
+// Unlike mobj_t, a door slot is freed in one step (dealloc), not a
+// retire()-then-deallocate() split: nothing keeps dereferencing a door's
+// raw pointer after it's removed the way P_RemoveMobj's body does, so
+// there's no use-after-free window to guard against by deferring the free.
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+pub struct DoorId {
+    index: u32,
+    generation: u32,
+}
+
+struct DoorSlot {
+    generation: u32,
+    door: Option<Box<vldoor_t>>,
+}
+
 pub struct PDoorsState {
-    doors: Vec<Box<vldoor_t>>,
+    doors: Vec<DoorSlot>,
+    free_list: Vec<u32>,
 }
 
 impl PDoorsState {
     pub const fn new() -> Self {
-        PDoorsState { doors: Vec::new() }
+        PDoorsState {
+            doors: Vec::new(),
+            free_list: Vec::new(),
+        }
     }
 
     // Moves a fully-defaulted (then caller-filled) vldoor_t onto the heap
-    // and hands back a raw pointer -- the direct replacement for
-    // Z_Malloc(size_of::<vldoor_t>(), ...). Nothing looks a door up by
-    // handle (only by this raw pointer, or via the SectorSpecial/ThinkerId
-    // scheme already tracked separately in p_tick.rs), so unlike mobj_t
-    // there's no generation-checked id or two-phase retire/deallocate split
-    // needed here -- see PMobjState::spawn/retire/deallocate for why mobj_t
-    // needed that.
-    pub fn spawn(&mut self, value: vldoor_t) -> *mut vldoor_t {
-        self.doors.push(Box::new(value));
-        self.doors.last_mut().unwrap().as_mut()
+    // and hands back both a stable generation-checked handle (stored in
+    // ThinkerNode's payload by p_tick.rs, replacing what used to be a bare
+    // raw pointer there) and a raw pointer for the caller's immediate
+    // post-spawn field writes -- mirrors PMobjState::spawn exactly.
+    pub fn spawn(&mut self, value: vldoor_t) -> (DoorId, *mut vldoor_t) {
+        let (index, generation) = if let Some(index) = self.free_list.pop() {
+            let slot = &mut self.doors[index as usize];
+            slot.generation = slot.generation.wrapping_add(1);
+            (index, slot.generation)
+        } else {
+            let index = self.doors.len() as u32;
+            self.doors.push(DoorSlot {
+                generation: 0,
+                door: None,
+            });
+            (index, 0)
+        };
+        let id = DoorId { index, generation };
+        let mut boxed = Box::new(value);
+        let ptr = boxed.as_mut() as *mut vldoor_t;
+        self.doors[index as usize].door = Some(boxed);
+        (id, ptr)
+    }
+
+    // Fallible materialization: None if the id is stale. Used by
+    // p_tick.rs's P_ThinkerRaw to resolve a Door-kind ThinkerNode's payload
+    // back into the raw pointer every T_* function still expects.
+    pub fn get(&self, id: DoorId) -> Option<*mut vldoor_t> {
+        self.doors
+            .get(id.index as usize)
+            .filter(|slot| slot.generation == id.generation)
+            .and_then(|slot| slot.door.as_deref())
+            .map(|r| r as *const vldoor_t as *mut vldoor_t)
     }
 
     // Called once, from P_RunThinkers' reaper, when a Door-kind thinker is
-    // reaped. A linear scan is fine -- concurrently active doors are always
-    // a handful, never remotely close to mobj_t's counts.
-    pub fn dealloc(&mut self, ptr: *mut vldoor_t) {
-        self.doors.retain(|b| !::core::ptr::eq(b.as_ref(), ptr));
+    // reaped.
+    pub fn dealloc(&mut self, id: DoorId) {
+        if let Some(slot) = self.doors.get_mut(id.index as usize) {
+            if slot.generation == id.generation {
+                slot.door = None;
+                self.free_list.push(id.index);
+            }
+        }
     }
 }
 
@@ -282,8 +331,9 @@ pub unsafe fn EV_DoDoor(state: &mut GameState, mut line: LineId, mut type_0: Vld
             continue;
         }
         rtn = 1_i32;
-        door = state.p_doors.spawn(vldoor_t::default());
-        let door_id = P_AddThinker(state, &raw mut (*door).thinker, ThinkerKind::Door);
+        let (door_arena_id, door_ptr) = state.p_doors.spawn(vldoor_t::default());
+        door = door_ptr;
+        let door_id = P_AddThinker(state, ThinkerPayload::Door(door_arena_id), ThinkerKind::Door);
         (*sec).specialdata = Some(SectorSpecial::Door(door_id));
         (*door).thinker.function = ThinkerFn::Door(T_VerticalDoor);
         (*door).sector = SectorId(secnum as u32);
@@ -409,7 +459,7 @@ pub unsafe fn EV_VerticalDoor(state: &mut GameState, mut line: LineId, mut thing
             1 | 26 | 27 | 28 | 117 => {
                 match special {
                     SectorSpecial::Door(id) => {
-                        door = state.p_tick.raw(id) as *mut vldoor_t;
+                        door = P_ThinkerRaw(state, id) as *mut vldoor_t;
                         if (*door).direction == -1_i32 {
                             (*door).direction = 1_i32;
                         } else {
@@ -423,7 +473,7 @@ pub unsafe fn EV_VerticalDoor(state: &mut GameState, mut line: LineId, mut thing
                         if (*thing).player.is_none() {
                             return;
                         }
-                        let plat = state.p_tick.raw(id) as *mut plat_t;
+                        let plat = P_ThinkerRaw(state, id) as *mut plat_t;
                         (*plat).wait = -1_i32;
                     }
                     SectorSpecial::Ceiling(id) => {
@@ -431,7 +481,7 @@ pub unsafe fn EV_VerticalDoor(state: &mut GameState, mut line: LineId, mut thing
                             return;
                         }
                         eprintln!("EV_VerticalDoor: Tried to close something that wasn't a door.");
-                        let ceiling = state.p_tick.raw(id) as *mut ceiling_t;
+                        let ceiling = P_ThinkerRaw(state, id) as *mut ceiling_t;
                         (*ceiling).direction = -1_i32;
                     }
                     SectorSpecial::Floor(id) => {
@@ -439,7 +489,7 @@ pub unsafe fn EV_VerticalDoor(state: &mut GameState, mut line: LineId, mut thing
                             return;
                         }
                         eprintln!("EV_VerticalDoor: Tried to close something that wasn't a door.");
-                        let floor = state.p_tick.raw(id) as *mut floormove_t;
+                        let floor = P_ThinkerRaw(state, id) as *mut floormove_t;
                         (*floor).direction = -1_i32;
                     }
                 }
@@ -467,8 +517,9 @@ pub unsafe fn EV_VerticalDoor(state: &mut GameState, mut line: LineId, mut thing
             );
         }
     }
-    door = state.p_doors.spawn(vldoor_t::default());
-    let door_id = P_AddThinker(state, &raw mut (*door).thinker, ThinkerKind::Door);
+    let (door_arena_id, door_ptr) = state.p_doors.spawn(vldoor_t::default());
+    door = door_ptr;
+    let door_id = P_AddThinker(state, ThinkerPayload::Door(door_arena_id), ThinkerKind::Door);
     (*sec).specialdata = Some(SectorSpecial::Door(door_id));
     (*door).thinker.function = ThinkerFn::Door(T_VerticalDoor);
     (*door).sector = door_sector_id;
@@ -500,8 +551,9 @@ pub unsafe fn EV_VerticalDoor(state: &mut GameState, mut line: LineId, mut thing
 pub unsafe fn P_SpawnDoorCloseIn30(state: &mut GameState, mut sector: SectorId) {
     let mut door: *mut vldoor_t = ::core::ptr::null_mut::<vldoor_t>();
     let sec: *mut sector_t = state.p_setup.sector_mut(sector);
-    door = state.p_doors.spawn(vldoor_t::default());
-    let door_id = P_AddThinker(state, &raw mut (*door).thinker, ThinkerKind::Door);
+    let (door_arena_id, door_ptr) = state.p_doors.spawn(vldoor_t::default());
+    door = door_ptr;
+    let door_id = P_AddThinker(state, ThinkerPayload::Door(door_arena_id), ThinkerKind::Door);
     (*sec).specialdata = Some(SectorSpecial::Door(door_id));
     (*sec).special = 0_i16;
     (*door).thinker.function = ThinkerFn::Door(T_VerticalDoor);
@@ -514,8 +566,9 @@ pub unsafe fn P_SpawnDoorCloseIn30(state: &mut GameState, mut sector: SectorId) 
 pub unsafe fn P_SpawnDoorRaiseIn5Mins(state: &mut GameState, mut sector: SectorId) {
     let mut door: *mut vldoor_t = ::core::ptr::null_mut::<vldoor_t>();
     let sec: *mut sector_t = state.p_setup.sector_mut(sector);
-    door = state.p_doors.spawn(vldoor_t::default());
-    let door_id = P_AddThinker(state, &raw mut (*door).thinker, ThinkerKind::Door);
+    let (door_arena_id, door_ptr) = state.p_doors.spawn(vldoor_t::default());
+    door = door_ptr;
+    let door_id = P_AddThinker(state, ThinkerPayload::Door(door_arena_id), ThinkerKind::Door);
     (*sec).specialdata = Some(SectorSpecial::Door(door_id));
     (*sec).special = 0_i16;
     (*door).thinker.function = ThinkerFn::Door(T_VerticalDoor);

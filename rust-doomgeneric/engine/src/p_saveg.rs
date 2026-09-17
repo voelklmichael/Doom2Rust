@@ -29,7 +29,9 @@ use crate::p_setup::SubsectorId;
 use crate::p_spec::{ceiling_t, floormove_t, plat_t};
 use crate::p_tick::P_AddThinker;
 use crate::p_tick::P_InitThinkers;
+use crate::p_tick::P_ThinkerRaw;
 use crate::p_tick::ThinkerKind;
+use crate::p_tick::ThinkerPayload;
 use crate::r_defs::side_t;
 use crate::stdint_types::byte;
 use crate::tables::angle_t;
@@ -939,7 +941,7 @@ pub unsafe fn P_ArchiveThinkers(state: &mut GameState) {
     let mut th: *mut thinker_t = ::core::ptr::null_mut::<thinker_t>();
     let mut cursor = state.p_tick.head();
     while let Some(id) = cursor {
-        th = state.p_tick.raw(id);
+        th = P_ThinkerRaw(state, id);
         if matches!((*th).function, ThinkerFn::Mobj(_)) {
             saveg_write8(state, tc_mobj as i32 as byte);
             saveg_write_pad(state);
@@ -955,7 +957,7 @@ pub unsafe fn P_UnArchiveThinkers(state: &mut GameState) {
     let mut mobj: *mut mobj_t = ::core::ptr::null_mut::<mobj_t>();
     let mut cursor = state.p_tick.head();
     while let Some(id) = cursor {
-        currentthinker = state.p_tick.raw(id);
+        currentthinker = P_ThinkerRaw(state, id);
         // Unlike the raw-pointer version this replaces, `next` lives in our
         // own node table, not inside the payload memory Z_Free/deallocate
         // below may free -- capturing it first just mirrors the original
@@ -983,7 +985,11 @@ pub unsafe fn P_UnArchiveThinkers(state: &mut GameState) {
                 // Z_Malloc'd block).
                 state.p_mobj.deallocate(mobj_id);
             }
-            ThinkerKind::Door => state.p_doors.dealloc(currentthinker as *mut vldoor_t),
+            ThinkerKind::Door => {
+                if let ThinkerPayload::Door(door_id) = state.p_tick.payload(id) {
+                    state.p_doors.dealloc(door_id);
+                }
+            }
             ThinkerKind::Ceiling => state.p_ceilng.dealloc(currentthinker as *mut ceiling_t),
             ThinkerKind::Plat => state.p_plats.dealloc(currentthinker as *mut plat_t),
             ThinkerKind::Floor => state
@@ -1032,7 +1038,7 @@ pub unsafe fn P_UnArchiveThinkers(state: &mut GameState) {
                     .sector_mut(state.p_setup.subsectors[(*mobj).subsector.0 as usize].sector)
                     .ceilingheight;
                 (*mobj).thinker.function = ThinkerFn::Mobj(P_MobjThinker);
-                P_AddThinker(state, &raw mut (*mobj).thinker, ThinkerKind::Mobj);
+                P_AddThinker(state, ThinkerPayload::Raw(&raw mut (*mobj).thinker), ThinkerKind::Mobj);
             }
             _ => {
                 I_Error(&format!("Unknown tclass {} in savegame", tclass as i32,));
@@ -1046,7 +1052,7 @@ pub unsafe fn P_ArchiveSpecials(state: &mut GameState) {
     let mut i: i32 = 0;
     let mut cursor = state.p_tick.head();
     while let Some(id) = cursor {
-        th = state.p_tick.raw(id);
+        th = P_ThinkerRaw(state, id);
         match (*th).function {
             ThinkerFn::Paused => {
                 i = 0_i32;
@@ -1124,17 +1130,18 @@ pub unsafe fn P_UnArchiveSpecials(state: &mut GameState) {
                     (*ceiling).thinker.function = ThinkerFn::Ceiling(T_MoveCeiling);
                 }
                 let ceiling_id =
-                    P_AddThinker(state, &raw mut (*ceiling).thinker, ThinkerKind::Ceiling);
+                    P_AddThinker(state, ThinkerPayload::Raw(&raw mut (*ceiling).thinker), ThinkerKind::Ceiling);
                 state.p_setup.sector_mut((*ceiling).sector).specialdata =
                     Some(SectorSpecial::Ceiling(ceiling_id));
                 P_AddActiveCeiling(&mut state.p_ceilng, ceiling_id);
             }
             1 => {
                 saveg_read_pad(state);
-                door = state.p_doors.spawn(vldoor_t::default());
+                let (door_arena_id, door_ptr) = state.p_doors.spawn(vldoor_t::default());
+                door = door_ptr;
                 saveg_read_vldoor_t(state, door);
                 (*door).thinker.function = ThinkerFn::Door(T_VerticalDoor);
-                let door_id = P_AddThinker(state, &raw mut (*door).thinker, ThinkerKind::Door);
+                let door_id = P_AddThinker(state, ThinkerPayload::Door(door_arena_id), ThinkerKind::Door);
                 state.p_setup.sector_mut((*door).sector).specialdata =
                     Some(SectorSpecial::Door(door_id));
             }
@@ -1143,7 +1150,7 @@ pub unsafe fn P_UnArchiveSpecials(state: &mut GameState) {
                 floor = state.p_spec.spawn_floor(floormove_t::default());
                 saveg_read_floormove_t(state, floor);
                 (*floor).thinker.function = ThinkerFn::Floor(T_MoveFloor);
-                let floor_id = P_AddThinker(state, &raw mut (*floor).thinker, ThinkerKind::Floor);
+                let floor_id = P_AddThinker(state, ThinkerPayload::Raw(&raw mut (*floor).thinker), ThinkerKind::Floor);
                 state.p_setup.sector_mut((*floor).sector).specialdata =
                     Some(SectorSpecial::Floor(floor_id));
             }
@@ -1154,7 +1161,7 @@ pub unsafe fn P_UnArchiveSpecials(state: &mut GameState) {
                 if matches!((*plat).thinker.function, ThinkerFn::Unresolved) {
                     (*plat).thinker.function = ThinkerFn::Plat(T_PlatRaise);
                 }
-                let plat_id = P_AddThinker(state, &raw mut (*plat).thinker, ThinkerKind::Plat);
+                let plat_id = P_AddThinker(state, ThinkerPayload::Raw(&raw mut (*plat).thinker), ThinkerKind::Plat);
                 state.p_setup.sector_mut((*plat).sector).specialdata =
                     Some(SectorSpecial::Plat(plat_id));
                 P_AddActivePlat(&mut state.p_plats, plat_id);
@@ -1164,21 +1171,21 @@ pub unsafe fn P_UnArchiveSpecials(state: &mut GameState) {
                 flash = state.p_lights.spawn_lightflash(lightflash_t::default());
                 saveg_read_lightflash_t(state, flash);
                 (*flash).thinker.function = ThinkerFn::LightFlash(T_LightFlash);
-                P_AddThinker(state, &raw mut (*flash).thinker, ThinkerKind::LightFlash);
+                P_AddThinker(state, ThinkerPayload::Raw(&raw mut (*flash).thinker), ThinkerKind::LightFlash);
             }
             5 => {
                 saveg_read_pad(state);
                 strobe = state.p_lights.spawn_strobe(strobe_t::default());
                 saveg_read_strobe_t(state, strobe);
                 (*strobe).thinker.function = ThinkerFn::Strobe(T_StrobeFlash);
-                P_AddThinker(state, &raw mut (*strobe).thinker, ThinkerKind::Strobe);
+                P_AddThinker(state, ThinkerPayload::Raw(&raw mut (*strobe).thinker), ThinkerKind::Strobe);
             }
             6 => {
                 saveg_read_pad(state);
                 glow = state.p_lights.spawn_glow(glow_t::default());
                 saveg_read_glow_t(state, glow);
                 (*glow).thinker.function = ThinkerFn::Glow(T_Glow);
-                P_AddThinker(state, &raw mut (*glow).thinker, ThinkerKind::Glow);
+                P_AddThinker(state, ThinkerPayload::Raw(&raw mut (*glow).thinker), ThinkerKind::Glow);
             }
             _ => {
                 I_Error(&format!(
