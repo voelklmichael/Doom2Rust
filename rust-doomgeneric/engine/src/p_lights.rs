@@ -111,62 +111,219 @@ pub const GLOWSPEED: i32 = 8;
 pub const STROBEBRIGHT: i32 = 5;
 pub const SLOWDARK: i32 = 35;
 
-// None of these 4 types are looked up via a handle or an activeXXX-style
-// array like ceiling_t/plat_t/vldoor_t are -- only ever referenced by the
-// raw pointer handed back from spawn, exactly as today. Unlike those types
-// there was no existing per-module state struct here at all before this;
-// one small struct hosting all 4 arenas is simplest, matching how uniform
-// and small these types are (they were already batched into one phase for
-// the same reason).
+// Generation-checked handles into PLightsState's 4 independent arenas --
+// mirror DoorId. None of these 4 types are looked up via a handle or an
+// activeXXX-style array like ceiling_t/plat_t/vldoor_t are -- only ever
+// referenced by the id handed back from spawn (resolved through
+// P_ThinkerRaw), exactly like the other converted kinds.
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+pub struct FireFlickerId {
+    index: u32,
+    generation: u32,
+}
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+pub struct LightFlashId {
+    index: u32,
+    generation: u32,
+}
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+pub struct StrobeId {
+    index: u32,
+    generation: u32,
+}
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+pub struct GlowId {
+    index: u32,
+    generation: u32,
+}
+
+struct FireFlickerSlot {
+    generation: u32,
+    value: Option<Box<fireflicker_t>>,
+}
+struct LightFlashSlot {
+    generation: u32,
+    value: Option<Box<lightflash_t>>,
+}
+struct StrobeSlot {
+    generation: u32,
+    value: Option<Box<strobe_t>>,
+}
+struct GlowSlot {
+    generation: u32,
+    value: Option<Box<glow_t>>,
+}
+
+// Unlike those types there was no existing per-module state struct here at
+// all before this; one small struct hosting all 4 arenas is simplest,
+// matching how uniform and small these types are (they were already
+// batched into one phase for the same reason). Each arena keeps its own
+// id/slot/free_list -- not unified into one generic table, matching this
+// codebase's existing style of separate per-kind tables (e.g. PSpecState
+// keeps its floor arena separate from its other state).
 pub struct PLightsState {
-    fireflickers: Vec<Box<fireflicker_t>>,
-    lightflashes: Vec<Box<lightflash_t>>,
-    strobes: Vec<Box<strobe_t>>,
-    glows: Vec<Box<glow_t>>,
+    fireflickers: Vec<FireFlickerSlot>,
+    fireflicker_free_list: Vec<u32>,
+    lightflashes: Vec<LightFlashSlot>,
+    lightflash_free_list: Vec<u32>,
+    strobes: Vec<StrobeSlot>,
+    strobe_free_list: Vec<u32>,
+    glows: Vec<GlowSlot>,
+    glow_free_list: Vec<u32>,
 }
 
 impl PLightsState {
     pub const fn new() -> Self {
         PLightsState {
             fireflickers: Vec::new(),
+            fireflicker_free_list: Vec::new(),
             lightflashes: Vec::new(),
+            lightflash_free_list: Vec::new(),
             strobes: Vec::new(),
+            strobe_free_list: Vec::new(),
             glows: Vec::new(),
+            glow_free_list: Vec::new(),
         }
     }
 
-    pub fn spawn_fireflicker(&mut self, value: fireflicker_t) -> *mut fireflicker_t {
-        self.fireflickers.push(Box::new(value));
-        self.fireflickers.last_mut().unwrap().as_mut()
+    pub fn spawn_fireflicker(&mut self, value: fireflicker_t) -> (FireFlickerId, *mut fireflicker_t) {
+        let (index, generation) = if let Some(index) = self.fireflicker_free_list.pop() {
+            let slot = &mut self.fireflickers[index as usize];
+            slot.generation = slot.generation.wrapping_add(1);
+            (index, slot.generation)
+        } else {
+            let index = self.fireflickers.len() as u32;
+            self.fireflickers.push(FireFlickerSlot {
+                generation: 0,
+                value: None,
+            });
+            (index, 0)
+        };
+        let id = FireFlickerId { index, generation };
+        let mut boxed = Box::new(value);
+        let ptr = boxed.as_mut() as *mut fireflicker_t;
+        self.fireflickers[index as usize].value = Some(boxed);
+        (id, ptr)
     }
-    pub fn dealloc_fireflicker(&mut self, ptr: *mut fireflicker_t) {
+    pub fn get_fireflicker(&self, id: FireFlickerId) -> Option<*mut fireflicker_t> {
         self.fireflickers
-            .retain(|b| !::core::ptr::eq(b.as_ref(), ptr));
+            .get(id.index as usize)
+            .filter(|slot| slot.generation == id.generation)
+            .and_then(|slot| slot.value.as_deref())
+            .map(|r| r as *const fireflicker_t as *mut fireflicker_t)
+    }
+    pub fn dealloc_fireflicker(&mut self, id: FireFlickerId) {
+        if let Some(slot) = self.fireflickers.get_mut(id.index as usize) {
+            if slot.generation == id.generation {
+                slot.value = None;
+                self.fireflicker_free_list.push(id.index);
+            }
+        }
     }
 
-    pub fn spawn_lightflash(&mut self, value: lightflash_t) -> *mut lightflash_t {
-        self.lightflashes.push(Box::new(value));
-        self.lightflashes.last_mut().unwrap().as_mut()
+    pub fn spawn_lightflash(&mut self, value: lightflash_t) -> (LightFlashId, *mut lightflash_t) {
+        let (index, generation) = if let Some(index) = self.lightflash_free_list.pop() {
+            let slot = &mut self.lightflashes[index as usize];
+            slot.generation = slot.generation.wrapping_add(1);
+            (index, slot.generation)
+        } else {
+            let index = self.lightflashes.len() as u32;
+            self.lightflashes.push(LightFlashSlot {
+                generation: 0,
+                value: None,
+            });
+            (index, 0)
+        };
+        let id = LightFlashId { index, generation };
+        let mut boxed = Box::new(value);
+        let ptr = boxed.as_mut() as *mut lightflash_t;
+        self.lightflashes[index as usize].value = Some(boxed);
+        (id, ptr)
     }
-    pub fn dealloc_lightflash(&mut self, ptr: *mut lightflash_t) {
+    pub fn get_lightflash(&self, id: LightFlashId) -> Option<*mut lightflash_t> {
         self.lightflashes
-            .retain(|b| !::core::ptr::eq(b.as_ref(), ptr));
+            .get(id.index as usize)
+            .filter(|slot| slot.generation == id.generation)
+            .and_then(|slot| slot.value.as_deref())
+            .map(|r| r as *const lightflash_t as *mut lightflash_t)
+    }
+    pub fn dealloc_lightflash(&mut self, id: LightFlashId) {
+        if let Some(slot) = self.lightflashes.get_mut(id.index as usize) {
+            if slot.generation == id.generation {
+                slot.value = None;
+                self.lightflash_free_list.push(id.index);
+            }
+        }
     }
 
-    pub fn spawn_strobe(&mut self, value: strobe_t) -> *mut strobe_t {
-        self.strobes.push(Box::new(value));
-        self.strobes.last_mut().unwrap().as_mut()
+    pub fn spawn_strobe(&mut self, value: strobe_t) -> (StrobeId, *mut strobe_t) {
+        let (index, generation) = if let Some(index) = self.strobe_free_list.pop() {
+            let slot = &mut self.strobes[index as usize];
+            slot.generation = slot.generation.wrapping_add(1);
+            (index, slot.generation)
+        } else {
+            let index = self.strobes.len() as u32;
+            self.strobes.push(StrobeSlot {
+                generation: 0,
+                value: None,
+            });
+            (index, 0)
+        };
+        let id = StrobeId { index, generation };
+        let mut boxed = Box::new(value);
+        let ptr = boxed.as_mut() as *mut strobe_t;
+        self.strobes[index as usize].value = Some(boxed);
+        (id, ptr)
     }
-    pub fn dealloc_strobe(&mut self, ptr: *mut strobe_t) {
-        self.strobes.retain(|b| !::core::ptr::eq(b.as_ref(), ptr));
+    pub fn get_strobe(&self, id: StrobeId) -> Option<*mut strobe_t> {
+        self.strobes
+            .get(id.index as usize)
+            .filter(|slot| slot.generation == id.generation)
+            .and_then(|slot| slot.value.as_deref())
+            .map(|r| r as *const strobe_t as *mut strobe_t)
+    }
+    pub fn dealloc_strobe(&mut self, id: StrobeId) {
+        if let Some(slot) = self.strobes.get_mut(id.index as usize) {
+            if slot.generation == id.generation {
+                slot.value = None;
+                self.strobe_free_list.push(id.index);
+            }
+        }
     }
 
-    pub fn spawn_glow(&mut self, value: glow_t) -> *mut glow_t {
-        self.glows.push(Box::new(value));
-        self.glows.last_mut().unwrap().as_mut()
+    pub fn spawn_glow(&mut self, value: glow_t) -> (GlowId, *mut glow_t) {
+        let (index, generation) = if let Some(index) = self.glow_free_list.pop() {
+            let slot = &mut self.glows[index as usize];
+            slot.generation = slot.generation.wrapping_add(1);
+            (index, slot.generation)
+        } else {
+            let index = self.glows.len() as u32;
+            self.glows.push(GlowSlot {
+                generation: 0,
+                value: None,
+            });
+            (index, 0)
+        };
+        let id = GlowId { index, generation };
+        let mut boxed = Box::new(value);
+        let ptr = boxed.as_mut() as *mut glow_t;
+        self.glows[index as usize].value = Some(boxed);
+        (id, ptr)
     }
-    pub fn dealloc_glow(&mut self, ptr: *mut glow_t) {
-        self.glows.retain(|b| !::core::ptr::eq(b.as_ref(), ptr));
+    pub fn get_glow(&self, id: GlowId) -> Option<*mut glow_t> {
+        self.glows
+            .get(id.index as usize)
+            .filter(|slot| slot.generation == id.generation)
+            .and_then(|slot| slot.value.as_deref())
+            .map(|r| r as *const glow_t as *mut glow_t)
+    }
+    pub fn dealloc_glow(&mut self, id: GlowId) {
+        if let Some(slot) = self.glows.get_mut(id.index as usize) {
+            if slot.generation == id.generation {
+                slot.value = None;
+                self.glow_free_list.push(id.index);
+            }
+        }
     }
 }
 pub unsafe fn T_FireFlicker(state: &mut GameState, mut flick: *mut fireflicker_t) {
@@ -188,8 +345,13 @@ pub unsafe fn P_SpawnFireFlicker(state: &mut GameState, mut sector: SectorId) {
     let mut flick: *mut fireflicker_t = ::core::ptr::null_mut::<fireflicker_t>();
     let sec: *mut sector_t = state.p_setup.sector_mut(sector);
     (*sec).special = 0_i16;
-    flick = state.p_lights.spawn_fireflicker(fireflicker_t::default());
-    P_AddThinker(state, ThinkerPayload::Raw(&raw mut (*flick).thinker), ThinkerKind::FireFlicker);
+    let (flick_arena_id, flick_ptr) = state.p_lights.spawn_fireflicker(fireflicker_t::default());
+    flick = flick_ptr;
+    P_AddThinker(
+        state,
+        ThinkerPayload::FireFlicker(flick_arena_id),
+        ThinkerKind::FireFlicker,
+    );
     (*flick).thinker.function = ThinkerFn::FireFlicker(T_FireFlicker);
     (*flick).sector = sector;
     (*flick).maxlight = (*sec).lightlevel as i32;
@@ -214,8 +376,13 @@ pub unsafe fn P_SpawnLightFlash(state: &mut GameState, mut sector: SectorId) {
     let mut flash: *mut lightflash_t = ::core::ptr::null_mut::<lightflash_t>();
     let sec: *mut sector_t = state.p_setup.sector_mut(sector);
     (*sec).special = 0_i16;
-    flash = state.p_lights.spawn_lightflash(lightflash_t::default());
-    P_AddThinker(state, ThinkerPayload::Raw(&raw mut (*flash).thinker), ThinkerKind::LightFlash);
+    let (flash_arena_id, flash_ptr) = state.p_lights.spawn_lightflash(lightflash_t::default());
+    flash = flash_ptr;
+    P_AddThinker(
+        state,
+        ThinkerPayload::LightFlash(flash_arena_id),
+        ThinkerKind::LightFlash,
+    );
     (*flash).thinker.function = ThinkerFn::LightFlash(T_LightFlash);
     (*flash).sector = sector;
     (*flash).maxlight = (*sec).lightlevel as i32;
@@ -246,8 +413,9 @@ pub unsafe fn P_SpawnStrobeFlash(
 ) {
     let mut flash: *mut strobe_t = ::core::ptr::null_mut::<strobe_t>();
     let sec: *mut sector_t = state.p_setup.sector_mut(sector);
-    flash = state.p_lights.spawn_strobe(strobe_t::default());
-    P_AddThinker(state, ThinkerPayload::Raw(&raw mut (*flash).thinker), ThinkerKind::Strobe);
+    let (flash_arena_id, flash_ptr) = state.p_lights.spawn_strobe(strobe_t::default());
+    flash = flash_ptr;
+    P_AddThinker(state, ThinkerPayload::Strobe(flash_arena_id), ThinkerKind::Strobe);
     (*flash).sector = sector;
     (*flash).darktime = fastOrSlow;
     (*flash).brighttime = STROBEBRIGHT;
@@ -356,8 +524,9 @@ pub unsafe fn T_Glow(state: &mut GameState, mut g: *mut glow_t) {
 pub unsafe fn P_SpawnGlowingLight(state: &mut GameState, mut sector: SectorId) {
     let mut g: *mut glow_t = ::core::ptr::null_mut::<glow_t>();
     let sec: *mut sector_t = state.p_setup.sector_mut(sector);
-    g = state.p_lights.spawn_glow(glow_t::default());
-    P_AddThinker(state, ThinkerPayload::Raw(&raw mut (*g).thinker), ThinkerKind::Glow);
+    let (g_arena_id, g_ptr) = state.p_lights.spawn_glow(glow_t::default());
+    g = g_ptr;
+    P_AddThinker(state, ThinkerPayload::Glow(g_arena_id), ThinkerKind::Glow);
     (*g).sector = sector;
     (*g).minlight = P_FindMinSurroundingLight(state, sec, (*sec).lightlevel as i32);
     (*g).maxlight = (*sec).lightlevel as i32;

@@ -32,9 +32,23 @@ pub enum CeilingE {
 }
 pub const CEILSPEED: i32 = FRACUNIT;
 pub const MAXCEILINGS: i32 = 30;
+
+// Generation-checked handle into PCeilngState's arena -- mirrors DoorId.
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+pub struct CeilingId {
+    index: u32,
+    generation: u32,
+}
+
+struct CeilingSlot {
+    generation: u32,
+    ceiling: Option<Box<ceiling_t>>,
+}
+
 pub struct PCeilngState {
     pub activeceilings: [Option<ThinkerId>; 30],
-    ceilings: Vec<Box<ceiling_t>>,
+    ceilings: Vec<CeilingSlot>,
+    free_list: Vec<u32>,
 }
 
 impl PCeilngState {
@@ -42,19 +56,55 @@ impl PCeilngState {
         PCeilngState {
             activeceilings: [None; 30],
             ceilings: Vec::new(),
+            free_list: Vec::new(),
         }
     }
 
-    // Direct replacement for Z_Malloc(size_of::<ceiling_t>(), ...) -- see
-    // PDoorsState::spawn/dealloc (p_doors.rs) for why no generation-checked
-    // id or two-phase retire/deallocate split is needed here either.
-    pub fn spawn(&mut self, value: ceiling_t) -> *mut ceiling_t {
-        self.ceilings.push(Box::new(value));
-        self.ceilings.last_mut().unwrap().as_mut()
+    // Moves a fully-defaulted (then caller-filled) ceiling_t onto the heap
+    // and hands back both a stable generation-checked handle (stored in
+    // ThinkerNode's payload by p_tick.rs, replacing what used to be a bare
+    // raw pointer there) and a raw pointer for the caller's immediate
+    // post-spawn field writes -- mirrors PDoorsState::spawn exactly.
+    pub fn spawn(&mut self, value: ceiling_t) -> (CeilingId, *mut ceiling_t) {
+        let (index, generation) = if let Some(index) = self.free_list.pop() {
+            let slot = &mut self.ceilings[index as usize];
+            slot.generation = slot.generation.wrapping_add(1);
+            (index, slot.generation)
+        } else {
+            let index = self.ceilings.len() as u32;
+            self.ceilings.push(CeilingSlot {
+                generation: 0,
+                ceiling: None,
+            });
+            (index, 0)
+        };
+        let id = CeilingId { index, generation };
+        let mut boxed = Box::new(value);
+        let ptr = boxed.as_mut() as *mut ceiling_t;
+        self.ceilings[index as usize].ceiling = Some(boxed);
+        (id, ptr)
     }
 
-    pub fn dealloc(&mut self, ptr: *mut ceiling_t) {
-        self.ceilings.retain(|b| !::core::ptr::eq(b.as_ref(), ptr));
+    // Fallible materialization: None if the id is stale. Used by
+    // p_tick.rs's P_ThinkerRaw to resolve a Ceiling-kind ThinkerNode's
+    // payload back into the raw pointer every T_* function still expects.
+    pub fn get(&self, id: CeilingId) -> Option<*mut ceiling_t> {
+        self.ceilings
+            .get(id.index as usize)
+            .filter(|slot| slot.generation == id.generation)
+            .and_then(|slot| slot.ceiling.as_deref())
+            .map(|r| r as *const ceiling_t as *mut ceiling_t)
+    }
+
+    // Called once, from P_RunThinkers' reaper, when a Ceiling-kind thinker
+    // is reaped.
+    pub fn dealloc(&mut self, id: CeilingId) {
+        if let Some(slot) = self.ceilings.get_mut(id.index as usize) {
+            if slot.generation == id.generation {
+                slot.ceiling = None;
+                self.free_list.push(id.index);
+            }
+        }
     }
 }
 
@@ -211,8 +261,13 @@ pub unsafe fn EV_DoCeiling(state: &mut GameState, mut line: LineId, mut type_0: 
             continue;
         }
         rtn = 1_i32;
-        ceiling = state.p_ceilng.spawn(ceiling_t::default());
-        let ceiling_id = P_AddThinker(state, ThinkerPayload::Raw(&raw mut (*ceiling).thinker), ThinkerKind::Ceiling);
+        let (ceiling_arena_id, ceiling_ptr) = state.p_ceilng.spawn(ceiling_t::default());
+        ceiling = ceiling_ptr;
+        let ceiling_id = P_AddThinker(
+            state,
+            ThinkerPayload::Ceiling(ceiling_arena_id),
+            ThinkerKind::Ceiling,
+        );
         (*sec).specialdata = Some(SectorSpecial::Ceiling(ceiling_id));
         (*ceiling).thinker.function = ThinkerFn::Ceiling(T_MoveCeiling);
         (*ceiling).sector = SectorId(secnum as u32);

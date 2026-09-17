@@ -13,7 +13,7 @@ use crate::p_ceilng::P_AddActiveCeiling;
 use crate::p_doors::vldoor_t;
 use crate::p_doors::VldoorE;
 use crate::p_floor::FloorE;
-use crate::p_lights::{fireflicker_t, glow_t, lightflash_t, strobe_t};
+use crate::p_lights::{glow_t, lightflash_t, strobe_t};
 use crate::p_maputl::P_SetThingPosition;
 use crate::p_mobj::mobjtype_from_raw;
 use crate::p_mobj::spritenum_from_raw;
@@ -973,38 +973,60 @@ pub unsafe fn P_UnArchiveThinkers(state: &mut GameState) {
         // 9 and doesn't depend on that.)
         match state.p_tick.kind(id) {
             ThinkerKind::Mobj => {
-                let mobj_id = (*(currentthinker as *mut mobj_t)).id;
-                P_RemoveMobj(state, currentthinker as *mut mobj_t);
-                // P_RemoveMobj only retires (see PMobjState::retire) -- it
-                // never itself frees the mobj's memory, and P_InitThinkers
-                // just below wipes PTickState before P_RunThinkers' reaper
-                // ever gets a chance to run on this now-Removed node, so
-                // nothing else was ever going to deallocate it. This call
-                // closes that gap (a pre-existing leak: every live mobj at
-                // the moment a savegame is loaded used to leak its
-                // Z_Malloc'd block).
-                state.p_mobj.deallocate(mobj_id);
+                if let ThinkerPayload::Mobj(mobj_id) = state.p_tick.payload(id) {
+                    P_RemoveMobj(state, currentthinker as *mut mobj_t);
+                    // P_RemoveMobj only retires (see PMobjState::retire) --
+                    // it never itself frees the mobj's memory, and
+                    // P_InitThinkers just below wipes PTickState before
+                    // P_RunThinkers' reaper ever gets a chance to run on
+                    // this now-Removed node, so nothing else was ever going
+                    // to deallocate it. This call closes that gap (a
+                    // pre-existing leak: every live mobj at the moment a
+                    // savegame is loaded used to leak its Z_Malloc'd
+                    // block).
+                    state.p_mobj.deallocate(mobj_id);
+                }
             }
             ThinkerKind::Door => {
                 if let ThinkerPayload::Door(door_id) = state.p_tick.payload(id) {
                     state.p_doors.dealloc(door_id);
                 }
             }
-            ThinkerKind::Ceiling => state.p_ceilng.dealloc(currentthinker as *mut ceiling_t),
-            ThinkerKind::Plat => state.p_plats.dealloc(currentthinker as *mut plat_t),
-            ThinkerKind::Floor => state
-                .p_spec
-                .dealloc_floor(currentthinker as *mut floormove_t),
-            ThinkerKind::FireFlicker => state
-                .p_lights
-                .dealloc_fireflicker(currentthinker as *mut fireflicker_t),
-            ThinkerKind::LightFlash => state
-                .p_lights
-                .dealloc_lightflash(currentthinker as *mut lightflash_t),
-            ThinkerKind::Strobe => state
-                .p_lights
-                .dealloc_strobe(currentthinker as *mut strobe_t),
-            ThinkerKind::Glow => state.p_lights.dealloc_glow(currentthinker as *mut glow_t),
+            ThinkerKind::Ceiling => {
+                if let ThinkerPayload::Ceiling(ceiling_id) = state.p_tick.payload(id) {
+                    state.p_ceilng.dealloc(ceiling_id);
+                }
+            }
+            ThinkerKind::Plat => {
+                if let ThinkerPayload::Plat(plat_id) = state.p_tick.payload(id) {
+                    state.p_plats.dealloc(plat_id);
+                }
+            }
+            ThinkerKind::Floor => {
+                if let ThinkerPayload::Floor(floor_id) = state.p_tick.payload(id) {
+                    state.p_spec.dealloc_floor(floor_id);
+                }
+            }
+            ThinkerKind::FireFlicker => {
+                if let ThinkerPayload::FireFlicker(fireflicker_id) = state.p_tick.payload(id) {
+                    state.p_lights.dealloc_fireflicker(fireflicker_id);
+                }
+            }
+            ThinkerKind::LightFlash => {
+                if let ThinkerPayload::LightFlash(lightflash_id) = state.p_tick.payload(id) {
+                    state.p_lights.dealloc_lightflash(lightflash_id);
+                }
+            }
+            ThinkerKind::Strobe => {
+                if let ThinkerPayload::Strobe(strobe_id) = state.p_tick.payload(id) {
+                    state.p_lights.dealloc_strobe(strobe_id);
+                }
+            }
+            ThinkerKind::Glow => {
+                if let ThinkerPayload::Glow(glow_id) = state.p_tick.payload(id) {
+                    state.p_lights.dealloc_glow(glow_id);
+                }
+            }
         }
         cursor = next;
     }
@@ -1020,7 +1042,7 @@ pub unsafe fn P_UnArchiveThinkers(state: &mut GameState) {
                 // except `.id` (never part of the on-disk format), so the id
                 // spawn() just assigned survives the read untouched below.
                 let placeholder = state.p_mobj.dummy_mobj;
-                let (_id, new_mobj) = state.p_mobj.spawn(placeholder);
+                let (mobj_arena_id, new_mobj) = state.p_mobj.spawn(placeholder);
                 mobj = new_mobj;
                 saveg_read_mobj_t(state, mobj);
                 if let Some(player_id) = (*mobj).player {
@@ -1038,7 +1060,7 @@ pub unsafe fn P_UnArchiveThinkers(state: &mut GameState) {
                     .sector_mut(state.p_setup.subsectors[(*mobj).subsector.0 as usize].sector)
                     .ceilingheight;
                 (*mobj).thinker.function = ThinkerFn::Mobj(P_MobjThinker);
-                P_AddThinker(state, ThinkerPayload::Raw(&raw mut (*mobj).thinker), ThinkerKind::Mobj);
+                P_AddThinker(state, ThinkerPayload::Mobj(mobj_arena_id), ThinkerKind::Mobj);
             }
             _ => {
                 I_Error(&format!("Unknown tclass {} in savegame", tclass as i32,));
@@ -1124,13 +1146,17 @@ pub unsafe fn P_UnArchiveSpecials(state: &mut GameState) {
             7 => return,
             0 => {
                 saveg_read_pad(state);
-                ceiling = state.p_ceilng.spawn(ceiling_t::default());
+                let (ceiling_arena_id, ceiling_ptr) = state.p_ceilng.spawn(ceiling_t::default());
+                ceiling = ceiling_ptr;
                 saveg_read_ceiling_t(state, ceiling);
                 if matches!((*ceiling).thinker.function, ThinkerFn::Unresolved) {
                     (*ceiling).thinker.function = ThinkerFn::Ceiling(T_MoveCeiling);
                 }
-                let ceiling_id =
-                    P_AddThinker(state, ThinkerPayload::Raw(&raw mut (*ceiling).thinker), ThinkerKind::Ceiling);
+                let ceiling_id = P_AddThinker(
+                    state,
+                    ThinkerPayload::Ceiling(ceiling_arena_id),
+                    ThinkerKind::Ceiling,
+                );
                 state.p_setup.sector_mut((*ceiling).sector).specialdata =
                     Some(SectorSpecial::Ceiling(ceiling_id));
                 P_AddActiveCeiling(&mut state.p_ceilng, ceiling_id);
@@ -1147,45 +1173,61 @@ pub unsafe fn P_UnArchiveSpecials(state: &mut GameState) {
             }
             2 => {
                 saveg_read_pad(state);
-                floor = state.p_spec.spawn_floor(floormove_t::default());
+                let (floor_arena_id, floor_ptr) = state.p_spec.spawn_floor(floormove_t::default());
+                floor = floor_ptr;
                 saveg_read_floormove_t(state, floor);
                 (*floor).thinker.function = ThinkerFn::Floor(T_MoveFloor);
-                let floor_id = P_AddThinker(state, ThinkerPayload::Raw(&raw mut (*floor).thinker), ThinkerKind::Floor);
+                let floor_id =
+                    P_AddThinker(state, ThinkerPayload::Floor(floor_arena_id), ThinkerKind::Floor);
                 state.p_setup.sector_mut((*floor).sector).specialdata =
                     Some(SectorSpecial::Floor(floor_id));
             }
             3 => {
                 saveg_read_pad(state);
-                plat = state.p_plats.spawn(plat_t::default());
+                let (plat_arena_id, plat_ptr) = state.p_plats.spawn(plat_t::default());
+                plat = plat_ptr;
                 saveg_read_plat_t(state, plat);
                 if matches!((*plat).thinker.function, ThinkerFn::Unresolved) {
                     (*plat).thinker.function = ThinkerFn::Plat(T_PlatRaise);
                 }
-                let plat_id = P_AddThinker(state, ThinkerPayload::Raw(&raw mut (*plat).thinker), ThinkerKind::Plat);
+                let plat_id =
+                    P_AddThinker(state, ThinkerPayload::Plat(plat_arena_id), ThinkerKind::Plat);
                 state.p_setup.sector_mut((*plat).sector).specialdata =
                     Some(SectorSpecial::Plat(plat_id));
                 P_AddActivePlat(&mut state.p_plats, plat_id);
             }
             4 => {
                 saveg_read_pad(state);
-                flash = state.p_lights.spawn_lightflash(lightflash_t::default());
+                let (flash_arena_id, flash_ptr) =
+                    state.p_lights.spawn_lightflash(lightflash_t::default());
+                flash = flash_ptr;
                 saveg_read_lightflash_t(state, flash);
                 (*flash).thinker.function = ThinkerFn::LightFlash(T_LightFlash);
-                P_AddThinker(state, ThinkerPayload::Raw(&raw mut (*flash).thinker), ThinkerKind::LightFlash);
+                P_AddThinker(
+                    state,
+                    ThinkerPayload::LightFlash(flash_arena_id),
+                    ThinkerKind::LightFlash,
+                );
             }
             5 => {
                 saveg_read_pad(state);
-                strobe = state.p_lights.spawn_strobe(strobe_t::default());
+                let (strobe_arena_id, strobe_ptr) = state.p_lights.spawn_strobe(strobe_t::default());
+                strobe = strobe_ptr;
                 saveg_read_strobe_t(state, strobe);
                 (*strobe).thinker.function = ThinkerFn::Strobe(T_StrobeFlash);
-                P_AddThinker(state, ThinkerPayload::Raw(&raw mut (*strobe).thinker), ThinkerKind::Strobe);
+                P_AddThinker(
+                    state,
+                    ThinkerPayload::Strobe(strobe_arena_id),
+                    ThinkerKind::Strobe,
+                );
             }
             6 => {
                 saveg_read_pad(state);
-                glow = state.p_lights.spawn_glow(glow_t::default());
+                let (glow_arena_id, glow_ptr) = state.p_lights.spawn_glow(glow_t::default());
+                glow = glow_ptr;
                 saveg_read_glow_t(state, glow);
                 (*glow).thinker.function = ThinkerFn::Glow(T_Glow);
-                P_AddThinker(state, ThinkerPayload::Raw(&raw mut (*glow).thinker), ThinkerKind::Glow);
+                P_AddThinker(state, ThinkerPayload::Glow(glow_arena_id), ThinkerKind::Glow);
             }
             _ => {
                 I_Error(&format!(
