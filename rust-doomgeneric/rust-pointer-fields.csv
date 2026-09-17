@@ -1,0 +1,8 @@
+file,struct name,field name,field type
+engine/src/m_menu.rs,menu_s,routine,Option<unsafe fn(&mut GameState) -> ()>
+engine/src/p_tick.rs,ThinkerNode,raw,*mut thinker_s
+engine/src/r_main.rs,RMainState,colfunc,Option<unsafe fn(&mut GameState) -> ()>
+engine/src/r_main.rs,RMainState,basecolfunc,Option<unsafe fn(&mut GameState) -> ()>
+engine/src/r_main.rs,RMainState,fuzzcolfunc,Option<unsafe fn(&mut GameState) -> ()>
+engine/src/r_main.rs,RMainState,transcolfunc,Option<unsafe fn(&mut GameState) -> ()>
+engine/src/r_main.rs,RMainState,spanfunc,Option<unsafe fn(&mut GameState) -> ()>

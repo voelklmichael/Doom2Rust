@@ -523,7 +523,7 @@ pub unsafe fn D_PageDrawer(state: &mut GameState) {
 pub fn D_AdvanceDemo(state: &mut GameState) {
     state.d_main.advancedemo = true;
 }
-pub unsafe fn D_DoAdvanceDemo(state: &mut GameState) {
+pub fn D_DoAdvanceDemo(state: &mut GameState) {
     state.g_game.players[state.g_game.consoleplayer as usize].playerstate = PlayerState::PST_LIVE;
     state.d_main.advancedemo = false;
     state.g_game.usergame = false;
