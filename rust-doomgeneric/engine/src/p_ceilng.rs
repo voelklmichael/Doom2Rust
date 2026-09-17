@@ -108,135 +108,141 @@ impl PCeilngState {
     }
 }
 
-pub unsafe fn T_MoveCeiling(state: &mut GameState, mut ceiling: *mut ceiling_t) {
-    let mut res: ResultE = ResultE::ok;
-    let sec: *mut sector_t = state.p_setup.sector_mut((*ceiling).sector);
-    match (*ceiling).direction {
-        1 => {
-            res = T_MovePlane(
-                state,
-                sec,
-                (*ceiling).speed,
-                (*ceiling).topheight,
-                false,
-                1_i32,
-                (*ceiling).direction,
-            );
-            if state.p_tick.leveltime & 7_i32 == 0 {
-                match (*ceiling).type_0 {
-                    CeilingE::silentCrushAndRaise => {}
-                    _ => {
-                        S_StartSound(
-                            state,
-                            SoundOrigin::Sector((*ceiling).sector),
-                            sfx_stnmov as i32,
-                        );
+pub fn T_MoveCeiling(state: &mut GameState, id: CeilingId) {
+    let ceiling = state
+        .p_ceilng
+        .get(id)
+        .expect("ThinkerFn::Ceiling id must reference a live ceiling");
+    unsafe {
+        let mut res: ResultE = ResultE::ok;
+        let sec: *mut sector_t = state.p_setup.sector_mut((*ceiling).sector);
+        match (*ceiling).direction {
+            1 => {
+                res = T_MovePlane(
+                    state,
+                    sec,
+                    (*ceiling).speed,
+                    (*ceiling).topheight,
+                    false,
+                    1_i32,
+                    (*ceiling).direction,
+                );
+                if state.p_tick.leveltime & 7_i32 == 0 {
+                    match (*ceiling).type_0 {
+                        CeilingE::silentCrushAndRaise => {}
+                        _ => {
+                            S_StartSound(
+                                state,
+                                SoundOrigin::Sector((*ceiling).sector),
+                                sfx_stnmov as i32,
+                            );
+                        }
+                    }
+                }
+                if res == ResultE::pastdest {
+                    let mut current_block_7: u64;
+                    match (*ceiling).type_0 {
+                        CeilingE::raiseToHighest => {
+                            P_RemoveActiveCeiling(state, ceiling);
+                            current_block_7 = 10599921512955367680;
+                        }
+                        CeilingE::silentCrushAndRaise => {
+                            S_StartSound(
+                                state,
+                                SoundOrigin::Sector((*ceiling).sector),
+                                sfx_pstop as i32,
+                            );
+                            current_block_7 = 16040908003852494439;
+                        }
+                        CeilingE::fastCrushAndRaise | CeilingE::crushAndRaise => {
+                            current_block_7 = 16040908003852494439;
+                        }
+                        _ => {
+                            current_block_7 = 10599921512955367680;
+                        }
+                    }
+                    match current_block_7 {
+                        16040908003852494439 => {
+                            (*ceiling).direction = -1_i32;
+                        }
+                        _ => {}
                     }
                 }
             }
-            if res == ResultE::pastdest {
-                let mut current_block_7: u64;
-                match (*ceiling).type_0 {
-                    CeilingE::raiseToHighest => {
-                        P_RemoveActiveCeiling(state, ceiling);
-                        current_block_7 = 10599921512955367680;
-                    }
-                    CeilingE::silentCrushAndRaise => {
-                        S_StartSound(
-                            state,
-                            SoundOrigin::Sector((*ceiling).sector),
-                            sfx_pstop as i32,
-                        );
-                        current_block_7 = 16040908003852494439;
-                    }
-                    CeilingE::fastCrushAndRaise | CeilingE::crushAndRaise => {
-                        current_block_7 = 16040908003852494439;
-                    }
-                    _ => {
-                        current_block_7 = 10599921512955367680;
-                    }
-                }
-                match current_block_7 {
-                    16040908003852494439 => {
-                        (*ceiling).direction = -1_i32;
-                    }
-                    _ => {}
-                }
-            }
-        }
-        -1 => {
-            res = T_MovePlane(
-                state,
-                sec,
-                (*ceiling).speed,
-                (*ceiling).bottomheight,
-                (*ceiling).crush,
-                1_i32,
-                (*ceiling).direction,
-            );
-            if state.p_tick.leveltime & 7_i32 == 0 {
-                match (*ceiling).type_0 {
-                    CeilingE::silentCrushAndRaise => {}
-                    _ => {
-                        S_StartSound(
-                            state,
-                            SoundOrigin::Sector((*ceiling).sector),
-                            sfx_stnmov as i32,
-                        );
+            -1 => {
+                res = T_MovePlane(
+                    state,
+                    sec,
+                    (*ceiling).speed,
+                    (*ceiling).bottomheight,
+                    (*ceiling).crush,
+                    1_i32,
+                    (*ceiling).direction,
+                );
+                if state.p_tick.leveltime & 7_i32 == 0 {
+                    match (*ceiling).type_0 {
+                        CeilingE::silentCrushAndRaise => {}
+                        _ => {
+                            S_StartSound(
+                                state,
+                                SoundOrigin::Sector((*ceiling).sector),
+                                sfx_stnmov as i32,
+                            );
+                        }
                     }
                 }
-            }
-            if res == ResultE::pastdest {
-                let mut current_block_19: u64;
-                match (*ceiling).type_0 {
-                    CeilingE::silentCrushAndRaise => {
-                        S_StartSound(
-                            state,
-                            SoundOrigin::Sector((*ceiling).sector),
-                            sfx_pstop as i32,
-                        );
-                        current_block_19 = 3850642056257311267;
+                if res == ResultE::pastdest {
+                    let mut current_block_19: u64;
+                    match (*ceiling).type_0 {
+                        CeilingE::silentCrushAndRaise => {
+                            S_StartSound(
+                                state,
+                                SoundOrigin::Sector((*ceiling).sector),
+                                sfx_pstop as i32,
+                            );
+                            current_block_19 = 3850642056257311267;
+                        }
+                        CeilingE::crushAndRaise => {
+                            current_block_19 = 3850642056257311267;
+                        }
+                        CeilingE::fastCrushAndRaise => {
+                            current_block_19 = 14600216857840559743;
+                        }
+                        CeilingE::lowerAndCrush | CeilingE::lowerToFloor => {
+                            P_RemoveActiveCeiling(state, ceiling);
+                            current_block_19 = 16924917904204750491;
+                        }
+                        _ => {
+                            current_block_19 = 16924917904204750491;
+                        }
                     }
-                    CeilingE::crushAndRaise => {
-                        current_block_19 = 3850642056257311267;
+                    match current_block_19 {
+                        3850642056257311267 => {
+                            (*ceiling).speed = CEILSPEED as fixed_t;
+                            current_block_19 = 14600216857840559743;
+                        }
+                        _ => {}
                     }
-                    CeilingE::fastCrushAndRaise => {
-                        current_block_19 = 14600216857840559743;
+                    match current_block_19 {
+                        14600216857840559743 => {
+                            (*ceiling).direction = 1_i32;
+                        }
+                        _ => {}
                     }
-                    CeilingE::lowerAndCrush | CeilingE::lowerToFloor => {
-                        P_RemoveActiveCeiling(state, ceiling);
-                        current_block_19 = 16924917904204750491;
+                } else if res == ResultE::crushed {
+                    match (*ceiling).type_0 {
+                        CeilingE::silentCrushAndRaise
+                        | CeilingE::crushAndRaise
+                        | CeilingE::lowerAndCrush => {
+                            (*ceiling).speed = (CEILSPEED / 8_i32) as fixed_t;
+                        }
+                        _ => {}
                     }
-                    _ => {
-                        current_block_19 = 16924917904204750491;
-                    }
-                }
-                match current_block_19 {
-                    3850642056257311267 => {
-                        (*ceiling).speed = CEILSPEED as fixed_t;
-                        current_block_19 = 14600216857840559743;
-                    }
-                    _ => {}
-                }
-                match current_block_19 {
-                    14600216857840559743 => {
-                        (*ceiling).direction = 1_i32;
-                    }
-                    _ => {}
-                }
-            } else if res == ResultE::crushed {
-                match (*ceiling).type_0 {
-                    CeilingE::silentCrushAndRaise
-                    | CeilingE::crushAndRaise
-                    | CeilingE::lowerAndCrush => {
-                        (*ceiling).speed = (CEILSPEED / 8_i32) as fixed_t;
-                    }
-                    _ => {}
                 }
             }
-        }
-        0 | _ => {}
-    };
+            0 | _ => {}
+        };
+    }
 }
 pub unsafe fn EV_DoCeiling(state: &mut GameState, mut line: LineId, mut type_0: CeilingE) -> i32 {
     let mut secnum: i32 = 0;

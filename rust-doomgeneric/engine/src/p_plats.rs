@@ -120,75 +120,81 @@ impl PPlatsState {
     }
 }
 
-pub unsafe fn T_PlatRaise(state: &mut GameState, mut plat: *mut plat_t) {
-    let mut res: ResultE = ResultE::ok;
-    let sec: *mut sector_t = state.p_setup.sector_mut((*plat).sector);
-    match (*plat).status {
-        PlatE::up => {
-            res = T_MovePlane(
-                state,
-                sec,
-                (*plat).speed,
-                (*plat).high,
-                (*plat).crush,
-                0_i32,
-                1_i32,
-            );
-            if ((*plat).type_0 == PlattypeE::raiseAndChange || (*plat).type_0 == PlattypeE::raiseToNearestAndChange) && state.p_tick.leveltime & 7_i32 == 0 {
-                S_StartSound(
+pub fn T_PlatRaise(state: &mut GameState, id: PlatId) {
+    let plat = state
+        .p_plats
+        .get(id)
+        .expect("ThinkerFn::Plat id must reference a live plat");
+    unsafe {
+        let mut res: ResultE = ResultE::ok;
+        let sec: *mut sector_t = state.p_setup.sector_mut((*plat).sector);
+        match (*plat).status {
+            PlatE::up => {
+                res = T_MovePlane(
                     state,
-                    SoundOrigin::Sector((*plat).sector),
-                    sfx_stnmov as i32,
+                    sec,
+                    (*plat).speed,
+                    (*plat).high,
+                    (*plat).crush,
+                    0_i32,
+                    1_i32,
                 );
-            }
-            if res == ResultE::crushed && !(*plat).crush {
-                (*plat).count = (*plat).wait;
-                (*plat).status = PlatE::down;
-                S_StartSound(
-                    state,
-                    SoundOrigin::Sector((*plat).sector),
-                    sfx_pstart as i32,
-                );
-            } else if res == ResultE::pastdest {
-                (*plat).count = (*plat).wait;
-                (*plat).status = PlatE::waiting;
-                S_StartSound(state, SoundOrigin::Sector((*plat).sector), sfx_pstop as i32);
-                match (*plat).type_0 {
-                    PlattypeE::blazeDWUS | PlattypeE::downWaitUpStay => {
-                        P_RemoveActivePlat(state, plat);
-                    }
-                    PlattypeE::raiseAndChange | PlattypeE::raiseToNearestAndChange => {
-                        P_RemoveActivePlat(state, plat);
-                    }
-                    PlattypeE::perpetualRaise => {}
+                if ((*plat).type_0 == PlattypeE::raiseAndChange || (*plat).type_0 == PlattypeE::raiseToNearestAndChange) && state.p_tick.leveltime & 7_i32 == 0 {
+                    S_StartSound(
+                        state,
+                        SoundOrigin::Sector((*plat).sector),
+                        sfx_stnmov as i32,
+                    );
                 }
-            }
-        }
-        PlatE::down => {
-            res = T_MovePlane(state, sec, (*plat).speed, (*plat).low, false, 0_i32, -1_i32);
-            if res == ResultE::pastdest {
-                (*plat).count = (*plat).wait;
-                (*plat).status = PlatE::waiting;
-                S_StartSound(state, SoundOrigin::Sector((*plat).sector), sfx_pstop as i32);
-            }
-        }
-        PlatE::waiting => {
-            (*plat).count -= 1;
-            if (*plat).count == 0 {
-                if (*sec).floorheight == (*plat).low {
-                    (*plat).status = PlatE::up;
-                } else {
+                if res == ResultE::crushed && !(*plat).crush {
+                    (*plat).count = (*plat).wait;
                     (*plat).status = PlatE::down;
+                    S_StartSound(
+                        state,
+                        SoundOrigin::Sector((*plat).sector),
+                        sfx_pstart as i32,
+                    );
+                } else if res == ResultE::pastdest {
+                    (*plat).count = (*plat).wait;
+                    (*plat).status = PlatE::waiting;
+                    S_StartSound(state, SoundOrigin::Sector((*plat).sector), sfx_pstop as i32);
+                    match (*plat).type_0 {
+                        PlattypeE::blazeDWUS | PlattypeE::downWaitUpStay => {
+                            P_RemoveActivePlat(state, plat);
+                        }
+                        PlattypeE::raiseAndChange | PlattypeE::raiseToNearestAndChange => {
+                            P_RemoveActivePlat(state, plat);
+                        }
+                        PlattypeE::perpetualRaise => {}
+                    }
                 }
-                S_StartSound(
-                    state,
-                    SoundOrigin::Sector((*plat).sector),
-                    sfx_pstart as i32,
-                );
             }
-        }
-        PlatE::in_stasis => {}
-    };
+            PlatE::down => {
+                res = T_MovePlane(state, sec, (*plat).speed, (*plat).low, false, 0_i32, -1_i32);
+                if res == ResultE::pastdest {
+                    (*plat).count = (*plat).wait;
+                    (*plat).status = PlatE::waiting;
+                    S_StartSound(state, SoundOrigin::Sector((*plat).sector), sfx_pstop as i32);
+                }
+            }
+            PlatE::waiting => {
+                (*plat).count -= 1;
+                if (*plat).count == 0 {
+                    if (*sec).floorheight == (*plat).low {
+                        (*plat).status = PlatE::up;
+                    } else {
+                        (*plat).status = PlatE::down;
+                    }
+                    S_StartSound(
+                        state,
+                        SoundOrigin::Sector((*plat).sector),
+                        sfx_pstart as i32,
+                    );
+                }
+            }
+            PlatE::in_stasis => {}
+        };
+    }
 }
 pub unsafe fn EV_DoPlat(
     state: &mut GameState,

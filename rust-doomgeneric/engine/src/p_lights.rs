@@ -326,20 +326,26 @@ impl PLightsState {
         }
     }
 }
-pub unsafe fn T_FireFlicker(state: &mut GameState, mut flick: *mut fireflicker_t) {
-    let mut amount: i32 = 0;
-    (*flick).count -= 1;
-    if (*flick).count != 0 {
-        return;
+pub fn T_FireFlicker(state: &mut GameState, id: FireFlickerId) {
+    let flick = state
+        .p_lights
+        .get_fireflicker(id)
+        .expect("ThinkerFn::FireFlicker id must reference a live fireflicker");
+    unsafe {
+        let mut amount: i32 = 0;
+        (*flick).count -= 1;
+        if (*flick).count != 0 {
+            return;
+        }
+        amount = (P_Random(&mut state.m_random) & 3_i32) * 16_i32;
+        let sec = state.p_setup.sector_mut((*flick).sector);
+        if sec.lightlevel as i32 - amount < (*flick).minlight {
+            sec.lightlevel = (*flick).minlight as i16;
+        } else {
+            sec.lightlevel = ((*flick).maxlight - amount) as i16;
+        }
+        (*flick).count = 4_i32;
     }
-    amount = (P_Random(&mut state.m_random) & 3_i32) * 16_i32;
-    let sec = state.p_setup.sector_mut((*flick).sector);
-    if sec.lightlevel as i32 - amount < (*flick).minlight {
-        sec.lightlevel = (*flick).minlight as i16;
-    } else {
-        sec.lightlevel = ((*flick).maxlight - amount) as i16;
-    }
-    (*flick).count = 4_i32;
 }
 pub unsafe fn P_SpawnFireFlicker(state: &mut GameState, mut sector: SectorId) {
     let mut flick: *mut fireflicker_t = ::core::ptr::null_mut::<fireflicker_t>();
@@ -358,19 +364,25 @@ pub unsafe fn P_SpawnFireFlicker(state: &mut GameState, mut sector: SectorId) {
     (*flick).minlight = P_FindMinSurroundingLight(state, sec, (*sec).lightlevel as i32) + 16_i32;
     (*flick).count = 4_i32;
 }
-pub unsafe fn T_LightFlash(state: &mut GameState, mut flash: *mut lightflash_t) {
-    (*flash).count -= 1;
-    if (*flash).count != 0 {
-        return;
+pub fn T_LightFlash(state: &mut GameState, id: LightFlashId) {
+    let flash = state
+        .p_lights
+        .get_lightflash(id)
+        .expect("ThinkerFn::LightFlash id must reference a live lightflash");
+    unsafe {
+        (*flash).count -= 1;
+        if (*flash).count != 0 {
+            return;
+        }
+        let sec = state.p_setup.sector_mut((*flash).sector);
+        if sec.lightlevel as i32 == (*flash).maxlight {
+            sec.lightlevel = (*flash).minlight as i16;
+            (*flash).count = (P_Random(&mut state.m_random) & (*flash).mintime) + 1_i32;
+        } else {
+            sec.lightlevel = (*flash).maxlight as i16;
+            (*flash).count = (P_Random(&mut state.m_random) & (*flash).maxtime) + 1_i32;
+        };
     }
-    let sec = state.p_setup.sector_mut((*flash).sector);
-    if sec.lightlevel as i32 == (*flash).maxlight {
-        sec.lightlevel = (*flash).minlight as i16;
-        (*flash).count = (P_Random(&mut state.m_random) & (*flash).mintime) + 1_i32;
-    } else {
-        sec.lightlevel = (*flash).maxlight as i16;
-        (*flash).count = (P_Random(&mut state.m_random) & (*flash).maxtime) + 1_i32;
-    };
 }
 pub unsafe fn P_SpawnLightFlash(state: &mut GameState, mut sector: SectorId) {
     let mut flash: *mut lightflash_t = ::core::ptr::null_mut::<lightflash_t>();
@@ -391,19 +403,25 @@ pub unsafe fn P_SpawnLightFlash(state: &mut GameState, mut sector: SectorId) {
     (*flash).mintime = 7_i32;
     (*flash).count = (P_Random(&mut state.m_random) & (*flash).maxtime) + 1_i32;
 }
-pub unsafe fn T_StrobeFlash(state: &mut GameState, mut flash: *mut strobe_t) {
-    (*flash).count -= 1;
-    if (*flash).count != 0 {
-        return;
+pub fn T_StrobeFlash(state: &mut GameState, id: StrobeId) {
+    let flash = state
+        .p_lights
+        .get_strobe(id)
+        .expect("ThinkerFn::Strobe id must reference a live strobe");
+    unsafe {
+        (*flash).count -= 1;
+        if (*flash).count != 0 {
+            return;
+        }
+        let sec = state.p_setup.sector_mut((*flash).sector);
+        if sec.lightlevel as i32 == (*flash).minlight {
+            sec.lightlevel = (*flash).maxlight as i16;
+            (*flash).count = (*flash).brighttime;
+        } else {
+            sec.lightlevel = (*flash).minlight as i16;
+            (*flash).count = (*flash).darktime;
+        };
     }
-    let sec = state.p_setup.sector_mut((*flash).sector);
-    if sec.lightlevel as i32 == (*flash).minlight {
-        sec.lightlevel = (*flash).maxlight as i16;
-        (*flash).count = (*flash).brighttime;
-    } else {
-        sec.lightlevel = (*flash).minlight as i16;
-        (*flash).count = (*flash).darktime;
-    };
 }
 pub unsafe fn P_SpawnStrobeFlash(
     state: &mut GameState,
@@ -501,25 +519,31 @@ pub unsafe fn EV_LightTurnOn(state: &mut GameState, mut line: LineId, mut bright
         i += 1;
     }
 }
-pub unsafe fn T_Glow(state: &mut GameState, mut g: *mut glow_t) {
-    let sec = state.p_setup.sector_mut((*g).sector);
-    match (*g).direction {
-        -1 => {
-            sec.lightlevel = (sec.lightlevel as i32 - GLOWSPEED) as i16;
-            if sec.lightlevel as i32 <= (*g).minlight {
-                sec.lightlevel = (sec.lightlevel as i32 + GLOWSPEED) as i16;
-                (*g).direction = 1_i32;
-            }
-        }
-        1 => {
-            sec.lightlevel = (sec.lightlevel as i32 + GLOWSPEED) as i16;
-            if sec.lightlevel as i32 >= (*g).maxlight {
+pub fn T_Glow(state: &mut GameState, id: GlowId) {
+    let g = state
+        .p_lights
+        .get_glow(id)
+        .expect("ThinkerFn::Glow id must reference a live glow");
+    unsafe {
+        let sec = state.p_setup.sector_mut((*g).sector);
+        match (*g).direction {
+            -1 => {
                 sec.lightlevel = (sec.lightlevel as i32 - GLOWSPEED) as i16;
-                (*g).direction = -1_i32;
+                if sec.lightlevel as i32 <= (*g).minlight {
+                    sec.lightlevel = (sec.lightlevel as i32 + GLOWSPEED) as i16;
+                    (*g).direction = 1_i32;
+                }
             }
-        }
-        _ => {}
-    };
+            1 => {
+                sec.lightlevel = (sec.lightlevel as i32 + GLOWSPEED) as i16;
+                if sec.lightlevel as i32 >= (*g).maxlight {
+                    sec.lightlevel = (sec.lightlevel as i32 - GLOWSPEED) as i16;
+                    (*g).direction = -1_i32;
+                }
+            }
+            _ => {}
+        };
+    }
 }
 pub unsafe fn P_SpawnGlowingLight(state: &mut GameState, mut sector: SectorId) {
     let mut g: *mut glow_t = ::core::ptr::null_mut::<glow_t>();
