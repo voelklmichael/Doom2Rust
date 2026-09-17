@@ -82,11 +82,11 @@ pub struct RMainState {
     pub scalelightfixed: [ColormapId; 48],
     pub zlight: [[ColormapId; 128]; 16],
     pub extralight: i32,
-    pub colfunc: Option<unsafe fn(&mut GameState) -> ()>,
-    pub basecolfunc: Option<unsafe fn(&mut GameState) -> ()>,
-    pub fuzzcolfunc: Option<unsafe fn(&mut GameState) -> ()>,
-    pub transcolfunc: Option<unsafe fn(&mut GameState) -> ()>,
-    pub spanfunc: Option<unsafe fn(&mut GameState) -> ()>,
+    pub colfunc: Option<fn(&mut GameState)>,
+    pub basecolfunc: Option<fn(&mut GameState)>,
+    pub fuzzcolfunc: Option<fn(&mut GameState)>,
+    pub transcolfunc: Option<fn(&mut GameState)>,
+    pub spanfunc: Option<fn(&mut GameState)>,
     pub setsizeneeded: bool,
     pub setblocks: i32,
     pub setdetail: i32,
@@ -449,18 +449,17 @@ pub unsafe fn R_ExecuteSetViewSize(state: &mut GameState) {
     state.r_main.centeryfrac = (state.r_main.centery << FRACBITS) as fixed_t;
     state.r_main.projection = state.r_main.centerxfrac;
     if state.r_main.detailshift == 0 {
-        state.r_main.basecolfunc = Some(R_DrawColumn as unsafe fn(&mut GameState) -> ());
+        state.r_main.basecolfunc = Some(R_DrawColumn);
         state.r_main.colfunc = state.r_main.basecolfunc;
-        state.r_main.fuzzcolfunc = Some(R_DrawFuzzColumn as unsafe fn(&mut GameState) -> ());
-        state.r_main.transcolfunc = Some(R_DrawTranslatedColumn as unsafe fn(&mut GameState) -> ());
-        state.r_main.spanfunc = Some(R_DrawSpan as unsafe fn(&mut GameState) -> ());
+        state.r_main.fuzzcolfunc = Some(R_DrawFuzzColumn);
+        state.r_main.transcolfunc = Some(R_DrawTranslatedColumn);
+        state.r_main.spanfunc = Some(R_DrawSpan);
     } else {
-        state.r_main.basecolfunc = Some(R_DrawColumnLow as unsafe fn(&mut GameState) -> ());
+        state.r_main.basecolfunc = Some(R_DrawColumnLow);
         state.r_main.colfunc = state.r_main.basecolfunc;
-        state.r_main.fuzzcolfunc = Some(R_DrawFuzzColumnLow as unsafe fn(&mut GameState) -> ());
-        state.r_main.transcolfunc =
-            Some(R_DrawTranslatedColumnLow as unsafe fn(&mut GameState) -> ());
-        state.r_main.spanfunc = Some(R_DrawSpanLow as unsafe fn(&mut GameState) -> ());
+        state.r_main.fuzzcolfunc = Some(R_DrawFuzzColumnLow);
+        state.r_main.transcolfunc = Some(R_DrawTranslatedColumnLow);
+        state.r_main.spanfunc = Some(R_DrawSpanLow);
     }
     let scaledviewwidth = state.r_draw.scaledviewwidth;
     let viewheight = state.r_draw.viewheight;
