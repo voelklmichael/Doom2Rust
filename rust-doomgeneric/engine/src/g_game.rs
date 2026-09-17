@@ -492,7 +492,7 @@ fn G_NextWeapon(state: &mut GameState, mut direction: i32) -> i32 {
     }
     weapon_order_table[i as usize].weapon_num as i32
 }
-pub unsafe fn G_BuildTiccmd(state: &mut GameState, cmd: &mut ticcmd_t, mut maketic: i32) {
+pub fn G_BuildTiccmd(state: &mut GameState, cmd: &mut ticcmd_t, mut maketic: i32) {
     let mut i: i32 = 0;
     let mut strafe: bool = false;
     let mut bstrafe: bool = false;
@@ -500,11 +500,18 @@ pub unsafe fn G_BuildTiccmd(state: &mut GameState, cmd: &mut ticcmd_t, mut maket
     let mut tspeed: i32 = 0;
     let mut forward: i32 = 0;
     let mut side: i32 = 0;
-    memset(
-        cmd as *mut ticcmd_t as *mut ::core::ffi::c_void,
-        0_i32,
-        ::core::mem::size_of::<ticcmd_t>() as size_t,
-    );
+    *cmd = ticcmd_t {
+        forwardmove: 0,
+        sidemove: 0,
+        angleturn: 0,
+        chatchar: 0,
+        buttons: 0,
+        consistancy: 0,
+        buttons2: 0,
+        inventory: 0,
+        lookfly: 0,
+        arti: 0,
+    };
     cmd.consistancy = state.g_game.consistancy[state.g_game.consoleplayer as usize]
         [(maketic % BACKUPTICS) as usize];
     strafe = state.g_game.gamekeydown[state.m_controls.key_strafe as usize]

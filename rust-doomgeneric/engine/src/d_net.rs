@@ -31,7 +31,7 @@ fn PlayerQuitGame(state: &mut GameState, player_num: u32) {
         }
     }
 }
-unsafe fn RunTic(state: &mut GameState, cmds: &[ticcmd_t], ingame: &[bool]) {
+fn RunTic(state: &mut GameState, cmds: &[ticcmd_t], ingame: &[bool]) {
     let mut i: u32 = 0;
     i = 0_u32;
     while i < MAXPLAYERS as u32 {
@@ -46,12 +46,14 @@ unsafe fn RunTic(state: &mut GameState, cmds: &[ticcmd_t], ingame: &[bool]) {
     if state.d_main.advancedemo {
         D_DoAdvanceDemo(state);
     }
-    G_Ticker(state, cmds);
+    unsafe {
+        G_Ticker(state, cmds);
+    }
 }
 const DOOM_LOOP_INTERFACE: loop_interface_t = loop_interface_t {
     ProcessEvents: Some(D_ProcessEvents),
-    BuildTiccmd: Some(G_BuildTiccmd as unsafe fn(&mut GameState, &mut ticcmd_t, i32) -> ()),
-    RunTic: Some(RunTic as unsafe fn(&mut GameState, &[ticcmd_t], &[bool]) -> ()),
+    BuildTiccmd: Some(G_BuildTiccmd),
+    RunTic: Some(RunTic),
     RunMenu: Some(M_Ticker),
 };
 unsafe fn LoadGameSettings(state: &mut GameState, mut settings: *mut net_gamesettings_t) {
