@@ -5,50 +5,28 @@ use crate::sha1::{
 use crate::stdint_types::byte;
 use crate::w_file::wad_file_t;
 use crate::w_wad::lumpinfo_t;
-use std::alloc::{alloc, realloc, Layout};
 pub struct WChecksumState {
-    open_wadfiles: *mut *mut wad_file_t,
-    num_open_wadfiles: i32,
+    open_wadfiles: Vec<&'static wad_file_t>,
 }
 
 impl WChecksumState {
     pub const fn new() -> Self {
         WChecksumState {
-            open_wadfiles: ::core::ptr::null::<*mut wad_file_t>() as *mut *mut wad_file_t,
-            num_open_wadfiles: 0,
+            open_wadfiles: Vec::new(),
         }
     }
 }
 
-unsafe fn GetFileNumber(state: &mut WChecksumState, handle: &'static wad_file_t) -> i32 {
-    let handle = handle as *const wad_file_t as *mut wad_file_t;
-    let mut i: i32 = 0;
-    let mut result: i32 = 0;
-    i = 0_i32;
-    while i < state.num_open_wadfiles {
-        if *state.open_wadfiles.offset(i as isize) == handle {
-            return i;
-        }
-        i += 1;
+fn GetFileNumber(state: &mut WChecksumState, handle: &'static wad_file_t) -> i32 {
+    if let Some(pos) = state
+        .open_wadfiles
+        .iter()
+        .position(|&f| ::core::ptr::eq(f, handle))
+    {
+        return pos as i32;
     }
-    let new_layout =
-        Layout::array::<*mut wad_file_t>((state.num_open_wadfiles + 1) as usize).unwrap();
-    state.open_wadfiles = if state.open_wadfiles.is_null() {
-        alloc(new_layout)
-    } else {
-        let old_layout =
-            Layout::array::<*mut wad_file_t>(state.num_open_wadfiles as usize).unwrap();
-        realloc(
-            state.open_wadfiles as *mut u8,
-            old_layout,
-            new_layout.size(),
-        )
-    } as *mut *mut wad_file_t;
-    let fresh0 = &mut (*state.open_wadfiles.offset(state.num_open_wadfiles as isize));
-    *fresh0 = handle;
-    result = state.num_open_wadfiles;
-    state.num_open_wadfiles += 1;
-    result
+    state.open_wadfiles.push(handle);
+    (state.open_wadfiles.len() - 1) as i32
 }
 unsafe fn ChecksumAddLump(
     state: &mut WChecksumState,
@@ -76,7 +54,7 @@ pub unsafe fn W_Checksum(state: &mut GameState, mut digest: *mut byte) {
     };
     let mut i: u32 = 0;
     SHA1_Init(&raw mut sha1_context);
-    state.w_checksum.num_open_wadfiles = 0_i32;
+    state.w_checksum.open_wadfiles.clear();
     i = 0_u32;
     while i < state.w_wad.numlumps {
         let lump = state.w_wad.lumpinfo.as_mut_ptr().offset(i as isize);
