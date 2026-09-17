@@ -89,7 +89,6 @@ use crate::stdint_types::size_t;
 use crate::v_video::V_DrawMouseSpeedBox;
 use crate::v_video::V_DrawPatch;
 use crate::v_video::V_DrawPatchDirect;
-use crate::v_video::V_RestoreBuffer;
 use crate::w_main::W_ParseCommandLine;
 use crate::w_wad::W_AddFile;
 use crate::w_wad::W_CheckCorrectIWAD;
@@ -353,8 +352,10 @@ pub unsafe fn D_Display(state: &mut GameState) {
             y = state.r_draw.viewwindowy + 4_i32;
         }
         let __wcache429_2 = W_CacheLumpName(state, "M_PAUSE") as *mut patch_t;
+        let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
         V_DrawPatchDirect(
             state,
+            dest_screen,
             state.r_draw.viewwindowx + (state.r_draw.scaledviewwidth - 68_i32) / 2_i32,
             y,
             __wcache429_2,
@@ -501,7 +502,6 @@ pub fn D_DoomLoop(state: &mut GameState) {
     I_SetWindowTitle(state, state.doomstat.gamedescription);
     I_SetGrabMouseCallback();
     unsafe { I_InitGraphics(state) };
-    V_RestoreBuffer(state);
     unsafe { R_ExecuteSetViewSize(state) };
     D_StartGameLoop(state);
     if state.g_game.testcontrols {
@@ -517,7 +517,8 @@ pub fn D_PageTicker(state: &mut GameState) {
 }
 pub unsafe fn D_PageDrawer(state: &mut GameState) {
     let __wcache609_1 = W_CacheLumpName(state, state.d_main.pagename) as *mut patch_t;
-    V_DrawPatch(state, 0_i32, 0_i32, __wcache609_1);
+    let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
+    V_DrawPatch(state, dest_screen, 0_i32, 0_i32, __wcache609_1);
 }
 pub fn D_AdvanceDemo(state: &mut GameState) {
     state.d_main.advancedemo = true;

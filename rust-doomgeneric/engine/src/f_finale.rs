@@ -433,7 +433,8 @@ pub unsafe fn F_TextWrite(state: &mut GameState) {
         }
         y += 1;
     }
-    V_MarkRect(state, 0_i32, 0_i32, SCREENWIDTH, SCREENHEIGHT);
+    let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
+    V_MarkRect(state, dest_screen, 0_i32, 0_i32, SCREENWIDTH, SCREENHEIGHT);
     cx = 10_i32;
     cy = 10_i32;
     let mut chars = state.f_finale.finaletext.bytes();
@@ -459,7 +460,8 @@ pub unsafe fn F_TextWrite(state: &mut GameState) {
                 if cx + w > SCREENWIDTH {
                     break;
                 }
-                V_DrawPatch(state, cx, cy, font_patch);
+                let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
+                V_DrawPatch(state, dest_screen, cx, cy, font_patch);
                 cx += w;
             }
         }
@@ -763,7 +765,8 @@ pub unsafe fn F_CastPrint(state: &mut GameState, text: &str) {
         } else {
             let font_patch = V_CachePatchNum(state, state.hu_stuff.hu_font[c as usize]);
             w = (*font_patch).width as i32;
-            V_DrawPatch(state, cx, 180_i32, font_patch);
+            let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
+            V_DrawPatch(state, dest_screen, cx, 180_i32, font_patch);
             cx += w;
         }
     }
@@ -775,7 +778,8 @@ pub unsafe fn F_CastDrawer(state: &mut GameState) {
     let mut flip: bool = false;
     let mut patch: *mut patch_t = ::core::ptr::null_mut::<patch_t>();
     let __wcache865_4 = W_CacheLumpName(state, "BOSSBACK") as *mut patch_t;
-    V_DrawPatch(state, 0_i32, 0_i32, __wcache865_4);
+    let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
+    V_DrawPatch(state, dest_screen, 0_i32, 0_i32, __wcache865_4);
     let cast_name = state.f_finale.castorder[state.f_finale.castnum as usize]
         .name
         .unwrap();
@@ -788,9 +792,11 @@ pub unsafe fn F_CastDrawer(state: &mut GameState) {
     flip = (*sprframe).flip[0] != 0;
     patch = W_CacheLumpNum(state, lump + state.r_data.firstspritelump) as *mut patch_t;
     if flip {
-        V_DrawPatchFlipped(state, 160_i32, 170_i32, patch);
+        let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
+        V_DrawPatchFlipped(state, dest_screen, 160_i32, 170_i32, patch);
     } else {
-        V_DrawPatch(state, 160_i32, 170_i32, patch);
+        let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
+        V_DrawPatch(state, dest_screen, 160_i32, 170_i32, patch);
     };
 }
 pub unsafe fn F_DrawPatchCol(
@@ -836,7 +842,8 @@ pub unsafe fn F_BunnyScroll(state: &mut GameState) {
     let mut stage: i32 = 0;
     p1 = W_CacheLumpName(state, "PFUB2") as *mut patch_t;
     p2 = W_CacheLumpName(state, "PFUB1") as *mut patch_t;
-    V_MarkRect(state, 0_i32, 0_i32, SCREENWIDTH, SCREENHEIGHT);
+    let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
+    V_MarkRect(state, dest_screen, 0_i32, 0_i32, SCREENWIDTH, SCREENHEIGHT);
     scrolled = 320_i32 - (state.f_finale.finalecount as i32 - 230_i32) / 2_i32;
     if scrolled > 320_i32 {
         scrolled = 320_i32;
@@ -858,8 +865,10 @@ pub unsafe fn F_BunnyScroll(state: &mut GameState) {
     }
     if state.f_finale.finalecount < 1180_u32 {
         let __wcache963_3 = W_CacheLumpName(state, "END0") as *mut patch_t;
+        let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
         V_DrawPatch(
             state,
+            dest_screen,
             (SCREENWIDTH - 13_i32 * 8_i32) / 2_i32,
             (SCREENHEIGHT - 8_i32 * 8_i32) / 2_i32,
             __wcache963_3,
@@ -881,8 +890,10 @@ pub unsafe fn F_BunnyScroll(state: &mut GameState) {
     }
     let name = format!("END{}", stage);
     let __wcache990_2 = W_CacheLumpName(state, &name) as *mut patch_t;
+    let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
     V_DrawPatch(
         state,
+        dest_screen,
         (SCREENWIDTH - 13_i32 * 8_i32) / 2_i32,
         (SCREENHEIGHT - 8_i32 * 8_i32) / 2_i32,
         __wcache990_2,
@@ -910,7 +921,8 @@ unsafe fn F_ArtScreenDrawer(state: &mut GameState) {
             _ => return,
         }
         let __wcache1026_1 = W_CacheLumpName(state, lumpname) as *mut patch_t;
-        V_DrawPatch(state, 0_i32, 0_i32, __wcache1026_1);
+        let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
+        V_DrawPatch(state, dest_screen, 0_i32, 0_i32, __wcache1026_1);
     };
 }
 pub fn F_Drawer(state: &mut GameState) {

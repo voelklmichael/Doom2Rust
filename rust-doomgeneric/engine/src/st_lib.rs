@@ -103,8 +103,10 @@ pub unsafe fn STlib_drawNum(state: &mut GameState, mut n: *mut st_number_t, mut 
         I_Error("drawNum: n->y - ST_Y < 0");
     }
     let st_backing_screen = state.st_stuff.st_backing_screen.as_mut_ptr();
+    let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
     V_CopyRect(
         state,
+        dest_screen,
         x,
         (*n).y - ST_Y,
         st_backing_screen,
@@ -118,7 +120,8 @@ pub unsafe fn STlib_drawNum(state: &mut GameState, mut n: *mut st_number_t, mut 
     }
     x = (*n).x;
     if num == 0 {
-        V_DrawPatch(state, x - w, (*n).y, zero_patch);
+        let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
+        V_DrawPatch(state, dest_screen, x - w, (*n).y, zero_patch);
     }
     while num != 0 && {
         let fresh0 = numdigits;
@@ -128,12 +131,14 @@ pub unsafe fn STlib_drawNum(state: &mut GameState, mut n: *mut st_number_t, mut 
         x -= w;
         let digit_lump = state.st_stuff.digit_set((*n).p)[(num % 10_i32) as usize];
         let digit_patch = V_CachePatchNum(state, digit_lump);
-        V_DrawPatch(state, x, (*n).y, digit_patch);
+        let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
+        V_DrawPatch(state, dest_screen, x, (*n).y, digit_patch);
         num /= 10_i32;
     }
     if neg != 0 {
         let patch = V_CachePatchNum(state, state.st_lib.sttminus);
-        V_DrawPatch(state, x - 8_i32, (*n).y, patch);
+        let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
+        V_DrawPatch(state, dest_screen, x - 8_i32, (*n).y, patch);
     }
 }
 pub unsafe fn STlib_updateNum(state: &mut GameState, mut n: *mut st_number_t, num: i32, on: bool) {
@@ -160,7 +165,8 @@ pub unsafe fn STlib_updatePercent(
 ) {
     if refresh != 0 && on {
         let patch = V_CachePatchNum(state, (*per).p);
-        V_DrawPatch(state, (*per).n.x, (*per).n.y, patch);
+        let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
+        V_DrawPatch(state, dest_screen, (*per).n.x, (*per).n.y, patch);
     }
     STlib_updateNum(state, &raw mut (*per).n, num, on);
 }
@@ -198,11 +204,23 @@ pub unsafe fn STlib_updateMultIcon(
                 I_Error("updateMultIcon: y - ST_Y < 0");
             }
             let st_backing_screen = state.st_stuff.st_backing_screen.as_mut_ptr();
-            V_CopyRect(state, x, y - ST_Y, st_backing_screen, w, h, x, y);
+            let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
+            V_CopyRect(
+                state,
+                dest_screen,
+                x,
+                y - ST_Y,
+                st_backing_screen,
+                w,
+                h,
+                x,
+                y,
+            );
         }
         let new_lump = state.st_stuff.digit_set((*mi).p)[inum as usize];
         let new_patch = V_CachePatchNum(state, new_lump);
-        V_DrawPatch(state, (*mi).x, (*mi).y, new_patch);
+        let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
+        V_DrawPatch(state, dest_screen, (*mi).x, (*mi).y, new_patch);
         (*mi).oldinum = inum;
     }
 }
@@ -233,10 +251,22 @@ pub unsafe fn STlib_updateBinIcon(
             I_Error("updateBinIcon: y - ST_Y < 0");
         }
         if val {
-            V_DrawPatch(state, (*bi).x, (*bi).y, patch);
+            let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
+            V_DrawPatch(state, dest_screen, (*bi).x, (*bi).y, patch);
         } else {
             let st_backing_screen = state.st_stuff.st_backing_screen.as_mut_ptr();
-            V_CopyRect(state, x, y - ST_Y, st_backing_screen, w, h, x, y);
+            let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
+            V_CopyRect(
+                state,
+                dest_screen,
+                x,
+                y - ST_Y,
+                st_backing_screen,
+                w,
+                h,
+                x,
+                y,
+            );
         }
         (*bi).oldval = val;
     }

@@ -46,8 +46,6 @@ use crate::tables::ANG45;
 use crate::v_video::V_CachePatchNum;
 use crate::v_video::V_CopyRect;
 use crate::v_video::V_DrawPatch;
-use crate::v_video::V_RestoreBuffer;
-use crate::v_video::V_UseBuffer;
 use crate::w_wad::W_CacheLumpNum;
 use crate::w_wad::{W_GetNumForName, W_ReleaseLumpName};
 
@@ -427,21 +425,18 @@ pub const ST_MAXAMMO3X: i32 = 314;
 pub const ST_MAXAMMO3Y: i32 = 185;
 pub fn ST_refreshBackground(state: &mut GameState) {
     if state.st_stuff.st_statusbaron {
-        V_UseBuffer(
-            &mut state.v_video,
-            state.st_stuff.st_backing_screen.as_mut_ptr(),
-        );
+        let st_backing_screen = state.st_stuff.st_backing_screen.as_mut_ptr();
         let sbar_patch = V_CachePatchNum(state, state.st_stuff.sbar);
-        unsafe { V_DrawPatch(state, ST_X, 0_i32, sbar_patch) };
+        unsafe { V_DrawPatch(state, st_backing_screen, ST_X, 0_i32, sbar_patch) };
         if state.g_game.netgame {
             let faceback_patch = V_CachePatchNum(state, state.st_stuff.faceback);
-            unsafe { V_DrawPatch(state, ST_FX, 0_i32, faceback_patch) };
+            unsafe { V_DrawPatch(state, st_backing_screen, ST_FX, 0_i32, faceback_patch) };
         }
-        V_RestoreBuffer(state);
-        let st_backing_screen = state.st_stuff.st_backing_screen.as_mut_ptr();
+        let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
         unsafe {
             V_CopyRect(
                 state,
+                dest_screen,
                 ST_X,
                 0_i32,
                 st_backing_screen,
