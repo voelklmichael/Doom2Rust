@@ -1,12 +1,15 @@
 use crate::d_player::player_t;
 use crate::doomdef::MAXPLAYERS;
 use crate::game_state::GameState;
+use crate::p_ceilng::CeilingId;
 use crate::p_doors::{vldoor_t, DoorId};
 use crate::p_lights::{fireflicker_t, glow_t, lightflash_t, strobe_t};
+use crate::p_lights::{FireFlickerId, GlowId, LightFlashId, StrobeId};
 use crate::p_mobj::P_RespawnSpecials;
-use crate::p_mobj::{mobj_t, thinker_s, thinker_t, ThinkerFn};
+use crate::p_mobj::{mobj_t, thinker_t, MobjId, ThinkerFn};
+use crate::p_plats::PlatId;
 use crate::p_spec::P_UpdateSpecials;
-use crate::p_spec::{ceiling_t, floormove_t, plat_t};
+use crate::p_spec::{ceiling_t, floormove_t, plat_t, FloorId};
 use crate::p_user::P_PlayerThink;
 
 // A handle into PTickState's own node table -- never constructed outside
@@ -45,15 +48,22 @@ pub enum ThinkerKind {
     Glow,
 }
 
-// A ThinkerNode's payload identity. Growing this enum with a generation-
-// checked id (mirroring DoorId/MobjId) and converting one more kind's
-// arena to hand out ids instead of bare pointers is the whole shape of
-// this track -- Raw is the not-yet-converted fallback, still exactly the
-// type-erased pointer this replaces (mobj_t, vldoor_t, ceiling_t, ...).
+// A ThinkerNode's payload identity. Every one of the 9 thinker kinds now
+// carries a generation-checked id into its own owning arena (mirroring
+// DoorId/MobjId) instead of a type-erased raw pointer -- this replaces
+// what used to be a single `*mut thinker_s` shared by every kind
+// (mobj_t, vldoor_t, ceiling_t, ...).
 #[derive(Copy, Clone)]
 pub enum ThinkerPayload {
+    Mobj(MobjId),
+    Ceiling(CeilingId),
     Door(DoorId),
-    Raw(*mut thinker_s),
+    Floor(FloorId),
+    Plat(PlatId),
+    FireFlicker(FireFlickerId),
+    LightFlash(LightFlashId),
+    Strobe(StrobeId),
+    Glow(GlowId),
 }
 
 #[derive(Copy, Clone)]
@@ -107,12 +117,51 @@ impl PTickState {
 // -- a sibling field PTickState itself has no access to.
 pub fn P_ThinkerRaw(state: &GameState, id: ThinkerId) -> *mut thinker_t {
     match state.p_tick.payload(id) {
+        ThinkerPayload::Mobj(mobj_id) => state
+            .p_mobj
+            .mobj_get(mobj_id)
+            .expect("ThinkerNode payload must reference a live mobj")
+            as *mut thinker_t,
+        ThinkerPayload::Ceiling(ceiling_id) => state
+            .p_ceilng
+            .get(ceiling_id)
+            .expect("ThinkerNode payload must reference a live ceiling")
+            as *mut thinker_t,
         ThinkerPayload::Door(door_id) => state
             .p_doors
             .get(door_id)
             .expect("ThinkerNode payload must reference a live door")
             as *mut thinker_t,
-        ThinkerPayload::Raw(ptr) => ptr,
+        ThinkerPayload::Floor(floor_id) => state
+            .p_spec
+            .get_floor(floor_id)
+            .expect("ThinkerNode payload must reference a live floor")
+            as *mut thinker_t,
+        ThinkerPayload::Plat(plat_id) => state
+            .p_plats
+            .get(plat_id)
+            .expect("ThinkerNode payload must reference a live plat")
+            as *mut thinker_t,
+        ThinkerPayload::FireFlicker(fireflicker_id) => state
+            .p_lights
+            .get_fireflicker(fireflicker_id)
+            .expect("ThinkerNode payload must reference a live fireflicker")
+            as *mut thinker_t,
+        ThinkerPayload::LightFlash(lightflash_id) => state
+            .p_lights
+            .get_lightflash(lightflash_id)
+            .expect("ThinkerNode payload must reference a live lightflash")
+            as *mut thinker_t,
+        ThinkerPayload::Strobe(strobe_id) => state
+            .p_lights
+            .get_strobe(strobe_id)
+            .expect("ThinkerNode payload must reference a live strobe")
+            as *mut thinker_t,
+        ThinkerPayload::Glow(glow_id) => state
+            .p_lights
+            .get_glow(glow_id)
+            .expect("ThinkerNode payload must reference a live glow")
+            as *mut thinker_t,
     }
 }
 
@@ -193,56 +242,63 @@ pub unsafe fn P_RunThinkers(state: &mut GameState) {
                 next = state.p_tick.next(id);
                 let kind = state.p_tick.kind(id);
                 P_UnlinkThinkerNode(state, id);
+                // Every kind's memory is now owned by its own arena (mobj_t
+                // by PMobjState, vldoor_t by PDoorsState, ceiling_t by
+                // PCeilngState, plat_t by PPlatsState, floormove_t by
+                // PSpecState, and the 4 light-effect types by PLightsState),
+                // not the zone allocator -- dealloc/deallocate drops the
+                // owning Box instead of Z_Free. Each arm reads its id out of
+                // the node's payload (not out of currentthinker) since Raw
+                // no longer exists -- every kind is id-based now.
                 match kind {
-                    // mobj_t's memory is owned by PMobjState's arena now,
-                    // not the zone allocator -- deallocate() drops the
-                    // owning Box instead of Z_Free.
                     ThinkerKind::Mobj => {
-                        let mobj_id = (*(currentthinker as *mut mobj_t)).id;
-                        state.p_mobj.deallocate(mobj_id);
+                        if let ThinkerPayload::Mobj(mobj_id) = state.p_tick.payload(id) {
+                            state.p_mobj.deallocate(mobj_id);
+                        }
                     }
-                    // vldoor_t's memory is owned by PDoorsState's arena now,
-                    // keyed by the DoorId this node's payload carries (not
-                    // by currentthinker -- Door is the one kind that's no
-                    // longer a bare pointer here).
                     ThinkerKind::Door => {
                         if let ThinkerPayload::Door(door_id) = state.p_tick.payload(id) {
                             state.p_doors.dealloc(door_id);
                         }
                     }
-                    // ceiling_t's memory is owned by PCeilngState's arena now.
                     ThinkerKind::Ceiling => {
-                        state.p_ceilng.dealloc(currentthinker as *mut ceiling_t);
+                        if let ThinkerPayload::Ceiling(ceiling_id) = state.p_tick.payload(id) {
+                            state.p_ceilng.dealloc(ceiling_id);
+                        }
                     }
-                    // plat_t's memory is owned by PPlatsState's arena now.
                     ThinkerKind::Plat => {
-                        state.p_plats.dealloc(currentthinker as *mut plat_t);
+                        if let ThinkerPayload::Plat(plat_id) = state.p_tick.payload(id) {
+                            state.p_plats.dealloc(plat_id);
+                        }
                     }
-                    // floormove_t's memory is owned by PSpecState's arena now.
                     ThinkerKind::Floor => {
-                        state
-                            .p_spec
-                            .dealloc_floor(currentthinker as *mut floormove_t);
+                        if let ThinkerPayload::Floor(floor_id) = state.p_tick.payload(id) {
+                            state.p_spec.dealloc_floor(floor_id);
+                        }
                     }
-                    // All 4 remaining kinds' memory is owned by PLightsState's
-                    // arenas now -- this was the last phase of the track.
                     ThinkerKind::FireFlicker => {
-                        state
-                            .p_lights
-                            .dealloc_fireflicker(currentthinker as *mut fireflicker_t);
+                        if let ThinkerPayload::FireFlicker(fireflicker_id) =
+                            state.p_tick.payload(id)
+                        {
+                            state.p_lights.dealloc_fireflicker(fireflicker_id);
+                        }
                     }
                     ThinkerKind::LightFlash => {
-                        state
-                            .p_lights
-                            .dealloc_lightflash(currentthinker as *mut lightflash_t);
+                        if let ThinkerPayload::LightFlash(lightflash_id) =
+                            state.p_tick.payload(id)
+                        {
+                            state.p_lights.dealloc_lightflash(lightflash_id);
+                        }
                     }
                     ThinkerKind::Strobe => {
-                        state
-                            .p_lights
-                            .dealloc_strobe(currentthinker as *mut strobe_t);
+                        if let ThinkerPayload::Strobe(strobe_id) = state.p_tick.payload(id) {
+                            state.p_lights.dealloc_strobe(strobe_id);
+                        }
                     }
                     ThinkerKind::Glow => {
-                        state.p_lights.dealloc_glow(currentthinker as *mut glow_t);
+                        if let ThinkerPayload::Glow(glow_id) = state.p_tick.payload(id) {
+                            state.p_lights.dealloc_glow(glow_id);
+                        }
                     }
                 }
             }
@@ -367,5 +423,157 @@ mod tests {
         let (door_id2, door_ptr2) = state.p_doors.spawn(vldoor_t::default());
         assert!(state.p_doors.get(door_id).is_none());
         assert_eq!(state.p_doors.get(door_id2), Some(door_ptr2));
+    }
+
+    // Same lifecycle as door_thinker_lifecycle_via_id, but for the Mobj
+    // kind -- exercises PMobjState::spawn/mobj_get/deallocate threaded
+    // through ThinkerPayload::Mobj instead of a bare mobj_t pointer.
+    #[test]
+    fn mobj_thinker_lifecycle_via_id() {
+        let state = init_game_state(Box::new(NullPlatform));
+
+        let value = state.p_mobj.dummy_mobj;
+        let (mobj_id, mobj_ptr) = state.p_mobj.spawn(value);
+        let node_id = P_AddThinker(state, ThinkerPayload::Mobj(mobj_id), ThinkerKind::Mobj);
+        assert_eq!(P_ThinkerRaw(state, node_id), mobj_ptr as *mut thinker_t);
+
+        unsafe { P_RemoveThinker(P_ThinkerRaw(state, node_id)) };
+        unsafe { P_RunThinkers(state) };
+        assert!(
+            state.p_mobj.mobj_get(mobj_id).is_none(),
+            "reaper should have deallocated the mobj via its MobjId"
+        );
+
+        let value2 = state.p_mobj.dummy_mobj;
+        let (mobj_id2, mobj_ptr2) = state.p_mobj.spawn(value2);
+        assert!(state.p_mobj.mobj_get(mobj_id).is_none());
+        assert_eq!(state.p_mobj.mobj_get(mobj_id2), Some(mobj_ptr2));
+    }
+
+    // Same lifecycle, Ceiling kind -- exercises PCeilngState's new
+    // generation-checked arena (spawn/get/dealloc) instead of its old
+    // Vec<Box<ceiling_t>> + pointer-equality dealloc.
+    #[test]
+    fn ceiling_thinker_lifecycle_via_id() {
+        let state = init_game_state(Box::new(NullPlatform));
+
+        let (ceiling_id, ceiling_ptr) = state.p_ceilng.spawn(ceiling_t::default());
+        let node_id = P_AddThinker(
+            state,
+            ThinkerPayload::Ceiling(ceiling_id),
+            ThinkerKind::Ceiling,
+        );
+        assert_eq!(P_ThinkerRaw(state, node_id), ceiling_ptr as *mut thinker_t);
+
+        unsafe { P_RemoveThinker(P_ThinkerRaw(state, node_id)) };
+        unsafe { P_RunThinkers(state) };
+        assert!(
+            state.p_ceilng.get(ceiling_id).is_none(),
+            "reaper should have deallocated the ceiling via its CeilingId"
+        );
+
+        let (ceiling_id2, ceiling_ptr2) = state.p_ceilng.spawn(ceiling_t::default());
+        assert!(state.p_ceilng.get(ceiling_id).is_none());
+        assert_eq!(state.p_ceilng.get(ceiling_id2), Some(ceiling_ptr2));
+    }
+
+    // Same lifecycle, Floor kind -- exercises PSpecState's new
+    // generation-checked floor arena (spawn_floor/get_floor/dealloc_floor).
+    #[test]
+    fn floor_thinker_lifecycle_via_id() {
+        let state = init_game_state(Box::new(NullPlatform));
+
+        let (floor_id, floor_ptr) = state.p_spec.spawn_floor(floormove_t::default());
+        let node_id = P_AddThinker(state, ThinkerPayload::Floor(floor_id), ThinkerKind::Floor);
+        assert_eq!(P_ThinkerRaw(state, node_id), floor_ptr as *mut thinker_t);
+
+        unsafe { P_RemoveThinker(P_ThinkerRaw(state, node_id)) };
+        unsafe { P_RunThinkers(state) };
+        assert!(
+            state.p_spec.get_floor(floor_id).is_none(),
+            "reaper should have deallocated the floor via its FloorId"
+        );
+
+        let (floor_id2, floor_ptr2) = state.p_spec.spawn_floor(floormove_t::default());
+        assert!(state.p_spec.get_floor(floor_id).is_none());
+        assert_eq!(state.p_spec.get_floor(floor_id2), Some(floor_ptr2));
+    }
+
+    // Same lifecycle, Plat kind -- exercises PPlatsState's new
+    // generation-checked arena (spawn/get/dealloc).
+    #[test]
+    fn plat_thinker_lifecycle_via_id() {
+        let state = init_game_state(Box::new(NullPlatform));
+
+        let (plat_id, plat_ptr) = state.p_plats.spawn(plat_t::default());
+        let node_id = P_AddThinker(state, ThinkerPayload::Plat(plat_id), ThinkerKind::Plat);
+        assert_eq!(P_ThinkerRaw(state, node_id), plat_ptr as *mut thinker_t);
+
+        unsafe { P_RemoveThinker(P_ThinkerRaw(state, node_id)) };
+        unsafe { P_RunThinkers(state) };
+        assert!(
+            state.p_plats.get(plat_id).is_none(),
+            "reaper should have deallocated the plat via its PlatId"
+        );
+
+        let (plat_id2, plat_ptr2) = state.p_plats.spawn(plat_t::default());
+        assert!(state.p_plats.get(plat_id).is_none());
+        assert_eq!(state.p_plats.get(plat_id2), Some(plat_ptr2));
+    }
+
+    // The 4 light-effect kinds (FireFlicker/LightFlash/Strobe/Glow) share
+    // an identical arena shape inside PLightsState -- these two tests
+    // (FireFlicker and Glow) are representative of all 4; LightFlash and
+    // Strobe follow the exact same pattern.
+    #[test]
+    fn fireflicker_thinker_lifecycle_via_id() {
+        let state = init_game_state(Box::new(NullPlatform));
+
+        let (fireflicker_id, fireflicker_ptr) =
+            state.p_lights.spawn_fireflicker(fireflicker_t::default());
+        let node_id = P_AddThinker(
+            state,
+            ThinkerPayload::FireFlicker(fireflicker_id),
+            ThinkerKind::FireFlicker,
+        );
+        assert_eq!(
+            P_ThinkerRaw(state, node_id),
+            fireflicker_ptr as *mut thinker_t
+        );
+
+        unsafe { P_RemoveThinker(P_ThinkerRaw(state, node_id)) };
+        unsafe { P_RunThinkers(state) };
+        assert!(
+            state.p_lights.get_fireflicker(fireflicker_id).is_none(),
+            "reaper should have deallocated the fireflicker via its FireFlickerId"
+        );
+
+        let (fireflicker_id2, fireflicker_ptr2) =
+            state.p_lights.spawn_fireflicker(fireflicker_t::default());
+        assert!(state.p_lights.get_fireflicker(fireflicker_id).is_none());
+        assert_eq!(
+            state.p_lights.get_fireflicker(fireflicker_id2),
+            Some(fireflicker_ptr2)
+        );
+    }
+
+    #[test]
+    fn glow_thinker_lifecycle_via_id() {
+        let state = init_game_state(Box::new(NullPlatform));
+
+        let (glow_id, glow_ptr) = state.p_lights.spawn_glow(glow_t::default());
+        let node_id = P_AddThinker(state, ThinkerPayload::Glow(glow_id), ThinkerKind::Glow);
+        assert_eq!(P_ThinkerRaw(state, node_id), glow_ptr as *mut thinker_t);
+
+        unsafe { P_RemoveThinker(P_ThinkerRaw(state, node_id)) };
+        unsafe { P_RunThinkers(state) };
+        assert!(
+            state.p_lights.get_glow(glow_id).is_none(),
+            "reaper should have deallocated the glow via its GlowId"
+        );
+
+        let (glow_id2, glow_ptr2) = state.p_lights.spawn_glow(glow_t::default());
+        assert!(state.p_lights.get_glow(glow_id).is_none());
+        assert_eq!(state.p_lights.get_glow(glow_id2), Some(glow_ptr2));
     }
 }
