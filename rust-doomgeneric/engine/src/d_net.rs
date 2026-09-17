@@ -51,10 +51,10 @@ unsafe fn RunTic(state: &mut GameState, mut cmds: *mut ticcmd_t, mut ingame: *mu
     G_Ticker(state, cmds);
 }
 const DOOM_LOOP_INTERFACE: loop_interface_t = loop_interface_t {
-    ProcessEvents: Some(D_ProcessEvents as unsafe fn(&mut GameState) -> ()),
+    ProcessEvents: Some(D_ProcessEvents),
     BuildTiccmd: Some(G_BuildTiccmd as unsafe fn(&mut GameState, *mut ticcmd_t, i32) -> ()),
     RunTic: Some(RunTic as unsafe fn(&mut GameState, *mut ticcmd_t, *mut bool) -> ()),
-    RunMenu: Some(M_Ticker as unsafe fn(&mut GameState) -> ()),
+    RunMenu: Some(M_Ticker),
 };
 unsafe fn LoadGameSettings(state: &mut GameState, mut settings: *mut net_gamesettings_t) {
     let mut i: u32 = 0;

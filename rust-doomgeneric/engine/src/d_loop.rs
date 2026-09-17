@@ -117,10 +117,10 @@ pub type netgame_startup_callback_t = Option<unsafe fn(i32, i32) -> bool>;
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct loop_interface_t {
-    pub ProcessEvents: Option<unsafe fn(&mut GameState) -> ()>,
+    pub ProcessEvents: Option<fn(&mut GameState)>,
     pub BuildTiccmd: Option<unsafe fn(&mut GameState, *mut ticcmd_t, i32) -> ()>,
     pub RunTic: Option<unsafe fn(&mut GameState, *mut ticcmd_t, *mut bool) -> ()>,
-    pub RunMenu: Option<unsafe fn(&mut GameState) -> ()>,
+    pub RunMenu: Option<fn(&mut GameState)>,
 }
 #[derive(Copy, Clone)]
 #[repr(C)]
