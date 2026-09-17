@@ -32,7 +32,6 @@ use crate::p_doors::PDoorsState;
 use crate::p_enemy::PEnemyState;
 use crate::p_lights::PLightsState;
 use crate::p_map::PMapState;
-use crate::p_maputl::fixup_intercepts_overrun;
 use crate::p_maputl::PMaputlState;
 use crate::p_mobj::PMobjState;
 use crate::p_plats::PPlatsState;
@@ -195,15 +194,14 @@ impl GameState {
     }
 }
 
-// Self-referential pointers (e.g. p_maputl's intercepts_overrun addresses)
-// can only be computed once the value is at its final, permanently-stable
-// address -- i.e. here, not inside any XxxState::new(). Must run exactly
-// once, right after the GameState this reference points at is constructed
-// and will never move again.
+// Self-referential pointers (e.g. sound channel links) can only be computed
+// once the value is at its final, permanently-stable address -- i.e. here,
+// not inside any XxxState::new(). Must run exactly once, right after the
+// GameState this reference points at is constructed and will never move
+// again.
 pub fn finish_init(state: &mut GameState) {
     unsafe {
         state.sounds.fixup_self_links();
-        fixup_intercepts_overrun(state);
         fixup_cheat_sequences(state);
         fixup_numanims(state);
     }
