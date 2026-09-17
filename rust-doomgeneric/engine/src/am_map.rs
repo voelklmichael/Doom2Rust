@@ -1446,7 +1446,8 @@ pub fn AM_drawMarks(state: &mut GameState) {
             {
                 let lumpnum = state.am_map.marknums[i as usize];
                 let patch = W_CacheLumpNum(state, lumpnum) as *mut patch_t;
-                unsafe { V_DrawPatch(state, fx, fy, patch) };
+                let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
+                unsafe { V_DrawPatch(state, dest_screen, fx, fy, patch) };
             }
         }
         i += 1;
@@ -1477,5 +1478,6 @@ pub fn AM_Drawer(state: &mut GameState) {
         state.am_map.f_w,
         state.am_map.f_h,
     );
-    V_MarkRect(state, f_x, f_y, f_w, f_h);
+    let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
+    V_MarkRect(state, dest_screen, f_x, f_y, f_w, f_h);
 }

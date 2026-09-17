@@ -85,7 +85,8 @@ pub unsafe fn HUlib_drawTextLine(
             if x + w > SCREENWIDTH {
                 break;
             }
-            V_DrawPatchDirect(state, x, (*l).y, patch);
+            let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
+            V_DrawPatchDirect(state, dest_screen, x, (*l).y, patch);
             x += w;
         } else {
             x += 4_i32;
@@ -99,7 +100,8 @@ pub unsafe fn HUlib_drawTextLine(
         let cursor_glyph = state.hu_stuff.hu_font[('_' as i32 - (*l).sc) as usize];
         let cursor_patch = V_CachePatchNum(state, cursor_glyph);
         if x + (*cursor_patch).width as i32 <= SCREENWIDTH {
-            V_DrawPatchDirect(state, x, (*l).y, cursor_patch);
+            let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
+            V_DrawPatchDirect(state, dest_screen, x, (*l).y, cursor_patch);
         }
     }
 }

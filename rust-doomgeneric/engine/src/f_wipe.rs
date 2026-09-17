@@ -224,7 +224,8 @@ pub fn wipe_EndScreen(
     let wipe_scr_end = state.f_wipe.wipe_scr_end.as_mut_ptr();
     unsafe { I_ReadScreen(state, wipe_scr_end) };
     let wipe_scr_start = state.f_wipe.wipe_scr_start.as_mut_ptr();
-    unsafe { V_DrawBlock(state, x, y_0, width, height, wipe_scr_start) };
+    let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
+    unsafe { V_DrawBlock(state, dest_screen, x, y_0, width, height, wipe_scr_start) };
     0_i32
 }
 pub fn wipe_ScreenWipe(
@@ -248,7 +249,8 @@ pub fn wipe_ScreenWipe(
         let init_fn = wipes[(wipeno * 3_i32) as usize].expect("non-null function pointer");
         unsafe { init_fn(state, width, height, ticks) };
     }
-    V_MarkRect(state, 0_i32, 0_i32, width, height);
+    let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
+    V_MarkRect(state, dest_screen, 0_i32, 0_i32, width, height);
     let do_fn = wipes[(wipeno * 3_i32 + 1_i32) as usize].expect("non-null function pointer");
     rc = unsafe { do_fn(state, width, height, ticks) };
     if rc != 0 {
