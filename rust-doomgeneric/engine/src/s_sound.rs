@@ -1,7 +1,6 @@
 use crate::d_mode::GameMode_t;
 use crate::doomdef::false_0;
 use crate::doomdef::true_0;
-use crate::doomdef::NULL;
 use crate::game_state::GameState;
 use crate::i_sound::snddevice_t;
 use crate::i_sound::I_GetSfxLumpNum;
@@ -448,7 +447,7 @@ pub fn S_StartMusic(state: &mut GameState, mut m_id: i32) {
     unsafe { S_ChangeMusic(state, m_id, false_0) };
 }
 pub unsafe fn S_ChangeMusic(state: &mut GameState, mut musicnum: i32, mut looping: i32) {
-    let mut handle: *mut ::core::ffi::c_void = ::core::ptr::null_mut::<::core::ffi::c_void>();
+    let mut handle: usize = 0;
     if musicnum == mus_intro as i32
         && (state.i_sound.snd_musicdevice == snddevice_t::SNDDEVICE_ADLIB as i32
             || state.i_sound.snd_musicdevice == snddevice_t::SNDDEVICE_SB as i32)
@@ -467,9 +466,9 @@ pub unsafe fn S_ChangeMusic(state: &mut GameState, mut musicnum: i32, mut loopin
         let namebuf = format!("d_{}", (*music).name.as_str());
         (*music).lumpnum = W_GetNumForName(&mut state.w_wad, &namebuf);
     }
-    (*music).data = W_CacheLumpNum(state, (*music).lumpnum);
+    let data = W_CacheLumpNum(state, (*music).lumpnum);
     let lumplen = W_LumpLength(&mut state.w_wad, (*music).lumpnum as u32);
-    handle = I_RegisterSong(&mut state.i_sound, (*music).data, lumplen);
+    handle = I_RegisterSong(&mut state.i_sound, data, lumplen);
     (*music).handle = handle;
     I_PlaySong(&mut state.i_sound, handle, looping != 0);
     state.s_sound.mus_playing = Some(musicnum);
@@ -486,7 +485,6 @@ pub unsafe fn S_StopMusic(state: &mut GameState) {
         let music = &raw mut state.sounds.S_music[musicnum as usize];
         I_UnRegisterSong(&mut state.i_sound, (*music).handle);
         W_ReleaseLumpNum(&mut state.w_wad, (*music).lumpnum);
-        (*music).data = NULL;
         state.s_sound.mus_playing = None;
     }
 }
