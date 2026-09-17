@@ -107,11 +107,7 @@ pub const S_STEREO_SWING: i32 = 96 * FRACUNIT;
 pub const NORM_SEP: i32 = 128;
 pub unsafe fn S_Init(state: &mut GameState, mut sfxVolume_0: i32, mut musicVolume_0: i32) {
     let mut i: i32 = 0;
-    I_PrecacheSounds(
-        &mut state.i_sound,
-        &raw mut state.sounds.S_sfx as *mut sfxinfo_t,
-        NUMSFX as i32,
-    );
+    I_PrecacheSounds(&mut state.i_sound, &mut state.sounds.S_sfx);
     S_SetSfxVolume(state, sfxVolume_0);
     S_SetMusicVolume(state, musicVolume_0);
     state.s_sound.channels = vec![
@@ -352,10 +348,10 @@ pub unsafe fn S_StartSound(state: &mut GameState, mut origin: SoundOrigin, mut s
         (*sfx).usefulness = 1_i32;
     }
     if (*sfx).lumpnum < 0_i32 {
-        (*sfx).lumpnum = I_GetSfxLumpNum(&mut state.i_sound, sfx);
+        (*sfx).lumpnum = I_GetSfxLumpNum(&mut state.i_sound, &mut *sfx);
     }
     (*state.s_sound.channels.as_mut_ptr().offset(cnum as isize)).handle =
-        I_StartSound(&mut state.i_sound, sfx, cnum, volume, sep);
+        I_StartSound(&mut state.i_sound, &mut *sfx, cnum, volume, sep);
 }
 pub fn S_PauseSound(state: &mut GameState) {
     if state.s_sound.mus_playing.is_some() && !state.s_sound.mus_paused {
