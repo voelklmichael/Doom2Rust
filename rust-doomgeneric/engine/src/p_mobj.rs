@@ -3278,6 +3278,18 @@ impl PMobjState {
             .map(|r| r as *const mobj_t as *mut mobj_t)
     }
 
+    // Reaper-only escape hatch: a thinker whose payload points at a removed
+    // mobj is still valid to resolve while the deferred cleanup is running,
+    // but it is not a live mobj for ordinary logic. The strict `mobj_get()`
+    // above remains the correct normal-path check.
+    pub fn mobj_get_for_thinker(&self, id: MobjId) -> Option<*mut mobj_t> {
+        self.mobjs
+            .get(id.index as usize)
+            .filter(|slot| slot.generation == id.generation)
+            .and_then(|slot| slot.mobj.as_deref())
+            .map(|r| r as *const mobj_t as *mut mobj_t)
+    }
+
     pub const fn new() -> Self {
         PMobjState {
             test: 0,

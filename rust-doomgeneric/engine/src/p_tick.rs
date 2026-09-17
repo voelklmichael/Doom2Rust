@@ -164,6 +164,60 @@ pub fn P_ThinkerRaw(state: &GameState, id: ThinkerId) -> *mut thinker_t {
     }
 }
 
+// Reaper-only access: a node may still be in the think list after its mobj is
+// retired and before the arena slot is deallocated. This accessor preserves the
+// old lifetime semantics for deferred cleanup without allowing stale payloads to
+// be treated as live in normal thinker execution.
+pub fn P_ThinkerRawForReaper(state: &GameState, id: ThinkerId) -> *mut thinker_t {
+    match state.p_tick.payload(id) {
+        ThinkerPayload::Mobj(mobj_id) => state
+            .p_mobj
+            .mobj_get_for_thinker(mobj_id)
+            .expect("ThinkerNode payload must reference a retired-but-not-yet-deallocated mobj")
+            as *mut thinker_t,
+        ThinkerPayload::Ceiling(ceiling_id) => state
+            .p_ceilng
+            .get(ceiling_id)
+            .expect("ThinkerNode payload must reference a live ceiling")
+            as *mut thinker_t,
+        ThinkerPayload::Door(door_id) => state
+            .p_doors
+            .get(door_id)
+            .expect("ThinkerNode payload must reference a live door")
+            as *mut thinker_t,
+        ThinkerPayload::Floor(floor_id) => state
+            .p_spec
+            .get_floor(floor_id)
+            .expect("ThinkerNode payload must reference a live floor")
+            as *mut thinker_t,
+        ThinkerPayload::Plat(plat_id) => state
+            .p_plats
+            .get(plat_id)
+            .expect("ThinkerNode payload must reference a live plat")
+            as *mut thinker_t,
+        ThinkerPayload::FireFlicker(fireflicker_id) => state
+            .p_lights
+            .get_fireflicker(fireflicker_id)
+            .expect("ThinkerNode payload must reference a live fireflicker")
+            as *mut thinker_t,
+        ThinkerPayload::LightFlash(lightflash_id) => state
+            .p_lights
+            .get_lightflash(lightflash_id)
+            .expect("ThinkerNode payload must reference a live lightflash")
+            as *mut thinker_t,
+        ThinkerPayload::Strobe(strobe_id) => state
+            .p_lights
+            .get_strobe(strobe_id)
+            .expect("ThinkerNode payload must reference a live strobe")
+            as *mut thinker_t,
+        ThinkerPayload::Glow(glow_id) => state
+            .p_lights
+            .get_glow(glow_id)
+            .expect("ThinkerNode payload must reference a live glow")
+            as *mut thinker_t,
+    }
+}
+
 pub fn P_InitThinkers(state: &mut GameState) {
     state.p_tick.nodes.clear();
     state.p_tick.free_list.clear();
@@ -229,7 +283,7 @@ fn P_UnlinkThinkerNode(state: &mut GameState, id: ThinkerId) {
 pub unsafe fn P_RunThinkers(state: &mut GameState) {
     let mut cursor = state.p_tick.head();
     while let Some(id) = cursor {
-        let currentthinker = P_ThinkerRaw(state, id);
+        let currentthinker = P_ThinkerRawForReaper(state, id);
         let next;
         match (*currentthinker).function {
             ThinkerFn::Removed => {
@@ -397,6 +451,9 @@ mod tests {
     use super::*;
     use crate::doomdef::pixel_t;
     use crate::game_state::init_game_state;
+    use crate::p_doors::vldoor_t;
+    use crate::p_lights::{fireflicker_t, glow_t};
+    use crate::p_spec::{ceiling_t, floormove_t, plat_t};
     use crate::platform::DoomPlatform;
 
     struct NullPlatform;
@@ -463,6 +520,23 @@ mod tests {
         let (mobj_id2, mobj_ptr2) = state.p_mobj.spawn(value2);
         assert!(state.p_mobj.mobj_get(mobj_id).is_none());
         assert_eq!(state.p_mobj.mobj_get(mobj_id2), Some(mobj_ptr2));
+    }
+
+    #[test]
+    fn reaper_can_resolve_retired_mobj_thinker() {
+        let state = init_game_state(Box::new(NullPlatform));
+
+        let value = state.p_mobj.dummy_mobj;
+        let (mobj_id, mobj_ptr) = state.p_mobj.spawn(value);
+        let node_id = P_AddThinker(state, ThinkerPayload::Mobj(mobj_id), ThinkerKind::Mobj);
+        assert_eq!(P_ThinkerRaw(state, node_id), mobj_ptr as *mut thinker_t);
+
+        state.p_mobj.retire(mobj_id);
+        unsafe { P_RemoveThinker(mobj_ptr as *mut thinker_t) };
+        assert!(state.p_mobj.mobj_get(mobj_id).is_none());
+
+        unsafe { P_RunThinkers(state) };
+        assert!(state.p_mobj.mobj_get(mobj_id).is_none());
     }
 
     // Same lifecycle, Ceiling kind -- exercises PCeilngState's new
