@@ -4,7 +4,6 @@ use crate::d_loop::D_StartNetGame;
 use crate::d_loop::{loop_interface_t, net_connect_data_t, net_gamesettings_t};
 use crate::d_main::D_DoAdvanceDemo;
 use crate::d_mode::skill_from_raw;
-use crate::d_player::player_t;
 use crate::d_ticcmd::ticcmd_t;
 use crate::g_game::G_CheckDemoStatus;
 use crate::g_game::G_Ticker;
@@ -22,14 +21,14 @@ use crate::game_state::GameState;
 use crate::m_menu::M_Ticker;
 use crate::tables::ANG270;
 use crate::tables::ANG90;
-unsafe fn PlayerQuitGame(state: &mut GameState, mut player: *mut player_t) {
-    let mut player_num: u32 = 0;
-    player_num = player.offset_from(&raw mut state.g_game.players as *mut player_t) as i64 as u32;
+fn PlayerQuitGame(state: &mut GameState, player_num: u32) {
     state.g_game.playeringame[player_num as usize] = false;
     state.g_game.players[state.g_game.consoleplayer as usize].message =
         Some(format!("Player {} left the game", player_num + 1));
     if state.g_game.demorecording {
-        G_CheckDemoStatus(state);
+        unsafe {
+            G_CheckDemoStatus(state);
+        }
     }
 }
 unsafe fn RunTic(state: &mut GameState, cmds: &[ticcmd_t], ingame: &[bool]) {
@@ -40,8 +39,7 @@ unsafe fn RunTic(state: &mut GameState, cmds: &[ticcmd_t], ingame: &[bool]) {
             && state.g_game.playeringame[i as usize]
             && !ingame[i as usize]
         {
-            let quitter: *mut player_t = &mut state.g_game.players[i as usize];
-            PlayerQuitGame(state, quitter);
+            PlayerQuitGame(state, i);
         }
         i = i.wrapping_add(1);
     }
