@@ -118,8 +118,8 @@ pub type netgame_startup_callback_t = Option<unsafe fn(i32, i32) -> bool>;
 #[repr(C)]
 pub struct loop_interface_t {
     pub ProcessEvents: Option<fn(&mut GameState)>,
-    pub BuildTiccmd: Option<unsafe fn(&mut GameState, *mut ticcmd_t, i32) -> ()>,
-    pub RunTic: Option<unsafe fn(&mut GameState, *mut ticcmd_t, *mut bool) -> ()>,
+    pub BuildTiccmd: Option<unsafe fn(&mut GameState, &mut ticcmd_t, i32) -> ()>,
+    pub RunTic: Option<unsafe fn(&mut GameState, &[ticcmd_t], &[bool]) -> ()>,
     pub RunMenu: Option<fn(&mut GameState)>,
 }
 #[derive(Copy, Clone)]
@@ -192,7 +192,7 @@ unsafe fn BuildNewTic(state: &mut GameState) -> bool {
         .BuildTiccmd
         .expect("non-null function pointer");
     let maketic = state.d_loop.maketic;
-    build_ticcmd(state, &raw mut cmd, maketic);
+    build_ticcmd(state, &mut cmd, maketic);
     state.d_loop.ticdata[(state.d_loop.maketic % BACKUPTICS) as usize].cmds[localplayer as usize] =
         cmd;
     state.d_loop.ticdata[(state.d_loop.maketic % BACKUPTICS) as usize].ingame
@@ -434,11 +434,7 @@ pub unsafe fn TryRunTics(state: &mut GameState) {
                 .loop_interface
                 .RunTic
                 .expect("non-null function pointer");
-            run_tic(
-                state,
-                &raw mut (*set).cmds as *mut ticcmd_t,
-                &raw mut (*set).ingame as *mut bool,
-            );
+            run_tic(state, &(*set).cmds, &(*set).ingame);
             state.d_loop.gametic += 1;
             TicdupSquash(set);
             i += 1;

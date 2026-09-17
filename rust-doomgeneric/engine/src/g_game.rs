@@ -492,7 +492,7 @@ fn G_NextWeapon(state: &mut GameState, mut direction: i32) -> i32 {
     }
     weapon_order_table[i as usize].weapon_num as i32
 }
-pub unsafe fn G_BuildTiccmd(state: &mut GameState, mut cmd: *mut ticcmd_t, mut maketic: i32) {
+pub unsafe fn G_BuildTiccmd(state: &mut GameState, cmd: &mut ticcmd_t, mut maketic: i32) {
     let mut i: i32 = 0;
     let mut strafe: bool = false;
     let mut bstrafe: bool = false;
@@ -501,11 +501,11 @@ pub unsafe fn G_BuildTiccmd(state: &mut GameState, mut cmd: *mut ticcmd_t, mut m
     let mut forward: i32 = 0;
     let mut side: i32 = 0;
     memset(
-        cmd as *mut ::core::ffi::c_void,
+        cmd as *mut ticcmd_t as *mut ::core::ffi::c_void,
         0_i32,
         ::core::mem::size_of::<ticcmd_t>() as size_t,
     );
-    (*cmd).consistancy = state.g_game.consistancy[state.g_game.consoleplayer as usize]
+    cmd.consistancy = state.g_game.consistancy[state.g_game.consoleplayer as usize]
         [(maketic % BACKUPTICS) as usize];
     strafe = state.g_game.gamekeydown[state.m_controls.key_strafe as usize]
         || state.g_game.mousearray[(state.m_controls.mousebstrafe + 1) as usize]
@@ -544,16 +544,16 @@ pub unsafe fn G_BuildTiccmd(state: &mut GameState, mut cmd: *mut ticcmd_t, mut m
         }
     } else {
         if state.g_game.gamekeydown[state.m_controls.key_right as usize] {
-            (*cmd).angleturn = ((*cmd).angleturn as i32 - angleturn[tspeed as usize]) as i16;
+            cmd.angleturn = (cmd.angleturn as i32 - angleturn[tspeed as usize]) as i16;
         }
         if state.g_game.gamekeydown[state.m_controls.key_left as usize] {
-            (*cmd).angleturn = ((*cmd).angleturn as i32 + angleturn[tspeed as usize]) as i16;
+            cmd.angleturn = (cmd.angleturn as i32 + angleturn[tspeed as usize]) as i16;
         }
         if state.g_game.joyxmove > 0_i32 {
-            (*cmd).angleturn = ((*cmd).angleturn as i32 - angleturn[tspeed as usize]) as i16;
+            cmd.angleturn = (cmd.angleturn as i32 - angleturn[tspeed as usize]) as i16;
         }
         if state.g_game.joyxmove < 0_i32 {
-            (*cmd).angleturn = ((*cmd).angleturn as i32 + angleturn[tspeed as usize]) as i16;
+            cmd.angleturn = (cmd.angleturn as i32 + angleturn[tspeed as usize]) as i16;
         }
     }
     if state.g_game.gamekeydown[state.m_controls.key_up as usize] {
@@ -582,33 +582,33 @@ pub unsafe fn G_BuildTiccmd(state: &mut GameState, mut cmd: *mut ticcmd_t, mut m
     {
         side += state.g_game.sidemove[speed as usize];
     }
-    (*cmd).chatchar = HU_dequeueChatChar(&mut state.hu_stuff) as byte;
+    cmd.chatchar = HU_dequeueChatChar(&mut state.hu_stuff) as byte;
     if state.g_game.gamekeydown[state.m_controls.key_fire as usize]
         || state.g_game.mousearray[(state.m_controls.mousebfire + 1) as usize]
         || state.g_game.joyarray[(state.m_controls.joybfire + 1) as usize]
     {
-        (*cmd).buttons = ((*cmd).buttons as i32 | BT_ATTACK as i32) as byte;
+        cmd.buttons = (cmd.buttons as i32 | BT_ATTACK as i32) as byte;
     }
     if state.g_game.gamekeydown[state.m_controls.key_use as usize]
         || state.g_game.joyarray[(state.m_controls.joybuse + 1) as usize]
         || state.g_game.mousearray[(state.m_controls.mousebuse + 1) as usize]
     {
-        (*cmd).buttons = ((*cmd).buttons as i32 | BT_USE as i32) as byte;
+        cmd.buttons = (cmd.buttons as i32 | BT_USE as i32) as byte;
         state.g_game.dclicks = 0_i32;
     }
     if state.g_game.gamestate == GameScreenState::GS_LEVEL && state.g_game.next_weapon != 0_i32 {
         let next_weapon = state.g_game.next_weapon;
         i = G_NextWeapon(state, next_weapon);
-        (*cmd).buttons = ((*cmd).buttons as i32 | BT_CHANGE as i32) as byte;
-        (*cmd).buttons = ((*cmd).buttons as i32 | i << BT_WEAPONSHIFT as i32) as byte;
+        cmd.buttons = (cmd.buttons as i32 | BT_CHANGE as i32) as byte;
+        cmd.buttons = (cmd.buttons as i32 | i << BT_WEAPONSHIFT as i32) as byte;
     } else {
         let weapon_keys = state.m_controls.weapon_keys();
         i = 0_i32;
         while (i as usize) < weapon_keys.len() {
             let key: i32 = weapon_keys[i as usize];
             if state.g_game.gamekeydown[key as usize] {
-                (*cmd).buttons = ((*cmd).buttons as i32 | BT_CHANGE as i32) as byte;
-                (*cmd).buttons = ((*cmd).buttons as i32 | i << BT_WEAPONSHIFT as i32) as byte;
+                cmd.buttons = (cmd.buttons as i32 | BT_CHANGE as i32) as byte;
+                cmd.buttons = (cmd.buttons as i32 | i << BT_WEAPONSHIFT as i32) as byte;
                 break;
             } else {
                 i += 1;
@@ -633,7 +633,7 @@ pub unsafe fn G_BuildTiccmd(state: &mut GameState, mut cmd: *mut ticcmd_t, mut m
                 state.g_game.dclicks += 1;
             }
             if state.g_game.dclicks == 2_i32 {
-                (*cmd).buttons = ((*cmd).buttons as i32 | BT_USE as i32) as byte;
+                cmd.buttons = (cmd.buttons as i32 | BT_USE as i32) as byte;
                 state.g_game.dclicks = 0_i32;
             } else {
                 state.g_game.dclicktime = 0_i32;
@@ -653,7 +653,7 @@ pub unsafe fn G_BuildTiccmd(state: &mut GameState, mut cmd: *mut ticcmd_t, mut m
                 state.g_game.dclicks2 += 1;
             }
             if state.g_game.dclicks2 == 2_i32 {
-                (*cmd).buttons = ((*cmd).buttons as i32 | BT_USE as i32) as byte;
+                cmd.buttons = (cmd.buttons as i32 | BT_USE as i32) as byte;
                 state.g_game.dclicks2 = 0_i32;
             } else {
                 state.g_game.dclicktime2 = 0_i32;
@@ -670,7 +670,7 @@ pub unsafe fn G_BuildTiccmd(state: &mut GameState, mut cmd: *mut ticcmd_t, mut m
     if strafe {
         side += state.g_game.mousex * 2_i32;
     } else {
-        (*cmd).angleturn = ((*cmd).angleturn as i32 - state.g_game.mousex * 0x8_i32) as i16;
+        cmd.angleturn = (cmd.angleturn as i32 - state.g_game.mousex * 0x8_i32) as i16;
     }
     if state.g_game.mousex == 0_i32 {
         state.g_game.testcontrols_mousespeed = 0_i32;
@@ -687,25 +687,25 @@ pub unsafe fn G_BuildTiccmd(state: &mut GameState, mut cmd: *mut ticcmd_t, mut m
     } else if side < -state.g_game.forwardmove[1] {
         side = -state.g_game.forwardmove[1];
     }
-    (*cmd).forwardmove = ((*cmd).forwardmove as i32 + forward) as i8;
-    (*cmd).sidemove = ((*cmd).sidemove as i32 + side) as i8;
+    cmd.forwardmove = (cmd.forwardmove as i32 + forward) as i8;
+    cmd.sidemove = (cmd.sidemove as i32 + side) as i8;
     if state.g_game.sendpause {
         state.g_game.sendpause = false;
-        (*cmd).buttons = (BT_SPECIAL as i32 | BTS_PAUSE as i32) as byte;
+        cmd.buttons = (BT_SPECIAL as i32 | BTS_PAUSE as i32) as byte;
     }
     if state.g_game.sendsave {
         state.g_game.sendsave = false;
-        (*cmd).buttons = (BT_SPECIAL as i32
+        cmd.buttons = (BT_SPECIAL as i32
             | BTS_SAVEGAME as i32
             | state.g_game.savegameslot << BTS_SAVESHIFT as i32) as byte;
     }
     if state.g_game.lowres_turn {
         let mut desired_angleturn: i16 = 0;
         desired_angleturn =
-            ((*cmd).angleturn as i32 + state.g_game.g_build_ticcmd_carry as i32) as i16;
-        (*cmd).angleturn = ((desired_angleturn as i32 + 128_i32) & 0xff00_i32) as i16;
+            (cmd.angleturn as i32 + state.g_game.g_build_ticcmd_carry as i32) as i16;
+        cmd.angleturn = ((desired_angleturn as i32 + 128_i32) & 0xff00_i32) as i16;
         state.g_game.g_build_ticcmd_carry =
-            (desired_angleturn as i32 - (*cmd).angleturn as i32) as i16;
+            (desired_angleturn as i32 - cmd.angleturn as i32) as i16;
     }
 }
 pub unsafe fn G_DoLoadLevel(state: &mut GameState) {
@@ -893,7 +893,7 @@ pub fn G_Responder(state: &mut GameState, mut ev: event_t) -> bool {
     }
     false
 }
-pub unsafe fn G_Ticker(state: &mut GameState, netcmds: *mut ticcmd_t) {
+pub unsafe fn G_Ticker(state: &mut GameState, netcmds: &[ticcmd_t]) {
     let mut i: i32 = 0;
     let mut buf: i32 = 0;
     let mut cmd: *mut ticcmd_t = ::core::ptr::null_mut::<ticcmd_t>();
@@ -945,12 +945,8 @@ pub unsafe fn G_Ticker(state: &mut GameState, netcmds: *mut ticcmd_t) {
     i = 0_i32;
     while i < MAXPLAYERS {
         if state.g_game.playeringame[i as usize] {
+            state.g_game.players[i as usize].cmd = netcmds[i as usize];
             cmd = &raw mut state.g_game.players[i as usize].cmd;
-            memcpy(
-                cmd as *mut ::core::ffi::c_void,
-                netcmds.offset(i as isize) as *mut ticcmd_t as *const ::core::ffi::c_void,
-                ::core::mem::size_of::<ticcmd_t>() as size_t,
-            );
             if state.g_game.demoplayback {
                 G_ReadDemoTiccmd(state, cmd);
             }
