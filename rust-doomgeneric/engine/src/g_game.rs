@@ -896,7 +896,6 @@ pub fn G_Responder(state: &mut GameState, mut ev: event_t) -> bool {
 pub unsafe fn G_Ticker(state: &mut GameState, netcmds: &[ticcmd_t]) {
     let mut i: i32 = 0;
     let mut buf: i32 = 0;
-    let mut cmd: *mut ticcmd_t = ::core::ptr::null_mut::<ticcmd_t>();
     i = 0_i32;
     while i < MAXPLAYERS {
         if state.g_game.playeringame[i as usize]
@@ -946,14 +945,13 @@ pub unsafe fn G_Ticker(state: &mut GameState, netcmds: &[ticcmd_t]) {
     while i < MAXPLAYERS {
         if state.g_game.playeringame[i as usize] {
             state.g_game.players[i as usize].cmd = netcmds[i as usize];
-            cmd = &raw mut state.g_game.players[i as usize].cmd;
             if state.g_game.demoplayback {
-                G_ReadDemoTiccmd(state, cmd);
+                G_ReadDemoTiccmd(state, i as usize);
             }
             if state.g_game.demorecording {
-                G_WriteDemoTiccmd(state, cmd);
+                G_WriteDemoTiccmd(state, i as usize);
             }
-            if (*cmd).forwardmove as i32 > TURBOTHRESHOLD {
+            if state.g_game.players[i as usize].cmd.forwardmove as i32 > TURBOTHRESHOLD {
                 state.g_game.turbodetected[i as usize] = true;
             }
             if state.d_loop.gametic & 31_i32 == 0_i32
@@ -971,11 +969,11 @@ pub unsafe fn G_Ticker(state: &mut GameState, netcmds: &[ticcmd_t]) {
             {
                 if state.d_loop.gametic > BACKUPTICS
                     && state.g_game.consistancy[i as usize][buf as usize] as i32
-                        != (*cmd).consistancy as i32
+                        != state.g_game.players[i as usize].cmd.consistancy as i32
                 {
                     I_Error(&format!(
                         "consistency failure ({} should be {})",
-                        (*cmd).consistancy as i32,
+                        state.g_game.players[i as usize].cmd.consistancy as i32,
                         state.g_game.consistancy[i as usize][buf as usize] as i32,
                     ));
                 }
@@ -1697,48 +1695,55 @@ pub fn G_InitNew(state: &mut GameState, mut skill: SkillType, mut episode: i32, 
     unsafe { G_DoLoadLevel(state) };
 }
 pub const DEMOMARKER: i32 = 0x80;
-pub unsafe fn G_ReadDemoTiccmd(state: &mut GameState, mut cmd: *mut ticcmd_t) {
+pub unsafe fn G_ReadDemoTiccmd(state: &mut GameState, player_num: usize) {
     if state.g_game.demobuffer[state.g_game.demo_p] as i32 == DEMOMARKER {
         G_CheckDemoStatus(state);
         return;
     }
-    (*cmd).forwardmove = state.g_game.demo_read_byte() as i8;
-    (*cmd).sidemove = state.g_game.demo_read_byte() as i8;
+    let forwardmove = state.g_game.demo_read_byte() as i8;
+    let sidemove = state.g_game.demo_read_byte() as i8;
+    let new_angleturn;
     if state.g_game.longtics {
-        (*cmd).angleturn = state.g_game.demo_read_byte() as i16;
+        let lo = state.g_game.demo_read_byte() as i16;
         let hi = state.g_game.demo_read_byte();
-        (*cmd).angleturn = ((*cmd).angleturn as i32 | (hi as i32) << 8_i32) as i16;
+        new_angleturn = (lo as i32 | (hi as i32) << 8_i32) as i16;
     } else {
         let hi = state.g_game.demo_read_byte();
-        (*cmd).angleturn = ((hi as i32) << 8_i32) as i16;
+        new_angleturn = ((hi as i32) << 8_i32) as i16;
     }
-    (*cmd).buttons = state.g_game.demo_read_byte() as byte;
+    let buttons = state.g_game.demo_read_byte() as byte;
+    let cmd = &mut state.g_game.players[player_num].cmd;
+    cmd.forwardmove = forwardmove;
+    cmd.sidemove = sidemove;
+    cmd.angleturn = new_angleturn;
+    cmd.buttons = buttons;
 }
 unsafe fn IncreaseDemoBuffer(state: &mut GameState) {
     let new_length = state.g_game.demoend * 2_usize;
     state.g_game.demobuffer.resize(new_length, 0);
     state.g_game.demoend = new_length;
 }
-pub unsafe fn G_WriteDemoTiccmd(state: &mut GameState, mut cmd: *mut ticcmd_t) {
+pub unsafe fn G_WriteDemoTiccmd(state: &mut GameState, player_num: usize) {
     if state.g_game.gamekeydown[state.m_controls.key_demo_quit as usize] {
         G_CheckDemoStatus(state);
     }
     let demo_start = state.g_game.demo_p;
-    state.g_game.demo_write_byte((*cmd).forwardmove as byte);
-    state.g_game.demo_write_byte((*cmd).sidemove as byte);
+    let cmd = state.g_game.players[player_num].cmd;
+    state.g_game.demo_write_byte(cmd.forwardmove as byte);
+    state.g_game.demo_write_byte(cmd.sidemove as byte);
     if state.g_game.longtics {
         state
             .g_game
-            .demo_write_byte(((*cmd).angleturn as i32 & 0xff_i32) as byte);
+            .demo_write_byte((cmd.angleturn as i32 & 0xff_i32) as byte);
         state
             .g_game
-            .demo_write_byte(((*cmd).angleturn as i32 >> 8_i32 & 0xff_i32) as byte);
+            .demo_write_byte((cmd.angleturn as i32 >> 8_i32 & 0xff_i32) as byte);
     } else {
         state
             .g_game
-            .demo_write_byte(((*cmd).angleturn as i32 >> 8_i32) as byte);
+            .demo_write_byte((cmd.angleturn as i32 >> 8_i32) as byte);
     }
-    state.g_game.demo_write_byte((*cmd).buttons);
+    state.g_game.demo_write_byte(cmd.buttons);
     state.g_game.demo_p = demo_start;
     if state.g_game.demo_p > state.g_game.demoend.saturating_sub(16) {
         if state.g_game.vanilla_demo_limit != 0 {
@@ -1748,7 +1753,7 @@ pub unsafe fn G_WriteDemoTiccmd(state: &mut GameState, mut cmd: *mut ticcmd_t) {
             IncreaseDemoBuffer(state);
         }
     }
-    G_ReadDemoTiccmd(state, cmd);
+    G_ReadDemoTiccmd(state, player_num);
 }
 pub unsafe fn G_RecordDemo(state: &mut GameState, name: &str) {
     let mut i: i32 = 0;
