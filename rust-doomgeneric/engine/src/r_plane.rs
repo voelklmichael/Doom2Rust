@@ -7,6 +7,7 @@ use crate::m_fixed::FixedMul;
 use crate::mem_compat::memset;
 use crate::r_data::R_GetColumn;
 use crate::r_defs::visplane_t;
+use crate::r_draw::ColumnSource;
 use crate::r_main::LIGHTLEVELS;
 use crate::r_main::LIGHTSEGSHIFT;
 use crate::r_main::LIGHTZSHIFT;
@@ -319,7 +320,8 @@ pub unsafe fn R_DrawPlanes(state: &mut GameState) {
                             .wrapping_add(state.r_main.xtoviewangle[x as usize])
                             >> ANGLETOSKYSHIFT) as i32;
                         state.r_draw.dc_x = x;
-                        state.r_draw.dc_source = R_GetColumn(state, state.r_sky.skytexture, angle);
+                        state.r_draw.dc_source =
+                            Some(R_GetColumn(state, state.r_sky.skytexture, angle));
                         state.r_main.colfunc.expect("non-null function pointer")(state);
                     }
                     x += 1;
@@ -327,7 +329,11 @@ pub unsafe fn R_DrawPlanes(state: &mut GameState) {
             } else {
                 lumpnum =
                     state.r_data.firstflat + state.r_data.flattranslation[(*plv).picnum as usize];
-                state.r_draw.ds_source = W_CacheLumpNum(state, lumpnum) as *mut byte;
+                W_CacheLumpNum(state, lumpnum);
+                state.r_draw.ds_source = Some(ColumnSource::Lump {
+                    lump: lumpnum,
+                    offset: 0,
+                });
                 state.r_plane.planeheight = ((*plv).height - state.r_main.viewz).abs() as fixed_t;
                 light = ((*plv).lightlevel >> LIGHTSEGSHIFT) + state.r_main.extralight;
                 if light >= LIGHTLEVELS {

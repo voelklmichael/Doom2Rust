@@ -16,6 +16,37 @@ use crate::v_video::V_RestoreBuffer;
 use crate::v_video::V_UseBuffer;
 use crate::w_wad::W_CacheLumpName;
 
+#[derive(Clone, Copy)]
+pub enum ColumnSource {
+    Lump { lump: i32, offset: usize },
+    Composite { tex: i32, offset: usize },
+}
+
+pub(crate) fn advance_source(src: ColumnSource, delta: usize) -> ColumnSource {
+    match src {
+        ColumnSource::Lump { lump, offset } => ColumnSource::Lump {
+            lump,
+            offset: offset.wrapping_add(delta),
+        },
+        ColumnSource::Composite { tex, offset } => ColumnSource::Composite {
+            tex,
+            offset: offset.wrapping_add(delta),
+        },
+    }
+}
+
+pub(crate) fn read_source(state: &GameState, src: ColumnSource, idx: i32) -> byte {
+    match src {
+        ColumnSource::Lump { lump, offset } => state.w_wad.lumpinfo[lump as usize]
+            .cache
+            .as_ref()
+            .unwrap()[(offset as isize + idx as isize) as usize],
+        ColumnSource::Composite { tex, offset } => state.r_data.texturecomposite[tex as usize]
+            .as_ref()
+            .unwrap()[(offset as isize + idx as isize) as usize],
+    }
+}
+
 pub struct RDrawState {
     pub viewwidth: i32,
     pub scaledviewwidth: i32,
@@ -31,7 +62,7 @@ pub struct RDrawState {
     pub dc_yh: i32,
     pub dc_iscale: fixed_t,
     pub dc_texturemid: fixed_t,
-    pub dc_source: *mut byte,
+    pub dc_source: Option<ColumnSource>,
     pub dccount: i32,
     pub fuzzpos: i32,
     pub dc_translation: usize,
@@ -44,7 +75,7 @@ pub struct RDrawState {
     pub ds_yfrac: fixed_t,
     pub ds_xstep: fixed_t,
     pub ds_ystep: fixed_t,
-    pub ds_source: *mut byte,
+    pub ds_source: Option<ColumnSource>,
     pub dscount: i32,
 }
 
@@ -65,7 +96,7 @@ impl RDrawState {
             dc_yh: 0,
             dc_iscale: 0,
             dc_texturemid: 0,
-            dc_source: ::core::ptr::null::<byte>() as *mut byte,
+            dc_source: None,
             dccount: 0,
             fuzzpos: 0,
             dc_translation: 0,
@@ -78,7 +109,7 @@ impl RDrawState {
             ds_yfrac: 0,
             ds_xstep: 0,
             ds_ystep: 0,
-            ds_source: ::core::ptr::null::<byte>() as *mut byte,
+            ds_source: None,
             dscount: 0,
         }
     }
@@ -112,10 +143,7 @@ pub unsafe fn R_DrawColumn(state: &mut GameState) {
     frac = state.r_draw.dc_texturemid
         + (state.r_draw.dc_yl as fixed_t - state.r_main.centery as fixed_t) * fracstep;
     loop {
-        let src_pixel = *state
-            .r_draw
-            .dc_source
-            .offset((frac >> FRACBITS & 127_i32) as isize);
+        let src_pixel = read_source(state, state.r_draw.dc_source.unwrap(), frac >> FRACBITS & 127_i32);
         *dest = state.r_data.colormaps
             [(state.r_draw.dc_colormap.unwrap() * 256 + src_pixel as i32) as usize];
         dest = dest.offset(SCREENWIDTH as isize);
@@ -158,10 +186,7 @@ pub unsafe fn R_DrawColumnLow(state: &mut GameState) {
     frac = state.r_draw.dc_texturemid
         + (state.r_draw.dc_yl as fixed_t - state.r_main.centery as fixed_t) * fracstep;
     loop {
-        let src_pixel = *state
-            .r_draw
-            .dc_source
-            .offset((frac >> FRACBITS & 127_i32) as isize);
+        let src_pixel = read_source(state, state.r_draw.dc_source.unwrap(), frac >> FRACBITS & 127_i32);
         *dest = state.r_data.colormaps
             [(state.r_draw.dc_colormap.unwrap() * 256 + src_pixel as i32) as usize];
         *dest2 = *dest;
@@ -303,7 +328,7 @@ pub unsafe fn R_DrawTranslatedColumn(state: &mut GameState) {
     frac = state.r_draw.dc_texturemid
         + (state.r_draw.dc_yl as fixed_t - state.r_main.centery as fixed_t) * fracstep;
     loop {
-        let raw_pixel = *state.r_draw.dc_source.offset((frac >> FRACBITS) as isize);
+        let raw_pixel = read_source(state, state.r_draw.dc_source.unwrap(), frac >> FRACBITS);
         let src_pixel =
             state.r_draw.translationtables[state.r_draw.dc_translation + raw_pixel as usize];
         *dest = state.r_data.colormaps
@@ -348,7 +373,7 @@ pub unsafe fn R_DrawTranslatedColumnLow(state: &mut GameState) {
     frac = state.r_draw.dc_texturemid
         + (state.r_draw.dc_yl as fixed_t - state.r_main.centery as fixed_t) * fracstep;
     loop {
-        let raw_pixel = *state.r_draw.dc_source.offset((frac >> FRACBITS) as isize);
+        let raw_pixel = read_source(state, state.r_draw.dc_source.unwrap(), frac >> FRACBITS);
         let src_pixel =
             state.r_draw.translationtables[state.r_draw.dc_translation + raw_pixel as usize];
         let colormap = state.r_draw.dc_colormap.unwrap();
@@ -418,7 +443,7 @@ pub unsafe fn R_DrawSpan(state: &mut GameState) {
         spot = (xtemp | ytemp) as i32;
         let fresh6 = dest;
         dest = dest.offset(1);
-        let src_pixel = *state.r_draw.ds_source.offset(spot as isize);
+        let src_pixel = read_source(state, state.r_draw.ds_source.unwrap(), spot);
         *fresh6 =
             state.r_data.colormaps[(state.r_draw.ds_colormap * 256 + src_pixel as i32) as usize];
         position = position.wrapping_add(step);
@@ -464,7 +489,7 @@ pub unsafe fn R_DrawSpanLow(state: &mut GameState) {
         spot = (xtemp | ytemp) as i32;
         let fresh8 = dest;
         dest = dest.offset(1);
-        let src_pixel = *state.r_draw.ds_source.offset(spot as isize);
+        let src_pixel = read_source(state, state.r_draw.ds_source.unwrap(), spot);
         *fresh8 =
             state.r_data.colormaps[(state.r_draw.ds_colormap * 256 + src_pixel as i32) as usize];
         let fresh9 = dest;

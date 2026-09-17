@@ -7,7 +7,7 @@ use crate::m_fixed::INT_MAX;
 use crate::m_fixed::INT_MIN;
 use crate::mem_compat::memcpy;
 use crate::p_spec::ML_MAPPED;
-use crate::r_data::column_t;
+use crate::r_draw::advance_source;
 use crate::r_data::R_GetColumn;
 use crate::r_defs::drawseg_t;
 use crate::r_defs::ClipArray;
@@ -119,7 +119,6 @@ pub unsafe fn R_RenderMaskedSegRange(
     mut x2: i32,
 ) {
     let mut index: u32 = 0;
-    let mut col: *mut column_t = ::core::ptr::null_mut::<column_t>();
     let mut lightnum: i32 = 0;
     let mut texnum: i32 = 0;
     state.r_bsp.curline = (*ds).curline;
@@ -229,12 +228,14 @@ pub unsafe fn R_RenderMaskedSegRange(
                 - FixedMul(state.r_draw.dc_texturemid, state.r_things.spryscale);
             state.r_draw.dc_iscale =
                 0xffffffff_u32.wrapping_div(state.r_things.spryscale as u32) as fixed_t;
-            col = R_GetColumn(
-                state,
-                texnum,
-                *maskedtexturecol.offset(state.r_draw.dc_x as isize) as i32,
-            )
-            .offset(-(3_i32 as isize)) as *mut column_t;
+            let col = advance_source(
+                R_GetColumn(
+                    state,
+                    texnum,
+                    *maskedtexturecol.offset(state.r_draw.dc_x as isize) as i32,
+                ),
+                (-3_isize) as usize,
+            );
             R_DrawMaskedColumn(state, col);
             *maskedtexturecol.offset(state.r_draw.dc_x as isize) = SHRT_MAX as i16;
         }
@@ -313,7 +314,8 @@ pub unsafe fn R_RenderSegLoop(state: &mut GameState) {
             state.r_draw.dc_yl = yl;
             state.r_draw.dc_yh = yh;
             state.r_draw.dc_texturemid = state.r_segs.rw_midtexturemid;
-            state.r_draw.dc_source = R_GetColumn(state, state.r_segs.midtexture, texturecolumn);
+            state.r_draw.dc_source =
+                Some(R_GetColumn(state, state.r_segs.midtexture, texturecolumn));
             state.r_main.colfunc.expect("non-null function pointer")(state);
             state.r_plane.ceilingclip[state.r_segs.rw_x as usize] = state.r_draw.viewheight as i16;
             state.r_plane.floorclip[state.r_segs.rw_x as usize] = -1_i32 as i16;
@@ -329,7 +331,7 @@ pub unsafe fn R_RenderSegLoop(state: &mut GameState) {
                     state.r_draw.dc_yh = mid;
                     state.r_draw.dc_texturemid = state.r_segs.rw_toptexturemid;
                     state.r_draw.dc_source =
-                        R_GetColumn(state, state.r_segs.toptexture, texturecolumn);
+                        Some(R_GetColumn(state, state.r_segs.toptexture, texturecolumn));
                     state.r_main.colfunc.expect("non-null function pointer")(state);
                     state.r_plane.ceilingclip[state.r_segs.rw_x as usize] = mid as i16;
                 } else {
@@ -349,7 +351,7 @@ pub unsafe fn R_RenderSegLoop(state: &mut GameState) {
                     state.r_draw.dc_yh = yh;
                     state.r_draw.dc_texturemid = state.r_segs.rw_bottomtexturemid;
                     state.r_draw.dc_source =
-                        R_GetColumn(state, state.r_segs.bottomtexture, texturecolumn);
+                        Some(R_GetColumn(state, state.r_segs.bottomtexture, texturecolumn));
                     state.r_main.colfunc.expect("non-null function pointer")(state);
                     state.r_plane.floorclip[state.r_segs.rw_x as usize] = mid as i16;
                 } else {
