@@ -39,13 +39,13 @@ pub struct sound_module_t {
     pub sound_devices: &'static [snddevice_t],
     pub Init: Option<fn(bool) -> bool>,
     pub Shutdown: Option<fn()>,
-    pub GetSfxLumpNum: Option<fn(*mut sfxinfo_t) -> i32>,
+    pub GetSfxLumpNum: Option<fn(&mut sfxinfo_t) -> i32>,
     pub Update: Option<fn()>,
     pub UpdateSoundParams: Option<fn(i32, i32, i32)>,
-    pub StartSound: Option<fn(*mut sfxinfo_t, i32, i32, i32) -> i32>,
+    pub StartSound: Option<fn(&mut sfxinfo_t, i32, i32, i32) -> i32>,
     pub StopSound: Option<fn(i32)>,
     pub SoundIsPlaying: Option<fn(i32) -> bool>,
-    pub CacheSounds: Option<fn(*mut sfxinfo_t, i32)>,
+    pub CacheSounds: Option<fn(&mut [sfxinfo_t])>,
 }
 #[derive(Copy, Clone)]
 pub struct music_module_t {
@@ -145,7 +145,7 @@ pub fn I_ShutdownSound(state: &mut ISoundState) {
         (module.Shutdown.expect("non-null function pointer"))();
     }
 }
-pub fn I_GetSfxLumpNum(state: &mut ISoundState, sfxinfo: *mut sfxinfo_t) -> i32 {
+pub fn I_GetSfxLumpNum(state: &mut ISoundState, sfxinfo: &mut sfxinfo_t) -> i32 {
     match state.sound_module {
         Some(module) => (module.GetSfxLumpNum.expect("non-null function pointer"))(sfxinfo),
         None => 0_i32,
@@ -183,7 +183,7 @@ pub fn I_UpdateSoundParams(state: &mut ISoundState, channel: i32, mut vol: i32, 
 }
 pub fn I_StartSound(
     state: &mut ISoundState,
-    sfxinfo: *mut sfxinfo_t,
+    sfxinfo: &mut sfxinfo_t,
     channel: i32,
     mut vol: i32,
     mut sep: i32,
@@ -207,10 +207,10 @@ pub fn I_SoundIsPlaying(state: &mut ISoundState, channel: i32) -> bool {
         None => false,
     }
 }
-pub fn I_PrecacheSounds(state: &mut ISoundState, sounds: *mut sfxinfo_t, num_sounds: i32) {
+pub fn I_PrecacheSounds(state: &mut ISoundState, sounds: &mut [sfxinfo_t]) {
     if let Some(module) = state.sound_module {
         if let Some(cache_sounds) = module.CacheSounds {
-            cache_sounds(sounds, num_sounds);
+            cache_sounds(sounds);
         }
     }
 }
