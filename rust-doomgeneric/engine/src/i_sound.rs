@@ -2,7 +2,6 @@ use crate::m_argv::M_CheckParm;
 use crate::m_config::M_BindVariable_int;
 use crate::m_config::M_BindVariable_string;
 
-use crate::doomdef::NULL;
 use crate::game_state::GameState;
 use crate::sounds::sfxinfo_t;
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -56,9 +55,9 @@ pub struct music_module_t {
     pub SetMusicVolume: Option<fn(i32)>,
     pub PauseMusic: Option<fn()>,
     pub ResumeMusic: Option<fn()>,
-    pub RegisterSong: Option<fn(*mut ::core::ffi::c_void, i32) -> *mut ::core::ffi::c_void>,
-    pub UnRegisterSong: Option<fn(*mut ::core::ffi::c_void)>,
-    pub PlaySong: Option<fn(*mut ::core::ffi::c_void, bool)>,
+    pub RegisterSong: Option<fn(*mut ::core::ffi::c_void, i32) -> usize>,
+    pub UnRegisterSong: Option<fn(usize)>,
+    pub PlaySong: Option<fn(usize, bool)>,
     pub StopSong: Option<fn()>,
     pub MusicIsPlaying: Option<fn() -> bool>,
     pub Poll: Option<fn()>,
@@ -235,22 +234,18 @@ pub fn I_ResumeSong(state: &mut ISoundState) {
         (module.ResumeMusic.expect("non-null function pointer"))();
     }
 }
-pub fn I_RegisterSong(
-    state: &mut ISoundState,
-    data: *mut ::core::ffi::c_void,
-    len: i32,
-) -> *mut ::core::ffi::c_void {
+pub fn I_RegisterSong(state: &mut ISoundState, data: *mut ::core::ffi::c_void, len: i32) -> usize {
     match state.music_module {
         Some(module) => (module.RegisterSong.expect("non-null function pointer"))(data, len),
-        None => NULL,
+        None => 0,
     }
 }
-pub fn I_UnRegisterSong(state: &mut ISoundState, handle: *mut ::core::ffi::c_void) {
+pub fn I_UnRegisterSong(state: &mut ISoundState, handle: usize) {
     if let Some(module) = state.music_module {
         (module.UnRegisterSong.expect("non-null function pointer"))(handle);
     }
 }
-pub fn I_PlaySong(state: &mut ISoundState, handle: *mut ::core::ffi::c_void, looping: bool) {
+pub fn I_PlaySong(state: &mut ISoundState, handle: usize, looping: bool) {
     if let Some(module) = state.music_module {
         (module.PlaySong.expect("non-null function pointer"))(handle, looping);
     }
