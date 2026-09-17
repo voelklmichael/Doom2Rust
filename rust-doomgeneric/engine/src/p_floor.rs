@@ -12,6 +12,7 @@ use crate::p_spec::floormove_t;
 use crate::p_spec::getSector;
 use crate::p_spec::getSide;
 use crate::p_spec::twoSided;
+use crate::p_spec::FloorId;
 use crate::p_spec::P_FindHighestFloorSurrounding;
 use crate::p_spec::P_FindLowestCeilingSurrounding;
 use crate::p_spec::P_FindLowestFloorSurrounding;
@@ -162,50 +163,56 @@ pub unsafe fn T_MovePlane(
     }
     ResultE::ok
 }
-pub unsafe fn T_MoveFloor(state: &mut GameState, mut floor: *mut floormove_t) {
-    let mut res: ResultE = ResultE::ok;
-    let sec: *mut sector_t = state.p_setup.sector_mut((*floor).sector);
-    res = T_MovePlane(
-        state,
-        sec,
-        (*floor).speed,
-        (*floor).floordestheight,
-        (*floor).crush,
-        0_i32,
-        (*floor).direction,
-    );
-    if state.p_tick.leveltime & 7_i32 == 0 {
-        S_StartSound(
+pub fn T_MoveFloor(state: &mut GameState, id: FloorId) {
+    let floor = state
+        .p_spec
+        .get_floor(id)
+        .expect("ThinkerFn::Floor id must reference a live floor");
+    unsafe {
+        let mut res: ResultE = ResultE::ok;
+        let sec: *mut sector_t = state.p_setup.sector_mut((*floor).sector);
+        res = T_MovePlane(
             state,
-            SoundOrigin::Sector((*floor).sector),
-            sfx_stnmov as i32,
+            sec,
+            (*floor).speed,
+            (*floor).floordestheight,
+            (*floor).crush,
+            0_i32,
+            (*floor).direction,
         );
-    }
-    if res == ResultE::pastdest {
-        (*sec).specialdata = None;
-        if (*floor).direction == 1_i32 {
-            match (*floor).type_0 {
-                FloorE::donutRaise => {
-                    (*sec).special = (*floor).newspecial as i16;
-                    (*sec).floorpic = (*floor).texture;
-                }
-                _ => {}
-            }
-        } else if (*floor).direction == -1_i32 {
-            match (*floor).type_0 {
-                FloorE::lowerAndChange => {
-                    (*sec).special = (*floor).newspecial as i16;
-                    (*sec).floorpic = (*floor).texture;
-                }
-                _ => {}
-            }
+        if state.p_tick.leveltime & 7_i32 == 0 {
+            S_StartSound(
+                state,
+                SoundOrigin::Sector((*floor).sector),
+                sfx_stnmov as i32,
+            );
         }
-        P_RemoveThinker(&raw mut (*floor).thinker);
-        S_StartSound(
-            state,
-            SoundOrigin::Sector((*floor).sector),
-            sfx_pstop as i32,
-        );
+        if res == ResultE::pastdest {
+            (*sec).specialdata = None;
+            if (*floor).direction == 1_i32 {
+                match (*floor).type_0 {
+                    FloorE::donutRaise => {
+                        (*sec).special = (*floor).newspecial as i16;
+                        (*sec).floorpic = (*floor).texture;
+                    }
+                    _ => {}
+                }
+            } else if (*floor).direction == -1_i32 {
+                match (*floor).type_0 {
+                    FloorE::lowerAndChange => {
+                        (*sec).special = (*floor).newspecial as i16;
+                        (*sec).floorpic = (*floor).texture;
+                    }
+                    _ => {}
+                }
+            }
+            P_RemoveThinker(&raw mut (*floor).thinker);
+            S_StartSound(
+                state,
+                SoundOrigin::Sector((*floor).sector),
+                sfx_pstop as i32,
+            );
+        }
     }
 }
 pub unsafe fn EV_DoFloor(state: &mut GameState, mut line: LineId, mut floortype: FloorE) -> i32 {

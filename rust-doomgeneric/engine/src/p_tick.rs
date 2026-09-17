@@ -2,14 +2,13 @@ use crate::d_player::player_t;
 use crate::doomdef::MAXPLAYERS;
 use crate::game_state::GameState;
 use crate::p_ceilng::CeilingId;
-use crate::p_doors::{vldoor_t, DoorId};
-use crate::p_lights::{fireflicker_t, glow_t, lightflash_t, strobe_t};
+use crate::p_doors::DoorId;
 use crate::p_lights::{FireFlickerId, GlowId, LightFlashId, StrobeId};
 use crate::p_mobj::P_RespawnSpecials;
 use crate::p_mobj::{mobj_t, thinker_t, MobjId, ThinkerFn};
 use crate::p_plats::PlatId;
+use crate::p_spec::FloorId;
 use crate::p_spec::P_UpdateSpecials;
-use crate::p_spec::{ceiling_t, floormove_t, plat_t, FloorId};
 use crate::p_user::P_PlayerThink;
 
 // A handle into PTickState's own node table -- never constructed outside
@@ -316,35 +315,51 @@ pub unsafe fn P_RunThinkers(state: &mut GameState) {
                 next = state.p_tick.next(id);
             }
             ThinkerFn::Ceiling(f) => {
-                f(state, currentthinker as *mut ceiling_t);
+                if let ThinkerPayload::Ceiling(ceiling_id) = state.p_tick.payload(id) {
+                    f(state, ceiling_id);
+                }
                 next = state.p_tick.next(id);
             }
             ThinkerFn::Door(f) => {
-                f(state, currentthinker as *mut vldoor_t);
+                if let ThinkerPayload::Door(door_id) = state.p_tick.payload(id) {
+                    f(state, door_id);
+                }
                 next = state.p_tick.next(id);
             }
             ThinkerFn::Floor(f) => {
-                f(state, currentthinker as *mut floormove_t);
+                if let ThinkerPayload::Floor(floor_id) = state.p_tick.payload(id) {
+                    f(state, floor_id);
+                }
                 next = state.p_tick.next(id);
             }
             ThinkerFn::Plat(f) => {
-                f(state, currentthinker as *mut plat_t);
+                if let ThinkerPayload::Plat(plat_id) = state.p_tick.payload(id) {
+                    f(state, plat_id);
+                }
                 next = state.p_tick.next(id);
             }
             ThinkerFn::FireFlicker(f) => {
-                f(state, currentthinker as *mut fireflicker_t);
+                if let ThinkerPayload::FireFlicker(fireflicker_id) = state.p_tick.payload(id) {
+                    f(state, fireflicker_id);
+                }
                 next = state.p_tick.next(id);
             }
             ThinkerFn::LightFlash(f) => {
-                f(state, currentthinker as *mut lightflash_t);
+                if let ThinkerPayload::LightFlash(lightflash_id) = state.p_tick.payload(id) {
+                    f(state, lightflash_id);
+                }
                 next = state.p_tick.next(id);
             }
             ThinkerFn::Strobe(f) => {
-                f(state, currentthinker as *mut strobe_t);
+                if let ThinkerPayload::Strobe(strobe_id) = state.p_tick.payload(id) {
+                    f(state, strobe_id);
+                }
                 next = state.p_tick.next(id);
             }
             ThinkerFn::Glow(f) => {
-                f(state, currentthinker as *mut glow_t);
+                if let ThinkerPayload::Glow(glow_id) = state.p_tick.payload(id) {
+                    f(state, glow_id);
+                }
                 next = state.p_tick.next(id);
             }
         }

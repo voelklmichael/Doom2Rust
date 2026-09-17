@@ -144,122 +144,128 @@ impl PDoorsState {
 }
 
 pub const VDOORWAIT: i32 = 150;
-pub unsafe fn T_VerticalDoor(state: &mut GameState, mut door: *mut vldoor_t) {
-    let mut res: ResultE = ResultE::ok;
-    let sec: *mut sector_t = state.p_setup.sector_mut((*door).sector);
-    match (*door).direction {
-        0 => {
-            (*door).topcountdown -= 1;
-            if (*door).topcountdown == 0 {
-                match (*door).type_0 {
-                    VldoorE::vld_blazeRaise => {
-                        (*door).direction = -1_i32;
-                        S_StartSound(state, SoundOrigin::Sector((*door).sector), sfx_bdcls as i32);
-                    }
-                    VldoorE::vld_normal => {
-                        (*door).direction = -1_i32;
-                        S_StartSound(
-                            state,
-                            SoundOrigin::Sector((*door).sector),
-                            sfx_dorcls as i32,
-                        );
-                    }
-                    VldoorE::vld_close30ThenOpen => {
-                        (*door).direction = 1_i32;
-                        S_StartSound(
-                            state,
-                            SoundOrigin::Sector((*door).sector),
-                            sfx_doropn as i32,
-                        );
-                    }
-                    _ => {}
-                }
-            }
-        }
-        2 => {
-            (*door).topcountdown -= 1;
-            if (*door).topcountdown == 0 {
-                match (*door).type_0 {
-                    VldoorE::vld_raiseIn5Mins => {
-                        (*door).direction = 1_i32;
-                        (*door).type_0 = VldoorE::vld_normal;
-                        S_StartSound(
-                            state,
-                            SoundOrigin::Sector((*door).sector),
-                            sfx_doropn as i32,
-                        );
-                    }
-                    _ => {}
-                }
-            }
-        }
-        -1 => {
-            res = T_MovePlane(
-                state,
-                sec,
-                (*door).speed,
-                (*sec).floorheight,
-                false,
-                1_i32,
-                (*door).direction,
-            );
-            if res == ResultE::pastdest {
-                match (*door).type_0 {
-                    VldoorE::vld_blazeRaise | VldoorE::vld_blazeClose => {
-                        (*sec).specialdata = None;
-                        P_RemoveThinker(&raw mut (*door).thinker);
-                        S_StartSound(state, SoundOrigin::Sector((*door).sector), sfx_bdcls as i32);
-                    }
-                    VldoorE::vld_normal | VldoorE::vld_close => {
-                        (*sec).specialdata = None;
-                        P_RemoveThinker(&raw mut (*door).thinker);
-                    }
-                    VldoorE::vld_close30ThenOpen => {
-                        (*door).direction = 0_i32;
-                        (*door).topcountdown = TICRATE * 30_i32;
-                    }
-                    _ => {}
-                }
-            } else if res == ResultE::crushed {
-                match (*door).type_0 {
-                    VldoorE::vld_blazeClose | VldoorE::vld_close => {}
-                    _ => {
-                        (*door).direction = 1_i32;
-                        S_StartSound(
-                            state,
-                            SoundOrigin::Sector((*door).sector),
-                            sfx_doropn as i32,
-                        );
+pub fn T_VerticalDoor(state: &mut GameState, id: DoorId) {
+    let door = state
+        .p_doors
+        .get(id)
+        .expect("ThinkerFn::Door id must reference a live door");
+    unsafe {
+        let mut res: ResultE = ResultE::ok;
+        let sec: *mut sector_t = state.p_setup.sector_mut((*door).sector);
+        match (*door).direction {
+            0 => {
+                (*door).topcountdown -= 1;
+                if (*door).topcountdown == 0 {
+                    match (*door).type_0 {
+                        VldoorE::vld_blazeRaise => {
+                            (*door).direction = -1_i32;
+                            S_StartSound(state, SoundOrigin::Sector((*door).sector), sfx_bdcls as i32);
+                        }
+                        VldoorE::vld_normal => {
+                            (*door).direction = -1_i32;
+                            S_StartSound(
+                                state,
+                                SoundOrigin::Sector((*door).sector),
+                                sfx_dorcls as i32,
+                            );
+                        }
+                        VldoorE::vld_close30ThenOpen => {
+                            (*door).direction = 1_i32;
+                            S_StartSound(
+                                state,
+                                SoundOrigin::Sector((*door).sector),
+                                sfx_doropn as i32,
+                            );
+                        }
+                        _ => {}
                     }
                 }
             }
-        }
-        1 => {
-            res = T_MovePlane(
-                state,
-                sec,
-                (*door).speed,
-                (*door).topheight,
-                false,
-                1_i32,
-                (*door).direction,
-            );
-            if res == ResultE::pastdest {
-                match (*door).type_0 {
-                    VldoorE::vld_blazeRaise | VldoorE::vld_normal => {
-                        (*door).direction = 0_i32;
-                        (*door).topcountdown = (*door).topwait;
+            2 => {
+                (*door).topcountdown -= 1;
+                if (*door).topcountdown == 0 {
+                    match (*door).type_0 {
+                        VldoorE::vld_raiseIn5Mins => {
+                            (*door).direction = 1_i32;
+                            (*door).type_0 = VldoorE::vld_normal;
+                            S_StartSound(
+                                state,
+                                SoundOrigin::Sector((*door).sector),
+                                sfx_doropn as i32,
+                            );
+                        }
+                        _ => {}
                     }
-                    VldoorE::vld_close30ThenOpen | VldoorE::vld_blazeOpen | VldoorE::vld_open => {
-                        (*sec).specialdata = None;
-                        P_RemoveThinker(&raw mut (*door).thinker);
-                    }
-                    _ => {}
                 }
             }
-        }
-        _ => {}
-    };
+            -1 => {
+                res = T_MovePlane(
+                    state,
+                    sec,
+                    (*door).speed,
+                    (*sec).floorheight,
+                    false,
+                    1_i32,
+                    (*door).direction,
+                );
+                if res == ResultE::pastdest {
+                    match (*door).type_0 {
+                        VldoorE::vld_blazeRaise | VldoorE::vld_blazeClose => {
+                            (*sec).specialdata = None;
+                            P_RemoveThinker(&raw mut (*door).thinker);
+                            S_StartSound(state, SoundOrigin::Sector((*door).sector), sfx_bdcls as i32);
+                        }
+                        VldoorE::vld_normal | VldoorE::vld_close => {
+                            (*sec).specialdata = None;
+                            P_RemoveThinker(&raw mut (*door).thinker);
+                        }
+                        VldoorE::vld_close30ThenOpen => {
+                            (*door).direction = 0_i32;
+                            (*door).topcountdown = TICRATE * 30_i32;
+                        }
+                        _ => {}
+                    }
+                } else if res == ResultE::crushed {
+                    match (*door).type_0 {
+                        VldoorE::vld_blazeClose | VldoorE::vld_close => {}
+                        _ => {
+                            (*door).direction = 1_i32;
+                            S_StartSound(
+                                state,
+                                SoundOrigin::Sector((*door).sector),
+                                sfx_doropn as i32,
+                            );
+                        }
+                    }
+                }
+            }
+            1 => {
+                res = T_MovePlane(
+                    state,
+                    sec,
+                    (*door).speed,
+                    (*door).topheight,
+                    false,
+                    1_i32,
+                    (*door).direction,
+                );
+                if res == ResultE::pastdest {
+                    match (*door).type_0 {
+                        VldoorE::vld_blazeRaise | VldoorE::vld_normal => {
+                            (*door).direction = 0_i32;
+                            (*door).topcountdown = (*door).topwait;
+                        }
+                        VldoorE::vld_close30ThenOpen | VldoorE::vld_blazeOpen | VldoorE::vld_open => {
+                            (*sec).specialdata = None;
+                            P_RemoveThinker(&raw mut (*door).thinker);
+                        }
+                        _ => {}
+                    }
+                }
+            }
+            _ => {}
+        };
+    }
 }
 pub unsafe fn EV_DoLockedDoor(
     state: &mut GameState,

@@ -16,10 +16,11 @@ use crate::m_fixed::INT_MAX;
 use crate::m_fixed::INT_MIN;
 use crate::m_random::P_Random;
 use crate::mem_compat::memcpy;
-use crate::p_doors::vldoor_t;
+use crate::p_ceilng::CeilingId;
+use crate::p_doors::DoorId;
 use crate::p_enemy::MELEERANGE;
 use crate::p_inter::NUMCARDS;
-use crate::p_lights::{fireflicker_t, glow_t, lightflash_t, strobe_t};
+use crate::p_lights::{FireFlickerId, GlowId, LightFlashId, StrobeId};
 use crate::p_map::P_AimLineAttack;
 use crate::p_map::P_CheckPosition;
 use crate::p_map::P_SlideMove;
@@ -27,9 +28,10 @@ use crate::p_map::P_TryMove;
 use crate::p_maputl::P_AproxDistance;
 use crate::p_maputl::P_SetThingPosition;
 use crate::p_maputl::P_UnsetThingPosition;
+use crate::p_plats::PlatId;
 use crate::p_pspr::P_SetupPsprites;
 use crate::p_setup::{LineId, SectorId, SubsectorId, VertexId};
-use crate::p_spec::{ceiling_t, floormove_t, plat_t};
+use crate::p_spec::FloorId;
 use crate::p_tick::P_AddThinker;
 use crate::p_tick::P_RemoveThinker;
 use crate::p_tick::ThinkerId;
@@ -63,14 +65,14 @@ pub enum ThinkerFn {
     Removed,
     Unresolved,
     Mobj(unsafe fn(&mut GameState, MobjId)),
-    Ceiling(unsafe fn(&mut GameState, *mut ceiling_t)),
-    Door(unsafe fn(&mut GameState, *mut vldoor_t)),
-    Floor(unsafe fn(&mut GameState, *mut floormove_t)),
-    Plat(unsafe fn(&mut GameState, *mut plat_t)),
-    FireFlicker(unsafe fn(&mut GameState, *mut fireflicker_t)),
-    LightFlash(unsafe fn(&mut GameState, *mut lightflash_t)),
-    Strobe(unsafe fn(&mut GameState, *mut strobe_t)),
-    Glow(unsafe fn(&mut GameState, *mut glow_t)),
+    Ceiling(fn(&mut GameState, CeilingId)),
+    Door(fn(&mut GameState, DoorId)),
+    Floor(fn(&mut GameState, FloorId)),
+    Plat(fn(&mut GameState, PlatId)),
+    FireFlicker(fn(&mut GameState, FireFlickerId)),
+    LightFlash(fn(&mut GameState, LightFlashId)),
+    Strobe(fn(&mut GameState, StrobeId)),
+    Glow(fn(&mut GameState, GlowId)),
 }
 #[derive(Copy, Clone)]
 pub enum SectorSpecial {
