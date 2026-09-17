@@ -226,8 +226,9 @@ pub unsafe fn EV_DoFloor(state: &mut GameState, mut line: LineId, mut floortype:
             continue;
         }
         rtn = 1_i32;
-        floor = state.p_spec.spawn_floor(floormove_t::default());
-        let floor_id = P_AddThinker(state, ThinkerPayload::Raw(&raw mut (*floor).thinker), ThinkerKind::Floor);
+        let (floor_arena_id, floor_ptr) = state.p_spec.spawn_floor(floormove_t::default());
+        floor = floor_ptr;
+        let floor_id = P_AddThinker(state, ThinkerPayload::Floor(floor_arena_id), ThinkerKind::Floor);
         (*sec).specialdata = Some(SectorSpecial::Floor(floor_id));
         (*floor).thinker.function = ThinkerFn::Floor(T_MoveFloor);
         (*floor).type_0 = floortype;
@@ -405,8 +406,9 @@ pub unsafe fn EV_BuildStairs(state: &mut GameState, mut line: LineId, mut type_0
             continue;
         }
         rtn = 1_i32;
-        floor = state.p_spec.spawn_floor(floormove_t::default());
-        let floor_id = P_AddThinker(state, ThinkerPayload::Raw(&raw mut (*floor).thinker), ThinkerKind::Floor);
+        let (floor_arena_id, floor_ptr) = state.p_spec.spawn_floor(floormove_t::default());
+        floor = floor_ptr;
+        let floor_id = P_AddThinker(state, ThinkerPayload::Floor(floor_arena_id), ThinkerKind::Floor);
         (*sec).specialdata = Some(SectorSpecial::Floor(floor_id));
         (*floor).thinker.function = ThinkerFn::Floor(T_MoveFloor);
         (*floor).direction = 1_i32;
@@ -442,10 +444,12 @@ pub unsafe fn EV_BuildStairs(state: &mut GameState, mut line: LineId, mut type_0
                             if (*tsec).specialdata.is_none() {
                                 sec = tsec;
                                 secnum = newsecnum;
-                                floor = state.p_spec.spawn_floor(floormove_t::default());
+                                let (floor_arena_id, floor_ptr) =
+                                    state.p_spec.spawn_floor(floormove_t::default());
+                                floor = floor_ptr;
                                 let floor_id = P_AddThinker(
                                     state,
-                                    ThinkerPayload::Raw(&raw mut (*floor).thinker),
+                                    ThinkerPayload::Floor(floor_arena_id),
                                     ThinkerKind::Floor,
                                 );
                                 (*sec).specialdata = Some(SectorSpecial::Floor(floor_id));

@@ -44,9 +44,23 @@ pub enum PlattypeE {
 pub const PLATWAIT: i32 = 3;
 pub const PLATSPEED: i32 = FRACUNIT;
 pub const MAXPLATS: i32 = 30;
+
+// Generation-checked handle into PPlatsState's arena -- mirrors DoorId.
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+pub struct PlatId {
+    index: u32,
+    generation: u32,
+}
+
+struct PlatSlot {
+    generation: u32,
+    plat: Option<Box<plat_t>>,
+}
+
 pub struct PPlatsState {
     pub activeplats: [Option<ThinkerId>; 30],
-    pub plats: Vec<Box<plat_t>>,
+    plats: Vec<PlatSlot>,
+    free_list: Vec<u32>,
 }
 
 impl PPlatsState {
@@ -54,19 +68,55 @@ impl PPlatsState {
         PPlatsState {
             activeplats: [None; 30],
             plats: Vec::new(),
+            free_list: Vec::new(),
         }
     }
 
-    // Direct replacement for Z_Malloc(size_of::<plat_t>(), ...) -- see
-    // PDoorsState::spawn/dealloc (p_doors.rs) for why no generation-checked
-    // id or two-phase retire/deallocate split is needed here either.
-    pub fn spawn(&mut self, value: plat_t) -> *mut plat_t {
-        self.plats.push(Box::new(value));
-        self.plats.last_mut().unwrap().as_mut()
+    // Moves a fully-defaulted (then caller-filled) plat_t onto the heap and
+    // hands back both a stable generation-checked handle (stored in
+    // ThinkerNode's payload by p_tick.rs, replacing what used to be a bare
+    // raw pointer there) and a raw pointer for the caller's immediate
+    // post-spawn field writes -- mirrors PDoorsState::spawn exactly.
+    pub fn spawn(&mut self, value: plat_t) -> (PlatId, *mut plat_t) {
+        let (index, generation) = if let Some(index) = self.free_list.pop() {
+            let slot = &mut self.plats[index as usize];
+            slot.generation = slot.generation.wrapping_add(1);
+            (index, slot.generation)
+        } else {
+            let index = self.plats.len() as u32;
+            self.plats.push(PlatSlot {
+                generation: 0,
+                plat: None,
+            });
+            (index, 0)
+        };
+        let id = PlatId { index, generation };
+        let mut boxed = Box::new(value);
+        let ptr = boxed.as_mut() as *mut plat_t;
+        self.plats[index as usize].plat = Some(boxed);
+        (id, ptr)
     }
 
-    pub fn dealloc(&mut self, ptr: *mut plat_t) {
-        self.plats.retain(|b| !::core::ptr::eq(b.as_ref(), ptr));
+    // Fallible materialization: None if the id is stale. Used by
+    // p_tick.rs's P_ThinkerRaw to resolve a Plat-kind ThinkerNode's payload
+    // back into the raw pointer every T_* function still expects.
+    pub fn get(&self, id: PlatId) -> Option<*mut plat_t> {
+        self.plats
+            .get(id.index as usize)
+            .filter(|slot| slot.generation == id.generation)
+            .and_then(|slot| slot.plat.as_deref())
+            .map(|r| r as *const plat_t as *mut plat_t)
+    }
+
+    // Called once, from P_RunThinkers' reaper, when a Plat-kind thinker is
+    // reaped.
+    pub fn dealloc(&mut self, id: PlatId) {
+        if let Some(slot) = self.plats.get_mut(id.index as usize) {
+            if slot.generation == id.generation {
+                slot.plat = None;
+                self.free_list.push(id.index);
+            }
+        }
     }
 }
 
@@ -169,8 +219,9 @@ pub unsafe fn EV_DoPlat(
             continue;
         }
         rtn = 1_i32;
-        plat = state.p_plats.spawn(plat_t::default());
-        let plat_id = P_AddThinker(state, ThinkerPayload::Raw(&raw mut (*plat).thinker), ThinkerKind::Plat);
+        let (plat_arena_id, plat_ptr) = state.p_plats.spawn(plat_t::default());
+        plat = plat_ptr;
+        let plat_id = P_AddThinker(state, ThinkerPayload::Plat(plat_arena_id), ThinkerKind::Plat);
         (*plat).type_0 = type_0;
         (*plat).sector = SectorId(secnum as u32);
         (*sec).specialdata = Some(SectorSpecial::Plat(plat_id));

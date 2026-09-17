@@ -3136,7 +3136,7 @@ pub unsafe fn P_SpawnMobj(
     value.tics = (*st).tics;
     value.sprite = (*st).sprite;
     value.frame = (*st).frame;
-    let (_id, mobj) = state.p_mobj.spawn(value);
+    let (id, mobj) = state.p_mobj.spawn(value);
     P_SetThingPosition(state, mobj);
     (*mobj).floorz = state
         .p_setup
@@ -3155,7 +3155,7 @@ pub unsafe fn P_SpawnMobj(
         (*mobj).z = z;
     }
     (*mobj).thinker.function = ThinkerFn::Mobj(P_MobjThinker);
-    P_AddThinker(state, ThinkerPayload::Raw(&raw mut (*mobj).thinker), ThinkerKind::Mobj);
+    P_AddThinker(state, ThinkerPayload::Mobj(id), ThinkerKind::Mobj);
     mobj
 }
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Hash)]

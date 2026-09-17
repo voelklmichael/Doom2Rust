@@ -69,6 +69,18 @@ use crate::p_lights::SLOWDARK;
 use crate::p_plats::MAXPLATS;
 use crate::p_switch::MAXBUTTONS;
 
+// Generation-checked handle into PSpecState's floor arena -- mirrors DoorId.
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+pub struct FloorId {
+    index: u32,
+    generation: u32,
+}
+
+struct FloorSlot {
+    generation: u32,
+    floor: Option<Box<floormove_t>>,
+}
+
 pub struct PSpecState {
     pub anims: [anim_t; 32],
     pub lastanim: usize,
@@ -79,7 +91,8 @@ pub struct PSpecState {
     pub donut_overrun_first: i32,
     pub donut_overrun_tmp_s3_floorheight: i32,
     pub donut_overrun_tmp_s3_floorpic: i32,
-    floors: Vec<Box<floormove_t>>,
+    floors: Vec<FloorSlot>,
+    floor_free_list: Vec<u32>,
 }
 
 impl PSpecState {
@@ -101,22 +114,58 @@ impl PSpecState {
             donut_overrun_tmp_s3_floorheight: 0,
             donut_overrun_tmp_s3_floorpic: 0,
             floors: Vec::new(),
+            floor_free_list: Vec::new(),
         }
     }
 
-    // Direct replacement for Z_Malloc(size_of::<floormove_t>(), ...) -- see
-    // PDoorsState::spawn/dealloc (p_doors.rs) for why no generation-checked
-    // id or two-phase retire/deallocate split is needed here either. Lives
+    // Moves a fully-defaulted (then caller-filled) floormove_t onto the
+    // heap and hands back both a stable generation-checked handle (stored
+    // in ThinkerNode's payload by p_tick.rs, replacing what used to be a
+    // bare raw pointer there) and a raw pointer for the caller's immediate
+    // post-spawn field writes -- mirrors PDoorsState::spawn exactly. Lives
     // on PSpecState (rather than a new PFloorState) because floormove_t
     // itself is defined here, and both p_floor.rs and this file's own
     // donut-overrun special case construct one.
-    pub fn spawn_floor(&mut self, value: floormove_t) -> *mut floormove_t {
-        self.floors.push(Box::new(value));
-        self.floors.last_mut().unwrap().as_mut()
+    pub fn spawn_floor(&mut self, value: floormove_t) -> (FloorId, *mut floormove_t) {
+        let (index, generation) = if let Some(index) = self.floor_free_list.pop() {
+            let slot = &mut self.floors[index as usize];
+            slot.generation = slot.generation.wrapping_add(1);
+            (index, slot.generation)
+        } else {
+            let index = self.floors.len() as u32;
+            self.floors.push(FloorSlot {
+                generation: 0,
+                floor: None,
+            });
+            (index, 0)
+        };
+        let id = FloorId { index, generation };
+        let mut boxed = Box::new(value);
+        let ptr = boxed.as_mut() as *mut floormove_t;
+        self.floors[index as usize].floor = Some(boxed);
+        (id, ptr)
     }
 
-    pub fn dealloc_floor(&mut self, ptr: *mut floormove_t) {
-        self.floors.retain(|b| !::core::ptr::eq(b.as_ref(), ptr));
+    // Fallible materialization: None if the id is stale. Used by
+    // p_tick.rs's P_ThinkerRaw to resolve a Floor-kind ThinkerNode's
+    // payload back into the raw pointer every T_* function still expects.
+    pub fn get_floor(&self, id: FloorId) -> Option<*mut floormove_t> {
+        self.floors
+            .get(id.index as usize)
+            .filter(|slot| slot.generation == id.generation)
+            .and_then(|slot| slot.floor.as_deref())
+            .map(|r| r as *const floormove_t as *mut floormove_t)
+    }
+
+    // Called once, from P_RunThinkers' reaper, when a Floor-kind thinker is
+    // reaped.
+    pub fn dealloc_floor(&mut self, id: FloorId) {
+        if let Some(slot) = self.floors.get_mut(id.index as usize) {
+            if slot.generation == id.generation {
+                slot.floor = None;
+                self.floor_free_list.push(id.index);
+            }
+        }
     }
 }
 
@@ -1201,9 +1250,10 @@ pub unsafe fn EV_DoDonut(state: &mut GameState, mut line: LineId) -> i32 {
                         s3_floorheight = (*s3).floorheight;
                         s3_floorpic = (*s3).floorpic;
                     }
-                    floor = state.p_spec.spawn_floor(floormove_t::default());
+                    let (floor_arena_id, floor_ptr) = state.p_spec.spawn_floor(floormove_t::default());
+                    floor = floor_ptr;
                     let floor_id =
-                        P_AddThinker(state, ThinkerPayload::Raw(&raw mut (*floor).thinker), ThinkerKind::Floor);
+                        P_AddThinker(state, ThinkerPayload::Floor(floor_arena_id), ThinkerKind::Floor);
                     (*s2).specialdata = Some(SectorSpecial::Floor(floor_id));
                     (*floor).thinker.function = ThinkerFn::Floor(T_MoveFloor);
                     (*floor).type_0 = FloorE::donutRaise;
@@ -1214,9 +1264,10 @@ pub unsafe fn EV_DoDonut(state: &mut GameState, mut line: LineId) -> i32 {
                     (*floor).texture = s3_floorpic;
                     (*floor).newspecial = 0_i32;
                     (*floor).floordestheight = s3_floorheight;
-                    floor = state.p_spec.spawn_floor(floormove_t::default());
+                    let (floor_arena_id, floor_ptr) = state.p_spec.spawn_floor(floormove_t::default());
+                    floor = floor_ptr;
                     let floor_id =
-                        P_AddThinker(state, ThinkerPayload::Raw(&raw mut (*floor).thinker), ThinkerKind::Floor);
+                        P_AddThinker(state, ThinkerPayload::Floor(floor_arena_id), ThinkerKind::Floor);
                     (*s1).specialdata = Some(SectorSpecial::Floor(floor_id));
                     (*floor).thinker.function = ThinkerFn::Floor(T_MoveFloor);
                     (*floor).type_0 = FloorE::lowerFloor;
