@@ -7,6 +7,7 @@ use crate::m_fixed::FRACBITS;
 use crate::p_mobj::mobj_t;
 use crate::p_mobj::thinker_t;
 use crate::p_mobj::ThinkerFn;
+use crate::p_tick::P_ThinkerRaw;
 use crate::r_defs::lighttable_t;
 use crate::stdint_types::byte;
 use crate::w_wad::W_CacheLumpNum;
@@ -655,7 +656,7 @@ pub unsafe fn R_PrecacheLevel(state: &mut GameState) {
     spritepresent = vec![0u8; state.r_things.numsprites as usize];
     let mut cursor = state.p_tick.head();
     while let Some(id) = cursor {
-        th = state.p_tick.raw(id);
+        th = P_ThinkerRaw(state, id);
         if matches!((*th).function, ThinkerFn::Mobj(_)) {
             spritepresent[(*(th as *mut mobj_t)).sprite as usize] = 1_u8;
         }

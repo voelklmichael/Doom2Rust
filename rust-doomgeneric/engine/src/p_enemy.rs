@@ -41,6 +41,7 @@ use crate::p_setup::LineId;
 use crate::p_setup::SectorId;
 use crate::p_sight::P_CheckSight;
 use crate::p_switch::P_UseSpecialLine;
+use crate::p_tick::P_ThinkerRaw;
 use crate::r_main::R_PointToAngle2;
 use crate::s_sound::S_StartSound;
 use crate::s_sound::SoundOrigin;
@@ -490,7 +491,7 @@ pub unsafe fn A_KeenDie(state: &mut GameState, id: MobjId) {
     A_Fall(state, (*mo).id);
     let mut cursor = state.p_tick.head();
     while let Some(id) = cursor {
-        th = state.p_tick.raw(id);
+        th = P_ThinkerRaw(state, id);
         if matches!((*th).function, ThinkerFn::Mobj(_)) {
             mo2 = th as *mut mobj_t;
             if mo2 != mo && (*mo2).type_0 as u32 == (*mo).type_0 as u32 && (*mo2).health > 0_i32 {
@@ -1234,7 +1235,7 @@ pub unsafe fn A_PainShootSkull(state: &mut GameState, mut actor: *mut mobj_t, mu
     count = 0_i32;
     let mut cursor = state.p_tick.head();
     while let Some(id) = cursor {
-        currentthinker = state.p_tick.raw(id);
+        currentthinker = P_ThinkerRaw(state, id);
         if matches!((*currentthinker).function, ThinkerFn::Mobj(_))
             && (*(currentthinker as *mut mobj_t)).type_0 as u32 == MobjType::MT_SKULL as i32 as u32
         {
@@ -1389,7 +1390,7 @@ pub unsafe fn A_BossDeath(state: &mut GameState, id: MobjId) {
     }
     let mut cursor = state.p_tick.head();
     while let Some(id) = cursor {
-        th = state.p_tick.raw(id);
+        th = P_ThinkerRaw(state, id);
         if matches!((*th).function, ThinkerFn::Mobj(_)) {
             mo2 = th as *mut mobj_t;
             if mo2 != mo && (*mo2).type_0 as u32 == (*mo).type_0 as u32 && (*mo2).health > 0_i32 {
@@ -1492,7 +1493,7 @@ pub unsafe fn A_BrainAwake(state: &mut GameState, _id: MobjId) {
     state.p_enemy.braintargeton = 0_i32;
     let mut cursor = state.p_tick.head();
     while let Some(id) = cursor {
-        thinker = state.p_tick.raw(id);
+        thinker = P_ThinkerRaw(state, id);
         if matches!((*thinker).function, ThinkerFn::Mobj(_)) {
             m = thinker as *mut mobj_t;
             if (*m).type_0 as u32 == MobjType::MT_BOSSTARGET as i32 as u32 {

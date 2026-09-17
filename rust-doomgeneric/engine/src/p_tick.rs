@@ -1,7 +1,7 @@
 use crate::d_player::player_t;
 use crate::doomdef::MAXPLAYERS;
 use crate::game_state::GameState;
-use crate::p_doors::vldoor_t;
+use crate::p_doors::{vldoor_t, DoorId};
 use crate::p_lights::{fireflicker_t, glow_t, lightflash_t, strobe_t};
 use crate::p_mobj::P_RespawnSpecials;
 use crate::p_mobj::{mobj_t, thinker_s, thinker_t, ThinkerFn};
@@ -45,15 +45,22 @@ pub enum ThinkerKind {
     Glow,
 }
 
+// A ThinkerNode's payload identity. Growing this enum with a generation-
+// checked id (mirroring DoorId/MobjId) and converting one more kind's
+// arena to hand out ids instead of bare pointers is the whole shape of
+// this track -- Raw is the not-yet-converted fallback, still exactly the
+// type-erased pointer this replaces (mobj_t, vldoor_t, ceiling_t, ...).
+#[derive(Copy, Clone)]
+pub enum ThinkerPayload {
+    Door(DoorId),
+    Raw(*mut thinker_s),
+}
+
 #[derive(Copy, Clone)]
 struct ThinkerNode {
     prev: Option<ThinkerId>,
     next: Option<ThinkerId>,
-    // Still points at the thinker's own Z_Malloc'd payload (mobj_t,
-    // vldoor_t, ceiling_t, ...) -- this table only externalizes the
-    // prev/next list bookkeeping, not the payload storage or the
-    // base-struct-downcast dispatch in P_RunThinkers below.
-    raw: *mut thinker_s,
+    payload: ThinkerPayload,
     kind: ThinkerKind,
 }
 
@@ -84,12 +91,28 @@ impl PTickState {
         self.nodes[id.0 as usize].next
     }
 
-    pub fn raw(&self, id: ThinkerId) -> *mut thinker_t {
-        self.nodes[id.0 as usize].raw
+    pub fn payload(&self, id: ThinkerId) -> ThinkerPayload {
+        self.nodes[id.0 as usize].payload
     }
 
     pub fn kind(&self, id: ThinkerId) -> ThinkerKind {
         self.nodes[id.0 as usize].kind
+    }
+}
+
+// Resolves a ThinkerNode's payload back into the raw pointer every T_*
+// function and every existing `state.p_tick.raw(id)` call site still
+// expects. Takes the whole GameState (not just &PTickState) because
+// resolving a converted kind's id needs its owning arena (e.g. p_doors)
+// -- a sibling field PTickState itself has no access to.
+pub fn P_ThinkerRaw(state: &GameState, id: ThinkerId) -> *mut thinker_t {
+    match state.p_tick.payload(id) {
+        ThinkerPayload::Door(door_id) => state
+            .p_doors
+            .get(door_id)
+            .expect("ThinkerNode payload must reference a live door")
+            as *mut thinker_t,
+        ThinkerPayload::Raw(ptr) => ptr,
     }
 }
 
@@ -102,14 +125,14 @@ pub fn P_InitThinkers(state: &mut GameState) {
 
 pub fn P_AddThinker(
     state: &mut GameState,
-    mut thinker: *mut thinker_t,
+    payload: ThinkerPayload,
     kind: ThinkerKind,
 ) -> ThinkerId {
     let id = if let Some(index) = state.p_tick.free_list.pop() {
         state.p_tick.nodes[index as usize] = ThinkerNode {
             prev: None,
             next: None,
-            raw: thinker,
+            payload,
             kind,
         };
         ThinkerId(index)
@@ -118,7 +141,7 @@ pub fn P_AddThinker(
         state.p_tick.nodes.push(ThinkerNode {
             prev: None,
             next: None,
-            raw: thinker,
+            payload,
             kind,
         });
         ThinkerId(index)
@@ -158,7 +181,7 @@ fn P_UnlinkThinkerNode(state: &mut GameState, id: ThinkerId) {
 pub unsafe fn P_RunThinkers(state: &mut GameState) {
     let mut cursor = state.p_tick.head();
     while let Some(id) = cursor {
-        let currentthinker = state.p_tick.raw(id);
+        let currentthinker = P_ThinkerRaw(state, id);
         let next;
         match (*currentthinker).function {
             ThinkerFn::Removed => {
@@ -178,9 +201,14 @@ pub unsafe fn P_RunThinkers(state: &mut GameState) {
                         let mobj_id = (*(currentthinker as *mut mobj_t)).id;
                         state.p_mobj.deallocate(mobj_id);
                     }
-                    // vldoor_t's memory is owned by PDoorsState's arena now.
+                    // vldoor_t's memory is owned by PDoorsState's arena now,
+                    // keyed by the DoorId this node's payload carries (not
+                    // by currentthinker -- Door is the one kind that's no
+                    // longer a bare pointer here).
                     ThinkerKind::Door => {
-                        state.p_doors.dealloc(currentthinker as *mut vldoor_t);
+                        if let ThinkerPayload::Door(door_id) = state.p_tick.payload(id) {
+                            state.p_doors.dealloc(door_id);
+                        }
                     }
                     // ceiling_t's memory is owned by PCeilngState's arena now.
                     ThinkerKind::Ceiling => {
@@ -291,4 +319,53 @@ pub unsafe fn P_Ticker(state: &mut GameState) {
     P_UpdateSpecials(state);
     P_RespawnSpecials(state);
     state.p_tick.leveltime += 1;
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::doomdef::pixel_t;
+    use crate::game_state::init_game_state;
+    use crate::platform::DoomPlatform;
+
+    struct NullPlatform;
+    impl DoomPlatform for NullPlatform {
+        fn init(&mut self, _screen_buffer: *mut pixel_t, _resx: i32, _resy: i32) {}
+        fn draw_frame(&mut self) {}
+        fn sleep_ms(&mut self, _ms: u32) {}
+        fn get_ticks_ms(&mut self) -> u32 {
+            0
+        }
+        fn get_key(&mut self) -> Option<(bool, u8)> {
+            None
+        }
+        fn set_window_title(&mut self, _title: &str) {}
+    }
+
+    // Exercises exactly what the DoorId conversion changed: a ThinkerNode's
+    // payload round-trips through P_ThinkerRaw back to the arena's live
+    // pointer, and the reaper's Door branch deallocs via the id (not a
+    // stored raw pointer) -- including that a stale id stays stale even
+    // after its arena slot is reused by a later spawn (generation check).
+    #[test]
+    fn door_thinker_lifecycle_via_id() {
+        let state = init_game_state(Box::new(NullPlatform));
+
+        let (door_id, door_ptr) = state.p_doors.spawn(vldoor_t::default());
+        let node_id = P_AddThinker(state, ThinkerPayload::Door(door_id), ThinkerKind::Door);
+        assert_eq!(P_ThinkerRaw(state, node_id), door_ptr as *mut thinker_t);
+
+        unsafe { P_RemoveThinker(P_ThinkerRaw(state, node_id)) };
+        unsafe { P_RunThinkers(state) };
+        assert!(
+            state.p_doors.get(door_id).is_none(),
+            "reaper should have deallocated the door via its DoorId"
+        );
+
+        // Reuse: a fresh spawn may land on the same freed slot, but the old
+        // id must not resolve to the new door's memory.
+        let (door_id2, door_ptr2) = state.p_doors.spawn(vldoor_t::default());
+        assert!(state.p_doors.get(door_id).is_none());
+        assert_eq!(state.p_doors.get(door_id2), Some(door_ptr2));
+    }
 }

@@ -18,8 +18,10 @@ use crate::p_spec::P_FindNextHighestFloor;
 use crate::p_spec::P_FindSectorFromLineTag;
 use crate::p_tick::P_AddThinker;
 use crate::p_tick::P_RemoveThinker;
+use crate::p_tick::P_ThinkerRaw;
 use crate::p_tick::ThinkerId;
 use crate::p_tick::ThinkerKind;
+use crate::p_tick::ThinkerPayload;
 use crate::s_sound::S_StartSound;
 use crate::s_sound::SoundOrigin;
 use crate::sounds::{sfx_pstart, sfx_pstop, sfx_stnmov};
@@ -168,7 +170,7 @@ pub unsafe fn EV_DoPlat(
         }
         rtn = 1_i32;
         plat = state.p_plats.spawn(plat_t::default());
-        let plat_id = P_AddThinker(state, &raw mut (*plat).thinker, ThinkerKind::Plat);
+        let plat_id = P_AddThinker(state, ThinkerPayload::Raw(&raw mut (*plat).thinker), ThinkerKind::Plat);
         (*plat).type_0 = type_0;
         (*plat).sector = SectorId(secnum as u32);
         (*sec).specialdata = Some(SectorSpecial::Plat(plat_id));
@@ -265,7 +267,7 @@ pub unsafe fn P_ActivateInStasis(state: &mut GameState, mut tag: i32) {
     i = 0_i32;
     while i < MAXPLATS {
         if let Some(id) = state.p_plats.activeplats[i as usize] {
-            let plat = state.p_tick.raw(id) as *mut plat_t;
+            let plat = P_ThinkerRaw(state, id) as *mut plat_t;
             if (*plat).tag == tag && (*plat).status == PlatE::in_stasis {
                 (*plat).status = (*plat).oldstatus;
                 (*plat).thinker.function = ThinkerFn::Plat(T_PlatRaise);
@@ -279,7 +281,7 @@ pub unsafe fn EV_StopPlat(state: &mut GameState, mut tag: i32) {
     j = 0_i32;
     while j < MAXPLATS {
         if let Some(id) = state.p_plats.activeplats[j as usize] {
-            let plat = state.p_tick.raw(id) as *mut plat_t;
+            let plat = P_ThinkerRaw(state, id) as *mut plat_t;
             if (*plat).status != PlatE::in_stasis && (*plat).tag == tag {
                 (*plat).oldstatus = (*plat).status;
                 (*plat).status = PlatE::in_stasis;
@@ -306,7 +308,7 @@ pub unsafe fn P_RemoveActivePlat(state: &mut GameState, mut plat: *mut plat_t) {
     i = 0_i32;
     while i < MAXPLATS {
         if let Some(id) = state.p_plats.activeplats[i as usize] {
-            if state.p_tick.raw(id) as *mut plat_t == plat {
+            if P_ThinkerRaw(state, id) as *mut plat_t == plat {
                 state.p_setup.sector_mut((*plat).sector).specialdata = None;
                 P_RemoveThinker(&raw mut (*plat).thinker);
                 state.p_plats.activeplats[i as usize] = None;

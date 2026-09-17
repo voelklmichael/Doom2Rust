@@ -34,6 +34,7 @@ use crate::p_tick::P_AddThinker;
 use crate::p_tick::P_RemoveThinker;
 use crate::p_tick::ThinkerId;
 use crate::p_tick::ThinkerKind;
+use crate::p_tick::ThinkerPayload;
 use crate::p_user::VIEWHEIGHT;
 use crate::r_main::R_PointInSubsector;
 use crate::r_main::R_PointToAngle2;
@@ -3154,7 +3155,7 @@ pub unsafe fn P_SpawnMobj(
         (*mobj).z = z;
     }
     (*mobj).thinker.function = ThinkerFn::Mobj(P_MobjThinker);
-    P_AddThinker(state, &raw mut (*mobj).thinker, ThinkerKind::Mobj);
+    P_AddThinker(state, ThinkerPayload::Raw(&raw mut (*mobj).thinker), ThinkerKind::Mobj);
     mobj
 }
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Hash)]
