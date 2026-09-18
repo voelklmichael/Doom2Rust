@@ -1038,7 +1038,7 @@ pub unsafe fn PIT_RadiusAttack(state: &mut GameState, mut thing_id: MobjId) -> b
     if dist >= state.p_map.bombdamage {
         return true;
     }
-    if P_CheckSight(state, thing, bombspot) {
+    if P_CheckSight(state, &*thing, &*bombspot) {
         P_DamageMobj(
             state,
             thing,
