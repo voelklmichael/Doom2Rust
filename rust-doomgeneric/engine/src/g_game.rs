@@ -1223,14 +1223,14 @@ pub unsafe fn G_DeathMatchSpawnPlayer(state: &mut GameState, mut playernum: i32)
             state.p_setup.deathmatchstarts[i as usize].type_0 = (playernum + 1_i32) as i16;
             let dm_spot = (&raw mut state.p_setup.deathmatchstarts as *mut mapthing_t)
                 .offset(i as isize) as *mut mapthing_t;
-            P_SpawnPlayer(state, dm_spot);
+            P_SpawnPlayer(state, *dm_spot);
             return;
         }
         j += 1;
     }
     let spot = (&raw mut state.p_setup.playerstarts as *mut mapthing_t).offset(playernum as isize)
         as *mut mapthing_t;
-    P_SpawnPlayer(state, spot);
+    P_SpawnPlayer(state, *spot);
 }
 pub unsafe fn G_DoReborn(state: &mut GameState, mut playernum: i32) {
     let mut i: i32 = 0;
@@ -1251,7 +1251,7 @@ pub unsafe fn G_DoReborn(state: &mut GameState, mut playernum: i32) {
         if G_CheckSpot(state, playernum, spot) {
             let spot = (&raw mut state.p_setup.playerstarts as *mut mapthing_t)
                 .offset(playernum as isize) as *mut mapthing_t;
-            P_SpawnPlayer(state, spot);
+            P_SpawnPlayer(state, *spot);
             return;
         }
         i = 0_i32;
@@ -1262,7 +1262,7 @@ pub unsafe fn G_DoReborn(state: &mut GameState, mut playernum: i32) {
                 state.p_setup.playerstarts[i as usize].type_0 = (playernum + 1_i32) as i16;
                 let spot = (&raw mut state.p_setup.playerstarts as *mut mapthing_t)
                     .offset(i as isize) as *mut mapthing_t;
-                P_SpawnPlayer(state, spot);
+                P_SpawnPlayer(state, *spot);
                 state.p_setup.playerstarts[i as usize].type_0 = (i + 1_i32) as i16;
                 return;
             }
@@ -1270,7 +1270,7 @@ pub unsafe fn G_DoReborn(state: &mut GameState, mut playernum: i32) {
         }
         let spot = (&raw mut state.p_setup.playerstarts as *mut mapthing_t)
             .offset(playernum as isize) as *mut mapthing_t;
-        P_SpawnPlayer(state, spot);
+        P_SpawnPlayer(state, *spot);
     };
 }
 pub fn G_ScreenShot(state: &mut GameState) {

@@ -3,7 +3,7 @@ use crate::m_fixed::fixed_t;
 use crate::m_fixed::FRACUNIT;
 use crate::m_fixed::INT_MAX;
 use crate::p_map::P_ChangeSector;
-use crate::p_mobj::sector_t;
+
 use crate::p_mobj::SectorSpecial;
 use crate::p_mobj::ThinkerFn;
 use crate::p_setup::LineId;
@@ -56,8 +56,7 @@ pub enum ResultE {
 }
 pub const FLOORSPEED: i32 = FRACUNIT;
 fn change_sector(state: &mut GameState, sector: SectorId, crush: bool) -> bool {
-    let sector_ptr: *mut sector_t = state.p_setup.sector_mut(sector);
-    unsafe { P_ChangeSector(state, sector_ptr, crush) }
+    P_ChangeSector(state, sector, crush)
 }
 pub fn T_MovePlane(
     state: &mut GameState,

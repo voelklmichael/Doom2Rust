@@ -52,7 +52,7 @@ pub fn EV_Teleport(state: &mut GameState, line: LineId, side: i32, thing: MobjId
                             let t = state.p_mobj.mo(thing);
                             (t.x, t.y, t.z)
                         };
-                        if !unsafe { P_TeleportMove(state, thing, m_x, m_y) } {
+                        if !P_TeleportMove(state, thing, m_x, m_y) {
                             return 0_i32;
                         }
                         if state.doomstat.gameversion != GameVersion::r#final {

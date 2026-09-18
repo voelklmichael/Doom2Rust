@@ -15,7 +15,7 @@ use crate::m_fixed::FRACUNIT;
 use crate::m_fixed::INT_MAX;
 use crate::m_fixed::INT_MIN;
 use crate::m_random::P_Random;
-use crate::mem_compat::memcpy;
+
 use crate::p_ceilng::CeilingId;
 use crate::p_doors::DoorId;
 use crate::p_enemy::MELEERANGE;
@@ -45,7 +45,7 @@ use crate::s_sound::S_StopSound;
 use crate::s_sound::SoundOrigin;
 use crate::sounds::{sfx_itmbk, sfx_oof, sfx_telept};
 use crate::st_stuff::ST_Start;
-use crate::stdint_types::size_t;
+
 use crate::tables::angle_t;
 use crate::tables::finecosine;
 use crate::tables::finesine;
@@ -2847,56 +2847,63 @@ pub fn P_ExplodeMissile(state: &mut GameState, mo: MobjId) {
 }
 pub const STOPSPEED: i32 = 0x1000;
 pub const FRICTION: i32 = 0xe800;
-pub unsafe fn P_XYMovement(state: &mut GameState, mo: MobjId) {
-    let mo: *mut mobj_t = state.p_mobj.mobj_ptr(mo);
-    let mut ptryx: fixed_t = 0;
-    let mut ptryy: fixed_t = 0;
-    let mut player: *mut player_t = ::core::ptr::null_mut::<player_t>();
-    let mut xmove: fixed_t = 0;
-    let mut ymove: fixed_t = 0;
-    if (*mo).momx == 0 && (*mo).momy == 0 {
-        if (*mo).flags & MF_SKULLFLY as i32 != 0 {
-            (*mo).flags &= !(MF_SKULLFLY as i32);
-            (*mo).momz = 0_i32 as fixed_t;
-            (*mo).momy = (*mo).momz;
-            (*mo).momx = (*mo).momy;
-            let spawnstate = state.info.mobjinfo_mut((*mo).type_0).spawnstate;
-            P_SetMobjState(state, (*mo).id, spawnstate);
+pub fn P_XYMovement(state: &mut GameState, mo: MobjId) {
+    let (momx, momy, flags) = {
+        let m = state.p_mobj.mo(mo);
+        (m.momx, m.momy, m.flags)
+    };
+    if momx == 0 && momy == 0 {
+        if flags & MF_SKULLFLY as i32 != 0 {
+            let mo_type = {
+                let m = state.p_mobj.mo_mut(mo);
+                m.flags &= !(MF_SKULLFLY as i32);
+                m.momz = 0_i32 as fixed_t;
+                m.momy = m.momz;
+                m.momx = m.momy;
+                m.type_0
+            };
+            let spawnstate = state.info.mobjinfo_mut(mo_type).spawnstate;
+            P_SetMobjState(state, mo, spawnstate);
         }
         return;
     }
-    player = match (*mo).player {
-        Some(id) => state.g_game.player_mut(id),
-        None => ::core::ptr::null_mut::<player_t>(),
+    let player = state.p_mobj.mo(mo).player;
+    let (mut xmove, mut ymove) = {
+        let m = state.p_mobj.mo_mut(mo);
+        if m.momx > MAXMOVE {
+            m.momx = MAXMOVE as fixed_t;
+        } else if m.momx < -MAXMOVE {
+            m.momx = -MAXMOVE as fixed_t;
+        }
+        if m.momy > MAXMOVE {
+            m.momy = MAXMOVE as fixed_t;
+        } else if m.momy < -MAXMOVE {
+            m.momy = -MAXMOVE as fixed_t;
+        }
+        (m.momx, m.momy)
     };
-    if (*mo).momx > MAXMOVE {
-        (*mo).momx = MAXMOVE as fixed_t;
-    } else if (*mo).momx < -MAXMOVE {
-        (*mo).momx = -MAXMOVE as fixed_t;
-    }
-    if (*mo).momy > MAXMOVE {
-        (*mo).momy = MAXMOVE as fixed_t;
-    } else if (*mo).momy < -MAXMOVE {
-        (*mo).momy = -MAXMOVE as fixed_t;
-    }
-    xmove = (*mo).momx;
-    ymove = (*mo).momy;
     loop {
+        let (mx, my) = {
+            let m = state.p_mobj.mo(mo);
+            (m.x, m.y)
+        };
+        let ptryx: fixed_t;
+        let ptryy: fixed_t;
         if xmove > MAXMOVE / 2_i32 || ymove > MAXMOVE / 2_i32 {
-            ptryx = ((*mo).x + xmove / 2_i32) as fixed_t;
-            ptryy = ((*mo).y + ymove / 2_i32) as fixed_t;
+            ptryx = (mx + xmove / 2_i32) as fixed_t;
+            ptryy = (my + ymove / 2_i32) as fixed_t;
             xmove >>= 1_i32;
             ymove >>= 1_i32;
         } else {
-            ptryx = (*mo).x + xmove;
-            ptryy = (*mo).y + ymove;
+            ptryx = mx + xmove;
+            ptryy = my + ymove;
             ymove = 0_i32 as fixed_t;
             xmove = ymove;
         }
-        if !P_TryMove(state, (*mo).id, ptryx, ptryy) {
-            if (*mo).player.is_some() {
-                P_SlideMove(state, (*mo).id);
-            } else if (*mo).flags & MF_MISSILE as i32 != 0 {
+        if !P_TryMove(state, mo, ptryx, ptryy) {
+            if player.is_some() {
+                P_SlideMove(state, mo);
+            } else if state.p_mobj.mo(mo).flags & MF_MISSILE as i32 != 0 {
                 if state.p_map.ceilingline.is_some_and(|ceilingline| {
                     state
                         .p_setup
@@ -2907,62 +2914,83 @@ pub unsafe fn P_XYMovement(state: &mut GameState, mo: MobjId) {
                                 == state.r_sky.skyflatnum
                         })
                 }) {
-                    P_RemoveMobj(state, (*mo).id);
+                    P_RemoveMobj(state, mo);
                     return;
                 }
-                P_ExplodeMissile(state, (*mo).id);
+                P_ExplodeMissile(state, mo);
             } else {
-                (*mo).momy = 0_i32 as fixed_t;
-                (*mo).momx = (*mo).momy;
+                let m = state.p_mobj.mo_mut(mo);
+                m.momy = 0_i32 as fixed_t;
+                m.momx = m.momy;
             }
         }
         if !(xmove != 0 || ymove != 0) {
             break;
         }
     }
-    if !player.is_null() && (*player).cheats & CF_NOMOMENTUM != 0 {
-        (*mo).momy = 0_i32 as fixed_t;
-        (*mo).momx = (*mo).momy;
-        return;
-    }
-    if (*mo).flags & (MF_MISSILE as i32 | MF_SKULLFLY as i32) != 0 {
-        return;
-    }
-    if (*mo).z > (*mo).floorz {
-        return;
-    }
-    if (*mo).flags & MF_CORPSE as i32 != 0 {
-        if ((*mo).momx > FRACUNIT / 4_i32
-            || (*mo).momx < -FRACUNIT / 4_i32
-            || (*mo).momy > FRACUNIT / 4_i32 || (*mo).momy < -FRACUNIT / 4_i32) && (*mo).floorz != state
-                    .p_setup
-                    .sector_mut(state.p_setup.subsectors[(*mo).subsector.0 as usize].sector)
-                    .floorheight {
+    if let Some(player_id) = player {
+        if state.g_game.players[player_id.0 as usize].cheats & CF_NOMOMENTUM != 0 {
+            let m = state.p_mobj.mo_mut(mo);
+            m.momy = 0_i32 as fixed_t;
+            m.momx = m.momy;
             return;
         }
     }
-    if (*mo).momx > -STOPSPEED
-        && (*mo).momx < STOPSPEED
-        && (*mo).momy > -STOPSPEED
-        && (*mo).momy < STOPSPEED
-        && (player.is_null()
-            || (*player).cmd.forwardmove as i32 == 0_i32 && (*player).cmd.sidemove as i32 == 0_i32)
+    let (flags, z, floorz, momx, momy, subsector) = {
+        let m = state.p_mobj.mo(mo);
+        (m.flags, m.z, m.floorz, m.momx, m.momy, m.subsector)
+    };
+    if flags & (MF_MISSILE as i32 | MF_SKULLFLY as i32) != 0 {
+        return;
+    }
+    if z > floorz {
+        return;
+    }
+    if flags & MF_CORPSE as i32 != 0
+        && (momx > FRACUNIT / 4_i32
+            || momx < -FRACUNIT / 4_i32
+            || momy > FRACUNIT / 4_i32
+            || momy < -FRACUNIT / 4_i32)
+        && floorz
+            != state
+                .p_setup
+                .sector_mut(state.p_setup.subsectors[subsector.0 as usize].sector)
+                .floorheight
     {
-        if !player.is_null()
-            && ((*mo)
+        return;
+    }
+    let player_idle = match player {
+        None => true,
+        Some(player_id) => {
+            let cmd = &state.g_game.players[player_id.0 as usize].cmd;
+            cmd.forwardmove as i32 == 0_i32 && cmd.sidemove as i32 == 0_i32
+        }
+    };
+    if momx > -STOPSPEED
+        && momx < STOPSPEED
+        && momy > -STOPSPEED
+        && momy < STOPSPEED
+        && player_idle
+    {
+        if player.is_some()
+            && (state
+                .p_mobj
+                .mo(mo)
                 .state
                 .unwrap()
                 .0
                 .wrapping_sub(StateNum::S_PLAY_RUN1 as u32))
                 < 4_u32
         {
-            P_SetMobjState(state, (*mo).id, StateNum::S_PLAY);
+            P_SetMobjState(state, mo, StateNum::S_PLAY);
         }
-        (*mo).momx = 0_i32 as fixed_t;
-        (*mo).momy = 0_i32 as fixed_t;
+        let m = state.p_mobj.mo_mut(mo);
+        m.momx = 0_i32 as fixed_t;
+        m.momy = 0_i32 as fixed_t;
     } else {
-        (*mo).momx = FixedMul((*mo).momx, FRICTION);
-        (*mo).momy = FixedMul((*mo).momy, FRICTION);
+        let m = state.p_mobj.mo_mut(mo);
+        m.momx = FixedMul(m.momx, FRICTION);
+        m.momy = FixedMul(m.momy, FRICTION);
     };
 }
 pub fn P_ZMovement(state: &mut GameState, mo: MobjId) {
@@ -3027,87 +3055,92 @@ pub fn P_ZMovement(state: &mut GameState, mo: MobjId) {
         }
     }
 }
-pub unsafe fn P_NightmareRespawn(state: &mut GameState, mobj: MobjId) {
-    let mobj: *mut mobj_t = state.p_mobj.mobj_ptr(mobj);
-    let mut x: fixed_t = 0;
-    let mut y: fixed_t = 0;
-    let mut z: fixed_t = 0;
-    let mut ss: SubsectorId = SubsectorId(0);
-    let mut mo: *mut mobj_t = ::core::ptr::null_mut::<mobj_t>();
-    let mut mthing: *mut mapthing_t = ::core::ptr::null_mut::<mapthing_t>();
-    x = (((*mobj).spawnpoint.x as i32) << FRACBITS) as fixed_t;
-    y = (((*mobj).spawnpoint.y as i32) << FRACBITS) as fixed_t;
-    if !P_CheckPosition(state, (*mobj).id, x, y) {
+pub fn P_NightmareRespawn(state: &mut GameState, mobj: MobjId) {
+    let spawnpoint = state.p_mobj.mo(mobj).spawnpoint;
+    let x = ((spawnpoint.x as i32) << FRACBITS) as fixed_t;
+    let y = ((spawnpoint.y as i32) << FRACBITS) as fixed_t;
+    if !P_CheckPosition(state, mobj, x, y) {
         return;
     }
+    let (mobj_x, mobj_y, mobj_subsector, mobj_type) = {
+        let m = state.p_mobj.mo(mobj);
+        (m.x, m.y, m.subsector, m.type_0)
+    };
     let floorheight1 = state
         .p_setup
-        .sector_mut(state.p_setup.subsectors[(*mobj).subsector.0 as usize].sector)
+        .sector_mut(state.p_setup.subsectors[mobj_subsector.0 as usize].sector)
         .floorheight;
-    mo = P_SpawnMobjPtr(state, (*mobj).x, (*mobj).y, floorheight1, MobjType::MT_TFOG);
-    S_StartSound(state, SoundOrigin::Mobj((*mo).id), sfx_telept as i32);
-    ss = R_PointInSubsector(state, x, y);
+    let fog = P_SpawnMobj(state, mobj_x, mobj_y, floorheight1, MobjType::MT_TFOG);
+    S_StartSound(state, SoundOrigin::Mobj(fog), sfx_telept as i32);
+    let ss = R_PointInSubsector(state, x, y);
     let floorheight2 = state
         .p_setup
         .sector_mut(state.p_setup.subsectors[ss.0 as usize].sector)
         .floorheight;
-    mo = P_SpawnMobjPtr(state, x, y, floorheight2, MobjType::MT_TFOG);
-    S_StartSound(state, SoundOrigin::Mobj((*mo).id), sfx_telept as i32);
-    mthing = &raw mut (*mobj).spawnpoint;
-    if state.info.mobjinfo_mut((*mobj).type_0).flags & MF_SPAWNCEILING as i32 != 0 {
-        z = ONCEILINGZ as fixed_t;
+    let fog = P_SpawnMobj(state, x, y, floorheight2, MobjType::MT_TFOG);
+    S_StartSound(state, SoundOrigin::Mobj(fog), sfx_telept as i32);
+    let z = if state.info.mobjinfo_mut(mobj_type).flags & MF_SPAWNCEILING as i32 != 0 {
+        ONCEILINGZ as fixed_t
     } else {
-        z = ONFLOORZ as fixed_t;
+        ONFLOORZ as fixed_t
+    };
+    let mo = P_SpawnMobj(state, x, y, z, mobj_type);
+    {
+        let m = state.p_mobj.mo_mut(mo);
+        m.spawnpoint = spawnpoint;
+        m.angle = (ANG45 * (spawnpoint.angle as i32 / 45_i32)) as angle_t;
+        if spawnpoint.options as i32 & MTF_AMBUSH != 0 {
+            m.flags |= MF_AMBUSH as i32;
+        }
+        m.reactiontime = 18_i32;
     }
-    mo = P_SpawnMobjPtr(state, x, y, z, (*mobj).type_0);
-    (*mo).spawnpoint = (*mobj).spawnpoint;
-    (*mo).angle = (ANG45 * ((*mthing).angle as i32 / 45_i32)) as angle_t;
-    if (*mthing).options as i32 & MTF_AMBUSH != 0 {
-        (*mo).flags |= MF_AMBUSH as i32;
-    }
-    (*mo).reactiontime = 18_i32;
-    P_RemoveMobj(state, (*mobj).id);
+    P_RemoveMobj(state, mobj);
 }
 pub fn P_MobjThinker(state: &mut GameState, id: MobjId) {
-    let mobj = state.p_mobj.mobj_get(id).unwrap();
-    unsafe {
-        if (*mobj).momx != 0 || (*mobj).momy != 0 || (*mobj).flags & MF_SKULLFLY as i32 != 0 {
-            P_XYMovement(state, (*mobj).id);
-            if matches!((*mobj).thinker.function, ThinkerFn::Removed) {
+    let removed = |state: &GameState| matches!(state.p_mobj.mo(id).thinker.function, ThinkerFn::Removed);
+    {
+        let m = state.p_mobj.mo(id);
+        if m.momx != 0 || m.momy != 0 || m.flags & MF_SKULLFLY as i32 != 0 {
+            P_XYMovement(state, id);
+            if removed(state) {
                 return;
             }
         }
-        if (*mobj).z != (*mobj).floorz || (*mobj).momz != 0 {
-            P_ZMovement(state, (*mobj).id);
-            if matches!((*mobj).thinker.function, ThinkerFn::Removed) {
+    }
+    {
+        let m = state.p_mobj.mo(id);
+        if m.z != m.floorz || m.momz != 0 {
+            P_ZMovement(state, id);
+            if removed(state) {
                 return;
             }
         }
-        if (*mobj).tics != -1_i32 {
-            (*mobj).tics -= 1;
-            if (*mobj).tics == 0 {
-                let nextstate = state.info.state_mut((*mobj).state.unwrap()).nextstate;
-                if !P_SetMobjState(state, (*mobj).id, nextstate) {}
-            }
-        } else {
-            if (*mobj).flags & MF_COUNTKILL as i32 == 0 {
-                return;
-            }
-            if !state.g_game.respawnmonsters {
-                return;
-            }
-            (*mobj).movecount += 1;
-            if (*mobj).movecount < 12_i32 * TICRATE {
-                return;
-            }
-            if state.p_tick.leveltime & 31_i32 != 0 {
-                return;
-            }
-            if P_Random(&mut state.m_random) > 4_i32 {
-                return;
-            }
-            P_NightmareRespawn(state, (*mobj).id);
+    }
+    if state.p_mobj.mo(id).tics != -1_i32 {
+        state.p_mobj.mo_mut(id).tics -= 1;
+        if state.p_mobj.mo(id).tics == 0 {
+            let current = state.p_mobj.mo(id).state.unwrap();
+            let nextstate = state.info.state_mut(current).nextstate;
+            P_SetMobjState(state, id, nextstate);
         }
+    } else {
+        if state.p_mobj.mo(id).flags & MF_COUNTKILL as i32 == 0 {
+            return;
+        }
+        if !state.g_game.respawnmonsters {
+            return;
+        }
+        state.p_mobj.mo_mut(id).movecount += 1;
+        if state.p_mobj.mo(id).movecount < 12_i32 * TICRATE {
+            return;
+        }
+        if state.p_tick.leveltime & 31_i32 != 0 {
+            return;
+        }
+        if P_Random(&mut state.m_random) > 4_i32 {
+            return;
+        }
+        P_NightmareRespawn(state, id);
     }
 }
 pub fn P_SpawnMobj(
@@ -3498,100 +3531,91 @@ pub fn P_RespawnSpecials(state: &mut GameState) {
     }
     state.p_mobj.iquetail = (state.p_mobj.iquetail + 1_i32) & (ITEMQUESIZE - 1_i32);
 }
-pub unsafe fn P_SpawnPlayer(state: &mut GameState, mut mthing: *mut mapthing_t) {
-    let mut p: *mut player_t = ::core::ptr::null_mut::<player_t>();
-    let mut x: fixed_t = 0;
-    let mut y: fixed_t = 0;
-    let mut z: fixed_t = 0;
-    let mut mobj: *mut mobj_t = ::core::ptr::null_mut::<mobj_t>();
-    let mut i: i32 = 0;
-    if (*mthing).type_0 as i32 == 0_i32 {
+pub fn P_SpawnPlayer(state: &mut GameState, mthing: mapthing_t) {
+    if mthing.type_0 as i32 == 0_i32 {
         return;
     }
-    if !state.g_game.playeringame[((*mthing).type_0 as i32 - 1_i32) as usize] {
+    let player_index = (mthing.type_0 as i32 - 1_i32) as usize;
+    if !state.g_game.playeringame[player_index] {
         return;
     }
-    p = &mut state.g_game.players[((*mthing).type_0 as i32 - 1_i32) as usize];
-    if (*p).playerstate == PlayerState::PST_REBORN {
-        G_PlayerReborn(&mut state.g_game, (*mthing).type_0 as i32 - 1_i32);
+    if state.g_game.players[player_index].playerstate == PlayerState::PST_REBORN {
+        unsafe { G_PlayerReborn(&mut state.g_game, mthing.type_0 as i32 - 1_i32) };
     }
-    x = (((*mthing).x as i32) << FRACBITS) as fixed_t;
-    y = (((*mthing).y as i32) << FRACBITS) as fixed_t;
-    z = ONFLOORZ as fixed_t;
-    mobj = P_SpawnMobjPtr(state, x, y, z, MobjType::MT_PLAYER);
-    if (*mthing).type_0 as i32 > 1_i32 {
-        (*mobj).flags |= ((*mthing).type_0 as i32 - 1_i32) << MF_TRANSSHIFT as i32;
+    let x = ((mthing.x as i32) << FRACBITS) as fixed_t;
+    let y = ((mthing.y as i32) << FRACBITS) as fixed_t;
+    let z = ONFLOORZ as fixed_t;
+    let mobj = P_SpawnMobj(state, x, y, z, MobjType::MT_PLAYER);
+    let player_health = state.g_game.players[player_index].health;
+    {
+        let m = state.p_mobj.mo_mut(mobj);
+        if mthing.type_0 as i32 > 1_i32 {
+            m.flags |= (mthing.type_0 as i32 - 1_i32) << MF_TRANSSHIFT as i32;
+        }
+        m.angle = (ANG45 * (mthing.angle as i32 / 45_i32)) as angle_t;
+        m.player = Some(PlayerId(player_index as u8));
+        m.health = player_health;
     }
-    (*mobj).angle = (ANG45 * ((*mthing).angle as i32 / 45_i32)) as angle_t;
-    (*mobj).player = Some(PlayerId(((*mthing).type_0 as i32 - 1_i32) as u8));
-    (*mobj).health = (*p).health;
-    (*p).mo = Some((*mobj).id);
-    (*p).playerstate = PlayerState::PST_LIVE;
-    (*p).refire = 0_i32;
-    (*p).message = None;
-    (*p).damagecount = 0_i32;
-    (*p).bonuscount = 0_i32;
-    (*p).extralight = 0_i32;
-    (*p).fixedcolormap = 0_i32;
-    (*p).viewheight = VIEWHEIGHT as fixed_t;
-    P_SetupPsprites(state, PlayerId(((*mthing).type_0 as i32 - 1_i32) as u8));
+    {
+        let p = &mut state.g_game.players[player_index];
+        p.mo = Some(mobj);
+        p.playerstate = PlayerState::PST_LIVE;
+        p.refire = 0_i32;
+        p.message = None;
+        p.damagecount = 0_i32;
+        p.bonuscount = 0_i32;
+        p.extralight = 0_i32;
+        p.fixedcolormap = 0_i32;
+        p.viewheight = VIEWHEIGHT as fixed_t;
+    }
+    P_SetupPsprites(state, PlayerId(player_index as u8));
     if state.g_game.deathmatch != 0 {
-        i = 0_i32;
-        while i < NUMCARDS {
-            (*p).cards[i as usize] = true;
-            i += 1;
+        for i in 0..NUMCARDS {
+            state.g_game.players[player_index].cards[i as usize] = true;
         }
     }
-    if (*mthing).type_0 as i32 - 1_i32 == state.g_game.consoleplayer {
-        ST_Start(state);
-        HU_Start(state);
+    if mthing.type_0 as i32 - 1_i32 == state.g_game.consoleplayer {
+        unsafe {
+            ST_Start(state);
+            HU_Start(state);
+        }
     }
 }
-pub unsafe fn P_SpawnMapThing(state: &mut GameState, mut mthing: *mut mapthing_t) {
-    let mut i: i32 = 0;
-    let mut bit: i32 = 0;
-    let mut mobj: *mut mobj_t = ::core::ptr::null_mut::<mobj_t>();
-    let mut x: fixed_t = 0;
-    let mut y: fixed_t = 0;
-    let mut z: fixed_t = 0;
-    if (*mthing).type_0 as i32 == 11_i32 {
+pub fn P_SpawnMapThing(state: &mut GameState, mthing: mapthing_t) {
+    if mthing.type_0 as i32 == 11_i32 {
         if state.p_setup.deathmatch_p < 10 {
             let idx = state.p_setup.deathmatch_p;
-            memcpy(
-                &raw mut state.p_setup.deathmatchstarts[idx] as *mut ::core::ffi::c_void,
-                mthing as *const ::core::ffi::c_void,
-                ::core::mem::size_of::<mapthing_t>() as size_t,
-            );
+            state.p_setup.deathmatchstarts[idx] = mthing;
             state.p_setup.deathmatch_p += 1;
         }
         return;
     }
-    if (*mthing).type_0 as i32 <= 0_i32 {
+    if mthing.type_0 as i32 <= 0_i32 {
         return;
     }
-    if (*mthing).type_0 as i32 <= 4_i32 {
-        state.p_setup.playerstarts[((*mthing).type_0 as i32 - 1_i32) as usize] = *mthing;
+    if mthing.type_0 as i32 <= 4_i32 {
+        state.p_setup.playerstarts[(mthing.type_0 as i32 - 1_i32) as usize] = mthing;
         if state.g_game.deathmatch == 0 {
             P_SpawnPlayer(state, mthing);
         }
         return;
     }
-    if !state.g_game.netgame && (*mthing).options as i32 & 16_i32 != 0 {
+    if !state.g_game.netgame && mthing.options as i32 & 16_i32 != 0 {
         return;
     }
-    if state.g_game.gameskill == SkillType::sk_baby {
-        bit = 1_i32;
+    let bit: i32 = if state.g_game.gameskill == SkillType::sk_baby {
+        1_i32
     } else if state.g_game.gameskill == SkillType::sk_nightmare {
-        bit = 4_i32;
+        4_i32
     } else {
-        bit = 1_i32 << (state.g_game.gameskill as i32 - 1_i32);
-    }
-    if (*mthing).options as i32 & bit == 0 {
+        1_i32 << (state.g_game.gameskill as i32 - 1_i32)
+    };
+    if mthing.options as i32 & bit == 0 {
         return;
     }
-    i = 0_i32;
+    let mut i: i32 = 0_i32;
     while i < NUMMOBJTYPES {
-        if (*mthing).type_0 as i32 == state.info.mobjinfo[i as usize].doomednum {
+        if mthing.type_0 as i32 == state.info.mobjinfo[i as usize].doomednum {
             break;
         }
         i += 1;
@@ -3599,9 +3623,7 @@ pub unsafe fn P_SpawnMapThing(state: &mut GameState, mut mthing: *mut mapthing_t
     if i == NUMMOBJTYPES {
         I_Error(&format!(
             "P_SpawnMapThing: Unknown type {} at ({}, {})",
-            (*mthing).type_0 as i32,
-            (*mthing).x as i32,
-            (*mthing).y as i32,
+            mthing.type_0 as i32, mthing.x as i32, mthing.y as i32,
         ));
     }
     if state.g_game.deathmatch != 0
@@ -3615,27 +3637,30 @@ pub unsafe fn P_SpawnMapThing(state: &mut GameState, mut mthing: *mut mapthing_t
     {
         return;
     }
-    x = (((*mthing).x as i32) << FRACBITS) as fixed_t;
-    y = (((*mthing).y as i32) << FRACBITS) as fixed_t;
-    if state.info.mobjinfo[i as usize].flags & MF_SPAWNCEILING as i32 != 0 {
-        z = ONCEILINGZ as fixed_t;
+    let x = ((mthing.x as i32) << FRACBITS) as fixed_t;
+    let y = ((mthing.y as i32) << FRACBITS) as fixed_t;
+    let z = if state.info.mobjinfo[i as usize].flags & MF_SPAWNCEILING as i32 != 0 {
+        ONCEILINGZ as fixed_t
     } else {
-        z = ONFLOORZ as fixed_t;
+        ONFLOORZ as fixed_t
+    };
+    let mobj = P_SpawnMobj(state, x, y, z, mobjtype_from_raw(i));
+    state.p_mobj.mo_mut(mobj).spawnpoint = mthing;
+    if state.p_mobj.mo(mobj).tics > 0_i32 {
+        let tics = state.p_mobj.mo(mobj).tics;
+        state.p_mobj.mo_mut(mobj).tics = 1_i32 + P_Random(&mut state.m_random) % tics;
     }
-    mobj = P_SpawnMobjPtr(state, x, y, z, mobjtype_from_raw(i));
-    (*mobj).spawnpoint = *mthing;
-    if (*mobj).tics > 0_i32 {
-        (*mobj).tics = 1_i32 + P_Random(&mut state.m_random) % (*mobj).tics;
-    }
-    if (*mobj).flags & MF_COUNTKILL as i32 != 0 {
+    let flags = state.p_mobj.mo(mobj).flags;
+    if flags & MF_COUNTKILL as i32 != 0 {
         state.g_game.totalkills += 1;
     }
-    if (*mobj).flags & MF_COUNTITEM as i32 != 0 {
+    if flags & MF_COUNTITEM as i32 != 0 {
         state.g_game.totalitems += 1;
     }
-    (*mobj).angle = (ANG45 * ((*mthing).angle as i32 / 45_i32)) as angle_t;
-    if (*mthing).options as i32 & MTF_AMBUSH != 0 {
-        (*mobj).flags |= MF_AMBUSH as i32;
+    let m = state.p_mobj.mo_mut(mobj);
+    m.angle = (ANG45 * (mthing.angle as i32 / 45_i32)) as angle_t;
+    if mthing.options as i32 & MTF_AMBUSH != 0 {
+        m.flags |= MF_AMBUSH as i32;
     }
 }
 pub fn P_SpawnPuff(state: &mut GameState, x: fixed_t, y: fixed_t, mut z: fixed_t) {
@@ -3664,17 +3689,20 @@ pub fn P_SpawnBlood(state: &mut GameState, x: fixed_t, y: fixed_t, mut z: fixed_
         P_SetMobjState(state, th, StateNum::S_BLOOD3);
     }
 }
-pub unsafe fn P_CheckMissileSpawn(state: &mut GameState, th: MobjId) {
-    let th: *mut mobj_t = state.p_mobj.mobj_ptr(th);
-    (*th).tics -= P_Random(&mut state.m_random) & 3_i32;
-    if (*th).tics < 1_i32 {
-        (*th).tics = 1_i32;
-    }
-    (*th).x += (*th).momx >> 1_i32;
-    (*th).y += (*th).momy >> 1_i32;
-    (*th).z += (*th).momz >> 1_i32;
-    if !P_TryMove(state, (*th).id, (*th).x, (*th).y) {
-        P_ExplodeMissile(state, (*th).id);
+pub fn P_CheckMissileSpawn(state: &mut GameState, th: MobjId) {
+    state.p_mobj.mo_mut(th).tics -= P_Random(&mut state.m_random) & 3_i32;
+    let (x, y) = {
+        let t = state.p_mobj.mo_mut(th);
+        if t.tics < 1_i32 {
+            t.tics = 1_i32;
+        }
+        t.x += t.momx >> 1_i32;
+        t.y += t.momy >> 1_i32;
+        t.z += t.momz >> 1_i32;
+        (t.x, t.y)
+    };
+    if !P_TryMove(state, th, x, y) {
+        P_ExplodeMissile(state, th);
     }
 }
 // Stand-in for a missing target (vanilla's `dummy_mobj`): a permanent arena
@@ -3741,7 +3769,7 @@ pub fn P_SpawnMissile(
         dist = 1_i32;
     }
     state.p_mobj.mo_mut(th).momz = ((dz - sz) / dist) as fixed_t;
-    unsafe { P_CheckMissileSpawn(state, th) };
+    P_CheckMissileSpawn(state, th);
     th
 }
 
@@ -3789,5 +3817,5 @@ pub fn P_SpawnPlayerMissile(state: &mut GameState, source: MobjId, type_0: MobjT
         t.momy = FixedMul(speed as fixed_t, finesine[(an >> ANGLETOFINESHIFT) as usize]);
         t.momz = FixedMul(speed as fixed_t, slope);
     }
-    unsafe { P_CheckMissileSpawn(state, th) };
+    P_CheckMissileSpawn(state, th);
 }

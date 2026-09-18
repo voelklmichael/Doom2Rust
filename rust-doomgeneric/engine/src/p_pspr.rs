@@ -503,7 +503,7 @@ pub fn P_GunShot(state: &mut GameState, mo: MobjId, mut accurate: bool) {
         );
     }
     let bulletslope = state.p_pspr.bulletslope;
-    unsafe { P_LineAttack(state, mo, angle, MISSILERANGE, bulletslope, damage) };
+    P_LineAttack(state, mo, angle, MISSILERANGE, bulletslope, damage);
 }
 pub fn A_FirePistol(state: &mut GameState, player_id: PlayerId, _position: i32) {
     {
@@ -567,7 +567,7 @@ pub fn A_FireShotgun2(
     player_id: PlayerId,
     _position: i32,
 ) {
-    unsafe {
+    {
         let player = player_id;
         let player_mo = state.g_game.players[player.0 as usize].mo.unwrap();
         let mut i: i32 = 0;
