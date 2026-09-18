@@ -305,16 +305,16 @@ pub fn R_CheckBBox(state: &mut GameState, bspcoord: [fixed_t; 4]) -> bool {
     let mut tspan: angle_t;
 
     let mut sx2: i32;
-    let boxx: i32 = if state.r_main.viewx <= bspcoord[BoxIndex::BOXLEFT as usize] {
+    let boxx: i32 = if state.r_main.viewx <= bspcoord[BoxIndex::Left as usize] {
         0_i32
-    } else if state.r_main.viewx < bspcoord[BoxIndex::BOXRIGHT as usize] {
+    } else if state.r_main.viewx < bspcoord[BoxIndex::Right as usize] {
         1_i32
     } else {
         2_i32
     };
-    let boxy: i32 = if state.r_main.viewy >= bspcoord[BoxIndex::BOXTOP as usize] {
+    let boxy: i32 = if state.r_main.viewy >= bspcoord[BoxIndex::Top as usize] {
         0_i32
-    } else if state.r_main.viewy > bspcoord[BoxIndex::BOXBOTTOM as usize] {
+    } else if state.r_main.viewy > bspcoord[BoxIndex::Bottom as usize] {
         1_i32
     } else {
         2_i32

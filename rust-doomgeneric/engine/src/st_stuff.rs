@@ -125,7 +125,7 @@ impl StStuffState {
             lu_palette: 0,
             st_clock: 0,
             st_msgcounter: 0,
-            st_chatstate: StChatStateEnum::StartChatState,
+            st_chatstate: StChatStateEnum::Start,
             st_gamestate: StStateEnum::AutomapState,
             st_statusbaron: false,
             st_chat: false,
@@ -278,9 +278,9 @@ pub enum StStateEnum {
 }
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum StChatStateEnum {
-    StartChatState = 0,
-    WaitDestState = 1,
-    GetChatState = 2,
+    Start = 0,
+    WaitDest = 1,
+    Get = 2,
 }
 pub type load_callback_t = fn(&mut GameState, &str) -> i32;
 pub const DEH_DEFAULT_GOD_MODE_HEALTH: i32 = 100;
@@ -985,7 +985,7 @@ pub fn ST_initData(state: &mut GameState) {
     state.st_stuff.st_firsttime = true;
     state.st_stuff.plyr = PlayerId(state.g_game.consoleplayer as u8);
     state.st_stuff.st_clock = 0_u32;
-    state.st_stuff.st_chatstate = StChatStateEnum::StartChatState;
+    state.st_stuff.st_chatstate = StChatStateEnum::Start;
     state.st_stuff.st_gamestate = StStateEnum::FirstPersonState;
     state.st_stuff.st_statusbaron = true;
     state.st_stuff.st_chat = false;

@@ -459,18 +459,18 @@ pub fn P_LoadLineDefs(state: &mut GameState, lump: i32) {
             ld.slopetype = SlopeType::ST_NEGATIVE;
         }
         if v1.x < v2.x {
-            ld.bbox[BoxIndex::BOXLEFT as usize] = v1.x;
-            ld.bbox[BoxIndex::BOXRIGHT as usize] = v2.x;
+            ld.bbox[BoxIndex::Left as usize] = v1.x;
+            ld.bbox[BoxIndex::Right as usize] = v2.x;
         } else {
-            ld.bbox[BoxIndex::BOXLEFT as usize] = v2.x;
-            ld.bbox[BoxIndex::BOXRIGHT as usize] = v1.x;
+            ld.bbox[BoxIndex::Left as usize] = v2.x;
+            ld.bbox[BoxIndex::Right as usize] = v1.x;
         }
         if v1.y < v2.y {
-            ld.bbox[BoxIndex::BOXBOTTOM as usize] = v1.y;
-            ld.bbox[BoxIndex::BOXTOP as usize] = v2.y;
+            ld.bbox[BoxIndex::Bottom as usize] = v1.y;
+            ld.bbox[BoxIndex::Top as usize] = v2.y;
         } else {
-            ld.bbox[BoxIndex::BOXBOTTOM as usize] = v2.y;
-            ld.bbox[BoxIndex::BOXTOP as usize] = v1.y;
+            ld.bbox[BoxIndex::Bottom as usize] = v2.y;
+            ld.bbox[BoxIndex::Top as usize] = v1.y;
         }
         ld.sidenum[0] = reader.i16();
         ld.sidenum[1] = reader.i16();
@@ -594,34 +594,34 @@ pub fn P_GroupLines(state: &mut GameState) {
             j += 1;
         }
         let sector = &mut state.p_setup.sectors[i as usize];
-        sector.soundorg.x = ((bbox[BoxIndex::BOXRIGHT as usize] + bbox[BoxIndex::BOXLEFT as usize])
-            / 2_i32) as fixed_t;
-        sector.soundorg.y = ((bbox[BoxIndex::BOXTOP as usize] + bbox[BoxIndex::BOXBOTTOM as usize])
-            / 2_i32) as fixed_t;
-        block = (bbox[BoxIndex::BOXTOP as usize] - state.p_setup.bmaporgy + 32_i32 * FRACUNIT)
+        sector.soundorg.x =
+            ((bbox[BoxIndex::Right as usize] + bbox[BoxIndex::Left as usize]) / 2_i32) as fixed_t;
+        sector.soundorg.y =
+            ((bbox[BoxIndex::Top as usize] + bbox[BoxIndex::Bottom as usize]) / 2_i32) as fixed_t;
+        block = (bbox[BoxIndex::Top as usize] - state.p_setup.bmaporgy + 32_i32 * FRACUNIT)
             >> MAPBLOCKSHIFT;
         block = if block >= state.p_setup.bmapheight {
             state.p_setup.bmapheight - 1_i32
         } else {
             block
         };
-        sector.blockbox[BoxIndex::BOXTOP as usize] = block;
-        block = (bbox[BoxIndex::BOXBOTTOM as usize] - state.p_setup.bmaporgy - 32_i32 * FRACUNIT)
+        sector.blockbox[BoxIndex::Top as usize] = block;
+        block = (bbox[BoxIndex::Bottom as usize] - state.p_setup.bmaporgy - 32_i32 * FRACUNIT)
             >> MAPBLOCKSHIFT;
         block = if block < 0_i32 { 0_i32 } else { block };
-        sector.blockbox[BoxIndex::BOXBOTTOM as usize] = block;
-        block = (bbox[BoxIndex::BOXRIGHT as usize] - state.p_setup.bmaporgx + 32_i32 * FRACUNIT)
+        sector.blockbox[BoxIndex::Bottom as usize] = block;
+        block = (bbox[BoxIndex::Right as usize] - state.p_setup.bmaporgx + 32_i32 * FRACUNIT)
             >> MAPBLOCKSHIFT;
         block = if block >= state.p_setup.bmapwidth {
             state.p_setup.bmapwidth - 1_i32
         } else {
             block
         };
-        sector.blockbox[BoxIndex::BOXRIGHT as usize] = block;
-        block = (bbox[BoxIndex::BOXLEFT as usize] - state.p_setup.bmaporgx - 32_i32 * FRACUNIT)
+        sector.blockbox[BoxIndex::Right as usize] = block;
+        block = (bbox[BoxIndex::Left as usize] - state.p_setup.bmaporgx - 32_i32 * FRACUNIT)
             >> MAPBLOCKSHIFT;
         block = if block < 0_i32 { 0_i32 } else { block };
-        sector.blockbox[BoxIndex::BOXLEFT as usize] = block;
+        sector.blockbox[BoxIndex::Left as usize] = block;
         i += 1;
     }
 }

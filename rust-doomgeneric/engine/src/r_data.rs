@@ -27,7 +27,7 @@ pub struct RDataState {
     pub lastspritelump: i32,
     pub numspritelumps: i32,
     pub numtextures: i32,
-    pub textures: Vec<Box<texture_t>>,
+    pub textures: Vec<texture_t>,
     pub textures_hashtable: Vec<Option<TextureId>>,
     pub texturewidthmask: Vec<i32>,
     pub textureheight: Vec<fixed_t>,
@@ -93,7 +93,7 @@ pub struct TextureId(pub u32);
 
 // No longer Copy/Clone: `patches` owns a Vec instead of being a C flexible
 // array member -- confirmed nothing copies a texture_t by value anywhere,
-// only ever accessed through the owning Vec<Box<texture_t>> in
+// only ever accessed through the owning Vec<texture_t> in
 // RDataState.textures or a raw pointer derived from it.
 pub struct texture_s {
     pub name: FixedCStr<8>,
@@ -362,7 +362,7 @@ pub fn R_InitTextures(state: &mut GameState) {
     // the loop below instead of pre-sized-then-indexed -- the loop always
     // assigns index i on iteration i, strictly in order, so there's no need
     // for a placeholder value (unlike a raw Z_Malloc'd null pointer, an
-    // owned Vec<Box<texture_t>>/Vec<Vec<_>> has no cheap "empty" placeholder
+    // owned Vec<texture_t>/Vec<Vec<_>> has no cheap "empty" placeholder
     // worth inventing just to pre-size).
     state.r_data.textures = Vec::with_capacity(state.r_data.numtextures as usize);
     state.r_data.texturecolumnlump = Vec::with_capacity(state.r_data.numtextures as usize);
@@ -442,7 +442,7 @@ pub fn R_InitTextures(state: &mut GameState) {
             patches.push(patch_entry);
             j += 1;
         }
-        state.r_data.textures.push(Box::new(texture_t {
+        state.r_data.textures.push(texture_t {
             name: mt_name,
             width: mt_width,
             height: mt_height,
@@ -450,7 +450,7 @@ pub fn R_InitTextures(state: &mut GameState) {
             next: None,
             patchcount: mt_patchcount,
             patches,
-        }));
+        });
         let texture_width = state.r_data.textures[i as usize].width;
         let texture_height = state.r_data.textures[i as usize].height;
         state
