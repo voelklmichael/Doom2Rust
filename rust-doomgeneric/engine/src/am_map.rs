@@ -25,7 +25,7 @@ use crate::p_spec::ML_MAPPED;
 use crate::p_spec::ML_SECRET;
 use crate::st_stuff::ST_Responder;
 use crate::stdint_types::byte;
-use crate::stdint_types::size_t;
+
 use crate::tables::angle_t;
 use crate::tables::finecosine;
 use crate::tables::finesine;
@@ -130,21 +130,7 @@ impl AmMapState {
             markpoints: [mpoint_t { x: 0, y: 0 }; 10],
             markpointnum: 0,
             followplayer: 1,
-            cheat_amap: cheatseq_t {
-                sequence: unsafe {
-                    ::core::mem::transmute::<[u8; 25], [::core::ffi::c_char; 25]>(
-                        *b"iddt\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0",
-                    )
-                },
-                sequence_len: (::core::mem::size_of::<[::core::ffi::c_char; 5]>() as size_t)
-                    .wrapping_sub(1 as size_t),
-                parameter_chars: 0,
-                chars_read: 0,
-                param_chars_read: 0,
-                parameter_buf: unsafe {
-                    ::core::mem::transmute::<[u8; 5], [::core::ffi::c_char; 5]>(*b"\0\0\0\0\0")
-                },
-            },
+            cheat_amap: cheatseq_t::new("iddt", 0),
             stopped: true,
             am_start_lastlevel: -1,
             am_start_lastepisode: -1,
@@ -753,7 +739,7 @@ pub fn AM_Stop(state: &mut GameState) {
     };
     AM_unloadPics(state);
     state.am_map.automapactive = false;
-    unsafe { ST_Responder(state, &st_notify) };
+    ST_Responder(state, &st_notify);
     state.am_map.stopped = true;
 }
 pub fn AM_Start(state: &mut GameState) {
@@ -869,10 +855,7 @@ pub unsafe fn AM_Responder(state: &mut GameState, mut ev: &event_t) -> bool {
             rc = false_0;
         }
         if state.g_game.deathmatch == 0
-            && cht_CheckCheat(
-                &raw mut state.am_map.cheat_amap,
-                ev.data2 as ::core::ffi::c_char,
-            ) != 0
+            && cht_CheckCheat(&mut state.am_map.cheat_amap, ev.data2 as u8)
         {
             rc = false_0;
             state.am_map.cheating = (state.am_map.cheating + 1_i32) % 3_i32;

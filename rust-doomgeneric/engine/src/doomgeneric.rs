@@ -18,5 +18,5 @@ pub fn doomgeneric_Create(state: &mut GameState, args: Vec<String>) {
         DOOMGENERIC_RESX,
         DOOMGENERIC_RESY,
     );
-    unsafe { D_DoomMain(state) };
+    D_DoomMain(state);
 }

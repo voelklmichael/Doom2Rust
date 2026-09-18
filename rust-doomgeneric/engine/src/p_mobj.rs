@@ -3211,17 +3211,6 @@ pub fn P_SpawnMobj(
     id
 }
 
-// Transitional: for callers that still hold raw mobj pointers.
-pub fn P_SpawnMobjPtr(
-    state: &mut GameState,
-    x: fixed_t,
-    y: fixed_t,
-    z: fixed_t,
-    type_0: MobjType,
-) -> *mut mobj_t {
-    let id = P_SpawnMobj(state, x, y, z, type_0);
-    state.p_mobj.mobj_ptr(id)
-}
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Hash)]
 #[repr(C)]
 pub struct MobjId {
@@ -3540,7 +3529,7 @@ pub fn P_SpawnPlayer(state: &mut GameState, mthing: mapthing_t) {
         return;
     }
     if state.g_game.players[player_index].playerstate == PlayerState::PST_REBORN {
-        unsafe { G_PlayerReborn(&mut state.g_game, mthing.type_0 as i32 - 1_i32) };
+        G_PlayerReborn(&mut state.g_game, mthing.type_0 as i32 - 1_i32);
     }
     let x = ((mthing.x as i32) << FRACBITS) as fixed_t;
     let y = ((mthing.y as i32) << FRACBITS) as fixed_t;
@@ -3773,16 +3762,6 @@ pub fn P_SpawnMissile(
     th
 }
 
-// Transitional: for callers that still hold raw mobj pointers.
-pub fn P_SpawnMissilePtr(
-    state: &mut GameState,
-    source: MobjId,
-    dest: MobjId,
-    type_0: MobjType,
-) -> *mut mobj_t {
-    let id = P_SpawnMissile(state, source, dest, type_0);
-    state.p_mobj.mobj_ptr(id)
-}
 pub fn P_SpawnPlayerMissile(state: &mut GameState, source: MobjId, type_0: MobjType) {
     let mut an: angle_t = state.p_mobj.mo(source).angle;
     let mut slope = P_AimLineAttack(state, Some(source), an, 16 as fixed_t * 64 as fixed_t * FRACUNIT);

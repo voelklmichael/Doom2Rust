@@ -372,30 +372,13 @@ pub unsafe fn I_FinishUpdate(state: &mut GameState) {
 pub fn I_ReadScreen(state: &GameState) -> Vec<byte> {
     state.i_video.I_VideoBuffer[..(SCREENWIDTH * SCREENHEIGHT) as usize].to_vec()
 }
-pub unsafe fn I_SetPalette(state: &mut GameState, mut palette: *mut byte) {
-    let mut i: i32 = 0;
-    i = 0_i32;
-    while i < 256_i32 {
-        state.i_video.colors[i as usize].set_a(0 as uint32_t as uint32_t);
-        let mut rhs = {
-            let fresh0 = palette;
-            palette = palette.offset(1);
-            gammatable[state.i_video.usegamma as usize][*fresh0 as usize] as uint32_t
-        } as uint32_t;
-        state.i_video.colors[i as usize].set_r(rhs);
-        let mut rhs_0 = {
-            let fresh1 = palette;
-            palette = palette.offset(1);
-            gammatable[state.i_video.usegamma as usize][*fresh1 as usize] as uint32_t
-        } as uint32_t;
-        state.i_video.colors[i as usize].set_g(rhs_0);
-        let mut rhs_1 = {
-            let fresh2 = palette;
-            palette = palette.offset(1);
-            gammatable[state.i_video.usegamma as usize][*fresh2 as usize] as uint32_t
-        } as uint32_t;
-        state.i_video.colors[i as usize].set_b(rhs_1);
-        i += 1;
+pub fn I_SetPalette(state: &mut GameState, palette: &[byte]) {
+    let gamma = &gammatable[state.i_video.usegamma as usize];
+    for (color, rgb) in state.i_video.colors.iter_mut().zip(palette.chunks_exact(3)) {
+        color.set_a(0 as uint32_t);
+        color.set_r(gamma[rgb[0] as usize] as uint32_t);
+        color.set_g(gamma[rgb[1] as usize] as uint32_t);
+        color.set_b(gamma[rgb[2] as usize] as uint32_t);
     }
 }
 pub fn I_GetPaletteIndex(mut r: i32, mut g: i32, mut b: i32) -> i32 {
