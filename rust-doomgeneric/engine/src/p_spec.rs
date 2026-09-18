@@ -180,7 +180,6 @@ impl PSpecState {
 }
 
 #[derive(Copy, Clone)]
-#[repr(C)]
 pub struct anim_t {
     pub istexture: bool,
     pub picnum: i32,
@@ -189,7 +188,6 @@ pub struct anim_t {
     pub speed: i32,
 }
 #[derive(Copy, Clone)]
-#[repr(C)]
 pub struct animdef_t {
     pub istexture: i32,
     pub endname: FixedCStr<9>,
@@ -197,7 +195,6 @@ pub struct animdef_t {
     pub speed: i32,
 }
 #[derive(Copy, Clone)]
-#[repr(C)]
 pub struct button_t {
     pub line: LineId,
     pub where_0: BWhere,
@@ -206,7 +203,6 @@ pub struct button_t {
     pub soundorg: SectorId,
 }
 #[derive(Copy, Clone)]
-#[repr(C)]
 pub struct plat_t {
     pub thinker: thinker_t,
     pub sector: SectorId,
@@ -245,7 +241,6 @@ impl Default for plat_t {
     }
 }
 #[derive(Copy, Clone)]
-#[repr(C)]
 pub struct ceiling_t {
     pub thinker: thinker_t,
     pub type_0: CeilingE,
@@ -280,7 +275,6 @@ impl Default for ceiling_t {
     }
 }
 #[derive(Copy, Clone)]
-#[repr(C)]
 pub struct floormove_t {
     pub thinker: thinker_t,
     pub type_0: FloorE,

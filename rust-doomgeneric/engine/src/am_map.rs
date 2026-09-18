@@ -149,25 +149,21 @@ impl AmMapState {
 }
 
 #[derive(Copy, Clone)]
-#[repr(C)]
 pub struct mpoint_t {
     pub x: fixed_t,
     pub y: fixed_t,
 }
 #[derive(Copy, Clone)]
-#[repr(C)]
 pub struct mline_t {
     pub a: mpoint_t,
     pub b: mpoint_t,
 }
 #[derive(Copy, Clone)]
-#[repr(C)]
 pub struct fline_t {
     pub a: fpoint_t,
     pub b: fpoint_t,
 }
 #[derive(Copy, Clone)]
-#[repr(C)]
 pub struct fpoint_t {
     pub x: i32,
     pub y: i32,

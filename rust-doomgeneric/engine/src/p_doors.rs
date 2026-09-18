@@ -34,7 +34,6 @@ pub enum VldoorE {
     vld_blazeClose = 7,
 }
 #[derive(Copy, Clone)]
-#[repr(C)]
 pub struct vldoor_t {
     pub thinker: thinker_t,
     pub type_0: VldoorE,

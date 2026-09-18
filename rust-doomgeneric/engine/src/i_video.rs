@@ -56,7 +56,6 @@ impl IVideoState {
 pub type __uint16_t = u16;
 pub type uint16_t = __uint16_t;
 #[derive(Copy, Clone)]
-#[repr(C)]
 pub struct FB_ScreenInfo {
     pub xres: uint32_t,
     pub yres: uint32_t,
@@ -94,13 +93,11 @@ impl FB_ScreenInfo {
     };
 }
 #[derive(Copy, Clone)]
-#[repr(C)]
 pub struct FB_BitField {
     pub offset: uint32_t,
     pub length: uint32_t,
 }
 #[derive(Copy, Clone)]
-#[repr(C)]
 pub struct color {
     pub b_g_r_a: [u8; 4],
 }
@@ -131,7 +128,6 @@ impl color {
     }
 }
 #[derive(Copy, Clone)]
-#[repr(C)]
 pub struct col_t {
     pub r: byte,
     pub g: byte,

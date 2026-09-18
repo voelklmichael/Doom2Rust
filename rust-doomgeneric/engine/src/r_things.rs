@@ -125,7 +125,6 @@ impl RThingsState {
 }
 
 #[derive(Copy, Clone)]
-#[repr(C)]
 pub struct vissprite_s {
     pub x1: i32,
     pub x2: i32,

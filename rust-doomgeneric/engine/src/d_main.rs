@@ -222,13 +222,11 @@ pub const wipe_NUMWIPES: C2RustUnnamed_2 = 2;
 pub const wipe_Melt: C2RustUnnamed_2 = 1;
 pub const wipe_ColorXForm: C2RustUnnamed_2 = 0;
 #[derive(Copy, Clone)]
-#[repr(C)]
 pub struct C2RustUnnamed_3 {
     pub name: &'static str,
     pub mission: GameMission_t,
 }
 #[derive(Copy, Clone)]
-#[repr(C)]
 pub struct C2RustUnnamed_4 {
     pub description: &'static str,
     pub cmdline: &'static str,

@@ -550,7 +550,6 @@ impl MMenuState {
 }
 
 #[derive(Copy, Clone)]
-#[repr(C)]
 pub struct menuitem_t {
     pub status: i16,
     pub name: FixedCStr<10>,

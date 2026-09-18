@@ -358,7 +358,6 @@ impl GGameState {
 }
 
 #[derive(Copy, Clone)]
-#[repr(C)]
 pub struct C2RustUnnamed_5 {
     pub weapon: weapontype_t,
     pub weapon_num: weapontype_t,

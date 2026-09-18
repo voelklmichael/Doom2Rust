@@ -34,7 +34,6 @@ impl WWadState {
 }
 
 #[derive(Clone)]
-#[repr(C)]
 pub struct lumpinfo_s {
     pub name: FixedCStr<8>,
     pub wad_file: &'static wad_file_t,

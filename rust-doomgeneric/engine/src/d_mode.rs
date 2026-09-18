@@ -97,7 +97,6 @@ impl GameVersion {
     }
 }
 #[derive(Copy, Clone)]
-#[repr(C)]
 pub struct C2RustUnnamed {
     pub mission: GameMission_t,
     pub mode: GameMode_t,
@@ -105,7 +104,6 @@ pub struct C2RustUnnamed {
     pub map: i32,
 }
 #[derive(Copy, Clone)]
-#[repr(C)]
 pub struct C2RustUnnamed_0 {
     pub mission: GameMission_t,
     pub version: GameVersion,

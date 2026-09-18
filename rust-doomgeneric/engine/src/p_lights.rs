@@ -12,7 +12,6 @@ use crate::p_tick::ThinkerKind;
 use crate::p_tick::ThinkerPayload;
 
 #[derive(Copy, Clone)]
-#[repr(C)]
 pub struct fireflicker_t {
     pub thinker: thinker_t,
     pub sector: SectorId,
@@ -34,7 +33,6 @@ impl Default for fireflicker_t {
     }
 }
 #[derive(Copy, Clone)]
-#[repr(C)]
 pub struct lightflash_t {
     pub thinker: thinker_t,
     pub sector: SectorId,
@@ -60,7 +58,6 @@ impl Default for lightflash_t {
     }
 }
 #[derive(Copy, Clone)]
-#[repr(C)]
 pub struct strobe_t {
     pub thinker: thinker_t,
     pub sector: SectorId,
@@ -86,7 +83,6 @@ impl Default for strobe_t {
     }
 }
 #[derive(Copy, Clone)]
-#[repr(C)]
 pub struct glow_t {
     pub thinker: thinker_t,
     pub sector: SectorId,
