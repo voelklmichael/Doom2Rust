@@ -1,5 +1,5 @@
 use crate::game_state::GameState;
-use crate::m_bbox::{BOXBOTTOM, BOXLEFT, BOXRIGHT, BOXTOP};
+use crate::m_bbox::BoxIndex;
 use crate::m_fixed::fixed_t;
 use crate::m_fixed::FixedDiv;
 use crate::m_fixed::FixedMul;
@@ -245,8 +245,8 @@ pub fn P_BoxOnLineSide(state: &mut GameState, tmbox: [fixed_t; 4], mut ld: LineI
     match ldv.slopetype as u32 {
         0 => {
             let ld_v1 = state.p_setup.vertexes[ldv.v1.0 as usize];
-            p1 = (tmbox[BOXTOP as usize] > ld_v1.y) as i32;
-            p2 = (tmbox[BOXBOTTOM as usize] > ld_v1.y) as i32;
+            p1 = (tmbox[BoxIndex::BOXTOP as usize] > ld_v1.y) as i32;
+            p2 = (tmbox[BoxIndex::BOXBOTTOM as usize] > ld_v1.y) as i32;
             if ldv.dx < 0_i32 {
                 p1 ^= 1_i32;
                 p2 ^= 1_i32;
@@ -254,28 +254,38 @@ pub fn P_BoxOnLineSide(state: &mut GameState, tmbox: [fixed_t; 4], mut ld: LineI
         }
         1 => {
             let ld_v1 = state.p_setup.vertexes[ldv.v1.0 as usize];
-            p1 = (tmbox[BOXRIGHT as usize] < ld_v1.x) as i32;
-            p2 = (tmbox[BOXLEFT as usize] < ld_v1.x) as i32;
+            p1 = (tmbox[BoxIndex::BOXRIGHT as usize] < ld_v1.x) as i32;
+            p2 = (tmbox[BoxIndex::BOXLEFT as usize] < ld_v1.x) as i32;
             if ldv.dy < 0_i32 {
                 p1 ^= 1_i32;
                 p2 ^= 1_i32;
             }
         }
         2 => {
-            p1 = P_PointOnLineSide(state, tmbox[BOXLEFT as usize], tmbox[BOXTOP as usize], ld);
+            p1 = P_PointOnLineSide(
+                state,
+                tmbox[BoxIndex::BOXLEFT as usize],
+                tmbox[BoxIndex::BOXTOP as usize],
+                ld,
+            );
             p2 = P_PointOnLineSide(
                 state,
-                tmbox[BOXRIGHT as usize],
-                tmbox[BOXBOTTOM as usize],
+                tmbox[BoxIndex::BOXRIGHT as usize],
+                tmbox[BoxIndex::BOXBOTTOM as usize],
                 ld,
             );
         }
         3 => {
-            p1 = P_PointOnLineSide(state, tmbox[BOXRIGHT as usize], tmbox[BOXTOP as usize], ld);
+            p1 = P_PointOnLineSide(
+                state,
+                tmbox[BoxIndex::BOXRIGHT as usize],
+                tmbox[BoxIndex::BOXTOP as usize],
+                ld,
+            );
             p2 = P_PointOnLineSide(
                 state,
-                tmbox[BOXLEFT as usize],
-                tmbox[BOXBOTTOM as usize],
+                tmbox[BoxIndex::BOXLEFT as usize],
+                tmbox[BoxIndex::BOXBOTTOM as usize],
                 ld,
             );
         }
@@ -370,7 +380,7 @@ pub fn P_UnsetThingPosition(state: &mut GameState, thing: MobjId) {
             t.y,
         )
     };
-    if flags & MF_NOSECTOR as i32 == 0 {
+    if flags & MF_NOSECTOR == 0 {
         if let Some(id) = snext {
             state
                 .p_mobj
@@ -389,7 +399,7 @@ pub fn P_UnsetThingPosition(state: &mut GameState, thing: MobjId) {
             state.p_setup.sector_mut(sector).thinglist = snext;
         }
     }
-    if flags & MF_NOBLOCKMAP as i32 == 0 {
+    if flags & MF_NOBLOCKMAP == 0 {
         if let Some(id) = bnext {
             state
                 .p_mobj
@@ -424,7 +434,7 @@ pub fn P_SetThingPosition(state: &mut GameState, thing: MobjId) {
     };
     let ss = R_PointInSubsector(state, x, y);
     state.p_mobj.mo_mut(thing).subsector = ss;
-    if flags & MF_NOSECTOR as i32 == 0 {
+    if flags & MF_NOSECTOR == 0 {
         let sector = state.p_setup.subsectors[ss.0 as usize].sector;
         let old_head = state.p_setup.sector_mut(sector).thinglist;
         {
@@ -441,7 +451,7 @@ pub fn P_SetThingPosition(state: &mut GameState, thing: MobjId) {
         }
         state.p_setup.sector_mut(sector).thinglist = Some(thing);
     }
-    if flags & MF_NOBLOCKMAP as i32 == 0 {
+    if flags & MF_NOBLOCKMAP == 0 {
         let blockx = (x - state.p_setup.bmaporgx) >> MAPBLOCKSHIFT;
         let blocky = (y - state.p_setup.bmaporgy) >> MAPBLOCKSHIFT;
         if blockx >= 0_i32

@@ -13,12 +13,12 @@ use crate::p_setup::LineId;
 
 use crate::s_sound::S_StartSound;
 use crate::s_sound::SoundOrigin;
-use crate::sounds::sfx_telept;
+use crate::sounds::SfxName;
 use crate::tables::finecosine;
 use crate::tables::finesine;
 use crate::tables::ANGLETOFINESHIFT;
 pub fn EV_Teleport(state: &mut GameState, line: LineId, side: i32, thing: MobjId) -> i32 {
-    if state.p_mobj.mo(thing).flags & MF_MISSILE as i32 != 0 {
+    if state.p_mobj.mo(thing).flags & MF_MISSILE != 0 {
         return 0_i32;
     }
     if side == 1_i32 {
@@ -63,7 +63,7 @@ pub fn EV_Teleport(state: &mut GameState, line: LineId, side: i32, thing: MobjId
                             p.viewz = thing_z + p.viewheight;
                         }
                         let fog = P_SpawnMobj(state, oldx, oldy, oldz, MobjType::MT_TFOG);
-                        S_StartSound(state, SoundOrigin::Mobj(fog), sfx_telept as i32);
+                        S_StartSound(state, SoundOrigin::Mobj(fog), SfxName::sfx_telept as i32);
                         let an = m_angle >> ANGLETOFINESHIFT;
                         let thing_z = state.p_mobj.mo(thing).z;
                         let fog = P_SpawnMobj(
@@ -73,7 +73,7 @@ pub fn EV_Teleport(state: &mut GameState, line: LineId, side: i32, thing: MobjId
                             thing_z,
                             MobjType::MT_TFOG,
                         );
-                        S_StartSound(state, SoundOrigin::Mobj(fog), sfx_telept as i32);
+                        S_StartSound(state, SoundOrigin::Mobj(fog), SfxName::sfx_telept as i32);
                         let t = state.p_mobj.mo_mut(thing);
                         if t.player.is_some() {
                             t.reactiontime = 18_i32;

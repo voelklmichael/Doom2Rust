@@ -365,11 +365,10 @@ pub fn R_DrawVisSprite(state: &mut GameState, vis: &vissprite_t) {
     state.r_draw.dc_colormap = vis.colormap;
     if state.r_draw.dc_colormap.is_none() {
         state.r_main.colfunc = state.r_main.fuzzcolfunc;
-    } else if vis.mobjflags & MF_TRANSLATION as i32 != 0 {
+    } else if vis.mobjflags & MF_TRANSLATION != 0 {
         state.r_main.colfunc = state.r_main.transcolfunc;
-        state.r_draw.dc_translation = ((vis.mobjflags & MF_TRANSLATION as i32)
-            >> (MF_TRANSSHIFT as i32 - 8_i32)) as usize
-            - 256;
+        state.r_draw.dc_translation =
+            ((vis.mobjflags & MF_TRANSLATION) >> (MF_TRANSSHIFT - 8_i32)) as usize - 256;
     }
     state.r_draw.dc_iscale = (vis.xiscale.abs() >> state.r_main.detailshift) as fixed_t;
     state.r_draw.dc_texturemid = vis.texturemid;
@@ -513,7 +512,7 @@ pub fn R_ProjectSprite(state: &mut GameState, thing_id: MobjId) {
         vis.startfrac += vis.xiscale * (vis.x1 - x1);
     }
     vis.patch = lump;
-    if thing_flags & MF_SHADOW as i32 != 0 {
+    if thing_flags & MF_SHADOW != 0 {
         vis.colormap = None;
     } else if let Some(colormap) = state.r_main.fixedcolormap {
         vis.colormap = Some(colormap);

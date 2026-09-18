@@ -12,8 +12,8 @@ use crate::m_random::M_Random;
 use crate::s_sound::S_ChangeMusic;
 use crate::s_sound::S_StartSound;
 use crate::s_sound::SoundOrigin;
-use crate::sounds::{mus_dm2int, mus_inter};
-use crate::sounds::{sfx_barexp, sfx_pistol, sfx_pldeth, sfx_sgcock, sfx_slop};
+use crate::sounds::MusicName;
+use crate::sounds::SfxName;
 use crate::st_stuff::load_callback_t;
 use crate::v_video::Screen;
 use crate::v_video::V_CachePatchNum;
@@ -1143,12 +1143,12 @@ pub fn WI_updateDeathmatchStats(state: &mut GameState) {
             }
             i += 1;
         }
-        S_StartSound(state, SoundOrigin::None, sfx_barexp as i32);
+        S_StartSound(state, SoundOrigin::None, SfxName::sfx_barexp as i32);
         state.wi_stuff.dm_state = 4_i32;
     }
     if state.wi_stuff.dm_state == 2_i32 {
         if state.wi_stuff.bcnt & 3_i32 == 0 {
-            S_StartSound(state, SoundOrigin::None, sfx_pistol as i32);
+            S_StartSound(state, SoundOrigin::None, SfxName::sfx_pistol as i32);
         }
         stillticking = false;
         i = 0_i32;
@@ -1178,12 +1178,12 @@ pub fn WI_updateDeathmatchStats(state: &mut GameState) {
             i += 1;
         }
         if !stillticking {
-            S_StartSound(state, SoundOrigin::None, sfx_barexp as i32);
+            S_StartSound(state, SoundOrigin::None, SfxName::sfx_barexp as i32);
             state.wi_stuff.dm_state += 1;
         }
     } else if state.wi_stuff.dm_state == 4_i32 {
         if state.wi_stuff.acceleratestage != 0 {
-            S_StartSound(state, SoundOrigin::None, sfx_slop as i32);
+            S_StartSound(state, SoundOrigin::None, SfxName::sfx_slop as i32);
             if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 {
                 WI_initNoState(state);
             } else {
@@ -1335,12 +1335,12 @@ pub fn WI_updateNetgameStats(state: &mut GameState) {
             }
             i += 1;
         }
-        S_StartSound(state, SoundOrigin::None, sfx_barexp as i32);
+        S_StartSound(state, SoundOrigin::None, SfxName::sfx_barexp as i32);
         state.wi_stuff.ng_state = 10_i32;
     }
     if state.wi_stuff.ng_state == 2_i32 {
         if state.wi_stuff.bcnt & 3_i32 == 0 {
-            S_StartSound(state, SoundOrigin::None, sfx_pistol as i32);
+            S_StartSound(state, SoundOrigin::None, SfxName::sfx_pistol as i32);
         }
         stillticking = false;
         i = 0_i32;
@@ -1359,12 +1359,12 @@ pub fn WI_updateNetgameStats(state: &mut GameState) {
             i += 1;
         }
         if !stillticking {
-            S_StartSound(state, SoundOrigin::None, sfx_barexp as i32);
+            S_StartSound(state, SoundOrigin::None, SfxName::sfx_barexp as i32);
             state.wi_stuff.ng_state += 1;
         }
     } else if state.wi_stuff.ng_state == 4_i32 {
         if state.wi_stuff.bcnt & 3_i32 == 0 {
-            S_StartSound(state, SoundOrigin::None, sfx_pistol as i32);
+            S_StartSound(state, SoundOrigin::None, SfxName::sfx_pistol as i32);
         }
         stillticking = false;
         i = 0_i32;
@@ -1383,12 +1383,12 @@ pub fn WI_updateNetgameStats(state: &mut GameState) {
             i += 1;
         }
         if !stillticking {
-            S_StartSound(state, SoundOrigin::None, sfx_barexp as i32);
+            S_StartSound(state, SoundOrigin::None, SfxName::sfx_barexp as i32);
             state.wi_stuff.ng_state += 1;
         }
     } else if state.wi_stuff.ng_state == 6_i32 {
         if state.wi_stuff.bcnt & 3_i32 == 0 {
-            S_StartSound(state, SoundOrigin::None, sfx_pistol as i32);
+            S_StartSound(state, SoundOrigin::None, SfxName::sfx_pistol as i32);
         }
         stillticking = false;
         i = 0_i32;
@@ -1407,12 +1407,12 @@ pub fn WI_updateNetgameStats(state: &mut GameState) {
             i += 1;
         }
         if !stillticking {
-            S_StartSound(state, SoundOrigin::None, sfx_barexp as i32);
+            S_StartSound(state, SoundOrigin::None, SfxName::sfx_barexp as i32);
             state.wi_stuff.ng_state += 1_i32 + 2_i32 * (state.wi_stuff.dofrags == 0) as i32;
         }
     } else if state.wi_stuff.ng_state == 8_i32 {
         if state.wi_stuff.bcnt & 3_i32 == 0 {
-            S_StartSound(state, SoundOrigin::None, sfx_pistol as i32);
+            S_StartSound(state, SoundOrigin::None, SfxName::sfx_pistol as i32);
         }
         stillticking = false;
         i = 0_i32;
@@ -1429,12 +1429,12 @@ pub fn WI_updateNetgameStats(state: &mut GameState) {
             i += 1;
         }
         if !stillticking {
-            S_StartSound(state, SoundOrigin::None, sfx_pldeth as i32);
+            S_StartSound(state, SoundOrigin::None, SfxName::sfx_pldeth as i32);
             state.wi_stuff.ng_state += 1;
         }
     } else if state.wi_stuff.ng_state == 10_i32 {
         if state.wi_stuff.acceleratestage != 0 {
-            S_StartSound(state, SoundOrigin::None, sfx_sgcock as i32);
+            S_StartSound(state, SoundOrigin::None, SfxName::sfx_sgcock as i32);
             if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 {
                 WI_initNoState(state);
             } else {
@@ -1566,51 +1566,51 @@ pub fn WI_updateStats(state: &mut GameState) {
             state.plyr_index(state.wi_stuff.me).ssecret * 100_i32 / state.wbs().maxsecret;
         state.wi_stuff.cnt_time = state.plyr_index(state.wi_stuff.me).stime / TICRATE;
         state.wi_stuff.cnt_par = state.wbs().partime / TICRATE;
-        S_StartSound(state, SoundOrigin::None, sfx_barexp as i32);
+        S_StartSound(state, SoundOrigin::None, SfxName::sfx_barexp as i32);
         state.wi_stuff.sp_state = 10_i32;
     }
     if state.wi_stuff.sp_state == 2_i32 {
         state.wi_stuff.cnt_kills[0] += 2_i32;
         if state.wi_stuff.bcnt & 3_i32 == 0 {
-            S_StartSound(state, SoundOrigin::None, sfx_pistol as i32);
+            S_StartSound(state, SoundOrigin::None, SfxName::sfx_pistol as i32);
         }
         if state.wi_stuff.cnt_kills[0]
             >= state.plyr_index(state.wi_stuff.me).skills * 100_i32 / state.wbs().maxkills
         {
             state.wi_stuff.cnt_kills[0] =
                 state.plyr_index(state.wi_stuff.me).skills * 100_i32 / state.wbs().maxkills;
-            S_StartSound(state, SoundOrigin::None, sfx_barexp as i32);
+            S_StartSound(state, SoundOrigin::None, SfxName::sfx_barexp as i32);
             state.wi_stuff.sp_state += 1;
         }
     } else if state.wi_stuff.sp_state == 4_i32 {
         state.wi_stuff.cnt_items[0] += 2_i32;
         if state.wi_stuff.bcnt & 3_i32 == 0 {
-            S_StartSound(state, SoundOrigin::None, sfx_pistol as i32);
+            S_StartSound(state, SoundOrigin::None, SfxName::sfx_pistol as i32);
         }
         if state.wi_stuff.cnt_items[0]
             >= state.plyr_index(state.wi_stuff.me).sitems * 100_i32 / state.wbs().maxitems
         {
             state.wi_stuff.cnt_items[0] =
                 state.plyr_index(state.wi_stuff.me).sitems * 100_i32 / state.wbs().maxitems;
-            S_StartSound(state, SoundOrigin::None, sfx_barexp as i32);
+            S_StartSound(state, SoundOrigin::None, SfxName::sfx_barexp as i32);
             state.wi_stuff.sp_state += 1;
         }
     } else if state.wi_stuff.sp_state == 6_i32 {
         state.wi_stuff.cnt_secret[0] += 2_i32;
         if state.wi_stuff.bcnt & 3_i32 == 0 {
-            S_StartSound(state, SoundOrigin::None, sfx_pistol as i32);
+            S_StartSound(state, SoundOrigin::None, SfxName::sfx_pistol as i32);
         }
         if state.wi_stuff.cnt_secret[0]
             >= state.plyr_index(state.wi_stuff.me).ssecret * 100_i32 / state.wbs().maxsecret
         {
             state.wi_stuff.cnt_secret[0] =
                 state.plyr_index(state.wi_stuff.me).ssecret * 100_i32 / state.wbs().maxsecret;
-            S_StartSound(state, SoundOrigin::None, sfx_barexp as i32);
+            S_StartSound(state, SoundOrigin::None, SfxName::sfx_barexp as i32);
             state.wi_stuff.sp_state += 1;
         }
     } else if state.wi_stuff.sp_state == 8_i32 {
         if state.wi_stuff.bcnt & 3_i32 == 0 {
-            S_StartSound(state, SoundOrigin::None, sfx_pistol as i32);
+            S_StartSound(state, SoundOrigin::None, SfxName::sfx_pistol as i32);
         }
         state.wi_stuff.cnt_time += 3_i32;
         if state.wi_stuff.cnt_time >= state.plyr_index(state.wi_stuff.me).stime / TICRATE {
@@ -1620,13 +1620,13 @@ pub fn WI_updateStats(state: &mut GameState) {
         if state.wi_stuff.cnt_par >= state.wbs().partime / TICRATE {
             state.wi_stuff.cnt_par = state.wbs().partime / TICRATE;
             if state.wi_stuff.cnt_time >= state.plyr_index(state.wi_stuff.me).stime / TICRATE {
-                S_StartSound(state, SoundOrigin::None, sfx_barexp as i32);
+                S_StartSound(state, SoundOrigin::None, SfxName::sfx_barexp as i32);
                 state.wi_stuff.sp_state += 1;
             }
         }
     } else if state.wi_stuff.sp_state == 10_i32 {
         if state.wi_stuff.acceleratestage != 0 {
-            S_StartSound(state, SoundOrigin::None, sfx_sgcock as i32);
+            S_StartSound(state, SoundOrigin::None, SfxName::sfx_sgcock as i32);
             if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 {
                 WI_initNoState(state);
             } else {
@@ -1698,7 +1698,7 @@ pub fn WI_checkForAccelerate(state: &mut GameState) {
     while i < MAXPLAYERS {
         if state.g_game.playeringame[i as usize] {
             let player = &state.g_game.players[i as usize];
-            if player.cmd.buttons as i32 & BT_ATTACK as i32 != 0 {
+            if player.cmd.buttons as i32 & BT_ATTACK != 0 {
                 if player.attackdown == 0 {
                     state.wi_stuff.acceleratestage = 1_i32;
                 }
@@ -1707,7 +1707,7 @@ pub fn WI_checkForAccelerate(state: &mut GameState) {
                 state.g_game.players[i as usize].attackdown = false_0;
             }
             let player = &state.g_game.players[i as usize];
-            if player.cmd.buttons as i32 & BT_USE as i32 != 0 {
+            if player.cmd.buttons as i32 & BT_USE != 0 {
                 if player.usedown == 0 {
                     state.wi_stuff.acceleratestage = 1_i32;
                 }
@@ -1723,9 +1723,9 @@ pub fn WI_Ticker(state: &mut GameState) {
     state.wi_stuff.bcnt += 1;
     if state.wi_stuff.bcnt == 1_i32 {
         if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 {
-            S_ChangeMusic(state, mus_dm2int as i32, true_0);
+            S_ChangeMusic(state, MusicName::mus_dm2int as i32, true_0);
         } else {
-            S_ChangeMusic(state, mus_inter as i32, true_0);
+            S_ChangeMusic(state, MusicName::mus_inter as i32, true_0);
         }
     }
     WI_checkForAccelerate(state);

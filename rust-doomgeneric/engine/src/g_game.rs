@@ -85,7 +85,7 @@ use crate::s_sound::S_PauseSound;
 use crate::s_sound::S_ResumeSound;
 use crate::s_sound::S_StartSound;
 use crate::s_sound::SoundOrigin;
-use crate::sounds::sfx_telept;
+use crate::sounds::SfxName;
 use crate::st_stuff::ST_Responder;
 use crate::st_stuff::ST_Ticker;
 use crate::statdump::StatCopy;
@@ -358,7 +358,7 @@ impl GGameState {
 }
 
 #[derive(Copy, Clone)]
-pub struct C2RustUnnamed_5 {
+pub struct WeaponOrder {
     pub weapon: weapontype_t,
     pub weapon_num: weapontype_t,
 }
@@ -370,40 +370,40 @@ pub const DOOM_191_VERSION: i32 = 111;
 pub const SAVEGAMESIZE: i32 = 0x2c000;
 pub const TURBOTHRESHOLD: i32 = 0x32;
 pub static angleturn: [fixed_t; 3] = [640_i32, 1280_i32, 320_i32];
-static weapon_order_table: [C2RustUnnamed_5; 9] = [
-    C2RustUnnamed_5 {
+static weapon_order_table: [WeaponOrder; 9] = [
+    WeaponOrder {
         weapon: weapontype_t::wp_fist,
         weapon_num: weapontype_t::wp_fist,
     },
-    C2RustUnnamed_5 {
+    WeaponOrder {
         weapon: weapontype_t::wp_chainsaw,
         weapon_num: weapontype_t::wp_fist,
     },
-    C2RustUnnamed_5 {
+    WeaponOrder {
         weapon: weapontype_t::wp_pistol,
         weapon_num: weapontype_t::wp_pistol,
     },
-    C2RustUnnamed_5 {
+    WeaponOrder {
         weapon: weapontype_t::wp_shotgun,
         weapon_num: weapontype_t::wp_shotgun,
     },
-    C2RustUnnamed_5 {
+    WeaponOrder {
         weapon: weapontype_t::wp_supershotgun,
         weapon_num: weapontype_t::wp_shotgun,
     },
-    C2RustUnnamed_5 {
+    WeaponOrder {
         weapon: weapontype_t::wp_chaingun,
         weapon_num: weapontype_t::wp_chaingun,
     },
-    C2RustUnnamed_5 {
+    WeaponOrder {
         weapon: weapontype_t::wp_missile,
         weapon_num: weapontype_t::wp_missile,
     },
-    C2RustUnnamed_5 {
+    WeaponOrder {
         weapon: weapontype_t::wp_plasma,
         weapon_num: weapontype_t::wp_plasma,
     },
-    C2RustUnnamed_5 {
+    WeaponOrder {
         weapon: weapontype_t::wp_bfg,
         weapon_num: weapontype_t::wp_bfg,
     },
@@ -458,8 +458,8 @@ fn G_NextWeapon(state: &mut GameState, mut direction: i32) -> i32 {
     }
     i = 0_i32;
     while (i as usize)
-        < ::core::mem::size_of::<[C2RustUnnamed_5; 9]>()
-            .wrapping_div(::core::mem::size_of::<C2RustUnnamed_5>())
+        < ::core::mem::size_of::<[WeaponOrder; 9]>()
+            .wrapping_div(::core::mem::size_of::<WeaponOrder>())
     {
         if weapon_order_table[i as usize].weapon as u32 == weapon as u32 {
             break;
@@ -471,12 +471,12 @@ fn G_NextWeapon(state: &mut GameState, mut direction: i32) -> i32 {
         i += direction;
         i = (i as usize)
             .wrapping_add(
-                ::core::mem::size_of::<[C2RustUnnamed_5; 9]>()
-                    .wrapping_div(::core::mem::size_of::<C2RustUnnamed_5>()),
+                ::core::mem::size_of::<[WeaponOrder; 9]>()
+                    .wrapping_div(::core::mem::size_of::<WeaponOrder>()),
             )
             .wrapping_rem(
-                ::core::mem::size_of::<[C2RustUnnamed_5; 9]>()
-                    .wrapping_div(::core::mem::size_of::<C2RustUnnamed_5>()),
+                ::core::mem::size_of::<[WeaponOrder; 9]>()
+                    .wrapping_div(::core::mem::size_of::<WeaponOrder>()),
             ) as i32;
         if !(i != start_i && !WeaponSelectable(state, weapon_order_table[i as usize].weapon)) {
             break;
@@ -586,28 +586,28 @@ pub fn G_BuildTiccmd(state: &mut GameState, cmd: &mut ticcmd_t, mut maketic: i32
         || state.g_game.mousearray[(state.m_controls.mousebfire + 1) as usize]
         || state.g_game.joyarray[(state.m_controls.joybfire + 1) as usize]
     {
-        cmd.buttons = (cmd.buttons as i32 | BT_ATTACK as i32) as byte;
+        cmd.buttons = (cmd.buttons as i32 | BT_ATTACK) as byte;
     }
     if state.g_game.gamekeydown[state.m_controls.key_use as usize]
         || state.g_game.joyarray[(state.m_controls.joybuse + 1) as usize]
         || state.g_game.mousearray[(state.m_controls.mousebuse + 1) as usize]
     {
-        cmd.buttons = (cmd.buttons as i32 | BT_USE as i32) as byte;
+        cmd.buttons = (cmd.buttons as i32 | BT_USE) as byte;
         state.g_game.dclicks = 0_i32;
     }
     if state.g_game.gamestate == GameScreenState::GS_LEVEL && state.g_game.next_weapon != 0_i32 {
         let next_weapon = state.g_game.next_weapon;
         i = G_NextWeapon(state, next_weapon);
-        cmd.buttons = (cmd.buttons as i32 | BT_CHANGE as i32) as byte;
-        cmd.buttons = (cmd.buttons as i32 | i << BT_WEAPONSHIFT as i32) as byte;
+        cmd.buttons = (cmd.buttons as i32 | BT_CHANGE) as byte;
+        cmd.buttons = (cmd.buttons as i32 | i << BT_WEAPONSHIFT) as byte;
     } else {
         let weapon_keys = state.m_controls.weapon_keys();
         i = 0_i32;
         while (i as usize) < weapon_keys.len() {
             let key: i32 = weapon_keys[i as usize];
             if state.g_game.gamekeydown[key as usize] {
-                cmd.buttons = (cmd.buttons as i32 | BT_CHANGE as i32) as byte;
-                cmd.buttons = (cmd.buttons as i32 | i << BT_WEAPONSHIFT as i32) as byte;
+                cmd.buttons = (cmd.buttons as i32 | BT_CHANGE) as byte;
+                cmd.buttons = (cmd.buttons as i32 | i << BT_WEAPONSHIFT) as byte;
                 break;
             } else {
                 i += 1;
@@ -632,7 +632,7 @@ pub fn G_BuildTiccmd(state: &mut GameState, cmd: &mut ticcmd_t, mut maketic: i32
                 state.g_game.dclicks += 1;
             }
             if state.g_game.dclicks == 2_i32 {
-                cmd.buttons = (cmd.buttons as i32 | BT_USE as i32) as byte;
+                cmd.buttons = (cmd.buttons as i32 | BT_USE) as byte;
                 state.g_game.dclicks = 0_i32;
             } else {
                 state.g_game.dclicktime = 0_i32;
@@ -652,7 +652,7 @@ pub fn G_BuildTiccmd(state: &mut GameState, cmd: &mut ticcmd_t, mut maketic: i32
                 state.g_game.dclicks2 += 1;
             }
             if state.g_game.dclicks2 == 2_i32 {
-                cmd.buttons = (cmd.buttons as i32 | BT_USE as i32) as byte;
+                cmd.buttons = (cmd.buttons as i32 | BT_USE) as byte;
                 state.g_game.dclicks2 = 0_i32;
             } else {
                 state.g_game.dclicktime2 = 0_i32;
@@ -690,13 +690,12 @@ pub fn G_BuildTiccmd(state: &mut GameState, cmd: &mut ticcmd_t, mut maketic: i32
     cmd.sidemove = (cmd.sidemove as i32 + side) as i8;
     if state.g_game.sendpause {
         state.g_game.sendpause = false;
-        cmd.buttons = (BT_SPECIAL as i32 | BTS_PAUSE as i32) as byte;
+        cmd.buttons = (BT_SPECIAL | BTS_PAUSE) as byte;
     }
     if state.g_game.sendsave {
         state.g_game.sendsave = false;
-        cmd.buttons = (BT_SPECIAL as i32
-            | BTS_SAVEGAME as i32
-            | state.g_game.savegameslot << BTS_SAVESHIFT as i32) as byte;
+        cmd.buttons =
+            (BT_SPECIAL | BTS_SAVEGAME | state.g_game.savegameslot << BTS_SAVESHIFT) as byte;
     }
     if state.g_game.lowres_turn {
         let mut desired_angleturn: i16 = 0;
@@ -973,9 +972,9 @@ pub fn G_Ticker(state: &mut GameState, netcmds: &[ticcmd_t]) {
     i = 0_i32;
     while i < MAXPLAYERS {
         if state.g_game.playeringame[i as usize]
-            && state.g_game.players[i as usize].cmd.buttons as i32 & BT_SPECIAL as i32 != 0
+            && state.g_game.players[i as usize].cmd.buttons as i32 & BT_SPECIAL != 0
         {
-            match state.g_game.players[i as usize].cmd.buttons as i32 & BT_SPECIALMASK as i32 {
+            match state.g_game.players[i as usize].cmd.buttons as i32 & BT_SPECIALMASK {
                 1 => {
                     state.g_game.paused = !state.g_game.paused;
                     if state.g_game.paused {
@@ -989,8 +988,8 @@ pub fn G_Ticker(state: &mut GameState, netcmds: &[ticcmd_t]) {
                         state.g_game.savedescription = "NET GAME".to_string();
                     }
                     state.g_game.savegameslot =
-                        (state.g_game.players[i as usize].cmd.buttons as i32 & BTS_SAVEMASK as i32)
-                            >> BTS_SAVESHIFT as i32;
+                        (state.g_game.players[i as usize].cmd.buttons as i32 & BTS_SAVEMASK)
+                            >> BTS_SAVESHIFT;
                     state.g_game.gameaction = GameAction::ga_savegame;
                 }
                 _ => {}
@@ -1035,7 +1034,7 @@ pub fn G_PlayerFinishLevel(state: &mut GameState, player: i32) {
     p.fixedcolormap = 0_i32;
     p.damagecount = 0_i32;
     p.bonuscount = 0_i32;
-    state.p_mobj.mo_mut(mo_id).flags &= !(MF_SHADOW as i32);
+    state.p_mobj.mo_mut(mo_id).flags &= !MF_SHADOW;
 }
 pub fn G_PlayerReborn(state: &mut GGameState, player: i32) {
     let old = &state.players[player as usize];
@@ -1128,7 +1127,7 @@ pub fn G_CheckSpot(state: &mut GameState, playernum: i32, mthing: &mapthing_t) -
         MobjType::MT_TFOG,
     );
     if state.g_game.players[state.g_game.consoleplayer as usize].viewz != 1_i32 {
-        S_StartSound(state, SoundOrigin::Mobj(mo), sfx_telept as i32);
+        S_StartSound(state, SoundOrigin::Mobj(mo), SfxName::sfx_telept as i32);
     }
     true
 }

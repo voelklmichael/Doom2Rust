@@ -25,7 +25,7 @@ use crate::p_inter::P_GivePower;
 use crate::p_inter::NUMCARDS;
 use crate::r_main::R_PointToAngle2;
 use crate::s_sound::S_ChangeMusic;
-use crate::sounds::{mus_e1m1, mus_runnin};
+use crate::sounds::MusicName;
 use crate::st_lib::STlib_init;
 use crate::st_lib::STlib_initBinIcon;
 use crate::st_lib::STlib_initMultIcon;
@@ -466,10 +466,11 @@ pub fn ST_Responder(state: &mut GameState, mut ev: &event_t) -> bool {
                 if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32
                     || !state.doomstat.gameversion.is_ultimate_or_higher()
                 {
-                    musnum =
-                        mus_runnin as i32 + (buf[0] as i32 - '0' as i32) * 10_i32 + buf[1] as i32
-                            - '0' as i32
-                            - 1_i32;
+                    musnum = MusicName::mus_runnin as i32
+                        + (buf[0] as i32 - '0' as i32) * 10_i32
+                        + buf[1] as i32
+                        - '0' as i32
+                        - 1_i32;
                     if (buf[0] as i32 - '0' as i32) * 10_i32 + buf[1] as i32 - '0' as i32 > 35_i32 {
                         state.g_game.player_mut(state.st_stuff.plyr).message =
                             Some("IMPOSSIBLE SELECTION".to_string());
@@ -477,7 +478,7 @@ pub fn ST_Responder(state: &mut GameState, mut ev: &event_t) -> bool {
                         S_ChangeMusic(state, musnum, 1_i32);
                     }
                 } else {
-                    musnum = mus_e1m1 as i32
+                    musnum = MusicName::mus_e1m1 as i32
                         + (buf[0] as i32 - '1' as i32) * 9_i32
                         + (buf[1] as i32 - '1' as i32);
                     if (buf[0] as i32 - '1' as i32) * 9_i32 + buf[1] as i32 - '1' as i32 > 31_i32 {

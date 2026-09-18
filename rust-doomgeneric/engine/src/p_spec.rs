@@ -51,7 +51,7 @@ use crate::r_data::R_TextureNumForName;
 
 use crate::s_sound::S_StartSound;
 use crate::s_sound::SoundOrigin;
-use crate::sounds::sfx_swtchn;
+use crate::sounds::SfxName;
 
 use crate::w_wad::W_CheckNumForName;
 
@@ -1070,7 +1070,7 @@ pub fn P_UpdateSpecials(state: &mut GameState) {
                 S_StartSound(
                     state,
                     SoundOrigin::Sector(state.p_switch.buttonlist[i as usize].soundorg),
-                    sfx_swtchn as i32,
+                    SfxName::sfx_swtchn as i32,
                 );
                 state.p_switch.buttonlist[i as usize] = EMPTY_BUTTON;
             }

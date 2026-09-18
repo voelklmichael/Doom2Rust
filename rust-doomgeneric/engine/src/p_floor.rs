@@ -25,7 +25,7 @@ use crate::p_tick::ThinkerKind;
 use crate::p_tick::ThinkerPayload;
 use crate::s_sound::S_StartSound;
 use crate::s_sound::SoundOrigin;
-use crate::sounds::{sfx_pstop, sfx_stnmov};
+use crate::sounds::SfxName;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum FloorE {
@@ -180,7 +180,11 @@ pub fn T_MoveFloor(state: &mut GameState, id: FloorId) {
         floor.direction,
     );
     if state.p_tick.leveltime & 7_i32 == 0 {
-        S_StartSound(state, SoundOrigin::Sector(floor.sector), sfx_stnmov as i32);
+        S_StartSound(
+            state,
+            SoundOrigin::Sector(floor.sector),
+            SfxName::sfx_stnmov as i32,
+        );
     }
     if res == ResultE::pastdest {
         let sec = state.p_setup.sector_mut(floor.sector);
@@ -195,7 +199,11 @@ pub fn T_MoveFloor(state: &mut GameState, id: FloorId) {
             sec.floorpic = floor.texture;
         }
         P_RemoveThinker(&mut state.p_spec.get_floor_mut(id).expect("live floor").thinker);
-        S_StartSound(state, SoundOrigin::Sector(floor.sector), sfx_pstop as i32);
+        S_StartSound(
+            state,
+            SoundOrigin::Sector(floor.sector),
+            SfxName::sfx_pstop as i32,
+        );
     }
 }
 pub fn EV_DoFloor(state: &mut GameState, line: LineId, floortype: FloorE) -> i32 {

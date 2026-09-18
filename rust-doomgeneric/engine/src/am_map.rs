@@ -168,11 +168,10 @@ pub struct fpoint_t {
     pub x: i32,
     pub y: i32,
 }
-pub const RIGHT: C2RustUnnamed_1 = 2;
-pub const LEFT: C2RustUnnamed_1 = 1;
-pub const BOTTOM: C2RustUnnamed_1 = 4;
-pub const TOP: C2RustUnnamed_1 = 8;
-pub type C2RustUnnamed_1 = u32;
+pub const RIGHT: i32 = 2;
+pub const LEFT: i32 = 1;
+pub const BOTTOM: i32 = 4;
+pub const TOP: i32 = 8;
 pub const ML_DONTDRAW: i32 = 128;
 pub const AM_MSGHEADER: i32 = (('a' as i32) << 24_i32) + (('m' as i32) << 16_i32);
 pub const AM_MSGENTERED: i32 = AM_MSGHEADER | ('e' as i32) << 8_i32;
@@ -930,27 +929,27 @@ pub fn AM_clipMline(state: &mut GameState, ml: &mline_t, fl: &mut fline_t) -> bo
     let mut dx: i32 = 0;
     let mut dy: i32 = 0;
     if ml.a.y > state.am_map.m_y2 {
-        outcode1 = TOP as i32;
+        outcode1 = TOP;
     } else if ml.a.y < state.am_map.m_y {
-        outcode1 = BOTTOM as i32;
+        outcode1 = BOTTOM;
     }
     if ml.b.y > state.am_map.m_y2 {
-        outcode2 = TOP as i32;
+        outcode2 = TOP;
     } else if ml.b.y < state.am_map.m_y {
-        outcode2 = BOTTOM as i32;
+        outcode2 = BOTTOM;
     }
     if outcode1 & outcode2 != 0 {
         return false;
     }
     if ml.a.x < state.am_map.m_x {
-        outcode1 |= LEFT as i32;
+        outcode1 |= LEFT;
     } else if ml.a.x > state.am_map.m_x2 {
-        outcode1 |= RIGHT as i32;
+        outcode1 |= RIGHT;
     }
     if ml.b.x < state.am_map.m_x {
-        outcode2 |= LEFT as i32;
+        outcode2 |= LEFT;
     } else if ml.b.x > state.am_map.m_x2 {
-        outcode2 |= RIGHT as i32;
+        outcode2 |= RIGHT;
     }
     if outcode1 & outcode2 != 0 {
         return false;
@@ -967,25 +966,25 @@ pub fn AM_clipMline(state: &mut GameState, ml: &mline_t, fl: &mut fline_t) -> bo
             - (FixedMul(ml.b.y - state.am_map.m_y, state.am_map.scale_mtof) >> 16_i32));
     outcode1 = 0_i32;
     if fl.a.y < 0_i32 {
-        outcode1 |= TOP as i32;
+        outcode1 |= TOP;
     } else if fl.a.y >= state.am_map.f_h {
-        outcode1 |= BOTTOM as i32;
+        outcode1 |= BOTTOM;
     }
     if fl.a.x < 0_i32 {
-        outcode1 |= LEFT as i32;
+        outcode1 |= LEFT;
     } else if fl.a.x >= state.am_map.f_w {
-        outcode1 |= RIGHT as i32;
+        outcode1 |= RIGHT;
     }
     outcode2 = 0_i32;
     if fl.b.y < 0_i32 {
-        outcode2 |= TOP as i32;
+        outcode2 |= TOP;
     } else if fl.b.y >= state.am_map.f_h {
-        outcode2 |= BOTTOM as i32;
+        outcode2 |= BOTTOM;
     }
     if fl.b.x < 0_i32 {
-        outcode2 |= LEFT as i32;
+        outcode2 |= LEFT;
     } else if fl.b.x >= state.am_map.f_w {
-        outcode2 |= RIGHT as i32;
+        outcode2 |= RIGHT;
     }
     if outcode1 & outcode2 != 0 {
         return false;
@@ -996,22 +995,22 @@ pub fn AM_clipMline(state: &mut GameState, ml: &mline_t, fl: &mut fline_t) -> bo
         } else {
             outside = outcode2;
         }
-        if outside & TOP as i32 != 0 {
+        if outside & TOP != 0 {
             dy = fl.a.y - fl.b.y;
             dx = fl.b.x - fl.a.x;
             tmp.x = fl.a.x + dx * fl.a.y / dy;
             tmp.y = 0_i32;
-        } else if outside & BOTTOM as i32 != 0 {
+        } else if outside & BOTTOM != 0 {
             dy = fl.a.y - fl.b.y;
             dx = fl.b.x - fl.a.x;
             tmp.x = fl.a.x + dx * (fl.a.y - state.am_map.f_h) / dy;
             tmp.y = state.am_map.f_h - 1_i32;
-        } else if outside & RIGHT as i32 != 0 {
+        } else if outside & RIGHT != 0 {
             dy = fl.b.y - fl.a.y;
             dx = fl.b.x - fl.a.x;
             tmp.y = fl.a.y + dy * (state.am_map.f_w - 1_i32 - fl.a.x) / dx;
             tmp.x = state.am_map.f_w - 1_i32;
-        } else if outside & LEFT as i32 != 0 {
+        } else if outside & LEFT != 0 {
             dy = fl.b.y - fl.a.y;
             dx = fl.b.x - fl.a.x;
             tmp.y = fl.a.y + dy * -fl.a.x / dx;
@@ -1024,27 +1023,27 @@ pub fn AM_clipMline(state: &mut GameState, ml: &mline_t, fl: &mut fline_t) -> bo
             fl.a = tmp;
             outcode1 = 0_i32;
             if fl.a.y < 0_i32 {
-                outcode1 |= TOP as i32;
+                outcode1 |= TOP;
             } else if fl.a.y >= state.am_map.f_h {
-                outcode1 |= BOTTOM as i32;
+                outcode1 |= BOTTOM;
             }
             if fl.a.x < 0_i32 {
-                outcode1 |= LEFT as i32;
+                outcode1 |= LEFT;
             } else if fl.a.x >= state.am_map.f_w {
-                outcode1 |= RIGHT as i32;
+                outcode1 |= RIGHT;
             }
         } else {
             fl.b = tmp;
             outcode2 = 0_i32;
             if fl.b.y < 0_i32 {
-                outcode2 |= TOP as i32;
+                outcode2 |= TOP;
             } else if fl.b.y >= state.am_map.f_h {
-                outcode2 |= BOTTOM as i32;
+                outcode2 |= BOTTOM;
             }
             if fl.b.x < 0_i32 {
-                outcode2 |= LEFT as i32;
+                outcode2 |= LEFT;
             } else if fl.b.x >= state.am_map.f_w {
-                outcode2 |= RIGHT as i32;
+                outcode2 |= RIGHT;
             }
         }
         if outcode1 & outcode2 != 0 {

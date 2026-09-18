@@ -308,7 +308,7 @@ fn TicdupSquash(set: &mut ticcmd_set_t) {
     while i < NET_MAXPLAYERS as u32 {
         let cmd = &mut set.cmds[i as usize];
         cmd.chatchar = 0 as byte;
-        if cmd.buttons as i32 & BT_SPECIAL as i32 != 0 {
+        if cmd.buttons as i32 & BT_SPECIAL != 0 {
             cmd.buttons = 0 as byte;
         }
         i = i.wrapping_add(1);

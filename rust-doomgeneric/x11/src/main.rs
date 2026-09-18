@@ -208,10 +208,10 @@ pub struct Depth {
     pub visuals: *mut Visual,
 }
 pub type Window = XID;
-pub type _XPrivDisplay = *mut C2RustUnnamed;
+pub type _XPrivDisplay = *mut XPrivDisplayRec;
 #[derive(Copy, Clone)]
 #[repr(C)]
-pub struct C2RustUnnamed {
+pub struct XPrivDisplayRec {
     pub ext_data: *mut XExtData,
     pub private1: *mut _XPrivate,
     pub fd: i32,
@@ -371,11 +371,11 @@ pub struct XClientMessageEvent {
     pub window: Window,
     pub message_type: Atom,
     pub format: i32,
-    pub data: C2RustUnnamed_0,
+    pub data: XClientMessageEventData,
 }
 #[derive(Copy, Clone)]
 #[repr(C)]
-pub union C2RustUnnamed_0 {
+pub union XClientMessageEventData {
     pub b: [::core::ffi::c_char; 20],
     pub s: [i16; 10],
     pub l: [i64; 5],

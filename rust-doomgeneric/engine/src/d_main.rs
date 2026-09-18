@@ -79,7 +79,7 @@ use crate::r_main::R_RenderPlayerView;
 use crate::s_sound::S_Init;
 use crate::s_sound::S_StartMusic;
 use crate::s_sound::S_UpdateSounds;
-use crate::sounds::{mus_dm2ttl, mus_intro};
+use crate::sounds::MusicName;
 use crate::st_stuff::ST_Drawer;
 use crate::st_stuff::ST_Init;
 use crate::statdump::StatDump;
@@ -126,7 +126,7 @@ pub struct DMainState {
     pub demosequence: i32,
     pub pagetic: i32,
     pub pagename: &'static str,
-    pub gameversions: [C2RustUnnamed_4; 9],
+    pub gameversions: [GameVersionInfo; 9],
 }
 
 impl Default for DMainState {
@@ -167,47 +167,47 @@ impl DMainState {
             pagetic: 0,
             pagename: "",
             gameversions: [
-                C2RustUnnamed_4 {
+                GameVersionInfo {
                     description: "Doom 1.666",
                     cmdline: "1.666",
                     version: GameVersion::doom_1_666,
                 },
-                C2RustUnnamed_4 {
+                GameVersionInfo {
                     description: "Doom 1.7/1.7a",
                     cmdline: "1.7",
                     version: GameVersion::doom_1_7,
                 },
-                C2RustUnnamed_4 {
+                GameVersionInfo {
                     description: "Doom 1.8",
                     cmdline: "1.8",
                     version: GameVersion::doom_1_8,
                 },
-                C2RustUnnamed_4 {
+                GameVersionInfo {
                     description: "Doom 1.9",
                     cmdline: "1.9",
                     version: GameVersion::doom_1_9,
                 },
-                C2RustUnnamed_4 {
+                GameVersionInfo {
                     description: "Hacx",
                     cmdline: "hacx",
                     version: GameVersion::hacx,
                 },
-                C2RustUnnamed_4 {
+                GameVersionInfo {
                     description: "Ultimate Doom",
                     cmdline: "ultimate",
                     version: GameVersion::ultimate,
                 },
-                C2RustUnnamed_4 {
+                GameVersionInfo {
                     description: "Final Doom",
                     cmdline: "final",
                     version: GameVersion::r#final,
                 },
-                C2RustUnnamed_4 {
+                GameVersionInfo {
                     description: "Final Doom (alt)",
                     cmdline: "final2",
                     version: GameVersion::final2,
                 },
-                C2RustUnnamed_4 {
+                GameVersionInfo {
                     description: "Chex Quest",
                     cmdline: "chex",
                     version: GameVersion::chex,
@@ -217,17 +217,19 @@ impl DMainState {
     }
 }
 
-pub type C2RustUnnamed_2 = u32;
-pub const wipe_NUMWIPES: C2RustUnnamed_2 = 2;
-pub const wipe_Melt: C2RustUnnamed_2 = 1;
-pub const wipe_ColorXForm: C2RustUnnamed_2 = 0;
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub enum WipeType {
+    wipe_ColorXForm = 0,
+    wipe_Melt = 1,
+}
+pub const wipe_NUMWIPES: i32 = 2;
 #[derive(Copy, Clone)]
-pub struct C2RustUnnamed_3 {
+pub struct MissionPack {
     pub name: &'static str,
     pub mission: GameMission_t,
 }
 #[derive(Copy, Clone)]
-pub struct C2RustUnnamed_4 {
+pub struct GameVersionInfo {
     pub description: &'static str,
     pub cmdline: &'static str,
     pub version: GameVersion,
@@ -381,7 +383,13 @@ pub fn D_Display(state: &mut GameState) {
             }
         }
         wipestart = nowtime;
-        done = wipe_ScreenWipe(state, wipe_Melt as i32, SCREENWIDTH, SCREENHEIGHT, tics) != 0;
+        done = wipe_ScreenWipe(
+            state,
+            WipeType::wipe_Melt as i32,
+            SCREENWIDTH,
+            SCREENHEIGHT,
+            tics,
+        ) != 0;
         M_Drawer(state);
         I_FinishUpdate(state);
         if done {
@@ -520,9 +528,9 @@ pub fn D_DoAdvanceDemo(state: &mut GameState) {
             state.g_game.gamestate = GameScreenState::GS_DEMOSCREEN;
             state.d_main.pagename = "TITLEPIC";
             if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 {
-                S_StartMusic(state, mus_dm2ttl as i32);
+                S_StartMusic(state, MusicName::mus_dm2ttl as i32);
             } else {
-                S_StartMusic(state, mus_intro as i32);
+                S_StartMusic(state, MusicName::mus_intro as i32);
             }
         }
         1 => {
@@ -541,7 +549,7 @@ pub fn D_DoAdvanceDemo(state: &mut GameState) {
             if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 {
                 state.d_main.pagetic = TICRATE * 11_i32;
                 state.d_main.pagename = "TITLEPIC";
-                S_StartMusic(state, mus_dm2ttl as i32);
+                S_StartMusic(state, MusicName::mus_dm2ttl as i32);
             } else {
                 state.d_main.pagetic = 200_i32;
                 if state.doomstat.gamemode as u32 == GameMode_t::retail as i32 as u32 {
@@ -572,16 +580,16 @@ pub fn D_StartTitle(state: &mut GameState) {
     D_AdvanceDemo(state);
 }
 fn SetMissionForPackName(state: &mut GameState, pack_name: &str) {
-    const packs: [C2RustUnnamed_3; 3] = [
-        C2RustUnnamed_3 {
+    const packs: [MissionPack; 3] = [
+        MissionPack {
             name: "doom2",
             mission: GameMission_t::doom2,
         },
-        C2RustUnnamed_3 {
+        MissionPack {
             name: "tnt",
             mission: GameMission_t::pack_tnt,
         },
-        C2RustUnnamed_3 {
+        MissionPack {
             name: "plutonia",
             mission: GameMission_t::pack_plut,
         },
