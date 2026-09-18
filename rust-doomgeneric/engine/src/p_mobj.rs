@@ -3414,7 +3414,7 @@ pub unsafe fn P_RemoveMobj(state: &mut GameState, mut mobj: *mut mobj_t) {
     }
     P_UnsetThingPosition(state, &mut *mobj);
     S_StopSound(state, SoundOrigin::Mobj((*mobj).id));
-    P_RemoveThinker(mobj as *mut thinker_t);
+    P_RemoveThinker(&mut (*mobj).thinker);
 }
 pub unsafe fn P_RespawnSpecials(state: &mut GameState) {
     let mut x: fixed_t = 0;

@@ -49,7 +49,7 @@ use crate::p_tick::ThinkerPayload;
 use crate::r_data::R_CheckTextureNumForName;
 use crate::r_data::R_FlatNumForName;
 use crate::r_data::R_TextureNumForName;
-use crate::r_defs::side_t;
+
 use crate::s_sound::S_StartSound;
 use crate::s_sound::SoundOrigin;
 use crate::sounds::sfx_swtchn;
@@ -506,168 +506,118 @@ pub fn P_InitPicAnims(state: &mut GameState) {
         i += 1;
     }
 }
-pub fn getSide(
-    state: &mut GameState,
-    mut currentSector: i32,
-    mut line: i32,
-    mut side: i32,
-) -> *mut side_t {
-    let sec = state.p_setup.sector_mut(SectorId(currentSector as u32));
-    let line_id = sec.lines[line as usize];
+pub fn getSide(state: &mut GameState, currentSector: i32, line: i32, side: i32) -> SideId {
+    let line_id = state.p_setup.sector_mut(SectorId(currentSector as u32)).lines[line as usize];
     let sidenum = state.p_setup.line(line_id).sidenum[side as usize];
-    return state.p_setup.side_mut(SideId(sidenum as u32));
+    SideId(sidenum as u32)
 }
-pub fn getSector(
-    state: &mut GameState,
-    mut currentSector: i32,
-    mut line: i32,
-    mut side: i32,
-) -> *mut sector_t {
-    let sec = state.p_setup.sector_mut(SectorId(currentSector as u32));
-    let line_id = sec.lines[line as usize];
+pub fn getSector(state: &mut GameState, currentSector: i32, line: i32, side: i32) -> SectorId {
+    let line_id = state.p_setup.sector_mut(SectorId(currentSector as u32)).lines[line as usize];
     let sidenum = state.p_setup.line(line_id).sidenum[side as usize];
-    let sector_id = state.p_setup.sides[sidenum as usize].sector;
-    return state.p_setup.sector_mut(sector_id);
+    state.p_setup.sides[sidenum as usize].sector
 }
 pub fn twoSided(state: &mut GameState, mut sector: i32, mut line: i32) -> i32 {
     let sec = state.p_setup.sector_mut(SectorId(sector as u32));
     let line_id = sec.lines[line as usize];
     state.p_setup.line(line_id).flags as i32 & ML_TWOSIDED
 }
-pub fn getNextSector(
-    state: &mut GameState,
-    mut line: LineId,
-    mut sec: *mut sector_t,
-) -> *mut sector_t {
+pub fn getNextSector(state: &mut GameState, line: LineId, sec: SectorId) -> Option<SectorId> {
     let linev = state.p_setup.line(line);
     if linev.flags as i32 & ML_TWOSIDED == 0 {
-        return ::core::ptr::null_mut::<sector_t>();
+        return None;
     }
-    let front: *mut sector_t = state.p_setup.sector_mut(linev.frontsector.unwrap());
+    let front = linev.frontsector.unwrap();
     if front == sec {
-        return match linev.backsector {
-            Some(id) => state.p_setup.sector_mut(id),
-            None => ::core::ptr::null_mut::<sector_t>(),
-        };
+        return linev.backsector;
     }
-    front
+    Some(front)
 }
-pub unsafe fn P_FindLowestFloorSurrounding(
-    state: &mut GameState,
-    mut sec: *mut sector_t,
-) -> fixed_t {
-    let mut i: i32 = 0;
-    let mut check: LineId;
-    let mut other: *mut sector_t = ::core::ptr::null_mut::<sector_t>();
-    let mut floor: fixed_t = (*sec).floorheight;
-    i = 0_i32;
-    while i < (*sec).linecount {
-        check = (*sec).lines[i as usize];
-        other = getNextSector(state, check, sec);
-        if !other.is_null() && (*other).floorheight < floor {
-            floor = (*other).floorheight;
+pub fn P_FindLowestFloorSurrounding(state: &mut GameState, sec: SectorId) -> fixed_t {
+    let mut floor: fixed_t = state.p_setup.sector_mut(sec).floorheight;
+    let linecount = state.p_setup.sector_mut(sec).linecount;
+    for i in 0..linecount {
+        let check = state.p_setup.sector_mut(sec).lines[i as usize];
+        if let Some(other) = getNextSector(state, check, sec) {
+            let other_floor = state.p_setup.sector_mut(other).floorheight;
+            if other_floor < floor {
+                floor = other_floor;
+            }
         }
-        i += 1;
     }
     floor
 }
-pub unsafe fn P_FindHighestFloorSurrounding(
-    state: &mut GameState,
-    mut sec: *mut sector_t,
-) -> fixed_t {
-    let mut i: i32 = 0;
-    let mut check: LineId;
-    let mut other: *mut sector_t = ::core::ptr::null_mut::<sector_t>();
+pub fn P_FindHighestFloorSurrounding(state: &mut GameState, sec: SectorId) -> fixed_t {
     let mut floor: fixed_t = -(500 as fixed_t) * FRACUNIT;
-    i = 0_i32;
-    while i < (*sec).linecount {
-        check = (*sec).lines[i as usize];
-        other = getNextSector(state, check, sec);
-        if !other.is_null() && (*other).floorheight > floor {
-            floor = (*other).floorheight;
+    let linecount = state.p_setup.sector_mut(sec).linecount;
+    for i in 0..linecount {
+        let check = state.p_setup.sector_mut(sec).lines[i as usize];
+        if let Some(other) = getNextSector(state, check, sec) {
+            let other_floor = state.p_setup.sector_mut(other).floorheight;
+            if other_floor > floor {
+                floor = other_floor;
+            }
         }
-        i += 1;
     }
     floor
 }
 pub const MAX_ADJOINING_SECTORS: i32 = 20;
-pub unsafe fn P_FindNextHighestFloor(
-    state: &mut GameState,
-    mut sec: *mut sector_t,
-    mut currentheight: i32,
-) -> fixed_t {
-    let mut i: i32 = 0;
-    let mut h: i32 = 0;
-    let mut min: i32 = 0;
-    let mut check: LineId;
-    let mut other: *mut sector_t = ::core::ptr::null_mut::<sector_t>();
+pub fn P_FindNextHighestFloor(state: &mut GameState, sec: SectorId, currentheight: i32) -> fixed_t {
     let mut height: fixed_t = currentheight as fixed_t;
     let mut heightlist: [fixed_t; 22] = [0; 22];
-    i = 0_i32;
-    h = 0_i32;
-    while i < (*sec).linecount {
-        check = (*sec).lines[i as usize];
-        other = getNextSector(state, check, sec);
-        if !other.is_null() && (*other).floorheight > height {
-            if h == MAX_ADJOINING_SECTORS + 1_i32 {
-                height = (*other).floorheight;
-            } else if h == MAX_ADJOINING_SECTORS + 2_i32 {
-                I_Error("Sector with more than 22 adjoining sectors. Vanilla will crash here");
+    let mut h: i32 = 0;
+    let linecount = state.p_setup.sector_mut(sec).linecount;
+    for i in 0..linecount {
+        let check = state.p_setup.sector_mut(sec).lines[i as usize];
+        if let Some(other) = getNextSector(state, check, sec) {
+            let other_floor = state.p_setup.sector_mut(other).floorheight;
+            if other_floor > height {
+                if h == MAX_ADJOINING_SECTORS + 1_i32 {
+                    height = other_floor;
+                } else if h == MAX_ADJOINING_SECTORS + 2_i32 {
+                    I_Error("Sector with more than 22 adjoining sectors. Vanilla will crash here");
+                }
+                let fresh1 = h;
+                h += 1;
+                heightlist[fresh1 as usize] = other_floor;
             }
-            let fresh1 = h;
-            h += 1;
-            heightlist[fresh1 as usize] = (*other).floorheight;
         }
-        i += 1;
     }
     if h == 0 {
         return currentheight as fixed_t;
     }
-    min = heightlist[0];
-    i = 1_i32;
-    while i < h {
+    let mut min = heightlist[0];
+    for i in 1..h {
         if heightlist[i as usize] < min {
             min = heightlist[i as usize];
         }
-        i += 1;
     }
     min as fixed_t
 }
-pub unsafe fn P_FindLowestCeilingSurrounding(
-    state: &mut GameState,
-    mut sec: *mut sector_t,
-) -> fixed_t {
-    let mut i: i32 = 0;
-    let mut check: LineId;
-    let mut other: *mut sector_t = ::core::ptr::null_mut::<sector_t>();
+pub fn P_FindLowestCeilingSurrounding(state: &mut GameState, sec: SectorId) -> fixed_t {
     let mut height: fixed_t = INT_MAX;
-    i = 0_i32;
-    while i < (*sec).linecount {
-        check = (*sec).lines[i as usize];
-        other = getNextSector(state, check, sec);
-        if !other.is_null() && (*other).ceilingheight < height {
-            height = (*other).ceilingheight;
+    let linecount = state.p_setup.sector_mut(sec).linecount;
+    for i in 0..linecount {
+        let check = state.p_setup.sector_mut(sec).lines[i as usize];
+        if let Some(other) = getNextSector(state, check, sec) {
+            let other_ceiling = state.p_setup.sector_mut(other).ceilingheight;
+            if other_ceiling < height {
+                height = other_ceiling;
+            }
         }
-        i += 1;
     }
     height
 }
-pub unsafe fn P_FindHighestCeilingSurrounding(
-    state: &mut GameState,
-    mut sec: *mut sector_t,
-) -> fixed_t {
-    let mut i: i32 = 0;
-    let mut check: LineId;
-    let mut other: *mut sector_t = ::core::ptr::null_mut::<sector_t>();
+pub fn P_FindHighestCeilingSurrounding(state: &mut GameState, sec: SectorId) -> fixed_t {
     let mut height: fixed_t = 0 as fixed_t;
-    i = 0_i32;
-    while i < (*sec).linecount {
-        check = (*sec).lines[i as usize];
-        other = getNextSector(state, check, sec);
-        if !other.is_null() && (*other).ceilingheight > height {
-            height = (*other).ceilingheight;
+    let linecount = state.p_setup.sector_mut(sec).linecount;
+    for i in 0..linecount {
+        let check = state.p_setup.sector_mut(sec).lines[i as usize];
+        if let Some(other) = getNextSector(state, check, sec) {
+            let other_ceiling = state.p_setup.sector_mut(other).ceilingheight;
+            if other_ceiling > height {
+                height = other_ceiling;
+            }
         }
-        i += 1;
     }
     height
 }
@@ -683,24 +633,17 @@ pub fn P_FindSectorFromLineTag(state: &mut GameState, mut line: LineId, mut star
     }
     -1_i32
 }
-pub unsafe fn P_FindMinSurroundingLight(
-    state: &mut GameState,
-    mut sector: *mut sector_t,
-    mut max: i32,
-) -> i32 {
-    let mut i: i32 = 0;
-    let mut min: i32 = 0;
-    let mut line: LineId;
-    let mut check: *mut sector_t = ::core::ptr::null_mut::<sector_t>();
-    min = max;
-    i = 0_i32;
-    while i < (*sector).linecount {
-        line = (*sector).lines[i as usize];
-        check = getNextSector(state, line, sector);
-        if !check.is_null() && ((*check).lightlevel as i32) < min {
-            min = (*check).lightlevel as i32;
+pub fn P_FindMinSurroundingLight(state: &mut GameState, sector: SectorId, max: i32) -> i32 {
+    let mut min = max;
+    let linecount = state.p_setup.sector_mut(sector).linecount;
+    for i in 0..linecount {
+        let line = state.p_setup.sector_mut(sector).lines[i as usize];
+        if let Some(check) = getNextSector(state, line, sector) {
+            let light = state.p_setup.sector_mut(check).lightlevel as i32;
+            if light < min {
+                min = light;
+            }
         }
-        i += 1;
     }
     min
 }
@@ -1179,11 +1122,7 @@ pub unsafe fn P_UpdateSpecials(state: &mut GameState) {
 }
 pub const DONUT_FLOORHEIGHT_DEFAULT: i32 = 0;
 pub const DONUT_FLOORPIC_DEFAULT: i32 = 0x16;
-fn DonutOverrun(
-    state: &mut GameState,
-    mut s3_floorheight: *mut fixed_t,
-    mut s3_floorpic: *mut i16,
-) {
+fn DonutOverrun(state: &mut GameState) -> (fixed_t, i16) {
     let state = state;
     if state.p_spec.donut_overrun_first != 0 {
         let mut p: i32 = 0;
@@ -1210,89 +1149,77 @@ fn DonutOverrun(
             }
         }
     }
-    unsafe {
-        *s3_floorheight = state.p_spec.donut_overrun_tmp_s3_floorheight;
-        *s3_floorpic = state.p_spec.donut_overrun_tmp_s3_floorpic as i16;
-    }
+    (
+        state.p_spec.donut_overrun_tmp_s3_floorheight,
+        state.p_spec.donut_overrun_tmp_s3_floorpic as i16,
+    )
 }
-pub unsafe fn EV_DoDonut(state: &mut GameState, mut line: LineId) -> i32 {
-    let mut s1: *mut sector_t = ::core::ptr::null_mut::<sector_t>();
-    let mut s2: *mut sector_t = ::core::ptr::null_mut::<sector_t>();
-    let mut s3: *mut sector_t = ::core::ptr::null_mut::<sector_t>();
-    let mut secnum: i32 = 0;
-    let mut rtn: i32 = 0;
-    let mut i: i32 = 0;
-    let mut floor: *mut floormove_t = ::core::ptr::null_mut::<floormove_t>();
-    let mut s3_floorheight: fixed_t = 0;
-    let mut s3_floorpic: i16 = 0;
-    secnum = -1_i32;
-    rtn = 0_i32;
+pub fn EV_DoDonut(state: &mut GameState, line: LineId) -> i32 {
+    let mut secnum: i32 = -1_i32;
+    let mut rtn: i32 = 0_i32;
     loop {
         secnum = P_FindSectorFromLineTag(state, line, secnum);
         if secnum < 0_i32 {
             break;
         }
-        s1 = state.p_setup.sector_mut(SectorId(secnum as u32));
-        if (*s1).specialdata.is_some() {
+        let s1 = SectorId(secnum as u32);
+        if state.p_setup.sector_mut(s1).specialdata.is_some() {
             continue;
         }
         rtn = 1_i32;
-        s2 = getNextSector(state, (*s1).lines[0], s1);
-        if s2.is_null() {
+        let first_line = state.p_setup.sector_mut(s1).lines[0];
+        let Some(s2) = getNextSector(state, first_line, s1) else {
             eprintln!(
                 "EV_DoDonut: linedef had no second sidedef! Unexpected behavior may occur in Vanilla Doom. "
             );
             break;
-        } else {
-            let s2_id = SectorId(s2.offset_from(state.p_setup.sectors.as_mut_ptr()) as i64 as u32);
-            i = 0_i32;
-            while i < (*s2).linecount {
-                let s2_line_id = (*s2).lines[i as usize];
-                s3 = match state.p_setup.line(s2_line_id).backsector {
-                    Some(id) => state.p_setup.sector_mut(id),
-                    None => ::core::ptr::null_mut::<sector_t>(),
-                };
-                if s3 == s1 {
-                    i += 1;
-                } else {
-                    if s3.is_null() {
-                        eprintln!(
-                            "EV_DoDonut: WARNING: emulating buffer overrun due to NULL back sector. Unexpected behavior may occur in Vanilla Doom."
-                        );
-                        DonutOverrun(state, &raw mut s3_floorheight, &raw mut s3_floorpic);
-                    } else {
-                        s3_floorheight = (*s3).floorheight;
-                        s3_floorpic = (*s3).floorpic;
-                    }
-                    let (floor_arena_id, floor_ptr) = state.p_spec.spawn_floor(floormove_t::default());
-                    floor = floor_ptr;
-                    let floor_id =
-                        P_AddThinker(state, ThinkerPayload::Floor(floor_arena_id), ThinkerKind::Floor);
-                    (*s2).specialdata = Some(SectorSpecial::Floor(floor_id));
-                    (*floor).thinker.function = ThinkerFn::Floor(T_MoveFloor);
-                    (*floor).type_0 = FloorE::donutRaise;
-                    (*floor).crush = false;
-                    (*floor).direction = 1_i32;
-                    (*floor).sector = s2_id;
-                    (*floor).speed = (FLOORSPEED / 2_i32) as fixed_t;
-                    (*floor).texture = s3_floorpic;
-                    (*floor).newspecial = 0_i32;
-                    (*floor).floordestheight = s3_floorheight;
-                    let (floor_arena_id, floor_ptr) = state.p_spec.spawn_floor(floormove_t::default());
-                    floor = floor_ptr;
-                    let floor_id =
-                        P_AddThinker(state, ThinkerPayload::Floor(floor_arena_id), ThinkerKind::Floor);
-                    (*s1).specialdata = Some(SectorSpecial::Floor(floor_id));
-                    (*floor).thinker.function = ThinkerFn::Floor(T_MoveFloor);
-                    (*floor).type_0 = FloorE::lowerFloor;
-                    (*floor).crush = false;
-                    (*floor).direction = -1_i32;
-                    (*floor).sector = SectorId(secnum as u32);
-                    (*floor).speed = (FLOORSPEED / 2_i32) as fixed_t;
-                    (*floor).floordestheight = s3_floorheight;
-                    break;
-                }
+        };
+        let linecount = state.p_setup.sector_mut(s2).linecount;
+        for i in 0..linecount {
+            let s2_line_id = state.p_setup.sector_mut(s2).lines[i as usize];
+            let s3 = state.p_setup.line(s2_line_id).backsector;
+            if s3 == Some(s1) {
+                continue;
             }
+            let (s3_floorheight, s3_floorpic) = match s3 {
+                Some(id) => {
+                    let s3 = state.p_setup.sector_mut(id);
+                    (s3.floorheight, s3.floorpic)
+                }
+                None => {
+                    eprintln!(
+                        "EV_DoDonut: WARNING: emulating buffer overrun due to NULL back sector. Unexpected behavior may occur in Vanilla Doom."
+                    );
+                    DonutOverrun(state)
+                }
+            };
+            let mut floor = floormove_t::default();
+            floor.thinker.function = ThinkerFn::Floor(T_MoveFloor);
+            floor.type_0 = FloorE::donutRaise;
+            floor.crush = false;
+            floor.direction = 1_i32;
+            floor.sector = s2;
+            floor.speed = (FLOORSPEED / 2_i32) as fixed_t;
+            floor.texture = s3_floorpic;
+            floor.newspecial = 0_i32;
+            floor.floordestheight = s3_floorheight;
+            let (floor_arena_id, _) = state.p_spec.spawn_floor(floor);
+            let floor_id =
+                P_AddThinker(state, ThinkerPayload::Floor(floor_arena_id), ThinkerKind::Floor);
+            state.p_setup.sector_mut(s2).specialdata = Some(SectorSpecial::Floor(floor_id));
+            let mut floor = floormove_t::default();
+            floor.thinker.function = ThinkerFn::Floor(T_MoveFloor);
+            floor.type_0 = FloorE::lowerFloor;
+            floor.crush = false;
+            floor.direction = -1_i32;
+            floor.sector = s1;
+            floor.speed = (FLOORSPEED / 2_i32) as fixed_t;
+            floor.floordestheight = s3_floorheight;
+            let (floor_arena_id, _) = state.p_spec.spawn_floor(floor);
+            let floor_id =
+                P_AddThinker(state, ThinkerPayload::Floor(floor_arena_id), ThinkerKind::Floor);
+            state.p_setup.sector_mut(s1).specialdata = Some(SectorSpecial::Floor(floor_id));
+            break;
         }
     }
     rtn

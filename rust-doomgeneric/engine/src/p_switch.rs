@@ -795,13 +795,13 @@ pub unsafe fn P_UseSpecialLine(
             current_block_108 = 4020771665460505868;
         }
         6707790765423050264 => {
-            if EV_DoLockedDoor(state, line, VldoorE::vld_blazeOpen, thing) != 0 {
+            if EV_DoLockedDoor(state, line, VldoorE::vld_blazeOpen, (*thing).id) != 0 {
                 P_ChangeSwitchTexture(state, line, 0_i32);
             }
             current_block_108 = 16981061190961355901;
         }
         16848555411549253182 => {
-            if EV_DoLockedDoor(state, line, VldoorE::vld_blazeOpen, thing) != 0 {
+            if EV_DoLockedDoor(state, line, VldoorE::vld_blazeOpen, (*thing).id) != 0 {
                 P_ChangeSwitchTexture(state, line, 1_i32);
             }
             current_block_108 = 16981061190961355901;
@@ -852,7 +852,7 @@ pub unsafe fn P_UseSpecialLine(
     }
     match current_block_108 {
         6634390297149606533 => {
-            EV_VerticalDoor(state, line, thing);
+            EV_VerticalDoor(state, line, (*thing).id);
         }
         _ => {}
     }
