@@ -599,46 +599,48 @@ pub unsafe fn A_Light1(_state: &mut GameState, mut player: *mut player_t, _psp: 
 pub unsafe fn A_Light2(_state: &mut GameState, mut player: *mut player_t, _psp: *mut pspdef_t) {
     (*player).extralight = 2_i32;
 }
-pub unsafe fn A_BFGSpray(state: &mut GameState, id: MobjId) {
-    let mo = state.p_mobj.mobj_get(id).unwrap();
-    let mut i: i32 = 0;
-    let mut j: i32 = 0;
-    let mut damage: i32 = 0;
-    let mut an: angle_t = 0;
-    let mo_target = (*mo)
-        .target
-        .and_then(|id| state.p_mobj.mobj_get(id))
-        .unwrap_or(::core::ptr::null_mut());
-    i = 0_i32;
-    while i < 40_i32 {
-        an = (*mo)
-            .angle
-            .wrapping_sub((ANG90 / 2_i32) as angle_t)
-            .wrapping_add((ANG90 / 40_i32 * i) as angle_t);
-        P_AimLineAttack(
-            state,
-            mo_target,
-            an,
-            16 as fixed_t * 64 as fixed_t * FRACUNIT,
-        );
-        if let Some(linetarget) = state.p_map.linetarget {
-            let linetarget = state.p_mobj.mobj_get(linetarget).unwrap();
-            P_SpawnMobj(
+pub fn A_BFGSpray(state: &mut GameState, id: MobjId) {
+    unsafe {
+        let mo = state.p_mobj.mobj_get(id).unwrap();
+        let mut i: i32 = 0;
+        let mut j: i32 = 0;
+        let mut damage: i32 = 0;
+        let mut an: angle_t = 0;
+        let mo_target = (*mo)
+            .target
+            .and_then(|id| state.p_mobj.mobj_get(id))
+            .unwrap_or(::core::ptr::null_mut());
+        i = 0_i32;
+        while i < 40_i32 {
+            an = (*mo)
+                .angle
+                .wrapping_sub((ANG90 / 2_i32) as angle_t)
+                .wrapping_add((ANG90 / 40_i32 * i) as angle_t);
+            P_AimLineAttack(
                 state,
-                (*linetarget).x,
-                (*linetarget).y,
-                (*linetarget).z + ((*linetarget).height >> 2_i32),
-                MobjType::MT_EXTRABFG,
+                mo_target,
+                an,
+                16 as fixed_t * 64 as fixed_t * FRACUNIT,
             );
-            damage = 0_i32;
-            j = 0_i32;
-            while j < 15_i32 {
-                damage += (P_Random(&mut state.m_random) & 7_i32) + 1_i32;
-                j += 1;
+            if let Some(linetarget) = state.p_map.linetarget {
+                let linetarget = state.p_mobj.mobj_get(linetarget).unwrap();
+                P_SpawnMobj(
+                    state,
+                    (*linetarget).x,
+                    (*linetarget).y,
+                    (*linetarget).z + ((*linetarget).height >> 2_i32),
+                    MobjType::MT_EXTRABFG,
+                );
+                damage = 0_i32;
+                j = 0_i32;
+                while j < 15_i32 {
+                    damage += (P_Random(&mut state.m_random) & 7_i32) + 1_i32;
+                    j += 1;
+                }
+                P_DamageMobj(state, linetarget, mo_target, mo_target, damage);
             }
-            P_DamageMobj(state, linetarget, mo_target, mo_target, damage);
+            i += 1;
         }
-        i += 1;
     }
 }
 pub unsafe fn A_BFGsound(state: &mut GameState, mut player: *mut player_t, _psp: *mut pspdef_t) {
