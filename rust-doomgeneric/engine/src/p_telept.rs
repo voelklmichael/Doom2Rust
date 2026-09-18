@@ -6,7 +6,7 @@ use crate::p_map::P_TeleportMove;
 use crate::p_mobj::mobj_t;
 use crate::p_mobj::thinker_t;
 use crate::p_mobj::MobjType;
-use crate::p_mobj::P_SpawnMobj;
+use crate::p_mobj::P_SpawnMobjPtr;
 use crate::p_mobj::ThinkerFn;
 use crate::p_mobj::MF_MISSILE;
 use crate::p_setup::LineId;
@@ -66,10 +66,10 @@ pub unsafe fn EV_Teleport(
                                 let thing_player = state.g_game.player_mut(thing_player);
                                 (*thing_player).viewz = (*thing).z + (*thing_player).viewheight;
                             }
-                            fog = P_SpawnMobj(state, oldx, oldy, oldz, MobjType::MT_TFOG);
+                            fog = P_SpawnMobjPtr(state, oldx, oldy, oldz, MobjType::MT_TFOG);
                             S_StartSound(state, SoundOrigin::Mobj((*(fog)).id), sfx_telept as i32);
                             an = (*m).angle >> ANGLETOFINESHIFT;
-                            fog = P_SpawnMobj(
+                            fog = P_SpawnMobjPtr(
                                 state,
                                 (*m).x + 20 as fixed_t * finecosine[an as isize],
                                 (*m).y + 20 as fixed_t * finesine[an as usize],

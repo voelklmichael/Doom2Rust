@@ -54,7 +54,7 @@ use crate::p_mobj::mapthing_t;
 use crate::p_mobj::MobjId;
 use crate::p_mobj::MobjType;
 use crate::p_mobj::P_RemoveMobj;
-use crate::p_mobj::P_SpawnMobj;
+use crate::p_mobj::P_SpawnMobjPtr;
 use crate::p_mobj::P_SpawnPlayer;
 use crate::p_mobj::StateNum;
 use crate::p_mobj::MF_SHADOW;
@@ -1194,7 +1194,7 @@ pub unsafe fn G_CheckSpot(
         .p_setup
         .sector_mut(state.p_setup.subsectors[ss.0 as usize].sector)
         .floorheight;
-    mo = P_SpawnMobj(
+    mo = P_SpawnMobjPtr(
         state,
         x + 20 as fixed_t * xa,
         y + 20 as fixed_t * ya,

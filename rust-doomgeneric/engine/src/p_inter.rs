@@ -20,7 +20,7 @@ use crate::p_mobj::mobj_t;
 use crate::p_mobj::MobjType;
 use crate::p_mobj::P_RemoveMobj;
 use crate::p_mobj::P_SetMobjState;
-use crate::p_mobj::P_SpawnMobj;
+use crate::p_mobj::P_SpawnMobjPtr;
 use crate::p_mobj::StateNum;
 use crate::p_mobj::ONFLOORZ;
 use crate::p_mobj::{
@@ -643,7 +643,7 @@ pub unsafe fn P_KillMobj(state: &mut GameState, source: Option<MobjId>, target: 
         }
         _ => return,
     }
-    mo = P_SpawnMobj(state, (*target).x, (*target).y, ONFLOORZ, item);
+    mo = P_SpawnMobjPtr(state, (*target).x, (*target).y, ONFLOORZ, item);
     (*mo).flags |= MF_DROPPED as i32;
 }
 pub unsafe fn P_DamageMobj(

@@ -125,7 +125,7 @@ pub fn P_MovePlayer(state: &mut GameState, player_id: PlayerId) {
     }
 }
 pub const ANG5: i32 = ANG90 / 18_i32;
-pub unsafe fn P_DeathThink(state: &mut GameState, player_id: PlayerId) {
+pub fn P_DeathThink(state: &mut GameState, player_id: PlayerId) {
     let player = player_id;
     let mut angle: angle_t = 0;
     let mut delta: angle_t = 0;

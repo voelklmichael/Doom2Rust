@@ -32,7 +32,7 @@ use crate::p_mobj::MobjType;
 use crate::p_mobj::P_RemoveMobj;
 use crate::p_mobj::P_SetMobjState;
 use crate::p_mobj::P_SpawnBlood;
-use crate::p_mobj::P_SpawnMobj;
+use crate::p_mobj::P_SpawnMobjPtr;
 use crate::p_mobj::P_SpawnPuff;
 use crate::p_mobj::P_SubstNullMobj;
 use crate::p_mobj::StateNum;
@@ -1130,7 +1130,7 @@ pub unsafe fn PIT_ChangeSector(state: &mut GameState, mut thing_id: MobjId) -> b
             None,
             10_i32,
         );
-        mo = P_SpawnMobj(
+        mo = P_SpawnMobjPtr(
             state,
             (*thing).x,
             (*thing).y,

@@ -937,11 +937,10 @@ pub unsafe fn P_CrossSpecialLine(
         _ => {}
     };
 }
-pub unsafe fn P_ShootSpecialLine(state: &mut GameState, thing: MobjId, mut line: LineId) {
-    let thing: *mut mobj_t = state.p_mobj.mobj_ptr(thing);
+pub fn P_ShootSpecialLine(state: &mut GameState, thing: MobjId, mut line: LineId) {
     let mut ok: i32 = 0;
     let special = state.p_setup.line(line).special;
-    if (*thing).player.is_none() {
+    if state.p_mobj.mo(thing).player.is_none() {
         ok = 0_i32;
         match special as i32 {
             46 => {
