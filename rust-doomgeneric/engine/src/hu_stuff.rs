@@ -19,7 +19,7 @@ use crate::m_controls::KEY_RALT;
 use crate::m_controls::KEY_RSHIFT;
 use crate::s_sound::S_StartSound;
 use crate::s_sound::SoundOrigin;
-use crate::sounds::{sfx_radio, sfx_tink};
+use crate::sounds::SfxName;
 use crate::stdint_types::byte;
 use crate::v_video::V_CachePatchNum;
 use crate::w_wad::{W_GetNumForName, W_LumpBytes};
@@ -494,9 +494,9 @@ pub fn HU_Ticker(state: &mut GameState) {
                             if state.doomstat.gamemode as u32
                                 == GameMode_t::commercial as i32 as u32
                             {
-                                S_StartSound(state, SoundOrigin::None, sfx_radio as i32);
+                                S_StartSound(state, SoundOrigin::None, SfxName::sfx_radio as i32);
                             } else {
-                                S_StartSound(state, SoundOrigin::None, sfx_tink as i32);
+                                S_StartSound(state, SoundOrigin::None, SfxName::sfx_tink as i32);
                             }
                         }
                         HUlib_resetIText(&mut state.hu_stuff.w_inputbuffer[i as usize]);

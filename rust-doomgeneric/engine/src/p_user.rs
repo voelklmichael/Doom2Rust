@@ -192,7 +192,7 @@ pub fn P_DeathThink(state: &mut GameState, player_id: PlayerId) {
     } else if state.g_game.players[player.0 as usize].damagecount != 0 {
         state.g_game.players[player.0 as usize].damagecount -= 1;
     }
-    if state.g_game.players[player.0 as usize].cmd.buttons as i32 & BT_USE as i32 != 0 {
+    if state.g_game.players[player.0 as usize].cmd.buttons as i32 & BT_USE != 0 {
         state.g_game.players[player.0 as usize].playerstate = PlayerState::PST_REBORN;
     }
 }
@@ -201,15 +201,15 @@ pub fn P_PlayerThink(state: &mut GameState, player_id: PlayerId) {
     let mut newweapon: weapontype_t = weapontype_t::wp_fist;
     let player_mo = state.g_game.players[player.0 as usize].mo.unwrap();
     if state.g_game.players[player.0 as usize].cheats & CF_NOCLIP != 0 {
-        state.p_mobj.mo_mut(player_mo).flags |= MF_NOCLIP as i32;
+        state.p_mobj.mo_mut(player_mo).flags |= MF_NOCLIP;
     } else {
-        state.p_mobj.mo_mut(player_mo).flags &= !(MF_NOCLIP as i32);
+        state.p_mobj.mo_mut(player_mo).flags &= !MF_NOCLIP;
     }
-    if state.p_mobj.mo(player_mo).flags & MF_JUSTATTACKED as i32 != 0 {
+    if state.p_mobj.mo(player_mo).flags & MF_JUSTATTACKED != 0 {
         state.g_game.players[player_id.0 as usize].cmd.angleturn = 0_i16;
         state.g_game.players[player_id.0 as usize].cmd.forwardmove = (0xc800_i32 / 512_i32) as i8;
         state.g_game.players[player_id.0 as usize].cmd.sidemove = 0_i8;
-        state.p_mobj.mo_mut(player_mo).flags &= !(MF_JUSTATTACKED as i32);
+        state.p_mobj.mo_mut(player_mo).flags &= !MF_JUSTATTACKED;
     }
     if state.g_game.players[player.0 as usize].playerstate == PlayerState::PST_DEAD {
         P_DeathThink(state, player_id);
@@ -231,13 +231,13 @@ pub fn P_PlayerThink(state: &mut GameState, player_id: PlayerId) {
     {
         P_PlayerInSpecialSector(state, player_id);
     }
-    if state.g_game.players[player_id.0 as usize].cmd.buttons as i32 & BT_SPECIAL as i32 != 0 {
+    if state.g_game.players[player_id.0 as usize].cmd.buttons as i32 & BT_SPECIAL != 0 {
         state.g_game.players[player_id.0 as usize].cmd.buttons = 0 as byte;
     }
-    if state.g_game.players[player_id.0 as usize].cmd.buttons as i32 & BT_CHANGE as i32 != 0 {
+    if state.g_game.players[player_id.0 as usize].cmd.buttons as i32 & BT_CHANGE != 0 {
         newweapon = weapontype_from_raw(
-            (state.g_game.players[player_id.0 as usize].cmd.buttons as i32 & BT_WEAPONMASK as i32)
-                >> BT_WEAPONSHIFT as i32,
+            (state.g_game.players[player_id.0 as usize].cmd.buttons as i32 & BT_WEAPONMASK)
+                >> BT_WEAPONSHIFT,
         );
         if newweapon as u32 == weapontype_t::wp_fist as i32 as u32
             && state.g_game.players[player.0 as usize].weaponowned
@@ -267,7 +267,7 @@ pub fn P_PlayerThink(state: &mut GameState, player_id: PlayerId) {
             state.g_game.players[player.0 as usize].pendingweapon = newweapon;
         }
     }
-    if state.g_game.players[player_id.0 as usize].cmd.buttons as i32 & BT_USE as i32 != 0 {
+    if state.g_game.players[player_id.0 as usize].cmd.buttons as i32 & BT_USE != 0 {
         if state.g_game.players[player.0 as usize].usedown == 0 {
             P_UseLines(state, player_id);
             state.g_game.players[player.0 as usize].usedown = true_0;
@@ -286,7 +286,7 @@ pub fn P_PlayerThink(state: &mut GameState, player_id: PlayerId) {
         state.g_game.players[player.0 as usize].powers[PowerType::pw_invisibility as usize] -= 1;
         if state.g_game.players[player.0 as usize].powers[PowerType::pw_invisibility as usize] == 0
         {
-            state.p_mobj.mo_mut(player_mo).flags &= !(MF_SHADOW as i32);
+            state.p_mobj.mo_mut(player_mo).flags &= !MF_SHADOW;
         }
     }
     if state.g_game.players[player.0 as usize].powers[PowerType::pw_infrared as usize] != 0 {

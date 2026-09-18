@@ -34,11 +34,7 @@ use crate::s_sound::S_SetMusicVolume;
 use crate::s_sound::S_SetSfxVolume;
 use crate::s_sound::S_StartSound;
 use crate::s_sound::SoundOrigin;
-use crate::sounds::{
-    sfx_boscub, sfx_bspact, sfx_dmpain, sfx_getpow, sfx_kntdth, sfx_oof, sfx_pistol, sfx_pldeth,
-    sfx_popain, sfx_posit1, sfx_posit3, sfx_pstop, sfx_sgtatk, sfx_skeswg, sfx_slop, sfx_stnmov,
-    sfx_swtchn, sfx_swtchx, sfx_telept, sfx_vilact,
-};
+use crate::sounds::SfxName;
 use crate::v_video::Screen;
 use crate::v_video::V_CachePatchName;
 
@@ -80,7 +76,7 @@ impl MMenuDefsHolder {
     pub fn new() -> Self {
         MMenuDefsHolder {
             MainDef: menu_s {
-                numitems: main_end as i32 as i16,
+                numitems: main_end as i16,
                 prevMenu: None,
                 items: vec![
                     menuitem_t {
@@ -126,7 +122,7 @@ impl MMenuDefsHolder {
                 lastOn: 0_i16,
             },
             EpiDef: menu_s {
-                numitems: ep_end as i32 as i16,
+                numitems: ep_end as i16,
                 prevMenu: Some(MenuId::Main),
                 items: vec![
                     menuitem_t {
@@ -157,10 +153,10 @@ impl MMenuDefsHolder {
                 routine: Some(M_DrawEpisode as fn(&mut GameState) -> ()),
                 x: 48_i16,
                 y: 63_i16,
-                lastOn: ep1 as i32 as i16,
+                lastOn: EpisodeMenu::ep1 as i32 as i16,
             },
             NewDef: menu_s {
-                numitems: newg_end as i32 as i16,
+                numitems: newg_end as i16,
                 prevMenu: Some(MenuId::Epi),
                 items: vec![
                     menuitem_t {
@@ -197,10 +193,10 @@ impl MMenuDefsHolder {
                 routine: Some(M_DrawNewGame as fn(&mut GameState) -> ()),
                 x: 48_i16,
                 y: 63_i16,
-                lastOn: hurtme as i32 as i16,
+                lastOn: NewGameMenu::hurtme as i32 as i16,
             },
             OptionsDef: menu_s {
-                numitems: opt_end as i32 as i16,
+                numitems: opt_end as i16,
                 prevMenu: Some(MenuId::Main),
                 items: vec![
                     menuitem_t {
@@ -258,7 +254,7 @@ impl MMenuDefsHolder {
                 lastOn: 0_i16,
             },
             ReadDef1: menu_s {
-                numitems: read1_end as i32 as i16,
+                numitems: read1_end as i16,
                 prevMenu: Some(MenuId::Main),
                 items: vec![menuitem_t {
                     status: 1_i16,
@@ -272,7 +268,7 @@ impl MMenuDefsHolder {
                 lastOn: 0_i16,
             },
             ReadDef2: menu_s {
-                numitems: read2_end as i32 as i16,
+                numitems: read2_end as i16,
                 prevMenu: Some(MenuId::Read1),
                 items: vec![menuitem_t {
                     status: 1_i16,
@@ -286,7 +282,7 @@ impl MMenuDefsHolder {
                 lastOn: 0_i16,
             },
             SoundDef: menu_s {
-                numitems: sound_end as i32 as i16,
+                numitems: sound_end as i16,
                 prevMenu: Some(MenuId::Options),
                 items: vec![
                     menuitem_t {
@@ -320,7 +316,7 @@ impl MMenuDefsHolder {
                 lastOn: 0_i16,
             },
             LoadDef: menu_s {
-                numitems: load_end as i32 as i16,
+                numitems: load_end as i16,
                 prevMenu: Some(MenuId::Main),
                 items: vec![
                     menuitem_t {
@@ -366,7 +362,7 @@ impl MMenuDefsHolder {
                 lastOn: 0_i16,
             },
             SaveDef: menu_s {
-                numitems: load_end as i32 as i16,
+                numitems: load_end as i16,
                 prevMenu: Some(MenuId::Main),
                 items: vec![
                     menuitem_t {
@@ -567,57 +563,73 @@ pub struct menu_s {
     pub y: i16,
     pub lastOn: i16,
 }
-pub const read2_end: C2RustUnnamed_6 = 1;
-pub const read1_end: C2RustUnnamed_5 = 1;
-pub const load_end: C2RustUnnamed_8 = 6;
-pub const scrnsize: C2RustUnnamed_4 = 3;
-pub const mousesens: C2RustUnnamed_4 = 5;
-pub const messages: C2RustUnnamed_4 = 1;
-pub const detail: C2RustUnnamed_4 = 2;
-pub const music_vol: C2RustUnnamed_7 = 2;
-pub const sfx_vol: C2RustUnnamed_7 = 0;
-pub const sound_end: C2RustUnnamed_7 = 4;
-pub const opt_end: C2RustUnnamed_4 = 8;
-pub const ep1: C2RustUnnamed_2 = 0;
-pub const hurtme: C2RustUnnamed_3 = 2;
-pub const nightmare: C2RustUnnamed_3 = 4;
-pub const newg_end: C2RustUnnamed_3 = 5;
-pub const ep_end: C2RustUnnamed_2 = 4;
-pub const main_end: C2RustUnnamed_1 = 6;
-pub const quitdoom: C2RustUnnamed_1 = 5;
-pub const readthis: C2RustUnnamed_1 = 4;
-pub type C2RustUnnamed_1 = u32;
-pub const savegame: C2RustUnnamed_1 = 3;
-pub const loadgame: C2RustUnnamed_1 = 2;
-pub const options: C2RustUnnamed_1 = 1;
-pub const newgame: C2RustUnnamed_1 = 0;
-pub type C2RustUnnamed_2 = u32;
-pub const ep4: C2RustUnnamed_2 = 3;
-pub const ep3: C2RustUnnamed_2 = 2;
-pub const ep2: C2RustUnnamed_2 = 1;
-pub type C2RustUnnamed_3 = u32;
-pub const violence: C2RustUnnamed_3 = 3;
-pub const toorough: C2RustUnnamed_3 = 1;
-pub const killthings: C2RustUnnamed_3 = 0;
-pub type C2RustUnnamed_4 = u32;
-pub const soundvol: C2RustUnnamed_4 = 7;
-pub const option_empty2: C2RustUnnamed_4 = 6;
-pub const option_empty1: C2RustUnnamed_4 = 4;
-pub const endgame: C2RustUnnamed_4 = 0;
-pub type C2RustUnnamed_5 = u32;
-pub const rdthsempty1: C2RustUnnamed_5 = 0;
-pub type C2RustUnnamed_6 = u32;
-pub const rdthsempty2: C2RustUnnamed_6 = 0;
-pub type C2RustUnnamed_7 = u32;
-pub const sfx_empty2: C2RustUnnamed_7 = 3;
-pub const sfx_empty1: C2RustUnnamed_7 = 1;
-pub type C2RustUnnamed_8 = u32;
-pub const load6: C2RustUnnamed_8 = 5;
-pub const load5: C2RustUnnamed_8 = 4;
-pub const load4: C2RustUnnamed_8 = 3;
-pub const load3: C2RustUnnamed_8 = 2;
-pub const load2: C2RustUnnamed_8 = 1;
-pub const load1: C2RustUnnamed_8 = 0;
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub enum ReadThis2Menu {
+    rdthsempty2 = 0,
+}
+pub const read2_end: i32 = 1;
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub enum ReadThis1Menu {
+    rdthsempty1 = 0,
+}
+pub const read1_end: i32 = 1;
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub enum LoadMenu {
+    load1 = 0,
+    load2 = 1,
+    load3 = 2,
+    load4 = 3,
+    load5 = 4,
+    load6 = 5,
+}
+pub const load_end: i32 = 6;
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub enum OptionsMenu {
+    endgame = 0,
+    messages = 1,
+    detail = 2,
+    scrnsize = 3,
+    option_empty1 = 4,
+    mousesens = 5,
+    option_empty2 = 6,
+    soundvol = 7,
+}
+pub const opt_end: i32 = 8;
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub enum SoundMenu {
+    sfx_vol = 0,
+    sfx_empty1 = 1,
+    music_vol = 2,
+    sfx_empty2 = 3,
+}
+pub const sound_end: i32 = 4;
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub enum EpisodeMenu {
+    ep1 = 0,
+    ep2 = 1,
+    ep3 = 2,
+    ep4 = 3,
+}
+pub const ep_end: i32 = 4;
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub enum NewGameMenu {
+    killthings = 0,
+    toorough = 1,
+    hurtme = 2,
+    violence = 3,
+    nightmare = 4,
+}
+pub const newg_end: i32 = 5;
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub enum MainMenu {
+    newgame = 0,
+    options = 1,
+    loadgame = 2,
+    savegame = 3,
+    readthis = 4,
+    quitdoom = 5,
+}
+pub const main_end: i32 = 6;
 pub const KEY_NUMLOCK: i32 = 0x80 + 0x45_i32;
 pub const GAMMALVL0: &str = "Gamma correction OFF\0";
 pub const GAMMALVL1: &str = "Gamma correction level 1\0";
@@ -631,18 +643,10 @@ pub static gammamsg: [&str; 5] = [GAMMALVL0, GAMMALVL1, GAMMALVL2, GAMMALVL3, GA
 pub const SKULLXOFF: i32 = -32_i32;
 pub const LINEHEIGHT: i32 = 16;
 pub static skullName: [&str; 2] = ["M_SKULL1", "M_SKULL2"];
-pub static main_e: C2RustUnnamed_1 = newgame;
-pub static episodes_e: C2RustUnnamed_2 = ep1;
-pub static newgame_e: C2RustUnnamed_3 = killthings;
-pub static options_e: C2RustUnnamed_4 = endgame;
-pub static read_e: C2RustUnnamed_5 = rdthsempty1;
-pub static read_e2: C2RustUnnamed_6 = rdthsempty2;
-pub static sound_e: C2RustUnnamed_7 = sfx_vol;
-pub static load_e: C2RustUnnamed_8 = load1;
 pub fn M_ReadSaveStrings(state: &mut GameState) {
     let mut i: i32 = 0;
     i = 0_i32;
-    while i < load_end as i32 {
+    while i < load_end {
         let savegame_file = P_SaveGameFile(state, i);
         match std::fs::File::open(&savegame_file) {
             Err(_) => {
@@ -668,7 +672,7 @@ pub fn M_DrawLoad(state: &mut GameState) {
     let dest_screen = Screen::Video;
     V_DrawPatchDirect(state, dest_screen, 72_i32, 28_i32, &__wcache890_24);
     i = 0_i32;
-    while i < load_end as i32 {
+    while i < load_end {
         let loaddef_x = state.m_menu.defs.LoadDef.x as i32;
         let loaddef_y = state.m_menu.defs.LoadDef.y as i32 + LINEHEIGHT * i;
         M_DrawSaveLoadBorder(state, loaddef_x, loaddef_y);
@@ -719,7 +723,7 @@ pub fn M_DrawSave(state: &mut GameState) {
     let dest_screen = Screen::Video;
     V_DrawPatchDirect(state, dest_screen, 72_i32, 28_i32, &__wcache961_20);
     i = 0_i32;
-    while i < load_end as i32 {
+    while i < load_end {
         let loaddef_x = state.m_menu.defs.LoadDef.x as i32;
         let loaddef_y = state.m_menu.defs.LoadDef.y as i32 + LINEHEIGHT * i;
         M_DrawSaveLoadBorder(state, loaddef_x, loaddef_y);
@@ -773,12 +777,12 @@ pub fn M_QuickSaveResponse(state: &mut GameState, mut key: i32) {
     if key == state.m_controls.key_menu_confirm {
         let quick_save_slot = state.m_menu.quickSaveSlot;
         M_DoSave(state, quick_save_slot);
-        S_StartSound(state, SoundOrigin::None, sfx_swtchx as i32);
+        S_StartSound(state, SoundOrigin::None, SfxName::sfx_swtchx as i32);
     }
 }
 pub fn M_QuickSave(state: &mut GameState) {
     if !state.g_game.usergame {
-        S_StartSound(state, SoundOrigin::None, sfx_oof as i32);
+        S_StartSound(state, SoundOrigin::None, SfxName::sfx_oof as i32);
         return;
     }
     if state.g_game.gamestate != GameScreenState::GS_LEVEL {
@@ -803,7 +807,7 @@ pub fn M_QuickLoadResponse(state: &mut GameState, mut key: i32) {
     if key == state.m_controls.key_menu_confirm {
         let quick_save_slot = state.m_menu.quickSaveSlot;
         M_LoadSelect(state, quick_save_slot);
-        S_StartSound(state, SoundOrigin::None, sfx_swtchx as i32);
+        S_StartSound(state, SoundOrigin::None, SfxName::sfx_swtchx as i32);
     }
 }
 pub fn M_QuickLoad(state: &mut GameState) {
@@ -877,13 +881,13 @@ pub fn M_DrawSound(state: &mut GameState) {
     V_DrawPatchDirect(state, dest_screen, 60_i32, 38_i32, &__wcache1179_17);
     let (x, y, vol) = (
         state.m_menu.defs.SoundDef.x as i32,
-        state.m_menu.defs.SoundDef.y as i32 + LINEHEIGHT * (sfx_vol as i32 + 1_i32),
+        state.m_menu.defs.SoundDef.y as i32 + LINEHEIGHT * (SoundMenu::sfx_vol as i32 + 1_i32),
         state.s_sound.sfxVolume,
     );
     M_DrawThermo(state, x, y, 16_i32, vol);
     let (x, y, vol) = (
         state.m_menu.defs.SoundDef.x as i32,
-        state.m_menu.defs.SoundDef.y as i32 + LINEHEIGHT * (music_vol as i32 + 1_i32),
+        state.m_menu.defs.SoundDef.y as i32 + LINEHEIGHT * (SoundMenu::music_vol as i32 + 1_i32),
         state.s_sound.musicVolume,
     );
     M_DrawThermo(state, x, y, 16_i32, vol);
@@ -966,14 +970,14 @@ pub fn M_VerifyNightmare(state: &mut GameState, mut key: i32) {
     }
     G_DeferedInitNew(
         state,
-        skill_from_raw(nightmare as i32),
+        skill_from_raw(NewGameMenu::nightmare as i32),
         state.m_menu.epi + 1_i32,
         1_i32,
     );
     M_ClearMenus(state);
 }
 pub fn M_ChooseSkill(state: &mut GameState, mut choice: i32) {
-    if choice == nightmare as i32 {
+    if choice == NewGameMenu::nightmare as i32 {
         M_StartMessage(
             state,
             "are you sure? this skill level\nisn't even remotely fair.\n\npress y or n.",
@@ -1024,7 +1028,7 @@ pub fn M_DrawOptions(state: &mut GameState) {
         state,
         dest_screen,
         state.m_menu.defs.OptionsDef.x as i32 + 175_i32,
-        state.m_menu.defs.OptionsDef.y as i32 + LINEHEIGHT * detail as i32,
+        state.m_menu.defs.OptionsDef.y as i32 + LINEHEIGHT * OptionsMenu::detail as i32,
         &__wcache1364_11,
     );
     let __wcache1373_10 = V_CachePatchName(state, msgNames[state.m_menu.showMessages as usize]);
@@ -1033,18 +1037,19 @@ pub fn M_DrawOptions(state: &mut GameState) {
         state,
         dest_screen,
         state.m_menu.defs.OptionsDef.x as i32 + 120_i32,
-        state.m_menu.defs.OptionsDef.y as i32 + LINEHEIGHT * messages as i32,
+        state.m_menu.defs.OptionsDef.y as i32 + LINEHEIGHT * OptionsMenu::messages as i32,
         &__wcache1373_10,
     );
     let (x, y, sens) = (
         state.m_menu.defs.OptionsDef.x as i32,
-        state.m_menu.defs.OptionsDef.y as i32 + LINEHEIGHT * (mousesens as i32 + 1_i32),
+        state.m_menu.defs.OptionsDef.y as i32
+            + LINEHEIGHT * (OptionsMenu::mousesens as i32 + 1_i32),
         state.m_menu.mouseSensitivity,
     );
     M_DrawThermo(state, x, y, 10_i32, sens);
     let (x, y, sz) = (
         state.m_menu.defs.OptionsDef.x as i32,
-        state.m_menu.defs.OptionsDef.y as i32 + LINEHEIGHT * (scrnsize as i32 + 1_i32),
+        state.m_menu.defs.OptionsDef.y as i32 + LINEHEIGHT * (OptionsMenu::scrnsize as i32 + 1_i32),
         state.m_menu.screenSize,
     );
     M_DrawThermo(state, x, y, 9_i32, sz);
@@ -1075,7 +1080,7 @@ pub fn M_EndGameResponse(state: &mut GameState, mut key: i32) {
 }
 pub fn M_EndGame(state: &mut GameState, _choice: i32) {
     if !state.g_game.usergame {
-        S_StartSound(state, SoundOrigin::None, sfx_oof as i32);
+        S_StartSound(state, SoundOrigin::None, SfxName::sfx_oof as i32);
         return;
     }
     if state.g_game.netgame {
@@ -1113,24 +1118,24 @@ pub fn M_FinishReadThis(state: &mut GameState, _choice: i32) {
     M_SetupNextMenu(state, menudef);
 }
 pub static quitsounds: [i32; 8] = [
-    sfx_pldeth as i32,
-    sfx_dmpain as i32,
-    sfx_popain as i32,
-    sfx_slop as i32,
-    sfx_telept as i32,
-    sfx_posit1 as i32,
-    sfx_posit3 as i32,
-    sfx_sgtatk as i32,
+    SfxName::sfx_pldeth as i32,
+    SfxName::sfx_dmpain as i32,
+    SfxName::sfx_popain as i32,
+    SfxName::sfx_slop as i32,
+    SfxName::sfx_telept as i32,
+    SfxName::sfx_posit1 as i32,
+    SfxName::sfx_posit3 as i32,
+    SfxName::sfx_sgtatk as i32,
 ];
 pub static quitsounds2: [i32; 8] = [
-    sfx_vilact as i32,
-    sfx_getpow as i32,
-    sfx_boscub as i32,
-    sfx_slop as i32,
-    sfx_skeswg as i32,
-    sfx_kntdth as i32,
-    sfx_bspact as i32,
-    sfx_sgtatk as i32,
+    SfxName::sfx_vilact as i32,
+    SfxName::sfx_getpow as i32,
+    SfxName::sfx_boscub as i32,
+    SfxName::sfx_slop as i32,
+    SfxName::sfx_skeswg as i32,
+    SfxName::sfx_kntdth as i32,
+    SfxName::sfx_bspact as i32,
+    SfxName::sfx_sgtatk as i32,
 ];
 pub fn M_QuitResponse(state: &mut GameState, mut key: i32) {
     if key != state.m_controls.key_menu_confirm {
@@ -1380,7 +1385,7 @@ pub fn M_Responder(state: &mut GameState, ev: &mut event_t) -> bool {
             let key_menu_confirm = state.m_controls.key_menu_confirm;
             M_QuitResponse(state, key_menu_confirm);
         } else {
-            S_StartSound(state, SoundOrigin::None, sfx_swtchn as i32);
+            S_StartSound(state, SoundOrigin::None, SfxName::sfx_swtchn as i32);
             M_QuitDOOM(state, 0_i32);
         }
         return true;
@@ -1518,7 +1523,7 @@ pub fn M_Responder(state: &mut GameState, ev: &mut event_t) -> bool {
                 .expect("non-null function pointer")(state, key);
         }
         state.m_menu.menuactive = false;
-        S_StartSound(state, SoundOrigin::None, sfx_swtchx as i32);
+        S_StartSound(state, SoundOrigin::None, SfxName::sfx_swtchx as i32);
         return true;
     }
     if state.d_main.devparm && key == state.m_controls.key_menu_help
@@ -1533,14 +1538,14 @@ pub fn M_Responder(state: &mut GameState, ev: &mut event_t) -> bool {
                 return false;
             }
             M_SizeDisplay(state, 0_i32);
-            S_StartSound(state, SoundOrigin::None, sfx_stnmov as i32);
+            S_StartSound(state, SoundOrigin::None, SfxName::sfx_stnmov as i32);
             return true;
         } else if key == state.m_controls.key_menu_incscreen {
             if state.am_map.automapactive || state.hu_stuff.chat_on {
                 return false;
             }
             M_SizeDisplay(state, 1_i32);
-            S_StartSound(state, SoundOrigin::None, sfx_stnmov as i32);
+            S_StartSound(state, SoundOrigin::None, SfxName::sfx_stnmov as i32);
             return true;
         } else if key == state.m_controls.key_menu_help {
             M_StartControlPanel(state);
@@ -1550,46 +1555,46 @@ pub fn M_Responder(state: &mut GameState, ev: &mut event_t) -> bool {
                 state.m_menu.currentMenu = MenuId::Read1;
             }
             state.m_menu.itemOn = 0_i16;
-            S_StartSound(state, SoundOrigin::None, sfx_swtchn as i32);
+            S_StartSound(state, SoundOrigin::None, SfxName::sfx_swtchn as i32);
             return true;
         } else if key == state.m_controls.key_menu_save {
             M_StartControlPanel(state);
-            S_StartSound(state, SoundOrigin::None, sfx_swtchn as i32);
+            S_StartSound(state, SoundOrigin::None, SfxName::sfx_swtchn as i32);
             M_SaveGame(state, 0_i32);
             return true;
         } else if key == state.m_controls.key_menu_load {
             M_StartControlPanel(state);
-            S_StartSound(state, SoundOrigin::None, sfx_swtchn as i32);
+            S_StartSound(state, SoundOrigin::None, SfxName::sfx_swtchn as i32);
             M_LoadGame(state, 0_i32);
             return true;
         } else if key == state.m_controls.key_menu_volume {
             M_StartControlPanel(state);
             state.m_menu.currentMenu = MenuId::Sound;
-            state.m_menu.itemOn = sfx_vol as i32 as i16;
-            S_StartSound(state, SoundOrigin::None, sfx_swtchn as i32);
+            state.m_menu.itemOn = SoundMenu::sfx_vol as i32 as i16;
+            S_StartSound(state, SoundOrigin::None, SfxName::sfx_swtchn as i32);
             return true;
         } else if key == state.m_controls.key_menu_detail {
             M_ChangeDetail(state, 0_i32);
-            S_StartSound(state, SoundOrigin::None, sfx_swtchn as i32);
+            S_StartSound(state, SoundOrigin::None, SfxName::sfx_swtchn as i32);
             return true;
         } else if key == state.m_controls.key_menu_qsave {
-            S_StartSound(state, SoundOrigin::None, sfx_swtchn as i32);
+            S_StartSound(state, SoundOrigin::None, SfxName::sfx_swtchn as i32);
             M_QuickSave(state);
             return true;
         } else if key == state.m_controls.key_menu_endgame {
-            S_StartSound(state, SoundOrigin::None, sfx_swtchn as i32);
+            S_StartSound(state, SoundOrigin::None, SfxName::sfx_swtchn as i32);
             M_EndGame(state, 0_i32);
             return true;
         } else if key == state.m_controls.key_menu_messages {
             M_ChangeMessages(state, 0_i32);
-            S_StartSound(state, SoundOrigin::None, sfx_swtchn as i32);
+            S_StartSound(state, SoundOrigin::None, SfxName::sfx_swtchn as i32);
             return true;
         } else if key == state.m_controls.key_menu_qload {
-            S_StartSound(state, SoundOrigin::None, sfx_swtchn as i32);
+            S_StartSound(state, SoundOrigin::None, SfxName::sfx_swtchn as i32);
             M_QuickLoad(state);
             return true;
         } else if key == state.m_controls.key_menu_quit {
-            S_StartSound(state, SoundOrigin::None, sfx_swtchn as i32);
+            S_StartSound(state, SoundOrigin::None, SfxName::sfx_swtchn as i32);
             M_QuitDOOM(state, 0_i32);
             return true;
         } else if key == state.m_controls.key_menu_gamma {
@@ -1607,7 +1612,7 @@ pub fn M_Responder(state: &mut GameState, ev: &mut event_t) -> bool {
     if !state.m_menu.menuactive {
         if key == state.m_controls.key_menu_activate {
             M_StartControlPanel(state);
-            S_StartSound(state, SoundOrigin::None, sfx_swtchn as i32);
+            S_StartSound(state, SoundOrigin::None, SfxName::sfx_swtchn as i32);
             return true;
         }
         return false;
@@ -1619,7 +1624,7 @@ pub fn M_Responder(state: &mut GameState, ev: &mut event_t) -> bool {
             } else {
                 state.m_menu.itemOn += 1;
             }
-            S_StartSound(state, SoundOrigin::None, sfx_pstop as i32);
+            S_StartSound(state, SoundOrigin::None, SfxName::sfx_pstop as i32);
             if state.m_menu.current().items[state.m_menu.itemOn as usize].status as i32 != -1_i32 {
                 break;
             }
@@ -1632,7 +1637,7 @@ pub fn M_Responder(state: &mut GameState, ev: &mut event_t) -> bool {
             } else {
                 state.m_menu.itemOn -= 1;
             }
-            S_StartSound(state, SoundOrigin::None, sfx_pstop as i32);
+            S_StartSound(state, SoundOrigin::None, SfxName::sfx_pstop as i32);
             if state.m_menu.current().items[state.m_menu.itemOn as usize].status as i32 != -1_i32 {
                 break;
             }
@@ -1641,14 +1646,14 @@ pub fn M_Responder(state: &mut GameState, ev: &mut event_t) -> bool {
     } else if key == state.m_controls.key_menu_left {
         let item = state.m_menu.current().items[state.m_menu.itemOn as usize];
         if let Some(routine) = item.routine.filter(|_| item.status as i32 == 2_i32) {
-            S_StartSound(state, SoundOrigin::None, sfx_stnmov as i32);
+            S_StartSound(state, SoundOrigin::None, SfxName::sfx_stnmov as i32);
             routine(state, 0_i32);
         }
         return true;
     } else if key == state.m_controls.key_menu_right {
         let item = state.m_menu.current().items[state.m_menu.itemOn as usize];
         if let Some(routine) = item.routine.filter(|_| item.status as i32 == 2_i32) {
-            S_StartSound(state, SoundOrigin::None, sfx_stnmov as i32);
+            S_StartSound(state, SoundOrigin::None, SfxName::sfx_stnmov as i32);
             routine(state, 1_i32);
         }
         return true;
@@ -1659,11 +1664,11 @@ pub fn M_Responder(state: &mut GameState, ev: &mut event_t) -> bool {
             state.m_menu.current_mut().lastOn = item_on;
             if item.status as i32 == 2_i32 {
                 routine(state, 1_i32);
-                S_StartSound(state, SoundOrigin::None, sfx_stnmov as i32);
+                S_StartSound(state, SoundOrigin::None, SfxName::sfx_stnmov as i32);
             } else {
                 let item_on = state.m_menu.itemOn as i32;
                 routine(state, item_on);
-                S_StartSound(state, SoundOrigin::None, sfx_pistol as i32);
+                S_StartSound(state, SoundOrigin::None, SfxName::sfx_pistol as i32);
             }
         }
         return true;
@@ -1671,7 +1676,7 @@ pub fn M_Responder(state: &mut GameState, ev: &mut event_t) -> bool {
         let item_on = state.m_menu.itemOn;
         state.m_menu.current_mut().lastOn = item_on;
         M_ClearMenus(state);
-        S_StartSound(state, SoundOrigin::None, sfx_swtchx as i32);
+        S_StartSound(state, SoundOrigin::None, SfxName::sfx_swtchx as i32);
         return true;
     } else if key == state.m_controls.key_menu_back {
         let item_on = state.m_menu.itemOn;
@@ -1679,7 +1684,7 @@ pub fn M_Responder(state: &mut GameState, ev: &mut event_t) -> bool {
         if let Some(prev) = state.m_menu.current().prevMenu {
             state.m_menu.currentMenu = prev;
             state.m_menu.itemOn = state.m_menu.current().lastOn;
-            S_StartSound(state, SoundOrigin::None, sfx_swtchn as i32);
+            S_StartSound(state, SoundOrigin::None, SfxName::sfx_swtchn as i32);
         }
         return true;
     } else if ch != 0_i32 || IsNullKey(key) {
@@ -1687,7 +1692,7 @@ pub fn M_Responder(state: &mut GameState, ev: &mut event_t) -> bool {
         while i < state.m_menu.current().numitems as i32 {
             if state.m_menu.current().items[i as usize].alphaKey as i32 == ch {
                 state.m_menu.itemOn = i as i16;
-                S_StartSound(state, SoundOrigin::None, sfx_pstop as i32);
+                S_StartSound(state, SoundOrigin::None, SfxName::sfx_pstop as i32);
                 return true;
             }
             i += 1;
@@ -1696,7 +1701,7 @@ pub fn M_Responder(state: &mut GameState, ev: &mut event_t) -> bool {
         while i <= state.m_menu.itemOn as i32 {
             if state.m_menu.current().items[i as usize].alphaKey as i32 == ch {
                 state.m_menu.itemOn = i as i16;
-                S_StartSound(state, SoundOrigin::None, sfx_pstop as i32);
+                S_StartSound(state, SoundOrigin::None, SfxName::sfx_pstop as i32);
                 return true;
             }
             i += 1;
@@ -1800,8 +1805,8 @@ pub fn M_Init(state: &mut GameState) {
     state.m_menu.quickSaveSlot = -1_i32;
     match state.doomstat.gamemode as u32 {
         2 => {
-            state.m_menu.defs.MainDef.items[readthis as usize] =
-                state.m_menu.defs.MainDef.items[quitdoom as usize];
+            state.m_menu.defs.MainDef.items[MainMenu::readthis as usize] =
+                state.m_menu.defs.MainDef.items[MainMenu::quitdoom as usize];
             state.m_menu.defs.MainDef.numitems -= 1;
             state.m_menu.defs.MainDef.y = (state.m_menu.defs.MainDef.y as i32 + 8_i32) as i16;
             state.m_menu.defs.NewDef.prevMenu = Some(MenuId::Main);

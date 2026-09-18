@@ -58,7 +58,7 @@ pub struct wadinfo_t {
     pub infotableofs: i32,
 }
 #[derive(Copy, Clone)]
-pub struct C2RustUnnamed_0 {
+pub struct UniqueLump {
     pub mission: GameMission_t,
     pub lumpname: &'static str,
 }
@@ -260,20 +260,20 @@ pub fn W_GenerateHashTable(state: &mut GameState) {
         }
     }
 }
-static unique_lumps: [C2RustUnnamed_0; 4] = [
-    C2RustUnnamed_0 {
+static unique_lumps: [UniqueLump; 4] = [
+    UniqueLump {
         mission: GameMission_t::doom,
         lumpname: "POSSA1",
     },
-    C2RustUnnamed_0 {
+    UniqueLump {
         mission: GameMission_t::heretic,
         lumpname: "IMPXA1",
     },
-    C2RustUnnamed_0 {
+    UniqueLump {
         mission: GameMission_t::hexen,
         lumpname: "ETTNA1",
     },
-    C2RustUnnamed_0 {
+    UniqueLump {
         mission: GameMission_t::strife,
         lumpname: "AGRDA1",
     },
@@ -283,8 +283,8 @@ pub fn W_CheckCorrectIWAD(state: &mut WWadState, mission: GameMission_t) {
     let mut lumpnum: i32 = 0;
     i = 0_i32;
     while (i as usize)
-        < ::core::mem::size_of::<[C2RustUnnamed_0; 4]>()
-            .wrapping_div(::core::mem::size_of::<C2RustUnnamed_0>())
+        < ::core::mem::size_of::<[UniqueLump; 4]>()
+            .wrapping_div(::core::mem::size_of::<UniqueLump>())
     {
         if mission as u32 != unique_lumps[i as usize].mission as u32 {
             lumpnum = W_CheckNumForName(state, unique_lumps[i as usize].lumpname);

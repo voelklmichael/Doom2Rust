@@ -1,6 +1,6 @@
 use crate::game_state::GameState;
 use crate::i_system::I_Error;
-use crate::m_bbox::{BOXBOTTOM, BOXLEFT, BOXRIGHT, BOXTOP};
+use crate::m_bbox::BoxIndex;
 use crate::m_fixed::fixed_t;
 use crate::p_setup::LineId;
 use crate::p_setup::SectorId;
@@ -314,16 +314,16 @@ pub fn R_CheckBBox(state: &mut GameState, bspcoord: [fixed_t; 4]) -> bool {
     let mut tspan: angle_t = 0;
     let mut sx1: i32 = 0;
     let mut sx2: i32 = 0;
-    if state.r_main.viewx <= bspcoord[BOXLEFT as usize] {
+    if state.r_main.viewx <= bspcoord[BoxIndex::BOXLEFT as usize] {
         boxx = 0_i32;
-    } else if state.r_main.viewx < bspcoord[BOXRIGHT as usize] {
+    } else if state.r_main.viewx < bspcoord[BoxIndex::BOXRIGHT as usize] {
         boxx = 1_i32;
     } else {
         boxx = 2_i32;
     }
-    if state.r_main.viewy >= bspcoord[BOXTOP as usize] {
+    if state.r_main.viewy >= bspcoord[BoxIndex::BOXTOP as usize] {
         boxy = 0_i32;
-    } else if state.r_main.viewy > bspcoord[BOXBOTTOM as usize] {
+    } else if state.r_main.viewy > bspcoord[BoxIndex::BOXBOTTOM as usize] {
         boxy = 1_i32;
     } else {
         boxy = 2_i32;

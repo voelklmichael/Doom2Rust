@@ -31,7 +31,7 @@ use crate::p_pspr::P_DropWeapon;
 use crate::r_main::R_PointToAngle2;
 use crate::s_sound::S_StartSound;
 use crate::s_sound::SoundOrigin;
-use crate::sounds::{sfx_getpow, sfx_itemup, sfx_wpnup};
+use crate::sounds::SfxName;
 use crate::tables::finecosine;
 use crate::tables::finesine;
 use crate::tables::ANG180;
@@ -47,11 +47,10 @@ pub enum CardType {
     it_yellowskull = 4,
     it_redskull = 5,
 }
-pub type C2RustUnnamed_0 = u32;
-pub const IRONTICS: C2RustUnnamed_0 = 2100;
-pub const INFRATICS: C2RustUnnamed_0 = 4200;
-pub const INVISTICS: C2RustUnnamed_0 = 2100;
-pub const INVULNTICS: C2RustUnnamed_0 = 1050;
+pub const IRONTICS: i32 = 2100;
+pub const INFRATICS: i32 = 4200;
+pub const INVISTICS: i32 = 2100;
+pub const INVULNTICS: i32 = 1050;
 pub const DEH_DEFAULT_MAX_HEALTH: i32 = 200;
 pub const DEH_DEFAULT_MAX_ARMOR: i32 = 200;
 pub const DEH_DEFAULT_GREEN_ARMOR_CLASS: i32 = 1;
@@ -162,7 +161,7 @@ pub fn P_GiveWeapon(
         }
         state.g_game.players[player.0 as usize].pendingweapon = weapon;
         if player.0 as i32 == state.g_game.consoleplayer {
-            S_StartSound(state, SoundOrigin::None, sfx_wpnup as i32);
+            S_StartSound(state, SoundOrigin::None, SfxName::sfx_wpnup as i32);
         }
         return false;
     }
@@ -216,21 +215,21 @@ pub fn P_GiveCard(player: &mut player_t, mut card: CardType) {
 }
 pub fn P_GivePower(state: &mut GameState, player: PlayerId, mut power: i32) -> bool {
     if power == PowerType::pw_invulnerability as i32 {
-        state.g_game.players[player.0 as usize].powers[power as usize] = INVULNTICS as i32;
+        state.g_game.players[player.0 as usize].powers[power as usize] = INVULNTICS;
         return true;
     }
     if power == PowerType::pw_invisibility as i32 {
-        state.g_game.players[player.0 as usize].powers[power as usize] = INVISTICS as i32;
+        state.g_game.players[player.0 as usize].powers[power as usize] = INVISTICS;
         let player_mo = state.g_game.players[player.0 as usize].mo.unwrap();
-        state.p_mobj.mo_mut(player_mo).flags |= MF_SHADOW as i32;
+        state.p_mobj.mo_mut(player_mo).flags |= MF_SHADOW;
         return true;
     }
     if power == PowerType::pw_infrared as i32 {
-        state.g_game.players[player.0 as usize].powers[power as usize] = INFRATICS as i32;
+        state.g_game.players[player.0 as usize].powers[power as usize] = INFRATICS;
         return true;
     }
     if power == PowerType::pw_ironfeet as i32 {
-        state.g_game.players[player.0 as usize].powers[power as usize] = IRONTICS as i32;
+        state.g_game.players[player.0 as usize].powers[power as usize] = IRONTICS;
         return true;
     }
     if power == PowerType::pw_strength as i32 {
@@ -252,7 +251,7 @@ pub fn P_TouchSpecialThing(state: &mut GameState, special: MobjId, toucher: Mobj
     if delta > state.p_mobj.mo(toucher).height || delta < -8_i32 * FRACUNIT {
         return;
     }
-    sound = sfx_itemup as i32;
+    sound = SfxName::sfx_itemup as i32;
     let player = state.p_mobj.mo(toucher).player.unwrap();
     if state.p_mobj.mo(toucher).health <= 0_i32 {
         return;
@@ -305,7 +304,7 @@ pub fn P_TouchSpecialThing(state: &mut GameState, special: MobjId, toucher: Mobj
             }
             state.p_mobj.mo_mut(toucher).health = state.g_game.players[player.0 as usize].health;
             state.g_game.players[player.0 as usize].message = Some("Supercharge!".to_string());
-            sound = sfx_getpow as i32;
+            sound = SfxName::sfx_getpow as i32;
         }
         74 => {
             if state.doomstat.gamemode as u32 != GameMode_t::commercial as i32 as u32 {
@@ -315,7 +314,7 @@ pub fn P_TouchSpecialThing(state: &mut GameState, special: MobjId, toucher: Mobj
             state.p_mobj.mo_mut(toucher).health = state.g_game.players[player.0 as usize].health;
             P_GiveArmor(&mut state.g_game.players[player.0 as usize], 2_i32);
             state.g_game.players[player.0 as usize].message = Some("MegaSphere!".to_string());
-            sound = sfx_getpow as i32;
+            sound = SfxName::sfx_getpow as i32;
         }
         62 => {
             if !state.g_game.players[player.0 as usize].cards[CardType::it_bluecard as usize] {
@@ -419,7 +418,7 @@ pub fn P_TouchSpecialThing(state: &mut GameState, special: MobjId, toucher: Mobj
                 return;
             }
             state.g_game.players[player.0 as usize].message = Some("Invulnerability!".to_string());
-            sound = sfx_getpow as i32;
+            sound = SfxName::sfx_getpow as i32;
         }
         72 => {
             if !P_GivePower(state, player, PowerType::pw_strength as i32) {
@@ -431,7 +430,7 @@ pub fn P_TouchSpecialThing(state: &mut GameState, special: MobjId, toucher: Mobj
             {
                 state.g_game.players[player.0 as usize].pendingweapon = weapontype_t::wp_fist;
             }
-            sound = sfx_getpow as i32;
+            sound = SfxName::sfx_getpow as i32;
         }
         73 => {
             if !P_GivePower(state, player, PowerType::pw_invisibility as i32) {
@@ -439,7 +438,7 @@ pub fn P_TouchSpecialThing(state: &mut GameState, special: MobjId, toucher: Mobj
             }
             state.g_game.players[player.0 as usize].message =
                 Some("Partial Invisibility".to_string());
-            sound = sfx_getpow as i32;
+            sound = SfxName::sfx_getpow as i32;
         }
         75 => {
             if !P_GivePower(state, player, PowerType::pw_ironfeet as i32) {
@@ -447,14 +446,14 @@ pub fn P_TouchSpecialThing(state: &mut GameState, special: MobjId, toucher: Mobj
             }
             state.g_game.players[player.0 as usize].message =
                 Some("Radiation Shielding Suit".to_string());
-            sound = sfx_getpow as i32;
+            sound = SfxName::sfx_getpow as i32;
         }
         76 => {
             if !P_GivePower(state, player, PowerType::pw_allmap as i32) {
                 return;
             }
             state.g_game.players[player.0 as usize].message = Some("Computer Area Map".to_string());
-            sound = sfx_getpow as i32;
+            sound = SfxName::sfx_getpow as i32;
         }
         77 => {
             if !P_GivePower(state, player, PowerType::pw_infrared as i32) {
@@ -462,10 +461,10 @@ pub fn P_TouchSpecialThing(state: &mut GameState, special: MobjId, toucher: Mobj
             }
             state.g_game.players[player.0 as usize].message =
                 Some("Light Amplification Visor".to_string());
-            sound = sfx_getpow as i32;
+            sound = SfxName::sfx_getpow as i32;
         }
         78 => {
-            if state.p_mobj.mo(special).flags & MF_DROPPED as i32 != 0 {
+            if state.p_mobj.mo(special).flags & MF_DROPPED != 0 {
                 if !P_GiveAmmo(state, player, ammotype_t::am_clip, 0_i32) {
                     return;
                 }
@@ -546,20 +545,20 @@ pub fn P_TouchSpecialThing(state: &mut GameState, special: MobjId, toucher: Mobj
             }
             state.g_game.players[player.0 as usize].message =
                 Some("You got the BFG9000!  Oh, yes.".to_string());
-            sound = sfx_wpnup as i32;
+            sound = SfxName::sfx_wpnup as i32;
         }
         88 => {
             if !P_GiveWeapon(
                 state,
                 player,
                 weapontype_t::wp_chaingun,
-                state.p_mobj.mo(special).flags & MF_DROPPED as i32 != 0,
+                state.p_mobj.mo(special).flags & MF_DROPPED != 0,
             ) {
                 return;
             }
             state.g_game.players[player.0 as usize].message =
                 Some("You got the chaingun!".to_string());
-            sound = sfx_wpnup as i32;
+            sound = SfxName::sfx_wpnup as i32;
         }
         89 => {
             if !P_GiveWeapon(state, player, weapontype_t::wp_chainsaw, false) {
@@ -567,7 +566,7 @@ pub fn P_TouchSpecialThing(state: &mut GameState, special: MobjId, toucher: Mobj
             }
             state.g_game.players[player.0 as usize].message =
                 Some("A chainsaw!  Find some meat!".to_string());
-            sound = sfx_wpnup as i32;
+            sound = SfxName::sfx_wpnup as i32;
         }
         90 => {
             if !P_GiveWeapon(state, player, weapontype_t::wp_missile, false) {
@@ -575,7 +574,7 @@ pub fn P_TouchSpecialThing(state: &mut GameState, special: MobjId, toucher: Mobj
             }
             state.g_game.players[player.0 as usize].message =
                 Some("You got the rocket launcher!".to_string());
-            sound = sfx_wpnup as i32;
+            sound = SfxName::sfx_wpnup as i32;
         }
         91 => {
             if !P_GiveWeapon(state, player, weapontype_t::wp_plasma, false) {
@@ -583,39 +582,39 @@ pub fn P_TouchSpecialThing(state: &mut GameState, special: MobjId, toucher: Mobj
             }
             state.g_game.players[player.0 as usize].message =
                 Some("You got the plasma gun!".to_string());
-            sound = sfx_wpnup as i32;
+            sound = SfxName::sfx_wpnup as i32;
         }
         92 => {
             if !P_GiveWeapon(
                 state,
                 player,
                 weapontype_t::wp_shotgun,
-                state.p_mobj.mo(special).flags & MF_DROPPED as i32 != 0,
+                state.p_mobj.mo(special).flags & MF_DROPPED != 0,
             ) {
                 return;
             }
             state.g_game.players[player.0 as usize].message =
                 Some("You got the shotgun!".to_string());
-            sound = sfx_wpnup as i32;
+            sound = SfxName::sfx_wpnup as i32;
         }
         93 => {
             if !P_GiveWeapon(
                 state,
                 player,
                 weapontype_t::wp_supershotgun,
-                state.p_mobj.mo(special).flags & MF_DROPPED as i32 != 0,
+                state.p_mobj.mo(special).flags & MF_DROPPED != 0,
             ) {
                 return;
             }
             state.g_game.players[player.0 as usize].message =
                 Some("You got the super shotgun!".to_string());
-            sound = sfx_wpnup as i32;
+            sound = SfxName::sfx_wpnup as i32;
         }
         _ => {
             I_Error("P_SpecialThing: Unknown gettable thing");
         }
     }
-    if state.p_mobj.mo(special).flags & MF_COUNTITEM as i32 != 0 {
+    if state.p_mobj.mo(special).flags & MF_COUNTITEM != 0 {
         state.g_game.players[player.0 as usize].itemcount += 1;
     }
     P_RemoveMobj(state, special);
@@ -627,11 +626,11 @@ pub fn P_TouchSpecialThing(state: &mut GameState, special: MobjId, toucher: Mobj
 pub fn P_KillMobj(state: &mut GameState, source: Option<MobjId>, target: MobjId) {
     {
         let t = state.p_mobj.mo_mut(target);
-        t.flags &= !(MF_SHOOTABLE as i32 | MF_FLOAT as i32 | MF_SKULLFLY as i32);
+        t.flags &= !(MF_SHOOTABLE | MF_FLOAT | MF_SKULLFLY);
         if t.type_0 as u32 != MobjType::MT_SKULL as i32 as u32 {
-            t.flags &= !(MF_NOGRAVITY as i32);
+            t.flags &= !MF_NOGRAVITY;
         }
-        t.flags |= MF_CORPSE as i32 | MF_DROPOFF as i32;
+        t.flags |= MF_CORPSE | MF_DROPOFF;
         t.height >>= 2_i32;
     }
     let source_player = source.and_then(|id| state.p_mobj.mo(id).player);
@@ -640,20 +639,20 @@ pub fn P_KillMobj(state: &mut GameState, source: Option<MobjId>, target: MobjId)
         (t.flags, t.player)
     };
     if let Some(source_player_id) = source_player {
-        if target_flags & MF_COUNTKILL as i32 != 0 {
+        if target_flags & MF_COUNTKILL != 0 {
             state.g_game.player_mut(source_player_id).killcount += 1;
         }
         if let Some(target_player_id) = target_player {
             state.g_game.player_mut(source_player_id).frags[target_player_id.0 as usize] += 1;
         }
-    } else if !state.g_game.netgame && target_flags & MF_COUNTKILL as i32 != 0 {
+    } else if !state.g_game.netgame && target_flags & MF_COUNTKILL != 0 {
         state.g_game.players[0].killcount += 1;
     }
     if let Some(target_player_id) = target_player {
         if source.is_none() {
             state.g_game.player_mut(target_player_id).frags[target_player_id.0 as usize] += 1;
         }
-        state.p_mobj.mo_mut(target).flags &= !(MF_SOLID as i32);
+        state.p_mobj.mo_mut(target).flags &= !MF_SOLID;
         state.g_game.player_mut(target_player_id).playerstate = PlayerState::PST_DEAD;
         P_DropWeapon(state, target_player_id);
         if target_player_id.0 as i32 == state.g_game.consoleplayer && state.am_map.automapactive {
@@ -691,7 +690,7 @@ pub fn P_KillMobj(state: &mut GameState, source: Option<MobjId>, target: MobjId)
         (t.x, t.y)
     };
     let mo = P_SpawnMobj(state, target_x, target_y, ONFLOORZ, item);
-    state.p_mobj.mo_mut(mo).flags |= MF_DROPPED as i32;
+    state.p_mobj.mo_mut(mo).flags |= MF_DROPPED;
 }
 pub fn P_DamageMobj(
     state: &mut GameState,
@@ -704,13 +703,13 @@ pub fn P_DamageMobj(
         let t = state.p_mobj.mo(target);
         (t.flags, t.health)
     };
-    if target_flags & MF_SHOOTABLE as i32 == 0 {
+    if target_flags & MF_SHOOTABLE == 0 {
         return;
     }
     if target_health <= 0_i32 {
         return;
     }
-    if target_flags & MF_SKULLFLY as i32 != 0 {
+    if target_flags & MF_SKULLFLY != 0 {
         let t = state.p_mobj.mo_mut(target);
         t.momz = 0_i32 as fixed_t;
         t.momy = t.momz;
@@ -726,7 +725,7 @@ pub fn P_DamageMobj(
             == weapontype_t::wp_chainsaw as i32 as u32
     });
     if let Some(inflictor) = inflictor {
-        if target_flags & MF_NOCLIP as i32 == 0 && !source_uses_chainsaw {
+        if target_flags & MF_NOCLIP == 0 && !source_uses_chainsaw {
             let (inflictor_x, inflictor_y, inflictor_z) = {
                 let i = state.p_mobj.mo(inflictor);
                 (i.x, i.y, i.z)
@@ -802,9 +801,9 @@ pub fn P_DamageMobj(
     }
     let target_type = state.p_mobj.mo(target).type_0;
     if P_Random(&mut state.m_random) < state.info.mobjinfo_mut(target_type).painchance
-        && state.p_mobj.mo(target).flags & MF_SKULLFLY as i32 == 0
+        && state.p_mobj.mo(target).flags & MF_SKULLFLY == 0
     {
-        state.p_mobj.mo_mut(target).flags |= MF_JUSTHIT as i32;
+        state.p_mobj.mo_mut(target).flags |= MF_JUSTHIT;
         let painstate = state.info.mobjinfo_mut(target_type).painstate;
         P_SetMobjState(state, target, painstate);
     }

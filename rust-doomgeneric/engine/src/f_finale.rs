@@ -26,11 +26,8 @@ use crate::s_sound::S_ChangeMusic;
 use crate::s_sound::S_StartMusic;
 use crate::s_sound::S_StartSound;
 use crate::s_sound::SoundOrigin;
-use crate::sounds::{mus_bunny, mus_evil, mus_read_m, mus_victor};
-use crate::sounds::{
-    sfx_claw, sfx_dshtgn, sfx_firsht, sfx_pistol, sfx_plasma, sfx_rlaunc, sfx_sgtatk, sfx_shotgn,
-    sfx_skeatk, sfx_skepch, sfx_skeswg, sfx_sklatk, sfx_vilatk,
-};
+use crate::sounds::MusicName;
+use crate::sounds::SfxName;
 
 use crate::stdint_types::size_t;
 use crate::v_video::V_CachePatchNum;
@@ -313,9 +310,9 @@ pub fn F_StartFinale(state: &mut GameState) {
         state.doomstat.gamemission as u32
     }) == GameMission_t::doom as i32 as u32
     {
-        S_ChangeMusic(state, mus_victor as i32, true_0);
+        S_ChangeMusic(state, MusicName::mus_victor as i32, true_0);
     } else {
-        S_ChangeMusic(state, mus_read_m as i32, true_0);
+        S_ChangeMusic(state, MusicName::mus_read_m as i32, true_0);
     }
     let gamemission = if state.doomstat.gamemission == GameMission_t::pack_chex {
         GameMission_t::doom
@@ -384,7 +381,7 @@ pub fn F_Ticker(state: &mut GameState) {
         state.f_finale.finalestage = FinaleStage::F_STAGE_ARTSCREEN;
         state.d_main.wipegamestate = GameScreenState::GS_WIPPED;
         if state.g_game.gameepisode == 3_i32 {
-            S_StartMusic(state, mus_bunny as i32);
+            S_StartMusic(state, MusicName::mus_bunny as i32);
         }
     }
 }
@@ -525,7 +522,7 @@ pub fn F_StartCast(state: &mut GameState) {
     state.f_finale.castframes = 0_i32;
     state.f_finale.castonmelee = 0_i32;
     state.f_finale.castattacking = false;
-    S_ChangeMusic(state, mus_evil as i32, true_0);
+    S_ChangeMusic(state, MusicName::mus_evil as i32, true_0);
 }
 pub fn F_CastTicker(state: &mut GameState) {
     let mut current_block: u64;
@@ -574,55 +571,55 @@ pub fn F_CastTicker(state: &mut GameState) {
         state.f_finale.castframes += 1;
         match st {
             154 => {
-                sfx = sfx_dshtgn as i32;
+                sfx = SfxName::sfx_dshtgn as i32;
             }
             185 => {
-                sfx = sfx_pistol as i32;
+                sfx = SfxName::sfx_pistol as i32;
             }
             218 => {
-                sfx = sfx_shotgn as i32;
+                sfx = SfxName::sfx_shotgn as i32;
             }
             256 => {
-                sfx = sfx_vilatk as i32;
+                sfx = SfxName::sfx_vilatk as i32;
             }
             336 => {
-                sfx = sfx_skeswg as i32;
+                sfx = SfxName::sfx_skeswg as i32;
             }
             338 => {
-                sfx = sfx_skepch as i32;
+                sfx = SfxName::sfx_skepch as i32;
             }
             340 => {
-                sfx = sfx_skeatk as i32;
+                sfx = SfxName::sfx_skeatk as i32;
             }
             383 | 380 | 377 => {
-                sfx = sfx_firsht as i32;
+                sfx = SfxName::sfx_firsht as i32;
             }
             417..=419 => {
-                sfx = sfx_shotgn as i32;
+                sfx = SfxName::sfx_shotgn as i32;
             }
             454 => {
-                sfx = sfx_claw as i32;
+                sfx = SfxName::sfx_claw as i32;
             }
             486 => {
-                sfx = sfx_sgtatk as i32;
+                sfx = SfxName::sfx_sgtatk as i32;
             }
             538 | 567 | 505 => {
-                sfx = sfx_firsht as i32;
+                sfx = SfxName::sfx_firsht as i32;
             }
             590 => {
-                sfx = sfx_sklatk as i32;
+                sfx = SfxName::sfx_sklatk as i32;
             }
             616 | 617 => {
-                sfx = sfx_shotgn as i32;
+                sfx = SfxName::sfx_shotgn as i32;
             }
             648 => {
-                sfx = sfx_plasma as i32;
+                sfx = SfxName::sfx_plasma as i32;
             }
             685 | 687 | 689 => {
-                sfx = sfx_rlaunc as i32;
+                sfx = SfxName::sfx_rlaunc as i32;
             }
             710 => {
-                sfx = sfx_sklatk as i32;
+                sfx = SfxName::sfx_sklatk as i32;
             }
             _ => {
                 sfx = 0_i32;
@@ -812,7 +809,7 @@ pub fn F_BunnyScroll(state: &mut GameState) {
         stage = 6_i32;
     }
     if stage > state.f_finale.laststage {
-        S_StartSound(state, SoundOrigin::None, sfx_pistol as i32);
+        S_StartSound(state, SoundOrigin::None, SfxName::sfx_pistol as i32);
         state.f_finale.laststage = stage;
     }
     let name = format!("END{}", stage);

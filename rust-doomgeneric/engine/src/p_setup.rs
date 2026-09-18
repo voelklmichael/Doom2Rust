@@ -5,9 +5,9 @@ use crate::g_game::G_DeathMatchSpawnPlayer;
 use crate::game_state::GameState;
 use crate::i_system::I_GetMemoryValue;
 use crate::m_argv::M_CheckParm;
+use crate::m_bbox::BoxIndex;
 use crate::m_bbox::M_AddToBox;
 use crate::m_bbox::M_ClearBox;
-use crate::m_bbox::{BOXBOTTOM, BOXLEFT, BOXRIGHT, BOXTOP};
 use crate::m_fixed::fixed_t;
 use crate::m_fixed::FixedDiv;
 use crate::m_fixed::FRACBITS;
@@ -218,18 +218,20 @@ impl PSetupState {
     }
 }
 
-pub type C2RustUnnamed_1 = u32;
-pub const ML_BLOCKMAP: C2RustUnnamed_1 = 10;
-pub const ML_REJECT: C2RustUnnamed_1 = 9;
-pub const ML_SECTORS: C2RustUnnamed_1 = 8;
-pub const ML_NODES: C2RustUnnamed_1 = 7;
-pub const ML_SSECTORS: C2RustUnnamed_1 = 6;
-pub const ML_SEGS: C2RustUnnamed_1 = 5;
-pub const ML_VERTEXES: C2RustUnnamed_1 = 4;
-pub const ML_SIDEDEFS: C2RustUnnamed_1 = 3;
-pub const ML_LINEDEFS: C2RustUnnamed_1 = 2;
-pub const ML_THINGS: C2RustUnnamed_1 = 1;
-pub const ML_LABEL: C2RustUnnamed_1 = 0;
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub enum MapLump {
+    ML_LABEL = 0,
+    ML_THINGS = 1,
+    ML_LINEDEFS = 2,
+    ML_SIDEDEFS = 3,
+    ML_VERTEXES = 4,
+    ML_SEGS = 5,
+    ML_SSECTORS = 6,
+    ML_NODES = 7,
+    ML_SECTORS = 8,
+    ML_REJECT = 9,
+    ML_BLOCKMAP = 10,
+}
 /// Bounds-checked little-endian reader over a map lump's raw bytes.
 struct LumpReader {
     data: std::rc::Rc<[u8]>,
@@ -456,18 +458,18 @@ pub fn P_LoadLineDefs(state: &mut GameState, lump: i32) {
             ld.slopetype = SlopeType::ST_NEGATIVE;
         }
         if v1.x < v2.x {
-            ld.bbox[BOXLEFT as usize] = v1.x;
-            ld.bbox[BOXRIGHT as usize] = v2.x;
+            ld.bbox[BoxIndex::BOXLEFT as usize] = v1.x;
+            ld.bbox[BoxIndex::BOXRIGHT as usize] = v2.x;
         } else {
-            ld.bbox[BOXLEFT as usize] = v2.x;
-            ld.bbox[BOXRIGHT as usize] = v1.x;
+            ld.bbox[BoxIndex::BOXLEFT as usize] = v2.x;
+            ld.bbox[BoxIndex::BOXRIGHT as usize] = v1.x;
         }
         if v1.y < v2.y {
-            ld.bbox[BOXBOTTOM as usize] = v1.y;
-            ld.bbox[BOXTOP as usize] = v2.y;
+            ld.bbox[BoxIndex::BOXBOTTOM as usize] = v1.y;
+            ld.bbox[BoxIndex::BOXTOP as usize] = v2.y;
         } else {
-            ld.bbox[BOXBOTTOM as usize] = v2.y;
-            ld.bbox[BOXTOP as usize] = v1.y;
+            ld.bbox[BoxIndex::BOXBOTTOM as usize] = v2.y;
+            ld.bbox[BoxIndex::BOXTOP as usize] = v1.y;
         }
         ld.sidenum[0] = reader.i16();
         ld.sidenum[1] = reader.i16();
@@ -592,32 +594,34 @@ pub fn P_GroupLines(state: &mut GameState) {
             j += 1;
         }
         let sector = &mut state.p_setup.sectors[i as usize];
-        sector.soundorg.x = ((bbox[BOXRIGHT as usize] + bbox[BOXLEFT as usize]) / 2_i32) as fixed_t;
-        sector.soundorg.y = ((bbox[BOXTOP as usize] + bbox[BOXBOTTOM as usize]) / 2_i32) as fixed_t;
-        block =
-            (bbox[BOXTOP as usize] - state.p_setup.bmaporgy + 32_i32 * FRACUNIT) >> MAPBLOCKSHIFT;
+        sector.soundorg.x = ((bbox[BoxIndex::BOXRIGHT as usize] + bbox[BoxIndex::BOXLEFT as usize])
+            / 2_i32) as fixed_t;
+        sector.soundorg.y = ((bbox[BoxIndex::BOXTOP as usize] + bbox[BoxIndex::BOXBOTTOM as usize])
+            / 2_i32) as fixed_t;
+        block = (bbox[BoxIndex::BOXTOP as usize] - state.p_setup.bmaporgy + 32_i32 * FRACUNIT)
+            >> MAPBLOCKSHIFT;
         block = if block >= state.p_setup.bmapheight {
             state.p_setup.bmapheight - 1_i32
         } else {
             block
         };
-        sector.blockbox[BOXTOP as usize] = block;
-        block = (bbox[BOXBOTTOM as usize] - state.p_setup.bmaporgy - 32_i32 * FRACUNIT)
+        sector.blockbox[BoxIndex::BOXTOP as usize] = block;
+        block = (bbox[BoxIndex::BOXBOTTOM as usize] - state.p_setup.bmaporgy - 32_i32 * FRACUNIT)
             >> MAPBLOCKSHIFT;
         block = if block < 0_i32 { 0_i32 } else { block };
-        sector.blockbox[BOXBOTTOM as usize] = block;
-        block =
-            (bbox[BOXRIGHT as usize] - state.p_setup.bmaporgx + 32_i32 * FRACUNIT) >> MAPBLOCKSHIFT;
+        sector.blockbox[BoxIndex::BOXBOTTOM as usize] = block;
+        block = (bbox[BoxIndex::BOXRIGHT as usize] - state.p_setup.bmaporgx + 32_i32 * FRACUNIT)
+            >> MAPBLOCKSHIFT;
         block = if block >= state.p_setup.bmapwidth {
             state.p_setup.bmapwidth - 1_i32
         } else {
             block
         };
-        sector.blockbox[BOXRIGHT as usize] = block;
-        block =
-            (bbox[BOXLEFT as usize] - state.p_setup.bmaporgx - 32_i32 * FRACUNIT) >> MAPBLOCKSHIFT;
+        sector.blockbox[BoxIndex::BOXRIGHT as usize] = block;
+        block = (bbox[BoxIndex::BOXLEFT as usize] - state.p_setup.bmaporgx - 32_i32 * FRACUNIT)
+            >> MAPBLOCKSHIFT;
         block = if block < 0_i32 { 0_i32 } else { block };
-        sector.blockbox[BOXLEFT as usize] = block;
+        sector.blockbox[BoxIndex::BOXLEFT as usize] = block;
         i += 1;
     }
 }
@@ -697,19 +701,19 @@ pub fn P_SetupLevel(state: &mut GameState, mut episode: i32, mut map: i32) {
     };
     lumpnum = W_GetNumForName(&mut state.w_wad, &lumpname);
     state.p_tick.leveltime = 0_i32;
-    P_LoadBlockMap(state, lumpnum + ML_BLOCKMAP as i32);
-    P_LoadVertexes(state, lumpnum + ML_VERTEXES as i32);
-    P_LoadSectors(state, lumpnum + ML_SECTORS as i32);
-    P_LoadSideDefs(state, lumpnum + ML_SIDEDEFS as i32);
-    P_LoadLineDefs(state, lumpnum + ML_LINEDEFS as i32);
-    P_LoadSubsectors(state, lumpnum + ML_SSECTORS as i32);
-    P_LoadNodes(state, lumpnum + ML_NODES as i32);
-    P_LoadSegs(state, lumpnum + ML_SEGS as i32);
+    P_LoadBlockMap(state, lumpnum + MapLump::ML_BLOCKMAP as i32);
+    P_LoadVertexes(state, lumpnum + MapLump::ML_VERTEXES as i32);
+    P_LoadSectors(state, lumpnum + MapLump::ML_SECTORS as i32);
+    P_LoadSideDefs(state, lumpnum + MapLump::ML_SIDEDEFS as i32);
+    P_LoadLineDefs(state, lumpnum + MapLump::ML_LINEDEFS as i32);
+    P_LoadSubsectors(state, lumpnum + MapLump::ML_SSECTORS as i32);
+    P_LoadNodes(state, lumpnum + MapLump::ML_NODES as i32);
+    P_LoadSegs(state, lumpnum + MapLump::ML_SEGS as i32);
     P_GroupLines(state);
-    P_LoadReject(state, lumpnum + ML_REJECT as i32);
+    P_LoadReject(state, lumpnum + MapLump::ML_REJECT as i32);
     state.g_game.bodyqueslot = 0_i32;
     state.p_setup.deathmatch_p = 0;
-    P_LoadThings(state, lumpnum + ML_THINGS as i32);
+    P_LoadThings(state, lumpnum + MapLump::ML_THINGS as i32);
     if state.g_game.deathmatch != 0 {
         i = 0_i32;
         while i < MAXPLAYERS {

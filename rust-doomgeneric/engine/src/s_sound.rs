@@ -30,10 +30,7 @@ use crate::p_setup::SectorId;
 use crate::r_main::R_PointToAngle2;
 use crate::sounds::SfxId;
 use crate::sounds::NUMSFX;
-use crate::sounds::{
-    mus_None, mus_e1m1, mus_e1m5, mus_e1m9, mus_e2m4, mus_e2m5, mus_e2m6, mus_e2m7, mus_e3m2,
-    mus_e3m3, mus_e3m4, mus_intro, mus_introa, mus_runnin, NUMMUSIC,
-};
+use crate::sounds::{MusicName, NUMMUSIC};
 use crate::tables::angle_t;
 use crate::tables::finesine;
 use crate::tables::ANGLETOFINESHIFT;
@@ -160,23 +157,24 @@ pub fn S_Start(state: &mut GameState) {
     }
     state.s_sound.mus_paused = false;
     if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 {
-        mnum = mus_runnin as i32 + state.g_game.gamemap - 1_i32;
+        mnum = MusicName::mus_runnin as i32 + state.g_game.gamemap - 1_i32;
     } else {
         let mut spmus: [i32; 9] = [
-            mus_e3m4 as i32,
-            mus_e3m2 as i32,
-            mus_e3m3 as i32,
-            mus_e1m5 as i32,
-            mus_e2m7 as i32,
-            mus_e2m4 as i32,
-            mus_e2m6 as i32,
-            mus_e2m5 as i32,
-            mus_e1m9 as i32,
+            MusicName::mus_e3m4 as i32,
+            MusicName::mus_e3m2 as i32,
+            MusicName::mus_e3m3 as i32,
+            MusicName::mus_e1m5 as i32,
+            MusicName::mus_e2m7 as i32,
+            MusicName::mus_e2m4 as i32,
+            MusicName::mus_e2m6 as i32,
+            MusicName::mus_e2m5 as i32,
+            MusicName::mus_e1m9 as i32,
         ];
         if state.g_game.gameepisode < 4_i32 {
-            mnum =
-                mus_e1m1 as i32 + (state.g_game.gameepisode - 1_i32) * 9_i32 + state.g_game.gamemap
-                    - 1_i32;
+            mnum = MusicName::mus_e1m1 as i32
+                + (state.g_game.gameepisode - 1_i32) * 9_i32
+                + state.g_game.gamemap
+                - 1_i32;
         } else {
             mnum = spmus[(state.g_game.gamemap - 1_i32) as usize];
         }
@@ -275,7 +273,7 @@ fn S_AdjustSoundParams(
 pub fn S_StartSound(state: &mut GameState, origin: SoundOrigin, sfx_id: i32) {
     let mut sep: i32 = 0;
     let mut volume = state.s_sound.snd_SfxVolume;
-    if sfx_id < 1_i32 || sfx_id > NUMSFX as i32 {
+    if !(1_i32..=NUMSFX).contains(&sfx_id) {
         I_Error(&format!("Bad sfx #: {}", sfx_id));
     }
     let sfx_index = sfx_id as usize;
@@ -394,13 +392,13 @@ pub fn S_StartMusic(state: &mut GameState, mut m_id: i32) {
     S_ChangeMusic(state, m_id, false_0);
 }
 pub fn S_ChangeMusic(state: &mut GameState, mut musicnum: i32, looping: i32) {
-    if musicnum == mus_intro as i32
+    if musicnum == MusicName::mus_intro as i32
         && (state.i_sound.snd_musicdevice == snddevice_t::SNDDEVICE_ADLIB as i32
             || state.i_sound.snd_musicdevice == snddevice_t::SNDDEVICE_SB as i32)
     {
-        musicnum = mus_introa as i32;
+        musicnum = MusicName::mus_introa as i32;
     }
-    if musicnum <= mus_None as i32 || musicnum >= NUMMUSIC as i32 {
+    if musicnum <= MusicName::mus_None as i32 || musicnum >= NUMMUSIC {
         I_Error(&format!("Bad music number {}", musicnum));
     }
     if state.s_sound.mus_playing == Some(musicnum) {

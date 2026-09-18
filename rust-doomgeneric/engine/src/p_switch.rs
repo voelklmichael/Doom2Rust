@@ -27,7 +27,7 @@ use crate::p_spec::ML_SECRET;
 use crate::r_data::R_TextureNumForName;
 use crate::s_sound::S_StartSound;
 use crate::s_sound::SoundOrigin;
-use crate::sounds::{sfx_swtchn, sfx_swtchx};
+use crate::sounds::SfxName;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum BWhere {
@@ -364,9 +364,9 @@ pub fn P_ChangeSwitchTexture(state: &mut GameState, mut line: LineId, mut useAga
     texTop = state.p_setup.sides[sidenum0 as usize].toptexture as i32;
     texMid = state.p_setup.sides[sidenum0 as usize].midtexture as i32;
     texBot = state.p_setup.sides[sidenum0 as usize].bottomtexture as i32;
-    sound = sfx_swtchn as i32;
+    sound = SfxName::sfx_swtchn as i32;
     if state.p_setup.line(line).special as i32 == 11_i32 {
-        sound = sfx_swtchx as i32;
+        sound = SfxName::sfx_swtchx as i32;
     }
     i = 0_i32;
     while i < state.p_switch.numswitches * 2_i32 {

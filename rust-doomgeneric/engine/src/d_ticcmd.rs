@@ -1,16 +1,15 @@
 use crate::stdint_types::byte;
-pub type C2RustUnnamed = u32;
-pub const BTS_SAVESHIFT: C2RustUnnamed = 2;
-pub const BTS_SAVEMASK: C2RustUnnamed = 28;
-pub const BTS_SAVEGAME: C2RustUnnamed = 2;
-pub const BTS_PAUSE: C2RustUnnamed = 1;
-pub const BT_WEAPONSHIFT: C2RustUnnamed = 3;
-pub const BT_WEAPONMASK: C2RustUnnamed = 56;
-pub const BT_CHANGE: C2RustUnnamed = 4;
-pub const BT_SPECIALMASK: C2RustUnnamed = 3;
-pub const BT_SPECIAL: C2RustUnnamed = 128;
-pub const BT_USE: C2RustUnnamed = 2;
-pub const BT_ATTACK: C2RustUnnamed = 1;
+pub const BTS_SAVESHIFT: i32 = 2;
+pub const BTS_SAVEMASK: i32 = 28;
+pub const BTS_SAVEGAME: i32 = 2;
+pub const BTS_PAUSE: i32 = 1;
+pub const BT_WEAPONSHIFT: i32 = 3;
+pub const BT_WEAPONMASK: i32 = 56;
+pub const BT_CHANGE: i32 = 4;
+pub const BT_SPECIALMASK: i32 = 3;
+pub const BT_SPECIAL: i32 = 128;
+pub const BT_USE: i32 = 2;
+pub const BT_ATTACK: i32 = 1;
 
 #[derive(Copy, Clone)]
 pub struct ticcmd_t {
