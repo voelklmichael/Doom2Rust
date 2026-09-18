@@ -1501,8 +1501,8 @@ pub fn G_DoLoadGame(state: &mut GameState) {
     );
     G_InitNew(state, skill, episode, map);
     state.p_tick.leveltime = savedleveltime;
-    unsafe { P_UnArchivePlayers(state) };
-    unsafe { P_UnArchiveWorld(state) };
+    P_UnArchivePlayers(state);
+    P_UnArchiveWorld(state);
     unsafe { P_UnArchiveThinkers(state) };
     unsafe { P_UnArchiveSpecials(state) };
     if !P_ReadSaveGameEOF(state) {
@@ -1538,8 +1538,8 @@ pub fn G_DoSaveGame(state: &mut GameState) {
     state.p_saveg.savegame_error = false;
     let savedescription = state.g_game.savedescription.clone();
     P_WriteSaveGameHeader(state, &savedescription);
-    unsafe { P_ArchivePlayers(state) };
-    unsafe { P_ArchiveWorld(state) };
+    P_ArchivePlayers(state);
+    P_ArchiveWorld(state);
     unsafe { P_ArchiveThinkers(state) };
     unsafe { P_ArchiveSpecials(state) };
     P_WriteSaveGameEOF(state);
