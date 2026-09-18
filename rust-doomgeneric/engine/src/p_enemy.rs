@@ -207,7 +207,7 @@ pub unsafe fn P_CheckMeleeRange(state: &mut GameState, mut actor: *mut mobj_t) -
     if dist >= MELEERANGE - 20_i32 * FRACUNIT + (*state.info.mobjinfo_mut((*pl).type_0)).radius {
         return false;
     }
-    if !P_CheckSight(state, actor, pl) {
+    if !P_CheckSight(state, &*actor, &*pl) {
         return false;
     }
     true
@@ -218,7 +218,7 @@ pub unsafe fn P_CheckMissileRange(state: &mut GameState, mut actor: *mut mobj_t)
         Some(target) => target,
         None => return false,
     };
-    if !P_CheckSight(state, actor, target) {
+    if !P_CheckSight(state, &*actor, &*target) {
         return false;
     }
     if (*actor).flags & MF_JUSTHIT as i32 != 0 {
@@ -446,7 +446,7 @@ pub unsafe fn P_LookForPlayers(
             player = &mut state.g_game.players[(*actor).lastlook as usize];
             if (*player).health > 0_i32 {
                 let player_mo = state.p_mobj.mobj_get((*player).mo.unwrap()).unwrap();
-                if P_CheckSight(state, actor, player_mo) {
+                if P_CheckSight(state, &*actor, &*player_mo) {
                     if !allaround {
                         an = R_PointToAngle2(
                             state,
@@ -521,7 +521,7 @@ pub fn A_Look(state: &mut GameState, id: MobjId) {
         if !targ.is_null() && (*targ).flags & MF_SHOOTABLE as i32 != 0 {
             (*actor).target = Some((*targ).id);
             if (*actor).flags & MF_AMBUSH as i32 != 0 {
-                if P_CheckSight(state, actor, targ) {
+                if P_CheckSight(state, &*actor, &*targ) {
                     current_block = 10571674169298881693;
                 } else {
                     current_block = 15619007995458559411;
@@ -626,7 +626,7 @@ pub fn A_Chase(state: &mut GameState, id: MobjId) {
         }
         if state.g_game.netgame
             && (*actor).threshold == 0
-            && !P_CheckSight(state, actor, target.unwrap())
+            && !P_CheckSight(state, &*actor, &*target.unwrap())
             && P_LookForPlayers(state, actor, true)
         {
             return;
@@ -749,7 +749,7 @@ pub fn A_CPosRefire(state: &mut GameState, id: MobjId) {
         let target = (*actor).target.and_then(|id| state.p_mobj.mobj_get(id));
         if target.is_none()
             || (*target.unwrap()).health <= 0_i32
-            || !P_CheckSight(state, actor, target.unwrap())
+            || !P_CheckSight(state, &*actor, &*target.unwrap())
         {
             let seestate = (*state.info.mobjinfo_mut((*actor).type_0)).seestate;
             P_SetMobjState(state, actor, seestate);
@@ -766,7 +766,7 @@ pub fn A_SpidRefire(state: &mut GameState, id: MobjId) {
         let target = (*actor).target.and_then(|id| state.p_mobj.mobj_get(id));
         if target.is_none()
             || (*target.unwrap()).health <= 0_i32
-            || !P_CheckSight(state, actor, target.unwrap())
+            || !P_CheckSight(state, &*actor, &*target.unwrap())
         {
             let seestate = (*state.info.mobjinfo_mut((*actor).type_0)).seestate;
             P_SetMobjState(state, actor, seestate);
@@ -1099,7 +1099,7 @@ pub fn A_Fire(state: &mut GameState, id: MobjId) {
             .and_then(|id| state.p_mobj.mobj_get(id))
             .unwrap_or(::core::ptr::null_mut());
         target = P_SubstNullMobj(&mut state.p_mobj, target_subst);
-        if !P_CheckSight(state, target, dest) {
+        if !P_CheckSight(state, &*target, &*dest) {
             return;
         }
         an = (*dest).angle >> ANGLETOFINESHIFT;
@@ -1142,7 +1142,7 @@ pub fn A_VileAttack(state: &mut GameState, id: MobjId) {
             None => return,
         };
         A_FaceTarget(state, (*actor).id);
-        if !P_CheckSight(state, actor, target) {
+        if !P_CheckSight(state, &*actor, &*target) {
             return;
         }
         S_StartSound(state, SoundOrigin::Mobj((*(actor)).id), sfx_barexp as i32);
