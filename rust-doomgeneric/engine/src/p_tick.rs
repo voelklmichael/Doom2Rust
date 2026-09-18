@@ -192,6 +192,22 @@ pub fn P_ThinkerRaw(state: &GameState, id: ThinkerId) -> *mut thinker_t {
     }
 }
 
+// Every mobj that is still an active Mobj thinker (not yet Removed), in
+// thinker-list order.
+pub fn P_MobjThinkerIds(state: &GameState) -> Vec<MobjId> {
+    let mut out = Vec::new();
+    let mut cursor = state.p_tick.head();
+    while let Some(id) = cursor {
+        if let ThinkerPayload::Mobj(mobj_id) = state.p_tick.payload(id) {
+            if matches!(state.p_mobj.mo(mobj_id).thinker.function, ThinkerFn::Mobj(_)) {
+                out.push(mobj_id);
+            }
+        }
+        cursor = state.p_tick.next(id);
+    }
+    out
+}
+
 pub fn P_InitThinkers(state: &mut GameState) {
     state.p_tick.nodes.clear();
     state.p_tick.free_list.clear();
