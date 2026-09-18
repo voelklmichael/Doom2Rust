@@ -3185,7 +3185,7 @@ pub fn P_SpawnMobj(
     value.tics = tics;
     value.sprite = sprite;
     value.frame = frame;
-    let (id, _) = state.p_mobj.spawn(value);
+    let id = state.p_mobj.spawn(value);
     P_SetThingPosition(state, id);
     let subsector = state.p_mobj.mo(id).subsector;
     let sector = state.p_setup.subsectors[subsector.0 as usize].sector;
@@ -3235,7 +3235,7 @@ struct MobjSlot {
     // deallocation are two separate steps despite that.
     mobj: Option<Box<mobj_t>>,
     // Set by retire() (mirrors the old ptr=None, but must NOT drop `mobj`
-    // yet -- see deallocate()); mobj_get() reports "gone" once this is
+    // yet -- see deallocate()); is_live() reports "gone" once this is
     // true, matching the old ptr=None-based check exactly.
     retired: bool,
 }
@@ -3264,7 +3264,7 @@ impl PMobjState {
     // sites are P_SpawnMobj and p_saveg.rs's P_UnArchiveThinkers
     // mobj-reconstruction branch -- the only two places that construct a
     // mobj_t from scratch.
-    pub fn spawn(&mut self, mut value: mobj_t) -> (MobjId, *mut mobj_t) {
+    pub fn spawn(&mut self, mut value: mobj_t) -> MobjId {
         let (index, generation) = if let Some(index) = self.free_list.pop() {
             let slot = &mut self.mobjs[index as usize];
             slot.generation = slot.generation.wrapping_add(1);
@@ -3280,15 +3280,13 @@ impl PMobjState {
         };
         let id = MobjId { index, generation };
         value.id = id;
-        let mut boxed = Box::new(value);
-        let ptr = boxed.as_mut() as *mut mobj_t;
         let slot = &mut self.mobjs[index as usize];
-        slot.mobj = Some(boxed);
+        slot.mobj = Some(Box::new(value));
         slot.retired = false;
-        (id, ptr)
+        id
     }
 
-    // Logical removal: marks the slot retired so mobj_get() immediately
+    // Logical removal: marks the slot retired so is_live() immediately
     // reports "gone", without touching the backing memory yet. A slot's
     // index is NOT reused (see deallocate()) until the memory is actually
     // freed -- reusing it any earlier, now that the slot *owns* a Box
@@ -3318,28 +3316,11 @@ impl PMobjState {
         }
     }
 
-    // Fallible materialization: None if the id is stale (the mobj was
-    // already removed) -- a normal, expected runtime state (a lost combat
-    // target), not a programming error, unlike SectorId/SideId's panicking
-    // accessors.
-    pub fn mobj_get(&self, id: MobjId) -> Option<*mut mobj_t> {
-        self.mobjs
-            .get(id.index as usize)
-            .filter(|slot| slot.generation == id.generation && !slot.retired)
-            .and_then(|slot| slot.mobj.as_deref())
-            .map(|r| r as *const mobj_t as *mut mobj_t)
-    }
-
-    // Same as mobj_get() but ignores `retired` -- used only by P_ThinkerRaw's
-    // reaper path, which must still reach a retired-but-not-yet-deallocated
-    // mobj's raw pointer to observe ThinkerFn::Removed and finish tearing it
-    // down via P_RunThinkers/deallocate(). Every other caller wants "gone"
-    // the instant retire() runs; the reaper is the one exception.
-    // Safe borrows. Unlike mobj_get() these still resolve a retired-but-not-
-    // yet-deallocated mobj (the memory is valid until the reaper runs), which
-    // is what the raw pointers they replace would have seen -- e.g. a
-    // blockmap iteration must read `bnext` of a mobj its own callback just
-    // removed. None only for a stale id (freed / slot reused).
+    // Safe borrows. These still resolve a retired-but-not-yet-deallocated
+    // mobj (the memory stays valid until the reaper runs) -- e.g. a blockmap
+    // iteration must read `bnext` of a mobj its own callback just removed.
+    // None only for a stale id (freed / slot reused); is_live() is the
+    // stricter check that also treats a retired mobj as gone.
     pub fn mobj_ref(&self, id: MobjId) -> Option<&mobj_t> {
         self.mobjs
             .get(id.index as usize)
@@ -3354,12 +3335,6 @@ impl PMobjState {
             .and_then(|slot| slot.mobj.as_deref_mut())
     }
 
-    // Transitional: the raw pointer a converted-signature function's body still
-    // works with. Like mobj_ref it ignores retirement (a raw pointer to a
-    // retired-but-not-yet-freed mobj was always still usable).
-    pub fn mobj_ptr(&self, id: MobjId) -> *mut mobj_t {
-        self.mobj_ref(id).expect("stale MobjId") as *const mobj_t as *mut mobj_t
-    }
 
     // Panicking shorthands over mobj_ref/mobj_mut for ids that must be live.
     pub fn mo(&self, id: MobjId) -> &mobj_t {
@@ -3370,8 +3345,8 @@ impl PMobjState {
         self.mobj_mut(id).expect("stale MobjId")
     }
 
-    // Same liveness rule as mobj_get() (a retired mobj is "gone"), for the
-    // `target.and_then(|id| mobj_get(id))` validity checks.
+    // Same liveness rule as is_live() (a retired mobj is "gone"), for the
+    // `target.filter(|id| is_live(*id))` validity checks.
     pub fn is_live(&self, id: MobjId) -> bool {
         self.mobjs
             .get(id.index as usize)
@@ -3380,13 +3355,6 @@ impl PMobjState {
             })
     }
 
-    pub fn mobj_get_for_reaper(&self, id: MobjId) -> Option<*mut mobj_t> {
-        self.mobjs
-            .get(id.index as usize)
-            .filter(|slot| slot.generation == id.generation)
-            .and_then(|slot| slot.mobj.as_deref())
-            .map(|r| r as *const mobj_t as *mut mobj_t)
-    }
 
     pub const fn new() -> Self {
         PMobjState {
@@ -3705,7 +3673,7 @@ pub fn P_SubstNullMobj(state: &mut PMobjState, mobj: Option<MobjId>) -> MobjId {
         Some(id) => id,
         None => {
             let template = state.dummy_mobj;
-            let (id, _) = state.spawn(template);
+            let id = state.spawn(template);
             state.dummy_id = Some(id);
             id
         }

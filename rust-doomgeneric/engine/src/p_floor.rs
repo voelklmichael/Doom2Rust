@@ -353,7 +353,7 @@ pub fn EV_DoFloor(state: &mut GameState, line: LineId, floortype: FloorE) -> i32
             floor.floordestheight -=
                 8_i32 * FRACUNIT * (floortype == FloorE::raiseFloorCrush) as i32;
         }
-        let (floor_arena_id, _) = state.p_spec.spawn_floor(floor);
+        let floor_arena_id = state.p_spec.spawn_floor(floor);
         let floor_id = P_AddThinker(state, ThinkerPayload::Floor(floor_arena_id), ThinkerKind::Floor);
         state.p_setup.sector_mut(sec).specialdata = Some(SectorSpecial::Floor(floor_id));
     }
@@ -366,7 +366,7 @@ fn spawn_stair(state: &mut GameState, sec: SectorId, speed: fixed_t, height: i32
     floor.sector = sec;
     floor.speed = speed;
     floor.floordestheight = height as fixed_t;
-    let (floor_arena_id, _) = state.p_spec.spawn_floor(floor);
+    let floor_arena_id = state.p_spec.spawn_floor(floor);
     let floor_id = P_AddThinker(state, ThinkerPayload::Floor(floor_arena_id), ThinkerKind::Floor);
     state.p_setup.sector_mut(sec).specialdata = Some(SectorSpecial::Floor(floor_id));
 }

@@ -490,22 +490,21 @@ mod tests {
     fn door_thinker_lifecycle_via_id() {
         let state = init_game_state(Box::new(NullPlatform));
 
-        let (door_id, door_ptr) = state.p_doors.spawn(vldoor_t::default());
+        let door_id = state.p_doors.spawn(vldoor_t::default());
         let node_id = P_AddThinker(state, ThinkerPayload::Door(door_id), ThinkerKind::Door);
-        assert_eq!(P_ThinkerMut(state, node_id) as *mut thinker_t, door_ptr as *mut thinker_t);
 
         P_RemoveThinker(P_ThinkerMut(state, node_id));
         P_RunThinkers(state);
         assert!(
-            state.p_doors.get(door_id).is_none(),
+            state.p_doors.get_ref(door_id).is_none(),
             "reaper should have deallocated the door via its DoorId"
         );
 
         // Reuse: a fresh spawn may land on the same freed slot, but the old
         // id must not resolve to the new door's memory.
-        let (door_id2, door_ptr2) = state.p_doors.spawn(vldoor_t::default());
-        assert!(state.p_doors.get(door_id).is_none());
-        assert_eq!(state.p_doors.get(door_id2), Some(door_ptr2));
+        let door_id2 = state.p_doors.spawn(vldoor_t::default());
+        assert!(state.p_doors.get_ref(door_id).is_none());
+        assert!(state.p_doors.get_ref(door_id2).is_some());
     }
 
     // Same lifecycle as door_thinker_lifecycle_via_id, but for the Mobj
@@ -516,21 +515,20 @@ mod tests {
         let state = init_game_state(Box::new(NullPlatform));
 
         let value = state.p_mobj.dummy_mobj;
-        let (mobj_id, mobj_ptr) = state.p_mobj.spawn(value);
+        let mobj_id = state.p_mobj.spawn(value);
         let node_id = P_AddThinker(state, ThinkerPayload::Mobj(mobj_id), ThinkerKind::Mobj);
-        assert_eq!(P_ThinkerMut(state, node_id) as *mut thinker_t, mobj_ptr as *mut thinker_t);
 
         P_RemoveThinker(P_ThinkerMut(state, node_id));
         P_RunThinkers(state);
         assert!(
-            state.p_mobj.mobj_get(mobj_id).is_none(),
+            state.p_mobj.mobj_ref(mobj_id).is_none(),
             "reaper should have deallocated the mobj via its MobjId"
         );
 
         let value2 = state.p_mobj.dummy_mobj;
-        let (mobj_id2, mobj_ptr2) = state.p_mobj.spawn(value2);
-        assert!(state.p_mobj.mobj_get(mobj_id).is_none());
-        assert_eq!(state.p_mobj.mobj_get(mobj_id2), Some(mobj_ptr2));
+        let mobj_id2 = state.p_mobj.spawn(value2);
+        assert!(state.p_mobj.mobj_ref(mobj_id).is_none());
+        assert!(state.p_mobj.mobj_ref(mobj_id2).is_some());
     }
 
     // Same lifecycle, Ceiling kind -- exercises PCeilngState's new
@@ -540,24 +538,23 @@ mod tests {
     fn ceiling_thinker_lifecycle_via_id() {
         let state = init_game_state(Box::new(NullPlatform));
 
-        let (ceiling_id, ceiling_ptr) = state.p_ceilng.spawn(ceiling_t::default());
+        let ceiling_id = state.p_ceilng.spawn(ceiling_t::default());
         let node_id = P_AddThinker(
             state,
             ThinkerPayload::Ceiling(ceiling_id),
             ThinkerKind::Ceiling,
         );
-        assert_eq!(P_ThinkerMut(state, node_id) as *mut thinker_t, ceiling_ptr as *mut thinker_t);
 
         P_RemoveThinker(P_ThinkerMut(state, node_id));
         P_RunThinkers(state);
         assert!(
-            state.p_ceilng.get(ceiling_id).is_none(),
+            state.p_ceilng.get_ref(ceiling_id).is_none(),
             "reaper should have deallocated the ceiling via its CeilingId"
         );
 
-        let (ceiling_id2, ceiling_ptr2) = state.p_ceilng.spawn(ceiling_t::default());
-        assert!(state.p_ceilng.get(ceiling_id).is_none());
-        assert_eq!(state.p_ceilng.get(ceiling_id2), Some(ceiling_ptr2));
+        let ceiling_id2 = state.p_ceilng.spawn(ceiling_t::default());
+        assert!(state.p_ceilng.get_ref(ceiling_id).is_none());
+        assert!(state.p_ceilng.get_ref(ceiling_id2).is_some());
     }
 
     // Same lifecycle, Floor kind -- exercises PSpecState's new
@@ -566,20 +563,19 @@ mod tests {
     fn floor_thinker_lifecycle_via_id() {
         let state = init_game_state(Box::new(NullPlatform));
 
-        let (floor_id, floor_ptr) = state.p_spec.spawn_floor(floormove_t::default());
+        let floor_id = state.p_spec.spawn_floor(floormove_t::default());
         let node_id = P_AddThinker(state, ThinkerPayload::Floor(floor_id), ThinkerKind::Floor);
-        assert_eq!(P_ThinkerMut(state, node_id) as *mut thinker_t, floor_ptr as *mut thinker_t);
 
         P_RemoveThinker(P_ThinkerMut(state, node_id));
         P_RunThinkers(state);
         assert!(
-            state.p_spec.get_floor(floor_id).is_none(),
+            state.p_spec.get_floor_ref(floor_id).is_none(),
             "reaper should have deallocated the floor via its FloorId"
         );
 
-        let (floor_id2, floor_ptr2) = state.p_spec.spawn_floor(floormove_t::default());
-        assert!(state.p_spec.get_floor(floor_id).is_none());
-        assert_eq!(state.p_spec.get_floor(floor_id2), Some(floor_ptr2));
+        let floor_id2 = state.p_spec.spawn_floor(floormove_t::default());
+        assert!(state.p_spec.get_floor_ref(floor_id).is_none());
+        assert!(state.p_spec.get_floor_ref(floor_id2).is_some());
     }
 
     // Same lifecycle, Plat kind -- exercises PPlatsState's new
@@ -588,20 +584,19 @@ mod tests {
     fn plat_thinker_lifecycle_via_id() {
         let state = init_game_state(Box::new(NullPlatform));
 
-        let (plat_id, plat_ptr) = state.p_plats.spawn(plat_t::default());
+        let plat_id = state.p_plats.spawn(plat_t::default());
         let node_id = P_AddThinker(state, ThinkerPayload::Plat(plat_id), ThinkerKind::Plat);
-        assert_eq!(P_ThinkerMut(state, node_id) as *mut thinker_t, plat_ptr as *mut thinker_t);
 
         P_RemoveThinker(P_ThinkerMut(state, node_id));
         P_RunThinkers(state);
         assert!(
-            state.p_plats.get(plat_id).is_none(),
+            state.p_plats.get_ref(plat_id).is_none(),
             "reaper should have deallocated the plat via its PlatId"
         );
 
-        let (plat_id2, plat_ptr2) = state.p_plats.spawn(plat_t::default());
-        assert!(state.p_plats.get(plat_id).is_none());
-        assert_eq!(state.p_plats.get(plat_id2), Some(plat_ptr2));
+        let plat_id2 = state.p_plats.spawn(plat_t::default());
+        assert!(state.p_plats.get_ref(plat_id).is_none());
+        assert!(state.p_plats.get_ref(plat_id2).is_some());
     }
 
     // The 4 light-effect kinds (FireFlicker/LightFlash/Strobe/Glow) share
@@ -612,48 +607,41 @@ mod tests {
     fn fireflicker_thinker_lifecycle_via_id() {
         let state = init_game_state(Box::new(NullPlatform));
 
-        let (fireflicker_id, fireflicker_ptr) =
-            state.p_lights.spawn_fireflicker(fireflicker_t::default());
+        let fireflicker_id = state.p_lights.spawn_fireflicker(fireflicker_t::default());
         let node_id = P_AddThinker(
             state,
             ThinkerPayload::FireFlicker(fireflicker_id),
             ThinkerKind::FireFlicker,
         );
-        assert_eq!(P_ThinkerMut(state, node_id) as *mut thinker_t, fireflicker_ptr as *mut thinker_t);
 
         P_RemoveThinker(P_ThinkerMut(state, node_id));
         P_RunThinkers(state);
         assert!(
-            state.p_lights.get_fireflicker(fireflicker_id).is_none(),
+            state.p_lights.get_fireflicker_ref(fireflicker_id).is_none(),
             "reaper should have deallocated the fireflicker via its FireFlickerId"
         );
 
-        let (fireflicker_id2, fireflicker_ptr2) =
-            state.p_lights.spawn_fireflicker(fireflicker_t::default());
-        assert!(state.p_lights.get_fireflicker(fireflicker_id).is_none());
-        assert_eq!(
-            state.p_lights.get_fireflicker(fireflicker_id2),
-            Some(fireflicker_ptr2)
-        );
+        let fireflicker_id2 = state.p_lights.spawn_fireflicker(fireflicker_t::default());
+        assert!(state.p_lights.get_fireflicker_ref(fireflicker_id).is_none());
+        assert!(state.p_lights.get_fireflicker_ref(fireflicker_id2).is_some());
     }
 
     #[test]
     fn glow_thinker_lifecycle_via_id() {
         let state = init_game_state(Box::new(NullPlatform));
 
-        let (glow_id, glow_ptr) = state.p_lights.spawn_glow(glow_t::default());
+        let glow_id = state.p_lights.spawn_glow(glow_t::default());
         let node_id = P_AddThinker(state, ThinkerPayload::Glow(glow_id), ThinkerKind::Glow);
-        assert_eq!(P_ThinkerMut(state, node_id) as *mut thinker_t, glow_ptr as *mut thinker_t);
 
         P_RemoveThinker(P_ThinkerMut(state, node_id));
         P_RunThinkers(state);
         assert!(
-            state.p_lights.get_glow(glow_id).is_none(),
+            state.p_lights.get_glow_ref(glow_id).is_none(),
             "reaper should have deallocated the glow via its GlowId"
         );
 
-        let (glow_id2, glow_ptr2) = state.p_lights.spawn_glow(glow_t::default());
-        assert!(state.p_lights.get_glow(glow_id).is_none());
-        assert_eq!(state.p_lights.get_glow(glow_id2), Some(glow_ptr2));
+        let glow_id2 = state.p_lights.spawn_glow(glow_t::default());
+        assert!(state.p_lights.get_glow_ref(glow_id).is_none());
+        assert!(state.p_lights.get_glow_ref(glow_id2).is_some());
     }
 }

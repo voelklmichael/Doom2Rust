@@ -129,7 +129,7 @@ impl PSpecState {
     // on PSpecState (rather than a new PFloorState) because floormove_t
     // itself is defined here, and both p_floor.rs and this file's own
     // donut-overrun special case construct one.
-    pub fn spawn_floor(&mut self, value: floormove_t) -> (FloorId, *mut floormove_t) {
+    pub fn spawn_floor(&mut self, value: floormove_t) -> FloorId {
         let (index, generation) = if let Some(index) = self.floor_free_list.pop() {
             let slot = &mut self.floors[index as usize];
             slot.generation = slot.generation.wrapping_add(1);
@@ -144,21 +144,10 @@ impl PSpecState {
         };
         let id = FloorId { index, generation };
         let mut boxed = Box::new(value);
-        let ptr = boxed.as_mut() as *mut floormove_t;
         self.floors[index as usize].floor = Some(boxed);
-        (id, ptr)
+        id
     }
 
-    // Fallible materialization: None if the id is stale. Used by
-    // p_tick.rs's P_ThinkerRaw to resolve a Floor-kind ThinkerNode's
-    // payload back into the raw pointer every T_* function still expects.
-    pub fn get_floor(&self, id: FloorId) -> Option<*mut floormove_t> {
-        self.floors
-            .get(id.index as usize)
-            .filter(|slot| slot.generation == id.generation)
-            .and_then(|slot| slot.floor.as_deref())
-            .map(|r| r as *const floormove_t as *mut floormove_t)
-    }
 
     pub fn get_floor_ref(&self, id: FloorId) -> Option<&floormove_t> {
         self.floors
@@ -1182,7 +1171,7 @@ pub fn EV_DoDonut(state: &mut GameState, line: LineId) -> i32 {
             floor.texture = s3_floorpic;
             floor.newspecial = 0_i32;
             floor.floordestheight = s3_floorheight;
-            let (floor_arena_id, _) = state.p_spec.spawn_floor(floor);
+            let floor_arena_id = state.p_spec.spawn_floor(floor);
             let floor_id =
                 P_AddThinker(state, ThinkerPayload::Floor(floor_arena_id), ThinkerKind::Floor);
             state.p_setup.sector_mut(s2).specialdata = Some(SectorSpecial::Floor(floor_id));
@@ -1194,7 +1183,7 @@ pub fn EV_DoDonut(state: &mut GameState, line: LineId) -> i32 {
             floor.sector = s1;
             floor.speed = (FLOORSPEED / 2_i32) as fixed_t;
             floor.floordestheight = s3_floorheight;
-            let (floor_arena_id, _) = state.p_spec.spawn_floor(floor);
+            let floor_arena_id = state.p_spec.spawn_floor(floor);
             let floor_id =
                 P_AddThinker(state, ThinkerPayload::Floor(floor_arena_id), ThinkerKind::Floor);
             state.p_setup.sector_mut(s1).specialdata = Some(SectorSpecial::Floor(floor_id));

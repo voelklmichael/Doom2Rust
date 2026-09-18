@@ -1026,7 +1026,7 @@ pub fn P_UnArchiveThinkers(state: &mut GameState) {
                 // except `.id` (never part of the on-disk format), so the id
                 // spawn() just assigned survives the read untouched below.
                 let placeholder = state.p_mobj.dummy_mobj;
-                let (mobj_arena_id, _) = state.p_mobj.spawn(placeholder);
+                let mobj_arena_id = state.p_mobj.spawn(placeholder);
                 saveg_read_mobj_t(&mut state.p_saveg, state.p_mobj.mo_mut(mobj_arena_id));
                 if let Some(player_id) = state.p_mobj.mo(mobj_arena_id).player {
                     state.g_game.player_mut(player_id).mo = Some(mobj_arena_id);
@@ -1146,7 +1146,7 @@ pub fn P_UnArchiveSpecials(state: &mut GameState) {
             7 => return,
             0 => {
                 saveg_read_pad(&mut state.p_saveg);
-                let (ceiling_arena_id, _) = state.p_ceilng.spawn(ceiling_t::default());
+                let ceiling_arena_id = state.p_ceilng.spawn(ceiling_t::default());
                 let sector = {
                     let c = state.p_ceilng.get_mut(ceiling_arena_id).expect("live ceiling");
                     saveg_read_ceiling_t(&mut state.p_saveg, c);
@@ -1166,7 +1166,7 @@ pub fn P_UnArchiveSpecials(state: &mut GameState) {
             }
             1 => {
                 saveg_read_pad(&mut state.p_saveg);
-                let (door_arena_id, _) = state.p_doors.spawn(vldoor_t::default());
+                let door_arena_id = state.p_doors.spawn(vldoor_t::default());
                 let sector = {
                     let d = state.p_doors.get_mut(door_arena_id).expect("live door");
                     saveg_read_vldoor_t(&mut state.p_saveg, d);
@@ -1178,7 +1178,7 @@ pub fn P_UnArchiveSpecials(state: &mut GameState) {
             }
             2 => {
                 saveg_read_pad(&mut state.p_saveg);
-                let (floor_arena_id, _) = state.p_spec.spawn_floor(floormove_t::default());
+                let floor_arena_id = state.p_spec.spawn_floor(floormove_t::default());
                 let sector = {
                     let f = state.p_spec.get_floor_mut(floor_arena_id).expect("live floor");
                     saveg_read_floormove_t(&mut state.p_saveg, f);
@@ -1191,7 +1191,7 @@ pub fn P_UnArchiveSpecials(state: &mut GameState) {
             }
             3 => {
                 saveg_read_pad(&mut state.p_saveg);
-                let (plat_arena_id, _) = state.p_plats.spawn(plat_t::default());
+                let plat_arena_id = state.p_plats.spawn(plat_t::default());
                 let sector = {
                     let p = state.p_plats.get_mut(plat_arena_id).expect("live plat");
                     saveg_read_plat_t(&mut state.p_saveg, p);
@@ -1207,7 +1207,7 @@ pub fn P_UnArchiveSpecials(state: &mut GameState) {
             }
             4 => {
                 saveg_read_pad(&mut state.p_saveg);
-                let (flash_arena_id, _) = state.p_lights.spawn_lightflash(lightflash_t::default());
+                let flash_arena_id = state.p_lights.spawn_lightflash(lightflash_t::default());
                 {
                     let f = state
                         .p_lights
@@ -1224,7 +1224,7 @@ pub fn P_UnArchiveSpecials(state: &mut GameState) {
             }
             5 => {
                 saveg_read_pad(&mut state.p_saveg);
-                let (strobe_arena_id, _) = state.p_lights.spawn_strobe(strobe_t::default());
+                let strobe_arena_id = state.p_lights.spawn_strobe(strobe_t::default());
                 {
                     let s = state
                         .p_lights
@@ -1241,7 +1241,7 @@ pub fn P_UnArchiveSpecials(state: &mut GameState) {
             }
             6 => {
                 saveg_read_pad(&mut state.p_saveg);
-                let (glow_arena_id, _) = state.p_lights.spawn_glow(glow_t::default());
+                let glow_arena_id = state.p_lights.spawn_glow(glow_t::default());
                 {
                     let g = state.p_lights.get_glow_mut(glow_arena_id).expect("live glow");
                     saveg_read_glow_t(&mut state.p_saveg, g);

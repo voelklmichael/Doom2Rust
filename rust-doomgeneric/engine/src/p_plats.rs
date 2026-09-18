@@ -77,7 +77,7 @@ impl PPlatsState {
     // ThinkerNode's payload by p_tick.rs, replacing what used to be a bare
     // raw pointer there) and a raw pointer for the caller's immediate
     // post-spawn field writes -- mirrors PDoorsState::spawn exactly.
-    pub fn spawn(&mut self, value: plat_t) -> (PlatId, *mut plat_t) {
+    pub fn spawn(&mut self, value: plat_t) -> PlatId {
         let (index, generation) = if let Some(index) = self.free_list.pop() {
             let slot = &mut self.plats[index as usize];
             slot.generation = slot.generation.wrapping_add(1);
@@ -92,21 +92,10 @@ impl PPlatsState {
         };
         let id = PlatId { index, generation };
         let mut boxed = Box::new(value);
-        let ptr = boxed.as_mut() as *mut plat_t;
         self.plats[index as usize].plat = Some(boxed);
-        (id, ptr)
+        id
     }
 
-    // Fallible materialization: None if the id is stale. Used by
-    // p_tick.rs's P_ThinkerRaw to resolve a Plat-kind ThinkerNode's payload
-    // back into the raw pointer every T_* function still expects.
-    pub fn get(&self, id: PlatId) -> Option<*mut plat_t> {
-        self.plats
-            .get(id.index as usize)
-            .filter(|slot| slot.generation == id.generation)
-            .and_then(|slot| slot.plat.as_deref())
-            .map(|r| r as *const plat_t as *mut plat_t)
-    }
 
     pub fn get_ref(&self, id: PlatId) -> Option<&plat_t> {
         self.plats
@@ -281,7 +270,7 @@ pub fn EV_DoPlat(state: &mut GameState, line: LineId, type_0: PlattypeE, amount:
                 S_StartSound(state, SoundOrigin::Sector(sec), sfx_pstart as i32);
             }
         }
-        let (plat_arena_id, _) = state.p_plats.spawn(plat);
+        let plat_arena_id = state.p_plats.spawn(plat);
         let plat_id = P_AddThinker(state, ThinkerPayload::Plat(plat_arena_id), ThinkerKind::Plat);
         state.p_setup.sector_mut(sec).specialdata = Some(SectorSpecial::Plat(plat_id));
         P_AddActivePlat(&mut state.p_plats, plat_id);

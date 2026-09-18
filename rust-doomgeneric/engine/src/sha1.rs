@@ -1,3 +1,4 @@
+#![allow(unsafe_code)]
 use crate::mem_compat::{memcpy, memset};
 use crate::stdint_types::byte;
 use crate::stdint_types::size_t;

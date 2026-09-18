@@ -1,6 +1,7 @@
 //! Drop-in replacements for the handful of libc memory primitives the
 //! transpiled code still calls, implemented on top of `core`/`std` instead
 //! of linking against libc.
+#![allow(unsafe_code)]
 use crate::stdint_types::size_t;
 use std::alloc::Layout;
 
