@@ -294,6 +294,9 @@ pub fn R_RenderSegLoop(state: &mut GameState) {
                 .rw_centerangle
                 .wrapping_add(state.r_main.xtoviewangle[state.r_segs.rw_x as usize])
                 >> ANGLETOFINESHIFT;
+            // A column at a seg's clipped edge can land just outside the
+            // front half-plane; vanilla reads past finetangent[] there.
+            angle = angle.min(finetangent.len() as angle_t - 1);
             texturecolumn = state.r_segs.rw_offset
                 - FixedMul(finetangent[angle as usize], state.r_segs.rw_distance);
             texturecolumn >>= FRACBITS;
