@@ -84,6 +84,12 @@ pub struct PEnemyState {
     pub easy: i32,
 }
 
+impl Default for PEnemyState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl PEnemyState {
     pub const fn new() -> Self {
         PEnemyState {
@@ -524,18 +530,14 @@ pub fn A_Look(state: &mut GameState, id: MobjId) {
         } else {
             current_block = 15619007995458559411;
         }
-        match current_block {
-            15619007995458559411 => {
-                if !P_LookForPlayers(state, actor, false) {
-                    return;
-                }
+        if current_block == 15619007995458559411
+            && !P_LookForPlayers(state, actor, false) {
+                return;
             }
-            _ => {}
-        }
         if state.info.mobjinfo_mut(state.p_mobj.mo(actor).type_0).seesound != 0 {
             let mut sound: i32 = 0;
             match state.info.mobjinfo_mut(state.p_mobj.mo(actor).type_0).seesound {
-                36 | 37 | 38 => {
+                36..=38 => {
                     sound = sfx_posit1 as i32 + P_Random(&mut state.m_random) % 3_i32;
                 }
                 39 | 40 => {
@@ -599,7 +601,7 @@ pub fn A_Chase(state: &mut GameState, id: MobjId) {
             return;
         }
         let actor_info = state.info.mobjinfo_mut(state.p_mobj.mo(actor).type_0);
-        if (*actor_info).meleestate != StateNum::S_NULL && P_CheckMeleeRange(state, actor) {
+        if actor_info.meleestate != StateNum::S_NULL && P_CheckMeleeRange(state, actor) {
             let attacksound = state.info.mobjinfo_mut(state.p_mobj.mo(actor).type_0).attacksound;
             if attacksound != 0 {
                 S_StartSound(state, SoundOrigin::Mobj(actor), attacksound);
@@ -1025,7 +1027,7 @@ pub fn A_VileChase(state: &mut GameState, id: MobjId) {
                     state,
                     bx,
                     by,
-                    |s, id| PIT_VileCheck(s, id),
+                    PIT_VileCheck,
                 ) {
                     let corpsehit_id = state.p_enemy.corpsehit.unwrap();
                     let corpsehit = corpsehit_id;
@@ -1342,7 +1344,7 @@ pub fn A_Scream(state: &mut GameState, id: MobjId) {
         let mut sound: i32 = 0;
         match state.info.mobjinfo_mut(state.p_mobj.mo(actor).type_0).deathsound {
             0 => return,
-            59 | 60 | 61 => {
+            59..=61 => {
                 sound = sfx_podth1 as i32 + P_Random(&mut state.m_random) % 3_i32;
             }
             62 | 63 => {

@@ -56,6 +56,12 @@ pub struct PSavegState {
     pub temp_savegame_filename: Option<String>,
 }
 
+impl Default for PSavegState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl PSavegState {
     pub const fn new() -> Self {
         PSavegState {
@@ -484,7 +490,7 @@ fn saveg_write_player_t(state: &mut PSavegState, str: &mut player_t) {
     saveg_writep(
         state,
         if str.message.is_some() {
-            1 as *mut ::core::ffi::c_void
+            std::ptr::dangling_mut::<::core::ffi::c_void>()
         } else {
             ::core::ptr::null_mut()
         },

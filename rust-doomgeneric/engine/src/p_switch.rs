@@ -266,6 +266,12 @@ pub struct PSwitchState {
     pub buttonlist: [button_t; 16],
 }
 
+impl Default for PSwitchState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl PSwitchState {
     pub const fn new() -> Self {
         PSwitchState {
@@ -456,16 +462,10 @@ pub fn P_UseSpecialLine(
             }
             _ => return false,
         }
-        match current_block_6 {
-            12497116384748537712 => {
-                current_block_6 = 3514215265213398008;
-            }
-            _ => {}
+        if current_block_6 == 12497116384748537712 {
+            current_block_6 = 3514215265213398008;
         }
-        match current_block_6 {
-            3514215265213398008 => {}
-            _ => {}
-        }
+        if current_block_6 == 3514215265213398008 {}
     }
     let mut current_block_108: u64;
     match linev.special as i32 {
@@ -811,53 +811,29 @@ pub fn P_UseSpecialLine(
         }
         _ => {}
     }
-    match current_block_108 {
-        4020771665460505868 => {
-            current_block_108 = 14541717319785412967;
-        }
-        _ => {}
+    if current_block_108 == 4020771665460505868 {
+        current_block_108 = 14541717319785412967;
     }
-    match current_block_108 {
-        14541717319785412967 => {
-            current_block_108 = 9823790708098527527;
-        }
-        _ => {}
+    if current_block_108 == 14541717319785412967 {
+        current_block_108 = 9823790708098527527;
     }
-    match current_block_108 {
-        9823790708098527527 => {
-            current_block_108 = 16744586327905341259;
-        }
-        _ => {}
+    if current_block_108 == 9823790708098527527 {
+        current_block_108 = 16744586327905341259;
     }
-    match current_block_108 {
-        16744586327905341259 => {
-            current_block_108 = 346168964044254087;
-        }
-        _ => {}
+    if current_block_108 == 16744586327905341259 {
+        current_block_108 = 346168964044254087;
     }
-    match current_block_108 {
-        346168964044254087 => {
-            current_block_108 = 7551167036031974558;
-        }
-        _ => {}
+    if current_block_108 == 346168964044254087 {
+        current_block_108 = 7551167036031974558;
     }
-    match current_block_108 {
-        7551167036031974558 => {
-            current_block_108 = 16004491317120851547;
-        }
-        _ => {}
+    if current_block_108 == 7551167036031974558 {
+        current_block_108 = 16004491317120851547;
     }
-    match current_block_108 {
-        16004491317120851547 => {
-            current_block_108 = 6634390297149606533;
-        }
-        _ => {}
+    if current_block_108 == 16004491317120851547 {
+        current_block_108 = 6634390297149606533;
     }
-    match current_block_108 {
-        6634390297149606533 => {
-            EV_VerticalDoor(state, line, thing);
-        }
-        _ => {}
+    if current_block_108 == 6634390297149606533 {
+        EV_VerticalDoor(state, line, thing);
     }
     true
 }

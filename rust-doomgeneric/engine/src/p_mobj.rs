@@ -2947,10 +2947,8 @@ pub fn P_XYMovement(state: &mut GameState, mo: MobjId) {
         return;
     }
     if flags & MF_CORPSE as i32 != 0
-        && (momx > FRACUNIT / 4_i32
-            || momx < -FRACUNIT / 4_i32
-            || momy > FRACUNIT / 4_i32
-            || momy < -FRACUNIT / 4_i32)
+        && (!(-FRACUNIT / 4_i32..=FRACUNIT / 4_i32).contains(&momx)
+            || !(-FRACUNIT / 4_i32..=FRACUNIT / 4_i32).contains(&momy))
         && floorz
             != state
                 .p_setup
@@ -3021,7 +3019,7 @@ pub fn P_ZMovement(state: &mut GameState, mo: MobjId) {
         }
         if state.p_mobj.mo(mo).momz < 0_i32 {
             if state.p_mobj.mo(mo).player.is_some() && state.p_mobj.mo(mo).momz < -GRAVITY * 8_i32 {
-                (*state.g_game.player_mut(state.p_mobj.mo(mo).player.unwrap())).deltaviewheight =
+                state.g_game.player_mut(state.p_mobj.mo(mo).player.unwrap()).deltaviewheight =
                     state.p_mobj.mo(mo).momz >> 3_i32;
                 S_StartSound(state, SoundOrigin::Mobj(mo), sfx_oof as i32);
             }
@@ -3253,6 +3251,12 @@ pub struct PMobjState {
     dummy_id: Option<MobjId>,
     mobjs: Vec<MobjSlot>,
     free_list: Vec<u32>,
+}
+
+impl Default for PMobjState {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl PMobjState {

@@ -46,6 +46,12 @@ pub struct HuStuffState {
     pub hu_responder_num_nobrainers: i32,
 }
 
+impl Default for HuStuffState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl HuStuffState {
     pub const fn new() -> Self {
         HuStuffState {

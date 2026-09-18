@@ -14,6 +14,12 @@ pub struct FWipeState {
     pub y: Vec<i32>,
 }
 
+impl Default for FWipeState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl FWipeState {
     pub const fn new() -> Self {
         FWipeState {

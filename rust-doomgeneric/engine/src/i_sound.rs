@@ -88,6 +88,12 @@ pub struct ISoundState {
     sound_modules: [Option<&'static sound_module_t>; 1],
 }
 
+impl Default for ISoundState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ISoundState {
     pub const fn new() -> Self {
         ISoundState {

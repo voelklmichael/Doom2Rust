@@ -18,6 +18,12 @@ pub struct MRandomState {
     pub prndindex: u8,
 }
 
+impl Default for MRandomState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl MRandomState {
     pub const fn new() -> Self {
         MRandomState {

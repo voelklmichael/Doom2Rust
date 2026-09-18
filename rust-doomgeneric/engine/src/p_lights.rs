@@ -172,6 +172,12 @@ pub struct PLightsState {
     glow_free_list: Vec<u32>,
 }
 
+impl Default for PLightsState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl PLightsState {
     pub const fn new() -> Self {
         PLightsState {

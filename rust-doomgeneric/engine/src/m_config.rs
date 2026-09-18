@@ -77,6 +77,12 @@ pub struct MConfigState {
     extra_defaults: default_collection_t,
 }
 
+impl Default for MConfigState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl MConfigState {
     pub fn new() -> Self {
         let doom_defaults_list = vec![

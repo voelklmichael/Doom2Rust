@@ -9,6 +9,12 @@ pub struct IInputState {
     shiftdown: i32,
 }
 
+impl Default for IInputState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl IInputState {
     pub const fn new() -> Self {
         IInputState {

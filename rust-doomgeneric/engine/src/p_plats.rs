@@ -63,6 +63,12 @@ pub struct PPlatsState {
     free_list: Vec<u32>,
 }
 
+impl Default for PPlatsState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl PPlatsState {
     pub const fn new() -> Self {
         PPlatsState {

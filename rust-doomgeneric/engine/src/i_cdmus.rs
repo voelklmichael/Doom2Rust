@@ -2,6 +2,12 @@ pub struct ICdMusState {
     cd_Error: i32,
 }
 
+impl Default for ICdMusState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ICdMusState {
     pub const fn new() -> Self {
         ICdMusState { cd_Error: 0 }

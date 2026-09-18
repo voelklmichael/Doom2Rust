@@ -38,6 +38,12 @@ pub struct PUserState {
     onground: bool,
 }
 
+impl Default for PUserState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl PUserState {
     pub const fn new() -> Self {
         PUserState { onground: false }

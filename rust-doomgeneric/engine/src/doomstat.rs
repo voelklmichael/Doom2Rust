@@ -8,6 +8,12 @@ pub struct DoomstatState {
     pub gamedescription: &'static str,
     pub modifiedgame: bool,
 }
+impl Default for DoomstatState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl DoomstatState {
     pub const fn new() -> Self {
         DoomstatState {

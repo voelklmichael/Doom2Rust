@@ -20,6 +20,12 @@ pub struct PSightState {
     sightcounts: [i32; 2],
 }
 
+impl Default for PSightState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl PSightState {
     pub const fn new() -> Self {
         PSightState {

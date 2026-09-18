@@ -552,6 +552,12 @@ pub struct SoundsState {
     pub S_sfx: [sfxinfo_t; 109],
 }
 
+impl Default for SoundsState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl SoundsState {
     pub fn sfx_mut(&mut self, id: SfxId) -> &mut sfxinfo_t {
         &mut self.S_sfx[id.0 as usize]

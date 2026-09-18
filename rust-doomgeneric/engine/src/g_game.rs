@@ -236,6 +236,12 @@ const NEW_PLAYER: player_s = player_s {
     didsecret: false,
 };
 
+impl Default for GGameState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl GGameState {
     pub const fn new() -> Self {
         GGameState {
@@ -708,14 +714,14 @@ pub fn G_DoLoadLevel(state: &mut GameState) {
     if state.doomstat.gamemode as u32 == GameMode_t::commercial as u32
         && [GameVersion::final2, GameVersion::chex].contains(&state.doomstat.gameversion)
     {
-        let skytexturename: &str;
-        if state.g_game.gamemap < 12_i32 {
-            skytexturename = "SKY1";
+        
+        let skytexturename: &str = if state.g_game.gamemap < 12_i32 {
+            "SKY1"
         } else if state.g_game.gamemap < 21_i32 {
-            skytexturename = "SKY2";
+            "SKY2"
         } else {
-            skytexturename = "SKY3";
-        }
+            "SKY3"
+        };
         state.r_sky.skytexture = R_TextureNumForName(&mut state.r_data, skytexturename);
     }
     state.g_game.levelstarttic = state.d_loop.gametic;
@@ -994,29 +1000,29 @@ pub fn G_Ticker(state: &mut GameState, netcmds: &[ticcmd_t]) {
         }
         i += 1;
     }
-    if state.g_game.oldgamestate as u32 == GameScreenState::GS_INTERMISSION as u32
-        && state.g_game.gamestate as u32 != GameScreenState::GS_INTERMISSION as u32
+    if state.g_game.oldgamestate == GameScreenState::GS_INTERMISSION
+        && state.g_game.gamestate != GameScreenState::GS_INTERMISSION
     {
         WI_End(state);
     }
     state.g_game.oldgamestate = state.g_game.gamestate;
-    match state.g_game.gamestate as u32 {
-        0 => {
+    match state.g_game.gamestate {
+        GameScreenState::GS_LEVEL => {
             P_Ticker(state);
             ST_Ticker(state);
             AM_Ticker(state);
             HU_Ticker(state);
         }
-        1 => {
+        GameScreenState::GS_INTERMISSION => {
             WI_Ticker(state);
         }
-        2 => {
+        GameScreenState::GS_FINALE => {
             F_Ticker(state);
         }
-        3 => {
+        GameScreenState::GS_DEMOSCREEN => {
             D_PageTicker(state);
         }
-        _ => {}
+        GameScreenState::GS_WIPPED => {}
     };
 }
 pub fn G_InitPlayer(state: &mut GGameState, player: i32) {
@@ -1204,13 +1210,7 @@ pub fn G_ExitLevel(state: &mut GameState) {
     state.g_game.gameaction = GameAction::ga_completed;
 }
 pub fn G_SecretExitLevel(state: &mut GameState) {
-    if state.doomstat.gamemode as u32 == GameMode_t::commercial as u32
-        && W_CheckNumForName(&mut state.w_wad, "map31") < 0_i32
-    {
-        state.g_game.secretexit = false;
-    } else {
-        state.g_game.secretexit = true;
-    }
+    state.g_game.secretexit = !(state.doomstat.gamemode as u32 == GameMode_t::commercial as u32 && W_CheckNumForName(&mut state.w_wad, "map31") < 0_i32);
     state.g_game.gameaction = GameAction::ga_completed;
 }
 pub fn G_DoCompleted(state: &mut GameState) {
@@ -1361,11 +1361,8 @@ pub fn G_WorldDone(state: &mut GameState) {
                 current_block_3 = 6937071982253665452;
             }
         }
-        match current_block_3 {
-            9744923308842414524 => {
-                F_StartFinale(state);
-            }
-            _ => {}
+        if current_block_3 == 9744923308842414524 {
+            F_StartFinale(state);
         }
     }
 }
@@ -1532,11 +1529,7 @@ pub fn G_InitNew(state: &mut GameState, mut skill: SkillType, mut episode: i32, 
         map = 9_i32;
     }
     M_ClearRandom(&mut state.m_random);
-    if skill == SkillType::sk_nightmare || state.d_main.respawnparm {
-        state.g_game.respawnmonsters = true;
-    } else {
-        state.g_game.respawnmonsters = false;
-    }
+    state.g_game.respawnmonsters = skill == SkillType::sk_nightmare || state.d_main.respawnparm;
     if state.d_main.fastparm
         || skill == SkillType::sk_nightmare && state.g_game.gameskill != SkillType::sk_nightmare
     {
@@ -1608,15 +1601,15 @@ pub fn G_ReadDemoTiccmd(state: &mut GameState, player_num: usize) {
     }
     let forwardmove = state.g_game.demo_read_byte() as i8;
     let sidemove = state.g_game.demo_read_byte() as i8;
-    let new_angleturn;
-    if state.g_game.longtics {
+    
+    let new_angleturn = if state.g_game.longtics {
         let lo = state.g_game.demo_read_byte() as i16;
         let hi = state.g_game.demo_read_byte();
-        new_angleturn = (lo as i32 | (hi as i32) << 8_i32) as i16;
+        (lo as i32 | (hi as i32) << 8_i32) as i16
     } else {
         let hi = state.g_game.demo_read_byte();
-        new_angleturn = ((hi as i32) << 8_i32) as i16;
-    }
+        ((hi as i32) << 8_i32) as i16
+    };
     let buttons = state.g_game.demo_read_byte() as byte;
     let cmd = &mut state.g_game.players[player_num].cmd;
     cmd.forwardmove = forwardmove;

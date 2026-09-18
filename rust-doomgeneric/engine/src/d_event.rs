@@ -13,11 +13,11 @@ pub enum GameAction {
 }
 #[derive(Copy, Clone, PartialEq)]
 pub enum GameScreenState {
-    GS_LEVEL = 0,
-    GS_INTERMISSION = 1,
-    GS_FINALE = 2,
-    GS_DEMOSCREEN = 3,
-    GS_WIPPED = 4294967295,
+    GS_LEVEL,
+    GS_INTERMISSION,
+    GS_FINALE,
+    GS_DEMOSCREEN,
+    GS_WIPPED,
 }
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum EvType {
@@ -42,6 +42,12 @@ pub struct DEventState {
     events: [event_t; MAXEVENTS],
     eventhead: usize,
     eventtail: usize,
+}
+
+impl Default for DEventState {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl DEventState {

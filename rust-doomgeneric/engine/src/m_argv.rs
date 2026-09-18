@@ -4,6 +4,12 @@ pub struct MArgvState {
     pub myargv: Vec<::std::ffi::CString>,
 }
 
+impl Default for MArgvState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl MArgvState {
     pub const fn new() -> Self {
         MArgvState { myargv: Vec::new() }
@@ -16,7 +22,7 @@ pub fn M_CheckParmWithArgs(state: &mut GameState, check: &str, mut num_args: i32
     while i < state.m_argv.myargv.len() as i32 - num_args {
         if state.m_argv.myargv[i as usize]
             .to_str()
-            .map_or(false, |arg| arg.eq_ignore_ascii_case(check))
+            .is_ok_and(|arg| arg.eq_ignore_ascii_case(check))
         {
             return i;
         }

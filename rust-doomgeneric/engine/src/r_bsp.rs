@@ -30,6 +30,12 @@ pub struct RBspState {
     pub solidsegs: [cliprange_t; 32],
 }
 
+impl Default for RBspState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl RBspState {
     pub const fn new() -> Self {
         RBspState {
@@ -210,8 +216,8 @@ pub fn R_AddLine(state: &mut GameState, mut line: SegId) {
         return;
     }
     state.r_bsp.backsector = state.p_setup.seg(line).backsector;
-    if state.r_bsp.backsector.is_some() {
-        if !(state
+    if state.r_bsp.backsector.is_some()
+        && !(state
             .p_setup
             .sector_mut(state.r_bsp.backsector.unwrap())
             .ceilingheight
@@ -276,7 +282,6 @@ pub fn R_AddLine(state: &mut GameState, mut line: SegId) {
             R_ClipPassWallSegment(state, x1, x2 - 1_i32);
             return;
         }
-    }
     R_ClipSolidWallSegment(state, x1, x2 - 1_i32);
 }
 pub static checkcoord: [[i32; 4]; 12] = [
@@ -414,7 +419,7 @@ pub fn R_Subsector(state: &mut GameState, mut num: i32) {
     }
 }
 pub fn R_RenderBSPNode(state: &mut GameState, mut bspnum: i32) {
-    let side: i32;
+    
     if bspnum & NF_SUBSECTOR != 0 {
         if bspnum == -1_i32 {
             R_Subsector(state, 0_i32);
@@ -424,7 +429,7 @@ pub fn R_RenderBSPNode(state: &mut GameState, mut bspnum: i32) {
         return;
     }
     let bsp = state.p_setup.nodes[bspnum as usize];
-    side = R_PointOnSide(state.r_main.viewx, state.r_main.viewy, &bsp);
+    let side: i32 = R_PointOnSide(state.r_main.viewx, state.r_main.viewy, &bsp);
     R_RenderBSPNode(state, bsp.children[side as usize] as i32);
     if R_CheckBBox(state, bsp.bbox[(side ^ 1_i32) as usize]) {
         R_RenderBSPNode(state, bsp.children[(side ^ 1_i32) as usize] as i32);

@@ -79,6 +79,12 @@ pub struct RDrawState {
     pub dscount: i32,
 }
 
+impl Default for RDrawState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl RDrawState {
     pub const fn new() -> Self {
         RDrawState {
@@ -526,7 +532,7 @@ pub fn R_FillBackScreen(state: &mut GameState) {
     let mut patch: Patch;
     let name1: &str = "FLOOR7_2";
     let name2: &str = "GRNROCK";
-    let name: &str;
+    
     if state.r_draw.scaledviewwidth == SCREENWIDTH {
         state.r_draw.background_buffer = None;
         return;
@@ -538,11 +544,11 @@ pub fn R_FillBackScreen(state: &mut GameState) {
                 as usize
         ]);
     }
-    if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 {
-        name = name2;
+    let name: &str = if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 {
+        name2
     } else {
-        name = name1;
-    }
+        name1
+    };
     let flat = W_LumpBytesName(state, name);
     let background = state.r_draw.background_buffer.as_mut().unwrap();
     for y in 0..(SCREENHEIGHT - SBARHEIGHT) as usize {

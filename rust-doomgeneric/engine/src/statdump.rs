@@ -10,6 +10,12 @@ pub struct StatDumpState {
     num_captured_stats: i32,
 }
 
+impl Default for StatDumpState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl StatDumpState {
     pub const fn new() -> Self {
         StatDumpState {

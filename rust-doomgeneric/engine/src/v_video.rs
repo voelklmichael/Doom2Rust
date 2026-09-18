@@ -53,6 +53,12 @@ impl GameState {
 pub struct VVideoState {
     pub dirtybox: [i32; 4],
 }
+impl Default for VVideoState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl VVideoState {
     pub const fn new() -> Self {
         VVideoState { dirtybox: [0; 4] }

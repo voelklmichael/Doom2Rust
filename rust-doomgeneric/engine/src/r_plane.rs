@@ -46,6 +46,12 @@ pub struct RPlaneState {
     pub cachedystep: [fixed_t; 200],
 }
 
+impl Default for RPlaneState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl RPlaneState {
     pub const fn new() -> Self {
         RPlaneState {

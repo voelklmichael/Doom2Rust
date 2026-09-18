@@ -73,6 +73,12 @@ pub struct WiStuffState {
     pub sp_state: i32,
 }
 
+impl Default for WiStuffState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl WiStuffState {
     pub const fn new() -> Self {
         WiStuffState {
@@ -894,17 +900,16 @@ pub fn WI_updateAnimatedBack(state: &mut GameState) {
                         a.nexttic = state.wi_stuff.bcnt + a.period;
                     }
                 }
-                2 => {
+                2
                     if !(state.wi_stuff.state == StateEnum::StatCount && i == 7_i32)
                         && state.wbs().next == a.data1
-                    {
+                    => {
                         a.ctr += 1;
                         if a.ctr == a.nanims {
                             a.ctr -= 1;
                         }
                         a.nexttic = state.wi_stuff.bcnt + a.period;
                     }
-                }
                 _ => {}
             }
         }

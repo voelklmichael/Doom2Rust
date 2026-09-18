@@ -89,6 +89,12 @@ pub struct PPsprState {
     pub bulletslope: fixed_t,
 }
 
+impl Default for PPsprState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl PPsprState {
     pub const fn new() -> Self {
         PPsprState {

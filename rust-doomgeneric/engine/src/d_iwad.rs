@@ -107,6 +107,12 @@ pub struct DIwadState {
     iwad_dirs: Vec<String>,
 }
 
+impl Default for DIwadState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl DIwadState {
     pub const fn new() -> Self {
         DIwadState {

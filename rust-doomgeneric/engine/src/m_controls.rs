@@ -113,6 +113,12 @@ pub struct MControlsState {
     pub dclick_use: i32,
 }
 
+impl Default for MControlsState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl MControlsState {
     pub const fn new() -> Self {
         MControlsState {

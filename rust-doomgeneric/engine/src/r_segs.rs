@@ -65,6 +65,12 @@ pub struct RSegsState {
     pub maskedtexturecol: Option<ClipArray>,
 }
 
+impl Default for RSegsState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl RSegsState {
     pub const fn new() -> Self {
         RSegsState {
@@ -564,7 +570,7 @@ pub fn R_StoreWallRange(state: &mut GameState, mut start: i32, mut stop: i32) {
         {
             state.r_segs.worldtop = state.r_segs.worldhigh;
         }
-        if state.r_segs.worldlow != state.r_segs.worldbottom
+        state.r_segs.markfloor = state.r_segs.worldlow != state.r_segs.worldbottom
             || state
                 .p_setup
                 .sector_mut(state.r_bsp.backsector.unwrap())
@@ -572,21 +578,15 @@ pub fn R_StoreWallRange(state: &mut GameState, mut start: i32, mut stop: i32) {
                 != state
                     .p_setup
                     .sector_mut(state.r_bsp.frontsector.unwrap())
-                    .floorpic as i32
-            || state
+                    .floorpic as i32 || state
                 .p_setup
                 .sector_mut(state.r_bsp.backsector.unwrap())
                 .lightlevel as i32
                 != state
                     .p_setup
                     .sector_mut(state.r_bsp.frontsector.unwrap())
-                    .lightlevel as i32
-        {
-            state.r_segs.markfloor = true;
-        } else {
-            state.r_segs.markfloor = false;
-        }
-        if state.r_segs.worldhigh != state.r_segs.worldtop
+                    .lightlevel as i32;
+        state.r_segs.markceiling = state.r_segs.worldhigh != state.r_segs.worldtop
             || state
                 .p_setup
                 .sector_mut(state.r_bsp.backsector.unwrap())
@@ -594,20 +594,14 @@ pub fn R_StoreWallRange(state: &mut GameState, mut start: i32, mut stop: i32) {
                 != state
                     .p_setup
                     .sector_mut(state.r_bsp.frontsector.unwrap())
-                    .ceilingpic as i32
-            || state
+                    .ceilingpic as i32 || state
                 .p_setup
                 .sector_mut(state.r_bsp.backsector.unwrap())
                 .lightlevel as i32
                 != state
                     .p_setup
                     .sector_mut(state.r_bsp.frontsector.unwrap())
-                    .lightlevel as i32
-        {
-            state.r_segs.markceiling = true;
-        } else {
-            state.r_segs.markceiling = false;
-        }
+                    .lightlevel as i32;
         if state
             .p_setup
             .sector_mut(state.r_bsp.backsector.unwrap())

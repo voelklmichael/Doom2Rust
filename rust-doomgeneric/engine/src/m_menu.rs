@@ -70,6 +70,12 @@ pub struct MMenuDefsHolder {
     pub SaveDef: menu_t,
 }
 
+impl Default for MMenuDefsHolder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl MMenuDefsHolder {
     pub fn new() -> Self {
         MMenuDefsHolder {
@@ -446,6 +452,12 @@ pub struct MMenuState {
     pub responder_lastx: i32,
     pub drawer_x: i16,
     pub drawer_y: i16,
+}
+
+impl Default for MMenuState {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl MMenuState {
@@ -827,7 +839,7 @@ pub fn M_DrawReadThis1(state: &mut GameState) {
     let mut skully: i32 = 175_i32;
     state.m_menu.inhelpscreens = true;
     match state.doomstat.gameversion as u32 {
-        1 | 2 | 3 | 4 | 5 => {
+        1..=5 => {
             if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 {
                 lumpname = "HELP";
                 skullx = 330_i32;
@@ -888,11 +900,10 @@ pub fn M_SfxVol(state: &mut GameState, mut choice: i32) {
                 state.s_sound.sfxVolume -= 1;
             }
         }
-        1 => {
-            if state.s_sound.sfxVolume < 15_i32 {
+        1
+            if state.s_sound.sfxVolume < 15_i32 => {
                 state.s_sound.sfxVolume += 1;
             }
-        }
         _ => {}
     }
     let sfx_volume = state.s_sound.sfxVolume * 8_i32;
@@ -905,11 +916,10 @@ pub fn M_MusicVol(state: &mut GameState, mut choice: i32) {
                 state.s_sound.musicVolume -= 1;
             }
         }
-        1 => {
-            if state.s_sound.musicVolume < 15_i32 {
+        1
+            if state.s_sound.musicVolume < 15_i32 => {
                 state.s_sound.musicVolume += 1;
             }
-        }
         _ => {}
     }
     let music_volume = state.s_sound.musicVolume * 8_i32;
@@ -1177,11 +1187,10 @@ pub fn M_ChangeSensitivity(state: &mut GameState, mut choice: i32) {
                 state.m_menu.mouseSensitivity -= 1;
             }
         }
-        1 => {
-            if state.m_menu.mouseSensitivity < 9_i32 {
+        1
+            if state.m_menu.mouseSensitivity < 9_i32 => {
                 state.m_menu.mouseSensitivity += 1;
             }
-        }
         _ => {}
     };
 }
@@ -1205,12 +1214,11 @@ pub fn M_SizeDisplay(state: &mut GameState, mut choice: i32) {
                 state.m_menu.screenSize -= 1;
             }
         }
-        1 => {
-            if state.m_menu.screenSize < 8_i32 {
+        1
+            if state.m_menu.screenSize < 8_i32 => {
                 state.m_menu.screenblocks += 1;
                 state.m_menu.screenSize += 1;
             }
-        }
         _ => {}
     }
     let (screenblocks, detail_level) = (state.m_menu.screenblocks, state.m_menu.detailLevel);

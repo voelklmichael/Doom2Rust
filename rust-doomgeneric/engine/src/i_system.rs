@@ -17,6 +17,12 @@ pub struct ISystemState {
     pub get_memory_value_firsttime: bool,
 }
 
+impl Default for ISystemState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ISystemState {
     pub fn new() -> Self {
         ISystemState {

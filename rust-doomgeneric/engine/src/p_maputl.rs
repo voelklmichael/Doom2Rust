@@ -24,6 +24,12 @@ pub struct PMaputlState {
     pub ptflags: i32,
 }
 
+impl Default for PMaputlState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl PMaputlState {
     pub fn new() -> Self {
         PMaputlState {

@@ -276,6 +276,12 @@ pub struct FFinaleState {
     laststage: i32,
 }
 
+impl Default for FFinaleState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl FFinaleState {
     pub const fn new() -> Self {
         FFinaleState {
@@ -533,8 +539,8 @@ pub fn F_CastTicker(state: &mut GameState) {
         return;
     }
     let cur_caststate = state.info.state_mut(state.f_finale.caststate.unwrap());
-    if (*cur_caststate).tics == -1_i32
-        || (*cur_caststate).nextstate as u32 == StateNum::S_NULL as i32 as u32
+    if cur_caststate.tics == -1_i32
+        || cur_caststate.nextstate as u32 == StateNum::S_NULL as i32 as u32
     {
         state.f_finale.castnum += 1;
         state.f_finale.castdeath = false;
@@ -566,7 +572,7 @@ pub fn F_CastTicker(state: &mut GameState) {
     } else if state.f_finale.caststate == Some(StateId(StateNum::S_PLAY_ATK1 as u32)) {
         current_block = 13354568087807251156;
     } else {
-        st = (*cur_caststate).nextstate as i32;
+        st = cur_caststate.nextstate as i32;
         state.f_finale.caststate = Some(StateId(st as u32));
         state.f_finale.castframes += 1;
         match st {
@@ -594,7 +600,7 @@ pub fn F_CastTicker(state: &mut GameState) {
             383 | 380 | 377 => {
                 sfx = sfx_firsht as i32;
             }
-            417 | 418 | 419 => {
+            417..=419 => {
                 sfx = sfx_shotgn as i32;
             }
             454 => {
@@ -630,50 +636,44 @@ pub fn F_CastTicker(state: &mut GameState) {
         }
         current_block = 1356832168064818221;
     }
-    match current_block {
-        1356832168064818221 => {
-            let cast_type = state.f_finale.castorder[state.f_finale.castnum as usize].type_0;
-            let cast_info = state.info.mobjinfo[cast_type as usize];
-            if state.f_finale.castframes == 12_i32 {
-                state.f_finale.castattacking = true;
+    if current_block == 1356832168064818221 {
+        let cast_type = state.f_finale.castorder[state.f_finale.castnum as usize].type_0;
+        let cast_info = state.info.mobjinfo[cast_type as usize];
+        if state.f_finale.castframes == 12_i32 {
+            state.f_finale.castattacking = true;
+            if state.f_finale.castonmelee != 0 {
+                state.f_finale.caststate = Some(StateId(cast_info.meleestate as u32));
+            } else {
+                state.f_finale.caststate = Some(StateId(cast_info.missilestate as u32));
+            }
+            state.f_finale.castonmelee ^= 1_i32;
+            if state.f_finale.caststate == Some(StateId(StateNum::S_NULL as u32)) {
                 if state.f_finale.castonmelee != 0 {
                     state.f_finale.caststate = Some(StateId(cast_info.meleestate as u32));
                 } else {
                     state.f_finale.caststate = Some(StateId(cast_info.missilestate as u32));
                 }
-                state.f_finale.castonmelee ^= 1_i32;
-                if state.f_finale.caststate == Some(StateId(StateNum::S_NULL as u32)) {
-                    if state.f_finale.castonmelee != 0 {
-                        state.f_finale.caststate = Some(StateId(cast_info.meleestate as u32));
-                    } else {
-                        state.f_finale.caststate = Some(StateId(cast_info.missilestate as u32));
-                    }
-                }
             }
-            if state.f_finale.castattacking {
-                if state.f_finale.castframes == 24_i32
-                    || state.f_finale.caststate == Some(StateId(cast_info.seestate as u32))
-                {
-                    current_block = 13354568087807251156;
-                } else {
-                    current_block = 168769493162332264;
-                }
+        }
+        if state.f_finale.castattacking {
+            if state.f_finale.castframes == 24_i32
+                || state.f_finale.caststate == Some(StateId(cast_info.seestate as u32))
+            {
+                current_block = 13354568087807251156;
             } else {
                 current_block = 168769493162332264;
             }
+        } else {
+            current_block = 168769493162332264;
         }
-        _ => {}
     }
-    match current_block {
-        13354568087807251156 => {
-            state.f_finale.castattacking = false;
-            state.f_finale.castframes = 0_i32;
-            let cast_type = state.f_finale.castorder[state.f_finale.castnum as usize].type_0;
-            state.f_finale.caststate = Some(StateId(
-                state.info.mobjinfo[cast_type as usize].seestate as u32,
-            ));
-        }
-        _ => {}
+    if current_block == 13354568087807251156 {
+        state.f_finale.castattacking = false;
+        state.f_finale.castframes = 0_i32;
+        let cast_type = state.f_finale.castorder[state.f_finale.castnum as usize].type_0;
+        state.f_finale.caststate = Some(StateId(
+            state.info.mobjinfo[cast_type as usize].seestate as u32,
+        ));
     }
     state.f_finale.casttics = state.info.state_mut(state.f_finale.caststate.unwrap()).tics;
     if state.f_finale.casttics == -1_i32 {
@@ -739,9 +739,9 @@ pub fn F_CastPrint(state: &mut GameState, text: &str) {
     }
 }
 pub fn F_CastDrawer(state: &mut GameState) {
-    let lump: i32;
-    let flip: bool;
-    let patch: Patch;
+    
+    
+    
     let __wcache865_4 = V_CachePatchName(state, "BOSSBACK");
     let dest_screen = Screen::Video;
     V_DrawPatch(state, dest_screen, 0_i32, 0_i32, &__wcache865_4);
@@ -752,9 +752,9 @@ pub fn F_CastDrawer(state: &mut GameState) {
     let cur_caststate = state.info.state_mut(state.f_finale.caststate.unwrap());
     let sprframe = &state.r_things.sprites[cur_caststate.sprite as usize].spriteframes
         [(cur_caststate.frame & FF_FRAMEMASK) as usize];
-    lump = sprframe.lump[0] as i32;
-    flip = sprframe.flip[0] != 0;
-    patch = V_CachePatchNum(state, lump + state.r_data.firstspritelump);
+    let lump: i32 = sprframe.lump[0] as i32;
+    let flip: bool = sprframe.flip[0] != 0;
+    let patch: Patch = V_CachePatchNum(state, lump + state.r_data.firstspritelump);
     if flip {
         let dest_screen = Screen::Video;
         V_DrawPatchFlipped(state, dest_screen, 160_i32, 170_i32, &patch);

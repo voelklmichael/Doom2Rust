@@ -7,6 +7,12 @@ pub struct RSkyState {
     pub skytexturemid: i32,
 }
 
+impl Default for RSkyState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl RSkyState {
     pub const fn new() -> Self {
         RSkyState {

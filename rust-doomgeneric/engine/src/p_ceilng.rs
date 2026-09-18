@@ -51,6 +51,12 @@ pub struct PCeilngState {
     free_list: Vec<u32>,
 }
 
+impl Default for PCeilngState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl PCeilngState {
     pub const fn new() -> Self {
         PCeilngState {

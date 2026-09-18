@@ -52,6 +52,12 @@ pub struct SSoundState {
     pub snd_channels: i32,
 }
 
+impl Default for SSoundState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl SSoundState {
     pub const fn new() -> Self {
         SSoundState {

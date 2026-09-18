@@ -29,6 +29,12 @@ pub struct IVideoState {
     pub dg_screen_buffer: Vec<pixel_t>,
 }
 
+impl Default for IVideoState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl IVideoState {
     pub const fn new() -> Self {
         IVideoState {

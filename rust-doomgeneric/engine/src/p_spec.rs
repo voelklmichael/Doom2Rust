@@ -98,6 +98,12 @@ pub struct PSpecState {
     floor_free_list: Vec<u32>,
 }
 
+impl Default for PSpecState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl PSpecState {
     pub const fn new() -> Self {
         PSpecState {
@@ -462,7 +468,7 @@ pub fn P_InitPicAnims(state: &mut GameState) {
         let endname = animdefs[i as usize].endname.as_str();
         let anim = &mut state.p_spec.anims[state.p_spec.lastanim];
         if animdefs[i as usize].istexture != 0 {
-            if R_CheckTextureNumForName(&mut state.r_data, &startname) == -1_i32 {
+            if R_CheckTextureNumForName(&state.r_data, &startname) == -1_i32 {
                 current_block_13 = 12237857397564741460;
             } else {
                 anim.picnum = R_TextureNumForName(&mut state.r_data, &endname);
@@ -479,21 +485,18 @@ pub fn P_InitPicAnims(state: &mut GameState) {
             anim.basepic = basepic;
             current_block_13 = 11650488183268122163;
         }
-        match current_block_13 {
-            11650488183268122163 => {
-                let anim = &mut state.p_spec.anims[state.p_spec.lastanim];
-                anim.istexture = animdefs[i as usize].istexture != 0;
-                anim.numpics = anim.picnum - anim.basepic + 1_i32;
-                if anim.numpics < 2_i32 {
-                    I_Error(&format!(
-                        "P_InitPicAnims: bad cycle from {} to {}",
-                        startname, endname,
-                    ));
-                }
-                anim.speed = animdefs[i as usize].speed;
-                state.p_spec.lastanim += 1;
+        if current_block_13 == 11650488183268122163 {
+            let anim = &mut state.p_spec.anims[state.p_spec.lastanim];
+            anim.istexture = animdefs[i as usize].istexture != 0;
+            anim.numpics = anim.picnum - anim.basepic + 1_i32;
+            if anim.numpics < 2_i32 {
+                I_Error(&format!(
+                    "P_InitPicAnims: bad cycle from {} to {}",
+                    startname, endname,
+                ));
             }
-            _ => {}
+            anim.speed = animdefs[i as usize].speed;
+            state.p_spec.lastanim += 1;
         }
         i += 1;
     }
@@ -932,11 +935,8 @@ pub fn P_ShootSpecialLine(state: &mut GameState, thing: MobjId, mut line: LineId
     let special = state.p_setup.line(line).special;
     if state.p_mobj.mo(thing).player.is_none() {
         ok = 0_i32;
-        match special as i32 {
-            46 => {
-                ok = 1_i32;
-            }
-            _ => {}
+        if special as i32 == 46 {
+            ok = 1_i32;
         }
         if ok == 0 {
             return;
@@ -1045,12 +1045,9 @@ pub fn P_UpdateSpecials(state: &mut GameState) {
     while i < state.p_spec.numlinespecials as i32 {
         line = state.p_spec.linespeciallist[i as usize];
         let linev = state.p_setup.line(line);
-        match linev.special as i32 {
-            48 => {
-                let fresh0 = &mut state.p_setup.sides[linev.sidenum[0] as usize].textureoffset;
-                *fresh0 += FRACUNIT;
-            }
-            _ => {}
+        if linev.special as i32 == 48 {
+            let fresh0 = &mut state.p_setup.sides[linev.sidenum[0] as usize].textureoffset;
+            *fresh0 += FRACUNIT;
         }
         i += 1;
     }

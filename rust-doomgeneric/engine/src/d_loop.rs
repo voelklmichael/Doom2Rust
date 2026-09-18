@@ -33,6 +33,12 @@ pub struct DLoopState {
     pub try_run_tics_oldentertics: i32,
 }
 
+impl Default for DLoopState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl DLoopState {
     pub fn new() -> Self {
         DLoopState {

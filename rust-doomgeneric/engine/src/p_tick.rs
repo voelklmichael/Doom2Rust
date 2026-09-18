@@ -81,6 +81,12 @@ pub struct PTickState {
     tail: Option<ThinkerId>,
 }
 
+impl Default for PTickState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl PTickState {
     pub const fn new() -> Self {
         PTickState {

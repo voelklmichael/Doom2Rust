@@ -122,6 +122,12 @@ pub struct PSetupState {
     pub junk_line_id: Option<LineId>,
 }
 
+impl Default for PSetupState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl PSetupState {
     pub const fn new() -> Self {
         PSetupState {

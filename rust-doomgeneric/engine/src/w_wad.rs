@@ -17,6 +17,12 @@ pub struct WWadState {
     pub lumphash: Vec<Option<u32>>,
 }
 
+impl Default for WWadState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl WWadState {
     pub const fn new() -> Self {
         WWadState {
@@ -72,7 +78,7 @@ pub fn W_AddFile(state: &mut GameState, filename: &str) -> Option<&'static wad_f
     // Scratch WAD-directory buffer -- built and consumed entirely within
     // this function, so a plain owned Vec replaces the old
     // Z_Malloc-then-Z_Free-at-the-end pair with no lifetime change.
-    let fileinfo: Vec<filelump_t>;
+    
     let wad_file = match W_OpenFile(filename) {
         Some(wad_file) => wad_file,
         None => {
@@ -81,14 +87,14 @@ pub fn W_AddFile(state: &mut GameState, filename: &str) -> Option<&'static wad_f
         }
     };
     let is_wad = filename.len() >= 3 && filename[filename.len() - 3..].eq_ignore_ascii_case("wad");
-    if !is_wad {
+    let fileinfo: Vec<filelump_t> = if !is_wad {
         let mut single = filelump_t {
             filepos: 0_i32,
             size: wad_file.length as i32,
             name: FixedCStr([0; 8]),
         };
         M_ExtractFileBase(filename, &mut single.name);
-        fileinfo = vec![single];
+        vec![single]
     } else {
         let mut header_buf = [0u8; ::core::mem::size_of::<wadinfo_t>()];
         W_Read(wad_file, 0_u32, &mut header_buf);
@@ -106,15 +112,15 @@ pub fn W_AddFile(state: &mut GameState, filename: &str) -> Option<&'static wad_f
         let mut dir_buf =
             vec![0u8; (header.numlumps as usize) * ::core::mem::size_of::<filelump_t>()];
         W_Read(wad_file, header.infotableofs as u32, &mut dir_buf);
-        fileinfo = dir_buf
+        dir_buf
             .chunks_exact(::core::mem::size_of::<filelump_t>())
             .map(|c| filelump_t {
                 filepos: i32::from_le_bytes(c[0..4].try_into().unwrap()),
                 size: i32::from_le_bytes(c[4..8].try_into().unwrap()),
                 name: FixedCStr::from_bytes(&c[8..16]),
             })
-            .collect();
-    }
+            .collect()
+    };
     state
         .w_wad
         .lumpinfo

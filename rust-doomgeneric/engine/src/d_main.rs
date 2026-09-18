@@ -129,6 +129,12 @@ pub struct DMainState {
     pub gameversions: [C2RustUnnamed_4; 9],
 }
 
+impl Default for DMainState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl DMainState {
     pub const fn new() -> Self {
         DMainState {
@@ -274,8 +280,8 @@ pub fn D_Display(state: &mut GameState) {
     if state.g_game.gamestate == GameScreenState::GS_LEVEL && state.d_loop.gametic != 0 {
         HU_Erase(state);
     }
-    match state.g_game.gamestate as u32 {
-        0 => {
+    match state.g_game.gamestate {
+        GameScreenState::GS_LEVEL => {
             if state.d_loop.gametic != 0 {
                 if state.am_map.automapactive {
                     AM_Drawer(state);
@@ -291,16 +297,16 @@ pub fn D_Display(state: &mut GameState) {
                 state.d_main.d_display_fullscreen = state.r_draw.viewheight == 200_i32;
             }
         }
-        1 => {
+        GameScreenState::GS_INTERMISSION => {
             WI_Drawer(state);
         }
-        2 => {
+        GameScreenState::GS_FINALE => {
             F_Drawer(state);
         }
-        3 => {
+        GameScreenState::GS_DEMOSCREEN => {
             D_PageDrawer(state);
         }
-        _ => {}
+        GameScreenState::GS_WIPPED => {}
     }
     if state.g_game.gamestate == GameScreenState::GS_LEVEL
         && !state.am_map.automapactive
@@ -311,7 +317,7 @@ pub fn D_Display(state: &mut GameState) {
     if state.g_game.gamestate == GameScreenState::GS_LEVEL && state.d_loop.gametic != 0 {
         HU_Drawer(state);
     }
-    if state.g_game.gamestate as u32 != state.d_main.d_display_oldgamestate as u32
+    if state.g_game.gamestate != state.d_main.d_display_oldgamestate
         && state.g_game.gamestate != GameScreenState::GS_LEVEL
     {
         let pal = W_LumpBytesName(state, "PLAYPAL");

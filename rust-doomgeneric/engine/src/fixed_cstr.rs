@@ -75,7 +75,7 @@ impl<const N: usize> FixedCStr<N> {
             if a == 0 && b == 0 {
                 return true;
             }
-            if a.to_ascii_lowercase() != b.to_ascii_lowercase() {
+            if !a.eq_ignore_ascii_case(&b) {
                 return false;
             }
         }
@@ -96,7 +96,7 @@ impl<const N: usize> FixedCStr<N> {
             if a == 0 && b == 0 {
                 return true;
             }
-            if a.to_ascii_lowercase() != b.to_ascii_lowercase() {
+            if !a.eq_ignore_ascii_case(&b) {
                 return false;
             }
         }

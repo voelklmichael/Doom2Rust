@@ -5,6 +5,12 @@ pub struct ITimerState {
     basetime: uint32_t,
 }
 
+impl Default for ITimerState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ITimerState {
     pub const fn new() -> Self {
         ITimerState { basetime: 0 }

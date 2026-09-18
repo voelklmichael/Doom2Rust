@@ -57,6 +57,12 @@ pub struct StLibState {
     sttminus: i32,
 }
 
+impl Default for StLibState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl StLibState {
     pub const fn new() -> Self {
         StLibState { sttminus: -1 }

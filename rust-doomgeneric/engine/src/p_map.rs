@@ -96,6 +96,12 @@ pub struct PMapState {
     pub baseaddr: u32,
 }
 
+impl Default for PMapState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl PMapState {
     pub const fn new() -> Self {
         PMapState {
@@ -210,7 +216,7 @@ pub fn P_TeleportMove(
                 state,
                 bx,
                 by,
-                |s, id| PIT_StompThing(s, id),
+                PIT_StompThing,
             ) {
                 return false;
             }
@@ -397,7 +403,7 @@ pub fn P_CheckPosition(
                 state,
                 bx,
                 by,
-                |s, id| PIT_CheckThing(s, id),
+                PIT_CheckThing,
             ) {
                 return false;
             }
@@ -417,7 +423,7 @@ pub fn P_CheckPosition(
                 state,
                 bx,
                 by,
-                |s, ld| PIT_CheckLine(s, ld),
+                PIT_CheckLine,
             ) {
                 return false;
             }
@@ -561,13 +567,11 @@ pub fn PTR_SlideTraverse(state: &mut GameState, in_0: intercept_t) -> bool {
         }
     } else {
         P_LineOpening(state, li);
-        if state.p_maputl.openrange >= state.p_mobj.mo(slidemo).height {
-            if state.p_maputl.opentop - state.p_mobj.mo(slidemo).z >= state.p_mobj.mo(slidemo).height {
-                if state.p_maputl.openbottom - state.p_mobj.mo(slidemo).z <= 24_i32 * FRACUNIT {
+        if state.p_maputl.openrange >= state.p_mobj.mo(slidemo).height
+            && state.p_maputl.opentop - state.p_mobj.mo(slidemo).z >= state.p_mobj.mo(slidemo).height
+                && state.p_maputl.openbottom - state.p_mobj.mo(slidemo).z <= 24_i32 * FRACUNIT {
                     return true;
                 }
-            }
-        }
     }
     if in_0.frac < state.p_map.bestslidefrac {
         state.p_map.secondslidefrac = state.p_map.bestslidefrac;
@@ -1108,7 +1112,7 @@ fn SpechitOverrun(state: &mut GameState, mut ld: LineId) {
     }
     addr = (state.p_map.baseaddr as i64 + ld.0 as i64 * 0x3e_i64) as u32;
     match state.p_map.numspechit {
-        9 | 10 | 11 | 12 => {
+        9..=12 => {
             state.p_map.tmbbox[(state.p_map.numspechit - 9_i32) as usize] = addr as fixed_t;
         }
         13 => {

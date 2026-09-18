@@ -132,13 +132,12 @@ pub fn P_GiveAmmo(
                 player.pendingweapon = weapontype_t::wp_plasma;
             }
         }
-        3 => {
+        3
             if player.readyweapon as u32 == weapontype_t::wp_fist as i32 as u32
                 && player.weaponowned[weapontype_t::wp_missile as usize]
-            {
+            => {
                 player.pendingweapon = weapontype_t::wp_missile;
             }
-        }
         _ => {}
     }
     true

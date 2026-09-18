@@ -87,6 +87,12 @@ pub struct PDoorsState {
     free_list: Vec<u32>,
 }
 
+impl Default for PDoorsState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl PDoorsState {
     pub const fn new() -> Self {
         PDoorsState {
@@ -442,7 +448,7 @@ pub fn EV_VerticalDoor(state: &mut GameState, line: LineId, thing: MobjId) {
         1 | 26 | 27 | 28 => {
             door.type_0 = VldoorE::vld_normal;
         }
-        31 | 32 | 33 | 34 => {
+        31..=34 => {
             door.type_0 = VldoorE::vld_open;
             state.p_setup.line_mut(line).special = 0_i16;
         }

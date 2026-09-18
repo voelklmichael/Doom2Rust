@@ -42,6 +42,12 @@ pub struct InfoState {
     pub mobjinfo: [mobjinfo_t; 137],
 }
 
+impl Default for InfoState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl InfoState {
     pub fn state_mut(&mut self, id: StateId) -> &mut state_t {
         &mut self.states[id.0 as usize]

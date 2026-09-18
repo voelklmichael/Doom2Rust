@@ -15,6 +15,12 @@ pub struct IJoystickState {
     joystick_physical_buttons: [i32; 10],
 }
 
+impl Default for IJoystickState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl IJoystickState {
     pub const fn new() -> Self {
         IJoystickState {

@@ -6,6 +6,12 @@ pub struct WChecksumState {
     open_wadfiles: Vec<&'static wad_file_t>,
 }
 
+impl Default for WChecksumState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl WChecksumState {
     pub const fn new() -> Self {
         WChecksumState {

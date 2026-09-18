@@ -92,6 +92,12 @@ pub struct RMainState {
     pub setdetail: i32,
 }
 
+impl Default for RMainState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl RMainState {
     pub fn new() -> Self {
         RMainState {
