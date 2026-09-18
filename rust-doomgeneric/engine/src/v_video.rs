@@ -267,16 +267,8 @@ pub fn V_ScreenShot(state: &mut GameState) {
 pub const MOUSE_SPEED_BOX_WIDTH: i32 = 120;
 pub const MOUSE_SPEED_BOX_HEIGHT: i32 = 9;
 pub fn V_DrawMouseSpeedBox(state: &mut IVideoState, speed: i32) {
-    
-    
-    
-    
-    
-    
-    
-    
     let mut original_speed: i32;
-    
+
     let mut linelen: i32;
     let bgcolor: i32 = I_GetPaletteIndex(0x77_i32, 0x77_i32, 0x77_i32);
     let bordercolor: i32 = I_GetPaletteIndex(0x55_i32, 0x55_i32, 0x55_i32);

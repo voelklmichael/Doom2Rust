@@ -1210,13 +1210,7 @@ pub fn M_SizeDisplay(state: &mut GameState, choice: i32) {
     let (screenblocks, detail_level) = (state.m_menu.screenblocks, state.m_menu.detailLevel);
     R_SetViewSize(state, screenblocks, detail_level);
 }
-pub fn M_DrawThermo(
-    state: &mut GameState,
-    x: i32,
-    y: i32,
-    thermWidth: i32,
-    thermDot: i32,
-) {
+pub fn M_DrawThermo(state: &mut GameState, x: i32, y: i32, thermWidth: i32, thermDot: i32) {
     let mut xx: i32;
     let mut i: i32;
     xx = x;
@@ -1673,7 +1667,7 @@ pub fn M_StartControlPanel(state: &mut GameState) {
 }
 pub fn M_Drawer(state: &mut GameState) {
     let mut i: u32;
-    
+
     state.m_menu.inhelpscreens = false;
     if state.m_menu.messageToPrint != 0 {
         let message_string = state.m_menu.messageString.clone();

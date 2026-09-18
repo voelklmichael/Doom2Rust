@@ -82,9 +82,8 @@ impl RPlaneState {
 pub const ANGLETOSKYSHIFT: i32 = 22;
 pub const MAXVISPLANES: i32 = 128;
 pub fn R_MapPlane(state: &mut GameState, y: i32, x1: i32, x2: i32) {
-    
     let distance: fixed_t;
-    
+
     let mut index: u32;
     if x2 < x1 || x1 < 0_i32 || x2 >= state.r_draw.viewwidth || y > state.r_draw.viewheight {
         I_Error(&format!("R_MapPlane: {}, {} at {}", x1, x2, y));
@@ -127,7 +126,7 @@ pub fn R_MapPlane(state: &mut GameState, y: i32, x1: i32, x2: i32) {
 }
 pub fn R_ClearPlanes(state: &mut GameState) {
     let mut i: i32;
-    
+
     i = 0_i32;
     while i < state.r_draw.viewwidth {
         state.r_plane.floorclip[i as usize] = state.r_draw.viewheight as i16;

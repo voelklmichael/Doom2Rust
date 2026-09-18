@@ -925,16 +925,10 @@ pub fn WI_drawAnimatedBack(state: &mut GameState) {
         i += 1;
     }
 }
-pub fn WI_drawNum(
-    state: &mut GameState,
-    mut x: i32,
-    y: i32,
-    mut n: i32,
-    mut digits: i32,
-) -> i32 {
+pub fn WI_drawNum(state: &mut GameState, mut x: i32, y: i32, mut n: i32, mut digits: i32) -> i32 {
     let zero_patch = V_CachePatchNum(state, state.wi_stuff.num[0]);
     let fontwidth: i32 = zero_patch.width();
-    
+
     let mut temp: i32;
     if digits < 0_i32 {
         if n == 0 {
@@ -1200,7 +1194,7 @@ pub fn WI_drawDeathmatchStats(state: &mut GameState) {
     let mut j: i32;
     let mut x: i32;
     let mut y: i32;
-    
+
     WI_slamBackground(state);
     WI_drawAnimatedBack(state);
     WI_drawLF(state);
@@ -1639,7 +1633,6 @@ pub fn WI_updateStats(state: &mut GameState) {
     }
 }
 pub fn WI_drawStats(state: &mut GameState) {
-    
     let zero_patch = V_CachePatchNum(state, state.wi_stuff.num[0]);
     let lh: i32 = 3_i32 * zero_patch.height() / 2_i32;
     WI_slamBackground(state);

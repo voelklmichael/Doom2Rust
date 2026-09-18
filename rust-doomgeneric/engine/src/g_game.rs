@@ -446,10 +446,9 @@ fn WeaponSelectable(state: &mut GameState, weapon: weapontype_t) -> bool {
     true
 }
 fn G_NextWeapon(state: &mut GameState, direction: i32) -> i32 {
-    
-    
     let mut i: i32;
-    let weapon: weapontype_t = if state.g_game.players[state.g_game.consoleplayer as usize].pendingweapon as u32
+    let weapon: weapontype_t = if state.g_game.players[state.g_game.consoleplayer as usize]
+        .pendingweapon as u32
         == weapontype_t::wp_nochange as u32
     {
         state.g_game.players[state.g_game.consoleplayer as usize].readyweapon
@@ -486,10 +485,9 @@ fn G_NextWeapon(state: &mut GameState, direction: i32) -> i32 {
 }
 pub fn G_BuildTiccmd(state: &mut GameState, cmd: &mut ticcmd_t, maketic: i32) {
     let mut i: i32;
-    
+
     let bstrafe: bool;
-    
-    
+
     let mut forward: i32;
     let mut side: i32;
     *cmd = ticcmd_t {
@@ -512,7 +510,8 @@ pub fn G_BuildTiccmd(state: &mut GameState, cmd: &mut ticcmd_t, maketic: i32) {
     let speed: i32 = (state.m_controls.key_speed >= NUMKEYS
         || state.m_controls.joybspeed >= MAX_JOY_BUTTONS
         || state.g_game.gamekeydown[state.m_controls.key_speed as usize]
-        || state.g_game.joyarray[(state.m_controls.joybspeed + 1) as usize]) as i32;
+        || state.g_game.joyarray[(state.m_controls.joybspeed + 1) as usize])
+        as i32;
     side = 0_i32;
     forward = side;
     if state.g_game.joyxmove != 0_i32
@@ -698,8 +697,8 @@ pub fn G_BuildTiccmd(state: &mut GameState, cmd: &mut ticcmd_t, maketic: i32) {
             (BT_SPECIAL | BTS_SAVEGAME | state.g_game.savegameslot << BTS_SAVESHIFT) as byte;
     }
     if state.g_game.lowres_turn {
-        
-        let desired_angleturn: i16 = (cmd.angleturn as i32 + state.g_game.g_build_ticcmd_carry as i32) as i16;
+        let desired_angleturn: i16 =
+            (cmd.angleturn as i32 + state.g_game.g_build_ticcmd_carry as i32) as i16;
         cmd.angleturn = ((desired_angleturn as i32 + 128_i32) & 0xff00_i32) as i16;
         state.g_game.g_build_ticcmd_carry =
             (desired_angleturn as i32 - cmd.angleturn as i32) as i16;
@@ -875,7 +874,7 @@ pub fn G_Responder(state: &mut GameState, ev: event_t) -> bool {
 }
 pub fn G_Ticker(state: &mut GameState, netcmds: &[ticcmd_t]) {
     let mut i: i32;
-    
+
     i = 0_i32;
     while i < MAXPLAYERS {
         if state.g_game.playeringame[i as usize]
@@ -1370,7 +1369,6 @@ pub fn G_LoadGame(state: &mut GameState, name: &str) {
     state.g_game.gameaction = GameAction::ga_loadgame;
 }
 pub fn G_DoLoadGame(state: &mut GameState) {
-    
     state.g_game.gameaction = GameAction::ga_nothing;
     state.p_saveg.save_stream = std::fs::File::open(&state.g_game.savename).ok();
     if state.p_saveg.save_stream.is_none() {
@@ -1458,12 +1456,7 @@ pub fn G_DoSaveGame(state: &mut GameState) {
         Some("game saved.".to_string());
     R_FillBackScreen(state);
 }
-pub fn G_DeferedInitNew(
-    state: &mut GameState,
-    skill: SkillType,
-    episode: i32,
-    map: i32,
-) {
+pub fn G_DeferedInitNew(state: &mut GameState, skill: SkillType, episode: i32, map: i32) {
     state.g_game.d_skill = skill;
     state.g_game.d_episode = episode;
     state.g_game.d_map = map;
@@ -1642,7 +1635,6 @@ pub fn G_WriteDemoTiccmd(state: &mut GameState, player_num: usize) {
     G_ReadDemoTiccmd(state, player_num);
 }
 pub fn G_RecordDemo(state: &mut GameState, name: &str) {
-    
     let mut maxsize: i32;
     state.g_game.usergame = false;
     state.g_game.demoname = format!("{}.lmp", name);
@@ -1724,11 +1716,8 @@ fn DemoVersionDescription(_state: &mut GameState, version: i32) -> String {
     }
 }
 pub fn G_DoPlayDemo(state: &mut GameState) {
-    
     let mut i: i32;
-    
-    
-    
+
     state.g_game.gameaction = GameAction::ga_nothing;
     let demo_lumpname = state.g_game.defdemoname.as_str().into_owned();
     let demo_lumpnum = W_GetNumForName(&mut state.w_wad, &demo_lumpname);
@@ -1785,8 +1774,6 @@ pub fn G_TimeDemo(state: &mut GameState, name: FixedCStr<8>) {
 pub fn G_CheckDemoStatus(state: &mut GameState) -> bool {
     let endtime: i32;
     if state.g_game.timingdemo {
-        
-        
         endtime = I_GetTime(state);
         let realtics: i32 = endtime - state.g_game.starttime;
         let fps: f32 = state.d_loop.gametic as f32 * TICRATE as f32 / realtics as f32;

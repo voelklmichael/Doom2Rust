@@ -513,7 +513,6 @@ pub fn P_LoadSideDefs(state: &mut GameState, lump: i32) {
     W_ReleaseLumpNum(&mut state.w_wad, lump);
 }
 pub fn P_LoadBlockMap(state: &mut GameState, lump: i32) {
-    
     let lumplen: i32 = W_LumpLength(&mut state.w_wad, lump as u32);
     let mut raw = vec![0u8; lumplen as usize];
     W_ReadLump(&mut state.w_wad, lump as u32, &mut raw);
@@ -671,7 +670,7 @@ fn P_LoadReject(state: &mut GameState, lumpnum: i32) {
 }
 pub fn P_SetupLevel(state: &mut GameState, episode: i32, map: i32) {
     let mut i: i32;
-    
+
     state.g_game.wminfo.maxfrags = 0_i32;
     state.g_game.totalsecret = state.g_game.wminfo.maxfrags;
     state.g_game.totalitems = state.g_game.totalsecret;

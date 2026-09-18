@@ -84,7 +84,7 @@ pub fn STlib_drawNum(state: &mut GameState, n: &mut st_number_t, mut num: i32) {
     let w: i32 = zero_patch.width();
     let h: i32 = zero_patch.height();
     let mut x: i32;
-    
+
     n.oldnum = num;
     let neg: i32 = (num < 0_i32) as i32;
     if neg != 0 {
@@ -143,13 +143,7 @@ pub fn STlib_updateNum(state: &mut GameState, n: &mut st_number_t, num: i32, on:
         STlib_drawNum(state, n, num);
     }
 }
-pub fn STlib_initPercent(
-    p: &mut st_percent_t,
-    x: i32,
-    y: i32,
-    pl: StDigitSet,
-    percent: i32,
-) {
+pub fn STlib_initPercent(p: &mut st_percent_t, x: i32, y: i32, pl: StDigitSet, percent: i32) {
     STlib_initNum(&mut p.n, x, y, pl, 3_i32);
     p.p = percent;
 }

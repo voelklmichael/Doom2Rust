@@ -58,8 +58,7 @@ pub fn P_Thrust(state: &mut GameState, mo: MobjId, mut angle: angle_t, move_0: f
 }
 pub fn P_CalcHeight(state: &mut GameState, player_id: PlayerId) {
     let player = &mut state.g_game.players[player_id.0 as usize];
-    
-    
+
     let player_mo = player.mo.unwrap();
     player.bob = FixedMul(
         state.p_mobj.mo(player_mo).momx,

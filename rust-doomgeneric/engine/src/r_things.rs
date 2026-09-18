@@ -214,8 +214,7 @@ pub fn R_InitSpriteDefs(state: &mut GameState, namelist: &[&'static str]) {
     let mut l: i32;
     let mut frame: i32;
     let mut rotation: i32;
-    
-    
+
     let mut patched: i32;
     state.r_things.numsprites = namelist.len() as i32;
     if state.r_things.numsprites == 0 {
@@ -323,7 +322,7 @@ pub fn R_StoreVisSprite(state: &mut GameState, vis: vissprite_t) {
 pub fn R_DrawMaskedColumn(state: &mut GameState, mut post: ColumnSource) {
     let mut topscreen: i32;
     let mut bottomscreen: i32;
-    
+
     let basetexturemid: fixed_t = state.r_draw.dc_texturemid;
     let mfloorclip = state.r_things.mfloorclip.unwrap();
     let mceilingclip = state.r_things.mceilingclip.unwrap();
@@ -358,7 +357,7 @@ pub fn R_DrawMaskedColumn(state: &mut GameState, mut post: ColumnSource) {
 pub fn R_DrawVisSprite(state: &mut GameState, vis: &vissprite_t) {
     let mut texturecolumn: i32;
     let mut frac: fixed_t;
-    
+
     let sprite_lump = vis.patch + state.r_data.firstspritelump;
     let patch: Patch = V_CachePatchNum(state, sprite_lump);
     state.r_draw.dc_colormap = vis.colormap;
@@ -405,21 +404,17 @@ pub fn R_ProjectSprite(state: &mut GameState, thing_id: MobjId) {
         thing.angle,
         thing.flags,
     );
-    
-    
+
     let mut gxt: fixed_t;
     let mut gyt: fixed_t;
     let mut tx: fixed_t;
-    
-    
-    
-    
+
     let lump: i32;
     let rot: u32;
     let flip: bool;
     let mut index: i32;
     let ang: angle_t;
-    
+
     let tr_x: fixed_t = thing_x - state.r_main.viewx;
     let tr_y: fixed_t = thing_y - state.r_main.viewy;
     gxt = FixedMul(tr_x, state.r_main.viewcos);
@@ -550,10 +545,7 @@ pub fn R_AddSprites(state: &mut GameState, sec: SectorId) {
 }
 pub fn R_DrawPSprite(state: &mut GameState, psp: &pspdef_t) {
     let mut tx: fixed_t;
-    
-    
-    
-    
+
     let mut avis: vissprite_t = vissprite_s {
         x1: 0,
         x2: 0,
@@ -589,12 +581,14 @@ pub fn R_DrawPSprite(state: &mut GameState, psp: &pspdef_t) {
     let flip: bool = sprframe.flip[0] != 0;
     tx = (psp.sx - 160_i32 * FRACUNIT) as fixed_t;
     tx -= state.r_data.spriteoffset[lump as usize];
-    let x1: i32 = (state.r_main.centerxfrac + FixedMul(tx, state.r_things.pspritescale)) >> FRACBITS;
+    let x1: i32 =
+        (state.r_main.centerxfrac + FixedMul(tx, state.r_things.pspritescale)) >> FRACBITS;
     if x1 > state.r_draw.viewwidth {
         return;
     }
     tx += state.r_data.spritewidth[lump as usize];
-    let x2: i32 = ((state.r_main.centerxfrac + FixedMul(tx, state.r_things.pspritescale)) >> FRACBITS)
+    let x2: i32 = ((state.r_main.centerxfrac + FixedMul(tx, state.r_things.pspritescale))
+        >> FRACBITS)
         - 1_i32;
     if x2 < 0_i32 {
         return;

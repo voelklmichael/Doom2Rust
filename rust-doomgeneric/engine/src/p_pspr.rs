@@ -102,16 +102,14 @@ impl Default for PPsprState {
 
 impl PPsprState {
     pub const fn new() -> Self {
-        PPsprState {
-            bulletslope: 0,
-        }
+        PPsprState { bulletslope: 0 }
     }
 }
 
 pub fn P_BringUpWeapon(state: &mut GameState, player_id: PlayerId) {
     let player = player_id;
     let player_mo = state.g_game.players[player.0 as usize].mo.unwrap();
-    
+
     if state.g_game.players[player.0 as usize].pendingweapon as u32
         == weapontype_t::wp_nochange as i32 as u32
     {
@@ -127,7 +125,8 @@ pub fn P_BringUpWeapon(state: &mut GameState, player_id: PlayerId) {
             SfxName::sfx_sawup as i32,
         );
     }
-    let newstate: StateNum = weaponinfo[state.g_game.players[player.0 as usize].pendingweapon as usize].upstate;
+    let newstate: StateNum =
+        weaponinfo[state.g_game.players[player.0 as usize].pendingweapon as usize].upstate;
     state.g_game.players[player.0 as usize].pendingweapon = weapontype_t::wp_nochange;
     state.g_game.players[player.0 as usize].psprites[PSpriteNum::ps_weapon as usize].sy =
         (128_i32 * FRACUNIT) as fixed_t;
@@ -135,9 +134,9 @@ pub fn P_BringUpWeapon(state: &mut GameState, player_id: PlayerId) {
 }
 pub fn P_CheckAmmo(state: &mut GameState, player_id: PlayerId) -> bool {
     let player = player_id;
-    
-    
-    let ammo: ammotype_t = weaponinfo[state.g_game.players[player.0 as usize].readyweapon as usize].ammo;
+
+    let ammo: ammotype_t =
+        weaponinfo[state.g_game.players[player.0 as usize].readyweapon as usize].ammo;
     let count: i32 = if state.g_game.players[player.0 as usize].readyweapon as u32
         == weapontype_t::wp_bfg as i32 as u32
     {
@@ -212,12 +211,13 @@ pub fn P_CheckAmmo(state: &mut GameState, player_id: PlayerId) -> bool {
 pub fn P_FireWeapon(state: &mut GameState, player_id: PlayerId) {
     let player = player_id;
     let player_mo = state.g_game.players[player.0 as usize].mo.unwrap();
-    
+
     if !P_CheckAmmo(state, player_id) {
         return;
     }
     P_SetMobjState(state, player_mo, StateNum::S_PLAY_ATK1);
-    let newstate: StateNum = weaponinfo[state.g_game.players[player.0 as usize].readyweapon as usize].atkstate;
+    let newstate: StateNum =
+        weaponinfo[state.g_game.players[player.0 as usize].readyweapon as usize].atkstate;
     P_SetPsprite(state, player_id, PSpriteNum::ps_weapon as i32, newstate);
     P_NoiseAlert(state, player_mo, player_mo);
 }
@@ -341,7 +341,7 @@ pub fn A_Lower(state: &mut GameState, player_id: PlayerId, position: i32) {
 pub fn A_Raise(state: &mut GameState, player_id: PlayerId, position: i32) {
     {
         let player = player_id;
-        
+
         state.g_game.players[player_id.0 as usize].psprites[position as usize].sy -=
             FRACUNIT * 6_i32;
         if state.g_game.players[player_id.0 as usize].psprites[position as usize].sy
@@ -351,7 +351,8 @@ pub fn A_Raise(state: &mut GameState, player_id: PlayerId, position: i32) {
         }
         state.g_game.players[player_id.0 as usize].psprites[position as usize].sy =
             (32_i32 * FRACUNIT) as fixed_t;
-        let newstate: StateNum = weaponinfo[state.g_game.players[player.0 as usize].readyweapon as usize].readystate;
+        let newstate: StateNum =
+            weaponinfo[state.g_game.players[player.0 as usize].readyweapon as usize].readystate;
         P_SetPsprite(state, player_id, PSpriteNum::ps_weapon as i32, newstate);
     }
 }
@@ -373,7 +374,7 @@ pub fn A_Punch(state: &mut GameState, player_id: PlayerId, _position: i32) {
     let player_mo = state.g_game.players[player.0 as usize].mo.unwrap();
     let mut angle: angle_t;
     let mut damage: i32;
-    
+
     damage = (P_Random(&mut state.m_random) % 10_i32 + 1_i32) << 1_i32;
     if state.g_game.players[player.0 as usize].powers[PowerType::pw_strength as usize] != 0 {
         damage *= 10_i32;
@@ -412,8 +413,7 @@ pub fn A_Saw(state: &mut GameState, player_id: PlayerId, _position: i32) {
     let player = player_id;
     let player_mo = state.g_game.players[player.0 as usize].mo.unwrap();
     let mut angle: angle_t;
-    
-    
+
     let damage: i32 = 2_i32 * (P_Random(&mut state.m_random) % 10_i32 + 1_i32);
     angle = state.p_mobj.mo(player_mo).angle;
     angle = angle.wrapping_add(
@@ -554,7 +554,7 @@ pub fn P_BulletSlope(state: &mut GameState, mo: MobjId) {
 }
 pub fn P_GunShot(state: &mut GameState, mo: MobjId, accurate: bool) {
     let mut angle: angle_t;
-    
+
     let damage: i32 = 5_i32 * (P_Random(&mut state.m_random) % 3_i32 + 1_i32);
     angle = state.p_mobj.mo(mo).angle;
     if !accurate {

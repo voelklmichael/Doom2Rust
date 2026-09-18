@@ -121,7 +121,7 @@ pub const MAXDRAWSEGS: i32 = 256;
 pub fn R_RenderMaskedSegRange(state: &mut GameState, ds: &drawseg_t, x1: i32, x2: i32) {
     let mut index: u32;
     let mut lightnum: i32;
-    
+
     state.r_bsp.curline = ds.curline;
     state.r_bsp.frontsector = state.p_setup.seg(state.r_bsp.curline).frontsector;
     state.r_bsp.backsector = state.p_setup.seg(state.r_bsp.curline).backsector;
@@ -374,9 +374,8 @@ pub fn R_RenderSegLoop(state: &mut GameState) {
     }
 }
 pub fn R_StoreWallRange(state: &mut GameState, start: i32, stop: i32) {
-    
     let mut sineval: fixed_t;
-    
+
     let mut offsetangle: angle_t;
     let vtop: fixed_t;
     let mut lightnum: i32;

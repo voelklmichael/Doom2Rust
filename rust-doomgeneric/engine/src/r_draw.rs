@@ -126,7 +126,7 @@ pub fn R_DrawColumn(state: &mut GameState) {
     let mut count: i32;
     let mut idx: usize;
     let mut frac: fixed_t;
-    
+
     count = state.r_draw.dc_yh - state.r_draw.dc_yl;
     if count < 0_i32 {
         return;
@@ -167,8 +167,7 @@ pub fn R_DrawColumnLow(state: &mut GameState) {
     let mut idx: usize;
     let mut idx2: usize;
     let mut frac: fixed_t;
-    
-    
+
     count = state.r_draw.dc_yh - state.r_draw.dc_yl;
     if count < 0_i32 {
         return;
@@ -265,7 +264,7 @@ pub fn R_DrawFuzzColumnLow(state: &mut GameState) {
     let mut count: i32;
     let mut idx: usize;
     let mut idx2: usize;
-    
+
     if state.r_draw.dc_yl == 0 {
         state.r_draw.dc_yl = 1_i32;
     }
@@ -315,7 +314,7 @@ pub fn R_DrawTranslatedColumn(state: &mut GameState) {
     let mut count: i32;
     let mut idx: usize;
     let mut frac: fixed_t;
-    
+
     count = state.r_draw.dc_yh - state.r_draw.dc_yl;
     if count < 0_i32 {
         return;
@@ -354,8 +353,7 @@ pub fn R_DrawTranslatedColumnLow(state: &mut GameState) {
     let mut idx: usize;
     let mut idx2: usize;
     let mut frac: fixed_t;
-    
-    
+
     count = state.r_draw.dc_yh - state.r_draw.dc_yl;
     if count < 0_i32 {
         return;
@@ -418,7 +416,7 @@ pub fn R_InitTranslationTables(state: &mut GameState) {
 }
 pub fn R_DrawSpan(state: &mut GameState) {
     let mut position: u32;
-    
+
     let mut idx: usize;
     let mut count: i32;
     let mut spot: i32;
@@ -460,7 +458,7 @@ pub fn R_DrawSpan(state: &mut GameState) {
 }
 pub fn R_DrawSpanLow(state: &mut GameState) {
     let mut position: u32;
-    
+
     let mut xtemp: u32;
     let mut ytemp: u32;
     let mut idx: usize;
@@ -646,7 +644,6 @@ pub fn R_VideoErase(state: &mut GameState, ofs: u32, count: i32) {
     }
 }
 pub fn R_DrawViewBorder(state: &mut GameState) {
-    
     let mut side: i32;
     let mut ofs: i32;
     let mut i: i32;

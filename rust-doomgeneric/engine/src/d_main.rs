@@ -635,7 +635,6 @@ pub fn D_IdentifyVersion(state: &mut GameState) {
             state.doomstat.gamemode = GameMode_t::shareware;
         }
     } else {
-        
         state.doomstat.gamemode = GameMode_t::commercial;
         let p: i32 = M_CheckParmWithArgs(state, "-pack", 1_i32);
         if p > 0_i32 {
@@ -727,7 +726,6 @@ pub fn PrintDehackedBanners() {
     }
 }
 fn InitGameVersion(state: &mut GameState) {
-    
     let p: i32 = M_CheckParmWithArgs(state, "-gameversion", 1_i32);
     if p != 0 {
         let arg = state.m_argv.myargv[(p + 1_i32) as usize].as_bytes();

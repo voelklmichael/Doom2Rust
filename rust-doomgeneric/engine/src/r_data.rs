@@ -264,8 +264,6 @@ pub fn R_GenerateLookup(state: &mut GameState, texnum: i32) {
     }
 }
 pub fn R_GetColumn(state: &mut GameState, tex: i32, mut col: i32) -> ColumnSource {
-    
-    
     col &= state.r_data.texturewidthmask[tex as usize];
     let lump: i32 = state.r_data.texturecolumnlump[tex as usize][col as usize] as i32;
     let ofs: i32 = state.r_data.texturecolumnofs[tex as usize][col as usize] as i32;
@@ -314,15 +312,13 @@ pub fn R_InitTextures(state: &mut GameState) {
     let mut i: i32;
     let mut j: i32;
     let mut patchlookup: Vec<i32>;
-    
+
     let mut offset: i32;
     let mut maxoff: i32;
     let maxoff2: i32;
-    
+
     let numtextures2: i32;
-    
-    
-    
+
     // PNAMES/TEXTURE1/TEXTURE2 are on-disk WAD lumps (raw bytes, not typed
     // Rust structs), so each is captured as a plain byte buffer once here
     // and decoded field-by-field with explicit little-endian reads below --
@@ -377,7 +373,8 @@ pub fn R_InitTextures(state: &mut GameState) {
     state.r_data.textureheight = vec![0 as fixed_t; state.r_data.numtextures as usize];
     let temp1: i32 = W_GetNumForName(&mut state.w_wad, "S_START");
     let temp2: i32 = W_GetNumForName(&mut state.w_wad, "S_END") - 1_i32;
-    let temp3: i32 = (temp2 - temp1 + 63_i32) / 64_i32 + (state.r_data.numtextures + 63_i32) / 64_i32;
+    let temp3: i32 =
+        (temp2 - temp1 + 63_i32) / 64_i32 + (state.r_data.numtextures + 63_i32) / 64_i32;
     if I_ConsoleStdout() {
         print!("[");
         i = 0_i32;
@@ -534,7 +531,6 @@ pub fn R_InitSpriteLumps(state: &mut GameState) {
     }
 }
 pub fn R_InitColormaps(state: &mut GameState) {
-    
     let lump: i32 = W_GetNumForName(&mut state.w_wad, "COLORMAP");
     let lumplen = W_LumpLength(&mut state.w_wad, lump as u32) as usize;
     state.r_data.colormaps = W_LumpBytes(state, lump)[..lumplen].to_vec();
@@ -549,7 +545,6 @@ pub fn R_InitData(state: &mut GameState) {
     R_InitColormaps(state);
 }
 pub fn R_FlatNumForName(state: &mut GameState, name: &str) -> i32 {
-    
     let i: i32 = W_CheckNumForName(&mut state.w_wad, name);
     if i == -1_i32 {
         I_Error(&format!("R_FlatNumForName: {} not found", name));
@@ -557,7 +552,6 @@ pub fn R_FlatNumForName(state: &mut GameState, name: &str) -> i32 {
     i - state.r_data.firstflat
 }
 pub fn R_CheckTextureNumForName(state: &RDataState, name: &str) -> i32 {
-    
     if name.as_bytes().first() == Some(&b'-') {
         return 0_i32;
     }
@@ -573,7 +567,6 @@ pub fn R_CheckTextureNumForName(state: &RDataState, name: &str) -> i32 {
     -1_i32
 }
 pub fn R_TextureNumForName(state: &mut RDataState, name: &str) -> i32 {
-    
     let i: i32 = R_CheckTextureNumForName(state, name);
     if i == -1_i32 {
         I_Error(&format!("R_TextureNumForName: {} not found", name));

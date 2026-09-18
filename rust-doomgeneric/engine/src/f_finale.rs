@@ -766,8 +766,7 @@ fn F_DrawPatchCol(state: &mut IVideoState, x: i32, patch: &Patch, col: i32) {
 pub fn F_BunnyScroll(state: &mut GameState) {
     let mut scrolled: i32;
     let mut x: i32;
-    
-    
+
     let mut stage: i32;
     let p1: Patch = V_CachePatchName(state, "PFUB2");
     let p2: Patch = V_CachePatchName(state, "PFUB1");

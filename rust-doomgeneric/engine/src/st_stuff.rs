@@ -46,8 +46,8 @@ use crate::tables::ANG45;
 use crate::v_video::V_CachePatchNum;
 use crate::v_video::V_CopyRect;
 use crate::v_video::V_DrawPatch;
-use crate::w_wad::W_LumpBytes;
 use crate::w_wad::W_GetNumForName;
+use crate::w_wad::W_LumpBytes;
 
 pub struct StStuffState {
     pub st_backing_screen: Vec<byte>,
@@ -609,7 +609,6 @@ pub fn ST_Responder(state: &mut GameState, ev: &event_t) -> bool {
     false
 }
 pub fn ST_calcPainOffset(state: &mut GameState) -> i32 {
-    
     let health: i32 = if state.g_game.player_mut(state.st_stuff.plyr).health > 100_i32 {
         100_i32
     } else {

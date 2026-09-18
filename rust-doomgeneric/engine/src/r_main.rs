@@ -177,20 +177,7 @@ pub fn R_PointOnSide(x: fixed_t, y: fixed_t, node: &node_t) -> i32 {
     }
     1_i32
 }
-pub fn R_PointOnSegSide(
-    state: &mut GameState,
-    x: fixed_t,
-    y: fixed_t,
-    line: SegId,
-) -> i32 {
-    
-    
-    
-    
-    
-    
-    
-    
+pub fn R_PointOnSegSide(state: &mut GameState, x: fixed_t, y: fixed_t, line: SegId) -> i32 {
     let line_v1 = state.p_setup.vertexes[state.p_setup.seg(line).v1.0 as usize];
     let line_v2 = state.p_setup.vertexes[state.p_setup.seg(line).v2.0 as usize];
     let lx: fixed_t = line_v1.x;
@@ -280,12 +267,10 @@ pub fn R_PointToAngle2(
     R_PointToAngle(state, x2, y2)
 }
 pub fn R_PointToDist(state: &mut GameState, x: fixed_t, y: fixed_t) -> fixed_t {
-    
     let mut dx: fixed_t;
     let mut dy: fixed_t;
     let temp: fixed_t;
-    
-    
+
     dx = (x - state.r_main.viewx).abs() as fixed_t;
     dy = (y - state.r_main.viewy).abs() as fixed_t;
     if dy > dx {
@@ -305,17 +290,15 @@ pub fn R_PointToDist(state: &mut GameState, x: fixed_t, y: fixed_t) -> fixed_t {
 }
 pub fn R_ScaleFromGlobalAngle(state: &mut GameState, visangle: angle_t) -> fixed_t {
     let mut scale: fixed_t;
-    
-    
-    
-    
-    
-    
-    let anglea: angle_t = (ANG90 as angle_t).wrapping_add(visangle.wrapping_sub(state.r_main.viewangle));
-    let angleb: angle_t = (ANG90 as angle_t).wrapping_add(visangle.wrapping_sub(state.r_segs.rw_normalangle));
+
+    let anglea: angle_t =
+        (ANG90 as angle_t).wrapping_add(visangle.wrapping_sub(state.r_main.viewangle));
+    let angleb: angle_t =
+        (ANG90 as angle_t).wrapping_add(visangle.wrapping_sub(state.r_segs.rw_normalangle));
     let sinea: i32 = finesine[(anglea >> ANGLETOFINESHIFT) as usize];
     let sineb: i32 = finesine[(angleb >> ANGLETOFINESHIFT) as usize];
-    let num: fixed_t = FixedMul(state.r_main.projection, sineb as fixed_t) << state.r_main.detailshift;
+    let num: fixed_t =
+        FixedMul(state.r_main.projection, sineb as fixed_t) << state.r_main.detailshift;
     let den: i32 = FixedMul(state.r_segs.rw_distance, sinea as fixed_t);
     if den > num >> 16_i32 {
         scale = FixedDiv(num, den as fixed_t);
@@ -333,7 +316,7 @@ pub fn R_InitTextureMapping(state: &mut GameState) {
     let mut i: i32;
     let mut x: i32;
     let mut t: i32;
-    
+
     let focallength: fixed_t = FixedDiv(
         state.r_main.centerxfrac,
         finetangent[(FINEANGLES / 4_i32 + FIELDOFVIEW / 2_i32) as usize],

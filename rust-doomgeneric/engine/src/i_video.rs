@@ -136,8 +136,7 @@ pub struct col_t {
 static RGB565_PALETTE: [uint16_t; 256] = [0; 256];
 pub fn I_InitGraphics(state: &mut GameState) {
     let mut i: i32;
-    
-    
+
     state.i_video.s_Fb = FB_ScreenInfo::ZERO;
     state.i_video.s_Fb.xres = DOOMGENERIC_RESX as uint32_t;
     state.i_video.s_Fb.yres = DOOMGENERIC_RESY as uint32_t;

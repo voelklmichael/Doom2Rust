@@ -155,7 +155,6 @@ fn saveg_write32(state: &mut PSavegState, value: i32) {
     saveg_write8(state, (value >> 24_i32 & 0xff_i32) as byte);
 }
 fn saveg_read_pad(state: &mut PSavegState) {
-    
     let mut i: i32;
     let pos = state
         .save_stream
@@ -171,7 +170,6 @@ fn saveg_read_pad(state: &mut PSavegState) {
     }
 }
 fn saveg_write_pad(state: &mut PSavegState) {
-    
     let mut i: i32;
     let pos = state
         .save_stream
@@ -237,7 +235,6 @@ fn saveg_write_thinker_t(state: &mut PSavegState, str: &mut thinker_t) {
     saveg_write_actionf_t(state, &mut str.function);
 }
 fn saveg_read_mobj_t(state: &mut PSavegState, str: &mut mobj_t) {
-    
     saveg_read_thinker_t(state, &mut str.thinker);
     str.x = saveg_read32(state) as fixed_t;
     str.y = saveg_read32(state) as fixed_t;
@@ -351,7 +348,6 @@ fn saveg_write_ticcmd_t(state: &mut PSavegState, str: &mut ticcmd_t) {
     saveg_write8(state, str.buttons);
 }
 fn saveg_read_pspdef_t(state: &mut PSavegState, str: &mut pspdef_t) {
-    
     let state_num: i32 = saveg_read32(state);
     if state_num > 0_i32 {
         str.state = Some(StateId(state_num as u32));
@@ -534,7 +530,6 @@ fn saveg_read_ceiling_e(state: &mut PSavegState) -> CeilingE {
     }
 }
 fn saveg_read_ceiling_t(state: &mut PSavegState, str: &mut ceiling_t) {
-    
     saveg_read_thinker_t(state, &mut str.thinker);
     str.type_0 = saveg_read_ceiling_e(state);
     let sector: i32 = saveg_read32(state);
@@ -573,7 +568,6 @@ fn saveg_read_vldoor_e(state: &mut PSavegState) -> VldoorE {
     }
 }
 fn saveg_read_vldoor_t(state: &mut PSavegState, str: &mut vldoor_t) {
-    
     saveg_read_thinker_t(state, &mut str.thinker);
     str.type_0 = saveg_read_vldoor_e(state);
     let sector: i32 = saveg_read32(state);
@@ -613,7 +607,6 @@ fn saveg_read_floor_e(state: &mut PSavegState) -> FloorE {
     }
 }
 fn saveg_read_floormove_t(state: &mut PSavegState, str: &mut floormove_t) {
-    
     saveg_read_thinker_t(state, &mut str.thinker);
     str.type_0 = saveg_read_floor_e(state);
     str.crush = saveg_read32(state) != 0;
@@ -656,7 +649,6 @@ fn saveg_read_plattype_e(state: &mut PSavegState) -> PlattypeE {
     }
 }
 fn saveg_read_plat_t(state: &mut PSavegState, str: &mut plat_t) {
-    
     saveg_read_thinker_t(state, &mut str.thinker);
     let sector: i32 = saveg_read32(state);
     str.sector = SectorId(sector as u32);
@@ -686,7 +678,6 @@ fn saveg_write_plat_t(state: &mut PSavegState, str: &mut plat_t) {
     saveg_write32(state, str.type_0 as i32);
 }
 fn saveg_read_lightflash_t(state: &mut PSavegState, str: &mut lightflash_t) {
-    
     saveg_read_thinker_t(state, &mut str.thinker);
     let sector: i32 = saveg_read32(state);
     str.sector = SectorId(sector as u32);
@@ -706,7 +697,6 @@ fn saveg_write_lightflash_t(state: &mut PSavegState, str: &mut lightflash_t) {
     saveg_write32(state, str.mintime);
 }
 fn saveg_read_strobe_t(state: &mut PSavegState, str: &mut strobe_t) {
-    
     saveg_read_thinker_t(state, &mut str.thinker);
     let sector: i32 = saveg_read32(state);
     str.sector = SectorId(sector as u32);
@@ -726,7 +716,6 @@ fn saveg_write_strobe_t(state: &mut PSavegState, str: &mut strobe_t) {
     saveg_write32(state, str.brighttime);
 }
 fn saveg_read_glow_t(state: &mut PSavegState, str: &mut glow_t) {
-    
     saveg_read_thinker_t(state, &mut str.thinker);
     let sector: i32 = saveg_read32(state);
     str.sector = SectorId(sector as u32);
@@ -786,9 +775,7 @@ pub fn P_WriteSaveGameHeader(state: &mut GameState, description: &str) {
 }
 pub fn P_ReadSaveGameHeader(state: &mut GameState) -> bool {
     let mut i: i32;
-    
-    
-    
+
     let mut read_vcheck: [u8; 16] = [0; 16];
     i = 0_i32;
     while i < SAVESTRINGSIZE {
@@ -826,7 +813,6 @@ pub fn P_ReadSaveGameHeader(state: &mut GameState) -> bool {
     true
 }
 pub fn P_ReadSaveGameEOF(state: &mut GameState) -> bool {
-    
     let value: i32 = saveg_read8(&mut state.p_saveg) as i32;
     value == SAVEGAME_EOF
 }

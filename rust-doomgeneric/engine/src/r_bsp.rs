@@ -173,11 +173,9 @@ pub fn R_ClearClipSegs(state: &mut GameState) {
     state.r_bsp.newend = 2;
 }
 pub fn R_AddLine(state: &mut GameState, line: SegId) {
-    
-    
     let mut angle1: angle_t;
     let mut angle2: angle_t;
-    
+
     let mut tspan: angle_t;
     state.r_bsp.curline = line;
     let line_v1 = state.p_setup.vertexes[state.p_setup.seg(line).v1.0 as usize];
@@ -301,18 +299,11 @@ pub static checkcoord: [[i32; 4]; 12] = [
     [0; 4],
 ];
 pub fn R_CheckBBox(state: &mut GameState, bspcoord: [fixed_t; 4]) -> bool {
-    
-    
-    
-    
-    
-    
-    
     let mut angle1: angle_t;
     let mut angle2: angle_t;
-    
+
     let mut tspan: angle_t;
-    
+
     let mut sx2: i32;
     let boxx: i32 = if state.r_main.viewx <= bspcoord[BoxIndex::BOXLEFT as usize] {
         0_i32

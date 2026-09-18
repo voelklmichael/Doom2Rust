@@ -139,7 +139,6 @@ fn GetAdjustedTime(state: &mut GameState) -> i32 {
     time_ms * TICRATE / 1000_i32
 }
 fn BuildNewTic(state: &mut GameState) -> bool {
-    
     let mut cmd: ticcmd_t = ticcmd_t {
         forwardmove: 0,
         sidemove: 0,
@@ -194,7 +193,6 @@ fn BuildNewTic(state: &mut GameState) -> bool {
     true
 }
 pub fn NetUpdate(state: &mut GameState) {
-    
     let mut newtics: i32;
     let mut i: i32;
     if state.d_loop.singletics {
@@ -243,7 +241,6 @@ pub fn D_InitNetGame(state: &mut GameState, connect_data: &mut net_connect_data_
 }
 pub fn D_QuitNetGame(_state: &mut GameState) {}
 fn GetLowTic(state: &mut GameState) -> i32 {
-    
     let lowtic: i32 = state.d_loop.maketic;
     lowtic
 }
@@ -319,9 +316,7 @@ fn SinglePlayerClear(set: &mut ticcmd_set_t) {
 pub fn TryRunTics(state: &mut GameState) {
     let mut i: i32;
     let mut lowtic: i32;
-    
-    
-    
+
     let mut counts: i32;
     let entertic: i32 = I_GetTime(state) / state.d_loop.ticdup;
     let realtics: i32 = entertic - state.d_loop.try_run_tics_oldentertics;

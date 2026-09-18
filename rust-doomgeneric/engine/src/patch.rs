@@ -60,7 +60,6 @@ impl Patch {
             offset: self.columnofs(column),
         }
     }
-
 }
 
 impl<'a> Iterator for Posts<'a> {

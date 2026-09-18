@@ -137,13 +137,7 @@ pub fn wipe_StartScreen(state: &mut GameState) -> i32 {
     state.f_wipe.wipe_scr_start = I_ReadScreen(state);
     0_i32
 }
-pub fn wipe_EndScreen(
-    state: &mut GameState,
-    x: i32,
-    y_0: i32,
-    width: i32,
-    height: i32,
-) -> i32 {
+pub fn wipe_EndScreen(state: &mut GameState, x: i32, y_0: i32, width: i32, height: i32) -> i32 {
     state.f_wipe.wipe_scr_end = I_ReadScreen(state);
     let wipe_scr_start = std::mem::take(&mut state.f_wipe.wipe_scr_start);
     V_DrawBlock(state, Screen::Video, x, y_0, width, height, &wipe_scr_start);
@@ -158,7 +152,6 @@ pub fn wipe_ScreenWipe(
     height: i32,
     ticks: i32,
 ) -> i32 {
-    
     let wipes: [WipeFn; 6] = [
         wipe_initColorXForm,
         wipe_doColorXForm,

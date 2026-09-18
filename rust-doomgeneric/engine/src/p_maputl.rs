@@ -205,16 +205,7 @@ pub fn P_AproxDistance(mut dx: fixed_t, mut dy: fixed_t) -> fixed_t {
     }
     dx + dy - (dy >> 1_i32)
 }
-pub fn P_PointOnLineSide(
-    state: &mut GameState,
-    x: fixed_t,
-    y: fixed_t,
-    line: LineId,
-) -> i32 {
-    
-    
-    
-    
+pub fn P_PointOnLineSide(state: &mut GameState, x: fixed_t, y: fixed_t, line: LineId) -> i32 {
     let line = state.p_setup.line(line);
     let line_v1 = state.p_setup.vertexes[line.v1.0 as usize];
     if line.dx == 0 {
@@ -734,10 +725,6 @@ pub fn P_PathTraverse<F: FnMut(&mut GameState, intercept_t) -> bool>(
     flags: i32,
     trav: F,
 ) -> bool {
-    
-    
-    
-    
     let xstep: fixed_t;
     let ystep: fixed_t;
     let mut partial: fixed_t;

@@ -150,7 +150,7 @@ pub const DEFAULT_SPECHIT_MAGIC: i32 = 0x1c09c98;
 pub fn PIT_StompThing(state: &mut GameState, thing_id: MobjId) -> bool {
     let thing = thing_id;
     let tmthing = state.p_map.tmthing.unwrap();
-    
+
     if state.p_mobj.mo(thing).flags & MF_SHOOTABLE == 0 {
         return true;
     }
@@ -169,19 +169,10 @@ pub fn PIT_StompThing(state: &mut GameState, thing_id: MobjId) -> bool {
     P_DamageMobj(state, thing, Some(tmthing), Some(tmthing), 10000_i32);
     true
 }
-pub fn P_TeleportMove(
-    state: &mut GameState,
-    thing: MobjId,
-    x: fixed_t,
-    y: fixed_t,
-) -> bool {
-    
-    
-    
-    
+pub fn P_TeleportMove(state: &mut GameState, thing: MobjId, x: fixed_t, y: fixed_t) -> bool {
     let mut bx: i32;
     let mut by: i32;
-    
+
     state.p_map.tmthing = Some(thing);
     state.p_map.tmflags = state.p_mobj.mo(thing).flags;
     state.p_map.tmx = x;
@@ -284,7 +275,7 @@ pub fn PIT_CheckLine(state: &mut GameState, ld: LineId) -> bool {
 pub fn PIT_CheckThing(state: &mut GameState, thing_id: MobjId) -> bool {
     let thing = thing_id;
     let tmthing = state.p_map.tmthing.unwrap();
-    
+
     let solid: bool;
     let damage: i32;
     if state.p_mobj.mo(thing).flags & (MF_SOLID | MF_SPECIAL | MF_SHOOTABLE) == 0 {
@@ -368,19 +359,14 @@ pub fn PIT_CheckThing(state: &mut GameState, thing_id: MobjId) -> bool {
     }
     state.p_mobj.mo(thing).flags & MF_SOLID == 0
 }
-pub fn P_CheckPosition(
-    state: &mut GameState,
-    thing: MobjId,
-    x: fixed_t,
-    y: fixed_t,
-) -> bool {
+pub fn P_CheckPosition(state: &mut GameState, thing: MobjId, x: fixed_t, y: fixed_t) -> bool {
     let mut xl: i32;
     let mut xh: i32;
     let mut yl: i32;
     let mut yh: i32;
     let mut bx: i32;
     let mut by: i32;
-    
+
     state.p_map.tmthing = Some(thing);
     state.p_map.tmflags = state.p_mobj.mo(thing).flags;
     state.p_map.tmx = x;
@@ -450,8 +436,6 @@ pub fn P_CheckPosition(
     true
 }
 pub fn P_TryMove(state: &mut GameState, thing: MobjId, x: fixed_t, y: fixed_t) -> bool {
-    
-    
     let mut side: i32;
     let mut oldside: i32;
     let mut ld: LineId;
@@ -532,12 +516,10 @@ pub fn P_ThingHeightClip(state: &mut GameState, thing: MobjId) -> bool {
     true
 }
 pub fn P_HitSlideLine(state: &mut GameState, ld: LineId) {
-    
     let mut lineangle: angle_t;
-    
+
     let mut deltaangle: angle_t;
-    
-    
+
     let ldv = state.p_setup.line(ld);
     if ldv.slopetype == SlopeType::ST_HORIZONTAL {
         state.p_map.tmymove = 0_i32 as fixed_t;
@@ -1057,8 +1039,7 @@ pub fn P_UseLines(state: &mut GameState, player: PlayerId) {
 }
 pub fn PIT_RadiusAttack(state: &mut GameState, thing_id: MobjId) -> bool {
     let thing = thing_id;
-    
-    
+
     let mut dist: fixed_t;
     if state.p_mobj.mo(thing).flags & MF_SHOOTABLE == 0 {
         return true;
@@ -1166,9 +1147,7 @@ pub fn P_ChangeSector(state: &mut GameState, sector: SectorId, crunch: bool) -> 
     state.p_map.nofit
 }
 fn SpechitOverrun(state: &mut GameState, ld: LineId) {
-    
     if state.p_map.baseaddr == 0_u32 {
-        
         let p: i32 = M_CheckParmWithArgs(state, "-spechit", 1_i32);
         if p > 0_i32 {
             let mut baseaddr: i32 = 0;

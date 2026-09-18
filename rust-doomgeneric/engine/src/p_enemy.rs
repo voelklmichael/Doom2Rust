@@ -278,10 +278,8 @@ pub static yspeed: [fixed_t; 8] = [
     0_i32, 47000_i32, FRACUNIT, 47000_i32, 0_i32, -47000_i32, -FRACUNIT, -47000_i32,
 ];
 pub fn P_Move(state: &mut GameState, actor: MobjId) -> bool {
-    
-    
     let mut ld: LineId;
-    
+
     let mut good: bool;
     if state.p_mobj.mo(actor).movedir == DirType::DI_NODIR as i32 {
         return false;
@@ -339,12 +337,9 @@ pub fn P_TryWalk(state: &mut GameState, actor: MobjId) -> bool {
     true
 }
 pub fn P_NewChaseDir(state: &mut GameState, actor: MobjId) {
-    
-    
     let mut d: [DirType; 3] = [DirType::DI_EAST; 3];
     let mut tdir: i32;
-    
-    
+
     let target = match state
         .p_mobj
         .mo(actor)
@@ -505,7 +500,7 @@ pub fn A_Look(state: &mut GameState, id: MobjId) {
     {
         let actor = id;
         let current_block: u64;
-        
+
         state.p_mobj.mo_mut(actor).threshold = 0_i32;
         let targ: Option<MobjId> = state
             .p_setup
@@ -537,18 +532,13 @@ pub fn A_Look(state: &mut GameState, id: MobjId) {
             .seesound
             != 0
         {
-            
             let sound: i32 = match state
                 .info
                 .mobjinfo_mut(state.p_mobj.mo(actor).type_0)
                 .seesound
             {
-                36..=38 => {
-                    SfxName::sfx_posit1 as i32 + P_Random(&mut state.m_random) % 3_i32
-                }
-                39 | 40 => {
-                    SfxName::sfx_bgsit1 as i32 + P_Random(&mut state.m_random) % 2_i32
-                }
+                36..=38 => SfxName::sfx_posit1 as i32 + P_Random(&mut state.m_random) % 3_i32,
+                39 | 40 => SfxName::sfx_bgsit1 as i32 + P_Random(&mut state.m_random) % 2_i32,
                 _ => {
                     state
                         .info
@@ -716,8 +706,7 @@ pub fn A_PosAttack(state: &mut GameState, id: MobjId) {
     {
         let actor = id;
         let mut angle: i32;
-        
-        
+
         if state.p_mobj.mo(actor).target.is_none() {
             return;
         }
@@ -742,9 +731,9 @@ pub fn A_SPosAttack(state: &mut GameState, id: MobjId) {
         let actor = id;
         let mut i: i32;
         let mut angle: i32;
-        
+
         let mut damage: i32;
-        
+
         if state.p_mobj.mo(actor).target.is_none() {
             return;
         }
@@ -772,10 +761,7 @@ pub fn A_SPosAttack(state: &mut GameState, id: MobjId) {
 pub fn A_CPosAttack(state: &mut GameState, id: MobjId) {
     {
         let actor = id;
-        
-        
-        
-        
+
         if state.p_mobj.mo(actor).target.is_none() {
             return;
         }
@@ -783,7 +769,8 @@ pub fn A_CPosAttack(state: &mut GameState, id: MobjId) {
         A_FaceTarget(state, actor);
         let bangle: i32 = state.p_mobj.mo(actor).angle as i32;
         let slope: i32 = P_AimLineAttack(state, Some(actor), bangle as angle_t, MISSILERANGE);
-        let angle: i32 = bangle + ((P_Random(&mut state.m_random) - P_Random(&mut state.m_random)) << 20_i32);
+        let angle: i32 =
+            bangle + ((P_Random(&mut state.m_random) - P_Random(&mut state.m_random)) << 20_i32);
         let damage: i32 = (P_Random(&mut state.m_random) % 5_i32 + 1_i32) * 3_i32;
         P_LineAttack(
             state,
@@ -965,7 +952,7 @@ pub fn A_BruisAttack(state: &mut GameState, id: MobjId) {
 pub fn A_SkelMissile(state: &mut GameState, id: MobjId) {
     {
         let actor = id;
-        
+
         let target = match state
             .p_mobj
             .mo(actor)
@@ -990,9 +977,7 @@ pub fn A_Tracer(state: &mut GameState, id: MobjId) {
         let actor = id;
         let mut exact: angle_t;
         let mut dist: fixed_t;
-        
-        
-        
+
         if state.d_loop.gametic & 3_i32 != 0 {
             return;
         }
@@ -1110,8 +1095,7 @@ pub fn A_SkelFist(state: &mut GameState, id: MobjId) {
 }
 pub fn PIT_VileCheck(state: &mut GameState, thing_id: MobjId) -> bool {
     let thing = thing_id;
-    
-    
+
     if state.p_mobj.mo(thing).flags & MF_CORPSE == 0 {
         return true;
     }
@@ -1234,9 +1218,7 @@ pub fn A_FireCrackle(state: &mut GameState, id: MobjId) {
 pub fn A_Fire(state: &mut GameState, id: MobjId) {
     {
         let actor = id;
-        
-        
-        
+
         let dest: Option<MobjId> = state
             .p_mobj
             .mo(actor)
@@ -1268,7 +1250,7 @@ pub fn A_Fire(state: &mut GameState, id: MobjId) {
 pub fn A_VileTarget(state: &mut GameState, id: MobjId) {
     {
         let actor = id;
-        
+
         let target = match state
             .p_mobj
             .mo(actor)
@@ -1295,8 +1277,7 @@ pub fn A_VileTarget(state: &mut GameState, id: MobjId) {
 pub fn A_VileAttack(state: &mut GameState, id: MobjId) {
     {
         let actor = id;
-        
-        
+
         let target = match state
             .p_mobj
             .mo(actor)
@@ -1342,9 +1323,7 @@ pub fn A_FatRaise(state: &mut GameState, id: MobjId) {
 pub fn A_FatAttack1(state: &mut GameState, id: MobjId) {
     {
         let actor = id;
-        
-        
-        
+
         A_FaceTarget(state, actor);
         state.p_mobj.mo_mut(actor).angle = state
             .p_mobj
@@ -1376,9 +1355,7 @@ pub fn A_FatAttack1(state: &mut GameState, id: MobjId) {
 pub fn A_FatAttack2(state: &mut GameState, id: MobjId) {
     {
         let actor = id;
-        
-        
-        
+
         A_FaceTarget(state, actor);
         state.p_mobj.mo_mut(actor).angle = state
             .p_mobj
@@ -1414,7 +1391,7 @@ pub fn A_FatAttack3(state: &mut GameState, id: MobjId) {
     {
         let actor = id;
         let mut mo: MobjId;
-        
+
         let mut an: i32;
         A_FaceTarget(state, actor);
         let target_subst = state
@@ -1460,8 +1437,7 @@ pub const SKULLSPEED: i32 = 20 * FRACUNIT;
 pub fn A_SkullAttack(state: &mut GameState, id: MobjId) {
     {
         let actor = id;
-        
-        
+
         let mut dist: i32;
         let dest: MobjId = match state
             .p_mobj
@@ -1497,12 +1473,6 @@ pub fn A_SkullAttack(state: &mut GameState, id: MobjId) {
     }
 }
 pub fn A_PainShootSkull(state: &mut GameState, actor: MobjId, angle: angle_t) {
-    
-    
-    
-    
-    
-    
     let mut count: i32 = 0;
     count += P_MobjThinkerIds(state)
         .into_iter()
@@ -1520,7 +1490,8 @@ pub fn A_PainShootSkull(state: &mut GameState, actor: MobjId, angle: angle_t) {
                 .radius
                 + state.info.mobjinfo[MobjType::MT_SKULL as usize].radius)
             / 2_i32;
-    let x: fixed_t = state.p_mobj.mo(actor).x + FixedMul(prestep as fixed_t, finecosine[an as usize]);
+    let x: fixed_t =
+        state.p_mobj.mo(actor).x + FixedMul(prestep as fixed_t, finecosine[an as usize]);
     let y: fixed_t = state.p_mobj.mo(actor).y + FixedMul(prestep as fixed_t, finesine[an as usize]);
     let z: fixed_t = (state.p_mobj.mo(actor).z + 8_i32 * FRACUNIT) as fixed_t;
     let newmobj: MobjId = P_SpawnMobj(state, x, y, z, MobjType::MT_SKULL);
@@ -1569,19 +1540,15 @@ pub fn A_PainDie(state: &mut GameState, id: MobjId) {
 pub fn A_Scream(state: &mut GameState, id: MobjId) {
     {
         let actor = id;
-        
+
         let sound: i32 = match state
             .info
             .mobjinfo_mut(state.p_mobj.mo(actor).type_0)
             .deathsound
         {
             0 => return,
-            59..=61 => {
-                SfxName::sfx_podth1 as i32 + P_Random(&mut state.m_random) % 3_i32
-            }
-            62 | 63 => {
-                SfxName::sfx_bgdth1 as i32 + P_Random(&mut state.m_random) % 2_i32
-            }
+            59..=61 => SfxName::sfx_podth1 as i32 + P_Random(&mut state.m_random) % 3_i32,
+            62 | 63 => SfxName::sfx_bgdth1 as i32 + P_Random(&mut state.m_random) % 2_i32,
             _ => {
                 state
                     .info
@@ -1836,10 +1803,7 @@ pub fn A_BrainScream(state: &mut GameState, id: MobjId) {
 pub fn A_BrainExplode(state: &mut GameState, id: MobjId) {
     {
         let mo = id;
-        
-        
-        
-        
+
         let x: i32 = state.p_mobj.mo(mo).x
             + (P_Random(&mut state.m_random) - P_Random(&mut state.m_random)) * 2048_i32;
         let y: i32 = state.p_mobj.mo(mo).y;
@@ -1865,8 +1829,7 @@ pub fn A_BrainDie(state: &mut GameState, _id: MobjId) {
 pub fn A_BrainSpit(state: &mut GameState, id: MobjId) {
     {
         let mo = id;
-        
-        
+
         state.p_enemy.easy ^= 1_i32;
         if state.g_game.gameskill <= SkillType::sk_easy && state.p_enemy.easy == 0 {
             return;
@@ -1897,11 +1860,7 @@ pub fn A_SpawnSound(state: &mut GameState, id: MobjId) {
 pub fn A_SpawnFly(state: &mut GameState, id: MobjId) {
     {
         let mo = id;
-        
-        
-        
-        
-        
+
         state.p_mobj.mo_mut(mo).reactiontime -= 1;
         if state.p_mobj.mo(mo).reactiontime != 0 {
             return;

@@ -519,8 +519,7 @@ pub fn AM_addMark(state: &mut GameState) {
 }
 pub fn AM_findMinMaxBoundaries(state: &mut GameState) {
     let mut i: i32;
-    
-    
+
     state.am_map.min_y = INT_MAX as fixed_t;
     state.am_map.min_x = state.am_map.min_y;
     state.am_map.max_y = -INT_MAX as fixed_t;
@@ -1006,12 +1005,7 @@ pub fn AM_clipMline(state: &mut GameState, ml: &mline_t, fl: &mut fline_t) -> bo
 pub fn AM_drawFline(state: &mut GameState, fl: &fline_t, color: i32) {
     let mut x: i32;
     let mut y: i32;
-    
-    
-    
-    
-    
-    
+
     let mut d: i32;
     if fl.a.x < 0_i32
         || fl.a.x >= state.am_map.f_w
@@ -1177,7 +1171,6 @@ pub fn AM_drawWalls(state: &mut GameState) {
     }
 }
 pub fn AM_rotate(x: &mut fixed_t, y: &mut fixed_t, a: angle_t) {
-    
     let tmpx: fixed_t = FixedMul(*x, finecosine[(a >> ANGLETOFINESHIFT) as usize])
         - FixedMul(*y, finesine[(a >> ANGLETOFINESHIFT) as usize]);
     *y = FixedMul(*x, finesine[(a >> ANGLETOFINESHIFT) as usize])

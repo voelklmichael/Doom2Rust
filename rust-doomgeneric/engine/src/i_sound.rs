@@ -134,8 +134,6 @@ fn InitSfxModule(state: &mut ISoundState, use_sfx_prefix: bool) {
     }
 }
 pub fn I_InitSound(state: &mut GameState, use_sfx_prefix: bool) {
-    
-    
     let nosound: bool = M_CheckParm(state, "-nosound") > 0_i32;
     let nosfx: bool = M_CheckParm(state, "-nosfx") > 0_i32;
     if !nosound && !state.i_video.screensaver_mode && !nosfx {
