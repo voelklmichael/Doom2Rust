@@ -8,7 +8,7 @@ use crate::i_input::I_GetEvent;
 use crate::i_system::I_Error;
 use crate::m_argv::{M_ArgvAtoi, M_CheckParmWithArgs};
 use crate::m_fixed::INT_MAX;
-use crate::mem_compat::{memcpy, memset};
+use crate::mem_compat::{memset};
 use crate::stdint_types::size_t;
 use crate::stdint_types::uint32_t;
 use crate::stdint_types::{byte, uint8_t};
@@ -369,12 +369,8 @@ pub unsafe fn I_FinishUpdate(state: &mut GameState) {
     }
     state.platform.draw_frame();
 }
-pub unsafe fn I_ReadScreen(state: &mut GameState, mut scr: *mut byte) {
-    memcpy(
-        scr as *mut ::core::ffi::c_void,
-        state.i_video.I_VideoBuffer.as_ptr() as *const ::core::ffi::c_void,
-        (SCREENWIDTH * SCREENHEIGHT) as size_t,
-    );
+pub fn I_ReadScreen(state: &GameState) -> Vec<byte> {
+    state.i_video.I_VideoBuffer[..(SCREENWIDTH * SCREENHEIGHT) as usize].to_vec()
 }
 pub unsafe fn I_SetPalette(state: &mut GameState, mut palette: *mut byte) {
     let mut i: i32 = 0;

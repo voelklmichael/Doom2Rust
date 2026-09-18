@@ -17,6 +17,7 @@ use crate::doomdef::SCREENWIDTH;
 use crate::doomdef::TICRATE;
 use crate::g_game::G_DeferedInitNew;
 use crate::game_state::GameState;
+use crate::v_video::Screen;
 use crate::i_video::I_SetPalette;
 use crate::m_cheat::cheatseq_t;
 use crate::m_cheat::cht_CheckCheat;
@@ -425,27 +426,25 @@ pub const ST_MAXAMMO3X: i32 = 314;
 pub const ST_MAXAMMO3Y: i32 = 185;
 pub fn ST_refreshBackground(state: &mut GameState) {
     if state.st_stuff.st_statusbaron {
-        let st_backing_screen = state.st_stuff.st_backing_screen.as_mut_ptr();
+        let st_backing_screen = Screen::StatusBar;
         let sbar_patch = V_CachePatchNum(state, state.st_stuff.sbar);
-        unsafe { V_DrawPatch(state, st_backing_screen, ST_X, 0_i32, sbar_patch) };
+        V_DrawPatch(state, st_backing_screen, ST_X, 0_i32, &sbar_patch);
         if state.g_game.netgame {
             let faceback_patch = V_CachePatchNum(state, state.st_stuff.faceback);
-            unsafe { V_DrawPatch(state, st_backing_screen, ST_FX, 0_i32, faceback_patch) };
+            V_DrawPatch(state, st_backing_screen, ST_FX, 0_i32, &faceback_patch);
         }
-        let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
-        unsafe {
-            V_CopyRect(
-                state,
-                dest_screen,
-                ST_X,
-                0_i32,
-                st_backing_screen,
-                ST_WIDTH,
-                ST_HEIGHT,
-                ST_X,
-                ST_Y,
-            )
-        };
+        let dest_screen = Screen::Video;
+        V_CopyRect(
+            state,
+            dest_screen,
+            ST_X,
+            0_i32,
+            st_backing_screen,
+            ST_WIDTH,
+            ST_HEIGHT,
+            ST_X,
+            ST_Y,
+        );
     }
 }
 pub unsafe fn ST_Responder(state: &mut GameState, mut ev: &event_t) -> bool {

@@ -9,7 +9,8 @@ use crate::doomdef::MAXPLAYERS;
 use crate::doomdef::SCREENHEIGHT;
 use crate::doomdef::SCREENWIDTH;
 use crate::game_state::GameState;
-use crate::hu_lib::patch_t;
+use crate::v_video::Screen;
+use crate::v_video::V_CachePatchNum;
 use crate::m_cheat::cheatseq_t;
 use crate::m_cheat::cht_CheckCheat;
 use crate::m_fixed::fixed_t;
@@ -1445,9 +1446,9 @@ pub fn AM_drawMarks(state: &mut GameState) {
                 && fy <= state.am_map.f_h - h
             {
                 let lumpnum = state.am_map.marknums[i as usize];
-                let patch = W_CacheLumpNum(state, lumpnum) as *mut patch_t;
-                let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
-                unsafe { V_DrawPatch(state, dest_screen, fx, fy, patch) };
+                let patch = V_CachePatchNum(state, lumpnum);
+                let dest_screen = Screen::Video;
+                V_DrawPatch(state, dest_screen, fx, fy, &patch);
             }
         }
         i += 1;
@@ -1478,6 +1479,6 @@ pub fn AM_Drawer(state: &mut GameState) {
         state.am_map.f_w,
         state.am_map.f_h,
     );
-    let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
+    let dest_screen = Screen::Video;
     V_MarkRect(state, dest_screen, f_x, f_y, f_w, f_h);
 }

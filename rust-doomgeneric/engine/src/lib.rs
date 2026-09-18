@@ -49,6 +49,7 @@ pub mod m_misc;
 pub mod m_random;
 pub mod mem_compat;
 pub mod p_ceilng;
+pub mod patch;
 pub mod p_doors;
 pub mod p_enemy;
 pub mod p_floor;

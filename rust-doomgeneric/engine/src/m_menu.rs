@@ -1,7 +1,6 @@
 use crate::d_event::{event_t, GameScreenState};
 use crate::d_main::D_StartTitle;
 use crate::dstrings::{doom1_endmsg, doom2_endmsg};
-use crate::hu_lib::patch_t;
 use crate::i_system::I_Error;
 use crate::w_wad::W_CacheLumpName;
 
@@ -17,6 +16,8 @@ use crate::g_game::G_LoadGame;
 use crate::g_game::G_SaveGame;
 use crate::g_game::G_ScreenShot;
 use crate::game_state::GameState;
+use crate::v_video::Screen;
+use crate::v_video::V_CachePatchName;
 use crate::hu_stuff::HU_FONTSIZE;
 use crate::hu_stuff::HU_FONTSTART;
 use crate::i_system::I_Quit;
@@ -648,9 +649,9 @@ pub fn M_ReadSaveStrings(state: &mut GameState) {
 }
 pub fn M_DrawLoad(state: &mut GameState) {
     let mut i: i32 = 0;
-    let __wcache890_24 = W_CacheLumpName(state, "M_LOADG") as *mut patch_t;
-    let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
-    V_DrawPatchDirect(state, dest_screen, 72_i32, 28_i32, __wcache890_24);
+    let __wcache890_24 = V_CachePatchName(state, "M_LOADG");
+    let dest_screen = Screen::Video;
+    V_DrawPatchDirect(state, dest_screen, 72_i32, 28_i32, &__wcache890_24);
     i = 0_i32;
     while i < load_end as i32 {
         let loaddef_x = state.m_menu.defs.LoadDef.x as i32;
@@ -663,20 +664,20 @@ pub fn M_DrawLoad(state: &mut GameState) {
 }
 pub fn M_DrawSaveLoadBorder(state: &mut GameState, mut x: i32, mut y: i32) {
     let mut i: i32 = 0;
-    let __wcache908_23 = W_CacheLumpName(state, "M_LSLEFT") as *mut patch_t;
-    let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
-    V_DrawPatchDirect(state, dest_screen, x - 8_i32, y + 7_i32, __wcache908_23);
+    let __wcache908_23 = V_CachePatchName(state, "M_LSLEFT");
+    let dest_screen = Screen::Video;
+    V_DrawPatchDirect(state, dest_screen, x - 8_i32, y + 7_i32, &__wcache908_23);
     i = 0_i32;
     while i < 24_i32 {
-        let __wcache916_22 = W_CacheLumpName(state, "M_LSCNTR") as *mut patch_t;
-        let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
-        V_DrawPatchDirect(state, dest_screen, x, y + 7_i32, __wcache916_22);
+        let __wcache916_22 = V_CachePatchName(state, "M_LSCNTR");
+        let dest_screen = Screen::Video;
+        V_DrawPatchDirect(state, dest_screen, x, y + 7_i32, &__wcache916_22);
         x += 8_i32;
         i += 1;
     }
-    let __wcache925_21 = W_CacheLumpName(state, "M_LSRGHT") as *mut patch_t;
-    let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
-    V_DrawPatchDirect(state, dest_screen, x, y + 7_i32, __wcache925_21);
+    let __wcache925_21 = V_CachePatchName(state, "M_LSRGHT");
+    let dest_screen = Screen::Video;
+    V_DrawPatchDirect(state, dest_screen, x, y + 7_i32, &__wcache925_21);
 }
 pub fn M_LoadSelect(state: &mut GameState, choice: i32) {
     let savegame_file = P_SaveGameFile(state, choice);
@@ -699,9 +700,9 @@ pub fn M_LoadGame(state: &mut GameState, _choice: i32) {
 }
 pub fn M_DrawSave(state: &mut GameState) {
     let mut i: i32 = 0;
-    let __wcache961_20 = W_CacheLumpName(state, "M_SAVEG") as *mut patch_t;
-    let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
-    V_DrawPatchDirect(state, dest_screen, 72_i32, 28_i32, __wcache961_20);
+    let __wcache961_20 = V_CachePatchName(state, "M_SAVEG");
+    let dest_screen = Screen::Video;
+    V_DrawPatchDirect(state, dest_screen, 72_i32, 28_i32, &__wcache961_20);
     i = 0_i32;
     while i < load_end as i32 {
         let loaddef_x = state.m_menu.defs.LoadDef.x as i32;
@@ -843,22 +844,22 @@ pub fn M_DrawReadThis1(state: &mut GameState) {
             I_Error("Unhandled game version");
         }
     }
-    let __wcache1158_19 = W_CacheLumpName(state, lumpname) as *mut patch_t;
-    let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
-    V_DrawPatchDirect(state, dest_screen, 0_i32, 0_i32, __wcache1158_19);
+    let __wcache1158_19 = V_CachePatchName(state, lumpname);
+    let dest_screen = Screen::Video;
+    V_DrawPatchDirect(state, dest_screen, 0_i32, 0_i32, &__wcache1158_19);
     state.m_menu.defs.ReadDef1.x = skullx as i16;
     state.m_menu.defs.ReadDef1.y = skully as i16;
 }
 pub fn M_DrawReadThis2(state: &mut GameState) {
     state.m_menu.inhelpscreens = true;
-    let __wcache1170_18 = W_CacheLumpName(state, "HELP1") as *mut patch_t;
-    let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
-    V_DrawPatchDirect(state, dest_screen, 0_i32, 0_i32, __wcache1170_18);
+    let __wcache1170_18 = V_CachePatchName(state, "HELP1");
+    let dest_screen = Screen::Video;
+    V_DrawPatchDirect(state, dest_screen, 0_i32, 0_i32, &__wcache1170_18);
 }
 pub fn M_DrawSound(state: &mut GameState) {
-    let __wcache1179_17 = W_CacheLumpName(state, "M_SVOL") as *mut patch_t;
-    let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
-    V_DrawPatchDirect(state, dest_screen, 60_i32, 38_i32, __wcache1179_17);
+    let __wcache1179_17 = V_CachePatchName(state, "M_SVOL");
+    let dest_screen = Screen::Video;
+    V_DrawPatchDirect(state, dest_screen, 60_i32, 38_i32, &__wcache1179_17);
     let (x, y, vol) = (
         state.m_menu.defs.SoundDef.x as i32,
         state.m_menu.defs.SoundDef.y as i32 + LINEHEIGHT * (sfx_vol as i32 + 1_i32),
@@ -911,17 +912,17 @@ pub fn M_MusicVol(state: &mut GameState, mut choice: i32) {
     S_SetMusicVolume(state, music_volume);
 }
 pub fn M_DrawMainMenu(state: &mut GameState) {
-    let __wcache1241_16 = W_CacheLumpName(state, "M_DOOM") as *mut patch_t;
-    let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
-    V_DrawPatchDirect(state, dest_screen, 94_i32, 2_i32, __wcache1241_16);
+    let __wcache1241_16 = V_CachePatchName(state, "M_DOOM");
+    let dest_screen = Screen::Video;
+    V_DrawPatchDirect(state, dest_screen, 94_i32, 2_i32, &__wcache1241_16);
 }
 pub fn M_DrawNewGame(state: &mut GameState) {
-    let __wcache1250_15 = W_CacheLumpName(state, "M_NEWG") as *mut patch_t;
-    let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
-    V_DrawPatchDirect(state, dest_screen, 96_i32, 14_i32, __wcache1250_15);
-    let __wcache1256_14 = W_CacheLumpName(state, "M_SKILL") as *mut patch_t;
-    let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
-    V_DrawPatchDirect(state, dest_screen, 54_i32, 38_i32, __wcache1256_14);
+    let __wcache1250_15 = V_CachePatchName(state, "M_NEWG");
+    let dest_screen = Screen::Video;
+    V_DrawPatchDirect(state, dest_screen, 96_i32, 14_i32, &__wcache1250_15);
+    let __wcache1256_14 = V_CachePatchName(state, "M_SKILL");
+    let dest_screen = Screen::Video;
+    V_DrawPatchDirect(state, dest_screen, 54_i32, 38_i32, &__wcache1256_14);
 }
 pub fn M_NewGame(state: &mut GameState, _choice: i32) {
     if state.g_game.netgame && !state.g_game.demoplayback {
@@ -944,9 +945,9 @@ pub fn M_NewGame(state: &mut GameState, _choice: i32) {
     };
 }
 pub fn M_DrawEpisode(state: &mut GameState) {
-    let __wcache1286_13 = W_CacheLumpName(state, "M_EPISOD") as *mut patch_t;
-    let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
-    V_DrawPatchDirect(state, dest_screen, 54_i32, 38_i32, __wcache1286_13);
+    let __wcache1286_13 = V_CachePatchName(state, "M_EPISOD");
+    let dest_screen = Screen::Video;
+    V_DrawPatchDirect(state, dest_screen, 54_i32, 38_i32, &__wcache1286_13);
 }
 pub fn M_VerifyNightmare(state: &mut GameState, mut key: i32) {
     if key != state.m_controls.key_menu_confirm {
@@ -1003,28 +1004,28 @@ pub fn M_Episode(state: &mut GameState, mut choice: i32) {
 static detailNames: [&str; 2] = ["M_GDHIGH", "M_GDLOW"];
 static msgNames: [&str; 2] = ["M_MSGOFF", "M_MSGON"];
 pub fn M_DrawOptions(state: &mut GameState) {
-    let __wcache1358_12 = W_CacheLumpName(state, "M_OPTTTL") as *mut patch_t;
-    let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
-    V_DrawPatchDirect(state, dest_screen, 108_i32, 15_i32, __wcache1358_12);
+    let __wcache1358_12 = V_CachePatchName(state, "M_OPTTTL");
+    let dest_screen = Screen::Video;
+    V_DrawPatchDirect(state, dest_screen, 108_i32, 15_i32, &__wcache1358_12);
     let __wcache1364_11 =
-        W_CacheLumpName(state, detailNames[state.m_menu.detailLevel as usize]) as *mut patch_t;
-    let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
+        V_CachePatchName(state, detailNames[state.m_menu.detailLevel as usize]);
+    let dest_screen = Screen::Video;
     V_DrawPatchDirect(
         state,
         dest_screen,
         state.m_menu.defs.OptionsDef.x as i32 + 175_i32,
         state.m_menu.defs.OptionsDef.y as i32 + LINEHEIGHT * detail as i32,
-        __wcache1364_11,
+        &__wcache1364_11,
     );
     let __wcache1373_10 =
-        W_CacheLumpName(state, msgNames[state.m_menu.showMessages as usize]) as *mut patch_t;
-    let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
+        V_CachePatchName(state, msgNames[state.m_menu.showMessages as usize]);
+    let dest_screen = Screen::Video;
     V_DrawPatchDirect(
         state,
         dest_screen,
         state.m_menu.defs.OptionsDef.x as i32 + 120_i32,
         state.m_menu.defs.OptionsDef.y as i32 + LINEHEIGHT * messages as i32,
-        __wcache1373_10,
+        &__wcache1373_10,
     );
     let (x, y, sens) = (
         state.m_menu.defs.OptionsDef.x as i32,
@@ -1220,29 +1221,29 @@ pub fn M_DrawThermo(
     let mut xx: i32 = 0;
     let mut i: i32 = 0;
     xx = x;
-    let __wcache1619_9 = W_CacheLumpName(state, "M_THERML") as *mut patch_t;
-    let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
-    V_DrawPatchDirect(state, dest_screen, xx, y, __wcache1619_9);
+    let __wcache1619_9 = V_CachePatchName(state, "M_THERML");
+    let dest_screen = Screen::Video;
+    V_DrawPatchDirect(state, dest_screen, xx, y, &__wcache1619_9);
     xx += 8_i32;
     i = 0_i32;
     while i < thermWidth {
-        let __wcache1628_8 = W_CacheLumpName(state, "M_THERMM") as *mut patch_t;
-        let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
-        V_DrawPatchDirect(state, dest_screen, xx, y, __wcache1628_8);
+        let __wcache1628_8 = V_CachePatchName(state, "M_THERMM");
+        let dest_screen = Screen::Video;
+        V_DrawPatchDirect(state, dest_screen, xx, y, &__wcache1628_8);
         xx += 8_i32;
         i += 1;
     }
-    let __wcache1637_7 = W_CacheLumpName(state, "M_THERMR") as *mut patch_t;
-    let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
-    V_DrawPatchDirect(state, dest_screen, xx, y, __wcache1637_7);
-    let __wcache1643_6 = W_CacheLumpName(state, "M_THERMO") as *mut patch_t;
-    let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
+    let __wcache1637_7 = V_CachePatchName(state, "M_THERMR");
+    let dest_screen = Screen::Video;
+    V_DrawPatchDirect(state, dest_screen, xx, y, &__wcache1637_7);
+    let __wcache1643_6 = V_CachePatchName(state, "M_THERMO");
+    let dest_screen = Screen::Video;
     V_DrawPatchDirect(
         state,
         dest_screen,
         x + 8_i32 + thermDot * 8_i32,
         y,
-        __wcache1643_6,
+        &__wcache1643_6,
     );
 }
 pub fn M_DrawEmptyCell(state: &mut GameState, menu: MenuId, mut item: i32) {
@@ -1250,14 +1251,14 @@ pub fn M_DrawEmptyCell(state: &mut GameState, menu: MenuId, mut item: i32) {
         let def = state.m_menu.def(menu);
         (def.x, def.y)
     };
-    let __wcache1651_5 = W_CacheLumpName(state, "M_CELL1") as *mut patch_t;
-    let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
+    let __wcache1651_5 = V_CachePatchName(state, "M_CELL1");
+    let dest_screen = Screen::Video;
     V_DrawPatchDirect(
         state,
         dest_screen,
         x as i32 - 10_i32,
         y as i32 + item * LINEHEIGHT - 1_i32,
-        __wcache1651_5,
+        &__wcache1651_5,
     );
 }
 pub fn M_DrawSelCell(state: &mut GameState, menu: MenuId, mut item: i32) {
@@ -1265,14 +1266,14 @@ pub fn M_DrawSelCell(state: &mut GameState, menu: MenuId, mut item: i32) {
         let def = state.m_menu.def(menu);
         (def.x, def.y)
     };
-    let __wcache1659_4 = W_CacheLumpName(state, "M_CELL2") as *mut patch_t;
-    let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
+    let __wcache1659_4 = V_CachePatchName(state, "M_CELL2");
+    let dest_screen = Screen::Video;
     V_DrawPatchDirect(
         state,
         dest_screen,
         x as i32 - 10_i32,
         y as i32 + item * LINEHEIGHT - 1_i32,
-        __wcache1659_4,
+        &__wcache1659_4,
     );
 }
 pub fn M_StartMessage(
@@ -1301,14 +1302,14 @@ pub fn M_StringWidth(state: &mut GameState, string: &str) -> i32 {
             w += 4_i32;
         } else {
             let font_patch = V_CachePatchNum(state, state.hu_stuff.hu_font[c as usize]);
-            w += unsafe { (*font_patch).width as i32 };
+            w += font_patch.width();
         }
     }
     w
 }
-pub unsafe fn M_StringHeight(state: &mut GameState, string: &str) -> i32 {
+pub fn M_StringHeight(state: &mut GameState, string: &str) -> i32 {
     let mut h: i32 = 0;
-    let height: i32 = (*V_CachePatchNum(state, state.hu_stuff.hu_font[0])).height as i32;
+    let height: i32 = V_CachePatchNum(state, state.hu_stuff.hu_font[0]).height();
     h = height;
     for b in string.bytes() {
         if b == b'\n' {
@@ -1335,12 +1336,12 @@ pub fn M_WriteText(state: &mut GameState, x: i32, y: i32, string: &str) {
                 cx += 4_i32;
             } else {
                 let font_patch = V_CachePatchNum(state, state.hu_stuff.hu_font[c as usize]);
-                w = unsafe { (*font_patch).width as i32 };
+                w = font_patch.width();
                 if cx + w > SCREENWIDTH {
                     break 'outer;
                 }
-                let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
-                V_DrawPatchDirect(state, dest_screen, cx, cy, font_patch);
+                let dest_screen = Screen::Video;
+                V_DrawPatchDirect(state, dest_screen, cx, cy, &font_patch);
                 cx += w;
             }
         }
@@ -1704,7 +1705,7 @@ pub fn M_StartControlPanel(state: &mut GameState) {
     state.m_menu.currentMenu = MenuId::Main;
     state.m_menu.itemOn = state.m_menu.current().lastOn;
 }
-pub unsafe fn M_Drawer(state: &mut GameState) {
+pub fn M_Drawer(state: &mut GameState) {
     let mut i: u32 = 0;
     let mut max: u32 = 0;
     state.m_menu.inhelpscreens = false;
@@ -1723,7 +1724,7 @@ pub unsafe fn M_Drawer(state: &mut GameState) {
                 line,
             );
             state.m_menu.drawer_y = (state.m_menu.drawer_y as i32
-                + (*V_CachePatchNum(state, state.hu_stuff.hu_font[0])).height as i32)
+                + V_CachePatchNum(state, state.hu_stuff.hu_font[0]).height())
                 as i16;
         }
         return;
@@ -1742,28 +1743,28 @@ pub unsafe fn M_Drawer(state: &mut GameState) {
     while i < max {
         let item_name = state.m_menu.current().items[i as usize].name;
         if !item_name.is_empty() {
-            let __wcache2221_2 = W_CacheLumpName(state, &item_name.as_str()) as *mut patch_t;
-            let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
+            let __wcache2221_2 = V_CachePatchName(state, &item_name.as_str());
+            let dest_screen = Screen::Video;
             V_DrawPatchDirect(
                 state,
                 dest_screen,
                 state.m_menu.drawer_x as i32,
                 state.m_menu.drawer_y as i32,
-                __wcache2221_2,
+                &__wcache2221_2,
             );
         }
         state.m_menu.drawer_y = (state.m_menu.drawer_y as i32 + LINEHEIGHT) as i16;
         i = i.wrapping_add(1);
     }
     let __wcache2231_1 =
-        W_CacheLumpName(state, skullName[state.m_menu.whichSkull as usize]) as *mut patch_t;
-    let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
+        V_CachePatchName(state, skullName[state.m_menu.whichSkull as usize]);
+    let dest_screen = Screen::Video;
     V_DrawPatchDirect(
         state,
         dest_screen,
         state.m_menu.drawer_x as i32 + SKULLXOFF,
         state.m_menu.current().y as i32 - 5_i32 + state.m_menu.itemOn as i32 * LINEHEIGHT,
-        __wcache2231_1,
+        &__wcache2231_1,
     );
 }
 pub fn M_ClearMenus(state: &mut GameState) {

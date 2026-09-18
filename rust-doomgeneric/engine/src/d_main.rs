@@ -33,7 +33,8 @@ use crate::g_game::G_RecordDemo;
 use crate::g_game::G_Responder;
 use crate::g_game::G_TimeDemo;
 use crate::game_state::GameState;
-use crate::hu_lib::patch_t;
+use crate::v_video::Screen;
+use crate::v_video::V_CachePatchName;
 use crate::hu_stuff::HU_Drawer;
 use crate::hu_stuff::HU_Erase;
 use crate::hu_stuff::HU_Init;
@@ -351,14 +352,14 @@ pub unsafe fn D_Display(state: &mut GameState) {
         } else {
             y = state.r_draw.viewwindowy + 4_i32;
         }
-        let __wcache429_2 = W_CacheLumpName(state, "M_PAUSE") as *mut patch_t;
-        let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
+        let __wcache429_2 = V_CachePatchName(state, "M_PAUSE");
+        let dest_screen = Screen::Video;
         V_DrawPatchDirect(
             state,
             dest_screen,
             state.r_draw.viewwindowx + (state.r_draw.scaledviewwidth - 68_i32) / 2_i32,
             y,
-            __wcache429_2,
+            &__wcache429_2,
         );
     }
     M_Drawer(state);
@@ -511,10 +512,10 @@ pub fn D_PageTicker(state: &mut GameState) {
         D_AdvanceDemo(state);
     }
 }
-pub unsafe fn D_PageDrawer(state: &mut GameState) {
-    let __wcache609_1 = W_CacheLumpName(state, state.d_main.pagename) as *mut patch_t;
-    let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
-    V_DrawPatch(state, dest_screen, 0_i32, 0_i32, __wcache609_1);
+pub fn D_PageDrawer(state: &mut GameState) {
+    let __wcache609_1 = V_CachePatchName(state, state.d_main.pagename);
+    let dest_screen = Screen::Video;
+    V_DrawPatch(state, dest_screen, 0_i32, 0_i32, &__wcache609_1);
 }
 pub fn D_AdvanceDemo(state: &mut GameState) {
     state.d_main.advancedemo = true;

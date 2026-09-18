@@ -2,7 +2,8 @@ use crate::d_player::PowerType;
 use crate::d_player::NUMPSPRITES;
 use crate::doomdef::SCREENWIDTH;
 use crate::game_state::GameState;
-use crate::hu_lib::patch_t;
+use crate::v_video::V_CachePatchNum;
+use crate::patch::Patch;
 use crate::i_system::I_Error;
 use crate::m_fixed::fixed_t;
 use crate::m_fixed::FixedDiv;
@@ -32,7 +33,7 @@ use crate::stdint_types::byte;
 use crate::stdint_types::size_t;
 use crate::tables::angle_t;
 use crate::tables::ANG45;
-use crate::w_wad::W_CacheLumpNum;
+
 use crate::w_wad::W_GetNumForName;
 
 pub struct RThingsState {
@@ -351,9 +352,9 @@ pub unsafe fn R_DrawMaskedColumn(state: &mut GameState, mut post: ColumnSource) 
 pub unsafe fn R_DrawVisSprite(state: &mut GameState, mut vis: *mut vissprite_t) {
     let mut texturecolumn: i32 = 0;
     let mut frac: fixed_t = 0;
-    let mut patch: *mut patch_t = ::core::ptr::null_mut::<patch_t>();
+    let mut patch: Patch;
     let sprite_lump = (*vis).patch + state.r_data.firstspritelump;
-    patch = W_CacheLumpNum(state, sprite_lump) as *mut patch_t;
+    patch = V_CachePatchNum(state, sprite_lump);
     state.r_draw.dc_colormap = (*vis).colormap;
     if state.r_draw.dc_colormap.is_none() {
         state.r_main.colfunc = state.r_main.fuzzcolfunc;
@@ -371,11 +372,10 @@ pub unsafe fn R_DrawVisSprite(state: &mut GameState, mut vis: *mut vissprite_t) 
     state.r_draw.dc_x = (*vis).x1;
     while state.r_draw.dc_x <= (*vis).x2 {
         texturecolumn = frac >> FRACBITS;
-        if texturecolumn < 0_i32 || texturecolumn >= (*patch).width as i32 {
+        if texturecolumn < 0_i32 || texturecolumn >= patch.width() {
             I_Error("R_DrawSpriteRange: bad texturecolumn");
         }
-        let column_offset = *(&raw const (*patch).columnofs as *const i32)
-            .offset(texturecolumn as isize) as usize;
+        let column_offset = patch.columnofs(texturecolumn);
         R_DrawMaskedColumn(
             state,
             ColumnSource::Lump {

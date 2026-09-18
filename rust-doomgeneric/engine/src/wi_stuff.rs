@@ -8,7 +8,7 @@ use crate::doomdef::SCREENWIDTH;
 use crate::doomdef::TICRATE;
 use crate::g_game::G_WorldDone;
 use crate::game_state::GameState;
-use crate::hu_lib::patch_t;
+use crate::v_video::Screen;
 use crate::m_random::M_Random;
 use crate::s_sound::S_ChangeMusic;
 use crate::s_sound::S_StartSound;
@@ -738,13 +738,13 @@ static lnodes: [[point_t; 9]; 4] = [
 pub const SHOWNEXTLOCDELAY: i32 = 4;
 pub fn WI_slamBackground(state: &mut GameState) {
     let patch = V_CachePatchNum(state, state.wi_stuff.background);
-    let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
-    unsafe { V_DrawPatch(state, dest_screen, 0_i32, 0_i32, patch) };
+    let dest_screen = Screen::Video;
+    V_DrawPatch(state, dest_screen, 0_i32, 0_i32, &patch);
 }
 pub fn WI_Responder() -> bool {
     false
 }
-pub unsafe fn WI_drawLF(state: &mut GameState) {
+pub fn WI_drawLF(state: &mut GameState) {
     let mut y: i32 = WI_TITLEY;
     if state.doomstat.gamemode as u32 != GameMode_t::commercial as i32 as u32
         || state.wbs().last < state.wi_stuff.NUMCMAPS
@@ -752,60 +752,48 @@ pub unsafe fn WI_drawLF(state: &mut GameState) {
         let index = state.wbs().last as usize;
         let last_lump = state.wi_stuff.lnames[index];
         let last_patch = V_CachePatchNum(state, last_lump);
-        let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
+        let dest_screen = Screen::Video;
         V_DrawPatch(
             state,
             dest_screen,
-            (SCREENWIDTH - (*last_patch).width as i32) / 2_i32,
+            (SCREENWIDTH - last_patch.width()) / 2_i32,
             y,
-            last_patch,
+            &last_patch,
         );
-        y += 5_i32 * (*last_patch).height as i32 / 4_i32;
+        y += 5_i32 * last_patch.height() / 4_i32;
         let finished_patch = V_CachePatchNum(state, state.wi_stuff.finished);
-        let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
+        let dest_screen = Screen::Video;
         V_DrawPatch(
             state,
             dest_screen,
-            (SCREENWIDTH - (*finished_patch).width as i32) / 2_i32,
+            (SCREENWIDTH - finished_patch.width()) / 2_i32,
             y,
-            finished_patch,
+            &finished_patch,
         );
-    } else if state.wbs().last != state.wi_stuff.NUMCMAPS {
-        if state.wbs().last > state.wi_stuff.NUMCMAPS {
-            let mut tmp: patch_t = patch_t {
-                width: SCREENWIDTH as i16,
-                height: SCREENHEIGHT as i16,
-                leftoffset: 1_i16,
-                topoffset: 1_i16,
-                columnofs: [0_i32, 0_i32, 0_i32, 0_i32, 0_i32, 0_i32, 0_i32, 0_i32],
-            };
-            let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
-            V_DrawPatch(state, dest_screen, 0_i32, y, &raw mut tmp);
-        }
     }
 }
-pub unsafe fn WI_drawEL(state: &mut GameState) {
+pub fn WI_drawEL(state: &mut GameState) {
     let mut y: i32 = WI_TITLEY;
     let entering_patch = V_CachePatchNum(state, state.wi_stuff.entering);
-    let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
+    let dest_screen = Screen::Video;
     V_DrawPatch(
         state,
         dest_screen,
-        (SCREENWIDTH - (*entering_patch).width as i32) / 2_i32,
+        (SCREENWIDTH - entering_patch.width()) / 2_i32,
         y,
-        entering_patch,
+        &entering_patch,
     );
     let index = state.wbs().next as usize;
     let next_lump = state.wi_stuff.lnames[index];
     let next_patch = V_CachePatchNum(state, next_lump);
-    y += 5_i32 * (*next_patch).height as i32 / 4_i32;
-    let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
+    y += 5_i32 * next_patch.height() / 4_i32;
+    let dest_screen = Screen::Video;
     V_DrawPatch(
         state,
         dest_screen,
-        (SCREENWIDTH - (*next_patch).width as i32) / 2_i32,
+        (SCREENWIDTH - next_patch.width()) / 2_i32,
         y,
-        next_patch,
+        &next_patch,
     );
 }
 pub unsafe fn WI_drawOnLnode(state: &mut GameState, mut n: i32, mut c: *mut i32) {
@@ -818,10 +806,10 @@ pub unsafe fn WI_drawOnLnode(state: &mut GameState, mut n: i32, mut c: *mut i32)
     i = 0_i32;
     loop {
         let patch = V_CachePatchNum(state, *c.offset(i as isize));
-        left = lnodes[state.wbs().epsd as usize][n as usize].x - (*patch).leftoffset as i32;
-        top = lnodes[state.wbs().epsd as usize][n as usize].y - (*patch).topoffset as i32;
-        right = left + (*patch).width as i32;
-        bottom = top + (*patch).height as i32;
+        left = lnodes[state.wbs().epsd as usize][n as usize].x - patch.leftoffset();
+        top = lnodes[state.wbs().epsd as usize][n as usize].y - patch.topoffset();
+        right = left + patch.width();
+        bottom = top + patch.height();
         if left >= 0_i32 && right < SCREENWIDTH && top >= 0_i32 && bottom < SCREENHEIGHT {
             fits = true;
         } else {
@@ -834,13 +822,13 @@ pub unsafe fn WI_drawOnLnode(state: &mut GameState, mut n: i32, mut c: *mut i32)
     if fits && i < 2_i32 {
         let patch = V_CachePatchNum(state, *c.offset(i as isize));
         let index = state.wbs().epsd as usize;
-        let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
+        let dest_screen = Screen::Video;
         V_DrawPatch(
             state,
             dest_screen,
             lnodes[index][n as usize].x,
             lnodes[index][n as usize].y,
-            patch,
+            &patch,
         );
     } else {
         print!("Could not place patch on level {}", n + 1_i32);
@@ -939,13 +927,13 @@ pub unsafe fn WI_drawAnimatedBack(state: &mut GameState) {
         a = (&mut state.wi_stuff.anims()[index][i as usize]) as *mut anim_t;
         if (*a).ctr >= 0_i32 {
             let patch = V_CachePatchNum(state, (*a).p[(*a).ctr as usize]);
-            let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
-            V_DrawPatch(state, dest_screen, (*a).loc.x, (*a).loc.y, patch);
+            let dest_screen = Screen::Video;
+            V_DrawPatch(state, dest_screen, (*a).loc.x, (*a).loc.y, &patch);
         }
         i += 1;
     }
 }
-pub unsafe fn WI_drawNum(
+pub fn WI_drawNum(
     state: &mut GameState,
     mut x: i32,
     mut y: i32,
@@ -953,7 +941,7 @@ pub unsafe fn WI_drawNum(
     mut digits: i32,
 ) -> i32 {
     let zero_patch = V_CachePatchNum(state, state.wi_stuff.num[0]);
-    let mut fontwidth: i32 = (*zero_patch).width as i32;
+    let mut fontwidth: i32 = zero_patch.width();
     let mut neg: i32 = 0;
     let mut temp: i32 = 0;
     if digits < 0_i32 {
@@ -983,15 +971,15 @@ pub unsafe fn WI_drawNum(
         }
         x -= fontwidth;
         let digit_patch = V_CachePatchNum(state, state.wi_stuff.num[(n % 10_i32) as usize]);
-        let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
-        V_DrawPatch(state, dest_screen, x, y, digit_patch);
+        let dest_screen = Screen::Video;
+        V_DrawPatch(state, dest_screen, x, y, &digit_patch);
         n /= 10_i32;
     }
     if neg != 0 {
         x -= 8_i32;
         let minus_patch = V_CachePatchNum(state, state.wi_stuff.wiminus);
-        let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
-        V_DrawPatch(state, dest_screen, x, y, minus_patch);
+        let dest_screen = Screen::Video;
+        V_DrawPatch(state, dest_screen, x, y, &minus_patch);
     }
     x
 }
@@ -1000,11 +988,11 @@ pub fn WI_drawPercent(state: &mut GameState, mut x: i32, mut y: i32, mut p_0: i3
         return;
     }
     let percent_patch = V_CachePatchNum(state, state.wi_stuff.percent);
-    let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
-    unsafe { V_DrawPatch(state, dest_screen, x, y, percent_patch) };
-    unsafe { WI_drawNum(state, x, y, p_0, -1_i32) };
+    let dest_screen = Screen::Video;
+    V_DrawPatch(state, dest_screen, x, y, &percent_patch);
+    WI_drawNum(state, x, y, p_0, -1_i32);
 }
-pub unsafe fn WI_drawTime(state: &mut GameState, mut x: i32, mut y: i32, mut t: i32) {
+pub fn WI_drawTime(state: &mut GameState, mut x: i32, mut y: i32, mut t: i32) {
     let mut div: i32 = 0;
     let mut n: i32 = 0;
     if t < 0_i32 {
@@ -1015,11 +1003,11 @@ pub unsafe fn WI_drawTime(state: &mut GameState, mut x: i32, mut y: i32, mut t: 
         loop {
             n = t / div % 60_i32;
             let colon_patch = V_CachePatchNum(state, state.wi_stuff.colon);
-            x = WI_drawNum(state, x, y, n, 2_i32) - (*colon_patch).width as i32;
+            x = WI_drawNum(state, x, y, n, 2_i32) - colon_patch.width();
             div *= 60_i32;
             if div == 60_i32 || t / div != 0 {
-                let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
-                V_DrawPatch(state, dest_screen, x, y, colon_patch);
+                let dest_screen = Screen::Video;
+                V_DrawPatch(state, dest_screen, x, y, &colon_patch);
             }
             if t / div == 0 {
                 break;
@@ -1027,13 +1015,13 @@ pub unsafe fn WI_drawTime(state: &mut GameState, mut x: i32, mut y: i32, mut t: 
         }
     } else {
         let sucks_patch = V_CachePatchNum(state, state.wi_stuff.sucks);
-        let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
+        let dest_screen = Screen::Video;
         V_DrawPatch(
             state,
             dest_screen,
-            x - (*sucks_patch).width as i32,
+            x - sucks_patch.width(),
             y,
-            sucks_patch,
+            &sucks_patch,
         );
     };
 }
@@ -1239,60 +1227,60 @@ pub unsafe fn WI_drawDeathmatchStats(state: &mut GameState) {
     WI_drawAnimatedBack(state);
     WI_drawLF(state);
     let total_patch = V_CachePatchNum(state, state.wi_stuff.total);
-    let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
+    let dest_screen = Screen::Video;
     V_DrawPatch(
         state,
         dest_screen,
-        DM_TOTALSX - (*total_patch).width as i32 / 2_i32,
+        DM_TOTALSX - total_patch.width() / 2_i32,
         DM_MATRIXY - WI_SPACINGY + 10_i32,
-        total_patch,
+        &total_patch,
     );
     let killers_patch = V_CachePatchNum(state, state.wi_stuff.killers);
-    let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
-    V_DrawPatch(state, dest_screen, DM_KILLERSX, DM_KILLERSY, killers_patch);
+    let dest_screen = Screen::Video;
+    V_DrawPatch(state, dest_screen, DM_KILLERSX, DM_KILLERSY, &killers_patch);
     let victims_patch = V_CachePatchNum(state, state.wi_stuff.victims);
-    let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
-    V_DrawPatch(state, dest_screen, DM_VICTIMSX, DM_VICTIMSY, victims_patch);
+    let dest_screen = Screen::Video;
+    V_DrawPatch(state, dest_screen, DM_VICTIMSX, DM_VICTIMSY, &victims_patch);
     x = DM_MATRIXX + DM_SPACINGX;
     y = DM_MATRIXY;
     i = 0_i32;
     while i < MAXPLAYERS {
         if state.g_game.playeringame[i as usize] {
             let p_patch = V_CachePatchNum(state, state.wi_stuff.p[i as usize]);
-            let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
+            let dest_screen = Screen::Video;
             V_DrawPatch(
                 state,
                 dest_screen,
-                x - (*p_patch).width as i32 / 2_i32,
+                x - p_patch.width() / 2_i32,
                 DM_MATRIXY - WI_SPACINGY,
-                p_patch,
+                &p_patch,
             );
-            let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
+            let dest_screen = Screen::Video;
             V_DrawPatch(
                 state,
                 dest_screen,
-                DM_MATRIXX - (*p_patch).width as i32 / 2_i32,
+                DM_MATRIXX - p_patch.width() / 2_i32,
                 y,
-                p_patch,
+                &p_patch,
             );
             if i == state.wi_stuff.me {
                 let bstar_patch = V_CachePatchNum(state, state.wi_stuff.bstar);
-                let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
+                let dest_screen = Screen::Video;
                 V_DrawPatch(
                     state,
                     dest_screen,
-                    x - (*p_patch).width as i32 / 2_i32,
+                    x - p_patch.width() / 2_i32,
                     DM_MATRIXY - WI_SPACINGY,
-                    bstar_patch,
+                    &bstar_patch,
                 );
                 let star_patch = V_CachePatchNum(state, state.wi_stuff.star);
-                let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
+                let dest_screen = Screen::Video;
                 V_DrawPatch(
                     state,
                     dest_screen,
-                    DM_MATRIXX - (*p_patch).width as i32 / 2_i32,
+                    DM_MATRIXX - p_patch.width() / 2_i32,
                     y,
-                    star_patch,
+                    &star_patch,
                 );
             }
         }
@@ -1302,7 +1290,7 @@ pub unsafe fn WI_drawDeathmatchStats(state: &mut GameState) {
     }
     y = DM_MATRIXY + 10_i32;
     let zero_patch = V_CachePatchNum(state, state.wi_stuff.num[0]);
-    w = (*zero_patch).width as i32;
+    w = zero_patch.width();
     i = 0_i32;
     while i < MAXPLAYERS {
         x = DM_MATRIXX + DM_SPACINGX;
@@ -1485,24 +1473,24 @@ pub unsafe fn WI_drawNetgameStats(state: &mut GameState) {
     let mut x: i32 = 0;
     let mut y: i32 = 0;
     let percent_patch = V_CachePatchNum(state, state.wi_stuff.percent);
-    let mut pwidth: i32 = (*percent_patch).width as i32;
+    let mut pwidth: i32 = percent_patch.width();
     WI_slamBackground(state);
     WI_drawAnimatedBack(state);
     WI_drawLF(state);
     let star_patch = V_CachePatchNum(state, state.wi_stuff.star);
-    let star_width = (*star_patch).width as i32;
+    let star_width = star_patch.width();
     let kills_patch = V_CachePatchNum(state, state.wi_stuff.kills);
-    let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
+    let dest_screen = Screen::Video;
     V_DrawPatch(
         state,
         dest_screen,
         32_i32 + star_width / 2_i32 + 32_i32 * (state.wi_stuff.dofrags == 0) as i32 + NG_SPACINGX
-            - (*kills_patch).width as i32,
+            - kills_patch.width(),
         NG_STATSY,
-        kills_patch,
+        &kills_patch,
     );
     let items_patch = V_CachePatchNum(state, state.wi_stuff.items);
-    let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
+    let dest_screen = Screen::Video;
     V_DrawPatch(
         state,
         dest_screen,
@@ -1510,12 +1498,12 @@ pub unsafe fn WI_drawNetgameStats(state: &mut GameState) {
             + star_width / 2_i32
             + 32_i32 * (state.wi_stuff.dofrags == 0) as i32
             + 2_i32 * NG_SPACINGX
-            - (*items_patch).width as i32,
+            - items_patch.width(),
         NG_STATSY,
-        items_patch,
+        &items_patch,
     );
     let secret_patch = V_CachePatchNum(state, state.wi_stuff.secret);
-    let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
+    let dest_screen = Screen::Video;
     V_DrawPatch(
         state,
         dest_screen,
@@ -1523,13 +1511,13 @@ pub unsafe fn WI_drawNetgameStats(state: &mut GameState) {
             + star_width / 2_i32
             + 32_i32 * (state.wi_stuff.dofrags == 0) as i32
             + 3_i32 * NG_SPACINGX
-            - (*secret_patch).width as i32,
+            - secret_patch.width(),
         NG_STATSY,
-        secret_patch,
+        &secret_patch,
     );
     if state.wi_stuff.dofrags != 0 {
         let frags_patch = V_CachePatchNum(state, state.wi_stuff.frags);
-        let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
+        let dest_screen = Screen::Video;
         V_DrawPatch(
             state,
             dest_screen,
@@ -1537,27 +1525,27 @@ pub unsafe fn WI_drawNetgameStats(state: &mut GameState) {
                 + star_width / 2_i32
                 + 32_i32 * (state.wi_stuff.dofrags == 0) as i32
                 + 4_i32 * NG_SPACINGX
-                - (*frags_patch).width as i32,
+                - frags_patch.width(),
             NG_STATSY,
-            frags_patch,
+            &frags_patch,
         );
     }
-    y = NG_STATSY + (*kills_patch).height as i32;
+    y = NG_STATSY + kills_patch.height();
     i = 0_i32;
     while i < MAXPLAYERS {
         if state.g_game.playeringame[i as usize] {
             x = 32_i32 + star_width / 2_i32 + 32_i32 * (state.wi_stuff.dofrags == 0) as i32;
             let p_patch = V_CachePatchNum(state, state.wi_stuff.p[i as usize]);
-            let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
-            V_DrawPatch(state, dest_screen, x - (*p_patch).width as i32, y, p_patch);
+            let dest_screen = Screen::Video;
+            V_DrawPatch(state, dest_screen, x - p_patch.width(), y, &p_patch);
             if i == state.wi_stuff.me {
-                let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
+                let dest_screen = Screen::Video;
                 V_DrawPatch(
                     state,
                     dest_screen,
-                    x - (*p_patch).width as i32,
+                    x - p_patch.width(),
                     y,
-                    star_patch,
+                    &star_patch,
                 );
             }
             x += NG_SPACINGX;
@@ -1681,28 +1669,28 @@ pub unsafe fn WI_updateStats(state: &mut GameState) {
 pub unsafe fn WI_drawStats(state: &mut GameState) {
     let mut lh: i32 = 0;
     let zero_patch = V_CachePatchNum(state, state.wi_stuff.num[0]);
-    lh = 3_i32 * (*zero_patch).height as i32 / 2_i32;
+    lh = 3_i32 * zero_patch.height() / 2_i32;
     WI_slamBackground(state);
     WI_drawAnimatedBack(state);
     WI_drawLF(state);
     let kills_patch = V_CachePatchNum(state, state.wi_stuff.kills);
-    let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
-    V_DrawPatch(state, dest_screen, SP_STATSX, SP_STATSY, kills_patch);
+    let dest_screen = Screen::Video;
+    V_DrawPatch(state, dest_screen, SP_STATSX, SP_STATSY, &kills_patch);
     let cnt_kills = state.wi_stuff.cnt_kills[0];
     WI_drawPercent(state, SCREENWIDTH - SP_STATSX, SP_STATSY, cnt_kills);
     let items_patch = V_CachePatchNum(state, state.wi_stuff.items);
-    let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
-    V_DrawPatch(state, dest_screen, SP_STATSX, SP_STATSY + lh, items_patch);
+    let dest_screen = Screen::Video;
+    V_DrawPatch(state, dest_screen, SP_STATSX, SP_STATSY + lh, &items_patch);
     let cnt_items = state.wi_stuff.cnt_items[0];
     WI_drawPercent(state, SCREENWIDTH - SP_STATSX, SP_STATSY + lh, cnt_items);
     let sp_secret_patch = V_CachePatchNum(state, state.wi_stuff.sp_secret);
-    let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
+    let dest_screen = Screen::Video;
     V_DrawPatch(
         state,
         dest_screen,
         SP_STATSX,
         SP_STATSY + 2_i32 * lh,
-        sp_secret_patch,
+        &sp_secret_patch,
     );
     let cnt_secret = state.wi_stuff.cnt_secret[0];
     WI_drawPercent(
@@ -1712,19 +1700,19 @@ pub unsafe fn WI_drawStats(state: &mut GameState) {
         cnt_secret,
     );
     let timepatch_patch = V_CachePatchNum(state, state.wi_stuff.timepatch);
-    let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
-    V_DrawPatch(state, dest_screen, SP_TIMEX, SP_TIMEY, timepatch_patch);
+    let dest_screen = Screen::Video;
+    V_DrawPatch(state, dest_screen, SP_TIMEX, SP_TIMEY, &timepatch_patch);
     let cnt_time = state.wi_stuff.cnt_time;
     WI_drawTime(state, SCREENWIDTH / 2_i32 - SP_TIMEX, SP_TIMEY, cnt_time);
     if state.wbs().epsd < 3_i32 {
         let par_patch = V_CachePatchNum(state, state.wi_stuff.par);
-        let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
+        let dest_screen = Screen::Video;
         V_DrawPatch(
             state,
             dest_screen,
             SCREENWIDTH / 2_i32 + SP_TIMEX,
             SP_TIMEY,
-            par_patch,
+            &par_patch,
         );
         let cnt_par = state.wi_stuff.cnt_par;
         WI_drawTime(state, SCREENWIDTH - SP_TIMEX, SP_TIMEY, cnt_par);

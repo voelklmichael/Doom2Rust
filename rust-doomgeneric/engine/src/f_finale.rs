@@ -10,7 +10,9 @@ use crate::doomdef::MAXPLAYERS;
 use crate::doomdef::SCREENHEIGHT;
 use crate::doomdef::SCREENWIDTH;
 use crate::game_state::GameState;
-use crate::hu_lib::patch_t;
+use crate::v_video::Screen;
+use crate::v_video::V_CachePatchName;
+use crate::patch::Patch;
 use crate::hu_stuff::HU_FONTSIZE;
 use crate::hu_stuff::HU_FONTSTART;
 use crate::i_video::IVideoState;
@@ -18,7 +20,7 @@ use crate::info::StateId;
 use crate::mem_compat::memcpy;
 use crate::p_mobj::MobjType;
 use crate::p_mobj::StateNum;
-use crate::r_data::column_t;
+
 use crate::r_defs::{spritedef_t, spriteframe_t};
 use crate::r_things::FF_FRAMEMASK;
 use crate::s_sound::S_ChangeMusic;
@@ -37,7 +39,7 @@ use crate::v_video::V_DrawPatch;
 use crate::v_video::V_DrawPatchFlipped;
 use crate::v_video::V_MarkRect;
 use crate::w_wad::W_CacheLumpName;
-use crate::w_wad::W_CacheLumpNum;
+
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum FinaleStage {
     F_STAGE_TEXT = 0,
@@ -433,7 +435,7 @@ pub unsafe fn F_TextWrite(state: &mut GameState) {
         }
         y += 1;
     }
-    let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
+    let dest_screen = Screen::Video;
     V_MarkRect(state, dest_screen, 0_i32, 0_i32, SCREENWIDTH, SCREENHEIGHT);
     cx = 10_i32;
     cy = 10_i32;
@@ -456,12 +458,12 @@ pub unsafe fn F_TextWrite(state: &mut GameState) {
                 cx += 4_i32;
             } else {
                 let font_patch = V_CachePatchNum(state, state.hu_stuff.hu_font[c as usize]);
-                w = (*font_patch).width as i32;
+                w = font_patch.width();
                 if cx + w > SCREENWIDTH {
                     break;
                 }
-                let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
-                V_DrawPatch(state, dest_screen, cx, cy, font_patch);
+                let dest_screen = Screen::Video;
+                V_DrawPatch(state, dest_screen, cx, cy, &font_patch);
                 cx += w;
             }
         }
@@ -743,7 +745,7 @@ pub fn F_CastResponder(state: &mut GameState, mut ev: &event_t) -> bool {
     }
     true
 }
-pub unsafe fn F_CastPrint(state: &mut GameState, text: &str) {
+pub fn F_CastPrint(state: &mut GameState, text: &str) {
     let mut c: i32 = 0;
     let mut cx: i32 = 0;
     let mut w: i32 = 0;
@@ -753,7 +755,7 @@ pub unsafe fn F_CastPrint(state: &mut GameState, text: &str) {
         if !(0_i32..=HU_FONTSIZE).contains(&c) {
             width += 4_i32;
         } else {
-            w = (*V_CachePatchNum(state, state.hu_stuff.hu_font[c as usize])).width as i32;
+            w = V_CachePatchNum(state, state.hu_stuff.hu_font[c as usize]).width();
             width += w;
         }
     }
@@ -764,9 +766,9 @@ pub unsafe fn F_CastPrint(state: &mut GameState, text: &str) {
             cx += 4_i32;
         } else {
             let font_patch = V_CachePatchNum(state, state.hu_stuff.hu_font[c as usize]);
-            w = (*font_patch).width as i32;
-            let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
-            V_DrawPatch(state, dest_screen, cx, 180_i32, font_patch);
+            w = font_patch.width();
+            let dest_screen = Screen::Video;
+            V_DrawPatch(state, dest_screen, cx, 180_i32, &font_patch);
             cx += w;
         }
     }
@@ -776,10 +778,10 @@ pub unsafe fn F_CastDrawer(state: &mut GameState) {
     let mut sprframe: *mut spriteframe_t = ::core::ptr::null_mut::<spriteframe_t>();
     let mut lump: i32 = 0;
     let mut flip: bool = false;
-    let mut patch: *mut patch_t = ::core::ptr::null_mut::<patch_t>();
-    let __wcache865_4 = W_CacheLumpName(state, "BOSSBACK") as *mut patch_t;
-    let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
-    V_DrawPatch(state, dest_screen, 0_i32, 0_i32, __wcache865_4);
+    let mut patch: Patch;
+    let __wcache865_4 = V_CachePatchName(state, "BOSSBACK");
+    let dest_screen = Screen::Video;
+    V_DrawPatch(state, dest_screen, 0_i32, 0_i32, &__wcache865_4);
     let cast_name = state.f_finale.castorder[state.f_finale.castnum as usize]
         .name
         .unwrap();
@@ -790,59 +792,33 @@ pub unsafe fn F_CastDrawer(state: &mut GameState) {
         as *mut spriteframe_t;
     lump = (*sprframe).lump[0] as i32;
     flip = (*sprframe).flip[0] != 0;
-    patch = W_CacheLumpNum(state, lump + state.r_data.firstspritelump) as *mut patch_t;
+    patch = V_CachePatchNum(state, lump + state.r_data.firstspritelump);
     if flip {
-        let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
-        V_DrawPatchFlipped(state, dest_screen, 160_i32, 170_i32, patch);
+        let dest_screen = Screen::Video;
+        V_DrawPatchFlipped(state, dest_screen, 160_i32, 170_i32, &patch);
     } else {
-        let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
-        V_DrawPatch(state, dest_screen, 160_i32, 170_i32, patch);
+        let dest_screen = Screen::Video;
+        V_DrawPatch(state, dest_screen, 160_i32, 170_i32, &patch);
     };
 }
-pub unsafe fn F_DrawPatchCol(
-    state: &mut IVideoState,
-    mut x: i32,
-    mut patch: *mut patch_t,
-    mut col: i32,
-) {
-    let mut column: *mut column_t = ::core::ptr::null_mut::<column_t>();
-    let mut source: *mut byte = ::core::ptr::null_mut::<byte>();
-    let mut dest: *mut byte = ::core::ptr::null_mut::<byte>();
-    let mut desttop: *mut byte = ::core::ptr::null_mut::<byte>();
-    let mut count: i32 = 0;
-    column = (patch as *mut byte)
-        .offset(*(&raw const (*patch).columnofs as *const i32).offset(col as isize) as isize)
-        as *mut column_t;
-    desttop = state.I_VideoBuffer.as_mut_ptr().offset(x as isize);
-    while (*column).topdelta as i32 != 0xff_i32 {
-        source = (column as *mut byte).offset(3_i32 as isize);
-        dest = desttop.offset(((*column).topdelta as i32 * SCREENWIDTH) as isize);
-        count = (*column).length as i32;
-        loop {
-            let fresh3 = count;
-            count -= 1;
-            if fresh3 == 0 {
-                break;
-            }
-            let fresh4 = source;
-            source = source.offset(1);
-            *dest = *fresh4;
-            dest = dest.offset(SCREENWIDTH as isize);
+fn F_DrawPatchCol(state: &mut IVideoState, x: i32, patch: &Patch, col: i32) {
+    for post in patch.posts(col) {
+        let mut dest = post.topdelta * SCREENWIDTH as usize + x as usize;
+        for &pixel in post.pixels {
+            state.I_VideoBuffer[dest] = pixel;
+            dest += SCREENWIDTH as usize;
         }
-        column = (column as *mut byte)
-            .offset((*column).length as i32 as isize)
-            .offset(4_i32 as isize) as *mut column_t;
     }
 }
-pub unsafe fn F_BunnyScroll(state: &mut GameState) {
+pub fn F_BunnyScroll(state: &mut GameState) {
     let mut scrolled: i32 = 0;
     let mut x: i32 = 0;
-    let mut p1: *mut patch_t = ::core::ptr::null_mut::<patch_t>();
-    let mut p2: *mut patch_t = ::core::ptr::null_mut::<patch_t>();
+    let mut p1: Patch;
+    let mut p2: Patch;
     let mut stage: i32 = 0;
-    p1 = W_CacheLumpName(state, "PFUB2") as *mut patch_t;
-    p2 = W_CacheLumpName(state, "PFUB1") as *mut patch_t;
-    let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
+    p1 = V_CachePatchName(state, "PFUB2");
+    p2 = V_CachePatchName(state, "PFUB1");
+    let dest_screen = Screen::Video;
     V_MarkRect(state, dest_screen, 0_i32, 0_i32, SCREENWIDTH, SCREENHEIGHT);
     scrolled = 320_i32 - (state.f_finale.finalecount as i32 - 230_i32) / 2_i32;
     if scrolled > 320_i32 {
@@ -854,9 +830,9 @@ pub unsafe fn F_BunnyScroll(state: &mut GameState) {
     x = 0_i32;
     while x < SCREENWIDTH {
         if x + scrolled < 320_i32 {
-            F_DrawPatchCol(&mut state.i_video, x, p1, x + scrolled);
+            F_DrawPatchCol(&mut state.i_video, x, &p1, x + scrolled);
         } else {
-            F_DrawPatchCol(&mut state.i_video, x, p2, x + scrolled - 320_i32);
+            F_DrawPatchCol(&mut state.i_video, x, &p2, x + scrolled - 320_i32);
         }
         x += 1;
     }
@@ -864,14 +840,14 @@ pub unsafe fn F_BunnyScroll(state: &mut GameState) {
         return;
     }
     if state.f_finale.finalecount < 1180_u32 {
-        let __wcache963_3 = W_CacheLumpName(state, "END0") as *mut patch_t;
-        let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
+        let __wcache963_3 = V_CachePatchName(state, "END0");
+        let dest_screen = Screen::Video;
         V_DrawPatch(
             state,
             dest_screen,
             (SCREENWIDTH - 13_i32 * 8_i32) / 2_i32,
             (SCREENHEIGHT - 8_i32 * 8_i32) / 2_i32,
-            __wcache963_3,
+            &__wcache963_3,
         );
         state.f_finale.laststage = 0_i32;
         return;
@@ -889,17 +865,17 @@ pub unsafe fn F_BunnyScroll(state: &mut GameState) {
         state.f_finale.laststage = stage;
     }
     let name = format!("END{}", stage);
-    let __wcache990_2 = W_CacheLumpName(state, &name) as *mut patch_t;
-    let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
+    let __wcache990_2 = V_CachePatchName(state, &name);
+    let dest_screen = Screen::Video;
     V_DrawPatch(
         state,
         dest_screen,
         (SCREENWIDTH - 13_i32 * 8_i32) / 2_i32,
         (SCREENHEIGHT - 8_i32 * 8_i32) / 2_i32,
-        __wcache990_2,
+        &__wcache990_2,
     );
 }
-unsafe fn F_ArtScreenDrawer(state: &mut GameState) {
+fn F_ArtScreenDrawer(state: &mut GameState) {
     let lumpname: &str;
     if state.g_game.gameepisode == 3_i32 {
         F_BunnyScroll(state);
@@ -920,9 +896,9 @@ unsafe fn F_ArtScreenDrawer(state: &mut GameState) {
             }
             _ => return,
         }
-        let __wcache1026_1 = W_CacheLumpName(state, lumpname) as *mut patch_t;
-        let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
-        V_DrawPatch(state, dest_screen, 0_i32, 0_i32, __wcache1026_1);
+        let __wcache1026_1 = V_CachePatchName(state, lumpname);
+        let dest_screen = Screen::Video;
+        V_DrawPatch(state, dest_screen, 0_i32, 0_i32, &__wcache1026_1);
     };
 }
 pub fn F_Drawer(state: &mut GameState) {
@@ -934,7 +910,7 @@ pub fn F_Drawer(state: &mut GameState) {
             unsafe { F_TextWrite(state) };
         }
         FinaleStage::F_STAGE_ARTSCREEN => {
-            unsafe { F_ArtScreenDrawer(state) };
+            F_ArtScreenDrawer(state);
         }
     };
 }
