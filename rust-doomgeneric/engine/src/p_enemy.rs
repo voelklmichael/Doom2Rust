@@ -1035,7 +1035,7 @@ pub fn A_VileChase(state: &mut GameState, id: MobjId) {
                         state,
                         bx,
                         by,
-                        Some(PIT_VileCheck as unsafe fn(&mut GameState, MobjId) -> bool),
+                        |s, id| PIT_VileCheck(s, id),
                     ) {
                         let corpsehit_id = state.p_enemy.corpsehit.unwrap();
                         let corpsehit = state.p_mobj.mobj_get(corpsehit_id).unwrap();
@@ -1103,11 +1103,11 @@ pub fn A_Fire(state: &mut GameState, id: MobjId) {
             return;
         }
         an = (*dest).angle >> ANGLETOFINESHIFT;
-        P_UnsetThingPosition(state, actor);
+        P_UnsetThingPosition(state, &mut *actor);
         (*actor).x = (*dest).x + FixedMul(24 as fixed_t * FRACUNIT, finecosine[an as isize]);
         (*actor).y = (*dest).y + FixedMul(24 as fixed_t * FRACUNIT, finesine[an as usize]);
         (*actor).z = (*dest).z;
-        P_SetThingPosition(state, actor);
+        P_SetThingPosition(state, &mut *actor);
     }
 }
 pub fn A_VileTarget(state: &mut GameState, id: MobjId) {

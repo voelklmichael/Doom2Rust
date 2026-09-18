@@ -1036,7 +1036,7 @@ pub unsafe fn P_UnArchiveThinkers(state: &mut GameState) {
                 }
                 (*mobj).target = None;
                 (*mobj).tracer = None;
-                P_SetThingPosition(state, mobj);
+                P_SetThingPosition(state, &mut *mobj);
                 (*mobj).floorz = state
                     .p_setup
                     .sector_mut(state.p_setup.subsectors[(*mobj).subsector.0 as usize].sector)
