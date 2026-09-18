@@ -1536,39 +1536,45 @@ pub fn A_BabyMetal(state: &mut GameState, id: MobjId) {
         A_Chase(state, (*mo).id);
     }
 }
-pub unsafe fn A_OpenShotgun2(
+pub fn A_OpenShotgun2(
     state: &mut GameState,
     mut player: *mut player_t,
     _psp: *mut pspdef_t,
 ) {
-    S_StartSound(
-        state,
-        SoundOrigin::Mobj((*player).mo.unwrap()),
-        sfx_dbopn as i32,
-    );
+    unsafe {
+        S_StartSound(
+            state,
+            SoundOrigin::Mobj((*player).mo.unwrap()),
+            sfx_dbopn as i32,
+        );
+    }
 }
-pub unsafe fn A_LoadShotgun2(
+pub fn A_LoadShotgun2(
     state: &mut GameState,
     mut player: *mut player_t,
     _psp: *mut pspdef_t,
 ) {
-    S_StartSound(
-        state,
-        SoundOrigin::Mobj((*player).mo.unwrap()),
-        sfx_dbload as i32,
-    );
+    unsafe {
+        S_StartSound(
+            state,
+            SoundOrigin::Mobj((*player).mo.unwrap()),
+            sfx_dbload as i32,
+        );
+    }
 }
-pub unsafe fn A_CloseShotgun2(
+pub fn A_CloseShotgun2(
     state: &mut GameState,
     mut player: *mut player_t,
     mut psp: *mut pspdef_t,
 ) {
-    S_StartSound(
-        state,
-        SoundOrigin::Mobj((*player).mo.unwrap()),
-        sfx_dbcls as i32,
-    );
-    A_ReFire(state, player, psp);
+    unsafe {
+        S_StartSound(
+            state,
+            SoundOrigin::Mobj((*player).mo.unwrap()),
+            sfx_dbcls as i32,
+        );
+        A_ReFire(state, player, psp);
+    }
 }
 pub fn A_BrainAwake(state: &mut GameState, _id: MobjId) {
     unsafe {
