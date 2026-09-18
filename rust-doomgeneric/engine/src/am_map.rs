@@ -1228,10 +1228,10 @@ pub fn AM_drawWalls(state: &mut GameState) {
 }
 pub fn AM_rotate(x: &mut fixed_t, y: &mut fixed_t, a: angle_t) {
     let mut tmpx: fixed_t = 0;
-    tmpx = FixedMul(*x, finecosine[(a >> ANGLETOFINESHIFT) as isize])
+    tmpx = FixedMul(*x, finecosine[(a >> ANGLETOFINESHIFT) as usize])
         - FixedMul(*y, finesine[(a >> ANGLETOFINESHIFT) as usize]);
     *y = FixedMul(*x, finesine[(a >> ANGLETOFINESHIFT) as usize])
-        + FixedMul(*y, finecosine[(a >> ANGLETOFINESHIFT) as isize]);
+        + FixedMul(*y, finecosine[(a >> ANGLETOFINESHIFT) as usize]);
     *x = tmpx;
 }
 pub fn AM_drawLineCharacter(

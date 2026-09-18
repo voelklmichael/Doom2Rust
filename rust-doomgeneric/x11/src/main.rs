@@ -920,11 +920,11 @@ impl DoomPlatform for X11Platform {
             self.s_Screen = (*(self.s_Display as _XPrivDisplay)).default_screen;
             let mut blackColor: i32 = (*(*(self.s_Display as _XPrivDisplay))
                 .screens
-                .offset(self.s_Screen as isize))
+                .add(self.s_Screen as usize))
             .black_pixel as i32;
             let mut whiteColor: i32 = (*(*(self.s_Display as _XPrivDisplay))
                 .screens
-                .offset(self.s_Screen as isize))
+                .add(self.s_Screen as usize))
             .white_pixel as i32;
             let mut attr: XSetWindowAttributes = XSetWindowAttributes {
                 background_pixmap: 0,
@@ -951,17 +951,17 @@ impl DoomPlatform for X11Platform {
             attr.event_mask = ExposureMask | KeyPressMask;
             attr.background_pixel = (*(*(self.s_Display as _XPrivDisplay))
                 .screens
-                .offset(self.s_Screen as isize))
+                .add(self.s_Screen as usize))
             .black_pixel;
             let mut depth: i32 = (*(*(self.s_Display as _XPrivDisplay))
                 .screens
-                .offset(self.s_Screen as isize))
+                .add(self.s_Screen as usize))
             .root_depth;
             self.s_Window = XCreateSimpleWindow(
                 self.s_Display,
                 (*(*(self.s_Display as _XPrivDisplay))
                     .screens
-                    .offset((*(self.s_Display as _XPrivDisplay)).default_screen as isize))
+                    .add((*(self.s_Display as _XPrivDisplay)).default_screen as usize))
                 .root,
                 0_i32,
                 0_i32,
@@ -996,7 +996,7 @@ impl DoomPlatform for X11Platform {
                 self.s_Display,
                 (*(*(self.s_Display as _XPrivDisplay))
                     .screens
-                    .offset(self.s_Screen as isize))
+                    .add(self.s_Screen as usize))
                 .root_visual,
                 depth as u32,
                 ZPixmap,

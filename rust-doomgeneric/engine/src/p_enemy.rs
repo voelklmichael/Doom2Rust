@@ -1060,7 +1060,7 @@ pub fn A_Tracer(state: &mut GameState, id: MobjId) {
         exact = state.p_mobj.mo(actor).angle >> ANGLETOFINESHIFT;
         state.p_mobj.mo_mut(actor).momx = FixedMul(
             state.info.mobjinfo_mut(state.p_mobj.mo(actor).type_0).speed as fixed_t,
-            finecosine[exact as isize],
+            finecosine[exact as usize],
         );
         state.p_mobj.mo_mut(actor).momy = FixedMul(
             state.info.mobjinfo_mut(state.p_mobj.mo(actor).type_0).speed as fixed_t,
@@ -1261,7 +1261,7 @@ pub fn A_Fire(state: &mut GameState, id: MobjId) {
         an = state.p_mobj.mo(dest.unwrap()).angle >> ANGLETOFINESHIFT;
         P_UnsetThingPosition(state, actor);
         state.p_mobj.mo_mut(actor).x = state.p_mobj.mo(dest.unwrap()).x
-            + FixedMul(24 as fixed_t * FRACUNIT, finecosine[an as isize]);
+            + FixedMul(24 as fixed_t * FRACUNIT, finecosine[an as usize]);
         state.p_mobj.mo_mut(actor).y = state.p_mobj.mo(dest.unwrap()).y
             + FixedMul(24 as fixed_t * FRACUNIT, finesine[an as usize]);
         state.p_mobj.mo_mut(actor).z = state.p_mobj.mo(dest.unwrap()).z;
@@ -1328,7 +1328,7 @@ pub fn A_VileAttack(state: &mut GameState, id: MobjId) {
             return;
         }
         state.p_mobj.mo_mut(fire.unwrap()).x =
-            state.p_mobj.mo(target).x - FixedMul(24 as fixed_t * FRACUNIT, finecosine[an as isize]);
+            state.p_mobj.mo(target).x - FixedMul(24 as fixed_t * FRACUNIT, finecosine[an as usize]);
         state.p_mobj.mo_mut(fire.unwrap()).y =
             state.p_mobj.mo(target).y - FixedMul(24 as fixed_t * FRACUNIT, finesine[an as usize]);
         P_RadiusAttack(state, fire.unwrap(), Some(actor), 70_i32);
@@ -1368,7 +1368,7 @@ pub fn A_FatAttack1(state: &mut GameState, id: MobjId) {
         an = (state.p_mobj.mo(mo).angle >> ANGLETOFINESHIFT) as i32;
         state.p_mobj.mo_mut(mo).momx = FixedMul(
             state.info.mobjinfo_mut(state.p_mobj.mo(mo).type_0).speed as fixed_t,
-            finecosine[an as isize],
+            finecosine[an as usize],
         );
         state.p_mobj.mo_mut(mo).momy = FixedMul(
             state.info.mobjinfo_mut(state.p_mobj.mo(mo).type_0).speed as fixed_t,
@@ -1405,7 +1405,7 @@ pub fn A_FatAttack2(state: &mut GameState, id: MobjId) {
         an = (state.p_mobj.mo(mo).angle >> ANGLETOFINESHIFT) as i32;
         state.p_mobj.mo_mut(mo).momx = FixedMul(
             state.info.mobjinfo_mut(state.p_mobj.mo(mo).type_0).speed as fixed_t,
-            finecosine[an as isize],
+            finecosine[an as usize],
         );
         state.p_mobj.mo_mut(mo).momy = FixedMul(
             state.info.mobjinfo_mut(state.p_mobj.mo(mo).type_0).speed as fixed_t,
@@ -1436,7 +1436,7 @@ pub fn A_FatAttack3(state: &mut GameState, id: MobjId) {
         an = (state.p_mobj.mo(mo).angle >> ANGLETOFINESHIFT) as i32;
         state.p_mobj.mo_mut(mo).momx = FixedMul(
             state.info.mobjinfo_mut(state.p_mobj.mo(mo).type_0).speed as fixed_t,
-            finecosine[an as isize],
+            finecosine[an as usize],
         );
         state.p_mobj.mo_mut(mo).momy = FixedMul(
             state.info.mobjinfo_mut(state.p_mobj.mo(mo).type_0).speed as fixed_t,
@@ -1451,7 +1451,7 @@ pub fn A_FatAttack3(state: &mut GameState, id: MobjId) {
         an = (state.p_mobj.mo(mo).angle >> ANGLETOFINESHIFT) as i32;
         state.p_mobj.mo_mut(mo).momx = FixedMul(
             state.info.mobjinfo_mut(state.p_mobj.mo(mo).type_0).speed as fixed_t,
-            finecosine[an as isize],
+            finecosine[an as usize],
         );
         state.p_mobj.mo_mut(mo).momy = FixedMul(
             state.info.mobjinfo_mut(state.p_mobj.mo(mo).type_0).speed as fixed_t,
@@ -1483,7 +1483,7 @@ pub fn A_SkullAttack(state: &mut GameState, id: MobjId) {
         S_StartSound(state, SoundOrigin::Mobj(actor), attacksound);
         A_FaceTarget(state, actor);
         an = state.p_mobj.mo(actor).angle >> ANGLETOFINESHIFT;
-        state.p_mobj.mo_mut(actor).momx = FixedMul(SKULLSPEED, finecosine[an as isize]);
+        state.p_mobj.mo_mut(actor).momx = FixedMul(SKULLSPEED, finecosine[an as usize]);
         state.p_mobj.mo_mut(actor).momy = FixedMul(SKULLSPEED, finesine[an as usize]);
         dist = P_AproxDistance(
             state.p_mobj.mo(dest).x - state.p_mobj.mo(actor).x,
@@ -1523,7 +1523,7 @@ pub fn A_PainShootSkull(state: &mut GameState, actor: MobjId, mut angle: angle_t
                 .radius
                 + state.info.mobjinfo[MobjType::MT_SKULL as usize].radius)
             / 2_i32;
-    x = state.p_mobj.mo(actor).x + FixedMul(prestep as fixed_t, finecosine[an as isize]);
+    x = state.p_mobj.mo(actor).x + FixedMul(prestep as fixed_t, finecosine[an as usize]);
     y = state.p_mobj.mo(actor).y + FixedMul(prestep as fixed_t, finesine[an as usize]);
     z = (state.p_mobj.mo(actor).z + 8_i32 * FRACUNIT) as fixed_t;
     newmobj = P_SpawnMobj(state, x, y, z, MobjType::MT_SKULL);

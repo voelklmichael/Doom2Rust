@@ -53,7 +53,7 @@ impl PUserState {
 pub fn P_Thrust(state: &mut GameState, mo: MobjId, mut angle: angle_t, move_0: fixed_t) {
     angle >>= ANGLETOFINESHIFT;
     let mo = state.p_mobj.mo_mut(mo);
-    mo.momx += FixedMul(move_0, finecosine[angle as isize]);
+    mo.momx += FixedMul(move_0, finecosine[angle as usize]);
     mo.momy += FixedMul(move_0, finesine[angle as usize]);
 }
 pub fn P_CalcHeight(state: &mut GameState, player_id: PlayerId) {

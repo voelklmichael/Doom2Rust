@@ -1109,7 +1109,7 @@ pub fn G_CheckSpot(state: &mut GameState, playernum: i32, mthing: &mapthing_t) -
             ya = finetangent[3072];
         }
         0 | 1024 | 2048 | 3072 => {
-            xa = finecosine[an as isize];
+            xa = finecosine[an as usize];
             ya = finesine[an as usize];
         }
         _ => {

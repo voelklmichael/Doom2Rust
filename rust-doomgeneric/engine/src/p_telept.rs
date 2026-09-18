@@ -68,7 +68,7 @@ pub fn EV_Teleport(state: &mut GameState, line: LineId, side: i32, thing: MobjId
                         let thing_z = state.p_mobj.mo(thing).z;
                         let fog = P_SpawnMobj(
                             state,
-                            m_x + 20 as fixed_t * finecosine[an as isize],
+                            m_x + 20 as fixed_t * finecosine[an as usize],
                             m_y + 20 as fixed_t * finesine[an as usize],
                             thing_z,
                             MobjType::MT_TFOG,

@@ -287,7 +287,7 @@ pub fn A_WeaponReady(state: &mut GameState, player_id: PlayerId, position: i32) 
         state.g_game.players[player_id.0 as usize].psprites[position as usize].sx = FRACUNIT
             + FixedMul(
                 state.g_game.players[player.0 as usize].bob,
-                finecosine[angle as isize],
+                finecosine[angle as usize],
             );
         angle &= FINEANGLES / 2_i32 - 1_i32;
         state.g_game.players[player_id.0 as usize].psprites[position as usize].sy = 32 as fixed_t

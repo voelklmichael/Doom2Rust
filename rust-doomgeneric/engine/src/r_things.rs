@@ -688,9 +688,8 @@ pub fn R_DrawSprite(state: &mut GameState, spr: &vissprite_t) {
         state.r_things.clipbot[x as usize] = state.r_things.cliptop[x as usize];
         x += 1;
     }
-    let mut ds_idx: isize = state.r_bsp.ds_p as isize - 1;
-    while ds_idx >= 0 {
-        let ds = state.r_bsp.drawsegs[ds_idx as usize];
+    for ds_idx in (0..state.r_bsp.ds_p).rev() {
+        let ds = state.r_bsp.drawsegs[ds_idx];
         if !(ds.x1 > spr.x2
             || ds.x2 < spr.x1
             || ds.silhouette == 0 && ds.maskedtexturecol.is_none())
@@ -754,7 +753,6 @@ pub fn R_DrawSprite(state: &mut GameState, spr: &vissprite_t) {
                 }
             }
         }
-        ds_idx -= 1;
     }
     x = spr.x1;
     while x <= spr.x2 {
@@ -779,13 +777,11 @@ pub fn R_DrawMasked(state: &mut GameState) {
         R_DrawSprite(state, &spr);
         i += 1;
     }
-    let mut ds_idx: isize = state.r_bsp.ds_p as isize - 1;
-    while ds_idx >= 0 {
-        let ds = state.r_bsp.drawsegs[ds_idx as usize];
+    for ds_idx in (0..state.r_bsp.ds_p).rev() {
+        let ds = state.r_bsp.drawsegs[ds_idx];
         if ds.maskedtexturecol.is_some() {
             R_RenderMaskedSegRange(state, &ds, ds.x1, ds.x2);
         }
-        ds_idx -= 1;
     }
     if state.r_main.viewangleoffset == 0 {
         R_DrawPlayerSprites(state);
