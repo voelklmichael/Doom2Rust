@@ -78,7 +78,7 @@ pub fn W_AddFile(state: &mut GameState, filename: &str) -> Option<&'static wad_f
     // Scratch WAD-directory buffer -- built and consumed entirely within
     // this function, so a plain owned Vec replaces the old
     // Z_Malloc-then-Z_Free-at-the-end pair with no lifetime change.
-    
+
     let wad_file = match W_OpenFile(filename) {
         Some(wad_file) => wad_file,
         None => {
@@ -113,7 +113,9 @@ pub fn W_AddFile(state: &mut GameState, filename: &str) -> Option<&'static wad_f
             vec![0u8; (header.numlumps as usize) * ::core::mem::size_of::<filelump_t>()];
         W_Read(wad_file, header.infotableofs as u32, &mut dir_buf);
         dir_buf
-            .as_chunks::<{ ::core::mem::size_of::<filelump_t>() }>().0.iter()
+            .as_chunks::<{ ::core::mem::size_of::<filelump_t>() }>()
+            .0
+            .iter()
             .map(|c| filelump_t {
                 filepos: i32::from_le_bytes(c[0..4].try_into().unwrap()),
                 size: i32::from_le_bytes(c[4..8].try_into().unwrap()),
@@ -215,7 +217,11 @@ pub fn W_LumpBytes(state: &mut GameState, lumpnum: i32) -> std::rc::Rc<[u8]> {
     // same harmless slack vanilla relied on.
     const CACHE_PAD: usize = 128;
     let mut buf = vec![0u8; lumplen as usize + CACHE_PAD].into_boxed_slice();
-    W_ReadLump(&mut state.w_wad, lumpnum as u32, &mut buf[..lumplen as usize]);
+    W_ReadLump(
+        &mut state.w_wad,
+        lumpnum as u32,
+        &mut buf[..lumplen as usize],
+    );
     let rc: std::rc::Rc<[u8]> = std::rc::Rc::from(buf);
     state.w_wad.lumpinfo[lumpnum as usize].cache = Some(std::rc::Rc::clone(&rc));
     rc

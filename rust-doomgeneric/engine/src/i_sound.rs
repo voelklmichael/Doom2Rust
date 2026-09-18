@@ -259,54 +259,34 @@ pub fn I_MusicIsPlaying(state: &mut ISoundState) -> bool {
     }
 }
 pub fn I_BindSoundVariables(state: &mut GameState) {
-    M_BindVariable_int(
-        &mut state.m_config,
-        "snd_musicdevice",
-        |s| &mut s.i_sound.snd_musicdevice
-    );
-    M_BindVariable_int(
-        &mut state.m_config,
-        "snd_sfxdevice",
-        |s| &mut s.i_sound.snd_sfxdevice
-    );
-    M_BindVariable_int(
-        &mut state.m_config,
-        "snd_sbport",
-        |s| &mut s.i_sound.snd_sbport
-    );
-    M_BindVariable_int(
-        &mut state.m_config,
-        "snd_sbirq",
-        |s| &mut s.i_sound.snd_sbirq
-    );
-    M_BindVariable_int(
-        &mut state.m_config,
-        "snd_sbdma",
-        |s| &mut s.i_sound.snd_sbdma
-    );
-    M_BindVariable_int(
-        &mut state.m_config,
-        "snd_mport",
-        |s| &mut s.i_sound.snd_mport
-    );
-    M_BindVariable_int(
-        &mut state.m_config,
-        "snd_maxslicetime_ms",
-        |s| &mut s.i_sound.snd_maxslicetime_ms
-    );
-    M_BindVariable_string(
-        &mut state.m_config,
-        "snd_musiccmd",
-        |s| &mut s.i_sound.snd_musiccmd
-    );
-    M_BindVariable_int(
-        &mut state.m_config,
-        "snd_samplerate",
-        |s| &mut s.i_sound.snd_samplerate
-    );
-    M_BindVariable_int(
-        &mut state.m_config,
-        "snd_cachesize",
-        |s| &mut s.i_sound.snd_cachesize
-    );
+    M_BindVariable_int(&mut state.m_config, "snd_musicdevice", |s| {
+        &mut s.i_sound.snd_musicdevice
+    });
+    M_BindVariable_int(&mut state.m_config, "snd_sfxdevice", |s| {
+        &mut s.i_sound.snd_sfxdevice
+    });
+    M_BindVariable_int(&mut state.m_config, "snd_sbport", |s| {
+        &mut s.i_sound.snd_sbport
+    });
+    M_BindVariable_int(&mut state.m_config, "snd_sbirq", |s| {
+        &mut s.i_sound.snd_sbirq
+    });
+    M_BindVariable_int(&mut state.m_config, "snd_sbdma", |s| {
+        &mut s.i_sound.snd_sbdma
+    });
+    M_BindVariable_int(&mut state.m_config, "snd_mport", |s| {
+        &mut s.i_sound.snd_mport
+    });
+    M_BindVariable_int(&mut state.m_config, "snd_maxslicetime_ms", |s| {
+        &mut s.i_sound.snd_maxslicetime_ms
+    });
+    M_BindVariable_string(&mut state.m_config, "snd_musiccmd", |s| {
+        &mut s.i_sound.snd_musiccmd
+    });
+    M_BindVariable_int(&mut state.m_config, "snd_samplerate", |s| {
+        &mut s.i_sound.snd_samplerate
+    });
+    M_BindVariable_int(&mut state.m_config, "snd_cachesize", |s| {
+        &mut s.i_sound.snd_cachesize
+    });
 }

@@ -391,7 +391,12 @@ pub fn HU_Start(state: &mut GameState) {
         HU_FONTSTART,
     );
     for i in 0..MAXPLAYERS {
-        HUlib_initIText(&mut state.hu_stuff.w_inputbuffer[i as usize], 0_i32, 0_i32, 0_i32);
+        HUlib_initIText(
+            &mut state.hu_stuff.w_inputbuffer[i as usize],
+            0_i32,
+            0_i32,
+            0_i32,
+        );
     }
     state.hu_stuff.headsupactive = true;
 }
@@ -432,11 +437,15 @@ pub fn HU_Ticker(state: &mut GameState) {
         state.hu_stuff.message_nottobefuckedwith = false;
     }
     if (state.m_menu.showMessages != 0 || state.hu_stuff.message_dontfuckwithme)
-        && (state.g_game.player_mut(state.hu_stuff.plr)
+        && (state
+            .g_game
+            .player_mut(state.hu_stuff.plr)
             .message
             .is_some()
             && !state.hu_stuff.message_nottobefuckedwith
-            || state.g_game.player_mut(state.hu_stuff.plr)
+            || state
+                .g_game
+                .player_mut(state.hu_stuff.plr)
                 .message
                 .is_some()
                 && state.hu_stuff.message_dontfuckwithme)
@@ -444,7 +453,9 @@ pub fn HU_Ticker(state: &mut GameState) {
         HUlib_addMessageToSText(
             &mut state.hu_stuff.w_message,
             None,
-            state.g_game.player_mut(state.hu_stuff.plr)
+            state
+                .g_game
+                .player_mut(state.hu_stuff.plr)
                 .message
                 .as_deref()
                 .unwrap(),
@@ -459,16 +470,13 @@ pub fn HU_Ticker(state: &mut GameState) {
         i = 0_i32;
         while i < MAXPLAYERS {
             if state.g_game.playeringame[i as usize] && i != state.g_game.consoleplayer && {
-                    c = state.g_game.players[i as usize].cmd.chatchar;
-                    c as i32 != 0
-                } {
+                c = state.g_game.players[i as usize].cmd.chatchar;
+                c as i32 != 0
+            } {
                 if c as i32 <= HU_BROADCAST {
                     state.hu_stuff.chat_dest[i as usize] = c;
                 } else {
-                    rc = HUlib_keyInIText(
-                        &mut state.hu_stuff.w_inputbuffer[i as usize],
-                        c,
-                    ) as i32;
+                    rc = HUlib_keyInIText(&mut state.hu_stuff.w_inputbuffer[i as usize], c) as i32;
                     if rc != 0 && c as i32 == KEY_ENTER {
                         if !state.hu_stuff.w_inputbuffer[i as usize].l.l.is_empty()
                             && (state.hu_stuff.chat_dest[i as usize] as i32
@@ -491,9 +499,7 @@ pub fn HU_Ticker(state: &mut GameState) {
                                 S_StartSound(state, SoundOrigin::None, sfx_tink as i32);
                             }
                         }
-                        HUlib_resetIText(
-                            &mut state.hu_stuff.w_inputbuffer[i as usize],
-                        );
+                        HUlib_resetIText(&mut state.hu_stuff.w_inputbuffer[i as usize]);
                     }
                 }
                 state.g_game.players[i as usize].cmd.chatchar = 0 as byte;
@@ -505,8 +511,7 @@ pub fn HU_Ticker(state: &mut GameState) {
 pub const QUEUESIZE: i32 = 128;
 pub fn HU_queueChatChar(state: &mut GameState, c: u8) {
     if (state.hu_stuff.head + 1_i32) & (QUEUESIZE - 1_i32) == state.hu_stuff.tail {
-        state.g_game.player_mut(state.hu_stuff.plr).message =
-            Some("[Message unsent]".to_string());
+        state.g_game.player_mut(state.hu_stuff.plr).message = Some("[Message unsent]".to_string());
     } else {
         state.hu_stuff.chatchars[state.hu_stuff.head as usize] = c;
         state.hu_stuff.head = (state.hu_stuff.head + 1_i32) & (QUEUESIZE - 1_i32);

@@ -1,7 +1,7 @@
 use crate::game_state::GameState;
 use crate::m_random::P_Random;
+use crate::p_mobj::thinker_t;
 use crate::p_mobj::ThinkerFn;
-use crate::p_mobj::{thinker_t};
 use crate::p_setup::LineId;
 use crate::p_setup::SectorId;
 use crate::p_spec::getNextSector;
@@ -465,7 +465,11 @@ pub fn P_SpawnStrobeFlash(state: &mut GameState, sector: SectorId, fastOrSlow: i
         flash.count = 1_i32;
     };
     let flash_arena_id = state.p_lights.spawn_strobe(flash);
-    P_AddThinker(state, ThinkerPayload::Strobe(flash_arena_id), ThinkerKind::Strobe);
+    P_AddThinker(
+        state,
+        ThinkerPayload::Strobe(flash_arena_id),
+        ThinkerKind::Strobe,
+    );
 }
 pub fn EV_StartLightStrobing(state: &mut GameState, mut line: LineId) {
     let mut secnum: i32 = 0;

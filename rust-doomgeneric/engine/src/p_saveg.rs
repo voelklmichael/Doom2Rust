@@ -100,7 +100,13 @@ pub fn P_SaveGameFile(state: &mut GameState, slot: i32) -> String {
 }
 fn saveg_read8(state: &mut PSavegState) -> byte {
     let mut result: [byte; 1] = [0];
-    if state.save_stream.as_mut().unwrap().read(&mut result).unwrap_or(0) < 1
+    if state
+        .save_stream
+        .as_mut()
+        .unwrap()
+        .read(&mut result)
+        .unwrap_or(0)
+        < 1
         && !state.savegame_error
     {
         eprintln!("saveg_read8: Unexpected end of file while reading save game");
@@ -109,7 +115,13 @@ fn saveg_read8(state: &mut PSavegState) -> byte {
     result[0]
 }
 fn saveg_write8(state: &mut PSavegState, value: byte) {
-    if state.save_stream.as_mut().unwrap().write(&[value]).unwrap_or(0) < 1
+    if state
+        .save_stream
+        .as_mut()
+        .unwrap()
+        .write(&[value])
+        .unwrap_or(0)
+        < 1
         && !state.savegame_error
     {
         eprintln!("saveg_write8: Error while writing save game");
@@ -751,7 +763,10 @@ pub fn P_WriteSaveGameHeader(state: &mut GameState, description: &str) {
     saveg_write8(&mut state.p_saveg, state.g_game.gamemap as byte);
     i = 0_i32;
     while i < MAXPLAYERS {
-        saveg_write8(&mut state.p_saveg, state.g_game.playeringame[i as usize] as byte);
+        saveg_write8(
+            &mut state.p_saveg,
+            state.g_game.playeringame[i as usize] as byte,
+        );
         i += 1;
     }
     saveg_write8(
@@ -762,7 +777,10 @@ pub fn P_WriteSaveGameHeader(state: &mut GameState, description: &str) {
         &mut state.p_saveg,
         (state.p_tick.leveltime >> 8_i32 & 0xff_i32) as byte,
     );
-    saveg_write8(&mut state.p_saveg, (state.p_tick.leveltime & 0xff_i32) as byte);
+    saveg_write8(
+        &mut state.p_saveg,
+        (state.p_tick.leveltime & 0xff_i32) as byte,
+    );
 }
 pub fn P_ReadSaveGameHeader(state: &mut GameState) -> bool {
     let mut i: i32 = 0;
@@ -914,7 +932,8 @@ pub fn P_UnArchiveWorld(state: &mut GameState) {
         let sidenum = li.sidenum;
         for &side in sidenum.iter() {
             if side as i32 != -1_i32 {
-                let textureoffset = ((saveg_read16(&mut state.p_saveg) as i32) << FRACBITS) as fixed_t;
+                let textureoffset =
+                    ((saveg_read16(&mut state.p_saveg) as i32) << FRACBITS) as fixed_t;
                 let rowoffset = ((saveg_read16(&mut state.p_saveg) as i32) << FRACBITS) as fixed_t;
                 let toptexture = saveg_read16(&mut state.p_saveg);
                 let bottomtexture = saveg_read16(&mut state.p_saveg);
@@ -1055,7 +1074,11 @@ pub fn P_UnArchiveThinkers(state: &mut GameState) {
                     m.ceilingz = ceilingheight;
                     m.thinker.function = ThinkerFn::Mobj(P_MobjThinker);
                 }
-                P_AddThinker(state, ThinkerPayload::Mobj(mobj_arena_id), ThinkerKind::Mobj);
+                P_AddThinker(
+                    state,
+                    ThinkerPayload::Mobj(mobj_arena_id),
+                    ThinkerKind::Mobj,
+                );
             }
             _ => {
                 I_Error(&format!("Unknown tclass {} in savegame", tclass as i32,));
@@ -1117,7 +1140,10 @@ pub fn P_ArchiveSpecials(state: &mut GameState) {
                 };
                 saveg_write8(&mut state.p_saveg, tc_flash as i32 as byte);
                 saveg_write_pad(&mut state.p_saveg);
-                let f = state.p_lights.get_lightflash_mut(flash_id).expect("live lightflash");
+                let f = state
+                    .p_lights
+                    .get_lightflash_mut(flash_id)
+                    .expect("live lightflash");
                 saveg_write_lightflash_t(&mut state.p_saveg, f);
             }
             ThinkerFn::Strobe(_) => {
@@ -1126,7 +1152,10 @@ pub fn P_ArchiveSpecials(state: &mut GameState) {
                 };
                 saveg_write8(&mut state.p_saveg, tc_strobe as i32 as byte);
                 saveg_write_pad(&mut state.p_saveg);
-                let s = state.p_lights.get_strobe_mut(strobe_id).expect("live strobe");
+                let s = state
+                    .p_lights
+                    .get_strobe_mut(strobe_id)
+                    .expect("live strobe");
                 saveg_write_strobe_t(&mut state.p_saveg, s);
             }
             ThinkerFn::Glow(_) => {
@@ -1154,7 +1183,10 @@ pub fn P_UnArchiveSpecials(state: &mut GameState) {
                 saveg_read_pad(&mut state.p_saveg);
                 let ceiling_arena_id = state.p_ceilng.spawn(ceiling_t::default());
                 let sector = {
-                    let c = state.p_ceilng.get_mut(ceiling_arena_id).expect("live ceiling");
+                    let c = state
+                        .p_ceilng
+                        .get_mut(ceiling_arena_id)
+                        .expect("live ceiling");
                     saveg_read_ceiling_t(&mut state.p_saveg, c);
                     if matches!(c.thinker.function, ThinkerFn::Unresolved) {
                         c.thinker.function = ThinkerFn::Ceiling(T_MoveCeiling);
@@ -1179,20 +1211,30 @@ pub fn P_UnArchiveSpecials(state: &mut GameState) {
                     d.thinker.function = ThinkerFn::Door(T_VerticalDoor);
                     d.sector
                 };
-                let door_id = P_AddThinker(state, ThinkerPayload::Door(door_arena_id), ThinkerKind::Door);
+                let door_id = P_AddThinker(
+                    state,
+                    ThinkerPayload::Door(door_arena_id),
+                    ThinkerKind::Door,
+                );
                 state.p_setup.sector_mut(sector).specialdata = Some(SectorSpecial::Door(door_id));
             }
             2 => {
                 saveg_read_pad(&mut state.p_saveg);
                 let floor_arena_id = state.p_spec.spawn_floor(floormove_t::default());
                 let sector = {
-                    let f = state.p_spec.get_floor_mut(floor_arena_id).expect("live floor");
+                    let f = state
+                        .p_spec
+                        .get_floor_mut(floor_arena_id)
+                        .expect("live floor");
                     saveg_read_floormove_t(&mut state.p_saveg, f);
                     f.thinker.function = ThinkerFn::Floor(T_MoveFloor);
                     f.sector
                 };
-                let floor_id =
-                    P_AddThinker(state, ThinkerPayload::Floor(floor_arena_id), ThinkerKind::Floor);
+                let floor_id = P_AddThinker(
+                    state,
+                    ThinkerPayload::Floor(floor_arena_id),
+                    ThinkerKind::Floor,
+                );
                 state.p_setup.sector_mut(sector).specialdata = Some(SectorSpecial::Floor(floor_id));
             }
             3 => {
@@ -1206,8 +1248,11 @@ pub fn P_UnArchiveSpecials(state: &mut GameState) {
                     }
                     p.sector
                 };
-                let plat_id =
-                    P_AddThinker(state, ThinkerPayload::Plat(plat_arena_id), ThinkerKind::Plat);
+                let plat_id = P_AddThinker(
+                    state,
+                    ThinkerPayload::Plat(plat_arena_id),
+                    ThinkerKind::Plat,
+                );
                 state.p_setup.sector_mut(sector).specialdata = Some(SectorSpecial::Plat(plat_id));
                 P_AddActivePlat(&mut state.p_plats, plat_id);
             }
@@ -1249,11 +1294,18 @@ pub fn P_UnArchiveSpecials(state: &mut GameState) {
                 saveg_read_pad(&mut state.p_saveg);
                 let glow_arena_id = state.p_lights.spawn_glow(glow_t::default());
                 {
-                    let g = state.p_lights.get_glow_mut(glow_arena_id).expect("live glow");
+                    let g = state
+                        .p_lights
+                        .get_glow_mut(glow_arena_id)
+                        .expect("live glow");
                     saveg_read_glow_t(&mut state.p_saveg, g);
                     g.thinker.function = ThinkerFn::Glow(T_Glow);
                 }
-                P_AddThinker(state, ThinkerPayload::Glow(glow_arena_id), ThinkerKind::Glow);
+                P_AddThinker(
+                    state,
+                    ThinkerPayload::Glow(glow_arena_id),
+                    ThinkerKind::Glow,
+                );
             }
             _ => {
                 I_Error(&format!(

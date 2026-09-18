@@ -90,7 +90,6 @@ impl PCeilngState {
         id
     }
 
-
     pub fn get_ref(&self, id: CeilingId) -> Option<&ceiling_t> {
         self.ceilings
             .get(id.index as usize)
@@ -133,8 +132,14 @@ pub fn T_MoveCeiling(state: &mut GameState, id: CeilingId) {
                 1_i32,
                 ceiling.direction,
             );
-            if state.p_tick.leveltime & 7_i32 == 0 && ceiling.type_0 != CeilingE::silentCrushAndRaise {
-                S_StartSound(state, SoundOrigin::Sector(ceiling.sector), sfx_stnmov as i32);
+            if state.p_tick.leveltime & 7_i32 == 0
+                && ceiling.type_0 != CeilingE::silentCrushAndRaise
+            {
+                S_StartSound(
+                    state,
+                    SoundOrigin::Sector(ceiling.sector),
+                    sfx_stnmov as i32,
+                );
             }
             if res == ResultE::pastdest {
                 match ceiling.type_0 {
@@ -162,8 +167,14 @@ pub fn T_MoveCeiling(state: &mut GameState, id: CeilingId) {
                 1_i32,
                 ceiling.direction,
             );
-            if state.p_tick.leveltime & 7_i32 == 0 && ceiling.type_0 != CeilingE::silentCrushAndRaise {
-                S_StartSound(state, SoundOrigin::Sector(ceiling.sector), sfx_stnmov as i32);
+            if state.p_tick.leveltime & 7_i32 == 0
+                && ceiling.type_0 != CeilingE::silentCrushAndRaise
+            {
+                S_StartSound(
+                    state,
+                    SoundOrigin::Sector(ceiling.sector),
+                    sfx_stnmov as i32,
+                );
             }
             if res == ResultE::pastdest {
                 match ceiling.type_0 {

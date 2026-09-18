@@ -1,9 +1,8 @@
-
 use crate::game_state::GameState;
-use crate::v_video::Screen;
 use crate::i_video::I_ReadScreen;
 use crate::m_random::M_Random;
 use crate::stdint_types::byte;
+use crate::v_video::Screen;
 use crate::v_video::V_DrawBlock;
 use crate::v_video::V_MarkRect;
 

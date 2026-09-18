@@ -2,12 +2,12 @@ use crate::d_mode::GameMode_t;
 use crate::doomdef::SCREENHEIGHT;
 use crate::doomdef::SCREENWIDTH;
 use crate::game_state::GameState;
-use crate::v_video::Screen;
-use crate::v_video::V_CachePatchName;
-use crate::patch::Patch;
 use crate::i_system::I_Error;
 use crate::m_fixed::fixed_t;
 use crate::m_fixed::FRACBITS;
+use crate::patch::Patch;
+use crate::v_video::Screen;
+use crate::v_video::V_CachePatchName;
 
 use crate::r_main::ColormapId;
 use crate::stdint_types::byte;
@@ -532,7 +532,7 @@ pub fn R_FillBackScreen(state: &mut GameState) {
     let mut patch: Patch;
     let name1: &str = "FLOOR7_2";
     let name2: &str = "GRNROCK";
-    
+
     if state.r_draw.scaledviewwidth == SCREENWIDTH {
         state.r_draw.background_buffer = None;
         return;

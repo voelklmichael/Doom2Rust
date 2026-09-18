@@ -10,17 +10,16 @@ use crate::doomdef::MAXPLAYERS;
 use crate::doomdef::SCREENHEIGHT;
 use crate::doomdef::SCREENWIDTH;
 use crate::game_state::GameState;
-use crate::v_video::Screen;
-use crate::v_video::V_CachePatchName;
-use crate::patch::Patch;
 use crate::hu_stuff::HU_FONTSIZE;
 use crate::hu_stuff::HU_FONTSTART;
 use crate::i_video::IVideoState;
 use crate::info::StateId;
+use crate::patch::Patch;
+use crate::v_video::Screen;
+use crate::v_video::V_CachePatchName;
 
 use crate::p_mobj::MobjType;
 use crate::p_mobj::StateNum;
-
 
 use crate::r_things::FF_FRAMEMASK;
 use crate::s_sound::S_ChangeMusic;
@@ -739,9 +738,6 @@ pub fn F_CastPrint(state: &mut GameState, text: &str) {
     }
 }
 pub fn F_CastDrawer(state: &mut GameState) {
-    
-    
-    
     let __wcache865_4 = V_CachePatchName(state, "BOSSBACK");
     let dest_screen = Screen::Video;
     V_DrawPatch(state, dest_screen, 0_i32, 0_i32, &__wcache865_4);

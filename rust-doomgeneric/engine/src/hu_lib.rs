@@ -4,8 +4,8 @@ use crate::game_state::GameState;
 use crate::m_controls::KEY_BACKSPACE;
 use crate::m_controls::KEY_ENTER;
 use crate::r_draw::R_VideoErase;
-use crate::v_video::V_CachePatchNum;
 use crate::v_video::Screen;
+use crate::v_video::V_CachePatchNum;
 use crate::v_video::V_DrawPatchDirect;
 #[derive(Clone)]
 pub struct hu_textline_t {

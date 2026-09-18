@@ -1674,7 +1674,10 @@ fn SearchCollection<'a>(
     mut collection: &'a mut default_collection_t,
     name: &str,
 ) -> Option<&'a mut default_t> {
-    collection.defaults.iter_mut().find(|entry| entry.name == name)
+    collection
+        .defaults
+        .iter_mut()
+        .find(|entry| entry.name == name)
 }
 static scantokey: [i32; 128] = [
     0_i32,

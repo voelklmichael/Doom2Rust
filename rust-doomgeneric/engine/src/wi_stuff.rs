@@ -8,7 +8,6 @@ use crate::doomdef::SCREENWIDTH;
 use crate::doomdef::TICRATE;
 use crate::g_game::G_WorldDone;
 use crate::game_state::GameState;
-use crate::v_video::Screen;
 use crate::m_random::M_Random;
 use crate::s_sound::S_ChangeMusic;
 use crate::s_sound::S_StartSound;
@@ -16,6 +15,7 @@ use crate::s_sound::SoundOrigin;
 use crate::sounds::{mus_dm2int, mus_inter};
 use crate::sounds::{sfx_barexp, sfx_pistol, sfx_pldeth, sfx_sgcock, sfx_slop};
 use crate::st_stuff::load_callback_t;
+use crate::v_video::Screen;
 use crate::v_video::V_CachePatchNum;
 use crate::v_video::V_DrawPatch;
 use crate::w_wad::{W_CheckNumForName, W_GetNumForName, W_LumpBytes, W_ReleaseLumpName};
@@ -854,13 +854,10 @@ pub fn WI_initAnimatedBack(state: &mut GameState) {
         let mut a = state.wi_stuff.anims()[index][i as usize];
         a.ctr = -1_i32;
         if a.type_0 == AnimEnum::ANIM_ALWAYS {
-            a.nexttic =
-                state.wi_stuff.bcnt + 1_i32 + M_Random(&mut state.m_random) % a.period;
+            a.nexttic = state.wi_stuff.bcnt + 1_i32 + M_Random(&mut state.m_random) % a.period;
         } else if a.type_0 == AnimEnum::ANIM_RANDOM {
-            a.nexttic = state.wi_stuff.bcnt
-                + 1_i32
-                + a.data2
-                + M_Random(&mut state.m_random) % a.data1;
+            a.nexttic =
+                state.wi_stuff.bcnt + 1_i32 + a.data2 + M_Random(&mut state.m_random) % a.data1;
         } else if a.type_0 == AnimEnum::ANIM_LEVEL {
             a.nexttic = state.wi_stuff.bcnt + 1_i32;
         }
@@ -893,23 +890,21 @@ pub fn WI_updateAnimatedBack(state: &mut GameState) {
                     a.ctr += 1;
                     if a.ctr == a.nanims {
                         a.ctr = -1_i32;
-                        a.nexttic = state.wi_stuff.bcnt
-                            + a.data2
-                            + M_Random(&mut state.m_random) % a.data1;
+                        a.nexttic =
+                            state.wi_stuff.bcnt + a.data2 + M_Random(&mut state.m_random) % a.data1;
                     } else {
                         a.nexttic = state.wi_stuff.bcnt + a.period;
                     }
                 }
-                2
-                    if !(state.wi_stuff.state == StateEnum::StatCount && i == 7_i32)
-                        && state.wbs().next == a.data1
-                    => {
-                        a.ctr += 1;
-                        if a.ctr == a.nanims {
-                            a.ctr -= 1;
-                        }
-                        a.nexttic = state.wi_stuff.bcnt + a.period;
+                2 if !(state.wi_stuff.state == StateEnum::StatCount && i == 7_i32)
+                    && state.wbs().next == a.data1 =>
+                {
+                    a.ctr += 1;
+                    if a.ctr == a.nanims {
+                        a.ctr -= 1;
                     }
+                    a.nexttic = state.wi_stuff.bcnt + a.period;
+                }
                 _ => {}
             }
         }
@@ -1020,13 +1015,7 @@ pub fn WI_drawTime(state: &mut GameState, mut x: i32, mut y: i32, mut t: i32) {
     } else {
         let sucks_patch = V_CachePatchNum(state, state.wi_stuff.sucks);
         let dest_screen = Screen::Video;
-        V_DrawPatch(
-            state,
-            dest_screen,
-            x - sucks_patch.width(),
-            y,
-            &sucks_patch,
-        );
+        V_DrawPatch(state, dest_screen, x - sucks_patch.width(), y, &sucks_patch);
     };
 }
 pub fn WI_End(state: &mut GameState) {
@@ -1536,13 +1525,7 @@ pub fn WI_drawNetgameStats(state: &mut GameState) {
             V_DrawPatch(state, dest_screen, x - p_patch.width(), y, &p_patch);
             if i == state.wi_stuff.me {
                 let dest_screen = Screen::Video;
-                V_DrawPatch(
-                    state,
-                    dest_screen,
-                    x - p_patch.width(),
-                    y,
-                    &star_patch,
-                );
+                V_DrawPatch(state, dest_screen, x - p_patch.width(), y, &star_patch);
             }
             x += NG_SPACINGX;
             let cnt_kills = state.wi_stuff.cnt_kills[i as usize];

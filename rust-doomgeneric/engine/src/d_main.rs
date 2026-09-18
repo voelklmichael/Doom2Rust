@@ -33,8 +33,6 @@ use crate::g_game::G_RecordDemo;
 use crate::g_game::G_Responder;
 use crate::g_game::G_TimeDemo;
 use crate::game_state::GameState;
-use crate::v_video::Screen;
-use crate::v_video::V_CachePatchName;
 use crate::hu_stuff::HU_Drawer;
 use crate::hu_stuff::HU_Erase;
 use crate::hu_stuff::HU_Init;
@@ -85,6 +83,8 @@ use crate::sounds::{mus_dm2ttl, mus_intro};
 use crate::st_stuff::ST_Drawer;
 use crate::st_stuff::ST_Init;
 use crate::statdump::StatDump;
+use crate::v_video::Screen;
+use crate::v_video::V_CachePatchName;
 
 use crate::stdint_types::size_t;
 use crate::v_video::V_DrawMouseSpeedBox;
@@ -404,64 +404,42 @@ pub fn D_BindVariables(state: &mut GameState) {
     state.m_controls.key_multi_msgplayer[1] = HUSTR_KEYINDIGO;
     state.m_controls.key_multi_msgplayer[2] = HUSTR_KEYBROWN;
     state.m_controls.key_multi_msgplayer[3] = HUSTR_KEYRED;
-    M_BindVariable_int(
-        &mut state.m_config,
-        "mouse_sensitivity",
-        |s| &mut s.m_menu.mouseSensitivity
-    );
-    M_BindVariable_int(
-        &mut state.m_config,
-        "sfx_volume",
-        |s| &mut s.s_sound.sfxVolume
-    );
-    M_BindVariable_int(
-        &mut state.m_config,
-        "music_volume",
-        |s| &mut s.s_sound.musicVolume
-    );
-    M_BindVariable_int(
-        &mut state.m_config,
-        "show_messages",
-        |s| &mut s.m_menu.showMessages
-    );
-    M_BindVariable_int(
-        &mut state.m_config,
-        "screenblocks",
-        |s| &mut s.m_menu.screenblocks
-    );
-    M_BindVariable_int(
-        &mut state.m_config,
-        "detaillevel",
-        |s| &mut s.m_menu.detailLevel
-    );
-    M_BindVariable_int(
-        &mut state.m_config,
-        "snd_channels",
-        |s| &mut s.s_sound.snd_channels
-    );
-    M_BindVariable_int(
-        &mut state.m_config,
-        "vanilla_savegame_limit",
-        |s| &mut s.g_game.vanilla_savegame_limit
-    );
-    M_BindVariable_int(
-        &mut state.m_config,
-        "vanilla_demo_limit",
-        |s| &mut s.g_game.vanilla_demo_limit
-    );
-    M_BindVariable_int(
-        &mut state.m_config,
-        "show_endoom",
-        |s| &mut s.d_main.show_endoom
-    );
+    M_BindVariable_int(&mut state.m_config, "mouse_sensitivity", |s| {
+        &mut s.m_menu.mouseSensitivity
+    });
+    M_BindVariable_int(&mut state.m_config, "sfx_volume", |s| {
+        &mut s.s_sound.sfxVolume
+    });
+    M_BindVariable_int(&mut state.m_config, "music_volume", |s| {
+        &mut s.s_sound.musicVolume
+    });
+    M_BindVariable_int(&mut state.m_config, "show_messages", |s| {
+        &mut s.m_menu.showMessages
+    });
+    M_BindVariable_int(&mut state.m_config, "screenblocks", |s| {
+        &mut s.m_menu.screenblocks
+    });
+    M_BindVariable_int(&mut state.m_config, "detaillevel", |s| {
+        &mut s.m_menu.detailLevel
+    });
+    M_BindVariable_int(&mut state.m_config, "snd_channels", |s| {
+        &mut s.s_sound.snd_channels
+    });
+    M_BindVariable_int(&mut state.m_config, "vanilla_savegame_limit", |s| {
+        &mut s.g_game.vanilla_savegame_limit
+    });
+    M_BindVariable_int(&mut state.m_config, "vanilla_demo_limit", |s| {
+        &mut s.g_game.vanilla_demo_limit
+    });
+    M_BindVariable_int(&mut state.m_config, "show_endoom", |s| {
+        &mut s.d_main.show_endoom
+    });
     i = 0_i32;
     while i < 10_i32 {
         let name = format!("chatmacro{}", i);
-        M_BindVariable_string(
-            &mut state.m_config,
-            &name,
-            move |s| &mut s.hu_stuff.chat_macros[i as usize]
-        );
+        M_BindVariable_string(&mut state.m_config, &name, move |s| {
+            &mut s.hu_stuff.chat_macros[i as usize]
+        });
         i += 1;
     }
 }

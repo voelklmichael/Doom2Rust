@@ -1,6 +1,6 @@
 use crate::game_state::GameState;
-use sha1_smol::Sha1;
 use crate::w_file::wad_file_t;
+use sha1_smol::Sha1;
 pub type sha1_digest_t = [u8; 20];
 pub struct WChecksumState {
     open_wadfiles: Vec<&'static wad_file_t>,

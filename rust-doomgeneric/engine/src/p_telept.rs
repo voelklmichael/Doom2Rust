@@ -1,17 +1,15 @@
 use crate::d_mode::GameVersion;
 use crate::game_state::GameState;
-use crate::p_tick::ThinkerPayload;
-use crate::p_mobj::MobjId;
 use crate::m_fixed::fixed_t;
 use crate::p_map::P_TeleportMove;
-
+use crate::p_mobj::MobjId;
+use crate::p_tick::ThinkerPayload;
 
 use crate::p_mobj::MobjType;
 use crate::p_mobj::P_SpawnMobj;
 use crate::p_mobj::ThinkerFn;
 use crate::p_mobj::MF_MISSILE;
 use crate::p_setup::LineId;
-
 
 use crate::s_sound::S_StartSound;
 use crate::s_sound::SoundOrigin;

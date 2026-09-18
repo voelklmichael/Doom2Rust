@@ -2,18 +2,17 @@ use crate::d_player::PowerType;
 use crate::d_player::NUMPSPRITES;
 use crate::doomdef::SCREENWIDTH;
 use crate::game_state::GameState;
-use crate::v_video::V_CachePatchNum;
-use crate::patch::Patch;
 use crate::i_system::I_Error;
 use crate::m_fixed::fixed_t;
 use crate::m_fixed::FixedDiv;
 use crate::m_fixed::FixedMul;
 use crate::m_fixed::FRACBITS;
 use crate::m_fixed::FRACUNIT;
-use crate::p_setup::SectorId;
-use crate::p_mobj::MobjId;
 use crate::p_mobj::pspdef_t;
+use crate::p_mobj::MobjId;
 use crate::p_mobj::{MF_SHADOW, MF_TRANSLATION, MF_TRANSSHIFT};
+use crate::p_setup::SectorId;
+use crate::patch::Patch;
 use crate::r_defs::ClipArray;
 use crate::r_defs::SpriteRotate;
 use crate::r_defs::{spritedef_t, spriteframe_t};
@@ -30,6 +29,7 @@ use crate::r_segs::R_RenderMaskedSegRange;
 use crate::r_segs::SIL_BOTTOM;
 use crate::r_segs::SIL_TOP;
 use crate::stdint_types::byte;
+use crate::v_video::V_CachePatchNum;
 
 use crate::tables::angle_t;
 use crate::tables::ANG45;
@@ -368,7 +368,8 @@ pub fn R_DrawVisSprite(state: &mut GameState, vis: &vissprite_t) {
         state.r_main.colfunc = state.r_main.fuzzcolfunc;
     } else if vis.mobjflags & MF_TRANSLATION as i32 != 0 {
         state.r_main.colfunc = state.r_main.transcolfunc;
-        state.r_draw.dc_translation = ((vis.mobjflags & MF_TRANSLATION as i32) >> (MF_TRANSSHIFT as i32 - 8_i32)) as usize
+        state.r_draw.dc_translation = ((vis.mobjflags & MF_TRANSLATION as i32)
+            >> (MF_TRANSSHIFT as i32 - 8_i32)) as usize
             - 256;
     }
     state.r_draw.dc_iscale = (vis.xiscale.abs() >> state.r_main.detailshift) as fixed_t;
@@ -447,8 +448,7 @@ pub fn R_ProjectSprite(state: &mut GameState, thing_id: MobjId) {
     if thing_frame & FF_FRAMEMASK >= sprdef.numframes {
         I_Error(&format!(
             "R_ProjectSprite: invalid sprite frame {} : {} ",
-            thing_sprite as u32,
-            thing_frame,
+            thing_sprite as u32, thing_frame,
         ));
     }
     let sprframe = sprdef.spriteframes[(thing_frame & FF_FRAMEMASK) as usize];
@@ -525,8 +525,7 @@ pub fn R_ProjectSprite(state: &mut GameState, thing_id: MobjId) {
         if index >= MAXLIGHTSCALE {
             index = MAXLIGHTSCALE - 1_i32;
         }
-        vis.colormap =
-            Some(state.r_main.light_row48(state.r_things.spritelights)[index as usize]);
+        vis.colormap = Some(state.r_main.light_row48(state.r_things.spritelights)[index as usize]);
     };
     R_StoreVisSprite(state, vis);
 }
@@ -585,8 +584,7 @@ pub fn R_DrawPSprite(state: &mut GameState, psp: &pspdef_t) {
     if psp_state_frame & FF_FRAMEMASK >= sprdef.numframes {
         I_Error(&format!(
             "R_ProjectSprite: invalid sprite frame {} : {} ",
-            psp_state_sprite as u32,
-            psp_state_frame,
+            psp_state_sprite as u32, psp_state_frame,
         ));
     }
     let sprframe = &sprdef.spriteframes[(psp_state_frame & FF_FRAMEMASK) as usize];
@@ -599,7 +597,8 @@ pub fn R_DrawPSprite(state: &mut GameState, psp: &pspdef_t) {
         return;
     }
     tx += state.r_data.spritewidth[lump as usize];
-    x2 = ((state.r_main.centerxfrac + FixedMul(tx, state.r_things.pspritescale)) >> FRACBITS) - 1_i32;
+    x2 = ((state.r_main.centerxfrac + FixedMul(tx, state.r_things.pspritescale)) >> FRACBITS)
+        - 1_i32;
     if x2 < 0_i32 {
         return;
     }
@@ -697,16 +696,8 @@ pub fn R_DrawSprite(state: &mut GameState, spr: &vissprite_t) {
             || ds.x2 < spr.x1
             || ds.silhouette == 0 && ds.maskedtexturecol.is_none())
         {
-            r1 = if ds.x1 < spr.x1 {
-                spr.x1
-            } else {
-                ds.x1
-            };
-            r2 = if ds.x2 > spr.x2 {
-                spr.x2
-            } else {
-                ds.x2
-            };
+            r1 = if ds.x1 < spr.x1 { spr.x1 } else { ds.x1 };
+            r2 = if ds.x2 > spr.x2 { spr.x2 } else { ds.x2 };
             if ds.scale1 > ds.scale2 {
                 lowscale = ds.scale2;
                 scale = ds.scale1;
@@ -715,8 +706,7 @@ pub fn R_DrawSprite(state: &mut GameState, spr: &vissprite_t) {
                 scale = ds.scale2;
             }
             if scale < spr.scale
-                || lowscale < spr.scale
-                    && R_PointOnSegSide(state, spr.gx, spr.gy, ds.curline) == 0
+                || lowscale < spr.scale && R_PointOnSegSide(state, spr.gx, spr.gy, ds.curline) == 0
             {
                 if ds.maskedtexturecol.is_some() {
                     R_RenderMaskedSegRange(state, &ds, r1, r2);
@@ -734,7 +724,8 @@ pub fn R_DrawSprite(state: &mut GameState, spr: &vissprite_t) {
                     x = r1;
                     while x <= r2 {
                         if state.r_things.clipbot[x as usize] as i32 == -2_i32 {
-                            state.r_things.clipbot[x as usize] = sprbottomclip.get(state, x as isize);
+                            state.r_things.clipbot[x as usize] =
+                                sprbottomclip.get(state, x as isize);
                         }
                         x += 1;
                     }
@@ -753,7 +744,8 @@ pub fn R_DrawSprite(state: &mut GameState, spr: &vissprite_t) {
                     x = r1;
                     while x <= r2 {
                         if state.r_things.clipbot[x as usize] as i32 == -2_i32 {
-                            state.r_things.clipbot[x as usize] = sprbottomclip.get(state, x as isize);
+                            state.r_things.clipbot[x as usize] =
+                                sprbottomclip.get(state, x as isize);
                         }
                         if state.r_things.cliptop[x as usize] as i32 == -2_i32 {
                             state.r_things.cliptop[x as usize] = sprtopclip.get(state, x as isize);

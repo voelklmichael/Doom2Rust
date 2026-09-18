@@ -3,7 +3,6 @@ use crate::fixed_cstr::FixedCStr;
 use crate::g_game::G_ExitLevel;
 use crate::g_game::G_SecretExitLevel;
 use crate::game_state::GameState;
-use crate::p_mobj::MobjId;
 use crate::i_system::I_Error;
 use crate::p_ceilng::CeilingE;
 use crate::p_ceilng::EV_DoCeiling;
@@ -16,6 +15,7 @@ use crate::p_floor::EV_DoFloor;
 use crate::p_floor::FloorE;
 use crate::p_floor::StairE;
 use crate::p_lights::EV_LightTurnOn;
+use crate::p_mobj::MobjId;
 
 use crate::p_plats::EV_DoPlat;
 use crate::p_plats::PlattypeE;

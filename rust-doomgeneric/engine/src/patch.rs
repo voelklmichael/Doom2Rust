@@ -46,8 +46,12 @@ impl Patch {
 
     pub fn columnofs(&self, column: i32) -> usize {
         let o = 8 + 4 * column as usize;
-        i32::from_le_bytes([self.data[o], self.data[o + 1], self.data[o + 2], self.data[o + 3]])
-            as usize
+        i32::from_le_bytes([
+            self.data[o],
+            self.data[o + 1],
+            self.data[o + 2],
+            self.data[o + 3],
+        ]) as usize
     }
 
     pub fn posts(&self, column: i32) -> Posts<'_> {

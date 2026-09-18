@@ -194,13 +194,7 @@ pub fn T_MoveFloor(state: &mut GameState, id: FloorId) {
             sec.special = floor.newspecial as i16;
             sec.floorpic = floor.texture;
         }
-        P_RemoveThinker(
-            &mut state
-                .p_spec
-                .get_floor_mut(id)
-                .expect("live floor")
-                .thinker,
-        );
+        P_RemoveThinker(&mut state.p_spec.get_floor_mut(id).expect("live floor").thinker);
         S_StartSound(state, SoundOrigin::Sector(floor.sector), sfx_pstop as i32);
     }
 }
@@ -354,7 +348,11 @@ pub fn EV_DoFloor(state: &mut GameState, line: LineId, floortype: FloorE) -> i32
                 8_i32 * FRACUNIT * (floortype == FloorE::raiseFloorCrush) as i32;
         }
         let floor_arena_id = state.p_spec.spawn_floor(floor);
-        let floor_id = P_AddThinker(state, ThinkerPayload::Floor(floor_arena_id), ThinkerKind::Floor);
+        let floor_id = P_AddThinker(
+            state,
+            ThinkerPayload::Floor(floor_arena_id),
+            ThinkerKind::Floor,
+        );
         state.p_setup.sector_mut(sec).specialdata = Some(SectorSpecial::Floor(floor_id));
     }
     rtn
@@ -367,7 +365,11 @@ fn spawn_stair(state: &mut GameState, sec: SectorId, speed: fixed_t, height: i32
     floor.speed = speed;
     floor.floordestheight = height as fixed_t;
     let floor_arena_id = state.p_spec.spawn_floor(floor);
-    let floor_id = P_AddThinker(state, ThinkerPayload::Floor(floor_arena_id), ThinkerKind::Floor);
+    let floor_id = P_AddThinker(
+        state,
+        ThinkerPayload::Floor(floor_arena_id),
+        ThinkerKind::Floor,
+    );
     state.p_setup.sector_mut(sec).specialdata = Some(SectorSpecial::Floor(floor_id));
 }
 pub fn EV_BuildStairs(state: &mut GameState, line: LineId, type_0: StairE) -> i32 {

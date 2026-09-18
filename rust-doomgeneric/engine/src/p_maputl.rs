@@ -54,29 +54,98 @@ impl PMaputlState {
             // paired with the GameState field each range aliases in vanilla's
             // stack layout. See InterceptsMemoryOverrun().
             intercepts_overrun: [
-                intercepts_overrun_t { len: 4, target: OverrunTarget::None },
-                intercepts_overrun_t { len: 4, target: OverrunTarget::None },
-                intercepts_overrun_t { len: 4, target: OverrunTarget::None },
-                intercepts_overrun_t { len: 4, target: OverrunTarget::LowFloor },
-                intercepts_overrun_t { len: 4, target: OverrunTarget::OpenBottom },
-                intercepts_overrun_t { len: 4, target: OverrunTarget::OpenTop },
-                intercepts_overrun_t { len: 4, target: OverrunTarget::OpenRange },
-                intercepts_overrun_t { len: 4, target: OverrunTarget::None },
-                intercepts_overrun_t { len: 120, target: OverrunTarget::None },
-                intercepts_overrun_t { len: 8, target: OverrunTarget::None },
-                intercepts_overrun_t { len: 4, target: OverrunTarget::BulletSlope },
-                intercepts_overrun_t { len: 4, target: OverrunTarget::None },
-                intercepts_overrun_t { len: 4, target: OverrunTarget::None },
-                intercepts_overrun_t { len: 4, target: OverrunTarget::None },
-                intercepts_overrun_t { len: 40, target: OverrunTarget::PlayerStarts },
-                intercepts_overrun_t { len: 4, target: OverrunTarget::None },
-                intercepts_overrun_t { len: 4, target: OverrunTarget::BmapWidth },
-                intercepts_overrun_t { len: 4, target: OverrunTarget::None },
-                intercepts_overrun_t { len: 4, target: OverrunTarget::BmapOrgX },
-                intercepts_overrun_t { len: 4, target: OverrunTarget::BmapOrgY },
-                intercepts_overrun_t { len: 4, target: OverrunTarget::None },
-                intercepts_overrun_t { len: 4, target: OverrunTarget::BmapHeight },
-                intercepts_overrun_t { len: 0, target: OverrunTarget::None },
+                intercepts_overrun_t {
+                    len: 4,
+                    target: OverrunTarget::None,
+                },
+                intercepts_overrun_t {
+                    len: 4,
+                    target: OverrunTarget::None,
+                },
+                intercepts_overrun_t {
+                    len: 4,
+                    target: OverrunTarget::None,
+                },
+                intercepts_overrun_t {
+                    len: 4,
+                    target: OverrunTarget::LowFloor,
+                },
+                intercepts_overrun_t {
+                    len: 4,
+                    target: OverrunTarget::OpenBottom,
+                },
+                intercepts_overrun_t {
+                    len: 4,
+                    target: OverrunTarget::OpenTop,
+                },
+                intercepts_overrun_t {
+                    len: 4,
+                    target: OverrunTarget::OpenRange,
+                },
+                intercepts_overrun_t {
+                    len: 4,
+                    target: OverrunTarget::None,
+                },
+                intercepts_overrun_t {
+                    len: 120,
+                    target: OverrunTarget::None,
+                },
+                intercepts_overrun_t {
+                    len: 8,
+                    target: OverrunTarget::None,
+                },
+                intercepts_overrun_t {
+                    len: 4,
+                    target: OverrunTarget::BulletSlope,
+                },
+                intercepts_overrun_t {
+                    len: 4,
+                    target: OverrunTarget::None,
+                },
+                intercepts_overrun_t {
+                    len: 4,
+                    target: OverrunTarget::None,
+                },
+                intercepts_overrun_t {
+                    len: 4,
+                    target: OverrunTarget::None,
+                },
+                intercepts_overrun_t {
+                    len: 40,
+                    target: OverrunTarget::PlayerStarts,
+                },
+                intercepts_overrun_t {
+                    len: 4,
+                    target: OverrunTarget::None,
+                },
+                intercepts_overrun_t {
+                    len: 4,
+                    target: OverrunTarget::BmapWidth,
+                },
+                intercepts_overrun_t {
+                    len: 4,
+                    target: OverrunTarget::None,
+                },
+                intercepts_overrun_t {
+                    len: 4,
+                    target: OverrunTarget::BmapOrgX,
+                },
+                intercepts_overrun_t {
+                    len: 4,
+                    target: OverrunTarget::BmapOrgY,
+                },
+                intercepts_overrun_t {
+                    len: 4,
+                    target: OverrunTarget::None,
+                },
+                intercepts_overrun_t {
+                    len: 4,
+                    target: OverrunTarget::BmapHeight,
+                },
+                intercepts_overrun_t {
+                    len: 0,
+                    target: OverrunTarget::None,
+                },
             ],
         }
     }
@@ -292,7 +361,16 @@ pub fn P_LineOpening(state: &mut GameState, linedef: LineId) {
 pub fn P_UnsetThingPosition(state: &mut GameState, thing: MobjId) {
     let (flags, snext, sprev, subsector, bnext, bprev, x, y) = {
         let t = state.p_mobj.mo(thing);
-        (t.flags, t.snext, t.sprev, t.subsector, t.bnext, t.bprev, t.x, t.y)
+        (
+            t.flags,
+            t.snext,
+            t.sprev,
+            t.subsector,
+            t.bnext,
+            t.bprev,
+            t.x,
+            t.y,
+        )
     };
     if flags & MF_NOSECTOR as i32 == 0 {
         if let Some(id) = snext {
@@ -597,7 +675,9 @@ fn InterceptsMemoryOverrun(state: &mut GameState, location: i32, value: i32) {
                         // field with the high half, when there is one.
                         let next_mt_idx = (word + 1) / 5;
                         let next_field_idx = (word + 1) % 5;
-                        if let Some(next_mt) = state.p_setup.playerstarts.get_mut(next_mt_idx as usize) {
+                        if let Some(next_mt) =
+                            state.p_setup.playerstarts.get_mut(next_mt_idx as usize)
+                        {
                             match next_field_idx {
                                 0 => next_mt.x = hi,
                                 1 => next_mt.y = hi,

@@ -51,6 +51,7 @@ use crate::m_random::P_Random;
 use crate::p_inter::maxammo;
 use crate::p_map::P_CheckPosition;
 use crate::p_mobj::mapthing_t;
+use crate::p_mobj::pspdef_t;
 use crate::p_mobj::MobjId;
 use crate::p_mobj::MobjType;
 use crate::p_mobj::P_RemoveMobj;
@@ -58,7 +59,6 @@ use crate::p_mobj::P_SpawnMobj;
 use crate::p_mobj::P_SpawnPlayer;
 use crate::p_mobj::StateNum;
 use crate::p_mobj::MF_SHADOW;
-use crate::p_mobj::{pspdef_t};
 use crate::p_saveg::P_ArchivePlayers;
 use crate::p_saveg::P_ArchiveSpecials;
 use crate::p_saveg::P_ArchiveThinkers;
@@ -714,7 +714,6 @@ pub fn G_DoLoadLevel(state: &mut GameState) {
     if state.doomstat.gamemode as u32 == GameMode_t::commercial as u32
         && [GameVersion::final2, GameVersion::chex].contains(&state.doomstat.gameversion)
     {
-        
         let skytexturename: &str = if state.g_game.gamemap < 12_i32 {
             "SKY1"
         } else if state.g_game.gamemap < 21_i32 {
@@ -1208,7 +1207,8 @@ pub fn G_ExitLevel(state: &mut GameState) {
     state.g_game.gameaction = GameAction::ga_completed;
 }
 pub fn G_SecretExitLevel(state: &mut GameState) {
-    state.g_game.secretexit = !(state.doomstat.gamemode as u32 == GameMode_t::commercial as u32 && W_CheckNumForName(&mut state.w_wad, "map31") < 0_i32);
+    state.g_game.secretexit = !(state.doomstat.gamemode as u32 == GameMode_t::commercial as u32
+        && W_CheckNumForName(&mut state.w_wad, "map31") < 0_i32);
     state.g_game.gameaction = GameAction::ga_completed;
 }
 pub fn G_DoCompleted(state: &mut GameState) {
@@ -1594,7 +1594,7 @@ pub fn G_ReadDemoTiccmd(state: &mut GameState, player_num: usize) {
     }
     let forwardmove = state.g_game.demo_read_byte() as i8;
     let sidemove = state.g_game.demo_read_byte() as i8;
-    
+
     let new_angleturn = if state.g_game.longtics {
         let lo = state.g_game.demo_read_byte() as i16;
         let hi = state.g_game.demo_read_byte();

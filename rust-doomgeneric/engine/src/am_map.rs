@@ -9,8 +9,6 @@ use crate::doomdef::MAXPLAYERS;
 use crate::doomdef::SCREENHEIGHT;
 use crate::doomdef::SCREENWIDTH;
 use crate::game_state::GameState;
-use crate::v_video::Screen;
-use crate::v_video::V_CachePatchNum;
 use crate::m_cheat::cheatseq_t;
 use crate::m_cheat::cht_CheckCheat;
 use crate::m_fixed::fixed_t;
@@ -20,6 +18,8 @@ use crate::m_fixed::FRACBITS;
 use crate::m_fixed::FRACUNIT;
 use crate::m_fixed::INT_MAX;
 use crate::p_maputl::MAPBLOCKUNITS;
+use crate::v_video::Screen;
+use crate::v_video::V_CachePatchNum;
 
 use crate::p_spec::ML_MAPPED;
 use crate::p_spec::ML_SECRET;
@@ -926,11 +926,7 @@ pub fn AM_clearFB(state: &mut GameState, mut color: i32) {
     let len = (state.am_map.f_w * state.am_map.f_h) as usize;
     state.i_video.I_VideoBuffer[..len].fill(color as byte);
 }
-pub fn AM_clipMline(
-    state: &mut GameState,
-    ml: &mline_t,
-    fl: &mut fline_t,
-) -> bool {
+pub fn AM_clipMline(state: &mut GameState, ml: &mline_t, fl: &mut fline_t) -> bool {
     let mut outcode1: i32 = 0_i32;
     let mut outcode2: i32 = 0_i32;
     let mut outside: i32 = 0;
@@ -1205,20 +1201,14 @@ pub fn AM_drawWalls(state: &mut GameState) {
                             } else {
                                 AM_drawMline(state, &l, WALLCOLORS + lightlev);
                             }
-                        } else if state
-                            .p_setup
-                            .sector_mut(li_backsector)
-                            .floorheight
+                        } else if state.p_setup.sector_mut(li_backsector).floorheight
                             != state
                                 .p_setup
                                 .sector_mut(li_frontsector.unwrap())
                                 .floorheight
                         {
                             AM_drawMline(state, &l, FDWALLCOLORS + lightlev);
-                        } else if state
-                            .p_setup
-                            .sector_mut(li_backsector)
-                            .ceilingheight
+                        } else if state.p_setup.sector_mut(li_backsector).ceilingheight
                             != state
                                 .p_setup
                                 .sector_mut(li_frontsector.unwrap())
@@ -1339,15 +1329,7 @@ pub fn AM_drawPlayers(state: &mut GameState) {
             }
             let p_mo = state.p_mobj.mo(p_mo_id.unwrap());
             let (p_angle, p_x, p_y) = (p_mo.angle, p_mo.x, p_mo.y);
-            AM_drawLineCharacter(
-                state,
-                &player_arrow,
-                0 as fixed_t,
-                p_angle,
-                color,
-                p_x,
-                p_y,
-            );
+            AM_drawLineCharacter(state, &player_arrow, 0 as fixed_t, p_angle, color, p_x, p_y);
         }
         i += 1;
     }

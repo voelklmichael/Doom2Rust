@@ -294,13 +294,13 @@ pub fn V_DrawMouseSpeedBox(state: &mut IVideoState, mut speed: i32) {
     box_x = SCREENWIDTH - MOUSE_SPEED_BOX_WIDTH - 10_i32;
     box_y = 15_i32;
     V_DrawFilledBox(
-            state,
-            box_x,
-            box_y,
-            MOUSE_SPEED_BOX_WIDTH,
-            MOUSE_SPEED_BOX_HEIGHT,
-            bgcolor,
-        );
+        state,
+        box_x,
+        box_y,
+        MOUSE_SPEED_BOX_WIDTH,
+        MOUSE_SPEED_BOX_HEIGHT,
+        bgcolor,
+    );
     V_DrawBox(
         state,
         box_x,

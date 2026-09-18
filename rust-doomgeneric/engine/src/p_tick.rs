@@ -226,7 +226,10 @@ pub fn P_MobjThinkerIds(state: &GameState) -> Vec<MobjId> {
     let mut cursor = state.p_tick.head();
     while let Some(id) = cursor {
         if let ThinkerPayload::Mobj(mobj_id) = state.p_tick.payload(id) {
-            if matches!(state.p_mobj.mo(mobj_id).thinker.function, ThinkerFn::Mobj(_)) {
+            if matches!(
+                state.p_mobj.mo(mobj_id).thinker.function,
+                ThinkerFn::Mobj(_)
+            ) {
                 out.push(mobj_id);
             }
         }
@@ -300,7 +303,6 @@ fn P_UnlinkThinkerNode(state: &mut GameState, id: ThinkerId) {
 pub fn P_RunThinkers(state: &mut GameState) {
     let mut cursor = state.p_tick.head();
     while let Some(id) = cursor {
-        
         let next;
         match P_ThinkerFunction(state, id) {
             ThinkerFn::Removed => {
@@ -354,8 +356,7 @@ pub fn P_RunThinkers(state: &mut GameState) {
                         }
                     }
                     ThinkerKind::LightFlash => {
-                        if let ThinkerPayload::LightFlash(lightflash_id) =
-                            state.p_tick.payload(id)
+                        if let ThinkerPayload::LightFlash(lightflash_id) = state.p_tick.payload(id)
                         {
                             state.p_lights.dealloc_lightflash(lightflash_id);
                         }
@@ -629,7 +630,10 @@ mod tests {
 
         let fireflicker_id2 = state.p_lights.spawn_fireflicker(fireflicker_t::default());
         assert!(state.p_lights.get_fireflicker_ref(fireflicker_id).is_none());
-        assert!(state.p_lights.get_fireflicker_ref(fireflicker_id2).is_some());
+        assert!(state
+            .p_lights
+            .get_fireflicker_ref(fireflicker_id2)
+            .is_some());
     }
 
     #[test]

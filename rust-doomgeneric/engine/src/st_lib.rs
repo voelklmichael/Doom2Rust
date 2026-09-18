@@ -1,7 +1,7 @@
 use crate::game_state::GameState;
-use crate::v_video::Screen;
 use crate::i_system::I_Error;
 use crate::st_stuff::ST_Y;
+use crate::v_video::Screen;
 use crate::v_video::V_CachePatchNum;
 use crate::v_video::V_CopyRect;
 use crate::v_video::V_DrawPatch;
@@ -74,13 +74,7 @@ pub fn STlib_init(state: &mut GameState) {
     W_LumpBytes(state, lumpnum);
     state.st_lib.sttminus = lumpnum;
 }
-pub fn STlib_initNum(
-    n: &mut st_number_t,
-    mut x: i32,
-    mut y: i32,
-    pl: StDigitSet,
-    mut width: i32,
-) {
+pub fn STlib_initNum(n: &mut st_number_t, mut x: i32, mut y: i32, pl: StDigitSet, mut width: i32) {
     n.x = x;
     n.y = y;
     n.oldnum = 0_i32;
@@ -177,12 +171,7 @@ pub fn STlib_updatePercent(
     }
     STlib_updateNum(state, &mut per.n, num, on);
 }
-pub fn STlib_initMultIcon(
-    i: &mut st_multicon_t,
-    mut x: i32,
-    mut y: i32,
-    il: StDigitSet,
-) {
+pub fn STlib_initMultIcon(i: &mut st_multicon_t, mut x: i32, mut y: i32, il: StDigitSet) {
     i.x = x;
     i.y = y;
     i.oldinum = -1_i32;

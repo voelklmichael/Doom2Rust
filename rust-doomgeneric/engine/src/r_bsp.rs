@@ -233,55 +233,58 @@ pub fn R_AddLine(state: &mut GameState, mut line: SegId) {
                     .p_setup
                     .sector_mut(state.r_bsp.frontsector.unwrap())
                     .ceilingheight)
-        {
-            if !(state
+    {
+        if !(state
+            .p_setup
+            .sector_mut(state.r_bsp.backsector.unwrap())
+            .ceilingheight
+            != state
+                .p_setup
+                .sector_mut(state.r_bsp.frontsector.unwrap())
+                .ceilingheight
+            || state
                 .p_setup
                 .sector_mut(state.r_bsp.backsector.unwrap())
-                .ceilingheight
+                .floorheight
                 != state
                     .p_setup
                     .sector_mut(state.r_bsp.frontsector.unwrap())
-                    .ceilingheight
-                || state
+                    .floorheight)
+            && state
+                .p_setup
+                .sector_mut(state.r_bsp.backsector.unwrap())
+                .ceilingpic as i32
+                == state
                     .p_setup
-                    .sector_mut(state.r_bsp.backsector.unwrap())
-                    .floorheight
-                    != state
-                        .p_setup
-                        .sector_mut(state.r_bsp.frontsector.unwrap())
-                        .floorheight) && state
-                    .p_setup
-                    .sector_mut(state.r_bsp.backsector.unwrap())
+                    .sector_mut(state.r_bsp.frontsector.unwrap())
                     .ceilingpic as i32
-                    == state
-                        .p_setup
-                        .sector_mut(state.r_bsp.frontsector.unwrap())
-                        .ceilingpic as i32
-                    && state
-                        .p_setup
-                        .sector_mut(state.r_bsp.backsector.unwrap())
-                        .floorpic as i32
-                        == state
-                            .p_setup
-                            .sector_mut(state.r_bsp.frontsector.unwrap())
-                            .floorpic as i32
-                    && state
-                        .p_setup
-                        .sector_mut(state.r_bsp.backsector.unwrap())
-                        .lightlevel as i32
-                        == state
-                            .p_setup
-                            .sector_mut(state.r_bsp.frontsector.unwrap())
-                            .lightlevel as i32 && state
-                        .p_setup
-                        .side_mut(state.p_setup.seg(state.r_bsp.curline).sidedef)
-                        .midtexture as i32
-                        == 0_i32 {
-                return;
-            }
-            R_ClipPassWallSegment(state, x1, x2 - 1_i32);
+            && state
+                .p_setup
+                .sector_mut(state.r_bsp.backsector.unwrap())
+                .floorpic as i32
+                == state
+                    .p_setup
+                    .sector_mut(state.r_bsp.frontsector.unwrap())
+                    .floorpic as i32
+            && state
+                .p_setup
+                .sector_mut(state.r_bsp.backsector.unwrap())
+                .lightlevel as i32
+                == state
+                    .p_setup
+                    .sector_mut(state.r_bsp.frontsector.unwrap())
+                    .lightlevel as i32
+            && state
+                .p_setup
+                .side_mut(state.p_setup.seg(state.r_bsp.curline).sidedef)
+                .midtexture as i32
+                == 0_i32
+        {
             return;
         }
+        R_ClipPassWallSegment(state, x1, x2 - 1_i32);
+        return;
+    }
     R_ClipSolidWallSegment(state, x1, x2 - 1_i32);
 }
 pub static checkcoord: [[i32; 4]; 12] = [
@@ -419,7 +422,6 @@ pub fn R_Subsector(state: &mut GameState, mut num: i32) {
     }
 }
 pub fn R_RenderBSPNode(state: &mut GameState, mut bspnum: i32) {
-    
     if bspnum & NF_SUBSECTOR != 0 {
         if bspnum == -1_i32 {
             R_Subsector(state, 0_i32);

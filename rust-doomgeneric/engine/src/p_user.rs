@@ -1,7 +1,7 @@
 use crate::d_mode::GameMode_t;
 use crate::d_player::PlayerId;
+use crate::d_player::PlayerState;
 use crate::d_player::PowerType;
-use crate::d_player::{PlayerState};
 use crate::d_player::{weapontype_from_raw, weapontype_t};
 use crate::d_player::{CF_NOCLIP, CF_NOMOMENTUM};
 
@@ -9,14 +9,14 @@ use crate::d_ticcmd::{BT_CHANGE, BT_SPECIAL, BT_USE, BT_WEAPONMASK, BT_WEAPONSHI
 use crate::doomdef::false_0;
 use crate::doomdef::true_0;
 use crate::game_state::GameState;
-use crate::p_mobj::MobjId;
 use crate::info::StateId;
 use crate::m_fixed::fixed_t;
 use crate::m_fixed::FixedMul;
 use crate::m_fixed::FRACUNIT;
 use crate::p_map::P_UseLines;
+use crate::p_mobj::MobjId;
 use crate::p_mobj::P_SetMobjState;
-use crate::p_mobj::{StateNum};
+use crate::p_mobj::StateNum;
 use crate::p_mobj::{MF_JUSTATTACKED, MF_NOCLIP, MF_SHADOW};
 use crate::p_pspr::P_MovePsprites;
 use crate::p_spec::P_PlayerInSpecialSector;
@@ -61,8 +61,13 @@ pub fn P_CalcHeight(state: &mut GameState, player_id: PlayerId) {
     let mut angle: i32 = 0;
     let mut bob: fixed_t = 0;
     let player_mo = player.mo.unwrap();
-    player.bob = FixedMul(state.p_mobj.mo(player_mo).momx, state.p_mobj.mo(player_mo).momx)
-        + FixedMul(state.p_mobj.mo(player_mo).momy, state.p_mobj.mo(player_mo).momy);
+    player.bob = FixedMul(
+        state.p_mobj.mo(player_mo).momx,
+        state.p_mobj.mo(player_mo).momx,
+    ) + FixedMul(
+        state.p_mobj.mo(player_mo).momy,
+        state.p_mobj.mo(player_mo).momy,
+    );
     player.bob >>= 2_i32;
     if player.bob > MAXBOB {
         player.bob = MAXBOB as fixed_t;
@@ -106,7 +111,9 @@ pub fn P_MovePlayer(state: &mut GameState, player_id: PlayerId) {
     let player_mo = state.g_game.players[player_id.0 as usize].mo.unwrap();
     {
         let mo = state.p_mobj.mo_mut(player_mo);
-        mo.angle = mo.angle.wrapping_add(((cmd.angleturn as i32) << 16_i32) as angle_t);
+        mo.angle = mo
+            .angle
+            .wrapping_add(((cmd.angleturn as i32) << 16_i32) as angle_t);
     }
     let (z, floorz, angle) = {
         let mo = state.p_mobj.mo(player_mo);
@@ -114,7 +121,12 @@ pub fn P_MovePlayer(state: &mut GameState, player_id: PlayerId) {
     };
     state.p_user.onground = z <= floorz;
     if cmd.forwardmove as i32 != 0 && state.p_user.onground {
-        P_Thrust(state, player_mo, angle, cmd.forwardmove as fixed_t * 2048 as fixed_t);
+        P_Thrust(
+            state,
+            player_mo,
+            angle,
+            cmd.forwardmove as fixed_t * 2048 as fixed_t,
+        );
     }
     if cmd.sidemove as i32 != 0 && state.p_user.onground {
         P_Thrust(
@@ -146,7 +158,10 @@ pub fn P_DeathThink(state: &mut GameState, player_id: PlayerId) {
     let player_mo = state.g_game.players[player.0 as usize].mo.unwrap();
     state.p_user.onground = state.p_mobj.mo(player_mo).z <= state.p_mobj.mo(player_mo).floorz;
     P_CalcHeight(state, player);
-    if state.g_game.players[player.0 as usize].attacker.is_some() && state.g_game.players[player.0 as usize].attacker != state.g_game.players[player.0 as usize].mo {
+    if state.g_game.players[player.0 as usize].attacker.is_some()
+        && state.g_game.players[player.0 as usize].attacker
+            != state.g_game.players[player.0 as usize].mo
+    {
         let attacker = state.g_game.players[player.0 as usize].attacker.unwrap();
         angle = R_PointToAngle2(
             state,
@@ -162,9 +177,17 @@ pub fn P_DeathThink(state: &mut GameState, player_id: PlayerId) {
                 state.g_game.players[player.0 as usize].damagecount -= 1;
             }
         } else if delta < ANG180 {
-            state.p_mobj.mo_mut(player_mo).angle = state.p_mobj.mo(player_mo).angle.wrapping_add(ANG5 as angle_t);
+            state.p_mobj.mo_mut(player_mo).angle = state
+                .p_mobj
+                .mo(player_mo)
+                .angle
+                .wrapping_add(ANG5 as angle_t);
         } else {
-            state.p_mobj.mo_mut(player_mo).angle = state.p_mobj.mo(player_mo).angle.wrapping_sub(ANG5 as angle_t);
+            state.p_mobj.mo_mut(player_mo).angle = state
+                .p_mobj
+                .mo(player_mo)
+                .angle
+                .wrapping_sub(ANG5 as angle_t);
         }
     } else if state.g_game.players[player.0 as usize].damagecount != 0 {
         state.g_game.players[player.0 as usize].damagecount -= 1;
@@ -200,7 +223,9 @@ pub fn P_PlayerThink(state: &mut GameState, player_id: PlayerId) {
     P_CalcHeight(state, player_id);
     if state
         .p_setup
-        .sector_mut(state.p_setup.subsectors[state.p_mobj.mo(player_mo).subsector.0 as usize].sector)
+        .sector_mut(
+            state.p_setup.subsectors[state.p_mobj.mo(player_mo).subsector.0 as usize].sector,
+        )
         .special
         != 0
     {
@@ -211,19 +236,25 @@ pub fn P_PlayerThink(state: &mut GameState, player_id: PlayerId) {
     }
     if state.g_game.players[player_id.0 as usize].cmd.buttons as i32 & BT_CHANGE as i32 != 0 {
         newweapon = weapontype_from_raw(
-            (state.g_game.players[player_id.0 as usize].cmd.buttons as i32 & BT_WEAPONMASK as i32) >> BT_WEAPONSHIFT as i32,
+            (state.g_game.players[player_id.0 as usize].cmd.buttons as i32 & BT_WEAPONMASK as i32)
+                >> BT_WEAPONSHIFT as i32,
         );
         if newweapon as u32 == weapontype_t::wp_fist as i32 as u32
-            && state.g_game.players[player.0 as usize].weaponowned[weapontype_t::wp_chainsaw as usize]
-            && !(state.g_game.players[player.0 as usize].readyweapon as u32 == weapontype_t::wp_chainsaw as i32 as u32
-                && state.g_game.players[player.0 as usize].powers[PowerType::pw_strength as usize] != 0)
+            && state.g_game.players[player.0 as usize].weaponowned
+                [weapontype_t::wp_chainsaw as usize]
+            && !(state.g_game.players[player.0 as usize].readyweapon as u32
+                == weapontype_t::wp_chainsaw as i32 as u32
+                && state.g_game.players[player.0 as usize].powers[PowerType::pw_strength as usize]
+                    != 0)
         {
             newweapon = weapontype_t::wp_chainsaw;
         }
         if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32
             && newweapon as u32 == weapontype_t::wp_shotgun as i32 as u32
-            && state.g_game.players[player.0 as usize].weaponowned[weapontype_t::wp_supershotgun as usize]
-            && state.g_game.players[player.0 as usize].readyweapon as u32 != weapontype_t::wp_supershotgun as i32 as u32
+            && state.g_game.players[player.0 as usize].weaponowned
+                [weapontype_t::wp_supershotgun as usize]
+            && state.g_game.players[player.0 as usize].readyweapon as u32
+                != weapontype_t::wp_supershotgun as i32 as u32
         {
             newweapon = weapontype_t::wp_supershotgun;
         }
@@ -253,7 +284,8 @@ pub fn P_PlayerThink(state: &mut GameState, player_id: PlayerId) {
     }
     if state.g_game.players[player.0 as usize].powers[PowerType::pw_invisibility as usize] != 0 {
         state.g_game.players[player.0 as usize].powers[PowerType::pw_invisibility as usize] -= 1;
-        if state.g_game.players[player.0 as usize].powers[PowerType::pw_invisibility as usize] == 0 {
+        if state.g_game.players[player.0 as usize].powers[PowerType::pw_invisibility as usize] == 0
+        {
             state.p_mobj.mo_mut(player_mo).flags &= !(MF_SHADOW as i32);
         }
     }
@@ -270,16 +302,23 @@ pub fn P_PlayerThink(state: &mut GameState, player_id: PlayerId) {
         state.g_game.players[player.0 as usize].bonuscount -= 1;
     }
     if state.g_game.players[player.0 as usize].powers[PowerType::pw_invulnerability as usize] != 0 {
-        if state.g_game.players[player.0 as usize].powers[PowerType::pw_invulnerability as usize] > 4_i32 * 32_i32
-            || state.g_game.players[player.0 as usize].powers[PowerType::pw_invulnerability as usize] & 8_i32 != 0
+        if state.g_game.players[player.0 as usize].powers[PowerType::pw_invulnerability as usize]
+            > 4_i32 * 32_i32
+            || state.g_game.players[player.0 as usize].powers
+                [PowerType::pw_invulnerability as usize]
+                & 8_i32
+                != 0
         {
             state.g_game.players[player.0 as usize].fixedcolormap = INVERSECOLORMAP;
         } else {
             state.g_game.players[player.0 as usize].fixedcolormap = 0_i32;
         }
     } else if state.g_game.players[player.0 as usize].powers[PowerType::pw_infrared as usize] != 0 {
-        if state.g_game.players[player.0 as usize].powers[PowerType::pw_infrared as usize] > 4_i32 * 32_i32
-            || state.g_game.players[player.0 as usize].powers[PowerType::pw_infrared as usize] & 8_i32 != 0
+        if state.g_game.players[player.0 as usize].powers[PowerType::pw_infrared as usize]
+            > 4_i32 * 32_i32
+            || state.g_game.players[player.0 as usize].powers[PowerType::pw_infrared as usize]
+                & 8_i32
+                != 0
         {
             state.g_game.players[player.0 as usize].fixedcolormap = 1_i32;
         } else {

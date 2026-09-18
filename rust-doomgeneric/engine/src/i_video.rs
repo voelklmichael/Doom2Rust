@@ -8,8 +8,8 @@ use crate::i_input::I_GetEvent;
 use crate::i_system::I_Error;
 use crate::m_argv::{M_ArgvAtoi, M_CheckParmWithArgs};
 use crate::m_fixed::INT_MAX;
-use crate::stdint_types::uint32_t;
 use crate::stdint_types::byte;
+use crate::stdint_types::uint32_t;
 use crate::tables::gammatable;
 
 pub struct IVideoState {
@@ -75,10 +75,22 @@ impl FB_ScreenInfo {
         xres_virtual: 0,
         yres_virtual: 0,
         bits_per_pixel: 0,
-        red: FB_BitField { offset: 0, length: 0 },
-        green: FB_BitField { offset: 0, length: 0 },
-        blue: FB_BitField { offset: 0, length: 0 },
-        transp: FB_BitField { offset: 0, length: 0 },
+        red: FB_BitField {
+            offset: 0,
+            length: 0,
+        },
+        green: FB_BitField {
+            offset: 0,
+            length: 0,
+        },
+        blue: FB_BitField {
+            offset: 0,
+            length: 0,
+        },
+        transp: FB_BitField {
+            offset: 0,
+            length: 0,
+        },
     };
 }
 #[derive(Copy, Clone)]
@@ -251,7 +263,8 @@ pub fn I_FinishUpdate(state: &mut GameState) {
     let mut frame = vec![0u8; line_bytes * SCREENHEIGHT as usize * scaling];
     let mut line_out = 0usize;
     for row in 0..SCREENHEIGHT as usize {
-        let source = &state.i_video.I_VideoBuffer[row * SCREENWIDTH as usize..][..SCREENWIDTH as usize];
+        let source =
+            &state.i_video.I_VideoBuffer[row * SCREENWIDTH as usize..][..SCREENWIDTH as usize];
         let first_line = &mut frame[line_out * line_bytes..][..line_bytes];
         let mut out = x_offset;
         for &index in source {
@@ -297,7 +310,12 @@ pub fn I_ReadScreen(state: &GameState) -> Vec<byte> {
 }
 pub fn I_SetPalette(state: &mut GameState, palette: &[byte]) {
     let gamma = &gammatable[state.i_video.usegamma as usize];
-    for (color, rgb) in state.i_video.colors.iter_mut().zip(palette.as_chunks::<3>().0.iter()) {
+    for (color, rgb) in state
+        .i_video
+        .colors
+        .iter_mut()
+        .zip(palette.as_chunks::<3>().0.iter())
+    {
         color.set_a(0 as uint32_t);
         color.set_r(gamma[rgb[0] as usize] as uint32_t);
         color.set_g(gamma[rgb[1] as usize] as uint32_t);

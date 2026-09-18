@@ -102,7 +102,6 @@ impl PPlatsState {
         id
     }
 
-
     pub fn get_ref(&self, id: PlatId) -> Option<&plat_t> {
         self.plats
             .get(id.index as usize)
@@ -136,7 +135,15 @@ pub fn T_PlatRaise(state: &mut GameState, id: PlatId) {
         .expect("ThinkerFn::Plat id must reference a live plat");
     match plat.status {
         PlatE::up => {
-            let res = T_MovePlane(state, plat.sector, plat.speed, plat.high, plat.crush, 0_i32, 1_i32);
+            let res = T_MovePlane(
+                state,
+                plat.sector,
+                plat.speed,
+                plat.high,
+                plat.crush,
+                0_i32,
+                1_i32,
+            );
             if (plat.type_0 == PlattypeE::raiseAndChange
                 || plat.type_0 == PlattypeE::raiseToNearestAndChange)
                 && state.p_tick.leveltime & 7_i32 == 0
@@ -165,7 +172,15 @@ pub fn T_PlatRaise(state: &mut GameState, id: PlatId) {
             }
         }
         PlatE::down => {
-            let res = T_MovePlane(state, plat.sector, plat.speed, plat.low, false, 0_i32, -1_i32);
+            let res = T_MovePlane(
+                state,
+                plat.sector,
+                plat.speed,
+                plat.low,
+                false,
+                0_i32,
+                -1_i32,
+            );
             if res == ResultE::pastdest {
                 let p = state.p_plats.get_mut(id).expect("live plat");
                 p.count = p.wait;
@@ -279,7 +294,11 @@ pub fn EV_DoPlat(state: &mut GameState, line: LineId, type_0: PlattypeE, amount:
             }
         }
         let plat_arena_id = state.p_plats.spawn(plat);
-        let plat_id = P_AddThinker(state, ThinkerPayload::Plat(plat_arena_id), ThinkerKind::Plat);
+        let plat_id = P_AddThinker(
+            state,
+            ThinkerPayload::Plat(plat_arena_id),
+            ThinkerKind::Plat,
+        );
         state.p_setup.sector_mut(sec).specialdata = Some(SectorSpecial::Plat(plat_id));
         P_AddActivePlat(&mut state.p_plats, plat_id);
     }

@@ -17,8 +17,6 @@ use crate::g_game::G_LoadGame;
 use crate::g_game::G_SaveGame;
 use crate::g_game::G_ScreenShot;
 use crate::game_state::GameState;
-use crate::v_video::Screen;
-use crate::v_video::V_CachePatchName;
 use crate::hu_stuff::HU_FONTSIZE;
 use crate::hu_stuff::HU_FONTSTART;
 use crate::i_system::I_Quit;
@@ -41,6 +39,8 @@ use crate::sounds::{
     sfx_popain, sfx_posit1, sfx_posit3, sfx_pstop, sfx_sgtatk, sfx_skeswg, sfx_slop, sfx_stnmov,
     sfx_swtchn, sfx_swtchx, sfx_telept, sfx_vilact,
 };
+use crate::v_video::Screen;
+use crate::v_video::V_CachePatchName;
 
 use crate::v_video::V_CachePatchNum;
 use crate::v_video::V_DrawPatchDirect;
@@ -900,10 +900,9 @@ pub fn M_SfxVol(state: &mut GameState, mut choice: i32) {
                 state.s_sound.sfxVolume -= 1;
             }
         }
-        1
-            if state.s_sound.sfxVolume < 15_i32 => {
-                state.s_sound.sfxVolume += 1;
-            }
+        1 if state.s_sound.sfxVolume < 15_i32 => {
+            state.s_sound.sfxVolume += 1;
+        }
         _ => {}
     }
     let sfx_volume = state.s_sound.sfxVolume * 8_i32;
@@ -916,10 +915,9 @@ pub fn M_MusicVol(state: &mut GameState, mut choice: i32) {
                 state.s_sound.musicVolume -= 1;
             }
         }
-        1
-            if state.s_sound.musicVolume < 15_i32 => {
-                state.s_sound.musicVolume += 1;
-            }
+        1 if state.s_sound.musicVolume < 15_i32 => {
+            state.s_sound.musicVolume += 1;
+        }
         _ => {}
     }
     let music_volume = state.s_sound.musicVolume * 8_i32;
@@ -1021,8 +1019,7 @@ pub fn M_DrawOptions(state: &mut GameState) {
     let __wcache1358_12 = V_CachePatchName(state, "M_OPTTTL");
     let dest_screen = Screen::Video;
     V_DrawPatchDirect(state, dest_screen, 108_i32, 15_i32, &__wcache1358_12);
-    let __wcache1364_11 =
-        V_CachePatchName(state, detailNames[state.m_menu.detailLevel as usize]);
+    let __wcache1364_11 = V_CachePatchName(state, detailNames[state.m_menu.detailLevel as usize]);
     let dest_screen = Screen::Video;
     V_DrawPatchDirect(
         state,
@@ -1031,8 +1028,7 @@ pub fn M_DrawOptions(state: &mut GameState) {
         state.m_menu.defs.OptionsDef.y as i32 + LINEHEIGHT * detail as i32,
         &__wcache1364_11,
     );
-    let __wcache1373_10 =
-        V_CachePatchName(state, msgNames[state.m_menu.showMessages as usize]);
+    let __wcache1373_10 = V_CachePatchName(state, msgNames[state.m_menu.showMessages as usize]);
     let dest_screen = Screen::Video;
     V_DrawPatchDirect(
         state,
@@ -1187,10 +1183,9 @@ pub fn M_ChangeSensitivity(state: &mut GameState, mut choice: i32) {
                 state.m_menu.mouseSensitivity -= 1;
             }
         }
-        1
-            if state.m_menu.mouseSensitivity < 9_i32 => {
-                state.m_menu.mouseSensitivity += 1;
-            }
+        1 if state.m_menu.mouseSensitivity < 9_i32 => {
+            state.m_menu.mouseSensitivity += 1;
+        }
         _ => {}
     };
 }
@@ -1214,11 +1209,10 @@ pub fn M_SizeDisplay(state: &mut GameState, mut choice: i32) {
                 state.m_menu.screenSize -= 1;
             }
         }
-        1
-            if state.m_menu.screenSize < 8_i32 => {
-                state.m_menu.screenblocks += 1;
-                state.m_menu.screenSize += 1;
-            }
+        1 if state.m_menu.screenSize < 8_i32 => {
+            state.m_menu.screenblocks += 1;
+            state.m_menu.screenSize += 1;
+        }
         _ => {}
     }
     let (screenblocks, detail_level) = (state.m_menu.screenblocks, state.m_menu.detailLevel);
@@ -1770,8 +1764,7 @@ pub fn M_Drawer(state: &mut GameState) {
         state.m_menu.drawer_y = (state.m_menu.drawer_y as i32 + LINEHEIGHT) as i16;
         i = i.wrapping_add(1);
     }
-    let __wcache2231_1 =
-        V_CachePatchName(state, skullName[state.m_menu.whichSkull as usize]);
+    let __wcache2231_1 = V_CachePatchName(state, skullName[state.m_menu.whichSkull as usize]);
     let dest_screen = Screen::Video;
     V_DrawPatchDirect(
         state,

@@ -1,4 +1,3 @@
-
 use crate::d_player::PowerType;
 use crate::d_player::CF_GODMODE;
 use crate::fixed_cstr::FixedCStr;
@@ -30,9 +29,9 @@ use crate::p_lights::P_SpawnGlowingLight;
 use crate::p_lights::P_SpawnLightFlash;
 use crate::p_lights::P_SpawnStrobeFlash;
 
+use crate::p_mobj::thinker_t;
 use crate::p_mobj::SectorSpecial;
 use crate::p_mobj::ThinkerFn;
-use crate::p_mobj::{thinker_t};
 use crate::p_plats::EV_DoPlat;
 use crate::p_plats::EV_StopPlat;
 use crate::p_plats::PlatE;
@@ -56,20 +55,20 @@ use crate::sounds::sfx_swtchn;
 
 use crate::w_wad::W_CheckNumForName;
 
+use crate::d_player::PlayerId;
 use crate::doomdef::false_0;
 use crate::doomdef::true_0;
 use crate::doomdef::TICRATE;
 use crate::game_state::GameState;
-use crate::d_player::PlayerId;
-use crate::p_switch::EMPTY_BUTTON;
-use crate::p_mobj::MobjId;
 use crate::m_fixed::FRACUNIT;
 use crate::m_fixed::INT_MAX;
 use crate::p_ceilng::MAXCEILINGS;
 use crate::p_floor::T_MoveFloor;
 use crate::p_floor::FLOORSPEED;
 use crate::p_lights::SLOWDARK;
+use crate::p_mobj::MobjId;
 use crate::p_plats::MAXPLATS;
+use crate::p_switch::EMPTY_BUTTON;
 use crate::p_switch::MAXBUTTONS;
 
 // Generation-checked handle into PSpecState's floor arena -- mirrors DoorId.
@@ -153,7 +152,6 @@ impl PSpecState {
         self.floors[index as usize].floor = Some(boxed);
         id
     }
-
 
     pub fn get_floor_ref(&self, id: FloorId) -> Option<&floormove_t> {
         self.floors
@@ -502,12 +500,18 @@ pub fn P_InitPicAnims(state: &mut GameState) {
     }
 }
 pub fn getSide(state: &mut GameState, currentSector: i32, line: i32, side: i32) -> SideId {
-    let line_id = state.p_setup.sector_mut(SectorId(currentSector as u32)).lines[line as usize];
+    let line_id = state
+        .p_setup
+        .sector_mut(SectorId(currentSector as u32))
+        .lines[line as usize];
     let sidenum = state.p_setup.line(line_id).sidenum[side as usize];
     SideId(sidenum as u32)
 }
 pub fn getSector(state: &mut GameState, currentSector: i32, line: i32, side: i32) -> SectorId {
-    let line_id = state.p_setup.sector_mut(SectorId(currentSector as u32)).lines[line as usize];
+    let line_id = state
+        .p_setup
+        .sector_mut(SectorId(currentSector as u32))
+        .lines[line as usize];
     let sidenum = state.p_setup.line(line_id).sidenum[side as usize];
     state.p_setup.sides[sidenum as usize].sector
 }
@@ -642,12 +646,7 @@ pub fn P_FindMinSurroundingLight(state: &mut GameState, sector: SectorId, max: i
     }
     min
 }
-pub fn P_CrossSpecialLine(
-    state: &mut GameState,
-    mut linenum: i32,
-    mut side: i32,
-    thing: MobjId,
-) {
+pub fn P_CrossSpecialLine(state: &mut GameState, mut linenum: i32, mut side: i32, thing: MobjId) {
     let line: LineId = LineId(linenum as u32);
     let mut ok: i32 = 0;
     let special = state.p_setup.line(line).special;
@@ -1168,8 +1167,11 @@ pub fn EV_DoDonut(state: &mut GameState, line: LineId) -> i32 {
             floor.newspecial = 0_i32;
             floor.floordestheight = s3_floorheight;
             let floor_arena_id = state.p_spec.spawn_floor(floor);
-            let floor_id =
-                P_AddThinker(state, ThinkerPayload::Floor(floor_arena_id), ThinkerKind::Floor);
+            let floor_id = P_AddThinker(
+                state,
+                ThinkerPayload::Floor(floor_arena_id),
+                ThinkerKind::Floor,
+            );
             state.p_setup.sector_mut(s2).specialdata = Some(SectorSpecial::Floor(floor_id));
             let mut floor = floormove_t::default();
             floor.thinker.function = ThinkerFn::Floor(T_MoveFloor);
@@ -1180,8 +1182,11 @@ pub fn EV_DoDonut(state: &mut GameState, line: LineId) -> i32 {
             floor.speed = (FLOORSPEED / 2_i32) as fixed_t;
             floor.floordestheight = s3_floorheight;
             let floor_arena_id = state.p_spec.spawn_floor(floor);
-            let floor_id =
-                P_AddThinker(state, ThinkerPayload::Floor(floor_arena_id), ThinkerKind::Floor);
+            let floor_id = P_AddThinker(
+                state,
+                ThinkerPayload::Floor(floor_arena_id),
+                ThinkerKind::Floor,
+            );
             state.p_setup.sector_mut(s1).specialdata = Some(SectorSpecial::Floor(floor_id));
             break;
         }

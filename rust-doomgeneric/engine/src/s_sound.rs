@@ -28,17 +28,17 @@ use crate::m_fixed::FRACUNIT;
 use crate::p_mobj::MobjId;
 use crate::p_setup::SectorId;
 use crate::r_main::R_PointToAngle2;
+use crate::sounds::SfxId;
 use crate::sounds::NUMSFX;
 use crate::sounds::{
     mus_None, mus_e1m1, mus_e1m5, mus_e1m9, mus_e2m4, mus_e2m5, mus_e2m6, mus_e2m7, mus_e3m2,
     mus_e3m3, mus_e3m4, mus_intro, mus_introa, mus_runnin, NUMMUSIC,
 };
-use crate::sounds::SfxId;
 use crate::tables::angle_t;
 use crate::tables::finesine;
 use crate::tables::ANGLETOFINESHIFT;
-use crate::w_wad::W_LumpBytes;
 use crate::w_wad::W_GetNumForName;
+use crate::w_wad::W_LumpBytes;
 use crate::w_wad::W_LumpLength;
 use crate::w_wad::W_ReleaseLumpNum;
 
@@ -264,7 +264,8 @@ fn S_AdjustSoundParams(
             approx_dist = S_CLIPPING_DIST as fixed_t;
         }
         *vol = 15_i32
-            + (state.s_sound.snd_SfxVolume - 15_i32) * ((S_CLIPPING_DIST - approx_dist) >> FRACBITS)
+            + (state.s_sound.snd_SfxVolume - 15_i32)
+                * ((S_CLIPPING_DIST - approx_dist) >> FRACBITS)
                 / S_ATTENUATOR;
     } else {
         *vol = state.s_sound.snd_SfxVolume * ((S_CLIPPING_DIST - approx_dist) >> FRACBITS)

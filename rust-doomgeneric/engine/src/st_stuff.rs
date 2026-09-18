@@ -17,7 +17,6 @@ use crate::doomdef::SCREENWIDTH;
 use crate::doomdef::TICRATE;
 use crate::g_game::G_DeferedInitNew;
 use crate::game_state::GameState;
-use crate::v_video::Screen;
 use crate::i_video::I_SetPalette;
 use crate::m_cheat::cheatseq_t;
 use crate::m_cheat::cht_CheckCheat;
@@ -39,6 +38,7 @@ use crate::st_lib::STlib_updatePercent;
 use crate::st_lib::StDigitSet;
 use crate::st_lib::{st_binicon_t, st_multicon_t, st_number_t, st_percent_t};
 use crate::stdint_types::byte;
+use crate::v_video::Screen;
 
 use crate::tables::angle_t;
 use crate::tables::ANG180;
@@ -405,8 +405,7 @@ pub fn ST_Responder(state: &mut GameState, mut ev: &event_t) -> bool {
         }
     } else if ev.type_0 == EvType::ev_keydown {
         if !state.g_game.netgame && state.g_game.gameskill != SkillType::sk_nightmare {
-            if cht_CheckCheat(&mut state.st_stuff.cheat_god, ev.data2 as u8)
-            {
+            if cht_CheckCheat(&mut state.st_stuff.cheat_god, ev.data2 as u8) {
                 state.g_game.player_mut(state.st_stuff.plyr).cheats ^= CF_GODMODE;
                 if state.g_game.player_mut(state.st_stuff.plyr).cheats & CF_GODMODE != 0 {
                     if let Some(mo_id) = state.g_game.player_mut(state.st_stuff.plyr).mo {
@@ -419,8 +418,7 @@ pub fn ST_Responder(state: &mut GameState, mut ev: &event_t) -> bool {
                     state.g_game.player_mut(state.st_stuff.plyr).message =
                         Some("Degreelessness Mode Off".to_string());
                 }
-            } else if cht_CheckCheat(&mut state.st_stuff.cheat_ammonokey, ev.data2 as u8)
-            {
+            } else if cht_CheckCheat(&mut state.st_stuff.cheat_ammonokey, ev.data2 as u8) {
                 state.g_game.player_mut(state.st_stuff.plyr).armorpoints = deh_idfa_armor;
                 state.g_game.player_mut(state.st_stuff.plyr).armortype = deh_idfa_armor_class;
                 i = 0_i32;
@@ -436,8 +434,7 @@ pub fn ST_Responder(state: &mut GameState, mut ev: &event_t) -> bool {
                 }
                 state.g_game.player_mut(state.st_stuff.plyr).message =
                     Some("Ammo (no keys) Added".to_string());
-            } else if cht_CheckCheat(&mut state.st_stuff.cheat_ammo, ev.data2 as u8)
-            {
+            } else if cht_CheckCheat(&mut state.st_stuff.cheat_ammo, ev.data2 as u8) {
                 state.g_game.player_mut(state.st_stuff.plyr).armorpoints = deh_idkfa_armor;
                 state.g_game.player_mut(state.st_stuff.plyr).armortype = deh_idkfa_armor_class;
                 i = 0_i32;
@@ -458,8 +455,7 @@ pub fn ST_Responder(state: &mut GameState, mut ev: &event_t) -> bool {
                 }
                 state.g_game.player_mut(state.st_stuff.plyr).message =
                     Some("Very Happy Ammo Added".to_string());
-            } else if cht_CheckCheat(&mut state.st_stuff.cheat_mus, ev.data2 as u8)
-            {
+            } else if cht_CheckCheat(&mut state.st_stuff.cheat_mus, ev.data2 as u8) {
                 let mut musnum: i32 = 0;
                 state.g_game.player_mut(state.st_stuff.plyr).message =
                     Some("Music Change".to_string());
@@ -523,8 +519,10 @@ pub fn ST_Responder(state: &mut GameState, mut ev: &event_t) -> bool {
             }
             i = 0_i32;
             while i < 6_i32 {
-                if cht_CheckCheat(&mut state.st_stuff.cheat_powerup[i as usize], ev.data2 as u8)
-                {
+                if cht_CheckCheat(
+                    &mut state.st_stuff.cheat_powerup[i as usize],
+                    ev.data2 as u8,
+                ) {
                     if state.g_game.player_mut(state.st_stuff.plyr).powers[i as usize] == 0 {
                         P_GivePower(state, state.st_stuff.plyr, i);
                     } else if i != PowerType::pw_strength as i32 {
@@ -537,35 +535,28 @@ pub fn ST_Responder(state: &mut GameState, mut ev: &event_t) -> bool {
                 }
                 i += 1;
             }
-            if cht_CheckCheat(&mut state.st_stuff.cheat_powerup[6], ev.data2 as u8)
-            {
+            if cht_CheckCheat(&mut state.st_stuff.cheat_powerup[6], ev.data2 as u8) {
                 state.g_game.player_mut(state.st_stuff.plyr).message =
                     Some("inVuln, Str, Inviso, Rad, Allmap, or Lite-amp".to_string());
-            } else if cht_CheckCheat(&mut state.st_stuff.cheat_choppers, ev.data2 as u8)
-            {
+            } else if cht_CheckCheat(&mut state.st_stuff.cheat_choppers, ev.data2 as u8) {
                 state.g_game.player_mut(state.st_stuff.plyr).weaponowned
                     [weapontype_t::wp_chainsaw as usize] = true;
                 state.g_game.player_mut(state.st_stuff.plyr).powers
                     [PowerType::pw_invulnerability as usize] = true_0;
                 state.g_game.player_mut(state.st_stuff.plyr).message =
                     Some("... doesn't suck - GM".to_string());
-            } else if cht_CheckCheat(&mut state.st_stuff.cheat_mypos, ev.data2 as u8)
-            {
+            } else if cht_CheckCheat(&mut state.st_stuff.cheat_mypos, ev.data2 as u8) {
                 let cp_mo_id = state.g_game.players[state.g_game.consoleplayer as usize]
                     .mo
                     .unwrap();
                 let cp_mo = state.p_mobj.mo(cp_mo_id);
                 state.g_game.player_mut(state.st_stuff.plyr).message = Some(format!(
                     "ang=0x{:x};x,y=(0x{:x},0x{:x})",
-                    cp_mo.angle,
-                    cp_mo.x,
-                    cp_mo.y,
+                    cp_mo.angle, cp_mo.x, cp_mo.y,
                 ));
             }
         }
-        if !state.g_game.netgame
-            && cht_CheckCheat(&mut state.st_stuff.cheat_clev, ev.data2 as u8)
-        {
+        if !state.g_game.netgame && cht_CheckCheat(&mut state.st_stuff.cheat_clev, ev.data2 as u8) {
             let mut epsd: i32 = 0;
             let mut map: i32 = 0;
             let buf_1: [u8; 2] = [
@@ -682,13 +673,7 @@ pub fn ST_updateFaceWidget(state: &mut GameState) {
             } else {
                 let plyr_attacker = state.p_mobj.mo(attacker_id);
                 let (attacker_x, attacker_y) = (plyr_attacker.x, plyr_attacker.y);
-                badguyangle = R_PointToAngle2(
-                    state,
-                    plyr_mo_x,
-                    plyr_mo_y,
-                    attacker_x,
-                    attacker_y,
-                );
+                badguyangle = R_PointToAngle2(state, plyr_mo_x, plyr_mo_y, attacker_x, attacker_y);
                 if badguyangle > plyr_mo_angle {
                     diffang = badguyangle.wrapping_sub(plyr_mo_angle);
                     i = (diffang > ANG180) as i32;
@@ -760,13 +745,11 @@ pub fn ST_updateFaceWidget(state: &mut GameState) {
 }
 pub fn ST_updateWidgets(state: &mut GameState) {
     let mut i: i32 = 0;
-    state.st_stuff.w_ready.data =
-        state.g_game.player_mut(state.st_stuff.plyr).readyweapon as i32;
+    state.st_stuff.w_ready.data = state.g_game.player_mut(state.st_stuff.plyr).readyweapon as i32;
     i = 0_i32;
     while i < 6_i32 {
-        state.st_stuff.w_arms_owned[i as usize] = state.g_game.player_mut(state.st_stuff.plyr)
-            .weaponowned[(i + 1_i32) as usize]
-            as i32;
+        state.st_stuff.w_arms_owned[i as usize] =
+            state.g_game.player_mut(state.st_stuff.plyr).weaponowned[(i + 1_i32) as usize] as i32;
         i += 1;
     }
     i = 0_i32;
@@ -815,8 +798,7 @@ pub fn ST_doPaletteStuff(state: &mut GameState) {
     let mut cnt: i32 = 0;
     let mut bzc: i32 = 0;
     cnt = state.g_game.player_mut(state.st_stuff.plyr).damagecount;
-    if state.g_game.player_mut(state.st_stuff.plyr).powers[PowerType::pw_strength as usize] != 0
-    {
+    if state.g_game.player_mut(state.st_stuff.plyr).powers[PowerType::pw_strength as usize] != 0 {
         bzc = 12_i32
             - (state.g_game.player_mut(state.st_stuff.plyr).powers
                 [PowerType::pw_strength as usize]
@@ -837,8 +819,7 @@ pub fn ST_doPaletteStuff(state: &mut GameState) {
             palette = NUMBONUSPALS - 1_i32;
         }
         palette += STARTBONUSPALS;
-    } else if state.g_game.player_mut(state.st_stuff.plyr).powers
-        [PowerType::pw_ironfeet as usize]
+    } else if state.g_game.player_mut(state.st_stuff.plyr).powers[PowerType::pw_ironfeet as usize]
         > 4_i32 * 32_i32
         || state.g_game.player_mut(state.st_stuff.plyr).powers[PowerType::pw_ironfeet as usize]
             & 8_i32
@@ -889,7 +870,13 @@ pub fn ST_drawWidgets(state: &mut GameState, mut refresh: bool) {
     }
     let health_num = state.g_game.player_mut(state.st_stuff.plyr).health;
     let mut w_health = state.st_stuff.w_health;
-    STlib_updatePercent(state, &mut w_health, health_num, statusbaron, refresh as i32);
+    STlib_updatePercent(
+        state,
+        &mut w_health,
+        health_num,
+        statusbaron,
+        refresh as i32,
+    );
     state.st_stuff.w_health = w_health;
     let armor_num = state.g_game.player_mut(state.st_stuff.plyr).armorpoints;
     let mut w_armor = state.st_stuff.w_armor;
@@ -1039,8 +1026,7 @@ pub fn ST_createWidgets(state: &mut GameState) {
         StDigitSet::TallNum,
         ST_AMMOWIDTH,
     );
-    state.st_stuff.w_ready.data =
-        state.g_game.player_mut(state.st_stuff.plyr).readyweapon as i32;
+    state.st_stuff.w_ready.data = state.g_game.player_mut(state.st_stuff.plyr).readyweapon as i32;
     STlib_initPercent(
         &mut state.st_stuff.w_health,
         ST_HEALTHX,

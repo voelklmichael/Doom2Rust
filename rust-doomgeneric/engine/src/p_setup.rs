@@ -31,8 +31,8 @@ use crate::r_things::R_InitSprites;
 use crate::s_sound::S_Start;
 use crate::stdint_types::byte;
 use crate::tables::angle_t;
-use crate::w_wad::W_LumpBytes;
 use crate::w_wad::W_GetNumForName;
+use crate::w_wad::W_LumpBytes;
 use crate::w_wad::W_LumpLength;
 use crate::w_wad::W_ReadLump;
 use crate::w_wad::W_ReleaseLumpNum;
@@ -355,8 +355,7 @@ pub fn P_LoadSubsectors(state: &mut GameState, lump: i32) {
     W_ReleaseLumpNum(&mut state.w_wad, lump);
 }
 pub fn P_LoadSectors(state: &mut GameState, lump: i32) {
-    let numsectors =
-        (W_LumpLength(&mut state.w_wad, lump as u32) as usize / MAPSECTOR_SIZE) as i32;
+    let numsectors = (W_LumpLength(&mut state.w_wad, lump as u32) as usize / MAPSECTOR_SIZE) as i32;
     state.p_setup.numsectors = numsectors;
     state.p_setup.sectors = vec![ZERO_SECTOR; numsectors as usize];
     let mut reader = LumpReader::new(state, lump);
@@ -420,7 +419,10 @@ pub fn P_LoadThings(state: &mut GameState, lump: i32) {
             options: reader.i16(),
         };
         let spawn = !(state.doomstat.gamemode as u32 != GameMode_t::commercial as i32 as u32
-            && matches!(spawnthing.type_0, 64 | 88 | 89 | 69 | 67 | 71 | 65 | 66 | 68 | 84));
+            && matches!(
+                spawnthing.type_0,
+                64 | 88 | 89 | 69 | 67 | 71 | 65 | 66 | 68 | 84
+            ));
         if !spawn {
             break;
         }
@@ -513,7 +515,9 @@ pub fn P_LoadBlockMap(state: &mut GameState, mut lump: i32) {
     let mut raw = vec![0u8; lumplen as usize];
     W_ReadLump(&mut state.w_wad, lump as u32, &mut raw);
     state.p_setup.blockmaplump = raw
-        .as_chunks::<2>().0.iter()
+        .as_chunks::<2>()
+        .0
+        .iter()
         .map(|c| i16::from_le_bytes([c[0], c[1]]))
         .collect();
     state.p_setup.bmaporgx = ((state.p_setup.blockmaplump[0] as i32) << FRACBITS) as fixed_t;
@@ -588,19 +592,18 @@ pub fn P_GroupLines(state: &mut GameState) {
             j += 1;
         }
         let sector = &mut state.p_setup.sectors[i as usize];
-        sector.soundorg.x =
-            ((bbox[BOXRIGHT as usize] + bbox[BOXLEFT as usize]) / 2_i32) as fixed_t;
-        sector.soundorg.y =
-            ((bbox[BOXTOP as usize] + bbox[BOXBOTTOM as usize]) / 2_i32) as fixed_t;
-        block = (bbox[BOXTOP as usize] - state.p_setup.bmaporgy + 32_i32 * FRACUNIT) >> MAPBLOCKSHIFT;
+        sector.soundorg.x = ((bbox[BOXRIGHT as usize] + bbox[BOXLEFT as usize]) / 2_i32) as fixed_t;
+        sector.soundorg.y = ((bbox[BOXTOP as usize] + bbox[BOXBOTTOM as usize]) / 2_i32) as fixed_t;
+        block =
+            (bbox[BOXTOP as usize] - state.p_setup.bmaporgy + 32_i32 * FRACUNIT) >> MAPBLOCKSHIFT;
         block = if block >= state.p_setup.bmapheight {
             state.p_setup.bmapheight - 1_i32
         } else {
             block
         };
         sector.blockbox[BOXTOP as usize] = block;
-        block =
-            (bbox[BOXBOTTOM as usize] - state.p_setup.bmaporgy - 32_i32 * FRACUNIT) >> MAPBLOCKSHIFT;
+        block = (bbox[BOXBOTTOM as usize] - state.p_setup.bmaporgy - 32_i32 * FRACUNIT)
+            >> MAPBLOCKSHIFT;
         block = if block < 0_i32 { 0_i32 } else { block };
         sector.blockbox[BOXBOTTOM as usize] = block;
         block =

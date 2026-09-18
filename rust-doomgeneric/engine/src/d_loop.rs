@@ -11,8 +11,8 @@ use crate::i_timer::I_Sleep;
 use crate::i_video::I_StartTic;
 use crate::m_fixed::fixed_t;
 use crate::m_fixed::FRACUNIT;
-use crate::w_checksum::sha1_digest_t;
 use crate::stdint_types::byte;
+use crate::w_checksum::sha1_digest_t;
 
 pub struct DLoopState {
     pub ticdata: [ticcmd_set_t; 128],
@@ -243,10 +243,7 @@ pub fn D_StartNetGame(state: &mut GameState, settings: &mut net_gamesettings_t) 
     state.d_loop.ticdup = settings.ticdup;
     state.d_loop.new_sync = settings.new_sync != 0;
 }
-pub fn D_InitNetGame(
-    state: &mut GameState,
-    connect_data: &mut net_connect_data_t,
-) -> bool {
+pub fn D_InitNetGame(state: &mut GameState, connect_data: &mut net_connect_data_t) -> bool {
     let mut result: bool = false;
     I_AtExit(
         &mut state.i_system,

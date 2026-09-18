@@ -8,8 +8,8 @@ use crate::m_fixed::FRACBITS;
 use crate::p_mobj::thinker_t;
 
 use crate::p_tick::P_MobjThinkerIds;
-use crate::r_draw::ColumnSource;
 use crate::r_defs::lighttable_t;
+use crate::r_draw::ColumnSource;
 use crate::stdint_types::byte;
 use crate::w_wad::W_LumpBytes;
 use crate::w_wad::W_LumpLength;
