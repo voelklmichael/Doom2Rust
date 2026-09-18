@@ -96,27 +96,27 @@ fn wipe_doMelt(state: &mut GameState, width: i32, height: i32, mut ticks: i32) -
     let ys = &mut state.f_wipe.y;
     while ticks > 0 {
         ticks -= 1;
-        for i in 0..width {
-            if ys[i] < 0_i32 {
-                ys[i] += 1;
+        for (i, y) in ys.iter_mut().enumerate().take(width) {
+            if *y < 0_i32 {
+                *y += 1;
                 done = false;
-            } else if ys[i] < height {
-                let mut dy = if ys[i] < 16_i32 { ys[i] + 1_i32 } else { 8_i32 };
-                if ys[i] + dy >= height {
-                    dy = height - ys[i];
+            } else if *y < height {
+                let mut dy = if *y < 16_i32 { *y + 1_i32 } else { 8_i32 };
+                if *y + dy >= height {
+                    dy = height - *y;
                 }
-                let src = i * height_words + ys[i] as usize;
-                let mut dst = ys[i] as usize * width + i;
+                let src = i * height_words + *y as usize;
+                let mut dst = *y as usize * width + i;
                 for k in 0..dy as usize {
                     let so = 2 * (src + k);
                     let d = 2 * dst;
                     video[d..d + 2].copy_from_slice(&scr_end[so..so + 2]);
                     dst += width;
                 }
-                ys[i] += dy;
+                *y += dy;
                 let src = i * height_words;
-                let mut dst = ys[i] as usize * width + i;
-                for k in 0..(height - ys[i]) as usize {
+                let mut dst = *y as usize * width + i;
+                for k in 0..(height - *y) as usize {
                     let so = 2 * (src + k);
                     let d = 2 * dst;
                     video[d..d + 2].copy_from_slice(&scr_start[so..so + 2]);
@@ -151,6 +151,7 @@ pub fn wipe_EndScreen(
     state.f_wipe.wipe_scr_start = wipe_scr_start;
     0_i32
 }
+type WipeFn = fn(&mut GameState, i32, i32, i32) -> i32;
 pub fn wipe_ScreenWipe(
     state: &mut GameState,
     mut wipeno: i32,
@@ -159,7 +160,7 @@ pub fn wipe_ScreenWipe(
     mut ticks: i32,
 ) -> i32 {
     let mut rc: i32 = 0;
-    let wipes: [fn(&mut GameState, i32, i32, i32) -> i32; 6] = [
+    let wipes: [WipeFn; 6] = [
         wipe_initColorXForm,
         wipe_doColorXForm,
         wipe_exitColorXForm,

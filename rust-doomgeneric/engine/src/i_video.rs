@@ -286,7 +286,7 @@ pub fn I_FinishUpdate(state: &mut GameState) {
         .i_video
         .dg_screen_buffer
         .iter_mut()
-        .zip(frame.chunks_exact(4))
+        .zip(frame.as_chunks::<4>().0.iter())
     {
         *pixel = u32::from_ne_bytes([bytes[0], bytes[1], bytes[2], bytes[3]]);
     }
@@ -297,7 +297,7 @@ pub fn I_ReadScreen(state: &GameState) -> Vec<byte> {
 }
 pub fn I_SetPalette(state: &mut GameState, palette: &[byte]) {
     let gamma = &gammatable[state.i_video.usegamma as usize];
-    for (color, rgb) in state.i_video.colors.iter_mut().zip(palette.chunks_exact(3)) {
+    for (color, rgb) in state.i_video.colors.iter_mut().zip(palette.as_chunks::<3>().0.iter()) {
         color.set_a(0 as uint32_t);
         color.set_r(gamma[rgb[0] as usize] as uint32_t);
         color.set_g(gamma[rgb[1] as usize] as uint32_t);

@@ -34,6 +34,7 @@ fn snddevice_from_raw(v: i32) -> snddevice_t {
         n => panic!("invalid snddevice {n}"),
     }
 }
+type StartSoundFn = fn(&mut sfxinfo_t, i32, i32, i32) -> i32;
 #[derive(Copy, Clone)]
 pub struct sound_module_t {
     pub sound_devices: &'static [snddevice_t],
@@ -42,7 +43,7 @@ pub struct sound_module_t {
     pub GetSfxLumpNum: Option<fn(&mut sfxinfo_t) -> i32>,
     pub Update: Option<fn()>,
     pub UpdateSoundParams: Option<fn(i32, i32, i32)>,
-    pub StartSound: Option<fn(&mut sfxinfo_t, i32, i32, i32) -> i32>,
+    pub StartSound: Option<StartSoundFn>,
     pub StopSound: Option<fn(i32)>,
     pub SoundIsPlaying: Option<fn(i32) -> bool>,
     pub CacheSounds: Option<fn(&mut [sfxinfo_t])>,
@@ -168,16 +169,8 @@ pub fn I_UpdateSound(state: &mut ISoundState) {
     }
 }
 fn CheckVolumeSeparation(vol: &mut i32, sep: &mut i32) {
-    if *sep < 0_i32 {
-        *sep = 0_i32;
-    } else if *sep > 254_i32 {
-        *sep = 254_i32;
-    }
-    if *vol < 0_i32 {
-        *vol = 0_i32;
-    } else if *vol > 127_i32 {
-        *vol = 127_i32;
-    }
+    *sep = (*sep).clamp(0_i32, 254_i32);
+    *vol = (*vol).clamp(0_i32, 127_i32);
 }
 pub fn I_UpdateSoundParams(state: &mut ISoundState, channel: i32, mut vol: i32, mut sep: i32) {
     if let Some(module) = state.sound_module {

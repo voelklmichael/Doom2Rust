@@ -117,12 +117,13 @@ pub struct net_gamesettings_t {
     pub consoleplayer: i32,
     pub player_classes: [i32; 8],
 }
+type RunTicFn = fn(&mut GameState, &[ticcmd_t], &[bool]);
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct loop_interface_t {
     pub ProcessEvents: Option<fn(&mut GameState)>,
     pub BuildTiccmd: Option<fn(&mut GameState, &mut ticcmd_t, i32)>,
-    pub RunTic: Option<fn(&mut GameState, &[ticcmd_t], &[bool])>,
+    pub RunTic: Option<RunTicFn>,
     pub RunMenu: Option<fn(&mut GameState)>,
 }
 #[derive(Copy, Clone)]

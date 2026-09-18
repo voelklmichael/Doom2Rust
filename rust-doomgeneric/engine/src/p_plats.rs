@@ -206,9 +206,11 @@ pub fn EV_DoPlat(state: &mut GameState, line: LineId, type_0: PlattypeE, amount:
             continue;
         }
         rtn = 1_i32;
-        let mut plat = plat_t::default();
-        plat.type_0 = type_0;
-        plat.sector = sec;
+        let mut plat = plat_t {
+            type_0,
+            sector: sec,
+            ..plat_t::default()
+        };
         plat.thinker.function = ThinkerFn::Plat(T_PlatRaise);
         plat.crush = false;
         plat.tag = linev.tag as i32;

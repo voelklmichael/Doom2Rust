@@ -113,7 +113,7 @@ pub fn W_AddFile(state: &mut GameState, filename: &str) -> Option<&'static wad_f
             vec![0u8; (header.numlumps as usize) * ::core::mem::size_of::<filelump_t>()];
         W_Read(wad_file, header.infotableofs as u32, &mut dir_buf);
         dir_buf
-            .chunks_exact(::core::mem::size_of::<filelump_t>())
+            .as_chunks::<{ ::core::mem::size_of::<filelump_t>() }>().0.iter()
             .map(|c| filelump_t {
                 filepos: i32::from_le_bytes(c[0..4].try_into().unwrap()),
                 size: i32::from_le_bytes(c[4..8].try_into().unwrap()),

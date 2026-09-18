@@ -68,8 +68,7 @@ pub fn M_ExtractFileBase(path: &str, dest: &mut FixedCStr<8>) {
         None => filename,
     };
     let mut buf = [0u8; 8];
-    let mut length = 0usize;
-    for &b in base.as_bytes() {
+    for (length, &b) in base.as_bytes().iter().enumerate() {
         if length >= 8 {
             let truncated = String::from_utf8_lossy(&buf[..length.min(8)]);
             println!(
@@ -79,7 +78,6 @@ pub fn M_ExtractFileBase(path: &str, dest: &mut FixedCStr<8>) {
             break;
         }
         buf[length] = b.to_ascii_uppercase();
-        length += 1;
     }
     *dest = FixedCStr(buf);
 }

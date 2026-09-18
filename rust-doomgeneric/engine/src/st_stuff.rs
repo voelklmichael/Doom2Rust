@@ -665,10 +665,10 @@ pub fn ST_updateFaceWidget(state: &mut GameState) {
     }
     if state.st_stuff.st_updatefacewidget_priority < 8_i32 {
         let plyr_attacker_id = state.g_game.player_mut(state.st_stuff.plyr).attacker;
-        if state.g_game.player_mut(state.st_stuff.plyr).damagecount != 0
-            && plyr_attacker_id.is_some()
-            && plyr_attacker_id != state.g_game.player_mut(state.st_stuff.plyr).mo
-        {
+        if let Some(attacker_id) = plyr_attacker_id.filter(|&a| {
+            state.g_game.player_mut(state.st_stuff.plyr).damagecount != 0
+                && Some(a) != state.g_game.player_mut(state.st_stuff.plyr).mo
+        }) {
             state.st_stuff.st_updatefacewidget_priority = 7_i32;
             let plyr_mo = state
                 .p_mobj
@@ -680,7 +680,7 @@ pub fn ST_updateFaceWidget(state: &mut GameState) {
                 state.st_stuff.st_facecount = ST_TURNCOUNT;
                 state.st_stuff.st_faceindex = ST_calcPainOffset(state) + ST_OUCHOFFSET;
             } else {
-                let plyr_attacker = state.p_mobj.mo(plyr_attacker_id.unwrap());
+                let plyr_attacker = state.p_mobj.mo(attacker_id);
                 let (attacker_x, attacker_y) = (plyr_attacker.x, plyr_attacker.y);
                 badguyangle = R_PointToAngle2(
                     state,

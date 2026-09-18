@@ -710,11 +710,11 @@ pub fn P_SetupPsprites(state: &mut GameState, player_id: PlayerId) {
 pub fn P_MovePsprites(state: &mut GameState, player_id: PlayerId) {
     for i in 0..NUMPSPRITES {
         let psp_state = state.g_game.player_mut(player_id).psprites[i as usize].state;
-        if psp_state.is_some() && state.g_game.player_mut(player_id).psprites[i as usize].tics != -1_i32 {
+        if let Some(psp_state) = psp_state.filter(|_| state.g_game.player_mut(player_id).psprites[i as usize].tics != -1_i32) {
             let psp = &mut state.g_game.player_mut(player_id).psprites[i as usize];
             psp.tics -= 1;
             if psp.tics == 0 {
-                let nextstate = state.info.state_mut(psp_state.unwrap()).nextstate;
+                let nextstate = state.info.state_mut(psp_state).nextstate;
                 P_SetPsprite(state, player_id, i, nextstate);
             }
         }

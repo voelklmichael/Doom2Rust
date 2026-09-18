@@ -1647,29 +1647,29 @@ pub fn M_Responder(state: &mut GameState, ev: &mut event_t) -> bool {
         return true;
     } else if key == state.m_controls.key_menu_left {
         let item = state.m_menu.current().items[state.m_menu.itemOn as usize];
-        if item.routine.is_some() && item.status as i32 == 2_i32 {
+        if let Some(routine) = item.routine.filter(|_| item.status as i32 == 2_i32) {
             S_StartSound(state, SoundOrigin::None, sfx_stnmov as i32);
-            item.routine.expect("non-null function pointer")(state, 0_i32);
+            routine(state, 0_i32);
         }
         return true;
     } else if key == state.m_controls.key_menu_right {
         let item = state.m_menu.current().items[state.m_menu.itemOn as usize];
-        if item.routine.is_some() && item.status as i32 == 2_i32 {
+        if let Some(routine) = item.routine.filter(|_| item.status as i32 == 2_i32) {
             S_StartSound(state, SoundOrigin::None, sfx_stnmov as i32);
-            item.routine.expect("non-null function pointer")(state, 1_i32);
+            routine(state, 1_i32);
         }
         return true;
     } else if key == state.m_controls.key_menu_forward {
         let item = state.m_menu.current().items[state.m_menu.itemOn as usize];
-        if item.routine.is_some() && item.status as i32 != 0 {
+        if let Some(routine) = item.routine.filter(|_| item.status as i32 != 0) {
             let item_on = state.m_menu.itemOn;
             state.m_menu.current_mut().lastOn = item_on;
             if item.status as i32 == 2_i32 {
-                item.routine.expect("non-null function pointer")(state, 1_i32);
+                routine(state, 1_i32);
                 S_StartSound(state, SoundOrigin::None, sfx_stnmov as i32);
             } else {
                 let item_on = state.m_menu.itemOn as i32;
-                item.routine.expect("non-null function pointer")(state, item_on);
+                routine(state, item_on);
                 S_StartSound(state, SoundOrigin::None, sfx_pistol as i32);
             }
         }
@@ -1815,7 +1815,7 @@ pub fn M_Init(state: &mut GameState) {
             state.m_menu.defs.NewDef.prevMenu = Some(MenuId::Main);
         }
         0 => {}
-        1 | 3 | _ => {}
+        _ => {}
     }
     if !state.doomstat.gameversion.is_ultimate_or_higher() {
         state.m_menu.defs.EpiDef.numitems -= 1;

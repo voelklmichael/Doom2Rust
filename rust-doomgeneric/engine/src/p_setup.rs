@@ -513,7 +513,7 @@ pub fn P_LoadBlockMap(state: &mut GameState, mut lump: i32) {
     let mut raw = vec![0u8; lumplen as usize];
     W_ReadLump(&mut state.w_wad, lump as u32, &mut raw);
     state.p_setup.blockmaplump = raw
-        .chunks_exact(2)
+        .as_chunks::<2>().0.iter()
         .map(|c| i16::from_le_bytes([c[0], c[1]]))
         .collect();
     state.p_setup.bmaporgx = ((state.p_setup.blockmaplump[0] as i32) << FRACBITS) as fixed_t;
@@ -543,8 +543,7 @@ pub fn P_GroupLines(state: &mut GameState) {
         let li = state.p_setup.lines[i as usize];
         let front_id = li.frontsector.unwrap();
         state.p_setup.sector_mut(front_id).linecount += 1;
-        if li.backsector.is_some() && li.backsector != li.frontsector {
-            let back_id = li.backsector.unwrap();
+        if let Some(back_id) = li.backsector.filter(|&b| Some(b) != li.frontsector) {
             state.p_setup.sector_mut(back_id).linecount += 1;
             state.p_setup.totallines += 1;
         }

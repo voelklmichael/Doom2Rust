@@ -44,11 +44,12 @@ pub enum DefaultType {
 }
 /// Where a bound configuration variable lives: an accessor that projects the
 /// variable out of the game state.
+type StrAccessor = Rc<dyn Fn(&mut GameState) -> &mut Option<&'static str>>;
 #[derive(Clone)]
 pub enum DefaultLocation {
     Int(Rc<dyn Fn(&mut GameState) -> &mut i32>),
     Float(Rc<dyn Fn(&mut GameState) -> &mut f32>),
-    Str(Rc<dyn Fn(&mut GameState) -> &mut Option<&'static str>>),
+    Str(StrAccessor),
 }
 pub struct default_t {
     pub name: &'static str,
@@ -1673,13 +1674,7 @@ fn SearchCollection<'a>(
     mut collection: &'a mut default_collection_t,
     name: &str,
 ) -> Option<&'a mut default_t> {
-    for entry in &mut collection.defaults {
-        if entry.name == name {
-            return Some(entry);
-        }
-    }
-
-    None
+    collection.defaults.iter_mut().find(|entry| entry.name == name)
 }
 static scantokey: [i32; 128] = [
     0_i32,

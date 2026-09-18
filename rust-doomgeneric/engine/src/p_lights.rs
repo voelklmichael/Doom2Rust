@@ -446,10 +446,12 @@ pub fn T_StrobeFlash(state: &mut GameState, id: StrobeId) {
 }
 pub fn P_SpawnStrobeFlash(state: &mut GameState, sector: SectorId, fastOrSlow: i32, inSync: i32) {
     let lightlevel = state.p_setup.sector_mut(sector).lightlevel as i32;
-    let mut flash = strobe_t::default();
-    flash.sector = sector;
-    flash.darktime = fastOrSlow;
-    flash.brighttime = STROBEBRIGHT;
+    let mut flash = strobe_t {
+        sector,
+        darktime: fastOrSlow,
+        brighttime: STROBEBRIGHT,
+        ..strobe_t::default()
+    };
     flash.thinker.function = ThinkerFn::Strobe(T_StrobeFlash);
     flash.maxlight = lightlevel;
     flash.minlight = P_FindMinSurroundingLight(state, sector, lightlevel);
@@ -547,10 +549,12 @@ pub fn T_Glow(state: &mut GameState, id: GlowId) {
 }
 pub fn P_SpawnGlowingLight(state: &mut GameState, sector: SectorId) {
     let lightlevel = state.p_setup.sector_mut(sector).lightlevel as i32;
-    let mut g = glow_t::default();
-    g.sector = sector;
-    g.minlight = P_FindMinSurroundingLight(state, sector, lightlevel);
-    g.maxlight = lightlevel;
+    let mut g = glow_t {
+        sector,
+        minlight: P_FindMinSurroundingLight(state, sector, lightlevel),
+        maxlight: lightlevel,
+        ..glow_t::default()
+    };
     g.thinker.function = ThinkerFn::Glow(T_Glow);
     g.direction = -1_i32;
     let g_arena_id = state.p_lights.spawn_glow(g);

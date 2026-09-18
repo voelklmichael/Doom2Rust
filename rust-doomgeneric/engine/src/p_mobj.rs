@@ -3001,8 +3001,8 @@ pub fn P_ZMovement(state: &mut GameState, mo: MobjId) {
     }
     state.p_mobj.mo_mut(mo).z += state.p_mobj.mo(mo).momz;
     let mo_target = state.p_mobj.mo(mo).target.filter(|&id| state.p_mobj.is_live(id));
-    if state.p_mobj.mo(mo).flags & MF_FLOAT as i32 != 0 && mo_target.is_some() && state.p_mobj.mo(mo).flags & MF_SKULLFLY as i32 == 0 && state.p_mobj.mo(mo).flags & MF_INFLOAT as i32 == 0 {
-        let target = mo_target.unwrap();
+    let mo_flags = state.p_mobj.mo(mo).flags;
+    if let Some(target) = mo_target.filter(|_| mo_flags & MF_FLOAT as i32 != 0 && mo_flags & MF_SKULLFLY as i32 == 0 && mo_flags & MF_INFLOAT as i32 == 0) {
         dist = P_AproxDistance(state.p_mobj.mo(mo).x - state.p_mobj.mo(target).x, state.p_mobj.mo(mo).y - state.p_mobj.mo(target).y);
         delta = state.p_mobj.mo(target).z + (state.p_mobj.mo(mo).height >> 1_i32) - state.p_mobj.mo(mo).z;
         if delta < 0_i32 && dist < -(delta * 3_i32) {

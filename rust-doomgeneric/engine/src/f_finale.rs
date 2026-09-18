@@ -783,12 +783,7 @@ pub fn F_BunnyScroll(state: &mut GameState) {
     let dest_screen = Screen::Video;
     V_MarkRect(state, dest_screen, 0_i32, 0_i32, SCREENWIDTH, SCREENHEIGHT);
     scrolled = 320_i32 - (state.f_finale.finalecount as i32 - 230_i32) / 2_i32;
-    if scrolled > 320_i32 {
-        scrolled = 320_i32;
-    }
-    if scrolled < 0_i32 {
-        scrolled = 0_i32;
-    }
+    scrolled = scrolled.clamp(0_i32, 320_i32);
     x = 0_i32;
     while x < SCREENWIDTH {
         if x + scrolled < 320_i32 {

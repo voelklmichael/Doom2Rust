@@ -847,19 +847,11 @@ pub fn AM_Responder(state: &mut GameState, mut ev: &event_t) -> bool {
     } else if ev.type_0 == EvType::ev_keyup {
         rc = false_0;
         key = ev.data1;
-        if key == state.m_controls.key_map_east {
+        if key == state.m_controls.key_map_east || key == state.m_controls.key_map_west {
             if state.am_map.followplayer == 0 {
                 state.am_map.m_paninc.x = 0_i32 as fixed_t;
             }
-        } else if key == state.m_controls.key_map_west {
-            if state.am_map.followplayer == 0 {
-                state.am_map.m_paninc.x = 0_i32 as fixed_t;
-            }
-        } else if key == state.m_controls.key_map_north {
-            if state.am_map.followplayer == 0 {
-                state.am_map.m_paninc.y = 0_i32 as fixed_t;
-            }
-        } else if key == state.m_controls.key_map_south {
+        } else if key == state.m_controls.key_map_north || key == state.m_controls.key_map_south {
             if state.am_map.followplayer == 0 {
                 state.am_map.m_paninc.y = 0_i32 as fixed_t;
             }
@@ -1200,38 +1192,43 @@ pub fn AM_drawWalls(state: &mut GameState) {
         let lightlev = state.am_map.lightlev;
         if state.am_map.cheating != 0 || li_flags & ML_MAPPED != 0 {
             if !(li_flags & LINE_NEVERSEE != 0 && state.am_map.cheating == 0) {
-                if li_backsector.is_none() {
-                    AM_drawMline(state, &l, WALLCOLORS + lightlev);
-                } else if li_special == 39_i32 {
-                    AM_drawMline(state, &l, WALLCOLORS + WALLRANGE / 2_i32);
-                } else if li_flags & ML_SECRET != 0 {
-                    if state.am_map.cheating != 0 {
-                        AM_drawMline(state, &l, SECRETWALLCOLORS + lightlev);
-                    } else {
+                match li_backsector {
+                    None => {
                         AM_drawMline(state, &l, WALLCOLORS + lightlev);
                     }
-                } else if state
-                    .p_setup
-                    .sector_mut(li_backsector.unwrap())
-                    .floorheight
-                    != state
-                        .p_setup
-                        .sector_mut(li_frontsector.unwrap())
-                        .floorheight
-                {
-                    AM_drawMline(state, &l, FDWALLCOLORS + lightlev);
-                } else if state
-                    .p_setup
-                    .sector_mut(li_backsector.unwrap())
-                    .ceilingheight
-                    != state
-                        .p_setup
-                        .sector_mut(li_frontsector.unwrap())
-                        .ceilingheight
-                {
-                    AM_drawMline(state, &l, CDWALLCOLORS + lightlev);
-                } else if state.am_map.cheating != 0 {
-                    AM_drawMline(state, &l, TSWALLCOLORS + lightlev);
+                    Some(li_backsector) => {
+                        if li_special == 39_i32 {
+                            AM_drawMline(state, &l, WALLCOLORS + WALLRANGE / 2_i32);
+                        } else if li_flags & ML_SECRET != 0 {
+                            if state.am_map.cheating != 0 {
+                                AM_drawMline(state, &l, SECRETWALLCOLORS + lightlev);
+                            } else {
+                                AM_drawMline(state, &l, WALLCOLORS + lightlev);
+                            }
+                        } else if state
+                            .p_setup
+                            .sector_mut(li_backsector)
+                            .floorheight
+                            != state
+                                .p_setup
+                                .sector_mut(li_frontsector.unwrap())
+                                .floorheight
+                        {
+                            AM_drawMline(state, &l, FDWALLCOLORS + lightlev);
+                        } else if state
+                            .p_setup
+                            .sector_mut(li_backsector)
+                            .ceilingheight
+                            != state
+                                .p_setup
+                                .sector_mut(li_frontsector.unwrap())
+                                .ceilingheight
+                        {
+                            AM_drawMline(state, &l, CDWALLCOLORS + lightlev);
+                        } else if state.am_map.cheating != 0 {
+                            AM_drawMline(state, &l, TSWALLCOLORS + lightlev);
+                        }
+                    }
                 }
             }
         } else if state.g_game.player_mut(state.am_map.plr).powers[PowerType::pw_allmap as usize]

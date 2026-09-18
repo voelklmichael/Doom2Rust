@@ -289,7 +289,7 @@ pub fn R_InitSpriteDefs(state: &mut GameState, namelist: &[&'static str]) {
                             rotation += 1;
                         }
                     }
-                    0 | _ => {}
+                    _ => {}
                 }
                 frame += 1;
             }

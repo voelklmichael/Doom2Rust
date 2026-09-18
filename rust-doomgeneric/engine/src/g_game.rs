@@ -1058,9 +1058,7 @@ pub fn G_PlayerReborn(state: &mut GGameState, player: i32) {
     p.weaponowned[weapontype_t::wp_fist as usize] = true;
     p.weaponowned[weapontype_t::wp_pistol as usize] = true;
     p.ammo[ammotype_t::am_clip as usize] = deh_initial_bullets;
-    for i in 0..NUMAMMO as usize {
-        p.maxammo[i] = maxammo[i];
-    }
+    p.maxammo[..NUMAMMO as usize].copy_from_slice(&maxammo[..NUMAMMO as usize]);
 }
 pub fn G_CheckSpot(state: &mut GameState, playernum: i32, mthing: &mapthing_t) -> bool {
     if state.g_game.players[playernum as usize].mo.is_none() {
@@ -1512,12 +1510,7 @@ pub fn G_InitNew(state: &mut GameState, mut skill: SkillType, mut episode: i32, 
             episode = 4_i32;
         }
     } else {
-        if episode < 1_i32 {
-            episode = 1_i32;
-        }
-        if episode > 3_i32 {
-            episode = 3_i32;
-        }
+        episode = episode.clamp(1_i32, 3_i32);
     }
     if episode > 1_i32 && state.doomstat.gamemode as u32 == GameMode_t::shareware as u32 {
         episode = 1_i32;
@@ -1585,7 +1578,7 @@ pub fn G_InitNew(state: &mut GameState, mut skill: SkillType, mut episode: i32, 
             4 => {
                 skytexturename = "SKY4";
             }
-            1 | _ => {
+            _ => {
                 skytexturename = "SKY1";
             }
         }
@@ -1676,7 +1669,7 @@ pub fn G_VanillaVersionCode(state: &mut DoomstatState) -> i32 {
         1 => {}
         2 => return 107_i32,
         3 => return 108_i32,
-        4 | _ => return 109_i32,
+        _ => return 109_i32,
     }
     106_i32
 }

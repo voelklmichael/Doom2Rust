@@ -329,11 +329,8 @@ fn GenerateTextureHashTable(state: &mut GameState) {
                 state.r_data.textures_hashtable[key as usize] = Some(TextureId(i as u32));
             }
             Some(mut cursor) => {
-                loop {
-                    match state.r_data.textures[cursor.0 as usize].next {
-                        Some(next) => cursor = next,
-                        None => break,
-                    }
+                while let Some(next) = state.r_data.textures[cursor.0 as usize].next {
+                    cursor = next;
                 }
                 state.r_data.textures[cursor.0 as usize].next = Some(TextureId(i as u32));
             }

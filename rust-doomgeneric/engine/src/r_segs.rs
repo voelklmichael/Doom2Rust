@@ -448,213 +448,216 @@ pub fn R_StoreWallRange(state: &mut GameState, mut start: i32, mut stop: i32) {
     state.r_segs.toptexture = state.r_segs.bottomtexture;
     state.r_segs.midtexture = state.r_segs.toptexture;
     state.r_bsp.drawsegs[state.r_bsp.ds_p].maskedtexturecol = None;
-    if state.r_bsp.backsector.is_none() {
-        state.r_segs.midtexture = state.r_data.texturetranslation
-            [state.p_setup.side_mut(state.r_bsp.sidedef).midtexture as usize];
-        state.r_segs.markceiling = true;
-        state.r_segs.markfloor = state.r_segs.markceiling;
-        if state.p_setup.line_mut(state.r_bsp.linedef).flags as i32 & ML_DONTPEGBOTTOM != 0 {
-            vtop = state
-                .p_setup
-                .sector_mut(state.r_bsp.frontsector.unwrap())
-                .floorheight
-                + state.r_data.textureheight
-                    [state.p_setup.side_mut(state.r_bsp.sidedef).midtexture as usize];
-            state.r_segs.rw_midtexturemid = vtop - state.r_main.viewz;
-        } else {
-            state.r_segs.rw_midtexturemid = state.r_segs.worldtop as fixed_t;
-        }
-        state.r_segs.rw_midtexturemid += state.p_setup.side_mut(state.r_bsp.sidedef).rowoffset;
-        state.r_bsp.drawsegs[state.r_bsp.ds_p].silhouette = SIL_BOTH;
-        state.r_bsp.drawsegs[state.r_bsp.ds_p].sprtopclip = Some(ClipArray::ScreenHeightArray);
-        state.r_bsp.drawsegs[state.r_bsp.ds_p].sprbottomclip = Some(ClipArray::NegOneArray);
-        state.r_bsp.drawsegs[state.r_bsp.ds_p].bsilheight = INT_MAX as fixed_t;
-        state.r_bsp.drawsegs[state.r_bsp.ds_p].tsilheight = INT_MIN as fixed_t;
-    } else {
-        state.r_bsp.drawsegs[state.r_bsp.ds_p].sprbottomclip = None;
-        state.r_bsp.drawsegs[state.r_bsp.ds_p].sprtopclip =
-            state.r_bsp.drawsegs[state.r_bsp.ds_p].sprbottomclip;
-        state.r_bsp.drawsegs[state.r_bsp.ds_p].silhouette = 0_i32;
-        if state
-            .p_setup
-            .sector_mut(state.r_bsp.frontsector.unwrap())
-            .floorheight
-            > state
-                .p_setup
-                .sector_mut(state.r_bsp.backsector.unwrap())
-                .floorheight
-        {
-            state.r_bsp.drawsegs[state.r_bsp.ds_p].silhouette = SIL_BOTTOM;
-            state.r_bsp.drawsegs[state.r_bsp.ds_p].bsilheight = state
-                .p_setup
-                .sector_mut(state.r_bsp.frontsector.unwrap())
-                .floorheight;
-        } else if state
-            .p_setup
-            .sector_mut(state.r_bsp.backsector.unwrap())
-            .floorheight
-            > state.r_main.viewz
-        {
-            state.r_bsp.drawsegs[state.r_bsp.ds_p].silhouette = SIL_BOTTOM;
-            state.r_bsp.drawsegs[state.r_bsp.ds_p].bsilheight = INT_MAX as fixed_t;
-        }
-        if state
-            .p_setup
-            .sector_mut(state.r_bsp.frontsector.unwrap())
-            .ceilingheight
-            < state
-                .p_setup
-                .sector_mut(state.r_bsp.backsector.unwrap())
-                .ceilingheight
-        {
-            state.r_bsp.drawsegs[state.r_bsp.ds_p].silhouette |= SIL_TOP;
-            state.r_bsp.drawsegs[state.r_bsp.ds_p].tsilheight = state
-                .p_setup
-                .sector_mut(state.r_bsp.frontsector.unwrap())
-                .ceilingheight;
-        } else if state
-            .p_setup
-            .sector_mut(state.r_bsp.backsector.unwrap())
-            .ceilingheight
-            < state.r_main.viewz
-        {
-            state.r_bsp.drawsegs[state.r_bsp.ds_p].silhouette |= SIL_TOP;
-            state.r_bsp.drawsegs[state.r_bsp.ds_p].tsilheight = INT_MIN as fixed_t;
-        }
-        if state
-            .p_setup
-            .sector_mut(state.r_bsp.backsector.unwrap())
-            .ceilingheight
-            <= state
-                .p_setup
-                .sector_mut(state.r_bsp.frontsector.unwrap())
-                .floorheight
-        {
+    match state.r_bsp.backsector {
+        None => {
+            state.r_segs.midtexture = state.r_data.texturetranslation
+                [state.p_setup.side_mut(state.r_bsp.sidedef).midtexture as usize];
+            state.r_segs.markceiling = true;
+            state.r_segs.markfloor = state.r_segs.markceiling;
+            if state.p_setup.line_mut(state.r_bsp.linedef).flags as i32 & ML_DONTPEGBOTTOM != 0 {
+                vtop = state
+                    .p_setup
+                    .sector_mut(state.r_bsp.frontsector.unwrap())
+                    .floorheight
+                    + state.r_data.textureheight
+                        [state.p_setup.side_mut(state.r_bsp.sidedef).midtexture as usize];
+                state.r_segs.rw_midtexturemid = vtop - state.r_main.viewz;
+            } else {
+                state.r_segs.rw_midtexturemid = state.r_segs.worldtop as fixed_t;
+            }
+            state.r_segs.rw_midtexturemid += state.p_setup.side_mut(state.r_bsp.sidedef).rowoffset;
+            state.r_bsp.drawsegs[state.r_bsp.ds_p].silhouette = SIL_BOTH;
+            state.r_bsp.drawsegs[state.r_bsp.ds_p].sprtopclip = Some(ClipArray::ScreenHeightArray);
             state.r_bsp.drawsegs[state.r_bsp.ds_p].sprbottomclip = Some(ClipArray::NegOneArray);
             state.r_bsp.drawsegs[state.r_bsp.ds_p].bsilheight = INT_MAX as fixed_t;
-            state.r_bsp.drawsegs[state.r_bsp.ds_p].silhouette |= SIL_BOTTOM;
-        }
-        if state
-            .p_setup
-            .sector_mut(state.r_bsp.backsector.unwrap())
-            .floorheight
-            >= state
-                .p_setup
-                .sector_mut(state.r_bsp.frontsector.unwrap())
-                .ceilingheight
-        {
-            state.r_bsp.drawsegs[state.r_bsp.ds_p].sprtopclip = Some(ClipArray::ScreenHeightArray);
             state.r_bsp.drawsegs[state.r_bsp.ds_p].tsilheight = INT_MIN as fixed_t;
-            state.r_bsp.drawsegs[state.r_bsp.ds_p].silhouette |= SIL_TOP;
         }
-        state.r_segs.worldhigh = state
-            .p_setup
-            .sector_mut(state.r_bsp.backsector.unwrap())
-            .ceilingheight
-            - state.r_main.viewz;
-        state.r_segs.worldlow = state
-            .p_setup
-            .sector_mut(state.r_bsp.backsector.unwrap())
-            .floorheight
-            - state.r_main.viewz;
-        if state
-            .p_setup
-            .sector_mut(state.r_bsp.frontsector.unwrap())
-            .ceilingpic as i32
-            == state.r_sky.skyflatnum
-            && state
-                .p_setup
-                .sector_mut(state.r_bsp.backsector.unwrap())
-                .ceilingpic as i32
-                == state.r_sky.skyflatnum
-        {
-            state.r_segs.worldtop = state.r_segs.worldhigh;
-        }
-        state.r_segs.markfloor = state.r_segs.worldlow != state.r_segs.worldbottom
-            || state
-                .p_setup
-                .sector_mut(state.r_bsp.backsector.unwrap())
-                .floorpic as i32
-                != state
-                    .p_setup
-                    .sector_mut(state.r_bsp.frontsector.unwrap())
-                    .floorpic as i32 || state
-                .p_setup
-                .sector_mut(state.r_bsp.backsector.unwrap())
-                .lightlevel as i32
-                != state
-                    .p_setup
-                    .sector_mut(state.r_bsp.frontsector.unwrap())
-                    .lightlevel as i32;
-        state.r_segs.markceiling = state.r_segs.worldhigh != state.r_segs.worldtop
-            || state
-                .p_setup
-                .sector_mut(state.r_bsp.backsector.unwrap())
-                .ceilingpic as i32
-                != state
-                    .p_setup
-                    .sector_mut(state.r_bsp.frontsector.unwrap())
-                    .ceilingpic as i32 || state
-                .p_setup
-                .sector_mut(state.r_bsp.backsector.unwrap())
-                .lightlevel as i32
-                != state
-                    .p_setup
-                    .sector_mut(state.r_bsp.frontsector.unwrap())
-                    .lightlevel as i32;
-        if state
-            .p_setup
-            .sector_mut(state.r_bsp.backsector.unwrap())
-            .ceilingheight
-            <= state
+        Some(backsector) => {
+            state.r_bsp.drawsegs[state.r_bsp.ds_p].sprbottomclip = None;
+            state.r_bsp.drawsegs[state.r_bsp.ds_p].sprtopclip =
+                state.r_bsp.drawsegs[state.r_bsp.ds_p].sprbottomclip;
+            state.r_bsp.drawsegs[state.r_bsp.ds_p].silhouette = 0_i32;
+            if state
                 .p_setup
                 .sector_mut(state.r_bsp.frontsector.unwrap())
                 .floorheight
-            || state
+                > state
+                    .p_setup
+                    .sector_mut(backsector)
+                    .floorheight
+            {
+                state.r_bsp.drawsegs[state.r_bsp.ds_p].silhouette = SIL_BOTTOM;
+                state.r_bsp.drawsegs[state.r_bsp.ds_p].bsilheight = state
+                    .p_setup
+                    .sector_mut(state.r_bsp.frontsector.unwrap())
+                    .floorheight;
+            } else if state
                 .p_setup
-                .sector_mut(state.r_bsp.backsector.unwrap())
+                .sector_mut(backsector)
+                .floorheight
+                > state.r_main.viewz
+            {
+                state.r_bsp.drawsegs[state.r_bsp.ds_p].silhouette = SIL_BOTTOM;
+                state.r_bsp.drawsegs[state.r_bsp.ds_p].bsilheight = INT_MAX as fixed_t;
+            }
+            if state
+                .p_setup
+                .sector_mut(state.r_bsp.frontsector.unwrap())
+                .ceilingheight
+                < state
+                    .p_setup
+                    .sector_mut(backsector)
+                    .ceilingheight
+            {
+                state.r_bsp.drawsegs[state.r_bsp.ds_p].silhouette |= SIL_TOP;
+                state.r_bsp.drawsegs[state.r_bsp.ds_p].tsilheight = state
+                    .p_setup
+                    .sector_mut(state.r_bsp.frontsector.unwrap())
+                    .ceilingheight;
+            } else if state
+                .p_setup
+                .sector_mut(backsector)
+                .ceilingheight
+                < state.r_main.viewz
+            {
+                state.r_bsp.drawsegs[state.r_bsp.ds_p].silhouette |= SIL_TOP;
+                state.r_bsp.drawsegs[state.r_bsp.ds_p].tsilheight = INT_MIN as fixed_t;
+            }
+            if state
+                .p_setup
+                .sector_mut(backsector)
+                .ceilingheight
+                <= state
+                    .p_setup
+                    .sector_mut(state.r_bsp.frontsector.unwrap())
+                    .floorheight
+            {
+                state.r_bsp.drawsegs[state.r_bsp.ds_p].sprbottomclip = Some(ClipArray::NegOneArray);
+                state.r_bsp.drawsegs[state.r_bsp.ds_p].bsilheight = INT_MAX as fixed_t;
+                state.r_bsp.drawsegs[state.r_bsp.ds_p].silhouette |= SIL_BOTTOM;
+            }
+            if state
+                .p_setup
+                .sector_mut(backsector)
                 .floorheight
                 >= state
                     .p_setup
                     .sector_mut(state.r_bsp.frontsector.unwrap())
                     .ceilingheight
-        {
-            state.r_segs.markfloor = true;
-            state.r_segs.markceiling = state.r_segs.markfloor;
-        }
-        if state.r_segs.worldhigh < state.r_segs.worldtop {
-            state.r_segs.toptexture = state.r_data.texturetranslation
-                [state.p_setup.side_mut(state.r_bsp.sidedef).toptexture as usize];
-            if state.p_setup.line_mut(state.r_bsp.linedef).flags as i32 & ML_DONTPEGTOP != 0 {
-                state.r_segs.rw_toptexturemid = state.r_segs.worldtop as fixed_t;
-            } else {
-                vtop = state
+            {
+                state.r_bsp.drawsegs[state.r_bsp.ds_p].sprtopclip = Some(ClipArray::ScreenHeightArray);
+                state.r_bsp.drawsegs[state.r_bsp.ds_p].tsilheight = INT_MIN as fixed_t;
+                state.r_bsp.drawsegs[state.r_bsp.ds_p].silhouette |= SIL_TOP;
+            }
+            state.r_segs.worldhigh = state
+                .p_setup
+                .sector_mut(backsector)
+                .ceilingheight
+                - state.r_main.viewz;
+            state.r_segs.worldlow = state
+                .p_setup
+                .sector_mut(backsector)
+                .floorheight
+                - state.r_main.viewz;
+            if state
+                .p_setup
+                .sector_mut(state.r_bsp.frontsector.unwrap())
+                .ceilingpic as i32
+                == state.r_sky.skyflatnum
+                && state
                     .p_setup
-                    .sector_mut(state.r_bsp.backsector.unwrap())
-                    .ceilingheight
-                    + state.r_data.textureheight
-                        [state.p_setup.side_mut(state.r_bsp.sidedef).toptexture as usize];
-                state.r_segs.rw_toptexturemid = vtop - state.r_main.viewz;
+                    .sector_mut(backsector)
+                    .ceilingpic as i32
+                    == state.r_sky.skyflatnum
+            {
+                state.r_segs.worldtop = state.r_segs.worldhigh;
             }
-        }
-        if state.r_segs.worldlow > state.r_segs.worldbottom {
-            state.r_segs.bottomtexture = state.r_data.texturetranslation
-                [state.p_setup.side_mut(state.r_bsp.sidedef).bottomtexture as usize];
-            if state.p_setup.line_mut(state.r_bsp.linedef).flags as i32 & ML_DONTPEGBOTTOM != 0 {
-                state.r_segs.rw_bottomtexturemid = state.r_segs.worldtop as fixed_t;
-            } else {
-                state.r_segs.rw_bottomtexturemid = state.r_segs.worldlow as fixed_t;
+            state.r_segs.markfloor = state.r_segs.worldlow != state.r_segs.worldbottom
+                || state
+                    .p_setup
+                    .sector_mut(backsector)
+                    .floorpic as i32
+                    != state
+                        .p_setup
+                        .sector_mut(state.r_bsp.frontsector.unwrap())
+                        .floorpic as i32 || state
+                    .p_setup
+                    .sector_mut(backsector)
+                    .lightlevel as i32
+                    != state
+                        .p_setup
+                        .sector_mut(state.r_bsp.frontsector.unwrap())
+                        .lightlevel as i32;
+            state.r_segs.markceiling = state.r_segs.worldhigh != state.r_segs.worldtop
+                || state
+                    .p_setup
+                    .sector_mut(backsector)
+                    .ceilingpic as i32
+                    != state
+                        .p_setup
+                        .sector_mut(state.r_bsp.frontsector.unwrap())
+                        .ceilingpic as i32 || state
+                    .p_setup
+                    .sector_mut(backsector)
+                    .lightlevel as i32
+                    != state
+                        .p_setup
+                        .sector_mut(state.r_bsp.frontsector.unwrap())
+                        .lightlevel as i32;
+            if state
+                .p_setup
+                .sector_mut(backsector)
+                .ceilingheight
+                <= state
+                    .p_setup
+                    .sector_mut(state.r_bsp.frontsector.unwrap())
+                    .floorheight
+                || state
+                    .p_setup
+                    .sector_mut(backsector)
+                    .floorheight
+                    >= state
+                        .p_setup
+                        .sector_mut(state.r_bsp.frontsector.unwrap())
+                        .ceilingheight
+            {
+                state.r_segs.markfloor = true;
+                state.r_segs.markceiling = state.r_segs.markfloor;
             }
-        }
-        state.r_segs.rw_toptexturemid += state.p_setup.side_mut(state.r_bsp.sidedef).rowoffset;
-        state.r_segs.rw_bottomtexturemid += state.p_setup.side_mut(state.r_bsp.sidedef).rowoffset;
-        if state.p_setup.side_mut(state.r_bsp.sidedef).midtexture != 0 {
-            state.r_segs.maskedtexture = true;
-            state.r_segs.maskedtexturecol = Some(ClipArray::Openings(
-                state.r_plane.lastopening as isize - state.r_segs.rw_x as isize,
-            ));
-            state.r_bsp.drawsegs[state.r_bsp.ds_p].maskedtexturecol = state.r_segs.maskedtexturecol;
-            state.r_plane.lastopening += (state.r_segs.rw_stopx - state.r_segs.rw_x) as usize;
+            if state.r_segs.worldhigh < state.r_segs.worldtop {
+                state.r_segs.toptexture = state.r_data.texturetranslation
+                    [state.p_setup.side_mut(state.r_bsp.sidedef).toptexture as usize];
+                if state.p_setup.line_mut(state.r_bsp.linedef).flags as i32 & ML_DONTPEGTOP != 0 {
+                    state.r_segs.rw_toptexturemid = state.r_segs.worldtop as fixed_t;
+                } else {
+                    vtop = state
+                        .p_setup
+                        .sector_mut(backsector)
+                        .ceilingheight
+                        + state.r_data.textureheight
+                            [state.p_setup.side_mut(state.r_bsp.sidedef).toptexture as usize];
+                    state.r_segs.rw_toptexturemid = vtop - state.r_main.viewz;
+                }
+            }
+            if state.r_segs.worldlow > state.r_segs.worldbottom {
+                state.r_segs.bottomtexture = state.r_data.texturetranslation
+                    [state.p_setup.side_mut(state.r_bsp.sidedef).bottomtexture as usize];
+                if state.p_setup.line_mut(state.r_bsp.linedef).flags as i32 & ML_DONTPEGBOTTOM != 0 {
+                    state.r_segs.rw_bottomtexturemid = state.r_segs.worldtop as fixed_t;
+                } else {
+                    state.r_segs.rw_bottomtexturemid = state.r_segs.worldlow as fixed_t;
+                }
+            }
+            state.r_segs.rw_toptexturemid += state.p_setup.side_mut(state.r_bsp.sidedef).rowoffset;
+            state.r_segs.rw_bottomtexturemid += state.p_setup.side_mut(state.r_bsp.sidedef).rowoffset;
+            if state.p_setup.side_mut(state.r_bsp.sidedef).midtexture != 0 {
+                state.r_segs.maskedtexture = true;
+                state.r_segs.maskedtexturecol = Some(ClipArray::Openings(
+                    state.r_plane.lastopening as isize - state.r_segs.rw_x as isize,
+                ));
+                state.r_bsp.drawsegs[state.r_bsp.ds_p].maskedtexturecol = state.r_segs.maskedtexturecol;
+                state.r_plane.lastopening += (state.r_segs.rw_stopx - state.r_segs.rw_x) as usize;
+            }
         }
     }
     state.r_segs.segtextured =

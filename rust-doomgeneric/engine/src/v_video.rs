@@ -74,6 +74,7 @@ pub fn V_MarkRect(state: &mut GameState, dest: Screen, x: i32, y: i32, width: i3
         );
     }
 }
+#[allow(clippy::too_many_arguments)]
 pub fn V_CopyRect(
     state: &mut GameState,
     dest: Screen,

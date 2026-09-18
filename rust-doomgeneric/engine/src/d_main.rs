@@ -244,10 +244,7 @@ pub fn D_ProcessEvents(state: &mut GameState) {
     if state.d_main.storedemo {
         return;
     }
-    loop {
-        let Some(mut ev) = D_PopEvent(&mut state.d_event) else {
-            break;
-        };
+    while let Some(mut ev) = D_PopEvent(&mut state.d_event) {
         if M_Responder(state, &mut ev) {
             continue;
         }
@@ -866,12 +863,7 @@ pub fn D_DoomMain(state: &mut GameState) {
         if p < state.m_argv.myargv.len() as i32 - 1_i32 {
             scale = M_ArgvAtoi(&state.m_argv.myargv[(p + 1_i32) as usize]);
         }
-        if scale < 10_i32 {
-            scale = 10_i32;
-        }
-        if scale > 400_i32 {
-            scale = 400_i32;
-        }
+        scale = scale.clamp(10_i32, 400_i32);
         println!("turbo scale: {}%", scale);
         state.g_game.forwardmove[0] = state.g_game.forwardmove[0] * scale / 100_i32;
         state.g_game.forwardmove[1] = state.g_game.forwardmove[1] * scale / 100_i32;

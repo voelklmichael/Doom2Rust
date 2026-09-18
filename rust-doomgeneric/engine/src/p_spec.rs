@@ -1088,7 +1088,6 @@ pub fn P_UpdateSpecials(state: &mut GameState) {
 pub const DONUT_FLOORHEIGHT_DEFAULT: i32 = 0;
 pub const DONUT_FLOORPIC_DEFAULT: i32 = 0x16;
 fn DonutOverrun(state: &mut GameState) -> (fixed_t, i16) {
-    let state = state;
     if state.p_spec.donut_overrun_first != 0 {
         let mut p: i32 = 0;
         state.p_spec.donut_overrun_first = 0_i32;

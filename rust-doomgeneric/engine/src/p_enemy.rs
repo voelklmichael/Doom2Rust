@@ -516,10 +516,10 @@ pub fn A_Look(state: &mut GameState, id: MobjId) {
             .soundtarget
             .filter(|&id| state.p_mobj.is_live(id))
             ;
-        if targ.is_some() && state.p_mobj.mo(targ.unwrap()).flags & MF_SHOOTABLE as i32 != 0 {
-            state.p_mobj.mo_mut(actor).target = Some(targ.unwrap());
+        if let Some(targ) = targ.filter(|&t| state.p_mobj.mo(t).flags & MF_SHOOTABLE as i32 != 0) {
+            state.p_mobj.mo_mut(actor).target = Some(targ);
             if state.p_mobj.mo(actor).flags & MF_AMBUSH as i32 != 0 {
-                if P_CheckSight(state, actor, targ.unwrap()) {
+                if P_CheckSight(state, actor, targ) {
                     current_block = 10571674169298881693;
                 } else {
                     current_block = 15619007995458559411;
@@ -1091,7 +1091,7 @@ pub fn A_Fire(state: &mut GameState, id: MobjId) {
             .target
             .filter(|&id| state.p_mobj.is_live(id))
             ;
-        let target_id = P_SubstNullMobj(&mut state.p_mobj, if target_subst.is_none() { None } else { Some(target_subst.unwrap()) });
+        let target_id = P_SubstNullMobj(&mut state.p_mobj, target_subst);
         target = target_id;
         if !P_CheckSight(state, target, dest.unwrap()) {
             return;
@@ -1176,7 +1176,7 @@ pub fn A_FatAttack1(state: &mut GameState, id: MobjId) {
             .target
             .filter(|&id| state.p_mobj.is_live(id))
             ;
-        let target_id = P_SubstNullMobj(&mut state.p_mobj, if target_subst.is_none() { None } else { Some(target_subst.unwrap()) });
+        let target_id = P_SubstNullMobj(&mut state.p_mobj, target_subst);
         target = target_id;
         P_SpawnMissile(state, actor, target, MobjType::MT_FATSHOT);
         mo = P_SpawnMissile(state, actor, target, MobjType::MT_FATSHOT);
@@ -1204,7 +1204,7 @@ pub fn A_FatAttack2(state: &mut GameState, id: MobjId) {
             .target
             .filter(|&id| state.p_mobj.is_live(id))
             ;
-        let target_id = P_SubstNullMobj(&mut state.p_mobj, if target_subst.is_none() { None } else { Some(target_subst.unwrap()) });
+        let target_id = P_SubstNullMobj(&mut state.p_mobj, target_subst);
         target = target_id;
         P_SpawnMissile(state, actor, target, MobjType::MT_FATSHOT);
         mo = P_SpawnMissile(state, actor, target, MobjType::MT_FATSHOT);
@@ -1231,7 +1231,7 @@ pub fn A_FatAttack3(state: &mut GameState, id: MobjId) {
             .target
             .filter(|&id| state.p_mobj.is_live(id))
             ;
-        let target_id = P_SubstNullMobj(&mut state.p_mobj, if target_subst.is_none() { None } else { Some(target_subst.unwrap()) });
+        let target_id = P_SubstNullMobj(&mut state.p_mobj, target_subst);
         target = target_id;
         mo = P_SpawnMissile(state, actor, target, MobjType::MT_FATSHOT);
         state.p_mobj.mo_mut(mo).angle = state.p_mobj.mo(mo).angle.wrapping_sub((FATSPREAD / 2_i32) as angle_t);
@@ -1633,7 +1633,6 @@ pub fn A_BrainSpit(state: &mut GameState, id: MobjId) {
         let mo = id;
         let mut targ: MobjId;
         let mut newmobj: MobjId;
-        let state = state;
         state.p_enemy.easy ^= 1_i32;
         if state.g_game.gameskill <= SkillType::sk_easy && state.p_enemy.easy == 0 {
             return;
@@ -1673,7 +1672,7 @@ pub fn A_SpawnFly(state: &mut GameState, id: MobjId) {
             .target
             .filter(|&id| state.p_mobj.is_live(id))
             ;
-        let targ_id = P_SubstNullMobj(&mut state.p_mobj, if targ_subst.is_none() { None } else { Some(targ_subst.unwrap()) });
+        let targ_id = P_SubstNullMobj(&mut state.p_mobj, targ_subst);
         targ = targ_id;
         fog = P_SpawnMobj(
             state,
