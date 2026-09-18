@@ -252,6 +252,14 @@ pub static alphSwitchList: [switchlist_t; 41] = [
         episode: 0_i16,
     },
 ];
+pub const EMPTY_BUTTON: button_t = button_t {
+    line: LineId(0),
+    where_0: BWhere::top,
+    btexture: 0,
+    btimer: 0,
+    soundorg: SectorId(0),
+};
+
 pub struct PSwitchState {
     pub switchlist: [i32; 100],
     pub numswitches: i32,
@@ -263,13 +271,7 @@ impl PSwitchState {
         PSwitchState {
             switchlist: [0; 100],
             numswitches: 0,
-            buttonlist: [button_t {
-                line: LineId(0),
-                where_0: BWhere::top,
-                btexture: 0,
-                btimer: 0,
-                soundorg: SectorId(0),
-            }; 16],
+            buttonlist: [EMPTY_BUTTON; 16],
         }
     }
 }

@@ -200,7 +200,7 @@ pub unsafe fn P_PlayerThink(state: &mut GameState, player_id: PlayerId) {
         .special
         != 0
     {
-        P_PlayerInSpecialSector(state, player);
+        P_PlayerInSpecialSector(state, player_id);
     }
     if (*cmd).buttons as i32 & BT_SPECIAL as i32 != 0 {
         (*cmd).buttons = 0 as byte;
@@ -234,7 +234,7 @@ pub unsafe fn P_PlayerThink(state: &mut GameState, player_id: PlayerId) {
     }
     if (*cmd).buttons as i32 & BT_USE as i32 != 0 {
         if (*player).usedown == 0 {
-            P_UseLines(state, player);
+            P_UseLines(state, player_id);
             (*player).usedown = true_0;
         }
     } else {

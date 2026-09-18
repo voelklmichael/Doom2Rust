@@ -16,11 +16,11 @@ use crate::m_fixed::fixed_t;
 use crate::m_fixed::FixedMul;
 use crate::m_fixed::FRACUNIT;
 use crate::m_random::P_Random;
-use crate::p_mobj::mobj_t;
+
 use crate::p_mobj::MobjType;
 use crate::p_mobj::P_RemoveMobj;
 use crate::p_mobj::P_SetMobjState;
-use crate::p_mobj::P_SpawnMobjPtr;
+use crate::p_mobj::P_SpawnMobj;
 use crate::p_mobj::StateNum;
 use crate::p_mobj::ONFLOORZ;
 use crate::p_mobj::{
@@ -577,214 +577,210 @@ pub fn P_TouchSpecialThing(
         S_StartSound(state, SoundOrigin::None, sound);
     }
 }
-pub unsafe fn P_KillMobj(state: &mut GameState, source: Option<MobjId>, target: MobjId) {
-    let source: *mut mobj_t = match source {
-        Some(id) => state.p_mobj.mobj_ptr(id),
-        None => ::core::ptr::null_mut(),
-    };
-    let target: *mut mobj_t = state.p_mobj.mobj_ptr(target);
-    let mut item: MobjType = MobjType::MT_PLAYER;
-    let mut mo: *mut mobj_t = ::core::ptr::null_mut::<mobj_t>();
-    (*target).flags &= !(MF_SHOOTABLE as i32 | MF_FLOAT as i32 | MF_SKULLFLY as i32);
-    if (*target).type_0 as u32 != MobjType::MT_SKULL as i32 as u32 {
-        (*target).flags &= !(MF_NOGRAVITY as i32);
+pub fn P_KillMobj(state: &mut GameState, source: Option<MobjId>, target: MobjId) {
+    {
+        let t = state.p_mobj.mo_mut(target);
+        t.flags &= !(MF_SHOOTABLE as i32 | MF_FLOAT as i32 | MF_SKULLFLY as i32);
+        if t.type_0 as u32 != MobjType::MT_SKULL as i32 as u32 {
+            t.flags &= !(MF_NOGRAVITY as i32);
+        }
+        t.flags |= MF_CORPSE as i32 | MF_DROPOFF as i32;
+        t.height >>= 2_i32;
     }
-    (*target).flags |= MF_CORPSE as i32 | MF_DROPOFF as i32;
-    (*target).height >>= 2_i32;
-    if !source.is_null() && (*source).player.is_some() {
-        let source_player = state.g_game.player_mut((*source).player.unwrap());
-        if (*target).flags & MF_COUNTKILL as i32 != 0 {
-            (*source_player).killcount += 1;
+    let source_player = source.and_then(|id| state.p_mobj.mo(id).player);
+    let (target_flags, target_player) = {
+        let t = state.p_mobj.mo(target);
+        (t.flags, t.player)
+    };
+    if let Some(source_player_id) = source_player {
+        if target_flags & MF_COUNTKILL as i32 != 0 {
+            state.g_game.player_mut(source_player_id).killcount += 1;
         }
-        if let Some(target_player_id) = (*target).player {
-            (*source_player).frags[target_player_id.0 as usize] += 1;
+        if let Some(target_player_id) = target_player {
+            state.g_game.player_mut(source_player_id).frags[target_player_id.0 as usize] += 1;
         }
-    } else if !state.g_game.netgame && (*target).flags & MF_COUNTKILL as i32 != 0 {
+    } else if !state.g_game.netgame && target_flags & MF_COUNTKILL as i32 != 0 {
         state.g_game.players[0].killcount += 1;
     }
-    if let Some(target_player_id) = (*target).player {
-        let target_player = state.g_game.player_mut(target_player_id) as *mut player_t;
-        if source.is_null() {
-            (*target_player).frags[target_player_id.0 as usize] += 1;
+    if let Some(target_player_id) = target_player {
+        if source.is_none() {
+            state.g_game.player_mut(target_player_id).frags[target_player_id.0 as usize] += 1;
         }
-        (*target).flags &= !(MF_SOLID as i32);
-        (*target_player).playerstate = PlayerState::PST_DEAD;
+        state.p_mobj.mo_mut(target).flags &= !(MF_SOLID as i32);
+        state.g_game.player_mut(target_player_id).playerstate = PlayerState::PST_DEAD;
         P_DropWeapon(state, target_player_id);
         if target_player_id.0 as i32 == state.g_game.consoleplayer && state.am_map.automapactive {
             AM_Stop(state);
         }
     }
-    let target_info = state.info.mobjinfo_mut((*target).type_0);
-    if (*target).health < -(*target_info).spawnhealth
-        && (*target_info).xdeathstate != StateNum::S_NULL
-    {
-        let xdeathstate = (*target_info).xdeathstate;
-        P_SetMobjState(state, (*target).id, xdeathstate);
+    let (target_type, target_health) = {
+        let t = state.p_mobj.mo(target);
+        (t.type_0, t.health)
+    };
+    let (spawnhealth, xdeathstate, deathstate) = {
+        let info = state.info.mobjinfo_mut(target_type);
+        (info.spawnhealth, info.xdeathstate, info.deathstate)
+    };
+    if target_health < -spawnhealth && xdeathstate != StateNum::S_NULL {
+        P_SetMobjState(state, target, xdeathstate);
     } else {
-        let deathstate = (*target_info).deathstate;
-        P_SetMobjState(state, (*target).id, deathstate);
+        P_SetMobjState(state, target, deathstate);
     }
-    (*target).tics -= P_Random(&mut state.m_random) & 3_i32;
-    if (*target).tics < 1_i32 {
-        (*target).tics = 1_i32;
+    state.p_mobj.mo_mut(target).tics -= P_Random(&mut state.m_random) & 3_i32;
+    if state.p_mobj.mo(target).tics < 1_i32 {
+        state.p_mobj.mo_mut(target).tics = 1_i32;
     }
     if state.doomstat.gameversion == GameVersion::chex {
         return;
     }
-    match (*target).type_0 as u32 {
-        23 | 1 => {
-            item = MobjType::MT_CLIP;
-        }
-        2 => {
-            item = MobjType::MT_SHOTGUN;
-        }
-        10 => {
-            item = MobjType::MT_CHAINGUN;
-        }
+    let item = match target_type as u32 {
+        23 | 1 => MobjType::MT_CLIP,
+        2 => MobjType::MT_SHOTGUN,
+        10 => MobjType::MT_CHAINGUN,
         _ => return,
-    }
-    mo = P_SpawnMobjPtr(state, (*target).x, (*target).y, ONFLOORZ, item);
-    (*mo).flags |= MF_DROPPED as i32;
+    };
+    let (target_x, target_y) = {
+        let t = state.p_mobj.mo(target);
+        (t.x, t.y)
+    };
+    let mo = P_SpawnMobj(state, target_x, target_y, ONFLOORZ, item);
+    state.p_mobj.mo_mut(mo).flags |= MF_DROPPED as i32;
 }
-pub unsafe fn P_DamageMobj(
+pub fn P_DamageMobj(
     state: &mut GameState,
     target: MobjId,
     inflictor: Option<MobjId>,
     source: Option<MobjId>,
     mut damage: i32,
 ) {
-    let target: *mut mobj_t = state.p_mobj.mobj_ptr(target);
-    let inflictor: *mut mobj_t = match inflictor {
-        Some(id) => state.p_mobj.mobj_ptr(id),
-        None => ::core::ptr::null_mut(),
+    let (target_flags, target_health) = {
+        let t = state.p_mobj.mo(target);
+        (t.flags, t.health)
     };
-    let source: *mut mobj_t = match source {
-        Some(id) => state.p_mobj.mobj_ptr(id),
-        None => ::core::ptr::null_mut(),
-    };
-    let mut ang: u32 = 0;
-    let mut saved: i32 = 0;
-    let mut player: *mut player_t = ::core::ptr::null_mut::<player_t>();
-    let mut thrust: fixed_t = 0;
-    if (*target).flags & MF_SHOOTABLE as i32 == 0 {
+    if target_flags & MF_SHOOTABLE as i32 == 0 {
         return;
     }
-    if (*target).health <= 0_i32 {
+    if target_health <= 0_i32 {
         return;
     }
-    if (*target).flags & MF_SKULLFLY as i32 != 0 {
-        (*target).momz = 0_i32 as fixed_t;
-        (*target).momy = (*target).momz;
-        (*target).momx = (*target).momy;
+    if target_flags & MF_SKULLFLY as i32 != 0 {
+        let t = state.p_mobj.mo_mut(target);
+        t.momz = 0_i32 as fixed_t;
+        t.momy = t.momz;
+        t.momx = t.momy;
     }
-    let target_player_id = (*target).player;
-    player = match target_player_id {
-        Some(id) => state.g_game.player_mut(id),
-        None => ::core::ptr::null_mut::<player_t>(),
-    };
-    if !player.is_null() && state.g_game.gameskill == SkillType::sk_baby {
+    let target_player_id = state.p_mobj.mo(target).player;
+    if target_player_id.is_some() && state.g_game.gameskill == SkillType::sk_baby {
         damage >>= 1_i32;
     }
-    if !inflictor.is_null()
-        && (*target).flags & MF_NOCLIP as i32 == 0
-        && (source.is_null()
-            || (*source).player.is_none()
-            || (*state.g_game.player_mut((*source).player.unwrap())).readyweapon as u32
-                != weapontype_t::wp_chainsaw as i32 as u32)
-    {
-        ang = R_PointToAngle2(
-            state,
-            (*inflictor).x,
-            (*inflictor).y,
-            (*target).x,
-            (*target).y,
-        );
-        thrust = (damage * (FRACUNIT >> 3_i32) * 100_i32
-            / state.info.mobjinfo_mut((*target).type_0).mass) as fixed_t;
-        if damage < 40_i32
-            && damage > (*target).health
-            && (*target).z - (*inflictor).z > 64_i32 * FRACUNIT
-            && P_Random(&mut state.m_random) & 1_i32 != 0
-        {
-            ang = ang.wrapping_add(ANG180);
-            thrust *= 4_i32;
+    let source_player = source.and_then(|id| state.p_mobj.mo(id).player);
+    let source_uses_chainsaw = source_player.is_some_and(|source_player_id| {
+        state.g_game.players[source_player_id.0 as usize].readyweapon as u32
+            == weapontype_t::wp_chainsaw as i32 as u32
+    });
+    if let Some(inflictor) = inflictor {
+        if target_flags & MF_NOCLIP as i32 == 0 && !source_uses_chainsaw {
+            let (inflictor_x, inflictor_y, inflictor_z) = {
+                let i = state.p_mobj.mo(inflictor);
+                (i.x, i.y, i.z)
+            };
+            let (target_x, target_y, target_z, target_type) = {
+                let t = state.p_mobj.mo(target);
+                (t.x, t.y, t.z, t.type_0)
+            };
+            let mut ang: u32 = R_PointToAngle2(state, inflictor_x, inflictor_y, target_x, target_y);
+            let mut thrust: fixed_t = (damage * (FRACUNIT >> 3_i32) * 100_i32
+                / state.info.mobjinfo_mut(target_type).mass) as fixed_t;
+            if damage < 40_i32
+                && damage > target_health
+                && target_z - inflictor_z > 64_i32 * FRACUNIT
+                && P_Random(&mut state.m_random) & 1_i32 != 0
+            {
+                ang = ang.wrapping_add(ANG180);
+                thrust *= 4_i32;
+            }
+            ang >>= ANGLETOFINESHIFT;
+            let t = state.p_mobj.mo_mut(target);
+            t.momx += FixedMul(thrust, finecosine[ang as isize]);
+            t.momy += FixedMul(thrust, finesine[ang as usize]);
         }
-        ang >>= ANGLETOFINESHIFT;
-        (*target).momx += FixedMul(thrust, finecosine[ang as isize]);
-        (*target).momy += FixedMul(thrust, finesine[ang as usize]);
     }
-    if !player.is_null() {
-        if state
+    if let Some(player_id) = target_player_id {
+        let target_subsector = state.p_mobj.mo(target).subsector;
+        let sector_special = state
             .p_setup
-            .sector_mut(state.p_setup.subsectors[(*target).subsector.0 as usize].sector)
-            .special as i32
-            == 11_i32
-            && damage >= (*target).health
-        {
-            damage = (*target).health - 1_i32;
+            .sector_mut(state.p_setup.subsectors[target_subsector.0 as usize].sector)
+            .special;
+        if sector_special as i32 == 11_i32 && damage >= target_health {
+            damage = target_health - 1_i32;
         }
+        let player = state.g_game.player_mut(player_id);
         if damage < 1000_i32
-            && ((*player).cheats & CF_GODMODE != 0
-                || (*player).powers[PowerType::pw_invulnerability as usize] != 0)
+            && (player.cheats & CF_GODMODE != 0
+                || player.powers[PowerType::pw_invulnerability as usize] != 0)
         {
             return;
         }
-        if (*player).armortype != 0 {
-            if (*player).armortype == 1_i32 {
-                saved = damage / 3_i32;
+        if player.armortype != 0 {
+            let mut saved: i32 = if player.armortype == 1_i32 {
+                damage / 3_i32
             } else {
-                saved = damage / 2_i32;
+                damage / 2_i32
+            };
+            if player.armorpoints <= saved {
+                saved = player.armorpoints;
+                player.armortype = 0_i32;
             }
-            if (*player).armorpoints <= saved {
-                saved = (*player).armorpoints;
-                (*player).armortype = 0_i32;
-            }
-            (*player).armorpoints -= saved;
+            player.armorpoints -= saved;
             damage -= saved;
         }
-        (*player).health -= damage;
-        if (*player).health < 0_i32 {
-            (*player).health = 0_i32;
+        player.health -= damage;
+        if player.health < 0_i32 {
+            player.health = 0_i32;
         }
-        (*player).attacker = if source.is_null() {
-            None
-        } else {
-            Some((*source).id)
-        };
-        (*player).damagecount += damage;
-        if (*player).damagecount > 100_i32 {
-            (*player).damagecount = 100_i32;
+        player.attacker = source;
+        player.damagecount += damage;
+        if player.damagecount > 100_i32 {
+            player.damagecount = 100_i32;
         }
         if target_player_id == Some(PlayerId(state.g_game.consoleplayer as u8)) {
             I_Tactile();
         }
     }
-    (*target).health -= damage;
-    if (*target).health <= 0_i32 {
-        P_KillMobj(state, { let p_ = source; if p_.is_null() { None } else { Some((*p_).id) } }, (*target).id);
+    state.p_mobj.mo_mut(target).health -= damage;
+    if state.p_mobj.mo(target).health <= 0_i32 {
+        P_KillMobj(state, source, target);
         return;
     }
-    if P_Random(&mut state.m_random) < state.info.mobjinfo_mut((*target).type_0).painchance
-        && (*target).flags & MF_SKULLFLY as i32 == 0
+    let target_type = state.p_mobj.mo(target).type_0;
+    if P_Random(&mut state.m_random) < state.info.mobjinfo_mut(target_type).painchance
+        && state.p_mobj.mo(target).flags & MF_SKULLFLY as i32 == 0
     {
-        (*target).flags |= MF_JUSTHIT as i32;
-        let painstate = state.info.mobjinfo_mut((*target).type_0).painstate;
-        P_SetMobjState(state, (*target).id, painstate);
+        state.p_mobj.mo_mut(target).flags |= MF_JUSTHIT as i32;
+        let painstate = state.info.mobjinfo_mut(target_type).painstate;
+        P_SetMobjState(state, target, painstate);
     }
-    (*target).reactiontime = 0_i32;
-    if ((*target).threshold == 0 || (*target).type_0 as u32 == MobjType::MT_VILE as i32 as u32)
-        && !source.is_null()
-        && source != target
-        && (*source).type_0 as u32 != MobjType::MT_VILE as i32 as u32
+    state.p_mobj.mo_mut(target).reactiontime = 0_i32;
+    if (state.p_mobj.mo(target).threshold == 0
+        || target_type as u32 == MobjType::MT_VILE as i32 as u32)
+        && source.is_some_and(|source| {
+            source != target
+                && state.p_mobj.mo(source).type_0 as u32 != MobjType::MT_VILE as i32 as u32
+        })
     {
-        (*target).target = Some((*source).id);
-        (*target).threshold = BASETHRESHOLD;
-        let target_info = state.info.mobjinfo_mut((*target).type_0);
-        if (*target).state == Some(StateId((*target_info).spawnstate as u32))
-            && (*target_info).seestate != StateNum::S_NULL
         {
-            let seestate = (*target_info).seestate;
-            P_SetMobjState(state, (*target).id, seestate);
+            let t = state.p_mobj.mo_mut(target);
+            t.target = source;
+            t.threshold = BASETHRESHOLD;
+        }
+        let (spawnstate, seestate) = {
+            let info = state.info.mobjinfo_mut(target_type);
+            (info.spawnstate, info.seestate)
+        };
+        if state.p_mobj.mo(target).state == Some(StateId(spawnstate as u32))
+            && seestate != StateNum::S_NULL
+        {
+            P_SetMobjState(state, target, seestate);
         }
     }
 }

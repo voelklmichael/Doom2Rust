@@ -1,4 +1,5 @@
-use crate::d_player::player_t;
+
+use crate::d_player::PlayerId;
 use crate::game_state::GameState;
 use crate::i_system::I_Error;
 use crate::m_argv::M_CheckParmWithArgs;
@@ -965,53 +966,43 @@ pub unsafe fn P_LineAttack(
         |s, i| unsafe { PTR_ShootTraverse(s, i) },
     );
 }
-pub unsafe fn PTR_UseTraverse(state: &mut GameState, in_0: intercept_t) -> bool {
+pub fn PTR_UseTraverse(state: &mut GameState, in_0: intercept_t) -> bool {
     let mut side: i32 = 0;
     let li = match in_0.target {
         InterceptTarget::Line(id) => id,
         InterceptTarget::Thing(_) => unreachable!(),
     };
-    let usething = state
-        .p_mobj
-        .mobj_get(state.p_map.usething.unwrap())
-        .unwrap();
+    let usething = state.p_map.usething.unwrap();
     if state.p_setup.line(li).special == 0 {
         P_LineOpening(state, li);
         if state.p_maputl.openrange <= 0_i32 {
-            S_StartSound(state, SoundOrigin::Mobj((*(usething)).id), sfx_noway as i32);
+            S_StartSound(state, SoundOrigin::Mobj(usething), sfx_noway as i32);
             return false;
         }
         return true;
     }
     side = 0_i32;
-    if P_PointOnLineSide(state, (*usething).x, (*usething).y, li) == 1_i32 {
+    let (use_x, use_y) = {
+        let u = state.p_mobj.mo(usething);
+        (u.x, u.y)
+    };
+    if P_PointOnLineSide(state, use_x, use_y, li) == 1_i32 {
         side = 1_i32;
     }
-    P_UseSpecialLine(state, (*usething).id, li, side);
+    P_UseSpecialLine(state, usething, li, side);
     false
 }
-pub unsafe fn P_UseLines(state: &mut GameState, mut player: *mut player_t) {
-    let mut angle: i32 = 0;
-    let mut x1: fixed_t = 0;
-    let mut y1: fixed_t = 0;
-    let mut x2: fixed_t = 0;
-    let mut y2: fixed_t = 0;
-    state.p_map.usething = (*player).mo;
-    let player_mo = state.p_mobj.mobj_get((*player).mo.unwrap()).unwrap();
-    angle = ((*player_mo).angle >> ANGLETOFINESHIFT) as i32;
-    x1 = (*player_mo).x;
-    y1 = (*player_mo).y;
-    x2 = x1 + (USERANGE >> FRACBITS) * finecosine[angle as isize];
-    y2 = y1 + (USERANGE >> FRACBITS) * finesine[angle as usize];
-    P_PathTraverse(
-        state,
-        x1,
-        y1,
-        x2,
-        y2,
-        PT_ADDLINES,
-        |s, i| unsafe { PTR_UseTraverse(s, i) },
-    );
+pub fn P_UseLines(state: &mut GameState, player: PlayerId) {
+    let player_mo = state.g_game.player_mut(player).mo;
+    state.p_map.usething = player_mo;
+    let player_mo = player_mo.unwrap();
+    let (angle, x1, y1) = {
+        let m = state.p_mobj.mo(player_mo);
+        ((m.angle >> ANGLETOFINESHIFT) as i32, m.x, m.y)
+    };
+    let x2 = x1 + (USERANGE >> FRACBITS) * finecosine[angle as isize];
+    let y2 = y1 + (USERANGE >> FRACBITS) * finesine[angle as usize];
+    P_PathTraverse(state, x1, y1, x2, y2, PT_ADDLINES, PTR_UseTraverse);
 }
 pub unsafe fn PIT_RadiusAttack(state: &mut GameState, mut thing_id: MobjId) -> bool {
     let thing = state.p_mobj.mobj_get(thing_id).unwrap();

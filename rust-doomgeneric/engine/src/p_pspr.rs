@@ -684,7 +684,7 @@ pub fn A_BFGSpray(state: &mut GameState, id: MobjId) {
             for _ in 0..15_i32 {
                 damage += (P_Random(&mut state.m_random) & 7_i32) + 1_i32;
             }
-            unsafe { P_DamageMobj(state, linetarget, mo_target, mo_target, damage) };
+            P_DamageMobj(state, linetarget, mo_target, mo_target, damage);
         }
     }
 }
