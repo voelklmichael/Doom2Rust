@@ -208,7 +208,7 @@ pub unsafe fn P_TeleportMove(
                 state,
                 bx,
                 by,
-                Some(PIT_StompThing as unsafe fn(&mut GameState, MobjId) -> bool),
+                |s, id| unsafe { PIT_StompThing(s, id) },
             ) {
                 return false;
             }
@@ -216,12 +216,12 @@ pub unsafe fn P_TeleportMove(
         }
         bx += 1;
     }
-    P_UnsetThingPosition(state, thing);
+    P_UnsetThingPosition(state, &mut *thing);
     (*thing).floorz = state.p_map.tmfloorz;
     (*thing).ceilingz = state.p_map.tmceilingz;
     (*thing).x = x;
     (*thing).y = y;
-    P_SetThingPosition(state, thing);
+    P_SetThingPosition(state, &mut *thing);
     true
 }
 pub unsafe fn PIT_CheckLine(state: &mut GameState, mut ld: LineId) -> bool {
@@ -395,7 +395,7 @@ pub unsafe fn P_CheckPosition(
                 state,
                 bx,
                 by,
-                Some(PIT_CheckThing as unsafe fn(&mut GameState, MobjId) -> bool),
+                |s, id| unsafe { PIT_CheckThing(s, id) },
             ) {
                 return false;
             }
@@ -415,7 +415,7 @@ pub unsafe fn P_CheckPosition(
                 state,
                 bx,
                 by,
-                Some(PIT_CheckLine as unsafe fn(&mut GameState, LineId) -> bool),
+                |s, ld| unsafe { PIT_CheckLine(s, ld) },
             ) {
                 return false;
             }
@@ -461,14 +461,14 @@ pub unsafe fn P_TryMove(
             return false;
         }
     }
-    P_UnsetThingPosition(state, thing);
+    P_UnsetThingPosition(state, &mut *thing);
     oldx = (*thing).x;
     oldy = (*thing).y;
     (*thing).floorz = state.p_map.tmfloorz;
     (*thing).ceilingz = state.p_map.tmceilingz;
     (*thing).x = x;
     (*thing).y = y;
-    P_SetThingPosition(state, thing);
+    P_SetThingPosition(state, &mut *thing);
     if (*thing).flags & (MF_TELEPORT as i32 | MF_NOCLIP as i32) == 0 {
         loop {
             let fresh0 = state.p_map.numspechit;
@@ -542,8 +542,8 @@ pub unsafe fn P_HitSlideLine(state: &mut GameState, mut ld: LineId) {
     state.p_map.tmxmove = FixedMul(newlen, finecosine[lineangle as isize]);
     state.p_map.tmymove = FixedMul(newlen, finesine[lineangle as usize]);
 }
-pub unsafe fn PTR_SlideTraverse(state: &mut GameState, mut in_0: *mut intercept_t) -> bool {
-    let li: LineId = match (*in_0).target {
+pub unsafe fn PTR_SlideTraverse(state: &mut GameState, in_0: intercept_t) -> bool {
+    let li: LineId = match in_0.target {
         InterceptTarget::Line(id) => id,
         InterceptTarget::Thing(_) => I_Error("PTR_SlideTraverse: not a line?"),
     };
@@ -562,10 +562,10 @@ pub unsafe fn PTR_SlideTraverse(state: &mut GameState, mut in_0: *mut intercept_
             }
         }
     }
-    if (*in_0).frac < state.p_map.bestslidefrac {
+    if in_0.frac < state.p_map.bestslidefrac {
         state.p_map.secondslidefrac = state.p_map.bestslidefrac;
         state.p_map.secondslideline = state.p_map.bestslideline;
-        state.p_map.bestslidefrac = (*in_0).frac;
+        state.p_map.bestslidefrac = in_0.frac;
         state.p_map.bestslideline = li;
     }
     false
@@ -607,7 +607,7 @@ pub unsafe fn P_SlideMove(state: &mut GameState, mut mo: *mut mobj_t) {
             leadx + (*mo).momx,
             leady + (*mo).momy,
             PT_ADDLINES,
-            Some(PTR_SlideTraverse as unsafe fn(&mut GameState, *mut intercept_t) -> bool),
+            |s, i| unsafe { PTR_SlideTraverse(s, i) },
         );
         P_PathTraverse(
             state,
@@ -616,7 +616,7 @@ pub unsafe fn P_SlideMove(state: &mut GameState, mut mo: *mut mobj_t) {
             trailx + (*mo).momx,
             leady + (*mo).momy,
             PT_ADDLINES,
-            Some(PTR_SlideTraverse as unsafe fn(&mut GameState, *mut intercept_t) -> bool),
+            |s, i| unsafe { PTR_SlideTraverse(s, i) },
         );
         P_PathTraverse(
             state,
@@ -625,7 +625,7 @@ pub unsafe fn P_SlideMove(state: &mut GameState, mut mo: *mut mobj_t) {
             leadx + (*mo).momx,
             traily + (*mo).momy,
             PT_ADDLINES,
-            Some(PTR_SlideTraverse as unsafe fn(&mut GameState, *mut intercept_t) -> bool),
+            |s, i| unsafe { PTR_SlideTraverse(s, i) },
         );
         if state.p_map.bestslidefrac == FRACUNIT + 1_i32 {
             break;
@@ -664,13 +664,13 @@ pub unsafe fn P_SlideMove(state: &mut GameState, mut mo: *mut mobj_t) {
         P_TryMove(state, mo, (*mo).x + (*mo).momx, (*mo).y);
     }
 }
-pub unsafe fn PTR_AimTraverse(state: &mut GameState, mut in_0: *mut intercept_t) -> bool {
+pub unsafe fn PTR_AimTraverse(state: &mut GameState, in_0: intercept_t) -> bool {
     let mut th: *mut mobj_t = ::core::ptr::null_mut::<mobj_t>();
     let mut slope: fixed_t = 0;
     let mut thingtopslope: fixed_t = 0;
     let mut thingbottomslope: fixed_t = 0;
     let mut dist: fixed_t = 0;
-    if let InterceptTarget::Line(li) = (*in_0).target {
+    if let InterceptTarget::Line(li) = in_0.target {
         let liv = state.p_setup.line(li);
         if liv.flags as i32 & ML_TWOSIDED == 0 {
             return false;
@@ -679,7 +679,7 @@ pub unsafe fn PTR_AimTraverse(state: &mut GameState, mut in_0: *mut intercept_t)
         if state.p_maputl.openbottom >= state.p_maputl.opentop {
             return false;
         }
-        dist = FixedMul(state.p_map.attackrange, (*in_0).frac);
+        dist = FixedMul(state.p_map.attackrange, in_0.frac);
         if liv.backsector.is_none()
             || state
                 .p_setup
@@ -715,7 +715,7 @@ pub unsafe fn PTR_AimTraverse(state: &mut GameState, mut in_0: *mut intercept_t)
         }
         return true;
     }
-    th = match (*in_0).target {
+    th = match in_0.target {
         InterceptTarget::Thing(id) => state.p_mobj.mobj_get(id).unwrap(),
         InterceptTarget::Line(_) => unreachable!(),
     };
@@ -725,7 +725,7 @@ pub unsafe fn PTR_AimTraverse(state: &mut GameState, mut in_0: *mut intercept_t)
     if (*th).flags & MF_SHOOTABLE as i32 == 0 {
         return true;
     }
-    dist = FixedMul(state.p_map.attackrange, (*in_0).frac);
+    dist = FixedMul(state.p_map.attackrange, in_0.frac);
     thingtopslope = FixedDiv((*th).z + (*th).height - state.p_map.shootz, dist);
     if thingtopslope < state.p_sight.bottomslope {
         return true;
@@ -744,7 +744,7 @@ pub unsafe fn PTR_AimTraverse(state: &mut GameState, mut in_0: *mut intercept_t)
     state.p_map.linetarget = Some((*th).id);
     false
 }
-pub unsafe fn PTR_ShootTraverse(state: &mut GameState, mut in_0: *mut intercept_t) -> bool {
+pub unsafe fn PTR_ShootTraverse(state: &mut GameState, in_0: intercept_t) -> bool {
     let mut current_block: u64;
     let mut x: fixed_t = 0;
     let mut y: fixed_t = 0;
@@ -759,13 +759,13 @@ pub unsafe fn PTR_ShootTraverse(state: &mut GameState, mut in_0: *mut intercept_
         .p_mobj
         .mobj_get(state.p_map.shootthing.unwrap())
         .unwrap();
-    if let InterceptTarget::Line(li) = (*in_0).target {
+    if let InterceptTarget::Line(li) = in_0.target {
         if state.p_setup.line(li).special != 0 {
             P_ShootSpecialLine(state, shootthing, li);
         }
         if state.p_setup.line(li).flags as i32 & ML_TWOSIDED != 0 {
             P_LineOpening(state, li);
-            dist = FixedMul(state.p_map.attackrange, (*in_0).frac);
+            dist = FixedMul(state.p_map.attackrange, in_0.frac);
             if state.p_setup.line(li).backsector.is_none() {
                 slope = FixedDiv(state.p_maputl.openbottom - state.p_map.shootz, dist);
                 if slope > state.p_map.aimslope {
@@ -826,7 +826,7 @@ pub unsafe fn PTR_ShootTraverse(state: &mut GameState, mut in_0: *mut intercept_
                 _ => return true,
             }
         }
-        frac = (*in_0).frac - FixedDiv(4 as fixed_t * FRACUNIT, state.p_map.attackrange);
+        frac = in_0.frac - FixedDiv(4 as fixed_t * FRACUNIT, state.p_map.attackrange);
         x = state.p_maputl.trace.x + FixedMul(state.p_maputl.trace.dx, frac);
         y = state.p_maputl.trace.y + FixedMul(state.p_maputl.trace.dy, frac);
         z = state.p_map.shootz
@@ -860,7 +860,7 @@ pub unsafe fn PTR_ShootTraverse(state: &mut GameState, mut in_0: *mut intercept_
         P_SpawnPuff(state, x, y, z);
         false
     } else {
-        th = match (*in_0).target {
+        th = match in_0.target {
             InterceptTarget::Thing(id) => state.p_mobj.mobj_get(id).unwrap(),
             InterceptTarget::Line(_) => unreachable!(),
         };
@@ -870,7 +870,7 @@ pub unsafe fn PTR_ShootTraverse(state: &mut GameState, mut in_0: *mut intercept_
         if (*th).flags & MF_SHOOTABLE as i32 == 0 {
             return true;
         }
-        dist = FixedMul(state.p_map.attackrange, (*in_0).frac);
+        dist = FixedMul(state.p_map.attackrange, in_0.frac);
         thingtopslope = FixedDiv((*th).z + (*th).height - state.p_map.shootz, dist);
         if thingtopslope < state.p_map.aimslope {
             return true;
@@ -879,7 +879,7 @@ pub unsafe fn PTR_ShootTraverse(state: &mut GameState, mut in_0: *mut intercept_
         if thingbottomslope > state.p_map.aimslope {
             return true;
         }
-        frac = (*in_0).frac - FixedDiv(10 as fixed_t * FRACUNIT, state.p_map.attackrange);
+        frac = in_0.frac - FixedDiv(10 as fixed_t * FRACUNIT, state.p_map.attackrange);
         x = state.p_maputl.trace.x + FixedMul(state.p_maputl.trace.dx, frac);
         y = state.p_maputl.trace.y + FixedMul(state.p_maputl.trace.dy, frac);
         z = state.p_map.shootz
@@ -923,7 +923,7 @@ pub unsafe fn P_AimLineAttack(
         x2,
         y2,
         PT_ADDLINES | PT_ADDTHINGS,
-        Some(PTR_AimTraverse as unsafe fn(&mut GameState, *mut intercept_t) -> bool),
+        |s, i| unsafe { PTR_AimTraverse(s, i) },
     );
     if state.p_map.linetarget.is_some() {
         return state.p_map.aimslope;
@@ -955,12 +955,12 @@ pub unsafe fn P_LineAttack(
         x2,
         y2,
         PT_ADDLINES | PT_ADDTHINGS,
-        Some(PTR_ShootTraverse as unsafe fn(&mut GameState, *mut intercept_t) -> bool),
+        |s, i| unsafe { PTR_ShootTraverse(s, i) },
     );
 }
-pub unsafe fn PTR_UseTraverse(state: &mut GameState, mut in_0: *mut intercept_t) -> bool {
+pub unsafe fn PTR_UseTraverse(state: &mut GameState, in_0: intercept_t) -> bool {
     let mut side: i32 = 0;
-    let li = match (*in_0).target {
+    let li = match in_0.target {
         InterceptTarget::Line(id) => id,
         InterceptTarget::Thing(_) => unreachable!(),
     };
@@ -1003,7 +1003,7 @@ pub unsafe fn P_UseLines(state: &mut GameState, mut player: *mut player_t) {
         x2,
         y2,
         PT_ADDLINES,
-        Some(PTR_UseTraverse as unsafe fn(&mut GameState, *mut intercept_t) -> bool),
+        |s, i| unsafe { PTR_UseTraverse(s, i) },
     );
 }
 pub unsafe fn PIT_RadiusAttack(state: &mut GameState, mut thing_id: MobjId) -> bool {
@@ -1082,7 +1082,7 @@ pub unsafe fn P_RadiusAttack(
                 state,
                 x,
                 y,
-                Some(PIT_RadiusAttack as unsafe fn(&mut GameState, MobjId) -> bool),
+                |s, id| unsafe { PIT_RadiusAttack(s, id) },
             );
             x += 1;
         }
@@ -1149,7 +1149,7 @@ pub unsafe fn P_ChangeSector(
                 state,
                 x,
                 y,
-                Some(PIT_ChangeSector as unsafe fn(&mut GameState, MobjId) -> bool),
+                |s, id| unsafe { PIT_ChangeSector(s, id) },
             );
             y += 1;
         }
