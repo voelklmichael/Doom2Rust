@@ -107,6 +107,34 @@ impl PTickState {
     pub fn kind(&self, id: ThinkerId) -> ThinkerKind {
         self.nodes[id.0 as usize].kind
     }
+
+    pub fn ceiling_payload(&self, id: ThinkerId) -> CeilingId {
+        match self.payload(id) {
+            ThinkerPayload::Ceiling(ceiling_id) => ceiling_id,
+            _ => panic!("thinker node is not a ceiling"),
+        }
+    }
+
+    pub fn door_payload(&self, id: ThinkerId) -> DoorId {
+        match self.payload(id) {
+            ThinkerPayload::Door(door_id) => door_id,
+            _ => panic!("thinker node is not a door"),
+        }
+    }
+
+    pub fn floor_payload(&self, id: ThinkerId) -> FloorId {
+        match self.payload(id) {
+            ThinkerPayload::Floor(floor_id) => floor_id,
+            _ => panic!("thinker node is not a floor"),
+        }
+    }
+
+    pub fn plat_payload(&self, id: ThinkerId) -> PlatId {
+        match self.payload(id) {
+            ThinkerPayload::Plat(plat_id) => plat_id,
+            _ => panic!("thinker node is not a plat"),
+        }
+    }
 }
 
 // Resolves a ThinkerNode's payload back into the raw pointer every T_*
@@ -204,8 +232,8 @@ pub fn P_AddThinker(
     id
 }
 
-pub unsafe fn P_RemoveThinker(mut thinker: *mut thinker_t) {
-    (*thinker).function = ThinkerFn::Removed;
+pub fn P_RemoveThinker(thinker: &mut thinker_t) {
+    thinker.function = ThinkerFn::Removed;
 }
 
 // Unlinks a node from the externalized list (used only when P_RunThinkers
@@ -425,7 +453,7 @@ mod tests {
         let node_id = P_AddThinker(state, ThinkerPayload::Door(door_id), ThinkerKind::Door);
         assert_eq!(P_ThinkerRaw(state, node_id), door_ptr as *mut thinker_t);
 
-        unsafe { P_RemoveThinker(P_ThinkerRaw(state, node_id)) };
+        unsafe { P_RemoveThinker(&mut *P_ThinkerRaw(state, node_id)) };
         unsafe { P_RunThinkers(state) };
         assert!(
             state.p_doors.get(door_id).is_none(),
@@ -451,7 +479,7 @@ mod tests {
         let node_id = P_AddThinker(state, ThinkerPayload::Mobj(mobj_id), ThinkerKind::Mobj);
         assert_eq!(P_ThinkerRaw(state, node_id), mobj_ptr as *mut thinker_t);
 
-        unsafe { P_RemoveThinker(P_ThinkerRaw(state, node_id)) };
+        unsafe { P_RemoveThinker(&mut *P_ThinkerRaw(state, node_id)) };
         unsafe { P_RunThinkers(state) };
         assert!(
             state.p_mobj.mobj_get(mobj_id).is_none(),
@@ -479,7 +507,7 @@ mod tests {
         );
         assert_eq!(P_ThinkerRaw(state, node_id), ceiling_ptr as *mut thinker_t);
 
-        unsafe { P_RemoveThinker(P_ThinkerRaw(state, node_id)) };
+        unsafe { P_RemoveThinker(&mut *P_ThinkerRaw(state, node_id)) };
         unsafe { P_RunThinkers(state) };
         assert!(
             state.p_ceilng.get(ceiling_id).is_none(),
@@ -501,7 +529,7 @@ mod tests {
         let node_id = P_AddThinker(state, ThinkerPayload::Floor(floor_id), ThinkerKind::Floor);
         assert_eq!(P_ThinkerRaw(state, node_id), floor_ptr as *mut thinker_t);
 
-        unsafe { P_RemoveThinker(P_ThinkerRaw(state, node_id)) };
+        unsafe { P_RemoveThinker(&mut *P_ThinkerRaw(state, node_id)) };
         unsafe { P_RunThinkers(state) };
         assert!(
             state.p_spec.get_floor(floor_id).is_none(),
@@ -523,7 +551,7 @@ mod tests {
         let node_id = P_AddThinker(state, ThinkerPayload::Plat(plat_id), ThinkerKind::Plat);
         assert_eq!(P_ThinkerRaw(state, node_id), plat_ptr as *mut thinker_t);
 
-        unsafe { P_RemoveThinker(P_ThinkerRaw(state, node_id)) };
+        unsafe { P_RemoveThinker(&mut *P_ThinkerRaw(state, node_id)) };
         unsafe { P_RunThinkers(state) };
         assert!(
             state.p_plats.get(plat_id).is_none(),
@@ -555,7 +583,7 @@ mod tests {
             fireflicker_ptr as *mut thinker_t
         );
 
-        unsafe { P_RemoveThinker(P_ThinkerRaw(state, node_id)) };
+        unsafe { P_RemoveThinker(&mut *P_ThinkerRaw(state, node_id)) };
         unsafe { P_RunThinkers(state) };
         assert!(
             state.p_lights.get_fireflicker(fireflicker_id).is_none(),
@@ -579,7 +607,7 @@ mod tests {
         let node_id = P_AddThinker(state, ThinkerPayload::Glow(glow_id), ThinkerKind::Glow);
         assert_eq!(P_ThinkerRaw(state, node_id), glow_ptr as *mut thinker_t);
 
-        unsafe { P_RemoveThinker(P_ThinkerRaw(state, node_id)) };
+        unsafe { P_RemoveThinker(&mut *P_ThinkerRaw(state, node_id)) };
         unsafe { P_RunThinkers(state) };
         assert!(
             state.p_lights.get_glow(glow_id).is_none(),
