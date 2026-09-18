@@ -116,7 +116,6 @@ pub fn D_ConnectNetGame(state: &mut GameState) {
         max_players: 0,
         is_freedoom: 0,
         wad_sha1sum: [0; 20],
-        deh_sha1sum: [0; 20],
         player_class: 0,
     };
     InitConnectData(state, &mut connect_data);
@@ -141,7 +140,6 @@ pub fn D_CheckNetGame(state: &mut GameState) {
         new_sync: 0,
         timelimit: 0,
         loadgame: 0,
-        random: 0,
         num_players: 0,
         consoleplayer: 0,
         player_classes: [0; 8],

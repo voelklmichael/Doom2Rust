@@ -1022,9 +1022,6 @@ pub fn G_Ticker(state: &mut GameState, netcmds: &[ticcmd_t]) {
         GameScreenState::GS_WIPPED => {}
     };
 }
-pub fn G_InitPlayer(state: &mut GGameState, player: i32) {
-    G_PlayerReborn(state, player);
-}
 pub fn G_PlayerFinishLevel(state: &mut GameState, player: i32) {
     let p = &mut state.g_game.players[player as usize];
     p.powers = [0; 6];

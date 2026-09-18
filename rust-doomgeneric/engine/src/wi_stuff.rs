@@ -743,9 +743,6 @@ pub fn WI_slamBackground(state: &mut GameState) {
     let dest_screen = Screen::Video;
     V_DrawPatch(state, dest_screen, 0_i32, 0_i32, &patch);
 }
-pub fn WI_Responder() -> bool {
-    false
-}
 pub fn WI_drawLF(state: &mut GameState) {
     let mut y: i32 = WI_TITLEY;
     if state.doomstat.gamemode as u32 != GameMode_t::commercial as i32 as u32

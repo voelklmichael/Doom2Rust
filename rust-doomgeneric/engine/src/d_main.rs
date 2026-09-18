@@ -18,7 +18,6 @@ use crate::doomdef::MAXPLAYERS;
 use crate::doomdef::SCREENHEIGHT;
 use crate::doomdef::SCREENWIDTH;
 use crate::doomdef::TICRATE;
-use crate::dummy::drone;
 use crate::f_finale::F_Drawer;
 use crate::f_wipe::wipe_EndScreen;
 use crate::f_wipe::wipe_ScreenWipe;
@@ -218,11 +217,11 @@ impl DMainState {
 }
 
 #[derive(Copy, Clone, PartialEq, Eq)]
+#[allow(dead_code)] // mirrors a C index table; discriminants must stay
 pub enum WipeType {
     wipe_ColorXForm = 0,
     wipe_Melt = 1,
 }
-pub const wipe_NUMWIPES: i32 = 2;
 #[derive(Copy, Clone)]
 pub struct MissionPack {
     pub name: &'static str,
@@ -448,17 +447,6 @@ pub fn D_BindVariables(state: &mut GameState) {
         });
         i += 1;
     }
-}
-pub fn D_GrabMouseCallback(state: &mut GameState) -> bool {
-    if drone {
-        return false;
-    }
-    if state.m_menu.menuactive || state.g_game.paused {
-        return false;
-    }
-    state.g_game.gamestate == GameScreenState::GS_LEVEL
-        && !state.g_game.demoplayback
-        && !state.d_main.advancedemo
 }
 pub fn doomgeneric_Tick(state: &mut GameState) {
     TryRunTics(state);
@@ -715,7 +703,6 @@ pub fn D_SetGameDescription(state: &mut GameState) {
         state.doomstat.gamedescription = "DOOM 2: TNT - Evilution";
     }
 }
-pub static title: [::core::ffi::c_char; 128] = [0; 128];
 fn D_AddFile(state: &mut GameState, filename: &str) -> bool {
     println!(" adding {}", filename);
     W_AddFile(state, filename).is_some()

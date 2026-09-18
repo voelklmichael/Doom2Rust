@@ -179,7 +179,6 @@ pub const AM_MSGEXITED: i32 = AM_MSGHEADER | ('x' as i32) << 8_i32;
 pub const REDS: i32 = 256 - 5_i32 * 16_i32;
 pub const REDRANGE: i32 = 16;
 pub const GREENS: i32 = 7 * 16_i32;
-pub const GREENRANGE: i32 = 16;
 pub const GRAYS: i32 = 6 * 16_i32;
 pub const GRAYSRANGE: i32 = 16;
 pub const BROWNS: i32 = 4 * 16_i32;
@@ -193,7 +192,6 @@ pub const TSWALLCOLORS: i32 = GRAYS;
 pub const FDWALLCOLORS: i32 = BROWNS;
 pub const CDWALLCOLORS: i32 = YELLOWS;
 pub const THINGCOLORS: i32 = GREENS;
-pub const THINGRANGE: i32 = GREENRANGE;
 pub const SECRETWALLCOLORS: i32 = WALLCOLORS;
 pub const GRIDCOLORS: i32 = GRAYS + GRAYSRANGE / 2_i32;
 pub const XHAIRCOLORS: i32 = GRAYS;
@@ -435,39 +433,6 @@ pub static cheat_player_arrow: [mline_t; 16] = [
         b: mpoint_t {
             x: R_1 / 6 as fixed_t + R_1 / 10 as fixed_t,
             y: -R_1 / 7 as fixed_t,
-        },
-    },
-];
-pub const R_2: i32 = 1_i32 << FRACBITS;
-pub static triangle_guy: [mline_t; 3] = [
-    mline_t {
-        a: mpoint_t {
-            x: (-0.867f64 * R_2 as f64) as fixed_t,
-            y: (-0.5f64 * R_2 as f64) as fixed_t,
-        },
-        b: mpoint_t {
-            x: (0.867f64 * R_2 as f64) as fixed_t,
-            y: (-0.5f64 * R_2 as f64) as fixed_t,
-        },
-    },
-    mline_t {
-        a: mpoint_t {
-            x: (0.867f64 * R_2 as f64) as fixed_t,
-            y: (-0.5f64 * R_2 as f64) as fixed_t,
-        },
-        b: mpoint_t {
-            x: 0_i32,
-            y: 1_i32 << FRACBITS,
-        },
-    },
-    mline_t {
-        a: mpoint_t {
-            x: 0_i32,
-            y: 1_i32 << FRACBITS,
-        },
-        b: mpoint_t {
-            x: (-0.867f64 * R_2 as f64) as fixed_t,
-            y: (-0.5f64 * R_2 as f64) as fixed_t,
         },
     },
 ];
@@ -886,20 +851,6 @@ pub fn AM_doFollowPlayer(state: &mut GameState) {
         state.am_map.m_y2 = state.am_map.m_y + state.am_map.m_h;
         state.am_map.f_oldloc.x = plr_x;
         state.am_map.f_oldloc.y = plr_y;
-    }
-}
-pub fn AM_updateLightLev(state: &mut AmMapState) {
-    const LITELEVELS: [i32; 8] = [0_i32, 4_i32, 7_i32, 10_i32, 12_i32, 14_i32, 15_i32, 15_i32];
-    if state.amclock > state.am_updatelightlev_nexttic {
-        let fresh1 = state.am_updatelightlev_litelevelscnt;
-        state.am_updatelightlev_litelevelscnt += 1;
-        state.lightlev = LITELEVELS[fresh1 as usize];
-        if state.am_updatelightlev_litelevelscnt as usize
-            == ::core::mem::size_of::<[i32; 8]>().wrapping_div(::core::mem::size_of::<i32>())
-        {
-            state.am_updatelightlev_litelevelscnt = 0_i32;
-        }
-        state.am_updatelightlev_nexttic = state.amclock + 6_i32 - state.amclock % 6_i32;
     }
 }
 pub fn AM_Ticker(state: &mut GameState) {

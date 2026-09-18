@@ -25,7 +25,6 @@ pub(crate) mod g_game;
 pub(crate) mod game_state;
 pub(crate) mod hu_lib;
 pub(crate) mod hu_stuff;
-pub(crate) mod i_cdmus;
 pub(crate) mod i_input;
 pub(crate) mod i_joystick;
 pub(crate) mod i_sound;

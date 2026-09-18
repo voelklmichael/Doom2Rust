@@ -219,6 +219,7 @@ impl PSetupState {
 }
 
 #[derive(Copy, Clone, PartialEq, Eq)]
+#[allow(dead_code)] // mirrors a C index table; discriminants must stay
 pub enum MapLump {
     ML_LABEL = 0,
     ML_THINGS = 1,

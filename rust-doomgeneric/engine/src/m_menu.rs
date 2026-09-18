@@ -563,27 +563,11 @@ pub struct menu_s {
     pub y: i16,
     pub lastOn: i16,
 }
-#[derive(Copy, Clone, PartialEq, Eq)]
-pub enum ReadThis2Menu {
-    rdthsempty2 = 0,
-}
 pub const read2_end: i32 = 1;
-#[derive(Copy, Clone, PartialEq, Eq)]
-pub enum ReadThis1Menu {
-    rdthsempty1 = 0,
-}
 pub const read1_end: i32 = 1;
-#[derive(Copy, Clone, PartialEq, Eq)]
-pub enum LoadMenu {
-    load1 = 0,
-    load2 = 1,
-    load3 = 2,
-    load4 = 3,
-    load5 = 4,
-    load6 = 5,
-}
 pub const load_end: i32 = 6;
 #[derive(Copy, Clone, PartialEq, Eq)]
+#[allow(dead_code)] // mirrors a C index table; discriminants must stay
 pub enum OptionsMenu {
     endgame = 0,
     messages = 1,
@@ -596,6 +580,7 @@ pub enum OptionsMenu {
 }
 pub const opt_end: i32 = 8;
 #[derive(Copy, Clone, PartialEq, Eq)]
+#[allow(dead_code)] // mirrors a C index table; discriminants must stay
 pub enum SoundMenu {
     sfx_vol = 0,
     sfx_empty1 = 1,
@@ -604,6 +589,7 @@ pub enum SoundMenu {
 }
 pub const sound_end: i32 = 4;
 #[derive(Copy, Clone, PartialEq, Eq)]
+#[allow(dead_code)] // mirrors a C index table; discriminants must stay
 pub enum EpisodeMenu {
     ep1 = 0,
     ep2 = 1,
@@ -612,6 +598,7 @@ pub enum EpisodeMenu {
 }
 pub const ep_end: i32 = 4;
 #[derive(Copy, Clone, PartialEq, Eq)]
+#[allow(dead_code)] // mirrors a C index table; discriminants must stay
 pub enum NewGameMenu {
     killthings = 0,
     toorough = 1,
@@ -621,6 +608,7 @@ pub enum NewGameMenu {
 }
 pub const newg_end: i32 = 5;
 #[derive(Copy, Clone, PartialEq, Eq)]
+#[allow(dead_code)] // mirrors a C index table; discriminants must stay
 pub enum MainMenu {
     newgame = 0,
     options = 1,
@@ -1257,36 +1245,6 @@ pub fn M_DrawThermo(
         &__wcache1643_6,
     );
 }
-pub fn M_DrawEmptyCell(state: &mut GameState, menu: MenuId, item: i32) {
-    let (x, y) = {
-        let def = state.m_menu.def(menu);
-        (def.x, def.y)
-    };
-    let __wcache1651_5 = V_CachePatchName(state, "M_CELL1");
-    let dest_screen = Screen::Video;
-    V_DrawPatchDirect(
-        state,
-        dest_screen,
-        x as i32 - 10_i32,
-        y as i32 + item * LINEHEIGHT - 1_i32,
-        &__wcache1651_5,
-    );
-}
-pub fn M_DrawSelCell(state: &mut GameState, menu: MenuId, item: i32) {
-    let (x, y) = {
-        let def = state.m_menu.def(menu);
-        (def.x, def.y)
-    };
-    let __wcache1659_4 = V_CachePatchName(state, "M_CELL2");
-    let dest_screen = Screen::Video;
-    V_DrawPatchDirect(
-        state,
-        dest_screen,
-        x as i32 - 10_i32,
-        y as i32 + item * LINEHEIGHT - 1_i32,
-        &__wcache1659_4,
-    );
-}
 pub fn M_StartMessage(
     state: &mut GameState,
     string: &str,
@@ -1300,10 +1258,6 @@ pub fn M_StartMessage(
     state.m_menu.messageIsQuitPrompt = false;
     state.m_menu.messageNeedsInput = input;
     state.m_menu.menuactive = true;
-}
-pub fn M_StopMessage(state: &mut GameState) {
-    state.m_menu.menuactive = state.m_menu.messageLastMenuActive != 0;
-    state.m_menu.messageToPrint = 0_i32;
 }
 pub fn M_StringWidth(state: &mut GameState, string: &str) -> i32 {
     let mut w: i32 = 0_i32;

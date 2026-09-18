@@ -1,5 +1,6 @@
 use crate::fixed_cstr::FixedCStr;
 #[derive(Copy, Clone, PartialEq, Eq)]
+#[allow(dead_code)] // mirrors a C index table; discriminants must stay
 pub enum MusicName {
     mus_None = 0,
     mus_e1m1 = 1,
@@ -91,6 +92,7 @@ pub struct musicinfo_t {
     pub handle: usize,
 }
 #[derive(Copy, Clone, PartialEq, Eq)]
+#[allow(dead_code)] // mirrors a C index table; discriminants must stay
 pub enum SfxName {
     sfx_None = 0,
     sfx_pistol = 1,

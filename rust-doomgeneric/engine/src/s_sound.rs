@@ -4,7 +4,6 @@ use crate::doomdef::true_0;
 use crate::game_state::GameState;
 use crate::i_sound::snddevice_t;
 use crate::i_sound::I_GetSfxLumpNum;
-use crate::i_sound::I_MusicIsPlaying;
 use crate::i_sound::I_PauseSong;
 use crate::i_sound::I_PlaySong;
 use crate::i_sound::I_PrecacheSounds;
@@ -417,9 +416,6 @@ pub fn S_ChangeMusic(state: &mut GameState, mut musicnum: i32, looping: i32) {
     state.sounds.S_music[music_index].handle = handle;
     I_PlaySong(&mut state.i_sound, handle, looping != 0);
     state.s_sound.mus_playing = Some(musicnum);
-}
-pub fn S_MusicPlaying(state: &mut GameState) -> bool {
-    I_MusicIsPlaying(&mut state.i_sound)
 }
 pub fn S_StopMusic(state: &mut GameState) {
     if let Some(musicnum) = state.s_sound.mus_playing {

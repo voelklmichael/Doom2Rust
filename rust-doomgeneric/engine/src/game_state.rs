@@ -14,7 +14,6 @@ use crate::f_finale::FFinaleState;
 use crate::f_wipe::FWipeState;
 use crate::g_game::GGameState;
 use crate::hu_stuff::HuStuffState;
-use crate::i_cdmus::ICdMusState;
 use crate::i_input::IInputState;
 use crate::i_joystick::IJoystickState;
 use crate::i_sound::ISoundState;
@@ -73,7 +72,6 @@ pub struct GameState {
     pub f_wipe: FWipeState,
     pub g_game: GGameState,
     pub hu_stuff: HuStuffState,
-    pub i_cdmus: ICdMusState,
     pub i_input: IInputState,
     pub i_joystick: IJoystickState,
     pub i_sound: ISoundState,
@@ -135,7 +133,6 @@ impl GameState {
             f_wipe: FWipeState::new(),
             g_game: GGameState::new(),
             hu_stuff: HuStuffState::new(),
-            i_cdmus: ICdMusState::new(),
             i_input: IInputState::new(),
             i_joystick: IJoystickState::new(),
             i_sound: ISoundState::new(),

@@ -185,20 +185,9 @@ pub fn HUlib_delCharFromIText(it: &mut hu_itext_t) {
         HUlib_delCharFromTextLine(&mut it.l);
     }
 }
-pub fn HUlib_eraseLineFromIText(it: &mut hu_itext_t) {
-    while it.lm != it.l.l.len() as i32 {
-        HUlib_delCharFromTextLine(&mut it.l);
-    }
-}
 pub fn HUlib_resetIText(it: &mut hu_itext_t) {
     it.lm = 0_i32;
     HUlib_clearTextLine(&mut it.l);
-}
-pub fn HUlib_addPrefixToIText(it: &mut hu_itext_t, s: &str) {
-    for b in s.bytes() {
-        HUlib_addCharToTextLine(&mut it.l, b);
-    }
-    it.lm = it.l.l.len() as i32;
 }
 pub fn HUlib_keyInIText(it: &mut hu_itext_t, ch: u8) -> bool {
     let ch = ch.to_ascii_uppercase();

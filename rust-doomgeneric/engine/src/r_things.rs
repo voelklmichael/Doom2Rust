@@ -300,7 +300,6 @@ pub fn R_InitSpriteDefs(state: &mut GameState, namelist: &[&'static str]) {
         i += 1;
     }
 }
-pub static newvissprite: i32 = 0;
 pub fn R_InitSprites(state: &mut GameState, namelist: &[&'static str]) {
     let mut i: i32;
     i = 0_i32;

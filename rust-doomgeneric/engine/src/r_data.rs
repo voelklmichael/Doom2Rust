@@ -86,12 +86,6 @@ impl RDataState {
     }
 }
 
-#[derive(Copy, Clone)]
-pub struct post_t {
-    pub topdelta: byte,
-    pub length: byte,
-}
-pub type column_t = post_t;
 pub type texture_t = texture_s;
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
@@ -115,24 +109,6 @@ pub struct texpatch_t {
     pub originx: i16,
     pub originy: i16,
     pub patch: i32,
-}
-#[derive(Copy, Clone)]
-pub struct mappatch_t {
-    pub originx: i16,
-    pub originy: i16,
-    pub patch: i16,
-    pub stepdir: i16,
-    pub colormap: i16,
-}
-#[derive(Copy, Clone)]
-pub struct maptexture_t {
-    pub name: FixedCStr<8>,
-    pub masked: i32,
-    pub width: i16,
-    pub height: i16,
-    pub obsolete: i32,
-    pub patchcount: i16,
-    pub patches: [mappatch_t; 1],
 }
 // `patch` is a byte slice starting at a post-stream (immediately after a
 // column's `columnofs` lookup, before the first post's 4-byte header);

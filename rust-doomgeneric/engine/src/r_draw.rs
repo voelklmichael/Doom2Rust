@@ -122,7 +122,6 @@ impl RDrawState {
 }
 
 pub const SBARHEIGHT: i32 = 32;
-pub static translations: [[byte; 256]; 3] = [[0; 256]; 3];
 pub fn R_DrawColumn(state: &mut GameState) {
     let mut count: i32;
     let mut idx: usize;

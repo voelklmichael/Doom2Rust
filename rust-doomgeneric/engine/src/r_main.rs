@@ -3,7 +3,6 @@ use crate::d_player::PlayerId;
 use crate::doomdef::SCREENHEIGHT;
 use crate::doomdef::SCREENWIDTH;
 use crate::game_state::GameState;
-use crate::m_bbox::BoxIndex;
 use crate::m_fixed::fixed_t;
 use crate::m_fixed::FixedDiv;
 use crate::m_fixed::FixedMul;
@@ -150,20 +149,6 @@ impl RMainState {
 pub const SLOPEBITS: i32 = 11;
 pub const DBITS: i32 = FRACBITS - SLOPEBITS;
 pub const FIELDOFVIEW: i32 = 2048;
-pub fn R_AddPointToBox(x: i32, y: i32, box_0: &mut [fixed_t; 4]) {
-    if x < box_0[BoxIndex::BOXLEFT as usize] {
-        box_0[BoxIndex::BOXLEFT as usize] = x as fixed_t;
-    }
-    if x > box_0[BoxIndex::BOXRIGHT as usize] {
-        box_0[BoxIndex::BOXRIGHT as usize] = x as fixed_t;
-    }
-    if y < box_0[BoxIndex::BOXBOTTOM as usize] {
-        box_0[BoxIndex::BOXBOTTOM as usize] = y as fixed_t;
-    }
-    if y > box_0[BoxIndex::BOXTOP as usize] {
-        box_0[BoxIndex::BOXTOP as usize] = y as fixed_t;
-    }
-}
 pub fn R_PointOnSide(x: fixed_t, y: fixed_t, node: &node_t) -> i32 {
     if node.dx == 0 {
         if x <= node.x {

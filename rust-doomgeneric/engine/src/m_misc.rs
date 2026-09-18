@@ -1,7 +1,6 @@
 use crate::fixed_cstr::FixedCStr;
 use std::io::Write;
 pub const EISDIR: i32 = 21;
-pub const DIR_SEPARATOR: i32 = '/' as i32;
 pub const DIR_SEPARATOR_S: &str = "/";
 pub fn M_MakeDirectory(path: &str) {
     use std::os::unix::fs::DirBuilderExt;
@@ -80,20 +79,6 @@ pub fn M_ExtractFileBase(path: &str, dest: &mut FixedCStr<8>) {
         buf[length] = b.to_ascii_uppercase();
     }
     *dest = FixedCStr(buf);
-}
-pub fn M_ForceUppercase(text: &str) -> String {
-    text.to_uppercase()
-}
-pub fn M_StrCaseStr<'a>(haystack: &'a str, needle: &str) -> Option<&'a str> {
-    let haystack_lower = haystack.to_lowercase();
-    let needle_lower = needle.to_lowercase();
-    haystack_lower.find(&needle_lower).map(|i| &haystack[i..])
-}
-pub fn M_StringDuplicate(orig: &str) -> String {
-    orig.to_string()
-}
-pub fn M_StringStartsWith(s: &str, prefix: &str) -> bool {
-    s.len() > prefix.len() && s.starts_with(prefix)
 }
 pub fn M_StringEndsWith(s: &str, suffix: &str) -> bool {
     s.ends_with(suffix)

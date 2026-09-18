@@ -16,7 +16,6 @@ impl MArgvState {
     }
 }
 
-pub const DIR_SEPARATOR: char = '/';
 pub fn M_CheckParmWithArgs(state: &mut GameState, check: &str, num_args: i32) -> i32 {
     let mut i: i32 = 1_i32;
     while i < state.m_argv.myargv.len() as i32 - num_args {
@@ -63,12 +62,5 @@ pub fn M_ArgvAtoi(arg: &::std::ffi::CStr) -> i32 {
         -value
     } else {
         value
-    }
-}
-pub fn M_GetExecutableName(game_state: &'static GameState) -> &'static str {
-    let arg0 = game_state.m_argv.myargv[0].to_str().unwrap();
-    match arg0.rfind(DIR_SEPARATOR) {
-        Some(pos) => &arg0[pos + 1..],
-        None => arg0,
     }
 }

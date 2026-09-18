@@ -264,7 +264,6 @@ pub const THUSTR_32: &str = "level 32: caribbean";
 pub const PLAYER_NAMES: [&str; 4] = ["Green: ", "Indigo: ", "Brown: ", "Red: "];
 pub const HU_TITLEX: i32 = 0;
 pub const HU_INPUTX: i32 = HU_MSGX;
-pub static chat_char: u8 = 0;
 const fn new_hu_itext_t() -> hu_itext_t {
     hu_itext_t {
         l: hu_textline_t {

@@ -61,9 +61,6 @@ impl Patch {
         }
     }
 
-    pub fn bytes(&self) -> &[u8] {
-        &self.data
-    }
 }
 
 impl<'a> Iterator for Posts<'a> {
