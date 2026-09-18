@@ -603,7 +603,7 @@ pub unsafe fn P_KillMobj(state: &mut GameState, mut source: *mut mobj_t, mut tar
         }
         (*target).flags &= !(MF_SOLID as i32);
         (*target_player).playerstate = PlayerState::PST_DEAD;
-        P_DropWeapon(state, target_player);
+        P_DropWeapon(state, target_player_id);
         if target_player_id.0 as i32 == state.g_game.consoleplayer && state.am_map.automapactive {
             AM_Stop(state);
         }
