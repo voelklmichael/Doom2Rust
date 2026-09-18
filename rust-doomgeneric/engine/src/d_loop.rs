@@ -273,7 +273,7 @@ pub unsafe fn D_InitNetGame(
     let mut result: bool = false;
     I_AtExit(
         &mut state.i_system,
-        Some(D_QuitNetGame as unsafe fn(&mut GameState) -> ()),
+        Some(D_QuitNetGame as fn(&mut GameState) -> ()),
         true,
     );
     state.d_loop.player_class = (*connect_data).player_class;
