@@ -1,7 +1,6 @@
 use crate::d_player::ammotype_t;
 use crate::p_mobj::StateNum;
 #[derive(Copy, Clone)]
-#[repr(C)]
 pub struct weaponinfo_t {
     pub ammo: ammotype_t,
     pub upstate: StateNum,

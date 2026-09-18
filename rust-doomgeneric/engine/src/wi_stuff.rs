@@ -549,7 +549,6 @@ impl WiStuffState {
 }
 
 #[derive(Copy, Clone)]
-#[repr(C)]
 pub struct wbplayerstruct_t {
     pub in_0: bool,
     pub skills: i32,
@@ -560,7 +559,6 @@ pub struct wbplayerstruct_t {
     pub score: i32,
 }
 #[derive(Copy, Clone)]
-#[repr(C)]
 pub struct wbstartstruct_t {
     pub epsd: i32,
     pub didsecret: bool,
@@ -581,7 +579,6 @@ pub enum StateEnum {
     ShowNextLoc = 1,
 }
 #[derive(Copy, Clone)]
-#[repr(C)]
 pub struct anim_t {
     pub type_0: AnimEnum,
     pub period: i32,
@@ -596,7 +593,6 @@ pub struct anim_t {
     pub state: i32,
 }
 #[derive(Copy, Clone)]
-#[repr(C)]
 pub struct point_t {
     pub x: i32,
     pub y: i32,

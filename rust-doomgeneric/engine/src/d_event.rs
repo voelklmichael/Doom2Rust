@@ -28,7 +28,6 @@ pub enum EvType {
     ev_quit = 4,
 }
 #[derive(Copy, Clone)]
-#[repr(C)]
 pub struct event_t {
     pub type_0: EvType,
     pub data1: i32,

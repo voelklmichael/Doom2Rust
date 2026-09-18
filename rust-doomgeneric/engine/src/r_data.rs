@@ -87,7 +87,6 @@ impl RDataState {
 }
 
 #[derive(Copy, Clone)]
-#[repr(C, packed)]
 pub struct post_t {
     pub topdelta: byte,
     pub length: byte,
@@ -112,14 +111,12 @@ pub struct texture_s {
     pub patches: Vec<texpatch_t>,
 }
 #[derive(Copy, Clone)]
-#[repr(C)]
 pub struct texpatch_t {
     pub originx: i16,
     pub originy: i16,
     pub patch: i32,
 }
 #[derive(Copy, Clone)]
-#[repr(C, packed)]
 pub struct mappatch_t {
     pub originx: i16,
     pub originy: i16,
@@ -128,7 +125,6 @@ pub struct mappatch_t {
     pub colormap: i16,
 }
 #[derive(Copy, Clone)]
-#[repr(C, packed)]
 pub struct maptexture_t {
     pub name: FixedCStr<8>,
     pub masked: i32,

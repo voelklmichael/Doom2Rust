@@ -102,7 +102,6 @@ impl SoundOrigin {
     }
 }
 #[derive(Copy, Clone)]
-#[repr(C)]
 pub struct channel_t {
     pub sfxinfo: Option<SfxId>,
     pub origin: SoundOrigin,

@@ -84,7 +84,6 @@ pub enum PlayerState {
 }
 
 #[derive(Clone)]
-#[repr(C)]
 pub struct player_s {
     pub mo: Option<MobjId>,
     pub playerstate: PlayerState,

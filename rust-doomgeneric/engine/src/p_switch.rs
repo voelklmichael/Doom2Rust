@@ -36,7 +36,6 @@ pub enum BWhere {
     bottom = 2,
 }
 #[derive(Copy, Clone)]
-#[repr(C)]
 pub struct switchlist_t {
     pub name1: FixedCStr<9>,
     pub name2: FixedCStr<9>,

@@ -13,7 +13,6 @@ pub const BT_USE: C2RustUnnamed = 2;
 pub const BT_ATTACK: C2RustUnnamed = 1;
 
 #[derive(Copy, Clone)]
-#[repr(C)]
 pub struct ticcmd_t {
     pub forwardmove: i8,
     pub sidemove: i8,

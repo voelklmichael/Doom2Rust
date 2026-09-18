@@ -46,7 +46,6 @@ pub enum FinaleStage {
     F_STAGE_CAST = 2,
 }
 #[derive(Copy, Clone)]
-#[repr(C)]
 pub struct textscreen_t {
     pub mission: GameMission_t,
     pub episode: i32,
@@ -55,7 +54,6 @@ pub struct textscreen_t {
     pub text: &'static str,
 }
 #[derive(Copy, Clone)]
-#[repr(C)]
 pub struct castinfo_t {
     pub name: Option<&'static str>,
     pub type_0: MobjType,

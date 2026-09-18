@@ -82,13 +82,11 @@ pub enum SectorSpecial {
     Plat(ThinkerId),
 }
 #[derive(Copy, Clone)]
-#[repr(C)]
 pub struct thinker_s {
     pub function: ThinkerFn,
 }
 pub type thinker_t = thinker_s;
 #[derive(Copy, Clone)]
-#[repr(C, packed)]
 pub struct mapthing_t {
     pub x: i16,
     pub y: i16,
@@ -2325,7 +2323,6 @@ pub fn statenum_from_raw(v: i32) -> StateNum {
     }
 }
 #[derive(Copy, Clone)]
-#[repr(C)]
 pub struct state_t {
     pub sprite: SpriteNum,
     pub frame: i32,
@@ -2619,7 +2616,6 @@ pub fn mobjtype_from_raw(v: i32) -> MobjType {
     }
 }
 #[derive(Copy, Clone)]
-#[repr(C)]
 pub struct mobjinfo_t {
     pub doomednum: i32,
     pub spawnstate: StateNum,
@@ -2675,7 +2671,6 @@ pub const MF_SHOOTABLE: C2RustUnnamed_1 = 4;
 pub const MF_SOLID: C2RustUnnamed_1 = 2;
 pub const MF_SPECIAL: C2RustUnnamed_1 = 1;
 #[derive(Copy, Clone)]
-#[repr(C)]
 pub struct mobj_s {
     pub thinker: thinker_t,
     pub x: fixed_t,
@@ -2714,7 +2709,6 @@ pub struct mobj_s {
     pub id: MobjId,
 }
 #[derive(Copy, Clone)]
-#[repr(C)]
 pub struct pspdef_t {
     pub state: Option<StateId>,
     pub tics: i32,
@@ -2724,14 +2718,12 @@ pub struct pspdef_t {
 pub type mobj_t = mobj_s;
 pub use crate::d_player::{player_s, player_t, PlayerId, PlayerState};
 #[derive(Copy, Clone)]
-#[repr(C)]
 pub struct subsector_s {
     pub sector: SectorId,
     pub numlines: i16,
     pub firstline: i16,
 }
 #[derive(Clone)]
-#[repr(C)]
 pub struct sector_t {
     pub floorheight: fixed_t,
     pub ceilingheight: fixed_t,
@@ -2751,7 +2743,6 @@ pub struct sector_t {
     pub lines: Vec<LineId>,
 }
 #[derive(Copy, Clone)]
-#[repr(C)]
 pub struct line_s {
     pub v1: VertexId,
     pub v2: VertexId,
@@ -2775,13 +2766,11 @@ pub enum SlopeType {
     ST_NEGATIVE = 3,
 }
 #[derive(Copy, Clone)]
-#[repr(C)]
 pub struct vertex_t {
     pub x: fixed_t,
     pub y: fixed_t,
 }
 #[derive(Copy, Clone)]
-#[repr(C)]
 pub struct degenmobj_t {
     pub thinker: thinker_t,
     pub x: fixed_t,
@@ -3228,7 +3217,6 @@ pub fn P_SpawnMobj(
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Hash)]
-#[repr(C)]
 pub struct MobjId {
     index: u32,
     generation: u32,

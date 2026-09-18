@@ -70,7 +70,6 @@ pub const mus_e1m2: C2RustUnnamed_0 = 2;
 pub const mus_e1m1: C2RustUnnamed_0 = 1;
 pub const mus_None: C2RustUnnamed_0 = 0;
 #[derive(Copy, Clone)]
-#[repr(C)]
 pub struct sfxinfo_struct {
     pub tagname: Option<&'static str>,
     pub name: FixedCStr<9>,
@@ -84,7 +83,6 @@ pub struct sfxinfo_struct {
 }
 pub type sfxinfo_t = sfxinfo_struct;
 #[derive(Copy, Clone)]
-#[repr(C)]
 pub struct musicinfo_t {
     pub name: FixedCStr<7>,
     pub lumpnum: i32,

@@ -47,7 +47,6 @@ impl ClipArray {
 }
 
 #[derive(Copy, Clone)]
-#[repr(C)]
 pub struct side_t {
     pub textureoffset: fixed_t,
     pub rowoffset: fixed_t,
@@ -58,7 +57,6 @@ pub struct side_t {
 }
 
 #[derive(Copy, Clone)]
-#[repr(C)]
 pub struct seg_t {
     pub v1: VertexId,
     pub v2: VertexId,
@@ -71,7 +69,6 @@ pub struct seg_t {
 }
 
 #[derive(Copy, Clone)]
-#[repr(C)]
 pub struct node_t {
     pub x: fixed_t,
     pub y: fixed_t,
@@ -82,7 +79,6 @@ pub struct node_t {
 }
 
 #[derive(Copy, Clone)]
-#[repr(C)]
 pub struct drawseg_s {
     pub curline: SegId,
     pub x1: i32,
@@ -156,7 +152,6 @@ pub enum SpriteRotate {
 }
 
 #[derive(Copy, Clone)]
-#[repr(C)]
 pub struct spriteframe_t {
     pub rotate: SpriteRotate,
     pub lump: [i16; 8],

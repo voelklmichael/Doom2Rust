@@ -20,7 +20,6 @@ pub enum StDigitSet {
     Keys,
 }
 #[derive(Copy, Clone)]
-#[repr(C)]
 pub struct st_number_t {
     pub x: i32,
     pub y: i32,
@@ -30,13 +29,11 @@ pub struct st_number_t {
     pub data: i32,
 }
 #[derive(Copy, Clone)]
-#[repr(C)]
 pub struct st_percent_t {
     pub n: st_number_t,
     pub p: i32,
 }
 #[derive(Copy, Clone)]
-#[repr(C)]
 pub struct st_multicon_t {
     pub x: i32,
     pub y: i32,
@@ -45,7 +42,6 @@ pub struct st_multicon_t {
     pub data: i32,
 }
 #[derive(Copy, Clone)]
-#[repr(C)]
 pub struct st_binicon_t {
     pub x: i32,
     pub y: i32,

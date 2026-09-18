@@ -66,7 +66,6 @@ impl RBspState {
 }
 
 #[derive(Copy, Clone)]
-#[repr(C)]
 pub struct cliprange_t {
     pub first: i32,
     pub last: i32,

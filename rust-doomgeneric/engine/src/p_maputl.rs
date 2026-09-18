@@ -152,7 +152,6 @@ impl PMaputlState {
 }
 
 #[derive(Copy, Clone)]
-#[repr(C)]
 pub struct divline_t {
     pub x: fixed_t,
     pub y: fixed_t,
@@ -165,7 +164,6 @@ pub enum InterceptTarget {
     Thing(MobjId),
 }
 #[derive(Copy, Clone)]
-#[repr(C)]
 pub struct intercept_t {
     pub frac: fixed_t,
     pub target: InterceptTarget,
