@@ -325,104 +325,99 @@ pub fn A_GunFlash(state: &mut GameState, player_id: PlayerId, _position: i32) {
     }
 }
 pub fn A_Punch(state: &mut GameState, player_id: PlayerId, _position: i32) {
-    unsafe {
-        let player = player_id;
-        let player_mo = state.g_game.players[player.0 as usize].mo.unwrap();
-        let mut angle: angle_t = 0;
-        let mut damage: i32 = 0;
-        let mut slope: i32 = 0;
-        damage = (P_Random(&mut state.m_random) % 10_i32 + 1_i32) << 1_i32;
-        if state.g_game.players[player.0 as usize].powers[PowerType::pw_strength as usize] != 0 {
-            damage *= 10_i32;
-        }
-        angle = state.p_mobj.mo(player_mo).angle;
-        angle = angle.wrapping_add(
-            ((P_Random(&mut state.m_random) - P_Random(&mut state.m_random)) << 18_i32) as angle_t,
-        );
-        slope = P_AimLineAttack(state, Some(player_mo), angle, MELEERANGE);
-        P_LineAttack(
-            state,
-            player_mo,
-            angle,
-            MELEERANGE,
-            slope as fixed_t,
-            damage,
-        );
-        if let Some(linetarget) = state.p_map.linetarget {
-            let linetarget = state.p_mobj.mobj_get(linetarget).unwrap();
-            S_StartSound(
-                state,
-                SoundOrigin::Mobj(player_mo),
-                sfx_punch as i32,
-            );
-            state.p_mobj.mo_mut(player_mo).angle = R_PointToAngle2(
-                state,
-                state.p_mobj.mo(player_mo).x,
-                state.p_mobj.mo(player_mo).y,
-                (*linetarget).x,
-                (*linetarget).y,
-            );
-        }
+    let player = player_id;
+    let player_mo = state.g_game.players[player.0 as usize].mo.unwrap();
+    let mut angle: angle_t = 0;
+    let mut damage: i32 = 0;
+    let mut slope: i32 = 0;
+    damage = (P_Random(&mut state.m_random) % 10_i32 + 1_i32) << 1_i32;
+    if state.g_game.players[player.0 as usize].powers[PowerType::pw_strength as usize] != 0 {
+        damage *= 10_i32;
     }
-}
-pub fn A_Saw(state: &mut GameState, player_id: PlayerId, _position: i32) {
-    unsafe {
-        let player = player_id;
-        let player_mo = state.g_game.players[player.0 as usize].mo.unwrap();
-        let mut angle: angle_t = 0;
-        let mut damage: i32 = 0;
-        let mut slope: i32 = 0;
-        damage = 2_i32 * (P_Random(&mut state.m_random) % 10_i32 + 1_i32);
-        angle = state.p_mobj.mo(player_mo).angle;
-        angle = angle.wrapping_add(
-            ((P_Random(&mut state.m_random) - P_Random(&mut state.m_random)) << 18_i32) as angle_t,
-        );
-        slope = P_AimLineAttack(state, Some(player_mo), angle, MELEERANGE + 1 as fixed_t);
-        P_LineAttack(
-            state,
-            player_mo,
-            angle,
-            MELEERANGE + 1 as fixed_t,
-            slope as fixed_t,
-            damage,
-        );
-        if state.p_map.linetarget.is_none() {
-            S_StartSound(
-                state,
-                SoundOrigin::Mobj(player_mo),
-                sfx_sawful as i32,
-            );
-            return;
-        }
+    angle = state.p_mobj.mo(player_mo).angle;
+    angle = angle.wrapping_add(
+        ((P_Random(&mut state.m_random) - P_Random(&mut state.m_random)) << 18_i32) as angle_t,
+    );
+    slope = P_AimLineAttack(state, Some(player_mo), angle, MELEERANGE);
+    P_LineAttack(
+        state,
+        player_mo,
+        angle,
+        MELEERANGE,
+        slope as fixed_t,
+        damage,
+    );
+    if let Some(linetarget) = state.p_map.linetarget {
+        let linetarget = state.p_mobj.mo(linetarget);
+        let (linetarget_x, linetarget_y) = (linetarget.x, linetarget.y);
         S_StartSound(
             state,
             SoundOrigin::Mobj(player_mo),
-            sfx_sawhit as i32,
+            sfx_punch as i32,
         );
-        let linetarget = state
-            .p_mobj
-            .mobj_get(state.p_map.linetarget.unwrap())
-            .unwrap();
-        angle = R_PointToAngle2(
+        state.p_mobj.mo_mut(player_mo).angle = R_PointToAngle2(
             state,
             state.p_mobj.mo(player_mo).x,
             state.p_mobj.mo(player_mo).y,
-            (*linetarget).x,
-            (*linetarget).y,
+            linetarget_x,
+            linetarget_y,
         );
-        if angle.wrapping_sub(state.p_mobj.mo(player_mo).angle) > ANG180 {
-            if (angle.wrapping_sub(state.p_mobj.mo(player_mo).angle) as i32) < -ANG90 / 20_i32 {
-                state.p_mobj.mo_mut(player_mo).angle = angle.wrapping_add((ANG90 / 21_i32) as angle_t);
-            } else {
-                state.p_mobj.mo_mut(player_mo).angle = state.p_mobj.mo(player_mo).angle.wrapping_sub((ANG90 / 20_i32) as angle_t);
-            }
-        } else if angle.wrapping_sub(state.p_mobj.mo(player_mo).angle) > (ANG90 / 20_i32) as angle_t {
-            state.p_mobj.mo_mut(player_mo).angle = angle.wrapping_sub((ANG90 / 21_i32) as angle_t);
-        } else {
-            state.p_mobj.mo_mut(player_mo).angle = state.p_mobj.mo(player_mo).angle.wrapping_add((ANG90 / 20_i32) as angle_t);
-        }
-        state.p_mobj.mo_mut(player_mo).flags |= MF_JUSTATTACKED as i32;
     }
+}
+pub fn A_Saw(state: &mut GameState, player_id: PlayerId, _position: i32) {
+    let player = player_id;
+    let player_mo = state.g_game.players[player.0 as usize].mo.unwrap();
+    let mut angle: angle_t = 0;
+    let mut damage: i32 = 0;
+    let mut slope: i32 = 0;
+    damage = 2_i32 * (P_Random(&mut state.m_random) % 10_i32 + 1_i32);
+    angle = state.p_mobj.mo(player_mo).angle;
+    angle = angle.wrapping_add(
+        ((P_Random(&mut state.m_random) - P_Random(&mut state.m_random)) << 18_i32) as angle_t,
+    );
+    slope = P_AimLineAttack(state, Some(player_mo), angle, MELEERANGE + 1 as fixed_t);
+    P_LineAttack(
+        state,
+        player_mo,
+        angle,
+        MELEERANGE + 1 as fixed_t,
+        slope as fixed_t,
+        damage,
+    );
+    if state.p_map.linetarget.is_none() {
+        S_StartSound(
+            state,
+            SoundOrigin::Mobj(player_mo),
+            sfx_sawful as i32,
+        );
+        return;
+    }
+    S_StartSound(
+        state,
+        SoundOrigin::Mobj(player_mo),
+        sfx_sawhit as i32,
+    );
+    let linetarget = state.p_mobj.mo(state.p_map.linetarget.unwrap());
+    let (linetarget_x, linetarget_y) = (linetarget.x, linetarget.y);
+    angle = R_PointToAngle2(
+        state,
+        state.p_mobj.mo(player_mo).x,
+        state.p_mobj.mo(player_mo).y,
+        linetarget_x,
+        linetarget_y,
+    );
+    if angle.wrapping_sub(state.p_mobj.mo(player_mo).angle) > ANG180 {
+        if (angle.wrapping_sub(state.p_mobj.mo(player_mo).angle) as i32) < -ANG90 / 20_i32 {
+            state.p_mobj.mo_mut(player_mo).angle = angle.wrapping_add((ANG90 / 21_i32) as angle_t);
+        } else {
+            state.p_mobj.mo_mut(player_mo).angle = state.p_mobj.mo(player_mo).angle.wrapping_sub((ANG90 / 20_i32) as angle_t);
+        }
+    } else if angle.wrapping_sub(state.p_mobj.mo(player_mo).angle) > (ANG90 / 20_i32) as angle_t {
+        state.p_mobj.mo_mut(player_mo).angle = angle.wrapping_sub((ANG90 / 21_i32) as angle_t);
+    } else {
+        state.p_mobj.mo_mut(player_mo).angle = state.p_mobj.mo(player_mo).angle.wrapping_add((ANG90 / 20_i32) as angle_t);
+    }
+    state.p_mobj.mo_mut(player_mo).flags |= MF_JUSTATTACKED as i32;
 }
 fn DecreaseAmmo(state: &mut GameState, player: PlayerId, ammonum: i32, amount: i32) {
     let player = state.g_game.player_mut(player);

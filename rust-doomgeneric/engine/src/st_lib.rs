@@ -5,7 +5,7 @@ use crate::st_stuff::ST_Y;
 use crate::v_video::V_CachePatchNum;
 use crate::v_video::V_CopyRect;
 use crate::v_video::V_DrawPatch;
-use crate::w_wad::{W_CacheLumpNum, W_GetNumForName};
+use crate::w_wad::{W_GetNumForName, W_LumpBytes};
 
 // Identifies one of StStuffState's own fixed lump-number arrays -- always
 // what a raw `*mut i32` used to point at here (tallnum/shortnum/faces/keys,
@@ -65,7 +65,7 @@ impl StLibState {
 
 pub fn STlib_init(state: &mut GameState) {
     let lumpnum = W_GetNumForName(&mut state.w_wad, "STTMINUS");
-    W_CacheLumpNum(state, lumpnum);
+    W_LumpBytes(state, lumpnum);
     state.st_lib.sttminus = lumpnum;
 }
 pub fn STlib_initNum(

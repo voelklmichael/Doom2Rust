@@ -32,7 +32,7 @@ use crate::tables::finesine;
 use crate::tables::ANGLETOFINESHIFT;
 use crate::v_video::V_DrawPatch;
 use crate::v_video::V_MarkRect;
-use crate::w_wad::{W_CacheLumpNum, W_GetNumForName, W_ReleaseLumpNum};
+use crate::w_wad::{W_GetNumForName, W_LumpBytes, W_ReleaseLumpNum};
 
 pub struct AmMapState {
     pub cheating: i32,
@@ -668,7 +668,7 @@ pub fn AM_loadPics(state: &mut GameState) {
     while i < 10_i32 {
         let namebuf = format!("AMMNUM{}", i);
         let lumpnum = W_GetNumForName(&mut state.w_wad, &namebuf);
-        W_CacheLumpNum(state, lumpnum);
+        W_LumpBytes(state, lumpnum);
         state.am_map.marknums[i as usize] = lumpnum;
         i += 1;
     }

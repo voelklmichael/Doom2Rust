@@ -46,7 +46,6 @@ use crate::tables::ANG45;
 use crate::v_video::V_CachePatchNum;
 use crate::v_video::V_CopyRect;
 use crate::v_video::V_DrawPatch;
-use crate::w_wad::W_CacheLumpNum;
 use crate::w_wad::W_LumpBytes;
 use crate::w_wad::{W_GetNumForName, W_ReleaseLumpName};
 
@@ -978,7 +977,7 @@ fn ST_loadUnloadGraphics(state: &mut GameState, callback: load_callback_t) {
 }
 fn ST_loadCallback(state: &mut GameState, lumpname: &str) -> i32 {
     let lumpnum = W_GetNumForName(&mut state.w_wad, lumpname);
-    W_CacheLumpNum(state, lumpnum);
+    W_LumpBytes(state, lumpnum);
     lumpnum
 }
 pub fn ST_loadGraphics(state: &mut GameState) {

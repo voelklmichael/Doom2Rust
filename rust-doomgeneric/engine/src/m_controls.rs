@@ -281,237 +281,237 @@ pub fn M_BindBaseControls(state: &mut GameState) {
     M_BindVariable_int(
         &mut state.m_config,
         "key_right",
-        &mut state.m_controls.key_right,
+        |s| &mut s.m_controls.key_right
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_left",
-        &mut state.m_controls.key_left,
+        |s| &mut s.m_controls.key_left
     );
-    M_BindVariable_int(&mut state.m_config, "key_up", &mut state.m_controls.key_up);
+    M_BindVariable_int(&mut state.m_config, "key_up", |s| &mut s.m_controls.key_up);
     M_BindVariable_int(
         &mut state.m_config,
         "key_down",
-        &mut state.m_controls.key_down,
+        |s| &mut s.m_controls.key_down
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_strafeleft",
-        &mut state.m_controls.key_strafeleft,
+        |s| &mut s.m_controls.key_strafeleft
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_straferight",
-        &mut state.m_controls.key_straferight,
+        |s| &mut s.m_controls.key_straferight
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_fire",
-        &mut state.m_controls.key_fire,
+        |s| &mut s.m_controls.key_fire
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_use",
-        &mut state.m_controls.key_use,
+        |s| &mut s.m_controls.key_use
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_strafe",
-        &mut state.m_controls.key_strafe,
+        |s| &mut s.m_controls.key_strafe
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_speed",
-        &mut state.m_controls.key_speed,
+        |s| &mut s.m_controls.key_speed
     );
     M_BindVariable_int(
         &mut state.m_config,
         "mouseb_fire",
-        &mut state.m_controls.mousebfire,
+        |s| &mut s.m_controls.mousebfire
     );
     M_BindVariable_int(
         &mut state.m_config,
         "mouseb_strafe",
-        &mut state.m_controls.mousebstrafe,
+        |s| &mut s.m_controls.mousebstrafe
     );
     M_BindVariable_int(
         &mut state.m_config,
         "mouseb_forward",
-        &mut state.m_controls.mousebforward,
+        |s| &mut s.m_controls.mousebforward
     );
     M_BindVariable_int(
         &mut state.m_config,
         "joyb_fire",
-        &mut state.m_controls.joybfire,
+        |s| &mut s.m_controls.joybfire
     );
     M_BindVariable_int(
         &mut state.m_config,
         "joyb_strafe",
-        &mut state.m_controls.joybstrafe,
+        |s| &mut s.m_controls.joybstrafe
     );
     M_BindVariable_int(
         &mut state.m_config,
         "joyb_use",
-        &mut state.m_controls.joybuse,
+        |s| &mut s.m_controls.joybuse
     );
     M_BindVariable_int(
         &mut state.m_config,
         "joyb_speed",
-        &mut state.m_controls.joybspeed,
+        |s| &mut s.m_controls.joybspeed
     );
     M_BindVariable_int(
         &mut state.m_config,
         "joyb_menu_activate",
-        &mut state.m_controls.joybmenu,
+        |s| &mut s.m_controls.joybmenu
     );
     M_BindVariable_int(
         &mut state.m_config,
         "joyb_strafeleft",
-        &mut state.m_controls.joybstrafeleft,
+        |s| &mut s.m_controls.joybstrafeleft
     );
     M_BindVariable_int(
         &mut state.m_config,
         "joyb_straferight",
-        &mut state.m_controls.joybstraferight,
+        |s| &mut s.m_controls.joybstraferight
     );
     M_BindVariable_int(
         &mut state.m_config,
         "mouseb_strafeleft",
-        &mut state.m_controls.mousebstrafeleft,
+        |s| &mut s.m_controls.mousebstrafeleft
     );
     M_BindVariable_int(
         &mut state.m_config,
         "mouseb_straferight",
-        &mut state.m_controls.mousebstraferight,
+        |s| &mut s.m_controls.mousebstraferight
     );
     M_BindVariable_int(
         &mut state.m_config,
         "mouseb_use",
-        &mut state.m_controls.mousebuse,
+        |s| &mut s.m_controls.mousebuse
     );
     M_BindVariable_int(
         &mut state.m_config,
         "mouseb_backward",
-        &mut state.m_controls.mousebbackward,
+        |s| &mut s.m_controls.mousebbackward
     );
     M_BindVariable_int(
         &mut state.m_config,
         "dclick_use",
-        &mut state.m_controls.dclick_use,
+        |s| &mut s.m_controls.dclick_use
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_pause",
-        &mut state.m_controls.key_pause,
+        |s| &mut s.m_controls.key_pause
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_message_refresh",
-        &mut state.m_controls.key_message_refresh,
+        |s| &mut s.m_controls.key_message_refresh
     );
 }
 pub fn M_BindHereticControls(state: &mut GameState) {
     M_BindVariable_int(
         &mut state.m_config,
         "key_flyup",
-        &mut state.m_controls.key_flyup,
+        |s| &mut s.m_controls.key_flyup
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_flydown",
-        &mut state.m_controls.key_flydown,
+        |s| &mut s.m_controls.key_flydown
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_flycenter",
-        &mut state.m_controls.key_flycenter,
+        |s| &mut s.m_controls.key_flycenter
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_lookup",
-        &mut state.m_controls.key_lookup,
+        |s| &mut s.m_controls.key_lookup
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_lookdown",
-        &mut state.m_controls.key_lookdown,
+        |s| &mut s.m_controls.key_lookdown
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_lookcenter",
-        &mut state.m_controls.key_lookcenter,
+        |s| &mut s.m_controls.key_lookcenter
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_invleft",
-        &mut state.m_controls.key_invleft,
+        |s| &mut s.m_controls.key_invleft
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_invright",
-        &mut state.m_controls.key_invright,
+        |s| &mut s.m_controls.key_invright
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_useartifact",
-        &mut state.m_controls.key_useartifact,
+        |s| &mut s.m_controls.key_useartifact
     );
 }
 pub fn M_BindHexenControls(state: &mut GameState) {
     M_BindVariable_int(
         &mut state.m_config,
         "key_jump",
-        &mut state.m_controls.key_jump,
+        |s| &mut s.m_controls.key_jump
     );
     M_BindVariable_int(
         &mut state.m_config,
         "mouseb_jump",
-        &mut state.m_controls.mousebjump,
+        |s| &mut s.m_controls.mousebjump
     );
     M_BindVariable_int(
         &mut state.m_config,
         "joyb_jump",
-        &mut state.m_controls.joybjump,
+        |s| &mut s.m_controls.joybjump
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_arti_all",
-        &mut state.m_controls.key_arti_all,
+        |s| &mut s.m_controls.key_arti_all
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_arti_health",
-        &mut state.m_controls.key_arti_health,
+        |s| &mut s.m_controls.key_arti_health
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_arti_poisonbag",
-        &mut state.m_controls.key_arti_poisonbag,
+        |s| &mut s.m_controls.key_arti_poisonbag
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_arti_blastradius",
-        &mut state.m_controls.key_arti_blastradius,
+        |s| &mut s.m_controls.key_arti_blastradius
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_arti_teleport",
-        &mut state.m_controls.key_arti_teleport,
+        |s| &mut s.m_controls.key_arti_teleport
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_arti_teleportother",
-        &mut state.m_controls.key_arti_teleportother,
+        |s| &mut s.m_controls.key_arti_teleportother
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_arti_egg",
-        &mut state.m_controls.key_arti_egg,
+        |s| &mut s.m_controls.key_arti_egg
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_arti_invulnerability",
-        &mut state.m_controls.key_arti_invulnerability,
+        |s| &mut s.m_controls.key_arti_invulnerability
     );
 }
 pub fn M_BindStrifeControls(state: &mut GameState) {
@@ -524,343 +524,343 @@ pub fn M_BindStrifeControls(state: &mut GameState) {
     M_BindVariable_int(
         &mut state.m_config,
         "key_jump",
-        &mut state.m_controls.key_jump,
+        |s| &mut s.m_controls.key_jump
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_lookUp",
-        &mut state.m_controls.key_lookup,
+        |s| &mut s.m_controls.key_lookup
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_lookDown",
-        &mut state.m_controls.key_lookdown,
+        |s| &mut s.m_controls.key_lookdown
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_invLeft",
-        &mut state.m_controls.key_invleft,
+        |s| &mut s.m_controls.key_invleft
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_invRight",
-        &mut state.m_controls.key_invright,
+        |s| &mut s.m_controls.key_invright
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_useHealth",
-        &mut state.m_controls.key_usehealth,
+        |s| &mut s.m_controls.key_usehealth
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_invquery",
-        &mut state.m_controls.key_invquery,
+        |s| &mut s.m_controls.key_invquery
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_mission",
-        &mut state.m_controls.key_mission,
+        |s| &mut s.m_controls.key_mission
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_invPop",
-        &mut state.m_controls.key_invpop,
+        |s| &mut s.m_controls.key_invpop
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_invKey",
-        &mut state.m_controls.key_invkey,
+        |s| &mut s.m_controls.key_invkey
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_invHome",
-        &mut state.m_controls.key_invhome,
+        |s| &mut s.m_controls.key_invhome
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_invEnd",
-        &mut state.m_controls.key_invend,
+        |s| &mut s.m_controls.key_invend
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_invUse",
-        &mut state.m_controls.key_invuse,
+        |s| &mut s.m_controls.key_invuse
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_invDrop",
-        &mut state.m_controls.key_invdrop,
+        |s| &mut s.m_controls.key_invdrop
     );
     M_BindVariable_int(
         &mut state.m_config,
         "mouseb_jump",
-        &mut state.m_controls.mousebjump,
+        |s| &mut s.m_controls.mousebjump
     );
     M_BindVariable_int(
         &mut state.m_config,
         "joyb_jump",
-        &mut state.m_controls.joybjump,
+        |s| &mut s.m_controls.joybjump
     );
 }
 pub fn M_BindWeaponControls(state: &mut GameState) {
     M_BindVariable_int(
         &mut state.m_config,
         "key_weapon1",
-        &mut state.m_controls.key_weapon1,
+        |s| &mut s.m_controls.key_weapon1
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_weapon2",
-        &mut state.m_controls.key_weapon2,
+        |s| &mut s.m_controls.key_weapon2
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_weapon3",
-        &mut state.m_controls.key_weapon3,
+        |s| &mut s.m_controls.key_weapon3
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_weapon4",
-        &mut state.m_controls.key_weapon4,
+        |s| &mut s.m_controls.key_weapon4
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_weapon5",
-        &mut state.m_controls.key_weapon5,
+        |s| &mut s.m_controls.key_weapon5
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_weapon6",
-        &mut state.m_controls.key_weapon6,
+        |s| &mut s.m_controls.key_weapon6
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_weapon7",
-        &mut state.m_controls.key_weapon7,
+        |s| &mut s.m_controls.key_weapon7
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_weapon8",
-        &mut state.m_controls.key_weapon8,
+        |s| &mut s.m_controls.key_weapon8
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_prevweapon",
-        &mut state.m_controls.key_prevweapon,
+        |s| &mut s.m_controls.key_prevweapon
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_nextweapon",
-        &mut state.m_controls.key_nextweapon,
+        |s| &mut s.m_controls.key_nextweapon
     );
     M_BindVariable_int(
         &mut state.m_config,
         "joyb_prevweapon",
-        &mut state.m_controls.joybprevweapon,
+        |s| &mut s.m_controls.joybprevweapon
     );
     M_BindVariable_int(
         &mut state.m_config,
         "joyb_nextweapon",
-        &mut state.m_controls.joybnextweapon,
+        |s| &mut s.m_controls.joybnextweapon
     );
     M_BindVariable_int(
         &mut state.m_config,
         "mouseb_prevweapon",
-        &mut state.m_controls.mousebprevweapon,
+        |s| &mut s.m_controls.mousebprevweapon
     );
     M_BindVariable_int(
         &mut state.m_config,
         "mouseb_nextweapon",
-        &mut state.m_controls.mousebnextweapon,
+        |s| &mut s.m_controls.mousebnextweapon
     );
 }
 pub fn M_BindMapControls(state: &mut GameState) {
     M_BindVariable_int(
         &mut state.m_config,
         "key_map_north",
-        &mut state.m_controls.key_map_north,
+        |s| &mut s.m_controls.key_map_north
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_map_south",
-        &mut state.m_controls.key_map_south,
+        |s| &mut s.m_controls.key_map_south
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_map_east",
-        &mut state.m_controls.key_map_east,
+        |s| &mut s.m_controls.key_map_east
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_map_west",
-        &mut state.m_controls.key_map_west,
+        |s| &mut s.m_controls.key_map_west
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_map_zoomin",
-        &mut state.m_controls.key_map_zoomin,
+        |s| &mut s.m_controls.key_map_zoomin
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_map_zoomout",
-        &mut state.m_controls.key_map_zoomout,
+        |s| &mut s.m_controls.key_map_zoomout
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_map_toggle",
-        &mut state.m_controls.key_map_toggle,
+        |s| &mut s.m_controls.key_map_toggle
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_map_maxzoom",
-        &mut state.m_controls.key_map_maxzoom,
+        |s| &mut s.m_controls.key_map_maxzoom
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_map_follow",
-        &mut state.m_controls.key_map_follow,
+        |s| &mut s.m_controls.key_map_follow
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_map_grid",
-        &mut state.m_controls.key_map_grid,
+        |s| &mut s.m_controls.key_map_grid
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_map_mark",
-        &mut state.m_controls.key_map_mark,
+        |s| &mut s.m_controls.key_map_mark
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_map_clearmark",
-        &mut state.m_controls.key_map_clearmark,
+        |s| &mut s.m_controls.key_map_clearmark
     );
 }
 pub fn M_BindMenuControls(state: &mut GameState) {
     M_BindVariable_int(
         &mut state.m_config,
         "key_menu_activate",
-        &mut state.m_controls.key_menu_activate,
+        |s| &mut s.m_controls.key_menu_activate
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_menu_up",
-        &mut state.m_controls.key_menu_up,
+        |s| &mut s.m_controls.key_menu_up
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_menu_down",
-        &mut state.m_controls.key_menu_down,
+        |s| &mut s.m_controls.key_menu_down
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_menu_left",
-        &mut state.m_controls.key_menu_left,
+        |s| &mut s.m_controls.key_menu_left
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_menu_right",
-        &mut state.m_controls.key_menu_right,
+        |s| &mut s.m_controls.key_menu_right
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_menu_back",
-        &mut state.m_controls.key_menu_back,
+        |s| &mut s.m_controls.key_menu_back
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_menu_forward",
-        &mut state.m_controls.key_menu_forward,
+        |s| &mut s.m_controls.key_menu_forward
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_menu_confirm",
-        &mut state.m_controls.key_menu_confirm,
+        |s| &mut s.m_controls.key_menu_confirm
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_menu_abort",
-        &mut state.m_controls.key_menu_abort,
+        |s| &mut s.m_controls.key_menu_abort
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_menu_help",
-        &mut state.m_controls.key_menu_help,
+        |s| &mut s.m_controls.key_menu_help
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_menu_save",
-        &mut state.m_controls.key_menu_save,
+        |s| &mut s.m_controls.key_menu_save
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_menu_load",
-        &mut state.m_controls.key_menu_load,
+        |s| &mut s.m_controls.key_menu_load
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_menu_volume",
-        &mut state.m_controls.key_menu_volume,
+        |s| &mut s.m_controls.key_menu_volume
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_menu_detail",
-        &mut state.m_controls.key_menu_detail,
+        |s| &mut s.m_controls.key_menu_detail
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_menu_qsave",
-        &mut state.m_controls.key_menu_qsave,
+        |s| &mut s.m_controls.key_menu_qsave
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_menu_endgame",
-        &mut state.m_controls.key_menu_endgame,
+        |s| &mut s.m_controls.key_menu_endgame
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_menu_messages",
-        &mut state.m_controls.key_menu_messages,
+        |s| &mut s.m_controls.key_menu_messages
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_menu_qload",
-        &mut state.m_controls.key_menu_qload,
+        |s| &mut s.m_controls.key_menu_qload
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_menu_quit",
-        &mut state.m_controls.key_menu_quit,
+        |s| &mut s.m_controls.key_menu_quit
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_menu_gamma",
-        &mut state.m_controls.key_menu_gamma,
+        |s| &mut s.m_controls.key_menu_gamma
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_menu_incscreen",
-        &mut state.m_controls.key_menu_incscreen,
+        |s| &mut s.m_controls.key_menu_incscreen
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_menu_decscreen",
-        &mut state.m_controls.key_menu_decscreen,
+        |s| &mut s.m_controls.key_menu_decscreen
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_menu_screenshot",
-        &mut state.m_controls.key_menu_screenshot,
+        |s| &mut s.m_controls.key_menu_screenshot
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_demo_quit",
-        &mut state.m_controls.key_demo_quit,
+        |s| &mut s.m_controls.key_demo_quit
     );
     M_BindVariable_int(
         &mut state.m_config,
         "key_spy",
-        &mut state.m_controls.key_spy,
+        |s| &mut s.m_controls.key_spy
     );
 }
 pub fn M_BindChatControls(state: &mut GameState, mut num_players: u32) {
@@ -868,7 +868,7 @@ pub fn M_BindChatControls(state: &mut GameState, mut num_players: u32) {
     M_BindVariable_int(
         &mut state.m_config,
         "key_multi_msg",
-        &mut state.m_controls.key_multi_msg,
+        |s| &mut s.m_controls.key_multi_msg
     );
     i = 0_u32;
     while i < num_players {
@@ -876,7 +876,7 @@ pub fn M_BindChatControls(state: &mut GameState, mut num_players: u32) {
         M_BindVariable_int(
             &mut state.m_config,
             &name,
-            &mut state.m_controls.key_multi_msgplayer[i as usize],
+            move |s| &mut s.m_controls.key_multi_msgplayer[i as usize]
         );
         i = i.wrapping_add(1);
     }

@@ -404,52 +404,52 @@ pub fn D_BindVariables(state: &mut GameState) {
     M_BindVariable_int(
         &mut state.m_config,
         "mouse_sensitivity",
-        &mut state.m_menu.mouseSensitivity,
+        |s| &mut s.m_menu.mouseSensitivity
     );
     M_BindVariable_int(
         &mut state.m_config,
         "sfx_volume",
-        &mut state.s_sound.sfxVolume,
+        |s| &mut s.s_sound.sfxVolume
     );
     M_BindVariable_int(
         &mut state.m_config,
         "music_volume",
-        &mut state.s_sound.musicVolume,
+        |s| &mut s.s_sound.musicVolume
     );
     M_BindVariable_int(
         &mut state.m_config,
         "show_messages",
-        &mut state.m_menu.showMessages,
+        |s| &mut s.m_menu.showMessages
     );
     M_BindVariable_int(
         &mut state.m_config,
         "screenblocks",
-        &mut state.m_menu.screenblocks,
+        |s| &mut s.m_menu.screenblocks
     );
     M_BindVariable_int(
         &mut state.m_config,
         "detaillevel",
-        &mut state.m_menu.detailLevel,
+        |s| &mut s.m_menu.detailLevel
     );
     M_BindVariable_int(
         &mut state.m_config,
         "snd_channels",
-        &mut state.s_sound.snd_channels,
+        |s| &mut s.s_sound.snd_channels
     );
     M_BindVariable_int(
         &mut state.m_config,
         "vanilla_savegame_limit",
-        &mut state.g_game.vanilla_savegame_limit,
+        |s| &mut s.g_game.vanilla_savegame_limit
     );
     M_BindVariable_int(
         &mut state.m_config,
         "vanilla_demo_limit",
-        &mut state.g_game.vanilla_demo_limit,
+        |s| &mut s.g_game.vanilla_demo_limit
     );
     M_BindVariable_int(
         &mut state.m_config,
         "show_endoom",
-        &mut state.d_main.show_endoom,
+        |s| &mut s.d_main.show_endoom
     );
     i = 0_i32;
     while i < 10_i32 {
@@ -457,7 +457,7 @@ pub fn D_BindVariables(state: &mut GameState) {
         M_BindVariable_string(
             &mut state.m_config,
             &name,
-            &mut state.hu_stuff.chat_macros[i as usize],
+            move |s| &mut s.hu_stuff.chat_macros[i as usize]
         );
         i += 1;
     }

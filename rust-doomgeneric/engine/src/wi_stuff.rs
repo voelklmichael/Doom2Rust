@@ -18,7 +18,7 @@ use crate::sounds::{sfx_barexp, sfx_pistol, sfx_pldeth, sfx_sgcock, sfx_slop};
 use crate::st_stuff::load_callback_t;
 use crate::v_video::V_CachePatchNum;
 use crate::v_video::V_DrawPatch;
-use crate::w_wad::{W_CacheLumpNum, W_CheckNumForName, W_GetNumForName, W_ReleaseLumpName};
+use crate::w_wad::{W_CheckNumForName, W_GetNumForName, W_LumpBytes, W_ReleaseLumpName};
 
 pub struct WiStuffState {
     pub epsd0animinfo: [anim_t; 10],
@@ -1842,7 +1842,7 @@ fn WI_loadUnloadData(state: &mut GameState, callback: load_callback_t) {
 }
 fn WI_loadCallback(state: &mut GameState, name: &str) -> i32 {
     let lumpnum = W_GetNumForName(&mut state.w_wad, name);
-    W_CacheLumpNum(state, lumpnum);
+    W_LumpBytes(state, lumpnum);
     lumpnum
 }
 pub fn WI_loadData(state: &mut GameState) {
@@ -1854,10 +1854,10 @@ pub fn WI_loadData(state: &mut GameState) {
     }
     WI_loadUnloadData(state, WI_loadCallback);
     let star_lump = W_GetNumForName(&mut state.w_wad, "STFST01");
-    W_CacheLumpNum(state, star_lump);
+    W_LumpBytes(state, star_lump);
     state.wi_stuff.star = star_lump;
     let bstar_lump = W_GetNumForName(&mut state.w_wad, "STFDEAD0");
-    W_CacheLumpNum(state, bstar_lump);
+    W_LumpBytes(state, bstar_lump);
     state.wi_stuff.bstar = bstar_lump;
 }
 fn WI_unloadCallback(state: &mut GameState, name: &str) -> i32 {

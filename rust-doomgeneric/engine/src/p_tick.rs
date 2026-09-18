@@ -462,6 +462,9 @@ mod tests {
     use super::*;
     use crate::doomdef::pixel_t;
     use crate::game_state::init_game_state;
+    use crate::p_doors::vldoor_t;
+    use crate::p_lights::{fireflicker_t, glow_t};
+    use crate::p_spec::{ceiling_t, floormove_t, plat_t};
     use crate::platform::DoomPlatform;
 
     struct NullPlatform;

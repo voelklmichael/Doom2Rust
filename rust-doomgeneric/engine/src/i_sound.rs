@@ -55,7 +55,7 @@ pub struct music_module_t {
     pub SetMusicVolume: Option<fn(i32)>,
     pub PauseMusic: Option<fn()>,
     pub ResumeMusic: Option<fn()>,
-    pub RegisterSong: Option<fn(*mut ::core::ffi::c_void, i32) -> usize>,
+    pub RegisterSong: Option<fn(&[u8]) -> usize>,
     pub UnRegisterSong: Option<fn(usize)>,
     pub PlaySong: Option<fn(usize, bool)>,
     pub StopSong: Option<fn()>,
@@ -161,23 +161,21 @@ pub fn I_UpdateSound(state: &mut ISoundState) {
         }
     }
 }
-fn CheckVolumeSeparation(mut vol: *mut i32, mut sep: *mut i32) {
-    unsafe {
-        if *sep < 0_i32 {
-            *sep = 0_i32;
-        } else if *sep > 254_i32 {
-            *sep = 254_i32;
-        }
-        if *vol < 0_i32 {
-            *vol = 0_i32;
-        } else if *vol > 127_i32 {
-            *vol = 127_i32;
-        }
+fn CheckVolumeSeparation(vol: &mut i32, sep: &mut i32) {
+    if *sep < 0_i32 {
+        *sep = 0_i32;
+    } else if *sep > 254_i32 {
+        *sep = 254_i32;
+    }
+    if *vol < 0_i32 {
+        *vol = 0_i32;
+    } else if *vol > 127_i32 {
+        *vol = 127_i32;
     }
 }
 pub fn I_UpdateSoundParams(state: &mut ISoundState, channel: i32, mut vol: i32, mut sep: i32) {
     if let Some(module) = state.sound_module {
-        CheckVolumeSeparation(&raw mut vol, &raw mut sep);
+        CheckVolumeSeparation(&mut vol, &mut sep);
         (module.UpdateSoundParams.expect("non-null function pointer"))(channel, vol, sep);
     }
 }
@@ -190,7 +188,7 @@ pub fn I_StartSound(
 ) -> i32 {
     match state.sound_module {
         Some(module) => {
-            CheckVolumeSeparation(&raw mut vol, &raw mut sep);
+            CheckVolumeSeparation(&mut vol, &mut sep);
             (module.StartSound.expect("non-null function pointer"))(sfxinfo, channel, vol, sep)
         }
         None => 0_i32,
@@ -234,9 +232,9 @@ pub fn I_ResumeSong(state: &mut ISoundState) {
         (module.ResumeMusic.expect("non-null function pointer"))();
     }
 }
-pub fn I_RegisterSong(state: &mut ISoundState, data: *mut ::core::ffi::c_void, len: i32) -> usize {
+pub fn I_RegisterSong(state: &mut ISoundState, data: &[u8]) -> usize {
     match state.music_module {
-        Some(module) => (module.RegisterSong.expect("non-null function pointer"))(data, len),
+        Some(module) => (module.RegisterSong.expect("non-null function pointer"))(data),
         None => 0,
     }
 }
@@ -265,51 +263,51 @@ pub fn I_BindSoundVariables(state: &mut GameState) {
     M_BindVariable_int(
         &mut state.m_config,
         "snd_musicdevice",
-        &mut state.i_sound.snd_musicdevice,
+        |s| &mut s.i_sound.snd_musicdevice
     );
     M_BindVariable_int(
         &mut state.m_config,
         "snd_sfxdevice",
-        &mut state.i_sound.snd_sfxdevice,
+        |s| &mut s.i_sound.snd_sfxdevice
     );
     M_BindVariable_int(
         &mut state.m_config,
         "snd_sbport",
-        &mut state.i_sound.snd_sbport,
+        |s| &mut s.i_sound.snd_sbport
     );
     M_BindVariable_int(
         &mut state.m_config,
         "snd_sbirq",
-        &mut state.i_sound.snd_sbirq,
+        |s| &mut s.i_sound.snd_sbirq
     );
     M_BindVariable_int(
         &mut state.m_config,
         "snd_sbdma",
-        &mut state.i_sound.snd_sbdma,
+        |s| &mut s.i_sound.snd_sbdma
     );
     M_BindVariable_int(
         &mut state.m_config,
         "snd_mport",
-        &mut state.i_sound.snd_mport,
+        |s| &mut s.i_sound.snd_mport
     );
     M_BindVariable_int(
         &mut state.m_config,
         "snd_maxslicetime_ms",
-        &mut state.i_sound.snd_maxslicetime_ms,
+        |s| &mut s.i_sound.snd_maxslicetime_ms
     );
     M_BindVariable_string(
         &mut state.m_config,
         "snd_musiccmd",
-        &mut state.i_sound.snd_musiccmd,
+        |s| &mut s.i_sound.snd_musiccmd
     );
     M_BindVariable_int(
         &mut state.m_config,
         "snd_samplerate",
-        &mut state.i_sound.snd_samplerate,
+        |s| &mut s.i_sound.snd_samplerate
     );
     M_BindVariable_int(
         &mut state.m_config,
         "snd_cachesize",
-        &mut state.i_sound.snd_cachesize,
+        |s| &mut s.i_sound.snd_cachesize
     );
 }
