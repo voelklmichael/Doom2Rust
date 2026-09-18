@@ -18,7 +18,6 @@ use crate::w_wad::W_CacheLumpNum;
 use crate::w_wad::W_GetNumForName;
 use crate::w_wad::W_LumpLength;
 
-pub type vpatchclipfunc_t = Option<unsafe fn(*mut patch_t, i32, i32) -> bool>;
 #[derive(Copy, Clone)]
 #[repr(C, packed)]
 pub struct pcx_t {
@@ -44,10 +43,6 @@ pub struct VVideoState {
     pub tinttable: Vec<byte>,
     pub xlatab: Vec<byte>,
     pub dirtybox: [i32; 4],
-    // No caller anywhere in the repo ever invokes V_SetPatchClipCallback, so
-    // this is permanently None -- kept as-is (dead stub) rather than deleted
-    // as a drive-by, same rationale as other vestigial fields in this crate.
-    patchclip_callback: vpatchclipfunc_t,
 }
 impl VVideoState {
     pub const fn new() -> Self {
@@ -55,7 +50,6 @@ impl VVideoState {
             tinttable: Vec::new(),
             xlatab: Vec::new(),
             dirtybox: [0; 4],
-            patchclip_callback: None,
         }
     }
 }
@@ -117,9 +111,6 @@ pub unsafe fn V_CopyRect(
         height -= 1;
     }
 }
-pub fn V_SetPatchClipCallback(state: &mut GameState, mut func: vpatchclipfunc_t) {
-    state.v_video.patchclip_callback = func;
-}
 /// Resolves a WAD lump number (as stored by the patch-lumpnum conversion
 /// track) to its cached patch data. Cheap and idempotent: the lump cache
 /// never evicts, so this is just a lookup after the first call.
@@ -142,14 +133,6 @@ pub unsafe fn V_DrawPatch(
     let mut w: i32 = 0;
     y -= (*patch).topoffset as i32;
     x -= (*patch).leftoffset as i32;
-    if state.v_video.patchclip_callback.is_some()
-        && !state
-            .v_video
-            .patchclip_callback
-            .expect("non-null function pointer")(patch, x, y)
-    {
-        return;
-    }
     if x < 0_i32
         || x + (*patch).width as i32 > SCREENWIDTH
         || y < 0_i32
@@ -222,14 +205,6 @@ pub unsafe fn V_DrawPatchFlipped(
     let mut w: i32 = 0;
     y -= (*patch).topoffset as i32;
     x -= (*patch).leftoffset as i32;
-    if state.v_video.patchclip_callback.is_some()
-        && !state
-            .v_video
-            .patchclip_callback
-            .expect("non-null function pointer")(patch, x, y)
-    {
-        return;
-    }
     if x < 0_i32
         || x + (*patch).width as i32 > SCREENWIDTH
         || y < 0_i32
@@ -360,11 +335,6 @@ pub unsafe fn V_DrawXlaPatch(
     let mut w: i32 = 0;
     y -= (*patch).topoffset as i32;
     x -= (*patch).leftoffset as i32;
-    if state.patchclip_callback.is_some()
-        && !state.patchclip_callback.expect("non-null function pointer")(patch, x, y)
-    {
-        return;
-    }
     col = 0_i32;
     desttop = dest_screen
         .offset((y * SCREENWIDTH) as isize)
