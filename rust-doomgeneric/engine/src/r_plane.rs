@@ -24,8 +24,6 @@ use crate::w_wad::W_CacheLumpNum;
 use crate::w_wad::W_ReleaseLumpNum;
 
 pub struct RPlaneState {
-    pub floorfunc: planefunction_t,
-    pub ceilingfunc: planefunction_t,
     pub visplanes: [visplane_t; 128],
     pub lastvisplane: usize,
     pub floorplane: Option<usize>,
@@ -51,8 +49,6 @@ pub struct RPlaneState {
 impl RPlaneState {
     pub const fn new() -> Self {
         RPlaneState {
-            floorfunc: None,
-            ceilingfunc: None,
             visplanes: [visplane_t {
                 height: 0,
                 picnum: 0,
@@ -89,7 +85,6 @@ impl RPlaneState {
     }
 }
 
-pub type planefunction_t = Option<unsafe fn(i32, i32) -> ()>;
 pub const ANGLETOSKYSHIFT: i32 = 22;
 pub const MAXVISPLANES: i32 = 128;
 pub unsafe fn R_MapPlane(state: &mut GameState, mut y: i32, mut x1: i32, mut x2: i32) {
