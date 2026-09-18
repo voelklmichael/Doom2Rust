@@ -56,7 +56,7 @@ pub use crate::d_ticcmd::ticcmd_t;
 #[derive(Copy, Clone)]
 pub enum StateAction {
     None,
-    Mobj(unsafe fn(&mut GameState, MobjId)),
+    Mobj(fn(&mut GameState, MobjId)),
     Weapon(unsafe fn(&mut GameState, *mut player_t, *mut pspdef_t)),
 }
 #[derive(Copy, Clone)]
