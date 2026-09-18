@@ -64,7 +64,7 @@ pub enum ThinkerFn {
     Paused,
     Removed,
     Unresolved,
-    Mobj(unsafe fn(&mut GameState, MobjId)),
+    Mobj(fn(&mut GameState, MobjId)),
     Ceiling(fn(&mut GameState, CeilingId)),
     Door(fn(&mut GameState, DoorId)),
     Floor(fn(&mut GameState, FloorId)),
@@ -3066,44 +3066,46 @@ pub unsafe fn P_NightmareRespawn(state: &mut GameState, mut mobj: *mut mobj_t) {
     (*mo).reactiontime = 18_i32;
     P_RemoveMobj(state, mobj);
 }
-pub unsafe fn P_MobjThinker(state: &mut GameState, id: MobjId) {
+pub fn P_MobjThinker(state: &mut GameState, id: MobjId) {
     let mobj = state.p_mobj.mobj_get(id).unwrap();
-    if (*mobj).momx != 0 || (*mobj).momy != 0 || (*mobj).flags & MF_SKULLFLY as i32 != 0 {
-        P_XYMovement(state, mobj);
-        if matches!((*mobj).thinker.function, ThinkerFn::Removed) {
-            return;
+    unsafe {
+        if (*mobj).momx != 0 || (*mobj).momy != 0 || (*mobj).flags & MF_SKULLFLY as i32 != 0 {
+            P_XYMovement(state, mobj);
+            if matches!((*mobj).thinker.function, ThinkerFn::Removed) {
+                return;
+            }
         }
-    }
-    if (*mobj).z != (*mobj).floorz || (*mobj).momz != 0 {
-        P_ZMovement(state, mobj);
-        if matches!((*mobj).thinker.function, ThinkerFn::Removed) {
-            return;
+        if (*mobj).z != (*mobj).floorz || (*mobj).momz != 0 {
+            P_ZMovement(state, mobj);
+            if matches!((*mobj).thinker.function, ThinkerFn::Removed) {
+                return;
+            }
         }
-    }
-    if (*mobj).tics != -1_i32 {
-        (*mobj).tics -= 1;
-        if (*mobj).tics == 0 {
-            let nextstate = (*state.info.state_mut((*mobj).state.unwrap())).nextstate;
-            if !P_SetMobjState(state, mobj, nextstate) {}
+        if (*mobj).tics != -1_i32 {
+            (*mobj).tics -= 1;
+            if (*mobj).tics == 0 {
+                let nextstate = (*state.info.state_mut((*mobj).state.unwrap())).nextstate;
+                if !P_SetMobjState(state, mobj, nextstate) {}
+            }
+        } else {
+            if (*mobj).flags & MF_COUNTKILL as i32 == 0 {
+                return;
+            }
+            if !state.g_game.respawnmonsters {
+                return;
+            }
+            (*mobj).movecount += 1;
+            if (*mobj).movecount < 12_i32 * TICRATE {
+                return;
+            }
+            if state.p_tick.leveltime & 31_i32 != 0 {
+                return;
+            }
+            if P_Random(&mut state.m_random) > 4_i32 {
+                return;
+            }
+            P_NightmareRespawn(state, mobj);
         }
-    } else {
-        if (*mobj).flags & MF_COUNTKILL as i32 == 0 {
-            return;
-        }
-        if !state.g_game.respawnmonsters {
-            return;
-        }
-        (*mobj).movecount += 1;
-        if (*mobj).movecount < 12_i32 * TICRATE {
-            return;
-        }
-        if state.p_tick.leveltime & 31_i32 != 0 {
-            return;
-        }
-        if P_Random(&mut state.m_random) > 4_i32 {
-            return;
-        }
-        P_NightmareRespawn(state, mobj);
     }
 }
 pub unsafe fn P_SpawnMobj(
