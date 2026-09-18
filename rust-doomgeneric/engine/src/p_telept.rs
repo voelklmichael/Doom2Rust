@@ -1,5 +1,6 @@
 use crate::d_mode::GameVersion;
 use crate::game_state::GameState;
+use crate::p_mobj::MobjId;
 use crate::m_fixed::fixed_t;
 use crate::p_map::P_TeleportMove;
 use crate::p_mobj::mobj_t;
@@ -21,8 +22,9 @@ pub unsafe fn EV_Teleport(
     state: &mut GameState,
     mut line: LineId,
     mut side: i32,
-    mut thing: *mut mobj_t,
+    thing: MobjId,
 ) -> i32 {
+    let thing: *mut mobj_t = state.p_mobj.mobj_ptr(thing);
     let mut i: i32 = 0;
     let mut tag: i32 = 0;
     let mut m: *mut mobj_t = ::core::ptr::null_mut::<mobj_t>();
@@ -54,7 +56,7 @@ pub unsafe fn EV_Teleport(
                             oldx = (*thing).x;
                             oldy = (*thing).y;
                             oldz = (*thing).z;
-                            if !P_TeleportMove(state, thing, (*m).x, (*m).y) {
+                            if !P_TeleportMove(state, (*thing).id, (*m).x, (*m).y) {
                                 return 0_i32;
                             }
                             if state.doomstat.gameversion != GameVersion::r#final {

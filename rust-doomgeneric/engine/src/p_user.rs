@@ -9,13 +9,14 @@ use crate::d_ticcmd::{BT_CHANGE, BT_SPECIAL, BT_USE, BT_WEAPONMASK, BT_WEAPONSHI
 use crate::doomdef::false_0;
 use crate::doomdef::true_0;
 use crate::game_state::GameState;
+use crate::p_mobj::MobjId;
 use crate::info::StateId;
 use crate::m_fixed::fixed_t;
 use crate::m_fixed::FixedMul;
 use crate::m_fixed::FRACUNIT;
 use crate::p_map::P_UseLines;
 use crate::p_mobj::P_SetMobjState;
-use crate::p_mobj::{mobj_t, StateNum};
+use crate::p_mobj::{StateNum};
 use crate::p_mobj::{MF_JUSTATTACKED, MF_NOCLIP, MF_SHADOW};
 use crate::p_pspr::P_MovePsprites;
 use crate::p_spec::P_PlayerInSpecialSector;
@@ -43,124 +44,127 @@ impl PUserState {
     }
 }
 
-pub unsafe fn P_Thrust(mut mo: *mut mobj_t, mut angle: angle_t, mut move_0: fixed_t) {
+pub fn P_Thrust(state: &mut GameState, mo: MobjId, mut angle: angle_t, move_0: fixed_t) {
     angle >>= ANGLETOFINESHIFT;
-    (*mo).momx += FixedMul(move_0, finecosine[angle as isize]);
-    (*mo).momy += FixedMul(move_0, finesine[angle as usize]);
+    let mo = state.p_mobj.mo_mut(mo);
+    mo.momx += FixedMul(move_0, finecosine[angle as isize]);
+    mo.momy += FixedMul(move_0, finesine[angle as usize]);
 }
-pub unsafe fn P_CalcHeight(state: &mut GameState, mut player: *mut player_t) {
+pub fn P_CalcHeight(state: &mut GameState, player_id: PlayerId) {
+    let player = &mut state.g_game.players[player_id.0 as usize];
     let mut angle: i32 = 0;
     let mut bob: fixed_t = 0;
-    let player_mo = state.p_mobj.mobj_get((*player).mo.unwrap()).unwrap();
-    (*player).bob = FixedMul((*player_mo).momx, (*player_mo).momx)
-        + FixedMul((*player_mo).momy, (*player_mo).momy);
-    (*player).bob >>= 2_i32;
-    if (*player).bob > MAXBOB {
-        (*player).bob = MAXBOB as fixed_t;
+    let player_mo = player.mo.unwrap();
+    player.bob = FixedMul(state.p_mobj.mo(player_mo).momx, state.p_mobj.mo(player_mo).momx)
+        + FixedMul(state.p_mobj.mo(player_mo).momy, state.p_mobj.mo(player_mo).momy);
+    player.bob >>= 2_i32;
+    if player.bob > MAXBOB {
+        player.bob = MAXBOB as fixed_t;
     }
-    if (*player).cheats & CF_NOMOMENTUM != 0 || !state.p_user.onground {
-        (*player).viewz = ((*player_mo).z + VIEWHEIGHT) as fixed_t;
-        if (*player).viewz > (*player_mo).ceilingz - 4_i32 * FRACUNIT {
-            (*player).viewz = ((*player_mo).ceilingz - 4_i32 * FRACUNIT) as fixed_t;
+    if player.cheats & CF_NOMOMENTUM != 0 || !state.p_user.onground {
+        player.viewz = (state.p_mobj.mo(player_mo).z + VIEWHEIGHT) as fixed_t;
+        if player.viewz > state.p_mobj.mo(player_mo).ceilingz - 4_i32 * FRACUNIT {
+            player.viewz = (state.p_mobj.mo(player_mo).ceilingz - 4_i32 * FRACUNIT) as fixed_t;
         }
-        (*player).viewz = (*player_mo).z + (*player).viewheight;
+        player.viewz = state.p_mobj.mo(player_mo).z + player.viewheight;
         return;
     }
     angle = (FINEANGLES / 20_i32 * state.p_tick.leveltime) & FINEMASK;
-    bob = FixedMul((*player).bob / 2 as fixed_t, finesine[angle as usize]);
-    if (*player).playerstate == PlayerState::PST_LIVE {
-        (*player).viewheight += (*player).deltaviewheight;
-        if (*player).viewheight > VIEWHEIGHT {
-            (*player).viewheight = VIEWHEIGHT as fixed_t;
-            (*player).deltaviewheight = 0_i32 as fixed_t;
+    bob = FixedMul(player.bob / 2 as fixed_t, finesine[angle as usize]);
+    if player.playerstate == PlayerState::PST_LIVE {
+        player.viewheight += player.deltaviewheight;
+        if player.viewheight > VIEWHEIGHT {
+            player.viewheight = VIEWHEIGHT as fixed_t;
+            player.deltaviewheight = 0_i32 as fixed_t;
         }
-        if (*player).viewheight < VIEWHEIGHT / 2_i32 {
-            (*player).viewheight = (VIEWHEIGHT / 2_i32) as fixed_t;
-            if (*player).deltaviewheight <= 0_i32 {
-                (*player).deltaviewheight = 1_i32 as fixed_t;
+        if player.viewheight < VIEWHEIGHT / 2_i32 {
+            player.viewheight = (VIEWHEIGHT / 2_i32) as fixed_t;
+            if player.deltaviewheight <= 0_i32 {
+                player.deltaviewheight = 1_i32 as fixed_t;
             }
         }
-        if (*player).deltaviewheight != 0 {
-            (*player).deltaviewheight += FRACUNIT / 4_i32;
-            if (*player).deltaviewheight == 0 {
-                (*player).deltaviewheight = 1_i32 as fixed_t;
+        if player.deltaviewheight != 0 {
+            player.deltaviewheight += FRACUNIT / 4_i32;
+            if player.deltaviewheight == 0 {
+                player.deltaviewheight = 1_i32 as fixed_t;
             }
         }
     }
-    (*player).viewz = (*player_mo).z + (*player).viewheight + bob;
-    if (*player).viewz > (*player_mo).ceilingz - 4_i32 * FRACUNIT {
-        (*player).viewz = ((*player_mo).ceilingz - 4_i32 * FRACUNIT) as fixed_t;
+    player.viewz = state.p_mobj.mo(player_mo).z + player.viewheight + bob;
+    if player.viewz > state.p_mobj.mo(player_mo).ceilingz - 4_i32 * FRACUNIT {
+        player.viewz = (state.p_mobj.mo(player_mo).ceilingz - 4_i32 * FRACUNIT) as fixed_t;
     }
 }
-pub unsafe fn P_MovePlayer(state: &mut GameState, mut player: *mut player_t) {
-    let mut cmd: *mut ticcmd_t = ::core::ptr::null_mut::<ticcmd_t>();
-    cmd = &raw mut (*player).cmd;
-    let player_mo = state.p_mobj.mobj_get((*player).mo.unwrap()).unwrap();
-    (*player_mo).angle = (*player_mo)
-        .angle
-        .wrapping_add((((*cmd).angleturn as i32) << 16_i32) as angle_t);
-    state.p_user.onground = (*player_mo).z <= (*player_mo).floorz;
-    if (*cmd).forwardmove as i32 != 0 && state.p_user.onground {
+pub fn P_MovePlayer(state: &mut GameState, player_id: PlayerId) {
+    let cmd = state.g_game.players[player_id.0 as usize].cmd;
+    let player_mo = state.g_game.players[player_id.0 as usize].mo.unwrap();
+    {
+        let mo = state.p_mobj.mo_mut(player_mo);
+        mo.angle = mo.angle.wrapping_add(((cmd.angleturn as i32) << 16_i32) as angle_t);
+    }
+    let (z, floorz, angle) = {
+        let mo = state.p_mobj.mo(player_mo);
+        (mo.z, mo.floorz, mo.angle)
+    };
+    state.p_user.onground = z <= floorz;
+    if cmd.forwardmove as i32 != 0 && state.p_user.onground {
+        P_Thrust(state, player_mo, angle, cmd.forwardmove as fixed_t * 2048 as fixed_t);
+    }
+    if cmd.sidemove as i32 != 0 && state.p_user.onground {
         P_Thrust(
+            state,
             player_mo,
-            (*player_mo).angle,
-            (*cmd).forwardmove as fixed_t * 2048 as fixed_t,
+            angle.wrapping_sub(ANG90 as angle_t),
+            cmd.sidemove as fixed_t * 2048 as fixed_t,
         );
     }
-    if (*cmd).sidemove as i32 != 0 && state.p_user.onground {
-        P_Thrust(
-            player_mo,
-            (*player_mo).angle.wrapping_sub(ANG90 as angle_t),
-            (*cmd).sidemove as fixed_t * 2048 as fixed_t,
-        );
-    }
-    if ((*cmd).forwardmove as i32 != 0 || (*cmd).sidemove as i32 != 0)
-        && (*player_mo).state == Some(StateId(StateNum::S_PLAY as u32))
+    if (cmd.forwardmove as i32 != 0 || cmd.sidemove as i32 != 0)
+        && state.p_mobj.mo(player_mo).state == Some(StateId(StateNum::S_PLAY as u32))
     {
         P_SetMobjState(state, player_mo, StateNum::S_PLAY_RUN1);
     }
 }
 pub const ANG5: i32 = ANG90 / 18_i32;
 pub unsafe fn P_DeathThink(state: &mut GameState, player_id: PlayerId) {
-    let player: *mut player_t = state.g_game.player_mut(player_id) as *mut player_t;
+    let player = player_id;
     let mut angle: angle_t = 0;
     let mut delta: angle_t = 0;
     P_MovePsprites(state, player_id);
-    if (*player).viewheight > 6_i32 * FRACUNIT {
-        (*player).viewheight -= FRACUNIT;
+    if state.g_game.players[player.0 as usize].viewheight > 6_i32 * FRACUNIT {
+        state.g_game.players[player.0 as usize].viewheight -= FRACUNIT;
     }
-    if (*player).viewheight < 6_i32 * FRACUNIT {
-        (*player).viewheight = (6_i32 * FRACUNIT) as fixed_t;
+    if state.g_game.players[player.0 as usize].viewheight < 6_i32 * FRACUNIT {
+        state.g_game.players[player.0 as usize].viewheight = (6_i32 * FRACUNIT) as fixed_t;
     }
-    (*player).deltaviewheight = 0_i32 as fixed_t;
-    let player_mo = state.p_mobj.mobj_get((*player).mo.unwrap()).unwrap();
-    state.p_user.onground = (*player_mo).z <= (*player_mo).floorz;
+    state.g_game.players[player.0 as usize].deltaviewheight = 0_i32 as fixed_t;
+    let player_mo = state.g_game.players[player.0 as usize].mo.unwrap();
+    state.p_user.onground = state.p_mobj.mo(player_mo).z <= state.p_mobj.mo(player_mo).floorz;
     P_CalcHeight(state, player);
-    if (*player).attacker.is_some() && (*player).attacker != (*player).mo {
-        let attacker = state.p_mobj.mobj_get((*player).attacker.unwrap()).unwrap();
+    if state.g_game.players[player.0 as usize].attacker.is_some() && state.g_game.players[player.0 as usize].attacker != state.g_game.players[player.0 as usize].mo {
+        let attacker = state.g_game.players[player.0 as usize].attacker.unwrap();
         angle = R_PointToAngle2(
             state,
-            (*player_mo).x,
-            (*player_mo).y,
-            (*attacker).x,
-            (*attacker).y,
+            state.p_mobj.mo(player_mo).x,
+            state.p_mobj.mo(player_mo).y,
+            state.p_mobj.mo(attacker).x,
+            state.p_mobj.mo(attacker).y,
         );
-        delta = angle.wrapping_sub((*player_mo).angle);
+        delta = angle.wrapping_sub(state.p_mobj.mo(player_mo).angle);
         if delta < ANG5 as angle_t || delta > -ANG5 as u32 {
-            (*player_mo).angle = angle;
-            if (*player).damagecount != 0 {
-                (*player).damagecount -= 1;
+            state.p_mobj.mo_mut(player_mo).angle = angle;
+            if state.g_game.players[player.0 as usize].damagecount != 0 {
+                state.g_game.players[player.0 as usize].damagecount -= 1;
             }
         } else if delta < ANG180 {
-            (*player_mo).angle = (*player_mo).angle.wrapping_add(ANG5 as angle_t);
+            state.p_mobj.mo_mut(player_mo).angle = state.p_mobj.mo(player_mo).angle.wrapping_add(ANG5 as angle_t);
         } else {
-            (*player_mo).angle = (*player_mo).angle.wrapping_sub(ANG5 as angle_t);
+            state.p_mobj.mo_mut(player_mo).angle = state.p_mobj.mo(player_mo).angle.wrapping_sub(ANG5 as angle_t);
         }
-    } else if (*player).damagecount != 0 {
-        (*player).damagecount -= 1;
+    } else if state.g_game.players[player.0 as usize].damagecount != 0 {
+        state.g_game.players[player.0 as usize].damagecount -= 1;
     }
-    if (*player).cmd.buttons as i32 & BT_USE as i32 != 0 {
-        (*player).playerstate = PlayerState::PST_REBORN;
+    if state.g_game.players[player.0 as usize].cmd.buttons as i32 & BT_USE as i32 != 0 {
+        state.g_game.players[player.0 as usize].playerstate = PlayerState::PST_REBORN;
     }
 }
 pub unsafe fn P_PlayerThink(state: &mut GameState, player_id: PlayerId) {
@@ -187,9 +191,9 @@ pub unsafe fn P_PlayerThink(state: &mut GameState, player_id: PlayerId) {
     if (*player_mo).reactiontime != 0 {
         (*player_mo).reactiontime -= 1;
     } else {
-        P_MovePlayer(state, player);
+        P_MovePlayer(state, player_id);
     }
-    P_CalcHeight(state, player);
+    P_CalcHeight(state, player_id);
     if state
         .p_setup
         .sector_mut(state.p_setup.subsectors[(*player_mo).subsector.0 as usize].sector)

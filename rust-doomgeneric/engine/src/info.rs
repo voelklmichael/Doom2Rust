@@ -43,12 +43,12 @@ pub struct InfoState {
 }
 
 impl InfoState {
-    pub fn state_mut(&mut self, id: StateId) -> *mut state_t {
-        &mut self.states[id.0 as usize] as *mut state_t
+    pub fn state_mut(&mut self, id: StateId) -> &mut state_t {
+        &mut self.states[id.0 as usize]
     }
 
-    pub fn mobjinfo_mut(&mut self, t: MobjType) -> *mut mobjinfo_t {
-        &mut self.mobjinfo[t as usize] as *mut mobjinfo_t
+    pub fn mobjinfo_mut(&mut self, t: MobjType) -> &mut mobjinfo_t {
+        &mut self.mobjinfo[t as usize]
     }
 
     pub fn new() -> Self {

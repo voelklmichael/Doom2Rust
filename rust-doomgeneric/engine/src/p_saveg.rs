@@ -939,11 +939,9 @@ pub unsafe fn P_ArchiveThinkers(state: &mut GameState) {
 }
 pub unsafe fn P_UnArchiveThinkers(state: &mut GameState) {
     let mut tclass: byte = 0;
-    let mut currentthinker: *mut thinker_t;
     let mut mobj: *mut mobj_t = ::core::ptr::null_mut::<mobj_t>();
     let mut cursor = state.p_tick.head();
     while let Some(id) = cursor {
-        currentthinker = P_ThinkerRaw(state, id);
         // Unlike the raw-pointer version this replaces, `next` lives in our
         // own node table, not inside the payload memory Z_Free/deallocate
         // below may free -- capturing it first just mirrors the original
@@ -960,7 +958,7 @@ pub unsafe fn P_UnArchiveThinkers(state: &mut GameState) {
         match state.p_tick.kind(id) {
             ThinkerKind::Mobj => {
                 if let ThinkerPayload::Mobj(mobj_id) = state.p_tick.payload(id) {
-                    P_RemoveMobj(state, currentthinker as *mut mobj_t);
+                    P_RemoveMobj(state, mobj_id);
                     // P_RemoveMobj only retires (see PMobjState::retire) --
                     // it never itself frees the mobj's memory, and
                     // P_InitThinkers just below wipes PTickState before
@@ -1036,7 +1034,7 @@ pub unsafe fn P_UnArchiveThinkers(state: &mut GameState) {
                 }
                 (*mobj).target = None;
                 (*mobj).tracer = None;
-                P_SetThingPosition(state, &mut *mobj);
+                P_SetThingPosition(state, (*mobj).id);
                 (*mobj).floorz = state
                     .p_setup
                     .sector_mut(state.p_setup.subsectors[(*mobj).subsector.0 as usize].sector)

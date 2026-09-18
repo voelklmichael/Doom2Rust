@@ -3,6 +3,7 @@ use crate::fixed_cstr::FixedCStr;
 use crate::g_game::G_ExitLevel;
 use crate::g_game::G_SecretExitLevel;
 use crate::game_state::GameState;
+use crate::p_mobj::MobjId;
 use crate::i_system::I_Error;
 use crate::p_ceilng::CeilingE;
 use crate::p_ceilng::EV_DoCeiling;
@@ -422,10 +423,11 @@ pub fn P_ChangeSwitchTexture(state: &mut GameState, mut line: LineId, mut useAga
 }
 pub unsafe fn P_UseSpecialLine(
     state: &mut GameState,
-    mut thing: *mut mobj_t,
+    thing: MobjId,
     mut line: LineId,
     mut side: i32,
 ) -> bool {
+    let thing: *mut mobj_t = state.p_mobj.mobj_ptr(thing);
     let linev = state.p_setup.line(line);
     if side != 0 {
         match linev.special as i32 {

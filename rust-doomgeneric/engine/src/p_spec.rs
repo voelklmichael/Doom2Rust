@@ -60,6 +60,7 @@ use crate::doomdef::false_0;
 use crate::doomdef::true_0;
 use crate::doomdef::TICRATE;
 use crate::game_state::GameState;
+use crate::p_mobj::MobjId;
 use crate::m_fixed::FRACUNIT;
 use crate::m_fixed::INT_MAX;
 use crate::p_ceilng::MAXCEILINGS;
@@ -651,8 +652,9 @@ pub unsafe fn P_CrossSpecialLine(
     state: &mut GameState,
     mut linenum: i32,
     mut side: i32,
-    mut thing: *mut mobj_t,
+    thing: MobjId,
 ) {
+    let thing: *mut mobj_t = state.p_mobj.mobj_ptr(thing);
     let line: LineId = LineId(linenum as u32);
     let mut ok: i32 = 0;
     let special = state.p_setup.line(line).special;
@@ -750,7 +752,7 @@ pub unsafe fn P_CrossSpecialLine(
             state.p_setup.line_mut(line).special = 0_i16;
         }
         39 => {
-            EV_Teleport(state, line, side, thing);
+            EV_Teleport(state, line, side, (*thing).id);
             state.p_setup.line_mut(line).special = 0_i16;
         }
         40 => {
@@ -822,7 +824,7 @@ pub unsafe fn P_CrossSpecialLine(
         }
         125 => {
             if (*thing).player.is_none() {
-                EV_Teleport(state, line, side, thing);
+                EV_Teleport(state, line, side, (*thing).id);
                 state.p_setup.line_mut(line).special = 0_i16;
             }
         }
@@ -904,7 +906,7 @@ pub unsafe fn P_CrossSpecialLine(
             EV_DoFloor(state, line, FloorE::raiseToTexture);
         }
         97 => {
-            EV_Teleport(state, line, side, thing);
+            EV_Teleport(state, line, side, (*thing).id);
         }
         98 => {
             EV_DoFloor(state, line, FloorE::turboLower);
@@ -923,7 +925,7 @@ pub unsafe fn P_CrossSpecialLine(
         }
         126 => {
             if (*thing).player.is_none() {
-                EV_Teleport(state, line, side, thing);
+                EV_Teleport(state, line, side, (*thing).id);
             }
         }
         128 => {
@@ -935,7 +937,8 @@ pub unsafe fn P_CrossSpecialLine(
         _ => {}
     };
 }
-pub unsafe fn P_ShootSpecialLine(state: &mut GameState, mut thing: *mut mobj_t, mut line: LineId) {
+pub unsafe fn P_ShootSpecialLine(state: &mut GameState, thing: MobjId, mut line: LineId) {
+    let thing: *mut mobj_t = state.p_mobj.mobj_ptr(thing);
     let mut ok: i32 = 0;
     let special = state.p_setup.line(line).special;
     if (*thing).player.is_none() {
@@ -982,9 +985,9 @@ pub unsafe fn P_PlayerInSpecialSector(state: &mut GameState, mut player: *mut pl
             {
                 P_DamageMobj(
                     state,
-                    player_mo,
-                    ::core::ptr::null_mut::<mobj_t>(),
-                    ::core::ptr::null_mut::<mobj_t>(),
+                    (*player_mo).id,
+                    None,
+                    None,
                     10_i32,
                 );
             }
@@ -995,9 +998,9 @@ pub unsafe fn P_PlayerInSpecialSector(state: &mut GameState, mut player: *mut pl
             {
                 P_DamageMobj(
                     state,
-                    player_mo,
-                    ::core::ptr::null_mut::<mobj_t>(),
-                    ::core::ptr::null_mut::<mobj_t>(),
+                    (*player_mo).id,
+                    None,
+                    None,
                     5_i32,
                 );
             }
@@ -1009,9 +1012,9 @@ pub unsafe fn P_PlayerInSpecialSector(state: &mut GameState, mut player: *mut pl
             {
                 P_DamageMobj(
                     state,
-                    player_mo,
-                    ::core::ptr::null_mut::<mobj_t>(),
-                    ::core::ptr::null_mut::<mobj_t>(),
+                    (*player_mo).id,
+                    None,
+                    None,
                     20_i32,
                 );
             }
@@ -1025,9 +1028,9 @@ pub unsafe fn P_PlayerInSpecialSector(state: &mut GameState, mut player: *mut pl
             if state.p_tick.leveltime & 0x1f_i32 == 0 {
                 P_DamageMobj(
                     state,
-                    player_mo,
-                    ::core::ptr::null_mut::<mobj_t>(),
-                    ::core::ptr::null_mut::<mobj_t>(),
+                    (*player_mo).id,
+                    None,
+                    None,
                     20_i32,
                 );
             }

@@ -1148,14 +1148,14 @@ pub unsafe fn G_CheckSpot(
         .p_mobj
         .mobj_get(state.g_game.players[playernum as usize].mo.unwrap())
         .unwrap();
-    if !P_CheckPosition(state, player_mo, x, y) {
+    if !P_CheckPosition(state, (*player_mo).id, x, y) {
         return false;
     }
     if state.g_game.bodyqueslot >= BODYQUESIZE {
         let old_id =
             state.g_game.bodyque[(state.g_game.bodyqueslot % BODYQUESIZE) as usize].unwrap();
         let old_mo = state.p_mobj.mobj_get(old_id).unwrap();
-        P_RemoveMobj(state, old_mo);
+        P_RemoveMobj(state, (*old_mo).id);
     }
     let player_mo_id = state.g_game.players[playernum as usize].mo;
     state.g_game.bodyque[(state.g_game.bodyqueslot % BODYQUESIZE) as usize] = player_mo_id;

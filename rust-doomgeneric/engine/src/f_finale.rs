@@ -353,7 +353,7 @@ pub unsafe fn F_StartFinale(state: &mut GameState) {
 }
 pub fn F_Responder(state: &mut GameState, mut event: &event_t) -> bool {
     if state.f_finale.finalestage == FinaleStage::F_STAGE_CAST {
-        return unsafe { F_CastResponder(state, event) };
+        return F_CastResponder(state, event);
     }
     false
 }
@@ -371,7 +371,7 @@ pub fn F_Ticker(state: &mut GameState) {
         }
         if i < MAXPLAYERS as size_t {
             if state.g_game.gamemap == 30_i32 {
-                unsafe { F_StartCast(state) };
+                F_StartCast(state);
             } else {
                 state.g_game.gameaction = GameAction::ga_worlddone;
             }
@@ -379,7 +379,7 @@ pub fn F_Ticker(state: &mut GameState) {
     }
     state.f_finale.finalecount = state.f_finale.finalecount.wrapping_add(1);
     if state.f_finale.finalestage == FinaleStage::F_STAGE_CAST {
-        unsafe { F_CastTicker(state) };
+        F_CastTicker(state);
         return;
     }
     if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 {
@@ -542,14 +542,14 @@ const INITIAL_CASTORDER: [castinfo_t; 18] = [
         type_0: MobjType::MT_PLAYER,
     },
 ];
-pub unsafe fn F_StartCast(state: &mut GameState) {
+pub fn F_StartCast(state: &mut GameState) {
     state.d_main.wipegamestate = GameScreenState::GS_WIPPED;
     state.f_finale.castnum = 0_i32;
     let cast_type = state.f_finale.castorder[state.f_finale.castnum as usize].type_0;
     state.f_finale.caststate = Some(StateId(
         state.info.mobjinfo[cast_type as usize].seestate as u32,
     ));
-    state.f_finale.casttics = (*state.info.state_mut(state.f_finale.caststate.unwrap())).tics;
+    state.f_finale.casttics = state.info.state_mut(state.f_finale.caststate.unwrap()).tics;
     state.f_finale.castdeath = false;
     state.f_finale.finalestage = FinaleStage::F_STAGE_CAST;
     state.f_finale.castframes = 0_i32;
@@ -557,7 +557,7 @@ pub unsafe fn F_StartCast(state: &mut GameState) {
     state.f_finale.castattacking = false;
     S_ChangeMusic(state, mus_evil as i32, true_0);
 }
-pub unsafe fn F_CastTicker(state: &mut GameState) {
+pub fn F_CastTicker(state: &mut GameState) {
     let mut current_block: u64;
     let mut st: i32 = 0;
     let mut sfx: i32 = 0;
@@ -708,12 +708,12 @@ pub unsafe fn F_CastTicker(state: &mut GameState) {
         }
         _ => {}
     }
-    state.f_finale.casttics = (*state.info.state_mut(state.f_finale.caststate.unwrap())).tics;
+    state.f_finale.casttics = state.info.state_mut(state.f_finale.caststate.unwrap()).tics;
     if state.f_finale.casttics == -1_i32 {
         state.f_finale.casttics = 15_i32;
     }
 }
-pub unsafe fn F_CastResponder(state: &mut GameState, mut ev: &event_t) -> bool {
+pub fn F_CastResponder(state: &mut GameState, mut ev: &event_t) -> bool {
     if ev.type_0 != EvType::ev_keydown {
         return false;
     }
@@ -725,7 +725,7 @@ pub unsafe fn F_CastResponder(state: &mut GameState, mut ev: &event_t) -> bool {
     state.f_finale.caststate = Some(StateId(
         state.info.mobjinfo[cast_type as usize].deathstate as u32,
     ));
-    state.f_finale.casttics = (*state.info.state_mut(state.f_finale.caststate.unwrap())).tics;
+    state.f_finale.casttics = state.info.state_mut(state.f_finale.caststate.unwrap()).tics;
     state.f_finale.castframes = 0_i32;
     state.f_finale.castattacking = false;
     if state.info.mobjinfo
