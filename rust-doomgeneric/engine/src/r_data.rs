@@ -171,7 +171,15 @@ pub fn R_GenerateComposite(state: &mut GameState, texnum: i32) {
     // (still-empty) allocation into that slot immediately -- safe here
     // since nothing re-enters this slot mid-loop (R_DrawColumnInCache is a
     // plain column-copy routine, no recursion back into R_GetColumn).
-    let mut block: Vec<u8> = vec![0u8; state.r_data.texturecompositesize[texnum as usize] as usize];
+    //
+    // Padded by 128 bytes past the exact composite size for the same reason
+    // as W_CacheLumpNum's cache buffer: r_draw.rs's column readers mask with
+    // `& 127` (matching vanilla's R_DrawColumn verbatim), which can read up
+    // to 127 bytes past a short column's real data when that column sits
+    // near the end of the buffer. Vanilla's zone allocator happened to leave
+    // slack there; an exactly-sized Vec doesn't, so it panics instead.
+    let mut block: Vec<u8> =
+        vec![0u8; state.r_data.texturecompositesize[texnum as usize] as usize + 128];
     let texture_patchcount = state.r_data.textures[texnum as usize].patchcount as i32;
     let texture_width = state.r_data.textures[texnum as usize].width as i32;
     let texture_height = state.r_data.textures[texnum as usize].height as i32;

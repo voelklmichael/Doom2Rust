@@ -198,8 +198,19 @@ pub fn W_CacheLumpNum(state: &mut GameState, lumpnum: i32) -> *mut ::core::ffi::
         cache.as_mut_ptr()
     } else {
         let lumplen = W_LumpLength(&mut state.w_wad, lumpnum as u32);
-        let mut buf = vec![0u8; lumplen as usize].into_boxed_slice();
-        W_ReadLump(&mut state.w_wad, lumpnum as u32, &mut buf);
+        // r_draw.rs's R_DrawColumn (and friends) reproduce vanilla's
+        // `dc_source[(frac>>FRACBITS) & 127]` column read verbatim, which
+        // vanilla itself only gets away with because its zone allocator
+        // rounds every block up, leaving slack heap bytes past a short
+        // lump's real data for that `& 127` mask to wander into instead of
+        // segfaulting. An exactly-sized buffer has no such slack, so a
+        // short column (any post shorter than 128 rows, cached near the
+        // end of its lump) makes that same read run past the end and panic
+        // -- pad every cached lump by the mask's full range to give it the
+        // same harmless slack vanilla relied on.
+        const CACHE_PAD: usize = 128;
+        let mut buf = vec![0u8; lumplen as usize + CACHE_PAD].into_boxed_slice();
+        W_ReadLump(&mut state.w_wad, lumpnum as u32, &mut buf[..lumplen as usize]);
         let lump = &mut state.w_wad.lumpinfo[lumpnum as usize];
         lump.cache = Some(buf);
         lump.cache.as_mut().unwrap().as_mut_ptr()

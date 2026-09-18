@@ -3278,6 +3278,19 @@ impl PMobjState {
             .map(|r| r as *const mobj_t as *mut mobj_t)
     }
 
+    // Same as mobj_get() but ignores `retired` -- used only by P_ThinkerRaw's
+    // reaper path, which must still reach a retired-but-not-yet-deallocated
+    // mobj's raw pointer to observe ThinkerFn::Removed and finish tearing it
+    // down via P_RunThinkers/deallocate(). Every other caller wants "gone"
+    // the instant retire() runs; the reaper is the one exception.
+    pub fn mobj_get_for_reaper(&self, id: MobjId) -> Option<*mut mobj_t> {
+        self.mobjs
+            .get(id.index as usize)
+            .filter(|slot| slot.generation == id.generation)
+            .and_then(|slot| slot.mobj.as_deref())
+            .map(|r| r as *const mobj_t as *mut mobj_t)
+    }
+
     pub const fn new() -> Self {
         PMobjState {
             test: 0,
