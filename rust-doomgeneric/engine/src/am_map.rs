@@ -697,7 +697,7 @@ pub unsafe fn AM_initVariables(state: &mut GameState) {
     state.am_map.old_m_h = state.am_map.m_h;
     ST_Responder(state, &st_notify);
 }
-pub unsafe fn AM_loadPics(state: &mut GameState) {
+pub fn AM_loadPics(state: &mut GameState) {
     let mut i: i32 = 0;
     i = 0_i32;
     while i < 10_i32 {
@@ -768,7 +768,7 @@ pub fn AM_Start(state: &mut GameState) {
         state.am_map.am_start_lastepisode = state.g_game.gameepisode;
     }
     unsafe { AM_initVariables(state) };
-    unsafe { AM_loadPics(state) };
+    AM_loadPics(state);
 }
 pub fn AM_minOutWindowScale(state: &mut GameState) {
     state.am_map.scale_mtof = state.am_map.min_scale_mtof;
@@ -961,7 +961,7 @@ pub fn AM_Ticker(state: &mut GameState) {
         AM_changeWindowLoc(state);
     }
 }
-pub unsafe fn AM_clearFB(state: &mut GameState, mut color: i32) {
+pub fn AM_clearFB(state: &mut GameState, mut color: i32) {
     let len = (state.am_map.f_w * state.am_map.f_h) as usize;
     state.i_video.I_VideoBuffer[..len].fill(color as byte);
 }
@@ -1453,7 +1453,7 @@ pub fn AM_drawMarks(state: &mut GameState) {
         i += 1;
     }
 }
-pub unsafe fn AM_drawCrosshair(state: &mut GameState, mut color: i32) {
+pub fn AM_drawCrosshair(state: &mut GameState, mut color: i32) {
     let idx = (state.am_map.f_w * (state.am_map.f_h + 1_i32) / 2_i32) as usize;
     state.i_video.I_VideoBuffer[idx] = color as byte;
 }
@@ -1461,7 +1461,7 @@ pub fn AM_Drawer(state: &mut GameState) {
     if !state.am_map.automapactive {
         return;
     }
-    unsafe { AM_clearFB(state, BACKGROUND) };
+    AM_clearFB(state, BACKGROUND);
     if state.am_map.grid != 0 {
         unsafe { AM_drawGrid(state, GRIDCOLORS) };
     }
@@ -1470,7 +1470,7 @@ pub fn AM_Drawer(state: &mut GameState) {
     if state.am_map.cheating == 2_i32 {
         unsafe { AM_drawThings(state, THINGCOLORS) };
     }
-    unsafe { AM_drawCrosshair(state, XHAIRCOLORS) };
+    AM_drawCrosshair(state, XHAIRCOLORS);
     AM_drawMarks(state);
     let (f_x, f_y, f_w, f_h) = (
         state.am_map.f_x,

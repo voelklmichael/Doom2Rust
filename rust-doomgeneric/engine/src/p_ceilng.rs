@@ -96,6 +96,20 @@ impl PCeilngState {
             .map(|r| r as *const ceiling_t as *mut ceiling_t)
     }
 
+    pub fn get_ref(&self, id: CeilingId) -> Option<&ceiling_t> {
+        self.ceilings
+            .get(id.index as usize)
+            .filter(|slot| slot.generation == id.generation)
+            .and_then(|slot| slot.ceiling.as_deref())
+    }
+
+    pub fn get_mut(&mut self, id: CeilingId) -> Option<&mut ceiling_t> {
+        self.ceilings
+            .get_mut(id.index as usize)
+            .filter(|slot| slot.generation == id.generation)
+            .and_then(|slot| slot.ceiling.as_deref_mut())
+    }
+
     // Called once, from P_RunThinkers' reaper, when a Ceiling-kind thinker
     // is reaped.
     pub fn dealloc(&mut self, id: CeilingId) {

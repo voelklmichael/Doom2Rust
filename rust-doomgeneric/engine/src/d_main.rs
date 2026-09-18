@@ -475,11 +475,7 @@ pub fn D_GrabMouseCallback(state: &mut GameState) -> bool {
 pub fn doomgeneric_Tick(state: &mut GameState) {
     unsafe { TryRunTics(state) };
     let listener_id = state.g_game.players[state.g_game.consoleplayer as usize].mo;
-    let listener_mo = match listener_id {
-        Some(id) => state.p_mobj.mobj_get(id).unwrap(),
-        None => ::core::ptr::null_mut(),
-    };
-    unsafe { S_UpdateSounds(state, listener_mo) };
+    S_UpdateSounds(state, listener_id);
     if state.i_video.screenvisible {
         unsafe { D_Display(state) };
     }
@@ -495,14 +491,14 @@ pub fn D_DoomLoop(state: &mut GameState) {
         );
     }
     if state.g_game.demorecording {
-        unsafe { G_BeginRecording(state) };
+        G_BeginRecording(state);
     }
     state.d_main.main_loop_started = true;
     unsafe { TryRunTics(state) };
     I_SetWindowTitle(state, state.doomstat.gamedescription);
     I_SetGrabMouseCallback();
     unsafe { I_InitGraphics(state) };
-    unsafe { R_ExecuteSetViewSize(state) };
+    R_ExecuteSetViewSize(state);
     D_StartGameLoop(state);
     if state.g_game.testcontrols {
         state.d_main.wipegamestate = state.g_game.gamestate;
@@ -831,7 +827,7 @@ fn D_Endoom(state: &mut GameState) {
     std::process::exit(0);
 }
 fn D_QuitCheckDemoStatus(state: &mut GameState) {
-    unsafe { G_CheckDemoStatus(state) };
+    G_CheckDemoStatus(state);
 }
 pub unsafe fn D_DoomMain(state: &mut GameState) {
     let mut p: i32 = 0;

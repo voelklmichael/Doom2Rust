@@ -757,10 +757,10 @@ pub fn M_QuickSaveResponse(state: &mut GameState, mut key: i32) {
     if key == state.m_controls.key_menu_confirm {
         let quick_save_slot = state.m_menu.quickSaveSlot;
         M_DoSave(state, quick_save_slot);
-        unsafe { S_StartSound(state, SoundOrigin::None, sfx_swtchx as i32) };
+        S_StartSound(state, SoundOrigin::None, sfx_swtchx as i32);
     }
 }
-pub unsafe fn M_QuickSave(state: &mut GameState) {
+pub fn M_QuickSave(state: &mut GameState) {
     if !state.g_game.usergame {
         S_StartSound(state, SoundOrigin::None, sfx_oof as i32);
         return;
@@ -787,7 +787,7 @@ pub fn M_QuickLoadResponse(state: &mut GameState, mut key: i32) {
     if key == state.m_controls.key_menu_confirm {
         let quick_save_slot = state.m_menu.quickSaveSlot;
         M_LoadSelect(state, quick_save_slot);
-        unsafe { S_StartSound(state, SoundOrigin::None, sfx_swtchx as i32) };
+        S_StartSound(state, SoundOrigin::None, sfx_swtchx as i32);
     }
 }
 pub fn M_QuickLoad(state: &mut GameState) {
@@ -1065,7 +1065,7 @@ pub fn M_EndGameResponse(state: &mut GameState, mut key: i32) {
 }
 pub fn M_EndGame(state: &mut GameState, _choice: i32) {
     if !state.g_game.usergame {
-        unsafe { S_StartSound(state, SoundOrigin::None, sfx_oof as i32) };
+        S_StartSound(state, SoundOrigin::None, sfx_oof as i32);
         return;
     }
     if state.g_game.netgame {
@@ -1128,21 +1128,17 @@ pub fn M_QuitResponse(state: &mut GameState, mut key: i32) {
     }
     if !state.g_game.netgame {
         if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 {
-            unsafe {
-                S_StartSound(
-                    state,
-                    SoundOrigin::None,
-                    quitsounds2[(state.d_loop.gametic >> 2_i32 & 7_i32) as usize],
-                )
-            };
+            S_StartSound(
+                state,
+                SoundOrigin::None,
+                quitsounds2[(state.d_loop.gametic >> 2_i32 & 7_i32) as usize],
+            );
         } else {
-            unsafe {
-                S_StartSound(
-                    state,
-                    SoundOrigin::None,
-                    quitsounds[(state.d_loop.gametic >> 2_i32 & 7_i32) as usize],
-                )
-            };
+            S_StartSound(
+                state,
+                SoundOrigin::None,
+                quitsounds[(state.d_loop.gametic >> 2_i32 & 7_i32) as usize],
+            );
         }
     }
     I_Quit(state);
@@ -1249,7 +1245,7 @@ pub fn M_DrawThermo(
         __wcache1643_6,
     );
 }
-pub unsafe fn M_DrawEmptyCell(state: &mut GameState, menu: MenuId, mut item: i32) {
+pub fn M_DrawEmptyCell(state: &mut GameState, menu: MenuId, mut item: i32) {
     let (x, y) = {
         let def = state.m_menu.def(menu);
         (def.x, def.y)
@@ -1264,7 +1260,7 @@ pub unsafe fn M_DrawEmptyCell(state: &mut GameState, menu: MenuId, mut item: i32
         __wcache1651_5,
     );
 }
-pub unsafe fn M_DrawSelCell(state: &mut GameState, menu: MenuId, mut item: i32) {
+pub fn M_DrawSelCell(state: &mut GameState, menu: MenuId, mut item: i32) {
     let (x, y) = {
         let def = state.m_menu.def(menu);
         (def.x, def.y)
@@ -1700,7 +1696,7 @@ pub unsafe fn M_Responder(state: &mut GameState, ev: &mut event_t) -> bool {
     }
     false
 }
-pub unsafe fn M_StartControlPanel(state: &mut GameState) {
+pub fn M_StartControlPanel(state: &mut GameState) {
     if state.m_menu.menuactive {
         return;
     }
@@ -1784,7 +1780,7 @@ pub fn M_Ticker(state: &mut GameState) {
         state.m_menu.skullAnimCounter = 8_i16;
     }
 }
-pub unsafe fn M_Init(state: &mut GameState) {
+pub fn M_Init(state: &mut GameState) {
     state.m_menu.currentMenu = MenuId::Main;
     state.m_menu.menuactive = false;
     state.m_menu.itemOn = state.m_menu.current().lastOn;

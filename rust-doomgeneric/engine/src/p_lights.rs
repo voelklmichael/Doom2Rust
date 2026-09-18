@@ -212,6 +212,20 @@ impl PLightsState {
             .and_then(|slot| slot.value.as_deref())
             .map(|r| r as *const fireflicker_t as *mut fireflicker_t)
     }
+
+    pub fn get_fireflicker_ref(&self, id: FireFlickerId) -> Option<&fireflicker_t> {
+        self.fireflickers
+            .get(id.index as usize)
+            .filter(|slot| slot.generation == id.generation)
+            .and_then(|slot| slot.value.as_deref())
+    }
+
+    pub fn get_fireflicker_mut(&mut self, id: FireFlickerId) -> Option<&mut fireflicker_t> {
+        self.fireflickers
+            .get_mut(id.index as usize)
+            .filter(|slot| slot.generation == id.generation)
+            .and_then(|slot| slot.value.as_deref_mut())
+    }
     pub fn dealloc_fireflicker(&mut self, id: FireFlickerId) {
         if let Some(slot) = self.fireflickers.get_mut(id.index as usize) {
             if slot.generation == id.generation {
@@ -246,6 +260,20 @@ impl PLightsState {
             .filter(|slot| slot.generation == id.generation)
             .and_then(|slot| slot.value.as_deref())
             .map(|r| r as *const lightflash_t as *mut lightflash_t)
+    }
+
+    pub fn get_lightflash_ref(&self, id: LightFlashId) -> Option<&lightflash_t> {
+        self.lightflashes
+            .get(id.index as usize)
+            .filter(|slot| slot.generation == id.generation)
+            .and_then(|slot| slot.value.as_deref())
+    }
+
+    pub fn get_lightflash_mut(&mut self, id: LightFlashId) -> Option<&mut lightflash_t> {
+        self.lightflashes
+            .get_mut(id.index as usize)
+            .filter(|slot| slot.generation == id.generation)
+            .and_then(|slot| slot.value.as_deref_mut())
     }
     pub fn dealloc_lightflash(&mut self, id: LightFlashId) {
         if let Some(slot) = self.lightflashes.get_mut(id.index as usize) {
@@ -282,6 +310,20 @@ impl PLightsState {
             .and_then(|slot| slot.value.as_deref())
             .map(|r| r as *const strobe_t as *mut strobe_t)
     }
+
+    pub fn get_strobe_ref(&self, id: StrobeId) -> Option<&strobe_t> {
+        self.strobes
+            .get(id.index as usize)
+            .filter(|slot| slot.generation == id.generation)
+            .and_then(|slot| slot.value.as_deref())
+    }
+
+    pub fn get_strobe_mut(&mut self, id: StrobeId) -> Option<&mut strobe_t> {
+        self.strobes
+            .get_mut(id.index as usize)
+            .filter(|slot| slot.generation == id.generation)
+            .and_then(|slot| slot.value.as_deref_mut())
+    }
     pub fn dealloc_strobe(&mut self, id: StrobeId) {
         if let Some(slot) = self.strobes.get_mut(id.index as usize) {
             if slot.generation == id.generation {
@@ -316,6 +358,20 @@ impl PLightsState {
             .filter(|slot| slot.generation == id.generation)
             .and_then(|slot| slot.value.as_deref())
             .map(|r| r as *const glow_t as *mut glow_t)
+    }
+
+    pub fn get_glow_ref(&self, id: GlowId) -> Option<&glow_t> {
+        self.glows
+            .get(id.index as usize)
+            .filter(|slot| slot.generation == id.generation)
+            .and_then(|slot| slot.value.as_deref())
+    }
+
+    pub fn get_glow_mut(&mut self, id: GlowId) -> Option<&mut glow_t> {
+        self.glows
+            .get_mut(id.index as usize)
+            .filter(|slot| slot.generation == id.generation)
+            .and_then(|slot| slot.value.as_deref_mut())
     }
     pub fn dealloc_glow(&mut self, id: GlowId) {
         if let Some(slot) = self.glows.get_mut(id.index as usize) {

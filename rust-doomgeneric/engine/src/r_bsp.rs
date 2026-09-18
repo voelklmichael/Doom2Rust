@@ -67,7 +67,7 @@ pub struct cliprange_t {
     pub last: i32,
 }
 pub const NF_SUBSECTOR: i32 = 0x8000;
-pub unsafe fn R_ClearDrawSegs(state: &mut GameState) {
+pub fn R_ClearDrawSegs(state: &mut GameState) {
     state.r_bsp.ds_p = 0;
 }
 pub unsafe fn R_ClipSolidWallSegment(state: &mut GameState, mut first: i32, mut last: i32) {
@@ -167,7 +167,7 @@ pub unsafe fn R_ClipPassWallSegment(state: &mut GameState, mut first: i32, mut l
     }
     R_StoreWallRange(state, (*start).last + 1_i32, last);
 }
-pub unsafe fn R_ClearClipSegs(state: &mut GameState) {
+pub fn R_ClearClipSegs(state: &mut GameState) {
     state.r_bsp.solidsegs[0].first = -0x7fffffff_i32;
     state.r_bsp.solidsegs[0].last = -1_i32;
     state.r_bsp.solidsegs[1].first = state.r_draw.viewwidth;

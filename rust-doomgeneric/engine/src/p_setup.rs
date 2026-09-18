@@ -684,7 +684,7 @@ pub unsafe fn P_LoadSideDefs(state: &mut GameState, mut lump: i32) {
     }
     W_ReleaseLumpNum(&mut state.w_wad, lump);
 }
-pub unsafe fn P_LoadBlockMap(state: &mut GameState, mut lump: i32) {
+pub fn P_LoadBlockMap(state: &mut GameState, mut lump: i32) {
     let mut lumplen: i32 = 0;
     lumplen = W_LumpLength(&mut state.w_wad, lump as u32);
     let mut raw = vec![0u8; lumplen as usize];
@@ -875,7 +875,7 @@ pub fn P_SetupLevel(state: &mut GameState, mut episode: i32, mut map: i32) {
         i += 1;
     }
     state.g_game.players[state.g_game.consoleplayer as usize].viewz = 1_i32 as fixed_t;
-    unsafe { S_Start(state) };
+    S_Start(state);
     P_InitThinkers(state);
     let lumpname = if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 {
         if map < 10_i32 {
@@ -892,7 +892,7 @@ pub fn P_SetupLevel(state: &mut GameState, mut episode: i32, mut map: i32) {
     };
     lumpnum = W_GetNumForName(&mut state.w_wad, &lumpname);
     state.p_tick.leveltime = 0_i32;
-    unsafe { P_LoadBlockMap(state, lumpnum + ML_BLOCKMAP as i32) };
+    P_LoadBlockMap(state, lumpnum + ML_BLOCKMAP as i32);
     unsafe { P_LoadVertexes(state, lumpnum + ML_VERTEXES as i32) };
     unsafe { P_LoadSectors(state, lumpnum + ML_SECTORS as i32) };
     unsafe { P_LoadSideDefs(state, lumpnum + ML_SIDEDEFS as i32) };

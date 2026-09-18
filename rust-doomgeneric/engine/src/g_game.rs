@@ -782,7 +782,7 @@ pub unsafe fn G_DoLoadLevel(state: &mut GameState) {
             Some("Press escape to quit.".to_string());
     }
 }
-unsafe fn SetJoyButtons(state: &mut GameState, mut buttons_mask: u32) {
+fn SetJoyButtons(state: &mut GameState, mut buttons_mask: u32) {
     let mut i: i32 = 0;
     i = 0_i32;
     while i < MAX_JOY_BUTTONS {
@@ -798,7 +798,7 @@ unsafe fn SetJoyButtons(state: &mut GameState, mut buttons_mask: u32) {
         i += 1;
     }
 }
-unsafe fn SetMouseButtons(state: &mut GameState, mut buttons_mask: u32) {
+fn SetMouseButtons(state: &mut GameState, mut buttons_mask: u32) {
     let mut i: i32 = 0;
     i = 0_i32;
     while i < MAX_MOUSE_BUTTONS {
@@ -841,7 +841,7 @@ pub fn G_Responder(state: &mut GameState, mut ev: event_t) -> bool {
             || ev.type_0 == EvType::ev_mouse && ev.data1 != 0
             || ev.type_0 == EvType::ev_joystick && ev.data1 != 0
         {
-            unsafe { M_StartControlPanel(state) };
+            M_StartControlPanel(state);
             return true;
         }
         return false;
@@ -884,13 +884,13 @@ pub fn G_Responder(state: &mut GameState, mut ev: event_t) -> bool {
             return false;
         }
         2 => {
-            unsafe { SetMouseButtons(state, ev.data1 as u32) };
+            SetMouseButtons(state, ev.data1 as u32);
             state.g_game.mousex = ev.data2 * (state.m_menu.mouseSensitivity + 5_i32) / 10_i32;
             state.g_game.mousey = ev.data3 * (state.m_menu.mouseSensitivity + 5_i32) / 10_i32;
             return true;
         }
         3 => {
-            unsafe { SetJoyButtons(state, ev.data1 as u32) };
+            SetJoyButtons(state, ev.data1 as u32);
             state.g_game.joyxmove = ev.data2;
             state.g_game.joyymove = ev.data3;
             state.g_game.joystrafemove = ev.data4;
@@ -1510,7 +1510,7 @@ pub fn G_DoLoadGame(state: &mut GameState) {
     }
     state.p_saveg.save_stream = None;
     if state.r_main.setsizeneeded {
-        unsafe { R_ExecuteSetViewSize(state) };
+        R_ExecuteSetViewSize(state);
     }
     unsafe { R_FillBackScreen(state) };
 }
@@ -1702,7 +1702,7 @@ pub fn G_InitNew(state: &mut GameState, mut skill: SkillType, mut episode: i32, 
     unsafe { G_DoLoadLevel(state) };
 }
 pub const DEMOMARKER: i32 = 0x80;
-pub unsafe fn G_ReadDemoTiccmd(state: &mut GameState, player_num: usize) {
+pub fn G_ReadDemoTiccmd(state: &mut GameState, player_num: usize) {
     if state.g_game.demobuffer[state.g_game.demo_p] as i32 == DEMOMARKER {
         G_CheckDemoStatus(state);
         return;
@@ -1725,12 +1725,12 @@ pub unsafe fn G_ReadDemoTiccmd(state: &mut GameState, player_num: usize) {
     cmd.angleturn = new_angleturn;
     cmd.buttons = buttons;
 }
-unsafe fn IncreaseDemoBuffer(state: &mut GameState) {
+fn IncreaseDemoBuffer(state: &mut GameState) {
     let new_length = state.g_game.demoend * 2_usize;
     state.g_game.demobuffer.resize(new_length, 0);
     state.g_game.demoend = new_length;
 }
-pub unsafe fn G_WriteDemoTiccmd(state: &mut GameState, player_num: usize) {
+pub fn G_WriteDemoTiccmd(state: &mut GameState, player_num: usize) {
     if state.g_game.gamekeydown[state.m_controls.key_demo_quit as usize] {
         G_CheckDemoStatus(state);
     }
@@ -1762,7 +1762,7 @@ pub unsafe fn G_WriteDemoTiccmd(state: &mut GameState, player_num: usize) {
     }
     G_ReadDemoTiccmd(state, player_num);
 }
-pub unsafe fn G_RecordDemo(state: &mut GameState, name: &str) {
+pub fn G_RecordDemo(state: &mut GameState, name: &str) {
     let mut i: i32 = 0;
     let mut maxsize: i32 = 0;
     state.g_game.usergame = false;
@@ -1788,7 +1788,7 @@ pub fn G_VanillaVersionCode(state: &mut DoomstatState) -> i32 {
     }
     106_i32
 }
-pub unsafe fn G_BeginRecording(state: &mut GameState) {
+pub fn G_BeginRecording(state: &mut GameState) {
     let mut i: i32 = 0;
     state.g_game.longtics = M_CheckParm(state, "-longtics") != 0_i32;
     state.g_game.lowres_turn = !state.g_game.longtics;
@@ -1904,7 +1904,7 @@ pub fn G_TimeDemo(state: &mut GameState, name: FixedCStr<8>) {
     state.g_game.defdemoname = name;
     state.g_game.gameaction = GameAction::ga_playdemo;
 }
-pub unsafe fn G_CheckDemoStatus(state: &mut GameState) -> bool {
+pub fn G_CheckDemoStatus(state: &mut GameState) -> bool {
     let mut endtime: i32 = 0;
     if state.g_game.timingdemo {
         let mut fps: f32 = 0.;

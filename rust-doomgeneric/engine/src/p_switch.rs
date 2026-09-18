@@ -343,7 +343,7 @@ pub fn P_StartButton(
     }
     I_Error("P_StartButton: no button slots left!");
 }
-pub unsafe fn P_ChangeSwitchTexture(state: &mut GameState, mut line: LineId, mut useAgain: i32) {
+pub fn P_ChangeSwitchTexture(state: &mut GameState, mut line: LineId, mut useAgain: i32) {
     let mut texTop: i32 = 0;
     let mut texMid: i32 = 0;
     let mut texBot: i32 = 0;

@@ -26,9 +26,7 @@ fn PlayerQuitGame(state: &mut GameState, player_num: u32) {
     state.g_game.players[state.g_game.consoleplayer as usize].message =
         Some(format!("Player {} left the game", player_num + 1));
     if state.g_game.demorecording {
-        unsafe {
-            G_CheckDemoStatus(state);
-        }
+        G_CheckDemoStatus(state);
     }
 }
 fn RunTic(state: &mut GameState, cmds: &[ticcmd_t], ingame: &[bool]) {

@@ -1108,7 +1108,7 @@ pub fn WI_drawNoState(state: &mut GameState) {
     state.wi_stuff.snl_pointeron = true;
     unsafe { WI_drawShowNextLoc(state) };
 }
-pub unsafe fn WI_fragSum(state: &mut GameState, mut playernum: i32) -> i32 {
+pub fn WI_fragSum(state: &mut GameState, mut playernum: i32) -> i32 {
     let mut i: i32 = 0;
     let mut frags_0: i32 = 0_i32;
     i = 0_i32;
@@ -1336,7 +1336,7 @@ pub fn WI_initNetgameStats(state: &mut GameState) {
             state.wi_stuff.cnt_secret[i as usize] = state.wi_stuff.cnt_frags[i as usize];
             state.wi_stuff.cnt_items[i as usize] = state.wi_stuff.cnt_secret[i as usize];
             state.wi_stuff.cnt_kills[i as usize] = state.wi_stuff.cnt_items[i as usize];
-            let fragsum = unsafe { WI_fragSum(state, i) };
+            let fragsum = WI_fragSum(state, i);
             state.wi_stuff.dofrags += fragsum;
         }
         i += 1;
@@ -1760,9 +1760,9 @@ pub fn WI_Ticker(state: &mut GameState) {
     state.wi_stuff.bcnt += 1;
     if state.wi_stuff.bcnt == 1_i32 {
         if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 {
-            unsafe { S_ChangeMusic(state, mus_dm2int as i32, true_0) };
+            S_ChangeMusic(state, mus_dm2int as i32, true_0);
         } else {
-            unsafe { S_ChangeMusic(state, mus_inter as i32, true_0) };
+            S_ChangeMusic(state, mus_inter as i32, true_0);
         }
     }
     WI_checkForAccelerate(state);
@@ -1896,7 +1896,7 @@ pub fn WI_Drawer(state: &mut GameState) {
         }
     };
 }
-pub unsafe fn WI_initVariables(state: &mut GameState) {
+pub fn WI_initVariables(state: &mut GameState) {
     state.wi_stuff.acceleratestage = 0_i32;
     state.wi_stuff.bcnt = 0_i32;
     state.wi_stuff.cnt = state.wi_stuff.bcnt;
@@ -1916,7 +1916,7 @@ pub unsafe fn WI_initVariables(state: &mut GameState) {
     }
 }
 pub fn WI_Start(state: &mut GameState) {
-    unsafe { WI_initVariables(state) };
+    WI_initVariables(state);
     WI_loadData(state);
     if state.g_game.deathmatch != 0 {
         WI_initDeathmatchStats(state);

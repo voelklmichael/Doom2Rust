@@ -285,7 +285,7 @@ pub fn R_GenerateLookup(state: &mut GameState, texnum: i32) {
         x += 1;
     }
 }
-pub unsafe fn R_GetColumn(state: &mut GameState, mut tex: i32, mut col: i32) -> ColumnSource {
+pub fn R_GetColumn(state: &mut GameState, mut tex: i32, mut col: i32) -> ColumnSource {
     let mut lump: i32 = 0;
     let mut ofs: i32 = 0;
     col &= state.r_data.texturewidthmask[tex as usize];
