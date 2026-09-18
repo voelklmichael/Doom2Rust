@@ -6,18 +6,34 @@
     unused_assignments,
     unused_mut
 )]
-#![feature(extern_types, raw_ref_op)]
 #[allow(unused_imports)]
 use ::rust_doomgeneric;
 use ::rust_doomgeneric::d_main::doomgeneric_Tick;
 use ::rust_doomgeneric::game_state::init_game_state;
 use ::rust_doomgeneric::platform::DoomPlatform;
 use libc::memset;
+// Opaque Xlib types, only ever used behind raw pointers.
+#[repr(C)]
+pub struct _XDisplay {
+    _data: [u8; 0],
+    _marker: ::core::marker::PhantomData<(*mut u8, ::core::marker::PhantomPinned)>,
+}
+#[repr(C)]
+pub struct _XGC {
+    _data: [u8; 0],
+    _marker: ::core::marker::PhantomData<(*mut u8, ::core::marker::PhantomPinned)>,
+}
+#[repr(C)]
+pub struct _XrmHashBucketRec {
+    _data: [u8; 0],
+    _marker: ::core::marker::PhantomData<(*mut u8, ::core::marker::PhantomPinned)>,
+}
+#[repr(C)]
+pub struct _XPrivate {
+    _data: [u8; 0],
+    _marker: ::core::marker::PhantomData<(*mut u8, ::core::marker::PhantomPinned)>,
+}
 extern "C" {
-    pub type _XDisplay;
-    pub type _XGC;
-    pub type _XrmHashBucketRec;
-    pub type _XPrivate;
     fn usleep(__useconds: __useconds_t) -> i32;
     fn gettimeofday(__tv: *mut timeval, __tz: *mut ::core::ffi::c_void) -> i32;
     fn XCreateImage(

@@ -424,6 +424,8 @@ pub struct MMenuState {
     pub messageLastMenuActive: i32,
     pub messageNeedsInput: bool,
     pub messageRoutine: Option<fn(&mut GameState, i32)>,
+    /// True while the pending message is the quit confirmation from `M_QuitDOOM`.
+    pub messageIsQuitPrompt: bool,
     pub saveStringEnter: i32,
     pub saveSlot: i32,
     pub saveCharIndex: i32,
@@ -463,6 +465,7 @@ impl MMenuState {
             messageLastMenuActive: 0,
             messageNeedsInput: false,
             messageRoutine: None,
+            messageIsQuitPrompt: false,
             saveStringEnter: 0,
             saveSlot: 0,
             saveCharIndex: 0,
@@ -1165,6 +1168,7 @@ pub fn M_QuitDOOM(state: &mut GameState, _choice: i32) {
     let msg = format!("{}\n\n(press y to quit to dos.)", M_SelectEndMessage(state));
     let routine = Some(M_QuitResponse as fn(&mut GameState, i32));
     M_StartMessage(state, &msg, routine, true);
+    state.m_menu.messageIsQuitPrompt = true;
 }
 pub fn M_ChangeSensitivity(state: &mut GameState, mut choice: i32) {
     match choice {
@@ -1287,6 +1291,7 @@ pub fn M_StartMessage(
     state.m_menu.messageToPrint = 1_i32;
     state.m_menu.messageString = string.to_string();
     state.m_menu.messageRoutine = routine;
+    state.m_menu.messageIsQuitPrompt = false;
     state.m_menu.messageNeedsInput = input;
     state.m_menu.menuactive = true;
 }
@@ -1369,7 +1374,7 @@ pub fn M_Responder(state: &mut GameState, ev: &mut event_t) -> bool {
     if ev.type_0 == EvType::ev_quit {
         if state.m_menu.menuactive
             && state.m_menu.messageToPrint != 0
-            && state.m_menu.messageRoutine == Some(M_QuitResponse as fn(&mut GameState, i32))
+            && state.m_menu.messageIsQuitPrompt
         {
             let key_menu_confirm = state.m_controls.key_menu_confirm;
             M_QuitResponse(state, key_menu_confirm);
