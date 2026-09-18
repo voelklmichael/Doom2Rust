@@ -242,18 +242,14 @@ as an `Rc<dyn Fn(&mut GameState) -> &mut T>`, and `SetVariable`/`M_Get*Variable`
 through the accessor with the whole `GameState`. There is no raw pointer, and no size
 mismatch, left to corrupt.
 
-## Permanent `unsafe` exceptions in the engine crate (2026-09-18)
+## `unsafe` in the engine crate (2026-09-18)
 
-Every file in `engine/src` is `unsafe`-free except two, which are deliberate:
+Every file in `engine/src` is `unsafe`-free (`#![deny(unsafe_code)]` in `lib.rs`). The two
+exceptions originally recorded here are gone: the hand-written `sha1.rs` was replaced by the
+`sha1_smol` crate (`w_checksum.rs` calls it directly), and `mem_compat.rs` — whose only
+remaining caller was `sha1.rs` — was deleted (PR #469).
 
-- `mem_compat.rs` — the C-style `memcpy`/`memset`/`malloc` primitives. Nothing outside
-  `sha1.rs` calls them any more.
-- `sha1.rs` — the C-style pointer-based SHA-1 implementation. It exposes a safe `Sha1`
-  wrapper (`new`/`update_int32`/`update_string`/`finalize`) which is what `w_checksum.rs`
-  uses.
-
-The `x11` crate is outside this policy. A future audit should not reopen these two files
-unless the crate-level goal changes.
+The `x11` crate is outside this policy.
 
 ## Intermission: no filler graphic for map numbers beyond `NUMCMAPS`
 
