@@ -25,15 +25,23 @@ pub enum ClipArray {
 }
 
 impl ClipArray {
-    pub unsafe fn resolve(self, state: &mut GameState) -> *mut i16 {
+    pub fn get(self, state: &GameState, x: isize) -> i16 {
         match self {
-            ClipArray::Openings(offset) => {
-                (&raw mut state.r_plane.openings as *mut i16).offset(offset)
-            }
-            ClipArray::ScreenHeightArray => &raw mut state.r_things.screenheightarray as *mut i16,
-            ClipArray::NegOneArray => &raw mut state.r_things.negonearray as *mut i16,
-            ClipArray::ClipBot => &raw mut state.r_things.clipbot as *mut i16,
-            ClipArray::ClipTop => &raw mut state.r_things.cliptop as *mut i16,
+            ClipArray::Openings(offset) => state.r_plane.openings[(offset + x) as usize],
+            ClipArray::ScreenHeightArray => state.r_things.screenheightarray[x as usize],
+            ClipArray::NegOneArray => state.r_things.negonearray[x as usize],
+            ClipArray::ClipBot => state.r_things.clipbot[x as usize],
+            ClipArray::ClipTop => state.r_things.cliptop[x as usize],
+        }
+    }
+
+    pub fn set(self, state: &mut GameState, x: isize, value: i16) {
+        match self {
+            ClipArray::Openings(offset) => state.r_plane.openings[(offset + x) as usize] = value,
+            ClipArray::ScreenHeightArray => state.r_things.screenheightarray[x as usize] = value,
+            ClipArray::NegOneArray => state.r_things.negonearray[x as usize] = value,
+            ClipArray::ClipBot => state.r_things.clipbot[x as usize] = value,
+            ClipArray::ClipTop => state.r_things.cliptop[x as usize] = value,
         }
     }
 }
@@ -91,30 +99,54 @@ pub struct drawseg_s {
 }
 pub type drawseg_t = drawseg_s;
 
+/// A visplane's per-column top/bottom rows. The arrays carry one extra
+/// element at each end (index `x + 1` holds column `x`), because the span
+/// builder deliberately reads/writes columns -1 and 320 (the sentinels around
+/// the plane's real columns).
 #[derive(Copy, Clone)]
-#[repr(C)]
 pub struct visplane_t {
     pub height: fixed_t,
     pub picnum: i32,
     pub lightlevel: i32,
     pub minx: i32,
     pub maxx: i32,
-    pub pad1: byte,
-    pub top: [byte; 320],
-    pub pad2: byte,
-    pub pad3: byte,
-    pub bottom: [byte; 320],
-    pub pad4: byte,
+    top: [byte; 322],
+    bottom: [byte; 322],
 }
 
-// #[repr(i32)] with these exact discriminant values is load-bearing, not
-// just documentation: R_InitSpriteDefs bulk-initializes a whole array of
-// spriteframe_t via a raw memset(..., -1, ...) rather than setting `rotate`
-// field-by-field, relying on the resulting all-0xff bytes being a valid
-// `SpriteRotate` bit pattern. That only holds because -1 is this enum's
-// actual `Unset` discriminant under repr(i32) -- changing these values (or
-// dropping the repr) would make that memset produce an invalid/UB enum
-// value instead of `Unset`.
+impl visplane_t {
+    pub const EMPTY: visplane_t = visplane_t {
+        height: 0,
+        picnum: 0,
+        lightlevel: 0,
+        minx: 0,
+        maxx: 0,
+        top: [0; 322],
+        bottom: [0; 322],
+    };
+
+    pub fn top(&self, x: i32) -> byte {
+        self.top[(x + 1) as usize]
+    }
+
+    pub fn set_top(&mut self, x: i32, value: byte) {
+        self.top[(x + 1) as usize] = value;
+    }
+
+    pub fn bottom(&self, x: i32) -> byte {
+        self.bottom[(x + 1) as usize]
+    }
+
+    pub fn set_bottom(&mut self, x: i32, value: byte) {
+        self.bottom[(x + 1) as usize] = value;
+    }
+
+    /// Marks all 320 real columns as untouched (top == 0xff).
+    pub fn clear_top(&mut self) {
+        self.top[1..=320].fill(0xff);
+    }
+}
+
 #[derive(Copy, Clone, PartialEq, Eq)]
 #[repr(i32)]
 pub enum SpriteRotate {

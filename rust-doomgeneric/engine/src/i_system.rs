@@ -1,5 +1,5 @@
 use crate::game_state::GameState;
-use crate::m_argv::{M_ArgvAtoi, M_CheckParmWithArgs};
+use crate::m_argv::{M_CheckParmWithArgs};
 use crate::m_misc::M_StrToInt;
 
 #[derive(Clone, Copy, PartialEq, Eq)]

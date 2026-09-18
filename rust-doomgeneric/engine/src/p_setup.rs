@@ -310,7 +310,7 @@ pub unsafe fn P_LoadVertexes(state: &mut GameState, mut lump: i32) {
     }
     W_ReleaseLumpNum(&mut state.w_wad, lump);
 }
-pub unsafe fn GetSectorAtNullAddress(state: &mut GameState) -> SectorId {
+pub fn GetSectorAtNullAddress(state: &mut GameState) -> SectorId {
     if state.p_setup.null_sector_id.is_none() {
         let mut sentinel = ZERO_SECTOR;
         if let Some(value) = I_GetMemoryValue(state, 0_u32, 4_i32) {

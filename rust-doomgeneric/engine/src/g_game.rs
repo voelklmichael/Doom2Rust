@@ -824,7 +824,7 @@ pub fn G_Responder(state: &mut GameState, mut ev: event_t) -> bool {
         if ST_Responder(state, &ev) {
             return true;
         }
-        if unsafe { AM_Responder(state, &ev) } {
+        if AM_Responder(state, &ev) {
             return true;
         }
     }
@@ -1411,7 +1411,7 @@ pub fn G_DoLoadGame(state: &mut GameState) {
     if state.r_main.setsizeneeded {
         R_ExecuteSetViewSize(state);
     }
-    unsafe { R_FillBackScreen(state) };
+    R_FillBackScreen(state);
 }
 pub fn G_SaveGame(state: &mut GameState, mut slot: i32, description: &str) {
     state.g_game.savegameslot = slot;
@@ -1467,7 +1467,7 @@ pub fn G_DoSaveGame(state: &mut GameState) {
     state.g_game.savedescription.clear();
     state.g_game.players[state.g_game.consoleplayer as usize].message =
         Some("game saved.".to_string());
-    unsafe { R_FillBackScreen(state) };
+    R_FillBackScreen(state);
 }
 pub fn G_DeferedInitNew(
     state: &mut GameState,

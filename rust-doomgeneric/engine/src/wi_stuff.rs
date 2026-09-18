@@ -1054,7 +1054,7 @@ pub fn WI_updateShowNextLoc(state: &mut GameState) {
         state.wi_stuff.snl_pointeron = (state.wi_stuff.cnt & 31_i32) < 20_i32;
     };
 }
-pub unsafe fn WI_drawShowNextLoc(state: &mut GameState) {
+pub fn WI_drawShowNextLoc(state: &mut GameState) {
     let mut i: i32 = 0;
     let mut last: i32 = 0;
     WI_slamBackground(state);
@@ -1093,7 +1093,7 @@ pub unsafe fn WI_drawShowNextLoc(state: &mut GameState) {
 }
 pub fn WI_drawNoState(state: &mut GameState) {
     state.wi_stuff.snl_pointeron = true;
-    unsafe { WI_drawShowNextLoc(state) };
+    WI_drawShowNextLoc(state);
 }
 pub fn WI_fragSum(state: &mut GameState, mut playernum: i32) -> i32 {
     let mut i: i32 = 0;
@@ -1131,7 +1131,7 @@ pub fn WI_initDeathmatchStats(state: &mut GameState) {
     }
     WI_initAnimatedBack(state);
 }
-pub unsafe fn WI_updateDeathmatchStats(state: &mut GameState) {
+pub fn WI_updateDeathmatchStats(state: &mut GameState) {
     let mut i: i32 = 0;
     let mut j: i32 = 0;
     let mut stillticking: bool = false;
@@ -1216,7 +1216,7 @@ pub unsafe fn WI_updateDeathmatchStats(state: &mut GameState) {
         }
     }
 }
-pub unsafe fn WI_drawDeathmatchStats(state: &mut GameState) {
+pub fn WI_drawDeathmatchStats(state: &mut GameState) {
     let mut i: i32 = 0;
     let mut j: i32 = 0;
     let mut x: i32 = 0;
@@ -1331,7 +1331,7 @@ pub fn WI_initNetgameStats(state: &mut GameState) {
     state.wi_stuff.dofrags = (state.wi_stuff.dofrags != 0) as i32;
     WI_initAnimatedBack(state);
 }
-pub unsafe fn WI_updateNetgameStats(state: &mut GameState) {
+pub fn WI_updateNetgameStats(state: &mut GameState) {
     let mut i: i32 = 0;
     let mut fsum: i32 = 0;
     let mut stillticking: bool = false;
@@ -1467,7 +1467,7 @@ pub unsafe fn WI_updateNetgameStats(state: &mut GameState) {
         }
     }
 }
-pub unsafe fn WI_drawNetgameStats(state: &mut GameState) {
+pub fn WI_drawNetgameStats(state: &mut GameState) {
     let mut i: i32 = 0;
     let mut x: i32 = 0;
     let mut y: i32 = 0;
@@ -1578,7 +1578,7 @@ pub fn WI_initStats(state: &mut GameState) {
     state.wi_stuff.cnt_pause = TICRATE;
     WI_initAnimatedBack(state);
 }
-pub unsafe fn WI_updateStats(state: &mut GameState) {
+pub fn WI_updateStats(state: &mut GameState) {
     WI_updateAnimatedBack(state);
     if state.wi_stuff.acceleratestage != 0 && state.wi_stuff.sp_state != 10_i32 {
         state.wi_stuff.acceleratestage = 0_i32;
@@ -1665,7 +1665,7 @@ pub unsafe fn WI_updateStats(state: &mut GameState) {
         }
     }
 }
-pub unsafe fn WI_drawStats(state: &mut GameState) {
+pub fn WI_drawStats(state: &mut GameState) {
     let mut lh: i32 = 0;
     let zero_patch = V_CachePatchNum(state, state.wi_stuff.num[0]);
     lh = 3_i32 * zero_patch.height() / 2_i32;
@@ -1756,11 +1756,11 @@ pub fn WI_Ticker(state: &mut GameState) {
     match state.wi_stuff.state {
         StateEnum::StatCount => {
             if state.g_game.deathmatch != 0 {
-                unsafe { WI_updateDeathmatchStats(state) };
+                WI_updateDeathmatchStats(state);
             } else if state.g_game.netgame {
-                unsafe { WI_updateNetgameStats(state) };
+                WI_updateNetgameStats(state);
             } else {
-                unsafe { WI_updateStats(state) };
+                WI_updateStats(state);
             }
         }
         StateEnum::ShowNextLoc => {
@@ -1868,15 +1868,15 @@ pub fn WI_Drawer(state: &mut GameState) {
     match state.wi_stuff.state {
         StateEnum::StatCount => {
             if state.g_game.deathmatch != 0 {
-                unsafe { WI_drawDeathmatchStats(state) };
+                WI_drawDeathmatchStats(state);
             } else if state.g_game.netgame {
-                unsafe { WI_drawNetgameStats(state) };
+                WI_drawNetgameStats(state);
             } else {
-                unsafe { WI_drawStats(state) };
+                WI_drawStats(state);
             }
         }
         StateEnum::ShowNextLoc => {
-            unsafe { WI_drawShowNextLoc(state) };
+            WI_drawShowNextLoc(state);
         }
         StateEnum::NoState => {
             WI_drawNoState(state);

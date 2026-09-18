@@ -531,23 +531,29 @@ pub fn R_PointInSubsector(state: &mut GameState, x: fixed_t, y: fixed_t) -> Subs
     }
     SubsectorId((nodenum & !NF_SUBSECTOR) as u32)
 }
-pub unsafe fn R_SetupFrame(state: &mut GameState, player_id: PlayerId) {
+pub fn R_SetupFrame(state: &mut GameState, player_id: PlayerId) {
     let mut i: i32 = 0;
     let player = state.g_game.player_mut(player_id);
     state.r_main.viewplayer = player_id;
-    let player_mo = state.p_mobj.mobj_get((*player).mo.unwrap()).unwrap();
-    state.r_main.viewx = (*player_mo).x;
-    state.r_main.viewy = (*player_mo).y;
-    state.r_main.viewangle = (*player_mo)
+    let (player_mo_id, extralight, viewz, fixedcolormap) = (
+        player.mo.unwrap(),
+        player.extralight,
+        player.viewz,
+        player.fixedcolormap,
+    );
+    let player_mo = state.p_mobj.mo(player_mo_id);
+    state.r_main.viewx = player_mo.x;
+    state.r_main.viewy = player_mo.y;
+    state.r_main.viewangle = player_mo
         .angle
         .wrapping_add(state.r_main.viewangleoffset as angle_t);
-    state.r_main.extralight = (*player).extralight;
-    state.r_main.viewz = (*player).viewz;
+    state.r_main.extralight = extralight;
+    state.r_main.viewz = viewz;
     state.r_main.viewsin = finesine[(state.r_main.viewangle >> ANGLETOFINESHIFT) as usize];
     state.r_main.viewcos = finecosine[(state.r_main.viewangle >> ANGLETOFINESHIFT) as isize];
     state.r_main.sscount = 0_i32;
-    if (*player).fixedcolormap != 0 {
-        let colormap = (*player).fixedcolormap;
+    if fixedcolormap != 0 {
+        let colormap = fixedcolormap;
         state.r_main.fixedcolormap = Some(colormap);
         state.r_segs.walllights = LightRow48::Fixed;
         i = 0_i32;
@@ -562,18 +568,18 @@ pub unsafe fn R_SetupFrame(state: &mut GameState, player_id: PlayerId) {
     state.r_main.validcount += 1;
 }
 pub fn R_RenderPlayerView(state: &mut GameState, player_id: PlayerId) {
-    unsafe { R_SetupFrame(state, player_id) };
+    R_SetupFrame(state, player_id);
     R_ClearClipSegs(state);
     R_ClearDrawSegs(state);
-    unsafe { R_ClearPlanes(state) };
+    R_ClearPlanes(state);
     R_ClearSprites(state);
     NetUpdate(state);
     let root_bspnum = state.p_setup.numnodes - 1_i32;
-    unsafe { R_RenderBSPNode(state, root_bspnum) };
+    R_RenderBSPNode(state, root_bspnum);
     NetUpdate(state);
-    unsafe { R_DrawPlanes(state) };
+    R_DrawPlanes(state);
     NetUpdate(state);
-    unsafe { R_DrawMasked(state) };
+    R_DrawMasked(state);
     NetUpdate(state);
 }
 pub const LIGHTLEVELS: i32 = 16;

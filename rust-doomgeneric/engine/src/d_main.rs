@@ -248,7 +248,7 @@ pub fn D_ProcessEvents(state: &mut GameState) {
         G_Responder(state, ev);
     }
 }
-pub unsafe fn D_Display(state: &mut GameState) {
+pub fn D_Display(state: &mut GameState) {
     let mut nowtime: i32 = 0;
     let mut tics: i32 = 0;
     let mut wipestart: i32 = 0;
@@ -478,7 +478,7 @@ pub fn doomgeneric_Tick(state: &mut GameState) {
     let listener_id = state.g_game.players[state.g_game.consoleplayer as usize].mo;
     S_UpdateSounds(state, listener_id);
     if state.i_video.screenvisible {
-        unsafe { D_Display(state) };
+        D_Display(state);
     }
 }
 pub fn D_DoomLoop(state: &mut GameState) {
@@ -498,7 +498,7 @@ pub fn D_DoomLoop(state: &mut GameState) {
     TryRunTics(state);
     I_SetWindowTitle(state, state.doomstat.gamedescription);
     I_SetGrabMouseCallback();
-    unsafe { I_InitGraphics(state) };
+    I_InitGraphics(state);
     R_ExecuteSetViewSize(state);
     D_StartGameLoop(state);
     if state.g_game.testcontrols {

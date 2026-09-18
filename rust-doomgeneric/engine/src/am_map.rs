@@ -1,6 +1,6 @@
 use crate::d_event::event_t;
 use crate::d_event::EvType;
-use crate::d_player::player_t;
+
 use crate::d_player::PlayerId;
 use crate::d_player::PowerType;
 use crate::doomdef::false_0;
@@ -20,7 +20,7 @@ use crate::m_fixed::FRACBITS;
 use crate::m_fixed::FRACUNIT;
 use crate::m_fixed::INT_MAX;
 use crate::p_maputl::MAPBLOCKUNITS;
-use crate::p_mobj::mobj_t;
+
 use crate::p_spec::ML_MAPPED;
 use crate::p_spec::ML_SECRET;
 use crate::st_stuff::ST_Responder;
@@ -612,7 +612,7 @@ pub fn AM_changeWindowLoc(state: &mut GameState) {
     state.am_map.m_x2 = state.am_map.m_x + state.am_map.m_w;
     state.am_map.m_y2 = state.am_map.m_y + state.am_map.m_h;
 }
-pub unsafe fn AM_initVariables(state: &mut GameState) {
+pub fn AM_initVariables(state: &mut GameState) {
     let mut pnum: i32 = 0;
     const st_notify: event_t = event_t {
         type_0: EvType::ev_keyup,
@@ -732,7 +732,7 @@ pub fn AM_Start(state: &mut GameState) {
         state.am_map.am_start_lastlevel = state.g_game.gamemap;
         state.am_map.am_start_lastepisode = state.g_game.gameepisode;
     }
-    unsafe { AM_initVariables(state) };
+    AM_initVariables(state);
     AM_loadPics(state);
 }
 pub fn AM_minOutWindowScale(state: &mut GameState) {
@@ -745,7 +745,7 @@ pub fn AM_maxOutWindowScale(state: &mut GameState) {
     state.am_map.scale_ftom = FixedDiv(FRACUNIT, state.am_map.scale_mtof);
     AM_activateNewScale(state);
 }
-pub unsafe fn AM_Responder(state: &mut GameState, mut ev: &event_t) -> bool {
+pub fn AM_Responder(state: &mut GameState, mut ev: &event_t) -> bool {
     let mut rc: i32 = 0;
     let mut key: i32 = 0;
     rc = false_0;

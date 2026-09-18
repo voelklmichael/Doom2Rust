@@ -8,13 +8,13 @@ use crate::patch::Patch;
 use crate::i_system::I_Error;
 use crate::m_fixed::fixed_t;
 use crate::m_fixed::FRACBITS;
-use crate::mem_compat::memcpy;
+
 use crate::r_main::ColormapId;
 use crate::stdint_types::byte;
-use crate::stdint_types::size_t;
+
 use crate::v_video::V_DrawPatch;
 use crate::v_video::V_MarkRect;
-use crate::w_wad::W_CacheLumpName;
+use crate::w_wad::W_LumpBytesName;
 
 #[derive(Clone, Copy)]
 pub enum ColumnSource {
@@ -520,9 +520,7 @@ pub fn R_InitBuffer(state: &mut GameState, mut width: i32, mut height: i32) {
         i += 1;
     }
 }
-pub unsafe fn R_FillBackScreen(state: &mut GameState) {
-    let mut src: *mut byte = ::core::ptr::null_mut::<byte>();
-    let mut dest: *mut byte = ::core::ptr::null_mut::<byte>();
+pub fn R_FillBackScreen(state: &mut GameState) {
     let mut x: i32 = 0;
     let mut y: i32 = 0;
     let mut patch: Patch;
@@ -545,34 +543,14 @@ pub unsafe fn R_FillBackScreen(state: &mut GameState) {
     } else {
         name = name1;
     }
-    src = W_CacheLumpName(state, name) as *mut byte;
-    dest = state
-        .r_draw
-        .background_buffer
-        .as_mut()
-        .unwrap()
-        .as_mut_ptr();
-    y = 0_i32;
-    while y < SCREENHEIGHT - SBARHEIGHT {
-        x = 0_i32;
-        while x < SCREENWIDTH / 64_i32 {
-            memcpy(
-                dest as *mut ::core::ffi::c_void,
-                src.offset(((y & 63_i32) << 6_i32) as isize) as *const ::core::ffi::c_void,
-                64 as size_t,
-            );
-            dest = dest.offset(64_i32 as isize);
-            x += 1;
+    let flat = W_LumpBytesName(state, name);
+    let background = state.r_draw.background_buffer.as_mut().unwrap();
+    for y in 0..(SCREENHEIGHT - SBARHEIGHT) as usize {
+        let row = &flat[(y & 63) << 6..][..64];
+        let line = &mut background[y * SCREENWIDTH as usize..][..SCREENWIDTH as usize];
+        for chunk in line.chunks_mut(64) {
+            chunk.copy_from_slice(&row[..chunk.len()]);
         }
-        if SCREENWIDTH & 63_i32 != 0 {
-            memcpy(
-                dest as *mut ::core::ffi::c_void,
-                src.offset(((y & 63_i32) << 6_i32) as isize) as *const ::core::ffi::c_void,
-                (SCREENWIDTH & 63_i32) as size_t,
-            );
-            dest = dest.offset((SCREENWIDTH & 63_i32) as isize);
-        }
-        y += 1;
     }
     let backdrop = Screen::Background;
     patch = V_CachePatchName(state, "brdr_t");
