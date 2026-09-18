@@ -283,3 +283,12 @@ are a real design decision, not a drive-by fix, so it's flagged here instead of
 silently patched. **Before ever wiring a reader up to `snd_musiccmd`, or writing
 a `chatmacro` config line, or converting another `DEFAULT_STRING`-bound field to
 `&'static str`/`Option<&'static str>`**, fix this binding mechanism first.
+
+## Intermission: no filler graphic for map numbers beyond `NUMCMAPS`
+
+`WI_drawLF` (intermission "finished" header) used to draw, for a level number
+greater than the episode's map count, a stack-built fake `patch_t` with all-zero
+column offsets — upstream doomgeneric/Chocolate Doom's "MAP33+ filler", whose pixels
+were whatever bytes followed that struct in memory (undefined behavior). The Rust
+port draws nothing there. It cannot occur with any stock IWAD (only a PWAD that
+warps to a map above the episode's last would reach it).

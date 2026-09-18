@@ -847,7 +847,7 @@ pub fn G_Responder(state: &mut GameState, mut ev: event_t) -> bool {
         return false;
     }
     if state.g_game.gamestate == GameScreenState::GS_LEVEL {
-        if unsafe { HU_Responder(state, &ev) } {
+        if HU_Responder(state, &ev) {
             return true;
         }
         if unsafe { ST_Responder(state, &ev) } {

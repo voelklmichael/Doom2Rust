@@ -6,7 +6,7 @@ use crate::fixed_cstr::FixedCStr;
 use crate::game_state::GameState;
 use crate::i_system::I_Error;
 use crate::m_misc::M_ExtractFileBase;
-use crate::stdint_types::byte;
+
 use crate::w_file::wad_file_t;
 use crate::w_file::W_OpenFile;
 use crate::w_file::W_Read;
@@ -34,7 +34,7 @@ pub struct lumpinfo_s {
     pub wad_file: &'static wad_file_t,
     pub position: i32,
     pub size: i32,
-    pub cache: Option<Box<[u8]>>,
+    pub cache: Option<std::rc::Rc<[u8]>>,
     pub next: Option<u32>,
 }
 pub type lumpinfo_t = lumpinfo_s;
@@ -189,33 +189,39 @@ pub fn W_ReadLump(state: &mut WWadState, lump: u32, dest: &mut [u8]) {
         ));
     }
 }
-pub fn W_CacheLumpNum(state: &mut GameState, lumpnum: i32) -> *mut ::core::ffi::c_void {
+pub fn W_LumpBytes(state: &mut GameState, lumpnum: i32) -> std::rc::Rc<[u8]> {
     if lumpnum as u32 >= state.w_wad.numlumps {
         I_Error(&format!("W_CacheLumpNum: {} >= numlumps", lumpnum));
     }
-    let lump = &mut state.w_wad.lumpinfo[lumpnum as usize];
-    let result: *mut byte = if let Some(cache) = lump.cache.as_mut() {
-        cache.as_mut_ptr()
-    } else {
-        let lumplen = W_LumpLength(&mut state.w_wad, lumpnum as u32);
-        // r_draw.rs's R_DrawColumn (and friends) reproduce vanilla's
-        // `dc_source[(frac>>FRACBITS) & 127]` column read verbatim, which
-        // vanilla itself only gets away with because its zone allocator
-        // rounds every block up, leaving slack heap bytes past a short
-        // lump's real data for that `& 127` mask to wander into instead of
-        // segfaulting. An exactly-sized buffer has no such slack, so a
-        // short column (any post shorter than 128 rows, cached near the
-        // end of its lump) makes that same read run past the end and panic
-        // -- pad every cached lump by the mask's full range to give it the
-        // same harmless slack vanilla relied on.
-        const CACHE_PAD: usize = 128;
-        let mut buf = vec![0u8; lumplen as usize + CACHE_PAD].into_boxed_slice();
-        W_ReadLump(&mut state.w_wad, lumpnum as u32, &mut buf[..lumplen as usize]);
-        let lump = &mut state.w_wad.lumpinfo[lumpnum as usize];
-        lump.cache = Some(buf);
-        lump.cache.as_mut().unwrap().as_mut_ptr()
-    };
-    result as *mut ::core::ffi::c_void
+    if let Some(cache) = state.w_wad.lumpinfo[lumpnum as usize].cache.as_ref() {
+        return std::rc::Rc::clone(cache);
+    }
+    let lumplen = W_LumpLength(&mut state.w_wad, lumpnum as u32);
+    // r_draw.rs's R_DrawColumn (and friends) reproduce vanilla's
+    // `dc_source[(frac>>FRACBITS) & 127]` column read verbatim, which
+    // vanilla itself only gets away with because its zone allocator
+    // rounds every block up, leaving slack heap bytes past a short
+    // lump's real data for that `& 127` mask to wander into instead of
+    // segfaulting. An exactly-sized buffer has no such slack, so a
+    // short column (any post shorter than 128 rows, cached near the
+    // end of its lump) makes that same read run past the end and panic
+    // -- pad every cached lump by the mask's full range to give it the
+    // same harmless slack vanilla relied on.
+    const CACHE_PAD: usize = 128;
+    let mut buf = vec![0u8; lumplen as usize + CACHE_PAD].into_boxed_slice();
+    W_ReadLump(&mut state.w_wad, lumpnum as u32, &mut buf[..lumplen as usize]);
+    let rc: std::rc::Rc<[u8]> = std::rc::Rc::from(buf);
+    state.w_wad.lumpinfo[lumpnum as usize].cache = Some(std::rc::Rc::clone(&rc));
+    rc
+}
+pub fn W_LumpBytesName(state: &mut GameState, name: &str) -> std::rc::Rc<[u8]> {
+    let lumpnum = W_GetNumForName(&mut state.w_wad, name);
+    W_LumpBytes(state, lumpnum)
+}
+pub fn W_CacheLumpNum(state: &mut GameState, lumpnum: i32) -> *mut ::core::ffi::c_void {
+    // The cache is never evicted, so the pointer stays valid for the process
+    // lifetime; callers only read through it.
+    std::rc::Rc::as_ptr(&W_LumpBytes(state, lumpnum)) as *const u8 as *mut ::core::ffi::c_void
 }
 pub fn W_CacheLumpName(state: &mut GameState, name: &str) -> *mut ::core::ffi::c_void {
     let lumpnum = W_GetNumForName(&mut state.w_wad, name);

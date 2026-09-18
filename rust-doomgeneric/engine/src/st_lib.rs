@@ -1,4 +1,5 @@
 use crate::game_state::GameState;
+use crate::v_video::Screen;
 use crate::i_system::I_Error;
 use crate::st_stuff::ST_Y;
 use crate::v_video::V_CachePatchNum;
@@ -84,8 +85,8 @@ pub unsafe fn STlib_drawNum(state: &mut GameState, mut n: *mut st_number_t, mut 
     let mut numdigits: i32 = (*n).width;
     let zero_lump = state.st_stuff.digit_set((*n).p)[0];
     let zero_patch = V_CachePatchNum(state, zero_lump);
-    let mut w: i32 = (*zero_patch).width as i32;
-    let mut h: i32 = (*zero_patch).height as i32;
+    let mut w: i32 = zero_patch.width();
+    let mut h: i32 = zero_patch.height();
     let mut x: i32 = (*n).x;
     let mut neg: i32 = 0;
     (*n).oldnum = num;
@@ -102,8 +103,8 @@ pub unsafe fn STlib_drawNum(state: &mut GameState, mut n: *mut st_number_t, mut 
     if (*n).y - ST_Y < 0_i32 {
         I_Error("drawNum: n->y - ST_Y < 0");
     }
-    let st_backing_screen = state.st_stuff.st_backing_screen.as_mut_ptr();
-    let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
+    let st_backing_screen = Screen::StatusBar;
+    let dest_screen = Screen::Video;
     V_CopyRect(
         state,
         dest_screen,
@@ -120,8 +121,8 @@ pub unsafe fn STlib_drawNum(state: &mut GameState, mut n: *mut st_number_t, mut 
     }
     x = (*n).x;
     if num == 0 {
-        let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
-        V_DrawPatch(state, dest_screen, x - w, (*n).y, zero_patch);
+        let dest_screen = Screen::Video;
+        V_DrawPatch(state, dest_screen, x - w, (*n).y, &zero_patch);
     }
     while num != 0 && {
         let fresh0 = numdigits;
@@ -131,14 +132,14 @@ pub unsafe fn STlib_drawNum(state: &mut GameState, mut n: *mut st_number_t, mut 
         x -= w;
         let digit_lump = state.st_stuff.digit_set((*n).p)[(num % 10_i32) as usize];
         let digit_patch = V_CachePatchNum(state, digit_lump);
-        let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
-        V_DrawPatch(state, dest_screen, x, (*n).y, digit_patch);
+        let dest_screen = Screen::Video;
+        V_DrawPatch(state, dest_screen, x, (*n).y, &digit_patch);
         num /= 10_i32;
     }
     if neg != 0 {
         let patch = V_CachePatchNum(state, state.st_lib.sttminus);
-        let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
-        V_DrawPatch(state, dest_screen, x - 8_i32, (*n).y, patch);
+        let dest_screen = Screen::Video;
+        V_DrawPatch(state, dest_screen, x - 8_i32, (*n).y, &patch);
     }
 }
 pub unsafe fn STlib_updateNum(state: &mut GameState, mut n: *mut st_number_t, num: i32, on: bool) {
@@ -165,8 +166,8 @@ pub unsafe fn STlib_updatePercent(
 ) {
     if refresh != 0 && on {
         let patch = V_CachePatchNum(state, (*per).p);
-        let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
-        V_DrawPatch(state, dest_screen, (*per).n.x, (*per).n.y, patch);
+        let dest_screen = Screen::Video;
+        V_DrawPatch(state, dest_screen, (*per).n.x, (*per).n.y, &patch);
     }
     STlib_updateNum(state, &raw mut (*per).n, num, on);
 }
@@ -196,15 +197,15 @@ pub unsafe fn STlib_updateMultIcon(
         if (*mi).oldinum != -1_i32 {
             let old_lump = state.st_stuff.digit_set((*mi).p)[(*mi).oldinum as usize];
             let old_patch = V_CachePatchNum(state, old_lump);
-            x = (*mi).x - (*old_patch).leftoffset as i32;
-            y = (*mi).y - (*old_patch).topoffset as i32;
-            w = (*old_patch).width as i32;
-            h = (*old_patch).height as i32;
+            x = (*mi).x - old_patch.leftoffset();
+            y = (*mi).y - old_patch.topoffset();
+            w = old_patch.width();
+            h = old_patch.height();
             if y - ST_Y < 0_i32 {
                 I_Error("updateMultIcon: y - ST_Y < 0");
             }
-            let st_backing_screen = state.st_stuff.st_backing_screen.as_mut_ptr();
-            let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
+            let st_backing_screen = Screen::StatusBar;
+            let dest_screen = Screen::Video;
             V_CopyRect(
                 state,
                 dest_screen,
@@ -219,8 +220,8 @@ pub unsafe fn STlib_updateMultIcon(
         }
         let new_lump = state.st_stuff.digit_set((*mi).p)[inum as usize];
         let new_patch = V_CachePatchNum(state, new_lump);
-        let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
-        V_DrawPatch(state, dest_screen, (*mi).x, (*mi).y, new_patch);
+        let dest_screen = Screen::Video;
+        V_DrawPatch(state, dest_screen, (*mi).x, (*mi).y, &new_patch);
         (*mi).oldinum = inum;
     }
 }
@@ -243,19 +244,19 @@ pub unsafe fn STlib_updateBinIcon(
     let mut h: i32 = 0;
     if on && ((*bi).oldval != val || refresh) {
         let patch = V_CachePatchNum(state, (*bi).p);
-        x = (*bi).x - (*patch).leftoffset as i32;
-        y = (*bi).y - (*patch).topoffset as i32;
-        w = (*patch).width as i32;
-        h = (*patch).height as i32;
+        x = (*bi).x - patch.leftoffset();
+        y = (*bi).y - patch.topoffset();
+        w = patch.width();
+        h = patch.height();
         if y - ST_Y < 0_i32 {
             I_Error("updateBinIcon: y - ST_Y < 0");
         }
         if val {
-            let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
-            V_DrawPatch(state, dest_screen, (*bi).x, (*bi).y, patch);
+            let dest_screen = Screen::Video;
+            V_DrawPatch(state, dest_screen, (*bi).x, (*bi).y, &patch);
         } else {
-            let st_backing_screen = state.st_stuff.st_backing_screen.as_mut_ptr();
-            let dest_screen = state.i_video.I_VideoBuffer.as_mut_ptr();
+            let st_backing_screen = Screen::StatusBar;
+            let dest_screen = Screen::Video;
             V_CopyRect(
                 state,
                 dest_screen,
