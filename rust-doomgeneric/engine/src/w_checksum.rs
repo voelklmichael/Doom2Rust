@@ -1,6 +1,7 @@
 use crate::game_state::GameState;
-use crate::sha1::{sha1_digest_t, Sha1};
+use sha1_smol::Sha1;
 use crate::w_file::wad_file_t;
+pub type sha1_digest_t = [u8; 20];
 pub struct WChecksumState {
     open_wadfiles: Vec<&'static wad_file_t>,
 }
@@ -28,10 +29,13 @@ pub fn W_Checksum(state: &mut GameState) -> sha1_digest_t {
     let mut sha1 = Sha1::new();
     state.w_checksum.open_wadfiles.clear();
     for lump in &state.w_wad.lumpinfo {
-        sha1.update_string(lump.name.as_bytes());
-        sha1.update_int32(GetFileNumber(&mut state.w_checksum, lump.wad_file) as u32);
-        sha1.update_int32(lump.position as u32);
-        sha1.update_int32(lump.size as u32);
+        // Name is hashed with its NUL terminator, as the C SHA1_UpdateString did.
+        sha1.update(lump.name.as_bytes());
+        sha1.update(&[0]);
+        let file_number = GetFileNumber(&mut state.w_checksum, lump.wad_file) as u32;
+        sha1.update(&file_number.to_be_bytes());
+        sha1.update(&(lump.position as u32).to_be_bytes());
+        sha1.update(&(lump.size as u32).to_be_bytes());
     }
-    sha1.finalize()
+    sha1.digest().bytes()
 }
