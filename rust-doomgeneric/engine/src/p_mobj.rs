@@ -52,7 +52,6 @@ use crate::tables::finesine;
 use crate::tables::ANG45;
 use crate::tables::ANGLETOFINESHIFT;
 
-pub use crate::d_ticcmd::ticcmd_t;
 #[derive(Copy, Clone)]
 pub enum StateAction {
     None,
@@ -94,7 +93,6 @@ pub struct mapthing_t {
     pub type_0: i16,
     pub options: i16,
 }
-pub const NUMSPRITES: i32 = 138;
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum SpriteNum {
     SPR_TROO = 0,
@@ -379,7 +377,6 @@ pub fn spritenum_from_raw(v: i32) -> SpriteNum {
         n => panic!("invalid spritenum {n}"),
     }
 }
-pub const NUMSTATES: i32 = 967;
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum StateNum {
     S_NULL = 0,
@@ -2655,7 +2652,6 @@ pub const MF_DROPPED: i32 = 131072;
 pub const MF_MISSILE: i32 = 65536;
 pub const MF_TELEPORT: i32 = 32768;
 pub const MF_FLOAT: i32 = 16384;
-pub const MF_SLIDE: i32 = 8192;
 pub const MF_NOCLIP: i32 = 4096;
 pub const MF_PICKUP: i32 = 2048;
 pub const MF_DROPOFF: i32 = 1024;
@@ -2715,7 +2711,7 @@ pub struct pspdef_t {
     pub sy: fixed_t,
 }
 pub type mobj_t = mobj_s;
-pub use crate::d_player::{player_s, player_t, PlayerId, PlayerState};
+pub use crate::d_player::{PlayerId, PlayerState};
 #[derive(Copy, Clone)]
 pub struct subsector_s {
     pub sector: SectorId,

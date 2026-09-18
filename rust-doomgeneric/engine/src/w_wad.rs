@@ -137,9 +137,6 @@ pub fn W_AddFile(state: &mut GameState, filename: &str) -> Option<&'static wad_f
     state.w_wad.lumphash = Vec::new();
     Some(wad_file)
 }
-pub fn W_NumLumps(state: &mut WWadState) -> i32 {
-    state.numlumps as i32
-}
 pub fn W_CheckNumForName(state: &mut WWadState, name: &str) -> i32 {
     let mut i: i32;
     if !state.lumphash.is_empty() {

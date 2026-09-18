@@ -47,7 +47,7 @@ use crate::v_video::V_CachePatchNum;
 use crate::v_video::V_CopyRect;
 use crate::v_video::V_DrawPatch;
 use crate::w_wad::W_LumpBytes;
-use crate::w_wad::{W_GetNumForName, W_ReleaseLumpName};
+use crate::w_wad::W_GetNumForName;
 
 pub struct StStuffState {
     pub st_backing_screen: Vec<byte>,
@@ -980,16 +980,6 @@ pub fn ST_loadGraphics(state: &mut GameState) {
 pub fn ST_loadData(state: &mut GameState) {
     state.st_stuff.lu_palette = W_GetNumForName(&mut state.w_wad, "PLAYPAL");
     ST_loadGraphics(state);
-}
-fn ST_unloadCallback(state: &mut GameState, lumpname: &str) -> i32 {
-    W_ReleaseLumpName(&mut state.w_wad, lumpname);
-    -1
-}
-pub fn ST_unloadGraphics(state: &mut GameState) {
-    ST_loadUnloadGraphics(state, ST_unloadCallback);
-}
-pub fn ST_unloadData(state: &mut GameState) {
-    ST_unloadGraphics(state);
 }
 pub fn ST_initData(state: &mut GameState) {
     let mut i: i32;

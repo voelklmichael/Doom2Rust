@@ -50,7 +50,6 @@ pub struct sound_module_t {
 }
 #[derive(Copy, Clone)]
 pub struct music_module_t {
-    pub sound_devices: &'static [snddevice_t],
     pub Init: Option<fn() -> bool>,
     pub Shutdown: Option<fn()>,
     pub SetMusicVolume: Option<fn(i32)>,
@@ -60,7 +59,6 @@ pub struct music_module_t {
     pub UnRegisterSong: Option<fn(usize)>,
     pub PlaySong: Option<fn(usize, bool)>,
     pub StopSong: Option<fn()>,
-    pub MusicIsPlaying: Option<fn() -> bool>,
     pub Poll: Option<fn()>,
 }
 pub struct ISoundState {
@@ -250,12 +248,6 @@ pub fn I_PlaySong(state: &mut ISoundState, handle: usize, looping: bool) {
 pub fn I_StopSong(state: &mut ISoundState) {
     if let Some(module) = state.music_module {
         (module.StopSong.expect("non-null function pointer"))();
-    }
-}
-pub fn I_MusicIsPlaying(state: &mut ISoundState) -> bool {
-    match state.music_module {
-        Some(module) => (module.MusicIsPlaying.expect("non-null function pointer"))(),
-        None => false,
     }
 }
 pub fn I_BindSoundVariables(state: &mut GameState) {

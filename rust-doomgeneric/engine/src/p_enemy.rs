@@ -99,7 +99,6 @@ impl PEnemyState {
     }
 }
 
-pub const NUMDIRS: i32 = 9;
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum DirType {
     DI_EAST = 0,

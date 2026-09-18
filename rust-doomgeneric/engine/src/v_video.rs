@@ -212,10 +212,6 @@ pub fn V_DrawBox(state: &mut IVideoState, x: i32, y: i32, w: i32, h: i32, c: i32
     V_DrawVertLine(state, x, y, h, c);
     V_DrawVertLine(state, x + w - 1_i32, y, h, c);
 }
-pub fn V_DrawRawScreen(dest: &mut [byte], raw: &[byte]) {
-    let len = (SCREENWIDTH * SCREENHEIGHT) as usize;
-    dest[..len].copy_from_slice(&raw[..len]);
-}
 pub fn WritePCXfile(filename: &str, data: &[byte], width: i32, height: i32, palette: &[byte]) {
     // 128-byte on-disk PCX header.
     let mut pack: Vec<u8> =

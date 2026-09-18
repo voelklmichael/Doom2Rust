@@ -8,9 +8,10 @@
 )]
 #[allow(unused_imports)]
 use ::rust_doomgeneric;
-use ::rust_doomgeneric::d_main::doomgeneric_Tick;
-use ::rust_doomgeneric::game_state::init_game_state;
-use ::rust_doomgeneric::platform::DoomPlatform;
+use ::rust_doomgeneric::doomgeneric_Create;
+use ::rust_doomgeneric::doomgeneric_Tick;
+use ::rust_doomgeneric::init_game_state;
+use ::rust_doomgeneric::DoomPlatform;
 use libc::memset;
 // Opaque Xlib types, only ever used behind raw pointers.
 #[repr(C)]
@@ -1106,7 +1107,7 @@ impl DoomPlatform for X11Platform {
 
 pub fn main() {
     let state = init_game_state(Box::new(X11Platform::new()));
-    ::rust_doomgeneric::doomgeneric::doomgeneric_Create(state, ::std::env::args().collect());
+    doomgeneric_Create(state, ::std::env::args().collect());
     loop {
         doomgeneric_Tick(state);
     }

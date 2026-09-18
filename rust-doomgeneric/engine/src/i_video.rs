@@ -233,9 +233,6 @@ pub fn I_InitGraphics(state: &mut GameState) {
     state.i_video.I_VideoBuffer = vec![0u8; (SCREENWIDTH * SCREENHEIGHT) as usize];
     state.i_video.screenvisible = true;
 }
-pub fn I_ShutdownGraphics(state: &mut GameState) {
-    state.i_video.I_VideoBuffer = Vec::new();
-}
 pub fn I_StartTic(state: &mut GameState) {
     I_GetEvent(state);
 }

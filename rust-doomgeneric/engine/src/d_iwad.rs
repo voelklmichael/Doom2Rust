@@ -100,7 +100,6 @@ static IWADS: [iwad_t; 14] = [
         description: "Strife",
     },
 ];
-pub const MAX_IWAD_DIRS: i32 = 128;
 
 pub struct DIwadState {
     iwad_dirs_built: bool,

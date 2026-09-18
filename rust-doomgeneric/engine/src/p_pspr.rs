@@ -91,8 +91,6 @@ pub fn P_SetPsprite(
     }
 }
 pub struct PPsprState {
-    swingx: fixed_t,
-    swingy: fixed_t,
     pub bulletslope: fixed_t,
 }
 
@@ -105,22 +103,11 @@ impl Default for PPsprState {
 impl PPsprState {
     pub const fn new() -> Self {
         PPsprState {
-            swingx: 0,
-            swingy: 0,
             bulletslope: 0,
         }
     }
 }
 
-pub fn P_CalcSwing(state: &mut GameState, player: PlayerId) {
-    let swing: fixed_t;
-    let mut angle: i32;
-    swing = state.g_game.players[player.0 as usize].bob;
-    angle = (FINEANGLES / 70_i32 * state.p_tick.leveltime) & FINEMASK;
-    state.p_pspr.swingx = FixedMul(swing, finesine[angle as usize]);
-    angle = (FINEANGLES / 70_i32 * state.p_tick.leveltime + FINEANGLES / 2_i32) & FINEMASK;
-    state.p_pspr.swingy = -FixedMul(state.p_pspr.swingx, finesine[angle as usize]);
-}
 pub fn P_BringUpWeapon(state: &mut GameState, player_id: PlayerId) {
     let player = player_id;
     let player_mo = state.g_game.players[player.0 as usize].mo.unwrap();

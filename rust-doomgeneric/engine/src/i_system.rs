@@ -50,8 +50,6 @@ pub struct atexit_listentry_s {
     pub func: atexit_func_t,
     pub run_on_error: bool,
 }
-pub const DEFAULT_RAM: i32 = 6;
-pub const MIN_RAM: i32 = 6;
 pub fn I_AtExit(state: &mut ISystemState, func: atexit_func_t, run_on_error: bool) {
     state
         .exit_funcs

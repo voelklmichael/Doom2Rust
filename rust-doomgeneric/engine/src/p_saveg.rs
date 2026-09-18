@@ -90,7 +90,6 @@ pub enum SpecialThinkerClass {
 }
 pub const SAVEGAME_EOF: i32 = 0x1d;
 pub const VERSIONSIZE: i32 = 16;
-pub static savegamelength: i32 = 0;
 pub fn P_TempSaveGameFile(state: &mut GameState) -> String {
     if state.p_saveg.temp_savegame_filename.is_none() {
         state.p_saveg.temp_savegame_filename =

@@ -91,7 +91,6 @@ pub struct net_connect_data_t {
     pub max_players: i32,
     pub is_freedoom: i32,
     pub wad_sha1sum: sha1_digest_t,
-    pub deh_sha1sum: sha1_digest_t,
     pub player_class: i32,
 }
 #[derive(Copy, Clone)]
@@ -110,7 +109,6 @@ pub struct net_gamesettings_t {
     pub new_sync: i32,
     pub timelimit: i32,
     pub loadgame: i32,
-    pub random: i32,
     pub num_players: i32,
     pub consoleplayer: i32,
     pub player_classes: [i32; 8],
