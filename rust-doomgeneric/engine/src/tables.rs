@@ -1167,11 +1167,11 @@ pub static finesine: [i32; 10240] = [
     65535, 65535, 65535, 65535, 65535, 65535, 65535,
 ];
 pub struct FineCosine;
-impl core::ops::Index<isize> for FineCosine {
+impl core::ops::Index<usize> for FineCosine {
     type Output = fixed_t;
     #[inline]
-    fn index(&self, index: isize) -> &fixed_t {
-        &finesine[(FINEANGLES / 4) as usize + index as usize]
+    fn index(&self, index: usize) -> &fixed_t {
+        &finesine[(FINEANGLES / 4) as usize + index]
     }
 }
 pub static finecosine: FineCosine = FineCosine;

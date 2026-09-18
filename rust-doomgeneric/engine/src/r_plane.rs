@@ -109,7 +109,7 @@ pub fn R_MapPlane(state: &mut GameState, mut y: i32, mut x1: i32, mut x2: i32) {
         .viewangle
         .wrapping_add(state.r_main.xtoviewangle[x1 as usize])
         >> ANGLETOFINESHIFT;
-    state.r_draw.ds_xfrac = state.r_main.viewx + FixedMul(finecosine[angle as isize], length);
+    state.r_draw.ds_xfrac = state.r_main.viewx + FixedMul(finecosine[angle as usize], length);
     state.r_draw.ds_yfrac = -state.r_main.viewy - FixedMul(finesine[angle as usize], length);
     if let Some(colormap) = state.r_main.fixedcolormap {
         state.r_draw.ds_colormap = colormap;
@@ -138,7 +138,7 @@ pub fn R_ClearPlanes(state: &mut GameState) {
     state.r_plane.lastopening = 0;
     state.r_plane.cachedheight = [0; 200];
     angle = state.r_main.viewangle.wrapping_sub(ANG90 as angle_t) >> ANGLETOFINESHIFT;
-    state.r_plane.basexscale = FixedDiv(finecosine[angle as isize], state.r_main.centerxfrac);
+    state.r_plane.basexscale = FixedDiv(finecosine[angle as usize], state.r_main.centerxfrac);
     state.r_plane.baseyscale = -FixedDiv(finesine[angle as usize], state.r_main.centerxfrac);
 }
 pub fn R_FindPlane(

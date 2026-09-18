@@ -487,7 +487,7 @@ pub fn R_ExecuteSetViewSize(state: &mut GameState) {
     }
     i = 0_i32;
     while i < state.r_draw.viewwidth {
-        cosadj = finecosine[(state.r_main.xtoviewangle[i as usize] >> ANGLETOFINESHIFT) as isize]
+        cosadj = finecosine[(state.r_main.xtoviewangle[i as usize] >> ANGLETOFINESHIFT) as usize]
             .abs() as fixed_t;
         state.r_plane.distscale[i as usize] = FixedDiv(FRACUNIT, cosadj);
         i += 1;
@@ -556,7 +556,7 @@ pub fn R_SetupFrame(state: &mut GameState, player_id: PlayerId) {
     state.r_main.extralight = extralight;
     state.r_main.viewz = viewz;
     state.r_main.viewsin = finesine[(state.r_main.viewangle >> ANGLETOFINESHIFT) as usize];
-    state.r_main.viewcos = finecosine[(state.r_main.viewangle >> ANGLETOFINESHIFT) as isize];
+    state.r_main.viewcos = finecosine[(state.r_main.viewangle >> ANGLETOFINESHIFT) as usize];
     state.r_main.sscount = 0_i32;
     if fixedcolormap != 0 {
         let colormap = fixedcolormap;

@@ -72,7 +72,6 @@ impl PSavegState {
     }
 }
 
-pub type intptr_t = isize;
 pub const tc_end: C2RustUnnamed_4 = 0;
 pub const tc_mobj: C2RustUnnamed_4 = 1;
 pub const tc_endspecials: C2RustUnnamed_5 = 7;
@@ -185,10 +184,10 @@ fn saveg_write_pad(state: &mut PSavegState) {
     }
 }
 fn saveg_readp(state: &mut PSavegState) -> *mut ::core::ffi::c_void {
-    saveg_read32(state) as intptr_t as *mut ::core::ffi::c_void
+    saveg_read32(state) as usize as *mut ::core::ffi::c_void
 }
 fn saveg_writep(state: &mut PSavegState, mut p: *mut ::core::ffi::c_void) {
-    saveg_write32(state, p as intptr_t as i32);
+    saveg_write32(state, p as usize as i32);
 }
 fn saveg_read_mapthing_t(state: &mut PSavegState, str: &mut mapthing_t) {
     str.x = saveg_read16(state);

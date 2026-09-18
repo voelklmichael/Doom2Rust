@@ -749,7 +749,7 @@ pub fn P_DamageMobj(
             }
             ang >>= ANGLETOFINESHIFT;
             let t = state.p_mobj.mo_mut(target);
-            t.momx += FixedMul(thrust, finecosine[ang as isize]);
+            t.momx += FixedMul(thrust, finecosine[ang as usize]);
             t.momy += FixedMul(thrust, finesine[ang as usize]);
         }
     }

@@ -3729,7 +3729,7 @@ pub fn P_SpawnMissile(
     let speed = state.info.mobjinfo_mut(th_type).speed;
     {
         let t = state.p_mobj.mo_mut(th);
-        t.momx = FixedMul(speed as fixed_t, finecosine[an as isize]);
+        t.momx = FixedMul(speed as fixed_t, finecosine[an as usize]);
         t.momy = FixedMul(speed as fixed_t, finesine[an as usize]);
     }
     let mut dist: i32 = P_AproxDistance(dx - sx, dy - sy);
@@ -3789,7 +3789,7 @@ pub fn P_SpawnPlayerMissile(state: &mut GameState, source: MobjId, type_0: MobjT
         t.angle = an;
         t.momx = FixedMul(
             speed as fixed_t,
-            finecosine[(an >> ANGLETOFINESHIFT) as isize],
+            finecosine[(an >> ANGLETOFINESHIFT) as usize],
         );
         t.momy = FixedMul(
             speed as fixed_t,

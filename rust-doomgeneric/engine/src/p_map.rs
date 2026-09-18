@@ -560,8 +560,8 @@ pub fn P_HitSlideLine(state: &mut GameState, mut ld: LineId) {
     lineangle >>= ANGLETOFINESHIFT;
     deltaangle >>= ANGLETOFINESHIFT;
     movelen = P_AproxDistance(state.p_map.tmxmove, state.p_map.tmymove);
-    newlen = FixedMul(movelen, finecosine[deltaangle as isize]);
-    state.p_map.tmxmove = FixedMul(newlen, finecosine[lineangle as isize]);
+    newlen = FixedMul(movelen, finecosine[deltaangle as usize]);
+    state.p_map.tmxmove = FixedMul(newlen, finecosine[lineangle as usize]);
     state.p_map.tmymove = FixedMul(newlen, finesine[lineangle as usize]);
 }
 pub fn PTR_SlideTraverse(state: &mut GameState, in_0: intercept_t) -> bool {
@@ -950,7 +950,7 @@ pub fn P_AimLineAttack(
         (m.x, m.y, m.z, m.height)
     };
     state.p_map.shootthing = Some(t1);
-    let x2 = x1 + (distance >> FRACBITS) * finecosine[angle as isize];
+    let x2 = x1 + (distance >> FRACBITS) * finecosine[angle as usize];
     let y2 = y1 + (distance >> FRACBITS) * finesine[angle as usize];
     state.p_map.shootz = (z1 + (height1 >> 1_i32) + 8_i32 * FRACUNIT) as fixed_t;
     state.p_sight.topslope = (100_i32 * FRACUNIT / 160_i32) as fixed_t;
@@ -986,7 +986,7 @@ pub fn P_LineAttack(
     };
     state.p_map.shootthing = Some(t1);
     state.p_map.la_damage = damage;
-    let x2 = x1 + (distance >> FRACBITS) * finecosine[angle as isize];
+    let x2 = x1 + (distance >> FRACBITS) * finecosine[angle as usize];
     let y2 = y1 + (distance >> FRACBITS) * finesine[angle as usize];
     state.p_map.shootz = (z1 + (height1 >> 1_i32) + 8_i32 * FRACUNIT) as fixed_t;
     state.p_map.attackrange = distance;
@@ -1035,7 +1035,7 @@ pub fn P_UseLines(state: &mut GameState, player: PlayerId) {
         let m = state.p_mobj.mo(player_mo);
         ((m.angle >> ANGLETOFINESHIFT) as i32, m.x, m.y)
     };
-    let x2 = x1 + (USERANGE >> FRACBITS) * finecosine[angle as isize];
+    let x2 = x1 + (USERANGE >> FRACBITS) * finecosine[angle as usize];
     let y2 = y1 + (USERANGE >> FRACBITS) * finesine[angle as usize];
     P_PathTraverse(state, x1, y1, x2, y2, PT_ADDLINES, PTR_UseTraverse);
 }
