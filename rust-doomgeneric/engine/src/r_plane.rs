@@ -4,7 +4,7 @@ use crate::i_system::I_Error;
 use crate::m_fixed::fixed_t;
 use crate::m_fixed::FixedDiv;
 use crate::m_fixed::FixedMul;
-use crate::mem_compat::memset;
+
 use crate::r_data::R_GetColumn;
 use crate::r_defs::visplane_t;
 use crate::r_draw::ColumnSource;
@@ -14,13 +14,13 @@ use crate::r_main::LIGHTZSHIFT;
 use crate::r_main::MAXLIGHTZ;
 use crate::r_segs::MAXDRAWSEGS;
 use crate::stdint_types::byte;
-use crate::stdint_types::size_t;
+
 use crate::tables::angle_t;
 use crate::tables::finecosine;
 use crate::tables::finesine;
 use crate::tables::ANG90;
 use crate::tables::ANGLETOFINESHIFT;
-use crate::w_wad::W_CacheLumpNum;
+use crate::w_wad::W_LumpBytes;
 use crate::w_wad::W_ReleaseLumpNum;
 
 pub struct RPlaneState {
@@ -49,19 +49,7 @@ pub struct RPlaneState {
 impl RPlaneState {
     pub const fn new() -> Self {
         RPlaneState {
-            visplanes: [visplane_t {
-                height: 0,
-                picnum: 0,
-                lightlevel: 0,
-                minx: 0,
-                maxx: 0,
-                pad1: 0,
-                top: [0; 320],
-                pad2: 0,
-                pad3: 0,
-                bottom: [0; 320],
-                pad4: 0,
-            }; 128],
+            visplanes: [visplane_t::EMPTY; 128],
             lastvisplane: 0,
             floorplane: None,
             ceilingplane: None,
@@ -131,7 +119,7 @@ pub fn R_MapPlane(state: &mut GameState, mut y: i32, mut x1: i32, mut x2: i32) {
     state.r_draw.ds_x2 = x2;
     state.r_main.spanfunc.expect("non-null function pointer")(state);
 }
-pub unsafe fn R_ClearPlanes(state: &mut GameState) {
+pub fn R_ClearPlanes(state: &mut GameState) {
     let mut i: i32 = 0;
     let mut angle: angle_t = 0;
     i = 0_i32;
@@ -142,16 +130,12 @@ pub unsafe fn R_ClearPlanes(state: &mut GameState) {
     }
     state.r_plane.lastvisplane = 0;
     state.r_plane.lastopening = 0;
-    memset(
-        &raw mut state.r_plane.cachedheight as *mut fixed_t as *mut ::core::ffi::c_void,
-        0_i32,
-        ::core::mem::size_of::<[fixed_t; 200]>() as size_t,
-    );
+    state.r_plane.cachedheight = [0; 200];
     angle = state.r_main.viewangle.wrapping_sub(ANG90 as angle_t) >> ANGLETOFINESHIFT;
     state.r_plane.basexscale = FixedDiv(finecosine[angle as isize], state.r_main.centerxfrac);
     state.r_plane.baseyscale = -FixedDiv(finesine[angle as usize], state.r_main.centerxfrac);
 }
-pub unsafe fn R_FindPlane(
+pub fn R_FindPlane(
     state: &mut GameState,
     mut height: fixed_t,
     mut picnum: i32,
@@ -176,73 +160,50 @@ pub unsafe fn R_FindPlane(
         I_Error("R_FindPlane: no more visplanes");
     }
     state.r_plane.lastvisplane += 1;
-    let pl = &raw mut state.r_plane.visplanes[check];
-    (*pl).height = height;
-    (*pl).picnum = picnum;
-    (*pl).lightlevel = lightlevel;
-    (*pl).minx = SCREENWIDTH;
-    (*pl).maxx = -1_i32;
-    memset(
-        &raw mut (*pl).top as *mut byte as *mut ::core::ffi::c_void,
-        0xff_i32,
-        ::core::mem::size_of::<[byte; 320]>() as size_t,
-    );
+    let pl = &mut state.r_plane.visplanes[check];
+    pl.height = height;
+    pl.picnum = picnum;
+    pl.lightlevel = lightlevel;
+    pl.minx = SCREENWIDTH;
+    pl.maxx = -1_i32;
+    pl.clear_top();
     check
 }
-pub unsafe fn R_CheckPlane(
-    state: &mut GameState,
-    mut pl: usize,
-    mut start: i32,
-    mut stop: i32,
-) -> usize {
-    let mut intrl: i32 = 0;
-    let mut intrh: i32 = 0;
-    let mut unionl: i32 = 0;
-    let mut unionh: i32 = 0;
-    let mut x: i32 = 0;
-    let plv = &raw mut state.r_plane.visplanes[pl];
-    if start < (*plv).minx {
-        intrl = (*plv).minx;
-        unionl = start;
+pub fn R_CheckPlane(state: &mut GameState, pl: usize, start: i32, stop: i32) -> usize {
+    let plv = &mut state.r_plane.visplanes[pl];
+    let (intrl, unionl) = if start < plv.minx {
+        (plv.minx, start)
     } else {
-        unionl = (*plv).minx;
-        intrl = start;
-    }
-    if stop > (*plv).maxx {
-        intrh = (*plv).maxx;
-        unionh = stop;
+        (start, plv.minx)
+    };
+    let (intrh, unionh) = if stop > plv.maxx {
+        (plv.maxx, stop)
     } else {
-        unionh = (*plv).maxx;
-        intrh = stop;
-    }
-    x = intrl;
+        (stop, plv.maxx)
+    };
+    let mut x = intrl;
     while x <= intrh {
-        if (*plv).top[x as usize] as i32 != 0xff_i32 {
+        if plv.top(x) as i32 != 0xff_i32 {
             break;
         }
         x += 1;
     }
     if x > intrh {
-        (*plv).minx = unionl;
-        (*plv).maxx = unionh;
+        plv.minx = unionl;
+        plv.maxx = unionh;
         return pl;
     }
-    let (height, picnum, lightlevel) = ((*plv).height, (*plv).picnum, (*plv).lightlevel);
+    let (height, picnum, lightlevel) = (plv.height, plv.picnum, plv.lightlevel);
     let fresh0 = state.r_plane.lastvisplane;
     state.r_plane.visplanes[fresh0].height = height;
     state.r_plane.visplanes[fresh0].picnum = picnum;
     state.r_plane.visplanes[fresh0].lightlevel = lightlevel;
     state.r_plane.lastvisplane += 1;
-    pl = fresh0;
-    let plv = &raw mut state.r_plane.visplanes[pl];
-    (*plv).minx = start;
-    (*plv).maxx = stop;
-    memset(
-        &raw mut (*plv).top as *mut byte as *mut ::core::ffi::c_void,
-        0xff_i32,
-        ::core::mem::size_of::<[byte; 320]>() as size_t,
-    );
-    pl
+    let plv = &mut state.r_plane.visplanes[fresh0];
+    plv.minx = start;
+    plv.maxx = stop;
+    plv.clear_top();
+    fresh0
 }
 pub fn R_MakeSpans(
     state: &mut GameState,
@@ -271,7 +232,7 @@ pub fn R_MakeSpans(
         b2 -= 1;
     }
 }
-pub unsafe fn R_DrawPlanes(state: &mut GameState) {
+pub fn R_DrawPlanes(state: &mut GameState) {
     let mut pl: usize = 0;
     let mut light: i32 = 0;
     let mut x: i32 = 0;
@@ -298,16 +259,16 @@ pub unsafe fn R_DrawPlanes(state: &mut GameState) {
     }
     pl = 0;
     while pl < state.r_plane.lastvisplane {
-        let plv = &raw mut state.r_plane.visplanes[pl];
-        if (*plv).minx <= (*plv).maxx {
-            if (*plv).picnum == state.r_sky.skyflatnum {
+        let mut plv = state.r_plane.visplanes[pl];
+        if plv.minx <= plv.maxx {
+            if plv.picnum == state.r_sky.skyflatnum {
                 state.r_draw.dc_iscale = state.r_things.pspriteiscale >> state.r_main.detailshift;
                 state.r_draw.dc_colormap = Some(0);
                 state.r_draw.dc_texturemid = state.r_sky.skytexturemid as fixed_t;
-                x = (*plv).minx;
-                while x <= (*plv).maxx {
-                    state.r_draw.dc_yl = (*plv).top[x as usize] as i32;
-                    state.r_draw.dc_yh = (*plv).bottom[x as usize] as i32;
+                x = plv.minx;
+                while x <= plv.maxx {
+                    state.r_draw.dc_yl = plv.top(x) as i32;
+                    state.r_draw.dc_yh = plv.bottom(x) as i32;
                     if state.r_draw.dc_yl <= state.r_draw.dc_yh {
                         angle = (state
                             .r_main
@@ -323,14 +284,14 @@ pub unsafe fn R_DrawPlanes(state: &mut GameState) {
                 }
             } else {
                 lumpnum =
-                    state.r_data.firstflat + state.r_data.flattranslation[(*plv).picnum as usize];
-                W_CacheLumpNum(state, lumpnum);
+                    state.r_data.firstflat + state.r_data.flattranslation[plv.picnum as usize];
+                W_LumpBytes(state, lumpnum);
                 state.r_draw.ds_source = Some(ColumnSource::Lump {
                     lump: lumpnum,
                     offset: 0,
                 });
-                state.r_plane.planeheight = ((*plv).height - state.r_main.viewz).abs() as fixed_t;
-                light = ((*plv).lightlevel >> LIGHTSEGSHIFT) + state.r_main.extralight;
+                state.r_plane.planeheight = (plv.height - state.r_main.viewz).abs() as fixed_t;
+                light = (plv.lightlevel >> LIGHTSEGSHIFT) + state.r_main.extralight;
                 if light >= LIGHTLEVELS {
                     light = LIGHTLEVELS - 1_i32;
                 }
@@ -338,21 +299,19 @@ pub unsafe fn R_DrawPlanes(state: &mut GameState) {
                     light = 0_i32;
                 }
                 state.r_plane.planezlight = light as usize;
-                *(&raw mut (*plv).top as *mut byte).offset(((*plv).maxx + 1_i32) as isize) =
-                    0xff as byte;
-                *(&raw mut (*plv).top as *mut byte).offset(((*plv).minx - 1_i32) as isize) =
-                    0xff as byte;
-                stop = (*plv).maxx + 1_i32;
-                x = (*plv).minx;
+                plv.set_top(plv.maxx + 1_i32, 0xff as byte);
+                plv.set_top(plv.minx - 1_i32, 0xff as byte);
+                state.r_plane.visplanes[pl] = plv;
+                stop = plv.maxx + 1_i32;
+                x = plv.minx;
                 while x <= stop {
                     R_MakeSpans(
                         state,
                         x,
-                        *(&raw const (*plv).top as *const byte).offset((x - 1_i32) as isize) as i32,
-                        *(&raw const (*plv).bottom as *const byte).offset((x - 1_i32) as isize)
-                            as i32,
-                        *(&raw const (*plv).top as *const byte).offset(x as isize) as i32,
-                        *(&raw const (*plv).bottom as *const byte).offset(x as isize) as i32,
+                        plv.top(x - 1_i32) as i32,
+                        plv.bottom(x - 1_i32) as i32,
+                        plv.top(x) as i32,
+                        plv.bottom(x) as i32,
                     );
                     x += 1;
                 }

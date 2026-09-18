@@ -18,7 +18,7 @@ use crate::sounds::{sfx_barexp, sfx_pistol, sfx_pldeth, sfx_sgcock, sfx_slop};
 use crate::st_stuff::load_callback_t;
 use crate::v_video::V_CachePatchNum;
 use crate::v_video::V_DrawPatch;
-use crate::w_wad::{W_CacheLumpNum, W_CheckNumForName, W_GetNumForName, W_ReleaseLumpName};
+use crate::w_wad::{W_CheckNumForName, W_GetNumForName, W_LumpBytes, W_ReleaseLumpName};
 
 pub struct WiStuffState {
     pub epsd0animinfo: [anim_t; 10],
@@ -796,7 +796,7 @@ pub fn WI_drawEL(state: &mut GameState) {
         &next_patch,
     );
 }
-pub unsafe fn WI_drawOnLnode(state: &mut GameState, mut n: i32, mut c: *mut i32) {
+pub fn WI_drawOnLnode(state: &mut GameState, n: i32, c: &[i32]) {
     let mut i: i32 = 0;
     let mut left: i32 = 0;
     let mut top: i32 = 0;
@@ -805,7 +805,7 @@ pub unsafe fn WI_drawOnLnode(state: &mut GameState, mut n: i32, mut c: *mut i32)
     let mut fits: bool = false;
     i = 0_i32;
     loop {
-        let patch = V_CachePatchNum(state, *c.offset(i as isize));
+        let patch = V_CachePatchNum(state, c[i as usize]);
         left = lnodes[state.wbs().epsd as usize][n as usize].x - patch.leftoffset();
         top = lnodes[state.wbs().epsd as usize][n as usize].y - patch.topoffset();
         right = left + patch.width();
@@ -815,12 +815,12 @@ pub unsafe fn WI_drawOnLnode(state: &mut GameState, mut n: i32, mut c: *mut i32)
         } else {
             i += 1;
         }
-        if !(!fits && i != 2_i32 && *c.offset(i as isize) != -1) {
+        if !(!fits && i != 2_i32 && c[i as usize] != -1) {
             break;
         }
     }
     if fits && i < 2_i32 {
-        let patch = V_CachePatchNum(state, *c.offset(i as isize));
+        let patch = V_CachePatchNum(state, c[i as usize]);
         let index = state.wbs().epsd as usize;
         let dest_screen = Screen::Video;
         V_DrawPatch(
@@ -834,9 +834,8 @@ pub unsafe fn WI_drawOnLnode(state: &mut GameState, mut n: i32, mut c: *mut i32)
         print!("Could not place patch on level {}", n + 1_i32);
     };
 }
-pub unsafe fn WI_initAnimatedBack(state: &mut GameState) {
+pub fn WI_initAnimatedBack(state: &mut GameState) {
     let mut i: i32 = 0;
-    let mut a: *mut anim_t = ::core::ptr::null_mut::<anim_t>();
     if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 {
         return;
     }
@@ -846,25 +845,25 @@ pub unsafe fn WI_initAnimatedBack(state: &mut GameState) {
     i = 0_i32;
     while i < state.wi_stuff.NUMANIMS[state.wbs().epsd as usize] {
         let index = state.wbs().epsd as usize;
-        a = (&mut state.wi_stuff.anims()[index][i as usize]) as *mut anim_t;
-        (*a).ctr = -1_i32;
-        if (*a).type_0 == AnimEnum::ANIM_ALWAYS {
-            (*a).nexttic =
-                state.wi_stuff.bcnt + 1_i32 + M_Random(&mut state.m_random) % (*a).period;
-        } else if (*a).type_0 == AnimEnum::ANIM_RANDOM {
-            (*a).nexttic = state.wi_stuff.bcnt
+        let mut a = state.wi_stuff.anims()[index][i as usize];
+        a.ctr = -1_i32;
+        if a.type_0 == AnimEnum::ANIM_ALWAYS {
+            a.nexttic =
+                state.wi_stuff.bcnt + 1_i32 + M_Random(&mut state.m_random) % a.period;
+        } else if a.type_0 == AnimEnum::ANIM_RANDOM {
+            a.nexttic = state.wi_stuff.bcnt
                 + 1_i32
-                + (*a).data2
-                + M_Random(&mut state.m_random) % (*a).data1;
-        } else if (*a).type_0 == AnimEnum::ANIM_LEVEL {
-            (*a).nexttic = state.wi_stuff.bcnt + 1_i32;
+                + a.data2
+                + M_Random(&mut state.m_random) % a.data1;
+        } else if a.type_0 == AnimEnum::ANIM_LEVEL {
+            a.nexttic = state.wi_stuff.bcnt + 1_i32;
         }
+        state.wi_stuff.anims()[index][i as usize] = a;
         i += 1;
     }
 }
-pub unsafe fn WI_updateAnimatedBack(state: &mut GameState) {
+pub fn WI_updateAnimatedBack(state: &mut GameState) {
     let mut i: i32 = 0;
-    let mut a: *mut anim_t = ::core::ptr::null_mut::<anim_t>();
     if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 {
         return;
     }
@@ -874,47 +873,47 @@ pub unsafe fn WI_updateAnimatedBack(state: &mut GameState) {
     i = 0_i32;
     while i < state.wi_stuff.NUMANIMS[state.wbs().epsd as usize] {
         let index = state.wbs().epsd as usize;
-        a = (&mut state.wi_stuff.anims()[index][i as usize]) as *mut anim_t;
-        if state.wi_stuff.bcnt == (*a).nexttic {
-            match (*a).type_0 as u32 {
+        let mut a = state.wi_stuff.anims()[index][i as usize];
+        if state.wi_stuff.bcnt == a.nexttic {
+            match a.type_0 as u32 {
                 0 => {
-                    (*a).ctr += 1;
-                    if (*a).ctr >= (*a).nanims {
-                        (*a).ctr = 0_i32;
+                    a.ctr += 1;
+                    if a.ctr >= a.nanims {
+                        a.ctr = 0_i32;
                     }
-                    (*a).nexttic = state.wi_stuff.bcnt + (*a).period;
+                    a.nexttic = state.wi_stuff.bcnt + a.period;
                 }
                 1 => {
-                    (*a).ctr += 1;
-                    if (*a).ctr == (*a).nanims {
-                        (*a).ctr = -1_i32;
-                        (*a).nexttic = state.wi_stuff.bcnt
-                            + (*a).data2
-                            + M_Random(&mut state.m_random) % (*a).data1;
+                    a.ctr += 1;
+                    if a.ctr == a.nanims {
+                        a.ctr = -1_i32;
+                        a.nexttic = state.wi_stuff.bcnt
+                            + a.data2
+                            + M_Random(&mut state.m_random) % a.data1;
                     } else {
-                        (*a).nexttic = state.wi_stuff.bcnt + (*a).period;
+                        a.nexttic = state.wi_stuff.bcnt + a.period;
                     }
                 }
                 2 => {
                     if !(state.wi_stuff.state == StateEnum::StatCount && i == 7_i32)
-                        && state.wbs().next == (*a).data1
+                        && state.wbs().next == a.data1
                     {
-                        (*a).ctr += 1;
-                        if (*a).ctr == (*a).nanims {
-                            (*a).ctr -= 1;
+                        a.ctr += 1;
+                        if a.ctr == a.nanims {
+                            a.ctr -= 1;
                         }
-                        (*a).nexttic = state.wi_stuff.bcnt + (*a).period;
+                        a.nexttic = state.wi_stuff.bcnt + a.period;
                     }
                 }
                 _ => {}
             }
         }
+        state.wi_stuff.anims()[index][i as usize] = a;
         i += 1;
     }
 }
-pub unsafe fn WI_drawAnimatedBack(state: &mut GameState) {
+pub fn WI_drawAnimatedBack(state: &mut GameState) {
     let mut i: i32 = 0;
-    let mut a: *mut anim_t = ::core::ptr::null_mut::<anim_t>();
     if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 {
         return;
     }
@@ -924,11 +923,11 @@ pub unsafe fn WI_drawAnimatedBack(state: &mut GameState) {
     i = 0_i32;
     while i < state.wi_stuff.NUMANIMS[state.wbs().epsd as usize] {
         let index = state.wbs().epsd as usize;
-        a = (&mut state.wi_stuff.anims()[index][i as usize]) as *mut anim_t;
-        if (*a).ctr >= 0_i32 {
-            let patch = V_CachePatchNum(state, (*a).p[(*a).ctr as usize]);
+        let mut a = state.wi_stuff.anims()[index][i as usize];
+        if a.ctr >= 0_i32 {
+            let patch = V_CachePatchNum(state, a.p[a.ctr as usize]);
             let dest_screen = Screen::Video;
-            V_DrawPatch(state, dest_screen, (*a).loc.x, (*a).loc.y, &patch);
+            V_DrawPatch(state, dest_screen, a.loc.x, a.loc.y, &patch);
         }
         i += 1;
     }
@@ -1034,7 +1033,7 @@ pub fn WI_initNoState(state: &mut GameState) {
     state.wi_stuff.cnt = 10_i32;
 }
 pub fn WI_updateNoState(state: &mut GameState) {
-    unsafe { WI_updateAnimatedBack(state) };
+    WI_updateAnimatedBack(state);
     state.wi_stuff.cnt -= 1;
     if state.wi_stuff.cnt == 0 {
         G_WorldDone(state);
@@ -1044,10 +1043,10 @@ pub fn WI_initShowNextLoc(state: &mut GameState) {
     state.wi_stuff.state = StateEnum::ShowNextLoc;
     state.wi_stuff.acceleratestage = 0_i32;
     state.wi_stuff.cnt = SHOWNEXTLOCDELAY * TICRATE;
-    unsafe { WI_initAnimatedBack(state) };
+    WI_initAnimatedBack(state);
 }
 pub fn WI_updateShowNextLoc(state: &mut GameState) {
-    unsafe { WI_updateAnimatedBack(state) };
+    WI_updateAnimatedBack(state);
     state.wi_stuff.cnt -= 1;
     if state.wi_stuff.cnt == 0 || state.wi_stuff.acceleratestage != 0 {
         WI_initNoState(state);
@@ -1055,7 +1054,7 @@ pub fn WI_updateShowNextLoc(state: &mut GameState) {
         state.wi_stuff.snl_pointeron = (state.wi_stuff.cnt & 31_i32) < 20_i32;
     };
 }
-pub unsafe fn WI_drawShowNextLoc(state: &mut GameState) {
+pub fn WI_drawShowNextLoc(state: &mut GameState) {
     let mut i: i32 = 0;
     let mut last: i32 = 0;
     WI_slamBackground(state);
@@ -1072,18 +1071,18 @@ pub unsafe fn WI_drawShowNextLoc(state: &mut GameState) {
         };
         i = 0_i32;
         while i <= last {
-            let splat = &raw mut state.wi_stuff.splat as *mut i32;
-            WI_drawOnLnode(state, i, splat);
+            let splat = state.wi_stuff.splat;
+            WI_drawOnLnode(state, i, &splat);
             i += 1;
         }
         if state.wbs().didsecret {
-            let splat = &raw mut state.wi_stuff.splat as *mut i32;
-            WI_drawOnLnode(state, 8_i32, splat);
+            let splat = state.wi_stuff.splat;
+            WI_drawOnLnode(state, 8_i32, &splat);
         }
         if state.wi_stuff.snl_pointeron {
             let next = state.wbs().next;
-            let yah = &raw mut state.wi_stuff.yah as *mut i32;
-            WI_drawOnLnode(state, next, yah);
+            let yah = state.wi_stuff.yah;
+            WI_drawOnLnode(state, next, &yah);
         }
     }
     if state.doomstat.gamemode as u32 != GameMode_t::commercial as i32 as u32
@@ -1094,7 +1093,7 @@ pub unsafe fn WI_drawShowNextLoc(state: &mut GameState) {
 }
 pub fn WI_drawNoState(state: &mut GameState) {
     state.wi_stuff.snl_pointeron = true;
-    unsafe { WI_drawShowNextLoc(state) };
+    WI_drawShowNextLoc(state);
 }
 pub fn WI_fragSum(state: &mut GameState, mut playernum: i32) -> i32 {
     let mut i: i32 = 0;
@@ -1130,9 +1129,9 @@ pub fn WI_initDeathmatchStats(state: &mut GameState) {
         }
         i += 1;
     }
-    unsafe { WI_initAnimatedBack(state) };
+    WI_initAnimatedBack(state);
 }
-pub unsafe fn WI_updateDeathmatchStats(state: &mut GameState) {
+pub fn WI_updateDeathmatchStats(state: &mut GameState) {
     let mut i: i32 = 0;
     let mut j: i32 = 0;
     let mut stillticking: bool = false;
@@ -1217,7 +1216,7 @@ pub unsafe fn WI_updateDeathmatchStats(state: &mut GameState) {
         }
     }
 }
-pub unsafe fn WI_drawDeathmatchStats(state: &mut GameState) {
+pub fn WI_drawDeathmatchStats(state: &mut GameState) {
     let mut i: i32 = 0;
     let mut j: i32 = 0;
     let mut x: i32 = 0;
@@ -1330,9 +1329,9 @@ pub fn WI_initNetgameStats(state: &mut GameState) {
         i += 1;
     }
     state.wi_stuff.dofrags = (state.wi_stuff.dofrags != 0) as i32;
-    unsafe { WI_initAnimatedBack(state) };
+    WI_initAnimatedBack(state);
 }
-pub unsafe fn WI_updateNetgameStats(state: &mut GameState) {
+pub fn WI_updateNetgameStats(state: &mut GameState) {
     let mut i: i32 = 0;
     let mut fsum: i32 = 0;
     let mut stillticking: bool = false;
@@ -1468,7 +1467,7 @@ pub unsafe fn WI_updateNetgameStats(state: &mut GameState) {
         }
     }
 }
-pub unsafe fn WI_drawNetgameStats(state: &mut GameState) {
+pub fn WI_drawNetgameStats(state: &mut GameState) {
     let mut i: i32 = 0;
     let mut x: i32 = 0;
     let mut y: i32 = 0;
@@ -1577,9 +1576,9 @@ pub fn WI_initStats(state: &mut GameState) {
     state.wi_stuff.cnt_par = -1_i32;
     state.wi_stuff.cnt_time = state.wi_stuff.cnt_par;
     state.wi_stuff.cnt_pause = TICRATE;
-    unsafe { WI_initAnimatedBack(state) };
+    WI_initAnimatedBack(state);
 }
-pub unsafe fn WI_updateStats(state: &mut GameState) {
+pub fn WI_updateStats(state: &mut GameState) {
     WI_updateAnimatedBack(state);
     if state.wi_stuff.acceleratestage != 0 && state.wi_stuff.sp_state != 10_i32 {
         state.wi_stuff.acceleratestage = 0_i32;
@@ -1666,7 +1665,7 @@ pub unsafe fn WI_updateStats(state: &mut GameState) {
         }
     }
 }
-pub unsafe fn WI_drawStats(state: &mut GameState) {
+pub fn WI_drawStats(state: &mut GameState) {
     let mut lh: i32 = 0;
     let zero_patch = V_CachePatchNum(state, state.wi_stuff.num[0]);
     lh = 3_i32 * zero_patch.height() / 2_i32;
@@ -1757,11 +1756,11 @@ pub fn WI_Ticker(state: &mut GameState) {
     match state.wi_stuff.state {
         StateEnum::StatCount => {
             if state.g_game.deathmatch != 0 {
-                unsafe { WI_updateDeathmatchStats(state) };
+                WI_updateDeathmatchStats(state);
             } else if state.g_game.netgame {
-                unsafe { WI_updateNetgameStats(state) };
+                WI_updateNetgameStats(state);
             } else {
-                unsafe { WI_updateStats(state) };
+                WI_updateStats(state);
             }
         }
         StateEnum::ShowNextLoc => {
@@ -1843,7 +1842,7 @@ fn WI_loadUnloadData(state: &mut GameState, callback: load_callback_t) {
 }
 fn WI_loadCallback(state: &mut GameState, name: &str) -> i32 {
     let lumpnum = W_GetNumForName(&mut state.w_wad, name);
-    W_CacheLumpNum(state, lumpnum);
+    W_LumpBytes(state, lumpnum);
     lumpnum
 }
 pub fn WI_loadData(state: &mut GameState) {
@@ -1855,10 +1854,10 @@ pub fn WI_loadData(state: &mut GameState) {
     }
     WI_loadUnloadData(state, WI_loadCallback);
     let star_lump = W_GetNumForName(&mut state.w_wad, "STFST01");
-    W_CacheLumpNum(state, star_lump);
+    W_LumpBytes(state, star_lump);
     state.wi_stuff.star = star_lump;
     let bstar_lump = W_GetNumForName(&mut state.w_wad, "STFDEAD0");
-    W_CacheLumpNum(state, bstar_lump);
+    W_LumpBytes(state, bstar_lump);
     state.wi_stuff.bstar = bstar_lump;
 }
 fn WI_unloadCallback(state: &mut GameState, name: &str) -> i32 {
@@ -1869,15 +1868,15 @@ pub fn WI_Drawer(state: &mut GameState) {
     match state.wi_stuff.state {
         StateEnum::StatCount => {
             if state.g_game.deathmatch != 0 {
-                unsafe { WI_drawDeathmatchStats(state) };
+                WI_drawDeathmatchStats(state);
             } else if state.g_game.netgame {
-                unsafe { WI_drawNetgameStats(state) };
+                WI_drawNetgameStats(state);
             } else {
-                unsafe { WI_drawStats(state) };
+                WI_drawStats(state);
             }
         }
         StateEnum::ShowNextLoc => {
-            unsafe { WI_drawShowNextLoc(state) };
+            WI_drawShowNextLoc(state);
         }
         StateEnum::NoState => {
             WI_drawNoState(state);

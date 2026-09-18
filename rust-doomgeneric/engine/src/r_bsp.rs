@@ -2,13 +2,12 @@ use crate::game_state::GameState;
 use crate::i_system::I_Error;
 use crate::m_bbox::{BOXBOTTOM, BOXLEFT, BOXRIGHT, BOXTOP};
 use crate::m_fixed::fixed_t;
-use crate::p_mobj::sector_t;
 use crate::p_setup::LineId;
 use crate::p_setup::SectorId;
 use crate::p_setup::SegId;
 use crate::p_setup::SideId;
 use crate::p_setup::SubsectorId;
-use crate::r_defs::{drawseg_s, drawseg_t, node_t};
+use crate::r_defs::{drawseg_s, drawseg_t};
 use crate::r_main::R_PointOnSide;
 use crate::r_main::R_PointToAngle;
 use crate::r_plane::R_FindPlane;
@@ -70,102 +69,96 @@ pub const NF_SUBSECTOR: i32 = 0x8000;
 pub fn R_ClearDrawSegs(state: &mut GameState) {
     state.r_bsp.ds_p = 0;
 }
-pub unsafe fn R_ClipSolidWallSegment(state: &mut GameState, mut first: i32, mut last: i32) {
-    let mut current_block: u64;
-    let mut next: *mut cliprange_t = ::core::ptr::null_mut::<cliprange_t>();
-    let mut start: *mut cliprange_t = ::core::ptr::null_mut::<cliprange_t>();
-    let base = &raw mut state.r_bsp.solidsegs as *mut cliprange_t;
-    start = base;
-    while (*start).last < first - 1_i32 {
-        start = start.offset(1);
+pub fn R_ClipSolidWallSegment(state: &mut GameState, first: i32, last: i32) {
+    let mut start: usize = 0;
+    while state.r_bsp.solidsegs[start].last < first - 1_i32 {
+        start += 1;
     }
-    if first < (*start).first {
-        if last < (*start).first - 1_i32 {
+    if first < state.r_bsp.solidsegs[start].first {
+        if last < state.r_bsp.solidsegs[start].first - 1_i32 {
             R_StoreWallRange(state, first, last);
-            next = base.add(state.r_bsp.newend);
+            let mut next = state.r_bsp.newend;
             state.r_bsp.newend += 1;
             while next != start {
-                *next = *next.offset(-(1_i32 as isize));
-                next = next.offset(-1);
+                state.r_bsp.solidsegs[next] = state.r_bsp.solidsegs[next - 1];
+                next -= 1;
             }
-            (*next).first = first;
-            (*next).last = last;
+            state.r_bsp.solidsegs[next].first = first;
+            state.r_bsp.solidsegs[next].last = last;
             return;
         }
-        R_StoreWallRange(state, first, (*start).first - 1_i32);
-        (*start).first = first;
+        let start_first = state.r_bsp.solidsegs[start].first;
+        R_StoreWallRange(state, first, start_first - 1_i32);
+        state.r_bsp.solidsegs[start].first = first;
     }
-    if last <= (*start).last {
+    if last <= state.r_bsp.solidsegs[start].last {
         return;
     }
-    next = start;
-    loop {
-        if last < (*next.offset(1_i32 as isize)).first - 1_i32 {
-            current_block = 224731115979188411;
-            break;
+    let mut next = start;
+    let reached_end_of_gap = loop {
+        if last < state.r_bsp.solidsegs[next + 1].first - 1_i32 {
+            break true;
         }
-        R_StoreWallRange(
-            state,
-            (*next).last + 1_i32,
-            (*next.offset(1_i32 as isize)).first - 1_i32,
+        let (from, to) = (
+            state.r_bsp.solidsegs[next].last + 1_i32,
+            state.r_bsp.solidsegs[next + 1].first - 1_i32,
         );
-        next = next.offset(1);
-        if last > (*next).last {
+        R_StoreWallRange(state, from, to);
+        next += 1;
+        if last > state.r_bsp.solidsegs[next].last {
             continue;
         }
-        (*start).last = (*next).last;
-        current_block = 18287538169731164953;
-        break;
-    }
-    match current_block {
-        224731115979188411 => {
-            R_StoreWallRange(state, (*next).last + 1_i32, last);
-            (*start).last = last;
-        }
-        _ => {}
+        state.r_bsp.solidsegs[start].last = state.r_bsp.solidsegs[next].last;
+        break false;
+    };
+    if reached_end_of_gap {
+        let from = state.r_bsp.solidsegs[next].last + 1_i32;
+        R_StoreWallRange(state, from, last);
+        state.r_bsp.solidsegs[start].last = last;
     }
     if next == start {
         return;
     }
     loop {
         let fresh0 = next;
-        next = next.offset(1);
-        if fresh0 == base.add(state.r_bsp.newend) {
+        next += 1;
+        if fresh0 == state.r_bsp.newend {
             break;
         }
-        start = start.offset(1);
-        *start = *next;
+        start += 1;
+        state.r_bsp.solidsegs[start] = state.r_bsp.solidsegs[next];
     }
-    state.r_bsp.newend = start.offset(1_i32 as isize).offset_from(base) as usize;
+    state.r_bsp.newend = start + 1;
 }
-pub unsafe fn R_ClipPassWallSegment(state: &mut GameState, mut first: i32, mut last: i32) {
-    let mut start: *mut cliprange_t = ::core::ptr::null_mut::<cliprange_t>();
-    start = &raw mut state.r_bsp.solidsegs as *mut cliprange_t;
-    while (*start).last < first - 1_i32 {
-        start = start.offset(1);
+pub fn R_ClipPassWallSegment(state: &mut GameState, first: i32, last: i32) {
+    let mut start: usize = 0;
+    while state.r_bsp.solidsegs[start].last < first - 1_i32 {
+        start += 1;
     }
-    if first < (*start).first {
-        if last < (*start).first - 1_i32 {
+    if first < state.r_bsp.solidsegs[start].first {
+        if last < state.r_bsp.solidsegs[start].first - 1_i32 {
             R_StoreWallRange(state, first, last);
             return;
         }
-        R_StoreWallRange(state, first, (*start).first - 1_i32);
+        let start_first = state.r_bsp.solidsegs[start].first;
+        R_StoreWallRange(state, first, start_first - 1_i32);
     }
-    if last <= (*start).last {
+    if last <= state.r_bsp.solidsegs[start].last {
         return;
     }
-    while last >= (*start.offset(1_i32 as isize)).first - 1_i32 {
-        R_StoreWallRange(
-            state,
-            (*start).last + 1_i32,
-            (*start.offset(1_i32 as isize)).first - 1_i32,
+    while last >= state.r_bsp.solidsegs[start + 1].first - 1_i32 {
+        let (from, to) = (
+            state.r_bsp.solidsegs[start].last + 1_i32,
+            state.r_bsp.solidsegs[start + 1].first - 1_i32,
         );
-        start = start.offset(1);
-        if last <= (*start).last {
+        R_StoreWallRange(state, from, to);
+        start += 1;
+        if last <= state.r_bsp.solidsegs[start].last {
             return;
         }
     }
-    R_StoreWallRange(state, (*start).last + 1_i32, last);
+    let from = state.r_bsp.solidsegs[start].last + 1_i32;
+    R_StoreWallRange(state, from, last);
 }
 pub fn R_ClearClipSegs(state: &mut GameState) {
     state.r_bsp.solidsegs[0].first = -0x7fffffff_i32;
@@ -174,7 +167,7 @@ pub fn R_ClearClipSegs(state: &mut GameState) {
     state.r_bsp.solidsegs[1].last = 0x7fffffff_i32;
     state.r_bsp.newend = 2;
 }
-pub unsafe fn R_AddLine(state: &mut GameState, mut line: SegId) {
+pub fn R_AddLine(state: &mut GameState, mut line: SegId) {
     let mut x1: i32 = 0;
     let mut x2: i32 = 0;
     let mut angle1: angle_t = 0;
@@ -300,7 +293,7 @@ pub static checkcoord: [[i32; 4]; 12] = [
     [2_i32, 1_i32, 3_i32, 0_i32],
     [0; 4],
 ];
-pub unsafe fn R_CheckBBox(state: &mut GameState, bspcoord: [fixed_t; 4]) -> bool {
+pub fn R_CheckBBox(state: &mut GameState, bspcoord: [fixed_t; 4]) -> bool {
     let mut boxx: i32 = 0;
     let mut boxy: i32 = 0;
     let mut boxpos: i32 = 0;
@@ -312,7 +305,6 @@ pub unsafe fn R_CheckBBox(state: &mut GameState, bspcoord: [fixed_t; 4]) -> bool
     let mut angle2: angle_t = 0;
     let mut span: angle_t = 0;
     let mut tspan: angle_t = 0;
-    let mut start: *mut cliprange_t = ::core::ptr::null_mut::<cliprange_t>();
     let mut sx1: i32 = 0;
     let mut sx2: i32 = 0;
     if state.r_main.viewx <= bspcoord[BOXLEFT as usize] {
@@ -367,16 +359,16 @@ pub unsafe fn R_CheckBBox(state: &mut GameState, bspcoord: [fixed_t; 4]) -> bool
         return false;
     }
     sx2 -= 1;
-    start = &raw mut state.r_bsp.solidsegs as *mut cliprange_t;
-    while (*start).last < sx2 {
-        start = start.offset(1);
+    let mut start: usize = 0;
+    while state.r_bsp.solidsegs[start].last < sx2 {
+        start += 1;
     }
-    if sx1 >= (*start).first && sx2 <= (*start).last {
+    if sx1 >= state.r_bsp.solidsegs[start].first && sx2 <= state.r_bsp.solidsegs[start].last {
         return false;
     }
     true
 }
-pub unsafe fn R_Subsector(state: &mut GameState, mut num: i32) {
+pub fn R_Subsector(state: &mut GameState, mut num: i32) {
     let mut count: i32 = 0;
     let mut line: SegId;
     if num >= state.p_setup.numsubsectors {
@@ -390,31 +382,27 @@ pub unsafe fn R_Subsector(state: &mut GameState, mut num: i32) {
     state.r_bsp.frontsector = Some(sub.sector);
     count = sub.numlines as i32;
     line = SegId(sub.firstline as u32);
-    let frontsector: *mut sector_t = state.p_setup.sector_mut(state.r_bsp.frontsector.unwrap());
-    if (*frontsector).floorheight < state.r_main.viewz {
-        let (floorheight, floorpic, lightlevel) = (
-            (*frontsector).floorheight,
-            (*frontsector).floorpic as i32,
-            (*frontsector).lightlevel as i32,
-        );
+    let frontsector_id = state.r_bsp.frontsector.unwrap();
+    let frontsector = state.p_setup.sector_mut(frontsector_id);
+    let (floorheight, floorpic, ceilingheight, ceilingpic, lightlevel) = (
+        frontsector.floorheight,
+        frontsector.floorpic as i32,
+        frontsector.ceilingheight,
+        frontsector.ceilingpic as i32,
+        frontsector.lightlevel as i32,
+    );
+    if floorheight < state.r_main.viewz {
         state.r_plane.floorplane = Some(R_FindPlane(state, floorheight, floorpic, lightlevel));
     } else {
         state.r_plane.floorplane = None;
     }
-    if (*frontsector).ceilingheight > state.r_main.viewz
-        || (*frontsector).ceilingpic as i32 == state.r_sky.skyflatnum
-    {
-        let (ceilingheight, ceilingpic, lightlevel) = (
-            (*frontsector).ceilingheight,
-            (*frontsector).ceilingpic as i32,
-            (*frontsector).lightlevel as i32,
-        );
+    if ceilingheight > state.r_main.viewz || ceilingpic == state.r_sky.skyflatnum {
         state.r_plane.ceilingplane =
             Some(R_FindPlane(state, ceilingheight, ceilingpic, lightlevel));
     } else {
         state.r_plane.ceilingplane = None;
     }
-    R_AddSprites(state, frontsector);
+    R_AddSprites(state, frontsector_id);
     loop {
         let fresh1 = count;
         count -= 1;
@@ -425,9 +413,8 @@ pub unsafe fn R_Subsector(state: &mut GameState, mut num: i32) {
         line = SegId(line.0 + 1);
     }
 }
-pub unsafe fn R_RenderBSPNode(state: &mut GameState, mut bspnum: i32) {
-    let mut bsp: *mut node_t = ::core::ptr::null_mut::<node_t>();
-    let mut side: i32 = 0;
+pub fn R_RenderBSPNode(state: &mut GameState, mut bspnum: i32) {
+    let side: i32;
     if bspnum & NF_SUBSECTOR != 0 {
         if bspnum == -1_i32 {
             R_Subsector(state, 0_i32);
@@ -436,10 +423,10 @@ pub unsafe fn R_RenderBSPNode(state: &mut GameState, mut bspnum: i32) {
         }
         return;
     }
-    bsp = state.p_setup.nodes.as_mut_ptr().offset(bspnum as isize);
-    side = R_PointOnSide(state.r_main.viewx, state.r_main.viewy, &*bsp);
-    R_RenderBSPNode(state, (*bsp).children[side as usize] as i32);
-    if R_CheckBBox(state, (*bsp).bbox[(side ^ 1_i32) as usize]) {
-        R_RenderBSPNode(state, (*bsp).children[(side ^ 1_i32) as usize] as i32);
+    let bsp = state.p_setup.nodes[bspnum as usize];
+    side = R_PointOnSide(state.r_main.viewx, state.r_main.viewy, &bsp);
+    R_RenderBSPNode(state, bsp.children[side as usize] as i32);
+    if R_CheckBBox(state, bsp.bbox[(side ^ 1_i32) as usize]) {
+        R_RenderBSPNode(state, bsp.children[(side ^ 1_i32) as usize] as i32);
     }
 }

@@ -35,7 +35,7 @@ use crate::p_mobj::P_SpawnPuff;
 use crate::p_mobj::P_SubstNullMobj;
 
 
-use crate::p_mobj::{mobjinfo_t};
+
 use crate::p_mobj::{
     MF_AMBUSH, MF_CORPSE, MF_FLOAT, MF_INFLOAT, MF_JUSTATTACKED, MF_JUSTHIT, MF_SHADOW,
     MF_SHOOTABLE, MF_SKULLFLY, MF_SOLID,
@@ -997,61 +997,60 @@ pub fn PIT_VileCheck(state: &mut GameState, mut thing_id: MobjId) -> bool {
     false
 }
 pub fn A_VileChase(state: &mut GameState, id: MobjId) {
-    unsafe {
-        let actor = id;
-        let mut xl: i32 = 0;
-        let mut xh: i32 = 0;
-        let mut yl: i32 = 0;
-        let mut yh: i32 = 0;
-        let mut bx: i32 = 0;
-        let mut by: i32 = 0;
-        let mut info: *mut mobjinfo_t = ::core::ptr::null_mut::<mobjinfo_t>();
-        let mut temp: Option<MobjId> = None;
-        if state.p_mobj.mo(actor).movedir != DirType::DI_NODIR as i32 {
-            state.p_enemy.viletryx = state.p_mobj.mo(actor).x
-                + state.info.mobjinfo_mut(state.p_mobj.mo(actor).type_0).speed as fixed_t
-                    * xspeed[state.p_mobj.mo(actor).movedir as usize];
-            state.p_enemy.viletryy = state.p_mobj.mo(actor).y
-                + state.info.mobjinfo_mut(state.p_mobj.mo(actor).type_0).speed as fixed_t
-                    * yspeed[state.p_mobj.mo(actor).movedir as usize];
-            xl = (state.p_enemy.viletryx - state.p_setup.bmaporgx - 32_i32 * FRACUNIT * 2_i32) >> MAPBLOCKSHIFT;
-            xh = (state.p_enemy.viletryx - state.p_setup.bmaporgx + 32_i32 * FRACUNIT * 2_i32) >> MAPBLOCKSHIFT;
-            yl = (state.p_enemy.viletryy - state.p_setup.bmaporgy - 32_i32 * FRACUNIT * 2_i32) >> MAPBLOCKSHIFT;
-            yh = (state.p_enemy.viletryy - state.p_setup.bmaporgy + 32_i32 * FRACUNIT * 2_i32) >> MAPBLOCKSHIFT;
-            state.p_enemy.vileobj = Some(actor);
-            bx = xl;
-            while bx <= xh {
-                by = yl;
-                while by <= yh {
-                    if !P_BlockThingsIterator(
-                        state,
-                        bx,
-                        by,
-                        |s, id| PIT_VileCheck(s, id),
-                    ) {
-                        let corpsehit_id = state.p_enemy.corpsehit.unwrap();
-                        let corpsehit = corpsehit_id;
-                        temp = state.p_mobj.mo(actor).target;
-                        state.p_mobj.mo_mut(actor).target = Some(corpsehit_id);
-                        A_FaceTarget(state, actor);
-                        state.p_mobj.mo_mut(actor).target = temp;
-                        P_SetMobjState(state, actor, StateNum::S_VILE_HEAL1);
-                        S_StartSound(state, SoundOrigin::Mobj(corpsehit_id), sfx_slop as i32);
-                        info = state.info.mobjinfo_mut(state.p_mobj.mo(corpsehit).type_0);
-                        P_SetMobjState(state, corpsehit, (*info).raisestate);
-                        state.p_mobj.mo_mut(corpsehit).height <<= 2_i32;
-                        state.p_mobj.mo_mut(corpsehit).flags = (*info).flags;
-                        state.p_mobj.mo_mut(corpsehit).health = (*info).spawnhealth;
-                        state.p_mobj.mo_mut(corpsehit).target = None;
-                        return;
-                    }
-                    by += 1;
+    let actor = id;
+    let mut xl: i32 = 0;
+    let mut xh: i32 = 0;
+    let mut yl: i32 = 0;
+    let mut yh: i32 = 0;
+    let mut bx: i32 = 0;
+    let mut by: i32 = 0;
+    let mut temp: Option<MobjId> = None;
+    if state.p_mobj.mo(actor).movedir != DirType::DI_NODIR as i32 {
+        state.p_enemy.viletryx = state.p_mobj.mo(actor).x
+            + state.info.mobjinfo_mut(state.p_mobj.mo(actor).type_0).speed as fixed_t
+                * xspeed[state.p_mobj.mo(actor).movedir as usize];
+        state.p_enemy.viletryy = state.p_mobj.mo(actor).y
+            + state.info.mobjinfo_mut(state.p_mobj.mo(actor).type_0).speed as fixed_t
+                * yspeed[state.p_mobj.mo(actor).movedir as usize];
+        xl = (state.p_enemy.viletryx - state.p_setup.bmaporgx - 32_i32 * FRACUNIT * 2_i32) >> MAPBLOCKSHIFT;
+        xh = (state.p_enemy.viletryx - state.p_setup.bmaporgx + 32_i32 * FRACUNIT * 2_i32) >> MAPBLOCKSHIFT;
+        yl = (state.p_enemy.viletryy - state.p_setup.bmaporgy - 32_i32 * FRACUNIT * 2_i32) >> MAPBLOCKSHIFT;
+        yh = (state.p_enemy.viletryy - state.p_setup.bmaporgy + 32_i32 * FRACUNIT * 2_i32) >> MAPBLOCKSHIFT;
+        state.p_enemy.vileobj = Some(actor);
+        bx = xl;
+        while bx <= xh {
+            by = yl;
+            while by <= yh {
+                if !P_BlockThingsIterator(
+                    state,
+                    bx,
+                    by,
+                    |s, id| PIT_VileCheck(s, id),
+                ) {
+                    let corpsehit_id = state.p_enemy.corpsehit.unwrap();
+                    let corpsehit = corpsehit_id;
+                    temp = state.p_mobj.mo(actor).target;
+                    state.p_mobj.mo_mut(actor).target = Some(corpsehit_id);
+                    A_FaceTarget(state, actor);
+                    state.p_mobj.mo_mut(actor).target = temp;
+                    P_SetMobjState(state, actor, StateNum::S_VILE_HEAL1);
+                    S_StartSound(state, SoundOrigin::Mobj(corpsehit_id), sfx_slop as i32);
+                    let info = state.info.mobjinfo_mut(state.p_mobj.mo(corpsehit).type_0);
+                    let (raisestate, info_flags, spawnhealth) =
+                        (info.raisestate, info.flags, info.spawnhealth);
+                    P_SetMobjState(state, corpsehit, raisestate);
+                    state.p_mobj.mo_mut(corpsehit).height <<= 2_i32;
+                    state.p_mobj.mo_mut(corpsehit).flags = info_flags;
+                    state.p_mobj.mo_mut(corpsehit).health = spawnhealth;
+                    state.p_mobj.mo_mut(corpsehit).target = None;
+                    return;
                 }
-                bx += 1;
+                by += 1;
             }
+            bx += 1;
         }
-        A_Chase(state, actor);
     }
+    A_Chase(state, actor);
 }
 pub fn A_VileStart(state: &mut GameState, id: MobjId) {
     {

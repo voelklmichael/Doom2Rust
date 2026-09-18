@@ -32,6 +32,7 @@ use crate::m_controls::KEY_SCRLCK;
 use crate::m_controls::KEY_UPARROW;
 use crate::m_misc::M_MakeDirectory;
 use crate::m_misc::M_StrToInt;
+use std::rc::Rc;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum DefaultType {
@@ -41,10 +42,13 @@ pub enum DefaultType {
     DEFAULT_FLOAT = 3,
     DEFAULT_KEY = 4,
 }
+/// Where a bound configuration variable lives: an accessor that projects the
+/// variable out of the game state.
+#[derive(Clone)]
 pub enum DefaultLocation {
-    Int(&'static mut i32),
-    Float(&'static mut f32),
-    Str(&'static mut Option<&'static str>),
+    Int(Rc<dyn Fn(&mut GameState) -> &mut i32>),
+    Float(Rc<dyn Fn(&mut GameState) -> &mut f32>),
+    Str(Rc<dyn Fn(&mut GameState) -> &mut Option<&'static str>>),
 }
 pub struct default_t {
     pub name: &'static str,
@@ -1806,16 +1810,17 @@ fn ParseIntParameter(strparm: &str) -> i32 {
     M_StrToInt(strparm, &mut parm);
     parm
 }
-fn SetVariable(def: &mut default_t, value: &str) {
+fn SetVariable(state: &mut GameState, name: &str, value: &str) {
+    let def = GetDefaultForName(&mut state.m_config, name);
     match def.type_0 {
         DefaultType::DEFAULT_STRING => {
-            if let Some(DefaultLocation::Str(loc)) = &mut def.location {
-                **loc = Some(Box::leak(value.to_string().into_boxed_str()));
+            if let Some(DefaultLocation::Str(loc)) = def.location.clone() {
+                *loc(state) = Some(Box::leak(value.to_string().into_boxed_str()));
             }
         }
         DefaultType::DEFAULT_INT | DefaultType::DEFAULT_INT_HEX => {
-            if let Some(DefaultLocation::Int(loc)) = &mut def.location {
-                **loc = ParseIntParameter(value);
+            if let Some(DefaultLocation::Int(loc)) = def.location.clone() {
+                *loc(state) = ParseIntParameter(value);
             }
         }
         DefaultType::DEFAULT_KEY => {
@@ -1827,13 +1832,13 @@ fn SetVariable(def: &mut default_t, value: &str) {
                 intparm = 0_i32;
             }
             def.original_translated = intparm;
-            if let Some(DefaultLocation::Int(loc)) = &mut def.location {
-                **loc = intparm;
+            if let Some(DefaultLocation::Int(loc)) = def.location.clone() {
+                *loc(state) = intparm;
             }
         }
         DefaultType::DEFAULT_FLOAT => {
-            if let Some(DefaultLocation::Float(loc)) = &mut def.location {
-                **loc = value.trim().parse::<f64>().unwrap_or(0.0) as f32;
+            if let Some(DefaultLocation::Float(loc)) = def.location.clone() {
+                *loc(state) = value.trim().parse::<f64>().unwrap_or(0.0) as f32;
             }
         }
     };
@@ -1900,16 +1905,11 @@ fn GetDefaultForName<'a>(state: &'a mut MConfigState, name: &str) -> &'a mut def
         I_Error(&format!("Unknown configuration variable: '{}'", name));
     }
 }
-// SAFETY invariant relied on below (all three M_BindVariable_* functions):
-// `location` is always reached through the process's single `Box::leak`'d
-// `GameState`, so it's genuinely `'static` even though the plain `&mut
-// GameState` parameter type used pervasively across this engine can't prove
-// that at any individual call site -- promoting it here, once, centralizes
-// that one unsafe step instead of threading a `&'static mut GameState` bound
-// through every caller up the chain (matches the invariant already relied on
-// for `wad_file_t`/`W_OpenFile` etc.).
-pub fn M_BindVariable_int(state: &mut MConfigState, name: &str, location: &mut i32) {
-    let location: &'static mut i32 = unsafe { &mut *(location as *mut i32) };
+pub fn M_BindVariable_int(
+    state: &mut MConfigState,
+    name: &str,
+    location: impl Fn(&mut GameState) -> &mut i32 + 'static,
+) {
     let variable = GetDefaultForName(state, name);
     match variable.type_0 {
         DefaultType::DEFAULT_INT | DefaultType::DEFAULT_INT_HEX | DefaultType::DEFAULT_KEY => {}
@@ -1918,11 +1918,14 @@ pub fn M_BindVariable_int(state: &mut MConfigState, name: &str, location: &mut i
             name
         )),
     }
-    variable.location = Some(DefaultLocation::Int(location));
+    variable.location = Some(DefaultLocation::Int(Rc::new(location)));
     variable.bound = true;
 }
-pub fn M_BindVariable_f32(state: &mut MConfigState, name: &str, location: &mut f32) {
-    let location: &'static mut f32 = unsafe { &mut *(location as *mut f32) };
+pub fn M_BindVariable_f32(
+    state: &mut MConfigState,
+    name: &str,
+    location: impl Fn(&mut GameState) -> &mut f32 + 'static,
+) {
     let variable = GetDefaultForName(state, name);
     if variable.type_0 != DefaultType::DEFAULT_FLOAT {
         I_Error(&format!(
@@ -1930,16 +1933,14 @@ pub fn M_BindVariable_f32(state: &mut MConfigState, name: &str, location: &mut f
             name
         ));
     }
-    variable.location = Some(DefaultLocation::Float(location));
+    variable.location = Some(DefaultLocation::Float(Rc::new(location)));
     variable.bound = true;
 }
 pub fn M_BindVariable_string(
     state: &mut MConfigState,
     name: &str,
-    location: &mut Option<&'static str>,
+    location: impl Fn(&mut GameState) -> &mut Option<&'static str> + 'static,
 ) {
-    let location: &'static mut Option<&'static str> =
-        unsafe { &mut *(location as *mut Option<&'static str>) };
     let variable = GetDefaultForName(state, name);
     if variable.type_0 != DefaultType::DEFAULT_STRING {
         I_Error(&format!(
@@ -1947,47 +1948,46 @@ pub fn M_BindVariable_string(
             name
         ));
     }
-    variable.location = Some(DefaultLocation::Str(location));
+    variable.location = Some(DefaultLocation::Str(Rc::new(location)));
     variable.bound = true;
 }
-pub fn M_SetVariable(state: &mut MConfigState, name: &str, value: &str) -> bool {
-    let variable = GetDefaultForName(state, name);
-    if !variable.bound {
+pub fn M_SetVariable(state: &mut GameState, name: &str, value: &str) -> bool {
+    if !GetDefaultForName(&mut state.m_config, name).bound {
         return false;
     }
-    SetVariable(variable, value);
+    SetVariable(state, name, value);
     true
 }
-pub fn M_GetIntVariable(state: &mut MConfigState, name: &str) -> i32 {
-    let variable = GetDefaultForName(state, name);
+pub fn M_GetIntVariable(state: &mut GameState, name: &str) -> i32 {
+    let variable = GetDefaultForName(&mut state.m_config, name);
     if !variable.bound
         || (variable.type_0 != DefaultType::DEFAULT_INT
             && variable.type_0 != DefaultType::DEFAULT_INT_HEX)
     {
         return 0_i32;
     }
-    match &variable.location {
-        Some(DefaultLocation::Int(loc)) => **loc,
+    match variable.location.clone() {
+        Some(DefaultLocation::Int(loc)) => *loc(state),
         _ => 0_i32,
     }
 }
-pub fn M_GetStrVariable(state: &mut MConfigState, name: &str) -> Option<&'static str> {
-    let variable = GetDefaultForName(state, name);
+pub fn M_GetStrVariable(state: &mut GameState, name: &str) -> Option<&'static str> {
+    let variable = GetDefaultForName(&mut state.m_config, name);
     if !variable.bound || variable.type_0 != DefaultType::DEFAULT_STRING {
         return None;
     }
-    match &variable.location {
-        Some(DefaultLocation::Str(loc)) => **loc,
+    match variable.location.clone() {
+        Some(DefaultLocation::Str(loc)) => *loc(state),
         _ => None,
     }
 }
-pub fn M_GetFloatVariable(state: &mut MConfigState, name: &str) -> f32 {
-    let variable = GetDefaultForName(state, name);
+pub fn M_GetFloatVariable(state: &mut GameState, name: &str) -> f32 {
+    let variable = GetDefaultForName(&mut state.m_config, name);
     if !variable.bound || variable.type_0 != DefaultType::DEFAULT_FLOAT {
         return 0_i32 as f32;
     }
-    match &variable.location {
-        Some(DefaultLocation::Float(loc)) => **loc,
+    match variable.location.clone() {
+        Some(DefaultLocation::Float(loc)) => *loc(state),
         _ => 0_i32 as f32,
     }
 }

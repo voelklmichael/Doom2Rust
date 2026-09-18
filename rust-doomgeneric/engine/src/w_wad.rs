@@ -218,15 +218,6 @@ pub fn W_LumpBytesName(state: &mut GameState, name: &str) -> std::rc::Rc<[u8]> {
     let lumpnum = W_GetNumForName(&mut state.w_wad, name);
     W_LumpBytes(state, lumpnum)
 }
-pub fn W_CacheLumpNum(state: &mut GameState, lumpnum: i32) -> *mut ::core::ffi::c_void {
-    // The cache is never evicted, so the pointer stays valid for the process
-    // lifetime; callers only read through it.
-    std::rc::Rc::as_ptr(&W_LumpBytes(state, lumpnum)) as *const u8 as *mut ::core::ffi::c_void
-}
-pub fn W_CacheLumpName(state: &mut GameState, name: &str) -> *mut ::core::ffi::c_void {
-    let lumpnum = W_GetNumForName(&mut state.w_wad, name);
-    W_CacheLumpNum(state, lumpnum)
-}
 pub fn W_ReleaseLumpNum(state: &mut WWadState, lumpnum: i32) {
     // Releasing a cached lump is a no-op now -- nothing purges cached blocks
     // under memory pressure since the zone allocator was removed entirely;

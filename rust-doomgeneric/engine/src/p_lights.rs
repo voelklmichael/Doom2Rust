@@ -186,7 +186,7 @@ impl PLightsState {
         }
     }
 
-    pub fn spawn_fireflicker(&mut self, value: fireflicker_t) -> (FireFlickerId, *mut fireflicker_t) {
+    pub fn spawn_fireflicker(&mut self, value: fireflicker_t) -> FireFlickerId {
         let (index, generation) = if let Some(index) = self.fireflicker_free_list.pop() {
             let slot = &mut self.fireflickers[index as usize];
             slot.generation = slot.generation.wrapping_add(1);
@@ -201,16 +201,8 @@ impl PLightsState {
         };
         let id = FireFlickerId { index, generation };
         let mut boxed = Box::new(value);
-        let ptr = boxed.as_mut() as *mut fireflicker_t;
         self.fireflickers[index as usize].value = Some(boxed);
-        (id, ptr)
-    }
-    pub fn get_fireflicker(&self, id: FireFlickerId) -> Option<*mut fireflicker_t> {
-        self.fireflickers
-            .get(id.index as usize)
-            .filter(|slot| slot.generation == id.generation)
-            .and_then(|slot| slot.value.as_deref())
-            .map(|r| r as *const fireflicker_t as *mut fireflicker_t)
+        id
     }
 
     pub fn get_fireflicker_ref(&self, id: FireFlickerId) -> Option<&fireflicker_t> {
@@ -235,7 +227,7 @@ impl PLightsState {
         }
     }
 
-    pub fn spawn_lightflash(&mut self, value: lightflash_t) -> (LightFlashId, *mut lightflash_t) {
+    pub fn spawn_lightflash(&mut self, value: lightflash_t) -> LightFlashId {
         let (index, generation) = if let Some(index) = self.lightflash_free_list.pop() {
             let slot = &mut self.lightflashes[index as usize];
             slot.generation = slot.generation.wrapping_add(1);
@@ -250,16 +242,8 @@ impl PLightsState {
         };
         let id = LightFlashId { index, generation };
         let mut boxed = Box::new(value);
-        let ptr = boxed.as_mut() as *mut lightflash_t;
         self.lightflashes[index as usize].value = Some(boxed);
-        (id, ptr)
-    }
-    pub fn get_lightflash(&self, id: LightFlashId) -> Option<*mut lightflash_t> {
-        self.lightflashes
-            .get(id.index as usize)
-            .filter(|slot| slot.generation == id.generation)
-            .and_then(|slot| slot.value.as_deref())
-            .map(|r| r as *const lightflash_t as *mut lightflash_t)
+        id
     }
 
     pub fn get_lightflash_ref(&self, id: LightFlashId) -> Option<&lightflash_t> {
@@ -284,7 +268,7 @@ impl PLightsState {
         }
     }
 
-    pub fn spawn_strobe(&mut self, value: strobe_t) -> (StrobeId, *mut strobe_t) {
+    pub fn spawn_strobe(&mut self, value: strobe_t) -> StrobeId {
         let (index, generation) = if let Some(index) = self.strobe_free_list.pop() {
             let slot = &mut self.strobes[index as usize];
             slot.generation = slot.generation.wrapping_add(1);
@@ -299,16 +283,8 @@ impl PLightsState {
         };
         let id = StrobeId { index, generation };
         let mut boxed = Box::new(value);
-        let ptr = boxed.as_mut() as *mut strobe_t;
         self.strobes[index as usize].value = Some(boxed);
-        (id, ptr)
-    }
-    pub fn get_strobe(&self, id: StrobeId) -> Option<*mut strobe_t> {
-        self.strobes
-            .get(id.index as usize)
-            .filter(|slot| slot.generation == id.generation)
-            .and_then(|slot| slot.value.as_deref())
-            .map(|r| r as *const strobe_t as *mut strobe_t)
+        id
     }
 
     pub fn get_strobe_ref(&self, id: StrobeId) -> Option<&strobe_t> {
@@ -333,7 +309,7 @@ impl PLightsState {
         }
     }
 
-    pub fn spawn_glow(&mut self, value: glow_t) -> (GlowId, *mut glow_t) {
+    pub fn spawn_glow(&mut self, value: glow_t) -> GlowId {
         let (index, generation) = if let Some(index) = self.glow_free_list.pop() {
             let slot = &mut self.glows[index as usize];
             slot.generation = slot.generation.wrapping_add(1);
@@ -348,16 +324,8 @@ impl PLightsState {
         };
         let id = GlowId { index, generation };
         let mut boxed = Box::new(value);
-        let ptr = boxed.as_mut() as *mut glow_t;
         self.glows[index as usize].value = Some(boxed);
-        (id, ptr)
-    }
-    pub fn get_glow(&self, id: GlowId) -> Option<*mut glow_t> {
-        self.glows
-            .get(id.index as usize)
-            .filter(|slot| slot.generation == id.generation)
-            .and_then(|slot| slot.value.as_deref())
-            .map(|r| r as *const glow_t as *mut glow_t)
+        id
     }
 
     pub fn get_glow_ref(&self, id: GlowId) -> Option<&glow_t> {
@@ -409,7 +377,7 @@ pub fn P_SpawnFireFlicker(state: &mut GameState, sector: SectorId) {
     flick.maxlight = lightlevel;
     flick.minlight = P_FindMinSurroundingLight(state, sector, lightlevel) + 16_i32;
     flick.count = 4_i32;
-    let (flick_arena_id, _) = state.p_lights.spawn_fireflicker(flick);
+    let flick_arena_id = state.p_lights.spawn_fireflicker(flick);
     P_AddThinker(
         state,
         ThinkerPayload::FireFlicker(flick_arena_id),
@@ -445,7 +413,7 @@ pub fn P_SpawnLightFlash(state: &mut GameState, sector: SectorId) {
     flash.maxtime = 64_i32;
     flash.mintime = 7_i32;
     flash.count = (P_Random(&mut state.m_random) & flash.maxtime) + 1_i32;
-    let (flash_arena_id, _) = state.p_lights.spawn_lightflash(flash);
+    let flash_arena_id = state.p_lights.spawn_lightflash(flash);
     P_AddThinker(
         state,
         ThinkerPayload::LightFlash(flash_arena_id),
@@ -488,7 +456,7 @@ pub fn P_SpawnStrobeFlash(state: &mut GameState, sector: SectorId, fastOrSlow: i
     } else {
         flash.count = 1_i32;
     };
-    let (flash_arena_id, _) = state.p_lights.spawn_strobe(flash);
+    let flash_arena_id = state.p_lights.spawn_strobe(flash);
     P_AddThinker(state, ThinkerPayload::Strobe(flash_arena_id), ThinkerKind::Strobe);
 }
 pub fn EV_StartLightStrobing(state: &mut GameState, mut line: LineId) {
@@ -579,7 +547,7 @@ pub fn P_SpawnGlowingLight(state: &mut GameState, sector: SectorId) {
     g.maxlight = lightlevel;
     g.thinker.function = ThinkerFn::Glow(T_Glow);
     g.direction = -1_i32;
-    let (g_arena_id, _) = state.p_lights.spawn_glow(g);
+    let g_arena_id = state.p_lights.spawn_glow(g);
     P_AddThinker(state, ThinkerPayload::Glow(g_arena_id), ThinkerKind::Glow);
     state.p_setup.sector_mut(sector).special = 0_i16;
 }

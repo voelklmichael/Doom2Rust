@@ -11,10 +11,10 @@ use crate::p_tick::P_MobjThinkerIds;
 use crate::r_draw::ColumnSource;
 use crate::r_defs::lighttable_t;
 use crate::stdint_types::byte;
-use crate::w_wad::W_CacheLumpNum;
+use crate::w_wad::W_LumpBytes;
 use crate::w_wad::W_LumpLength;
 use crate::w_wad::W_LumpNameHash;
-use crate::w_wad::{W_CacheLumpName, W_CheckNumForName, W_GetNumForName, W_ReleaseLumpName};
+use crate::w_wad::{W_CheckNumForName, W_GetNumForName, W_LumpBytesName, W_ReleaseLumpName};
 
 pub struct RDataState {
     pub firstflat: i32,
@@ -173,7 +173,7 @@ pub fn R_GenerateComposite(state: &mut GameState, texnum: i32) {
     // plain column-copy routine, no recursion back into R_GetColumn).
     //
     // Padded by 128 bytes past the exact composite size for the same reason
-    // as W_CacheLumpNum's cache buffer: r_draw.rs's column readers mask with
+    // as W_LumpBytes's cache buffer: r_draw.rs's column readers mask with
     // `& 127` (matching vanilla's R_DrawColumn verbatim), which can read up
     // to 127 bytes past a short column's real data when that column sits
     // near the end of the buffer. Vanilla's zone allocator happened to leave
@@ -191,8 +191,8 @@ pub fn R_GenerateComposite(state: &mut GameState, texnum: i32) {
         // columnofs entries) -- decoded field-by-field below instead of via
         // pointer-cast, same reasoning as R_InitTextures's maptexture_t.
         let realpatch_len = W_LumpLength(&mut state.w_wad, tex_patch.patch as u32) as usize;
-        let realpatch_ptr = W_CacheLumpNum(state, tex_patch.patch) as *const u8;
-        let realpatch = unsafe { ::core::slice::from_raw_parts(realpatch_ptr, realpatch_len) };
+        let realpatch_lump = W_LumpBytes(state, tex_patch.patch);
+        let realpatch = &realpatch_lump[..realpatch_len];
         let realpatch_width = i16::from_le_bytes(realpatch[0..2].try_into().unwrap()) as i32;
         x1 = tex_patch.originx as i32;
         x2 = x1 + realpatch_width;
@@ -240,8 +240,8 @@ pub fn R_GenerateLookup(state: &mut GameState, texnum: i32) {
     while i < texture_patchcount {
         let tex_patch = state.r_data.textures[texnum as usize].patches[i as usize];
         let realpatch_len = W_LumpLength(&mut state.w_wad, tex_patch.patch as u32) as usize;
-        let realpatch_ptr = W_CacheLumpNum(state, tex_patch.patch) as *const u8;
-        let realpatch = unsafe { ::core::slice::from_raw_parts(realpatch_ptr, realpatch_len) };
+        let realpatch_lump = W_LumpBytes(state, tex_patch.patch);
+        let realpatch = &realpatch_lump[..realpatch_len];
         let realpatch_width = i16::from_le_bytes(realpatch[0..2].try_into().unwrap()) as i32;
         x1 = tex_patch.originx as i32;
         x2 = x1 + realpatch_width;
@@ -292,7 +292,7 @@ pub fn R_GetColumn(state: &mut GameState, mut tex: i32, mut col: i32) -> ColumnS
     lump = state.r_data.texturecolumnlump[tex as usize][col as usize] as i32;
     ofs = state.r_data.texturecolumnofs[tex as usize][col as usize] as i32;
     if lump > 0_i32 {
-        W_CacheLumpNum(state, lump);
+        W_LumpBytes(state, lump);
         return ColumnSource::Lump {
             lump,
             offset: ofs as usize,
@@ -335,7 +335,7 @@ fn GenerateTextureHashTable(state: &mut GameState) {
         i += 1;
     }
 }
-pub unsafe fn R_InitTextures(state: &mut GameState) {
+pub fn R_InitTextures(state: &mut GameState) {
     let mut i: i32 = 0;
     let mut j: i32 = 0;
     let mut patchlookup: Vec<i32>;
@@ -358,8 +358,7 @@ pub unsafe fn R_InitTextures(state: &mut GameState) {
     // scattering pointer arithmetic through the whole parse.
     let pnames_lump = W_GetNumForName(&mut state.w_wad, "PNAMES") as u32;
     let pnames_len = W_LumpLength(&mut state.w_wad, pnames_lump) as usize;
-    let pnames_ptr = W_CacheLumpName(state, "PNAMES") as *const u8;
-    let pnames = ::core::slice::from_raw_parts(pnames_ptr, pnames_len).to_vec();
+    let pnames = W_LumpBytesName(state, "PNAMES")[..pnames_len].to_vec();
     nummappatches = i32::from_le_bytes(pnames[0..4].try_into().unwrap());
     patchlookup = vec![0i32; nummappatches as usize];
     i = 0_i32;
@@ -374,19 +373,14 @@ pub unsafe fn R_InitTextures(state: &mut GameState) {
     W_ReleaseLumpName(&mut state.w_wad, "PNAMES");
     let texture1_lump = W_GetNumForName(&mut state.w_wad, "TEXTURE1") as u32;
     maxoff = W_LumpLength(&mut state.w_wad, texture1_lump);
-    let maptex1_ptr = W_CacheLumpName(state, "TEXTURE1") as *const u8;
-    let maptex1 = ::core::slice::from_raw_parts(maptex1_ptr, maxoff as usize).to_vec();
+    let maptex1 = W_LumpBytesName(state, "TEXTURE1")[..maxoff as usize].to_vec();
     numtextures1 = i32::from_le_bytes(maptex1[0..4].try_into().unwrap());
     let maptex2 = if W_CheckNumForName(&mut state.w_wad, "TEXTURE2") != -1_i32 {
         let texture2_lump = W_GetNumForName(&mut state.w_wad, "TEXTURE2") as u32;
         maxoff2 = W_LumpLength(&mut state.w_wad, texture2_lump);
-        let maptex2_ptr = W_CacheLumpName(state, "TEXTURE2") as *const u8;
-        numtextures2 = i32::from_le_bytes(
-            ::core::slice::from_raw_parts(maptex2_ptr, 4)
-                .try_into()
-                .unwrap(),
-        );
-        Some(::core::slice::from_raw_parts(maptex2_ptr, maxoff2 as usize).to_vec())
+        let maptex2 = W_LumpBytesName(state, "TEXTURE2")[..maxoff2 as usize].to_vec();
+        numtextures2 = i32::from_le_bytes(maptex2[0..4].try_into().unwrap());
+        Some(maptex2)
     } else {
         numtextures2 = 0_i32;
         maxoff2 = 0_i32;
@@ -553,8 +547,8 @@ pub fn R_InitSpriteLumps(state: &mut GameState) {
         // this loop body doesn't need to know the lump's true length (the
         // header is always present regardless of `width`, unlike
         // `columnofs`, which is a true flexible-array tail elsewhere).
-        let lump_ptr = W_CacheLumpNum(state, state.r_data.firstspritelump + i) as *const u8;
-        let header = unsafe { ::core::slice::from_raw_parts(lump_ptr, 8) };
+        let lump = W_LumpBytes(state, state.r_data.firstspritelump + i);
+        let header = &lump[..8];
         let width = i16::from_le_bytes(header[0..2].try_into().unwrap());
         let leftoffset = i16::from_le_bytes(header[4..6].try_into().unwrap());
         let topoffset = i16::from_le_bytes(header[6..8].try_into().unwrap());
@@ -567,12 +561,11 @@ pub fn R_InitSpriteLumps(state: &mut GameState) {
 pub fn R_InitColormaps(state: &mut GameState) {
     let mut lump: i32 = 0;
     lump = W_GetNumForName(&mut state.w_wad, "COLORMAP");
-    let lump_ptr = W_CacheLumpNum(state, lump) as *const lighttable_t;
     let lumplen = W_LumpLength(&mut state.w_wad, lump as u32) as usize;
-    state.r_data.colormaps = unsafe { ::core::slice::from_raw_parts(lump_ptr, lumplen) }.to_vec();
+    state.r_data.colormaps = W_LumpBytes(state, lump)[..lumplen].to_vec();
 }
 pub fn R_InitData(state: &mut GameState) {
-    unsafe { R_InitTextures(state) };
+    R_InitTextures(state);
     print!(".");
     R_InitFlats(state);
     print!(".");
@@ -637,7 +630,7 @@ pub fn R_PrecacheLevel(state: &mut GameState) {
         if flatpresent[i as usize] != 0 {
             lump = state.r_data.firstflat + i;
             state.r_data.flatmemory += state.w_wad.lumpinfo[lump as usize].size;
-            W_CacheLumpNum(state, lump);
+            W_LumpBytes(state, lump);
         }
         i += 1;
     }
@@ -659,7 +652,7 @@ pub fn R_PrecacheLevel(state: &mut GameState) {
             while j < patchcount {
                 lump = state.r_data.textures[i as usize].patches[j as usize].patch;
                 state.r_data.texturememory += state.w_wad.lumpinfo[lump as usize].size;
-                W_CacheLumpNum(state, lump);
+                W_LumpBytes(state, lump);
                 j += 1;
             }
         }
@@ -681,7 +674,7 @@ pub fn R_PrecacheLevel(state: &mut GameState) {
                         + state.r_things.sprites[i as usize].spriteframes[j as usize].lump
                             [k as usize] as i32;
                     state.r_data.spritememory += state.w_wad.lumpinfo[lump as usize].size;
-                    W_CacheLumpNum(state, lump);
+                    W_LumpBytes(state, lump);
                     k += 1;
                 }
                 j += 1;

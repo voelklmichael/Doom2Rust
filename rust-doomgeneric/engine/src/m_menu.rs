@@ -2,7 +2,8 @@ use crate::d_event::{event_t, GameScreenState};
 use crate::d_main::D_StartTitle;
 use crate::dstrings::{doom1_endmsg, doom2_endmsg};
 use crate::i_system::I_Error;
-use crate::w_wad::W_CacheLumpName;
+
+use crate::w_wad::W_LumpBytesName;
 
 use crate::d_event::EvType;
 use crate::d_mode::GameMission_t;
@@ -40,7 +41,7 @@ use crate::sounds::{
     sfx_popain, sfx_posit1, sfx_posit3, sfx_pstop, sfx_sgtatk, sfx_skeswg, sfx_slop, sfx_stnmov,
     sfx_swtchn, sfx_swtchx, sfx_telept, sfx_vilact,
 };
-use crate::stdint_types::byte;
+
 use crate::v_video::V_CachePatchNum;
 use crate::v_video::V_DrawPatchDirect;
 
@@ -1350,7 +1351,7 @@ pub fn M_WriteText(state: &mut GameState, x: i32, y: i32, string: &str) {
 fn IsNullKey(mut key: i32) -> bool {
     key == KEY_PAUSE || key == KEY_CAPSLOCK || key == KEY_SCRLCK || key == KEY_NUMLOCK
 }
-pub unsafe fn M_Responder(state: &mut GameState, ev: &mut event_t) -> bool {
+pub fn M_Responder(state: &mut GameState, ev: &mut event_t) -> bool {
     let mut ch: i32 = 0;
     let mut key: i32 = 0;
     let mut i: i32 = 0;
@@ -1592,8 +1593,8 @@ pub unsafe fn M_Responder(state: &mut GameState, ev: &mut event_t) -> bool {
             }
             state.g_game.players[state.g_game.consoleplayer as usize].message =
                 Some(gammamsg[state.i_video.usegamma as usize].to_string());
-            let __wcache2009_3 = W_CacheLumpName(state, "PLAYPAL") as *mut byte;
-            I_SetPalette(state, __wcache2009_3);
+            let pal = W_LumpBytesName(state, "PLAYPAL");
+            I_SetPalette(state, &pal[..768]);
             return true;
         }
     }

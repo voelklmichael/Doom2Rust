@@ -38,42 +38,42 @@ pub fn I_BindJoystickVariables(state: &mut GameState) {
     M_BindVariable_int(
         &mut state.m_config,
         "use_joystick",
-        &mut state.i_joystick.usejoystick,
+        |s| &mut s.i_joystick.usejoystick
     );
     M_BindVariable_int(
         &mut state.m_config,
         "joystick_index",
-        &mut state.i_joystick.joystick_index,
+        |s| &mut s.i_joystick.joystick_index
     );
     M_BindVariable_int(
         &mut state.m_config,
         "joystick_x_axis",
-        &mut state.i_joystick.joystick_x_axis,
+        |s| &mut s.i_joystick.joystick_x_axis
     );
     M_BindVariable_int(
         &mut state.m_config,
         "joystick_y_axis",
-        &mut state.i_joystick.joystick_y_axis,
+        |s| &mut s.i_joystick.joystick_y_axis
     );
     M_BindVariable_int(
         &mut state.m_config,
         "joystick_strafe_axis",
-        &mut state.i_joystick.joystick_strafe_axis,
+        |s| &mut s.i_joystick.joystick_strafe_axis
     );
     M_BindVariable_int(
         &mut state.m_config,
         "joystick_x_invert",
-        &mut state.i_joystick.joystick_x_invert,
+        |s| &mut s.i_joystick.joystick_x_invert
     );
     M_BindVariable_int(
         &mut state.m_config,
         "joystick_y_invert",
-        &mut state.i_joystick.joystick_y_invert,
+        |s| &mut s.i_joystick.joystick_y_invert
     );
     M_BindVariable_int(
         &mut state.m_config,
         "joystick_strafe_invert",
-        &mut state.i_joystick.joystick_strafe_invert,
+        |s| &mut s.i_joystick.joystick_strafe_invert
     );
     i = 0_i32;
     while i < NUM_VIRTUAL_BUTTONS {
@@ -81,7 +81,7 @@ pub fn I_BindJoystickVariables(state: &mut GameState) {
         M_BindVariable_int(
             &mut state.m_config,
             &name,
-            &mut state.i_joystick.joystick_physical_buttons[i as usize],
+            move |s| &mut s.i_joystick.joystick_physical_buttons[i as usize]
         );
         i += 1;
     }

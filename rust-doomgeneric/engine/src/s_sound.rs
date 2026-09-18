@@ -37,7 +37,7 @@ use crate::sounds::SfxId;
 use crate::tables::angle_t;
 use crate::tables::finesine;
 use crate::tables::ANGLETOFINESHIFT;
-use crate::w_wad::W_CacheLumpNum;
+use crate::w_wad::W_LumpBytes;
 use crate::w_wad::W_GetNumForName;
 use crate::w_wad::W_LumpLength;
 use crate::w_wad::W_ReleaseLumpNum;
@@ -407,9 +407,9 @@ pub fn S_ChangeMusic(state: &mut GameState, mut musicnum: i32, looping: i32) {
         state.sounds.S_music[music_index].lumpnum = W_GetNumForName(&mut state.w_wad, &namebuf);
     }
     let lumpnum = state.sounds.S_music[music_index].lumpnum;
-    let data = W_CacheLumpNum(state, lumpnum);
-    let lumplen = W_LumpLength(&mut state.w_wad, lumpnum as u32);
-    let handle = I_RegisterSong(&mut state.i_sound, data, lumplen);
+    let lumplen = W_LumpLength(&mut state.w_wad, lumpnum as u32) as usize;
+    let data = W_LumpBytes(state, lumpnum);
+    let handle = I_RegisterSong(&mut state.i_sound, &data[..lumplen]);
     state.sounds.S_music[music_index].handle = handle;
     I_PlaySong(&mut state.i_sound, handle, looping != 0);
     state.s_sound.mus_playing = Some(musicnum);

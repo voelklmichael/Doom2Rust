@@ -100,7 +100,7 @@ impl PDoorsState {
     // ThinkerNode's payload by p_tick.rs, replacing what used to be a bare
     // raw pointer there) and a raw pointer for the caller's immediate
     // post-spawn field writes -- mirrors PMobjState::spawn exactly.
-    pub fn spawn(&mut self, value: vldoor_t) -> (DoorId, *mut vldoor_t) {
+    pub fn spawn(&mut self, value: vldoor_t) -> DoorId {
         let (index, generation) = if let Some(index) = self.free_list.pop() {
             let slot = &mut self.doors[index as usize];
             slot.generation = slot.generation.wrapping_add(1);
@@ -115,21 +115,10 @@ impl PDoorsState {
         };
         let id = DoorId { index, generation };
         let mut boxed = Box::new(value);
-        let ptr = boxed.as_mut() as *mut vldoor_t;
         self.doors[index as usize].door = Some(boxed);
-        (id, ptr)
+        id
     }
 
-    // Fallible materialization: None if the id is stale. Used by
-    // p_tick.rs's P_ThinkerRaw to resolve a Door-kind ThinkerNode's payload
-    // back into the raw pointer every T_* function still expects.
-    pub fn get(&self, id: DoorId) -> Option<*mut vldoor_t> {
-        self.doors
-            .get(id.index as usize)
-            .filter(|slot| slot.generation == id.generation)
-            .and_then(|slot| slot.door.as_deref())
-            .map(|r| r as *const vldoor_t as *mut vldoor_t)
-    }
 
     pub fn get_ref(&self, id: DoorId) -> Option<&vldoor_t> {
         self.doors
@@ -349,7 +338,7 @@ pub fn EV_DoDoor(state: &mut GameState, line: LineId, type_0: VldoorE) -> i32 {
             }
             _ => {}
         }
-        let (door_arena_id, _) = state.p_doors.spawn(door);
+        let door_arena_id = state.p_doors.spawn(door);
         let door_id = P_AddThinker(state, ThinkerPayload::Door(door_arena_id), ThinkerKind::Door);
         state.p_setup.sector_mut(sec).specialdata = Some(SectorSpecial::Door(door_id));
     }
@@ -470,7 +459,7 @@ pub fn EV_VerticalDoor(state: &mut GameState, line: LineId, thing: MobjId) {
     }
     door.topheight = P_FindLowestCeilingSurrounding(state, door_sector_id);
     door.topheight -= 4_i32 * FRACUNIT;
-    let (door_arena_id, _) = state.p_doors.spawn(door);
+    let door_arena_id = state.p_doors.spawn(door);
     let door_id = P_AddThinker(state, ThinkerPayload::Door(door_arena_id), ThinkerKind::Door);
     state.p_setup.sector_mut(door_sector_id).specialdata = Some(SectorSpecial::Door(door_id));
 }
@@ -482,7 +471,7 @@ pub fn P_SpawnDoorCloseIn30(state: &mut GameState, sector: SectorId) {
     door.type_0 = VldoorE::vld_normal;
     door.speed = (FRACUNIT * 2_i32) as fixed_t;
     door.topcountdown = 30_i32 * TICRATE;
-    let (door_arena_id, _) = state.p_doors.spawn(door);
+    let door_arena_id = state.p_doors.spawn(door);
     let door_id = P_AddThinker(state, ThinkerPayload::Door(door_arena_id), ThinkerKind::Door);
     let sec = state.p_setup.sector_mut(sector);
     sec.specialdata = Some(SectorSpecial::Door(door_id));
@@ -499,7 +488,7 @@ pub fn P_SpawnDoorRaiseIn5Mins(state: &mut GameState, sector: SectorId) {
     door.topheight -= 4_i32 * FRACUNIT;
     door.topwait = VDOORWAIT;
     door.topcountdown = 5_i32 * 60_i32 * TICRATE;
-    let (door_arena_id, _) = state.p_doors.spawn(door);
+    let door_arena_id = state.p_doors.spawn(door);
     let door_id = P_AddThinker(state, ThinkerPayload::Door(door_arena_id), ThinkerKind::Door);
     let sec = state.p_setup.sector_mut(sector);
     sec.specialdata = Some(SectorSpecial::Door(door_id));

@@ -22,7 +22,7 @@ use crate::s_sound::SoundOrigin;
 use crate::sounds::{sfx_radio, sfx_tink};
 use crate::stdint_types::byte;
 use crate::v_video::V_CachePatchNum;
-use crate::w_wad::{W_CacheLumpNum, W_GetNumForName};
+use crate::w_wad::{W_GetNumForName, W_LumpBytes};
 
 pub struct HuStuffState {
     pub plr: PlayerId,
@@ -313,7 +313,7 @@ pub fn HU_Init(state: &mut GameState) {
         j += 1;
         let buffer = format!("STCFN{:03}", fresh0);
         let lumpnum = W_GetNumForName(&mut state.w_wad, &buffer);
-        W_CacheLumpNum(state, lumpnum);
+        W_LumpBytes(state, lumpnum);
         state.hu_stuff.hu_font[i as usize] = lumpnum;
         i += 1;
     }

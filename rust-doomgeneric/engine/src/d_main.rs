@@ -85,7 +85,7 @@ use crate::sounds::{mus_dm2ttl, mus_intro};
 use crate::st_stuff::ST_Drawer;
 use crate::st_stuff::ST_Init;
 use crate::statdump::StatDump;
-use crate::stdint_types::byte;
+
 use crate::stdint_types::size_t;
 use crate::v_video::V_DrawMouseSpeedBox;
 use crate::v_video::V_DrawPatch;
@@ -94,7 +94,7 @@ use crate::w_main::W_ParseCommandLine;
 use crate::w_wad::W_AddFile;
 use crate::w_wad::W_CheckCorrectIWAD;
 use crate::w_wad::W_GenerateHashTable;
-use crate::w_wad::{W_CacheLumpName, W_CheckNumForName};
+use crate::w_wad::{W_CheckNumForName, W_LumpBytesName};
 use crate::wi_stuff::WI_Drawer;
 
 pub struct DMainState {
@@ -242,13 +242,13 @@ pub fn D_ProcessEvents(state: &mut GameState) {
         let Some(mut ev) = D_PopEvent(&mut state.d_event) else {
             break;
         };
-        if unsafe { M_Responder(state, &mut ev) } {
+        if M_Responder(state, &mut ev) {
             continue;
         }
         G_Responder(state, ev);
     }
 }
-pub unsafe fn D_Display(state: &mut GameState) {
+pub fn D_Display(state: &mut GameState) {
     let mut nowtime: i32 = 0;
     let mut tics: i32 = 0;
     let mut wipestart: i32 = 0;
@@ -314,8 +314,8 @@ pub unsafe fn D_Display(state: &mut GameState) {
     if state.g_game.gamestate as u32 != state.d_main.d_display_oldgamestate as u32
         && state.g_game.gamestate != GameScreenState::GS_LEVEL
     {
-        let __wcache387_3 = W_CacheLumpName(state, "PLAYPAL") as *mut byte;
-        I_SetPalette(state, __wcache387_3);
+        let pal = W_LumpBytesName(state, "PLAYPAL");
+        I_SetPalette(state, &pal[..768]);
     }
     if state.g_game.gamestate == GameScreenState::GS_LEVEL
         && state.d_main.d_display_oldgamestate != GameScreenState::GS_LEVEL
@@ -404,52 +404,52 @@ pub fn D_BindVariables(state: &mut GameState) {
     M_BindVariable_int(
         &mut state.m_config,
         "mouse_sensitivity",
-        &mut state.m_menu.mouseSensitivity,
+        |s| &mut s.m_menu.mouseSensitivity
     );
     M_BindVariable_int(
         &mut state.m_config,
         "sfx_volume",
-        &mut state.s_sound.sfxVolume,
+        |s| &mut s.s_sound.sfxVolume
     );
     M_BindVariable_int(
         &mut state.m_config,
         "music_volume",
-        &mut state.s_sound.musicVolume,
+        |s| &mut s.s_sound.musicVolume
     );
     M_BindVariable_int(
         &mut state.m_config,
         "show_messages",
-        &mut state.m_menu.showMessages,
+        |s| &mut s.m_menu.showMessages
     );
     M_BindVariable_int(
         &mut state.m_config,
         "screenblocks",
-        &mut state.m_menu.screenblocks,
+        |s| &mut s.m_menu.screenblocks
     );
     M_BindVariable_int(
         &mut state.m_config,
         "detaillevel",
-        &mut state.m_menu.detailLevel,
+        |s| &mut s.m_menu.detailLevel
     );
     M_BindVariable_int(
         &mut state.m_config,
         "snd_channels",
-        &mut state.s_sound.snd_channels,
+        |s| &mut s.s_sound.snd_channels
     );
     M_BindVariable_int(
         &mut state.m_config,
         "vanilla_savegame_limit",
-        &mut state.g_game.vanilla_savegame_limit,
+        |s| &mut s.g_game.vanilla_savegame_limit
     );
     M_BindVariable_int(
         &mut state.m_config,
         "vanilla_demo_limit",
-        &mut state.g_game.vanilla_demo_limit,
+        |s| &mut s.g_game.vanilla_demo_limit
     );
     M_BindVariable_int(
         &mut state.m_config,
         "show_endoom",
-        &mut state.d_main.show_endoom,
+        |s| &mut s.d_main.show_endoom
     );
     i = 0_i32;
     while i < 10_i32 {
@@ -457,7 +457,7 @@ pub fn D_BindVariables(state: &mut GameState) {
         M_BindVariable_string(
             &mut state.m_config,
             &name,
-            &mut state.hu_stuff.chat_macros[i as usize],
+            move |s| &mut s.hu_stuff.chat_macros[i as usize]
         );
         i += 1;
     }
@@ -474,11 +474,11 @@ pub fn D_GrabMouseCallback(state: &mut GameState) -> bool {
         && !state.d_main.advancedemo
 }
 pub fn doomgeneric_Tick(state: &mut GameState) {
-    unsafe { TryRunTics(state) };
+    TryRunTics(state);
     let listener_id = state.g_game.players[state.g_game.consoleplayer as usize].mo;
     S_UpdateSounds(state, listener_id);
     if state.i_video.screenvisible {
-        unsafe { D_Display(state) };
+        D_Display(state);
     }
 }
 pub fn D_DoomLoop(state: &mut GameState) {
@@ -495,10 +495,10 @@ pub fn D_DoomLoop(state: &mut GameState) {
         G_BeginRecording(state);
     }
     state.d_main.main_loop_started = true;
-    unsafe { TryRunTics(state) };
+    TryRunTics(state);
     I_SetWindowTitle(state, state.doomstat.gamedescription);
     I_SetGrabMouseCallback();
-    unsafe { I_InitGraphics(state) };
+    I_InitGraphics(state);
     R_ExecuteSetViewSize(state);
     D_StartGameLoop(state);
     if state.g_game.testcontrols {
@@ -830,7 +830,7 @@ fn D_Endoom(state: &mut GameState) {
 fn D_QuitCheckDemoStatus(state: &mut GameState) {
     G_CheckDemoStatus(state);
 }
-pub unsafe fn D_DoomMain(state: &mut GameState) {
+pub fn D_DoomMain(state: &mut GameState) {
     let mut p: i32 = 0;
     let mut file: String = String::new();
     let mut demolumpname: FixedCStr<8> = FixedCStr::from_array([0; 8]);

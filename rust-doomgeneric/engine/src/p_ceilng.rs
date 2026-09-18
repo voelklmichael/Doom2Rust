@@ -65,7 +65,7 @@ impl PCeilngState {
     // ThinkerNode's payload by p_tick.rs, replacing what used to be a bare
     // raw pointer there) and a raw pointer for the caller's immediate
     // post-spawn field writes -- mirrors PDoorsState::spawn exactly.
-    pub fn spawn(&mut self, value: ceiling_t) -> (CeilingId, *mut ceiling_t) {
+    pub fn spawn(&mut self, value: ceiling_t) -> CeilingId {
         let (index, generation) = if let Some(index) = self.free_list.pop() {
             let slot = &mut self.ceilings[index as usize];
             slot.generation = slot.generation.wrapping_add(1);
@@ -80,21 +80,10 @@ impl PCeilngState {
         };
         let id = CeilingId { index, generation };
         let mut boxed = Box::new(value);
-        let ptr = boxed.as_mut() as *mut ceiling_t;
         self.ceilings[index as usize].ceiling = Some(boxed);
-        (id, ptr)
+        id
     }
 
-    // Fallible materialization: None if the id is stale. Used by
-    // p_tick.rs's P_ThinkerRaw to resolve a Ceiling-kind ThinkerNode's
-    // payload back into the raw pointer every T_* function still expects.
-    pub fn get(&self, id: CeilingId) -> Option<*mut ceiling_t> {
-        self.ceilings
-            .get(id.index as usize)
-            .filter(|slot| slot.generation == id.generation)
-            .and_then(|slot| slot.ceiling.as_deref())
-            .map(|r| r as *const ceiling_t as *mut ceiling_t)
-    }
 
     pub fn get_ref(&self, id: CeilingId) -> Option<&ceiling_t> {
         self.ceilings
@@ -267,7 +256,7 @@ pub fn EV_DoCeiling(state: &mut GameState, line: LineId, type_0: CeilingE) -> i3
         }
         ceiling.tag = tag;
         ceiling.type_0 = type_0;
-        let (ceiling_arena_id, _) = state.p_ceilng.spawn(ceiling);
+        let ceiling_arena_id = state.p_ceilng.spawn(ceiling);
         let ceiling_id = P_AddThinker(
             state,
             ThinkerPayload::Ceiling(ceiling_arena_id),

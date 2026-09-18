@@ -55,7 +55,7 @@ use crate::r_things::RThingsState;
 use crate::s_sound::SSoundState;
 use crate::sounds::SoundsState;
 use crate::st_lib::StLibState;
-use crate::st_stuff::{fixup_cheat_sequences, StStuffState};
+use crate::st_stuff::StStuffState;
 use crate::statdump::StatDumpState;
 use crate::v_video::VVideoState;
 use crate::w_checksum::WChecksumState;
@@ -200,9 +200,8 @@ impl GameState {
 // GameState this reference points at is constructed and will never move
 // again.
 pub fn finish_init(state: &mut GameState) {
-    unsafe {
+    {
         state.sounds.fixup_self_links();
-        fixup_cheat_sequences(state);
         fixup_numanims(state);
     }
 }

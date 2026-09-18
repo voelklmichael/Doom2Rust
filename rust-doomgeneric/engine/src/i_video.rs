@@ -8,10 +8,8 @@ use crate::i_input::I_GetEvent;
 use crate::i_system::I_Error;
 use crate::m_argv::{M_ArgvAtoi, M_CheckParmWithArgs};
 use crate::m_fixed::INT_MAX;
-use crate::mem_compat::{memset};
-use crate::stdint_types::size_t;
 use crate::stdint_types::uint32_t;
-use crate::stdint_types::{byte, uint8_t};
+use crate::stdint_types::byte;
 use crate::tables::gammatable;
 
 pub struct IVideoState {
@@ -34,29 +32,7 @@ pub struct IVideoState {
 impl IVideoState {
     pub const fn new() -> Self {
         IVideoState {
-            s_Fb: FB_ScreenInfo {
-                xres: 0,
-                yres: 0,
-                xres_virtual: 0,
-                yres_virtual: 0,
-                bits_per_pixel: 0,
-                red: FB_BitField {
-                    offset: 0,
-                    length: 0,
-                },
-                green: FB_BitField {
-                    offset: 0,
-                    length: 0,
-                },
-                blue: FB_BitField {
-                    offset: 0,
-                    length: 0,
-                },
-                transp: FB_BitField {
-                    offset: 0,
-                    length: 0,
-                },
-            },
+            s_Fb: FB_ScreenInfo::ZERO,
             fb_scaling: 1,
             usemouse: 0,
             colors: [color { b_g_r_a: [0; 4] }; 256],
@@ -85,6 +61,19 @@ pub struct FB_ScreenInfo {
     pub green: FB_BitField,
     pub blue: FB_BitField,
     pub transp: FB_BitField,
+}
+impl FB_ScreenInfo {
+    pub const ZERO: FB_ScreenInfo = FB_ScreenInfo {
+        xres: 0,
+        yres: 0,
+        xres_virtual: 0,
+        yres_virtual: 0,
+        bits_per_pixel: 0,
+        red: FB_BitField { offset: 0, length: 0 },
+        green: FB_BitField { offset: 0, length: 0 },
+        blue: FB_BitField { offset: 0, length: 0 },
+        transp: FB_BitField { offset: 0, length: 0 },
+    };
 }
 #[derive(Copy, Clone)]
 #[repr(C)]
@@ -131,86 +120,11 @@ pub struct col_t {
     pub b: byte,
 }
 static rgb565_palette: [uint16_t; 256] = [0; 256];
-pub unsafe fn cmap_to_rgb565(
-    state: &mut GameState,
-    mut out: *mut uint16_t,
-    mut in_0: *mut uint8_t,
-    mut in_pixels: i32,
-) {
-    let mut i: i32 = 0;
-    let mut j: i32 = 0;
-    let mut c: color = color { b_g_r_a: [0; 4] };
-    let mut r: uint16_t = 0;
-    let mut g: uint16_t = 0;
-    let mut b: uint16_t = 0;
-    i = 0_i32;
-    while i < in_pixels {
-        c = state.i_video.colors[*in_0 as usize];
-        r = (((c.r() as i32 >> 3_i32) as uint16_t as i32) << 11_i32) as uint16_t;
-        g = (((c.g() as i32 >> 2_i32) as uint16_t as i32) << 5_i32) as uint16_t;
-        b = ((c.b() as i32 >> 3_i32) as uint16_t as i32) as uint16_t;
-        *out = (r as i32 | g as i32 | b as i32) as uint16_t;
-        in_0 = in_0.offset(1);
-        j = 0_i32;
-        while j < state.i_video.fb_scaling {
-            out = out.offset(1);
-            j += 1;
-        }
-        i += 1;
-    }
-}
-pub unsafe fn cmap_to_fb(
-    state: &mut GameState,
-    mut out: *mut uint8_t,
-    mut in_0: *mut uint8_t,
-    mut in_pixels: i32,
-) {
-    let mut i: i32 = 0;
-    let mut k: i32 = 0;
-    let mut c: color = color { b_g_r_a: [0; 4] };
-    let mut pix: uint32_t = 0;
-    i = 0_i32;
-    while i < in_pixels {
-        c = state.i_video.colors[*in_0 as usize];
-        if state.i_video.s_Fb.bits_per_pixel == 16 as uint32_t {
-            let mut p: uint16_t = ((c.r() as i32 & 0xf8_i32) << 8_i32
-                | (c.g() as i32 & 0xfc_i32) << 3_i32
-                | c.b() as i32 >> 3_i32) as uint16_t;
-            k = 0_i32;
-            while k < state.i_video.fb_scaling {
-                *(out as *mut uint16_t) = p;
-                out = out.offset(2_i32 as isize);
-                k += 1;
-            }
-        } else if state.i_video.s_Fb.bits_per_pixel == 32 as uint32_t {
-            pix = ((c.r() as i32) << state.i_video.s_Fb.red.offset
-                | (c.g() as i32) << state.i_video.s_Fb.green.offset
-                | (c.b() as i32) << state.i_video.s_Fb.blue.offset) as uint32_t;
-            k = 0_i32;
-            while k < state.i_video.fb_scaling {
-                *(out as *mut uint32_t) = pix;
-                out = out.offset(4_i32 as isize);
-                k += 1;
-            }
-        } else {
-            I_Error(&format!(
-                "No idea how to convert {} bpp pixels",
-                state.i_video.s_Fb.bits_per_pixel
-            ));
-        }
-        in_0 = in_0.offset(1);
-        i += 1;
-    }
-}
-pub unsafe fn I_InitGraphics(state: &mut GameState) {
+pub fn I_InitGraphics(state: &mut GameState) {
     let mut i: i32 = 0;
     let mut gfxmodeparm: i32 = 0;
     let mut mode: &str = "";
-    memset(
-        &raw mut state.i_video.s_Fb as *mut ::core::ffi::c_void,
-        0_i32,
-        ::core::mem::size_of::<FB_ScreenInfo>() as size_t,
-    );
+    state.i_video.s_Fb = FB_ScreenInfo::ZERO;
     state.i_video.s_Fb.xres = DOOMGENERIC_RESX as uint32_t;
     state.i_video.s_Fb.yres = DOOMGENERIC_RESY as uint32_t;
     state.i_video.s_Fb.xres_virtual = state.i_video.s_Fb.xres;
@@ -311,91 +225,77 @@ pub fn I_ShutdownGraphics(state: &mut GameState) {
 pub fn I_StartTic(state: &mut GameState) {
     I_GetEvent(state);
 }
-pub unsafe fn I_FinishUpdate(state: &mut GameState) {
-    let mut y: i32 = 0;
-    let mut x_offset: i32 = 0;
-    let mut x_offset_end: i32 = 0;
-    let mut line_in: *mut u8 = ::core::ptr::null_mut::<u8>();
-    let mut line_out: *mut u8 = ::core::ptr::null_mut::<u8>();
-    x_offset = state
-        .i_video
-        .s_Fb
+pub fn I_FinishUpdate(state: &mut GameState) {
+    let fb = state.i_video.s_Fb;
+    let scaling = state.i_video.fb_scaling as usize;
+    let bytes_per_pixel = (fb.bits_per_pixel / 8) as usize;
+    let line_bytes = fb.xres as usize * bytes_per_pixel;
+    let x_offset = fb
         .xres
         .wrapping_sub((SCREENWIDTH * state.i_video.fb_scaling) as uint32_t)
-        .wrapping_mul(state.i_video.s_Fb.bits_per_pixel)
+        .wrapping_mul(fb.bits_per_pixel)
         .wrapping_div(8 as uint32_t)
-        .wrapping_div(2 as uint32_t) as i32;
-    x_offset_end = state
+        .wrapping_div(2 as uint32_t) as usize;
+    if fb.bits_per_pixel != 16 && fb.bits_per_pixel != 32 {
+        I_Error(&format!(
+            "No idea how to convert {} bpp pixels",
+            fb.bits_per_pixel
+        ));
+    }
+    let mut frame = vec![0u8; line_bytes * SCREENHEIGHT as usize * scaling];
+    let mut line_out = 0usize;
+    for row in 0..SCREENHEIGHT as usize {
+        let source = &state.i_video.I_VideoBuffer[row * SCREENWIDTH as usize..][..SCREENWIDTH as usize];
+        let first_line = &mut frame[line_out * line_bytes..][..line_bytes];
+        let mut out = x_offset;
+        for &index in source {
+            let c = state.i_video.colors[index as usize];
+            if fb.bits_per_pixel == 16 {
+                let p: uint16_t = ((c.r() as i32 & 0xf8_i32) << 8_i32
+                    | (c.g() as i32 & 0xfc_i32) << 3_i32
+                    | c.b() as i32 >> 3_i32) as uint16_t;
+                for _ in 0..scaling {
+                    first_line[out..out + 2].copy_from_slice(&p.to_ne_bytes());
+                    out += 2;
+                }
+            } else {
+                let pix = ((c.r() as i32) << fb.red.offset
+                    | (c.g() as i32) << fb.green.offset
+                    | (c.b() as i32) << fb.blue.offset) as uint32_t;
+                for _ in 0..scaling {
+                    first_line[out..out + 4].copy_from_slice(&pix.to_ne_bytes());
+                    out += 4;
+                }
+            }
+        }
+        for copy in 1..scaling {
+            frame.copy_within(
+                line_out * line_bytes..(line_out + 1) * line_bytes,
+                (line_out + copy) * line_bytes,
+            );
+        }
+        line_out += scaling;
+    }
+    for (pixel, bytes) in state
         .i_video
-        .s_Fb
-        .xres
-        .wrapping_sub((SCREENWIDTH * state.i_video.fb_scaling) as uint32_t)
-        .wrapping_mul(state.i_video.s_Fb.bits_per_pixel)
-        .wrapping_div(8 as uint32_t)
-        .wrapping_sub(x_offset as uint32_t) as i32;
-    line_in = state.i_video.I_VideoBuffer.as_mut_ptr() as *mut u8;
-    line_out = state.i_video.dg_screen_buffer.as_mut_ptr() as *mut u8;
-    y = SCREENHEIGHT;
-    loop {
-        let fresh3 = y;
-        y -= 1;
-        if fresh3 == 0 {
-            break;
-        }
-        let mut i: i32 = 0;
-        i = 0_i32;
-        while i < state.i_video.fb_scaling {
-            line_out = line_out.offset(x_offset as isize);
-            cmap_to_fb(
-                state,
-                line_out as *mut ::core::ffi::c_void as *mut uint8_t,
-                line_in as *mut ::core::ffi::c_void as *mut uint8_t,
-                SCREENWIDTH,
-            );
-            line_out = line_out.offset(
-                ((SCREENWIDTH * state.i_video.fb_scaling) as uint32_t)
-                    .wrapping_mul(
-                        state
-                            .i_video
-                            .s_Fb
-                            .bits_per_pixel
-                            .wrapping_div(8 as uint32_t),
-                    )
-                    .wrapping_add(x_offset_end as uint32_t) as isize,
-            );
-            i += 1;
-        }
-        line_in = line_in.offset(SCREENWIDTH as isize);
+        .dg_screen_buffer
+        .iter_mut()
+        .zip(frame.chunks_exact(4))
+    {
+        *pixel = u32::from_ne_bytes([bytes[0], bytes[1], bytes[2], bytes[3]]);
     }
     state.platform.draw_frame();
 }
 pub fn I_ReadScreen(state: &GameState) -> Vec<byte> {
     state.i_video.I_VideoBuffer[..(SCREENWIDTH * SCREENHEIGHT) as usize].to_vec()
 }
-pub unsafe fn I_SetPalette(state: &mut GameState, mut palette: *mut byte) {
-    let mut i: i32 = 0;
-    i = 0_i32;
-    while i < 256_i32 {
-        state.i_video.colors[i as usize].set_a(0 as uint32_t as uint32_t);
-        let mut rhs = {
-            let fresh0 = palette;
-            palette = palette.offset(1);
-            gammatable[state.i_video.usegamma as usize][*fresh0 as usize] as uint32_t
-        } as uint32_t;
-        state.i_video.colors[i as usize].set_r(rhs);
-        let mut rhs_0 = {
-            let fresh1 = palette;
-            palette = palette.offset(1);
-            gammatable[state.i_video.usegamma as usize][*fresh1 as usize] as uint32_t
-        } as uint32_t;
-        state.i_video.colors[i as usize].set_g(rhs_0);
-        let mut rhs_1 = {
-            let fresh2 = palette;
-            palette = palette.offset(1);
-            gammatable[state.i_video.usegamma as usize][*fresh2 as usize] as uint32_t
-        } as uint32_t;
-        state.i_video.colors[i as usize].set_b(rhs_1);
-        i += 1;
+pub fn I_SetPalette(state: &mut GameState, palette: &[byte]) {
+    let gamma = &gammatable[state.i_video.usegamma as usize];
+    for (color, rgb) in state.i_video.colors.iter_mut().zip(palette.chunks_exact(3)) {
+        color.set_a(0 as uint32_t);
+        color.set_r(gamma[rgb[0] as usize] as uint32_t);
+        color.set_g(gamma[rgb[1] as usize] as uint32_t);
+        color.set_b(gamma[rgb[2] as usize] as uint32_t);
     }
 }
 pub fn I_GetPaletteIndex(mut r: i32, mut g: i32, mut b: i32) -> i32 {

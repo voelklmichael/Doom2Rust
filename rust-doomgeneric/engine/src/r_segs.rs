@@ -5,7 +5,7 @@ use crate::m_fixed::FixedMul;
 use crate::m_fixed::FRACBITS;
 use crate::m_fixed::INT_MAX;
 use crate::m_fixed::INT_MIN;
-use crate::mem_compat::memcpy;
+
 use crate::p_spec::ML_MAPPED;
 use crate::r_draw::advance_source;
 use crate::r_data::R_GetColumn;
@@ -21,7 +21,7 @@ use crate::r_main::MAXLIGHTSCALE;
 use crate::r_plane::R_CheckPlane;
 use crate::r_things::R_DrawMaskedColumn;
 use crate::stdint_types::byte;
-use crate::stdint_types::size_t;
+
 use crate::tables::angle_t;
 use crate::tables::finesine;
 use crate::tables::finetangent;
@@ -112,16 +112,11 @@ pub const SIL_BOTTOM: i32 = 1;
 pub const SIL_TOP: i32 = 2;
 pub const SIL_BOTH: i32 = 3;
 pub const MAXDRAWSEGS: i32 = 256;
-pub unsafe fn R_RenderMaskedSegRange(
-    state: &mut GameState,
-    mut ds: *mut drawseg_t,
-    mut x1: i32,
-    mut x2: i32,
-) {
+pub fn R_RenderMaskedSegRange(state: &mut GameState, ds: &drawseg_t, x1: i32, x2: i32) {
     let mut index: u32 = 0;
     let mut lightnum: i32 = 0;
     let mut texnum: i32 = 0;
-    state.r_bsp.curline = (*ds).curline;
+    state.r_bsp.curline = ds.curline;
     state.r_bsp.frontsector = state.p_setup.seg(state.r_bsp.curline).frontsector;
     state.r_bsp.backsector = state.p_setup.seg(state.r_bsp.curline).backsector;
     texnum = state.r_data.texturetranslation[state
@@ -148,12 +143,12 @@ pub unsafe fn R_RenderMaskedSegRange(
     } else {
         state.r_segs.walllights = LightRow48::Normal(lightnum as usize);
     }
-    state.r_segs.maskedtexturecol = (*ds).maskedtexturecol;
-    state.r_segs.rw_scalestep = (*ds).scalestep;
+    state.r_segs.maskedtexturecol = ds.maskedtexturecol;
+    state.r_segs.rw_scalestep = ds.scalestep;
     state.r_things.spryscale =
-        (*ds).scale1 + (x1 as fixed_t - (*ds).x1 as fixed_t) * state.r_segs.rw_scalestep;
-    state.r_things.mfloorclip = (*ds).sprbottomclip;
-    state.r_things.mceilingclip = (*ds).sprtopclip;
+        ds.scale1 + (x1 as fixed_t - ds.x1 as fixed_t) * state.r_segs.rw_scalestep;
+    state.r_things.mfloorclip = ds.sprbottomclip;
+    state.r_things.mceilingclip = ds.sprtopclip;
     if state
         .p_setup
         .line_mut(state.p_setup.seg(state.r_bsp.curline).linedef)
@@ -212,10 +207,10 @@ pub unsafe fn R_RenderMaskedSegRange(
     if state.r_main.fixedcolormap.is_some() {
         state.r_draw.dc_colormap = state.r_main.fixedcolormap;
     }
-    let maskedtexturecol = state.r_segs.maskedtexturecol.unwrap().resolve(state);
+    let maskedtexturecol = state.r_segs.maskedtexturecol.unwrap();
     state.r_draw.dc_x = x1;
     while state.r_draw.dc_x <= x2 {
-        if *maskedtexturecol.offset(state.r_draw.dc_x as isize) as i32 != SHRT_MAX {
+        if maskedtexturecol.get(state, state.r_draw.dc_x as isize) as i32 != SHRT_MAX {
             if state.r_main.fixedcolormap.is_none() {
                 index = (state.r_things.spryscale >> LIGHTSCALESHIFT) as u32;
                 if index >= MAXLIGHTSCALE as u32 {
@@ -232,12 +227,12 @@ pub unsafe fn R_RenderMaskedSegRange(
                 R_GetColumn(
                     state,
                     texnum,
-                    *maskedtexturecol.offset(state.r_draw.dc_x as isize) as i32,
+                    maskedtexturecol.get(state, state.r_draw.dc_x as isize) as i32,
                 ),
                 (-3_isize) as usize,
             );
             R_DrawMaskedColumn(state, col);
-            *maskedtexturecol.offset(state.r_draw.dc_x as isize) = SHRT_MAX as i16;
+            maskedtexturecol.set(state, state.r_draw.dc_x as isize, SHRT_MAX as i16);
         }
         state.r_things.spryscale += state.r_segs.rw_scalestep;
         state.r_draw.dc_x += 1;
@@ -245,7 +240,7 @@ pub unsafe fn R_RenderMaskedSegRange(
 }
 pub const HEIGHTBITS: i32 = 12;
 pub const HEIGHTUNIT: i32 = 1_i32 << HEIGHTBITS;
-pub unsafe fn R_RenderSegLoop(state: &mut GameState) {
+pub fn R_RenderSegLoop(state: &mut GameState) {
     let mut angle: angle_t = 0;
     let mut index: u32 = 0;
     let mut yl: i32 = 0;
@@ -267,9 +262,8 @@ pub unsafe fn R_RenderSegLoop(state: &mut GameState) {
             }
             if top <= bottom {
                 let ceilingplane = state.r_plane.ceilingplane.unwrap();
-                state.r_plane.visplanes[ceilingplane].top[state.r_segs.rw_x as usize] = top as byte;
-                state.r_plane.visplanes[ceilingplane].bottom[state.r_segs.rw_x as usize] =
-                    bottom as byte;
+                state.r_plane.visplanes[ceilingplane].set_top(state.r_segs.rw_x, top as byte);
+                state.r_plane.visplanes[ceilingplane].set_bottom(state.r_segs.rw_x, bottom as byte);
             }
         }
         yh = state.r_segs.bottomfrac >> HEIGHTBITS;
@@ -284,9 +278,8 @@ pub unsafe fn R_RenderSegLoop(state: &mut GameState) {
             }
             if top <= bottom {
                 let floorplane = state.r_plane.floorplane.unwrap();
-                state.r_plane.visplanes[floorplane].top[state.r_segs.rw_x as usize] = top as byte;
-                state.r_plane.visplanes[floorplane].bottom[state.r_segs.rw_x as usize] =
-                    bottom as byte;
+                state.r_plane.visplanes[floorplane].set_top(state.r_segs.rw_x, top as byte);
+                state.r_plane.visplanes[floorplane].set_bottom(state.r_segs.rw_x, bottom as byte);
             }
         }
         if state.r_segs.segtextured {
@@ -361,8 +354,8 @@ pub unsafe fn R_RenderSegLoop(state: &mut GameState) {
                 state.r_plane.floorclip[state.r_segs.rw_x as usize] = (yh + 1_i32) as i16;
             }
             if state.r_segs.maskedtexture {
-                let maskedtexturecol = state.r_segs.maskedtexturecol.unwrap().resolve(state);
-                *maskedtexturecol.offset(state.r_segs.rw_x as isize) = texturecolumn as i16;
+                let maskedtexturecol = state.r_segs.maskedtexturecol.unwrap();
+                maskedtexturecol.set(state, state.r_segs.rw_x as isize, texturecolumn as i16);
             }
         }
         state.r_segs.rw_scale += state.r_segs.rw_scalestep;
@@ -371,7 +364,7 @@ pub unsafe fn R_RenderSegLoop(state: &mut GameState) {
         state.r_segs.rw_x += 1;
     }
 }
-pub unsafe fn R_StoreWallRange(state: &mut GameState, mut start: i32, mut stop: i32) {
+pub fn R_StoreWallRange(state: &mut GameState, mut start: i32, mut stop: i32) {
     let mut hyp: fixed_t = 0;
     let mut sineval: fixed_t = 0;
     let mut distangle: angle_t = 0;
@@ -793,13 +786,10 @@ pub unsafe fn R_StoreWallRange(state: &mut GameState, mut start: i32, mut stop: 
         || state.r_segs.maskedtexture)
         && state.r_bsp.drawsegs[state.r_bsp.ds_p].sprtopclip.is_none()
     {
-        memcpy(
-            (&raw mut state.r_plane.openings as *mut i16).add(state.r_plane.lastopening)
-                as *mut ::core::ffi::c_void,
-            (&raw mut state.r_plane.ceilingclip as *mut i16).offset(start as isize)
-                as *const ::core::ffi::c_void,
-            (2_i32 * (state.r_segs.rw_stopx - start)) as size_t,
-        );
+        let count = (state.r_segs.rw_stopx - start) as usize;
+        let lastopening = state.r_plane.lastopening;
+        state.r_plane.openings[lastopening..lastopening + count]
+            .copy_from_slice(&state.r_plane.ceilingclip[start as usize..start as usize + count]);
         state.r_bsp.drawsegs[state.r_bsp.ds_p].sprtopclip = Some(ClipArray::Openings(
             state.r_plane.lastopening as isize - start as isize,
         ));
@@ -811,13 +801,10 @@ pub unsafe fn R_StoreWallRange(state: &mut GameState, mut start: i32, mut stop: 
             .sprbottomclip
             .is_none()
     {
-        memcpy(
-            (&raw mut state.r_plane.openings as *mut i16).add(state.r_plane.lastopening)
-                as *mut ::core::ffi::c_void,
-            (&raw mut state.r_plane.floorclip as *mut i16).offset(start as isize)
-                as *const ::core::ffi::c_void,
-            (2_i32 * (state.r_segs.rw_stopx - start)) as size_t,
-        );
+        let count = (state.r_segs.rw_stopx - start) as usize;
+        let lastopening = state.r_plane.lastopening;
+        state.r_plane.openings[lastopening..lastopening + count]
+            .copy_from_slice(&state.r_plane.floorclip[start as usize..start as usize + count]);
         state.r_bsp.drawsegs[state.r_bsp.ds_p].sprbottomclip = Some(ClipArray::Openings(
             state.r_plane.lastopening as isize - start as isize,
         ));

@@ -1,3 +1,4 @@
+#![allow(unsafe_code)]
 use crate::mem_compat::{memcpy, memset};
 use crate::stdint_types::byte;
 use crate::stdint_types::size_t;
@@ -962,4 +963,43 @@ pub unsafe fn SHA1_UpdateString(
             .len()
             .wrapping_add(1 as size_t),
     );
+}
+
+/// Safe streaming interface over the C-style routines above (this file is the
+/// engine's deliberate unsafe exception; callers elsewhere stay unsafe-free).
+pub struct Sha1 {
+    ctx: sha1_context_t,
+}
+impl Sha1 {
+    pub fn new() -> Self {
+        let mut ctx = sha1_context_s {
+            h0: 0,
+            h1: 0,
+            h2: 0,
+            h3: 0,
+            h4: 0,
+            nblocks: 0,
+            buf: [0; 64],
+            count: 0,
+        };
+        unsafe { SHA1_Init(&mut ctx) };
+        Sha1 { ctx }
+    }
+
+    pub fn update_int32(&mut self, val: u32) {
+        unsafe { SHA1_UpdateInt32(&mut self.ctx, val) };
+    }
+
+    /// Hashes `s` followed by its NUL terminator, like the C `SHA1_UpdateString`.
+    pub fn update_string(&mut self, s: &[u8]) {
+        let mut bytes = s.to_vec();
+        bytes.push(0);
+        unsafe { SHA1_Update(&mut self.ctx, bytes.as_mut_ptr(), bytes.len() as size_t) };
+    }
+
+    pub fn finalize(mut self) -> sha1_digest_t {
+        let mut digest: sha1_digest_t = [0; 20];
+        unsafe { SHA1_Final(digest.as_mut_ptr(), &mut self.ctx) };
+        digest
+    }
 }
