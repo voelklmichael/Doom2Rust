@@ -118,7 +118,7 @@ pub fn P_ThinkerRaw(state: &GameState, id: ThinkerId) -> *mut thinker_t {
     match state.p_tick.payload(id) {
         ThinkerPayload::Mobj(mobj_id) => state
             .p_mobj
-            .mobj_get(mobj_id)
+            .mobj_get_for_reaper(mobj_id)
             .expect("ThinkerNode payload must reference a live mobj")
             as *mut thinker_t,
         ThinkerPayload::Ceiling(ceiling_id) => state
