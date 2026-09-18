@@ -236,8 +236,8 @@ pub fn P_BoxOnLineSide(state: &mut GameState, tmbox: [fixed_t; 4], ld: LineId) -
     match ldv.slopetype as u32 {
         0 => {
             let ld_v1 = state.p_setup.vertexes[ldv.v1.0 as usize];
-            p1 = (tmbox[BoxIndex::BOXTOP as usize] > ld_v1.y) as i32;
-            p2 = (tmbox[BoxIndex::BOXBOTTOM as usize] > ld_v1.y) as i32;
+            p1 = (tmbox[BoxIndex::Top as usize] > ld_v1.y) as i32;
+            p2 = (tmbox[BoxIndex::Bottom as usize] > ld_v1.y) as i32;
             if ldv.dx < 0_i32 {
                 p1 ^= 1_i32;
                 p2 ^= 1_i32;
@@ -245,8 +245,8 @@ pub fn P_BoxOnLineSide(state: &mut GameState, tmbox: [fixed_t; 4], ld: LineId) -
         }
         1 => {
             let ld_v1 = state.p_setup.vertexes[ldv.v1.0 as usize];
-            p1 = (tmbox[BoxIndex::BOXRIGHT as usize] < ld_v1.x) as i32;
-            p2 = (tmbox[BoxIndex::BOXLEFT as usize] < ld_v1.x) as i32;
+            p1 = (tmbox[BoxIndex::Right as usize] < ld_v1.x) as i32;
+            p2 = (tmbox[BoxIndex::Left as usize] < ld_v1.x) as i32;
             if ldv.dy < 0_i32 {
                 p1 ^= 1_i32;
                 p2 ^= 1_i32;
@@ -255,28 +255,28 @@ pub fn P_BoxOnLineSide(state: &mut GameState, tmbox: [fixed_t; 4], ld: LineId) -
         2 => {
             p1 = P_PointOnLineSide(
                 state,
-                tmbox[BoxIndex::BOXLEFT as usize],
-                tmbox[BoxIndex::BOXTOP as usize],
+                tmbox[BoxIndex::Left as usize],
+                tmbox[BoxIndex::Top as usize],
                 ld,
             );
             p2 = P_PointOnLineSide(
                 state,
-                tmbox[BoxIndex::BOXRIGHT as usize],
-                tmbox[BoxIndex::BOXBOTTOM as usize],
+                tmbox[BoxIndex::Right as usize],
+                tmbox[BoxIndex::Bottom as usize],
                 ld,
             );
         }
         3 => {
             p1 = P_PointOnLineSide(
                 state,
-                tmbox[BoxIndex::BOXRIGHT as usize],
-                tmbox[BoxIndex::BOXTOP as usize],
+                tmbox[BoxIndex::Right as usize],
+                tmbox[BoxIndex::Top as usize],
                 ld,
             );
             p2 = P_PointOnLineSide(
                 state,
-                tmbox[BoxIndex::BOXLEFT as usize],
-                tmbox[BoxIndex::BOXBOTTOM as usize],
+                tmbox[BoxIndex::Left as usize],
+                tmbox[BoxIndex::Bottom as usize],
                 ld,
             );
         }
