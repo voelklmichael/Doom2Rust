@@ -519,8 +519,8 @@ pub fn AM_addMark(state: &mut GameState) {
 }
 pub fn AM_findMinMaxBoundaries(state: &mut GameState) {
     let mut i: i32;
-    let a: fixed_t;
-    let b: fixed_t;
+    
+    
     state.am_map.min_y = INT_MAX as fixed_t;
     state.am_map.min_x = state.am_map.min_y;
     state.am_map.max_y = -INT_MAX as fixed_t;
@@ -544,11 +544,11 @@ pub fn AM_findMinMaxBoundaries(state: &mut GameState) {
     state.am_map.max_h = state.am_map.max_y - state.am_map.min_y;
     state.am_map.min_w = (2_i32 * 16_i32 * FRACUNIT) as fixed_t;
     state.am_map.min_h = (2_i32 * 16_i32 * FRACUNIT) as fixed_t;
-    a = FixedDiv(
+    let a: fixed_t = FixedDiv(
         (state.am_map.f_w as fixed_t) << FRACBITS,
         state.am_map.max_w,
     );
-    b = FixedDiv(
+    let b: fixed_t = FixedDiv(
         (state.am_map.f_h as fixed_t) << FRACBITS,
         state.am_map.max_h,
     );
@@ -1006,12 +1006,12 @@ pub fn AM_clipMline(state: &mut GameState, ml: &mline_t, fl: &mut fline_t) -> bo
 pub fn AM_drawFline(state: &mut GameState, fl: &fline_t, color: i32) {
     let mut x: i32;
     let mut y: i32;
-    let dx: i32;
-    let dy: i32;
-    let sx: i32;
-    let sy: i32;
-    let ax: i32;
-    let ay: i32;
+    
+    
+    
+    
+    
+    
     let mut d: i32;
     if fl.a.x < 0_i32
         || fl.a.x >= state.am_map.f_w
@@ -1027,12 +1027,12 @@ pub fn AM_drawFline(state: &mut GameState, fl: &fline_t, color: i32) {
         eprint!("fuck {} \r", fresh0);
         return;
     }
-    dx = fl.b.x - fl.a.x;
-    ax = 2_i32 * (if dx < 0_i32 { -dx } else { dx });
-    sx = if dx < 0_i32 { -1_i32 } else { 1_i32 };
-    dy = fl.b.y - fl.a.y;
-    ay = 2_i32 * (if dy < 0_i32 { -dy } else { dy });
-    sy = if dy < 0_i32 { -1_i32 } else { 1_i32 };
+    let dx: i32 = fl.b.x - fl.a.x;
+    let ax: i32 = 2_i32 * (if dx < 0_i32 { -dx } else { dx });
+    let sx: i32 = if dx < 0_i32 { -1_i32 } else { 1_i32 };
+    let dy: i32 = fl.b.y - fl.a.y;
+    let ay: i32 = 2_i32 * (if dy < 0_i32 { -dy } else { dy });
+    let sy: i32 = if dy < 0_i32 { -1_i32 } else { 1_i32 };
     x = fl.a.x;
     y = fl.a.y;
     if ax > ay {
@@ -1177,8 +1177,8 @@ pub fn AM_drawWalls(state: &mut GameState) {
     }
 }
 pub fn AM_rotate(x: &mut fixed_t, y: &mut fixed_t, a: angle_t) {
-    let tmpx: fixed_t;
-    tmpx = FixedMul(*x, finecosine[(a >> ANGLETOFINESHIFT) as usize])
+    
+    let tmpx: fixed_t = FixedMul(*x, finecosine[(a >> ANGLETOFINESHIFT) as usize])
         - FixedMul(*y, finesine[(a >> ANGLETOFINESHIFT) as usize]);
     *y = FixedMul(*x, finesine[(a >> ANGLETOFINESHIFT) as usize])
         + FixedMul(*y, finecosine[(a >> ANGLETOFINESHIFT) as usize]);

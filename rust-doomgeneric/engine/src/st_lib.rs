@@ -84,9 +84,9 @@ pub fn STlib_drawNum(state: &mut GameState, n: &mut st_number_t, mut num: i32) {
     let w: i32 = zero_patch.width();
     let h: i32 = zero_patch.height();
     let mut x: i32;
-    let neg: i32;
+    
     n.oldnum = num;
-    neg = (num < 0_i32) as i32;
+    let neg: i32 = (num < 0_i32) as i32;
     if neg != 0 {
         if numdigits == 2_i32 && num < -9_i32 {
             num = -9_i32;

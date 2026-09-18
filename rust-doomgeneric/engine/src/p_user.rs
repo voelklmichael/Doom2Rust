@@ -58,8 +58,8 @@ pub fn P_Thrust(state: &mut GameState, mo: MobjId, mut angle: angle_t, move_0: f
 }
 pub fn P_CalcHeight(state: &mut GameState, player_id: PlayerId) {
     let player = &mut state.g_game.players[player_id.0 as usize];
-    let angle: i32;
-    let bob: fixed_t;
+    
+    
     let player_mo = player.mo.unwrap();
     player.bob = FixedMul(
         state.p_mobj.mo(player_mo).momx,
@@ -80,8 +80,8 @@ pub fn P_CalcHeight(state: &mut GameState, player_id: PlayerId) {
         player.viewz = state.p_mobj.mo(player_mo).z + player.viewheight;
         return;
     }
-    angle = (FINEANGLES / 20_i32 * state.p_tick.leveltime) & FINEMASK;
-    bob = FixedMul(player.bob / 2 as fixed_t, finesine[angle as usize]);
+    let angle: i32 = (FINEANGLES / 20_i32 * state.p_tick.leveltime) & FINEMASK;
+    let bob: fixed_t = FixedMul(player.bob / 2 as fixed_t, finesine[angle as usize]);
     if player.playerstate == PlayerState::PST_LIVE {
         player.viewheight += player.deltaviewheight;
         if player.viewheight > VIEWHEIGHT {

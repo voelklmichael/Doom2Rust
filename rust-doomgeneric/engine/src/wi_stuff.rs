@@ -934,7 +934,7 @@ pub fn WI_drawNum(
 ) -> i32 {
     let zero_patch = V_CachePatchNum(state, state.wi_stuff.num[0]);
     let fontwidth: i32 = zero_patch.width();
-    let neg: i32;
+    
     let mut temp: i32;
     if digits < 0_i32 {
         if n == 0 {
@@ -948,7 +948,7 @@ pub fn WI_drawNum(
             }
         }
     }
-    neg = (n < 0_i32) as i32;
+    let neg: i32 = (n < 0_i32) as i32;
     if neg != 0 {
         n = -n;
     }
@@ -1200,7 +1200,7 @@ pub fn WI_drawDeathmatchStats(state: &mut GameState) {
     let mut j: i32;
     let mut x: i32;
     let mut y: i32;
-    let w: i32;
+    
     WI_slamBackground(state);
     WI_drawAnimatedBack(state);
     WI_drawLF(state);
@@ -1268,7 +1268,7 @@ pub fn WI_drawDeathmatchStats(state: &mut GameState) {
     }
     y = DM_MATRIXY + 10_i32;
     let zero_patch = V_CachePatchNum(state, state.wi_stuff.num[0]);
-    w = zero_patch.width();
+    let w: i32 = zero_patch.width();
     i = 0_i32;
     while i < MAXPLAYERS {
         x = DM_MATRIXX + DM_SPACINGX;
@@ -1639,9 +1639,9 @@ pub fn WI_updateStats(state: &mut GameState) {
     }
 }
 pub fn WI_drawStats(state: &mut GameState) {
-    let lh: i32;
+    
     let zero_patch = V_CachePatchNum(state, state.wi_stuff.num[0]);
-    lh = 3_i32 * zero_patch.height() / 2_i32;
+    let lh: i32 = 3_i32 * zero_patch.height() / 2_i32;
     WI_slamBackground(state);
     WI_drawAnimatedBack(state);
     WI_drawLF(state);

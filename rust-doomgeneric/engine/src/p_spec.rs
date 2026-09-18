@@ -1082,11 +1082,11 @@ pub const DONUT_FLOORHEIGHT_DEFAULT: i32 = 0;
 pub const DONUT_FLOORPIC_DEFAULT: i32 = 0x16;
 fn DonutOverrun(state: &mut GameState) -> (fixed_t, i16) {
     if state.p_spec.donut_overrun_first != 0 {
-        let p: i32;
+        
         state.p_spec.donut_overrun_first = 0_i32;
         state.p_spec.donut_overrun_tmp_s3_floorheight = DONUT_FLOORHEIGHT_DEFAULT;
         state.p_spec.donut_overrun_tmp_s3_floorpic = DONUT_FLOORPIC_DEFAULT;
-        p = M_CheckParmWithArgs(state, "-donut", 2_i32);
+        let p: i32 = M_CheckParmWithArgs(state, "-donut", 2_i32);
         if p > 0_i32 {
             M_StrToInt(
                 state.m_argv.myargv[(p + 1_i32) as usize].to_str().unwrap(),

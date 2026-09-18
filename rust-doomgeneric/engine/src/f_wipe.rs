@@ -158,7 +158,7 @@ pub fn wipe_ScreenWipe(
     height: i32,
     ticks: i32,
 ) -> i32 {
-    let rc: i32;
+    
     let wipes: [WipeFn; 6] = [
         wipe_initColorXForm,
         wipe_doColorXForm,
@@ -175,7 +175,7 @@ pub fn wipe_ScreenWipe(
     let dest_screen = Screen::Video;
     V_MarkRect(state, dest_screen, 0_i32, 0_i32, width, height);
     let do_fn = wipes[(wipeno * 3_i32 + 1_i32) as usize];
-    rc = do_fn(state, width, height, ticks);
+    let rc: i32 = do_fn(state, width, height, ticks);
     if rc != 0 {
         state.f_wipe.go = false;
         let exit_fn = wipes[(wipeno * 3_i32 + 2_i32) as usize];

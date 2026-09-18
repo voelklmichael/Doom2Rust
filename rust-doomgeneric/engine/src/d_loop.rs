@@ -139,7 +139,7 @@ fn GetAdjustedTime(state: &mut GameState) -> i32 {
     time_ms * TICRATE / 1000_i32
 }
 fn BuildNewTic(state: &mut GameState) -> bool {
-    let gameticdiv: i32;
+    
     let mut cmd: ticcmd_t = ticcmd_t {
         forwardmove: 0,
         sidemove: 0,
@@ -152,7 +152,7 @@ fn BuildNewTic(state: &mut GameState) -> bool {
         lookfly: 0,
         arti: 0,
     };
-    gameticdiv = state.d_loop.gametic / state.d_loop.ticdup;
+    let gameticdiv: i32 = state.d_loop.gametic / state.d_loop.ticdup;
     I_StartTic(state);
     let process_events = state
         .d_loop
@@ -194,13 +194,13 @@ fn BuildNewTic(state: &mut GameState) -> bool {
     true
 }
 pub fn NetUpdate(state: &mut GameState) {
-    let nowtime: i32;
+    
     let mut newtics: i32;
     let mut i: i32;
     if state.d_loop.singletics {
         return;
     }
-    nowtime = GetAdjustedTime(state) / state.d_loop.ticdup;
+    let nowtime: i32 = GetAdjustedTime(state) / state.d_loop.ticdup;
     newtics = nowtime - state.d_loop.lasttime;
     state.d_loop.lasttime = nowtime;
     if state.d_loop.skiptics <= newtics {
@@ -243,8 +243,8 @@ pub fn D_InitNetGame(state: &mut GameState, connect_data: &mut net_connect_data_
 }
 pub fn D_QuitNetGame(_state: &mut GameState) {}
 fn GetLowTic(state: &mut GameState) -> i32 {
-    let lowtic: i32;
-    lowtic = state.d_loop.maketic;
+    
+    let lowtic: i32 = state.d_loop.maketic;
     lowtic
 }
 fn OldNetSync(state: &mut GameState) {
@@ -319,12 +319,12 @@ fn SinglePlayerClear(set: &mut ticcmd_set_t) {
 pub fn TryRunTics(state: &mut GameState) {
     let mut i: i32;
     let mut lowtic: i32;
-    let entertic: i32;
-    let realtics: i32;
-    let availabletics: i32;
+    
+    
+    
     let mut counts: i32;
-    entertic = I_GetTime(state) / state.d_loop.ticdup;
-    realtics = entertic - state.d_loop.try_run_tics_oldentertics;
+    let entertic: i32 = I_GetTime(state) / state.d_loop.ticdup;
+    let realtics: i32 = entertic - state.d_loop.try_run_tics_oldentertics;
     state.d_loop.try_run_tics_oldentertics = entertic;
     if state.d_loop.singletics {
         BuildNewTic(state);
@@ -332,7 +332,7 @@ pub fn TryRunTics(state: &mut GameState) {
         NetUpdate(state);
     }
     lowtic = GetLowTic(state);
-    availabletics = lowtic - state.d_loop.gametic / state.d_loop.ticdup;
+    let availabletics: i32 = lowtic - state.d_loop.gametic / state.d_loop.ticdup;
     if state.d_loop.new_sync {
         counts = availabletics;
     } else {

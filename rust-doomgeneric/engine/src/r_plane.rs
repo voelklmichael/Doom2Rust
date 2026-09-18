@@ -82,9 +82,9 @@ impl RPlaneState {
 pub const ANGLETOSKYSHIFT: i32 = 22;
 pub const MAXVISPLANES: i32 = 128;
 pub fn R_MapPlane(state: &mut GameState, y: i32, x1: i32, x2: i32) {
-    let angle: angle_t;
+    
     let distance: fixed_t;
-    let length: fixed_t;
+    
     let mut index: u32;
     if x2 < x1 || x1 < 0_i32 || x2 >= state.r_draw.viewwidth || y > state.r_draw.viewheight {
         I_Error(&format!("R_MapPlane: {}, {} at {}", x1, x2, y));
@@ -103,8 +103,8 @@ pub fn R_MapPlane(state: &mut GameState, y: i32, x1: i32, x2: i32) {
         state.r_draw.ds_xstep = state.r_plane.cachedxstep[y as usize];
         state.r_draw.ds_ystep = state.r_plane.cachedystep[y as usize];
     }
-    length = FixedMul(distance, state.r_plane.distscale[x1 as usize]);
-    angle = state
+    let length: fixed_t = FixedMul(distance, state.r_plane.distscale[x1 as usize]);
+    let angle: angle_t = state
         .r_main
         .viewangle
         .wrapping_add(state.r_main.xtoviewangle[x1 as usize])
@@ -127,7 +127,7 @@ pub fn R_MapPlane(state: &mut GameState, y: i32, x1: i32, x2: i32) {
 }
 pub fn R_ClearPlanes(state: &mut GameState) {
     let mut i: i32;
-    let angle: angle_t;
+    
     i = 0_i32;
     while i < state.r_draw.viewwidth {
         state.r_plane.floorclip[i as usize] = state.r_draw.viewheight as i16;
@@ -137,7 +137,7 @@ pub fn R_ClearPlanes(state: &mut GameState) {
     state.r_plane.lastvisplane = 0;
     state.r_plane.lastopening = 0;
     state.r_plane.cachedheight = [0; 200];
-    angle = state.r_main.viewangle.wrapping_sub(ANG90 as angle_t) >> ANGLETOFINESHIFT;
+    let angle: angle_t = state.r_main.viewangle.wrapping_sub(ANG90 as angle_t) >> ANGLETOFINESHIFT;
     state.r_plane.basexscale = FixedDiv(finecosine[angle as usize], state.r_main.centerxfrac);
     state.r_plane.baseyscale = -FixedDiv(finesine[angle as usize], state.r_main.centerxfrac);
 }

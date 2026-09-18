@@ -446,16 +446,16 @@ fn WeaponSelectable(state: &mut GameState, weapon: weapontype_t) -> bool {
     true
 }
 fn G_NextWeapon(state: &mut GameState, direction: i32) -> i32 {
-    let weapon: weapontype_t;
-    let start_i: i32;
+    
+    
     let mut i: i32;
-    if state.g_game.players[state.g_game.consoleplayer as usize].pendingweapon as u32
+    let weapon: weapontype_t = if state.g_game.players[state.g_game.consoleplayer as usize].pendingweapon as u32
         == weapontype_t::wp_nochange as u32
     {
-        weapon = state.g_game.players[state.g_game.consoleplayer as usize].readyweapon;
+        state.g_game.players[state.g_game.consoleplayer as usize].readyweapon
     } else {
-        weapon = state.g_game.players[state.g_game.consoleplayer as usize].pendingweapon;
-    }
+        state.g_game.players[state.g_game.consoleplayer as usize].pendingweapon
+    };
     i = 0_i32;
     while (i as usize)
         < ::core::mem::size_of::<[WeaponOrder; 9]>()
@@ -466,7 +466,7 @@ fn G_NextWeapon(state: &mut GameState, direction: i32) -> i32 {
         }
         i += 1;
     }
-    start_i = i;
+    let start_i: i32 = i;
     loop {
         i += direction;
         i = (i as usize)
@@ -486,10 +486,10 @@ fn G_NextWeapon(state: &mut GameState, direction: i32) -> i32 {
 }
 pub fn G_BuildTiccmd(state: &mut GameState, cmd: &mut ticcmd_t, maketic: i32) {
     let mut i: i32;
-    let strafe: bool;
+    
     let bstrafe: bool;
-    let speed: i32;
-    let tspeed: i32;
+    
+    
     let mut forward: i32;
     let mut side: i32;
     *cmd = ticcmd_t {
@@ -506,10 +506,10 @@ pub fn G_BuildTiccmd(state: &mut GameState, cmd: &mut ticcmd_t, maketic: i32) {
     };
     cmd.consistancy = state.g_game.consistancy[state.g_game.consoleplayer as usize]
         [(maketic % BACKUPTICS) as usize];
-    strafe = state.g_game.gamekeydown[state.m_controls.key_strafe as usize]
+    let strafe: bool = state.g_game.gamekeydown[state.m_controls.key_strafe as usize]
         || state.g_game.mousearray[(state.m_controls.mousebstrafe + 1) as usize]
         || state.g_game.joyarray[(state.m_controls.joybstrafe + 1) as usize];
-    speed = (state.m_controls.key_speed >= NUMKEYS
+    let speed: i32 = (state.m_controls.key_speed >= NUMKEYS
         || state.m_controls.joybspeed >= MAX_JOY_BUTTONS
         || state.g_game.gamekeydown[state.m_controls.key_speed as usize]
         || state.g_game.joyarray[(state.m_controls.joybspeed + 1) as usize]) as i32;
@@ -523,11 +523,11 @@ pub fn G_BuildTiccmd(state: &mut GameState, cmd: &mut ticcmd_t, maketic: i32) {
     } else {
         state.g_game.turnheld = 0_i32;
     }
-    if state.g_game.turnheld < SLOWTURNTICS {
-        tspeed = 2_i32;
+    let tspeed: i32 = if state.g_game.turnheld < SLOWTURNTICS {
+        2_i32
     } else {
-        tspeed = speed;
-    }
+        speed
+    };
     if strafe {
         if state.g_game.gamekeydown[state.m_controls.key_right as usize] {
             side += state.g_game.sidemove[speed as usize];
@@ -698,9 +698,8 @@ pub fn G_BuildTiccmd(state: &mut GameState, cmd: &mut ticcmd_t, maketic: i32) {
             (BT_SPECIAL | BTS_SAVEGAME | state.g_game.savegameslot << BTS_SAVESHIFT) as byte;
     }
     if state.g_game.lowres_turn {
-        let desired_angleturn: i16;
-        desired_angleturn =
-            (cmd.angleturn as i32 + state.g_game.g_build_ticcmd_carry as i32) as i16;
+        
+        let desired_angleturn: i16 = (cmd.angleturn as i32 + state.g_game.g_build_ticcmd_carry as i32) as i16;
         cmd.angleturn = ((desired_angleturn as i32 + 128_i32) & 0xff00_i32) as i16;
         state.g_game.g_build_ticcmd_carry =
             (desired_angleturn as i32 - cmd.angleturn as i32) as i16;
@@ -876,7 +875,7 @@ pub fn G_Responder(state: &mut GameState, ev: event_t) -> bool {
 }
 pub fn G_Ticker(state: &mut GameState, netcmds: &[ticcmd_t]) {
     let mut i: i32;
-    let buf: i32;
+    
     i = 0_i32;
     while i < MAXPLAYERS {
         if state.g_game.playeringame[i as usize]
@@ -921,7 +920,7 @@ pub fn G_Ticker(state: &mut GameState, netcmds: &[ticcmd_t]) {
             GameAction::ga_nothing => {}
         }
     }
-    buf = state.d_loop.gametic / state.d_loop.ticdup % BACKUPTICS;
+    let buf: i32 = state.d_loop.gametic / state.d_loop.ticdup % BACKUPTICS;
     i = 0_i32;
     while i < MAXPLAYERS {
         if state.g_game.playeringame[i as usize] {
@@ -1371,7 +1370,7 @@ pub fn G_LoadGame(state: &mut GameState, name: &str) {
     state.g_game.gameaction = GameAction::ga_loadgame;
 }
 pub fn G_DoLoadGame(state: &mut GameState) {
-    let savedleveltime: i32;
+    
     state.g_game.gameaction = GameAction::ga_nothing;
     state.p_saveg.save_stream = std::fs::File::open(&state.g_game.savename).ok();
     if state.p_saveg.save_stream.is_none() {
@@ -1382,7 +1381,7 @@ pub fn G_DoLoadGame(state: &mut GameState) {
         state.p_saveg.save_stream = None;
         return;
     }
-    savedleveltime = state.p_tick.leveltime;
+    let savedleveltime: i32 = state.p_tick.leveltime;
     let (skill, episode, map) = (
         state.g_game.gameskill,
         state.g_game.gameepisode,
@@ -1643,12 +1642,12 @@ pub fn G_WriteDemoTiccmd(state: &mut GameState, player_num: usize) {
     G_ReadDemoTiccmd(state, player_num);
 }
 pub fn G_RecordDemo(state: &mut GameState, name: &str) {
-    let i: i32;
+    
     let mut maxsize: i32;
     state.g_game.usergame = false;
     state.g_game.demoname = format!("{}.lmp", name);
     maxsize = 0x20000_i32;
-    i = M_CheckParmWithArgs(state, "-maxdemo", 1_i32);
+    let i: i32 = M_CheckParmWithArgs(state, "-maxdemo", 1_i32);
     if i != 0 {
         maxsize = M_ArgvAtoi(&state.m_argv.myargv[(i + 1_i32) as usize]) * 1024_i32;
     }
@@ -1725,18 +1724,18 @@ fn DemoVersionDescription(_state: &mut GameState, version: i32) -> String {
     }
 }
 pub fn G_DoPlayDemo(state: &mut GameState) {
-    let skill: SkillType;
+    
     let mut i: i32;
-    let episode: i32;
-    let map: i32;
-    let demoversion: i32;
+    
+    
+    
     state.g_game.gameaction = GameAction::ga_nothing;
     let demo_lumpname = state.g_game.defdemoname.as_str().into_owned();
     let demo_lumpnum = W_GetNumForName(&mut state.w_wad, &demo_lumpname);
     let demo_lumplen = W_LumpLength(&mut state.w_wad, demo_lumpnum as u32) as usize;
     state.g_game.demobuffer = W_LumpBytes(state, demo_lumpnum)[..demo_lumplen].to_vec();
     state.g_game.demo_p = 0;
-    demoversion = state.g_game.demo_read_byte() as i32;
+    let demoversion: i32 = state.g_game.demo_read_byte() as i32;
     if demoversion == G_VanillaVersionCode(&mut state.doomstat) {
         state.g_game.longtics = false;
     } else if demoversion == DOOM_191_VERSION {
@@ -1749,9 +1748,9 @@ pub fn G_DoPlayDemo(state: &mut GameState) {
             DemoVersionDescription(state, demoversion),
         );
     }
-    skill = skill_from_raw(state.g_game.demo_read_byte() as i32);
-    episode = state.g_game.demo_read_byte() as i32;
-    map = state.g_game.demo_read_byte() as i32;
+    let skill: SkillType = skill_from_raw(state.g_game.demo_read_byte() as i32);
+    let episode: i32 = state.g_game.demo_read_byte() as i32;
+    let map: i32 = state.g_game.demo_read_byte() as i32;
     state.g_game.deathmatch = state.g_game.demo_read_byte() as i32;
     state.d_main.respawnparm = state.g_game.demo_read_byte() != 0;
     state.d_main.fastparm = state.g_game.demo_read_byte() != 0;
@@ -1786,11 +1785,11 @@ pub fn G_TimeDemo(state: &mut GameState, name: FixedCStr<8>) {
 pub fn G_CheckDemoStatus(state: &mut GameState) -> bool {
     let endtime: i32;
     if state.g_game.timingdemo {
-        let fps: f32;
-        let realtics: i32;
+        
+        
         endtime = I_GetTime(state);
-        realtics = endtime - state.g_game.starttime;
-        fps = state.d_loop.gametic as f32 * TICRATE as f32 / realtics as f32;
+        let realtics: i32 = endtime - state.g_game.starttime;
+        let fps: f32 = state.d_loop.gametic as f32 * TICRATE as f32 / realtics as f32;
         state.g_game.timingdemo = false;
         state.g_game.demoplayback = false;
         I_Error(&format!(

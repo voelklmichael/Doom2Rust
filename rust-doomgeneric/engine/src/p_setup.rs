@@ -513,8 +513,8 @@ pub fn P_LoadSideDefs(state: &mut GameState, lump: i32) {
     W_ReleaseLumpNum(&mut state.w_wad, lump);
 }
 pub fn P_LoadBlockMap(state: &mut GameState, lump: i32) {
-    let lumplen: i32;
-    lumplen = W_LumpLength(&mut state.w_wad, lump as u32);
+    
+    let lumplen: i32 = W_LumpLength(&mut state.w_wad, lump as u32);
     let mut raw = vec![0u8; lumplen as usize];
     W_ReadLump(&mut state.w_wad, lump as u32, &mut raw);
     state.p_setup.blockmaplump = raw
@@ -671,7 +671,7 @@ fn P_LoadReject(state: &mut GameState, lumpnum: i32) {
 }
 pub fn P_SetupLevel(state: &mut GameState, episode: i32, map: i32) {
     let mut i: i32;
-    let lumpnum: i32;
+    
     state.g_game.wminfo.maxfrags = 0_i32;
     state.g_game.totalsecret = state.g_game.wminfo.maxfrags;
     state.g_game.totalitems = state.g_game.totalsecret;
@@ -700,7 +700,7 @@ pub fn P_SetupLevel(state: &mut GameState, episode: i32, map: i32) {
             char::from((('0' as i32) + map) as u8)
         )
     };
-    lumpnum = W_GetNumForName(&mut state.w_wad, &lumpname);
+    let lumpnum: i32 = W_GetNumForName(&mut state.w_wad, &lumpname);
     state.p_tick.leveltime = 0_i32;
     P_LoadBlockMap(state, lumpnum + MapLump::ML_BLOCKMAP as i32);
     P_LoadVertexes(state, lumpnum + MapLump::ML_VERTEXES as i32);

@@ -140,8 +140,8 @@ pub fn W_AddFile(state: &mut GameState, filename: &str) -> Option<&'static wad_f
 pub fn W_CheckNumForName(state: &mut WWadState, name: &str) -> i32 {
     let mut i: i32;
     if !state.lumphash.is_empty() {
-        let hash: u32;
-        hash = W_LumpNameHash(name.as_bytes()).wrapping_rem(state.numlumps);
+        
+        let hash: u32 = W_LumpNameHash(name.as_bytes()).wrapping_rem(state.numlumps);
         let mut cur = state.lumphash[hash as usize];
         while let Some(idx) = cur {
             if state.lumpinfo[idx as usize]
@@ -167,8 +167,8 @@ pub fn W_CheckNumForName(state: &mut WWadState, name: &str) -> i32 {
     -1_i32
 }
 pub fn W_GetNumForName(state: &mut WWadState, name: &str) -> i32 {
-    let i: i32;
-    i = W_CheckNumForName(state, name);
+    
+    let i: i32 = W_CheckNumForName(state, name);
     if i < 0_i32 {
         I_Error(&format!("W_GetNumForName: {} not found!", name));
     }
@@ -247,8 +247,8 @@ pub fn W_GenerateHashTable(state: &mut GameState) {
         state.w_wad.lumphash = vec![None; state.w_wad.numlumps as usize];
         i = 0_u32;
         while i < state.w_wad.numlumps {
-            let hash: u32;
-            hash = W_LumpNameHash(state.w_wad.lumpinfo[i as usize].name.as_bytes())
+            
+            let hash: u32 = W_LumpNameHash(state.w_wad.lumpinfo[i as usize].name.as_bytes())
                 .wrapping_rem(state.w_wad.numlumps);
             let old_head = state.w_wad.lumphash[hash as usize];
             state.w_wad.lumpinfo[i as usize].next = old_head;

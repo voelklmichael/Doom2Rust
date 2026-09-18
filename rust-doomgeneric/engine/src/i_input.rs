@@ -50,12 +50,12 @@ fn GetTypedChar(state: &mut IInputState, mut key: u8) -> u8 {
     key
 }
 fn UpdateShiftStatus(state: &mut IInputState, pressed: i32, key: u8) {
-    let change: i32;
-    if pressed != 0 {
-        change = 1_i32;
+    
+    let change: i32 = if pressed != 0 {
+        1_i32
     } else {
-        change = -1_i32;
-    }
+        -1_i32
+    };
     if key as i32 == KEY_RSHIFT {
         state.shiftdown += change;
     }

@@ -150,11 +150,11 @@ pub const DEFAULT_SPECHIT_MAGIC: i32 = 0x1c09c98;
 pub fn PIT_StompThing(state: &mut GameState, thing_id: MobjId) -> bool {
     let thing = thing_id;
     let tmthing = state.p_map.tmthing.unwrap();
-    let blockdist: fixed_t;
+    
     if state.p_mobj.mo(thing).flags & MF_SHOOTABLE == 0 {
         return true;
     }
-    blockdist = state.p_mobj.mo(thing).radius + state.p_mobj.mo(tmthing).radius;
+    let blockdist: fixed_t = state.p_mobj.mo(thing).radius + state.p_mobj.mo(tmthing).radius;
     if (state.p_mobj.mo(thing).x - state.p_map.tmx).abs() >= blockdist
         || (state.p_mobj.mo(thing).y - state.p_map.tmy).abs() >= blockdist
     {
@@ -175,13 +175,13 @@ pub fn P_TeleportMove(
     x: fixed_t,
     y: fixed_t,
 ) -> bool {
-    let xl: i32;
-    let xh: i32;
-    let yl: i32;
-    let yh: i32;
+    
+    
+    
+    
     let mut bx: i32;
     let mut by: i32;
-    let newsubsec: SubsectorId;
+    
     state.p_map.tmthing = Some(thing);
     state.p_map.tmflags = state.p_mobj.mo(thing).flags;
     state.p_map.tmx = x;
@@ -190,7 +190,7 @@ pub fn P_TeleportMove(
     state.p_map.tmbbox[BoxIndex::BOXBOTTOM as usize] = y - state.p_mobj.mo(thing).radius;
     state.p_map.tmbbox[BoxIndex::BOXRIGHT as usize] = x + state.p_mobj.mo(thing).radius;
     state.p_map.tmbbox[BoxIndex::BOXLEFT as usize] = x - state.p_mobj.mo(thing).radius;
-    newsubsec = R_PointInSubsector(state, x, y);
+    let newsubsec: SubsectorId = R_PointInSubsector(state, x, y);
     state.p_map.ceilingline = None;
     state.p_map.tmdropoffz = state
         .p_setup
@@ -203,18 +203,18 @@ pub fn P_TeleportMove(
         .ceilingheight;
     state.r_main.validcount += 1;
     state.p_map.numspechit = 0_i32;
-    xl = (state.p_map.tmbbox[BoxIndex::BOXLEFT as usize]
+    let xl: i32 = (state.p_map.tmbbox[BoxIndex::BOXLEFT as usize]
         - state.p_setup.bmaporgx
         - 32_i32 * FRACUNIT)
         >> MAPBLOCKSHIFT;
-    xh = (state.p_map.tmbbox[BoxIndex::BOXRIGHT as usize] - state.p_setup.bmaporgx
+    let xh: i32 = (state.p_map.tmbbox[BoxIndex::BOXRIGHT as usize] - state.p_setup.bmaporgx
         + 32_i32 * FRACUNIT)
         >> MAPBLOCKSHIFT;
-    yl = (state.p_map.tmbbox[BoxIndex::BOXBOTTOM as usize]
+    let yl: i32 = (state.p_map.tmbbox[BoxIndex::BOXBOTTOM as usize]
         - state.p_setup.bmaporgy
         - 32_i32 * FRACUNIT)
         >> MAPBLOCKSHIFT;
-    yh = (state.p_map.tmbbox[BoxIndex::BOXTOP as usize] - state.p_setup.bmaporgy
+    let yh: i32 = (state.p_map.tmbbox[BoxIndex::BOXTOP as usize] - state.p_setup.bmaporgy
         + 32_i32 * FRACUNIT)
         >> MAPBLOCKSHIFT;
     bx = xl;
@@ -284,13 +284,13 @@ pub fn PIT_CheckLine(state: &mut GameState, ld: LineId) -> bool {
 pub fn PIT_CheckThing(state: &mut GameState, thing_id: MobjId) -> bool {
     let thing = thing_id;
     let tmthing = state.p_map.tmthing.unwrap();
-    let blockdist: fixed_t;
+    
     let solid: bool;
     let damage: i32;
     if state.p_mobj.mo(thing).flags & (MF_SOLID | MF_SPECIAL | MF_SHOOTABLE) == 0 {
         return true;
     }
-    blockdist = state.p_mobj.mo(thing).radius + state.p_mobj.mo(tmthing).radius;
+    let blockdist: fixed_t = state.p_mobj.mo(thing).radius + state.p_mobj.mo(tmthing).radius;
     if (state.p_mobj.mo(thing).x - state.p_map.tmx).abs() >= blockdist
         || (state.p_mobj.mo(thing).y - state.p_map.tmy).abs() >= blockdist
     {
@@ -380,7 +380,7 @@ pub fn P_CheckPosition(
     let mut yh: i32;
     let mut bx: i32;
     let mut by: i32;
-    let newsubsec: SubsectorId;
+    
     state.p_map.tmthing = Some(thing);
     state.p_map.tmflags = state.p_mobj.mo(thing).flags;
     state.p_map.tmx = x;
@@ -389,7 +389,7 @@ pub fn P_CheckPosition(
     state.p_map.tmbbox[BoxIndex::BOXBOTTOM as usize] = y - state.p_mobj.mo(thing).radius;
     state.p_map.tmbbox[BoxIndex::BOXRIGHT as usize] = x + state.p_mobj.mo(thing).radius;
     state.p_map.tmbbox[BoxIndex::BOXLEFT as usize] = x - state.p_mobj.mo(thing).radius;
-    newsubsec = R_PointInSubsector(state, x, y);
+    let newsubsec: SubsectorId = R_PointInSubsector(state, x, y);
     state.p_map.ceilingline = None;
     state.p_map.tmdropoffz = state
         .p_setup
@@ -450,8 +450,8 @@ pub fn P_CheckPosition(
     true
 }
 pub fn P_TryMove(state: &mut GameState, thing: MobjId, x: fixed_t, y: fixed_t) -> bool {
-    let oldx: fixed_t;
-    let oldy: fixed_t;
+    
+    
     let mut side: i32;
     let mut oldside: i32;
     let mut ld: LineId;
@@ -481,8 +481,8 @@ pub fn P_TryMove(state: &mut GameState, thing: MobjId, x: fixed_t, y: fixed_t) -
         }
     }
     P_UnsetThingPosition(state, thing);
-    oldx = state.p_mobj.mo(thing).x;
-    oldy = state.p_mobj.mo(thing).y;
+    let oldx: fixed_t = state.p_mobj.mo(thing).x;
+    let oldy: fixed_t = state.p_mobj.mo(thing).y;
     state.p_mobj.mo_mut(thing).floorz = state.p_map.tmfloorz;
     state.p_mobj.mo_mut(thing).ceilingz = state.p_map.tmceilingz;
     state.p_mobj.mo_mut(thing).x = x;
@@ -532,12 +532,12 @@ pub fn P_ThingHeightClip(state: &mut GameState, thing: MobjId) -> bool {
     true
 }
 pub fn P_HitSlideLine(state: &mut GameState, ld: LineId) {
-    let side: i32;
+    
     let mut lineangle: angle_t;
-    let moveangle: angle_t;
+    
     let mut deltaangle: angle_t;
-    let movelen: fixed_t;
-    let newlen: fixed_t;
+    
+    
     let ldv = state.p_setup.line(ld);
     if ldv.slopetype == SlopeType::ST_HORIZONTAL {
         state.p_map.tmymove = 0_i32 as fixed_t;
@@ -548,7 +548,7 @@ pub fn P_HitSlideLine(state: &mut GameState, ld: LineId) {
         return;
     }
     let slidemo = state.p_map.slidemo.unwrap();
-    side = P_PointOnLineSide(
+    let side: i32 = P_PointOnLineSide(
         state,
         state.p_mobj.mo(slidemo).x,
         state.p_mobj.mo(slidemo).y,
@@ -558,7 +558,7 @@ pub fn P_HitSlideLine(state: &mut GameState, ld: LineId) {
     if side == 1_i32 {
         lineangle = lineangle.wrapping_add(ANG180) as angle_t as angle_t;
     }
-    moveangle = R_PointToAngle2(
+    let moveangle: angle_t = R_PointToAngle2(
         state,
         0 as fixed_t,
         0 as fixed_t,
@@ -571,8 +571,8 @@ pub fn P_HitSlideLine(state: &mut GameState, ld: LineId) {
     }
     lineangle >>= ANGLETOFINESHIFT;
     deltaangle >>= ANGLETOFINESHIFT;
-    movelen = P_AproxDistance(state.p_map.tmxmove, state.p_map.tmymove);
-    newlen = FixedMul(movelen, finecosine[deltaangle as usize]);
+    let movelen: fixed_t = P_AproxDistance(state.p_map.tmxmove, state.p_map.tmymove);
+    let newlen: fixed_t = FixedMul(movelen, finecosine[deltaangle as usize]);
     state.p_map.tmxmove = FixedMul(newlen, finecosine[lineangle as usize]);
     state.p_map.tmymove = FixedMul(newlen, finesine[lineangle as usize]);
 }
@@ -1057,8 +1057,8 @@ pub fn P_UseLines(state: &mut GameState, player: PlayerId) {
 }
 pub fn PIT_RadiusAttack(state: &mut GameState, thing_id: MobjId) -> bool {
     let thing = thing_id;
-    let dx: fixed_t;
-    let dy: fixed_t;
+    
+    
     let mut dist: fixed_t;
     if state.p_mobj.mo(thing).flags & MF_SHOOTABLE == 0 {
         return true;
@@ -1073,8 +1073,8 @@ pub fn PIT_RadiusAttack(state: &mut GameState, thing_id: MobjId) -> bool {
         .p_map
         .bombsource
         .filter(|&id| state.p_mobj.is_live(id));
-    dx = (state.p_mobj.mo(thing).x - state.p_mobj.mo(bombspot).x).abs() as fixed_t;
-    dy = (state.p_mobj.mo(thing).y - state.p_mobj.mo(bombspot).y).abs() as fixed_t;
+    let dx: fixed_t = (state.p_mobj.mo(thing).x - state.p_mobj.mo(bombspot).x).abs() as fixed_t;
+    let dy: fixed_t = (state.p_mobj.mo(thing).y - state.p_mobj.mo(bombspot).y).abs() as fixed_t;
     dist = if dx > dy { dx } else { dy };
     dist = (dist - state.p_mobj.mo(thing).radius) >> FRACBITS;
     if dist < 0_i32 {
@@ -1166,10 +1166,10 @@ pub fn P_ChangeSector(state: &mut GameState, sector: SectorId, crunch: bool) -> 
     state.p_map.nofit
 }
 fn SpechitOverrun(state: &mut GameState, ld: LineId) {
-    let addr: u32;
+    
     if state.p_map.baseaddr == 0_u32 {
-        let p: i32;
-        p = M_CheckParmWithArgs(state, "-spechit", 1_i32);
+        
+        let p: i32 = M_CheckParmWithArgs(state, "-spechit", 1_i32);
         if p > 0_i32 {
             let mut baseaddr: i32 = 0;
             M_StrToInt(
@@ -1181,7 +1181,7 @@ fn SpechitOverrun(state: &mut GameState, ld: LineId) {
             state.p_map.baseaddr = DEFAULT_SPECHIT_MAGIC as u32;
         }
     }
-    addr = (state.p_map.baseaddr as i64 + ld.0 as i64 * 0x3e_i64) as u32;
+    let addr: u32 = (state.p_map.baseaddr as i64 + ld.0 as i64 * 0x3e_i64) as u32;
     match state.p_map.numspechit {
         9..=12 => {
             state.p_map.tmbbox[(state.p_map.numspechit - 9_i32) as usize] = addr as fixed_t;

@@ -126,7 +126,7 @@ pub fn R_DrawColumn(state: &mut GameState) {
     let mut count: i32;
     let mut idx: usize;
     let mut frac: fixed_t;
-    let fracstep: fixed_t;
+    
     count = state.r_draw.dc_yh - state.r_draw.dc_yl;
     if count < 0_i32 {
         return;
@@ -142,7 +142,7 @@ pub fn R_DrawColumn(state: &mut GameState) {
     }
     idx = state.r_draw.ylookup[state.r_draw.dc_yl as usize]
         + state.r_draw.columnofs[state.r_draw.dc_x as usize] as usize;
-    fracstep = state.r_draw.dc_iscale;
+    let fracstep: fixed_t = state.r_draw.dc_iscale;
     frac = state.r_draw.dc_texturemid
         + (state.r_draw.dc_yl as fixed_t - state.r_main.centery as fixed_t) * fracstep;
     loop {
@@ -167,8 +167,8 @@ pub fn R_DrawColumnLow(state: &mut GameState) {
     let mut idx: usize;
     let mut idx2: usize;
     let mut frac: fixed_t;
-    let fracstep: fixed_t;
-    let x: i32;
+    
+    
     count = state.r_draw.dc_yh - state.r_draw.dc_yl;
     if count < 0_i32 {
         return;
@@ -182,12 +182,12 @@ pub fn R_DrawColumnLow(state: &mut GameState) {
             state.r_draw.dc_yl, state.r_draw.dc_yh, state.r_draw.dc_x
         ));
     }
-    x = state.r_draw.dc_x << 1_i32;
+    let x: i32 = state.r_draw.dc_x << 1_i32;
     idx = state.r_draw.ylookup[state.r_draw.dc_yl as usize]
         + state.r_draw.columnofs[x as usize] as usize;
     idx2 = state.r_draw.ylookup[state.r_draw.dc_yl as usize]
         + state.r_draw.columnofs[(x + 1_i32) as usize] as usize;
-    fracstep = state.r_draw.dc_iscale;
+    let fracstep: fixed_t = state.r_draw.dc_iscale;
     frac = state.r_draw.dc_texturemid
         + (state.r_draw.dc_yl as fixed_t - state.r_main.centery as fixed_t) * fracstep;
     loop {
@@ -265,7 +265,7 @@ pub fn R_DrawFuzzColumnLow(state: &mut GameState) {
     let mut count: i32;
     let mut idx: usize;
     let mut idx2: usize;
-    let x: i32;
+    
     if state.r_draw.dc_yl == 0 {
         state.r_draw.dc_yl = 1_i32;
     }
@@ -276,7 +276,7 @@ pub fn R_DrawFuzzColumnLow(state: &mut GameState) {
     if count < 0_i32 {
         return;
     }
-    x = state.r_draw.dc_x << 1_i32;
+    let x: i32 = state.r_draw.dc_x << 1_i32;
     if x as u32 >= SCREENWIDTH as u32
         || state.r_draw.dc_yl < 0_i32
         || state.r_draw.dc_yh >= SCREENHEIGHT
@@ -315,7 +315,7 @@ pub fn R_DrawTranslatedColumn(state: &mut GameState) {
     let mut count: i32;
     let mut idx: usize;
     let mut frac: fixed_t;
-    let fracstep: fixed_t;
+    
     count = state.r_draw.dc_yh - state.r_draw.dc_yl;
     if count < 0_i32 {
         return;
@@ -331,7 +331,7 @@ pub fn R_DrawTranslatedColumn(state: &mut GameState) {
     }
     idx = state.r_draw.ylookup[state.r_draw.dc_yl as usize]
         + state.r_draw.columnofs[state.r_draw.dc_x as usize] as usize;
-    fracstep = state.r_draw.dc_iscale;
+    let fracstep: fixed_t = state.r_draw.dc_iscale;
     frac = state.r_draw.dc_texturemid
         + (state.r_draw.dc_yl as fixed_t - state.r_main.centery as fixed_t) * fracstep;
     loop {
@@ -354,13 +354,13 @@ pub fn R_DrawTranslatedColumnLow(state: &mut GameState) {
     let mut idx: usize;
     let mut idx2: usize;
     let mut frac: fixed_t;
-    let fracstep: fixed_t;
-    let x: i32;
+    
+    
     count = state.r_draw.dc_yh - state.r_draw.dc_yl;
     if count < 0_i32 {
         return;
     }
-    x = state.r_draw.dc_x << 1_i32;
+    let x: i32 = state.r_draw.dc_x << 1_i32;
     if x as u32 >= SCREENWIDTH as u32
         || state.r_draw.dc_yl < 0_i32
         || state.r_draw.dc_yh >= SCREENHEIGHT
@@ -374,7 +374,7 @@ pub fn R_DrawTranslatedColumnLow(state: &mut GameState) {
         + state.r_draw.columnofs[x as usize] as usize;
     idx2 = state.r_draw.ylookup[state.r_draw.dc_yl as usize]
         + state.r_draw.columnofs[(x + 1_i32) as usize] as usize;
-    fracstep = state.r_draw.dc_iscale;
+    let fracstep: fixed_t = state.r_draw.dc_iscale;
     frac = state.r_draw.dc_texturemid
         + (state.r_draw.dc_yl as fixed_t - state.r_main.centery as fixed_t) * fracstep;
     loop {
@@ -418,7 +418,7 @@ pub fn R_InitTranslationTables(state: &mut GameState) {
 }
 pub fn R_DrawSpan(state: &mut GameState) {
     let mut position: u32;
-    let step: u32;
+    
     let mut idx: usize;
     let mut count: i32;
     let mut spot: i32;
@@ -436,7 +436,7 @@ pub fn R_DrawSpan(state: &mut GameState) {
     }
     position = (state.r_draw.ds_xfrac << 10_i32) as u32 & 0xffff0000_u32
         | (state.r_draw.ds_yfrac >> 6_i32 & 0xffff_i32) as u32;
-    step = (state.r_draw.ds_xstep << 10_i32) as u32 & 0xffff0000_u32
+    let step: u32 = (state.r_draw.ds_xstep << 10_i32) as u32 & 0xffff0000_u32
         | (state.r_draw.ds_ystep >> 6_i32 & 0xffff_i32) as u32;
     idx = state.r_draw.ylookup[state.r_draw.ds_y as usize]
         + state.r_draw.columnofs[state.r_draw.ds_x1 as usize] as usize;
@@ -460,7 +460,7 @@ pub fn R_DrawSpan(state: &mut GameState) {
 }
 pub fn R_DrawSpanLow(state: &mut GameState) {
     let mut position: u32;
-    let step: u32;
+    
     let mut xtemp: u32;
     let mut ytemp: u32;
     let mut idx: usize;
@@ -478,7 +478,7 @@ pub fn R_DrawSpanLow(state: &mut GameState) {
     }
     position = (state.r_draw.ds_xfrac << 10_i32) as u32 & 0xffff0000_u32
         | (state.r_draw.ds_yfrac >> 6_i32 & 0xffff_i32) as u32;
-    step = (state.r_draw.ds_xstep << 10_i32) as u32 & 0xffff0000_u32
+    let step: u32 = (state.r_draw.ds_xstep << 10_i32) as u32 & 0xffff0000_u32
         | (state.r_draw.ds_ystep >> 6_i32 & 0xffff_i32) as u32;
     count = state.r_draw.ds_x2 - state.r_draw.ds_x1;
     state.r_draw.ds_x1 <<= 1_i32;
@@ -646,14 +646,14 @@ pub fn R_VideoErase(state: &mut GameState, ofs: u32, count: i32) {
     }
 }
 pub fn R_DrawViewBorder(state: &mut GameState) {
-    let top: i32;
+    
     let mut side: i32;
     let mut ofs: i32;
     let mut i: i32;
     if state.r_draw.scaledviewwidth == SCREENWIDTH {
         return;
     }
-    top = (SCREENHEIGHT - SBARHEIGHT - state.r_draw.viewheight) / 2_i32;
+    let top: i32 = (SCREENHEIGHT - SBARHEIGHT - state.r_draw.viewheight) / 2_i32;
     side = (SCREENWIDTH - state.r_draw.scaledviewwidth) / 2_i32;
     R_VideoErase(state, 0_u32, top * SCREENWIDTH + side);
     ofs = (state.r_draw.viewheight + top) * SCREENWIDTH - side;

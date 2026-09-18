@@ -214,16 +214,16 @@ pub fn R_InitSpriteDefs(state: &mut GameState, namelist: &[&'static str]) {
     let mut l: i32;
     let mut frame: i32;
     let mut rotation: i32;
-    let start: i32;
-    let end: i32;
+    
+    
     let mut patched: i32;
     state.r_things.numsprites = namelist.len() as i32;
     if state.r_things.numsprites == 0 {
         return;
     }
     state.r_things.sprites = Vec::with_capacity(state.r_things.numsprites as usize);
-    start = state.r_data.firstspritelump - 1_i32;
-    end = state.r_data.lastspritelump + 1_i32;
+    let start: i32 = state.r_data.firstspritelump - 1_i32;
+    let end: i32 = state.r_data.lastspritelump + 1_i32;
     i = 0_i32;
     while i < state.r_things.numsprites {
         state.r_things.spritename = namelist[i as usize];
@@ -323,8 +323,8 @@ pub fn R_StoreVisSprite(state: &mut GameState, vis: vissprite_t) {
 pub fn R_DrawMaskedColumn(state: &mut GameState, mut post: ColumnSource) {
     let mut topscreen: i32;
     let mut bottomscreen: i32;
-    let basetexturemid: fixed_t;
-    basetexturemid = state.r_draw.dc_texturemid;
+    
+    let basetexturemid: fixed_t = state.r_draw.dc_texturemid;
     let mfloorclip = state.r_things.mfloorclip.unwrap();
     let mceilingclip = state.r_things.mceilingclip.unwrap();
     loop {
@@ -358,9 +358,9 @@ pub fn R_DrawMaskedColumn(state: &mut GameState, mut post: ColumnSource) {
 pub fn R_DrawVisSprite(state: &mut GameState, vis: &vissprite_t) {
     let mut texturecolumn: i32;
     let mut frac: fixed_t;
-    let patch: Patch;
+    
     let sprite_lump = vis.patch + state.r_data.firstspritelump;
-    patch = V_CachePatchNum(state, sprite_lump);
+    let patch: Patch = V_CachePatchNum(state, sprite_lump);
     state.r_draw.dc_colormap = vis.colormap;
     if state.r_draw.dc_colormap.is_none() {
         state.r_main.colfunc = state.r_main.fuzzcolfunc;
@@ -405,30 +405,30 @@ pub fn R_ProjectSprite(state: &mut GameState, thing_id: MobjId) {
         thing.angle,
         thing.flags,
     );
-    let tr_x: fixed_t;
-    let tr_y: fixed_t;
+    
+    
     let mut gxt: fixed_t;
     let mut gyt: fixed_t;
     let mut tx: fixed_t;
-    let tz: fixed_t;
-    let xscale: fixed_t;
-    let x1: i32;
-    let x2: i32;
+    
+    
+    
+    
     let lump: i32;
     let rot: u32;
     let flip: bool;
     let mut index: i32;
     let ang: angle_t;
-    let iscale: fixed_t;
-    tr_x = thing_x - state.r_main.viewx;
-    tr_y = thing_y - state.r_main.viewy;
+    
+    let tr_x: fixed_t = thing_x - state.r_main.viewx;
+    let tr_y: fixed_t = thing_y - state.r_main.viewy;
     gxt = FixedMul(tr_x, state.r_main.viewcos);
     gyt = -FixedMul(tr_y, state.r_main.viewsin);
-    tz = gxt - gyt;
+    let tz: fixed_t = gxt - gyt;
     if tz < MINZ {
         return;
     }
-    xscale = FixedDiv(state.r_main.projection, tz);
+    let xscale: fixed_t = FixedDiv(state.r_main.projection, tz);
     gxt = -FixedMul(tr_x, state.r_main.viewsin);
     gyt = FixedMul(tr_y, state.r_main.viewcos);
     tx = -(gyt + gxt);
@@ -462,12 +462,12 @@ pub fn R_ProjectSprite(state: &mut GameState, thing_id: MobjId) {
         flip = sprframe.flip[0] != 0;
     }
     tx -= state.r_data.spriteoffset[lump as usize];
-    x1 = (state.r_main.centerxfrac + FixedMul(tx, xscale)) >> FRACBITS;
+    let x1: i32 = (state.r_main.centerxfrac + FixedMul(tx, xscale)) >> FRACBITS;
     if x1 > state.r_draw.viewwidth {
         return;
     }
     tx += state.r_data.spritewidth[lump as usize];
-    x2 = ((state.r_main.centerxfrac + FixedMul(tx, xscale)) >> FRACBITS) - 1_i32;
+    let x2: i32 = ((state.r_main.centerxfrac + FixedMul(tx, xscale)) >> FRACBITS) - 1_i32;
     if x2 < 0_i32 {
         return;
     }
@@ -499,7 +499,7 @@ pub fn R_ProjectSprite(state: &mut GameState, thing_id: MobjId) {
     } else {
         x2
     };
-    iscale = FixedDiv(FRACUNIT, xscale);
+    let iscale: fixed_t = FixedDiv(FRACUNIT, xscale);
     if flip {
         vis.startfrac = (state.r_data.spritewidth[lump as usize] - 1_i32) as fixed_t;
         vis.xiscale = -iscale;
@@ -550,10 +550,10 @@ pub fn R_AddSprites(state: &mut GameState, sec: SectorId) {
 }
 pub fn R_DrawPSprite(state: &mut GameState, psp: &pspdef_t) {
     let mut tx: fixed_t;
-    let x1: i32;
-    let x2: i32;
-    let lump: i32;
-    let flip: bool;
+    
+    
+    
+    
     let mut avis: vissprite_t = vissprite_s {
         x1: 0,
         x2: 0,
@@ -585,16 +585,16 @@ pub fn R_DrawPSprite(state: &mut GameState, psp: &pspdef_t) {
         ));
     }
     let sprframe = &sprdef.spriteframes[(psp_state_frame & FF_FRAMEMASK) as usize];
-    lump = sprframe.lump[0] as i32;
-    flip = sprframe.flip[0] != 0;
+    let lump: i32 = sprframe.lump[0] as i32;
+    let flip: bool = sprframe.flip[0] != 0;
     tx = (psp.sx - 160_i32 * FRACUNIT) as fixed_t;
     tx -= state.r_data.spriteoffset[lump as usize];
-    x1 = (state.r_main.centerxfrac + FixedMul(tx, state.r_things.pspritescale)) >> FRACBITS;
+    let x1: i32 = (state.r_main.centerxfrac + FixedMul(tx, state.r_things.pspritescale)) >> FRACBITS;
     if x1 > state.r_draw.viewwidth {
         return;
     }
     tx += state.r_data.spritewidth[lump as usize];
-    x2 = ((state.r_main.centerxfrac + FixedMul(tx, state.r_things.pspritescale)) >> FRACBITS)
+    let x2: i32 = ((state.r_main.centerxfrac + FixedMul(tx, state.r_things.pspritescale)) >> FRACBITS)
         - 1_i32;
     if x2 < 0_i32 {
         return;

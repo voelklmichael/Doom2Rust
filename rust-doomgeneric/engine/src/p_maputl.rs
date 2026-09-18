@@ -211,10 +211,10 @@ pub fn P_PointOnLineSide(
     y: fixed_t,
     line: LineId,
 ) -> i32 {
-    let dx: fixed_t;
-    let dy: fixed_t;
-    let left: fixed_t;
-    let right: fixed_t;
+    
+    
+    
+    
     let line = state.p_setup.line(line);
     let line_v1 = state.p_setup.vertexes[line.v1.0 as usize];
     if line.dx == 0 {
@@ -229,10 +229,10 @@ pub fn P_PointOnLineSide(
         }
         return (line.dx > 0_i32) as i32;
     }
-    dx = x - line_v1.x;
-    dy = y - line_v1.y;
-    left = FixedMul(line.dy >> FRACBITS, dx);
-    right = FixedMul(dy, line.dx >> FRACBITS);
+    let dx: fixed_t = x - line_v1.x;
+    let dy: fixed_t = y - line_v1.y;
+    let left: fixed_t = FixedMul(line.dy >> FRACBITS, dx);
+    let right: fixed_t = FixedMul(dy, line.dx >> FRACBITS);
     if right < left {
         return 0_i32;
     }
@@ -734,10 +734,10 @@ pub fn P_PathTraverse<F: FnMut(&mut GameState, intercept_t) -> bool>(
     flags: i32,
     trav: F,
 ) -> bool {
-    let xt1: fixed_t;
-    let yt1: fixed_t;
-    let xt2: fixed_t;
-    let yt2: fixed_t;
+    
+    
+    
+    
     let xstep: fixed_t;
     let ystep: fixed_t;
     let mut partial: fixed_t;
@@ -763,12 +763,12 @@ pub fn P_PathTraverse<F: FnMut(&mut GameState, intercept_t) -> bool>(
     state.p_maputl.trace.dy = y2 - y1;
     x1 -= state.p_setup.bmaporgx;
     y1 -= state.p_setup.bmaporgy;
-    xt1 = x1 >> MAPBLOCKSHIFT;
-    yt1 = y1 >> MAPBLOCKSHIFT;
+    let xt1: fixed_t = x1 >> MAPBLOCKSHIFT;
+    let yt1: fixed_t = y1 >> MAPBLOCKSHIFT;
     x2 -= state.p_setup.bmaporgx;
     y2 -= state.p_setup.bmaporgy;
-    xt2 = x2 >> MAPBLOCKSHIFT;
-    yt2 = y2 >> MAPBLOCKSHIFT;
+    let xt2: fixed_t = x2 >> MAPBLOCKSHIFT;
+    let yt2: fixed_t = y2 >> MAPBLOCKSHIFT;
     if xt2 > xt1 {
         mapxstep = 1_i32;
         partial = (FRACUNIT - (x1 >> MAPBTOFRAC & (FRACUNIT - 1_i32))) as fixed_t;

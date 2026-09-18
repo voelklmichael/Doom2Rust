@@ -77,7 +77,7 @@ pub fn P_GiveAmmo(
     mut num: i32,
 ) -> bool {
     let player = &mut state.g_game.players[player_id.0 as usize];
-    let oldammo: i32;
+    
     if ammo as u32 == ammotype_t::am_noammo as i32 as u32 {
         return false;
     }
@@ -97,7 +97,7 @@ pub fn P_GiveAmmo(
     {
         num <<= 1_i32;
     }
-    oldammo = player.ammo[ammo as usize];
+    let oldammo: i32 = player.ammo[ammo as usize];
     player.ammo[ammo as usize] += num;
     if player.ammo[ammo as usize] > player.maxammo[ammo as usize] {
         player.ammo[ammo as usize] = player.maxammo[ammo as usize];
@@ -197,8 +197,8 @@ pub fn P_GiveBody(state: &mut GameState, player_id: PlayerId, num: i32) -> bool 
     true
 }
 pub fn P_GiveArmor(player: &mut player_t, armortype: i32) -> bool {
-    let hits: i32;
-    hits = armortype * 100_i32;
+    
+    let hits: i32 = armortype * 100_i32;
     if player.armorpoints >= hits {
         return false;
     }
@@ -245,9 +245,9 @@ pub fn P_GivePower(state: &mut GameState, player: PlayerId, power: i32) -> bool 
 }
 pub fn P_TouchSpecialThing(state: &mut GameState, special: MobjId, toucher: MobjId) {
     let mut i: i32;
-    let delta: fixed_t;
+    
     let mut sound: i32;
-    delta = state.p_mobj.mo(special).z - state.p_mobj.mo(toucher).z;
+    let delta: fixed_t = state.p_mobj.mo(special).z - state.p_mobj.mo(toucher).z;
     if delta > state.p_mobj.mo(toucher).height || delta < -8_i32 * FRACUNIT {
         return;
     }

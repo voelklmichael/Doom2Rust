@@ -183,20 +183,20 @@ pub fn R_PointOnSegSide(
     y: fixed_t,
     line: SegId,
 ) -> i32 {
-    let lx: fixed_t;
-    let ly: fixed_t;
-    let ldx: fixed_t;
-    let ldy: fixed_t;
-    let dx: fixed_t;
-    let dy: fixed_t;
-    let left: fixed_t;
-    let right: fixed_t;
+    
+    
+    
+    
+    
+    
+    
+    
     let line_v1 = state.p_setup.vertexes[state.p_setup.seg(line).v1.0 as usize];
     let line_v2 = state.p_setup.vertexes[state.p_setup.seg(line).v2.0 as usize];
-    lx = line_v1.x;
-    ly = line_v1.y;
-    ldx = line_v2.x - lx;
-    ldy = line_v2.y - ly;
+    let lx: fixed_t = line_v1.x;
+    let ly: fixed_t = line_v1.y;
+    let ldx: fixed_t = line_v2.x - lx;
+    let ldy: fixed_t = line_v2.y - ly;
     if ldx == 0 {
         if x <= lx {
             return (ldy > 0_i32) as i32;
@@ -209,16 +209,16 @@ pub fn R_PointOnSegSide(
         }
         return (ldx > 0_i32) as i32;
     }
-    dx = x - lx;
-    dy = y - ly;
+    let dx: fixed_t = x - lx;
+    let dy: fixed_t = y - ly;
     if (ldy ^ ldx ^ dx ^ dy) as u32 & 0x80000000_u32 != 0 {
         if (ldy ^ dx) as u32 & 0x80000000_u32 != 0 {
             return 1_i32;
         }
         return 0_i32;
     }
-    left = FixedMul(ldy >> FRACBITS, dx);
-    right = FixedMul(dy, ldx >> FRACBITS);
+    let left: fixed_t = FixedMul(ldy >> FRACBITS, dx);
+    let right: fixed_t = FixedMul(dy, ldx >> FRACBITS);
     if right < left {
         return 0_i32;
     }
@@ -280,12 +280,12 @@ pub fn R_PointToAngle2(
     R_PointToAngle(state, x2, y2)
 }
 pub fn R_PointToDist(state: &mut GameState, x: fixed_t, y: fixed_t) -> fixed_t {
-    let angle: i32;
+    
     let mut dx: fixed_t;
     let mut dy: fixed_t;
     let temp: fixed_t;
-    let dist: fixed_t;
-    let frac: fixed_t;
+    
+    
     dx = (x - state.r_main.viewx).abs() as fixed_t;
     dy = (y - state.r_main.viewy).abs() as fixed_t;
     if dy > dx {
@@ -293,30 +293,30 @@ pub fn R_PointToDist(state: &mut GameState, x: fixed_t, y: fixed_t) -> fixed_t {
         dx = dy;
         dy = temp;
     }
-    if dx != 0_i32 {
-        frac = FixedDiv(dy, dx);
+    let frac: fixed_t = if dx != 0_i32 {
+        FixedDiv(dy, dx)
     } else {
-        frac = 0_i32 as fixed_t;
-    }
-    angle = (tantoangle[(frac >> DBITS) as usize].wrapping_add(ANG90 as angle_t)
+        0_i32 as fixed_t
+    };
+    let angle: i32 = (tantoangle[(frac >> DBITS) as usize].wrapping_add(ANG90 as angle_t)
         >> ANGLETOFINESHIFT) as i32;
-    dist = FixedDiv(dx, finesine[angle as usize]);
+    let dist: fixed_t = FixedDiv(dx, finesine[angle as usize]);
     dist
 }
 pub fn R_ScaleFromGlobalAngle(state: &mut GameState, visangle: angle_t) -> fixed_t {
     let mut scale: fixed_t;
-    let anglea: angle_t;
-    let angleb: angle_t;
-    let sinea: i32;
-    let sineb: i32;
-    let num: fixed_t;
-    let den: i32;
-    anglea = (ANG90 as angle_t).wrapping_add(visangle.wrapping_sub(state.r_main.viewangle));
-    angleb = (ANG90 as angle_t).wrapping_add(visangle.wrapping_sub(state.r_segs.rw_normalangle));
-    sinea = finesine[(anglea >> ANGLETOFINESHIFT) as usize];
-    sineb = finesine[(angleb >> ANGLETOFINESHIFT) as usize];
-    num = FixedMul(state.r_main.projection, sineb as fixed_t) << state.r_main.detailshift;
-    den = FixedMul(state.r_segs.rw_distance, sinea as fixed_t);
+    
+    
+    
+    
+    
+    
+    let anglea: angle_t = (ANG90 as angle_t).wrapping_add(visangle.wrapping_sub(state.r_main.viewangle));
+    let angleb: angle_t = (ANG90 as angle_t).wrapping_add(visangle.wrapping_sub(state.r_segs.rw_normalangle));
+    let sinea: i32 = finesine[(anglea >> ANGLETOFINESHIFT) as usize];
+    let sineb: i32 = finesine[(angleb >> ANGLETOFINESHIFT) as usize];
+    let num: fixed_t = FixedMul(state.r_main.projection, sineb as fixed_t) << state.r_main.detailshift;
+    let den: i32 = FixedMul(state.r_segs.rw_distance, sinea as fixed_t);
     if den > num >> 16_i32 {
         scale = FixedDiv(num, den as fixed_t);
         if scale > 64_i32 * FRACUNIT {
@@ -333,8 +333,8 @@ pub fn R_InitTextureMapping(state: &mut GameState) {
     let mut i: i32;
     let mut x: i32;
     let mut t: i32;
-    let focallength: fixed_t;
-    focallength = FixedDiv(
+    
+    let focallength: fixed_t = FixedDiv(
         state.r_main.centerxfrac,
         finetangent[(FINEANGLES / 4_i32 + FIELDOFVIEW / 2_i32) as usize],
     );

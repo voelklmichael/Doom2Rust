@@ -121,11 +121,11 @@ pub const MAXDRAWSEGS: i32 = 256;
 pub fn R_RenderMaskedSegRange(state: &mut GameState, ds: &drawseg_t, x1: i32, x2: i32) {
     let mut index: u32;
     let mut lightnum: i32;
-    let texnum: i32;
+    
     state.r_bsp.curline = ds.curline;
     state.r_bsp.frontsector = state.p_setup.seg(state.r_bsp.curline).frontsector;
     state.r_bsp.backsector = state.p_setup.seg(state.r_bsp.curline).backsector;
-    texnum = state.r_data.texturetranslation[state
+    let texnum: i32 = state.r_data.texturetranslation[state
         .p_setup
         .side_mut(state.p_setup.seg(state.r_bsp.curline).sidedef)
         .midtexture as usize];
@@ -374,9 +374,9 @@ pub fn R_RenderSegLoop(state: &mut GameState) {
     }
 }
 pub fn R_StoreWallRange(state: &mut GameState, start: i32, stop: i32) {
-    let hyp: fixed_t;
+    
     let mut sineval: fixed_t;
-    let distangle: angle_t;
+    
     let mut offsetangle: angle_t;
     let vtop: fixed_t;
     let mut lightnum: i32;
@@ -403,10 +403,10 @@ pub fn R_StoreWallRange(state: &mut GameState, start: i32, stop: i32) {
     if offsetangle > ANG90 as angle_t {
         offsetangle = ANG90 as angle_t;
     }
-    distangle = (ANG90 as angle_t).wrapping_sub(offsetangle);
+    let distangle: angle_t = (ANG90 as angle_t).wrapping_sub(offsetangle);
     let curline_v1 = state.p_setup.vertexes[state.p_setup.seg(state.r_bsp.curline).v1.0 as usize];
     let (v1x, v1y) = (curline_v1.x, curline_v1.y);
-    hyp = R_PointToDist(state, v1x, v1y);
+    let hyp: fixed_t = R_PointToDist(state, v1x, v1y);
     sineval = finesine[(distangle >> ANGLETOFINESHIFT) as usize];
     state.r_segs.rw_distance = FixedMul(hyp, sineval);
     state.r_segs.rw_x = start;

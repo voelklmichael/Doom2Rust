@@ -1673,7 +1673,7 @@ pub fn M_StartControlPanel(state: &mut GameState) {
 }
 pub fn M_Drawer(state: &mut GameState) {
     let mut i: u32;
-    let max: u32;
+    
     state.m_menu.inhelpscreens = false;
     if state.m_menu.messageToPrint != 0 {
         let message_string = state.m_menu.messageString.clone();
@@ -1704,7 +1704,7 @@ pub fn M_Drawer(state: &mut GameState) {
     }
     state.m_menu.drawer_x = state.m_menu.current().x;
     state.m_menu.drawer_y = state.m_menu.current().y;
-    max = state.m_menu.current().numitems as u32;
+    let max: u32 = state.m_menu.current().numitems as u32;
     i = 0_u32;
     while i < max {
         let item_name = state.m_menu.current().items[i as usize].name;

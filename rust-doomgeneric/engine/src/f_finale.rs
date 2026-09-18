@@ -766,11 +766,11 @@ fn F_DrawPatchCol(state: &mut IVideoState, x: i32, patch: &Patch, col: i32) {
 pub fn F_BunnyScroll(state: &mut GameState) {
     let mut scrolled: i32;
     let mut x: i32;
-    let p1: Patch;
-    let p2: Patch;
+    
+    
     let mut stage: i32;
-    p1 = V_CachePatchName(state, "PFUB2");
-    p2 = V_CachePatchName(state, "PFUB1");
+    let p1: Patch = V_CachePatchName(state, "PFUB2");
+    let p2: Patch = V_CachePatchName(state, "PFUB1");
     let dest_screen = Screen::Video;
     V_MarkRect(state, dest_screen, 0_i32, 0_i32, SCREENWIDTH, SCREENHEIGHT);
     scrolled = 320_i32 - (state.f_finale.finalecount as i32 - 230_i32) / 2_i32;

@@ -173,18 +173,18 @@ pub fn R_ClearClipSegs(state: &mut GameState) {
     state.r_bsp.newend = 2;
 }
 pub fn R_AddLine(state: &mut GameState, line: SegId) {
-    let x1: i32;
-    let x2: i32;
+    
+    
     let mut angle1: angle_t;
     let mut angle2: angle_t;
-    let span: angle_t;
+    
     let mut tspan: angle_t;
     state.r_bsp.curline = line;
     let line_v1 = state.p_setup.vertexes[state.p_setup.seg(line).v1.0 as usize];
     let line_v2 = state.p_setup.vertexes[state.p_setup.seg(line).v2.0 as usize];
     angle1 = R_PointToAngle(state, line_v1.x, line_v1.y);
     angle2 = R_PointToAngle(state, line_v2.x, line_v2.y);
-    span = angle1.wrapping_sub(angle2);
+    let span: angle_t = angle1.wrapping_sub(angle2);
     if span >= ANG180 {
         return;
     }
@@ -209,8 +209,8 @@ pub fn R_AddLine(state: &mut GameState, line: SegId) {
     }
     angle1 = angle1.wrapping_add(ANG90 as angle_t) >> ANGLETOFINESHIFT;
     angle2 = angle2.wrapping_add(ANG90 as angle_t) >> ANGLETOFINESHIFT;
-    x1 = state.r_main.viewangletox[angle1 as usize];
-    x2 = state.r_main.viewangletox[angle2 as usize];
+    let x1: i32 = state.r_main.viewangletox[angle1 as usize];
+    let x2: i32 = state.r_main.viewangletox[angle2 as usize];
     if x1 == x2 {
         return;
     }
@@ -301,44 +301,44 @@ pub static checkcoord: [[i32; 4]; 12] = [
     [0; 4],
 ];
 pub fn R_CheckBBox(state: &mut GameState, bspcoord: [fixed_t; 4]) -> bool {
-    let boxx: i32;
-    let boxy: i32;
-    let boxpos: i32;
-    let x1: fixed_t;
-    let y1: fixed_t;
-    let x2: fixed_t;
-    let y2: fixed_t;
+    
+    
+    
+    
+    
+    
+    
     let mut angle1: angle_t;
     let mut angle2: angle_t;
-    let span: angle_t;
+    
     let mut tspan: angle_t;
-    let sx1: i32;
+    
     let mut sx2: i32;
-    if state.r_main.viewx <= bspcoord[BoxIndex::BOXLEFT as usize] {
-        boxx = 0_i32;
+    let boxx: i32 = if state.r_main.viewx <= bspcoord[BoxIndex::BOXLEFT as usize] {
+        0_i32
     } else if state.r_main.viewx < bspcoord[BoxIndex::BOXRIGHT as usize] {
-        boxx = 1_i32;
+        1_i32
     } else {
-        boxx = 2_i32;
-    }
-    if state.r_main.viewy >= bspcoord[BoxIndex::BOXTOP as usize] {
-        boxy = 0_i32;
+        2_i32
+    };
+    let boxy: i32 = if state.r_main.viewy >= bspcoord[BoxIndex::BOXTOP as usize] {
+        0_i32
     } else if state.r_main.viewy > bspcoord[BoxIndex::BOXBOTTOM as usize] {
-        boxy = 1_i32;
+        1_i32
     } else {
-        boxy = 2_i32;
-    }
-    boxpos = (boxy << 2_i32) + boxx;
+        2_i32
+    };
+    let boxpos: i32 = (boxy << 2_i32) + boxx;
     if boxpos == 5_i32 {
         return true;
     }
-    x1 = bspcoord[checkcoord[boxpos as usize][0] as usize];
-    y1 = bspcoord[checkcoord[boxpos as usize][1] as usize];
-    x2 = bspcoord[checkcoord[boxpos as usize][2] as usize];
-    y2 = bspcoord[checkcoord[boxpos as usize][3] as usize];
+    let x1: fixed_t = bspcoord[checkcoord[boxpos as usize][0] as usize];
+    let y1: fixed_t = bspcoord[checkcoord[boxpos as usize][1] as usize];
+    let x2: fixed_t = bspcoord[checkcoord[boxpos as usize][2] as usize];
+    let y2: fixed_t = bspcoord[checkcoord[boxpos as usize][3] as usize];
     angle1 = R_PointToAngle(state, x1, y1).wrapping_sub(state.r_main.viewangle);
     angle2 = R_PointToAngle(state, x2, y2).wrapping_sub(state.r_main.viewangle);
-    span = angle1.wrapping_sub(angle2);
+    let span: angle_t = angle1.wrapping_sub(angle2);
     if span >= ANG180 {
         return true;
     }
@@ -360,7 +360,7 @@ pub fn R_CheckBBox(state: &mut GameState, bspcoord: [fixed_t; 4]) -> bool {
     }
     angle1 = angle1.wrapping_add(ANG90 as angle_t) >> ANGLETOFINESHIFT;
     angle2 = angle2.wrapping_add(ANG90 as angle_t) >> ANGLETOFINESHIFT;
-    sx1 = state.r_main.viewangletox[angle1 as usize];
+    let sx1: i32 = state.r_main.viewangletox[angle1 as usize];
     sx2 = state.r_main.viewangletox[angle2 as usize];
     if sx1 == sx2 {
         return false;

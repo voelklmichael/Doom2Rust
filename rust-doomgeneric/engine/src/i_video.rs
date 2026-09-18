@@ -136,21 +136,21 @@ pub struct col_t {
 static RGB565_PALETTE: [uint16_t; 256] = [0; 256];
 pub fn I_InitGraphics(state: &mut GameState) {
     let mut i: i32;
-    let gfxmodeparm: i32;
-    let mode: &str;
+    
+    
     state.i_video.s_Fb = FB_ScreenInfo::ZERO;
     state.i_video.s_Fb.xres = DOOMGENERIC_RESX as uint32_t;
     state.i_video.s_Fb.yres = DOOMGENERIC_RESY as uint32_t;
     state.i_video.s_Fb.xres_virtual = state.i_video.s_Fb.xres;
     state.i_video.s_Fb.yres_virtual = state.i_video.s_Fb.yres;
-    gfxmodeparm = M_CheckParmWithArgs(state, "-gfxmode", 1_i32);
-    if gfxmodeparm != 0 {
-        mode = state.m_argv.myargv[(gfxmodeparm + 1_i32) as usize]
+    let gfxmodeparm: i32 = M_CheckParmWithArgs(state, "-gfxmode", 1_i32);
+    let mode: &str = if gfxmodeparm != 0 {
+        state.m_argv.myargv[(gfxmodeparm + 1_i32) as usize]
             .to_str()
-            .unwrap();
+            .unwrap()
     } else {
-        mode = "rgba8888";
-    }
+        "rgba8888"
+    };
     if mode == "rgba8888" {
         state.i_video.s_Fb.bits_per_pixel = 32 as uint32_t;
         state.i_video.s_Fb.blue.length = 8 as uint32_t;

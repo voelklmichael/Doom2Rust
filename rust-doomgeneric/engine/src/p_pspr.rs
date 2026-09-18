@@ -111,7 +111,7 @@ impl PPsprState {
 pub fn P_BringUpWeapon(state: &mut GameState, player_id: PlayerId) {
     let player = player_id;
     let player_mo = state.g_game.players[player.0 as usize].mo.unwrap();
-    let newstate: StateNum;
+    
     if state.g_game.players[player.0 as usize].pendingweapon as u32
         == weapontype_t::wp_nochange as i32 as u32
     {
@@ -127,7 +127,7 @@ pub fn P_BringUpWeapon(state: &mut GameState, player_id: PlayerId) {
             SfxName::sfx_sawup as i32,
         );
     }
-    newstate = weaponinfo[state.g_game.players[player.0 as usize].pendingweapon as usize].upstate;
+    let newstate: StateNum = weaponinfo[state.g_game.players[player.0 as usize].pendingweapon as usize].upstate;
     state.g_game.players[player.0 as usize].pendingweapon = weapontype_t::wp_nochange;
     state.g_game.players[player.0 as usize].psprites[PSpriteNum::ps_weapon as usize].sy =
         (128_i32 * FRACUNIT) as fixed_t;
@@ -135,20 +135,20 @@ pub fn P_BringUpWeapon(state: &mut GameState, player_id: PlayerId) {
 }
 pub fn P_CheckAmmo(state: &mut GameState, player_id: PlayerId) -> bool {
     let player = player_id;
-    let ammo: ammotype_t;
-    let count: i32;
-    ammo = weaponinfo[state.g_game.players[player.0 as usize].readyweapon as usize].ammo;
-    if state.g_game.players[player.0 as usize].readyweapon as u32
+    
+    
+    let ammo: ammotype_t = weaponinfo[state.g_game.players[player.0 as usize].readyweapon as usize].ammo;
+    let count: i32 = if state.g_game.players[player.0 as usize].readyweapon as u32
         == weapontype_t::wp_bfg as i32 as u32
     {
-        count = deh_bfg_cells_per_shot;
+        deh_bfg_cells_per_shot
     } else if state.g_game.players[player.0 as usize].readyweapon as u32
         == weapontype_t::wp_supershotgun as i32 as u32
     {
-        count = 2_i32;
+        2_i32
     } else {
-        count = 1_i32;
-    }
+        1_i32
+    };
     if ammo as u32 == ammotype_t::am_noammo as i32 as u32
         || state.g_game.players[player.0 as usize].ammo[ammo as usize] >= count
     {
@@ -212,12 +212,12 @@ pub fn P_CheckAmmo(state: &mut GameState, player_id: PlayerId) -> bool {
 pub fn P_FireWeapon(state: &mut GameState, player_id: PlayerId) {
     let player = player_id;
     let player_mo = state.g_game.players[player.0 as usize].mo.unwrap();
-    let newstate: StateNum;
+    
     if !P_CheckAmmo(state, player_id) {
         return;
     }
     P_SetMobjState(state, player_mo, StateNum::S_PLAY_ATK1);
-    newstate = weaponinfo[state.g_game.players[player.0 as usize].readyweapon as usize].atkstate;
+    let newstate: StateNum = weaponinfo[state.g_game.players[player.0 as usize].readyweapon as usize].atkstate;
     P_SetPsprite(state, player_id, PSpriteNum::ps_weapon as i32, newstate);
     P_NoiseAlert(state, player_mo, player_mo);
 }
@@ -341,7 +341,7 @@ pub fn A_Lower(state: &mut GameState, player_id: PlayerId, position: i32) {
 pub fn A_Raise(state: &mut GameState, player_id: PlayerId, position: i32) {
     {
         let player = player_id;
-        let newstate: StateNum;
+        
         state.g_game.players[player_id.0 as usize].psprites[position as usize].sy -=
             FRACUNIT * 6_i32;
         if state.g_game.players[player_id.0 as usize].psprites[position as usize].sy
@@ -351,8 +351,7 @@ pub fn A_Raise(state: &mut GameState, player_id: PlayerId, position: i32) {
         }
         state.g_game.players[player_id.0 as usize].psprites[position as usize].sy =
             (32_i32 * FRACUNIT) as fixed_t;
-        newstate =
-            weaponinfo[state.g_game.players[player.0 as usize].readyweapon as usize].readystate;
+        let newstate: StateNum = weaponinfo[state.g_game.players[player.0 as usize].readyweapon as usize].readystate;
         P_SetPsprite(state, player_id, PSpriteNum::ps_weapon as i32, newstate);
     }
 }
@@ -374,7 +373,7 @@ pub fn A_Punch(state: &mut GameState, player_id: PlayerId, _position: i32) {
     let player_mo = state.g_game.players[player.0 as usize].mo.unwrap();
     let mut angle: angle_t;
     let mut damage: i32;
-    let slope: i32;
+    
     damage = (P_Random(&mut state.m_random) % 10_i32 + 1_i32) << 1_i32;
     if state.g_game.players[player.0 as usize].powers[PowerType::pw_strength as usize] != 0 {
         damage *= 10_i32;
@@ -383,7 +382,7 @@ pub fn A_Punch(state: &mut GameState, player_id: PlayerId, _position: i32) {
     angle = angle.wrapping_add(
         ((P_Random(&mut state.m_random) - P_Random(&mut state.m_random)) << 18_i32) as angle_t,
     );
-    slope = P_AimLineAttack(state, Some(player_mo), angle, MELEERANGE);
+    let slope: i32 = P_AimLineAttack(state, Some(player_mo), angle, MELEERANGE);
     P_LineAttack(
         state,
         player_mo,
@@ -413,14 +412,14 @@ pub fn A_Saw(state: &mut GameState, player_id: PlayerId, _position: i32) {
     let player = player_id;
     let player_mo = state.g_game.players[player.0 as usize].mo.unwrap();
     let mut angle: angle_t;
-    let damage: i32;
-    let slope: i32;
-    damage = 2_i32 * (P_Random(&mut state.m_random) % 10_i32 + 1_i32);
+    
+    
+    let damage: i32 = 2_i32 * (P_Random(&mut state.m_random) % 10_i32 + 1_i32);
     angle = state.p_mobj.mo(player_mo).angle;
     angle = angle.wrapping_add(
         ((P_Random(&mut state.m_random) - P_Random(&mut state.m_random)) << 18_i32) as angle_t,
     );
-    slope = P_AimLineAttack(state, Some(player_mo), angle, MELEERANGE + 1 as fixed_t);
+    let slope: i32 = P_AimLineAttack(state, Some(player_mo), angle, MELEERANGE + 1 as fixed_t);
     P_LineAttack(
         state,
         player_mo,
@@ -555,8 +554,8 @@ pub fn P_BulletSlope(state: &mut GameState, mo: MobjId) {
 }
 pub fn P_GunShot(state: &mut GameState, mo: MobjId, accurate: bool) {
     let mut angle: angle_t;
-    let damage: i32;
-    damage = 5_i32 * (P_Random(&mut state.m_random) % 3_i32 + 1_i32);
+    
+    let damage: i32 = 5_i32 * (P_Random(&mut state.m_random) % 3_i32 + 1_i32);
     angle = state.p_mobj.mo(mo).angle;
     if !accurate {
         angle = angle.wrapping_add(

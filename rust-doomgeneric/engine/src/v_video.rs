@@ -267,28 +267,28 @@ pub fn V_ScreenShot(state: &mut GameState) {
 pub const MOUSE_SPEED_BOX_WIDTH: i32 = 120;
 pub const MOUSE_SPEED_BOX_HEIGHT: i32 = 9;
 pub fn V_DrawMouseSpeedBox(state: &mut IVideoState, speed: i32) {
-    let bgcolor: i32;
-    let bordercolor: i32;
-    let red: i32;
-    let black: i32;
-    let white: i32;
-    let yellow: i32;
-    let box_x: i32;
-    let box_y: i32;
+    
+    
+    
+    
+    
+    
+    
+    
     let mut original_speed: i32;
-    let redline_x: i32;
+    
     let mut linelen: i32;
-    bgcolor = I_GetPaletteIndex(0x77_i32, 0x77_i32, 0x77_i32);
-    bordercolor = I_GetPaletteIndex(0x55_i32, 0x55_i32, 0x55_i32);
-    red = I_GetPaletteIndex(0xff_i32, 0_i32, 0_i32);
-    black = I_GetPaletteIndex(0_i32, 0_i32, 0_i32);
-    yellow = I_GetPaletteIndex(0xff_i32, 0xff_i32, 0_i32);
-    white = I_GetPaletteIndex(0xff_i32, 0xff_i32, 0xff_i32);
+    let bgcolor: i32 = I_GetPaletteIndex(0x77_i32, 0x77_i32, 0x77_i32);
+    let bordercolor: i32 = I_GetPaletteIndex(0x55_i32, 0x55_i32, 0x55_i32);
+    let red: i32 = I_GetPaletteIndex(0xff_i32, 0_i32, 0_i32);
+    let black: i32 = I_GetPaletteIndex(0_i32, 0_i32, 0_i32);
+    let yellow: i32 = I_GetPaletteIndex(0xff_i32, 0xff_i32, 0_i32);
+    let white: i32 = I_GetPaletteIndex(0xff_i32, 0xff_i32, 0xff_i32);
     if state.usemouse == 0 || ((state.mouse_acceleration - 1_f32) as f64).abs() < 0.01f64 {
         return;
     }
-    box_x = SCREENWIDTH - MOUSE_SPEED_BOX_WIDTH - 10_i32;
-    box_y = 15_i32;
+    let box_x: i32 = SCREENWIDTH - MOUSE_SPEED_BOX_WIDTH - 10_i32;
+    let box_y: i32 = 15_i32;
     V_DrawFilledBox(
         state,
         box_x,
@@ -305,7 +305,7 @@ pub fn V_DrawMouseSpeedBox(state: &mut IVideoState, speed: i32) {
         MOUSE_SPEED_BOX_HEIGHT,
         bordercolor,
     );
-    redline_x = MOUSE_SPEED_BOX_WIDTH / 3_i32;
+    let redline_x: i32 = MOUSE_SPEED_BOX_WIDTH / 3_i32;
     if speed < state.mouse_threshold {
         original_speed = speed;
     } else {

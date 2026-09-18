@@ -609,8 +609,8 @@ pub fn ST_Responder(state: &mut GameState, ev: &event_t) -> bool {
     false
 }
 pub fn ST_calcPainOffset(state: &mut GameState) -> i32 {
-    let health: i32;
-    health = if state.g_game.player_mut(state.st_stuff.plyr).health > 100_i32 {
+    
+    let health: i32 = if state.g_game.player_mut(state.st_stuff.plyr).health > 100_i32 {
         100_i32
     } else {
         state.g_game.player_mut(state.st_stuff.plyr).health
