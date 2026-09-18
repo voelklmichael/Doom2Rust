@@ -259,3 +259,13 @@ column offsets — upstream doomgeneric/Chocolate Doom's "MAP33+ filler", whose 
 were whatever bytes followed that struct in memory (undefined behavior). The Rust
 port draws nothing there. It cannot occur with any stock IWAD (only a PWAD that
 warps to a map above the episode's last would reach it).
+
+## Wall texture column: `finetangent[]` index clamped (2026-09-19)
+
+`R_RenderSegLoop` computes `angle = (rw_centerangle + xtoviewangle[x]) >> ANGLETOFINESHIFT`
+and indexes `finetangent[4096]` with it. For a column at a clipped seg edge the angle can
+fall just outside the front half-plane (e.g. 8188), which upstream doomgeneric silently
+reads past the end of the array (undefined behavior; whatever the linker placed next). The
+Rust port panicked with an out-of-bounds index during normal play on `DOOM.WAD`. The index
+is now clamped to `finetangent.len() - 1`, as PrBoom does. Only the texture column of that
+single edge pixel column can differ, and in-range angles are unaffected.
