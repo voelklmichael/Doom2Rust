@@ -1503,8 +1503,8 @@ pub fn G_DoLoadGame(state: &mut GameState) {
     state.p_tick.leveltime = savedleveltime;
     P_UnArchivePlayers(state);
     P_UnArchiveWorld(state);
-    unsafe { P_UnArchiveThinkers(state) };
-    unsafe { P_UnArchiveSpecials(state) };
+    P_UnArchiveThinkers(state);
+    P_UnArchiveSpecials(state);
     if !P_ReadSaveGameEOF(state) {
         I_Error("Bad savegame");
     }
@@ -1540,8 +1540,8 @@ pub fn G_DoSaveGame(state: &mut GameState) {
     P_WriteSaveGameHeader(state, &savedescription);
     P_ArchivePlayers(state);
     P_ArchiveWorld(state);
-    unsafe { P_ArchiveThinkers(state) };
-    unsafe { P_ArchiveSpecials(state) };
+    P_ArchiveThinkers(state);
+    P_ArchiveSpecials(state);
     P_WriteSaveGameEOF(state);
     if state.g_game.vanilla_savegame_limit != 0
         && state

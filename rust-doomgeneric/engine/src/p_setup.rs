@@ -920,7 +920,7 @@ pub fn P_SetupLevel(state: &mut GameState, mut episode: i32, mut map: i32) {
     gs.p_mobj.iquehead = gs.p_mobj.iquetail;
     P_SpawnSpecials(gs);
     if gs.g_game.precache {
-        unsafe { R_PrecacheLevel(gs) };
+        R_PrecacheLevel(gs);
     }
 }
 pub fn P_Init(state: &mut GameState) {

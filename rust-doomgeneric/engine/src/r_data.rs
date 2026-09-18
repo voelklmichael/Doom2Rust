@@ -4,10 +4,10 @@ use crate::i_system::I_ConsoleStdout;
 use crate::i_system::I_Error;
 use crate::m_fixed::fixed_t;
 use crate::m_fixed::FRACBITS;
-use crate::p_mobj::mobj_t;
+
 use crate::p_mobj::thinker_t;
-use crate::p_mobj::ThinkerFn;
-use crate::p_tick::P_ThinkerRaw;
+
+use crate::p_tick::P_MobjThinkerIds;
 use crate::r_draw::ColumnSource;
 use crate::r_defs::lighttable_t;
 use crate::stdint_types::byte;
@@ -612,7 +612,7 @@ pub fn R_TextureNumForName(state: &mut RDataState, name: &str) -> i32 {
     }
     i
 }
-pub unsafe fn R_PrecacheLevel(state: &mut GameState) {
+pub fn R_PrecacheLevel(state: &mut GameState) {
     let mut flatpresent: Vec<u8>;
     let mut texturepresent: Vec<u8>;
     let mut spritepresent: Vec<u8>;
@@ -620,7 +620,7 @@ pub unsafe fn R_PrecacheLevel(state: &mut GameState) {
     let mut j: i32 = 0;
     let mut k: i32 = 0;
     let mut lump: i32 = 0;
-    let mut th: *mut thinker_t = ::core::ptr::null_mut::<thinker_t>();
+    let mut _th: *mut thinker_t = ::core::ptr::null_mut::<thinker_t>();
     if state.g_game.demoplayback {
         return;
     }
@@ -666,13 +666,8 @@ pub unsafe fn R_PrecacheLevel(state: &mut GameState) {
         i += 1;
     }
     spritepresent = vec![0u8; state.r_things.numsprites as usize];
-    let mut cursor = state.p_tick.head();
-    while let Some(id) = cursor {
-        th = P_ThinkerRaw(state, id);
-        if matches!((*th).function, ThinkerFn::Mobj(_)) {
-            spritepresent[(*(th as *mut mobj_t)).sprite as usize] = 1_u8;
-        }
-        cursor = state.p_tick.next(id);
+    for mobj_id in P_MobjThinkerIds(state) {
+        spritepresent[state.p_mobj.mo(mobj_id).sprite as usize] = 1_u8;
     }
     state.r_data.spritememory = 0_i32;
     i = 0_i32;
