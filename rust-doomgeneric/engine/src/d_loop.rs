@@ -11,7 +11,7 @@ use crate::i_timer::I_Sleep;
 use crate::i_video::I_StartTic;
 use crate::m_fixed::fixed_t;
 use crate::m_fixed::FRACUNIT;
-use crate::sha1::sha1_digest_t;
+use crate::w_checksum::sha1_digest_t;
 use crate::stdint_types::byte;
 
 pub struct DLoopState {
