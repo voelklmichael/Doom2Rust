@@ -113,7 +113,6 @@ pub struct net_gamesettings_t {
     pub consoleplayer: i32,
     pub player_classes: [i32; 8],
 }
-pub type netgame_startup_callback_t = Option<unsafe fn(i32, i32) -> bool>;
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct loop_interface_t {

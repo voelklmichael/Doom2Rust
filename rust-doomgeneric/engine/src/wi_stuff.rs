@@ -1037,14 +1037,8 @@ pub unsafe fn WI_drawTime(state: &mut GameState, mut x: i32, mut y: i32, mut t: 
         );
     };
 }
-pub unsafe fn WI_End(state: &mut GameState) {
-    pub unsafe fn WI_unloadData_0(state: &mut GameState) {
-        WI_loadUnloadData(
-            state,
-            Some(WI_unloadCallback as unsafe fn(&mut GameState, &str, *mut i32) -> ()),
-        );
-    }
-    WI_unloadData_0(state);
+pub fn WI_End(state: &mut GameState) {
+    WI_loadUnloadData(state, WI_unloadCallback);
 }
 pub fn WI_initNoState(state: &mut GameState) {
     state.wi_stuff.state = StateEnum::NoState;
@@ -1790,109 +1784,65 @@ pub fn WI_Ticker(state: &mut GameState) {
         }
     };
 }
-unsafe fn WI_loadUnloadData(state: &mut GameState, mut callback: load_callback_t) {
-    let mut i: i32 = 0;
-    let mut j: i32 = 0;
-    let mut a: *mut anim_t = ::core::ptr::null_mut::<anim_t>();
+fn WI_loadUnloadData(state: &mut GameState, callback: load_callback_t) {
     if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 {
-        i = 0_i32;
-        while i < state.wi_stuff.NUMCMAPS {
-            let cb_ptr = state.wi_stuff.lnames.as_mut_ptr().offset(i as isize) as *mut i32;
-            callback.expect("non-null function pointer")(state, &format!("CWILV{:02}", i,), cb_ptr);
-            i += 1;
+        for i in 0..state.wi_stuff.NUMCMAPS as usize {
+            state.wi_stuff.lnames[i] = callback(state, &format!("CWILV{:02}", i));
         }
     } else {
-        i = 0_i32;
-        while i < NUMMAPS {
-            let cb_ptr = state.wi_stuff.lnames.as_mut_ptr().offset(i as isize) as *mut i32;
-            let s = &format!("WILV{}{}", state.wbs().epsd, i,);
-            callback.expect("non-null function pointer")(state, s, cb_ptr);
-            i += 1;
+        for i in 0..NUMMAPS as usize {
+            let name = format!("WILV{}{}", state.wbs().epsd, i);
+            state.wi_stuff.lnames[i] = callback(state, &name);
         }
-        let cb_ptr = (&raw mut state.wi_stuff.yah as *mut i32).offset(0_i32 as isize) as *mut i32;
-        callback.expect("non-null function pointer")(state, "WIURH0", cb_ptr);
-        let cb_ptr = (&raw mut state.wi_stuff.yah as *mut i32).offset(1_i32 as isize) as *mut i32;
-        callback.expect("non-null function pointer")(state, "WIURH1", cb_ptr);
-        let cb_ptr = (&raw mut state.wi_stuff.splat as *mut i32).offset(0_i32 as isize) as *mut i32;
-        callback.expect("non-null function pointer")(state, "WISPLAT", cb_ptr);
+        state.wi_stuff.yah[0] = callback(state, "WIURH0");
+        state.wi_stuff.yah[1] = callback(state, "WIURH1");
+        state.wi_stuff.splat[0] = callback(state, "WISPLAT");
         if state.wbs().epsd < 3_i32 {
-            j = 0_i32;
-            while j < state.wi_stuff.NUMANIMS[state.wbs().epsd as usize] {
-                let index = state.wbs().epsd as usize;
-                a = (&mut state.wi_stuff.anims()[index][j as usize]) as *mut anim_t;
-                i = 0_i32;
-                while i < (*a).nanims {
-                    if state.wbs().epsd != 1_i32 || j != 8_i32 {
-                        let s = format!("WIA{}{:02}{:02}", state.wbs().epsd, j, i,);
-                        callback.expect("non-null function pointer")(
-                            state,
-                            &s,
-                            (&raw mut (*a).p as *mut i32).offset(i as isize) as *mut i32,
-                        );
+            let epsd = state.wbs().epsd as usize;
+            for j in 0..state.wi_stuff.NUMANIMS[epsd] as usize {
+                let nanims = state.wi_stuff.anims()[epsd][j].nanims as usize;
+                for i in 0..nanims {
+                    let lump = if epsd != 1 || j != 8 {
+                        let name = format!("WIA{}{:02}{:02}", epsd, j, i);
+                        callback(state, &name)
                     } else {
-                        (*a).p[i as usize] = state.wi_stuff.anims()[1][4].p[i as usize];
-                    }
-                    i += 1;
+                        state.wi_stuff.anims()[1][4].p[i]
+                    };
+                    state.wi_stuff.anims()[epsd][j].p[i] = lump;
                 }
-                j += 1;
             }
         }
     }
-    let cb_ptr = &raw mut state.wi_stuff.wiminus;
-    callback.expect("non-null function pointer")(state, "WIMINUS", cb_ptr);
-    i = 0_i32;
-    while i < 10_i32 {
-        let cb_ptr = (&raw mut state.wi_stuff.num as *mut i32).offset(i as isize) as *mut i32;
-        callback.expect("non-null function pointer")(state, &format!("WINUM{}", i,), cb_ptr);
-        i += 1;
+    state.wi_stuff.wiminus = callback(state, "WIMINUS");
+    for i in 0..10_usize {
+        state.wi_stuff.num[i] = callback(state, &format!("WINUM{}", i));
     }
-    let cb_ptr = &raw mut state.wi_stuff.percent;
-    callback.expect("non-null function pointer")(state, "WIPCNT", cb_ptr);
-    let cb_ptr = &raw mut state.wi_stuff.finished;
-    callback.expect("non-null function pointer")(state, "WIF", cb_ptr);
-    let cb_ptr = &raw mut state.wi_stuff.entering;
-    callback.expect("non-null function pointer")(state, "WIENTER", cb_ptr);
-    let cb_ptr = &raw mut state.wi_stuff.kills;
-    callback.expect("non-null function pointer")(state, "WIOSTK", cb_ptr);
-    let cb_ptr = &raw mut state.wi_stuff.secret;
-    callback.expect("non-null function pointer")(state, "WIOSTS", cb_ptr);
-    let cb_ptr = &raw mut state.wi_stuff.sp_secret;
-    callback.expect("non-null function pointer")(state, "WISCRT2", cb_ptr);
-    if W_CheckNumForName(&mut state.w_wad, "WIOBJ") >= 0_i32 {
-        if state.g_game.netgame && state.g_game.deathmatch == 0 {
-            let cb_ptr = &raw mut state.wi_stuff.items;
-            callback.expect("non-null function pointer")(state, "WIOBJ", cb_ptr);
-        } else {
-            let cb_ptr = &raw mut state.wi_stuff.items;
-            callback.expect("non-null function pointer")(state, "WIOSTI", cb_ptr);
-        }
+    state.wi_stuff.percent = callback(state, "WIPCNT");
+    state.wi_stuff.finished = callback(state, "WIF");
+    state.wi_stuff.entering = callback(state, "WIENTER");
+    state.wi_stuff.kills = callback(state, "WIOSTK");
+    state.wi_stuff.secret = callback(state, "WIOSTS");
+    state.wi_stuff.sp_secret = callback(state, "WISCRT2");
+    let items_name = if W_CheckNumForName(&mut state.w_wad, "WIOBJ") >= 0_i32
+        && state.g_game.netgame
+        && state.g_game.deathmatch == 0
+    {
+        "WIOBJ"
     } else {
-        let cb_ptr = &raw mut state.wi_stuff.items;
-        callback.expect("non-null function pointer")(state, "WIOSTI", cb_ptr);
-    }
-    let cb_ptr = &raw mut state.wi_stuff.frags;
-    callback.expect("non-null function pointer")(state, "WIFRGS", cb_ptr);
-    let cb_ptr = &raw mut state.wi_stuff.colon;
-    callback.expect("non-null function pointer")(state, "WICOLON", cb_ptr);
-    let cb_ptr = &raw mut state.wi_stuff.timepatch;
-    callback.expect("non-null function pointer")(state, "WITIME", cb_ptr);
-    let cb_ptr = &raw mut state.wi_stuff.sucks;
-    callback.expect("non-null function pointer")(state, "WISUCKS", cb_ptr);
-    let cb_ptr = &raw mut state.wi_stuff.par;
-    callback.expect("non-null function pointer")(state, "WIPAR", cb_ptr);
-    let cb_ptr = &raw mut state.wi_stuff.killers;
-    callback.expect("non-null function pointer")(state, "WIKILRS", cb_ptr);
-    let cb_ptr = &raw mut state.wi_stuff.victims;
-    callback.expect("non-null function pointer")(state, "WIVCTMS", cb_ptr);
-    let cb_ptr = &raw mut state.wi_stuff.total;
-    callback.expect("non-null function pointer")(state, "WIMSTT", cb_ptr);
-    i = 0_i32;
-    while i < MAXPLAYERS {
-        let cb_ptr = (&raw mut state.wi_stuff.p as *mut i32).offset(i as isize) as *mut i32;
-        callback.expect("non-null function pointer")(state, &format!("STPB{}", i,), cb_ptr);
-        let cb_ptr = (&raw mut state.wi_stuff.bp as *mut i32).offset(i as isize) as *mut i32;
-        callback.expect("non-null function pointer")(state, &format!("WIBP{}", i + 1_i32,), cb_ptr);
-        i += 1;
+        "WIOSTI"
+    };
+    state.wi_stuff.items = callback(state, items_name);
+    state.wi_stuff.frags = callback(state, "WIFRGS");
+    state.wi_stuff.colon = callback(state, "WICOLON");
+    state.wi_stuff.timepatch = callback(state, "WITIME");
+    state.wi_stuff.sucks = callback(state, "WISUCKS");
+    state.wi_stuff.par = callback(state, "WIPAR");
+    state.wi_stuff.killers = callback(state, "WIKILRS");
+    state.wi_stuff.victims = callback(state, "WIVCTMS");
+    state.wi_stuff.total = callback(state, "WIMSTT");
+    for i in 0..MAXPLAYERS as usize {
+        state.wi_stuff.p[i] = callback(state, &format!("STPB{}", i));
+        state.wi_stuff.bp[i] = callback(state, &format!("WIBP{}", i + 1));
     }
     let name = if state.doomstat.gamemode == GameMode_t::commercial {
         "INTERPIC".to_string()
@@ -1901,25 +1851,21 @@ unsafe fn WI_loadUnloadData(state: &mut GameState, mut callback: load_callback_t
     } else {
         format!("WIMAP{}", state.wbs().epsd)
     };
-    let cb_ptr = &raw mut state.wi_stuff.background;
-    callback.expect("non-null function pointer")(state, &name, cb_ptr);
+    state.wi_stuff.background = callback(state, &name);
 }
-unsafe fn WI_loadCallback(state: &mut GameState, name: &str, variable: *mut i32) {
+fn WI_loadCallback(state: &mut GameState, name: &str) -> i32 {
     let lumpnum = W_GetNumForName(&mut state.w_wad, name);
     W_CacheLumpNum(state, lumpnum);
-    *variable = lumpnum;
+    lumpnum
 }
-pub unsafe fn WI_loadData(state: &mut GameState) {
+pub fn WI_loadData(state: &mut GameState) {
     if state.doomstat.gamemode == GameMode_t::commercial {
         state.wi_stuff.NUMCMAPS = 32;
         state.wi_stuff.lnames = vec![-1; state.wi_stuff.NUMCMAPS as usize];
     } else {
         state.wi_stuff.lnames = vec![-1; NUMMAPS as usize];
     }
-    WI_loadUnloadData(
-        state,
-        Some(WI_loadCallback as unsafe fn(&mut GameState, &str, *mut i32) -> ()),
-    );
+    WI_loadUnloadData(state, WI_loadCallback);
     let star_lump = W_GetNumForName(&mut state.w_wad, "STFST01");
     W_CacheLumpNum(state, star_lump);
     state.wi_stuff.star = star_lump;
@@ -1927,11 +1873,9 @@ pub unsafe fn WI_loadData(state: &mut GameState) {
     W_CacheLumpNum(state, bstar_lump);
     state.wi_stuff.bstar = bstar_lump;
 }
-fn WI_unloadCallback(state: &mut GameState, name: &str, variable: *mut i32) {
-    unsafe {
-        W_ReleaseLumpName(&mut state.w_wad, name);
-        *variable = -1;
-    }
+fn WI_unloadCallback(state: &mut GameState, name: &str) -> i32 {
+    W_ReleaseLumpName(&mut state.w_wad, name);
+    -1
 }
 pub fn WI_Drawer(state: &mut GameState) {
     match state.wi_stuff.state {
@@ -1973,7 +1917,7 @@ pub unsafe fn WI_initVariables(state: &mut GameState) {
 }
 pub fn WI_Start(state: &mut GameState) {
     unsafe { WI_initVariables(state) };
-    unsafe { WI_loadData(state) };
+    WI_loadData(state);
     if state.g_game.deathmatch != 0 {
         WI_initDeathmatchStats(state);
     } else if state.g_game.netgame {
