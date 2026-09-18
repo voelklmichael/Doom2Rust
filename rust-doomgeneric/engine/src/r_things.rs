@@ -304,10 +304,10 @@ pub fn R_InitSprites(state: &mut GameState, namelist: &[&'static str]) {
     }
     unsafe { R_InitSpriteDefs(state, namelist) };
 }
-pub unsafe fn R_ClearSprites(state: &mut GameState) {
+pub fn R_ClearSprites(state: &mut GameState) {
     state.r_things.vissprite_p = 0;
 }
-pub unsafe fn R_NewVisSprite(state: &mut GameState) -> *mut vissprite_t {
+pub fn R_NewVisSprite(state: &mut GameState) -> *mut vissprite_t {
     if state.r_things.vissprite_p == MAXVISSPRITES as usize {
         return &raw mut state.r_things.overflowsprite;
     }
@@ -649,7 +649,7 @@ pub unsafe fn R_DrawPlayerSprites(state: &mut GameState) {
         psp = psp.offset(1);
     }
 }
-pub unsafe fn R_SortVisSprites(state: &mut GameState) {
+pub fn R_SortVisSprites(state: &mut GameState) {
     let count = state.r_things.vissprite_p as i32;
     let mut order = core::mem::take(&mut state.r_things.vissprite_order);
     order.clear();

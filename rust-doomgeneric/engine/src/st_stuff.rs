@@ -714,7 +714,7 @@ pub unsafe fn ST_Responder(state: &mut GameState, mut ev: &event_t) -> bool {
     }
     false
 }
-pub unsafe fn ST_calcPainOffset(state: &mut GameState) -> i32 {
+pub fn ST_calcPainOffset(state: &mut GameState) -> i32 {
     let mut health: i32 = 0;
     health = if (*state.g_game.player_mut(state.st_stuff.plyr)).health > 100_i32 {
         100_i32
@@ -1095,7 +1095,7 @@ pub fn ST_unloadGraphics(state: &mut GameState) {
 pub fn ST_unloadData(state: &mut GameState) {
     ST_unloadGraphics(state);
 }
-pub unsafe fn ST_initData(state: &mut GameState) {
+pub fn ST_initData(state: &mut GameState) {
     let mut i: i32 = 0;
     state.st_stuff.st_firsttime = true;
     state.st_stuff.plyr = PlayerId(state.g_game.consoleplayer as u8);
@@ -1267,7 +1267,7 @@ pub fn ST_Start(state: &mut GameState) {
     if !state.st_stuff.st_stopped {
         unsafe { ST_Stop(state) };
     }
-    unsafe { ST_initData(state) };
+    ST_initData(state);
     unsafe { ST_createWidgets(state) };
     state.st_stuff.st_stopped = false;
 }

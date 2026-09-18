@@ -388,7 +388,7 @@ pub fn R_InitTextureMapping(state: &mut GameState) {
     state.r_main.clipangle = state.r_main.xtoviewangle[0];
 }
 pub const DISTMAP: i32 = 2;
-pub unsafe fn R_InitLightTables(state: &mut GameState) {
+pub fn R_InitLightTables(state: &mut GameState) {
     let mut i: i32 = 0;
     let mut j: i32 = 0;
     let mut level: i32 = 0;
@@ -422,7 +422,7 @@ pub fn R_SetViewSize(state: &mut GameState, mut blocks: i32, mut detail: i32) {
     state.r_main.setblocks = blocks;
     state.r_main.setdetail = detail;
 }
-pub unsafe fn R_ExecuteSetViewSize(state: &mut GameState) {
+pub fn R_ExecuteSetViewSize(state: &mut GameState) {
     let mut cosadj: fixed_t = 0;
     let mut dy: fixed_t = 0;
     let mut i: i32 = 0;
@@ -512,7 +512,7 @@ pub fn R_Init(state: &mut GameState) {
     let (screenblocks, detail_level) = (state.m_menu.screenblocks, state.m_menu.detailLevel);
     R_SetViewSize(state, screenblocks, detail_level);
     print!(".");
-    unsafe { R_InitLightTables(state) };
+    R_InitLightTables(state);
     print!(".");
     R_InitSkyMap(state);
     R_InitTranslationTables(state);
@@ -563,10 +563,10 @@ pub unsafe fn R_SetupFrame(state: &mut GameState, player_id: PlayerId) {
 }
 pub fn R_RenderPlayerView(state: &mut GameState, player_id: PlayerId) {
     unsafe { R_SetupFrame(state, player_id) };
-    unsafe { R_ClearClipSegs(state) };
-    unsafe { R_ClearDrawSegs(state) };
+    R_ClearClipSegs(state);
+    R_ClearDrawSegs(state);
     unsafe { R_ClearPlanes(state) };
-    unsafe { R_ClearSprites(state) };
+    R_ClearSprites(state);
     NetUpdate(state);
     let root_bspnum = state.p_setup.numnodes - 1_i32;
     unsafe { R_RenderBSPNode(state, root_bspnum) };

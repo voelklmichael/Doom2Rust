@@ -157,6 +157,20 @@ impl PSpecState {
             .map(|r| r as *const floormove_t as *mut floormove_t)
     }
 
+    pub fn get_floor_ref(&self, id: FloorId) -> Option<&floormove_t> {
+        self.floors
+            .get(id.index as usize)
+            .filter(|slot| slot.generation == id.generation)
+            .and_then(|slot| slot.floor.as_deref())
+    }
+
+    pub fn get_floor_mut(&mut self, id: FloorId) -> Option<&mut floormove_t> {
+        self.floors
+            .get_mut(id.index as usize)
+            .filter(|slot| slot.generation == id.generation)
+            .and_then(|slot| slot.floor.as_deref_mut())
+    }
+
     // Called once, from P_RunThinkers' reaper, when a Floor-kind thinker is
     // reaped.
     pub fn dealloc_floor(&mut self, id: FloorId) {
@@ -492,7 +506,7 @@ pub fn P_InitPicAnims(state: &mut GameState) {
         i += 1;
     }
 }
-pub unsafe fn getSide(
+pub fn getSide(
     state: &mut GameState,
     mut currentSector: i32,
     mut line: i32,
@@ -503,7 +517,7 @@ pub unsafe fn getSide(
     let sidenum = state.p_setup.line(line_id).sidenum[side as usize];
     return state.p_setup.side_mut(SideId(sidenum as u32));
 }
-pub unsafe fn getSector(
+pub fn getSector(
     state: &mut GameState,
     mut currentSector: i32,
     mut line: i32,
@@ -515,7 +529,7 @@ pub unsafe fn getSector(
     let sector_id = state.p_setup.sides[sidenum as usize].sector;
     return state.p_setup.sector_mut(sector_id);
 }
-pub unsafe fn twoSided(state: &mut GameState, mut sector: i32, mut line: i32) -> i32 {
+pub fn twoSided(state: &mut GameState, mut sector: i32, mut line: i32) -> i32 {
     let sec = state.p_setup.sector_mut(SectorId(sector as u32));
     let line_id = sec.lines[line as usize];
     state.p_setup.line(line_id).flags as i32 & ML_TWOSIDED

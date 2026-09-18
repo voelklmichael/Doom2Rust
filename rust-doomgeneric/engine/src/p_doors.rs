@@ -131,6 +131,20 @@ impl PDoorsState {
             .map(|r| r as *const vldoor_t as *mut vldoor_t)
     }
 
+    pub fn get_ref(&self, id: DoorId) -> Option<&vldoor_t> {
+        self.doors
+            .get(id.index as usize)
+            .filter(|slot| slot.generation == id.generation)
+            .and_then(|slot| slot.door.as_deref())
+    }
+
+    pub fn get_mut(&mut self, id: DoorId) -> Option<&mut vldoor_t> {
+        self.doors
+            .get_mut(id.index as usize)
+            .filter(|slot| slot.generation == id.generation)
+            .and_then(|slot| slot.door.as_deref_mut())
+    }
+
     // Called once, from P_RunThinkers' reaper, when a Door-kind thinker is
     // reaped.
     pub fn dealloc(&mut self, id: DoorId) {

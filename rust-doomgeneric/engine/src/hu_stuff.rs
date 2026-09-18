@@ -303,7 +303,7 @@ pub static mapnames_commercial: [&str; 96] = [
     THUSTR_24, THUSTR_25, THUSTR_26, THUSTR_27, THUSTR_28, THUSTR_29, THUSTR_30, THUSTR_31,
     THUSTR_32,
 ];
-pub unsafe fn HU_Init(state: &mut GameState) {
+pub fn HU_Init(state: &mut GameState) {
     let mut i: i32 = 0;
     let mut j: i32 = 0;
     j = HU_FONTSTART;
@@ -505,7 +505,7 @@ pub unsafe fn HU_Ticker(state: &mut GameState) {
     }
 }
 pub const QUEUESIZE: i32 = 128;
-pub unsafe fn HU_queueChatChar(state: &mut GameState, c: u8) {
+pub fn HU_queueChatChar(state: &mut GameState, c: u8) {
     if (state.hu_stuff.head + 1_i32) & (QUEUESIZE - 1_i32) == state.hu_stuff.tail {
         (*state.g_game.player_mut(state.hu_stuff.plr)).message =
             Some("[Message unsent]".to_string());

@@ -3304,6 +3304,25 @@ impl PMobjState {
             .and_then(|slot| slot.mobj.as_deref_mut())
     }
 
+    // Panicking shorthands over mobj_ref/mobj_mut for ids that must be live.
+    pub fn mo(&self, id: MobjId) -> &mobj_t {
+        self.mobj_ref(id).expect("stale MobjId")
+    }
+
+    pub fn mo_mut(&mut self, id: MobjId) -> &mut mobj_t {
+        self.mobj_mut(id).expect("stale MobjId")
+    }
+
+    // Same liveness rule as mobj_get() (a retired mobj is "gone"), for the
+    // `target.and_then(|id| mobj_get(id))` validity checks.
+    pub fn is_live(&self, id: MobjId) -> bool {
+        self.mobjs
+            .get(id.index as usize)
+            .is_some_and(|slot| {
+                slot.generation == id.generation && !slot.retired && slot.mobj.is_some()
+            })
+    }
+
     pub fn mobj_get_for_reaper(&self, id: MobjId) -> Option<*mut mobj_t> {
         self.mobjs
             .get(id.index as usize)
@@ -3630,7 +3649,7 @@ pub unsafe fn P_CheckMissileSpawn(state: &mut GameState, mut th: *mut mobj_t) {
         P_ExplodeMissile(state, th);
     }
 }
-pub unsafe fn P_SubstNullMobj(state: &mut PMobjState, mut mobj: *mut mobj_t) -> *mut mobj_t {
+pub fn P_SubstNullMobj(state: &mut PMobjState, mut mobj: *mut mobj_t) -> *mut mobj_t {
     if mobj.is_null() {
         state.dummy_mobj.x = 0_i32 as fixed_t;
         state.dummy_mobj.y = 0_i32 as fixed_t;

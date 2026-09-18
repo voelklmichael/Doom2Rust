@@ -108,6 +108,20 @@ impl PPlatsState {
             .map(|r| r as *const plat_t as *mut plat_t)
     }
 
+    pub fn get_ref(&self, id: PlatId) -> Option<&plat_t> {
+        self.plats
+            .get(id.index as usize)
+            .filter(|slot| slot.generation == id.generation)
+            .and_then(|slot| slot.plat.as_deref())
+    }
+
+    pub fn get_mut(&mut self, id: PlatId) -> Option<&mut plat_t> {
+        self.plats
+            .get_mut(id.index as usize)
+            .filter(|slot| slot.generation == id.generation)
+            .and_then(|slot| slot.plat.as_deref_mut())
+    }
+
     // Called once, from P_RunThinkers' reaper, when a Plat-kind thinker is
     // reaped.
     pub fn dealloc(&mut self, id: PlatId) {

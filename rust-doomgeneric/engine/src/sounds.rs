@@ -553,8 +553,8 @@ pub struct SoundsState {
 }
 
 impl SoundsState {
-    pub fn sfx_mut(&mut self, id: SfxId) -> *mut sfxinfo_t {
-        &mut self.S_sfx[id.0 as usize] as *mut sfxinfo_t
+    pub fn sfx_mut(&mut self, id: SfxId) -> &mut sfxinfo_t {
+        &mut self.S_sfx[id.0 as usize]
     }
 
     pub fn new() -> Self {

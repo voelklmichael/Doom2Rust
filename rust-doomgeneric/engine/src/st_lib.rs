@@ -62,7 +62,7 @@ impl StLibState {
     }
 }
 
-pub unsafe fn STlib_init(state: &mut GameState) {
+pub fn STlib_init(state: &mut GameState) {
     let lumpnum = W_GetNumForName(&mut state.w_wad, "STTMINUS");
     W_CacheLumpNum(state, lumpnum);
     state.st_lib.sttminus = lumpnum;

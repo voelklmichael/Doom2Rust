@@ -1590,7 +1590,7 @@ pub fn A_BrainAwake(state: &mut GameState, _id: MobjId) {
     }
 }
 pub fn A_BrainPain(state: &mut GameState, _id: MobjId) {
-    unsafe { S_StartSound(state, SoundOrigin::None, sfx_bospn as i32) };
+    S_StartSound(state, SoundOrigin::None, sfx_bospn as i32);
 }
 pub fn A_BrainScream(state: &mut GameState, id: MobjId) {
     unsafe {

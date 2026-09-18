@@ -87,7 +87,7 @@ impl RPlaneState {
 
 pub const ANGLETOSKYSHIFT: i32 = 22;
 pub const MAXVISPLANES: i32 = 128;
-pub unsafe fn R_MapPlane(state: &mut GameState, mut y: i32, mut x1: i32, mut x2: i32) {
+pub fn R_MapPlane(state: &mut GameState, mut y: i32, mut x1: i32, mut x2: i32) {
     let mut angle: angle_t = 0;
     let mut distance: fixed_t = 0;
     let mut length: fixed_t = 0;
@@ -254,12 +254,12 @@ pub fn R_MakeSpans(
 ) {
     while t1 < t2 && t1 <= b1 {
         let spanstart_t1 = state.r_plane.spanstart[t1 as usize];
-        unsafe { R_MapPlane(state, t1, spanstart_t1, x - 1_i32) };
+        R_MapPlane(state, t1, spanstart_t1, x - 1_i32);
         t1 += 1;
     }
     while b1 > b2 && b1 >= t1 {
         let spanstart_b1 = state.r_plane.spanstart[b1 as usize];
-        unsafe { R_MapPlane(state, b1, spanstart_b1, x - 1_i32) };
+        R_MapPlane(state, b1, spanstart_b1, x - 1_i32);
         b1 -= 1;
     }
     while t2 < t1 && t2 <= b2 {

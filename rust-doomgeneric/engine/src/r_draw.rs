@@ -499,7 +499,7 @@ pub fn R_DrawSpanLow(state: &mut GameState) {
         }
     }
 }
-pub unsafe fn R_InitBuffer(state: &mut GameState, mut width: i32, mut height: i32) {
+pub fn R_InitBuffer(state: &mut GameState, mut width: i32, mut height: i32) {
     let mut i: i32 = 0;
     state.r_draw.viewwindowx = (SCREENWIDTH - width) >> 1_i32;
     i = 0_i32;
