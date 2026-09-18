@@ -57,7 +57,7 @@ pub use crate::d_ticcmd::ticcmd_t;
 pub enum StateAction {
     None,
     Mobj(fn(&mut GameState, MobjId)),
-    Weapon(fn(&mut GameState, *mut player_t, *mut pspdef_t)),
+    Weapon(fn(&mut GameState, PlayerId, i32)),
 }
 #[derive(Copy, Clone)]
 pub enum ThinkerFn {
@@ -3461,7 +3461,7 @@ pub unsafe fn P_SpawnPlayer(state: &mut GameState, mut mthing: *mut mapthing_t) 
     (*p).extralight = 0_i32;
     (*p).fixedcolormap = 0_i32;
     (*p).viewheight = VIEWHEIGHT as fixed_t;
-    P_SetupPsprites(state, p);
+    P_SetupPsprites(state, PlayerId(((*mthing).type_0 as i32 - 1_i32) as u8));
     if state.g_game.deathmatch != 0 {
         i = 0_i32;
         while i < NUMCARDS {

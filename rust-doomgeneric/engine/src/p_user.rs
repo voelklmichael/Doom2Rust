@@ -1,4 +1,5 @@
 use crate::d_mode::GameMode_t;
+use crate::d_player::PlayerId;
 use crate::d_player::PowerType;
 use crate::d_player::{player_t, PlayerState};
 use crate::d_player::{weapontype_from_raw, weapontype_t};
@@ -120,10 +121,11 @@ pub unsafe fn P_MovePlayer(state: &mut GameState, mut player: *mut player_t) {
     }
 }
 pub const ANG5: i32 = ANG90 / 18_i32;
-pub unsafe fn P_DeathThink(state: &mut GameState, mut player: *mut player_t) {
+pub unsafe fn P_DeathThink(state: &mut GameState, player_id: PlayerId) {
+    let player: *mut player_t = state.g_game.player_mut(player_id) as *mut player_t;
     let mut angle: angle_t = 0;
     let mut delta: angle_t = 0;
-    P_MovePsprites(state, player);
+    P_MovePsprites(state, player_id);
     if (*player).viewheight > 6_i32 * FRACUNIT {
         (*player).viewheight -= FRACUNIT;
     }
@@ -161,7 +163,8 @@ pub unsafe fn P_DeathThink(state: &mut GameState, mut player: *mut player_t) {
         (*player).playerstate = PlayerState::PST_REBORN;
     }
 }
-pub unsafe fn P_PlayerThink(state: &mut GameState, mut player: *mut player_t) {
+pub unsafe fn P_PlayerThink(state: &mut GameState, player_id: PlayerId) {
+    let player: *mut player_t = state.g_game.player_mut(player_id) as *mut player_t;
     let mut cmd: *mut ticcmd_t = ::core::ptr::null_mut::<ticcmd_t>();
     let mut newweapon: weapontype_t = weapontype_t::wp_fist;
     let player_mo = state.p_mobj.mobj_get((*player).mo.unwrap()).unwrap();
@@ -178,7 +181,7 @@ pub unsafe fn P_PlayerThink(state: &mut GameState, mut player: *mut player_t) {
         (*player_mo).flags &= !(MF_JUSTATTACKED as i32);
     }
     if (*player).playerstate == PlayerState::PST_DEAD {
-        P_DeathThink(state, player);
+        P_DeathThink(state, player_id);
         return;
     }
     if (*player_mo).reactiontime != 0 {
@@ -233,7 +236,7 @@ pub unsafe fn P_PlayerThink(state: &mut GameState, mut player: *mut player_t) {
     } else {
         (*player).usedown = false_0;
     }
-    P_MovePsprites(state, player);
+    P_MovePsprites(state, player_id);
     if (*player).powers[PowerType::pw_strength as usize] != 0 {
         (*player).powers[PowerType::pw_strength as usize] += 1;
     }

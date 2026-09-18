@@ -1,4 +1,4 @@
-use crate::d_player::player_t;
+use crate::d_player::PlayerId;
 use crate::doomdef::MAXPLAYERS;
 use crate::game_state::GameState;
 use crate::p_ceilng::CeilingId;
@@ -381,8 +381,7 @@ pub unsafe fn P_Ticker(state: &mut GameState) {
     i = 0_i32;
     while i < MAXPLAYERS {
         if state.g_game.playeringame[i as usize] {
-            let player: *mut player_t = &mut state.g_game.players[i as usize];
-            P_PlayerThink(state, player);
+            P_PlayerThink(state, PlayerId(i as u8));
         }
         i += 1;
     }

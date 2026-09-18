@@ -1,6 +1,7 @@
 use crate::d_mode::GameMode_t;
 use crate::d_mode::SkillType;
 use crate::d_player::player_t;
+use crate::d_player::PlayerId;
 use crate::g_game::G_ExitLevel;
 use crate::i_system::I_Error;
 use crate::m_fixed::fixed_t;
@@ -31,7 +32,7 @@ use crate::p_mobj::P_SpawnMobj;
 use crate::p_mobj::P_SpawnPuff;
 use crate::p_mobj::P_SubstNullMobj;
 use crate::p_mobj::ThinkerFn;
-use crate::p_mobj::{mobj_t, pspdef_t};
+use crate::p_mobj::mobj_t;
 use crate::p_mobj::{mobjinfo_t, sector_t, thinker_t};
 use crate::p_mobj::{
     MF_AMBUSH, MF_CORPSE, MF_FLOAT, MF_INFLOAT, MF_JUSTATTACKED, MF_JUSTHIT, MF_SHADOW,
@@ -1536,12 +1537,9 @@ pub fn A_BabyMetal(state: &mut GameState, id: MobjId) {
         A_Chase(state, (*mo).id);
     }
 }
-pub fn A_OpenShotgun2(
-    state: &mut GameState,
-    mut player: *mut player_t,
-    _psp: *mut pspdef_t,
-) {
+pub fn A_OpenShotgun2(state: &mut GameState, player_id: PlayerId, _position: i32) {
     unsafe {
+        let player: *mut player_t = state.g_game.player_mut(player_id) as *mut player_t;
         S_StartSound(
             state,
             SoundOrigin::Mobj((*player).mo.unwrap()),
@@ -1549,12 +1547,9 @@ pub fn A_OpenShotgun2(
         );
     }
 }
-pub fn A_LoadShotgun2(
-    state: &mut GameState,
-    mut player: *mut player_t,
-    _psp: *mut pspdef_t,
-) {
+pub fn A_LoadShotgun2(state: &mut GameState, player_id: PlayerId, _position: i32) {
     unsafe {
+        let player: *mut player_t = state.g_game.player_mut(player_id) as *mut player_t;
         S_StartSound(
             state,
             SoundOrigin::Mobj((*player).mo.unwrap()),
@@ -1562,18 +1557,15 @@ pub fn A_LoadShotgun2(
         );
     }
 }
-pub fn A_CloseShotgun2(
-    state: &mut GameState,
-    mut player: *mut player_t,
-    mut psp: *mut pspdef_t,
-) {
+pub fn A_CloseShotgun2(state: &mut GameState, player_id: PlayerId, position: i32) {
     unsafe {
+        let player: *mut player_t = state.g_game.player_mut(player_id) as *mut player_t;
         S_StartSound(
             state,
             SoundOrigin::Mobj((*player).mo.unwrap()),
             sfx_dbcls as i32,
         );
-        A_ReFire(state, player, psp);
+        A_ReFire(state, player_id, position);
     }
 }
 pub fn A_BrainAwake(state: &mut GameState, _id: MobjId) {
