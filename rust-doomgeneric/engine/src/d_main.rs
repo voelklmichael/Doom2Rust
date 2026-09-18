@@ -839,7 +839,7 @@ pub unsafe fn D_DoomMain(state: &mut GameState) {
     let mut demolumpname: FixedCStr<8> = FixedCStr::from_array([0; 8]);
     I_AtExit(
         &mut state.i_system,
-        Some(D_Endoom as unsafe fn(&mut GameState) -> ()),
+        Some(D_Endoom as fn(&mut GameState) -> ()),
         false,
     );
     I_PrintBanner(&PACKAGE_STRING.as_str());
@@ -882,7 +882,7 @@ pub unsafe fn D_DoomMain(state: &mut GameState) {
     M_LoadDefaults(state);
     I_AtExit(
         &mut state.i_system,
-        Some(M_SaveDefaults as unsafe fn(&mut GameState) -> ()),
+        Some(M_SaveDefaults as fn(&mut GameState) -> ()),
         false,
     );
     let mut gamemission_out = state.doomstat.gamemission;
@@ -937,7 +937,7 @@ pub unsafe fn D_DoomMain(state: &mut GameState) {
     }
     I_AtExit(
         &mut state.i_system,
-        Some(D_QuitCheckDemoStatus as unsafe fn(&mut GameState) -> ()),
+        Some(D_QuitCheckDemoStatus as fn(&mut GameState) -> ()),
         true,
     );
     W_GenerateHashTable(state);
@@ -1109,7 +1109,7 @@ pub unsafe fn D_DoomMain(state: &mut GameState) {
     if M_CheckParmWithArgs(state, "-statdump", 1_i32) != 0 {
         I_AtExit(
             &mut state.i_system,
-            Some(StatDump as unsafe fn(&mut GameState) -> ()),
+            Some(StatDump as fn(&mut GameState) -> ()),
             true,
         );
         println!("External statistics registered.");

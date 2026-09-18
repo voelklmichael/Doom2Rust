@@ -129,7 +129,7 @@ pub unsafe fn S_Init(state: &mut GameState, mut sfxVolume_0: i32, mut musicVolum
     }
     I_AtExit(
         &mut state.i_system,
-        Some(S_Shutdown as unsafe fn(&mut GameState) -> ()),
+        Some(S_Shutdown as fn(&mut GameState) -> ()),
         true,
     );
 }

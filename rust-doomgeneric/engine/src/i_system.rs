@@ -40,7 +40,7 @@ impl ISystemState {
     }
 }
 
-pub type atexit_func_t = Option<unsafe fn(&mut GameState) -> ()>;
+pub type atexit_func_t = Option<fn(&mut GameState) -> ()>;
 pub type atexit_listentry_t = atexit_listentry_s;
 #[derive(Copy, Clone)]
 pub struct atexit_listentry_s {
@@ -113,9 +113,7 @@ pub fn I_ConsoleStdout() -> bool {
 pub fn I_Quit(state: &mut GameState) {
     let entries = state.i_system.exit_funcs.clone();
     for entry in entries.iter().rev() {
-        unsafe {
-            entry.func.expect("non-null function pointer")(state);
-        }
+        entry.func.expect("non-null function pointer")(state);
     }
 }
 pub fn I_Error(message: &str) -> ! {
