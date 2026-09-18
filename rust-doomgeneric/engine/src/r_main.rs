@@ -158,33 +158,29 @@ pub fn R_AddPointToBox(x: i32, y: i32, box_0: &mut [fixed_t; 4]) {
         box_0[BOXTOP as usize] = y as fixed_t;
     }
 }
-pub unsafe fn R_PointOnSide(mut x: fixed_t, mut y: fixed_t, mut node: *mut node_t) -> i32 {
-    let mut dx: fixed_t = 0;
-    let mut dy: fixed_t = 0;
-    let mut left: fixed_t = 0;
-    let mut right: fixed_t = 0;
-    if (*node).dx == 0 {
-        if x <= (*node).x {
-            return ((*node).dy > 0_i32) as i32;
+pub fn R_PointOnSide(x: fixed_t, y: fixed_t, node: &node_t) -> i32 {
+    if node.dx == 0 {
+        if x <= node.x {
+            return (node.dy > 0_i32) as i32;
         }
-        return ((*node).dy < 0_i32) as i32;
+        return (node.dy < 0_i32) as i32;
     }
-    if (*node).dy == 0 {
-        if y <= (*node).y {
-            return ((*node).dx < 0_i32) as i32;
+    if node.dy == 0 {
+        if y <= node.y {
+            return (node.dx < 0_i32) as i32;
         }
-        return ((*node).dx > 0_i32) as i32;
+        return (node.dx > 0_i32) as i32;
     }
-    dx = x - (*node).x;
-    dy = y - (*node).y;
-    if ((*node).dy ^ (*node).dx ^ dx ^ dy) as u32 & 0x80000000_u32 != 0 {
-        if ((*node).dy ^ dx) as u32 & 0x80000000_u32 != 0 {
+    let dx = x - node.x;
+    let dy = y - node.y;
+    if (node.dy ^ node.dx ^ dx ^ dy) as u32 & 0x80000000_u32 != 0 {
+        if (node.dy ^ dx) as u32 & 0x80000000_u32 != 0 {
             return 1_i32;
         }
         return 0_i32;
     }
-    left = FixedMul((*node).dy >> FRACBITS, dx);
-    right = FixedMul(dy, (*node).dx >> FRACBITS);
+    let left = FixedMul(node.dy >> FRACBITS, dx);
+    let right = FixedMul(dy, node.dx >> FRACBITS);
     if right < left {
         return 0_i32;
     }
@@ -523,22 +519,15 @@ pub fn R_Init(state: &mut GameState) {
     print!(".");
     state.r_main.framecount = 0_i32;
 }
-pub unsafe fn R_PointInSubsector(
-    state: &mut GameState,
-    mut x: fixed_t,
-    mut y: fixed_t,
-) -> SubsectorId {
-    let mut node: *mut node_t = ::core::ptr::null_mut::<node_t>();
-    let mut side: i32 = 0;
-    let mut nodenum: i32 = 0;
+pub fn R_PointInSubsector(state: &mut GameState, x: fixed_t, y: fixed_t) -> SubsectorId {
     if state.p_setup.numnodes == 0 {
         return SubsectorId(0);
     }
-    nodenum = state.p_setup.numnodes - 1_i32;
+    let mut nodenum = state.p_setup.numnodes - 1_i32;
     while nodenum & NF_SUBSECTOR == 0 {
-        node = state.p_setup.nodes.as_mut_ptr().offset(nodenum as isize);
-        side = R_PointOnSide(x, y, node);
-        nodenum = (*node).children[side as usize] as i32;
+        let node = &state.p_setup.nodes[nodenum as usize];
+        let side = R_PointOnSide(x, y, node);
+        nodenum = node.children[side as usize] as i32;
     }
     SubsectorId((nodenum & !NF_SUBSECTOR) as u32)
 }

@@ -3141,7 +3141,7 @@ pub unsafe fn P_SpawnMobj(
     value.sprite = (*st).sprite;
     value.frame = (*st).frame;
     let (id, mobj) = state.p_mobj.spawn(value);
-    P_SetThingPosition(state, mobj);
+    P_SetThingPosition(state, &mut *mobj);
     (*mobj).floorz = state
         .p_setup
         .sector_mut(state.p_setup.subsectors[(*mobj).subsector.0 as usize].sector)
@@ -3285,6 +3285,25 @@ impl PMobjState {
     // mobj's raw pointer to observe ThinkerFn::Removed and finish tearing it
     // down via P_RunThinkers/deallocate(). Every other caller wants "gone"
     // the instant retire() runs; the reaper is the one exception.
+    // Safe borrows. Unlike mobj_get() these still resolve a retired-but-not-
+    // yet-deallocated mobj (the memory is valid until the reaper runs), which
+    // is what the raw pointers they replace would have seen -- e.g. a
+    // blockmap iteration must read `bnext` of a mobj its own callback just
+    // removed. None only for a stale id (freed / slot reused).
+    pub fn mobj_ref(&self, id: MobjId) -> Option<&mobj_t> {
+        self.mobjs
+            .get(id.index as usize)
+            .filter(|slot| slot.generation == id.generation)
+            .and_then(|slot| slot.mobj.as_deref())
+    }
+
+    pub fn mobj_mut(&mut self, id: MobjId) -> Option<&mut mobj_t> {
+        self.mobjs
+            .get_mut(id.index as usize)
+            .filter(|slot| slot.generation == id.generation)
+            .and_then(|slot| slot.mobj.as_deref_mut())
+    }
+
     pub fn mobj_get_for_reaper(&self, id: MobjId) -> Option<*mut mobj_t> {
         self.mobjs
             .get(id.index as usize)
@@ -3374,7 +3393,7 @@ pub unsafe fn P_RemoveMobj(state: &mut GameState, mut mobj: *mut mobj_t) {
             state.p_mobj.iquetail = (state.p_mobj.iquetail + 1_i32) & (ITEMQUESIZE - 1_i32);
         }
     }
-    P_UnsetThingPosition(state, mobj);
+    P_UnsetThingPosition(state, &mut *mobj);
     S_StopSound(state, SoundOrigin::Mobj((*mobj).id));
     P_RemoveThinker(mobj as *mut thinker_t);
 }
