@@ -73,7 +73,6 @@ impl IVideoState {
 
 pub type __uint16_t = u16;
 pub type uint16_t = __uint16_t;
-pub type grabmouse_callback_t = Option<unsafe fn() -> bool>;
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct FB_ScreenInfo {
