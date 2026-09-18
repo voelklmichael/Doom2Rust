@@ -587,7 +587,7 @@ pub unsafe fn P_LoadThings(state: &mut GameState, mut lump: i32) {
         spawnthing.angle = (*mt).angle;
         spawnthing.type_0 = (*mt).type_0;
         spawnthing.options = (*mt).options;
-        P_SpawnMapThing(state, &raw mut spawnthing);
+        P_SpawnMapThing(state, spawnthing);
         i += 1;
         mt = mt.offset(1);
     }
@@ -918,9 +918,9 @@ pub fn P_SetupLevel(state: &mut GameState, mut episode: i32, mut map: i32) {
     let gs = state;
     gs.p_mobj.iquetail = 0_i32;
     gs.p_mobj.iquehead = gs.p_mobj.iquetail;
-    unsafe { P_SpawnSpecials(gs) };
+    P_SpawnSpecials(gs);
     if gs.g_game.precache {
-        unsafe { R_PrecacheLevel(gs) };
+        R_PrecacheLevel(gs);
     }
 }
 pub fn P_Init(state: &mut GameState) {

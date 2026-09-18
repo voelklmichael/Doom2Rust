@@ -1,4 +1,5 @@
-use crate::d_player::player_t;
+
+use crate::d_player::PlayerId;
 use crate::game_state::GameState;
 use crate::i_system::I_Error;
 use crate::m_argv::M_CheckParmWithArgs;
@@ -26,7 +27,7 @@ use crate::p_maputl::P_UnsetThingPosition;
 use crate::p_maputl::MAPBLOCKSHIFT;
 use crate::p_maputl::PT_ADDLINES;
 use crate::p_maputl::PT_ADDTHINGS;
-use crate::p_mobj::mobj_t;
+
 use crate::p_mobj::MobjId;
 use crate::p_mobj::MobjType;
 use crate::p_mobj::P_RemoveMobj;
@@ -36,12 +37,13 @@ use crate::p_mobj::P_SpawnMobj;
 use crate::p_mobj::P_SpawnPuff;
 use crate::p_mobj::P_SubstNullMobj;
 use crate::p_mobj::StateNum;
-use crate::p_mobj::{sector_t, SlopeType};
+use crate::p_mobj::{SlopeType};
 use crate::p_mobj::{
     MF_DROPOFF, MF_DROPPED, MF_FLOAT, MF_MISSILE, MF_NOBLOOD, MF_NOCLIP, MF_PICKUP, MF_SHOOTABLE,
     MF_SKULLFLY, MF_SOLID, MF_SPECIAL, MF_TELEPORT,
 };
 use crate::p_setup::LineId;
+use crate::p_setup::SectorId;
 use crate::p_setup::SubsectorId;
 use crate::p_sight::P_CheckSight;
 use crate::p_spec::P_CrossSpecialLine;
@@ -140,31 +142,31 @@ pub const ML_BLOCKMONSTERS: i32 = 2;
 pub const USERANGE: i32 = 64 * FRACUNIT;
 pub const MAXSPECIALCROSS_ORIGINAL: i32 = 8;
 pub const DEFAULT_SPECHIT_MAGIC: i32 = 0x1c09c98;
-pub unsafe fn PIT_StompThing(state: &mut GameState, mut thing_id: MobjId) -> bool {
-    let thing = state.p_mobj.mobj_get(thing_id).unwrap();
-    let tmthing = state.p_mobj.mobj_get(state.p_map.tmthing.unwrap()).unwrap();
+pub fn PIT_StompThing(state: &mut GameState, mut thing_id: MobjId) -> bool {
+    let thing = thing_id;
+    let tmthing = state.p_map.tmthing.unwrap();
     let mut blockdist: fixed_t = 0;
-    if (*thing).flags & MF_SHOOTABLE as i32 == 0 {
+    if state.p_mobj.mo(thing).flags & MF_SHOOTABLE as i32 == 0 {
         return true;
     }
-    blockdist = (*thing).radius + (*tmthing).radius;
-    if ((*thing).x - state.p_map.tmx).abs() >= blockdist
-        || ((*thing).y - state.p_map.tmy).abs() >= blockdist
+    blockdist = state.p_mobj.mo(thing).radius + state.p_mobj.mo(tmthing).radius;
+    if (state.p_mobj.mo(thing).x - state.p_map.tmx).abs() >= blockdist
+        || (state.p_mobj.mo(thing).y - state.p_map.tmy).abs() >= blockdist
     {
         return true;
     }
     if thing == tmthing {
         return true;
     }
-    if (*tmthing).player.is_none() && state.g_game.gamemap != 30_i32 {
+    if state.p_mobj.mo(tmthing).player.is_none() && state.g_game.gamemap != 30_i32 {
         return false;
     }
-    P_DamageMobj(state, thing, tmthing, tmthing, 10000_i32);
+    P_DamageMobj(state, thing, Some(tmthing), Some(tmthing), 10000_i32);
     true
 }
-pub unsafe fn P_TeleportMove(
+pub fn P_TeleportMove(
     state: &mut GameState,
-    mut thing: *mut mobj_t,
+    thing: MobjId,
     mut x: fixed_t,
     mut y: fixed_t,
 ) -> bool {
@@ -175,14 +177,14 @@ pub unsafe fn P_TeleportMove(
     let mut bx: i32 = 0;
     let mut by: i32 = 0;
     let mut newsubsec: SubsectorId = SubsectorId(0);
-    state.p_map.tmthing = Some((*thing).id);
-    state.p_map.tmflags = (*thing).flags;
+    state.p_map.tmthing = Some(thing);
+    state.p_map.tmflags = state.p_mobj.mo(thing).flags;
     state.p_map.tmx = x;
     state.p_map.tmy = y;
-    state.p_map.tmbbox[BOXTOP as usize] = y + (*thing).radius;
-    state.p_map.tmbbox[BOXBOTTOM as usize] = y - (*thing).radius;
-    state.p_map.tmbbox[BOXRIGHT as usize] = x + (*thing).radius;
-    state.p_map.tmbbox[BOXLEFT as usize] = x - (*thing).radius;
+    state.p_map.tmbbox[BOXTOP as usize] = y + state.p_mobj.mo(thing).radius;
+    state.p_map.tmbbox[BOXBOTTOM as usize] = y - state.p_mobj.mo(thing).radius;
+    state.p_map.tmbbox[BOXRIGHT as usize] = x + state.p_mobj.mo(thing).radius;
+    state.p_map.tmbbox[BOXLEFT as usize] = x - state.p_mobj.mo(thing).radius;
     newsubsec = R_PointInSubsector(state, x, y);
     state.p_map.ceilingline = None;
     state.p_map.tmdropoffz = state
@@ -208,7 +210,7 @@ pub unsafe fn P_TeleportMove(
                 state,
                 bx,
                 by,
-                |s, id| unsafe { PIT_StompThing(s, id) },
+                |s, id| PIT_StompThing(s, id),
             ) {
                 return false;
             }
@@ -216,15 +218,15 @@ pub unsafe fn P_TeleportMove(
         }
         bx += 1;
     }
-    P_UnsetThingPosition(state, &mut *thing);
-    (*thing).floorz = state.p_map.tmfloorz;
-    (*thing).ceilingz = state.p_map.tmceilingz;
-    (*thing).x = x;
-    (*thing).y = y;
-    P_SetThingPosition(state, &mut *thing);
+    P_UnsetThingPosition(state, thing);
+    state.p_mobj.mo_mut(thing).floorz = state.p_map.tmfloorz;
+    state.p_mobj.mo_mut(thing).ceilingz = state.p_map.tmceilingz;
+    state.p_mobj.mo_mut(thing).x = x;
+    state.p_mobj.mo_mut(thing).y = y;
+    P_SetThingPosition(state, thing);
     true
 }
-pub unsafe fn PIT_CheckLine(state: &mut GameState, mut ld: LineId) -> bool {
+pub fn PIT_CheckLine(state: &mut GameState, mut ld: LineId) -> bool {
     let ldv = state.p_setup.line(ld);
     if state.p_map.tmbbox[BOXRIGHT as usize] <= ldv.bbox[BOXLEFT as usize]
         || state.p_map.tmbbox[BOXLEFT as usize] >= ldv.bbox[BOXRIGHT as usize]
@@ -240,12 +242,12 @@ pub unsafe fn PIT_CheckLine(state: &mut GameState, mut ld: LineId) -> bool {
     if ldv.backsector.is_none() {
         return false;
     }
-    let tmthing = state.p_mobj.mobj_get(state.p_map.tmthing.unwrap()).unwrap();
-    if (*tmthing).flags & MF_MISSILE as i32 == 0 {
+    let tmthing = state.p_map.tmthing.unwrap();
+    if state.p_mobj.mo(tmthing).flags & MF_MISSILE as i32 == 0 {
         if ldv.flags as i32 & ML_BLOCKING != 0 {
             return false;
         }
-        if (*tmthing).player.is_none() && ldv.flags as i32 & ML_BLOCKMONSTERS != 0 {
+        if state.p_mobj.mo(tmthing).player.is_none() && ldv.flags as i32 & ML_BLOCKMONSTERS != 0 {
             return false;
         }
     }
@@ -269,86 +271,86 @@ pub unsafe fn PIT_CheckLine(state: &mut GameState, mut ld: LineId) -> bool {
     }
     true
 }
-pub unsafe fn PIT_CheckThing(state: &mut GameState, mut thing_id: MobjId) -> bool {
-    let thing = state.p_mobj.mobj_get(thing_id).unwrap();
-    let tmthing = state.p_mobj.mobj_get(state.p_map.tmthing.unwrap()).unwrap();
+pub fn PIT_CheckThing(state: &mut GameState, mut thing_id: MobjId) -> bool {
+    let thing = thing_id;
+    let tmthing = state.p_map.tmthing.unwrap();
     let mut blockdist: fixed_t = 0;
     let mut solid: bool = false;
     let mut damage: i32 = 0;
-    if (*thing).flags & (MF_SOLID as i32 | MF_SPECIAL as i32 | MF_SHOOTABLE as i32) == 0 {
+    if state.p_mobj.mo(thing).flags & (MF_SOLID as i32 | MF_SPECIAL as i32 | MF_SHOOTABLE as i32) == 0 {
         return true;
     }
-    blockdist = (*thing).radius + (*tmthing).radius;
-    if ((*thing).x - state.p_map.tmx).abs() >= blockdist
-        || ((*thing).y - state.p_map.tmy).abs() >= blockdist
+    blockdist = state.p_mobj.mo(thing).radius + state.p_mobj.mo(tmthing).radius;
+    if (state.p_mobj.mo(thing).x - state.p_map.tmx).abs() >= blockdist
+        || (state.p_mobj.mo(thing).y - state.p_map.tmy).abs() >= blockdist
     {
         return true;
     }
     if thing == tmthing {
         return true;
     }
-    if (*tmthing).flags & MF_SKULLFLY as i32 != 0 {
+    if state.p_mobj.mo(tmthing).flags & MF_SKULLFLY as i32 != 0 {
         damage = (P_Random(&mut state.m_random) % 8_i32 + 1_i32)
-            * (*state.info.mobjinfo_mut((*tmthing).type_0)).damage;
-        P_DamageMobj(state, thing, tmthing, tmthing, damage);
-        (*tmthing).flags &= !(MF_SKULLFLY as i32);
-        (*tmthing).momz = 0_i32 as fixed_t;
-        (*tmthing).momy = (*tmthing).momz;
-        (*tmthing).momx = (*tmthing).momy;
-        let spawnstate = (*state.info.mobjinfo_mut((*tmthing).type_0)).spawnstate;
+            * state.info.mobjinfo_mut(state.p_mobj.mo(tmthing).type_0).damage;
+        P_DamageMobj(state, thing, Some(tmthing), Some(tmthing), damage);
+        state.p_mobj.mo_mut(tmthing).flags &= !(MF_SKULLFLY as i32);
+        state.p_mobj.mo_mut(tmthing).momz = 0_i32 as fixed_t;
+        state.p_mobj.mo_mut(tmthing).momy = state.p_mobj.mo(tmthing).momz;
+        state.p_mobj.mo_mut(tmthing).momx = state.p_mobj.mo(tmthing).momy;
+        let spawnstate = state.info.mobjinfo_mut(state.p_mobj.mo(tmthing).type_0).spawnstate;
         P_SetMobjState(state, tmthing, spawnstate);
         return false;
     }
-    if (*tmthing).flags & MF_MISSILE as i32 != 0 {
-        if (*tmthing).z > (*thing).z + (*thing).height {
+    if state.p_mobj.mo(tmthing).flags & MF_MISSILE as i32 != 0 {
+        if state.p_mobj.mo(tmthing).z > state.p_mobj.mo(thing).z + state.p_mobj.mo(thing).height {
             return true;
         }
-        if (*tmthing).z + (*tmthing).height < (*thing).z {
+        if state.p_mobj.mo(tmthing).z + state.p_mobj.mo(tmthing).height < state.p_mobj.mo(thing).z {
             return true;
         }
-        let tm_target = (*tmthing).target.and_then(|id| state.p_mobj.mobj_get(id));
+        let tm_target = state.p_mobj.mo(tmthing).target.filter(|&id| state.p_mobj.is_live(id));
         if tm_target.is_some()
-            && ((*tm_target.unwrap()).type_0 as u32 == (*thing).type_0 as u32
-                || (*tm_target.unwrap()).type_0 as u32 == MobjType::MT_KNIGHT as i32 as u32
-                    && (*thing).type_0 as u32 == MobjType::MT_BRUISER as i32 as u32
-                || (*tm_target.unwrap()).type_0 as u32 == MobjType::MT_BRUISER as i32 as u32
-                    && (*thing).type_0 as u32 == MobjType::MT_KNIGHT as i32 as u32)
+            && (state.p_mobj.mo(tm_target.unwrap()).type_0 as u32 == state.p_mobj.mo(thing).type_0 as u32
+                || state.p_mobj.mo(tm_target.unwrap()).type_0 as u32 == MobjType::MT_KNIGHT as i32 as u32
+                    && state.p_mobj.mo(thing).type_0 as u32 == MobjType::MT_BRUISER as i32 as u32
+                || state.p_mobj.mo(tm_target.unwrap()).type_0 as u32 == MobjType::MT_BRUISER as i32 as u32
+                    && state.p_mobj.mo(thing).type_0 as u32 == MobjType::MT_KNIGHT as i32 as u32)
         {
             if Some(thing) == tm_target {
                 return true;
             }
-            if (*thing).type_0 as u32 != MobjType::MT_PLAYER as i32 as u32
+            if state.p_mobj.mo(thing).type_0 as u32 != MobjType::MT_PLAYER as i32 as u32
                 && deh_species_infighting == 0
             {
                 return false;
             }
         }
-        if (*thing).flags & MF_SHOOTABLE as i32 == 0 {
-            return (*thing).flags & MF_SOLID as i32 == 0;
+        if state.p_mobj.mo(thing).flags & MF_SHOOTABLE as i32 == 0 {
+            return state.p_mobj.mo(thing).flags & MF_SOLID as i32 == 0;
         }
         damage = (P_Random(&mut state.m_random) % 8_i32 + 1_i32)
-            * (*state.info.mobjinfo_mut((*tmthing).type_0)).damage;
+            * state.info.mobjinfo_mut(state.p_mobj.mo(tmthing).type_0).damage;
         P_DamageMobj(
             state,
             thing,
-            tmthing,
-            tm_target.unwrap_or(::core::ptr::null_mut()),
+            Some(tmthing),
+            tm_target,
             damage,
         );
         return false;
     }
-    if (*thing).flags & MF_SPECIAL as i32 != 0 {
-        solid = (*thing).flags & MF_SOLID as i32 != 0;
+    if state.p_mobj.mo(thing).flags & MF_SPECIAL as i32 != 0 {
+        solid = state.p_mobj.mo(thing).flags & MF_SOLID as i32 != 0;
         if state.p_map.tmflags & MF_PICKUP as i32 != 0 {
             P_TouchSpecialThing(state, thing, tmthing);
         }
         return !solid;
     }
-    (*thing).flags & MF_SOLID as i32 == 0
+    state.p_mobj.mo(thing).flags & MF_SOLID as i32 == 0
 }
-pub unsafe fn P_CheckPosition(
+pub fn P_CheckPosition(
     state: &mut GameState,
-    mut thing: *mut mobj_t,
+    thing: MobjId,
     mut x: fixed_t,
     mut y: fixed_t,
 ) -> bool {
@@ -359,14 +361,14 @@ pub unsafe fn P_CheckPosition(
     let mut bx: i32 = 0;
     let mut by: i32 = 0;
     let mut newsubsec: SubsectorId = SubsectorId(0);
-    state.p_map.tmthing = Some((*thing).id);
-    state.p_map.tmflags = (*thing).flags;
+    state.p_map.tmthing = Some(thing);
+    state.p_map.tmflags = state.p_mobj.mo(thing).flags;
     state.p_map.tmx = x;
     state.p_map.tmy = y;
-    state.p_map.tmbbox[BOXTOP as usize] = y + (*thing).radius;
-    state.p_map.tmbbox[BOXBOTTOM as usize] = y - (*thing).radius;
-    state.p_map.tmbbox[BOXRIGHT as usize] = x + (*thing).radius;
-    state.p_map.tmbbox[BOXLEFT as usize] = x - (*thing).radius;
+    state.p_map.tmbbox[BOXTOP as usize] = y + state.p_mobj.mo(thing).radius;
+    state.p_map.tmbbox[BOXBOTTOM as usize] = y - state.p_mobj.mo(thing).radius;
+    state.p_map.tmbbox[BOXRIGHT as usize] = x + state.p_mobj.mo(thing).radius;
+    state.p_map.tmbbox[BOXLEFT as usize] = x - state.p_mobj.mo(thing).radius;
     newsubsec = R_PointInSubsector(state, x, y);
     state.p_map.ceilingline = None;
     state.p_map.tmdropoffz = state
@@ -395,7 +397,7 @@ pub unsafe fn P_CheckPosition(
                 state,
                 bx,
                 by,
-                |s, id| unsafe { PIT_CheckThing(s, id) },
+                |s, id| PIT_CheckThing(s, id),
             ) {
                 return false;
             }
@@ -415,7 +417,7 @@ pub unsafe fn P_CheckPosition(
                 state,
                 bx,
                 by,
-                |s, ld| unsafe { PIT_CheckLine(s, ld) },
+                |s, ld| PIT_CheckLine(s, ld),
             ) {
                 return false;
             }
@@ -425,9 +427,9 @@ pub unsafe fn P_CheckPosition(
     }
     true
 }
-pub unsafe fn P_TryMove(
+pub fn P_TryMove(
     state: &mut GameState,
-    mut thing: *mut mobj_t,
+    thing: MobjId,
     mut x: fixed_t,
     mut y: fixed_t,
 ) -> bool {
@@ -440,36 +442,36 @@ pub unsafe fn P_TryMove(
     if !P_CheckPosition(state, thing, x, y) {
         return false;
     }
-    if (*thing).flags & MF_NOCLIP as i32 == 0 {
-        if state.p_map.tmceilingz - state.p_map.tmfloorz < (*thing).height {
+    if state.p_mobj.mo(thing).flags & MF_NOCLIP as i32 == 0 {
+        if state.p_map.tmceilingz - state.p_map.tmfloorz < state.p_mobj.mo(thing).height {
             return false;
         }
         state.p_map.floatok = true;
-        if (*thing).flags & MF_TELEPORT as i32 == 0
-            && state.p_map.tmceilingz - (*thing).z < (*thing).height
+        if state.p_mobj.mo(thing).flags & MF_TELEPORT as i32 == 0
+            && state.p_map.tmceilingz - state.p_mobj.mo(thing).z < state.p_mobj.mo(thing).height
         {
             return false;
         }
-        if (*thing).flags & MF_TELEPORT as i32 == 0
-            && state.p_map.tmfloorz - (*thing).z > 24_i32 * FRACUNIT
+        if state.p_mobj.mo(thing).flags & MF_TELEPORT as i32 == 0
+            && state.p_map.tmfloorz - state.p_mobj.mo(thing).z > 24_i32 * FRACUNIT
         {
             return false;
         }
-        if (*thing).flags & (MF_DROPOFF as i32 | MF_FLOAT as i32) == 0
+        if state.p_mobj.mo(thing).flags & (MF_DROPOFF as i32 | MF_FLOAT as i32) == 0
             && state.p_map.tmfloorz - state.p_map.tmdropoffz > 24_i32 * FRACUNIT
         {
             return false;
         }
     }
-    P_UnsetThingPosition(state, &mut *thing);
-    oldx = (*thing).x;
-    oldy = (*thing).y;
-    (*thing).floorz = state.p_map.tmfloorz;
-    (*thing).ceilingz = state.p_map.tmceilingz;
-    (*thing).x = x;
-    (*thing).y = y;
-    P_SetThingPosition(state, &mut *thing);
-    if (*thing).flags & (MF_TELEPORT as i32 | MF_NOCLIP as i32) == 0 {
+    P_UnsetThingPosition(state, thing);
+    oldx = state.p_mobj.mo(thing).x;
+    oldy = state.p_mobj.mo(thing).y;
+    state.p_mobj.mo_mut(thing).floorz = state.p_map.tmfloorz;
+    state.p_mobj.mo_mut(thing).ceilingz = state.p_map.tmceilingz;
+    state.p_mobj.mo_mut(thing).x = x;
+    state.p_mobj.mo_mut(thing).y = y;
+    P_SetThingPosition(state, thing);
+    if state.p_mobj.mo(thing).flags & (MF_TELEPORT as i32 | MF_NOCLIP as i32) == 0 {
         loop {
             let fresh0 = state.p_map.numspechit;
             state.p_map.numspechit -= 1;
@@ -477,7 +479,7 @@ pub unsafe fn P_TryMove(
                 break;
             }
             ld = state.p_map.spechit[state.p_map.numspechit as usize];
-            side = P_PointOnLineSide(state, (*thing).x, (*thing).y, ld);
+            side = P_PointOnLineSide(state, state.p_mobj.mo(thing).x, state.p_mobj.mo(thing).y, ld);
             oldside = P_PointOnLineSide(state, oldx, oldy, ld);
             if side != oldside && state.p_setup.line(ld).special != 0 {
                 P_CrossSpecialLine(state, ld.0 as i32, oldside, thing);
@@ -486,23 +488,28 @@ pub unsafe fn P_TryMove(
     }
     true
 }
-pub unsafe fn P_ThingHeightClip(state: &mut GameState, mut thing: *mut mobj_t) -> bool {
-    let mut onfloor: bool;
-    onfloor = (*thing).z == (*thing).floorz;
-    P_CheckPosition(state, thing, (*thing).x, (*thing).y);
-    (*thing).floorz = state.p_map.tmfloorz;
-    (*thing).ceilingz = state.p_map.tmceilingz;
+pub fn P_ThingHeightClip(state: &mut GameState, thing: MobjId) -> bool {
+    let (z, floorz, x, y) = {
+        let t = state.p_mobj.mo(thing);
+        (t.z, t.floorz, t.x, t.y)
+    };
+    let onfloor = z == floorz;
+    P_CheckPosition(state, thing, x, y);
+    let (tmfloorz, tmceilingz) = (state.p_map.tmfloorz, state.p_map.tmceilingz);
+    let t = state.p_mobj.mo_mut(thing);
+    t.floorz = tmfloorz;
+    t.ceilingz = tmceilingz;
     if onfloor {
-        (*thing).z = (*thing).floorz;
-    } else if (*thing).z + (*thing).height > (*thing).ceilingz {
-        (*thing).z = (*thing).ceilingz - (*thing).height;
+        t.z = t.floorz;
+    } else if t.z + t.height > t.ceilingz {
+        t.z = t.ceilingz - t.height;
     }
-    if (*thing).ceilingz - (*thing).floorz < (*thing).height {
+    if t.ceilingz - t.floorz < t.height {
         return false;
     }
     true
 }
-pub unsafe fn P_HitSlideLine(state: &mut GameState, mut ld: LineId) {
+pub fn P_HitSlideLine(state: &mut GameState, mut ld: LineId) {
     let mut side: i32 = 0;
     let mut lineangle: angle_t = 0;
     let mut moveangle: angle_t = 0;
@@ -518,8 +525,8 @@ pub unsafe fn P_HitSlideLine(state: &mut GameState, mut ld: LineId) {
         state.p_map.tmxmove = 0_i32 as fixed_t;
         return;
     }
-    let slidemo = state.p_mobj.mobj_get(state.p_map.slidemo.unwrap()).unwrap();
-    side = P_PointOnLineSide(state, (*slidemo).x, (*slidemo).y, ld);
+    let slidemo = state.p_map.slidemo.unwrap();
+    side = P_PointOnLineSide(state, state.p_mobj.mo(slidemo).x, state.p_mobj.mo(slidemo).y, ld);
     lineangle = R_PointToAngle2(state, 0 as fixed_t, 0 as fixed_t, ldv.dx, ldv.dy);
     if side == 1_i32 {
         lineangle = lineangle.wrapping_add(ANG180) as angle_t as angle_t;
@@ -542,21 +549,21 @@ pub unsafe fn P_HitSlideLine(state: &mut GameState, mut ld: LineId) {
     state.p_map.tmxmove = FixedMul(newlen, finecosine[lineangle as isize]);
     state.p_map.tmymove = FixedMul(newlen, finesine[lineangle as usize]);
 }
-pub unsafe fn PTR_SlideTraverse(state: &mut GameState, in_0: intercept_t) -> bool {
+pub fn PTR_SlideTraverse(state: &mut GameState, in_0: intercept_t) -> bool {
     let li: LineId = match in_0.target {
         InterceptTarget::Line(id) => id,
         InterceptTarget::Thing(_) => I_Error("PTR_SlideTraverse: not a line?"),
     };
-    let slidemo = state.p_mobj.mobj_get(state.p_map.slidemo.unwrap()).unwrap();
+    let slidemo = state.p_map.slidemo.unwrap();
     if state.p_setup.line(li).flags as i32 & ML_TWOSIDED == 0 {
-        if P_PointOnLineSide(state, (*slidemo).x, (*slidemo).y, li) != 0 {
+        if P_PointOnLineSide(state, state.p_mobj.mo(slidemo).x, state.p_mobj.mo(slidemo).y, li) != 0 {
             return true;
         }
     } else {
         P_LineOpening(state, li);
-        if state.p_maputl.openrange >= (*slidemo).height {
-            if state.p_maputl.opentop - (*slidemo).z >= (*slidemo).height {
-                if state.p_maputl.openbottom - (*slidemo).z <= 24_i32 * FRACUNIT {
+        if state.p_maputl.openrange >= state.p_mobj.mo(slidemo).height {
+            if state.p_maputl.opentop - state.p_mobj.mo(slidemo).z >= state.p_mobj.mo(slidemo).height {
+                if state.p_maputl.openbottom - state.p_mobj.mo(slidemo).z <= 24_i32 * FRACUNIT {
                     return true;
                 }
             }
@@ -570,71 +577,40 @@ pub unsafe fn PTR_SlideTraverse(state: &mut GameState, in_0: intercept_t) -> boo
     }
     false
 }
-pub unsafe fn P_SlideMove(state: &mut GameState, mut mo: *mut mobj_t) {
-    let mut leadx: fixed_t = 0;
-    let mut leady: fixed_t = 0;
-    let mut trailx: fixed_t = 0;
-    let mut traily: fixed_t = 0;
-    let mut newx: fixed_t = 0;
-    let mut newy: fixed_t = 0;
-    let mut hitcount: i32 = 0;
-    state.p_map.slidemo = Some((*mo).id);
-    hitcount = 0_i32;
+pub fn P_SlideMove(state: &mut GameState, mo: MobjId) {
+    state.p_map.slidemo = Some(mo);
+    let mut hitcount: i32 = 0_i32;
     loop {
         hitcount += 1;
         if hitcount == 3_i32 {
             break;
         }
-        if (*mo).momx > 0_i32 {
-            leadx = (*mo).x + (*mo).radius;
-            trailx = (*mo).x - (*mo).radius;
+        let (mx, my, momx, momy, radius) = {
+            let m = state.p_mobj.mo(mo);
+            (m.x, m.y, m.momx, m.momy, m.radius)
+        };
+        let (leadx, trailx) = if momx > 0_i32 {
+            (mx + radius, mx - radius)
         } else {
-            leadx = (*mo).x - (*mo).radius;
-            trailx = (*mo).x + (*mo).radius;
-        }
-        if (*mo).momy > 0_i32 {
-            leady = (*mo).y + (*mo).radius;
-            traily = (*mo).y - (*mo).radius;
+            (mx - radius, mx + radius)
+        };
+        let (leady, traily) = if momy > 0_i32 {
+            (my + radius, my - radius)
         } else {
-            leady = (*mo).y - (*mo).radius;
-            traily = (*mo).y + (*mo).radius;
-        }
+            (my - radius, my + radius)
+        };
         state.p_map.bestslidefrac = (FRACUNIT + 1_i32) as fixed_t;
-        P_PathTraverse(
-            state,
-            leadx,
-            leady,
-            leadx + (*mo).momx,
-            leady + (*mo).momy,
-            PT_ADDLINES,
-            |s, i| unsafe { PTR_SlideTraverse(s, i) },
-        );
-        P_PathTraverse(
-            state,
-            trailx,
-            leady,
-            trailx + (*mo).momx,
-            leady + (*mo).momy,
-            PT_ADDLINES,
-            |s, i| unsafe { PTR_SlideTraverse(s, i) },
-        );
-        P_PathTraverse(
-            state,
-            leadx,
-            traily,
-            leadx + (*mo).momx,
-            traily + (*mo).momy,
-            PT_ADDLINES,
-            |s, i| unsafe { PTR_SlideTraverse(s, i) },
-        );
+        P_PathTraverse(state, leadx, leady, leadx + momx, leady + momy, PT_ADDLINES, PTR_SlideTraverse);
+        P_PathTraverse(state, trailx, leady, trailx + momx, leady + momy, PT_ADDLINES, PTR_SlideTraverse);
+        P_PathTraverse(state, leadx, traily, leadx + momx, traily + momy, PT_ADDLINES, PTR_SlideTraverse);
         if state.p_map.bestslidefrac == FRACUNIT + 1_i32 {
             break;
         }
         state.p_map.bestslidefrac -= 0x800_i32;
         if state.p_map.bestslidefrac > 0_i32 {
-            newx = FixedMul((*mo).momx, state.p_map.bestslidefrac);
-            newy = FixedMul((*mo).momy, state.p_map.bestslidefrac);
-            if !P_TryMove(state, mo, (*mo).x + newx, (*mo).y + newy) {
+            let newx = FixedMul(momx, state.p_map.bestslidefrac);
+            let newy = FixedMul(momy, state.p_map.bestslidefrac);
+            if !P_TryMove(state, mo, mx + newx, my + newy) {
                 break;
             }
         }
@@ -645,27 +621,37 @@ pub unsafe fn P_SlideMove(state: &mut GameState, mut mo: *mut mobj_t) {
         if state.p_map.bestslidefrac <= 0_i32 {
             return;
         }
-        state.p_map.tmxmove = FixedMul((*mo).momx, state.p_map.bestslidefrac);
-        state.p_map.tmymove = FixedMul((*mo).momy, state.p_map.bestslidefrac);
+        state.p_map.tmxmove = FixedMul(momx, state.p_map.bestslidefrac);
+        state.p_map.tmymove = FixedMul(momy, state.p_map.bestslidefrac);
         P_HitSlideLine(state, state.p_map.bestslideline);
-        (*mo).momx = state.p_map.tmxmove;
-        (*mo).momy = state.p_map.tmymove;
-        if !P_TryMove(
-            state,
-            mo,
-            (*mo).x + state.p_map.tmxmove,
-            (*mo).y + state.p_map.tmymove,
-        ) {
+        let (tmxmove, tmymove) = (state.p_map.tmxmove, state.p_map.tmymove);
+        {
+            let m = state.p_mobj.mo_mut(mo);
+            m.momx = tmxmove;
+            m.momy = tmymove;
+        }
+        let (cx, cy) = {
+            let m = state.p_mobj.mo(mo);
+            (m.x, m.y)
+        };
+        if !P_TryMove(state, mo, cx + tmxmove, cy + tmymove) {
             continue;
         }
         return;
     }
-    if !P_TryMove(state, mo, (*mo).x, (*mo).y + (*mo).momy) {
-        P_TryMove(state, mo, (*mo).x + (*mo).momx, (*mo).y);
+    let (cx, cy, cmomx, cmomy) = {
+        let m = state.p_mobj.mo(mo);
+        (m.x, m.y, m.momx, m.momy)
+    };
+    if !P_TryMove(state, mo, cx, cy + cmomy) {
+        let (cx, cy) = {
+            let m = state.p_mobj.mo(mo);
+            (m.x, m.y)
+        };
+        P_TryMove(state, mo, cx + cmomx, cy);
     }
 }
-pub unsafe fn PTR_AimTraverse(state: &mut GameState, in_0: intercept_t) -> bool {
-    let mut th: *mut mobj_t = ::core::ptr::null_mut::<mobj_t>();
+pub fn PTR_AimTraverse(state: &mut GameState, in_0: intercept_t) -> bool {
     let mut slope: fixed_t = 0;
     let mut thingtopslope: fixed_t = 0;
     let mut thingbottomslope: fixed_t = 0;
@@ -715,22 +701,22 @@ pub unsafe fn PTR_AimTraverse(state: &mut GameState, in_0: intercept_t) -> bool 
         }
         return true;
     }
-    th = match in_0.target {
-        InterceptTarget::Thing(id) => state.p_mobj.mobj_get(id).unwrap(),
+    let th = match in_0.target {
+        InterceptTarget::Thing(id) => id,
         InterceptTarget::Line(_) => unreachable!(),
     };
-    if Some((*th).id) == state.p_map.shootthing {
+    if Some(th) == state.p_map.shootthing {
         return true;
     }
-    if (*th).flags & MF_SHOOTABLE as i32 == 0 {
+    if state.p_mobj.mo(th).flags & MF_SHOOTABLE as i32 == 0 {
         return true;
     }
     dist = FixedMul(state.p_map.attackrange, in_0.frac);
-    thingtopslope = FixedDiv((*th).z + (*th).height - state.p_map.shootz, dist);
+    thingtopslope = FixedDiv(state.p_mobj.mo(th).z + state.p_mobj.mo(th).height - state.p_map.shootz, dist);
     if thingtopslope < state.p_sight.bottomslope {
         return true;
     }
-    thingbottomslope = FixedDiv((*th).z - state.p_map.shootz, dist);
+    thingbottomslope = FixedDiv(state.p_mobj.mo(th).z - state.p_map.shootz, dist);
     if thingbottomslope > state.p_sight.topslope {
         return true;
     }
@@ -741,24 +727,20 @@ pub unsafe fn PTR_AimTraverse(state: &mut GameState, in_0: intercept_t) -> bool 
         thingbottomslope = state.p_sight.bottomslope;
     }
     state.p_map.aimslope = ((thingtopslope + thingbottomslope) / 2_i32) as fixed_t;
-    state.p_map.linetarget = Some((*th).id);
+    state.p_map.linetarget = Some(th);
     false
 }
-pub unsafe fn PTR_ShootTraverse(state: &mut GameState, in_0: intercept_t) -> bool {
+pub fn PTR_ShootTraverse(state: &mut GameState, in_0: intercept_t) -> bool {
     let mut current_block: u64;
     let mut x: fixed_t = 0;
     let mut y: fixed_t = 0;
     let mut z: fixed_t = 0;
     let mut frac: fixed_t = 0;
-    let mut th: *mut mobj_t = ::core::ptr::null_mut::<mobj_t>();
     let mut slope: fixed_t = 0;
     let mut dist: fixed_t = 0;
     let mut thingtopslope: fixed_t = 0;
     let mut thingbottomslope: fixed_t = 0;
-    let shootthing = state
-        .p_mobj
-        .mobj_get(state.p_map.shootthing.unwrap())
-        .unwrap();
+    let shootthing = state.p_map.shootthing.unwrap();
     if let InterceptTarget::Line(li) = in_0.target {
         if state.p_setup.line(li).special != 0 {
             P_ShootSpecialLine(state, shootthing, li);
@@ -860,22 +842,22 @@ pub unsafe fn PTR_ShootTraverse(state: &mut GameState, in_0: intercept_t) -> boo
         P_SpawnPuff(state, x, y, z);
         false
     } else {
-        th = match in_0.target {
-            InterceptTarget::Thing(id) => state.p_mobj.mobj_get(id).unwrap(),
+        let th = match in_0.target {
+            InterceptTarget::Thing(id) => id,
             InterceptTarget::Line(_) => unreachable!(),
         };
         if th == shootthing {
             return true;
         }
-        if (*th).flags & MF_SHOOTABLE as i32 == 0 {
+        if state.p_mobj.mo(th).flags & MF_SHOOTABLE as i32 == 0 {
             return true;
         }
         dist = FixedMul(state.p_map.attackrange, in_0.frac);
-        thingtopslope = FixedDiv((*th).z + (*th).height - state.p_map.shootz, dist);
+        thingtopslope = FixedDiv(state.p_mobj.mo(th).z + state.p_mobj.mo(th).height - state.p_map.shootz, dist);
         if thingtopslope < state.p_map.aimslope {
             return true;
         }
-        thingbottomslope = FixedDiv((*th).z - state.p_map.shootz, dist);
+        thingbottomslope = FixedDiv(state.p_mobj.mo(th).z - state.p_map.shootz, dist);
         if thingbottomslope > state.p_map.aimslope {
             return true;
         }
@@ -887,273 +869,224 @@ pub unsafe fn PTR_ShootTraverse(state: &mut GameState, in_0: intercept_t) -> boo
                 state.p_map.aimslope,
                 FixedMul(frac, state.p_map.attackrange),
             );
-        if (*th).flags & MF_NOBLOOD as i32 != 0 {
+        if state.p_mobj.mo(th).flags & MF_NOBLOOD as i32 != 0 {
             P_SpawnPuff(state, x, y, z);
         } else {
             P_SpawnBlood(state, x, y, z, state.p_map.la_damage);
         }
         if state.p_map.la_damage != 0 {
-            P_DamageMobj(state, th, shootthing, shootthing, state.p_map.la_damage);
+            P_DamageMobj(state, th, Some(shootthing), Some(shootthing), state.p_map.la_damage);
         }
         false
     }
 }
-pub unsafe fn P_AimLineAttack(
+pub fn P_AimLineAttack(
     state: &mut GameState,
-    mut t1: *mut mobj_t,
-    mut angle: angle_t,
-    mut distance: fixed_t,
+    t1: Option<MobjId>,
+    angle: angle_t,
+    distance: fixed_t,
 ) -> fixed_t {
-    let mut x2: fixed_t = 0;
-    let mut y2: fixed_t = 0;
-    t1 = P_SubstNullMobj(&mut state.p_mobj, t1);
-    angle >>= ANGLETOFINESHIFT;
-    state.p_map.shootthing = Some((*t1).id);
-    x2 = (*t1).x + (distance >> FRACBITS) * finecosine[angle as isize];
-    y2 = (*t1).y + (distance >> FRACBITS) * finesine[angle as usize];
-    state.p_map.shootz = ((*t1).z + ((*t1).height >> 1_i32) + 8_i32 * FRACUNIT) as fixed_t;
+    let t1 = P_SubstNullMobj(&mut state.p_mobj, t1);
+    let angle = angle >> ANGLETOFINESHIFT;
+    let (x1, y1, z1, height1) = {
+        let m = state.p_mobj.mo(t1);
+        (m.x, m.y, m.z, m.height)
+    };
+    state.p_map.shootthing = Some(t1);
+    let x2 = x1 + (distance >> FRACBITS) * finecosine[angle as isize];
+    let y2 = y1 + (distance >> FRACBITS) * finesine[angle as usize];
+    state.p_map.shootz = (z1 + (height1 >> 1_i32) + 8_i32 * FRACUNIT) as fixed_t;
     state.p_sight.topslope = (100_i32 * FRACUNIT / 160_i32) as fixed_t;
     state.p_sight.bottomslope = (-100_i32 * FRACUNIT / 160_i32) as fixed_t;
     state.p_map.attackrange = distance;
     state.p_map.linetarget = None;
     P_PathTraverse(
         state,
-        (*t1).x,
-        (*t1).y,
+        x1,
+        y1,
         x2,
         y2,
         PT_ADDLINES | PT_ADDTHINGS,
-        |s, i| unsafe { PTR_AimTraverse(s, i) },
+        PTR_AimTraverse,
     );
     if state.p_map.linetarget.is_some() {
         return state.p_map.aimslope;
     }
     0 as fixed_t
 }
-pub unsafe fn P_LineAttack(
+pub fn P_LineAttack(
     state: &mut GameState,
-    mut t1: *mut mobj_t,
-    mut angle: angle_t,
-    mut distance: fixed_t,
-    mut slope: fixed_t,
-    mut damage: i32,
+    t1: MobjId,
+    angle: angle_t,
+    distance: fixed_t,
+    slope: fixed_t,
+    damage: i32,
 ) {
-    let mut x2: fixed_t = 0;
-    let mut y2: fixed_t = 0;
-    angle >>= ANGLETOFINESHIFT;
-    state.p_map.shootthing = Some((*t1).id);
+    let angle = angle >> ANGLETOFINESHIFT;
+    let (x1, y1, z1, height1) = {
+        let m = state.p_mobj.mo(t1);
+        (m.x, m.y, m.z, m.height)
+    };
+    state.p_map.shootthing = Some(t1);
     state.p_map.la_damage = damage;
-    x2 = (*t1).x + (distance >> FRACBITS) * finecosine[angle as isize];
-    y2 = (*t1).y + (distance >> FRACBITS) * finesine[angle as usize];
-    state.p_map.shootz = ((*t1).z + ((*t1).height >> 1_i32) + 8_i32 * FRACUNIT) as fixed_t;
+    let x2 = x1 + (distance >> FRACBITS) * finecosine[angle as isize];
+    let y2 = y1 + (distance >> FRACBITS) * finesine[angle as usize];
+    state.p_map.shootz = (z1 + (height1 >> 1_i32) + 8_i32 * FRACUNIT) as fixed_t;
     state.p_map.attackrange = distance;
     state.p_map.aimslope = slope;
-    P_PathTraverse(
-        state,
-        (*t1).x,
-        (*t1).y,
-        x2,
-        y2,
-        PT_ADDLINES | PT_ADDTHINGS,
-        |s, i| unsafe { PTR_ShootTraverse(s, i) },
-    );
-}
-pub unsafe fn PTR_UseTraverse(state: &mut GameState, in_0: intercept_t) -> bool {
-    let mut side: i32 = 0;
-    let li = match in_0.target {
-        InterceptTarget::Line(id) => id,
-        InterceptTarget::Thing(_) => unreachable!(),
-    };
-    let usething = state
-        .p_mobj
-        .mobj_get(state.p_map.usething.unwrap())
-        .unwrap();
-    if state.p_setup.line(li).special == 0 {
-        P_LineOpening(state, li);
-        if state.p_maputl.openrange <= 0_i32 {
-            S_StartSound(state, SoundOrigin::Mobj((*(usething)).id), sfx_noway as i32);
-            return false;
-        }
-        return true;
-    }
-    side = 0_i32;
-    if P_PointOnLineSide(state, (*usething).x, (*usething).y, li) == 1_i32 {
-        side = 1_i32;
-    }
-    P_UseSpecialLine(state, usething, li, side);
-    false
-}
-pub unsafe fn P_UseLines(state: &mut GameState, mut player: *mut player_t) {
-    let mut angle: i32 = 0;
-    let mut x1: fixed_t = 0;
-    let mut y1: fixed_t = 0;
-    let mut x2: fixed_t = 0;
-    let mut y2: fixed_t = 0;
-    state.p_map.usething = (*player).mo;
-    let player_mo = state.p_mobj.mobj_get((*player).mo.unwrap()).unwrap();
-    angle = ((*player_mo).angle >> ANGLETOFINESHIFT) as i32;
-    x1 = (*player_mo).x;
-    y1 = (*player_mo).y;
-    x2 = x1 + (USERANGE >> FRACBITS) * finecosine[angle as isize];
-    y2 = y1 + (USERANGE >> FRACBITS) * finesine[angle as usize];
     P_PathTraverse(
         state,
         x1,
         y1,
         x2,
         y2,
-        PT_ADDLINES,
-        |s, i| unsafe { PTR_UseTraverse(s, i) },
+        PT_ADDLINES | PT_ADDTHINGS,
+        PTR_ShootTraverse,
     );
 }
-pub unsafe fn PIT_RadiusAttack(state: &mut GameState, mut thing_id: MobjId) -> bool {
-    let thing = state.p_mobj.mobj_get(thing_id).unwrap();
+pub fn PTR_UseTraverse(state: &mut GameState, in_0: intercept_t) -> bool {
+    let mut side: i32 = 0;
+    let li = match in_0.target {
+        InterceptTarget::Line(id) => id,
+        InterceptTarget::Thing(_) => unreachable!(),
+    };
+    let usething = state.p_map.usething.unwrap();
+    if state.p_setup.line(li).special == 0 {
+        P_LineOpening(state, li);
+        if state.p_maputl.openrange <= 0_i32 {
+            S_StartSound(state, SoundOrigin::Mobj(usething), sfx_noway as i32);
+            return false;
+        }
+        return true;
+    }
+    side = 0_i32;
+    let (use_x, use_y) = {
+        let u = state.p_mobj.mo(usething);
+        (u.x, u.y)
+    };
+    if P_PointOnLineSide(state, use_x, use_y, li) == 1_i32 {
+        side = 1_i32;
+    }
+    P_UseSpecialLine(state, usething, li, side);
+    false
+}
+pub fn P_UseLines(state: &mut GameState, player: PlayerId) {
+    let player_mo = state.g_game.player_mut(player).mo;
+    state.p_map.usething = player_mo;
+    let player_mo = player_mo.unwrap();
+    let (angle, x1, y1) = {
+        let m = state.p_mobj.mo(player_mo);
+        ((m.angle >> ANGLETOFINESHIFT) as i32, m.x, m.y)
+    };
+    let x2 = x1 + (USERANGE >> FRACBITS) * finecosine[angle as isize];
+    let y2 = y1 + (USERANGE >> FRACBITS) * finesine[angle as usize];
+    P_PathTraverse(state, x1, y1, x2, y2, PT_ADDLINES, PTR_UseTraverse);
+}
+pub fn PIT_RadiusAttack(state: &mut GameState, mut thing_id: MobjId) -> bool {
+    let thing = thing_id;
     let mut dx: fixed_t = 0;
     let mut dy: fixed_t = 0;
     let mut dist: fixed_t = 0;
-    if (*thing).flags & MF_SHOOTABLE as i32 == 0 {
+    if state.p_mobj.mo(thing).flags & MF_SHOOTABLE as i32 == 0 {
         return true;
     }
-    if (*thing).type_0 as u32 == MobjType::MT_CYBORG as i32 as u32
-        || (*thing).type_0 as u32 == MobjType::MT_SPIDER as i32 as u32
+    if state.p_mobj.mo(thing).type_0 as u32 == MobjType::MT_CYBORG as i32 as u32
+        || state.p_mobj.mo(thing).type_0 as u32 == MobjType::MT_SPIDER as i32 as u32
     {
         return true;
     }
-    let bombspot = state
-        .p_mobj
-        .mobj_get(state.p_map.bombspot.unwrap())
-        .unwrap();
+    let bombspot = state.p_map.bombspot.unwrap();
     let bombsource = state
         .p_map
         .bombsource
-        .and_then(|id| state.p_mobj.mobj_get(id))
-        .unwrap_or(::core::ptr::null_mut());
-    dx = ((*thing).x - (*bombspot).x).abs() as fixed_t;
-    dy = ((*thing).y - (*bombspot).y).abs() as fixed_t;
+        .filter(|&id| state.p_mobj.is_live(id));
+    dx = (state.p_mobj.mo(thing).x - state.p_mobj.mo(bombspot).x).abs() as fixed_t;
+    dy = (state.p_mobj.mo(thing).y - state.p_mobj.mo(bombspot).y).abs() as fixed_t;
     dist = if dx > dy { dx } else { dy };
-    dist = (dist - (*thing).radius) >> FRACBITS;
+    dist = (dist - state.p_mobj.mo(thing).radius) >> FRACBITS;
     if dist < 0_i32 {
         dist = 0_i32 as fixed_t;
     }
     if dist >= state.p_map.bombdamage {
         return true;
     }
-    if P_CheckSight(state, &*thing, &*bombspot) {
+    if P_CheckSight(state, thing, bombspot) {
         P_DamageMobj(
             state,
             thing,
-            bombspot,
+            Some(bombspot),
             bombsource,
             state.p_map.bombdamage - dist,
         );
     }
     true
 }
-pub unsafe fn P_RadiusAttack(
-    state: &mut GameState,
-    mut spot: *mut mobj_t,
-    mut source: *mut mobj_t,
-    mut damage: i32,
-) {
-    let mut x: i32 = 0;
-    let mut y: i32 = 0;
-    let mut xl: i32 = 0;
-    let mut xh: i32 = 0;
-    let mut yl: i32 = 0;
-    let mut yh: i32 = 0;
-    let mut dist: fixed_t = 0;
-    dist = ((damage + 32_i32 * FRACUNIT) << FRACBITS) as fixed_t;
-    yh = ((*spot).y + dist - state.p_setup.bmaporgy) >> MAPBLOCKSHIFT;
-    yl = ((*spot).y - dist - state.p_setup.bmaporgy) >> MAPBLOCKSHIFT;
-    xh = ((*spot).x + dist - state.p_setup.bmaporgx) >> MAPBLOCKSHIFT;
-    xl = ((*spot).x - dist - state.p_setup.bmaporgx) >> MAPBLOCKSHIFT;
-    state.p_map.bombspot = Some((*spot).id);
-    state.p_map.bombsource = if source.is_null() {
-        None
-    } else {
-        Some((*source).id)
+pub fn P_RadiusAttack(state: &mut GameState, spot: MobjId, source: Option<MobjId>, damage: i32) {
+    let (spot_x, spot_y) = {
+        let s = state.p_mobj.mo(spot);
+        (s.x, s.y)
     };
+    let dist: fixed_t = ((damage + 32_i32 * FRACUNIT) << FRACBITS) as fixed_t;
+    let yh = (spot_y + dist - state.p_setup.bmaporgy) >> MAPBLOCKSHIFT;
+    let yl = (spot_y - dist - state.p_setup.bmaporgy) >> MAPBLOCKSHIFT;
+    let xh = (spot_x + dist - state.p_setup.bmaporgx) >> MAPBLOCKSHIFT;
+    let xl = (spot_x - dist - state.p_setup.bmaporgx) >> MAPBLOCKSHIFT;
+    state.p_map.bombspot = Some(spot);
+    state.p_map.bombsource = source;
     state.p_map.bombdamage = damage;
-    y = yl;
-    while y <= yh {
-        x = xl;
-        while x <= xh {
-            P_BlockThingsIterator(
-                state,
-                x,
-                y,
-                |s, id| unsafe { PIT_RadiusAttack(s, id) },
-            );
-            x += 1;
+    for y in yl..=yh {
+        for x in xl..=xh {
+            P_BlockThingsIterator(state, x, y, PIT_RadiusAttack);
         }
-        y += 1;
     }
 }
-pub unsafe fn PIT_ChangeSector(state: &mut GameState, mut thing_id: MobjId) -> bool {
-    let thing = state.p_mobj.mobj_get(thing_id).unwrap();
-    let mut mo: *mut mobj_t = ::core::ptr::null_mut::<mobj_t>();
+pub fn PIT_ChangeSector(state: &mut GameState, thing: MobjId) -> bool {
     if P_ThingHeightClip(state, thing) {
         return true;
     }
-    if (*thing).health <= 0_i32 {
+    let (health, flags) = {
+        let t = state.p_mobj.mo(thing);
+        (t.health, t.flags)
+    };
+    if health <= 0_i32 {
         P_SetMobjState(state, thing, StateNum::S_GIBS);
-        (*thing).flags &= !(MF_SOLID as i32);
-        (*thing).height = 0_i32 as fixed_t;
-        (*thing).radius = 0_i32 as fixed_t;
+        let t = state.p_mobj.mo_mut(thing);
+        t.flags &= !(MF_SOLID as i32);
+        t.height = 0_i32 as fixed_t;
+        t.radius = 0_i32 as fixed_t;
         return true;
     }
-    if (*thing).flags & MF_DROPPED as i32 != 0 {
+    if flags & MF_DROPPED as i32 != 0 {
         P_RemoveMobj(state, thing);
         return true;
     }
-    if (*thing).flags & MF_SHOOTABLE as i32 == 0 {
+    if flags & MF_SHOOTABLE as i32 == 0 {
         return true;
     }
     state.p_map.nofit = true;
     if state.p_map.crushchange && state.p_tick.leveltime & 3_i32 == 0 {
-        P_DamageMobj(
-            state,
-            thing,
-            ::core::ptr::null_mut::<mobj_t>(),
-            ::core::ptr::null_mut::<mobj_t>(),
-            10_i32,
-        );
-        mo = P_SpawnMobj(
-            state,
-            (*thing).x,
-            (*thing).y,
-            (*thing).z + (*thing).height / 2 as fixed_t,
-            MobjType::MT_BLOOD,
-        );
-        (*mo).momx =
-            ((P_Random(&mut state.m_random) - P_Random(&mut state.m_random)) << 12_i32) as fixed_t;
-        (*mo).momy =
-            ((P_Random(&mut state.m_random) - P_Random(&mut state.m_random)) << 12_i32) as fixed_t;
+        P_DamageMobj(state, thing, None, None, 10_i32);
+        let (x, y, z, height) = {
+            let t = state.p_mobj.mo(thing);
+            (t.x, t.y, t.z, t.height)
+        };
+        let mo = P_SpawnMobj(state, x, y, z + height / 2 as fixed_t, MobjType::MT_BLOOD);
+        let momx = ((P_Random(&mut state.m_random) - P_Random(&mut state.m_random)) << 12_i32) as fixed_t;
+        let momy = ((P_Random(&mut state.m_random) - P_Random(&mut state.m_random)) << 12_i32) as fixed_t;
+        let m = state.p_mobj.mo_mut(mo);
+        m.momx = momx;
+        m.momy = momy;
     }
     true
 }
-pub unsafe fn P_ChangeSector(
-    state: &mut GameState,
-    mut sector: *mut sector_t,
-    mut crunch: bool,
-) -> bool {
-    let mut x: i32 = 0;
-    let mut y: i32 = 0;
+pub fn P_ChangeSector(state: &mut GameState, sector: SectorId, crunch: bool) -> bool {
     state.p_map.nofit = false;
     state.p_map.crushchange = crunch;
-    x = (*sector).blockbox[BOXLEFT as usize];
-    while x <= (*sector).blockbox[BOXRIGHT as usize] {
-        y = (*sector).blockbox[BOXBOTTOM as usize];
-        while y <= (*sector).blockbox[BOXTOP as usize] {
-            P_BlockThingsIterator(
-                state,
-                x,
-                y,
-                |s, id| unsafe { PIT_ChangeSector(s, id) },
-            );
-            y += 1;
+    let blockbox = state.p_setup.sector_mut(sector).blockbox;
+    for x in blockbox[BOXLEFT as usize]..=blockbox[BOXRIGHT as usize] {
+        for y in blockbox[BOXBOTTOM as usize]..=blockbox[BOXTOP as usize] {
+            P_BlockThingsIterator(state, x, y, PIT_ChangeSector);
         }
-        x += 1;
     }
     state.p_map.nofit
 }

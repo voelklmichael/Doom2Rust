@@ -6,7 +6,7 @@ use crate::m_fixed::FixedMul;
 use crate::m_fixed::FRACBITS;
 use crate::m_fixed::FRACUNIT;
 use crate::m_fixed::INT_MAX;
-use crate::p_mobj::mobj_t;
+
 use crate::p_mobj::{MobjId, MF_NOBLOCKMAP, MF_NOSECTOR};
 use crate::p_setup::LineId;
 use crate::r_main::R_PointInSubsector;
@@ -283,74 +283,85 @@ pub fn P_LineOpening(state: &mut GameState, linedef: LineId) {
     }
     state.p_maputl.openrange = state.p_maputl.opentop - state.p_maputl.openbottom;
 }
-pub fn P_UnsetThingPosition(state: &mut GameState, thing: &mut mobj_t) {
-    if thing.flags & MF_NOSECTOR as i32 == 0 {
-        if let Some(id) = thing.snext {
+pub fn P_UnsetThingPosition(state: &mut GameState, thing: MobjId) {
+    let (flags, snext, sprev, subsector, bnext, bprev, x, y) = {
+        let t = state.p_mobj.mo(thing);
+        (t.flags, t.snext, t.sprev, t.subsector, t.bnext, t.bprev, t.x, t.y)
+    };
+    if flags & MF_NOSECTOR as i32 == 0 {
+        if let Some(id) = snext {
             state
                 .p_mobj
                 .mobj_mut(id)
                 .expect("sector-list snext neighbor is always live")
-                .sprev = thing.sprev;
+                .sprev = sprev;
         }
-        if let Some(id) = thing.sprev {
+        if let Some(id) = sprev {
             state
                 .p_mobj
                 .mobj_mut(id)
                 .expect("sector-list sprev neighbor is always live")
-                .snext = thing.snext;
+                .snext = snext;
         } else {
-            let sector = state.p_setup.subsectors[thing.subsector.0 as usize].sector;
-            state.p_setup.sector_mut(sector).thinglist = thing.snext;
+            let sector = state.p_setup.subsectors[subsector.0 as usize].sector;
+            state.p_setup.sector_mut(sector).thinglist = snext;
         }
     }
-    if thing.flags & MF_NOBLOCKMAP as i32 == 0 {
-        if let Some(id) = thing.bnext {
+    if flags & MF_NOBLOCKMAP as i32 == 0 {
+        if let Some(id) = bnext {
             state
                 .p_mobj
                 .mobj_mut(id)
                 .expect("blockmap-list bnext neighbor is always live")
-                .bprev = thing.bprev;
+                .bprev = bprev;
         }
-        if let Some(id) = thing.bprev {
+        if let Some(id) = bprev {
             state
                 .p_mobj
                 .mobj_mut(id)
                 .expect("blockmap-list bprev neighbor is always live")
-                .bnext = thing.bnext;
+                .bnext = bnext;
         } else {
-            let blockx = (thing.x - state.p_setup.bmaporgx) >> MAPBLOCKSHIFT;
-            let blocky = (thing.y - state.p_setup.bmaporgy) >> MAPBLOCKSHIFT;
+            let blockx = (x - state.p_setup.bmaporgx) >> MAPBLOCKSHIFT;
+            let blocky = (y - state.p_setup.bmaporgy) >> MAPBLOCKSHIFT;
             if blockx >= 0_i32
                 && blockx < state.p_setup.bmapwidth
                 && blocky >= 0_i32
                 && blocky < state.p_setup.bmapheight
             {
                 state.p_setup.blocklinks[(blocky * state.p_setup.bmapwidth + blockx) as usize] =
-                    thing.bnext;
+                    bnext;
             }
         }
     }
 }
-pub fn P_SetThingPosition(state: &mut GameState, thing: &mut mobj_t) {
-    let ss = R_PointInSubsector(state, thing.x, thing.y);
-    thing.subsector = ss;
-    if thing.flags & MF_NOSECTOR as i32 == 0 {
+pub fn P_SetThingPosition(state: &mut GameState, thing: MobjId) {
+    let (x, y, flags) = {
+        let t = state.p_mobj.mo(thing);
+        (t.x, t.y, t.flags)
+    };
+    let ss = R_PointInSubsector(state, x, y);
+    state.p_mobj.mo_mut(thing).subsector = ss;
+    if flags & MF_NOSECTOR as i32 == 0 {
         let sector = state.p_setup.subsectors[ss.0 as usize].sector;
         let old_head = state.p_setup.sector_mut(sector).thinglist;
-        thing.sprev = None;
-        thing.snext = old_head;
+        {
+            let t = state.p_mobj.mo_mut(thing);
+            t.sprev = None;
+            t.snext = old_head;
+        }
         if let Some(head_id) = old_head {
             state
                 .p_mobj
                 .mobj_mut(head_id)
                 .expect("sector thinglist head is always live")
-                .sprev = Some(thing.id);
+                .sprev = Some(thing);
         }
-        state.p_setup.sector_mut(sector).thinglist = Some(thing.id);
+        state.p_setup.sector_mut(sector).thinglist = Some(thing);
     }
-    if thing.flags & MF_NOBLOCKMAP as i32 == 0 {
-        let blockx = (thing.x - state.p_setup.bmaporgx) >> MAPBLOCKSHIFT;
-        let blocky = (thing.y - state.p_setup.bmaporgy) >> MAPBLOCKSHIFT;
+    if flags & MF_NOBLOCKMAP as i32 == 0 {
+        let blockx = (x - state.p_setup.bmaporgx) >> MAPBLOCKSHIFT;
+        let blocky = (y - state.p_setup.bmaporgy) >> MAPBLOCKSHIFT;
         if blockx >= 0_i32
             && blockx < state.p_setup.bmapwidth
             && blocky >= 0_i32
@@ -358,19 +369,23 @@ pub fn P_SetThingPosition(state: &mut GameState, thing: &mut mobj_t) {
         {
             let idx = (blocky * state.p_setup.bmapwidth + blockx) as usize;
             let old_head = state.p_setup.blocklinks[idx];
-            thing.bprev = None;
-            thing.bnext = old_head;
+            {
+                let t = state.p_mobj.mo_mut(thing);
+                t.bprev = None;
+                t.bnext = old_head;
+            }
             if let Some(head_id) = old_head {
                 state
                     .p_mobj
                     .mobj_mut(head_id)
                     .expect("blockmap-list head is always live")
-                    .bprev = Some(thing.id);
+                    .bprev = Some(thing);
             }
-            state.p_setup.blocklinks[idx] = Some(thing.id);
+            state.p_setup.blocklinks[idx] = Some(thing);
         } else {
-            thing.bprev = None;
-            thing.bnext = None;
+            let t = state.p_mobj.mo_mut(thing);
+            t.bprev = None;
+            t.bnext = None;
         }
     }
 }

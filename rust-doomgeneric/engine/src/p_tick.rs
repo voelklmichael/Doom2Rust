@@ -5,7 +5,7 @@ use crate::p_ceilng::CeilingId;
 use crate::p_doors::DoorId;
 use crate::p_lights::{FireFlickerId, GlowId, LightFlashId, StrobeId};
 use crate::p_mobj::P_RespawnSpecials;
-use crate::p_mobj::{mobj_t, thinker_t, MobjId, ThinkerFn};
+use crate::p_mobj::{thinker_t, MobjId, ThinkerFn};
 use crate::p_plats::PlatId;
 use crate::p_spec::FloorId;
 use crate::p_spec::P_UpdateSpecials;
@@ -137,59 +137,96 @@ impl PTickState {
     }
 }
 
-// Resolves a ThinkerNode's payload back into the raw pointer every T_*
-// function and every existing `state.p_tick.raw(id)` call site still
-// expects. Takes the whole GameState (not just &PTickState) because
-// resolving a converted kind's id needs its owning arena (e.g. p_doors)
-// -- a sibling field PTickState itself has no access to.
-pub fn P_ThinkerRaw(state: &GameState, id: ThinkerId) -> *mut thinker_t {
+// The thinker header embedded in a ThinkerNode's payload, resolved through
+// its owning arena. Takes the whole GameState because the arena is a sibling
+// field PTickState has no access to. (A retired-but-not-yet-freed mobj still
+// resolves: the reaper has to see ThinkerFn::Removed.)
+pub fn P_ThinkerMut(state: &mut GameState, id: ThinkerId) -> &mut thinker_t {
     match state.p_tick.payload(id) {
-        ThinkerPayload::Mobj(mobj_id) => state
-            .p_mobj
-            .mobj_get_for_reaper(mobj_id)
-            .expect("ThinkerNode payload must reference a live mobj")
-            as *mut thinker_t,
-        ThinkerPayload::Ceiling(ceiling_id) => state
-            .p_ceilng
-            .get(ceiling_id)
-            .expect("ThinkerNode payload must reference a live ceiling")
-            as *mut thinker_t,
-        ThinkerPayload::Door(door_id) => state
-            .p_doors
-            .get(door_id)
-            .expect("ThinkerNode payload must reference a live door")
-            as *mut thinker_t,
-        ThinkerPayload::Floor(floor_id) => state
-            .p_spec
-            .get_floor(floor_id)
-            .expect("ThinkerNode payload must reference a live floor")
-            as *mut thinker_t,
-        ThinkerPayload::Plat(plat_id) => state
-            .p_plats
-            .get(plat_id)
-            .expect("ThinkerNode payload must reference a live plat")
-            as *mut thinker_t,
-        ThinkerPayload::FireFlicker(fireflicker_id) => state
-            .p_lights
-            .get_fireflicker(fireflicker_id)
-            .expect("ThinkerNode payload must reference a live fireflicker")
-            as *mut thinker_t,
-        ThinkerPayload::LightFlash(lightflash_id) => state
-            .p_lights
-            .get_lightflash(lightflash_id)
-            .expect("ThinkerNode payload must reference a live lightflash")
-            as *mut thinker_t,
-        ThinkerPayload::Strobe(strobe_id) => state
-            .p_lights
-            .get_strobe(strobe_id)
-            .expect("ThinkerNode payload must reference a live strobe")
-            as *mut thinker_t,
-        ThinkerPayload::Glow(glow_id) => state
-            .p_lights
-            .get_glow(glow_id)
-            .expect("ThinkerNode payload must reference a live glow")
-            as *mut thinker_t,
+        ThinkerPayload::Mobj(mobj_id) => {
+            &mut state
+                .p_mobj
+                .mobj_mut(mobj_id)
+                .expect("ThinkerNode payload must reference a live mobj")
+                .thinker
+        }
+        ThinkerPayload::Ceiling(ceiling_id) => {
+            &mut state
+                .p_ceilng
+                .get_mut(ceiling_id)
+                .expect("ThinkerNode payload must reference a live ceiling")
+                .thinker
+        }
+        ThinkerPayload::Door(door_id) => {
+            &mut state
+                .p_doors
+                .get_mut(door_id)
+                .expect("ThinkerNode payload must reference a live door")
+                .thinker
+        }
+        ThinkerPayload::Floor(floor_id) => {
+            &mut state
+                .p_spec
+                .get_floor_mut(floor_id)
+                .expect("ThinkerNode payload must reference a live floor")
+                .thinker
+        }
+        ThinkerPayload::Plat(plat_id) => {
+            &mut state
+                .p_plats
+                .get_mut(plat_id)
+                .expect("ThinkerNode payload must reference a live plat")
+                .thinker
+        }
+        ThinkerPayload::FireFlicker(fireflicker_id) => {
+            &mut state
+                .p_lights
+                .get_fireflicker_mut(fireflicker_id)
+                .expect("ThinkerNode payload must reference a live fireflicker")
+                .thinker
+        }
+        ThinkerPayload::LightFlash(lightflash_id) => {
+            &mut state
+                .p_lights
+                .get_lightflash_mut(lightflash_id)
+                .expect("ThinkerNode payload must reference a live lightflash")
+                .thinker
+        }
+        ThinkerPayload::Strobe(strobe_id) => {
+            &mut state
+                .p_lights
+                .get_strobe_mut(strobe_id)
+                .expect("ThinkerNode payload must reference a live strobe")
+                .thinker
+        }
+        ThinkerPayload::Glow(glow_id) => {
+            &mut state
+                .p_lights
+                .get_glow_mut(glow_id)
+                .expect("ThinkerNode payload must reference a live glow")
+                .thinker
+        }
     }
+}
+
+pub fn P_ThinkerFunction(state: &mut GameState, id: ThinkerId) -> ThinkerFn {
+    P_ThinkerMut(state, id).function
+}
+
+// Every mobj that is still an active Mobj thinker (not yet Removed), in
+// thinker-list order.
+pub fn P_MobjThinkerIds(state: &GameState) -> Vec<MobjId> {
+    let mut out = Vec::new();
+    let mut cursor = state.p_tick.head();
+    while let Some(id) = cursor {
+        if let ThinkerPayload::Mobj(mobj_id) = state.p_tick.payload(id) {
+            if matches!(state.p_mobj.mo(mobj_id).thinker.function, ThinkerFn::Mobj(_)) {
+                out.push(mobj_id);
+            }
+        }
+        cursor = state.p_tick.next(id);
+    }
+    out
 }
 
 pub fn P_InitThinkers(state: &mut GameState) {
@@ -254,12 +291,12 @@ fn P_UnlinkThinkerNode(state: &mut GameState, id: ThinkerId) {
     state.p_tick.free_list.push(id.0);
 }
 
-pub unsafe fn P_RunThinkers(state: &mut GameState) {
+pub fn P_RunThinkers(state: &mut GameState) {
     let mut cursor = state.p_tick.head();
     while let Some(id) = cursor {
-        let currentthinker = P_ThinkerRaw(state, id);
+        
         let next;
-        match (*currentthinker).function {
+        match P_ThinkerFunction(state, id) {
             ThinkerFn::Removed => {
                 // Capture next before unlinking/freeing -- unlike the
                 // pointer-chasing version this replaces, `next` lives in our
@@ -333,8 +370,9 @@ pub unsafe fn P_RunThinkers(state: &mut GameState) {
                 next = state.p_tick.next(id);
             }
             ThinkerFn::Mobj(f) => {
-                let mobj_id = (*(currentthinker as *mut mobj_t)).id;
-                f(state, mobj_id);
+                if let ThinkerPayload::Mobj(mobj_id) = state.p_tick.payload(id) {
+                    f(state, mobj_id);
+                }
                 // Read after the call, not before: a think function can spawn
                 // a new mobj (P_AddThinker appends at the tail), and if this
                 // node was previously the tail, that newly spawned thinker
@@ -394,7 +432,7 @@ pub unsafe fn P_RunThinkers(state: &mut GameState) {
         cursor = next;
     }
 }
-pub unsafe fn P_Ticker(state: &mut GameState) {
+pub fn P_Ticker(state: &mut GameState) {
     let mut i: i32 = 0;
     if state.g_game.paused {
         return;
@@ -451,10 +489,10 @@ mod tests {
 
         let (door_id, door_ptr) = state.p_doors.spawn(vldoor_t::default());
         let node_id = P_AddThinker(state, ThinkerPayload::Door(door_id), ThinkerKind::Door);
-        assert_eq!(P_ThinkerRaw(state, node_id), door_ptr as *mut thinker_t);
+        assert_eq!(P_ThinkerMut(state, node_id) as *mut thinker_t, door_ptr as *mut thinker_t);
 
-        unsafe { P_RemoveThinker(&mut *P_ThinkerRaw(state, node_id)) };
-        unsafe { P_RunThinkers(state) };
+        P_RemoveThinker(P_ThinkerMut(state, node_id));
+        P_RunThinkers(state);
         assert!(
             state.p_doors.get(door_id).is_none(),
             "reaper should have deallocated the door via its DoorId"
@@ -477,10 +515,10 @@ mod tests {
         let value = state.p_mobj.dummy_mobj;
         let (mobj_id, mobj_ptr) = state.p_mobj.spawn(value);
         let node_id = P_AddThinker(state, ThinkerPayload::Mobj(mobj_id), ThinkerKind::Mobj);
-        assert_eq!(P_ThinkerRaw(state, node_id), mobj_ptr as *mut thinker_t);
+        assert_eq!(P_ThinkerMut(state, node_id) as *mut thinker_t, mobj_ptr as *mut thinker_t);
 
-        unsafe { P_RemoveThinker(&mut *P_ThinkerRaw(state, node_id)) };
-        unsafe { P_RunThinkers(state) };
+        P_RemoveThinker(P_ThinkerMut(state, node_id));
+        P_RunThinkers(state);
         assert!(
             state.p_mobj.mobj_get(mobj_id).is_none(),
             "reaper should have deallocated the mobj via its MobjId"
@@ -505,10 +543,10 @@ mod tests {
             ThinkerPayload::Ceiling(ceiling_id),
             ThinkerKind::Ceiling,
         );
-        assert_eq!(P_ThinkerRaw(state, node_id), ceiling_ptr as *mut thinker_t);
+        assert_eq!(P_ThinkerMut(state, node_id) as *mut thinker_t, ceiling_ptr as *mut thinker_t);
 
-        unsafe { P_RemoveThinker(&mut *P_ThinkerRaw(state, node_id)) };
-        unsafe { P_RunThinkers(state) };
+        P_RemoveThinker(P_ThinkerMut(state, node_id));
+        P_RunThinkers(state);
         assert!(
             state.p_ceilng.get(ceiling_id).is_none(),
             "reaper should have deallocated the ceiling via its CeilingId"
@@ -527,10 +565,10 @@ mod tests {
 
         let (floor_id, floor_ptr) = state.p_spec.spawn_floor(floormove_t::default());
         let node_id = P_AddThinker(state, ThinkerPayload::Floor(floor_id), ThinkerKind::Floor);
-        assert_eq!(P_ThinkerRaw(state, node_id), floor_ptr as *mut thinker_t);
+        assert_eq!(P_ThinkerMut(state, node_id) as *mut thinker_t, floor_ptr as *mut thinker_t);
 
-        unsafe { P_RemoveThinker(&mut *P_ThinkerRaw(state, node_id)) };
-        unsafe { P_RunThinkers(state) };
+        P_RemoveThinker(P_ThinkerMut(state, node_id));
+        P_RunThinkers(state);
         assert!(
             state.p_spec.get_floor(floor_id).is_none(),
             "reaper should have deallocated the floor via its FloorId"
@@ -549,10 +587,10 @@ mod tests {
 
         let (plat_id, plat_ptr) = state.p_plats.spawn(plat_t::default());
         let node_id = P_AddThinker(state, ThinkerPayload::Plat(plat_id), ThinkerKind::Plat);
-        assert_eq!(P_ThinkerRaw(state, node_id), plat_ptr as *mut thinker_t);
+        assert_eq!(P_ThinkerMut(state, node_id) as *mut thinker_t, plat_ptr as *mut thinker_t);
 
-        unsafe { P_RemoveThinker(&mut *P_ThinkerRaw(state, node_id)) };
-        unsafe { P_RunThinkers(state) };
+        P_RemoveThinker(P_ThinkerMut(state, node_id));
+        P_RunThinkers(state);
         assert!(
             state.p_plats.get(plat_id).is_none(),
             "reaper should have deallocated the plat via its PlatId"
@@ -578,13 +616,10 @@ mod tests {
             ThinkerPayload::FireFlicker(fireflicker_id),
             ThinkerKind::FireFlicker,
         );
-        assert_eq!(
-            P_ThinkerRaw(state, node_id),
-            fireflicker_ptr as *mut thinker_t
-        );
+        assert_eq!(P_ThinkerMut(state, node_id) as *mut thinker_t, fireflicker_ptr as *mut thinker_t);
 
-        unsafe { P_RemoveThinker(&mut *P_ThinkerRaw(state, node_id)) };
-        unsafe { P_RunThinkers(state) };
+        P_RemoveThinker(P_ThinkerMut(state, node_id));
+        P_RunThinkers(state);
         assert!(
             state.p_lights.get_fireflicker(fireflicker_id).is_none(),
             "reaper should have deallocated the fireflicker via its FireFlickerId"
@@ -605,10 +640,10 @@ mod tests {
 
         let (glow_id, glow_ptr) = state.p_lights.spawn_glow(glow_t::default());
         let node_id = P_AddThinker(state, ThinkerPayload::Glow(glow_id), ThinkerKind::Glow);
-        assert_eq!(P_ThinkerRaw(state, node_id), glow_ptr as *mut thinker_t);
+        assert_eq!(P_ThinkerMut(state, node_id) as *mut thinker_t, glow_ptr as *mut thinker_t);
 
-        unsafe { P_RemoveThinker(&mut *P_ThinkerRaw(state, node_id)) };
-        unsafe { P_RunThinkers(state) };
+        P_RemoveThinker(P_ThinkerMut(state, node_id));
+        P_RunThinkers(state);
         assert!(
             state.p_lights.get_glow(glow_id).is_none(),
             "reaper should have deallocated the glow via its GlowId"

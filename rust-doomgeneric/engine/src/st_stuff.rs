@@ -7,7 +7,7 @@ use crate::d_mode::GameMode_t;
 use crate::d_mode::{GameVersion, SkillType};
 use crate::d_player::PlayerId;
 use crate::d_player::PowerType;
-use crate::d_player::{ammotype_t, player_t, NUMAMMO};
+use crate::d_player::{ammotype_t, NUMAMMO};
 use crate::d_player::{weapontype_t, NUMWEAPONS};
 use crate::d_player::{CF_GODMODE, CF_NOCLIP};
 use crate::doomdef::true_0;
@@ -608,9 +608,7 @@ pub unsafe fn ST_Responder(state: &mut GameState, mut ev: &event_t) -> bool {
                 ) != 0
                 {
                     if (*state.g_game.player_mut(state.st_stuff.plyr)).powers[i as usize] == 0 {
-                        let plyr_ptr =
-                            state.g_game.player_mut(state.st_stuff.plyr) as *mut player_t;
-                        P_GivePower(state, plyr_ptr, i);
+                        P_GivePower(state, state.st_stuff.plyr, i);
                     } else if i != PowerType::pw_strength as i32 {
                         (*state.g_game.player_mut(state.st_stuff.plyr)).powers[i as usize] = 1_i32;
                     } else {

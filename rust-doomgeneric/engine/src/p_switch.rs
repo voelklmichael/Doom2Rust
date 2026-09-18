@@ -3,6 +3,7 @@ use crate::fixed_cstr::FixedCStr;
 use crate::g_game::G_ExitLevel;
 use crate::g_game::G_SecretExitLevel;
 use crate::game_state::GameState;
+use crate::p_mobj::MobjId;
 use crate::i_system::I_Error;
 use crate::p_ceilng::CeilingE;
 use crate::p_ceilng::EV_DoCeiling;
@@ -15,7 +16,7 @@ use crate::p_floor::EV_DoFloor;
 use crate::p_floor::FloorE;
 use crate::p_floor::StairE;
 use crate::p_lights::EV_LightTurnOn;
-use crate::p_mobj::mobj_t;
+
 use crate::p_plats::EV_DoPlat;
 use crate::p_plats::PlattypeE;
 use crate::p_setup::LineId;
@@ -251,6 +252,14 @@ pub static alphSwitchList: [switchlist_t; 41] = [
         episode: 0_i16,
     },
 ];
+pub const EMPTY_BUTTON: button_t = button_t {
+    line: LineId(0),
+    where_0: BWhere::top,
+    btexture: 0,
+    btimer: 0,
+    soundorg: SectorId(0),
+};
+
 pub struct PSwitchState {
     pub switchlist: [i32; 100],
     pub numswitches: i32,
@@ -262,13 +271,7 @@ impl PSwitchState {
         PSwitchState {
             switchlist: [0; 100],
             numswitches: 0,
-            buttonlist: [button_t {
-                line: LineId(0),
-                where_0: BWhere::top,
-                btexture: 0,
-                btimer: 0,
-                soundorg: SectorId(0),
-            }; 16],
+            buttonlist: [EMPTY_BUTTON; 16],
         }
     }
 }
@@ -420,9 +423,9 @@ pub fn P_ChangeSwitchTexture(state: &mut GameState, mut line: LineId, mut useAga
         i += 1;
     }
 }
-pub unsafe fn P_UseSpecialLine(
+pub fn P_UseSpecialLine(
     state: &mut GameState,
-    mut thing: *mut mobj_t,
+    thing: MobjId,
     mut line: LineId,
     mut side: i32,
 ) -> bool {
@@ -433,7 +436,7 @@ pub unsafe fn P_UseSpecialLine(
             _ => return false,
         }
     }
-    if (*thing).player.is_none() {
+    if state.p_mobj.mo(thing).player.is_none() {
         if linev.flags as i32 & ML_SECRET != 0 {
             return false;
         }
@@ -795,13 +798,13 @@ pub unsafe fn P_UseSpecialLine(
             current_block_108 = 4020771665460505868;
         }
         6707790765423050264 => {
-            if EV_DoLockedDoor(state, line, VldoorE::vld_blazeOpen, (*thing).id) != 0 {
+            if EV_DoLockedDoor(state, line, VldoorE::vld_blazeOpen, thing) != 0 {
                 P_ChangeSwitchTexture(state, line, 0_i32);
             }
             current_block_108 = 16981061190961355901;
         }
         16848555411549253182 => {
-            if EV_DoLockedDoor(state, line, VldoorE::vld_blazeOpen, (*thing).id) != 0 {
+            if EV_DoLockedDoor(state, line, VldoorE::vld_blazeOpen, thing) != 0 {
                 P_ChangeSwitchTexture(state, line, 1_i32);
             }
             current_block_108 = 16981061190961355901;
@@ -852,7 +855,7 @@ pub unsafe fn P_UseSpecialLine(
     }
     match current_block_108 {
         6634390297149606533 => {
-            EV_VerticalDoor(state, line, (*thing).id);
+            EV_VerticalDoor(state, line, thing);
         }
         _ => {}
     }

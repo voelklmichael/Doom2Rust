@@ -5,7 +5,7 @@ use crate::m_fixed::FixedDiv;
 use crate::m_fixed::FixedMul;
 use crate::m_fixed::FRACBITS;
 use crate::p_maputl::divline_t;
-use crate::p_mobj::mobj_t;
+use crate::p_mobj::MobjId;
 use crate::p_setup::SubsectorId;
 use crate::p_spec::ML_TWOSIDED;
 use crate::r_bsp::NF_SUBSECTOR;
@@ -180,11 +180,15 @@ pub fn P_CrossBSPNode(state: &mut GameState, bspnum: i32) -> bool {
     }
     P_CrossBSPNode(state, children[(side ^ 1_i32) as usize] as i32)
 }
-pub fn P_CheckSight(state: &mut GameState, t1: &mobj_t, t2: &mobj_t) -> bool {
-    let (t1_subsector, t1_x, t1_y, t1_z, t1_height) =
-        (t1.subsector, t1.x, t1.y, t1.z, t1.height);
-    let (t2_subsector, t2_x, t2_y, t2_z, t2_height) =
-        (t2.subsector, t2.x, t2.y, t2.z, t2.height);
+pub fn P_CheckSight(state: &mut GameState, t1: MobjId, t2: MobjId) -> bool {
+    let (t1_subsector, t1_x, t1_y, t1_z, t1_height) = {
+        let m = state.p_mobj.mo(t1);
+        (m.subsector, m.x, m.y, m.z, m.height)
+    };
+    let (t2_subsector, t2_x, t2_y, t2_z, t2_height) = {
+        let m = state.p_mobj.mo(t2);
+        (m.subsector, m.x, m.y, m.z, m.height)
+    };
     let s1 = state.p_setup.subsectors[t1_subsector.0 as usize].sector.0 as i32;
     let s2 = state.p_setup.subsectors[t2_subsector.0 as usize].sector.0 as i32;
     let pnum = s1 * state.p_setup.numsectors + s2;

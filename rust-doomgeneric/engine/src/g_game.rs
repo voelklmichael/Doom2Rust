@@ -54,7 +54,7 @@ use crate::p_mobj::mapthing_t;
 use crate::p_mobj::MobjId;
 use crate::p_mobj::MobjType;
 use crate::p_mobj::P_RemoveMobj;
-use crate::p_mobj::P_SpawnMobj;
+use crate::p_mobj::P_SpawnMobjPtr;
 use crate::p_mobj::P_SpawnPlayer;
 use crate::p_mobj::StateNum;
 use crate::p_mobj::MF_SHADOW;
@@ -1148,14 +1148,14 @@ pub unsafe fn G_CheckSpot(
         .p_mobj
         .mobj_get(state.g_game.players[playernum as usize].mo.unwrap())
         .unwrap();
-    if !P_CheckPosition(state, player_mo, x, y) {
+    if !P_CheckPosition(state, (*player_mo).id, x, y) {
         return false;
     }
     if state.g_game.bodyqueslot >= BODYQUESIZE {
         let old_id =
             state.g_game.bodyque[(state.g_game.bodyqueslot % BODYQUESIZE) as usize].unwrap();
         let old_mo = state.p_mobj.mobj_get(old_id).unwrap();
-        P_RemoveMobj(state, old_mo);
+        P_RemoveMobj(state, (*old_mo).id);
     }
     let player_mo_id = state.g_game.players[playernum as usize].mo;
     state.g_game.bodyque[(state.g_game.bodyqueslot % BODYQUESIZE) as usize] = player_mo_id;
@@ -1194,7 +1194,7 @@ pub unsafe fn G_CheckSpot(
         .p_setup
         .sector_mut(state.p_setup.subsectors[ss.0 as usize].sector)
         .floorheight;
-    mo = P_SpawnMobj(
+    mo = P_SpawnMobjPtr(
         state,
         x + 20 as fixed_t * xa,
         y + 20 as fixed_t * ya,
@@ -1223,14 +1223,14 @@ pub unsafe fn G_DeathMatchSpawnPlayer(state: &mut GameState, mut playernum: i32)
             state.p_setup.deathmatchstarts[i as usize].type_0 = (playernum + 1_i32) as i16;
             let dm_spot = (&raw mut state.p_setup.deathmatchstarts as *mut mapthing_t)
                 .offset(i as isize) as *mut mapthing_t;
-            P_SpawnPlayer(state, dm_spot);
+            P_SpawnPlayer(state, *dm_spot);
             return;
         }
         j += 1;
     }
     let spot = (&raw mut state.p_setup.playerstarts as *mut mapthing_t).offset(playernum as isize)
         as *mut mapthing_t;
-    P_SpawnPlayer(state, spot);
+    P_SpawnPlayer(state, *spot);
 }
 pub unsafe fn G_DoReborn(state: &mut GameState, mut playernum: i32) {
     let mut i: i32 = 0;
@@ -1251,7 +1251,7 @@ pub unsafe fn G_DoReborn(state: &mut GameState, mut playernum: i32) {
         if G_CheckSpot(state, playernum, spot) {
             let spot = (&raw mut state.p_setup.playerstarts as *mut mapthing_t)
                 .offset(playernum as isize) as *mut mapthing_t;
-            P_SpawnPlayer(state, spot);
+            P_SpawnPlayer(state, *spot);
             return;
         }
         i = 0_i32;
@@ -1262,7 +1262,7 @@ pub unsafe fn G_DoReborn(state: &mut GameState, mut playernum: i32) {
                 state.p_setup.playerstarts[i as usize].type_0 = (playernum + 1_i32) as i16;
                 let spot = (&raw mut state.p_setup.playerstarts as *mut mapthing_t)
                     .offset(i as isize) as *mut mapthing_t;
-                P_SpawnPlayer(state, spot);
+                P_SpawnPlayer(state, *spot);
                 state.p_setup.playerstarts[i as usize].type_0 = (i + 1_i32) as i16;
                 return;
             }
@@ -1270,7 +1270,7 @@ pub unsafe fn G_DoReborn(state: &mut GameState, mut playernum: i32) {
         }
         let spot = (&raw mut state.p_setup.playerstarts as *mut mapthing_t)
             .offset(playernum as isize) as *mut mapthing_t;
-        P_SpawnPlayer(state, spot);
+        P_SpawnPlayer(state, *spot);
     };
 }
 pub fn G_ScreenShot(state: &mut GameState) {
@@ -1503,8 +1503,8 @@ pub fn G_DoLoadGame(state: &mut GameState) {
     state.p_tick.leveltime = savedleveltime;
     P_UnArchivePlayers(state);
     P_UnArchiveWorld(state);
-    unsafe { P_UnArchiveThinkers(state) };
-    unsafe { P_UnArchiveSpecials(state) };
+    P_UnArchiveThinkers(state);
+    P_UnArchiveSpecials(state);
     if !P_ReadSaveGameEOF(state) {
         I_Error("Bad savegame");
     }
@@ -1540,8 +1540,8 @@ pub fn G_DoSaveGame(state: &mut GameState) {
     P_WriteSaveGameHeader(state, &savedescription);
     P_ArchivePlayers(state);
     P_ArchiveWorld(state);
-    unsafe { P_ArchiveThinkers(state) };
-    unsafe { P_ArchiveSpecials(state) };
+    P_ArchiveThinkers(state);
+    P_ArchiveSpecials(state);
     P_WriteSaveGameEOF(state);
     if state.g_game.vanilla_savegame_limit != 0
         && state
