@@ -118,7 +118,7 @@ impl PDoorsState {
             (index, 0)
         };
         let id = DoorId { index, generation };
-        let mut boxed = Box::new(value);
+        let boxed = Box::new(value);
         self.doors[index as usize].door = Some(boxed);
         id
     }

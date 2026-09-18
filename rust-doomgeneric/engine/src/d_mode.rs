@@ -108,7 +108,7 @@ pub struct ValidVersion {
     pub mission: GameMission_t,
     pub version: GameVersion,
 }
-static valid_modes: [ValidMode; 13] = [
+static VALID_MODES: [ValidMode; 13] = [
     ValidMode {
         mission: GameMission_t::pack_chex,
         mode: GameMode_t::shareware,
@@ -188,15 +188,15 @@ static valid_modes: [ValidMode; 13] = [
         map: 34_i32,
     },
 ];
-pub fn D_ValidGameMode(mut mission: GameMission_t, mut mode: GameMode_t) -> bool {
-    let mut i: i32 = 0;
+pub fn D_ValidGameMode(mission: GameMission_t, mode: GameMode_t) -> bool {
+    let mut i: i32;
     i = 0_i32;
     while (i as usize)
         < ::core::mem::size_of::<[ValidMode; 13]>()
             .wrapping_div(::core::mem::size_of::<ValidMode>())
     {
-        if valid_modes[i as usize].mode as u32 == mode as u32
-            && valid_modes[i as usize].mission as u32 == mission as u32
+        if VALID_MODES[i as usize].mode as u32 == mode as u32
+            && VALID_MODES[i as usize].mission as u32 == mission as u32
         {
             return true;
         }
@@ -205,12 +205,12 @@ pub fn D_ValidGameMode(mut mission: GameMission_t, mut mode: GameMode_t) -> bool
     false
 }
 pub fn D_ValidEpisodeMap(
-    mut mission: GameMission_t,
-    mut mode: GameMode_t,
-    mut episode: i32,
-    mut map: i32,
+    mission: GameMission_t,
+    mode: GameMode_t,
+    episode: i32,
+    map: i32,
 ) -> bool {
-    let mut i: i32 = 0;
+    let mut i: i32;
     if mission as u32 == GameMission_t::heretic as i32 as u32 {
         if mode as u32 == GameMode_t::retail as i32 as u32 && episode == 6_i32 {
             return (1_i32..=3_i32).contains(&map);
@@ -223,27 +223,27 @@ pub fn D_ValidEpisodeMap(
         < ::core::mem::size_of::<[ValidMode; 13]>()
             .wrapping_div(::core::mem::size_of::<ValidMode>())
     {
-        if mission as u32 == valid_modes[i as usize].mission as u32
-            && mode as u32 == valid_modes[i as usize].mode as u32
+        if mission as u32 == VALID_MODES[i as usize].mission as u32
+            && mode as u32 == VALID_MODES[i as usize].mode as u32
         {
             return episode >= 1_i32
-                && episode <= valid_modes[i as usize].episode
+                && episode <= VALID_MODES[i as usize].episode
                 && map >= 1_i32
-                && map <= valid_modes[i as usize].map;
+                && map <= VALID_MODES[i as usize].map;
         }
         i += 1;
     }
     false
 }
-pub fn D_GetNumEpisodes(mut mission: GameMission_t, mut mode: GameMode_t) -> i32 {
-    let mut episode: i32 = 0;
+pub fn D_GetNumEpisodes(mission: GameMission_t, mode: GameMode_t) -> i32 {
+    let mut episode: i32;
     episode = 1_i32;
     while D_ValidEpisodeMap(mission, mode, episode, 1_i32) {
         episode += 1;
     }
     episode - 1_i32
 }
-static valid_versions: [ValidVersion; 10] = [
+static VALID_VERSIONS: [ValidVersion; 10] = [
     ValidVersion {
         mission: GameMission_t::doom,
         version: GameVersion::doom_1_9,
@@ -285,8 +285,8 @@ static valid_versions: [ValidVersion; 10] = [
         version: GameVersion::strife_1_31,
     },
 ];
-pub fn D_ValidGameVersion(mut mission: GameMission_t, mut version: GameVersion) -> bool {
-    let mut i: i32 = 0;
+pub fn D_ValidGameVersion(mut mission: GameMission_t, version: GameVersion) -> bool {
+    let mut i: i32;
     if mission as u32 == GameMission_t::doom2 as i32 as u32
         || mission as u32 == GameMission_t::pack_plut as i32 as u32
         || mission as u32 == GameMission_t::pack_tnt as i32 as u32
@@ -300,8 +300,8 @@ pub fn D_ValidGameVersion(mut mission: GameMission_t, mut version: GameVersion) 
         < ::core::mem::size_of::<[ValidVersion; 10]>()
             .wrapping_div(::core::mem::size_of::<ValidVersion>())
     {
-        if valid_versions[i as usize].mission as u32 == mission as u32
-            && valid_versions[i as usize].version as u32 == version as u32
+        if VALID_VERSIONS[i as usize].mission as u32 == mission as u32
+            && VALID_VERSIONS[i as usize].version as u32 == version as u32
         {
             return true;
         }
@@ -309,7 +309,7 @@ pub fn D_ValidGameVersion(mut mission: GameMission_t, mut version: GameVersion) 
     }
     false
 }
-pub fn D_IsEpisodeMap(mut mission: GameMission_t) -> bool {
+pub fn D_IsEpisodeMap(mission: GameMission_t) -> bool {
     match mission {
         GameMission_t::doom | GameMission_t::heretic | GameMission_t::pack_chex => true,
         GameMission_t::none

@@ -85,7 +85,7 @@ impl PCeilngState {
             (index, 0)
         };
         let id = CeilingId { index, generation };
-        let mut boxed = Box::new(value);
+        let boxed = Box::new(value);
         self.ceilings[index as usize].ceiling = Some(boxed);
         id
     }
@@ -293,7 +293,7 @@ pub fn EV_DoCeiling(state: &mut GameState, line: LineId, type_0: CeilingE) -> i3
     rtn
 }
 pub fn P_AddActiveCeiling(state: &mut PCeilngState, id: ThinkerId) {
-    let mut i: i32 = 0;
+    let mut i: i32;
     i = 0_i32;
     while i < MAXCEILINGS {
         if state.activeceilings[i as usize].is_none() {

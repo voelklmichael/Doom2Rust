@@ -141,9 +141,9 @@ pub fn W_NumLumps(state: &mut WWadState) -> i32 {
     state.numlumps as i32
 }
 pub fn W_CheckNumForName(state: &mut WWadState, name: &str) -> i32 {
-    let mut i: i32 = 0;
+    let mut i: i32;
     if !state.lumphash.is_empty() {
-        let mut hash: u32 = 0;
+        let hash: u32;
         hash = W_LumpNameHash(name.as_bytes()).wrapping_rem(state.numlumps);
         let mut cur = state.lumphash[hash as usize];
         while let Some(idx) = cur {
@@ -170,7 +170,7 @@ pub fn W_CheckNumForName(state: &mut WWadState, name: &str) -> i32 {
     -1_i32
 }
 pub fn W_GetNumForName(state: &mut WWadState, name: &str) -> i32 {
-    let mut i: i32 = 0;
+    let i: i32;
     i = W_CheckNumForName(state, name);
     if i < 0_i32 {
         I_Error(&format!("W_GetNumForName: {} not found!", name));
@@ -244,13 +244,13 @@ pub fn W_ReleaseLumpName(state: &mut WWadState, name: &str) {
     W_ReleaseLumpNum(state, lumpnum);
 }
 pub fn W_GenerateHashTable(state: &mut GameState) {
-    let mut i: u32 = 0;
+    let mut i: u32;
     state.w_wad.lumphash = Vec::new();
     if state.w_wad.numlumps > 0_u32 {
         state.w_wad.lumphash = vec![None; state.w_wad.numlumps as usize];
         i = 0_u32;
         while i < state.w_wad.numlumps {
-            let mut hash: u32 = 0;
+            let hash: u32;
             hash = W_LumpNameHash(state.w_wad.lumpinfo[i as usize].name.as_bytes())
                 .wrapping_rem(state.w_wad.numlumps);
             let old_head = state.w_wad.lumphash[hash as usize];
@@ -260,7 +260,7 @@ pub fn W_GenerateHashTable(state: &mut GameState) {
         }
     }
 }
-static unique_lumps: [UniqueLump; 4] = [
+static UNIQUE_LUMPS: [UniqueLump; 4] = [
     UniqueLump {
         mission: GameMission_t::doom,
         lumpname: "POSSA1",
@@ -279,23 +279,23 @@ static unique_lumps: [UniqueLump; 4] = [
     },
 ];
 pub fn W_CheckCorrectIWAD(state: &mut WWadState, mission: GameMission_t) {
-    let mut i: i32 = 0;
-    let mut lumpnum: i32 = 0;
+    let mut i: i32;
+    let mut lumpnum: i32;
     i = 0_i32;
     while (i as usize)
         < ::core::mem::size_of::<[UniqueLump; 4]>()
             .wrapping_div(::core::mem::size_of::<UniqueLump>())
     {
-        if mission as u32 != unique_lumps[i as usize].mission as u32 {
-            lumpnum = W_CheckNumForName(state, unique_lumps[i as usize].lumpname);
+        if mission as u32 != UNIQUE_LUMPS[i as usize].mission as u32 {
+            lumpnum = W_CheckNumForName(state, UNIQUE_LUMPS[i as usize].lumpname);
             if lumpnum >= 0_i32 {
                 I_Error(&format!(
                     "\nYou are trying to use a {} IWAD file with the {}{} binary.\nThis isn't going to work.\nYou probably want to use the {}{} binary.",
-                    D_SuggestGameName(unique_lumps[i as usize].mission, GameMode_t::indetermined),
+                    D_SuggestGameName(UNIQUE_LUMPS[i as usize].mission, GameMode_t::indetermined),
                     PROGRAM_PREFIX.as_str(),
                     D_GameMissionString(mission),
                     PROGRAM_PREFIX.as_str(),
-                    D_GameMissionString(unique_lumps[i as usize].mission),
+                    D_GameMissionString(UNIQUE_LUMPS[i as usize].mission),
                 ));
             }
         }

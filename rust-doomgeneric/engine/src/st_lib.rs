@@ -70,7 +70,7 @@ pub fn STlib_init(state: &mut GameState) {
     W_LumpBytes(state, lumpnum);
     state.st_lib.sttminus = lumpnum;
 }
-pub fn STlib_initNum(n: &mut st_number_t, mut x: i32, mut y: i32, pl: StDigitSet, mut width: i32) {
+pub fn STlib_initNum(n: &mut st_number_t, x: i32, y: i32, pl: StDigitSet, width: i32) {
     n.x = x;
     n.y = y;
     n.oldnum = 0_i32;
@@ -81,10 +81,10 @@ pub fn STlib_drawNum(state: &mut GameState, n: &mut st_number_t, mut num: i32) {
     let mut numdigits: i32 = n.width;
     let zero_lump = state.st_stuff.digit_set(n.p)[0];
     let zero_patch = V_CachePatchNum(state, zero_lump);
-    let mut w: i32 = zero_patch.width();
-    let mut h: i32 = zero_patch.height();
-    let mut x: i32 = n.x;
-    let mut neg: i32 = 0;
+    let w: i32 = zero_patch.width();
+    let h: i32 = zero_patch.height();
+    let mut x: i32;
+    let neg: i32;
     n.oldnum = num;
     neg = (num < 0_i32) as i32;
     if neg != 0 {
@@ -145,10 +145,10 @@ pub fn STlib_updateNum(state: &mut GameState, n: &mut st_number_t, num: i32, on:
 }
 pub fn STlib_initPercent(
     p: &mut st_percent_t,
-    mut x: i32,
-    mut y: i32,
+    x: i32,
+    y: i32,
     pl: StDigitSet,
-    mut percent: i32,
+    percent: i32,
 ) {
     STlib_initNum(&mut p.n, x, y, pl, 3_i32);
     p.p = percent;
@@ -158,7 +158,7 @@ pub fn STlib_updatePercent(
     per: &mut st_percent_t,
     num: i32,
     on: bool,
-    mut refresh: i32,
+    refresh: i32,
 ) {
     if refresh != 0 && on {
         let patch = V_CachePatchNum(state, per.p);
@@ -167,7 +167,7 @@ pub fn STlib_updatePercent(
     }
     STlib_updateNum(state, &mut per.n, num, on);
 }
-pub fn STlib_initMultIcon(i: &mut st_multicon_t, mut x: i32, mut y: i32, il: StDigitSet) {
+pub fn STlib_initMultIcon(i: &mut st_multicon_t, x: i32, y: i32, il: StDigitSet) {
     i.x = x;
     i.y = y;
     i.oldinum = -1_i32;
@@ -178,12 +178,12 @@ pub fn STlib_updateMultIcon(
     mi: &mut st_multicon_t,
     inum: i32,
     on: bool,
-    mut refresh: bool,
+    refresh: bool,
 ) {
-    let mut w: i32 = 0;
-    let mut h: i32 = 0;
-    let mut x: i32 = 0;
-    let mut y: i32 = 0;
+    let w: i32;
+    let h: i32;
+    let x: i32;
+    let y: i32;
     if on && (mi.oldinum != inum || refresh) && inum != -1_i32 {
         if mi.oldinum != -1_i32 {
             let old_lump = state.st_stuff.digit_set(mi.p)[mi.oldinum as usize];
@@ -216,7 +216,7 @@ pub fn STlib_updateMultIcon(
         mi.oldinum = inum;
     }
 }
-pub fn STlib_initBinIcon(b: &mut st_binicon_t, mut x: i32, mut y: i32, mut i: i32) {
+pub fn STlib_initBinIcon(b: &mut st_binicon_t, x: i32, y: i32, i: i32) {
     b.x = x;
     b.y = y;
     b.oldval = false;
@@ -227,12 +227,12 @@ pub fn STlib_updateBinIcon(
     bi: &mut st_binicon_t,
     val: bool,
     on: bool,
-    mut refresh: bool,
+    refresh: bool,
 ) {
-    let mut x: i32 = 0;
-    let mut y: i32 = 0;
-    let mut w: i32 = 0;
-    let mut h: i32 = 0;
+    let x: i32;
+    let y: i32;
+    let w: i32;
+    let h: i32;
     if on && (bi.oldval != val || refresh) {
         let patch = V_CachePatchNum(state, bi.p);
         x = bi.x - patch.leftoffset();

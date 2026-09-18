@@ -3,8 +3,8 @@ use crate::stdint_types::byte;
 pub type angle_t = u32;
 pub const FINEANGLES: i32 = 8192;
 pub const SLOPERANGE: i32 = 2048;
-pub fn SlopeDiv(mut num: u32, mut den: u32) -> i32 {
-    let mut ans: u32 = 0;
+pub fn SlopeDiv(num: u32, den: u32) -> i32 {
+    let ans: u32;
     if den < 512 {
         SLOPERANGE
     } else {

@@ -73,11 +73,11 @@ pub static clipammo: [i32; 4] = [10_i32, 4_i32, 20_i32, 1_i32];
 pub fn P_GiveAmmo(
     state: &mut GameState,
     player_id: PlayerId,
-    mut ammo: ammotype_t,
+    ammo: ammotype_t,
     mut num: i32,
 ) -> bool {
     let player = &mut state.g_game.players[player_id.0 as usize];
-    let mut oldammo: i32 = 0;
+    let oldammo: i32;
     if ammo as u32 == ammotype_t::am_noammo as i32 as u32 {
         return false;
     }
@@ -143,11 +143,11 @@ pub fn P_GiveAmmo(
 pub fn P_GiveWeapon(
     state: &mut GameState,
     player: PlayerId,
-    mut weapon: weapontype_t,
-    mut dropped: bool,
+    weapon: weapontype_t,
+    dropped: bool,
 ) -> bool {
-    let mut gaveammo: bool = false;
-    let mut gaveweapon: bool;
+    let gaveammo: bool;
+    let gaveweapon: bool;
     if state.g_game.netgame && state.g_game.deathmatch != 2_i32 && !dropped {
         if state.g_game.players[player.0 as usize].weaponowned[weapon as usize] {
             return false;
@@ -183,7 +183,7 @@ pub fn P_GiveWeapon(
     }
     gaveweapon || gaveammo
 }
-pub fn P_GiveBody(state: &mut GameState, player_id: PlayerId, mut num: i32) -> bool {
+pub fn P_GiveBody(state: &mut GameState, player_id: PlayerId, num: i32) -> bool {
     let player = &mut state.g_game.players[player_id.0 as usize];
     if player.health >= MAXHEALTH {
         return false;
@@ -196,8 +196,8 @@ pub fn P_GiveBody(state: &mut GameState, player_id: PlayerId, mut num: i32) -> b
     state.p_mobj.mo_mut(player_mo).health = player.health;
     true
 }
-pub fn P_GiveArmor(player: &mut player_t, mut armortype: i32) -> bool {
-    let mut hits: i32 = 0;
+pub fn P_GiveArmor(player: &mut player_t, armortype: i32) -> bool {
+    let hits: i32;
     hits = armortype * 100_i32;
     if player.armorpoints >= hits {
         return false;
@@ -206,14 +206,14 @@ pub fn P_GiveArmor(player: &mut player_t, mut armortype: i32) -> bool {
     player.armorpoints = hits;
     true
 }
-pub fn P_GiveCard(player: &mut player_t, mut card: CardType) {
+pub fn P_GiveCard(player: &mut player_t, card: CardType) {
     if player.cards[card as usize] {
         return;
     }
     player.bonuscount = BONUSADD;
     player.cards[card as usize] = true;
 }
-pub fn P_GivePower(state: &mut GameState, player: PlayerId, mut power: i32) -> bool {
+pub fn P_GivePower(state: &mut GameState, player: PlayerId, power: i32) -> bool {
     if power == PowerType::pw_invulnerability as i32 {
         state.g_game.players[player.0 as usize].powers[power as usize] = INVULNTICS;
         return true;
@@ -244,9 +244,9 @@ pub fn P_GivePower(state: &mut GameState, player: PlayerId, mut power: i32) -> b
     true
 }
 pub fn P_TouchSpecialThing(state: &mut GameState, special: MobjId, toucher: MobjId) {
-    let mut i: i32 = 0;
-    let mut delta: fixed_t = 0;
-    let mut sound: i32 = 0;
+    let mut i: i32;
+    let delta: fixed_t;
+    let mut sound: i32;
     delta = state.p_mobj.mo(special).z - state.p_mobj.mo(toucher).z;
     if delta > state.p_mobj.mo(toucher).height || delta < -8_i32 * FRACUNIT {
         return;

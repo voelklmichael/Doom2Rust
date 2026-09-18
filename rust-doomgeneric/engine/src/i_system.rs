@@ -35,9 +35,9 @@ impl ISystemState {
 
     fn dos_mem_dump_bytes(&self) -> &[u8; 10] {
         match self.dos_mem_dump {
-            DosMemDump::Dos622 => &mem_dump_dos622,
-            DosMemDump::Win98 => &mem_dump_win98,
-            DosMemDump::DosBox => &mem_dump_dosbox,
+            DosMemDump::Dos622 => &MEM_DUMP_DOS622,
+            DosMemDump::Win98 => &MEM_DUMP_WIN98,
+            DosMemDump::DosBox => &MEM_DUMP_DOSBOX,
             DosMemDump::Custom => &self.mem_dump_custom,
         }
     }
@@ -52,7 +52,7 @@ pub struct atexit_listentry_s {
 }
 pub const DEFAULT_RAM: i32 = 6;
 pub const MIN_RAM: i32 = 6;
-pub fn I_AtExit(state: &mut ISystemState, mut func: atexit_func_t, mut run_on_error: bool) {
+pub fn I_AtExit(state: &mut ISystemState, func: atexit_func_t, run_on_error: bool) {
     state
         .exit_funcs
         .push(atexit_listentry_t { func, run_on_error });
@@ -88,7 +88,7 @@ pub fn I_Error(message: &str) -> ! {
     panic!("{}", message)
 }
 pub const DOS_MEM_DUMP_SIZE: i32 = 10;
-static mem_dump_dos622: [u8; 10] = [
+static MEM_DUMP_DOS622: [u8; 10] = [
     0x57_i32 as u8,
     0x92_i32 as u8,
     0x19_i32 as u8,
@@ -100,7 +100,7 @@ static mem_dump_dos622: [u8; 10] = [
     0x16_i32 as u8,
     0_i32 as u8,
 ];
-static mem_dump_win98: [u8; 10] = [
+static MEM_DUMP_WIN98: [u8; 10] = [
     0x9e_i32 as u8,
     0xf_i32 as u8,
     0xc9_i32 as u8,
@@ -112,7 +112,7 @@ static mem_dump_win98: [u8; 10] = [
     0x16_i32 as u8,
     0_i32 as u8,
 ];
-static mem_dump_dosbox: [u8; 10] = [
+static MEM_DUMP_DOSBOX: [u8; 10] = [
     0_i32 as u8,
     0_i32 as u8,
     0_i32 as u8,
@@ -126,11 +126,10 @@ static mem_dump_dosbox: [u8; 10] = [
 ];
 pub fn I_GetMemoryValue(state: &mut GameState, offset: u32, size: i32) -> Option<u32> {
     if state.i_system.get_memory_value_firsttime {
-        let mut p: i32 = 0;
-        let mut i: i32 = 0;
+        let mut p: i32;
+        let mut i: i32;
         let mut val: i32 = 0;
         state.i_system.get_memory_value_firsttime = false;
-        i = 0_i32;
         p = M_CheckParmWithArgs(state, "-setmem", 1_i32);
         if p > 0_i32 {
             if state.m_argv.myargv[(p + 1_i32) as usize]

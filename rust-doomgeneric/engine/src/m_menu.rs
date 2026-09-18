@@ -644,7 +644,7 @@ pub const SKULLXOFF: i32 = -32_i32;
 pub const LINEHEIGHT: i32 = 16;
 pub static skullName: [&str; 2] = ["M_SKULL1", "M_SKULL2"];
 pub fn M_ReadSaveStrings(state: &mut GameState) {
-    let mut i: i32 = 0;
+    let mut i: i32;
     i = 0_i32;
     while i < load_end {
         let savegame_file = P_SaveGameFile(state, i);
@@ -667,7 +667,7 @@ pub fn M_ReadSaveStrings(state: &mut GameState) {
     }
 }
 pub fn M_DrawLoad(state: &mut GameState) {
-    let mut i: i32 = 0;
+    let mut i: i32;
     let __wcache890_24 = V_CachePatchName(state, "M_LOADG");
     let dest_screen = Screen::Video;
     V_DrawPatchDirect(state, dest_screen, 72_i32, 28_i32, &__wcache890_24);
@@ -681,8 +681,8 @@ pub fn M_DrawLoad(state: &mut GameState) {
         i += 1;
     }
 }
-pub fn M_DrawSaveLoadBorder(state: &mut GameState, mut x: i32, mut y: i32) {
-    let mut i: i32 = 0;
+pub fn M_DrawSaveLoadBorder(state: &mut GameState, mut x: i32, y: i32) {
+    let mut i: i32;
     let __wcache908_23 = V_CachePatchName(state, "M_LSLEFT");
     let dest_screen = Screen::Video;
     V_DrawPatchDirect(state, dest_screen, x - 8_i32, y + 7_i32, &__wcache908_23);
@@ -718,7 +718,7 @@ pub fn M_LoadGame(state: &mut GameState, _choice: i32) {
     M_ReadSaveStrings(state);
 }
 pub fn M_DrawSave(state: &mut GameState) {
-    let mut i: i32 = 0;
+    let mut i: i32;
     let __wcache961_20 = V_CachePatchName(state, "M_SAVEG");
     let dest_screen = Screen::Video;
     V_DrawPatchDirect(state, dest_screen, 72_i32, 28_i32, &__wcache961_20);
@@ -739,7 +739,7 @@ pub fn M_DrawSave(state: &mut GameState) {
         M_WriteText(state, text_x, text_y, "_");
     }
 }
-pub fn M_DoSave(state: &mut GameState, mut slot: i32) {
+pub fn M_DoSave(state: &mut GameState, slot: i32) {
     let savegame_name = state.m_menu.savegamestrings[slot as usize].clone();
     G_SaveGame(state, slot, &savegame_name);
     M_ClearMenus(state);
@@ -747,7 +747,7 @@ pub fn M_DoSave(state: &mut GameState, mut slot: i32) {
         state.m_menu.quickSaveSlot = slot;
     }
 }
-pub fn M_SaveSelect(state: &mut GameState, mut choice: i32) {
+pub fn M_SaveSelect(state: &mut GameState, choice: i32) {
     state.m_menu.saveStringEnter = 1_i32;
     state.m_menu.saveSlot = choice;
     state.m_menu.saveOldString = state.m_menu.savegamestrings[choice as usize].clone();
@@ -773,7 +773,7 @@ pub fn M_SaveGame(state: &mut GameState, _choice: i32) {
     M_SetupNextMenu(state, menudef);
     M_ReadSaveStrings(state);
 }
-pub fn M_QuickSaveResponse(state: &mut GameState, mut key: i32) {
+pub fn M_QuickSaveResponse(state: &mut GameState, key: i32) {
     if key == state.m_controls.key_menu_confirm {
         let quick_save_slot = state.m_menu.quickSaveSlot;
         M_DoSave(state, quick_save_slot);
@@ -803,7 +803,7 @@ pub fn M_QuickSave(state: &mut GameState) {
     let routine = Some(M_QuickSaveResponse as fn(&mut GameState, i32));
     M_StartMessage(state, &msg, routine, true);
 }
-pub fn M_QuickLoadResponse(state: &mut GameState, mut key: i32) {
+pub fn M_QuickLoadResponse(state: &mut GameState, key: i32) {
     if key == state.m_controls.key_menu_confirm {
         let quick_save_slot = state.m_menu.quickSaveSlot;
         M_LoadSelect(state, quick_save_slot);
@@ -837,7 +837,7 @@ pub fn M_QuickLoad(state: &mut GameState) {
     M_StartMessage(state, &msg, routine, true);
 }
 pub fn M_DrawReadThis1(state: &mut GameState) {
-    let mut lumpname: &str = "CREDIT";
+    let lumpname: &str;
     let mut skullx: i32 = 330_i32;
     let mut skully: i32 = 175_i32;
     state.m_menu.inhelpscreens = true;
@@ -896,7 +896,7 @@ pub fn M_Sound(state: &mut GameState, _choice: i32) {
     let menudef = MenuId::Sound;
     M_SetupNextMenu(state, menudef);
 }
-pub fn M_SfxVol(state: &mut GameState, mut choice: i32) {
+pub fn M_SfxVol(state: &mut GameState, choice: i32) {
     match choice {
         0 => {
             if state.s_sound.sfxVolume != 0 {
@@ -911,7 +911,7 @@ pub fn M_SfxVol(state: &mut GameState, mut choice: i32) {
     let sfx_volume = state.s_sound.sfxVolume * 8_i32;
     S_SetSfxVolume(state, sfx_volume);
 }
-pub fn M_MusicVol(state: &mut GameState, mut choice: i32) {
+pub fn M_MusicVol(state: &mut GameState, choice: i32) {
     match choice {
         0 => {
             if state.s_sound.musicVolume != 0 {
@@ -964,7 +964,7 @@ pub fn M_DrawEpisode(state: &mut GameState) {
     let dest_screen = Screen::Video;
     V_DrawPatchDirect(state, dest_screen, 54_i32, 38_i32, &__wcache1286_13);
 }
-pub fn M_VerifyNightmare(state: &mut GameState, mut key: i32) {
+pub fn M_VerifyNightmare(state: &mut GameState, key: i32) {
     if key != state.m_controls.key_menu_confirm {
         return;
     }
@@ -976,7 +976,7 @@ pub fn M_VerifyNightmare(state: &mut GameState, mut key: i32) {
     );
     M_ClearMenus(state);
 }
-pub fn M_ChooseSkill(state: &mut GameState, mut choice: i32) {
+pub fn M_ChooseSkill(state: &mut GameState, choice: i32) {
     if choice == NewGameMenu::nightmare as i32 {
         M_StartMessage(
             state,
@@ -1016,13 +1016,13 @@ pub fn M_Episode(state: &mut GameState, mut choice: i32) {
     let menudef = MenuId::New;
     M_SetupNextMenu(state, menudef);
 }
-static detailNames: [&str; 2] = ["M_GDHIGH", "M_GDLOW"];
-static msgNames: [&str; 2] = ["M_MSGOFF", "M_MSGON"];
+static DETAIL_NAMES: [&str; 2] = ["M_GDHIGH", "M_GDLOW"];
+static MSG_NAMES: [&str; 2] = ["M_MSGOFF", "M_MSGON"];
 pub fn M_DrawOptions(state: &mut GameState) {
     let __wcache1358_12 = V_CachePatchName(state, "M_OPTTTL");
     let dest_screen = Screen::Video;
     V_DrawPatchDirect(state, dest_screen, 108_i32, 15_i32, &__wcache1358_12);
-    let __wcache1364_11 = V_CachePatchName(state, detailNames[state.m_menu.detailLevel as usize]);
+    let __wcache1364_11 = V_CachePatchName(state, DETAIL_NAMES[state.m_menu.detailLevel as usize]);
     let dest_screen = Screen::Video;
     V_DrawPatchDirect(
         state,
@@ -1031,7 +1031,7 @@ pub fn M_DrawOptions(state: &mut GameState) {
         state.m_menu.defs.OptionsDef.y as i32 + LINEHEIGHT * OptionsMenu::detail as i32,
         &__wcache1364_11,
     );
-    let __wcache1373_10 = V_CachePatchName(state, msgNames[state.m_menu.showMessages as usize]);
+    let __wcache1373_10 = V_CachePatchName(state, MSG_NAMES[state.m_menu.showMessages as usize]);
     let dest_screen = Screen::Video;
     V_DrawPatchDirect(
         state,
@@ -1069,7 +1069,7 @@ pub fn M_ChangeMessages(state: &mut GameState, _choice: i32) {
     }
     state.hu_stuff.message_dontfuckwithme = true;
 }
-pub fn M_EndGameResponse(state: &mut GameState, mut key: i32) {
+pub fn M_EndGameResponse(state: &mut GameState, key: i32) {
     if key != state.m_controls.key_menu_confirm {
         return;
     }
@@ -1137,7 +1137,7 @@ pub static quitsounds2: [i32; 8] = [
     SfxName::sfx_bspact as i32,
     SfxName::sfx_sgtatk as i32,
 ];
-pub fn M_QuitResponse(state: &mut GameState, mut key: i32) {
+pub fn M_QuitResponse(state: &mut GameState, key: i32) {
     if key != state.m_controls.key_menu_confirm {
         return;
     }
@@ -1180,7 +1180,7 @@ pub fn M_QuitDOOM(state: &mut GameState, _choice: i32) {
     M_StartMessage(state, &msg, routine, true);
     state.m_menu.messageIsQuitPrompt = true;
 }
-pub fn M_ChangeSensitivity(state: &mut GameState, mut choice: i32) {
+pub fn M_ChangeSensitivity(state: &mut GameState, choice: i32) {
     match choice {
         0 => {
             if state.m_menu.mouseSensitivity != 0 {
@@ -1205,7 +1205,7 @@ pub fn M_ChangeDetail(state: &mut GameState, _choice: i32) {
             Some("Low detail".to_string());
     };
 }
-pub fn M_SizeDisplay(state: &mut GameState, mut choice: i32) {
+pub fn M_SizeDisplay(state: &mut GameState, choice: i32) {
     match choice {
         0 => {
             if state.m_menu.screenSize > 0_i32 {
@@ -1224,13 +1224,13 @@ pub fn M_SizeDisplay(state: &mut GameState, mut choice: i32) {
 }
 pub fn M_DrawThermo(
     state: &mut GameState,
-    mut x: i32,
-    mut y: i32,
-    mut thermWidth: i32,
-    mut thermDot: i32,
+    x: i32,
+    y: i32,
+    thermWidth: i32,
+    thermDot: i32,
 ) {
-    let mut xx: i32 = 0;
-    let mut i: i32 = 0;
+    let mut xx: i32;
+    let mut i: i32;
     xx = x;
     let __wcache1619_9 = V_CachePatchName(state, "M_THERML");
     let dest_screen = Screen::Video;
@@ -1257,7 +1257,7 @@ pub fn M_DrawThermo(
         &__wcache1643_6,
     );
 }
-pub fn M_DrawEmptyCell(state: &mut GameState, menu: MenuId, mut item: i32) {
+pub fn M_DrawEmptyCell(state: &mut GameState, menu: MenuId, item: i32) {
     let (x, y) = {
         let def = state.m_menu.def(menu);
         (def.x, def.y)
@@ -1272,7 +1272,7 @@ pub fn M_DrawEmptyCell(state: &mut GameState, menu: MenuId, mut item: i32) {
         &__wcache1651_5,
     );
 }
-pub fn M_DrawSelCell(state: &mut GameState, menu: MenuId, mut item: i32) {
+pub fn M_DrawSelCell(state: &mut GameState, menu: MenuId, item: i32) {
     let (x, y) = {
         let def = state.m_menu.def(menu);
         (def.x, def.y)
@@ -1291,7 +1291,7 @@ pub fn M_StartMessage(
     state: &mut GameState,
     string: &str,
     routine: Option<fn(&mut GameState, i32)>,
-    mut input: bool,
+    input: bool,
 ) {
     state.m_menu.messageLastMenuActive = state.m_menu.menuactive as i32;
     state.m_menu.messageToPrint = 1_i32;
@@ -1307,7 +1307,7 @@ pub fn M_StopMessage(state: &mut GameState) {
 }
 pub fn M_StringWidth(state: &mut GameState, string: &str) -> i32 {
     let mut w: i32 = 0_i32;
-    let mut c: i32 = 0;
+    let mut c: i32;
     for b in string.bytes() {
         c = b.to_ascii_uppercase() as i32 - HU_FONTSTART;
         if !(0_i32..HU_FONTSIZE).contains(&c) {
@@ -1320,7 +1320,7 @@ pub fn M_StringWidth(state: &mut GameState, string: &str) -> i32 {
     w
 }
 pub fn M_StringHeight(state: &mut GameState, string: &str) -> i32 {
-    let mut h: i32 = 0;
+    let mut h: i32;
     let height: i32 = V_CachePatchNum(state, state.hu_stuff.hu_font[0]).height();
     h = height;
     for b in string.bytes() {
@@ -1331,10 +1331,10 @@ pub fn M_StringHeight(state: &mut GameState, string: &str) -> i32 {
     h
 }
 pub fn M_WriteText(state: &mut GameState, x: i32, y: i32, string: &str) {
-    let mut w: i32 = 0;
-    let mut c: i32 = 0;
-    let mut cx: i32 = 0;
-    let mut cy: i32 = 0;
+    let mut w: i32;
+    let mut c: i32;
+    let mut cx: i32;
+    let mut cy: i32;
     cx = x;
     cy = y;
     'outer: for b in string.bytes() {
@@ -1359,13 +1359,13 @@ pub fn M_WriteText(state: &mut GameState, x: i32, y: i32, string: &str) {
         }
     }
 }
-fn IsNullKey(mut key: i32) -> bool {
+fn IsNullKey(key: i32) -> bool {
     key == KEY_PAUSE || key == KEY_CAPSLOCK || key == KEY_SCRLCK || key == KEY_NUMLOCK
 }
 pub fn M_Responder(state: &mut GameState, ev: &mut event_t) -> bool {
-    let mut ch: i32 = 0;
-    let mut key: i32 = 0;
-    let mut i: i32 = 0;
+    let mut ch: i32;
+    let mut key: i32;
+    let mut i: i32;
     if state.g_game.testcontrols {
         if ev.type_0 == EvType::ev_quit
             || ev.type_0 == EvType::ev_keydown
@@ -1718,8 +1718,8 @@ pub fn M_StartControlPanel(state: &mut GameState) {
     state.m_menu.itemOn = state.m_menu.current().lastOn;
 }
 pub fn M_Drawer(state: &mut GameState) {
-    let mut i: u32 = 0;
-    let mut max: u32 = 0;
+    let mut i: u32;
+    let max: u32;
     state.m_menu.inhelpscreens = false;
     if state.m_menu.messageToPrint != 0 {
         let message_string = state.m_menu.messageString.clone();

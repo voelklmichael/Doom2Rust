@@ -148,7 +148,7 @@ impl PSpecState {
             (index, 0)
         };
         let id = FloorId { index, generation };
-        let mut boxed = Box::new(value);
+        let boxed = Box::new(value);
         self.floors[index as usize].floor = Some(boxed);
         id
     }
@@ -451,7 +451,7 @@ pub static animdefs: [animdef_t; 23] = [
 ];
 pub const MAXLINEANIMS: i32 = 64;
 pub fn P_InitPicAnims(state: &mut GameState) {
-    let mut i: i32 = 0;
+    let mut i: i32;
     state.p_spec.lastanim = 0;
     let mut current_block_13: u64;
     i = 0_i32;
@@ -509,7 +509,7 @@ pub fn getSector(state: &mut GameState, currentSector: i32, line: i32, side: i32
     let sidenum = state.p_setup.line(line_id).sidenum[side as usize];
     state.p_setup.sides[sidenum as usize].sector
 }
-pub fn twoSided(state: &mut GameState, mut sector: i32, mut line: i32) -> i32 {
+pub fn twoSided(state: &mut GameState, sector: i32, line: i32) -> i32 {
     let sec = state.p_setup.sector_mut(SectorId(sector as u32));
     let line_id = sec.lines[line as usize];
     state.p_setup.line(line_id).flags as i32 & ML_TWOSIDED
@@ -614,8 +614,8 @@ pub fn P_FindHighestCeilingSurrounding(state: &mut GameState, sec: SectorId) -> 
     }
     height
 }
-pub fn P_FindSectorFromLineTag(state: &mut GameState, mut line: LineId, mut start: i32) -> i32 {
-    let mut i: i32 = 0;
+pub fn P_FindSectorFromLineTag(state: &mut GameState, line: LineId, start: i32) -> i32 {
+    let mut i: i32;
     let line_tag = state.p_setup.line(line).tag;
     i = start + 1_i32;
     while i < state.p_setup.numsectors {
@@ -640,9 +640,9 @@ pub fn P_FindMinSurroundingLight(state: &mut GameState, sector: SectorId, max: i
     }
     min
 }
-pub fn P_CrossSpecialLine(state: &mut GameState, mut linenum: i32, mut side: i32, thing: MobjId) {
+pub fn P_CrossSpecialLine(state: &mut GameState, linenum: i32, side: i32, thing: MobjId) {
     let line: LineId = LineId(linenum as u32);
-    let mut ok: i32 = 0;
+    let mut ok: i32;
     let special = state.p_setup.line(line).special;
     if state.p_mobj.mo(thing).player.is_none() {
         match state.p_mobj.mo(thing).type_0 as u32 {
@@ -923,8 +923,8 @@ pub fn P_CrossSpecialLine(state: &mut GameState, mut linenum: i32, mut side: i32
         _ => {}
     };
 }
-pub fn P_ShootSpecialLine(state: &mut GameState, thing: MobjId, mut line: LineId) {
-    let mut ok: i32 = 0;
+pub fn P_ShootSpecialLine(state: &mut GameState, thing: MobjId, line: LineId) {
+    let mut ok: i32;
     let special = state.p_setup.line(line).special;
     if state.p_mobj.mo(thing).player.is_none() {
         ok = 0_i32;
@@ -1010,8 +1010,8 @@ pub fn P_PlayerInSpecialSector(state: &mut GameState, player: PlayerId) {
     };
 }
 pub fn P_UpdateSpecials(state: &mut GameState) {
-    let mut pic: i32 = 0;
-    let mut i: i32 = 0;
+    let mut pic: i32;
+    let mut i: i32;
     let mut line: LineId;
     if state.p_spec.levelTimer {
         state.p_spec.levelTimeCount -= 1;
@@ -1082,7 +1082,7 @@ pub const DONUT_FLOORHEIGHT_DEFAULT: i32 = 0;
 pub const DONUT_FLOORPIC_DEFAULT: i32 = 0x16;
 fn DonutOverrun(state: &mut GameState) -> (fixed_t, i16) {
     if state.p_spec.donut_overrun_first != 0 {
-        let mut p: i32 = 0;
+        let p: i32;
         state.p_spec.donut_overrun_first = 0_i32;
         state.p_spec.donut_overrun_tmp_s3_floorheight = DONUT_FLOORHEIGHT_DEFAULT;
         state.p_spec.donut_overrun_tmp_s3_floorpic = DONUT_FLOORPIC_DEFAULT;

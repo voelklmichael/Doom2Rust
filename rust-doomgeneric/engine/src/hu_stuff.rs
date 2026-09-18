@@ -310,8 +310,8 @@ pub static mapnames_commercial: [&str; 96] = [
     THUSTR_32,
 ];
 pub fn HU_Init(state: &mut GameState) {
-    let mut i: i32 = 0;
-    let mut j: i32 = 0;
+    let mut i: i32;
+    let mut j: i32;
     j = HU_FONTSTART;
     i = 0_i32;
     while i < HU_FONTSIZE {
@@ -329,7 +329,7 @@ pub fn HU_Stop(state: &mut GameState) {
 }
 pub fn HU_Start(state: &mut GameState) {
     let mut _i: i32 = 0;
-    let mut s: &str = "";
+    let mut s: &str;
     if state.hu_stuff.headsupactive {
         HU_Stop(state);
     }
@@ -426,9 +426,9 @@ pub fn HU_Erase(state: &mut GameState) {
     state.hu_stuff.w_title = w_title;
 }
 pub fn HU_Ticker(state: &mut GameState) {
-    let mut i: i32 = 0;
-    let mut rc: i32 = 0;
-    let mut c: u8 = 0;
+    let mut i: i32;
+    let mut rc: i32;
+    let mut c: u8;
     if state.hu_stuff.message_counter != 0 && {
         state.hu_stuff.message_counter -= 1;
         state.hu_stuff.message_counter == 0
@@ -518,7 +518,7 @@ pub fn HU_queueChatChar(state: &mut GameState, c: u8) {
     };
 }
 pub fn HU_dequeueChatChar(state: &mut HuStuffState) -> u8 {
-    let mut c: u8 = 0;
+    let c: u8;
     if state.head != state.tail {
         c = state.chatchars[state.tail as usize];
         state.tail = (state.tail + 1_i32) & (QUEUESIZE - 1_i32);
@@ -527,11 +527,11 @@ pub fn HU_dequeueChatChar(state: &mut HuStuffState) -> u8 {
     }
     c
 }
-pub fn HU_Responder(state: &mut GameState, mut ev: &event_t) -> bool {
+pub fn HU_Responder(state: &mut GameState, ev: &event_t) -> bool {
     let mut eatkey: bool = false;
-    let mut c: u8 = 0;
-    let mut i: i32 = 0;
-    let mut numplayers: i32 = 0;
+    let c: u8;
+    let mut i: i32;
+    let mut numplayers: i32;
     numplayers = 0_i32;
     i = 0_i32;
     while i < MAXPLAYERS {

@@ -511,8 +511,8 @@ pub fn P_LoadSideDefs(state: &mut GameState, lump: i32) {
     }
     W_ReleaseLumpNum(&mut state.w_wad, lump);
 }
-pub fn P_LoadBlockMap(state: &mut GameState, mut lump: i32) {
-    let mut lumplen: i32 = 0;
+pub fn P_LoadBlockMap(state: &mut GameState, lump: i32) {
+    let lumplen: i32;
     lumplen = W_LumpLength(&mut state.w_wad, lump as u32);
     let mut raw = vec![0u8; lumplen as usize];
     W_ReadLump(&mut state.w_wad, lump as u32, &mut raw);
@@ -530,10 +530,10 @@ pub fn P_LoadBlockMap(state: &mut GameState, mut lump: i32) {
         vec![None; (state.p_setup.bmapwidth as usize) * (state.p_setup.bmapheight as usize)];
 }
 pub fn P_GroupLines(state: &mut GameState) {
-    let mut i: i32 = 0;
-    let mut j: i32 = 0;
+    let mut i: i32;
+    let mut j: i32;
     let mut bbox: [fixed_t; 4] = [0; 4];
-    let mut block: i32 = 0;
+    let mut block: i32;
     i = 0_i32;
     while i < state.p_setup.numsubsectors {
         let firstline = state.p_setup.subsectors[i as usize].firstline;
@@ -668,9 +668,9 @@ fn P_LoadReject(state: &mut GameState, lumpnum: i32) {
         PadRejectArray(state, lumplen as usize, (minlength - lumplen) as u32);
     };
 }
-pub fn P_SetupLevel(state: &mut GameState, mut episode: i32, mut map: i32) {
-    let mut i: i32 = 0;
-    let mut lumpnum: i32 = 0;
+pub fn P_SetupLevel(state: &mut GameState, episode: i32, map: i32) {
+    let mut i: i32;
+    let lumpnum: i32;
     state.g_game.wminfo.maxfrags = 0_i32;
     state.g_game.totalsecret = state.g_game.wminfo.maxfrags;
     state.g_game.totalitems = state.g_game.totalsecret;

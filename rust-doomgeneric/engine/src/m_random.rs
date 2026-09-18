@@ -1,4 +1,4 @@
-static rndtable: [u8; 256] = [
+static RNDTABLE: [u8; 256] = [
     0, 8, 109, 220, 222, 241, 149, 107, 75, 248, 254, 140, 16, 66, 74, 21, 211, 47, 80, 242, 154,
     27, 205, 128, 161, 89, 77, 36, 95, 110, 85, 48, 212, 140, 211, 249, 22, 79, 200, 50, 28, 188,
     52, 140, 202, 120, 68, 145, 62, 70, 184, 190, 91, 197, 152, 224, 149, 104, 25, 178, 252, 182,
@@ -35,11 +35,11 @@ impl MRandomState {
 
 pub fn P_Random(state: &mut MRandomState) -> i32 {
     state.prndindex += 1;
-    rndtable[state.prndindex as usize] as i32
+    RNDTABLE[state.prndindex as usize] as i32
 }
 pub fn M_Random(state: &mut MRandomState) -> i32 {
     state.rndindex += 1;
-    rndtable[state.rndindex as usize] as i32
+    RNDTABLE[state.rndindex as usize] as i32
 }
 pub fn M_ClearRandom(state: &mut MRandomState) {
     state.prndindex = 0;

@@ -29,7 +29,7 @@ fn PlayerQuitGame(state: &mut GameState, player_num: u32) {
     }
 }
 fn RunTic(state: &mut GameState, cmds: &[ticcmd_t], ingame: &[bool]) {
-    let mut i: u32 = 0;
+    let mut i: u32;
     i = 0_u32;
     while i < MAXPLAYERS as u32 {
         if !state.g_game.demoplayback
@@ -52,7 +52,7 @@ const DOOM_LOOP_INTERFACE: loop_interface_t = loop_interface_t {
     RunMenu: Some(M_Ticker),
 };
 fn LoadGameSettings(state: &mut GameState, settings: &mut net_gamesettings_t) {
-    let mut i: u32 = 0;
+    let mut i: u32;
     state.g_game.deathmatch = settings.deathmatch;
     state.d_main.startepisode = settings.episode;
     state.d_main.startmap = settings.map;

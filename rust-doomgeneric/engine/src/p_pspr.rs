@@ -113,8 +113,8 @@ impl PPsprState {
 }
 
 pub fn P_CalcSwing(state: &mut GameState, player: PlayerId) {
-    let mut swing: fixed_t = 0;
-    let mut angle: i32 = 0;
+    let swing: fixed_t;
+    let mut angle: i32;
     swing = state.g_game.players[player.0 as usize].bob;
     angle = (FINEANGLES / 70_i32 * state.p_tick.leveltime) & FINEMASK;
     state.p_pspr.swingx = FixedMul(swing, finesine[angle as usize]);
@@ -124,7 +124,7 @@ pub fn P_CalcSwing(state: &mut GameState, player: PlayerId) {
 pub fn P_BringUpWeapon(state: &mut GameState, player_id: PlayerId) {
     let player = player_id;
     let player_mo = state.g_game.players[player.0 as usize].mo.unwrap();
-    let mut newstate: StateNum = StateNum::S_NULL;
+    let newstate: StateNum;
     if state.g_game.players[player.0 as usize].pendingweapon as u32
         == weapontype_t::wp_nochange as i32 as u32
     {
@@ -148,8 +148,8 @@ pub fn P_BringUpWeapon(state: &mut GameState, player_id: PlayerId) {
 }
 pub fn P_CheckAmmo(state: &mut GameState, player_id: PlayerId) -> bool {
     let player = player_id;
-    let mut ammo: ammotype_t = ammotype_t::am_clip;
-    let mut count: i32 = 0;
+    let ammo: ammotype_t;
+    let count: i32;
     ammo = weaponinfo[state.g_game.players[player.0 as usize].readyweapon as usize].ammo;
     if state.g_game.players[player.0 as usize].readyweapon as u32
         == weapontype_t::wp_bfg as i32 as u32
@@ -225,7 +225,7 @@ pub fn P_CheckAmmo(state: &mut GameState, player_id: PlayerId) -> bool {
 pub fn P_FireWeapon(state: &mut GameState, player_id: PlayerId) {
     let player = player_id;
     let player_mo = state.g_game.players[player.0 as usize].mo.unwrap();
-    let mut newstate: StateNum = StateNum::S_NULL;
+    let newstate: StateNum;
     if !P_CheckAmmo(state, player_id) {
         return;
     }
@@ -247,8 +247,8 @@ pub fn A_WeaponReady(state: &mut GameState, player_id: PlayerId, position: i32) 
     {
         let player = player_id;
         let player_mo = state.g_game.players[player.0 as usize].mo.unwrap();
-        let mut newstate: StateNum = StateNum::S_NULL;
-        let mut angle: i32 = 0;
+        let newstate: StateNum;
+        let mut angle: i32;
         if state.p_mobj.mo(player_mo).state == Some(StateId(StateNum::S_PLAY_ATK1 as u32))
             || state.p_mobj.mo(player_mo).state == Some(StateId(StateNum::S_PLAY_ATK2 as u32))
         {
@@ -354,7 +354,7 @@ pub fn A_Lower(state: &mut GameState, player_id: PlayerId, position: i32) {
 pub fn A_Raise(state: &mut GameState, player_id: PlayerId, position: i32) {
     {
         let player = player_id;
-        let mut newstate: StateNum = StateNum::S_NULL;
+        let newstate: StateNum;
         state.g_game.players[player_id.0 as usize].psprites[position as usize].sy -=
             FRACUNIT * 6_i32;
         if state.g_game.players[player_id.0 as usize].psprites[position as usize].sy
@@ -385,9 +385,9 @@ pub fn A_GunFlash(state: &mut GameState, player_id: PlayerId, _position: i32) {
 pub fn A_Punch(state: &mut GameState, player_id: PlayerId, _position: i32) {
     let player = player_id;
     let player_mo = state.g_game.players[player.0 as usize].mo.unwrap();
-    let mut angle: angle_t = 0;
-    let mut damage: i32 = 0;
-    let mut slope: i32 = 0;
+    let mut angle: angle_t;
+    let mut damage: i32;
+    let slope: i32;
     damage = (P_Random(&mut state.m_random) % 10_i32 + 1_i32) << 1_i32;
     if state.g_game.players[player.0 as usize].powers[PowerType::pw_strength as usize] != 0 {
         damage *= 10_i32;
@@ -425,9 +425,9 @@ pub fn A_Punch(state: &mut GameState, player_id: PlayerId, _position: i32) {
 pub fn A_Saw(state: &mut GameState, player_id: PlayerId, _position: i32) {
     let player = player_id;
     let player_mo = state.g_game.players[player.0 as usize].mo.unwrap();
-    let mut angle: angle_t = 0;
-    let mut damage: i32 = 0;
-    let mut slope: i32 = 0;
+    let mut angle: angle_t;
+    let damage: i32;
+    let slope: i32;
     damage = 2_i32 * (P_Random(&mut state.m_random) % 10_i32 + 1_i32);
     angle = state.p_mobj.mo(player_mo).angle;
     angle = angle.wrapping_add(
@@ -539,7 +539,7 @@ pub fn A_FirePlasma(state: &mut GameState, player_id: PlayerId, _position: i32) 
     }
 }
 pub fn P_BulletSlope(state: &mut GameState, mo: MobjId) {
-    let mut an: angle_t = 0;
+    let mut an: angle_t;
     an = state.p_mobj.mo(mo).angle;
     state.p_pspr.bulletslope = P_AimLineAttack(
         state,
@@ -566,9 +566,9 @@ pub fn P_BulletSlope(state: &mut GameState, mo: MobjId) {
         }
     }
 }
-pub fn P_GunShot(state: &mut GameState, mo: MobjId, mut accurate: bool) {
-    let mut angle: angle_t = 0;
-    let mut damage: i32 = 0;
+pub fn P_GunShot(state: &mut GameState, mo: MobjId, accurate: bool) {
+    let mut angle: angle_t;
+    let damage: i32;
     damage = 5_i32 * (P_Random(&mut state.m_random) % 3_i32 + 1_i32);
     angle = state.p_mobj.mo(mo).angle;
     if !accurate {
@@ -613,7 +613,7 @@ pub fn A_FireShotgun(state: &mut GameState, player_id: PlayerId, _position: i32)
     {
         let player = player_id;
         let player_mo = state.g_game.players[player.0 as usize].mo.unwrap();
-        let mut i: i32 = 0;
+        let mut i: i32;
         S_StartSound(
             state,
             SoundOrigin::Mobj(player_mo),
@@ -644,9 +644,9 @@ pub fn A_FireShotgun2(state: &mut GameState, player_id: PlayerId, _position: i32
     {
         let player = player_id;
         let player_mo = state.g_game.players[player.0 as usize].mo.unwrap();
-        let mut i: i32 = 0;
-        let mut angle: angle_t = 0;
-        let mut damage: i32 = 0;
+        let mut i: i32;
+        let mut angle: angle_t;
+        let mut damage: i32;
         S_StartSound(
             state,
             SoundOrigin::Mobj(player_mo),
@@ -794,7 +794,7 @@ pub fn A_BFGsound(state: &mut GameState, player_id: PlayerId, _position: i32) {
 }
 pub fn P_SetupPsprites(state: &mut GameState, player_id: PlayerId) {
     let player = player_id;
-    let mut i: i32 = 0;
+    let mut i: i32;
     i = 0_i32;
     while i < NUMPSPRITES {
         state.g_game.players[player.0 as usize].psprites[i as usize].state = None;

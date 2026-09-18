@@ -202,7 +202,7 @@ impl PLightsState {
             (index, 0)
         };
         let id = FireFlickerId { index, generation };
-        let mut boxed = Box::new(value);
+        let boxed = Box::new(value);
         self.fireflickers[index as usize].value = Some(boxed);
         id
     }
@@ -243,7 +243,7 @@ impl PLightsState {
             (index, 0)
         };
         let id = LightFlashId { index, generation };
-        let mut boxed = Box::new(value);
+        let boxed = Box::new(value);
         self.lightflashes[index as usize].value = Some(boxed);
         id
     }
@@ -284,7 +284,7 @@ impl PLightsState {
             (index, 0)
         };
         let id = StrobeId { index, generation };
-        let mut boxed = Box::new(value);
+        let boxed = Box::new(value);
         self.strobes[index as usize].value = Some(boxed);
         id
     }
@@ -325,7 +325,7 @@ impl PLightsState {
             (index, 0)
         };
         let id = GlowId { index, generation };
-        let mut boxed = Box::new(value);
+        let boxed = Box::new(value);
         self.glows[index as usize].value = Some(boxed);
         id
     }
@@ -467,8 +467,8 @@ pub fn P_SpawnStrobeFlash(state: &mut GameState, sector: SectorId, fastOrSlow: i
         ThinkerKind::Strobe,
     );
 }
-pub fn EV_StartLightStrobing(state: &mut GameState, mut line: LineId) {
-    let mut secnum: i32 = 0;
+pub fn EV_StartLightStrobing(state: &mut GameState, line: LineId) {
+    let mut secnum: i32;
     secnum = -1_i32;
     loop {
         secnum = P_FindSectorFromLineTag(state, line, secnum);

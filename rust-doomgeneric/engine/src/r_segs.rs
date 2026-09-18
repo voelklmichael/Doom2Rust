@@ -119,9 +119,9 @@ pub const SIL_TOP: i32 = 2;
 pub const SIL_BOTH: i32 = 3;
 pub const MAXDRAWSEGS: i32 = 256;
 pub fn R_RenderMaskedSegRange(state: &mut GameState, ds: &drawseg_t, x1: i32, x2: i32) {
-    let mut index: u32 = 0;
-    let mut lightnum: i32 = 0;
-    let mut texnum: i32 = 0;
+    let mut index: u32;
+    let mut lightnum: i32;
+    let texnum: i32;
     state.r_bsp.curline = ds.curline;
     state.r_bsp.frontsector = state.p_setup.seg(state.r_bsp.curline).frontsector;
     state.r_bsp.backsector = state.p_setup.seg(state.r_bsp.curline).backsector;
@@ -247,14 +247,14 @@ pub fn R_RenderMaskedSegRange(state: &mut GameState, ds: &drawseg_t, x1: i32, x2
 pub const HEIGHTBITS: i32 = 12;
 pub const HEIGHTUNIT: i32 = 1_i32 << HEIGHTBITS;
 pub fn R_RenderSegLoop(state: &mut GameState) {
-    let mut angle: angle_t = 0;
-    let mut index: u32 = 0;
-    let mut yl: i32 = 0;
-    let mut yh: i32 = 0;
-    let mut mid: i32 = 0;
-    let mut texturecolumn: fixed_t = 0;
-    let mut top: i32 = 0;
-    let mut bottom: i32 = 0;
+    let mut angle: angle_t;
+    let mut index: u32;
+    let mut yl: i32;
+    let mut yh: i32;
+    let mut mid: i32;
+    let mut texturecolumn: fixed_t;
+    let mut top: i32;
+    let mut bottom: i32;
     while state.r_segs.rw_x < state.r_segs.rw_stopx {
         yl = (state.r_segs.topfrac + HEIGHTUNIT - 1_i32) >> HEIGHTBITS;
         if yl < state.r_plane.ceilingclip[state.r_segs.rw_x as usize] as i32 + 1_i32 {
@@ -373,13 +373,13 @@ pub fn R_RenderSegLoop(state: &mut GameState) {
         state.r_segs.rw_x += 1;
     }
 }
-pub fn R_StoreWallRange(state: &mut GameState, mut start: i32, mut stop: i32) {
-    let mut hyp: fixed_t = 0;
-    let mut sineval: fixed_t = 0;
-    let mut distangle: angle_t = 0;
-    let mut offsetangle: angle_t = 0;
-    let mut vtop: fixed_t = 0;
-    let mut lightnum: i32 = 0;
+pub fn R_StoreWallRange(state: &mut GameState, start: i32, stop: i32) {
+    let hyp: fixed_t;
+    let mut sineval: fixed_t;
+    let distangle: angle_t;
+    let mut offsetangle: angle_t;
+    let vtop: fixed_t;
+    let mut lightnum: i32;
     if state.r_bsp.ds_p == MAXDRAWSEGS as usize {
         return;
     }

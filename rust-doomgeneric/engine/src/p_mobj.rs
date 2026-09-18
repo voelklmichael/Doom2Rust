@@ -2979,8 +2979,8 @@ pub fn P_XYMovement(state: &mut GameState, mo: MobjId) {
     };
 }
 pub fn P_ZMovement(state: &mut GameState, mo: MobjId) {
-    let mut dist: fixed_t = 0;
-    let mut delta: fixed_t = 0;
+    let dist: fixed_t;
+    let delta: fixed_t;
     if state.p_mobj.mo(mo).player.is_some() && state.p_mobj.mo(mo).z < state.p_mobj.mo(mo).floorz {
         let mo_player = state.g_game.player_mut(state.p_mobj.mo(mo).player.unwrap());
         mo_player.viewheight -= state.p_mobj.mo(mo).floorz - state.p_mobj.mo(mo).z;
@@ -3009,7 +3009,7 @@ pub fn P_ZMovement(state: &mut GameState, mo: MobjId) {
         }
     }
     if state.p_mobj.mo(mo).z <= state.p_mobj.mo(mo).floorz {
-        let mut correct_lost_soul_bounce: i32 =
+        let correct_lost_soul_bounce: i32 =
             (state.doomstat.gameversion.is_ultimate_or_higher()) as i32;
         if correct_lost_soul_bounce != 0 && state.p_mobj.mo(mo).flags & MF_SKULLFLY != 0 {
             state.p_mobj.mo_mut(mo).momz = -state.p_mobj.mo(mo).momz;

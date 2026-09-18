@@ -124,10 +124,10 @@ impl RDrawState {
 pub const SBARHEIGHT: i32 = 32;
 pub static translations: [[byte; 256]; 3] = [[0; 256]; 3];
 pub fn R_DrawColumn(state: &mut GameState) {
-    let mut count: i32 = 0;
+    let mut count: i32;
     let mut idx: usize;
-    let mut frac: fixed_t = 0;
-    let mut fracstep: fixed_t = 0;
+    let mut frac: fixed_t;
+    let fracstep: fixed_t;
     count = state.r_draw.dc_yh - state.r_draw.dc_yl;
     if count < 0_i32 {
         return;
@@ -164,12 +164,12 @@ pub fn R_DrawColumn(state: &mut GameState) {
     }
 }
 pub fn R_DrawColumnLow(state: &mut GameState) {
-    let mut count: i32 = 0;
+    let mut count: i32;
     let mut idx: usize;
     let mut idx2: usize;
-    let mut frac: fixed_t = 0;
-    let mut fracstep: fixed_t = 0;
-    let mut x: i32 = 0;
+    let mut frac: fixed_t;
+    let fracstep: fixed_t;
+    let x: i32;
     count = state.r_draw.dc_yh - state.r_draw.dc_yl;
     if count < 0_i32 {
         return;
@@ -221,7 +221,7 @@ pub static fuzzoffset: [i32; 50] = [
     -FUZZOFF, FUZZOFF, FUZZOFF, FUZZOFF, FUZZOFF, -FUZZOFF, FUZZOFF, FUZZOFF, -FUZZOFF, FUZZOFF,
 ];
 pub fn R_DrawFuzzColumn(state: &mut GameState) {
-    let mut count: i32 = 0;
+    let mut count: i32;
     let mut idx: usize;
     if state.r_draw.dc_yl == 0 {
         state.r_draw.dc_yl = 1_i32;
@@ -263,10 +263,10 @@ pub fn R_DrawFuzzColumn(state: &mut GameState) {
     }
 }
 pub fn R_DrawFuzzColumnLow(state: &mut GameState) {
-    let mut count: i32 = 0;
+    let mut count: i32;
     let mut idx: usize;
     let mut idx2: usize;
-    let mut x: i32 = 0;
+    let x: i32;
     if state.r_draw.dc_yl == 0 {
         state.r_draw.dc_yl = 1_i32;
     }
@@ -313,10 +313,10 @@ pub fn R_DrawFuzzColumnLow(state: &mut GameState) {
     }
 }
 pub fn R_DrawTranslatedColumn(state: &mut GameState) {
-    let mut count: i32 = 0;
+    let mut count: i32;
     let mut idx: usize;
-    let mut frac: fixed_t = 0;
-    let mut fracstep: fixed_t = 0;
+    let mut frac: fixed_t;
+    let fracstep: fixed_t;
     count = state.r_draw.dc_yh - state.r_draw.dc_yl;
     if count < 0_i32 {
         return;
@@ -351,12 +351,12 @@ pub fn R_DrawTranslatedColumn(state: &mut GameState) {
     }
 }
 pub fn R_DrawTranslatedColumnLow(state: &mut GameState) {
-    let mut count: i32 = 0;
+    let mut count: i32;
     let mut idx: usize;
     let mut idx2: usize;
-    let mut frac: fixed_t = 0;
-    let mut fracstep: fixed_t = 0;
-    let mut x: i32 = 0;
+    let mut frac: fixed_t;
+    let fracstep: fixed_t;
+    let x: i32;
     count = state.r_draw.dc_yh - state.r_draw.dc_yl;
     if count < 0_i32 {
         return;
@@ -397,7 +397,7 @@ pub fn R_DrawTranslatedColumnLow(state: &mut GameState) {
     }
 }
 pub fn R_InitTranslationTables(state: &mut GameState) {
-    let mut i: i32 = 0;
+    let mut i: i32;
     state.r_draw.translationtables = vec![0u8; 256 * 3];
     i = 0_i32;
     while i < 256_i32 {
@@ -418,13 +418,13 @@ pub fn R_InitTranslationTables(state: &mut GameState) {
     }
 }
 pub fn R_DrawSpan(state: &mut GameState) {
-    let mut position: u32 = 0;
-    let mut step: u32 = 0;
+    let mut position: u32;
+    let step: u32;
     let mut idx: usize;
-    let mut count: i32 = 0;
-    let mut spot: i32 = 0;
-    let mut xtemp: u32 = 0;
-    let mut ytemp: u32 = 0;
+    let mut count: i32;
+    let mut spot: i32;
+    let mut xtemp: u32;
+    let mut ytemp: u32;
     if state.r_draw.ds_x2 < state.r_draw.ds_x1
         || state.r_draw.ds_x1 < 0_i32
         || state.r_draw.ds_x2 >= SCREENWIDTH
@@ -460,13 +460,13 @@ pub fn R_DrawSpan(state: &mut GameState) {
     }
 }
 pub fn R_DrawSpanLow(state: &mut GameState) {
-    let mut position: u32 = 0;
-    let mut step: u32 = 0;
-    let mut xtemp: u32 = 0;
-    let mut ytemp: u32 = 0;
+    let mut position: u32;
+    let step: u32;
+    let mut xtemp: u32;
+    let mut ytemp: u32;
     let mut idx: usize;
-    let mut count: i32 = 0;
-    let mut spot: i32 = 0;
+    let mut count: i32;
+    let mut spot: i32;
     if state.r_draw.ds_x2 < state.r_draw.ds_x1
         || state.r_draw.ds_x1 < 0_i32
         || state.r_draw.ds_x2 >= SCREENWIDTH
@@ -507,8 +507,8 @@ pub fn R_DrawSpanLow(state: &mut GameState) {
         }
     }
 }
-pub fn R_InitBuffer(state: &mut GameState, mut width: i32, mut height: i32) {
-    let mut i: i32 = 0;
+pub fn R_InitBuffer(state: &mut GameState, width: i32, height: i32) {
+    let mut i: i32;
     state.r_draw.viewwindowx = (SCREENWIDTH - width) >> 1_i32;
     i = 0_i32;
     while i < width {
@@ -527,8 +527,8 @@ pub fn R_InitBuffer(state: &mut GameState, mut width: i32, mut height: i32) {
     }
 }
 pub fn R_FillBackScreen(state: &mut GameState) {
-    let mut x: i32 = 0;
-    let mut y: i32 = 0;
+    let mut x: i32;
+    let mut y: i32;
     let mut patch: Patch;
     let name1: &str = "FLOOR7_2";
     let name2: &str = "GRNROCK";
@@ -647,10 +647,10 @@ pub fn R_VideoErase(state: &mut GameState, ofs: u32, count: i32) {
     }
 }
 pub fn R_DrawViewBorder(state: &mut GameState) {
-    let mut top: i32 = 0;
-    let mut side: i32 = 0;
-    let mut ofs: i32 = 0;
-    let mut i: i32 = 0;
+    let top: i32;
+    let mut side: i32;
+    let mut ofs: i32;
+    let mut i: i32;
     if state.r_draw.scaledviewwidth == SCREENWIDTH {
         return;
     }

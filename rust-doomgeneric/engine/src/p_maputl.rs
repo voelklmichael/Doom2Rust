@@ -207,14 +207,14 @@ pub fn P_AproxDistance(mut dx: fixed_t, mut dy: fixed_t) -> fixed_t {
 }
 pub fn P_PointOnLineSide(
     state: &mut GameState,
-    mut x: fixed_t,
-    mut y: fixed_t,
-    mut line: LineId,
+    x: fixed_t,
+    y: fixed_t,
+    line: LineId,
 ) -> i32 {
-    let mut dx: fixed_t = 0;
-    let mut dy: fixed_t = 0;
-    let mut left: fixed_t = 0;
-    let mut right: fixed_t = 0;
+    let dx: fixed_t;
+    let dy: fixed_t;
+    let left: fixed_t;
+    let right: fixed_t;
     let line = state.p_setup.line(line);
     let line_v1 = state.p_setup.vertexes[line.v1.0 as usize];
     if line.dx == 0 {
@@ -238,7 +238,7 @@ pub fn P_PointOnLineSide(
     }
     1_i32
 }
-pub fn P_BoxOnLineSide(state: &mut GameState, tmbox: [fixed_t; 4], mut ld: LineId) -> i32 {
+pub fn P_BoxOnLineSide(state: &mut GameState, tmbox: [fixed_t; 4], ld: LineId) -> i32 {
     let mut p1: i32 = 0_i32;
     let mut p2: i32 = 0_i32;
     let ldv = state.p_setup.line(ld);
@@ -731,23 +731,23 @@ pub fn P_PathTraverse<F: FnMut(&mut GameState, intercept_t) -> bool>(
     mut y1: fixed_t,
     mut x2: fixed_t,
     mut y2: fixed_t,
-    mut flags: i32,
+    flags: i32,
     trav: F,
 ) -> bool {
-    let mut xt1: fixed_t = 0;
-    let mut yt1: fixed_t = 0;
-    let mut xt2: fixed_t = 0;
-    let mut yt2: fixed_t = 0;
-    let mut xstep: fixed_t = 0;
-    let mut ystep: fixed_t = 0;
-    let mut partial: fixed_t = 0;
-    let mut xintercept: fixed_t = 0;
-    let mut yintercept: fixed_t = 0;
-    let mut mapx: i32 = 0;
-    let mut mapy: i32 = 0;
-    let mut mapxstep: i32 = 0;
-    let mut mapystep: i32 = 0;
-    let mut count: i32 = 0;
+    let xt1: fixed_t;
+    let yt1: fixed_t;
+    let xt2: fixed_t;
+    let yt2: fixed_t;
+    let xstep: fixed_t;
+    let ystep: fixed_t;
+    let mut partial: fixed_t;
+    let mut xintercept: fixed_t;
+    let mut yintercept: fixed_t;
+    let mut mapx: i32;
+    let mut mapy: i32;
+    let mapxstep: i32;
+    let mapystep: i32;
+    let mut count: i32;
     state.p_maputl.earlyout = (flags & PT_EARLYOUT) != 0;
     state.r_main.validcount += 1;
     state.p_maputl.intercept_p = 0;

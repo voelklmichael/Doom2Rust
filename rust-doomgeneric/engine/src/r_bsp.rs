@@ -172,13 +172,13 @@ pub fn R_ClearClipSegs(state: &mut GameState) {
     state.r_bsp.solidsegs[1].last = 0x7fffffff_i32;
     state.r_bsp.newend = 2;
 }
-pub fn R_AddLine(state: &mut GameState, mut line: SegId) {
-    let mut x1: i32 = 0;
-    let mut x2: i32 = 0;
-    let mut angle1: angle_t = 0;
-    let mut angle2: angle_t = 0;
-    let mut span: angle_t = 0;
-    let mut tspan: angle_t = 0;
+pub fn R_AddLine(state: &mut GameState, line: SegId) {
+    let x1: i32;
+    let x2: i32;
+    let mut angle1: angle_t;
+    let mut angle2: angle_t;
+    let span: angle_t;
+    let mut tspan: angle_t;
     state.r_bsp.curline = line;
     let line_v1 = state.p_setup.vertexes[state.p_setup.seg(line).v1.0 as usize];
     let line_v2 = state.p_setup.vertexes[state.p_setup.seg(line).v2.0 as usize];
@@ -301,19 +301,19 @@ pub static checkcoord: [[i32; 4]; 12] = [
     [0; 4],
 ];
 pub fn R_CheckBBox(state: &mut GameState, bspcoord: [fixed_t; 4]) -> bool {
-    let mut boxx: i32 = 0;
-    let mut boxy: i32 = 0;
-    let mut boxpos: i32 = 0;
-    let mut x1: fixed_t = 0;
-    let mut y1: fixed_t = 0;
-    let mut x2: fixed_t = 0;
-    let mut y2: fixed_t = 0;
-    let mut angle1: angle_t = 0;
-    let mut angle2: angle_t = 0;
-    let mut span: angle_t = 0;
-    let mut tspan: angle_t = 0;
-    let mut sx1: i32 = 0;
-    let mut sx2: i32 = 0;
+    let boxx: i32;
+    let boxy: i32;
+    let boxpos: i32;
+    let x1: fixed_t;
+    let y1: fixed_t;
+    let x2: fixed_t;
+    let y2: fixed_t;
+    let mut angle1: angle_t;
+    let mut angle2: angle_t;
+    let span: angle_t;
+    let mut tspan: angle_t;
+    let sx1: i32;
+    let mut sx2: i32;
     if state.r_main.viewx <= bspcoord[BoxIndex::BOXLEFT as usize] {
         boxx = 0_i32;
     } else if state.r_main.viewx < bspcoord[BoxIndex::BOXRIGHT as usize] {
@@ -375,8 +375,8 @@ pub fn R_CheckBBox(state: &mut GameState, bspcoord: [fixed_t; 4]) -> bool {
     }
     true
 }
-pub fn R_Subsector(state: &mut GameState, mut num: i32) {
-    let mut count: i32 = 0;
+pub fn R_Subsector(state: &mut GameState, num: i32) {
+    let mut count: i32;
     let mut line: SegId;
     if num >= state.p_setup.numsubsectors {
         I_Error(&format!(
@@ -420,7 +420,7 @@ pub fn R_Subsector(state: &mut GameState, mut num: i32) {
         line = SegId(line.0 + 1);
     }
 }
-pub fn R_RenderBSPNode(state: &mut GameState, mut bspnum: i32) {
+pub fn R_RenderBSPNode(state: &mut GameState, bspnum: i32) {
     if bspnum & NF_SUBSECTOR != 0 {
         if bspnum == -1_i32 {
             R_Subsector(state, 0_i32);

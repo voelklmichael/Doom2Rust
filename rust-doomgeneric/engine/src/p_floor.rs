@@ -61,14 +61,14 @@ fn change_sector(state: &mut GameState, sector: SectorId, crush: bool) -> bool {
 pub fn T_MovePlane(
     state: &mut GameState,
     sector: SectorId,
-    mut speed: fixed_t,
-    mut dest: fixed_t,
-    mut crush: bool,
-    mut floorOrCeiling: i32,
-    mut direction: i32,
+    speed: fixed_t,
+    dest: fixed_t,
+    crush: bool,
+    floorOrCeiling: i32,
+    direction: i32,
 ) -> ResultE {
-    let mut flag: bool;
-    let mut lastpos: fixed_t = 0;
+    let flag: bool;
+    let lastpos: fixed_t;
     match floorOrCeiling {
         0 => match direction {
             -1 => {
@@ -154,9 +154,8 @@ pub fn T_MovePlane(
                     }
                     return ResultE::pastdest;
                 } else {
-                    lastpos = state.p_setup.sector_mut(sector).ceilingheight;
                     state.p_setup.sector_mut(sector).ceilingheight += speed;
-                    flag = change_sector(state, sector, crush);
+                    change_sector(state, sector, crush);
                 }
             }
             _ => {}

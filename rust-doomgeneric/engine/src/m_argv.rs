@@ -17,7 +17,7 @@ impl MArgvState {
 }
 
 pub const DIR_SEPARATOR: char = '/';
-pub fn M_CheckParmWithArgs(state: &mut GameState, check: &str, mut num_args: i32) -> i32 {
+pub fn M_CheckParmWithArgs(state: &mut GameState, check: &str, num_args: i32) -> i32 {
     let mut i: i32 = 1_i32;
     while i < state.m_argv.myargv.len() as i32 - num_args {
         if state.m_argv.myargv[i as usize]

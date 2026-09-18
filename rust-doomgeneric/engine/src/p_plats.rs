@@ -97,7 +97,7 @@ impl PPlatsState {
             (index, 0)
         };
         let id = PlatId { index, generation };
-        let mut boxed = Box::new(value);
+        let boxed = Box::new(value);
         self.plats[index as usize].plat = Some(boxed);
         id
     }
@@ -350,7 +350,7 @@ pub fn EV_StopPlat(state: &mut GameState, tag: i32) {
     }
 }
 pub fn P_AddActivePlat(state: &mut PPlatsState, id: ThinkerId) {
-    let mut i: i32 = 0;
+    let mut i: i32;
     i = 0_i32;
     while i < MAXPLATS {
         if state.activeplats[i as usize].is_none() {

@@ -28,7 +28,7 @@ pub fn I_GetTime(state: &mut GameState) -> i32 {
         .wrapping_div(1000 as uint32_t) as i32
 }
 pub fn I_GetTimeMS(state: &mut GameState) -> i32 {
-    let mut ticks: uint32_t = state.platform.get_ticks_ms();
+    let ticks: uint32_t = state.platform.get_ticks_ms();
     if state.i_timer.basetime == 0 as uint32_t {
         state.i_timer.basetime = ticks;
     }

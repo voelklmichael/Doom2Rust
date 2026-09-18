@@ -133,11 +133,11 @@ pub struct col_t {
     pub g: byte,
     pub b: byte,
 }
-static rgb565_palette: [uint16_t; 256] = [0; 256];
+static RGB565_PALETTE: [uint16_t; 256] = [0; 256];
 pub fn I_InitGraphics(state: &mut GameState) {
-    let mut i: i32 = 0;
-    let mut gfxmodeparm: i32 = 0;
-    let mut mode: &str = "";
+    let mut i: i32;
+    let gfxmodeparm: i32;
+    let mode: &str;
     state.i_video.s_Fb = FB_ScreenInfo::ZERO;
     state.i_video.s_Fb.xres = DOOMGENERIC_RESX as uint32_t;
     state.i_video.s_Fb.yres = DOOMGENERIC_RESY as uint32_t;
@@ -318,20 +318,20 @@ pub fn I_SetPalette(state: &mut GameState, palette: &[byte]) {
         color.set_b(gamma[rgb[2] as usize] as uint32_t);
     }
 }
-pub fn I_GetPaletteIndex(mut r: i32, mut g: i32, mut b: i32) -> i32 {
-    let mut best: i32 = 0;
-    let mut best_diff: i32 = 0;
-    let mut diff: i32 = 0;
-    let mut i: i32 = 0;
+pub fn I_GetPaletteIndex(r: i32, g: i32, b: i32) -> i32 {
+    let mut best: i32;
+    let mut best_diff: i32;
+    let mut diff: i32;
+    let mut i: i32;
     let mut color: col_t = col_t { r: 0, g: 0, b: 0 };
     println!("I_GetPaletteIndex");
     best = 0_i32;
     best_diff = INT_MAX;
     i = 0_i32;
     while i < 256_i32 {
-        color.r = ((0xf800_i32 & rgb565_palette[i as usize] as i32) >> 11_i32) as byte;
-        color.g = ((0x7e0_i32 & rgb565_palette[i as usize] as i32) >> 5_i32) as byte;
-        color.b = (0x1f_i32 & rgb565_palette[i as usize] as i32) as byte;
+        color.r = ((0xf800_i32 & RGB565_PALETTE[i as usize] as i32) >> 11_i32) as byte;
+        color.g = ((0x7e0_i32 & RGB565_PALETTE[i as usize] as i32) >> 5_i32) as byte;
+        color.b = (0x1f_i32 & RGB565_PALETTE[i as usize] as i32) as byte;
         diff = (r - color.r as i32) * (r - color.r as i32)
             + (g - color.g as i32) * (g - color.g as i32)
             + (b - color.b as i32) * (b - color.b as i32);

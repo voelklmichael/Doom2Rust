@@ -643,8 +643,8 @@ pub fn M_BindMenuControls(state: &mut GameState) {
         &mut s.m_controls.key_spy
     });
 }
-pub fn M_BindChatControls(state: &mut GameState, mut num_players: u32) {
-    let mut i: u32 = 0;
+pub fn M_BindChatControls(state: &mut GameState, num_players: u32) {
+    let mut i: u32;
     M_BindVariable_int(&mut state.m_config, "key_multi_msg", |s| {
         &mut s.m_controls.key_multi_msg
     });

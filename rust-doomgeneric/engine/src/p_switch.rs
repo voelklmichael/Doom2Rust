@@ -282,9 +282,9 @@ impl PSwitchState {
 }
 
 pub fn P_InitSwitchList(state: &mut GameState) {
-    let mut i: i32 = 0;
-    let mut index: i32 = 0;
-    let mut episode: i32 = 0;
+    let mut i: i32;
+    let mut index: i32;
+    let mut episode: i32;
     episode = 1_i32;
     if state.doomstat.gamemode as u32 == GameMode_t::registered as i32 as u32
         || state.doomstat.gamemode as u32 == GameMode_t::retail as i32 as u32
@@ -321,12 +321,12 @@ pub fn P_InitSwitchList(state: &mut GameState) {
 }
 pub fn P_StartButton(
     state: &mut GameState,
-    mut line: LineId,
-    mut w: BWhere,
-    mut texture: i32,
-    mut time: i32,
+    line: LineId,
+    w: BWhere,
+    texture: i32,
+    time: i32,
 ) {
-    let mut i: i32 = 0;
+    let mut i: i32;
     i = 0_i32;
     while i < MAXBUTTONS {
         if state.p_switch.buttonlist[i as usize].btimer != 0
@@ -351,12 +351,12 @@ pub fn P_StartButton(
     }
     I_Error("P_StartButton: no button slots left!");
 }
-pub fn P_ChangeSwitchTexture(state: &mut GameState, mut line: LineId, mut useAgain: i32) {
-    let mut texTop: i32 = 0;
-    let mut texMid: i32 = 0;
-    let mut texBot: i32 = 0;
-    let mut i: i32 = 0;
-    let mut sound: i32 = 0;
+pub fn P_ChangeSwitchTexture(state: &mut GameState, line: LineId, useAgain: i32) {
+    let texTop: i32;
+    let texMid: i32;
+    let texBot: i32;
+    let mut i: i32;
+    let mut sound: i32;
     if useAgain == 0 {
         state.p_setup.line_mut(line).special = 0_i16;
     }
@@ -431,8 +431,8 @@ pub fn P_ChangeSwitchTexture(state: &mut GameState, mut line: LineId, mut useAga
 pub fn P_UseSpecialLine(
     state: &mut GameState,
     thing: MobjId,
-    mut line: LineId,
-    mut side: i32,
+    line: LineId,
+    side: i32,
 ) -> bool {
     let linev = state.p_setup.line(line);
     if side != 0 {

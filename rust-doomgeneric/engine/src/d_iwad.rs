@@ -14,7 +14,7 @@ pub struct iwad_t {
 pub const FILES_DIR: &str = ".";
 pub const DIR_SEPARATOR: char = '/';
 pub const DIR_SEPARATOR_S: &str = "/";
-static iwads: [iwad_t; 14] = [
+static IWADS: [iwad_t; 14] = [
     iwad_t {
         name: "doom2.wad",
         mission: GameMission_t::doom2,
@@ -150,7 +150,7 @@ fn check_directory_has_iwad(dir: &str, iwadname: &str) -> Option<String> {
     }
 }
 fn search_directory_for_iwad(dir: &str, mask: i32, mission: &mut GameMission_t) -> Option<String> {
-    for iwad in iwads.iter() {
+    for iwad in IWADS.iter() {
         if 1_i32 << iwad.mission as i32 & mask == 0_i32 {
             continue;
         }
@@ -166,7 +166,7 @@ fn identify_iwad_by_name(name: &str, mask: i32) -> GameMission_t {
         Some(pos) => &name[pos + 1..],
         None => name,
     };
-    for iwad in iwads.iter() {
+    for iwad in IWADS.iter() {
         if 1_i32 << iwad.mission as i32 & mask == 0_i32 {
             continue;
         }
@@ -224,7 +224,7 @@ pub fn D_FindIWAD(state: &mut GameState, mask: i32, mission: &mut GameMission_t)
     }
 }
 pub fn D_SaveGameIWADName(gamemission: GameMission_t) -> &'static str {
-    for iwad in iwads.iter() {
+    for iwad in IWADS.iter() {
         if gamemission == iwad.mission {
             return iwad.name;
         }
@@ -232,7 +232,7 @@ pub fn D_SaveGameIWADName(gamemission: GameMission_t) -> &'static str {
     "unknown.wad"
 }
 pub fn D_SuggestGameName(mission: GameMission_t, mode: GameMode_t) -> &'static str {
-    for iwad in iwads.iter() {
+    for iwad in IWADS.iter() {
         if iwad.mission == mission && (mode == GameMode_t::indetermined || iwad.mode == mode) {
             return iwad.description;
         }

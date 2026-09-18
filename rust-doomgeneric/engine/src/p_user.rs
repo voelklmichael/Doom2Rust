@@ -58,8 +58,8 @@ pub fn P_Thrust(state: &mut GameState, mo: MobjId, mut angle: angle_t, move_0: f
 }
 pub fn P_CalcHeight(state: &mut GameState, player_id: PlayerId) {
     let player = &mut state.g_game.players[player_id.0 as usize];
-    let mut angle: i32 = 0;
-    let mut bob: fixed_t = 0;
+    let angle: i32;
+    let bob: fixed_t;
     let player_mo = player.mo.unwrap();
     player.bob = FixedMul(
         state.p_mobj.mo(player_mo).momx,
@@ -145,8 +145,8 @@ pub fn P_MovePlayer(state: &mut GameState, player_id: PlayerId) {
 pub const ANG5: i32 = ANG90 / 18_i32;
 pub fn P_DeathThink(state: &mut GameState, player_id: PlayerId) {
     let player = player_id;
-    let mut angle: angle_t = 0;
-    let mut delta: angle_t = 0;
+    let angle: angle_t;
+    let delta: angle_t;
     P_MovePsprites(state, player_id);
     if state.g_game.players[player.0 as usize].viewheight > 6_i32 * FRACUNIT {
         state.g_game.players[player.0 as usize].viewheight -= FRACUNIT;
@@ -198,7 +198,7 @@ pub fn P_DeathThink(state: &mut GameState, player_id: PlayerId) {
 }
 pub fn P_PlayerThink(state: &mut GameState, player_id: PlayerId) {
     let player = player_id;
-    let mut newweapon: weapontype_t = weapontype_t::wp_fist;
+    let mut newweapon: weapontype_t;
     let player_mo = state.g_game.players[player.0 as usize].mo.unwrap();
     if state.g_game.players[player.0 as usize].cheats & CF_NOCLIP != 0 {
         state.p_mobj.mo_mut(player_mo).flags |= MF_NOCLIP;

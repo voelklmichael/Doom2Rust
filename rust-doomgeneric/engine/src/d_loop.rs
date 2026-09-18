@@ -130,10 +130,10 @@ pub struct ticcmd_set_t {
 }
 pub const NET_MAXPLAYERS: i32 = 8;
 pub const BACKUPTICS: i32 = 128;
-static localplayer: i32 = 0;
+static LOCALPLAYER: i32 = 0;
 pub static offsetms: fixed_t = 0;
 fn GetAdjustedTime(state: &mut GameState) -> i32 {
-    let mut time_ms: i32 = 0;
+    let mut time_ms: i32;
     time_ms = I_GetTimeMS(state);
     if state.d_loop.new_sync {
         time_ms += offsetms / FRACUNIT;
@@ -141,7 +141,7 @@ fn GetAdjustedTime(state: &mut GameState) -> i32 {
     time_ms * TICRATE / 1000_i32
 }
 fn BuildNewTic(state: &mut GameState) -> bool {
-    let mut gameticdiv: i32 = 0;
+    let gameticdiv: i32;
     let mut cmd: ticcmd_t = ticcmd_t {
         forwardmove: 0,
         sidemove: 0,
@@ -188,17 +188,17 @@ fn BuildNewTic(state: &mut GameState) -> bool {
         .expect("non-null function pointer");
     let maketic = state.d_loop.maketic;
     build_ticcmd(state, &mut cmd, maketic);
-    state.d_loop.ticdata[(state.d_loop.maketic % BACKUPTICS) as usize].cmds[localplayer as usize] =
+    state.d_loop.ticdata[(state.d_loop.maketic % BACKUPTICS) as usize].cmds[LOCALPLAYER as usize] =
         cmd;
     state.d_loop.ticdata[(state.d_loop.maketic % BACKUPTICS) as usize].ingame
-        [localplayer as usize] = true;
+        [LOCALPLAYER as usize] = true;
     state.d_loop.maketic += 1;
     true
 }
 pub fn NetUpdate(state: &mut GameState) {
-    let mut nowtime: i32 = 0;
-    let mut newtics: i32 = 0;
-    let mut i: i32 = 0;
+    let nowtime: i32;
+    let mut newtics: i32;
+    let mut i: i32;
     if state.d_loop.singletics {
         return;
     }
@@ -220,12 +220,6 @@ pub fn NetUpdate(state: &mut GameState) {
         i += 1;
     }
 }
-fn D_Disconnected() {
-    if drone {
-        I_Error("Disconnected from server in drone mode.");
-    }
-    println!("Disconnected from server.");
-}
 pub fn D_StartGameLoop(state: &mut GameState) {
     state.d_loop.lasttime = GetAdjustedTime(state) / state.d_loop.ticdup;
 }
@@ -240,7 +234,7 @@ pub fn D_StartNetGame(state: &mut GameState, settings: &mut net_gamesettings_t) 
     state.d_loop.new_sync = settings.new_sync != 0;
 }
 pub fn D_InitNetGame(state: &mut GameState, connect_data: &mut net_connect_data_t) -> bool {
-    let mut result: bool = false;
+    let result: bool = false;
     I_AtExit(
         &mut state.i_system,
         Some(D_QuitNetGame as fn(&mut GameState) -> ()),
@@ -251,12 +245,12 @@ pub fn D_InitNetGame(state: &mut GameState, connect_data: &mut net_connect_data_
 }
 pub fn D_QuitNetGame(_state: &mut GameState) {}
 fn GetLowTic(state: &mut GameState) -> i32 {
-    let mut lowtic: i32 = 0;
+    let lowtic: i32;
     lowtic = state.d_loop.maketic;
     lowtic
 }
 fn OldNetSync(state: &mut GameState) {
-    let mut i: u32 = 0;
+    let mut i: u32;
     let mut keyplayer: i32 = -1_i32;
     state.d_loop.frameon += 1;
     i = 0_u32;
@@ -271,7 +265,7 @@ fn OldNetSync(state: &mut GameState) {
     if keyplayer < 0_i32 {
         return;
     }
-    if localplayer != keyplayer {
+    if LOCALPLAYER != keyplayer {
         if state.d_loop.maketic <= state.d_loop.recvtic {
             state.d_loop.lasttime -= 1;
         }
@@ -289,7 +283,7 @@ fn OldNetSync(state: &mut GameState) {
 }
 fn PlayersInGame(state: &mut GameState) -> bool {
     let mut result: bool = false;
-    let mut i: u32 = 0;
+    let mut i: u32;
     if net_client_connected {
         i = 0_u32;
         while i < NET_MAXPLAYERS as u32 {
@@ -303,7 +297,7 @@ fn PlayersInGame(state: &mut GameState) -> bool {
     result
 }
 fn TicdupSquash(set: &mut ticcmd_set_t) {
-    let mut i: u32 = 0;
+    let mut i: u32;
     i = 0_u32;
     while i < NET_MAXPLAYERS as u32 {
         let cmd = &mut set.cmds[i as usize];
@@ -315,22 +309,22 @@ fn TicdupSquash(set: &mut ticcmd_set_t) {
     }
 }
 fn SinglePlayerClear(set: &mut ticcmd_set_t) {
-    let mut i: u32 = 0;
+    let mut i: u32;
     i = 0_u32;
     while i < NET_MAXPLAYERS as u32 {
-        if i != localplayer as u32 {
+        if i != LOCALPLAYER as u32 {
             set.ingame[i as usize] = false;
         }
         i = i.wrapping_add(1);
     }
 }
 pub fn TryRunTics(state: &mut GameState) {
-    let mut i: i32 = 0;
-    let mut lowtic: i32 = 0;
-    let mut entertic: i32 = 0;
-    let mut realtics: i32 = 0;
-    let mut availabletics: i32 = 0;
-    let mut counts: i32 = 0;
+    let mut i: i32;
+    let mut lowtic: i32;
+    let entertic: i32;
+    let realtics: i32;
+    let availabletics: i32;
+    let mut counts: i32;
     entertic = I_GetTime(state) / state.d_loop.ticdup;
     realtics = entertic - state.d_loop.try_run_tics_oldentertics;
     state.d_loop.try_run_tics_oldentertics = entertic;

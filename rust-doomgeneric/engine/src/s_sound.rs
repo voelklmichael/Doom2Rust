@@ -146,8 +146,8 @@ fn S_StopChannel(state: &mut GameState, cnum: i32) {
     }
 }
 pub fn S_Start(state: &mut GameState) {
-    let mut cnum: i32 = 0;
-    let mut mnum: i32 = 0;
+    let mut cnum: i32;
+    let mnum: i32;
     cnum = 0_i32;
     while cnum < state.s_sound.snd_channels {
         if state.s_sound.channels[cnum as usize].sfxinfo.is_some() {
@@ -159,7 +159,7 @@ pub fn S_Start(state: &mut GameState) {
     if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 {
         mnum = MusicName::mus_runnin as i32 + state.g_game.gamemap - 1_i32;
     } else {
-        let mut spmus: [i32; 9] = [
+        let spmus: [i32; 9] = [
             MusicName::mus_e3m4 as i32,
             MusicName::mus_e3m2 as i32,
             MusicName::mus_e3m3 as i32,
@@ -376,19 +376,19 @@ pub fn S_UpdateSounds(state: &mut GameState, listener: Option<MobjId>) {
         }
     }
 }
-pub fn S_SetMusicVolume(state: &mut GameState, mut volume: i32) {
+pub fn S_SetMusicVolume(state: &mut GameState, volume: i32) {
     if !(0_i32..=127_i32).contains(&volume) {
         I_Error(&format!("Attempt to set music volume at {}", volume));
     }
     I_SetMusicVolume(&mut state.i_sound, volume);
 }
-pub fn S_SetSfxVolume(state: &mut GameState, mut volume: i32) {
+pub fn S_SetSfxVolume(state: &mut GameState, volume: i32) {
     if !(0_i32..=127_i32).contains(&volume) {
         I_Error(&format!("Attempt to set sfx volume at {}", volume));
     }
     state.s_sound.snd_SfxVolume = volume;
 }
-pub fn S_StartMusic(state: &mut GameState, mut m_id: i32) {
+pub fn S_StartMusic(state: &mut GameState, m_id: i32) {
     S_ChangeMusic(state, m_id, false_0);
 }
 pub fn S_ChangeMusic(state: &mut GameState, mut musicnum: i32, looping: i32) {

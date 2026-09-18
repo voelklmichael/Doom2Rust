@@ -81,11 +81,11 @@ impl RPlaneState {
 
 pub const ANGLETOSKYSHIFT: i32 = 22;
 pub const MAXVISPLANES: i32 = 128;
-pub fn R_MapPlane(state: &mut GameState, mut y: i32, mut x1: i32, mut x2: i32) {
-    let mut angle: angle_t = 0;
-    let mut distance: fixed_t = 0;
-    let mut length: fixed_t = 0;
-    let mut index: u32 = 0;
+pub fn R_MapPlane(state: &mut GameState, y: i32, x1: i32, x2: i32) {
+    let angle: angle_t;
+    let distance: fixed_t;
+    let length: fixed_t;
+    let mut index: u32;
     if x2 < x1 || x1 < 0_i32 || x2 >= state.r_draw.viewwidth || y > state.r_draw.viewheight {
         I_Error(&format!("R_MapPlane: {}, {} at {}", x1, x2, y));
     }
@@ -126,8 +126,8 @@ pub fn R_MapPlane(state: &mut GameState, mut y: i32, mut x1: i32, mut x2: i32) {
     state.r_main.spanfunc.expect("non-null function pointer")(state);
 }
 pub fn R_ClearPlanes(state: &mut GameState) {
-    let mut i: i32 = 0;
-    let mut angle: angle_t = 0;
+    let mut i: i32;
+    let angle: angle_t;
     i = 0_i32;
     while i < state.r_draw.viewwidth {
         state.r_plane.floorclip[i as usize] = state.r_draw.viewheight as i16;
@@ -144,7 +144,7 @@ pub fn R_ClearPlanes(state: &mut GameState) {
 pub fn R_FindPlane(
     state: &mut GameState,
     mut height: fixed_t,
-    mut picnum: i32,
+    picnum: i32,
     mut lightlevel: i32,
 ) -> usize {
     let mut check: usize = 0;
@@ -213,7 +213,7 @@ pub fn R_CheckPlane(state: &mut GameState, pl: usize, start: i32, stop: i32) -> 
 }
 pub fn R_MakeSpans(
     state: &mut GameState,
-    mut x: i32,
+    x: i32,
     mut t1: i32,
     mut b1: i32,
     mut t2: i32,
@@ -239,12 +239,12 @@ pub fn R_MakeSpans(
     }
 }
 pub fn R_DrawPlanes(state: &mut GameState) {
-    let mut pl: usize = 0;
-    let mut light: i32 = 0;
-    let mut x: i32 = 0;
-    let mut stop: i32 = 0;
-    let mut angle: i32 = 0;
-    let mut lumpnum: i32 = 0;
+    let mut pl: usize;
+    let mut light: i32;
+    let mut x: i32;
+    let mut stop: i32;
+    let mut angle: i32;
+    let mut lumpnum: i32;
     if state.r_bsp.ds_p as i64 > MAXDRAWSEGS as i64 {
         I_Error(&format!(
             "R_DrawPlanes: drawsegs overflow ({})",

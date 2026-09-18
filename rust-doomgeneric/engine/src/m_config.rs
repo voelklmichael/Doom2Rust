@@ -1671,7 +1671,7 @@ impl MConfigState {
 }
 
 fn SearchCollection<'a>(
-    mut collection: &'a mut default_collection_t,
+    collection: &'a mut default_collection_t,
     name: &str,
 ) -> Option<&'a mut default_t> {
     collection
@@ -1679,7 +1679,7 @@ fn SearchCollection<'a>(
         .iter_mut()
         .find(|entry| entry.name == name)
 }
-static scantokey: [i32; 128] = [
+static SCANTOKEY: [i32; 128] = [
     0_i32,
     27_i32,
     '1' as i32,
@@ -1831,7 +1831,7 @@ fn SetVariable(state: &mut GameState, name: &str, value: &str) {
             let mut intparm = ParseIntParameter(value);
             def.untranslated = intparm;
             if (0_i32..128_i32).contains(&intparm) {
-                intparm = scantokey[intparm as usize];
+                intparm = SCANTOKEY[intparm as usize];
             } else {
                 intparm = 0_i32;
             }
@@ -1866,7 +1866,7 @@ pub fn M_SaveDefaultsAlternate(state: &mut GameState, main_0: &str, extra: &str)
     state.m_config.extra_defaults.filename = orig_extra;
 }
 pub fn M_LoadDefaults(state: &mut GameState) {
-    let mut i: i32 = 0;
+    let mut i: i32;
     i = M_CheckParmWithArgs(state, "-config", 1_i32);
     if i != 0 {
         state.m_config.doom_defaults.filename = state.m_argv.myargv[(i + 1_i32) as usize]

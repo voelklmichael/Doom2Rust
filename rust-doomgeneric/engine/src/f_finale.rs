@@ -337,14 +337,14 @@ pub fn F_StartFinale(state: &mut GameState) {
     state.f_finale.finalestage = FinaleStage::F_STAGE_TEXT;
     state.f_finale.finalecount = 0_u32;
 }
-pub fn F_Responder(state: &mut GameState, mut event: &event_t) -> bool {
+pub fn F_Responder(state: &mut GameState, event: &event_t) -> bool {
     if state.f_finale.finalestage == FinaleStage::F_STAGE_CAST {
         return F_CastResponder(state, event);
     }
     false
 }
 pub fn F_Ticker(state: &mut GameState) {
-    let mut i: size_t = 0;
+    let mut i: size_t;
     if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32
         && state.f_finale.finalecount > 50_u32
     {
@@ -386,11 +386,11 @@ pub fn F_Ticker(state: &mut GameState) {
     }
 }
 pub fn F_TextWrite(state: &mut GameState) {
-    let mut w: i32 = 0;
-    let mut count: i32 = 0;
-    let mut c: i32 = 0;
-    let mut cx: i32 = 0;
-    let mut cy: i32 = 0;
+    let mut w: i32;
+    let mut count: i32;
+    let mut c: i32;
+    let mut cx: i32;
+    let mut cy: i32;
     let flat = W_LumpBytesName(state, state.f_finale.finaleflat);
     let video = &mut state.i_video.I_VideoBuffer;
     for y in 0..SCREENHEIGHT as usize {
@@ -526,8 +526,8 @@ pub fn F_StartCast(state: &mut GameState) {
 }
 pub fn F_CastTicker(state: &mut GameState) {
     let mut current_block: u64;
-    let mut st: i32 = 0;
-    let mut sfx: i32 = 0;
+    let st: i32;
+    let sfx: i32;
     state.f_finale.casttics -= 1;
     if state.f_finale.casttics > 0_i32 {
         return;
@@ -674,7 +674,7 @@ pub fn F_CastTicker(state: &mut GameState) {
         state.f_finale.casttics = 15_i32;
     }
 }
-pub fn F_CastResponder(state: &mut GameState, mut ev: &event_t) -> bool {
+pub fn F_CastResponder(state: &mut GameState, ev: &event_t) -> bool {
     if ev.type_0 != EvType::ev_keydown {
         return false;
     }
@@ -705,9 +705,9 @@ pub fn F_CastResponder(state: &mut GameState, mut ev: &event_t) -> bool {
     true
 }
 pub fn F_CastPrint(state: &mut GameState, text: &str) {
-    let mut c: i32 = 0;
-    let mut cx: i32 = 0;
-    let mut w: i32 = 0;
+    let mut c: i32;
+    let mut cx: i32;
+    let mut w: i32;
     let mut width: i32 = 0;
     for b in text.bytes() {
         c = b.to_ascii_uppercase() as i32 - HU_FONTSTART;
@@ -764,11 +764,11 @@ fn F_DrawPatchCol(state: &mut IVideoState, x: i32, patch: &Patch, col: i32) {
     }
 }
 pub fn F_BunnyScroll(state: &mut GameState) {
-    let mut scrolled: i32 = 0;
-    let mut x: i32 = 0;
-    let mut p1: Patch;
-    let mut p2: Patch;
-    let mut stage: i32 = 0;
+    let mut scrolled: i32;
+    let mut x: i32;
+    let p1: Patch;
+    let p2: Patch;
+    let mut stage: i32;
     p1 = V_CachePatchName(state, "PFUB2");
     p2 = V_CachePatchName(state, "PFUB1");
     let dest_screen = Screen::Video;

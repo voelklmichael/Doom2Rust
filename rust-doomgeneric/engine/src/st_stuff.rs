@@ -390,8 +390,8 @@ pub fn ST_refreshBackground(state: &mut GameState) {
         );
     }
 }
-pub fn ST_Responder(state: &mut GameState, mut ev: &event_t) -> bool {
-    let mut i: i32 = 0;
+pub fn ST_Responder(state: &mut GameState, ev: &event_t) -> bool {
+    let mut i: i32;
     if ev.type_0 == EvType::ev_keyup && ev.data1 as u32 & 0xffff0000_u32 == AM_MSGHEADER as u32 {
         match ev.data1 {
             AM_MSGENTERED => {
@@ -456,7 +456,7 @@ pub fn ST_Responder(state: &mut GameState, mut ev: &event_t) -> bool {
                 state.g_game.player_mut(state.st_stuff.plyr).message =
                     Some("Very Happy Ammo Added".to_string());
             } else if cht_CheckCheat(&mut state.st_stuff.cheat_mus, ev.data2 as u8) {
-                let mut musnum: i32 = 0;
+                let musnum: i32;
                 state.g_game.player_mut(state.st_stuff.plyr).message =
                     Some("Music Change".to_string());
                 let buf: [u8; 2] = [
@@ -558,8 +558,8 @@ pub fn ST_Responder(state: &mut GameState, mut ev: &event_t) -> bool {
             }
         }
         if !state.g_game.netgame && cht_CheckCheat(&mut state.st_stuff.cheat_clev, ev.data2 as u8) {
-            let mut epsd: i32 = 0;
-            let mut map: i32 = 0;
+            let mut epsd: i32;
+            let map: i32;
             let buf_1: [u8; 2] = [
                 state.st_stuff.cheat_clev.param()[0],
                 state.st_stuff.cheat_clev.param()[1],
@@ -609,7 +609,7 @@ pub fn ST_Responder(state: &mut GameState, mut ev: &event_t) -> bool {
     false
 }
 pub fn ST_calcPainOffset(state: &mut GameState) -> i32 {
-    let mut health: i32 = 0;
+    let health: i32;
     health = if state.g_game.player_mut(state.st_stuff.plyr).health > 100_i32 {
         100_i32
     } else {
@@ -623,10 +623,10 @@ pub fn ST_calcPainOffset(state: &mut GameState) -> i32 {
     state.st_stuff.st_calcpainoffset_lastcalc
 }
 pub fn ST_updateFaceWidget(state: &mut GameState) {
-    let mut i: i32 = 0;
-    let mut badguyangle: angle_t = 0;
-    let mut diffang: angle_t = 0;
-    let mut doevilgrin: bool = false;
+    let mut i: i32;
+    let badguyangle: angle_t;
+    let diffang: angle_t;
+    let mut doevilgrin: bool;
     if state.st_stuff.st_updatefacewidget_priority < 10_i32
         && state.g_game.player_mut(state.st_stuff.plyr).health == 0
     {
@@ -745,7 +745,7 @@ pub fn ST_updateFaceWidget(state: &mut GameState) {
     state.st_stuff.st_facecount -= 1;
 }
 pub fn ST_updateWidgets(state: &mut GameState) {
-    let mut i: i32 = 0;
+    let mut i: i32;
     state.st_stuff.w_ready.data = state.g_game.player_mut(state.st_stuff.plyr).readyweapon as i32;
     i = 0_i32;
     while i < 6_i32 {
@@ -794,10 +794,10 @@ pub fn ST_Ticker(state: &mut GameState) {
     state.st_stuff.st_oldhealth = state.g_game.player_mut(state.st_stuff.plyr).health;
 }
 pub fn ST_doPaletteStuff(state: &mut GameState) {
-    let mut palette: i32 = 0;
+    let mut palette: i32;
     let mut _pal: *mut byte = ::core::ptr::null_mut::<byte>();
-    let mut cnt: i32 = 0;
-    let mut bzc: i32 = 0;
+    let mut cnt: i32;
+    let bzc: i32;
     cnt = state.g_game.player_mut(state.st_stuff.plyr).damagecount;
     if state.g_game.player_mut(state.st_stuff.plyr).powers[PowerType::pw_strength as usize] != 0 {
         bzc = 12_i32
@@ -842,8 +842,8 @@ pub fn ST_doPaletteStuff(state: &mut GameState) {
         I_SetPalette(state, &pal[offset..offset + 768]);
     }
 }
-pub fn ST_drawWidgets(state: &mut GameState, mut refresh: bool) {
-    let mut i: i32 = 0;
+pub fn ST_drawWidgets(state: &mut GameState, refresh: bool) {
+    let mut i: i32;
     state.st_stuff.st_armson = state.st_stuff.st_statusbaron && state.g_game.deathmatch == 0;
     state.st_stuff.st_fragson = state.g_game.deathmatch != 0 && state.st_stuff.st_statusbaron;
     let statusbaron = state.st_stuff.st_statusbaron;
@@ -922,7 +922,7 @@ pub fn ST_doRefresh(state: &mut GameState) {
 pub fn ST_diffDraw(state: &mut GameState) {
     ST_drawWidgets(state, false);
 }
-pub fn ST_Drawer(state: &mut GameState, mut fullscreen: bool, mut refresh: bool) {
+pub fn ST_Drawer(state: &mut GameState, fullscreen: bool, refresh: bool) {
     state.st_stuff.st_statusbaron = !fullscreen || state.am_map.automapactive;
     state.st_stuff.st_firsttime = state.st_stuff.st_firsttime || refresh;
     ST_doPaletteStuff(state);
@@ -992,7 +992,7 @@ pub fn ST_unloadData(state: &mut GameState) {
     ST_unloadGraphics(state);
 }
 pub fn ST_initData(state: &mut GameState) {
-    let mut i: i32 = 0;
+    let mut i: i32;
     state.st_stuff.st_firsttime = true;
     state.st_stuff.plyr = PlayerId(state.g_game.consoleplayer as u8);
     state.st_stuff.st_clock = 0_u32;
@@ -1019,7 +1019,7 @@ pub fn ST_initData(state: &mut GameState) {
     STlib_init(state);
 }
 pub fn ST_createWidgets(state: &mut GameState) {
-    let mut i: i32 = 0;
+    let mut i: i32;
     STlib_initNum(
         &mut state.st_stuff.w_ready,
         ST_AMMOX,

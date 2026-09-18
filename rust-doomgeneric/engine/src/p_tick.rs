@@ -440,7 +440,7 @@ pub fn P_RunThinkers(state: &mut GameState) {
     }
 }
 pub fn P_Ticker(state: &mut GameState) {
-    let mut i: i32 = 0;
+    let mut i: i32;
     if state.g_game.paused {
         return;
     }

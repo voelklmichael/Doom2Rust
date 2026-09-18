@@ -132,32 +132,32 @@ fn saveg_write8(state: &mut PSavegState, value: byte) {
     }
 }
 fn saveg_read16(state: &mut PSavegState) -> i16 {
-    let mut result: i32 = 0;
+    let mut result: i32;
     result = saveg_read8(state) as i32;
     result |= (saveg_read8(state) as i32) << 8_i32;
     result as i16
 }
-fn saveg_write16(state: &mut PSavegState, mut value: i16) {
+fn saveg_write16(state: &mut PSavegState, value: i16) {
     saveg_write8(state, (value as i32 & 0xff_i32) as byte);
     saveg_write8(state, (value as i32 >> 8_i32 & 0xff_i32) as byte);
 }
 fn saveg_read32(state: &mut PSavegState) -> i32 {
-    let mut result: i32 = 0;
+    let mut result: i32;
     result = saveg_read8(state) as i32;
     result |= (saveg_read8(state) as i32) << 8_i32;
     result |= (saveg_read8(state) as i32) << 16_i32;
     result |= (saveg_read8(state) as i32) << 24_i32;
     result
 }
-fn saveg_write32(state: &mut PSavegState, mut value: i32) {
+fn saveg_write32(state: &mut PSavegState, value: i32) {
     saveg_write8(state, (value & 0xff_i32) as byte);
     saveg_write8(state, (value >> 8_i32 & 0xff_i32) as byte);
     saveg_write8(state, (value >> 16_i32 & 0xff_i32) as byte);
     saveg_write8(state, (value >> 24_i32 & 0xff_i32) as byte);
 }
 fn saveg_read_pad(state: &mut PSavegState) {
-    let mut padding: i32 = 0;
-    let mut i: i32 = 0;
+    let padding: i32;
+    let mut i: i32;
     let pos = state
         .save_stream
         .as_mut()
@@ -172,8 +172,8 @@ fn saveg_read_pad(state: &mut PSavegState) {
     }
 }
 fn saveg_write_pad(state: &mut PSavegState) {
-    let mut padding: i32 = 0;
-    let mut i: i32 = 0;
+    let padding: i32;
+    let mut i: i32;
     let pos = state
         .save_stream
         .as_mut()
@@ -190,7 +190,7 @@ fn saveg_write_pad(state: &mut PSavegState) {
 fn saveg_readp(state: &mut PSavegState) -> *mut ::core::ffi::c_void {
     saveg_read32(state) as usize as *mut ::core::ffi::c_void
 }
-fn saveg_writep(state: &mut PSavegState, mut p: *mut ::core::ffi::c_void) {
+fn saveg_writep(state: &mut PSavegState, p: *mut ::core::ffi::c_void) {
     saveg_write32(state, p as usize as i32);
 }
 fn saveg_read_mapthing_t(state: &mut PSavegState, str: &mut mapthing_t) {
@@ -238,7 +238,7 @@ fn saveg_write_thinker_t(state: &mut PSavegState, str: &mut thinker_t) {
     saveg_write_actionf_t(state, &mut str.function);
 }
 fn saveg_read_mobj_t(state: &mut PSavegState, str: &mut mobj_t) {
-    let mut pl: i32 = 0;
+    let pl: i32;
     saveg_read_thinker_t(state, &mut str.thinker);
     str.x = saveg_read32(state) as fixed_t;
     str.y = saveg_read32(state) as fixed_t;
@@ -352,7 +352,7 @@ fn saveg_write_ticcmd_t(state: &mut PSavegState, str: &mut ticcmd_t) {
     saveg_write8(state, str.buttons);
 }
 fn saveg_read_pspdef_t(state: &mut PSavegState, str: &mut pspdef_t) {
-    let mut state_num: i32 = 0;
+    let state_num: i32;
     state_num = saveg_read32(state);
     if state_num > 0_i32 {
         str.state = Some(StateId(state_num as u32));
@@ -374,7 +374,7 @@ fn saveg_write_pspdef_t(state: &mut PSavegState, str: &mut pspdef_t) {
     saveg_write32(state, str.sy);
 }
 fn saveg_read_player_t(state: &mut PSavegState, str: &mut player_t) {
-    let mut i: i32 = 0;
+    let mut i: i32;
     // Placeholder value, discarded -- see saveg_write_player_t.
     saveg_readp(state);
     str.playerstate = match saveg_read32(state) {
@@ -448,7 +448,7 @@ fn saveg_read_player_t(state: &mut PSavegState, str: &mut player_t) {
     str.didsecret = saveg_read32(state) != 0;
 }
 fn saveg_write_player_t(state: &mut PSavegState, str: &mut player_t) {
-    let mut i: i32 = 0;
+    let mut i: i32;
     // The written value is a placeholder: on load it is immediately
     // overwritten with null by P_UnArchivePlayers and then correctly
     // restored from the mobj's own player backref in P_UnArchiveThinkers.
@@ -535,7 +535,7 @@ fn saveg_read_ceiling_e(state: &mut PSavegState) -> CeilingE {
     }
 }
 fn saveg_read_ceiling_t(state: &mut PSavegState, str: &mut ceiling_t) {
-    let mut sector: i32 = 0;
+    let sector: i32;
     saveg_read_thinker_t(state, &mut str.thinker);
     str.type_0 = saveg_read_ceiling_e(state);
     sector = saveg_read32(state);
@@ -574,7 +574,7 @@ fn saveg_read_vldoor_e(state: &mut PSavegState) -> VldoorE {
     }
 }
 fn saveg_read_vldoor_t(state: &mut PSavegState, str: &mut vldoor_t) {
-    let mut sector: i32 = 0;
+    let sector: i32;
     saveg_read_thinker_t(state, &mut str.thinker);
     str.type_0 = saveg_read_vldoor_e(state);
     sector = saveg_read32(state);
@@ -614,7 +614,7 @@ fn saveg_read_floor_e(state: &mut PSavegState) -> FloorE {
     }
 }
 fn saveg_read_floormove_t(state: &mut PSavegState, str: &mut floormove_t) {
-    let mut sector: i32 = 0;
+    let sector: i32;
     saveg_read_thinker_t(state, &mut str.thinker);
     str.type_0 = saveg_read_floor_e(state);
     str.crush = saveg_read32(state) != 0;
@@ -657,7 +657,7 @@ fn saveg_read_plattype_e(state: &mut PSavegState) -> PlattypeE {
     }
 }
 fn saveg_read_plat_t(state: &mut PSavegState, str: &mut plat_t) {
-    let mut sector: i32 = 0;
+    let sector: i32;
     saveg_read_thinker_t(state, &mut str.thinker);
     sector = saveg_read32(state);
     str.sector = SectorId(sector as u32);
@@ -687,7 +687,7 @@ fn saveg_write_plat_t(state: &mut PSavegState, str: &mut plat_t) {
     saveg_write32(state, str.type_0 as i32);
 }
 fn saveg_read_lightflash_t(state: &mut PSavegState, str: &mut lightflash_t) {
-    let mut sector: i32 = 0;
+    let sector: i32;
     saveg_read_thinker_t(state, &mut str.thinker);
     sector = saveg_read32(state);
     str.sector = SectorId(sector as u32);
@@ -707,7 +707,7 @@ fn saveg_write_lightflash_t(state: &mut PSavegState, str: &mut lightflash_t) {
     saveg_write32(state, str.mintime);
 }
 fn saveg_read_strobe_t(state: &mut PSavegState, str: &mut strobe_t) {
-    let mut sector: i32 = 0;
+    let sector: i32;
     saveg_read_thinker_t(state, &mut str.thinker);
     sector = saveg_read32(state);
     str.sector = SectorId(sector as u32);
@@ -727,7 +727,7 @@ fn saveg_write_strobe_t(state: &mut PSavegState, str: &mut strobe_t) {
     saveg_write32(state, str.brighttime);
 }
 fn saveg_read_glow_t(state: &mut PSavegState, str: &mut glow_t) {
-    let mut sector: i32 = 0;
+    let sector: i32;
     saveg_read_thinker_t(state, &mut str.thinker);
     sector = saveg_read32(state);
     str.sector = SectorId(sector as u32);
@@ -786,10 +786,10 @@ pub fn P_WriteSaveGameHeader(state: &mut GameState, description: &str) {
     );
 }
 pub fn P_ReadSaveGameHeader(state: &mut GameState) -> bool {
-    let mut i: i32 = 0;
-    let mut a: byte = 0;
-    let mut b: byte = 0;
-    let mut c: byte = 0;
+    let mut i: i32;
+    let a: byte;
+    let b: byte;
+    let c: byte;
     let mut read_vcheck: [u8; 16] = [0; 16];
     i = 0_i32;
     while i < SAVESTRINGSIZE {
@@ -827,7 +827,7 @@ pub fn P_ReadSaveGameHeader(state: &mut GameState) -> bool {
     true
 }
 pub fn P_ReadSaveGameEOF(state: &mut GameState) -> bool {
-    let mut value: i32 = 0;
+    let value: i32;
     value = saveg_read8(&mut state.p_saveg) as i32;
     value == SAVEGAME_EOF
 }
@@ -835,7 +835,7 @@ pub fn P_WriteSaveGameEOF(state: &mut GameState) {
     saveg_write8(&mut state.p_saveg, SAVEGAME_EOF as byte);
 }
 pub fn P_ArchivePlayers(state: &mut GameState) {
-    let mut i: i32 = 0;
+    let mut i: i32;
     i = 0_i32;
     while i < MAXPLAYERS {
         if state.g_game.playeringame[i as usize] {
@@ -846,7 +846,7 @@ pub fn P_ArchivePlayers(state: &mut GameState) {
     }
 }
 pub fn P_UnArchivePlayers(state: &mut GameState) {
-    let mut i: i32 = 0;
+    let mut i: i32;
     i = 0_i32;
     while i < MAXPLAYERS {
         if state.g_game.playeringame[i as usize] {
@@ -967,7 +967,7 @@ pub fn P_ArchiveThinkers(state: &mut GameState) {
     saveg_write8(&mut state.p_saveg, ThinkerClass::tc_end as i32 as byte);
 }
 pub fn P_UnArchiveThinkers(state: &mut GameState) {
-    let mut tclass: byte = 0;
+    let mut tclass: byte;
     let mut cursor = state.p_tick.head();
     while let Some(id) = cursor {
         // Unlike the raw-pointer version this replaces, `next` lives in our
@@ -1203,7 +1203,7 @@ pub fn P_ArchiveSpecials(state: &mut GameState) {
     );
 }
 pub fn P_UnArchiveSpecials(state: &mut GameState) {
-    let mut tclass: byte = 0;
+    let mut tclass: byte;
     loop {
         tclass = saveg_read8(&mut state.p_saveg);
         match tclass as i32 {

@@ -148,12 +148,12 @@ pub const MINZ: i32 = FRACUNIT * 4_i32;
 pub const BASEYCENTER: i32 = 100;
 pub fn R_InstallSpriteLump(
     state: &mut GameState,
-    mut lump: i32,
-    mut frame: u32,
+    lump: i32,
+    frame: u32,
     mut rotation: u32,
-    mut flipped: bool,
+    flipped: bool,
 ) {
-    let mut r: i32 = 0;
+    let mut r: i32;
     if frame >= 29_u32 || rotation > 8_u32 {
         I_Error(&format!(
             "R_InstallSpriteLump: Bad frame characters in lump {}",
@@ -210,13 +210,13 @@ pub fn R_InstallSpriteLump(
     state.r_things.sprtemp[frame as usize].flip[rotation as usize] = flipped as byte;
 }
 pub fn R_InitSpriteDefs(state: &mut GameState, namelist: &[&'static str]) {
-    let mut i: i32 = 0;
-    let mut l: i32 = 0;
-    let mut frame: i32 = 0;
-    let mut rotation: i32 = 0;
-    let mut start: i32 = 0;
-    let mut end: i32 = 0;
-    let mut patched: i32 = 0;
+    let mut i: i32;
+    let mut l: i32;
+    let mut frame: i32;
+    let mut rotation: i32;
+    let start: i32;
+    let end: i32;
+    let mut patched: i32;
     state.r_things.numsprites = namelist.len() as i32;
     if state.r_things.numsprites == 0 {
         return;
@@ -302,7 +302,7 @@ pub fn R_InitSpriteDefs(state: &mut GameState, namelist: &[&'static str]) {
 }
 pub static newvissprite: i32 = 0;
 pub fn R_InitSprites(state: &mut GameState, namelist: &[&'static str]) {
-    let mut i: i32 = 0;
+    let mut i: i32;
     i = 0_i32;
     while i < SCREENWIDTH {
         state.r_things.negonearray[i as usize] = -1_i32 as i16;
@@ -322,9 +322,9 @@ pub fn R_StoreVisSprite(state: &mut GameState, vis: vissprite_t) {
     state.r_things.vissprite_p += 1;
 }
 pub fn R_DrawMaskedColumn(state: &mut GameState, mut post: ColumnSource) {
-    let mut topscreen: i32 = 0;
-    let mut bottomscreen: i32 = 0;
-    let mut basetexturemid: fixed_t = 0;
+    let mut topscreen: i32;
+    let mut bottomscreen: i32;
+    let basetexturemid: fixed_t;
     basetexturemid = state.r_draw.dc_texturemid;
     let mfloorclip = state.r_things.mfloorclip.unwrap();
     let mceilingclip = state.r_things.mceilingclip.unwrap();
@@ -357,9 +357,9 @@ pub fn R_DrawMaskedColumn(state: &mut GameState, mut post: ColumnSource) {
     state.r_draw.dc_texturemid = basetexturemid;
 }
 pub fn R_DrawVisSprite(state: &mut GameState, vis: &vissprite_t) {
-    let mut texturecolumn: i32 = 0;
-    let mut frac: fixed_t = 0;
-    let mut patch: Patch;
+    let mut texturecolumn: i32;
+    let mut frac: fixed_t;
+    let patch: Patch;
     let sprite_lump = vis.patch + state.r_data.firstspritelump;
     patch = V_CachePatchNum(state, sprite_lump);
     state.r_draw.dc_colormap = vis.colormap;
@@ -406,21 +406,21 @@ pub fn R_ProjectSprite(state: &mut GameState, thing_id: MobjId) {
         thing.angle,
         thing.flags,
     );
-    let mut tr_x: fixed_t = 0;
-    let mut tr_y: fixed_t = 0;
-    let mut gxt: fixed_t = 0;
-    let mut gyt: fixed_t = 0;
-    let mut tx: fixed_t = 0;
-    let mut tz: fixed_t = 0;
-    let mut xscale: fixed_t = 0;
-    let mut x1: i32 = 0;
-    let mut x2: i32 = 0;
-    let mut lump: i32 = 0;
-    let mut rot: u32 = 0;
-    let mut flip: bool = false;
-    let mut index: i32 = 0;
-    let mut ang: angle_t = 0;
-    let mut iscale: fixed_t = 0;
+    let tr_x: fixed_t;
+    let tr_y: fixed_t;
+    let mut gxt: fixed_t;
+    let mut gyt: fixed_t;
+    let mut tx: fixed_t;
+    let tz: fixed_t;
+    let xscale: fixed_t;
+    let x1: i32;
+    let x2: i32;
+    let lump: i32;
+    let rot: u32;
+    let flip: bool;
+    let mut index: i32;
+    let ang: angle_t;
+    let iscale: fixed_t;
     tr_x = thing_x - state.r_main.viewx;
     tr_y = thing_y - state.r_main.viewy;
     gxt = FixedMul(tr_x, state.r_main.viewcos);
@@ -550,11 +550,11 @@ pub fn R_AddSprites(state: &mut GameState, sec: SectorId) {
     }
 }
 pub fn R_DrawPSprite(state: &mut GameState, psp: &pspdef_t) {
-    let mut tx: fixed_t = 0;
-    let mut x1: i32 = 0;
-    let mut x2: i32 = 0;
-    let mut lump: i32 = 0;
-    let mut flip: bool = false;
+    let mut tx: fixed_t;
+    let x1: i32;
+    let x2: i32;
+    let lump: i32;
+    let flip: bool;
     let mut avis: vissprite_t = vissprite_s {
         x1: 0,
         x2: 0,
@@ -675,12 +675,12 @@ pub fn R_SortVisSprites(state: &mut GameState) {
     state.r_things.vissprite_order = order;
 }
 pub fn R_DrawSprite(state: &mut GameState, spr: &vissprite_t) {
-    let mut x: i32 = 0;
-    let mut r1: i32 = 0;
-    let mut r2: i32 = 0;
-    let mut scale: fixed_t = 0;
-    let mut lowscale: fixed_t = 0;
-    let mut silhouette: i32 = 0;
+    let mut x: i32;
+    let mut r1: i32;
+    let mut r2: i32;
+    let mut scale: fixed_t;
+    let mut lowscale: fixed_t;
+    let mut silhouette: i32;
     x = spr.x1;
     while x <= spr.x2 {
         state.r_things.cliptop[x as usize] = -2_i32 as i16;

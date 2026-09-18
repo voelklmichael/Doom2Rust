@@ -252,13 +252,13 @@ pub fn D_ProcessEvents(state: &mut GameState) {
     }
 }
 pub fn D_Display(state: &mut GameState) {
-    let mut nowtime: i32 = 0;
-    let mut tics: i32 = 0;
-    let mut wipestart: i32 = 0;
-    let mut y: i32 = 0;
-    let mut done: bool = false;
-    let mut wipe: bool = false;
-    let mut redrawsbar: bool = false;
+    let mut nowtime: i32;
+    let mut tics: i32;
+    let mut wipestart: i32;
+    let y: i32;
+    let mut done: bool;
+    let wipe: bool;
+    let mut redrawsbar: bool;
     if state.g_game.nodrawers {
         return;
     }
@@ -398,7 +398,7 @@ pub fn D_Display(state: &mut GameState) {
     }
 }
 pub fn D_BindVariables(state: &mut GameState) {
-    let mut i: i32 = 0;
+    let mut i: i32;
     I_BindJoystickVariables(state);
     I_BindSoundVariables(state);
     M_BindBaseControls(state);
@@ -580,7 +580,7 @@ pub fn D_StartTitle(state: &mut GameState) {
     D_AdvanceDemo(state);
 }
 fn SetMissionForPackName(state: &mut GameState, pack_name: &str) {
-    const packs: [MissionPack; 3] = [
+    const PACKS: [MissionPack; 3] = [
         MissionPack {
             name: "doom2",
             mission: GameMission_t::doom2,
@@ -594,21 +594,21 @@ fn SetMissionForPackName(state: &mut GameState, pack_name: &str) {
             mission: GameMission_t::pack_plut,
         },
     ];
-    for pack in &packs {
+    for pack in &PACKS {
         if pack_name.eq_ignore_ascii_case(pack.name) {
             state.doomstat.gamemission = pack.mission;
             return;
         }
     }
     println!("Valid mission packs are:");
-    for pack in &packs {
+    for pack in &PACKS {
         println!("\t{}", pack.name);
     }
     I_Error(&format!("Unknown mission pack name: {}", pack_name));
 }
 pub fn D_IdentifyVersion(state: &mut GameState) {
     if state.doomstat.gamemission as u32 == GameMission_t::none as i32 as u32 {
-        let mut i: u32 = 0;
+        let mut i: u32;
         i = 0_u32;
         while i < state.w_wad.numlumps {
             if state.w_wad.lumpinfo[i as usize]
@@ -647,7 +647,7 @@ pub fn D_IdentifyVersion(state: &mut GameState) {
             state.doomstat.gamemode = GameMode_t::shareware;
         }
     } else {
-        let mut p: i32 = 0;
+        let p: i32;
         state.doomstat.gamemode = GameMode_t::commercial;
         p = M_CheckParmWithArgs(state, "-pack", 1_i32);
         if p > 0_i32 {
@@ -660,8 +660,8 @@ pub fn D_IdentifyVersion(state: &mut GameState) {
     };
 }
 pub fn D_SetGameDescription(state: &mut GameState) {
-    let mut is_freedoom: bool = W_CheckNumForName(&mut state.w_wad, "FREEDOOM") >= 0_i32;
-    let mut is_freedm: bool = W_CheckNumForName(&mut state.w_wad, "FREEDM") >= 0_i32;
+    let is_freedoom: bool = W_CheckNumForName(&mut state.w_wad, "FREEDOOM") >= 0_i32;
+    let is_freedm: bool = W_CheckNumForName(&mut state.w_wad, "FREEDM") >= 0_i32;
     state.doomstat.gamedescription = "Unknown";
     if (if state.doomstat.gamemission as u32 == GameMission_t::pack_chex as i32 as u32 {
         GameMission_t::doom as i32 as u32
@@ -720,17 +720,17 @@ fn D_AddFile(state: &mut GameState, filename: &str) -> bool {
     println!(" adding {}", filename);
     W_AddFile(state, filename).is_some()
 }
-static copyright_banners: [&str; 3] = [
+static COPYRIGHT_BANNERS: [&str; 3] = [
     "===========================================================================\nATTENTION:  This version of DOOM has been modified.  If you would like to\nget a copy of the original game, call 1-800-IDGAMES or see the readme file.\n        You will not receive technical support for modified games.\n                      press enter to continue\n===========================================================================\n",
     "===========================================================================\n                 Commercial product - do not distribute!\n         Please report software piracy to the SPA: 1-800-388-PIR8\n===========================================================================\n",
     "===========================================================================\n                                Shareware!\n===========================================================================\n",
 ];
 pub fn PrintDehackedBanners() {
-    let mut i: size_t = 0;
+    let mut i: size_t;
     i = 0 as size_t;
-    while i < copyright_banners.len() as size_t {
-        let deh_s_str: &str = copyright_banners[i];
-        if deh_s_str != copyright_banners[i] {
+    while i < COPYRIGHT_BANNERS.len() as size_t {
+        let deh_s_str: &str = COPYRIGHT_BANNERS[i];
+        if deh_s_str != COPYRIGHT_BANNERS[i] {
             print!("{}", deh_s_str);
             if !deh_s_str.ends_with('\n') {
                 println!();
@@ -740,7 +740,7 @@ pub fn PrintDehackedBanners() {
     }
 }
 fn InitGameVersion(state: &mut GameState) {
-    let mut p: i32 = 0;
+    let p: i32;
     p = M_CheckParmWithArgs(state, "-gameversion", 1_i32);
     if p != 0 {
         let arg = state.m_argv.myargv[(p + 1_i32) as usize].as_bytes();
@@ -818,8 +818,8 @@ fn D_QuitCheckDemoStatus(state: &mut GameState) {
     G_CheckDemoStatus(state);
 }
 pub fn D_DoomMain(state: &mut GameState) {
-    let mut p: i32 = 0;
-    let mut file: String = String::new();
+    let mut p: i32;
+    let file: String;
     let mut demolumpname: FixedCStr<8> = FixedCStr::from_array([0; 8]);
     I_AtExit(
         &mut state.i_system,
@@ -951,7 +951,7 @@ pub fn D_DoomMain(state: &mut GameState) {
             FixedCStr(*b"cybra1\0\0"),
             FixedCStr(*b"spida1d1"),
         ];
-        let mut i: i32 = 0;
+        let mut i: i32;
         if state.doomstat.gamemode as u32 == GameMode_t::shareware as i32 as u32 {
             I_Error("\nYou cannot -file with the shareware version. Register!");
         }

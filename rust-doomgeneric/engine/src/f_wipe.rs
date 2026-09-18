@@ -139,10 +139,10 @@ pub fn wipe_StartScreen(state: &mut GameState) -> i32 {
 }
 pub fn wipe_EndScreen(
     state: &mut GameState,
-    mut x: i32,
-    mut y_0: i32,
-    mut width: i32,
-    mut height: i32,
+    x: i32,
+    y_0: i32,
+    width: i32,
+    height: i32,
 ) -> i32 {
     state.f_wipe.wipe_scr_end = I_ReadScreen(state);
     let wipe_scr_start = std::mem::take(&mut state.f_wipe.wipe_scr_start);
@@ -153,12 +153,12 @@ pub fn wipe_EndScreen(
 type WipeFn = fn(&mut GameState, i32, i32, i32) -> i32;
 pub fn wipe_ScreenWipe(
     state: &mut GameState,
-    mut wipeno: i32,
-    mut width: i32,
-    mut height: i32,
-    mut ticks: i32,
+    wipeno: i32,
+    width: i32,
+    height: i32,
+    ticks: i32,
 ) -> i32 {
-    let mut rc: i32 = 0;
+    let rc: i32;
     let wipes: [WipeFn; 6] = [
         wipe_initColorXForm,
         wipe_doColorXForm,

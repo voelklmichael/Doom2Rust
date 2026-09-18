@@ -40,7 +40,7 @@ impl IJoystickState {
 }
 
 pub fn I_BindJoystickVariables(state: &mut GameState) {
-    let mut i: i32 = 0;
+    let mut i: i32;
     M_BindVariable_int(&mut state.m_config, "use_joystick", |s| {
         &mut s.i_joystick.usejoystick
     });

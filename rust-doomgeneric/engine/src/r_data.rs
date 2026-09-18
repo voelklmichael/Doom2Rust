@@ -140,8 +140,8 @@ pub struct maptexture_t {
 // index instead of pointer arithmetic, so an out-of-bounds/corrupt post
 // panics instead of reading adjacent memory.
 pub fn R_DrawColumnInCache(patch: &[u8], cache: &mut [u8], originy: i32, cacheheight: i32) {
-    let mut count: i32 = 0;
-    let mut position: i32 = 0;
+    let mut count: i32;
+    let mut position: i32;
     let mut cursor: usize = 0;
     while patch[cursor] as i32 != 0xff_i32 {
         let topdelta = patch[cursor] as i32;
@@ -287,9 +287,9 @@ pub fn R_GenerateLookup(state: &mut GameState, texnum: i32) {
         x += 1;
     }
 }
-pub fn R_GetColumn(state: &mut GameState, mut tex: i32, mut col: i32) -> ColumnSource {
-    let mut lump: i32 = 0;
-    let mut ofs: i32 = 0;
+pub fn R_GetColumn(state: &mut GameState, tex: i32, mut col: i32) -> ColumnSource {
+    let lump: i32;
+    let ofs: i32;
     col &= state.r_data.texturewidthmask[tex as usize];
     lump = state.r_data.texturecolumnlump[tex as usize][col as usize] as i32;
     ofs = state.r_data.texturecolumnofs[tex as usize][col as usize] as i32;
@@ -309,8 +309,8 @@ pub fn R_GetColumn(state: &mut GameState, mut tex: i32, mut col: i32) -> ColumnS
     }
 }
 fn GenerateTextureHashTable(state: &mut GameState) {
-    let mut i: i32 = 0;
-    let mut key: i32 = 0;
+    let mut i: i32;
+    let mut key: i32;
     state.r_data.textures_hashtable = vec![None; state.r_data.numtextures as usize];
     i = 0_i32;
     while i < state.r_data.numtextures {
@@ -335,18 +335,18 @@ fn GenerateTextureHashTable(state: &mut GameState) {
     }
 }
 pub fn R_InitTextures(state: &mut GameState) {
-    let mut i: i32 = 0;
-    let mut j: i32 = 0;
+    let mut i: i32;
+    let mut j: i32;
     let mut patchlookup: Vec<i32>;
-    let mut nummappatches: i32 = 0;
-    let mut offset: i32 = 0;
-    let mut maxoff: i32 = 0;
-    let mut maxoff2: i32 = 0;
-    let mut numtextures1: i32 = 0;
-    let mut numtextures2: i32 = 0;
-    let mut temp1: i32 = 0;
-    let mut temp2: i32 = 0;
-    let mut temp3: i32 = 0;
+    let nummappatches: i32;
+    let mut offset: i32;
+    let mut maxoff: i32;
+    let maxoff2: i32;
+    let numtextures1: i32;
+    let numtextures2: i32;
+    let temp1: i32;
+    let temp2: i32;
+    let temp3: i32;
     // PNAMES/TEXTURE1/TEXTURE2 are on-disk WAD lumps (raw bytes, not typed
     // Rust structs), so each is captured as a plain byte buffer once here
     // and decoded field-by-field with explicit little-endian reads below --
@@ -515,7 +515,7 @@ pub fn R_InitTextures(state: &mut GameState) {
     GenerateTextureHashTable(state);
 }
 pub fn R_InitFlats(state: &mut GameState) {
-    let mut i: i32 = 0;
+    let mut i: i32;
     state.r_data.firstflat = W_GetNumForName(&mut state.w_wad, "F_START") + 1_i32;
     state.r_data.lastflat = W_GetNumForName(&mut state.w_wad, "F_END") - 1_i32;
     state.r_data.numflats = state.r_data.lastflat - state.r_data.firstflat + 1_i32;
@@ -527,7 +527,7 @@ pub fn R_InitFlats(state: &mut GameState) {
     }
 }
 pub fn R_InitSpriteLumps(state: &mut GameState) {
-    let mut i: i32 = 0;
+    let mut i: i32;
     state.r_data.firstspritelump = W_GetNumForName(&mut state.w_wad, "S_START") + 1_i32;
     state.r_data.lastspritelump = W_GetNumForName(&mut state.w_wad, "S_END") - 1_i32;
     state.r_data.numspritelumps =
@@ -558,7 +558,7 @@ pub fn R_InitSpriteLumps(state: &mut GameState) {
     }
 }
 pub fn R_InitColormaps(state: &mut GameState) {
-    let mut lump: i32 = 0;
+    let lump: i32;
     lump = W_GetNumForName(&mut state.w_wad, "COLORMAP");
     let lumplen = W_LumpLength(&mut state.w_wad, lump as u32) as usize;
     state.r_data.colormaps = W_LumpBytes(state, lump)[..lumplen].to_vec();
@@ -573,7 +573,7 @@ pub fn R_InitData(state: &mut GameState) {
     R_InitColormaps(state);
 }
 pub fn R_FlatNumForName(state: &mut GameState, name: &str) -> i32 {
-    let mut i: i32 = 0;
+    let i: i32;
     i = W_CheckNumForName(&mut state.w_wad, name);
     if i == -1_i32 {
         I_Error(&format!("R_FlatNumForName: {} not found", name));
@@ -581,7 +581,7 @@ pub fn R_FlatNumForName(state: &mut GameState, name: &str) -> i32 {
     i - state.r_data.firstflat
 }
 pub fn R_CheckTextureNumForName(state: &RDataState, name: &str) -> i32 {
-    let mut key: i32 = 0;
+    let key: i32;
     if name.as_bytes().first() == Some(&b'-') {
         return 0_i32;
     }
@@ -597,7 +597,7 @@ pub fn R_CheckTextureNumForName(state: &RDataState, name: &str) -> i32 {
     -1_i32
 }
 pub fn R_TextureNumForName(state: &mut RDataState, name: &str) -> i32 {
-    let mut i: i32 = 0;
+    let i: i32;
     i = R_CheckTextureNumForName(state, name);
     if i == -1_i32 {
         I_Error(&format!("R_TextureNumForName: {} not found", name));
@@ -608,10 +608,10 @@ pub fn R_PrecacheLevel(state: &mut GameState) {
     let mut flatpresent: Vec<u8>;
     let mut texturepresent: Vec<u8>;
     let mut spritepresent: Vec<u8>;
-    let mut i: i32 = 0;
-    let mut j: i32 = 0;
-    let mut k: i32 = 0;
-    let mut lump: i32 = 0;
+    let mut i: i32;
+    let mut j: i32;
+    let mut k: i32;
+    let mut lump: i32;
     let mut _th: *mut thinker_t = ::core::ptr::null_mut::<thinker_t>();
     if state.g_game.demoplayback {
         return;
