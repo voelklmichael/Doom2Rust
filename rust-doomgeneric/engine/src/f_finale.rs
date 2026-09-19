@@ -255,7 +255,7 @@ const INITIAL_TEXTSCREENS: [textscreen_t; 22] = [
 
 pub struct FFinaleState {
     finalestage: FinaleStage,
-    finalecount: u32,
+    pub(crate) finalecount: u32,
     textscreens: [textscreen_t; 22],
     finaletext: &'static str,
     finaleflat: &'static str,
