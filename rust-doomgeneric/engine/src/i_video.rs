@@ -8,6 +8,7 @@ use crate::i_input::I_GetEvent;
 use crate::i_system::I_Error;
 use crate::m_argv::{M_ArgvAtoi, M_CheckParmWithArgs};
 use crate::m_fixed::INT_MAX;
+use crate::platform::DoomPlatform;
 use crate::stdint_types::byte;
 use crate::stdint_types::uint32_t;
 use crate::tables::gammatable;
@@ -144,9 +145,7 @@ pub fn I_InitGraphics(state: &mut GameState) {
     state.i_video.s_Fb.yres_virtual = state.i_video.s_Fb.yres;
     let gfxmodeparm: i32 = M_CheckParmWithArgs(state, "-gfxmode", 1_i32);
     let mode: &str = if gfxmodeparm != 0 {
-        state.m_argv.myargv[(gfxmodeparm + 1_i32) as usize]
-            .to_str()
-            .unwrap()
+        state.m_argv.myargv[(gfxmodeparm + 1_i32) as usize].as_str()
     } else {
         "rgba8888"
     };
@@ -173,7 +172,8 @@ pub fn I_InitGraphics(state: &mut GameState) {
     } else {
         I_Error(&format!("Unknown gfxmode value: {}\n", mode));
     }
-    println!(
+    doom_println!(
+        state.platform,
         "I_InitGraphics: framebuffer: x_res: {}, y_res: {}, x_virtual: {}, y_virtual: {}, bpp: {}",
         state.i_video.s_Fb.xres,
         state.i_video.s_Fb.yres,
@@ -181,7 +181,7 @@ pub fn I_InitGraphics(state: &mut GameState) {
         state.i_video.s_Fb.yres_virtual,
         state.i_video.s_Fb.bits_per_pixel,
     );
-    println!(
+    doom_println!(state.platform,
         "I_InitGraphics: framebuffer: RGBA: {}{}{}{}, red_off: {}, green_off: {}, blue_off: {}, transp_off: {}",
         state.i_video.s_Fb.red.length,
         state.i_video.s_Fb.green.length,
@@ -192,15 +192,18 @@ pub fn I_InitGraphics(state: &mut GameState) {
         state.i_video.s_Fb.blue.offset,
         state.i_video.s_Fb.transp.offset,
     );
-    println!(
+    doom_println!(
+        state.platform,
         "I_InitGraphics: DOOM screen size: w x h: {} x {}",
-        SCREENWIDTH, SCREENHEIGHT,
+        SCREENWIDTH,
+        SCREENHEIGHT,
     );
     i = M_CheckParmWithArgs(state, "-scaling", 1_i32);
     if i > 0_i32 {
         i = M_ArgvAtoi(&state.m_argv.myargv[(i + 1_i32) as usize]);
         state.i_video.fb_scaling = i;
-        println!(
+        doom_println!(
+            state.platform,
             "I_InitGraphics: Scaling factor: {}",
             state.i_video.fb_scaling
         );
@@ -224,7 +227,8 @@ pub fn I_InitGraphics(state: &mut GameState) {
                 .wrapping_div(SCREENHEIGHT as uint32_t)
                 as i32;
         }
-        println!(
+        doom_println!(
+            state.platform,
             "I_InitGraphics: Auto-scaling factor: {}",
             state.i_video.fb_scaling
         );
@@ -314,13 +318,13 @@ pub fn I_SetPalette(state: &mut GameState, palette: &[byte]) {
         color.set_b(gamma[rgb[2] as usize] as uint32_t);
     }
 }
-pub fn I_GetPaletteIndex(r: i32, g: i32, b: i32) -> i32 {
+pub fn I_GetPaletteIndex(platform: &mut dyn DoomPlatform, r: i32, g: i32, b: i32) -> i32 {
     let mut best: i32;
     let mut best_diff: i32;
     let mut diff: i32;
     let mut i: i32;
     let mut color: col_t = col_t { r: 0, g: 0, b: 0 };
-    println!("I_GetPaletteIndex");
+    doom_println!(platform, "I_GetPaletteIndex");
     best = 0_i32;
     best_diff = INT_MAX;
     i = 0_i32;

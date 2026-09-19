@@ -19,9 +19,9 @@ pub fn W_ParseCommandLine(state: &mut GameState) -> bool {
             let filename = D_TryFindWADByName(
                 &mut state.d_iwad,
                 &*state.fs,
-                state.m_argv.myargv[p as usize].to_str().unwrap(),
+                state.m_argv.myargv[p as usize].as_str(),
             );
-            println!(" adding {}", filename);
+            doom_println!(state.platform, " adding {}", filename);
             W_AddFile(state, &filename);
         }
     }

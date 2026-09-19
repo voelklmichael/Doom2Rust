@@ -635,9 +635,11 @@ fn PadRejectArray(state: &mut GameState, offset: usize, len: u32) {
     let pad_bytes = ::core::mem::size_of::<[u32; 4]>();
     let mut padvalue: u8 = 0;
     if len as usize > pad_bytes {
-        eprintln!(
+        doom_eprintln!(
+            state.platform,
             "PadRejectArray: REJECT lump too short to pad! ({} > {})",
-            len, pad_bytes as i32,
+            len,
+            pad_bytes as i32,
         );
         padvalue = if M_CheckParm(state, "-reject_pad_with_ff") != 0 {
             0xff

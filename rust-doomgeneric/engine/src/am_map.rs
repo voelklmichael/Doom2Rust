@@ -1018,7 +1018,7 @@ pub fn AM_drawFline(state: &mut GameState, fl: &fline_t, color: i32) {
     {
         let fresh0 = state.am_map.am_drawfline_fuck;
         state.am_map.am_drawfline_fuck += 1;
-        eprint!("fuck {} \r", fresh0);
+        doom_eprint!(state.platform, "fuck {} \r", fresh0);
         return;
     }
     let dx: i32 = fl.b.x - fl.a.x;

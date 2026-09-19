@@ -998,7 +998,10 @@ pub fn M_Episode(state: &mut GameState, mut choice: i32) {
         return;
     }
     if state.doomstat.gamemode as u32 == GameMode_t::registered as i32 as u32 && choice > 2_i32 {
-        eprintln!("M_Episode: 4th episode requires UltimateDOOM");
+        doom_eprintln!(
+            state.platform,
+            "M_Episode: 4th episode requires UltimateDOOM"
+        );
         choice = 0_i32;
     }
     state.m_menu.epi = choice;

@@ -104,6 +104,16 @@ pub fn P_TempSaveGameFile(state: &mut GameState) -> String {
 pub fn P_SaveGameFile(state: &mut GameState, slot: i32) -> String {
     format!("{}doomsav{}.dsg", state.d_main.savegamedir, slot)
 }
+/// Prints the deferred "ran off the end of the file" diagnostic, if a
+/// `saveg_read8` hit one; call once when a load finishes or is abandoned.
+pub fn P_ReportSaveGameReadError(state: &mut GameState) {
+    if state.p_saveg.savegame_error {
+        doom_eprintln!(
+            state.platform,
+            "saveg_read8: Unexpected end of file while reading save game"
+        );
+    }
+}
 fn saveg_read8(state: &mut PSavegState) -> byte {
     match state.save_buffer.get(state.save_pos) {
         Some(&b) => {
@@ -111,10 +121,7 @@ fn saveg_read8(state: &mut PSavegState) -> byte {
             b
         }
         None => {
-            if !state.savegame_error {
-                eprintln!("saveg_read8: Unexpected end of file while reading save game");
-                state.savegame_error = true;
-            }
+            state.savegame_error = true;
             0
         }
     }

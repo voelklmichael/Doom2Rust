@@ -432,7 +432,10 @@ pub fn EV_VerticalDoor(state: &mut GameState, line: LineId, thing: MobjId) {
                         if thing_player.is_none() {
                             return;
                         }
-                        eprintln!("EV_VerticalDoor: Tried to close something that wasn't a door.");
+                        doom_eprintln!(
+                            state.platform,
+                            "EV_VerticalDoor: Tried to close something that wasn't a door."
+                        );
                         let ceiling_id = state.p_tick.ceiling_payload(id);
                         state
                             .p_ceilng
@@ -444,7 +447,10 @@ pub fn EV_VerticalDoor(state: &mut GameState, line: LineId, thing: MobjId) {
                         if thing_player.is_none() {
                             return;
                         }
-                        eprintln!("EV_VerticalDoor: Tried to close something that wasn't a door.");
+                        doom_eprintln!(
+                            state.platform,
+                            "EV_VerticalDoor: Tried to close something that wasn't a door."
+                        );
                         let floor_id = state.p_tick.floor_payload(id);
                         state
                             .p_spec

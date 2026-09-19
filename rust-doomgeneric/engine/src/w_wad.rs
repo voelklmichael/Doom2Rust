@@ -79,7 +79,7 @@ pub fn W_AddFile(state: &mut GameState, filename: &str) -> Option<FileId> {
     let wad_file = match state.fs.open(filename) {
         Some(wad_file) => wad_file,
         None => {
-            println!(" couldn't open {}", filename);
+            doom_println!(state.platform, " couldn't open {}", filename);
             return None;
         }
     };
@@ -91,7 +91,7 @@ pub fn W_AddFile(state: &mut GameState, filename: &str) -> Option<FileId> {
             size: wad_length as i32,
             name: FixedCStr([0; 8]),
         };
-        M_ExtractFileBase(filename, &mut single.name);
+        M_ExtractFileBase(&mut *state.platform, filename, &mut single.name);
         vec![single]
     } else {
         let mut header_buf = [0u8; ::core::mem::size_of::<wadinfo_t>()];

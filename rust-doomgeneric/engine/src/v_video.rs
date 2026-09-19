@@ -8,6 +8,7 @@ use crate::i_video::I_GetPaletteIndex;
 use crate::m_bbox::M_AddToBox;
 use crate::m_fixed::fixed_t;
 use crate::patch::Patch;
+use crate::platform::DoomPlatform;
 use crate::stdint_types::byte;
 use crate::w_wad::W_LumpBytes;
 use crate::w_wad::W_LumpBytesName;
@@ -273,16 +274,16 @@ pub fn V_ScreenShot(state: &mut GameState) {
 }
 pub const MOUSE_SPEED_BOX_WIDTH: i32 = 120;
 pub const MOUSE_SPEED_BOX_HEIGHT: i32 = 9;
-pub fn V_DrawMouseSpeedBox(state: &mut IVideoState, speed: i32) {
+pub fn V_DrawMouseSpeedBox(state: &mut IVideoState, platform: &mut dyn DoomPlatform, speed: i32) {
     let mut original_speed: i32;
 
     let mut linelen: i32;
-    let bgcolor: i32 = I_GetPaletteIndex(0x77_i32, 0x77_i32, 0x77_i32);
-    let bordercolor: i32 = I_GetPaletteIndex(0x55_i32, 0x55_i32, 0x55_i32);
-    let red: i32 = I_GetPaletteIndex(0xff_i32, 0_i32, 0_i32);
-    let black: i32 = I_GetPaletteIndex(0_i32, 0_i32, 0_i32);
-    let yellow: i32 = I_GetPaletteIndex(0xff_i32, 0xff_i32, 0_i32);
-    let white: i32 = I_GetPaletteIndex(0xff_i32, 0xff_i32, 0xff_i32);
+    let bgcolor: i32 = I_GetPaletteIndex(platform, 0x77_i32, 0x77_i32, 0x77_i32);
+    let bordercolor: i32 = I_GetPaletteIndex(platform, 0x55_i32, 0x55_i32, 0x55_i32);
+    let red: i32 = I_GetPaletteIndex(platform, 0xff_i32, 0_i32, 0_i32);
+    let black: i32 = I_GetPaletteIndex(platform, 0_i32, 0_i32, 0_i32);
+    let yellow: i32 = I_GetPaletteIndex(platform, 0xff_i32, 0xff_i32, 0_i32);
+    let white: i32 = I_GetPaletteIndex(platform, 0xff_i32, 0xff_i32, 0xff_i32);
     if state.usemouse == 0 || ((state.mouse_acceleration - 1_f32) as f64).abs() < 0.01f64 {
         return;
     }

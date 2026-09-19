@@ -1,7 +1,7 @@
 use crate::game_state::GameState;
 
 pub struct MArgvState {
-    pub myargv: Vec<::std::ffi::CString>,
+    pub myargv: Vec<String>,
 }
 
 impl Default for MArgvState {
@@ -19,10 +19,7 @@ impl MArgvState {
 pub fn M_CheckParmWithArgs(state: &mut GameState, check: &str, num_args: i32) -> i32 {
     let mut i: i32 = 1_i32;
     while i < state.m_argv.myargv.len() as i32 - num_args {
-        if state.m_argv.myargv[i as usize]
-            .to_str()
-            .is_ok_and(|arg| arg.eq_ignore_ascii_case(check))
-        {
+        if state.m_argv.myargv[i as usize].eq_ignore_ascii_case(check) {
             return i;
         }
         i += 1;
@@ -41,8 +38,8 @@ pub fn M_FindResponseFile(state: &mut GameState) {
         i += 1;
     }
 }
-pub fn M_ArgvAtoi(arg: &::std::ffi::CStr) -> i32 {
-    let bytes = arg.to_bytes();
+pub fn M_ArgvAtoi(arg: &str) -> i32 {
+    let bytes = arg.as_bytes();
     let mut i = 0;
     while i < bytes.len() && bytes[i].is_ascii_whitespace() {
         i += 1;

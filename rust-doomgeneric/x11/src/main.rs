@@ -1104,6 +1104,15 @@ impl DoomPlatform for X11Platform {
             }
         }
     }
+    fn print(&mut self, message: &str) {
+        print!("{}", message);
+    }
+    fn eprint(&mut self, message: &str) {
+        eprint!("{}", message);
+    }
+    fn quit(&mut self) -> ! {
+        ::std::process::exit(0)
+    }
 }
 
 pub fn main() {

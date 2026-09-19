@@ -830,7 +830,11 @@ pub fn WI_drawOnLnode(state: &mut GameState, n: i32, c: &[i32]) {
             &patch,
         );
     } else {
-        print!("Could not place patch on level {}", n + 1_i32);
+        doom_print!(
+            state.platform,
+            "Could not place patch on level {}",
+            n + 1_i32
+        );
     };
 }
 pub fn WI_initAnimatedBack(state: &mut GameState) {

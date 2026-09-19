@@ -479,16 +479,16 @@ pub fn R_ExecuteSetViewSize(state: &mut GameState) {
 }
 pub fn R_Init(state: &mut GameState) {
     R_InitData(state);
-    print!(".");
-    print!(".");
+    doom_print!(state.platform, ".");
+    doom_print!(state.platform, ".");
     let (screenblocks, detail_level) = (state.m_menu.screenblocks, state.m_menu.detailLevel);
     R_SetViewSize(state, screenblocks, detail_level);
-    print!(".");
+    doom_print!(state.platform, ".");
     R_InitLightTables(state);
-    print!(".");
+    doom_print!(state.platform, ".");
     R_InitSkyMap(state);
     R_InitTranslationTables(state);
-    print!(".");
+    doom_print!(state.platform, ".");
     state.r_main.framecount = 0_i32;
 }
 pub fn R_PointInSubsector(state: &mut GameState, x: fixed_t, y: fixed_t) -> SubsectorId {

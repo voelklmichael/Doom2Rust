@@ -487,6 +487,11 @@ mod tests {
             None
         }
         fn set_window_title(&mut self, _title: &str) {}
+        fn print(&mut self, _message: &str) {}
+        fn eprint(&mut self, _message: &str) {}
+        fn quit(&mut self) -> ! {
+            panic!("quit")
+        }
     }
 
     // Exercises exactly what the DoorId conversion changed: a ThinkerNode's

@@ -3,6 +3,11 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 
+extern crate alloc;
+
+#[macro_use]
+mod console;
+
 pub(crate) mod am_map;
 pub(crate) mod d_event;
 pub(crate) mod d_items;

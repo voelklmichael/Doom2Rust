@@ -64,6 +64,7 @@ use crate::p_saveg::P_ArchiveThinkers;
 use crate::p_saveg::P_ArchiveWorld;
 use crate::p_saveg::P_ReadSaveGameEOF;
 use crate::p_saveg::P_ReadSaveGameHeader;
+use crate::p_saveg::P_ReportSaveGameReadError;
 use crate::p_saveg::P_SaveGameFile;
 use crate::p_saveg::P_TempSaveGameFile;
 use crate::p_saveg::P_UnArchivePlayers;
@@ -1375,6 +1376,7 @@ pub fn G_DoLoadGame(state: &mut GameState) {
     state.p_saveg.save_pos = 0;
     state.p_saveg.savegame_error = false;
     if !P_ReadSaveGameHeader(state) {
+        P_ReportSaveGameReadError(state);
         state.p_saveg.save_buffer = Vec::new();
         return;
     }
@@ -1391,8 +1393,10 @@ pub fn G_DoLoadGame(state: &mut GameState) {
     P_UnArchiveThinkers(state);
     P_UnArchiveSpecials(state);
     if !P_ReadSaveGameEOF(state) {
+        P_ReportSaveGameReadError(state);
         I_Error("Bad savegame");
     }
+    P_ReportSaveGameReadError(state);
     state.p_saveg.save_buffer = Vec::new();
     if state.r_main.setsizeneeded {
         R_ExecuteSetViewSize(state);
@@ -1718,7 +1722,7 @@ pub fn G_DoPlayDemo(state: &mut GameState) {
     } else if demoversion == DOOM_191_VERSION {
         state.g_game.longtics = true;
     } else {
-        println!(
+        doom_println!(state.platform,
             "Demo is from a different game version!\n(read {}, should be {})\n\n*** You may need to upgrade your version of Doom to v1.9. ***\n    See: https://www.doomworld.com/classicdoom/info/patches.php\n    This appears to be {}.",
             demoversion,
             G_VanillaVersionCode(&mut state.doomstat),
