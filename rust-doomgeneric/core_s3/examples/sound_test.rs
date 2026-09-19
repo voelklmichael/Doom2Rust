@@ -41,6 +41,10 @@ const AMPLITUDE: i16 = 5000;
 const FADE: u32 = 220;
 
 /// One step of the test sequence. `hz == 0` is silence.
+///
+/// The LCD is only drawn on during the silent steps (which say what comes next): drawing takes a
+/// few tens of ms, longer than the 35 ms of audio the DMA ring holds, so drawing during a note
+/// would make it drop out.
 struct Step {
     label: &'static str,
     hz: u16,
@@ -53,8 +57,8 @@ const fn note(label: &'static str, hz: u16) -> Step {
     Step { label, hz, ms: 200, left: true, right: true }
 }
 
-const fn pause(ms: u16) -> Step {
-    Step { label: "", hz: 0, ms, left: false, right: false }
+const fn pause(label: &'static str, ms: u16) -> Step {
+    Step { label, hz: 0, ms, left: false, right: false }
 }
 
 /// C major, C4 to C5, then the stereo check.
@@ -67,11 +71,11 @@ const STEPS: [Step; 13] = [
     note("A4  440 Hz", 440),
     note("B4  494 Hz", 494),
     note("C5  523 Hz", 523),
-    pause(500),
+    pause("next: LEFT only, 440 Hz", 500),
     Step { label: "LEFT only 440 Hz", hz: 440, ms: 400, left: true, right: false },
-    pause(200),
+    pause("next: RIGHT only, 660 Hz", 200),
     Step { label: "RIGHT only 660 Hz", hz: 660, ms: 400, left: false, right: true },
-    pause(1500),
+    pause("next: the scale again", 1500),
 ];
 
 /// Generates the sequence one frame at a time.
@@ -158,7 +162,9 @@ fn main() -> ! {
     let mut speaker = match opened {
         Ok(speaker) => {
             println!("[sound_test] I2S1 + DMA_CH1 running at {} Hz, ring {} frames", audio::SAMPLE_RATE, audio::RING_FRAMES);
-            line(display, 50, Rgb565::GREEN, "I2S: running, 22050 Hz");
+            let mut text = String::<40>::new();
+            let _ = write!(text, "I2S: running, {} Hz", audio::SAMPLE_RATE);
+            line(display, 50, Rgb565::GREEN, &text);
             speaker
         }
         Err(error) => {
@@ -188,7 +194,7 @@ fn main() -> ! {
     let mut frames_sent: u32 = 0;
     let mut next_report = Instant::now().duration_since_epoch().as_millis() + 2000;
     let mut chunk = [0i16; 2 * audio::CHUNK_FRAMES];
-    line(display, 150, Rgb565::YELLOW, STEPS[player.step].label);
+    line(display, 150, Rgb565::YELLOW, "playing the scale");
     loop {
         // Refill the ring one chunk at a time whenever the DMA has freed one.
         if speaker.free_frames() >= audio::CHUNK_FRAMES {
@@ -204,14 +210,19 @@ fn main() -> ! {
                 frames_sent = frames_sent.wrapping_add(audio::CHUNK_FRAMES as u32);
             }
             if let Some(step) = new_step {
-                line(display, 150, Rgb565::YELLOW, STEPS[step].label);
+                let step = &STEPS[step];
+                println!("[sound_test] {}", if step.hz == 0 { "(pause)" } else { step.label });
+                if step.hz == 0 {
+                    line(display, 150, Rgb565::YELLOW, step.label);
+                }
             }
         } else {
             delay.delay_millis(1);
         }
 
+        // Status: only in the long pause, when a dropout would not be heard.
         let now = Instant::now().duration_since_epoch().as_millis();
-        if now >= next_report {
+        if now >= next_report && STEPS[player.step].hz == 0 && STEPS[player.step].ms >= 1000 {
             next_report = now + 2000;
             let mut status = String::<48>::new();
             let _ = write!(status, "frames sent {frames_sent}, DMA restarts {}", speaker.restarts);
