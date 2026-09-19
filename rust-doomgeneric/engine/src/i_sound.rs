@@ -1,4 +1,4 @@
-use crate::m_argv::check_parm;
+use crate::m_argv::parm_exists;
 use crate::m_config::bind_variable_int;
 use crate::m_config::bind_variable_string;
 
@@ -134,8 +134,8 @@ fn init_sfx_module(state: &mut ISoundState, use_sfx_prefix: bool) {
     }
 }
 pub fn init_sound(state: &mut GameState, use_sfx_prefix: bool) {
-    let nosound: bool = check_parm(state, "-nosound") > 0;
-    let nosfx: bool = check_parm(state, "-nosfx") > 0;
+    let nosound: bool = parm_exists(state, "-nosound");
+    let nosfx: bool = parm_exists(state, "-nosfx");
     if !nosound && !state.i_video.screensaver_mode && !nosfx {
         init_sfx_module(&mut state.i_sound, use_sfx_prefix);
     }

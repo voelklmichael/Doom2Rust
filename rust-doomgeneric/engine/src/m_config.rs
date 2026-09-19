@@ -1262,11 +1262,9 @@ pub fn set_config_filenames(
 }
 pub fn save_defaults(_state: &mut GameState) {}
 pub fn load_defaults(state: &mut GameState) {
-    let mut i: i32;
-    i = check_parm_with_args(state, "-config", 1);
-    if i != 0 {
-        state.m_config.doom_defaults.filename =
-            state.m_argv.myargv[(i + 1) as usize].as_str().to_string();
+    let _i: i32;
+    if let Some(i) = check_parm_with_args(state, "-config", 1) {
+        state.m_config.doom_defaults.filename = state.m_argv.myargv[i + 1].as_str().to_string();
         doom_println!(
             state.platform,
             "\tdefault file: {}",
@@ -1283,10 +1281,8 @@ pub fn load_defaults(state: &mut GameState) {
         "saving config in {}",
         state.m_config.doom_defaults.filename
     );
-    i = check_parm_with_args(state, "-extraconfig", 1);
-    if i != 0 {
-        state.m_config.extra_defaults.filename =
-            state.m_argv.myargv[(i + 1) as usize].as_str().to_string();
+    if let Some(i) = check_parm_with_args(state, "-extraconfig", 1) {
+        state.m_config.extra_defaults.filename = state.m_argv.myargv[i + 1].as_str().to_string();
         doom_println!(
             state.platform,
             "        extra configuration file: {}",

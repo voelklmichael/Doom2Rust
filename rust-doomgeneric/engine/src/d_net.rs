@@ -7,7 +7,7 @@ use crate::d_mode::skill_from_raw;
 use crate::d_ticcmd::TicCmd;
 use crate::g_game::check_demo_status;
 use crate::g_game::g_ticker;
-use crate::m_argv::check_parm;
+use crate::m_argv::parm_exists;
 use crate::w_checksum::checksum;
 use crate::w_wad::check_num_for_name;
 
@@ -85,25 +85,25 @@ fn save_game_settings(state: &GameState, settings: &mut NetGameSettings) {
     settings.respawn_monsters = state.d_main.respawnparm as i32;
     settings.timelimit = state.g_game.timelimit;
     settings.lowres_turn =
-        (check_parm(state, "-record") > 0 && check_parm(state, "-longtics") == 0) as i32;
+        (parm_exists(state, "-record") && !parm_exists(state, "-longtics")) as i32;
 }
 fn init_connect_data(state: &mut GameState, connect_data: &mut NetConnectData) {
     connect_data.max_players = MAXPLAYERS;
     connect_data.drone = false;
-    if check_parm(state, "-left") > 0 {
+    if parm_exists(state, "-left") {
         state.r_main.viewangleoffset = ANG90;
         connect_data.drone = true;
     }
-    if check_parm(state, "-right") > 0 {
+    if parm_exists(state, "-right") {
         state.r_main.viewangleoffset = ANG270 as i32;
         connect_data.drone = true;
     }
     connect_data.gamemode = state.doomstat.gamemode as i32;
     connect_data.gamemission = state.doomstat.gamemission as i32;
     connect_data.lowres_turn =
-        (check_parm(state, "-record") > 0 && check_parm(state, "-longtics") == 0) as i32;
+        (parm_exists(state, "-record") && !parm_exists(state, "-longtics")) as i32;
     connect_data.wad_sha1sum = checksum(state);
-    connect_data.is_freedoom = check_num_for_name(&state.w_wad, "FREEDOOM") >= 0;
+    connect_data.is_freedoom = check_num_for_name(&state.w_wad, "FREEDOOM").is_some();
 }
 pub fn connect_net_game(state: &mut GameState) {
     let mut connect_data: NetConnectData = NetConnectData {
@@ -118,7 +118,7 @@ pub fn connect_net_game(state: &mut GameState) {
     };
     init_connect_data(state, &mut connect_data);
     state.g_game.netgame = init_net_game(state, &connect_data);
-    if check_parm(state, "-solo-net") > 0 {
+    if parm_exists(state, "-solo-net") {
         state.g_game.netgame = true;
     }
 }
@@ -165,7 +165,7 @@ pub fn check_net_game(state: &mut GameState) {
         settings.num_players,
     );
     if state.g_game.timelimit > 0 && state.g_game.deathmatch != 0 {
-        if state.g_game.timelimit == 20 && check_parm(state, "-avg") != 0 {
+        if state.g_game.timelimit == 20 && parm_exists(state, "-avg") {
             doom_println!(
                 state.platform,
                 "Austin Virtual Gaming: Levels will end after 20 minutes"

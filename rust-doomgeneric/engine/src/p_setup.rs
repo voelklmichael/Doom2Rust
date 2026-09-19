@@ -4,7 +4,7 @@ use crate::fixed_cstr::FixedCStr;
 use crate::g_game::death_match_spawn_player;
 use crate::game_state::GameState;
 use crate::i_system::get_memory_value;
-use crate::m_argv::check_parm;
+use crate::m_argv::parm_exists;
 use crate::m_bbox::add_to_box;
 use crate::m_bbox::clear_box;
 use crate::m_bbox::BoxIndex;
@@ -624,7 +624,7 @@ fn pad_reject_array(state: &mut GameState, offset: usize, len: u32) {
             len,
             pad_bytes as i32,
         );
-        padvalue = if check_parm(state, "-reject_pad_with_ff") != 0 {
+        padvalue = if parm_exists(state, "-reject_pad_with_ff") {
             0xff
         } else {
             // Upstream writes 0xf00 into a byte, which truncates to zero.

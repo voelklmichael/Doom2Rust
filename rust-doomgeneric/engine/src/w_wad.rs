@@ -134,7 +134,8 @@ pub fn w_add_file(state: &mut GameState, filename: &str) -> Option<FileId> {
     state.w_wad.lumphash = Vec::new();
     Some(wad_file)
 }
-pub fn check_num_for_name(state: &WWadState, name: &str) -> i32 {
+/// The number of the last lump called `name`, if there is one.
+pub fn check_num_for_name(state: &WWadState, name: &str) -> Option<i32> {
     let mut i: i32;
     if state.lumphash.is_empty() {
         i = state.numlumps.wrapping_sub(1) as i32;
@@ -143,7 +144,7 @@ pub fn check_num_for_name(state: &WWadState, name: &str) -> i32 {
                 .name
                 .eq_str_ignore_ascii_case(name)
             {
-                return i;
+                return Some(i);
             }
             i -= 1;
         }
@@ -155,19 +156,16 @@ pub fn check_num_for_name(state: &WWadState, name: &str) -> i32 {
                 .name
                 .eq_str_ignore_ascii_case(name)
             {
-                return idx as i32;
+                return Some(idx as i32);
             }
             cur = state.lumpinfo[idx as usize].next;
         }
     }
-    -1
+    None
 }
 pub fn get_num_for_name(state: &WWadState, name: &str) -> i32 {
-    let i: i32 = check_num_for_name(state, name);
-    if i < 0 {
-        error(&format!("W_GetNumForName: {name} not found!"));
-    }
-    i
+    check_num_for_name(state, name)
+        .unwrap_or_else(|| error(&format!("W_GetNumForName: {name} not found!")))
 }
 pub fn lump_length(state: &WWadState, lump: u32) -> i32 {
     if lump >= state.numlumps {
@@ -272,16 +270,15 @@ static UNIQUE_LUMPS: [UniqueLump; 4] = [
 ];
 pub fn check_correct_iwad(state: &WWadState, mission: GameMission) {
     let mut i: i32;
-    let mut lumpnum: i32;
     i = 0;
     while (i as usize)
         < ::core::mem::size_of::<[UniqueLump; 4]>()
             .wrapping_div(::core::mem::size_of::<UniqueLump>())
     {
-        if mission as u32 != UNIQUE_LUMPS[i as usize].mission as u32 {
-            lumpnum = check_num_for_name(state, UNIQUE_LUMPS[i as usize].lumpname);
-            if lumpnum >= 0 {
-                error(&format!(
+        if mission as u32 != UNIQUE_LUMPS[i as usize].mission as u32
+            && check_num_for_name(state, UNIQUE_LUMPS[i as usize].lumpname).is_some()
+        {
+            error(&format!(
                     "\nYou are trying to use a {} IWAD file with the {}{} binary.\nThis isn't going to work.\nYou probably want to use the {}{} binary.",
                     suggest_game_name(UNIQUE_LUMPS[i as usize].mission, GameMode::Indetermined),
                     PROGRAM_PREFIX.as_str(),
@@ -289,7 +286,6 @@ pub fn check_correct_iwad(state: &WWadState, mission: GameMission) {
                     PROGRAM_PREFIX.as_str(),
                     game_mission_string(UNIQUE_LUMPS[i as usize].mission),
                 ));
-            }
         }
         i += 1;
     }

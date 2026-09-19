@@ -9,9 +9,8 @@ use alloc::vec::Vec;
 use crate::p_mobj::SectorSpecial;
 use crate::p_mobj::ThinkerFn;
 use crate::p_setup::LineId;
-use crate::p_setup::SectorId;
 use crate::p_spec::find_highest_ceiling_surrounding;
-use crate::p_spec::find_sector_from_line_tag;
+use crate::p_spec::sectors_with_line_tag;
 use crate::p_spec::Ceiling;
 use crate::p_tick::add_thinker;
 use crate::p_tick::remove_thinker;
@@ -220,7 +219,6 @@ pub fn move_ceiling(state: &mut GameState, id: CeilingId) {
 }
 pub fn do_ceiling(state: &mut GameState, line: LineId, kind: CeilingE) -> bool {
     let mut rtn = false;
-    let mut secnum: i32 = -1;
     match kind {
         CeilingE::FastCrushAndRaise | CeilingE::SilentCrushAndRaise | CeilingE::CrushAndRaise => {
             let tag = state.p_setup.line(line).tag as i32;
@@ -228,12 +226,8 @@ pub fn do_ceiling(state: &mut GameState, line: LineId, kind: CeilingE) -> bool {
         }
         _ => {}
     }
-    loop {
-        secnum = find_sector_from_line_tag(state, line, secnum);
-        if secnum < 0 {
-            break;
-        }
-        let sec = SectorId(secnum as u32);
+    for sector in sectors_with_line_tag(state, line) {
+        let sec = sector;
         if state.p_setup.sector_mut(sec).specialdata.is_some() {
             continue;
         }

@@ -12,11 +12,10 @@ use alloc::vec::Vec;
 use crate::p_mobj::SectorSpecial;
 use crate::p_mobj::ThinkerFn;
 use crate::p_setup::LineId;
-use crate::p_setup::SectorId;
 use crate::p_spec::find_highest_floor_surrounding;
 use crate::p_spec::find_lowest_floor_surrounding;
 use crate::p_spec::find_next_highest_floor;
-use crate::p_spec::find_sector_from_line_tag;
+use crate::p_spec::sectors_with_line_tag;
 use crate::p_spec::Plat;
 use crate::p_tick::add_thinker;
 use crate::p_tick::remove_thinker;
@@ -212,17 +211,12 @@ pub fn plat_raise(state: &mut GameState, id: PlatId) {
 }
 pub fn do_plat(state: &mut GameState, line: LineId, kind: PlattypeE, amount: i32) -> bool {
     let linev = state.p_setup.line(line);
-    let mut secnum: i32 = -1;
     let mut rtn = false;
     if kind == PlattypeE::PerpetualRaise {
         activate_in_stasis(state, linev.tag as i32);
     }
-    loop {
-        secnum = find_sector_from_line_tag(state, line, secnum);
-        if secnum < 0 {
-            break;
-        }
-        let sec = SectorId(secnum as u32);
+    for sector in sectors_with_line_tag(state, line) {
+        let sec = sector;
         if state.p_setup.sector_mut(sec).specialdata.is_some() {
             continue;
         }

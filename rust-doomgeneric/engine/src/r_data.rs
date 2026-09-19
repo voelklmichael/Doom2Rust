@@ -324,14 +324,14 @@ pub fn init_textures(state: &mut GameState) {
         let patch_name = FixedCStr::<8>::from_bytes(&pnames[name_off..name_off + 8])
             .as_str()
             .into_owned();
-        patchlookup[i as usize] = check_num_for_name(&state.w_wad, &patch_name);
+        patchlookup[i as usize] = check_num_for_name(&state.w_wad, &patch_name).unwrap_or(-1);
     }
     release_lump_name(&state.w_wad, "PNAMES");
     let texture1_lump = get_num_for_name(&state.w_wad, "TEXTURE1") as u32;
     maxoff = lump_length(&state.w_wad, texture1_lump);
     let maptex1 = lump_bytes_name(state, "TEXTURE1")[..maxoff as usize].to_vec();
     let numtextures1: i32 = i32::from_le_bytes(maptex1[0..4].try_into().unwrap());
-    let maptex2 = if check_num_for_name(&state.w_wad, "TEXTURE2") == -1 {
+    let maptex2 = if check_num_for_name(&state.w_wad, "TEXTURE2").is_none() {
         numtextures2 = 0;
         maxoff2 = 0;
         None
@@ -512,33 +512,30 @@ pub fn r_init_data(state: &mut GameState) {
     init_colormaps(state);
 }
 pub fn flat_num_for_name(state: &GameState, name: &str) -> i32 {
-    let i: i32 = check_num_for_name(&state.w_wad, name);
-    if i == -1 {
-        error(&format!("R_FlatNumForName: {name} not found"));
-    }
+    let i = check_num_for_name(&state.w_wad, name)
+        .unwrap_or_else(|| error(&format!("R_FlatNumForName: {name} not found")));
     i - state.r_data.firstflat
 }
-pub fn check_texture_num_for_name(state: &RDataState, name: &str) -> i32 {
+/// The number of the texture called `name`, if there is one (`-` means "no
+/// texture" and is texture 0).
+pub fn check_texture_num_for_name(state: &RDataState, name: &str) -> Option<i32> {
     if name.as_bytes().first() == Some(&b'-') {
-        return 0;
+        return Some(0);
     }
     let key: i32 = lump_name_hash(name.as_bytes()).wrapping_rem(state.numtextures as u32) as i32;
     let mut cursor = state.textures_hashtable[key as usize];
     while let Some(id) = cursor {
         let texture = &state.textures[id.0 as usize];
         if texture.name.eq_bytes_ignore_ascii_case(name.as_bytes()) {
-            return texture.index;
+            return Some(texture.index);
         }
         cursor = texture.next;
     }
-    -1
+    None
 }
 pub fn texture_num_for_name(state: &RDataState, name: &str) -> i32 {
-    let i: i32 = check_texture_num_for_name(state, name);
-    if i == -1 {
-        error(&format!("R_TextureNumForName: {name} not found"));
-    }
-    i
+    check_texture_num_for_name(state, name)
+        .unwrap_or_else(|| error(&format!("R_TextureNumForName: {name} not found")))
 }
 pub fn precache_level(state: &mut GameState) {
     let mut flatpresent: Vec<u8>;

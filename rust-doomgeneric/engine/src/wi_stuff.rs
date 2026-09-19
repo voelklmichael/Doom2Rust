@@ -1550,7 +1550,7 @@ fn load_unload_data(state: &mut GameState, callback: LoadCallback) {
     state.wi_stuff.kills = callback(state, "WIOSTK");
     state.wi_stuff.secret = callback(state, "WIOSTS");
     state.wi_stuff.sp_secret = callback(state, "WISCRT2");
-    let items_name = if check_num_for_name(&state.w_wad, "WIOBJ") >= 0
+    let items_name = if check_num_for_name(&state.w_wad, "WIOBJ").is_some()
         && state.g_game.netgame
         && state.g_game.deathmatch == 0
     {
