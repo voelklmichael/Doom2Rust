@@ -5,11 +5,11 @@ use crate::d_items::WEAPONINFO;
 use crate::d_mode::GameMission;
 use crate::d_mode::GameMode;
 use crate::d_mode::{GameVersion, SkillType};
+use crate::d_player::CheatFlags;
 use crate::d_player::PlayerId;
 use crate::d_player::PowerType;
 use crate::d_player::{AmmoType, NUMAMMO};
 use crate::d_player::{WeaponType, NUMWEAPONS};
-use crate::d_player::{CF_GODMODE, CF_NOCLIP};
 use crate::doomdef::MAXPLAYERS;
 use crate::doomdef::SCREENHEIGHT;
 use crate::doomdef::SCREENWIDTH;
@@ -405,8 +405,13 @@ pub fn st_responder(state: &mut GameState, ev: &Event) -> bool {
     } else if ev.kind == EvType::Keydown {
         if !state.g_game.netgame && state.g_game.gameskill != SkillType::Nightmare {
             if cht_check_cheat(&mut state.st_stuff.cheat_god, ev.data2 as u8) {
-                state.g_game.player_mut(state.st_stuff.plyr).cheats ^= CF_GODMODE;
-                if state.g_game.player_mut(state.st_stuff.plyr).cheats & CF_GODMODE != 0 {
+                state.g_game.player_mut(state.st_stuff.plyr).cheats ^= CheatFlags::GODMODE;
+                if state
+                    .g_game
+                    .player_mut(state.st_stuff.plyr)
+                    .cheats
+                    .contains(CheatFlags::GODMODE)
+                {
                     if let Some(mo_id) = state.g_game.player_mut(state.st_stuff.plyr).mo {
                         state.p_mobj.mo_mut(mo_id).health = 100;
                     }
@@ -494,8 +499,13 @@ pub fn st_responder(state: &mut GameState, ev: &Event) -> bool {
                 }) != GameMission::Doom as i32 as u32
                     && cht_check_cheat(&mut state.st_stuff.cheat_commercial_noclip, ev.data2 as u8)
             {
-                state.g_game.player_mut(state.st_stuff.plyr).cheats ^= CF_NOCLIP;
-                if state.g_game.player_mut(state.st_stuff.plyr).cheats & CF_NOCLIP != 0 {
+                state.g_game.player_mut(state.st_stuff.plyr).cheats ^= CheatFlags::NOCLIP;
+                if state
+                    .g_game
+                    .player_mut(state.st_stuff.plyr)
+                    .cheats
+                    .contains(CheatFlags::NOCLIP)
+                {
                     state.g_game.player_mut(state.st_stuff.plyr).message =
                         Some("No Clipping Mode ON".to_string());
                 } else {
@@ -708,7 +718,11 @@ pub fn update_face_widget(state: &mut GameState) {
         }
     }
     if state.st_stuff.st_updatefacewidget_priority < 5
-        && (state.g_game.player_mut(state.st_stuff.plyr).cheats & CF_GODMODE != 0
+        && (state
+            .g_game
+            .player_mut(state.st_stuff.plyr)
+            .cheats
+            .contains(CheatFlags::GODMODE)
             || state.g_game.player_mut(state.st_stuff.plyr).powers
                 [PowerType::Invulnerability as usize]
                 != 0)

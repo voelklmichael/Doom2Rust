@@ -5,8 +5,8 @@ use crate::m_fixed::Fixed;
 use crate::m_fixed::FRACBITS;
 use crate::m_fixed::INT_MAX;
 use crate::m_fixed::INT_MIN;
+use crate::p_mobj::LineFlags;
 
-use crate::p_spec::ML_MAPPED;
 use crate::r_data::get_column;
 use crate::r_defs::ClipArray;
 use crate::r_defs::DrawSeg;
@@ -111,8 +111,6 @@ impl RSegsState {
 }
 
 pub const SHRT_MAX: i32 = __SHRT_MAX__;
-pub const ML_DONTPEGTOP: i32 = 8;
-pub const ML_DONTPEGBOTTOM: i32 = 16;
 pub const SIL_BOTTOM: i32 = 1;
 pub const SIL_TOP: i32 = 2;
 pub const SIL_BOTH: i32 = 3;
@@ -157,9 +155,8 @@ pub fn render_masked_seg_range(state: &mut GameState, ds: &DrawSeg, x1: i32, x2:
     if state
         .p_setup
         .line_mut(state.p_setup.seg(state.r_bsp.curline).linedef)
-        .flags as i32
-        & ML_DONTPEGBOTTOM
-        != 0
+        .flags
+        .contains(LineFlags::DONTPEGBOTTOM)
     {
         state.r_draw.dc_texturemid = if state
             .p_setup
@@ -386,8 +383,11 @@ pub fn store_wall_range(state: &mut GameState, start: i32, stop: i32) {
     }
     state.r_bsp.sidedef = state.p_setup.seg(state.r_bsp.curline).sidedef;
     state.r_bsp.linedef = state.p_setup.seg(state.r_bsp.curline).linedef;
-    state.p_setup.line_mut(state.r_bsp.linedef).flags =
-        (state.p_setup.line_mut(state.r_bsp.linedef).flags as i32 | ML_MAPPED) as i16;
+    state
+        .p_setup
+        .line_mut(state.r_bsp.linedef)
+        .flags
+        .insert(LineFlags::MAPPED);
     state.r_segs.rw_normalangle = state
         .p_setup
         .seg(state.r_bsp.curline)
@@ -455,7 +455,12 @@ pub fn store_wall_range(state: &mut GameState, start: i32, stop: i32) {
                 [state.p_setup.side_mut(state.r_bsp.sidedef).midtexture as usize];
             state.r_segs.markceiling = true;
             state.r_segs.markfloor = state.r_segs.markceiling;
-            if state.p_setup.line_mut(state.r_bsp.linedef).flags as i32 & ML_DONTPEGBOTTOM != 0 {
+            if state
+                .p_setup
+                .line_mut(state.r_bsp.linedef)
+                .flags
+                .contains(LineFlags::DONTPEGBOTTOM)
+            {
                 vtop = state
                     .p_setup
                     .sector_mut(state.r_bsp.frontsector.unwrap())
@@ -581,7 +586,12 @@ pub fn store_wall_range(state: &mut GameState, start: i32, stop: i32) {
             if state.r_segs.worldhigh < state.r_segs.worldtop {
                 state.r_segs.toptexture = state.r_data.texturetranslation
                     [state.p_setup.side_mut(state.r_bsp.sidedef).toptexture as usize];
-                if state.p_setup.line_mut(state.r_bsp.linedef).flags as i32 & ML_DONTPEGTOP != 0 {
+                if state
+                    .p_setup
+                    .line_mut(state.r_bsp.linedef)
+                    .flags
+                    .contains(LineFlags::DONTPEGTOP)
+                {
                     state.r_segs.rw_toptexturemid = state.r_segs.worldtop as Fixed;
                 } else {
                     vtop = state.p_setup.sector_mut(backsector).ceilingheight
@@ -593,7 +603,11 @@ pub fn store_wall_range(state: &mut GameState, start: i32, stop: i32) {
             if state.r_segs.worldlow > state.r_segs.worldbottom {
                 state.r_segs.bottomtexture = state.r_data.texturetranslation
                     [state.p_setup.side_mut(state.r_bsp.sidedef).bottomtexture as usize];
-                if state.p_setup.line_mut(state.r_bsp.linedef).flags as i32 & ML_DONTPEGBOTTOM != 0
+                if state
+                    .p_setup
+                    .line_mut(state.r_bsp.linedef)
+                    .flags
+                    .contains(LineFlags::DONTPEGBOTTOM)
                 {
                     state.r_segs.rw_bottomtexturemid = state.r_segs.worldtop as Fixed;
                 } else {

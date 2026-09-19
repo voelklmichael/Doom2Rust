@@ -9,14 +9,10 @@ use crate::p_enemy::{
     spos_attack, start_fire, troop_attack, vile_attack, vile_chase, vile_start, vile_target,
     xscream,
 };
+use crate::p_mobj::MobjFlags;
 use crate::p_mobj::SpriteNum;
 use crate::p_mobj::StateNum;
 use crate::p_mobj::{MobjInfo, MobjType, State, StateAction};
-use crate::p_mobj::{
-    MF_COUNTITEM, MF_COUNTKILL, MF_DROPOFF, MF_FLOAT, MF_MISSILE, MF_NOBLOCKMAP, MF_NOBLOOD,
-    MF_NOCLIP, MF_NOGRAVITY, MF_NOSECTOR, MF_NOTDMATCH, MF_PICKUP, MF_SHADOW, MF_SHOOTABLE,
-    MF_SOLID, MF_SPAWNCEILING, MF_SPECIAL,
-};
 use crate::p_pspr::{
     bfgsound, bfgspray, check_reload, fire_bfg, fire_cgun, fire_missile, fire_pistol, fire_plasma,
     fire_shotgun, fire_shotgun2, gun_flash, light0, light1, light2, lower, punch, raise, re_fire,
@@ -8794,7 +8790,11 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SOLID | MF_SHOOTABLE | MF_DROPOFF | MF_PICKUP | MF_NOTDMATCH,
+                    flags: MobjFlags::SOLID
+                        | MobjFlags::SHOOTABLE
+                        | MobjFlags::DROPOFF
+                        | MobjFlags::PICKUP
+                        | MobjFlags::NOTDMATCH,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -8819,7 +8819,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::Posact as i32,
-                    flags: MF_SOLID | MF_SHOOTABLE | MF_COUNTKILL,
+                    flags: MobjFlags::SOLID | MobjFlags::SHOOTABLE | MobjFlags::COUNTKILL,
                     raisestate: StateNum::PossRaise1,
                 },
                 MobjInfo {
@@ -8844,7 +8844,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::Posact as i32,
-                    flags: MF_SOLID | MF_SHOOTABLE | MF_COUNTKILL,
+                    flags: MobjFlags::SOLID | MobjFlags::SHOOTABLE | MobjFlags::COUNTKILL,
                     raisestate: StateNum::SposRaise1,
                 },
                 MobjInfo {
@@ -8869,7 +8869,7 @@ impl InfoState {
                     mass: 500,
                     damage: 0,
                     activesound: SfxName::Vilact as i32,
-                    flags: MF_SOLID | MF_SHOOTABLE | MF_COUNTKILL,
+                    flags: MobjFlags::SOLID | MobjFlags::SHOOTABLE | MobjFlags::COUNTKILL,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -8894,7 +8894,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_NOBLOCKMAP | MF_NOGRAVITY,
+                    flags: MobjFlags::NOBLOCKMAP | MobjFlags::NOGRAVITY,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -8919,7 +8919,7 @@ impl InfoState {
                     mass: 500,
                     damage: 0,
                     activesound: SfxName::Skeact as i32,
-                    flags: MF_SOLID | MF_SHOOTABLE | MF_COUNTKILL,
+                    flags: MobjFlags::SOLID | MobjFlags::SHOOTABLE | MobjFlags::COUNTKILL,
                     raisestate: StateNum::SkelRaise1,
                 },
                 MobjInfo {
@@ -8944,7 +8944,10 @@ impl InfoState {
                     mass: 100,
                     damage: 10,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_NOBLOCKMAP | MF_MISSILE | MF_DROPOFF | MF_NOGRAVITY,
+                    flags: MobjFlags::NOBLOCKMAP
+                        | MobjFlags::MISSILE
+                        | MobjFlags::DROPOFF
+                        | MobjFlags::NOGRAVITY,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -8969,7 +8972,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_NOBLOCKMAP | MF_NOGRAVITY,
+                    flags: MobjFlags::NOBLOCKMAP | MobjFlags::NOGRAVITY,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -8994,7 +8997,7 @@ impl InfoState {
                     mass: 1000,
                     damage: 0,
                     activesound: SfxName::Posact as i32,
-                    flags: MF_SOLID | MF_SHOOTABLE | MF_COUNTKILL,
+                    flags: MobjFlags::SOLID | MobjFlags::SHOOTABLE | MobjFlags::COUNTKILL,
                     raisestate: StateNum::FattRaise1,
                 },
                 MobjInfo {
@@ -9019,7 +9022,10 @@ impl InfoState {
                     mass: 100,
                     damage: 8,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_NOBLOCKMAP | MF_MISSILE | MF_DROPOFF | MF_NOGRAVITY,
+                    flags: MobjFlags::NOBLOCKMAP
+                        | MobjFlags::MISSILE
+                        | MobjFlags::DROPOFF
+                        | MobjFlags::NOGRAVITY,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -9044,7 +9050,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::Posact as i32,
-                    flags: MF_SOLID | MF_SHOOTABLE | MF_COUNTKILL,
+                    flags: MobjFlags::SOLID | MobjFlags::SHOOTABLE | MobjFlags::COUNTKILL,
                     raisestate: StateNum::CposRaise1,
                 },
                 MobjInfo {
@@ -9069,7 +9075,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::Bgact as i32,
-                    flags: MF_SOLID | MF_SHOOTABLE | MF_COUNTKILL,
+                    flags: MobjFlags::SOLID | MobjFlags::SHOOTABLE | MobjFlags::COUNTKILL,
                     raisestate: StateNum::TrooRaise1,
                 },
                 MobjInfo {
@@ -9094,7 +9100,7 @@ impl InfoState {
                     mass: 400,
                     damage: 0,
                     activesound: SfxName::Dmact as i32,
-                    flags: MF_SOLID | MF_SHOOTABLE | MF_COUNTKILL,
+                    flags: MobjFlags::SOLID | MobjFlags::SHOOTABLE | MobjFlags::COUNTKILL,
                     raisestate: StateNum::SargRaise1,
                 },
                 MobjInfo {
@@ -9119,7 +9125,10 @@ impl InfoState {
                     mass: 400,
                     damage: 0,
                     activesound: SfxName::Dmact as i32,
-                    flags: MF_SOLID | MF_SHOOTABLE | MF_SHADOW | MF_COUNTKILL,
+                    flags: MobjFlags::SOLID
+                        | MobjFlags::SHOOTABLE
+                        | MobjFlags::SHADOW
+                        | MobjFlags::COUNTKILL,
                     raisestate: StateNum::SargRaise1,
                 },
                 MobjInfo {
@@ -9144,7 +9153,11 @@ impl InfoState {
                     mass: 400,
                     damage: 0,
                     activesound: SfxName::Dmact as i32,
-                    flags: MF_SOLID | MF_SHOOTABLE | MF_FLOAT | MF_NOGRAVITY | MF_COUNTKILL,
+                    flags: MobjFlags::SOLID
+                        | MobjFlags::SHOOTABLE
+                        | MobjFlags::FLOAT
+                        | MobjFlags::NOGRAVITY
+                        | MobjFlags::COUNTKILL,
                     raisestate: StateNum::HeadRaise1,
                 },
                 MobjInfo {
@@ -9169,7 +9182,7 @@ impl InfoState {
                     mass: 1000,
                     damage: 0,
                     activesound: SfxName::Dmact as i32,
-                    flags: MF_SOLID | MF_SHOOTABLE | MF_COUNTKILL,
+                    flags: MobjFlags::SOLID | MobjFlags::SHOOTABLE | MobjFlags::COUNTKILL,
                     raisestate: StateNum::BossRaise1,
                 },
                 MobjInfo {
@@ -9194,7 +9207,10 @@ impl InfoState {
                     mass: 100,
                     damage: 8,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_NOBLOCKMAP | MF_MISSILE | MF_DROPOFF | MF_NOGRAVITY,
+                    flags: MobjFlags::NOBLOCKMAP
+                        | MobjFlags::MISSILE
+                        | MobjFlags::DROPOFF
+                        | MobjFlags::NOGRAVITY,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -9219,7 +9235,7 @@ impl InfoState {
                     mass: 1000,
                     damage: 0,
                     activesound: SfxName::Dmact as i32,
-                    flags: MF_SOLID | MF_SHOOTABLE | MF_COUNTKILL,
+                    flags: MobjFlags::SOLID | MobjFlags::SHOOTABLE | MobjFlags::COUNTKILL,
                     raisestate: StateNum::Bos2Raise1,
                 },
                 MobjInfo {
@@ -9244,7 +9260,10 @@ impl InfoState {
                     mass: 50,
                     damage: 3,
                     activesound: SfxName::Dmact as i32,
-                    flags: MF_SOLID | MF_SHOOTABLE | MF_FLOAT | MF_NOGRAVITY,
+                    flags: MobjFlags::SOLID
+                        | MobjFlags::SHOOTABLE
+                        | MobjFlags::FLOAT
+                        | MobjFlags::NOGRAVITY,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -9269,7 +9288,7 @@ impl InfoState {
                     mass: 1000,
                     damage: 0,
                     activesound: SfxName::Dmact as i32,
-                    flags: MF_SOLID | MF_SHOOTABLE | MF_COUNTKILL,
+                    flags: MobjFlags::SOLID | MobjFlags::SHOOTABLE | MobjFlags::COUNTKILL,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -9294,7 +9313,7 @@ impl InfoState {
                     mass: 600,
                     damage: 0,
                     activesound: SfxName::Bspact as i32,
-                    flags: MF_SOLID | MF_SHOOTABLE | MF_COUNTKILL,
+                    flags: MobjFlags::SOLID | MobjFlags::SHOOTABLE | MobjFlags::COUNTKILL,
                     raisestate: StateNum::BspiRaise1,
                 },
                 MobjInfo {
@@ -9319,7 +9338,7 @@ impl InfoState {
                     mass: 1000,
                     damage: 0,
                     activesound: SfxName::Dmact as i32,
-                    flags: MF_SOLID | MF_SHOOTABLE | MF_COUNTKILL,
+                    flags: MobjFlags::SOLID | MobjFlags::SHOOTABLE | MobjFlags::COUNTKILL,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -9344,7 +9363,11 @@ impl InfoState {
                     mass: 400,
                     damage: 0,
                     activesound: SfxName::Dmact as i32,
-                    flags: MF_SOLID | MF_SHOOTABLE | MF_FLOAT | MF_NOGRAVITY | MF_COUNTKILL,
+                    flags: MobjFlags::SOLID
+                        | MobjFlags::SHOOTABLE
+                        | MobjFlags::FLOAT
+                        | MobjFlags::NOGRAVITY
+                        | MobjFlags::COUNTKILL,
                     raisestate: StateNum::PainRaise1,
                 },
                 MobjInfo {
@@ -9369,7 +9392,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::Posact as i32,
-                    flags: MF_SOLID | MF_SHOOTABLE | MF_COUNTKILL,
+                    flags: MobjFlags::SOLID | MobjFlags::SHOOTABLE | MobjFlags::COUNTKILL,
                     raisestate: StateNum::SswvRaise1,
                 },
                 MobjInfo {
@@ -9394,7 +9417,11 @@ impl InfoState {
                     mass: 10000000,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SOLID | MF_SPAWNCEILING | MF_NOGRAVITY | MF_SHOOTABLE | MF_COUNTKILL,
+                    flags: MobjFlags::SOLID
+                        | MobjFlags::SPAWNCEILING
+                        | MobjFlags::NOGRAVITY
+                        | MobjFlags::SHOOTABLE
+                        | MobjFlags::COUNTKILL,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -9419,7 +9446,7 @@ impl InfoState {
                     mass: 10000000,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SOLID | MF_SHOOTABLE,
+                    flags: MobjFlags::SOLID | MobjFlags::SHOOTABLE,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -9444,7 +9471,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_NOBLOCKMAP | MF_NOSECTOR,
+                    flags: MobjFlags::NOBLOCKMAP | MobjFlags::NOSECTOR,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -9469,7 +9496,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_NOBLOCKMAP | MF_NOSECTOR,
+                    flags: MobjFlags::NOBLOCKMAP | MobjFlags::NOSECTOR,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -9494,7 +9521,11 @@ impl InfoState {
                     mass: 100,
                     damage: 3,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_NOBLOCKMAP | MF_MISSILE | MF_DROPOFF | MF_NOGRAVITY | MF_NOCLIP,
+                    flags: MobjFlags::NOBLOCKMAP
+                        | MobjFlags::MISSILE
+                        | MobjFlags::DROPOFF
+                        | MobjFlags::NOGRAVITY
+                        | MobjFlags::NOCLIP,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -9519,7 +9550,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_NOBLOCKMAP | MF_NOGRAVITY,
+                    flags: MobjFlags::NOBLOCKMAP | MobjFlags::NOGRAVITY,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -9544,7 +9575,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SOLID | MF_SHOOTABLE | MF_NOBLOOD,
+                    flags: MobjFlags::SOLID | MobjFlags::SHOOTABLE | MobjFlags::NOBLOOD,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -9569,7 +9600,10 @@ impl InfoState {
                     mass: 100,
                     damage: 3,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_NOBLOCKMAP | MF_MISSILE | MF_DROPOFF | MF_NOGRAVITY,
+                    flags: MobjFlags::NOBLOCKMAP
+                        | MobjFlags::MISSILE
+                        | MobjFlags::DROPOFF
+                        | MobjFlags::NOGRAVITY,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -9594,7 +9628,10 @@ impl InfoState {
                     mass: 100,
                     damage: 5,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_NOBLOCKMAP | MF_MISSILE | MF_DROPOFF | MF_NOGRAVITY,
+                    flags: MobjFlags::NOBLOCKMAP
+                        | MobjFlags::MISSILE
+                        | MobjFlags::DROPOFF
+                        | MobjFlags::NOGRAVITY,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -9619,7 +9656,10 @@ impl InfoState {
                     mass: 100,
                     damage: 20,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_NOBLOCKMAP | MF_MISSILE | MF_DROPOFF | MF_NOGRAVITY,
+                    flags: MobjFlags::NOBLOCKMAP
+                        | MobjFlags::MISSILE
+                        | MobjFlags::DROPOFF
+                        | MobjFlags::NOGRAVITY,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -9644,7 +9684,10 @@ impl InfoState {
                     mass: 100,
                     damage: 5,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_NOBLOCKMAP | MF_MISSILE | MF_DROPOFF | MF_NOGRAVITY,
+                    flags: MobjFlags::NOBLOCKMAP
+                        | MobjFlags::MISSILE
+                        | MobjFlags::DROPOFF
+                        | MobjFlags::NOGRAVITY,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -9669,7 +9712,10 @@ impl InfoState {
                     mass: 100,
                     damage: 100,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_NOBLOCKMAP | MF_MISSILE | MF_DROPOFF | MF_NOGRAVITY,
+                    flags: MobjFlags::NOBLOCKMAP
+                        | MobjFlags::MISSILE
+                        | MobjFlags::DROPOFF
+                        | MobjFlags::NOGRAVITY,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -9694,7 +9740,10 @@ impl InfoState {
                     mass: 100,
                     damage: 5,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_NOBLOCKMAP | MF_MISSILE | MF_DROPOFF | MF_NOGRAVITY,
+                    flags: MobjFlags::NOBLOCKMAP
+                        | MobjFlags::MISSILE
+                        | MobjFlags::DROPOFF
+                        | MobjFlags::NOGRAVITY,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -9719,7 +9768,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_NOBLOCKMAP | MF_NOGRAVITY,
+                    flags: MobjFlags::NOBLOCKMAP | MobjFlags::NOGRAVITY,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -9744,7 +9793,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_NOBLOCKMAP,
+                    flags: MobjFlags::NOBLOCKMAP,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -9769,7 +9818,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_NOBLOCKMAP | MF_NOGRAVITY,
+                    flags: MobjFlags::NOBLOCKMAP | MobjFlags::NOGRAVITY,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -9794,7 +9843,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_NOBLOCKMAP | MF_NOGRAVITY,
+                    flags: MobjFlags::NOBLOCKMAP | MobjFlags::NOGRAVITY,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -9819,7 +9868,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_NOBLOCKMAP | MF_NOSECTOR,
+                    flags: MobjFlags::NOBLOCKMAP | MobjFlags::NOSECTOR,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -9844,7 +9893,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_NOBLOCKMAP | MF_NOGRAVITY,
+                    flags: MobjFlags::NOBLOCKMAP | MobjFlags::NOGRAVITY,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -9869,7 +9918,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SPECIAL,
+                    flags: MobjFlags::SPECIAL,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -9894,7 +9943,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SPECIAL,
+                    flags: MobjFlags::SPECIAL,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -9919,7 +9968,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SPECIAL | MF_COUNTITEM,
+                    flags: MobjFlags::SPECIAL | MobjFlags::COUNTITEM,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -9944,7 +9993,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SPECIAL | MF_COUNTITEM,
+                    flags: MobjFlags::SPECIAL | MobjFlags::COUNTITEM,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -9969,7 +10018,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SPECIAL | MF_NOTDMATCH,
+                    flags: MobjFlags::SPECIAL | MobjFlags::NOTDMATCH,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -9994,7 +10043,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SPECIAL | MF_NOTDMATCH,
+                    flags: MobjFlags::SPECIAL | MobjFlags::NOTDMATCH,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -10019,7 +10068,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SPECIAL | MF_NOTDMATCH,
+                    flags: MobjFlags::SPECIAL | MobjFlags::NOTDMATCH,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -10044,7 +10093,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SPECIAL | MF_NOTDMATCH,
+                    flags: MobjFlags::SPECIAL | MobjFlags::NOTDMATCH,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -10069,7 +10118,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SPECIAL | MF_NOTDMATCH,
+                    flags: MobjFlags::SPECIAL | MobjFlags::NOTDMATCH,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -10094,7 +10143,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SPECIAL | MF_NOTDMATCH,
+                    flags: MobjFlags::SPECIAL | MobjFlags::NOTDMATCH,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -10119,7 +10168,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SPECIAL,
+                    flags: MobjFlags::SPECIAL,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -10144,7 +10193,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SPECIAL,
+                    flags: MobjFlags::SPECIAL,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -10169,7 +10218,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SPECIAL | MF_COUNTITEM,
+                    flags: MobjFlags::SPECIAL | MobjFlags::COUNTITEM,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -10194,7 +10243,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SPECIAL | MF_COUNTITEM,
+                    flags: MobjFlags::SPECIAL | MobjFlags::COUNTITEM,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -10219,7 +10268,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SPECIAL | MF_COUNTITEM,
+                    flags: MobjFlags::SPECIAL | MobjFlags::COUNTITEM,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -10244,7 +10293,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SPECIAL | MF_COUNTITEM,
+                    flags: MobjFlags::SPECIAL | MobjFlags::COUNTITEM,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -10269,7 +10318,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SPECIAL,
+                    flags: MobjFlags::SPECIAL,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -10294,7 +10343,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SPECIAL | MF_COUNTITEM,
+                    flags: MobjFlags::SPECIAL | MobjFlags::COUNTITEM,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -10319,7 +10368,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SPECIAL | MF_COUNTITEM,
+                    flags: MobjFlags::SPECIAL | MobjFlags::COUNTITEM,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -10344,7 +10393,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SPECIAL | MF_COUNTITEM,
+                    flags: MobjFlags::SPECIAL | MobjFlags::COUNTITEM,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -10369,7 +10418,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SPECIAL,
+                    flags: MobjFlags::SPECIAL,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -10394,7 +10443,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SPECIAL,
+                    flags: MobjFlags::SPECIAL,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -10419,7 +10468,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SPECIAL,
+                    flags: MobjFlags::SPECIAL,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -10444,7 +10493,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SPECIAL,
+                    flags: MobjFlags::SPECIAL,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -10469,7 +10518,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SPECIAL,
+                    flags: MobjFlags::SPECIAL,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -10494,7 +10543,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SPECIAL,
+                    flags: MobjFlags::SPECIAL,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -10519,7 +10568,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SPECIAL,
+                    flags: MobjFlags::SPECIAL,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -10544,7 +10593,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SPECIAL,
+                    flags: MobjFlags::SPECIAL,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -10569,7 +10618,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SPECIAL,
+                    flags: MobjFlags::SPECIAL,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -10594,7 +10643,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SPECIAL,
+                    flags: MobjFlags::SPECIAL,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -10619,7 +10668,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SPECIAL,
+                    flags: MobjFlags::SPECIAL,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -10644,7 +10693,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SPECIAL,
+                    flags: MobjFlags::SPECIAL,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -10669,7 +10718,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SPECIAL,
+                    flags: MobjFlags::SPECIAL,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -10694,7 +10743,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SPECIAL,
+                    flags: MobjFlags::SPECIAL,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -10719,7 +10768,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SPECIAL,
+                    flags: MobjFlags::SPECIAL,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -10744,7 +10793,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SPECIAL,
+                    flags: MobjFlags::SPECIAL,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -10769,7 +10818,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SOLID,
+                    flags: MobjFlags::SOLID,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -10794,7 +10843,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SOLID,
+                    flags: MobjFlags::SOLID,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -10819,7 +10868,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SOLID,
+                    flags: MobjFlags::SOLID,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -10844,7 +10893,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SOLID,
+                    flags: MobjFlags::SOLID,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -10869,7 +10918,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SOLID,
+                    flags: MobjFlags::SOLID,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -10894,7 +10943,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SOLID,
+                    flags: MobjFlags::SOLID,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -10919,7 +10968,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SOLID,
+                    flags: MobjFlags::SOLID,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -10944,7 +10993,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SOLID,
+                    flags: MobjFlags::SOLID,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -10969,7 +11018,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SOLID,
+                    flags: MobjFlags::SOLID,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -10994,7 +11043,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SOLID,
+                    flags: MobjFlags::SOLID,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -11019,7 +11068,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SOLID,
+                    flags: MobjFlags::SOLID,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -11044,7 +11093,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SOLID,
+                    flags: MobjFlags::SOLID,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -11069,7 +11118,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SOLID,
+                    flags: MobjFlags::SOLID,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -11094,7 +11143,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SOLID,
+                    flags: MobjFlags::SOLID,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -11119,7 +11168,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SOLID,
+                    flags: MobjFlags::SOLID,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -11144,7 +11193,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SOLID,
+                    flags: MobjFlags::SOLID,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -11169,7 +11218,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SOLID,
+                    flags: MobjFlags::SOLID,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -11194,7 +11243,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SOLID,
+                    flags: MobjFlags::SOLID,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -11219,7 +11268,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SOLID,
+                    flags: MobjFlags::SOLID,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -11244,7 +11293,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SOLID,
+                    flags: MobjFlags::SOLID,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -11269,7 +11318,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: 0,
+                    flags: MobjFlags::empty(),
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -11294,7 +11343,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SOLID,
+                    flags: MobjFlags::SOLID,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -11319,7 +11368,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SOLID | MF_SPAWNCEILING | MF_NOGRAVITY,
+                    flags: MobjFlags::SOLID | MobjFlags::SPAWNCEILING | MobjFlags::NOGRAVITY,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -11344,7 +11393,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SOLID | MF_SPAWNCEILING | MF_NOGRAVITY,
+                    flags: MobjFlags::SOLID | MobjFlags::SPAWNCEILING | MobjFlags::NOGRAVITY,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -11369,7 +11418,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SOLID | MF_SPAWNCEILING | MF_NOGRAVITY,
+                    flags: MobjFlags::SOLID | MobjFlags::SPAWNCEILING | MobjFlags::NOGRAVITY,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -11394,7 +11443,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SOLID | MF_SPAWNCEILING | MF_NOGRAVITY,
+                    flags: MobjFlags::SOLID | MobjFlags::SPAWNCEILING | MobjFlags::NOGRAVITY,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -11419,7 +11468,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SOLID | MF_SPAWNCEILING | MF_NOGRAVITY,
+                    flags: MobjFlags::SOLID | MobjFlags::SPAWNCEILING | MobjFlags::NOGRAVITY,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -11444,7 +11493,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SPAWNCEILING | MF_NOGRAVITY,
+                    flags: MobjFlags::SPAWNCEILING | MobjFlags::NOGRAVITY,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -11469,7 +11518,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SPAWNCEILING | MF_NOGRAVITY,
+                    flags: MobjFlags::SPAWNCEILING | MobjFlags::NOGRAVITY,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -11494,7 +11543,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SPAWNCEILING | MF_NOGRAVITY,
+                    flags: MobjFlags::SPAWNCEILING | MobjFlags::NOGRAVITY,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -11519,7 +11568,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SPAWNCEILING | MF_NOGRAVITY,
+                    flags: MobjFlags::SPAWNCEILING | MobjFlags::NOGRAVITY,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -11544,7 +11593,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SPAWNCEILING | MF_NOGRAVITY,
+                    flags: MobjFlags::SPAWNCEILING | MobjFlags::NOGRAVITY,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -11569,7 +11618,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: 0,
+                    flags: MobjFlags::empty(),
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -11594,7 +11643,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: 0,
+                    flags: MobjFlags::empty(),
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -11619,7 +11668,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: 0,
+                    flags: MobjFlags::empty(),
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -11644,7 +11693,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: 0,
+                    flags: MobjFlags::empty(),
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -11669,7 +11718,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: 0,
+                    flags: MobjFlags::empty(),
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -11694,7 +11743,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: 0,
+                    flags: MobjFlags::empty(),
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -11719,7 +11768,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: 0,
+                    flags: MobjFlags::empty(),
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -11744,7 +11793,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: 0,
+                    flags: MobjFlags::empty(),
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -11769,7 +11818,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: 0,
+                    flags: MobjFlags::empty(),
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -11794,7 +11843,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SOLID,
+                    flags: MobjFlags::SOLID,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -11819,7 +11868,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: 0,
+                    flags: MobjFlags::empty(),
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -11844,7 +11893,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SOLID,
+                    flags: MobjFlags::SOLID,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -11869,7 +11918,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SOLID,
+                    flags: MobjFlags::SOLID,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -11894,7 +11943,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SOLID,
+                    flags: MobjFlags::SOLID,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -11919,7 +11968,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SOLID,
+                    flags: MobjFlags::SOLID,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -11944,7 +11993,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SOLID,
+                    flags: MobjFlags::SOLID,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -11969,7 +12018,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SOLID,
+                    flags: MobjFlags::SOLID,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -11994,7 +12043,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SOLID | MF_SPAWNCEILING | MF_NOGRAVITY,
+                    flags: MobjFlags::SOLID | MobjFlags::SPAWNCEILING | MobjFlags::NOGRAVITY,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -12019,7 +12068,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SOLID | MF_SPAWNCEILING | MF_NOGRAVITY,
+                    flags: MobjFlags::SOLID | MobjFlags::SPAWNCEILING | MobjFlags::NOGRAVITY,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -12044,7 +12093,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SOLID | MF_SPAWNCEILING | MF_NOGRAVITY,
+                    flags: MobjFlags::SOLID | MobjFlags::SPAWNCEILING | MobjFlags::NOGRAVITY,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -12069,7 +12118,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SOLID | MF_SPAWNCEILING | MF_NOGRAVITY,
+                    flags: MobjFlags::SOLID | MobjFlags::SPAWNCEILING | MobjFlags::NOGRAVITY,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -12094,7 +12143,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SOLID | MF_SPAWNCEILING | MF_NOGRAVITY,
+                    flags: MobjFlags::SOLID | MobjFlags::SPAWNCEILING | MobjFlags::NOGRAVITY,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -12119,7 +12168,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_SOLID | MF_SPAWNCEILING | MF_NOGRAVITY,
+                    flags: MobjFlags::SOLID | MobjFlags::SPAWNCEILING | MobjFlags::NOGRAVITY,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -12144,7 +12193,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_NOBLOCKMAP,
+                    flags: MobjFlags::NOBLOCKMAP,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -12169,7 +12218,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_NOBLOCKMAP,
+                    flags: MobjFlags::NOBLOCKMAP,
                     raisestate: StateNum::Null,
                 },
                 MobjInfo {
@@ -12194,7 +12243,7 @@ impl InfoState {
                     mass: 100,
                     damage: 0,
                     activesound: SfxName::SfxNone as i32,
-                    flags: MF_NOBLOCKMAP,
+                    flags: MobjFlags::NOBLOCKMAP,
                     raisestate: StateNum::Null,
                 },
             ],

@@ -2,9 +2,11 @@ use crate::am_map::am_stop;
 use crate::d_items::WEAPONINFO;
 use crate::d_mode::SkillType;
 use crate::d_mode::{GameMode, GameVersion};
+use crate::d_player::CheatFlags;
 use crate::d_player::PowerType;
 use crate::d_player::WeaponType;
-use crate::d_player::CF_GODMODE;
+use crate::p_mobj::MobjFlags;
+
 use crate::d_player::{ammotype_from_raw, AmmoType, NUMAMMO};
 use crate::d_player::{Player, PlayerId, PlayerState};
 use crate::game_state::GameState;
@@ -24,10 +26,6 @@ use crate::p_mobj::spawn_mobj;
 use crate::p_mobj::MobjType;
 use crate::p_mobj::StateNum;
 use crate::p_mobj::ONFLOORZ;
-use crate::p_mobj::{
-    MF_CORPSE, MF_COUNTITEM, MF_COUNTKILL, MF_DROPOFF, MF_DROPPED, MF_FLOAT, MF_JUSTHIT, MF_NOCLIP,
-    MF_NOGRAVITY, MF_SHADOW, MF_SHOOTABLE, MF_SKULLFLY, MF_SOLID,
-};
 use crate::p_pspr::drop_weapon;
 use crate::r_main::point_to_angle2;
 use crate::s_sound::s_start_sound;
@@ -214,7 +212,7 @@ pub fn give_power(state: &mut GameState, player: PlayerId, power: i32) -> bool {
     if power == PowerType::Invisibility as i32 {
         state.g_game.players[player.0 as usize].powers[power as usize] = INVISTICS;
         let player_mo = state.g_game.players[player.0 as usize].mo.unwrap();
-        state.p_mobj.mo_mut(player_mo).flags |= MF_SHADOW;
+        state.p_mobj.mo_mut(player_mo).flags |= MobjFlags::SHADOW;
         return true;
     }
     if power == PowerType::Infrared as i32 {
@@ -455,7 +453,7 @@ pub fn touch_special_thing(state: &mut GameState, special: MobjId, toucher: Mobj
             sound = SfxName::Getpow as i32;
         }
         78 => {
-            if state.p_mobj.mo(special).flags & MF_DROPPED != 0 {
+            if state.p_mobj.mo(special).flags.contains(MobjFlags::DROPPED) {
                 if !give_ammo(state, player, AmmoType::Clip, 0) {
                     return;
                 }
@@ -539,7 +537,7 @@ pub fn touch_special_thing(state: &mut GameState, special: MobjId, toucher: Mobj
                 state,
                 player,
                 WeaponType::Chaingun,
-                state.p_mobj.mo(special).flags & MF_DROPPED != 0,
+                state.p_mobj.mo(special).flags.contains(MobjFlags::DROPPED),
             ) {
                 return;
             }
@@ -576,7 +574,7 @@ pub fn touch_special_thing(state: &mut GameState, special: MobjId, toucher: Mobj
                 state,
                 player,
                 WeaponType::Shotgun,
-                state.p_mobj.mo(special).flags & MF_DROPPED != 0,
+                state.p_mobj.mo(special).flags.contains(MobjFlags::DROPPED),
             ) {
                 return;
             }
@@ -589,7 +587,7 @@ pub fn touch_special_thing(state: &mut GameState, special: MobjId, toucher: Mobj
                 state,
                 player,
                 WeaponType::Supershotgun,
-                state.p_mobj.mo(special).flags & MF_DROPPED != 0,
+                state.p_mobj.mo(special).flags.contains(MobjFlags::DROPPED),
             ) {
                 return;
             }
@@ -601,7 +599,12 @@ pub fn touch_special_thing(state: &mut GameState, special: MobjId, toucher: Mobj
             error("P_SpecialThing: Unknown gettable thing");
         }
     }
-    if state.p_mobj.mo(special).flags & MF_COUNTITEM != 0 {
+    if state
+        .p_mobj
+        .mo(special)
+        .flags
+        .contains(MobjFlags::COUNTITEM)
+    {
         state.g_game.players[player.0 as usize].itemcount += 1;
     }
     remove_mobj(state, special);
@@ -613,11 +616,11 @@ pub fn touch_special_thing(state: &mut GameState, special: MobjId, toucher: Mobj
 pub fn kill_mobj(state: &mut GameState, source: Option<MobjId>, target: MobjId) {
     {
         let t = state.p_mobj.mo_mut(target);
-        t.flags &= !(MF_SHOOTABLE | MF_FLOAT | MF_SKULLFLY);
+        t.flags &= !(MobjFlags::SHOOTABLE | MobjFlags::FLOAT | MobjFlags::SKULLFLY);
         if t.kind as u32 != MobjType::Skull as i32 as u32 {
-            t.flags &= !MF_NOGRAVITY;
+            t.flags &= !MobjFlags::NOGRAVITY;
         }
-        t.flags |= MF_CORPSE | MF_DROPOFF;
+        t.flags |= MobjFlags::CORPSE | MobjFlags::DROPOFF;
         t.height >>= 2;
     }
     let source_player = source.and_then(|id| state.p_mobj.mo(id).player);
@@ -626,20 +629,20 @@ pub fn kill_mobj(state: &mut GameState, source: Option<MobjId>, target: MobjId) 
         (t.flags, t.player)
     };
     if let Some(source_player_id) = source_player {
-        if target_flags & MF_COUNTKILL != 0 {
+        if target_flags.contains(MobjFlags::COUNTKILL) {
             state.g_game.player_mut(source_player_id).killcount += 1;
         }
         if let Some(target_player_id) = target_player {
             state.g_game.player_mut(source_player_id).frags[target_player_id.0 as usize] += 1;
         }
-    } else if !state.g_game.netgame && target_flags & MF_COUNTKILL != 0 {
+    } else if !state.g_game.netgame && target_flags.contains(MobjFlags::COUNTKILL) {
         state.g_game.players[0].killcount += 1;
     }
     if let Some(target_player_id) = target_player {
         if source.is_none() {
             state.g_game.player_mut(target_player_id).frags[target_player_id.0 as usize] += 1;
         }
-        state.p_mobj.mo_mut(target).flags &= !MF_SOLID;
+        state.p_mobj.mo_mut(target).flags &= !MobjFlags::SOLID;
         state.g_game.player_mut(target_player_id).playerstate = PlayerState::Dead;
         drop_weapon(state, target_player_id);
         if target_player_id.0 as i32 == state.g_game.consoleplayer && state.am_map.automapactive {
@@ -677,7 +680,7 @@ pub fn kill_mobj(state: &mut GameState, source: Option<MobjId>, target: MobjId) 
         (t.x, t.y)
     };
     let mo = spawn_mobj(state, target_x, target_y, ONFLOORZ, item);
-    state.p_mobj.mo_mut(mo).flags |= MF_DROPPED;
+    state.p_mobj.mo_mut(mo).flags |= MobjFlags::DROPPED;
 }
 pub fn damage_mobj(
     state: &mut GameState,
@@ -690,13 +693,13 @@ pub fn damage_mobj(
         let t = state.p_mobj.mo(target);
         (t.flags, t.health)
     };
-    if target_flags & MF_SHOOTABLE == 0 {
+    if !target_flags.contains(MobjFlags::SHOOTABLE) {
         return;
     }
     if target_health <= 0 {
         return;
     }
-    if target_flags & MF_SKULLFLY != 0 {
+    if target_flags.contains(MobjFlags::SKULLFLY) {
         let t = state.p_mobj.mo_mut(target);
         t.momz = 0;
         t.momy = t.momz;
@@ -712,7 +715,7 @@ pub fn damage_mobj(
             == WeaponType::Chainsaw as i32 as u32
     });
     if let Some(inflictor) = inflictor {
-        if target_flags & MF_NOCLIP == 0 && !source_uses_chainsaw {
+        if !target_flags.contains(MobjFlags::NOCLIP) && !source_uses_chainsaw {
             let (inflictor_x, inflictor_y, inflictor_z) = {
                 let i = state.p_mobj.mo(inflictor);
                 (i.x, i.y, i.z)
@@ -750,7 +753,7 @@ pub fn damage_mobj(
         }
         let player = state.g_game.player_mut(player_id);
         if damage < 1000
-            && (player.cheats & CF_GODMODE != 0
+            && (player.cheats.contains(CheatFlags::GODMODE)
                 || player.powers[PowerType::Invulnerability as usize] != 0)
         {
             return;
@@ -788,9 +791,9 @@ pub fn damage_mobj(
     }
     let target_type = state.p_mobj.mo(target).kind;
     if p_random(&mut state.m_random) < state.info.mobjinfo_mut(target_type).painchance
-        && state.p_mobj.mo(target).flags & MF_SKULLFLY == 0
+        && !state.p_mobj.mo(target).flags.contains(MobjFlags::SKULLFLY)
     {
-        state.p_mobj.mo_mut(target).flags |= MF_JUSTHIT;
+        state.p_mobj.mo_mut(target).flags |= MobjFlags::JUSTHIT;
         let painstate = state.info.mobjinfo_mut(target_type).painstate;
         set_mobj_state(state, target, painstate);
     }

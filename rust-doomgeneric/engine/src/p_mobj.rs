@@ -1,5 +1,6 @@
 use crate::d_mode::SkillType;
-use crate::d_player::CF_NOMOMENTUM;
+use crate::d_player::CheatFlags;
+
 use crate::doomdef::MAXPLAYERS;
 use crate::doomdef::TICRATE;
 use crate::g_game::player_reborn;
@@ -2613,6 +2614,59 @@ pub fn mobjtype_from_raw(v: i32) -> MobjType {
         n => panic!("invalid mobjtype {n}"),
     }
 }
+bitflags::bitflags! {
+    /// Behaviour flags of a mobj (`MF_*` in the C source).
+    #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+    pub struct MobjFlags: i32 {
+        const SPECIAL = 1;
+        const SOLID = 2;
+        const SHOOTABLE = 4;
+        const NOSECTOR = 8;
+        const NOBLOCKMAP = 16;
+        const AMBUSH = 32;
+        const JUSTHIT = 64;
+        const JUSTATTACKED = 128;
+        const SPAWNCEILING = 256;
+        const NOGRAVITY = 512;
+        const DROPOFF = 1024;
+        const PICKUP = 2048;
+        const NOCLIP = 0x1000;
+        const FLOAT = 0x4000;
+        const TELEPORT = 0x8000;
+        const MISSILE = 0x10000;
+        const DROPPED = 0x20000;
+        const SHADOW = 0x40000;
+        const NOBLOOD = 0x80000;
+        const CORPSE = 0x100000;
+        const INFLOAT = 0x200000;
+        const COUNTKILL = 0x400000;
+        const COUNTITEM = 0x800000;
+        const SKULLFLY = 0x1000000;
+        const NOTDMATCH = 0x2000000;
+        const TRANSLATION = 0xc000000;
+    }
+}
+impl MobjFlags {
+    /// Bit position of the two-bit player colour-translation field, which
+    /// `TRANSLATION` masks.
+    pub const TRANSLATION_SHIFT: i32 = 26;
+}
+bitflags::bitflags! {
+    /// Flags of a map line (`ML_*` in the C source).
+    #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+    pub struct LineFlags: i16 {
+        const BLOCKING = 1;
+        const BLOCKMONSTERS = 2;
+        const TWOSIDED = 4;
+        const DONTPEGTOP = 8;
+        const DONTPEGBOTTOM = 16;
+        const SECRET = 32;
+        const SOUNDBLOCK = 64;
+        const DONTDRAW = 128;
+        const MAPPED = 256;
+    }
+}
+
 #[derive(Copy, Clone)]
 pub struct MobjInfo {
     pub doomednum: i32,
@@ -2636,36 +2690,9 @@ pub struct MobjInfo {
     pub mass: i32,
     pub damage: i32,
     pub activesound: i32,
-    pub flags: i32,
+    pub flags: MobjFlags,
     pub raisestate: StateNum,
 }
-pub const MF_TRANSSHIFT: i32 = 26;
-pub const MF_TRANSLATION: i32 = 201326592;
-pub const MF_NOTDMATCH: i32 = 33554432;
-pub const MF_SKULLFLY: i32 = 16777216;
-pub const MF_COUNTITEM: i32 = 8388608;
-pub const MF_COUNTKILL: i32 = 4194304;
-pub const MF_INFLOAT: i32 = 2097152;
-pub const MF_CORPSE: i32 = 1048576;
-pub const MF_NOBLOOD: i32 = 524288;
-pub const MF_SHADOW: i32 = 262144;
-pub const MF_DROPPED: i32 = 131072;
-pub const MF_MISSILE: i32 = 65536;
-pub const MF_TELEPORT: i32 = 32768;
-pub const MF_FLOAT: i32 = 16384;
-pub const MF_NOCLIP: i32 = 4096;
-pub const MF_PICKUP: i32 = 2048;
-pub const MF_DROPOFF: i32 = 1024;
-pub const MF_NOGRAVITY: i32 = 512;
-pub const MF_SPAWNCEILING: i32 = 256;
-pub const MF_JUSTATTACKED: i32 = 128;
-pub const MF_JUSTHIT: i32 = 64;
-pub const MF_AMBUSH: i32 = 32;
-pub const MF_NOBLOCKMAP: i32 = 16;
-pub const MF_NOSECTOR: i32 = 8;
-pub const MF_SHOOTABLE: i32 = 4;
-pub const MF_SOLID: i32 = 2;
-pub const MF_SPECIAL: i32 = 1;
 #[derive(Copy, Clone)]
 pub struct Mobj {
     pub thinker: Thinker,
@@ -2691,7 +2718,7 @@ pub struct Mobj {
     pub kind: MobjType,
     pub tics: i32,
     pub state: Option<StateId>,
-    pub flags: i32,
+    pub flags: MobjFlags,
     pub health: i32,
     pub movedir: i32,
     pub movecount: i32,
@@ -2743,7 +2770,7 @@ pub struct Line {
     pub v2: VertexId,
     pub dx: Fixed,
     pub dy: Fixed,
-    pub flags: i16,
+    pub flags: LineFlags,
     pub special: i16,
     pub tag: i16,
     pub sidenum: [i16; 2],
@@ -2821,7 +2848,7 @@ pub fn explode_missile(state: &mut GameState, mo: MobjId) {
     if state.p_mobj.mo(mo).tics < 1 {
         state.p_mobj.mo_mut(mo).tics = 1;
     }
-    state.p_mobj.mo_mut(mo).flags &= !MF_MISSILE;
+    state.p_mobj.mo_mut(mo).flags &= !MobjFlags::MISSILE;
     let deathsound = state.info.mobjinfo_mut(state.p_mobj.mo(mo).kind).deathsound;
     if deathsound != 0 {
         s_start_sound(state, SoundOrigin::Mobj(mo), deathsound);
@@ -2835,10 +2862,10 @@ pub fn xymovement(state: &mut GameState, mo: MobjId) {
         (m.momx, m.momy, m.flags)
     };
     if momx == 0 && momy == 0 {
-        if flags & MF_SKULLFLY != 0 {
+        if flags.contains(MobjFlags::SKULLFLY) {
             let mo_type = {
                 let m = state.p_mobj.mo_mut(mo);
-                m.flags &= !MF_SKULLFLY;
+                m.flags &= !MobjFlags::SKULLFLY;
                 m.momz = 0;
                 m.momy = m.momz;
                 m.momx = m.momy;
@@ -2885,7 +2912,7 @@ pub fn xymovement(state: &mut GameState, mo: MobjId) {
         if !try_move(state, mo, ptryx, ptryy) {
             if player.is_some() {
                 slide_move(state, mo);
-            } else if state.p_mobj.mo(mo).flags & MF_MISSILE != 0 {
+            } else if state.p_mobj.mo(mo).flags.contains(MobjFlags::MISSILE) {
                 if state.p_map.ceilingline.is_some_and(|ceilingline| {
                     state
                         .p_setup
@@ -2911,7 +2938,10 @@ pub fn xymovement(state: &mut GameState, mo: MobjId) {
         }
     }
     if let Some(player_id) = player {
-        if state.g_game.players[player_id.0 as usize].cheats & CF_NOMOMENTUM != 0 {
+        if state.g_game.players[player_id.0 as usize]
+            .cheats
+            .contains(CheatFlags::NOMOMENTUM)
+        {
             let m = state.p_mobj.mo_mut(mo);
             m.momy = 0;
             m.momx = m.momy;
@@ -2922,13 +2952,13 @@ pub fn xymovement(state: &mut GameState, mo: MobjId) {
         let m = state.p_mobj.mo(mo);
         (m.flags, m.z, m.floorz, m.momx, m.momy, m.subsector)
     };
-    if flags & (MF_MISSILE | MF_SKULLFLY) != 0 {
+    if flags.intersects(MobjFlags::MISSILE | MobjFlags::SKULLFLY) {
         return;
     }
     if z > floorz {
         return;
     }
-    if flags & MF_CORPSE != 0
+    if flags.contains(MobjFlags::CORPSE)
         && (!(-FRACUNIT / 4..=FRACUNIT / 4).contains(&momx)
             || !(-FRACUNIT / 4..=FRACUNIT / 4).contains(&momy))
         && floorz
@@ -2985,7 +3015,9 @@ pub fn zmovement(state: &mut GameState, mo: MobjId) {
         .filter(|&id| state.p_mobj.is_live(id));
     let mo_flags = state.p_mobj.mo(mo).flags;
     if let Some(target) = mo_target.filter(|_| {
-        mo_flags & MF_FLOAT != 0 && mo_flags & MF_SKULLFLY == 0 && mo_flags & MF_INFLOAT == 0
+        mo_flags.contains(MobjFlags::FLOAT)
+            && !mo_flags.contains(MobjFlags::SKULLFLY)
+            && !mo_flags.contains(MobjFlags::INFLOAT)
     }) {
         dist = aprox_distance(
             state.p_mobj.mo(mo).x - state.p_mobj.mo(target).x,
@@ -3002,7 +3034,8 @@ pub fn zmovement(state: &mut GameState, mo: MobjId) {
     if state.p_mobj.mo(mo).z <= state.p_mobj.mo(mo).floorz {
         let correct_lost_soul_bounce: i32 =
             (state.doomstat.gameversion.is_ultimate_or_higher()) as i32;
-        if correct_lost_soul_bounce != 0 && state.p_mobj.mo(mo).flags & MF_SKULLFLY != 0 {
+        if correct_lost_soul_bounce != 0 && state.p_mobj.mo(mo).flags.contains(MobjFlags::SKULLFLY)
+        {
             state.p_mobj.mo_mut(mo).momz = -state.p_mobj.mo(mo).momz;
         }
         if state.p_mobj.mo(mo).momz < 0 {
@@ -3016,15 +3049,17 @@ pub fn zmovement(state: &mut GameState, mo: MobjId) {
             state.p_mobj.mo_mut(mo).momz = 0;
         }
         state.p_mobj.mo_mut(mo).z = state.p_mobj.mo(mo).floorz;
-        if correct_lost_soul_bounce == 0 && state.p_mobj.mo(mo).flags & MF_SKULLFLY != 0 {
+        if correct_lost_soul_bounce == 0 && state.p_mobj.mo(mo).flags.contains(MobjFlags::SKULLFLY)
+        {
             state.p_mobj.mo_mut(mo).momz = -state.p_mobj.mo(mo).momz;
         }
-        if state.p_mobj.mo(mo).flags & MF_MISSILE != 0 && state.p_mobj.mo(mo).flags & MF_NOCLIP == 0
+        if state.p_mobj.mo(mo).flags.contains(MobjFlags::MISSILE)
+            && !state.p_mobj.mo(mo).flags.contains(MobjFlags::NOCLIP)
         {
             explode_missile(state, mo);
             return;
         }
-    } else if state.p_mobj.mo(mo).flags & MF_NOGRAVITY == 0 {
+    } else if !state.p_mobj.mo(mo).flags.contains(MobjFlags::NOGRAVITY) {
         if state.p_mobj.mo(mo).momz == 0 {
             state.p_mobj.mo_mut(mo).momz = (-GRAVITY * 2) as Fixed;
         } else {
@@ -3036,10 +3071,11 @@ pub fn zmovement(state: &mut GameState, mo: MobjId) {
             state.p_mobj.mo_mut(mo).momz = 0;
         }
         state.p_mobj.mo_mut(mo).z = state.p_mobj.mo(mo).ceilingz - state.p_mobj.mo(mo).height;
-        if state.p_mobj.mo(mo).flags & MF_SKULLFLY != 0 {
+        if state.p_mobj.mo(mo).flags.contains(MobjFlags::SKULLFLY) {
             state.p_mobj.mo_mut(mo).momz = -state.p_mobj.mo(mo).momz;
         }
-        if state.p_mobj.mo(mo).flags & MF_MISSILE != 0 && state.p_mobj.mo(mo).flags & MF_NOCLIP == 0
+        if state.p_mobj.mo(mo).flags.contains(MobjFlags::MISSILE)
+            && !state.p_mobj.mo(mo).flags.contains(MobjFlags::NOCLIP)
         {
             explode_missile(state, mo);
         }
@@ -3069,7 +3105,12 @@ pub fn nightmare_respawn(state: &mut GameState, mobj: MobjId) {
         .floorheight;
     let fog = spawn_mobj(state, x, y, floorheight2, MobjType::Tfog);
     s_start_sound(state, SoundOrigin::Mobj(fog), SfxName::Telept as i32);
-    let z = if state.info.mobjinfo_mut(mobj_type).flags & MF_SPAWNCEILING != 0 {
+    let z = if state
+        .info
+        .mobjinfo_mut(mobj_type)
+        .flags
+        .contains(MobjFlags::SPAWNCEILING)
+    {
         ONCEILINGZ as Fixed
     } else {
         ONFLOORZ as Fixed
@@ -3080,7 +3121,7 @@ pub fn nightmare_respawn(state: &mut GameState, mobj: MobjId) {
         m.spawnpoint = spawnpoint;
         m.angle = (ANG45 * (spawnpoint.angle as i32 / 45)) as Angle;
         if spawnpoint.options as i32 & MTF_AMBUSH != 0 {
-            m.flags |= MF_AMBUSH;
+            m.flags |= MobjFlags::AMBUSH;
         }
         m.reactiontime = 18;
     }
@@ -3091,7 +3132,7 @@ pub fn mobj_thinker(state: &mut GameState, id: MobjId) {
         |state: &GameState| matches!(state.p_mobj.mo(id).thinker.function, ThinkerFn::Removed);
     {
         let m = state.p_mobj.mo(id);
-        if m.momx != 0 || m.momy != 0 || m.flags & MF_SKULLFLY != 0 {
+        if m.momx != 0 || m.momy != 0 || m.flags.contains(MobjFlags::SKULLFLY) {
             xymovement(state, id);
             if removed(state) {
                 return;
@@ -3108,7 +3149,7 @@ pub fn mobj_thinker(state: &mut GameState, id: MobjId) {
         }
     }
     if state.p_mobj.mo(id).tics == -1 {
-        if state.p_mobj.mo(id).flags & MF_COUNTKILL == 0 {
+        if !state.p_mobj.mo(id).flags.contains(MobjFlags::COUNTKILL) {
             return;
         }
         if !state.g_game.respawnmonsters {
@@ -3384,7 +3425,7 @@ impl PMobjState {
                 kind: MobjType::Player,
                 tics: 0,
                 state: None,
-                flags: 0,
+                flags: MobjFlags::empty(),
                 health: 0,
                 movedir: 0,
                 movecount: 0,
@@ -3416,8 +3457,8 @@ pub fn remove_mobj(state: &mut GameState, mobj: MobjId) {
         let m = state.p_mobj.mo(mobj);
         (m.flags, m.kind, m.spawnpoint)
     };
-    if flags & MF_SPECIAL != 0
-        && flags & MF_DROPPED == 0
+    if flags.contains(MobjFlags::SPECIAL)
+        && !flags.contains(MobjFlags::DROPPED)
         && kind as u32 != MobjType::Inv as i32 as u32
         && kind as u32 != MobjType::Ins as i32 as u32
     {
@@ -3461,7 +3502,10 @@ pub fn respawn_specials(state: &mut GameState) {
         }
         i += 1;
     }
-    let z = if state.info.mobjinfo[i as usize].flags & MF_SPAWNCEILING != 0 {
+    let z = if state.info.mobjinfo[i as usize]
+        .flags
+        .contains(MobjFlags::SPAWNCEILING)
+    {
         ONCEILINGZ as Fixed
     } else {
         ONFLOORZ as Fixed
@@ -3493,7 +3537,9 @@ pub fn spawn_player(state: &mut GameState, mthing: MapThing) {
     {
         let m = state.p_mobj.mo_mut(mobj);
         if mthing.kind as i32 > 1 {
-            m.flags |= (mthing.kind as i32 - 1) << MF_TRANSSHIFT;
+            m.flags |= MobjFlags::from_bits_retain(
+                (mthing.kind as i32 - 1) << MobjFlags::TRANSLATION_SHIFT,
+            );
         }
         m.angle = (ANG45 * (mthing.angle as i32 / 45)) as Angle;
         m.player = Some(PlayerId(player_index as u8));
@@ -3569,18 +3615,27 @@ pub fn spawn_map_thing(state: &mut GameState, mthing: MapThing) {
             mthing.kind as i32, mthing.x as i32, mthing.y as i32,
         ));
     }
-    if state.g_game.deathmatch != 0 && state.info.mobjinfo[i as usize].flags & MF_NOTDMATCH != 0 {
+    if state.g_game.deathmatch != 0
+        && state.info.mobjinfo[i as usize]
+            .flags
+            .contains(MobjFlags::NOTDMATCH)
+    {
         return;
     }
     if state.d_main.nomonsters
         && (i == MobjType::Skull as i32
-            || state.info.mobjinfo[i as usize].flags & MF_COUNTKILL != 0)
+            || state.info.mobjinfo[i as usize]
+                .flags
+                .contains(MobjFlags::COUNTKILL))
     {
         return;
     }
     let x = ((mthing.x as i32) << FRACBITS) as Fixed;
     let y = ((mthing.y as i32) << FRACBITS) as Fixed;
-    let z = if state.info.mobjinfo[i as usize].flags & MF_SPAWNCEILING != 0 {
+    let z = if state.info.mobjinfo[i as usize]
+        .flags
+        .contains(MobjFlags::SPAWNCEILING)
+    {
         ONCEILINGZ as Fixed
     } else {
         ONFLOORZ as Fixed
@@ -3592,16 +3647,16 @@ pub fn spawn_map_thing(state: &mut GameState, mthing: MapThing) {
         state.p_mobj.mo_mut(mobj).tics = 1 + p_random(&mut state.m_random) % tics;
     }
     let flags = state.p_mobj.mo(mobj).flags;
-    if flags & MF_COUNTKILL != 0 {
+    if flags.contains(MobjFlags::COUNTKILL) {
         state.g_game.totalkills += 1;
     }
-    if flags & MF_COUNTITEM != 0 {
+    if flags.contains(MobjFlags::COUNTITEM) {
         state.g_game.totalitems += 1;
     }
     let m = state.p_mobj.mo_mut(mobj);
     m.angle = (ANG45 * (mthing.angle as i32 / 45)) as Angle;
     if mthing.options as i32 & MTF_AMBUSH != 0 {
-        m.flags |= MF_AMBUSH;
+        m.flags |= MobjFlags::AMBUSH;
     }
 }
 pub fn spawn_puff(state: &mut GameState, x: Fixed, y: Fixed, mut z: Fixed) {
@@ -3665,7 +3720,7 @@ pub fn subst_null_mobj(state: &mut PMobjState, mobj: Option<MobjId>) -> MobjId {
     dummy.x = 0;
     dummy.y = 0;
     dummy.z = 0;
-    dummy.flags = 0;
+    dummy.flags = MobjFlags::empty();
     id
 }
 pub fn spawn_missile(
@@ -3690,7 +3745,7 @@ pub fn spawn_missile(
     }
     state.p_mobj.mo_mut(th).target = Some(source);
     let mut an: Angle = point_to_angle2(state, sx, sy, dx, dy);
-    if dflags & MF_SHADOW != 0 {
+    if dflags.contains(MobjFlags::SHADOW) {
         an = an.wrapping_add(
             ((p_random(&mut state.m_random) - p_random(&mut state.m_random)) << 20) as Angle,
         );

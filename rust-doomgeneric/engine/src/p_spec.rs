@@ -1,5 +1,7 @@
+use crate::d_player::CheatFlags;
 use crate::d_player::PowerType;
-use crate::d_player::CF_GODMODE;
+use crate::p_mobj::LineFlags;
+
 use crate::fixed_cstr::FixedCStr;
 use crate::g_game::exit_level;
 use crate::g_game::secret_exit_level;
@@ -307,7 +309,6 @@ impl Default for FloorMove {
         }
     }
 }
-pub const ML_TWOSIDED: i32 = 4;
 pub const FASTDARK: i32 = 15;
 pub static ANIMDEFS: [AnimDef; 22] = [
     AnimDef {
@@ -496,14 +497,18 @@ pub fn get_sector(state: &mut GameState, current_sector: i32, line: i32, side: i
     let sidenum = state.p_setup.line(line_id).sidenum[side as usize];
     state.p_setup.sides[sidenum as usize].sector
 }
-pub fn two_sided(state: &mut GameState, sector: i32, line: i32) -> i32 {
+pub fn two_sided(state: &mut GameState, sector: i32, line: i32) -> bool {
     let sec = state.p_setup.sector_mut(SectorId(sector as u32));
     let line_id = sec.lines[line as usize];
-    state.p_setup.line(line_id).flags as i32 & ML_TWOSIDED
+    state
+        .p_setup
+        .line(line_id)
+        .flags
+        .contains(LineFlags::TWOSIDED)
 }
 pub fn get_next_sector(state: &GameState, line: LineId, sec: SectorId) -> Option<SectorId> {
     let linev = state.p_setup.line(line);
-    if linev.flags as i32 & ML_TWOSIDED == 0 {
+    if !linev.flags.contains(LineFlags::TWOSIDED) {
         return None;
     }
     let front = linev.frontsector.unwrap();
@@ -977,7 +982,7 @@ pub fn player_in_special_sector(state: &mut GameState, player: PlayerId) {
             state.p_setup.sector_mut(sector_id).special = 0;
         }
         11 => {
-            state.g_game.player_mut(player).cheats &= !CF_GODMODE;
+            state.g_game.player_mut(player).cheats &= !CheatFlags::GODMODE;
             if state.p_tick.leveltime & 0x1f == 0 {
                 damage_mobj(state, player_mo, None, None, 20);
             }
@@ -1228,5 +1233,3 @@ pub fn spawn_specials(state: &mut GameState) {
         state.p_switch.buttonlist[i] = EMPTY_BUTTON;
     }
 }
-pub const ML_SECRET: i32 = 32;
-pub const ML_MAPPED: i32 = 256;

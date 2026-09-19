@@ -26,6 +26,8 @@ use crate::p_maputl::InterceptTarget;
 use crate::p_maputl::MAPBLOCKSHIFT;
 use crate::p_maputl::PT_ADDLINES;
 use crate::p_maputl::PT_ADDTHINGS;
+use crate::p_mobj::LineFlags;
+use crate::p_mobj::MobjFlags;
 
 use crate::p_mobj::remove_mobj;
 use crate::p_mobj::set_mobj_state;
@@ -37,17 +39,13 @@ use crate::p_mobj::MobjId;
 use crate::p_mobj::MobjType;
 use crate::p_mobj::SlopeType;
 use crate::p_mobj::StateNum;
-use crate::p_mobj::{
-    MF_DROPOFF, MF_DROPPED, MF_FLOAT, MF_MISSILE, MF_NOBLOOD, MF_NOCLIP, MF_PICKUP, MF_SHOOTABLE,
-    MF_SKULLFLY, MF_SOLID, MF_SPECIAL, MF_TELEPORT,
-};
 use crate::p_setup::LineId;
 use crate::p_setup::SectorId;
 use crate::p_setup::SubsectorId;
 use crate::p_sight::check_sight;
 use crate::p_spec::cross_special_line;
 use crate::p_spec::shoot_special_line;
-use crate::p_spec::ML_TWOSIDED;
+
 use crate::p_switch::use_special_line;
 use crate::r_main::point_in_subsector;
 use crate::r_main::point_to_angle2;
@@ -63,7 +61,7 @@ use crate::tables::FINESINE;
 pub struct PMapState {
     pub tmbbox: [Fixed; 4],
     pub tmthing: Option<MobjId>,
-    pub tmflags: i32,
+    pub tmflags: MobjFlags,
     pub tmx: Fixed,
     pub tmy: Fixed,
     pub floatok: bool,
@@ -106,7 +104,7 @@ impl PMapState {
         Self {
             tmbbox: [0; 4],
             tmthing: None,
-            tmflags: 0,
+            tmflags: MobjFlags::empty(),
             tmx: 0,
             tmy: 0,
             floatok: false,
@@ -142,8 +140,6 @@ impl PMapState {
 
 pub const DEH_DEFAULT_SPECIES_INFIGHTING: i32 = 0;
 pub const DEH_SPECIES_INFIGHTING: i32 = DEH_DEFAULT_SPECIES_INFIGHTING;
-pub const ML_BLOCKING: i32 = 1;
-pub const ML_BLOCKMONSTERS: i32 = 2;
 pub const USERANGE: i32 = 64 * FRACUNIT;
 pub const MAXSPECIALCROSS_ORIGINAL: i32 = 8;
 pub const DEFAULT_SPECHIT_MAGIC: i32 = 0x1c09c98;
@@ -151,7 +147,7 @@ pub fn stomp_thing(state: &mut GameState, thing_id: MobjId) -> bool {
     let thing = thing_id;
     let tmthing = state.p_map.tmthing.unwrap();
 
-    if state.p_mobj.mo(thing).flags & MF_SHOOTABLE == 0 {
+    if !state.p_mobj.mo(thing).flags.contains(MobjFlags::SHOOTABLE) {
         return true;
     }
     let blockdist: Fixed = state.p_mobj.mo(thing).radius + state.p_mobj.mo(tmthing).radius;
@@ -235,11 +231,12 @@ pub fn check_line(state: &mut GameState, ld: LineId) -> bool {
         return false;
     }
     let tmthing = state.p_map.tmthing.unwrap();
-    if state.p_mobj.mo(tmthing).flags & MF_MISSILE == 0 {
-        if ldv.flags as i32 & ML_BLOCKING != 0 {
+    if !state.p_mobj.mo(tmthing).flags.contains(MobjFlags::MISSILE) {
+        if ldv.flags.contains(LineFlags::BLOCKING) {
             return false;
         }
-        if state.p_mobj.mo(tmthing).player.is_none() && ldv.flags as i32 & ML_BLOCKMONSTERS != 0 {
+        if state.p_mobj.mo(tmthing).player.is_none() && ldv.flags.contains(LineFlags::BLOCKMONSTERS)
+        {
             return false;
         }
     }
@@ -269,7 +266,12 @@ pub fn check_thing(state: &mut GameState, thing_id: MobjId) -> bool {
 
     let solid: bool;
     let damage: i32;
-    if state.p_mobj.mo(thing).flags & (MF_SOLID | MF_SPECIAL | MF_SHOOTABLE) == 0 {
+    if !state
+        .p_mobj
+        .mo(thing)
+        .flags
+        .intersects(MobjFlags::SOLID | MobjFlags::SPECIAL | MobjFlags::SHOOTABLE)
+    {
         return true;
     }
     let blockdist: Fixed = state.p_mobj.mo(thing).radius + state.p_mobj.mo(tmthing).radius;
@@ -281,14 +283,14 @@ pub fn check_thing(state: &mut GameState, thing_id: MobjId) -> bool {
     if thing == tmthing {
         return true;
     }
-    if state.p_mobj.mo(tmthing).flags & MF_SKULLFLY != 0 {
+    if state.p_mobj.mo(tmthing).flags.contains(MobjFlags::SKULLFLY) {
         damage = (p_random(&mut state.m_random) % 8 + 1)
             * state
                 .info
                 .mobjinfo_mut(state.p_mobj.mo(tmthing).kind)
                 .damage;
         damage_mobj(state, thing, Some(tmthing), Some(tmthing), damage);
-        state.p_mobj.mo_mut(tmthing).flags &= !MF_SKULLFLY;
+        state.p_mobj.mo_mut(tmthing).flags &= !MobjFlags::SKULLFLY;
         state.p_mobj.mo_mut(tmthing).momz = 0;
         state.p_mobj.mo_mut(tmthing).momy = state.p_mobj.mo(tmthing).momz;
         state.p_mobj.mo_mut(tmthing).momx = state.p_mobj.mo(tmthing).momy;
@@ -299,7 +301,7 @@ pub fn check_thing(state: &mut GameState, thing_id: MobjId) -> bool {
         set_mobj_state(state, tmthing, spawnstate);
         return false;
     }
-    if state.p_mobj.mo(tmthing).flags & MF_MISSILE != 0 {
+    if state.p_mobj.mo(tmthing).flags.contains(MobjFlags::MISSILE) {
         if state.p_mobj.mo(tmthing).z > state.p_mobj.mo(thing).z + state.p_mobj.mo(thing).height {
             return true;
         }
@@ -330,8 +332,8 @@ pub fn check_thing(state: &mut GameState, thing_id: MobjId) -> bool {
                 return false;
             }
         }
-        if state.p_mobj.mo(thing).flags & MF_SHOOTABLE == 0 {
-            return state.p_mobj.mo(thing).flags & MF_SOLID == 0;
+        if !state.p_mobj.mo(thing).flags.contains(MobjFlags::SHOOTABLE) {
+            return !state.p_mobj.mo(thing).flags.contains(MobjFlags::SOLID);
         }
         damage = (p_random(&mut state.m_random) % 8 + 1)
             * state
@@ -341,14 +343,14 @@ pub fn check_thing(state: &mut GameState, thing_id: MobjId) -> bool {
         damage_mobj(state, thing, Some(tmthing), tm_target, damage);
         return false;
     }
-    if state.p_mobj.mo(thing).flags & MF_SPECIAL != 0 {
-        solid = state.p_mobj.mo(thing).flags & MF_SOLID != 0;
-        if state.p_map.tmflags & MF_PICKUP != 0 {
+    if state.p_mobj.mo(thing).flags.contains(MobjFlags::SPECIAL) {
+        solid = state.p_mobj.mo(thing).flags.contains(MobjFlags::SOLID);
+        if state.p_map.tmflags.contains(MobjFlags::PICKUP) {
             touch_special_thing(state, thing, tmthing);
         }
         return !solid;
     }
-    state.p_mobj.mo(thing).flags & MF_SOLID == 0
+    !state.p_mobj.mo(thing).flags.contains(MobjFlags::SOLID)
 }
 pub fn check_position(state: &mut GameState, thing: MobjId, x: Fixed, y: Fixed) -> bool {
     let mut xl: i32;
@@ -377,7 +379,7 @@ pub fn check_position(state: &mut GameState, thing: MobjId, x: Fixed, y: Fixed) 
         .ceilingheight;
     state.r_main.validcount += 1;
     state.p_map.numspechit = 0;
-    if state.p_map.tmflags & MF_NOCLIP != 0 {
+    if state.p_map.tmflags.contains(MobjFlags::NOCLIP) {
         return true;
     }
     xl = (state.p_map.tmbbox[BoxIndex::Left as usize] - state.p_setup.bmaporgx - 32 * FRACUNIT)
@@ -416,22 +418,26 @@ pub fn try_move(state: &mut GameState, thing: MobjId, x: Fixed, y: Fixed) -> boo
     if !check_position(state, thing, x, y) {
         return false;
     }
-    if state.p_mobj.mo(thing).flags & MF_NOCLIP == 0 {
+    if !state.p_mobj.mo(thing).flags.contains(MobjFlags::NOCLIP) {
         if state.p_map.tmceilingz - state.p_map.tmfloorz < state.p_mobj.mo(thing).height {
             return false;
         }
         state.p_map.floatok = true;
-        if state.p_mobj.mo(thing).flags & MF_TELEPORT == 0
+        if !state.p_mobj.mo(thing).flags.contains(MobjFlags::TELEPORT)
             && state.p_map.tmceilingz - state.p_mobj.mo(thing).z < state.p_mobj.mo(thing).height
         {
             return false;
         }
-        if state.p_mobj.mo(thing).flags & MF_TELEPORT == 0
+        if !state.p_mobj.mo(thing).flags.contains(MobjFlags::TELEPORT)
             && state.p_map.tmfloorz - state.p_mobj.mo(thing).z > 24 * FRACUNIT
         {
             return false;
         }
-        if state.p_mobj.mo(thing).flags & (MF_DROPOFF | MF_FLOAT) == 0
+        if !state
+            .p_mobj
+            .mo(thing)
+            .flags
+            .intersects(MobjFlags::DROPOFF | MobjFlags::FLOAT)
             && state.p_map.tmfloorz - state.p_map.tmdropoffz > 24 * FRACUNIT
         {
             return false;
@@ -445,7 +451,12 @@ pub fn try_move(state: &mut GameState, thing: MobjId, x: Fixed, y: Fixed) -> boo
     state.p_mobj.mo_mut(thing).x = x;
     state.p_mobj.mo_mut(thing).y = y;
     set_thing_position(state, thing);
-    if state.p_mobj.mo(thing).flags & (MF_TELEPORT | MF_NOCLIP) == 0 {
+    if !state
+        .p_mobj
+        .mo(thing)
+        .flags
+        .intersects(MobjFlags::TELEPORT | MobjFlags::NOCLIP)
+    {
         loop {
             let fresh0 = state.p_map.numspechit;
             state.p_map.numspechit -= 1;
@@ -531,17 +542,7 @@ pub fn slide_traverse(state: &mut GameState, intercept: Intercept) -> bool {
         InterceptTarget::Thing(_) => error("PTR_SlideTraverse: not a line?"),
     };
     let slidemo = state.p_map.slidemo.unwrap();
-    if state.p_setup.line(li).flags as i32 & ML_TWOSIDED == 0 {
-        if point_on_line_side(
-            state,
-            state.p_mobj.mo(slidemo).x,
-            state.p_mobj.mo(slidemo).y,
-            li,
-        ) != 0
-        {
-            return true;
-        }
-    } else {
+    if state.p_setup.line(li).flags.contains(LineFlags::TWOSIDED) {
         line_opening(state, li);
         if state.p_maputl.openrange >= state.p_mobj.mo(slidemo).height
             && state.p_maputl.opentop - state.p_mobj.mo(slidemo).z
@@ -550,6 +551,14 @@ pub fn slide_traverse(state: &mut GameState, intercept: Intercept) -> bool {
         {
             return true;
         }
+    } else if point_on_line_side(
+        state,
+        state.p_mobj.mo(slidemo).x,
+        state.p_mobj.mo(slidemo).y,
+        li,
+    ) != 0
+    {
+        return true;
     }
     if intercept.frac < state.p_map.bestslidefrac {
         state.p_map.secondslidefrac = state.p_map.bestslidefrac;
@@ -664,7 +673,7 @@ pub fn aim_traverse(state: &mut GameState, intercept: Intercept) -> bool {
     let dist: Fixed;
     if let InterceptTarget::Line(li) = intercept.target {
         let liv = state.p_setup.line(li);
-        if liv.flags as i32 & ML_TWOSIDED == 0 {
+        if !liv.flags.contains(LineFlags::TWOSIDED) {
             return false;
         }
         line_opening(state, li);
@@ -714,7 +723,7 @@ pub fn aim_traverse(state: &mut GameState, intercept: Intercept) -> bool {
     if Some(th) == state.p_map.shootthing {
         return true;
     }
-    if state.p_mobj.mo(th).flags & MF_SHOOTABLE == 0 {
+    if !state.p_mobj.mo(th).flags.contains(MobjFlags::SHOOTABLE) {
         return true;
     }
     dist = fixed_mul(state.p_map.attackrange, intercept.frac);
@@ -752,7 +761,7 @@ pub fn shoot_traverse(state: &mut GameState, intercept: Intercept) -> bool {
         if state.p_setup.line(li).special != 0 {
             shoot_special_line(state, shootthing, li);
         }
-        if state.p_setup.line(li).flags as i32 & ML_TWOSIDED != 0 {
+        if state.p_setup.line(li).flags.contains(LineFlags::TWOSIDED) {
             line_opening(state, li);
             let dist = fixed_mul(state.p_map.attackrange, intercept.frac);
             // A missing back side (emulated) leaves both openings to check.
@@ -823,7 +832,7 @@ pub fn shoot_traverse(state: &mut GameState, intercept: Intercept) -> bool {
         if th == shootthing {
             return true;
         }
-        if state.p_mobj.mo(th).flags & MF_SHOOTABLE == 0 {
+        if !state.p_mobj.mo(th).flags.contains(MobjFlags::SHOOTABLE) {
             return true;
         }
         dist = fixed_mul(state.p_map.attackrange, intercept.frac);
@@ -846,7 +855,7 @@ pub fn shoot_traverse(state: &mut GameState, intercept: Intercept) -> bool {
                 state.p_map.aimslope,
                 fixed_mul(frac, state.p_map.attackrange),
             );
-        if state.p_mobj.mo(th).flags & MF_NOBLOOD != 0 {
+        if state.p_mobj.mo(th).flags.contains(MobjFlags::NOBLOOD) {
             spawn_puff(state, x, y, z);
         } else {
             spawn_blood(state, x, y, z, state.p_map.la_damage);
@@ -969,7 +978,7 @@ pub fn pit_radius_attack(state: &mut GameState, thing_id: MobjId) -> bool {
     let thing = thing_id;
 
     let mut dist: Fixed;
-    if state.p_mobj.mo(thing).flags & MF_SHOOTABLE == 0 {
+    if !state.p_mobj.mo(thing).flags.contains(MobjFlags::SHOOTABLE) {
         return true;
     }
     if state.p_mobj.mo(thing).kind as u32 == MobjType::Cyborg as i32 as u32
@@ -1033,16 +1042,16 @@ pub fn pit_change_sector(state: &mut GameState, thing: MobjId) -> bool {
     if health <= 0 {
         set_mobj_state(state, thing, StateNum::Gibs);
         let t = state.p_mobj.mo_mut(thing);
-        t.flags &= !MF_SOLID;
+        t.flags &= !MobjFlags::SOLID;
         t.height = 0;
         t.radius = 0;
         return true;
     }
-    if flags & MF_DROPPED != 0 {
+    if flags.contains(MobjFlags::DROPPED) {
         remove_mobj(state, thing);
         return true;
     }
-    if flags & MF_SHOOTABLE == 0 {
+    if !flags.contains(MobjFlags::SHOOTABLE) {
         return true;
     }
     state.p_map.nofit = true;

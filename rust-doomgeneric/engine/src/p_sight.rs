@@ -5,9 +5,10 @@ use crate::m_fixed::fixed_mul;
 use crate::m_fixed::Fixed;
 use crate::m_fixed::FRACBITS;
 use crate::p_maputl::DivLine;
+use crate::p_mobj::LineFlags;
 use crate::p_mobj::MobjId;
 use crate::p_setup::SubsectorId;
-use crate::p_spec::ML_TWOSIDED;
+
 use crate::r_bsp::NF_SUBSECTOR;
 
 pub struct PSightState {
@@ -120,7 +121,7 @@ pub fn cross_subsector(state: &mut GameState, num: i32) -> bool {
         if !has_back {
             return false;
         }
-        if flags as i32 & ML_TWOSIDED == 0 {
+        if !flags.contains(LineFlags::TWOSIDED) {
             return false;
         }
         let (front_floor, front_ceiling) = {

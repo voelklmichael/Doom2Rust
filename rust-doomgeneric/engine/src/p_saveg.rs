@@ -1,4 +1,5 @@
 use crate::d_mode::skill_from_raw;
+use crate::d_player::CheatFlags;
 use crate::d_player::NUMPOWERS;
 use crate::d_player::NUMPSPRITES;
 use crate::d_player::{weapontype_from_raw, NUMWEAPONS};
@@ -18,6 +19,7 @@ use crate::p_maputl::set_thing_position;
 use crate::p_mobj::mobjtype_from_raw;
 use crate::p_mobj::remove_mobj;
 use crate::p_mobj::spritenum_from_raw;
+use crate::p_mobj::{LineFlags, MobjFlags};
 use crate::p_mobj::{MapThing, SectorSpecial, Thinker, ThinkerFn};
 use crate::p_mobj::{Mobj, PspDef};
 use crate::p_plats::add_active_plat;
@@ -248,7 +250,7 @@ fn saveg_read_mobj_t(state: &mut PSavegState, str: &mut Mobj) {
     saveg_read32(state);
     str.tics = saveg_read32(state);
     str.state = Some(StateId(saveg_read32(state) as u32));
-    str.flags = saveg_read32(state);
+    str.flags = MobjFlags::from_bits_retain(saveg_read32(state));
     str.health = saveg_read32(state);
     str.movedir = saveg_read32(state);
     str.movecount = saveg_read32(state);
@@ -293,7 +295,7 @@ fn saveg_write_mobj_t(state: &mut PSavegState, str: &Mobj) {
     saveg_write32(state, 0);
     saveg_write32(state, str.tics);
     saveg_write32(state, str.state.unwrap().0 as i32);
-    saveg_write32(state, str.flags);
+    saveg_write32(state, str.flags.bits());
     saveg_write32(state, str.health);
     saveg_write32(state, str.movedir);
     saveg_write32(state, str.movecount);
@@ -386,7 +388,7 @@ fn saveg_read_player_t(state: &mut PSavegState, str: &mut Player) {
     }
     str.attackdown = saveg_read32(state) != 0;
     str.usedown = saveg_read32(state) != 0;
-    str.cheats = saveg_read32(state);
+    str.cheats = CheatFlags::from_bits_retain(saveg_read32(state));
     str.refire = saveg_read32(state);
     str.killcount = saveg_read32(state);
     str.itemcount = saveg_read32(state);
@@ -442,7 +444,7 @@ fn saveg_write_player_t(state: &mut PSavegState, str: &Player) {
     }
     saveg_write32(state, i32::from(str.attackdown));
     saveg_write32(state, i32::from(str.usedown));
-    saveg_write32(state, str.cheats);
+    saveg_write32(state, str.cheats.bits());
     saveg_write32(state, str.refire);
     saveg_write32(state, str.killcount);
     saveg_write32(state, str.itemcount);
@@ -784,7 +786,7 @@ pub fn archive_world(state: &mut GameState) {
     for i in 0..(state.p_setup.numlines as usize) {
         let li = &state.p_setup.lines[i];
         let (flags, special, tag, sidenum) = (li.flags, li.special, li.tag, li.sidenum);
-        saveg_write16(&mut state.p_saveg, flags);
+        saveg_write16(&mut state.p_saveg, flags.bits());
         saveg_write16(&mut state.p_saveg, special);
         saveg_write16(&mut state.p_saveg, tag);
         for &side in &sidenum {
@@ -831,7 +833,7 @@ pub fn un_archive_world(state: &mut GameState) {
         let special = saveg_read16(&mut state.p_saveg);
         let tag = saveg_read16(&mut state.p_saveg);
         let li = &mut state.p_setup.lines[i];
-        li.flags = flags;
+        li.flags = LineFlags::from_bits_retain(flags);
         li.special = special;
         li.tag = tag;
         let sidenum = li.sidenum;

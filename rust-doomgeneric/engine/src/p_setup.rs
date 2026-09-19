@@ -14,12 +14,13 @@ use crate::m_fixed::FRACBITS;
 use crate::m_fixed::FRACUNIT;
 use crate::p_maputl::MAPBLOCKSHIFT;
 use crate::p_mobj::spawn_map_thing;
+use crate::p_mobj::LineFlags;
 use crate::p_mobj::{
     DegenMobj, Line, MapThing, MobjId, Sector, SlopeType, Subsector, Thinker, ThinkerFn, Vertex,
 };
 use crate::p_spec::init_pic_anims;
 use crate::p_spec::spawn_specials;
-use crate::p_spec::ML_TWOSIDED;
+
 use crate::p_switch::init_switch_list;
 use crate::p_tick::init_thinkers;
 use crate::r_data::flat_num_for_name;
@@ -54,7 +55,7 @@ pub const ZERO_LINE: Line = Line {
     v2: VertexId(0),
     dx: 0,
     dy: 0,
-    flags: 0,
+    flags: LineFlags::empty(),
     special: 0,
     tag: 0,
     sidenum: [0; 2],
@@ -314,7 +315,7 @@ pub fn load_segs(state: &mut GameState, lump: i32) {
         let ldef = state.p_setup.line(seg_linedef);
         let seg_sidenum = ldef.sidenum[side as usize] as u32;
         let frontsector = Some(state.p_setup.sides[seg_sidenum as usize].sector);
-        let backsector = if ldef.flags as i32 & ML_TWOSIDED != 0 {
+        let backsector = if ldef.flags.contains(LineFlags::TWOSIDED) {
             let sidenum = ldef.sidenum[(side ^ 1) as usize] as i32;
             if sidenum < 0 || sidenum >= state.p_setup.numsides {
                 Some(get_sector_at_null_address(state))
@@ -439,7 +440,7 @@ pub fn load_line_defs(state: &mut GameState, lump: i32) {
         let mut ld = state.p_setup.lines[i];
         ld.v1 = VertexId(reader.i16() as u32);
         ld.v2 = VertexId(reader.i16() as u32);
-        ld.flags = reader.i16();
+        ld.flags = LineFlags::from_bits_retain(reader.i16());
         ld.special = reader.i16();
         ld.tag = reader.i16();
         let v1 = state.p_setup.vertex(ld.v1);

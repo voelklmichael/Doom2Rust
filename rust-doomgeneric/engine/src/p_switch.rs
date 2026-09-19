@@ -15,6 +15,7 @@ use crate::p_floor::do_floor;
 use crate::p_floor::FloorE;
 use crate::p_floor::StairE;
 use crate::p_lights::light_turn_on;
+use crate::p_mobj::LineFlags;
 use crate::p_mobj::MobjId;
 
 use crate::p_plats::do_plat;
@@ -23,7 +24,7 @@ use crate::p_setup::LineId;
 use crate::p_setup::SectorId;
 use crate::p_spec::do_donut;
 use crate::p_spec::Button;
-use crate::p_spec::ML_SECRET;
+
 use crate::r_data::texture_num_for_name;
 use crate::s_sound::s_start_sound;
 use crate::s_sound::SoundOrigin;
@@ -409,7 +410,7 @@ pub fn use_special_line(state: &mut GameState, thing: MobjId, line: LineId, side
         return false;
     }
     if state.p_mobj.mo(thing).player.is_none() {
-        if linev.flags as i32 & ML_SECRET != 0 {
+        if linev.flags.contains(LineFlags::SECRET) {
             return false;
         }
         if !matches!(linev.special as i32, 1 | 32 | 33 | 34) {
