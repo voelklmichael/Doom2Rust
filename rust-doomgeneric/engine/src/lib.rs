@@ -1,8 +1,5 @@
 #![no_std]
 #![deny(unsafe_code)]
-#![allow(non_camel_case_types)]
-#![allow(non_snake_case)]
-#![allow(non_upper_case_globals)]
 
 #[macro_use]
 extern crate alloc;
@@ -96,8 +93,8 @@ pub(crate) mod wi_stuff;
 #[cfg(test)]
 mod regression_tests;
 
-pub use d_main::doomgeneric_Tick;
-pub use doomgeneric::doomgeneric_Create;
+pub use d_main::doomgeneric_tick;
+pub use doomgeneric::doomgeneric_create;
 pub use filesystem::{DoomFileSystem, FileId};
 pub use game_state::init_game_state;
 pub use platform::DoomPlatform;

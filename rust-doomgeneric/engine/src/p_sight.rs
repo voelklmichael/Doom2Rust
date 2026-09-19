@@ -1,22 +1,22 @@
 use crate::game_state::GameState;
-use crate::i_system::I_Error;
-use crate::m_fixed::fixed_t;
-use crate::m_fixed::FixedDiv;
-use crate::m_fixed::FixedMul;
+use crate::i_system::error;
+use crate::m_fixed::fixed_div;
+use crate::m_fixed::fixed_mul;
+use crate::m_fixed::Fixed;
 use crate::m_fixed::FRACBITS;
-use crate::p_maputl::divline_t;
+use crate::p_maputl::DivLine;
 use crate::p_mobj::MobjId;
 use crate::p_setup::SubsectorId;
 use crate::p_spec::ML_TWOSIDED;
 use crate::r_bsp::NF_SUBSECTOR;
 
 pub struct PSightState {
-    sightzstart: fixed_t,
-    pub topslope: fixed_t,
-    pub bottomslope: fixed_t,
-    strace: divline_t,
-    t2x: fixed_t,
-    t2y: fixed_t,
+    sightzstart: Fixed,
+    pub topslope: Fixed,
+    pub bottomslope: Fixed,
+    strace: DivLine,
+    t2x: Fixed,
+    t2y: Fixed,
     sightcounts: [i32; 2],
 }
 
@@ -32,7 +32,7 @@ impl PSightState {
             sightzstart: 0,
             topslope: 0,
             bottomslope: 0,
-            strace: divline_t {
+            strace: DivLine {
                 x: 0,
                 y: 0,
                 dx: 0,
@@ -44,7 +44,7 @@ impl PSightState {
         }
     }
 }
-pub fn P_DivlineSide(x: fixed_t, y: fixed_t, node: &divline_t) -> i32 {
+pub fn divline_side(x: Fixed, y: Fixed, node: &DivLine) -> i32 {
     if node.dx == 0 {
         if x == node.x {
             return 2;
@@ -75,17 +75,17 @@ pub fn P_DivlineSide(x: fixed_t, y: fixed_t, node: &divline_t) -> i32 {
     }
     1
 }
-pub fn P_InterceptVector2(v2: &divline_t, v1: &divline_t) -> fixed_t {
-    let den = FixedMul(v1.dy >> 8, v2.dx) - FixedMul(v1.dx >> 8, v2.dy);
+pub fn intercept_vector2(v2: &DivLine, v1: &DivLine) -> Fixed {
+    let den = fixed_mul(v1.dy >> 8, v2.dx) - fixed_mul(v1.dx >> 8, v2.dy);
     if den == 0 {
         return 0;
     }
-    let num = FixedMul((v1.x - v2.x) >> 8, v1.dy) + FixedMul((v2.y - v1.y) >> 8, v1.dx);
-    FixedDiv(num, den)
+    let num = fixed_mul((v1.x - v2.x) >> 8, v1.dy) + fixed_mul((v2.y - v1.y) >> 8, v1.dx);
+    fixed_div(num, den)
 }
-pub fn P_CrossSubsector(state: &mut GameState, num: i32) -> bool {
+pub fn cross_subsector(state: &mut GameState, num: i32) -> bool {
     if num >= state.p_setup.numsubsectors {
-        I_Error(&format!(
+        error(&format!(
             "P_CrossSubsector: ss {} with numss = {}",
             num, state.p_setup.numsubsectors
         ));
@@ -105,16 +105,16 @@ pub fn P_CrossSubsector(state: &mut GameState, num: i32) -> bool {
             (line.v1, line.v2, line.backsector.is_some(), line.flags);
         let v1 = state.p_setup.vertex(v1_id);
         let v2 = state.p_setup.vertex(v2_id);
-        if P_DivlineSide(v1.x, v1.y, &strace) == P_DivlineSide(v2.x, v2.y, &strace) {
+        if divline_side(v1.x, v1.y, &strace) == divline_side(v2.x, v2.y, &strace) {
             continue;
         }
-        let divl = divline_t {
+        let divl = DivLine {
             x: v1.x,
             y: v1.y,
             dx: v2.x - v1.x,
             dy: v2.y - v1.y,
         };
-        if P_DivlineSide(strace.x, strace.y, &divl) == P_DivlineSide(t2x, t2y, &divl) {
+        if divline_side(strace.x, strace.y, &divl) == divline_side(t2x, t2y, &divl) {
             continue;
         }
         if !has_back {
@@ -139,15 +139,15 @@ pub fn P_CrossSubsector(state: &mut GameState, num: i32) -> bool {
         if openbottom >= opentop {
             return false;
         }
-        let frac = P_InterceptVector2(&strace, &divl);
+        let frac = intercept_vector2(&strace, &divl);
         if front_floor != back_floor {
-            let slope = FixedDiv(openbottom - state.p_sight.sightzstart, frac);
+            let slope = fixed_div(openbottom - state.p_sight.sightzstart, frac);
             if slope > state.p_sight.bottomslope {
                 state.p_sight.bottomslope = slope;
             }
         }
         if front_ceiling != back_ceiling {
-            let slope = FixedDiv(opentop - state.p_sight.sightzstart, frac);
+            let slope = fixed_div(opentop - state.p_sight.sightzstart, frac);
             if slope < state.p_sight.topslope {
                 state.p_sight.topslope = slope;
             }
@@ -158,35 +158,35 @@ pub fn P_CrossSubsector(state: &mut GameState, num: i32) -> bool {
     }
     true
 }
-pub fn P_CrossBSPNode(state: &mut GameState, bspnum: i32) -> bool {
+pub fn cross_bspnode(state: &mut GameState, bspnum: i32) -> bool {
     if bspnum & NF_SUBSECTOR != 0 {
         if bspnum == -1 {
-            return P_CrossSubsector(state, 0);
+            return cross_subsector(state, 0);
         } else {
-            return P_CrossSubsector(state, bspnum & !NF_SUBSECTOR);
+            return cross_subsector(state, bspnum & !NF_SUBSECTOR);
         }
     }
     let bsp = &state.p_setup.nodes[bspnum as usize];
-    let divl = divline_t {
+    let divl = DivLine {
         x: bsp.x,
         y: bsp.y,
         dx: bsp.dx,
         dy: bsp.dy,
     };
     let children = bsp.children;
-    let mut side = P_DivlineSide(state.p_sight.strace.x, state.p_sight.strace.y, &divl);
+    let mut side = divline_side(state.p_sight.strace.x, state.p_sight.strace.y, &divl);
     if side == 2 {
         side = 0;
     }
-    if !P_CrossBSPNode(state, children[side as usize] as i32) {
+    if !cross_bspnode(state, children[side as usize] as i32) {
         return false;
     }
-    if side == P_DivlineSide(state.p_sight.t2x, state.p_sight.t2y, &divl) {
+    if side == divline_side(state.p_sight.t2x, state.p_sight.t2y, &divl) {
         return true;
     }
-    P_CrossBSPNode(state, children[(side ^ 1) as usize] as i32)
+    cross_bspnode(state, children[(side ^ 1) as usize] as i32)
 }
-pub fn P_CheckSight(state: &mut GameState, t1: MobjId, t2: MobjId) -> bool {
+pub fn check_sight(state: &mut GameState, t1: MobjId, t2: MobjId) -> bool {
     let (t1_subsector, t1_x, t1_y, t1_z, t1_height) = {
         let m = state.p_mobj.mo(t1);
         (m.subsector, m.x, m.y, m.z, m.height)
@@ -215,5 +215,5 @@ pub fn P_CheckSight(state: &mut GameState, t1: MobjId, t2: MobjId) -> bool {
     state.p_sight.t2y = t2_y;
     state.p_sight.strace.dx = t2_x - t1_x;
     state.p_sight.strace.dy = t2_y - t1_y;
-    P_CrossBSPNode(state, state.p_setup.numnodes - 1)
+    cross_bspnode(state, state.p_setup.numnodes - 1)
 }

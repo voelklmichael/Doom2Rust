@@ -1,19 +1,19 @@
 use crate::game_state::GameState;
-use crate::i_system::I_Error;
+use crate::i_system::error;
 use crate::m_bbox::BoxIndex;
-use crate::m_fixed::fixed_t;
+use crate::m_fixed::Fixed;
 use crate::p_setup::LineId;
 use crate::p_setup::SectorId;
 use crate::p_setup::SegId;
 use crate::p_setup::SideId;
 use crate::p_setup::SubsectorId;
-use crate::r_defs::{drawseg_s, drawseg_t};
-use crate::r_main::R_PointOnSide;
-use crate::r_main::R_PointToAngle;
-use crate::r_plane::R_FindPlane;
-use crate::r_segs::R_StoreWallRange;
-use crate::r_things::R_AddSprites;
-use crate::tables::angle_t;
+use crate::r_defs::DrawSeg;
+use crate::r_main::point_on_side;
+use crate::r_main::point_to_angle;
+use crate::r_plane::find_plane;
+use crate::r_segs::store_wall_range;
+use crate::r_things::add_sprites;
+use crate::tables::Angle;
 use crate::tables::ANG180;
 use crate::tables::ANG90;
 use crate::tables::ANGLETOFINESHIFT;
@@ -24,10 +24,10 @@ pub struct RBspState {
     pub linedef: LineId,
     pub frontsector: Option<SectorId>,
     pub backsector: Option<SectorId>,
-    pub drawsegs: [drawseg_t; 256],
+    pub drawsegs: [DrawSeg; 256],
     pub ds_p: usize,
     pub newend: usize,
-    pub solidsegs: [cliprange_t; 32],
+    pub solidsegs: [ClipRange; 32],
 }
 
 impl Default for RBspState {
@@ -44,7 +44,7 @@ impl RBspState {
             linedef: LineId(0),
             frontsector: None,
             backsector: None,
-            drawsegs: [drawseg_s {
+            drawsegs: [DrawSeg {
                 curline: SegId(0),
                 x1: 0,
                 x2: 0,
@@ -60,28 +60,28 @@ impl RBspState {
             }; 256],
             ds_p: 0,
             newend: 0,
-            solidsegs: [cliprange_t { first: 0, last: 0 }; 32],
+            solidsegs: [ClipRange { first: 0, last: 0 }; 32],
         }
     }
 }
 
 #[derive(Copy, Clone)]
-pub struct cliprange_t {
+pub struct ClipRange {
     pub first: i32,
     pub last: i32,
 }
 pub const NF_SUBSECTOR: i32 = 0x8000;
-pub fn R_ClearDrawSegs(state: &mut GameState) {
+pub fn clear_draw_segs(state: &mut GameState) {
     state.r_bsp.ds_p = 0;
 }
-pub fn R_ClipSolidWallSegment(state: &mut GameState, first: i32, last: i32) {
+pub fn clip_solid_wall_segment(state: &mut GameState, first: i32, last: i32) {
     let mut start: usize = 0;
     while state.r_bsp.solidsegs[start].last < first - 1 {
         start += 1;
     }
     if first < state.r_bsp.solidsegs[start].first {
         if last < state.r_bsp.solidsegs[start].first - 1 {
-            R_StoreWallRange(state, first, last);
+            store_wall_range(state, first, last);
             let mut next = state.r_bsp.newend;
             state.r_bsp.newend += 1;
             while next != start {
@@ -93,7 +93,7 @@ pub fn R_ClipSolidWallSegment(state: &mut GameState, first: i32, last: i32) {
             return;
         }
         let start_first = state.r_bsp.solidsegs[start].first;
-        R_StoreWallRange(state, first, start_first - 1);
+        store_wall_range(state, first, start_first - 1);
         state.r_bsp.solidsegs[start].first = first;
     }
     if last <= state.r_bsp.solidsegs[start].last {
@@ -108,7 +108,7 @@ pub fn R_ClipSolidWallSegment(state: &mut GameState, first: i32, last: i32) {
             state.r_bsp.solidsegs[next].last + 1,
             state.r_bsp.solidsegs[next + 1].first - 1,
         );
-        R_StoreWallRange(state, from, to);
+        store_wall_range(state, from, to);
         next += 1;
         if last > state.r_bsp.solidsegs[next].last {
             continue;
@@ -118,7 +118,7 @@ pub fn R_ClipSolidWallSegment(state: &mut GameState, first: i32, last: i32) {
     };
     if reached_end_of_gap {
         let from = state.r_bsp.solidsegs[next].last + 1;
-        R_StoreWallRange(state, from, last);
+        store_wall_range(state, from, last);
         state.r_bsp.solidsegs[start].last = last;
     }
     if next == start {
@@ -135,18 +135,18 @@ pub fn R_ClipSolidWallSegment(state: &mut GameState, first: i32, last: i32) {
     }
     state.r_bsp.newend = start + 1;
 }
-pub fn R_ClipPassWallSegment(state: &mut GameState, first: i32, last: i32) {
+pub fn clip_pass_wall_segment(state: &mut GameState, first: i32, last: i32) {
     let mut start: usize = 0;
     while state.r_bsp.solidsegs[start].last < first - 1 {
         start += 1;
     }
     if first < state.r_bsp.solidsegs[start].first {
         if last < state.r_bsp.solidsegs[start].first - 1 {
-            R_StoreWallRange(state, first, last);
+            store_wall_range(state, first, last);
             return;
         }
         let start_first = state.r_bsp.solidsegs[start].first;
-        R_StoreWallRange(state, first, start_first - 1);
+        store_wall_range(state, first, start_first - 1);
     }
     if last <= state.r_bsp.solidsegs[start].last {
         return;
@@ -156,33 +156,33 @@ pub fn R_ClipPassWallSegment(state: &mut GameState, first: i32, last: i32) {
             state.r_bsp.solidsegs[start].last + 1,
             state.r_bsp.solidsegs[start + 1].first - 1,
         );
-        R_StoreWallRange(state, from, to);
+        store_wall_range(state, from, to);
         start += 1;
         if last <= state.r_bsp.solidsegs[start].last {
             return;
         }
     }
     let from = state.r_bsp.solidsegs[start].last + 1;
-    R_StoreWallRange(state, from, last);
+    store_wall_range(state, from, last);
 }
-pub fn R_ClearClipSegs(state: &mut GameState) {
+pub fn clear_clip_segs(state: &mut GameState) {
     state.r_bsp.solidsegs[0].first = -0x7fffffff;
     state.r_bsp.solidsegs[0].last = -1;
     state.r_bsp.solidsegs[1].first = state.r_draw.viewwidth;
     state.r_bsp.solidsegs[1].last = 0x7fffffff;
     state.r_bsp.newend = 2;
 }
-pub fn R_AddLine(state: &mut GameState, line: SegId) {
-    let mut angle1: angle_t;
-    let mut angle2: angle_t;
+pub fn add_line(state: &mut GameState, line: SegId) {
+    let mut angle1: Angle;
+    let mut angle2: Angle;
 
-    let mut tspan: angle_t;
+    let mut tspan: Angle;
     state.r_bsp.curline = line;
     let line_v1 = state.p_setup.vertexes[state.p_setup.seg(line).v1.0 as usize];
     let line_v2 = state.p_setup.vertexes[state.p_setup.seg(line).v2.0 as usize];
-    angle1 = R_PointToAngle(state, line_v1.x, line_v1.y);
-    angle2 = R_PointToAngle(state, line_v2.x, line_v2.y);
-    let span: angle_t = angle1.wrapping_sub(angle2);
+    angle1 = point_to_angle(state, line_v1.x, line_v1.y);
+    angle2 = point_to_angle(state, line_v2.x, line_v2.y);
+    let span: Angle = angle1.wrapping_sub(angle2);
     if span >= ANG180 {
         return;
     }
@@ -190,23 +190,23 @@ pub fn R_AddLine(state: &mut GameState, line: SegId) {
     angle1 = angle1.wrapping_sub(state.r_main.viewangle);
     angle2 = angle2.wrapping_sub(state.r_main.viewangle);
     tspan = angle1.wrapping_add(state.r_main.clipangle);
-    if tspan > (2 as angle_t).wrapping_mul(state.r_main.clipangle) {
-        tspan = tspan.wrapping_sub((2 as angle_t).wrapping_mul(state.r_main.clipangle));
+    if tspan > (2 as Angle).wrapping_mul(state.r_main.clipangle) {
+        tspan = tspan.wrapping_sub((2 as Angle).wrapping_mul(state.r_main.clipangle));
         if tspan >= span {
             return;
         }
         angle1 = state.r_main.clipangle;
     }
     tspan = state.r_main.clipangle.wrapping_sub(angle2);
-    if tspan > (2 as angle_t).wrapping_mul(state.r_main.clipangle) {
-        tspan = tspan.wrapping_sub((2 as angle_t).wrapping_mul(state.r_main.clipangle));
+    if tspan > (2 as Angle).wrapping_mul(state.r_main.clipangle) {
+        tspan = tspan.wrapping_sub((2 as Angle).wrapping_mul(state.r_main.clipangle));
         if tspan >= span {
             return;
         }
         angle2 = state.r_main.clipangle.wrapping_neg();
     }
-    angle1 = angle1.wrapping_add(ANG90 as angle_t) >> ANGLETOFINESHIFT;
-    angle2 = angle2.wrapping_add(ANG90 as angle_t) >> ANGLETOFINESHIFT;
+    angle1 = angle1.wrapping_add(ANG90 as Angle) >> ANGLETOFINESHIFT;
+    angle2 = angle2.wrapping_add(ANG90 as Angle) >> ANGLETOFINESHIFT;
     let x1: i32 = state.r_main.viewangletox[angle1 as usize];
     let x2: i32 = state.r_main.viewangletox[angle2 as usize];
     if x1 == x2 {
@@ -279,12 +279,12 @@ pub fn R_AddLine(state: &mut GameState, line: SegId) {
         {
             return;
         }
-        R_ClipPassWallSegment(state, x1, x2 - 1);
+        clip_pass_wall_segment(state, x1, x2 - 1);
         return;
     }
-    R_ClipSolidWallSegment(state, x1, x2 - 1);
+    clip_solid_wall_segment(state, x1, x2 - 1);
 }
-pub static checkcoord: [[i32; 4]; 12] = [
+pub static CHECKCOORD: [[i32; 4]; 12] = [
     [3, 0, 2, 1],
     [3, 0, 2, 0],
     [3, 1, 2, 0],
@@ -298,11 +298,11 @@ pub static checkcoord: [[i32; 4]; 12] = [
     [2, 1, 3, 0],
     [0; 4],
 ];
-pub fn R_CheckBBox(state: &mut GameState, bspcoord: [fixed_t; 4]) -> bool {
-    let mut angle1: angle_t;
-    let mut angle2: angle_t;
+pub fn check_bbox(state: &mut GameState, bspcoord: [Fixed; 4]) -> bool {
+    let mut angle1: Angle;
+    let mut angle2: Angle;
 
-    let mut tspan: angle_t;
+    let mut tspan: Angle;
 
     let mut sx2: i32;
     let boxx: i32 = if state.r_main.viewx <= bspcoord[BoxIndex::Left as usize] {
@@ -323,34 +323,34 @@ pub fn R_CheckBBox(state: &mut GameState, bspcoord: [fixed_t; 4]) -> bool {
     if boxpos == 5 {
         return true;
     }
-    let x1: fixed_t = bspcoord[checkcoord[boxpos as usize][0] as usize];
-    let y1: fixed_t = bspcoord[checkcoord[boxpos as usize][1] as usize];
-    let x2: fixed_t = bspcoord[checkcoord[boxpos as usize][2] as usize];
-    let y2: fixed_t = bspcoord[checkcoord[boxpos as usize][3] as usize];
-    angle1 = R_PointToAngle(state, x1, y1).wrapping_sub(state.r_main.viewangle);
-    angle2 = R_PointToAngle(state, x2, y2).wrapping_sub(state.r_main.viewangle);
-    let span: angle_t = angle1.wrapping_sub(angle2);
+    let x1: Fixed = bspcoord[CHECKCOORD[boxpos as usize][0] as usize];
+    let y1: Fixed = bspcoord[CHECKCOORD[boxpos as usize][1] as usize];
+    let x2: Fixed = bspcoord[CHECKCOORD[boxpos as usize][2] as usize];
+    let y2: Fixed = bspcoord[CHECKCOORD[boxpos as usize][3] as usize];
+    angle1 = point_to_angle(state, x1, y1).wrapping_sub(state.r_main.viewangle);
+    angle2 = point_to_angle(state, x2, y2).wrapping_sub(state.r_main.viewangle);
+    let span: Angle = angle1.wrapping_sub(angle2);
     if span >= ANG180 {
         return true;
     }
     tspan = angle1.wrapping_add(state.r_main.clipangle);
-    if tspan > (2 as angle_t).wrapping_mul(state.r_main.clipangle) {
-        tspan = tspan.wrapping_sub((2 as angle_t).wrapping_mul(state.r_main.clipangle));
+    if tspan > (2 as Angle).wrapping_mul(state.r_main.clipangle) {
+        tspan = tspan.wrapping_sub((2 as Angle).wrapping_mul(state.r_main.clipangle));
         if tspan >= span {
             return false;
         }
         angle1 = state.r_main.clipangle;
     }
     tspan = state.r_main.clipangle.wrapping_sub(angle2);
-    if tspan > (2 as angle_t).wrapping_mul(state.r_main.clipangle) {
-        tspan = tspan.wrapping_sub((2 as angle_t).wrapping_mul(state.r_main.clipangle));
+    if tspan > (2 as Angle).wrapping_mul(state.r_main.clipangle) {
+        tspan = tspan.wrapping_sub((2 as Angle).wrapping_mul(state.r_main.clipangle));
         if tspan >= span {
             return false;
         }
         angle2 = state.r_main.clipangle.wrapping_neg();
     }
-    angle1 = angle1.wrapping_add(ANG90 as angle_t) >> ANGLETOFINESHIFT;
-    angle2 = angle2.wrapping_add(ANG90 as angle_t) >> ANGLETOFINESHIFT;
+    angle1 = angle1.wrapping_add(ANG90 as Angle) >> ANGLETOFINESHIFT;
+    angle2 = angle2.wrapping_add(ANG90 as Angle) >> ANGLETOFINESHIFT;
     let sx1: i32 = state.r_main.viewangletox[angle1 as usize];
     sx2 = state.r_main.viewangletox[angle2 as usize];
     if sx1 == sx2 {
@@ -366,11 +366,11 @@ pub fn R_CheckBBox(state: &mut GameState, bspcoord: [fixed_t; 4]) -> bool {
     }
     true
 }
-pub fn R_Subsector(state: &mut GameState, num: i32) {
+pub fn r_subsector(state: &mut GameState, num: i32) {
     let mut count: i32;
     let mut line: SegId;
     if num >= state.p_setup.numsubsectors {
-        I_Error(&format!(
+        error(&format!(
             "R_Subsector: ss {} with numss = {}",
             num, state.p_setup.numsubsectors
         ));
@@ -390,40 +390,39 @@ pub fn R_Subsector(state: &mut GameState, num: i32) {
         frontsector.lightlevel as i32,
     );
     if floorheight < state.r_main.viewz {
-        state.r_plane.floorplane = Some(R_FindPlane(state, floorheight, floorpic, lightlevel));
+        state.r_plane.floorplane = Some(find_plane(state, floorheight, floorpic, lightlevel));
     } else {
         state.r_plane.floorplane = None;
     }
     if ceilingheight > state.r_main.viewz || ceilingpic == state.r_sky.skyflatnum {
-        state.r_plane.ceilingplane =
-            Some(R_FindPlane(state, ceilingheight, ceilingpic, lightlevel));
+        state.r_plane.ceilingplane = Some(find_plane(state, ceilingheight, ceilingpic, lightlevel));
     } else {
         state.r_plane.ceilingplane = None;
     }
-    R_AddSprites(state, frontsector_id);
+    add_sprites(state, frontsector_id);
     loop {
         let fresh1 = count;
         count -= 1;
         if fresh1 == 0 {
             break;
         }
-        R_AddLine(state, line);
+        add_line(state, line);
         line = SegId(line.0 + 1);
     }
 }
-pub fn R_RenderBSPNode(state: &mut GameState, bspnum: i32) {
+pub fn render_bspnode(state: &mut GameState, bspnum: i32) {
     if bspnum & NF_SUBSECTOR != 0 {
         if bspnum == -1 {
-            R_Subsector(state, 0);
+            r_subsector(state, 0);
         } else {
-            R_Subsector(state, bspnum & !NF_SUBSECTOR);
+            r_subsector(state, bspnum & !NF_SUBSECTOR);
         }
         return;
     }
     let bsp = state.p_setup.nodes[bspnum as usize];
-    let side: i32 = R_PointOnSide(state.r_main.viewx, state.r_main.viewy, &bsp);
-    R_RenderBSPNode(state, bsp.children[side as usize] as i32);
-    if R_CheckBBox(state, bsp.bbox[(side ^ 1) as usize]) {
-        R_RenderBSPNode(state, bsp.children[(side ^ 1) as usize] as i32);
+    let side: i32 = point_on_side(state.r_main.viewx, state.r_main.viewy, &bsp);
+    render_bspnode(state, bsp.children[side as usize] as i32);
+    if check_bbox(state, bsp.bbox[(side ^ 1) as usize]) {
+        render_bspnode(state, bsp.children[(side ^ 1) as usize] as i32);
     }
 }

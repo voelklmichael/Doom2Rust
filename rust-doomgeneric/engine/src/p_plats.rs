@@ -1,11 +1,11 @@
 use crate::doomdef::TICRATE;
 use crate::game_state::GameState;
-use crate::i_system::I_Error;
-use crate::m_fixed::fixed_t;
+use crate::i_system::error;
+use crate::m_fixed::Fixed;
 use crate::m_fixed::FRACUNIT;
-use crate::m_random::P_Random;
+use crate::m_random::p_random;
+use crate::p_floor::move_plane;
 use crate::p_floor::ResultE;
-use crate::p_floor::T_MovePlane;
 use alloc::boxed::Box;
 use alloc::vec::Vec;
 
@@ -13,35 +13,35 @@ use crate::p_mobj::SectorSpecial;
 use crate::p_mobj::ThinkerFn;
 use crate::p_setup::LineId;
 use crate::p_setup::SectorId;
-use crate::p_spec::plat_t;
-use crate::p_spec::P_FindHighestFloorSurrounding;
-use crate::p_spec::P_FindLowestFloorSurrounding;
-use crate::p_spec::P_FindNextHighestFloor;
-use crate::p_spec::P_FindSectorFromLineTag;
-use crate::p_tick::P_AddThinker;
-use crate::p_tick::P_RemoveThinker;
+use crate::p_spec::find_highest_floor_surrounding;
+use crate::p_spec::find_lowest_floor_surrounding;
+use crate::p_spec::find_next_highest_floor;
+use crate::p_spec::find_sector_from_line_tag;
+use crate::p_spec::Plat;
+use crate::p_tick::add_thinker;
+use crate::p_tick::remove_thinker;
 
 use crate::p_tick::ThinkerId;
 use crate::p_tick::ThinkerKind;
 use crate::p_tick::ThinkerPayload;
-use crate::s_sound::S_StartSound;
+use crate::s_sound::s_start_sound;
 use crate::s_sound::SoundOrigin;
 use crate::sounds::SfxName;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum PlatE {
-    up = 0,
-    down = 1,
-    waiting = 2,
-    in_stasis = 3,
+    Up = 0,
+    Down = 1,
+    Waiting = 2,
+    InStasis = 3,
 }
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum PlattypeE {
-    perpetualRaise = 0,
-    downWaitUpStay = 1,
-    raiseAndChange = 2,
-    raiseToNearestAndChange = 3,
-    blazeDWUS = 4,
+    PerpetualRaise = 0,
+    DownWaitUpStay = 1,
+    RaiseAndChange = 2,
+    RaiseToNearestAndChange = 3,
+    BlazeDWUS = 4,
 }
 pub const PLATWAIT: i32 = 3;
 pub const PLATSPEED: i32 = FRACUNIT;
@@ -56,7 +56,7 @@ pub struct PlatId {
 
 struct PlatSlot {
     generation: u32,
-    plat: Option<Box<plat_t>>,
+    plat: Option<Box<Plat>>,
 }
 
 pub struct PPlatsState {
@@ -80,12 +80,12 @@ impl PPlatsState {
         }
     }
 
-    // Moves a fully-defaulted (then caller-filled) plat_t onto the heap and
+    // Moves a fully-defaulted (then caller-filled) Plat onto the heap and
     // hands back both a stable generation-checked handle (stored in
     // ThinkerNode's payload by p_tick.rs, replacing what used to be a bare
     // raw pointer there) and a raw pointer for the caller's immediate
     // post-spawn field writes -- mirrors PDoorsState::spawn exactly.
-    pub fn spawn(&mut self, value: plat_t) -> PlatId {
+    pub fn spawn(&mut self, value: Plat) -> PlatId {
         let (index, generation) = if let Some(index) = self.free_list.pop() {
             let slot = &mut self.plats[index as usize];
             slot.generation = slot.generation.wrapping_add(1);
@@ -104,21 +104,21 @@ impl PPlatsState {
         id
     }
 
-    pub fn get_ref(&self, id: PlatId) -> Option<&plat_t> {
+    pub fn get_ref(&self, id: PlatId) -> Option<&Plat> {
         self.plats
             .get(id.index as usize)
             .filter(|slot| slot.generation == id.generation)
             .and_then(|slot| slot.plat.as_deref())
     }
 
-    pub fn get_mut(&mut self, id: PlatId) -> Option<&mut plat_t> {
+    pub fn get_mut(&mut self, id: PlatId) -> Option<&mut Plat> {
         self.plats
             .get_mut(id.index as usize)
             .filter(|slot| slot.generation == id.generation)
             .and_then(|slot| slot.plat.as_deref_mut())
     }
 
-    // Called once, from P_RunThinkers' reaper, when a Plat-kind thinker is
+    // Called once, from run_thinkers' reaper, when a Plat-kind thinker is
     // reaped.
     pub fn dealloc(&mut self, id: PlatId) {
         if let Some(slot) = self.plats.get_mut(id.index as usize) {
@@ -130,95 +130,95 @@ impl PPlatsState {
     }
 }
 
-pub fn T_PlatRaise(state: &mut GameState, id: PlatId) {
+pub fn plat_raise(state: &mut GameState, id: PlatId) {
     let plat = *state
         .p_plats
         .get_ref(id)
         .expect("ThinkerFn::Plat id must reference a live plat");
     match plat.status {
-        PlatE::up => {
-            let res = T_MovePlane(state, plat.sector, plat.speed, plat.high, plat.crush, 0, 1);
-            if (plat.kind == PlattypeE::raiseAndChange
-                || plat.kind == PlattypeE::raiseToNearestAndChange)
+        PlatE::Up => {
+            let res = move_plane(state, plat.sector, plat.speed, plat.high, plat.crush, 0, 1);
+            if (plat.kind == PlattypeE::RaiseAndChange
+                || plat.kind == PlattypeE::RaiseToNearestAndChange)
                 && state.p_tick.leveltime & 7 == 0
             {
-                S_StartSound(
+                s_start_sound(
                     state,
                     SoundOrigin::Sector(plat.sector),
-                    SfxName::sfx_stnmov as i32,
+                    SfxName::Stnmov as i32,
                 );
             }
-            if res == ResultE::crushed && !plat.crush {
+            if res == ResultE::Crushed && !plat.crush {
                 let p = state.p_plats.get_mut(id).expect("live plat");
                 p.count = p.wait;
-                p.status = PlatE::down;
-                S_StartSound(
+                p.status = PlatE::Down;
+                s_start_sound(
                     state,
                     SoundOrigin::Sector(plat.sector),
-                    SfxName::sfx_pstart as i32,
+                    SfxName::Pstart as i32,
                 );
-            } else if res == ResultE::pastdest {
+            } else if res == ResultE::Pastdest {
                 let p = state.p_plats.get_mut(id).expect("live plat");
                 p.count = p.wait;
-                p.status = PlatE::waiting;
-                S_StartSound(
+                p.status = PlatE::Waiting;
+                s_start_sound(
                     state,
                     SoundOrigin::Sector(plat.sector),
-                    SfxName::sfx_pstop as i32,
+                    SfxName::Pstop as i32,
                 );
                 match plat.kind {
-                    PlattypeE::blazeDWUS | PlattypeE::downWaitUpStay => {
-                        P_RemoveActivePlat(state, id);
+                    PlattypeE::BlazeDWUS | PlattypeE::DownWaitUpStay => {
+                        remove_active_plat(state, id);
                     }
-                    PlattypeE::raiseAndChange | PlattypeE::raiseToNearestAndChange => {
-                        P_RemoveActivePlat(state, id);
+                    PlattypeE::RaiseAndChange | PlattypeE::RaiseToNearestAndChange => {
+                        remove_active_plat(state, id);
                     }
-                    PlattypeE::perpetualRaise => {}
+                    PlattypeE::PerpetualRaise => {}
                 }
             }
         }
-        PlatE::down => {
-            let res = T_MovePlane(state, plat.sector, plat.speed, plat.low, false, 0, -1);
-            if res == ResultE::pastdest {
+        PlatE::Down => {
+            let res = move_plane(state, plat.sector, plat.speed, plat.low, false, 0, -1);
+            if res == ResultE::Pastdest {
                 let p = state.p_plats.get_mut(id).expect("live plat");
                 p.count = p.wait;
-                p.status = PlatE::waiting;
-                S_StartSound(
+                p.status = PlatE::Waiting;
+                s_start_sound(
                     state,
                     SoundOrigin::Sector(plat.sector),
-                    SfxName::sfx_pstop as i32,
+                    SfxName::Pstop as i32,
                 );
             }
         }
-        PlatE::waiting => {
+        PlatE::Waiting => {
             let p = state.p_plats.get_mut(id).expect("live plat");
             p.count -= 1;
             if p.count == 0 {
                 let low = p.low;
                 if state.p_setup.sector_mut(plat.sector).floorheight == low {
-                    state.p_plats.get_mut(id).expect("live plat").status = PlatE::up;
+                    state.p_plats.get_mut(id).expect("live plat").status = PlatE::Up;
                 } else {
-                    state.p_plats.get_mut(id).expect("live plat").status = PlatE::down;
+                    state.p_plats.get_mut(id).expect("live plat").status = PlatE::Down;
                 }
-                S_StartSound(
+                s_start_sound(
                     state,
                     SoundOrigin::Sector(plat.sector),
-                    SfxName::sfx_pstart as i32,
+                    SfxName::Pstart as i32,
                 );
             }
         }
-        PlatE::in_stasis => {}
+        PlatE::InStasis => {}
     };
 }
-pub fn EV_DoPlat(state: &mut GameState, line: LineId, kind: PlattypeE, amount: i32) -> bool {
+pub fn do_plat(state: &mut GameState, line: LineId, kind: PlattypeE, amount: i32) -> bool {
     let linev = state.p_setup.line(line);
     let mut secnum: i32 = -1;
     let mut rtn = false;
-    if kind == PlattypeE::perpetualRaise {
-        P_ActivateInStasis(state, linev.tag as i32);
+    if kind == PlattypeE::PerpetualRaise {
+        activate_in_stasis(state, linev.tag as i32);
     }
     loop {
-        secnum = P_FindSectorFromLineTag(state, line, secnum);
+        secnum = find_sector_from_line_tag(state, line, secnum);
         if secnum < 0 {
             break;
         }
@@ -227,135 +227,135 @@ pub fn EV_DoPlat(state: &mut GameState, line: LineId, kind: PlattypeE, amount: i
             continue;
         }
         rtn = true;
-        let mut plat = plat_t {
+        let mut plat = Plat {
             kind,
             sector: sec,
-            ..plat_t::default()
+            ..Plat::default()
         };
-        plat.thinker.function = ThinkerFn::Plat(T_PlatRaise);
+        plat.thinker.function = ThinkerFn::Plat(plat_raise);
         plat.crush = false;
         plat.tag = linev.tag as i32;
         let floorheight = state.p_setup.sector_mut(sec).floorheight;
         match kind {
-            PlattypeE::raiseToNearestAndChange => {
-                plat.speed = (PLATSPEED / 2) as fixed_t;
+            PlattypeE::RaiseToNearestAndChange => {
+                plat.speed = (PLATSPEED / 2) as Fixed;
                 let neighbor_sector_id = state.p_setup.sides[linev.sidenum[0] as usize].sector;
                 let neighbor_pic = state.p_setup.sector_mut(neighbor_sector_id).floorpic;
                 state.p_setup.sector_mut(sec).floorpic = neighbor_pic;
-                plat.high = P_FindNextHighestFloor(state, sec, floorheight);
+                plat.high = find_next_highest_floor(state, sec, floorheight);
                 plat.wait = 0;
-                plat.status = PlatE::up;
+                plat.status = PlatE::Up;
                 state.p_setup.sector_mut(sec).special = 0;
-                S_StartSound(state, SoundOrigin::Sector(sec), SfxName::sfx_stnmov as i32);
+                s_start_sound(state, SoundOrigin::Sector(sec), SfxName::Stnmov as i32);
             }
-            PlattypeE::raiseAndChange => {
-                plat.speed = (PLATSPEED / 2) as fixed_t;
+            PlattypeE::RaiseAndChange => {
+                plat.speed = (PLATSPEED / 2) as Fixed;
                 let neighbor_sector_id = state.p_setup.sides[linev.sidenum[0] as usize].sector;
                 let neighbor_pic = state.p_setup.sector_mut(neighbor_sector_id).floorpic;
                 state.p_setup.sector_mut(sec).floorpic = neighbor_pic;
-                plat.high = (floorheight + amount * FRACUNIT) as fixed_t;
+                plat.high = (floorheight + amount * FRACUNIT) as Fixed;
                 plat.wait = 0;
-                plat.status = PlatE::up;
-                S_StartSound(state, SoundOrigin::Sector(sec), SfxName::sfx_stnmov as i32);
+                plat.status = PlatE::Up;
+                s_start_sound(state, SoundOrigin::Sector(sec), SfxName::Stnmov as i32);
             }
-            PlattypeE::downWaitUpStay => {
-                plat.speed = (PLATSPEED * 4) as fixed_t;
-                plat.low = P_FindLowestFloorSurrounding(state, sec);
+            PlattypeE::DownWaitUpStay => {
+                plat.speed = (PLATSPEED * 4) as Fixed;
+                plat.low = find_lowest_floor_surrounding(state, sec);
                 if plat.low > floorheight {
                     plat.low = floorheight;
                 }
                 plat.high = floorheight;
                 plat.wait = TICRATE * PLATWAIT;
-                plat.status = PlatE::down;
-                S_StartSound(state, SoundOrigin::Sector(sec), SfxName::sfx_pstart as i32);
+                plat.status = PlatE::Down;
+                s_start_sound(state, SoundOrigin::Sector(sec), SfxName::Pstart as i32);
             }
-            PlattypeE::blazeDWUS => {
-                plat.speed = (PLATSPEED * 8) as fixed_t;
-                plat.low = P_FindLowestFloorSurrounding(state, sec);
+            PlattypeE::BlazeDWUS => {
+                plat.speed = (PLATSPEED * 8) as Fixed;
+                plat.low = find_lowest_floor_surrounding(state, sec);
                 if plat.low > floorheight {
                     plat.low = floorheight;
                 }
                 plat.high = floorheight;
                 plat.wait = TICRATE * PLATWAIT;
-                plat.status = PlatE::down;
-                S_StartSound(state, SoundOrigin::Sector(sec), SfxName::sfx_pstart as i32);
+                plat.status = PlatE::Down;
+                s_start_sound(state, SoundOrigin::Sector(sec), SfxName::Pstart as i32);
             }
-            PlattypeE::perpetualRaise => {
-                plat.speed = PLATSPEED as fixed_t;
-                plat.low = P_FindLowestFloorSurrounding(state, sec);
+            PlattypeE::PerpetualRaise => {
+                plat.speed = PLATSPEED as Fixed;
+                plat.low = find_lowest_floor_surrounding(state, sec);
                 if plat.low > floorheight {
                     plat.low = floorheight;
                 }
-                plat.high = P_FindHighestFloorSurrounding(state, sec);
+                plat.high = find_highest_floor_surrounding(state, sec);
                 if plat.high < floorheight {
                     plat.high = floorheight;
                 }
                 plat.wait = TICRATE * PLATWAIT;
-                plat.status = if P_Random(&mut state.m_random) & 1 != 0 {
-                    PlatE::down
+                plat.status = if p_random(&mut state.m_random) & 1 != 0 {
+                    PlatE::Down
                 } else {
-                    PlatE::up
+                    PlatE::Up
                 };
-                S_StartSound(state, SoundOrigin::Sector(sec), SfxName::sfx_pstart as i32);
+                s_start_sound(state, SoundOrigin::Sector(sec), SfxName::Pstart as i32);
             }
         }
         let plat_arena_id = state.p_plats.spawn(plat);
-        let plat_id = P_AddThinker(
+        let plat_id = add_thinker(
             state,
             ThinkerPayload::Plat(plat_arena_id),
             ThinkerKind::Plat,
         );
         state.p_setup.sector_mut(sec).specialdata = Some(SectorSpecial::Plat(plat_id));
-        P_AddActivePlat(&mut state.p_plats, plat_id);
+        add_active_plat(&mut state.p_plats, plat_id);
     }
     rtn
 }
-pub fn P_ActivateInStasis(state: &mut GameState, tag: i32) {
+pub fn activate_in_stasis(state: &mut GameState, tag: i32) {
     for i in 0..MAXPLATS as usize {
         if let Some(id) = state.p_plats.activeplats[i] {
             let plat_id = state.p_tick.plat_payload(id);
             let p = state.p_plats.get_mut(plat_id).expect("live plat");
-            if p.tag == tag && p.status == PlatE::in_stasis {
+            if p.tag == tag && p.status == PlatE::InStasis {
                 p.status = p.oldstatus;
-                p.thinker.function = ThinkerFn::Plat(T_PlatRaise);
+                p.thinker.function = ThinkerFn::Plat(plat_raise);
             }
         }
     }
 }
-pub fn EV_StopPlat(state: &mut GameState, tag: i32) {
+pub fn stop_plat(state: &mut GameState, tag: i32) {
     for j in 0..MAXPLATS as usize {
         if let Some(id) = state.p_plats.activeplats[j] {
             let plat_id = state.p_tick.plat_payload(id);
             let p = state.p_plats.get_mut(plat_id).expect("live plat");
-            if p.status != PlatE::in_stasis && p.tag == tag {
+            if p.status != PlatE::InStasis && p.tag == tag {
                 p.oldstatus = p.status;
-                p.status = PlatE::in_stasis;
+                p.status = PlatE::InStasis;
                 p.thinker.function = ThinkerFn::Paused;
             }
         }
     }
 }
-pub fn P_AddActivePlat(state: &mut PPlatsState, id: ThinkerId) {
+pub fn add_active_plat(state: &mut PPlatsState, id: ThinkerId) {
     for i in 0..(MAXPLATS as usize) {
         if state.activeplats[i].is_none() {
             state.activeplats[i] = Some(id);
             return;
         }
     }
-    I_Error("P_AddActivePlat: no more plats!");
+    error("P_AddActivePlat: no more plats!");
 }
-pub fn P_RemoveActivePlat(state: &mut GameState, plat_id: PlatId) {
+pub fn remove_active_plat(state: &mut GameState, plat_id: PlatId) {
     for i in 0..MAXPLATS as usize {
         if let Some(id) = state.p_plats.activeplats[i] {
             if state.p_tick.plat_payload(id) == plat_id {
                 let p = state.p_plats.get_mut(plat_id).expect("live plat");
                 let sector = p.sector;
-                P_RemoveThinker(&mut p.thinker);
+                remove_thinker(&mut p.thinker);
                 state.p_setup.sector_mut(sector).specialdata = None;
                 state.p_plats.activeplats[i] = None;
                 return;
             }
         }
     }
-    I_Error("P_RemoveActivePlat: can't find plat!");
+    error("P_RemoveActivePlat: can't find plat!");
 }

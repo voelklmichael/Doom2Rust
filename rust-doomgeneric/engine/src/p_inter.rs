@@ -1,52 +1,52 @@
-use crate::am_map::AM_Stop;
-use crate::d_items::weaponinfo;
+use crate::am_map::am_stop;
+use crate::d_items::WEAPONINFO;
 use crate::d_mode::SkillType;
-use crate::d_mode::{GameMode_t, GameVersion};
-use crate::d_player::weapontype_t;
+use crate::d_mode::{GameMode, GameVersion};
 use crate::d_player::PowerType;
+use crate::d_player::WeaponType;
 use crate::d_player::CF_GODMODE;
-use crate::d_player::{ammotype_from_raw, ammotype_t, NUMAMMO};
-use crate::d_player::{player_t, PlayerId, PlayerState};
+use crate::d_player::{ammotype_from_raw, AmmoType, NUMAMMO};
+use crate::d_player::{Player, PlayerId, PlayerState};
 use crate::game_state::GameState;
-use crate::i_system::I_Error;
-use crate::i_system::I_Tactile;
+use crate::i_system::error;
+use crate::i_system::tactile;
 use crate::info::StateId;
-use crate::m_fixed::fixed_t;
-use crate::m_fixed::FixedMul;
+use crate::m_fixed::fixed_mul;
+use crate::m_fixed::Fixed;
 use crate::m_fixed::FRACUNIT;
-use crate::m_random::P_Random;
+use crate::m_random::p_random;
 use crate::p_mobj::MobjId;
 use alloc::string::ToString;
 
+use crate::p_mobj::remove_mobj;
+use crate::p_mobj::set_mobj_state;
+use crate::p_mobj::spawn_mobj;
 use crate::p_mobj::MobjType;
-use crate::p_mobj::P_RemoveMobj;
-use crate::p_mobj::P_SetMobjState;
-use crate::p_mobj::P_SpawnMobj;
 use crate::p_mobj::StateNum;
 use crate::p_mobj::ONFLOORZ;
 use crate::p_mobj::{
     MF_CORPSE, MF_COUNTITEM, MF_COUNTKILL, MF_DROPOFF, MF_DROPPED, MF_FLOAT, MF_JUSTHIT, MF_NOCLIP,
     MF_NOGRAVITY, MF_SHADOW, MF_SHOOTABLE, MF_SKULLFLY, MF_SOLID,
 };
-use crate::p_pspr::P_DropWeapon;
-use crate::r_main::R_PointToAngle2;
-use crate::s_sound::S_StartSound;
+use crate::p_pspr::drop_weapon;
+use crate::r_main::point_to_angle2;
+use crate::s_sound::s_start_sound;
 use crate::s_sound::SoundOrigin;
 use crate::sounds::SfxName;
-use crate::tables::finecosine;
-use crate::tables::finesine;
 use crate::tables::ANG180;
 use crate::tables::ANGLETOFINESHIFT;
+use crate::tables::FINECOSINE;
+use crate::tables::FINESINE;
 
 pub const NUMCARDS: i32 = 6;
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum CardType {
-    it_bluecard = 0,
-    it_yellowcard = 1,
-    it_redcard = 2,
-    it_blueskull = 3,
-    it_yellowskull = 4,
-    it_redskull = 5,
+    Bluecard = 0,
+    Yellowcard = 1,
+    Redcard = 2,
+    Blueskull = 3,
+    Yellowskull = 4,
+    Redskull = 5,
 }
 pub const IRONTICS: i32 = 2100;
 pub const INFRATICS: i32 = 4200;
@@ -59,43 +59,36 @@ pub const DEH_DEFAULT_BLUE_ARMOR_CLASS: i32 = 2;
 pub const DEH_DEFAULT_MAX_SOULSPHERE: i32 = 200;
 pub const DEH_DEFAULT_SOULSPHERE_HEALTH: i32 = 100;
 pub const DEH_DEFAULT_MEGASPHERE_HEALTH: i32 = 200;
-pub const deh_max_health: i32 = DEH_DEFAULT_MAX_HEALTH;
-pub const deh_max_armor: i32 = DEH_DEFAULT_MAX_ARMOR;
-pub const deh_green_armor_class: i32 = DEH_DEFAULT_GREEN_ARMOR_CLASS;
-pub const deh_blue_armor_class: i32 = DEH_DEFAULT_BLUE_ARMOR_CLASS;
-pub const deh_max_soulsphere: i32 = DEH_DEFAULT_MAX_SOULSPHERE;
-pub const deh_soulsphere_health: i32 = DEH_DEFAULT_SOULSPHERE_HEALTH;
-pub const deh_megasphere_health: i32 = DEH_DEFAULT_MEGASPHERE_HEALTH;
+pub const DEH_MAX_HEALTH: i32 = DEH_DEFAULT_MAX_HEALTH;
+pub const DEH_MAX_ARMOR: i32 = DEH_DEFAULT_MAX_ARMOR;
+pub const DEH_GREEN_ARMOR_CLASS: i32 = DEH_DEFAULT_GREEN_ARMOR_CLASS;
+pub const DEH_BLUE_ARMOR_CLASS: i32 = DEH_DEFAULT_BLUE_ARMOR_CLASS;
+pub const DEH_MAX_SOULSPHERE: i32 = DEH_DEFAULT_MAX_SOULSPHERE;
+pub const DEH_SOULSPHERE_HEALTH: i32 = DEH_DEFAULT_SOULSPHERE_HEALTH;
+pub const DEH_MEGASPHERE_HEALTH: i32 = DEH_DEFAULT_MEGASPHERE_HEALTH;
 pub const MAXHEALTH: i32 = 100;
 pub const BASETHRESHOLD: i32 = 100;
 pub const BONUSADD: i32 = 6;
-pub static maxammo: [i32; 4] = [200, 50, 300, 50];
-pub static clipammo: [i32; 4] = [10, 4, 20, 1];
-pub fn P_GiveAmmo(
-    state: &mut GameState,
-    player_id: PlayerId,
-    ammo: ammotype_t,
-    mut num: i32,
-) -> bool {
+pub static MAXAMMO: [i32; 4] = [200, 50, 300, 50];
+pub static CLIPAMMO: [i32; 4] = [10, 4, 20, 1];
+pub fn give_ammo(state: &mut GameState, player_id: PlayerId, ammo: AmmoType, mut num: i32) -> bool {
     let player = &mut state.g_game.players[player_id.0 as usize];
 
-    if ammo as u32 == ammotype_t::am_noammo as i32 as u32 {
+    if ammo as u32 == AmmoType::Noammo as i32 as u32 {
         return false;
     }
     if ammo as u32 > NUMAMMO as u32 {
-        I_Error(&format!("P_GiveAmmo: bad type {}", ammo as u32));
+        error(&format!("P_GiveAmmo: bad type {}", ammo as u32));
     }
     if player.ammo[ammo as usize] == player.maxammo[ammo as usize] {
         return false;
     }
     if num != 0 {
-        num *= clipammo[ammo as usize];
+        num *= CLIPAMMO[ammo as usize];
     } else {
-        num = clipammo[ammo as usize] / 2;
+        num = CLIPAMMO[ammo as usize] / 2;
     }
-    if state.g_game.gameskill == SkillType::sk_baby
-        || state.g_game.gameskill == SkillType::sk_nightmare
-    {
+    if state.g_game.gameskill == SkillType::Baby || state.g_game.gameskill == SkillType::Nightmare {
         num <<= 1;
     }
     let oldammo: i32 = player.ammo[ammo as usize];
@@ -108,43 +101,43 @@ pub fn P_GiveAmmo(
     }
     match ammo as u32 {
         0 => {
-            if player.readyweapon as u32 == weapontype_t::wp_fist as i32 as u32 {
-                if player.weaponowned[weapontype_t::wp_chaingun as usize] {
-                    player.pendingweapon = weapontype_t::wp_chaingun;
+            if player.readyweapon as u32 == WeaponType::Fist as i32 as u32 {
+                if player.weaponowned[WeaponType::Chaingun as usize] {
+                    player.pendingweapon = WeaponType::Chaingun;
                 } else {
-                    player.pendingweapon = weapontype_t::wp_pistol;
+                    player.pendingweapon = WeaponType::Pistol;
                 }
             }
         }
         1 => {
-            if (player.readyweapon as u32 == weapontype_t::wp_fist as i32 as u32
-                || player.readyweapon as u32 == weapontype_t::wp_pistol as i32 as u32)
-                && player.weaponowned[weapontype_t::wp_shotgun as usize]
+            if (player.readyweapon as u32 == WeaponType::Fist as i32 as u32
+                || player.readyweapon as u32 == WeaponType::Pistol as i32 as u32)
+                && player.weaponowned[WeaponType::Shotgun as usize]
             {
-                player.pendingweapon = weapontype_t::wp_shotgun;
+                player.pendingweapon = WeaponType::Shotgun;
             }
         }
         2 => {
-            if (player.readyweapon as u32 == weapontype_t::wp_fist as i32 as u32
-                || player.readyweapon as u32 == weapontype_t::wp_pistol as i32 as u32)
-                && player.weaponowned[weapontype_t::wp_plasma as usize]
+            if (player.readyweapon as u32 == WeaponType::Fist as i32 as u32
+                || player.readyweapon as u32 == WeaponType::Pistol as i32 as u32)
+                && player.weaponowned[WeaponType::Plasma as usize]
             {
-                player.pendingweapon = weapontype_t::wp_plasma;
+                player.pendingweapon = WeaponType::Plasma;
             }
         }
-        3 if player.readyweapon as u32 == weapontype_t::wp_fist as i32 as u32
-            && player.weaponowned[weapontype_t::wp_missile as usize] =>
+        3 if player.readyweapon as u32 == WeaponType::Fist as i32 as u32
+            && player.weaponowned[WeaponType::Missile as usize] =>
         {
-            player.pendingweapon = weapontype_t::wp_missile;
+            player.pendingweapon = WeaponType::Missile;
         }
         _ => {}
     }
     true
 }
-pub fn P_GiveWeapon(
+pub fn give_weapon(
     state: &mut GameState,
     player: PlayerId,
-    weapon: weapontype_t,
+    weapon: WeaponType,
     dropped: bool,
 ) -> bool {
     let gaveammo: bool;
@@ -156,21 +149,21 @@ pub fn P_GiveWeapon(
         state.g_game.players[player.0 as usize].bonuscount += BONUSADD;
         state.g_game.players[player.0 as usize].weaponowned[weapon as usize] = true;
         if state.g_game.deathmatch != 0 {
-            P_GiveAmmo(state, player, weaponinfo[weapon as usize].ammo, 5);
+            give_ammo(state, player, WEAPONINFO[weapon as usize].ammo, 5);
         } else {
-            P_GiveAmmo(state, player, weaponinfo[weapon as usize].ammo, 2);
+            give_ammo(state, player, WEAPONINFO[weapon as usize].ammo, 2);
         }
         state.g_game.players[player.0 as usize].pendingweapon = weapon;
         if player.0 as i32 == state.g_game.consoleplayer {
-            S_StartSound(state, SoundOrigin::None, SfxName::sfx_wpnup as i32);
+            s_start_sound(state, SoundOrigin::None, SfxName::Wpnup as i32);
         }
         return false;
     }
-    if weaponinfo[weapon as usize].ammo as u32 != ammotype_t::am_noammo as i32 as u32 {
+    if WEAPONINFO[weapon as usize].ammo as u32 != AmmoType::Noammo as i32 as u32 {
         if dropped {
-            gaveammo = P_GiveAmmo(state, player, weaponinfo[weapon as usize].ammo, 1);
+            gaveammo = give_ammo(state, player, WEAPONINFO[weapon as usize].ammo, 1);
         } else {
-            gaveammo = P_GiveAmmo(state, player, weaponinfo[weapon as usize].ammo, 2);
+            gaveammo = give_ammo(state, player, WEAPONINFO[weapon as usize].ammo, 2);
         }
     } else {
         gaveammo = false;
@@ -184,7 +177,7 @@ pub fn P_GiveWeapon(
     }
     gaveweapon || gaveammo
 }
-pub fn P_GiveBody(state: &mut GameState, player_id: PlayerId, num: i32) -> bool {
+pub fn give_body(state: &mut GameState, player_id: PlayerId, num: i32) -> bool {
     let player = &mut state.g_game.players[player_id.0 as usize];
     if player.health >= MAXHEALTH {
         return false;
@@ -197,7 +190,7 @@ pub fn P_GiveBody(state: &mut GameState, player_id: PlayerId, num: i32) -> bool 
     state.p_mobj.mo_mut(player_mo).health = player.health;
     true
 }
-pub fn P_GiveArmor(player: &mut player_t, armortype: i32) -> bool {
+pub fn give_armor(player: &mut Player, armortype: i32) -> bool {
     let hits: i32 = armortype * 100;
     if player.armorpoints >= hits {
         return false;
@@ -206,34 +199,34 @@ pub fn P_GiveArmor(player: &mut player_t, armortype: i32) -> bool {
     player.armorpoints = hits;
     true
 }
-pub fn P_GiveCard(player: &mut player_t, card: CardType) {
+pub fn give_card(player: &mut Player, card: CardType) {
     if player.cards[card as usize] {
         return;
     }
     player.bonuscount = BONUSADD;
     player.cards[card as usize] = true;
 }
-pub fn P_GivePower(state: &mut GameState, player: PlayerId, power: i32) -> bool {
-    if power == PowerType::pw_invulnerability as i32 {
+pub fn give_power(state: &mut GameState, player: PlayerId, power: i32) -> bool {
+    if power == PowerType::Invulnerability as i32 {
         state.g_game.players[player.0 as usize].powers[power as usize] = INVULNTICS;
         return true;
     }
-    if power == PowerType::pw_invisibility as i32 {
+    if power == PowerType::Invisibility as i32 {
         state.g_game.players[player.0 as usize].powers[power as usize] = INVISTICS;
         let player_mo = state.g_game.players[player.0 as usize].mo.unwrap();
         state.p_mobj.mo_mut(player_mo).flags |= MF_SHADOW;
         return true;
     }
-    if power == PowerType::pw_infrared as i32 {
+    if power == PowerType::Infrared as i32 {
         state.g_game.players[player.0 as usize].powers[power as usize] = INFRATICS;
         return true;
     }
-    if power == PowerType::pw_ironfeet as i32 {
+    if power == PowerType::Ironfeet as i32 {
         state.g_game.players[player.0 as usize].powers[power as usize] = IRONTICS;
         return true;
     }
-    if power == PowerType::pw_strength as i32 {
-        P_GiveBody(state, player, 100);
+    if power == PowerType::Strength as i32 {
+        give_body(state, player, 100);
         state.g_game.players[player.0 as usize].powers[power as usize] = 1;
         return true;
     }
@@ -243,22 +236,22 @@ pub fn P_GivePower(state: &mut GameState, player: PlayerId, power: i32) -> bool 
     state.g_game.players[player.0 as usize].powers[power as usize] = 1;
     true
 }
-pub fn P_TouchSpecialThing(state: &mut GameState, special: MobjId, toucher: MobjId) {
+pub fn touch_special_thing(state: &mut GameState, special: MobjId, toucher: MobjId) {
     let mut sound: i32;
-    let delta: fixed_t = state.p_mobj.mo(special).z - state.p_mobj.mo(toucher).z;
+    let delta: Fixed = state.p_mobj.mo(special).z - state.p_mobj.mo(toucher).z;
     if delta > state.p_mobj.mo(toucher).height || delta < -8 * FRACUNIT {
         return;
     }
-    sound = SfxName::sfx_itemup as i32;
+    sound = SfxName::Itemup as i32;
     let player = state.p_mobj.mo(toucher).player.unwrap();
     if state.p_mobj.mo(toucher).health <= 0 {
         return;
     }
     match state.p_mobj.mo(special).sprite as u32 {
         55 => {
-            if !P_GiveArmor(
+            if !give_armor(
                 &mut state.g_game.players[player.0 as usize],
-                deh_green_armor_class,
+                DEH_GREEN_ARMOR_CLASS,
             ) {
                 return;
             }
@@ -266,9 +259,9 @@ pub fn P_TouchSpecialThing(state: &mut GameState, special: MobjId, toucher: Mobj
                 Some("Picked up the armor.".to_string());
         }
         56 => {
-            if !P_GiveArmor(
+            if !give_armor(
                 &mut state.g_game.players[player.0 as usize],
-                deh_blue_armor_class,
+                DEH_BLUE_ARMOR_CLASS,
             ) {
                 return;
             }
@@ -277,8 +270,8 @@ pub fn P_TouchSpecialThing(state: &mut GameState, special: MobjId, toucher: Mobj
         }
         60 => {
             state.g_game.players[player.0 as usize].health += 1;
-            if state.g_game.players[player.0 as usize].health > deh_max_health {
-                state.g_game.players[player.0 as usize].health = deh_max_health;
+            if state.g_game.players[player.0 as usize].health > DEH_MAX_HEALTH {
+                state.g_game.players[player.0 as usize].health = DEH_MAX_HEALTH;
             }
             state.p_mobj.mo_mut(toucher).health = state.g_game.players[player.0 as usize].health;
             state.g_game.players[player.0 as usize].message =
@@ -286,8 +279,8 @@ pub fn P_TouchSpecialThing(state: &mut GameState, special: MobjId, toucher: Mobj
         }
         61 => {
             state.g_game.players[player.0 as usize].armorpoints += 1;
-            if state.g_game.players[player.0 as usize].armorpoints > deh_max_armor {
-                state.g_game.players[player.0 as usize].armorpoints = deh_max_armor;
+            if state.g_game.players[player.0 as usize].armorpoints > DEH_MAX_ARMOR {
+                state.g_game.players[player.0 as usize].armorpoints = DEH_MAX_ARMOR;
             }
             if state.g_game.players[player.0 as usize].armortype == 0 {
                 state.g_game.players[player.0 as usize].armortype = 1;
@@ -296,111 +289,111 @@ pub fn P_TouchSpecialThing(state: &mut GameState, special: MobjId, toucher: Mobj
                 Some("Picked up an armor bonus.".to_string());
         }
         70 => {
-            state.g_game.players[player.0 as usize].health += deh_soulsphere_health;
-            if state.g_game.players[player.0 as usize].health > deh_max_soulsphere {
-                state.g_game.players[player.0 as usize].health = deh_max_soulsphere;
+            state.g_game.players[player.0 as usize].health += DEH_SOULSPHERE_HEALTH;
+            if state.g_game.players[player.0 as usize].health > DEH_MAX_SOULSPHERE {
+                state.g_game.players[player.0 as usize].health = DEH_MAX_SOULSPHERE;
             }
             state.p_mobj.mo_mut(toucher).health = state.g_game.players[player.0 as usize].health;
             state.g_game.players[player.0 as usize].message = Some("Supercharge!".to_string());
-            sound = SfxName::sfx_getpow as i32;
+            sound = SfxName::Getpow as i32;
         }
         74 => {
-            if state.doomstat.gamemode as u32 != GameMode_t::commercial as i32 as u32 {
+            if state.doomstat.gamemode as u32 != GameMode::Commercial as i32 as u32 {
                 return;
             }
-            state.g_game.players[player.0 as usize].health = deh_megasphere_health;
+            state.g_game.players[player.0 as usize].health = DEH_MEGASPHERE_HEALTH;
             state.p_mobj.mo_mut(toucher).health = state.g_game.players[player.0 as usize].health;
-            P_GiveArmor(&mut state.g_game.players[player.0 as usize], 2);
+            give_armor(&mut state.g_game.players[player.0 as usize], 2);
             state.g_game.players[player.0 as usize].message = Some("MegaSphere!".to_string());
-            sound = SfxName::sfx_getpow as i32;
+            sound = SfxName::Getpow as i32;
         }
         62 => {
-            if !state.g_game.players[player.0 as usize].cards[CardType::it_bluecard as usize] {
+            if !state.g_game.players[player.0 as usize].cards[CardType::Bluecard as usize] {
                 state.g_game.players[player.0 as usize].message =
                     Some("Picked up a blue keycard.".to_string());
             }
-            P_GiveCard(
+            give_card(
                 &mut state.g_game.players[player.0 as usize],
-                CardType::it_bluecard,
+                CardType::Bluecard,
             );
             if state.g_game.netgame {
                 return;
             }
         }
         64 => {
-            if !state.g_game.players[player.0 as usize].cards[CardType::it_yellowcard as usize] {
+            if !state.g_game.players[player.0 as usize].cards[CardType::Yellowcard as usize] {
                 state.g_game.players[player.0 as usize].message =
                     Some("Picked up a yellow keycard.".to_string());
             }
-            P_GiveCard(
+            give_card(
                 &mut state.g_game.players[player.0 as usize],
-                CardType::it_yellowcard,
+                CardType::Yellowcard,
             );
             if state.g_game.netgame {
                 return;
             }
         }
         63 => {
-            if !state.g_game.players[player.0 as usize].cards[CardType::it_redcard as usize] {
+            if !state.g_game.players[player.0 as usize].cards[CardType::Redcard as usize] {
                 state.g_game.players[player.0 as usize].message =
                     Some("Picked up a red keycard.".to_string());
             }
-            P_GiveCard(
+            give_card(
                 &mut state.g_game.players[player.0 as usize],
-                CardType::it_redcard,
+                CardType::Redcard,
             );
             if state.g_game.netgame {
                 return;
             }
         }
         65 => {
-            if !state.g_game.players[player.0 as usize].cards[CardType::it_blueskull as usize] {
+            if !state.g_game.players[player.0 as usize].cards[CardType::Blueskull as usize] {
                 state.g_game.players[player.0 as usize].message =
                     Some("Picked up a blue skull key.".to_string());
             }
-            P_GiveCard(
+            give_card(
                 &mut state.g_game.players[player.0 as usize],
-                CardType::it_blueskull,
+                CardType::Blueskull,
             );
             if state.g_game.netgame {
                 return;
             }
         }
         67 => {
-            if !state.g_game.players[player.0 as usize].cards[CardType::it_yellowskull as usize] {
+            if !state.g_game.players[player.0 as usize].cards[CardType::Yellowskull as usize] {
                 state.g_game.players[player.0 as usize].message =
                     Some("Picked up a yellow skull key.".to_string());
             }
-            P_GiveCard(
+            give_card(
                 &mut state.g_game.players[player.0 as usize],
-                CardType::it_yellowskull,
+                CardType::Yellowskull,
             );
             if state.g_game.netgame {
                 return;
             }
         }
         66 => {
-            if !state.g_game.players[player.0 as usize].cards[CardType::it_redskull as usize] {
+            if !state.g_game.players[player.0 as usize].cards[CardType::Redskull as usize] {
                 state.g_game.players[player.0 as usize].message =
                     Some("Picked up a red skull key.".to_string());
             }
-            P_GiveCard(
+            give_card(
                 &mut state.g_game.players[player.0 as usize],
-                CardType::it_redskull,
+                CardType::Redskull,
             );
             if state.g_game.netgame {
                 return;
             }
         }
         68 => {
-            if !P_GiveBody(state, player, 10) {
+            if !give_body(state, player, 10) {
                 return;
             }
             state.g_game.players[player.0 as usize].message =
                 Some("Picked up a stimpack.".to_string());
         }
         69 => {
-            if !P_GiveBody(state, player, 25) {
+            if !give_body(state, player, 25) {
                 return;
             }
             if state.g_game.players[player.0 as usize].health < 25 {
@@ -412,109 +405,109 @@ pub fn P_TouchSpecialThing(state: &mut GameState, special: MobjId, toucher: Mobj
             }
         }
         71 => {
-            if !P_GivePower(state, player, PowerType::pw_invulnerability as i32) {
+            if !give_power(state, player, PowerType::Invulnerability as i32) {
                 return;
             }
             state.g_game.players[player.0 as usize].message = Some("Invulnerability!".to_string());
-            sound = SfxName::sfx_getpow as i32;
+            sound = SfxName::Getpow as i32;
         }
         72 => {
-            if !P_GivePower(state, player, PowerType::pw_strength as i32) {
+            if !give_power(state, player, PowerType::Strength as i32) {
                 return;
             }
             state.g_game.players[player.0 as usize].message = Some("Berserk!".to_string());
             if state.g_game.players[player.0 as usize].readyweapon as u32
-                != weapontype_t::wp_fist as i32 as u32
+                != WeaponType::Fist as i32 as u32
             {
-                state.g_game.players[player.0 as usize].pendingweapon = weapontype_t::wp_fist;
+                state.g_game.players[player.0 as usize].pendingweapon = WeaponType::Fist;
             }
-            sound = SfxName::sfx_getpow as i32;
+            sound = SfxName::Getpow as i32;
         }
         73 => {
-            if !P_GivePower(state, player, PowerType::pw_invisibility as i32) {
+            if !give_power(state, player, PowerType::Invisibility as i32) {
                 return;
             }
             state.g_game.players[player.0 as usize].message =
                 Some("Partial Invisibility".to_string());
-            sound = SfxName::sfx_getpow as i32;
+            sound = SfxName::Getpow as i32;
         }
         75 => {
-            if !P_GivePower(state, player, PowerType::pw_ironfeet as i32) {
+            if !give_power(state, player, PowerType::Ironfeet as i32) {
                 return;
             }
             state.g_game.players[player.0 as usize].message =
                 Some("Radiation Shielding Suit".to_string());
-            sound = SfxName::sfx_getpow as i32;
+            sound = SfxName::Getpow as i32;
         }
         76 => {
-            if !P_GivePower(state, player, PowerType::pw_allmap as i32) {
+            if !give_power(state, player, PowerType::Allmap as i32) {
                 return;
             }
             state.g_game.players[player.0 as usize].message = Some("Computer Area Map".to_string());
-            sound = SfxName::sfx_getpow as i32;
+            sound = SfxName::Getpow as i32;
         }
         77 => {
-            if !P_GivePower(state, player, PowerType::pw_infrared as i32) {
+            if !give_power(state, player, PowerType::Infrared as i32) {
                 return;
             }
             state.g_game.players[player.0 as usize].message =
                 Some("Light Amplification Visor".to_string());
-            sound = SfxName::sfx_getpow as i32;
+            sound = SfxName::Getpow as i32;
         }
         78 => {
             if state.p_mobj.mo(special).flags & MF_DROPPED != 0 {
-                if !P_GiveAmmo(state, player, ammotype_t::am_clip, 0) {
+                if !give_ammo(state, player, AmmoType::Clip, 0) {
                     return;
                 }
-            } else if !P_GiveAmmo(state, player, ammotype_t::am_clip, 1) {
+            } else if !give_ammo(state, player, AmmoType::Clip, 1) {
                 return;
             }
             state.g_game.players[player.0 as usize].message = Some("Picked up a clip.".to_string());
         }
         79 => {
-            if !P_GiveAmmo(state, player, ammotype_t::am_clip, 5) {
+            if !give_ammo(state, player, AmmoType::Clip, 5) {
                 return;
             }
             state.g_game.players[player.0 as usize].message =
                 Some("Picked up a box of bullets.".to_string());
         }
         80 => {
-            if !P_GiveAmmo(state, player, ammotype_t::am_misl, 1) {
+            if !give_ammo(state, player, AmmoType::Misl, 1) {
                 return;
             }
             state.g_game.players[player.0 as usize].message =
                 Some("Picked up a rocket.".to_string());
         }
         81 => {
-            if !P_GiveAmmo(state, player, ammotype_t::am_misl, 5) {
+            if !give_ammo(state, player, AmmoType::Misl, 5) {
                 return;
             }
             state.g_game.players[player.0 as usize].message =
                 Some("Picked up a box of rockets.".to_string());
         }
         82 => {
-            if !P_GiveAmmo(state, player, ammotype_t::am_cell, 1) {
+            if !give_ammo(state, player, AmmoType::Cell, 1) {
                 return;
             }
             state.g_game.players[player.0 as usize].message =
                 Some("Picked up an energy cell.".to_string());
         }
         83 => {
-            if !P_GiveAmmo(state, player, ammotype_t::am_cell, 5) {
+            if !give_ammo(state, player, AmmoType::Cell, 5) {
                 return;
             }
             state.g_game.players[player.0 as usize].message =
                 Some("Picked up an energy cell pack.".to_string());
         }
         84 => {
-            if !P_GiveAmmo(state, player, ammotype_t::am_shell, 1) {
+            if !give_ammo(state, player, AmmoType::Shell, 1) {
                 return;
             }
             state.g_game.players[player.0 as usize].message =
                 Some("Picked up 4 shotgun shells.".to_string());
         }
         85 => {
-            if !P_GiveAmmo(state, player, ammotype_t::am_shell, 5) {
+            if !give_ammo(state, player, AmmoType::Shell, 5) {
                 return;
             }
             state.g_game.players[player.0 as usize].message =
@@ -528,100 +521,100 @@ pub fn P_TouchSpecialThing(state: &mut GameState, special: MobjId, toucher: Mobj
                 state.g_game.players[player.0 as usize].backpack = true;
             }
             for i in 0..NUMAMMO {
-                P_GiveAmmo(state, player, ammotype_from_raw(i), 1);
+                give_ammo(state, player, ammotype_from_raw(i), 1);
             }
             state.g_game.players[player.0 as usize].message =
                 Some("Picked up a backpack full of ammo!".to_string());
         }
         87 => {
-            if !P_GiveWeapon(state, player, weapontype_t::wp_bfg, false) {
+            if !give_weapon(state, player, WeaponType::Bfg, false) {
                 return;
             }
             state.g_game.players[player.0 as usize].message =
                 Some("You got the BFG9000!  Oh, yes.".to_string());
-            sound = SfxName::sfx_wpnup as i32;
+            sound = SfxName::Wpnup as i32;
         }
         88 => {
-            if !P_GiveWeapon(
+            if !give_weapon(
                 state,
                 player,
-                weapontype_t::wp_chaingun,
+                WeaponType::Chaingun,
                 state.p_mobj.mo(special).flags & MF_DROPPED != 0,
             ) {
                 return;
             }
             state.g_game.players[player.0 as usize].message =
                 Some("You got the chaingun!".to_string());
-            sound = SfxName::sfx_wpnup as i32;
+            sound = SfxName::Wpnup as i32;
         }
         89 => {
-            if !P_GiveWeapon(state, player, weapontype_t::wp_chainsaw, false) {
+            if !give_weapon(state, player, WeaponType::Chainsaw, false) {
                 return;
             }
             state.g_game.players[player.0 as usize].message =
                 Some("A chainsaw!  Find some meat!".to_string());
-            sound = SfxName::sfx_wpnup as i32;
+            sound = SfxName::Wpnup as i32;
         }
         90 => {
-            if !P_GiveWeapon(state, player, weapontype_t::wp_missile, false) {
+            if !give_weapon(state, player, WeaponType::Missile, false) {
                 return;
             }
             state.g_game.players[player.0 as usize].message =
                 Some("You got the rocket launcher!".to_string());
-            sound = SfxName::sfx_wpnup as i32;
+            sound = SfxName::Wpnup as i32;
         }
         91 => {
-            if !P_GiveWeapon(state, player, weapontype_t::wp_plasma, false) {
+            if !give_weapon(state, player, WeaponType::Plasma, false) {
                 return;
             }
             state.g_game.players[player.0 as usize].message =
                 Some("You got the plasma gun!".to_string());
-            sound = SfxName::sfx_wpnup as i32;
+            sound = SfxName::Wpnup as i32;
         }
         92 => {
-            if !P_GiveWeapon(
+            if !give_weapon(
                 state,
                 player,
-                weapontype_t::wp_shotgun,
+                WeaponType::Shotgun,
                 state.p_mobj.mo(special).flags & MF_DROPPED != 0,
             ) {
                 return;
             }
             state.g_game.players[player.0 as usize].message =
                 Some("You got the shotgun!".to_string());
-            sound = SfxName::sfx_wpnup as i32;
+            sound = SfxName::Wpnup as i32;
         }
         93 => {
-            if !P_GiveWeapon(
+            if !give_weapon(
                 state,
                 player,
-                weapontype_t::wp_supershotgun,
+                WeaponType::Supershotgun,
                 state.p_mobj.mo(special).flags & MF_DROPPED != 0,
             ) {
                 return;
             }
             state.g_game.players[player.0 as usize].message =
                 Some("You got the super shotgun!".to_string());
-            sound = SfxName::sfx_wpnup as i32;
+            sound = SfxName::Wpnup as i32;
         }
         _ => {
-            I_Error("P_SpecialThing: Unknown gettable thing");
+            error("P_SpecialThing: Unknown gettable thing");
         }
     }
     if state.p_mobj.mo(special).flags & MF_COUNTITEM != 0 {
         state.g_game.players[player.0 as usize].itemcount += 1;
     }
-    P_RemoveMobj(state, special);
+    remove_mobj(state, special);
     state.g_game.players[player.0 as usize].bonuscount += BONUSADD;
     if player.0 as i32 == state.g_game.consoleplayer {
-        S_StartSound(state, SoundOrigin::None, sound);
+        s_start_sound(state, SoundOrigin::None, sound);
     }
 }
-pub fn P_KillMobj(state: &mut GameState, source: Option<MobjId>, target: MobjId) {
+pub fn kill_mobj(state: &mut GameState, source: Option<MobjId>, target: MobjId) {
     {
         let t = state.p_mobj.mo_mut(target);
         t.flags &= !(MF_SHOOTABLE | MF_FLOAT | MF_SKULLFLY);
-        if t.kind as u32 != MobjType::MT_SKULL as i32 as u32 {
+        if t.kind as u32 != MobjType::Skull as i32 as u32 {
             t.flags &= !MF_NOGRAVITY;
         }
         t.flags |= MF_CORPSE | MF_DROPOFF;
@@ -647,10 +640,10 @@ pub fn P_KillMobj(state: &mut GameState, source: Option<MobjId>, target: MobjId)
             state.g_game.player_mut(target_player_id).frags[target_player_id.0 as usize] += 1;
         }
         state.p_mobj.mo_mut(target).flags &= !MF_SOLID;
-        state.g_game.player_mut(target_player_id).playerstate = PlayerState::PST_DEAD;
-        P_DropWeapon(state, target_player_id);
+        state.g_game.player_mut(target_player_id).playerstate = PlayerState::Dead;
+        drop_weapon(state, target_player_id);
         if target_player_id.0 as i32 == state.g_game.consoleplayer && state.am_map.automapactive {
-            AM_Stop(state);
+            am_stop(state);
         }
     }
     let (target_type, target_health) = {
@@ -661,32 +654,32 @@ pub fn P_KillMobj(state: &mut GameState, source: Option<MobjId>, target: MobjId)
         let info = state.info.mobjinfo_mut(target_type);
         (info.spawnhealth, info.xdeathstate, info.deathstate)
     };
-    if target_health < -spawnhealth && xdeathstate != StateNum::S_NULL {
-        P_SetMobjState(state, target, xdeathstate);
+    if target_health < -spawnhealth && xdeathstate != StateNum::Null {
+        set_mobj_state(state, target, xdeathstate);
     } else {
-        P_SetMobjState(state, target, deathstate);
+        set_mobj_state(state, target, deathstate);
     }
-    state.p_mobj.mo_mut(target).tics -= P_Random(&mut state.m_random) & 3;
+    state.p_mobj.mo_mut(target).tics -= p_random(&mut state.m_random) & 3;
     if state.p_mobj.mo(target).tics < 1 {
         state.p_mobj.mo_mut(target).tics = 1;
     }
-    if state.doomstat.gameversion == GameVersion::chex {
+    if state.doomstat.gameversion == GameVersion::Chex {
         return;
     }
     let item = match target_type as u32 {
-        23 | 1 => MobjType::MT_CLIP,
-        2 => MobjType::MT_SHOTGUN,
-        10 => MobjType::MT_CHAINGUN,
+        23 | 1 => MobjType::Clip,
+        2 => MobjType::Shotgun,
+        10 => MobjType::Chaingun,
         _ => return,
     };
     let (target_x, target_y) = {
         let t = state.p_mobj.mo(target);
         (t.x, t.y)
     };
-    let mo = P_SpawnMobj(state, target_x, target_y, ONFLOORZ, item);
+    let mo = spawn_mobj(state, target_x, target_y, ONFLOORZ, item);
     state.p_mobj.mo_mut(mo).flags |= MF_DROPPED;
 }
-pub fn P_DamageMobj(
+pub fn damage_mobj(
     state: &mut GameState,
     target: MobjId,
     inflictor: Option<MobjId>,
@@ -710,13 +703,13 @@ pub fn P_DamageMobj(
         t.momx = t.momy;
     }
     let target_player_id = state.p_mobj.mo(target).player;
-    if target_player_id.is_some() && state.g_game.gameskill == SkillType::sk_baby {
+    if target_player_id.is_some() && state.g_game.gameskill == SkillType::Baby {
         damage >>= 1;
     }
     let source_player = source.and_then(|id| state.p_mobj.mo(id).player);
     let source_uses_chainsaw = source_player.is_some_and(|source_player_id| {
         state.g_game.players[source_player_id.0 as usize].readyweapon as u32
-            == weapontype_t::wp_chainsaw as i32 as u32
+            == WeaponType::Chainsaw as i32 as u32
     });
     if let Some(inflictor) = inflictor {
         if target_flags & MF_NOCLIP == 0 && !source_uses_chainsaw {
@@ -728,22 +721,22 @@ pub fn P_DamageMobj(
                 let t = state.p_mobj.mo(target);
                 (t.x, t.y, t.z, t.kind)
             };
-            let mut ang: u32 = R_PointToAngle2(state, inflictor_x, inflictor_y, target_x, target_y);
-            let mut thrust: fixed_t = (damage * (FRACUNIT >> 3) * 100
+            let mut ang: u32 = point_to_angle2(state, inflictor_x, inflictor_y, target_x, target_y);
+            let mut thrust: Fixed = (damage * (FRACUNIT >> 3) * 100
                 / state.info.mobjinfo_mut(target_type).mass)
-                as fixed_t;
+                as Fixed;
             if damage < 40
                 && damage > target_health
                 && target_z - inflictor_z > 64 * FRACUNIT
-                && P_Random(&mut state.m_random) & 1 != 0
+                && p_random(&mut state.m_random) & 1 != 0
             {
                 ang = ang.wrapping_add(ANG180);
                 thrust *= 4;
             }
             ang >>= ANGLETOFINESHIFT;
             let t = state.p_mobj.mo_mut(target);
-            t.momx += FixedMul(thrust, finecosine[ang as usize]);
-            t.momy += FixedMul(thrust, finesine[ang as usize]);
+            t.momx += fixed_mul(thrust, FINECOSINE[ang as usize]);
+            t.momy += fixed_mul(thrust, FINESINE[ang as usize]);
         }
     }
     if let Some(player_id) = target_player_id {
@@ -758,7 +751,7 @@ pub fn P_DamageMobj(
         let player = state.g_game.player_mut(player_id);
         if damage < 1000
             && (player.cheats & CF_GODMODE != 0
-                || player.powers[PowerType::pw_invulnerability as usize] != 0)
+                || player.powers[PowerType::Invulnerability as usize] != 0)
         {
             return;
         }
@@ -785,28 +778,27 @@ pub fn P_DamageMobj(
             player.damagecount = 100;
         }
         if target_player_id == Some(PlayerId(state.g_game.consoleplayer as u8)) {
-            I_Tactile();
+            tactile();
         }
     }
     state.p_mobj.mo_mut(target).health -= damage;
     if state.p_mobj.mo(target).health <= 0 {
-        P_KillMobj(state, source, target);
+        kill_mobj(state, source, target);
         return;
     }
     let target_type = state.p_mobj.mo(target).kind;
-    if P_Random(&mut state.m_random) < state.info.mobjinfo_mut(target_type).painchance
+    if p_random(&mut state.m_random) < state.info.mobjinfo_mut(target_type).painchance
         && state.p_mobj.mo(target).flags & MF_SKULLFLY == 0
     {
         state.p_mobj.mo_mut(target).flags |= MF_JUSTHIT;
         let painstate = state.info.mobjinfo_mut(target_type).painstate;
-        P_SetMobjState(state, target, painstate);
+        set_mobj_state(state, target, painstate);
     }
     state.p_mobj.mo_mut(target).reactiontime = 0;
     if (state.p_mobj.mo(target).threshold == 0
-        || target_type as u32 == MobjType::MT_VILE as i32 as u32)
+        || target_type as u32 == MobjType::Vile as i32 as u32)
         && source.is_some_and(|source| {
-            source != target
-                && state.p_mobj.mo(source).kind as u32 != MobjType::MT_VILE as i32 as u32
+            source != target && state.p_mobj.mo(source).kind as u32 != MobjType::Vile as i32 as u32
         })
     {
         {
@@ -819,9 +811,9 @@ pub fn P_DamageMobj(
             (info.spawnstate, info.seestate)
         };
         if state.p_mobj.mo(target).state == Some(StateId(spawnstate as u32))
-            && seestate != StateNum::S_NULL
+            && seestate != StateNum::Null
         {
-            P_SetMobjState(state, target, seestate);
+            set_mobj_state(state, target, seestate);
         }
     }
 }

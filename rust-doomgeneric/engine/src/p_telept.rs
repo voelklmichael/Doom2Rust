@@ -1,22 +1,22 @@
 use crate::d_mode::GameVersion;
 use crate::game_state::GameState;
-use crate::p_map::P_TeleportMove;
+use crate::p_map::teleport_move;
 use crate::p_mobj::MobjId;
 use crate::p_tick::ThinkerPayload;
 
+use crate::p_mobj::spawn_mobj;
 use crate::p_mobj::MobjType;
-use crate::p_mobj::P_SpawnMobj;
 use crate::p_mobj::ThinkerFn;
 use crate::p_mobj::MF_MISSILE;
 use crate::p_setup::LineId;
 
-use crate::s_sound::S_StartSound;
+use crate::s_sound::s_start_sound;
 use crate::s_sound::SoundOrigin;
 use crate::sounds::SfxName;
-use crate::tables::finecosine;
-use crate::tables::finesine;
 use crate::tables::ANGLETOFINESHIFT;
-pub fn EV_Teleport(state: &mut GameState, line: LineId, side: i32, thing: MobjId) -> bool {
+use crate::tables::FINECOSINE;
+use crate::tables::FINESINE;
+pub fn teleport(state: &mut GameState, line: LineId, side: i32, thing: MobjId) -> bool {
     if state.p_mobj.mo(thing).flags & MF_MISSILE != 0 {
         return false;
     }
@@ -42,17 +42,17 @@ pub fn EV_Teleport(state: &mut GameState, line: LineId, side: i32, thing: MobjId
                         mo.angle,
                     )
                 };
-                if is_live_mobj && m_type as u32 == MobjType::MT_TELEPORTMAN as i32 as u32 {
+                if is_live_mobj && m_type as u32 == MobjType::Teleportman as i32 as u32 {
                     let sector = state.p_setup.subsectors[m_subsector.0 as usize].sector;
                     if sector.0 == i as u32 {
                         let (oldx, oldy, oldz) = {
                             let t = state.p_mobj.mo(thing);
                             (t.x, t.y, t.z)
                         };
-                        if !P_TeleportMove(state, thing, m_x, m_y) {
+                        if !teleport_move(state, thing, m_x, m_y) {
                             return false;
                         }
-                        if state.doomstat.gameversion != GameVersion::r#final {
+                        if state.doomstat.gameversion != GameVersion::Final {
                             let t = state.p_mobj.mo_mut(thing);
                             t.z = t.floorz;
                         }
@@ -61,18 +61,18 @@ pub fn EV_Teleport(state: &mut GameState, line: LineId, side: i32, thing: MobjId
                             let p = state.g_game.player_mut(thing_player);
                             p.viewz = thing_z + p.viewheight;
                         }
-                        let fog = P_SpawnMobj(state, oldx, oldy, oldz, MobjType::MT_TFOG);
-                        S_StartSound(state, SoundOrigin::Mobj(fog), SfxName::sfx_telept as i32);
+                        let fog = spawn_mobj(state, oldx, oldy, oldz, MobjType::Tfog);
+                        s_start_sound(state, SoundOrigin::Mobj(fog), SfxName::Telept as i32);
                         let an = m_angle >> ANGLETOFINESHIFT;
                         let thing_z = state.p_mobj.mo(thing).z;
-                        let fog = P_SpawnMobj(
+                        let fog = spawn_mobj(
                             state,
-                            m_x + 20 * finecosine[an as usize],
-                            m_y + 20 * finesine[an as usize],
+                            m_x + 20 * FINECOSINE[an as usize],
+                            m_y + 20 * FINESINE[an as usize],
                             thing_z,
-                            MobjType::MT_TFOG,
+                            MobjType::Tfog,
                         );
-                        S_StartSound(state, SoundOrigin::Mobj(fog), SfxName::sfx_telept as i32);
+                        s_start_sound(state, SoundOrigin::Mobj(fog), SfxName::Telept as i32);
                         let t = state.p_mobj.mo_mut(thing);
                         if t.player.is_some() {
                             t.reactiontime = 18;

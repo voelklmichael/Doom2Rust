@@ -1,23 +1,23 @@
-use crate::doomdef::pixel_t;
+use crate::doomdef::Pixel;
 use crate::doomdef::SCREENHEIGHT;
 use crate::doomdef::SCREENWIDTH;
 use crate::doomgeneric::DOOMGENERIC_RESX;
 use crate::doomgeneric::DOOMGENERIC_RESY;
 use crate::game_state::GameState;
-use crate::i_input::I_GetEvent;
-use crate::i_system::I_Error;
-use crate::m_argv::{M_ArgvAtoi, M_CheckParmWithArgs};
+use crate::i_input::get_event;
+use crate::i_system::error;
+use crate::m_argv::{argv_atoi, check_parm_with_args};
 use crate::m_fixed::INT_MAX;
 use crate::platform::DoomPlatform;
-use crate::tables::gammatable;
+use crate::tables::GAMMATABLE;
 use alloc::vec::Vec;
 
 pub struct IVideoState {
-    pub s_Fb: FB_ScreenInfo,
+    pub s_fb: FBScreenInfo,
     pub fb_scaling: i32,
     pub usemouse: i32,
-    pub colors: [color; 256],
-    pub I_VideoBuffer: Vec<u8>,
+    pub colors: [Color; 256],
+    pub i_video_buffer: Vec<u8>,
     pub screensaver_mode: bool,
     pub screenvisible: bool,
     pub mouse_acceleration: f32,
@@ -26,7 +26,7 @@ pub struct IVideoState {
     // The engine's own writable framebuffer, handed to the platform layer's
     // init() once at startup -- the platform keeps its own independent
     // handle into the same allocation for display/blit purposes.
-    pub dg_screen_buffer: Vec<pixel_t>,
+    pub dg_screen_buffer: Vec<Pixel>,
 }
 
 impl Default for IVideoState {
@@ -38,11 +38,11 @@ impl Default for IVideoState {
 impl IVideoState {
     pub const fn new() -> Self {
         IVideoState {
-            s_Fb: FB_ScreenInfo::ZERO,
+            s_fb: FBScreenInfo::ZERO,
             fb_scaling: 1,
             usemouse: 0,
-            colors: [color { b_g_r_a: [0; 4] }; 256],
-            I_VideoBuffer: Vec::new(),
+            colors: [Color { b_g_r_a: [0; 4] }; 256],
+            i_video_buffer: Vec::new(),
             screensaver_mode: false,
             screenvisible: false,
             mouse_acceleration: 2.0f32,
@@ -53,55 +53,53 @@ impl IVideoState {
     }
 }
 
-pub type __uint16_t = u16;
-pub type uint16_t = __uint16_t;
 #[derive(Copy, Clone)]
-pub struct FB_ScreenInfo {
+pub struct FBScreenInfo {
     pub xres: u32,
     pub yres: u32,
     pub xres_virtual: u32,
     pub yres_virtual: u32,
     pub bits_per_pixel: u32,
-    pub red: FB_BitField,
-    pub green: FB_BitField,
-    pub blue: FB_BitField,
-    pub transp: FB_BitField,
+    pub red: FBBitField,
+    pub green: FBBitField,
+    pub blue: FBBitField,
+    pub transp: FBBitField,
 }
-impl FB_ScreenInfo {
-    pub const ZERO: FB_ScreenInfo = FB_ScreenInfo {
+impl FBScreenInfo {
+    pub const ZERO: FBScreenInfo = FBScreenInfo {
         xres: 0,
         yres: 0,
         xres_virtual: 0,
         yres_virtual: 0,
         bits_per_pixel: 0,
-        red: FB_BitField {
+        red: FBBitField {
             offset: 0,
             length: 0,
         },
-        green: FB_BitField {
+        green: FBBitField {
             offset: 0,
             length: 0,
         },
-        blue: FB_BitField {
+        blue: FBBitField {
             offset: 0,
             length: 0,
         },
-        transp: FB_BitField {
+        transp: FBBitField {
             offset: 0,
             length: 0,
         },
     };
 }
 #[derive(Copy, Clone)]
-pub struct FB_BitField {
+pub struct FBBitField {
     pub offset: u32,
     pub length: u32,
 }
 #[derive(Copy, Clone)]
-pub struct color {
+pub struct Color {
     pub b_g_r_a: [u8; 4],
 }
-impl color {
+impl Color {
     pub fn r(&self) -> u8 {
         self.b_g_r_a[2]
     }
@@ -128,68 +126,68 @@ impl color {
     }
 }
 #[derive(Copy, Clone)]
-pub struct col_t {
+pub struct Column {
     pub r: u8,
     pub g: u8,
     pub b: u8,
 }
-static RGB565_PALETTE: [uint16_t; 256] = [0; 256];
-pub fn I_InitGraphics(state: &mut GameState) {
+static RGB565_PALETTE: [u16; 256] = [0; 256];
+pub fn init_graphics(state: &mut GameState) {
     let mut i: i32;
 
-    state.i_video.s_Fb = FB_ScreenInfo::ZERO;
-    state.i_video.s_Fb.xres = DOOMGENERIC_RESX as u32;
-    state.i_video.s_Fb.yres = DOOMGENERIC_RESY as u32;
-    state.i_video.s_Fb.xres_virtual = state.i_video.s_Fb.xres;
-    state.i_video.s_Fb.yres_virtual = state.i_video.s_Fb.yres;
-    let gfxmodeparm: i32 = M_CheckParmWithArgs(state, "-gfxmode", 1);
+    state.i_video.s_fb = FBScreenInfo::ZERO;
+    state.i_video.s_fb.xres = DOOMGENERIC_RESX as u32;
+    state.i_video.s_fb.yres = DOOMGENERIC_RESY as u32;
+    state.i_video.s_fb.xres_virtual = state.i_video.s_fb.xres;
+    state.i_video.s_fb.yres_virtual = state.i_video.s_fb.yres;
+    let gfxmodeparm: i32 = check_parm_with_args(state, "-gfxmode", 1);
     let mode: &str = if gfxmodeparm != 0 {
         state.m_argv.myargv[(gfxmodeparm + 1) as usize].as_str()
     } else {
         "rgba8888"
     };
     if mode == "rgba8888" {
-        state.i_video.s_Fb.bits_per_pixel = 32_u32;
-        state.i_video.s_Fb.blue.length = 8_u32;
-        state.i_video.s_Fb.green.length = 8_u32;
-        state.i_video.s_Fb.red.length = 8_u32;
-        state.i_video.s_Fb.transp.length = 8_u32;
-        state.i_video.s_Fb.blue.offset = 0_u32;
-        state.i_video.s_Fb.green.offset = 8_u32;
-        state.i_video.s_Fb.red.offset = 16_u32;
-        state.i_video.s_Fb.transp.offset = 24_u32;
+        state.i_video.s_fb.bits_per_pixel = 32_u32;
+        state.i_video.s_fb.blue.length = 8_u32;
+        state.i_video.s_fb.green.length = 8_u32;
+        state.i_video.s_fb.red.length = 8_u32;
+        state.i_video.s_fb.transp.length = 8_u32;
+        state.i_video.s_fb.blue.offset = 0_u32;
+        state.i_video.s_fb.green.offset = 8_u32;
+        state.i_video.s_fb.red.offset = 16_u32;
+        state.i_video.s_fb.transp.offset = 24_u32;
     } else if mode == "rgb565" {
-        state.i_video.s_Fb.bits_per_pixel = 16_u32;
-        state.i_video.s_Fb.blue.length = 5_u32;
-        state.i_video.s_Fb.green.length = 6_u32;
-        state.i_video.s_Fb.red.length = 5_u32;
-        state.i_video.s_Fb.transp.length = 0_u32;
-        state.i_video.s_Fb.blue.offset = 11_u32;
-        state.i_video.s_Fb.green.offset = 5_u32;
-        state.i_video.s_Fb.red.offset = 0_u32;
-        state.i_video.s_Fb.transp.offset = 16_u32;
+        state.i_video.s_fb.bits_per_pixel = 16_u32;
+        state.i_video.s_fb.blue.length = 5_u32;
+        state.i_video.s_fb.green.length = 6_u32;
+        state.i_video.s_fb.red.length = 5_u32;
+        state.i_video.s_fb.transp.length = 0_u32;
+        state.i_video.s_fb.blue.offset = 11_u32;
+        state.i_video.s_fb.green.offset = 5_u32;
+        state.i_video.s_fb.red.offset = 0_u32;
+        state.i_video.s_fb.transp.offset = 16_u32;
     } else {
-        I_Error(&format!("Unknown gfxmode value: {}\n", mode));
+        error(&format!("Unknown gfxmode value: {}\n", mode));
     }
     doom_println!(
         state.platform,
         "I_InitGraphics: framebuffer: x_res: {}, y_res: {}, x_virtual: {}, y_virtual: {}, bpp: {}",
-        state.i_video.s_Fb.xres,
-        state.i_video.s_Fb.yres,
-        state.i_video.s_Fb.xres_virtual,
-        state.i_video.s_Fb.yres_virtual,
-        state.i_video.s_Fb.bits_per_pixel,
+        state.i_video.s_fb.xres,
+        state.i_video.s_fb.yres,
+        state.i_video.s_fb.xres_virtual,
+        state.i_video.s_fb.yres_virtual,
+        state.i_video.s_fb.bits_per_pixel,
     );
     doom_println!(state.platform,
         "I_InitGraphics: framebuffer: RGBA: {}{}{}{}, red_off: {}, green_off: {}, blue_off: {}, transp_off: {}",
-        state.i_video.s_Fb.red.length,
-        state.i_video.s_Fb.green.length,
-        state.i_video.s_Fb.blue.length,
-        state.i_video.s_Fb.transp.length,
-        state.i_video.s_Fb.red.offset,
-        state.i_video.s_Fb.green.offset,
-        state.i_video.s_Fb.blue.offset,
-        state.i_video.s_Fb.transp.offset,
+        state.i_video.s_fb.red.length,
+        state.i_video.s_fb.green.length,
+        state.i_video.s_fb.blue.length,
+        state.i_video.s_fb.transp.length,
+        state.i_video.s_fb.red.offset,
+        state.i_video.s_fb.green.offset,
+        state.i_video.s_fb.blue.offset,
+        state.i_video.s_fb.transp.offset,
     );
     doom_println!(
         state.platform,
@@ -197,9 +195,9 @@ pub fn I_InitGraphics(state: &mut GameState) {
         SCREENWIDTH,
         SCREENHEIGHT,
     );
-    i = M_CheckParmWithArgs(state, "-scaling", 1);
+    i = check_parm_with_args(state, "-scaling", 1);
     if i > 0 {
-        i = M_ArgvAtoi(&state.m_argv.myargv[(i + 1) as usize]);
+        i = argv_atoi(&state.m_argv.myargv[(i + 1) as usize]);
         state.i_video.fb_scaling = i;
         doom_println!(
             state.platform,
@@ -207,12 +205,12 @@ pub fn I_InitGraphics(state: &mut GameState) {
             state.i_video.fb_scaling
         );
     } else {
-        state.i_video.fb_scaling = state.i_video.s_Fb.xres.wrapping_div(SCREENWIDTH as u32) as i32;
-        if state.i_video.s_Fb.yres.wrapping_div(SCREENHEIGHT as u32)
+        state.i_video.fb_scaling = state.i_video.s_fb.xres.wrapping_div(SCREENWIDTH as u32) as i32;
+        if state.i_video.s_fb.yres.wrapping_div(SCREENHEIGHT as u32)
             < state.i_video.fb_scaling as u32
         {
             state.i_video.fb_scaling =
-                state.i_video.s_Fb.yres.wrapping_div(SCREENHEIGHT as u32) as i32;
+                state.i_video.s_fb.yres.wrapping_div(SCREENHEIGHT as u32) as i32;
         }
         doom_println!(
             state.platform,
@@ -220,14 +218,14 @@ pub fn I_InitGraphics(state: &mut GameState) {
             state.i_video.fb_scaling
         );
     }
-    state.i_video.I_VideoBuffer = vec![0u8; (SCREENWIDTH * SCREENHEIGHT) as usize];
+    state.i_video.i_video_buffer = vec![0u8; (SCREENWIDTH * SCREENHEIGHT) as usize];
     state.i_video.screenvisible = true;
 }
-pub fn I_StartTic(state: &mut GameState) {
-    I_GetEvent(state);
+pub fn start_tic(state: &mut GameState) {
+    get_event(state);
 }
-pub fn I_FinishUpdate(state: &mut GameState) {
-    let fb = state.i_video.s_Fb;
+pub fn finish_update(state: &mut GameState) {
+    let fb = state.i_video.s_fb;
     let scaling = state.i_video.fb_scaling as usize;
     let bytes_per_pixel = (fb.bits_per_pixel / 8) as usize;
     let line_bytes = fb.xres as usize * bytes_per_pixel;
@@ -238,7 +236,7 @@ pub fn I_FinishUpdate(state: &mut GameState) {
         .wrapping_div(8_u32)
         .wrapping_div(2_u32) as usize;
     if fb.bits_per_pixel != 16 && fb.bits_per_pixel != 32 {
-        I_Error(&format!(
+        error(&format!(
             "No idea how to convert {} bpp pixels",
             fb.bits_per_pixel
         ));
@@ -247,15 +245,15 @@ pub fn I_FinishUpdate(state: &mut GameState) {
     let mut line_out = 0usize;
     for row in 0..SCREENHEIGHT as usize {
         let source =
-            &state.i_video.I_VideoBuffer[row * SCREENWIDTH as usize..][..SCREENWIDTH as usize];
+            &state.i_video.i_video_buffer[row * SCREENWIDTH as usize..][..SCREENWIDTH as usize];
         let first_line = &mut frame[line_out * line_bytes..][..line_bytes];
         let mut out = x_offset;
         for &index in source {
             let c = state.i_video.colors[index as usize];
             if fb.bits_per_pixel == 16 {
-                let p: uint16_t = ((c.r() as i32 & 0xf8) << 8
+                let p: u16 = ((c.r() as i32 & 0xf8) << 8
                     | (c.g() as i32 & 0xfc) << 3
-                    | c.b() as i32 >> 3) as uint16_t;
+                    | c.b() as i32 >> 3) as u16;
                 for _ in 0..scaling {
                     first_line[out..out + 2].copy_from_slice(&p.to_ne_bytes());
                     out += 2;
@@ -288,11 +286,11 @@ pub fn I_FinishUpdate(state: &mut GameState) {
     }
     state.platform.draw_frame(&state.i_video.dg_screen_buffer);
 }
-pub fn I_ReadScreen(state: &GameState) -> Vec<u8> {
-    state.i_video.I_VideoBuffer[..(SCREENWIDTH * SCREENHEIGHT) as usize].to_vec()
+pub fn read_screen(state: &GameState) -> Vec<u8> {
+    state.i_video.i_video_buffer[..(SCREENWIDTH * SCREENHEIGHT) as usize].to_vec()
 }
-pub fn I_SetPalette(state: &mut GameState, palette: &[u8]) {
-    let gamma = &gammatable[state.i_video.usegamma as usize];
+pub fn set_palette(state: &mut GameState, palette: &[u8]) {
+    let gamma = &GAMMATABLE[state.i_video.usegamma as usize];
     for (color, rgb) in state
         .i_video
         .colors
@@ -305,11 +303,11 @@ pub fn I_SetPalette(state: &mut GameState, palette: &[u8]) {
         color.set_b(gamma[rgb[2] as usize] as u32);
     }
 }
-pub fn I_GetPaletteIndex(platform: &mut dyn DoomPlatform, r: i32, g: i32, b: i32) -> i32 {
+pub fn get_palette_index(platform: &mut dyn DoomPlatform, r: i32, g: i32, b: i32) -> i32 {
     let mut best: i32;
     let mut best_diff: i32;
     let mut diff: i32;
-    let mut color: col_t = col_t { r: 0, g: 0, b: 0 };
+    let mut color: Column = Column { r: 0, g: 0, b: 0 };
     doom_println!(platform, "I_GetPaletteIndex");
     best = 0;
     best_diff = INT_MAX;
@@ -330,7 +328,7 @@ pub fn I_GetPaletteIndex(platform: &mut dyn DoomPlatform, r: i32, g: i32, b: i32
     }
     best
 }
-pub fn I_SetWindowTitle(state: &mut GameState, title: &str) {
+pub fn i_set_window_title(state: &mut GameState, title: &str) {
     state.platform.set_window_title(title);
 }
-pub fn I_SetGrabMouseCallback() {}
+pub fn set_grab_mouse_callback() {}

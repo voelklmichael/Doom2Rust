@@ -1,14 +1,14 @@
 #[derive(Copy, Clone)]
-pub struct cheatseq_t {
+pub struct CheatSeq {
     sequence: &'static [u8],
     parameter_chars: usize,
     chars_read: usize,
     param_chars_read: usize,
     parameter_buf: [u8; 5],
 }
-impl cheatseq_t {
+impl CheatSeq {
     pub const fn new(sequence: &'static str, parameter_chars: usize) -> Self {
-        cheatseq_t {
+        CheatSeq {
             sequence: sequence.as_bytes(),
             parameter_chars,
             chars_read: 0,
@@ -22,7 +22,7 @@ impl cheatseq_t {
         &self.parameter_buf[..self.parameter_chars]
     }
 }
-pub fn cht_CheckCheat(cht: &mut cheatseq_t, key: u8) -> bool {
+pub fn cht_check_cheat(cht: &mut CheatSeq, key: u8) -> bool {
     if cht.chars_read < cht.sequence.len() {
         if key == cht.sequence[cht.chars_read] {
             cht.chars_read += 1;

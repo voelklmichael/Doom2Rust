@@ -1,75 +1,75 @@
 use crate::game_state::GameState;
-use crate::m_fixed::fixed_t;
+use crate::m_fixed::Fixed;
 use crate::m_fixed::FRACUNIT;
 use crate::m_fixed::INT_MAX;
-use crate::p_map::P_ChangeSector;
+use crate::p_map::p_change_sector;
 
 use crate::p_mobj::SectorSpecial;
 use crate::p_mobj::ThinkerFn;
 use crate::p_setup::LineId;
 use crate::p_setup::SectorId;
-use crate::p_spec::floormove_t;
-use crate::p_spec::getSector;
-use crate::p_spec::getSide;
-use crate::p_spec::twoSided;
+use crate::p_spec::find_highest_floor_surrounding;
+use crate::p_spec::find_lowest_ceiling_surrounding;
+use crate::p_spec::find_lowest_floor_surrounding;
+use crate::p_spec::find_next_highest_floor;
+use crate::p_spec::find_sector_from_line_tag;
+use crate::p_spec::get_sector;
+use crate::p_spec::get_side;
+use crate::p_spec::two_sided;
 use crate::p_spec::FloorId;
-use crate::p_spec::P_FindHighestFloorSurrounding;
-use crate::p_spec::P_FindLowestCeilingSurrounding;
-use crate::p_spec::P_FindLowestFloorSurrounding;
-use crate::p_spec::P_FindNextHighestFloor;
-use crate::p_spec::P_FindSectorFromLineTag;
+use crate::p_spec::FloorMove;
 use crate::p_spec::ML_TWOSIDED;
-use crate::p_tick::P_AddThinker;
-use crate::p_tick::P_RemoveThinker;
+use crate::p_tick::add_thinker;
+use crate::p_tick::remove_thinker;
 use crate::p_tick::ThinkerKind;
 use crate::p_tick::ThinkerPayload;
-use crate::s_sound::S_StartSound;
+use crate::s_sound::s_start_sound;
 use crate::s_sound::SoundOrigin;
 use crate::sounds::SfxName;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum FloorE {
-    lowerFloor = 0,
-    lowerFloorToLowest = 1,
-    turboLower = 2,
-    raiseFloor = 3,
-    raiseFloorToNearest = 4,
-    raiseToTexture = 5,
-    lowerAndChange = 6,
-    raiseFloor24 = 7,
-    raiseFloor24AndChange = 8,
-    raiseFloorCrush = 9,
-    raiseFloorTurbo = 10,
-    donutRaise = 11,
-    raiseFloor512 = 12,
+    LowerFloor = 0,
+    LowerFloorToLowest = 1,
+    TurboLower = 2,
+    RaiseFloor = 3,
+    RaiseFloorToNearest = 4,
+    RaiseToTexture = 5,
+    LowerAndChange = 6,
+    RaiseFloor24 = 7,
+    RaiseFloor24AndChange = 8,
+    RaiseFloorCrush = 9,
+    RaiseFloorTurbo = 10,
+    DonutRaise = 11,
+    RaiseFloor512 = 12,
 }
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum StairE {
-    build8 = 0,
-    turbo16 = 1,
+    Build8 = 0,
+    Turbo16 = 1,
 }
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum ResultE {
-    ok = 0,
-    crushed = 1,
-    pastdest = 2,
+    Ok = 0,
+    Crushed = 1,
+    Pastdest = 2,
 }
 pub const FLOORSPEED: i32 = FRACUNIT;
 fn change_sector(state: &mut GameState, sector: SectorId, crush: bool) -> bool {
-    P_ChangeSector(state, sector, crush)
+    p_change_sector(state, sector, crush)
 }
-pub fn T_MovePlane(
+pub fn move_plane(
     state: &mut GameState,
     sector: SectorId,
-    speed: fixed_t,
-    dest: fixed_t,
+    speed: Fixed,
+    dest: Fixed,
     crush: bool,
-    floorOrCeiling: i32,
+    floor_or_ceiling: i32,
     direction: i32,
 ) -> ResultE {
     let flag: bool;
-    let lastpos: fixed_t;
-    match floorOrCeiling {
+    let lastpos: Fixed;
+    match floor_or_ceiling {
         0 => match direction {
             -1 => {
                 if state.p_setup.sector_mut(sector).floorheight - speed < dest {
@@ -80,7 +80,7 @@ pub fn T_MovePlane(
                         state.p_setup.sector_mut(sector).floorheight = lastpos;
                         change_sector(state, sector, crush);
                     }
-                    return ResultE::pastdest;
+                    return ResultE::Pastdest;
                 } else {
                     lastpos = state.p_setup.sector_mut(sector).floorheight;
                     state.p_setup.sector_mut(sector).floorheight -= speed;
@@ -88,7 +88,7 @@ pub fn T_MovePlane(
                     if flag {
                         state.p_setup.sector_mut(sector).floorheight = lastpos;
                         change_sector(state, sector, crush);
-                        return ResultE::crushed;
+                        return ResultE::Crushed;
                     }
                 }
             }
@@ -101,18 +101,18 @@ pub fn T_MovePlane(
                         state.p_setup.sector_mut(sector).floorheight = lastpos;
                         change_sector(state, sector, crush);
                     }
-                    return ResultE::pastdest;
+                    return ResultE::Pastdest;
                 } else {
                     lastpos = state.p_setup.sector_mut(sector).floorheight;
                     state.p_setup.sector_mut(sector).floorheight += speed;
                     flag = change_sector(state, sector, crush);
                     if flag {
                         if crush {
-                            return ResultE::crushed;
+                            return ResultE::Crushed;
                         }
                         state.p_setup.sector_mut(sector).floorheight = lastpos;
                         change_sector(state, sector, crush);
-                        return ResultE::crushed;
+                        return ResultE::Crushed;
                     }
                 }
             }
@@ -128,18 +128,18 @@ pub fn T_MovePlane(
                         state.p_setup.sector_mut(sector).ceilingheight = lastpos;
                         change_sector(state, sector, crush);
                     }
-                    return ResultE::pastdest;
+                    return ResultE::Pastdest;
                 } else {
                     lastpos = state.p_setup.sector_mut(sector).ceilingheight;
                     state.p_setup.sector_mut(sector).ceilingheight -= speed;
                     flag = change_sector(state, sector, crush);
                     if flag {
                         if crush {
-                            return ResultE::crushed;
+                            return ResultE::Crushed;
                         }
                         state.p_setup.sector_mut(sector).ceilingheight = lastpos;
                         change_sector(state, sector, crush);
-                        return ResultE::crushed;
+                        return ResultE::Crushed;
                     }
                 }
             }
@@ -152,7 +152,7 @@ pub fn T_MovePlane(
                         state.p_setup.sector_mut(sector).ceilingheight = lastpos;
                         change_sector(state, sector, crush);
                     }
-                    return ResultE::pastdest;
+                    return ResultE::Pastdest;
                 } else {
                     state.p_setup.sector_mut(sector).ceilingheight += speed;
                     change_sector(state, sector, crush);
@@ -162,14 +162,14 @@ pub fn T_MovePlane(
         },
         _ => {}
     }
-    ResultE::ok
+    ResultE::Ok
 }
-pub fn T_MoveFloor(state: &mut GameState, id: FloorId) {
+pub fn move_floor(state: &mut GameState, id: FloorId) {
     let floor = *state
         .p_spec
         .get_floor_ref(id)
         .expect("ThinkerFn::Floor id must reference a live floor");
-    let res = T_MovePlane(
+    let res = move_plane(
         state,
         floor.sector,
         floor.speed,
@@ -179,37 +179,37 @@ pub fn T_MoveFloor(state: &mut GameState, id: FloorId) {
         floor.direction,
     );
     if state.p_tick.leveltime & 7 == 0 {
-        S_StartSound(
+        s_start_sound(
             state,
             SoundOrigin::Sector(floor.sector),
-            SfxName::sfx_stnmov as i32,
+            SfxName::Stnmov as i32,
         );
     }
-    if res == ResultE::pastdest {
+    if res == ResultE::Pastdest {
         let sec = state.p_setup.sector_mut(floor.sector);
         sec.specialdata = None;
         if floor.direction == 1 {
-            if floor.kind == FloorE::donutRaise {
+            if floor.kind == FloorE::DonutRaise {
                 sec.special = floor.newspecial as i16;
                 sec.floorpic = floor.texture;
             }
-        } else if floor.direction == -1 && floor.kind == FloorE::lowerAndChange {
+        } else if floor.direction == -1 && floor.kind == FloorE::LowerAndChange {
             sec.special = floor.newspecial as i16;
             sec.floorpic = floor.texture;
         }
-        P_RemoveThinker(&mut state.p_spec.get_floor_mut(id).expect("live floor").thinker);
-        S_StartSound(
+        remove_thinker(&mut state.p_spec.get_floor_mut(id).expect("live floor").thinker);
+        s_start_sound(
             state,
             SoundOrigin::Sector(floor.sector),
-            SfxName::sfx_pstop as i32,
+            SfxName::Pstop as i32,
         );
     }
 }
-pub fn EV_DoFloor(state: &mut GameState, line: LineId, floortype: FloorE) -> bool {
+pub fn do_floor(state: &mut GameState, line: LineId, floortype: FloorE) -> bool {
     let mut rtn = false;
     let mut secnum: i32 = -1;
     loop {
-        secnum = P_FindSectorFromLineTag(state, line, secnum);
+        secnum = find_sector_from_line_tag(state, line, secnum);
         if secnum < 0 {
             break;
         }
@@ -218,8 +218,8 @@ pub fn EV_DoFloor(state: &mut GameState, line: LineId, floortype: FloorE) -> boo
             continue;
         }
         rtn = true;
-        let mut floor = floormove_t::default();
-        floor.thinker.function = ThinkerFn::Floor(T_MoveFloor);
+        let mut floor = FloorMove::default();
+        floor.thinker.function = ThinkerFn::Floor(move_floor);
         floor.kind = floortype;
         floor.crush = false;
         let (floorheight, ceilingheight, linecount) = {
@@ -228,63 +228,63 @@ pub fn EV_DoFloor(state: &mut GameState, line: LineId, floortype: FloorE) -> boo
         };
         let mut raise_lowest_ceiling = false;
         match floortype {
-            FloorE::lowerFloor => {
+            FloorE::LowerFloor => {
                 floor.direction = -1;
                 floor.sector = sec;
-                floor.speed = FLOORSPEED as fixed_t;
-                floor.floordestheight = P_FindHighestFloorSurrounding(state, sec);
+                floor.speed = FLOORSPEED as Fixed;
+                floor.floordestheight = find_highest_floor_surrounding(state, sec);
             }
-            FloorE::lowerFloorToLowest => {
+            FloorE::LowerFloorToLowest => {
                 floor.direction = -1;
                 floor.sector = sec;
-                floor.speed = FLOORSPEED as fixed_t;
-                floor.floordestheight = P_FindLowestFloorSurrounding(state, sec);
+                floor.speed = FLOORSPEED as Fixed;
+                floor.floordestheight = find_lowest_floor_surrounding(state, sec);
             }
-            FloorE::turboLower => {
+            FloorE::TurboLower => {
                 floor.direction = -1;
                 floor.sector = sec;
-                floor.speed = (FLOORSPEED * 4) as fixed_t;
-                floor.floordestheight = P_FindHighestFloorSurrounding(state, sec);
+                floor.speed = (FLOORSPEED * 4) as Fixed;
+                floor.floordestheight = find_highest_floor_surrounding(state, sec);
                 if floor.floordestheight != floorheight {
                     floor.floordestheight += 8 * FRACUNIT;
                 }
             }
-            FloorE::raiseFloorCrush => {
+            FloorE::RaiseFloorCrush => {
                 floor.crush = true;
                 raise_lowest_ceiling = true;
             }
-            FloorE::raiseFloor => {
+            FloorE::RaiseFloor => {
                 raise_lowest_ceiling = true;
             }
-            FloorE::raiseFloorTurbo => {
+            FloorE::RaiseFloorTurbo => {
                 floor.direction = 1;
                 floor.sector = sec;
-                floor.speed = (FLOORSPEED * 4) as fixed_t;
-                floor.floordestheight = P_FindNextHighestFloor(state, sec, floorheight);
+                floor.speed = (FLOORSPEED * 4) as Fixed;
+                floor.floordestheight = find_next_highest_floor(state, sec, floorheight);
             }
-            FloorE::raiseFloorToNearest => {
+            FloorE::RaiseFloorToNearest => {
                 floor.direction = 1;
                 floor.sector = sec;
-                floor.speed = FLOORSPEED as fixed_t;
-                floor.floordestheight = P_FindNextHighestFloor(state, sec, floorheight);
+                floor.speed = FLOORSPEED as Fixed;
+                floor.floordestheight = find_next_highest_floor(state, sec, floorheight);
             }
-            FloorE::raiseFloor24 => {
+            FloorE::RaiseFloor24 => {
                 floor.direction = 1;
                 floor.sector = sec;
-                floor.speed = FLOORSPEED as fixed_t;
-                floor.floordestheight = (floorheight + 24 * FRACUNIT) as fixed_t;
+                floor.speed = FLOORSPEED as Fixed;
+                floor.floordestheight = (floorheight + 24 * FRACUNIT) as Fixed;
             }
-            FloorE::raiseFloor512 => {
+            FloorE::RaiseFloor512 => {
                 floor.direction = 1;
                 floor.sector = sec;
-                floor.speed = FLOORSPEED as fixed_t;
-                floor.floordestheight = (floorheight + 512 * FRACUNIT) as fixed_t;
+                floor.speed = FLOORSPEED as Fixed;
+                floor.floordestheight = (floorheight + 512 * FRACUNIT) as Fixed;
             }
-            FloorE::raiseFloor24AndChange => {
+            FloorE::RaiseFloor24AndChange => {
                 floor.direction = 1;
                 floor.sector = sec;
-                floor.speed = FLOORSPEED as fixed_t;
-                floor.floordestheight = (floorheight + 24 * FRACUNIT) as fixed_t;
+                floor.speed = FLOORSPEED as Fixed;
+                floor.floordestheight = (floorheight + 24 * FRACUNIT) as Fixed;
                 let front = state.p_setup.line(line).frontsector.unwrap();
                 let (front_pic, front_special) = {
                     let fsec = state.p_setup.sector_mut(front);
@@ -294,15 +294,15 @@ pub fn EV_DoFloor(state: &mut GameState, line: LineId, floortype: FloorE) -> boo
                 s.floorpic = front_pic;
                 s.special = front_special;
             }
-            FloorE::raiseToTexture => {
+            FloorE::RaiseToTexture => {
                 let mut minsize: i32 = INT_MAX;
                 floor.direction = 1;
                 floor.sector = sec;
-                floor.speed = FLOORSPEED as fixed_t;
+                floor.speed = FLOORSPEED as Fixed;
                 for i in 0..linecount {
-                    if twoSided(state, secnum, i) != 0 {
+                    if two_sided(state, secnum, i) != 0 {
                         for side_index in 0..2_i32 {
-                            let side = getSide(state, secnum, i, side_index);
+                            let side = get_side(state, secnum, i, side_index);
                             let bottomtexture = state.p_setup.side_mut(side).bottomtexture;
                             if bottomtexture as i32 >= 0
                                 && state.r_data.textureheight[bottomtexture as usize] < minsize
@@ -312,22 +312,22 @@ pub fn EV_DoFloor(state: &mut GameState, line: LineId, floortype: FloorE) -> boo
                         }
                     }
                 }
-                floor.floordestheight = (floorheight + minsize) as fixed_t;
+                floor.floordestheight = (floorheight + minsize) as Fixed;
             }
-            FloorE::lowerAndChange => {
+            FloorE::LowerAndChange => {
                 floor.direction = -1;
                 floor.sector = sec;
-                floor.speed = FLOORSPEED as fixed_t;
-                floor.floordestheight = P_FindLowestFloorSurrounding(state, sec);
+                floor.speed = FLOORSPEED as Fixed;
+                floor.floordestheight = find_lowest_floor_surrounding(state, sec);
                 floor.texture = state.p_setup.sector_mut(sec).floorpic;
                 for i in 0..linecount {
-                    if twoSided(state, secnum, i) != 0 {
-                        let side0 = getSide(state, secnum, i, 0);
+                    if two_sided(state, secnum, i) != 0 {
+                        let side0 = get_side(state, secnum, i, 0);
                         let side0_sector = state.p_setup.side_mut(side0).sector;
                         let other = if side0_sector.0 == secnum as u32 {
-                            getSector(state, secnum, i, 1)
+                            get_sector(state, secnum, i, 1)
                         } else {
-                            getSector(state, secnum, i, 0)
+                            get_sector(state, secnum, i, 0)
                         };
                         let (other_floor, other_pic, other_special) = {
                             let o = state.p_setup.sector_mut(other);
@@ -346,15 +346,15 @@ pub fn EV_DoFloor(state: &mut GameState, line: LineId, floortype: FloorE) -> boo
         if raise_lowest_ceiling {
             floor.direction = 1;
             floor.sector = sec;
-            floor.speed = FLOORSPEED as fixed_t;
-            floor.floordestheight = P_FindLowestCeilingSurrounding(state, sec);
+            floor.speed = FLOORSPEED as Fixed;
+            floor.floordestheight = find_lowest_ceiling_surrounding(state, sec);
             if floor.floordestheight > ceilingheight {
                 floor.floordestheight = ceilingheight;
             }
-            floor.floordestheight -= 8 * FRACUNIT * (floortype == FloorE::raiseFloorCrush) as i32;
+            floor.floordestheight -= 8 * FRACUNIT * (floortype == FloorE::RaiseFloorCrush) as i32;
         }
         let floor_arena_id = state.p_spec.spawn_floor(floor);
-        let floor_id = P_AddThinker(
+        let floor_id = add_thinker(
             state,
             ThinkerPayload::Floor(floor_arena_id),
             ThinkerKind::Floor,
@@ -363,26 +363,26 @@ pub fn EV_DoFloor(state: &mut GameState, line: LineId, floortype: FloorE) -> boo
     }
     rtn
 }
-fn spawn_stair(state: &mut GameState, sec: SectorId, speed: fixed_t, height: i32) {
-    let mut floor = floormove_t::default();
-    floor.thinker.function = ThinkerFn::Floor(T_MoveFloor);
+fn spawn_stair(state: &mut GameState, sec: SectorId, speed: Fixed, height: i32) {
+    let mut floor = FloorMove::default();
+    floor.thinker.function = ThinkerFn::Floor(move_floor);
     floor.direction = 1;
     floor.sector = sec;
     floor.speed = speed;
-    floor.floordestheight = height as fixed_t;
+    floor.floordestheight = height as Fixed;
     let floor_arena_id = state.p_spec.spawn_floor(floor);
-    let floor_id = P_AddThinker(
+    let floor_id = add_thinker(
         state,
         ThinkerPayload::Floor(floor_arena_id),
         ThinkerKind::Floor,
     );
     state.p_setup.sector_mut(sec).specialdata = Some(SectorSpecial::Floor(floor_id));
 }
-pub fn EV_BuildStairs(state: &mut GameState, line: LineId, kind: StairE) -> bool {
+pub fn build_stairs(state: &mut GameState, line: LineId, kind: StairE) -> bool {
     let mut rtn = false;
     let mut secnum: i32 = -1;
     loop {
-        secnum = P_FindSectorFromLineTag(state, line, secnum);
+        secnum = find_sector_from_line_tag(state, line, secnum);
         if secnum < 0 {
             break;
         }
@@ -391,9 +391,9 @@ pub fn EV_BuildStairs(state: &mut GameState, line: LineId, kind: StairE) -> bool
             continue;
         }
         rtn = true;
-        let (speed, stairsize): (fixed_t, fixed_t) = match kind {
-            StairE::build8 => ((FLOORSPEED / 4) as fixed_t, (8 * FRACUNIT) as fixed_t),
-            StairE::turbo16 => ((FLOORSPEED * 4) as fixed_t, (16 * FRACUNIT) as fixed_t),
+        let (speed, stairsize): (Fixed, Fixed) = match kind {
+            StairE::Build8 => ((FLOORSPEED / 4) as Fixed, (8 * FRACUNIT) as Fixed),
+            StairE::Turbo16 => ((FLOORSPEED * 4) as Fixed, (16 * FRACUNIT) as Fixed),
         };
         let mut height: i32 = state.p_setup.sector_mut(sec).floorheight + stairsize;
         let texture = state.p_setup.sector_mut(sec).floorpic as i32;

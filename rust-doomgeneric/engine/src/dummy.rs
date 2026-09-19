@@ -1,2 +1,2 @@
-pub static net_client_connected: bool = false;
-pub static drone: bool = false;
+pub static NET_CLIENT_CONNECTED: bool = false;
+pub static DRONE: bool = false;

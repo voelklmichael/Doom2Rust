@@ -1,42 +1,42 @@
-use crate::d_event::event_t;
 use crate::d_event::EvType;
-use crate::d_mode::GameMission_t;
-use crate::d_mode::GameMode_t;
+use crate::d_event::Event;
+use crate::d_mode::GameMission;
+use crate::d_mode::GameMode;
 use crate::d_mode::GameVersion;
 use crate::d_player::PlayerId;
 use crate::doomdef::MAXPLAYERS;
 use crate::doomdef::TICRATE;
 use crate::game_state::GameState;
 use crate::hu_lib::{
-    hu_itext_t, hu_stext_t, hu_textline_t, HUlib_addCharToTextLine, HUlib_addMessageToSText,
-    HUlib_drawIText, HUlib_drawSText, HUlib_drawTextLine, HUlib_eraseIText, HUlib_eraseSText,
-    HUlib_eraseTextLine, HUlib_initIText, HUlib_initSText, HUlib_initTextLine, HUlib_keyInIText,
-    HUlib_resetIText,
+    hulib_add_char_to_text_line, hulib_add_message_to_stext, hulib_draw_itext, hulib_draw_stext,
+    hulib_draw_text_line, hulib_erase_itext, hulib_erase_stext, hulib_erase_text_line,
+    hulib_init_itext, hulib_init_stext, hulib_init_text_line, hulib_key_in_itext,
+    hulib_reset_itext, HuIText, HuSText, HuTextLine,
 };
 use crate::m_controls::KEY_ENTER;
 use crate::m_controls::KEY_ESCAPE;
 use crate::m_controls::KEY_RALT;
 use crate::m_controls::KEY_RSHIFT;
-use crate::s_sound::S_StartSound;
+use crate::s_sound::s_start_sound;
 use crate::s_sound::SoundOrigin;
 use crate::sounds::SfxName;
-use crate::v_video::V_CachePatchNum;
-use crate::w_wad::{W_GetNumForName, W_LumpBytes};
+use crate::v_video::cache_patch_num;
+use crate::w_wad::{get_num_for_name, lump_bytes};
 use alloc::string::String;
 use alloc::string::ToString;
 
 pub struct HuStuffState {
     pub plr: PlayerId,
     pub hu_font: [i32; 63],
-    pub w_title: hu_textline_t,
+    pub w_title: HuTextLine,
     pub chat_on: bool,
-    pub w_chat: hu_itext_t,
+    pub w_chat: HuIText,
     pub chat_dest: [u8; 4],
-    pub w_inputbuffer: [hu_itext_t; 4],
+    pub w_inputbuffer: [HuIText; 4],
     pub message_on: bool,
     pub message_dontfuckwithme: bool,
     pub message_nottobefuckedwith: bool,
-    pub w_message: hu_stext_t,
+    pub w_message: HuSText,
     pub message_counter: i32,
     pub headsupactive: bool,
     pub chatchars: [u8; 128],
@@ -58,7 +58,7 @@ impl HuStuffState {
         HuStuffState {
             plr: PlayerId(0),
             hu_font: [-1; 63],
-            w_title: hu_textline_t {
+            w_title: HuTextLine {
                 x: 0,
                 y: 0,
                 sc: 0,
@@ -66,8 +66,8 @@ impl HuStuffState {
                 needsupdate: 0,
             },
             chat_on: false,
-            w_chat: hu_itext_t {
-                l: hu_textline_t {
+            w_chat: HuIText {
+                l: HuTextLine {
                     x: 0,
                     y: 0,
                     sc: 0,
@@ -87,7 +87,7 @@ impl HuStuffState {
             message_on: false,
             message_dontfuckwithme: false,
             message_nottobefuckedwith: false,
-            w_message: hu_stext_t {
+            w_message: HuSText {
                 l: [
                     new_hu_textline_t(),
                     new_hu_textline_t(),
@@ -265,9 +265,9 @@ pub const THUSTR_32: &str = "level 32: caribbean";
 pub const PLAYER_NAMES: [&str; 4] = ["Green: ", "Indigo: ", "Brown: ", "Red: "];
 pub const HU_TITLEX: i32 = 0;
 pub const HU_INPUTX: i32 = HU_MSGX;
-const fn new_hu_itext_t() -> hu_itext_t {
-    hu_itext_t {
-        l: hu_textline_t {
+const fn new_hu_itext_t() -> HuIText {
+    HuIText {
+        l: HuTextLine {
             x: 0,
             y: 0,
             sc: 0,
@@ -278,8 +278,8 @@ const fn new_hu_itext_t() -> hu_itext_t {
         laston: false,
     }
 }
-const fn new_hu_textline_t() -> hu_textline_t {
-    hu_textline_t {
+const fn new_hu_textline_t() -> HuTextLine {
+    HuTextLine {
         x: 0,
         y: 0,
         sc: 0,
@@ -287,7 +287,7 @@ const fn new_hu_textline_t() -> hu_textline_t {
         needsupdate: 0,
     }
 }
-pub static mapnames: [&str; 45] = [
+pub static MAPNAMES: [&str; 45] = [
     HUSTR_E1M1, HUSTR_E1M2, HUSTR_E1M3, HUSTR_E1M4, HUSTR_E1M5, HUSTR_E1M6, HUSTR_E1M7, HUSTR_E1M8,
     HUSTR_E1M9, HUSTR_E2M1, HUSTR_E2M2, HUSTR_E2M3, HUSTR_E2M4, HUSTR_E2M5, HUSTR_E2M6, HUSTR_E2M7,
     HUSTR_E2M8, HUSTR_E2M9, HUSTR_E3M1, HUSTR_E3M2, HUSTR_E3M3, HUSTR_E3M4, HUSTR_E3M5, HUSTR_E3M6,
@@ -295,7 +295,7 @@ pub static mapnames: [&str; 45] = [
     HUSTR_E4M6, HUSTR_E4M7, HUSTR_E4M8, HUSTR_E4M9, "NEWLEVEL", "NEWLEVEL", "NEWLEVEL", "NEWLEVEL",
     "NEWLEVEL", "NEWLEVEL", "NEWLEVEL", "NEWLEVEL", "NEWLEVEL",
 ];
-pub static mapnames_commercial: [&str; 96] = [
+pub static MAPNAMES_COMMERCIAL: [&str; 96] = [
     HUSTR_1, HUSTR_2, HUSTR_3, HUSTR_4, HUSTR_5, HUSTR_6, HUSTR_7, HUSTR_8, HUSTR_9, HUSTR_10,
     HUSTR_11, HUSTR_12, HUSTR_13, HUSTR_14, HUSTR_15, HUSTR_16, HUSTR_17, HUSTR_18, HUSTR_19,
     HUSTR_20, HUSTR_21, HUSTR_22, HUSTR_23, HUSTR_24, HUSTR_25, HUSTR_26, HUSTR_27, HUSTR_28,
@@ -309,22 +309,22 @@ pub static mapnames_commercial: [&str; 96] = [
     THUSTR_24, THUSTR_25, THUSTR_26, THUSTR_27, THUSTR_28, THUSTR_29, THUSTR_30, THUSTR_31,
     THUSTR_32,
 ];
-pub fn HU_Init(state: &mut GameState) {
+pub fn hu_init(state: &mut GameState) {
     for (i, code) in (HU_FONTSTART..HU_FONTSTART + HU_FONTSIZE).enumerate() {
         let buffer = format!("STCFN{code:03}");
-        let lumpnum = W_GetNumForName(&mut state.w_wad, &buffer);
-        W_LumpBytes(state, lumpnum);
+        let lumpnum = get_num_for_name(&mut state.w_wad, &buffer);
+        lump_bytes(state, lumpnum);
         state.hu_stuff.hu_font[i] = lumpnum;
     }
 }
-pub fn HU_Stop(state: &mut GameState) {
+pub fn hu_stop(state: &mut GameState) {
     state.hu_stuff.headsupactive = false;
 }
-pub fn HU_Start(state: &mut GameState) {
+pub fn hu_start(state: &mut GameState) {
     let mut _i: i32 = 0;
     let mut s: &str;
     if state.hu_stuff.headsupactive {
-        HU_Stop(state);
+        hu_stop(state);
     }
     state.hu_stuff.plr = PlayerId(state.g_game.consoleplayer as u8);
     state.hu_stuff.message_on = false;
@@ -332,8 +332,8 @@ pub fn HU_Start(state: &mut GameState) {
     state.hu_stuff.message_nottobefuckedwith = false;
     state.hu_stuff.chat_on = false;
     let hu_font0 = state.hu_stuff.hu_font[0];
-    let hu_font0_height = V_CachePatchNum(state, hu_font0).height();
-    HUlib_initSText(
+    let hu_font0_height = cache_patch_num(state, hu_font0).height();
+    hulib_init_stext(
         &mut state.hu_stuff.w_message,
         HU_MSGX,
         HU_MSGY,
@@ -341,78 +341,78 @@ pub fn HU_Start(state: &mut GameState) {
         HU_FONTSTART,
         hu_font0_height,
     );
-    HUlib_initTextLine(
+    hulib_init_text_line(
         &mut state.hu_stuff.w_title,
         HU_TITLEX,
         167 - hu_font0_height,
         HU_FONTSTART,
     );
-    match if state.doomstat.gamemission as u32 == GameMission_t::pack_chex as i32 as u32 {
-        GameMission_t::doom as i32 as u32
-    } else if state.doomstat.gamemission as u32 == GameMission_t::pack_hacx as i32 as u32 {
-        GameMission_t::doom2 as i32 as u32
+    match if state.doomstat.gamemission as u32 == GameMission::PackChex as i32 as u32 {
+        GameMission::Doom as i32 as u32
+    } else if state.doomstat.gamemission as u32 == GameMission::PackHacx as i32 as u32 {
+        GameMission::Doom2 as i32 as u32
     } else {
         state.doomstat.gamemission as u32
     } {
         0 => {
-            s = mapnames[((state.g_game.gameepisode - 1) * 9 + state.g_game.gamemap - 1) as usize];
+            s = MAPNAMES[((state.g_game.gameepisode - 1) * 9 + state.g_game.gamemap - 1) as usize];
         }
         1 => {
-            s = mapnames_commercial[(state.g_game.gamemap - 1) as usize];
+            s = MAPNAMES_COMMERCIAL[(state.g_game.gamemap - 1) as usize];
         }
         3 => {
-            s = mapnames_commercial[(state.g_game.gamemap - 1 + 32) as usize];
+            s = MAPNAMES_COMMERCIAL[(state.g_game.gamemap - 1 + 32) as usize];
         }
         2 => {
-            s = mapnames_commercial[(state.g_game.gamemap - 1 + 64) as usize];
+            s = MAPNAMES_COMMERCIAL[(state.g_game.gamemap - 1 + 64) as usize];
         }
         _ => {
             s = "Unknown level";
         }
     }
-    if state.doomstat.gameversion == GameVersion::chex {
-        s = mapnames[(state.g_game.gamemap - 1) as usize];
+    if state.doomstat.gameversion == GameVersion::Chex {
+        s = MAPNAMES[(state.g_game.gamemap - 1) as usize];
     }
     for b in s.bytes() {
-        HUlib_addCharToTextLine(&mut state.hu_stuff.w_title, b);
+        hulib_add_char_to_text_line(&mut state.hu_stuff.w_title, b);
     }
-    HUlib_initIText(
+    hulib_init_itext(
         &mut state.hu_stuff.w_chat,
         HU_INPUTX,
         HU_MSGY + HU_MSGHEIGHT * (hu_font0_height + 1),
         HU_FONTSTART,
     );
     for i in 0..(MAXPLAYERS as usize) {
-        HUlib_initIText(&mut state.hu_stuff.w_inputbuffer[i], 0, 0, 0);
+        hulib_init_itext(&mut state.hu_stuff.w_inputbuffer[i], 0, 0, 0);
     }
     state.hu_stuff.headsupactive = true;
 }
-pub fn HU_Drawer(state: &mut GameState) {
+pub fn hu_drawer(state: &mut GameState) {
     let message_on = state.hu_stuff.message_on;
     let w_message = state.hu_stuff.w_message.clone();
-    HUlib_drawSText(state, &w_message, message_on);
+    hulib_draw_stext(state, &w_message, message_on);
     let chat_on = state.hu_stuff.chat_on;
     let w_chat = state.hu_stuff.w_chat.clone();
-    HUlib_drawIText(state, &w_chat, chat_on);
+    hulib_draw_itext(state, &w_chat, chat_on);
     if state.am_map.automapactive {
         let w_title = state.hu_stuff.w_title.clone();
-        HUlib_drawTextLine(state, &w_title, false);
+        hulib_draw_text_line(state, &w_title, false);
     }
 }
-pub fn HU_Erase(state: &mut GameState) {
+pub fn erase(state: &mut GameState) {
     let message_on = state.hu_stuff.message_on;
     let mut w_message = state.hu_stuff.w_message.clone();
-    HUlib_eraseSText(state, &mut w_message, message_on);
+    hulib_erase_stext(state, &mut w_message, message_on);
     state.hu_stuff.w_message = w_message;
     let chat_on = state.hu_stuff.chat_on;
     let mut w_chat = state.hu_stuff.w_chat.clone();
-    HUlib_eraseIText(state, &mut w_chat, chat_on);
+    hulib_erase_itext(state, &mut w_chat, chat_on);
     state.hu_stuff.w_chat = w_chat;
     let mut w_title = state.hu_stuff.w_title.clone();
-    HUlib_eraseTextLine(state, &mut w_title);
+    hulib_erase_text_line(state, &mut w_title);
     state.hu_stuff.w_title = w_title;
 }
-pub fn HU_Ticker(state: &mut GameState) {
+pub fn hu_ticker(state: &mut GameState) {
     let mut rc: i32;
     let mut c: u8;
     if state.hu_stuff.message_counter != 0 && {
@@ -422,7 +422,7 @@ pub fn HU_Ticker(state: &mut GameState) {
         state.hu_stuff.message_on = false;
         state.hu_stuff.message_nottobefuckedwith = false;
     }
-    if (state.m_menu.showMessages != 0 || state.hu_stuff.message_dontfuckwithme)
+    if (state.m_menu.show_messages != 0 || state.hu_stuff.message_dontfuckwithme)
         && (state
             .g_game
             .player_mut(state.hu_stuff.plr)
@@ -436,7 +436,7 @@ pub fn HU_Ticker(state: &mut GameState) {
                 .is_some()
                 && state.hu_stuff.message_dontfuckwithme)
     {
-        HUlib_addMessageToSText(
+        hulib_add_message_to_stext(
             &mut state.hu_stuff.w_message,
             None,
             state
@@ -461,14 +461,15 @@ pub fn HU_Ticker(state: &mut GameState) {
                 if c as i32 <= HU_BROADCAST {
                     state.hu_stuff.chat_dest[i as usize] = c;
                 } else {
-                    rc = HUlib_keyInIText(&mut state.hu_stuff.w_inputbuffer[i as usize], c) as i32;
+                    rc =
+                        hulib_key_in_itext(&mut state.hu_stuff.w_inputbuffer[i as usize], c) as i32;
                     if rc != 0 && c as i32 == KEY_ENTER {
                         if !state.hu_stuff.w_inputbuffer[i as usize].l.l.is_empty()
                             && (state.hu_stuff.chat_dest[i as usize] as i32
                                 == state.g_game.consoleplayer + 1
                                 || state.hu_stuff.chat_dest[i as usize] as i32 == HU_BROADCAST)
                         {
-                            HUlib_addMessageToSText(
+                            hulib_add_message_to_stext(
                                 &mut state.hu_stuff.w_message,
                                 Some(PLAYER_NAMES[i as usize]),
                                 &state.hu_stuff.w_inputbuffer[i as usize].l.l,
@@ -476,15 +477,14 @@ pub fn HU_Ticker(state: &mut GameState) {
                             state.hu_stuff.message_nottobefuckedwith = true;
                             state.hu_stuff.message_on = true;
                             state.hu_stuff.message_counter = HU_MSGTIMEOUT;
-                            if state.doomstat.gamemode as u32
-                                == GameMode_t::commercial as i32 as u32
+                            if state.doomstat.gamemode as u32 == GameMode::Commercial as i32 as u32
                             {
-                                S_StartSound(state, SoundOrigin::None, SfxName::sfx_radio as i32);
+                                s_start_sound(state, SoundOrigin::None, SfxName::Radio as i32);
                             } else {
-                                S_StartSound(state, SoundOrigin::None, SfxName::sfx_tink as i32);
+                                s_start_sound(state, SoundOrigin::None, SfxName::Tink as i32);
                             }
                         }
-                        HUlib_resetIText(&mut state.hu_stuff.w_inputbuffer[i as usize]);
+                        hulib_reset_itext(&mut state.hu_stuff.w_inputbuffer[i as usize]);
                     }
                 }
                 state.g_game.players[i as usize].cmd.chatchar = 0_u8;
@@ -493,7 +493,7 @@ pub fn HU_Ticker(state: &mut GameState) {
     }
 }
 pub const QUEUESIZE: i32 = 128;
-pub fn HU_queueChatChar(state: &mut GameState, c: u8) {
+pub fn queue_chat_char(state: &mut GameState, c: u8) {
     if (state.hu_stuff.head + 1) & (QUEUESIZE - 1) == state.hu_stuff.tail {
         state.g_game.player_mut(state.hu_stuff.plr).message = Some("[Message unsent]".to_string());
     } else {
@@ -501,7 +501,7 @@ pub fn HU_queueChatChar(state: &mut GameState, c: u8) {
         state.hu_stuff.head = (state.hu_stuff.head + 1) & (QUEUESIZE - 1);
     };
 }
-pub fn HU_dequeueChatChar(state: &mut HuStuffState) -> u8 {
+pub fn dequeue_chat_char(state: &mut HuStuffState) -> u8 {
     let c: u8;
     if state.head != state.tail {
         c = state.chatchars[state.tail as usize];
@@ -511,7 +511,7 @@ pub fn HU_dequeueChatChar(state: &mut HuStuffState) -> u8 {
     }
     c
 }
-pub fn HU_Responder(state: &mut GameState, ev: &event_t) -> bool {
+pub fn hu_responder(state: &mut GameState, ev: &Event) -> bool {
     let mut eatkey: bool = false;
     let c: u8;
     let mut numplayers: i32;
@@ -522,10 +522,10 @@ pub fn HU_Responder(state: &mut GameState, ev: &event_t) -> bool {
     if ev.data1 == KEY_RSHIFT {
         return false;
     } else if ev.data1 == KEY_RALT || ev.data1 == KEY_LALT {
-        state.hu_stuff.hu_responder_altdown = ev.kind == EvType::ev_keydown;
+        state.hu_stuff.hu_responder_altdown = ev.kind == EvType::Keydown;
         return false;
     }
-    if ev.kind != EvType::ev_keydown {
+    if ev.kind != EvType::Keydown {
         return false;
     }
     if !state.hu_stuff.chat_on {
@@ -536,16 +536,16 @@ pub fn HU_Responder(state: &mut GameState, ev: &event_t) -> bool {
         } else if state.g_game.netgame && ev.data2 == state.m_controls.key_multi_msg {
             state.hu_stuff.chat_on = true;
             eatkey = state.hu_stuff.chat_on;
-            HUlib_resetIText(&mut state.hu_stuff.w_chat);
-            HU_queueChatChar(state, HU_BROADCAST as u8);
+            hulib_reset_itext(&mut state.hu_stuff.w_chat);
+            queue_chat_char(state, HU_BROADCAST as u8);
         } else if state.g_game.netgame && numplayers > 2 {
             for i in 0..MAXPLAYERS {
                 if ev.data2 == state.m_controls.key_multi_msgplayer[i as usize] {
                     if state.g_game.playeringame[i as usize] && i != state.g_game.consoleplayer {
                         state.hu_stuff.chat_on = true;
                         eatkey = state.hu_stuff.chat_on;
-                        HUlib_resetIText(&mut state.hu_stuff.w_chat);
-                        HU_queueChatChar(state, (i + 1) as u8);
+                        hulib_reset_itext(&mut state.hu_stuff.w_chat);
+                        queue_chat_char(state, (i + 1) as u8);
                         break;
                     } else if i == state.g_game.consoleplayer {
                         state.hu_stuff.hu_responder_num_nobrainers += 1;
@@ -575,19 +575,19 @@ pub fn HU_Responder(state: &mut GameState, ev: &event_t) -> bool {
             return false;
         }
         let macromessage = state.hu_stuff.chat_macros[c as usize].unwrap_or("");
-        HU_queueChatChar(state, KEY_ENTER as u8);
+        queue_chat_char(state, KEY_ENTER as u8);
         for b in macromessage.bytes() {
-            HU_queueChatChar(state, b);
+            queue_chat_char(state, b);
         }
-        HU_queueChatChar(state, KEY_ENTER as u8);
+        queue_chat_char(state, KEY_ENTER as u8);
         state.hu_stuff.chat_on = false;
         state.g_game.player_mut(state.hu_stuff.plr).message = Some(macromessage.to_string());
         eatkey = true;
     } else {
         c = ev.data2 as u8;
-        eatkey = HUlib_keyInIText(&mut state.hu_stuff.w_chat, c);
+        eatkey = hulib_key_in_itext(&mut state.hu_stuff.w_chat, c);
         if eatkey {
-            HU_queueChatChar(state, c);
+            queue_chat_char(state, c);
         }
         if c as i32 == KEY_ENTER {
             state.hu_stuff.chat_on = false;

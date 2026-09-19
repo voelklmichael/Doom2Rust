@@ -16,7 +16,7 @@ impl ITimerState {
     }
 }
 
-pub fn I_GetTime(state: &mut GameState) -> i32 {
+pub fn get_time(state: &mut GameState) -> i32 {
     let mut ticks: u32 = state.platform.get_ticks_ms();
     if state.i_timer.basetime == 0_u32 {
         state.i_timer.basetime = ticks;
@@ -24,13 +24,13 @@ pub fn I_GetTime(state: &mut GameState) -> i32 {
     ticks = ticks.wrapping_sub(state.i_timer.basetime);
     ticks.wrapping_mul(TICRATE as u32).wrapping_div(1000_u32) as i32
 }
-pub fn I_GetTimeMS(state: &mut GameState) -> i32 {
+pub fn get_time_ms(state: &mut GameState) -> i32 {
     let ticks: u32 = state.platform.get_ticks_ms();
     if state.i_timer.basetime == 0_u32 {
         state.i_timer.basetime = ticks;
     }
     ticks.wrapping_sub(state.i_timer.basetime) as i32
 }
-pub fn I_Sleep(state: &mut GameState, ms: i32) {
+pub fn sleep(state: &mut GameState, ms: i32) {
     state.platform.sleep_ms(ms as u32);
 }

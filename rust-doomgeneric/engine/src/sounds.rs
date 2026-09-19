@@ -2,78 +2,78 @@ use crate::fixed_cstr::FixedCStr;
 #[derive(Copy, Clone, PartialEq, Eq)]
 #[allow(dead_code)] // mirrors a C index table; discriminants must stay
 pub enum MusicName {
-    mus_None = 0,
-    mus_e1m1 = 1,
-    mus_e1m2 = 2,
-    mus_e1m3 = 3,
-    mus_e1m4 = 4,
-    mus_e1m5 = 5,
-    mus_e1m6 = 6,
-    mus_e1m7 = 7,
-    mus_e1m8 = 8,
-    mus_e1m9 = 9,
-    mus_e2m1 = 10,
-    mus_e2m2 = 11,
-    mus_e2m3 = 12,
-    mus_e2m4 = 13,
-    mus_e2m5 = 14,
-    mus_e2m6 = 15,
-    mus_e2m7 = 16,
-    mus_e2m8 = 17,
-    mus_e2m9 = 18,
-    mus_e3m1 = 19,
-    mus_e3m2 = 20,
-    mus_e3m3 = 21,
-    mus_e3m4 = 22,
-    mus_e3m5 = 23,
-    mus_e3m6 = 24,
-    mus_e3m7 = 25,
-    mus_e3m8 = 26,
-    mus_e3m9 = 27,
-    mus_inter = 28,
-    mus_intro = 29,
-    mus_bunny = 30,
-    mus_victor = 31,
-    mus_introa = 32,
-    mus_runnin = 33,
-    mus_stalks = 34,
-    mus_countd = 35,
-    mus_betwee = 36,
-    mus_doom = 37,
-    mus_the_da = 38,
-    mus_shawn = 39,
-    mus_ddtblu = 40,
-    mus_in_cit = 41,
-    mus_dead = 42,
-    mus_stlks2 = 43,
-    mus_theda2 = 44,
-    mus_doom2 = 45,
-    mus_ddtbl2 = 46,
-    mus_runni2 = 47,
-    mus_dead2 = 48,
-    mus_stlks3 = 49,
-    mus_romero = 50,
-    mus_shawn2 = 51,
-    mus_messag = 52,
-    mus_count2 = 53,
-    mus_ddtbl3 = 54,
-    mus_ampie = 55,
-    mus_theda3 = 56,
-    mus_adrian = 57,
-    mus_messg2 = 58,
-    mus_romer2 = 59,
-    mus_tense = 60,
-    mus_shawn3 = 61,
-    mus_openin = 62,
-    mus_evil = 63,
-    mus_ultima = 64,
-    mus_read_m = 65,
-    mus_dm2ttl = 66,
-    mus_dm2int = 67,
+    MusNone = 0,
+    E1m1 = 1,
+    E1m2 = 2,
+    E1m3 = 3,
+    E1m4 = 4,
+    E1m5 = 5,
+    E1m6 = 6,
+    E1m7 = 7,
+    E1m8 = 8,
+    E1m9 = 9,
+    E2m1 = 10,
+    E2m2 = 11,
+    E2m3 = 12,
+    E2m4 = 13,
+    E2m5 = 14,
+    E2m6 = 15,
+    E2m7 = 16,
+    E2m8 = 17,
+    E2m9 = 18,
+    E3m1 = 19,
+    E3m2 = 20,
+    E3m3 = 21,
+    E3m4 = 22,
+    E3m5 = 23,
+    E3m6 = 24,
+    E3m7 = 25,
+    E3m8 = 26,
+    E3m9 = 27,
+    Inter = 28,
+    Intro = 29,
+    Bunny = 30,
+    Victor = 31,
+    Introa = 32,
+    Runnin = 33,
+    Stalks = 34,
+    Countd = 35,
+    Betwee = 36,
+    Doom = 37,
+    TheDa = 38,
+    Shawn = 39,
+    Ddtblu = 40,
+    InCit = 41,
+    Dead = 42,
+    Stlks2 = 43,
+    Theda2 = 44,
+    Doom2 = 45,
+    Ddtbl2 = 46,
+    Runni2 = 47,
+    Dead2 = 48,
+    Stlks3 = 49,
+    Romero = 50,
+    Shawn2 = 51,
+    Messag = 52,
+    Count2 = 53,
+    Ddtbl3 = 54,
+    Ampie = 55,
+    Theda3 = 56,
+    Adrian = 57,
+    Messg2 = 58,
+    Romer2 = 59,
+    Tense = 60,
+    Shawn3 = 61,
+    Openin = 62,
+    Evil = 63,
+    Ultima = 64,
+    ReadM = 65,
+    Dm2ttl = 66,
+    Dm2int = 67,
 }
 pub const NUMMUSIC: i32 = 68;
 #[derive(Copy, Clone)]
-pub struct sfxinfo_struct {
+pub struct SfxInfo {
     pub tagname: Option<&'static str>,
     pub name: FixedCStr<9>,
     pub priority: i32,
@@ -84,9 +84,8 @@ pub struct sfxinfo_struct {
     pub lumpnum: i32,
     pub numchannels: i32,
 }
-pub type sfxinfo_t = sfxinfo_struct;
 #[derive(Copy, Clone)]
-pub struct musicinfo_t {
+pub struct MusicInfo {
     pub name: FixedCStr<7>,
     pub lumpnum: i32,
     pub handle: usize,
@@ -94,454 +93,454 @@ pub struct musicinfo_t {
 #[derive(Copy, Clone, PartialEq, Eq)]
 #[allow(dead_code)] // mirrors a C index table; discriminants must stay
 pub enum SfxName {
-    sfx_None = 0,
-    sfx_pistol = 1,
-    sfx_shotgn = 2,
-    sfx_sgcock = 3,
-    sfx_dshtgn = 4,
-    sfx_dbopn = 5,
-    sfx_dbcls = 6,
-    sfx_dbload = 7,
-    sfx_plasma = 8,
-    sfx_bfg = 9,
-    sfx_sawup = 10,
-    sfx_sawidl = 11,
-    sfx_sawful = 12,
-    sfx_sawhit = 13,
-    sfx_rlaunc = 14,
-    sfx_rxplod = 15,
-    sfx_firsht = 16,
-    sfx_firxpl = 17,
-    sfx_pstart = 18,
-    sfx_pstop = 19,
-    sfx_doropn = 20,
-    sfx_dorcls = 21,
-    sfx_stnmov = 22,
-    sfx_swtchn = 23,
-    sfx_swtchx = 24,
-    sfx_plpain = 25,
-    sfx_dmpain = 26,
-    sfx_popain = 27,
-    sfx_vipain = 28,
-    sfx_mnpain = 29,
-    sfx_pepain = 30,
-    sfx_slop = 31,
-    sfx_itemup = 32,
-    sfx_wpnup = 33,
-    sfx_oof = 34,
-    sfx_telept = 35,
-    sfx_posit1 = 36,
-    sfx_posit2 = 37,
-    sfx_posit3 = 38,
-    sfx_bgsit1 = 39,
-    sfx_bgsit2 = 40,
-    sfx_sgtsit = 41,
-    sfx_cacsit = 42,
-    sfx_brssit = 43,
-    sfx_cybsit = 44,
-    sfx_spisit = 45,
-    sfx_bspsit = 46,
-    sfx_kntsit = 47,
-    sfx_vilsit = 48,
-    sfx_mansit = 49,
-    sfx_pesit = 50,
-    sfx_sklatk = 51,
-    sfx_sgtatk = 52,
-    sfx_skepch = 53,
-    sfx_vilatk = 54,
-    sfx_claw = 55,
-    sfx_skeswg = 56,
-    sfx_pldeth = 57,
-    sfx_pdiehi = 58,
-    sfx_podth1 = 59,
-    sfx_podth2 = 60,
-    sfx_podth3 = 61,
-    sfx_bgdth1 = 62,
-    sfx_bgdth2 = 63,
-    sfx_sgtdth = 64,
-    sfx_cacdth = 65,
-    sfx_skldth = 66,
-    sfx_brsdth = 67,
-    sfx_cybdth = 68,
-    sfx_spidth = 69,
-    sfx_bspdth = 70,
-    sfx_vildth = 71,
-    sfx_kntdth = 72,
-    sfx_pedth = 73,
-    sfx_skedth = 74,
-    sfx_posact = 75,
-    sfx_bgact = 76,
-    sfx_dmact = 77,
-    sfx_bspact = 78,
-    sfx_bspwlk = 79,
-    sfx_vilact = 80,
-    sfx_noway = 81,
-    sfx_barexp = 82,
-    sfx_punch = 83,
-    sfx_hoof = 84,
-    sfx_metal = 85,
-    sfx_chgun = 86,
-    sfx_tink = 87,
-    sfx_bdopn = 88,
-    sfx_bdcls = 89,
-    sfx_itmbk = 90,
-    sfx_flame = 91,
-    sfx_flamst = 92,
-    sfx_getpow = 93,
-    sfx_bospit = 94,
-    sfx_boscub = 95,
-    sfx_bossit = 96,
-    sfx_bospn = 97,
-    sfx_bosdth = 98,
-    sfx_manatk = 99,
-    sfx_mandth = 100,
-    sfx_sssit = 101,
-    sfx_ssdth = 102,
-    sfx_keenpn = 103,
-    sfx_keendt = 104,
-    sfx_skeact = 105,
-    sfx_skesit = 106,
-    sfx_skeatk = 107,
-    sfx_radio = 108,
+    SfxNone = 0,
+    Pistol = 1,
+    Shotgn = 2,
+    Sgcock = 3,
+    Dshtgn = 4,
+    Dbopn = 5,
+    Dbcls = 6,
+    Dbload = 7,
+    Plasma = 8,
+    Bfg = 9,
+    Sawup = 10,
+    Sawidl = 11,
+    Sawful = 12,
+    Sawhit = 13,
+    Rlaunc = 14,
+    Rxplod = 15,
+    Firsht = 16,
+    Firxpl = 17,
+    Pstart = 18,
+    Pstop = 19,
+    Doropn = 20,
+    Dorcls = 21,
+    Stnmov = 22,
+    Swtchn = 23,
+    Swtchx = 24,
+    Plpain = 25,
+    Dmpain = 26,
+    Popain = 27,
+    Vipain = 28,
+    Mnpain = 29,
+    Pepain = 30,
+    Slop = 31,
+    Itemup = 32,
+    Wpnup = 33,
+    Oof = 34,
+    Telept = 35,
+    Posit1 = 36,
+    Posit2 = 37,
+    Posit3 = 38,
+    Bgsit1 = 39,
+    Bgsit2 = 40,
+    Sgtsit = 41,
+    Cacsit = 42,
+    Brssit = 43,
+    Cybsit = 44,
+    Spisit = 45,
+    Bspsit = 46,
+    Kntsit = 47,
+    Vilsit = 48,
+    Mansit = 49,
+    Pesit = 50,
+    Sklatk = 51,
+    Sgtatk = 52,
+    Skepch = 53,
+    Vilatk = 54,
+    Claw = 55,
+    Skeswg = 56,
+    Pldeth = 57,
+    Pdiehi = 58,
+    Podth1 = 59,
+    Podth2 = 60,
+    Podth3 = 61,
+    Bgdth1 = 62,
+    Bgdth2 = 63,
+    Sgtdth = 64,
+    Cacdth = 65,
+    Skldth = 66,
+    Brsdth = 67,
+    Cybdth = 68,
+    Spidth = 69,
+    Bspdth = 70,
+    Vildth = 71,
+    Kntdth = 72,
+    Pedth = 73,
+    Skedth = 74,
+    Posact = 75,
+    Bgact = 76,
+    Dmact = 77,
+    Bspact = 78,
+    Bspwlk = 79,
+    Vilact = 80,
+    Noway = 81,
+    Barexp = 82,
+    Punch = 83,
+    Hoof = 84,
+    Metal = 85,
+    Chgun = 86,
+    Tink = 87,
+    Bdopn = 88,
+    Bdcls = 89,
+    Itmbk = 90,
+    Flame = 91,
+    Flamst = 92,
+    Getpow = 93,
+    Bospit = 94,
+    Boscub = 95,
+    Bossit = 96,
+    Bospn = 97,
+    Bosdth = 98,
+    Manatk = 99,
+    Mandth = 100,
+    Sssit = 101,
+    Ssdth = 102,
+    Keenpn = 103,
+    Keendt = 104,
+    Skeact = 105,
+    Skesit = 106,
+    Skeatk = 107,
+    Radio = 108,
 }
 pub const NUMSFX: i32 = 109;
-const INITIAL_S_MUSIC: [musicinfo_t; 68] = [
-    musicinfo_t {
+const INITIAL_S_MUSIC: [MusicInfo; 68] = [
+    MusicInfo {
         name: FixedCStr([0u8; 7]),
         lumpnum: 0,
         handle: 0,
     },
-    musicinfo_t {
+    MusicInfo {
         name: FixedCStr(*b"e1m1\x00\x00\x00"),
         lumpnum: 0,
         handle: 0,
     },
-    musicinfo_t {
+    MusicInfo {
         name: FixedCStr(*b"e1m2\x00\x00\x00"),
         lumpnum: 0,
         handle: 0,
     },
-    musicinfo_t {
+    MusicInfo {
         name: FixedCStr(*b"e1m3\x00\x00\x00"),
         lumpnum: 0,
         handle: 0,
     },
-    musicinfo_t {
+    MusicInfo {
         name: FixedCStr(*b"e1m4\x00\x00\x00"),
         lumpnum: 0,
         handle: 0,
     },
-    musicinfo_t {
+    MusicInfo {
         name: FixedCStr(*b"e1m5\x00\x00\x00"),
         lumpnum: 0,
         handle: 0,
     },
-    musicinfo_t {
+    MusicInfo {
         name: FixedCStr(*b"e1m6\x00\x00\x00"),
         lumpnum: 0,
         handle: 0,
     },
-    musicinfo_t {
+    MusicInfo {
         name: FixedCStr(*b"e1m7\x00\x00\x00"),
         lumpnum: 0,
         handle: 0,
     },
-    musicinfo_t {
+    MusicInfo {
         name: FixedCStr(*b"e1m8\x00\x00\x00"),
         lumpnum: 0,
         handle: 0,
     },
-    musicinfo_t {
+    MusicInfo {
         name: FixedCStr(*b"e1m9\x00\x00\x00"),
         lumpnum: 0,
         handle: 0,
     },
-    musicinfo_t {
+    MusicInfo {
         name: FixedCStr(*b"e2m1\x00\x00\x00"),
         lumpnum: 0,
         handle: 0,
     },
-    musicinfo_t {
+    MusicInfo {
         name: FixedCStr(*b"e2m2\x00\x00\x00"),
         lumpnum: 0,
         handle: 0,
     },
-    musicinfo_t {
+    MusicInfo {
         name: FixedCStr(*b"e2m3\x00\x00\x00"),
         lumpnum: 0,
         handle: 0,
     },
-    musicinfo_t {
+    MusicInfo {
         name: FixedCStr(*b"e2m4\x00\x00\x00"),
         lumpnum: 0,
         handle: 0,
     },
-    musicinfo_t {
+    MusicInfo {
         name: FixedCStr(*b"e2m5\x00\x00\x00"),
         lumpnum: 0,
         handle: 0,
     },
-    musicinfo_t {
+    MusicInfo {
         name: FixedCStr(*b"e2m6\x00\x00\x00"),
         lumpnum: 0,
         handle: 0,
     },
-    musicinfo_t {
+    MusicInfo {
         name: FixedCStr(*b"e2m7\x00\x00\x00"),
         lumpnum: 0,
         handle: 0,
     },
-    musicinfo_t {
+    MusicInfo {
         name: FixedCStr(*b"e2m8\x00\x00\x00"),
         lumpnum: 0,
         handle: 0,
     },
-    musicinfo_t {
+    MusicInfo {
         name: FixedCStr(*b"e2m9\x00\x00\x00"),
         lumpnum: 0,
         handle: 0,
     },
-    musicinfo_t {
+    MusicInfo {
         name: FixedCStr(*b"e3m1\x00\x00\x00"),
         lumpnum: 0,
         handle: 0,
     },
-    musicinfo_t {
+    MusicInfo {
         name: FixedCStr(*b"e3m2\x00\x00\x00"),
         lumpnum: 0,
         handle: 0,
     },
-    musicinfo_t {
+    MusicInfo {
         name: FixedCStr(*b"e3m3\x00\x00\x00"),
         lumpnum: 0,
         handle: 0,
     },
-    musicinfo_t {
+    MusicInfo {
         name: FixedCStr(*b"e3m4\x00\x00\x00"),
         lumpnum: 0,
         handle: 0,
     },
-    musicinfo_t {
+    MusicInfo {
         name: FixedCStr(*b"e3m5\x00\x00\x00"),
         lumpnum: 0,
         handle: 0,
     },
-    musicinfo_t {
+    MusicInfo {
         name: FixedCStr(*b"e3m6\x00\x00\x00"),
         lumpnum: 0,
         handle: 0,
     },
-    musicinfo_t {
+    MusicInfo {
         name: FixedCStr(*b"e3m7\x00\x00\x00"),
         lumpnum: 0,
         handle: 0,
     },
-    musicinfo_t {
+    MusicInfo {
         name: FixedCStr(*b"e3m8\x00\x00\x00"),
         lumpnum: 0,
         handle: 0,
     },
-    musicinfo_t {
+    MusicInfo {
         name: FixedCStr(*b"e3m9\x00\x00\x00"),
         lumpnum: 0,
         handle: 0,
     },
-    musicinfo_t {
+    MusicInfo {
         name: FixedCStr(*b"inter\x00\x00"),
         lumpnum: 0,
         handle: 0,
     },
-    musicinfo_t {
+    MusicInfo {
         name: FixedCStr(*b"intro\x00\x00"),
         lumpnum: 0,
         handle: 0,
     },
-    musicinfo_t {
+    MusicInfo {
         name: FixedCStr(*b"bunny\x00\x00"),
         lumpnum: 0,
         handle: 0,
     },
-    musicinfo_t {
+    MusicInfo {
         name: FixedCStr(*b"victor\x00"),
         lumpnum: 0,
         handle: 0,
     },
-    musicinfo_t {
+    MusicInfo {
         name: FixedCStr(*b"introa\x00"),
         lumpnum: 0,
         handle: 0,
     },
-    musicinfo_t {
+    MusicInfo {
         name: FixedCStr(*b"runnin\x00"),
         lumpnum: 0,
         handle: 0,
     },
-    musicinfo_t {
+    MusicInfo {
         name: FixedCStr(*b"stalks\x00"),
         lumpnum: 0,
         handle: 0,
     },
-    musicinfo_t {
+    MusicInfo {
         name: FixedCStr(*b"countd\x00"),
         lumpnum: 0,
         handle: 0,
     },
-    musicinfo_t {
+    MusicInfo {
         name: FixedCStr(*b"betwee\x00"),
         lumpnum: 0,
         handle: 0,
     },
-    musicinfo_t {
+    MusicInfo {
         name: FixedCStr(*b"doom\x00\x00\x00"),
         lumpnum: 0,
         handle: 0,
     },
-    musicinfo_t {
+    MusicInfo {
         name: FixedCStr(*b"the_da\x00"),
         lumpnum: 0,
         handle: 0,
     },
-    musicinfo_t {
+    MusicInfo {
         name: FixedCStr(*b"shawn\x00\x00"),
         lumpnum: 0,
         handle: 0,
     },
-    musicinfo_t {
+    MusicInfo {
         name: FixedCStr(*b"ddtblu\x00"),
         lumpnum: 0,
         handle: 0,
     },
-    musicinfo_t {
+    MusicInfo {
         name: FixedCStr(*b"in_cit\x00"),
         lumpnum: 0,
         handle: 0,
     },
-    musicinfo_t {
+    MusicInfo {
         name: FixedCStr(*b"dead\x00\x00\x00"),
         lumpnum: 0,
         handle: 0,
     },
-    musicinfo_t {
+    MusicInfo {
         name: FixedCStr(*b"stlks2\x00"),
         lumpnum: 0,
         handle: 0,
     },
-    musicinfo_t {
+    MusicInfo {
         name: FixedCStr(*b"theda2\x00"),
         lumpnum: 0,
         handle: 0,
     },
-    musicinfo_t {
+    MusicInfo {
         name: FixedCStr(*b"doom2\x00\x00"),
         lumpnum: 0,
         handle: 0,
     },
-    musicinfo_t {
+    MusicInfo {
         name: FixedCStr(*b"ddtbl2\x00"),
         lumpnum: 0,
         handle: 0,
     },
-    musicinfo_t {
+    MusicInfo {
         name: FixedCStr(*b"runni2\x00"),
         lumpnum: 0,
         handle: 0,
     },
-    musicinfo_t {
+    MusicInfo {
         name: FixedCStr(*b"dead2\x00\x00"),
         lumpnum: 0,
         handle: 0,
     },
-    musicinfo_t {
+    MusicInfo {
         name: FixedCStr(*b"stlks3\x00"),
         lumpnum: 0,
         handle: 0,
     },
-    musicinfo_t {
+    MusicInfo {
         name: FixedCStr(*b"romero\x00"),
         lumpnum: 0,
         handle: 0,
     },
-    musicinfo_t {
+    MusicInfo {
         name: FixedCStr(*b"shawn2\x00"),
         lumpnum: 0,
         handle: 0,
     },
-    musicinfo_t {
+    MusicInfo {
         name: FixedCStr(*b"messag\x00"),
         lumpnum: 0,
         handle: 0,
     },
-    musicinfo_t {
+    MusicInfo {
         name: FixedCStr(*b"count2\x00"),
         lumpnum: 0,
         handle: 0,
     },
-    musicinfo_t {
+    MusicInfo {
         name: FixedCStr(*b"ddtbl3\x00"),
         lumpnum: 0,
         handle: 0,
     },
-    musicinfo_t {
+    MusicInfo {
         name: FixedCStr(*b"ampie\x00\x00"),
         lumpnum: 0,
         handle: 0,
     },
-    musicinfo_t {
+    MusicInfo {
         name: FixedCStr(*b"theda3\x00"),
         lumpnum: 0,
         handle: 0,
     },
-    musicinfo_t {
+    MusicInfo {
         name: FixedCStr(*b"adrian\x00"),
         lumpnum: 0,
         handle: 0,
     },
-    musicinfo_t {
+    MusicInfo {
         name: FixedCStr(*b"messg2\x00"),
         lumpnum: 0,
         handle: 0,
     },
-    musicinfo_t {
+    MusicInfo {
         name: FixedCStr(*b"romer2\x00"),
         lumpnum: 0,
         handle: 0,
     },
-    musicinfo_t {
+    MusicInfo {
         name: FixedCStr(*b"tense\x00\x00"),
         lumpnum: 0,
         handle: 0,
     },
-    musicinfo_t {
+    MusicInfo {
         name: FixedCStr(*b"shawn3\x00"),
         lumpnum: 0,
         handle: 0,
     },
-    musicinfo_t {
+    MusicInfo {
         name: FixedCStr(*b"openin\x00"),
         lumpnum: 0,
         handle: 0,
     },
-    musicinfo_t {
+    MusicInfo {
         name: FixedCStr(*b"evil\x00\x00\x00"),
         lumpnum: 0,
         handle: 0,
     },
-    musicinfo_t {
+    MusicInfo {
         name: FixedCStr(*b"ultima\x00"),
         lumpnum: 0,
         handle: 0,
     },
-    musicinfo_t {
+    MusicInfo {
         name: FixedCStr(*b"read_m\x00"),
         lumpnum: 0,
         handle: 0,
     },
-    musicinfo_t {
+    MusicInfo {
         name: FixedCStr(*b"dm2ttl\x00"),
         lumpnum: 0,
         handle: 0,
     },
-    musicinfo_t {
+    MusicInfo {
         name: FixedCStr(*b"dm2int\x00"),
         lumpnum: 0,
         handle: 0,
@@ -552,8 +551,8 @@ const INITIAL_S_MUSIC: [musicinfo_t; 68] = [
 pub struct SfxId(pub u32);
 
 pub struct SoundsState {
-    pub S_music: [musicinfo_t; 68],
-    pub S_sfx: [sfxinfo_t; 109],
+    pub s_music: [MusicInfo; 68],
+    pub s_sfx: [SfxInfo; 109],
 }
 
 impl Default for SoundsState {
@@ -563,15 +562,15 @@ impl Default for SoundsState {
 }
 
 impl SoundsState {
-    pub fn sfx_mut(&mut self, id: SfxId) -> &mut sfxinfo_t {
-        &mut self.S_sfx[id.0 as usize]
+    pub fn sfx_mut(&mut self, id: SfxId) -> &mut SfxInfo {
+        &mut self.s_sfx[id.0 as usize]
     }
 
     pub fn new() -> Self {
         SoundsState {
-            S_music: INITIAL_S_MUSIC,
-            S_sfx: [
-                sfxinfo_struct {
+            s_music: INITIAL_S_MUSIC,
+            s_sfx: [
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"none\0\0\0\0\0"),
                     priority: 0,
@@ -582,7 +581,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"pistol\0\0\0"),
                     priority: 64,
@@ -593,7 +592,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"shotgn\0\0\0"),
                     priority: 64,
@@ -604,7 +603,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"sgcock\0\0\0"),
                     priority: 64,
@@ -615,7 +614,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"dshtgn\0\0\0"),
                     priority: 64,
@@ -626,7 +625,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"dbopn\0\0\0\0"),
                     priority: 64,
@@ -637,7 +636,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"dbcls\0\0\0\0"),
                     priority: 64,
@@ -648,7 +647,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"dbload\0\0\0"),
                     priority: 64,
@@ -659,7 +658,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"plasma\0\0\0"),
                     priority: 64,
@@ -670,7 +669,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"bfg\0\0\0\0\0\0"),
                     priority: 64,
@@ -681,7 +680,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"sawup\0\0\0\0"),
                     priority: 64,
@@ -692,7 +691,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"sawidl\0\0\0"),
                     priority: 118,
@@ -703,7 +702,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"sawful\0\0\0"),
                     priority: 64,
@@ -714,7 +713,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"sawhit\0\0\0"),
                     priority: 64,
@@ -725,7 +724,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"rlaunc\0\0\0"),
                     priority: 64,
@@ -736,7 +735,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"rxplod\0\0\0"),
                     priority: 70,
@@ -747,7 +746,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"firsht\0\0\0"),
                     priority: 70,
@@ -758,7 +757,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"firxpl\0\0\0"),
                     priority: 70,
@@ -769,7 +768,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"pstart\0\0\0"),
                     priority: 100,
@@ -780,7 +779,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"pstop\0\0\0\0"),
                     priority: 100,
@@ -791,7 +790,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"doropn\0\0\0"),
                     priority: 100,
@@ -802,7 +801,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"dorcls\0\0\0"),
                     priority: 100,
@@ -813,7 +812,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"stnmov\0\0\0"),
                     priority: 119,
@@ -824,7 +823,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"swtchn\0\0\0"),
                     priority: 78,
@@ -835,7 +834,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"swtchx\0\0\0"),
                     priority: 78,
@@ -846,7 +845,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"plpain\0\0\0"),
                     priority: 96,
@@ -857,7 +856,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"dmpain\0\0\0"),
                     priority: 96,
@@ -868,7 +867,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"popain\0\0\0"),
                     priority: 96,
@@ -879,7 +878,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"vipain\0\0\0"),
                     priority: 96,
@@ -890,7 +889,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"mnpain\0\0\0"),
                     priority: 96,
@@ -901,7 +900,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"pepain\0\0\0"),
                     priority: 96,
@@ -912,7 +911,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"slop\0\0\0\0\0"),
                     priority: 78,
@@ -923,7 +922,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"itemup\0\0\0"),
                     priority: 78,
@@ -934,7 +933,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"wpnup\0\0\0\0"),
                     priority: 78,
@@ -945,7 +944,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"oof\0\0\0\0\0\0"),
                     priority: 96,
@@ -956,7 +955,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"telept\0\0\0"),
                     priority: 32,
@@ -967,7 +966,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"posit1\0\0\0"),
                     priority: 98,
@@ -978,7 +977,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"posit2\0\0\0"),
                     priority: 98,
@@ -989,7 +988,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"posit3\0\0\0"),
                     priority: 98,
@@ -1000,7 +999,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"bgsit1\0\0\0"),
                     priority: 98,
@@ -1011,7 +1010,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"bgsit2\0\0\0"),
                     priority: 98,
@@ -1022,7 +1021,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"sgtsit\0\0\0"),
                     priority: 98,
@@ -1033,7 +1032,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"cacsit\0\0\0"),
                     priority: 98,
@@ -1044,7 +1043,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"brssit\0\0\0"),
                     priority: 94,
@@ -1055,7 +1054,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"cybsit\0\0\0"),
                     priority: 92,
@@ -1066,7 +1065,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"spisit\0\0\0"),
                     priority: 90,
@@ -1077,7 +1076,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"bspsit\0\0\0"),
                     priority: 90,
@@ -1088,7 +1087,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"kntsit\0\0\0"),
                     priority: 90,
@@ -1099,7 +1098,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"vilsit\0\0\0"),
                     priority: 90,
@@ -1110,7 +1109,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"mansit\0\0\0"),
                     priority: 90,
@@ -1121,7 +1120,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"pesit\0\0\0\0"),
                     priority: 90,
@@ -1132,7 +1131,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"sklatk\0\0\0"),
                     priority: 70,
@@ -1143,7 +1142,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"sgtatk\0\0\0"),
                     priority: 70,
@@ -1154,7 +1153,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"skepch\0\0\0"),
                     priority: 70,
@@ -1165,7 +1164,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"vilatk\0\0\0"),
                     priority: 70,
@@ -1176,7 +1175,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"claw\0\0\0\0\0"),
                     priority: 70,
@@ -1187,7 +1186,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"skeswg\0\0\0"),
                     priority: 70,
@@ -1198,7 +1197,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"pldeth\0\0\0"),
                     priority: 32,
@@ -1209,7 +1208,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"pdiehi\0\0\0"),
                     priority: 32,
@@ -1220,7 +1219,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"podth1\0\0\0"),
                     priority: 70,
@@ -1231,7 +1230,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"podth2\0\0\0"),
                     priority: 70,
@@ -1242,7 +1241,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"podth3\0\0\0"),
                     priority: 70,
@@ -1253,7 +1252,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"bgdth1\0\0\0"),
                     priority: 70,
@@ -1264,7 +1263,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"bgdth2\0\0\0"),
                     priority: 70,
@@ -1275,7 +1274,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"sgtdth\0\0\0"),
                     priority: 70,
@@ -1286,7 +1285,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"cacdth\0\0\0"),
                     priority: 70,
@@ -1297,7 +1296,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"skldth\0\0\0"),
                     priority: 70,
@@ -1308,7 +1307,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"brsdth\0\0\0"),
                     priority: 32,
@@ -1319,7 +1318,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"cybdth\0\0\0"),
                     priority: 32,
@@ -1330,7 +1329,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"spidth\0\0\0"),
                     priority: 32,
@@ -1341,7 +1340,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"bspdth\0\0\0"),
                     priority: 32,
@@ -1352,7 +1351,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"vildth\0\0\0"),
                     priority: 32,
@@ -1363,7 +1362,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"kntdth\0\0\0"),
                     priority: 32,
@@ -1374,7 +1373,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"pedth\0\0\0\0"),
                     priority: 32,
@@ -1385,7 +1384,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"skedth\0\0\0"),
                     priority: 32,
@@ -1396,7 +1395,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"posact\0\0\0"),
                     priority: 120,
@@ -1407,7 +1406,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"bgact\0\0\0\0"),
                     priority: 120,
@@ -1418,7 +1417,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"dmact\0\0\0\0"),
                     priority: 120,
@@ -1429,7 +1428,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"bspact\0\0\0"),
                     priority: 100,
@@ -1440,7 +1439,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"bspwlk\0\0\0"),
                     priority: 100,
@@ -1451,7 +1450,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"vilact\0\0\0"),
                     priority: 100,
@@ -1462,7 +1461,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"noway\0\0\0\0"),
                     priority: 78,
@@ -1473,7 +1472,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"barexp\0\0\0"),
                     priority: 60,
@@ -1484,7 +1483,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"punch\0\0\0\0"),
                     priority: 64,
@@ -1495,7 +1494,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"hoof\0\0\0\0\0"),
                     priority: 70,
@@ -1506,7 +1505,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"metal\0\0\0\0"),
                     priority: 70,
@@ -1517,7 +1516,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"chgun\0\0\0\0"),
                     priority: 64,
@@ -1528,7 +1527,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"tink\0\0\0\0\0"),
                     priority: 60,
@@ -1539,7 +1538,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"bdopn\0\0\0\0"),
                     priority: 100,
@@ -1550,7 +1549,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"bdcls\0\0\0\0"),
                     priority: 100,
@@ -1561,7 +1560,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"itmbk\0\0\0\0"),
                     priority: 100,
@@ -1572,7 +1571,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"flame\0\0\0\0"),
                     priority: 32,
@@ -1583,7 +1582,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"flamst\0\0\0"),
                     priority: 32,
@@ -1594,7 +1593,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"getpow\0\0\0"),
                     priority: 60,
@@ -1605,7 +1604,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"bospit\0\0\0"),
                     priority: 70,
@@ -1616,7 +1615,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"boscub\0\0\0"),
                     priority: 70,
@@ -1627,7 +1626,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"bossit\0\0\0"),
                     priority: 70,
@@ -1638,7 +1637,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"bospn\0\0\0\0"),
                     priority: 70,
@@ -1649,7 +1648,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"bosdth\0\0\0"),
                     priority: 70,
@@ -1660,7 +1659,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"manatk\0\0\0"),
                     priority: 70,
@@ -1671,7 +1670,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"mandth\0\0\0"),
                     priority: 70,
@@ -1682,7 +1681,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"sssit\0\0\0\0"),
                     priority: 70,
@@ -1693,7 +1692,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"ssdth\0\0\0\0"),
                     priority: 70,
@@ -1704,7 +1703,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"keenpn\0\0\0"),
                     priority: 70,
@@ -1715,7 +1714,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"keendt\0\0\0"),
                     priority: 70,
@@ -1726,7 +1725,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"skeact\0\0\0"),
                     priority: 70,
@@ -1737,7 +1736,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"skesit\0\0\0"),
                     priority: 70,
@@ -1748,7 +1747,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"skeatk\0\0\0"),
                     priority: 70,
@@ -1759,7 +1758,7 @@ impl SoundsState {
                     lumpnum: 0,
                     numchannels: -1,
                 },
-                sfxinfo_struct {
+                SfxInfo {
                     tagname: None,
                     name: FixedCStr(*b"radio\0\0\0\0"),
                     priority: 60,
@@ -1780,6 +1779,6 @@ impl SoundsState {
     // location, which would be invalidated by any subsequent move. See
     // init_game_state().
     pub fn fixup_self_links(&mut self) {
-        self.S_sfx[SfxName::sfx_chgun as usize].link = Some(SfxId(SfxName::sfx_pistol as u32));
+        self.s_sfx[SfxName::Chgun as usize].link = Some(SfxId(SfxName::Pistol as u32));
     }
 }

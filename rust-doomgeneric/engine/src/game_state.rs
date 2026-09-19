@@ -186,11 +186,11 @@ impl GameState {
         }
     }
 
-    pub fn wbs(&mut self) -> &mut crate::wi_stuff::wbstartstruct_t {
+    pub fn wbs(&mut self) -> &mut crate::wi_stuff::WbStartStruct {
         &mut self.g_game.wminfo
     }
 
-    pub fn plyr_index(&mut self, index: i32) -> &mut crate::wi_stuff::wbplayerstruct_t {
+    pub fn plyr_index(&mut self, index: i32) -> &mut crate::wi_stuff::WbPlayerStruct {
         &mut self.g_game.wminfo.plyr[index as usize]
     }
 }

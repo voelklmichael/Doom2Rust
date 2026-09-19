@@ -1,8 +1,8 @@
-use crate::m_fixed::fixed_t;
-pub type angle_t = u32;
+use crate::m_fixed::Fixed;
+pub type Angle = u32;
 pub const FINEANGLES: i32 = 8192;
 pub const SLOPERANGE: i32 = 2048;
-pub fn SlopeDiv(num: u32, den: u32) -> i32 {
+pub fn slope_div(num: u32, den: u32) -> i32 {
     let ans: u32;
     if den < 512 {
         SLOPERANGE
@@ -15,7 +15,7 @@ pub fn SlopeDiv(num: u32, den: u32) -> i32 {
         }
     }
 }
-pub static finetangent: [i32; 4096] = [
+pub static FINETANGENT: [i32; 4096] = [
     -170910304, -56965752, -34178904, -24413316, -18988036, -15535599, -13145455, -11392683,
     -10052327, -8994149, -8137527, -7429880, -6835455, -6329090, -5892567, -5512368, -5178251,
     -4882318, -4618375, -4381502, -4167737, -3973855, -3797206, -3635590, -3487165, -3350381,
@@ -361,7 +361,7 @@ pub static finetangent: [i32; 4096] = [
     5892567, 6329090, 6835455, 7429880, 8137527, 8994149, 10052327, 11392683, 13145455, 15535599,
     18988036, 24413316, 34178904, 56965752, 170910304,
 ];
-pub static finesine: [i32; 10240] = [
+pub static FINESINE: [i32; 10240] = [
     25, 75, 125, 175, 226, 276, 326, 376, 427, 477, 527, 578, 628, 678, 728, 779, 829, 879, 929,
     980, 1030, 1080, 1130, 1181, 1231, 1281, 1331, 1382, 1432, 1482, 1532, 1583, 1633, 1683, 1733,
     1784, 1834, 1884, 1934, 1985, 2035, 2085, 2135, 2186, 2236, 2286, 2336, 2387, 2437, 2487, 2537,
@@ -1167,14 +1167,14 @@ pub static finesine: [i32; 10240] = [
 ];
 pub struct FineCosine;
 impl core::ops::Index<usize> for FineCosine {
-    type Output = fixed_t;
+    type Output = Fixed;
     #[inline]
-    fn index(&self, index: usize) -> &fixed_t {
-        &finesine[(FINEANGLES / 4) as usize + index]
+    fn index(&self, index: usize) -> &Fixed {
+        &FINESINE[(FINEANGLES / 4) as usize + index]
     }
 }
-pub static finecosine: FineCosine = FineCosine;
-pub static tantoangle: [angle_t; 2049] = [
+pub static FINECOSINE: FineCosine = FineCosine;
+pub static TANTOANGLE: [Angle; 2049] = [
     0, 333772, 667544, 1001315, 1335086, 1668857, 2002626, 2336395, 2670163, 3003929, 3337694,
     3671457, 4005219, 4338979, 4672736, 5006492, 5340245, 5673995, 6007743, 6341488, 6675230,
     7008968, 7342704, 7676435, 8010164, 8343888, 8677609, 9011325, 9345037, 9678744, 10012447,
@@ -1428,7 +1428,7 @@ pub static tantoangle: [angle_t; 2049] = [
     535030240, 535197984, 535365632, 535533216, 535700704, 535868128, 536035456, 536202720,
     536369888, 536536992, 536704000, 536870912,
 ];
-pub static gammatable: [[u8; 256]; 5] = [
+pub static GAMMATABLE: [[u8; 256]; 5] = [
     [
         1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25,
         26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48,

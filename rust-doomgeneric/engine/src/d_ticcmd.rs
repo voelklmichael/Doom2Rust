@@ -11,7 +11,7 @@ pub const BT_USE: i32 = 2;
 pub const BT_ATTACK: i32 = 1;
 
 #[derive(Copy, Clone)]
-pub struct ticcmd_t {
+pub struct TicCmd {
     pub forwardmove: i8,
     pub sidemove: i8,
     pub angleturn: i16,

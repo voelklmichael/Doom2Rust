@@ -1,38 +1,38 @@
 use crate::d_mode::skill_from_raw;
 use crate::d_player::NUMPOWERS;
 use crate::d_player::NUMPSPRITES;
-use crate::d_player::{player_t, PlayerId, PlayerState};
 use crate::d_player::{weapontype_from_raw, NUMWEAPONS};
-use crate::d_ticcmd::ticcmd_t;
-use crate::g_game::G_VanillaVersionCode;
-use crate::i_system::I_Error;
+use crate::d_player::{Player, PlayerId, PlayerState};
+use crate::d_ticcmd::TicCmd;
+use crate::g_game::vanilla_version_code;
+use crate::i_system::error;
 use crate::info::StateId;
-use crate::m_fixed::fixed_t;
+use crate::m_fixed::Fixed;
+use crate::p_ceilng::add_active_ceiling;
 use crate::p_ceilng::CeilingE;
-use crate::p_ceilng::P_AddActiveCeiling;
-use crate::p_doors::vldoor_t;
+use crate::p_doors::VlDoor;
 use crate::p_doors::VldoorE;
 use crate::p_floor::FloorE;
-use crate::p_lights::{glow_t, lightflash_t, strobe_t};
-use crate::p_maputl::P_SetThingPosition;
+use crate::p_lights::{Glow, LightFlash, Strobe};
+use crate::p_maputl::set_thing_position;
 use crate::p_mobj::mobjtype_from_raw;
+use crate::p_mobj::remove_mobj;
 use crate::p_mobj::spritenum_from_raw;
-use crate::p_mobj::P_RemoveMobj;
-use crate::p_mobj::{mapthing_t, thinker_t, SectorSpecial, ThinkerFn};
-use crate::p_mobj::{mobj_t, pspdef_t};
-use crate::p_plats::P_AddActivePlat;
+use crate::p_mobj::{MapThing, SectorSpecial, Thinker, ThinkerFn};
+use crate::p_mobj::{Mobj, PspDef};
+use crate::p_plats::add_active_plat;
 use crate::p_plats::PlatE;
 use crate::p_plats::PlattypeE;
 use crate::p_setup::SectorId;
 use crate::p_setup::SideId;
 use crate::p_setup::SubsectorId;
-use crate::p_spec::{ceiling_t, floormove_t, plat_t};
-use crate::p_tick::P_AddThinker;
-use crate::p_tick::P_InitThinkers;
-use crate::p_tick::P_ThinkerFunction;
+use crate::p_spec::{Ceiling, FloorMove, Plat};
+use crate::p_tick::add_thinker;
+use crate::p_tick::init_thinkers;
+use crate::p_tick::thinker_function;
 use crate::p_tick::ThinkerKind;
 use crate::p_tick::ThinkerPayload;
-use crate::tables::angle_t;
+use crate::tables::Angle;
 use alloc::string::String;
 use alloc::vec::Vec;
 
@@ -41,14 +41,14 @@ use crate::doomdef::MAXPLAYERS;
 use crate::game_state::GameState;
 use crate::m_fixed::FRACBITS;
 use crate::m_menu::SAVESTRINGSIZE;
-use crate::p_ceilng::T_MoveCeiling;
+use crate::p_ceilng::move_ceiling;
 use crate::p_ceilng::MAXCEILINGS;
-use crate::p_doors::T_VerticalDoor;
-use crate::p_floor::T_MoveFloor;
+use crate::p_doors::t_vertical_door;
+use crate::p_floor::move_floor;
 use crate::p_inter::NUMCARDS;
-use crate::p_lights::{T_Glow, T_LightFlash, T_StrobeFlash};
-use crate::p_mobj::P_MobjThinker;
-use crate::p_plats::T_PlatRaise;
+use crate::p_lights::{glow, light_flash, strobe_flash};
+use crate::p_mobj::mobj_thinker;
+use crate::p_plats::plat_raise;
 
 pub struct PSavegState {
     /// The savegame image: read from disk in full before a load, and built up
@@ -79,35 +79,35 @@ impl PSavegState {
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum ThinkerClass {
-    tc_end = 0,
-    tc_mobj = 1,
+    End = 0,
+    Mobj = 1,
 }
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum SpecialThinkerClass {
-    tc_ceiling = 0,
-    tc_door = 1,
-    tc_floor = 2,
-    tc_plat = 3,
-    tc_flash = 4,
-    tc_strobe = 5,
-    tc_glow = 6,
-    tc_endspecials = 7,
+    Ceiling = 0,
+    Door = 1,
+    Floor = 2,
+    Plat = 3,
+    Flash = 4,
+    Strobe = 5,
+    Glow = 6,
+    Endspecials = 7,
 }
 pub const SAVEGAME_EOF: i32 = 0x1d;
 pub const VERSIONSIZE: i32 = 16;
-pub fn P_TempSaveGameFile(state: &mut GameState) -> String {
+pub fn temp_save_game_file(state: &mut GameState) -> String {
     if state.p_saveg.temp_savegame_filename.is_none() {
         state.p_saveg.temp_savegame_filename =
             Some(format!("{}temp.dsg", state.d_main.savegamedir));
     }
     state.p_saveg.temp_savegame_filename.clone().unwrap()
 }
-pub fn P_SaveGameFile(state: &mut GameState, slot: i32) -> String {
+pub fn save_game_file(state: &mut GameState, slot: i32) -> String {
     format!("{}doomsav{}.dsg", state.d_main.savegamedir, slot)
 }
 /// Prints the deferred "ran off the end of the file" diagnostic, if a
 /// `saveg_read8` hit one; call once when a load finishes or is abandoned.
-pub fn P_ReportSaveGameReadError(state: &mut GameState) {
+pub fn report_save_game_read_error(state: &mut GameState) {
     if state.p_saveg.savegame_error {
         doom_eprintln!(
             state.platform,
@@ -177,14 +177,14 @@ fn saveg_read_present(state: &mut PSavegState) -> bool {
 fn saveg_write_present(state: &mut PSavegState, present: bool) {
     saveg_write32(state, i32::from(present));
 }
-fn saveg_read_mapthing_t(state: &mut PSavegState, str: &mut mapthing_t) {
+fn saveg_read_mapthing_t(state: &mut PSavegState, str: &mut MapThing) {
     str.x = saveg_read16(state);
     str.y = saveg_read16(state);
     str.angle = saveg_read16(state);
     str.kind = saveg_read16(state);
     str.options = saveg_read16(state);
 }
-fn saveg_write_mapthing_t(state: &mut PSavegState, str: &mut mapthing_t) {
+fn saveg_write_mapthing_t(state: &mut PSavegState, str: &mut MapThing) {
     saveg_write16(state, str.x);
     saveg_write16(state, str.y);
     saveg_write16(state, str.angle);
@@ -201,37 +201,37 @@ fn saveg_read_actionf_t(state: &mut PSavegState, str: &mut ThinkerFn) {
 fn saveg_write_actionf_t(state: &mut PSavegState, str: &mut ThinkerFn) {
     saveg_write_present(state, !matches!(*str, ThinkerFn::Paused));
 }
-fn saveg_read_thinker_t(state: &mut PSavegState, str: &mut thinker_t) {
-    // P_AddThinker (called after every payload type is reconstructed, in
-    // both P_UnArchiveThinkers and P_UnArchiveSpecials below) always rebuilds
+fn saveg_read_thinker_t(state: &mut PSavegState, str: &mut Thinker) {
+    // add_thinker (called after every payload type is reconstructed, in
+    // both un_archive_thinkers and un_archive_specials below) always rebuilds
     // prev/next from scratch in PTickState's own node table, so these
     // on-disk bytes are already dead -- discard.
     saveg_read32(state);
     saveg_read32(state);
     saveg_read_actionf_t(state, &mut str.function);
 }
-fn saveg_write_thinker_t(state: &mut PSavegState, str: &mut thinker_t) {
+fn saveg_write_thinker_t(state: &mut PSavegState, str: &mut Thinker) {
     saveg_write32(state, 0);
     saveg_write32(state, 0);
     saveg_write_actionf_t(state, &mut str.function);
 }
-fn saveg_read_mobj_t(state: &mut PSavegState, str: &mut mobj_t) {
+fn saveg_read_mobj_t(state: &mut PSavegState, str: &mut Mobj) {
     saveg_read_thinker_t(state, &mut str.thinker);
-    str.x = saveg_read32(state) as fixed_t;
-    str.y = saveg_read32(state) as fixed_t;
-    str.z = saveg_read32(state) as fixed_t;
-    // P_SetThingPosition (called on every reconstructed mobj right after this,
-    // see P_UnArchiveThinkers) fully rebuilds snext/sprev from scratch, so
+    str.x = saveg_read32(state) as Fixed;
+    str.y = saveg_read32(state) as Fixed;
+    str.z = saveg_read32(state) as Fixed;
+    // set_thing_position (called on every reconstructed mobj right after this,
+    // see un_archive_thinkers) fully rebuilds snext/sprev from scratch, so
     // these on-disk bytes are already dead -- discard, same treatment as
     // target/tracer's inert reads just below.
     saveg_read32(state);
     str.snext = None;
     saveg_read32(state);
     str.sprev = None;
-    str.angle = saveg_read32(state) as angle_t;
+    str.angle = saveg_read32(state) as Angle;
     str.sprite = spritenum_from_raw(saveg_read32(state));
     str.frame = saveg_read32(state);
-    // P_SetThingPosition also fully rebuilds bnext/bprev from scratch --
+    // set_thing_position also fully rebuilds bnext/bprev from scratch --
     // same dead-bytes treatment as snext/sprev above.
     saveg_read32(state);
     str.bnext = None;
@@ -239,13 +239,13 @@ fn saveg_read_mobj_t(state: &mut PSavegState, str: &mut mobj_t) {
     str.bprev = None;
     saveg_read32(state);
     str.subsector = SubsectorId(0);
-    str.floorz = saveg_read32(state) as fixed_t;
-    str.ceilingz = saveg_read32(state) as fixed_t;
-    str.radius = saveg_read32(state) as fixed_t;
-    str.height = saveg_read32(state) as fixed_t;
-    str.momx = saveg_read32(state) as fixed_t;
-    str.momy = saveg_read32(state) as fixed_t;
-    str.momz = saveg_read32(state) as fixed_t;
+    str.floorz = saveg_read32(state) as Fixed;
+    str.ceilingz = saveg_read32(state) as Fixed;
+    str.radius = saveg_read32(state) as Fixed;
+    str.height = saveg_read32(state) as Fixed;
+    str.momx = saveg_read32(state) as Fixed;
+    str.momy = saveg_read32(state) as Fixed;
+    str.momz = saveg_read32(state) as Fixed;
     str.validcount = saveg_read32(state);
     str.kind = mobjtype_from_raw(saveg_read32(state));
     saveg_read32(state);
@@ -271,7 +271,7 @@ fn saveg_read_mobj_t(state: &mut PSavegState, str: &mut mobj_t) {
     saveg_read32(state);
     str.tracer = None;
 }
-fn saveg_write_mobj_t(state: &mut PSavegState, str: &mut mobj_t) {
+fn saveg_write_mobj_t(state: &mut PSavegState, str: &mut Mobj) {
     saveg_write_thinker_t(state, &mut str.thinker);
     saveg_write32(state, str.x);
     saveg_write32(state, str.y);
@@ -312,7 +312,7 @@ fn saveg_write_mobj_t(state: &mut PSavegState, str: &mut mobj_t) {
     saveg_write_mapthing_t(state, &mut str.spawnpoint);
     saveg_write32(state, 0);
 }
-fn saveg_read_ticcmd_t(state: &mut PSavegState, str: &mut ticcmd_t) {
+fn saveg_read_ticcmd_t(state: &mut PSavegState, str: &mut TicCmd) {
     str.forwardmove = saveg_read8(state) as i8;
     str.sidemove = saveg_read8(state) as i8;
     str.angleturn = saveg_read16(state);
@@ -320,7 +320,7 @@ fn saveg_read_ticcmd_t(state: &mut PSavegState, str: &mut ticcmd_t) {
     str.chatchar = saveg_read8(state);
     str.buttons = saveg_read8(state);
 }
-fn saveg_write_ticcmd_t(state: &mut PSavegState, str: &mut ticcmd_t) {
+fn saveg_write_ticcmd_t(state: &mut PSavegState, str: &mut TicCmd) {
     saveg_write8(state, str.forwardmove as u8);
     saveg_write8(state, str.sidemove as u8);
     saveg_write16(state, str.angleturn);
@@ -328,7 +328,7 @@ fn saveg_write_ticcmd_t(state: &mut PSavegState, str: &mut ticcmd_t) {
     saveg_write8(state, str.chatchar);
     saveg_write8(state, str.buttons);
 }
-fn saveg_read_pspdef_t(state: &mut PSavegState, str: &mut pspdef_t) {
+fn saveg_read_pspdef_t(state: &mut PSavegState, str: &mut PspDef) {
     let state_num: i32 = saveg_read32(state);
     if state_num > 0 {
         str.state = Some(StateId(state_num as u32));
@@ -336,10 +336,10 @@ fn saveg_read_pspdef_t(state: &mut PSavegState, str: &mut pspdef_t) {
         str.state = None;
     }
     str.tics = saveg_read32(state);
-    str.sx = saveg_read32(state) as fixed_t;
-    str.sy = saveg_read32(state) as fixed_t;
+    str.sx = saveg_read32(state) as Fixed;
+    str.sy = saveg_read32(state) as Fixed;
 }
-fn saveg_write_pspdef_t(state: &mut PSavegState, str: &mut pspdef_t) {
+fn saveg_write_pspdef_t(state: &mut PSavegState, str: &mut PspDef) {
     if let Some(state_id) = str.state {
         saveg_write32(state, state_id.0 as i32);
     } else {
@@ -349,20 +349,20 @@ fn saveg_write_pspdef_t(state: &mut PSavegState, str: &mut pspdef_t) {
     saveg_write32(state, str.sx);
     saveg_write32(state, str.sy);
 }
-fn saveg_read_player_t(state: &mut PSavegState, str: &mut player_t) {
+fn saveg_read_player_t(state: &mut PSavegState, str: &mut Player) {
     // Placeholder value, discarded -- see saveg_write_player_t.
     saveg_read_present(state);
     str.playerstate = match saveg_read32(state) {
-        0 => PlayerState::PST_LIVE,
-        1 => PlayerState::PST_DEAD,
-        2 => PlayerState::PST_REBORN,
+        0 => PlayerState::Live,
+        1 => PlayerState::Dead,
+        2 => PlayerState::Reborn,
         n => panic!("P_UnArchivePlayers: invalid playerstate {n} in savegame"),
     };
     saveg_read_ticcmd_t(state, &mut str.cmd);
-    str.viewz = saveg_read32(state) as fixed_t;
-    str.viewheight = saveg_read32(state) as fixed_t;
-    str.deltaviewheight = saveg_read32(state) as fixed_t;
-    str.bob = saveg_read32(state) as fixed_t;
+    str.viewz = saveg_read32(state) as Fixed;
+    str.viewheight = saveg_read32(state) as Fixed;
+    str.deltaviewheight = saveg_read32(state) as Fixed;
+    str.bob = saveg_read32(state) as Fixed;
     str.health = saveg_read32(state);
     str.armorpoints = saveg_read32(state);
     str.armortype = saveg_read32(state);
@@ -408,10 +408,10 @@ fn saveg_read_player_t(state: &mut PSavegState, str: &mut player_t) {
     }
     str.didsecret = saveg_read32(state) != 0;
 }
-fn saveg_write_player_t(state: &mut PSavegState, str: &mut player_t) {
+fn saveg_write_player_t(state: &mut PSavegState, str: &mut Player) {
     // The written value is a placeholder: on load it is immediately
-    // overwritten with null by P_UnArchivePlayers and then correctly
-    // restored from the mobj's own player backref in P_UnArchiveThinkers.
+    // overwritten with null by un_archive_players and then correctly
+    // restored from the mobj's own player backref in un_archive_thinkers.
     saveg_write_present(state, false);
     saveg_write32(state, str.playerstate as i32);
     saveg_write_ticcmd_t(state, &mut str.cmd);
@@ -464,29 +464,29 @@ fn saveg_write_player_t(state: &mut PSavegState, str: &mut player_t) {
 }
 fn saveg_read_ceiling_e(state: &mut PSavegState) -> CeilingE {
     match saveg_read32(state) {
-        0 => CeilingE::lowerToFloor,
-        1 => CeilingE::raiseToHighest,
-        2 => CeilingE::lowerAndCrush,
-        3 => CeilingE::crushAndRaise,
-        4 => CeilingE::fastCrushAndRaise,
-        5 => CeilingE::silentCrushAndRaise,
+        0 => CeilingE::LowerToFloor,
+        1 => CeilingE::RaiseToHighest,
+        2 => CeilingE::LowerAndCrush,
+        3 => CeilingE::CrushAndRaise,
+        4 => CeilingE::FastCrushAndRaise,
+        5 => CeilingE::SilentCrushAndRaise,
         n => panic!("P_UnArchiveSpecials: invalid ceiling type {n} in savegame"),
     }
 }
-fn saveg_read_ceiling_t(state: &mut PSavegState, str: &mut ceiling_t) {
+fn saveg_read_ceiling_t(state: &mut PSavegState, str: &mut Ceiling) {
     saveg_read_thinker_t(state, &mut str.thinker);
     str.kind = saveg_read_ceiling_e(state);
     let sector: i32 = saveg_read32(state);
     str.sector = SectorId(sector as u32);
-    str.bottomheight = saveg_read32(state) as fixed_t;
-    str.topheight = saveg_read32(state) as fixed_t;
-    str.speed = saveg_read32(state) as fixed_t;
+    str.bottomheight = saveg_read32(state) as Fixed;
+    str.topheight = saveg_read32(state) as Fixed;
+    str.speed = saveg_read32(state) as Fixed;
     str.crush = saveg_read32(state) != 0;
     str.direction = saveg_read32(state);
     str.tag = saveg_read32(state);
     str.olddirection = saveg_read32(state);
 }
-fn saveg_write_ceiling_t(state: &mut PSavegState, str: &mut ceiling_t) {
+fn saveg_write_ceiling_t(state: &mut PSavegState, str: &mut Ceiling) {
     saveg_write_thinker_t(state, &mut str.thinker);
     saveg_write32(state, str.kind as i32);
     saveg_write32(state, str.sector.0 as i32);
@@ -500,29 +500,29 @@ fn saveg_write_ceiling_t(state: &mut PSavegState, str: &mut ceiling_t) {
 }
 fn saveg_read_vldoor_e(state: &mut PSavegState) -> VldoorE {
     match saveg_read32(state) {
-        0 => VldoorE::vld_normal,
-        1 => VldoorE::vld_close30ThenOpen,
-        2 => VldoorE::vld_close,
-        3 => VldoorE::vld_open,
-        4 => VldoorE::vld_raiseIn5Mins,
-        5 => VldoorE::vld_blazeRaise,
-        6 => VldoorE::vld_blazeOpen,
-        7 => VldoorE::vld_blazeClose,
+        0 => VldoorE::Normal,
+        1 => VldoorE::Close30ThenOpen,
+        2 => VldoorE::Close,
+        3 => VldoorE::Open,
+        4 => VldoorE::RaiseIn5Mins,
+        5 => VldoorE::BlazeRaise,
+        6 => VldoorE::BlazeOpen,
+        7 => VldoorE::BlazeClose,
         n => panic!("P_UnArchiveSpecials: invalid door type {n} in savegame"),
     }
 }
-fn saveg_read_vldoor_t(state: &mut PSavegState, str: &mut vldoor_t) {
+fn saveg_read_vldoor_t(state: &mut PSavegState, str: &mut VlDoor) {
     saveg_read_thinker_t(state, &mut str.thinker);
     str.kind = saveg_read_vldoor_e(state);
     let sector: i32 = saveg_read32(state);
     str.sector = SectorId(sector as u32);
-    str.topheight = saveg_read32(state) as fixed_t;
-    str.speed = saveg_read32(state) as fixed_t;
+    str.topheight = saveg_read32(state) as Fixed;
+    str.speed = saveg_read32(state) as Fixed;
     str.direction = saveg_read32(state);
     str.topwait = saveg_read32(state);
     str.topcountdown = saveg_read32(state);
 }
-fn saveg_write_vldoor_t(state: &mut PSavegState, str: &mut vldoor_t) {
+fn saveg_write_vldoor_t(state: &mut PSavegState, str: &mut VlDoor) {
     saveg_write_thinker_t(state, &mut str.thinker);
     saveg_write32(state, str.kind as i32);
     saveg_write32(state, str.sector.0 as i32);
@@ -534,23 +534,23 @@ fn saveg_write_vldoor_t(state: &mut PSavegState, str: &mut vldoor_t) {
 }
 fn saveg_read_floor_e(state: &mut PSavegState) -> FloorE {
     match saveg_read32(state) {
-        0 => FloorE::lowerFloor,
-        1 => FloorE::lowerFloorToLowest,
-        2 => FloorE::turboLower,
-        3 => FloorE::raiseFloor,
-        4 => FloorE::raiseFloorToNearest,
-        5 => FloorE::raiseToTexture,
-        6 => FloorE::lowerAndChange,
-        7 => FloorE::raiseFloor24,
-        8 => FloorE::raiseFloor24AndChange,
-        9 => FloorE::raiseFloorCrush,
-        10 => FloorE::raiseFloorTurbo,
-        11 => FloorE::donutRaise,
-        12 => FloorE::raiseFloor512,
+        0 => FloorE::LowerFloor,
+        1 => FloorE::LowerFloorToLowest,
+        2 => FloorE::TurboLower,
+        3 => FloorE::RaiseFloor,
+        4 => FloorE::RaiseFloorToNearest,
+        5 => FloorE::RaiseToTexture,
+        6 => FloorE::LowerAndChange,
+        7 => FloorE::RaiseFloor24,
+        8 => FloorE::RaiseFloor24AndChange,
+        9 => FloorE::RaiseFloorCrush,
+        10 => FloorE::RaiseFloorTurbo,
+        11 => FloorE::DonutRaise,
+        12 => FloorE::RaiseFloor512,
         n => panic!("P_UnArchiveSpecials: invalid floor type {n} in savegame"),
     }
 }
-fn saveg_read_floormove_t(state: &mut PSavegState, str: &mut floormove_t) {
+fn saveg_read_floormove_t(state: &mut PSavegState, str: &mut FloorMove) {
     saveg_read_thinker_t(state, &mut str.thinker);
     str.kind = saveg_read_floor_e(state);
     str.crush = saveg_read32(state) != 0;
@@ -559,10 +559,10 @@ fn saveg_read_floormove_t(state: &mut PSavegState, str: &mut floormove_t) {
     str.direction = saveg_read32(state);
     str.newspecial = saveg_read32(state);
     str.texture = saveg_read16(state);
-    str.floordestheight = saveg_read32(state) as fixed_t;
-    str.speed = saveg_read32(state) as fixed_t;
+    str.floordestheight = saveg_read32(state) as Fixed;
+    str.speed = saveg_read32(state) as Fixed;
 }
-fn saveg_write_floormove_t(state: &mut PSavegState, str: &mut floormove_t) {
+fn saveg_write_floormove_t(state: &mut PSavegState, str: &mut FloorMove) {
     saveg_write_thinker_t(state, &mut str.thinker);
     saveg_write32(state, str.kind as i32);
     saveg_write32(state, str.crush as i32);
@@ -575,30 +575,30 @@ fn saveg_write_floormove_t(state: &mut PSavegState, str: &mut floormove_t) {
 }
 fn saveg_read_plat_e(state: &mut PSavegState) -> PlatE {
     match saveg_read32(state) {
-        0 => PlatE::up,
-        1 => PlatE::down,
-        2 => PlatE::waiting,
-        3 => PlatE::in_stasis,
+        0 => PlatE::Up,
+        1 => PlatE::Down,
+        2 => PlatE::Waiting,
+        3 => PlatE::InStasis,
         n => panic!("P_UnArchiveSpecials: invalid plat status {n} in savegame"),
     }
 }
 fn saveg_read_plattype_e(state: &mut PSavegState) -> PlattypeE {
     match saveg_read32(state) {
-        0 => PlattypeE::perpetualRaise,
-        1 => PlattypeE::downWaitUpStay,
-        2 => PlattypeE::raiseAndChange,
-        3 => PlattypeE::raiseToNearestAndChange,
-        4 => PlattypeE::blazeDWUS,
+        0 => PlattypeE::PerpetualRaise,
+        1 => PlattypeE::DownWaitUpStay,
+        2 => PlattypeE::RaiseAndChange,
+        3 => PlattypeE::RaiseToNearestAndChange,
+        4 => PlattypeE::BlazeDWUS,
         n => panic!("P_UnArchiveSpecials: invalid plat type {n} in savegame"),
     }
 }
-fn saveg_read_plat_t(state: &mut PSavegState, str: &mut plat_t) {
+fn saveg_read_plat_t(state: &mut PSavegState, str: &mut Plat) {
     saveg_read_thinker_t(state, &mut str.thinker);
     let sector: i32 = saveg_read32(state);
     str.sector = SectorId(sector as u32);
-    str.speed = saveg_read32(state) as fixed_t;
-    str.low = saveg_read32(state) as fixed_t;
-    str.high = saveg_read32(state) as fixed_t;
+    str.speed = saveg_read32(state) as Fixed;
+    str.low = saveg_read32(state) as Fixed;
+    str.high = saveg_read32(state) as Fixed;
     str.wait = saveg_read32(state);
     str.count = saveg_read32(state);
     str.status = saveg_read_plat_e(state);
@@ -607,7 +607,7 @@ fn saveg_read_plat_t(state: &mut PSavegState, str: &mut plat_t) {
     str.tag = saveg_read32(state);
     str.kind = saveg_read_plattype_e(state);
 }
-fn saveg_write_plat_t(state: &mut PSavegState, str: &mut plat_t) {
+fn saveg_write_plat_t(state: &mut PSavegState, str: &mut Plat) {
     saveg_write_thinker_t(state, &mut str.thinker);
     saveg_write32(state, str.sector.0 as i32);
     saveg_write32(state, str.speed);
@@ -621,7 +621,7 @@ fn saveg_write_plat_t(state: &mut PSavegState, str: &mut plat_t) {
     saveg_write32(state, str.tag);
     saveg_write32(state, str.kind as i32);
 }
-fn saveg_read_lightflash_t(state: &mut PSavegState, str: &mut lightflash_t) {
+fn saveg_read_lightflash_t(state: &mut PSavegState, str: &mut LightFlash) {
     saveg_read_thinker_t(state, &mut str.thinker);
     let sector: i32 = saveg_read32(state);
     str.sector = SectorId(sector as u32);
@@ -631,7 +631,7 @@ fn saveg_read_lightflash_t(state: &mut PSavegState, str: &mut lightflash_t) {
     str.maxtime = saveg_read32(state);
     str.mintime = saveg_read32(state);
 }
-fn saveg_write_lightflash_t(state: &mut PSavegState, str: &mut lightflash_t) {
+fn saveg_write_lightflash_t(state: &mut PSavegState, str: &mut LightFlash) {
     saveg_write_thinker_t(state, &mut str.thinker);
     saveg_write32(state, str.sector.0 as i32);
     saveg_write32(state, str.count);
@@ -640,7 +640,7 @@ fn saveg_write_lightflash_t(state: &mut PSavegState, str: &mut lightflash_t) {
     saveg_write32(state, str.maxtime);
     saveg_write32(state, str.mintime);
 }
-fn saveg_read_strobe_t(state: &mut PSavegState, str: &mut strobe_t) {
+fn saveg_read_strobe_t(state: &mut PSavegState, str: &mut Strobe) {
     saveg_read_thinker_t(state, &mut str.thinker);
     let sector: i32 = saveg_read32(state);
     str.sector = SectorId(sector as u32);
@@ -650,7 +650,7 @@ fn saveg_read_strobe_t(state: &mut PSavegState, str: &mut strobe_t) {
     str.darktime = saveg_read32(state);
     str.brighttime = saveg_read32(state);
 }
-fn saveg_write_strobe_t(state: &mut PSavegState, str: &mut strobe_t) {
+fn saveg_write_strobe_t(state: &mut PSavegState, str: &mut Strobe) {
     saveg_write_thinker_t(state, &mut str.thinker);
     saveg_write32(state, str.sector.0 as i32);
     saveg_write32(state, str.count);
@@ -659,7 +659,7 @@ fn saveg_write_strobe_t(state: &mut PSavegState, str: &mut strobe_t) {
     saveg_write32(state, str.darktime);
     saveg_write32(state, str.brighttime);
 }
-fn saveg_read_glow_t(state: &mut PSavegState, str: &mut glow_t) {
+fn saveg_read_glow_t(state: &mut PSavegState, str: &mut Glow) {
     saveg_read_thinker_t(state, &mut str.thinker);
     let sector: i32 = saveg_read32(state);
     str.sector = SectorId(sector as u32);
@@ -667,14 +667,14 @@ fn saveg_read_glow_t(state: &mut PSavegState, str: &mut glow_t) {
     str.maxlight = saveg_read32(state);
     str.direction = saveg_read32(state);
 }
-fn saveg_write_glow_t(state: &mut PSavegState, str: &mut glow_t) {
+fn saveg_write_glow_t(state: &mut PSavegState, str: &mut Glow) {
     saveg_write_thinker_t(state, &mut str.thinker);
     saveg_write32(state, str.sector.0 as i32);
     saveg_write32(state, str.minlight);
     saveg_write32(state, str.maxlight);
     saveg_write32(state, str.direction);
 }
-pub fn P_WriteSaveGameHeader(state: &mut GameState, description: &str) {
+pub fn write_save_game_header(state: &mut GameState, description: &str) {
     let mut i: i32 = 0;
     for &b in description.as_bytes() {
         saveg_write8(&mut state.p_saveg, b);
@@ -684,7 +684,7 @@ pub fn P_WriteSaveGameHeader(state: &mut GameState, description: &str) {
         saveg_write8(&mut state.p_saveg, 0_u8);
         i += 1;
     }
-    let name = format!("version {}", G_VanillaVersionCode(&mut state.doomstat));
+    let name = format!("version {}", vanilla_version_code(&mut state.doomstat));
     let mut name_bytes = [0u8; 16];
     let copy_len = name.len().min(16);
     name_bytes[..copy_len].copy_from_slice(&name.as_bytes()[..copy_len]);
@@ -707,7 +707,7 @@ pub fn P_WriteSaveGameHeader(state: &mut GameState, description: &str) {
     );
     saveg_write8(&mut state.p_saveg, (state.p_tick.leveltime & 0xff) as u8);
 }
-pub fn P_ReadSaveGameHeader(state: &mut GameState) -> bool {
+pub fn read_save_game_header(state: &mut GameState) -> bool {
     let mut read_vcheck: [u8; 16] = [0; 16];
     for _ in 0..SAVESTRINGSIZE {
         saveg_read8(&mut state.p_saveg);
@@ -715,7 +715,7 @@ pub fn P_ReadSaveGameHeader(state: &mut GameState) -> bool {
     for slot in read_vcheck.iter_mut().take(VERSIONSIZE as usize) {
         *slot = saveg_read8(&mut state.p_saveg);
     }
-    let version_name = format!("version {}", G_VanillaVersionCode(&mut state.doomstat));
+    let version_name = format!("version {}", vanilla_version_code(&mut state.doomstat));
     let mut vcheck: [u8; 16] = [0; 16];
     let copy_len = version_name.len().min(16);
     vcheck[..copy_len].copy_from_slice(&version_name.as_bytes()[..copy_len]);
@@ -738,14 +738,14 @@ pub fn P_ReadSaveGameHeader(state: &mut GameState) -> bool {
     state.p_tick.leveltime = ((a as i32) << 16) + ((b as i32) << 8) + c as i32;
     true
 }
-pub fn P_ReadSaveGameEOF(state: &mut GameState) -> bool {
+pub fn read_save_game_eof(state: &mut GameState) -> bool {
     let value: i32 = saveg_read8(&mut state.p_saveg) as i32;
     value == SAVEGAME_EOF
 }
-pub fn P_WriteSaveGameEOF(state: &mut GameState) {
+pub fn write_save_game_eof(state: &mut GameState) {
     saveg_write8(&mut state.p_saveg, SAVEGAME_EOF as u8);
 }
-pub fn P_ArchivePlayers(state: &mut GameState) {
+pub fn archive_players(state: &mut GameState) {
     for i in 0..(MAXPLAYERS as usize) {
         if state.g_game.playeringame[i] {
             saveg_write_pad(&mut state.p_saveg);
@@ -753,7 +753,7 @@ pub fn P_ArchivePlayers(state: &mut GameState) {
         }
     }
 }
-pub fn P_UnArchivePlayers(state: &mut GameState) {
+pub fn un_archive_players(state: &mut GameState) {
     for i in 0..(MAXPLAYERS as usize) {
         if state.g_game.playeringame[i] {
             saveg_read_pad(&mut state.p_saveg);
@@ -764,7 +764,7 @@ pub fn P_UnArchivePlayers(state: &mut GameState) {
         }
     }
 }
-pub fn P_ArchiveWorld(state: &mut GameState) {
+pub fn archive_world(state: &mut GameState) {
     for i in 0..state.p_setup.numsectors {
         let sec = state.p_setup.sector_mut(SectorId(i as u32));
         let (floorheight, ceilingheight, floorpic, ceilingpic, lightlevel, special, tag) = (
@@ -809,10 +809,10 @@ pub fn P_ArchiveWorld(state: &mut GameState) {
         }
     }
 }
-pub fn P_UnArchiveWorld(state: &mut GameState) {
+pub fn un_archive_world(state: &mut GameState) {
     for i in 0..state.p_setup.numsectors {
-        let floorheight = ((saveg_read16(&mut state.p_saveg) as i32) << FRACBITS) as fixed_t;
-        let ceilingheight = ((saveg_read16(&mut state.p_saveg) as i32) << FRACBITS) as fixed_t;
+        let floorheight = ((saveg_read16(&mut state.p_saveg) as i32) << FRACBITS) as Fixed;
+        let ceilingheight = ((saveg_read16(&mut state.p_saveg) as i32) << FRACBITS) as Fixed;
         let floorpic = saveg_read16(&mut state.p_saveg);
         let ceilingpic = saveg_read16(&mut state.p_saveg);
         let lightlevel = saveg_read16(&mut state.p_saveg);
@@ -841,8 +841,8 @@ pub fn P_UnArchiveWorld(state: &mut GameState) {
         for &side in sidenum.iter() {
             if side as i32 != -1 {
                 let textureoffset =
-                    ((saveg_read16(&mut state.p_saveg) as i32) << FRACBITS) as fixed_t;
-                let rowoffset = ((saveg_read16(&mut state.p_saveg) as i32) << FRACBITS) as fixed_t;
+                    ((saveg_read16(&mut state.p_saveg) as i32) << FRACBITS) as Fixed;
+                let rowoffset = ((saveg_read16(&mut state.p_saveg) as i32) << FRACBITS) as Fixed;
                 let toptexture = saveg_read16(&mut state.p_saveg);
                 let bottomtexture = saveg_read16(&mut state.p_saveg);
                 let midtexture = saveg_read16(&mut state.p_saveg);
@@ -856,12 +856,12 @@ pub fn P_UnArchiveWorld(state: &mut GameState) {
         }
     }
 }
-pub fn P_ArchiveThinkers(state: &mut GameState) {
+pub fn archive_thinkers(state: &mut GameState) {
     let mut cursor = state.p_tick.head();
     while let Some(id) = cursor {
         if let ThinkerPayload::Mobj(mobj_id) = state.p_tick.payload(id) {
-            if matches!(P_ThinkerFunction(state, id), ThinkerFn::Mobj(_)) {
-                saveg_write8(&mut state.p_saveg, ThinkerClass::tc_mobj as i32 as u8);
+            if matches!(thinker_function(state, id), ThinkerFn::Mobj(_)) {
+                saveg_write8(&mut state.p_saveg, ThinkerClass::Mobj as i32 as u8);
                 saveg_write_pad(&mut state.p_saveg);
                 let mobj = state.p_mobj.mobj_mut(mobj_id).expect("live mobj");
                 saveg_write_mobj_t(&mut state.p_saveg, mobj);
@@ -869,9 +869,9 @@ pub fn P_ArchiveThinkers(state: &mut GameState) {
         }
         cursor = state.p_tick.next(id);
     }
-    saveg_write8(&mut state.p_saveg, ThinkerClass::tc_end as i32 as u8);
+    saveg_write8(&mut state.p_saveg, ThinkerClass::End as i32 as u8);
 }
-pub fn P_UnArchiveThinkers(state: &mut GameState) {
+pub fn un_archive_thinkers(state: &mut GameState) {
     let mut tclass: u8;
     let mut cursor = state.p_tick.head();
     while let Some(id) = cursor {
@@ -881,9 +881,9 @@ pub fn P_UnArchiveThinkers(state: &mut GameState) {
         // ordering, not a use-after-free workaround.
         let next = state.p_tick.next(id);
         // Dispatch on the node's recorded kind, not `.function` -- every
-        // payload type's memory is now owned by its own arena (mobj_t and
+        // payload type's memory is now owned by its own arena (Mobj and
         // all 8 thinker specials), not the zone allocator, so each needs
-        // its own dealloc/deallocate call, mirroring P_RunThinkers' reaper
+        // its own dealloc/deallocate call, mirroring run_thinkers' reaper
         // dispatch exactly. (`.function` is still live/intact at this point
         // for the Mobj case specifically, which is why the original code
         // could match on it directly -- but `kind` works uniformly for all
@@ -891,11 +891,11 @@ pub fn P_UnArchiveThinkers(state: &mut GameState) {
         match state.p_tick.kind(id) {
             ThinkerKind::Mobj => {
                 if let ThinkerPayload::Mobj(mobj_id) = state.p_tick.payload(id) {
-                    P_RemoveMobj(state, mobj_id);
-                    // P_RemoveMobj only retires (see PMobjState::retire) --
+                    remove_mobj(state, mobj_id);
+                    // remove_mobj only retires (see PMobjState::retire) --
                     // it never itself frees the mobj's memory, and
-                    // P_InitThinkers just below wipes PTickState before
-                    // P_RunThinkers' reaper ever gets a chance to run on
+                    // init_thinkers just below wipes PTickState before
+                    // run_thinkers' reaper ever gets a chance to run on
                     // this now-Removed node, so nothing else was ever going
                     // to deallocate it. This call closes that gap (a
                     // pre-existing leak: every live mobj at the moment a
@@ -947,7 +947,7 @@ pub fn P_UnArchiveThinkers(state: &mut GameState) {
         }
         cursor = next;
     }
-    P_InitThinkers(state);
+    init_thinkers(state);
     loop {
         tclass = saveg_read8(&mut state.p_saveg);
         match tclass as i32 {
@@ -969,7 +969,7 @@ pub fn P_UnArchiveThinkers(state: &mut GameState) {
                     m.target = None;
                     m.tracer = None;
                 }
-                P_SetThingPosition(state, mobj_arena_id);
+                set_thing_position(state, mobj_arena_id);
                 let subsector = state.p_mobj.mo(mobj_arena_id).subsector;
                 let sector = state.p_setup.subsectors[subsector.0 as usize].sector;
                 let (floorheight, ceilingheight) = {
@@ -980,24 +980,24 @@ pub fn P_UnArchiveThinkers(state: &mut GameState) {
                     let m = state.p_mobj.mo_mut(mobj_arena_id);
                     m.floorz = floorheight;
                     m.ceilingz = ceilingheight;
-                    m.thinker.function = ThinkerFn::Mobj(P_MobjThinker);
+                    m.thinker.function = ThinkerFn::Mobj(mobj_thinker);
                 }
-                P_AddThinker(
+                add_thinker(
                     state,
                     ThinkerPayload::Mobj(mobj_arena_id),
                     ThinkerKind::Mobj,
                 );
             }
             _ => {
-                I_Error(&format!("Unknown tclass {} in savegame", tclass as i32,));
+                error(&format!("Unknown tclass {} in savegame", tclass as i32,));
             }
         }
     }
 }
-pub fn P_ArchiveSpecials(state: &mut GameState) {
+pub fn archive_specials(state: &mut GameState) {
     let mut cursor = state.p_tick.head();
     while let Some(id) = cursor {
-        match P_ThinkerFunction(state, id) {
+        match thinker_function(state, id) {
             ThinkerFn::Paused => {
                 let in_stasis = state
                     .p_ceilng
@@ -1009,7 +1009,7 @@ pub fn P_ArchiveSpecials(state: &mut GameState) {
                     let ceiling_id = state.p_tick.ceiling_payload(id);
                     saveg_write8(
                         &mut state.p_saveg,
-                        SpecialThinkerClass::tc_ceiling as i32 as u8,
+                        SpecialThinkerClass::Ceiling as i32 as u8,
                     );
                     saveg_write_pad(&mut state.p_saveg);
                     let c = state.p_ceilng.get_mut(ceiling_id).expect("live ceiling");
@@ -1020,7 +1020,7 @@ pub fn P_ArchiveSpecials(state: &mut GameState) {
                 let ceiling_id = state.p_tick.ceiling_payload(id);
                 saveg_write8(
                     &mut state.p_saveg,
-                    SpecialThinkerClass::tc_ceiling as i32 as u8,
+                    SpecialThinkerClass::Ceiling as i32 as u8,
                 );
                 saveg_write_pad(&mut state.p_saveg);
                 let c = state.p_ceilng.get_mut(ceiling_id).expect("live ceiling");
@@ -1028,30 +1028,21 @@ pub fn P_ArchiveSpecials(state: &mut GameState) {
             }
             ThinkerFn::Door(_) => {
                 let door_id = state.p_tick.door_payload(id);
-                saveg_write8(
-                    &mut state.p_saveg,
-                    SpecialThinkerClass::tc_door as i32 as u8,
-                );
+                saveg_write8(&mut state.p_saveg, SpecialThinkerClass::Door as i32 as u8);
                 saveg_write_pad(&mut state.p_saveg);
                 let d = state.p_doors.get_mut(door_id).expect("live door");
                 saveg_write_vldoor_t(&mut state.p_saveg, d);
             }
             ThinkerFn::Floor(_) => {
                 let floor_id = state.p_tick.floor_payload(id);
-                saveg_write8(
-                    &mut state.p_saveg,
-                    SpecialThinkerClass::tc_floor as i32 as u8,
-                );
+                saveg_write8(&mut state.p_saveg, SpecialThinkerClass::Floor as i32 as u8);
                 saveg_write_pad(&mut state.p_saveg);
                 let f = state.p_spec.get_floor_mut(floor_id).expect("live floor");
                 saveg_write_floormove_t(&mut state.p_saveg, f);
             }
             ThinkerFn::Plat(_) => {
                 let plat_id = state.p_tick.plat_payload(id);
-                saveg_write8(
-                    &mut state.p_saveg,
-                    SpecialThinkerClass::tc_plat as i32 as u8,
-                );
+                saveg_write8(&mut state.p_saveg, SpecialThinkerClass::Plat as i32 as u8);
                 saveg_write_pad(&mut state.p_saveg);
                 let p = state.p_plats.get_mut(plat_id).expect("live plat");
                 saveg_write_plat_t(&mut state.p_saveg, p);
@@ -1060,10 +1051,7 @@ pub fn P_ArchiveSpecials(state: &mut GameState) {
                 let ThinkerPayload::LightFlash(flash_id) = state.p_tick.payload(id) else {
                     unreachable!()
                 };
-                saveg_write8(
-                    &mut state.p_saveg,
-                    SpecialThinkerClass::tc_flash as i32 as u8,
-                );
+                saveg_write8(&mut state.p_saveg, SpecialThinkerClass::Flash as i32 as u8);
                 saveg_write_pad(&mut state.p_saveg);
                 let f = state
                     .p_lights
@@ -1075,10 +1063,7 @@ pub fn P_ArchiveSpecials(state: &mut GameState) {
                 let ThinkerPayload::Strobe(strobe_id) = state.p_tick.payload(id) else {
                     unreachable!()
                 };
-                saveg_write8(
-                    &mut state.p_saveg,
-                    SpecialThinkerClass::tc_strobe as i32 as u8,
-                );
+                saveg_write8(&mut state.p_saveg, SpecialThinkerClass::Strobe as i32 as u8);
                 saveg_write_pad(&mut state.p_saveg);
                 let s = state
                     .p_lights
@@ -1090,10 +1075,7 @@ pub fn P_ArchiveSpecials(state: &mut GameState) {
                 let ThinkerPayload::Glow(glow_id) = state.p_tick.payload(id) else {
                     unreachable!()
                 };
-                saveg_write8(
-                    &mut state.p_saveg,
-                    SpecialThinkerClass::tc_glow as i32 as u8,
-                );
+                saveg_write8(&mut state.p_saveg, SpecialThinkerClass::Glow as i32 as u8);
                 saveg_write_pad(&mut state.p_saveg);
                 let g = state.p_lights.get_glow_mut(glow_id).expect("live glow");
                 saveg_write_glow_t(&mut state.p_saveg, g);
@@ -1104,10 +1086,10 @@ pub fn P_ArchiveSpecials(state: &mut GameState) {
     }
     saveg_write8(
         &mut state.p_saveg,
-        SpecialThinkerClass::tc_endspecials as i32 as u8,
+        SpecialThinkerClass::Endspecials as i32 as u8,
     );
 }
-pub fn P_UnArchiveSpecials(state: &mut GameState) {
+pub fn un_archive_specials(state: &mut GameState) {
     let mut tclass: u8;
     loop {
         tclass = saveg_read8(&mut state.p_saveg);
@@ -1115,7 +1097,7 @@ pub fn P_UnArchiveSpecials(state: &mut GameState) {
             7 => return,
             0 => {
                 saveg_read_pad(&mut state.p_saveg);
-                let ceiling_arena_id = state.p_ceilng.spawn(ceiling_t::default());
+                let ceiling_arena_id = state.p_ceilng.spawn(Ceiling::default());
                 let sector = {
                     let c = state
                         .p_ceilng
@@ -1123,29 +1105,29 @@ pub fn P_UnArchiveSpecials(state: &mut GameState) {
                         .expect("live ceiling");
                     saveg_read_ceiling_t(&mut state.p_saveg, c);
                     if matches!(c.thinker.function, ThinkerFn::Unresolved) {
-                        c.thinker.function = ThinkerFn::Ceiling(T_MoveCeiling);
+                        c.thinker.function = ThinkerFn::Ceiling(move_ceiling);
                     }
                     c.sector
                 };
-                let ceiling_id = P_AddThinker(
+                let ceiling_id = add_thinker(
                     state,
                     ThinkerPayload::Ceiling(ceiling_arena_id),
                     ThinkerKind::Ceiling,
                 );
                 state.p_setup.sector_mut(sector).specialdata =
                     Some(SectorSpecial::Ceiling(ceiling_id));
-                P_AddActiveCeiling(&mut state.p_ceilng, ceiling_id);
+                add_active_ceiling(&mut state.p_ceilng, ceiling_id);
             }
             1 => {
                 saveg_read_pad(&mut state.p_saveg);
-                let door_arena_id = state.p_doors.spawn(vldoor_t::default());
+                let door_arena_id = state.p_doors.spawn(VlDoor::default());
                 let sector = {
                     let d = state.p_doors.get_mut(door_arena_id).expect("live door");
                     saveg_read_vldoor_t(&mut state.p_saveg, d);
-                    d.thinker.function = ThinkerFn::Door(T_VerticalDoor);
+                    d.thinker.function = ThinkerFn::Door(t_vertical_door);
                     d.sector
                 };
-                let door_id = P_AddThinker(
+                let door_id = add_thinker(
                     state,
                     ThinkerPayload::Door(door_arena_id),
                     ThinkerKind::Door,
@@ -1154,17 +1136,17 @@ pub fn P_UnArchiveSpecials(state: &mut GameState) {
             }
             2 => {
                 saveg_read_pad(&mut state.p_saveg);
-                let floor_arena_id = state.p_spec.spawn_floor(floormove_t::default());
+                let floor_arena_id = state.p_spec.spawn_floor(FloorMove::default());
                 let sector = {
                     let f = state
                         .p_spec
                         .get_floor_mut(floor_arena_id)
                         .expect("live floor");
                     saveg_read_floormove_t(&mut state.p_saveg, f);
-                    f.thinker.function = ThinkerFn::Floor(T_MoveFloor);
+                    f.thinker.function = ThinkerFn::Floor(move_floor);
                     f.sector
                 };
-                let floor_id = P_AddThinker(
+                let floor_id = add_thinker(
                     state,
                     ThinkerPayload::Floor(floor_arena_id),
                     ThinkerKind::Floor,
@@ -1173,35 +1155,35 @@ pub fn P_UnArchiveSpecials(state: &mut GameState) {
             }
             3 => {
                 saveg_read_pad(&mut state.p_saveg);
-                let plat_arena_id = state.p_plats.spawn(plat_t::default());
+                let plat_arena_id = state.p_plats.spawn(Plat::default());
                 let sector = {
                     let p = state.p_plats.get_mut(plat_arena_id).expect("live plat");
                     saveg_read_plat_t(&mut state.p_saveg, p);
                     if matches!(p.thinker.function, ThinkerFn::Unresolved) {
-                        p.thinker.function = ThinkerFn::Plat(T_PlatRaise);
+                        p.thinker.function = ThinkerFn::Plat(plat_raise);
                     }
                     p.sector
                 };
-                let plat_id = P_AddThinker(
+                let plat_id = add_thinker(
                     state,
                     ThinkerPayload::Plat(plat_arena_id),
                     ThinkerKind::Plat,
                 );
                 state.p_setup.sector_mut(sector).specialdata = Some(SectorSpecial::Plat(plat_id));
-                P_AddActivePlat(&mut state.p_plats, plat_id);
+                add_active_plat(&mut state.p_plats, plat_id);
             }
             4 => {
                 saveg_read_pad(&mut state.p_saveg);
-                let flash_arena_id = state.p_lights.spawn_lightflash(lightflash_t::default());
+                let flash_arena_id = state.p_lights.spawn_lightflash(LightFlash::default());
                 {
                     let f = state
                         .p_lights
                         .get_lightflash_mut(flash_arena_id)
                         .expect("live lightflash");
                     saveg_read_lightflash_t(&mut state.p_saveg, f);
-                    f.thinker.function = ThinkerFn::LightFlash(T_LightFlash);
+                    f.thinker.function = ThinkerFn::LightFlash(light_flash);
                 }
-                P_AddThinker(
+                add_thinker(
                     state,
                     ThinkerPayload::LightFlash(flash_arena_id),
                     ThinkerKind::LightFlash,
@@ -1209,16 +1191,16 @@ pub fn P_UnArchiveSpecials(state: &mut GameState) {
             }
             5 => {
                 saveg_read_pad(&mut state.p_saveg);
-                let strobe_arena_id = state.p_lights.spawn_strobe(strobe_t::default());
+                let strobe_arena_id = state.p_lights.spawn_strobe(Strobe::default());
                 {
                     let s = state
                         .p_lights
                         .get_strobe_mut(strobe_arena_id)
                         .expect("live strobe");
                     saveg_read_strobe_t(&mut state.p_saveg, s);
-                    s.thinker.function = ThinkerFn::Strobe(T_StrobeFlash);
+                    s.thinker.function = ThinkerFn::Strobe(strobe_flash);
                 }
-                P_AddThinker(
+                add_thinker(
                     state,
                     ThinkerPayload::Strobe(strobe_arena_id),
                     ThinkerKind::Strobe,
@@ -1226,23 +1208,23 @@ pub fn P_UnArchiveSpecials(state: &mut GameState) {
             }
             6 => {
                 saveg_read_pad(&mut state.p_saveg);
-                let glow_arena_id = state.p_lights.spawn_glow(glow_t::default());
+                let glow_arena_id = state.p_lights.spawn_glow(Glow::default());
                 {
                     let g = state
                         .p_lights
                         .get_glow_mut(glow_arena_id)
                         .expect("live glow");
                     saveg_read_glow_t(&mut state.p_saveg, g);
-                    g.thinker.function = ThinkerFn::Glow(T_Glow);
+                    g.thinker.function = ThinkerFn::Glow(glow);
                 }
-                P_AddThinker(
+                add_thinker(
                     state,
                     ThinkerPayload::Glow(glow_arena_id),
                     ThinkerKind::Glow,
                 );
             }
             _ => {
-                I_Error(&format!(
+                error(&format!(
                     "P_UnarchiveSpecials:Unknown tclass {} in savegame",
                     tclass as i32,
                 ));
