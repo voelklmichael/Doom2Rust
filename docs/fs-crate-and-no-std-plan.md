@@ -17,7 +17,11 @@ engine and `x11` and implements it as `StdFileSystem`. The host passes both back
 to `init_game_state(platform, fs)`, and the engine stores them as
 `GameState.platform` / `GameState.fs`.
 
-## Track A: filesystem extraction (this track)
+## Track A: filesystem extraction (DONE, PRs #478-#481)
+
+Status: all four phases landed as a stack. `engine/src` no longer contains `std::fs` or
+`std::io`; a unit test (`filesystem::tests::engine_sources_do_not_use_std_fs_or_io`) fails
+if either comes back.
 
 Where the engine touched the filesystem before this track:
 

@@ -825,7 +825,7 @@ pub fn D_DoomMain(state: &mut GameState) {
     if state.d_main.devparm {
         print!("{}", D_DEVSTR.as_str());
     }
-    M_SetConfigDir(&mut state.m_config, None);
+    M_SetConfigDir(&mut state.m_config, &mut *state.fs, None);
     p = M_CheckParm(state, "-turbo");
     if p != 0 {
         let mut scale: i32 = 200_i32;
@@ -908,6 +908,7 @@ pub fn D_DoomMain(state: &mut GameState) {
     D_SetGameDescription(state);
     state.d_main.savegamedir = M_GetSaveGameDir(
         &mut state.m_config,
+        &mut *state.fs,
         D_SaveGameIWADName(state.doomstat.gamemission),
     );
     if state.doomstat.modifiedgame {

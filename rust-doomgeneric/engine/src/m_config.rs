@@ -1,7 +1,7 @@
+use crate::filesystem::DoomFileSystem;
 use crate::game_state::GameState;
 use crate::i_system::I_Error;
 use crate::m_argv::M_CheckParmWithArgs;
-use crate::m_misc::M_MakeDirectory;
 use std::rc::Rc;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -1335,7 +1335,7 @@ pub fn M_BindVariable_string(
 fn GetDefaultConfigDir() -> String {
     ".".to_string()
 }
-pub fn M_SetConfigDir(state: &mut MConfigState, dir: Option<&str>) {
+pub fn M_SetConfigDir(state: &mut MConfigState, fs: &mut dyn DoomFileSystem, dir: Option<&str>) {
     if let Some(dir) = dir {
         state.configdir = dir.to_string();
     } else {
@@ -1344,15 +1344,19 @@ pub fn M_SetConfigDir(state: &mut MConfigState, dir: Option<&str>) {
     if !state.configdir.is_empty() {
         println!("Using {} for configuration and saves", state.configdir);
     }
-    M_MakeDirectory(&state.configdir);
+    fs.create_dir(&state.configdir);
 }
-pub fn M_GetSaveGameDir(state: &mut MConfigState, _iwadname: &'static str) -> String {
+pub fn M_GetSaveGameDir(
+    state: &mut MConfigState,
+    fs: &mut dyn DoomFileSystem,
+    _iwadname: &'static str,
+) -> String {
     let savegamedir;
     if state.configdir.is_empty() {
         savegamedir = String::new();
     } else {
         savegamedir = format!("{}{}.savegame/", state.configdir, DIR_SEPARATOR_S);
-        M_MakeDirectory(&savegamedir);
+        fs.create_dir(&savegamedir);
         println!("Using {} for savegames", savegamedir);
     }
     savegamedir

@@ -1,9 +1,9 @@
 use crate::d_mode::GameMission_t;
 use crate::d_mode::GameMode_t;
+use crate::filesystem::DoomFileSystem;
 use crate::game_state::GameState;
 use crate::i_system::I_Error;
 use crate::m_argv::M_CheckParmWithArgs;
-use crate::m_misc::M_FileExists;
 #[derive(Copy, Clone)]
 pub struct iwad_t {
     pub name: &'static str,
@@ -121,9 +121,6 @@ impl DIwadState {
     }
 }
 
-fn file_exists(path: &str) -> bool {
-    M_FileExists(path)
-}
 fn add_iwad_dir(state: &mut DIwadState, dir: &str) {
     state.iwad_dirs.push(dir.to_string());
 }
@@ -132,8 +129,8 @@ fn dir_is_file(path: &str, filename: &str) -> bool {
         && path.as_bytes()[path.len() - filename.len() - 1] == DIR_SEPARATOR as u8
         && path[path.len() - filename.len()..].eq_ignore_ascii_case(filename)
 }
-fn check_directory_has_iwad(dir: &str, iwadname: &str) -> Option<String> {
-    if dir_is_file(dir, iwadname) && file_exists(dir) {
+fn check_directory_has_iwad(fs: &dyn DoomFileSystem, dir: &str, iwadname: &str) -> Option<String> {
+    if dir_is_file(dir, iwadname) && fs.exists(dir) {
         return Some(dir.to_string());
     }
     let filename = if dir == "." {
@@ -142,18 +139,23 @@ fn check_directory_has_iwad(dir: &str, iwadname: &str) -> Option<String> {
         format!("{}{}{}", dir, DIR_SEPARATOR_S, iwadname)
     };
     println!("Trying IWAD file:{}", filename);
-    if file_exists(&filename) {
+    if fs.exists(&filename) {
         Some(filename)
     } else {
         None
     }
 }
-fn search_directory_for_iwad(dir: &str, mask: i32, mission: &mut GameMission_t) -> Option<String> {
+fn search_directory_for_iwad(
+    fs: &dyn DoomFileSystem,
+    dir: &str,
+    mask: i32,
+    mission: &mut GameMission_t,
+) -> Option<String> {
     for iwad in IWADS.iter() {
         if 1_i32 << iwad.mission as i32 & mask == 0_i32 {
             continue;
         }
-        if let Some(filename) = check_directory_has_iwad(dir, iwad.name) {
+        if let Some(filename) = check_directory_has_iwad(fs, dir, iwad.name) {
             *mission = iwad.mission;
             return Some(filename);
         }
@@ -179,24 +181,32 @@ fn build_iwad_dir_list(state: &mut DIwadState) {
     add_iwad_dir(state, FILES_DIR);
     state.iwad_dirs_built = true;
 }
-pub fn D_FindWADByName(state: &mut DIwadState, name: &str) -> Option<String> {
-    if file_exists(name) {
+pub fn D_FindWADByName(
+    state: &mut DIwadState,
+    fs: &dyn DoomFileSystem,
+    name: &str,
+) -> Option<String> {
+    if fs.exists(name) {
         return Some(name.to_string());
     }
     build_iwad_dir_list(state);
     for dir in state.iwad_dirs.iter() {
-        if dir_is_file(dir, name) && file_exists(dir) {
+        if dir_is_file(dir, name) && fs.exists(dir) {
             return Some(dir.clone());
         }
         let path = format!("{}{}{}", dir, DIR_SEPARATOR_S, name);
-        if file_exists(&path) {
+        if fs.exists(&path) {
             return Some(path);
         }
     }
     None
 }
-pub fn D_TryFindWADByName(state: &mut DIwadState, filename: &str) -> String {
-    D_FindWADByName(state, filename).unwrap_or_else(|| filename.to_string())
+pub fn D_TryFindWADByName(
+    state: &mut DIwadState,
+    fs: &dyn DoomFileSystem,
+    filename: &str,
+) -> String {
+    D_FindWADByName(state, fs, filename).unwrap_or_else(|| filename.to_string())
 }
 pub fn D_FindIWAD(state: &mut GameState, mask: i32, mission: &mut GameMission_t) -> String {
     let iwadparm = M_CheckParmWithArgs(state, "-iwad", 1_i32);
@@ -205,7 +215,7 @@ pub fn D_FindIWAD(state: &mut GameState, mask: i32, mission: &mut GameMission_t)
             .to_str()
             .unwrap()
             .to_string();
-        let result = D_FindWADByName(&mut state.d_iwad, &iwadfile);
+        let result = D_FindWADByName(&mut state.d_iwad, &*state.fs, &iwadfile);
         let Some(result) = result else {
             I_Error(&format!("IWAD file '{}' not found!", iwadfile));
         };
@@ -215,7 +225,7 @@ pub fn D_FindIWAD(state: &mut GameState, mask: i32, mission: &mut GameMission_t)
         println!("-iwad not specified, trying a few iwad names");
         build_iwad_dir_list(&mut state.d_iwad);
         for dir in state.d_iwad.iwad_dirs.iter() {
-            if let Some(found) = search_directory_for_iwad(dir, mask, mission) {
+            if let Some(found) = search_directory_for_iwad(&*state.fs, dir, mask, mission) {
                 return found;
             }
         }

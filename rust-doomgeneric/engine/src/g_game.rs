@@ -44,7 +44,6 @@ use crate::m_fixed::fixed_t;
 use crate::m_fixed::FRACBITS;
 use crate::m_fixed::FRACUNIT;
 use crate::m_menu::M_StartControlPanel;
-use crate::m_misc::M_WriteFile;
 use crate::m_random::M_ClearRandom;
 use crate::m_random::P_Random;
 
@@ -1796,7 +1795,9 @@ pub fn G_CheckDemoStatus(state: &mut GameState) -> bool {
     if state.g_game.demorecording {
         state.g_game.demo_write_byte(DEMOMARKER as byte);
         let demo_len = state.g_game.demo_p;
-        M_WriteFile(&state.g_game.demoname, &state.g_game.demobuffer[..demo_len]);
+        state
+            .fs
+            .write_file(&state.g_game.demoname, &state.g_game.demobuffer[..demo_len]);
         state.g_game.demobuffer = Vec::new();
         state.g_game.demorecording = false;
         I_Error(&format!("Demo {} recorded", state.g_game.demoname));
