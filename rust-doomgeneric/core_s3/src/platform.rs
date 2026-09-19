@@ -18,15 +18,30 @@ const DOOM_HEIGHT: usize = 200;
 /// The LCD is 320x240, so the picture is centred vertically with black bars above and below.
 const LCD_TOP: i32 = 20;
 
+/// Frame timing, printed over serial every couple of seconds.
+#[derive(Default)]
+struct FrameStats {
+    window_start_us: u64,
+    frames: u32,
+    blit_us: u64,
+}
+
+const STATS_WINDOW_US: u64 = 2_000_000;
+
+fn now_us() -> u64 {
+    Instant::now().duration_since_epoch().as_micros() as u64
+}
+
 pub struct CoreS3Platform {
     display: CoreS3Display,
     /// Pixels per row of the engine's frame buffer, set in `init`.
     stride: usize,
+    stats: FrameStats,
 }
 
 impl CoreS3Platform {
     pub fn new(display: CoreS3Display) -> Self {
-        Self { display, stride: DOOM_WIDTH }
+        Self { display, stride: DOOM_WIDTH, stats: FrameStats::default() }
     }
 }
 
@@ -52,7 +67,28 @@ impl DoomPlatform for CoreS3Platform {
             Point::new(0, LCD_TOP),
             Size::new(DOOM_WIDTH as u32, DOOM_HEIGHT as u32),
         );
+        let blit_start = now_us();
         self.display.blit_pixels(&area, pixels).expect("blit frame");
+        let now = now_us();
+
+        let stats = &mut self.stats;
+        if stats.window_start_us == 0 {
+            stats.window_start_us = blit_start;
+        }
+        stats.frames += 1;
+        stats.blit_us += now - blit_start;
+        let elapsed = now - stats.window_start_us;
+        if elapsed >= STATS_WINDOW_US {
+            let frames = u64::from(stats.frames);
+            print!(
+                "[perf] {}.{} fps, blit {} us/frame, everything else {} us/frame\n",
+                frames * 1_000_000 / elapsed,
+                frames * 10_000_000 / elapsed % 10,
+                stats.blit_us / frames,
+                (elapsed - stats.blit_us) / frames,
+            );
+            *stats = FrameStats { window_start_us: now, ..FrameStats::default() };
+        }
     }
 
     fn sleep_ms(&mut self, ms: u32) {
