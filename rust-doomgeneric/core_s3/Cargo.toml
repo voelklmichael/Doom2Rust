@@ -17,10 +17,17 @@ test = false
 bench = false
 
 [dependencies]
-esp-hal = { version = "1.2", features = ["esp32s3"] }
-esp-bootloader-esp-idf = { version = "0.6", features = ["esp32s3"] }
-esp-backtrace = { version = "0.20", features = ["esp32s3", "panic-handler", "println"] }
-esp-println = { version = "0.18", features = ["esp32s3"] }
+# `core-s3` is the CoreS3 board support crate (I2C/PMU/LCD bring-up, UI widgets), taken
+# from git at the tag the display_widgets example was verified against. The other
+# versions are the ones core-s3 v0.5.0 pins in its workspace; esp-hal is a `links` crate,
+# so they must match core-s3's exactly or the build fails with duplicate-crate errors.
+core-s3 = { git = "https://github.com/anapeksha/core-s3-rs", tag = "v0.5.0", features = ["esp-hal"] }
+embedded-graphics = { version = "0.8.2", default-features = false }
+esp-backtrace = { version = "=0.17.0", default-features = false, features = ["esp32s3", "panic-handler", "println"] }
+esp-bootloader-esp-idf = { version = "0.5.0", default-features = false, features = ["esp32s3"] }
+esp-hal = { version = "=1.1.2", default-features = false, features = ["esp32s3", "rt", "unstable"] }
+esp-println = { version = "=0.15.0", default-features = false, features = ["esp32s3", "jtag-serial"] }
+heapless = { version = "0.9.3", default-features = false }
 
 [profile.dev]
 # Debug builds are too slow (and too big) to be useful on the device.
