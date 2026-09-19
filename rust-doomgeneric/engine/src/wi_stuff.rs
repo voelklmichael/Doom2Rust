@@ -81,6 +81,10 @@ impl Default for WiStuffState {
 }
 
 impl WiStuffState {
+    // Kept out of line: `GameState::new` inlines every state constructor, and once
+    // `init_game_state` passes 256 KB the Xtensa linker fails ("dangerous relocation:
+    // l32r: literal target out of range") building the firmware. These are the biggest.
+    #[inline(never)]
     pub const fn new() -> Self {
         Self {
             epsd0animinfo: [

@@ -9,7 +9,7 @@ use std::time::{Duration, Instant};
 /// The command a key is bound to, if any.
 ///
 /// Arrows or WASD move and turn, `q`/`e` (or `,`/`.`) strafe, Space fires, `f` uses/opens,
-/// `1`-`7` pick a weapon, Tab is the map, Enter/Esc/`y`/`n`/Backspace drive the menus. Holding Run is
+/// `1`-`7` pick a weapon, `m` mutes or unmutes the speaker, Tab is the map, Enter/Esc/`y`/`n`/Backspace drive the menus. Holding Run is
 /// handled separately in `main.rs` (a sticky toggle on `r`), because terminals cannot report
 /// Shift on its own.
 pub fn command_for(code: KeyCode) -> Option<Command> {
@@ -31,6 +31,7 @@ pub fn command_for(code: KeyCode) -> Option<Command> {
             'e' | '.' => Command::StrafeRight,
             ' ' => Command::Fire,
             'f' => Command::Use,
+            'm' => Command::ToggleSound,
             'y' => Command::Yes,
             'n' => Command::No,
             '1' => Command::Weapon1,
@@ -65,6 +66,7 @@ Keys
   Enter / Esc  in menus: select / back
   Backspace    in menus: delete a letter
   Y / N        answer yes / no in menus
+  M            mute / unmute the speaker
   Ctrl-C       quit
 ";
 
@@ -176,7 +178,7 @@ mod tests {
         let keys = [
             KeyCode::Up, KeyCode::Down, KeyCode::Left, KeyCode::Right, KeyCode::Enter,
             KeyCode::Esc, KeyCode::Tab, KeyCode::Backspace, KeyCode::Char('q'), KeyCode::Char('e'),
-            KeyCode::Char(' '), KeyCode::Char('f'), KeyCode::Char('y'), KeyCode::Char('n'),
+            KeyCode::Char(' '), KeyCode::Char('f'), KeyCode::Char('m'), KeyCode::Char('y'), KeyCode::Char('n'),
             KeyCode::Char('1'), KeyCode::Char('2'), KeyCode::Char('3'), KeyCode::Char('4'),
             KeyCode::Char('5'), KeyCode::Char('6'), KeyCode::Char('7'),
         ];

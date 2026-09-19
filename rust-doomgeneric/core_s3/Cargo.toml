@@ -34,6 +34,7 @@ embedded-hal = { version = "1.0.0", default-features = false }
 rust_doomgeneric = { path = "../engine" }
 core_s3_protocol = { path = "../core_s3_protocol" }
 core_s3_dhcp = { path = "../core_s3_dhcp" }
+core_s3_audio = { path = "../core_s3_audio" }
 core_s3_ws = { path = "../core_s3_ws" }
 # Wi-Fi input. esp-radio needs the esp-rtos scheduler underneath, and embassy-net for TCP.
 esp-radio = { version = "=1.0.0-beta.0", default-features = false, features = ["esp32s3", "wifi", "unstable", "esp-alloc"] }

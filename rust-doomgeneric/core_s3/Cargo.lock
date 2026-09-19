@@ -148,6 +148,7 @@ name = "core_s3"
 version = "0.0.0"
 dependencies = [
  "core-s3",
+ "core_s3_audio",
  "core_s3_dhcp",
  "core_s3_protocol",
  "core_s3_ws",
@@ -169,6 +170,10 @@ dependencies = [
  "rust_doomgeneric",
  "static_cell",
 ]
+
+[[package]]
+name = "core_s3_audio"
+version = "0.0.0"
 
 [[package]]
 name = "core_s3_dhcp"
@@ -1476,6 +1481,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9f7c3e4beb33f85d45ae3e3a1792185706c8e16d043238c593331cc7cd313b50"
 
 [[package]]
+name = "oplon"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0df1044d4a29bc6db30e653b263b80599bcb4f15c0c0e2c61f9ac32f71d58de3"
+
+[[package]]
 name = "paste"
 version = "1.0.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1667,6 +1678,7 @@ name = "rust_doomgeneric"
 version = "0.0.0"
 dependencies = [
  "bitflags 2.13.2",
+ "oplon",
  "sha1_smol",
 ]
 

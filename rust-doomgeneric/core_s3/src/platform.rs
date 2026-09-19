@@ -7,7 +7,7 @@ use esp_hal::{delay::Delay, time::Instant};
 use esp_println::print;
 use rust_doomgeneric::DoomPlatform;
 
-use crate::{lcd, net};
+use crate::{audio, lcd, net, sound};
 
 /// Frame timing, printed over serial every couple of seconds.
 #[derive(Default)]
@@ -18,6 +18,9 @@ struct FrameStats {
     present_us: u64,
     /// The part of that spent waiting for the previous frame to finish going out.
     waiting_us: u64,
+    /// Time the engine spent mixing sound and handing it over (`audio_frames_wanted` to the end
+    /// of each `audio_write`); part of "everything else".
+    audio_us: u64,
 }
 
 const STATS_WINDOW_US: u64 = 2_000_000;
@@ -29,6 +32,8 @@ fn now_us() -> u64 {
 #[derive(Default)]
 pub struct CoreS3Platform {
     stats: FrameStats,
+    /// When the engine last started on a chunk of sound (see `FrameStats::audio_us`).
+    audio_mark_us: u64,
 }
 
 impl CoreS3Platform {
@@ -50,12 +55,13 @@ impl CoreS3Platform {
         if elapsed >= STATS_WINDOW_US {
             let frames = u64::from(stats.frames);
             print!(
-                "[perf] {}.{} fps, present {} us/frame (waiting for the LCD {}), everything else {} us/frame\n",
+                "[perf] {}.{} fps, present {} us/frame (waiting for the LCD {}), everything else {} us/frame (of it sound {})\n",
                 frames * 1_000_000 / elapsed,
                 frames * 10_000_000 / elapsed % 10,
                 stats.present_us / frames,
                 stats.waiting_us / frames,
                 (elapsed - stats.present_us) / frames,
+                stats.audio_us / frames,
             );
             *stats = FrameStats { window_start_us: end, ..FrameStats::default() };
         }
@@ -69,8 +75,9 @@ fn to_rgb565(pixel: u32) -> Rgb565 {
 }
 
 /// The engine key code for a command: what the engine's default bindings (m_controls.rs) expect.
-fn doom_key(command: Command) -> u8 {
-    match command {
+/// `None` for a command that is not a game key.
+fn doom_key(command: Command) -> Option<u8> {
+    Some(match command {
         Command::Forward => 0xad,
         Command::Backward => 0xaf,
         Command::TurnLeft => 0xac,
@@ -95,7 +102,9 @@ fn doom_key(command: Command) -> u8 {
         Command::Backspace => 0x7f, // KEY_BACKSPACE
         // A typed character is the key itself; the engine sees letters in lower case.
         Command::Char(character) => character.to_ascii_lowercase(),
-    }
+        // The firmware's own (the speaker), see `get_key`.
+        Command::ToggleSound => return None,
+    })
 }
 
 impl DoomPlatform for CoreS3Platform {
@@ -118,6 +127,23 @@ impl DoomPlatform for CoreS3Platform {
         true
     }
 
+    fn audio_open(&mut self, _preferred_rate: u32) -> Option<u32> {
+        // The speaker runs at a fixed rate; `None` if it did not come up (see `main`).
+        sound::ready().then_some(audio::SAMPLE_RATE)
+    }
+
+    fn audio_frames_wanted(&mut self) -> usize {
+        self.audio_mark_us = now_us();
+        sound::frames_wanted()
+    }
+
+    fn audio_write(&mut self, samples: &[i16]) {
+        sound::write(samples);
+        let now = now_us();
+        self.stats.audio_us += now - self.audio_mark_us;
+        self.audio_mark_us = now;
+    }
+
     fn sleep_ms(&mut self, ms: u32) {
         Delay::new().delay_millis(ms);
     }
@@ -128,8 +154,14 @@ impl DoomPlatform for CoreS3Platform {
     }
 
     fn get_key(&mut self) -> Option<(bool, u8)> {
-        let event = net::next_key_event()?;
-        Some((event.pressed, doom_key(event.command)))
+        loop {
+            let event = net::next_key_event()?;
+            match doom_key(event.command) {
+                Some(key) => return Some((event.pressed, key)),
+                None if event.pressed => sound::toggle_mute(),
+                None => {}
+            }
+        }
     }
 
     fn set_window_title(&mut self, _title: &str) {}

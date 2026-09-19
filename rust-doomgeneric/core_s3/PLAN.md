@@ -8,6 +8,8 @@ Bare-metal (`no_std`, `esp-hal`) firmware for the [CoreS3 Lite](https://docs.m5s
 2. **Demo playback**: run the engine with no input, showing the demo. WAD embedded via
    `include_bytes!`. DONE, confirmed on hardware (2026-09-19).
 3. **Input over Wi-Fi**: control the game from a PC over TCP. DONE, confirmed on hardware (2026-09-19).
+4. **Sound effects** through the speaker (see "Sound" below), with a standalone speaker test:
+   `cargo run --release --example sound_test`. DONE on hardware (2026-09-19).
 
 ## Running it
 
@@ -176,3 +178,64 @@ needs a reset.
 
 **Not done / ideas:** no on-device key-echo or connection indicator beyond serial logs; the performance
 work from milestone 2 still applies (about 3 fps).
+
+## Sound (sound effects; music is not on the device yet)
+
+**Status:** builds, flashes, runs; the serial log shows real audio flowing (see below). Whether it
+sounds right was judged by the owner's ears: effects play, and were too loud at first (see Volume).
+
+**Hardware.** Speaker amp AW88298 (I2C 0x36, reset line = AW9523B P0_2, released by the BSP's power
+init), fed by I2S1 on DMA channel 1 (the LCD uses channel 0): BCLK = GPIO34, WS = GPIO33, DOUT = GPIO13,
+Philips I2S, 16-bit slots. The amp is an I2S slave that derives its clock from BCLK, so no MCLK
+(GPIO0) is needed. Enabling the amp needs a running BCLK first, so the I2S is started (sending
+silence), then the amp is reset and configured (M5Unified's register sequence, with the rate bucket
+for 11025 Hz). After that its status register changes from 0x4000 to 0x0311 (clock/PLL locked, as
+far as one can tell without the datasheet). The amp's volume register stays at "full".
+
+**Code.** `src/audio.rs` (I2S ring + amp; shared with the example), `src/sound.rs` (queue and the
+pump task on core 0, mute), `../core_s3_audio` (lock-free frame queue, host tested),
+`examples/sound_test.rs`, the three audio hooks in `src/platform.rs`. The game (core 1) mixes into a
+queue and never waits; a task on core 0 moves audio into the DMA ring one 512-byte chunk at a time and
+pads with silence when the game is late (a level load), so a stall is a gap, not a replay of old audio.
+
+**Rate, ring, memory.** 11025 Hz, sent as stereo with both channels equal (one speaker; the engine's
+left/right panning becomes a level difference). 11025 Hz is what the sound effects are recorded at, so
+the engine does no resampling. The ring is three 128-frame chunks (1.5 KB, 35 ms); the queue holds
+1024 frames (4 KB): about 6 KB of internal RAM in all (the frame buffer for the LCD is 128 KB). Delay from game to speaker is about 60-80 ms.
+esp-hal's I2S driver always builds 4092-byte descriptors, except that a circular buffer of at most
+8184 bytes is cut into exactly three, so three chunks is the finest ring possible; asking for smaller
+descriptors with `dma_buffers!` is silently ignored (an early version did that: free-space counts made
+no sense).
+
+**Volume and mute.**
+- `VOLUME_256THS` in `src/sound.rs` (currently 32, i.e. -12 dB below an earlier default that was "very
+  distracting"; 256 would be the engine's own level) is applied to the samples. Change it and rebuild.
+  The in-game sound volume slider (Options) works on top of it; its default (8 of 15) is the same as
+  vanilla DOOM.
+- Mute at run time, no reflash: the **Sound on/off** button (or the M key) on the web controller, or
+  `M` in `core_s3_sender`. It is a new protocol command (`Command::ToggleSound`, code 22) that the
+  firmware handles itself; muted, the game keeps mixing and the ring is fed silence, so nothing else
+  changes. The serial log says `[audio] muted` / `unmuted`. Seen working on the device: a browser
+  joined the board's network, opened the controller and pressed the button, the log printed
+  `[audio] muted`, and from then on the pump fed silence only (the fps is the same either way). The
+  sender's `M` is only covered by host tests.
+- Build time: `SOUND=off cargo build --release` leaves the speaker unset up completely, `SOUND=muted`
+  starts muted.
+
+**Measured** (`[perf]`, same attract-mode demo, first 22 windows of 2 s, mean): built with
+`SOUND=off` 29.0 fps, with sound 28.0 fps (-1.0 fps, about 3.5%). Title-screen windows are unchanged
+(33.1 vs 32.9); in the demo's gameplay windows sound costs 1 to 1.9 fps (e.g. 28.9 -> 27.0; the busiest
+window 26.0 -> 23.4 in one run, 24.9 in another). Running muted costs the same, so it is not the pump
+or the copy into the ring. The `[perf]` line now ends with `(of it sound N)`: the engine's mixing plus
+handing the audio over is 0.5-0.8 ms per frame; the rest of the loss (about 1.5 ms per frame) is not
+profiled: most likely the engine's own per-tic bookkeeping of sound channels, which now stay alive for
+the length of each sound (with no mixer they were dropped at once). The mixer in
+`engine/src/sfx_mixer.rs` divides by 255 twice for every voice and output frame; doing that division
+once per output frame would likely recover part of the 0.5-0.8 ms (not tried: the mixer is also being
+changed by the music work).
+
+**Open.** The pump has to run at least every 35 ms or the ring runs dry and esp-hal's bookkeeping
+forces a restart of the transfer (a short glitch, counted in the `DMA restarts` log field; one at
+startup is normal, later ones would be a sign of a stalled core 0). The longest gap seen is 3 ms.
+Music (OPL synthesis) on the device is untried; it would need a higher rate (the amp supports up to
+96 kHz) and its own CPU budget.

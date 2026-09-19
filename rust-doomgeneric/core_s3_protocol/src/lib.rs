@@ -11,9 +11,10 @@
 //! as long as the sender says. Bytes with an unknown command code are ignored by the receiver, so
 //! new commands can be added without breaking older firmware.
 //!
-//! Codes 0 to 21 are the game actions of [`Command`]. Codes 32 to 126 are typed characters: the
-//! code is the ASCII value, and the receiver presses that key (this is how cheat codes and other
-//! text reach the game). The codes in between are unused.
+//! Codes 0 to 22 are the actions of [`Command`]: the game's, and one for the firmware itself
+//! ([`Command::ToggleSound`]). Codes 32 to 126 are typed characters: the code is the ASCII value,
+//! and the receiver presses that key (this is how cheat codes and other text reach the game). The
+//! codes in between are unused.
 #![no_std]
 
 /// TCP port the CoreS3 listens on.
@@ -47,6 +48,9 @@ pub enum Command {
     Weapon6,
     Weapon7,
     Backspace,
+    /// Mutes or unmutes the speaker. Not a game key: the firmware acts on the press itself and
+    /// the game never sees it.
+    ToggleSound,
     /// A typed printable ASCII character. Build it with [`Command::typed`], which checks the range.
     Char(u8),
 }
@@ -57,7 +61,7 @@ const LAST_CHAR: u8 = 126;
 
 impl Command {
     /// The game actions, in code order. Typed characters are not in this list.
-    pub const ALL: [Self; 22] = [
+    pub const ALL: [Self; 23] = [
         Self::Forward,
         Self::Backward,
         Self::TurnLeft,
@@ -80,6 +84,7 @@ impl Command {
         Self::Weapon6,
         Self::Weapon7,
         Self::Backspace,
+        Self::ToggleSound,
     ];
 
     /// The typed character for the ASCII byte `byte`, if it is printable.
@@ -118,6 +123,7 @@ impl Command {
             Self::Weapon6 => 19,
             Self::Weapon7 => 20,
             Self::Backspace => 21,
+            Self::ToggleSound => 22,
         }
     }
 }
