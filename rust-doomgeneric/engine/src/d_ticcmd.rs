@@ -1,4 +1,3 @@
-use crate::stdint_types::byte;
 pub const BTS_SAVESHIFT: i32 = 2;
 pub const BTS_SAVEMASK: i32 = 28;
 pub const BTS_SAVEGAME: i32 = 2;
@@ -16,11 +15,11 @@ pub struct ticcmd_t {
     pub forwardmove: i8,
     pub sidemove: i8,
     pub angleturn: i16,
-    pub chatchar: byte,
-    pub buttons: byte,
-    pub consistancy: byte,
-    pub buttons2: byte,
+    pub chatchar: u8,
+    pub buttons: u8,
+    pub consistancy: u8,
+    pub buttons2: u8,
     pub inventory: i32,
-    pub lookfly: byte,
-    pub arti: byte,
+    pub lookfly: u8,
+    pub arti: u8,
 }

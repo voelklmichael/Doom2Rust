@@ -5,10 +5,9 @@ use crate::p_setup::SectorId;
 use crate::p_setup::SegId;
 use crate::p_setup::SideId;
 use crate::p_setup::VertexId;
-use crate::stdint_types::byte;
 use crate::tables::angle_t;
 use alloc::vec::Vec;
-pub type lighttable_t = byte;
+pub type lighttable_t = u8;
 
 // A sprite/wall vertical-clip array, always one of these fixed i16 arrays --
 // never an independently-allocated buffer. `Openings(i)` is an index into
@@ -107,8 +106,8 @@ pub struct visplane_t {
     pub lightlevel: i32,
     pub minx: i32,
     pub maxx: i32,
-    top: [byte; 322],
-    bottom: [byte; 322],
+    top: [u8; 322],
+    bottom: [u8; 322],
 }
 
 impl visplane_t {
@@ -122,19 +121,19 @@ impl visplane_t {
         bottom: [0; 322],
     };
 
-    pub fn top(&self, x: i32) -> byte {
+    pub fn top(&self, x: i32) -> u8 {
         self.top[(x + 1) as usize]
     }
 
-    pub fn set_top(&mut self, x: i32, value: byte) {
+    pub fn set_top(&mut self, x: i32, value: u8) {
         self.top[(x + 1) as usize] = value;
     }
 
-    pub fn bottom(&self, x: i32) -> byte {
+    pub fn bottom(&self, x: i32) -> u8 {
         self.bottom[(x + 1) as usize]
     }
 
-    pub fn set_bottom(&mut self, x: i32, value: byte) {
+    pub fn set_bottom(&mut self, x: i32, value: u8) {
         self.bottom[(x + 1) as usize] = value;
     }
 
@@ -156,7 +155,7 @@ pub enum SpriteRotate {
 pub struct spriteframe_t {
     pub rotate: SpriteRotate,
     pub lump: [i16; 8],
-    pub flip: [byte; 8],
+    pub flip: [u8; 8],
 }
 
 #[derive(Clone)]

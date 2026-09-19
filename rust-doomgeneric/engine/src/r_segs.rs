@@ -20,7 +20,6 @@ use crate::r_main::LIGHTSEGSHIFT;
 use crate::r_main::MAXLIGHTSCALE;
 use crate::r_plane::R_CheckPlane;
 use crate::r_things::R_DrawMaskedColumn;
-use crate::stdint_types::byte;
 
 use crate::tables::angle_t;
 use crate::tables::finesine;
@@ -268,8 +267,8 @@ pub fn R_RenderSegLoop(state: &mut GameState) {
             }
             if top <= bottom {
                 let ceilingplane = state.r_plane.ceilingplane.unwrap();
-                state.r_plane.visplanes[ceilingplane].set_top(state.r_segs.rw_x, top as byte);
-                state.r_plane.visplanes[ceilingplane].set_bottom(state.r_segs.rw_x, bottom as byte);
+                state.r_plane.visplanes[ceilingplane].set_top(state.r_segs.rw_x, top as u8);
+                state.r_plane.visplanes[ceilingplane].set_bottom(state.r_segs.rw_x, bottom as u8);
             }
         }
         yh = state.r_segs.bottomfrac >> HEIGHTBITS;
@@ -284,8 +283,8 @@ pub fn R_RenderSegLoop(state: &mut GameState) {
             }
             if top <= bottom {
                 let floorplane = state.r_plane.floorplane.unwrap();
-                state.r_plane.visplanes[floorplane].set_top(state.r_segs.rw_x, top as byte);
-                state.r_plane.visplanes[floorplane].set_bottom(state.r_segs.rw_x, bottom as byte);
+                state.r_plane.visplanes[floorplane].set_top(state.r_segs.rw_x, top as u8);
+                state.r_plane.visplanes[floorplane].set_bottom(state.r_segs.rw_x, bottom as u8);
             }
         }
         if state.r_segs.segtextured {

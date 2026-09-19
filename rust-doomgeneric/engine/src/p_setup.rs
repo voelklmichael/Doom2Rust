@@ -29,7 +29,6 @@ use crate::r_data::R_TextureNumForName;
 use crate::r_defs::{node_t, seg_t, side_t};
 use crate::r_things::R_InitSprites;
 use crate::s_sound::S_Start;
-use crate::stdint_types::byte;
 use crate::tables::angle_t;
 use crate::w_wad::W_GetNumForName;
 use crate::w_wad::W_LumpBytes;
@@ -115,7 +114,7 @@ pub struct PSetupState {
     pub bmaporgx: fixed_t,
     pub bmaporgy: fixed_t,
     pub blocklinks: Vec<Option<MobjId>>,
-    pub rejectmatrix: Vec<byte>,
+    pub rejectmatrix: Vec<u8>,
     pub deathmatchstarts: [mapthing_t; 10],
     pub deathmatch_p: usize,
     pub playerstarts: [mapthing_t; 4],
@@ -636,7 +635,7 @@ fn PadRejectArray(state: &mut GameState, offset: usize, len: u32) {
     }
     let array = &mut state.p_setup.rejectmatrix[offset..offset + len as usize];
     for (i, dest) in array.iter_mut().enumerate().take(pad_bytes) {
-        *dest = (rejectpad[i / 4] >> ((i % 4) as u32 * 8) & 0xff) as byte;
+        *dest = (rejectpad[i / 4] >> ((i % 4) as u32 * 8) & 0xff) as u8;
     }
     if len as usize > pad_bytes {
         array[pad_bytes..].fill(padvalue);

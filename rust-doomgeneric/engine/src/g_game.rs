@@ -90,7 +90,6 @@ use crate::sounds::SfxName;
 use crate::st_stuff::ST_Responder;
 use crate::st_stuff::ST_Ticker;
 use crate::statdump::StatCopy;
-use crate::stdint_types::byte;
 
 use crate::tables::finecosine;
 use crate::tables::finesine;
@@ -140,7 +139,7 @@ pub struct GGameState {
     pub lowres_turn: bool,
     pub demoplayback: bool,
     pub netdemo: bool,
-    pub demobuffer: Vec<byte>,
+    pub demobuffer: Vec<u8>,
     pub demo_p: usize,
     pub demoend: usize,
     pub singledemo: bool,
@@ -148,7 +147,7 @@ pub struct GGameState {
     pub testcontrols: bool,
     pub testcontrols_mousespeed: i32,
     pub wminfo: wbstartstruct_t,
-    pub consistancy: [[byte; 128]; 4],
+    pub consistancy: [[u8; 128]; 4],
     pub forwardmove: [fixed_t; 2],
     pub sidemove: [fixed_t; 2],
     pub next_weapon: i32,
@@ -345,13 +344,13 @@ impl GGameState {
         &mut self.players[id.0 as usize]
     }
 
-    fn demo_read_byte(&mut self) -> byte {
+    fn demo_read_byte(&mut self) -> u8 {
         let b = self.demobuffer[self.demo_p];
         self.demo_p += 1;
         b
     }
 
-    fn demo_write_byte(&mut self, b: byte) {
+    fn demo_write_byte(&mut self, b: u8) {
         self.demobuffer[self.demo_p] = b;
         self.demo_p += 1;
     }
@@ -580,33 +579,33 @@ pub fn G_BuildTiccmd(state: &mut GameState, cmd: &mut ticcmd_t, maketic: i32) {
     {
         side += state.g_game.sidemove[speed as usize];
     }
-    cmd.chatchar = HU_dequeueChatChar(&mut state.hu_stuff) as byte;
+    cmd.chatchar = HU_dequeueChatChar(&mut state.hu_stuff);
     if state.g_game.gamekeydown[state.m_controls.key_fire as usize]
         || state.g_game.mousearray[(state.m_controls.mousebfire + 1) as usize]
         || state.g_game.joyarray[(state.m_controls.joybfire + 1) as usize]
     {
-        cmd.buttons = (cmd.buttons as i32 | BT_ATTACK) as byte;
+        cmd.buttons = (cmd.buttons as i32 | BT_ATTACK) as u8;
     }
     if state.g_game.gamekeydown[state.m_controls.key_use as usize]
         || state.g_game.joyarray[(state.m_controls.joybuse + 1) as usize]
         || state.g_game.mousearray[(state.m_controls.mousebuse + 1) as usize]
     {
-        cmd.buttons = (cmd.buttons as i32 | BT_USE) as byte;
+        cmd.buttons = (cmd.buttons as i32 | BT_USE) as u8;
         state.g_game.dclicks = 0;
     }
     if state.g_game.gamestate == GameScreenState::GS_LEVEL && state.g_game.next_weapon != 0 {
         let next_weapon = state.g_game.next_weapon;
         i = G_NextWeapon(state, next_weapon);
-        cmd.buttons = (cmd.buttons as i32 | BT_CHANGE) as byte;
-        cmd.buttons = (cmd.buttons as i32 | i << BT_WEAPONSHIFT) as byte;
+        cmd.buttons = (cmd.buttons as i32 | BT_CHANGE) as u8;
+        cmd.buttons = (cmd.buttons as i32 | i << BT_WEAPONSHIFT) as u8;
     } else {
         let weapon_keys = state.m_controls.weapon_keys();
         i = 0;
         while (i as usize) < weapon_keys.len() {
             let key: i32 = weapon_keys[i as usize];
             if state.g_game.gamekeydown[key as usize] {
-                cmd.buttons = (cmd.buttons as i32 | BT_CHANGE) as byte;
-                cmd.buttons = (cmd.buttons as i32 | i << BT_WEAPONSHIFT) as byte;
+                cmd.buttons = (cmd.buttons as i32 | BT_CHANGE) as u8;
+                cmd.buttons = (cmd.buttons as i32 | i << BT_WEAPONSHIFT) as u8;
                 break;
             } else {
                 i += 1;
@@ -631,7 +630,7 @@ pub fn G_BuildTiccmd(state: &mut GameState, cmd: &mut ticcmd_t, maketic: i32) {
                 state.g_game.dclicks += 1;
             }
             if state.g_game.dclicks == 2 {
-                cmd.buttons = (cmd.buttons as i32 | BT_USE) as byte;
+                cmd.buttons = (cmd.buttons as i32 | BT_USE) as u8;
                 state.g_game.dclicks = 0;
             } else {
                 state.g_game.dclicktime = 0;
@@ -651,7 +650,7 @@ pub fn G_BuildTiccmd(state: &mut GameState, cmd: &mut ticcmd_t, maketic: i32) {
                 state.g_game.dclicks2 += 1;
             }
             if state.g_game.dclicks2 == 2 {
-                cmd.buttons = (cmd.buttons as i32 | BT_USE) as byte;
+                cmd.buttons = (cmd.buttons as i32 | BT_USE) as u8;
                 state.g_game.dclicks2 = 0;
             } else {
                 state.g_game.dclicktime2 = 0;
@@ -689,12 +688,12 @@ pub fn G_BuildTiccmd(state: &mut GameState, cmd: &mut ticcmd_t, maketic: i32) {
     cmd.sidemove = (cmd.sidemove as i32 + side) as i8;
     if state.g_game.sendpause {
         state.g_game.sendpause = false;
-        cmd.buttons = (BT_SPECIAL | BTS_PAUSE) as byte;
+        cmd.buttons = (BT_SPECIAL | BTS_PAUSE) as u8;
     }
     if state.g_game.sendsave {
         state.g_game.sendsave = false;
         cmd.buttons =
-            (BT_SPECIAL | BTS_SAVEGAME | state.g_game.savegameslot << BTS_SAVESHIFT) as byte;
+            (BT_SPECIAL | BTS_SAVEGAME | state.g_game.savegameslot << BTS_SAVESHIFT) as u8;
     }
     if state.g_game.lowres_turn {
         let desired_angleturn: i16 =
@@ -944,10 +943,9 @@ pub fn G_Ticker(state: &mut GameState, netcmds: &[ticcmd_t]) {
                 }
                 if let Some(mo_id) = state.g_game.players[i as usize].mo {
                     state.g_game.consistancy[i as usize][buf as usize] =
-                        state.p_mobj.mo(mo_id).x as byte;
+                        state.p_mobj.mo(mo_id).x as u8;
                 } else {
-                    state.g_game.consistancy[i as usize][buf as usize] =
-                        state.m_random.rndindex as byte;
+                    state.g_game.consistancy[i as usize][buf as usize] = state.m_random.rndindex;
                 }
             }
         }
@@ -1529,7 +1527,7 @@ pub fn G_ReadDemoTiccmd(state: &mut GameState, player_num: usize) {
         let hi = state.g_game.demo_read_byte();
         ((hi as i32) << 8) as i16
     };
-    let buttons = state.g_game.demo_read_byte() as byte;
+    let buttons = state.g_game.demo_read_byte();
     let cmd = &mut state.g_game.players[player_num].cmd;
     cmd.forwardmove = forwardmove;
     cmd.sidemove = sidemove;
@@ -1547,19 +1545,19 @@ pub fn G_WriteDemoTiccmd(state: &mut GameState, player_num: usize) {
     }
     let demo_start = state.g_game.demo_p;
     let cmd = state.g_game.players[player_num].cmd;
-    state.g_game.demo_write_byte(cmd.forwardmove as byte);
-    state.g_game.demo_write_byte(cmd.sidemove as byte);
+    state.g_game.demo_write_byte(cmd.forwardmove as u8);
+    state.g_game.demo_write_byte(cmd.sidemove as u8);
     if state.g_game.longtics {
         state
             .g_game
-            .demo_write_byte((cmd.angleturn as i32 & 0xff) as byte);
+            .demo_write_byte((cmd.angleturn as i32 & 0xff) as u8);
         state
             .g_game
-            .demo_write_byte((cmd.angleturn as i32 >> 8 & 0xff) as byte);
+            .demo_write_byte((cmd.angleturn as i32 >> 8 & 0xff) as u8);
     } else {
         state
             .g_game
-            .demo_write_byte((cmd.angleturn as i32 >> 8) as byte);
+            .demo_write_byte((cmd.angleturn as i32 >> 8) as u8);
     }
     state.g_game.demo_write_byte(cmd.buttons);
     state.g_game.demo_p = demo_start;
@@ -1603,31 +1601,23 @@ pub fn G_BeginRecording(state: &mut GameState) {
     state.g_game.lowres_turn = !state.g_game.longtics;
     state.g_game.demo_p = 0;
     if state.g_game.longtics {
-        state.g_game.demo_write_byte(DOOM_191_VERSION as byte);
+        state.g_game.demo_write_byte(DOOM_191_VERSION as u8);
     } else {
-        let version = G_VanillaVersionCode(&mut state.doomstat) as byte;
+        let version = G_VanillaVersionCode(&mut state.doomstat) as u8;
         state.g_game.demo_write_byte(version);
     }
-    state.g_game.demo_write_byte(state.g_game.gameskill as byte);
+    state.g_game.demo_write_byte(state.g_game.gameskill as u8);
+    state.g_game.demo_write_byte(state.g_game.gameepisode as u8);
+    state.g_game.demo_write_byte(state.g_game.gamemap as u8);
+    state.g_game.demo_write_byte(state.g_game.deathmatch as u8);
+    state.g_game.demo_write_byte(state.d_main.respawnparm as u8);
+    state.g_game.demo_write_byte(state.d_main.fastparm as u8);
+    state.g_game.demo_write_byte(state.d_main.nomonsters as u8);
     state
         .g_game
-        .demo_write_byte(state.g_game.gameepisode as byte);
-    state.g_game.demo_write_byte(state.g_game.gamemap as byte);
-    state
-        .g_game
-        .demo_write_byte(state.g_game.deathmatch as byte);
-    state
-        .g_game
-        .demo_write_byte(state.d_main.respawnparm as byte);
-    state.g_game.demo_write_byte(state.d_main.fastparm as byte);
-    state
-        .g_game
-        .demo_write_byte(state.d_main.nomonsters as byte);
-    state
-        .g_game
-        .demo_write_byte(state.g_game.consoleplayer as byte);
+        .demo_write_byte(state.g_game.consoleplayer as u8);
     for i in 0..(MAXPLAYERS as usize) {
-        let b = state.g_game.playeringame[i] as byte;
+        let b = state.g_game.playeringame[i] as u8;
         state.g_game.demo_write_byte(b);
     }
 }
@@ -1737,7 +1727,7 @@ pub fn G_CheckDemoStatus(state: &mut GameState) -> bool {
         return true;
     }
     if state.g_game.demorecording {
-        state.g_game.demo_write_byte(DEMOMARKER as byte);
+        state.g_game.demo_write_byte(DEMOMARKER as u8);
         let demo_len = state.g_game.demo_p;
         state
             .fs

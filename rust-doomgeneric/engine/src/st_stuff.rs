@@ -36,7 +36,6 @@ use crate::st_lib::STlib_updateNum;
 use crate::st_lib::STlib_updatePercent;
 use crate::st_lib::StDigitSet;
 use crate::st_lib::{st_binicon_t, st_multicon_t, st_number_t, st_percent_t};
-use crate::stdint_types::byte;
 use crate::v_video::Screen;
 use alloc::string::ToString;
 use alloc::vec::Vec;
@@ -51,7 +50,7 @@ use crate::w_wad::W_GetNumForName;
 use crate::w_wad::W_LumpBytes;
 
 pub struct StStuffState {
-    pub st_backing_screen: Vec<byte>,
+    pub st_backing_screen: Vec<u8>,
     pub plyr: PlayerId,
     pub st_firsttime: bool,
     pub lu_palette: i32,
@@ -772,7 +771,6 @@ pub fn ST_Ticker(state: &mut GameState) {
 }
 pub fn ST_doPaletteStuff(state: &mut GameState) {
     let mut palette: i32;
-    let mut _pal: *mut byte = ::core::ptr::null_mut::<byte>();
     let mut cnt: i32;
     let bzc: i32;
     cnt = state.g_game.player_mut(state.st_stuff.plyr).damagecount;

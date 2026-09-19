@@ -13,7 +13,6 @@ use crate::r_main::LIGHTSEGSHIFT;
 use crate::r_main::LIGHTZSHIFT;
 use crate::r_main::MAXLIGHTZ;
 use crate::r_segs::MAXDRAWSEGS;
-use crate::stdint_types::byte;
 
 use crate::tables::angle_t;
 use crate::tables::finecosine;
@@ -295,8 +294,8 @@ pub fn R_DrawPlanes(state: &mut GameState) {
                     light = 0;
                 }
                 state.r_plane.planezlight = light as usize;
-                plv.set_top(plv.maxx + 1, 0xff as byte);
-                plv.set_top(plv.minx - 1, 0xff as byte);
+                plv.set_top(plv.maxx + 1, 0xff_u8);
+                plv.set_top(plv.minx - 1, 0xff_u8);
                 state.r_plane.visplanes[pl] = plv;
                 stop = plv.maxx + 1;
                 for x in plv.minx..=stop {

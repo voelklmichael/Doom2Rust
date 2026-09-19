@@ -20,7 +20,6 @@ use crate::m_controls::KEY_RSHIFT;
 use crate::s_sound::S_StartSound;
 use crate::s_sound::SoundOrigin;
 use crate::sounds::SfxName;
-use crate::stdint_types::byte;
 use crate::v_video::V_CachePatchNum;
 use crate::w_wad::{W_GetNumForName, W_LumpBytes};
 use alloc::string::String;
@@ -488,7 +487,7 @@ pub fn HU_Ticker(state: &mut GameState) {
                         HUlib_resetIText(&mut state.hu_stuff.w_inputbuffer[i as usize]);
                     }
                 }
-                state.g_game.players[i as usize].cmd.chatchar = 0 as byte;
+                state.g_game.players[i as usize].cmd.chatchar = 0_u8;
             }
         }
     }

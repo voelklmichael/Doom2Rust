@@ -11,7 +11,6 @@ use crate::i_timer::I_Sleep;
 use crate::i_video::I_StartTic;
 use crate::m_fixed::fixed_t;
 use crate::m_fixed::FRACUNIT;
-use crate::stdint_types::byte;
 use crate::w_checksum::sha1_digest_t;
 
 pub struct DLoopState {
@@ -293,9 +292,9 @@ fn TicdupSquash(set: &mut ticcmd_set_t) {
     i = 0;
     while i < NET_MAXPLAYERS as u32 {
         let cmd = &mut set.cmds[i as usize];
-        cmd.chatchar = 0 as byte;
+        cmd.chatchar = 0_u8;
         if cmd.buttons as i32 & BT_SPECIAL != 0 {
-            cmd.buttons = 0 as byte;
+            cmd.buttons = 0_u8;
         }
         i = i.wrapping_add(1);
     }

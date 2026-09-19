@@ -11,7 +11,6 @@ use crate::v_video::V_CachePatchName;
 use alloc::vec::Vec;
 
 use crate::r_main::ColormapId;
-use crate::stdint_types::byte;
 
 use crate::v_video::V_DrawPatch;
 use crate::v_video::V_MarkRect;
@@ -36,7 +35,7 @@ pub(crate) fn advance_source(src: ColumnSource, delta: usize) -> ColumnSource {
     }
 }
 
-pub(crate) fn read_source(state: &GameState, src: ColumnSource, idx: i32) -> byte {
+pub(crate) fn read_source(state: &GameState, src: ColumnSource, idx: i32) -> u8 {
     match src {
         ColumnSource::Lump { lump, offset } => {
             state.w_wad.lumpinfo[lump as usize].cache.as_ref().unwrap()
@@ -56,7 +55,7 @@ pub struct RDrawState {
     pub viewwindowy: i32,
     pub ylookup: [usize; 832],
     pub columnofs: [i32; 1120],
-    pub background_buffer: Option<Vec<byte>>,
+    pub background_buffer: Option<Vec<u8>>,
     pub dc_colormap: Option<ColormapId>,
     pub dc_x: i32,
     pub dc_yl: i32,
@@ -67,7 +66,7 @@ pub struct RDrawState {
     pub dccount: i32,
     pub fuzzpos: i32,
     pub dc_translation: usize,
-    pub translationtables: Vec<byte>,
+    pub translationtables: Vec<u8>,
     pub ds_y: i32,
     pub ds_x1: i32,
     pub ds_x2: i32,
@@ -398,11 +397,11 @@ pub fn R_InitTranslationTables(state: &mut GameState) {
     state.r_draw.translationtables = vec![0u8; 256 * 3];
     for i in 0..256 {
         if (0x70..=0x7f).contains(&i) {
-            state.r_draw.translationtables[i as usize] = (0x60 + (i & 0xf)) as byte;
-            state.r_draw.translationtables[(i + 256) as usize] = (0x40 + (i & 0xf)) as byte;
-            state.r_draw.translationtables[(i + 512) as usize] = (0x20 + (i & 0xf)) as byte;
+            state.r_draw.translationtables[i as usize] = (0x60 + (i & 0xf)) as u8;
+            state.r_draw.translationtables[(i + 256) as usize] = (0x40 + (i & 0xf)) as u8;
+            state.r_draw.translationtables[(i + 512) as usize] = (0x20 + (i & 0xf)) as u8;
         } else {
-            let fresh11 = i as byte;
+            let fresh11 = i as u8;
             state.r_draw.translationtables[(i + 512) as usize] = fresh11;
             let fresh12 = fresh11;
             state.r_draw.translationtables[(i + 256) as usize] = fresh12;

@@ -9,7 +9,6 @@ use crate::m_bbox::M_AddToBox;
 use crate::m_fixed::fixed_t;
 use crate::patch::Patch;
 use crate::platform::DoomPlatform;
-use crate::stdint_types::byte;
 use crate::w_wad::W_LumpBytes;
 use crate::w_wad::W_LumpBytesName;
 use alloc::string::String;
@@ -27,7 +26,7 @@ pub enum Screen {
 }
 
 impl GameState {
-    pub fn screen(&self, screen: Screen) -> &[byte] {
+    pub fn screen(&self, screen: Screen) -> &[u8] {
         match screen {
             Screen::Video => &self.i_video.I_VideoBuffer,
             Screen::StatusBar => &self.st_stuff.st_backing_screen,
@@ -39,7 +38,7 @@ impl GameState {
         }
     }
 
-    pub fn screen_mut(&mut self, screen: Screen) -> &mut [byte] {
+    pub fn screen_mut(&mut self, screen: Screen) -> &mut [u8] {
         match screen {
             Screen::Video => &mut self.i_video.I_VideoBuffer,
             Screen::StatusBar => &mut self.st_stuff.st_backing_screen,
@@ -101,7 +100,7 @@ pub fn V_CopyRect(
     }
     V_MarkRect(state, dest, destx, desty, width, height);
     let width = width as usize;
-    let mut rows: Vec<byte> = Vec::with_capacity(width * height as usize);
+    let mut rows: Vec<u8> = Vec::with_capacity(width * height as usize);
     {
         let src = state.screen(source);
         for row in 0..height {
@@ -123,7 +122,7 @@ pub fn V_CachePatchNum(state: &mut GameState, lumpnum: i32) -> Patch {
 pub fn V_CachePatchName(state: &mut GameState, name: &str) -> Patch {
     Patch::new(W_LumpBytesName(state, name))
 }
-fn blit_patch(screen: &mut [byte], patch: &Patch, x: i32, y: i32, flipped: bool) {
+fn blit_patch(screen: &mut [u8], patch: &Patch, x: i32, y: i32, flipped: bool) {
     let w = patch.width();
     for col in 0..w {
         let source_column = if flipped { w - 1 - col } else { col };
@@ -172,7 +171,7 @@ pub fn V_DrawBlock(
     y: i32,
     width: i32,
     height: i32,
-    src: &[byte],
+    src: &[u8],
 ) {
     if x < 0 || x + width > SCREENWIDTH || y < 0 || y + height > SCREENHEIGHT {
         I_Error("Bad V_DrawBlock");
@@ -188,16 +187,16 @@ pub fn V_DrawBlock(
 pub fn V_DrawFilledBox(state: &mut IVideoState, x: i32, y: i32, w: i32, h: i32, c: i32) {
     for row in 0..h {
         let start = (SCREENWIDTH * (y + row) + x) as usize;
-        state.I_VideoBuffer[start..start + w as usize].fill(c as byte);
+        state.I_VideoBuffer[start..start + w as usize].fill(c as u8);
     }
 }
 pub fn V_DrawHorizLine(state: &mut IVideoState, x: i32, y: i32, w: i32, c: i32) {
     let start = (SCREENWIDTH * y + x) as usize;
-    state.I_VideoBuffer[start..start + w as usize].fill(c as byte);
+    state.I_VideoBuffer[start..start + w as usize].fill(c as u8);
 }
 pub fn V_DrawVertLine(state: &mut IVideoState, x: i32, y: i32, h: i32, c: i32) {
     for row in 0..h {
-        state.I_VideoBuffer[(SCREENWIDTH * (y + row) + x) as usize] = c as byte;
+        state.I_VideoBuffer[(SCREENWIDTH * (y + row) + x) as usize] = c as u8;
     }
 }
 pub fn V_DrawBox(state: &mut IVideoState, x: i32, y: i32, w: i32, h: i32, c: i32) {
@@ -209,10 +208,10 @@ pub fn V_DrawBox(state: &mut IVideoState, x: i32, y: i32, w: i32, h: i32, c: i32
 pub fn WritePCXfile(
     fs: &mut dyn DoomFileSystem,
     filename: &str,
-    data: &[byte],
+    data: &[u8],
     width: i32,
     height: i32,
-    palette: &[byte],
+    palette: &[u8],
 ) {
     // 128-byte on-disk PCX header.
     let mut pack: Vec<u8> = Vec::with_capacity((128 + width * height * 2 + 768 + 1) as usize);
@@ -234,11 +233,11 @@ pub fn WritePCXfile(
         if pixel as i32 & 0xc0 != 0xc0 {
             pack.push(pixel);
         } else {
-            pack.push(0xc1 as byte);
+            pack.push(0xc1_u8);
             pack.push(pixel);
         }
     }
-    pack.push(0xc as byte);
+    pack.push(0xc_u8);
     pack.extend_from_slice(&palette[..768]);
     fs.write_file(filename, &pack);
 }

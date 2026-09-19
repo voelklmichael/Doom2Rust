@@ -23,7 +23,6 @@ use crate::v_video::V_CachePatchNum;
 use crate::p_spec::ML_MAPPED;
 use crate::p_spec::ML_SECRET;
 use crate::st_stuff::ST_Responder;
-use crate::stdint_types::byte;
 
 use crate::tables::angle_t;
 use crate::tables::finecosine;
@@ -804,7 +803,7 @@ pub fn AM_Ticker(state: &mut GameState) {
 }
 pub fn AM_clearFB(state: &mut GameState, color: i32) {
     let len = (state.am_map.f_w * state.am_map.f_h) as usize;
-    state.i_video.I_VideoBuffer[..len].fill(color as byte);
+    state.i_video.I_VideoBuffer[..len].fill(color as u8);
 }
 pub fn AM_clipMline(state: &mut GameState, ml: &mline_t, fl: &mut fline_t) -> bool {
     let mut outcode1: i32 = 0;
@@ -967,7 +966,7 @@ pub fn AM_drawFline(state: &mut GameState, fl: &fline_t, color: i32) {
     if ax > ay {
         d = ay - ax / 2;
         loop {
-            state.i_video.I_VideoBuffer[(y * state.am_map.f_w + x) as usize] = color as byte;
+            state.i_video.I_VideoBuffer[(y * state.am_map.f_w + x) as usize] = color as u8;
             if x == fl.b.x {
                 return;
             }
@@ -981,7 +980,7 @@ pub fn AM_drawFline(state: &mut GameState, fl: &fline_t, color: i32) {
     } else {
         d = ax - ay / 2;
         loop {
-            state.i_video.I_VideoBuffer[(y * state.am_map.f_w + x) as usize] = color as byte;
+            state.i_video.I_VideoBuffer[(y * state.am_map.f_w + x) as usize] = color as u8;
             if y == fl.b.y {
                 return;
             }
@@ -1246,7 +1245,7 @@ pub fn AM_drawMarks(state: &mut GameState) {
 }
 pub fn AM_drawCrosshair(state: &mut GameState, color: i32) {
     let idx = (state.am_map.f_w * (state.am_map.f_h + 1) / 2) as usize;
-    state.i_video.I_VideoBuffer[idx] = color as byte;
+    state.i_video.I_VideoBuffer[idx] = color as u8;
 }
 pub fn AM_Drawer(state: &mut GameState) {
     if !state.am_map.automapactive {

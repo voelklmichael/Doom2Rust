@@ -19,7 +19,6 @@ use crate::p_mobj::{MF_JUSTATTACKED, MF_NOCLIP, MF_SHADOW};
 use crate::p_pspr::P_MovePsprites;
 use crate::p_spec::P_PlayerInSpecialSector;
 use crate::r_main::R_PointToAngle2;
-use crate::stdint_types::byte;
 use crate::tables::angle_t;
 use crate::tables::finecosine;
 use crate::tables::finesine;
@@ -224,7 +223,7 @@ pub fn P_PlayerThink(state: &mut GameState, player_id: PlayerId) {
         P_PlayerInSpecialSector(state, player_id);
     }
     if state.g_game.players[player_id.0 as usize].cmd.buttons as i32 & BT_SPECIAL != 0 {
-        state.g_game.players[player_id.0 as usize].cmd.buttons = 0 as byte;
+        state.g_game.players[player_id.0 as usize].cmd.buttons = 0_u8;
     }
     if state.g_game.players[player_id.0 as usize].cmd.buttons as i32 & BT_CHANGE != 0 {
         newweapon = weapontype_from_raw(

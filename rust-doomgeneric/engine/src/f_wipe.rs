@@ -1,7 +1,6 @@
 use crate::game_state::GameState;
 use crate::i_video::I_ReadScreen;
 use crate::m_random::M_Random;
-use crate::stdint_types::byte;
 use crate::v_video::Screen;
 use crate::v_video::V_DrawBlock;
 use crate::v_video::V_MarkRect;
@@ -9,8 +8,8 @@ use alloc::vec::Vec;
 
 pub struct FWipeState {
     pub go: bool,
-    pub wipe_scr_start: Vec<byte>,
-    pub wipe_scr_end: Vec<byte>,
+    pub wipe_scr_start: Vec<u8>,
+    pub wipe_scr_end: Vec<u8>,
     pub y: Vec<i32>,
 }
 
@@ -31,7 +30,7 @@ impl FWipeState {
     }
 }
 
-fn wipe_shittyColMajorXform(array: &mut [byte], width: i32, height: i32) {
+fn wipe_shittyColMajorXform(array: &mut [u8], width: i32, height: i32) {
     let (width, height) = (width as usize, height as usize);
     let mut dest = vec![0u8; width * height * 2];
     for y in 0..height {

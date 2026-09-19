@@ -86,7 +86,6 @@ pub(crate) mod sounds;
 pub(crate) mod st_lib;
 pub(crate) mod st_stuff;
 pub(crate) mod statdump;
-pub(crate) mod stdint_types;
 pub(crate) mod tables;
 pub(crate) mod v_video;
 pub(crate) mod w_checksum;

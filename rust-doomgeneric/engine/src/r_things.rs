@@ -28,7 +28,6 @@ use crate::r_main::MAXLIGHTSCALE;
 use crate::r_segs::R_RenderMaskedSegRange;
 use crate::r_segs::SIL_BOTTOM;
 use crate::r_segs::SIL_TOP;
-use crate::stdint_types::byte;
 use crate::v_video::V_CachePatchNum;
 use alloc::vec::Vec;
 
@@ -182,7 +181,7 @@ pub fn R_InstallSpriteLump(
         for r in 0..8 {
             state.r_things.sprtemp[frame as usize].lump[r] =
                 (lump - state.r_data.firstspritelump) as i16;
-            state.r_things.sprtemp[frame as usize].flip[r] = flipped as byte;
+            state.r_things.sprtemp[frame as usize].flip[r] = flipped as u8;
         }
         return;
     }
@@ -205,7 +204,7 @@ pub fn R_InstallSpriteLump(
     }
     state.r_things.sprtemp[frame as usize].lump[rotation as usize] =
         (lump - state.r_data.firstspritelump) as i16;
-    state.r_things.sprtemp[frame as usize].flip[rotation as usize] = flipped as byte;
+    state.r_things.sprtemp[frame as usize].flip[rotation as usize] = flipped as u8;
 }
 pub fn R_InitSpriteDefs(state: &mut GameState, namelist: &[&'static str]) {
     let mut frame: i32;

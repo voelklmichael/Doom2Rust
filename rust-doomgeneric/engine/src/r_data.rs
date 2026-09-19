@@ -7,12 +7,9 @@ use crate::m_fixed::FRACBITS;
 use alloc::boxed::Box;
 use alloc::vec::Vec;
 
-use crate::p_mobj::thinker_t;
-
 use crate::p_tick::P_MobjThinkerIds;
 use crate::r_defs::lighttable_t;
 use crate::r_draw::ColumnSource;
-use crate::stdint_types::byte;
 use crate::w_wad::W_LumpBytes;
 use crate::w_wad::W_LumpLength;
 use crate::w_wad::W_LumpNameHash;
@@ -202,7 +199,7 @@ pub fn R_GenerateComposite(state: &mut GameState, texnum: i32) {
     state.r_data.texturecomposite[texnum as usize] = Some(block.into_boxed_slice());
 }
 pub fn R_GenerateLookup(state: &mut GameState, texnum: i32) {
-    let mut patchcount: Vec<byte>;
+    let mut patchcount: Vec<u8>;
     let mut x: i32;
     let mut x1: i32;
     let mut x2: i32;
@@ -550,7 +547,6 @@ pub fn R_PrecacheLevel(state: &mut GameState) {
     let mut texturepresent: Vec<u8>;
     let mut spritepresent: Vec<u8>;
     let mut lump: i32;
-    let mut _th: *mut thinker_t = ::core::ptr::null_mut::<thinker_t>();
     if state.g_game.demoplayback {
         return;
     }

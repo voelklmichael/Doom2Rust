@@ -28,7 +28,6 @@ use crate::s_sound::SoundOrigin;
 use crate::sounds::MusicName;
 use crate::sounds::SfxName;
 
-use crate::stdint_types::size_t;
 use crate::v_video::V_CachePatchNum;
 use crate::v_video::V_DrawPatch;
 use crate::v_video::V_DrawPatchFlipped;
@@ -343,18 +342,18 @@ pub fn F_Responder(state: &mut GameState, event: &event_t) -> bool {
     false
 }
 pub fn F_Ticker(state: &mut GameState) {
-    let mut i: size_t;
+    let mut i: usize;
     if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32
         && state.f_finale.finalecount > 50
     {
-        i = 0 as size_t;
-        while i < MAXPLAYERS as size_t {
+        i = 0_usize;
+        while i < MAXPLAYERS as usize {
             if state.g_game.players[i].cmd.buttons != 0 {
                 break;
             }
             i = i.wrapping_add(1);
         }
-        if i < MAXPLAYERS as size_t {
+        if i < MAXPLAYERS as usize {
             if state.g_game.gamemap == 30 {
                 F_StartCast(state);
             } else {
@@ -371,10 +370,13 @@ pub fn F_Ticker(state: &mut GameState) {
         return;
     }
     if state.f_finale.finalestage == FinaleStage::F_STAGE_TEXT
-        && state.f_finale.finalecount as size_t
-            > (state.f_finale.finaletext.len() as size_t)
-                .wrapping_mul(TEXTSPEED as size_t)
-                .wrapping_add(TEXTWAIT as size_t)
+        && state.f_finale.finalecount as usize
+            > state
+                .f_finale
+                .finaletext
+                .len()
+                .wrapping_mul(TEXTSPEED as usize)
+                .wrapping_add(TEXTWAIT as usize)
     {
         state.f_finale.finalecount = 0;
         state.f_finale.finalestage = FinaleStage::F_STAGE_ARTSCREEN;
