@@ -269,3 +269,24 @@ reads past the end of the array (undefined behavior; whatever the linker placed 
 Rust port panicked with an out-of-bounds index during normal play on `DOOM.WAD`. The index
 is now clamped to `finetangent.len() - 1`, as PrBoom does. Only the texture column of that
 single edge pixel column can differ, and in-range angles are unaffected.
+
+## Savegames: built and read in memory, written in one go (2026-09-19)
+
+`G_DoSaveGame` / `G_DoLoadGame` used to stream the save file byte by byte through an open
+`std::fs::File` (`PSavegState.save_stream`). The engine no longer touches the filesystem
+directly (see `fs-crate-and-no-std-plan.md`), so a savegame is now a `Vec<u8>`
+(`PSavegState.save_buffer`) that is read from disk in full before a load and handed to
+`DoomFileSystem::write_file` in one call after a save. The on-disk format is unchanged: a
+save written by the new code is byte-identical to one from the streaming code, apart from
+the raw thinker-function pointer words that `saveg_writep` has always serialized (they vary
+from run to run even on the old code).
+
+Observable differences:
+
+- A save-file open failure is now detected when the finished image is written, not before
+  serialization starts. The recovery-file fallback (`<temp>/recovery.dsg`) and both error
+  messages are unchanged.
+- The "Savegame buffer overrun" check (`vanilla_savegame_limit`) now happens before anything
+  is written, so an over-limit save leaves no partial `temp.dsg` behind.
+- A write error can no longer surface halfway through serialization (`saveg_write8` cannot
+  fail), so the `saveg_write8: Error while writing save game` message is gone.

@@ -29,6 +29,7 @@ use crate::doomstat::DoomstatState;
 use crate::f_finale::F_Responder;
 use crate::f_finale::F_StartFinale;
 use crate::f_finale::F_Ticker;
+use crate::filesystem::read_file;
 use crate::fixed_cstr::FixedCStr;
 use crate::game_state::GameState;
 use crate::hu_stuff::HU_Responder;
@@ -43,8 +44,6 @@ use crate::m_fixed::fixed_t;
 use crate::m_fixed::FRACBITS;
 use crate::m_fixed::FRACUNIT;
 use crate::m_menu::M_StartControlPanel;
-use crate::m_misc::M_TempFile;
-use crate::m_misc::M_WriteFile;
 use crate::m_random::M_ClearRandom;
 use crate::m_random::P_Random;
 
@@ -104,7 +103,6 @@ use crate::wi_stuff::WI_End;
 use crate::wi_stuff::WI_Start;
 use crate::wi_stuff::WI_Ticker;
 use crate::wi_stuff::{wbplayerstruct_t, wbstartstruct_t};
-use std::io::Seek;
 
 pub struct GGameState {
     pub oldgamestate: GameScreenState,
@@ -1370,13 +1368,14 @@ pub fn G_LoadGame(state: &mut GameState, name: &str) {
 }
 pub fn G_DoLoadGame(state: &mut GameState) {
     state.g_game.gameaction = GameAction::ga_nothing;
-    state.p_saveg.save_stream = std::fs::File::open(&state.g_game.savename).ok();
-    if state.p_saveg.save_stream.is_none() {
+    let Some(image) = read_file(&mut *state.fs, &state.g_game.savename) else {
         return;
-    }
+    };
+    state.p_saveg.save_buffer = image;
+    state.p_saveg.save_pos = 0;
     state.p_saveg.savegame_error = false;
     if !P_ReadSaveGameHeader(state) {
-        state.p_saveg.save_stream = None;
+        state.p_saveg.save_buffer = Vec::new();
         return;
     }
     let savedleveltime: i32 = state.p_tick.leveltime;
@@ -1394,7 +1393,7 @@ pub fn G_DoLoadGame(state: &mut GameState) {
     if !P_ReadSaveGameEOF(state) {
         I_Error("Bad savegame");
     }
-    state.p_saveg.save_stream = None;
+    state.p_saveg.save_buffer = Vec::new();
     if state.r_main.setsizeneeded {
         R_ExecuteSetViewSize(state);
     }
@@ -1406,21 +1405,10 @@ pub fn G_SaveGame(state: &mut GameState, slot: i32, description: &str) {
     state.g_game.sendsave = true;
 }
 pub fn G_DoSaveGame(state: &mut GameState) {
-    let mut recovery_savegame_file: Option<String> = None;
     let temp_savegame_file = P_TempSaveGameFile(state);
     let savegame_file = P_SaveGameFile(state, state.g_game.savegameslot);
-    state.p_saveg.save_stream = std::fs::File::create(&temp_savegame_file).ok();
-    if state.p_saveg.save_stream.is_none() {
-        let recovery_file = M_TempFile("recovery.dsg");
-        state.p_saveg.save_stream = std::fs::File::create(&recovery_file).ok();
-        if state.p_saveg.save_stream.is_none() {
-            I_Error(&format!(
-                "Failed to open either '{}' or '{}' to write savegame.",
-                temp_savegame_file, recovery_file,
-            ));
-        }
-        recovery_savegame_file = Some(recovery_file);
-    }
+    state.p_saveg.save_buffer = Vec::new();
+    state.p_saveg.save_pos = 0;
     state.p_saveg.savegame_error = false;
     let savedescription = state.g_game.savedescription.clone();
     P_WriteSaveGameHeader(state, &savedescription);
@@ -1430,26 +1418,26 @@ pub fn G_DoSaveGame(state: &mut GameState) {
     P_ArchiveSpecials(state);
     P_WriteSaveGameEOF(state);
     if state.g_game.vanilla_savegame_limit != 0
-        && state
-            .p_saveg
-            .save_stream
-            .as_mut()
-            .unwrap()
-            .stream_position()
-            .unwrap_or(0)
-            > SAVEGAMESIZE as u64
+        && state.p_saveg.save_buffer.len() > SAVEGAMESIZE as usize
     {
         I_Error("Savegame buffer overrun");
     }
-    state.p_saveg.save_stream = None;
-    if let Some(recovery_file) = &recovery_savegame_file {
+    let image = std::mem::take(&mut state.p_saveg.save_buffer);
+    if !state.fs.write_file(&temp_savegame_file, &image) {
+        let recovery_file = state.fs.temp_path("recovery.dsg");
+        if !state.fs.write_file(&recovery_file, &image) {
+            I_Error(&format!(
+                "Failed to open either '{}' or '{}' to write savegame.",
+                temp_savegame_file, recovery_file,
+            ));
+        }
         I_Error(&format!(
             "Failed to open savegame file '{}' for writing.\nBut your game has been saved to '{}' for recovery.",
             temp_savegame_file, recovery_file,
         ));
     }
-    let _ = std::fs::remove_file(&savegame_file);
-    let _ = std::fs::rename(&temp_savegame_file, &savegame_file);
+    state.fs.remove_file(&savegame_file);
+    state.fs.rename(&temp_savegame_file, &savegame_file);
     state.g_game.gameaction = GameAction::ga_nothing;
     state.g_game.savedescription.clear();
     state.g_game.players[state.g_game.consoleplayer as usize].message =
@@ -1807,7 +1795,9 @@ pub fn G_CheckDemoStatus(state: &mut GameState) -> bool {
     if state.g_game.demorecording {
         state.g_game.demo_write_byte(DEMOMARKER as byte);
         let demo_len = state.g_game.demo_p;
-        M_WriteFile(&state.g_game.demoname, &state.g_game.demobuffer[..demo_len]);
+        state
+            .fs
+            .write_file(&state.g_game.demoname, &state.g_game.demobuffer[..demo_len]);
         state.g_game.demobuffer = Vec::new();
         state.g_game.demorecording = false;
         I_Error(&format!("Demo {} recorded", state.g_game.demoname));
