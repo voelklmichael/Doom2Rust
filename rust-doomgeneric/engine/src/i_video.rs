@@ -140,7 +140,7 @@ pub fn init_graphics(state: &mut GameState) {
     state.i_video.s_fb.yres = DOOMGENERIC_RESY as u32;
     state.i_video.s_fb.xres_virtual = state.i_video.s_fb.xres;
     state.i_video.s_fb.yres_virtual = state.i_video.s_fb.yres;
-    let mode: &str = match check_parm_with_args(state, "-gfxmode", 1) {
+    let mode: &str = match check_parm_with_args(&state.m_argv, "-gfxmode", 1) {
         Some(p) => state.m_argv.myargv[p + 1].as_str(),
         None => "rgba8888",
     };
@@ -193,7 +193,7 @@ pub fn init_graphics(state: &mut GameState) {
         SCREENWIDTH,
         SCREENHEIGHT,
     );
-    if let Some(i) = check_parm_with_args(state, "-scaling", 1) {
+    if let Some(i) = check_parm_with_args(&state.m_argv, "-scaling", 1) {
         state.i_video.fb_scaling = argv_atoi(&state.m_argv.myargv[i + 1]);
         doom_println!(
             state.platform,
@@ -282,8 +282,8 @@ pub fn finish_update(state: &mut GameState) {
     }
     state.platform.draw_frame(&state.i_video.dg_screen_buffer);
 }
-pub fn read_screen(state: &GameState) -> Vec<u8> {
-    state.i_video.i_video_buffer[..(SCREENWIDTH * SCREENHEIGHT) as usize].to_vec()
+pub fn read_screen(i_video: &IVideoState) -> Vec<u8> {
+    i_video.i_video_buffer[..(SCREENWIDTH * SCREENHEIGHT) as usize].to_vec()
 }
 pub fn set_palette(state: &mut GameState, palette: &[u8]) {
     let gamma = &GAMMATABLE[state.i_video.usegamma as usize];

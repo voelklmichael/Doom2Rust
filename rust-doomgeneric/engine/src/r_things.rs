@@ -13,6 +13,7 @@ use crate::p_mobj::MobjId;
 use crate::p_mobj::PspDef;
 use crate::p_setup::SectorId;
 use crate::patch::Patch;
+use crate::r_data::RDataState;
 use crate::r_defs::ClipArray;
 use crate::r_defs::SpriteRotate;
 use crate::r_defs::{SpriteDef, SpriteFrame};
@@ -146,7 +147,8 @@ pub const MAXVISSPRITES: i32 = 128;
 pub const MINZ: i32 = FRACUNIT * 4;
 pub const BASEYCENTER: i32 = 100;
 pub fn install_sprite_lump(
-    state: &mut GameState,
+    r_data: &RDataState,
+    r_things: &mut RThingsState,
     lump: i32,
     frame: u32,
     mut rotation: u32,
@@ -157,52 +159,51 @@ pub fn install_sprite_lump(
             "R_InstallSpriteLump: Bad frame characters in lump {lump}"
         ));
     }
-    if frame as i32 > state.r_things.maxframe {
-        state.r_things.maxframe = frame as i32;
+    if frame as i32 > r_things.maxframe {
+        r_things.maxframe = frame as i32;
     }
     if rotation == 0 {
-        if state.r_things.sprtemp[frame as usize].rotate == SpriteRotate::NonRotating {
+        if r_things.sprtemp[frame as usize].rotate == SpriteRotate::NonRotating {
             error(&format!(
                 "R_InitSprites: Sprite {} frame {} has multip rot=0 lump",
-                state.r_things.spritename,
+                r_things.spritename,
                 ('A' as i32 as u32).wrapping_add(frame) as u8 as char,
             ));
         }
-        if state.r_things.sprtemp[frame as usize].rotate == SpriteRotate::Rotating {
+        if r_things.sprtemp[frame as usize].rotate == SpriteRotate::Rotating {
             error(&format!(
                 "R_InitSprites: Sprite {} frame {} has rotations and a rot=0 lump",
-                state.r_things.spritename,
+                r_things.spritename,
                 ('A' as i32 as u32).wrapping_add(frame) as u8 as char,
             ));
         }
-        state.r_things.sprtemp[frame as usize].rotate = SpriteRotate::NonRotating;
+        r_things.sprtemp[frame as usize].rotate = SpriteRotate::NonRotating;
         for r in 0..8 {
-            state.r_things.sprtemp[frame as usize].lump[r] =
-                (lump - state.r_data.firstspritelump) as i16;
-            state.r_things.sprtemp[frame as usize].flip[r] = flipped as u8;
+            r_things.sprtemp[frame as usize].lump[r] = (lump - r_data.firstspritelump) as i16;
+            r_things.sprtemp[frame as usize].flip[r] = flipped as u8;
         }
         return;
     }
-    if state.r_things.sprtemp[frame as usize].rotate == SpriteRotate::NonRotating {
+    if r_things.sprtemp[frame as usize].rotate == SpriteRotate::NonRotating {
         error(&format!(
             "R_InitSprites: Sprite {} frame {} has rotations and a rot=0 lump",
-            state.r_things.spritename,
+            r_things.spritename,
             ('A' as i32 as u32).wrapping_add(frame) as u8 as char,
         ));
     }
-    state.r_things.sprtemp[frame as usize].rotate = SpriteRotate::Rotating;
+    r_things.sprtemp[frame as usize].rotate = SpriteRotate::Rotating;
     rotation = rotation.wrapping_sub(1);
-    if state.r_things.sprtemp[frame as usize].lump[rotation as usize] as i32 != -1 {
+    if r_things.sprtemp[frame as usize].lump[rotation as usize] as i32 != -1 {
         error(&format!(
             "R_InitSprites: Sprite {} : {} : {} has two lumps mapped to it",
-            state.r_things.spritename,
+            r_things.spritename,
             ('A' as i32 as u32).wrapping_add(frame) as u8 as char,
             ('1' as i32 as u32).wrapping_add(rotation) as u8 as char,
         ));
     }
-    state.r_things.sprtemp[frame as usize].lump[rotation as usize] =
-        (lump - state.r_data.firstspritelump) as i16;
-    state.r_things.sprtemp[frame as usize].flip[rotation as usize] = flipped as u8;
+    r_things.sprtemp[frame as usize].lump[rotation as usize] =
+        (lump - r_data.firstspritelump) as i16;
+    r_things.sprtemp[frame as usize].flip[rotation as usize] = flipped as u8;
 }
 pub fn init_sprite_defs(state: &mut GameState, namelist: &[&'static str]) {
     let mut frame: i32;
@@ -237,11 +238,25 @@ pub fn init_sprite_defs(state: &mut GameState, namelist: &[&'static str]) {
                 } else {
                     patched = l;
                 }
-                install_sprite_lump(state, patched, frame as u32, rotation as u32, false);
+                install_sprite_lump(
+                    &state.r_data,
+                    &mut state.r_things,
+                    patched,
+                    frame as u32,
+                    rotation as u32,
+                    false,
+                );
                 if state.w_wad.lumpinfo[l as usize].name[6] != 0 {
                     frame = state.w_wad.lumpinfo[l as usize].name[6] as i32 - 'A' as i32;
                     rotation = state.w_wad.lumpinfo[l as usize].name[7] as i32 - '0' as i32;
-                    install_sprite_lump(state, l, frame as u32, rotation as u32, true);
+                    install_sprite_lump(
+                        &state.r_data,
+                        &mut state.r_things,
+                        l,
+                        frame as u32,
+                        rotation as u32,
+                        true,
+                    );
                 }
             }
         }
@@ -288,16 +303,16 @@ pub fn init_sprites(state: &mut GameState, namelist: &[&'static str]) {
     }
     init_sprite_defs(state, namelist);
 }
-pub fn clear_sprites(state: &mut GameState) {
-    state.r_things.vissprite_p = 0;
+pub fn clear_sprites(r_things: &mut RThingsState) {
+    r_things.vissprite_p = 0;
 }
-pub fn store_vis_sprite(state: &mut GameState, vis: VisSprite) {
-    if state.r_things.vissprite_p == MAXVISSPRITES as usize {
-        state.r_things.overflowsprite = vis;
+pub fn store_vis_sprite(r_things: &mut RThingsState, vis: VisSprite) {
+    if r_things.vissprite_p == MAXVISSPRITES as usize {
+        r_things.overflowsprite = vis;
         return;
     }
-    state.r_things.vissprites[state.r_things.vissprite_p] = vis;
-    state.r_things.vissprite_p += 1;
+    r_things.vissprites[r_things.vissprite_p] = vis;
+    r_things.vissprite_p += 1;
 }
 pub fn draw_masked_column(state: &mut GameState, mut post: ColumnSource) {
     let mut topscreen: i32;
@@ -307,11 +322,11 @@ pub fn draw_masked_column(state: &mut GameState, mut post: ColumnSource) {
     let mfloorclip = state.r_things.mfloorclip.unwrap();
     let mceilingclip = state.r_things.mceilingclip.unwrap();
     loop {
-        let topdelta = read_source(state, post, 0);
+        let topdelta = read_source(&state.r_data, &state.w_wad, post, 0);
         if topdelta as i32 == 0xff {
             break;
         }
-        let length = read_source(state, post, 1);
+        let length = read_source(&state.r_data, &state.w_wad, post, 1);
         topscreen = state.r_things.sprtopscreen + state.r_things.spryscale * topdelta as i32;
         bottomscreen = topscreen + state.r_things.spryscale * length as i32;
         state.r_draw.dc_yl = (topscreen + FRACUNIT - 1) >> FRACBITS;
@@ -429,7 +444,7 @@ pub fn project_sprite(state: &mut GameState, thing_id: MobjId) {
         lump = sprframe.lump[0] as i32;
         flip = sprframe.flip[0] != 0;
     } else {
-        ang = point_to_angle(state, thing_x, thing_y);
+        ang = point_to_angle(&state.r_main, thing_x, thing_y);
         rot = ang
             .wrapping_sub(thing_angle)
             .wrapping_add(((ANG45 / 2) as u32).wrapping_mul(9))
@@ -500,7 +515,7 @@ pub fn project_sprite(state: &mut GameState, thing_id: MobjId) {
         }
         vis.colormap = Some(state.r_main.light_row48(state.r_things.spritelights)[index as usize]);
     }
-    store_vis_sprite(state, vis);
+    store_vis_sprite(&mut state.r_things, vis);
 }
 pub fn add_sprites(state: &mut GameState, sec: SectorId) {
     let sector = state.p_setup.sector_mut(sec);
@@ -635,17 +650,17 @@ pub fn draw_player_sprites(state: &mut GameState) {
         }
     }
 }
-pub fn sort_vis_sprites(state: &mut GameState) {
-    let count = state.r_things.vissprite_p as i32;
-    let mut order = core::mem::take(&mut state.r_things.vissprite_order);
+pub fn sort_vis_sprites(r_things: &mut RThingsState) {
+    let count = r_things.vissprite_p as i32;
+    let mut order = core::mem::take(&mut r_things.vissprite_order);
     order.clear();
     if count > 0 {
         order.extend(0..count as usize);
         // Stable sort: preserves the original selection-sort's leftmost-first
         // tie-break among vissprites sharing the same scale.
-        order.sort_by_key(|&i| state.r_things.vissprites[i].scale);
+        order.sort_by_key(|&i| r_things.vissprites[i].scale);
     }
-    state.r_things.vissprite_order = order;
+    r_things.vissprite_order = order;
 }
 pub fn draw_sprite(state: &mut GameState, spr: &VisSprite) {
     let mut r1: i32;
@@ -673,7 +688,8 @@ pub fn draw_sprite(state: &mut GameState, spr: &VisSprite) {
                 scale = ds.scale2;
             }
             if scale < spr.scale
-                || lowscale < spr.scale && point_on_seg_side(state, spr.gx, spr.gy, ds.curline) == 0
+                || lowscale < spr.scale
+                    && point_on_seg_side(&state.p_setup, spr.gx, spr.gy, ds.curline) == 0
             {
                 if ds.maskedtexturecol.is_some() {
                     render_masked_seg_range(state, &ds, r1, r2);
@@ -730,7 +746,7 @@ pub fn draw_sprite(state: &mut GameState, spr: &VisSprite) {
     draw_vis_sprite(state, spr);
 }
 pub fn draw_masked(state: &mut GameState) {
-    sort_vis_sprites(state);
+    sort_vis_sprites(&mut state.r_things);
     for i in 0..state.r_things.vissprite_order.len() {
         let idx = state.r_things.vissprite_order[i];
         let spr = state.r_things.vissprites[idx];

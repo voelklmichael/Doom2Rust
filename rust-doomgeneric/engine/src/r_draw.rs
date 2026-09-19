@@ -3,11 +3,15 @@ use crate::doomdef::SCREENHEIGHT;
 use crate::doomdef::SCREENWIDTH;
 use crate::game_state::GameState;
 use crate::i_system::error;
+use crate::i_video::IVideoState;
 use crate::m_fixed::Fixed;
 use crate::m_fixed::FRACBITS;
 use crate::patch::Patch;
+use crate::r_data::RDataState;
 use crate::v_video::cache_patch_name;
 use crate::v_video::Screen;
+use crate::v_video::VVideoState;
+use crate::w_wad::WWadState;
 use alloc::vec::Vec;
 
 use crate::r_main::ColormapId;
@@ -35,13 +39,18 @@ pub(crate) fn advance_source(src: ColumnSource, delta: usize) -> ColumnSource {
     }
 }
 
-pub(crate) fn read_source(state: &GameState, src: ColumnSource, idx: i32) -> u8 {
+pub(crate) fn read_source(
+    r_data: &RDataState,
+    w_wad: &WWadState,
+    src: ColumnSource,
+    idx: i32,
+) -> u8 {
     match src {
         ColumnSource::Lump { lump, offset } => {
-            state.w_wad.lumpinfo[lump as usize].cache.as_ref().unwrap()
+            w_wad.lumpinfo[lump as usize].cache.as_ref().unwrap()
                 [(offset as isize + idx as isize) as usize]
         }
-        ColumnSource::Composite { tex, offset } => state.r_data.texturecomposite[tex as usize]
+        ColumnSource::Composite { tex, offset } => r_data.texturecomposite[tex as usize]
             .as_ref()
             .unwrap()[(offset as isize + idx as isize) as usize],
     }
@@ -147,7 +156,8 @@ pub fn draw_column(state: &mut GameState) {
         + (state.r_draw.dc_yl as Fixed - state.r_main.centery as Fixed) * fracstep;
     loop {
         let src_pixel = read_source(
-            state,
+            &state.r_data,
+            &state.w_wad,
             state.r_draw.dc_source.unwrap(),
             frac >> FRACBITS & 127,
         );
@@ -191,7 +201,8 @@ pub fn draw_column_low(state: &mut GameState) {
         + (state.r_draw.dc_yl as Fixed - state.r_main.centery as Fixed) * fracstep;
     loop {
         let src_pixel = read_source(
-            state,
+            &state.r_data,
+            &state.w_wad,
             state.r_draw.dc_source.unwrap(),
             frac >> FRACBITS & 127,
         );
@@ -334,7 +345,12 @@ pub fn draw_translated_column(state: &mut GameState) {
     frac = state.r_draw.dc_texturemid
         + (state.r_draw.dc_yl as Fixed - state.r_main.centery as Fixed) * fracstep;
     loop {
-        let raw_pixel = read_source(state, state.r_draw.dc_source.unwrap(), frac >> FRACBITS);
+        let raw_pixel = read_source(
+            &state.r_data,
+            &state.w_wad,
+            state.r_draw.dc_source.unwrap(),
+            frac >> FRACBITS,
+        );
         let src_pixel =
             state.r_draw.translationtables[state.r_draw.dc_translation + raw_pixel as usize];
         state.i_video.i_video_buffer[idx] = state.r_data.colormaps
@@ -376,7 +392,12 @@ pub fn draw_translated_column_low(state: &mut GameState) {
     frac = state.r_draw.dc_texturemid
         + (state.r_draw.dc_yl as Fixed - state.r_main.centery as Fixed) * fracstep;
     loop {
-        let raw_pixel = read_source(state, state.r_draw.dc_source.unwrap(), frac >> FRACBITS);
+        let raw_pixel = read_source(
+            &state.r_data,
+            &state.w_wad,
+            state.r_draw.dc_source.unwrap(),
+            frac >> FRACBITS,
+        );
         let src_pixel =
             state.r_draw.translationtables[state.r_draw.dc_translation + raw_pixel as usize];
         let colormap = state.r_draw.dc_colormap.unwrap();
@@ -393,19 +414,19 @@ pub fn draw_translated_column_low(state: &mut GameState) {
         }
     }
 }
-pub fn init_translation_tables(state: &mut GameState) {
-    state.r_draw.translationtables = vec![0u8; 256 * 3];
+pub fn init_translation_tables(r_draw: &mut RDrawState) {
+    r_draw.translationtables = vec![0u8; 256 * 3];
     for i in 0..256 {
         if (0x70..=0x7f).contains(&i) {
-            state.r_draw.translationtables[i as usize] = (0x60 + (i & 0xf)) as u8;
-            state.r_draw.translationtables[(i + 256) as usize] = (0x40 + (i & 0xf)) as u8;
-            state.r_draw.translationtables[(i + 512) as usize] = (0x20 + (i & 0xf)) as u8;
+            r_draw.translationtables[i as usize] = (0x60 + (i & 0xf)) as u8;
+            r_draw.translationtables[(i + 256) as usize] = (0x40 + (i & 0xf)) as u8;
+            r_draw.translationtables[(i + 512) as usize] = (0x20 + (i & 0xf)) as u8;
         } else {
             let fresh11 = i as u8;
-            state.r_draw.translationtables[(i + 512) as usize] = fresh11;
+            r_draw.translationtables[(i + 512) as usize] = fresh11;
             let fresh12 = fresh11;
-            state.r_draw.translationtables[(i + 256) as usize] = fresh12;
-            state.r_draw.translationtables[i as usize] = fresh12;
+            r_draw.translationtables[(i + 256) as usize] = fresh12;
+            r_draw.translationtables[i as usize] = fresh12;
         }
     }
 }
@@ -440,7 +461,12 @@ pub fn draw_span(state: &mut GameState) {
         spot = (xtemp | ytemp) as i32;
         let fresh6 = idx;
         idx += 1;
-        let src_pixel = read_source(state, state.r_draw.ds_source.unwrap(), spot);
+        let src_pixel = read_source(
+            &state.r_data,
+            &state.w_wad,
+            state.r_draw.ds_source.unwrap(),
+            spot,
+        );
         state.i_video.i_video_buffer[fresh6] =
             state.r_data.colormaps[(state.r_draw.ds_colormap * 256 + src_pixel as i32) as usize];
         position = position.wrapping_add(step);
@@ -484,7 +510,12 @@ pub fn draw_span_low(state: &mut GameState) {
         spot = (xtemp | ytemp) as i32;
         let fresh8 = idx;
         idx += 1;
-        let src_pixel = read_source(state, state.r_draw.ds_source.unwrap(), spot);
+        let src_pixel = read_source(
+            &state.r_data,
+            &state.w_wad,
+            state.r_draw.ds_source.unwrap(),
+            spot,
+        );
         let pixel =
             state.r_data.colormaps[(state.r_draw.ds_colormap * 256 + src_pixel as i32) as usize];
         state.i_video.i_video_buffer[fresh8] = pixel;
@@ -499,18 +530,18 @@ pub fn draw_span_low(state: &mut GameState) {
         }
     }
 }
-pub fn init_buffer(state: &mut GameState, width: i32, height: i32) {
-    state.r_draw.viewwindowx = (SCREENWIDTH - width) >> 1;
+pub fn init_buffer(r_draw: &mut RDrawState, width: i32, height: i32) {
+    r_draw.viewwindowx = (SCREENWIDTH - width) >> 1;
     for i in 0..width {
-        state.r_draw.columnofs[i as usize] = state.r_draw.viewwindowx + i;
+        r_draw.columnofs[i as usize] = r_draw.viewwindowx + i;
     }
     if width == SCREENWIDTH {
-        state.r_draw.viewwindowy = 0;
+        r_draw.viewwindowy = 0;
     } else {
-        state.r_draw.viewwindowy = (SCREENHEIGHT - SBARHEIGHT - height) >> 1;
+        r_draw.viewwindowy = (SCREENHEIGHT - SBARHEIGHT - height) >> 1;
     }
     for i in 0..height {
-        state.r_draw.ylookup[i as usize] = ((i + state.r_draw.viewwindowy) * SCREENWIDTH) as usize;
+        r_draw.ylookup[i as usize] = ((i + r_draw.viewwindowy) * SCREENWIDTH) as usize;
     }
 }
 pub fn fill_back_screen(state: &mut GameState) {
@@ -627,32 +658,32 @@ pub fn fill_back_screen(state: &mut GameState) {
         &__wcache672_1,
     );
 }
-pub fn video_erase(state: &mut GameState, ofs: u32, count: i32) {
-    if let Some(background_buffer) = &state.r_draw.background_buffer {
+pub fn video_erase(i_video: &mut IVideoState, r_draw: &RDrawState, ofs: u32, count: i32) {
+    if let Some(background_buffer) = &r_draw.background_buffer {
         let range = ofs as usize..ofs as usize + count as usize;
-        state.i_video.i_video_buffer[range.clone()].copy_from_slice(&background_buffer[range]);
+        i_video.i_video_buffer[range.clone()].copy_from_slice(&background_buffer[range]);
     }
 }
-pub fn draw_view_border(state: &mut GameState) {
+pub fn draw_view_border(i_video: &mut IVideoState, r_draw: &RDrawState, v_video: &mut VVideoState) {
     let mut side: i32;
     let mut ofs: i32;
-    if state.r_draw.scaledviewwidth == SCREENWIDTH {
+    if r_draw.scaledviewwidth == SCREENWIDTH {
         return;
     }
-    let top: i32 = (SCREENHEIGHT - SBARHEIGHT - state.r_draw.viewheight) / 2;
-    side = (SCREENWIDTH - state.r_draw.scaledviewwidth) / 2;
-    video_erase(state, 0, top * SCREENWIDTH + side);
-    ofs = (state.r_draw.viewheight + top) * SCREENWIDTH - side;
-    video_erase(state, ofs as u32, top * SCREENWIDTH + side);
+    let top: i32 = (SCREENHEIGHT - SBARHEIGHT - r_draw.viewheight) / 2;
+    side = (SCREENWIDTH - r_draw.scaledviewwidth) / 2;
+    video_erase(i_video, r_draw, 0, top * SCREENWIDTH + side);
+    ofs = (r_draw.viewheight + top) * SCREENWIDTH - side;
+    video_erase(i_video, r_draw, ofs as u32, top * SCREENWIDTH + side);
     ofs = top * SCREENWIDTH + SCREENWIDTH - side;
     side <<= 1;
-    for _ in 1..state.r_draw.viewheight {
-        video_erase(state, ofs as u32, side);
+    for _ in 1..r_draw.viewheight {
+        video_erase(i_video, r_draw, ofs as u32, side);
         ofs += SCREENWIDTH;
     }
     let dest_screen = Screen::Video;
     mark_rect(
-        state,
+        v_video,
         dest_screen,
         0,
         0,

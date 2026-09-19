@@ -1,3 +1,4 @@
+use crate::d_main::DMainState;
 use crate::d_mode::skill_from_raw;
 use crate::d_player::CheatFlags;
 use crate::d_player::NUMPOWERS;
@@ -6,6 +7,7 @@ use crate::d_player::{weapontype_from_raw, NUMWEAPONS};
 use crate::d_player::{Player, PlayerId, PlayerState};
 use crate::d_ticcmd::TicCmd;
 use crate::g_game::vanilla_version_code;
+use crate::g_game::GGameState;
 use crate::i_system::error;
 use crate::info::StateId;
 use crate::m_fixed::Fixed;
@@ -25,6 +27,7 @@ use crate::p_mobj::{Mobj, PspDef};
 use crate::p_plats::add_active_plat;
 use crate::p_plats::PlatE;
 use crate::p_plats::PlattypeE;
+use crate::p_setup::PSetupState;
 use crate::p_setup::SectorId;
 use crate::p_setup::SideId;
 use crate::p_setup::SubsectorId;
@@ -97,15 +100,14 @@ pub enum SpecialThinkerClass {
 }
 pub const SAVEGAME_EOF: i32 = 0x1d;
 pub const VERSIONSIZE: i32 = 16;
-pub fn temp_save_game_file(state: &mut GameState) -> String {
-    if state.p_saveg.temp_savegame_filename.is_none() {
-        state.p_saveg.temp_savegame_filename =
-            Some(format!("{}temp.dsg", state.d_main.savegamedir));
+pub fn temp_save_game_file(d_main: &DMainState, p_saveg: &mut PSavegState) -> String {
+    if p_saveg.temp_savegame_filename.is_none() {
+        p_saveg.temp_savegame_filename = Some(format!("{}temp.dsg", d_main.savegamedir));
     }
-    state.p_saveg.temp_savegame_filename.clone().unwrap()
+    p_saveg.temp_savegame_filename.clone().unwrap()
 }
-pub fn save_game_file(state: &GameState, slot: i32) -> String {
-    format!("{}doomsav{}.dsg", state.d_main.savegamedir, slot)
+pub fn save_game_file(d_main: &DMainState, slot: i32) -> String {
+    format!("{}doomsav{}.dsg", d_main.savegamedir, slot)
 }
 /// Prints the deferred "ran off the end of the file" diagnostic, if a
 /// `saveg_read8` hit one; call once when a load finishes or is abandoned.
@@ -737,35 +739,35 @@ pub fn read_save_game_header(state: &mut GameState) -> bool {
     state.p_tick.leveltime = ((a as i32) << 16) + ((b as i32) << 8) + c as i32;
     true
 }
-pub fn read_save_game_eof(state: &mut GameState) -> bool {
-    let value: i32 = saveg_read8(&mut state.p_saveg) as i32;
+pub fn read_save_game_eof(p_saveg: &mut PSavegState) -> bool {
+    let value: i32 = saveg_read8(p_saveg) as i32;
     value == SAVEGAME_EOF
 }
-pub fn write_save_game_eof(state: &mut GameState) {
-    saveg_write8(&mut state.p_saveg, SAVEGAME_EOF as u8);
+pub fn write_save_game_eof(p_saveg: &mut PSavegState) {
+    saveg_write8(p_saveg, SAVEGAME_EOF as u8);
 }
-pub fn archive_players(state: &mut GameState) {
+pub fn archive_players(g_game: &GGameState, p_saveg: &mut PSavegState) {
     for i in 0..(MAXPLAYERS as usize) {
-        if state.g_game.playeringame[i] {
-            saveg_write_pad(&mut state.p_saveg);
-            saveg_write_player_t(&mut state.p_saveg, &state.g_game.players[i]);
+        if g_game.playeringame[i] {
+            saveg_write_pad(p_saveg);
+            saveg_write_player_t(p_saveg, &g_game.players[i]);
         }
     }
 }
-pub fn un_archive_players(state: &mut GameState) {
+pub fn un_archive_players(g_game: &mut GGameState, p_saveg: &mut PSavegState) {
     for i in 0..(MAXPLAYERS as usize) {
-        if state.g_game.playeringame[i] {
-            saveg_read_pad(&mut state.p_saveg);
-            saveg_read_player_t(&mut state.p_saveg, &mut state.g_game.players[i]);
-            state.g_game.players[i].mo = None;
-            state.g_game.players[i].message = None;
-            state.g_game.players[i].attacker = None;
+        if g_game.playeringame[i] {
+            saveg_read_pad(p_saveg);
+            saveg_read_player_t(p_saveg, &mut g_game.players[i]);
+            g_game.players[i].mo = None;
+            g_game.players[i].message = None;
+            g_game.players[i].attacker = None;
         }
     }
 }
-pub fn archive_world(state: &mut GameState) {
-    for i in 0..state.p_setup.numsectors {
-        let sec = state.p_setup.sector_mut(SectorId(i as u32));
+pub fn archive_world(p_saveg: &mut PSavegState, p_setup: &mut PSetupState) {
+    for i in 0..p_setup.numsectors {
+        let sec = p_setup.sector_mut(SectorId(i as u32));
         let (floorheight, ceilingheight, floorpic, ceilingpic, lightlevel, special, tag) = (
             sec.floorheight,
             sec.ceilingheight,
@@ -775,23 +777,23 @@ pub fn archive_world(state: &mut GameState) {
             sec.special,
             sec.tag,
         );
-        saveg_write16(&mut state.p_saveg, (floorheight >> FRACBITS) as i16);
-        saveg_write16(&mut state.p_saveg, (ceilingheight >> FRACBITS) as i16);
-        saveg_write16(&mut state.p_saveg, floorpic);
-        saveg_write16(&mut state.p_saveg, ceilingpic);
-        saveg_write16(&mut state.p_saveg, lightlevel);
-        saveg_write16(&mut state.p_saveg, special);
-        saveg_write16(&mut state.p_saveg, tag);
+        saveg_write16(p_saveg, (floorheight >> FRACBITS) as i16);
+        saveg_write16(p_saveg, (ceilingheight >> FRACBITS) as i16);
+        saveg_write16(p_saveg, floorpic);
+        saveg_write16(p_saveg, ceilingpic);
+        saveg_write16(p_saveg, lightlevel);
+        saveg_write16(p_saveg, special);
+        saveg_write16(p_saveg, tag);
     }
-    for i in 0..(state.p_setup.numlines as usize) {
-        let li = &state.p_setup.lines[i];
+    for i in 0..(p_setup.numlines as usize) {
+        let li = &p_setup.lines[i];
         let (flags, special, tag, sidenum) = (li.flags, li.special, li.tag, li.sidenum);
-        saveg_write16(&mut state.p_saveg, flags.bits());
-        saveg_write16(&mut state.p_saveg, special);
-        saveg_write16(&mut state.p_saveg, tag);
+        saveg_write16(p_saveg, flags.bits());
+        saveg_write16(p_saveg, special);
+        saveg_write16(p_saveg, tag);
         for &side in &sidenum {
             if side as i32 != -1 {
-                let si = state.p_setup.side_mut(SideId(side as u32));
+                let si = p_setup.side_mut(SideId(side as u32));
                 let (textureoffset, rowoffset, toptexture, bottomtexture, midtexture) = (
                     si.textureoffset,
                     si.rowoffset,
@@ -799,25 +801,25 @@ pub fn archive_world(state: &mut GameState) {
                     si.bottomtexture,
                     si.midtexture,
                 );
-                saveg_write16(&mut state.p_saveg, (textureoffset >> FRACBITS) as i16);
-                saveg_write16(&mut state.p_saveg, (rowoffset >> FRACBITS) as i16);
-                saveg_write16(&mut state.p_saveg, toptexture);
-                saveg_write16(&mut state.p_saveg, bottomtexture);
-                saveg_write16(&mut state.p_saveg, midtexture);
+                saveg_write16(p_saveg, (textureoffset >> FRACBITS) as i16);
+                saveg_write16(p_saveg, (rowoffset >> FRACBITS) as i16);
+                saveg_write16(p_saveg, toptexture);
+                saveg_write16(p_saveg, bottomtexture);
+                saveg_write16(p_saveg, midtexture);
             }
         }
     }
 }
-pub fn un_archive_world(state: &mut GameState) {
-    for i in 0..state.p_setup.numsectors {
-        let floorheight = ((saveg_read16(&mut state.p_saveg) as i32) << FRACBITS) as Fixed;
-        let ceilingheight = ((saveg_read16(&mut state.p_saveg) as i32) << FRACBITS) as Fixed;
-        let floorpic = saveg_read16(&mut state.p_saveg);
-        let ceilingpic = saveg_read16(&mut state.p_saveg);
-        let lightlevel = saveg_read16(&mut state.p_saveg);
-        let special = saveg_read16(&mut state.p_saveg);
-        let tag = saveg_read16(&mut state.p_saveg);
-        let sec = state.p_setup.sector_mut(SectorId(i as u32));
+pub fn un_archive_world(p_saveg: &mut PSavegState, p_setup: &mut PSetupState) {
+    for i in 0..p_setup.numsectors {
+        let floorheight = ((saveg_read16(p_saveg) as i32) << FRACBITS) as Fixed;
+        let ceilingheight = ((saveg_read16(p_saveg) as i32) << FRACBITS) as Fixed;
+        let floorpic = saveg_read16(p_saveg);
+        let ceilingpic = saveg_read16(p_saveg);
+        let lightlevel = saveg_read16(p_saveg);
+        let special = saveg_read16(p_saveg);
+        let tag = saveg_read16(p_saveg);
+        let sec = p_setup.sector_mut(SectorId(i as u32));
         sec.floorheight = floorheight;
         sec.ceilingheight = ceilingheight;
         sec.floorpic = floorpic;
@@ -828,24 +830,23 @@ pub fn un_archive_world(state: &mut GameState) {
         sec.specialdata = None;
         sec.soundtarget = None;
     }
-    for i in 0..(state.p_setup.numlines as usize) {
-        let flags = saveg_read16(&mut state.p_saveg);
-        let special = saveg_read16(&mut state.p_saveg);
-        let tag = saveg_read16(&mut state.p_saveg);
-        let li = &mut state.p_setup.lines[i];
+    for i in 0..(p_setup.numlines as usize) {
+        let flags = saveg_read16(p_saveg);
+        let special = saveg_read16(p_saveg);
+        let tag = saveg_read16(p_saveg);
+        let li = &mut p_setup.lines[i];
         li.flags = LineFlags::from_bits_retain(flags);
         li.special = special;
         li.tag = tag;
         let sidenum = li.sidenum;
         for &side in &sidenum {
             if side as i32 != -1 {
-                let textureoffset =
-                    ((saveg_read16(&mut state.p_saveg) as i32) << FRACBITS) as Fixed;
-                let rowoffset = ((saveg_read16(&mut state.p_saveg) as i32) << FRACBITS) as Fixed;
-                let toptexture = saveg_read16(&mut state.p_saveg);
-                let bottomtexture = saveg_read16(&mut state.p_saveg);
-                let midtexture = saveg_read16(&mut state.p_saveg);
-                let si = state.p_setup.side_mut(SideId(side as u32));
+                let textureoffset = ((saveg_read16(p_saveg) as i32) << FRACBITS) as Fixed;
+                let rowoffset = ((saveg_read16(p_saveg) as i32) << FRACBITS) as Fixed;
+                let toptexture = saveg_read16(p_saveg);
+                let bottomtexture = saveg_read16(p_saveg);
+                let midtexture = saveg_read16(p_saveg);
+                let si = p_setup.side_mut(SideId(side as u32));
                 si.textureoffset = textureoffset;
                 si.rowoffset = rowoffset;
                 si.toptexture = toptexture;
@@ -946,7 +947,7 @@ pub fn un_archive_thinkers(state: &mut GameState) {
         }
         cursor = next;
     }
-    init_thinkers(state);
+    init_thinkers(&mut state.p_tick);
     loop {
         tclass = saveg_read8(&mut state.p_saveg);
         match tclass as i32 {
@@ -982,7 +983,7 @@ pub fn un_archive_thinkers(state: &mut GameState) {
                     m.thinker.function = ThinkerFn::Mobj(mobj_thinker);
                 }
                 add_thinker(
-                    state,
+                    &mut state.p_tick,
                     ThinkerPayload::Mobj(mobj_arena_id),
                     ThinkerKind::Mobj,
                 );
@@ -1109,7 +1110,7 @@ pub fn un_archive_specials(state: &mut GameState) {
                     c.sector
                 };
                 let ceiling_id = add_thinker(
-                    state,
+                    &mut state.p_tick,
                     ThinkerPayload::Ceiling(ceiling_arena_id),
                     ThinkerKind::Ceiling,
                 );
@@ -1127,7 +1128,7 @@ pub fn un_archive_specials(state: &mut GameState) {
                     d.sector
                 };
                 let door_id = add_thinker(
-                    state,
+                    &mut state.p_tick,
                     ThinkerPayload::Door(door_arena_id),
                     ThinkerKind::Door,
                 );
@@ -1146,7 +1147,7 @@ pub fn un_archive_specials(state: &mut GameState) {
                     f.sector
                 };
                 let floor_id = add_thinker(
-                    state,
+                    &mut state.p_tick,
                     ThinkerPayload::Floor(floor_arena_id),
                     ThinkerKind::Floor,
                 );
@@ -1164,7 +1165,7 @@ pub fn un_archive_specials(state: &mut GameState) {
                     p.sector
                 };
                 let plat_id = add_thinker(
-                    state,
+                    &mut state.p_tick,
                     ThinkerPayload::Plat(plat_arena_id),
                     ThinkerKind::Plat,
                 );
@@ -1183,7 +1184,7 @@ pub fn un_archive_specials(state: &mut GameState) {
                     f.thinker.function = ThinkerFn::LightFlash(light_flash);
                 }
                 add_thinker(
-                    state,
+                    &mut state.p_tick,
                     ThinkerPayload::LightFlash(flash_arena_id),
                     ThinkerKind::LightFlash,
                 );
@@ -1200,7 +1201,7 @@ pub fn un_archive_specials(state: &mut GameState) {
                     s.thinker.function = ThinkerFn::Strobe(strobe_flash);
                 }
                 add_thinker(
-                    state,
+                    &mut state.p_tick,
                     ThinkerPayload::Strobe(strobe_arena_id),
                     ThinkerKind::Strobe,
                 );
@@ -1217,7 +1218,7 @@ pub fn un_archive_specials(state: &mut GameState) {
                     g.thinker.function = ThinkerFn::Glow(glow);
                 }
                 add_thinker(
-                    state,
+                    &mut state.p_tick,
                     ThinkerPayload::Glow(glow_arena_id),
                     ThinkerKind::Glow,
                 );

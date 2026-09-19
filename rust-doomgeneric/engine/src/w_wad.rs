@@ -234,18 +234,18 @@ pub fn release_lump_name(state: &WWadState, name: &str) {
     let lumpnum = get_num_for_name(state, name);
     release_lump_num(state, lumpnum);
 }
-pub fn generate_hash_table(state: &mut GameState) {
+pub fn generate_hash_table(w_wad: &mut WWadState) {
     let mut i: u32;
-    state.w_wad.lumphash = Vec::new();
-    if state.w_wad.numlumps > 0 {
-        state.w_wad.lumphash = vec![None; state.w_wad.numlumps as usize];
+    w_wad.lumphash = Vec::new();
+    if w_wad.numlumps > 0 {
+        w_wad.lumphash = vec![None; w_wad.numlumps as usize];
         i = 0;
-        while i < state.w_wad.numlumps {
-            let hash: u32 = lump_name_hash(state.w_wad.lumpinfo[i as usize].name.as_bytes())
-                .wrapping_rem(state.w_wad.numlumps);
-            let old_head = state.w_wad.lumphash[hash as usize];
-            state.w_wad.lumpinfo[i as usize].next = old_head;
-            state.w_wad.lumphash[hash as usize] = Some(i);
+        while i < w_wad.numlumps {
+            let hash: u32 = lump_name_hash(w_wad.lumpinfo[i as usize].name.as_bytes())
+                .wrapping_rem(w_wad.numlumps);
+            let old_head = w_wad.lumphash[hash as usize];
+            w_wad.lumpinfo[i as usize].next = old_head;
+            w_wad.lumphash[hash as usize] = Some(i);
             i = i.wrapping_add(1);
         }
     }

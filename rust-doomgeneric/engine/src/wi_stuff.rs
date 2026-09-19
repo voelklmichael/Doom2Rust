@@ -5,6 +5,7 @@ use crate::doomdef::SCREENHEIGHT;
 use crate::doomdef::SCREENWIDTH;
 use crate::doomdef::TICRATE;
 use crate::g_game::world_done;
+use crate::g_game::GGameState;
 use crate::game_state::GameState;
 use crate::m_random::m_random;
 use crate::s_sound::change_music;
@@ -842,10 +843,10 @@ pub fn draw_time(state: &mut GameState, mut x: i32, y: i32, t: i32) {
 pub fn wi_end(state: &mut GameState) {
     load_unload_data(state, unload_callback);
 }
-pub fn init_no_state(state: &mut GameState) {
-    state.wi_stuff.state = StateEnum::NoState;
-    state.wi_stuff.acceleratestage = false;
-    state.wi_stuff.cnt = 10;
+pub fn init_no_state(wi_stuff: &mut WiStuffState) {
+    wi_stuff.state = StateEnum::NoState;
+    wi_stuff.acceleratestage = false;
+    wi_stuff.cnt = 10;
 }
 pub fn update_no_state(state: &mut GameState) {
     update_animated_back(state);
@@ -864,7 +865,7 @@ pub fn update_show_next_loc(state: &mut GameState) {
     update_animated_back(state);
     state.wi_stuff.cnt -= 1;
     if state.wi_stuff.cnt == 0 || state.wi_stuff.acceleratestage {
-        init_no_state(state);
+        init_no_state(&mut state.wi_stuff);
     } else {
         state.wi_stuff.snl_pointeron = (state.wi_stuff.cnt & 31) < 20;
     }
@@ -986,7 +987,7 @@ pub fn update_deathmatch_stats(state: &mut GameState) {
         if state.wi_stuff.acceleratestage {
             s_start_sound(state, SoundOrigin::None, SfxName::Slop as i32);
             if state.doomstat.gamemode as u32 == GameMode::Commercial as i32 as u32 {
-                init_no_state(state);
+                init_no_state(&mut state.wi_stuff);
             } else {
                 init_show_next_loc(state);
             }
@@ -1215,7 +1216,7 @@ pub fn update_netgame_stats(state: &mut GameState) {
         if state.wi_stuff.acceleratestage {
             s_start_sound(state, SoundOrigin::None, SfxName::Sgcock as i32);
             if state.doomstat.gamemode as u32 == GameMode::Commercial as i32 as u32 {
-                init_no_state(state);
+                init_no_state(&mut state.wi_stuff);
             } else {
                 init_show_next_loc(state);
             }
@@ -1395,7 +1396,7 @@ pub fn update_stats(state: &mut GameState) {
         if state.wi_stuff.acceleratestage {
             s_start_sound(state, SoundOrigin::None, SfxName::Sgcock as i32);
             if state.doomstat.gamemode as u32 == GameMode::Commercial as i32 as u32 {
-                init_no_state(state);
+                init_no_state(&mut state.wi_stuff);
             } else {
                 init_show_next_loc(state);
             }
@@ -1459,26 +1460,26 @@ pub fn draw_stats(state: &mut GameState) {
         draw_time(state, SCREENWIDTH - SP_TIMEX, SP_TIMEY, cnt_par);
     }
 }
-pub fn check_for_accelerate(state: &mut GameState) {
+pub fn check_for_accelerate(g_game: &mut GGameState, wi_stuff: &mut WiStuffState) {
     for i in 0..(MAXPLAYERS as usize) {
-        if state.g_game.playeringame[i] {
-            let player = &state.g_game.players[i];
+        if g_game.playeringame[i] {
+            let player = &g_game.players[i];
             if player.cmd.buttons as i32 & BT_ATTACK != 0 {
                 if !player.attackdown {
-                    state.wi_stuff.acceleratestage = true;
+                    wi_stuff.acceleratestage = true;
                 }
-                state.g_game.players[i].attackdown = true;
+                g_game.players[i].attackdown = true;
             } else {
-                state.g_game.players[i].attackdown = false;
+                g_game.players[i].attackdown = false;
             }
-            let player = &state.g_game.players[i];
+            let player = &g_game.players[i];
             if player.cmd.buttons as i32 & BT_USE != 0 {
                 if !player.usedown {
-                    state.wi_stuff.acceleratestage = true;
+                    wi_stuff.acceleratestage = true;
                 }
-                state.g_game.players[i].usedown = true;
+                g_game.players[i].usedown = true;
             } else {
-                state.g_game.players[i].usedown = false;
+                g_game.players[i].usedown = false;
             }
         }
     }
@@ -1492,7 +1493,7 @@ pub fn wi_ticker(state: &mut GameState) {
             change_music(state, MusicName::Inter as i32, true);
         }
     }
-    check_for_accelerate(state);
+    check_for_accelerate(&mut state.g_game, &mut state.wi_stuff);
     match state.wi_stuff.state {
         StateEnum::StatCount => {
             if state.g_game.deathmatch != 0 {
@@ -1653,8 +1654,8 @@ pub fn wi_start(state: &mut GameState) {
         init_stats(state);
     }
 }
-pub fn fixup_numanims(state: &mut GameState) {
-    state.wi_stuff.numanims = [
+pub fn fixup_numanims(wi_stuff: &mut WiStuffState) {
+    wi_stuff.numanims = [
         ::core::mem::size_of::<[Anim; 10]>().wrapping_div(::core::mem::size_of::<Anim>()) as i32,
         ::core::mem::size_of::<[Anim; 9]>().wrapping_div(::core::mem::size_of::<Anim>()) as i32,
         ::core::mem::size_of::<[Anim; 6]>().wrapping_div(::core::mem::size_of::<Anim>()) as i32,

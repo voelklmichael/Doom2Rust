@@ -5,6 +5,7 @@ use crate::p_ceilng::CeilingId;
 use crate::p_doors::DoorId;
 use crate::p_lights::{FireFlickerId, GlowId, LightFlashId, StrobeId};
 use crate::p_mobj::respawn_specials;
+use crate::p_mobj::PMobjState;
 use crate::p_mobj::{MobjId, Thinker, ThinkerFn};
 use crate::p_plats::PlatId;
 use crate::p_spec::update_specials;
@@ -222,33 +223,34 @@ pub fn thinker_function(state: &mut GameState, id: ThinkerId) -> ThinkerFn {
 
 // Every mobj that is still an active Mobj thinker (not yet Removed), in
 // thinker-list order.
-pub fn mobj_thinker_ids(state: &GameState) -> Vec<MobjId> {
+pub fn mobj_thinker_ids(p_mobj: &PMobjState, p_tick: &PTickState) -> Vec<MobjId> {
     let mut out = Vec::new();
-    let mut cursor = state.p_tick.head();
+    let mut cursor = p_tick.head();
     while let Some(id) = cursor {
-        if let ThinkerPayload::Mobj(mobj_id) = state.p_tick.payload(id) {
-            if matches!(
-                state.p_mobj.mo(mobj_id).thinker.function,
-                ThinkerFn::Mobj(_)
-            ) {
+        if let ThinkerPayload::Mobj(mobj_id) = p_tick.payload(id) {
+            if matches!(p_mobj.mo(mobj_id).thinker.function, ThinkerFn::Mobj(_)) {
                 out.push(mobj_id);
             }
         }
-        cursor = state.p_tick.next(id);
+        cursor = p_tick.next(id);
     }
     out
 }
 
-pub fn init_thinkers(state: &mut GameState) {
-    state.p_tick.nodes.clear();
-    state.p_tick.free_list.clear();
-    state.p_tick.head = None;
-    state.p_tick.tail = None;
+pub fn init_thinkers(p_tick: &mut PTickState) {
+    p_tick.nodes.clear();
+    p_tick.free_list.clear();
+    p_tick.head = None;
+    p_tick.tail = None;
 }
 
-pub fn add_thinker(state: &mut GameState, payload: ThinkerPayload, kind: ThinkerKind) -> ThinkerId {
-    let id = if let Some(index) = state.p_tick.free_list.pop() {
-        state.p_tick.nodes[index as usize] = ThinkerNode {
+pub fn add_thinker(
+    p_tick: &mut PTickState,
+    payload: ThinkerPayload,
+    kind: ThinkerKind,
+) -> ThinkerId {
+    let id = if let Some(index) = p_tick.free_list.pop() {
+        p_tick.nodes[index as usize] = ThinkerNode {
             prev: None,
             next: None,
             payload,
@@ -256,8 +258,8 @@ pub fn add_thinker(state: &mut GameState, payload: ThinkerPayload, kind: Thinker
         };
         ThinkerId(index)
     } else {
-        let index = state.p_tick.nodes.len() as u32;
-        state.p_tick.nodes.push(ThinkerNode {
+        let index = p_tick.nodes.len() as u32;
+        p_tick.nodes.push(ThinkerNode {
             prev: None,
             next: None,
             payload,
@@ -265,13 +267,13 @@ pub fn add_thinker(state: &mut GameState, payload: ThinkerPayload, kind: Thinker
         });
         ThinkerId(index)
     };
-    if let Some(tail_id) = state.p_tick.tail {
-        state.p_tick.nodes[tail_id.0 as usize].next = Some(id);
-        state.p_tick.nodes[id.0 as usize].prev = Some(tail_id);
+    if let Some(tail_id) = p_tick.tail {
+        p_tick.nodes[tail_id.0 as usize].next = Some(id);
+        p_tick.nodes[id.0 as usize].prev = Some(tail_id);
     } else {
-        state.p_tick.head = Some(id);
+        p_tick.head = Some(id);
     }
-    state.p_tick.tail = Some(id);
+    p_tick.tail = Some(id);
     id
 }
 
@@ -283,18 +285,18 @@ pub fn remove_thinker(thinker: &mut Thinker) {
 // finds a ThinkerFn::Removed node to reap). Does not touch the payload
 // memory itself -- callers deallocate that separately (each payload type's
 // own arena now, no longer Z_Free).
-fn unlink_thinker_node(state: &mut GameState, id: ThinkerId) {
-    let prev = state.p_tick.nodes[id.0 as usize].prev;
-    let next = state.p_tick.nodes[id.0 as usize].next;
+fn unlink_thinker_node(p_tick: &mut PTickState, id: ThinkerId) {
+    let prev = p_tick.nodes[id.0 as usize].prev;
+    let next = p_tick.nodes[id.0 as usize].next;
     match prev {
-        Some(p) => state.p_tick.nodes[p.0 as usize].next = next,
-        None => state.p_tick.head = next,
+        Some(p) => p_tick.nodes[p.0 as usize].next = next,
+        None => p_tick.head = next,
     }
     match next {
-        Some(n) => state.p_tick.nodes[n.0 as usize].prev = prev,
-        None => state.p_tick.tail = prev,
+        Some(n) => p_tick.nodes[n.0 as usize].prev = prev,
+        None => p_tick.tail = prev,
     }
-    state.p_tick.free_list.push(id.0);
+    p_tick.free_list.push(id.0);
 }
 
 pub fn run_thinkers(state: &mut GameState) {
@@ -310,7 +312,7 @@ pub fn run_thinkers(state: &mut GameState) {
                 // matches the original semantics most directly.
                 next = state.p_tick.next(id);
                 let kind = state.p_tick.kind(id);
-                unlink_thinker_node(state, id);
+                unlink_thinker_node(&mut state.p_tick, id);
                 // Every kind's memory is now owned by its own arena (Mobj
                 // by PMobjState, VlDoor by PDoorsState, Ceiling by
                 // PCeilngState, Plat by PPlatsState, FloorMove by
@@ -499,7 +501,11 @@ mod tests {
         let state = init_game_state(Box::new(NullPlatform), Box::new(MemFileSystem::default()));
 
         let door_id = state.p_doors.spawn(VlDoor::default());
-        let node_id = add_thinker(state, ThinkerPayload::Door(door_id), ThinkerKind::Door);
+        let node_id = add_thinker(
+            &mut state.p_tick,
+            ThinkerPayload::Door(door_id),
+            ThinkerKind::Door,
+        );
 
         remove_thinker(thinker_mut(state, node_id));
         run_thinkers(state);
@@ -524,7 +530,11 @@ mod tests {
 
         let value = state.p_mobj.dummy_mobj;
         let mobj_id = state.p_mobj.spawn(value);
-        let node_id = add_thinker(state, ThinkerPayload::Mobj(mobj_id), ThinkerKind::Mobj);
+        let node_id = add_thinker(
+            &mut state.p_tick,
+            ThinkerPayload::Mobj(mobj_id),
+            ThinkerKind::Mobj,
+        );
 
         remove_thinker(thinker_mut(state, node_id));
         run_thinkers(state);
@@ -548,7 +558,7 @@ mod tests {
 
         let ceiling_id = state.p_ceilng.spawn(Ceiling::default());
         let node_id = add_thinker(
-            state,
+            &mut state.p_tick,
             ThinkerPayload::Ceiling(ceiling_id),
             ThinkerKind::Ceiling,
         );
@@ -572,7 +582,11 @@ mod tests {
         let state = init_game_state(Box::new(NullPlatform), Box::new(MemFileSystem::default()));
 
         let floor_id = state.p_spec.spawn_floor(FloorMove::default());
-        let node_id = add_thinker(state, ThinkerPayload::Floor(floor_id), ThinkerKind::Floor);
+        let node_id = add_thinker(
+            &mut state.p_tick,
+            ThinkerPayload::Floor(floor_id),
+            ThinkerKind::Floor,
+        );
 
         remove_thinker(thinker_mut(state, node_id));
         run_thinkers(state);
@@ -593,7 +607,11 @@ mod tests {
         let state = init_game_state(Box::new(NullPlatform), Box::new(MemFileSystem::default()));
 
         let plat_id = state.p_plats.spawn(Plat::default());
-        let node_id = add_thinker(state, ThinkerPayload::Plat(plat_id), ThinkerKind::Plat);
+        let node_id = add_thinker(
+            &mut state.p_tick,
+            ThinkerPayload::Plat(plat_id),
+            ThinkerKind::Plat,
+        );
 
         remove_thinker(thinker_mut(state, node_id));
         run_thinkers(state);
@@ -617,7 +635,7 @@ mod tests {
 
         let fireflicker_id = state.p_lights.spawn_fireflicker(FireFlicker::default());
         let node_id = add_thinker(
-            state,
+            &mut state.p_tick,
             ThinkerPayload::FireFlicker(fireflicker_id),
             ThinkerKind::FireFlicker,
         );
@@ -642,7 +660,11 @@ mod tests {
         let state = init_game_state(Box::new(NullPlatform), Box::new(MemFileSystem::default()));
 
         let glow_id = state.p_lights.spawn_glow(Glow::default());
-        let node_id = add_thinker(state, ThinkerPayload::Glow(glow_id), ThinkerKind::Glow);
+        let node_id = add_thinker(
+            &mut state.p_tick,
+            ThinkerPayload::Glow(glow_id),
+            ThinkerKind::Glow,
+        );
 
         remove_thinker(thinker_mut(state, node_id));
         run_thinkers(state);

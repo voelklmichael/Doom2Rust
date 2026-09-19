@@ -174,7 +174,7 @@ pub fn teleport_move(state: &mut GameState, thing: MobjId, x: Fixed, y: Fixed) -
     state.p_map.tmbbox[BoxIndex::Bottom as usize] = y - state.p_mobj.mo(thing).radius;
     state.p_map.tmbbox[BoxIndex::Right as usize] = x + state.p_mobj.mo(thing).radius;
     state.p_map.tmbbox[BoxIndex::Left as usize] = x - state.p_mobj.mo(thing).radius;
-    let newsubsec: SubsectorId = point_in_subsector(state, x, y);
+    let newsubsec: SubsectorId = point_in_subsector(&state.p_setup, x, y);
     state.p_map.ceilingline = None;
     state.p_map.tmdropoffz = state
         .p_setup
@@ -224,7 +224,7 @@ pub fn check_line(state: &mut GameState, ld: LineId) -> bool {
         return true;
     }
     let tmbbox = state.p_map.tmbbox;
-    if box_on_line_side(state, tmbbox, ld) != -1 {
+    if box_on_line_side(&state.p_setup, tmbbox, ld) != -1 {
         return true;
     }
     if ldv.backsector.is_none() {
@@ -240,7 +240,7 @@ pub fn check_line(state: &mut GameState, ld: LineId) -> bool {
             return false;
         }
     }
-    line_opening(state, ld);
+    line_opening(&mut state.p_maputl, &mut state.p_setup, ld);
     if state.p_maputl.opentop < state.p_map.tmceilingz {
         state.p_map.tmceilingz = state.p_maputl.opentop;
         state.p_map.ceilingline = Some(ld);
@@ -366,7 +366,7 @@ pub fn check_position(state: &mut GameState, thing: MobjId, x: Fixed, y: Fixed) 
     state.p_map.tmbbox[BoxIndex::Bottom as usize] = y - state.p_mobj.mo(thing).radius;
     state.p_map.tmbbox[BoxIndex::Right as usize] = x + state.p_mobj.mo(thing).radius;
     state.p_map.tmbbox[BoxIndex::Left as usize] = x - state.p_mobj.mo(thing).radius;
-    let newsubsec: SubsectorId = point_in_subsector(state, x, y);
+    let newsubsec: SubsectorId = point_in_subsector(&state.p_setup, x, y);
     state.p_map.ceilingline = None;
     state.p_map.tmdropoffz = state
         .p_setup
@@ -465,12 +465,12 @@ pub fn try_move(state: &mut GameState, thing: MobjId, x: Fixed, y: Fixed) -> boo
             }
             ld = state.p_map.spechit[state.p_map.numspechit as usize];
             side = point_on_line_side(
-                state,
+                &state.p_setup,
                 state.p_mobj.mo(thing).x,
                 state.p_mobj.mo(thing).y,
                 ld,
             );
-            oldside = point_on_line_side(state, oldx, oldy, ld);
+            oldside = point_on_line_side(&state.p_setup, oldx, oldy, ld);
             if side != oldside && state.p_setup.line(ld).special != 0 {
                 cross_special_line(state, ld.0 as i32, oldside, thing);
             }
@@ -515,16 +515,22 @@ pub fn hit_slide_line(state: &mut GameState, ld: LineId) {
     }
     let slidemo = state.p_map.slidemo.unwrap();
     let side: i32 = point_on_line_side(
-        state,
+        &state.p_setup,
         state.p_mobj.mo(slidemo).x,
         state.p_mobj.mo(slidemo).y,
         ld,
     );
-    lineangle = point_to_angle2(state, 0, 0, ldv.dx, ldv.dy);
+    lineangle = point_to_angle2(&mut state.r_main, 0, 0, ldv.dx, ldv.dy);
     if side == 1 {
         lineangle = lineangle.wrapping_add(ANG180) as Angle as Angle;
     }
-    let moveangle: Angle = point_to_angle2(state, 0, 0, state.p_map.tmxmove, state.p_map.tmymove);
+    let moveangle: Angle = point_to_angle2(
+        &mut state.r_main,
+        0,
+        0,
+        state.p_map.tmxmove,
+        state.p_map.tmymove,
+    );
     deltaangle = moveangle.wrapping_sub(lineangle);
     if deltaangle > ANG180 {
         deltaangle = deltaangle.wrapping_add(ANG180) as Angle as Angle;
@@ -543,7 +549,7 @@ pub fn slide_traverse(state: &mut GameState, intercept: Intercept) -> bool {
     };
     let slidemo = state.p_map.slidemo.unwrap();
     if state.p_setup.line(li).flags.contains(LineFlags::TWOSIDED) {
-        line_opening(state, li);
+        line_opening(&mut state.p_maputl, &mut state.p_setup, li);
         if state.p_maputl.openrange >= state.p_mobj.mo(slidemo).height
             && state.p_maputl.opentop - state.p_mobj.mo(slidemo).z
                 >= state.p_mobj.mo(slidemo).height
@@ -552,7 +558,7 @@ pub fn slide_traverse(state: &mut GameState, intercept: Intercept) -> bool {
             return true;
         }
     } else if point_on_line_side(
-        state,
+        &state.p_setup,
         state.p_mobj.mo(slidemo).x,
         state.p_mobj.mo(slidemo).y,
         li,
@@ -676,7 +682,7 @@ pub fn aim_traverse(state: &mut GameState, intercept: Intercept) -> bool {
         if !liv.flags.contains(LineFlags::TWOSIDED) {
             return false;
         }
-        line_opening(state, li);
+        line_opening(&mut state.p_maputl, &mut state.p_setup, li);
         if state.p_maputl.openbottom >= state.p_maputl.opentop {
             return false;
         }
@@ -762,7 +768,7 @@ pub fn shoot_traverse(state: &mut GameState, intercept: Intercept) -> bool {
             shoot_special_line(state, shootthing, li);
         }
         if state.p_setup.line(li).flags.contains(LineFlags::TWOSIDED) {
-            line_opening(state, li);
+            line_opening(&mut state.p_maputl, &mut state.p_setup, li);
             let dist = fixed_mul(state.p_map.attackrange, intercept.frac);
             // A missing back side (emulated) leaves both openings to check.
             let (check_floor, check_ceiling) = match state.p_setup.line(li).backsector {
@@ -944,7 +950,7 @@ pub fn use_traverse(state: &mut GameState, intercept: Intercept) -> bool {
     };
     let usething = state.p_map.usething.unwrap();
     if state.p_setup.line(li).special == 0 {
-        line_opening(state, li);
+        line_opening(&mut state.p_maputl, &mut state.p_setup, li);
         if state.p_maputl.openrange <= 0 {
             s_start_sound(state, SoundOrigin::Mobj(usething), SfxName::Noway as i32);
             return false;
@@ -956,7 +962,7 @@ pub fn use_traverse(state: &mut GameState, intercept: Intercept) -> bool {
         let u = state.p_mobj.mo(usething);
         (u.x, u.y)
     };
-    if point_on_line_side(state, use_x, use_y, li) == 1 {
+    if point_on_line_side(&state.p_setup, use_x, use_y, li) == 1 {
         side = 1;
     }
     use_special_line(state, usething, li, side);
@@ -1083,7 +1089,7 @@ pub fn p_change_sector(state: &mut GameState, sector: SectorId, crunch: bool) ->
 }
 fn spechit_overrun(state: &mut GameState, ld: LineId) {
     if state.p_map.baseaddr == 0 {
-        if let Some(p) = check_parm_with_args(state, "-spechit", 1) {
+        if let Some(p) = check_parm_with_args(&state.m_argv, "-spechit", 1) {
             let mut baseaddr: i32 = 0;
             str_to_int(state.m_argv.myargv[p + 1].as_str(), &mut baseaddr);
             state.p_map.baseaddr = baseaddr as u32;

@@ -6,7 +6,7 @@ use alloc::vec::Vec;
 
 pub fn parse_command_line(state: &mut GameState) -> bool {
     let mut modifiedgame: bool = false;
-    if let Some(p) = check_parm_with_args(state, "-file", 1) {
+    if let Some(p) = check_parm_with_args(&state.m_argv, "-file", 1) {
         modifiedgame = true;
         // Every argument up to the next option is a file to add.
         let files: Vec<_> = state.m_argv.myargv[p + 1..]

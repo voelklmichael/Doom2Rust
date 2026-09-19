@@ -5,6 +5,7 @@ use crate::d_player::PlayerState;
 use crate::d_player::PowerType;
 use crate::d_player::{weapontype_from_raw, WeaponType};
 use crate::p_mobj::MobjFlags;
+use crate::p_mobj::PMobjState;
 
 use crate::d_ticcmd::{BT_CHANGE, BT_SPECIAL, BT_USE, BT_WEAPONMASK, BT_WEAPONSHIFT};
 use crate::game_state::GameState;
@@ -47,9 +48,9 @@ impl PUserState {
     }
 }
 
-pub fn p_thrust(state: &mut GameState, mo: MobjId, mut angle: Angle, amount: Fixed) {
+pub fn p_thrust(p_mobj: &mut PMobjState, mo: MobjId, mut angle: Angle, amount: Fixed) {
     angle >>= ANGLETOFINESHIFT;
-    let mo = state.p_mobj.mo_mut(mo);
+    let mo = p_mobj.mo_mut(mo);
     mo.momx += fixed_mul(amount, FINECOSINE[angle as usize]);
     mo.momy += fixed_mul(amount, FINESINE[angle as usize]);
 }
@@ -117,11 +118,16 @@ pub fn move_player(state: &mut GameState, player_id: PlayerId) {
     };
     state.p_user.onground = z <= floorz;
     if cmd.forwardmove as i32 != 0 && state.p_user.onground {
-        p_thrust(state, player_mo, angle, cmd.forwardmove as Fixed * 2048);
+        p_thrust(
+            &mut state.p_mobj,
+            player_mo,
+            angle,
+            cmd.forwardmove as Fixed * 2048,
+        );
     }
     if cmd.sidemove as i32 != 0 && state.p_user.onground {
         p_thrust(
-            state,
+            &mut state.p_mobj,
             player_mo,
             angle.wrapping_sub(ANG90 as Angle),
             cmd.sidemove as Fixed * 2048,
@@ -155,7 +161,7 @@ pub fn death_think(state: &mut GameState, player_id: PlayerId) {
     {
         let attacker = state.g_game.players[player.0 as usize].attacker.unwrap();
         angle = point_to_angle2(
-            state,
+            &mut state.r_main,
             state.p_mobj.mo(player_mo).x,
             state.p_mobj.mo(player_mo).y,
             state.p_mobj.mo(attacker).x,

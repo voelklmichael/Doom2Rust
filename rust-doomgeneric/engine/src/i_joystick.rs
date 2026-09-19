@@ -1,5 +1,5 @@
-use crate::game_state::GameState;
 use crate::m_config::bind_variable_int;
+use crate::m_config::MConfigState;
 
 pub const NUM_VIRTUAL_BUTTONS: i32 = 10;
 
@@ -37,34 +37,32 @@ impl IJoystickState {
     }
 }
 
-pub fn bind_joystick_variables(state: &mut GameState) {
-    bind_variable_int(&mut state.m_config, "use_joystick", |s| {
-        &mut s.i_joystick.usejoystick
-    });
-    bind_variable_int(&mut state.m_config, "joystick_index", |s| {
+pub fn bind_joystick_variables(m_config: &mut MConfigState) {
+    bind_variable_int(m_config, "use_joystick", |s| &mut s.i_joystick.usejoystick);
+    bind_variable_int(m_config, "joystick_index", |s| {
         &mut s.i_joystick.joystick_index
     });
-    bind_variable_int(&mut state.m_config, "joystick_x_axis", |s| {
+    bind_variable_int(m_config, "joystick_x_axis", |s| {
         &mut s.i_joystick.joystick_x_axis
     });
-    bind_variable_int(&mut state.m_config, "joystick_y_axis", |s| {
+    bind_variable_int(m_config, "joystick_y_axis", |s| {
         &mut s.i_joystick.joystick_y_axis
     });
-    bind_variable_int(&mut state.m_config, "joystick_strafe_axis", |s| {
+    bind_variable_int(m_config, "joystick_strafe_axis", |s| {
         &mut s.i_joystick.joystick_strafe_axis
     });
-    bind_variable_int(&mut state.m_config, "joystick_x_invert", |s| {
+    bind_variable_int(m_config, "joystick_x_invert", |s| {
         &mut s.i_joystick.joystick_x_invert
     });
-    bind_variable_int(&mut state.m_config, "joystick_y_invert", |s| {
+    bind_variable_int(m_config, "joystick_y_invert", |s| {
         &mut s.i_joystick.joystick_y_invert
     });
-    bind_variable_int(&mut state.m_config, "joystick_strafe_invert", |s| {
+    bind_variable_int(m_config, "joystick_strafe_invert", |s| {
         &mut s.i_joystick.joystick_strafe_invert
     });
     for i in 0..NUM_VIRTUAL_BUTTONS {
         let name = format!("joystick_physical_button{i}");
-        bind_variable_int(&mut state.m_config, &name, move |s| {
+        bind_variable_int(m_config, &name, move |s| {
             &mut s.i_joystick.joystick_physical_buttons[i as usize]
         });
     }

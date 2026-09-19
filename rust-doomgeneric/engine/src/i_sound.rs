@@ -1,8 +1,10 @@
+use crate::i_video::IVideoState;
 use crate::m_argv::parm_exists;
+use crate::m_argv::MArgvState;
 use crate::m_config::bind_variable_int;
 use crate::m_config::bind_variable_string;
+use crate::m_config::MConfigState;
 
-use crate::game_state::GameState;
 use crate::sounds::SfxInfo;
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum SndDevice {
@@ -133,11 +135,16 @@ fn init_sfx_module(state: &mut ISoundState, use_sfx_prefix: bool) {
         }
     }
 }
-pub fn init_sound(state: &mut GameState, use_sfx_prefix: bool) {
-    let nosound: bool = parm_exists(state, "-nosound");
-    let nosfx: bool = parm_exists(state, "-nosfx");
-    if !nosound && !state.i_video.screensaver_mode && !nosfx {
-        init_sfx_module(&mut state.i_sound, use_sfx_prefix);
+pub fn init_sound(
+    i_sound: &mut ISoundState,
+    i_video: &IVideoState,
+    m_argv: &MArgvState,
+    use_sfx_prefix: bool,
+) {
+    let nosound: bool = parm_exists(m_argv, "-nosound");
+    let nosfx: bool = parm_exists(m_argv, "-nosfx");
+    if !nosound && !i_video.screensaver_mode && !nosfx {
+        init_sfx_module(i_sound, use_sfx_prefix);
     }
 }
 pub fn shutdown_sound(state: &ISoundState) {
@@ -250,35 +257,21 @@ pub fn stop_song(state: &ISoundState) {
         (module.stop_song.expect("non-null function pointer"))();
     }
 }
-pub fn bind_sound_variables(state: &mut GameState) {
-    bind_variable_int(&mut state.m_config, "snd_musicdevice", |s| {
+pub fn bind_sound_variables(m_config: &mut MConfigState) {
+    bind_variable_int(m_config, "snd_musicdevice", |s| {
         &mut s.i_sound.snd_musicdevice
     });
-    bind_variable_int(&mut state.m_config, "snd_sfxdevice", |s| {
-        &mut s.i_sound.snd_sfxdevice
-    });
-    bind_variable_int(&mut state.m_config, "snd_sbport", |s| {
-        &mut s.i_sound.snd_sbport
-    });
-    bind_variable_int(&mut state.m_config, "snd_sbirq", |s| {
-        &mut s.i_sound.snd_sbirq
-    });
-    bind_variable_int(&mut state.m_config, "snd_sbdma", |s| {
-        &mut s.i_sound.snd_sbdma
-    });
-    bind_variable_int(&mut state.m_config, "snd_mport", |s| {
-        &mut s.i_sound.snd_mport
-    });
-    bind_variable_int(&mut state.m_config, "snd_maxslicetime_ms", |s| {
+    bind_variable_int(m_config, "snd_sfxdevice", |s| &mut s.i_sound.snd_sfxdevice);
+    bind_variable_int(m_config, "snd_sbport", |s| &mut s.i_sound.snd_sbport);
+    bind_variable_int(m_config, "snd_sbirq", |s| &mut s.i_sound.snd_sbirq);
+    bind_variable_int(m_config, "snd_sbdma", |s| &mut s.i_sound.snd_sbdma);
+    bind_variable_int(m_config, "snd_mport", |s| &mut s.i_sound.snd_mport);
+    bind_variable_int(m_config, "snd_maxslicetime_ms", |s| {
         &mut s.i_sound.snd_maxslicetime_ms
     });
-    bind_variable_string(&mut state.m_config, "snd_musiccmd", |s| {
-        &mut s.i_sound.snd_musiccmd
-    });
-    bind_variable_int(&mut state.m_config, "snd_samplerate", |s| {
+    bind_variable_string(m_config, "snd_musiccmd", |s| &mut s.i_sound.snd_musiccmd);
+    bind_variable_int(m_config, "snd_samplerate", |s| {
         &mut s.i_sound.snd_samplerate
     });
-    bind_variable_int(&mut state.m_config, "snd_cachesize", |s| {
-        &mut s.i_sound.snd_cachesize
-    });
+    bind_variable_int(m_config, "snd_cachesize", |s| &mut s.i_sound.snd_cachesize);
 }

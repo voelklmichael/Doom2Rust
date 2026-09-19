@@ -401,7 +401,14 @@ pub fn text_write(state: &mut GameState) {
         }
     }
     let dest_screen = Screen::Video;
-    mark_rect(state, dest_screen, 0, 0, SCREENWIDTH, SCREENHEIGHT);
+    mark_rect(
+        &mut state.v_video,
+        dest_screen,
+        0,
+        0,
+        SCREENWIDTH,
+        SCREENHEIGHT,
+    );
     cx = 10;
     cy = 10;
     let mut chars = state.f_finale.finaletext.bytes();
@@ -720,7 +727,14 @@ pub fn bunny_scroll(state: &mut GameState) {
     let p1: Patch = cache_patch_name(state, "PFUB2");
     let p2: Patch = cache_patch_name(state, "PFUB1");
     let dest_screen = Screen::Video;
-    mark_rect(state, dest_screen, 0, 0, SCREENWIDTH, SCREENHEIGHT);
+    mark_rect(
+        &mut state.v_video,
+        dest_screen,
+        0,
+        0,
+        SCREENWIDTH,
+        SCREENHEIGHT,
+    );
     scrolled = 320 - (state.f_finale.finalecount as i32 - 230) / 2;
     scrolled = scrolled.clamp(0, 320);
     for x in 0..SCREENWIDTH {

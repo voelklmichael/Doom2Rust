@@ -4,6 +4,7 @@ use crate::i_system::console_stdout;
 use crate::i_system::error;
 use crate::m_fixed::Fixed;
 use crate::m_fixed::FRACBITS;
+use crate::w_wad::WWadState;
 use alloc::boxed::Box;
 use alloc::vec::Vec;
 
@@ -272,25 +273,25 @@ pub fn get_column(state: &mut GameState, tex: i32, mut col: i32) -> ColumnSource
         offset: ofs as usize,
     }
 }
-fn generate_texture_hash_table(state: &mut GameState) {
+fn generate_texture_hash_table(r_data: &mut RDataState) {
     let mut key: i32;
-    state.r_data.textures_hashtable = vec![None; state.r_data.numtextures as usize];
-    for i in 0..state.r_data.numtextures {
-        state.r_data.textures[i as usize].index = i;
-        state.r_data.textures[i as usize].next = None;
-        key = lump_name_hash(state.r_data.textures[i as usize].name.as_bytes())
-            .wrapping_rem(state.r_data.numtextures as u32) as i32;
+    r_data.textures_hashtable = vec![None; r_data.numtextures as usize];
+    for i in 0..r_data.numtextures {
+        r_data.textures[i as usize].index = i;
+        r_data.textures[i as usize].next = None;
+        key = lump_name_hash(r_data.textures[i as usize].name.as_bytes())
+            .wrapping_rem(r_data.numtextures as u32) as i32;
         // Walk to the end of the bucket's chain, appending there (matches
         // the original pointer-to-pointer "rover" trick's tail-append order).
-        match state.r_data.textures_hashtable[key as usize] {
+        match r_data.textures_hashtable[key as usize] {
             None => {
-                state.r_data.textures_hashtable[key as usize] = Some(TextureId(i as u32));
+                r_data.textures_hashtable[key as usize] = Some(TextureId(i as u32));
             }
             Some(mut cursor) => {
-                while let Some(next) = state.r_data.textures[cursor.0 as usize].next {
+                while let Some(next) = r_data.textures[cursor.0 as usize].next {
                     cursor = next;
                 }
-                state.r_data.textures[cursor.0 as usize].next = Some(TextureId(i as u32));
+                r_data.textures[cursor.0 as usize].next = Some(TextureId(i as u32));
             }
         }
     }
@@ -459,15 +460,15 @@ pub fn init_textures(state: &mut GameState) {
     for i in 0..state.r_data.numtextures {
         state.r_data.texturetranslation[i as usize] = i;
     }
-    generate_texture_hash_table(state);
+    generate_texture_hash_table(&mut state.r_data);
 }
-pub fn init_flats(state: &mut GameState) {
-    state.r_data.firstflat = get_num_for_name(&state.w_wad, "F_START") + 1;
-    state.r_data.lastflat = get_num_for_name(&state.w_wad, "F_END") - 1;
-    state.r_data.numflats = state.r_data.lastflat - state.r_data.firstflat + 1;
-    state.r_data.flattranslation = vec![0; (state.r_data.numflats + 1) as usize];
-    for i in 0..state.r_data.numflats {
-        state.r_data.flattranslation[i as usize] = i;
+pub fn init_flats(r_data: &mut RDataState, w_wad: &WWadState) {
+    r_data.firstflat = get_num_for_name(w_wad, "F_START") + 1;
+    r_data.lastflat = get_num_for_name(w_wad, "F_END") - 1;
+    r_data.numflats = r_data.lastflat - r_data.firstflat + 1;
+    r_data.flattranslation = vec![0; (r_data.numflats + 1) as usize];
+    for i in 0..r_data.numflats {
+        r_data.flattranslation[i as usize] = i;
     }
 }
 pub fn init_sprite_lumps(state: &mut GameState) {
@@ -505,16 +506,16 @@ pub fn init_colormaps(state: &mut GameState) {
 pub fn r_init_data(state: &mut GameState) {
     init_textures(state);
     doom_print!(state.platform, ".");
-    init_flats(state);
+    init_flats(&mut state.r_data, &state.w_wad);
     doom_print!(state.platform, ".");
     init_sprite_lumps(state);
     doom_print!(state.platform, ".");
     init_colormaps(state);
 }
-pub fn flat_num_for_name(state: &GameState, name: &str) -> i32 {
-    let i = check_num_for_name(&state.w_wad, name)
+pub fn flat_num_for_name(r_data: &RDataState, w_wad: &WWadState, name: &str) -> i32 {
+    let i = check_num_for_name(w_wad, name)
         .unwrap_or_else(|| error(&format!("R_FlatNumForName: {name} not found")));
-    i - state.r_data.firstflat
+    i - r_data.firstflat
 }
 /// The number of the texture called `name`, if there is one (`-` means "no
 /// texture" and is texture 0).
@@ -577,7 +578,7 @@ pub fn precache_level(state: &mut GameState) {
         }
     }
     spritepresent = vec![0u8; state.r_things.numsprites as usize];
-    for mobj_id in mobj_thinker_ids(state) {
+    for mobj_id in mobj_thinker_ids(&state.p_mobj, &state.p_tick) {
         spritepresent[state.p_mobj.mo(mobj_id).sprite as usize] = 1;
     }
     state.r_data.spritememory = 0;

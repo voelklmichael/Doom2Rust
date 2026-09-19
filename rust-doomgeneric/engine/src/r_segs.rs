@@ -404,7 +404,7 @@ pub fn store_wall_range(state: &mut GameState, start: i32, stop: i32) {
     let distangle: Angle = (ANG90 as Angle).wrapping_sub(offsetangle);
     let curline_v1 = state.p_setup.vertexes[state.p_setup.seg(state.r_bsp.curline).v1.0 as usize];
     let (v1x, v1y) = (curline_v1.x, curline_v1.y);
-    let hyp: Fixed = point_to_dist(state, v1x, v1y);
+    let hyp: Fixed = point_to_dist(&state.r_main, v1x, v1y);
     sineval = FINESINE[(distangle >> ANGLETOFINESHIFT) as usize];
     state.r_segs.rw_distance = fixed_mul(hyp, sineval);
     state.r_segs.rw_x = start;
@@ -416,7 +416,7 @@ pub fn store_wall_range(state: &mut GameState, start: i32, stop: i32) {
         .r_main
         .viewangle
         .wrapping_add(state.r_main.xtoviewangle[start as usize]);
-    state.r_segs.rw_scale = scale_from_global_angle(state, angle1);
+    state.r_segs.rw_scale = scale_from_global_angle(&state.r_main, &state.r_segs, angle1);
     state.r_bsp.drawsegs[state.r_bsp.ds_p].scale1 = state.r_segs.rw_scale;
     if stop > start {
         state.r_bsp.drawsegs[state.r_bsp.ds_p].scale2 = {
@@ -424,7 +424,7 @@ pub fn store_wall_range(state: &mut GameState, start: i32, stop: i32) {
                 .r_main
                 .viewangle
                 .wrapping_add(state.r_main.xtoviewangle[stop as usize]);
-            scale_from_global_angle(state, angle2)
+            scale_from_global_angle(&state.r_main, &state.r_segs, angle2)
         };
         state.r_segs.rw_scalestep = ((state.r_bsp.drawsegs[state.r_bsp.ds_p].scale2
             - state.r_segs.rw_scale)
@@ -734,7 +734,12 @@ pub fn store_wall_range(state: &mut GameState, start: i32, stop: i32) {
             state.r_segs.rw_x,
             state.r_segs.rw_stopx - 1,
         );
-        state.r_plane.ceilingplane = Some(check_plane(state, ceilingplane, rw_x, rw_stopx_1));
+        state.r_plane.ceilingplane = Some(check_plane(
+            &mut state.r_plane,
+            ceilingplane,
+            rw_x,
+            rw_stopx_1,
+        ));
     }
     if state.r_segs.markfloor {
         let (floorplane, rw_x2, rw_stopx_2) = (
@@ -742,7 +747,12 @@ pub fn store_wall_range(state: &mut GameState, start: i32, stop: i32) {
             state.r_segs.rw_x,
             state.r_segs.rw_stopx - 1,
         );
-        state.r_plane.floorplane = Some(check_plane(state, floorplane, rw_x2, rw_stopx_2));
+        state.r_plane.floorplane = Some(check_plane(
+            &mut state.r_plane,
+            floorplane,
+            rw_x2,
+            rw_stopx_2,
+        ));
     }
     render_seg_loop(state);
     if (state.r_bsp.drawsegs[state.r_bsp.ds_p].silhouette & SIL_TOP != 0

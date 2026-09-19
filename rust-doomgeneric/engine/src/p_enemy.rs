@@ -1,5 +1,7 @@
 use crate::d_mode::GameMode;
 use crate::d_mode::SkillType;
+use crate::doomstat::DoomstatState;
+use crate::g_game::GGameState;
 use crate::p_mobj::LineFlags;
 use crate::p_mobj::MobjFlags;
 
@@ -166,7 +168,7 @@ pub fn recursive_sound(state: &mut GameState, sec: SectorId, soundblocks: i32) {
         let check = state.p_setup.sector_mut(sec).lines[i as usize];
         let checkv = state.p_setup.line(check);
         if checkv.flags.contains(LineFlags::TWOSIDED) {
-            line_opening(state, check);
+            line_opening(&mut state.p_maputl, &mut state.p_setup, check);
             if state.p_maputl.openrange > 0 {
                 let other = if state.p_setup.sides[checkv.sidenum[0] as usize].sector == sec {
                     state.p_setup.sides[checkv.sidenum[1] as usize].sector
@@ -453,7 +455,7 @@ pub fn look_for_players(state: &mut GameState, actor: MobjId, allaround: bool) -
                             let p = state.p_mobj.mo(player_mo);
                             (p.x, p.y)
                         };
-                        let an = point_to_angle2(state, actor_x, actor_y, pmo_x, pmo_y)
+                        let an = point_to_angle2(&mut state.r_main, actor_x, actor_y, pmo_x, pmo_y)
                             .wrapping_sub(actor_angle);
                         if an > ANG90 as Angle && an < ANG270 {
                             let dist = aprox_distance(pmo_x - actor_x, pmo_y - actor_y);
@@ -476,7 +478,7 @@ pub fn keen_die(state: &mut GameState, id: MobjId) {
     let mo = id;
     fall(state, mo);
     let mo_type = state.p_mobj.mo(mo).kind;
-    for mo2 in mobj_thinker_ids(state) {
+    for mo2 in mobj_thinker_ids(&state.p_mobj, &state.p_tick) {
         if mo2 != mo
             && state.p_mobj.mo(mo2).kind as u32 == mo_type as u32
             && state.p_mobj.mo(mo2).health > 0
@@ -679,7 +681,7 @@ pub fn face_target(state: &mut GameState, id: MobjId) {
         };
         state.p_mobj.mo_mut(actor).flags &= !MobjFlags::AMBUSH;
         state.p_mobj.mo_mut(actor).angle = point_to_angle2(
-            state,
+            &mut state.r_main,
             state.p_mobj.mo(actor).x,
             state.p_mobj.mo(actor).y,
             state.p_mobj.mo(target).x,
@@ -953,7 +955,7 @@ pub fn a_tracer(state: &mut GameState, id: MobjId) {
             return;
         }
         exact = point_to_angle2(
-            state,
+            &mut state.r_main,
             state.p_mobj.mo(actor).x,
             state.p_mobj.mo(actor).y,
             state.p_mobj.mo(dest.unwrap()).x,
@@ -1381,7 +1383,7 @@ pub fn skull_attack(state: &mut GameState, id: MobjId) {
 }
 pub fn pain_shoot_skull(state: &mut GameState, actor: MobjId, angle: Angle) {
     let mut count: i32 = 0;
-    count += mobj_thinker_ids(state)
+    count += mobj_thinker_ids(&state.p_mobj, &state.p_tick)
         .into_iter()
         .filter(|&m| state.p_mobj.mo(m).kind as u32 == MobjType::Skull as i32 as u32)
         .count() as i32;
@@ -1500,23 +1502,23 @@ pub fn explode(state: &mut GameState, id: MobjId) {
         .filter(|&id| state.p_mobj.is_live(id));
     p_radius_attack(state, thingy, target, 128);
 }
-fn check_boss_end(state: &GameState, motype: MobjType) -> bool {
-    if state.doomstat.gameversion.is_ultimate_or_higher() {
-        match state.g_game.gameepisode {
-            1 => state.g_game.gamemap == 8 && motype as u32 == MobjType::Bruiser as i32 as u32,
-            2 => state.g_game.gamemap == 8 && motype as u32 == MobjType::Cyborg as i32 as u32,
-            3 => state.g_game.gamemap == 8 && motype as u32 == MobjType::Spider as i32 as u32,
+fn check_boss_end(doomstat: &DoomstatState, g_game: &GGameState, motype: MobjType) -> bool {
+    if doomstat.gameversion.is_ultimate_or_higher() {
+        match g_game.gameepisode {
+            1 => g_game.gamemap == 8 && motype as u32 == MobjType::Bruiser as i32 as u32,
+            2 => g_game.gamemap == 8 && motype as u32 == MobjType::Cyborg as i32 as u32,
+            3 => g_game.gamemap == 8 && motype as u32 == MobjType::Spider as i32 as u32,
             4 => {
-                state.g_game.gamemap == 6 && motype as u32 == MobjType::Cyborg as i32 as u32
-                    || state.g_game.gamemap == 8 && motype as u32 == MobjType::Spider as i32 as u32
+                g_game.gamemap == 6 && motype as u32 == MobjType::Cyborg as i32 as u32
+                    || g_game.gamemap == 8 && motype as u32 == MobjType::Spider as i32 as u32
             }
-            _ => state.g_game.gamemap == 8,
+            _ => g_game.gamemap == 8,
         }
     } else {
-        if state.g_game.gamemap != 8 {
+        if g_game.gamemap != 8 {
             return false;
         }
-        if motype as u32 == MobjType::Bruiser as i32 as u32 && state.g_game.gameepisode != 1 {
+        if motype as u32 == MobjType::Bruiser as i32 as u32 && g_game.gameepisode != 1 {
             return false;
         }
         true
@@ -1535,7 +1537,7 @@ pub fn boss_death(state: &mut GameState, id: MobjId) {
             {
                 return;
             }
-        } else if !check_boss_end(state, state.p_mobj.mo(mo).kind) {
+        } else if !check_boss_end(&state.doomstat, &state.g_game, state.p_mobj.mo(mo).kind) {
             return;
         }
         i = 0;
@@ -1550,7 +1552,7 @@ pub fn boss_death(state: &mut GameState, id: MobjId) {
             return;
         }
         let mo_type = state.p_mobj.mo(mo).kind;
-        for mo2 in mobj_thinker_ids(state) {
+        for mo2 in mobj_thinker_ids(&state.p_mobj, &state.p_tick) {
             if mo2 != mo
                 && state.p_mobj.mo(mo2).kind as u32 == mo_type as u32
                 && state.p_mobj.mo(mo2).health > 0
@@ -1594,7 +1596,7 @@ pub fn boss_death(state: &mut GameState, id: MobjId) {
                 _ => {}
             }
         }
-        exit_level(state);
+        exit_level(&mut state.g_game);
     }
 }
 pub fn hoof(state: &mut GameState, id: MobjId) {
@@ -1652,7 +1654,7 @@ pub fn close_shotgun2(state: &mut GameState, player_id: PlayerId, position: i32)
 pub fn brain_awake(state: &mut GameState, _id: MobjId) {
     state.p_enemy.numbraintargets = 0;
     state.p_enemy.braintargeton = 0;
-    for m in mobj_thinker_ids(state) {
+    for m in mobj_thinker_ids(&state.p_mobj, &state.p_tick) {
         if state.p_mobj.mo(m).kind as u32 == MobjType::Bosstarget as i32 as u32 {
             let n = state.p_enemy.numbraintargets as usize;
             state.p_enemy.braintargets[n] = Some(m);
@@ -1705,7 +1707,7 @@ pub fn brain_explode(state: &mut GameState, id: MobjId) {
     }
 }
 pub fn brain_die(state: &mut GameState, _id: MobjId) {
-    exit_level(state);
+    exit_level(&mut state.g_game);
 }
 pub fn brain_spit(state: &mut GameState, id: MobjId) {
     {

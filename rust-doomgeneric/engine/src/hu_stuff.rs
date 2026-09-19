@@ -6,6 +6,7 @@ use crate::d_mode::GameVersion;
 use crate::d_player::PlayerId;
 use crate::doomdef::MAXPLAYERS;
 use crate::doomdef::TICRATE;
+use crate::g_game::GGameState;
 use crate::game_state::GameState;
 use crate::hu_lib::{
     hulib_add_char_to_text_line, hulib_add_message_to_stext, hulib_draw_itext, hulib_draw_stext,
@@ -13,6 +14,7 @@ use crate::hu_lib::{
     hulib_init_itext, hulib_init_stext, hulib_init_text_line, hulib_key_in_itext,
     hulib_reset_itext, HuIText, HuSText, HuTextLine,
 };
+use crate::m_controls::MControlsState;
 use crate::m_controls::KEY_ENTER;
 use crate::m_controls::KEY_ESCAPE;
 use crate::m_controls::KEY_RALT;
@@ -317,14 +319,14 @@ pub fn hu_init(state: &mut GameState) {
         state.hu_stuff.hu_font[i] = lumpnum;
     }
 }
-pub fn hu_stop(state: &mut GameState) {
-    state.hu_stuff.headsupactive = false;
+pub fn hu_stop(hu_stuff: &mut HuStuffState) {
+    hu_stuff.headsupactive = false;
 }
 pub fn hu_start(state: &mut GameState) {
     let mut _i: i32 = 0;
     let mut s: &str;
     if state.hu_stuff.headsupactive {
-        hu_stop(state);
+        hu_stop(&mut state.hu_stuff);
     }
     state.hu_stuff.plr = PlayerId(state.g_game.consoleplayer as u8);
     state.hu_stuff.message_on = false;
@@ -493,12 +495,12 @@ pub fn hu_ticker(state: &mut GameState) {
     }
 }
 pub const QUEUESIZE: i32 = 128;
-pub fn queue_chat_char(state: &mut GameState, c: u8) {
-    if (state.hu_stuff.head + 1) & (QUEUESIZE - 1) == state.hu_stuff.tail {
-        state.g_game.player_mut(state.hu_stuff.plr).message = Some("[Message unsent]".to_string());
+pub fn queue_chat_char(g_game: &mut GGameState, hu_stuff: &mut HuStuffState, c: u8) {
+    if (hu_stuff.head + 1) & (QUEUESIZE - 1) == hu_stuff.tail {
+        g_game.player_mut(hu_stuff.plr).message = Some("[Message unsent]".to_string());
     } else {
-        state.hu_stuff.chatchars[state.hu_stuff.head as usize] = c;
-        state.hu_stuff.head = (state.hu_stuff.head + 1) & (QUEUESIZE - 1);
+        hu_stuff.chatchars[hu_stuff.head as usize] = c;
+        hu_stuff.head = (hu_stuff.head + 1) & (QUEUESIZE - 1);
     }
 }
 pub fn dequeue_chat_char(state: &mut HuStuffState) -> u8 {
@@ -511,92 +513,96 @@ pub fn dequeue_chat_char(state: &mut HuStuffState) -> u8 {
     }
     c
 }
-pub fn hu_responder(state: &mut GameState, ev: &Event) -> bool {
+pub fn hu_responder(
+    g_game: &mut GGameState,
+    hu_stuff: &mut HuStuffState,
+    m_controls: &MControlsState,
+    ev: &Event,
+) -> bool {
     let mut eatkey: bool = false;
     let c: u8;
     let mut numplayers: i32;
     numplayers = 0;
     for i in 0..(MAXPLAYERS as usize) {
-        numplayers += state.g_game.playeringame[i] as i32;
+        numplayers += g_game.playeringame[i] as i32;
     }
     if ev.data1 == KEY_RSHIFT {
         return false;
     } else if ev.data1 == KEY_RALT || ev.data1 == KEY_LALT {
-        state.hu_stuff.hu_responder_altdown = ev.kind == EvType::Keydown;
+        hu_stuff.hu_responder_altdown = ev.kind == EvType::Keydown;
         return false;
     }
     if ev.kind != EvType::Keydown {
         return false;
     }
-    if !state.hu_stuff.chat_on {
-        if ev.data1 == state.m_controls.key_message_refresh {
-            state.hu_stuff.message_on = true;
-            state.hu_stuff.message_counter = HU_MSGTIMEOUT;
+    if !hu_stuff.chat_on {
+        if ev.data1 == m_controls.key_message_refresh {
+            hu_stuff.message_on = true;
+            hu_stuff.message_counter = HU_MSGTIMEOUT;
             eatkey = true;
-        } else if state.g_game.netgame && ev.data2 == state.m_controls.key_multi_msg {
-            state.hu_stuff.chat_on = true;
-            eatkey = state.hu_stuff.chat_on;
-            hulib_reset_itext(&mut state.hu_stuff.w_chat);
-            queue_chat_char(state, HU_BROADCAST as u8);
-        } else if state.g_game.netgame && numplayers > 2 {
+        } else if g_game.netgame && ev.data2 == m_controls.key_multi_msg {
+            hu_stuff.chat_on = true;
+            eatkey = hu_stuff.chat_on;
+            hulib_reset_itext(&mut hu_stuff.w_chat);
+            queue_chat_char(g_game, hu_stuff, HU_BROADCAST as u8);
+        } else if g_game.netgame && numplayers > 2 {
             for i in 0..MAXPLAYERS {
-                if ev.data2 == state.m_controls.key_multi_msgplayer[i as usize] {
-                    if state.g_game.playeringame[i as usize] && i != state.g_game.consoleplayer {
-                        state.hu_stuff.chat_on = true;
-                        eatkey = state.hu_stuff.chat_on;
-                        hulib_reset_itext(&mut state.hu_stuff.w_chat);
-                        queue_chat_char(state, (i + 1) as u8);
+                if ev.data2 == m_controls.key_multi_msgplayer[i as usize] {
+                    if g_game.playeringame[i as usize] && i != g_game.consoleplayer {
+                        hu_stuff.chat_on = true;
+                        eatkey = hu_stuff.chat_on;
+                        hulib_reset_itext(&mut hu_stuff.w_chat);
+                        queue_chat_char(g_game, hu_stuff, (i + 1) as u8);
                         break;
-                    } else if i == state.g_game.consoleplayer {
-                        state.hu_stuff.hu_responder_num_nobrainers += 1;
-                        if state.hu_stuff.hu_responder_num_nobrainers < 3 {
-                            state.g_game.player_mut(state.hu_stuff.plr).message =
+                    } else if i == g_game.consoleplayer {
+                        hu_stuff.hu_responder_num_nobrainers += 1;
+                        if hu_stuff.hu_responder_num_nobrainers < 3 {
+                            g_game.player_mut(hu_stuff.plr).message =
                                 Some("You mumble to yourself".to_string());
-                        } else if state.hu_stuff.hu_responder_num_nobrainers < 6 {
-                            state.g_game.player_mut(state.hu_stuff.plr).message =
+                        } else if hu_stuff.hu_responder_num_nobrainers < 6 {
+                            g_game.player_mut(hu_stuff.plr).message =
                                 Some("Who's there?".to_string());
-                        } else if state.hu_stuff.hu_responder_num_nobrainers < 9 {
-                            state.g_game.player_mut(state.hu_stuff.plr).message =
+                        } else if hu_stuff.hu_responder_num_nobrainers < 9 {
+                            g_game.player_mut(hu_stuff.plr).message =
                                 Some("You scare yourself".to_string());
-                        } else if state.hu_stuff.hu_responder_num_nobrainers < 32 {
-                            state.g_game.player_mut(state.hu_stuff.plr).message =
+                        } else if hu_stuff.hu_responder_num_nobrainers < 32 {
+                            g_game.player_mut(hu_stuff.plr).message =
                                 Some("You start to rave".to_string());
                         } else {
-                            state.g_game.player_mut(state.hu_stuff.plr).message =
+                            g_game.player_mut(hu_stuff.plr).message =
                                 Some("You've lost it...".to_string());
                         }
                     }
                 }
             }
         }
-    } else if state.hu_stuff.hu_responder_altdown {
+    } else if hu_stuff.hu_responder_altdown {
         c = (ev.data1 - '0' as i32) as u8;
         if c as i32 > 9 {
             return false;
         }
-        let macromessage = state.hu_stuff.chat_macros[c as usize].unwrap_or("");
-        queue_chat_char(state, KEY_ENTER as u8);
+        let macromessage = hu_stuff.chat_macros[c as usize].unwrap_or("");
+        queue_chat_char(g_game, hu_stuff, KEY_ENTER as u8);
         for b in macromessage.bytes() {
-            queue_chat_char(state, b);
+            queue_chat_char(g_game, hu_stuff, b);
         }
-        queue_chat_char(state, KEY_ENTER as u8);
-        state.hu_stuff.chat_on = false;
-        state.g_game.player_mut(state.hu_stuff.plr).message = Some(macromessage.to_string());
+        queue_chat_char(g_game, hu_stuff, KEY_ENTER as u8);
+        hu_stuff.chat_on = false;
+        g_game.player_mut(hu_stuff.plr).message = Some(macromessage.to_string());
         eatkey = true;
     } else {
         c = ev.data2 as u8;
-        eatkey = hulib_key_in_itext(&mut state.hu_stuff.w_chat, c);
+        eatkey = hulib_key_in_itext(&mut hu_stuff.w_chat, c);
         if eatkey {
-            queue_chat_char(state, c);
+            queue_chat_char(g_game, hu_stuff, c);
         }
         if c as i32 == KEY_ENTER {
-            state.hu_stuff.chat_on = false;
-            if !state.hu_stuff.w_chat.l.l.is_empty() {
-                state.g_game.player_mut(state.hu_stuff.plr).message =
-                    Some(state.hu_stuff.w_chat.l.l.clone());
+            hu_stuff.chat_on = false;
+            if !hu_stuff.w_chat.l.l.is_empty() {
+                g_game.player_mut(hu_stuff.plr).message = Some(hu_stuff.w_chat.l.l.clone());
             }
         } else if c as i32 == KEY_ESCAPE {
-            state.hu_stuff.chat_on = false;
+            hu_stuff.chat_on = false;
         }
     }
     eatkey

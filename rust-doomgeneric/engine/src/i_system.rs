@@ -1,5 +1,6 @@
 use crate::game_state::GameState;
 use crate::m_argv::check_parm_with_args;
+use crate::m_argv::MArgvState;
 use crate::m_misc::str_to_int;
 use crate::platform::DoomPlatform;
 use alloc::vec::Vec;
@@ -90,49 +91,54 @@ pub const DOS_MEM_DUMP_SIZE: i32 = 10;
 static MEM_DUMP_DOS622: [u8; 10] = [0x57, 0x92, 0x19, 0, 0xf4, 0x6, 0x70, 0, 0x16, 0];
 static MEM_DUMP_WIN98: [u8; 10] = [0x9e, 0xf, 0xc9, 0, 0x65, 0x4, 0x70, 0, 0x16, 0];
 static MEM_DUMP_DOSBOX: [u8; 10] = [0, 0, 0, 0xf1, 0, 0, 0, 0, 0x7, 0];
-pub fn get_memory_value(state: &mut GameState, offset: u32, size: i32) -> Option<u32> {
-    if state.i_system.get_memory_value_firsttime {
+pub fn get_memory_value(
+    i_system: &mut ISystemState,
+    m_argv: &MArgvState,
+    offset: u32,
+    size: i32,
+) -> Option<u32> {
+    if i_system.get_memory_value_firsttime {
         let _p: i32;
         let mut i: i32;
         let mut val: i32 = 0;
-        state.i_system.get_memory_value_firsttime = false;
-        if let Some(mut p) = check_parm_with_args(state, "-setmem", 1) {
-            if state.m_argv.myargv[p + 1]
+        i_system.get_memory_value_firsttime = false;
+        if let Some(mut p) = check_parm_with_args(m_argv, "-setmem", 1) {
+            if m_argv.myargv[p + 1]
                 .as_bytes()
                 .eq_ignore_ascii_case(b"dos622")
             {
-                state.i_system.dos_mem_dump = DosMemDump::Dos622;
+                i_system.dos_mem_dump = DosMemDump::Dos622;
             }
-            if state.m_argv.myargv[p + 1]
+            if m_argv.myargv[p + 1]
                 .as_bytes()
                 .eq_ignore_ascii_case(b"dos71")
             {
-                state.i_system.dos_mem_dump = DosMemDump::Win98;
-            } else if state.m_argv.myargv[p + 1]
+                i_system.dos_mem_dump = DosMemDump::Win98;
+            } else if m_argv.myargv[p + 1]
                 .as_bytes()
                 .eq_ignore_ascii_case(b"dosbox")
             {
-                state.i_system.dos_mem_dump = DosMemDump::DosBox;
+                i_system.dos_mem_dump = DosMemDump::DosBox;
             } else {
                 i = 0;
                 while i < DOS_MEM_DUMP_SIZE {
                     p += 1;
-                    if p >= state.m_argv.myargv.len()
-                        || state.m_argv.myargv[p].as_bytes().first() == Some(&b'-')
+                    if p >= m_argv.myargv.len()
+                        || m_argv.myargv[p].as_bytes().first() == Some(&b'-')
                     {
                         break;
                     }
-                    str_to_int(state.m_argv.myargv[p].as_str(), &mut val);
+                    str_to_int(m_argv.myargv[p].as_str(), &mut val);
                     let fresh0 = i;
                     i += 1;
-                    state.i_system.mem_dump_custom[fresh0 as usize] = val as u8;
+                    i_system.mem_dump_custom[fresh0 as usize] = val as u8;
                     i += 1;
                 }
-                state.i_system.dos_mem_dump = DosMemDump::Custom;
+                i_system.dos_mem_dump = DosMemDump::Custom;
             }
         }
     }
-    let dump = state.i_system.dos_mem_dump_bytes();
+    let dump = i_system.dos_mem_dump_bytes();
     let offset = offset as usize;
     match size {
         1 => Some(dump[offset] as u32),

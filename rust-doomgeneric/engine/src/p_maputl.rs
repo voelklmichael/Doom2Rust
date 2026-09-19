@@ -7,6 +7,8 @@ use crate::m_fixed::FRACBITS;
 use crate::m_fixed::FRACUNIT;
 use crate::m_fixed::INT_MAX;
 use crate::p_mobj::MobjFlags;
+use crate::p_pspr::PPsprState;
+use crate::p_setup::PSetupState;
 
 use crate::p_mobj::MobjId;
 use crate::p_setup::LineId;
@@ -206,9 +208,9 @@ pub fn aprox_distance(mut dx: Fixed, mut dy: Fixed) -> Fixed {
     }
     dx + dy - (dy >> 1)
 }
-pub fn point_on_line_side(state: &GameState, x: Fixed, y: Fixed, line: LineId) -> i32 {
-    let line = state.p_setup.line(line);
-    let line_v1 = state.p_setup.vertexes[line.v1.0 as usize];
+pub fn point_on_line_side(p_setup: &PSetupState, x: Fixed, y: Fixed, line: LineId) -> i32 {
+    let line = p_setup.line(line);
+    let line_v1 = p_setup.vertexes[line.v1.0 as usize];
     if line.dx == 0 {
         if x <= line_v1.x {
             return (line.dy > 0) as i32;
@@ -230,13 +232,13 @@ pub fn point_on_line_side(state: &GameState, x: Fixed, y: Fixed, line: LineId) -
     }
     1
 }
-pub fn box_on_line_side(state: &GameState, tmbox: [Fixed; 4], ld: LineId) -> i32 {
+pub fn box_on_line_side(p_setup: &PSetupState, tmbox: [Fixed; 4], ld: LineId) -> i32 {
     let mut p1: i32 = 0;
     let mut p2: i32 = 0;
-    let ldv = state.p_setup.line(ld);
+    let ldv = p_setup.line(ld);
     match ldv.slopetype as u32 {
         0 => {
-            let ld_v1 = state.p_setup.vertexes[ldv.v1.0 as usize];
+            let ld_v1 = p_setup.vertexes[ldv.v1.0 as usize];
             p1 = (tmbox[BoxIndex::Top as usize] > ld_v1.y) as i32;
             p2 = (tmbox[BoxIndex::Bottom as usize] > ld_v1.y) as i32;
             if ldv.dx < 0 {
@@ -245,7 +247,7 @@ pub fn box_on_line_side(state: &GameState, tmbox: [Fixed; 4], ld: LineId) -> i32
             }
         }
         1 => {
-            let ld_v1 = state.p_setup.vertexes[ldv.v1.0 as usize];
+            let ld_v1 = p_setup.vertexes[ldv.v1.0 as usize];
             p1 = (tmbox[BoxIndex::Right as usize] < ld_v1.x) as i32;
             p2 = (tmbox[BoxIndex::Left as usize] < ld_v1.x) as i32;
             if ldv.dy < 0 {
@@ -255,13 +257,13 @@ pub fn box_on_line_side(state: &GameState, tmbox: [Fixed; 4], ld: LineId) -> i32
         }
         2 => {
             p1 = point_on_line_side(
-                state,
+                p_setup,
                 tmbox[BoxIndex::Left as usize],
                 tmbox[BoxIndex::Top as usize],
                 ld,
             );
             p2 = point_on_line_side(
-                state,
+                p_setup,
                 tmbox[BoxIndex::Right as usize],
                 tmbox[BoxIndex::Bottom as usize],
                 ld,
@@ -269,13 +271,13 @@ pub fn box_on_line_side(state: &GameState, tmbox: [Fixed; 4], ld: LineId) -> i32
         }
         3 => {
             p1 = point_on_line_side(
-                state,
+                p_setup,
                 tmbox[BoxIndex::Right as usize],
                 tmbox[BoxIndex::Top as usize],
                 ld,
             );
             p2 = point_on_line_side(
-                state,
+                p_setup,
                 tmbox[BoxIndex::Left as usize],
                 tmbox[BoxIndex::Bottom as usize],
                 ld,
@@ -316,9 +318,9 @@ pub fn point_on_divline_side(x: Fixed, y: Fixed, line: &DivLine) -> i32 {
     }
     1
 }
-pub fn make_divline(state: &GameState, li: LineId) -> DivLine {
-    let li = state.p_setup.line(li);
-    let li_v1 = state.p_setup.vertexes[li.v1.0 as usize];
+pub fn make_divline(p_setup: &PSetupState, li: LineId) -> DivLine {
+    let li = p_setup.line(li);
+    let li_v1 = p_setup.vertexes[li.v1.0 as usize];
     DivLine {
         x: li_v1.x,
         y: li_v1.y,
@@ -334,29 +336,29 @@ pub fn intercept_vector(v2: &DivLine, v1: &DivLine) -> Fixed {
     let num = fixed_mul((v1.x - v2.x) >> 8, v1.dy) + fixed_mul((v2.y - v1.y) >> 8, v1.dx);
     fixed_div(num, den)
 }
-pub fn line_opening(state: &mut GameState, linedef: LineId) {
-    let linedefv = state.p_setup.line(linedef);
+pub fn line_opening(p_maputl: &mut PMaputlState, p_setup: &mut PSetupState, linedef: LineId) {
+    let linedefv = p_setup.line(linedef);
     if linedefv.sidenum[1] as i32 == -1 {
-        state.p_maputl.openrange = 0;
+        p_maputl.openrange = 0;
         return;
     }
     let (front_floor, front_ceiling) = {
-        let front = state.p_setup.sector_mut(linedefv.frontsector.unwrap());
+        let front = p_setup.sector_mut(linedefv.frontsector.unwrap());
         (front.floorheight, front.ceilingheight)
     };
     let (back_floor, back_ceiling) = {
-        let back = state.p_setup.sector_mut(linedefv.backsector.unwrap());
+        let back = p_setup.sector_mut(linedefv.backsector.unwrap());
         (back.floorheight, back.ceilingheight)
     };
-    state.p_maputl.opentop = front_ceiling.min(back_ceiling);
+    p_maputl.opentop = front_ceiling.min(back_ceiling);
     if front_floor > back_floor {
-        state.p_maputl.openbottom = front_floor;
-        state.p_maputl.lowfloor = back_floor;
+        p_maputl.openbottom = front_floor;
+        p_maputl.lowfloor = back_floor;
     } else {
-        state.p_maputl.openbottom = back_floor;
-        state.p_maputl.lowfloor = front_floor;
+        p_maputl.openbottom = back_floor;
+        p_maputl.lowfloor = front_floor;
     }
-    state.p_maputl.openrange = state.p_maputl.opentop - state.p_maputl.openbottom;
+    p_maputl.openrange = p_maputl.opentop - p_maputl.openbottom;
 }
 pub fn unset_thing_position(state: &mut GameState, thing: MobjId) {
     let (flags, snext, sprev, subsector, bnext, bprev, x, y) = {
@@ -424,7 +426,7 @@ pub fn set_thing_position(state: &mut GameState, thing: MobjId) {
         let t = state.p_mobj.mo(thing);
         (t.x, t.y, t.flags)
     };
-    let ss = point_in_subsector(state, x, y);
+    let ss = point_in_subsector(&state.p_setup, x, y);
     state.p_mobj.mo_mut(thing).subsector = ss;
     if !flags.contains(MobjFlags::NOSECTOR) {
         let sector = state.p_setup.subsectors[ss.0 as usize].sector;
@@ -538,13 +540,13 @@ pub fn add_line_intercepts(state: &mut GameState, ld: LineId) -> bool {
         s1 = point_on_divline_side(ld_v1.x, ld_v1.y, &trace);
         s2 = point_on_divline_side(ld_v2.x, ld_v2.y, &trace);
     } else {
-        s1 = point_on_line_side(state, trace.x, trace.y, ld);
-        s2 = point_on_line_side(state, trace.x + trace.dx, trace.y + trace.dy, ld);
+        s1 = point_on_line_side(&state.p_setup, trace.x, trace.y, ld);
+        s2 = point_on_line_side(&state.p_setup, trace.x + trace.dx, trace.y + trace.dy, ld);
     }
     if s1 == s2 {
         return true;
     }
-    let dl = make_divline(state, ld);
+    let dl = make_divline(&state.p_setup, ld);
     let frac = intercept_vector(&trace, &dl);
     if frac < 0 {
         return true;
@@ -635,24 +637,30 @@ pub fn traverse_intercepts<F: FnMut(&mut GameState, Intercept) -> bool>(
     }
     true
 }
-fn intercepts_memory_overrun(state: &mut GameState, location: i32, value: i32) {
+fn intercepts_memory_overrun(
+    p_maputl: &mut PMaputlState,
+    p_pspr: &mut PPsprState,
+    p_setup: &mut PSetupState,
+    location: i32,
+    value: i32,
+) {
     let mut i = 0;
     let mut offset = 0;
-    while state.p_maputl.intercepts_overrun[i as usize].len != 0 {
-        let entry_len = state.p_maputl.intercepts_overrun[i as usize].len;
+    while p_maputl.intercepts_overrun[i as usize].len != 0 {
+        let entry_len = p_maputl.intercepts_overrun[i as usize].len;
         if offset + entry_len > location {
             let index = location - offset;
-            match state.p_maputl.intercepts_overrun[i as usize].target {
+            match p_maputl.intercepts_overrun[i as usize].target {
                 OverrunTarget::None => {}
-                OverrunTarget::LowFloor => state.p_maputl.lowfloor = value,
-                OverrunTarget::OpenBottom => state.p_maputl.openbottom = value,
-                OverrunTarget::OpenTop => state.p_maputl.opentop = value,
-                OverrunTarget::OpenRange => state.p_maputl.openrange = value,
-                OverrunTarget::BulletSlope => state.p_pspr.bulletslope = value,
-                OverrunTarget::BmapWidth => state.p_setup.bmapwidth = value,
-                OverrunTarget::BmapOrgX => state.p_setup.bmaporgx = value,
-                OverrunTarget::BmapOrgY => state.p_setup.bmaporgy = value,
-                OverrunTarget::BmapHeight => state.p_setup.bmapheight = value,
+                OverrunTarget::LowFloor => p_maputl.lowfloor = value,
+                OverrunTarget::OpenBottom => p_maputl.openbottom = value,
+                OverrunTarget::OpenTop => p_maputl.opentop = value,
+                OverrunTarget::OpenRange => p_maputl.openrange = value,
+                OverrunTarget::BulletSlope => p_pspr.bulletslope = value,
+                OverrunTarget::BmapWidth => p_setup.bmapwidth = value,
+                OverrunTarget::BmapOrgX => p_setup.bmaporgx = value,
+                OverrunTarget::BmapOrgY => p_setup.bmaporgy = value,
+                OverrunTarget::BmapHeight => p_setup.bmapheight = value,
                 OverrunTarget::PlayerStarts => {
                     // `MapThing` is 5 i16 fields (10 bytes); `index` here is
                     // a 16-bit-word offset into the flattened [MapThing; 4].
@@ -661,7 +669,7 @@ fn intercepts_memory_overrun(state: &mut GameState, location: i32, value: i32) {
                     let field_idx = word % 5;
                     let lo = (value & 0xffff) as i16;
                     let hi = (value >> 16 & 0xffff) as i16;
-                    if let Some(mt) = state.p_setup.playerstarts.get_mut(mt_idx) {
+                    if let Some(mt) = p_setup.playerstarts.get_mut(mt_idx) {
                         match field_idx {
                             0 => mt.x = lo,
                             1 => mt.y = lo,
@@ -675,9 +683,7 @@ fn intercepts_memory_overrun(state: &mut GameState, location: i32, value: i32) {
                         // field with the high half, when there is one.
                         let next_mt_idx = (word + 1) / 5;
                         let next_field_idx = (word + 1) % 5;
-                        if let Some(next_mt) =
-                            state.p_setup.playerstarts.get_mut(next_mt_idx as usize)
-                        {
+                        if let Some(next_mt) = p_setup.playerstarts.get_mut(next_mt_idx as usize) {
                             match next_field_idx {
                                 0 => next_mt.x = hi,
                                 1 => next_mt.y = hi,
@@ -712,9 +718,27 @@ fn intercepts_overrun(state: &mut GameState, num_intercepts: i32, intercept: Int
         InterceptTarget::Line(id) => (true, id.0 as i32),
         InterceptTarget::Thing(id) => (false, id.raw_index() as i32),
     };
-    intercepts_memory_overrun(state, location, intercept.frac);
-    intercepts_memory_overrun(state, location + 4, isaline as i32);
-    intercepts_memory_overrun(state, location + 8, target_value);
+    intercepts_memory_overrun(
+        &mut state.p_maputl,
+        &mut state.p_pspr,
+        &mut state.p_setup,
+        location,
+        intercept.frac,
+    );
+    intercepts_memory_overrun(
+        &mut state.p_maputl,
+        &mut state.p_pspr,
+        &mut state.p_setup,
+        location + 4,
+        isaline as i32,
+    );
+    intercepts_memory_overrun(
+        &mut state.p_maputl,
+        &mut state.p_pspr,
+        &mut state.p_setup,
+        location + 8,
+        target_value,
+    );
 }
 pub fn path_traverse<F: FnMut(&mut GameState, Intercept) -> bool>(
     state: &mut GameState,

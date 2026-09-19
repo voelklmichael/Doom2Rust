@@ -6,6 +6,8 @@ use crate::m_fixed::FRACUNIT;
 use crate::m_random::p_random;
 use crate::p_floor::move_plane;
 use crate::p_floor::ResultE;
+use crate::p_setup::PSetupState;
+use crate::p_tick::PTickState;
 use alloc::boxed::Box;
 use alloc::vec::Vec;
 
@@ -167,10 +169,20 @@ pub fn plat_raise(state: &mut GameState, id: PlatId) {
                 );
                 match plat.kind {
                     PlattypeE::BlazeDWUS | PlattypeE::DownWaitUpStay => {
-                        remove_active_plat(state, id);
+                        remove_active_plat(
+                            &mut state.p_plats,
+                            &mut state.p_setup,
+                            &state.p_tick,
+                            id,
+                        );
                     }
                     PlattypeE::RaiseAndChange | PlattypeE::RaiseToNearestAndChange => {
-                        remove_active_plat(state, id);
+                        remove_active_plat(
+                            &mut state.p_plats,
+                            &mut state.p_setup,
+                            &state.p_tick,
+                            id,
+                        );
                     }
                     PlattypeE::PerpetualRaise => {}
                 }
@@ -213,9 +225,9 @@ pub fn do_plat(state: &mut GameState, line: LineId, kind: PlattypeE, amount: i32
     let linev = state.p_setup.line(line);
     let mut rtn = false;
     if kind == PlattypeE::PerpetualRaise {
-        activate_in_stasis(state, linev.tag as i32);
+        activate_in_stasis(&mut state.p_plats, &state.p_tick, linev.tag as i32);
     }
-    for sector in sectors_with_line_tag(state, line) {
+    for sector in sectors_with_line_tag(&state.p_setup, line) {
         let sec = sector;
         if state.p_setup.sector_mut(sec).specialdata.is_some() {
             continue;
@@ -236,7 +248,7 @@ pub fn do_plat(state: &mut GameState, line: LineId, kind: PlattypeE, amount: i32
                 let neighbor_sector_id = state.p_setup.sides[linev.sidenum[0] as usize].sector;
                 let neighbor_pic = state.p_setup.sector_mut(neighbor_sector_id).floorpic;
                 state.p_setup.sector_mut(sec).floorpic = neighbor_pic;
-                plat.high = find_next_highest_floor(state, sec, floorheight);
+                plat.high = find_next_highest_floor(&mut state.p_setup, sec, floorheight);
                 plat.wait = 0;
                 plat.status = PlatE::Up;
                 state.p_setup.sector_mut(sec).special = 0;
@@ -254,7 +266,7 @@ pub fn do_plat(state: &mut GameState, line: LineId, kind: PlattypeE, amount: i32
             }
             PlattypeE::DownWaitUpStay => {
                 plat.speed = (PLATSPEED * 4) as Fixed;
-                plat.low = find_lowest_floor_surrounding(state, sec);
+                plat.low = find_lowest_floor_surrounding(&mut state.p_setup, sec);
                 if plat.low > floorheight {
                     plat.low = floorheight;
                 }
@@ -265,7 +277,7 @@ pub fn do_plat(state: &mut GameState, line: LineId, kind: PlattypeE, amount: i32
             }
             PlattypeE::BlazeDWUS => {
                 plat.speed = (PLATSPEED * 8) as Fixed;
-                plat.low = find_lowest_floor_surrounding(state, sec);
+                plat.low = find_lowest_floor_surrounding(&mut state.p_setup, sec);
                 if plat.low > floorheight {
                     plat.low = floorheight;
                 }
@@ -276,11 +288,11 @@ pub fn do_plat(state: &mut GameState, line: LineId, kind: PlattypeE, amount: i32
             }
             PlattypeE::PerpetualRaise => {
                 plat.speed = PLATSPEED as Fixed;
-                plat.low = find_lowest_floor_surrounding(state, sec);
+                plat.low = find_lowest_floor_surrounding(&mut state.p_setup, sec);
                 if plat.low > floorheight {
                     plat.low = floorheight;
                 }
-                plat.high = find_highest_floor_surrounding(state, sec);
+                plat.high = find_highest_floor_surrounding(&mut state.p_setup, sec);
                 if plat.high < floorheight {
                     plat.high = floorheight;
                 }
@@ -295,7 +307,7 @@ pub fn do_plat(state: &mut GameState, line: LineId, kind: PlattypeE, amount: i32
         }
         let plat_arena_id = state.p_plats.spawn(plat);
         let plat_id = add_thinker(
-            state,
+            &mut state.p_tick,
             ThinkerPayload::Plat(plat_arena_id),
             ThinkerKind::Plat,
         );
@@ -304,11 +316,11 @@ pub fn do_plat(state: &mut GameState, line: LineId, kind: PlattypeE, amount: i32
     }
     rtn
 }
-pub fn activate_in_stasis(state: &mut GameState, tag: i32) {
+pub fn activate_in_stasis(p_plats: &mut PPlatsState, p_tick: &PTickState, tag: i32) {
     for i in 0..MAXPLATS as usize {
-        if let Some(id) = state.p_plats.activeplats[i] {
-            let plat_id = state.p_tick.plat_payload(id);
-            let p = state.p_plats.get_mut(plat_id).expect("live plat");
+        if let Some(id) = p_plats.activeplats[i] {
+            let plat_id = p_tick.plat_payload(id);
+            let p = p_plats.get_mut(plat_id).expect("live plat");
             if p.tag == tag && p.status == PlatE::InStasis {
                 p.status = p.oldstatus;
                 p.thinker.function = ThinkerFn::Plat(plat_raise);
@@ -316,11 +328,11 @@ pub fn activate_in_stasis(state: &mut GameState, tag: i32) {
         }
     }
 }
-pub fn stop_plat(state: &mut GameState, tag: i32) {
+pub fn stop_plat(p_plats: &mut PPlatsState, p_tick: &PTickState, tag: i32) {
     for j in 0..MAXPLATS as usize {
-        if let Some(id) = state.p_plats.activeplats[j] {
-            let plat_id = state.p_tick.plat_payload(id);
-            let p = state.p_plats.get_mut(plat_id).expect("live plat");
+        if let Some(id) = p_plats.activeplats[j] {
+            let plat_id = p_tick.plat_payload(id);
+            let p = p_plats.get_mut(plat_id).expect("live plat");
             if p.status != PlatE::InStasis && p.tag == tag {
                 p.oldstatus = p.status;
                 p.status = PlatE::InStasis;
@@ -338,15 +350,20 @@ pub fn add_active_plat(state: &mut PPlatsState, id: ThinkerId) {
     }
     error("P_AddActivePlat: no more plats!");
 }
-pub fn remove_active_plat(state: &mut GameState, plat_id: PlatId) {
+pub fn remove_active_plat(
+    p_plats: &mut PPlatsState,
+    p_setup: &mut PSetupState,
+    p_tick: &PTickState,
+    plat_id: PlatId,
+) {
     for i in 0..MAXPLATS as usize {
-        if let Some(id) = state.p_plats.activeplats[i] {
-            if state.p_tick.plat_payload(id) == plat_id {
-                let p = state.p_plats.get_mut(plat_id).expect("live plat");
+        if let Some(id) = p_plats.activeplats[i] {
+            if p_tick.plat_payload(id) == plat_id {
+                let p = p_plats.get_mut(plat_id).expect("live plat");
                 let sector = p.sector;
                 remove_thinker(&mut p.thinker);
-                state.p_setup.sector_mut(sector).specialdata = None;
-                state.p_plats.activeplats[i] = None;
+                p_setup.sector_mut(sector).specialdata = None;
+                p_plats.activeplats[i] = None;
                 return;
             }
         }

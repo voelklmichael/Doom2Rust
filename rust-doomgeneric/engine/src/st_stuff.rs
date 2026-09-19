@@ -15,6 +15,7 @@ use crate::doomdef::SCREENHEIGHT;
 use crate::doomdef::SCREENWIDTH;
 use crate::doomdef::TICRATE;
 use crate::g_game::defered_init_new;
+use crate::g_game::GGameState;
 use crate::game_state::GameState;
 use crate::i_video::set_palette;
 use crate::m_cheat::cht_check_cheat;
@@ -519,7 +520,7 @@ pub fn st_responder(state: &mut GameState, ev: &Event) -> bool {
                     ev.data2 as u8,
                 ) {
                     if state.g_game.player_mut(state.st_stuff.plyr).powers[i as usize] == 0 {
-                        give_power(state, state.st_stuff.plyr, i);
+                        give_power(&mut state.g_game, &mut state.p_mobj, state.st_stuff.plyr, i);
                     } else if i != PowerType::Strength as i32 {
                         state.g_game.player_mut(state.st_stuff.plyr).powers[i as usize] = 1;
                     } else {
@@ -597,23 +598,23 @@ pub fn st_responder(state: &mut GameState, ev: &Event) -> bool {
             state.g_game.player_mut(state.st_stuff.plyr).message =
                 Some("Changing Level...".to_string());
             let gameskill = state.g_game.gameskill;
-            defered_init_new(state, gameskill, epsd, map);
+            defered_init_new(&mut state.g_game, gameskill, epsd, map);
         }
     }
     false
 }
-pub fn calc_pain_offset(state: &mut GameState) -> i32 {
-    let health: i32 = if state.g_game.player_mut(state.st_stuff.plyr).health > 100 {
+pub fn calc_pain_offset(g_game: &mut GGameState, st_stuff: &mut StStuffState) -> i32 {
+    let health: i32 = if g_game.player_mut(st_stuff.plyr).health > 100 {
         100
     } else {
-        state.g_game.player_mut(state.st_stuff.plyr).health
+        g_game.player_mut(st_stuff.plyr).health
     };
-    if health != state.st_stuff.st_calcpainoffset_oldhealth {
-        state.st_stuff.st_calcpainoffset_lastcalc =
+    if health != st_stuff.st_calcpainoffset_oldhealth {
+        st_stuff.st_calcpainoffset_lastcalc =
             ST_FACESTRIDE * ((100 - health) * ST_NUMPAINFACES / 101);
-        state.st_stuff.st_calcpainoffset_oldhealth = health;
+        st_stuff.st_calcpainoffset_oldhealth = health;
     }
-    state.st_stuff.st_calcpainoffset_lastcalc
+    st_stuff.st_calcpainoffset_lastcalc
 }
 pub fn update_face_widget(state: &mut GameState) {
     let i: i32;
@@ -643,7 +644,8 @@ pub fn update_face_widget(state: &mut GameState) {
         if doevilgrin {
             state.st_stuff.st_updatefacewidget_priority = 8;
             state.st_stuff.st_facecount = ST_EVILGRINCOUNT;
-            state.st_stuff.st_faceindex = calc_pain_offset(state) + ST_EVILGRINOFFSET;
+            state.st_stuff.st_faceindex =
+                calc_pain_offset(&mut state.g_game, &mut state.st_stuff) + ST_EVILGRINOFFSET;
         }
     }
     if state.st_stuff.st_updatefacewidget_priority < 8 {
@@ -661,11 +663,18 @@ pub fn update_face_widget(state: &mut GameState) {
                 > ST_MUCHPAIN
             {
                 state.st_stuff.st_facecount = ST_TURNCOUNT;
-                state.st_stuff.st_faceindex = calc_pain_offset(state) + ST_OUCHOFFSET;
+                state.st_stuff.st_faceindex =
+                    calc_pain_offset(&mut state.g_game, &mut state.st_stuff) + ST_OUCHOFFSET;
             } else {
                 let plyr_attacker = state.p_mobj.mo(attacker_id);
                 let (attacker_x, attacker_y) = (plyr_attacker.x, plyr_attacker.y);
-                badguyangle = point_to_angle2(state, plyr_mo_x, plyr_mo_y, attacker_x, attacker_y);
+                badguyangle = point_to_angle2(
+                    &mut state.r_main,
+                    plyr_mo_x,
+                    plyr_mo_y,
+                    attacker_x,
+                    attacker_y,
+                );
                 if badguyangle > plyr_mo_angle {
                     diffang = badguyangle.wrapping_sub(plyr_mo_angle);
                     i = (diffang > ANG180) as i32;
@@ -674,7 +683,8 @@ pub fn update_face_widget(state: &mut GameState) {
                     i = (diffang <= ANG180) as i32;
                 }
                 state.st_stuff.st_facecount = ST_TURNCOUNT;
-                state.st_stuff.st_faceindex = calc_pain_offset(state);
+                state.st_stuff.st_faceindex =
+                    calc_pain_offset(&mut state.g_game, &mut state.st_stuff);
                 if diffang < ANG45 as Angle {
                     state.st_stuff.st_faceindex += ST_RAMPAGEOFFSET;
                 } else if i != 0 {
@@ -693,11 +703,13 @@ pub fn update_face_widget(state: &mut GameState) {
         {
             state.st_stuff.st_updatefacewidget_priority = 7;
             state.st_stuff.st_facecount = ST_TURNCOUNT;
-            state.st_stuff.st_faceindex = calc_pain_offset(state) + ST_OUCHOFFSET;
+            state.st_stuff.st_faceindex =
+                calc_pain_offset(&mut state.g_game, &mut state.st_stuff) + ST_OUCHOFFSET;
         } else {
             state.st_stuff.st_updatefacewidget_priority = 6;
             state.st_stuff.st_facecount = ST_TURNCOUNT;
-            state.st_stuff.st_faceindex = calc_pain_offset(state) + ST_RAMPAGEOFFSET;
+            state.st_stuff.st_faceindex =
+                calc_pain_offset(&mut state.g_game, &mut state.st_stuff) + ST_RAMPAGEOFFSET;
         }
     }
     if state.st_stuff.st_updatefacewidget_priority < 6 {
@@ -708,7 +720,8 @@ pub fn update_face_widget(state: &mut GameState) {
                 state.st_stuff.st_updatefacewidget_lastattackdown -= 1;
                 if state.st_stuff.st_updatefacewidget_lastattackdown == 0 {
                     state.st_stuff.st_updatefacewidget_priority = 5;
-                    state.st_stuff.st_faceindex = calc_pain_offset(state) + ST_RAMPAGEOFFSET;
+                    state.st_stuff.st_faceindex =
+                        calc_pain_offset(&mut state.g_game, &mut state.st_stuff) + ST_RAMPAGEOFFSET;
                     state.st_stuff.st_facecount = 1;
                     state.st_stuff.st_updatefacewidget_lastattackdown = 1;
                 }
@@ -732,7 +745,8 @@ pub fn update_face_widget(state: &mut GameState) {
         state.st_stuff.st_facecount = 1;
     }
     if state.st_stuff.st_facecount == 0 {
-        state.st_stuff.st_faceindex = calc_pain_offset(state) + state.st_stuff.st_randomnumber % 3;
+        state.st_stuff.st_faceindex = calc_pain_offset(&mut state.g_game, &mut state.st_stuff)
+            + state.st_stuff.st_randomnumber % 3;
         state.st_stuff.st_facecount = ST_STRAIGHTFACECOUNT;
         state.st_stuff.st_updatefacewidget_priority = 0;
     }
@@ -980,125 +994,125 @@ pub fn st_init_data(state: &mut GameState) {
     }
     stlib_init(state);
 }
-pub fn create_widgets(state: &mut GameState) {
+pub fn create_widgets(g_game: &mut GGameState, st_stuff: &mut StStuffState) {
     stlib_init_num(
-        &mut state.st_stuff.w_ready,
+        &mut st_stuff.w_ready,
         ST_AMMOX,
         ST_AMMOY,
         StDigitSet::TallNum,
         ST_AMMOWIDTH,
     );
-    state.st_stuff.w_ready.data = state.g_game.player_mut(state.st_stuff.plyr).readyweapon as i32;
+    st_stuff.w_ready.data = g_game.player_mut(st_stuff.plyr).readyweapon as i32;
     stlib_init_percent(
-        &mut state.st_stuff.w_health,
+        &mut st_stuff.w_health,
         ST_HEALTHX,
         ST_HEALTHY,
         StDigitSet::TallNum,
-        state.st_stuff.tallpercent,
+        st_stuff.tallpercent,
     );
     stlib_init_bin_icon(
-        &mut state.st_stuff.w_armsbg,
+        &mut st_stuff.w_armsbg,
         ST_ARMSBGX,
         ST_ARMSBGY,
-        state.st_stuff.armsbg,
+        st_stuff.armsbg,
     );
     for i in 0..6 {
         stlib_init_mult_icon(
-            &mut state.st_stuff.w_arms[i as usize],
+            &mut st_stuff.w_arms[i as usize],
             ST_ARMSX + i % 3 * ST_ARMSXSPACE,
             ST_ARMSY + i / 3 * ST_ARMSYSPACE,
             StDigitSet::Arms(i as usize),
         );
     }
     stlib_init_num(
-        &mut state.st_stuff.w_frags,
+        &mut st_stuff.w_frags,
         ST_FRAGSX,
         ST_FRAGSY,
         StDigitSet::TallNum,
         ST_FRAGSWIDTH,
     );
     stlib_init_mult_icon(
-        &mut state.st_stuff.w_faces,
+        &mut st_stuff.w_faces,
         ST_FACESX,
         ST_FACESY,
         StDigitSet::Faces,
     );
     stlib_init_percent(
-        &mut state.st_stuff.w_armor,
+        &mut st_stuff.w_armor,
         ST_ARMORX,
         ST_ARMORY,
         StDigitSet::TallNum,
-        state.st_stuff.tallpercent,
+        st_stuff.tallpercent,
     );
     stlib_init_mult_icon(
-        &mut state.st_stuff.w_keyboxes[0],
+        &mut st_stuff.w_keyboxes[0],
         ST_KEY0X,
         ST_KEY0Y,
         StDigitSet::Keys,
     );
     stlib_init_mult_icon(
-        &mut state.st_stuff.w_keyboxes[1],
+        &mut st_stuff.w_keyboxes[1],
         ST_KEY1X,
         ST_KEY1Y,
         StDigitSet::Keys,
     );
     stlib_init_mult_icon(
-        &mut state.st_stuff.w_keyboxes[2],
+        &mut st_stuff.w_keyboxes[2],
         ST_KEY2X,
         ST_KEY2Y,
         StDigitSet::Keys,
     );
     stlib_init_num(
-        &mut state.st_stuff.w_ammo[0],
+        &mut st_stuff.w_ammo[0],
         ST_AMMO0X,
         ST_AMMO0Y,
         StDigitSet::ShortNum,
         ST_AMMO0WIDTH,
     );
     stlib_init_num(
-        &mut state.st_stuff.w_ammo[1],
+        &mut st_stuff.w_ammo[1],
         ST_AMMO1X,
         ST_AMMO1Y,
         StDigitSet::ShortNum,
         ST_AMMO1WIDTH,
     );
     stlib_init_num(
-        &mut state.st_stuff.w_ammo[2],
+        &mut st_stuff.w_ammo[2],
         ST_AMMO2X,
         ST_AMMO2Y,
         StDigitSet::ShortNum,
         ST_AMMO2WIDTH,
     );
     stlib_init_num(
-        &mut state.st_stuff.w_ammo[3],
+        &mut st_stuff.w_ammo[3],
         ST_AMMO3X,
         ST_AMMO3Y,
         StDigitSet::ShortNum,
         ST_AMMO3WIDTH,
     );
     stlib_init_num(
-        &mut state.st_stuff.w_maxammo[0],
+        &mut st_stuff.w_maxammo[0],
         ST_MAXAMMO0X,
         ST_MAXAMMO0Y,
         StDigitSet::ShortNum,
         ST_MAXAMMO0WIDTH,
     );
     stlib_init_num(
-        &mut state.st_stuff.w_maxammo[1],
+        &mut st_stuff.w_maxammo[1],
         ST_MAXAMMO1X,
         ST_MAXAMMO1Y,
         StDigitSet::ShortNum,
         ST_MAXAMMO1WIDTH,
     );
     stlib_init_num(
-        &mut state.st_stuff.w_maxammo[2],
+        &mut st_stuff.w_maxammo[2],
         ST_MAXAMMO2X,
         ST_MAXAMMO2Y,
         StDigitSet::ShortNum,
         ST_MAXAMMO2WIDTH,
     );
     stlib_init_num(
-        &mut state.st_stuff.w_maxammo[3],
+        &mut st_stuff.w_maxammo[3],
         ST_MAXAMMO3X,
         ST_MAXAMMO3Y,
         StDigitSet::ShortNum,
@@ -1110,7 +1124,7 @@ pub fn st_start(state: &mut GameState) {
         st_stop(state);
     }
     st_init_data(state);
-    create_widgets(state);
+    create_widgets(&mut state.g_game, &mut state.st_stuff);
     state.st_stuff.st_stopped = false;
 }
 pub fn st_stop(state: &mut GameState) {

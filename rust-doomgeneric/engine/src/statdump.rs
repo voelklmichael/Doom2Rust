@@ -1,5 +1,7 @@
+use crate::g_game::GGameState;
 use crate::game_state::GameState;
 use crate::m_argv::parm_exists;
+use crate::m_argv::MArgvState;
 
 use crate::wi_stuff::{WbPlayerStruct, WbStartStruct};
 pub const MAX_CAPTURES: i32 = 32;
@@ -44,11 +46,10 @@ impl StatDumpState {
     }
 }
 
-pub fn stat_copy(state: &mut GameState) {
-    if parm_exists(state, "-statdump") && state.statdump.num_captured_stats < MAX_CAPTURES {
-        state.statdump.captured_stats[state.statdump.num_captured_stats as usize] =
-            state.g_game.wminfo;
-        state.statdump.num_captured_stats += 1;
+pub fn stat_copy(g_game: &GGameState, m_argv: &MArgvState, statdump: &mut StatDumpState) {
+    if parm_exists(m_argv, "-statdump") && statdump.num_captured_stats < MAX_CAPTURES {
+        statdump.captured_stats[statdump.num_captured_stats as usize] = g_game.wminfo;
+        statdump.num_captured_stats += 1;
     }
 }
 pub fn stat_dump(_state: &mut GameState) {}

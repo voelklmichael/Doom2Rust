@@ -96,13 +96,23 @@ pub fn hulib_erase_text_line(state: &mut GameState, l: &mut HuTextLine) {
             if y < state.r_draw.viewwindowy
                 || y >= state.r_draw.viewwindowy + state.r_draw.viewheight
             {
-                video_erase(state, yoffset as u32, SCREENWIDTH);
+                video_erase(
+                    &mut state.i_video,
+                    &state.r_draw,
+                    yoffset as u32,
+                    SCREENWIDTH,
+                );
             } else {
                 let viewwindowx = state.r_draw.viewwindowx;
                 let second_ofs =
                     (yoffset + state.r_draw.viewwindowx + state.r_draw.viewwidth) as u32;
-                video_erase(state, yoffset as u32, viewwindowx);
-                video_erase(state, second_ofs, viewwindowx);
+                video_erase(
+                    &mut state.i_video,
+                    &state.r_draw,
+                    yoffset as u32,
+                    viewwindowx,
+                );
+                video_erase(&mut state.i_video, &state.r_draw, second_ofs, viewwindowx);
             }
             y += 1;
             yoffset += SCREENWIDTH;

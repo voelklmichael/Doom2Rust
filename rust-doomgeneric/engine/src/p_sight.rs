@@ -7,7 +7,9 @@ use crate::m_fixed::FRACBITS;
 use crate::p_maputl::DivLine;
 use crate::p_mobj::LineFlags;
 use crate::p_mobj::MobjId;
+use crate::p_setup::PSetupState;
 use crate::p_setup::SubsectorId;
+use crate::r_main::RMainState;
 
 use crate::r_bsp::NF_SUBSECTOR;
 
@@ -84,28 +86,33 @@ pub fn intercept_vector2(v2: &DivLine, v1: &DivLine) -> Fixed {
     let num = fixed_mul((v1.x - v2.x) >> 8, v1.dy) + fixed_mul((v2.y - v1.y) >> 8, v1.dx);
     fixed_div(num, den)
 }
-pub fn cross_subsector(state: &mut GameState, num: i32) -> bool {
-    if num >= state.p_setup.numsubsectors {
+pub fn cross_subsector(
+    p_setup: &mut PSetupState,
+    p_sight: &mut PSightState,
+    r_main: &RMainState,
+    num: i32,
+) -> bool {
+    if num >= p_setup.numsubsectors {
         error(&format!(
             "P_CrossSubsector: ss {} with numss = {}",
-            num, state.p_setup.numsubsectors
+            num, p_setup.numsubsectors
         ));
     }
-    let sub = state.p_setup.subsector(SubsectorId(num as u32));
-    let strace = state.p_sight.strace;
-    let (t2x, t2y) = (state.p_sight.t2x, state.p_sight.t2y);
+    let sub = p_setup.subsector(SubsectorId(num as u32));
+    let strace = p_sight.strace;
+    let (t2x, t2y) = (p_sight.t2x, p_sight.t2y);
     let first = sub.firstline as usize;
     for seg_index in first..first + sub.numlines as usize {
-        let seg = state.p_setup.segs[seg_index];
-        let line = state.p_setup.line_mut(seg.linedef);
-        if line.validcount == state.r_main.validcount {
+        let seg = p_setup.segs[seg_index];
+        let line = p_setup.line_mut(seg.linedef);
+        if line.validcount == r_main.validcount {
             continue;
         }
-        line.validcount = state.r_main.validcount;
+        line.validcount = r_main.validcount;
         let (v1_id, v2_id, has_back, flags) =
             (line.v1, line.v2, line.backsector.is_some(), line.flags);
-        let v1 = state.p_setup.vertex(v1_id);
-        let v2 = state.p_setup.vertex(v2_id);
+        let v1 = p_setup.vertex(v1_id);
+        let v2 = p_setup.vertex(v2_id);
         if divline_side(v1.x, v1.y, &strace) == divline_side(v2.x, v2.y, &strace) {
             continue;
         }
@@ -125,11 +132,11 @@ pub fn cross_subsector(state: &mut GameState, num: i32) -> bool {
             return false;
         }
         let (front_floor, front_ceiling) = {
-            let front = state.p_setup.sector_mut(seg.frontsector.unwrap());
+            let front = p_setup.sector_mut(seg.frontsector.unwrap());
             (front.floorheight, front.ceilingheight)
         };
         let (back_floor, back_ceiling) = {
-            let back = state.p_setup.sector_mut(seg.backsector.unwrap());
+            let back = p_setup.sector_mut(seg.backsector.unwrap());
             (back.floorheight, back.ceilingheight)
         };
         if front_floor == back_floor && front_ceiling == back_ceiling {
@@ -142,18 +149,18 @@ pub fn cross_subsector(state: &mut GameState, num: i32) -> bool {
         }
         let frac = intercept_vector2(&strace, &divl);
         if front_floor != back_floor {
-            let slope = fixed_div(openbottom - state.p_sight.sightzstart, frac);
-            if slope > state.p_sight.bottomslope {
-                state.p_sight.bottomslope = slope;
+            let slope = fixed_div(openbottom - p_sight.sightzstart, frac);
+            if slope > p_sight.bottomslope {
+                p_sight.bottomslope = slope;
             }
         }
         if front_ceiling != back_ceiling {
-            let slope = fixed_div(opentop - state.p_sight.sightzstart, frac);
-            if slope < state.p_sight.topslope {
-                state.p_sight.topslope = slope;
+            let slope = fixed_div(opentop - p_sight.sightzstart, frac);
+            if slope < p_sight.topslope {
+                p_sight.topslope = slope;
             }
         }
-        if state.p_sight.topslope <= state.p_sight.bottomslope {
+        if p_sight.topslope <= p_sight.bottomslope {
             return false;
         }
     }
@@ -162,9 +169,14 @@ pub fn cross_subsector(state: &mut GameState, num: i32) -> bool {
 pub fn cross_bspnode(state: &mut GameState, bspnum: i32) -> bool {
     if bspnum & NF_SUBSECTOR != 0 {
         if bspnum == -1 {
-            return cross_subsector(state, 0);
+            return cross_subsector(&mut state.p_setup, &mut state.p_sight, &state.r_main, 0);
         }
-        return cross_subsector(state, bspnum & !NF_SUBSECTOR);
+        return cross_subsector(
+            &mut state.p_setup,
+            &mut state.p_sight,
+            &state.r_main,
+            bspnum & !NF_SUBSECTOR,
+        );
     }
     let bsp = &state.p_setup.nodes[bspnum as usize];
     let divl = DivLine {

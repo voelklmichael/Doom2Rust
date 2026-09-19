@@ -10,9 +10,11 @@ use crate::p_mobj::SectorSpecial;
 use crate::p_mobj::Thinker;
 use crate::p_mobj::ThinkerFn;
 use crate::p_setup::LineId;
+use crate::p_setup::PSetupState;
 use crate::p_setup::SectorId;
 use crate::p_spec::find_lowest_ceiling_surrounding;
 use crate::p_spec::sectors_with_line_tag;
+use crate::p_tick::PTickState;
 use alloc::boxed::Box;
 use alloc::string::ToString;
 use alloc::vec::Vec;
@@ -311,7 +313,7 @@ pub fn do_locked_door(state: &mut GameState, line: LineId, kind: VldoorE, thing:
 }
 pub fn do_door(state: &mut GameState, line: LineId, kind: VldoorE) -> bool {
     let mut rtn = false;
-    for sector in sectors_with_line_tag(state, line) {
+    for sector in sectors_with_line_tag(&state.p_setup, line) {
         let sec = sector;
         if state.p_setup.sector_mut(sec).specialdata.is_some() {
             continue;
@@ -326,14 +328,14 @@ pub fn do_door(state: &mut GameState, line: LineId, kind: VldoorE) -> bool {
         door.speed = (FRACUNIT * 2) as Fixed;
         match kind {
             VldoorE::BlazeClose => {
-                door.topheight = find_lowest_ceiling_surrounding(state, sec);
+                door.topheight = find_lowest_ceiling_surrounding(&mut state.p_setup, sec);
                 door.topheight -= 4 * FRACUNIT;
                 door.direction = -1;
                 door.speed = (FRACUNIT * 2 * 4) as Fixed;
                 s_start_sound(state, SoundOrigin::Sector(sec), SfxName::Bdcls as i32);
             }
             VldoorE::Close => {
-                door.topheight = find_lowest_ceiling_surrounding(state, sec);
+                door.topheight = find_lowest_ceiling_surrounding(&mut state.p_setup, sec);
                 door.topheight -= 4 * FRACUNIT;
                 door.direction = -1;
                 s_start_sound(state, SoundOrigin::Sector(sec), SfxName::Dorcls as i32);
@@ -345,7 +347,7 @@ pub fn do_door(state: &mut GameState, line: LineId, kind: VldoorE) -> bool {
             }
             VldoorE::BlazeRaise | VldoorE::BlazeOpen => {
                 door.direction = 1;
-                door.topheight = find_lowest_ceiling_surrounding(state, sec);
+                door.topheight = find_lowest_ceiling_surrounding(&mut state.p_setup, sec);
                 door.topheight -= 4 * FRACUNIT;
                 door.speed = (FRACUNIT * 2 * 4) as Fixed;
                 if door.topheight != ceilingheight {
@@ -354,7 +356,7 @@ pub fn do_door(state: &mut GameState, line: LineId, kind: VldoorE) -> bool {
             }
             VldoorE::Normal | VldoorE::Open => {
                 door.direction = 1;
-                door.topheight = find_lowest_ceiling_surrounding(state, sec);
+                door.topheight = find_lowest_ceiling_surrounding(&mut state.p_setup, sec);
                 door.topheight -= 4 * FRACUNIT;
                 if door.topheight != ceilingheight {
                     s_start_sound(state, SoundOrigin::Sector(sec), SfxName::Doropn as i32);
@@ -364,7 +366,7 @@ pub fn do_door(state: &mut GameState, line: LineId, kind: VldoorE) -> bool {
         }
         let door_arena_id = state.p_doors.spawn(door);
         let door_id = add_thinker(
-            state,
+            &mut state.p_tick,
             ThinkerPayload::Door(door_arena_id),
             ThinkerKind::Door,
         );
@@ -501,17 +503,22 @@ pub fn ev_vertical_door(state: &mut GameState, line: LineId, thing: MobjId) {
         }
         _ => {}
     }
-    door.topheight = find_lowest_ceiling_surrounding(state, door_sector_id);
+    door.topheight = find_lowest_ceiling_surrounding(&mut state.p_setup, door_sector_id);
     door.topheight -= 4 * FRACUNIT;
     let door_arena_id = state.p_doors.spawn(door);
     let door_id = add_thinker(
-        state,
+        &mut state.p_tick,
         ThinkerPayload::Door(door_arena_id),
         ThinkerKind::Door,
     );
     state.p_setup.sector_mut(door_sector_id).specialdata = Some(SectorSpecial::Door(door_id));
 }
-pub fn spawn_door_close_in30(state: &mut GameState, sector: SectorId) {
+pub fn spawn_door_close_in30(
+    p_doors: &mut PDoorsState,
+    p_setup: &mut PSetupState,
+    p_tick: &mut PTickState,
+    sector: SectorId,
+) {
     let mut door = VlDoor::default();
     door.thinker.function = ThinkerFn::Door(t_vertical_door);
     door.sector = sector;
@@ -519,34 +526,39 @@ pub fn spawn_door_close_in30(state: &mut GameState, sector: SectorId) {
     door.kind = VldoorE::Normal;
     door.speed = (FRACUNIT * 2) as Fixed;
     door.topcountdown = 30 * TICRATE;
-    let door_arena_id = state.p_doors.spawn(door);
+    let door_arena_id = p_doors.spawn(door);
     let door_id = add_thinker(
-        state,
+        p_tick,
         ThinkerPayload::Door(door_arena_id),
         ThinkerKind::Door,
     );
-    let sec = state.p_setup.sector_mut(sector);
+    let sec = p_setup.sector_mut(sector);
     sec.specialdata = Some(SectorSpecial::Door(door_id));
     sec.special = 0;
 }
-pub fn spawn_door_raise_in5_mins(state: &mut GameState, sector: SectorId) {
+pub fn spawn_door_raise_in5_mins(
+    p_doors: &mut PDoorsState,
+    p_setup: &mut PSetupState,
+    p_tick: &mut PTickState,
+    sector: SectorId,
+) {
     let mut door = VlDoor::default();
     door.thinker.function = ThinkerFn::Door(t_vertical_door);
     door.sector = sector;
     door.direction = 2;
     door.kind = VldoorE::RaiseIn5Mins;
     door.speed = (FRACUNIT * 2) as Fixed;
-    door.topheight = find_lowest_ceiling_surrounding(state, sector);
+    door.topheight = find_lowest_ceiling_surrounding(p_setup, sector);
     door.topheight -= 4 * FRACUNIT;
     door.topwait = VDOORWAIT;
     door.topcountdown = 5 * 60 * TICRATE;
-    let door_arena_id = state.p_doors.spawn(door);
+    let door_arena_id = p_doors.spawn(door);
     let door_id = add_thinker(
-        state,
+        p_tick,
         ThinkerPayload::Door(door_arena_id),
         ThinkerKind::Door,
     );
-    let sec = state.p_setup.sector_mut(sector);
+    let sec = p_setup.sector_mut(sector);
     sec.specialdata = Some(SectorSpecial::Door(door_id));
     sec.special = 0;
 }
