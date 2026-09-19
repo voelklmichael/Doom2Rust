@@ -300,7 +300,7 @@ pub fn I_FinishUpdate(state: &mut GameState) {
     {
         *pixel = u32::from_ne_bytes([bytes[0], bytes[1], bytes[2], bytes[3]]);
     }
-    state.platform.draw_frame();
+    state.platform.draw_frame(&state.i_video.dg_screen_buffer);
 }
 pub fn I_ReadScreen(state: &GameState) -> Vec<byte> {
     state.i_video.I_VideoBuffer[..(SCREENWIDTH * SCREENHEIGHT) as usize].to_vec()

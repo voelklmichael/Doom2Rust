@@ -12,10 +12,6 @@ pub fn doomgeneric_Create(state: &mut GameState, args: Vec<String>) {
     M_FindResponseFile(state);
     state.i_video.dg_screen_buffer =
         vec![0 as pixel_t; (DOOMGENERIC_RESX * DOOMGENERIC_RESY) as usize];
-    state.platform.init(
-        state.i_video.dg_screen_buffer.as_mut_ptr(),
-        DOOMGENERIC_RESX,
-        DOOMGENERIC_RESY,
-    );
+    state.platform.init(DOOMGENERIC_RESX, DOOMGENERIC_RESY);
     D_DoomMain(state);
 }

@@ -290,3 +290,15 @@ Observable differences:
   is written, so an over-limit save leaves no partial `temp.dsg` behind.
 - A write error can no longer surface halfway through serialization (`saveg_write8` cannot
   fail), so the `saveg_write8: Error while writing save game` message is gone.
+
+## Savegames: pointer words are a 0/1 presence flag (2026-09-19)
+
+Vanilla serialized raw pointers in a few slots (`player_t` placeholder pointers, `message`,
+and the thinker function pointer of every thinker). Loading only ever tests them for
+null/non-null, so the engine now writes `0` or `1` instead of a process address
+(`saveg_write_present`). Saves written by the engine are therefore byte-for-byte
+reproducible (previously the thinker-function words varied from run to run), and saves from
+vanilla or from older builds still load, because any non-zero word reads as "present".
+What is given up: a save no longer carries the (meaningless) original pointer values, so
+byte-comparing a save against one written by the C program will differ in those words,
+exactly as it already did between two runs of the C program.
