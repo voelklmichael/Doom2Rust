@@ -148,6 +148,7 @@ name = "core_s3"
 version = "0.0.0"
 dependencies = [
  "core-s3",
+ "core_s3_audio",
  "core_s3_dhcp",
  "core_s3_protocol",
  "critical-section",
@@ -168,6 +169,10 @@ dependencies = [
  "rust_doomgeneric",
  "static_cell",
 ]
+
+[[package]]
+name = "core_s3_audio"
+version = "0.0.0"
 
 [[package]]
 name = "core_s3_dhcp"
