@@ -37,12 +37,14 @@ use esp_hal::{
 use esp_println::println;
 use static_cell::StaticCell;
 
-/// Doom's sound effects are 11025 Hz; 22050 is twice that (cheap nearest-neighbour resampling in
-/// the engine) and the amp has a matching rate setting.
-pub const SAMPLE_RATE: u32 = 11_025;
+/// The I2S rate. Doom's sound effects are 11025 Hz and the music synthesizer needs more than that
+/// (its output is not low-pass filtered when it is brought down from the chip's 49716 Hz, so a low
+/// rate folds the highs back into the audible range), so the ring runs at twice the effects' rate:
+/// `sound` repeats each effect frame. The amp has a matching rate setting.
+pub const SAMPLE_RATE: u32 = 22_050;
 
 /// One DMA descriptor: 256 stereo frames (11.6 ms), 1 KB.
-pub const CHUNK_FRAMES: usize = 128;
+pub const CHUNK_FRAMES: usize = 256;
 pub const RING_CHUNKS: usize = 3;
 /// The ring: 768 frames (35 ms), 3 KB of internal RAM. With the DMA a chunk into the ring at all
 /// times, a sound reaches the speaker after two to three chunks (23-35 ms).

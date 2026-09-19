@@ -10,6 +10,7 @@ extern crate alloc;
 
 mod audio;
 mod lcd;
+mod music;
 mod net;
 mod platform;
 mod web;
@@ -218,19 +219,14 @@ async fn main(spawner: Spawner) {
                 core::mem::size_of_val(&*state),
                 esp_alloc::HEAP.free()
             );
-            // `-nomusic`: the OPL music synthesizer is in the engine, but its cost on this chip is
-            // not measured yet; the device plays sound effects only until it is.
-            let args: Vec<_> = [
-                "doomgeneric",
-                "-iwad",
-                "doom1.wad",
-                "-scaling",
-                "1",
-                "-nomusic",
-            ]
-            .into_iter()
+            let mut args: Vec<_> = ["doomgeneric", "-iwad", "doom1.wad", "-scaling", "1"]
+                .into_iter()
                 .map(ToString::to_string)
                 .collect();
+            // Build with MUSIC=off for sound effects only (the synthesizer is not even built).
+            if option_env!("MUSIC") == Some("off") {
+                args.push("-nomusic".to_string());
+            }
             doomgeneric_create(state, args);
             loop {
                 doomgeneric_tick(state);

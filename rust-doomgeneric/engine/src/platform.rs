@@ -1,5 +1,25 @@
 use crate::doomdef::Pixel;
 
+/// What the game asks of the music player. A platform that plays the music itself (see
+/// [`DoomPlatform::music_open`]) receives these through [`DoomPlatform::music_command`], in the
+/// order the game issues them.
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub enum MusicCommand<'a> {
+    /// Loads a song, replacing the previous one. The bytes are the song's MUS lump and are only
+    /// valid for the duration of the call.
+    Register(&'a [u8]),
+    /// Starts the registered song from its beginning.
+    Play { looping: bool },
+    /// Stops the song and silences the notes still ringing.
+    Stop,
+    /// Holds the song and its notes where they are.
+    Pause,
+    /// Continues after [`Pause`](Self::Pause).
+    Resume,
+    /// The music volume from the menu slider, 0..=127.
+    Volume(i32),
+}
+
 pub trait DoomPlatform {
     /// Called once before the game loop starts. Every frame later passed to
     /// [`draw_frame`](Self::draw_frame) is `resx * resy` pixels.
@@ -41,6 +61,20 @@ pub trait DoomPlatform {
     /// Queues `samples` (interleaved left/right, `2 * frames` values) for
     /// playback. Called from the game loop, so it must not block for long.
     fn audio_write(&mut self, _samples: &[i16]) {}
+    /// Optional: lets the platform play the music instead of the engine's own synthesizer, for a
+    /// platform that runs it somewhere else (another core). Called once after
+    /// [`audio_open`](Self::audio_open) succeeded, with the WAD's `GENMIDI` instrument lump
+    /// (parse it with [`GenMidi::parse`](crate::GenMidi::parse), play with
+    /// [`MusicPlayer`](crate::MusicPlayer)). Return `true` to take the music over: the engine
+    /// then builds no synthesizer and sends every music request to
+    /// [`music_command`](Self::music_command). The default is `false`: the engine plays the music
+    /// itself and mixes it into the stream passed to [`audio_write`](Self::audio_write).
+    fn music_open(&mut self, _genmidi: &[u8]) -> bool {
+        false
+    }
+    /// A music request, only after [`music_open`](Self::music_open) returned `true`. Called from
+    /// the game loop, so it must not block for long.
+    fn music_command(&mut self, _command: MusicCommand<'_>) {}
     fn sleep_ms(&mut self, ms: u32);
     fn get_ticks_ms(&mut self) -> u32;
     /// Pops one queued key event, if any: `(pressed, keycode)`.
