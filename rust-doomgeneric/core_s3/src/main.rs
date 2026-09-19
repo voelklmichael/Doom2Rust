@@ -147,31 +147,35 @@ async fn main(spawner: Spawner) {
     show(&mut display, &["CoreS3 DOOM", "starting Wi-Fi..."]);
     // What the game keeps showing in its top bar once it is running.
     let mut status = String::<40>::new();
-    match net::start(spawner, peripherals.WIFI) {
-        None => {
-            show(&mut display, &["CoreS3 DOOM", "Wi-Fi not configured", "no network input"]);
-            let _ = write!(status, "no Wi-Fi");
-        }
-        Some(stack) => match with_timeout(WAIT_FOR_ADDRESS, stack.wait_config_up()).await {
-            Ok(()) => {
-                let mut address = String::<40>::new();
-                if let Some(config) = stack.config_v4() {
-                    let _ = write!(address, "{}", config.address.address());
-                }
-                let mut port = String::<40>::new();
-                let _ = write!(port, "port {DEFAULT_PORT}");
-                println!("wifi: address {address}, controller port {DEFAULT_PORT}");
+    let network = net::start(spawner, peripherals.WIFI);
+    match with_timeout(WAIT_FOR_ADDRESS, network.stack.wait_config_up()).await {
+        Ok(()) => {
+            let mut address = String::<40>::new();
+            if let Some(config) = network.stack.config_v4() {
+                let _ = write!(address, "{}", config.address.address());
+            }
+            let mut port = String::<40>::new();
+            let _ = write!(port, "port {DEFAULT_PORT}");
+            println!("wifi: address {address}, controller port {DEFAULT_PORT}");
+            if let Some(ssid) = network.own_network {
+                // The board made its own network: the controller has to join it first.
+                show(
+                    &mut display,
+                    &["CoreS3 DOOM", "join Wi-Fi:", ssid, "then controller:", &address, &port],
+                );
+                let _ = write!(status, "{ssid} {address}:{DEFAULT_PORT}");
+            } else {
                 show(&mut display, &["CoreS3 DOOM", "controller address:", &address, &port]);
                 let _ = write!(status, "{address}:{DEFAULT_PORT}");
-                Timer::after(SHOW_ADDRESS).await;
             }
-            Err(_) => {
-                println!("wifi: no address after {WAIT_FOR_ADDRESS:?}; starting the game anyway");
-                show(&mut display, &["CoreS3 DOOM", "no Wi-Fi yet", "still retrying"]);
-                let _ = write!(status, "no Wi-Fi yet");
-                Timer::after(SHOW_ADDRESS).await;
-            }
-        },
+            Timer::after(SHOW_ADDRESS).await;
+        }
+        Err(_) => {
+            println!("wifi: no address after {WAIT_FOR_ADDRESS:?}; starting the game anyway");
+            show(&mut display, &["CoreS3 DOOM", "no Wi-Fi yet", "still retrying"]);
+            let _ = write!(status, "no Wi-Fi yet");
+            Timer::after(SHOW_ADDRESS).await;
+        }
     }
 
     // What the game keeps showing: a black screen with the status in its top bar, which the game

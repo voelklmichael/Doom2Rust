@@ -1,6 +1,7 @@
 //! Passes the Wi-Fi credentials to the firmware as `WIFI_SSID` / `WIFI_PASSWORD` compile-time
 //! constants. They come from the environment, else from `wifi.env` (see `wifi.env.example`).
-//! If neither has them the constants are empty and the firmware runs without Wi-Fi.
+//! If neither has them the constants are empty and the firmware makes its own open network instead
+//! of joining one (see `src/net.rs`).
 
 use std::{env, fs};
 

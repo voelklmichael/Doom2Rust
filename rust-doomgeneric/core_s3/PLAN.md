@@ -17,14 +17,26 @@ cd core_s3
 cargo run --release             # builds, flashes, opens the serial monitor
 ```
 
-Wi-Fi input needs credentials: copy `wifi.env.example` to `wifi.env` (gitignored) and fill in
-`WIFI_SSID` / `WIFI_PASSWORD`; `build.rs` compiles them into the image (so treat the built `.elf` /
-`.bin` as sensitive). Without them the firmware still runs the demos with Wi-Fi off. Only WPA2 (or
-WPA/WPA2 mixed) networks work. Then, from the repo root, with the address shown at the top of the LCD:
+The controller connects over Wi-Fi in one of two ways, chosen when the firmware is built:
 
-```bash
-cargo run -p core_s3_sender -- 192.168.68.103      # port 7878 unless given as host:port
-```
+- **The board's own network (no setup, no password).** With no `wifi.env` (or empty values) the board
+  makes an open network called `CoreS3-DOOM` at `192.168.4.1` and runs a small DHCP server. Join it
+  from the PC (the PC has no internet while it is joined, unless it has a second connection), then,
+  from the repo root:
+
+  ```bash
+  cargo run -p core_s3_sender -- 192.168.4.1
+  ```
+
+- **Your own network.** Copy `wifi.env.example` to `wifi.env` (gitignored) and fill in `WIFI_SSID` /
+  `WIFI_PASSWORD`; `build.rs` compiles them into the image (so treat the built `.elf` / `.bin` as
+  sensitive). Only WPA2 (or WPA/WPA2 mixed) networks work. Use the address shown at the top of the LCD:
+
+  ```bash
+  cargo run -p core_s3_sender -- 192.168.68.103      # port 7878 unless given as host:port
+  ```
+
+Either way the LCD shows what to join and where to connect, and keeps the address in its top bar.
 
 One-off host setup: `cargo install espup espflash --locked`, `espup install --targets esp32s3`,
 and membership of the `dialout` group. If the board is not detected, hold reset ~3 s until the
@@ -94,9 +106,18 @@ keyboard drawing (`KEY_MAP`, checked against the bindings by a test) when it con
 kitty keyboard protocol report real key releases; others get releases after `--hold-ms` (default 150).
 The key mapping, hold tracking and the TCP path are unit tested; the terminal glue is not.
 
+**The board's own network** (`net.rs`, `../core_s3_dhcp`): with no credentials the firmware starts
+esp-radio in access-point mode (open, channel 1, up to 4 clients, SSID `CoreS3-DOOM`) with the static
+address `192.168.4.1/24`, and answers DHCP itself. `core_s3_dhcp` is a small `no_std` server (unit
+tested on the host: offer, ack, nak, one address per MAC, full pool, junk input); it hands out
+`192.168.4.2` upward and offers no gateway or DNS, so a laptop does not route anything else over it.
+Checked on hardware: the network appears in a scan, open, on channel 1. Joining it and connecting the
+sender was left to the user (the development laptop has one Wi-Fi adapter and would lose its
+connection).
+
 **Firmware layout**
-- Core 0: esp-rtos scheduler plus an embassy executor running the Wi-Fi station (reconnects on drop),
-  DHCP and the TCP command server (`net.rs`), and the LCD pump that streams finished frames by DMA
+- Core 0: esp-rtos scheduler plus an embassy executor running the Wi-Fi station (reconnects on drop)
+  or the access point, DHCP and the TCP command server (`net.rs`), and the LCD pump that streams finished frames by DMA
   (`lcd.rs`). One controller at a time; keep-alive frees the slot if it
   vanishes, and any keys it held are released on disconnect.
 - Core 1: builds and runs the game (`main.rs`), reading events through `get_key()`.
