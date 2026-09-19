@@ -119,6 +119,14 @@ free (a task serving a page or holding a WebSocket is not listening). The page h
   at held keys once per tic and a quick click would be missed;
 - an editable **key list**: click + on an action and press a key to bind it, x to remove one, Reset to
   go back. It is kept in the browser (`localStorage`), and the keyboard works anywhere on the page;
+- **layouts**: keys are remembered by their *position* (`KeyboardEvent.code`), like games do, so WASD
+  stays a cluster on Neo2 or AZERTY, and are labelled with what they print on the user's keyboard.
+  A browser only tells the page its layout on secure pages (Chromium, `navigator.keyboard`), which the
+  board's plain `http://` page is not, so labels are learned as keys are pressed or bound (keys not yet
+  seen show the US name, in italics). Arrows, Enter, Esc, Tab and Backspace are remembered by name, so
+  Neo2's cursor layer (an arrow produced by another key) works. The text box in Keys mode identifies
+  keys exactly like the key list (by the key event, nothing is typed into the box); input that only
+  arrives as characters (a phone keyboard, a paste) is matched against what keys are known to print;
 - a **text box** whose input is sent immediately, in two modes. *Keys* (the default): each typed key
   does its binding, so `w` is forward and space is fire; holding a key repeats it, which keeps the
   action going, and Enter/arrows/Shift and the like act as real holds; a pasted run such as `wwwd`
