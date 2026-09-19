@@ -1,9 +1,9 @@
 //! The hardware-free half of the CoreS3's sound output, so it can be unit tested on the host.
 //!
 //! The game (core 1) mixes sound into a [`FrameQueue`]; a task on core 0 moves it from there into
-//! the I2S DMA ring, one [`Pacing::plan`] at a time. The queue keeps the game from ever waiting on
-//! the speaker, and lets the task on core 0 fill the ring with silence when the game is late (a
-//! level load, a slow frame) instead of letting the DMA replay old audio.
+//! the I2S DMA ring, one DMA chunk at a time. The queue keeps the game from ever waiting on the
+//! speaker, and lets the task on core 0 fill the ring with silence when the game is late (a level
+//! load, a slow frame) instead of letting the DMA replay old audio.
 //!
 //! A *frame* is one left and one right sample.
 
@@ -85,47 +85,26 @@ impl<const N: usize> FrameQueue<N> {
     }
 }
 
+impl<const N: usize> FrameQueue<N> {
+    /// Like [`pop`](Self::pop), but fills what the queue could not supply with silence, so `out`
+    /// is always complete. Returns how many frames were real.
+    pub fn pop_padded(&self, out: &mut [i16]) -> usize {
+        let popped = self.pop(out);
+        out[popped * 2..].fill(0);
+        popped
+    }
+}
+
 impl<const N: usize> Default for FrameQueue<N> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-/// How much audio to keep where, in frames.
-#[derive(Clone, Copy, Debug)]
-pub struct Pacing {
-    /// The DMA ring is topped up from the queue to this level.
-    pub ring_target: usize,
-    /// Below this level the ring is topped up with silence, so it never runs dry (a dry ring
-    /// replays old audio). It has to cover how late the pump can be.
-    pub ring_min: usize,
-    /// What the game keeps queued: it is asked for `queue_target - queued` frames per tick.
-    pub queue_target: usize,
-}
-
-/// What one pass of the pump does.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct Plan {
-    /// Frames to move from the queue into the ring.
-    pub from_queue: usize,
-    /// Frames of silence to add after them.
-    pub silence: usize,
-}
-
-impl Pacing {
-    /// Frames the game should mix now, given how many are still queued.
-    pub fn frames_wanted(&self, queued: usize) -> usize {
-        self.queue_target.saturating_sub(queued)
-    }
-
-    /// The pump's move. `level` is how many frames the ring holds (an upper estimate is fine),
-    /// `free` how many it can take, `queued` how many wait in the queue.
-    pub fn plan(&self, level: usize, free: usize, queued: usize) -> Plan {
-        let room = free.min(self.ring_target.saturating_sub(level));
-        let from_queue = room.min(queued);
-        let silence = self.ring_min.saturating_sub(level + from_queue).min(free - from_queue);
-        Plan { from_queue, silence }
-    }
+/// How many frames the game should mix now to keep `target` frames queued, given how many are
+/// still `queued`.
+pub fn frames_wanted(queued: usize, target: usize) -> usize {
+    target.saturating_sub(queued)
 }
 
 #[cfg(test)]
@@ -220,38 +199,29 @@ mod tests {
         producer.join().unwrap();
     }
 
-    const PACING: Pacing = Pacing { ring_target: 600, ring_min: 300, queue_target: 800 };
-
     #[test]
     fn the_game_is_asked_for_what_the_queue_lacks() {
-        assert_eq!(PACING.frames_wanted(0), 800);
-        assert_eq!(PACING.frames_wanted(500), 300);
-        assert_eq!(PACING.frames_wanted(800), 0);
-        assert_eq!(PACING.frames_wanted(2000), 0);
+        assert_eq!(frames_wanted(0, 800), 800);
+        assert_eq!(frames_wanted(500, 800), 300);
+        assert_eq!(frames_wanted(800, 800), 0);
+        assert_eq!(frames_wanted(2000, 800), 0);
     }
 
     #[test]
-    fn the_pump_tops_the_ring_up_from_the_queue() {
-        // Ring at 400 of 600: 200 frames of room, plenty queued.
-        assert_eq!(PACING.plan(400, 1000, 800), Plan { from_queue: 200, silence: 0 });
-        // Little queued: take what there is.
-        assert_eq!(PACING.plan(400, 1000, 50), Plan { from_queue: 50, silence: 0 });
-        // The ring's free space limits it.
-        assert_eq!(PACING.plan(400, 128, 800), Plan { from_queue: 128, silence: 0 });
-        // A full ring takes nothing.
-        assert_eq!(PACING.plan(600, 1000, 800), Plan { from_queue: 0, silence: 0 });
-    }
-
-    #[test]
-    fn a_starved_ring_gets_silence_up_to_the_minimum() {
-        // Nothing queued and the level fell below the minimum.
-        assert_eq!(PACING.plan(100, 1000, 0), Plan { from_queue: 0, silence: 200 });
-        // Exactly at the minimum: leave it (real audio may arrive any moment).
-        assert_eq!(PACING.plan(300, 1000, 0), Plan { from_queue: 0, silence: 0 });
-        // A little queued audio counts towards the minimum before silence is added.
-        assert_eq!(PACING.plan(100, 1000, 50), Plan { from_queue: 50, silence: 150 });
-        // Silence never exceeds the room that is left.
-        assert_eq!(PACING.plan(0, 128, 0), Plan { from_queue: 0, silence: 128 });
-        assert_eq!(PACING.plan(0, 128, 100), Plan { from_queue: 100, silence: 28 });
+    fn a_short_queue_is_padded_with_silence() {
+        let q = FrameQueue::<8>::new();
+        q.push(&[1, 2, 3, 4]);
+        let mut out = [9i16; 12];
+        assert_eq!(q.pop_padded(&mut out), 2);
+        assert_eq!(out, [1, 2, 3, 4, 0, 0, 0, 0, 0, 0, 0, 0]);
+        // Empty: all silence.
+        let mut out = [9i16; 4];
+        assert_eq!(q.pop_padded(&mut out), 0);
+        assert_eq!(out, [0; 4]);
+        // Exactly enough: nothing padded.
+        q.push(&[5, 6]);
+        let mut out = [9i16; 2];
+        assert_eq!(q.pop_padded(&mut out), 1);
+        assert_eq!(out, [5, 6]);
     }
 }

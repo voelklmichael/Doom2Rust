@@ -8,10 +8,12 @@
 
 extern crate alloc;
 
+mod audio;
 mod lcd;
 mod net;
 mod platform;
 mod power;
+mod sound;
 mod wad_fs;
 
 use alloc::{boxed::Box, string::ToString, vec::Vec};
@@ -114,6 +116,17 @@ async fn main(spawner: Spawner) {
     .with_sda(peripherals.GPIO12)
     .with_scl(peripherals.GPIO11);
     CoreS3::init_core_s3_power(&mut i2c).expect("LCD power");
+    // The speaker, set up over the same I2C bus (which is why this comes before the power chip
+    // takes the bus). Its pump runs on this core; the game reaches it through `sound`.
+    sound::start(
+        spawner,
+        &mut i2c,
+        peripherals.I2S1,
+        peripherals.DMA_CH1,
+        peripherals.GPIO34,
+        peripherals.GPIO33,
+        peripherals.GPIO13,
+    );
     // Nothing else needs the bus; the power chip keeps it so that quitting can switch the board off.
     power::init(i2c);
     let lcd = RefCell::new(lcd::Lcd::new(

@@ -7,7 +7,7 @@ use esp_hal::{delay::Delay, time::Instant};
 use esp_println::print;
 use rust_doomgeneric::DoomPlatform;
 
-use crate::{lcd, net};
+use crate::{audio, lcd, net, sound};
 
 /// Frame timing, printed over serial every couple of seconds.
 #[derive(Default)]
@@ -113,6 +113,19 @@ impl DoomPlatform for CoreS3Platform {
         lcd::submit_frame(frame);
         self.record(start, acquired, now_us());
         true
+    }
+
+    fn audio_open(&mut self, _preferred_rate: u32) -> Option<u32> {
+        // The speaker runs at a fixed rate; `None` if it did not come up (see `main`).
+        sound::ready().then_some(audio::SAMPLE_RATE)
+    }
+
+    fn audio_frames_wanted(&mut self) -> usize {
+        sound::frames_wanted()
+    }
+
+    fn audio_write(&mut self, samples: &[i16]) {
+        sound::write(samples);
     }
 
     fn sleep_ms(&mut self, ms: u32) {

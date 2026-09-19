@@ -190,18 +190,19 @@ fn main() -> ! {
     let mut chunk = [0i16; 2 * audio::CHUNK_FRAMES];
     line(display, 150, Rgb565::YELLOW, STEPS[player.step].label);
     loop {
-        // Top the ring up whenever the DMA has freed some space.
-        let free = speaker.free_frames().min(audio::CHUNK_FRAMES);
-        if free > 0 {
+        // Refill the ring one chunk at a time whenever the DMA has freed one.
+        if speaker.free_frames() >= audio::CHUNK_FRAMES {
             let mut new_step = None;
-            for frame in chunk[..free * 2].chunks_exact_mut(2) {
+            for frame in chunk.chunks_exact_mut(2) {
                 let ((left, right), started) = player.frame();
                 frame.copy_from_slice(&[left, right]);
                 if started {
                     new_step = Some(player.step);
                 }
             }
-            frames_sent = frames_sent.wrapping_add(speaker.push(&chunk[..free * 2]) as u32);
+            if speaker.push_chunk(&chunk) {
+                frames_sent = frames_sent.wrapping_add(audio::CHUNK_FRAMES as u32);
+            }
             if let Some(step) = new_step {
                 line(display, 150, Rgb565::YELLOW, STEPS[step].label);
             }
