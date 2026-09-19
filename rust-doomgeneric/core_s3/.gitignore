@@ -1,3 +1,5 @@
 /target
 # The IWAD is not committed; see assets/README.md.
 /assets/*.wad
+# Wi-Fi credentials; copy wifi.env.example to wifi.env.
+/wifi.env

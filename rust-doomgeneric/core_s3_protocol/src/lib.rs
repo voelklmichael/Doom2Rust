@@ -104,9 +104,40 @@ impl KeyEvent {
     }
 }
 
+/// Which commands are currently held, so a receiver can let go of everything when the
+/// connection drops (otherwise the player would keep walking forever).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct HeldKeys {
+    bits: u32,
+}
+
+const _: () = assert!(Command::ALL.len() <= u32::BITS as usize);
+
+impl HeldKeys {
+    pub fn update(&mut self, event: KeyEvent) {
+        let bit = 1 << event.command as u32;
+        if event.pressed {
+            self.bits |= bit;
+        } else {
+            self.bits &= !bit;
+        }
+    }
+
+    /// Release events for everything currently held; afterwards nothing is held.
+    pub fn take_releases(&mut self) -> impl Iterator<Item = KeyEvent> {
+        let bits = core::mem::take(&mut self.bits);
+        Command::ALL
+            .into_iter()
+            .filter(move |&command| bits & (1 << command as u32) != 0)
+            .map(KeyEvent::release)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    extern crate std;
+    use std::vec::Vec;
 
     #[test]
     fn every_command_round_trips_as_press_and_release() {
@@ -138,5 +169,28 @@ mod tests {
         assert_eq!(KeyEvent::decode(RELEASE_BIT | first_unknown), None);
         assert_eq!(KeyEvent::decode(0x7f), None);
         assert_eq!(KeyEvent::decode(0xff), None);
+    }
+
+    #[test]
+    fn held_keys_are_released_once_after_a_disconnect() {
+        let mut held = HeldKeys::default();
+        held.update(KeyEvent::press(Command::Forward));
+        held.update(KeyEvent::press(Command::Fire));
+        held.update(KeyEvent::press(Command::Use));
+        held.update(KeyEvent::release(Command::Use));
+        let releases: Vec<_> = held.take_releases().collect();
+        assert_eq!(
+            releases,
+            [KeyEvent::release(Command::Forward), KeyEvent::release(Command::Fire)]
+        );
+        assert_eq!(held.take_releases().count(), 0);
+    }
+
+    #[test]
+    fn pressing_twice_still_releases_once() {
+        let mut held = HeldKeys::default();
+        held.update(KeyEvent::press(Command::Run));
+        held.update(KeyEvent::press(Command::Run));
+        assert_eq!(held.take_releases().count(), 1);
     }
 }
