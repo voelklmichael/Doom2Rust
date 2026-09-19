@@ -6,6 +6,7 @@
     unused_assignments,
     unused_mut
 )]
+use ::doomgeneric_fs::StdFileSystem;
 #[allow(unused_imports)]
 use ::rust_doomgeneric;
 use ::rust_doomgeneric::doomgeneric_Create;
@@ -1106,7 +1107,7 @@ impl DoomPlatform for X11Platform {
 }
 
 pub fn main() {
-    let state = init_game_state(Box::new(X11Platform::new()));
+    let state = init_game_state(Box::new(X11Platform::new()), Box::new(StdFileSystem::new()));
     doomgeneric_Create(state, ::std::env::args().collect());
     loop {
         doomgeneric_Tick(state);

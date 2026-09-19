@@ -11,4 +11,5 @@ path = "src/main.rs"
 
 [dependencies]
 libc = "0.2"
+doomgeneric_fs = { path = "../fs" }
 rust_doomgeneric = { path = "../engine" }

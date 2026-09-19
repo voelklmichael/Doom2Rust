@@ -10,6 +10,7 @@ use crate::d_iwad::DIwadState;
 use crate::d_loop::DLoopState;
 use crate::d_main::DMainState;
 use crate::doomstat::DoomstatState;
+use crate::filesystem::DoomFileSystem;
 use crate::f_finale::FFinaleState;
 use crate::f_wipe::FWipeState;
 use crate::g_game::GGameState;
@@ -118,10 +119,11 @@ pub struct GameState {
     pub w_wad: WWadState,
     pub wi_stuff: WiStuffState,
     pub platform: Box<dyn DoomPlatform>,
+    pub fs: Box<dyn DoomFileSystem>,
 }
 
 impl GameState {
-    fn new(platform: Box<dyn DoomPlatform>) -> Self {
+    fn new(platform: Box<dyn DoomPlatform>, fs: Box<dyn DoomFileSystem>) -> Self {
         GameState {
             am_map: AmMapState::new(),
             d_event: DEventState::new(),
@@ -179,6 +181,7 @@ impl GameState {
             w_wad: WWadState::new(),
             wi_stuff: WiStuffState::new(),
             platform,
+            fs,
         }
     }
 
@@ -203,11 +206,14 @@ pub fn finish_init(state: &mut GameState) {
     }
 }
 
-/// Constructs the single `GameState`, wired to the given platform backend,
-/// and leaks it to obtain a `&'static mut` -- the state is meant to live for
+/// Constructs the single `GameState`, wired to the given platform and
+/// filesystem backends, and leaks it to obtain a `&'static mut` -- the state is meant to live for
 /// the remainder of the process, so this is not actually a leak in practice.
-pub fn init_game_state(platform: Box<dyn DoomPlatform>) -> &'static mut GameState {
-    let state = Box::leak(Box::new(GameState::new(platform)));
+pub fn init_game_state(
+    platform: Box<dyn DoomPlatform>,
+    fs: Box<dyn DoomFileSystem>,
+) -> &'static mut GameState {
+    let state = Box::leak(Box::new(GameState::new(platform, fs)));
     finish_init(state);
     state
 }
