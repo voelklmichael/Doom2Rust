@@ -12,3 +12,9 @@ rustflags = [
 
 [unstable]
 build-std = ["core", "alloc"]
+
+[env]
+# esp-hal's cache setup at startup. The data cache is 32 KB with 32-byte lines by default; the
+# linker script already leaves the other 32 KB of its block free, so 64 KB costs no RAM.
+ESP_HAL_CONFIG_DATA_CACHE_SIZE = "64KB"
+ESP_HAL_CONFIG_DATA_CACHE_LINE_SIZE = "64B"
