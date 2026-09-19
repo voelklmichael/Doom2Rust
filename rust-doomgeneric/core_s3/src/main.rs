@@ -1,24 +1,39 @@
-//! DOOM on the M5Stack CoreS3 Lite. Milestone 2: play the shareware attract-mode demos
-//! from a WAD embedded in the firmware image, with no input.
+//! DOOM on the M5Stack CoreS3 Lite, controlled over Wi-Fi.
+//!
+//! Core 0 runs the esp-rtos scheduler, Wi-Fi and the TCP command server (`net`). Core 1 builds and
+//! runs the game. Before the game starts, core 0 shows the board's IP address on the LCD so the
+//! controller (`core_s3_sender`) knows where to connect.
 #![no_std]
 #![no_main]
 
 extern crate alloc;
 
+mod net;
 mod platform;
 mod wad_fs;
 
 use alloc::{boxed::Box, string::ToString, vec::Vec};
+use core::fmt::Write as _;
 use core_s3::{
+    bsp::{CoreS3Display, CoreS3DisplayParts, CoreS3DisplayResources},
+    ui::Label,
     CoreS3,
-    bsp::{CoreS3DisplayParts, CoreS3DisplayResources},
 };
+use core_s3_protocol::DEFAULT_PORT;
+use embassy_executor::Spawner;
+use embassy_time::{with_timeout, Duration, Timer};
+use embedded_graphics::{pixelcolor::Rgb565, prelude::*};
 use esp_backtrace as _;
 use esp_hal::{
     clock::CpuClock,
+    interrupt::software::SoftwareInterruptControl,
     psram::{PsramConfig, PsramMode},
+    ram,
+    system::Stack,
+    timer::timg::TimerGroup,
 };
 use esp_println::println;
+use heapless::String;
 use rust_doomgeneric::{doomgeneric_create, doomgeneric_tick, init_game_state};
 
 use platform::CoreS3Platform;
@@ -29,21 +44,52 @@ esp_bootloader_esp_idf::esp_app_desc!();
 /// Shareware IWAD, embedded in flash and read in place. See `assets/README.md`.
 static WAD: &[u8] = include_bytes!("../assets/doom1.wad");
 
-#[esp_hal::main]
-fn main() -> ! {
+/// Stack of the game's thread on core 1. `init_game_state` builds the engine's state (hundreds of
+/// KB) by value before boxing it, so the stack has to be far bigger than internal RAM can spare.
+const GAME_STACK_SIZE: usize = 1024 * 1024;
+
+/// A stack for core 1, allocated from the heap (which puts it in PSRAM).
+fn game_stack() -> &'static mut Stack<GAME_STACK_SIZE> {
+    let stack = Box::<Stack<GAME_STACK_SIZE>>::new_uninit();
+    // SAFETY: `Stack` consists of nothing but `MaybeUninit` bytes, so it is always initialised.
+    Box::leak(unsafe { stack.assume_init() })
+}
+
+const WAIT_FOR_ADDRESS: Duration = Duration::from_secs(20);
+const SHOW_ADDRESS: Duration = Duration::from_secs(3);
+
+fn show(display: &mut CoreS3Display, lines: &[&str]) {
+    display.clear(Rgb565::BLACK).expect("clear LCD");
+    for (line, y) in lines.iter().zip((30..).step_by(30)) {
+        Label { text: line, top_left: Point::new(20, y), color: Rgb565::CYAN }
+            .draw(display)
+            .expect("draw text");
+    }
+}
+
+#[esp_rtos::main]
+async fn main(spawner: Spawner) {
     let peripherals = esp_hal::init(esp_hal::Config::default().with_cpu_clock(CpuClock::max()));
 
-    // The engine's state and frame buffer are far bigger than the internal RAM, so the whole
-    // heap lives in the 8 MB PSRAM. The CoreS3's PSRAM is quad SPI; asking for it explicitly
-    // keeps esp-hal from probing octal mode on GPIO35-37, which are the LCD pins.
+    // The game's state and frame buffer are far bigger than internal RAM, so most of the heap is
+    // the 8 MB PSRAM. It goes in first: the allocator uses the first region that fits, so the
+    // game lands in PSRAM while the Wi-Fi driver, which asks for internal RAM explicitly, gets
+    // the two internal regions. The PSRAM is quad SPI; asking for that explicitly keeps esp-hal
+    // from probing octal mode on GPIO35-37, which are the LCD pins.
     esp_alloc::psram_allocator!(
         peripherals.PSRAM,
         esp_hal::psram,
         PsramConfig { mode: PsramMode::QuadSpi, ..Default::default() }
     );
-    println!("heap: {} bytes free", esp_alloc::HEAP.free());
+    esp_alloc::heap_allocator!(#[ram(reclaimed)] size: 64 * 1024);
+    esp_alloc::heap_allocator!(size: 36 * 1024);
 
-    let CoreS3DisplayParts { display, internal_i2c: _i2c } =
+    // The scheduler must be running before the radio is initialised.
+    let timg0 = TimerGroup::new(peripherals.TIMG0);
+    let software_interrupts = SoftwareInterruptControl::new(peripherals.SW_INTERRUPT);
+    esp_rtos::start(timg0.timer0, software_interrupts.software_interrupt0);
+
+    let CoreS3DisplayParts { mut display, internal_i2c: _i2c } =
         CoreS3::init_display(CoreS3DisplayResources {
             i2c0: peripherals.I2C0,
             i2c_sda: peripherals.GPIO12,
@@ -57,20 +103,65 @@ fn main() -> ! {
         })
         .expect("display");
 
-    let state = init_game_state(
-        Box::new(CoreS3Platform::new(display)),
-        Box::new(EmbeddedWad::new("doom1.wad", WAD)),
+    show(&mut display, &["CoreS3 DOOM", "starting Wi-Fi..."]);
+    // What the game keeps showing in its top bar once it is running.
+    let mut status = String::<40>::new();
+    match net::start(spawner, peripherals.WIFI) {
+        None => {
+            show(&mut display, &["CoreS3 DOOM", "Wi-Fi not configured", "no network input"]);
+            let _ = write!(status, "no Wi-Fi");
+        }
+        Some(stack) => match with_timeout(WAIT_FOR_ADDRESS, stack.wait_config_up()).await {
+            Ok(()) => {
+                let mut address = String::<40>::new();
+                if let Some(config) = stack.config_v4() {
+                    let _ = write!(address, "{}", config.address.address());
+                }
+                let mut port = String::<40>::new();
+                let _ = write!(port, "port {DEFAULT_PORT}");
+                println!("wifi: address {address}, controller port {DEFAULT_PORT}");
+                show(&mut display, &["CoreS3 DOOM", "controller address:", &address, &port]);
+                let _ = write!(status, "{address}:{DEFAULT_PORT}");
+                Timer::after(SHOW_ADDRESS).await;
+            }
+            Err(_) => {
+                println!("wifi: no address after {WAIT_FOR_ADDRESS:?}; starting the game anyway");
+                show(&mut display, &["CoreS3 DOOM", "no Wi-Fi yet", "still retrying"]);
+                let _ = write!(status, "no Wi-Fi yet");
+                Timer::after(SHOW_ADDRESS).await;
+            }
+        },
+    }
+
+    // The game runs on core 1, so the network never waits for a frame and the game never waits
+    // for the radio. It builds its own state there, on the big stack.
+    esp_rtos::start_second_core(
+        peripherals.CPU_CTRL,
+        software_interrupts.software_interrupt1,
+        game_stack(),
+        move || {
+            let state = init_game_state(
+                Box::new(CoreS3Platform::new(display, status)),
+                Box::new(EmbeddedWad::new("doom1.wad", WAD)),
+            );
+            println!(
+                "game state built: {} bytes, {} bytes of heap free",
+                core::mem::size_of_val(&*state),
+                esp_alloc::HEAP.free()
+            );
+            let args: Vec<_> = ["doomgeneric", "-iwad", "doom1.wad", "-scaling", "1"]
+                .into_iter()
+                .map(ToString::to_string)
+                .collect();
+            doomgeneric_create(state, args);
+            loop {
+                doomgeneric_tick(state);
+            }
+        },
     );
-    println!("game state initialised, {} bytes free", esp_alloc::HEAP.free());
 
-    let args: Vec<_> = ["doomgeneric", "-iwad", "doom1.wad", "-scaling", "1"]
-        .into_iter()
-        .map(ToString::to_string)
-        .collect();
-    doomgeneric_create(state, args);
-    println!("doomgeneric_create done, {} bytes free", esp_alloc::HEAP.free());
-
+    // Core 0 has nothing left to do itself; the network tasks keep running on this executor.
     loop {
-        doomgeneric_tick(state);
+        Timer::after(Duration::from_secs(3600)).await;
     }
 }

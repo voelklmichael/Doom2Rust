@@ -1,7 +1,8 @@
 //! `DoomPlatform` for the CoreS3: LCD output, a millisecond clock and the serial console.
-//! There is no input yet, so the engine just plays its attract-mode demos.
+//! Input arrives over Wi-Fi (see `net`).
 
-use core_s3::bsp::CoreS3Display;
+use core_s3::{bsp::CoreS3Display, ui::Label};
+use core_s3_protocol::Command;
 use embedded_graphics::{
     pixelcolor::Rgb565,
     prelude::*,
@@ -9,7 +10,10 @@ use embedded_graphics::{
 };
 use esp_hal::{delay::Delay, time::Instant};
 use esp_println::print;
+use heapless::String;
 use rust_doomgeneric::DoomPlatform;
+
+use crate::net;
 
 /// DOOM's native resolution. The engine is run with `-scaling 1`, which draws the 320x200
 /// image centred in each (wider) row of its frame buffer.
@@ -36,12 +40,14 @@ pub struct CoreS3Platform {
     display: CoreS3Display,
     /// Pixels per row of the engine's frame buffer, set in `init`.
     stride: usize,
+    /// Shown in the top black bar, which the game never draws over (e.g. the controller address).
+    status: String<40>,
     stats: FrameStats,
 }
 
 impl CoreS3Platform {
-    pub fn new(display: CoreS3Display) -> Self {
-        Self { display, stride: DOOM_WIDTH, stats: FrameStats::default() }
+    pub fn new(display: CoreS3Display, status: String<40>) -> Self {
+        Self { display, stride: DOOM_WIDTH, status, stats: FrameStats::default() }
     }
 }
 
@@ -51,10 +57,40 @@ fn to_rgb565(pixel: u32) -> Rgb565 {
     Rgb565::new(r >> 3, g >> 2, b >> 3)
 }
 
+/// The engine key code for a command: what the engine's default bindings (m_controls.rs) expect.
+fn doom_key(command: Command) -> u8 {
+    match command {
+        Command::Forward => 0xad,
+        Command::Backward => 0xaf,
+        Command::TurnLeft => 0xac,
+        Command::TurnRight => 0xae,
+        Command::StrafeLeft => 0xa0,
+        Command::StrafeRight => 0xa1,
+        Command::Fire => 0xa3,
+        Command::Use => 0xa2,
+        Command::Run => 0x80 + 0x36, // KEY_RSHIFT
+        Command::Enter => 13,
+        Command::Escape => 27,
+        Command::Map => 9, // Tab
+        Command::Yes => b'y',
+        Command::No => b'n',
+        Command::Weapon1 => b'1',
+        Command::Weapon2 => b'2',
+        Command::Weapon3 => b'3',
+        Command::Weapon4 => b'4',
+        Command::Weapon5 => b'5',
+        Command::Weapon6 => b'6',
+        Command::Weapon7 => b'7',
+    }
+}
+
 impl DoomPlatform for CoreS3Platform {
     fn init(&mut self, resx: i32, _resy: i32) {
         self.stride = resx as usize;
         self.display.clear(Rgb565::BLACK).expect("clear LCD");
+        Label { text: &self.status, top_left: Point::new(4, 5), color: Rgb565::CYAN }
+            .draw(&mut self.display)
+            .expect("draw status");
     }
 
     fn draw_frame(&mut self, frame: &[u32]) {
@@ -101,7 +137,8 @@ impl DoomPlatform for CoreS3Platform {
     }
 
     fn get_key(&mut self) -> Option<(bool, u8)> {
-        None
+        let event = net::next_key_event()?;
+        Some((event.pressed, doom_key(event.command)))
     }
 
     fn set_window_title(&mut self, _title: &str) {}

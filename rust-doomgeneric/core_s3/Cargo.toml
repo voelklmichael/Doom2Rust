@@ -30,6 +30,15 @@ esp-hal = { version = "=1.1.2", default-features = false, features = ["esp32s3",
 esp-println = { version = "=0.15.0", default-features = false, features = ["esp32s3", "jtag-serial"] }
 heapless = { version = "0.9.3", default-features = false }
 rust_doomgeneric = { path = "../engine" }
+core_s3_protocol = { path = "../core_s3_protocol" }
+# Wi-Fi input. esp-radio needs the esp-rtos scheduler underneath, and embassy-net for TCP.
+esp-radio = { version = "=1.0.0-beta.0", default-features = false, features = ["esp32s3", "wifi", "unstable", "esp-alloc"] }
+esp-rtos = { version = "=0.3.0", features = ["esp32s3", "embassy", "esp-radio", "esp-alloc"] }
+embassy-executor = { version = "0.10", default-features = false }
+embassy-net = { version = "0.9", default-features = false, features = ["tcp", "dhcpv4", "medium-ethernet"] }
+embassy-sync = "0.8"
+embassy-time = "0.5"
+static_cell = "2.1"
 
 [profile.dev]
 # Debug builds are too slow (and too big) to be useful on the device.
