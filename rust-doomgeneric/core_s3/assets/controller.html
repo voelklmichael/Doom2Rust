@@ -1,0 +1,562 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>CoreS3 DOOM controller</title>
+<style>
+  :root {
+    --bg: #14161a; --panel: #1e2228; --line: #343b46; --text: #e6e8eb; --dim: #8b94a1;
+    --btn: #2b323c; --accent: #e0a030; --ok: #46c46a; --bad: #d9534f;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--text);
+    font: 16px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  body { max-width: 720px; margin: 0 auto; padding: 12px; }
+  h1 { font-size: 18px; margin: 0; }
+  header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  #status { display: flex; align-items: center; gap: 8px; color: var(--dim); font-size: 14px; }
+  #dot { width: 12px; height: 12px; border-radius: 50%; background: var(--bad); }
+  #dot.on { background: var(--ok); }
+  section { background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+    padding: 10px; margin-bottom: 12px; }
+  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--dim);
+    margin: 0 0 8px; font-weight: 600; }
+  button { font: inherit; color: var(--text); background: var(--btn); border: 1px solid var(--line);
+    border-radius: 8px; min-height: 52px; padding: 6px 10px; cursor: pointer;
+    touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+  button.down, button.on { background: var(--accent); color: #111; border-color: var(--accent); }
+  #dot.on { box-shadow: 0 0 6px var(--ok); }
+  .grid { display: grid; gap: 8px; }
+  .move { grid-template-columns: repeat(3, 1fr); }
+  .actions { grid-template-columns: repeat(4, 1fr); margin-top: 8px; }
+  .weapons { grid-template-columns: repeat(7, 1fr); }
+  .menu { grid-template-columns: repeat(5, 1fr); }
+  .fire { background: #5a2a26; border-color: #8a3f39; font-weight: 700; }
+  .fire.down { background: var(--bad); color: #fff; }
+  .off button { opacity: .45; }
+  #text { width: 100%; font: inherit; color: var(--text); background: #0f1114;
+    border: 1px solid var(--line); border-radius: 8px; padding: 12px; }
+  .modes { display: flex; gap: 16px; margin-bottom: 8px; }
+  .modes label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+  #sent { margin-top: 6px; min-height: 1.4em; color: var(--dim); font-family: ui-monospace, monospace;
+    font-size: 14px; word-break: break-all; }
+  .hint { color: var(--dim); font-size: 13px; margin: 6px 0 0; }
+  details summary { cursor: pointer; font-weight: 600; }
+  table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+  td { padding: 4px 6px; border-top: 1px solid var(--line); vertical-align: middle; }
+  td.name { white-space: nowrap; color: var(--dim); width: 1%; }
+  .chip { display: inline-flex; align-items: center; gap: 4px; background: var(--btn);
+    border: 1px solid var(--line); border-radius: 6px; padding: 2px 4px 2px 8px; margin: 2px 4px 2px 0;
+    font-family: ui-monospace, monospace; font-size: 14px; }
+  .chip.guess { font-style: italic; opacity: .75; }
+  .chip button { min-height: 0; padding: 0 6px; border: 0; background: none; color: var(--dim); font-size: 16px; }
+  td button.add { min-height: 30px; padding: 2px 10px; }
+  #reset { margin-top: 10px; min-height: 40px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>CoreS3 DOOM</h1>
+  <div id="status"><span id="dot"></span><span id="state">connecting…</span></div>
+</header>
+
+<div id="controls">
+  <section>
+    <h2>Move</h2>
+    <div class="grid move">
+      <button data-a="4">« Strafe</button>
+      <button data-a="0">▲ Forward</button>
+      <button data-a="5">Strafe »</button>
+      <button data-a="2">◀ Turn</button>
+      <button data-a="1">▼ Back</button>
+      <button data-a="3">Turn ▶</button>
+    </div>
+    <div class="grid actions">
+      <button data-a="6" class="fire">Fire</button>
+      <button data-a="7">Use</button>
+      <button data-toggle="8" id="run">Run</button>
+      <button data-a="11">Map</button>
+    </div>
+  </section>
+
+  <section>
+    <h2>Weapons</h2>
+    <div class="grid weapons">
+      <button data-a="14">1</button><button data-a="15">2</button><button data-a="16">3</button>
+      <button data-a="17">4</button><button data-a="18">5</button><button data-a="19">6</button>
+      <button data-a="20">7</button>
+    </div>
+  </section>
+
+  <section>
+    <h2>Menu</h2>
+    <div class="grid menu">
+      <button data-a="10">Esc</button><button data-a="9">Enter</button>
+      <button data-a="12">Yes</button><button data-a="13">No</button>
+      <button data-a="21">⌫</button>
+    </div>
+  </section>
+</div>
+
+<section>
+  <h2>Type</h2>
+  <div class="modes">
+    <label><input type="radio" name="mode" value="keys" checked> Keys</label>
+    <label><input type="radio" name="mode" value="text"> Text</label>
+  </div>
+  <input id="text" type="text" autocomplete="off" autocapitalize="off" autocorrect="off"
+         spellcheck="false" enterkeyhint="send">
+  <div id="sent"></div>
+  <p class="hint" id="modehint"></p>
+</section>
+
+<section>
+  <details>
+    <summary>Key bindings</summary>
+    <p class="hint">Keys work anywhere on this page, and the text box in Keys mode uses the same
+      bindings. Click + on an action, then press the key to give it. Bindings are kept in this
+      browser.</p>
+    <p class="hint">A key is remembered by its position on the keyboard, as games do, so WASD stays a
+      cluster on any layout (Neo2, AZERTY...). It is shown as what it prints on your keyboard once you
+      have pressed it; until then (in italics) as it would print on a US keyboard. Arrows, Enter, Esc,
+      Tab and Backspace are remembered by name, so a layer that produces them from other keys works
+      too.</p>
+    <table id="keys"></table>
+    <button id="reset">Reset to defaults</button>
+  </details>
+</section>
+
+<script>
+'use strict';
+
+// What each action byte means to the board (the codes of core_s3_protocol::Command).
+const ACTIONS = [
+  [0, 'Forward'], [1, 'Backward'], [2, 'Turn left'], [3, 'Turn right'],
+  [4, 'Strafe left'], [5, 'Strafe right'], [6, 'Fire'], [7, 'Use / open'], [8, 'Run'],
+  [9, 'Enter'], [10, 'Esc / menu'], [11, 'Map'], [12, 'Yes'], [13, 'No'],
+  [14, 'Weapon 1'], [15, 'Weapon 2'], [16, 'Weapon 3'], [17, 'Weapon 4'],
+  [18, 'Weapon 5'], [19, 'Weapon 6'], [20, 'Weapon 7'], [21, 'Backspace'],
+];
+const RELEASE = 0x80;
+// A press shorter than this is stretched: the game only looks at held keys once per tic (28 ms),
+// so a quick click would otherwise be missed.
+const MIN_HOLD_MS = 120;
+
+const DEFAULT_KEYS = {
+  ArrowUp: 0, KeyW: 0, ArrowDown: 1, KeyS: 1, ArrowLeft: 2, KeyA: 2, ArrowRight: 3, KeyD: 3,
+  KeyQ: 4, Comma: 4, KeyE: 5, Period: 5, Space: 6, KeyF: 7, ShiftLeft: 8, ShiftRight: 8,
+  Enter: 9, Escape: 10, Tab: 11, KeyY: 12, KeyN: 13,
+  Digit1: 14, Digit2: 15, Digit3: 16, Digit4: 17, Digit5: 18, Digit6: 19, Digit7: 20,
+  Backspace: 21,
+};
+
+const $ = (id) => document.getElementById(id);
+
+// ---- connection -------------------------------------------------------------------------------
+
+let socket = null;
+let connected = false;
+
+function setState(text, on) {
+  $('state').textContent = text;
+  $('dot').className = on ? 'on' : '';
+  $('controls').className = on ? '' : 'off';
+}
+
+function connect() {
+  setState('connecting…', false);
+  socket = new WebSocket('ws://' + location.host + '/ws');
+  socket.binaryType = 'arraybuffer';
+  socket.onopen = () => { connected = true; setState('connected', true); };
+  socket.onclose = () => {
+    connected = false;
+    forgetHolds();
+    setState('disconnected, retrying…', false);
+    setTimeout(connect, 1500);
+  };
+  socket.onerror = () => socket.close();
+}
+
+function send(bytes) {
+  if (connected) socket.send(new Uint8Array(bytes));
+}
+
+// ---- holding actions --------------------------------------------------------------------------
+
+// Several things can hold the same action (a key and a button); the board hears one press when
+// the first starts and one release when the last lets go.
+const count = new Array(256).fill(0);
+const since = new Array(256).fill(0);
+const pending = new Array(256).fill(null);
+
+function press(action) {
+  count[action]++;
+  if (count[action] > 1) return;
+  since[action] = performance.now();
+  if (pending[action] !== null) {           // still down on the board: just keep it down
+    clearTimeout(pending[action]);
+    pending[action] = null;
+    return;
+  }
+  send([action]);
+}
+
+function release(action) {
+  if (count[action] === 0) return;
+  if (--count[action] > 0) return;
+  const wait = Math.max(0, MIN_HOLD_MS - (performance.now() - since[action]));
+  if (wait === 0) { send([action | RELEASE]); return; }
+  pending[action] = setTimeout(() => { pending[action] = null; send([action | RELEASE]); }, wait);
+}
+
+function tap(action) { press(action); release(action); }
+
+// Lets go of everything at once (the tab lost focus, or the link dropped).
+function releaseAll() {
+  for (let action = 0; action < 256; action++) {
+    if (count[action] > 0 || pending[action] !== null) {
+      clearTimeout(pending[action]);
+      pending[action] = null;
+      count[action] = 0;
+      send([action | RELEASE]);
+    }
+  }
+  document.querySelectorAll('button.down').forEach((b) => b.classList.remove('down'));
+  keysDown.clear();
+  runToggle.classList.remove('on');
+}
+
+// After a lost connection the board has already let go of everything itself.
+function forgetHolds() {
+  for (let action = 0; action < 256; action++) {
+    clearTimeout(pending[action]);
+    pending[action] = null;
+    count[action] = 0;
+  }
+  document.querySelectorAll('button.down').forEach((b) => b.classList.remove('down'));
+  keysDown.clear();
+  runToggle.classList.remove('on');
+}
+
+// ---- buttons ----------------------------------------------------------------------------------
+
+const runToggle = $('run');
+
+document.querySelectorAll('button[data-a]').forEach((button) => {
+  const action = Number(button.dataset.a);
+  button.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    button.setPointerCapture(e.pointerId);
+    button.classList.add('down');
+    press(action);
+  });
+  const up = () => {
+    if (!button.classList.contains('down')) return;
+    button.classList.remove('down');
+    release(action);
+  };
+  button.addEventListener('pointerup', up);
+  button.addEventListener('pointercancel', up);
+  button.addEventListener('lostpointercapture', up);
+  button.addEventListener('contextmenu', (e) => e.preventDefault());
+});
+
+runToggle.addEventListener('click', () => {
+  const action = Number(runToggle.dataset.toggle);
+  if (runToggle.classList.toggle('on')) press(action); else release(action);
+});
+
+// ---- keyboard ---------------------------------------------------------------------------------
+
+// Keys are remembered by their position on the keyboard, the way games do it: WASD stays a cluster
+// on any layout. What a key prints depends on the layout (Neo2, AZERTY...), so the printed character
+// is only used to label it. Named keys (arrows, Enter, Esc, Tab, Backspace) are remembered by name
+// instead, so a layout layer that produces an arrow from some other key (Neo2's cursor layer) works.
+let keymap = loadKeys();
+const labels = loadLabels();    // key -> the character it prints on this keyboard, as far as seen
+const keysDown = new Map();     // physical key -> the action it is holding
+let capturing = null;           // { action, button } while waiting for a key to bind
+
+const NAMED = /^(Arrow(Up|Down|Left|Right)|Enter|Escape|Tab|Backspace)$/;
+const keyId = (e) => (NAMED.test(e.key) ? e.key : e.code);
+// A real keyboard event names its key; a phone's soft keyboard and input methods do not.
+const usable = (e) => Boolean(e.code) && e.code !== 'Unidentified' && e.keyCode !== 229 && !e.isComposing;
+
+function loadKeys() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('coreS3Keys'));
+    if (saved && typeof saved === 'object') return saved;
+  } catch (e) { /* no storage, or nothing valid saved */ }
+  return Object.assign({}, DEFAULT_KEYS);
+}
+
+function saveKeys() {
+  try { localStorage.setItem('coreS3Keys', JSON.stringify(keymap)); } catch (e) { /* not kept */ }
+}
+
+function loadLabels() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('coreS3Labels'));
+    if (saved && typeof saved === 'object') return saved;
+  } catch (e) { /* nothing saved */ }
+  return {};
+}
+
+// Notes what a key prints. Only plain letters and digits are learned from ordinary typing: a
+// layout layer can print anything else. A key that is being bound is learned whatever it prints.
+function learn(e, force) {
+  const plain = !e.shiftKey && !e.ctrlKey && !e.metaKey && !e.altKey && !e.getModifierState('AltGraph');
+  if (!usable(e) || NAMED.test(e.key) || e.key.length !== 1 || e.key === ' ' || !plain) return;
+  if (!force && !/^[\p{L}\p{N}]$/u.test(e.key)) return;
+  const printed = e.key.toLowerCase();
+  if (labels[e.code] === printed) return;
+  // A character sits on one key: whatever else was thought to print it is out of date.
+  for (const other of Object.keys(labels)) if (labels[other] === printed) delete labels[other];
+  labels[e.code] = printed;
+  try { localStorage.setItem('coreS3Labels', JSON.stringify(labels)); } catch (err) { /* not kept */ }
+  renderKeys();
+}
+
+addEventListener('keydown', (e) => {
+  if (capturing) {
+    e.preventDefault();
+    learn(e, true);
+    keymap[keyId(e)] = capturing.action;
+    capturing = null;
+    saveKeys();
+    renderKeys();
+    return;
+  }
+  // AltGr (a layout's third layer) reports Ctrl+Alt on some systems; real shortcuts are left alone.
+  if ((e.ctrlKey || e.metaKey || e.altKey) && !e.getModifierState('AltGraph')) return;
+  // The text box in Keys mode takes keys exactly like the rest of the page (by the key pressed, as
+  // the key list does), and nothing gets typed into it. Text mode, and keyboards that do not say
+  // which key was pressed, use the characters that arrive in its input event instead.
+  const inBox = e.target === $('text');
+  if (inBox && (mode === 'text' || !usable(e))) return;
+  if (inBox) e.preventDefault();
+  learn(e, false);
+  const id = keyId(e);
+  const action = keymap[id];
+  if (action === undefined) { if (inBox) log('·'); return; }
+  e.preventDefault();
+  if (e.repeat || keysDown.has(e.code)) return;
+  keysDown.set(e.code, action);
+  press(action);
+  if (inBox) log(keyLabel(id));
+});
+
+addEventListener('keyup', (e) => {
+  if (!keysDown.has(e.code)) return;
+  e.preventDefault();
+  const action = keysDown.get(e.code);
+  keysDown.delete(e.code);
+  release(action);
+});
+
+addEventListener('blur', releaseAll);
+
+// ---- key list ---------------------------------------------------------------------------------
+
+// How a key is shown: what it prints on this keyboard once that is known, else its name on a US one.
+function keyLabel(id) {
+  if (labels[id]) return labels[id].toUpperCase();
+  return usName(id);
+}
+
+function usName(id) {
+  if (id.startsWith('Key')) return id.slice(3);
+  if (id.startsWith('Digit')) return id.slice(5);
+  if (id.startsWith('Numpad')) return 'Num ' + id.slice(6);
+  const names = {
+    ArrowUp: '↑', ArrowDown: '↓', ArrowLeft: '←', ArrowRight: '→', Space: 'Space', Escape: 'Esc',
+    ShiftLeft: 'Shift (L)', ShiftRight: 'Shift (R)', ControlLeft: 'Ctrl (L)', ControlRight: 'Ctrl (R)',
+    AltLeft: 'Alt (L)', AltRight: 'Alt (R)', Comma: ',', Period: '.', Slash: '/', Semicolon: ';',
+    Quote: "'", BracketLeft: '[', BracketRight: ']', Backslash: '\\', Minus: '-', Equal: '=',
+    Backquote: '`',
+  };
+  return names[id] || id;
+}
+
+// A key whose label depends on the layout and has not been seen yet is only a guess (US names).
+const guess = (id) => !labels[id] && /^(Key|Digit|Comma|Period|Slash|Semicolon|Quote|Bracket|Backslash|Minus|Equal|Backquote)/.test(id);
+
+function renderKeys() {
+  const table = $('keys');
+  table.textContent = '';
+  for (const [action, name] of ACTIONS) {
+    const row = table.insertRow();
+    row.insertCell().textContent = name;
+    row.cells[0].className = 'name';
+    const cell = row.insertCell();
+    for (const code of Object.keys(keymap).filter((c) => keymap[c] === action)) {
+      const chip = document.createElement('span');
+      chip.className = 'chip';
+      chip.append(keyLabel(code));
+      chip.classList.toggle('guess', guess(code));
+      chip.title = guess(code)
+        ? 'The key at the position of ' + usName(code) + ' on a US keyboard. Press it once to see what it prints on yours.'
+        : 'Key position ' + code;
+      const remove = document.createElement('button');
+      remove.textContent = '×';
+      remove.title = 'Remove';
+      remove.onclick = () => { delete keymap[code]; saveKeys(); renderKeys(); };
+      chip.append(remove);
+      cell.append(chip);
+    }
+    const add = document.createElement('button');
+    add.className = 'add';
+    add.textContent = capturing && capturing.action === action ? 'press a key…' : '+';
+    add.onclick = () => {
+      capturing = capturing && capturing.action === action ? null : { action };
+      renderKeys();
+    };
+    cell.append(add);
+  }
+}
+
+$('reset').onclick = () => {
+  keymap = Object.assign({}, DEFAULT_KEYS);
+  capturing = null;
+  saveKeys();
+  renderKeys();
+};
+
+// ---- typing -----------------------------------------------------------------------------------
+
+// Keys mode: a typed key acts as its binding, like pressing it on a keyboard. Text mode: the
+// character goes to the game as typed (cheat codes, save names).
+const box = $('text');
+const HINTS = {
+  keys: 'Each key you press does what its binding does (w forward, space fire, f use...), found the same ' +
+        'way as in the key list below. Holding a key keeps the action going; a pasted run like wwwd ' +
+        'plays one key every 0.2 s.',
+  text: 'Every character goes to the game as typed: cheat codes, save names. Enter, Backspace and Esc ' +
+        'work as in the menu.',
+};
+const PLACEHOLDERS = {
+  keys: 'Type keys: w a s d, space to fire…',
+  text: 'Type text: every character is sent at once',
+};
+const MACRO_STEP_MS = 200;
+const CHAR_GAP_MS = 25;
+const CHAR_CODES = {
+  ' ': 'Space', ',': 'Comma', '.': 'Period', '/': 'Slash', ';': 'Semicolon', "'": 'Quote',
+  '[': 'BracketLeft', ']': 'BracketRight', '\\': 'Backslash', '-': 'Minus', '=': 'Equal', '`': 'Backquote',
+};
+let mode = loadMode();
+let sent = '';
+
+function loadMode() {
+  try { if (localStorage.getItem('coreS3Mode') === 'text') return 'text'; } catch (e) { /* default */ }
+  return 'keys';
+}
+
+function setMode(next) {
+  mode = next;
+  try { localStorage.setItem('coreS3Mode', mode); } catch (e) { /* not kept */ }
+  document.querySelector('input[name=mode][value=' + mode + ']').checked = true;
+  box.placeholder = PLACEHOLDERS[mode];
+  $('modehint').textContent = HINTS[mode];
+}
+
+document.querySelectorAll('input[name=mode]').forEach((radio) => {
+  radio.addEventListener('change', () => { setMode(radio.value); box.focus(); });
+});
+
+function log(text) {
+  sent = (sent + text).slice(-40);
+  $('sent').textContent = sent;
+}
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// The key a typed character stands for, for input that arrives as characters (a phone's keyboard, a
+// paste): the key known to print it on this keyboard, else the key that prints it on a US one.
+function codeForChar(ch) {
+  const c = ch.toLowerCase();
+  for (const code of Object.keys(labels)) if (labels[code] === c) return code;
+  let code;
+  if (/^[a-z]$/.test(c)) code = 'Key' + c.toUpperCase();
+  else if (/^[0-9]$/.test(c)) code = 'Digit' + c;
+  else code = CHAR_CODES[c];
+  // If that key is known to print something else here, this character is not that key.
+  return code !== undefined && labels[code] && labels[code] !== c ? undefined : code;
+}
+
+// Keys mode: one typed key. A tap is stretched to the minimum hold, and typing the same key again
+// before it ends just extends it, so a held key (which repeats) keeps the action going.
+function tapChar(ch) {
+  const code = codeForChar(ch);
+  const action = code === undefined ? undefined : keymap[code];
+  if (action === undefined) { log('·'); return; }
+  tap(action);
+  log(ch);
+}
+
+let macro = Promise.resolve();
+
+function playKeys(chars) {
+  macro = macro.then(async () => {
+    for (const ch of chars.slice(0, 200)) { tapChar(ch); await sleep(MACRO_STEP_MS); }
+  });
+}
+
+// Text mode: one character at a time, so pasting a long text cannot overflow the board's queue.
+const charQueue = [];
+let pumping = false;
+
+function typeChar(ch) {
+  let code = ch.codePointAt(0);
+  if (code >= 65 && code <= 90) code += 32;     // the game wants letters lowercase
+  if (code < 32 || code > 126) return;
+  charQueue.push(code);
+  if (!pumping) pump();
+}
+
+function pump() {
+  const code = charQueue.shift();
+  if (code === undefined) { pumping = false; return; }
+  pumping = true;
+  send([code, code | RELEASE]);
+  log(String.fromCharCode(code));
+  setTimeout(pump, CHAR_GAP_MS);
+}
+
+function drainBox() {
+  const chars = [...box.value];
+  box.value = '';
+  if (mode === 'text') chars.forEach(typeChar);
+  else if (chars.length === 1) tapChar(chars[0]);
+  else playKeys(chars);
+}
+
+box.addEventListener('input', (e) => { if (!e.isComposing) drainBox(); });
+box.addEventListener('compositionend', drainBox);
+box.addEventListener('keydown', (e) => {
+  if (mode !== 'text' || e.isComposing) return;
+  const special = { Enter: [9, '⏎'], Backspace: [21, '⌫'], Escape: [10, '⎋'] }[e.key];
+  if (!special) return;
+  e.preventDefault();
+  tap(special[0]);
+  log(special[1]);
+});
+
+// ---- go ---------------------------------------------------------------------------------------
+
+// Where the browser will tell us (Chromium, on secure pages only), learn the whole layout at once.
+if (navigator.keyboard && navigator.keyboard.getLayoutMap) {
+  navigator.keyboard.getLayoutMap().then((map) => {
+    for (const code of Object.keys(labels)) delete labels[code];
+    map.forEach((printed, code) => { labels[code] = printed; });
+    renderKeys();
+  }).catch(() => {});
+}
+
+renderKeys();
+setMode(mode);
+connect();
+</script>
+</body>
+</html>

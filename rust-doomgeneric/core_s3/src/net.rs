@@ -5,8 +5,10 @@
 //! by DHCP. Without them it makes its own open network ([`AP_SSID`]) at [`AP_ADDRESS`] and runs a
 //! small DHCP server, so a laptop that joins it needs no password and no setup.
 //!
-//! Every byte the controller sends is one `core_s3_protocol` command (see that crate).
+//! Every byte the controller sends is one `core_s3_protocol` command (see that crate). The plain TCP
+//! connection and the web controller (`web`) both feed the same queue.
 
+use crate::web;
 use core_s3_dhcp::{Server as DhcpServer, CLIENT_PORT, MAX_CLIENTS, REPLY_LEN, SERVER_PORT};
 use core_s3_protocol::{HeldKeys, KeyEvent, DEFAULT_PORT};
 use embassy_executor::Spawner;
@@ -38,8 +40,8 @@ pub struct Network {
     pub own_network: Option<&'static str>,
 }
 
-/// Events wait here between the network task (core 0) and the game (core 1).
-static KEY_EVENTS: Channel<CriticalSectionRawMutex, KeyEvent, 32> = Channel::new();
+/// Events wait here between the network tasks (core 0) and the game (core 1).
+static KEY_EVENTS: Channel<CriticalSectionRawMutex, KeyEvent, 128> = Channel::new();
 
 /// The oldest event the controller has sent that the game has not seen yet.
 pub fn next_key_event() -> Option<KeyEvent> {
@@ -51,10 +53,36 @@ fn queue(event: KeyEvent) {
     let _ = KEY_EVENTS.try_send(event);
 }
 
+/// Handles one byte a controller sent: a command being pressed or released. Bytes with an unknown
+/// code are ignored.
+pub fn handle_command_byte(byte: u8, held: &mut HeldKeys) {
+    let Some(event) = KeyEvent::decode(byte) else { return };
+    println!("key {event:?}");
+    held.update(event);
+    queue(event);
+}
+
+/// Lets go of everything a controller was holding, for when it disconnects.
+pub fn release_held(held: &mut HeldKeys) {
+    for release in held.take_releases() {
+        queue(release);
+    }
+}
+
+/// The tasks both Wi-Fi modes run: the network stack, the plain TCP command server and the web
+/// controller (three tasks, so there is always one listening; see `web`).
+fn spawn_network_tasks(spawner: Spawner, stack: Stack<'static>, runner: Runner<'static, Interface>) {
+    spawner.spawn(net_task(runner).expect("spawn net_task"));
+    spawner.spawn(command_server(stack).expect("spawn command_server"));
+    for _ in 0..3 {
+        spawner.spawn(web::web_server(stack).expect("spawn web_server"));
+    }
+}
+
 /// Starts Wi-Fi and the command server: the station if credentials were compiled in, the board's
 /// own network if not. Returns the network stack, so the caller can wait for an address.
 pub fn start(spawner: Spawner, wifi: WIFI<'static>) -> Network {
-    static RESOURCES: StaticCell<StackResources<4>> = StaticCell::new();
+    static RESOURCES: StaticCell<StackResources<6>> = StaticCell::new();
     let rng = Rng::new();
     let seed = u64::from(rng.random()) << 32 | u64::from(rng.random());
 
@@ -80,8 +108,7 @@ pub fn start(spawner: Spawner, wifi: WIFI<'static>) -> Network {
         );
         spawner.spawn(access_point_task(controller).expect("spawn access_point_task"));
         spawner.spawn(dhcp_server(stack).expect("spawn dhcp_server"));
-        spawner.spawn(net_task(runner).expect("spawn net_task"));
-        spawner.spawn(command_server(stack).expect("spawn command_server"));
+        spawn_network_tasks(spawner, stack, runner);
         return Network { stack, own_network: Some(AP_SSID) };
     }
 
@@ -99,8 +126,7 @@ pub fn start(spawner: Spawner, wifi: WIFI<'static>) -> Network {
         seed,
     );
     spawner.spawn(wifi_task(controller).expect("spawn wifi_task"));
-    spawner.spawn(net_task(runner).expect("spawn net_task"));
-    spawner.spawn(command_server(stack).expect("spawn command_server"));
+    spawn_network_tasks(spawner, stack, runner);
     Network { stack, own_network: None }
 }
 
@@ -187,17 +213,12 @@ async fn command_server(stack: Stack<'static>) {
                 Ok(0) | Err(_) => break,
                 Ok(count) => {
                     for &byte in &bytes[..count] {
-                        let Some(event) = KeyEvent::decode(byte) else { continue };
-                        println!("key {event:?}");
-                        held.update(event);
-                        queue(event);
+                        handle_command_byte(byte, &mut held);
                     }
                 }
             }
         }
-        for release in held.take_releases() {
-            queue(release);
-        }
+        release_held(&mut held);
         println!("controller disconnected");
     }
 }
