@@ -3,7 +3,7 @@ target = "xtensa-esp32s3-none-elf"
 
 [target.xtensa-esp32s3-none-elf]
 # `cargo run` flashes and opens the serial monitor.
-runner = "espflash flash --monitor"
+runner = "espflash flash --monitor --flash-size 16mb --partition-table partitions.csv"
 rustflags = [
     # esp-hal's linker script.
     "-C", "link-arg=-Tlinkall.x",

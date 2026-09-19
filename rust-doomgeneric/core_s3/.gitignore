@@ -1,1 +1,3 @@
 /target
+# The IWAD is not committed; see assets/README.md.
+/assets/*.wad
