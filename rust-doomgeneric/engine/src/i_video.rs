@@ -231,47 +231,80 @@ pub fn finish_update(state: &mut GameState) {
     {
         return;
     }
-    let fb = state.i_video.s_fb;
-    let scaling = state.i_video.fb_scaling as usize;
-    let bytes_per_pixel = (fb.bits_per_pixel / 8) as usize;
-    let line_bytes = fb.xres as usize * bytes_per_pixel;
-    let x_offset = fb
-        .xres
-        .wrapping_sub((SCREENWIDTH * state.i_video.fb_scaling) as u32)
-        .wrapping_mul(fb.bits_per_pixel)
-        .wrapping_div(8_u32)
-        .wrapping_div(2_u32) as usize;
-    if fb.bits_per_pixel != 16 && fb.bits_per_pixel != 32 {
-        error(&format!(
-            "No idea how to convert {} bpp pixels",
-            fb.bits_per_pixel
-        ));
+    match state.i_video.s_fb.bits_per_pixel {
+        32 => convert_frame_rgb32(&mut state.i_video),
+        16 => convert_frame_rgb565(&mut state.i_video),
+        bits_per_pixel => error(&format!(
+            "No idea how to convert {bits_per_pixel} bpp pixels"
+        )),
     }
+    state.platform.draw_frame(&state.i_video.dg_screen_buffer);
+}
+/// Byte offset that centres a scaled Doom screen in a framebuffer line.
+fn line_offset_bytes(i_video: &IVideoState) -> usize {
+    i_video
+        .s_fb
+        .xres
+        .wrapping_sub((SCREENWIDTH * i_video.fb_scaling) as u32)
+        .wrapping_mul(i_video.s_fb.bits_per_pixel)
+        .wrapping_div(8_u32)
+        .wrapping_div(2_u32) as usize
+}
+/// Converts the palette-indexed screen straight into `dg_screen_buffer`, one
+/// `u32` per pixel. Each source row is converted once and then copied to the
+/// other `fb_scaling - 1` output lines.
+fn convert_frame_rgb32(i_video: &mut IVideoState) {
+    let fb = i_video.s_fb;
+    let scaling = i_video.fb_scaling as usize;
+    let width = fb.xres as usize;
+    if scaling == 0 || width == 0 {
+        return;
+    }
+    let x_offset = line_offset_bytes(i_video) / 4;
+    let lines = i_video.dg_screen_buffer.len() / width;
+    for row in 0..SCREENHEIGHT as usize {
+        let source = &i_video.i_video_buffer[row * SCREENWIDTH as usize..][..SCREENWIDTH as usize];
+        let first_line = row * scaling;
+        if first_line >= lines {
+            break;
+        }
+        let first = first_line * width;
+        let out = &mut i_video.dg_screen_buffer[first..first + width][x_offset..];
+        for (&index, pixels) in source.iter().zip(out.chunks_exact_mut(scaling)) {
+            let c = i_video.colors[index as usize];
+            pixels.fill(
+                ((c.r() as i32) << fb.red.offset
+                    | (c.g() as i32) << fb.green.offset
+                    | (c.b() as i32) << fb.blue.offset) as u32,
+            );
+        }
+        for copy in 1..scaling.min(lines - first_line) {
+            i_video
+                .dg_screen_buffer
+                .copy_within(first..first + width, first + copy * width);
+        }
+    }
+}
+/// Converts the palette-indexed screen to RGB565, two pixels packed per `u32`
+/// of `dg_screen_buffer`.
+fn convert_frame_rgb565(i_video: &mut IVideoState) {
+    let scaling = i_video.fb_scaling as usize;
+    let line_bytes = i_video.s_fb.xres as usize * 2;
+    let x_offset = line_offset_bytes(i_video);
     let mut frame = vec![0u8; line_bytes * SCREENHEIGHT as usize * scaling];
     let mut line_out = 0usize;
     for row in 0..SCREENHEIGHT as usize {
-        let source =
-            &state.i_video.i_video_buffer[row * SCREENWIDTH as usize..][..SCREENWIDTH as usize];
+        let source = &i_video.i_video_buffer[row * SCREENWIDTH as usize..][..SCREENWIDTH as usize];
         let first_line = &mut frame[line_out * line_bytes..][..line_bytes];
         let mut out = x_offset;
         for &index in source {
-            let c = state.i_video.colors[index as usize];
-            if fb.bits_per_pixel == 16 {
-                let p: u16 = ((c.r() as i32 & 0xf8) << 8
-                    | (c.g() as i32 & 0xfc) << 3
-                    | c.b() as i32 >> 3) as u16;
-                for _ in 0..scaling {
-                    first_line[out..out + 2].copy_from_slice(&p.to_ne_bytes());
-                    out += 2;
-                }
-            } else {
-                let pix = ((c.r() as i32) << fb.red.offset
-                    | (c.g() as i32) << fb.green.offset
-                    | (c.b() as i32) << fb.blue.offset) as u32;
-                for _ in 0..scaling {
-                    first_line[out..out + 4].copy_from_slice(&pix.to_ne_bytes());
-                    out += 4;
-                }
+            let c = i_video.colors[index as usize];
+            let p: u16 = ((c.r() as i32 & 0xf8) << 8
+                | (c.g() as i32 & 0xfc) << 3
+                | c.b() as i32 >> 3) as u16;
+            for _ in 0..scaling {
+                first_line[out..out + 2].copy_from_slice(&p.to_ne_bytes());
+                out += 2;
             }
         }
         for copy in 1..scaling {
@@ -282,15 +315,13 @@ pub fn finish_update(state: &mut GameState) {
         }
         line_out += scaling;
     }
-    for (pixel, bytes) in state
-        .i_video
+    for (pixel, bytes) in i_video
         .dg_screen_buffer
         .iter_mut()
         .zip(frame.as_chunks::<4>().0.iter())
     {
         *pixel = u32::from_ne_bytes([bytes[0], bytes[1], bytes[2], bytes[3]]);
     }
-    state.platform.draw_frame(&state.i_video.dg_screen_buffer);
 }
 pub fn read_screen(i_video: &IVideoState) -> Vec<u8> {
     i_video.i_video_buffer[..(SCREENWIDTH * SCREENHEIGHT) as usize].to_vec()
