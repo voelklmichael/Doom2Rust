@@ -14,8 +14,8 @@
 
 use crate::d_event::{post_event, EvType, Event};
 use crate::d_main::doomgeneric_tick;
-use crate::doomdef::Pixel;
-use crate::doomgeneric::doomgeneric_create;
+use crate::doomdef::{Pixel, SCREENHEIGHT, SCREENWIDTH};
+use crate::doomgeneric::{doomgeneric_create, DOOMGENERIC_RESX};
 use crate::f_finale::cast_ticker;
 use crate::filesystem::{read_file, MemFileSystem};
 use crate::g_game::{do_load_game, do_save_game, exit_level, g_load_game, g_save_game};
@@ -31,8 +31,10 @@ use crate::platform::DoomPlatform;
 use alloc::boxed::Box;
 use alloc::string::{String, ToString};
 use alloc::vec::Vec;
+use std::cell::RefCell;
 use std::fmt::Write as _;
 use std::panic::{catch_unwind, AssertUnwindSafe};
+use std::rc::Rc;
 
 const GOLDEN_PATH: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/golden/regression.txt");
 /// Generous upper bound on `doomgeneric_tick` calls for the longest demo.
@@ -68,6 +70,69 @@ impl DoomPlatform for NullPlatform {
     }
 }
 
+/// A [`NullPlatform`] that hashes every frame it is given. Whichever way the
+/// engine delivers a frame, the hash is of the same thing: the 320 x 200 image
+/// as `0x00RRGGBB` pixels. With `indexed` it accepts the engine's indexed
+/// frame; without, it takes the scaled 32-bit frame from `draw_frame`.
+struct HashingPlatform {
+    inner: NullPlatform,
+    indexed: bool,
+    hashes: Rc<RefCell<Vec<u64>>>,
+}
+
+impl DoomPlatform for HashingPlatform {
+    fn init(&mut self, resx: i32, resy: i32) {
+        self.inner.init(resx, resy);
+    }
+    fn draw_frame(&mut self, frame: &[Pixel]) {
+        assert!(!self.indexed, "an indexed platform must not get draw_frame");
+        // Auto-scaling on a 640 x 400 frame doubles every pixel both ways.
+        let (width, height) = (SCREENWIDTH as usize, SCREENHEIGHT as usize);
+        let stride = DOOMGENERIC_RESX as usize;
+        let mut pixels = Vec::with_capacity(width * height);
+        for y in 0..height {
+            for x in 0..width {
+                let p = frame[2 * y * stride + 2 * x];
+                assert_eq!(p, frame[2 * y * stride + 2 * x + 1]);
+                assert_eq!(p, frame[(2 * y + 1) * stride + 2 * x]);
+                assert_eq!(p, frame[(2 * y + 1) * stride + 2 * x + 1]);
+                pixels.push(p);
+            }
+        }
+        self.hashes.borrow_mut().push(fnv(FNV_OFFSET, pixels));
+    }
+    fn draw_indexed_frame(&mut self, indices: &[u8], palette: &[Pixel; 256]) -> bool {
+        if !self.indexed {
+            return false;
+        }
+        assert_eq!(indices.len(), (SCREENWIDTH * SCREENHEIGHT) as usize);
+        let hash = fnv(FNV_OFFSET, indices.iter().map(|&i| palette[usize::from(i)]));
+        self.hashes.borrow_mut().push(hash);
+        true
+    }
+    fn sleep_ms(&mut self, ms: u32) {
+        self.inner.sleep_ms(ms);
+    }
+    fn get_ticks_ms(&mut self) -> u32 {
+        self.inner.get_ticks_ms()
+    }
+    fn get_key(&mut self) -> Option<(bool, u8)> {
+        self.inner.get_key()
+    }
+    fn set_window_title(&mut self, title: &str) {
+        self.inner.set_window_title(title);
+    }
+    fn print(&mut self, message: &str) {
+        self.inner.print(message);
+    }
+    fn eprint(&mut self, message: &str) {
+        self.inner.eprint(message);
+    }
+    fn quit(&mut self) -> ! {
+        self.inner.quit()
+    }
+}
+
 fn fnv(mut hash: u64, values: impl IntoIterator<Item = u32>) -> u64 {
     for v in values {
         hash = (hash ^ u64::from(v)).wrapping_mul(FNV_PRIME);
@@ -93,10 +158,14 @@ fn iwad_bytes() -> Option<Vec<u8>> {
 /// A freshly created engine reading the IWAD from memory, plus a handle for
 /// the panic the engine raises when a timedemo finishes.
 fn start(args: &[&str]) -> Option<&'static mut GameState> {
+    start_with(Box::new(NullPlatform::default()), args)
+}
+
+fn start_with(platform: Box<dyn DoomPlatform>, args: &[&str]) -> Option<&'static mut GameState> {
     let wad = iwad_bytes()?;
     let mut fs = MemFileSystem::default();
     fs.files.insert("doom1.wad".to_string(), wad);
-    let state = init_game_state(Box::new(NullPlatform::default()), Box::new(fs));
+    let state = init_game_state(platform, Box::new(fs));
     let mut argv: Vec<String> = alloc::vec![
         "doom".to_string(),
         "-iwad".to_string(),
@@ -489,4 +558,32 @@ fn save_files_are_reproducible() {
         return;
     };
     assert!(save_slot(a, 0).1 == save_slot(b, 0).1);
+}
+
+/// The frame a platform gets through `draw_indexed_frame` is the same image
+/// as the one the engine scales and converts for `draw_frame`, on every frame
+/// of a run that covers menus, the automap, intermissions, finales and wipes.
+#[test]
+fn indexed_frames_match_scaled_frames() {
+    let run = |indexed: bool| -> Option<Vec<u64>> {
+        let hashes = Rc::new(RefCell::new(Vec::new()));
+        let platform = HashingPlatform {
+            inner: NullPlatform::default(),
+            indexed,
+            hashes: Rc::clone(&hashes),
+        };
+        let state = start_with(Box::new(platform), &["-timedemo", "demo3"])?;
+        let message = run_until_exit(state, scripted_input);
+        assert!(message.starts_with("timed "), "unexpected exit: {message}");
+        Some(hashes.take())
+    };
+    let (Some(scaled), Some(indexed)) = (run(false), run(true)) else {
+        std::eprintln!("skipping: no IWAD (set DOOM_IWAD or put doom1.wad in ~/Downloads)");
+        return;
+    };
+    assert!(scaled.len() > 1000, "only {} frames", scaled.len());
+    assert_eq!(scaled.len(), indexed.len());
+    for (n, (a, b)) in scaled.iter().zip(&indexed).enumerate() {
+        assert_eq!(a, b, "frame {n} differs");
+    }
 }

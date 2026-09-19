@@ -49,6 +49,36 @@ impl CoreS3Platform {
     pub fn new(display: CoreS3Display, status: String<40>) -> Self {
         Self { display, stride: DOOM_WIDTH, status, stats: FrameStats::default() }
     }
+
+    /// Sends one 320x200 frame to the LCD and updates the frame timing printed on serial.
+    fn present(&mut self, pixels: impl Iterator<Item = Rgb565>) {
+        let area = Rectangle::new(
+            Point::new(0, LCD_TOP),
+            Size::new(DOOM_WIDTH as u32, DOOM_HEIGHT as u32),
+        );
+        let blit_start = now_us();
+        self.display.blit_pixels(&area, pixels).expect("blit frame");
+        let now = now_us();
+
+        let stats = &mut self.stats;
+        if stats.window_start_us == 0 {
+            stats.window_start_us = blit_start;
+        }
+        stats.frames += 1;
+        stats.blit_us += now - blit_start;
+        let elapsed = now - stats.window_start_us;
+        if elapsed >= STATS_WINDOW_US {
+            let frames = u64::from(stats.frames);
+            print!(
+                "[perf] {}.{} fps, blit {} us/frame, everything else {} us/frame\n",
+                frames * 1_000_000 / elapsed,
+                frames * 10_000_000 / elapsed % 10,
+                stats.blit_us / frames,
+                (elapsed - stats.blit_us) / frames,
+            );
+            *stats = FrameStats { window_start_us: now, ..FrameStats::default() };
+        }
+    }
 }
 
 /// Engine pixels are `0x00RRGGBB`.
@@ -94,37 +124,21 @@ impl DoomPlatform for CoreS3Platform {
     }
 
     fn draw_frame(&mut self, frame: &[u32]) {
+        // Only reached if `draw_indexed_frame` declines, which it never does.
         let x0 = (self.stride - DOOM_WIDTH) / 2;
         let pixels = frame
             .chunks_exact(self.stride)
             .take(DOOM_HEIGHT)
             .flat_map(|row| row[x0..x0 + DOOM_WIDTH].iter().map(|&p| to_rgb565(p)));
-        let area = Rectangle::new(
-            Point::new(0, LCD_TOP),
-            Size::new(DOOM_WIDTH as u32, DOOM_HEIGHT as u32),
-        );
-        let blit_start = now_us();
-        self.display.blit_pixels(&area, pixels).expect("blit frame");
-        let now = now_us();
+        self.present(pixels);
+    }
 
-        let stats = &mut self.stats;
-        if stats.window_start_us == 0 {
-            stats.window_start_us = blit_start;
-        }
-        stats.frames += 1;
-        stats.blit_us += now - blit_start;
-        let elapsed = now - stats.window_start_us;
-        if elapsed >= STATS_WINDOW_US {
-            let frames = u64::from(stats.frames);
-            print!(
-                "[perf] {}.{} fps, blit {} us/frame, everything else {} us/frame\n",
-                frames * 1_000_000 / elapsed,
-                frames * 10_000_000 / elapsed % 10,
-                stats.blit_us / frames,
-                (elapsed - stats.blit_us) / frames,
-            );
-            *stats = FrameStats { window_start_us: now, ..FrameStats::default() };
-        }
+    fn draw_indexed_frame(&mut self, indices: &[u8], palette: &[u32; 256]) -> bool {
+        // The engine's 320x200 screen goes straight to the LCD through a colour table: no scaled
+        // 32-bit copy of the frame is built in PSRAM.
+        let colors = palette.map(to_rgb565);
+        self.present(indices.iter().map(|&index| colors[usize::from(index)]));
+        true
     }
 
     fn sleep_ms(&mut self, ms: u32) {

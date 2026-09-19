@@ -221,6 +221,16 @@ pub fn start_tic(state: &mut GameState) {
     get_event(state);
 }
 pub fn finish_update(state: &mut GameState) {
+    let palette = state
+        .i_video
+        .colors
+        .map(|c| (u32::from(c.r()) << 16) | (u32::from(c.g()) << 8) | u32::from(c.b()));
+    if state
+        .platform
+        .draw_indexed_frame(&state.i_video.i_video_buffer, &palette)
+    {
+        return;
+    }
     let fb = state.i_video.s_fb;
     let scaling = state.i_video.fb_scaling as usize;
     let bytes_per_pixel = (fb.bits_per_pixel / 8) as usize;
