@@ -29,6 +29,8 @@ esp-bootloader-esp-idf = { version = "0.5.0", default-features = false, features
 esp-hal = { version = "=1.1.2", default-features = false, features = ["esp32s3", "rt", "unstable"] }
 esp-println = { version = "=0.15.0", default-features = false, features = ["esp32s3", "jtag-serial"] }
 heapless = { version = "0.9.3", default-features = false }
+critical-section = "1.2.0"
+embedded-hal = { version = "1.0.0", default-features = false }
 rust_doomgeneric = { path = "../engine" }
 core_s3_protocol = { path = "../core_s3_protocol" }
 # Wi-Fi input. esp-radio needs the esp-rtos scheduler underneath, and embassy-net for TCP.
