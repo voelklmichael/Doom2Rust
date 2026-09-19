@@ -51,7 +51,7 @@ use crate::i_video::i_set_window_title;
 use crate::i_video::init_graphics;
 use crate::i_video::set_grab_mouse_callback;
 use crate::i_video::set_palette;
-use crate::m_argv::{argv_atoi, check_parm, check_parm_with_args};
+use crate::m_argv::{argv_atoi, check_parm, check_parm_with_args, parm_exists};
 use crate::m_config::bind_variable_int;
 use crate::m_config::bind_variable_string;
 use crate::m_config::get_save_game_dir;
@@ -547,7 +547,7 @@ pub fn do_advance_demo(state: &mut GameState) {
     }
     if state.d_main.bfgedition
         && state.d_main.pagename.eq_ignore_ascii_case("TITLEPIC")
-        && check_num_for_name(&state.w_wad, "titlepic") < 0
+        && check_num_for_name(&state.w_wad, "titlepic").is_none()
     {
         state.d_main.pagename = "INTERPIC";
     }
@@ -616,25 +616,24 @@ pub fn identify_version(state: &mut GameState) {
         state.doomstat.gamemission as u32
     }) == GameMission::Doom as i32 as u32
     {
-        if check_num_for_name(&state.w_wad, "E4M1") > 0 {
+        if check_num_for_name(&state.w_wad, "E4M1").is_some() {
             state.doomstat.gamemode = GameMode::Retail;
-        } else if check_num_for_name(&state.w_wad, "E3M1") > 0 {
+        } else if check_num_for_name(&state.w_wad, "E3M1").is_some() {
             state.doomstat.gamemode = GameMode::Registered;
         } else {
             state.doomstat.gamemode = GameMode::Shareware;
         }
     } else {
         state.doomstat.gamemode = GameMode::Commercial;
-        let p: i32 = check_parm_with_args(state, "-pack", 1);
-        if p > 0 {
-            let pack_name = state.m_argv.myargv[(p + 1) as usize].as_str().to_string();
+        if let Some(p) = check_parm_with_args(state, "-pack", 1) {
+            let pack_name = state.m_argv.myargv[p + 1].as_str().to_string();
             set_mission_for_pack_name(state, &pack_name);
         }
     }
 }
 pub fn set_game_description(state: &mut GameState) {
-    let is_freedoom: bool = check_num_for_name(&state.w_wad, "FREEDOOM") >= 0;
-    let is_freedm: bool = check_num_for_name(&state.w_wad, "FREEDM") >= 0;
+    let is_freedoom: bool = check_num_for_name(&state.w_wad, "FREEDOOM").is_some();
+    let is_freedm: bool = check_num_for_name(&state.w_wad, "FREEDM").is_some();
     state.doomstat.gamedescription = "Unknown";
     if (if state.doomstat.gamemission as u32 == GameMission::PackChex as i32 as u32 {
         GameMission::Doom as i32 as u32
@@ -693,9 +692,8 @@ fn d_add_file(state: &mut GameState, filename: &str) -> bool {
     w_add_file(state, filename).is_some()
 }
 fn init_game_version(state: &mut GameState) {
-    let p: i32 = check_parm_with_args(state, "-gameversion", 1);
-    if p != 0 {
-        let arg = state.m_argv.myargv[(p + 1) as usize].as_bytes();
+    if let Some(p) = check_parm_with_args(state, "-gameversion", 1) {
+        let arg = state.m_argv.myargv[p + 1].as_bytes();
         let found = state
             .d_main
             .gameversions
@@ -710,7 +708,7 @@ fn init_game_version(state: &mut GameState) {
             }
             error(&format!(
                 "Unknown game version '{}'",
-                state.m_argv.myargv[(p + 1) as usize].as_str(),
+                state.m_argv.myargv[p + 1].as_str(),
             ));
         }
     } else if state.doomstat.gamemission as u32 == GameMission::PackChex as i32 as u32 {
@@ -761,7 +759,7 @@ fn endoom(state: &mut GameState) {
     if state.d_main.show_endoom == 0
         || !state.d_main.main_loop_started
         || state.i_video.screensaver_mode
-        || check_parm(state, "-testcontrols") > 0
+        || parm_exists(state, "-testcontrols")
     {
         return;
     }
@@ -771,7 +769,7 @@ fn quit_check_demo_status(state: &mut GameState) {
     check_demo_status(state);
 }
 pub fn doom_main(state: &mut GameState) {
-    let mut p: i32;
+    let _p: i32;
     let file: String;
     let mut demolumpname: FixedCStr<8> = FixedCStr::from_array([0; 8]);
     at_exit(
@@ -780,14 +778,14 @@ pub fn doom_main(state: &mut GameState) {
         false,
     );
     print_banner(&mut *state.platform, &PACKAGE_STRING.as_str());
-    state.d_main.nomonsters = check_parm(state, "-nomonsters") != 0;
-    state.d_main.respawnparm = check_parm(state, "-respawn") != 0;
-    state.d_main.fastparm = check_parm(state, "-fast") != 0;
-    state.d_main.devparm = check_parm(state, "-devparm") != 0;
-    if check_parm(state, "-deathmatch") != 0 {
+    state.d_main.nomonsters = parm_exists(state, "-nomonsters");
+    state.d_main.respawnparm = parm_exists(state, "-respawn");
+    state.d_main.fastparm = parm_exists(state, "-fast");
+    state.d_main.devparm = parm_exists(state, "-devparm");
+    if parm_exists(state, "-deathmatch") {
         state.g_game.deathmatch = 1;
     }
-    if check_parm(state, "-altdeath") != 0 {
+    if parm_exists(state, "-altdeath") {
         state.g_game.deathmatch = 2;
     }
     if state.d_main.devparm {
@@ -799,11 +797,10 @@ pub fn doom_main(state: &mut GameState) {
         &mut *state.platform,
         None,
     );
-    p = check_parm(state, "-turbo");
-    if p != 0 {
+    if let Some(p) = check_parm(state, "-turbo") {
         let mut scale: i32 = 200;
-        if p < state.m_argv.myargv.len() as i32 - 1 {
-            scale = argv_atoi(&state.m_argv.myargv[(p + 1) as usize]);
+        if let Some(arg) = state.m_argv.myargv.get(p + 1) {
+            scale = argv_atoi(arg);
         }
         scale = scale.clamp(10, 400);
         doom_println!(state.platform, "turbo scale: {}%", scale);
@@ -846,18 +843,16 @@ pub fn doom_main(state: &mut GameState) {
     check_correct_iwad(&state.w_wad, GameMission::Doom);
     identify_version(state);
     init_game_version(state);
-    if check_num_for_name(&state.w_wad, "dmenupic") >= 0 {
+    if check_num_for_name(&state.w_wad, "dmenupic").is_some() {
         doom_println!(state.platform, "BFG Edition: Using workarounds as needed.");
         state.d_main.bfgedition = true;
     }
     let modifiedgame = parse_command_line(state);
     state.doomstat.modifiedgame = modifiedgame;
-    p = check_parm_with_args(state, "-playdemo", 1);
-    if p == 0 {
-        p = check_parm_with_args(state, "-timedemo", 1);
-    }
-    if p != 0 {
-        let arg = state.m_argv.myargv[(p + 1) as usize].as_str();
+    let demo_parm = check_parm_with_args(state, "-playdemo", 1)
+        .or_else(|| check_parm_with_args(state, "-timedemo", 1));
+    if let Some(p) = demo_parm {
+        let arg = state.m_argv.myargv[p + 1].as_str();
         if string_ends_with(arg, ".lmp") {
             file = arg.to_string();
         } else {
@@ -866,7 +861,7 @@ pub fn doom_main(state: &mut GameState) {
         if d_add_file(state, &file) {
             demolumpname = state.w_wad.lumpinfo[state.w_wad.numlumps.wrapping_sub(1) as usize].name;
         } else {
-            let src_bytes = state.m_argv.myargv[(p + 1) as usize].as_bytes();
+            let src_bytes = state.m_argv.myargv[p + 1].as_bytes();
             demolumpname = FixedCStr::from_bytes(src_bytes);
         }
         doom_println!(state.platform, "Playing demo {}.", file);
@@ -915,14 +910,14 @@ pub fn doom_main(state: &mut GameState) {
         }
         if state.doomstat.gamemode as u32 == GameMode::Registered as i32 as u32 {
             for lump_name in &name {
-                if check_num_for_name(&state.w_wad, &lump_name.as_str()) < 0 {
+                if check_num_for_name(&state.w_wad, &lump_name.as_str()).is_none() {
                     error("\nThis is not the registered version.");
                 }
             }
         }
     }
-    if check_num_for_name(&state.w_wad, "SS_START") >= 0
-        || check_num_for_name(&state.w_wad, "FF_END") >= 0
+    if check_num_for_name(&state.w_wad, "SS_START").is_some()
+        || check_num_for_name(&state.w_wad, "FF_END").is_some()
     {
         print_divider(&mut *state.platform);
         doom_println!(state.platform,
@@ -930,8 +925,8 @@ pub fn doom_main(state: &mut GameState) {
         );
     }
     print_startup_banner(&mut *state.platform, state.doomstat.gamedescription);
-    if check_num_for_name(&state.w_wad, "FREEDOOM") >= 0
-        && check_num_for_name(&state.w_wad, "FREEDM") < 0
+    if check_num_for_name(&state.w_wad, "FREEDOOM").is_some()
+        && check_num_for_name(&state.w_wad, "FREEDM").is_none()
     {
         doom_println!(state.platform,
             " WARNING: You are playing using one of the Freedoom IWAD\n files, which might not work in this port. See this page\n for more information on how to play using Freedoom:\n   http://www.chocolate-doom.org/wiki/index.php/Freedoom"
@@ -946,10 +941,9 @@ pub fn doom_main(state: &mut GameState) {
     state.d_main.startepisode = 1;
     state.d_main.startmap = 1;
     state.d_main.autostart = false;
-    p = check_parm_with_args(state, "-skill", 1);
-    if p != 0 {
+    if let Some(p) = check_parm_with_args(state, "-skill", 1) {
         state.d_main.startskill = skill_from_raw(
-            state.m_argv.myargv[(p + 1) as usize]
+            state.m_argv.myargv[p + 1]
                 .as_bytes()
                 .first()
                 .copied()
@@ -958,9 +952,8 @@ pub fn doom_main(state: &mut GameState) {
         );
         state.d_main.autostart = true;
     }
-    p = check_parm_with_args(state, "-episode", 1);
-    if p != 0 {
-        state.d_main.startepisode = state.m_argv.myargv[(p + 1) as usize]
+    if let Some(p) = check_parm_with_args(state, "-episode", 1) {
+        state.d_main.startepisode = state.m_argv.myargv[p + 1]
             .as_bytes()
             .first()
             .copied()
@@ -970,27 +963,24 @@ pub fn doom_main(state: &mut GameState) {
         state.d_main.autostart = true;
     }
     state.g_game.timelimit = 0;
-    p = check_parm_with_args(state, "-timer", 1);
-    if p != 0 {
-        state.g_game.timelimit = argv_atoi(&state.m_argv.myargv[(p + 1) as usize]);
+    if let Some(p) = check_parm_with_args(state, "-timer", 1) {
+        state.g_game.timelimit = argv_atoi(&state.m_argv.myargv[p + 1]);
     }
-    p = check_parm(state, "-avg");
-    if p != 0 {
+    if let Some(_p) = check_parm(state, "-avg") {
         state.g_game.timelimit = 20;
     }
-    p = check_parm_with_args(state, "-warp", 1);
-    if p != 0 {
+    if let Some(p) = check_parm_with_args(state, "-warp", 1) {
         if state.doomstat.gamemode as u32 == GameMode::Commercial as i32 as u32 {
-            state.d_main.startmap = argv_atoi(&state.m_argv.myargv[(p + 1) as usize]);
+            state.d_main.startmap = argv_atoi(&state.m_argv.myargv[p + 1]);
         } else {
-            state.d_main.startepisode = state.m_argv.myargv[(p + 1) as usize]
+            state.d_main.startepisode = state.m_argv.myargv[p + 1]
                 .as_bytes()
                 .first()
                 .copied()
                 .unwrap_or(0) as i32
                 - '0' as i32;
-            if (p + 2) < state.m_argv.myargv.len() as i32 {
-                state.d_main.startmap = state.m_argv.myargv[(p + 2) as usize]
+            if p + 2 < state.m_argv.myargv.len() {
+                state.d_main.startmap = state.m_argv.myargv[p + 2]
                     .as_bytes()
                     .first()
                     .copied()
@@ -1002,16 +992,14 @@ pub fn doom_main(state: &mut GameState) {
         }
         state.d_main.autostart = true;
     }
-    p = check_parm(state, "-testcontrols");
-    if p > 0 {
+    if let Some(_p) = check_parm(state, "-testcontrols") {
         state.d_main.startepisode = 1;
         state.d_main.startmap = 1;
         state.d_main.autostart = true;
         state.g_game.testcontrols = true;
     }
-    p = check_parm_with_args(state, "-loadgame", 1);
-    if p != 0 {
-        state.d_main.startloadgame = argv_atoi(&state.m_argv.myargv[(p + 1) as usize]);
+    if let Some(p) = check_parm_with_args(state, "-loadgame", 1) {
+        state.d_main.startloadgame = argv_atoi(&state.m_argv.myargv[p + 1]);
     } else {
         state.d_main.startloadgame = -1;
     }
@@ -1039,11 +1027,11 @@ pub fn doom_main(state: &mut GameState) {
     doom_println!(state.platform, "ST_Init: Init status bar.");
     st_init(state);
     if state.doomstat.gamemode as u32 == GameMode::Commercial as i32 as u32
-        && check_num_for_name(&state.w_wad, "map01") < 0
+        && check_num_for_name(&state.w_wad, "map01").is_none()
     {
         state.d_main.storedemo = true;
     }
-    if check_parm_with_args(state, "-statdump", 1) != 0 {
+    if check_parm_with_args(state, "-statdump", 1).is_some() {
         at_exit(
             &mut state.i_system,
             Some(stat_dump as fn(&mut GameState) -> ()),
@@ -1051,21 +1039,18 @@ pub fn doom_main(state: &mut GameState) {
         );
         doom_println!(state.platform, "External statistics registered.");
     }
-    p = check_parm_with_args(state, "-record", 1);
-    if p != 0 {
-        let record_name = state.m_argv.myargv[(p + 1) as usize].as_str().to_string();
+    if let Some(p) = check_parm_with_args(state, "-record", 1) {
+        let record_name = state.m_argv.myargv[p + 1].as_str().to_string();
         record_demo(state, &record_name);
         state.d_main.autostart = true;
     }
-    p = check_parm_with_args(state, "-playdemo", 1);
-    if p != 0 {
+    if let Some(_p) = check_parm_with_args(state, "-playdemo", 1) {
         state.g_game.singledemo = true;
         defered_play_demo(state, demolumpname);
         doom_loop(state);
         return;
     }
-    p = check_parm_with_args(state, "-timedemo", 1);
-    if p != 0 {
+    if let Some(_p) = check_parm_with_args(state, "-timedemo", 1) {
         time_demo(state, demolumpname);
         doom_loop(state);
         return;

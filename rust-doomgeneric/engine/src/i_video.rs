@@ -133,18 +133,16 @@ pub struct Column {
 }
 static RGB565_PALETTE: [u16; 256] = [0; 256];
 pub fn init_graphics(state: &mut GameState) {
-    let mut i: i32;
+    let _i: i32;
 
     state.i_video.s_fb = FBScreenInfo::ZERO;
     state.i_video.s_fb.xres = DOOMGENERIC_RESX as u32;
     state.i_video.s_fb.yres = DOOMGENERIC_RESY as u32;
     state.i_video.s_fb.xres_virtual = state.i_video.s_fb.xres;
     state.i_video.s_fb.yres_virtual = state.i_video.s_fb.yres;
-    let gfxmodeparm: i32 = check_parm_with_args(state, "-gfxmode", 1);
-    let mode: &str = if gfxmodeparm != 0 {
-        state.m_argv.myargv[(gfxmodeparm + 1) as usize].as_str()
-    } else {
-        "rgba8888"
+    let mode: &str = match check_parm_with_args(state, "-gfxmode", 1) {
+        Some(p) => state.m_argv.myargv[p + 1].as_str(),
+        None => "rgba8888",
     };
     if mode == "rgba8888" {
         state.i_video.s_fb.bits_per_pixel = 32_u32;
@@ -195,10 +193,8 @@ pub fn init_graphics(state: &mut GameState) {
         SCREENWIDTH,
         SCREENHEIGHT,
     );
-    i = check_parm_with_args(state, "-scaling", 1);
-    if i > 0 {
-        i = argv_atoi(&state.m_argv.myargv[(i + 1) as usize]);
-        state.i_video.fb_scaling = i;
+    if let Some(i) = check_parm_with_args(state, "-scaling", 1) {
+        state.i_video.fb_scaling = argv_atoi(&state.m_argv.myargv[i + 1]);
         doom_println!(
             state.platform,
             "I_InitGraphics: Scaling factor: {}",

@@ -219,11 +219,8 @@ pub fn try_find_wadby_name(
     find_wadby_name(state, fs, filename).unwrap_or_else(|| filename.to_string())
 }
 pub fn find_iwad(state: &mut GameState, mask: i32, mission: &mut GameMission) -> String {
-    let iwadparm = check_parm_with_args(state, "-iwad", 1);
-    if iwadparm != 0 {
-        let iwadfile = state.m_argv.myargv[(iwadparm + 1) as usize]
-            .as_str()
-            .to_string();
+    if let Some(iwadparm) = check_parm_with_args(state, "-iwad", 1) {
+        let iwadfile = state.m_argv.myargv[iwadparm + 1].as_str().to_string();
         let result = find_wadby_name(&mut state.d_iwad, &*state.fs, &iwadfile);
         let Some(result) = result else {
             error(&format!("IWAD file '{iwadfile}' not found!"));

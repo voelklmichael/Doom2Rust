@@ -451,7 +451,7 @@ pub fn init_pic_anims(state: &mut GameState) {
         let startname = def.startname.as_str();
         let endname = def.endname.as_str();
         let (picnum, basepic) = if def.istexture {
-            if check_texture_num_for_name(&state.r_data, &startname) == -1 {
+            if check_texture_num_for_name(&state.r_data, &startname).is_none() {
                 continue;
             }
             (
@@ -459,7 +459,7 @@ pub fn init_pic_anims(state: &mut GameState) {
                 texture_num_for_name(&state.r_data, &startname),
             )
         } else {
-            if check_num_for_name(&state.w_wad, &startname) == -1 {
+            if check_num_for_name(&state.w_wad, &startname).is_none() {
                 continue;
             }
             (
@@ -481,24 +481,23 @@ pub fn init_pic_anims(state: &mut GameState) {
         state.p_spec.lastanim += 1;
     }
 }
-pub fn get_side(state: &mut GameState, current_sector: i32, line: i32, side: i32) -> SideId {
-    let line_id = state
-        .p_setup
-        .sector_mut(SectorId(current_sector as u32))
-        .lines[line as usize];
+pub fn get_side(state: &mut GameState, current_sector: SectorId, line: i32, side: i32) -> SideId {
+    let line_id = state.p_setup.sector_mut(current_sector).lines[line as usize];
     let sidenum = state.p_setup.line(line_id).sidenum[side as usize];
     SideId(sidenum as u32)
 }
-pub fn get_sector(state: &mut GameState, current_sector: i32, line: i32, side: i32) -> SectorId {
-    let line_id = state
-        .p_setup
-        .sector_mut(SectorId(current_sector as u32))
-        .lines[line as usize];
+pub fn get_sector(
+    state: &mut GameState,
+    current_sector: SectorId,
+    line: i32,
+    side: i32,
+) -> SectorId {
+    let line_id = state.p_setup.sector_mut(current_sector).lines[line as usize];
     let sidenum = state.p_setup.line(line_id).sidenum[side as usize];
     state.p_setup.sides[sidenum as usize].sector
 }
-pub fn two_sided(state: &mut GameState, sector: i32, line: i32) -> bool {
-    let sec = state.p_setup.sector_mut(SectorId(sector as u32));
+pub fn two_sided(state: &mut GameState, sector: SectorId, line: i32) -> bool {
+    let sec = state.p_setup.sector_mut(sector);
     let line_id = sec.lines[line as usize];
     state
         .p_setup
@@ -606,14 +605,22 @@ pub fn find_highest_ceiling_surrounding(state: &mut GameState, sec: SectorId) ->
     }
     height
 }
-pub fn find_sector_from_line_tag(state: &GameState, line: LineId, start: i32) -> i32 {
+/// The next sector after `start` (`-1` to begin) that carries the same tag as
+/// `line`.
+pub fn find_sector_from_line_tag(state: &GameState, line: LineId, start: i32) -> Option<i32> {
     let line_tag = state.p_setup.line(line).tag;
-    for i in start + 1..state.p_setup.numsectors {
-        if state.p_setup.sectors[i as usize].tag as i32 == line_tag as i32 {
-            return i;
-        }
+    (start + 1..state.p_setup.numsectors)
+        .find(|&i| state.p_setup.sectors[i as usize].tag == line_tag)
+}
+/// The sectors that carry the same tag as `line`, in map order.
+pub fn sectors_with_line_tag(state: &GameState, line: LineId) -> Vec<SectorId> {
+    let mut found = Vec::new();
+    let mut next = -1;
+    while let Some(i) = find_sector_from_line_tag(state, line, next) {
+        found.push(SectorId(i as u32));
+        next = i;
     }
-    -1
+    found
 }
 pub fn find_min_surrounding_light(state: &mut GameState, sector: SectorId, max: i32) -> i32 {
     let mut min = max;
@@ -1065,14 +1072,13 @@ fn donut_overrun(state: &mut GameState) -> (Fixed, i16) {
         state.p_spec.donut_overrun_first = false;
         state.p_spec.donut_overrun_tmp_s3_floorheight = DONUT_FLOORHEIGHT_DEFAULT;
         state.p_spec.donut_overrun_tmp_s3_floorpic = DONUT_FLOORPIC_DEFAULT;
-        let p: i32 = check_parm_with_args(state, "-donut", 2);
-        if p > 0 {
+        if let Some(p) = check_parm_with_args(state, "-donut", 2) {
             str_to_int(
-                state.m_argv.myargv[(p + 1) as usize].as_str(),
+                state.m_argv.myargv[p + 1].as_str(),
                 &mut state.p_spec.donut_overrun_tmp_s3_floorheight,
             );
             str_to_int(
-                state.m_argv.myargv[(p + 2) as usize].as_str(),
+                state.m_argv.myargv[p + 2].as_str(),
                 &mut state.p_spec.donut_overrun_tmp_s3_floorpic,
             );
             if state.p_spec.donut_overrun_tmp_s3_floorpic >= state.r_data.numflats {
@@ -1091,14 +1097,9 @@ fn donut_overrun(state: &mut GameState) -> (Fixed, i16) {
     )
 }
 pub fn do_donut(state: &mut GameState, line: LineId) -> bool {
-    let mut secnum: i32 = -1;
     let mut rtn = false;
-    loop {
-        secnum = find_sector_from_line_tag(state, line, secnum);
-        if secnum < 0 {
-            break;
-        }
-        let s1 = SectorId(secnum as u32);
+    for sector in sectors_with_line_tag(state, line) {
+        let s1 = sector;
         if state.p_setup.sector_mut(s1).specialdata.is_some() {
             continue;
         }

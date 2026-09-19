@@ -1083,13 +1083,9 @@ pub fn p_change_sector(state: &mut GameState, sector: SectorId, crunch: bool) ->
 }
 fn spechit_overrun(state: &mut GameState, ld: LineId) {
     if state.p_map.baseaddr == 0 {
-        let p: i32 = check_parm_with_args(state, "-spechit", 1);
-        if p > 0 {
+        if let Some(p) = check_parm_with_args(state, "-spechit", 1) {
             let mut baseaddr: i32 = 0;
-            str_to_int(
-                state.m_argv.myargv[(p + 1) as usize].as_str(),
-                &mut baseaddr,
-            );
+            str_to_int(state.m_argv.myargv[p + 1].as_str(), &mut baseaddr);
             state.p_map.baseaddr = baseaddr as u32;
         } else {
             state.p_map.baseaddr = DEFAULT_SPECHIT_MAGIC as u32;

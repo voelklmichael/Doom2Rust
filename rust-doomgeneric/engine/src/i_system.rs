@@ -92,24 +92,23 @@ static MEM_DUMP_WIN98: [u8; 10] = [0x9e, 0xf, 0xc9, 0, 0x65, 0x4, 0x70, 0, 0x16,
 static MEM_DUMP_DOSBOX: [u8; 10] = [0, 0, 0, 0xf1, 0, 0, 0, 0, 0x7, 0];
 pub fn get_memory_value(state: &mut GameState, offset: u32, size: i32) -> Option<u32> {
     if state.i_system.get_memory_value_firsttime {
-        let mut p: i32;
+        let _p: i32;
         let mut i: i32;
         let mut val: i32 = 0;
         state.i_system.get_memory_value_firsttime = false;
-        p = check_parm_with_args(state, "-setmem", 1);
-        if p > 0 {
-            if state.m_argv.myargv[(p + 1) as usize]
+        if let Some(mut p) = check_parm_with_args(state, "-setmem", 1) {
+            if state.m_argv.myargv[p + 1]
                 .as_bytes()
                 .eq_ignore_ascii_case(b"dos622")
             {
                 state.i_system.dos_mem_dump = DosMemDump::Dos622;
             }
-            if state.m_argv.myargv[(p + 1) as usize]
+            if state.m_argv.myargv[p + 1]
                 .as_bytes()
                 .eq_ignore_ascii_case(b"dos71")
             {
                 state.i_system.dos_mem_dump = DosMemDump::Win98;
-            } else if state.m_argv.myargv[(p + 1) as usize]
+            } else if state.m_argv.myargv[p + 1]
                 .as_bytes()
                 .eq_ignore_ascii_case(b"dosbox")
             {
@@ -118,12 +117,12 @@ pub fn get_memory_value(state: &mut GameState, offset: u32, size: i32) -> Option
                 i = 0;
                 while i < DOS_MEM_DUMP_SIZE {
                     p += 1;
-                    if p >= state.m_argv.myargv.len() as i32
-                        || state.m_argv.myargv[p as usize].as_bytes().first() == Some(&b'-')
+                    if p >= state.m_argv.myargv.len()
+                        || state.m_argv.myargv[p].as_bytes().first() == Some(&b'-')
                     {
                         break;
                     }
-                    str_to_int(state.m_argv.myargv[p as usize].as_str(), &mut val);
+                    str_to_int(state.m_argv.myargv[p].as_str(), &mut val);
                     let fresh0 = i;
                     i += 1;
                     state.i_system.mem_dump_custom[fresh0 as usize] = val as u8;

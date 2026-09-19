@@ -38,7 +38,7 @@ use crate::hu_stuff::PLAYER_NAMES;
 use crate::i_system::error;
 use crate::i_system::i_quit;
 use crate::i_timer::get_time;
-use crate::m_argv::{argv_atoi, check_parm, check_parm_with_args};
+use crate::m_argv::{argv_atoi, check_parm_with_args, parm_exists};
 use crate::m_fixed::Fixed;
 use crate::m_fixed::FRACBITS;
 use crate::m_fixed::FRACUNIT;
@@ -1167,7 +1167,7 @@ pub fn exit_level(state: &mut GameState) {
 }
 pub fn secret_exit_level(state: &mut GameState) {
     state.g_game.secretexit = !(state.doomstat.gamemode as u32 == GameMode::Commercial as u32
-        && check_num_for_name(&state.w_wad, "map31") < 0);
+        && check_num_for_name(&state.w_wad, "map31").is_none());
     state.g_game.gameaction = GameAction::Completed;
 }
 pub fn do_completed(state: &mut GameState) {
@@ -1563,9 +1563,8 @@ pub fn record_demo(state: &mut GameState, name: &str) {
     state.g_game.usergame = false;
     state.g_game.demoname = format!("{name}.lmp");
     maxsize = 0x20000;
-    let i: i32 = check_parm_with_args(state, "-maxdemo", 1);
-    if i != 0 {
-        maxsize = argv_atoi(&state.m_argv.myargv[(i + 1) as usize]) * 1024;
+    if let Some(i) = check_parm_with_args(state, "-maxdemo", 1) {
+        maxsize = argv_atoi(&state.m_argv.myargv[i + 1]) * 1024;
     }
     state.g_game.demobuffer = vec![0u8; maxsize as usize];
     state.g_game.demoend = maxsize as usize;
@@ -1584,7 +1583,7 @@ pub fn vanilla_version_code(state: &DoomstatState) -> i32 {
     106
 }
 pub fn begin_recording(state: &mut GameState) {
-    state.g_game.longtics = check_parm(state, "-longtics") != 0;
+    state.g_game.longtics = parm_exists(state, "-longtics");
     state.g_game.lowres_turn = !state.g_game.longtics;
     state.g_game.demo_p = 0;
     if state.g_game.longtics {
@@ -1660,8 +1659,8 @@ pub fn do_play_demo(state: &mut GameState) {
         state.g_game.playeringame[i] = state.g_game.demo_read_byte() != 0;
     }
     if state.g_game.playeringame[1]
-        || check_parm(state, "-solo-net") > 0
-        || check_parm(state, "-netdemo") > 0
+        || parm_exists(state, "-solo-net")
+        || parm_exists(state, "-netdemo")
     {
         state.g_game.netgame = true;
         state.g_game.netdemo = true;
@@ -1674,7 +1673,7 @@ pub fn do_play_demo(state: &mut GameState) {
     state.g_game.demoplayback = true;
 }
 pub fn time_demo(state: &mut GameState, name: FixedCStr<8>) {
-    state.g_game.nodrawers = check_parm(state, "-nodraw") != 0;
+    state.g_game.nodrawers = parm_exists(state, "-nodraw");
     state.g_game.timingdemo = true;
     state.d_loop.singletics = true;
     state.g_game.defdemoname = name;

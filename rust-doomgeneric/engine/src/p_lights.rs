@@ -5,8 +5,8 @@ use crate::p_mobj::ThinkerFn;
 use crate::p_setup::LineId;
 use crate::p_setup::SectorId;
 use crate::p_spec::find_min_surrounding_light;
-use crate::p_spec::find_sector_from_line_tag;
 use crate::p_spec::get_next_sector;
+use crate::p_spec::sectors_with_line_tag;
 use crate::p_tick::add_thinker;
 use crate::p_tick::ThinkerKind;
 use crate::p_tick::ThinkerPayload;
@@ -475,18 +475,12 @@ pub fn spawn_strobe_flash(
     );
 }
 pub fn start_light_strobing(state: &mut GameState, line: LineId) {
-    let mut secnum: i32;
-    secnum = -1;
-    loop {
-        secnum = find_sector_from_line_tag(state, line, secnum);
-        if secnum < 0 {
-            break;
-        }
-        let sec = state.p_setup.sector_mut(SectorId(secnum as u32));
+    for sector in sectors_with_line_tag(state, line) {
+        let sec = state.p_setup.sector_mut(sector);
         if sec.specialdata.is_some() {
             continue;
         }
-        spawn_strobe_flash(state, SectorId(secnum as u32), SLOWDARK, 0);
+        spawn_strobe_flash(state, sector, SLOWDARK, 0);
     }
 }
 pub fn turn_tag_lights_off(state: &mut GameState, line: LineId) {
