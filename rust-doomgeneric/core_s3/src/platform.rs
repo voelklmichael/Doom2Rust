@@ -92,6 +92,9 @@ fn doom_key(command: Command) -> u8 {
         Command::Weapon5 => b'5',
         Command::Weapon6 => b'6',
         Command::Weapon7 => b'7',
+        Command::Backspace => 0x7f, // KEY_BACKSPACE
+        // A typed character is the key itself; the engine sees letters in lower case.
+        Command::Char(character) => character.to_ascii_lowercase(),
     }
 }
 

@@ -9,7 +9,7 @@ use std::time::{Duration, Instant};
 /// The command a key is bound to, if any.
 ///
 /// Arrows or WASD move and turn, `q`/`e` (or `,`/`.`) strafe, Space fires, `f` uses/opens,
-/// `1`-`7` pick a weapon, Tab is the map, Enter/Esc/`y`/`n` drive the menus. Holding Run is
+/// `1`-`7` pick a weapon, Tab is the map, Enter/Esc/`y`/`n`/Backspace drive the menus. Holding Run is
 /// handled separately in `main.rs` (a sticky toggle on `r`), because terminals cannot report
 /// Shift on its own.
 pub fn command_for(code: KeyCode) -> Option<Command> {
@@ -21,6 +21,7 @@ pub fn command_for(code: KeyCode) -> Option<Command> {
         KeyCode::Enter => Command::Enter,
         KeyCode::Esc => Command::Escape,
         KeyCode::Tab => Command::Map,
+        KeyCode::Backspace => Command::Backspace,
         KeyCode::Char(c) => match c.to_ascii_lowercase() {
             'w' => Command::Forward,
             's' => Command::Backward,
@@ -62,6 +63,7 @@ Keys
   , and .      strafe, like Q and E
   Space        fire
   Enter / Esc  in menus: select / back
+  Backspace    in menus: delete a letter
   Y / N        answer yes / no in menus
   Ctrl-C       quit
 ";
@@ -147,6 +149,7 @@ mod tests {
             (KeyCode::Enter, "Enter"),
             (KeyCode::Esc, "Esc"),
             (KeyCode::Tab, "Tab"),
+            (KeyCode::Backspace, "Backspace"),
         ] {
             assert!(command_for(code).is_some(), "{code:?} should be bound");
             assert!(KEY_MAP.contains(label), "{code:?} is bound but {label:?} is not in KEY_MAP");
@@ -172,7 +175,7 @@ mod tests {
     fn every_command_has_a_key() {
         let keys = [
             KeyCode::Up, KeyCode::Down, KeyCode::Left, KeyCode::Right, KeyCode::Enter,
-            KeyCode::Esc, KeyCode::Tab, KeyCode::Char('q'), KeyCode::Char('e'),
+            KeyCode::Esc, KeyCode::Tab, KeyCode::Backspace, KeyCode::Char('q'), KeyCode::Char('e'),
             KeyCode::Char(' '), KeyCode::Char('f'), KeyCode::Char('y'), KeyCode::Char('n'),
             KeyCode::Char('1'), KeyCode::Char('2'), KeyCode::Char('3'), KeyCode::Char('4'),
             KeyCode::Char('5'), KeyCode::Char('6'), KeyCode::Char('7'),

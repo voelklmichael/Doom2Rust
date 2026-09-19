@@ -12,6 +12,7 @@ mod audio;
 mod lcd;
 mod net;
 mod platform;
+mod web;
 mod power;
 mod sound;
 mod wad_fs;
@@ -167,18 +168,20 @@ async fn main(spawner: Spawner) {
             if let Some(config) = network.stack.config_v4() {
                 let _ = write!(address, "{}", config.address.address());
             }
-            let mut port = String::<40>::new();
-            let _ = write!(port, "port {DEFAULT_PORT}");
-            println!("wifi: address {address}, controller port {DEFAULT_PORT}");
+            let mut url = String::<40>::new();
+            let _ = write!(url, "http://{address}");
+            let mut sender = String::<40>::new();
+            let _ = write!(sender, "or sender: {address}:{DEFAULT_PORT}");
+            println!("wifi: address {address}, web controller on port 80, sender port {DEFAULT_PORT}");
             if let Some(ssid) = network.own_network {
                 // The board made its own network: the controller has to join it first.
                 show(
                     &mut display,
-                    &["CoreS3 DOOM", "join Wi-Fi:", ssid, "then controller:", &address, &port],
+                    &["CoreS3 DOOM", "join Wi-Fi:", ssid, "then open in a browser:", &url, &sender],
                 );
                 let _ = write!(status, "{ssid} {address}:{DEFAULT_PORT}");
             } else {
-                show(&mut display, &["CoreS3 DOOM", "controller address:", &address, &port]);
+                show(&mut display, &["CoreS3 DOOM", "open in a browser:", &url, &sender]);
                 let _ = write!(status, "{address}:{DEFAULT_PORT}");
             }
             Timer::after(SHOW_ADDRESS).await;
