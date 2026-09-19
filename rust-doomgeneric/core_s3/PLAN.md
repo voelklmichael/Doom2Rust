@@ -89,7 +89,8 @@ turn, strafe, fire, use, run, menu keys, weapons 1-7). Press and release are sep
 stays held exactly as long as the sender says. Unknown codes are ignored.
 
 **Sender** (`../core_s3_sender`): reads the keyboard in a terminal (arrows or WASD, Q/E strafe, Space
-fire, F use, 1-7 weapons, Tab map, Enter/Esc/Y/N, R toggles run, Ctrl-C quits). Terminals with the
+fire, F use, 1-7 weapons, Tab map, Enter/Esc/Y/N, R toggles run, Ctrl-C quits) and prints these as a
+keyboard drawing (`KEY_MAP`, checked against the bindings by a test) when it connects. Terminals with the
 kitty keyboard protocol report real key releases; others get releases after `--hold-ms` (default 150).
 The key mapping, hold tracking and the TCP path are unit tested; the terminal glue is not.
 
