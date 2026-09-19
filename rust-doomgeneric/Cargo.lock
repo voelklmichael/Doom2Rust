@@ -24,6 +24,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "core_s3_dhcp"
+version = "0.0.0"
+
+[[package]]
 name = "core_s3_protocol"
 version = "0.0.0"
 

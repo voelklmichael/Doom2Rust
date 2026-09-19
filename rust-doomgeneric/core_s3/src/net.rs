@@ -1,20 +1,42 @@
-//! Wi-Fi station plus a TCP command server. Runs on core 0 under the esp-rtos embassy executor;
-//! the game on core 1 picks the decoded events up with [`next_key_event`].
+//! Wi-Fi plus a TCP command server. Runs on core 0 under the esp-rtos embassy executor; the game
+//! on core 1 picks the decoded events up with [`next_key_event`].
+//!
+//! With credentials in `wifi.env` the board joins that network as a station and gets its address
+//! by DHCP. Without them it makes its own open network ([`AP_SSID`]) at [`AP_ADDRESS`] and runs a
+//! small DHCP server, so a laptop that joins it needs no password and no setup.
 //!
 //! Every byte the controller sends is one `core_s3_protocol` command (see that crate).
 
+use core_s3_dhcp::{Server as DhcpServer, CLIENT_PORT, MAX_CLIENTS, REPLY_LEN, SERVER_PORT};
 use core_s3_protocol::{HeldKeys, KeyEvent, DEFAULT_PORT};
 use embassy_executor::Spawner;
-use embassy_net::{tcp::TcpSocket, Config as NetConfig, Runner, Stack, StackResources};
+use embassy_net::{
+    tcp::TcpSocket,
+    udp::{PacketMetadata, UdpSocket},
+    Config as NetConfig, Ipv4Address, Ipv4Cidr, Runner, Stack, StackResources, StaticConfigV4,
+};
 use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, channel::Channel};
 use embassy_time::{Duration, Timer};
 use esp_hal::{peripherals::WIFI, rng::Rng};
 use esp_println::println;
-use esp_radio::wifi::{sta::StationConfig, Config, ControllerConfig, Interface, WifiController};
+use esp_radio::wifi::{
+    ap::AccessPointConfig, sta::StationConfig, Config, ControllerConfig, Interface, WifiController,
+};
 use static_cell::StaticCell;
 
 const WIFI_SSID: &str = env!("WIFI_SSID");
 const WIFI_PASSWORD: &str = env!("WIFI_PASSWORD");
+
+/// The board's own network, used when there are no credentials: open, at this address.
+const AP_SSID: &str = "CoreS3-DOOM";
+const AP_ADDRESS: Ipv4Address = Ipv4Address::new(192, 168, 4, 1);
+
+/// Where the controller connects, and what it has to do to get there.
+pub struct Network {
+    pub stack: Stack<'static>,
+    /// The network the controller must join first: the board's own one, if it made one.
+    pub own_network: Option<&'static str>,
+}
 
 /// Events wait here between the network task (core 0) and the game (core 1).
 static KEY_EVENTS: Channel<CriticalSectionRawMutex, KeyEvent, 32> = Channel::new();
@@ -29,12 +51,38 @@ fn queue(event: KeyEvent) {
     let _ = KEY_EVENTS.try_send(event);
 }
 
-/// Starts Wi-Fi and the command server. Returns the network stack (so the caller can wait for an
-/// address), or `None` when no credentials were compiled in.
-pub fn start(spawner: Spawner, wifi: WIFI<'static>) -> Option<Stack<'static>> {
+/// Starts Wi-Fi and the command server: the station if credentials were compiled in, the board's
+/// own network if not. Returns the network stack, so the caller can wait for an address.
+pub fn start(spawner: Spawner, wifi: WIFI<'static>) -> Network {
+    static RESOURCES: StaticCell<StackResources<4>> = StaticCell::new();
+    let rng = Rng::new();
+    let seed = u64::from(rng.random()) << 32 | u64::from(rng.random());
+
     if WIFI_SSID.is_empty() {
-        println!("wifi: no credentials (copy wifi.env.example to wifi.env); network input is off");
-        return None;
+        println!("wifi: no credentials in wifi.env; making the open network {AP_SSID}");
+        let access_point = AccessPointConfig::default()
+            .with_ssid(AP_SSID)
+            .with_max_connections(MAX_CLIENTS as u16);
+        let controller = WifiController::new(
+            wifi,
+            ControllerConfig::default().with_initial_config(Config::AccessPoint(access_point)),
+        )
+        .expect("wifi controller");
+        let (stack, runner) = embassy_net::new(
+            Interface::access_point(),
+            NetConfig::ipv4_static(StaticConfigV4 {
+                address: Ipv4Cidr::new(AP_ADDRESS, 24),
+                gateway: None,
+                dns_servers: Default::default(),
+            }),
+            RESOURCES.init(StackResources::new()),
+            seed,
+        );
+        spawner.spawn(access_point_task(controller).expect("spawn access_point_task"));
+        spawner.spawn(dhcp_server(stack).expect("spawn dhcp_server"));
+        spawner.spawn(net_task(runner).expect("spawn net_task"));
+        spawner.spawn(command_server(stack).expect("spawn command_server"));
+        return Network { stack, own_network: Some(AP_SSID) };
     }
 
     let mut controller =
@@ -44,21 +92,54 @@ pub fn start(spawner: Spawner, wifi: WIFI<'static>) -> Option<Stack<'static>> {
             StationConfig::default().with_ssid(WIFI_SSID).with_password(WIFI_PASSWORD.into()),
         ))
         .expect("wifi config");
-
-    static RESOURCES: StaticCell<StackResources<3>> = StaticCell::new();
-    let rng = Rng::new();
-    let seed = u64::from(rng.random()) << 32 | u64::from(rng.random());
     let (stack, runner) = embassy_net::new(
         Interface::station(),
         NetConfig::dhcpv4(Default::default()),
         RESOURCES.init(StackResources::new()),
         seed,
     );
-
     spawner.spawn(wifi_task(controller).expect("spawn wifi_task"));
     spawner.spawn(net_task(runner).expect("spawn net_task"));
     spawner.spawn(command_server(stack).expect("spawn command_server"));
-    Some(stack)
+    Network { stack, own_network: None }
+}
+
+/// Keeps the access point up (it stops when the controller is dropped) and logs who joins.
+#[embassy_executor::task]
+async fn access_point_task(controller: WifiController<'static>) {
+    loop {
+        match controller.wait_for_access_point_connected_event_async().await {
+            Ok(event) => println!("wifi: {event:?}"),
+            Err(err) => {
+                println!("wifi: access point event error: {err:?}");
+                Timer::after(Duration::from_secs(1)).await;
+            }
+        }
+    }
+}
+
+/// Hands out addresses to whoever joins the board's network.
+#[embassy_executor::task]
+async fn dhcp_server(stack: Stack<'static>) {
+    let mut rx_meta = [PacketMetadata::EMPTY; 2];
+    let mut rx_buffer = [0u8; 1024];
+    let mut tx_meta = [PacketMetadata::EMPTY; 2];
+    let mut tx_buffer = [0u8; 1024];
+    let mut socket = UdpSocket::new(stack, &mut rx_meta, &mut rx_buffer, &mut tx_meta, &mut tx_buffer);
+    socket.bind(SERVER_PORT).expect("bind the DHCP server port");
+
+    let mut server = DhcpServer::new(AP_ADDRESS.octets());
+    let mut request = [0u8; 576];
+    let mut reply = [0u8; REPLY_LEN];
+    loop {
+        let Ok((length, _)) = socket.recv_from(&mut request).await else { continue };
+        let Some(reply_length) = server.handle(&request[..length], &mut reply) else { continue };
+        // The client has no address yet, so the answer goes to everyone.
+        match socket.send_to(&reply[..reply_length], (Ipv4Address::BROADCAST, CLIENT_PORT)).await {
+            Ok(()) => println!("dhcp: answered a client"),
+            Err(err) => println!("dhcp: send failed: {err:?}"),
+        }
+    }
 }
 
 /// Keeps the station associated, reconnecting whenever it drops.
