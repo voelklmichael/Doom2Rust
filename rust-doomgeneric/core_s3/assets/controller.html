@@ -49,6 +49,7 @@
   .chip { display: inline-flex; align-items: center; gap: 4px; background: var(--btn);
     border: 1px solid var(--line); border-radius: 6px; padding: 2px 4px 2px 8px; margin: 2px 4px 2px 0;
     font-family: ui-monospace, monospace; font-size: 14px; }
+  .chip.guess { font-style: italic; opacity: .75; }
   .chip button { min-height: 0; padding: 0 6px; border: 0; background: none; color: var(--dim); font-size: 16px; }
   td button.add { min-height: 30px; padding: 2px 10px; }
   #reset { margin-top: 10px; min-height: 40px; }
@@ -116,6 +117,11 @@
     <p class="hint">Keys work anywhere on this page, and the text box in Keys mode uses the same
       bindings. Click + on an action, then press the key to give it. Bindings are kept in this
       browser.</p>
+    <p class="hint">A key is remembered by its position on the keyboard, as games do, so WASD stays a
+      cluster on any layout (Neo2, AZERTY...). It is shown as what it prints on your keyboard once you
+      have pressed it; until then (in italics) as it would print on a US keyboard. Arrows, Enter, Esc,
+      Tab and Backspace are remembered by name, so a layer that produces them from other keys works
+      too.</p>
     <table id="keys"></table>
     <button id="reset">Reset to defaults</button>
   </details>
@@ -263,9 +269,19 @@ runToggle.addEventListener('click', () => {
 
 // ---- keyboard ---------------------------------------------------------------------------------
 
+// Keys are remembered by their position on the keyboard, the way games do it: WASD stays a cluster
+// on any layout. What a key prints depends on the layout (Neo2, AZERTY...), so the printed character
+// is only used to label it. Named keys (arrows, Enter, Esc, Tab, Backspace) are remembered by name
+// instead, so a layout layer that produces an arrow from some other key (Neo2's cursor layer) works.
 let keymap = loadKeys();
+const labels = loadLabels();    // key -> the character it prints on this keyboard, as far as seen
 const keysDown = new Map();     // physical key -> the action it is holding
 let capturing = null;           // { action, button } while waiting for a key to bind
+
+const NAMED = /^(Arrow(Up|Down|Left|Right)|Enter|Escape|Tab|Backspace)$/;
+const keyId = (e) => (NAMED.test(e.key) ? e.key : e.code);
+// A real keyboard event names its key; a phone's soft keyboard and input methods do not.
+const usable = (e) => Boolean(e.code) && e.code !== 'Unidentified' && e.keyCode !== 229 && !e.isComposing;
 
 function loadKeys() {
   try {
@@ -279,25 +295,56 @@ function saveKeys() {
   try { localStorage.setItem('coreS3Keys', JSON.stringify(keymap)); } catch (e) { /* not kept */ }
 }
 
+function loadLabels() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('coreS3Labels'));
+    if (saved && typeof saved === 'object') return saved;
+  } catch (e) { /* nothing saved */ }
+  return {};
+}
+
+// Notes what a key prints. Only plain letters and digits are learned from ordinary typing: a
+// layout layer can print anything else. A key that is being bound is learned whatever it prints.
+function learn(e, force) {
+  const plain = !e.shiftKey && !e.ctrlKey && !e.metaKey && !e.altKey && !e.getModifierState('AltGraph');
+  if (!usable(e) || NAMED.test(e.key) || e.key.length !== 1 || e.key === ' ' || !plain) return;
+  if (!force && !/^[\p{L}\p{N}]$/u.test(e.key)) return;
+  const printed = e.key.toLowerCase();
+  if (labels[e.code] === printed) return;
+  // A character sits on one key: whatever else was thought to print it is out of date.
+  for (const other of Object.keys(labels)) if (labels[other] === printed) delete labels[other];
+  labels[e.code] = printed;
+  try { localStorage.setItem('coreS3Labels', JSON.stringify(labels)); } catch (err) { /* not kept */ }
+  renderKeys();
+}
+
 addEventListener('keydown', (e) => {
   if (capturing) {
     e.preventDefault();
-    keymap[e.code] = capturing.action;
+    learn(e, true);
+    keymap[keyId(e)] = capturing.action;
     capturing = null;
     saveKeys();
     renderKeys();
     return;
   }
-  if (e.ctrlKey || e.metaKey || e.altKey) return;
-  // In the text box, characters arrive through its input event; only Keys mode also takes the
-  // special keys (Enter, arrows, Shift...) here, held for as long as they are down.
-  if (e.target === $('text') && (mode === 'text' || e.key.length === 1)) return;
-  const action = keymap[e.code];
-  if (action === undefined) return;
+  // AltGr (a layout's third layer) reports Ctrl+Alt on some systems; real shortcuts are left alone.
+  if ((e.ctrlKey || e.metaKey || e.altKey) && !e.getModifierState('AltGraph')) return;
+  // The text box in Keys mode takes keys exactly like the rest of the page (by the key pressed, as
+  // the key list does), and nothing gets typed into it. Text mode, and keyboards that do not say
+  // which key was pressed, use the characters that arrive in its input event instead.
+  const inBox = e.target === $('text');
+  if (inBox && (mode === 'text' || !usable(e))) return;
+  if (inBox) e.preventDefault();
+  learn(e, false);
+  const id = keyId(e);
+  const action = keymap[id];
+  if (action === undefined) { if (inBox) log('·'); return; }
   e.preventDefault();
   if (e.repeat || keysDown.has(e.code)) return;
   keysDown.set(e.code, action);
   press(action);
+  if (inBox) log(keyLabel(id));
 });
 
 addEventListener('keyup', (e) => {
@@ -312,10 +359,16 @@ addEventListener('blur', releaseAll);
 
 // ---- key list ---------------------------------------------------------------------------------
 
-function keyLabel(code) {
-  if (code.startsWith('Key')) return code.slice(3);
-  if (code.startsWith('Digit')) return code.slice(5);
-  if (code.startsWith('Numpad')) return 'Num ' + code.slice(6);
+// How a key is shown: what it prints on this keyboard once that is known, else its name on a US one.
+function keyLabel(id) {
+  if (labels[id]) return labels[id].toUpperCase();
+  return usName(id);
+}
+
+function usName(id) {
+  if (id.startsWith('Key')) return id.slice(3);
+  if (id.startsWith('Digit')) return id.slice(5);
+  if (id.startsWith('Numpad')) return 'Num ' + id.slice(6);
   const names = {
     ArrowUp: '↑', ArrowDown: '↓', ArrowLeft: '←', ArrowRight: '→', Space: 'Space', Escape: 'Esc',
     ShiftLeft: 'Shift (L)', ShiftRight: 'Shift (R)', ControlLeft: 'Ctrl (L)', ControlRight: 'Ctrl (R)',
@@ -323,8 +376,11 @@ function keyLabel(code) {
     Quote: "'", BracketLeft: '[', BracketRight: ']', Backslash: '\\', Minus: '-', Equal: '=',
     Backquote: '`',
   };
-  return names[code] || code;
+  return names[id] || id;
 }
+
+// A key whose label depends on the layout and has not been seen yet is only a guess (US names).
+const guess = (id) => !labels[id] && /^(Key|Digit|Comma|Period|Slash|Semicolon|Quote|Bracket|Backslash|Minus|Equal|Backquote)/.test(id);
 
 function renderKeys() {
   const table = $('keys');
@@ -338,6 +394,10 @@ function renderKeys() {
       const chip = document.createElement('span');
       chip.className = 'chip';
       chip.append(keyLabel(code));
+      chip.classList.toggle('guess', guess(code));
+      chip.title = guess(code)
+        ? 'The key at the position of ' + usName(code) + ' on a US keyboard. Press it once to see what it prints on yours.'
+        : 'Key position ' + code;
       const remove = document.createElement('button');
       remove.textContent = '×';
       remove.title = 'Remove';
@@ -369,8 +429,9 @@ $('reset').onclick = () => {
 // character goes to the game as typed (cheat codes, save names).
 const box = $('text');
 const HINTS = {
-  keys: 'Each typed key does what its binding does (w forward, space fire, f use...). Holding a key ' +
-        'keeps the action going; a pasted run like wwwd plays one key every 0.2 s. Bindings: see below.',
+  keys: 'Each key you press does what its binding does (w forward, space fire, f use...), found the same ' +
+        'way as in the key list below. Holding a key keeps the action going; a pasted run like wwwd ' +
+        'plays one key every 0.2 s.',
   text: 'Every character goes to the game as typed: cheat codes, save names. Enter, Backspace and Esc ' +
         'work as in the menu.',
 };
@@ -411,11 +472,17 @@ function log(text) {
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-// The physical key a typed character stands for, so the key list can be looked up.
+// The key a typed character stands for, for input that arrives as characters (a phone's keyboard, a
+// paste): the key known to print it on this keyboard, else the key that prints it on a US one.
 function codeForChar(ch) {
-  if (/^[a-z]$/i.test(ch)) return 'Key' + ch.toUpperCase();
-  if (/^[0-9]$/.test(ch)) return 'Digit' + ch;
-  return CHAR_CODES[ch];
+  const c = ch.toLowerCase();
+  for (const code of Object.keys(labels)) if (labels[code] === c) return code;
+  let code;
+  if (/^[a-z]$/.test(c)) code = 'Key' + c.toUpperCase();
+  else if (/^[0-9]$/.test(c)) code = 'Digit' + c;
+  else code = CHAR_CODES[c];
+  // If that key is known to print something else here, this character is not that key.
+  return code !== undefined && labels[code] && labels[code] !== c ? undefined : code;
 }
 
 // Keys mode: one typed key. A tap is stretched to the minimum hold, and typing the same key again
@@ -477,6 +544,15 @@ box.addEventListener('keydown', (e) => {
 });
 
 // ---- go ---------------------------------------------------------------------------------------
+
+// Where the browser will tell us (Chromium, on secure pages only), learn the whole layout at once.
+if (navigator.keyboard && navigator.keyboard.getLayoutMap) {
+  navigator.keyboard.getLayoutMap().then((map) => {
+    for (const code of Object.keys(labels)) delete labels[code];
+    map.forEach((printed, code) => { labels[code] = printed; });
+    renderKeys();
+  }).catch(() => {});
+}
 
 renderKeys();
 setMode(mode);
