@@ -16,6 +16,20 @@ numbers are estimates from reading the code.
 | E: column/span loops hoisted | 10.0-10.7 | 44.5 ms | 48-55 ms |
 | H: DMA blit on core 0 | 18.4-21.8 | 6.2 ms present (0.2 ms waiting) | 40-48 ms |
 
+Config-only round, measured differently because most light scenes are now capped by the engine's
+35 Hz tic clock. `bench.sh`-style run: reset the board, take the first 30 two-second `[perf]` windows
+(the demo loop is deterministic and game time follows wall time, so window N shows the same scene in
+every run; run-to-run noise is about 0.1 fps). "Heavy" = the 10 windows where no run was capped
+(under 29 fps).
+
+| Build | all 30 windows | heavy windows |
+|---|---|---|
+| After H | 20.8 fps | 17.6 fps |
+| A: PSRAM 80 MHz | 28.4 fps | 25.6 fps |
+| A + B: 64 KB data cache, 64-byte lines | 29.4 fps | 26.7 fps |
+| A + B + `opt-level = "s"` (not kept) | 29.5 fps | 27.0 fps |
+| A + B + engine 3, rest "s" (not kept) | 29.2 fps | 26.6 fps |
+
 From D on, "blit" is measured on the game core. For H the column is "present": the time core 1 spends
 in `draw_indexed_frame`, which is waiting for the previous frame to finish going out (0.2 ms, so the
 DMA is fully hidden behind rendering) plus converting the frame into the DMA buffer (6 ms).
@@ -36,16 +50,16 @@ about 18-21 fps.
 
 | # | Idea | Effect (guess) | Effort | Risk | Status |
 |---|---|---|---|---|---|
-| A | PSRAM to 80 MHz (`ram_frequency: Freq80m`; the default is 40 MHz) | PSRAM-bound phases up to ~2x faster | one line | low (may need a stability check) | todo |
-| B | Data cache 64 KB with 64-byte lines (`ESP_HAL_CONFIG_DATA_CACHE_SIZE` / `_LINE_SIZE`); the linker script already leaves that block free | fewer PSRAM misses, no RAM cost | config | low | todo |
-| C | Flash QIO at 80 MHz (`espflash --flash-mode qio --flash-freq 80mhz`), after checking what it is now | faster code and rodata cache misses | runner flag | low | todo |
+| A | PSRAM to 80 MHz (`ram_frequency: Freq80m`; the default is 40 MHz) | PSRAM-bound phases up to ~2x faster | one line | low (may need a stability check) | **done, measured: +46% on heavy scenes** |
+| B | Data cache 64 KB with 64-byte lines (`ESP_HAL_CONFIG_DATA_CACHE_SIZE` / `_LINE_SIZE`); the linker script already leaves that block free | fewer PSRAM misses, no RAM cost | config | low | **done, measured: +4% on heavy scenes.** 64 KB with 32-byte lines was not tried separately. |
+| C | Flash QIO at 80 MHz (`espflash --flash-mode qio --flash-freq 80mhz`), after checking what it is now | faster code and rodata cache misses | runner flag | low | **not possible on this board.** The flash was DIO at 40 MHz. QIO boot-loops (`TG0WDT_SYS_RST` right after the ROM loads the bootloader) at both 80 and 40 MHz. See below. |
 | D | Indexed present path: a defaulted `DoomPlatform` method hands over the 64 KB indexed buffer and the palette; CoreS3 maps it through a 256-entry RGB565 table straight into the SPI stream. Other platforms and the tests keep the current path. | removes a 512 KB alloc+memset and ~4 MB of PSRAM traffic per frame; probably the biggest single win | medium | low | **done, measured: 2.9 -> 8.5 fps** |
 | E | Hoist the per-pixel lookups out of the column, span, low-detail and fuzz loops in `r_draw.rs` (resolve source slice, `&[u8; 256]` colormap and destination once per column) | 2-3x on the loops that dominate rendering | medium | low | **done, measured: 8.5 -> 10.7 fps** |
 | F | Hot code in IRAM via esp-hal's `use_rwtext_ld_hook` (move `r_*` and fixed-math functions into `.rwtext`; ~250 KB of IRAM/DRAM is spare) | fewer icache misses | medium | medium (LTO inlining changes section names) | todo |
 | G | Hot buffers in internal RAM: `i_video_buffer` (64 KB), `colormaps` (9 KB), `ylookup` / `columnofs` | fewer PSRAM misses | medium | needs an allocation hook | todo |
 | H | Faster, asynchronous blit: DMA SPI, an 80 MHz SPI clock (panel must tolerate it), or presenting from core 0 while core 1 renders the next frame | frees 25-58 ms per frame | high | medium | **done (DMA + core 0), measured: 10.7 -> ~20 fps.** The 80 MHz clock is not needed while the wire time stays hidden. |
 | I | Visible knobs: low detail (`detailshift=1`, about half the world pixels), screen size 9 or 8, skipping the melt wipe | up to ~2x rendering | small | changes how it looks | todo |
-| J | Build-profile experiments: `opt-level` 2, 3 or "s" for the engine versus the rest, given the 32 KB icache | +-10% | trivial | none | todo |
+| J | Build-profile experiments: `opt-level` 2, 3 or "s" for the engine versus the rest, given the 32 KB icache | +-10% | trivial | none | **done, nothing to gain.** "s" shrinks `.text` from 1.16 MB to 0.85 MB but is within 1% on speed; engine at 3 with the rest "s" is no better. `opt-level = 3` stays. `opt-level = 2` not tried. |
 
 Not recommended: two-core rendering (the renderer's global state is not thread-safe and both cores
 share the PSRAM bus), raising the CPU clock (already at max), dropping game tics (changes the
@@ -59,7 +73,7 @@ per frame. Use the attract-mode demo loop as the benchmark (deterministic, no in
 runs with no code: Wi-Fi off, low detail, smaller screen. Check the flash mode and speed in the
 bootloader boot log.
 
-**Phase 1, config only** (A, B, C, J), one change per flash so the effects can be separated.
+**Phase 1, config only** (A, B, C, J), one change per flash so the effects can be separated. Done.
 
 **Phase 2, engine changes** (D, then E, plus the `hu_drawer` widget clones in `hu_stuff.rs`). The
 golden regression test (`cargo test --release`) checks frames bit for bit, so these are verified on
@@ -88,3 +102,16 @@ Per frame in a busy scene: about 6 ms converting the frame for the LCD, 40-48 ms
 from PSRAM and writes 2 bytes per pixel with a byte-pair copy; a `u16` table and a wider write, or
 moving the conversion to core 0, would cut most of it. Beyond that the split of "everything else" is
 still unmeasured (Phase 0), and A, B, C, F, G and I are untried.
+
+## Notes from the config round
+
+- **QIO flash does not boot on this board.** The header written by espflash is DIO, 16 MB, 40 MHz
+  (`02 40` at flash offset 0). With `--flash-mode qio` (at 80 or at 40 MHz) the board resets in a
+  loop right after the ROM loads the bootloader, and `/dev/ttyACM0` keeps disappearing. It recovers
+  without touching the board: the port re-enumerates on every attempt, so reflashing with
+  `--flash-mode dio --flash-freq 40mhz` works, sometimes needing a retry. Do not add QIO to the
+  runner. The runtime flash clock is set separately by esp-hal's PSRAM init (its default is 80 MHz),
+  so the 40 MHz in the header is only the boot stage.
+- **The ELF is not stripped** (`debug = 2`) on purpose, for backtraces in `espflash monitor --elf`.
+  It is 24 MB on disk, but espflash writes only the loadable segments, so the 5.6 MB flash image has
+  no debug info in it.
