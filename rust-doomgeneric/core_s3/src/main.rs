@@ -32,7 +32,7 @@ use esp_hal::{
     gpio::{Level, Output, OutputConfig},
     i2c::master::{Config as I2cConfig, I2c},
     interrupt::software::SoftwareInterruptControl,
-    psram::{PsramConfig, PsramMode},
+    psram::{PsramConfig, PsramMode, SpiRamFreq},
     ram,
     system::Stack,
     time::Rate,
@@ -89,7 +89,11 @@ async fn main(spawner: Spawner) {
     esp_alloc::psram_allocator!(
         peripherals.PSRAM,
         esp_hal::psram,
-        PsramConfig { mode: PsramMode::QuadSpi, ..Default::default() }
+        PsramConfig {
+            mode: PsramMode::QuadSpi,
+            ram_frequency: SpiRamFreq::Freq80m,
+            ..Default::default()
+        }
     );
     esp_alloc::heap_allocator!(#[ram(reclaimed)] size: 64 * 1024);
     esp_alloc::heap_allocator!(size: 36 * 1024);
