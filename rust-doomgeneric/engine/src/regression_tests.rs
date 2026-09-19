@@ -16,7 +16,7 @@ use crate::d_event::{event_t, D_PostEvent, EvType};
 use crate::d_main::doomgeneric_Tick;
 use crate::doomdef::pixel_t;
 use crate::doomgeneric::doomgeneric_Create;
-use crate::filesystem::MemFileSystem;
+use crate::filesystem::{read_file, MemFileSystem};
 use crate::g_game::{G_DoLoadGame, G_DoSaveGame, G_ExitLevel, G_LoadGame, G_SaveGame};
 use crate::game_state::{init_game_state, GameState};
 use crate::p_saveg::P_SaveGameFile;
@@ -43,8 +43,8 @@ struct NullPlatform {
 }
 
 impl DoomPlatform for NullPlatform {
-    fn init(&mut self, _screen_buffer: *mut pixel_t, _resx: i32, _resy: i32) {}
-    fn draw_frame(&mut self) {}
+    fn init(&mut self, _resx: i32, _resy: i32) {}
+    fn draw_frame(&mut self, _frame: &[pixel_t]) {}
     fn sleep_ms(&mut self, ms: u32) {
         self.now_ms += ms;
     }
@@ -285,6 +285,15 @@ fn actual_output() -> Option<String> {
     for demo in ["demo1", "demo2", "demo3"] {
         writeln!(out, "sim {demo} {}", demo_summary(demo)?).unwrap();
     }
+    let state = start_e1m1()?;
+    let (_, save) = save_slot(state, 0);
+    writeln!(
+        out,
+        "save e1m1@350 len={} hash={:016x}",
+        save.len(),
+        fnv_bytes(&save)
+    )
+    .unwrap();
     for line in ui_frame_lines()? {
         writeln!(out, "{line}").unwrap();
     }
@@ -314,25 +323,38 @@ fn simulation_and_frames_match_golden() {
     );
 }
 
-/// Saves a game 350 tics into E1M1 and loads it back: the world must come
-/// back exactly as it was written.
-#[test]
-fn save_game_round_trips() {
-    let Some(state) = start(&["-warp", "1", "1", "-skill", "3"]) else {
-        std::eprintln!("skipping: no IWAD (set DOOM_IWAD or put doom1.wad in ~/Downloads)");
-        return;
-    };
+/// Plays 350 tics of E1M1 and returns the engine, ready to save.
+fn start_e1m1() -> Option<&'static mut GameState> {
+    let state = start(&["-warp", "1", "1", "-skill", "3"])?;
     while state.d_loop.gametic < 350 {
         doomgeneric_Tick(state);
     }
-    let before = world_summary(state);
-    // Save directly, not through the deferred `sendsave` request, which would
-    // trigger a second save on the next tick.
-    G_SaveGame(state, 0, "roundtrip");
+    Some(state)
+}
+
+/// Writes save slot `slot` directly, not through the deferred `sendsave`
+/// request (which would trigger a second save on the next tick), and returns
+/// the file's path and contents.
+fn save_slot(state: &mut GameState, slot: i32) -> (String, Vec<u8>) {
+    G_SaveGame(state, slot, "roundtrip");
     state.g_game.sendsave = false;
     G_DoSaveGame(state);
-    let path = P_SaveGameFile(state, 0);
-    assert!(state.fs.exists(&path), "no save file at {path}");
+    let path = P_SaveGameFile(state, slot);
+    let bytes =
+        read_file(&mut *state.fs, &path).unwrap_or_else(|| panic!("no save file at {path}"));
+    (path, bytes)
+}
+
+/// Saving and loading restores the exact world, and saving again writes the
+/// same bytes: nothing process-specific (such as addresses) is in the file.
+#[test]
+fn save_game_round_trips() {
+    let Some(state) = start_e1m1() else {
+        std::eprintln!("skipping: no IWAD (set DOOM_IWAD or put doom1.wad in ~/Downloads)");
+        return;
+    };
+    let before = world_summary(state);
+    let (path, first) = save_slot(state, 0);
 
     // Let the world move on, then restore it from the file.
     for _ in 0..40 {
@@ -346,4 +368,17 @@ fn save_game_round_trips() {
     G_LoadGame(state, &path);
     G_DoLoadGame(state);
     assert_eq!(before, world_summary(state));
+
+    let (_, second) = save_slot(state, 1);
+    assert!(first == second, "re-saving a loaded game changed the file");
+}
+
+/// Two independent engines saving at the same point write identical files.
+#[test]
+fn save_files_are_reproducible() {
+    let (Some(a), Some(b)) = (start_e1m1(), start_e1m1()) else {
+        std::eprintln!("skipping: no IWAD (set DOOM_IWAD or put doom1.wad in ~/Downloads)");
+        return;
+    };
+    assert!(save_slot(a, 0).1 == save_slot(b, 0).1);
 }

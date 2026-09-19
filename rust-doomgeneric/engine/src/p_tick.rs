@@ -479,8 +479,8 @@ mod tests {
 
     struct NullPlatform;
     impl DoomPlatform for NullPlatform {
-        fn init(&mut self, _screen_buffer: *mut pixel_t, _resx: i32, _resy: i32) {}
-        fn draw_frame(&mut self) {}
+        fn init(&mut self, _resx: i32, _resy: i32) {}
+        fn draw_frame(&mut self, _frame: &[pixel_t]) {}
         fn sleep_ms(&mut self, _ms: u32) {}
         fn get_ticks_ms(&mut self) -> u32 {
             0

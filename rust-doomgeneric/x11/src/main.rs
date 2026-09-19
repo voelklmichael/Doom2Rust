@@ -847,6 +847,8 @@ struct X11Platform {
     s_Screen: i32,
     s_Gc: GC,
     s_Image: *mut XImage,
+    /// Backing store of `s_Image`; must not be resized while the image exists.
+    s_Frame: Vec<pixel_t>,
     s_KeyQueue: [u16; KEYQUEUE_SIZE as usize],
     s_KeyQueueWriteIndex: u32,
     s_KeyQueueReadIndex: u32,
@@ -860,6 +862,7 @@ impl X11Platform {
             s_Screen: 0,
             s_Gc: ::core::ptr::null::<_XGC>() as *mut _XGC,
             s_Image: ::core::ptr::null::<XImage>() as *mut XImage,
+            s_Frame: Vec::new(),
             s_KeyQueue: [0; KEYQUEUE_SIZE as usize],
             s_KeyQueueWriteIndex: 0,
             s_KeyQueueReadIndex: 0,
@@ -911,7 +914,8 @@ fn convertToDoomKey(mut key: u32) -> u8 {
     key as u8
 }
 impl DoomPlatform for X11Platform {
-    fn init(&mut self, screen_buffer: *mut pixel_t, resx: i32, resy: i32) {
+    fn init(&mut self, resx: i32, resy: i32) {
+        self.s_Frame = vec![0; resx as usize * resy as usize];
         unsafe {
             memset(
                 &raw mut self.s_KeyQueue as *mut u16 as *mut ::core::ffi::c_void,
@@ -1003,16 +1007,17 @@ impl DoomPlatform for X11Platform {
                 depth as u32,
                 ZPixmap,
                 0_i32,
-                screen_buffer as *mut ::core::ffi::c_char,
+                self.s_Frame.as_mut_ptr() as *mut ::core::ffi::c_char,
                 resx as u32,
-                resx as u32,
+                resy as u32,
                 32_i32,
                 0_i32,
             );
         }
     }
 
-    fn draw_frame(&mut self) {
+    fn draw_frame(&mut self, frame: &[pixel_t]) {
+        self.s_Frame.copy_from_slice(frame);
         unsafe {
             if !self.s_Display.is_null() {
                 while XPending(self.s_Display) > 0_i32 {

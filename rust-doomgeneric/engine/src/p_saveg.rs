@@ -174,11 +174,15 @@ fn saveg_write_pad(state: &mut PSavegState) {
         i += 1;
     }
 }
-fn saveg_readp(state: &mut PSavegState) -> *mut ::core::ffi::c_void {
-    saveg_read32(state) as usize as *mut ::core::ffi::c_void
+// Vanilla wrote raw pointers here. Loading only ever checks them for null, so
+// a presence flag is written instead: it keeps the format, loads vanilla
+// saves (any non-zero word means "present") and makes the files reproducible
+// rather than leaking process addresses.
+fn saveg_read_present(state: &mut PSavegState) -> bool {
+    saveg_read32(state) != 0
 }
-fn saveg_writep(state: &mut PSavegState, p: *mut ::core::ffi::c_void) {
-    saveg_write32(state, p as usize as i32);
+fn saveg_write_present(state: &mut PSavegState, present: bool) {
+    saveg_write32(state, i32::from(present));
 }
 fn saveg_read_mapthing_t(state: &mut PSavegState, str: &mut mapthing_t) {
     str.x = saveg_read16(state);
@@ -195,20 +199,14 @@ fn saveg_write_mapthing_t(state: &mut PSavegState, str: &mut mapthing_t) {
     saveg_write16(state, str.options);
 }
 fn saveg_read_actionf_t(state: &mut PSavegState, str: &mut ThinkerFn) {
-    let word = saveg_readp(state);
-    *str = if word.is_null() {
-        ThinkerFn::Paused
-    } else {
+    *str = if saveg_read_present(state) {
         ThinkerFn::Unresolved
+    } else {
+        ThinkerFn::Paused
     };
 }
 fn saveg_write_actionf_t(state: &mut PSavegState, str: &mut ThinkerFn) {
-    let word: *mut ::core::ffi::c_void = if matches!(*str, ThinkerFn::Paused) {
-        ::core::ptr::null_mut()
-    } else {
-        str as *mut ThinkerFn as *mut ::core::ffi::c_void
-    };
-    saveg_writep(state, word);
+    saveg_write_present(state, !matches!(*str, ThinkerFn::Paused));
 }
 fn saveg_read_thinker_t(state: &mut PSavegState, str: &mut thinker_t) {
     // P_AddThinker (called after every payload type is reconstructed, in
@@ -361,7 +359,7 @@ fn saveg_write_pspdef_t(state: &mut PSavegState, str: &mut pspdef_t) {
 fn saveg_read_player_t(state: &mut PSavegState, str: &mut player_t) {
     let mut i: i32;
     // Placeholder value, discarded -- see saveg_write_player_t.
-    saveg_readp(state);
+    saveg_read_present(state);
     str.playerstate = match saveg_read32(state) {
         0 => PlayerState::PST_LIVE,
         1 => PlayerState::PST_DEAD,
@@ -416,7 +414,7 @@ fn saveg_read_player_t(state: &mut PSavegState, str: &mut player_t) {
     str.killcount = saveg_read32(state);
     str.itemcount = saveg_read32(state);
     str.secretcount = saveg_read32(state);
-    saveg_readp(state);
+    saveg_read_present(state);
     str.message = None;
     str.damagecount = saveg_read32(state);
     str.bonuscount = saveg_read32(state);
@@ -437,7 +435,7 @@ fn saveg_write_player_t(state: &mut PSavegState, str: &mut player_t) {
     // The written value is a placeholder: on load it is immediately
     // overwritten with null by P_UnArchivePlayers and then correctly
     // restored from the mobj's own player backref in P_UnArchiveThinkers.
-    saveg_writep(state, ::core::ptr::null_mut());
+    saveg_write_present(state, false);
     saveg_write32(state, str.playerstate as i32);
     saveg_write_ticcmd_t(state, &mut str.cmd);
     saveg_write32(state, str.viewz);
@@ -487,14 +485,7 @@ fn saveg_write_player_t(state: &mut PSavegState, str: &mut player_t) {
     saveg_write32(state, str.killcount);
     saveg_write32(state, str.itemcount);
     saveg_write32(state, str.secretcount);
-    saveg_writep(
-        state,
-        if str.message.is_some() {
-            core::ptr::dangling_mut::<::core::ffi::c_void>()
-        } else {
-            ::core::ptr::null_mut()
-        },
-    );
+    saveg_write_present(state, str.message.is_some());
     saveg_write32(state, str.damagecount);
     saveg_write32(state, str.bonuscount);
     saveg_write32(state, 0);

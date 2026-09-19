@@ -1,6 +1,7 @@
 sim demo1 mobjs=240 mobjhash=b275ed4873c6d2d6 sechash=beb33ecf97cb9087 playerhash=14586785f267f0ba prnd=148 rnd=238 gametic=1710
 sim demo2 mobjs=278 mobjhash=948bec889a77ae3b sechash=ca5da5d6099ad260 playerhash=c6631285c63ff951 prnd=146 rnd=107 gametic=2347
 sim demo3 mobjs=243 mobjhash=27c7d7cea131f295 sechash=cf88093f49c47f4e playerhash=19257685642013f5 prnd=124 rnd=87 gametic=3863
+save e1m1@350 len=25638 hash=2dba4e057dedde14
 frame 00005 2bffeb378612a8f1
 frame 00010 4fa3f84db5d1f5a8
 frame 00015 6b663b5bb4790870
