@@ -1,13 +1,12 @@
 use crate::doomdef::SCREENHEIGHT;
 use crate::doomdef::SCREENWIDTH;
+use crate::filesystem::DoomFileSystem;
 use crate::game_state::GameState;
 use crate::i_system::I_Error;
 use crate::i_video::IVideoState;
 use crate::i_video::I_GetPaletteIndex;
 use crate::m_bbox::M_AddToBox;
 use crate::m_fixed::fixed_t;
-use crate::m_misc::M_FileExists;
-use crate::m_misc::M_WriteFile;
 use crate::patch::Patch;
 use crate::stdint_types::byte;
 use crate::w_wad::W_LumpBytes;
@@ -212,7 +211,14 @@ pub fn V_DrawBox(state: &mut IVideoState, x: i32, y: i32, w: i32, h: i32, c: i32
     V_DrawVertLine(state, x, y, h, c);
     V_DrawVertLine(state, x + w - 1_i32, y, h, c);
 }
-pub fn WritePCXfile(filename: &str, data: &[byte], width: i32, height: i32, palette: &[byte]) {
+pub fn WritePCXfile(
+    fs: &mut dyn DoomFileSystem,
+    filename: &str,
+    data: &[byte],
+    width: i32,
+    height: i32,
+    palette: &[byte],
+) {
     // 128-byte on-disk PCX header.
     let mut pack: Vec<u8> =
         Vec::with_capacity((128 + width * height * 2_i32 + 768_i32 + 1_i32) as usize);
@@ -240,14 +246,14 @@ pub fn WritePCXfile(filename: &str, data: &[byte], width: i32, height: i32, pale
     }
     pack.push(0xc as byte);
     pack.extend_from_slice(&palette[..768]);
-    M_WriteFile(filename, &pack);
+    fs.write_file(filename, &pack);
 }
 pub fn V_ScreenShot(state: &mut GameState) {
     let mut i = 0i32;
     let mut lbmname = String::new();
     while i <= 99 {
         lbmname = format!("DOOM{i:02}.pcx");
-        if !M_FileExists(&lbmname) {
+        if !state.fs.exists(&lbmname) {
             break;
         }
         i += 1;
@@ -257,6 +263,7 @@ pub fn V_ScreenShot(state: &mut GameState) {
     }
     let palette = W_LumpBytesName(state, "PLAYPAL");
     WritePCXfile(
+        &mut *state.fs,
         &lbmname,
         &state.i_video.I_VideoBuffer,
         SCREENWIDTH,
@@ -347,4 +354,23 @@ pub fn V_DrawMouseSpeedBox(state: &mut IVideoState, speed: i32) {
         MOUSE_SPEED_BOX_HEIGHT - 2_i32,
         red,
     );
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::filesystem::MemFileSystem;
+
+    #[test]
+    fn pcx_is_written_through_the_filesystem() {
+        let mut fs = MemFileSystem::default();
+        let palette = [7u8; 768];
+        WritePCXfile(&mut fs, "DOOM00.pcx", &[1, 2, 0xc5, 4], 2, 2, &palette);
+        let file = &fs.files["DOOM00.pcx"];
+        assert_eq!(file[0], 0x0a);
+        // 128-byte header, 4 pixels (one needs an 0xc1 run-length escape), 0x0c + palette.
+        assert_eq!(file.len(), 128 + 5 + 1 + 768);
+        assert_eq!(file[128 + 2], 0xc1);
+        assert_eq!(file[128 + 3], 0xc5);
+    }
 }

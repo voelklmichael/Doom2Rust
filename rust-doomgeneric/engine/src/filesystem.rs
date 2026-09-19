@@ -128,4 +128,33 @@ mod tests {
         // The slot from the first read was released and is reused.
         assert_eq!(fs.open("a.dsg"), Some(FileId(0)));
     }
+
+    /// The engine reaches the host's files only through `DoomFileSystem`, so
+    /// that it can eventually build without `std`. Keep it that way.
+    #[test]
+    fn engine_sources_do_not_use_std_fs_or_io() {
+        let banned = [["std", "::fs"].concat(), ["std", "::io"].concat()];
+        let src = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("src");
+        for entry in std::fs::read_dir(src).unwrap() {
+            let path = entry.unwrap().path();
+            if path.extension().is_none_or(|e| e != "rs") || path.ends_with("filesystem.rs") {
+                continue;
+            }
+            let text = std::fs::read_to_string(&path).unwrap();
+            for (n, line) in text.lines().enumerate() {
+                if line.trim_start().starts_with("//") {
+                    continue;
+                }
+                for b in &banned {
+                    assert!(
+                        !line.contains(b.as_str()),
+                        "{}:{}: {}",
+                        path.display(),
+                        n + 1,
+                        b
+                    );
+                }
+            }
+        }
+    }
 }

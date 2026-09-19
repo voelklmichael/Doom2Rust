@@ -1,23 +1,4 @@
 use crate::fixed_cstr::FixedCStr;
-use std::io::Write;
-pub const EISDIR: i32 = 21;
-pub fn M_MakeDirectory(path: &str) {
-    use std::os::unix::fs::DirBuilderExt;
-    let _ = std::fs::DirBuilder::new().mode(0o755).create(path);
-}
-pub fn M_FileExists(filename: &str) -> bool {
-    match std::fs::File::open(filename) {
-        Ok(_) => true,
-        Err(e) => e.raw_os_error() == Some(EISDIR),
-    }
-}
-pub fn M_WriteFile(name: &str, source: &[u8]) -> bool {
-    let mut handle = match std::fs::File::create(name) {
-        Ok(handle) => handle,
-        Err(_) => return false,
-    };
-    handle.write_all(source).is_ok()
-}
 fn m_strtoint_digit_prefix(s: &str, radix: u32) -> Option<i32> {
     let end = s.find(|c: char| !c.is_digit(radix)).unwrap_or(s.len());
     if end == 0 {
