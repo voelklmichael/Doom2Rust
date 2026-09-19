@@ -15,12 +15,68 @@
 //! ([`Command::ToggleSound`]). Codes 32 to 126 are typed characters: the code is the ASCII value,
 //! and the receiver presses that key (this is how cheat codes and other text reach the game). The
 //! codes in between are unused.
+//!
+//! The other direction is used for one thing only, and only by the web controller (WebSocket text
+//! messages; the plain TCP link carries nothing back): the board reports its frame rate as
+//! `fps 28.4`, see [`encode_fps`] and [`decode_fps`]. A controller that does not know the message
+//! ignores it.
 #![no_std]
 
 /// TCP port the CoreS3 listens on.
 pub const DEFAULT_PORT: u16 = 7878;
 
 const RELEASE_BIT: u8 = 0x80;
+
+const FPS_PREFIX: &[u8] = b"fps ";
+
+/// The longest [`encode_fps`] message: `fps ` and a 10-digit whole part, a point and a digit.
+pub const FPS_MESSAGE_MAX: usize = FPS_PREFIX.len() + 10 + 2;
+
+/// The message that reports a frame rate of `tenths` / 10 frames per second: `fps 28.4`. Returns
+/// the number of bytes written to `out`.
+pub fn encode_fps(tenths: u32, out: &mut [u8; FPS_MESSAGE_MAX]) -> usize {
+    out[..FPS_PREFIX.len()].copy_from_slice(FPS_PREFIX);
+    let mut length = FPS_PREFIX.len();
+    let mut digits = [0u8; 10];
+    let mut count = 0;
+    let mut whole = tenths / 10;
+    loop {
+        digits[count] = b'0' + (whole % 10) as u8;
+        count += 1;
+        whole /= 10;
+        if whole == 0 {
+            break;
+        }
+    }
+    for &digit in digits[..count].iter().rev() {
+        out[length] = digit;
+        length += 1;
+    }
+    out[length] = b'.';
+    out[length + 1] = b'0' + (tenths % 10) as u8;
+    length + 2
+}
+
+/// The frame rate in tenths of a frame per second that a message from [`encode_fps`] reports.
+/// `None` for anything else (so a controller can ignore messages it does not know).
+pub fn decode_fps(message: &[u8]) -> Option<u32> {
+    let rest = message.strip_prefix(FPS_PREFIX)?;
+    let (whole, tenth) = match rest {
+        [whole @ .., b'.', tenth] => (whole, *tenth),
+        _ => return None,
+    };
+    if whole.is_empty() || whole.len() > 10 || !tenth.is_ascii_digit() {
+        return None;
+    }
+    let mut tenths: u64 = 0;
+    for &digit in whole {
+        if !digit.is_ascii_digit() {
+            return None;
+        }
+        tenths = tenths * 10 + u64::from(digit - b'0');
+    }
+    u32::try_from(tenths * 10 + u64::from(tenth - b'0')).ok()
+}
 
 /// What a byte asks for: a game action, or a typed character. The codes are part of the wire
 /// format: append new actions, never renumber.
@@ -283,5 +339,40 @@ mod tests {
         held.update(KeyEvent::press(Command::Run));
         held.update(KeyEvent::press(Command::Run));
         assert_eq!(held.take_releases().count(), 1);
+    }
+
+    fn fps(tenths: u32) -> Vec<u8> {
+        let mut out = [0u8; FPS_MESSAGE_MAX];
+        let length = encode_fps(tenths, &mut out);
+        out[..length].to_vec()
+    }
+
+    #[test]
+    fn a_frame_rate_is_written_as_text_with_one_decimal() {
+        assert_eq!(fps(284), b"fps 28.4");
+        assert_eq!(fps(300), b"fps 30.0");
+        assert_eq!(fps(5), b"fps 0.5");
+        assert_eq!(fps(0), b"fps 0.0");
+        assert_eq!(fps(1234), b"fps 123.4");
+    }
+
+    #[test]
+    fn a_frame_rate_round_trips_and_always_fits() {
+        for tenths in [0, 1, 9, 10, 99, 284, 999, 6553, 100_000, u32::MAX] {
+            let message = fps(tenths);
+            assert!(message.len() <= FPS_MESSAGE_MAX);
+            assert_eq!(decode_fps(&message), Some(tenths));
+        }
+    }
+
+    #[test]
+    fn other_messages_are_not_a_frame_rate() {
+        for message in [
+            &b""[..], b"fps", b"fps ", b"fps 28", b"fps 28.", b"fps .4", b"fps 28.44", b"fps -1.0",
+            b"fps 2x.4", b"fps 28,4", b"FPS 28.4", b"fps 28.4 ", b"ping", b"fps 99999999999.0",
+            b"fps 429496729.6",
+        ] {
+            assert_eq!(decode_fps(message), None, "{:?}", core::str::from_utf8(message));
+        }
     }
 }

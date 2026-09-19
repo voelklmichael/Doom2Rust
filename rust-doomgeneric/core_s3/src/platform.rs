@@ -1,6 +1,8 @@
 //! `DoomPlatform` for the CoreS3: LCD output, a millisecond clock and the serial console.
 //! Input arrives over Wi-Fi (see `net`); the LCD is driven from core 0 (see `lcd`).
 
+use core::sync::atomic::{AtomicU32, Ordering};
+
 use core_s3_protocol::Command;
 use embedded_graphics::{pixelcolor::Rgb565, prelude::*};
 use esp_hal::{delay::Delay, time::Instant};
@@ -24,6 +26,29 @@ struct FrameStats {
 }
 
 const STATS_WINDOW_US: u64 = 2_000_000;
+
+/// The latest frame rate, for the web controller (core 0) to send to browsers: the number of
+/// tenths of a frame per second in the low 16 bits and, in the high 16, a count that goes up with
+/// every sample (so a repeat of the same rate still counts as new, and a stalled game shows as no
+/// change). 0 = nothing measured yet. One relaxed store per stats window; the game does no
+/// formatting or allocation for it.
+static FPS_SAMPLE: AtomicU32 = AtomicU32::new(0);
+
+/// The latest sample: `(counter, fps in tenths)`, or `None` before the first one. A different
+/// counter than last time means a new sample.
+pub fn fps_sample() -> Option<(u16, u16)> {
+    match FPS_SAMPLE.load(Ordering::Relaxed) {
+        0 => None,
+        sample => Some(((sample >> 16) as u16, sample as u16)),
+    }
+}
+
+fn publish_fps(tenths: u64) {
+    let counter = (FPS_SAMPLE.load(Ordering::Relaxed) >> 16).wrapping_add(1) & 0xffff;
+    // Counter 0 is skipped on wrap-around so a sample is never mistaken for "nothing yet".
+    let counter = if counter == 0 { 1 } else { counter };
+    FPS_SAMPLE.store(counter << 16 | tenths.min(u64::from(u16::MAX)) as u32, Ordering::Relaxed);
+}
 
 fn now_us() -> u64 {
     Instant::now().duration_since_epoch().as_micros() as u64
@@ -54,10 +79,12 @@ impl CoreS3Platform {
         let elapsed = end - stats.window_start_us;
         if elapsed >= STATS_WINDOW_US {
             let frames = u64::from(stats.frames);
+            let tenths = frames * 10_000_000 / elapsed;
+            publish_fps(tenths);
             print!(
                 "[perf] {}.{} fps, present {} us/frame (waiting for the LCD {}), everything else {} us/frame (of it sound {})\n",
-                frames * 1_000_000 / elapsed,
-                frames * 10_000_000 / elapsed % 10,
+                tenths / 10,
+                tenths % 10,
                 stats.present_us / frames,
                 stats.waiting_us / frames,
                 (elapsed - stats.present_us) / frames,

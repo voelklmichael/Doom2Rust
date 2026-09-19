@@ -144,6 +144,20 @@ RFC's own examples. The page was tested in headless Chromium against the board (
 typing in both modes, rebinding, reload, blur), and the server with a separate WebSocket client (two
 connections at once, ping/pong, dropped connections).
 
+**FPS readout.** The page shows the game's frame rate ("28.4 fps") next to the connection status.
+Messages go the other way too, but only on the web controller's WebSocket (the plain TCP port, and so
+`core_s3_sender`, never gets anything back): the board sends a WebSocket *text* message `fps 28.4`
+(`core_s3_protocol::encode_fps`/`decode_fps`, framed by `core_s3_ws::text_frame`, all host tested).
+It is measured where the `[perf]` serial line already is (`platform.rs`, the 2 s window, so a new value
+about every 2 s): the game core stores the number in one atomic (`FPS_SAMPLE`: tenths of a frame per
+second plus a sample counter; no formatting or allocation on that core) and each WebSocket task on core 0
+looks at it every 500 ms and sends it when the counter changed, and once right after connecting. The
+page shows "- fps" until a value arrives, after 6 s without one (game stalled, older firmware) and when
+disconnected, and ignores messages it does not know, so new server messages can be added later. To see
+it: join the `CoreS3-DOOM` network with a phone or laptop and open `http://192.168.4.1/`. The page logic
+was tested in headless Chromium against a local stand-in for the board that pushed fps messages
+(update, junk ignored, going stale, recovering); the on-board path was not loaded in a browser.
+
 **The board's own network** (`net.rs`, `../core_s3_dhcp`): with no credentials the firmware starts
 esp-radio in access-point mode (open, channel 1, up to 4 clients, SSID `CoreS3-DOOM`) with the static
 address `192.168.4.1/24`, and answers DHCP itself. `core_s3_dhcp` is a small `no_std` server (unit
