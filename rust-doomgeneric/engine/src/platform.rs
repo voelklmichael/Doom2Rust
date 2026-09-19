@@ -21,6 +21,26 @@ pub trait DoomPlatform {
     fn draw_indexed_frame(&mut self, _indices: &[u8], _palette: &[Pixel; 256]) -> bool {
         false
     }
+    /// Opens the sound output. The stream is interleaved stereo, signed 16-bit
+    /// samples. `preferred_rate` is the sample rate in Hz the engine asks for
+    /// (`snd_samplerate`, 44100 by default); return the rate actually in use, or
+    /// `None` for no sound. The default is no sound.
+    fn audio_open(&mut self, _preferred_rate: u32) -> Option<u32> {
+        None
+    }
+    /// How many frames (a frame is one left and one right sample) the output
+    /// wants right now. Called once per game tick after
+    /// [`audio_open`](Self::audio_open) succeeded; the engine mixes exactly that
+    /// many and passes them to [`audio_write`](Self::audio_write). The platform
+    /// owns the pacing: a real-time sink returns the frames elapsed since it was
+    /// last fed (capped, so a stall does not queue seconds of audio), a DMA ring
+    /// returns its free space.
+    fn audio_frames_wanted(&mut self) -> usize {
+        0
+    }
+    /// Queues `samples` (interleaved left/right, `2 * frames` values) for
+    /// playback. Called from the game loop, so it must not block for long.
+    fn audio_write(&mut self, _samples: &[i16]) {}
     fn sleep_ms(&mut self, ms: u32);
     fn get_ticks_ms(&mut self) -> u32;
     /// Pops one queued key event, if any: `(pressed, keycode)`.

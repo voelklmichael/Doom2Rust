@@ -1,11 +1,24 @@
+use crate::game_state::GameState;
 use crate::i_video::IVideoState;
 use crate::m_argv::parm_exists;
 use crate::m_argv::MArgvState;
 use crate::m_config::bind_variable_int;
 use crate::m_config::bind_variable_string;
 use crate::m_config::MConfigState;
-
-use crate::sounds::SfxInfo;
+use crate::platform::DoomPlatform;
+use crate::sfx_mixer::Mixer;
+use crate::sfx_mixer::Sample;
+use crate::sounds::SfxId;
+use crate::sounds::SoundsState;
+use crate::w_wad::check_num_for_name;
+use crate::w_wad::lump_bytes;
+use crate::w_wad::lump_length;
+use crate::w_wad::WWadState;
+use alloc::format;
+use alloc::string::String;
+/// Values of the `snd_musicdevice` / `snd_sfxdevice` config variables. Only
+/// `Adlib` and `Sb` are compared against; the rest document the config values.
+#[allow(dead_code)]
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum SndDevice {
     SnddeviceNone = 0,
@@ -19,36 +32,6 @@ pub enum SndDevice {
     Genmidi = 8,
     Awe32 = 9,
     Cd = 10,
-}
-fn snddevice_from_raw(v: i32) -> SndDevice {
-    match v {
-        0 => SndDevice::SnddeviceNone,
-        1 => SndDevice::Pcspeaker,
-        2 => SndDevice::Adlib,
-        3 => SndDevice::Sb,
-        4 => SndDevice::Pas,
-        5 => SndDevice::Gus,
-        6 => SndDevice::Waveblaster,
-        7 => SndDevice::Soundcanvas,
-        8 => SndDevice::Genmidi,
-        9 => SndDevice::Awe32,
-        10 => SndDevice::Cd,
-        n => panic!("invalid snddevice {n}"),
-    }
-}
-type StartSoundFn = fn(&mut SfxInfo, i32, i32, i32) -> i32;
-#[derive(Copy, Clone)]
-pub struct SoundModule {
-    pub sound_devices: &'static [SndDevice],
-    pub init: Option<fn(bool) -> bool>,
-    pub shutdown: Option<fn()>,
-    pub get_sfx_lump_num: Option<fn(&mut SfxInfo) -> i32>,
-    pub update: Option<fn()>,
-    pub update_sound_params: Option<fn(i32, i32, i32)>,
-    pub start_sound: Option<StartSoundFn>,
-    pub stop_sound: Option<fn(i32)>,
-    pub sound_is_playing: Option<fn(i32) -> bool>,
-    pub cache_sounds: Option<fn(&mut [SfxInfo])>,
 }
 #[derive(Copy, Clone)]
 pub struct MusicModule {
@@ -68,7 +51,9 @@ pub struct ISoundState {
     pub snd_cachesize: i32,
     pub snd_maxslicetime_ms: i32,
     pub snd_musiccmd: Option<&'static str>,
-    sound_module: Option<&'static SoundModule>,
+    /// `Some` once the platform has opened an audio device.
+    mixer: Option<Mixer>,
+    use_sfx_prefix: bool,
     music_module: Option<&'static MusicModule>,
     pub snd_musicdevice: i32,
     pub snd_sfxdevice: i32,
@@ -76,17 +61,12 @@ pub struct ISoundState {
     snd_sbirq: i32,
     snd_sbdma: i32,
     snd_mport: i32,
-    // Unused in this port: the M_BindVariable calls that would read/write
-    // these live behind #ifdef FEATURE_SOUND in the original C, which isn't
-    // defined here (sound_modules is a stub with no real backend). Kept as
-    // GameState fields (rather than deleted) so the names survive if real
-    // sound support is ever added.
+    // Unused in this port: libsamplerate is not supported (the mixer does its
+    // own nearest-neighbour rate conversion, as the SDL_mixer backend does
+    // without it). Kept as GameState fields (rather than deleted) so the names
+    // survive.
     pub use_libsamplerate: i32,
     pub libsamplerate_scale: f32,
-    // Always a single None entry -- see init_sfx_module, which never finds a
-    // real backend and always leaves sound_module None. Kept as-is (dead
-    // stub), same rationale as above, rather than deleted as a drive-by.
-    sound_modules: [Option<&'static SoundModule>; 1],
 }
 
 impl Default for ISoundState {
@@ -102,7 +82,8 @@ impl ISoundState {
             snd_cachesize: 64 * 1024 * 1024,
             snd_maxslicetime_ms: 28,
             snd_musiccmd: None,
-            sound_module: None,
+            mixer: None,
+            use_sfx_prefix: true,
             music_module: None,
             snd_musicdevice: SndDevice::Sb as i32,
             snd_sfxdevice: SndDevice::Sb as i32,
@@ -112,58 +93,74 @@ impl ISoundState {
             snd_mport: 0,
             use_libsamplerate: 0,
             libsamplerate_scale: 0.65,
-            sound_modules: [None],
         }
     }
 }
-fn snd_device_in_list(device: SndDevice, list: &[SndDevice]) -> bool {
-    list.contains(&device)
-}
-fn init_sfx_module(state: &mut ISoundState, use_sfx_prefix: bool) {
-    state.sound_module = None;
-    for i in 0..state.sound_modules.len() {
-        let Some(module) = state.sound_modules[i] else {
-            break;
-        };
-        if snd_device_in_list(
-            snddevice_from_raw(state.snd_sfxdevice),
-            module.sound_devices,
-        ) && (module.init.expect("non-null function pointer"))(use_sfx_prefix)
-        {
-            state.sound_module = Some(module);
-            return;
-        }
-    }
-}
+/// Opens the platform's audio device (unless `-nosound` / `-nosfx`) and starts
+/// the mixer at whatever rate the platform settles on.
 pub fn init_sound(
     i_sound: &mut ISoundState,
     i_video: &IVideoState,
     m_argv: &MArgvState,
+    platform: &mut dyn DoomPlatform,
     use_sfx_prefix: bool,
 ) {
     let nosound: bool = parm_exists(m_argv, "-nosound");
     let nosfx: bool = parm_exists(m_argv, "-nosfx");
     if !nosound && !i_video.screensaver_mode && !nosfx {
-        init_sfx_module(i_sound, use_sfx_prefix);
+        let preferred = u32::try_from(i_sound.snd_samplerate)
+            .ok()
+            .filter(|&rate| rate > 0)
+            .unwrap_or(44100);
+        i_sound.mixer = platform.audio_open(preferred).map(Mixer::new);
+        i_sound.use_sfx_prefix = use_sfx_prefix;
     }
 }
-pub fn shutdown_sound(state: &ISoundState) {
-    if let Some(module) = state.sound_module {
-        (module.shutdown.expect("non-null function pointer"))();
-    }
+pub fn shutdown_sound(state: &mut ISoundState) {
+    state.mixer = None;
     if let Some(module) = state.music_module {
         (module.shutdown.expect("non-null function pointer"))();
     }
 }
-pub fn get_sfx_lump_num(state: &ISoundState, sfxinfo: &mut SfxInfo) -> i32 {
-    match state.sound_module {
-        Some(module) => (module.get_sfx_lump_num.expect("non-null function pointer"))(sfxinfo),
-        None => 0,
+/// Name of the lump holding `sfx`'s samples: Doom prefixes its lumps with
+/// `ds`, and a linked sfx shares the lump of the sfx it links to.
+fn sfx_lump_name(sounds: &SoundsState, sfx: SfxId, use_sfx_prefix: bool) -> String {
+    let info = &sounds.s_sfx[sfx.0 as usize];
+    let name = match info.link {
+        Some(link) => sounds.s_sfx[link.0 as usize].name.as_str(),
+        None => info.name.as_str(),
+    };
+    if use_sfx_prefix {
+        format!("ds{name}")
+    } else {
+        String::from(name)
     }
 }
-pub fn update_sound(state: &ISoundState) {
-    if let Some(module) = state.sound_module {
-        (module.update.expect("non-null function pointer"))();
+/// Lump number of `sfx`'s samples, or -1 if the WAD has none (that sound is
+/// then silent). Without an audio device nothing is looked up.
+pub fn get_sfx_lump_num(
+    state: &ISoundState,
+    w_wad: &WWadState,
+    sounds: &SoundsState,
+    sfx: SfxId,
+) -> i32 {
+    if state.mixer.is_none() {
+        return 0;
+    }
+    check_num_for_name(w_wad, &sfx_lump_name(sounds, sfx, state.use_sfx_prefix)).unwrap_or(-1)
+}
+/// Renders as much audio as the platform currently wants and hands it over.
+pub fn update_sound(state: &mut ISoundState, platform: &mut dyn DoomPlatform) {
+    const CHUNK_FRAMES: usize = 512;
+    if let Some(mixer) = state.mixer.as_mut() {
+        let mut wanted = platform.audio_frames_wanted();
+        let mut chunk = [0i16; CHUNK_FRAMES * 2];
+        while wanted > 0 {
+            let frames = wanted.min(CHUNK_FRAMES);
+            mixer.mix(&mut chunk[..frames * 2]);
+            platform.audio_write(&chunk[..frames * 2]);
+            wanted -= frames;
+        }
     }
     if let Some(module) = state.music_module {
         if let Some(poll) = module.poll {
@@ -175,46 +172,54 @@ fn check_volume_separation(vol: &mut i32, sep: &mut i32) {
     *sep = (*sep).clamp(0, 254);
     *vol = (*vol).clamp(0, 127);
 }
-pub fn update_sound_params(state: &ISoundState, channel: i32, mut vol: i32, mut sep: i32) {
-    if let Some(module) = state.sound_module {
+pub fn update_sound_params(state: &mut ISoundState, channel: i32, mut vol: i32, mut sep: i32) {
+    if let Some(mixer) = state.mixer.as_mut() {
         check_volume_separation(&mut vol, &mut sep);
-        (module
-            .update_sound_params
-            .expect("non-null function pointer"))(channel, vol, sep);
+        mixer.set_params(channel, vol, sep);
     }
 }
+/// Starts `sfx` on `channel`. Returns the channel as the sound's handle, or -1
+/// if it could not be played. Without an audio device it returns 0.
 pub fn i_start_sound(
-    state: &ISoundState,
-    sfxinfo: &mut SfxInfo,
+    state: &mut GameState,
+    sfx: SfxId,
     channel: i32,
     mut vol: i32,
     mut sep: i32,
 ) -> i32 {
-    match state.sound_module {
-        Some(module) => {
-            check_volume_separation(&mut vol, &mut sep);
-            (module.start_sound.expect("non-null function pointer"))(sfxinfo, channel, vol, sep)
-        }
-        None => 0,
+    if state.i_sound.mixer.is_none() {
+        return 0;
+    }
+    check_volume_separation(&mut vol, &mut sep);
+    let lumpnum = state.sounds.s_sfx[sfx.0 as usize].lumpnum;
+    if lumpnum < 0 {
+        return -1;
+    }
+    let lump_len = lump_length(&state.w_wad, lumpnum as u32) as usize;
+    let Some(sample) = Sample::from_lump(lump_bytes(state, lumpnum), lump_len) else {
+        return -1;
+    };
+    let started = state
+        .i_sound
+        .mixer
+        .as_mut()
+        .is_some_and(|mixer| mixer.start(channel, sample, vol, sep));
+    if started {
+        channel
+    } else {
+        -1
     }
 }
-pub fn i_stop_sound(state: &ISoundState, channel: i32) {
-    if let Some(module) = state.sound_module {
-        (module.stop_sound.expect("non-null function pointer"))(channel);
+pub fn i_stop_sound(state: &mut ISoundState, channel: i32) {
+    if let Some(mixer) = state.mixer.as_mut() {
+        mixer.stop(channel);
     }
 }
 pub fn sound_is_playing(state: &ISoundState, channel: i32) -> bool {
-    match state.sound_module {
-        Some(module) => (module.sound_is_playing.expect("non-null function pointer"))(channel),
-        None => false,
-    }
-}
-pub fn precache_sounds(state: &ISoundState, sounds: &mut [SfxInfo]) {
-    if let Some(module) = state.sound_module {
-        if let Some(cache_sounds) = module.cache_sounds {
-            cache_sounds(sounds);
-        }
-    }
+    state
+        .mixer
+        .as_ref()
+        .is_some_and(|mixer| mixer.is_playing(channel))
 }
 pub fn init_music(state: &ISoundState) {
     if let Some(module) = state.music_module {

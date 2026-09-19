@@ -79,6 +79,7 @@ pub(crate) mod r_segs;
 pub(crate) mod r_sky;
 pub(crate) mod r_things;
 pub(crate) mod s_sound;
+pub(crate) mod sfx_mixer;
 pub(crate) mod sounds;
 pub(crate) mod st_lib;
 pub(crate) mod st_stuff;

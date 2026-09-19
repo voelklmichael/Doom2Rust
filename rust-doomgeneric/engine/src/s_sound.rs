@@ -6,7 +6,6 @@ use crate::i_sound::i_start_sound;
 use crate::i_sound::i_stop_sound;
 use crate::i_sound::pause_song;
 use crate::i_sound::play_song;
-use crate::i_sound::precache_sounds;
 use crate::i_sound::register_song;
 use crate::i_sound::resume_song;
 use crate::i_sound::shutdown_sound;
@@ -110,7 +109,6 @@ pub const S_ATTENUATOR: i32 = (S_CLIPPING_DIST - S_CLOSE_DIST) >> FRACBITS;
 pub const S_STEREO_SWING: i32 = 96 * FRACUNIT;
 pub const NORM_SEP: i32 = 128;
 pub fn s_init(state: &mut GameState, sfx_volume_0: i32, music_volume_0: i32) {
-    precache_sounds(&state.i_sound, &mut state.sounds.s_sfx);
     set_sfx_volume(&mut state.s_sound, sfx_volume_0);
     s_set_music_volume(&state.i_sound, music_volume_0);
     state.s_sound.channels = vec![
@@ -133,10 +131,10 @@ pub fn s_init(state: &mut GameState, sfx_volume_0: i32, music_volume_0: i32) {
     );
 }
 pub fn shutdown(state: &mut GameState) {
-    shutdown_sound(&state.i_sound);
+    shutdown_sound(&mut state.i_sound);
 }
 fn stop_channel(
-    i_sound: &ISoundState,
+    i_sound: &mut ISoundState,
     s_sound: &mut SSoundState,
     sounds: &mut SoundsState,
     cnum: i32,
@@ -154,7 +152,12 @@ pub fn s_start(state: &mut GameState) {
     let mnum: i32;
     for cnum in 0..state.s_sound.snd_channels {
         if state.s_sound.channels[cnum as usize].sfxinfo.is_some() {
-            stop_channel(&state.i_sound, &mut state.s_sound, &mut state.sounds, cnum);
+            stop_channel(
+                &mut state.i_sound,
+                &mut state.s_sound,
+                &mut state.sounds,
+                cnum,
+            );
         }
     }
     state.s_sound.mus_paused = false;
@@ -183,7 +186,7 @@ pub fn s_start(state: &mut GameState) {
     change_music(state, mnum, true);
 }
 pub fn s_stop_sound(
-    i_sound: &ISoundState,
+    i_sound: &mut ISoundState,
     s_sound: &mut SSoundState,
     sounds: &mut SoundsState,
     origin: SoundOrigin,
@@ -197,7 +200,7 @@ pub fn s_stop_sound(
     }
 }
 fn get_channel(
-    i_sound: &ISoundState,
+    i_sound: &mut ISoundState,
     s_sound: &mut SSoundState,
     sounds: &mut SoundsState,
     origin: SoundOrigin,
@@ -324,13 +327,13 @@ pub fn s_start_sound(state: &mut GameState, origin: SoundOrigin, sfx_id: i32) {
         NORM_SEP
     };
     s_stop_sound(
-        &state.i_sound,
+        &mut state.i_sound,
         &mut state.s_sound,
         &mut state.sounds,
         origin,
     );
     let cnum = get_channel(
-        &state.i_sound,
+        &mut state.i_sound,
         &mut state.s_sound,
         &mut state.sounds,
         origin,
@@ -345,11 +348,12 @@ pub fn s_start_sound(state: &mut GameState, origin: SoundOrigin, sfx_id: i32) {
     if fresh2 < 0 {
         sfx.usefulness = 1;
     }
-    if sfx.lumpnum < 0 {
-        sfx.lumpnum = get_sfx_lump_num(&state.i_sound, sfx);
+    let sfx_id = SfxId(sfx_id as u32);
+    if state.sounds.s_sfx[sfx_index].lumpnum < 0 {
+        let lumpnum = get_sfx_lump_num(&state.i_sound, &state.w_wad, &state.sounds, sfx_id);
+        state.sounds.s_sfx[sfx_index].lumpnum = lumpnum;
     }
-    state.s_sound.channels[cnum as usize].handle =
-        i_start_sound(&state.i_sound, sfx, cnum, volume, sep);
+    state.s_sound.channels[cnum as usize].handle = i_start_sound(state, sfx_id, cnum, volume, sep);
 }
 pub fn pause_sound(i_sound: &ISoundState, s_sound: &mut SSoundState) {
     if s_sound.mus_playing.is_some() && !s_sound.mus_paused {
@@ -364,14 +368,19 @@ pub fn resume_sound(i_sound: &ISoundState, s_sound: &mut SSoundState) {
     }
 }
 pub fn update_sounds(state: &mut GameState, listener: Option<MobjId>) {
-    update_sound(&state.i_sound);
+    update_sound(&mut state.i_sound, &mut *state.platform);
     for cnum in 0..state.s_sound.snd_channels {
         let c = state.s_sound.channels[cnum as usize];
         let Some(sfxinfo) = c.sfxinfo else {
             continue;
         };
         if !sound_is_playing(&state.i_sound, c.handle) {
-            stop_channel(&state.i_sound, &mut state.s_sound, &mut state.sounds, cnum);
+            stop_channel(
+                &mut state.i_sound,
+                &mut state.s_sound,
+                &mut state.sounds,
+                cnum,
+            );
             continue;
         }
         let (has_link, link_volume) = {
@@ -381,7 +390,12 @@ pub fn update_sounds(state: &mut GameState, listener: Option<MobjId>) {
         // A linked sound too quiet to hear is stopped outright; audible ones
         // get their volume from adjust_sound_params below.
         if has_link && state.s_sound.snd_sfx_volume + link_volume < 1 {
-            stop_channel(&state.i_sound, &mut state.s_sound, &mut state.sounds, cnum);
+            stop_channel(
+                &mut state.i_sound,
+                &mut state.s_sound,
+                &mut state.sounds,
+                cnum,
+            );
             continue;
         }
         if c.origin != SoundOrigin::None
@@ -389,9 +403,14 @@ pub fn update_sounds(state: &mut GameState, listener: Option<MobjId>) {
         {
             let listener = listener.unwrap();
             match adjust_sound_params(state, listener, c.origin) {
-                None => stop_channel(&state.i_sound, &mut state.s_sound, &mut state.sounds, cnum),
+                None => stop_channel(
+                    &mut state.i_sound,
+                    &mut state.s_sound,
+                    &mut state.sounds,
+                    cnum,
+                ),
                 Some((volume, sep)) => {
-                    update_sound_params(&state.i_sound, c.handle, volume, sep);
+                    update_sound_params(&mut state.i_sound, c.handle, volume, sep);
                 }
             }
         }

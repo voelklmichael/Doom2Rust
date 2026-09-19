@@ -302,3 +302,27 @@ vanilla or from older builds still load, because any non-zero word reads as "pre
 What is given up: a save no longer carries the (meaningless) original pointer values, so
 byte-comparing a save against one written by the C program will differ in those words,
 exactly as it already did between two runs of the C program.
+
+## Sound effects: a built-in mixer instead of SDL_mixer (2026-09-19)
+
+Upstream doomgeneric only has sound in its SDL/Allegro ports (`i_sdlsound.c`,
+`i_allegrosound.c`, built with `FEATURE_SOUND`); the X11 port is silent. The engine now
+mixes sound effects itself (`sfx_mixer.rs`) and hands stereo PCM to the platform through
+`DoomPlatform::audio_open` / `audio_frames_wanted` / `audio_write`. The mixer follows
+`i_sdlsound.c`: nearest-neighbour rate conversion, the `b | b << 8` 8-to-16-bit widening,
+pan `left = (254 - sep) * vol / 127`, `right = sep * vol / 127`, saturating overlap.
+
+Differences from the SDL backend:
+
+- A sound whose `ds*` lump is missing from the WAD is silent. Vanilla stops with
+  `W_GetNumForName: ... not found!`.
+- Sounds are loaded when first played, not at start-up (`I_PrecacheSounds` is gone), so the
+  first play of an effect reads its lump then. The lump is shared with the lump cache, not
+  copied and expanded to the output rate.
+- `use_libsamplerate` / `libsamplerate_scale` stay unused; there is no libsamplerate path.
+- Music is not implemented yet (`MusicModule` has no backend), so `S_ChangeMusic` still
+  does nothing audible.
+- A platform that does not implement `audio_open` (the default) plays nothing, and the
+  engine then behaves exactly as before: no lumps are looked up for sound.
+- The Linux build sends its audio to `aplay` or `paplay` over a pipe (`DOOM_AUDIO=off` or
+  `DOOM_AUDIO=file:PATH` override it).
