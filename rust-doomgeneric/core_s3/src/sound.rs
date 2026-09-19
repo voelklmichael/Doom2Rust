@@ -36,13 +36,19 @@ const QUEUE_TARGET: usize = 4 * CHUNK_FRAMES;
 /// be there within two chunks of that.
 const PUMP_PERIOD: Duration = Duration::from_millis(2);
 
-/// Master volume in 256ths of what the engine mixes (128 = half). The engine's sound effects use
-/// nearly the full 16 bit range, and the CoreS3's speaker is loud; adjust to taste. (A multiply
-/// and a shift: this runs for every frame on the game core, and a division is slow there.)
-const VOLUME_256THS: i32 = 128;
+/// Master volume in 256ths of what the engine mixes, after the two channels are averaged (256 would
+/// be the engine's own level). The CoreS3's speaker is loud: 128 (-6 dB) was still "very
+/// distracting", so this is -12 dB below that. Change it and rebuild for another level; the
+/// in-game menu's sound volume slider works on top of it. The amp's own volume register is left at
+/// full on purpose. (A multiply and a shift: this runs for every frame on the game core.)
+const VOLUME_256THS: i32 = 32;
 
 /// The engine's mixed audio for the speaker.
 static QUEUE: FrameQueue<QUEUE_FRAMES> = FrameQueue::new();
+/// Muted at run time (the controller's sound button, or the `M` key of `core_s3_sender`). The
+/// speaker keeps running and the game keeps mixing, so nothing changes for the game; the audio is
+/// just thrown away and the ring gets silence.
+static MUTED: AtomicBool = AtomicBool::new(false);
 /// Set once the speaker works; the platform reports "no sound" to the engine until then.
 static READY: AtomicBool = AtomicBool::new(false);
 
@@ -65,6 +71,13 @@ pub fn start(
     ws: GPIO33<'static>,
     dout: GPIO13<'static>,
 ) {
+    // Build with SOUND=off for a firmware without any sound (the speaker is not even set up), or
+    // SOUND=muted to start muted.
+    match option_env!("SOUND") {
+        Some("off") => return println!("audio: built with SOUND=off; no sound"),
+        Some("muted") => MUTED.store(true, Ordering::Relaxed),
+        _ => {}
+    }
     let speaker = match Speaker::open(i2s, dma, bclk, ws, dout) {
         Ok(speaker) => speaker,
         Err(error) => return println!("audio: {error}; no sound"),
@@ -74,6 +87,12 @@ pub fn start(
         Ok(()) => spawner.spawn(pump(speaker).expect("spawn sound pump")),
         Err(error) => println!("audio: amp init failed ({error:?}); no sound"),
     }
+}
+
+/// Mutes or unmutes the speaker.
+pub fn toggle_mute() {
+    let muted = !MUTED.fetch_xor(true, Ordering::Relaxed);
+    println!("[audio] {}", if muted { "muted" } else { "unmuted" });
 }
 
 /// True once [`pump`] is running.
@@ -90,6 +109,9 @@ pub fn frames_wanted() -> usize {
 /// mixes both channels into one (the engine's panning becomes a level difference) and applies the
 /// master volume.
 pub fn write(samples: &[i16]) {
+    if MUTED.load(Ordering::Relaxed) {
+        return;
+    }
     let mut mono = [0i16; 2 * 64];
     let mut peak = 0;
     for part in samples.chunks(2 * 64) {
@@ -114,7 +136,12 @@ fn refill(speaker: &mut Speaker) -> (u32, u32) {
     let (mut real, mut silence) = (0, 0);
     for _ in 0..speaker.free_frames() / CHUNK_FRAMES {
         let mut chunk = [0i16; 2 * CHUNK_FRAMES];
-        let popped = QUEUE.pop_padded(&mut chunk);
+        let mut popped = QUEUE.pop_padded(&mut chunk);
+        if MUTED.load(Ordering::Relaxed) {
+            // Drain what was queued before the mute too.
+            chunk.fill(0);
+            popped = 0;
+        }
         if speaker.push_chunk(&chunk) {
             real += popped as u32;
             silence += (CHUNK_FRAMES - popped) as u32;

@@ -95,6 +95,7 @@
       <button data-a="10">Esc</button><button data-a="9">Enter</button>
       <button data-a="12">Yes</button><button data-a="13">No</button>
       <button data-a="21">⌫</button>
+      <button data-a="22">Sound on/off</button>
     </div>
   </section>
 </div>
@@ -137,6 +138,7 @@ const ACTIONS = [
   [9, 'Enter'], [10, 'Esc / menu'], [11, 'Map'], [12, 'Yes'], [13, 'No'],
   [14, 'Weapon 1'], [15, 'Weapon 2'], [16, 'Weapon 3'], [17, 'Weapon 4'],
   [18, 'Weapon 5'], [19, 'Weapon 6'], [20, 'Weapon 7'], [21, 'Backspace'],
+  [22, 'Sound on/off'],
 ];
 const RELEASE = 0x80;
 // A press shorter than this is stretched: the game only looks at held keys once per tic (28 ms),
@@ -148,7 +150,7 @@ const DEFAULT_KEYS = {
   KeyQ: 4, Comma: 4, KeyE: 5, Period: 5, Space: 6, KeyF: 7, ShiftLeft: 8, ShiftRight: 8,
   Enter: 9, Escape: 10, Tab: 11, KeyY: 12, KeyN: 13,
   Digit1: 14, Digit2: 15, Digit3: 16, Digit4: 17, Digit5: 18, Digit6: 19, Digit7: 20,
-  Backspace: 21,
+  Backspace: 21, KeyM: 22,
 };
 
 const $ = (id) => document.getElementById(id);
