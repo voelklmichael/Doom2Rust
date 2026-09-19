@@ -172,9 +172,10 @@ async fn main(spawner: Spawner) {
     }
 
     // What the game keeps showing: a black screen with the status in its top bar, which the game
-    // never draws over.
+    // never draws over. The bar is the 20 rows above the picture; text is positioned by its
+    // baseline, so 15 puts the 10-row font in rows 8-17.
     display.clear(Rgb565::BLACK).expect("clear LCD");
-    Label { text: &status, top_left: Point::new(4, 5), color: Rgb565::CYAN }
+    Label { text: &status, top_left: Point::new(4, 15), color: Rgb565::CYAN }
         .draw(&mut display)
         .expect("draw status");
 

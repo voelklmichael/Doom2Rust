@@ -13,7 +13,7 @@
 //! its last press or auto-repeat, so holding a key briefly stutters until auto-repeat starts.
 
 use core_s3_protocol::{Command, KeyEvent};
-use core_s3_sender::{command_for, send, with_default_port, HoldTracker};
+use core_s3_sender::{command_for, send, with_default_port, HoldTracker, KEY_MAP};
 use crossterm::event::{
     self, Event, KeyCode, KeyEventKind, KeyModifiers, KeyboardEnhancementFlags,
     PopKeyboardEnhancementFlags, PushKeyboardEnhancementFlags,
@@ -88,7 +88,9 @@ fn run(args: &Args) -> io::Result<()> {
     let mut stream = TcpStream::connect(&args.address)?;
     // One byte per event: never let Nagle's algorithm batch them up.
     stream.set_nodelay(true)?;
-    println!("connected to {}; Ctrl-C quits", args.address);
+    println!("connected to {}", args.address);
+    // Before raw mode, while "\n" still returns the cursor to the start of the line.
+    println!("{KEY_MAP}");
 
     let terminal = RawTerminal::enter()?;
     let mut tracker = HoldTracker::new(args.hold);

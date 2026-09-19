@@ -45,6 +45,27 @@ pub fn command_for(code: KeyCode) -> Option<Command> {
     })
 }
 
+/// The key bindings drawn as a keyboard, printed when the sender starts. Keep it in step with
+/// [`command_for`] and the `r` toggle in `main.rs`; a test checks that every bound key appears.
+pub const KEY_MAP: &str = "\
+Keys
+        ┌───┬───┬───┬───┬───┬───┬───┐
+        │ 1 │ 2 │ 3 │ 4 │ 5 │ 6 │ 7 │   choose weapon
+        └───┴───┴───┴───┴───┴───┴───┘
+  ┌─────┬───┬───┬───┬───┐
+  │ Tab │ Q │ W │ E │ R │   map | strafe left | forward | strafe right | run on/off
+  └─────┴───┴───┴───┴───┘
+     ┌───┬───┬───┬───┐
+     │ A │ S │ D │ F │   turn left | back | turn right | use / open
+     └───┴───┴───┴───┘
+  Arrow keys   move and turn, like W A S D
+  , and .      strafe, like Q and E
+  Space        fire
+  Enter / Esc  in menus: select / back
+  Y / N        answer yes / no in menus
+  Ctrl-C       quit
+";
+
 /// Fake key releases for terminals that only report presses.
 ///
 /// Such a terminal repeats a held key (after its initial repeat delay), so a key counts as held
@@ -108,6 +129,31 @@ pub fn with_default_port(address: &str) -> String {
 mod tests {
     use super::*;
     use std::io::Read;
+
+    #[test]
+    fn key_map_mentions_every_bound_key() {
+        for c in ' '..='~' {
+            if command_for(KeyCode::Char(c)).is_none() {
+                continue;
+            }
+            let label = if c == ' ' { "Space".to_owned() } else { c.to_ascii_uppercase().to_string() };
+            assert!(KEY_MAP.contains(&label), "{c:?} is bound but {label:?} is not in KEY_MAP");
+        }
+        for (code, label) in [
+            (KeyCode::Up, "Arrow"),
+            (KeyCode::Down, "Arrow"),
+            (KeyCode::Left, "Arrow"),
+            (KeyCode::Right, "Arrow"),
+            (KeyCode::Enter, "Enter"),
+            (KeyCode::Esc, "Esc"),
+            (KeyCode::Tab, "Tab"),
+        ] {
+            assert!(command_for(code).is_some(), "{code:?} should be bound");
+            assert!(KEY_MAP.contains(label), "{code:?} is bound but {label:?} is not in KEY_MAP");
+        }
+        // Run is a toggle on `r` in main.rs, not in `command_for`.
+        assert!(KEY_MAP.contains('R'));
+    }
     use std::net::{TcpListener, TcpStream};
 
     const HOLD: Duration = Duration::from_millis(100);
