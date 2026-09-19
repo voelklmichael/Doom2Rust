@@ -12,8 +12,6 @@ use crate::w_checksum::W_Checksum;
 use crate::w_wad::W_CheckNumForName;
 
 use crate::d_main::D_ProcessEvents;
-use crate::doomdef::false_0;
-use crate::doomdef::true_0;
 use crate::doomdef::MAXPLAYERS;
 use crate::g_game::G_BuildTiccmd;
 use crate::game_state::GameState;
@@ -91,30 +89,30 @@ fn SaveGameSettings(state: &mut GameState, settings: &mut net_gamesettings_t) {
 }
 fn InitConnectData(state: &mut GameState, connect_data: &mut net_connect_data_t) {
     connect_data.max_players = MAXPLAYERS;
-    connect_data.drone = false_0;
+    connect_data.drone = false;
     if M_CheckParm(state, "-left") > 0 {
         state.r_main.viewangleoffset = ANG90;
-        connect_data.drone = true_0;
+        connect_data.drone = true;
     }
     if M_CheckParm(state, "-right") > 0 {
         state.r_main.viewangleoffset = ANG270 as i32;
-        connect_data.drone = true_0;
+        connect_data.drone = true;
     }
     connect_data.gamemode = state.doomstat.gamemode as i32;
     connect_data.gamemission = state.doomstat.gamemission as i32;
     connect_data.lowres_turn =
         (M_CheckParm(state, "-record") > 0 && M_CheckParm(state, "-longtics") == 0) as i32;
     connect_data.wad_sha1sum = W_Checksum(state);
-    connect_data.is_freedoom = (W_CheckNumForName(&mut state.w_wad, "FREEDOOM") >= 0) as i32;
+    connect_data.is_freedoom = W_CheckNumForName(&mut state.w_wad, "FREEDOOM") >= 0;
 }
 pub fn D_ConnectNetGame(state: &mut GameState) {
     let mut connect_data: net_connect_data_t = net_connect_data_t {
         gamemode: 0,
         gamemission: 0,
         lowres_turn: 0,
-        drone: 0,
+        drone: false,
         max_players: 0,
-        is_freedoom: 0,
+        is_freedoom: false,
         wad_sha1sum: [0; 20],
         player_class: 0,
     };

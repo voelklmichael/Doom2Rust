@@ -10,7 +10,6 @@ use crate::d_player::PowerType;
 use crate::d_player::{ammotype_t, NUMAMMO};
 use crate::d_player::{weapontype_t, NUMWEAPONS};
 use crate::d_player::{CF_GODMODE, CF_NOCLIP};
-use crate::doomdef::true_0;
 use crate::doomdef::MAXPLAYERS;
 use crate::doomdef::SCREENHEIGHT;
 use crate::doomdef::SCREENWIDTH;
@@ -477,7 +476,7 @@ pub fn ST_Responder(state: &mut GameState, ev: &event_t) -> bool {
                         state.g_game.player_mut(state.st_stuff.plyr).message =
                             Some("IMPOSSIBLE SELECTION".to_string());
                     } else {
-                        S_ChangeMusic(state, musnum, 1);
+                        S_ChangeMusic(state, musnum, true);
                     }
                 } else {
                     musnum = MusicName::mus_e1m1 as i32
@@ -487,7 +486,7 @@ pub fn ST_Responder(state: &mut GameState, ev: &event_t) -> bool {
                         state.g_game.player_mut(state.st_stuff.plyr).message =
                             Some("IMPOSSIBLE SELECTION".to_string());
                     } else {
-                        S_ChangeMusic(state, musnum, 1);
+                        S_ChangeMusic(state, musnum, true);
                     }
                 }
             } else if (if state.doomstat.gamemission as u32
@@ -545,7 +544,7 @@ pub fn ST_Responder(state: &mut GameState, ev: &event_t) -> bool {
                 state.g_game.player_mut(state.st_stuff.plyr).weaponowned
                     [weapontype_t::wp_chainsaw as usize] = true;
                 state.g_game.player_mut(state.st_stuff.plyr).powers
-                    [PowerType::pw_invulnerability as usize] = true_0;
+                    [PowerType::pw_invulnerability as usize] = 1;
                 state.g_game.player_mut(state.st_stuff.plyr).message =
                     Some("... doesn't suck - GM".to_string());
             } else if cht_CheckCheat(&mut state.st_stuff.cheat_mypos, ev.data2 as u8) {
@@ -711,7 +710,7 @@ pub fn ST_updateFaceWidget(state: &mut GameState) {
         }
     }
     if state.st_stuff.st_updatefacewidget_priority < 6 {
-        if state.g_game.player_mut(state.st_stuff.plyr).attackdown != 0 {
+        if state.g_game.player_mut(state.st_stuff.plyr).attackdown {
             if state.st_stuff.st_updatefacewidget_lastattackdown == -1 {
                 state.st_stuff.st_updatefacewidget_lastattackdown = ST_RAMPAGEDELAY;
             } else {

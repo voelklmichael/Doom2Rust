@@ -1,6 +1,4 @@
 use crate::d_mode::GameMode_t;
-use crate::doomdef::false_0;
-use crate::doomdef::true_0;
 use crate::game_state::GameState;
 use crate::i_sound::snddevice_t;
 use crate::i_sound::I_GetSfxLumpNum;
@@ -179,7 +177,7 @@ pub fn S_Start(state: &mut GameState) {
             mnum = spmus[(state.g_game.gamemap - 1) as usize];
         }
     }
-    S_ChangeMusic(state, mnum, true_0);
+    S_ChangeMusic(state, mnum, true);
 }
 pub fn S_StopSound(state: &mut GameState, origin: SoundOrigin) {
     for cnum in 0..state.s_sound.snd_channels {
@@ -226,13 +224,13 @@ fn S_GetChannel(state: &mut GameState, origin: SoundOrigin, sfxinfo: SfxId) -> i
     c.origin = origin;
     cnum
 }
+/// Volume and stereo separation for a sound heard from `source`, or `None` if
+/// it is too far away (or too quiet) to be audible.
 fn S_AdjustSoundParams(
     state: &mut GameState,
     listener: MobjId,
     source: SoundOrigin,
-    vol: &mut i32,
-    sep: &mut i32,
-) -> i32 {
+) -> Option<(i32, i32)> {
     let (source_x, source_y) = source
         .xy(state)
         .expect("sound source is always resolvable here");
@@ -244,7 +242,7 @@ fn S_AdjustSoundParams(
     let ady = (listener_y - source_y).abs() as fixed_t;
     let mut approx_dist = adx + ady - ((if adx < ady { adx } else { ady }) >> 1);
     if state.g_game.gamemap != 8 && approx_dist > S_CLIPPING_DIST {
-        return 0;
+        return None;
     }
     let mut angle: angle_t = R_PointToAngle2(state, listener_x, listener_y, source_x, source_y);
     if angle > listener_angle {
@@ -253,24 +251,22 @@ fn S_AdjustSoundParams(
         angle = angle.wrapping_add((0xffffffff as angle_t).wrapping_sub(listener_angle));
     }
     angle >>= ANGLETOFINESHIFT;
-    *sep = 128 - (FixedMul(S_STEREO_SWING, finesine[angle as usize]) >> FRACBITS);
-    if approx_dist < S_CLOSE_DIST {
-        *vol = state.s_sound.snd_SfxVolume;
+    let sep = 128 - (FixedMul(S_STEREO_SWING, finesine[angle as usize]) >> FRACBITS);
+
+    let vol = if approx_dist < S_CLOSE_DIST {
+        state.s_sound.snd_SfxVolume
     } else if state.g_game.gamemap == 8 {
         if approx_dist > S_CLIPPING_DIST {
             approx_dist = S_CLIPPING_DIST as fixed_t;
         }
-        *vol = 15
-            + (state.s_sound.snd_SfxVolume - 15) * ((S_CLIPPING_DIST - approx_dist) >> FRACBITS)
-                / S_ATTENUATOR;
+        15 + (state.s_sound.snd_SfxVolume - 15) * ((S_CLIPPING_DIST - approx_dist) >> FRACBITS)
+            / S_ATTENUATOR
     } else {
-        *vol = state.s_sound.snd_SfxVolume * ((S_CLIPPING_DIST - approx_dist) >> FRACBITS)
-            / S_ATTENUATOR;
-    }
-    (*vol > 0) as i32
+        state.s_sound.snd_SfxVolume * ((S_CLIPPING_DIST - approx_dist) >> FRACBITS) / S_ATTENUATOR
+    };
+    (vol > 0).then_some((vol, sep))
 }
 pub fn S_StartSound(state: &mut GameState, origin: SoundOrigin, sfx_id: i32) {
-    let mut sep: i32 = 0;
     let mut volume = state.s_sound.snd_SfxVolume;
     if !(1..=NUMSFX).contains(&sfx_id) {
         I_Error(&format!("Bad sfx #: {}", sfx_id));
@@ -289,23 +285,28 @@ pub fn S_StartSound(state: &mut GameState, origin: SoundOrigin, sfx_id: i32) {
     // matching the vanilla invariant that a non-null sound origin implies
     // the console player's mobj already exists.
     let listener_mo_id = state.g_game.players[state.g_game.consoleplayer as usize].mo;
-    if origin != SoundOrigin::None && origin != SoundOrigin::Mobj(listener_mo_id.unwrap()) {
+    let sep: i32 = if origin != SoundOrigin::None
+        && origin != SoundOrigin::Mobj(listener_mo_id.unwrap())
+    {
         let listener = listener_mo_id.unwrap();
-        let rc = S_AdjustSoundParams(state, listener, origin, &mut volume, &mut sep);
+        let Some((adjusted_volume, adjusted_sep)) = S_AdjustSoundParams(state, listener, origin)
+        else {
+            return;
+        };
+        volume = adjusted_volume;
         let (origin_x, origin_y) = origin.xy(state).unwrap();
         let (listener_x, listener_y) = {
             let l = state.p_mobj.mo(listener);
             (l.x, l.y)
         };
         if origin_x == listener_x && origin_y == listener_y {
-            sep = NORM_SEP;
-        }
-        if rc == 0 {
-            return;
+            NORM_SEP
+        } else {
+            adjusted_sep
         }
     } else {
-        sep = NORM_SEP;
-    }
+        NORM_SEP
+    };
     S_StopSound(state, origin);
     let cnum = S_GetChannel(state, origin, SfxId(sfx_id as u32));
     if cnum < 0 {
@@ -346,31 +347,25 @@ pub fn S_UpdateSounds(state: &mut GameState, listener: Option<MobjId>) {
             S_StopChannel(state, cnum);
             continue;
         }
-        let mut volume = state.s_sound.snd_SfxVolume;
-        let mut sep = NORM_SEP;
         let (has_link, link_volume) = {
             let sfx = state.sounds.sfx_mut(sfxinfo);
             (sfx.link.is_some(), sfx.volume)
         };
-        if has_link {
-            volume += link_volume;
-            if volume < 1 {
-                S_StopChannel(state, cnum);
-                continue;
-            }
-            if volume > state.s_sound.snd_SfxVolume {
-                volume = state.s_sound.snd_SfxVolume;
-            }
+        // A linked sound too quiet to hear is stopped outright; audible ones
+        // get their volume from S_AdjustSoundParams below.
+        if has_link && state.s_sound.snd_SfxVolume + link_volume < 1 {
+            S_StopChannel(state, cnum);
+            continue;
         }
         if c.origin != SoundOrigin::None
             && SoundOrigin::Mobj(listener.expect("positional sound needs a listener")) != c.origin
         {
             let listener = listener.unwrap();
-            let audible = S_AdjustSoundParams(state, listener, c.origin, &mut volume, &mut sep);
-            if audible == 0 {
-                S_StopChannel(state, cnum);
-            } else {
-                I_UpdateSoundParams(&mut state.i_sound, c.handle, volume, sep);
+            match S_AdjustSoundParams(state, listener, c.origin) {
+                None => S_StopChannel(state, cnum),
+                Some((volume, sep)) => {
+                    I_UpdateSoundParams(&mut state.i_sound, c.handle, volume, sep);
+                }
             }
         }
     }
@@ -388,9 +383,9 @@ pub fn S_SetSfxVolume(state: &mut GameState, volume: i32) {
     state.s_sound.snd_SfxVolume = volume;
 }
 pub fn S_StartMusic(state: &mut GameState, m_id: i32) {
-    S_ChangeMusic(state, m_id, false_0);
+    S_ChangeMusic(state, m_id, false);
 }
-pub fn S_ChangeMusic(state: &mut GameState, mut musicnum: i32, looping: i32) {
+pub fn S_ChangeMusic(state: &mut GameState, mut musicnum: i32, looping: bool) {
     if musicnum == MusicName::mus_intro as i32
         && (state.i_sound.snd_musicdevice == snddevice_t::SNDDEVICE_ADLIB as i32
             || state.i_sound.snd_musicdevice == snddevice_t::SNDDEVICE_SB as i32)
@@ -414,7 +409,7 @@ pub fn S_ChangeMusic(state: &mut GameState, mut musicnum: i32, looping: i32) {
     let data = W_LumpBytes(state, lumpnum);
     let handle = I_RegisterSong(&mut state.i_sound, &data[..lumplen]);
     state.sounds.S_music[music_index].handle = handle;
-    I_PlaySong(&mut state.i_sound, handle, looping != 0);
+    I_PlaySong(&mut state.i_sound, handle, looping);
     state.s_sound.mus_playing = Some(musicnum);
 }
 pub fn S_StopMusic(state: &mut GameState) {

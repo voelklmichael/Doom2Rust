@@ -1,7 +1,5 @@
 use crate::d_mode::GameMode_t;
 use crate::d_ticcmd::{BT_ATTACK, BT_USE};
-use crate::doomdef::false_0;
-use crate::doomdef::true_0;
 use crate::doomdef::MAXPLAYERS;
 use crate::doomdef::SCREENHEIGHT;
 use crate::doomdef::SCREENWIDTH;
@@ -27,12 +25,12 @@ pub struct WiStuffState {
     pub epsd1animinfo: [anim_t; 9],
     pub epsd2animinfo: [anim_t; 6],
     pub NUMANIMS: [i32; 4],
-    pub acceleratestage: i32,
+    pub acceleratestage: bool,
     pub me: i32,
     pub state: StateEnum,
     pub cnt: i32,
     pub bcnt: i32,
-    pub firstrefresh: i32,
+    pub firstrefresh: bool,
     pub cnt_kills: [i32; 4],
     pub cnt_items: [i32; 4],
     pub cnt_secret: [i32; 4],
@@ -70,7 +68,7 @@ pub struct WiStuffState {
     pub dm_frags: [[i32; 4]; 4],
     pub dm_totals: [i32; 4],
     pub cnt_frags: [i32; 4],
-    pub dofrags: i32,
+    pub dofrags: bool,
     pub ng_state: i32,
     pub sp_state: i32,
 }
@@ -416,12 +414,12 @@ impl WiStuffState {
                 },
             ],
             NUMANIMS: [0; 4],
-            acceleratestage: 0,
+            acceleratestage: false,
             me: 0,
             state: StateEnum::StatCount,
             cnt: 0,
             bcnt: 0,
-            firstrefresh: 0,
+            firstrefresh: false,
             cnt_kills: [0; 4],
             cnt_items: [0; 4],
             cnt_secret: [0; 4],
@@ -459,7 +457,7 @@ impl WiStuffState {
             dm_frags: [[0; 4]; 4],
             dm_totals: [0; 4],
             cnt_frags: [0; 4],
-            dofrags: 0,
+            dofrags: false,
             ng_state: 0,
             sp_state: 0,
         }
@@ -855,7 +853,7 @@ pub fn WI_End(state: &mut GameState) {
 }
 pub fn WI_initNoState(state: &mut GameState) {
     state.wi_stuff.state = StateEnum::NoState;
-    state.wi_stuff.acceleratestage = 0;
+    state.wi_stuff.acceleratestage = false;
     state.wi_stuff.cnt = 10;
 }
 pub fn WI_updateNoState(state: &mut GameState) {
@@ -867,14 +865,14 @@ pub fn WI_updateNoState(state: &mut GameState) {
 }
 pub fn WI_initShowNextLoc(state: &mut GameState) {
     state.wi_stuff.state = StateEnum::ShowNextLoc;
-    state.wi_stuff.acceleratestage = 0;
+    state.wi_stuff.acceleratestage = false;
     state.wi_stuff.cnt = SHOWNEXTLOCDELAY * TICRATE;
     WI_initAnimatedBack(state);
 }
 pub fn WI_updateShowNextLoc(state: &mut GameState) {
     WI_updateAnimatedBack(state);
     state.wi_stuff.cnt -= 1;
-    if state.wi_stuff.cnt == 0 || state.wi_stuff.acceleratestage != 0 {
+    if state.wi_stuff.cnt == 0 || state.wi_stuff.acceleratestage {
         WI_initNoState(state);
     } else {
         state.wi_stuff.snl_pointeron = (state.wi_stuff.cnt & 31) < 20;
@@ -938,7 +936,7 @@ pub fn WI_initDeathmatchStats(state: &mut GameState) {
     let mut i: i32;
     let mut j: i32;
     state.wi_stuff.state = StateEnum::StatCount;
-    state.wi_stuff.acceleratestage = 0;
+    state.wi_stuff.acceleratestage = false;
     state.wi_stuff.dm_state = 1;
     state.wi_stuff.cnt_pause = TICRATE;
     i = 0;
@@ -962,8 +960,8 @@ pub fn WI_updateDeathmatchStats(state: &mut GameState) {
     let mut j: i32;
     let mut stillticking: bool;
     WI_updateAnimatedBack(state);
-    if state.wi_stuff.acceleratestage != 0 && state.wi_stuff.dm_state != 4 {
-        state.wi_stuff.acceleratestage = 0;
+    if state.wi_stuff.acceleratestage && state.wi_stuff.dm_state != 4 {
+        state.wi_stuff.acceleratestage = false;
         i = 0;
         while i < MAXPLAYERS {
             if state.g_game.playeringame[i as usize] {
@@ -1018,7 +1016,7 @@ pub fn WI_updateDeathmatchStats(state: &mut GameState) {
             state.wi_stuff.dm_state += 1;
         }
     } else if state.wi_stuff.dm_state == 4 {
-        if state.wi_stuff.acceleratestage != 0 {
+        if state.wi_stuff.acceleratestage {
             S_StartSound(state, SoundOrigin::None, SfxName::sfx_slop as i32);
             if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 {
                 WI_initNoState(state);
@@ -1131,9 +1129,10 @@ pub fn WI_drawDeathmatchStats(state: &mut GameState) {
 pub fn WI_initNetgameStats(state: &mut GameState) {
     let mut i: i32;
     state.wi_stuff.state = StateEnum::StatCount;
-    state.wi_stuff.acceleratestage = 0;
+    state.wi_stuff.acceleratestage = false;
     state.wi_stuff.ng_state = 1;
     state.wi_stuff.cnt_pause = TICRATE;
+    let mut total_frags = 0;
     i = 0;
     while i < MAXPLAYERS {
         if state.g_game.playeringame[i as usize] {
@@ -1141,12 +1140,11 @@ pub fn WI_initNetgameStats(state: &mut GameState) {
             state.wi_stuff.cnt_secret[i as usize] = state.wi_stuff.cnt_frags[i as usize];
             state.wi_stuff.cnt_items[i as usize] = state.wi_stuff.cnt_secret[i as usize];
             state.wi_stuff.cnt_kills[i as usize] = state.wi_stuff.cnt_items[i as usize];
-            let fragsum = WI_fragSum(state, i);
-            state.wi_stuff.dofrags += fragsum;
+            total_frags += WI_fragSum(state, i);
         }
         i += 1;
     }
-    state.wi_stuff.dofrags = (state.wi_stuff.dofrags != 0) as i32;
+    state.wi_stuff.dofrags = total_frags != 0;
     WI_initAnimatedBack(state);
 }
 pub fn WI_updateNetgameStats(state: &mut GameState) {
@@ -1154,8 +1152,8 @@ pub fn WI_updateNetgameStats(state: &mut GameState) {
     let mut fsum: i32;
     let mut stillticking: bool;
     WI_updateAnimatedBack(state);
-    if state.wi_stuff.acceleratestage != 0 && state.wi_stuff.ng_state != 10 {
-        state.wi_stuff.acceleratestage = 0;
+    if state.wi_stuff.acceleratestage && state.wi_stuff.ng_state != 10 {
+        state.wi_stuff.acceleratestage = false;
         i = 0;
         while i < MAXPLAYERS {
             if state.g_game.playeringame[i as usize] {
@@ -1165,7 +1163,7 @@ pub fn WI_updateNetgameStats(state: &mut GameState) {
                     state.plyr_index(i).sitems * 100 / state.wbs().maxitems;
                 state.wi_stuff.cnt_secret[i as usize] =
                     state.plyr_index(i).ssecret * 100 / state.wbs().maxsecret;
-                if state.wi_stuff.dofrags != 0 {
+                if state.wi_stuff.dofrags {
                     state.wi_stuff.cnt_frags[i as usize] = WI_fragSum(state, i);
                 }
             }
@@ -1244,7 +1242,7 @@ pub fn WI_updateNetgameStats(state: &mut GameState) {
         }
         if !stillticking {
             S_StartSound(state, SoundOrigin::None, SfxName::sfx_barexp as i32);
-            state.wi_stuff.ng_state += 1 + 2 * (state.wi_stuff.dofrags == 0) as i32;
+            state.wi_stuff.ng_state += 1 + 2 * (!state.wi_stuff.dofrags) as i32;
         }
     } else if state.wi_stuff.ng_state == 8 {
         if state.wi_stuff.bcnt & 3 == 0 {
@@ -1269,7 +1267,7 @@ pub fn WI_updateNetgameStats(state: &mut GameState) {
             state.wi_stuff.ng_state += 1;
         }
     } else if state.wi_stuff.ng_state == 10 {
-        if state.wi_stuff.acceleratestage != 0 {
+        if state.wi_stuff.acceleratestage {
             S_StartSound(state, SoundOrigin::None, SfxName::sfx_sgcock as i32);
             if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 {
                 WI_initNoState(state);
@@ -1301,7 +1299,7 @@ pub fn WI_drawNetgameStats(state: &mut GameState) {
     V_DrawPatch(
         state,
         dest_screen,
-        32 + star_width / 2 + 32 * (state.wi_stuff.dofrags == 0) as i32 + NG_SPACINGX
+        32 + star_width / 2 + 32 * (!state.wi_stuff.dofrags) as i32 + NG_SPACINGX
             - kills_patch.width(),
         NG_STATSY,
         &kills_patch,
@@ -1311,7 +1309,7 @@ pub fn WI_drawNetgameStats(state: &mut GameState) {
     V_DrawPatch(
         state,
         dest_screen,
-        32 + star_width / 2 + 32 * (state.wi_stuff.dofrags == 0) as i32 + 2 * NG_SPACINGX
+        32 + star_width / 2 + 32 * (!state.wi_stuff.dofrags) as i32 + 2 * NG_SPACINGX
             - items_patch.width(),
         NG_STATSY,
         &items_patch,
@@ -1321,18 +1319,18 @@ pub fn WI_drawNetgameStats(state: &mut GameState) {
     V_DrawPatch(
         state,
         dest_screen,
-        32 + star_width / 2 + 32 * (state.wi_stuff.dofrags == 0) as i32 + 3 * NG_SPACINGX
+        32 + star_width / 2 + 32 * (!state.wi_stuff.dofrags) as i32 + 3 * NG_SPACINGX
             - secret_patch.width(),
         NG_STATSY,
         &secret_patch,
     );
-    if state.wi_stuff.dofrags != 0 {
+    if state.wi_stuff.dofrags {
         let frags_patch = V_CachePatchNum(state, state.wi_stuff.frags);
         let dest_screen = Screen::Video;
         V_DrawPatch(
             state,
             dest_screen,
-            32 + star_width / 2 + 32 * (state.wi_stuff.dofrags == 0) as i32 + 4 * NG_SPACINGX
+            32 + star_width / 2 + 32 * (!state.wi_stuff.dofrags) as i32 + 4 * NG_SPACINGX
                 - frags_patch.width(),
             NG_STATSY,
             &frags_patch,
@@ -1342,7 +1340,7 @@ pub fn WI_drawNetgameStats(state: &mut GameState) {
     i = 0;
     while i < MAXPLAYERS {
         if state.g_game.playeringame[i as usize] {
-            x = 32 + star_width / 2 + 32 * (state.wi_stuff.dofrags == 0) as i32;
+            x = 32 + star_width / 2 + 32 * (!state.wi_stuff.dofrags) as i32;
             let p_patch = V_CachePatchNum(state, state.wi_stuff.p[i as usize]);
             let dest_screen = Screen::Video;
             V_DrawPatch(state, dest_screen, x - p_patch.width(), y, &p_patch);
@@ -1360,7 +1358,7 @@ pub fn WI_drawNetgameStats(state: &mut GameState) {
             let cnt_secret = state.wi_stuff.cnt_secret[i as usize];
             WI_drawPercent(state, x - pwidth, y + 10, cnt_secret);
             x += NG_SPACINGX;
-            if state.wi_stuff.dofrags != 0 {
+            if state.wi_stuff.dofrags {
                 let cnt_frags = state.wi_stuff.cnt_frags[i as usize];
                 WI_drawNum(state, x, y + 10, cnt_frags, -1);
             }
@@ -1371,7 +1369,7 @@ pub fn WI_drawNetgameStats(state: &mut GameState) {
 }
 pub fn WI_initStats(state: &mut GameState) {
     state.wi_stuff.state = StateEnum::StatCount;
-    state.wi_stuff.acceleratestage = 0;
+    state.wi_stuff.acceleratestage = false;
     state.wi_stuff.sp_state = 1;
     state.wi_stuff.cnt_secret[0] = -1;
     state.wi_stuff.cnt_items[0] = state.wi_stuff.cnt_secret[0];
@@ -1383,8 +1381,8 @@ pub fn WI_initStats(state: &mut GameState) {
 }
 pub fn WI_updateStats(state: &mut GameState) {
     WI_updateAnimatedBack(state);
-    if state.wi_stuff.acceleratestage != 0 && state.wi_stuff.sp_state != 10 {
-        state.wi_stuff.acceleratestage = 0;
+    if state.wi_stuff.acceleratestage && state.wi_stuff.sp_state != 10 {
+        state.wi_stuff.acceleratestage = false;
         state.wi_stuff.cnt_kills[0] =
             state.plyr_index(state.wi_stuff.me).skills * 100 / state.wbs().maxkills;
         state.wi_stuff.cnt_items[0] =
@@ -1452,7 +1450,7 @@ pub fn WI_updateStats(state: &mut GameState) {
             }
         }
     } else if state.wi_stuff.sp_state == 10 {
-        if state.wi_stuff.acceleratestage != 0 {
+        if state.wi_stuff.acceleratestage {
             S_StartSound(state, SoundOrigin::None, SfxName::sfx_sgcock as i32);
             if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 {
                 WI_initNoState(state);
@@ -1525,21 +1523,21 @@ pub fn WI_checkForAccelerate(state: &mut GameState) {
         if state.g_game.playeringame[i as usize] {
             let player = &state.g_game.players[i as usize];
             if player.cmd.buttons as i32 & BT_ATTACK != 0 {
-                if player.attackdown == 0 {
-                    state.wi_stuff.acceleratestage = 1;
+                if !player.attackdown {
+                    state.wi_stuff.acceleratestage = true;
                 }
-                state.g_game.players[i as usize].attackdown = true_0;
+                state.g_game.players[i as usize].attackdown = true;
             } else {
-                state.g_game.players[i as usize].attackdown = false_0;
+                state.g_game.players[i as usize].attackdown = false;
             }
             let player = &state.g_game.players[i as usize];
             if player.cmd.buttons as i32 & BT_USE != 0 {
-                if player.usedown == 0 {
-                    state.wi_stuff.acceleratestage = 1;
+                if !player.usedown {
+                    state.wi_stuff.acceleratestage = true;
                 }
-                state.g_game.players[i as usize].usedown = true_0;
+                state.g_game.players[i as usize].usedown = true;
             } else {
-                state.g_game.players[i as usize].usedown = false_0;
+                state.g_game.players[i as usize].usedown = false;
             }
         }
         i += 1;
@@ -1549,9 +1547,9 @@ pub fn WI_Ticker(state: &mut GameState) {
     state.wi_stuff.bcnt += 1;
     if state.wi_stuff.bcnt == 1 {
         if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 {
-            S_ChangeMusic(state, MusicName::mus_dm2int as i32, true_0);
+            S_ChangeMusic(state, MusicName::mus_dm2int as i32, true);
         } else {
-            S_ChangeMusic(state, MusicName::mus_inter as i32, true_0);
+            S_ChangeMusic(state, MusicName::mus_inter as i32, true);
         }
     }
     WI_checkForAccelerate(state);
@@ -1686,10 +1684,10 @@ pub fn WI_Drawer(state: &mut GameState) {
     };
 }
 pub fn WI_initVariables(state: &mut GameState) {
-    state.wi_stuff.acceleratestage = 0;
+    state.wi_stuff.acceleratestage = false;
     state.wi_stuff.bcnt = 0;
     state.wi_stuff.cnt = state.wi_stuff.bcnt;
-    state.wi_stuff.firstrefresh = 1;
+    state.wi_stuff.firstrefresh = true;
     state.wi_stuff.me = state.wbs().pnum;
     if state.wbs().maxkills == 0 {
         state.wbs().maxkills = 1;

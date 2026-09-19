@@ -6,8 +6,6 @@ use crate::d_player::{weapontype_from_raw, weapontype_t};
 use crate::d_player::{CF_NOCLIP, CF_NOMOMENTUM};
 
 use crate::d_ticcmd::{BT_CHANGE, BT_SPECIAL, BT_USE, BT_WEAPONMASK, BT_WEAPONSHIFT};
-use crate::doomdef::false_0;
-use crate::doomdef::true_0;
 use crate::game_state::GameState;
 use crate::info::StateId;
 use crate::m_fixed::fixed_t;
@@ -262,12 +260,12 @@ pub fn P_PlayerThink(state: &mut GameState, player_id: PlayerId) {
         }
     }
     if state.g_game.players[player_id.0 as usize].cmd.buttons as i32 & BT_USE != 0 {
-        if state.g_game.players[player.0 as usize].usedown == 0 {
+        if !state.g_game.players[player.0 as usize].usedown {
             P_UseLines(state, player_id);
-            state.g_game.players[player.0 as usize].usedown = true_0;
+            state.g_game.players[player.0 as usize].usedown = true;
         }
     } else {
-        state.g_game.players[player.0 as usize].usedown = false_0;
+        state.g_game.players[player.0 as usize].usedown = false;
     }
     P_MovePsprites(state, player_id);
     if state.g_game.players[player.0 as usize].powers[PowerType::pw_strength as usize] != 0 {

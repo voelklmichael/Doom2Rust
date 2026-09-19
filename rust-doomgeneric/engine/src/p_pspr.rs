@@ -7,8 +7,6 @@ use crate::d_player::PowerType;
 use crate::d_player::{ammotype_t, NUMAMMO};
 use crate::d_player::{PSpriteNum, NUMPSPRITES};
 use crate::d_ticcmd::BT_ATTACK;
-use crate::doomdef::false_0;
-use crate::doomdef::true_0;
 use crate::game_state::GameState;
 use crate::info::StateId;
 use crate::m_fixed::fixed_t;
@@ -262,18 +260,18 @@ pub fn A_WeaponReady(state: &mut GameState, player_id: PlayerId, position: i32) 
             return;
         }
         if state.g_game.players[player.0 as usize].cmd.buttons as i32 & BT_ATTACK != 0 {
-            if state.g_game.players[player.0 as usize].attackdown == 0
+            if !state.g_game.players[player.0 as usize].attackdown
                 || state.g_game.players[player.0 as usize].readyweapon as u32
                     != weapontype_t::wp_missile as i32 as u32
                     && state.g_game.players[player.0 as usize].readyweapon as u32
                         != weapontype_t::wp_bfg as i32 as u32
             {
-                state.g_game.players[player.0 as usize].attackdown = true_0;
+                state.g_game.players[player.0 as usize].attackdown = true;
                 P_FireWeapon(state, player_id);
                 return;
             }
         } else {
-            state.g_game.players[player.0 as usize].attackdown = false_0;
+            state.g_game.players[player.0 as usize].attackdown = false;
         }
         angle = (128 * state.p_tick.leveltime) & FINEMASK;
         state.g_game.players[player_id.0 as usize].psprites[position as usize].sx = FRACUNIT

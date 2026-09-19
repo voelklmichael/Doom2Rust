@@ -218,8 +218,8 @@ pub fn T_MoveCeiling(state: &mut GameState, id: CeilingId) {
         _ => {}
     };
 }
-pub fn EV_DoCeiling(state: &mut GameState, line: LineId, kind: CeilingE) -> i32 {
-    let mut rtn: i32 = 0;
+pub fn EV_DoCeiling(state: &mut GameState, line: LineId, kind: CeilingE) -> bool {
+    let mut rtn = false;
     let mut secnum: i32 = -1;
     match kind {
         CeilingE::fastCrushAndRaise | CeilingE::silentCrushAndRaise | CeilingE::crushAndRaise => {
@@ -237,7 +237,7 @@ pub fn EV_DoCeiling(state: &mut GameState, line: LineId, kind: CeilingE) -> i32 
         if state.p_setup.sector_mut(sec).specialdata.is_some() {
             continue;
         }
-        rtn = 1;
+        rtn = true;
         let (ceilingheight, floorheight, tag) = {
             let s = state.p_setup.sector_mut(sec);
             (s.ceilingheight, s.floorheight, s.tag as i32)
@@ -327,8 +327,8 @@ pub fn P_ActivateInStasisCeiling(state: &mut GameState, tag: i32) {
         }
     }
 }
-pub fn EV_CeilingCrushStop(state: &mut GameState, tag: i32) -> i32 {
-    let mut rtn: i32 = 0;
+pub fn EV_CeilingCrushStop(state: &mut GameState, tag: i32) -> bool {
+    let mut rtn = false;
     for i in 0..MAXCEILINGS as usize {
         if let Some(id) = state.p_ceilng.activeceilings[i] {
             let ceiling_id = state.p_tick.ceiling_payload(id);
@@ -337,7 +337,7 @@ pub fn EV_CeilingCrushStop(state: &mut GameState, tag: i32) -> i32 {
                 c.olddirection = c.direction;
                 c.thinker.function = ThinkerFn::Paused;
                 c.direction = 0;
-                rtn = 1;
+                rtn = true;
             }
         }
     }

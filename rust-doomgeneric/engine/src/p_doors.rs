@@ -284,9 +284,9 @@ pub fn T_VerticalDoor(state: &mut GameState, id: DoorId) {
         _ => {}
     };
 }
-pub fn EV_DoLockedDoor(state: &mut GameState, line: LineId, kind: VldoorE, thing: MobjId) -> i32 {
+pub fn EV_DoLockedDoor(state: &mut GameState, line: LineId, kind: VldoorE, thing: MobjId) -> bool {
     let Some(player_id) = state.p_mobj.mo(thing).player else {
-        return 0;
+        return false;
     };
     let (blue, red, yellow) = {
         let p = state.g_game.player_mut(player_id);
@@ -305,12 +305,12 @@ pub fn EV_DoLockedDoor(state: &mut GameState, line: LineId, kind: VldoorE, thing
     if let Some(message) = missing {
         state.g_game.player_mut(player_id).message = Some(message.to_string());
         S_StartSound(state, SoundOrigin::None, SfxName::sfx_oof as i32);
-        return 0;
+        return false;
     }
     EV_DoDoor(state, line, kind)
 }
-pub fn EV_DoDoor(state: &mut GameState, line: LineId, kind: VldoorE) -> i32 {
-    let mut rtn: i32 = 0;
+pub fn EV_DoDoor(state: &mut GameState, line: LineId, kind: VldoorE) -> bool {
+    let mut rtn = false;
     let mut secnum: i32 = -1;
     loop {
         secnum = P_FindSectorFromLineTag(state, line, secnum);
@@ -321,7 +321,7 @@ pub fn EV_DoDoor(state: &mut GameState, line: LineId, kind: VldoorE) -> i32 {
         if state.p_setup.sector_mut(sec).specialdata.is_some() {
             continue;
         }
-        rtn = 1;
+        rtn = true;
         let ceilingheight = state.p_setup.sector_mut(sec).ceilingheight;
         let mut door = vldoor_t::default();
         door.thinker.function = ThinkerFn::Door(T_VerticalDoor);

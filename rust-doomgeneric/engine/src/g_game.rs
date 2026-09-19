@@ -21,8 +21,6 @@ use crate::d_ticcmd::{
     BTS_PAUSE, BTS_SAVEGAME, BTS_SAVEMASK, BTS_SAVESHIFT, BT_ATTACK, BT_CHANGE, BT_SPECIAL,
     BT_SPECIALMASK, BT_USE, BT_WEAPONSHIFT,
 };
-use crate::doomdef::false_0;
-use crate::doomdef::true_0;
 use crate::doomdef::MAXPLAYERS;
 use crate::doomdef::TICRATE;
 use crate::doomstat::DoomstatState;
@@ -215,8 +213,8 @@ const NEW_PLAYER: player_s = player_s {
     weaponowned: [false; 9],
     ammo: [0; 4],
     maxammo: [0; 4],
-    attackdown: 0,
-    usedown: 0,
+    attackdown: false,
+    usedown: false,
     cheats: 0,
     refire: 0,
     killcount: 0,
@@ -1043,7 +1041,7 @@ pub fn G_PlayerReborn(state: &mut GGameState, player: i32) {
     p.killcount = killcount;
     p.itemcount = itemcount;
     p.secretcount = secretcount;
-    p.attackdown = true_0;
+    p.attackdown = true;
     p.usedown = p.attackdown;
     p.playerstate = PlayerState::PST_LIVE;
     p.health = deh_initial_health;
@@ -1451,7 +1449,7 @@ pub fn G_DoNewGame(state: &mut GameState) {
     state.g_game.demoplayback = false;
     state.g_game.netdemo = false;
     state.g_game.netgame = false;
-    state.g_game.deathmatch = false_0;
+    state.g_game.deathmatch = 0;
     state.g_game.playeringame[3] = false;
     state.g_game.playeringame[2] = state.g_game.playeringame[3];
     state.g_game.playeringame[1] = state.g_game.playeringame[2];
@@ -1774,7 +1772,7 @@ pub fn G_CheckDemoStatus(state: &mut GameState) -> bool {
         state.g_game.demoplayback = false;
         state.g_game.netdemo = false;
         state.g_game.netgame = false;
-        state.g_game.deathmatch = false_0;
+        state.g_game.deathmatch = 0;
         state.g_game.playeringame[3] = false;
         state.g_game.playeringame[2] = state.g_game.playeringame[3];
         state.g_game.playeringame[1] = state.g_game.playeringame[2];

@@ -16,12 +16,12 @@ use crate::sounds::SfxName;
 use crate::tables::finecosine;
 use crate::tables::finesine;
 use crate::tables::ANGLETOFINESHIFT;
-pub fn EV_Teleport(state: &mut GameState, line: LineId, side: i32, thing: MobjId) -> i32 {
+pub fn EV_Teleport(state: &mut GameState, line: LineId, side: i32, thing: MobjId) -> bool {
     if state.p_mobj.mo(thing).flags & MF_MISSILE != 0 {
-        return 0;
+        return false;
     }
     if side == 1 {
-        return 0;
+        return false;
     }
     let tag = state.p_setup.line(line).tag as i32;
     for i in 0..state.p_setup.numsectors {
@@ -50,7 +50,7 @@ pub fn EV_Teleport(state: &mut GameState, line: LineId, side: i32, thing: MobjId
                             (t.x, t.y, t.z)
                         };
                         if !P_TeleportMove(state, thing, m_x, m_y) {
-                            return 0;
+                            return false;
                         }
                         if state.doomstat.gameversion != GameVersion::r#final {
                             let t = state.p_mobj.mo_mut(thing);
@@ -81,12 +81,12 @@ pub fn EV_Teleport(state: &mut GameState, line: LineId, side: i32, thing: MobjId
                         t.momz = 0;
                         t.momy = t.momz;
                         t.momx = t.momy;
-                        return 1;
+                        return true;
                     }
                 }
             }
             cursor = state.p_tick.next(id);
         }
     }
-    0
+    false
 }
