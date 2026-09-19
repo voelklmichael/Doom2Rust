@@ -154,7 +154,6 @@ pub fn R_InstallSpriteLump(
     mut rotation: u32,
     flipped: bool,
 ) {
-    let mut r: i32;
     if frame >= 29 || rotation > 8 {
         I_Error(&format!(
             "R_InstallSpriteLump: Bad frame characters in lump {}",
@@ -180,12 +179,10 @@ pub fn R_InstallSpriteLump(
             ));
         }
         state.r_things.sprtemp[frame as usize].rotate = SpriteRotate::NonRotating;
-        r = 0;
-        while r < 8 {
-            state.r_things.sprtemp[frame as usize].lump[r as usize] =
+        for r in 0..8 {
+            state.r_things.sprtemp[frame as usize].lump[r] =
                 (lump - state.r_data.firstspritelump) as i16;
-            state.r_things.sprtemp[frame as usize].flip[r as usize] = flipped as byte;
-            r += 1;
+            state.r_things.sprtemp[frame as usize].flip[r] = flipped as byte;
         }
         return;
     }
@@ -211,8 +208,6 @@ pub fn R_InstallSpriteLump(
     state.r_things.sprtemp[frame as usize].flip[rotation as usize] = flipped as byte;
 }
 pub fn R_InitSpriteDefs(state: &mut GameState, namelist: &[&'static str]) {
-    let mut i: i32;
-    let mut l: i32;
     let mut frame: i32;
     let mut rotation: i32;
 
@@ -224,17 +219,15 @@ pub fn R_InitSpriteDefs(state: &mut GameState, namelist: &[&'static str]) {
     state.r_things.sprites = Vec::with_capacity(state.r_things.numsprites as usize);
     let start: i32 = state.r_data.firstspritelump - 1;
     let end: i32 = state.r_data.lastspritelump + 1;
-    i = 0;
-    while i < state.r_things.numsprites {
-        state.r_things.spritename = namelist[i as usize];
+    for &name in namelist {
+        state.r_things.spritename = name;
         state.r_things.sprtemp = [spriteframe_t {
             rotate: SpriteRotate::Unset,
             lump: [-1; 8],
             flip: [0xff; 8],
         }; 29];
         state.r_things.maxframe = -1;
-        l = start + 1;
-        while l < end {
+        for l in start + 1..end {
             if state.w_wad.lumpinfo[l as usize]
                 .name
                 .eq_bytes_ignore_ascii_case_n(state.r_things.spritename.as_bytes(), 4)
@@ -254,7 +247,6 @@ pub fn R_InitSpriteDefs(state: &mut GameState, namelist: &[&'static str]) {
                     R_InstallSpriteLump(state, l, frame as u32, rotation as u32, true);
                 }
             }
-            l += 1;
         }
         if state.r_things.maxframe == -1 {
             state.r_things.sprites.push(spritedef_t {
@@ -263,8 +255,7 @@ pub fn R_InitSpriteDefs(state: &mut GameState, namelist: &[&'static str]) {
             });
         } else {
             state.r_things.maxframe += 1;
-            frame = 0;
-            while frame < state.r_things.maxframe {
+            for frame in 0..state.r_things.maxframe {
                 match state.r_things.sprtemp[frame as usize].rotate as i32 {
                     -1 => {
                         I_Error(&format!(
@@ -274,38 +265,29 @@ pub fn R_InitSpriteDefs(state: &mut GameState, namelist: &[&'static str]) {
                         ));
                     }
                     1 => {
-                        rotation = 0;
-                        while rotation < 8 {
-                            if state.r_things.sprtemp[frame as usize].lump[rotation as usize] as i32
-                                == -1
-                            {
+                        for rotation in 0..8 {
+                            if state.r_things.sprtemp[frame as usize].lump[rotation] as i32 == -1 {
                                 I_Error(&format!(
                                     "R_InitSprites: Sprite {} frame {} is missing rotations",
                                     state.r_things.spritename,
                                     (frame + 'A' as i32) as u8 as char,
                                 ));
                             }
-                            rotation += 1;
                         }
                     }
                     _ => {}
                 }
-                frame += 1;
             }
             state.r_things.sprites.push(spritedef_t {
                 numframes: state.r_things.maxframe,
                 spriteframes: state.r_things.sprtemp[..state.r_things.maxframe as usize].to_vec(),
             });
         }
-        i += 1;
     }
 }
 pub fn R_InitSprites(state: &mut GameState, namelist: &[&'static str]) {
-    let mut i: i32;
-    i = 0;
-    while i < SCREENWIDTH {
-        state.r_things.negonearray[i as usize] = -1_i16;
-        i += 1;
+    for i in 0..(SCREENWIDTH as usize) {
+        state.r_things.negonearray[i] = -1_i16;
     }
     R_InitSpriteDefs(state, namelist);
 }
@@ -668,17 +650,14 @@ pub fn R_SortVisSprites(state: &mut GameState) {
     state.r_things.vissprite_order = order;
 }
 pub fn R_DrawSprite(state: &mut GameState, spr: &vissprite_t) {
-    let mut x: i32;
     let mut r1: i32;
     let mut r2: i32;
     let mut scale: fixed_t;
     let mut lowscale: fixed_t;
     let mut silhouette: i32;
-    x = spr.x1;
-    while x <= spr.x2 {
+    for x in spr.x1..=spr.x2 {
         state.r_things.cliptop[x as usize] = -2_i16;
         state.r_things.clipbot[x as usize] = state.r_things.cliptop[x as usize];
-        x += 1;
     }
     for ds_idx in (0..state.r_bsp.ds_p).rev() {
         let ds = state.r_bsp.drawsegs[ds_idx];
@@ -711,28 +690,23 @@ pub fn R_DrawSprite(state: &mut GameState, spr: &vissprite_t) {
                 }
                 if silhouette == 1 {
                     let sprbottomclip = ds.sprbottomclip.unwrap();
-                    x = r1;
-                    while x <= r2 {
+                    for x in r1..=r2 {
                         if state.r_things.clipbot[x as usize] as i32 == -2 {
                             state.r_things.clipbot[x as usize] =
                                 sprbottomclip.get(state, x as isize);
                         }
-                        x += 1;
                     }
                 } else if silhouette == 2 {
                     let sprtopclip = ds.sprtopclip.unwrap();
-                    x = r1;
-                    while x <= r2 {
+                    for x in r1..=r2 {
                         if state.r_things.cliptop[x as usize] as i32 == -2 {
                             state.r_things.cliptop[x as usize] = sprtopclip.get(state, x as isize);
                         }
-                        x += 1;
                     }
                 } else if silhouette == 3 {
                     let sprbottomclip = ds.sprbottomclip.unwrap();
                     let sprtopclip = ds.sprtopclip.unwrap();
-                    x = r1;
-                    while x <= r2 {
+                    for x in r1..=r2 {
                         if state.r_things.clipbot[x as usize] as i32 == -2 {
                             state.r_things.clipbot[x as usize] =
                                 sprbottomclip.get(state, x as isize);
@@ -740,21 +714,18 @@ pub fn R_DrawSprite(state: &mut GameState, spr: &vissprite_t) {
                         if state.r_things.cliptop[x as usize] as i32 == -2 {
                             state.r_things.cliptop[x as usize] = sprtopclip.get(state, x as isize);
                         }
-                        x += 1;
                     }
                 }
             }
         }
     }
-    x = spr.x1;
-    while x <= spr.x2 {
+    for x in spr.x1..=spr.x2 {
         if state.r_things.clipbot[x as usize] as i32 == -2 {
             state.r_things.clipbot[x as usize] = state.r_draw.viewheight as i16;
         }
         if state.r_things.cliptop[x as usize] as i32 == -2 {
             state.r_things.cliptop[x as usize] = -1_i16;
         }
-        x += 1;
     }
     state.r_things.mfloorclip = Some(ClipArray::ClipBot);
     state.r_things.mceilingclip = Some(ClipArray::ClipTop);
@@ -762,12 +733,10 @@ pub fn R_DrawSprite(state: &mut GameState, spr: &vissprite_t) {
 }
 pub fn R_DrawMasked(state: &mut GameState) {
     R_SortVisSprites(state);
-    let mut i = 0;
-    while i < state.r_things.vissprite_order.len() {
+    for i in 0..state.r_things.vissprite_order.len() {
         let idx = state.r_things.vissprite_order[i];
         let spr = state.r_things.vissprites[idx];
         R_DrawSprite(state, &spr);
-        i += 1;
     }
     for ds_idx in (0..state.r_bsp.ds_p).rev() {
         let ds = state.r_bsp.drawsegs[ds_idx];

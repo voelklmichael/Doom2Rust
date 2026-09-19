@@ -734,7 +734,6 @@ pub fn P_PathTraverse<F: FnMut(&mut GameState, intercept_t) -> bool>(
     let mut mapy: i32;
     let mapxstep: i32;
     let mapystep: i32;
-    let mut count: i32;
     state.p_maputl.earlyout = (flags & PT_EARLYOUT) != 0;
     state.r_main.validcount += 1;
     state.p_maputl.intercept_p = 0;
@@ -786,8 +785,7 @@ pub fn P_PathTraverse<F: FnMut(&mut GameState, intercept_t) -> bool>(
     xintercept = (x1 >> MAPBTOFRAC) + FixedMul(partial, xstep);
     mapx = xt1;
     mapy = yt1;
-    count = 0;
-    while count < 64 {
+    for _ in 0..64 {
         if flags & PT_ADDLINES != 0
             && !P_BlockLinesIterator(state, mapx, mapy, PIT_AddLineIntercepts)
         {
@@ -808,7 +806,6 @@ pub fn P_PathTraverse<F: FnMut(&mut GameState, intercept_t) -> bool>(
             xintercept += xstep;
             mapy += mapystep;
         }
-        count += 1;
     }
     P_TraverseIntercepts(state, trav, FRACUNIT)
 }

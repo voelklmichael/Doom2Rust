@@ -400,15 +400,13 @@ pub fn P_NewChaseDir(state: &mut GameState, actor: MobjId) {
         }
     }
     if P_Random(&mut state.m_random) & 1 != 0 {
-        tdir = DirType::DI_EAST as i32;
-        while tdir <= DirType::DI_SOUTHEAST as i32 {
+        for tdir in DirType::DI_EAST as i32..=DirType::DI_SOUTHEAST as i32 {
             if tdir != turnaround as i32 {
                 state.p_mobj.mo_mut(actor).movedir = tdir;
                 if P_TryWalk(state, actor) {
                     return;
                 }
             }
-            tdir += 1;
         }
     } else {
         tdir = DirType::DI_SOUTHEAST as i32;
@@ -495,7 +493,6 @@ pub fn A_KeenDie(state: &mut GameState, id: MobjId) {
 pub fn A_Look(state: &mut GameState, id: MobjId) {
     {
         let actor = id;
-        let current_block: u64;
 
         state.p_mobj.mo_mut(actor).threshold = 0;
         let targ: Option<MobjId> = state
@@ -505,21 +502,15 @@ pub fn A_Look(state: &mut GameState, id: MobjId) {
             )
             .soundtarget
             .filter(|&id| state.p_mobj.is_live(id));
-        if let Some(targ) = targ.filter(|&t| state.p_mobj.mo(t).flags & MF_SHOOTABLE != 0) {
-            state.p_mobj.mo_mut(actor).target = Some(targ);
-            if state.p_mobj.mo(actor).flags & MF_AMBUSH != 0 {
-                if P_CheckSight(state, actor, targ) {
-                    current_block = 10571674169298881693;
-                } else {
-                    current_block = 15619007995458559411;
-                }
+        // Whether the actor already sees its target (and so skips looking around).
+        let sees_target =
+            if let Some(targ) = targ.filter(|&t| state.p_mobj.mo(t).flags & MF_SHOOTABLE != 0) {
+                state.p_mobj.mo_mut(actor).target = Some(targ);
+                state.p_mobj.mo(actor).flags & MF_AMBUSH == 0 || P_CheckSight(state, actor, targ)
             } else {
-                current_block = 10571674169298881693;
-            }
-        } else {
-            current_block = 15619007995458559411;
-        }
-        if current_block == 15619007995458559411 && !P_LookForPlayers(state, actor, false) {
+                false
+            };
+        if !sees_target && !P_LookForPlayers(state, actor, false) {
             return;
         }
         if state
@@ -724,7 +715,6 @@ pub fn A_PosAttack(state: &mut GameState, id: MobjId) {
 pub fn A_SPosAttack(state: &mut GameState, id: MobjId) {
     {
         let actor = id;
-        let mut i: i32;
         let mut angle: i32;
 
         let mut damage: i32;
@@ -736,8 +726,7 @@ pub fn A_SPosAttack(state: &mut GameState, id: MobjId) {
         A_FaceTarget(state, actor);
         let bangle: i32 = state.p_mobj.mo(actor).angle as i32;
         let slope: i32 = P_AimLineAttack(state, Some(actor), bangle as angle_t, MISSILERANGE);
-        i = 0;
-        while i < 3 {
+        for _ in 0..3 {
             angle =
                 bangle + ((P_Random(&mut state.m_random) - P_Random(&mut state.m_random)) << 20);
             damage = (P_Random(&mut state.m_random) % 5 + 1) * 3;
@@ -749,7 +738,6 @@ pub fn A_SPosAttack(state: &mut GameState, id: MobjId) {
                 slope as fixed_t,
                 damage,
             );
-            i += 1;
         }
     }
 }
@@ -1133,8 +1121,6 @@ pub fn A_VileChase(state: &mut GameState, id: MobjId) {
     let xh: i32;
     let yl: i32;
     let yh: i32;
-    let mut bx: i32;
-    let mut by: i32;
     let temp: Option<MobjId>;
     if state.p_mobj.mo(actor).movedir != DirType::DI_NODIR as i32 {
         state.p_enemy.viletryx = state.p_mobj.mo(actor).x
@@ -1148,10 +1134,8 @@ pub fn A_VileChase(state: &mut GameState, id: MobjId) {
         yl = (state.p_enemy.viletryy - state.p_setup.bmaporgy - 32 * FRACUNIT * 2) >> MAPBLOCKSHIFT;
         yh = (state.p_enemy.viletryy - state.p_setup.bmaporgy + 32 * FRACUNIT * 2) >> MAPBLOCKSHIFT;
         state.p_enemy.vileobj = Some(actor);
-        bx = xl;
-        while bx <= xh {
-            by = yl;
-            while by <= yh {
+        for bx in xl..=xh {
+            for by in yl..=yh {
                 if !P_BlockThingsIterator(state, bx, by, PIT_VileCheck) {
                     let corpsehit_id = state.p_enemy.corpsehit.unwrap();
                     let corpsehit = corpsehit_id;
@@ -1175,9 +1159,7 @@ pub fn A_VileChase(state: &mut GameState, id: MobjId) {
                     state.p_mobj.mo_mut(corpsehit).target = None;
                     return;
                 }
-                by += 1;
             }
-            bx += 1;
         }
     }
     A_Chase(state, actor);

@@ -336,14 +336,11 @@ pub fn EV_StopPlat(state: &mut GameState, tag: i32) {
     }
 }
 pub fn P_AddActivePlat(state: &mut PPlatsState, id: ThinkerId) {
-    let mut i: i32;
-    i = 0;
-    while i < MAXPLATS {
-        if state.activeplats[i as usize].is_none() {
-            state.activeplats[i as usize] = Some(id);
+    for i in 0..(MAXPLATS as usize) {
+        if state.activeplats[i].is_none() {
+            state.activeplats[i] = Some(id);
             return;
         }
-        i += 1;
     }
     I_Error("P_AddActivePlat: no more plats!");
 }

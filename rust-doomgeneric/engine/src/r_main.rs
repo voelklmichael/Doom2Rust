@@ -310,15 +310,13 @@ pub fn R_ScaleFromGlobalAngle(state: &mut GameState, visangle: angle_t) -> fixed
 }
 pub fn R_InitTextureMapping(state: &mut GameState) {
     let mut i: i32;
-    let mut x: i32;
     let mut t: i32;
 
     let focallength: fixed_t = FixedDiv(
         state.r_main.centerxfrac,
         finetangent[(FINEANGLES / 4 + FIELDOFVIEW / 2) as usize],
     );
-    i = 0;
-    while i < FINEANGLES / 2 {
+    for i in 0..FINEANGLES / 2 {
         if finetangent[i as usize] > FRACUNIT * 2 {
             t = -1;
         } else if finetangent[i as usize] < -FRACUNIT * 2 {
@@ -333,40 +331,31 @@ pub fn R_InitTextureMapping(state: &mut GameState) {
             }
         }
         state.r_main.viewangletox[i as usize] = t;
-        i += 1;
     }
-    x = 0;
-    while x <= state.r_draw.viewwidth {
+    for x in 0..=state.r_draw.viewwidth {
         i = 0;
         while state.r_main.viewangletox[i as usize] > x {
             i += 1;
         }
         state.r_main.xtoviewangle[x as usize] = ((i << ANGLETOFINESHIFT) - ANG90) as angle_t;
-        x += 1;
     }
-    i = 0;
-    while i < FINEANGLES / 2 {
+    for i in 0..FINEANGLES / 2 {
         if state.r_main.viewangletox[i as usize] == -1 {
             state.r_main.viewangletox[i as usize] = 0;
         } else if state.r_main.viewangletox[i as usize] == state.r_draw.viewwidth + 1 {
             state.r_main.viewangletox[i as usize] = state.r_draw.viewwidth;
         }
-        i += 1;
     }
     state.r_main.clipangle = state.r_main.xtoviewangle[0];
 }
 pub const DISTMAP: i32 = 2;
 pub fn R_InitLightTables(state: &mut GameState) {
-    let mut i: i32;
-    let mut j: i32;
     let mut level: i32;
     let mut startmap: i32;
     let mut scale: i32;
-    i = 0;
-    while i < LIGHTLEVELS {
+    for i in 0..LIGHTLEVELS {
         startmap = (LIGHTLEVELS - 1 - i) * 2 * NUMCOLORMAPS / LIGHTLEVELS;
-        j = 0;
-        while j < MAXLIGHTZ {
+        for j in 0..MAXLIGHTZ {
             scale = FixedDiv(
                 SCREENWIDTH / 2 * FRACUNIT,
                 (j as fixed_t + 1) << LIGHTZSHIFT,
@@ -380,9 +369,7 @@ pub fn R_InitLightTables(state: &mut GameState) {
                 level = NUMCOLORMAPS - 1;
             }
             state.r_main.zlight[i as usize][j as usize] = level;
-            j += 1;
         }
-        i += 1;
     }
 }
 pub fn R_SetViewSize(state: &mut GameState, blocks: i32, detail: i32) {
@@ -393,8 +380,6 @@ pub fn R_SetViewSize(state: &mut GameState, blocks: i32, detail: i32) {
 pub fn R_ExecuteSetViewSize(state: &mut GameState) {
     let mut cosadj: fixed_t;
     let mut dy: fixed_t;
-    let mut i: i32;
-    let mut j: i32;
     let mut level: i32;
     let mut startmap: i32;
     state.r_main.setsizeneeded = false;
@@ -431,33 +416,25 @@ pub fn R_ExecuteSetViewSize(state: &mut GameState) {
     R_InitTextureMapping(state);
     state.r_things.pspritescale = (FRACUNIT * state.r_draw.viewwidth / SCREENWIDTH) as fixed_t;
     state.r_things.pspriteiscale = (FRACUNIT * SCREENWIDTH / state.r_draw.viewwidth) as fixed_t;
-    i = 0;
-    while i < state.r_draw.viewwidth {
+    for i in 0..state.r_draw.viewwidth {
         state.r_things.screenheightarray[i as usize] = state.r_draw.viewheight as i16;
-        i += 1;
     }
-    i = 0;
-    while i < state.r_draw.viewheight {
+    for i in 0..state.r_draw.viewheight {
         dy = (((i - state.r_draw.viewheight / 2) << FRACBITS) + FRACUNIT / 2) as fixed_t;
         dy = dy.abs() as fixed_t;
         state.r_plane.yslope[i as usize] = FixedDiv(
             ((state.r_draw.viewwidth as fixed_t) << state.r_main.detailshift) / 2 * FRACUNIT,
             dy,
         );
-        i += 1;
     }
-    i = 0;
-    while i < state.r_draw.viewwidth {
+    for i in 0..state.r_draw.viewwidth {
         cosadj = finecosine[(state.r_main.xtoviewangle[i as usize] >> ANGLETOFINESHIFT) as usize]
             .abs() as fixed_t;
         state.r_plane.distscale[i as usize] = FixedDiv(FRACUNIT, cosadj);
-        i += 1;
     }
-    i = 0;
-    while i < LIGHTLEVELS {
+    for i in 0..LIGHTLEVELS {
         startmap = (LIGHTLEVELS - 1 - i) * 2 * NUMCOLORMAPS / LIGHTLEVELS;
-        j = 0;
-        while j < MAXLIGHTSCALE {
+        for j in 0..MAXLIGHTSCALE {
             level = startmap
                 - j * SCREENWIDTH / (state.r_draw.viewwidth << state.r_main.detailshift) / DISTMAP;
             if level < 0 {
@@ -467,9 +444,7 @@ pub fn R_ExecuteSetViewSize(state: &mut GameState) {
                 level = NUMCOLORMAPS - 1;
             }
             state.r_main.scalelight[i as usize][j as usize] = level;
-            j += 1;
         }
-        i += 1;
     }
 }
 pub fn R_Init(state: &mut GameState) {
@@ -499,7 +474,6 @@ pub fn R_PointInSubsector(state: &mut GameState, x: fixed_t, y: fixed_t) -> Subs
     SubsectorId((nodenum & !NF_SUBSECTOR) as u32)
 }
 pub fn R_SetupFrame(state: &mut GameState, player_id: PlayerId) {
-    let mut i: i32;
     let player = state.g_game.player_mut(player_id);
     state.r_main.viewplayer = player_id;
     let (player_mo_id, extralight, viewz, fixedcolormap) = (
@@ -523,10 +497,8 @@ pub fn R_SetupFrame(state: &mut GameState, player_id: PlayerId) {
         let colormap = fixedcolormap;
         state.r_main.fixedcolormap = Some(colormap);
         state.r_segs.walllights = LightRow48::Fixed;
-        i = 0;
-        while i < MAXLIGHTSCALE {
-            state.r_main.scalelightfixed[i as usize] = colormap;
-            i += 1;
+        for i in 0..(MAXLIGHTSCALE as usize) {
+            state.r_main.scalelightfixed[i] = colormap;
         }
     } else {
         state.r_main.fixedcolormap = None;

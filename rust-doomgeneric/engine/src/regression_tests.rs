@@ -16,11 +16,15 @@ use crate::d_event::{event_t, D_PostEvent, EvType};
 use crate::d_main::doomgeneric_Tick;
 use crate::doomdef::pixel_t;
 use crate::doomgeneric::doomgeneric_Create;
+use crate::f_finale::F_CastTicker;
 use crate::filesystem::{read_file, MemFileSystem};
 use crate::g_game::{G_DoLoadGame, G_DoSaveGame, G_ExitLevel, G_LoadGame, G_SaveGame};
 use crate::game_state::{init_game_state, GameState};
+use crate::info::StateId;
 use crate::p_saveg::P_SaveGameFile;
+use crate::p_setup::LineId;
 use crate::p_setup::SectorId;
+use crate::p_switch::P_UseSpecialLine;
 use crate::p_tick::P_MobjThinkerIds;
 use crate::platform::DoomPlatform;
 use alloc::boxed::Box;
@@ -280,11 +284,112 @@ fn ui_frame_lines() -> Option<Vec<String>> {
     Some(lines)
 }
 
+/// Hash of the Doom II cast-call sequence (monster, animation state, attack
+/// phase and timing after every tic). No demo reaches the cast, so it is
+/// driven directly.
+fn cast_trace() -> Option<String> {
+    let state = start(&[])?;
+    // What F_StartCast sets up, minus the Doom II music that doom1.wad lacks.
+    let first = state.f_finale.castorder[0].kind;
+    let see = StateId(state.info.mobjinfo[first as usize].seestate as u32);
+    state.f_finale.castnum = 0;
+    state.f_finale.caststate = Some(see);
+    state.f_finale.casttics = state.info.state_mut(see).tics;
+    state.f_finale.castdeath = false;
+    state.f_finale.castframes = 0;
+    state.f_finale.castonmelee = 0;
+    state.f_finale.castattacking = false;
+    let mut hash = FNV_OFFSET;
+    for _ in 0..6000 {
+        F_CastTicker(state);
+        let f = &state.f_finale;
+        hash = fnv(
+            hash,
+            [
+                f.castnum,
+                f.casttics,
+                f.caststate.map_or(-1, |s| s.0 as i32),
+                i32::from(f.castdeath),
+                f.castframes,
+                f.castonmelee,
+                i32::from(f.castattacking),
+            ]
+            .map(|v| v as u32),
+        );
+    }
+    Some(format!("{hash:016x} castnum={}", state.f_finale.castnum))
+}
+
+/// Uses the first two-sided line of E1M1 with every line special in turn, from the player and
+/// from a monster, on both sides, and hashes each outcome and the resulting
+/// world. Covers every arm of `P_UseSpecialLine`.
+fn use_special_line_trace() -> Option<String> {
+    let state = start_e1m1()?;
+    let (save_path, _) = save_slot(state, 0);
+    let line = (0..state.p_setup.numlines)
+        .map(|i| LineId(i as u32))
+        .find(|&l| state.p_setup.line(l).backsector.is_some())?;
+    // A tag carried by only a few sectors, as real maps use, so that one
+    // activation does not affect every untagged sector.
+    let tag = (0..state.p_setup.numsectors)
+        .map(|i| state.p_setup.sector_mut(SectorId(i as u32)).tag)
+        .find(|&t| t != 0)?;
+    let mut hash = FNV_OFFSET;
+    for special in 0..=145i16 {
+        for side in 0..=1 {
+            for player_uses in [true, false] {
+                // Every case starts from the same saved world.
+                G_LoadGame(state, &save_path);
+                G_DoLoadGame(state);
+                let actor = if player_uses {
+                    state.g_game.players[0].mo.unwrap()
+                } else {
+                    P_MobjThinkerIds(state).into_iter().find(|&id| {
+                        let m = state.p_mobj.mo(id);
+                        m.player.is_none() && m.flags & crate::p_mobj::MF_COUNTKILL != 0
+                    })?
+                };
+                state.p_setup.line_mut(line).special = special;
+                state.p_setup.line_mut(line).tag = tag;
+                let used = P_UseSpecialLine(state, actor, line, side);
+                // Let any mover that was started run for a few tics, and
+                // note what the use did to the line itself (a switch flips
+                // its textures and clears once-only specials).
+                for _ in 0..8 {
+                    crate::p_tick::P_RunThinkers(state);
+                }
+                let sidenum = state.p_setup.line(line).sidenum[0] as usize;
+                let side_textures = {
+                    let s = &state.p_setup.sides[sidenum];
+                    [s.toptexture, s.midtexture, s.bottomtexture].map(|t| t as i32)
+                };
+                let line_special = state.p_setup.line(line).special;
+                let world = world_summary(state);
+                hash = fnv(
+                    hash,
+                    [
+                        u32::from(used),
+                        i32::from(line_special) as u32,
+                        side_textures[0] as u32,
+                        side_textures[1] as u32,
+                        side_textures[2] as u32,
+                        fnv_bytes(world.as_bytes()) as u32,
+                    ],
+                );
+                state.g_game.gameaction = crate::d_event::GameAction::ga_nothing;
+            }
+        }
+    }
+    Some(format!("{hash:016x}"))
+}
+
 fn actual_output() -> Option<String> {
     let mut out = String::new();
     for demo in ["demo1", "demo2", "demo3"] {
         writeln!(out, "sim {demo} {}", demo_summary(demo)?).unwrap();
     }
+    writeln!(out, "cast {}", cast_trace()?).unwrap();
+    writeln!(out, "usespecial {}", use_special_line_trace()?).unwrap();
     let state = start_e1m1()?;
     let (_, save) = save_slot(state, 0);
     writeln!(

@@ -635,9 +635,7 @@ pub const SKULLXOFF: i32 = -32;
 pub const LINEHEIGHT: i32 = 16;
 pub static skullName: [&str; 2] = ["M_SKULL1", "M_SKULL2"];
 pub fn M_ReadSaveStrings(state: &mut GameState) {
-    let mut i: i32;
-    i = 0;
-    while i < load_end {
+    for i in 0..load_end {
         let savegame_file = P_SaveGameFile(state, i);
         match state.fs.open(&savegame_file) {
             None => {
@@ -655,36 +653,29 @@ pub fn M_ReadSaveStrings(state: &mut GameState) {
                 state.m_menu.defs.LoadDef.items[i as usize].status = 1;
             }
         }
-        i += 1;
     }
 }
 pub fn M_DrawLoad(state: &mut GameState) {
-    let mut i: i32;
     let __wcache890_24 = V_CachePatchName(state, "M_LOADG");
     let dest_screen = Screen::Video;
     V_DrawPatchDirect(state, dest_screen, 72, 28, &__wcache890_24);
-    i = 0;
-    while i < load_end {
+    for i in 0..load_end {
         let loaddef_x = state.m_menu.defs.LoadDef.x as i32;
         let loaddef_y = state.m_menu.defs.LoadDef.y as i32 + LINEHEIGHT * i;
         M_DrawSaveLoadBorder(state, loaddef_x, loaddef_y);
         let savestr = state.m_menu.savegamestrings[i as usize].clone();
         M_WriteText(state, loaddef_x, loaddef_y, &savestr);
-        i += 1;
     }
 }
 pub fn M_DrawSaveLoadBorder(state: &mut GameState, mut x: i32, y: i32) {
-    let mut i: i32;
     let __wcache908_23 = V_CachePatchName(state, "M_LSLEFT");
     let dest_screen = Screen::Video;
     V_DrawPatchDirect(state, dest_screen, x - 8, y + 7, &__wcache908_23);
-    i = 0;
-    while i < 24 {
+    for _ in 0..24 {
         let __wcache916_22 = V_CachePatchName(state, "M_LSCNTR");
         let dest_screen = Screen::Video;
         V_DrawPatchDirect(state, dest_screen, x, y + 7, &__wcache916_22);
         x += 8;
-        i += 1;
     }
     let __wcache925_21 = V_CachePatchName(state, "M_LSRGHT");
     let dest_screen = Screen::Video;
@@ -710,18 +701,16 @@ pub fn M_LoadGame(state: &mut GameState, _choice: i32) {
     M_ReadSaveStrings(state);
 }
 pub fn M_DrawSave(state: &mut GameState) {
-    let mut i: i32;
+    let i: i32;
     let __wcache961_20 = V_CachePatchName(state, "M_SAVEG");
     let dest_screen = Screen::Video;
     V_DrawPatchDirect(state, dest_screen, 72, 28, &__wcache961_20);
-    i = 0;
-    while i < load_end {
+    for i in 0..load_end {
         let loaddef_x = state.m_menu.defs.LoadDef.x as i32;
         let loaddef_y = state.m_menu.defs.LoadDef.y as i32 + LINEHEIGHT * i;
         M_DrawSaveLoadBorder(state, loaddef_x, loaddef_y);
         let savestr = state.m_menu.savegamestrings[i as usize].clone();
         M_WriteText(state, loaddef_x, loaddef_y, &savestr);
-        i += 1;
     }
     if state.m_menu.saveStringEnter != 0 {
         let savestr = state.m_menu.savegamestrings[state.m_menu.saveSlot as usize].clone();
@@ -1213,19 +1202,16 @@ pub fn M_SizeDisplay(state: &mut GameState, choice: i32) {
 }
 pub fn M_DrawThermo(state: &mut GameState, x: i32, y: i32, thermWidth: i32, thermDot: i32) {
     let mut xx: i32;
-    let mut i: i32;
     xx = x;
     let __wcache1619_9 = V_CachePatchName(state, "M_THERML");
     let dest_screen = Screen::Video;
     V_DrawPatchDirect(state, dest_screen, xx, y, &__wcache1619_9);
     xx += 8;
-    i = 0;
-    while i < thermWidth {
+    for _ in 0..thermWidth {
         let __wcache1628_8 = V_CachePatchName(state, "M_THERMM");
         let dest_screen = Screen::Video;
         V_DrawPatchDirect(state, dest_screen, xx, y, &__wcache1628_8);
         xx += 8;
-        i += 1;
     }
     let __wcache1637_7 = V_CachePatchName(state, "M_THERMR");
     let dest_screen = Screen::Video;
@@ -1629,14 +1615,12 @@ pub fn M_Responder(state: &mut GameState, ev: &mut event_t) -> bool {
         }
         return true;
     } else if ch != 0 || IsNullKey(key) {
-        i = state.m_menu.itemOn as i32 + 1;
-        while i < state.m_menu.current().numitems as i32 {
+        for i in state.m_menu.itemOn as i32 + 1..state.m_menu.current().numitems as i32 {
             if state.m_menu.current().items[i as usize].alphaKey as i32 == ch {
                 state.m_menu.itemOn = i as i16;
                 S_StartSound(state, SoundOrigin::None, SfxName::sfx_pstop as i32);
                 return true;
             }
-            i += 1;
         }
         i = 0;
         while i <= state.m_menu.itemOn as i32 {

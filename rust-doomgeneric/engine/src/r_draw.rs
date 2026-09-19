@@ -395,10 +395,8 @@ pub fn R_DrawTranslatedColumnLow(state: &mut GameState) {
     }
 }
 pub fn R_InitTranslationTables(state: &mut GameState) {
-    let mut i: i32;
     state.r_draw.translationtables = vec![0u8; 256 * 3];
-    i = 0;
-    while i < 256 {
+    for i in 0..256 {
         if (0x70..=0x7f).contains(&i) {
             state.r_draw.translationtables[i as usize] = (0x60 + (i & 0xf)) as byte;
             state.r_draw.translationtables[(i + 256) as usize] = (0x40 + (i & 0xf)) as byte;
@@ -410,7 +408,6 @@ pub fn R_InitTranslationTables(state: &mut GameState) {
             state.r_draw.translationtables[(i + 256) as usize] = fresh12;
             state.r_draw.translationtables[i as usize] = fresh12;
         }
-        i += 1;
     }
 }
 pub fn R_DrawSpan(state: &mut GameState) {
@@ -504,22 +501,17 @@ pub fn R_DrawSpanLow(state: &mut GameState) {
     }
 }
 pub fn R_InitBuffer(state: &mut GameState, width: i32, height: i32) {
-    let mut i: i32;
     state.r_draw.viewwindowx = (SCREENWIDTH - width) >> 1;
-    i = 0;
-    while i < width {
+    for i in 0..width {
         state.r_draw.columnofs[i as usize] = state.r_draw.viewwindowx + i;
-        i += 1;
     }
     if width == SCREENWIDTH {
         state.r_draw.viewwindowy = 0;
     } else {
         state.r_draw.viewwindowy = (SCREENHEIGHT - SBARHEIGHT - height) >> 1;
     }
-    i = 0;
-    while i < height {
+    for i in 0..height {
         state.r_draw.ylookup[i as usize] = ((i + state.r_draw.viewwindowy) * SCREENWIDTH) as usize;
-        i += 1;
     }
 }
 pub fn R_FillBackScreen(state: &mut GameState) {
@@ -645,7 +637,6 @@ pub fn R_VideoErase(state: &mut GameState, ofs: u32, count: i32) {
 pub fn R_DrawViewBorder(state: &mut GameState) {
     let mut side: i32;
     let mut ofs: i32;
-    let mut i: i32;
     if state.r_draw.scaledviewwidth == SCREENWIDTH {
         return;
     }
@@ -656,11 +647,9 @@ pub fn R_DrawViewBorder(state: &mut GameState) {
     R_VideoErase(state, ofs as u32, top * SCREENWIDTH + side);
     ofs = top * SCREENWIDTH + SCREENWIDTH - side;
     side <<= 1;
-    i = 1;
-    while i < state.r_draw.viewheight {
+    for _ in 1..state.r_draw.viewheight {
         R_VideoErase(state, ofs as u32, side);
         ofs += SCREENWIDTH;
-        i += 1;
     }
     let dest_screen = Screen::Video;
     V_MarkRect(

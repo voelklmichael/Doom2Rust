@@ -291,14 +291,11 @@ pub fn EV_DoCeiling(state: &mut GameState, line: LineId, kind: CeilingE) -> bool
     rtn
 }
 pub fn P_AddActiveCeiling(state: &mut PCeilngState, id: ThinkerId) {
-    let mut i: i32;
-    i = 0;
-    while i < MAXCEILINGS {
-        if state.activeceilings[i as usize].is_none() {
-            state.activeceilings[i as usize] = Some(id);
+    for i in 0..(MAXCEILINGS as usize) {
+        if state.activeceilings[i].is_none() {
+            state.activeceilings[i] = Some(id);
             return;
         }
-        i += 1;
     }
 }
 pub fn P_RemoveActiveCeiling(state: &mut GameState, ceiling_id: CeilingId) {

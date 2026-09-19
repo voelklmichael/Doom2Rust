@@ -578,7 +578,6 @@ pub fn A_FireShotgun(state: &mut GameState, player_id: PlayerId, _position: i32)
     {
         let player = player_id;
         let player_mo = state.g_game.players[player.0 as usize].mo.unwrap();
-        let mut i: i32;
         S_StartSound(
             state,
             SoundOrigin::Mobj(player_mo),
@@ -598,10 +597,8 @@ pub fn A_FireShotgun(state: &mut GameState, player_id: PlayerId, _position: i32)
             weaponinfo[state.g_game.players[player.0 as usize].readyweapon as usize].flashstate,
         );
         P_BulletSlope(state, player_mo);
-        i = 0;
-        while i < 7 {
+        for _ in 0..7 {
             P_GunShot(state, player_mo, false);
-            i += 1;
         }
     }
 }
@@ -609,7 +606,6 @@ pub fn A_FireShotgun2(state: &mut GameState, player_id: PlayerId, _position: i32
     {
         let player = player_id;
         let player_mo = state.g_game.players[player.0 as usize].mo.unwrap();
-        let mut i: i32;
         let mut angle: angle_t;
         let mut damage: i32;
         S_StartSound(
@@ -631,8 +627,7 @@ pub fn A_FireShotgun2(state: &mut GameState, player_id: PlayerId, _position: i32
             weaponinfo[state.g_game.players[player.0 as usize].readyweapon as usize].flashstate,
         );
         P_BulletSlope(state, player_mo);
-        i = 0;
-        while i < 20 {
+        for _ in 0..20 {
             damage = 5 * (P_Random(&mut state.m_random) % 3 + 1);
             angle = state.p_mobj.mo(player_mo).angle;
             angle = angle.wrapping_add(
@@ -643,7 +638,6 @@ pub fn A_FireShotgun2(state: &mut GameState, player_id: PlayerId, _position: i32
                     - P_Random(&mut state.m_random) as fixed_t)
                     << 5);
             P_LineAttack(state, player_mo, angle, MISSILERANGE, slope, damage);
-            i += 1;
         }
     }
 }
@@ -747,11 +741,8 @@ pub fn A_BFGsound(state: &mut GameState, player_id: PlayerId, _position: i32) {
 }
 pub fn P_SetupPsprites(state: &mut GameState, player_id: PlayerId) {
     let player = player_id;
-    let mut i: i32;
-    i = 0;
-    while i < NUMPSPRITES {
-        state.g_game.players[player.0 as usize].psprites[i as usize].state = None;
-        i += 1;
+    for i in 0..(NUMPSPRITES as usize) {
+        state.g_game.players[player.0 as usize].psprites[i].state = None;
     }
     state.g_game.players[player.0 as usize].pendingweapon =
         state.g_game.players[player.0 as usize].readyweapon;

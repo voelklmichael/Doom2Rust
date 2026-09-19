@@ -603,14 +603,11 @@ pub fn P_FindHighestCeilingSurrounding(state: &mut GameState, sec: SectorId) -> 
     height
 }
 pub fn P_FindSectorFromLineTag(state: &mut GameState, line: LineId, start: i32) -> i32 {
-    let mut i: i32;
     let line_tag = state.p_setup.line(line).tag;
-    i = start + 1;
-    while i < state.p_setup.numsectors {
+    for i in start + 1..state.p_setup.numsectors {
         if state.p_setup.sectors[i as usize].tag as i32 == line_tag as i32 {
             return i;
         }
-        i += 1;
     }
     -1
 }
@@ -999,7 +996,6 @@ pub fn P_PlayerInSpecialSector(state: &mut GameState, player: PlayerId) {
 }
 pub fn P_UpdateSpecials(state: &mut GameState) {
     let mut pic: i32;
-    let mut i: i32;
     let mut line: LineId;
     if state.p_spec.levelTimer {
         state.p_spec.levelTimeCount -= 1;
@@ -1007,63 +1003,55 @@ pub fn P_UpdateSpecials(state: &mut GameState) {
             G_ExitLevel(state);
         }
     }
-    let mut anim_idx: usize = 0;
-    while anim_idx < state.p_spec.lastanim {
+    for anim_idx in 0..state.p_spec.lastanim {
         let anim = &state.p_spec.anims[anim_idx];
-        i = anim.basepic;
-        while i < anim.basepic + anim.numpics {
+        for i in anim.basepic..anim.basepic + anim.numpics {
             pic = anim.basepic + (state.p_tick.leveltime / anim.speed + i) % anim.numpics;
             if anim.istexture {
                 state.r_data.texturetranslation[i as usize] = pic;
             } else {
                 state.r_data.flattranslation[i as usize] = pic;
             }
-            i += 1;
         }
-        anim_idx += 1;
     }
-    i = 0;
-    while i < state.p_spec.numlinespecials as i32 {
-        line = state.p_spec.linespeciallist[i as usize];
+    for i in 0..(state.p_spec.numlinespecials as usize) {
+        line = state.p_spec.linespeciallist[i];
         let linev = state.p_setup.line(line);
         if linev.special as i32 == 48 {
             let fresh0 = &mut state.p_setup.sides[linev.sidenum[0] as usize].textureoffset;
             *fresh0 += FRACUNIT;
         }
-        i += 1;
     }
-    i = 0;
-    while i < MAXBUTTONS {
-        if state.p_switch.buttonlist[i as usize].btimer != 0 {
-            state.p_switch.buttonlist[i as usize].btimer -= 1;
-            if state.p_switch.buttonlist[i as usize].btimer == 0 {
-                let button_line_id = state.p_switch.buttonlist[i as usize].line;
-                match state.p_switch.buttonlist[i as usize].position {
+    for i in 0..(MAXBUTTONS as usize) {
+        if state.p_switch.buttonlist[i].btimer != 0 {
+            state.p_switch.buttonlist[i].btimer -= 1;
+            if state.p_switch.buttonlist[i].btimer == 0 {
+                let button_line_id = state.p_switch.buttonlist[i].line;
+                match state.p_switch.buttonlist[i].position {
                     BWhere::top => {
                         state.p_setup.sides
                             [state.p_setup.lines[button_line_id.0 as usize].sidenum[0] as usize]
-                            .toptexture = state.p_switch.buttonlist[i as usize].btexture as i16;
+                            .toptexture = state.p_switch.buttonlist[i].btexture as i16;
                     }
                     BWhere::middle => {
                         state.p_setup.sides
                             [state.p_setup.lines[button_line_id.0 as usize].sidenum[0] as usize]
-                            .midtexture = state.p_switch.buttonlist[i as usize].btexture as i16;
+                            .midtexture = state.p_switch.buttonlist[i].btexture as i16;
                     }
                     BWhere::bottom => {
                         state.p_setup.sides
                             [state.p_setup.lines[button_line_id.0 as usize].sidenum[0] as usize]
-                            .bottomtexture = state.p_switch.buttonlist[i as usize].btexture as i16;
+                            .bottomtexture = state.p_switch.buttonlist[i].btexture as i16;
                     }
                 }
                 S_StartSound(
                     state,
-                    SoundOrigin::Sector(state.p_switch.buttonlist[i as usize].soundorg),
+                    SoundOrigin::Sector(state.p_switch.buttonlist[i].soundorg),
                     SfxName::sfx_swtchn as i32,
                 );
-                state.p_switch.buttonlist[i as usize] = EMPTY_BUTTON;
+                state.p_switch.buttonlist[i] = EMPTY_BUTTON;
             }
         }
-        i += 1;
     }
 }
 pub const DONUT_FLOORHEIGHT_DEFAULT: i32 = 0;
@@ -1234,14 +1222,14 @@ pub fn P_SpawnSpecials(state: &mut GameState) {
             state.p_spec.numlinespecials += 1;
         }
     }
-    for i in 0..MAXCEILINGS {
-        state.p_ceilng.activeceilings[i as usize] = None;
+    for i in 0..(MAXCEILINGS as usize) {
+        state.p_ceilng.activeceilings[i] = None;
     }
-    for i in 0..MAXPLATS {
-        state.p_plats.activeplats[i as usize] = None;
+    for i in 0..(MAXPLATS as usize) {
+        state.p_plats.activeplats[i] = None;
     }
-    for i in 0..MAXBUTTONS {
-        state.p_switch.buttonlist[i as usize] = EMPTY_BUTTON;
+    for i in 0..(MAXBUTTONS as usize) {
+        state.p_switch.buttonlist[i] = EMPTY_BUTTON;
     }
 }
 pub const ML_SECRET: i32 = 32;

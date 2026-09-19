@@ -705,7 +705,6 @@ pub fn G_BuildTiccmd(state: &mut GameState, cmd: &mut ticcmd_t, maketic: i32) {
     }
 }
 pub fn G_DoLoadLevel(state: &mut GameState) {
-    let mut i: i32;
     state.r_sky.skyflatnum = R_FlatNumForName(state, "F_SKY1");
     if state.doomstat.gamemode as u32 == GameMode_t::commercial as u32
         && [GameVersion::final2, GameVersion::chex].contains(&state.doomstat.gameversion)
@@ -724,16 +723,14 @@ pub fn G_DoLoadLevel(state: &mut GameState) {
         state.d_main.wipegamestate = GameScreenState::GS_WIPPED;
     }
     state.g_game.gamestate = GameScreenState::GS_LEVEL;
-    i = 0;
-    while i < MAXPLAYERS {
-        state.g_game.turbodetected[i as usize] = false;
-        if state.g_game.playeringame[i as usize]
-            && state.g_game.players[i as usize].playerstate == PlayerState::PST_DEAD
+    for i in 0..(MAXPLAYERS as usize) {
+        state.g_game.turbodetected[i] = false;
+        if state.g_game.playeringame[i]
+            && state.g_game.players[i].playerstate == PlayerState::PST_DEAD
         {
-            state.g_game.players[i as usize].playerstate = PlayerState::PST_REBORN;
+            state.g_game.players[i].playerstate = PlayerState::PST_REBORN;
         }
-        state.g_game.players[i as usize].frags = [0; 4];
-        i += 1;
+        state.g_game.players[i].frags = [0; 4];
     }
     P_SetupLevel(state, state.g_game.gameepisode, state.g_game.gamemap);
     state.g_game.displayplayer = state.g_game.consoleplayer;
@@ -755,9 +752,7 @@ pub fn G_DoLoadLevel(state: &mut GameState) {
     }
 }
 fn SetJoyButtons(state: &mut GameState, buttons_mask: u32) {
-    let mut i: i32;
-    i = 0;
-    while i < MAX_JOY_BUTTONS {
+    for i in 0..MAX_JOY_BUTTONS {
         let button_on: i32 = (buttons_mask & (1 << i) as u32 != 0) as i32;
         if !state.g_game.joyarray[(i + 1) as usize] && button_on != 0 {
             if i == state.m_controls.joybprevweapon {
@@ -767,13 +762,10 @@ fn SetJoyButtons(state: &mut GameState, buttons_mask: u32) {
             }
         }
         state.g_game.joyarray[(i + 1) as usize] = button_on != 0;
-        i += 1;
     }
 }
 fn SetMouseButtons(state: &mut GameState, buttons_mask: u32) {
-    let mut i: i32;
-    i = 0;
-    while i < MAX_MOUSE_BUTTONS {
+    for i in 0..MAX_MOUSE_BUTTONS {
         let button_on: u32 = (buttons_mask & (1 << i) as u32 != 0) as u32;
         if !state.g_game.mousearray[(i + 1) as usize] && button_on != 0 {
             if i == state.m_controls.mousebprevweapon {
@@ -783,7 +775,6 @@ fn SetMouseButtons(state: &mut GameState, buttons_mask: u32) {
             }
         }
         state.g_game.mousearray[(i + 1) as usize] = button_on != 0;
-        i += 1;
     }
 }
 pub fn G_Responder(state: &mut GameState, ev: event_t) -> bool {
@@ -873,16 +864,12 @@ pub fn G_Responder(state: &mut GameState, ev: event_t) -> bool {
     false
 }
 pub fn G_Ticker(state: &mut GameState, netcmds: &[ticcmd_t]) {
-    let mut i: i32;
-
-    i = 0;
-    while i < MAXPLAYERS {
+    for i in 0..MAXPLAYERS {
         if state.g_game.playeringame[i as usize]
             && state.g_game.players[i as usize].playerstate == PlayerState::PST_REBORN
         {
             G_DoReborn(state, i);
         }
-        i += 1;
     }
     while state.g_game.gameaction != GameAction::ga_nothing {
         match state.g_game.gameaction {
@@ -920,8 +907,7 @@ pub fn G_Ticker(state: &mut GameState, netcmds: &[ticcmd_t]) {
         }
     }
     let buf: i32 = state.d_loop.gametic / state.d_loop.ticdup % BACKUPTICS;
-    i = 0;
-    while i < MAXPLAYERS {
+    for i in 0..MAXPLAYERS {
         if state.g_game.playeringame[i as usize] {
             state.g_game.players[i as usize].cmd = netcmds[i as usize];
             if state.g_game.demoplayback {
@@ -965,14 +951,12 @@ pub fn G_Ticker(state: &mut GameState, netcmds: &[ticcmd_t]) {
                 }
             }
         }
-        i += 1;
     }
-    i = 0;
-    while i < MAXPLAYERS {
-        if state.g_game.playeringame[i as usize]
-            && state.g_game.players[i as usize].cmd.buttons as i32 & BT_SPECIAL != 0
+    for i in 0..(MAXPLAYERS as usize) {
+        if state.g_game.playeringame[i]
+            && state.g_game.players[i].cmd.buttons as i32 & BT_SPECIAL != 0
         {
-            match state.g_game.players[i as usize].cmd.buttons as i32 & BT_SPECIALMASK {
+            match state.g_game.players[i].cmd.buttons as i32 & BT_SPECIALMASK {
                 1 => {
                     state.g_game.paused = !state.g_game.paused;
                     if state.g_game.paused {
@@ -985,15 +969,14 @@ pub fn G_Ticker(state: &mut GameState, netcmds: &[ticcmd_t]) {
                     if state.g_game.savedescription.is_empty() {
                         state.g_game.savedescription = "NET GAME".to_string();
                     }
-                    state.g_game.savegameslot =
-                        (state.g_game.players[i as usize].cmd.buttons as i32 & BTS_SAVEMASK)
-                            >> BTS_SAVESHIFT;
+                    state.g_game.savegameslot = (state.g_game.players[i].cmd.buttons as i32
+                        & BTS_SAVEMASK)
+                        >> BTS_SAVESHIFT;
                     state.g_game.gameaction = GameAction::ga_savegame;
                 }
                 _ => {}
             }
         }
-        i += 1;
     }
     if state.g_game.oldgamestate == GameScreenState::GS_INTERMISSION
         && state.g_game.gamestate != GameScreenState::GS_INTERMISSION
@@ -1197,14 +1180,11 @@ pub fn G_SecretExitLevel(state: &mut GameState) {
     state.g_game.gameaction = GameAction::ga_completed;
 }
 pub fn G_DoCompleted(state: &mut GameState) {
-    let mut i: i32;
     state.g_game.gameaction = GameAction::ga_nothing;
-    i = 0;
-    while i < MAXPLAYERS {
+    for i in 0..MAXPLAYERS {
         if state.g_game.playeringame[i as usize] {
             G_PlayerFinishLevel(state, i);
         }
-        i += 1;
     }
     if state.am_map.automapactive {
         AM_Stop(state);
@@ -1222,10 +1202,8 @@ pub fn G_DoCompleted(state: &mut GameState) {
                     return;
                 }
                 9 => {
-                    i = 0;
-                    while i < MAXPLAYERS {
-                        state.g_game.players[i as usize].didsecret = true;
-                        i += 1;
+                    for i in 0..(MAXPLAYERS as usize) {
+                        state.g_game.players[i].didsecret = true;
                     }
                 }
                 _ => {}
@@ -1239,10 +1217,8 @@ pub fn G_DoCompleted(state: &mut GameState) {
     }
     if state.g_game.gamemap == 9 && state.doomstat.gamemode as u32 != GameMode_t::commercial as u32
     {
-        i = 0;
-        while i < MAXPLAYERS {
-            state.g_game.players[i as usize].didsecret = true;
-            i += 1;
+        for i in 0..(MAXPLAYERS as usize) {
+            state.g_game.players[i].didsecret = true;
         }
     }
     state.g_game.wminfo.didsecret =
@@ -1304,15 +1280,13 @@ pub fn G_DoCompleted(state: &mut GameState) {
         state.g_game.wminfo.partime = TICRATE * cpars[state.g_game.gamemap as usize];
     }
     state.g_game.wminfo.pnum = state.g_game.consoleplayer;
-    i = 0;
-    while i < MAXPLAYERS {
-        state.g_game.wminfo.plyr[i as usize].intercept = state.g_game.playeringame[i as usize];
-        state.g_game.wminfo.plyr[i as usize].skills = state.g_game.players[i as usize].killcount;
-        state.g_game.wminfo.plyr[i as usize].sitems = state.g_game.players[i as usize].itemcount;
-        state.g_game.wminfo.plyr[i as usize].ssecret = state.g_game.players[i as usize].secretcount;
-        state.g_game.wminfo.plyr[i as usize].stime = state.p_tick.leveltime;
-        state.g_game.wminfo.plyr[i as usize].frags = state.g_game.players[i as usize].frags;
-        i += 1;
+    for i in 0..(MAXPLAYERS as usize) {
+        state.g_game.wminfo.plyr[i].intercept = state.g_game.playeringame[i];
+        state.g_game.wminfo.plyr[i].skills = state.g_game.players[i].killcount;
+        state.g_game.wminfo.plyr[i].sitems = state.g_game.players[i].itemcount;
+        state.g_game.wminfo.plyr[i].ssecret = state.g_game.players[i].secretcount;
+        state.g_game.wminfo.plyr[i].stime = state.p_tick.leveltime;
+        state.g_game.wminfo.plyr[i].frags = state.g_game.players[i].frags;
     }
     state.g_game.gamestate = GameScreenState::GS_INTERMISSION;
     state.g_game.viewactive = false;
@@ -1326,23 +1300,12 @@ pub fn G_WorldDone(state: &mut GameState) {
         state.g_game.players[state.g_game.consoleplayer as usize].didsecret = true;
     }
     if state.doomstat.gamemode as u32 == GameMode_t::commercial as u32 {
-        let current_block_3: u64;
-        match state.g_game.gamemap {
-            15 | 31 => {
-                if !state.g_game.secretexit {
-                    current_block_3 = 6937071982253665452;
-                } else {
-                    current_block_3 = 9744923308842414524;
-                }
-            }
-            6 | 11 | 20 | 30 => {
-                current_block_3 = 9744923308842414524;
-            }
-            _ => {
-                current_block_3 = 6937071982253665452;
-            }
-        }
-        if current_block_3 == 9744923308842414524 {
+        let start_finale = match state.g_game.gamemap {
+            15 | 31 => state.g_game.secretexit,
+            6 | 11 | 20 | 30 => true,
+            _ => false,
+        };
+        if start_finale {
             F_StartFinale(state);
         }
     }
@@ -1467,7 +1430,6 @@ pub fn G_DoNewGame(state: &mut GameState) {
 }
 pub fn G_InitNew(state: &mut GameState, mut skill: SkillType, mut episode: i32, mut map: i32) {
     let skytexturename: &str;
-    let mut i: i32;
     if state.g_game.paused {
         state.g_game.paused = false;
         S_ResumeSound(state);
@@ -1496,29 +1458,23 @@ pub fn G_InitNew(state: &mut GameState, mut skill: SkillType, mut episode: i32, 
     if state.d_main.fastparm
         || skill == SkillType::sk_nightmare && state.g_game.gameskill != SkillType::sk_nightmare
     {
-        i = StateNum::S_SARG_RUN1 as i32;
-        while i <= StateNum::S_SARG_PAIN2 as i32 {
+        for i in StateNum::S_SARG_RUN1 as i32..=StateNum::S_SARG_PAIN2 as i32 {
             state.info.states[i as usize].tics >>= 1;
-            i += 1;
         }
         state.info.mobjinfo[MobjType::MT_BRUISERSHOT as usize].speed = 20 * FRACUNIT;
         state.info.mobjinfo[MobjType::MT_HEADSHOT as usize].speed = 20 * FRACUNIT;
         state.info.mobjinfo[MobjType::MT_TROOPSHOT as usize].speed = 20 * FRACUNIT;
     } else if skill != SkillType::sk_nightmare && state.g_game.gameskill == SkillType::sk_nightmare
     {
-        i = StateNum::S_SARG_RUN1 as i32;
-        while i <= StateNum::S_SARG_PAIN2 as i32 {
+        for i in StateNum::S_SARG_RUN1 as i32..=StateNum::S_SARG_PAIN2 as i32 {
             state.info.states[i as usize].tics <<= 1;
-            i += 1;
         }
         state.info.mobjinfo[MobjType::MT_BRUISERSHOT as usize].speed = 15 * FRACUNIT;
         state.info.mobjinfo[MobjType::MT_HEADSHOT as usize].speed = 10 * FRACUNIT;
         state.info.mobjinfo[MobjType::MT_TROOPSHOT as usize].speed = 10 * FRACUNIT;
     }
-    i = 0;
-    while i < MAXPLAYERS {
-        state.g_game.players[i as usize].playerstate = PlayerState::PST_REBORN;
-        i += 1;
+    for i in 0..(MAXPLAYERS as usize) {
+        state.g_game.players[i].playerstate = PlayerState::PST_REBORN;
     }
     state.g_game.usergame = true;
     state.g_game.paused = false;
@@ -1643,7 +1599,6 @@ pub fn G_VanillaVersionCode(state: &mut DoomstatState) -> i32 {
     106
 }
 pub fn G_BeginRecording(state: &mut GameState) {
-    let mut i: i32;
     state.g_game.longtics = M_CheckParm(state, "-longtics") != 0;
     state.g_game.lowres_turn = !state.g_game.longtics;
     state.g_game.demo_p = 0;
@@ -1671,11 +1626,9 @@ pub fn G_BeginRecording(state: &mut GameState) {
     state
         .g_game
         .demo_write_byte(state.g_game.consoleplayer as byte);
-    i = 0;
-    while i < MAXPLAYERS {
-        let b = state.g_game.playeringame[i as usize] as byte;
+    for i in 0..(MAXPLAYERS as usize) {
+        let b = state.g_game.playeringame[i] as byte;
         state.g_game.demo_write_byte(b);
-        i += 1;
     }
 }
 pub fn G_DeferedPlayDemo(state: &mut GameState, name: FixedCStr<8>) {
@@ -1699,8 +1652,6 @@ fn DemoVersionDescription(_state: &mut GameState, version: i32) -> String {
     }
 }
 pub fn G_DoPlayDemo(state: &mut GameState) {
-    let mut i: i32;
-
     state.g_game.gameaction = GameAction::ga_nothing;
     let demo_lumpname = state.g_game.defdemoname.as_str().into_owned();
     let demo_lumpnum = W_GetNumForName(&mut state.w_wad, &demo_lumpname);
@@ -1728,10 +1679,8 @@ pub fn G_DoPlayDemo(state: &mut GameState) {
     state.d_main.fastparm = state.g_game.demo_read_byte() != 0;
     state.d_main.nomonsters = state.g_game.demo_read_byte() != 0;
     state.g_game.consoleplayer = state.g_game.demo_read_byte() as i32;
-    i = 0;
-    while i < MAXPLAYERS {
-        state.g_game.playeringame[i as usize] = state.g_game.demo_read_byte() != 0;
-        i += 1;
+    for i in 0..(MAXPLAYERS as usize) {
+        state.g_game.playeringame[i] = state.g_game.demo_read_byte() != 0;
     }
     if state.g_game.playeringame[1]
         || M_CheckParm(state, "-solo-net") > 0

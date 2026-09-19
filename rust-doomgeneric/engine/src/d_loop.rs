@@ -194,7 +194,6 @@ fn BuildNewTic(state: &mut GameState) -> bool {
 }
 pub fn NetUpdate(state: &mut GameState) {
     let mut newtics: i32;
-    let mut i: i32;
     if state.d_loop.singletics {
         return;
     }
@@ -208,12 +207,10 @@ pub fn NetUpdate(state: &mut GameState) {
         state.d_loop.skiptics -= newtics;
         newtics = 0;
     }
-    i = 0;
-    while i < newtics {
+    for _ in 0..newtics {
         if !BuildNewTic(state) {
             break;
         }
-        i += 1;
     }
 }
 pub fn D_StartGameLoop(state: &mut GameState) {
@@ -314,7 +311,6 @@ fn SinglePlayerClear(set: &mut ticcmd_set_t) {
     }
 }
 pub fn TryRunTics(state: &mut GameState) {
-    let mut i: i32;
     let mut lowtic: i32;
 
     let mut counts: i32;
@@ -373,8 +369,7 @@ pub fn TryRunTics(state: &mut GameState) {
         if !net_client_connected {
             SinglePlayerClear(&mut set);
         }
-        i = 0;
-        while i < state.d_loop.ticdup {
+        for _ in 0..state.d_loop.ticdup {
             if state.d_loop.gametic / state.d_loop.ticdup > lowtic {
                 I_Error("gametic>lowtic");
             }
@@ -387,7 +382,6 @@ pub fn TryRunTics(state: &mut GameState) {
             run_tic(state, &set.cmds, &set.ingame);
             state.d_loop.gametic += 1;
             TicdupSquash(&mut set);
-            i += 1;
         }
         state.d_loop.ticdata[set_index] = set;
         NetUpdate(state);

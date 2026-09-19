@@ -478,15 +478,12 @@ pub fn AM_addMark(state: &mut GameState) {
     state.am_map.markpointnum = (state.am_map.markpointnum + 1) % AM_NUMMARKPOINTS;
 }
 pub fn AM_findMinMaxBoundaries(state: &mut GameState) {
-    let mut i: i32;
-
     state.am_map.min_y = INT_MAX as fixed_t;
     state.am_map.min_x = state.am_map.min_y;
     state.am_map.max_y = -INT_MAX as fixed_t;
     state.am_map.max_x = state.am_map.max_y;
-    i = 0;
-    while i < state.p_setup.numvertexes {
-        let v = state.p_setup.vertexes[i as usize];
+    for i in 0..(state.p_setup.numvertexes as usize) {
+        let v = state.p_setup.vertexes[i];
         if v.x < state.am_map.min_x {
             state.am_map.min_x = v.x;
         } else if v.x > state.am_map.max_x {
@@ -497,7 +494,6 @@ pub fn AM_findMinMaxBoundaries(state: &mut GameState) {
         } else if v.y > state.am_map.max_y {
             state.am_map.max_y = v.y;
         }
-        i += 1;
     }
     state.am_map.max_w = state.am_map.max_x - state.am_map.min_x;
     state.am_map.max_h = state.am_map.max_y - state.am_map.min_y;
@@ -580,30 +576,21 @@ pub fn AM_initVariables(state: &mut GameState) {
     ST_Responder(state, &ST_NOTIFY);
 }
 pub fn AM_loadPics(state: &mut GameState) {
-    let mut i: i32;
-    i = 0;
-    while i < 10 {
+    for i in 0..10 {
         let namebuf = format!("AMMNUM{}", i);
         let lumpnum = W_GetNumForName(&mut state.w_wad, &namebuf);
         W_LumpBytes(state, lumpnum);
         state.am_map.marknums[i as usize] = lumpnum;
-        i += 1;
     }
 }
 pub fn AM_unloadPics(state: &mut GameState) {
-    let mut i: i32;
-    i = 0;
-    while i < 10 {
-        W_ReleaseLumpNum(&mut state.w_wad, state.am_map.marknums[i as usize]);
-        i += 1;
+    for i in 0..10 {
+        W_ReleaseLumpNum(&mut state.w_wad, state.am_map.marknums[i]);
     }
 }
 pub fn AM_clearMarks(state: &mut GameState) {
-    let mut i: i32;
-    i = 0;
-    while i < AM_NUMMARKPOINTS {
-        state.am_map.markpoints[i as usize].x = -1;
-        i += 1;
+    for i in 0..(AM_NUMMARKPOINTS as usize) {
+        state.am_map.markpoints[i].x = -1;
     }
     state.am_map.markpointnum = 0;
 }
@@ -1057,14 +1044,12 @@ pub fn AM_drawGrid(state: &mut GameState, color: i32) {
     }
 }
 pub fn AM_drawWalls(state: &mut GameState) {
-    let mut i: i32;
     let mut l: mline_t = mline_t {
         a: mpoint_t { x: 0, y: 0 },
         b: mpoint_t { x: 0, y: 0 },
     };
-    i = 0;
-    while i < state.p_setup.numlines {
-        let li = &state.p_setup.lines[i as usize];
+    for i in 0..(state.p_setup.numlines as usize) {
+        let li = &state.p_setup.lines[i];
         let (li_flags, li_special) = (li.flags as i32, li.special as i32);
         let (li_backsector, li_frontsector) = (li.backsector, li.frontsector);
         let li_v1 = state.p_setup.vertexes[li.v1.0 as usize];
@@ -1115,7 +1100,6 @@ pub fn AM_drawWalls(state: &mut GameState) {
         {
             AM_drawMline(state, &l, GRAYS + 3);
         }
-        i += 1;
     }
 }
 pub fn AM_rotate(x: &mut fixed_t, y: &mut fixed_t, a: angle_t) {
@@ -1134,15 +1118,13 @@ pub fn AM_drawLineCharacter(
     x: fixed_t,
     y: fixed_t,
 ) {
-    let mut i: i32;
     let mut l: mline_t = mline_t {
         a: mpoint_t { x: 0, y: 0 },
         b: mpoint_t { x: 0, y: 0 },
     };
-    i = 0;
-    while i < lineguy.len() as i32 {
-        l.a.x = lineguy[i as usize].a.x;
-        l.a.y = lineguy[i as usize].a.y;
+    for line in lineguy {
+        l.a.x = line.a.x;
+        l.a.y = line.a.y;
         if scale != 0 {
             l.a.x = FixedMul(scale, l.a.x);
             l.a.y = FixedMul(scale, l.a.y);
@@ -1152,8 +1134,8 @@ pub fn AM_drawLineCharacter(
         }
         l.a.x += x;
         l.a.y += y;
-        l.b.x = lineguy[i as usize].b.x;
-        l.b.y = lineguy[i as usize].b.y;
+        l.b.x = line.b.x;
+        l.b.y = line.b.y;
         if scale != 0 {
             l.b.x = FixedMul(scale, l.b.x);
             l.b.y = FixedMul(scale, l.b.y);
@@ -1164,11 +1146,9 @@ pub fn AM_drawLineCharacter(
         l.b.x += x;
         l.b.y += y;
         AM_drawMline(state, &l, color);
-        i += 1;
     }
 }
 pub fn AM_drawPlayers(state: &mut GameState) {
-    let mut i: i32;
     const THEIR_COLORS: [i32; 4] = [GREENS, GRAYS, BROWNS, REDS];
     let mut their_color: i32 = -1;
     let mut color: i32;
@@ -1191,8 +1171,7 @@ pub fn AM_drawPlayers(state: &mut GameState) {
         }
         return;
     }
-    i = 0;
-    while i < MAXPLAYERS {
+    for i in 0..MAXPLAYERS {
         their_color += 1;
         let p = &state.g_game.players[i as usize];
         let (p_invisibility, p_mo_id) = (p.powers[PowerType::pw_invisibility as usize], p.mo);
@@ -1210,14 +1189,11 @@ pub fn AM_drawPlayers(state: &mut GameState) {
             let (p_angle, p_x, p_y) = (p_mo.angle, p_mo.x, p_mo.y);
             AM_drawLineCharacter(state, &player_arrow, 0, p_angle, color, p_x, p_y);
         }
-        i += 1;
     }
 }
 pub fn AM_drawThings(state: &mut GameState, colors: i32) {
-    let mut i: i32;
-    i = 0;
-    while i < state.p_setup.numsectors {
-        let mut cursor = state.p_setup.sectors[i as usize].thinglist;
+    for i in 0..(state.p_setup.numsectors as usize) {
+        let mut cursor = state.p_setup.sectors[i].thinglist;
         while let Some(id) = cursor {
             let t = state.p_mobj.mo(id);
             let (t_angle, t_x, t_y, t_snext) = (t.angle, t.x, t.y, t.snext);
@@ -1233,29 +1209,26 @@ pub fn AM_drawThings(state: &mut GameState, colors: i32) {
             );
             cursor = t_snext;
         }
-        i += 1;
     }
 }
 pub fn AM_drawMarks(state: &mut GameState) {
-    let mut i: i32;
     let mut fx: i32;
     let mut fy: i32;
     let mut w: i32;
     let mut h: i32;
-    i = 0;
-    while i < AM_NUMMARKPOINTS {
-        if state.am_map.markpoints[i as usize].x != -1 {
+    for i in 0..(AM_NUMMARKPOINTS as usize) {
+        if state.am_map.markpoints[i].x != -1 {
             w = 5;
             h = 6;
             fx = state.am_map.f_x as fixed_t
                 + (FixedMul(
-                    state.am_map.markpoints[i as usize].x - state.am_map.m_x,
+                    state.am_map.markpoints[i].x - state.am_map.m_x,
                     state.am_map.scale_mtof,
                 ) >> 16);
             fy = state.am_map.f_y as fixed_t
                 + (state.am_map.f_h as fixed_t
                     - (FixedMul(
-                        state.am_map.markpoints[i as usize].y - state.am_map.m_y,
+                        state.am_map.markpoints[i].y - state.am_map.m_y,
                         state.am_map.scale_mtof,
                     ) >> 16));
             if fx >= state.am_map.f_x
@@ -1263,13 +1236,12 @@ pub fn AM_drawMarks(state: &mut GameState) {
                 && fy >= state.am_map.f_y
                 && fy <= state.am_map.f_h - h
             {
-                let lumpnum = state.am_map.marknums[i as usize];
+                let lumpnum = state.am_map.marknums[i];
                 let patch = V_CachePatchNum(state, lumpnum);
                 let dest_screen = Screen::Video;
                 V_DrawPatch(state, dest_screen, fx, fy, &patch);
             }
         }
-        i += 1;
     }
 }
 pub fn AM_drawCrosshair(state: &mut GameState, color: i32) {

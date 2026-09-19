@@ -38,7 +38,6 @@ impl IJoystickState {
 }
 
 pub fn I_BindJoystickVariables(state: &mut GameState) {
-    let mut i: i32;
     M_BindVariable_int(&mut state.m_config, "use_joystick", |s| {
         &mut s.i_joystick.usejoystick
     });
@@ -63,12 +62,10 @@ pub fn I_BindJoystickVariables(state: &mut GameState) {
     M_BindVariable_int(&mut state.m_config, "joystick_strafe_invert", |s| {
         &mut s.i_joystick.joystick_strafe_invert
     });
-    i = 0;
-    while i < NUM_VIRTUAL_BUTTONS {
+    for i in 0..NUM_VIRTUAL_BUTTONS {
         let name = format!("joystick_physical_button{}", i);
         M_BindVariable_int(&mut state.m_config, &name, move |s| {
             &mut s.i_joystick.joystick_physical_buttons[i as usize]
         });
-        i += 1;
     }
 }
