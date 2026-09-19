@@ -125,6 +125,20 @@ pub fn pong_frame(payload: &[u8], out: &mut [u8; 2 + MAX_CONTROL_PAYLOAD]) -> us
     2 + payload.len()
 }
 
+/// The longest payload [`text_frame`] takes: what fits the 7-bit length field.
+pub const MAX_TEXT_PAYLOAD: usize = 125;
+
+/// Builds an unmasked WebSocket text message (a single frame) carrying `payload`, as a server
+/// sends it to a browser, which delivers it to the page's `onmessage`. `payload` must be valid
+/// UTF-8 and at most [`MAX_TEXT_PAYLOAD`] bytes (longer is cut off). Returns the length.
+pub fn text_frame(payload: &[u8], out: &mut [u8; 2 + MAX_TEXT_PAYLOAD]) -> usize {
+    let payload = &payload[..payload.len().min(MAX_TEXT_PAYLOAD)];
+    out[0] = 0x81;
+    out[1] = payload.len() as u8;
+    out[2..2 + payload.len()].copy_from_slice(payload);
+    2 + payload.len()
+}
+
 /// What the decoder found while reading the bytes a client sent.
 #[derive(Debug, PartialEq, Eq)]
 pub enum Output {
@@ -481,5 +495,30 @@ mod tests {
     #[test]
     fn a_ping_with_a_payload_is_reported_once_it_is_complete() {
         assert_eq!(decode(&[0x89, 0x02, 1, 2, 0x82, 0x01, 7]), [Output::Ping, Output::Data(7)]);
+    }
+
+    #[test]
+    fn a_text_frame_is_final_unmasked_and_carries_its_payload() {
+        let mut out = [0u8; 2 + MAX_TEXT_PAYLOAD];
+        let length = text_frame(b"fps 28.4", &mut out);
+        assert_eq!(&out[..length], b"\x81\x08fps 28.4");
+        let length = text_frame(b"", &mut out);
+        assert_eq!(&out[..length], [0x81, 0x00]);
+    }
+
+    #[test]
+    fn a_long_text_payload_is_cut_to_what_the_length_byte_holds() {
+        let mut out = [0u8; 2 + MAX_TEXT_PAYLOAD];
+        let length = text_frame(&[b'a'; 300], &mut out);
+        assert_eq!(length, 2 + MAX_TEXT_PAYLOAD);
+        assert_eq!(out[1], MAX_TEXT_PAYLOAD as u8);
+    }
+
+    #[test]
+    fn what_a_client_decodes_of_our_text_frame_is_the_payload() {
+        // The client-side decoder reads unmasked frames too (tests only; a real client is a browser).
+        let mut out = [0u8; 2 + MAX_TEXT_PAYLOAD];
+        let length = text_frame(b"fps 28.4", &mut out);
+        assert_eq!(decode(&out[..length]), data(b"fps 28.4"));
     }
 }

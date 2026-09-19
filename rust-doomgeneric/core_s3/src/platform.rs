@@ -1,6 +1,8 @@
 //! `DoomPlatform` for the CoreS3: LCD output, a millisecond clock and the serial console.
 //! Input arrives over Wi-Fi (see `net`); the LCD is driven from core 0 (see `lcd`).
 
+use core::sync::atomic::{AtomicU32, Ordering};
+
 use core_s3_protocol::Command;
 use embedded_graphics::{pixelcolor::Rgb565, prelude::*};
 use esp_hal::{delay::Delay, time::Instant};
@@ -24,14 +26,53 @@ struct FrameStats {
 }
 
 const STATS_WINDOW_US: u64 = 2_000_000;
+/// How often a new frame rate is published for the LCD bar and the web page (shorter than the
+/// `[perf]` window, which stays at 2 s so the serial log and its benchmark recipe do not change).
+const FPS_WINDOW_US: u64 = 1_000_000;
+
+/// The latest frame rate, for the LCD bar and the web controller (both on core 0): the number of
+/// tenths of a frame per second in the low 16 bits and, in the high 16, a count that goes up with
+/// every sample (so a repeat of the same rate still counts as new, and a stalled game shows as no
+/// change). 0 = nothing measured yet. One relaxed store per second; the game does no
+/// formatting or allocation for it.
+static FPS_SAMPLE: AtomicU32 = AtomicU32::new(0);
+
+/// The latest sample: `(counter, fps in tenths)`, or `None` before the first one. A different
+/// counter than last time means a new sample.
+pub fn fps_sample() -> Option<(u16, u16)> {
+    match FPS_SAMPLE.load(Ordering::Relaxed) {
+        0 => None,
+        sample => Some(((sample >> 16) as u16, sample as u16)),
+    }
+}
+
+fn publish_fps(tenths: u64) {
+    let counter = (FPS_SAMPLE.load(Ordering::Relaxed) >> 16).wrapping_add(1) & 0xffff;
+    // Counter 0 is skipped on wrap-around so a sample is never mistaken for "nothing yet".
+    let counter = if counter == 0 { 1 } else { counter };
+    FPS_SAMPLE.store(counter << 16 | tenths.min(u64::from(u16::MAX)) as u32, Ordering::Relaxed);
+}
 
 fn now_us() -> u64 {
     Instant::now().duration_since_epoch().as_micros() as u64
 }
 
+/// Frames counted towards the next published frame rate.
+#[derive(Default)]
+struct FpsWindow {
+    start_us: u64,
+    frames: u32,
+}
+
+/// Tenths of a frame per second for `frames` in `elapsed_us`.
+fn fps_tenths(frames: u32, elapsed_us: u64) -> u64 {
+    u64::from(frames) * 10_000_000 / elapsed_us
+}
+
 #[derive(Default)]
 pub struct CoreS3Platform {
     stats: FrameStats,
+    fps_window: FpsWindow,
     /// When the engine last started on a chunk of sound (see `FrameStats::audio_us`).
     audio_mark_us: u64,
 }
@@ -44,6 +85,17 @@ impl CoreS3Platform {
     /// Adds one frame to the timing and prints it once per window. `start` is when the frame came
     /// in, `acquired` when the LCD buffer became free, `end` when the frame was handed over.
     fn record(&mut self, start: u64, acquired: u64, end: u64) {
+        let window = &mut self.fps_window;
+        if window.start_us == 0 {
+            window.start_us = start;
+        }
+        window.frames += 1;
+        let elapsed = end - window.start_us;
+        if elapsed >= FPS_WINDOW_US {
+            publish_fps(fps_tenths(window.frames, elapsed));
+            *window = FpsWindow { start_us: end, frames: 0 };
+        }
+
         let stats = &mut self.stats;
         if stats.window_start_us == 0 {
             stats.window_start_us = start;
@@ -54,10 +106,11 @@ impl CoreS3Platform {
         let elapsed = end - stats.window_start_us;
         if elapsed >= STATS_WINDOW_US {
             let frames = u64::from(stats.frames);
+            let tenths = fps_tenths(stats.frames, elapsed);
             print!(
                 "[perf] {}.{} fps, present {} us/frame (waiting for the LCD {}), everything else {} us/frame (of it sound {})\n",
-                frames * 1_000_000 / elapsed,
-                frames * 10_000_000 / elapsed % 10,
+                tenths / 10,
+                tenths % 10,
                 stats.present_us / frames,
                 stats.waiting_us / frames,
                 (elapsed - stats.present_us) / frames,

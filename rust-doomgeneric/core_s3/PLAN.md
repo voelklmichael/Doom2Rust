@@ -144,6 +144,32 @@ RFC's own examples. The page was tested in headless Chromium against the board (
 typing in both modes, rebinding, reload, blur), and the server with a separate WebSocket client (two
 connections at once, ping/pong, dropped connections).
 
+**FPS readout.** The frame rate ("28.4 fps") is shown in two places, both fed by one number.
+*On the LCD*, in the top status bar right after the address (`192.168.4.1:7878  28.4 fps`, yellow).
+*On the web page*, next to the connection status. Where it is measured: `platform.rs`, which counts
+the frames it presents. A second, 1 s window next to the 2 s `[perf]` one (the serial line keeps its 2 s
+cadence) stores the result in one atomic, `FPS_SAMPLE` (tenths of a frame per second plus a sample
+counter). That is one relaxed store per second on the game core, with no formatting or allocation.
+
+- LCD: the bar is outside the game's frame buffer (which covers only the 320x200 picture) and was drawn
+  once at startup, through the BSP `Display` on core 0. `lcd::run_pump` now takes a `between_frames`
+  hook that runs just before each frame is sent, the one moment the pump is not holding the SPI bus. The
+  hook in `main.rs` does one atomic load and, when the sample counter has changed, redraws only the
+  8-character fps cell (`" 9.9 fps"`, `"28.4 fps"`: fixed width and an opaque black background, so a
+  shorter number leaves no old digits). Measured on the board, a redraw takes about 1 to 1.8 ms on core 0,
+  once a second. The cell sits at 4 + 6 * len(status) + 12 px; the status text is at most 40 characters,
+  so it always fits 320 px (station mode `192.168.68.103:7878` ends at pixel 118, fps at 130 to 178).
+  It keeps showing the last value if the game stops presenting frames.
+- Web: a WebSocket *text* message `fps 28.4` (`core_s3_protocol::encode_fps`/`decode_fps`, framed by
+  `core_s3_ws::text_frame`, all host tested). It goes only on the web controller's WebSocket (the plain
+  TCP port, and so `core_s3_sender`, never gets anything back). Each WebSocket task on core 0 looks at
+  the atomic every 500 ms, sends when the counter changed, and once right after connecting. The page
+  shows "- fps" until a value arrives, after 6 s without one (game stalled, older firmware) and when
+  disconnected, and ignores messages it does not know, so more server messages can be added later. To see
+  it: join the `CoreS3-DOOM` network with a phone or laptop and open `http://192.168.4.1/`. The page logic
+  was tested in headless Chromium against a local stand-in for the board that pushed fps messages
+  (update, junk ignored, going stale, recovering); the on-board path was not loaded in a browser.
+
 **The board's own network** (`net.rs`, `../core_s3_dhcp`): with no credentials the firmware starts
 esp-radio in access-point mode (open, channel 1, up to 4 clients, SSID `CoreS3-DOOM`) with the static
 address `192.168.4.1/24`, and answers DHCP itself. `core_s3_dhcp` is a small `no_std` server (unit

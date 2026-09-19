@@ -16,6 +16,8 @@
   h1 { font-size: 18px; margin: 0; }
   header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
   #status { display: flex; align-items: center; gap: 8px; color: var(--dim); font-size: 14px; }
+  #fps { font-family: ui-monospace, monospace; font-variant-numeric: tabular-nums; min-width: 8ch;
+    text-align: right; }
   #dot { width: 12px; height: 12px; border-radius: 50%; background: var(--bad); }
   #dot.on { background: var(--ok); }
   section { background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
@@ -58,7 +60,8 @@
 <body>
 <header>
   <h1>CoreS3 DOOM</h1>
-  <div id="status"><span id="dot"></span><span id="state">connecting…</span></div>
+  <div id="status"><span id="dot"></span><span id="state">connecting…</span>
+    <span id="fps" title="frames per second the game is running at (from the board)">- fps</span></div>
 </header>
 
 <div id="controls">
@@ -166,13 +169,31 @@ function setState(text, on) {
   $('controls').className = on ? '' : 'off';
 }
 
+// The board sends its frame rate as a text message, "fps 28.4", about once a second. Nothing (an older
+// firmware, no sample yet, a stalled game, no connection) shows as "- fps". Other messages are ignored.
+const FPS_STALE_MS = 6000;
+let fpsTimer = null;
+
+function showFps(text) {
+  $('fps').textContent = text + ' fps';
+  clearTimeout(fpsTimer);
+  fpsTimer = text === '-' ? null : setTimeout(() => showFps('-'), FPS_STALE_MS);
+}
+
+function onMessage(event) {
+  const match = typeof event.data === 'string' && /^fps (\d+\.\d)$/.exec(event.data);
+  if (match) showFps(match[1]);
+}
+
 function connect() {
   setState('connecting…', false);
   socket = new WebSocket('ws://' + location.host + '/ws');
   socket.binaryType = 'arraybuffer';
   socket.onopen = () => { connected = true; setState('connected', true); };
+  socket.onmessage = onMessage;
   socket.onclose = () => {
     connected = false;
+    showFps('-');
     forgetHolds();
     setState('disconnected, retrying…', false);
     setTimeout(connect, 1500);

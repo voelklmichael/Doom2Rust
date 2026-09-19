@@ -29,7 +29,12 @@ use core_s3::{
 use core_s3_protocol::DEFAULT_PORT;
 use embassy_executor::Spawner;
 use embassy_time::{with_timeout, Duration, Timer};
-use embedded_graphics::{pixelcolor::Rgb565, prelude::*};
+use embedded_graphics::{
+    mono_font::{ascii::FONT_6X10, MonoTextStyleBuilder},
+    pixelcolor::Rgb565,
+    prelude::*,
+    text::Text,
+};
 use esp_backtrace as _;
 use esp_hal::{
     clock::CpuClock,
@@ -235,7 +240,29 @@ async fn main(spawner: Spawner) {
     );
 
     // Core 0 streams the finished frames to the LCD; the network tasks keep running on this
-    // executor in between.
-    lcd::run_pump(&lcd).await
+    // executor in between. Where the frame rate goes in the status bar: right after the address, in a cell of a fixed
+    // width so a shorter number never leaves old digits behind. `status` holds at most 40
+    // characters, so the cell always fits the 320 pixels.
+    let fps_x = 4 + 6 * status.len() as i32 + 2 * 6;
+    let fps_style = MonoTextStyleBuilder::new()
+        .font(&FONT_6X10)
+        .text_color(Rgb565::YELLOW)
+        .background_color(Rgb565::BLACK)
+        .build();
+    let mut fps_shown = None;
+    lcd::run_pump(&lcd, || {
+        // A new sample is about once a second; the rest of the time this is one atomic load.
+        let Some((counter, tenths)) = platform::fps_sample() else { return };
+        if fps_shown == Some(counter) {
+            return;
+        }
+        fps_shown = Some(counter);
+        // Always eight characters (" 9.9 fps", "28.4 fps"); the game cannot run above 35 anyway.
+        let tenths = tenths.min(999);
+        let mut text = String::<8>::new();
+        let _ = write!(text, "{:>2}.{} fps", tenths / 10, tenths % 10);
+        let _ = Text::new(&text, Point::new(fps_x, 15), fps_style).draw(&mut display);
+    })
+    .await
 
 }

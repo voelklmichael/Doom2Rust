@@ -2,29 +2,36 @@
 //! sends key events back over a WebSocket on `/ws`. Every byte of a WebSocket message is one
 //! `core_s3_protocol` event, exactly like a byte on the plain TCP connection (`net`).
 //!
+//! The other way, the board pushes its frame rate to every connected page as a WebSocket text
+//! message (`core_s3_protocol::encode_fps`) whenever the game has measured a new one (see
+//! `platform::fps_sample`; about once a second).
+//!
 //! Three tasks run this. A task that is serving a page or holding a WebSocket is not listening, so
 //! with only one or two a browser that loads the page and then opens its WebSocket (or a second tab)
 //! could find nobody listening and be refused for a moment.
 
 use core::fmt::Write as _;
 
-use core_s3_protocol::HeldKeys;
+use core_s3_protocol::{encode_fps, HeldKeys, FPS_MESSAGE_MAX};
 use core_s3_ws::{
-    handshake_response, head_length, parse_request, pong_frame, Decoder, Output, Request,
-    CLOSE_FRAME, MAX_CONTROL_PAYLOAD, MAX_HEAD,
+    handshake_response, head_length, parse_request, pong_frame, text_frame, Decoder, Output,
+    Request, CLOSE_FRAME, MAX_CONTROL_PAYLOAD, MAX_HEAD, MAX_TEXT_PAYLOAD,
 };
+use embassy_futures::select::{select, Either};
 use embassy_net::{
     tcp::{Error, TcpSocket},
     Stack,
 };
-use embassy_time::Duration;
+use embassy_time::{Duration, Instant, Timer};
 use esp_println::println;
 use heapless::String;
 
-use crate::net;
+use crate::{net, platform};
 
 const PAGE: &str = include_str!("../assets/controller.html");
 const PORT: u16 = 80;
+/// How often a connection looks for a new frame rate sample to send.
+const FPS_POLL: Duration = Duration::from_millis(500);
 
 #[embassy_executor::task(pool_size = 3)]
 pub async fn web_server(stack: Stack<'static>) {
@@ -103,11 +110,24 @@ async fn websocket(socket: &mut TcpSocket<'_>, key: &str) -> Result<(), Error> {
     let mut decoder = Decoder::new();
     let mut held = HeldKeys::default();
     let mut bytes = [0u8; 64];
+    // The counter of the last frame rate sample sent (none yet, so a connection that opens after
+    // the first sample gets it at once).
+    let mut fps_sent = None;
+    let mut next_poll = Instant::now();
     let result = 'connection: loop {
-        let read = match socket.read(&mut bytes).await {
-            Ok(0) => break Ok(()),
-            Ok(read) => read,
-            Err(err) => break Err(err),
+        if Instant::now() >= next_poll {
+            next_poll = Instant::now() + FPS_POLL;
+            if let Err(err) = send_fps(socket, &mut fps_sent).await {
+                break Err(err);
+            }
+        }
+        // Wait for the browser, but not past the next look at the frame rate. The deadline is fixed
+        // (not restarted per read) so a busy stream of key events cannot starve the frame rate.
+        let read = match select(socket.read(&mut bytes), Timer::at(next_poll)).await {
+            Either::First(Ok(0)) => break Ok(()),
+            Either::First(Ok(read)) => read,
+            Either::First(Err(err)) => break Err(err),
+            Either::Second(()) => continue,
         };
         for &byte in &bytes[..read] {
             match decoder.push(byte) {
@@ -132,6 +152,20 @@ async fn websocket(socket: &mut TcpSocket<'_>, key: &str) -> Result<(), Error> {
     net::release_held(&mut held);
     println!("web: controller disconnected");
     result
+}
+
+/// Sends the latest frame rate to the browser if the game has measured a new one since `sent`.
+async fn send_fps(socket: &mut TcpSocket<'_>, sent: &mut Option<u16>) -> Result<(), Error> {
+    let Some((counter, tenths)) = platform::fps_sample() else { return Ok(()) };
+    if *sent == Some(counter) {
+        return Ok(());
+    }
+    *sent = Some(counter);
+    let mut message = [0u8; FPS_MESSAGE_MAX];
+    let length = encode_fps(u32::from(tenths), &mut message);
+    let mut frame = [0u8; 2 + MAX_TEXT_PAYLOAD];
+    let length = text_frame(&message[..length], &mut frame);
+    write_all(socket, &frame[..length]).await
 }
 
 async fn write_all(socket: &mut TcpSocket<'_>, mut data: &[u8]) -> Result<(), Error> {
