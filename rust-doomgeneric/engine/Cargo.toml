@@ -9,6 +9,8 @@ autobins = false
 [dependencies]
 bitflags = "2"
 sha1_smol = "1.0.1"
+# OPL2 (YM3812) FM synthesis for the music: no_std, integer-only, no unsafe.
+oplon = { version = "1.0.0", default-features = false }
 
 # Lints beyond clippy's defaults that the engine is clean against. They keep the
 # code from drifting back to C habits (needless `&mut`, repeated type names,

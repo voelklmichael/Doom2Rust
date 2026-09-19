@@ -925,8 +925,14 @@ pub fn doom_main(state: &mut GameState) {
         print_divider(&mut *state.platform);
     }
     doom_println!(state.platform, "I_Init: Setting up machine state.");
-    init_sound(&mut state.i_sound, &state.i_video, &state.m_argv, true);
-    init_music(&state.i_sound);
+    init_sound(
+        &mut state.i_sound,
+        &state.i_video,
+        &state.m_argv,
+        &mut *state.platform,
+        true,
+    );
+    init_music(state);
     connect_net_game(state);
     state.d_main.startskill = SkillType::Medium;
     state.d_main.startepisode = 1;

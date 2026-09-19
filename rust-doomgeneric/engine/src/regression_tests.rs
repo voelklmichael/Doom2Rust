@@ -147,7 +147,7 @@ fn fnv_bytes(bytes: &[u8]) -> u64 {
     })
 }
 
-fn iwad_bytes() -> Option<Vec<u8>> {
+pub(crate) fn iwad_bytes() -> Option<Vec<u8>> {
     let path = std::env::var("DOOM_IWAD").ok().or_else(|| {
         std::env::var("HOME")
             .ok()
@@ -628,4 +628,107 @@ fn indexed_frames_match_scaled_frames() {
     for (n, (a, b)) in scaled.iter().zip(&indexed).enumerate() {
         assert_eq!(a, b, "frame {n} differs");
     }
+}
+
+/// A [`NullPlatform`] with a sound card: 11025 Hz, and every tick call wants a
+/// 35th of a second of audio, which it records.
+struct AudioPlatform {
+    inner: NullPlatform,
+    opened: Rc<RefCell<bool>>,
+    samples: Rc<RefCell<Vec<i16>>>,
+}
+
+impl DoomPlatform for AudioPlatform {
+    fn init(&mut self, resx: i32, resy: i32) {
+        self.inner.init(resx, resy);
+    }
+    fn draw_frame(&mut self, frame: &[Pixel]) {
+        self.inner.draw_frame(frame);
+    }
+    fn audio_open(&mut self, preferred_rate: u32) -> Option<u32> {
+        assert_eq!(preferred_rate, 44100, "snd_samplerate default");
+        *self.opened.borrow_mut() = true;
+        Some(11025)
+    }
+    fn audio_frames_wanted(&mut self) -> usize {
+        11025 / 35
+    }
+    fn audio_write(&mut self, samples: &[i16]) {
+        self.samples.borrow_mut().extend_from_slice(samples);
+    }
+    fn sleep_ms(&mut self, ms: u32) {
+        self.inner.sleep_ms(ms);
+    }
+    fn get_ticks_ms(&mut self) -> u32 {
+        self.inner.get_ticks_ms()
+    }
+    fn get_key(&mut self) -> Option<(bool, u8)> {
+        self.inner.get_key()
+    }
+    fn set_window_title(&mut self, title: &str) {
+        self.inner.set_window_title(title);
+    }
+    fn print(&mut self, message: &str) {
+        self.inner.print(message);
+    }
+    fn eprint(&mut self, message: &str) {
+        self.inner.eprint(message);
+    }
+    fn quit(&mut self) -> ! {
+        self.inner.quit()
+    }
+}
+
+/// Runs the first `ticks` tick calls of demo1 on an [`AudioPlatform`], with the
+/// extra command line arguments, and returns whether the audio device was
+/// opened and everything the engine wrote to it.
+fn demo_audio(args: &[&str], ticks: u32) -> Option<(bool, Vec<i16>)> {
+    let opened = Rc::new(RefCell::new(false));
+    let samples = Rc::new(RefCell::new(Vec::new()));
+    let platform = AudioPlatform {
+        inner: NullPlatform::default(),
+        opened: Rc::clone(&opened),
+        samples: Rc::clone(&samples),
+    };
+    let mut argv = alloc::vec!["-timedemo", "demo1"];
+    argv.extend_from_slice(args);
+    let state = start_with(Box::new(platform), &argv)?;
+    for _ in 0..ticks {
+        doomgeneric_tick(state);
+    }
+    let opened = *opened.borrow();
+    Some((opened, samples.take()))
+}
+
+/// The sound effects a demo triggers come out of the audio device: audible,
+/// stereo, and in whole batches of what the platform asked for.
+#[test]
+fn sound_effects_reach_the_audio_output() {
+    let Some((opened, samples)) = demo_audio(&[], 1500) else {
+        std::eprintln!("skipping: no IWAD (set DOOM_IWAD or put doom1.wad in ~/Downloads)");
+        return;
+    };
+    assert!(opened);
+    // A tick call feeds the device once, or a few more times while the engine
+    // waits for a screen wipe.
+    let per_call = 2 * (11025 / 35);
+    assert_eq!(samples.len() % per_call, 0);
+    assert!(samples.len() >= 1500 * per_call);
+    let peak = samples.iter().map(|s| i32::from(s.unsigned_abs())).max();
+    assert!(peak > Some(1000), "demo1 is silent: peak {peak:?}");
+    let panned = samples.chunks_exact(2).any(|f| f[0] != f[1]);
+    assert!(panned, "every sound came out dead centre");
+    let sounding = samples.chunks_exact(2).filter(|f| f[0] != 0 || f[1] != 0);
+    assert!(sounding.count() > 11025, "less than a second of sound");
+}
+
+/// `-nosound` never opens the audio device.
+#[test]
+fn nosound_leaves_the_audio_device_closed() {
+    let Some((opened, samples)) = demo_audio(&["-nosound"], 200) else {
+        std::eprintln!("skipping: no IWAD (set DOOM_IWAD or put doom1.wad in ~/Downloads)");
+        return;
+    };
+    assert!(!opened);
+    assert!(samples.is_empty());
 }

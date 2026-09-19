@@ -302,3 +302,48 @@ vanilla or from older builds still load, because any non-zero word reads as "pre
 What is given up: a save no longer carries the (meaningless) original pointer values, so
 byte-comparing a save against one written by the C program will differ in those words,
 exactly as it already did between two runs of the C program.
+
+## Sound effects: a built-in mixer instead of SDL_mixer (2026-09-19)
+
+Upstream doomgeneric only has sound in its SDL/Allegro ports (`i_sdlsound.c`,
+`i_allegrosound.c`, built with `FEATURE_SOUND`); the X11 port is silent. The engine now
+mixes sound effects itself (`sfx_mixer.rs`) and hands stereo PCM to the platform through
+`DoomPlatform::audio_open` / `audio_frames_wanted` / `audio_write`. The mixer follows
+`i_sdlsound.c`: nearest-neighbour rate conversion, the `b | b << 8` 8-to-16-bit widening,
+pan `left = (254 - sep) * vol / 127`, `right = sep * vol / 127`, saturating overlap.
+
+Differences from the SDL backend:
+
+- A sound whose `ds*` lump is missing from the WAD is silent. Vanilla stops with
+  `W_GetNumForName: ... not found!`.
+- Sounds are loaded when first played, not at start-up (`I_PrecacheSounds` is gone), so the
+  first play of an effect reads its lump then. The lump is shared with the lump cache, not
+  copied and expanded to the output rate.
+- `use_libsamplerate` / `libsamplerate_scale` stay unused; there is no libsamplerate path.
+- Music: see the next section.
+- A platform that does not implement `audio_open` (the default) plays nothing, and the
+  engine then behaves exactly as before: no lumps are looked up for sound.
+- The Linux build sends its audio to `aplay` or `paplay` over a pipe (`DOOM_AUDIO=off` or
+  `DOOM_AUDIO=file:PATH` override it).
+
+## Music: OPL2 emulation instead of SDL_mixer's MIDI (2026-09-19)
+
+The SDL port turns each MUS lump into MIDI (`mus2mid.c`) and lets SDL_mixer play it with
+whatever MIDI synthesizer the system has. Here the MUS score is played directly
+(`mus.rs`) on an emulated OPL2 chip (the `oplon` crate) programmed from the WAD's `GENMIDI`
+lump, as DOS Doom did on an AdLib / Sound Blaster (`opl_music.rs`, standing in for
+Chocolate Doom's `i_oplmusic.c`). It follows the same design as the original (channel state,
+nine voices, two-voice instruments, drum keys 35-81 from the percussion patches) but the
+driver was written from the format, not ported line by line, so it is not sample-identical to
+DOS Doom or Chocolate Doom:
+
+- Volume: a note's velocity, the channel volume and the music volume each add attenuation on a
+  `40 * log10(v / 127)` dB curve (`ATTENUATION`), rather than the DMX volume table.
+- Pitch: F-numbers come from an equal-tempered table generated at compile time, not DMX's
+  pitch curve. Pitch bend is the usual two semitones. The second voice's detune is read as
+  1/32 semitone steps, which is a guess from the data (the values sit between -6 and +5).
+- Voice stealing when all nine voices are busy: second voices first, then the highest
+  channel number (drums first), oldest note first.
+- Only MUS lumps play; a PWAD with MIDI-format music is silent.
+- The output is raised by `MUSIC_GAIN` so music and effects are of similar loudness.
+- `-nomusic` turns it off. It needs an audio device and the `GENMIDI` lump.
