@@ -38,6 +38,9 @@ The controller connects over Wi-Fi in one of two ways, chosen when the firmware 
 
 Either way the LCD shows what to join and where to connect, and keeps the address in its top bar.
 
+Or skip the sender and open the **web controller** in any browser (a phone works too): `http://<the
+address on the LCD>/` (`http://192.168.4.1/` on the board's own network). It needs nothing installed.
+
 One-off host setup: `cargo install espup espflash --locked`, `espup install --targets esp32s3`,
 and membership of the `dialout` group. If the board is not detected, hold reset ~3 s until the
 green LED lights, then release. The "LOAD segment with RWX permissions" linker warning is
@@ -106,6 +109,29 @@ keyboard drawing (`KEY_MAP`, checked against the bindings by a test) when it con
 kitty keyboard protocol report real key releases; others get releases after `--hold-ms` (default 150).
 The key mapping, hold tracking and the TCP path are unit tested; the terminal glue is not.
 
+**Web controller** (`src/web.rs`, `assets/controller.html`, `../core_s3_ws`): the board serves one page
+on port 80 and the page sends key events back over a WebSocket on `/ws`. Every byte of a message is
+one protocol event, so it feeds the same queue as the TCP port. Three tasks listen, so one is always
+free (a task serving a page or holding a WebSocket is not listening). The page has
+
+- **buttons** for every action, held for as long as they are pressed (mouse or touch; several at once),
+  and a sticky Run toggle. A press shorter than 120 ms is stretched to that, because the game only looks
+  at held keys once per tic and a quick click would be missed;
+- an editable **key list**: click + on an action and press a key to bind it, x to remove one, Reset to
+  go back. It is kept in the browser (`localStorage`), and the keyboard works anywhere on the page;
+- a **text box** whose input is sent immediately, in two modes. *Keys* (the default): each typed key
+  does its binding, so `w` is forward and space is fire; holding a key repeats it, which keeps the
+  action going, and Enter/arrows/Shift and the like act as real holds; a pasted run such as `wwwd`
+  plays one key per 0.2 s. *Text*: each character goes to the game as typed (cheat codes such as
+  `iddqd`, save names), which needs its own mode because letters like `d` and `q` are also bindings.
+
+To make typing possible the protocol grew: codes 32-126 are typed characters (the code is the ASCII
+value) and code 21 is Backspace; old bytes keep their meaning. `core_s3_ws` is a small `no_std` crate
+(request parsing, the RFC 6455 handshake, a byte-at-a-time frame decoder) tested on the host with the
+RFC's own examples. The page was tested in headless Chromium against the board (clicks, holds, keys,
+typing in both modes, rebinding, reload, blur), and the server with a separate WebSocket client (two
+connections at once, ping/pong, dropped connections).
+
 **The board's own network** (`net.rs`, `../core_s3_dhcp`): with no credentials the firmware starts
 esp-radio in access-point mode (open, channel 1, up to 4 clients, SSID `CoreS3-DOOM`) with the static
 address `192.168.4.1/24`, and answers DHCP itself. `core_s3_dhcp` is a small `no_std` server (unit
@@ -117,7 +143,7 @@ connection).
 
 **Firmware layout**
 - Core 0: esp-rtos scheduler plus an embassy executor running the Wi-Fi station (reconnects on drop)
-  or the access point, DHCP and the TCP command server (`net.rs`), and the LCD pump that streams finished frames by DMA
+  or the access point, DHCP, the TCP command server (`net.rs`), the web controller (`web.rs`), and the LCD pump that streams finished frames by DMA
   (`lcd.rs`). One controller at a time; keep-alive frees the slot if it
   vanishes, and any keys it held are released on disconnect.
 - Core 1: builds and runs the game (`main.rs`), reading events through `get_key()`.

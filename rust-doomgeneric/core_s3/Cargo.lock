@@ -150,6 +150,7 @@ dependencies = [
  "core-s3",
  "core_s3_dhcp",
  "core_s3_protocol",
+ "core_s3_ws",
  "critical-section",
  "embassy-executor",
  "embassy-net",
@@ -176,6 +177,13 @@ version = "0.0.0"
 [[package]]
 name = "core_s3_protocol"
 version = "0.0.0"
+
+[[package]]
+name = "core_s3_ws"
+version = "0.0.0"
+dependencies = [
+ "sha1_smol",
+]
 
 [[package]]
 name = "critical-section"
