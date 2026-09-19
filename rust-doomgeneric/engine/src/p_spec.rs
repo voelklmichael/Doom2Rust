@@ -105,7 +105,7 @@ impl Default for PSpecState {
 
 impl PSpecState {
     pub const fn new() -> Self {
-        PSpecState {
+        Self {
             anims: [Anim {
                 istexture: false,
                 picnum: 0,
@@ -222,7 +222,7 @@ pub struct Plat {
 // p_saveg.rs's restore branch), so these values are never actually read.
 impl Default for Plat {
     fn default() -> Self {
-        Plat {
+        Self {
             thinker: Thinker {
                 function: ThinkerFn::Unresolved,
             },
@@ -258,7 +258,7 @@ pub struct Ceiling {
 // p_saveg.rs's restore branch), so these values are never actually read.
 impl Default for Ceiling {
     fn default() -> Self {
-        Ceiling {
+        Self {
             thinker: Thinker {
                 function: ThinkerFn::Unresolved,
             },
@@ -292,7 +292,7 @@ pub struct FloorMove {
 // restore branch), so these values are never actually read.
 impl Default for FloorMove {
     fn default() -> Self {
-        FloorMove {
+        Self {
             thinker: Thinker {
                 function: ThinkerFn::Unresolved,
             },
@@ -454,11 +454,11 @@ pub fn init_pic_anims(state: &mut GameState) {
                 continue;
             }
             (
-                texture_num_for_name(&mut state.r_data, &endname),
-                texture_num_for_name(&mut state.r_data, &startname),
+                texture_num_for_name(&state.r_data, &endname),
+                texture_num_for_name(&state.r_data, &startname),
             )
         } else {
-            if check_num_for_name(&mut state.w_wad, &startname) == -1 {
+            if check_num_for_name(&state.w_wad, &startname) == -1 {
                 continue;
             }
             (
@@ -473,8 +473,7 @@ pub fn init_pic_anims(state: &mut GameState) {
         anim.numpics = picnum - basepic + 1;
         if anim.numpics < 2 {
             error(&format!(
-                "P_InitPicAnims: bad cycle from {} to {}",
-                startname, endname,
+                "P_InitPicAnims: bad cycle from {startname} to {endname}",
             ));
         }
         anim.speed = def.speed;
@@ -502,7 +501,7 @@ pub fn two_sided(state: &mut GameState, sector: i32, line: i32) -> i32 {
     let line_id = sec.lines[line as usize];
     state.p_setup.line(line_id).flags as i32 & ML_TWOSIDED
 }
-pub fn get_next_sector(state: &mut GameState, line: LineId, sec: SectorId) -> Option<SectorId> {
+pub fn get_next_sector(state: &GameState, line: LineId, sec: SectorId) -> Option<SectorId> {
     let linev = state.p_setup.line(line);
     if linev.flags as i32 & ML_TWOSIDED == 0 {
         return None;
@@ -602,7 +601,7 @@ pub fn find_highest_ceiling_surrounding(state: &mut GameState, sec: SectorId) ->
     }
     height
 }
-pub fn find_sector_from_line_tag(state: &mut GameState, line: LineId, start: i32) -> i32 {
+pub fn find_sector_from_line_tag(state: &GameState, line: LineId, start: i32) -> i32 {
     let line_tag = state.p_setup.line(line).tag;
     for i in start + 1..state.p_setup.numsectors {
         if state.p_setup.sectors[i as usize].tag as i32 == line_tag as i32 {
@@ -906,7 +905,7 @@ pub fn cross_special_line(state: &mut GameState, linenum: i32, side: i32, thing:
             do_floor(state, line, FloorE::RaiseFloorTurbo);
         }
         _ => {}
-    };
+    }
 }
 pub fn shoot_special_line(state: &mut GameState, thing: MobjId, line: LineId) {
     let mut ok: i32;
@@ -934,7 +933,7 @@ pub fn shoot_special_line(state: &mut GameState, thing: MobjId, line: LineId) {
             change_switch_texture(state, line, false);
         }
         _ => {}
-    };
+    }
 }
 pub fn player_in_special_sector(state: &mut GameState, player: PlayerId) {
     let player_mo = state.g_game.player_mut(player).mo.unwrap();
@@ -992,7 +991,7 @@ pub fn player_in_special_sector(state: &mut GameState, player: PlayerId) {
                 special as i32,
             ));
         }
-    };
+    }
 }
 pub fn update_specials(state: &mut GameState) {
     let mut pic: i32;
@@ -1113,17 +1112,14 @@ pub fn do_donut(state: &mut GameState, line: LineId) -> bool {
             if s3 == Some(s1) {
                 continue;
             }
-            let (s3_floorheight, s3_floorpic) = match s3 {
-                Some(id) => {
-                    let s3 = state.p_setup.sector_mut(id);
-                    (s3.floorheight, s3.floorpic)
-                }
-                None => {
-                    doom_eprintln!(state.platform,
-                        "EV_DoDonut: WARNING: emulating buffer overrun due to NULL back sector. Unexpected behavior may occur in Vanilla Doom."
-                    );
-                    donut_overrun(state)
-                }
+            let (s3_floorheight, s3_floorpic) = if let Some(id) = s3 {
+                let s3 = state.p_setup.sector_mut(id);
+                (s3.floorheight, s3.floorpic)
+            } else {
+                doom_eprintln!(state.platform,
+                    "EV_DoDonut: WARNING: emulating buffer overrun due to NULL back sector. Unexpected behavior may occur in Vanilla Doom."
+                );
+                donut_overrun(state)
             };
             let mut floor = FloorMove::default();
             floor.thinker.function = ThinkerFn::Floor(move_floor);

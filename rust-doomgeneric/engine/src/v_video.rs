@@ -62,7 +62,7 @@ impl Default for VVideoState {
 
 impl VVideoState {
     pub const fn new() -> Self {
-        VVideoState { dirtybox: [0; 4] }
+        Self { dirtybox: [0; 4] }
     }
 }
 pub fn mark_rect(state: &mut GameState, dest: Screen, x: i32, y: i32, width: i32, height: i32) {
@@ -230,10 +230,10 @@ pub fn write_pcxfile(
     pack.extend_from_slice(&[0u8; 58]);
     debug_assert_eq!(pack.len(), 128);
     for &pixel in &data[..(width * height) as usize] {
-        if pixel as i32 & 0xc0 != 0xc0 {
+        if pixel as i32 & 0xc0 == 0xc0 {
+            pack.push(0xc1_u8);
             pack.push(pixel);
         } else {
-            pack.push(0xc1_u8);
             pack.push(pixel);
         }
     }

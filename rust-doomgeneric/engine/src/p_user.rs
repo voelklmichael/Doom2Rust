@@ -43,7 +43,7 @@ impl Default for PUserState {
 
 impl PUserState {
     pub const fn new() -> Self {
-        PUserState { onground: false }
+        Self { onground: false }
     }
 }
 
@@ -305,5 +305,5 @@ pub fn player_think(state: &mut GameState, player_id: PlayerId) {
         }
     } else {
         state.g_game.players[player.0 as usize].fixedcolormap = 0;
-    };
+    }
 }

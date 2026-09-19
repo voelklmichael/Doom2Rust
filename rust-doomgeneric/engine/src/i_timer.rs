@@ -12,7 +12,7 @@ impl Default for ITimerState {
 
 impl ITimerState {
     pub const fn new() -> Self {
-        ITimerState { basetime: 0 }
+        Self { basetime: 0 }
     }
 }
 

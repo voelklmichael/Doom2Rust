@@ -37,7 +37,7 @@ impl Default for IVideoState {
 
 impl IVideoState {
     pub const fn new() -> Self {
-        IVideoState {
+        Self {
             s_fb: FBScreenInfo::ZERO,
             fb_scaling: 1,
             usemouse: 0,
@@ -66,7 +66,7 @@ pub struct FBScreenInfo {
     pub transp: FBBitField,
 }
 impl FBScreenInfo {
-    pub const ZERO: FBScreenInfo = FBScreenInfo {
+    pub const ZERO: Self = Self {
         xres: 0,
         yres: 0,
         xres_virtual: 0,
@@ -100,16 +100,16 @@ pub struct Color {
     pub b_g_r_a: [u8; 4],
 }
 impl Color {
-    pub fn r(&self) -> u8 {
+    pub fn r(self) -> u8 {
         self.b_g_r_a[2]
     }
-    pub fn g(&self) -> u8 {
+    pub fn g(self) -> u8 {
         self.b_g_r_a[1]
     }
-    pub fn b(&self) -> u8 {
+    pub fn b(self) -> u8 {
         self.b_g_r_a[0]
     }
-    pub fn a(&self) -> u8 {
+    pub fn a(self) -> u8 {
         self.b_g_r_a[3]
     }
     pub fn set_r(&mut self, value: u32) {
@@ -167,7 +167,7 @@ pub fn init_graphics(state: &mut GameState) {
         state.i_video.s_fb.red.offset = 0_u32;
         state.i_video.s_fb.transp.offset = 16_u32;
     } else {
-        error(&format!("Unknown gfxmode value: {}\n", mode));
+        error(&format!("Unknown gfxmode value: {mode}\n"));
     }
     doom_println!(
         state.platform,

@@ -23,7 +23,7 @@ pub struct FireFlicker {
 }
 impl Default for FireFlicker {
     fn default() -> Self {
-        FireFlicker {
+        Self {
             thinker: Thinker {
                 function: ThinkerFn::Unresolved,
             },
@@ -46,7 +46,7 @@ pub struct LightFlash {
 }
 impl Default for LightFlash {
     fn default() -> Self {
-        LightFlash {
+        Self {
             thinker: Thinker {
                 function: ThinkerFn::Unresolved,
             },
@@ -71,7 +71,7 @@ pub struct Strobe {
 }
 impl Default for Strobe {
     fn default() -> Self {
-        Strobe {
+        Self {
             thinker: Thinker {
                 function: ThinkerFn::Unresolved,
             },
@@ -94,7 +94,7 @@ pub struct Glow {
 }
 impl Default for Glow {
     fn default() -> Self {
-        Glow {
+        Self {
             thinker: Thinker {
                 function: ThinkerFn::Unresolved,
             },
@@ -178,7 +178,7 @@ impl Default for PLightsState {
 
 impl PLightsState {
     pub const fn new() -> Self {
-        PLightsState {
+        Self {
             fireflickers: Vec::new(),
             fireflicker_free_list: Vec::new(),
             lightflashes: Vec::new(),
@@ -404,7 +404,7 @@ pub fn light_flash(state: &mut GameState, id: LightFlashId) {
     } else {
         sec.lightlevel = flash.maxlight as i16;
         flash.count = (p_random(&mut state.m_random) & flash.maxtime) + 1;
-    };
+    }
 }
 pub fn spawn_light_flash(state: &mut GameState, sector: SectorId) {
     state.p_setup.sector_mut(sector).special = 0;
@@ -440,7 +440,7 @@ pub fn strobe_flash(state: &mut GameState, id: StrobeId) {
     } else {
         sec.lightlevel = flash.minlight as i16;
         flash.count = flash.darktime;
-    };
+    }
 }
 pub fn spawn_strobe_flash(
     state: &mut GameState,
@@ -466,7 +466,7 @@ pub fn spawn_strobe_flash(
         flash.count = (p_random(&mut state.m_random) & 7) + 1;
     } else {
         flash.count = 1;
-    };
+    }
     let flash_arena_id = state.p_lights.spawn_strobe(flash);
     add_thinker(
         state,
@@ -552,7 +552,7 @@ pub fn glow(state: &mut GameState, id: GlowId) {
             }
         }
         _ => {}
-    };
+    }
 }
 pub fn spawn_glowing_light(state: &mut GameState, sector: SectorId) {
     let lightlevel = state.p_setup.sector_mut(sector).lightlevel as i32;

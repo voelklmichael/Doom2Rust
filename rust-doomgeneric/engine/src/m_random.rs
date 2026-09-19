@@ -26,7 +26,7 @@ impl Default for MRandomState {
 
 impl MRandomState {
     pub const fn new() -> Self {
-        MRandomState {
+        Self {
             rndindex: 0,
             prndindex: 0,
         }

@@ -15,7 +15,7 @@ impl Default for RSkyState {
 
 impl RSkyState {
     pub const fn new() -> Self {
-        RSkyState {
+        Self {
             skyflatnum: 0,
             skytexture: 0,
             skytexturemid: 0,

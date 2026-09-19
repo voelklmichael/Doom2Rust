@@ -27,7 +27,7 @@ impl Default for ISystemState {
 
 impl ISystemState {
     pub fn new() -> Self {
-        ISystemState {
+        Self {
             exit_funcs: Vec::new(),
             mem_dump_custom: [0; 10],
             dos_mem_dump: DosMemDump::Dos622,

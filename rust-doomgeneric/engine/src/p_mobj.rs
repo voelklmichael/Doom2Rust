@@ -2967,7 +2967,7 @@ pub fn xymovement(state: &mut GameState, mo: MobjId) {
         let m = state.p_mobj.mo_mut(mo);
         m.momx = fixed_mul(m.momx, FRICTION);
         m.momy = fixed_mul(m.momy, FRICTION);
-    };
+    }
 }
 pub fn zmovement(state: &mut GameState, mo: MobjId) {
     let dist: Fixed;
@@ -3107,14 +3107,7 @@ pub fn mobj_thinker(state: &mut GameState, id: MobjId) {
             }
         }
     }
-    if state.p_mobj.mo(id).tics != -1 {
-        state.p_mobj.mo_mut(id).tics -= 1;
-        if state.p_mobj.mo(id).tics == 0 {
-            let current = state.p_mobj.mo(id).state.unwrap();
-            let nextstate = state.info.state_mut(current).nextstate;
-            set_mobj_state(state, id, nextstate);
-        }
-    } else {
+    if state.p_mobj.mo(id).tics == -1 {
         if state.p_mobj.mo(id).flags & MF_COUNTKILL == 0 {
             return;
         }
@@ -3132,6 +3125,13 @@ pub fn mobj_thinker(state: &mut GameState, id: MobjId) {
             return;
         }
         nightmare_respawn(state, id);
+    } else {
+        state.p_mobj.mo_mut(id).tics -= 1;
+        if state.p_mobj.mo(id).tics == 0 {
+            let current = state.p_mobj.mo(id).state.unwrap();
+            let nextstate = state.info.state_mut(current).nextstate;
+            set_mobj_state(state, id, nextstate);
+        }
     }
 }
 pub fn spawn_mobj(state: &mut GameState, x: Fixed, y: Fixed, z: Fixed, kind: MobjType) -> MobjId {
@@ -3207,7 +3207,7 @@ impl MobjId {
     /// comparing ids (generation is deliberately hidden for that) -- just
     /// for callers that need a plain distinguishing number, e.g. the
     /// vanilla-demo-compatibility overrun emulation in p_maputl.rs.
-    pub fn raw_index(&self) -> u32 {
+    pub fn raw_index(self) -> u32 {
         self.index
     }
 }
@@ -3343,7 +3343,7 @@ impl PMobjState {
     }
 
     pub const fn new() -> Self {
-        PMobjState {
+        Self {
             test: 0,
             itemrespawnque: [MapThing {
                 x: 0,
@@ -3653,14 +3653,13 @@ pub fn subst_null_mobj(state: &mut PMobjState, mobj: Option<MobjId>) -> MobjId {
     if let Some(id) = mobj {
         return id;
     }
-    let id = match state.dummy_id.filter(|&id| state.mobj_ref(id).is_some()) {
-        Some(id) => id,
-        None => {
-            let template = state.dummy_mobj;
-            let id = state.spawn(template);
-            state.dummy_id = Some(id);
-            id
-        }
+    let id = if let Some(id) = state.dummy_id.filter(|&id| state.mobj_ref(id).is_some()) {
+        id
+    } else {
+        let template = state.dummy_mobj;
+        let id = state.spawn(template);
+        state.dummy_id = Some(id);
+        id
     };
     let dummy = state.mo_mut(id);
     dummy.x = 0;

@@ -17,7 +17,7 @@ impl Default for StatDumpState {
 
 impl StatDumpState {
     pub const fn new() -> Self {
-        StatDumpState {
+        Self {
             captured_stats: [WbStartStruct {
                 epsd: 0,
                 didsecret: false,

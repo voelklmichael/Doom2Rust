@@ -159,14 +159,14 @@ pub fn give_weapon(
         }
         return false;
     }
-    if WEAPONINFO[weapon as usize].ammo as u32 != AmmoType::Noammo as i32 as u32 {
+    if WEAPONINFO[weapon as usize].ammo as u32 == AmmoType::Noammo as i32 as u32 {
+        gaveammo = false;
+    } else {
         if dropped {
             gaveammo = give_ammo(state, player, WEAPONINFO[weapon as usize].ammo, 1);
         } else {
             gaveammo = give_ammo(state, player, WEAPONINFO[weapon as usize].ammo, 2);
         }
-    } else {
-        gaveammo = false;
     }
     if state.g_game.players[player.0 as usize].weaponowned[weapon as usize] {
         gaveweapon = false;

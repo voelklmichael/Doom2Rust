@@ -23,7 +23,7 @@ impl Default for IJoystickState {
 
 impl IJoystickState {
     pub const fn new() -> Self {
-        IJoystickState {
+        Self {
             usejoystick: 0,
             joystick_index: -1,
             joystick_x_axis: 0,
@@ -63,7 +63,7 @@ pub fn bind_joystick_variables(state: &mut GameState) {
         &mut s.i_joystick.joystick_strafe_invert
     });
     for i in 0..NUM_VIRTUAL_BUTTONS {
-        let name = format!("joystick_physical_button{}", i);
+        let name = format!("joystick_physical_button{i}");
         bind_variable_int(&mut state.m_config, &name, move |s| {
             &mut s.i_joystick.joystick_physical_buttons[i as usize]
         });

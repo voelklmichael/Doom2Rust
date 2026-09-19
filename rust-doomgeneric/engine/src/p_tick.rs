@@ -90,7 +90,7 @@ impl Default for PTickState {
 
 impl PTickState {
     pub const fn new() -> Self {
-        PTickState {
+        Self {
             leveltime: 0,
             nodes: Vec::new(),
             free_list: Vec::new(),

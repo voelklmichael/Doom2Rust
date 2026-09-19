@@ -243,7 +243,7 @@ impl Default for GGameState {
 
 impl GGameState {
     pub const fn new() -> Self {
-        GGameState {
+        Self {
             oldgamestate: GameScreenState::Level,
             gameaction: GameAction::Nothing,
             gamestate: GameScreenState::Level,
@@ -411,7 +411,7 @@ pub const SLOWTURNTICS: i32 = 6;
 pub const NUMKEYS: i32 = 256;
 pub const MAX_JOY_BUTTONS: i32 = 20;
 pub const BODYQUESIZE: i32 = 32;
-fn weapon_selectable(state: &mut GameState, weapon: WeaponType) -> bool {
+fn weapon_selectable(state: &GameState, weapon: WeaponType) -> bool {
     if weapon as u32 == WeaponType::Supershotgun as u32
         && (if state.doomstat.gamemission as u32 == GameMission::PackChex as u32 {
             GameMission::Doom as u32
@@ -443,7 +443,7 @@ fn weapon_selectable(state: &mut GameState, weapon: WeaponType) -> bool {
     }
     true
 }
-fn g_next_weapon(state: &mut GameState, direction: i32) -> i32 {
+fn g_next_weapon(state: &GameState, direction: i32) -> i32 {
     let mut i: i32;
     let weapon: WeaponType = if state.g_game.players[state.g_game.consoleplayer as usize]
         .pendingweapon as u32
@@ -606,9 +606,8 @@ pub fn g_build_ticcmd(state: &mut GameState, cmd: &mut TicCmd, maketic: i32) {
                 cmd.buttons = (cmd.buttons as i32 | BT_CHANGE) as u8;
                 cmd.buttons = (cmd.buttons as i32 | i << BT_WEAPONSHIFT) as u8;
                 break;
-            } else {
-                i += 1;
             }
+            i += 1;
         }
     }
     state.g_game.next_weapon = 0;
@@ -714,7 +713,7 @@ pub fn do_load_level(state: &mut GameState) {
         } else {
             "SKY3"
         };
-        state.r_sky.skytexture = texture_num_for_name(&mut state.r_data, skytexturename);
+        state.r_sky.skytexture = texture_num_for_name(&state.r_data, skytexturename);
     }
     state.g_game.levelstarttic = state.d_loop.gametic;
     if state.d_main.wipegamestate == GameScreenState::Level {
@@ -922,7 +921,7 @@ pub fn g_ticker(state: &mut GameState, netcmds: &[TicCmd]) {
             {
                 let player_name = PLAYER_NAMES[i as usize];
                 state.g_game.players[state.g_game.consoleplayer as usize].message =
-                    Some(format!("{} is turbo!", player_name));
+                    Some(format!("{player_name} is turbo!"));
                 state.g_game.turbodetected[i as usize] = false;
             }
             if state.g_game.netgame
@@ -997,7 +996,7 @@ pub fn g_ticker(state: &mut GameState, netcmds: &[TicCmd]) {
             page_ticker(state);
         }
         GameScreenState::Wipped => {}
-    };
+    }
 }
 pub fn player_finish_level(state: &mut GameState, player: i32) {
     let p = &mut state.g_game.players[player as usize];
@@ -1086,7 +1085,7 @@ pub fn check_spot(state: &mut GameState, playernum: i32, mthing: &MapThing) -> b
             ya = FINESINE[an as usize];
         }
         _ => {
-            error(&format!("G_CheckSpot: unexpected angle {}\n", an));
+            error(&format!("G_CheckSpot: unexpected angle {an}\n"));
         }
     }
     let floorheight = state
@@ -1102,7 +1101,7 @@ pub fn check_spot(state: &mut GameState, playernum: i32, mthing: &MapThing) -> b
 pub fn death_match_spawn_player(state: &mut GameState, playernum: i32) {
     let selections = state.p_setup.deathmatch_p as i32;
     if selections < 4 {
-        error(&format!("Only {} deathmatch spots, 4 required", selections));
+        error(&format!("Only {selections} deathmatch spots, 4 required"));
     }
     for _ in 0..20 {
         let i = (p_random(&mut state.m_random) % selections) as usize;
@@ -1118,9 +1117,7 @@ pub fn death_match_spawn_player(state: &mut GameState, playernum: i32) {
     spawn_player(state, spot);
 }
 pub fn do_reborn(state: &mut GameState, playernum: i32) {
-    if !state.g_game.netgame {
-        state.g_game.gameaction = GameAction::LoadLevel;
-    } else {
+    if state.g_game.netgame {
         let player_mo_id = state.g_game.players[playernum as usize].mo.unwrap();
         state.p_mobj.mo_mut(player_mo_id).player = None;
         if state.g_game.deathmatch != 0 {
@@ -1145,7 +1142,9 @@ pub fn do_reborn(state: &mut GameState, playernum: i32) {
         }
         let spot = state.p_setup.playerstarts[playernum as usize];
         spawn_player(state, spot);
-    };
+    } else {
+        state.g_game.gameaction = GameAction::LoadLevel;
+    }
 }
 pub fn g_screen_shot(state: &mut GameState) {
     state.g_game.gameaction = GameAction::Screenshot;
@@ -1166,7 +1165,7 @@ pub fn exit_level(state: &mut GameState) {
 }
 pub fn secret_exit_level(state: &mut GameState) {
     state.g_game.secretexit = !(state.doomstat.gamemode as u32 == GameMode::Commercial as u32
-        && check_num_for_name(&mut state.w_wad, "map31") < 0);
+        && check_num_for_name(&state.w_wad, "map31") < 0);
     state.g_game.gameaction = GameAction::Completed;
 }
 pub fn do_completed(state: &mut GameState) {
@@ -1373,13 +1372,11 @@ pub fn do_save_game(state: &mut GameState) {
         let recovery_file = state.fs.temp_path("recovery.dsg");
         if !state.fs.write_file(&recovery_file, &image) {
             error(&format!(
-                "Failed to open either '{}' or '{}' to write savegame.",
-                temp_savegame_file, recovery_file,
+                "Failed to open either '{temp_savegame_file}' or '{recovery_file}' to write savegame.",
             ));
         }
         error(&format!(
-            "Failed to open savegame file '{}' for writing.\nBut your game has been saved to '{}' for recovery.",
-            temp_savegame_file, recovery_file,
+            "Failed to open savegame file '{temp_savegame_file}' for writing.\nBut your game has been saved to '{recovery_file}' for recovery.",
         ));
     }
     state.fs.remove_file(&savegame_file);
@@ -1496,7 +1493,7 @@ pub fn init_new(state: &mut GameState, mut skill: SkillType, mut episode: i32, m
             }
         }
     }
-    state.r_sky.skytexture = texture_num_for_name(&mut state.r_data, skytexturename);
+    state.r_sky.skytexture = texture_num_for_name(&state.r_data, skytexturename);
     do_load_level(state);
 }
 pub const DEMOMARKER: i32 = 0x80;
@@ -1554,16 +1551,15 @@ pub fn write_demo_ticcmd(state: &mut GameState, player_num: usize) {
         if state.g_game.vanilla_demo_limit != 0 {
             check_demo_status(state);
             return;
-        } else {
-            increase_demo_buffer(state);
         }
+        increase_demo_buffer(state);
     }
     read_demo_ticcmd(state, player_num);
 }
 pub fn record_demo(state: &mut GameState, name: &str) {
     let mut maxsize: i32;
     state.g_game.usergame = false;
-    state.g_game.demoname = format!("{}.lmp", name);
+    state.g_game.demoname = format!("{name}.lmp");
     maxsize = 0x20000;
     let i: i32 = check_parm_with_args(state, "-maxdemo", 1);
     if i != 0 {
@@ -1573,7 +1569,7 @@ pub fn record_demo(state: &mut GameState, name: &str) {
     state.g_game.demoend = maxsize as usize;
     state.g_game.demorecording = true;
 }
-pub fn vanilla_version_code(state: &mut DoomstatState) -> i32 {
+pub fn vanilla_version_code(state: &DoomstatState) -> i32 {
     match state.gameversion as u32 {
         0 => {
             error("Doom 1.2 does not have a version code!");
@@ -1592,7 +1588,7 @@ pub fn begin_recording(state: &mut GameState) {
     if state.g_game.longtics {
         state.g_game.demo_write_byte(DOOM_191_VERSION as u8);
     } else {
-        let version = vanilla_version_code(&mut state.doomstat) as u8;
+        let version = vanilla_version_code(&state.doomstat) as u8;
         state.g_game.demo_write_byte(version);
     }
     state.g_game.demo_write_byte(state.g_game.gameskill as u8);
@@ -1633,12 +1629,12 @@ fn demo_version_description(_state: &mut GameState, version: i32) -> String {
 pub fn do_play_demo(state: &mut GameState) {
     state.g_game.gameaction = GameAction::Nothing;
     let demo_lumpname = state.g_game.defdemoname.as_str().into_owned();
-    let demo_lumpnum = get_num_for_name(&mut state.w_wad, &demo_lumpname);
-    let demo_lumplen = lump_length(&mut state.w_wad, demo_lumpnum as u32) as usize;
+    let demo_lumpnum = get_num_for_name(&state.w_wad, &demo_lumpname);
+    let demo_lumplen = lump_length(&state.w_wad, demo_lumpnum as u32) as usize;
     state.g_game.demobuffer = lump_bytes(state, demo_lumpnum)[..demo_lumplen].to_vec();
     state.g_game.demo_p = 0;
     let demoversion: i32 = state.g_game.demo_read_byte() as i32;
-    if demoversion == vanilla_version_code(&mut state.doomstat) {
+    if demoversion == vanilla_version_code(&state.doomstat) {
         state.g_game.longtics = false;
     } else if demoversion == DOOM_191_VERSION {
         state.g_game.longtics = true;
@@ -1646,7 +1642,7 @@ pub fn do_play_demo(state: &mut GameState) {
         doom_println!(state.platform,
             "Demo is from a different game version!\n(read {}, should be {})\n\n*** You may need to upgrade your version of Doom to v1.9. ***\n    See: https://www.doomworld.com/classicdoom/info/patches.php\n    This appears to be {}.",
             demoversion,
-            vanilla_version_code(&mut state.doomstat),
+            vanilla_version_code(&state.doomstat),
             demo_version_description(state, demoversion),
         );
     }
@@ -1696,7 +1692,7 @@ pub fn check_demo_status(state: &mut GameState) -> bool {
         ));
     }
     if state.g_game.demoplayback {
-        release_lump_name(&mut state.w_wad, &state.g_game.defdemoname.as_str());
+        release_lump_name(&state.w_wad, &state.g_game.defdemoname.as_str());
         state.g_game.demoplayback = false;
         state.g_game.netdemo = false;
         state.g_game.netgame = false;

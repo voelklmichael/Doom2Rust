@@ -61,7 +61,7 @@ impl Default for PCeilngState {
 
 impl PCeilngState {
     pub const fn new() -> Self {
-        PCeilngState {
+        Self {
             activeceilings: [None; 30],
             ceilings: Vec::new(),
             free_list: Vec::new(),
@@ -216,7 +216,7 @@ pub fn move_ceiling(state: &mut GameState, id: CeilingId) {
             }
         }
         _ => {}
-    };
+    }
 }
 pub fn do_ceiling(state: &mut GameState, line: LineId, kind: CeilingE) -> bool {
     let mut rtn = false;

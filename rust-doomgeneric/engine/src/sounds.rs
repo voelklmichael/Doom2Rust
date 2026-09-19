@@ -567,7 +567,7 @@ impl SoundsState {
     }
 
     pub fn new() -> Self {
-        SoundsState {
+        Self {
             s_music: INITIAL_S_MUSIC,
             s_sfx: [
                 SfxInfo {

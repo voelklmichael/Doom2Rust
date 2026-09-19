@@ -49,7 +49,7 @@ impl InfoState {
     }
 
     pub fn new() -> Self {
-        InfoState {
+        Self {
             sprnames: [
                 "TROO", "SHTG", "PUNG", "PISG", "PISF", "SHTF", "SHT2", "CHGG", "CHGF", "MISG",
                 "MISF", "SAWG", "PLSG", "PLSF", "BFGG", "BFGF", "BLUD", "PUFF", "BAL1", "BAL2",

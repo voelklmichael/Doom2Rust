@@ -20,7 +20,7 @@ pub struct FixedCStr<const N: usize>(pub [u8; N]);
 
 impl<const N: usize> FixedCStr<N> {
     pub const fn from_array(bytes: [u8; N]) -> Self {
-        FixedCStr(bytes)
+        Self(bytes)
     }
 
     /// Truncates to N bytes if longer; pads with NUL bytes if shorter -- the
@@ -34,7 +34,7 @@ impl<const N: usize> FixedCStr<N> {
         let mut buf = [0u8; N];
         let len = b.len().min(N);
         buf[..len].copy_from_slice(&b[..len]);
-        FixedCStr(buf)
+        Self(buf)
     }
 
     pub const fn as_bytes(&self) -> &[u8; N] {
@@ -126,6 +126,6 @@ impl<const N: usize> ::core::fmt::Debug for FixedCStr<N> {
 
 impl<const N: usize> Default for FixedCStr<N> {
     fn default() -> Self {
-        FixedCStr([0u8; N])
+        Self([0u8; N])
     }
 }

@@ -118,7 +118,7 @@ impl Default for StStuffState {
 
 impl StStuffState {
     pub const fn new() -> Self {
-        StStuffState {
+        Self {
             st_backing_screen: Vec::new(),
             plyr: PlayerId(0),
             st_firsttime: false,
@@ -747,11 +747,11 @@ pub fn update_widgets(state: &mut GameState) {
     state.st_stuff.st_fragson = state.g_game.deathmatch != 0 && state.st_stuff.st_statusbaron;
     state.st_stuff.st_fragscount = 0;
     for i in 0..MAXPLAYERS {
-        if i != state.g_game.consoleplayer {
-            state.st_stuff.st_fragscount +=
+        if i == state.g_game.consoleplayer {
+            state.st_stuff.st_fragscount -=
                 state.g_game.player_mut(state.st_stuff.plyr).frags[i as usize];
         } else {
-            state.st_stuff.st_fragscount -=
+            state.st_stuff.st_fragscount +=
                 state.g_game.player_mut(state.st_stuff.plyr).frags[i as usize];
         }
     }
@@ -893,16 +893,16 @@ pub fn st_drawer(state: &mut GameState, fullscreen: bool, refresh: bool) {
         do_refresh(state);
     } else {
         diff_draw(state);
-    };
+    }
 }
 fn load_unload_graphics(state: &mut GameState, callback: LoadCallback) {
     for i in 0..10_usize {
-        state.st_stuff.tallnum[i] = callback(state, &format!("STTNUM{}", i));
-        state.st_stuff.shortnum[i] = callback(state, &format!("STYSNUM{}", i));
+        state.st_stuff.tallnum[i] = callback(state, &format!("STTNUM{i}"));
+        state.st_stuff.shortnum[i] = callback(state, &format!("STYSNUM{i}"));
     }
     state.st_stuff.tallpercent = callback(state, "STTPRCNT");
     for i in 0..NUMCARDS as usize {
-        state.st_stuff.keys[i] = callback(state, &format!("STKEYS{}", i));
+        state.st_stuff.keys[i] = callback(state, &format!("STKEYS{i}"));
     }
     state.st_stuff.armsbg = callback(state, "STARMS");
     for i in 0..6_usize {
@@ -914,15 +914,15 @@ fn load_unload_graphics(state: &mut GameState, callback: LoadCallback) {
     let mut facenum = 0_usize;
     for i in 0..ST_NUMPAINFACES {
         for j in 0..ST_NUMSTRAIGHTFACES {
-            state.st_stuff.faces[facenum] = callback(state, &format!("STFST{}{}", i, j));
+            state.st_stuff.faces[facenum] = callback(state, &format!("STFST{i}{j}"));
             facenum += 1;
         }
         for name in [
-            format!("STFTR{}0", i),
-            format!("STFTL{}0", i),
-            format!("STFOUCH{}", i),
-            format!("STFEVL{}", i),
-            format!("STFKILL{}", i),
+            format!("STFTR{i}0"),
+            format!("STFTL{i}0"),
+            format!("STFOUCH{i}"),
+            format!("STFEVL{i}"),
+            format!("STFKILL{i}"),
         ] {
             state.st_stuff.faces[facenum] = callback(state, &name);
             facenum += 1;
@@ -933,7 +933,7 @@ fn load_unload_graphics(state: &mut GameState, callback: LoadCallback) {
     state.st_stuff.faces[facenum] = callback(state, "STFDEAD0");
 }
 fn st_load_callback(state: &mut GameState, lumpname: &str) -> i32 {
-    let lumpnum = get_num_for_name(&mut state.w_wad, lumpname);
+    let lumpnum = get_num_for_name(&state.w_wad, lumpname);
     lump_bytes(state, lumpnum);
     lumpnum
 }
@@ -941,7 +941,7 @@ pub fn load_graphics(state: &mut GameState) {
     load_unload_graphics(state, st_load_callback);
 }
 pub fn st_load_data(state: &mut GameState) {
-    state.st_stuff.lu_palette = get_num_for_name(&mut state.w_wad, "PLAYPAL");
+    state.st_stuff.lu_palette = get_num_for_name(&state.w_wad, "PLAYPAL");
     load_graphics(state);
 }
 pub fn st_init_data(state: &mut GameState) {

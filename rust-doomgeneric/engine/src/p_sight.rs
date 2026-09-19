@@ -28,7 +28,7 @@ impl Default for PSightState {
 
 impl PSightState {
     pub const fn new() -> Self {
-        PSightState {
+        Self {
             sightzstart: 0,
             topslope: 0,
             bottomslope: 0,
@@ -162,9 +162,8 @@ pub fn cross_bspnode(state: &mut GameState, bspnum: i32) -> bool {
     if bspnum & NF_SUBSECTOR != 0 {
         if bspnum == -1 {
             return cross_subsector(state, 0);
-        } else {
-            return cross_subsector(state, bspnum & !NF_SUBSECTOR);
         }
+        return cross_subsector(state, bspnum & !NF_SUBSECTOR);
     }
     let bsp = &state.p_setup.nodes[bspnum as usize];
     let divl = DivLine {

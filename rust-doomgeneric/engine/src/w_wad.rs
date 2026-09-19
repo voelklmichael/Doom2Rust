@@ -24,7 +24,7 @@ impl Default for WWadState {
 
 impl WWadState {
     pub const fn new() -> Self {
-        WWadState {
+        Self {
             lumpinfo: Vec::new(),
             numlumps: 0,
             lumphash: Vec::new(),
@@ -76,24 +76,13 @@ pub fn w_add_file(state: &mut GameState, filename: &str) -> Option<FileId> {
     // this function, so a plain owned Vec replaces the old
     // Z_Malloc-then-Z_Free-at-the-end pair with no lifetime change.
 
-    let wad_file = match state.fs.open(filename) {
-        Some(wad_file) => wad_file,
-        None => {
-            doom_println!(state.platform, " couldn't open {}", filename);
-            return None;
-        }
+    let Some(wad_file) = state.fs.open(filename) else {
+        doom_println!(state.platform, " couldn't open {}", filename);
+        return None;
     };
     let wad_length = state.fs.len(wad_file) as u32;
     let is_wad = filename.len() >= 3 && filename[filename.len() - 3..].eq_ignore_ascii_case("wad");
-    let fileinfo: Vec<filelump_t> = if !is_wad {
-        let mut single = filelump_t {
-            filepos: 0,
-            size: wad_length as i32,
-            name: FixedCStr([0; 8]),
-        };
-        extract_file_base(&mut *state.platform, filename, &mut single.name);
-        vec![single]
-    } else {
+    let fileinfo: Vec<filelump_t> = if is_wad {
         let mut header_buf = [0u8; ::core::mem::size_of::<wadinfo_t>()];
         state.fs.read_at(wad_file, 0, &mut header_buf);
         let header = wadinfo_t {
@@ -103,8 +92,7 @@ pub fn w_add_file(state: &mut GameState, filename: &str) -> Option<FileId> {
         };
         if header.identification.0 != *b"IWAD" && header.identification.0 != *b"PWAD" {
             error(&format!(
-                "Wad file {} doesn't have IWAD or PWAD id\n",
-                filename,
+                "Wad file {filename} doesn't have IWAD or PWAD id\n",
             ));
         }
         let mut dir_buf =
@@ -122,6 +110,14 @@ pub fn w_add_file(state: &mut GameState, filename: &str) -> Option<FileId> {
                 name: FixedCStr::from_bytes(&c[8..16]),
             })
             .collect()
+    } else {
+        let mut single = filelump_t {
+            filepos: 0,
+            size: wad_length as i32,
+            name: FixedCStr([0; 8]),
+        };
+        extract_file_base(&mut *state.platform, filename, &mut single.name);
+        vec![single]
     };
     state
         .w_wad
@@ -138,9 +134,20 @@ pub fn w_add_file(state: &mut GameState, filename: &str) -> Option<FileId> {
     state.w_wad.lumphash = Vec::new();
     Some(wad_file)
 }
-pub fn check_num_for_name(state: &mut WWadState, name: &str) -> i32 {
+pub fn check_num_for_name(state: &WWadState, name: &str) -> i32 {
     let mut i: i32;
-    if !state.lumphash.is_empty() {
+    if state.lumphash.is_empty() {
+        i = state.numlumps.wrapping_sub(1) as i32;
+        while i >= 0 {
+            if state.lumpinfo[i as usize]
+                .name
+                .eq_str_ignore_ascii_case(name)
+            {
+                return i;
+            }
+            i -= 1;
+        }
+    } else {
         let hash: u32 = lump_name_hash(name.as_bytes()).wrapping_rem(state.numlumps);
         let mut cur = state.lumphash[hash as usize];
         while let Some(idx) = cur {
@@ -152,36 +159,25 @@ pub fn check_num_for_name(state: &mut WWadState, name: &str) -> i32 {
             }
             cur = state.lumpinfo[idx as usize].next;
         }
-    } else {
-        i = state.numlumps.wrapping_sub(1) as i32;
-        while i >= 0 {
-            if state.lumpinfo[i as usize]
-                .name
-                .eq_str_ignore_ascii_case(name)
-            {
-                return i;
-            }
-            i -= 1;
-        }
     }
     -1
 }
-pub fn get_num_for_name(state: &mut WWadState, name: &str) -> i32 {
+pub fn get_num_for_name(state: &WWadState, name: &str) -> i32 {
     let i: i32 = check_num_for_name(state, name);
     if i < 0 {
-        error(&format!("W_GetNumForName: {} not found!", name));
+        error(&format!("W_GetNumForName: {name} not found!"));
     }
     i
 }
-pub fn lump_length(state: &mut WWadState, lump: u32) -> i32 {
+pub fn lump_length(state: &WWadState, lump: u32) -> i32 {
     if lump >= state.numlumps {
-        error(&format!("W_LumpLength: {} >= numlumps", lump));
+        error(&format!("W_LumpLength: {lump} >= numlumps"));
     }
     state.lumpinfo[lump as usize].size
 }
-pub fn read_lump(state: &mut WWadState, fs: &dyn DoomFileSystem, lump: u32, dest: &mut [u8]) {
+pub fn read_lump(state: &WWadState, fs: &dyn DoomFileSystem, lump: u32, dest: &mut [u8]) {
     if lump >= state.numlumps {
-        error(&format!("W_ReadLump: {} >= numlumps", lump));
+        error(&format!("W_ReadLump: {lump} >= numlumps"));
     }
     let l = &state.lumpinfo[lump as usize];
     let c = fs.read_at(l.wad_file, l.position as u32 as u64, dest) as i32;
@@ -193,13 +189,14 @@ pub fn read_lump(state: &mut WWadState, fs: &dyn DoomFileSystem, lump: u32, dest
     }
 }
 pub fn lump_bytes(state: &mut GameState, lumpnum: i32) -> alloc::rc::Rc<[u8]> {
+    const CACHE_PAD: usize = 128;
     if lumpnum as u32 >= state.w_wad.numlumps {
-        error(&format!("W_CacheLumpNum: {} >= numlumps", lumpnum));
+        error(&format!("W_CacheLumpNum: {lumpnum} >= numlumps"));
     }
     if let Some(cache) = state.w_wad.lumpinfo[lumpnum as usize].cache.as_ref() {
         return alloc::rc::Rc::clone(cache);
     }
-    let lumplen = lump_length(&mut state.w_wad, lumpnum as u32);
+    let lumplen = lump_length(&state.w_wad, lumpnum as u32);
     // r_draw.rs's draw_column (and friends) reproduce vanilla's
     // `dc_source[(frac>>FRACBITS) & 127]` column read verbatim, which
     // vanilla itself only gets away with because its zone allocator
@@ -210,10 +207,9 @@ pub fn lump_bytes(state: &mut GameState, lumpnum: i32) -> alloc::rc::Rc<[u8]> {
     // end of its lump) makes that same read run past the end and panic
     // -- pad every cached lump by the mask's full range to give it the
     // same harmless slack vanilla relied on.
-    const CACHE_PAD: usize = 128;
     let mut buf = vec![0u8; lumplen as usize + CACHE_PAD].into_boxed_slice();
     read_lump(
-        &mut state.w_wad,
+        &state.w_wad,
         &*state.fs,
         lumpnum as u32,
         &mut buf[..lumplen as usize],
@@ -223,20 +219,20 @@ pub fn lump_bytes(state: &mut GameState, lumpnum: i32) -> alloc::rc::Rc<[u8]> {
     rc
 }
 pub fn lump_bytes_name(state: &mut GameState, name: &str) -> alloc::rc::Rc<[u8]> {
-    let lumpnum = get_num_for_name(&mut state.w_wad, name);
+    let lumpnum = get_num_for_name(&state.w_wad, name);
     lump_bytes(state, lumpnum)
 }
-pub fn release_lump_num(state: &mut WWadState, lumpnum: i32) {
+pub fn release_lump_num(state: &WWadState, lumpnum: i32) {
     // Releasing a cached lump is a no-op now -- nothing purges cached blocks
     // under memory pressure since the zone allocator was removed entirely;
     // the owned cache buffer just stays cached until process exit either
     // way. Kept as a bounds-checked no-op rather than deleted, matching this
     // function's original validation behavior.
     if lumpnum as u32 >= state.numlumps {
-        error(&format!("W_ReleaseLumpNum: {} >= numlumps", lumpnum));
+        error(&format!("W_ReleaseLumpNum: {lumpnum} >= numlumps"));
     }
 }
-pub fn release_lump_name(state: &mut WWadState, name: &str) {
+pub fn release_lump_name(state: &WWadState, name: &str) {
     let lumpnum = get_num_for_name(state, name);
     release_lump_num(state, lumpnum);
 }
@@ -274,7 +270,7 @@ static UNIQUE_LUMPS: [UniqueLump; 4] = [
         lumpname: "AGRDA1",
     },
 ];
-pub fn check_correct_iwad(state: &mut WWadState, mission: GameMission) {
+pub fn check_correct_iwad(state: &WWadState, mission: GameMission) {
     let mut i: i32;
     let mut lumpnum: i32;
     i = 0;

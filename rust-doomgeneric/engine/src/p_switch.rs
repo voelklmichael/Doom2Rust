@@ -273,7 +273,7 @@ impl Default for PSwitchState {
 
 impl PSwitchState {
     pub const fn new() -> Self {
-        PSwitchState {
+        Self {
             switchlist: [0; 100],
             numswitches: 0,
             buttonlist: [EMPTY_BUTTON; 16],
@@ -300,23 +300,18 @@ pub fn init_switch_list(state: &mut GameState) {
             state.p_switch.numswitches = index / 2;
             state.p_switch.switchlist[index as usize] = -1;
             break;
-        } else {
-            if ALPH_SWITCH_LIST[i as usize].episode as i32 <= episode {
-                let fresh0 = index;
-                index += 1;
-                state.p_switch.switchlist[fresh0 as usize] = texture_num_for_name(
-                    &mut state.r_data,
-                    &ALPH_SWITCH_LIST[i as usize].name1.as_str(),
-                );
-                let fresh1 = index;
-                index += 1;
-                state.p_switch.switchlist[fresh1 as usize] = texture_num_for_name(
-                    &mut state.r_data,
-                    &ALPH_SWITCH_LIST[i as usize].name2.as_str(),
-                );
-            }
-            i += 1;
         }
+        if ALPH_SWITCH_LIST[i as usize].episode as i32 <= episode {
+            let fresh0 = index;
+            index += 1;
+            state.p_switch.switchlist[fresh0 as usize] =
+                texture_num_for_name(&state.r_data, &ALPH_SWITCH_LIST[i as usize].name1.as_str());
+            let fresh1 = index;
+            index += 1;
+            state.p_switch.switchlist[fresh1 as usize] =
+                texture_num_for_name(&state.r_data, &ALPH_SWITCH_LIST[i as usize].name2.as_str());
+        }
+        i += 1;
     }
 }
 pub fn start_button(state: &mut GameState, line: LineId, w: BWhere, texture: i32, time: i32) {

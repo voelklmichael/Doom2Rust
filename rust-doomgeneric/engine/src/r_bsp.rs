@@ -38,7 +38,7 @@ impl Default for RBspState {
 
 impl RBspState {
     pub const fn new() -> Self {
-        RBspState {
+        Self {
             curline: SegId(0),
             sidedef: SideId(0),
             linedef: LineId(0),
@@ -298,7 +298,7 @@ pub static CHECKCOORD: [[i32; 4]; 12] = [
     [2, 1, 3, 0],
     [0; 4],
 ];
-pub fn check_bbox(state: &mut GameState, bspcoord: [Fixed; 4]) -> bool {
+pub fn check_bbox(state: &GameState, bspcoord: [Fixed; 4]) -> bool {
     let mut angle1: Angle;
     let mut angle2: Angle;
 

@@ -68,7 +68,7 @@ impl Default for PSavegState {
 
 impl PSavegState {
     pub const fn new() -> Self {
-        PSavegState {
+        Self {
             save_buffer: Vec::new(),
             save_pos: 0,
             savegame_error: false,
@@ -102,7 +102,7 @@ pub fn temp_save_game_file(state: &mut GameState) -> String {
     }
     state.p_saveg.temp_savegame_filename.clone().unwrap()
 }
-pub fn save_game_file(state: &mut GameState, slot: i32) -> String {
+pub fn save_game_file(state: &GameState, slot: i32) -> String {
     format!("{}doomsav{}.dsg", state.d_main.savegamedir, slot)
 }
 /// Prints the deferred "ran off the end of the file" diagnostic, if a
@@ -116,15 +116,12 @@ pub fn report_save_game_read_error(state: &mut GameState) {
     }
 }
 fn saveg_read8(state: &mut PSavegState) -> u8 {
-    match state.save_buffer.get(state.save_pos) {
-        Some(&b) => {
-            state.save_pos += 1;
-            b
-        }
-        None => {
-            state.savegame_error = true;
-            0
-        }
+    if let Some(&b) = state.save_buffer.get(state.save_pos) {
+        state.save_pos += 1;
+        b
+    } else {
+        state.savegame_error = true;
+        0
     }
 }
 fn saveg_write8(state: &mut PSavegState, value: u8) {
@@ -184,7 +181,7 @@ fn saveg_read_mapthing_t(state: &mut PSavegState, str: &mut MapThing) {
     str.kind = saveg_read16(state);
     str.options = saveg_read16(state);
 }
-fn saveg_write_mapthing_t(state: &mut PSavegState, str: &mut MapThing) {
+fn saveg_write_mapthing_t(state: &mut PSavegState, str: &MapThing) {
     saveg_write16(state, str.x);
     saveg_write16(state, str.y);
     saveg_write16(state, str.angle);
@@ -198,7 +195,7 @@ fn saveg_read_actionf_t(state: &mut PSavegState, str: &mut ThinkerFn) {
         ThinkerFn::Paused
     };
 }
-fn saveg_write_actionf_t(state: &mut PSavegState, str: &mut ThinkerFn) {
+fn saveg_write_actionf_t(state: &mut PSavegState, str: &ThinkerFn) {
     saveg_write_present(state, !matches!(*str, ThinkerFn::Paused));
 }
 fn saveg_read_thinker_t(state: &mut PSavegState, str: &mut Thinker) {
@@ -210,10 +207,10 @@ fn saveg_read_thinker_t(state: &mut PSavegState, str: &mut Thinker) {
     saveg_read32(state);
     saveg_read_actionf_t(state, &mut str.function);
 }
-fn saveg_write_thinker_t(state: &mut PSavegState, str: &mut Thinker) {
+fn saveg_write_thinker_t(state: &mut PSavegState, str: &Thinker) {
     saveg_write32(state, 0);
     saveg_write32(state, 0);
-    saveg_write_actionf_t(state, &mut str.function);
+    saveg_write_actionf_t(state, &str.function);
 }
 fn saveg_read_mobj_t(state: &mut PSavegState, str: &mut Mobj) {
     saveg_read_thinker_t(state, &mut str.thinker);
@@ -271,8 +268,8 @@ fn saveg_read_mobj_t(state: &mut PSavegState, str: &mut Mobj) {
     saveg_read32(state);
     str.tracer = None;
 }
-fn saveg_write_mobj_t(state: &mut PSavegState, str: &mut Mobj) {
-    saveg_write_thinker_t(state, &mut str.thinker);
+fn saveg_write_mobj_t(state: &mut PSavegState, str: &Mobj) {
+    saveg_write_thinker_t(state, &str.thinker);
     saveg_write32(state, str.x);
     saveg_write32(state, str.y);
     saveg_write32(state, str.z);
@@ -309,7 +306,7 @@ fn saveg_write_mobj_t(state: &mut PSavegState, str: &mut Mobj) {
         saveg_write32(state, 0);
     }
     saveg_write32(state, str.lastlook);
-    saveg_write_mapthing_t(state, &mut str.spawnpoint);
+    saveg_write_mapthing_t(state, &str.spawnpoint);
     saveg_write32(state, 0);
 }
 fn saveg_read_ticcmd_t(state: &mut PSavegState, str: &mut TicCmd) {
@@ -320,7 +317,7 @@ fn saveg_read_ticcmd_t(state: &mut PSavegState, str: &mut TicCmd) {
     str.chatchar = saveg_read8(state);
     str.buttons = saveg_read8(state);
 }
-fn saveg_write_ticcmd_t(state: &mut PSavegState, str: &mut TicCmd) {
+fn saveg_write_ticcmd_t(state: &mut PSavegState, str: &TicCmd) {
     saveg_write8(state, str.forwardmove as u8);
     saveg_write8(state, str.sidemove as u8);
     saveg_write16(state, str.angleturn);
@@ -339,7 +336,7 @@ fn saveg_read_pspdef_t(state: &mut PSavegState, str: &mut PspDef) {
     str.sx = saveg_read32(state) as Fixed;
     str.sy = saveg_read32(state) as Fixed;
 }
-fn saveg_write_pspdef_t(state: &mut PSavegState, str: &mut PspDef) {
+fn saveg_write_pspdef_t(state: &mut PSavegState, str: &PspDef) {
     if let Some(state_id) = str.state {
         saveg_write32(state, state_id.0 as i32);
     } else {
@@ -408,13 +405,13 @@ fn saveg_read_player_t(state: &mut PSavegState, str: &mut Player) {
     }
     str.didsecret = saveg_read32(state) != 0;
 }
-fn saveg_write_player_t(state: &mut PSavegState, str: &mut Player) {
+fn saveg_write_player_t(state: &mut PSavegState, str: &Player) {
     // The written value is a placeholder: on load it is immediately
     // overwritten with null by un_archive_players and then correctly
     // restored from the mobj's own player backref in un_archive_thinkers.
     saveg_write_present(state, false);
     saveg_write32(state, str.playerstate as i32);
-    saveg_write_ticcmd_t(state, &mut str.cmd);
+    saveg_write_ticcmd_t(state, &str.cmd);
     saveg_write32(state, str.viewz);
     saveg_write32(state, str.viewheight);
     saveg_write32(state, str.deltaviewheight);
@@ -458,7 +455,7 @@ fn saveg_write_player_t(state: &mut PSavegState, str: &mut Player) {
     saveg_write32(state, str.fixedcolormap);
     saveg_write32(state, str.colormap);
     for i in 0..(NUMPSPRITES as usize) {
-        saveg_write_pspdef_t(state, &mut str.psprites[i]);
+        saveg_write_pspdef_t(state, &str.psprites[i]);
     }
     saveg_write32(state, str.didsecret as i32);
 }
@@ -486,8 +483,8 @@ fn saveg_read_ceiling_t(state: &mut PSavegState, str: &mut Ceiling) {
     str.tag = saveg_read32(state);
     str.olddirection = saveg_read32(state);
 }
-fn saveg_write_ceiling_t(state: &mut PSavegState, str: &mut Ceiling) {
-    saveg_write_thinker_t(state, &mut str.thinker);
+fn saveg_write_ceiling_t(state: &mut PSavegState, str: &Ceiling) {
+    saveg_write_thinker_t(state, &str.thinker);
     saveg_write32(state, str.kind as i32);
     saveg_write32(state, str.sector.0 as i32);
     saveg_write32(state, str.bottomheight);
@@ -522,8 +519,8 @@ fn saveg_read_vldoor_t(state: &mut PSavegState, str: &mut VlDoor) {
     str.topwait = saveg_read32(state);
     str.topcountdown = saveg_read32(state);
 }
-fn saveg_write_vldoor_t(state: &mut PSavegState, str: &mut VlDoor) {
-    saveg_write_thinker_t(state, &mut str.thinker);
+fn saveg_write_vldoor_t(state: &mut PSavegState, str: &VlDoor) {
+    saveg_write_thinker_t(state, &str.thinker);
     saveg_write32(state, str.kind as i32);
     saveg_write32(state, str.sector.0 as i32);
     saveg_write32(state, str.topheight);
@@ -562,8 +559,8 @@ fn saveg_read_floormove_t(state: &mut PSavegState, str: &mut FloorMove) {
     str.floordestheight = saveg_read32(state) as Fixed;
     str.speed = saveg_read32(state) as Fixed;
 }
-fn saveg_write_floormove_t(state: &mut PSavegState, str: &mut FloorMove) {
-    saveg_write_thinker_t(state, &mut str.thinker);
+fn saveg_write_floormove_t(state: &mut PSavegState, str: &FloorMove) {
+    saveg_write_thinker_t(state, &str.thinker);
     saveg_write32(state, str.kind as i32);
     saveg_write32(state, str.crush as i32);
     saveg_write32(state, str.sector.0 as i32);
@@ -607,8 +604,8 @@ fn saveg_read_plat_t(state: &mut PSavegState, str: &mut Plat) {
     str.tag = saveg_read32(state);
     str.kind = saveg_read_plattype_e(state);
 }
-fn saveg_write_plat_t(state: &mut PSavegState, str: &mut Plat) {
-    saveg_write_thinker_t(state, &mut str.thinker);
+fn saveg_write_plat_t(state: &mut PSavegState, str: &Plat) {
+    saveg_write_thinker_t(state, &str.thinker);
     saveg_write32(state, str.sector.0 as i32);
     saveg_write32(state, str.speed);
     saveg_write32(state, str.low);
@@ -631,8 +628,8 @@ fn saveg_read_lightflash_t(state: &mut PSavegState, str: &mut LightFlash) {
     str.maxtime = saveg_read32(state);
     str.mintime = saveg_read32(state);
 }
-fn saveg_write_lightflash_t(state: &mut PSavegState, str: &mut LightFlash) {
-    saveg_write_thinker_t(state, &mut str.thinker);
+fn saveg_write_lightflash_t(state: &mut PSavegState, str: &LightFlash) {
+    saveg_write_thinker_t(state, &str.thinker);
     saveg_write32(state, str.sector.0 as i32);
     saveg_write32(state, str.count);
     saveg_write32(state, str.maxlight);
@@ -650,8 +647,8 @@ fn saveg_read_strobe_t(state: &mut PSavegState, str: &mut Strobe) {
     str.darktime = saveg_read32(state);
     str.brighttime = saveg_read32(state);
 }
-fn saveg_write_strobe_t(state: &mut PSavegState, str: &mut Strobe) {
-    saveg_write_thinker_t(state, &mut str.thinker);
+fn saveg_write_strobe_t(state: &mut PSavegState, str: &Strobe) {
+    saveg_write_thinker_t(state, &str.thinker);
     saveg_write32(state, str.sector.0 as i32);
     saveg_write32(state, str.count);
     saveg_write32(state, str.minlight);
@@ -667,8 +664,8 @@ fn saveg_read_glow_t(state: &mut PSavegState, str: &mut Glow) {
     str.maxlight = saveg_read32(state);
     str.direction = saveg_read32(state);
 }
-fn saveg_write_glow_t(state: &mut PSavegState, str: &mut Glow) {
-    saveg_write_thinker_t(state, &mut str.thinker);
+fn saveg_write_glow_t(state: &mut PSavegState, str: &Glow) {
+    saveg_write_thinker_t(state, &str.thinker);
     saveg_write32(state, str.sector.0 as i32);
     saveg_write32(state, str.minlight);
     saveg_write32(state, str.maxlight);
@@ -684,7 +681,7 @@ pub fn write_save_game_header(state: &mut GameState, description: &str) {
         saveg_write8(&mut state.p_saveg, 0_u8);
         i += 1;
     }
-    let name = format!("version {}", vanilla_version_code(&mut state.doomstat));
+    let name = format!("version {}", vanilla_version_code(&state.doomstat));
     let mut name_bytes = [0u8; 16];
     let copy_len = name.len().min(16);
     name_bytes[..copy_len].copy_from_slice(&name.as_bytes()[..copy_len]);
@@ -708,6 +705,10 @@ pub fn write_save_game_header(state: &mut GameState, description: &str) {
     saveg_write8(&mut state.p_saveg, (state.p_tick.leveltime & 0xff) as u8);
 }
 pub fn read_save_game_header(state: &mut GameState) -> bool {
+    fn cstr_prefix(buf: &[u8]) -> &[u8] {
+        let len = buf.iter().position(|&b| b == 0).unwrap_or(buf.len());
+        &buf[..len]
+    }
     let mut read_vcheck: [u8; 16] = [0; 16];
     for _ in 0..SAVESTRINGSIZE {
         saveg_read8(&mut state.p_saveg);
@@ -715,14 +716,10 @@ pub fn read_save_game_header(state: &mut GameState) -> bool {
     for slot in read_vcheck.iter_mut().take(VERSIONSIZE as usize) {
         *slot = saveg_read8(&mut state.p_saveg);
     }
-    let version_name = format!("version {}", vanilla_version_code(&mut state.doomstat));
+    let version_name = format!("version {}", vanilla_version_code(&state.doomstat));
     let mut vcheck: [u8; 16] = [0; 16];
     let copy_len = version_name.len().min(16);
     vcheck[..copy_len].copy_from_slice(&version_name.as_bytes()[..copy_len]);
-    fn cstr_prefix(buf: &[u8]) -> &[u8] {
-        let len = buf.iter().position(|&b| b == 0).unwrap_or(buf.len());
-        &buf[..len]
-    }
     if cstr_prefix(&read_vcheck) != cstr_prefix(&vcheck) {
         return false;
     }
@@ -749,7 +746,7 @@ pub fn archive_players(state: &mut GameState) {
     for i in 0..(MAXPLAYERS as usize) {
         if state.g_game.playeringame[i] {
             saveg_write_pad(&mut state.p_saveg);
-            saveg_write_player_t(&mut state.p_saveg, &mut state.g_game.players[i]);
+            saveg_write_player_t(&mut state.p_saveg, &state.g_game.players[i]);
         }
     }
 }
@@ -790,7 +787,7 @@ pub fn archive_world(state: &mut GameState) {
         saveg_write16(&mut state.p_saveg, flags);
         saveg_write16(&mut state.p_saveg, special);
         saveg_write16(&mut state.p_saveg, tag);
-        for &side in sidenum.iter() {
+        for &side in &sidenum {
             if side as i32 != -1 {
                 let si = state.p_setup.side_mut(SideId(side as u32));
                 let (textureoffset, rowoffset, toptexture, bottomtexture, midtexture) = (
@@ -838,7 +835,7 @@ pub fn un_archive_world(state: &mut GameState) {
         li.special = special;
         li.tag = tag;
         let sidenum = li.sidenum;
-        for &side in sidenum.iter() {
+        for &side in &sidenum {
             if side as i32 != -1 {
                 let textureoffset =
                     ((saveg_read16(&mut state.p_saveg) as i32) << FRACBITS) as Fixed;

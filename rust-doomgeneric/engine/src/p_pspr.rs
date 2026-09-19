@@ -49,37 +49,36 @@ pub fn set_psprite(state: &mut GameState, player_id: PlayerId, position: i32, mu
         if stnum as u64 == 0 {
             state.g_game.player_mut(player_id).psprites[pos].state = None;
             break;
-        } else {
-            let state_id = StateId(stnum as u32);
-            let (tics, misc1, misc2, action) = {
-                let st = state.info.state_mut(state_id);
-                (st.tics, st.misc1, st.misc2, st.action)
-            };
-            {
-                let psp = &mut state.g_game.player_mut(player_id).psprites[pos];
-                psp.state = Some(state_id);
-                psp.tics = tics;
-                if misc1 != 0 {
-                    psp.sx = (misc1 << FRACBITS) as Fixed;
-                    psp.sy = (misc2 << FRACBITS) as Fixed;
-                }
+        }
+        let state_id = StateId(stnum as u32);
+        let (tics, misc1, misc2, action) = {
+            let st = state.info.state_mut(state_id);
+            (st.tics, st.misc1, st.misc2, st.action)
+        };
+        {
+            let psp = &mut state.g_game.player_mut(player_id).psprites[pos];
+            psp.state = Some(state_id);
+            psp.tics = tics;
+            if misc1 != 0 {
+                psp.sx = (misc1 << FRACBITS) as Fixed;
+                psp.sy = (misc2 << FRACBITS) as Fixed;
             }
-            if let StateAction::Weapon(f) = action {
-                f(state, player_id, position);
-                if state.g_game.player_mut(player_id).psprites[pos]
-                    .state
-                    .is_none()
-                {
-                    break;
-                }
-            }
-            let current = state.g_game.player_mut(player_id).psprites[pos]
+        }
+        if let StateAction::Weapon(f) = action {
+            f(state, player_id, position);
+            if state.g_game.player_mut(player_id).psprites[pos]
                 .state
-                .unwrap();
-            stnum = state.info.state_mut(current).nextstate;
-            if state.g_game.player_mut(player_id).psprites[pos].tics != 0 {
+                .is_none()
+            {
                 break;
             }
+        }
+        let current = state.g_game.player_mut(player_id).psprites[pos]
+            .state
+            .unwrap();
+        stnum = state.info.state_mut(current).nextstate;
+        if state.g_game.player_mut(player_id).psprites[pos].tics != 0 {
+            break;
         }
     }
 }
@@ -95,7 +94,7 @@ impl Default for PPsprState {
 
 impl PPsprState {
     pub const fn new() -> Self {
-        PPsprState { bulletslope: 0 }
+        Self { bulletslope: 0 }
     }
 }
 
@@ -283,7 +282,7 @@ pub fn re_fire(state: &mut GameState, player_id: PlayerId, _position: i32) {
         } else {
             state.g_game.players[player.0 as usize].refire = 0;
             check_ammo(state, player_id);
-        };
+        }
     }
 }
 pub fn check_reload(state: &mut GameState, player_id: PlayerId, _position: i32) {
@@ -430,7 +429,7 @@ fn decrease_ammo(state: &mut GameState, player: PlayerId, ammonum: i32, amount: 
         player.ammo[ammonum as usize] -= amount;
     } else {
         player.maxammo[(ammonum - NUMAMMO) as usize] -= amount;
-    };
+    }
 }
 pub fn fire_missile(state: &mut GameState, player_id: PlayerId, _position: i32) {
     {

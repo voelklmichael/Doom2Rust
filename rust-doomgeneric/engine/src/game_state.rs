@@ -125,7 +125,7 @@ pub struct GameState {
 
 impl GameState {
     fn new(platform: Box<dyn DoomPlatform>, fs: Box<dyn DoomFileSystem>) -> Self {
-        GameState {
+        Self {
             am_map: AmMapState::new(),
             d_event: DEventState::new(),
             d_iwad: DIwadState::new(),

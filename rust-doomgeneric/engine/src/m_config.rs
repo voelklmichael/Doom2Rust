@@ -1227,7 +1227,7 @@ impl MConfigState {
                 bound: false,
             },
         ];
-        MConfigState {
+        Self {
             configdir: String::new(),
             default_main_config: "",
             default_extra_config: "",
@@ -1307,7 +1307,7 @@ fn get_default_for_name<'a>(state: &'a mut MConfigState, name: &str) -> &'a mut 
     if let Some(result) = result {
         result
     } else {
-        error(&format!("Unknown configuration variable: '{}'", name));
+        error(&format!("Unknown configuration variable: '{name}'"));
     }
 }
 pub fn bind_variable_int(
@@ -1319,8 +1319,7 @@ pub fn bind_variable_int(
     match variable.kind {
         DefaultType::Int | DefaultType::IntHex | DefaultType::Key => {}
         _ => error(&format!(
-            "M_BindVariable_int: '{}' is not an int/key variable",
-            name
+            "M_BindVariable_int: '{name}' is not an int/key variable"
         )),
     }
     variable.location = Some(DefaultLocation::Int(Rc::new(location)));
@@ -1334,8 +1333,7 @@ pub fn bind_variable_string(
     let variable = get_default_for_name(state, name);
     if variable.kind != DefaultType::String {
         error(&format!(
-            "M_BindVariable_string: '{}' is not a string variable",
-            name
+            "M_BindVariable_string: '{name}' is not a string variable"
         ));
     }
     variable.location = Some(DefaultLocation::Str(Rc::new(location)));
@@ -1365,7 +1363,7 @@ pub fn set_config_dir(
     fs.create_dir(&state.configdir);
 }
 pub fn get_save_game_dir(
-    state: &mut MConfigState,
+    state: &MConfigState,
     fs: &mut dyn DoomFileSystem,
     platform: &mut dyn DoomPlatform,
     _iwadname: &'static str,

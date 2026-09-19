@@ -77,7 +77,7 @@ impl Default for MMenuDefsHolder {
 
 impl MMenuDefsHolder {
     pub fn new() -> Self {
-        MMenuDefsHolder {
+        Self {
             main_def: Menu {
                 numitems: MAIN_END as i16,
                 prev_menu: None,
@@ -461,7 +461,7 @@ impl Default for MMenuState {
 
 impl MMenuState {
     pub fn new() -> Self {
-        MMenuState {
+        Self {
             defs: MMenuDefsHolder::new(),
             mouse_sensitivity: 5,
             show_messages: 1,
@@ -937,7 +937,7 @@ pub fn new_game(state: &mut GameState, _choice: i32) {
     } else {
         let menudef = MenuId::Epi;
         setup_next_menu(state, menudef);
-    };
+    }
 }
 pub fn draw_episode(state: &mut GameState) {
     let __wcache1286_13 = cache_patch_name(state, "M_EPISOD");
@@ -1088,7 +1088,7 @@ pub fn read_this2(state: &mut GameState, _choice: i32) {
         setup_next_menu(state, menudef);
     } else {
         finish_read_this(state, 0);
-    };
+    }
 }
 pub fn finish_read_this(state: &mut GameState, _choice: i32) {
     let menudef = MenuId::Main;
@@ -1135,7 +1135,7 @@ pub fn quit_response(state: &mut GameState, key: i32) {
     }
     i_quit(state);
 }
-fn select_end_message(state: &mut GameState) -> &'static str {
+fn select_end_message(state: &GameState) -> &'static str {
     let endmsg: &'static [&'static str; 8] =
         if (if state.doomstat.gamemission as u32 == GameMission::PackChex as i32 as u32 {
             GameMission::Doom as i32 as u32
@@ -1168,7 +1168,7 @@ pub fn change_sensitivity(state: &mut GameState, choice: i32) {
             state.m_menu.mouse_sensitivity += 1;
         }
         _ => {}
-    };
+    }
 }
 pub fn change_detail(state: &mut GameState, _choice: i32) {
     state.m_menu.detail_level = 1 - state.m_menu.detail_level;
@@ -1180,7 +1180,7 @@ pub fn change_detail(state: &mut GameState, _choice: i32) {
     } else {
         state.g_game.players[state.g_game.consoleplayer as usize].message =
             Some("Low detail".to_string());
-    };
+    }
 }
 pub fn size_display(state: &mut GameState, choice: i32) {
     match choice {
@@ -1244,11 +1244,11 @@ pub fn string_width(state: &mut GameState, string: &str) -> i32 {
     let mut c: i32;
     for b in string.bytes() {
         c = b.to_ascii_uppercase() as i32 - HU_FONTSTART;
-        if !(0..HU_FONTSIZE).contains(&c) {
-            w += 4;
-        } else {
+        if (0..HU_FONTSIZE).contains(&c) {
             let font_patch = cache_patch_num(state, state.hu_stuff.hu_font[c as usize]);
             w += font_patch.width();
+        } else {
+            w += 4;
         }
     }
     w
@@ -1278,9 +1278,7 @@ pub fn write_text(state: &mut GameState, x: i32, y: i32, string: &str) {
             cy += 12;
         } else {
             c = (c as u8).to_ascii_uppercase() as i32 - HU_FONTSTART;
-            if !(0..HU_FONTSIZE).contains(&c) {
-                cx += 4;
-            } else {
+            if (0..HU_FONTSIZE).contains(&c) {
                 let font_patch = cache_patch_num(state, state.hu_stuff.hu_font[c as usize]);
                 w = font_patch.width();
                 if cx + w > SCREENWIDTH {
@@ -1289,6 +1287,8 @@ pub fn write_text(state: &mut GameState, x: i32, y: i32, string: &str) {
                 let dest_screen = Screen::Video;
                 draw_patch_direct(state, dest_screen, cx, cy, &font_patch);
                 cx += w;
+            } else {
+                cx += 4;
             }
         }
     }
@@ -1296,7 +1296,7 @@ pub fn write_text(state: &mut GameState, x: i32, y: i32, string: &str) {
 fn is_null_key(key: i32) -> bool {
     key == KEY_PAUSE || key == KEY_CAPSLOCK || key == KEY_SCRLCK || key == KEY_NUMLOCK
 }
-pub fn m_responder(state: &mut GameState, ev: &mut Event) -> bool {
+pub fn m_responder(state: &mut GameState, ev: &Event) -> bool {
     let mut ch: i32;
     let mut key: i32;
     let mut i: i32;

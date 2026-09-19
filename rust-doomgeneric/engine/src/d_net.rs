@@ -49,7 +49,7 @@ const DOOM_LOOP_INTERFACE: LoopInterface = LoopInterface {
     run_tic: Some(run_tic),
     run_menu: Some(m_ticker),
 };
-fn load_game_settings(state: &mut GameState, settings: &mut NetGameSettings) {
+fn load_game_settings(state: &mut GameState, settings: &NetGameSettings) {
     let mut i: u32;
     state.g_game.deathmatch = settings.deathmatch;
     state.d_main.startepisode = settings.episode;
@@ -73,7 +73,7 @@ fn load_game_settings(state: &mut GameState, settings: &mut NetGameSettings) {
         i = i.wrapping_add(1);
     }
 }
-fn save_game_settings(state: &mut GameState, settings: &mut NetGameSettings) {
+fn save_game_settings(state: &GameState, settings: &mut NetGameSettings) {
     settings.deathmatch = state.g_game.deathmatch;
     settings.episode = state.d_main.startepisode;
     settings.map = state.d_main.startmap;
@@ -103,7 +103,7 @@ fn init_connect_data(state: &mut GameState, connect_data: &mut NetConnectData) {
     connect_data.lowres_turn =
         (check_parm(state, "-record") > 0 && check_parm(state, "-longtics") == 0) as i32;
     connect_data.wad_sha1sum = checksum(state);
-    connect_data.is_freedoom = check_num_for_name(&mut state.w_wad, "FREEDOOM") >= 0;
+    connect_data.is_freedoom = check_num_for_name(&state.w_wad, "FREEDOOM") >= 0;
 }
 pub fn connect_net_game(state: &mut GameState) {
     let mut connect_data: NetConnectData = NetConnectData {
@@ -117,7 +117,7 @@ pub fn connect_net_game(state: &mut GameState) {
         player_class: 0,
     };
     init_connect_data(state, &mut connect_data);
-    state.g_game.netgame = init_net_game(state, &mut connect_data);
+    state.g_game.netgame = init_net_game(state, &connect_data);
     if check_parm(state, "-solo-net") > 0 {
         state.g_game.netgame = true;
     }
@@ -148,7 +148,7 @@ pub fn check_net_game(state: &mut GameState) {
     register_loop_callbacks(state, DOOM_LOOP_INTERFACE);
     save_game_settings(state, &mut settings);
     start_net_game(state, &mut settings);
-    load_game_settings(state, &mut settings);
+    load_game_settings(state, &settings);
     doom_println!(
         state.platform,
         "startskill {}  deathmatch: {}  startmap: {}  startepisode: {}",

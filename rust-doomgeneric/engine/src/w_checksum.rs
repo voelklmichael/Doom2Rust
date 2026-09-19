@@ -15,7 +15,7 @@ impl Default for WChecksumState {
 
 impl WChecksumState {
     pub const fn new() -> Self {
-        WChecksumState {
+        Self {
             open_wadfiles: Vec::new(),
         }
     }

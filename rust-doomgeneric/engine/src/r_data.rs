@@ -53,7 +53,7 @@ impl Default for RDataState {
 
 impl RDataState {
     pub const fn new() -> Self {
-        RDataState {
+        Self {
             firstflat: 0,
             lastflat: 0,
             numflats: 0,
@@ -163,7 +163,7 @@ pub fn generate_composite(state: &mut GameState, texnum: i32) {
         // height:i16, leftoffset:i16, topoffset:i16, then `width` many i32
         // columnofs entries) -- decoded field-by-field below instead of via
         // pointer-cast, same reasoning as init_textures's maptexture_t.
-        let realpatch_len = lump_length(&mut state.w_wad, tex_patch.patch as u32) as usize;
+        let realpatch_len = lump_length(&state.w_wad, tex_patch.patch as u32) as usize;
         let realpatch_lump = lump_bytes(state, tex_patch.patch);
         let realpatch = &realpatch_lump[..realpatch_len];
         let realpatch_width = i16::from_le_bytes(realpatch[0..2].try_into().unwrap()) as i32;
@@ -209,7 +209,7 @@ pub fn generate_lookup(state: &mut GameState, texnum: i32) {
     patchcount = vec![0u8; texture_width as usize];
     for i in 0..texture_patchcount {
         let tex_patch = state.r_data.textures[texnum as usize].patches[i as usize];
-        let realpatch_len = lump_length(&mut state.w_wad, tex_patch.patch as u32) as usize;
+        let realpatch_len = lump_length(&state.w_wad, tex_patch.patch as u32) as usize;
         let realpatch_lump = lump_bytes(state, tex_patch.patch);
         let realpatch = &realpatch_lump[..realpatch_len];
         let realpatch_width = i16::from_le_bytes(realpatch[0..2].try_into().unwrap()) as i32;
@@ -247,7 +247,7 @@ pub fn generate_lookup(state: &mut GameState, texnum: i32) {
             state.r_data.texturecolumnofs[texnum as usize][x as usize] =
                 state.r_data.texturecompositesize[texnum as usize] as u16;
             if state.r_data.texturecompositesize[texnum as usize] > 0x10000 - texture_height {
-                error(&format!("R_GenerateLookup: texture {} is >64k", texnum));
+                error(&format!("R_GenerateLookup: texture {texnum} is >64k"));
             }
             state.r_data.texturecompositesize[texnum as usize] += texture_height;
         }
@@ -314,8 +314,8 @@ pub fn init_textures(state: &mut GameState) {
     // unavoidable raw-pointer operations (the cache lookup and the
     // raw-parts slice construction) to one place per lump instead of
     // scattering pointer arithmetic through the whole parse.
-    let pnames_lump = get_num_for_name(&mut state.w_wad, "PNAMES") as u32;
-    let pnames_len = lump_length(&mut state.w_wad, pnames_lump) as usize;
+    let pnames_lump = get_num_for_name(&state.w_wad, "PNAMES") as u32;
+    let pnames_len = lump_length(&state.w_wad, pnames_lump) as usize;
     let pnames = lump_bytes_name(state, "PNAMES")[..pnames_len].to_vec();
     let nummappatches: i32 = i32::from_le_bytes(pnames[0..4].try_into().unwrap());
     patchlookup = vec![0i32; nummappatches as usize];
@@ -324,23 +324,23 @@ pub fn init_textures(state: &mut GameState) {
         let patch_name = FixedCStr::<8>::from_bytes(&pnames[name_off..name_off + 8])
             .as_str()
             .into_owned();
-        patchlookup[i as usize] = check_num_for_name(&mut state.w_wad, &patch_name);
+        patchlookup[i as usize] = check_num_for_name(&state.w_wad, &patch_name);
     }
-    release_lump_name(&mut state.w_wad, "PNAMES");
-    let texture1_lump = get_num_for_name(&mut state.w_wad, "TEXTURE1") as u32;
-    maxoff = lump_length(&mut state.w_wad, texture1_lump);
+    release_lump_name(&state.w_wad, "PNAMES");
+    let texture1_lump = get_num_for_name(&state.w_wad, "TEXTURE1") as u32;
+    maxoff = lump_length(&state.w_wad, texture1_lump);
     let maptex1 = lump_bytes_name(state, "TEXTURE1")[..maxoff as usize].to_vec();
     let numtextures1: i32 = i32::from_le_bytes(maptex1[0..4].try_into().unwrap());
-    let maptex2 = if check_num_for_name(&mut state.w_wad, "TEXTURE2") != -1 {
-        let texture2_lump = get_num_for_name(&mut state.w_wad, "TEXTURE2") as u32;
-        maxoff2 = lump_length(&mut state.w_wad, texture2_lump);
-        let maptex2 = lump_bytes_name(state, "TEXTURE2")[..maxoff2 as usize].to_vec();
-        numtextures2 = i32::from_le_bytes(maptex2[0..4].try_into().unwrap());
-        Some(maptex2)
-    } else {
+    let maptex2 = if check_num_for_name(&state.w_wad, "TEXTURE2") == -1 {
         numtextures2 = 0;
         maxoff2 = 0;
         None
+    } else {
+        let texture2_lump = get_num_for_name(&state.w_wad, "TEXTURE2") as u32;
+        maxoff2 = lump_length(&state.w_wad, texture2_lump);
+        let maptex2 = lump_bytes_name(state, "TEXTURE2")[..maxoff2 as usize].to_vec();
+        numtextures2 = i32::from_le_bytes(maptex2[0..4].try_into().unwrap());
+        Some(maptex2)
     };
     state.r_data.numtextures = numtextures1 + numtextures2;
     // textures/texturecolumnlump/texturecolumnofs are built via push() in
@@ -356,8 +356,8 @@ pub fn init_textures(state: &mut GameState) {
     state.r_data.texturecompositesize = vec![0; state.r_data.numtextures as usize];
     state.r_data.texturewidthmask = vec![0; state.r_data.numtextures as usize];
     state.r_data.textureheight = vec![0; state.r_data.numtextures as usize];
-    let temp1: i32 = get_num_for_name(&mut state.w_wad, "S_START");
-    let temp2: i32 = get_num_for_name(&mut state.w_wad, "S_END") - 1;
+    let temp1: i32 = get_num_for_name(&state.w_wad, "S_START");
+    let temp2: i32 = get_num_for_name(&state.w_wad, "S_END") - 1;
     let temp3: i32 = (temp2 - temp1 + 63) / 64 + (state.r_data.numtextures + 63) / 64;
     if console_stdout() {
         doom_print!(state.platform, "[");
@@ -448,9 +448,9 @@ pub fn init_textures(state: &mut GameState) {
         i += 1;
         dir_index += 1;
     }
-    release_lump_name(&mut state.w_wad, "TEXTURE1");
+    release_lump_name(&state.w_wad, "TEXTURE1");
     if maptex2.is_some() {
-        release_lump_name(&mut state.w_wad, "TEXTURE2");
+        release_lump_name(&state.w_wad, "TEXTURE2");
     }
     for i in 0..state.r_data.numtextures {
         generate_lookup(state, i);
@@ -462,8 +462,8 @@ pub fn init_textures(state: &mut GameState) {
     generate_texture_hash_table(state);
 }
 pub fn init_flats(state: &mut GameState) {
-    state.r_data.firstflat = get_num_for_name(&mut state.w_wad, "F_START") + 1;
-    state.r_data.lastflat = get_num_for_name(&mut state.w_wad, "F_END") - 1;
+    state.r_data.firstflat = get_num_for_name(&state.w_wad, "F_START") + 1;
+    state.r_data.lastflat = get_num_for_name(&state.w_wad, "F_END") - 1;
     state.r_data.numflats = state.r_data.lastflat - state.r_data.firstflat + 1;
     state.r_data.flattranslation = vec![0; (state.r_data.numflats + 1) as usize];
     for i in 0..state.r_data.numflats {
@@ -471,8 +471,8 @@ pub fn init_flats(state: &mut GameState) {
     }
 }
 pub fn init_sprite_lumps(state: &mut GameState) {
-    state.r_data.firstspritelump = get_num_for_name(&mut state.w_wad, "S_START") + 1;
-    state.r_data.lastspritelump = get_num_for_name(&mut state.w_wad, "S_END") - 1;
+    state.r_data.firstspritelump = get_num_for_name(&state.w_wad, "S_START") + 1;
+    state.r_data.lastspritelump = get_num_for_name(&state.w_wad, "S_END") - 1;
     state.r_data.numspritelumps = state.r_data.lastspritelump - state.r_data.firstspritelump + 1;
     state.r_data.spritewidth = vec![0; state.r_data.numspritelumps as usize];
     state.r_data.spriteoffset = vec![0; state.r_data.numspritelumps as usize];
@@ -498,8 +498,8 @@ pub fn init_sprite_lumps(state: &mut GameState) {
     }
 }
 pub fn init_colormaps(state: &mut GameState) {
-    let lump: i32 = get_num_for_name(&mut state.w_wad, "COLORMAP");
-    let lumplen = lump_length(&mut state.w_wad, lump as u32) as usize;
+    let lump: i32 = get_num_for_name(&state.w_wad, "COLORMAP");
+    let lumplen = lump_length(&state.w_wad, lump as u32) as usize;
     state.r_data.colormaps = lump_bytes(state, lump)[..lumplen].to_vec();
 }
 pub fn r_init_data(state: &mut GameState) {
@@ -511,10 +511,10 @@ pub fn r_init_data(state: &mut GameState) {
     doom_print!(state.platform, ".");
     init_colormaps(state);
 }
-pub fn flat_num_for_name(state: &mut GameState, name: &str) -> i32 {
-    let i: i32 = check_num_for_name(&mut state.w_wad, name);
+pub fn flat_num_for_name(state: &GameState, name: &str) -> i32 {
+    let i: i32 = check_num_for_name(&state.w_wad, name);
     if i == -1 {
-        error(&format!("R_FlatNumForName: {} not found", name));
+        error(&format!("R_FlatNumForName: {name} not found"));
     }
     i - state.r_data.firstflat
 }
@@ -533,10 +533,10 @@ pub fn check_texture_num_for_name(state: &RDataState, name: &str) -> i32 {
     }
     -1
 }
-pub fn texture_num_for_name(state: &mut RDataState, name: &str) -> i32 {
+pub fn texture_num_for_name(state: &RDataState, name: &str) -> i32 {
     let i: i32 = check_texture_num_for_name(state, name);
     if i == -1 {
-        error(&format!("R_TextureNumForName: {} not found", name));
+        error(&format!("R_TextureNumForName: {name} not found"));
     }
     i
 }

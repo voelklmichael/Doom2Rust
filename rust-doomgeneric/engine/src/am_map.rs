@@ -92,7 +92,7 @@ impl Default for AmMapState {
 
 impl AmMapState {
     pub const fn new() -> Self {
-        AmMapState {
+        Self {
             cheating: 0,
             grid: false,
             leveljuststarted: true,
@@ -455,14 +455,14 @@ pub fn save_scale_and_loc(state: &mut GameState) {
 pub fn restore_scale_and_loc(state: &mut GameState) {
     state.am_map.m_w = state.am_map.old_m_w;
     state.am_map.m_h = state.am_map.old_m_h;
-    if !state.am_map.followplayer {
-        state.am_map.m_x = state.am_map.old_m_x;
-        state.am_map.m_y = state.am_map.old_m_y;
-    } else {
+    if state.am_map.followplayer {
         let plr_mo_id = state.g_game.player_mut(state.am_map.plr).mo.unwrap();
         let plr_mo = state.p_mobj.mo(plr_mo_id);
         state.am_map.m_x = (plr_mo.x - state.am_map.m_w / 2) as Fixed;
         state.am_map.m_y = (plr_mo.y - state.am_map.m_h / 2) as Fixed;
+    } else {
+        state.am_map.m_x = state.am_map.old_m_x;
+        state.am_map.m_y = state.am_map.old_m_y;
     }
     state.am_map.m_x2 = state.am_map.m_x + state.am_map.m_w;
     state.am_map.m_y2 = state.am_map.m_y + state.am_map.m_h;
@@ -525,7 +525,6 @@ pub fn change_window_loc(state: &mut GameState) {
     state.am_map.m_y2 = state.am_map.m_y + state.am_map.m_h;
 }
 pub fn am_init_variables(state: &mut GameState) {
-    let mut pnum: i32;
     const ST_NOTIFY: Event = Event {
         kind: EvType::Keyup,
         data1: AM_MSGENTERED,
@@ -533,6 +532,7 @@ pub fn am_init_variables(state: &mut GameState) {
         data3: 0,
         data4: 0,
     };
+    let mut pnum: i32;
     state.am_map.automapactive = true;
     state.am_map.f_oldloc.x = INT_MAX as Fixed;
     state.am_map.amclock = 0;
@@ -552,9 +552,8 @@ pub fn am_init_variables(state: &mut GameState) {
             if state.g_game.playeringame[pnum as usize] {
                 state.am_map.plr = PlayerId(pnum as u8);
                 break;
-            } else {
-                pnum += 1;
             }
+            pnum += 1;
         }
     }
     let plr_mo_id = state.g_game.player_mut(state.am_map.plr).mo.unwrap();
@@ -570,15 +569,15 @@ pub fn am_init_variables(state: &mut GameState) {
 }
 pub fn load_pics(state: &mut GameState) {
     for i in 0..10 {
-        let namebuf = format!("AMMNUM{}", i);
-        let lumpnum = get_num_for_name(&mut state.w_wad, &namebuf);
+        let namebuf = format!("AMMNUM{i}");
+        let lumpnum = get_num_for_name(&state.w_wad, &namebuf);
         lump_bytes(state, lumpnum);
         state.am_map.marknums[i as usize] = lumpnum;
     }
 }
-pub fn unload_pics(state: &mut GameState) {
+pub fn unload_pics(state: &GameState) {
     for i in 0..10 {
-        release_lump_num(&mut state.w_wad, state.am_map.marknums[i]);
+        release_lump_num(&state.w_wad, state.am_map.marknums[i]);
     }
 }
 pub fn clear_marks(state: &mut GameState) {
@@ -656,28 +655,28 @@ pub fn am_responder(state: &mut GameState, ev: &Event) -> bool {
         rc = true;
         key = ev.data1;
         if key == state.m_controls.key_map_east {
-            if !state.am_map.followplayer {
-                state.am_map.m_paninc.x = fixed_mul((4) << 16, state.am_map.scale_ftom);
-            } else {
+            if state.am_map.followplayer {
                 rc = false;
+            } else {
+                state.am_map.m_paninc.x = fixed_mul((4) << 16, state.am_map.scale_ftom);
             }
         } else if key == state.m_controls.key_map_west {
-            if !state.am_map.followplayer {
-                state.am_map.m_paninc.x = -fixed_mul((4) << 16, state.am_map.scale_ftom);
-            } else {
+            if state.am_map.followplayer {
                 rc = false;
+            } else {
+                state.am_map.m_paninc.x = -fixed_mul((4) << 16, state.am_map.scale_ftom);
             }
         } else if key == state.m_controls.key_map_north {
-            if !state.am_map.followplayer {
-                state.am_map.m_paninc.y = fixed_mul((4) << 16, state.am_map.scale_ftom);
-            } else {
+            if state.am_map.followplayer {
                 rc = false;
+            } else {
+                state.am_map.m_paninc.y = fixed_mul((4) << 16, state.am_map.scale_ftom);
             }
         } else if key == state.m_controls.key_map_south {
-            if !state.am_map.followplayer {
-                state.am_map.m_paninc.y = -fixed_mul((4) << 16, state.am_map.scale_ftom);
-            } else {
+            if state.am_map.followplayer {
                 rc = false;
+            } else {
+                state.am_map.m_paninc.y = -fixed_mul((4) << 16, state.am_map.scale_ftom);
             }
         } else if key == state.m_controls.key_map_zoomout {
             state.am_map.mtof_zoommul = M_ZOOMOUT as Fixed;
@@ -759,7 +758,7 @@ pub fn change_window_scale(state: &mut GameState) {
         max_out_window_scale(state);
     } else {
         activate_new_scale(state);
-    };
+    }
 }
 pub fn do_follow_player(state: &mut GameState) {
     let plr_mo_id = state.g_game.player_mut(state.am_map.plr).mo.unwrap();
@@ -799,7 +798,7 @@ pub fn clear_fb(state: &mut GameState, color: i32) {
     let len = (state.am_map.f_w * state.am_map.f_h) as usize;
     state.i_video.i_video_buffer[..len].fill(color as u8);
 }
-pub fn clip_mline(state: &mut GameState, ml: &MLine, fl: &mut FLine) -> bool {
+pub fn clip_mline(state: &GameState, ml: &MLine, fl: &mut FLine) -> bool {
     let mut outcode1: i32 = 0;
     let mut outcode2: i32 = 0;
     let mut outside: i32;

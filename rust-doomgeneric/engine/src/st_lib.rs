@@ -61,12 +61,12 @@ impl Default for StLibState {
 
 impl StLibState {
     pub const fn new() -> Self {
-        StLibState { sttminus: -1 }
+        Self { sttminus: -1 }
     }
 }
 
 pub fn stlib_init(state: &mut GameState) {
-    let lumpnum = get_num_for_name(&mut state.w_wad, "STTMINUS");
+    let lumpnum = get_num_for_name(&state.w_wad, "STTMINUS");
     lump_bytes(state, lumpnum);
     state.st_lib.sttminus = lumpnum;
 }

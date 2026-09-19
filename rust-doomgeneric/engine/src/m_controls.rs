@@ -121,7 +121,7 @@ impl Default for MControlsState {
 
 impl MControlsState {
     pub const fn new() -> Self {
-        MControlsState {
+        Self {
             key_right: KEY_RIGHTARROW,
             key_left: KEY_LEFTARROW,
             key_up: KEY_UPARROW,

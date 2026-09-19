@@ -40,7 +40,7 @@ impl Default for DLoopState {
 
 impl DLoopState {
     pub fn new() -> Self {
-        DLoopState {
+        Self {
             ticdata: [TicCmdSet {
                 cmds: [TicCmd {
                     forwardmove: 0,
@@ -225,7 +225,7 @@ pub fn start_net_game(state: &mut GameState, settings: &mut NetGameSettings) {
     state.d_loop.ticdup = settings.ticdup;
     state.d_loop.new_sync = settings.new_sync != 0;
 }
-pub fn init_net_game(state: &mut GameState, connect_data: &mut NetConnectData) -> bool {
+pub fn init_net_game(state: &mut GameState, connect_data: &NetConnectData) -> bool {
     let result: bool = false;
     at_exit(
         &mut state.i_system,
@@ -236,7 +236,7 @@ pub fn init_net_game(state: &mut GameState, connect_data: &mut NetConnectData) -
     result
 }
 pub fn quit_net_game(_state: &mut GameState) {}
-fn get_low_tic(state: &mut GameState) -> i32 {
+fn get_low_tic(state: &GameState) -> i32 {
     let lowtic: i32 = state.d_loop.maketic;
     lowtic
 }
@@ -249,9 +249,8 @@ fn old_net_sync(state: &mut GameState) {
         if state.d_loop.local_playeringame[i as usize] {
             keyplayer = i as i32;
             break;
-        } else {
-            i = i.wrapping_add(1);
         }
+        i = i.wrapping_add(1);
     }
     if keyplayer < 0 {
         return;
@@ -272,7 +271,7 @@ fn old_net_sync(state: &mut GameState) {
         }
     }
 }
-fn players_in_game(state: &mut GameState) -> bool {
+fn players_in_game(state: &GameState) -> bool {
     let mut result: bool = false;
     let mut i: u32;
     if NET_CLIENT_CONNECTED {
