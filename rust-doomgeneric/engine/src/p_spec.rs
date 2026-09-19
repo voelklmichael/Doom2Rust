@@ -58,8 +58,6 @@ use crate::sounds::SfxName;
 use crate::w_wad::W_CheckNumForName;
 
 use crate::d_player::PlayerId;
-use crate::doomdef::false_0;
-use crate::doomdef::true_0;
 use crate::doomdef::TICRATE;
 use crate::game_state::GameState;
 use crate::m_fixed::FRACUNIT;
@@ -92,7 +90,7 @@ pub struct PSpecState {
     pub levelTimeCount: i32,
     pub numlinespecials: i16,
     pub linespeciallist: [LineId; 64],
-    pub donut_overrun_first: i32,
+    pub donut_overrun_first: bool,
     pub donut_overrun_tmp_s3_floorheight: i32,
     pub donut_overrun_tmp_s3_floorpic: i32,
     floors: Vec<FloorSlot>,
@@ -120,7 +118,7 @@ impl PSpecState {
             levelTimeCount: 0,
             numlinespecials: 0,
             linespeciallist: [LineId(0); 64],
-            donut_overrun_first: 1,
+            donut_overrun_first: true,
             donut_overrun_tmp_s3_floorheight: 0,
             donut_overrun_tmp_s3_floorpic: 0,
             floors: Vec::new(),
@@ -191,7 +189,7 @@ pub struct anim_t {
 }
 #[derive(Copy, Clone)]
 pub struct animdef_t {
-    pub istexture: i32,
+    pub istexture: bool,
     pub endname: FixedCStr<9>,
     pub startname: FixedCStr<9>,
     pub speed: i32,
@@ -311,188 +309,176 @@ impl Default for floormove_t {
 }
 pub const ML_TWOSIDED: i32 = 4;
 pub const FASTDARK: i32 = 15;
-pub static animdefs: [animdef_t; 23] = [
+pub static animdefs: [animdef_t; 22] = [
     animdef_t {
-        istexture: false_0,
+        istexture: false,
         endname: FixedCStr(*b"NUKAGE3\0\0"),
         startname: FixedCStr(*b"NUKAGE1\0\0"),
         speed: 8,
     },
     animdef_t {
-        istexture: false_0,
+        istexture: false,
         endname: FixedCStr(*b"FWATER4\0\0"),
         startname: FixedCStr(*b"FWATER1\0\0"),
         speed: 8,
     },
     animdef_t {
-        istexture: false_0,
+        istexture: false,
         endname: FixedCStr(*b"SWATER4\0\0"),
         startname: FixedCStr(*b"SWATER1\0\0"),
         speed: 8,
     },
     animdef_t {
-        istexture: false_0,
+        istexture: false,
         endname: FixedCStr(*b"LAVA4\0\0\0\0"),
         startname: FixedCStr(*b"LAVA1\0\0\0\0"),
         speed: 8,
     },
     animdef_t {
-        istexture: false_0,
+        istexture: false,
         endname: FixedCStr(*b"BLOOD3\0\0\0"),
         startname: FixedCStr(*b"BLOOD1\0\0\0"),
         speed: 8,
     },
     animdef_t {
-        istexture: false_0,
+        istexture: false,
         endname: FixedCStr(*b"RROCK08\0\0"),
         startname: FixedCStr(*b"RROCK05\0\0"),
         speed: 8,
     },
     animdef_t {
-        istexture: false_0,
+        istexture: false,
         endname: FixedCStr(*b"SLIME04\0\0"),
         startname: FixedCStr(*b"SLIME01\0\0"),
         speed: 8,
     },
     animdef_t {
-        istexture: false_0,
+        istexture: false,
         endname: FixedCStr(*b"SLIME08\0\0"),
         startname: FixedCStr(*b"SLIME05\0\0"),
         speed: 8,
     },
     animdef_t {
-        istexture: false_0,
+        istexture: false,
         endname: FixedCStr(*b"SLIME12\0\0"),
         startname: FixedCStr(*b"SLIME09\0\0"),
         speed: 8,
     },
     animdef_t {
-        istexture: true_0,
+        istexture: true,
         endname: FixedCStr(*b"BLODGR4\0\0"),
         startname: FixedCStr(*b"BLODGR1\0\0"),
         speed: 8,
     },
     animdef_t {
-        istexture: true_0,
+        istexture: true,
         endname: FixedCStr(*b"SLADRIP3\0"),
         startname: FixedCStr(*b"SLADRIP1\0"),
         speed: 8,
     },
     animdef_t {
-        istexture: true_0,
+        istexture: true,
         endname: FixedCStr(*b"BLODRIP4\0"),
         startname: FixedCStr(*b"BLODRIP1\0"),
         speed: 8,
     },
     animdef_t {
-        istexture: true_0,
+        istexture: true,
         endname: FixedCStr(*b"FIREWALL\0"),
         startname: FixedCStr(*b"FIREWALA\0"),
         speed: 8,
     },
     animdef_t {
-        istexture: true_0,
+        istexture: true,
         endname: FixedCStr(*b"GSTFONT3\0"),
         startname: FixedCStr(*b"GSTFONT1\0"),
         speed: 8,
     },
     animdef_t {
-        istexture: true_0,
+        istexture: true,
         endname: FixedCStr(*b"FIRELAVA\0"),
         startname: FixedCStr(*b"FIRELAV3\0"),
         speed: 8,
     },
     animdef_t {
-        istexture: true_0,
+        istexture: true,
         endname: FixedCStr(*b"FIREMAG3\0"),
         startname: FixedCStr(*b"FIREMAG1\0"),
         speed: 8,
     },
     animdef_t {
-        istexture: true_0,
+        istexture: true,
         endname: FixedCStr(*b"FIREBLU2\0"),
         startname: FixedCStr(*b"FIREBLU1\0"),
         speed: 8,
     },
     animdef_t {
-        istexture: true_0,
+        istexture: true,
         endname: FixedCStr(*b"ROCKRED3\0"),
         startname: FixedCStr(*b"ROCKRED1\0"),
         speed: 8,
     },
     animdef_t {
-        istexture: true_0,
+        istexture: true,
         endname: FixedCStr(*b"BFALL4\0\0\0"),
         startname: FixedCStr(*b"BFALL1\0\0\0"),
         speed: 8,
     },
     animdef_t {
-        istexture: true_0,
+        istexture: true,
         endname: FixedCStr(*b"SFALL4\0\0\0"),
         startname: FixedCStr(*b"SFALL1\0\0\0"),
         speed: 8,
     },
     animdef_t {
-        istexture: true_0,
+        istexture: true,
         endname: FixedCStr(*b"WFALL4\0\0\0"),
         startname: FixedCStr(*b"WFALL1\0\0\0"),
         speed: 8,
     },
     animdef_t {
-        istexture: true_0,
+        istexture: true,
         endname: FixedCStr(*b"DBRAIN4\0\0"),
         startname: FixedCStr(*b"DBRAIN1\0\0"),
         speed: 8,
     },
-    animdef_t {
-        istexture: -1,
-        endname: FixedCStr(*b"\0\0\0\0\0\0\0\0\0"),
-        startname: FixedCStr(*b"\0\0\0\0\0\0\0\0\0"),
-        speed: 0,
-    },
 ];
 pub const MAXLINEANIMS: i32 = 64;
 pub fn P_InitPicAnims(state: &mut GameState) {
-    let mut i: i32;
     state.p_spec.lastanim = 0;
-    let mut current_block_13: u64;
-    i = 0;
-    while animdefs[i as usize].istexture != -1 {
-        let startname = animdefs[i as usize].startname.as_str();
-        let endname = animdefs[i as usize].endname.as_str();
-        let anim = &mut state.p_spec.anims[state.p_spec.lastanim];
-        if animdefs[i as usize].istexture != 0 {
+    for def in &animdefs {
+        let startname = def.startname.as_str();
+        let endname = def.endname.as_str();
+        let (picnum, basepic) = if def.istexture {
             if R_CheckTextureNumForName(&state.r_data, &startname) == -1 {
-                current_block_13 = 12237857397564741460;
-            } else {
-                anim.picnum = R_TextureNumForName(&mut state.r_data, &endname);
-                anim.basepic = R_TextureNumForName(&mut state.r_data, &startname);
-                current_block_13 = 11650488183268122163;
+                continue;
             }
-        } else if W_CheckNumForName(&mut state.w_wad, &startname) == -1 {
-            current_block_13 = 12237857397564741460;
+            (
+                R_TextureNumForName(&mut state.r_data, &endname),
+                R_TextureNumForName(&mut state.r_data, &startname),
+            )
         } else {
-            let picnum = R_FlatNumForName(state, &endname);
-            let basepic = R_FlatNumForName(state, &startname);
-            let anim = &mut state.p_spec.anims[state.p_spec.lastanim];
-            anim.picnum = picnum;
-            anim.basepic = basepic;
-            current_block_13 = 11650488183268122163;
-        }
-        if current_block_13 == 11650488183268122163 {
-            let anim = &mut state.p_spec.anims[state.p_spec.lastanim];
-            anim.istexture = animdefs[i as usize].istexture != 0;
-            anim.numpics = anim.picnum - anim.basepic + 1;
-            if anim.numpics < 2 {
-                I_Error(&format!(
-                    "P_InitPicAnims: bad cycle from {} to {}",
-                    startname, endname,
-                ));
+            if W_CheckNumForName(&mut state.w_wad, &startname) == -1 {
+                continue;
             }
-            anim.speed = animdefs[i as usize].speed;
-            state.p_spec.lastanim += 1;
+            (
+                R_FlatNumForName(state, &endname),
+                R_FlatNumForName(state, &startname),
+            )
+        };
+        let anim = &mut state.p_spec.anims[state.p_spec.lastanim];
+        anim.picnum = picnum;
+        anim.basepic = basepic;
+        anim.istexture = def.istexture;
+        anim.numpics = picnum - basepic + 1;
+        if anim.numpics < 2 {
+            I_Error(&format!(
+                "P_InitPicAnims: bad cycle from {} to {}",
+                startname, endname,
+            ));
         }
-        i += 1;
+        anim.speed = def.speed;
+        state.p_spec.lastanim += 1;
     }
 }
 pub fn getSide(state: &mut GameState, currentSector: i32, line: i32, side: i32) -> SideId {
@@ -940,15 +926,15 @@ pub fn P_ShootSpecialLine(state: &mut GameState, thing: MobjId, line: LineId) {
     match special as i32 {
         24 => {
             EV_DoFloor(state, line, FloorE::raiseFloor);
-            P_ChangeSwitchTexture(state, line, 0);
+            P_ChangeSwitchTexture(state, line, false);
         }
         46 => {
             EV_DoDoor(state, line, VldoorE::vld_open);
-            P_ChangeSwitchTexture(state, line, 1);
+            P_ChangeSwitchTexture(state, line, true);
         }
         47 => {
             EV_DoPlat(state, line, PlattypeE::raiseToNearestAndChange, 0);
-            P_ChangeSwitchTexture(state, line, 0);
+            P_ChangeSwitchTexture(state, line, false);
         }
         _ => {}
     };
@@ -1083,8 +1069,8 @@ pub fn P_UpdateSpecials(state: &mut GameState) {
 pub const DONUT_FLOORHEIGHT_DEFAULT: i32 = 0;
 pub const DONUT_FLOORPIC_DEFAULT: i32 = 0x16;
 fn DonutOverrun(state: &mut GameState) -> (fixed_t, i16) {
-    if state.p_spec.donut_overrun_first != 0 {
-        state.p_spec.donut_overrun_first = 0;
+    if state.p_spec.donut_overrun_first {
+        state.p_spec.donut_overrun_first = false;
         state.p_spec.donut_overrun_tmp_s3_floorheight = DONUT_FLOORHEIGHT_DEFAULT;
         state.p_spec.donut_overrun_tmp_s3_floorpic = DONUT_FLOORPIC_DEFAULT;
         let p: i32 = M_CheckParmWithArgs(state, "-donut", 2);
@@ -1112,9 +1098,9 @@ fn DonutOverrun(state: &mut GameState) -> (fixed_t, i16) {
         state.p_spec.donut_overrun_tmp_s3_floorpic as i16,
     )
 }
-pub fn EV_DoDonut(state: &mut GameState, line: LineId) -> i32 {
+pub fn EV_DoDonut(state: &mut GameState, line: LineId) -> bool {
     let mut secnum: i32 = -1;
-    let mut rtn: i32 = 0;
+    let mut rtn = false;
     loop {
         secnum = P_FindSectorFromLineTag(state, line, secnum);
         if secnum < 0 {
@@ -1124,7 +1110,7 @@ pub fn EV_DoDonut(state: &mut GameState, line: LineId) -> i32 {
         if state.p_setup.sector_mut(s1).specialdata.is_some() {
             continue;
         }
-        rtn = 1;
+        rtn = true;
         let first_line = state.p_setup.sector_mut(s1).lines[0];
         let Some(s2) = getNextSector(state, first_line, s1) else {
             doom_eprintln!(state.platform,

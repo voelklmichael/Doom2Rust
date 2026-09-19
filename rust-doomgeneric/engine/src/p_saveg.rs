@@ -409,8 +409,8 @@ fn saveg_read_player_t(state: &mut PSavegState, str: &mut player_t) {
         str.maxammo[i as usize] = saveg_read32(state);
         i += 1;
     }
-    str.attackdown = saveg_read32(state);
-    str.usedown = saveg_read32(state);
+    str.attackdown = saveg_read32(state) != 0;
+    str.usedown = saveg_read32(state) != 0;
     str.cheats = saveg_read32(state);
     str.refire = saveg_read32(state);
     str.killcount = saveg_read32(state);
@@ -480,8 +480,8 @@ fn saveg_write_player_t(state: &mut PSavegState, str: &mut player_t) {
         saveg_write32(state, str.maxammo[i as usize]);
         i += 1;
     }
-    saveg_write32(state, str.attackdown);
-    saveg_write32(state, str.usedown);
+    saveg_write32(state, i32::from(str.attackdown));
+    saveg_write32(state, i32::from(str.usedown));
     saveg_write32(state, str.cheats);
     saveg_write32(state, str.refire);
     saveg_write32(state, str.killcount);

@@ -1,4 +1,3 @@
-use crate::doomdef::true_0;
 use crate::doomdef::SCREENWIDTH;
 use crate::game_state::GameState;
 use crate::m_controls::KEY_BACKSPACE;
@@ -32,7 +31,7 @@ pub struct hu_itext_t {
 pub const HU_MAXLINELENGTH: i32 = 80;
 pub fn HUlib_clearTextLine(t: &mut hu_textline_t) {
     t.l.clear();
-    t.needsupdate = true_0;
+    t.needsupdate = 1;
 }
 pub fn HUlib_initTextLine(t: &mut hu_textline_t, x: i32, y: i32, sc: i32) {
     t.x = x;

@@ -210,10 +210,10 @@ pub fn T_PlatRaise(state: &mut GameState, id: PlatId) {
         PlatE::in_stasis => {}
     };
 }
-pub fn EV_DoPlat(state: &mut GameState, line: LineId, kind: PlattypeE, amount: i32) -> i32 {
+pub fn EV_DoPlat(state: &mut GameState, line: LineId, kind: PlattypeE, amount: i32) -> bool {
     let linev = state.p_setup.line(line);
     let mut secnum: i32 = -1;
-    let mut rtn: i32 = 0;
+    let mut rtn = false;
     if kind == PlattypeE::perpetualRaise {
         P_ActivateInStasis(state, linev.tag as i32);
     }
@@ -226,7 +226,7 @@ pub fn EV_DoPlat(state: &mut GameState, line: LineId, kind: PlattypeE, amount: i
         if state.p_setup.sector_mut(sec).specialdata.is_some() {
             continue;
         }
-        rtn = 1;
+        rtn = true;
         let mut plat = plat_t {
             kind,
             sector: sec,

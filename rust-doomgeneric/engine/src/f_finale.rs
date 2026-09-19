@@ -5,7 +5,6 @@ use crate::d_event::GameScreenState;
 use crate::d_mode::GameMission_t;
 use crate::d_mode::GameMode_t;
 use crate::d_mode::GameVersion;
-use crate::doomdef::true_0;
 use crate::doomdef::MAXPLAYERS;
 use crate::doomdef::SCREENHEIGHT;
 use crate::doomdef::SCREENWIDTH;
@@ -310,9 +309,9 @@ pub fn F_StartFinale(state: &mut GameState) {
         state.doomstat.gamemission as u32
     }) == GameMission_t::doom as i32 as u32
     {
-        S_ChangeMusic(state, MusicName::mus_victor as i32, true_0);
+        S_ChangeMusic(state, MusicName::mus_victor as i32, true);
     } else {
-        S_ChangeMusic(state, MusicName::mus_read_m as i32, true_0);
+        S_ChangeMusic(state, MusicName::mus_read_m as i32, true);
     }
     let gamemission = if state.doomstat.gamemission == GameMission_t::pack_chex {
         GameMission_t::doom
@@ -522,7 +521,7 @@ pub fn F_StartCast(state: &mut GameState) {
     state.f_finale.castframes = 0;
     state.f_finale.castonmelee = 0;
     state.f_finale.castattacking = false;
-    S_ChangeMusic(state, MusicName::mus_evil as i32, true_0);
+    S_ChangeMusic(state, MusicName::mus_evil as i32, true);
 }
 pub fn F_CastTicker(state: &mut GameState) {
     let mut current_block: u64;

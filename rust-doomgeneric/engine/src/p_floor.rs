@@ -205,8 +205,8 @@ pub fn T_MoveFloor(state: &mut GameState, id: FloorId) {
         );
     }
 }
-pub fn EV_DoFloor(state: &mut GameState, line: LineId, floortype: FloorE) -> i32 {
-    let mut rtn: i32 = 0;
+pub fn EV_DoFloor(state: &mut GameState, line: LineId, floortype: FloorE) -> bool {
+    let mut rtn = false;
     let mut secnum: i32 = -1;
     loop {
         secnum = P_FindSectorFromLineTag(state, line, secnum);
@@ -217,7 +217,7 @@ pub fn EV_DoFloor(state: &mut GameState, line: LineId, floortype: FloorE) -> i32
         if state.p_setup.sector_mut(sec).specialdata.is_some() {
             continue;
         }
-        rtn = 1;
+        rtn = true;
         let mut floor = floormove_t::default();
         floor.thinker.function = ThinkerFn::Floor(T_MoveFloor);
         floor.kind = floortype;
@@ -378,8 +378,8 @@ fn spawn_stair(state: &mut GameState, sec: SectorId, speed: fixed_t, height: i32
     );
     state.p_setup.sector_mut(sec).specialdata = Some(SectorSpecial::Floor(floor_id));
 }
-pub fn EV_BuildStairs(state: &mut GameState, line: LineId, kind: StairE) -> i32 {
-    let mut rtn: i32 = 0;
+pub fn EV_BuildStairs(state: &mut GameState, line: LineId, kind: StairE) -> bool {
+    let mut rtn = false;
     let mut secnum: i32 = -1;
     loop {
         secnum = P_FindSectorFromLineTag(state, line, secnum);
@@ -390,7 +390,7 @@ pub fn EV_BuildStairs(state: &mut GameState, line: LineId, kind: StairE) -> i32 
         if state.p_setup.sector_mut(sec).specialdata.is_some() {
             continue;
         }
-        rtn = 1;
+        rtn = true;
         let (speed, stairsize): (fixed_t, fixed_t) = match kind {
             StairE::build8 => ((FLOORSPEED / 4) as fixed_t, (8 * FRACUNIT) as fixed_t),
             StairE::turbo16 => ((FLOORSPEED * 4) as fixed_t, (16 * FRACUNIT) as fixed_t),

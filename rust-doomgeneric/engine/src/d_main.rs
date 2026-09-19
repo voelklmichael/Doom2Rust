@@ -217,12 +217,6 @@ impl DMainState {
     }
 }
 
-#[derive(Copy, Clone, PartialEq, Eq)]
-#[allow(dead_code)] // mirrors a C index table; discriminants must stay
-pub enum WipeType {
-    wipe_ColorXForm = 0,
-    wipe_Melt = 1,
-}
 #[derive(Copy, Clone)]
 pub struct MissionPack {
     pub name: &'static str,
@@ -387,13 +381,7 @@ pub fn D_Display(state: &mut GameState) {
             }
         }
         wipestart = nowtime;
-        done = wipe_ScreenWipe(
-            state,
-            WipeType::wipe_Melt as i32,
-            SCREENWIDTH,
-            SCREENHEIGHT,
-            tics,
-        ) != 0;
+        done = wipe_ScreenWipe(state, SCREENWIDTH, SCREENHEIGHT, tics);
         M_Drawer(state);
         I_FinishUpdate(state);
         if done {

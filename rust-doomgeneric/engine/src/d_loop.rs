@@ -87,9 +87,9 @@ pub struct net_connect_data_t {
     pub gamemode: i32,
     pub gamemission: i32,
     pub lowres_turn: i32,
-    pub drone: i32,
+    pub drone: bool,
     pub max_players: i32,
-    pub is_freedoom: i32,
+    pub is_freedoom: bool,
     pub wad_sha1sum: sha1_digest_t,
     pub player_class: i32,
 }

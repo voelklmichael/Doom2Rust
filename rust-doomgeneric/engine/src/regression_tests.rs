@@ -224,7 +224,7 @@ fn scripted_input(state: &mut GameState) {
         800 => G_ExitLevel(state),
         950 | 1050 | 1150 | 1250 | 1350 | 1950 | 2050 | 2150 | 2250 | 2350 | 3150 | 3250 | 3350
         | 3450 | 3550 => {
-            state.wi_stuff.acceleratestage = 1;
+            state.wi_stuff.acceleratestage = true;
         }
         1800 => {
             state.g_game.gameepisode = 1;
