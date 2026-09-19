@@ -7,7 +7,7 @@ use crate::m_config::bind_variable_int;
 use crate::m_config::bind_variable_string;
 use crate::m_config::MConfigState;
 use crate::opl_music::MusicPlayer;
-use crate::platform::DoomPlatform;
+use crate::platform::{DoomPlatform, MusicCommand};
 use crate::sfx_mixer::Mixer;
 use crate::sfx_mixer::Sample;
 use crate::sounds::SfxId;
@@ -45,6 +45,8 @@ pub struct ISoundState {
     use_sfx_prefix: bool,
     /// `Some` once the audio device is open and the WAD has a `GENMIDI` lump.
     music: Option<MusicPlayer>,
+    /// The platform plays the music (`DoomPlatform::music_open`); `music` stays `None`.
+    platform_music: bool,
     pub snd_musicdevice: i32,
     pub snd_sfxdevice: i32,
     snd_sbport: i32,
@@ -75,6 +77,7 @@ impl ISoundState {
             mixer: None,
             use_sfx_prefix: true,
             music: None,
+            platform_music: false,
             snd_musicdevice: SndDevice::Sb as i32,
             snd_sfxdevice: SndDevice::Sb as i32,
             snd_sbport: 0,
@@ -109,6 +112,29 @@ pub fn init_sound(
 pub fn shutdown_sound(state: &mut ISoundState) {
     state.mixer = None;
     state.music = None;
+}
+/// Sends `command` to the platform if it plays the music, else to the engine's own player.
+fn music_command(
+    state: &mut ISoundState,
+    platform: &mut dyn DoomPlatform,
+    command: MusicCommand<'_>,
+) -> bool {
+    if state.platform_music {
+        platform.music_command(command);
+        return true;
+    }
+    let Some(music) = state.music.as_mut() else {
+        return false;
+    };
+    match command {
+        MusicCommand::Register(data) => return music.register(data),
+        MusicCommand::Play { looping } => music.play(looping),
+        MusicCommand::Stop => music.stop(),
+        MusicCommand::Pause => music.pause(),
+        MusicCommand::Resume => music.resume(),
+        MusicCommand::Volume(volume) => music.set_volume(volume),
+    }
+    true
 }
 /// Name of the lump holding `sfx`'s samples: Doom prefixes its lumps with
 /// `ds`, and a linked sfx shares the lump of the sfx it links to.
@@ -226,46 +252,46 @@ pub fn init_music(state: &mut GameState) {
     };
     let lump_len = lump_length(&state.w_wad, lumpnum as u32) as usize;
     let lump = lump_bytes(state, lumpnum);
-    if let Some(bank) = GenMidi::parse(&lump[..lump_len]) {
+    if state.platform.music_open(&lump[..lump_len]) {
+        state.i_sound.platform_music = true;
+    } else if let Some(bank) = GenMidi::parse(&lump[..lump_len]) {
         state.i_sound.music = Some(MusicPlayer::new(bank, rate));
     }
 }
-pub fn i_set_music_volume(state: &mut ISoundState, volume: i32) {
-    if let Some(music) = state.music.as_mut() {
-        music.set_volume(volume);
-    }
+pub fn i_set_music_volume(state: &mut ISoundState, platform: &mut dyn DoomPlatform, volume: i32) {
+    music_command(state, platform, MusicCommand::Volume(volume));
 }
-pub fn pause_song(state: &mut ISoundState) {
-    if let Some(music) = state.music.as_mut() {
-        music.pause();
-    }
+pub fn pause_song(state: &mut ISoundState, platform: &mut dyn DoomPlatform) {
+    music_command(state, platform, MusicCommand::Pause);
 }
-pub fn resume_song(state: &mut ISoundState) {
-    if let Some(music) = state.music.as_mut() {
-        music.resume();
-    }
+pub fn resume_song(state: &mut ISoundState, platform: &mut dyn DoomPlatform) {
+    music_command(state, platform, MusicCommand::Resume);
 }
 /// Loads a MUS lump. The handle is 1 if it was accepted, else 0.
-pub fn register_song(state: &mut ISoundState, data: &[u8]) -> usize {
-    state
-        .music
-        .as_mut()
-        .map_or(0, |music| usize::from(music.register(data)))
+pub fn register_song(
+    state: &mut ISoundState,
+    platform: &mut dyn DoomPlatform,
+    data: &[u8],
+) -> usize {
+    usize::from(music_command(state, platform, MusicCommand::Register(data)))
 }
 pub fn un_register_song(state: &mut ISoundState, _handle: usize) {
+    // A platform's player is told to stop by `stop_song` and drops the song when the next one is
+    // registered.
     if let Some(music) = state.music.as_mut() {
         music.unregister();
     }
 }
-pub fn play_song(state: &mut ISoundState, _handle: usize, looping: bool) {
-    if let Some(music) = state.music.as_mut() {
-        music.play(looping);
-    }
+pub fn play_song(
+    state: &mut ISoundState,
+    platform: &mut dyn DoomPlatform,
+    _handle: usize,
+    looping: bool,
+) {
+    music_command(state, platform, MusicCommand::Play { looping });
 }
-pub fn stop_song(state: &mut ISoundState) {
-    if let Some(music) = state.music.as_mut() {
-        music.stop();
-    }
+pub fn stop_song(state: &mut ISoundState, platform: &mut dyn DoomPlatform) {
+    music_command(state, platform, MusicCommand::Stop);
 }
 pub fn bind_sound_variables(m_config: &mut MConfigState) {
     bind_variable_int(m_config, "snd_musicdevice", |s| {

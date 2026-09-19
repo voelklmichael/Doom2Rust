@@ -636,6 +636,8 @@ struct AudioPlatform {
     inner: NullPlatform,
     opened: Rc<RefCell<bool>>,
     samples: Rc<RefCell<Vec<i16>>>,
+    /// `Some`: this platform plays the music itself and logs what the engine asks of it.
+    music: Option<Rc<RefCell<Vec<std::string::String>>>>,
 }
 
 impl DoomPlatform for AudioPlatform {
@@ -655,6 +657,21 @@ impl DoomPlatform for AudioPlatform {
     }
     fn audio_write(&mut self, samples: &[i16]) {
         self.samples.borrow_mut().extend_from_slice(samples);
+    }
+    fn music_open(&mut self, genmidi: &[u8]) -> bool {
+        let Some(log) = &self.music else { return false };
+        log.borrow_mut().push(std::format!("open {}", genmidi.starts_with(b"#OPL_II#")));
+        true
+    }
+    fn music_command(&mut self, command: crate::MusicCommand<'_>) {
+        let log = self.music.as_ref().expect("music_open returned false");
+        let text = match command {
+            crate::MusicCommand::Register(data) => {
+                std::format!("register mus={}", data.starts_with(b"MUS\x1a"))
+            }
+            other => std::format!("{other:?}"),
+        };
+        log.borrow_mut().push(text);
     }
     fn sleep_ms(&mut self, ms: u32) {
         self.inner.sleep_ms(ms);
@@ -683,12 +700,23 @@ impl DoomPlatform for AudioPlatform {
 /// extra command line arguments, and returns whether the audio device was
 /// opened and everything the engine wrote to it.
 fn demo_audio(args: &[&str], ticks: u32) -> Option<(bool, Vec<i16>)> {
+    demo_audio_music(args, ticks, None)
+}
+
+/// Like [`demo_audio`], for a platform that plays the music itself if `music`
+/// is given (it collects the requests).
+fn demo_audio_music(
+    args: &[&str],
+    ticks: u32,
+    music: Option<Rc<RefCell<Vec<std::string::String>>>>,
+) -> Option<(bool, Vec<i16>)> {
     let opened = Rc::new(RefCell::new(false));
     let samples = Rc::new(RefCell::new(Vec::new()));
     let platform = AudioPlatform {
         inner: NullPlatform::default(),
         opened: Rc::clone(&opened),
         samples: Rc::clone(&samples),
+        music,
     };
     let mut argv = alloc::vec!["-timedemo", "demo1"];
     argv.extend_from_slice(args);
@@ -731,4 +759,29 @@ fn nosound_leaves_the_audio_device_closed() {
     };
     assert!(!opened);
     assert!(samples.is_empty());
+}
+
+/// A platform that takes the music over gets the GENMIDI bank once, then every song request in
+/// order, and the engine mixes no music of its own into the stream.
+#[test]
+fn a_platform_can_take_the_music_over() {
+    let log = Rc::new(RefCell::new(Vec::new()));
+    let Some((_, samples)) = demo_audio_music(&[], 400, Some(Rc::clone(&log))) else {
+        std::eprintln!("skipping: no IWAD (set DOOM_IWAD or put doom1.wad in ~/Downloads)");
+        return;
+    };
+    let log = log.take();
+    assert_eq!(log.first().map(String::as_str), Some("open true"), "{log:?}");
+    assert_eq!(log.iter().filter(|line| line.starts_with("open")).count(), 1);
+    let register = log.iter().position(|line| line == "register mus=true");
+    let play = log.iter().position(|line| line.starts_with("Play"));
+    assert!(register.is_some() && play > register, "song not registered then played: {log:?}");
+    assert!(log.iter().any(|line| line.starts_with("Volume")), "{log:?}");
+
+    // The same run with the engine's own player mixes music into the stream, so it is louder
+    // and different from the one without.
+    let Some((_, with_engine_music)) = demo_audio_music(&[], 400, None) else {
+        return;
+    };
+    assert_ne!(samples, with_engine_music, "the engine still mixed music of its own");
 }

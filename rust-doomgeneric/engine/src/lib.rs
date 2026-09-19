@@ -101,4 +101,6 @@ pub use d_main::doomgeneric_tick;
 pub use doomgeneric::doomgeneric_create;
 pub use filesystem::{DoomFileSystem, FileId};
 pub use game_state::init_game_state;
-pub use platform::DoomPlatform;
+pub use genmidi::GenMidi;
+pub use opl_music::MusicPlayer;
+pub use platform::{DoomPlatform, MusicCommand};

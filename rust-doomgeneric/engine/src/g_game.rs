@@ -965,9 +965,9 @@ pub fn g_ticker(state: &mut GameState, netcmds: &[TicCmd]) {
                 1 => {
                     state.g_game.paused = !state.g_game.paused;
                     if state.g_game.paused {
-                        pause_sound(&mut state.i_sound, &mut state.s_sound);
+                        pause_sound(&mut state.i_sound, &mut *state.platform, &mut state.s_sound);
                     } else {
-                        resume_sound(&mut state.i_sound, &mut state.s_sound);
+                        resume_sound(&mut state.i_sound, &mut *state.platform, &mut state.s_sound);
                     }
                 }
                 2 => {
@@ -1427,7 +1427,7 @@ pub fn init_new(state: &mut GameState, mut skill: SkillType, mut episode: i32, m
     let skytexturename: &str;
     if state.g_game.paused {
         state.g_game.paused = false;
-        resume_sound(&mut state.i_sound, &mut state.s_sound);
+        resume_sound(&mut state.i_sound, &mut *state.platform, &mut state.s_sound);
     }
     if skill > SkillType::Nightmare {
         skill = SkillType::Nightmare;
