@@ -16,6 +16,7 @@ use crate::m_fixed::FixedMul;
 use crate::m_fixed::FRACUNIT;
 use crate::m_random::P_Random;
 use crate::p_mobj::MobjId;
+use alloc::string::ToString;
 
 use crate::p_mobj::MobjType;
 use crate::p_mobj::P_RemoveMobj;

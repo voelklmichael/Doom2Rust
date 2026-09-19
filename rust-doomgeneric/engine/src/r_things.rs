@@ -30,6 +30,7 @@ use crate::r_segs::SIL_BOTTOM;
 use crate::r_segs::SIL_TOP;
 use crate::stdint_types::byte;
 use crate::v_video::V_CachePatchNum;
+use alloc::vec::Vec;
 
 use crate::tables::angle_t;
 use crate::tables::ANG45;

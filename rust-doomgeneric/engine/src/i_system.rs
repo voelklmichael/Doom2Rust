@@ -2,6 +2,7 @@ use crate::game_state::GameState;
 use crate::m_argv::M_CheckParmWithArgs;
 use crate::m_misc::M_StrToInt;
 use crate::platform::DoomPlatform;
+use alloc::vec::Vec;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum DosMemDump {

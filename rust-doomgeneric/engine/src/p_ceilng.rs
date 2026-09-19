@@ -3,6 +3,8 @@ use crate::m_fixed::fixed_t;
 use crate::m_fixed::FRACUNIT;
 use crate::p_floor::ResultE;
 use crate::p_floor::T_MovePlane;
+use alloc::boxed::Box;
+use alloc::vec::Vec;
 
 use crate::p_mobj::SectorSpecial;
 use crate::p_mobj::ThinkerFn;

@@ -10,6 +10,7 @@ use crate::p_plats::PlatId;
 use crate::p_spec::FloorId;
 use crate::p_spec::P_UpdateSpecials;
 use crate::p_user::P_PlayerThink;
+use alloc::vec::Vec;
 
 // A handle into PTickState's own node table -- never constructed outside
 // this module, only handed out by head()/next() and walked by callers.
@@ -474,6 +475,7 @@ mod tests {
     use crate::p_lights::{fireflicker_t, glow_t};
     use crate::p_spec::{ceiling_t, floormove_t, plat_t};
     use crate::platform::DoomPlatform;
+    use alloc::boxed::Box;
 
     struct NullPlatform;
     impl DoomPlatform for NullPlatform {

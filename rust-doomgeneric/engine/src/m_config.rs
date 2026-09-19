@@ -3,7 +3,10 @@ use crate::game_state::GameState;
 use crate::i_system::I_Error;
 use crate::m_argv::M_CheckParmWithArgs;
 use crate::platform::DoomPlatform;
-use std::rc::Rc;
+use alloc::rc::Rc;
+use alloc::string::String;
+use alloc::string::ToString;
+use alloc::vec::Vec;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum DefaultType {

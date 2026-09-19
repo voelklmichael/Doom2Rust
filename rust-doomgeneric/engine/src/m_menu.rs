@@ -2,6 +2,9 @@ use crate::d_event::{event_t, GameScreenState};
 use crate::d_main::D_StartTitle;
 use crate::dstrings::{doom1_endmsg, doom2_endmsg};
 use crate::i_system::I_Error;
+use alloc::string::String;
+use alloc::string::ToString;
+use alloc::vec::Vec;
 
 use crate::w_wad::W_LumpBytesName;
 

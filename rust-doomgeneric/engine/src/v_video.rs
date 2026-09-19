@@ -12,6 +12,8 @@ use crate::platform::DoomPlatform;
 use crate::stdint_types::byte;
 use crate::w_wad::W_LumpBytes;
 use crate::w_wad::W_LumpBytesName;
+use alloc::string::String;
+use alloc::vec::Vec;
 
 /// Which framebuffer a drawing call targets.
 #[derive(Copy, Clone, PartialEq, Eq)]

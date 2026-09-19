@@ -5,6 +5,9 @@ use crate::game_state::GameState;
 use crate::i_system::I_Error;
 use crate::m_argv::M_CheckParmWithArgs;
 use crate::platform::DoomPlatform;
+use alloc::string::String;
+use alloc::string::ToString;
+use alloc::vec::Vec;
 #[derive(Copy, Clone)]
 pub struct iwad_t {
     pub name: &'static str,

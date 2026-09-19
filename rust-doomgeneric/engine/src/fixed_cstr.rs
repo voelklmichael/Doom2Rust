@@ -12,6 +12,7 @@
 //! Not every `char[N]` field in this codebase uses this type -- only ones acting
 //! as a name/identifier compared or hashed as a unit. A buffer that's just
 //! scratch space for `snprintf`-style formatting stays a plain array.
+use alloc::string::String;
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 #[repr(transparent)]
@@ -57,7 +58,7 @@ impl<const N: usize> FixedCStr<N> {
 
     /// Lossy conversion for display/formatting -- WAD data isn't guaranteed to
     /// be valid UTF-8 (or even ASCII), so this never panics.
-    pub fn as_str(&self) -> ::std::borrow::Cow<'_, str> {
+    pub fn as_str(&self) -> alloc::borrow::Cow<'_, str> {
         String::from_utf8_lossy(&self.0[..self.len()])
     }
 

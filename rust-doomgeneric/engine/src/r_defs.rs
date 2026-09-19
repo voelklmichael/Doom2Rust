@@ -7,6 +7,7 @@ use crate::p_setup::SideId;
 use crate::p_setup::VertexId;
 use crate::stdint_types::byte;
 use crate::tables::angle_t;
+use alloc::vec::Vec;
 pub type lighttable_t = byte;
 
 // A sprite/wall vertical-clip array, always one of these fixed i16 arrays --

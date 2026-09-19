@@ -37,6 +37,7 @@ use crate::w_wad::W_GetNumForName;
 use crate::w_wad::W_LumpBytes;
 use crate::w_wad::W_LumpLength;
 use crate::w_wad::W_ReleaseLumpNum;
+use alloc::vec::Vec;
 
 pub struct SSoundState {
     pub channels: Vec<channel_t>,

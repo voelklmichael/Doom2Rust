@@ -6,6 +6,8 @@ use crate::g_game::G_PlayerReborn;
 use crate::game_state::GameState;
 use crate::hu_stuff::HU_Start;
 use crate::i_system::I_Error;
+use alloc::boxed::Box;
+use alloc::vec::Vec;
 
 use crate::info::StateId;
 use crate::m_fixed::fixed_t;

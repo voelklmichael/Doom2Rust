@@ -8,6 +8,8 @@ use crate::m_argv::M_CheckParmWithArgs;
 use crate::m_fixed::fixed_t;
 use crate::m_misc::M_StrToInt;
 use crate::m_random::P_Random;
+use alloc::boxed::Box;
+use alloc::vec::Vec;
 
 use crate::p_ceilng::CeilingE;
 use crate::p_ceilng::EV_CeilingCrushStop;

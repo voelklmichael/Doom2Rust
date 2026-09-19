@@ -2,7 +2,7 @@
 //! left/top offset, all little-endian i16), `width` little-endian i32 column
 //! offsets, then the columns themselves as runs of "posts"
 //! (`topdelta, length, pad, pixels[length], pad`) terminated by `topdelta == 0xff`.
-use std::rc::Rc;
+use alloc::rc::Rc;
 
 #[derive(Clone)]
 pub struct Patch {

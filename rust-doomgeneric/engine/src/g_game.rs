@@ -46,6 +46,9 @@ use crate::m_fixed::FRACUNIT;
 use crate::m_menu::M_StartControlPanel;
 use crate::m_random::M_ClearRandom;
 use crate::m_random::P_Random;
+use alloc::string::String;
+use alloc::string::ToString;
+use alloc::vec::Vec;
 
 use crate::p_inter::maxammo;
 use crate::p_map::P_CheckPosition;
@@ -1426,7 +1429,7 @@ pub fn G_DoSaveGame(state: &mut GameState) {
     {
         I_Error("Savegame buffer overrun");
     }
-    let image = std::mem::take(&mut state.p_saveg.save_buffer);
+    let image = core::mem::take(&mut state.p_saveg.save_buffer);
     if !state.fs.write_file(&temp_savegame_file, &image) {
         let recovery_file = state.fs.temp_path("recovery.dsg");
         if !state.fs.write_file(&recovery_file, &image) {

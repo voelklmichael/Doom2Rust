@@ -8,6 +8,7 @@ use crate::m_fixed::FRACBITS;
 use crate::patch::Patch;
 use crate::v_video::Screen;
 use crate::v_video::V_CachePatchName;
+use alloc::vec::Vec;
 
 use crate::r_main::ColormapId;
 use crate::stdint_types::byte;

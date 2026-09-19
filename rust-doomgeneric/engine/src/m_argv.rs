@@ -1,4 +1,6 @@
 use crate::game_state::GameState;
+use alloc::string::String;
+use alloc::vec::Vec;
 
 pub struct MArgvState {
     pub myargv: Vec<String>,

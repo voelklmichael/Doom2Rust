@@ -34,6 +34,8 @@ use crate::p_tick::ThinkerKind;
 use crate::p_tick::ThinkerPayload;
 use crate::stdint_types::byte;
 use crate::tables::angle_t;
+use alloc::string::String;
+use alloc::vec::Vec;
 
 use crate::d_player::NUMAMMO;
 use crate::doomdef::MAXPLAYERS;
@@ -488,7 +490,7 @@ fn saveg_write_player_t(state: &mut PSavegState, str: &mut player_t) {
     saveg_writep(
         state,
         if str.message.is_some() {
-            std::ptr::dangling_mut::<::core::ffi::c_void>()
+            core::ptr::dangling_mut::<::core::ffi::c_void>()
         } else {
             ::core::ptr::null_mut()
         },

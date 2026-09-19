@@ -1,5 +1,6 @@
 use crate::d_event::event_t;
 use crate::d_event::EvType;
+use alloc::string::ToString;
 
 use crate::d_player::PlayerId;
 use crate::d_player::PowerType;

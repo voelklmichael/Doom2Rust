@@ -13,6 +13,9 @@ use crate::p_setup::LineId;
 use crate::p_setup::SectorId;
 use crate::p_spec::P_FindLowestCeilingSurrounding;
 use crate::p_spec::P_FindSectorFromLineTag;
+use alloc::boxed::Box;
+use alloc::string::ToString;
+use alloc::vec::Vec;
 
 use crate::p_tick::P_AddThinker;
 use crate::p_tick::P_RemoveThinker;

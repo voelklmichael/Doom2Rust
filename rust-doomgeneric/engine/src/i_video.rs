@@ -12,6 +12,7 @@ use crate::platform::DoomPlatform;
 use crate::stdint_types::byte;
 use crate::stdint_types::uint32_t;
 use crate::tables::gammatable;
+use alloc::vec::Vec;
 
 pub struct IVideoState {
     pub s_Fb: FB_ScreenInfo,

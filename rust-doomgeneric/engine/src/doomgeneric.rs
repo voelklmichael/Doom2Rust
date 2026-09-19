@@ -2,6 +2,8 @@ use crate::d_main::D_DoomMain;
 use crate::doomdef::pixel_t;
 use crate::game_state::GameState;
 use crate::m_argv::M_FindResponseFile;
+use alloc::string::String;
+use alloc::vec::Vec;
 
 pub const DOOMGENERIC_RESX: i32 = 640;
 pub const DOOMGENERIC_RESY: i32 = 400;

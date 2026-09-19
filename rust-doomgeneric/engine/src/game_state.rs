@@ -1,3 +1,4 @@
+use alloc::boxed::Box;
 // The aggregate state struct that replaces the codebase's original `static
 // mut` globals. Built once by `init_game_state`, which leaks it to a
 // `&'static mut GameState` and threads it explicitly through every function

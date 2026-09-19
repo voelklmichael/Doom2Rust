@@ -84,6 +84,8 @@ use crate::st_stuff::ST_Init;
 use crate::statdump::StatDump;
 use crate::v_video::Screen;
 use crate::v_video::V_CachePatchName;
+use alloc::string::String;
+use alloc::string::ToString;
 
 use crate::v_video::V_DrawMouseSpeedBox;
 use crate::v_video::V_DrawPatch;

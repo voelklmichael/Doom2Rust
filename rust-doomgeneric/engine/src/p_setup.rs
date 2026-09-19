@@ -36,6 +36,7 @@ use crate::w_wad::W_LumpBytes;
 use crate::w_wad::W_LumpLength;
 use crate::w_wad::W_ReadLump;
 use crate::w_wad::W_ReleaseLumpNum;
+use alloc::vec::Vec;
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub struct SectorId(pub u32);
@@ -235,7 +236,7 @@ pub enum MapLump {
 }
 /// Bounds-checked little-endian reader over a map lump's raw bytes.
 struct LumpReader {
-    data: std::rc::Rc<[u8]>,
+    data: alloc::rc::Rc<[u8]>,
     pos: usize,
 }
 impl LumpReader {

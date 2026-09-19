@@ -4,6 +4,8 @@ use crate::i_system::I_ConsoleStdout;
 use crate::i_system::I_Error;
 use crate::m_fixed::fixed_t;
 use crate::m_fixed::FRACBITS;
+use alloc::boxed::Box;
+use alloc::vec::Vec;
 
 use crate::p_mobj::thinker_t;
 

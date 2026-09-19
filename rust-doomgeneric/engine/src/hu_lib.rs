@@ -7,6 +7,7 @@ use crate::r_draw::R_VideoErase;
 use crate::v_video::Screen;
 use crate::v_video::V_CachePatchNum;
 use crate::v_video::V_DrawPatchDirect;
+use alloc::string::String;
 #[derive(Clone)]
 pub struct hu_textline_t {
     pub x: i32,

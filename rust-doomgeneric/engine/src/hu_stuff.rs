@@ -23,6 +23,8 @@ use crate::sounds::SfxName;
 use crate::stdint_types::byte;
 use crate::v_video::V_CachePatchNum;
 use crate::w_wad::{W_GetNumForName, W_LumpBytes};
+use alloc::string::String;
+use alloc::string::ToString;
 
 pub struct HuStuffState {
     pub plr: PlayerId,
