@@ -19,12 +19,14 @@ use crate::r_data::r_init_data;
 use crate::r_defs::Node;
 use crate::r_draw::init_buffer;
 use crate::r_draw::init_translation_tables;
+use crate::r_draw::RDrawState;
 use crate::r_draw::{
     draw_column, draw_column_low, draw_fuzz_column, draw_fuzz_column_low, draw_span, draw_span_low,
     draw_translated_column, draw_translated_column_low,
 };
 use crate::r_plane::clear_planes;
 use crate::r_plane::draw_planes;
+use crate::r_segs::RSegsState;
 use crate::r_sky::init_sky_map;
 use crate::r_things::clear_sprites;
 use crate::r_things::draw_masked;
@@ -285,17 +287,15 @@ pub fn point_to_dist(r_main: &RMainState, x: Fixed, y: Fixed) -> Fixed {
     let dist: Fixed = fixed_div(dx, FINESINE[angle as usize]);
     dist
 }
-pub fn scale_from_global_angle(state: &GameState, visangle: Angle) -> Fixed {
+pub fn scale_from_global_angle(r_main: &RMainState, r_segs: &RSegsState, visangle: Angle) -> Fixed {
     let mut scale: Fixed;
 
-    let anglea: Angle =
-        (ANG90 as Angle).wrapping_add(visangle.wrapping_sub(state.r_main.viewangle));
-    let angleb: Angle =
-        (ANG90 as Angle).wrapping_add(visangle.wrapping_sub(state.r_segs.rw_normalangle));
+    let anglea: Angle = (ANG90 as Angle).wrapping_add(visangle.wrapping_sub(r_main.viewangle));
+    let angleb: Angle = (ANG90 as Angle).wrapping_add(visangle.wrapping_sub(r_segs.rw_normalangle));
     let sinea: i32 = FINESINE[(anglea >> ANGLETOFINESHIFT) as usize];
     let sineb: i32 = FINESINE[(angleb >> ANGLETOFINESHIFT) as usize];
-    let num: Fixed = fixed_mul(state.r_main.projection, sineb as Fixed) << state.r_main.detailshift;
-    let den: i32 = fixed_mul(state.r_segs.rw_distance, sinea as Fixed);
+    let num: Fixed = fixed_mul(r_main.projection, sineb as Fixed) << r_main.detailshift;
+    let den: i32 = fixed_mul(r_segs.rw_distance, sinea as Fixed);
     if den > num >> 16 {
         scale = fixed_div(num, den as Fixed);
         if scale > 64 * FRACUNIT {
@@ -308,45 +308,45 @@ pub fn scale_from_global_angle(state: &GameState, visangle: Angle) -> Fixed {
     }
     scale
 }
-pub fn init_texture_mapping(state: &mut GameState) {
+pub fn init_texture_mapping(r_draw: &RDrawState, r_main: &mut RMainState) {
     let mut i: i32;
     let mut t: i32;
 
     let focallength: Fixed = fixed_div(
-        state.r_main.centerxfrac,
+        r_main.centerxfrac,
         FINETANGENT[(FINEANGLES / 4 + FIELDOFVIEW / 2) as usize],
     );
     for i in 0..FINEANGLES / 2 {
         if FINETANGENT[i as usize] > FRACUNIT * 2 {
             t = -1;
         } else if FINETANGENT[i as usize] < -FRACUNIT * 2 {
-            t = state.r_draw.viewwidth + 1;
+            t = r_draw.viewwidth + 1;
         } else {
             t = fixed_mul(FINETANGENT[i as usize], focallength);
-            t = (state.r_main.centerxfrac - t + FRACUNIT - 1) >> FRACBITS;
+            t = (r_main.centerxfrac - t + FRACUNIT - 1) >> FRACBITS;
             if t < -1 {
                 t = -1;
-            } else if t > state.r_draw.viewwidth + 1 {
-                t = state.r_draw.viewwidth + 1;
+            } else if t > r_draw.viewwidth + 1 {
+                t = r_draw.viewwidth + 1;
             }
         }
-        state.r_main.viewangletox[i as usize] = t;
+        r_main.viewangletox[i as usize] = t;
     }
-    for x in 0..=state.r_draw.viewwidth {
+    for x in 0..=r_draw.viewwidth {
         i = 0;
-        while state.r_main.viewangletox[i as usize] > x {
+        while r_main.viewangletox[i as usize] > x {
             i += 1;
         }
-        state.r_main.xtoviewangle[x as usize] = ((i << ANGLETOFINESHIFT) - ANG90) as Angle;
+        r_main.xtoviewangle[x as usize] = ((i << ANGLETOFINESHIFT) - ANG90) as Angle;
     }
     for i in 0..FINEANGLES / 2 {
-        if state.r_main.viewangletox[i as usize] == -1 {
-            state.r_main.viewangletox[i as usize] = 0;
-        } else if state.r_main.viewangletox[i as usize] == state.r_draw.viewwidth + 1 {
-            state.r_main.viewangletox[i as usize] = state.r_draw.viewwidth;
+        if r_main.viewangletox[i as usize] == -1 {
+            r_main.viewangletox[i as usize] = 0;
+        } else if r_main.viewangletox[i as usize] == r_draw.viewwidth + 1 {
+            r_main.viewangletox[i as usize] = r_draw.viewwidth;
         }
     }
-    state.r_main.clipangle = state.r_main.xtoviewangle[0];
+    r_main.clipangle = r_main.xtoviewangle[0];
 }
 pub const DISTMAP: i32 = 2;
 pub fn init_light_tables(r_main: &mut RMainState) {
@@ -410,7 +410,7 @@ pub fn execute_set_view_size(state: &mut GameState) {
     let scaledviewwidth = state.r_draw.scaledviewwidth;
     let viewheight = state.r_draw.viewheight;
     init_buffer(&mut state.r_draw, scaledviewwidth, viewheight);
-    init_texture_mapping(state);
+    init_texture_mapping(&state.r_draw, &mut state.r_main);
     state.r_things.pspritescale = (FRACUNIT * state.r_draw.viewwidth / SCREENWIDTH) as Fixed;
     state.r_things.pspriteiscale = (FRACUNIT * SCREENWIDTH / state.r_draw.viewwidth) as Fixed;
     for i in 0..state.r_draw.viewwidth {
@@ -505,9 +505,9 @@ pub fn setup_frame(state: &mut GameState, player_id: PlayerId) {
 }
 pub fn render_player_view(state: &mut GameState, player_id: PlayerId) {
     setup_frame(state, player_id);
-    clear_clip_segs(state);
+    clear_clip_segs(&mut state.r_bsp, &state.r_draw);
     clear_draw_segs(&mut state.r_bsp);
-    clear_planes(state);
+    clear_planes(&state.r_draw, &state.r_main, &mut state.r_plane);
     clear_sprites(&mut state.r_things);
     net_update(state);
     let root_bspnum = state.p_setup.numnodes - 1;

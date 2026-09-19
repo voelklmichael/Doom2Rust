@@ -1,9 +1,10 @@
+use crate::i_video::IVideoState;
 use crate::m_argv::parm_exists;
+use crate::m_argv::MArgvState;
 use crate::m_config::bind_variable_int;
 use crate::m_config::bind_variable_string;
 use crate::m_config::MConfigState;
 
-use crate::game_state::GameState;
 use crate::sounds::SfxInfo;
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum SndDevice {
@@ -134,11 +135,16 @@ fn init_sfx_module(state: &mut ISoundState, use_sfx_prefix: bool) {
         }
     }
 }
-pub fn init_sound(state: &mut GameState, use_sfx_prefix: bool) {
-    let nosound: bool = parm_exists(&state.m_argv, "-nosound");
-    let nosfx: bool = parm_exists(&state.m_argv, "-nosfx");
-    if !nosound && !state.i_video.screensaver_mode && !nosfx {
-        init_sfx_module(&mut state.i_sound, use_sfx_prefix);
+pub fn init_sound(
+    i_sound: &mut ISoundState,
+    i_video: &IVideoState,
+    m_argv: &MArgvState,
+    use_sfx_prefix: bool,
+) {
+    let nosound: bool = parm_exists(m_argv, "-nosound");
+    let nosfx: bool = parm_exists(m_argv, "-nosfx");
+    if !nosound && !i_video.screensaver_mode && !nosfx {
+        init_sfx_module(i_sound, use_sfx_prefix);
     }
 }
 pub fn shutdown_sound(state: &ISoundState) {

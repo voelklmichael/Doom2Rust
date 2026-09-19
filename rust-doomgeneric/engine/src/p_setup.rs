@@ -4,7 +4,9 @@ use crate::fixed_cstr::FixedCStr;
 use crate::g_game::death_match_spawn_player;
 use crate::game_state::GameState;
 use crate::i_system::get_memory_value;
+use crate::i_system::ISystemState;
 use crate::m_argv::parm_exists;
+use crate::m_argv::MArgvState;
 use crate::m_bbox::add_to_box;
 use crate::m_bbox::clear_box;
 use crate::m_bbox::BoxIndex;
@@ -284,20 +286,24 @@ pub fn load_vertexes(state: &mut GameState, lump: i32) {
     }
     release_lump_num(&state.w_wad, lump);
 }
-pub fn get_sector_at_null_address(state: &mut GameState) -> SectorId {
-    if state.p_setup.null_sector_id.is_none() {
+pub fn get_sector_at_null_address(
+    i_system: &mut ISystemState,
+    m_argv: &MArgvState,
+    p_setup: &mut PSetupState,
+) -> SectorId {
+    if p_setup.null_sector_id.is_none() {
         let mut sentinel = ZERO_SECTOR;
-        if let Some(value) = get_memory_value(state, 0, 4) {
+        if let Some(value) = get_memory_value(i_system, m_argv, 0, 4) {
             sentinel.floorheight = value as i32;
         }
-        if let Some(value) = get_memory_value(state, 4, 4) {
+        if let Some(value) = get_memory_value(i_system, m_argv, 4, 4) {
             sentinel.ceilingheight = value as i32;
         }
-        let id = SectorId(state.p_setup.sectors.len() as u32);
-        state.p_setup.sectors.push(sentinel);
-        state.p_setup.null_sector_id = Some(id);
+        let id = SectorId(p_setup.sectors.len() as u32);
+        p_setup.sectors.push(sentinel);
+        p_setup.null_sector_id = Some(id);
     }
-    state.p_setup.null_sector_id.unwrap()
+    p_setup.null_sector_id.unwrap()
 }
 pub fn load_segs(state: &mut GameState, lump: i32) {
     let numsegs = (lump_length(&state.w_wad, lump as u32) as usize / MAPSEG_SIZE) as i32;
@@ -318,7 +324,11 @@ pub fn load_segs(state: &mut GameState, lump: i32) {
         let backsector = if ldef.flags.contains(LineFlags::TWOSIDED) {
             let sidenum = ldef.sidenum[(side ^ 1) as usize] as i32;
             if sidenum < 0 || sidenum >= state.p_setup.numsides {
-                Some(get_sector_at_null_address(state))
+                Some(get_sector_at_null_address(
+                    &mut state.i_system,
+                    &state.m_argv,
+                    &mut state.p_setup,
+                ))
             } else {
                 Some(state.p_setup.sides[sidenum as usize].sector)
             }
@@ -368,8 +378,10 @@ pub fn load_sectors(state: &mut GameState, lump: i32) {
         let lightlevel = reader.i16();
         let special = reader.i16();
         let tag = reader.i16();
-        let floorpic = flat_num_for_name(state, &floorpic_name.as_str()) as i16;
-        let ceilingpic = flat_num_for_name(state, &ceilingpic_name.as_str()) as i16;
+        let floorpic =
+            flat_num_for_name(&state.r_data, &state.w_wad, &floorpic_name.as_str()) as i16;
+        let ceilingpic =
+            flat_num_for_name(&state.r_data, &state.w_wad, &ceilingpic_name.as_str()) as i16;
         let ss = &mut state.p_setup.sectors[i];
         ss.floorheight = ((floorheight as i32) << FRACBITS) as Fixed;
         ss.ceilingheight = ((ceilingheight as i32) << FRACBITS) as Fixed;
@@ -712,8 +724,8 @@ pub fn setup_level(state: &mut GameState, episode: i32, map: i32) {
     }
 }
 pub fn p_init(state: &mut GameState) {
-    init_switch_list(state);
-    init_pic_anims(state);
+    init_switch_list(&state.doomstat, &mut state.p_switch, &state.r_data);
+    init_pic_anims(&mut state.p_spec, &state.r_data, &state.w_wad);
     let sprnames = state.info.sprnames;
     init_sprites(state, &sprnames);
 }

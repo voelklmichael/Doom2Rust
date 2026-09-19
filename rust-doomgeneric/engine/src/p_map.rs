@@ -240,7 +240,7 @@ pub fn check_line(state: &mut GameState, ld: LineId) -> bool {
             return false;
         }
     }
-    line_opening(state, ld);
+    line_opening(&mut state.p_maputl, &mut state.p_setup, ld);
     if state.p_maputl.opentop < state.p_map.tmceilingz {
         state.p_map.tmceilingz = state.p_maputl.opentop;
         state.p_map.ceilingline = Some(ld);
@@ -549,7 +549,7 @@ pub fn slide_traverse(state: &mut GameState, intercept: Intercept) -> bool {
     };
     let slidemo = state.p_map.slidemo.unwrap();
     if state.p_setup.line(li).flags.contains(LineFlags::TWOSIDED) {
-        line_opening(state, li);
+        line_opening(&mut state.p_maputl, &mut state.p_setup, li);
         if state.p_maputl.openrange >= state.p_mobj.mo(slidemo).height
             && state.p_maputl.opentop - state.p_mobj.mo(slidemo).z
                 >= state.p_mobj.mo(slidemo).height
@@ -682,7 +682,7 @@ pub fn aim_traverse(state: &mut GameState, intercept: Intercept) -> bool {
         if !liv.flags.contains(LineFlags::TWOSIDED) {
             return false;
         }
-        line_opening(state, li);
+        line_opening(&mut state.p_maputl, &mut state.p_setup, li);
         if state.p_maputl.openbottom >= state.p_maputl.opentop {
             return false;
         }
@@ -768,7 +768,7 @@ pub fn shoot_traverse(state: &mut GameState, intercept: Intercept) -> bool {
             shoot_special_line(state, shootthing, li);
         }
         if state.p_setup.line(li).flags.contains(LineFlags::TWOSIDED) {
-            line_opening(state, li);
+            line_opening(&mut state.p_maputl, &mut state.p_setup, li);
             let dist = fixed_mul(state.p_map.attackrange, intercept.frac);
             // A missing back side (emulated) leaves both openings to check.
             let (check_floor, check_ceiling) = match state.p_setup.line(li).backsector {
@@ -950,7 +950,7 @@ pub fn use_traverse(state: &mut GameState, intercept: Intercept) -> bool {
     };
     let usething = state.p_map.usething.unwrap();
     if state.p_setup.line(li).special == 0 {
-        line_opening(state, li);
+        line_opening(&mut state.p_maputl, &mut state.p_setup, li);
         if state.p_maputl.openrange <= 0 {
             s_start_sound(state, SoundOrigin::Mobj(usething), SfxName::Noway as i32);
             return false;

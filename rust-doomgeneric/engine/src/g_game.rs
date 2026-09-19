@@ -5,6 +5,7 @@ use crate::d_event::EvType;
 use crate::d_event::Event;
 use crate::d_event::GameAction;
 use crate::d_event::GameScreenState;
+use crate::d_loop::DLoopState;
 use crate::d_loop::BACKUPTICS;
 use crate::d_main::advance_demo;
 use crate::d_main::page_ticker;
@@ -38,7 +39,9 @@ use crate::hu_stuff::PLAYER_NAMES;
 use crate::i_system::error;
 use crate::i_system::i_quit;
 use crate::i_timer::get_time;
+use crate::m_argv::MArgvState;
 use crate::m_argv::{argv_atoi, check_parm_with_args, parm_exists};
+use crate::m_controls::MControlsState;
 use crate::m_fixed::Fixed;
 use crate::m_fixed::FRACBITS;
 use crate::m_fixed::FRACUNIT;
@@ -46,6 +49,8 @@ use crate::m_menu::start_control_panel;
 use crate::m_random::clear_random;
 use crate::m_random::p_random;
 use crate::p_mobj::MobjFlags;
+use crate::p_mobj::PMobjState;
+use crate::w_wad::WWadState;
 use alloc::string::String;
 use alloc::string::ToString;
 use alloc::vec::Vec;
@@ -413,47 +418,43 @@ pub const SLOWTURNTICS: i32 = 6;
 pub const NUMKEYS: i32 = 256;
 pub const MAX_JOY_BUTTONS: i32 = 20;
 pub const BODYQUESIZE: i32 = 32;
-fn weapon_selectable(state: &GameState, weapon: WeaponType) -> bool {
+fn weapon_selectable(doomstat: &DoomstatState, g_game: &GGameState, weapon: WeaponType) -> bool {
     if weapon as u32 == WeaponType::Supershotgun as u32
-        && (if state.doomstat.gamemission as u32 == GameMission::PackChex as u32 {
+        && (if doomstat.gamemission as u32 == GameMission::PackChex as u32 {
             GameMission::Doom as u32
-        } else if state.doomstat.gamemission as u32 == GameMission::PackHacx as u32 {
+        } else if doomstat.gamemission as u32 == GameMission::PackHacx as u32 {
             GameMission::Doom2 as u32
         } else {
-            state.doomstat.gamemission as u32
+            doomstat.gamemission as u32
         }) == GameMission::Doom as u32
     {
         return false;
     }
     if (weapon as u32 == WeaponType::Plasma as u32 || weapon as u32 == WeaponType::Bfg as u32)
-        && state.doomstat.gamemission as u32 == GameMission::Doom as u32
-        && state.doomstat.gamemode as u32 == GameMode::Shareware as u32
+        && doomstat.gamemission as u32 == GameMission::Doom as u32
+        && doomstat.gamemode as u32 == GameMode::Shareware as u32
     {
         return false;
     }
-    if !state.g_game.players[state.g_game.consoleplayer as usize].weaponowned[weapon as usize] {
+    if !g_game.players[g_game.consoleplayer as usize].weaponowned[weapon as usize] {
         return false;
     }
     if weapon as u32 == WeaponType::Fist as u32
-        && state.g_game.players[state.g_game.consoleplayer as usize].weaponowned
-            [WeaponType::Chainsaw as usize]
-        && state.g_game.players[state.g_game.consoleplayer as usize].powers
-            [PowerType::Strength as usize]
-            == 0
+        && g_game.players[g_game.consoleplayer as usize].weaponowned[WeaponType::Chainsaw as usize]
+        && g_game.players[g_game.consoleplayer as usize].powers[PowerType::Strength as usize] == 0
     {
         return false;
     }
     true
 }
-fn g_next_weapon(state: &GameState, direction: i32) -> i32 {
+fn g_next_weapon(doomstat: &DoomstatState, g_game: &GGameState, direction: i32) -> i32 {
     let mut i: i32;
-    let weapon: WeaponType = if state.g_game.players[state.g_game.consoleplayer as usize]
-        .pendingweapon as u32
+    let weapon: WeaponType = if g_game.players[g_game.consoleplayer as usize].pendingweapon as u32
         == WeaponType::Nochange as u32
     {
-        state.g_game.players[state.g_game.consoleplayer as usize].readyweapon
+        g_game.players[g_game.consoleplayer as usize].readyweapon
     } else {
-        state.g_game.players[state.g_game.consoleplayer as usize].pendingweapon
+        g_game.players[g_game.consoleplayer as usize].pendingweapon
     };
     i = 0;
     while (i as usize)
@@ -477,7 +478,9 @@ fn g_next_weapon(state: &GameState, direction: i32) -> i32 {
                 ::core::mem::size_of::<[WeaponOrder; 9]>()
                     .wrapping_div(::core::mem::size_of::<WeaponOrder>()),
             ) as i32;
-        if !(i != start_i && !weapon_selectable(state, WEAPON_ORDER_TABLE[i as usize].weapon)) {
+        if !(i != start_i
+            && !weapon_selectable(doomstat, g_game, WEAPON_ORDER_TABLE[i as usize].weapon))
+        {
             break;
         }
     }
@@ -596,7 +599,7 @@ pub fn g_build_ticcmd(state: &mut GameState, cmd: &mut TicCmd, maketic: i32) {
     }
     if state.g_game.gamestate == GameScreenState::Level && state.g_game.next_weapon != 0 {
         let next_weapon = state.g_game.next_weapon;
-        i = g_next_weapon(state, next_weapon);
+        i = g_next_weapon(&state.doomstat, &state.g_game, next_weapon);
         cmd.buttons = (cmd.buttons as i32 | BT_CHANGE) as u8;
         cmd.buttons = (cmd.buttons as i32 | i << BT_WEAPONSHIFT) as u8;
     } else {
@@ -704,7 +707,7 @@ pub fn g_build_ticcmd(state: &mut GameState, cmd: &mut TicCmd, maketic: i32) {
     }
 }
 pub fn do_load_level(state: &mut GameState) {
-    state.r_sky.skyflatnum = flat_num_for_name(state, "F_SKY1");
+    state.r_sky.skyflatnum = flat_num_for_name(&state.r_data, &state.w_wad, "F_SKY1");
     if state.doomstat.gamemode as u32 == GameMode::Commercial as u32
         && [GameVersion::Final2, GameVersion::Chex].contains(&state.doomstat.gameversion)
     {
@@ -749,30 +752,30 @@ pub fn do_load_level(state: &mut GameState) {
             Some("Press escape to quit.".to_string());
     }
 }
-fn set_joy_buttons(state: &mut GameState, buttons_mask: u32) {
+fn set_joy_buttons(g_game: &mut GGameState, m_controls: &MControlsState, buttons_mask: u32) {
     for i in 0..MAX_JOY_BUTTONS {
         let button_on: i32 = (buttons_mask & (1 << i) as u32 != 0) as i32;
-        if !state.g_game.joyarray[(i + 1) as usize] && button_on != 0 {
-            if i == state.m_controls.joybprevweapon {
-                state.g_game.next_weapon = -1;
-            } else if i == state.m_controls.joybnextweapon {
-                state.g_game.next_weapon = 1;
+        if !g_game.joyarray[(i + 1) as usize] && button_on != 0 {
+            if i == m_controls.joybprevweapon {
+                g_game.next_weapon = -1;
+            } else if i == m_controls.joybnextweapon {
+                g_game.next_weapon = 1;
             }
         }
-        state.g_game.joyarray[(i + 1) as usize] = button_on != 0;
+        g_game.joyarray[(i + 1) as usize] = button_on != 0;
     }
 }
-fn set_mouse_buttons(state: &mut GameState, buttons_mask: u32) {
+fn set_mouse_buttons(g_game: &mut GGameState, m_controls: &MControlsState, buttons_mask: u32) {
     for i in 0..MAX_MOUSE_BUTTONS {
         let button_on: u32 = (buttons_mask & (1 << i) as u32 != 0) as u32;
-        if !state.g_game.mousearray[(i + 1) as usize] && button_on != 0 {
-            if i == state.m_controls.mousebprevweapon {
-                state.g_game.next_weapon = -1;
-            } else if i == state.m_controls.mousebnextweapon {
-                state.g_game.next_weapon = 1;
+        if !g_game.mousearray[(i + 1) as usize] && button_on != 0 {
+            if i == m_controls.mousebprevweapon {
+                g_game.next_weapon = -1;
+            } else if i == m_controls.mousebnextweapon {
+                g_game.next_weapon = 1;
             }
         }
-        state.g_game.mousearray[(i + 1) as usize] = button_on != 0;
+        g_game.mousearray[(i + 1) as usize] = button_on != 0;
     }
 }
 pub fn g_responder(state: &mut GameState, ev: Event) -> bool {
@@ -808,7 +811,12 @@ pub fn g_responder(state: &mut GameState, ev: Event) -> bool {
         return false;
     }
     if state.g_game.gamestate == GameScreenState::Level {
-        if hu_responder(state, &ev) {
+        if hu_responder(
+            &mut state.g_game,
+            &mut state.hu_stuff,
+            &state.m_controls,
+            &ev,
+        ) {
             return true;
         }
         if st_responder(state, &ev) {
@@ -845,13 +853,13 @@ pub fn g_responder(state: &mut GameState, ev: Event) -> bool {
             return false;
         }
         2 => {
-            set_mouse_buttons(state, ev.data1 as u32);
+            set_mouse_buttons(&mut state.g_game, &state.m_controls, ev.data1 as u32);
             state.g_game.mousex = ev.data2 * (state.m_menu.mouse_sensitivity + 5) / 10;
             state.g_game.mousey = ev.data3 * (state.m_menu.mouse_sensitivity + 5) / 10;
             return true;
         }
         3 => {
-            set_joy_buttons(state, ev.data1 as u32);
+            set_joy_buttons(&mut state.g_game, &state.m_controls, ev.data1 as u32);
             state.g_game.joyxmove = ev.data2;
             state.g_game.joyymove = ev.data3;
             state.g_game.joystrafemove = ev.data4;
@@ -957,9 +965,9 @@ pub fn g_ticker(state: &mut GameState, netcmds: &[TicCmd]) {
                 1 => {
                     state.g_game.paused = !state.g_game.paused;
                     if state.g_game.paused {
-                        pause_sound(state);
+                        pause_sound(&state.i_sound, &mut state.s_sound);
                     } else {
-                        resume_sound(state);
+                        resume_sound(&state.i_sound, &mut state.s_sound);
                     }
                 }
                 2 => {
@@ -985,7 +993,7 @@ pub fn g_ticker(state: &mut GameState, netcmds: &[TicCmd]) {
         GameScreenState::Level => {
             p_ticker(state);
             st_ticker(state);
-            am_ticker(state);
+            am_ticker(&mut state.am_map, &mut state.g_game, &state.p_mobj);
             hu_ticker(state);
         }
         GameScreenState::Intermission => {
@@ -1000,8 +1008,8 @@ pub fn g_ticker(state: &mut GameState, netcmds: &[TicCmd]) {
         GameScreenState::Wipped => {}
     }
 }
-pub fn player_finish_level(state: &mut GameState, player: i32) {
-    let p = &mut state.g_game.players[player as usize];
+pub fn player_finish_level(g_game: &mut GGameState, p_mobj: &mut PMobjState, player: i32) {
+    let p = &mut g_game.players[player as usize];
     p.powers = [0; 6];
     p.cards = [false; 6];
     let mo_id = p.mo.unwrap();
@@ -1009,7 +1017,7 @@ pub fn player_finish_level(state: &mut GameState, player: i32) {
     p.fixedcolormap = 0;
     p.damagecount = 0;
     p.bonuscount = 0;
-    state.p_mobj.mo_mut(mo_id).flags &= !MobjFlags::SHADOW;
+    p_mobj.mo_mut(mo_id).flags &= !MobjFlags::SHADOW;
 }
 pub fn player_reborn(state: &mut GGameState, player: i32) {
     let old = &state.players[player as usize];
@@ -1165,16 +1173,16 @@ pub fn exit_level(g_game: &mut GGameState) {
     g_game.secretexit = false;
     g_game.gameaction = GameAction::Completed;
 }
-pub fn secret_exit_level(state: &mut GameState) {
-    state.g_game.secretexit = !(state.doomstat.gamemode as u32 == GameMode::Commercial as u32
-        && check_num_for_name(&state.w_wad, "map31").is_none());
-    state.g_game.gameaction = GameAction::Completed;
+pub fn secret_exit_level(doomstat: &DoomstatState, g_game: &mut GGameState, w_wad: &WWadState) {
+    g_game.secretexit = !(doomstat.gamemode as u32 == GameMode::Commercial as u32
+        && check_num_for_name(w_wad, "map31").is_none());
+    g_game.gameaction = GameAction::Completed;
 }
 pub fn do_completed(state: &mut GameState) {
     state.g_game.gameaction = GameAction::Nothing;
     for i in 0..MAXPLAYERS {
         if state.g_game.playeringame[i as usize] {
-            player_finish_level(state, i);
+            player_finish_level(&mut state.g_game, &mut state.p_mobj, i);
         }
     }
     if state.am_map.automapactive {
@@ -1280,7 +1288,7 @@ pub fn do_completed(state: &mut GameState) {
     state.g_game.gamestate = GameScreenState::Intermission;
     state.g_game.viewactive = false;
     state.am_map.automapactive = false;
-    stat_copy(state);
+    stat_copy(&state.g_game, &state.m_argv, &mut state.statdump);
     wi_start(state);
 }
 pub fn world_done(state: &mut GameState) {
@@ -1331,8 +1339,8 @@ pub fn do_load_game(state: &mut GameState) {
     );
     init_new(state, skill, episode, map);
     state.p_tick.leveltime = savedleveltime;
-    un_archive_players(state);
-    un_archive_world(state);
+    un_archive_players(&mut state.g_game, &mut state.p_saveg);
+    un_archive_world(&mut state.p_saveg, &mut state.p_setup);
     un_archive_thinkers(state);
     un_archive_specials(state);
     if !read_save_game_eof(&mut state.p_saveg) {
@@ -1352,15 +1360,15 @@ pub fn g_save_game(g_game: &mut GGameState, slot: i32, description: &str) {
     g_game.sendsave = true;
 }
 pub fn do_save_game(state: &mut GameState) {
-    let temp_savegame_file = temp_save_game_file(state);
+    let temp_savegame_file = temp_save_game_file(&state.d_main, &mut state.p_saveg);
     let savegame_file = save_game_file(&state.d_main, state.g_game.savegameslot);
     state.p_saveg.save_buffer = Vec::new();
     state.p_saveg.save_pos = 0;
     state.p_saveg.savegame_error = false;
     let savedescription = state.g_game.savedescription.clone();
     write_save_game_header(state, &savedescription);
-    archive_players(state);
-    archive_world(state);
+    archive_players(&state.g_game, &mut state.p_saveg);
+    archive_world(&mut state.p_saveg, &mut state.p_setup);
     archive_thinkers(state);
     archive_specials(state);
     write_save_game_eof(&mut state.p_saveg);
@@ -1419,7 +1427,7 @@ pub fn init_new(state: &mut GameState, mut skill: SkillType, mut episode: i32, m
     let skytexturename: &str;
     if state.g_game.paused {
         state.g_game.paused = false;
-        resume_sound(state);
+        resume_sound(&state.i_sound, &mut state.s_sound);
     }
     if skill > SkillType::Nightmare {
         skill = SkillType::Nightmare;
@@ -1558,17 +1566,17 @@ pub fn write_demo_ticcmd(state: &mut GameState, player_num: usize) {
     }
     read_demo_ticcmd(state, player_num);
 }
-pub fn record_demo(state: &mut GameState, name: &str) {
+pub fn record_demo(g_game: &mut GGameState, m_argv: &MArgvState, name: &str) {
     let mut maxsize: i32;
-    state.g_game.usergame = false;
-    state.g_game.demoname = format!("{name}.lmp");
+    g_game.usergame = false;
+    g_game.demoname = format!("{name}.lmp");
     maxsize = 0x20000;
-    if let Some(i) = check_parm_with_args(&state.m_argv, "-maxdemo", 1) {
-        maxsize = argv_atoi(&state.m_argv.myargv[i + 1]) * 1024;
+    if let Some(i) = check_parm_with_args(m_argv, "-maxdemo", 1) {
+        maxsize = argv_atoi(&m_argv.myargv[i + 1]) * 1024;
     }
-    state.g_game.demobuffer = vec![0u8; maxsize as usize];
-    state.g_game.demoend = maxsize as usize;
-    state.g_game.demorecording = true;
+    g_game.demobuffer = vec![0u8; maxsize as usize];
+    g_game.demoend = maxsize as usize;
+    g_game.demorecording = true;
 }
 pub fn vanilla_version_code(state: &DoomstatState) -> i32 {
     match state.gameversion as u32 {
@@ -1672,12 +1680,17 @@ pub fn do_play_demo(state: &mut GameState) {
     state.g_game.usergame = false;
     state.g_game.demoplayback = true;
 }
-pub fn time_demo(state: &mut GameState, name: FixedCStr<8>) {
-    state.g_game.nodrawers = parm_exists(&state.m_argv, "-nodraw");
-    state.g_game.timingdemo = true;
-    state.d_loop.singletics = true;
-    state.g_game.defdemoname = name;
-    state.g_game.gameaction = GameAction::PlayDemo;
+pub fn time_demo(
+    d_loop: &mut DLoopState,
+    g_game: &mut GGameState,
+    m_argv: &MArgvState,
+    name: FixedCStr<8>,
+) {
+    g_game.nodrawers = parm_exists(m_argv, "-nodraw");
+    g_game.timingdemo = true;
+    d_loop.singletics = true;
+    g_game.defdemoname = name;
+    g_game.gameaction = GameAction::PlayDemo;
 }
 pub fn check_demo_status(state: &mut GameState) -> bool {
     let endtime: i32;

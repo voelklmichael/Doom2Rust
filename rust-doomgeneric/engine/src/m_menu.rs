@@ -1,6 +1,9 @@
 use crate::d_event::{Event, GameScreenState};
+use crate::d_loop::DLoopState;
 use crate::d_main::start_title;
+use crate::doomstat::DoomstatState;
 use crate::dstrings::{DOOM1_ENDMSG, DOOM2_ENDMSG};
+use crate::g_game::GGameState;
 use crate::i_system::error;
 use alloc::string::String;
 use alloc::string::ToString;
@@ -719,12 +722,12 @@ pub fn draw_save(state: &mut GameState) {
         write_text(state, text_x, text_y, "_");
     }
 }
-pub fn do_save(state: &mut GameState, slot: i32) {
-    let savegame_name = state.m_menu.savegamestrings[slot as usize].clone();
-    g_save_game(&mut state.g_game, slot, &savegame_name);
-    clear_menus(&mut state.m_menu);
-    if state.m_menu.quick_save_slot == -2 {
-        state.m_menu.quick_save_slot = slot;
+pub fn do_save(g_game: &mut GGameState, m_menu: &mut MMenuState, slot: i32) {
+    let savegame_name = m_menu.savegamestrings[slot as usize].clone();
+    g_save_game(g_game, slot, &savegame_name);
+    clear_menus(m_menu);
+    if m_menu.quick_save_slot == -2 {
+        m_menu.quick_save_slot = slot;
     }
 }
 pub fn save_select(state: &mut GameState, choice: i32) {
@@ -756,7 +759,7 @@ pub fn m_save_game(state: &mut GameState, _choice: i32) {
 pub fn quick_save_response(state: &mut GameState, key: i32) {
     if key == state.m_controls.key_menu_confirm {
         let quick_save_slot = state.m_menu.quick_save_slot;
-        do_save(state, quick_save_slot);
+        do_save(&mut state.g_game, &mut state.m_menu, quick_save_slot);
         s_start_sound(state, SoundOrigin::None, SfxName::Swtchx as i32);
     }
 }
@@ -790,19 +793,19 @@ pub fn quick_load_response(state: &mut GameState, key: i32) {
         s_start_sound(state, SoundOrigin::None, SfxName::Swtchx as i32);
     }
 }
-pub fn quick_load(state: &mut GameState) {
-    if state.g_game.netgame {
+pub fn quick_load(g_game: &GGameState, m_menu: &mut MMenuState) {
+    if g_game.netgame {
         start_message(
-            &mut state.m_menu,
+            m_menu,
             "you can't quickload during a netgame!\n\npress a key.",
             None,
             false,
         );
         return;
     }
-    if state.m_menu.quick_save_slot < 0 {
+    if m_menu.quick_save_slot < 0 {
         start_message(
-            &mut state.m_menu,
+            m_menu,
             "you haven't picked a quicksave slot yet!\n\npress a key.",
             None,
             false,
@@ -811,10 +814,10 @@ pub fn quick_load(state: &mut GameState) {
     }
     let msg = format!(
         "do you want to quickload the game named\n\n'{}'?\n\npress y or n.",
-        state.m_menu.savegamestrings[state.m_menu.quick_save_slot as usize],
+        m_menu.savegamestrings[m_menu.quick_save_slot as usize],
     );
     let routine = Some(quick_load_response as fn(&mut GameState, i32));
-    start_message(&mut state.m_menu, &msg, routine, true);
+    start_message(m_menu, &msg, routine, true);
 }
 pub fn draw_read_this1(state: &mut GameState) {
     let lumpname: &str;
@@ -1058,7 +1061,7 @@ pub fn end_game_response(state: &mut GameState, key: i32) {
     let item_on = state.m_menu.item_on;
     state.m_menu.current_mut().last_on = item_on;
     clear_menus(&mut state.m_menu);
-    start_title(state);
+    start_title(&mut state.d_main, &mut state.g_game);
 }
 pub fn end_game(state: &mut GameState, _choice: i32) {
     if !state.g_game.usergame {
@@ -1140,24 +1143,27 @@ pub fn quit_response(state: &mut GameState, key: i32) {
     }
     i_quit(state);
 }
-fn select_end_message(state: &GameState) -> &'static str {
+fn select_end_message(d_loop: &DLoopState, doomstat: &DoomstatState) -> &'static str {
     let endmsg: &'static [&'static str; 8] =
-        if (if state.doomstat.gamemission as u32 == GameMission::PackChex as i32 as u32 {
+        if (if doomstat.gamemission as u32 == GameMission::PackChex as i32 as u32 {
             GameMission::Doom as i32 as u32
-        } else if state.doomstat.gamemission as u32 == GameMission::PackHacx as i32 as u32 {
+        } else if doomstat.gamemission as u32 == GameMission::PackHacx as i32 as u32 {
             GameMission::Doom2 as i32 as u32
         } else {
-            state.doomstat.gamemission as u32
+            doomstat.gamemission as u32
         }) == GameMission::Doom as i32 as u32
         {
             &DOOM1_ENDMSG
         } else {
             &DOOM2_ENDMSG
         };
-    endmsg[(state.d_loop.gametic % NUM_QUITMESSAGES) as usize]
+    endmsg[(d_loop.gametic % NUM_QUITMESSAGES) as usize]
 }
 pub fn quit_doom(state: &mut GameState, _choice: i32) {
-    let msg = format!("{}\n\n(press y to quit to dos.)", select_end_message(state));
+    let msg = format!(
+        "{}\n\n(press y to quit to dos.)",
+        select_end_message(&state.d_loop, &state.doomstat)
+    );
     let routine = Some(quit_response as fn(&mut GameState, i32));
     start_message(&mut state.m_menu, &msg, routine, true);
     state.m_menu.message_is_quit_prompt = true;
@@ -1416,7 +1422,7 @@ pub fn m_responder(state: &mut GameState, ev: &Event) -> bool {
                 state.m_menu.save_string_enter = 0;
                 if !state.m_menu.savegamestrings[state.m_menu.save_slot as usize].is_empty() {
                     let save_slot = state.m_menu.save_slot;
-                    do_save(state, save_slot);
+                    do_save(&mut state.g_game, &mut state.m_menu, save_slot);
                 }
             }
             _ => {
@@ -1528,7 +1534,7 @@ pub fn m_responder(state: &mut GameState, ev: &Event) -> bool {
             return true;
         } else if key == state.m_controls.key_menu_qload {
             s_start_sound(state, SoundOrigin::None, SfxName::Swtchn as i32);
-            quick_load(state);
+            quick_load(&state.g_game, &mut state.m_menu);
             return true;
         } else if key == state.m_controls.key_menu_quit {
             s_start_sound(state, SoundOrigin::None, SfxName::Swtchn as i32);
@@ -1726,29 +1732,29 @@ pub fn m_ticker(state: &mut GameState) {
         state.m_menu.skull_anim_counter = 8;
     }
 }
-pub fn m_init(state: &mut GameState) {
-    state.m_menu.current_menu = MenuId::Main;
-    state.m_menu.menuactive = false;
-    state.m_menu.item_on = state.m_menu.current().last_on;
-    state.m_menu.which_skull = 0;
-    state.m_menu.skull_anim_counter = 10;
-    state.m_menu.screen_size = state.m_menu.screenblocks - 3;
-    state.m_menu.message_to_print = 0;
-    state.m_menu.message_string = String::new();
-    state.m_menu.message_last_menu_active = state.m_menu.menuactive as i32;
-    state.m_menu.quick_save_slot = -1;
-    match state.doomstat.gamemode as u32 {
+pub fn m_init(doomstat: &DoomstatState, m_menu: &mut MMenuState) {
+    m_menu.current_menu = MenuId::Main;
+    m_menu.menuactive = false;
+    m_menu.item_on = m_menu.current().last_on;
+    m_menu.which_skull = 0;
+    m_menu.skull_anim_counter = 10;
+    m_menu.screen_size = m_menu.screenblocks - 3;
+    m_menu.message_to_print = 0;
+    m_menu.message_string = String::new();
+    m_menu.message_last_menu_active = m_menu.menuactive as i32;
+    m_menu.quick_save_slot = -1;
+    match doomstat.gamemode as u32 {
         2 => {
-            state.m_menu.defs.main_def.items[MainMenu::Readthis as usize] =
-                state.m_menu.defs.main_def.items[MainMenu::Quitdoom as usize];
-            state.m_menu.defs.main_def.numitems -= 1;
-            state.m_menu.defs.main_def.y = (state.m_menu.defs.main_def.y as i32 + 8) as i16;
-            state.m_menu.defs.new_def.prev_menu = Some(MenuId::Main);
+            m_menu.defs.main_def.items[MainMenu::Readthis as usize] =
+                m_menu.defs.main_def.items[MainMenu::Quitdoom as usize];
+            m_menu.defs.main_def.numitems -= 1;
+            m_menu.defs.main_def.y = (m_menu.defs.main_def.y as i32 + 8) as i16;
+            m_menu.defs.new_def.prev_menu = Some(MenuId::Main);
         }
         0 => {}
         _ => {}
     }
-    if !state.doomstat.gameversion.is_ultimate_or_higher() {
-        state.m_menu.defs.epi_def.numitems -= 1;
+    if !doomstat.gameversion.is_ultimate_or_higher() {
+        m_menu.defs.epi_def.numitems -= 1;
     }
 }

@@ -3,6 +3,8 @@ use crate::m_fixed::Fixed;
 use crate::m_fixed::FRACUNIT;
 use crate::p_floor::move_plane;
 use crate::p_floor::ResultE;
+use crate::p_setup::PSetupState;
+use crate::p_tick::PTickState;
 use alloc::boxed::Box;
 use alloc::vec::Vec;
 
@@ -143,7 +145,12 @@ pub fn move_ceiling(state: &mut GameState, id: CeilingId) {
             if res == ResultE::Pastdest {
                 match ceiling.kind {
                     CeilingE::RaiseToHighest => {
-                        remove_active_ceiling(state, id);
+                        remove_active_ceiling(
+                            &mut state.p_ceilng,
+                            &mut state.p_setup,
+                            &state.p_tick,
+                            id,
+                        );
                     }
                     CeilingE::SilentCrushAndRaise => {
                         s_start_sound(
@@ -198,7 +205,12 @@ pub fn move_ceiling(state: &mut GameState, id: CeilingId) {
                         state.p_ceilng.get_mut(id).expect("live ceiling").direction = 1;
                     }
                     CeilingE::LowerAndCrush | CeilingE::LowerToFloor => {
-                        remove_active_ceiling(state, id);
+                        remove_active_ceiling(
+                            &mut state.p_ceilng,
+                            &mut state.p_setup,
+                            &state.p_tick,
+                            id,
+                        );
                     }
                     _ => {}
                 }
@@ -217,23 +229,29 @@ pub fn move_ceiling(state: &mut GameState, id: CeilingId) {
         _ => {}
     }
 }
-pub fn do_ceiling(state: &mut GameState, line: LineId, kind: CeilingE) -> bool {
+pub fn do_ceiling(
+    p_ceilng: &mut PCeilngState,
+    p_setup: &mut PSetupState,
+    p_tick: &mut PTickState,
+    line: LineId,
+    kind: CeilingE,
+) -> bool {
     let mut rtn = false;
     match kind {
         CeilingE::FastCrushAndRaise | CeilingE::SilentCrushAndRaise | CeilingE::CrushAndRaise => {
-            let tag = state.p_setup.line(line).tag as i32;
-            activate_in_stasis_ceiling(state, tag);
+            let tag = p_setup.line(line).tag as i32;
+            activate_in_stasis_ceiling(p_ceilng, p_tick, tag);
         }
         _ => {}
     }
-    for sector in sectors_with_line_tag(&state.p_setup, line) {
+    for sector in sectors_with_line_tag(p_setup, line) {
         let sec = sector;
-        if state.p_setup.sector_mut(sec).specialdata.is_some() {
+        if p_setup.sector_mut(sec).specialdata.is_some() {
             continue;
         }
         rtn = true;
         let (ceilingheight, floorheight, tag) = {
-            let s = state.p_setup.sector_mut(sec);
+            let s = p_setup.sector_mut(sec);
             (s.ceilingheight, s.floorheight, s.tag as i32)
         };
         let mut ceiling = Ceiling::default();
@@ -258,7 +276,7 @@ pub fn do_ceiling(state: &mut GameState, line: LineId, kind: CeilingE) -> bool {
                 lower_block = true;
             }
             CeilingE::RaiseToHighest => {
-                ceiling.topheight = find_highest_ceiling_surrounding(&mut state.p_setup, sec);
+                ceiling.topheight = find_highest_ceiling_surrounding(p_setup, sec);
                 ceiling.direction = 1;
                 ceiling.speed = CEILSPEED as Fixed;
             }
@@ -273,14 +291,14 @@ pub fn do_ceiling(state: &mut GameState, line: LineId, kind: CeilingE) -> bool {
         }
         ceiling.tag = tag;
         ceiling.kind = kind;
-        let ceiling_arena_id = state.p_ceilng.spawn(ceiling);
+        let ceiling_arena_id = p_ceilng.spawn(ceiling);
         let ceiling_id = add_thinker(
-            &mut state.p_tick,
+            p_tick,
             ThinkerPayload::Ceiling(ceiling_arena_id),
             ThinkerKind::Ceiling,
         );
-        state.p_setup.sector_mut(sec).specialdata = Some(SectorSpecial::Ceiling(ceiling_id));
-        add_active_ceiling(&mut state.p_ceilng, ceiling_id);
+        p_setup.sector_mut(sec).specialdata = Some(SectorSpecial::Ceiling(ceiling_id));
+        add_active_ceiling(p_ceilng, ceiling_id);
     }
     rtn
 }
@@ -292,25 +310,30 @@ pub fn add_active_ceiling(state: &mut PCeilngState, id: ThinkerId) {
         }
     }
 }
-pub fn remove_active_ceiling(state: &mut GameState, ceiling_id: CeilingId) {
+pub fn remove_active_ceiling(
+    p_ceilng: &mut PCeilngState,
+    p_setup: &mut PSetupState,
+    p_tick: &PTickState,
+    ceiling_id: CeilingId,
+) {
     for i in 0..MAXCEILINGS as usize {
-        if let Some(id) = state.p_ceilng.activeceilings[i] {
-            if state.p_tick.ceiling_payload(id) == ceiling_id {
-                let c = state.p_ceilng.get_mut(ceiling_id).expect("live ceiling");
+        if let Some(id) = p_ceilng.activeceilings[i] {
+            if p_tick.ceiling_payload(id) == ceiling_id {
+                let c = p_ceilng.get_mut(ceiling_id).expect("live ceiling");
                 let sector = c.sector;
                 remove_thinker(&mut c.thinker);
-                state.p_setup.sector_mut(sector).specialdata = None;
-                state.p_ceilng.activeceilings[i] = None;
+                p_setup.sector_mut(sector).specialdata = None;
+                p_ceilng.activeceilings[i] = None;
                 break;
             }
         }
     }
 }
-pub fn activate_in_stasis_ceiling(state: &mut GameState, tag: i32) {
+pub fn activate_in_stasis_ceiling(p_ceilng: &mut PCeilngState, p_tick: &PTickState, tag: i32) {
     for i in 0..MAXCEILINGS as usize {
-        if let Some(id) = state.p_ceilng.activeceilings[i] {
-            let ceiling_id = state.p_tick.ceiling_payload(id);
-            let c = state.p_ceilng.get_mut(ceiling_id).expect("live ceiling");
+        if let Some(id) = p_ceilng.activeceilings[i] {
+            let ceiling_id = p_tick.ceiling_payload(id);
+            let c = p_ceilng.get_mut(ceiling_id).expect("live ceiling");
             if c.tag == tag && c.direction == 0 {
                 c.direction = c.olddirection;
                 c.thinker.function = ThinkerFn::Ceiling(move_ceiling);
@@ -318,12 +341,12 @@ pub fn activate_in_stasis_ceiling(state: &mut GameState, tag: i32) {
         }
     }
 }
-pub fn ceiling_crush_stop(state: &mut GameState, tag: i32) -> bool {
+pub fn ceiling_crush_stop(p_ceilng: &mut PCeilngState, p_tick: &PTickState, tag: i32) -> bool {
     let mut rtn = false;
     for i in 0..MAXCEILINGS as usize {
-        if let Some(id) = state.p_ceilng.activeceilings[i] {
-            let ceiling_id = state.p_tick.ceiling_payload(id);
-            let c = state.p_ceilng.get_mut(ceiling_id).expect("live ceiling");
+        if let Some(id) = p_ceilng.activeceilings[i] {
+            let ceiling_id = p_tick.ceiling_payload(id);
+            let c = p_ceilng.get_mut(ceiling_id).expect("live ceiling");
             if c.tag == tag && c.direction != 0 {
                 c.olddirection = c.direction;
                 c.thinker.function = ThinkerFn::Paused;

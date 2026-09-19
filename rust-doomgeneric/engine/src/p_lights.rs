@@ -9,6 +9,7 @@ use crate::p_spec::find_min_surrounding_light;
 use crate::p_spec::get_next_sector;
 use crate::p_spec::sectors_with_line_tag;
 use crate::p_tick::add_thinker;
+use crate::p_tick::PTickState;
 use crate::p_tick::ThinkerKind;
 use crate::p_tick::ThinkerPayload;
 use alloc::boxed::Box;
@@ -373,18 +374,23 @@ pub fn fire_flicker(state: &mut GameState, id: FireFlickerId) {
     }
     flick.count = 4;
 }
-pub fn spawn_fire_flicker(state: &mut GameState, sector: SectorId) {
-    state.p_setup.sector_mut(sector).special = 0;
-    let lightlevel = state.p_setup.sector_mut(sector).lightlevel as i32;
+pub fn spawn_fire_flicker(
+    p_lights: &mut PLightsState,
+    p_setup: &mut PSetupState,
+    p_tick: &mut PTickState,
+    sector: SectorId,
+) {
+    p_setup.sector_mut(sector).special = 0;
+    let lightlevel = p_setup.sector_mut(sector).lightlevel as i32;
     let mut flick = FireFlicker::default();
     flick.thinker.function = ThinkerFn::FireFlicker(fire_flicker);
     flick.sector = sector;
     flick.maxlight = lightlevel;
-    flick.minlight = find_min_surrounding_light(&mut state.p_setup, sector, lightlevel) + 16;
+    flick.minlight = find_min_surrounding_light(p_setup, sector, lightlevel) + 16;
     flick.count = 4;
-    let flick_arena_id = state.p_lights.spawn_fireflicker(flick);
+    let flick_arena_id = p_lights.spawn_fireflicker(flick);
     add_thinker(
-        &mut state.p_tick,
+        p_tick,
         ThinkerPayload::FireFlicker(flick_arena_id),
         ThinkerKind::FireFlicker,
     );
@@ -549,21 +555,22 @@ pub fn glow(state: &mut GameState, id: GlowId) {
         _ => {}
     }
 }
-pub fn spawn_glowing_light(state: &mut GameState, sector: SectorId) {
-    let lightlevel = state.p_setup.sector_mut(sector).lightlevel as i32;
+pub fn spawn_glowing_light(
+    p_lights: &mut PLightsState,
+    p_setup: &mut PSetupState,
+    p_tick: &mut PTickState,
+    sector: SectorId,
+) {
+    let lightlevel = p_setup.sector_mut(sector).lightlevel as i32;
     let mut g = Glow {
         sector,
-        minlight: find_min_surrounding_light(&mut state.p_setup, sector, lightlevel),
+        minlight: find_min_surrounding_light(p_setup, sector, lightlevel),
         maxlight: lightlevel,
         ..Glow::default()
     };
     g.thinker.function = ThinkerFn::Glow(glow);
     g.direction = -1;
-    let g_arena_id = state.p_lights.spawn_glow(g);
-    add_thinker(
-        &mut state.p_tick,
-        ThinkerPayload::Glow(g_arena_id),
-        ThinkerKind::Glow,
-    );
-    state.p_setup.sector_mut(sector).special = 0;
+    let g_arena_id = p_lights.spawn_glow(g);
+    add_thinker(p_tick, ThinkerPayload::Glow(g_arena_id), ThinkerKind::Glow);
+    p_setup.sector_mut(sector).special = 0;
 }

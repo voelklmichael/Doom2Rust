@@ -3474,7 +3474,12 @@ pub fn remove_mobj(state: &mut GameState, mobj: MobjId) {
         }
     }
     unset_thing_position(state, mobj);
-    s_stop_sound(state, SoundOrigin::Mobj(mobj));
+    s_stop_sound(
+        &state.i_sound,
+        &mut state.s_sound,
+        &mut state.sounds,
+        SoundOrigin::Mobj(mobj),
+    );
     remove_thinker(&mut state.p_mobj.mo_mut(mobj).thinker);
 }
 pub fn respawn_specials(state: &mut GameState) {

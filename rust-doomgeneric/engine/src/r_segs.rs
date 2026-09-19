@@ -416,7 +416,7 @@ pub fn store_wall_range(state: &mut GameState, start: i32, stop: i32) {
         .r_main
         .viewangle
         .wrapping_add(state.r_main.xtoviewangle[start as usize]);
-    state.r_segs.rw_scale = scale_from_global_angle(state, angle1);
+    state.r_segs.rw_scale = scale_from_global_angle(&state.r_main, &state.r_segs, angle1);
     state.r_bsp.drawsegs[state.r_bsp.ds_p].scale1 = state.r_segs.rw_scale;
     if stop > start {
         state.r_bsp.drawsegs[state.r_bsp.ds_p].scale2 = {
@@ -424,7 +424,7 @@ pub fn store_wall_range(state: &mut GameState, start: i32, stop: i32) {
                 .r_main
                 .viewangle
                 .wrapping_add(state.r_main.xtoviewangle[stop as usize]);
-            scale_from_global_angle(state, angle2)
+            scale_from_global_angle(&state.r_main, &state.r_segs, angle2)
         };
         state.r_segs.rw_scalestep = ((state.r_bsp.drawsegs[state.r_bsp.ds_p].scale2
             - state.r_segs.rw_scale)

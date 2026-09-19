@@ -132,7 +132,7 @@ fn run_until_exit(state: &mut GameState, mut before_tick: impl FnMut(&mut GameSt
 fn world_summary(state: &mut GameState) -> String {
     let mut mobj_hash = FNV_OFFSET;
     let mut count = 0;
-    for id in mobj_thinker_ids(state) {
+    for id in mobj_thinker_ids(&state.p_mobj, &state.p_tick) {
         let m = state.p_mobj.mo(id);
         mobj_hash = fnv(
             mobj_hash,
@@ -345,10 +345,12 @@ fn use_special_line_trace() -> Option<String> {
                 let actor = if player_uses {
                     state.g_game.players[0].mo.unwrap()
                 } else {
-                    mobj_thinker_ids(state).into_iter().find(|&id| {
-                        let m = state.p_mobj.mo(id);
-                        m.player.is_none() && m.flags.contains(MobjFlags::COUNTKILL)
-                    })?
+                    mobj_thinker_ids(&state.p_mobj, &state.p_tick)
+                        .into_iter()
+                        .find(|&id| {
+                            let m = state.p_mobj.mo(id);
+                            m.player.is_none() && m.flags.contains(MobjFlags::COUNTKILL)
+                        })?
                 };
                 state.p_setup.line_mut(line).special = special;
                 state.p_setup.line_mut(line).tag = tag;

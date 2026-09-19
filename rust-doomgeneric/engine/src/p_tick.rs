@@ -5,6 +5,7 @@ use crate::p_ceilng::CeilingId;
 use crate::p_doors::DoorId;
 use crate::p_lights::{FireFlickerId, GlowId, LightFlashId, StrobeId};
 use crate::p_mobj::respawn_specials;
+use crate::p_mobj::PMobjState;
 use crate::p_mobj::{MobjId, Thinker, ThinkerFn};
 use crate::p_plats::PlatId;
 use crate::p_spec::update_specials;
@@ -222,19 +223,16 @@ pub fn thinker_function(state: &mut GameState, id: ThinkerId) -> ThinkerFn {
 
 // Every mobj that is still an active Mobj thinker (not yet Removed), in
 // thinker-list order.
-pub fn mobj_thinker_ids(state: &GameState) -> Vec<MobjId> {
+pub fn mobj_thinker_ids(p_mobj: &PMobjState, p_tick: &PTickState) -> Vec<MobjId> {
     let mut out = Vec::new();
-    let mut cursor = state.p_tick.head();
+    let mut cursor = p_tick.head();
     while let Some(id) = cursor {
-        if let ThinkerPayload::Mobj(mobj_id) = state.p_tick.payload(id) {
-            if matches!(
-                state.p_mobj.mo(mobj_id).thinker.function,
-                ThinkerFn::Mobj(_)
-            ) {
+        if let ThinkerPayload::Mobj(mobj_id) = p_tick.payload(id) {
+            if matches!(p_mobj.mo(mobj_id).thinker.function, ThinkerFn::Mobj(_)) {
                 out.push(mobj_id);
             }
         }
-        cursor = state.p_tick.next(id);
+        cursor = p_tick.next(id);
     }
     out
 }

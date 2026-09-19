@@ -5,6 +5,7 @@ use crate::doomdef::SCREENHEIGHT;
 use crate::doomdef::SCREENWIDTH;
 use crate::doomdef::TICRATE;
 use crate::g_game::world_done;
+use crate::g_game::GGameState;
 use crate::game_state::GameState;
 use crate::m_random::m_random;
 use crate::s_sound::change_music;
@@ -1459,26 +1460,26 @@ pub fn draw_stats(state: &mut GameState) {
         draw_time(state, SCREENWIDTH - SP_TIMEX, SP_TIMEY, cnt_par);
     }
 }
-pub fn check_for_accelerate(state: &mut GameState) {
+pub fn check_for_accelerate(g_game: &mut GGameState, wi_stuff: &mut WiStuffState) {
     for i in 0..(MAXPLAYERS as usize) {
-        if state.g_game.playeringame[i] {
-            let player = &state.g_game.players[i];
+        if g_game.playeringame[i] {
+            let player = &g_game.players[i];
             if player.cmd.buttons as i32 & BT_ATTACK != 0 {
                 if !player.attackdown {
-                    state.wi_stuff.acceleratestage = true;
+                    wi_stuff.acceleratestage = true;
                 }
-                state.g_game.players[i].attackdown = true;
+                g_game.players[i].attackdown = true;
             } else {
-                state.g_game.players[i].attackdown = false;
+                g_game.players[i].attackdown = false;
             }
-            let player = &state.g_game.players[i];
+            let player = &g_game.players[i];
             if player.cmd.buttons as i32 & BT_USE != 0 {
                 if !player.usedown {
-                    state.wi_stuff.acceleratestage = true;
+                    wi_stuff.acceleratestage = true;
                 }
-                state.g_game.players[i].usedown = true;
+                g_game.players[i].usedown = true;
             } else {
-                state.g_game.players[i].usedown = false;
+                g_game.players[i].usedown = false;
             }
         }
     }
@@ -1492,7 +1493,7 @@ pub fn wi_ticker(state: &mut GameState) {
             change_music(state, MusicName::Inter as i32, true);
         }
     }
-    check_for_accelerate(state);
+    check_for_accelerate(&mut state.g_game, &mut state.wi_stuff);
     match state.wi_stuff.state {
         StateEnum::StatCount => {
             if state.g_game.deathmatch != 0 {

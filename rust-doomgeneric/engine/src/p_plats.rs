@@ -6,6 +6,8 @@ use crate::m_fixed::FRACUNIT;
 use crate::m_random::p_random;
 use crate::p_floor::move_plane;
 use crate::p_floor::ResultE;
+use crate::p_setup::PSetupState;
+use crate::p_tick::PTickState;
 use alloc::boxed::Box;
 use alloc::vec::Vec;
 
@@ -167,10 +169,20 @@ pub fn plat_raise(state: &mut GameState, id: PlatId) {
                 );
                 match plat.kind {
                     PlattypeE::BlazeDWUS | PlattypeE::DownWaitUpStay => {
-                        remove_active_plat(state, id);
+                        remove_active_plat(
+                            &mut state.p_plats,
+                            &mut state.p_setup,
+                            &state.p_tick,
+                            id,
+                        );
                     }
                     PlattypeE::RaiseAndChange | PlattypeE::RaiseToNearestAndChange => {
-                        remove_active_plat(state, id);
+                        remove_active_plat(
+                            &mut state.p_plats,
+                            &mut state.p_setup,
+                            &state.p_tick,
+                            id,
+                        );
                     }
                     PlattypeE::PerpetualRaise => {}
                 }
@@ -213,7 +225,7 @@ pub fn do_plat(state: &mut GameState, line: LineId, kind: PlattypeE, amount: i32
     let linev = state.p_setup.line(line);
     let mut rtn = false;
     if kind == PlattypeE::PerpetualRaise {
-        activate_in_stasis(state, linev.tag as i32);
+        activate_in_stasis(&mut state.p_plats, &state.p_tick, linev.tag as i32);
     }
     for sector in sectors_with_line_tag(&state.p_setup, line) {
         let sec = sector;
@@ -304,11 +316,11 @@ pub fn do_plat(state: &mut GameState, line: LineId, kind: PlattypeE, amount: i32
     }
     rtn
 }
-pub fn activate_in_stasis(state: &mut GameState, tag: i32) {
+pub fn activate_in_stasis(p_plats: &mut PPlatsState, p_tick: &PTickState, tag: i32) {
     for i in 0..MAXPLATS as usize {
-        if let Some(id) = state.p_plats.activeplats[i] {
-            let plat_id = state.p_tick.plat_payload(id);
-            let p = state.p_plats.get_mut(plat_id).expect("live plat");
+        if let Some(id) = p_plats.activeplats[i] {
+            let plat_id = p_tick.plat_payload(id);
+            let p = p_plats.get_mut(plat_id).expect("live plat");
             if p.tag == tag && p.status == PlatE::InStasis {
                 p.status = p.oldstatus;
                 p.thinker.function = ThinkerFn::Plat(plat_raise);
@@ -316,11 +328,11 @@ pub fn activate_in_stasis(state: &mut GameState, tag: i32) {
         }
     }
 }
-pub fn stop_plat(state: &mut GameState, tag: i32) {
+pub fn stop_plat(p_plats: &mut PPlatsState, p_tick: &PTickState, tag: i32) {
     for j in 0..MAXPLATS as usize {
-        if let Some(id) = state.p_plats.activeplats[j] {
-            let plat_id = state.p_tick.plat_payload(id);
-            let p = state.p_plats.get_mut(plat_id).expect("live plat");
+        if let Some(id) = p_plats.activeplats[j] {
+            let plat_id = p_tick.plat_payload(id);
+            let p = p_plats.get_mut(plat_id).expect("live plat");
             if p.status != PlatE::InStasis && p.tag == tag {
                 p.oldstatus = p.status;
                 p.status = PlatE::InStasis;
@@ -338,15 +350,20 @@ pub fn add_active_plat(state: &mut PPlatsState, id: ThinkerId) {
     }
     error("P_AddActivePlat: no more plats!");
 }
-pub fn remove_active_plat(state: &mut GameState, plat_id: PlatId) {
+pub fn remove_active_plat(
+    p_plats: &mut PPlatsState,
+    p_setup: &mut PSetupState,
+    p_tick: &PTickState,
+    plat_id: PlatId,
+) {
     for i in 0..MAXPLATS as usize {
-        if let Some(id) = state.p_plats.activeplats[i] {
-            if state.p_tick.plat_payload(id) == plat_id {
-                let p = state.p_plats.get_mut(plat_id).expect("live plat");
+        if let Some(id) = p_plats.activeplats[i] {
+            if p_tick.plat_payload(id) == plat_id {
+                let p = p_plats.get_mut(plat_id).expect("live plat");
                 let sector = p.sector;
                 remove_thinker(&mut p.thinker);
-                state.p_setup.sector_mut(sector).specialdata = None;
-                state.p_plats.activeplats[i] = None;
+                p_setup.sector_mut(sector).specialdata = None;
+                p_plats.activeplats[i] = None;
                 return;
             }
         }

@@ -4,6 +4,9 @@ use crate::i_system::error;
 use crate::m_fixed::fixed_div;
 use crate::m_fixed::fixed_mul;
 use crate::m_fixed::Fixed;
+use crate::r_draw::RDrawState;
+use crate::r_main::RMainState;
+use crate::r_sky::RSkyState;
 
 use crate::r_data::get_column;
 use crate::r_defs::VisPlane;
@@ -123,44 +126,45 @@ pub fn map_plane(state: &mut GameState, y: i32, x1: i32, x2: i32) {
     state.r_draw.ds_x2 = x2;
     state.r_main.spanfunc.expect("non-null function pointer")(state);
 }
-pub fn clear_planes(state: &mut GameState) {
-    for i in 0..state.r_draw.viewwidth {
-        state.r_plane.floorclip[i as usize] = state.r_draw.viewheight as i16;
-        state.r_plane.ceilingclip[i as usize] = -1_i16;
+pub fn clear_planes(r_draw: &RDrawState, r_main: &RMainState, r_plane: &mut RPlaneState) {
+    for i in 0..r_draw.viewwidth {
+        r_plane.floorclip[i as usize] = r_draw.viewheight as i16;
+        r_plane.ceilingclip[i as usize] = -1_i16;
     }
-    state.r_plane.lastvisplane = 0;
-    state.r_plane.lastopening = 0;
-    state.r_plane.cachedheight = [0; 200];
-    let angle: Angle = state.r_main.viewangle.wrapping_sub(ANG90 as Angle) >> ANGLETOFINESHIFT;
-    state.r_plane.basexscale = fixed_div(FINECOSINE[angle as usize], state.r_main.centerxfrac);
-    state.r_plane.baseyscale = -fixed_div(FINESINE[angle as usize], state.r_main.centerxfrac);
+    r_plane.lastvisplane = 0;
+    r_plane.lastopening = 0;
+    r_plane.cachedheight = [0; 200];
+    let angle: Angle = r_main.viewangle.wrapping_sub(ANG90 as Angle) >> ANGLETOFINESHIFT;
+    r_plane.basexscale = fixed_div(FINECOSINE[angle as usize], r_main.centerxfrac);
+    r_plane.baseyscale = -fixed_div(FINESINE[angle as usize], r_main.centerxfrac);
 }
 pub fn find_plane(
-    state: &mut GameState,
+    r_plane: &mut RPlaneState,
+    r_sky: &RSkyState,
     mut height: Fixed,
     picnum: i32,
     mut lightlevel: i32,
 ) -> usize {
     let mut check: usize = 0;
-    if picnum == state.r_sky.skyflatnum {
+    if picnum == r_sky.skyflatnum {
         height = 0;
         lightlevel = 0;
     }
-    while check < state.r_plane.lastvisplane {
-        let pl = state.r_plane.visplanes[check];
+    while check < r_plane.lastvisplane {
+        let pl = r_plane.visplanes[check];
         if height == pl.height && picnum == pl.picnum && lightlevel == pl.lightlevel {
             break;
         }
         check += 1;
     }
-    if check < state.r_plane.lastvisplane {
+    if check < r_plane.lastvisplane {
         return check;
     }
-    if state.r_plane.lastvisplane == MAXVISPLANES as usize {
+    if r_plane.lastvisplane == MAXVISPLANES as usize {
         error("R_FindPlane: no more visplanes");
     }
-    state.r_plane.lastvisplane += 1;
-    let pl = &mut state.r_plane.visplanes[check];
+    r_plane.lastvisplane += 1;
+    let pl = &mut r_plane.visplanes[check];
     pl.height = height;
     pl.picnum = picnum;
     pl.lightlevel = lightlevel;

@@ -4,6 +4,9 @@ use crate::m_fixed::FRACUNIT;
 use crate::m_fixed::INT_MAX;
 use crate::p_map::p_change_sector;
 use crate::p_mobj::LineFlags;
+use crate::p_setup::PSetupState;
+use crate::p_spec::PSpecState;
+use crate::p_tick::PTickState;
 
 use crate::p_mobj::SectorSpecial;
 use crate::p_mobj::ThinkerFn;
@@ -357,30 +360,43 @@ pub fn do_floor(state: &mut GameState, line: LineId, floortype: FloorE) -> bool 
     }
     rtn
 }
-fn spawn_stair(state: &mut GameState, sec: SectorId, speed: Fixed, height: i32) {
+fn spawn_stair(
+    p_setup: &mut PSetupState,
+    p_spec: &mut PSpecState,
+    p_tick: &mut PTickState,
+    sec: SectorId,
+    speed: Fixed,
+    height: i32,
+) {
     let mut floor = FloorMove::default();
     floor.thinker.function = ThinkerFn::Floor(move_floor);
     floor.direction = 1;
     floor.sector = sec;
     floor.speed = speed;
     floor.floordestheight = height as Fixed;
-    let floor_arena_id = state.p_spec.spawn_floor(floor);
+    let floor_arena_id = p_spec.spawn_floor(floor);
     let floor_id = add_thinker(
-        &mut state.p_tick,
+        p_tick,
         ThinkerPayload::Floor(floor_arena_id),
         ThinkerKind::Floor,
     );
-    state.p_setup.sector_mut(sec).specialdata = Some(SectorSpecial::Floor(floor_id));
+    p_setup.sector_mut(sec).specialdata = Some(SectorSpecial::Floor(floor_id));
 }
-pub fn build_stairs(state: &mut GameState, line: LineId, kind: StairE) -> bool {
+pub fn build_stairs(
+    p_setup: &mut PSetupState,
+    p_spec: &mut PSpecState,
+    p_tick: &mut PTickState,
+    line: LineId,
+    kind: StairE,
+) -> bool {
     let mut rtn = false;
     let mut secnum: i32 = -1;
     // `secnum` is advanced inside the body, so the scan resumes after the
     // staircase just built (as vanilla does); a plain for loop would not.
-    while let Some(next) = find_sector_from_line_tag(&state.p_setup, line, secnum) {
+    while let Some(next) = find_sector_from_line_tag(p_setup, line, secnum) {
         secnum = next;
         let mut sec = SectorId(secnum as u32);
-        if state.p_setup.sector_mut(sec).specialdata.is_some() {
+        if p_setup.sector_mut(sec).specialdata.is_some() {
             continue;
         }
         rtn = true;
@@ -388,21 +404,21 @@ pub fn build_stairs(state: &mut GameState, line: LineId, kind: StairE) -> bool {
             StairE::Build8 => ((FLOORSPEED / 4) as Fixed, (8 * FRACUNIT) as Fixed),
             StairE::Turbo16 => ((FLOORSPEED * 4) as Fixed, (16 * FRACUNIT) as Fixed),
         };
-        let mut height: i32 = state.p_setup.sector_mut(sec).floorheight + stairsize;
-        let texture = state.p_setup.sector_mut(sec).floorpic as i32;
-        spawn_stair(state, sec, speed, height);
+        let mut height: i32 = p_setup.sector_mut(sec).floorheight + stairsize;
+        let texture = p_setup.sector_mut(sec).floorpic as i32;
+        spawn_stair(p_setup, p_spec, p_tick, sec, speed, height);
         loop {
             let mut found = false;
-            let linecount = state.p_setup.sector_mut(sec).linecount;
+            let linecount = p_setup.sector_mut(sec).linecount;
             for i in 0..linecount {
-                let line_id = state.p_setup.sector_mut(sec).lines[i as usize];
-                let iline = state.p_setup.line(line_id);
+                let line_id = p_setup.sector_mut(sec).lines[i as usize];
+                let iline = p_setup.line(line_id);
                 if iline.flags.contains(LineFlags::TWOSIDED) {
                     let front_id = iline.frontsector.unwrap();
                     if secnum == front_id.0 as i32 {
                         let back_id = iline.backsector.unwrap();
                         let (back_pic, back_free) = {
-                            let tsec = state.p_setup.sector_mut(back_id);
+                            let tsec = p_setup.sector_mut(back_id);
                             (tsec.floorpic as i32, tsec.specialdata.is_none())
                         };
                         if back_pic == texture {
@@ -410,7 +426,7 @@ pub fn build_stairs(state: &mut GameState, line: LineId, kind: StairE) -> bool {
                             if back_free {
                                 sec = back_id;
                                 secnum = back_id.0 as i32;
-                                spawn_stair(state, sec, speed, height);
+                                spawn_stair(p_setup, p_spec, p_tick, sec, speed, height);
                                 found = true;
                                 break;
                             }

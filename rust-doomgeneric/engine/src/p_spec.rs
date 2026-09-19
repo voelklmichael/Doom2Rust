@@ -2,6 +2,8 @@ use crate::d_player::CheatFlags;
 use crate::d_player::PowerType;
 use crate::p_mobj::LineFlags;
 use crate::p_setup::PSetupState;
+use crate::r_data::RDataState;
+use crate::w_wad::WWadState;
 
 use crate::fixed_cstr::FixedCStr;
 use crate::g_game::exit_level;
@@ -446,29 +448,29 @@ pub static ANIMDEFS: [AnimDef; 22] = [
     },
 ];
 pub const MAXLINEANIMS: i32 = 64;
-pub fn init_pic_anims(state: &mut GameState) {
-    state.p_spec.lastanim = 0;
+pub fn init_pic_anims(p_spec: &mut PSpecState, r_data: &RDataState, w_wad: &WWadState) {
+    p_spec.lastanim = 0;
     for def in &ANIMDEFS {
         let startname = def.startname.as_str();
         let endname = def.endname.as_str();
         let (picnum, basepic) = if def.istexture {
-            if check_texture_num_for_name(&state.r_data, &startname).is_none() {
+            if check_texture_num_for_name(r_data, &startname).is_none() {
                 continue;
             }
             (
-                texture_num_for_name(&state.r_data, &endname),
-                texture_num_for_name(&state.r_data, &startname),
+                texture_num_for_name(r_data, &endname),
+                texture_num_for_name(r_data, &startname),
             )
         } else {
-            if check_num_for_name(&state.w_wad, &startname).is_none() {
+            if check_num_for_name(w_wad, &startname).is_none() {
                 continue;
             }
             (
-                flat_num_for_name(state, &endname),
-                flat_num_for_name(state, &startname),
+                flat_num_for_name(r_data, w_wad, &endname),
+                flat_num_for_name(r_data, w_wad, &startname),
             )
         };
-        let anim = &mut state.p_spec.anims[state.p_spec.lastanim];
+        let anim = &mut p_spec.anims[p_spec.lastanim];
         anim.picnum = picnum;
         anim.basepic = basepic;
         anim.istexture = def.istexture;
@@ -479,7 +481,7 @@ pub fn init_pic_anims(state: &mut GameState) {
             ));
         }
         anim.speed = def.speed;
-        state.p_spec.lastanim += 1;
+        p_spec.lastanim += 1;
     }
 }
 pub fn get_side(
@@ -683,11 +685,23 @@ pub fn cross_special_line(state: &mut GameState, linenum: i32, side: i32, thing:
             state.p_setup.line_mut(line).special = 0;
         }
         6 => {
-            do_ceiling(state, line, CeilingE::FastCrushAndRaise);
+            do_ceiling(
+                &mut state.p_ceilng,
+                &mut state.p_setup,
+                &mut state.p_tick,
+                line,
+                CeilingE::FastCrushAndRaise,
+            );
             state.p_setup.line_mut(line).special = 0;
         }
         8 => {
-            build_stairs(state, line, StairE::Build8);
+            build_stairs(
+                &mut state.p_setup,
+                &mut state.p_spec,
+                &mut state.p_tick,
+                line,
+                StairE::Build8,
+            );
             state.p_setup.line_mut(line).special = 0;
         }
         10 => {
@@ -719,7 +733,13 @@ pub fn cross_special_line(state: &mut GameState, linenum: i32, side: i32, thing:
             state.p_setup.line_mut(line).special = 0;
         }
         25 => {
-            do_ceiling(state, line, CeilingE::CrushAndRaise);
+            do_ceiling(
+                &mut state.p_ceilng,
+                &mut state.p_setup,
+                &mut state.p_tick,
+                line,
+                CeilingE::CrushAndRaise,
+            );
             state.p_setup.line_mut(line).special = 0;
         }
         30 => {
@@ -747,12 +767,24 @@ pub fn cross_special_line(state: &mut GameState, linenum: i32, side: i32, thing:
             state.p_setup.line_mut(line).special = 0;
         }
         40 => {
-            do_ceiling(state, line, CeilingE::RaiseToHighest);
+            do_ceiling(
+                &mut state.p_ceilng,
+                &mut state.p_setup,
+                &mut state.p_tick,
+                line,
+                CeilingE::RaiseToHighest,
+            );
             do_floor(state, line, FloorE::LowerFloorToLowest);
             state.p_setup.line_mut(line).special = 0;
         }
         44 => {
-            do_ceiling(state, line, CeilingE::LowerAndCrush);
+            do_ceiling(
+                &mut state.p_ceilng,
+                &mut state.p_setup,
+                &mut state.p_tick,
+                line,
+                CeilingE::LowerAndCrush,
+            );
             state.p_setup.line_mut(line).special = 0;
         }
         52 => {
@@ -763,7 +795,11 @@ pub fn cross_special_line(state: &mut GameState, linenum: i32, side: i32, thing:
             state.p_setup.line_mut(line).special = 0;
         }
         54 => {
-            stop_plat(state, state.p_setup.line(line).tag as i32);
+            stop_plat(
+                &mut state.p_plats,
+                &state.p_tick,
+                state.p_setup.line(line).tag as i32,
+            );
             state.p_setup.line_mut(line).special = 0;
         }
         56 => {
@@ -771,7 +807,11 @@ pub fn cross_special_line(state: &mut GameState, linenum: i32, side: i32, thing:
             state.p_setup.line_mut(line).special = 0;
         }
         57 => {
-            ceiling_crush_stop(state, state.p_setup.line(line).tag as i32);
+            ceiling_crush_stop(
+                &mut state.p_ceilng,
+                &state.p_tick,
+                state.p_setup.line(line).tag as i32,
+            );
             state.p_setup.line_mut(line).special = 0;
         }
         58 => {
@@ -795,7 +835,13 @@ pub fn cross_special_line(state: &mut GameState, linenum: i32, side: i32, thing:
             state.p_setup.line_mut(line).special = 0;
         }
         100 => {
-            build_stairs(state, line, StairE::Turbo16);
+            build_stairs(
+                &mut state.p_setup,
+                &mut state.p_spec,
+                &mut state.p_tick,
+                line,
+                StairE::Turbo16,
+            );
             state.p_setup.line_mut(line).special = 0;
         }
         110 => {
@@ -811,7 +857,7 @@ pub fn cross_special_line(state: &mut GameState, linenum: i32, side: i32, thing:
             state.p_setup.line_mut(line).special = 0;
         }
         124 => {
-            secret_exit_level(state);
+            secret_exit_level(&state.doomstat, &mut state.g_game, &state.w_wad);
         }
         125 => {
             if state.p_mobj.mo(thing).player.is_none() {
@@ -824,17 +870,39 @@ pub fn cross_special_line(state: &mut GameState, linenum: i32, side: i32, thing:
             state.p_setup.line_mut(line).special = 0;
         }
         141 => {
-            do_ceiling(state, line, CeilingE::SilentCrushAndRaise);
+            do_ceiling(
+                &mut state.p_ceilng,
+                &mut state.p_setup,
+                &mut state.p_tick,
+                line,
+                CeilingE::SilentCrushAndRaise,
+            );
             state.p_setup.line_mut(line).special = 0;
         }
         72 => {
-            do_ceiling(state, line, CeilingE::LowerAndCrush);
+            do_ceiling(
+                &mut state.p_ceilng,
+                &mut state.p_setup,
+                &mut state.p_tick,
+                line,
+                CeilingE::LowerAndCrush,
+            );
         }
         73 => {
-            do_ceiling(state, line, CeilingE::CrushAndRaise);
+            do_ceiling(
+                &mut state.p_ceilng,
+                &mut state.p_setup,
+                &mut state.p_tick,
+                line,
+                CeilingE::CrushAndRaise,
+            );
         }
         74 => {
-            ceiling_crush_stop(state, state.p_setup.line(line).tag as i32);
+            ceiling_crush_stop(
+                &mut state.p_ceilng,
+                &state.p_tick,
+                state.p_setup.line(line).tag as i32,
+            );
         }
         75 => {
             do_door(state, line, VldoorE::Close);
@@ -843,7 +911,13 @@ pub fn cross_special_line(state: &mut GameState, linenum: i32, side: i32, thing:
             do_door(state, line, VldoorE::Close30ThenOpen);
         }
         77 => {
-            do_ceiling(state, line, CeilingE::FastCrushAndRaise);
+            do_ceiling(
+                &mut state.p_ceilng,
+                &mut state.p_setup,
+                &mut state.p_tick,
+                line,
+                CeilingE::FastCrushAndRaise,
+            );
         }
         79 => {
             light_turn_on(&mut state.p_setup, line, 35);
@@ -873,7 +947,11 @@ pub fn cross_special_line(state: &mut GameState, linenum: i32, side: i32, thing:
             do_plat(state, line, PlattypeE::DownWaitUpStay, 0);
         }
         89 => {
-            stop_plat(state, state.p_setup.line(line).tag as i32);
+            stop_plat(
+                &mut state.p_plats,
+                &state.p_tick,
+                state.p_setup.line(line).tag as i32,
+            );
         }
         90 => {
             do_door(state, line, VldoorE::Normal);
@@ -1199,13 +1277,23 @@ pub fn spawn_specials(state: &mut GameState) {
                     state.p_setup.sector_mut(secid).special = 4;
                 }
                 8 => {
-                    spawn_glowing_light(state, secid);
+                    spawn_glowing_light(
+                        &mut state.p_lights,
+                        &mut state.p_setup,
+                        &mut state.p_tick,
+                        secid,
+                    );
                 }
                 9 => {
                     state.g_game.totalsecret += 1;
                 }
                 10 => {
-                    spawn_door_close_in30(state, secid);
+                    spawn_door_close_in30(
+                        &mut state.p_doors,
+                        &mut state.p_setup,
+                        &mut state.p_tick,
+                        secid,
+                    );
                 }
                 12 => {
                     spawn_strobe_flash(state, secid, SLOWDARK, 1);
@@ -1214,10 +1302,20 @@ pub fn spawn_specials(state: &mut GameState) {
                     spawn_strobe_flash(state, secid, FASTDARK, 1);
                 }
                 14 => {
-                    spawn_door_raise_in5_mins(state, secid);
+                    spawn_door_raise_in5_mins(
+                        &mut state.p_doors,
+                        &mut state.p_setup,
+                        &mut state.p_tick,
+                        secid,
+                    );
                 }
                 17 => {
-                    spawn_fire_flicker(state, secid);
+                    spawn_fire_flicker(
+                        &mut state.p_lights,
+                        &mut state.p_setup,
+                        &mut state.p_tick,
+                        secid,
+                    );
                 }
                 _ => {}
             }

@@ -102,7 +102,7 @@ fn init_connect_data(state: &mut GameState, connect_data: &mut NetConnectData) {
     connect_data.gamemission = state.doomstat.gamemission as i32;
     connect_data.lowres_turn =
         (parm_exists(&state.m_argv, "-record") && !parm_exists(&state.m_argv, "-longtics")) as i32;
-    connect_data.wad_sha1sum = checksum(state);
+    connect_data.wad_sha1sum = checksum(&mut state.w_checksum, &state.w_wad);
     connect_data.is_freedoom = check_num_for_name(&state.w_wad, "FREEDOOM").is_some();
 }
 pub fn connect_net_game(state: &mut GameState) {
@@ -117,7 +117,7 @@ pub fn connect_net_game(state: &mut GameState) {
         player_class: 0,
     };
     init_connect_data(state, &mut connect_data);
-    state.g_game.netgame = init_net_game(state, &connect_data);
+    state.g_game.netgame = init_net_game(&mut state.d_loop, &mut state.i_system, &connect_data);
     if parm_exists(&state.m_argv, "-solo-net") {
         state.g_game.netgame = true;
     }

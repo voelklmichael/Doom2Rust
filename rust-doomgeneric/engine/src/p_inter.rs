@@ -7,6 +7,7 @@ use crate::d_player::PowerType;
 use crate::d_player::WeaponType;
 use crate::g_game::GGameState;
 use crate::p_mobj::MobjFlags;
+use crate::p_mobj::PMobjState;
 
 use crate::d_player::{ammotype_from_raw, AmmoType, NUMAMMO};
 use crate::d_player::{Player, PlayerId, PlayerState};
@@ -201,8 +202,13 @@ pub fn give_weapon(
     }
     gaveweapon || gaveammo
 }
-pub fn give_body(state: &mut GameState, player_id: PlayerId, num: i32) -> bool {
-    let player = &mut state.g_game.players[player_id.0 as usize];
+pub fn give_body(
+    g_game: &mut GGameState,
+    p_mobj: &mut PMobjState,
+    player_id: PlayerId,
+    num: i32,
+) -> bool {
+    let player = &mut g_game.players[player_id.0 as usize];
     if player.health >= MAXHEALTH {
         return false;
     }
@@ -211,7 +217,7 @@ pub fn give_body(state: &mut GameState, player_id: PlayerId, num: i32) -> bool {
         player.health = MAXHEALTH;
     }
     let player_mo = player.mo.unwrap();
-    state.p_mobj.mo_mut(player_mo).health = player.health;
+    p_mobj.mo_mut(player_mo).health = player.health;
     true
 }
 pub fn give_armor(player: &mut Player, armortype: i32) -> bool {
@@ -230,34 +236,39 @@ pub fn give_card(player: &mut Player, card: CardType) {
     player.bonuscount = BONUSADD;
     player.cards[card as usize] = true;
 }
-pub fn give_power(state: &mut GameState, player: PlayerId, power: i32) -> bool {
+pub fn give_power(
+    g_game: &mut GGameState,
+    p_mobj: &mut PMobjState,
+    player: PlayerId,
+    power: i32,
+) -> bool {
     if power == PowerType::Invulnerability as i32 {
-        state.g_game.players[player.0 as usize].powers[power as usize] = INVULNTICS;
+        g_game.players[player.0 as usize].powers[power as usize] = INVULNTICS;
         return true;
     }
     if power == PowerType::Invisibility as i32 {
-        state.g_game.players[player.0 as usize].powers[power as usize] = INVISTICS;
-        let player_mo = state.g_game.players[player.0 as usize].mo.unwrap();
-        state.p_mobj.mo_mut(player_mo).flags |= MobjFlags::SHADOW;
+        g_game.players[player.0 as usize].powers[power as usize] = INVISTICS;
+        let player_mo = g_game.players[player.0 as usize].mo.unwrap();
+        p_mobj.mo_mut(player_mo).flags |= MobjFlags::SHADOW;
         return true;
     }
     if power == PowerType::Infrared as i32 {
-        state.g_game.players[player.0 as usize].powers[power as usize] = INFRATICS;
+        g_game.players[player.0 as usize].powers[power as usize] = INFRATICS;
         return true;
     }
     if power == PowerType::Ironfeet as i32 {
-        state.g_game.players[player.0 as usize].powers[power as usize] = IRONTICS;
+        g_game.players[player.0 as usize].powers[power as usize] = IRONTICS;
         return true;
     }
     if power == PowerType::Strength as i32 {
-        give_body(state, player, 100);
-        state.g_game.players[player.0 as usize].powers[power as usize] = 1;
+        give_body(g_game, p_mobj, player, 100);
+        g_game.players[player.0 as usize].powers[power as usize] = 1;
         return true;
     }
-    if state.g_game.players[player.0 as usize].powers[power as usize] != 0 {
+    if g_game.players[player.0 as usize].powers[power as usize] != 0 {
         return false;
     }
-    state.g_game.players[player.0 as usize].powers[power as usize] = 1;
+    g_game.players[player.0 as usize].powers[power as usize] = 1;
     true
 }
 pub fn touch_special_thing(state: &mut GameState, special: MobjId, toucher: MobjId) {
@@ -410,14 +421,14 @@ pub fn touch_special_thing(state: &mut GameState, special: MobjId, toucher: Mobj
             }
         }
         68 => {
-            if !give_body(state, player, 10) {
+            if !give_body(&mut state.g_game, &mut state.p_mobj, player, 10) {
                 return;
             }
             state.g_game.players[player.0 as usize].message =
                 Some("Picked up a stimpack.".to_string());
         }
         69 => {
-            if !give_body(state, player, 25) {
+            if !give_body(&mut state.g_game, &mut state.p_mobj, player, 25) {
                 return;
             }
             if state.g_game.players[player.0 as usize].health < 25 {
@@ -429,14 +440,24 @@ pub fn touch_special_thing(state: &mut GameState, special: MobjId, toucher: Mobj
             }
         }
         71 => {
-            if !give_power(state, player, PowerType::Invulnerability as i32) {
+            if !give_power(
+                &mut state.g_game,
+                &mut state.p_mobj,
+                player,
+                PowerType::Invulnerability as i32,
+            ) {
                 return;
             }
             state.g_game.players[player.0 as usize].message = Some("Invulnerability!".to_string());
             sound = SfxName::Getpow as i32;
         }
         72 => {
-            if !give_power(state, player, PowerType::Strength as i32) {
+            if !give_power(
+                &mut state.g_game,
+                &mut state.p_mobj,
+                player,
+                PowerType::Strength as i32,
+            ) {
                 return;
             }
             state.g_game.players[player.0 as usize].message = Some("Berserk!".to_string());
@@ -448,7 +469,12 @@ pub fn touch_special_thing(state: &mut GameState, special: MobjId, toucher: Mobj
             sound = SfxName::Getpow as i32;
         }
         73 => {
-            if !give_power(state, player, PowerType::Invisibility as i32) {
+            if !give_power(
+                &mut state.g_game,
+                &mut state.p_mobj,
+                player,
+                PowerType::Invisibility as i32,
+            ) {
                 return;
             }
             state.g_game.players[player.0 as usize].message =
@@ -456,7 +482,12 @@ pub fn touch_special_thing(state: &mut GameState, special: MobjId, toucher: Mobj
             sound = SfxName::Getpow as i32;
         }
         75 => {
-            if !give_power(state, player, PowerType::Ironfeet as i32) {
+            if !give_power(
+                &mut state.g_game,
+                &mut state.p_mobj,
+                player,
+                PowerType::Ironfeet as i32,
+            ) {
                 return;
             }
             state.g_game.players[player.0 as usize].message =
@@ -464,14 +495,24 @@ pub fn touch_special_thing(state: &mut GameState, special: MobjId, toucher: Mobj
             sound = SfxName::Getpow as i32;
         }
         76 => {
-            if !give_power(state, player, PowerType::Allmap as i32) {
+            if !give_power(
+                &mut state.g_game,
+                &mut state.p_mobj,
+                player,
+                PowerType::Allmap as i32,
+            ) {
                 return;
             }
             state.g_game.players[player.0 as usize].message = Some("Computer Area Map".to_string());
             sound = SfxName::Getpow as i32;
         }
         77 => {
-            if !give_power(state, player, PowerType::Infrared as i32) {
+            if !give_power(
+                &mut state.g_game,
+                &mut state.p_mobj,
+                player,
+                PowerType::Infrared as i32,
+            ) {
                 return;
             }
             state.g_game.players[player.0 as usize].message =

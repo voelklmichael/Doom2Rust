@@ -4,6 +4,7 @@ use crate::i_system::console_stdout;
 use crate::i_system::error;
 use crate::m_fixed::Fixed;
 use crate::m_fixed::FRACBITS;
+use crate::w_wad::WWadState;
 use alloc::boxed::Box;
 use alloc::vec::Vec;
 
@@ -461,13 +462,13 @@ pub fn init_textures(state: &mut GameState) {
     }
     generate_texture_hash_table(&mut state.r_data);
 }
-pub fn init_flats(state: &mut GameState) {
-    state.r_data.firstflat = get_num_for_name(&state.w_wad, "F_START") + 1;
-    state.r_data.lastflat = get_num_for_name(&state.w_wad, "F_END") - 1;
-    state.r_data.numflats = state.r_data.lastflat - state.r_data.firstflat + 1;
-    state.r_data.flattranslation = vec![0; (state.r_data.numflats + 1) as usize];
-    for i in 0..state.r_data.numflats {
-        state.r_data.flattranslation[i as usize] = i;
+pub fn init_flats(r_data: &mut RDataState, w_wad: &WWadState) {
+    r_data.firstflat = get_num_for_name(w_wad, "F_START") + 1;
+    r_data.lastflat = get_num_for_name(w_wad, "F_END") - 1;
+    r_data.numflats = r_data.lastflat - r_data.firstflat + 1;
+    r_data.flattranslation = vec![0; (r_data.numflats + 1) as usize];
+    for i in 0..r_data.numflats {
+        r_data.flattranslation[i as usize] = i;
     }
 }
 pub fn init_sprite_lumps(state: &mut GameState) {
@@ -505,16 +506,16 @@ pub fn init_colormaps(state: &mut GameState) {
 pub fn r_init_data(state: &mut GameState) {
     init_textures(state);
     doom_print!(state.platform, ".");
-    init_flats(state);
+    init_flats(&mut state.r_data, &state.w_wad);
     doom_print!(state.platform, ".");
     init_sprite_lumps(state);
     doom_print!(state.platform, ".");
     init_colormaps(state);
 }
-pub fn flat_num_for_name(state: &GameState, name: &str) -> i32 {
-    let i = check_num_for_name(&state.w_wad, name)
+pub fn flat_num_for_name(r_data: &RDataState, w_wad: &WWadState, name: &str) -> i32 {
+    let i = check_num_for_name(w_wad, name)
         .unwrap_or_else(|| error(&format!("R_FlatNumForName: {name} not found")));
-    i - state.r_data.firstflat
+    i - r_data.firstflat
 }
 /// The number of the texture called `name`, if there is one (`-` means "no
 /// texture" and is texture 0).
@@ -577,7 +578,7 @@ pub fn precache_level(state: &mut GameState) {
         }
     }
     spritepresent = vec![0u8; state.r_things.numsprites as usize];
-    for mobj_id in mobj_thinker_ids(state) {
+    for mobj_id in mobj_thinker_ids(&state.p_mobj, &state.p_tick) {
         spritepresent[state.p_mobj.mo(mobj_id).sprite as usize] = 1;
     }
     state.r_data.spritememory = 0;

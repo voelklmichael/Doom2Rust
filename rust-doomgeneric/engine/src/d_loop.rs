@@ -5,6 +5,7 @@ use crate::dummy::NET_CLIENT_CONNECTED;
 use crate::game_state::GameState;
 use crate::i_system::at_exit;
 use crate::i_system::error;
+use crate::i_system::ISystemState;
 use crate::i_timer::get_time;
 use crate::i_timer::get_time_ms;
 use crate::i_timer::sleep;
@@ -225,14 +226,18 @@ pub fn start_net_game(d_loop: &mut DLoopState, settings: &mut NetGameSettings) {
     d_loop.ticdup = settings.ticdup;
     d_loop.new_sync = settings.new_sync != 0;
 }
-pub fn init_net_game(state: &mut GameState, connect_data: &NetConnectData) -> bool {
+pub fn init_net_game(
+    d_loop: &mut DLoopState,
+    i_system: &mut ISystemState,
+    connect_data: &NetConnectData,
+) -> bool {
     let result: bool = false;
     at_exit(
-        &mut state.i_system,
+        i_system,
         Some(quit_net_game as fn(&mut GameState) -> ()),
         true,
     );
-    state.d_loop.player_class = connect_data.player_class;
+    d_loop.player_class = connect_data.player_class;
     result
 }
 pub fn quit_net_game(_state: &mut GameState) {}
