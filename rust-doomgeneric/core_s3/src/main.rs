@@ -56,7 +56,7 @@ fn game_stack() -> &'static mut Stack<GAME_STACK_SIZE> {
 }
 
 const WAIT_FOR_ADDRESS: Duration = Duration::from_secs(20);
-const SHOW_ADDRESS: Duration = Duration::from_secs(5);
+const SHOW_ADDRESS: Duration = Duration::from_secs(3);
 
 fn show(display: &mut CoreS3Display, lines: &[&str]) {
     display.clear(Rgb565::BLACK).expect("clear LCD");
@@ -104,8 +104,13 @@ async fn main(spawner: Spawner) {
         .expect("display");
 
     show(&mut display, &["CoreS3 DOOM", "starting Wi-Fi..."]);
+    // What the game keeps showing in its top bar once it is running.
+    let mut status = String::<40>::new();
     match net::start(spawner, peripherals.WIFI) {
-        None => show(&mut display, &["CoreS3 DOOM", "Wi-Fi not configured", "no network input"]),
+        None => {
+            show(&mut display, &["CoreS3 DOOM", "Wi-Fi not configured", "no network input"]);
+            let _ = write!(status, "no Wi-Fi");
+        }
         Some(stack) => match with_timeout(WAIT_FOR_ADDRESS, stack.wait_config_up()).await {
             Ok(()) => {
                 let mut address = String::<40>::new();
@@ -116,11 +121,13 @@ async fn main(spawner: Spawner) {
                 let _ = write!(port, "port {DEFAULT_PORT}");
                 println!("wifi: address {address}, controller port {DEFAULT_PORT}");
                 show(&mut display, &["CoreS3 DOOM", "controller address:", &address, &port]);
+                let _ = write!(status, "{address}:{DEFAULT_PORT}");
                 Timer::after(SHOW_ADDRESS).await;
             }
             Err(_) => {
                 println!("wifi: no address after {WAIT_FOR_ADDRESS:?}; starting the game anyway");
                 show(&mut display, &["CoreS3 DOOM", "no Wi-Fi yet", "still retrying"]);
+                let _ = write!(status, "no Wi-Fi yet");
                 Timer::after(SHOW_ADDRESS).await;
             }
         },
@@ -134,7 +141,7 @@ async fn main(spawner: Spawner) {
         game_stack(),
         move || {
             let state = init_game_state(
-                Box::new(CoreS3Platform::new(display)),
+                Box::new(CoreS3Platform::new(display, status)),
                 Box::new(EmbeddedWad::new("doom1.wad", WAD)),
             );
             println!(

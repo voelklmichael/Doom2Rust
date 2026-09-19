@@ -1,7 +1,7 @@
 //! `DoomPlatform` for the CoreS3: LCD output, a millisecond clock and the serial console.
 //! Input arrives over Wi-Fi (see `net`).
 
-use core_s3::bsp::CoreS3Display;
+use core_s3::{bsp::CoreS3Display, ui::Label};
 use core_s3_protocol::Command;
 use embedded_graphics::{
     pixelcolor::Rgb565,
@@ -10,6 +10,7 @@ use embedded_graphics::{
 };
 use esp_hal::{delay::Delay, time::Instant};
 use esp_println::print;
+use heapless::String;
 use rust_doomgeneric::DoomPlatform;
 
 use crate::net;
@@ -39,12 +40,14 @@ pub struct CoreS3Platform {
     display: CoreS3Display,
     /// Pixels per row of the engine's frame buffer, set in `init`.
     stride: usize,
+    /// Shown in the top black bar, which the game never draws over (e.g. the controller address).
+    status: String<40>,
     stats: FrameStats,
 }
 
 impl CoreS3Platform {
-    pub fn new(display: CoreS3Display) -> Self {
-        Self { display, stride: DOOM_WIDTH, stats: FrameStats::default() }
+    pub fn new(display: CoreS3Display, status: String<40>) -> Self {
+        Self { display, stride: DOOM_WIDTH, status, stats: FrameStats::default() }
     }
 }
 
@@ -85,6 +88,9 @@ impl DoomPlatform for CoreS3Platform {
     fn init(&mut self, resx: i32, _resy: i32) {
         self.stride = resx as usize;
         self.display.clear(Rgb565::BLACK).expect("clear LCD");
+        Label { text: &self.status, top_left: Point::new(4, 5), color: Rgb565::CYAN }
+            .draw(&mut self.display)
+            .expect("draw status");
     }
 
     fn draw_frame(&mut self, frame: &[u32]) {

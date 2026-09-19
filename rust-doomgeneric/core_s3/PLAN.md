@@ -7,7 +7,7 @@ Bare-metal (`no_std`, `esp-hal`) firmware for the [CoreS3 Lite](https://docs.m5s
 1. **Board bring-up, something on the LCD.** DONE, confirmed on hardware (2026-09-19).
 2. **Demo playback**: run the engine with no input, showing the demo. WAD embedded via
    `include_bytes!`. DONE, confirmed on hardware (2026-09-19).
-3. **Input**: control the game from the touch screen. Not started.
+3. **Input over Wi-Fi**: control the game from a PC over TCP. DONE, confirmed on hardware (2026-09-19).
 
 ## Running it
 
@@ -15,6 +15,15 @@ Bare-metal (`no_std`, `esp-hal`) firmware for the [CoreS3 Lite](https://docs.m5s
 source ~/export-esp.sh          # puts the Xtensa linker on PATH
 cd core_s3
 cargo run --release             # builds, flashes, opens the serial monitor
+```
+
+Wi-Fi input needs credentials: copy `wifi.env.example` to `wifi.env` (gitignored) and fill in
+`WIFI_SSID` / `WIFI_PASSWORD`; `build.rs` compiles them into the image (so treat the built `.elf` /
+`.bin` as sensitive). Without them the firmware still runs the demos with Wi-Fi off. Only WPA2 (or
+WPA/WPA2 mixed) networks work. Then, from the repo root, with the address shown at the top of the LCD:
+
+```bash
+cargo run -p core_s3_sender -- 192.168.68.103      # port 7878 unless given as host:port
 ```
 
 One-off host setup: `cargo install espup espflash --locked`, `espup install --targets esp32s3`,
@@ -70,9 +79,34 @@ renderer itself. Speed was judged good enough for now; profile there first if it
 **Known oddity:** the engine prints `Demo is from a different game version! (read 108, should be
 109)` once during the demo loop and then carries on. Not investigated.
 
-## Milestone 3: input (outline)
+## Milestone 3: input over Wi-Fi
 
-The engine polls `DoomPlatform::get_key` on every tic, so the plan is a blocking read of the
-touch controller there (FT6336U, over the BSP's internal I2C bus), mapped to key events, likely
-as on-screen buttons. No async executor is needed for that. One thing to design first: the BSP
-owns the internal I2C handle, which `main.rs` currently just holds.
+**Protocol** (`../core_s3_protocol`, shared by firmware and sender): a plain TCP stream on port 7878
+where every byte is one command. Bit 7 = 1 means "released", bits 0-6 are the command code (forward,
+turn, strafe, fire, use, run, menu keys, weapons 1-7). Press and release are separate so a held key
+stays held exactly as long as the sender says. Unknown codes are ignored.
+
+**Sender** (`../core_s3_sender`): reads the keyboard in a terminal (arrows or WASD, Q/E strafe, Space
+fire, F use, 1-7 weapons, Tab map, Enter/Esc/Y/N, R toggles run, Ctrl-C quits). Terminals with the
+kitty keyboard protocol report real key releases; others get releases after `--hold-ms` (default 150).
+The key mapping, hold tracking and the TCP path are unit tested; the terminal glue is not.
+
+**Firmware layout**
+- Core 0: esp-rtos scheduler plus an embassy executor running the Wi-Fi station (reconnects on drop),
+  DHCP and the TCP command server (`net.rs`). One controller at a time; keep-alive frees the slot if it
+  vanishes, and any keys it held are released on disconnect.
+- Core 1: builds and runs the game (`main.rs`), reading events through `get_key()`.
+- The controller address is shown on the LCD while starting and stays in the top black bar.
+
+**Things learned the hard way**
+- Building the engine state by value (290 KB) overflowed the main thread's stack once esp-rtos and the
+  Wi-Fi heap took internal RAM: esp-hal's stack guard shows up as "Unhandled interrupt" in `memset`. The
+  game therefore runs on core 1 on a 1 MiB stack allocated from PSRAM.
+- The allocator uses the first region that fits, so PSRAM is added to the heap first (the game lands
+  there) and the two internal regions second (the radio asks for internal RAM explicitly).
+- A board sitting in the panic handler cannot be reflashed: `espflash` hangs at "Connecting...". Hold
+  reset ~3 s until the green LED lights to enter download mode.
+- `wifi.env` is read by `build.rs` from the crate directory; edit that file, not `wifi.env.example`.
+
+**Not done / ideas:** no on-device key-echo or connection indicator beyond serial logs; the performance
+work from milestone 2 still applies (about 3 fps).
