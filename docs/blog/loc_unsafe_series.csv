@@ -1,0 +1,393 @@
+commit_index,sha,date,rust_code_lines,rust_total_lines,unsafe_lines,unsafe_fn,unsafe_blocks,static_mut,raw_pointer_tokens,c_type_tokens,as_casts,libc_refs,tests,subject
+0,7e80b4e,2026-09-05T11:47:38+02:00,0,0,0,0,0,0,0,0,0,0,0,added doomgeneric
+1,706008c,2026-09-05T11:57:26+02:00,0,0,0,0,0,0,0,0,0,0,0,docs for buildign/runnig c version
+2,a8802f2,2026-09-05T11:59:03+02:00,0,0,0,0,0,0,0,0,0,0,0,adding c-binary to gitignore
+3,588b5ed,2026-09-05T12:30:16+02:00,145160,145167,48430,1426,244,1639,10456,52321,15243,8,0,Merge pull request #1 from voelklmichael/c2rust-transpile-x11
+4,edf8108,2026-09-06T10:11:39+02:00,131636,131723,46021,1384,65,986,6059,3325,49824,8,0,Merge pull request #68 from voelklmichael/bool-phase19-tier4plus
+5,62acb6b,2026-09-06T10:35:03+02:00,131627,131714,46007,1382,65,986,6059,3325,49820,8,0,Merge pull request #70 from voelklmichael/m-fixed-simplify
+6,e7a72f4,2026-09-06T10:35:46+02:00,131626,131713,45987,1379,65,981,6056,3325,28819,8,0,Merge pull request #69 from voelklmichael/finecosine-index
+7,96412d1,2026-09-06T10:46:10+02:00,131347,131434,45987,1379,65,981,6056,3325,28819,8,0,Merge pull request #71 from voelklmichael/const-dedup-phase1-pu-tags
+8,c46be93,2026-09-06T13:30:43+02:00,117072,117159,45878,1270,65,974,5704,3010,28819,73,0,Merge pull request #93 from voelklmichael/type-dedup-phase10-stdint-types
+9,c41eaf4,2026-09-06T14:23:42+02:00,117033,117119,45864,1262,65,974,5703,3010,28811,73,0,Merge pull request #99 from voelklmichael/extern-fnptr-phase5-loop-interface
+10,40e9831,2026-09-06T14:33:33+02:00,117025,117111,45860,1262,65,974,5703,3010,28767,73,0,Merge pull request #100 from voelklmichael/bool-locals-phase1
+11,c287d0a,2026-09-06T15:17:43+02:00,117023,117109,45860,1262,65,974,5703,3010,28764,73,0,Merge pull request #101 from voelklmichael/bool-fields-phase1
+12,b633c86,2026-09-06T15:49:13+02:00,116519,116605,45452,1184,65,974,5614,3001,28723,65,0,Merge pull request #102 from voelklmichael/action-enum-phase1-core
+13,828b3f0,2026-09-06T18:55:45+02:00,80965,81051,45449,1182,65,974,5565,2908,28079,65,0,Merge pull request #116 from voelklmichael/extern-c-removal-phase3-private-fns
+14,2fce3b0,2026-09-06T19:25:41+02:00,80875,80961,45379,1153,65,974,5557,2907,28073,65,0,Merge pull request #117 from voelklmichael/dead-code-removal-empty-body-fns
+15,a0ece51,2026-09-06T19:32:17+02:00,80875,80961,45379,1153,65,974,5557,2907,27964,65,0,Merge pull request #119 from voelklmichael/static-cast-cleanup-phase1
+16,cacba95,2026-09-06T19:46:18+02:00,80886,80981,45382,1154,65,976,5557,2907,27964,65,0,Merge pull request #120 from voelklmichael/gamestate-phase0-infra
+17,22b4f38,2026-09-06T21:39:59+02:00,80886,80981,45382,1154,65,976,5557,2907,27964,65,0,Capture Track 17 idea: typed arena indices instead of raw pointer returns
+18,9df617f,2026-09-06T21:47:14+02:00,81225,81397,45258,1142,477,893,5555,2905,27959,65,0,Merge pull request #138 from voelklmichael/gamestate-phase17-i-sound
+19,33c6538,2026-09-06T22:15:35+02:00,60135,60292,41342,1142,475,893,5544,2905,27841,65,0,Merge pull request #139 from voelklmichael/minor_event_references
+20,ed69455,2026-09-06T22:58:54+02:00,60370,60527,41557,1142,590,892,5543,2905,27840,65,0,"Track 16 phase 18: z_zone.rs's mainzone, the Z_Malloc/Z_Free allocator hub"
+21,a62250b,2026-09-06T23:02:44+02:00,60385,60542,41525,1142,596,890,5543,2905,27840,65,0,Track 16 phase 19: two small read-only/local-static cleanups
+22,a88d369,2026-09-06T23:09:01+02:00,60723,60880,41813,1142,695,886,5540,2905,27837,65,0,Track 16 phase 20: v_video.rs's patch-drawing hub (tinttable/xlatab/dest_screen/dirtybox)
+23,c2557cf,2026-09-06T23:17:46+02:00,60750,60907,41861,1142,880,881,5540,2905,27837,65,0,Track 16 phase 21: doomstat.rs's game-identification hub
+24,0fc6f42,2026-09-06T23:30:05+02:00,60883,61040,41902,1142,880,861,5540,2905,27837,65,0,"Track 16 phase 22: i_scale.rs, the flagged 5th atomic dispatch hub"
+25,89eeba8,2026-09-06T23:36:12+02:00,61092,61258,42095,1140,1026,857,5540,2903,27833,65,0,"Track 16 phase 23: m_config.rs's doom_defaults/extra_defaults pair, deferred since phase 5"
+26,414f10a,2026-09-06T23:51:45+02:00,61375,61556,42342,1140,1423,798,5540,2903,27833,65,0,"Track 16 phase 24: the p_map/p_enemy/p_maputl cluster, where PIT_*/PTR_* lives"
+27,57d0db1,2026-09-06T23:56:46+02:00,61422,61605,42381,1140,1484,795,5540,2903,27833,65,0,Track 16 phase 25: w_wad.rs's lump directory (lumpinfo/numlumps/lumphash)
+28,e3ca99f,2026-09-07T00:02:20+02:00,61444,61630,42387,1140,1514,785,5540,2903,27833,65,0,Track 16 phase 26: p_spec.rs's texture-animation and special-line tables
+29,6e95f67,2026-09-07T00:07:22+02:00,61572,61760,42505,1140,1655,762,5540,2903,27833,65,0,Track 16 phase 27: p_inter.rs's ammo tables + r_things.rs's sprite-rendering state
+30,d0b2ff4,2026-09-07T00:17:39+02:00,61729,61921,42614,1140,1896,723,5540,2903,27833,65,0,Track 16 phase 28: d_loop.rs's game-loop timing + hu_stuff.rs's HUD/chat widgets
+31,b22ebcb,2026-09-07T00:23:41+02:00,61810,62008,42674,1140,1955,719,5540,2903,27833,65,0,Track 16 phase 29: m_argv.rs's command-line args + r_sky.rs's sky texture state
+32,c64a18d,2026-09-07T00:33:59+02:00,61872,62075,42698,1140,2000,703,5540,2903,27833,65,0,Track 16 phase 30: p_saveg.rs's save-file state + i_system.rs's exit/crash-dump state
+33,36ed69d,2026-09-07T06:20:27+02:00,61907,62119,42709,1140,2239,593,5532,2903,27825,65,0,"Track 16 phase 31: m_controls.rs, all 109 keybinding config variables"
+34,21d1c1a,2026-09-07T06:30:27+02:00,62308,62522,43161,1140,3175,512,5532,2903,27825,65,0,"Track 16 phase 32: g_game.rs, the biggest hub in the codebase"
+35,cd5335b,2026-09-07T06:45:16+02:00,62597,62825,43501,1140,3479,449,5532,2903,27825,65,0,"Track 16 phase 33: m_menu.rs, the menu system (and a real regression fix)"
+36,b58e43d,2026-09-07T06:52:07+02:00,62597,62825,43499,1140,3477,448,5532,2903,27825,65,0,"Track 16 phase 34: fix two more instances of the per-file-static shadow bug, plus a phase 28 leftover"
+37,906ae81,2026-09-07T07:05:14+02:00,62657,62888,43499,1140,3867,385,5532,2903,27825,65,0,Phase 35: thread am_map.rs into GameState
+38,4ba7459,2026-09-07T07:12:31+02:00,62718,62952,43494,1140,4196,325,5532,2903,27825,65,0,Phase 36: thread st_stuff.rs into GameState
+39,64e39f5,2026-09-07T07:20:04+02:00,62789,63027,43487,1140,4615,271,5531,2903,27824,65,0,Phase 37: thread wi_stuff.rs into GameState
+40,756d785,2026-09-07T07:26:03+02:00,62772,63013,43529,1140,4844,236,5531,2903,27824,65,0,Phase 38: thread r_main.rs into GameState
+41,c2f8eee,2026-09-07T07:29:53+02:00,62783,63027,43529,1140,5059,203,5531,2903,27824,65,0,Phase 39: thread r_segs.rs into GameState
+42,51dc357,2026-09-07T07:33:40+02:00,62765,63012,43529,1140,5421,171,5531,2903,27824,65,0,Phase 40: thread r_draw.rs into GameState
+43,d0e866d,2026-09-07T07:40:34+02:00,62777,63027,43523,1140,5564,140,5531,2903,27824,65,0,"Phase 41: thread d_main.rs into GameState, permanently resolving the phase-34 oldgamestate shadow-collision workaround"
+44,1fe98b2,2026-09-07T07:49:26+02:00,62755,63018,43385,1140,5876,112,5531,2903,27824,65,0,Phase 42: thread p_setup.rs into GameState
+45,16a2954,2026-09-07T07:54:15+02:00,62759,63025,43385,1140,6016,85,5531,2903,27824,65,0,Phase 43: thread r_data.rs into GameState
+46,d041482,2026-09-07T07:58:13+02:00,62768,63037,43385,1140,6122,63,5531,2903,27824,65,0,Phase 44: thread r_plane.rs into GameState
+47,1184a37,2026-09-07T08:01:51+02:00,62775,63047,43385,1140,6312,53,5531,2903,27824,65,0,Phase 45: thread r_bsp.rs into GameState
+48,bc46ca8,2026-09-07T08:05:11+02:00,62788,63063,43385,1140,6378,46,5531,2903,27824,65,0,Phase 46: thread s_sound.rs into GameState
+49,cb67931,2026-09-07T08:09:14+02:00,62796,63074,43385,1140,6486,35,5531,2903,27824,65,0,Phase 47: thread i_video.rs into GameState
+50,91d89e0,2026-09-07T08:14:15+02:00,62803,63084,43376,1137,6531,29,5528,2903,27821,65,0,Phase 48: thread f_wipe.rs into GameState
+51,7336899,2026-09-07T08:17:53+02:00,62801,63085,43376,1137,6587,27,5528,2903,27821,65,0,Phase 49: thread p_tick.rs into GameState
+52,12e0d7e,2026-09-07T08:24:02+02:00,62802,63089,43376,1137,6646,24,5528,2903,27821,65,0,Phase 50: thread info.rs's sprnames/states/mobjinfo into GameState
+53,2a60cdd,2026-09-07T11:13:35+02:00,62862,63152,43405,1137,6664,24,5479,2897,27796,65,0,Track 17 phase A: arena-index sector_t/side_t/subsector_t
+54,923ed98,2026-09-07T12:09:44+02:00,62881,63171,43422,1137,6755,24,5467,2896,27778,65,0,Track 17 phase B: arena-index line_t/seg_t/RBspState sector+side fields
+55,325dc5a,2026-09-07T13:11:44+02:00,62937,63243,43425,1137,6757,24,5470,2896,27782,65,0,Track 17 phase C1: generational arena infra for mobj_t
+56,972d848,2026-09-07T13:45:10+02:00,63026,63332,43513,1137,6782,24,5409,2896,27727,65,0,Track 17 phase C2: fix dangling target/tracer/soundtarget/attacker via MobjId
+57,a321850,2026-09-07T13:55:13+02:00,63027,63333,43514,1137,6783,24,5407,2896,27727,65,0,Track 17 phase C3: index-based dispatch for the mobj thinker tick function
+58,3a7f33e,2026-09-07T14:02:33+02:00,63035,63341,43520,1137,6789,24,5394,2896,27727,65,0,Track 17 phase C4: index-based PIT_* thing-iteration callback hub
+59,3556ccc,2026-09-07T14:09:43+02:00,63088,63394,43572,1137,6841,24,5341,2896,27727,65,0,Track 17 phase C5: index-based dispatch for the StateAction::Mobj action hub
+60,8937085,2026-09-07T14:24:07+02:00,63088,63394,43572,1137,6841,24,5341,2893,27730,65,0,Track 17 phase C6: clean up target/tracer/attacker savegame placeholder I/O
+61,e824298,2026-09-07T16:03:18+02:00,63096,63405,43576,1137,6840,24,5349,2897,27735,65,0,Bridge-collapse BC1: thread state through the true program entry point
+62,94518f5,2026-09-07T16:22:15+02:00,63096,63405,43576,1137,6748,24,5349,2897,27735,65,0,Bridge-collapse BC2: thread state through D_DoomMain
+63,316953b,2026-09-07T16:24:31+02:00,63096,63405,43576,1137,6736,24,5349,2897,27735,65,0,Bridge-collapse BC3: thread state through D_DoomLoop
+64,4ebbab2,2026-09-07T16:28:05+02:00,63097,63406,43576,1137,6713,24,5349,2897,27735,65,0,Bridge-collapse BC4: thread state through TryRunTics
+65,702e63f,2026-09-07T16:33:05+02:00,63098,63407,43575,1137,6604,24,5349,2897,27735,65,0,Bridge-collapse BC5: thread state through D_DoomLoop's remaining children
+66,07ac4ba,2026-09-07T16:36:25+02:00,63098,63407,43575,1137,6542,24,5349,2897,27735,65,0,Bridge-collapse BC6: thread state through D_Display
+67,698e971,2026-09-07T16:40:28+02:00,63102,63411,43579,1137,6540,24,5349,2897,27735,65,0,Bridge-collapse BC7: thread state through M_LoadDefaults
+68,4c0ddd4,2026-09-07T16:43:42+02:00,63102,63411,43579,1137,6529,24,5349,2897,27735,65,0,Bridge-collapse BC8: thread state through I_InitSound/I_BindSoundVariables
+69,15742e0,2026-09-07T16:51:15+02:00,63122,63431,43589,1137,6516,24,5349,2897,27735,65,0,Bridge-collapse BC9: thread state through most of v_video.rs
+70,6926e8d,2026-09-07T17:00:59+02:00,63127,63436,43593,1137,6437,24,5349,2897,27735,65,0,Bridge-collapse BC10: thread state through f_finale.rs
+71,e0db540,2026-09-07T17:04:01+02:00,63127,63436,43593,1137,6409,24,5349,2897,27735,65,0,Bridge-collapse BC11: thread state through D_BindVariables
+72,09e107d,2026-09-07T17:08:54+02:00,63130,63439,43595,1137,6350,24,5349,2897,27735,65,0,Bridge-collapse BC12: thread state through R_InitBuffer/R_FillBackScreen/R_VideoErase/R_DrawViewBorder
+73,126e25c,2026-09-07T17:11:30+02:00,63128,63437,43593,1137,6349,24,5349,2897,27735,65,0,Bridge-collapse BC13: thread state through R_RenderPlayerView
+74,6f9ed23,2026-09-07T17:16:52+02:00,63130,63439,43587,1137,6343,24,5349,2897,27735,65,0,Bridge-collapse BC14: thread state through HU_Drawer
+75,6b44fdc,2026-09-07T17:19:24+02:00,63126,63435,43583,1137,6317,24,5349,2897,27735,65,0,Bridge-collapse BC15: thread state through NetUpdate
+76,db25052,2026-09-07T17:22:49+02:00,63116,63425,43572,1137,6287,24,5349,2897,27735,65,0,Bridge-collapse BC16: thread state through M_Drawer
+77,cb6394c,2026-09-07T17:29:25+02:00,63063,63372,43518,1137,6225,24,5349,2897,27735,65,0,Bridge-collapse BC17: thread state through ST_Drawer
+78,0d4cfd2,2026-09-07T17:36:50+02:00,63073,63382,43526,1137,6101,24,5349,2897,27735,65,0,Bridge-collapse BC18: thread state through AM_Drawer
+79,6c572ef,2026-09-07T17:41:38+02:00,63077,63386,43529,1137,5948,24,5349,2897,27735,65,0,Bridge-collapse BC19: thread state through WI_Drawer
+80,9aa67fe,2026-09-07T17:45:11+02:00,63079,63388,43529,1137,5901,24,5349,2897,27735,65,0,Bridge-collapse BC20: thread state through D_CheckNetGame/D_ConnectNetGame
+81,f4414eb,2026-09-07T17:50:29+02:00,63083,63392,43532,1137,5852,24,5349,2897,27735,65,0,Bridge-collapse BC21: thread state through most of s_sound.rs
+82,cbe1815,2026-09-07T17:53:42+02:00,63084,63393,43532,1137,5692,24,5349,2897,27735,65,0,Bridge-collapse BC22: thread state through M_Bind*Controls
+83,00aa6ab,2026-09-07T17:58:03+02:00,63088,63397,43534,1137,5695,24,5349,2897,27735,65,0,Bridge-collapse BC23: thread state through g_game.rs's small leaf functions
+84,e2712c4,2026-09-07T18:02:39+02:00,63089,63398,43534,1137,5614,24,5349,2897,27735,65,0,Bridge-collapse BC24: thread state through R_InitData
+85,e116aae,2026-09-07T18:05:22+02:00,63089,63398,43534,1137,5573,24,5349,2897,27735,65,0,Bridge-collapse BC25: thread state through R_PrecacheLevel
+86,3c9c8b0,2026-09-07T18:07:37+02:00,63089,63398,43534,1137,5558,24,5349,2897,27735,65,0,Bridge-collapse BC26: thread state through R_GenerateComposite/R_GenerateLookup
+87,de5adc5,2026-09-07T18:10:49+02:00,63097,63406,43542,1137,5570,24,5349,2897,27735,65,0,Bridge-collapse BC27: thread state through R_FlatNumForName/R_TextureNumForName
+88,e95872b,2026-09-07T18:13:17+02:00,63097,63406,43542,1137,5563,24,5349,2897,27735,65,0,Bridge-collapse BC28: thread state through G_PlayerFinishLevel/G_PlayerReborn
+89,d56894f,2026-09-07T18:15:31+02:00,63097,63406,43542,1137,5556,24,5349,2897,27735,65,0,Bridge-collapse BC29: thread state through G_WorldDone
+90,4983347,2026-09-07T18:20:19+02:00,63087,63396,43531,1137,5520,24,5349,2897,27735,65,0,Bridge-collapse BC30: thread state through G_DoReborn/P_SpawnPlayer
+91,71f13d6,2026-09-07T18:23:22+02:00,63087,63396,43531,1137,5474,24,5349,2897,27735,65,0,Bridge-collapse BC31: thread state through G_DoLoadGame/G_DoSaveGame/G_DoNewGame
+92,5b5c463,2026-09-07T18:27:09+02:00,63085,63394,43531,1137,5416,24,5349,2897,27735,65,0,Bridge-collapse BC32: thread state through G_Ticker
+93,8f5d0a6,2026-09-07T18:30:45+02:00,63082,63391,43527,1137,5404,24,5349,2897,27735,65,0,Bridge-collapse BC33: thread state through P_Ticker
+94,9840525,2026-09-07T18:41:12+02:00,63083,63392,43528,1137,4945,24,5349,2897,27735,65,0,Bridge-collapse BC34: thread state through the remaining G_Ticker dispatch targets
+95,f6a0f57,2026-09-07T18:44:29+02:00,63083,63392,43528,1137,4896,24,5349,2897,27735,65,0,Bridge-collapse BC35: thread state through G_DoLoadLevel/G_DoWorldDone
+96,f52b30d,2026-09-07T18:47:52+02:00,63083,63392,43528,1137,4817,24,5349,2897,27735,65,0,Bridge-collapse BC36: thread state through G_DoCompleted
+97,0ab3a5c,2026-09-07T18:51:07+02:00,63083,63392,43528,1137,4763,24,5349,2897,27735,65,0,Bridge-collapse BC37: thread state through G_DoPlayDemo
+98,ed78fc4,2026-09-07T18:55:08+02:00,63078,63387,43523,1137,4725,24,5349,2897,27735,65,0,Bridge-collapse BC38: thread state through G_InitNew
+99,393a90d,2026-09-07T18:57:24+02:00,63069,63378,43514,1137,4709,24,5349,2897,27735,65,0,Bridge-collapse BC39: thread state through G_NextWeapon/WeaponSelectable
+100,8a90345,2026-09-07T19:01:09+02:00,63069,63378,43514,1137,4663,24,5349,2897,27735,65,0,Bridge-collapse BC40: thread state through G_Responder
+101,5ca67e7,2026-09-07T19:06:32+02:00,63071,63380,43516,1137,4541,24,5349,2897,27735,65,0,Bridge-collapse BC41: thread state through the demo recording/playback cluster
+102,4d9bc2d,2026-09-07T19:19:49+02:00,63066,63375,43512,1137,4328,24,5349,2897,27735,65,0,Bridge-collapse BC42: collapse the loop_interface_t hub
+103,ab61840,2026-09-07T19:43:16+02:00,63093,63402,43418,1137,3863,24,5349,2897,27731,65,0,Bridge-collapse BC43: collapse the menu-routine hubs and M_Responder
+104,3eae695,2026-09-07T19:51:41+02:00,63091,63400,43416,1137,3804,24,5349,2897,27731,65,0,Bridge-collapse BC44: collapse the f_wipe wipe-effect hub
+105,c4ba85c,2026-09-07T21:10:00+02:00,63102,63411,43425,1137,3337,24,5349,2897,27731,65,0,Bridge-collapse BC45: collapse R_StoreWallRange rendering cluster
+106,e499543,2026-09-07T21:14:49+02:00,63108,63417,43428,1137,3264,24,5349,2897,27731,65,0,Bridge-collapse BC46: collapse R_Subsector/R_FindPlane/R_AddSprites/R_ProjectSprite cluster
+107,786af55,2026-09-07T21:19:04+02:00,63110,63419,43430,1137,3196,24,5349,2897,27731,65,0,"Bridge-collapse BC47: collapse R_RenderBSPNode/R_AddLine/R_CheckBBox, completing the rendering hot-path cluster"
+108,26b78b4,2026-09-07T21:22:28+02:00,63110,63419,43430,1137,3181,24,5349,2897,27731,65,0,Bridge-collapse BC48: collapse R_ClipSolidWallSegment/R_ClipPassWallSegment
+109,7d4ce92,2026-09-07T21:25:15+02:00,63109,63418,43430,1137,3172,24,5349,2897,27731,65,0,"Bridge-collapse BC49: collapse R_ClearDrawSegs/R_ClearClipSegs, completing r_bsp.rs"
+110,c19a2db,2026-09-07T21:30:42+02:00,63109,63418,43430,1137,3069,24,5349,2897,27731,65,0,Bridge-collapse BC50: collapse sprite-drawing leaves (R_ClearSprites/R_NewVisSprite/R_DrawMaskedColumn/R_DrawVisSprite/R_DrawPSprite/R_DrawPlayerSprites/R_SortVisSprites)
+111,0cb0ebc,2026-09-07T21:34:52+02:00,63108,63417,43430,1137,2956,24,5349,2897,27731,65,0,"Bridge-collapse BC51: collapse R_DrawSprite/R_DrawMasked/R_RenderMaskedSegRange, completing the masked-sprite-drawing cluster"
+112,daf19a5,2026-09-07T21:37:55+02:00,63109,63418,43431,1137,2902,24,5349,2897,27731,65,0,"Bridge-collapse BC52: collapse R_InitSprites/R_InitSpriteDefs/R_InstallSpriteLump, completing r_things.rs"
+113,3856fc8,2026-09-07T21:42:48+02:00,63111,63420,43434,1137,2805,24,5349,2897,27731,65,0,"Bridge-collapse BC53: collapse R_MapPlane/R_ClearPlanes/R_MakeSpans/R_DrawPlanes, completing r_plane.rs"
+114,3f220af,2026-09-07T21:47:37+02:00,63108,63417,43431,1137,2763,24,5349,2897,27731,65,0,Bridge-collapse BC54: collapse R_SetupFrame/R_SetViewSize/R_InitTextureMapping/R_InitLightTables
+115,7ca2ce2,2026-09-07T21:53:41+02:00,63119,63428,43441,1137,2770,24,5349,2897,27731,65,0,Bridge-collapse BC55: collapse R_PointToAngle/R_PointToAngle2
+116,65aacf0,2026-09-07T21:56:56+02:00,63119,63428,43441,1137,2770,24,5349,2897,27731,65,0,Bridge-collapse BC56: collapse R_PointInSubsector
+117,94839ae,2026-09-07T21:59:09+02:00,63118,63427,43441,1137,2764,24,5349,2897,27731,65,0,"Bridge-collapse BC57: collapse R_Init, completing r_main.rs and the entire r_* rendering cluster"
+118,5e1f22b,2026-09-07T22:06:12+02:00,63117,63426,43441,1137,2573,24,5349,2897,27731,65,0,Bridge-collapse BC58: collapse the colfunc/spanfunc rendering hub -- FOURTH HUB CONVERSION
+119,072abb5,2026-09-07T22:16:01+02:00,63117,63426,43441,1137,2450,24,5349,2897,27731,65,0,Bridge-collapse BC59: collapse ST_Start/ST_Stop/ST_Init and the status bar init cluster
+120,2d4f071,2026-09-07T22:20:00+02:00,63117,63426,43441,1137,2369,24,5349,2897,27731,65,0,Bridge-collapse BC60: collapse ST_Responder (cheat-code handler)
+121,251c249,2026-09-07T22:23:19+02:00,63117,63426,43441,1137,2363,24,5349,2897,27731,65,0,"Bridge-collapse BC61: collapse ST_calcPainOffset, effectively completing st_stuff.rs"
+122,36931cd,2026-09-07T22:31:37+02:00,63122,63431,43447,1137,2224,24,5349,2897,27731,65,0,"Bridge-collapse BC62: collapse HU_Init/HU_Stop/HU_Start/HU_Erase/HU_Ticker/HU_queueChatChar/HU_Responder, completing hu_stuff.rs and hu_lib.rs"
+123,43fbeaf,2026-09-07T22:37:19+02:00,63123,63432,43448,1137,2103,24,5349,2897,27731,65,0,"Bridge-collapse BC63: collapse WI_Start/WI_End and the intermission-screen init cluster, completing wi_stuff.rs"
+124,7d33f52,2026-09-07T23:04:37+02:00,63123,63432,43448,1137,1876,24,5349,2897,27731,65,0,"Bridge-collapse BC64: collapse AM_Start/AM_Stop/AM_Responder and the automap init cluster, effectively completing am_map.rs"
+125,45d84bb,2026-09-07T23:13:51+02:00,63122,63431,43447,1137,1793,24,5349,2897,27731,65,0,"Bridge-collapse BC65: collapse D_IdentifyVersion/D_SetGameDescription/InitGameVersion and related startup helpers, effectively completing d_main.rs"
+126,74ffe6d,2026-09-08T06:28:37+02:00,63114,63423,43440,1136,1718,24,5349,2897,27730,65,0,Bridge-collapse BC66: collapse the entire p_saveg.rs save/load serialization system
+127,5d942c1,2026-09-08T06:37:41+02:00,63114,63423,43440,1136,1688,24,5349,2897,27730,65,0,Bridge-collapse BC67: collapse p_switch.rs entirely (P_InitSwitchList/P_StartButton/P_ChangeSwitchTexture/P_UseSpecialLine)
+128,2491f0d,2026-09-08T06:49:50+02:00,63115,63424,43440,1136,1541,24,5349,2897,27730,65,0,Bridge-collapse BC68: collapse the entire p_setup.rs level-loading pipeline
+129,93276d6,2026-09-08T07:19:50+02:00,63134,63443,43453,1136,1181,24,5349,2897,27730,65,0,"Bridge-collapse BC69: collapse the blockmap/PIT_*/PTR_* hub cluster -- FIFTH HUB CONVERSION, the deepest and most interconnected of the whole track"
+130,3698be1,2026-09-08T07:57:00+02:00,63144,63453,43457,1136,1013,24,5349,2897,27730,65,0,"Bridge-collapse BC70: collapse the StateAction and ThinkerFn hubs -- SIXTH and SEVENTH hub conversions, the two deepest gameplay-dispatch tables in the codebase"
+131,9a20bc5,2026-09-08T08:06:13+02:00,63139,63448,43452,1136,876,24,5349,2897,27730,65,0,Bridge-collapse BC70 follow-up: finish collapsing internal game_state() calls the first substitution pass missed
+132,fd9ff21,2026-09-08T08:15:50+02:00,63136,63445,43450,1136,847,24,5349,2897,27730,65,0,Bridge-collapse BC71: finish p_maputl.rs -- close out the blockmap/PIT_*/PTR_* hub cluster to zero remaining game_state() calls
+133,9790792,2026-09-08T08:36:54+02:00,63115,63424,43434,1136,670,24,5349,2897,27730,65,0,Bridge-collapse BC72: collapse the line/sector-special trigger subsystem (p_spec.rs cluster)
+134,596ca71,2026-09-08T08:47:11+02:00,63118,63427,43436,1136,587,24,5349,2897,27730,65,0,Bridge-collapse BC73: collapse the mobj lifecycle subsystem in p_mobj.rs (spawn/move/despawn/respawn)
+135,6db8c38,2026-09-08T08:52:25+02:00,63120,63429,43436,1136,546,24,5349,2897,27730,65,0,Bridge-collapse BC74: collapse p_inter.rs entirely (damage/death/item-pickup subsystem)
+136,ac2aebf,2026-09-08T08:58:20+02:00,63115,63424,43432,1136,494,24,5349,2897,27730,65,0,Bridge-collapse BC75: finish p_enemy.rs -- collapse the remaining monster-AI leaf helpers to zero
+137,cf99f7f,2026-09-08T09:03:30+02:00,63118,63427,43434,1136,480,24,5349,2897,27730,65,0,Bridge-collapse BC76: collapse S_GetChannel/S_AdjustSoundParams in s_sound.rs
+138,0b169aa,2026-09-08T09:09:29+02:00,63117,63426,43434,1136,446,24,5349,2897,27730,65,0,Bridge-collapse BC77: collapse i_video.rs's frame-blit/palette pipeline
+139,3796c7a,2026-09-08T09:15:25+02:00,63120,63429,43434,1136,424,24,5349,2897,27730,65,0,Bridge-collapse BC78: collapse I_ZoneBase/I_GetMemoryValue/Z_Init
+140,a5c39a0,2026-09-08T09:19:02+02:00,63120,63429,43434,1136,406,24,5349,2897,27730,65,0,Bridge-collapse BC79: collapse OldNetSync/PlayersInGame/GetLowTic in d_loop.rs
+141,8157400,2026-09-08T09:23:48+02:00,63121,63430,43435,1136,393,24,5349,2897,27730,65,0,Bridge-collapse BC80: collapse p_sight.rs entirely (line-of-sight checking)
+142,d60a173,2026-09-08T09:28:24+02:00,63119,63428,43433,1136,381,24,5349,2897,27730,65,0,Bridge-collapse BC81: collapse p_user.rs entirely (per-player think/movement)
+143,e99c020,2026-09-08T09:31:37+02:00,63119,63428,43433,1136,370,24,5349,2897,27730,65,0,Bridge-collapse BC82: collapse p_telept.rs entirely (EV_Teleport)
+144,4a70285,2026-09-08T09:39:18+02:00,63118,63427,43432,1136,351,24,5349,2897,27730,65,0,Bridge-collapse BC83: finish p_pspr.rs's weapon-fire helpers (P_BulletSlope/P_GunShot/P_CheckAmmo/P_FireWeapon/P_BringUpWeapon/P_DropWeapon/P_SetupPsprites)
+145,37e3a2f,2026-09-08T09:43:33+02:00,63117,63426,43432,1136,345,24,5349,2897,27730,65,0,Bridge-collapse BC84: collapse R_GetColumn in r_data.rs
+146,eb39f2a,2026-09-08T09:48:48+02:00,63114,63423,43432,1136,335,24,5349,2897,27730,65,0,Bridge-collapse BC85: collapse P_AddThinker/P_InitThinkers and P_RemoveActivePlat/P_RemoveActiveCeiling
+147,5104e93,2026-09-08T09:55:17+02:00,63115,63424,43433,1136,332,24,5349,2897,27730,65,0,"Bridge-collapse BC86: collapse R_InitSkyMap, I_GetEvent, and W_Checksum"
+148,89de576,2026-09-08T10:04:11+02:00,63117,63426,43435,1136,321,24,5349,2897,27730,65,0,Bridge-collapse BC87: collapse D_FindIWAD and I_BindJoystickVariables
+149,a05b850,2026-09-08T10:10:19+02:00,63120,63429,43435,1136,324,24,5349,2897,27730,65,0,Bridge-collapse BC88: collapse M_CheckParmWithArgs/M_CheckParm/M_ParmExists/M_FindResponseFile (the command-line-argument lookup hub)
+150,5a13ef4,2026-09-08T21:14:23+02:00,62877,63186,43435,1136,324,24,5349,2897,27213,65,0,m_random cleanup
+151,0619d53,2026-09-08T21:17:28+02:00,62877,63186,43435,1136,324,24,5349,2897,27208,65,0,d_events cleanup
+152,46f60e6,2026-09-08T22:20:49+02:00,63315,63612,43570,1136,324,24,5349,2897,27208,65,0,cargo fmt
+153,dac97c0,2026-09-08T22:24:50+02:00,63303,63600,43559,1136,324,24,5340,2887,27198,65,0,Screenshot handling
+154,133fefb,2026-09-08T22:26:39+02:00,63307,63604,43559,1136,324,24,5340,2887,27195,65,0,m_fixed
+155,6185734,2026-09-08T22:50:44+02:00,63336,63635,43556,1136,324,24,5340,2887,27139,65,0,GameVersion
+156,bed775b,2026-09-08T23:13:23+02:00,63337,63636,43555,1136,324,24,5340,2887,27099,65,0,GameScreenState
+157,cf0acee,2026-09-08T23:15:35+02:00,63337,63636,43555,1136,324,24,5340,2887,27099,65,0,GameVersion
+158,5e32af9,2026-09-11T16:12:32+02:00,63302,63601,43521,1136,307,24,5340,2887,27097,65,0,"Bridge-collapse BC89: collapse S_StartSound, the sound-trigger hub"
+159,abb49e7,2026-09-11T16:31:55+02:00,63349,63648,43560,1136,309,24,5340,2887,27097,65,0,"Bridge-collapse BC90: collapse W_CacheLumpNum/W_CacheLumpName, the lump-cache hub"
+160,84bb16f,2026-09-11T16:36:37+02:00,63261,63560,43481,1136,308,24,5340,2887,27097,65,0,"Bridge-collapse BC91: collapse the V_DrawPatch family, the last deferred whole-codebase-fanout hub"
+161,22a26ca,2026-09-11T16:50:38+02:00,63153,63452,43381,1133,300,24,5311,2852,27064,65,0,"Bridge-collapse BC92: replace I_Error with a bare panic, closing the track"
+162,f1fc91e,2026-09-11T16:59:37+02:00,63153,63452,43380,1133,286,24,5311,2852,27064,65,0,Bridge-collapse BC93: final sweep of remaining small leftover call sites
+163,4bbd21c,2026-09-11T17:00:58+02:00,63153,63452,43380,1133,286,24,5311,2852,27064,65,0,docs: close out track16-gamestate-plan.md with final bridge-collapse status
+164,313615e,2026-09-11T17:14:18+02:00,63155,63454,43383,1133,245,24,5311,2852,27064,65,0,"Bridge-collapse BC94: collapse the atexit_func_t hub, the final one"
+165,b8f3946,2026-09-11T17:15:33+02:00,63155,63454,43383,1133,245,24,5311,2852,27064,65,0,docs: correct track16-gamestate-plan.md now that atexit_func_t converted (BC94)
+166,d20ce1e,2026-09-11T17:20:58+02:00,63155,63454,43383,1133,245,24,5311,2852,27064,65,0,"docs: add Track 18 plan -- eliminate c_char, adopt native Rust strings"
+167,6d8aa38,2026-09-11T17:26:47+02:00,63053,63352,43294,1133,245,24,5307,2852,27017,62,0,"Track 18 phase 1: eliminate toupper/tolower, first c_char/libc-string phase"
+168,17ae325,2026-09-11T17:27:20+02:00,63053,63352,43294,1133,245,24,5307,2852,27017,62,0,docs: update Track 18 status after phase 1
+169,3d95b68,2026-09-11T17:40:03+02:00,63028,63327,43270,1133,245,24,5300,2857,27006,58,0,Track 18 phase 2: eliminate strlen/strcmp/strncmp/strcasecmp/strncasecmp
+170,ddeccad,2026-09-11T17:40:34+02:00,63028,63327,43270,1133,245,24,5300,2857,27006,58,0,docs: update Track 18 status after phase 2
+171,6a96504,2026-09-11T18:38:45+02:00,63046,63345,43260,1133,245,24,5280,2843,26967,54,0,Track 18 phase 3: eliminate atoi/sscanf/strncpy (partial)
+172,622e98e,2026-09-11T18:48:17+02:00,63103,63446,43236,1133,245,24,5263,2822,26940,50,0,"Track 18 phase 4: FixedCStr<N> newtype, convert the WAD-lumpname family"
+173,9a3ee58,2026-09-11T18:56:59+02:00,62862,63206,41313,1133,228,24,5262,2526,26938,50,0,Track 18 phase 5: convert the large const-data-table c_char arrays
+174,870b2ce,2026-09-11T19:04:32+02:00,62694,63038,40880,1133,214,24,5263,2475,26939,50,0,Track 18 phase 6: convert the remaining individual c_char literal constants
+175,bf8d78b,2026-09-11T19:07:01+02:00,62695,63039,40880,1133,214,24,5263,2470,26939,50,0,Track 18 phase 7: convert p_setup.rs's on-disk level-data texture/flat names
+176,ae2b382,2026-09-11T19:08:06+02:00,62695,63039,40880,1133,214,24,5263,2470,26939,50,0,docs: update Track 18 status after phases 3-7
+177,22c5c63,2026-09-11T19:23:03+02:00,62638,62982,40834,1133,214,24,5236,2456,26905,50,0,"Track 18 phase 8: eliminate fprintf/puts/putchar, start on printf"
+178,3c55857,2026-09-11T19:38:37+02:00,62579,62923,40783,1133,214,24,5093,2381,26760,42,0,Track 18 phase 9: finish the printf-family conversion sweep
+179,464ba3e,2026-09-11T19:44:52+02:00,62557,62901,40762,1133,214,24,4463,1848,26141,42,0,Track 18 phase 10: sprnames NULL-terminated pointer array + musicinfo/tagname tables
+180,9cbecbe,2026-09-11T19:49:51+02:00,62537,62881,40744,1133,214,24,4429,1824,26111,42,0,"Track 18 phase 11: convert *mut c_char-returning functions, fix 2 leaks along the way"
+181,005db42,2026-09-11T21:14:08+02:00,62419,62763,40643,1130,214,24,4352,1729,26054,40,0,Track 18 phase 12: eliminate M_StringJoin and the configdir/savegame path cluster
+182,17b1f31,2026-09-11T21:38:29+02:00,62256,62601,40492,1130,214,23,4104,1543,25796,40,0,Track 18 phase 13: convert player_t.message to Option<String>
+183,534e66a,2026-09-11T21:45:01+02:00,61994,62339,40238,1130,214,23,3939,1288,25617,38,0,"Track 18 phase 14: shiftxform to u8, load_callback_t hub to &str"
+184,fcfa490,2026-09-11T21:51:28+02:00,61928,62273,40177,1130,214,23,3880,1235,25555,38,0,Track 18 phase 15: convert texture/flat name lookup trio to &str
+185,c7b0f7c,2026-09-11T21:59:01+02:00,61928,62273,40181,1130,214,23,3870,1212,25554,38,0,"Track 18 phase 16: snd_musiccmd, pcx_t, M_FileExists/M_WriteFile to &str"
+186,381bcb0,2026-09-11T22:13:35+02:00,61882,62227,40138,1130,214,23,3840,1144,25523,37,0,Track 18 phase 17: clear m_menu.rs's alphaKey/tempstring/endstring/lumpname
+187,c9ebc74,2026-09-11T22:19:59+02:00,61855,62200,40123,1130,214,23,3824,1113,25512,36,0,Track 18 phase 18: convert hu_stuff.rs's chat char queue and chat_macros
+188,001abfb,2026-09-11T22:24:09+02:00,61823,62168,40093,1130,214,23,3799,1091,25485,34,0,"Track 18 phase 19: clear f_finale.rs, mostly clear am_map.rs lumpnames"
+189,652c13d,2026-09-11T22:30:29+02:00,61704,62049,39988,1129,214,23,3746,1041,25388,33,0,"Track 18 phase 20: gamedescription to &str, delete dead GetGameName"
+190,a301521,2026-09-11T22:37:59+02:00,61631,61976,39922,1129,214,23,3699,994,25328,33,0,Track 18 phase 21: savename/savedescription/P_WriteSaveGameHeader to String
+191,b350656,2026-09-11T22:42:26+02:00,61627,61972,39918,1129,214,23,3689,966,25326,33,0,Track 18 phase 22: R_PrecacheLevel flag arrays and Z_ChangeTag2 to native types
+192,06e18d6,2026-09-11T22:51:48+02:00,61598,61943,39896,1129,214,23,3670,939,25307,33,0,"Track 18 phase 23: HUlib char param, sky-flat names, config-key builders, checksum buffer"
+193,9a9b5b5,2026-09-11T22:57:17+02:00,61531,61876,39853,1129,214,23,3580,873,25198,33,0,"Track 18 phase 24: gameversions table, mission-pack lookup, pagename field"
+194,1ea0151,2026-09-11T23:02:27+02:00,61513,61858,39839,1129,214,23,3568,856,25182,32,0,"Track 18 phase 25: music lump-name buffer, savegame version-check buffer"
+195,ae4d2f3,2026-09-11T23:10:52+02:00,61444,61789,39749,1127,214,23,3531,810,25129,31,0,Track 18 phase 26: the IWAD search-and-open chain
+196,e295267,2026-09-11T23:14:18+02:00,61444,61789,39749,1127,214,23,3525,804,25125,31,0,Track 18 phase 27: M_StrToInt and ParseIntParameter
+197,b8ae1ec,2026-09-11T23:19:26+02:00,61437,61782,39744,1127,214,23,3518,795,25118,31,0,"Track 18 phase 28: chatmacro config-key builder, G_RecordDemo"
+198,ad49e70,2026-09-11T23:24:33+02:00,61435,61780,39742,1127,214,23,3513,790,25114,31,0,"Track 18 phase 29: -gfxmode string comparison, track closure"
+199,72b8089,2026-09-11T23:34:03+02:00,61437,61782,39711,1122,213,23,3513,790,25112,30,0,removed a bit of unsafe
+200,6da0037,2026-09-11T23:55:50+02:00,61333,61678,39645,1120,213,21,3448,765,25063,30,0,Merge pull request #304 from voelklmichael/remove-libc-file
+201,7090693,2026-09-12T00:08:10+02:00,61332,61677,39645,1120,213,21,3448,765,25063,29,0,Merge pull request #305 from voelklmichael/strdup-to-rust
+202,3a3b6ab,2026-09-12T00:09:16+02:00,61332,61677,39645,1120,213,21,3448,765,25063,29,0,docs: note the SetVariable string leak and the snd_musiccmd binding bug
+203,134196f,2026-09-12T08:24:11+02:00,61300,61645,39616,1120,213,21,3418,750,25033,26,0,Replace libc::printf/puts with print!/println! macros
+204,1441c2c,2026-09-12T08:25:14+02:00,61139,61484,39466,1111,212,21,3376,707,24993,25,0,"m_misc: remove dead code, make remaining functions safe, drop libc externs"
+205,81f70ac,2026-09-12T08:26:52+02:00,61118,61463,39466,1111,212,21,3371,704,24993,25,0,d_main: remove dead __ctype_b_loc/memmove externs and ctype constants
+206,c1ab111,2026-09-12T08:30:22+02:00,61081,61426,30638,1111,194,21,3371,704,24993,25,0,Remove unnecessary unsafe blocks around static struct literals
+207,7c9c7ec,2026-09-12T08:32:44+02:00,61081,61426,30638,1111,194,21,3371,704,24993,25,0,st_lib: silence unused refresh parameter in STlib_drawNum
+208,e50bef8,2026-09-12T08:34:29+02:00,61081,61426,30638,1111,194,21,3371,704,24993,25,0,st_lib: remove dead refresh parameter from STlib_drawNum/updateNum
+209,54edbdf,2026-09-12T08:53:30+02:00,61002,61347,30584,1110,194,21,3367,704,24965,25,0,Remove unused local variables and function arguments project-wide
+210,34512cf,2026-09-12T08:55:18+02:00,61000,61345,30584,1110,194,21,3367,704,24965,25,0,Remove remaining unnecessary-parens and unused-import warnings
+211,9044db5,2026-09-12T10:57:59+02:00,60997,61365,30551,1096,183,13,3350,697,24950,25,0,Merge pull request #306 from voelklmichael/dg-platform-trait
+212,95e7118,2026-09-12T10:58:31+02:00,60997,61365,30551,1096,183,13,3350,697,24950,25,0,Merge pull request #307 from voelklmichael/dg-platform-crate-split
+213,1d5ded2,2026-09-12T10:58:53+02:00,60995,61368,30545,1096,183,11,3350,697,24950,25,0,Merge pull request #308 from voelklmichael/i-sound-libsamplerate-fields
+214,4110a38,2026-09-12T10:59:11+02:00,60820,61193,30407,1088,176,11,3319,681,24883,24,0,Merge pull request #309 from voelklmichael/remove-dead-memio-module
+215,b5b24c6,2026-09-12T10:59:26+02:00,59024,59397,28869,1027,60,11,3174,671,24124,23,0,Merge pull request #310 from voelklmichael/bridge-collapse-bc95-dead-code-batch
+216,895e833,2026-09-12T10:59:43+02:00,59013,59379,28863,1026,10,7,3174,671,24124,23,0,Merge pull request #311 from voelklmichael/bridge-collapse-bc96-w-wad
+217,bfcaa27,2026-09-12T16:18:19+02:00,59013,59379,28828,1025,10,7,3174,671,24124,23,0,Merge pull request #312 from voelklmichael/extern-c-callback-phase1-standalone
+218,48db041,2026-09-12T16:20:05+02:00,59006,59372,28826,1025,10,7,3174,671,24124,23,0,Merge pull request #313 from voelklmichael/extern-c-callback-phase2-atexit
+219,22a6f67,2026-09-12T16:25:35+02:00,59006,59372,28826,1025,10,7,3174,671,24124,23,0,Merge pull request #314 from voelklmichael/extern-c-callback-phase3-pit-ptr-hub
+220,fcfbe22,2026-09-12T16:25:50+02:00,58978,59344,28799,1020,10,7,3167,664,24124,23,0,Merge pull request #315 from voelklmichael/extern-c-callback-phase4-menu-routines
+221,036ef43,2026-09-12T16:25:55+02:00,58978,59344,28799,1020,10,7,3167,664,24124,23,0,Merge pull request #316 from voelklmichael/extern-c-callback-phase5-sound-vtables
+222,39337d1,2026-09-12T16:26:01+02:00,59069,59443,28879,1023,10,7,3141,666,24134,1,0,Merge pull request #317 from voelklmichael/ptr-fields-phase1-subsector-player-idx
+223,beee272,2026-09-12T16:26:06+02:00,59076,59452,28884,1023,10,7,3141,666,24138,1,0,Merge pull request #318 from voelklmichael/ptr-fields-phase2-channel-sfx-origin
+224,9569566,2026-09-12T16:26:11+02:00,59078,59454,28884,1023,10,7,3122,666,24120,1,0,Merge pull request #319 from voelklmichael/ptr-fields-phase3-mobj-player
+225,5e9e799,2026-09-12T16:26:17+02:00,59063,59441,28862,1023,10,7,3094,666,24078,1,0,Merge pull request #320 from voelklmichael/ptr-fields-phase4-mobj-state
+226,15fef95,2026-09-12T16:26:22+02:00,59102,59480,28883,1023,10,7,3084,665,24083,1,0,Merge pull request #321 from voelklmichael/ptr-fields-phase5-vertexes
+227,f1db9fc,2026-09-12T16:26:28+02:00,59117,59496,28875,1023,10,7,3073,665,24073,1,0,Merge pull request #322 from voelklmichael/ptr-fields-phase6-lines
+228,7cc4842,2026-09-12T16:26:33+02:00,59118,59497,28871,1023,10,7,3067,663,24063,1,0,Merge pull request #323 from voelklmichael/ptr-fields-phase7-segs
+229,b369353,2026-09-12T16:26:39+02:00,59106,59486,28858,1023,10,7,3061,662,24056,1,0,Merge pull request #324 from voelklmichael/ptr-fields-phase8-mobj-info
+230,8b573f7,2026-09-12T16:26:44+02:00,59094,59474,28847,1023,10,7,3048,660,24038,1,0,Merge pull request #325 from voelklmichael/ptr-fields-phase9-blockmap
+231,b75b097,2026-09-12T16:26:49+02:00,59019,59399,28772,1023,10,7,3024,652,24006,1,0,Merge pull request #326 from voelklmichael/ptr-fields-phase10-rdata-textures
+232,bd5965b,2026-09-12T16:26:55+02:00,58983,59363,28736,1023,10,7,2987,646,23978,1,0,Merge pull request #327 from voelklmichael/ptr-fields-phase11-rdata-textures-outer
+233,28aeaae,2026-09-12T16:27:01+02:00,59002,59382,28750,1023,10,7,2969,622,23960,1,0,Merge pull request #328 from voelklmichael/ptr-fields-phase12-sector-specialdata
+234,272ab1d,2026-09-12T16:27:06+02:00,58915,59295,28768,1023,10,7,2964,620,23960,1,0,Merge pull request #329 from voelklmichael/ptr-fields-phase13-default-location
+235,ad36a45,2026-09-12T23:49:04+02:00,58835,59217,28711,1023,10,7,2928,620,23916,1,0,Merge pull request #330 from voelklmichael/ptrfields2-phase1-vissprite
+236,cd79ae1,2026-09-12T23:49:09+02:00,58827,59209,28702,1022,10,7,2920,620,23910,1,0,Merge pull request #331 from voelklmichael/ptrfields2-phase2-atexit-sfxlink
+237,cff5397,2026-09-12T23:49:15+02:00,58824,59215,28699,1022,10,7,2918,620,23906,1,0,Merge pull request #332 from voelklmichael/ptrfields2-phase3-lumpinfo
+238,0178096,2026-09-12T23:49:19+02:00,58832,59227,28705,1022,10,7,2910,620,23910,1,0,Merge pull request #333 from voelklmichael/ptrfields2-phase4-texture-next
+239,9cc1bcf,2026-09-12T23:49:24+02:00,58853,59252,28726,1022,10,7,2895,618,23898,1,0,Merge pull request #334 from voelklmichael/ptrfields2-phase5-mobj-sector-list
+240,b54d5ae,2026-09-12T23:49:28+02:00,58855,59256,28728,1022,10,7,2878,616,23888,1,0,Merge pull request #335 from voelklmichael/ptrfields2-phase6-mobj-blockmap-list
+241,8eadcd4,2026-09-12T23:49:33+02:00,58936,59373,28796,1023,10,7,2840,614,23862,1,0,Merge pull request #336 from voelklmichael/ptrfields2-phase7-thinker-list
+242,e0199f0,2026-09-12T23:49:38+02:00,58940,59385,28816,1023,10,3,2840,614,23862,1,0,Merge pull request #337 from voelklmichael/unsafe-reduction-phase1-static-mut-easy
+243,803fa30,2026-09-12T23:49:42+02:00,58944,59389,28814,1023,9,1,2832,614,23858,1,0,Merge pull request #338 from voelklmichael/unsafe-reduction-phase2-static-mut-hazard
+244,d717a63,2026-09-12T23:49:47+02:00,58946,59391,27255,888,10,1,2832,614,23858,1,0,Merge pull request #339 from voelklmichael/unsafe-reduction-phase3-noop-removal
+245,83c890e,2026-09-13T10:34:54+02:00,58948,59393,27255,888,10,1,2832,614,23816,1,0,Merge pull request #340 from voelklmichael/enum-conversion-phase1-small-state-enums
+246,9215952,2026-09-13T10:38:30+02:00,59100,59545,27255,888,10,1,2832,614,23593,1,0,Merge pull request #361 from voelklmichael/enum-conversion-phase20-ammoweapontype
+247,8fc2775,2026-09-13T10:54:18+02:00,59099,59547,27255,888,10,1,2832,614,23593,1,0,Merge pull request #362 from voelklmichael/enum-conversion-phase22-psprite-power
+248,b10d8a7,2026-09-13T10:57:23+02:00,59227,59675,27255,888,10,1,2832,614,23592,1,0,Merge pull request #363 from voelklmichael/enum-conversion-phase23-spritenum
+249,ba8e05f,2026-09-13T11:10:07+02:00,60195,60644,27259,888,10,1,2832,614,22428,1,0,Merge pull request #364 from voelklmichael/enum-conversion-phase24-statenum
+250,f4a3ee6,2026-09-13T11:17:46+02:00,60328,60777,27259,888,10,1,2832,614,22425,1,0,Merge pull request #365 from voelklmichael/enum-conversion-phase25-mobjtype
+251,84c6878,2026-09-13T13:22:30+02:00,60304,60753,27239,888,10,1,2815,608,22413,1,0,Merge pull request #366 from voelklmichael/vec-buffer-fields
+252,5eb4cd9,2026-09-13T13:24:09+02:00,60271,60720,27207,888,10,1,2799,604,22395,1,0,Merge pull request #373 from voelklmichael/f-wipe-vec-fields
+253,790d8f2,2026-09-13T13:25:06+02:00,60267,60716,27203,888,10,1,2788,602,22386,1,0,Merge pull request #374 from voelklmichael/p-setup-vec-fields
+254,c589ff6,2026-09-13T13:25:40+02:00,60263,60712,27199,888,10,1,2786,602,22384,1,0,Merge pull request #375 from voelklmichael/r-data-colormaps-vec
+255,2c3ad48,2026-09-13T13:26:15+02:00,60211,60657,27149,888,10,1,2758,597,22354,1,0,Merge pull request #376 from voelklmichael/w-wad-vec-fields
+256,e68602c,2026-09-13T13:26:48+02:00,60203,60649,27145,888,10,1,2754,596,22351,1,0,Merge pull request #377 from voelklmichael/i-video-buffer-vec
+257,c929c75,2026-09-13T13:27:21+02:00,60202,60648,27142,888,10,1,2749,595,22353,1,0,Merge pull request #378 from voelklmichael/more-buffer-fields-vec
+258,3a31cd5,2026-09-13T16:33:24+02:00,59851,60339,26762,889,10,1,2536,482,22102,1,0,Merge pull request #385 from voelklmichael/bool-final-remaining
+259,25bfd0e,2026-09-13T19:19:29+02:00,59851,60339,26762,889,10,1,2532,482,22099,1,0,Merge pull request #386 from voelklmichael/ptrfields2-st-stuff-plyr
+260,be257e2,2026-09-13T19:19:50+02:00,59838,60326,26749,889,10,1,2516,482,22082,1,0,Merge pull request #387 from voelklmichael/ptrfields2-cursor-fields-to-indices
+261,e65953c,2026-09-13T19:20:04+02:00,59813,60301,26727,889,10,1,2508,480,22063,1,0,Merge pull request #388 from voelklmichael/ptrfields2-spritedef-vec
+262,581a16c,2026-09-13T19:20:24+02:00,59806,60285,26726,889,10,1,2503,480,22059,1,0,Merge pull request #389 from voelklmichael/ptrfields2-mconfig-defaults-vec
+263,8dc84aa,2026-09-13T19:20:56+02:00,59812,60291,26730,889,10,1,2503,480,22063,1,0,Merge pull request #390 from voelklmichael/ptrfields2-sectorspecial-thinkerid
+264,a81169a,2026-09-13T19:21:13+02:00,59609,60116,26544,887,10,1,2432,474,21953,1,0,Merge pull request #391 from voelklmichael/zzone-std-allocator
+265,024ddaa,2026-09-13T19:26:08+02:00,59589,60096,26524,887,10,1,2432,474,21637,1,0,removing unnesserary as casts
+266,3e8eeaf,2026-09-13T19:28:35+02:00,59595,60102,26531,887,10,1,2432,474,21461,1,0,removing unnesserary as casts
+267,5a3d979,2026-09-13T22:14:22+02:00,59415,59921,26373,887,10,1,2378,452,21387,1,0,Merge pull request #392 from voelklmichael/zzone-phase1-scratch-buffers
+268,ba0d2b1,2026-09-13T22:14:35+02:00,59379,59895,26342,886,10,1,2371,449,21379,1,0,Merge pull request #393 from voelklmichael/zzone-phase2-wad-lump-cache
+269,962dab5,2026-09-13T22:14:46+02:00,59351,59871,26319,885,10,1,2363,446,21372,1,0,Merge pull request #394 from voelklmichael/zzone-phase3-texture-composite
+270,f936002,2026-09-13T22:14:57+02:00,59394,59938,26335,885,10,1,2363,446,21373,1,0,Merge pull request #395 from voelklmichael/mobj-phase1-thinkerkind-foundation
+271,e33e6e9,2026-09-13T22:15:08+02:00,59392,59973,26325,885,10,1,2363,445,21371,1,0,Merge pull request #396 from voelklmichael/mobj-phase2-mobj-arena
+272,0146ad3,2026-09-13T22:15:20+02:00,59401,60002,26302,885,10,1,2361,441,21357,1,0,Merge pull request #397 from voelklmichael/mobj-phase3-vldoor
+273,18163c6,2026-09-13T22:15:30+02:00,59418,60028,26294,885,10,1,2362,440,21352,1,0,Merge pull request #398 from voelklmichael/mobj-phase4-ceiling
+274,47eef47,2026-09-13T22:15:43+02:00,59437,60056,26286,885,10,1,2363,439,21347,1,0,Merge pull request #399 from voelklmichael/mobj-phase5-plat
+275,67a07ee,2026-09-13T22:15:53+02:00,59431,60063,26258,885,10,1,2360,434,21330,1,0,Merge pull request #400 from voelklmichael/mobj-phase6-floor
+276,6b04252,2026-09-13T22:16:06+02:00,59508,60163,26239,885,10,1,2371,428,21319,1,0,Merge pull request #401 from voelklmichael/mobj-phase7-lights
+277,8f22aa7,2026-09-14T16:22:56+02:00,59501,60159,26235,885,10,1,2366,425,21314,1,0,Merge pull request #402 from voelklmichael/zzone-cleanup-phase1-wwad
+278,dca8453,2026-09-14T16:24:07+02:00,59310,59954,26108,877,10,1,2333,409,21194,1,0,Merge pull request #405 from voelklmichael/zzone-cleanup-phase4-delete-zzone
+279,db002f6,2026-09-14T16:28:30+02:00,59310,59954,26108,877,10,1,2333,409,21194,1,0,"bitfields removed, crate setup normalized"
+280,7d8c87c,2026-09-14T16:28:56+02:00,59316,59959,26109,877,10,1,2333,409,21198,1,0,"bitfields removed, crate setup normalized"
+281,c9eca2c,2026-09-14T16:43:21+02:00,59235,59878,26112,877,10,1,2333,409,21198,1,0,removed #[no_mangle]
+282,2187533,2026-09-14T21:42:27+02:00,59247,59890,25511,839,17,1,2333,409,21198,1,0,Merge pull request #411 from voelklmichael/unsafe-reduction-phase3b-noop-removal
+283,9f0784b,2026-09-14T21:42:56+02:00,59245,59888,24384,763,173,1,2333,409,21198,1,0,Merge pull request #412 from voelklmichael/unsafe-reduction-phase4-calls-only
+284,74e71a9,2026-09-14T21:43:11+02:00,59239,59882,24378,763,173,1,2328,409,21192,1,0,Merge pull request #413 from voelklmichael/unsafe-reduction-phase5-setup-accessors
+285,f472e06,2026-09-14T21:43:26+02:00,59201,59844,24215,757,169,1,2291,409,21128,1,0,Merge pull request #414 from voelklmichael/unsafe-reduction-phase6-array-offset
+286,8c36585,2026-09-14T21:43:41+02:00,59188,59859,24005,750,173,1,2244,406,21114,1,0,Merge pull request #415 from voelklmichael/unsafe-reduction-phase7-rdata-slices
+287,17a54be,2026-09-14T22:03:21+02:00,59144,59813,23858,745,175,1,2237,406,21111,1,0,Merge pull request #406 from voelklmichael/wad-file-static
+288,4ff70b9,2026-09-14T22:03:49+02:00,59037,59703,23807,735,172,1,2216,403,21099,1,0,Merge pull request #407 from voelklmichael/wad-file-std-collapse
+289,8417276,2026-09-14T22:04:10+02:00,59001,59664,23795,735,171,1,2208,396,21081,1,0,Merge pull request #408 from voelklmichael/w-read-safe-bytes
+290,494dd33,2026-09-14T22:04:31+02:00,58973,59636,23776,734,169,1,2201,395,21077,1,0,Merge pull request #409 from voelklmichael/d-iwad-safe
+291,dce747b,2026-09-14T22:04:51+02:00,58526,59198,22867,715,172,7,2029,240,20921,1,0,Merge pull request #410 from voelklmichael/m-bind-variable-safe
+292,0289fa9,2026-09-14T22:05:44+02:00,58526,59198,22862,715,167,7,2029,240,20921,1,0,Remove unsafe wraps made redundant by merging the two unsafe-reduction stacks
+293,d1b97f9,2026-09-14T23:03:41+02:00,58516,59188,22855,715,167,7,2026,239,20920,1,0,Merge pull request #416 from voelklmichael/ammap-fb-eliminate
+294,ebc1b5e,2026-09-14T23:04:04+02:00,58519,59191,22857,715,167,7,2024,239,20920,1,0,Merge pull request #417 from voelklmichael/ammap-marknums-lumpnum
+295,9a3cf1a,2026-09-14T23:04:27+02:00,58574,59249,22906,715,167,7,1762,239,20771,1,0,Merge pull request #418 from voelklmichael/patch-lumpnum-st-wi-lib
+296,e0f84ee,2026-09-14T23:04:46+02:00,58591,59266,22918,715,167,7,1737,239,20755,1,0,Merge pull request #419 from voelklmichael/patch-lumpnum-hu-font
+297,ac743ba,2026-09-14T23:38:43+02:00,58496,59171,22873,715,167,7,1667,239,20682,1,0,Merge pull request #420 from voelklmichael/widget-observer-pointers-eliminate
+298,126905d,2026-09-15T17:36:58+02:00,58346,59018,22721,715,167,7,1636,221,20652,1,0,Merge pull request #421 from voelklmichael/g-game-pointer-fields-eliminate
+299,8cb801c,2026-09-15T17:37:19+02:00,58344,59016,22722,715,167,7,1634,221,20651,1,0,Merge pull request #422 from voelklmichael/f-wipe-scr-pointer-eliminate
+300,27a370f,2026-09-15T17:37:39+02:00,58323,58995,22717,715,167,7,1629,221,20646,1,0,Merge pull request #423 from voelklmichael/hu-lib-textline-font-ptr-eliminate
+301,f37154a,2026-09-15T17:38:07+02:00,58304,58976,22711,715,167,7,1623,214,20641,1,0,Merge pull request #424 from voelklmichael/hu-stuff-player-names-eliminate
+302,6d13fac,2026-09-15T17:38:34+02:00,58304,58978,22696,715,167,7,1617,214,20620,1,0,Merge pull request #425 from voelklmichael/i-system-dos-mem-dump-enum
+303,c1f6649,2026-09-15T18:02:55+02:00,58299,58967,22693,715,167,7,1614,214,20618,1,0,Merge pull request #426 from voelklmichael/m-controls-weapon-keys-eliminate
+304,3a053cb,2026-09-15T18:05:14+02:00,58160,58824,22686,658,167,7,1587,214,20589,1,0,Merge pull request #427 from voelklmichael/m-menu-pointer-fields-eliminate
+305,979feea,2026-09-15T18:15:59+02:00,58161,58825,22687,658,167,7,1585,214,20588,1,0,Merge pull request #428 from voelklmichael/p-enemy-braintargets-mobjid
+306,caa0ad9,2026-09-15T18:21:16+02:00,58157,58821,22682,658,167,7,1583,214,20576,1,0,Merge pull request #429 from voelklmichael/p-plats-activeplats-thinkerid
+307,2114a2a,2026-09-15T18:23:36+02:00,58154,58818,22681,658,167,7,1581,214,20573,1,0,Merge pull request #430 from voelklmichael/p-setup-blockmap-eliminate
+308,c9c987d,2026-09-15T18:36:06+02:00,58080,58744,22454,619,161,7,1572,214,20560,1,0,Merge pull request #431 from voelklmichael/i-sound-vtable-safe
+309,0128aeb,2026-09-15T18:49:00+02:00,58072,58736,22445,619,161,7,1569,214,20547,1,0,Merge pull request #432 from voelklmichael/p-ceilng-activeceilings-thinkerid
+310,caa6a7e,2026-09-15T18:54:18+02:00,58093,58762,22448,619,161,7,1546,214,20527,1,0,Merge pull request #433 from voelklmichael/st-lib-digit-set-enum
+311,ed62028,2026-09-15T19:02:06+02:00,58027,58696,22382,619,161,7,1502,214,20474,1,0,Merge pull request #434 from voelklmichael/f-finale-caststate-stateid
+312,6e56822,2026-09-15T19:05:25+02:00,58025,58694,22380,619,161,7,1497,214,20472,1,0,Merge pull request #435 from voelklmichael/s-sound-mus-playing-index
+313,f0c7568,2026-09-15T19:08:58+02:00,58011,58678,22379,619,161,7,1496,214,20471,1,0,Merge pull request #436 from voelklmichael/d-net-netcmds-eliminate
+314,f491dca,2026-09-15T19:33:21+02:00,57976,58652,22339,619,161,7,1411,214,20413,1,0,Merge pull request #437 from voelklmichael/renderer-colormap-indices
+315,8a985e2,2026-09-15T19:38:50+02:00,57972,58648,22337,619,161,7,1405,214,20419,1,0,Merge pull request #438 from voelklmichael/r-draw-screen-buffer-offsets
+316,62db055,2026-09-15T19:59:24+02:00,57943,58627,22295,620,161,7,1356,214,20385,1,0,Merge pull request #439 from voelklmichael/renderer-scratch-array-indices
+317,b24ffe8,2026-09-15T21:50:32+02:00,57870,58555,22255,620,161,7,1356,214,7872,1,0,cargo clippy --fix unnecessary_cast
+318,f44a978,2026-09-15T21:56:04+02:00,57715,58400,22209,620,161,7,1356,214,7863,1,0,minor cleanup
+319,8b3f0f7,2026-09-15T22:12:04+02:00,58258,58941,22654,620,161,7,1356,214,7863,1,0,cargo fmt
+320,4226bb0,2026-09-15T22:23:48+02:00,58258,58941,22654,620,161,7,1356,214,7863,1,0,vscode tasks
+321,d46b2dd,2026-09-15T22:35:34+02:00,58228,58913,22615,619,161,7,1344,212,7825,1,0,wi_stuff: removed fields
+322,0446cba,2026-09-15T22:41:27+02:00,58146,58833,22535,619,161,7,1344,212,7808,1,0,cargo clippy fix
+323,950a7a7,2026-09-15T22:42:46+02:00,58146,58833,22535,619,161,7,1344,212,7808,1,0,cargo fix
+324,4753952,2026-09-15T22:50:24+02:00,58159,58846,22548,619,161,7,1344,212,7809,1,0,minor change
+325,d1b42a3,2026-09-15T23:05:02+02:00,58146,58833,22542,619,161,7,1332,212,7801,1,0,wi_stuff: anims
+326,472bb8d,2026-09-17T21:05:00+02:00,58146,58833,22542,619,161,7,1332,212,7801,1,0, typo fixed
+327,b1ef627,2026-09-17T21:39:42+02:00,58263,58981,22555,619,163,7,1335,212,7809,1,1,Merge pull request #440 from voelklmichael/p-tick-door-thinker-id
+328,30976da,2026-09-17T21:39:50+02:00,58178,58881,22489,616,163,7,1307,199,7781,1,1,Merge pull request #442 from voelklmichael/p-maputl-overrun-target-enum
+329,b213f7c,2026-09-17T21:40:18+02:00,58156,58859,22459,615,163,7,1295,199,7774,1,1,w_checksum: replace raw alloc/realloc pointer array with Vec (#441)
+330,66bfe89,2026-09-17T21:50:43+02:00,58197,58903,22470,615,163,7,1279,199,7762,1,1,Merge pull request #444 from voelklmichael/r-draw-column-source-enum
+331,4f6045e,2026-09-17T21:50:45+02:00,58120,58826,22469,615,163,7,1270,189,7762,1,1,Merge pull request #443 from voelklmichael/sounds-musicinfo-handle
+332,60170d0,2026-09-17T22:00:52+02:00,58116,58822,22465,615,163,7,1263,189,7760,1,1,Merge pull request #445 from voelklmichael/i-sound-sfxinfo-callback-ptr
+333,a229773,2026-09-17T22:05:24+02:00,58307,59013,22635,615,163,7,1272,189,7760,1,1,Merge pull request #446 from voelklmichael/v-video-dest-screen-elimination
+334,e14a97e,2026-09-17T22:25:54+02:00,58810,59593,22723,615,175,7,1290,189,7814,1,7,Merge pull request #448 from voelklmichael/p-thinker-payload-remaining-kinds
+335,6ddbabf,2026-09-17T22:31:27+02:00,58811,59594,22164,592,177,7,1290,189,7814,1,7,Merge pull request #449 from voelklmichael/menu-routine-fn-safe
+336,3f9555a,2026-09-17T22:38:58+02:00,58815,59598,21844,580,179,7,1268,186,7803,1,7,Merge pull request #447 from voelklmichael/d-loop-loop-interface-safe-fn
+337,a137ed5,2026-09-17T22:50:07+02:00,58797,59580,21420,559,179,7,1257,186,7795,1,7,Merge pull request #450 from voelklmichael/r-draw-colfunc-safe-fn
+338,94d11d9,2026-09-17T23:18:11+02:00,58863,59646,21436,543,187,7,1233,186,7787,1,7,Merge pull request #451 from voelklmichael/thinkerfn-safe-fn
+339,7cd8ba1,2026-09-18T16:31:14+02:00,58872,59678,21436,543,187,7,1236,186,7791,1,7,Merge pull request #453 from voelklmichael/fix-thinker-mobj-reap-and-column-oob
+340,94f6d93,2026-09-18T16:43:00+02:00,58870,59676,21432,536,186,7,1236,186,7791,1,7,Merge pull request #454 from voelklmichael/atexit-func-safe-fn
+341,73962c5,2026-09-18T16:48:17+02:00,58872,59678,21425,534,187,7,1236,186,7791,1,7,Merge pull request #455 from voelklmichael/thinkerfn-mobj-safe-fn
+342,e06b6a9,2026-09-18T16:51:30+02:00,58972,59778,21424,483,237,7,1236,186,7791,1,7,Merge pull request #456 from voelklmichael/stateaction-mobj-safe-fn
+343,b41ba91,2026-09-18T16:54:03+02:00,58967,59773,21423,482,237,7,1236,186,7791,1,7,Merge pull request #457 from voelklmichael/r-plane-remove-dead-planefunc
+344,fd2155b,2026-09-18T16:58:43+02:00,59009,59815,21403,460,258,7,1236,186,7791,1,7,Merge pull request #458 from voelklmichael/stateaction-weapon-safe-fn
+345,38e4327,2026-09-18T17:19:17+02:00,59033,59839,21440,460,258,7,1248,186,7831,1,7,Merge pull request #459 from voelklmichael/stateaction-weapon-params
+346,dc32b97,2026-09-18T22:43:54+02:00,59019,59825,20840,427,254,7,1207,186,7824,1,7,Merge pull request #460 from voelklmichael/unsafe-elim-p-saveg
+347,abee2c1,2026-09-18T22:43:58+02:00,58876,59679,20554,410,249,7,1154,186,7756,1,7,Merge pull request #461 from voelklmichael/unsafe-elim-safe-callbacks
+348,f2d7f7e,2026-09-18T22:44:03+02:00,58832,59635,20346,405,249,7,1142,186,7754,1,7,Merge pull request #462 from voelklmichael/unsafe-elim-p-sight
+349,2491e08,2026-09-18T22:44:09+02:00,58769,59581,19834,374,257,7,1116,186,7740,1,7,Merge pull request #463 from voelklmichael/unsafe-elim-p-maputl
+350,1782d40,2026-09-18T22:50:52+02:00,58813,59647,18692,324,225,7,1098,186,7745,1,7,Merge pull request #464 from voelklmichael/unsafe-elim-s-sound
+351,58b6164,2026-09-18T22:52:12+02:00,58468,59314,16943,293,217,7,1023,186,7686,1,7,Merge pull request #465 from voelklmichael/unsafe-elim-sector-specials
+352,011a82b,2026-09-18T22:52:30+02:00,58434,59321,10637,206,114,7,780,182,7887,1,7,Merge pull request #466 from voelklmichael/unsafe-elim-mobj-ids
+353,28a9e10,2026-09-18T22:52:49+02:00,57843,58759,8933,141,82,7,552,166,7523,1,7,Merge pull request #467 from voelklmichael/unsafe-elim-ui-foundation
+354,e40aac0,2026-09-18T22:53:06+02:00,56755,57666,1164,19,9,1,154,45,7073,1,7,Merge pull request #468 from voelklmichael/unsafe-elim-ui-widgets
+355,2dec35d,2026-09-18T22:55:06+02:00,56755,57666,1164,19,9,1,154,45,7073,1,7,removed completed notes files
+356,933c6aa,2026-09-18T23:00:22+02:00,55732,56631,198,10,5,1,119,32,6286,1,7,Merge pull request #469 from voelklmichael/replace-sha1-with-sha1-smol
+357,230d40c,2026-09-18T23:00:52+02:00,55732,56631,198,10,5,1,119,32,6286,1,7,"docs: engine/src has no unsafe exceptions left (sha1.rs, mem_compat.rs removed)"
+358,995bbdb,2026-09-18T23:06:32+02:00,55748,56649,198,10,5,1,123,32,6285,1,7,Build on stable Rust: drop nightly toolchain pin and feature gates
+359,da3fdd6,2026-09-18T23:20:00+02:00,55940,56906,198,10,5,1,122,32,6276,1,7,Apply clippy autofixes; drop numeric discriminants from GameScreenState
+360,ff0e668,2026-09-18T23:30:29+02:00,55902,56867,198,10,5,1,122,32,6266,1,7,Fix remaining clippy warnings
+361,098f496,2026-09-18T23:33:32+02:00,56252,57195,198,10,5,1,122,32,6266,1,7,cargo fmt
+362,4957370,2026-09-18T23:37:54+02:00,56179,57122,198,10,5,1,122,32,6266,1,7,Merge pull request #472 from voelklmichael/remove-repr-c
+363,13c74ce,2026-09-18T23:50:15+02:00,56174,57117,198,10,5,1,122,32,6261,1,7,Merge pull request #473 from voelklmichael/usize-not-isize
+364,bf015ab,2026-09-19T00:01:38+02:00,56271,57214,198,10,5,1,122,32,5810,1,7,Merge pull request #474 from voelklmichael/name-c2rust-unnamed-types
+365,81018f0,2026-09-19T00:06:15+02:00,56258,57201,198,10,5,1,122,32,5809,1,7,Drop blanket lint allows for dead_code/unused_mut/unused_assignments and fix warnings
+366,9e589bd,2026-09-19T00:23:09+02:00,54962,55904,198,10,5,1,121,29,5661,1,7,Merge pull request #475 from voelklmichael/pub-crate-visibility
+367,676fc3c,2026-09-19T00:24:24+02:00,54712,55901,198,10,5,1,121,29,5661,1,7,cargo clippy --fix
+368,fabff38,2026-09-19T00:25:20+02:00,54653,55675,198,10,5,1,121,29,5661,1,7,cargo fmt
+369,8bc77d7,2026-09-19T00:28:01+02:00,54647,55669,198,10,5,1,121,29,5661,1,7,Merge pull request #476 from voelklmichael/clippy-cleanup
+370,4e3ffdc,2026-09-19T00:43:23+02:00,54648,55672,198,10,5,1,121,29,5662,1,7,Merge pull request #477 from voelklmichael/fix-finetangent-oob
+371,20d5ff2,2026-09-19T08:17:51+02:00,54811,55872,198,10,5,1,121,29,5672,1,7,Merge pull request #478 from voelklmichael/fs-crate-1-scaffold
+372,62dfccd,2026-09-19T08:19:01+02:00,54858,55931,198,10,5,1,121,29,5673,1,12,Merge pull request #482 from voelklmichael/fs-crate-3-savegames
+373,6ba46f0,2026-09-19T08:29:14+02:00,55012,56099,198,10,5,1,121,29,5671,1,11,Merge pull request #483 from voelklmichael/engine-no-std
+374,9b5c48c,2026-09-19T10:40:19+02:00,55263,56402,198,10,5,2,122,29,5679,1,13,Merge pull request #484 from voelklmichael/idiom-regression-tests
+375,d7d000a,2026-09-19T10:40:25+02:00,54856,55996,198,10,5,2,122,29,5431,1,13,Merge pull request #485 from voelklmichael/idiom-literals
+376,574e0fa,2026-09-19T10:40:31+02:00,54754,55901,198,10,5,2,122,29,5404,1,13,Merge pull request #486 from voelklmichael/idiom-bool
+377,0fd5827,2026-09-19T10:40:38+02:00,54769,55929,198,10,5,3,112,23,5400,1,14,Merge pull request #487 from voelklmichael/idiom-platform-savegame
+378,8ea2dc7,2026-09-19T10:40:45+02:00,54106,55279,198,10,5,3,112,23,5301,1,14,Merge pull request #488 from voelklmichael/idiom-loops
+379,9db3702,2026-09-19T10:40:50+02:00,53871,55042,198,10,5,3,110,23,5262,1,14,Merge pull request #489 from voelklmichael/idiom-naming
+380,d8b60ce,2026-09-19T10:40:58+02:00,53763,54935,198,10,5,3,110,23,5262,1,14,Merge pull request #490 from voelklmichael/idiom-lints
+381,f909f3f,2026-09-19T10:41:05+02:00,53926,55116,198,10,5,3,110,23,5242,1,14,Merge pull request #491 from voelklmichael/idiom-flags
+382,e075893,2026-09-19T10:41:11+02:00,53841,55042,198,10,5,3,110,23,5194,1,14,Merge pull request #492 from voelklmichael/idiom-option-lookups
+383,c971695,2026-09-19T10:41:17+02:00,54391,55592,198,10,5,3,110,23,5194,1,14,Merge pull request #493 from voelklmichael/idiom-narrow-state
+384,ccd21d8,2026-09-19T10:41:23+02:00,54371,55577,198,10,5,3,110,23,5194,1,14,Merge pull request #494 from voelklmichael/idiom-outcode
+385,c5133d6,2026-09-19T14:34:35+02:00,54414,55625,198,10,5,3,110,23,5195,1,14,Merge pull request #495 from voelklmichael/core-s3-bringup
+386,e065303,2026-09-19T14:34:51+02:00,54570,55839,198,10,5,3,110,23,5201,1,14,Merge pull request #496 from voelklmichael/core-s3-engine
+387,d78b041,2026-09-19T14:35:02+02:00,55228,56658,199,10,6,4,110,23,5209,1,26,Merge pull request #497 from voelklmichael/core-s3-wifi-input
+388,b48bba9,2026-09-19T16:30:22+02:00,55590,57128,199,10,6,5,110,23,5214,1,27,Merge pull request #498 from voelklmichael/core-s3-speedup
+389,60b3719,2026-09-19T16:50:07+02:00,55632,57177,199,10,6,5,110,23,5214,1,28,Merge pull request #499 from voelklmichael/core-s3-status-line
+390,07c23c9,2026-09-19T17:04:24+02:00,55657,57218,199,10,6,5,110,23,5214,1,28,Merge pull request #500 from voelklmichael/core-s3-power-off
+391,e44bcd8,2026-09-19T17:24:09+02:00,56036,57668,199,10,6,5,110,23,5220,1,38,Merge pull request #501 from voelklmichael/core-s3-access-point
