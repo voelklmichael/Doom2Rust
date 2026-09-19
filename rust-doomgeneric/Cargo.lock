@@ -169,6 +169,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "oplon"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0df1044d4a29bc6db30e653b263b80599bcb4f15c0c0e2c61f9ac32f71d58de3"
+
+[[package]]
 name = "parking_lot"
 version = "0.12.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -223,6 +229,7 @@ name = "rust_doomgeneric"
 version = "0.0.0"
 dependencies = [
  "bitflags",
+ "oplon",
  "sha1_smol",
 ]
 

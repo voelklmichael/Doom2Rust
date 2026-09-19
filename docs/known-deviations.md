@@ -320,9 +320,30 @@ Differences from the SDL backend:
   first play of an effect reads its lump then. The lump is shared with the lump cache, not
   copied and expanded to the output rate.
 - `use_libsamplerate` / `libsamplerate_scale` stay unused; there is no libsamplerate path.
-- Music is not implemented yet (`MusicModule` has no backend), so `S_ChangeMusic` still
-  does nothing audible.
+- Music: see the next section.
 - A platform that does not implement `audio_open` (the default) plays nothing, and the
   engine then behaves exactly as before: no lumps are looked up for sound.
 - The Linux build sends its audio to `aplay` or `paplay` over a pipe (`DOOM_AUDIO=off` or
   `DOOM_AUDIO=file:PATH` override it).
+
+## Music: OPL2 emulation instead of SDL_mixer's MIDI (2026-09-19)
+
+The SDL port turns each MUS lump into MIDI (`mus2mid.c`) and lets SDL_mixer play it with
+whatever MIDI synthesizer the system has. Here the MUS score is played directly
+(`mus.rs`) on an emulated OPL2 chip (the `oplon` crate) programmed from the WAD's `GENMIDI`
+lump, as DOS Doom did on an AdLib / Sound Blaster (`opl_music.rs`, standing in for
+Chocolate Doom's `i_oplmusic.c`). It follows the same design as the original (channel state,
+nine voices, two-voice instruments, drum keys 35-81 from the percussion patches) but the
+driver was written from the format, not ported line by line, so it is not sample-identical to
+DOS Doom or Chocolate Doom:
+
+- Volume: a note's velocity, the channel volume and the music volume each add attenuation on a
+  `40 * log10(v / 127)` dB curve (`ATTENUATION`), rather than the DMX volume table.
+- Pitch: F-numbers come from an equal-tempered table generated at compile time, not DMX's
+  pitch curve. Pitch bend is the usual two semitones. The second voice's detune is read as
+  1/32 semitone steps, which is a guess from the data (the values sit between -6 and +5).
+- Voice stealing when all nine voices are busy: second voices first, then the highest
+  channel number (drums first), oldest note first.
+- Only MUS lumps play; a PWAD with MIDI-format music is silent.
+- The output is raised by `MUSIC_GAIN` so music and effects are of similar loudness.
+- `-nomusic` turns it off. It needs an audio device and the `GENMIDI` lump.

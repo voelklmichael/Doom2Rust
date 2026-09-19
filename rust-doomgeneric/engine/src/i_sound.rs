@@ -1,10 +1,12 @@
 use crate::game_state::GameState;
+use crate::genmidi::GenMidi;
 use crate::i_video::IVideoState;
 use crate::m_argv::parm_exists;
 use crate::m_argv::MArgvState;
 use crate::m_config::bind_variable_int;
 use crate::m_config::bind_variable_string;
 use crate::m_config::MConfigState;
+use crate::opl_music::MusicPlayer;
 use crate::platform::DoomPlatform;
 use crate::sfx_mixer::Mixer;
 use crate::sfx_mixer::Sample;
@@ -33,19 +35,6 @@ pub enum SndDevice {
     Awe32 = 9,
     Cd = 10,
 }
-#[derive(Copy, Clone)]
-pub struct MusicModule {
-    pub init: Option<fn() -> bool>,
-    pub shutdown: Option<fn()>,
-    pub set_music_volume: Option<fn(i32)>,
-    pub pause_music: Option<fn()>,
-    pub resume_music: Option<fn()>,
-    pub register_song: Option<fn(&[u8]) -> usize>,
-    pub un_register_song: Option<fn(usize)>,
-    pub play_song: Option<fn(usize, bool)>,
-    pub stop_song: Option<fn()>,
-    pub poll: Option<fn()>,
-}
 pub struct ISoundState {
     pub snd_samplerate: i32,
     pub snd_cachesize: i32,
@@ -54,7 +43,8 @@ pub struct ISoundState {
     /// `Some` once the platform has opened an audio device.
     mixer: Option<Mixer>,
     use_sfx_prefix: bool,
-    music_module: Option<&'static MusicModule>,
+    /// `Some` once the audio device is open and the WAD has a `GENMIDI` lump.
+    music: Option<MusicPlayer>,
     pub snd_musicdevice: i32,
     pub snd_sfxdevice: i32,
     snd_sbport: i32,
@@ -84,7 +74,7 @@ impl ISoundState {
             snd_musiccmd: None,
             mixer: None,
             use_sfx_prefix: true,
-            music_module: None,
+            music: None,
             snd_musicdevice: SndDevice::Sb as i32,
             snd_sfxdevice: SndDevice::Sb as i32,
             snd_sbport: 0,
@@ -118,9 +108,7 @@ pub fn init_sound(
 }
 pub fn shutdown_sound(state: &mut ISoundState) {
     state.mixer = None;
-    if let Some(module) = state.music_module {
-        (module.shutdown.expect("non-null function pointer"))();
-    }
+    state.music = None;
 }
 /// Name of the lump holding `sfx`'s samples: Doom prefixes its lumps with
 /// `ds`, and a linked sfx shares the lump of the sfx it links to.
@@ -154,17 +142,20 @@ pub fn update_sound(state: &mut ISoundState, platform: &mut dyn DoomPlatform) {
     const CHUNK_FRAMES: usize = 512;
     if let Some(mixer) = state.mixer.as_mut() {
         let mut wanted = platform.audio_frames_wanted();
-        let mut chunk = [0i16; CHUNK_FRAMES * 2];
         while wanted > 0 {
             let frames = wanted.min(CHUNK_FRAMES);
-            mixer.mix(&mut chunk[..frames * 2]);
+            let mut acc = [0i32; CHUNK_FRAMES * 2];
+            let acc = &mut acc[..frames * 2];
+            mixer.mix_add(acc);
+            if let Some(music) = state.music.as_mut() {
+                music.render_add(acc);
+            }
+            let mut chunk = [0i16; CHUNK_FRAMES * 2];
+            for (out, sum) in chunk.iter_mut().zip(acc.iter()) {
+                *out = (*sum).clamp(i32::from(i16::MIN), i32::from(i16::MAX)) as i16;
+            }
             platform.audio_write(&chunk[..frames * 2]);
             wanted -= frames;
-        }
-    }
-    if let Some(module) = state.music_module {
-        if let Some(poll) = module.poll {
-            poll();
         }
     }
 }
@@ -221,45 +212,59 @@ pub fn sound_is_playing(state: &ISoundState, channel: i32) -> bool {
         .as_ref()
         .is_some_and(|mixer| mixer.is_playing(channel))
 }
-pub fn init_music(state: &ISoundState) {
-    if let Some(module) = state.music_module {
-        (module.init.expect("non-null function pointer"))();
+/// Starts the music synthesizer, if there is an audio device and the WAD has
+/// the `GENMIDI` instrument lump (`-nomusic` leaves it off).
+pub fn init_music(state: &mut GameState) {
+    let Some(rate) = state.i_sound.mixer.as_ref().map(Mixer::sample_rate) else {
+        return;
+    };
+    if parm_exists(&state.m_argv, "-nomusic") {
+        return;
+    }
+    let Some(lumpnum) = check_num_for_name(&state.w_wad, "GENMIDI") else {
+        return;
+    };
+    let lump_len = lump_length(&state.w_wad, lumpnum as u32) as usize;
+    let lump = lump_bytes(state, lumpnum);
+    if let Some(bank) = GenMidi::parse(&lump[..lump_len]) {
+        state.i_sound.music = Some(MusicPlayer::new(bank, rate));
     }
 }
-pub fn i_set_music_volume(state: &ISoundState, volume: i32) {
-    if let Some(module) = state.music_module {
-        (module.set_music_volume.expect("non-null function pointer"))(volume);
+pub fn i_set_music_volume(state: &mut ISoundState, volume: i32) {
+    if let Some(music) = state.music.as_mut() {
+        music.set_volume(volume);
     }
 }
-pub fn pause_song(state: &ISoundState) {
-    if let Some(module) = state.music_module {
-        (module.pause_music.expect("non-null function pointer"))();
+pub fn pause_song(state: &mut ISoundState) {
+    if let Some(music) = state.music.as_mut() {
+        music.pause();
     }
 }
-pub fn resume_song(state: &ISoundState) {
-    if let Some(module) = state.music_module {
-        (module.resume_music.expect("non-null function pointer"))();
+pub fn resume_song(state: &mut ISoundState) {
+    if let Some(music) = state.music.as_mut() {
+        music.resume();
     }
 }
-pub fn register_song(state: &ISoundState, data: &[u8]) -> usize {
-    match state.music_module {
-        Some(module) => (module.register_song.expect("non-null function pointer"))(data),
-        None => 0,
+/// Loads a MUS lump. The handle is 1 if it was accepted, else 0.
+pub fn register_song(state: &mut ISoundState, data: &[u8]) -> usize {
+    state
+        .music
+        .as_mut()
+        .map_or(0, |music| usize::from(music.register(data)))
+}
+pub fn un_register_song(state: &mut ISoundState, _handle: usize) {
+    if let Some(music) = state.music.as_mut() {
+        music.unregister();
     }
 }
-pub fn un_register_song(state: &ISoundState, handle: usize) {
-    if let Some(module) = state.music_module {
-        (module.un_register_song.expect("non-null function pointer"))(handle);
+pub fn play_song(state: &mut ISoundState, _handle: usize, looping: bool) {
+    if let Some(music) = state.music.as_mut() {
+        music.play(looping);
     }
 }
-pub fn play_song(state: &ISoundState, handle: usize, looping: bool) {
-    if let Some(module) = state.music_module {
-        (module.play_song.expect("non-null function pointer"))(handle, looping);
-    }
-}
-pub fn stop_song(state: &ISoundState) {
-    if let Some(module) = state.music_module {
-        (module.stop_song.expect("non-null function pointer"))();
+pub fn stop_song(state: &mut ISoundState) {
+    if let Some(music) = state.music.as_mut() {
+        music.stop();
     }
 }
 pub fn bind_sound_variables(m_config: &mut MConfigState) {

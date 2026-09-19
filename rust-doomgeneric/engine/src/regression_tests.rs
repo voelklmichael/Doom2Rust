@@ -147,7 +147,7 @@ fn fnv_bytes(bytes: &[u8]) -> u64 {
     })
 }
 
-fn iwad_bytes() -> Option<Vec<u8>> {
+pub(crate) fn iwad_bytes() -> Option<Vec<u8>> {
     let path = std::env::var("DOOM_IWAD").ok().or_else(|| {
         std::env::var("HOME")
             .ok()

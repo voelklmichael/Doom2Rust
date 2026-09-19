@@ -907,7 +907,7 @@ pub fn music_vol(state: &mut GameState, choice: i32) {
         _ => {}
     }
     let music_volume = state.s_sound.music_volume * 8;
-    s_set_music_volume(&state.i_sound, music_volume);
+    s_set_music_volume(&mut state.i_sound, music_volume);
 }
 pub fn draw_main_menu(state: &mut GameState) {
     let __wcache1241_16 = cache_patch_name(state, "M_DOOM");

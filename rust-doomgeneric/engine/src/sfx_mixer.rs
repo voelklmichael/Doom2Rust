@@ -142,21 +142,30 @@ impl Mixer {
             .is_some_and(Option::is_some)
     }
 
-    /// Renders `out.len() / 2` frames of interleaved stereo, advancing every
-    /// playing voice. Voices that run out of samples are dropped, which is
-    /// what makes [`is_playing`](Self::is_playing) turn false.
+    pub fn sample_rate(&self) -> u32 {
+        self.sample_rate
+    }
+
+    /// Adds the next `acc.len() / 2` frames of every playing voice to `acc`
+    /// (interleaved stereo, unclipped). Voices that run out of samples are
+    /// dropped, which is what makes [`is_playing`](Self::is_playing) turn false.
+    pub fn mix_add(&mut self, acc: &mut [i32]) {
+        for slot in &mut self.voices {
+            let Some(voice) = slot else { continue };
+            if voice.render_into(acc) {
+                *slot = None;
+            }
+        }
+    }
+
+    /// Renders `out.len() / 2` frames of interleaved stereo, clipped to 16 bits.
+    #[cfg(test)]
     pub fn mix(&mut self, out: &mut [i16]) {
         const CHUNK_FRAMES: usize = 256;
         for chunk in out.chunks_mut(CHUNK_FRAMES * 2) {
-            let frames = chunk.len() / 2;
             let mut acc = [0i32; CHUNK_FRAMES * 2];
-            let acc = &mut acc[..frames * 2];
-            for slot in &mut self.voices {
-                let Some(voice) = slot else { continue };
-                if voice.render_into(acc) {
-                    *slot = None;
-                }
-            }
+            let acc = &mut acc[..chunk.len() / 2 * 2];
+            self.mix_add(acc);
             for (o, a) in chunk.iter_mut().zip(acc.iter()) {
                 *o = (*a).clamp(i32::from(i16::MIN), i32::from(i16::MAX)) as i16;
             }
@@ -167,6 +176,7 @@ impl Mixer {
 impl Voice {
     /// Adds this voice to `acc` (interleaved stereo). Returns `true` once the
     /// sample has been played to its end.
+    #[allow(clippy::chunks_exact_to_as_chunks)] // as_chunks needs a newer toolchain than the ESP one
     fn render_into(&mut self, acc: &mut [i32]) -> bool {
         let pcm = &self.sample.data[self.sample.samples.clone()];
         for frame in acc.chunks_exact_mut(2) {

@@ -932,7 +932,7 @@ pub fn doom_main(state: &mut GameState) {
         &mut *state.platform,
         true,
     );
-    init_music(&state.i_sound);
+    init_music(state);
     connect_net_game(state);
     state.d_main.startskill = SkillType::Medium;
     state.d_main.startepisode = 1;
