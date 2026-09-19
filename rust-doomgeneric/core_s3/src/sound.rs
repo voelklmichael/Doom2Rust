@@ -25,8 +25,8 @@ use esp_println::println;
 
 use crate::audio::{self, Speaker, CHUNK_FRAMES};
 
-/// Frames between the game and the pump (must be a power of two): 93 ms at 22050 Hz.
-const QUEUE_FRAMES: usize = 2048;
+/// Frames between the game and the pump (must be a power of two): 93 ms at 11025 Hz, 4 KB.
+const QUEUE_FRAMES: usize = 1024;
 
 /// What the game keeps queued: four chunks (46 ms). The game refills once per tick (28-40 ms), so
 /// the queue has to hold a tick's worth plus a chunk, or the pump runs short between ticks.
