@@ -18,7 +18,7 @@ use esp_println::println;
 use rust_doomgeneric::{GenMidi, MusicCommand, MusicPlayer};
 use static_cell::StaticCell;
 
-use crate::{audio, sound};
+use crate::{audio, lagprobe, sound};
 
 /// Rendered music, mono sent as stereo like the effects (both slots equal), at the ring's rate.
 /// 46 ms: the synthesizer runs ahead by this much, which is how much of a stall of core 0 (Wi-Fi,
@@ -167,7 +167,9 @@ pub async fn task() {
             while QUEUE.free() >= SLICE_FRAMES {
                 let start = Instant::now();
                 render(player);
-                BUSY_US.fetch_add(start.elapsed().as_micros() as u32, Ordering::Relaxed);
+                let spent = start.elapsed().as_micros() as u32;
+                lagprobe::slice(spent);
+                BUSY_US.fetch_add(spent, Ordering::Relaxed);
                 RENDERED_FRAMES.fetch_add(SLICE_FRAMES as u32, Ordering::Relaxed);
                 // Let the LCD's DMA chunks, the network and the pump run.
                 embassy_futures::yield_now().await;

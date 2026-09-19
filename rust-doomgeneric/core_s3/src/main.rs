@@ -9,6 +9,7 @@
 extern crate alloc;
 
 mod audio;
+mod lagprobe;
 mod lcd;
 mod music;
 mod net;
@@ -165,6 +166,10 @@ async fn main(spawner: Spawner) {
     display.init(&mut Delay::new()).expect("display");
 
     show(&mut display, &["CoreS3 DOOM", "starting Wi-Fi..."]);
+    #[cfg(feature = "lagprobe")]
+    spawner.spawn(lagprobe::task().expect("spawn lagprobe"));
+    #[cfg(feature = "lagprobe-keys")]
+    spawner.spawn(lagprobe::keys().expect("spawn lagprobe keys"));
     // What the game keeps showing in its top bar once it is running.
     let mut status = String::<40>::new();
     let network = net::start(spawner, peripherals.WIFI);

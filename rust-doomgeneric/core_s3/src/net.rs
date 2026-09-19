@@ -8,7 +8,7 @@
 //! Every byte the controller sends is one `core_s3_protocol` command (see that crate). The plain TCP
 //! connection and the web controller (`web`) both feed the same queue.
 
-use crate::web;
+use crate::{lagprobe, web};
 use core_s3_dhcp::{Server as DhcpServer, CLIENT_PORT, MAX_CLIENTS, REPLY_LEN, SERVER_PORT};
 use core_s3_protocol::{HeldKeys, KeyEvent, DEFAULT_PORT};
 use embassy_executor::Spawner;
@@ -41,32 +41,53 @@ pub struct Network {
 }
 
 /// Events wait here between the network tasks (core 0) and the game (core 1).
-static KEY_EVENTS: Channel<CriticalSectionRawMutex, KeyEvent, 128> = Channel::new();
+static KEY_EVENTS: Channel<CriticalSectionRawMutex, (KeyEvent, lagprobe::Stamp), 128> = Channel::new();
 
 /// The oldest event the controller has sent that the game has not seen yet.
 pub fn next_key_event() -> Option<KeyEvent> {
-    KEY_EVENTS.try_receive().ok()
+    match KEY_EVENTS.try_receive() {
+        Ok((event, stamp)) => {
+            lagprobe::key_taken(stamp);
+            Some(event)
+        }
+        Err(_) => {
+            lagprobe::polled_empty();
+            None
+        }
+    }
 }
 
-fn queue(event: KeyEvent) {
+fn queue(event: KeyEvent, stamp: lagprobe::Stamp) {
     // A full queue means the game has stalled; dropping input beats blocking the network.
-    let _ = KEY_EVENTS.try_send(event);
+    let _ = KEY_EVENTS.try_send((event, stamp));
 }
 
 /// Handles one byte a controller sent: a command being pressed or released. Bytes with an unknown
 /// code are ignored.
 pub fn handle_command_byte(byte: u8, held: &mut HeldKeys) {
+    let stamp = lagprobe::stamp();
     let Some(event) = KeyEvent::decode(byte) else { return };
-    println!("key {event:?}");
+    // No log line per event: esp-println writes the USB port with interrupts off and waits for the host
+    // to drain it, which measured 0.25 to 1.7 ms per line on this board, for every press and release.
     held.update(event);
-    queue(event);
+    queue(event, stamp);
 }
 
 /// Lets go of everything a controller was holding, for when it disconnects.
 pub fn release_held(held: &mut HeldKeys) {
     for release in held.take_releases() {
-        queue(release);
+        queue(release, lagprobe::stamp());
     }
+}
+
+/// Socket settings shared by every listener: a controller that vanishes without closing (laptop lid,
+/// phone asleep, dead Wi-Fi) must not hold a slot forever, and the small messages the board sends
+/// (the frame rate, pongs) must not wait for Nagle's algorithm. (smoltcp acknowledges received data
+/// after at most 10 ms; embassy-net does not expose that setting.)
+pub fn tune(socket: &mut TcpSocket<'_>) {
+    socket.set_keep_alive(Some(Duration::from_secs(5)));
+    socket.set_timeout(Some(Duration::from_secs(20)));
+    socket.set_nagle_enabled(false);
 }
 
 /// The tasks both Wi-Fi modes run: the network stack, the plain TCP command server and the web
@@ -90,7 +111,12 @@ pub fn start(spawner: Spawner, wifi: WIFI<'static>) -> Network {
         println!("wifi: no credentials in wifi.env; making the open network {AP_SSID}");
         let access_point = AccessPointConfig::default()
             .with_ssid(AP_SSID)
-            .with_max_connections(MAX_CLIENTS as u16);
+            .with_max_connections(MAX_CLIENTS as u16)
+            // A phone in power save wakes for the beacons that announce waiting data; with the
+            // default of 2 it may only listen every second beacon (200 ms), which is how late the
+            // board's replies (frame rate, acknowledgements) can reach it. Every beacon: 100 ms.
+            // (The board's own radio never sleeps: esp-radio's default power-save mode is None.)
+            .with_dtim_period(1);
         let controller = WifiController::new(
             wifi,
             ControllerConfig::default().with_initial_config(Config::AccessPoint(access_point)),
@@ -196,10 +222,7 @@ async fn command_server(stack: Stack<'static>) {
     let mut tx_buffer = [0u8; 64];
     loop {
         let mut socket = TcpSocket::new(stack, &mut rx_buffer, &mut tx_buffer);
-        // A controller that vanishes without closing (laptop lid, dead Wi-Fi) must not hold the
-        // only connection slot forever.
-        socket.set_keep_alive(Some(Duration::from_secs(5)));
-        socket.set_timeout(Some(Duration::from_secs(20)));
+        tune(&mut socket);
         if let Err(err) = socket.accept(DEFAULT_PORT).await {
             println!("command server: accept failed: {err:?}");
             continue;

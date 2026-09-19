@@ -119,8 +119,9 @@ one protocol event, so it feeds the same queue as the TCP port. Three tasks list
 free (a task serving a page or holding a WebSocket is not listening). The page has
 
 - **buttons** for every action, held for as long as they are pressed (mouse or touch; several at once),
-  and a sticky Run toggle. A press shorter than 120 ms is stretched to that, because the game only looks
-  at held keys once per tic and a quick click would be missed;
+  and a sticky Run toggle. A press shorter than 60 ms is stretched to that (two tics); the board also
+  makes sure the game sees every press for at least one tic before its release (`PollGate`, see
+  "Input latency"), so a quick click is never missed;
 - an editable **key list**: click + on an action and press a key to bind it, x to remove one, Reset to
   go back. It is kept in the browser (`localStorage`), and the keyboard works anywhere on the page;
 - **layouts**: keys are remembered by their *position* (`KeyboardEvent.code`), like games do, so WASD
@@ -134,7 +135,8 @@ free (a task serving a page or holding a WebSocket is not listening). The page h
 - a **text box** whose input is sent immediately, in two modes. *Keys* (the default): each typed key
   does its binding, so `w` is forward and space is fire; holding a key repeats it, which keeps the
   action going, and Enter/arrows/Shift and the like act as real holds; a pasted run such as `wwwd`
-  plays one key per 0.2 s. *Text*: each character goes to the game as typed (cheat codes such as
+  plays one key per 80 ms. Keys typed on a phone keyboard are played as they appear, not when the word
+  is committed. *Text*: each character goes to the game as typed (cheat codes such as
   `iddqd`, save names), which needs its own mode because letters like `d` and `q` are also bindings.
 
 To make typing possible the protocol grew: codes 32-126 are typed characters (the code is the ASCII
@@ -206,6 +208,74 @@ needs a reset.
 
 **Not done / ideas:** no on-device key-echo or connection indicator beyond serial logs; the performance
 work from milestone 2 still applies (about 3 fps).
+
+## Input latency (2026-09-20)
+
+**Report:** "the web UI is quite laggy", first suspected to be the OPL synthesizer sharing core 0 with
+the web server; later narrowed to "fine until the text box is used, then the buttons stop working or
+everything lags", on a phone and on a laptop.
+
+**Not the music.** `--features lagprobe` (see `src/lagprobe.rs`, compiled out otherwise) prints every
+5 s how late a 10 ms sleep on core 0's executor wakes up. The network path (embassy-net's runner, the
+web and command servers) is woken by the same executor, so this is the delay any of them can suffer
+from whatever else runs there. Measured on the board (histogram buckets of 250 us, so percentiles are
+upper edges; `[lag]` lines, 60 s each, game running, music at 60-65 percent of core 0):
+
+| build | median late | 99th percentile | worst |
+|---|---|---|---|
+| muted (starts that way; the synthesizer does no work) | < 0.25 ms | < 1.25 ms | 2.5 ms |
+| unmuted, music playing | < 0.5 ms | < 1.75 ms | 3.1 ms |
+| unmuted, `MUSIC=off` | < 0.25 ms | < 1.25 ms | 2.8 ms |
+
+The synthesizer adds about 0.25 ms to the median and 0.5 ms to the 99th percentile. Its longest slice
+is 1.5 ms (it yields every 8 frames), and no music frame was ever late (`[audio] ... 0 frames late`),
+so the network path needed no priority change (an `InterruptExecutor` for the network was not built:
+the numbers do not call for it). Also no effect of the fps push or the LCD's fps redraw beyond that
+noise. esp-radio's power-save mode is `None` (its default), so the radio itself never sleeps.
+
+**What was wrong** (page, and the board's key queue):
+- *Buttons stopped working (page).* Every button counts its holders in `press`/`release`; the button's
+  `up` handler dropped the count only if the button still looked "down", so a second finger (or a
+  second pointer) on the same button left it counted as held for good and every later press sent
+  nothing. A fuzz run of the page (random keys, typing, compositions, clicks, multi-finger holds,
+  blurs: `tools/page_fuzz.py`) hit it in 3 of 12 seeds; now each button tracks its pointers and it does
+  not happen (0 failures in 30 + 24 seeds).
+- *The text box was slow (page).* A phone keyboard builds each word as a composition and commits it at
+  the space; the page ignored input until then and then played a multi-character burst as a macro at
+  200 ms per key with every tap held 120 ms. Typing `wwwd` over 0.4 s sent its first byte at 0.7 s and
+  its last at 1.6 s; a pasted `wwwd` took 0.7 s. Now characters are played as they appear (first byte
+  at 0 ms, last at 0.4 s for the same typing), a paste takes 0.3 s (80 ms per key, hold 60 ms).
+  Measured in headless Chromium against a local stand-in (`tools/page_typing.py`).
+- *Backlog on the board (firmware).* The game takes one press/release pair per tic (35 per second: the
+  engine's `I_GetEvent` stops after the first release, as in doomgeneric). Text mode sent a character
+  every 25 ms (40 per second), so a burst of typing built a queue and everything behind it waited: at
+  full rate the wait grew to 0.4-1.0 s and took a second to drain after typing stopped, with or without
+  music (same numbers in all three builds). The page now sends a character every 30 ms (33 per second)
+  and the wait stays at the tic (median 14-18 ms, worst 32-51 ms, also during the burst).
+- *A log line per key.* `handle_command_byte` printed every event with esp-println, which writes the USB
+  port inside a critical section and waits for the host to drain it: 0.25 ms median, up to 1.7 ms per
+  line with a monitor attached, and the game core waits for the same lock. Removed.
+
+**Small changes for latency:** Nagle's algorithm is off on all listening sockets (`net::tune`); smoltcp's
+ACK delay (10 ms) is not reachable through embassy-net; the access point's DTIM period is 1 instead of 2
+so a phone in power save may wake for every beacon (100 ms) rather than every second one.
+
+**`PollGate`** (`../core_s3_protocol`, host tested): the game drains events once per tic and stops at
+the first release, so a tap whose press and release were both queued at that moment (jitter on the
+network, a slow frame) was lost before the game's next tic looked at the held keys. The gate holds
+such a release back for one poll, so every key is seen down for at least one tic. That is what allows
+the page's minimum hold to be 60 ms instead of 120 ms. Typed characters pass straight through.
+
+**Not verified:** a real phone or laptop against the board (the development machine has one Wi-Fi
+adapter and must not join the board's network). Also, the 23 KB page is served through a 1 KB socket
+buffer, one window per round trip; a phone's delayed ACKs can make the first load take a few seconds
+(gzip at build time would help; not done). While the game builds a level (about a second) events wait
+in the queue; that is the game being busy, not the network.
+
+**Probes:** `cargo build --release --features lagprobe` prints `[lag]` lines every 5 s (executor
+lateness, key queue wait, longest music slice); `--features lagprobe-keys` also injects synthetic
+`Weapon1` taps (100 ms) and typed-character bursts (33 per second) in 10 s phases, never anything the
+menu acts on.
 
 ## Sound (effects and music)
 
@@ -363,9 +433,11 @@ in any run, but there is no margin measurement (see Open).
   -30 dB * 3/4. If the level is wrong, `SOUND_LEVEL`.
 - Core 0 is 60-70 percent busy with the music. The Wi-Fi driver preempts the executor thread and the
   music has 46 ms of buffer, but heavy web-controller traffic while a busy song plays could make the
-  music stutter (it counts them as `frames late` in the log) or delay the network tasks. Only the open
-  AP's beacon (visible in a scan) was checked under music load; joining, DHCP and the controller could
-  not be tested from the development machine (one Wi-Fi adapter). If it bites: `MUSIC=off`, or make the
+  music stutter (it counts them as `frames late` in the log) or delay the network tasks. (Measured
+  since, see "Input latency": the synthesizer delays the executor by 0.25 ms median / 3 ms worst and
+  no music frame was late; the web controller's lag was not the music. Only the open AP's beacon was
+  checked under music load with a real radio; joining, DHCP and the controller could not be tested from
+  the development machine, one Wi-Fi adapter.) If it bites: `MUSIC=off`, or make the
   emulator cheaper (its `Operator::next` is about 100 instructions; a specialised OPL2-only loop with
   the waveform, vibrato and envelope cases hoisted could plausibly save a third), or drop to a lower
   chip rate for the busiest songs.
