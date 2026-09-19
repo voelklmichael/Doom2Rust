@@ -81,7 +81,6 @@ pub(crate) mod stdint_types;
 pub(crate) mod tables;
 pub(crate) mod v_video;
 pub(crate) mod w_checksum;
-pub(crate) mod w_file;
 pub(crate) mod w_main;
 pub(crate) mod w_wad;
 pub(crate) mod wi_stuff;

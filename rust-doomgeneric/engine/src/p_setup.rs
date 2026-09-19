@@ -515,7 +515,7 @@ pub fn P_LoadSideDefs(state: &mut GameState, lump: i32) {
 pub fn P_LoadBlockMap(state: &mut GameState, lump: i32) {
     let lumplen: i32 = W_LumpLength(&mut state.w_wad, lump as u32);
     let mut raw = vec![0u8; lumplen as usize];
-    W_ReadLump(&mut state.w_wad, lump as u32, &mut raw);
+    W_ReadLump(&mut state.w_wad, &*state.fs, lump as u32, &mut raw);
     state.p_setup.blockmaplump = raw
         .as_chunks::<2>()
         .0
@@ -662,6 +662,7 @@ fn P_LoadReject(state: &mut GameState, lumpnum: i32) {
         state.p_setup.rejectmatrix = vec![0u8; minlength as usize];
         W_ReadLump(
             &mut state.w_wad,
+            &*state.fs,
             lumpnum as u32,
             &mut state.p_setup.rejectmatrix,
         );

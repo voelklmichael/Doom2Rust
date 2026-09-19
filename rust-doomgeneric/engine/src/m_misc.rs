@@ -12,9 +12,6 @@ pub fn M_FileExists(filename: &str) -> bool {
         Err(e) => e.raw_os_error() == Some(EISDIR),
     }
 }
-pub fn M_FileLength(file: &std::fs::File) -> i64 {
-    file.metadata().map(|m| m.len() as i64).unwrap_or(0)
-}
 pub fn M_WriteFile(name: &str, source: &[u8]) -> bool {
     let mut handle = match std::fs::File::create(name) {
         Ok(handle) => handle,
