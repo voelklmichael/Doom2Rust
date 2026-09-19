@@ -140,6 +140,9 @@ impl DoomPlatform for CoreS3Platform {
     }
 
     fn quit(&mut self) -> ! {
+        // The engine has finished (Quit Game in its menu): switch the board off.
+        crate::power::power_off();
+        // Still here: the power chip left us powered, so all that is left is to wait for a reset.
         loop {
             core::hint::spin_loop();
         }

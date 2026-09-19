@@ -11,6 +11,7 @@ extern crate alloc;
 mod lcd;
 mod net;
 mod platform;
+mod power;
 mod wad_fs;
 
 use alloc::{boxed::Box, string::ToString, vec::Vec};
@@ -113,6 +114,8 @@ async fn main(spawner: Spawner) {
     .with_sda(peripherals.GPIO12)
     .with_scl(peripherals.GPIO11);
     CoreS3::init_core_s3_power(&mut i2c).expect("LCD power");
+    // Nothing else needs the bus; the power chip keeps it so that quitting can switch the board off.
+    power::init(i2c);
     let lcd = RefCell::new(lcd::Lcd::new(
         peripherals.SPI2,
         peripherals.GPIO36,
