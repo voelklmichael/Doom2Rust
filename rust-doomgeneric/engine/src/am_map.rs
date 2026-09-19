@@ -170,10 +170,36 @@ pub struct FPoint {
     pub x: i32,
     pub y: i32,
 }
-pub const RIGHT: i32 = 2;
-pub const LEFT: i32 = 1;
-pub const BOTTOM: i32 = 4;
-pub const TOP: i32 = 8;
+bitflags::bitflags! {
+    /// The sides of a rectangle a point lies outside of (a Cohen-Sutherland
+    /// "outcode"); [`clip_mline`] uses it to clip automap lines to the screen.
+    #[derive(Copy, Clone, PartialEq, Eq, Debug)]
+    struct Outcode: u8 {
+        const LEFT = 1;
+        const RIGHT = 2;
+        const BOTTOM = 4;
+        const TOP = 8;
+    }
+}
+
+impl Outcode {
+    /// Which sides of the `width` x `height` screen (origin at the top left)
+    /// `point` is outside of.
+    fn of_screen_point(point: FPoint, width: i32, height: i32) -> Self {
+        let mut code = Self::empty();
+        if point.y < 0 {
+            code |= Self::TOP;
+        } else if point.y >= height {
+            code |= Self::BOTTOM;
+        }
+        if point.x < 0 {
+            code |= Self::LEFT;
+        } else if point.x >= width {
+            code |= Self::RIGHT;
+        }
+        code
+    }
+}
 pub const AM_MSGHEADER: i32 = (('a' as i32) << 24) + (('m' as i32) << 16);
 pub const AM_MSGENTERED: i32 = AM_MSGHEADER | ('e' as i32) << 8;
 pub const AM_MSGEXITED: i32 = AM_MSGHEADER | ('x' as i32) << 8;
@@ -799,36 +825,35 @@ pub fn clear_fb(am_map: &AmMapState, i_video: &mut IVideoState, color: i32) {
     i_video.i_video_buffer[..len].fill(color as u8);
 }
 pub fn clip_mline(am_map: &AmMapState, ml: &MLine, fl: &mut FLine) -> bool {
-    let mut outcode1: i32 = 0;
-    let mut outcode2: i32 = 0;
-    let mut outside: i32;
+    let mut outcode1 = Outcode::empty();
+    let mut outcode2 = Outcode::empty();
     let mut tmp: FPoint = FPoint { x: 0, y: 0 };
     let mut dx: i32;
     let mut dy: i32;
     if ml.a.y > am_map.m_y2 {
-        outcode1 = TOP;
+        outcode1 = Outcode::TOP;
     } else if ml.a.y < am_map.m_y {
-        outcode1 = BOTTOM;
+        outcode1 = Outcode::BOTTOM;
     }
     if ml.b.y > am_map.m_y2 {
-        outcode2 = TOP;
+        outcode2 = Outcode::TOP;
     } else if ml.b.y < am_map.m_y {
-        outcode2 = BOTTOM;
+        outcode2 = Outcode::BOTTOM;
     }
-    if outcode1 & outcode2 != 0 {
+    if outcode1.intersects(outcode2) {
         return false;
     }
     if ml.a.x < am_map.m_x {
-        outcode1 |= LEFT;
+        outcode1 |= Outcode::LEFT;
     } else if ml.a.x > am_map.m_x2 {
-        outcode1 |= RIGHT;
+        outcode1 |= Outcode::RIGHT;
     }
     if ml.b.x < am_map.m_x {
-        outcode2 |= LEFT;
+        outcode2 |= Outcode::LEFT;
     } else if ml.b.x > am_map.m_x2 {
-        outcode2 |= RIGHT;
+        outcode2 |= Outcode::RIGHT;
     }
-    if outcode1 & outcode2 != 0 {
+    if outcode1.intersects(outcode2) {
         return false;
     }
     fl.a.x = am_map.f_x as Fixed + (fixed_mul(ml.a.x - am_map.m_x, am_map.scale_mtof) >> 16);
@@ -837,53 +862,33 @@ pub fn clip_mline(am_map: &AmMapState, ml: &MLine, fl: &mut FLine) -> bool {
     fl.b.x = am_map.f_x as Fixed + (fixed_mul(ml.b.x - am_map.m_x, am_map.scale_mtof) >> 16);
     fl.b.y = am_map.f_y as Fixed
         + (am_map.f_h as Fixed - (fixed_mul(ml.b.y - am_map.m_y, am_map.scale_mtof) >> 16));
-    outcode1 = 0;
-    if fl.a.y < 0 {
-        outcode1 |= TOP;
-    } else if fl.a.y >= am_map.f_h {
-        outcode1 |= BOTTOM;
-    }
-    if fl.a.x < 0 {
-        outcode1 |= LEFT;
-    } else if fl.a.x >= am_map.f_w {
-        outcode1 |= RIGHT;
-    }
-    outcode2 = 0;
-    if fl.b.y < 0 {
-        outcode2 |= TOP;
-    } else if fl.b.y >= am_map.f_h {
-        outcode2 |= BOTTOM;
-    }
-    if fl.b.x < 0 {
-        outcode2 |= LEFT;
-    } else if fl.b.x >= am_map.f_w {
-        outcode2 |= RIGHT;
-    }
-    if outcode1 & outcode2 != 0 {
+    outcode1 = Outcode::of_screen_point(fl.a, am_map.f_w, am_map.f_h);
+    outcode2 = Outcode::of_screen_point(fl.b, am_map.f_w, am_map.f_h);
+    if outcode1.intersects(outcode2) {
         return false;
     }
-    while outcode1 | outcode2 != 0 {
-        if outcode1 != 0 {
-            outside = outcode1;
+    while !(outcode1 | outcode2).is_empty() {
+        let outside = if outcode1.is_empty() {
+            outcode2
         } else {
-            outside = outcode2;
-        }
-        if outside & TOP != 0 {
+            outcode1
+        };
+        if outside.contains(Outcode::TOP) {
             dy = fl.a.y - fl.b.y;
             dx = fl.b.x - fl.a.x;
             tmp.x = fl.a.x + dx * fl.a.y / dy;
             tmp.y = 0;
-        } else if outside & BOTTOM != 0 {
+        } else if outside.contains(Outcode::BOTTOM) {
             dy = fl.a.y - fl.b.y;
             dx = fl.b.x - fl.a.x;
             tmp.x = fl.a.x + dx * (fl.a.y - am_map.f_h) / dy;
             tmp.y = am_map.f_h - 1;
-        } else if outside & RIGHT != 0 {
+        } else if outside.contains(Outcode::RIGHT) {
             dy = fl.b.y - fl.a.y;
             dx = fl.b.x - fl.a.x;
             tmp.y = fl.a.y + dy * (am_map.f_w - 1 - fl.a.x) / dx;
             tmp.x = am_map.f_w - 1;
-        } else if outside & LEFT != 0 {
+        } else if outside.contains(Outcode::LEFT) {
             dy = fl.b.y - fl.a.y;
             dx = fl.b.x - fl.a.x;
             tmp.y = fl.a.y + dy * -fl.a.x / dx;
@@ -894,32 +899,12 @@ pub fn clip_mline(am_map: &AmMapState, ml: &MLine, fl: &mut FLine) -> bool {
         }
         if outside == outcode1 {
             fl.a = tmp;
-            outcode1 = 0;
-            if fl.a.y < 0 {
-                outcode1 |= TOP;
-            } else if fl.a.y >= am_map.f_h {
-                outcode1 |= BOTTOM;
-            }
-            if fl.a.x < 0 {
-                outcode1 |= LEFT;
-            } else if fl.a.x >= am_map.f_w {
-                outcode1 |= RIGHT;
-            }
+            outcode1 = Outcode::of_screen_point(fl.a, am_map.f_w, am_map.f_h);
         } else {
             fl.b = tmp;
-            outcode2 = 0;
-            if fl.b.y < 0 {
-                outcode2 |= TOP;
-            } else if fl.b.y >= am_map.f_h {
-                outcode2 |= BOTTOM;
-            }
-            if fl.b.x < 0 {
-                outcode2 |= LEFT;
-            } else if fl.b.x >= am_map.f_w {
-                outcode2 |= RIGHT;
-            }
+            outcode2 = Outcode::of_screen_point(fl.b, am_map.f_w, am_map.f_h);
         }
-        if outcode1 & outcode2 != 0 {
+        if outcode1.intersects(outcode2) {
             return false;
         }
     }
