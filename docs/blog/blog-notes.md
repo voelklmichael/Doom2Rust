@@ -259,3 +259,13 @@ identical simulation hashes on demo1 to demo3), and stacked PRs merged in order.
 - **Performance:** one machine, Xvfb, 2 to 3 runs; `realtics` resolution is 1/35 s. The C copy was
   built in a scratch directory (`-Os` and `-O2`), nothing in the repo was touched.
 - **Human-time estimates** in section 2 are my judgment.
+
+## 9. Open items (help needed)
+
+- **Verify the speedup: how to measure?** Current numbers are one machine, 2 to 3 runs of
+  `-timedemo demo1` under Xvfb (`realtics` resolution is 1/35 s) for Rust vs C, and the
+  ESP32 `[perf]` serial lines for the board. Needs an agreed, repeatable method before the
+  post quotes a speedup.
+- **Sound.**
+- **Testing of more games and levels.** So far only the shareware IWAD (E1) and its demos are
+  covered by the golden tests.
