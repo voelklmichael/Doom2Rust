@@ -233,13 +233,18 @@ pub fn submit_frame(frame: Frame) {
 
 /// Streams submitted frames to the panel, forever. Runs on core 0; it sleeps between DMA chunks, so
 /// the network tasks sharing the executor keep running.
-pub async fn run_pump(lcd: &RefCell<Lcd>) -> ! {
+///
+/// `between_frames` runs once per frame, just before it goes out: the one moment the pump is not
+/// using the SPI bus, so it may draw through the [`Display`](core_s3::display::Display) (over
+/// [`LcdSpi`]), which is how the status bar above the picture is updated. It has to be quick.
+pub async fn run_pump(lcd: &RefCell<Lcd>, mut between_frames: impl FnMut()) -> ! {
     loop {
         let ready = critical_section::with(|cs| READY.borrow_ref_mut(cs).take());
         let Some(frame) = ready else {
             Timer::after(POLL_FRAME).await;
             continue;
         };
+        between_frames();
         let frame = send(lcd, frame).await;
         critical_section::with(|cs| *FREE.borrow_ref_mut(cs) = Some(frame));
     }

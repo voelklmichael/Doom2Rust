@@ -169,7 +169,7 @@ function setState(text, on) {
   $('controls').className = on ? '' : 'off';
 }
 
-// The board sends its frame rate as a text message, "fps 28.4", about every 2 s. Nothing (an older
+// The board sends its frame rate as a text message, "fps 28.4", about once a second. Nothing (an older
 // firmware, no sample yet, a stalled game, no connection) shows as "- fps". Other messages are ignored.
 const FPS_STALE_MS = 6000;
 let fpsTimer = null;

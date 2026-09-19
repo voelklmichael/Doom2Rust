@@ -4,7 +4,7 @@
 //!
 //! The other way, the board pushes its frame rate to every connected page as a WebSocket text
 //! message (`core_s3_protocol::encode_fps`) whenever the game has measured a new one (see
-//! `platform::fps_sample`; about every 2 s).
+//! `platform::fps_sample`; about once a second).
 //!
 //! Three tasks run this. A task that is serving a page or holding a WebSocket is not listening, so
 //! with only one or two a browser that loads the page and then opens its WebSocket (or a second tab)
