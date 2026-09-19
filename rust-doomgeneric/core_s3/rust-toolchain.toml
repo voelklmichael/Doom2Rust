@@ -1,0 +1,3 @@
+# Installed by `espup install` (Xtensa support is not in upstream rustc).
+[toolchain]
+channel = "esp"

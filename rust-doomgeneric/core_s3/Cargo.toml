@@ -1,0 +1,33 @@
+[package]
+name = "core_s3"
+authors = ["michaelvoelkl@zoho.com"]
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+# Standalone workspace: this crate targets xtensa-esp32s3-none-elf and needs the
+# `esp` toolchain (see PLAN.md), so it must stay out of the host workspace
+# (`cargo build --workspace` on the host would otherwise try to build it).
+[workspace]
+
+[[bin]]
+name = "core_s3"
+path = "src/main.rs"
+test = false
+bench = false
+
+[dependencies]
+esp-hal = { version = "1.2", features = ["esp32s3"] }
+esp-bootloader-esp-idf = { version = "0.6", features = ["esp32s3"] }
+esp-backtrace = { version = "0.20", features = ["esp32s3", "panic-handler", "println"] }
+esp-println = { version = "0.18", features = ["esp32s3"] }
+
+[profile.dev]
+# Debug builds are too slow (and too big) to be useful on the device.
+opt-level = "s"
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+debug = 2
