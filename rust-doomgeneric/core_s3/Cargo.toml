@@ -22,12 +22,14 @@ bench = false
 # versions are the ones core-s3 v0.5.0 pins in its workspace; esp-hal is a `links` crate,
 # so they must match core-s3's exactly or the build fails with duplicate-crate errors.
 core-s3 = { git = "https://github.com/anapeksha/core-s3-rs", tag = "v0.5.0", features = ["esp-hal"] }
+esp-alloc = { version = "=0.10.0", features = ["esp32s3"] }
 embedded-graphics = { version = "0.8.2", default-features = false }
 esp-backtrace = { version = "=0.17.0", default-features = false, features = ["esp32s3", "panic-handler", "println"] }
 esp-bootloader-esp-idf = { version = "0.5.0", default-features = false, features = ["esp32s3"] }
 esp-hal = { version = "=1.1.2", default-features = false, features = ["esp32s3", "rt", "unstable"] }
 esp-println = { version = "=0.15.0", default-features = false, features = ["esp32s3", "jtag-serial"] }
 heapless = { version = "0.9.3", default-features = false }
+rust_doomgeneric = { path = "../engine" }
 
 [profile.dev]
 # Debug builds are too slow (and too big) to be useful on the device.
