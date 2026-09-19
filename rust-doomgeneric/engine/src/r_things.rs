@@ -8,9 +8,9 @@ use crate::m_fixed::fixed_mul;
 use crate::m_fixed::Fixed;
 use crate::m_fixed::FRACBITS;
 use crate::m_fixed::FRACUNIT;
+use crate::p_mobj::MobjFlags;
 use crate::p_mobj::MobjId;
 use crate::p_mobj::PspDef;
-use crate::p_mobj::{MF_SHADOW, MF_TRANSLATION, MF_TRANSSHIFT};
 use crate::p_setup::SectorId;
 use crate::patch::Patch;
 use crate::r_defs::ClipArray;
@@ -95,7 +95,7 @@ impl RThingsState {
                 texturemid: 0,
                 patch: 0,
                 colormap: None,
-                mobjflags: 0,
+                mobjflags: MobjFlags::empty(),
             }; 128],
             vissprite_p: 0,
             overflowsprite: VisSprite {
@@ -111,7 +111,7 @@ impl RThingsState {
                 texturemid: 0,
                 patch: 0,
                 colormap: None,
-                mobjflags: 0,
+                mobjflags: MobjFlags::empty(),
             },
             mfloorclip: None,
             mceilingclip: None,
@@ -138,7 +138,7 @@ pub struct VisSprite {
     pub texturemid: Fixed,
     pub patch: i32,
     pub colormap: Option<ColormapId>,
-    pub mobjflags: i32,
+    pub mobjflags: MobjFlags,
 }
 pub const FF_FULLBRIGHT: i32 = 0x8000;
 pub const FF_FRAMEMASK: i32 = 0x7fff;
@@ -343,10 +343,11 @@ pub fn draw_vis_sprite(state: &mut GameState, vis: &VisSprite) {
     state.r_draw.dc_colormap = vis.colormap;
     if state.r_draw.dc_colormap.is_none() {
         state.r_main.colfunc = state.r_main.fuzzcolfunc;
-    } else if vis.mobjflags & MF_TRANSLATION != 0 {
+    } else if vis.mobjflags.contains(MobjFlags::TRANSLATION) {
         state.r_main.colfunc = state.r_main.transcolfunc;
-        state.r_draw.dc_translation =
-            ((vis.mobjflags & MF_TRANSLATION) >> (MF_TRANSSHIFT - 8)) as usize - 256;
+        state.r_draw.dc_translation = ((vis.mobjflags & MobjFlags::TRANSLATION).bits()
+            >> (MobjFlags::TRANSLATION_SHIFT - 8)) as usize
+            - 256;
     }
     state.r_draw.dc_iscale = (vis.xiscale.abs() >> state.r_main.detailshift) as Fixed;
     state.r_draw.dc_texturemid = vis.texturemid;
@@ -459,7 +460,7 @@ pub fn project_sprite(state: &mut GameState, thing_id: MobjId) {
         texturemid: 0,
         patch: 0,
         colormap: None,
-        mobjflags: 0,
+        mobjflags: MobjFlags::empty(),
     };
     vis.mobjflags = thing_flags;
     vis.scale = xscale << state.r_main.detailshift;
@@ -486,7 +487,7 @@ pub fn project_sprite(state: &mut GameState, thing_id: MobjId) {
         vis.startfrac += vis.xiscale * (vis.x1 - x1);
     }
     vis.patch = lump;
-    if thing_flags & MF_SHADOW != 0 {
+    if thing_flags.contains(MobjFlags::SHADOW) {
         vis.colormap = None;
     } else if let Some(colormap) = state.r_main.fixedcolormap {
         vis.colormap = Some(colormap);
@@ -539,7 +540,7 @@ pub fn draw_psprite(state: &mut GameState, psp: &PspDef) {
         texturemid: 0,
         patch: 0,
         colormap: None,
-        mobjflags: 0,
+        mobjflags: MobjFlags::empty(),
     };
     let psp_state = state.info.state_mut(psp.state.unwrap());
     let (psp_state_sprite, psp_state_frame) = (psp_state.sprite, psp_state.frame);
@@ -572,7 +573,7 @@ pub fn draw_psprite(state: &mut GameState, psp: &PspDef) {
     if x2 < 0 {
         return;
     }
-    avis.mobjflags = 0;
+    avis.mobjflags = MobjFlags::empty();
     avis.texturemid = (BASEYCENTER << FRACBITS) + FRACUNIT / 2
         - (psp.sy - state.r_data.spritetopoffset[lump as usize]);
     avis.x1 = if x1 < 0 { 0 } else { x1 };

@@ -6,8 +6,9 @@ use crate::m_fixed::Fixed;
 use crate::m_fixed::FRACBITS;
 use crate::m_fixed::FRACUNIT;
 use crate::m_fixed::INT_MAX;
+use crate::p_mobj::MobjFlags;
 
-use crate::p_mobj::{MobjId, MF_NOBLOCKMAP, MF_NOSECTOR};
+use crate::p_mobj::MobjId;
 use crate::p_setup::LineId;
 use crate::r_main::point_in_subsector;
 
@@ -371,7 +372,7 @@ pub fn unset_thing_position(state: &mut GameState, thing: MobjId) {
             t.y,
         )
     };
-    if flags & MF_NOSECTOR == 0 {
+    if !flags.contains(MobjFlags::NOSECTOR) {
         if let Some(id) = snext {
             state
                 .p_mobj
@@ -390,7 +391,7 @@ pub fn unset_thing_position(state: &mut GameState, thing: MobjId) {
             state.p_setup.sector_mut(sector).thinglist = snext;
         }
     }
-    if flags & MF_NOBLOCKMAP == 0 {
+    if !flags.contains(MobjFlags::NOBLOCKMAP) {
         if let Some(id) = bnext {
             state
                 .p_mobj
@@ -425,7 +426,7 @@ pub fn set_thing_position(state: &mut GameState, thing: MobjId) {
     };
     let ss = point_in_subsector(state, x, y);
     state.p_mobj.mo_mut(thing).subsector = ss;
-    if flags & MF_NOSECTOR == 0 {
+    if !flags.contains(MobjFlags::NOSECTOR) {
         let sector = state.p_setup.subsectors[ss.0 as usize].sector;
         let old_head = state.p_setup.sector_mut(sector).thinglist;
         {
@@ -442,7 +443,7 @@ pub fn set_thing_position(state: &mut GameState, thing: MobjId) {
         }
         state.p_setup.sector_mut(sector).thinglist = Some(thing);
     }
-    if flags & MF_NOBLOCKMAP == 0 {
+    if !flags.contains(MobjFlags::NOBLOCKMAP) {
         let blockx = (x - state.p_setup.bmaporgx) >> MAPBLOCKSHIFT;
         let blocky = (y - state.p_setup.bmaporgy) >> MAPBLOCKSHIFT;
         if blockx >= 0

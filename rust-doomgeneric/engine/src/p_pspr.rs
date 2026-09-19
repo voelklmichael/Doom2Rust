@@ -23,9 +23,9 @@ use crate::p_map::line_attack;
 use crate::p_mobj::set_mobj_state;
 use crate::p_mobj::spawn_mobj;
 use crate::p_mobj::spawn_player_missile;
+use crate::p_mobj::MobjFlags;
 use crate::p_mobj::MobjId;
 use crate::p_mobj::MobjType;
-use crate::p_mobj::MF_JUSTATTACKED;
 
 use crate::p_mobj::StateAction;
 use crate::p_mobj::{statenum_from_raw, StateNum};
@@ -421,7 +421,7 @@ pub fn saw(state: &mut GameState, player_id: PlayerId, _position: i32) {
             .angle
             .wrapping_add((ANG90 / 20) as Angle);
     }
-    state.p_mobj.mo_mut(player_mo).flags |= MF_JUSTATTACKED;
+    state.p_mobj.mo_mut(player_mo).flags |= MobjFlags::JUSTATTACKED;
 }
 fn decrease_ammo(state: &mut GameState, player: PlayerId, ammonum: i32, amount: i32) {
     let player = state.g_game.player_mut(player);

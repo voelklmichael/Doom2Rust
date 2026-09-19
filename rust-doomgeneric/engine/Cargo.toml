@@ -7,6 +7,7 @@ edition = "2021"
 autobins = false
 
 [dependencies]
+bitflags = "2"
 sha1_smol = "1.0.1"
 
 # Lints beyond clippy's defaults that the engine is clean against. They keep the

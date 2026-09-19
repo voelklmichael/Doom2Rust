@@ -1,5 +1,6 @@
 use crate::d_event::EvType;
 use crate::d_event::Event;
+use crate::p_mobj::LineFlags;
 use alloc::string::ToString;
 
 use crate::d_player::PlayerId;
@@ -20,8 +21,6 @@ use crate::p_maputl::MAPBLOCKUNITS;
 use crate::v_video::cache_patch_num;
 use crate::v_video::Screen;
 
-use crate::p_spec::ML_MAPPED;
-use crate::p_spec::ML_SECRET;
 use crate::st_stuff::st_responder;
 
 use crate::tables::Angle;
@@ -170,7 +169,6 @@ pub const RIGHT: i32 = 2;
 pub const LEFT: i32 = 1;
 pub const BOTTOM: i32 = 4;
 pub const TOP: i32 = 8;
-pub const ML_DONTDRAW: i32 = 128;
 pub const AM_MSGHEADER: i32 = (('a' as i32) << 24) + (('m' as i32) << 16);
 pub const AM_MSGENTERED: i32 = AM_MSGHEADER | ('e' as i32) << 8;
 pub const AM_MSGEXITED: i32 = AM_MSGHEADER | ('x' as i32) << 8;
@@ -197,7 +195,6 @@ pub const AM_NUMMARKPOINTS: i32 = 10;
 pub const INITSCALEMTOF: f64 = 0.2f64 * FRACUNIT as f64;
 pub const M_ZOOMIN: i32 = (1.02f64 * FRACUNIT as f64) as i32;
 pub const M_ZOOMOUT: i32 = (FRACUNIT as f64 / 1.02f64) as i32;
-pub const LINE_NEVERSEE: i32 = ML_DONTDRAW;
 pub const R_0: i32 = 8 * 16 * FRACUNIT / 7;
 pub static PLAYER_ARROW: [MLine; 7] = [
     MLine {
@@ -1042,7 +1039,7 @@ pub fn draw_walls(state: &mut GameState) {
     };
     for i in 0..(state.p_setup.numlines as usize) {
         let li = &state.p_setup.lines[i];
-        let (li_flags, li_special) = (li.flags as i32, li.special as i32);
+        let (li_flags, li_special) = (li.flags, li.special as i32);
         let (li_backsector, li_frontsector) = (li.backsector, li.frontsector);
         let li_v1 = state.p_setup.vertexes[li.v1.0 as usize];
         let li_v2 = state.p_setup.vertexes[li.v2.0 as usize];
@@ -1051,8 +1048,8 @@ pub fn draw_walls(state: &mut GameState) {
         l.b.x = li_v2.x;
         l.b.y = li_v2.y;
         let lightlev = state.am_map.lightlev;
-        if state.am_map.cheating != 0 || li_flags & ML_MAPPED != 0 {
-            if !(li_flags & LINE_NEVERSEE != 0 && state.am_map.cheating == 0) {
+        if state.am_map.cheating != 0 || li_flags.contains(LineFlags::MAPPED) {
+            if !(li_flags.contains(LineFlags::DONTDRAW) && state.am_map.cheating == 0) {
                 match li_backsector {
                     None => {
                         draw_mline(state, &l, WALLCOLORS + lightlev);
@@ -1060,7 +1057,7 @@ pub fn draw_walls(state: &mut GameState) {
                     Some(li_backsector) => {
                         if li_special == 39 {
                             draw_mline(state, &l, WALLCOLORS + WALLRANGE / 2);
-                        } else if li_flags & ML_SECRET != 0 {
+                        } else if li_flags.contains(LineFlags::SECRET) {
                             if state.am_map.cheating != 0 {
                                 draw_mline(state, &l, SECRETWALLCOLORS + lightlev);
                             } else {
@@ -1087,7 +1084,7 @@ pub fn draw_walls(state: &mut GameState) {
                 }
             }
         } else if state.g_game.player_mut(state.am_map.plr).powers[PowerType::Allmap as usize] != 0
-            && li_flags & LINE_NEVERSEE == 0
+            && !li_flags.contains(LineFlags::DONTDRAW)
         {
             draw_mline(state, &l, GRAYS + 3);
         }

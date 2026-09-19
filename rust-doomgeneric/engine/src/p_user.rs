@@ -1,9 +1,10 @@
 use crate::d_mode::GameMode;
+use crate::d_player::CheatFlags;
 use crate::d_player::PlayerId;
 use crate::d_player::PlayerState;
 use crate::d_player::PowerType;
 use crate::d_player::{weapontype_from_raw, WeaponType};
-use crate::d_player::{CF_NOCLIP, CF_NOMOMENTUM};
+use crate::p_mobj::MobjFlags;
 
 use crate::d_ticcmd::{BT_CHANGE, BT_SPECIAL, BT_USE, BT_WEAPONMASK, BT_WEAPONSHIFT};
 use crate::game_state::GameState;
@@ -15,7 +16,6 @@ use crate::p_map::use_lines;
 use crate::p_mobj::set_mobj_state;
 use crate::p_mobj::MobjId;
 use crate::p_mobj::StateNum;
-use crate::p_mobj::{MF_JUSTATTACKED, MF_NOCLIP, MF_SHADOW};
 use crate::p_pspr::move_psprites;
 use crate::p_spec::player_in_special_sector;
 use crate::r_main::point_to_angle2;
@@ -68,7 +68,7 @@ pub fn calc_height(state: &mut GameState, player_id: PlayerId) {
     if player.bob > MAXBOB {
         player.bob = MAXBOB as Fixed;
     }
-    if player.cheats & CF_NOMOMENTUM != 0 || !state.p_user.onground {
+    if player.cheats.contains(CheatFlags::NOMOMENTUM) || !state.p_user.onground {
         player.viewz = (state.p_mobj.mo(player_mo).z + VIEWHEIGHT) as Fixed;
         if player.viewz > state.p_mobj.mo(player_mo).ceilingz - 4 * FRACUNIT {
             player.viewz = (state.p_mobj.mo(player_mo).ceilingz - 4 * FRACUNIT) as Fixed;
@@ -185,16 +185,24 @@ pub fn player_think(state: &mut GameState, player_id: PlayerId) {
     let player = player_id;
     let mut newweapon: WeaponType;
     let player_mo = state.g_game.players[player.0 as usize].mo.unwrap();
-    if state.g_game.players[player.0 as usize].cheats & CF_NOCLIP != 0 {
-        state.p_mobj.mo_mut(player_mo).flags |= MF_NOCLIP;
+    if state.g_game.players[player.0 as usize]
+        .cheats
+        .contains(CheatFlags::NOCLIP)
+    {
+        state.p_mobj.mo_mut(player_mo).flags |= MobjFlags::NOCLIP;
     } else {
-        state.p_mobj.mo_mut(player_mo).flags &= !MF_NOCLIP;
+        state.p_mobj.mo_mut(player_mo).flags &= !MobjFlags::NOCLIP;
     }
-    if state.p_mobj.mo(player_mo).flags & MF_JUSTATTACKED != 0 {
+    if state
+        .p_mobj
+        .mo(player_mo)
+        .flags
+        .contains(MobjFlags::JUSTATTACKED)
+    {
         state.g_game.players[player_id.0 as usize].cmd.angleturn = 0;
         state.g_game.players[player_id.0 as usize].cmd.forwardmove = (0xc800 / 512) as i8;
         state.g_game.players[player_id.0 as usize].cmd.sidemove = 0;
-        state.p_mobj.mo_mut(player_mo).flags &= !MF_JUSTATTACKED;
+        state.p_mobj.mo_mut(player_mo).flags &= !MobjFlags::JUSTATTACKED;
     }
     if state.g_game.players[player.0 as usize].playerstate == PlayerState::Dead {
         death_think(state, player_id);
@@ -269,7 +277,7 @@ pub fn player_think(state: &mut GameState, player_id: PlayerId) {
     if state.g_game.players[player.0 as usize].powers[PowerType::Invisibility as usize] != 0 {
         state.g_game.players[player.0 as usize].powers[PowerType::Invisibility as usize] -= 1;
         if state.g_game.players[player.0 as usize].powers[PowerType::Invisibility as usize] == 0 {
-            state.p_mobj.mo_mut(player_mo).flags &= !MF_SHADOW;
+            state.p_mobj.mo_mut(player_mo).flags &= !MobjFlags::SHADOW;
         }
     }
     if state.g_game.players[player.0 as usize].powers[PowerType::Infrared as usize] != 0 {

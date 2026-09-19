@@ -21,6 +21,7 @@ use crate::filesystem::{read_file, MemFileSystem};
 use crate::g_game::{do_load_game, do_save_game, exit_level, g_load_game, g_save_game};
 use crate::game_state::{init_game_state, GameState};
 use crate::info::StateId;
+use crate::p_mobj::MobjFlags;
 use crate::p_saveg::save_game_file;
 use crate::p_setup::LineId;
 use crate::p_setup::SectorId;
@@ -143,7 +144,7 @@ fn world_summary(state: &mut GameState) -> String {
                 m.momx,
                 m.momy,
                 m.kind as i32,
-                m.flags,
+                m.flags.bits(),
                 m.tics,
                 m.movecount,
             ]
@@ -346,7 +347,7 @@ fn use_special_line_trace() -> Option<String> {
                 } else {
                     mobj_thinker_ids(state).into_iter().find(|&id| {
                         let m = state.p_mobj.mo(id);
-                        m.player.is_none() && m.flags & crate::p_mobj::MF_COUNTKILL != 0
+                        m.player.is_none() && m.flags.contains(MobjFlags::COUNTKILL)
                     })?
                 };
                 state.p_setup.line_mut(line).special = special;

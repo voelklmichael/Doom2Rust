@@ -12,6 +12,7 @@ use crate::d_mode::GameMission;
 use crate::d_mode::GameMode;
 use crate::d_mode::GameVersion;
 use crate::d_mode::{skill_from_raw, SkillType};
+use crate::d_player::CheatFlags;
 use crate::d_player::PowerType;
 use crate::d_player::WeaponType;
 use crate::d_player::{AmmoType, NUMAMMO};
@@ -44,6 +45,7 @@ use crate::m_fixed::FRACUNIT;
 use crate::m_menu::start_control_panel;
 use crate::m_random::clear_random;
 use crate::m_random::p_random;
+use crate::p_mobj::MobjFlags;
 use alloc::string::String;
 use alloc::string::ToString;
 use alloc::vec::Vec;
@@ -58,7 +60,7 @@ use crate::p_mobj::MobjId;
 use crate::p_mobj::MobjType;
 use crate::p_mobj::PspDef;
 use crate::p_mobj::StateNum;
-use crate::p_mobj::MF_SHADOW;
+
 use crate::p_saveg::archive_players;
 use crate::p_saveg::archive_specials;
 use crate::p_saveg::archive_thinkers;
@@ -214,7 +216,7 @@ const NEW_PLAYER: Player = Player {
     maxammo: [0; 4],
     attackdown: false,
     usedown: false,
-    cheats: 0,
+    cheats: CheatFlags::empty(),
     refire: 0,
     killcount: 0,
     itemcount: 0,
@@ -1007,7 +1009,7 @@ pub fn player_finish_level(state: &mut GameState, player: i32) {
     p.fixedcolormap = 0;
     p.damagecount = 0;
     p.bonuscount = 0;
-    state.p_mobj.mo_mut(mo_id).flags &= !MF_SHADOW;
+    state.p_mobj.mo_mut(mo_id).flags &= !MobjFlags::SHADOW;
 }
 pub fn player_reborn(state: &mut GGameState, player: i32) {
     let old = &state.players[player as usize];

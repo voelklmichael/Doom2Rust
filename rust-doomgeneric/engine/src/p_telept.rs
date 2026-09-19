@@ -1,13 +1,14 @@
 use crate::d_mode::GameVersion;
 use crate::game_state::GameState;
 use crate::p_map::teleport_move;
+use crate::p_mobj::MobjFlags;
 use crate::p_mobj::MobjId;
 use crate::p_tick::ThinkerPayload;
 
 use crate::p_mobj::spawn_mobj;
 use crate::p_mobj::MobjType;
 use crate::p_mobj::ThinkerFn;
-use crate::p_mobj::MF_MISSILE;
+
 use crate::p_setup::LineId;
 
 use crate::s_sound::s_start_sound;
@@ -17,7 +18,7 @@ use crate::tables::ANGLETOFINESHIFT;
 use crate::tables::FINECOSINE;
 use crate::tables::FINESINE;
 pub fn teleport(state: &mut GameState, line: LineId, side: i32, thing: MobjId) -> bool {
-    if state.p_mobj.mo(thing).flags & MF_MISSILE != 0 {
+    if state.p_mobj.mo(thing).flags.contains(MobjFlags::MISSILE) {
         return false;
     }
     if side == 1 {

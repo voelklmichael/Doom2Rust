@@ -3,6 +3,7 @@ use crate::m_fixed::Fixed;
 use crate::m_fixed::FRACUNIT;
 use crate::m_fixed::INT_MAX;
 use crate::p_map::p_change_sector;
+use crate::p_mobj::LineFlags;
 
 use crate::p_mobj::SectorSpecial;
 use crate::p_mobj::ThinkerFn;
@@ -18,7 +19,7 @@ use crate::p_spec::get_side;
 use crate::p_spec::two_sided;
 use crate::p_spec::FloorId;
 use crate::p_spec::FloorMove;
-use crate::p_spec::ML_TWOSIDED;
+
 use crate::p_tick::add_thinker;
 use crate::p_tick::remove_thinker;
 use crate::p_tick::ThinkerKind;
@@ -296,7 +297,7 @@ pub fn do_floor(state: &mut GameState, line: LineId, floortype: FloorE) -> bool 
                 floor.sector = sec;
                 floor.speed = FLOORSPEED as Fixed;
                 for i in 0..linecount {
-                    if two_sided(state, secnum, i) != 0 {
+                    if two_sided(state, secnum, i) {
                         for side_index in 0..2_i32 {
                             let side = get_side(state, secnum, i, side_index);
                             let bottomtexture = state.p_setup.side_mut(side).bottomtexture;
@@ -317,7 +318,7 @@ pub fn do_floor(state: &mut GameState, line: LineId, floortype: FloorE) -> bool 
                 floor.floordestheight = find_lowest_floor_surrounding(state, sec);
                 floor.texture = state.p_setup.sector_mut(sec).floorpic;
                 for i in 0..linecount {
-                    if two_sided(state, secnum, i) != 0 {
+                    if two_sided(state, secnum, i) {
                         let side0 = get_side(state, secnum, i, 0);
                         let side0_sector = state.p_setup.side_mut(side0).sector;
                         let other = if side0_sector.0 == secnum as u32 {
@@ -400,7 +401,7 @@ pub fn build_stairs(state: &mut GameState, line: LineId, kind: StairE) -> bool {
             for i in 0..linecount {
                 let line_id = state.p_setup.sector_mut(sec).lines[i as usize];
                 let iline = state.p_setup.line(line_id);
-                if iline.flags as i32 & ML_TWOSIDED != 0 {
+                if iline.flags.contains(LineFlags::TWOSIDED) {
                     let front_id = iline.frontsector.unwrap();
                     if secnum == front_id.0 as i32 {
                         let back_id = iline.backsector.unwrap();

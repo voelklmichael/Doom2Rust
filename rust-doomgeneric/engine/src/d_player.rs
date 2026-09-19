@@ -27,12 +27,9 @@ pub enum PSpriteNum {
     Weapon = 0,
     Flash = 1,
 }
-// CF_NOCLIP/CF_GODMODE/CF_NOMOMENTUM are bit flags (1/2/4) combined with
+// CheatFlags::NOCLIP/CheatFlags::GODMODE/CheatFlags::NOMOMENTUM are bit flags (1/2/4) combined with
 // bitwise OR/AND/XOR into a single `cheats` field, not mutually-exclusive
 // enum variants - not a candidate for enum conversion.
-pub const CF_NOCLIP: i32 = 1;
-pub const CF_GODMODE: i32 = 2;
-pub const CF_NOMOMENTUM: i32 = 4;
 pub const NUMPOWERS: i32 = 6;
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum PowerType {
@@ -74,6 +71,16 @@ pub fn weapontype_from_raw(v: i32) -> WeaponType {
     }
 }
 
+bitflags::bitflags! {
+    /// A player's active cheats (`CF_*` in the C source).
+    #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+    pub struct CheatFlags: i32 {
+        const NOCLIP = 1;
+        const GODMODE = 2;
+        const NOMOMENTUM = 4;
+    }
+}
+
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub struct PlayerId(pub u8);
 
@@ -107,7 +114,7 @@ pub struct Player {
     pub maxammo: [i32; 4],
     pub attackdown: bool,
     pub usedown: bool,
-    pub cheats: i32,
+    pub cheats: CheatFlags,
     pub refire: i32,
     pub killcount: i32,
     pub itemcount: i32,
