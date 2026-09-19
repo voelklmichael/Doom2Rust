@@ -43,7 +43,15 @@ embassy-executor = { version = "0.10", default-features = false }
 embassy-net = { version = "0.9", default-features = false, features = ["tcp", "udp", "dhcpv4", "medium-ethernet"] }
 embassy-sync = "0.8"
 embassy-time = "0.5"
+embassy-futures = "0.1"
 static_cell = "2.1"
+# The engine's OPL2 emulator, from the local copy (see ../third_party/oplon/LOCAL_CHANGES.md): with
+# `iram` its hot loop and tables sit in internal RAM instead of behind the flash cache, which the
+# game core shares (about 2 fps of the game's 28 otherwise).
+oplon = { version = "1.0.0", default-features = false, features = ["iram"] }
+
+[patch.crates-io]
+oplon = { path = "../third_party/oplon" }
 
 [profile.dev]
 # Debug builds are too slow (and too big) to be useful on the device.

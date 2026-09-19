@@ -5,9 +5,9 @@ use core_s3_protocol::Command;
 use embedded_graphics::{pixelcolor::Rgb565, prelude::*};
 use esp_hal::{delay::Delay, time::Instant};
 use esp_println::print;
-use rust_doomgeneric::DoomPlatform;
+use rust_doomgeneric::{DoomPlatform, MusicCommand};
 
-use crate::{audio, lcd, net, sound};
+use crate::{lcd, music, net, sound};
 
 /// Frame timing, printed over serial every couple of seconds.
 #[derive(Default)]
@@ -128,8 +128,9 @@ impl DoomPlatform for CoreS3Platform {
     }
 
     fn audio_open(&mut self, _preferred_rate: u32) -> Option<u32> {
-        // The speaker runs at a fixed rate; `None` if it did not come up (see `main`).
-        sound::ready().then_some(audio::SAMPLE_RATE)
+        // The engine mixes the effects at their own rate; `sound` brings them to the speaker's.
+        // `None` if the speaker did not come up (see `main`).
+        sound::ready().then_some(sound::SFX_RATE)
     }
 
     fn audio_frames_wanted(&mut self) -> usize {
@@ -142,6 +143,15 @@ impl DoomPlatform for CoreS3Platform {
         let now = now_us();
         self.stats.audio_us += now - self.audio_mark_us;
         self.audio_mark_us = now;
+    }
+
+    fn music_open(&mut self, genmidi: &[u8]) -> bool {
+        // The synthesizer runs on core 0 (see `music`).
+        music::open(genmidi)
+    }
+
+    fn music_command(&mut self, command: MusicCommand<'_>) {
+        music::command(command);
     }
 
     fn sleep_ms(&mut self, ms: u32) {
