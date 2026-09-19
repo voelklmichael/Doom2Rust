@@ -678,15 +678,13 @@ pub fn WI_drawOnLnode(state: &mut GameState, n: i32, c: &[i32]) {
     };
 }
 pub fn WI_initAnimatedBack(state: &mut GameState) {
-    let mut i: i32;
     if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 {
         return;
     }
     if state.wbs().epsd > 2 {
         return;
     }
-    i = 0;
-    while i < state.wi_stuff.NUMANIMS[state.wbs().epsd as usize] {
+    for i in 0..state.wi_stuff.NUMANIMS[state.wbs().epsd as usize] {
         let index = state.wbs().epsd as usize;
         let mut a = state.wi_stuff.anims()[index][i as usize];
         a.ctr = -1;
@@ -698,19 +696,16 @@ pub fn WI_initAnimatedBack(state: &mut GameState) {
             a.nexttic = state.wi_stuff.bcnt + 1;
         }
         state.wi_stuff.anims()[index][i as usize] = a;
-        i += 1;
     }
 }
 pub fn WI_updateAnimatedBack(state: &mut GameState) {
-    let mut i: i32;
     if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 {
         return;
     }
     if state.wbs().epsd > 2 {
         return;
     }
-    i = 0;
-    while i < state.wi_stuff.NUMANIMS[state.wbs().epsd as usize] {
+    for i in 0..state.wi_stuff.NUMANIMS[state.wbs().epsd as usize] {
         let index = state.wbs().epsd as usize;
         let mut a = state.wi_stuff.anims()[index][i as usize];
         if state.wi_stuff.bcnt == a.nexttic {
@@ -745,19 +740,16 @@ pub fn WI_updateAnimatedBack(state: &mut GameState) {
             }
         }
         state.wi_stuff.anims()[index][i as usize] = a;
-        i += 1;
     }
 }
 pub fn WI_drawAnimatedBack(state: &mut GameState) {
-    let mut i: i32;
     if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 {
         return;
     }
     if state.wbs().epsd > 2 {
         return;
     }
-    i = 0;
-    while i < state.wi_stuff.NUMANIMS[state.wbs().epsd as usize] {
+    for i in 0..state.wi_stuff.NUMANIMS[state.wbs().epsd as usize] {
         let index = state.wbs().epsd as usize;
         let a = state.wi_stuff.anims()[index][i as usize];
         if a.ctr >= 0 {
@@ -765,7 +757,6 @@ pub fn WI_drawAnimatedBack(state: &mut GameState) {
             let dest_screen = Screen::Video;
             V_DrawPatch(state, dest_screen, a.loc.x, a.loc.y, &patch);
         }
-        i += 1;
     }
 }
 pub fn WI_drawNum(state: &mut GameState, mut x: i32, y: i32, mut n: i32, mut digits: i32) -> i32 {
@@ -879,7 +870,6 @@ pub fn WI_updateShowNextLoc(state: &mut GameState) {
     };
 }
 pub fn WI_drawShowNextLoc(state: &mut GameState) {
-    let mut i: i32;
     let last: i32;
     WI_slamBackground(state);
     WI_drawAnimatedBack(state);
@@ -893,11 +883,9 @@ pub fn WI_drawShowNextLoc(state: &mut GameState) {
         } else {
             state.wbs().last
         };
-        i = 0;
-        while i <= last {
+        for i in 0..=last {
             let splat = state.wi_stuff.splat;
             WI_drawOnLnode(state, i, &splat);
-            i += 1;
         }
         if state.wbs().didsecret {
             let splat = state.wi_stuff.splat;
@@ -920,62 +908,46 @@ pub fn WI_drawNoState(state: &mut GameState) {
     WI_drawShowNextLoc(state);
 }
 pub fn WI_fragSum(state: &mut GameState, playernum: i32) -> i32 {
-    let mut i: i32;
     let mut total: i32 = 0;
-    i = 0;
-    while i < MAXPLAYERS {
+    for i in 0..MAXPLAYERS {
         if state.g_game.playeringame[i as usize] && i != playernum {
             total += state.plyr_index(playernum).frags[i as usize];
         }
-        i += 1;
     }
     total -= state.plyr_index(playernum).frags[playernum as usize];
     total
 }
 pub fn WI_initDeathmatchStats(state: &mut GameState) {
-    let mut i: i32;
-    let mut j: i32;
     state.wi_stuff.state = StateEnum::StatCount;
     state.wi_stuff.acceleratestage = false;
     state.wi_stuff.dm_state = 1;
     state.wi_stuff.cnt_pause = TICRATE;
-    i = 0;
-    while i < MAXPLAYERS {
-        if state.g_game.playeringame[i as usize] {
-            j = 0;
-            while j < MAXPLAYERS {
-                if state.g_game.playeringame[j as usize] {
-                    state.wi_stuff.dm_frags[i as usize][j as usize] = 0;
+    for i in 0..(MAXPLAYERS as usize) {
+        if state.g_game.playeringame[i] {
+            for j in 0..(MAXPLAYERS as usize) {
+                if state.g_game.playeringame[j] {
+                    state.wi_stuff.dm_frags[i][j] = 0;
                 }
-                j += 1;
             }
-            state.wi_stuff.dm_totals[i as usize] = 0;
+            state.wi_stuff.dm_totals[i] = 0;
         }
-        i += 1;
     }
     WI_initAnimatedBack(state);
 }
 pub fn WI_updateDeathmatchStats(state: &mut GameState) {
-    let mut i: i32;
-    let mut j: i32;
     let mut stillticking: bool;
     WI_updateAnimatedBack(state);
     if state.wi_stuff.acceleratestage && state.wi_stuff.dm_state != 4 {
         state.wi_stuff.acceleratestage = false;
-        i = 0;
-        while i < MAXPLAYERS {
+        for i in 0..MAXPLAYERS {
             if state.g_game.playeringame[i as usize] {
-                j = 0;
-                while j < MAXPLAYERS {
-                    if state.g_game.playeringame[j as usize] {
-                        state.wi_stuff.dm_frags[i as usize][j as usize] =
-                            state.plyr_index(i).frags[j as usize];
+                for j in 0..(MAXPLAYERS as usize) {
+                    if state.g_game.playeringame[j] {
+                        state.wi_stuff.dm_frags[i as usize][j] = state.plyr_index(i).frags[j];
                     }
-                    j += 1;
                 }
                 state.wi_stuff.dm_totals[i as usize] = WI_fragSum(state, i);
             }
-            i += 1;
         }
         S_StartSound(state, SoundOrigin::None, SfxName::sfx_barexp as i32);
         state.wi_stuff.dm_state = 4;
@@ -985,31 +957,26 @@ pub fn WI_updateDeathmatchStats(state: &mut GameState) {
             S_StartSound(state, SoundOrigin::None, SfxName::sfx_pistol as i32);
         }
         stillticking = false;
-        i = 0;
-        while i < MAXPLAYERS {
+        for i in 0..MAXPLAYERS {
             if state.g_game.playeringame[i as usize] {
-                j = 0;
-                while j < MAXPLAYERS {
-                    if state.g_game.playeringame[j as usize]
-                        && state.wi_stuff.dm_frags[i as usize][j as usize]
-                            != state.plyr_index(i).frags[j as usize]
+                for j in 0..(MAXPLAYERS as usize) {
+                    if state.g_game.playeringame[j]
+                        && state.wi_stuff.dm_frags[i as usize][j] != state.plyr_index(i).frags[j]
                     {
-                        if state.plyr_index(i).frags[j as usize] < 0 {
-                            state.wi_stuff.dm_frags[i as usize][j as usize] -= 1;
+                        if state.plyr_index(i).frags[j] < 0 {
+                            state.wi_stuff.dm_frags[i as usize][j] -= 1;
                         } else {
-                            state.wi_stuff.dm_frags[i as usize][j as usize] += 1;
+                            state.wi_stuff.dm_frags[i as usize][j] += 1;
                         }
-                        let frag = &mut state.wi_stuff.dm_frags[i as usize][j as usize];
+                        let frag = &mut state.wi_stuff.dm_frags[i as usize][j];
                         *frag = (*frag).clamp(-99, 99);
                         stillticking = true;
                     }
-                    j += 1;
                 }
                 state.wi_stuff.dm_totals[i as usize] = WI_fragSum(state, i);
                 let total = &mut state.wi_stuff.dm_totals[i as usize];
                 *total = (*total).clamp(-99, 99);
             }
-            i += 1;
         }
         if !stillticking {
             S_StartSound(state, SoundOrigin::None, SfxName::sfx_barexp as i32);
@@ -1033,8 +1000,6 @@ pub fn WI_updateDeathmatchStats(state: &mut GameState) {
     }
 }
 pub fn WI_drawDeathmatchStats(state: &mut GameState) {
-    let mut i: i32;
-    let mut j: i32;
     let mut x: i32;
     let mut y: i32;
 
@@ -1058,8 +1023,7 @@ pub fn WI_drawDeathmatchStats(state: &mut GameState) {
     V_DrawPatch(state, dest_screen, DM_VICTIMSX, DM_VICTIMSY, &victims_patch);
     x = DM_MATRIXX + DM_SPACINGX;
     y = DM_MATRIXY;
-    i = 0;
-    while i < MAXPLAYERS {
+    for i in 0..MAXPLAYERS {
         if state.g_game.playeringame[i as usize] {
             let p_patch = V_CachePatchNum(state, state.wi_stuff.p[i as usize]);
             let dest_screen = Screen::Video;
@@ -1101,40 +1065,33 @@ pub fn WI_drawDeathmatchStats(state: &mut GameState) {
         }
         x += DM_SPACINGX;
         y += WI_SPACINGY;
-        i += 1;
     }
     y = DM_MATRIXY + 10;
     let zero_patch = V_CachePatchNum(state, state.wi_stuff.num[0]);
     let w: i32 = zero_patch.width();
-    i = 0;
-    while i < MAXPLAYERS {
+    for i in 0..(MAXPLAYERS as usize) {
         x = DM_MATRIXX + DM_SPACINGX;
-        if state.g_game.playeringame[i as usize] {
-            j = 0;
-            while j < MAXPLAYERS {
-                if state.g_game.playeringame[j as usize] {
-                    let dm_frags = state.wi_stuff.dm_frags[i as usize][j as usize];
+        if state.g_game.playeringame[i] {
+            for j in 0..(MAXPLAYERS as usize) {
+                if state.g_game.playeringame[j] {
+                    let dm_frags = state.wi_stuff.dm_frags[i][j];
                     WI_drawNum(state, x + w, y, dm_frags, 2);
                 }
                 x += DM_SPACINGX;
-                j += 1;
             }
-            let dm_totals = state.wi_stuff.dm_totals[i as usize];
+            let dm_totals = state.wi_stuff.dm_totals[i];
             WI_drawNum(state, DM_TOTALSX + w, y, dm_totals, 2);
         }
         y += WI_SPACINGY;
-        i += 1;
     }
 }
 pub fn WI_initNetgameStats(state: &mut GameState) {
-    let mut i: i32;
     state.wi_stuff.state = StateEnum::StatCount;
     state.wi_stuff.acceleratestage = false;
     state.wi_stuff.ng_state = 1;
     state.wi_stuff.cnt_pause = TICRATE;
     let mut total_frags = 0;
-    i = 0;
-    while i < MAXPLAYERS {
+    for i in 0..MAXPLAYERS {
         if state.g_game.playeringame[i as usize] {
             state.wi_stuff.cnt_frags[i as usize] = 0;
             state.wi_stuff.cnt_secret[i as usize] = state.wi_stuff.cnt_frags[i as usize];
@@ -1142,20 +1099,17 @@ pub fn WI_initNetgameStats(state: &mut GameState) {
             state.wi_stuff.cnt_kills[i as usize] = state.wi_stuff.cnt_items[i as usize];
             total_frags += WI_fragSum(state, i);
         }
-        i += 1;
     }
     state.wi_stuff.dofrags = total_frags != 0;
     WI_initAnimatedBack(state);
 }
 pub fn WI_updateNetgameStats(state: &mut GameState) {
-    let mut i: i32;
     let mut fsum: i32;
     let mut stillticking: bool;
     WI_updateAnimatedBack(state);
     if state.wi_stuff.acceleratestage && state.wi_stuff.ng_state != 10 {
         state.wi_stuff.acceleratestage = false;
-        i = 0;
-        while i < MAXPLAYERS {
+        for i in 0..MAXPLAYERS {
             if state.g_game.playeringame[i as usize] {
                 state.wi_stuff.cnt_kills[i as usize] =
                     state.plyr_index(i).skills * 100 / state.wbs().maxkills;
@@ -1167,7 +1121,6 @@ pub fn WI_updateNetgameStats(state: &mut GameState) {
                     state.wi_stuff.cnt_frags[i as usize] = WI_fragSum(state, i);
                 }
             }
-            i += 1;
         }
         S_StartSound(state, SoundOrigin::None, SfxName::sfx_barexp as i32);
         state.wi_stuff.ng_state = 10;
@@ -1177,8 +1130,7 @@ pub fn WI_updateNetgameStats(state: &mut GameState) {
             S_StartSound(state, SoundOrigin::None, SfxName::sfx_pistol as i32);
         }
         stillticking = false;
-        i = 0;
-        while i < MAXPLAYERS {
+        for i in 0..MAXPLAYERS {
             if state.g_game.playeringame[i as usize] {
                 state.wi_stuff.cnt_kills[i as usize] += 2;
                 if state.wi_stuff.cnt_kills[i as usize]
@@ -1190,7 +1142,6 @@ pub fn WI_updateNetgameStats(state: &mut GameState) {
                     stillticking = true;
                 }
             }
-            i += 1;
         }
         if !stillticking {
             S_StartSound(state, SoundOrigin::None, SfxName::sfx_barexp as i32);
@@ -1201,8 +1152,7 @@ pub fn WI_updateNetgameStats(state: &mut GameState) {
             S_StartSound(state, SoundOrigin::None, SfxName::sfx_pistol as i32);
         }
         stillticking = false;
-        i = 0;
-        while i < MAXPLAYERS {
+        for i in 0..MAXPLAYERS {
             if state.g_game.playeringame[i as usize] {
                 state.wi_stuff.cnt_items[i as usize] += 2;
                 if state.wi_stuff.cnt_items[i as usize]
@@ -1214,7 +1164,6 @@ pub fn WI_updateNetgameStats(state: &mut GameState) {
                     stillticking = true;
                 }
             }
-            i += 1;
         }
         if !stillticking {
             S_StartSound(state, SoundOrigin::None, SfxName::sfx_barexp as i32);
@@ -1225,8 +1174,7 @@ pub fn WI_updateNetgameStats(state: &mut GameState) {
             S_StartSound(state, SoundOrigin::None, SfxName::sfx_pistol as i32);
         }
         stillticking = false;
-        i = 0;
-        while i < MAXPLAYERS {
+        for i in 0..MAXPLAYERS {
             if state.g_game.playeringame[i as usize] {
                 state.wi_stuff.cnt_secret[i as usize] += 2;
                 if state.wi_stuff.cnt_secret[i as usize]
@@ -1238,7 +1186,6 @@ pub fn WI_updateNetgameStats(state: &mut GameState) {
                     stillticking = true;
                 }
             }
-            i += 1;
         }
         if !stillticking {
             S_StartSound(state, SoundOrigin::None, SfxName::sfx_barexp as i32);
@@ -1249,8 +1196,7 @@ pub fn WI_updateNetgameStats(state: &mut GameState) {
             S_StartSound(state, SoundOrigin::None, SfxName::sfx_pistol as i32);
         }
         stillticking = false;
-        i = 0;
-        while i < MAXPLAYERS {
+        for i in 0..MAXPLAYERS {
             if state.g_game.playeringame[i as usize] {
                 state.wi_stuff.cnt_frags[i as usize] += 1;
                 fsum = WI_fragSum(state, i);
@@ -1260,7 +1206,6 @@ pub fn WI_updateNetgameStats(state: &mut GameState) {
                     stillticking = true;
                 }
             }
-            i += 1;
         }
         if !stillticking {
             S_StartSound(state, SoundOrigin::None, SfxName::sfx_pldeth as i32);
@@ -1284,7 +1229,6 @@ pub fn WI_updateNetgameStats(state: &mut GameState) {
     }
 }
 pub fn WI_drawNetgameStats(state: &mut GameState) {
-    let mut i: i32;
     let mut x: i32;
     let mut y: i32;
     let percent_patch = V_CachePatchNum(state, state.wi_stuff.percent);
@@ -1337,8 +1281,7 @@ pub fn WI_drawNetgameStats(state: &mut GameState) {
         );
     }
     y = NG_STATSY + kills_patch.height();
-    i = 0;
-    while i < MAXPLAYERS {
+    for i in 0..MAXPLAYERS {
         if state.g_game.playeringame[i as usize] {
             x = 32 + star_width / 2 + 32 * (!state.wi_stuff.dofrags) as i32;
             let p_patch = V_CachePatchNum(state, state.wi_stuff.p[i as usize]);
@@ -1364,7 +1307,6 @@ pub fn WI_drawNetgameStats(state: &mut GameState) {
             }
             y += WI_SPACINGY;
         }
-        i += 1;
     }
 }
 pub fn WI_initStats(state: &mut GameState) {
@@ -1518,29 +1460,27 @@ pub fn WI_drawStats(state: &mut GameState) {
     }
 }
 pub fn WI_checkForAccelerate(state: &mut GameState) {
-    let mut i: i32 = 0;
-    while i < MAXPLAYERS {
-        if state.g_game.playeringame[i as usize] {
-            let player = &state.g_game.players[i as usize];
+    for i in 0..(MAXPLAYERS as usize) {
+        if state.g_game.playeringame[i] {
+            let player = &state.g_game.players[i];
             if player.cmd.buttons as i32 & BT_ATTACK != 0 {
                 if !player.attackdown {
                     state.wi_stuff.acceleratestage = true;
                 }
-                state.g_game.players[i as usize].attackdown = true;
+                state.g_game.players[i].attackdown = true;
             } else {
-                state.g_game.players[i as usize].attackdown = false;
+                state.g_game.players[i].attackdown = false;
             }
-            let player = &state.g_game.players[i as usize];
+            let player = &state.g_game.players[i];
             if player.cmd.buttons as i32 & BT_USE != 0 {
                 if !player.usedown {
                     state.wi_stuff.acceleratestage = true;
                 }
-                state.g_game.players[i as usize].usedown = true;
+                state.g_game.players[i].usedown = true;
             } else {
-                state.g_game.players[i as usize].usedown = false;
+                state.g_game.players[i].usedown = false;
             }
         }
-        i += 1;
     }
 }
 pub fn WI_Ticker(state: &mut GameState) {

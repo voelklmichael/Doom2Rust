@@ -244,8 +244,6 @@ pub fn P_GivePower(state: &mut GameState, player: PlayerId, power: i32) -> bool 
     true
 }
 pub fn P_TouchSpecialThing(state: &mut GameState, special: MobjId, toucher: MobjId) {
-    let mut i: i32;
-
     let mut sound: i32;
     let delta: fixed_t = state.p_mobj.mo(special).z - state.p_mobj.mo(toucher).z;
     if delta > state.p_mobj.mo(toucher).height || delta < -8 * FRACUNIT {
@@ -524,17 +522,13 @@ pub fn P_TouchSpecialThing(state: &mut GameState, special: MobjId, toucher: Mobj
         }
         86 => {
             if !state.g_game.players[player.0 as usize].backpack {
-                i = 0;
-                while i < NUMAMMO {
-                    state.g_game.players[player.0 as usize].maxammo[i as usize] *= 2;
-                    i += 1;
+                for i in 0..(NUMAMMO as usize) {
+                    state.g_game.players[player.0 as usize].maxammo[i] *= 2;
                 }
                 state.g_game.players[player.0 as usize].backpack = true;
             }
-            i = 0;
-            while i < NUMAMMO {
+            for i in 0..NUMAMMO {
                 P_GiveAmmo(state, player, ammotype_from_raw(i), 1);
-                i += 1;
             }
             state.g_game.players[player.0 as usize].message =
                 Some("Picked up a backpack full of ammo!".to_string());

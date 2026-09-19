@@ -441,7 +441,6 @@ pub fn P_RunThinkers(state: &mut GameState) {
     }
 }
 pub fn P_Ticker(state: &mut GameState) {
-    let mut i: i32;
     if state.g_game.paused {
         return;
     }
@@ -452,12 +451,10 @@ pub fn P_Ticker(state: &mut GameState) {
     {
         return;
     }
-    i = 0;
-    while i < MAXPLAYERS {
+    for i in 0..MAXPLAYERS {
         if state.g_game.playeringame[i as usize] {
             P_PlayerThink(state, PlayerId(i as u8));
         }
-        i += 1;
     }
     P_RunThinkers(state);
     P_UpdateSpecials(state);

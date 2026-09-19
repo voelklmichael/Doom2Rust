@@ -3523,8 +3523,8 @@ pub fn P_SpawnPlayer(state: &mut GameState, mthing: mapthing_t) {
     }
     P_SetupPsprites(state, PlayerId(player_index as u8));
     if state.g_game.deathmatch != 0 {
-        for i in 0..NUMCARDS {
-            state.g_game.players[player_index].cards[i as usize] = true;
+        for i in 0..(NUMCARDS as usize) {
+            state.g_game.players[player_index].cards[i] = true;
         }
     }
     if mthing.kind as i32 - 1 == state.g_game.consoleplayer {

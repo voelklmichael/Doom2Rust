@@ -258,14 +258,14 @@ pub struct FFinaleState {
     textscreens: [textscreen_t; 22],
     finaletext: &'static str,
     finaleflat: &'static str,
-    castorder: [castinfo_t; 18],
-    castnum: i32,
-    casttics: i32,
-    caststate: Option<StateId>,
-    castdeath: bool,
-    castframes: i32,
-    castonmelee: i32,
-    castattacking: bool,
+    pub(crate) castorder: [castinfo_t; 18],
+    pub(crate) castnum: i32,
+    pub(crate) casttics: i32,
+    pub(crate) caststate: Option<StateId>,
+    pub(crate) castdeath: bool,
+    pub(crate) castframes: i32,
+    pub(crate) castonmelee: i32,
+    pub(crate) castattacking: bool,
     laststage: i32,
 }
 
@@ -524,13 +524,11 @@ pub fn F_StartCast(state: &mut GameState) {
     S_ChangeMusic(state, MusicName::mus_evil as i32, true);
 }
 pub fn F_CastTicker(state: &mut GameState) {
-    let mut current_block: u64;
-    let st: i32;
-    let sfx: i32;
     state.f_finale.casttics -= 1;
     if state.f_finale.casttics > 0 {
         return;
     }
+    let mut stop_attack = false;
     let cur_caststate = state.info.state_mut(state.f_finale.caststate.unwrap());
     if cur_caststate.tics == -1 || cur_caststate.nextstate as u32 == StateNum::S_NULL as i32 as u32
     {
@@ -560,75 +558,38 @@ pub fn F_CastTicker(state: &mut GameState) {
             state.info.mobjinfo[cast_type as usize].seestate as u32,
         ));
         state.f_finale.castframes = 0;
-        current_block = 1356832168064818221;
     } else if state.f_finale.caststate == Some(StateId(StateNum::S_PLAY_ATK1 as u32)) {
-        current_block = 13354568087807251156;
+        // The player's attack frame ends the attack at once.
+        stop_attack = true;
     } else {
-        st = cur_caststate.nextstate as i32;
+        let st = cur_caststate.nextstate as i32;
         state.f_finale.caststate = Some(StateId(st as u32));
         state.f_finale.castframes += 1;
-        match st {
-            154 => {
-                sfx = SfxName::sfx_dshtgn as i32;
-            }
-            185 => {
-                sfx = SfxName::sfx_pistol as i32;
-            }
-            218 => {
-                sfx = SfxName::sfx_shotgn as i32;
-            }
-            256 => {
-                sfx = SfxName::sfx_vilatk as i32;
-            }
-            336 => {
-                sfx = SfxName::sfx_skeswg as i32;
-            }
-            338 => {
-                sfx = SfxName::sfx_skepch as i32;
-            }
-            340 => {
-                sfx = SfxName::sfx_skeatk as i32;
-            }
-            383 | 380 | 377 => {
-                sfx = SfxName::sfx_firsht as i32;
-            }
-            417..=419 => {
-                sfx = SfxName::sfx_shotgn as i32;
-            }
-            454 => {
-                sfx = SfxName::sfx_claw as i32;
-            }
-            486 => {
-                sfx = SfxName::sfx_sgtatk as i32;
-            }
-            538 | 567 | 505 => {
-                sfx = SfxName::sfx_firsht as i32;
-            }
-            590 => {
-                sfx = SfxName::sfx_sklatk as i32;
-            }
-            616 | 617 => {
-                sfx = SfxName::sfx_shotgn as i32;
-            }
-            648 => {
-                sfx = SfxName::sfx_plasma as i32;
-            }
-            685 | 687 | 689 => {
-                sfx = SfxName::sfx_rlaunc as i32;
-            }
-            710 => {
-                sfx = SfxName::sfx_sklatk as i32;
-            }
-            _ => {
-                sfx = 0;
-            }
-        }
+        let sfx = match st {
+            154 => SfxName::sfx_dshtgn as i32,
+            185 => SfxName::sfx_pistol as i32,
+            218 => SfxName::sfx_shotgn as i32,
+            256 => SfxName::sfx_vilatk as i32,
+            336 => SfxName::sfx_skeswg as i32,
+            338 => SfxName::sfx_skepch as i32,
+            340 => SfxName::sfx_skeatk as i32,
+            383 | 380 | 377 => SfxName::sfx_firsht as i32,
+            417..=419 => SfxName::sfx_shotgn as i32,
+            454 => SfxName::sfx_claw as i32,
+            486 => SfxName::sfx_sgtatk as i32,
+            538 | 567 | 505 => SfxName::sfx_firsht as i32,
+            590 => SfxName::sfx_sklatk as i32,
+            616 | 617 => SfxName::sfx_shotgn as i32,
+            648 => SfxName::sfx_plasma as i32,
+            685 | 687 | 689 => SfxName::sfx_rlaunc as i32,
+            710 => SfxName::sfx_sklatk as i32,
+            _ => 0,
+        };
         if sfx != 0 {
             S_StartSound(state, SoundOrigin::None, sfx);
         }
-        current_block = 1356832168064818221;
     }
-    if current_block == 1356832168064818221 {
+    if !stop_attack {
         let cast_type = state.f_finale.castorder[state.f_finale.castnum as usize].kind;
         let cast_info = state.info.mobjinfo[cast_type as usize];
         if state.f_finale.castframes == 12 {
@@ -647,19 +608,11 @@ pub fn F_CastTicker(state: &mut GameState) {
                 }
             }
         }
-        if state.f_finale.castattacking {
-            if state.f_finale.castframes == 24
-                || state.f_finale.caststate == Some(StateId(cast_info.seestate as u32))
-            {
-                current_block = 13354568087807251156;
-            } else {
-                current_block = 168769493162332264;
-            }
-        } else {
-            current_block = 168769493162332264;
-        }
+        stop_attack = state.f_finale.castattacking
+            && (state.f_finale.castframes == 24
+                || state.f_finale.caststate == Some(StateId(cast_info.seestate as u32)));
     }
-    if current_block == 13354568087807251156 {
+    if stop_attack {
         state.f_finale.castattacking = false;
         state.f_finale.castframes = 0;
         let cast_type = state.f_finale.castorder[state.f_finale.castnum as usize].kind;
@@ -762,7 +715,6 @@ fn F_DrawPatchCol(state: &mut IVideoState, x: i32, patch: &Patch, col: i32) {
 }
 pub fn F_BunnyScroll(state: &mut GameState) {
     let mut scrolled: i32;
-    let mut x: i32;
 
     let mut stage: i32;
     let p1: Patch = V_CachePatchName(state, "PFUB2");
@@ -771,14 +723,12 @@ pub fn F_BunnyScroll(state: &mut GameState) {
     V_MarkRect(state, dest_screen, 0, 0, SCREENWIDTH, SCREENHEIGHT);
     scrolled = 320 - (state.f_finale.finalecount as i32 - 230) / 2;
     scrolled = scrolled.clamp(0, 320);
-    x = 0;
-    while x < SCREENWIDTH {
+    for x in 0..SCREENWIDTH {
         if x + scrolled < 320 {
             F_DrawPatchCol(&mut state.i_video, x, &p1, x + scrolled);
         } else {
             F_DrawPatchCol(&mut state.i_video, x, &p2, x + scrolled - 320);
         }
-        x += 1;
     }
     if state.f_finale.finalecount < 1130 {
         return;

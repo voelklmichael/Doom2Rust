@@ -323,13 +323,11 @@ pub fn I_GetPaletteIndex(platform: &mut dyn DoomPlatform, r: i32, g: i32, b: i32
     let mut best: i32;
     let mut best_diff: i32;
     let mut diff: i32;
-    let mut i: i32;
     let mut color: col_t = col_t { r: 0, g: 0, b: 0 };
     doom_println!(platform, "I_GetPaletteIndex");
     best = 0;
     best_diff = INT_MAX;
-    i = 0;
-    while i < 256 {
+    for i in 0..256 {
         color.r = ((0xf800 & RGB565_PALETTE[i as usize] as i32) >> 11) as byte;
         color.g = ((0x7e0 & RGB565_PALETTE[i as usize] as i32) >> 5) as byte;
         color.b = (0x1f & RGB565_PALETTE[i as usize] as i32) as byte;
@@ -343,7 +341,6 @@ pub fn I_GetPaletteIndex(platform: &mut dyn DoomPlatform, r: i32, g: i32, b: i32
         if diff == 0 {
             break;
         }
-        i += 1;
     }
     best
 }

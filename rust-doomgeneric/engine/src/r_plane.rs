@@ -125,13 +125,9 @@ pub fn R_MapPlane(state: &mut GameState, y: i32, x1: i32, x2: i32) {
     state.r_main.spanfunc.expect("non-null function pointer")(state);
 }
 pub fn R_ClearPlanes(state: &mut GameState) {
-    let mut i: i32;
-
-    i = 0;
-    while i < state.r_draw.viewwidth {
+    for i in 0..state.r_draw.viewwidth {
         state.r_plane.floorclip[i as usize] = state.r_draw.viewheight as i16;
         state.r_plane.ceilingclip[i as usize] = -1_i16;
-        i += 1;
     }
     state.r_plane.lastvisplane = 0;
     state.r_plane.lastopening = 0;
@@ -238,9 +234,7 @@ pub fn R_MakeSpans(
     }
 }
 pub fn R_DrawPlanes(state: &mut GameState) {
-    let mut pl: usize;
     let mut light: i32;
-    let mut x: i32;
     let mut stop: i32;
     let mut angle: i32;
     let mut lumpnum: i32;
@@ -262,16 +256,14 @@ pub fn R_DrawPlanes(state: &mut GameState) {
             state.r_plane.lastopening as i64,
         ));
     }
-    pl = 0;
-    while pl < state.r_plane.lastvisplane {
+    for pl in 0..state.r_plane.lastvisplane {
         let mut plv = state.r_plane.visplanes[pl];
         if plv.minx <= plv.maxx {
             if plv.picnum == state.r_sky.skyflatnum {
                 state.r_draw.dc_iscale = state.r_things.pspriteiscale >> state.r_main.detailshift;
                 state.r_draw.dc_colormap = Some(0);
                 state.r_draw.dc_texturemid = state.r_sky.skytexturemid as fixed_t;
-                x = plv.minx;
-                while x <= plv.maxx {
+                for x in plv.minx..=plv.maxx {
                     state.r_draw.dc_yl = plv.top(x) as i32;
                     state.r_draw.dc_yh = plv.bottom(x) as i32;
                     if state.r_draw.dc_yl <= state.r_draw.dc_yh {
@@ -285,7 +277,6 @@ pub fn R_DrawPlanes(state: &mut GameState) {
                             Some(R_GetColumn(state, state.r_sky.skytexture, angle));
                         state.r_main.colfunc.expect("non-null function pointer")(state);
                     }
-                    x += 1;
                 }
             } else {
                 lumpnum =
@@ -308,8 +299,7 @@ pub fn R_DrawPlanes(state: &mut GameState) {
                 plv.set_top(plv.minx - 1, 0xff as byte);
                 state.r_plane.visplanes[pl] = plv;
                 stop = plv.maxx + 1;
-                x = plv.minx;
-                while x <= stop {
+                for x in plv.minx..=stop {
                     R_MakeSpans(
                         state,
                         x,
@@ -318,11 +308,9 @@ pub fn R_DrawPlanes(state: &mut GameState) {
                         plv.top(x) as i32,
                         plv.bottom(x) as i32,
                     );
-                    x += 1;
                 }
                 W_ReleaseLumpNum(&mut state.w_wad, lumpnum);
             }
         }
-        pl += 1;
     }
 }

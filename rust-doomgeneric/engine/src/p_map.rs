@@ -170,9 +170,6 @@ pub fn PIT_StompThing(state: &mut GameState, thing_id: MobjId) -> bool {
     true
 }
 pub fn P_TeleportMove(state: &mut GameState, thing: MobjId, x: fixed_t, y: fixed_t) -> bool {
-    let mut bx: i32;
-    let mut by: i32;
-
     state.p_map.tmthing = Some(thing);
     state.p_map.tmflags = state.p_mobj.mo(thing).flags;
     state.p_map.tmx = x;
@@ -206,16 +203,12 @@ pub fn P_TeleportMove(state: &mut GameState, thing: MobjId, x: fixed_t, y: fixed
     let yh: i32 = (state.p_map.tmbbox[BoxIndex::Top as usize] - state.p_setup.bmaporgy
         + 32 * FRACUNIT)
         >> MAPBLOCKSHIFT;
-    bx = xl;
-    while bx <= xh {
-        by = yl;
-        while by <= yh {
+    for bx in xl..=xh {
+        for by in yl..=yh {
             if !P_BlockThingsIterator(state, bx, by, PIT_StompThing) {
                 return false;
             }
-            by += 1;
         }
-        bx += 1;
     }
     P_UnsetThingPosition(state, thing);
     state.p_mobj.mo_mut(thing).floorz = state.p_map.tmfloorz;
@@ -362,8 +355,6 @@ pub fn P_CheckPosition(state: &mut GameState, thing: MobjId, x: fixed_t, y: fixe
     let mut xh: i32;
     let mut yl: i32;
     let mut yh: i32;
-    let mut bx: i32;
-    let mut by: i32;
 
     state.p_map.tmthing = Some(thing);
     state.p_map.tmflags = state.p_mobj.mo(thing).flags;
@@ -397,31 +388,23 @@ pub fn P_CheckPosition(state: &mut GameState, thing: MobjId, x: fixed_t, y: fixe
         >> MAPBLOCKSHIFT;
     yh = (state.p_map.tmbbox[BoxIndex::Top as usize] - state.p_setup.bmaporgy + 32 * FRACUNIT)
         >> MAPBLOCKSHIFT;
-    bx = xl;
-    while bx <= xh {
-        by = yl;
-        while by <= yh {
+    for bx in xl..=xh {
+        for by in yl..=yh {
             if !P_BlockThingsIterator(state, bx, by, PIT_CheckThing) {
                 return false;
             }
-            by += 1;
         }
-        bx += 1;
     }
     xl = (state.p_map.tmbbox[BoxIndex::Left as usize] - state.p_setup.bmaporgx) >> MAPBLOCKSHIFT;
     xh = (state.p_map.tmbbox[BoxIndex::Right as usize] - state.p_setup.bmaporgx) >> MAPBLOCKSHIFT;
     yl = (state.p_map.tmbbox[BoxIndex::Bottom as usize] - state.p_setup.bmaporgy) >> MAPBLOCKSHIFT;
     yh = (state.p_map.tmbbox[BoxIndex::Top as usize] - state.p_setup.bmaporgy) >> MAPBLOCKSHIFT;
-    bx = xl;
-    while bx <= xh {
-        by = yl;
-        while by <= yh {
+    for bx in xl..=xh {
+        for by in yl..=yh {
             if !P_BlockLinesIterator(state, bx, by, PIT_CheckLine) {
                 return false;
             }
-            by += 1;
         }
-        bx += 1;
     }
     true
 }
@@ -757,12 +740,10 @@ pub fn PTR_AimTraverse(state: &mut GameState, intercept: intercept_t) -> bool {
     false
 }
 pub fn PTR_ShootTraverse(state: &mut GameState, intercept: intercept_t) -> bool {
-    let mut current_block: u64;
     let x: fixed_t;
     let y: fixed_t;
     let z: fixed_t;
     let frac: fixed_t;
-    let mut slope: fixed_t;
     let dist: fixed_t;
     let thingtopslope: fixed_t;
     let thingbottomslope: fixed_t;
@@ -773,65 +754,32 @@ pub fn PTR_ShootTraverse(state: &mut GameState, intercept: intercept_t) -> bool 
         }
         if state.p_setup.line(li).flags as i32 & ML_TWOSIDED != 0 {
             P_LineOpening(state, li);
-            dist = FixedMul(state.p_map.attackrange, intercept.frac);
-            if state.p_setup.line(li).backsector.is_none() {
-                slope = FixedDiv(state.p_maputl.openbottom - state.p_map.shootz, dist);
-                if slope > state.p_map.aimslope {
-                    current_block = 15534775465039326179;
-                } else {
-                    slope = FixedDiv(state.p_maputl.opentop - state.p_map.shootz, dist);
-                    if slope < state.p_map.aimslope {
-                        current_block = 15534775465039326179;
-                    } else {
-                        current_block = 4808432441040389987;
-                    }
+            let dist = FixedMul(state.p_map.attackrange, intercept.frac);
+            // A missing back side (emulated) leaves both openings to check.
+            let (check_floor, check_ceiling) = match state.p_setup.line(li).backsector {
+                None => (true, true),
+                Some(back) => {
+                    let front = state.p_setup.line(li).frontsector.unwrap();
+                    let (front_floor, front_ceiling) = {
+                        let s = state.p_setup.sector_mut(front);
+                        (s.floorheight, s.ceilingheight)
+                    };
+                    let (back_floor, back_ceiling) = {
+                        let s = state.p_setup.sector_mut(back);
+                        (s.floorheight, s.ceilingheight)
+                    };
+                    (front_floor != back_floor, front_ceiling != back_ceiling)
                 }
-            } else {
-                if state
-                    .p_setup
-                    .sector_mut(state.p_setup.line(li).frontsector.unwrap())
-                    .floorheight
-                    != state
-                        .p_setup
-                        .sector_mut(state.p_setup.line(li).backsector.unwrap())
-                        .floorheight
-                {
-                    slope = FixedDiv(state.p_maputl.openbottom - state.p_map.shootz, dist);
-                    if slope > state.p_map.aimslope {
-                        current_block = 15534775465039326179;
-                    } else {
-                        current_block = 12039483399334584727;
-                    }
-                } else {
-                    current_block = 12039483399334584727;
-                }
-                match current_block {
-                    15534775465039326179 => {}
-                    _ => {
-                        if state
-                            .p_setup
-                            .sector_mut(state.p_setup.line(li).frontsector.unwrap())
-                            .ceilingheight
-                            != state
-                                .p_setup
-                                .sector_mut(state.p_setup.line(li).backsector.unwrap())
-                                .ceilingheight
-                        {
-                            slope = FixedDiv(state.p_maputl.opentop - state.p_map.shootz, dist);
-                            if slope < state.p_map.aimslope {
-                                current_block = 15534775465039326179;
-                            } else {
-                                current_block = 4808432441040389987;
-                            }
-                        } else {
-                            current_block = 4808432441040389987;
-                        }
-                    }
-                }
-            }
-            match current_block {
-                15534775465039326179 => {}
-                _ => return true,
+            };
+            let hits_line = (check_floor
+                && FixedDiv(state.p_maputl.openbottom - state.p_map.shootz, dist)
+                    > state.p_map.aimslope)
+                || (check_ceiling
+                    && FixedDiv(state.p_maputl.opentop - state.p_map.shootz, dist)
+                        < state.p_map.aimslope);
+            if !hits_line {
+                // The shot passes through.
+                return true;
             }
         }
         frac = intercept.frac - FixedDiv(4 * FRACUNIT, state.p_map.attackrange);

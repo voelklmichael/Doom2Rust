@@ -531,40 +531,30 @@ pub fn P_LoadBlockMap(state: &mut GameState, lump: i32) {
         vec![None; (state.p_setup.bmapwidth as usize) * (state.p_setup.bmapheight as usize)];
 }
 pub fn P_GroupLines(state: &mut GameState) {
-    let mut i: i32;
-    let mut j: i32;
     let mut bbox: [fixed_t; 4] = [0; 4];
     let mut block: i32;
-    i = 0;
-    while i < state.p_setup.numsubsectors {
-        let firstline = state.p_setup.subsectors[i as usize].firstline;
+    for i in 0..(state.p_setup.numsubsectors as usize) {
+        let firstline = state.p_setup.subsectors[i].firstline;
         let seg_sidedef = state.p_setup.segs[firstline as usize].sidedef;
-        state.p_setup.subsectors[i as usize].sector =
-            state.p_setup.sides[seg_sidedef.0 as usize].sector;
-        i += 1;
+        state.p_setup.subsectors[i].sector = state.p_setup.sides[seg_sidedef.0 as usize].sector;
     }
     state.p_setup.totallines = 0;
-    i = 0;
-    while i < state.p_setup.numlines {
+    for i in 0..(state.p_setup.numlines as usize) {
         state.p_setup.totallines += 1;
-        let li = state.p_setup.lines[i as usize];
+        let li = state.p_setup.lines[i];
         let front_id = li.frontsector.unwrap();
         state.p_setup.sector_mut(front_id).linecount += 1;
         if let Some(back_id) = li.backsector.filter(|&b| Some(b) != li.frontsector) {
             state.p_setup.sector_mut(back_id).linecount += 1;
             state.p_setup.totallines += 1;
         }
-        i += 1;
     }
-    i = 0;
-    while i < state.p_setup.numsectors {
-        let sec = &mut state.p_setup.sectors[i as usize];
+    for i in 0..(state.p_setup.numsectors as usize) {
+        let sec = &mut state.p_setup.sectors[i];
         sec.lines = Vec::with_capacity(sec.linecount as usize);
         sec.linecount = 0;
-        i += 1;
     }
-    i = 0;
-    while i < state.p_setup.numlines {
+    for i in 0..state.p_setup.numlines {
         let li_id = LineId(i as u32);
         let li = state.p_setup.lines[i as usize];
         if let Some(front_id) = li.frontsector {
@@ -579,22 +569,18 @@ pub fn P_GroupLines(state: &mut GameState) {
                 sector.linecount += 1;
             }
         }
-        i += 1;
     }
-    i = 0;
-    while i < state.p_setup.numsectors {
+    for i in 0..(state.p_setup.numsectors as usize) {
         M_ClearBox(&mut bbox);
-        j = 0;
-        while j < state.p_setup.sectors[i as usize].linecount {
-            let li_id = state.p_setup.sectors[i as usize].lines[j as usize];
+        for j in 0..state.p_setup.sectors[i].linecount {
+            let li_id = state.p_setup.sectors[i].lines[j as usize];
             let li = state.p_setup.line(li_id);
             let li_v1 = state.p_setup.vertexes[li.v1.0 as usize];
             let li_v2 = state.p_setup.vertexes[li.v2.0 as usize];
             M_AddToBox(&mut bbox, li_v1.x, li_v1.y);
             M_AddToBox(&mut bbox, li_v2.x, li_v2.y);
-            j += 1;
         }
-        let sector = &mut state.p_setup.sectors[i as usize];
+        let sector = &mut state.p_setup.sectors[i];
         sector.soundorg.x =
             ((bbox[BoxIndex::Right as usize] + bbox[BoxIndex::Left as usize]) / 2) as fixed_t;
         sector.soundorg.y =
@@ -623,7 +609,6 @@ pub fn P_GroupLines(state: &mut GameState) {
             >> MAPBLOCKSHIFT;
         block = if block < 0 { 0 } else { block };
         sector.blockbox[BoxIndex::Left as usize] = block;
-        i += 1;
     }
 }
 fn PadRejectArray(state: &mut GameState, offset: usize, len: u32) {
@@ -674,19 +659,15 @@ fn P_LoadReject(state: &mut GameState, lumpnum: i32) {
     };
 }
 pub fn P_SetupLevel(state: &mut GameState, episode: i32, map: i32) {
-    let mut i: i32;
-
     state.g_game.wminfo.maxfrags = 0;
     state.g_game.totalsecret = state.g_game.wminfo.maxfrags;
     state.g_game.totalitems = state.g_game.totalsecret;
     state.g_game.totalkills = state.g_game.totalitems;
     state.g_game.wminfo.partime = 180;
-    i = 0;
-    while i < MAXPLAYERS {
-        state.g_game.players[i as usize].itemcount = 0;
-        state.g_game.players[i as usize].secretcount = state.g_game.players[i as usize].itemcount;
-        state.g_game.players[i as usize].killcount = state.g_game.players[i as usize].secretcount;
-        i += 1;
+    for i in 0..(MAXPLAYERS as usize) {
+        state.g_game.players[i].itemcount = 0;
+        state.g_game.players[i].secretcount = state.g_game.players[i].itemcount;
+        state.g_game.players[i].killcount = state.g_game.players[i].secretcount;
     }
     state.g_game.players[state.g_game.consoleplayer as usize].viewz = 1;
     S_Start(state);
@@ -720,13 +701,11 @@ pub fn P_SetupLevel(state: &mut GameState, episode: i32, map: i32) {
     state.p_setup.deathmatch_p = 0;
     P_LoadThings(state, lumpnum + MapLump::ML_THINGS as i32);
     if state.g_game.deathmatch != 0 {
-        i = 0;
-        while i < MAXPLAYERS {
+        for i in 0..MAXPLAYERS {
             if state.g_game.playeringame[i as usize] {
                 state.g_game.players[i as usize].mo = None;
                 G_DeathMatchSpawnPlayer(state, i);
             }
-            i += 1;
         }
     }
     let gs = state;

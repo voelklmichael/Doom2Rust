@@ -144,14 +144,11 @@ fn S_StopChannel(state: &mut GameState, cnum: i32) {
     }
 }
 pub fn S_Start(state: &mut GameState) {
-    let mut cnum: i32;
     let mnum: i32;
-    cnum = 0;
-    while cnum < state.s_sound.snd_channels {
+    for cnum in 0..state.s_sound.snd_channels {
         if state.s_sound.channels[cnum as usize].sfxinfo.is_some() {
             S_StopChannel(state, cnum);
         }
-        cnum += 1;
     }
     state.s_sound.mus_paused = false;
     if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 {

@@ -390,7 +390,6 @@ pub fn D_Display(state: &mut GameState) {
     }
 }
 pub fn D_BindVariables(state: &mut GameState) {
-    let mut i: i32;
     I_BindJoystickVariables(state);
     I_BindSoundVariables(state);
     M_BindBaseControls(state);
@@ -432,13 +431,11 @@ pub fn D_BindVariables(state: &mut GameState) {
     M_BindVariable_int(&mut state.m_config, "show_endoom", |s| {
         &mut s.d_main.show_endoom
     });
-    i = 0;
-    while i < 10 {
+    for i in 0..10 {
         let name = format!("chatmacro{}", i);
         M_BindVariable_string(&mut state.m_config, &name, move |s| {
             &mut s.hu_stuff.chat_macros[i as usize]
         });
-        i += 1;
     }
 }
 pub fn doomgeneric_Tick(state: &mut GameState) {
@@ -914,17 +911,14 @@ pub fn D_DoomMain(state: &mut GameState) {
             FixedCStr(*b"cybra1\0\0"),
             FixedCStr(*b"spida1d1"),
         ];
-        let mut i: i32;
         if state.doomstat.gamemode as u32 == GameMode_t::shareware as i32 as u32 {
             I_Error("\nYou cannot -file with the shareware version. Register!");
         }
         if state.doomstat.gamemode as u32 == GameMode_t::registered as i32 as u32 {
-            i = 0;
-            while i < 23 {
-                if W_CheckNumForName(&mut state.w_wad, &name[i as usize].as_str()) < 0 {
+            for lump_name in &name {
+                if W_CheckNumForName(&mut state.w_wad, &lump_name.as_str()) < 0 {
                     I_Error("\nThis is not the registered version.");
                 }
-                i += 1;
             }
         }
     }

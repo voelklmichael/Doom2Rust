@@ -392,7 +392,6 @@ pub fn ST_refreshBackground(state: &mut GameState) {
     }
 }
 pub fn ST_Responder(state: &mut GameState, ev: &event_t) -> bool {
-    let mut i: i32;
     if ev.kind == EvType::ev_keyup && ev.data1 as u32 & 0xffff0000 == AM_MSGHEADER as u32 {
         match ev.data1 {
             AM_MSGENTERED => {
@@ -422,37 +421,27 @@ pub fn ST_Responder(state: &mut GameState, ev: &event_t) -> bool {
             } else if cht_CheckCheat(&mut state.st_stuff.cheat_ammonokey, ev.data2 as u8) {
                 state.g_game.player_mut(state.st_stuff.plyr).armorpoints = deh_idfa_armor;
                 state.g_game.player_mut(state.st_stuff.plyr).armortype = deh_idfa_armor_class;
-                i = 0;
-                while i < NUMWEAPONS {
-                    state.g_game.player_mut(state.st_stuff.plyr).weaponowned[i as usize] = true;
-                    i += 1;
+                for i in 0..(NUMWEAPONS as usize) {
+                    state.g_game.player_mut(state.st_stuff.plyr).weaponowned[i] = true;
                 }
-                i = 0;
-                while i < NUMAMMO {
-                    state.g_game.player_mut(state.st_stuff.plyr).ammo[i as usize] =
-                        state.g_game.player_mut(state.st_stuff.plyr).maxammo[i as usize];
-                    i += 1;
+                for i in 0..(NUMAMMO as usize) {
+                    state.g_game.player_mut(state.st_stuff.plyr).ammo[i] =
+                        state.g_game.player_mut(state.st_stuff.plyr).maxammo[i];
                 }
                 state.g_game.player_mut(state.st_stuff.plyr).message =
                     Some("Ammo (no keys) Added".to_string());
             } else if cht_CheckCheat(&mut state.st_stuff.cheat_ammo, ev.data2 as u8) {
                 state.g_game.player_mut(state.st_stuff.plyr).armorpoints = deh_idkfa_armor;
                 state.g_game.player_mut(state.st_stuff.plyr).armortype = deh_idkfa_armor_class;
-                i = 0;
-                while i < NUMWEAPONS {
-                    state.g_game.player_mut(state.st_stuff.plyr).weaponowned[i as usize] = true;
-                    i += 1;
+                for i in 0..(NUMWEAPONS as usize) {
+                    state.g_game.player_mut(state.st_stuff.plyr).weaponowned[i] = true;
                 }
-                i = 0;
-                while i < NUMAMMO {
-                    state.g_game.player_mut(state.st_stuff.plyr).ammo[i as usize] =
-                        state.g_game.player_mut(state.st_stuff.plyr).maxammo[i as usize];
-                    i += 1;
+                for i in 0..(NUMAMMO as usize) {
+                    state.g_game.player_mut(state.st_stuff.plyr).ammo[i] =
+                        state.g_game.player_mut(state.st_stuff.plyr).maxammo[i];
                 }
-                i = 0;
-                while i < NUMCARDS {
-                    state.g_game.player_mut(state.st_stuff.plyr).cards[i as usize] = true;
-                    i += 1;
+                for i in 0..(NUMCARDS as usize) {
+                    state.g_game.player_mut(state.st_stuff.plyr).cards[i] = true;
                 }
                 state.g_game.player_mut(state.st_stuff.plyr).message =
                     Some("Very Happy Ammo Added".to_string());
@@ -519,8 +508,7 @@ pub fn ST_Responder(state: &mut GameState, ev: &event_t) -> bool {
                         Some("No Clipping Mode OFF".to_string());
                 }
             }
-            i = 0;
-            while i < 6 {
+            for i in 0..6 {
                 if cht_CheckCheat(
                     &mut state.st_stuff.cheat_powerup[i as usize],
                     ev.data2 as u8,
@@ -535,7 +523,6 @@ pub fn ST_Responder(state: &mut GameState, ev: &event_t) -> bool {
                     state.g_game.player_mut(state.st_stuff.plyr).message =
                         Some("Power-up Toggled".to_string());
                 }
-                i += 1;
             }
             if cht_CheckCheat(&mut state.st_stuff.cheat_powerup[6], ev.data2 as u8) {
                 state.g_game.player_mut(state.st_stuff.plyr).message =
@@ -623,7 +610,7 @@ pub fn ST_calcPainOffset(state: &mut GameState) -> i32 {
     state.st_stuff.st_calcpainoffset_lastcalc
 }
 pub fn ST_updateFaceWidget(state: &mut GameState) {
-    let mut i: i32;
+    let i: i32;
     let badguyangle: angle_t;
     let diffang: angle_t;
     let mut doevilgrin: bool;
@@ -638,16 +625,14 @@ pub fn ST_updateFaceWidget(state: &mut GameState) {
         && state.g_game.player_mut(state.st_stuff.plyr).bonuscount != 0
     {
         doevilgrin = false;
-        i = 0;
-        while i < NUMWEAPONS {
-            if state.st_stuff.oldweaponsowned[i as usize]
-                != state.g_game.player_mut(state.st_stuff.plyr).weaponowned[i as usize]
+        for i in 0..(NUMWEAPONS as usize) {
+            if state.st_stuff.oldweaponsowned[i]
+                != state.g_game.player_mut(state.st_stuff.plyr).weaponowned[i]
             {
                 doevilgrin = true;
-                state.st_stuff.oldweaponsowned[i as usize] =
-                    state.g_game.player_mut(state.st_stuff.plyr).weaponowned[i as usize];
+                state.st_stuff.oldweaponsowned[i] =
+                    state.g_game.player_mut(state.st_stuff.plyr).weaponowned[i];
             }
-            i += 1;
         }
         if doevilgrin {
             state.st_stuff.st_updatefacewidget_priority = 8;
@@ -744,16 +729,12 @@ pub fn ST_updateFaceWidget(state: &mut GameState) {
     state.st_stuff.st_facecount -= 1;
 }
 pub fn ST_updateWidgets(state: &mut GameState) {
-    let mut i: i32;
     state.st_stuff.w_ready.data = state.g_game.player_mut(state.st_stuff.plyr).readyweapon as i32;
-    i = 0;
-    while i < 6 {
+    for i in 0..6 {
         state.st_stuff.w_arms_owned[i as usize] =
             state.g_game.player_mut(state.st_stuff.plyr).weaponowned[(i + 1) as usize] as i32;
-        i += 1;
     }
-    i = 0;
-    while i < 3 {
+    for i in 0..3 {
         state.st_stuff.keyboxes[i as usize] =
             if state.g_game.player_mut(state.st_stuff.plyr).cards[i as usize] {
                 i
@@ -763,15 +744,13 @@ pub fn ST_updateWidgets(state: &mut GameState) {
         if state.g_game.player_mut(state.st_stuff.plyr).cards[(i + 3) as usize] {
             state.st_stuff.keyboxes[i as usize] = i + 3;
         }
-        i += 1;
     }
     ST_updateFaceWidget(state);
     state.st_stuff.st_notdeathmatch = state.g_game.deathmatch == 0;
     state.st_stuff.st_armson = state.st_stuff.st_statusbaron && state.g_game.deathmatch == 0;
     state.st_stuff.st_fragson = state.g_game.deathmatch != 0 && state.st_stuff.st_statusbaron;
     state.st_stuff.st_fragscount = 0;
-    i = 0;
-    while i < MAXPLAYERS {
+    for i in 0..MAXPLAYERS {
         if i != state.g_game.consoleplayer {
             state.st_stuff.st_fragscount +=
                 state.g_game.player_mut(state.st_stuff.plyr).frags[i as usize];
@@ -779,7 +758,6 @@ pub fn ST_updateWidgets(state: &mut GameState) {
             state.st_stuff.st_fragscount -=
                 state.g_game.player_mut(state.st_stuff.plyr).frags[i as usize];
         }
-        i += 1;
     }
     state.st_stuff.st_msgcounter -= 1;
     if state.st_stuff.st_msgcounter == 0 {
@@ -841,7 +819,6 @@ pub fn ST_doPaletteStuff(state: &mut GameState) {
     }
 }
 pub fn ST_drawWidgets(state: &mut GameState, refresh: bool) {
-    let mut i: i32;
     state.st_stuff.st_armson = state.st_stuff.st_statusbaron && state.g_game.deathmatch == 0;
     state.st_stuff.st_fragson = state.g_game.deathmatch != 0 && state.st_stuff.st_statusbaron;
     let statusbaron = state.st_stuff.st_statusbaron;
@@ -855,17 +832,15 @@ pub fn ST_drawWidgets(state: &mut GameState, refresh: bool) {
     let mut w_ready = state.st_stuff.w_ready;
     STlib_updateNum(state, &mut w_ready, ready_ammo_num, statusbaron);
     state.st_stuff.w_ready = w_ready;
-    i = 0;
-    while i < 4 {
-        let ammo_num = state.g_game.player_mut(state.st_stuff.plyr).ammo[i as usize];
-        let mut w_ammo = state.st_stuff.w_ammo[i as usize];
+    for i in 0..4 {
+        let ammo_num = state.g_game.player_mut(state.st_stuff.plyr).ammo[i];
+        let mut w_ammo = state.st_stuff.w_ammo[i];
         STlib_updateNum(state, &mut w_ammo, ammo_num, statusbaron);
-        state.st_stuff.w_ammo[i as usize] = w_ammo;
-        let maxammo_num = state.g_game.player_mut(state.st_stuff.plyr).maxammo[i as usize];
-        let mut w_maxammo = state.st_stuff.w_maxammo[i as usize];
+        state.st_stuff.w_ammo[i] = w_ammo;
+        let maxammo_num = state.g_game.player_mut(state.st_stuff.plyr).maxammo[i];
+        let mut w_maxammo = state.st_stuff.w_maxammo[i];
         STlib_updateNum(state, &mut w_maxammo, maxammo_num, statusbaron);
-        state.st_stuff.w_maxammo[i as usize] = w_maxammo;
-        i += 1;
+        state.st_stuff.w_maxammo[i] = w_maxammo;
     }
     let health_num = state.g_game.player_mut(state.st_stuff.plyr).health;
     let mut w_health = state.st_stuff.w_health;
@@ -886,25 +861,21 @@ pub fn ST_drawWidgets(state: &mut GameState, refresh: bool) {
     STlib_updateBinIcon(state, &mut w_armsbg, notdeathmatch, statusbaron, refresh);
     state.st_stuff.w_armsbg = w_armsbg;
     let armson = state.st_stuff.st_armson;
-    i = 0;
-    while i < 6 {
-        let arms_owned = state.st_stuff.w_arms_owned[i as usize];
-        let mut w_arms = state.st_stuff.w_arms[i as usize];
+    for i in 0..6 {
+        let arms_owned = state.st_stuff.w_arms_owned[i];
+        let mut w_arms = state.st_stuff.w_arms[i];
         STlib_updateMultIcon(state, &mut w_arms, arms_owned, armson, refresh);
-        state.st_stuff.w_arms[i as usize] = w_arms;
-        i += 1;
+        state.st_stuff.w_arms[i] = w_arms;
     }
     let faceindex = state.st_stuff.st_faceindex;
     let mut w_faces = state.st_stuff.w_faces;
     STlib_updateMultIcon(state, &mut w_faces, faceindex, statusbaron, refresh);
     state.st_stuff.w_faces = w_faces;
-    i = 0;
-    while i < 3 {
-        let keybox = state.st_stuff.keyboxes[i as usize];
-        let mut w_keyboxes = state.st_stuff.w_keyboxes[i as usize];
+    for i in 0..3 {
+        let keybox = state.st_stuff.keyboxes[i];
+        let mut w_keyboxes = state.st_stuff.w_keyboxes[i];
         STlib_updateMultIcon(state, &mut w_keyboxes, keybox, statusbaron, refresh);
-        state.st_stuff.w_keyboxes[i as usize] = w_keyboxes;
-        i += 1;
+        state.st_stuff.w_keyboxes[i] = w_keyboxes;
     }
     let fragscount = state.st_stuff.st_fragscount;
     let fragson = state.st_stuff.st_fragson;
@@ -980,7 +951,6 @@ pub fn ST_loadData(state: &mut GameState) {
     ST_loadGraphics(state);
 }
 pub fn ST_initData(state: &mut GameState) {
-    let mut i: i32;
     state.st_stuff.st_firsttime = true;
     state.st_stuff.plyr = PlayerId(state.g_game.consoleplayer as u8);
     state.st_stuff.st_clock = 0;
@@ -993,21 +963,16 @@ pub fn ST_initData(state: &mut GameState) {
     state.st_stuff.st_faceindex = 0;
     state.st_stuff.st_palette = -1;
     state.st_stuff.st_oldhealth = -1;
-    i = 0;
-    while i < NUMWEAPONS {
-        state.st_stuff.oldweaponsowned[i as usize] =
-            state.g_game.player_mut(state.st_stuff.plyr).weaponowned[i as usize];
-        i += 1;
+    for i in 0..(NUMWEAPONS as usize) {
+        state.st_stuff.oldweaponsowned[i] =
+            state.g_game.player_mut(state.st_stuff.plyr).weaponowned[i];
     }
-    i = 0;
-    while i < 3 {
-        state.st_stuff.keyboxes[i as usize] = -1;
-        i += 1;
+    for i in 0..3 {
+        state.st_stuff.keyboxes[i] = -1;
     }
     STlib_init(state);
 }
 pub fn ST_createWidgets(state: &mut GameState) {
-    let mut i: i32;
     STlib_initNum(
         &mut state.st_stuff.w_ready,
         ST_AMMOX,
@@ -1029,15 +994,13 @@ pub fn ST_createWidgets(state: &mut GameState) {
         ST_ARMSBGY,
         state.st_stuff.armsbg,
     );
-    i = 0;
-    while i < 6 {
+    for i in 0..6 {
         STlib_initMultIcon(
             &mut state.st_stuff.w_arms[i as usize],
             ST_ARMSX + i % 3 * ST_ARMSXSPACE,
             ST_ARMSY + i / 3 * ST_ARMSYSPACE,
             StDigitSet::Arms(i as usize),
         );
-        i += 1;
     }
     STlib_initNum(
         &mut state.st_stuff.w_frags,

@@ -311,18 +311,11 @@ pub static mapnames_commercial: [&str; 96] = [
     THUSTR_32,
 ];
 pub fn HU_Init(state: &mut GameState) {
-    let mut i: i32;
-    let mut j: i32;
-    j = HU_FONTSTART;
-    i = 0;
-    while i < HU_FONTSIZE {
-        let fresh0 = j;
-        j += 1;
-        let buffer = format!("STCFN{:03}", fresh0);
+    for (i, code) in (HU_FONTSTART..HU_FONTSTART + HU_FONTSIZE).enumerate() {
+        let buffer = format!("STCFN{code:03}");
         let lumpnum = W_GetNumForName(&mut state.w_wad, &buffer);
         W_LumpBytes(state, lumpnum);
-        state.hu_stuff.hu_font[i as usize] = lumpnum;
-        i += 1;
+        state.hu_stuff.hu_font[i] = lumpnum;
     }
 }
 pub fn HU_Stop(state: &mut GameState) {
@@ -390,8 +383,8 @@ pub fn HU_Start(state: &mut GameState) {
         HU_MSGY + HU_MSGHEIGHT * (hu_font0_height + 1),
         HU_FONTSTART,
     );
-    for i in 0..MAXPLAYERS {
-        HUlib_initIText(&mut state.hu_stuff.w_inputbuffer[i as usize], 0, 0, 0);
+    for i in 0..(MAXPLAYERS as usize) {
+        HUlib_initIText(&mut state.hu_stuff.w_inputbuffer[i], 0, 0, 0);
     }
     state.hu_stuff.headsupactive = true;
 }
@@ -421,7 +414,6 @@ pub fn HU_Erase(state: &mut GameState) {
     state.hu_stuff.w_title = w_title;
 }
 pub fn HU_Ticker(state: &mut GameState) {
-    let mut i: i32;
     let mut rc: i32;
     let mut c: u8;
     if state.hu_stuff.message_counter != 0 && {
@@ -462,8 +454,7 @@ pub fn HU_Ticker(state: &mut GameState) {
         state.hu_stuff.message_dontfuckwithme = false;
     }
     if state.g_game.netgame {
-        i = 0;
-        while i < MAXPLAYERS {
+        for i in 0..MAXPLAYERS {
             if state.g_game.playeringame[i as usize] && i != state.g_game.consoleplayer && {
                 c = state.g_game.players[i as usize].cmd.chatchar;
                 c as i32 != 0
@@ -499,7 +490,6 @@ pub fn HU_Ticker(state: &mut GameState) {
                 }
                 state.g_game.players[i as usize].cmd.chatchar = 0 as byte;
             }
-            i += 1;
         }
     }
 }
@@ -525,13 +515,10 @@ pub fn HU_dequeueChatChar(state: &mut HuStuffState) -> u8 {
 pub fn HU_Responder(state: &mut GameState, ev: &event_t) -> bool {
     let mut eatkey: bool = false;
     let c: u8;
-    let mut i: i32;
     let mut numplayers: i32;
     numplayers = 0;
-    i = 0;
-    while i < MAXPLAYERS {
-        numplayers += state.g_game.playeringame[i as usize] as i32;
-        i += 1;
+    for i in 0..(MAXPLAYERS as usize) {
+        numplayers += state.g_game.playeringame[i] as i32;
     }
     if ev.data1 == KEY_RSHIFT {
         return false;
@@ -553,8 +540,7 @@ pub fn HU_Responder(state: &mut GameState, ev: &event_t) -> bool {
             HUlib_resetIText(&mut state.hu_stuff.w_chat);
             HU_queueChatChar(state, HU_BROADCAST as u8);
         } else if state.g_game.netgame && numplayers > 2 {
-            i = 0;
-            while i < MAXPLAYERS {
+            for i in 0..MAXPLAYERS {
                 if ev.data2 == state.m_controls.key_multi_msgplayer[i as usize] {
                     if state.g_game.playeringame[i as usize] && i != state.g_game.consoleplayer {
                         state.hu_stuff.chat_on = true;
@@ -582,7 +568,6 @@ pub fn HU_Responder(state: &mut GameState, ev: &event_t) -> bool {
                         }
                     }
                 }
-                i += 1;
             }
         }
     } else if state.hu_stuff.hu_responder_altdown {
