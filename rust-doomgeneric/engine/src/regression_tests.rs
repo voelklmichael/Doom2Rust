@@ -28,6 +28,7 @@ use crate::p_setup::SectorId;
 use crate::p_switch::use_special_line;
 use crate::p_tick::mobj_thinker_ids;
 use crate::platform::DoomPlatform;
+use crate::r_main::set_view_size;
 use alloc::boxed::Box;
 use alloc::string::{String, ToString};
 use alloc::vec::Vec;
@@ -354,6 +355,42 @@ fn ui_frame_lines() -> Option<Vec<String>> {
     Some(lines)
 }
 
+/// `frame` lines for demo1 at the given detail level (0 = high, 1 = low) with
+/// every monster made invisible or colour-translated in turn. The plain demos
+/// take neither the fuzz nor the translated column drawers, and never leave
+/// high detail, so this is what covers those drawing paths.
+fn effect_frame_lines(detail: i32) -> Option<Vec<String>> {
+    let state = start(&["-timedemo", "demo1"])?;
+    let mut lines = Vec::new();
+    let message = run_until_exit(state, |state| {
+        let g = state.d_loop.gametic;
+        if g == 10 {
+            let blocks = state.m_menu.screenblocks;
+            set_view_size(&mut state.r_main, blocks, detail);
+        }
+        let ids = mobj_thinker_ids(&state.p_mobj, &state.p_tick);
+        for (n, id) in ids.into_iter().enumerate() {
+            let flags = &mut state.p_mobj.mo_mut(id).flags;
+            if flags.contains(MobjFlags::COUNTKILL) {
+                *flags |= match n % 3 {
+                    0 => MobjFlags::SHADOW,
+                    class => {
+                        MobjFlags::from_bits_retain((class as i32) << MobjFlags::TRANSLATION_SHIFT)
+                    }
+                };
+            }
+        }
+        if g % 5 == 0 {
+            lines.push(format!(
+                "fx{detail} {g:05} {:016x}",
+                fnv_bytes(&state.i_video.i_video_buffer)
+            ));
+        }
+    });
+    lines.push(format!("fx{detail} end {message}"));
+    Some(lines)
+}
+
 /// Hash of the Doom II cast-call sequence (monster, animation state, attack
 /// phase and timing after every tic). No demo reaches the cast, so it is
 /// driven directly.
@@ -473,6 +510,11 @@ fn actual_output() -> Option<String> {
     .unwrap();
     for line in ui_frame_lines()? {
         writeln!(out, "{line}").unwrap();
+    }
+    for detail in [0, 1] {
+        for line in effect_frame_lines(detail)? {
+            writeln!(out, "{line}").unwrap();
+        }
     }
     Some(out)
 }

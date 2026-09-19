@@ -39,21 +39,44 @@ pub(crate) fn advance_source(src: ColumnSource, delta: usize) -> ColumnSource {
     }
 }
 
+/// The bytes a [`ColumnSource`] reads from, and the offset in them at which the source starts.
+/// The pixel loops resolve this once per column or span instead of once per pixel.
+fn source_bytes<'a>(
+    r_data: &'a RDataState,
+    w_wad: &'a WWadState,
+    src: ColumnSource,
+) -> (&'a [u8], isize) {
+    match src {
+        ColumnSource::Lump { lump, offset } => (
+            &w_wad.lumpinfo[lump as usize].cache.as_ref().unwrap()[..],
+            offset as isize,
+        ),
+        ColumnSource::Composite { tex, offset } => (
+            r_data.texturecomposite[tex as usize].as_ref().unwrap(),
+            offset as isize,
+        ),
+    }
+}
+
+/// One light level of the colormap table: what a source pixel becomes at that brightness.
+fn colormap_row(colormaps: &[u8], index: ColormapId) -> &[u8; 256] {
+    let start = (index * 256) as usize;
+    (&colormaps[start..start + 256]).try_into().unwrap()
+}
+
+/// One of the player colour translation tables, `dc_translation` bytes into `translationtables`.
+fn translation_row(tables: &[u8], offset: usize) -> &[u8; 256] {
+    (&tables[offset..offset + 256]).try_into().unwrap()
+}
+
 pub(crate) fn read_source(
     r_data: &RDataState,
     w_wad: &WWadState,
     src: ColumnSource,
     idx: i32,
 ) -> u8 {
-    match src {
-        ColumnSource::Lump { lump, offset } => {
-            w_wad.lumpinfo[lump as usize].cache.as_ref().unwrap()
-                [(offset as isize + idx as isize) as usize]
-        }
-        ColumnSource::Composite { tex, offset } => r_data.texturecomposite[tex as usize]
-            .as_ref()
-            .unwrap()[(offset as isize + idx as isize) as usize],
-    }
+    let (bytes, base) = source_bytes(r_data, w_wad, src);
+    bytes[(base + idx as isize) as usize]
 }
 
 pub struct RDrawState {
@@ -154,15 +177,12 @@ pub fn draw_column(state: &mut GameState) {
     let fracstep: Fixed = state.r_draw.dc_iscale;
     frac = state.r_draw.dc_texturemid
         + (state.r_draw.dc_yl as Fixed - state.r_main.centery as Fixed) * fracstep;
+    let (source, base) = source_bytes(&state.r_data, &state.w_wad, state.r_draw.dc_source.unwrap());
+    let colormap = colormap_row(&state.r_data.colormaps, state.r_draw.dc_colormap.unwrap());
+    let screen = &mut state.i_video.i_video_buffer;
     loop {
-        let src_pixel = read_source(
-            &state.r_data,
-            &state.w_wad,
-            state.r_draw.dc_source.unwrap(),
-            frac >> FRACBITS & 127,
-        );
-        state.i_video.i_video_buffer[idx] = state.r_data.colormaps
-            [(state.r_draw.dc_colormap.unwrap() * 256 + src_pixel as i32) as usize];
+        let src_pixel = source[(base + (frac >> FRACBITS & 127) as isize) as usize];
+        screen[idx] = colormap[usize::from(src_pixel)];
         idx += SCREENWIDTH as usize;
         frac += fracstep;
         let fresh0 = count;
@@ -199,17 +219,14 @@ pub fn draw_column_low(state: &mut GameState) {
     let fracstep: Fixed = state.r_draw.dc_iscale;
     frac = state.r_draw.dc_texturemid
         + (state.r_draw.dc_yl as Fixed - state.r_main.centery as Fixed) * fracstep;
+    let (source, base) = source_bytes(&state.r_data, &state.w_wad, state.r_draw.dc_source.unwrap());
+    let colormap = colormap_row(&state.r_data.colormaps, state.r_draw.dc_colormap.unwrap());
+    let screen = &mut state.i_video.i_video_buffer;
     loop {
-        let src_pixel = read_source(
-            &state.r_data,
-            &state.w_wad,
-            state.r_draw.dc_source.unwrap(),
-            frac >> FRACBITS & 127,
-        );
-        let pixel = state.r_data.colormaps
-            [(state.r_draw.dc_colormap.unwrap() * 256 + src_pixel as i32) as usize];
-        state.i_video.i_video_buffer[idx] = pixel;
-        state.i_video.i_video_buffer[idx2] = pixel;
+        let src_pixel = source[(base + (frac >> FRACBITS & 127) as isize) as usize];
+        let pixel = colormap[usize::from(src_pixel)];
+        screen[idx] = pixel;
+        screen[idx2] = pixel;
         idx += SCREENWIDTH as usize;
         idx2 += SCREENWIDTH as usize;
         frac += fracstep;
@@ -253,15 +270,16 @@ pub fn draw_fuzz_column(state: &mut GameState) {
     }
     idx = state.r_draw.ylookup[state.r_draw.dc_yl as usize]
         + state.r_draw.columnofs[state.r_draw.dc_x as usize] as usize;
+    let colormap = colormap_row(&state.r_data.colormaps, 6);
+    let screen = &mut state.i_video.i_video_buffer;
+    let mut fuzzpos = state.r_draw.fuzzpos;
     loop {
-        let neighbor_idx =
-            (idx as isize + FUZZOFFSET[state.r_draw.fuzzpos as usize] as isize) as usize;
-        let neighbor = state.i_video.i_video_buffer[neighbor_idx];
-        state.i_video.i_video_buffer[idx] =
-            state.r_data.colormaps[(6 * 256 + neighbor as i32) as usize];
-        state.r_draw.fuzzpos += 1;
-        if state.r_draw.fuzzpos == FUZZTABLE {
-            state.r_draw.fuzzpos = 0;
+        let neighbor_idx = (idx as isize + FUZZOFFSET[fuzzpos as usize] as isize) as usize;
+        let neighbor = screen[neighbor_idx];
+        screen[idx] = colormap[usize::from(neighbor)];
+        fuzzpos += 1;
+        if fuzzpos == FUZZTABLE {
+            fuzzpos = 0;
         }
         idx += SCREENWIDTH as usize;
         let fresh2 = count;
@@ -270,6 +288,7 @@ pub fn draw_fuzz_column(state: &mut GameState) {
             break;
         }
     }
+    state.r_draw.fuzzpos = fuzzpos;
 }
 pub fn draw_fuzz_column_low(state: &mut GameState) {
     let mut count: i32;
@@ -300,17 +319,18 @@ pub fn draw_fuzz_column_low(state: &mut GameState) {
         + state.r_draw.columnofs[x as usize] as usize;
     idx2 = state.r_draw.ylookup[state.r_draw.dc_yl as usize]
         + state.r_draw.columnofs[(x + 1) as usize] as usize;
+    let colormap = colormap_row(&state.r_data.colormaps, 6);
+    let screen = &mut state.i_video.i_video_buffer;
+    let mut fuzzpos = state.r_draw.fuzzpos;
     loop {
-        let off = FUZZOFFSET[state.r_draw.fuzzpos as usize] as isize;
-        let neighbor = state.i_video.i_video_buffer[(idx as isize + off) as usize];
-        let neighbor2 = state.i_video.i_video_buffer[(idx2 as isize + off) as usize];
-        state.i_video.i_video_buffer[idx] =
-            state.r_data.colormaps[(6 * 256 + neighbor as i32) as usize];
-        state.i_video.i_video_buffer[idx2] =
-            state.r_data.colormaps[(6 * 256 + neighbor2 as i32) as usize];
-        state.r_draw.fuzzpos += 1;
-        if state.r_draw.fuzzpos == FUZZTABLE {
-            state.r_draw.fuzzpos = 0;
+        let off = FUZZOFFSET[fuzzpos as usize] as isize;
+        let neighbor = screen[(idx as isize + off) as usize];
+        let neighbor2 = screen[(idx2 as isize + off) as usize];
+        screen[idx] = colormap[usize::from(neighbor)];
+        screen[idx2] = colormap[usize::from(neighbor2)];
+        fuzzpos += 1;
+        if fuzzpos == FUZZTABLE {
+            fuzzpos = 0;
         }
         idx += SCREENWIDTH as usize;
         idx2 += SCREENWIDTH as usize;
@@ -320,6 +340,7 @@ pub fn draw_fuzz_column_low(state: &mut GameState) {
             break;
         }
     }
+    state.r_draw.fuzzpos = fuzzpos;
 }
 pub fn draw_translated_column(state: &mut GameState) {
     let mut count: i32;
@@ -344,17 +365,14 @@ pub fn draw_translated_column(state: &mut GameState) {
     let fracstep: Fixed = state.r_draw.dc_iscale;
     frac = state.r_draw.dc_texturemid
         + (state.r_draw.dc_yl as Fixed - state.r_main.centery as Fixed) * fracstep;
+    let (source, base) = source_bytes(&state.r_data, &state.w_wad, state.r_draw.dc_source.unwrap());
+    let translation = translation_row(&state.r_draw.translationtables, state.r_draw.dc_translation);
+    let colormap = colormap_row(&state.r_data.colormaps, state.r_draw.dc_colormap.unwrap());
+    let screen = &mut state.i_video.i_video_buffer;
     loop {
-        let raw_pixel = read_source(
-            &state.r_data,
-            &state.w_wad,
-            state.r_draw.dc_source.unwrap(),
-            frac >> FRACBITS,
-        );
-        let src_pixel =
-            state.r_draw.translationtables[state.r_draw.dc_translation + raw_pixel as usize];
-        state.i_video.i_video_buffer[idx] = state.r_data.colormaps
-            [(state.r_draw.dc_colormap.unwrap() * 256 + src_pixel as i32) as usize];
+        let raw_pixel = source[(base + (frac >> FRACBITS) as isize) as usize];
+        let src_pixel = translation[usize::from(raw_pixel)];
+        screen[idx] = colormap[usize::from(src_pixel)];
         idx += SCREENWIDTH as usize;
         frac += fracstep;
         let fresh4 = count;
@@ -391,19 +409,16 @@ pub fn draw_translated_column_low(state: &mut GameState) {
     let fracstep: Fixed = state.r_draw.dc_iscale;
     frac = state.r_draw.dc_texturemid
         + (state.r_draw.dc_yl as Fixed - state.r_main.centery as Fixed) * fracstep;
+    let (source, base) = source_bytes(&state.r_data, &state.w_wad, state.r_draw.dc_source.unwrap());
+    let translation = translation_row(&state.r_draw.translationtables, state.r_draw.dc_translation);
+    let colormap = colormap_row(&state.r_data.colormaps, state.r_draw.dc_colormap.unwrap());
+    let screen = &mut state.i_video.i_video_buffer;
     loop {
-        let raw_pixel = read_source(
-            &state.r_data,
-            &state.w_wad,
-            state.r_draw.dc_source.unwrap(),
-            frac >> FRACBITS,
-        );
-        let src_pixel =
-            state.r_draw.translationtables[state.r_draw.dc_translation + raw_pixel as usize];
-        let colormap = state.r_draw.dc_colormap.unwrap();
-        let pixel = state.r_data.colormaps[(colormap * 256 + src_pixel as i32) as usize];
-        state.i_video.i_video_buffer[idx] = pixel;
-        state.i_video.i_video_buffer[idx2] = pixel;
+        let raw_pixel = source[(base + (frac >> FRACBITS) as isize) as usize];
+        let src_pixel = translation[usize::from(raw_pixel)];
+        let pixel = colormap[usize::from(src_pixel)];
+        screen[idx] = pixel;
+        screen[idx2] = pixel;
         idx += SCREENWIDTH as usize;
         idx2 += SCREENWIDTH as usize;
         frac += fracstep;
@@ -455,20 +470,17 @@ pub fn draw_span(state: &mut GameState) {
     idx = state.r_draw.ylookup[state.r_draw.ds_y as usize]
         + state.r_draw.columnofs[state.r_draw.ds_x1 as usize] as usize;
     count = state.r_draw.ds_x2 - state.r_draw.ds_x1;
+    let (source, base) = source_bytes(&state.r_data, &state.w_wad, state.r_draw.ds_source.unwrap());
+    let colormap = colormap_row(&state.r_data.colormaps, state.r_draw.ds_colormap);
+    let screen = &mut state.i_video.i_video_buffer;
     loop {
         ytemp = position >> 4 & 0xfc0;
         xtemp = position >> 26;
         spot = (xtemp | ytemp) as i32;
         let fresh6 = idx;
         idx += 1;
-        let src_pixel = read_source(
-            &state.r_data,
-            &state.w_wad,
-            state.r_draw.ds_source.unwrap(),
-            spot,
-        );
-        state.i_video.i_video_buffer[fresh6] =
-            state.r_data.colormaps[(state.r_draw.ds_colormap * 256 + src_pixel as i32) as usize];
+        let src_pixel = source[(base + spot as isize) as usize];
+        screen[fresh6] = colormap[usize::from(src_pixel)];
         position = position.wrapping_add(step);
         let fresh7 = count;
         count -= 1;
@@ -504,24 +516,21 @@ pub fn draw_span_low(state: &mut GameState) {
     state.r_draw.ds_x2 <<= 1;
     idx = state.r_draw.ylookup[state.r_draw.ds_y as usize]
         + state.r_draw.columnofs[state.r_draw.ds_x1 as usize] as usize;
+    let (source, base) = source_bytes(&state.r_data, &state.w_wad, state.r_draw.ds_source.unwrap());
+    let colormap = colormap_row(&state.r_data.colormaps, state.r_draw.ds_colormap);
+    let screen = &mut state.i_video.i_video_buffer;
     loop {
         ytemp = position >> 4 & 0xfc0;
         xtemp = position >> 26;
         spot = (xtemp | ytemp) as i32;
         let fresh8 = idx;
         idx += 1;
-        let src_pixel = read_source(
-            &state.r_data,
-            &state.w_wad,
-            state.r_draw.ds_source.unwrap(),
-            spot,
-        );
-        let pixel =
-            state.r_data.colormaps[(state.r_draw.ds_colormap * 256 + src_pixel as i32) as usize];
-        state.i_video.i_video_buffer[fresh8] = pixel;
+        let src_pixel = source[(base + spot as isize) as usize];
+        let pixel = colormap[usize::from(src_pixel)];
+        screen[fresh8] = pixel;
         let fresh9 = idx;
         idx += 1;
-        state.i_video.i_video_buffer[fresh9] = pixel;
+        screen[fresh9] = pixel;
         position = position.wrapping_add(step);
         let fresh10 = count;
         count -= 1;
