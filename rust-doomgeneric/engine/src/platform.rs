@@ -1,4 +1,4 @@
-use crate::doomdef::pixel_t;
+use crate::doomdef::Pixel;
 
 pub trait DoomPlatform {
     /// Called once before the game loop starts. Every frame later passed to
@@ -6,7 +6,7 @@ pub trait DoomPlatform {
     fn init(&mut self, resx: i32, resy: i32);
     /// Called once per frame with the finished frame, row by row. The slice is
     /// only valid for the duration of the call.
-    fn draw_frame(&mut self, frame: &[pixel_t]);
+    fn draw_frame(&mut self, frame: &[Pixel]);
     fn sleep_ms(&mut self, ms: u32);
     fn get_ticks_ms(&mut self) -> u32;
     /// Pops one queued key event, if any: `(pressed, keycode)`.

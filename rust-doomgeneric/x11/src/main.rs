@@ -9,8 +9,8 @@
 use ::doomgeneric_fs::StdFileSystem;
 #[allow(unused_imports)]
 use ::rust_doomgeneric;
-use ::rust_doomgeneric::doomgeneric_Create;
-use ::rust_doomgeneric::doomgeneric_Tick;
+use ::rust_doomgeneric::doomgeneric_create;
+use ::rust_doomgeneric::doomgeneric_tick;
 use ::rust_doomgeneric::init_game_state;
 use ::rust_doomgeneric::DoomPlatform;
 use libc::memset;
@@ -1122,8 +1122,8 @@ impl DoomPlatform for X11Platform {
 
 pub fn main() {
     let state = init_game_state(Box::new(X11Platform::new()), Box::new(StdFileSystem::new()));
-    doomgeneric_Create(state, ::std::env::args().collect());
+    doomgeneric_create(state, ::std::env::args().collect());
     loop {
-        doomgeneric_Tick(state);
+        doomgeneric_tick(state);
     }
 }

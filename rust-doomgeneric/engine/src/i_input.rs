@@ -1,6 +1,6 @@
-use crate::d_event::event_t;
-use crate::d_event::D_PostEvent;
+use crate::d_event::post_event;
 use crate::d_event::EvType;
+use crate::d_event::Event;
 use crate::game_state::GameState;
 use crate::m_controls::KEY_RSHIFT;
 
@@ -34,11 +34,11 @@ static SHIFTXFORM: [u8; 128] = [
     b'K', b'L', b'M', b'N', b'O', b'P', b'Q', b'R', b'S', b'T', b'U', b'V', b'W', b'X', b'Y', b'Z',
     b'{', b'|', b'}', b'~', 127,
 ];
-fn TranslateKey(key: u8) -> u8 {
+fn translate_key(key: u8) -> u8 {
     key
 }
-fn GetTypedChar(state: &mut IInputState, mut key: u8) -> u8 {
-    key = TranslateKey(key);
+fn get_typed_char(state: &mut IInputState, mut key: u8) -> u8 {
+    key = translate_key(key);
     if state.shiftdown > 0 {
         if key as i32 >= 0 && (key as usize) < SHIFTXFORM.len() {
             key = SHIFTXFORM[key as usize];
@@ -48,15 +48,15 @@ fn GetTypedChar(state: &mut IInputState, mut key: u8) -> u8 {
     }
     key
 }
-fn UpdateShiftStatus(state: &mut IInputState, pressed: i32, key: u8) {
+fn update_shift_status(state: &mut IInputState, pressed: i32, key: u8) {
     let change: i32 = if pressed != 0 { 1 } else { -1 };
     if key as i32 == KEY_RSHIFT {
         state.shiftdown += change;
     }
 }
-pub fn I_GetEvent(state: &mut GameState) {
-    let mut event: event_t = event_t {
-        kind: EvType::ev_keydown,
+pub fn get_event(state: &mut GameState) {
+    let mut event: Event = Event {
+        kind: EvType::Keydown,
         data1: 0,
         data2: 0,
         data3: 0,
@@ -64,20 +64,20 @@ pub fn I_GetEvent(state: &mut GameState) {
     };
     while let Some((pressed, key)) = state.platform.get_key() {
         let pressed = pressed as i32;
-        UpdateShiftStatus(&mut state.i_input, pressed, key);
+        update_shift_status(&mut state.i_input, pressed, key);
         if pressed != 0 {
-            event.kind = EvType::ev_keydown;
-            event.data1 = TranslateKey(key) as i32;
-            event.data2 = GetTypedChar(&mut state.i_input, key) as i32;
+            event.kind = EvType::Keydown;
+            event.data1 = translate_key(key) as i32;
+            event.data2 = get_typed_char(&mut state.i_input, key) as i32;
             if event.data1 != 0 {
-                D_PostEvent(&mut state.d_event, event);
+                post_event(&mut state.d_event, event);
             }
         } else {
-            event.kind = EvType::ev_keyup;
-            event.data1 = TranslateKey(key) as i32;
+            event.kind = EvType::Keyup;
+            event.data1 = translate_key(key) as i32;
             event.data2 = 0;
             if event.data1 != 0 {
-                D_PostEvent(&mut state.d_event, event);
+                post_event(&mut state.d_event, event);
             }
             break;
         }

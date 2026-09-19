@@ -12,20 +12,20 @@
 //! Set `UPDATE_GOLDEN=1` to rewrite the golden file from the current output.
 //! Only do that when a behaviour change is intended and understood.
 
-use crate::d_event::{event_t, D_PostEvent, EvType};
-use crate::d_main::doomgeneric_Tick;
-use crate::doomdef::pixel_t;
-use crate::doomgeneric::doomgeneric_Create;
-use crate::f_finale::F_CastTicker;
+use crate::d_event::{post_event, EvType, Event};
+use crate::d_main::doomgeneric_tick;
+use crate::doomdef::Pixel;
+use crate::doomgeneric::doomgeneric_create;
+use crate::f_finale::cast_ticker;
 use crate::filesystem::{read_file, MemFileSystem};
-use crate::g_game::{G_DoLoadGame, G_DoSaveGame, G_ExitLevel, G_LoadGame, G_SaveGame};
+use crate::g_game::{do_load_game, do_save_game, exit_level, g_load_game, g_save_game};
 use crate::game_state::{init_game_state, GameState};
 use crate::info::StateId;
-use crate::p_saveg::P_SaveGameFile;
+use crate::p_saveg::save_game_file;
 use crate::p_setup::LineId;
 use crate::p_setup::SectorId;
-use crate::p_switch::P_UseSpecialLine;
-use crate::p_tick::P_MobjThinkerIds;
+use crate::p_switch::use_special_line;
+use crate::p_tick::mobj_thinker_ids;
 use crate::platform::DoomPlatform;
 use alloc::boxed::Box;
 use alloc::string::{String, ToString};
@@ -34,7 +34,7 @@ use std::fmt::Write as _;
 use std::panic::{catch_unwind, AssertUnwindSafe};
 
 const GOLDEN_PATH: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/golden/regression.txt");
-/// Generous upper bound on `doomgeneric_Tick` calls for the longest demo.
+/// Generous upper bound on `doomgeneric_tick` calls for the longest demo.
 const MAX_TICK_CALLS: u32 = 200_000;
 const FNV_OFFSET: u64 = 0xcbf2_9ce4_8422_2325;
 const FNV_PRIME: u64 = 0x0000_0100_0000_01b3;
@@ -48,7 +48,7 @@ struct NullPlatform {
 
 impl DoomPlatform for NullPlatform {
     fn init(&mut self, _resx: i32, _resy: i32) {}
-    fn draw_frame(&mut self, _frame: &[pixel_t]) {}
+    fn draw_frame(&mut self, _frame: &[Pixel]) {}
     fn sleep_ms(&mut self, ms: u32) {
         self.now_ms += ms;
     }
@@ -102,7 +102,7 @@ fn start(args: &[&str]) -> Option<&'static mut GameState> {
         "doom1.wad".to_string()
     ];
     argv.extend(args.iter().map(|a| (*a).to_string()));
-    doomgeneric_Create(state, argv);
+    doomgeneric_create(state, argv);
     Some(state)
 }
 
@@ -112,7 +112,7 @@ fn run_until_exit(state: &mut GameState, mut before_tick: impl FnMut(&mut GameSt
     let outcome = catch_unwind(AssertUnwindSafe(|| {
         for _ in 0..MAX_TICK_CALLS {
             before_tick(state);
-            doomgeneric_Tick(state);
+            doomgeneric_tick(state);
         }
         panic!("runaway: the demo did not finish within {MAX_TICK_CALLS} ticks");
     }));
@@ -131,7 +131,7 @@ fn run_until_exit(state: &mut GameState, mut before_tick: impl FnMut(&mut GameSt
 fn world_summary(state: &mut GameState) -> String {
     let mut mobj_hash = FNV_OFFSET;
     let mut count = 0;
-    for id in P_MobjThinkerIds(state) {
+    for id in mobj_thinker_ids(state) {
         let m = state.p_mobj.mo(id);
         mobj_hash = fnv(
             mobj_hash,
@@ -179,10 +179,10 @@ fn simulation_summary(state: &mut GameState) -> String {
 }
 
 fn key(state: &mut GameState, k: i32) {
-    D_PostEvent(
+    post_event(
         &mut state.d_event,
-        event_t {
-            kind: EvType::ev_keydown,
+        Event {
+            kind: EvType::Keydown,
             data1: k,
             data2: 0,
             data3: 0,
@@ -225,7 +225,7 @@ fn scripted_input(state: &mut GameState) {
         774 => key(state, i32::from(b'k')),
         776 => key(state, i32::from(b'f')),
         778 => key(state, i32::from(b'a')),
-        800 => G_ExitLevel(state),
+        800 => exit_level(state),
         950 | 1050 | 1150 | 1250 | 1350 | 1950 | 2050 | 2150 | 2250 | 2350 | 3150 | 3250 | 3350
         | 3450 | 3550 => {
             state.wi_stuff.acceleratestage = true;
@@ -233,12 +233,12 @@ fn scripted_input(state: &mut GameState) {
         1800 => {
             state.g_game.gameepisode = 1;
             state.g_game.gamemap = 8;
-            G_ExitLevel(state);
+            exit_level(state);
         }
         3000 => {
             state.g_game.gameepisode = 3;
             state.g_game.gamemap = 8;
-            G_ExitLevel(state);
+            exit_level(state);
         }
         3600 => state.f_finale.finalecount = 5000,
         3650 => state.f_finale.finalecount = 300,
@@ -267,7 +267,7 @@ fn ui_frame_lines() -> Option<Vec<String>> {
         if g % 5 == 0 {
             lines.push(format!(
                 "frame {g:05} {:016x}",
-                fnv_bytes(&state.i_video.I_VideoBuffer)
+                fnv_bytes(&state.i_video.i_video_buffer)
             ));
             if g % 100 == 0 {
                 let bytes: Vec<u8> = state
@@ -289,7 +289,7 @@ fn ui_frame_lines() -> Option<Vec<String>> {
 /// driven directly.
 fn cast_trace() -> Option<String> {
     let state = start(&[])?;
-    // What F_StartCast sets up, minus the Doom II music that doom1.wad lacks.
+    // What start_cast sets up, minus the Doom II music that doom1.wad lacks.
     let first = state.f_finale.castorder[0].kind;
     let see = StateId(state.info.mobjinfo[first as usize].seestate as u32);
     state.f_finale.castnum = 0;
@@ -301,7 +301,7 @@ fn cast_trace() -> Option<String> {
     state.f_finale.castattacking = false;
     let mut hash = FNV_OFFSET;
     for _ in 0..6000 {
-        F_CastTicker(state);
+        cast_ticker(state);
         let f = &state.f_finale;
         hash = fnv(
             hash,
@@ -322,7 +322,7 @@ fn cast_trace() -> Option<String> {
 
 /// Uses the first two-sided line of E1M1 with every line special in turn, from the player and
 /// from a monster, on both sides, and hashes each outcome and the resulting
-/// world. Covers every arm of `P_UseSpecialLine`.
+/// world. Covers every arm of `use_special_line`.
 fn use_special_line_trace() -> Option<String> {
     let state = start_e1m1()?;
     let (save_path, _) = save_slot(state, 0);
@@ -339,24 +339,24 @@ fn use_special_line_trace() -> Option<String> {
         for side in 0..=1 {
             for player_uses in [true, false] {
                 // Every case starts from the same saved world.
-                G_LoadGame(state, &save_path);
-                G_DoLoadGame(state);
+                g_load_game(state, &save_path);
+                do_load_game(state);
                 let actor = if player_uses {
                     state.g_game.players[0].mo.unwrap()
                 } else {
-                    P_MobjThinkerIds(state).into_iter().find(|&id| {
+                    mobj_thinker_ids(state).into_iter().find(|&id| {
                         let m = state.p_mobj.mo(id);
                         m.player.is_none() && m.flags & crate::p_mobj::MF_COUNTKILL != 0
                     })?
                 };
                 state.p_setup.line_mut(line).special = special;
                 state.p_setup.line_mut(line).tag = tag;
-                let used = P_UseSpecialLine(state, actor, line, side);
+                let used = use_special_line(state, actor, line, side);
                 // Let any mover that was started run for a few tics, and
                 // note what the use did to the line itself (a switch flips
                 // its textures and clears once-only specials).
                 for _ in 0..8 {
-                    crate::p_tick::P_RunThinkers(state);
+                    crate::p_tick::run_thinkers(state);
                 }
                 let sidenum = state.p_setup.line(line).sidenum[0] as usize;
                 let side_textures = {
@@ -376,7 +376,7 @@ fn use_special_line_trace() -> Option<String> {
                         fnv_bytes(world.as_bytes()) as u32,
                     ],
                 );
-                state.g_game.gameaction = crate::d_event::GameAction::ga_nothing;
+                state.g_game.gameaction = crate::d_event::GameAction::Nothing;
             }
         }
     }
@@ -432,7 +432,7 @@ fn simulation_and_frames_match_golden() {
 fn start_e1m1() -> Option<&'static mut GameState> {
     let state = start(&["-warp", "1", "1", "-skill", "3"])?;
     while state.d_loop.gametic < 350 {
-        doomgeneric_Tick(state);
+        doomgeneric_tick(state);
     }
     Some(state)
 }
@@ -441,10 +441,10 @@ fn start_e1m1() -> Option<&'static mut GameState> {
 /// request (which would trigger a second save on the next tick), and returns
 /// the file's path and contents.
 fn save_slot(state: &mut GameState, slot: i32) -> (String, Vec<u8>) {
-    G_SaveGame(state, slot, "roundtrip");
+    g_save_game(state, slot, "roundtrip");
     state.g_game.sendsave = false;
-    G_DoSaveGame(state);
-    let path = P_SaveGameFile(state, slot);
+    do_save_game(state);
+    let path = save_game_file(state, slot);
     let bytes =
         read_file(&mut *state.fs, &path).unwrap_or_else(|| panic!("no save file at {path}"));
     (path, bytes)
@@ -463,15 +463,15 @@ fn save_game_round_trips() {
 
     // Let the world move on, then restore it from the file.
     for _ in 0..40 {
-        doomgeneric_Tick(state);
+        doomgeneric_tick(state);
     }
     assert_ne!(
         before,
         world_summary(state),
         "the world should have changed"
     );
-    G_LoadGame(state, &path);
-    G_DoLoadGame(state);
+    g_load_game(state, &path);
+    do_load_game(state);
     assert_eq!(before, world_summary(state));
 
     let (_, second) = save_slot(state, 1);

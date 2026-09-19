@@ -1,4 +1,4 @@
-pub static doom1_endmsg: [&str; 8] = [
+pub static DOOM1_ENDMSG: [&str; 8] = [
     "are you sure you want to\nquit this great game?",
     "please don't leave, there's more\ndemons to toast!",
     "let's beat it -- this is turning\ninto a bloodbath!",
@@ -8,7 +8,7 @@ pub static doom1_endmsg: [&str; 8] = [
     "ya know, next time you come in here\ni'm gonna toast ya.",
     "go ahead and leave. see if i care.",
 ];
-pub static doom2_endmsg: [&str; 8] = [
+pub static DOOM2_ENDMSG: [&str; 8] = [
     "are you sure you want to\nquit this great game?",
     "you want to quit?\nthen, thou hast lost an eighth!",
     "don't go now, there's a \ndimensional shambler waiting\nat the dos prompt!",

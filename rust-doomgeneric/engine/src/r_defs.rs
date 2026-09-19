@@ -1,14 +1,13 @@
 use crate::game_state::GameState;
-use crate::m_fixed::fixed_t;
+use crate::m_fixed::Fixed;
 use crate::p_setup::LineId;
 use crate::p_setup::SectorId;
 use crate::p_setup::SegId;
 use crate::p_setup::SideId;
 use crate::p_setup::VertexId;
-use crate::stdint_types::byte;
-use crate::tables::angle_t;
+use crate::tables::Angle;
 use alloc::vec::Vec;
-pub type lighttable_t = byte;
+pub type LightTable = u8;
 
 // A sprite/wall vertical-clip array, always one of these fixed i16 arrays --
 // never an independently-allocated buffer. `Openings(i)` is an index into
@@ -48,9 +47,9 @@ impl ClipArray {
 }
 
 #[derive(Copy, Clone)]
-pub struct side_t {
-    pub textureoffset: fixed_t,
-    pub rowoffset: fixed_t,
+pub struct Side {
+    pub textureoffset: Fixed,
+    pub rowoffset: Fixed,
     pub toptexture: i16,
     pub bottomtexture: i16,
     pub midtexture: i16,
@@ -58,11 +57,11 @@ pub struct side_t {
 }
 
 #[derive(Copy, Clone)]
-pub struct seg_t {
+pub struct Seg {
     pub v1: VertexId,
     pub v2: VertexId,
-    pub offset: fixed_t,
-    pub angle: angle_t,
+    pub offset: Fixed,
+    pub angle: Angle,
     pub sidedef: SideId,
     pub linedef: LineId,
     pub frontsector: Option<SectorId>,
@@ -70,49 +69,48 @@ pub struct seg_t {
 }
 
 #[derive(Copy, Clone)]
-pub struct node_t {
-    pub x: fixed_t,
-    pub y: fixed_t,
-    pub dx: fixed_t,
-    pub dy: fixed_t,
-    pub bbox: [[fixed_t; 4]; 2],
+pub struct Node {
+    pub x: Fixed,
+    pub y: Fixed,
+    pub dx: Fixed,
+    pub dy: Fixed,
+    pub bbox: [[Fixed; 4]; 2],
     pub children: [u16; 2],
 }
 
 #[derive(Copy, Clone)]
-pub struct drawseg_s {
+pub struct DrawSeg {
     pub curline: SegId,
     pub x1: i32,
     pub x2: i32,
-    pub scale1: fixed_t,
-    pub scale2: fixed_t,
-    pub scalestep: fixed_t,
+    pub scale1: Fixed,
+    pub scale2: Fixed,
+    pub scalestep: Fixed,
     pub silhouette: i32,
-    pub bsilheight: fixed_t,
-    pub tsilheight: fixed_t,
+    pub bsilheight: Fixed,
+    pub tsilheight: Fixed,
     pub sprtopclip: Option<ClipArray>,
     pub sprbottomclip: Option<ClipArray>,
     pub maskedtexturecol: Option<ClipArray>,
 }
-pub type drawseg_t = drawseg_s;
 
 /// A visplane's per-column top/bottom rows. The arrays carry one extra
 /// element at each end (index `x + 1` holds column `x`), because the span
 /// builder deliberately reads/writes columns -1 and 320 (the sentinels around
 /// the plane's real columns).
 #[derive(Copy, Clone)]
-pub struct visplane_t {
-    pub height: fixed_t,
+pub struct VisPlane {
+    pub height: Fixed,
     pub picnum: i32,
     pub lightlevel: i32,
     pub minx: i32,
     pub maxx: i32,
-    top: [byte; 322],
-    bottom: [byte; 322],
+    top: [u8; 322],
+    bottom: [u8; 322],
 }
 
-impl visplane_t {
-    pub const EMPTY: visplane_t = visplane_t {
+impl VisPlane {
+    pub const EMPTY: VisPlane = VisPlane {
         height: 0,
         picnum: 0,
         lightlevel: 0,
@@ -122,19 +120,19 @@ impl visplane_t {
         bottom: [0; 322],
     };
 
-    pub fn top(&self, x: i32) -> byte {
+    pub fn top(&self, x: i32) -> u8 {
         self.top[(x + 1) as usize]
     }
 
-    pub fn set_top(&mut self, x: i32, value: byte) {
+    pub fn set_top(&mut self, x: i32, value: u8) {
         self.top[(x + 1) as usize] = value;
     }
 
-    pub fn bottom(&self, x: i32) -> byte {
+    pub fn bottom(&self, x: i32) -> u8 {
         self.bottom[(x + 1) as usize]
     }
 
-    pub fn set_bottom(&mut self, x: i32, value: byte) {
+    pub fn set_bottom(&mut self, x: i32, value: u8) {
         self.bottom[(x + 1) as usize] = value;
     }
 
@@ -153,14 +151,14 @@ pub enum SpriteRotate {
 }
 
 #[derive(Copy, Clone)]
-pub struct spriteframe_t {
+pub struct SpriteFrame {
     pub rotate: SpriteRotate,
     pub lump: [i16; 8],
-    pub flip: [byte; 8],
+    pub flip: [u8; 8],
 }
 
 #[derive(Clone)]
-pub struct spritedef_t {
+pub struct SpriteDef {
     pub numframes: i32,
-    pub spriteframes: Vec<spriteframe_t>,
+    pub spriteframes: Vec<SpriteFrame>,
 }

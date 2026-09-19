@@ -1,4 +1,4 @@
-use crate::m_fixed::fixed_t;
+use crate::m_fixed::Fixed;
 use crate::m_fixed::INT_MAX;
 use crate::m_fixed::INT_MIN;
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -8,13 +8,13 @@ pub enum BoxIndex {
     Left = 2,
     Right = 3,
 }
-pub fn M_ClearBox(bbox: &mut [fixed_t; 4]) {
-    bbox[BoxIndex::Right as usize] = INT_MIN as fixed_t;
+pub fn clear_box(bbox: &mut [Fixed; 4]) {
+    bbox[BoxIndex::Right as usize] = INT_MIN as Fixed;
     bbox[BoxIndex::Top as usize] = bbox[BoxIndex::Right as usize];
-    bbox[BoxIndex::Left as usize] = INT_MAX as fixed_t;
+    bbox[BoxIndex::Left as usize] = INT_MAX as Fixed;
     bbox[BoxIndex::Bottom as usize] = bbox[BoxIndex::Left as usize];
 }
-pub fn M_AddToBox(bbox: &mut [fixed_t; 4], x: fixed_t, y: fixed_t) {
+pub fn add_to_box(bbox: &mut [Fixed; 4], x: Fixed, y: Fixed) {
     if x < bbox[BoxIndex::Left as usize] {
         bbox[BoxIndex::Left as usize] = x;
     } else if x > bbox[BoxIndex::Right as usize] {

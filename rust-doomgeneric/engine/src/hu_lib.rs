@@ -2,13 +2,13 @@ use crate::doomdef::SCREENWIDTH;
 use crate::game_state::GameState;
 use crate::m_controls::KEY_BACKSPACE;
 use crate::m_controls::KEY_ENTER;
-use crate::r_draw::R_VideoErase;
+use crate::r_draw::video_erase;
+use crate::v_video::cache_patch_num;
+use crate::v_video::draw_patch_direct;
 use crate::v_video::Screen;
-use crate::v_video::V_CachePatchNum;
-use crate::v_video::V_DrawPatchDirect;
 use alloc::string::String;
 #[derive(Clone)]
-pub struct hu_textline_t {
+pub struct HuTextLine {
     pub x: i32,
     pub y: i32,
     pub sc: i32,
@@ -16,30 +16,30 @@ pub struct hu_textline_t {
     pub needsupdate: i32,
 }
 #[derive(Clone)]
-pub struct hu_stext_t {
-    pub l: [hu_textline_t; 4],
+pub struct HuSText {
+    pub l: [HuTextLine; 4],
     pub h: i32,
     pub cl: i32,
     pub laston: bool,
 }
 #[derive(Clone)]
-pub struct hu_itext_t {
-    pub l: hu_textline_t,
+pub struct HuIText {
+    pub l: HuTextLine,
     pub lm: i32,
     pub laston: bool,
 }
 pub const HU_MAXLINELENGTH: i32 = 80;
-pub fn HUlib_clearTextLine(t: &mut hu_textline_t) {
+pub fn hulib_clear_text_line(t: &mut HuTextLine) {
     t.l.clear();
     t.needsupdate = 1;
 }
-pub fn HUlib_initTextLine(t: &mut hu_textline_t, x: i32, y: i32, sc: i32) {
+pub fn hulib_init_text_line(t: &mut HuTextLine, x: i32, y: i32, sc: i32) {
     t.x = x;
     t.y = y;
     t.sc = sc;
-    HUlib_clearTextLine(t);
+    hulib_clear_text_line(t);
 }
-pub fn HUlib_addCharToTextLine(t: &mut hu_textline_t, ch: u8) -> bool {
+pub fn hulib_add_char_to_text_line(t: &mut HuTextLine, ch: u8) -> bool {
     if t.l.len() as i32 == HU_MAXLINELENGTH {
         false
     } else {
@@ -48,7 +48,7 @@ pub fn HUlib_addCharToTextLine(t: &mut hu_textline_t, ch: u8) -> bool {
         true
     }
 }
-pub fn HUlib_delCharFromTextLine(t: &mut hu_textline_t) -> bool {
+pub fn hulib_del_char_from_text_line(t: &mut HuTextLine) -> bool {
     if t.l.is_empty() {
         false
     } else {
@@ -57,18 +57,18 @@ pub fn HUlib_delCharFromTextLine(t: &mut hu_textline_t) -> bool {
         true
     }
 }
-pub fn HUlib_drawTextLine(state: &mut GameState, l: &hu_textline_t, drawcursor: bool) {
+pub fn hulib_draw_text_line(state: &mut GameState, l: &HuTextLine, drawcursor: bool) {
     let mut x = l.x;
     for i in 0..l.l.len() {
         let c = l.l.as_bytes()[i].to_ascii_uppercase();
         if c as i32 != ' ' as i32 && c as i32 >= l.sc && c as i32 <= '_' as i32 {
             let glyph = state.hu_stuff.hu_font[(c as i32 - l.sc) as usize];
-            let patch = V_CachePatchNum(state, glyph);
+            let patch = cache_patch_num(state, glyph);
             let w = patch.width();
             if x + w > SCREENWIDTH {
                 break;
             }
-            V_DrawPatchDirect(state, Screen::Video, x, l.y, &patch);
+            draw_patch_direct(state, Screen::Video, x, l.y, &patch);
             x += w;
         } else {
             x += 4;
@@ -79,16 +79,16 @@ pub fn HUlib_drawTextLine(state: &mut GameState, l: &hu_textline_t, drawcursor: 
     }
     if drawcursor {
         let cursor_glyph = state.hu_stuff.hu_font[('_' as i32 - l.sc) as usize];
-        let cursor_patch = V_CachePatchNum(state, cursor_glyph);
+        let cursor_patch = cache_patch_num(state, cursor_glyph);
         if x + cursor_patch.width() <= SCREENWIDTH {
-            V_DrawPatchDirect(state, Screen::Video, x, l.y, &cursor_patch);
+            draw_patch_direct(state, Screen::Video, x, l.y, &cursor_patch);
         }
     }
 }
-pub fn HUlib_eraseTextLine(state: &mut GameState, l: &mut hu_textline_t) {
+pub fn hulib_erase_text_line(state: &mut GameState, l: &mut HuTextLine) {
     if !state.am_map.automapactive && state.r_draw.viewwindowx != 0 && l.needsupdate != 0 {
         let glyph = state.hu_stuff.hu_font[0];
-        let patch = V_CachePatchNum(state, glyph);
+        let patch = cache_patch_num(state, glyph);
         let lh = patch.height() + 1;
         let mut y = l.y;
         let mut yoffset = y * SCREENWIDTH;
@@ -96,13 +96,13 @@ pub fn HUlib_eraseTextLine(state: &mut GameState, l: &mut hu_textline_t) {
             if y < state.r_draw.viewwindowy
                 || y >= state.r_draw.viewwindowy + state.r_draw.viewheight
             {
-                R_VideoErase(state, yoffset as u32, SCREENWIDTH);
+                video_erase(state, yoffset as u32, SCREENWIDTH);
             } else {
                 let viewwindowx = state.r_draw.viewwindowx;
                 let second_ofs =
                     (yoffset + state.r_draw.viewwindowx + state.r_draw.viewwidth) as u32;
-                R_VideoErase(state, yoffset as u32, viewwindowx);
-                R_VideoErase(state, second_ofs, viewwindowx);
+                video_erase(state, yoffset as u32, viewwindowx);
+                video_erase(state, second_ofs, viewwindowx);
             }
             y += 1;
             yoffset += SCREENWIDTH;
@@ -112,8 +112,8 @@ pub fn HUlib_eraseTextLine(state: &mut GameState, l: &mut hu_textline_t) {
         l.needsupdate -= 1;
     }
 }
-pub fn HUlib_initSText(
-    s: &mut hu_stext_t,
+pub fn hulib_init_stext(
+    s: &mut HuSText,
     x: i32,
     y: i32,
     h: i32,
@@ -124,7 +124,7 @@ pub fn HUlib_initSText(
     s.laston = true;
     s.cl = 0;
     for i in 0..h {
-        HUlib_initTextLine(
+        hulib_init_text_line(
             &mut s.l[i as usize],
             x,
             y - i * (font0_height + 1),
@@ -132,29 +132,29 @@ pub fn HUlib_initSText(
         );
     }
 }
-pub fn HUlib_addLineToSText(s: &mut hu_stext_t) {
+pub fn hulib_add_line_to_stext(s: &mut HuSText) {
     s.cl += 1;
     if s.cl == s.h {
         s.cl = 0;
     }
-    HUlib_clearTextLine(&mut s.l[s.cl as usize]);
+    hulib_clear_text_line(&mut s.l[s.cl as usize]);
     for i in 0..s.h {
         s.l[i as usize].needsupdate = 4;
     }
 }
-pub fn HUlib_addMessageToSText(s: &mut hu_stext_t, prefix: Option<&str>, msg: &str) {
-    HUlib_addLineToSText(s);
+pub fn hulib_add_message_to_stext(s: &mut HuSText, prefix: Option<&str>, msg: &str) {
+    hulib_add_line_to_stext(s);
     let cl = s.cl as usize;
     if let Some(prefix) = prefix {
         for b in prefix.bytes() {
-            HUlib_addCharToTextLine(&mut s.l[cl], b);
+            hulib_add_char_to_text_line(&mut s.l[cl], b);
         }
     }
     for b in msg.bytes() {
-        HUlib_addCharToTextLine(&mut s.l[cl], b);
+        hulib_add_char_to_text_line(&mut s.l[cl], b);
     }
 }
-pub fn HUlib_drawSText(state: &mut GameState, s: &hu_stext_t, on: bool) {
+pub fn hulib_draw_stext(state: &mut GameState, s: &HuSText, on: bool) {
     if !on {
         return;
     }
@@ -163,53 +163,53 @@ pub fn HUlib_drawSText(state: &mut GameState, s: &hu_stext_t, on: bool) {
         if idx < 0 {
             idx += s.h;
         }
-        HUlib_drawTextLine(state, &s.l[idx as usize], false);
+        hulib_draw_text_line(state, &s.l[idx as usize], false);
     }
 }
-pub fn HUlib_eraseSText(state: &mut GameState, s: &mut hu_stext_t, on: bool) {
+pub fn hulib_erase_stext(state: &mut GameState, s: &mut HuSText, on: bool) {
     for i in 0..s.h {
         if s.laston && !on {
             s.l[i as usize].needsupdate = 4;
         }
-        HUlib_eraseTextLine(state, &mut s.l[i as usize]);
+        hulib_erase_text_line(state, &mut s.l[i as usize]);
     }
     s.laston = on;
 }
-pub fn HUlib_initIText(it: &mut hu_itext_t, x: i32, y: i32, startchar: i32) {
+pub fn hulib_init_itext(it: &mut HuIText, x: i32, y: i32, startchar: i32) {
     it.lm = 0;
     it.laston = true;
-    HUlib_initTextLine(&mut it.l, x, y, startchar);
+    hulib_init_text_line(&mut it.l, x, y, startchar);
 }
-pub fn HUlib_delCharFromIText(it: &mut hu_itext_t) {
+pub fn hulib_del_char_from_itext(it: &mut HuIText) {
     if it.l.l.len() as i32 != it.lm {
-        HUlib_delCharFromTextLine(&mut it.l);
+        hulib_del_char_from_text_line(&mut it.l);
     }
 }
-pub fn HUlib_resetIText(it: &mut hu_itext_t) {
+pub fn hulib_reset_itext(it: &mut HuIText) {
     it.lm = 0;
-    HUlib_clearTextLine(&mut it.l);
+    hulib_clear_text_line(&mut it.l);
 }
-pub fn HUlib_keyInIText(it: &mut hu_itext_t, ch: u8) -> bool {
+pub fn hulib_key_in_itext(it: &mut HuIText, ch: u8) -> bool {
     let ch = ch.to_ascii_uppercase();
     if ch as i32 >= ' ' as i32 && ch as i32 <= '_' as i32 {
-        HUlib_addCharToTextLine(&mut it.l, ch);
+        hulib_add_char_to_text_line(&mut it.l, ch);
     } else if ch as i32 == KEY_BACKSPACE {
-        HUlib_delCharFromIText(it);
+        hulib_del_char_from_itext(it);
     } else if ch as i32 != KEY_ENTER {
         return false;
     }
     true
 }
-pub fn HUlib_drawIText(state: &mut GameState, it: &hu_itext_t, on: bool) {
+pub fn hulib_draw_itext(state: &mut GameState, it: &HuIText, on: bool) {
     if !on {
         return;
     }
-    HUlib_drawTextLine(state, &it.l, true);
+    hulib_draw_text_line(state, &it.l, true);
 }
-pub fn HUlib_eraseIText(state: &mut GameState, it: &mut hu_itext_t, on: bool) {
+pub fn hulib_erase_itext(state: &mut GameState, it: &mut HuIText, on: bool) {
     if it.laston && !on {
         it.l.needsupdate = 4;
     }
-    HUlib_eraseTextLine(state, &mut it.l);
+    hulib_erase_text_line(state, &mut it.l);
     it.laston = on;
 }

@@ -9,7 +9,7 @@ fn m_strtoint_digit_prefix(s: &str, radix: u32) -> Option<i32> {
         i32::from_str_radix(&s[..end], radix).ok()
     }
 }
-pub fn M_StrToInt(str: &str, result: &mut i32) -> bool {
+pub fn str_to_int(str: &str, result: &mut i32) -> bool {
     let trimmed = str.trim_start();
     let (sign, unsigned) = match trimmed.strip_prefix('-') {
         Some(rest) => (-1, rest),
@@ -33,7 +33,7 @@ pub fn M_StrToInt(str: &str, result: &mut i32) -> bool {
         None => false,
     }
 }
-pub fn M_ExtractFileBase(platform: &mut dyn DoomPlatform, path: &str, dest: &mut FixedCStr<8>) {
+pub fn extract_file_base(platform: &mut dyn DoomPlatform, path: &str, dest: &mut FixedCStr<8>) {
     let filename = match path.rfind('/') {
         Some(idx) => &path[idx + 1..],
         None => path,
@@ -58,6 +58,6 @@ pub fn M_ExtractFileBase(platform: &mut dyn DoomPlatform, path: &str, dest: &mut
     }
     *dest = FixedCStr(buf);
 }
-pub fn M_StringEndsWith(s: &str, suffix: &str) -> bool {
+pub fn string_ends_with(s: &str, suffix: &str) -> bool {
     s.ends_with(suffix)
 }

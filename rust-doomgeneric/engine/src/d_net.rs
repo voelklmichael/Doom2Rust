@@ -1,32 +1,32 @@
-use crate::d_loop::D_InitNetGame;
-use crate::d_loop::D_RegisterLoopCallbacks;
-use crate::d_loop::D_StartNetGame;
-use crate::d_loop::{loop_interface_t, net_connect_data_t, net_gamesettings_t};
-use crate::d_main::D_DoAdvanceDemo;
+use crate::d_loop::init_net_game;
+use crate::d_loop::register_loop_callbacks;
+use crate::d_loop::start_net_game;
+use crate::d_loop::{LoopInterface, NetConnectData, NetGameSettings};
+use crate::d_main::do_advance_demo;
 use crate::d_mode::skill_from_raw;
-use crate::d_ticcmd::ticcmd_t;
-use crate::g_game::G_CheckDemoStatus;
-use crate::g_game::G_Ticker;
-use crate::m_argv::M_CheckParm;
-use crate::w_checksum::W_Checksum;
-use crate::w_wad::W_CheckNumForName;
+use crate::d_ticcmd::TicCmd;
+use crate::g_game::check_demo_status;
+use crate::g_game::g_ticker;
+use crate::m_argv::check_parm;
+use crate::w_checksum::checksum;
+use crate::w_wad::check_num_for_name;
 
-use crate::d_main::D_ProcessEvents;
+use crate::d_main::d_process_events;
 use crate::doomdef::MAXPLAYERS;
-use crate::g_game::G_BuildTiccmd;
+use crate::g_game::g_build_ticcmd;
 use crate::game_state::GameState;
-use crate::m_menu::M_Ticker;
+use crate::m_menu::m_ticker;
 use crate::tables::ANG270;
 use crate::tables::ANG90;
-fn PlayerQuitGame(state: &mut GameState, player_num: u32) {
+fn player_quit_game(state: &mut GameState, player_num: u32) {
     state.g_game.playeringame[player_num as usize] = false;
     state.g_game.players[state.g_game.consoleplayer as usize].message =
         Some(format!("Player {} left the game", player_num + 1));
     if state.g_game.demorecording {
-        G_CheckDemoStatus(state);
+        check_demo_status(state);
     }
 }
-fn RunTic(state: &mut GameState, cmds: &[ticcmd_t], ingame: &[bool]) {
+fn run_tic(state: &mut GameState, cmds: &[TicCmd], ingame: &[bool]) {
     let mut i: u32;
     i = 0;
     while i < MAXPLAYERS as u32 {
@@ -34,22 +34,22 @@ fn RunTic(state: &mut GameState, cmds: &[ticcmd_t], ingame: &[bool]) {
             && state.g_game.playeringame[i as usize]
             && !ingame[i as usize]
         {
-            PlayerQuitGame(state, i);
+            player_quit_game(state, i);
         }
         i = i.wrapping_add(1);
     }
     if state.d_main.advancedemo {
-        D_DoAdvanceDemo(state);
+        do_advance_demo(state);
     }
-    G_Ticker(state, cmds);
+    g_ticker(state, cmds);
 }
-const DOOM_LOOP_INTERFACE: loop_interface_t = loop_interface_t {
-    ProcessEvents: Some(D_ProcessEvents),
-    BuildTiccmd: Some(G_BuildTiccmd),
-    RunTic: Some(RunTic),
-    RunMenu: Some(M_Ticker),
+const DOOM_LOOP_INTERFACE: LoopInterface = LoopInterface {
+    process_events: Some(d_process_events),
+    build_ticcmd: Some(g_build_ticcmd),
+    run_tic: Some(run_tic),
+    run_menu: Some(m_ticker),
 };
-fn LoadGameSettings(state: &mut GameState, settings: &mut net_gamesettings_t) {
+fn load_game_settings(state: &mut GameState, settings: &mut NetGameSettings) {
     let mut i: u32;
     state.g_game.deathmatch = settings.deathmatch;
     state.d_main.startepisode = settings.episode;
@@ -73,7 +73,7 @@ fn LoadGameSettings(state: &mut GameState, settings: &mut net_gamesettings_t) {
         i = i.wrapping_add(1);
     }
 }
-fn SaveGameSettings(state: &mut GameState, settings: &mut net_gamesettings_t) {
+fn save_game_settings(state: &mut GameState, settings: &mut NetGameSettings) {
     settings.deathmatch = state.g_game.deathmatch;
     settings.episode = state.d_main.startepisode;
     settings.map = state.d_main.startmap;
@@ -85,28 +85,28 @@ fn SaveGameSettings(state: &mut GameState, settings: &mut net_gamesettings_t) {
     settings.respawn_monsters = state.d_main.respawnparm as i32;
     settings.timelimit = state.g_game.timelimit;
     settings.lowres_turn =
-        (M_CheckParm(state, "-record") > 0 && M_CheckParm(state, "-longtics") == 0) as i32;
+        (check_parm(state, "-record") > 0 && check_parm(state, "-longtics") == 0) as i32;
 }
-fn InitConnectData(state: &mut GameState, connect_data: &mut net_connect_data_t) {
+fn init_connect_data(state: &mut GameState, connect_data: &mut NetConnectData) {
     connect_data.max_players = MAXPLAYERS;
     connect_data.drone = false;
-    if M_CheckParm(state, "-left") > 0 {
+    if check_parm(state, "-left") > 0 {
         state.r_main.viewangleoffset = ANG90;
         connect_data.drone = true;
     }
-    if M_CheckParm(state, "-right") > 0 {
+    if check_parm(state, "-right") > 0 {
         state.r_main.viewangleoffset = ANG270 as i32;
         connect_data.drone = true;
     }
     connect_data.gamemode = state.doomstat.gamemode as i32;
     connect_data.gamemission = state.doomstat.gamemission as i32;
     connect_data.lowres_turn =
-        (M_CheckParm(state, "-record") > 0 && M_CheckParm(state, "-longtics") == 0) as i32;
-    connect_data.wad_sha1sum = W_Checksum(state);
-    connect_data.is_freedoom = W_CheckNumForName(&mut state.w_wad, "FREEDOOM") >= 0;
+        (check_parm(state, "-record") > 0 && check_parm(state, "-longtics") == 0) as i32;
+    connect_data.wad_sha1sum = checksum(state);
+    connect_data.is_freedoom = check_num_for_name(&mut state.w_wad, "FREEDOOM") >= 0;
 }
-pub fn D_ConnectNetGame(state: &mut GameState) {
-    let mut connect_data: net_connect_data_t = net_connect_data_t {
+pub fn connect_net_game(state: &mut GameState) {
+    let mut connect_data: NetConnectData = NetConnectData {
         gamemode: 0,
         gamemission: 0,
         lowres_turn: 0,
@@ -116,14 +116,14 @@ pub fn D_ConnectNetGame(state: &mut GameState) {
         wad_sha1sum: [0; 20],
         player_class: 0,
     };
-    InitConnectData(state, &mut connect_data);
-    state.g_game.netgame = D_InitNetGame(state, &mut connect_data);
-    if M_CheckParm(state, "-solo-net") > 0 {
+    init_connect_data(state, &mut connect_data);
+    state.g_game.netgame = init_net_game(state, &mut connect_data);
+    if check_parm(state, "-solo-net") > 0 {
         state.g_game.netgame = true;
     }
 }
-pub fn D_CheckNetGame(state: &mut GameState) {
-    let mut settings: net_gamesettings_t = net_gamesettings_t {
+pub fn check_net_game(state: &mut GameState) {
+    let mut settings: NetGameSettings = NetGameSettings {
         ticdup: 0,
         extratics: 0,
         deathmatch: 0,
@@ -145,10 +145,10 @@ pub fn D_CheckNetGame(state: &mut GameState) {
     if state.g_game.netgame {
         state.d_main.autostart = true;
     }
-    D_RegisterLoopCallbacks(state, DOOM_LOOP_INTERFACE);
-    SaveGameSettings(state, &mut settings);
-    D_StartNetGame(state, &mut settings);
-    LoadGameSettings(state, &mut settings);
+    register_loop_callbacks(state, DOOM_LOOP_INTERFACE);
+    save_game_settings(state, &mut settings);
+    start_net_game(state, &mut settings);
+    load_game_settings(state, &mut settings);
     doom_println!(
         state.platform,
         "startskill {}  deathmatch: {}  startmap: {}  startepisode: {}",
@@ -165,7 +165,7 @@ pub fn D_CheckNetGame(state: &mut GameState) {
         settings.num_players,
     );
     if state.g_game.timelimit > 0 && state.g_game.deathmatch != 0 {
-        if state.g_game.timelimit == 20 && M_CheckParm(state, "-avg") != 0 {
+        if state.g_game.timelimit == 20 && check_parm(state, "-avg") != 0 {
             doom_println!(
                 state.platform,
                 "Austin Virtual Gaming: Levels will end after 20 minutes"

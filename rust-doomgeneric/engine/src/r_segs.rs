@@ -1,33 +1,32 @@
 use crate::game_state::GameState;
-use crate::i_system::I_Error;
-use crate::m_fixed::fixed_t;
-use crate::m_fixed::FixedMul;
+use crate::i_system::error;
+use crate::m_fixed::fixed_mul;
+use crate::m_fixed::Fixed;
 use crate::m_fixed::FRACBITS;
 use crate::m_fixed::INT_MAX;
 use crate::m_fixed::INT_MIN;
 
 use crate::p_spec::ML_MAPPED;
-use crate::r_data::R_GetColumn;
-use crate::r_defs::drawseg_t;
+use crate::r_data::get_column;
 use crate::r_defs::ClipArray;
+use crate::r_defs::DrawSeg;
 use crate::r_draw::advance_source;
+use crate::r_main::point_to_dist;
+use crate::r_main::scale_from_global_angle;
 use crate::r_main::LightRow48;
-use crate::r_main::R_PointToDist;
-use crate::r_main::R_ScaleFromGlobalAngle;
 use crate::r_main::LIGHTLEVELS;
 use crate::r_main::LIGHTSCALESHIFT;
 use crate::r_main::LIGHTSEGSHIFT;
 use crate::r_main::MAXLIGHTSCALE;
-use crate::r_plane::R_CheckPlane;
-use crate::r_things::R_DrawMaskedColumn;
-use crate::stdint_types::byte;
+use crate::r_plane::check_plane;
+use crate::r_things::draw_masked_column;
 
-use crate::tables::angle_t;
-use crate::tables::finesine;
-use crate::tables::finetangent;
+use crate::tables::Angle;
 use crate::tables::ANG180;
 use crate::tables::ANG90;
 use crate::tables::ANGLETOFINESHIFT;
+use crate::tables::FINESINE;
+use crate::tables::FINETANGENT;
 
 pub struct RSegsState {
     pub segtextured: bool,
@@ -37,30 +36,30 @@ pub struct RSegsState {
     pub toptexture: i32,
     pub bottomtexture: i32,
     pub midtexture: i32,
-    pub rw_normalangle: angle_t,
+    pub rw_normalangle: Angle,
     pub rw_angle1: i32,
     pub rw_x: i32,
     pub rw_stopx: i32,
-    pub rw_centerangle: angle_t,
-    pub rw_offset: fixed_t,
-    pub rw_distance: fixed_t,
-    pub rw_scale: fixed_t,
-    pub rw_scalestep: fixed_t,
-    pub rw_midtexturemid: fixed_t,
-    pub rw_toptexturemid: fixed_t,
-    pub rw_bottomtexturemid: fixed_t,
+    pub rw_centerangle: Angle,
+    pub rw_offset: Fixed,
+    pub rw_distance: Fixed,
+    pub rw_scale: Fixed,
+    pub rw_scalestep: Fixed,
+    pub rw_midtexturemid: Fixed,
+    pub rw_toptexturemid: Fixed,
+    pub rw_bottomtexturemid: Fixed,
     pub worldtop: i32,
     pub worldbottom: i32,
     pub worldhigh: i32,
     pub worldlow: i32,
-    pub pixhigh: fixed_t,
-    pub pixlow: fixed_t,
-    pub pixhighstep: fixed_t,
-    pub pixlowstep: fixed_t,
-    pub topfrac: fixed_t,
-    pub topstep: fixed_t,
-    pub bottomfrac: fixed_t,
-    pub bottomstep: fixed_t,
+    pub pixhigh: Fixed,
+    pub pixlow: Fixed,
+    pub pixhighstep: Fixed,
+    pub pixlowstep: Fixed,
+    pub topfrac: Fixed,
+    pub topstep: Fixed,
+    pub bottomfrac: Fixed,
+    pub bottomstep: Fixed,
     pub walllights: LightRow48,
     pub maskedtexturecol: Option<ClipArray>,
 }
@@ -118,7 +117,7 @@ pub const SIL_BOTTOM: i32 = 1;
 pub const SIL_TOP: i32 = 2;
 pub const SIL_BOTH: i32 = 3;
 pub const MAXDRAWSEGS: i32 = 256;
-pub fn R_RenderMaskedSegRange(state: &mut GameState, ds: &drawseg_t, x1: i32, x2: i32) {
+pub fn render_masked_seg_range(state: &mut GameState, ds: &DrawSeg, x1: i32, x2: i32) {
     let mut index: u32;
     let mut lightnum: i32;
 
@@ -152,7 +151,7 @@ pub fn R_RenderMaskedSegRange(state: &mut GameState, ds: &drawseg_t, x1: i32, x2
     state.r_segs.maskedtexturecol = ds.maskedtexturecol;
     state.r_segs.rw_scalestep = ds.scalestep;
     state.r_things.spryscale =
-        ds.scale1 + (x1 as fixed_t - ds.x1 as fixed_t) * state.r_segs.rw_scalestep;
+        ds.scale1 + (x1 as Fixed - ds.x1 as Fixed) * state.r_segs.rw_scalestep;
     state.r_things.mfloorclip = ds.sprbottomclip;
     state.r_things.mceilingclip = ds.sprtopclip;
     if state
@@ -226,18 +225,18 @@ pub fn R_RenderMaskedSegRange(state: &mut GameState, ds: &drawseg_t, x1: i32, x2
                     Some(state.r_main.light_row48(state.r_segs.walllights)[index as usize]);
             }
             state.r_things.sprtopscreen = state.r_main.centeryfrac
-                - FixedMul(state.r_draw.dc_texturemid, state.r_things.spryscale);
+                - fixed_mul(state.r_draw.dc_texturemid, state.r_things.spryscale);
             state.r_draw.dc_iscale =
-                0xffffffff_u32.wrapping_div(state.r_things.spryscale as u32) as fixed_t;
+                0xffffffff_u32.wrapping_div(state.r_things.spryscale as u32) as Fixed;
             let col = advance_source(
-                R_GetColumn(
+                get_column(
                     state,
                     texnum,
                     maskedtexturecol.get(state, state.r_draw.dc_x as isize) as i32,
                 ),
                 (-3_isize) as usize,
             );
-            R_DrawMaskedColumn(state, col);
+            draw_masked_column(state, col);
             maskedtexturecol.set(state, state.r_draw.dc_x as isize, SHRT_MAX as i16);
         }
         state.r_things.spryscale += state.r_segs.rw_scalestep;
@@ -246,13 +245,13 @@ pub fn R_RenderMaskedSegRange(state: &mut GameState, ds: &drawseg_t, x1: i32, x2
 }
 pub const HEIGHTBITS: i32 = 12;
 pub const HEIGHTUNIT: i32 = 1 << HEIGHTBITS;
-pub fn R_RenderSegLoop(state: &mut GameState) {
-    let mut angle: angle_t;
+pub fn render_seg_loop(state: &mut GameState) {
+    let mut angle: Angle;
     let mut index: u32;
     let mut yl: i32;
     let mut yh: i32;
     let mut mid: i32;
-    let mut texturecolumn: fixed_t;
+    let mut texturecolumn: Fixed;
     let mut top: i32;
     let mut bottom: i32;
     while state.r_segs.rw_x < state.r_segs.rw_stopx {
@@ -268,8 +267,8 @@ pub fn R_RenderSegLoop(state: &mut GameState) {
             }
             if top <= bottom {
                 let ceilingplane = state.r_plane.ceilingplane.unwrap();
-                state.r_plane.visplanes[ceilingplane].set_top(state.r_segs.rw_x, top as byte);
-                state.r_plane.visplanes[ceilingplane].set_bottom(state.r_segs.rw_x, bottom as byte);
+                state.r_plane.visplanes[ceilingplane].set_top(state.r_segs.rw_x, top as u8);
+                state.r_plane.visplanes[ceilingplane].set_bottom(state.r_segs.rw_x, bottom as u8);
             }
         }
         yh = state.r_segs.bottomfrac >> HEIGHTBITS;
@@ -284,8 +283,8 @@ pub fn R_RenderSegLoop(state: &mut GameState) {
             }
             if top <= bottom {
                 let floorplane = state.r_plane.floorplane.unwrap();
-                state.r_plane.visplanes[floorplane].set_top(state.r_segs.rw_x, top as byte);
-                state.r_plane.visplanes[floorplane].set_bottom(state.r_segs.rw_x, bottom as byte);
+                state.r_plane.visplanes[floorplane].set_top(state.r_segs.rw_x, top as u8);
+                state.r_plane.visplanes[floorplane].set_bottom(state.r_segs.rw_x, bottom as u8);
             }
         }
         if state.r_segs.segtextured {
@@ -296,9 +295,9 @@ pub fn R_RenderSegLoop(state: &mut GameState) {
                 >> ANGLETOFINESHIFT;
             // A column at a seg's clipped edge can land just outside the
             // front half-plane; vanilla reads past finetangent[] there.
-            angle = angle.min(finetangent.len() as angle_t - 1);
+            angle = angle.min(FINETANGENT.len() as Angle - 1);
             texturecolumn = state.r_segs.rw_offset
-                - FixedMul(finetangent[angle as usize], state.r_segs.rw_distance);
+                - fixed_mul(FINETANGENT[angle as usize], state.r_segs.rw_distance);
             texturecolumn >>= FRACBITS;
             index = (state.r_segs.rw_scale >> LIGHTSCALESHIFT) as u32;
             if index >= MAXLIGHTSCALE as u32 {
@@ -308,7 +307,7 @@ pub fn R_RenderSegLoop(state: &mut GameState) {
                 Some(state.r_main.light_row48(state.r_segs.walllights)[index as usize]);
             state.r_draw.dc_x = state.r_segs.rw_x;
             state.r_draw.dc_iscale =
-                0xffffffff_u32.wrapping_div(state.r_segs.rw_scale as u32) as fixed_t;
+                0xffffffff_u32.wrapping_div(state.r_segs.rw_scale as u32) as Fixed;
         } else {
             texturecolumn = 0;
         }
@@ -317,7 +316,7 @@ pub fn R_RenderSegLoop(state: &mut GameState) {
             state.r_draw.dc_yh = yh;
             state.r_draw.dc_texturemid = state.r_segs.rw_midtexturemid;
             state.r_draw.dc_source =
-                Some(R_GetColumn(state, state.r_segs.midtexture, texturecolumn));
+                Some(get_column(state, state.r_segs.midtexture, texturecolumn));
             state.r_main.colfunc.expect("non-null function pointer")(state);
             state.r_plane.ceilingclip[state.r_segs.rw_x as usize] = state.r_draw.viewheight as i16;
             state.r_plane.floorclip[state.r_segs.rw_x as usize] = -1_i16;
@@ -333,7 +332,7 @@ pub fn R_RenderSegLoop(state: &mut GameState) {
                     state.r_draw.dc_yh = mid;
                     state.r_draw.dc_texturemid = state.r_segs.rw_toptexturemid;
                     state.r_draw.dc_source =
-                        Some(R_GetColumn(state, state.r_segs.toptexture, texturecolumn));
+                        Some(get_column(state, state.r_segs.toptexture, texturecolumn));
                     state.r_main.colfunc.expect("non-null function pointer")(state);
                     state.r_plane.ceilingclip[state.r_segs.rw_x as usize] = mid as i16;
                 } else {
@@ -352,11 +351,8 @@ pub fn R_RenderSegLoop(state: &mut GameState) {
                     state.r_draw.dc_yl = mid;
                     state.r_draw.dc_yh = yh;
                     state.r_draw.dc_texturemid = state.r_segs.rw_bottomtexturemid;
-                    state.r_draw.dc_source = Some(R_GetColumn(
-                        state,
-                        state.r_segs.bottomtexture,
-                        texturecolumn,
-                    ));
+                    state.r_draw.dc_source =
+                        Some(get_column(state, state.r_segs.bottomtexture, texturecolumn));
                     state.r_main.colfunc.expect("non-null function pointer")(state);
                     state.r_plane.floorclip[state.r_segs.rw_x as usize] = mid as i16;
                 } else {
@@ -376,17 +372,17 @@ pub fn R_RenderSegLoop(state: &mut GameState) {
         state.r_segs.rw_x += 1;
     }
 }
-pub fn R_StoreWallRange(state: &mut GameState, start: i32, stop: i32) {
-    let mut sineval: fixed_t;
+pub fn store_wall_range(state: &mut GameState, start: i32, stop: i32) {
+    let mut sineval: Fixed;
 
-    let mut offsetangle: angle_t;
-    let vtop: fixed_t;
+    let mut offsetangle: Angle;
+    let vtop: Fixed;
     let mut lightnum: i32;
     if state.r_bsp.ds_p == MAXDRAWSEGS as usize {
         return;
     }
     if start >= state.r_draw.viewwidth || start > stop {
-        I_Error(&format!("Bad R_RenderWallRange: {} to {}", start, stop));
+        error(&format!("Bad R_RenderWallRange: {} to {}", start, stop));
     }
     state.r_bsp.sidedef = state.p_setup.seg(state.r_bsp.curline).sidedef;
     state.r_bsp.linedef = state.p_setup.seg(state.r_bsp.curline).linedef;
@@ -396,21 +392,21 @@ pub fn R_StoreWallRange(state: &mut GameState, start: i32, stop: i32) {
         .p_setup
         .seg(state.r_bsp.curline)
         .angle
-        .wrapping_add(ANG90 as angle_t);
+        .wrapping_add(ANG90 as Angle);
     offsetangle = (state
         .r_segs
         .rw_normalangle
-        .wrapping_sub(state.r_segs.rw_angle1 as angle_t) as i32)
+        .wrapping_sub(state.r_segs.rw_angle1 as Angle) as i32)
         .unsigned_abs();
-    if offsetangle > ANG90 as angle_t {
-        offsetangle = ANG90 as angle_t;
+    if offsetangle > ANG90 as Angle {
+        offsetangle = ANG90 as Angle;
     }
-    let distangle: angle_t = (ANG90 as angle_t).wrapping_sub(offsetangle);
+    let distangle: Angle = (ANG90 as Angle).wrapping_sub(offsetangle);
     let curline_v1 = state.p_setup.vertexes[state.p_setup.seg(state.r_bsp.curline).v1.0 as usize];
     let (v1x, v1y) = (curline_v1.x, curline_v1.y);
-    let hyp: fixed_t = R_PointToDist(state, v1x, v1y);
-    sineval = finesine[(distangle >> ANGLETOFINESHIFT) as usize];
-    state.r_segs.rw_distance = FixedMul(hyp, sineval);
+    let hyp: Fixed = point_to_dist(state, v1x, v1y);
+    sineval = FINESINE[(distangle >> ANGLETOFINESHIFT) as usize];
+    state.r_segs.rw_distance = fixed_mul(hyp, sineval);
     state.r_segs.rw_x = start;
     state.r_bsp.drawsegs[state.r_bsp.ds_p].x1 = state.r_segs.rw_x;
     state.r_bsp.drawsegs[state.r_bsp.ds_p].x2 = stop;
@@ -420,7 +416,7 @@ pub fn R_StoreWallRange(state: &mut GameState, start: i32, stop: i32) {
         .r_main
         .viewangle
         .wrapping_add(state.r_main.xtoviewangle[start as usize]);
-    state.r_segs.rw_scale = R_ScaleFromGlobalAngle(state, angle1);
+    state.r_segs.rw_scale = scale_from_global_angle(state, angle1);
     state.r_bsp.drawsegs[state.r_bsp.ds_p].scale1 = state.r_segs.rw_scale;
     if stop > start {
         state.r_bsp.drawsegs[state.r_bsp.ds_p].scale2 = {
@@ -428,11 +424,11 @@ pub fn R_StoreWallRange(state: &mut GameState, start: i32, stop: i32) {
                 .r_main
                 .viewangle
                 .wrapping_add(state.r_main.xtoviewangle[stop as usize]);
-            R_ScaleFromGlobalAngle(state, angle2)
+            scale_from_global_angle(state, angle2)
         };
         state.r_segs.rw_scalestep = ((state.r_bsp.drawsegs[state.r_bsp.ds_p].scale2
             - state.r_segs.rw_scale)
-            / (stop - start)) as fixed_t;
+            / (stop - start)) as Fixed;
         state.r_bsp.drawsegs[state.r_bsp.ds_p].scalestep = state.r_segs.rw_scalestep;
     } else {
         state.r_bsp.drawsegs[state.r_bsp.ds_p].scale2 =
@@ -468,14 +464,14 @@ pub fn R_StoreWallRange(state: &mut GameState, start: i32, stop: i32) {
                         [state.p_setup.side_mut(state.r_bsp.sidedef).midtexture as usize];
                 state.r_segs.rw_midtexturemid = vtop - state.r_main.viewz;
             } else {
-                state.r_segs.rw_midtexturemid = state.r_segs.worldtop as fixed_t;
+                state.r_segs.rw_midtexturemid = state.r_segs.worldtop as Fixed;
             }
             state.r_segs.rw_midtexturemid += state.p_setup.side_mut(state.r_bsp.sidedef).rowoffset;
             state.r_bsp.drawsegs[state.r_bsp.ds_p].silhouette = SIL_BOTH;
             state.r_bsp.drawsegs[state.r_bsp.ds_p].sprtopclip = Some(ClipArray::ScreenHeightArray);
             state.r_bsp.drawsegs[state.r_bsp.ds_p].sprbottomclip = Some(ClipArray::NegOneArray);
-            state.r_bsp.drawsegs[state.r_bsp.ds_p].bsilheight = INT_MAX as fixed_t;
-            state.r_bsp.drawsegs[state.r_bsp.ds_p].tsilheight = INT_MIN as fixed_t;
+            state.r_bsp.drawsegs[state.r_bsp.ds_p].bsilheight = INT_MAX as Fixed;
+            state.r_bsp.drawsegs[state.r_bsp.ds_p].tsilheight = INT_MIN as Fixed;
         }
         Some(backsector) => {
             state.r_bsp.drawsegs[state.r_bsp.ds_p].sprbottomclip = None;
@@ -495,7 +491,7 @@ pub fn R_StoreWallRange(state: &mut GameState, start: i32, stop: i32) {
                     .floorheight;
             } else if state.p_setup.sector_mut(backsector).floorheight > state.r_main.viewz {
                 state.r_bsp.drawsegs[state.r_bsp.ds_p].silhouette = SIL_BOTTOM;
-                state.r_bsp.drawsegs[state.r_bsp.ds_p].bsilheight = INT_MAX as fixed_t;
+                state.r_bsp.drawsegs[state.r_bsp.ds_p].bsilheight = INT_MAX as Fixed;
             }
             if state
                 .p_setup
@@ -510,7 +506,7 @@ pub fn R_StoreWallRange(state: &mut GameState, start: i32, stop: i32) {
                     .ceilingheight;
             } else if state.p_setup.sector_mut(backsector).ceilingheight < state.r_main.viewz {
                 state.r_bsp.drawsegs[state.r_bsp.ds_p].silhouette |= SIL_TOP;
-                state.r_bsp.drawsegs[state.r_bsp.ds_p].tsilheight = INT_MIN as fixed_t;
+                state.r_bsp.drawsegs[state.r_bsp.ds_p].tsilheight = INT_MIN as Fixed;
             }
             if state.p_setup.sector_mut(backsector).ceilingheight
                 <= state
@@ -519,7 +515,7 @@ pub fn R_StoreWallRange(state: &mut GameState, start: i32, stop: i32) {
                     .floorheight
             {
                 state.r_bsp.drawsegs[state.r_bsp.ds_p].sprbottomclip = Some(ClipArray::NegOneArray);
-                state.r_bsp.drawsegs[state.r_bsp.ds_p].bsilheight = INT_MAX as fixed_t;
+                state.r_bsp.drawsegs[state.r_bsp.ds_p].bsilheight = INT_MAX as Fixed;
                 state.r_bsp.drawsegs[state.r_bsp.ds_p].silhouette |= SIL_BOTTOM;
             }
             if state.p_setup.sector_mut(backsector).floorheight
@@ -530,7 +526,7 @@ pub fn R_StoreWallRange(state: &mut GameState, start: i32, stop: i32) {
             {
                 state.r_bsp.drawsegs[state.r_bsp.ds_p].sprtopclip =
                     Some(ClipArray::ScreenHeightArray);
-                state.r_bsp.drawsegs[state.r_bsp.ds_p].tsilheight = INT_MIN as fixed_t;
+                state.r_bsp.drawsegs[state.r_bsp.ds_p].tsilheight = INT_MIN as Fixed;
                 state.r_bsp.drawsegs[state.r_bsp.ds_p].silhouette |= SIL_TOP;
             }
             state.r_segs.worldhigh =
@@ -586,7 +582,7 @@ pub fn R_StoreWallRange(state: &mut GameState, start: i32, stop: i32) {
                 state.r_segs.toptexture = state.r_data.texturetranslation
                     [state.p_setup.side_mut(state.r_bsp.sidedef).toptexture as usize];
                 if state.p_setup.line_mut(state.r_bsp.linedef).flags as i32 & ML_DONTPEGTOP != 0 {
-                    state.r_segs.rw_toptexturemid = state.r_segs.worldtop as fixed_t;
+                    state.r_segs.rw_toptexturemid = state.r_segs.worldtop as Fixed;
                 } else {
                     vtop = state.p_setup.sector_mut(backsector).ceilingheight
                         + state.r_data.textureheight
@@ -599,9 +595,9 @@ pub fn R_StoreWallRange(state: &mut GameState, start: i32, stop: i32) {
                     [state.p_setup.side_mut(state.r_bsp.sidedef).bottomtexture as usize];
                 if state.p_setup.line_mut(state.r_bsp.linedef).flags as i32 & ML_DONTPEGBOTTOM != 0
                 {
-                    state.r_segs.rw_bottomtexturemid = state.r_segs.worldtop as fixed_t;
+                    state.r_segs.rw_bottomtexturemid = state.r_segs.worldtop as Fixed;
                 } else {
-                    state.r_segs.rw_bottomtexturemid = state.r_segs.worldlow as fixed_t;
+                    state.r_segs.rw_bottomtexturemid = state.r_segs.worldlow as Fixed;
                 }
             }
             state.r_segs.rw_toptexturemid += state.p_setup.side_mut(state.r_bsp.sidedef).rowoffset;
@@ -625,26 +621,26 @@ pub fn R_StoreWallRange(state: &mut GameState, start: i32, stop: i32) {
         offsetangle = state
             .r_segs
             .rw_normalangle
-            .wrapping_sub(state.r_segs.rw_angle1 as angle_t);
+            .wrapping_sub(state.r_segs.rw_angle1 as Angle);
         if offsetangle > ANG180 {
             offsetangle = offsetangle.wrapping_neg();
         }
-        if offsetangle > ANG90 as angle_t {
-            offsetangle = ANG90 as angle_t;
+        if offsetangle > ANG90 as Angle {
+            offsetangle = ANG90 as Angle;
         }
-        sineval = finesine[(offsetangle >> ANGLETOFINESHIFT) as usize];
-        state.r_segs.rw_offset = FixedMul(hyp, sineval);
+        sineval = FINESINE[(offsetangle >> ANGLETOFINESHIFT) as usize];
+        state.r_segs.rw_offset = fixed_mul(hyp, sineval);
         if state
             .r_segs
             .rw_normalangle
-            .wrapping_sub(state.r_segs.rw_angle1 as angle_t)
+            .wrapping_sub(state.r_segs.rw_angle1 as Angle)
             < ANG180
         {
             state.r_segs.rw_offset = -state.r_segs.rw_offset;
         }
         state.r_segs.rw_offset += state.p_setup.side_mut(state.r_bsp.sidedef).textureoffset
             + state.p_setup.seg(state.r_bsp.curline).offset;
-        state.r_segs.rw_centerangle = (ANG90 as angle_t)
+        state.r_segs.rw_centerangle = (ANG90 as Angle)
             .wrapping_add(state.r_main.viewangle)
             .wrapping_sub(state.r_segs.rw_normalangle);
         if state.r_main.fixedcolormap.is_none() {
@@ -695,29 +691,27 @@ pub fn R_StoreWallRange(state: &mut GameState, start: i32, stop: i32) {
     }
     state.r_segs.worldtop >>= 4;
     state.r_segs.worldbottom >>= 4;
-    state.r_segs.topstep = -FixedMul(state.r_segs.rw_scalestep, state.r_segs.worldtop as fixed_t);
+    state.r_segs.topstep = -fixed_mul(state.r_segs.rw_scalestep, state.r_segs.worldtop as Fixed);
     state.r_segs.topfrac = (state.r_main.centeryfrac >> 4)
-        - FixedMul(state.r_segs.worldtop as fixed_t, state.r_segs.rw_scale);
-    state.r_segs.bottomstep = -FixedMul(
-        state.r_segs.rw_scalestep,
-        state.r_segs.worldbottom as fixed_t,
-    );
+        - fixed_mul(state.r_segs.worldtop as Fixed, state.r_segs.rw_scale);
+    state.r_segs.bottomstep =
+        -fixed_mul(state.r_segs.rw_scalestep, state.r_segs.worldbottom as Fixed);
     state.r_segs.bottomfrac = (state.r_main.centeryfrac >> 4)
-        - FixedMul(state.r_segs.worldbottom as fixed_t, state.r_segs.rw_scale);
+        - fixed_mul(state.r_segs.worldbottom as Fixed, state.r_segs.rw_scale);
     if state.r_bsp.backsector.is_some() {
         state.r_segs.worldhigh >>= 4;
         state.r_segs.worldlow >>= 4;
         if state.r_segs.worldhigh < state.r_segs.worldtop {
             state.r_segs.pixhigh = (state.r_main.centeryfrac >> 4)
-                - FixedMul(state.r_segs.worldhigh as fixed_t, state.r_segs.rw_scale);
+                - fixed_mul(state.r_segs.worldhigh as Fixed, state.r_segs.rw_scale);
             state.r_segs.pixhighstep =
-                -FixedMul(state.r_segs.rw_scalestep, state.r_segs.worldhigh as fixed_t);
+                -fixed_mul(state.r_segs.rw_scalestep, state.r_segs.worldhigh as Fixed);
         }
         if state.r_segs.worldlow > state.r_segs.worldbottom {
             state.r_segs.pixlow = (state.r_main.centeryfrac >> 4)
-                - FixedMul(state.r_segs.worldlow as fixed_t, state.r_segs.rw_scale);
+                - fixed_mul(state.r_segs.worldlow as Fixed, state.r_segs.rw_scale);
             state.r_segs.pixlowstep =
-                -FixedMul(state.r_segs.rw_scalestep, state.r_segs.worldlow as fixed_t);
+                -fixed_mul(state.r_segs.rw_scalestep, state.r_segs.worldlow as Fixed);
         }
     }
     if state.r_segs.markceiling {
@@ -726,7 +720,7 @@ pub fn R_StoreWallRange(state: &mut GameState, start: i32, stop: i32) {
             state.r_segs.rw_x,
             state.r_segs.rw_stopx - 1,
         );
-        state.r_plane.ceilingplane = Some(R_CheckPlane(state, ceilingplane, rw_x, rw_stopx_1));
+        state.r_plane.ceilingplane = Some(check_plane(state, ceilingplane, rw_x, rw_stopx_1));
     }
     if state.r_segs.markfloor {
         let (floorplane, rw_x2, rw_stopx_2) = (
@@ -734,9 +728,9 @@ pub fn R_StoreWallRange(state: &mut GameState, start: i32, stop: i32) {
             state.r_segs.rw_x,
             state.r_segs.rw_stopx - 1,
         );
-        state.r_plane.floorplane = Some(R_CheckPlane(state, floorplane, rw_x2, rw_stopx_2));
+        state.r_plane.floorplane = Some(check_plane(state, floorplane, rw_x2, rw_stopx_2));
     }
-    R_RenderSegLoop(state);
+    render_seg_loop(state);
     if (state.r_bsp.drawsegs[state.r_bsp.ds_p].silhouette & SIL_TOP != 0
         || state.r_segs.maskedtexture)
         && state.r_bsp.drawsegs[state.r_bsp.ds_p].sprtopclip.is_none()
@@ -769,13 +763,13 @@ pub fn R_StoreWallRange(state: &mut GameState, start: i32, stop: i32) {
         && state.r_bsp.drawsegs[state.r_bsp.ds_p].silhouette & SIL_TOP == 0
     {
         state.r_bsp.drawsegs[state.r_bsp.ds_p].silhouette |= SIL_TOP;
-        state.r_bsp.drawsegs[state.r_bsp.ds_p].tsilheight = INT_MIN as fixed_t;
+        state.r_bsp.drawsegs[state.r_bsp.ds_p].tsilheight = INT_MIN as Fixed;
     }
     if state.r_segs.maskedtexture
         && state.r_bsp.drawsegs[state.r_bsp.ds_p].silhouette & SIL_BOTTOM == 0
     {
         state.r_bsp.drawsegs[state.r_bsp.ds_p].silhouette |= SIL_BOTTOM;
-        state.r_bsp.drawsegs[state.r_bsp.ds_p].bsilheight = INT_MAX as fixed_t;
+        state.r_bsp.drawsegs[state.r_bsp.ds_p].bsilheight = INT_MAX as Fixed;
     }
     state.r_bsp.ds_p += 1;
 }

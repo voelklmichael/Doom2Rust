@@ -1,61 +1,61 @@
 use crate::d_player::PowerType;
 use crate::d_player::CF_GODMODE;
 use crate::fixed_cstr::FixedCStr;
-use crate::g_game::G_ExitLevel;
-use crate::g_game::G_SecretExitLevel;
-use crate::i_system::I_Error;
-use crate::m_argv::M_CheckParmWithArgs;
-use crate::m_fixed::fixed_t;
-use crate::m_misc::M_StrToInt;
-use crate::m_random::P_Random;
+use crate::g_game::exit_level;
+use crate::g_game::secret_exit_level;
+use crate::i_system::error;
+use crate::m_argv::check_parm_with_args;
+use crate::m_fixed::Fixed;
+use crate::m_misc::str_to_int;
+use crate::m_random::p_random;
 use alloc::boxed::Box;
 use alloc::vec::Vec;
 
+use crate::p_ceilng::ceiling_crush_stop;
+use crate::p_ceilng::do_ceiling;
 use crate::p_ceilng::CeilingE;
-use crate::p_ceilng::EV_CeilingCrushStop;
-use crate::p_ceilng::EV_DoCeiling;
-use crate::p_doors::EV_DoDoor;
-use crate::p_doors::P_SpawnDoorCloseIn30;
-use crate::p_doors::P_SpawnDoorRaiseIn5Mins;
+use crate::p_doors::do_door;
+use crate::p_doors::spawn_door_close_in30;
+use crate::p_doors::spawn_door_raise_in5_mins;
 use crate::p_doors::VldoorE;
-use crate::p_floor::EV_BuildStairs;
-use crate::p_floor::EV_DoFloor;
+use crate::p_floor::build_stairs;
+use crate::p_floor::do_floor;
 use crate::p_floor::FloorE;
 use crate::p_floor::StairE;
-use crate::p_inter::P_DamageMobj;
-use crate::p_lights::EV_LightTurnOn;
-use crate::p_lights::EV_StartLightStrobing;
-use crate::p_lights::EV_TurnTagLightsOff;
-use crate::p_lights::P_SpawnFireFlicker;
-use crate::p_lights::P_SpawnGlowingLight;
-use crate::p_lights::P_SpawnLightFlash;
-use crate::p_lights::P_SpawnStrobeFlash;
+use crate::p_inter::damage_mobj;
+use crate::p_lights::light_turn_on;
+use crate::p_lights::spawn_fire_flicker;
+use crate::p_lights::spawn_glowing_light;
+use crate::p_lights::spawn_light_flash;
+use crate::p_lights::spawn_strobe_flash;
+use crate::p_lights::start_light_strobing;
+use crate::p_lights::turn_tag_lights_off;
 
-use crate::p_mobj::thinker_t;
 use crate::p_mobj::SectorSpecial;
+use crate::p_mobj::Thinker;
 use crate::p_mobj::ThinkerFn;
-use crate::p_plats::EV_DoPlat;
-use crate::p_plats::EV_StopPlat;
+use crate::p_plats::do_plat;
+use crate::p_plats::stop_plat;
 use crate::p_plats::PlatE;
 use crate::p_plats::PlattypeE;
 use crate::p_setup::LineId;
 use crate::p_setup::SectorId;
 use crate::p_setup::SideId;
+use crate::p_switch::change_switch_texture;
 use crate::p_switch::BWhere;
-use crate::p_switch::P_ChangeSwitchTexture;
-use crate::p_telept::EV_Teleport;
-use crate::p_tick::P_AddThinker;
+use crate::p_telept::teleport;
+use crate::p_tick::add_thinker;
 use crate::p_tick::ThinkerKind;
 use crate::p_tick::ThinkerPayload;
-use crate::r_data::R_CheckTextureNumForName;
-use crate::r_data::R_FlatNumForName;
-use crate::r_data::R_TextureNumForName;
+use crate::r_data::check_texture_num_for_name;
+use crate::r_data::flat_num_for_name;
+use crate::r_data::texture_num_for_name;
 
-use crate::s_sound::S_StartSound;
+use crate::s_sound::s_start_sound;
 use crate::s_sound::SoundOrigin;
 use crate::sounds::SfxName;
 
-use crate::w_wad::W_CheckNumForName;
+use crate::w_wad::check_num_for_name;
 
 use crate::d_player::PlayerId;
 use crate::doomdef::TICRATE;
@@ -63,7 +63,7 @@ use crate::game_state::GameState;
 use crate::m_fixed::FRACUNIT;
 use crate::m_fixed::INT_MAX;
 use crate::p_ceilng::MAXCEILINGS;
-use crate::p_floor::T_MoveFloor;
+use crate::p_floor::move_floor;
 use crate::p_floor::FLOORSPEED;
 use crate::p_lights::SLOWDARK;
 use crate::p_mobj::MobjId;
@@ -80,14 +80,14 @@ pub struct FloorId {
 
 struct FloorSlot {
     generation: u32,
-    floor: Option<Box<floormove_t>>,
+    floor: Option<Box<FloorMove>>,
 }
 
 pub struct PSpecState {
-    pub anims: [anim_t; 32],
+    pub anims: [Anim; 32],
     pub lastanim: usize,
-    pub levelTimer: bool,
-    pub levelTimeCount: i32,
+    pub level_timer: bool,
+    pub level_time_count: i32,
     pub numlinespecials: i16,
     pub linespeciallist: [LineId; 64],
     pub donut_overrun_first: bool,
@@ -106,7 +106,7 @@ impl Default for PSpecState {
 impl PSpecState {
     pub const fn new() -> Self {
         PSpecState {
-            anims: [anim_t {
+            anims: [Anim {
                 istexture: false,
                 picnum: 0,
                 basepic: 0,
@@ -114,8 +114,8 @@ impl PSpecState {
                 speed: 0,
             }; 32],
             lastanim: 0,
-            levelTimer: false,
-            levelTimeCount: 0,
+            level_timer: false,
+            level_time_count: 0,
             numlinespecials: 0,
             linespeciallist: [LineId(0); 64],
             donut_overrun_first: true,
@@ -126,15 +126,15 @@ impl PSpecState {
         }
     }
 
-    // Moves a fully-defaulted (then caller-filled) floormove_t onto the
+    // Moves a fully-defaulted (then caller-filled) FloorMove onto the
     // heap and hands back both a stable generation-checked handle (stored
     // in ThinkerNode's payload by p_tick.rs, replacing what used to be a
     // bare raw pointer there) and a raw pointer for the caller's immediate
     // post-spawn field writes -- mirrors PDoorsState::spawn exactly. Lives
-    // on PSpecState (rather than a new PFloorState) because floormove_t
+    // on PSpecState (rather than a new PFloorState) because FloorMove
     // itself is defined here, and both p_floor.rs and this file's own
     // donut-overrun special case construct one.
-    pub fn spawn_floor(&mut self, value: floormove_t) -> FloorId {
+    pub fn spawn_floor(&mut self, value: FloorMove) -> FloorId {
         let (index, generation) = if let Some(index) = self.floor_free_list.pop() {
             let slot = &mut self.floors[index as usize];
             slot.generation = slot.generation.wrapping_add(1);
@@ -153,21 +153,21 @@ impl PSpecState {
         id
     }
 
-    pub fn get_floor_ref(&self, id: FloorId) -> Option<&floormove_t> {
+    pub fn get_floor_ref(&self, id: FloorId) -> Option<&FloorMove> {
         self.floors
             .get(id.index as usize)
             .filter(|slot| slot.generation == id.generation)
             .and_then(|slot| slot.floor.as_deref())
     }
 
-    pub fn get_floor_mut(&mut self, id: FloorId) -> Option<&mut floormove_t> {
+    pub fn get_floor_mut(&mut self, id: FloorId) -> Option<&mut FloorMove> {
         self.floors
             .get_mut(id.index as usize)
             .filter(|slot| slot.generation == id.generation)
             .and_then(|slot| slot.floor.as_deref_mut())
     }
 
-    // Called once, from P_RunThinkers' reaper, when a Floor-kind thinker is
+    // Called once, from run_thinkers' reaper, when a Floor-kind thinker is
     // reaped.
     pub fn dealloc_floor(&mut self, id: FloorId) {
         if let Some(slot) = self.floors.get_mut(id.index as usize) {
@@ -180,7 +180,7 @@ impl PSpecState {
 }
 
 #[derive(Copy, Clone)]
-pub struct anim_t {
+pub struct Anim {
     pub istexture: bool,
     pub picnum: i32,
     pub basepic: i32,
@@ -188,14 +188,14 @@ pub struct anim_t {
     pub speed: i32,
 }
 #[derive(Copy, Clone)]
-pub struct animdef_t {
+pub struct AnimDef {
     pub istexture: bool,
     pub endname: FixedCStr<9>,
     pub startname: FixedCStr<9>,
     pub speed: i32,
 }
 #[derive(Copy, Clone)]
-pub struct button_t {
+pub struct Button {
     pub line: LineId,
     pub position: BWhere,
     pub btexture: i32,
@@ -203,12 +203,12 @@ pub struct button_t {
     pub soundorg: SectorId,
 }
 #[derive(Copy, Clone)]
-pub struct plat_t {
-    pub thinker: thinker_t,
+pub struct Plat {
+    pub thinker: Thinker,
     pub sector: SectorId,
-    pub speed: fixed_t,
-    pub low: fixed_t,
-    pub high: fixed_t,
+    pub speed: Fixed,
+    pub low: Fixed,
+    pub high: Fixed,
     pub wait: i32,
     pub count: i32,
     pub status: PlatE,
@@ -218,12 +218,12 @@ pub struct plat_t {
     pub kind: PlattypeE,
 }
 // Placeholder passed to PPlatsState::spawn() -- every real field is set by
-// the caller within a few lines of spawn() returning (EV_DoPlat, and
+// the caller within a few lines of spawn() returning (do_plat, and
 // p_saveg.rs's restore branch), so these values are never actually read.
-impl Default for plat_t {
+impl Default for Plat {
     fn default() -> Self {
-        plat_t {
-            thinker: thinker_t {
+        Plat {
+            thinker: Thinker {
                 function: ThinkerFn::Unresolved,
             },
             sector: SectorId(0),
@@ -232,37 +232,37 @@ impl Default for plat_t {
             high: 0,
             wait: 0,
             count: 0,
-            status: PlatE::up,
-            oldstatus: PlatE::up,
+            status: PlatE::Up,
+            oldstatus: PlatE::Up,
             crush: false,
             tag: 0,
-            kind: PlattypeE::perpetualRaise,
+            kind: PlattypeE::PerpetualRaise,
         }
     }
 }
 #[derive(Copy, Clone)]
-pub struct ceiling_t {
-    pub thinker: thinker_t,
+pub struct Ceiling {
+    pub thinker: Thinker,
     pub kind: CeilingE,
     pub sector: SectorId,
-    pub bottomheight: fixed_t,
-    pub topheight: fixed_t,
-    pub speed: fixed_t,
+    pub bottomheight: Fixed,
+    pub topheight: Fixed,
+    pub speed: Fixed,
     pub crush: bool,
     pub direction: i32,
     pub tag: i32,
     pub olddirection: i32,
 }
 // Placeholder passed to PCeilngState::spawn() -- every real field is set by
-// the caller within a few lines of spawn() returning (EV_DoCeiling, and
+// the caller within a few lines of spawn() returning (do_ceiling, and
 // p_saveg.rs's restore branch), so these values are never actually read.
-impl Default for ceiling_t {
+impl Default for Ceiling {
     fn default() -> Self {
-        ceiling_t {
-            thinker: thinker_t {
+        Ceiling {
+            thinker: Thinker {
                 function: ThinkerFn::Unresolved,
             },
-            kind: CeilingE::lowerToFloor,
+            kind: CeilingE::LowerToFloor,
             sector: SectorId(0),
             bottomheight: 0,
             topheight: 0,
@@ -275,28 +275,28 @@ impl Default for ceiling_t {
     }
 }
 #[derive(Copy, Clone)]
-pub struct floormove_t {
-    pub thinker: thinker_t,
+pub struct FloorMove {
+    pub thinker: Thinker,
     pub kind: FloorE,
     pub crush: bool,
     pub sector: SectorId,
     pub direction: i32,
     pub newspecial: i32,
     pub texture: i16,
-    pub floordestheight: fixed_t,
-    pub speed: fixed_t,
+    pub floordestheight: Fixed,
+    pub speed: Fixed,
 }
 // Placeholder passed to PSpecState::spawn_floor() -- every real field is set
-// by the caller within a few lines of spawn() returning (EV_DoFloor,
-// EV_BuildStairs x2, the donut-overrun sites below, and p_saveg.rs's
+// by the caller within a few lines of spawn() returning (do_floor,
+// build_stairs x2, the donut-overrun sites below, and p_saveg.rs's
 // restore branch), so these values are never actually read.
-impl Default for floormove_t {
+impl Default for FloorMove {
     fn default() -> Self {
-        floormove_t {
-            thinker: thinker_t {
+        FloorMove {
+            thinker: Thinker {
                 function: ThinkerFn::Unresolved,
             },
-            kind: FloorE::lowerFloor,
+            kind: FloorE::LowerFloor,
             crush: false,
             sector: SectorId(0),
             direction: 0,
@@ -309,134 +309,134 @@ impl Default for floormove_t {
 }
 pub const ML_TWOSIDED: i32 = 4;
 pub const FASTDARK: i32 = 15;
-pub static animdefs: [animdef_t; 22] = [
-    animdef_t {
+pub static ANIMDEFS: [AnimDef; 22] = [
+    AnimDef {
         istexture: false,
         endname: FixedCStr(*b"NUKAGE3\0\0"),
         startname: FixedCStr(*b"NUKAGE1\0\0"),
         speed: 8,
     },
-    animdef_t {
+    AnimDef {
         istexture: false,
         endname: FixedCStr(*b"FWATER4\0\0"),
         startname: FixedCStr(*b"FWATER1\0\0"),
         speed: 8,
     },
-    animdef_t {
+    AnimDef {
         istexture: false,
         endname: FixedCStr(*b"SWATER4\0\0"),
         startname: FixedCStr(*b"SWATER1\0\0"),
         speed: 8,
     },
-    animdef_t {
+    AnimDef {
         istexture: false,
         endname: FixedCStr(*b"LAVA4\0\0\0\0"),
         startname: FixedCStr(*b"LAVA1\0\0\0\0"),
         speed: 8,
     },
-    animdef_t {
+    AnimDef {
         istexture: false,
         endname: FixedCStr(*b"BLOOD3\0\0\0"),
         startname: FixedCStr(*b"BLOOD1\0\0\0"),
         speed: 8,
     },
-    animdef_t {
+    AnimDef {
         istexture: false,
         endname: FixedCStr(*b"RROCK08\0\0"),
         startname: FixedCStr(*b"RROCK05\0\0"),
         speed: 8,
     },
-    animdef_t {
+    AnimDef {
         istexture: false,
         endname: FixedCStr(*b"SLIME04\0\0"),
         startname: FixedCStr(*b"SLIME01\0\0"),
         speed: 8,
     },
-    animdef_t {
+    AnimDef {
         istexture: false,
         endname: FixedCStr(*b"SLIME08\0\0"),
         startname: FixedCStr(*b"SLIME05\0\0"),
         speed: 8,
     },
-    animdef_t {
+    AnimDef {
         istexture: false,
         endname: FixedCStr(*b"SLIME12\0\0"),
         startname: FixedCStr(*b"SLIME09\0\0"),
         speed: 8,
     },
-    animdef_t {
+    AnimDef {
         istexture: true,
         endname: FixedCStr(*b"BLODGR4\0\0"),
         startname: FixedCStr(*b"BLODGR1\0\0"),
         speed: 8,
     },
-    animdef_t {
+    AnimDef {
         istexture: true,
         endname: FixedCStr(*b"SLADRIP3\0"),
         startname: FixedCStr(*b"SLADRIP1\0"),
         speed: 8,
     },
-    animdef_t {
+    AnimDef {
         istexture: true,
         endname: FixedCStr(*b"BLODRIP4\0"),
         startname: FixedCStr(*b"BLODRIP1\0"),
         speed: 8,
     },
-    animdef_t {
+    AnimDef {
         istexture: true,
         endname: FixedCStr(*b"FIREWALL\0"),
         startname: FixedCStr(*b"FIREWALA\0"),
         speed: 8,
     },
-    animdef_t {
+    AnimDef {
         istexture: true,
         endname: FixedCStr(*b"GSTFONT3\0"),
         startname: FixedCStr(*b"GSTFONT1\0"),
         speed: 8,
     },
-    animdef_t {
+    AnimDef {
         istexture: true,
         endname: FixedCStr(*b"FIRELAVA\0"),
         startname: FixedCStr(*b"FIRELAV3\0"),
         speed: 8,
     },
-    animdef_t {
+    AnimDef {
         istexture: true,
         endname: FixedCStr(*b"FIREMAG3\0"),
         startname: FixedCStr(*b"FIREMAG1\0"),
         speed: 8,
     },
-    animdef_t {
+    AnimDef {
         istexture: true,
         endname: FixedCStr(*b"FIREBLU2\0"),
         startname: FixedCStr(*b"FIREBLU1\0"),
         speed: 8,
     },
-    animdef_t {
+    AnimDef {
         istexture: true,
         endname: FixedCStr(*b"ROCKRED3\0"),
         startname: FixedCStr(*b"ROCKRED1\0"),
         speed: 8,
     },
-    animdef_t {
+    AnimDef {
         istexture: true,
         endname: FixedCStr(*b"BFALL4\0\0\0"),
         startname: FixedCStr(*b"BFALL1\0\0\0"),
         speed: 8,
     },
-    animdef_t {
+    AnimDef {
         istexture: true,
         endname: FixedCStr(*b"SFALL4\0\0\0"),
         startname: FixedCStr(*b"SFALL1\0\0\0"),
         speed: 8,
     },
-    animdef_t {
+    AnimDef {
         istexture: true,
         endname: FixedCStr(*b"WFALL4\0\0\0"),
         startname: FixedCStr(*b"WFALL1\0\0\0"),
         speed: 8,
     },
-    animdef_t {
+    AnimDef {
         istexture: true,
         endname: FixedCStr(*b"DBRAIN4\0\0"),
         startname: FixedCStr(*b"DBRAIN1\0\0"),
@@ -444,26 +444,26 @@ pub static animdefs: [animdef_t; 22] = [
     },
 ];
 pub const MAXLINEANIMS: i32 = 64;
-pub fn P_InitPicAnims(state: &mut GameState) {
+pub fn init_pic_anims(state: &mut GameState) {
     state.p_spec.lastanim = 0;
-    for def in &animdefs {
+    for def in &ANIMDEFS {
         let startname = def.startname.as_str();
         let endname = def.endname.as_str();
         let (picnum, basepic) = if def.istexture {
-            if R_CheckTextureNumForName(&state.r_data, &startname) == -1 {
+            if check_texture_num_for_name(&state.r_data, &startname) == -1 {
                 continue;
             }
             (
-                R_TextureNumForName(&mut state.r_data, &endname),
-                R_TextureNumForName(&mut state.r_data, &startname),
+                texture_num_for_name(&mut state.r_data, &endname),
+                texture_num_for_name(&mut state.r_data, &startname),
             )
         } else {
-            if W_CheckNumForName(&mut state.w_wad, &startname) == -1 {
+            if check_num_for_name(&mut state.w_wad, &startname) == -1 {
                 continue;
             }
             (
-                R_FlatNumForName(state, &endname),
-                R_FlatNumForName(state, &startname),
+                flat_num_for_name(state, &endname),
+                flat_num_for_name(state, &startname),
             )
         };
         let anim = &mut state.p_spec.anims[state.p_spec.lastanim];
@@ -472,7 +472,7 @@ pub fn P_InitPicAnims(state: &mut GameState) {
         anim.istexture = def.istexture;
         anim.numpics = picnum - basepic + 1;
         if anim.numpics < 2 {
-            I_Error(&format!(
+            error(&format!(
                 "P_InitPicAnims: bad cycle from {} to {}",
                 startname, endname,
             ));
@@ -481,28 +481,28 @@ pub fn P_InitPicAnims(state: &mut GameState) {
         state.p_spec.lastanim += 1;
     }
 }
-pub fn getSide(state: &mut GameState, currentSector: i32, line: i32, side: i32) -> SideId {
+pub fn get_side(state: &mut GameState, current_sector: i32, line: i32, side: i32) -> SideId {
     let line_id = state
         .p_setup
-        .sector_mut(SectorId(currentSector as u32))
+        .sector_mut(SectorId(current_sector as u32))
         .lines[line as usize];
     let sidenum = state.p_setup.line(line_id).sidenum[side as usize];
     SideId(sidenum as u32)
 }
-pub fn getSector(state: &mut GameState, currentSector: i32, line: i32, side: i32) -> SectorId {
+pub fn get_sector(state: &mut GameState, current_sector: i32, line: i32, side: i32) -> SectorId {
     let line_id = state
         .p_setup
-        .sector_mut(SectorId(currentSector as u32))
+        .sector_mut(SectorId(current_sector as u32))
         .lines[line as usize];
     let sidenum = state.p_setup.line(line_id).sidenum[side as usize];
     state.p_setup.sides[sidenum as usize].sector
 }
-pub fn twoSided(state: &mut GameState, sector: i32, line: i32) -> i32 {
+pub fn two_sided(state: &mut GameState, sector: i32, line: i32) -> i32 {
     let sec = state.p_setup.sector_mut(SectorId(sector as u32));
     let line_id = sec.lines[line as usize];
     state.p_setup.line(line_id).flags as i32 & ML_TWOSIDED
 }
-pub fn getNextSector(state: &mut GameState, line: LineId, sec: SectorId) -> Option<SectorId> {
+pub fn get_next_sector(state: &mut GameState, line: LineId, sec: SectorId) -> Option<SectorId> {
     let linev = state.p_setup.line(line);
     if linev.flags as i32 & ML_TWOSIDED == 0 {
         return None;
@@ -513,12 +513,12 @@ pub fn getNextSector(state: &mut GameState, line: LineId, sec: SectorId) -> Opti
     }
     Some(front)
 }
-pub fn P_FindLowestFloorSurrounding(state: &mut GameState, sec: SectorId) -> fixed_t {
-    let mut floor: fixed_t = state.p_setup.sector_mut(sec).floorheight;
+pub fn find_lowest_floor_surrounding(state: &mut GameState, sec: SectorId) -> Fixed {
+    let mut floor: Fixed = state.p_setup.sector_mut(sec).floorheight;
     let linecount = state.p_setup.sector_mut(sec).linecount;
     for i in 0..linecount {
         let check = state.p_setup.sector_mut(sec).lines[i as usize];
-        if let Some(other) = getNextSector(state, check, sec) {
+        if let Some(other) = get_next_sector(state, check, sec) {
             let other_floor = state.p_setup.sector_mut(other).floorheight;
             if other_floor < floor {
                 floor = other_floor;
@@ -527,12 +527,12 @@ pub fn P_FindLowestFloorSurrounding(state: &mut GameState, sec: SectorId) -> fix
     }
     floor
 }
-pub fn P_FindHighestFloorSurrounding(state: &mut GameState, sec: SectorId) -> fixed_t {
-    let mut floor: fixed_t = -(500) * FRACUNIT;
+pub fn find_highest_floor_surrounding(state: &mut GameState, sec: SectorId) -> Fixed {
+    let mut floor: Fixed = -(500) * FRACUNIT;
     let linecount = state.p_setup.sector_mut(sec).linecount;
     for i in 0..linecount {
         let check = state.p_setup.sector_mut(sec).lines[i as usize];
-        if let Some(other) = getNextSector(state, check, sec) {
+        if let Some(other) = get_next_sector(state, check, sec) {
             let other_floor = state.p_setup.sector_mut(other).floorheight;
             if other_floor > floor {
                 floor = other_floor;
@@ -542,20 +542,20 @@ pub fn P_FindHighestFloorSurrounding(state: &mut GameState, sec: SectorId) -> fi
     floor
 }
 pub const MAX_ADJOINING_SECTORS: i32 = 20;
-pub fn P_FindNextHighestFloor(state: &mut GameState, sec: SectorId, currentheight: i32) -> fixed_t {
-    let mut height: fixed_t = currentheight as fixed_t;
-    let mut heightlist: [fixed_t; 22] = [0; 22];
+pub fn find_next_highest_floor(state: &mut GameState, sec: SectorId, currentheight: i32) -> Fixed {
+    let mut height: Fixed = currentheight as Fixed;
+    let mut heightlist: [Fixed; 22] = [0; 22];
     let mut h: i32 = 0;
     let linecount = state.p_setup.sector_mut(sec).linecount;
     for i in 0..linecount {
         let check = state.p_setup.sector_mut(sec).lines[i as usize];
-        if let Some(other) = getNextSector(state, check, sec) {
+        if let Some(other) = get_next_sector(state, check, sec) {
             let other_floor = state.p_setup.sector_mut(other).floorheight;
             if other_floor > height {
                 if h == MAX_ADJOINING_SECTORS + 1 {
                     height = other_floor;
                 } else if h == MAX_ADJOINING_SECTORS + 2 {
-                    I_Error("Sector with more than 22 adjoining sectors. Vanilla will crash here");
+                    error("Sector with more than 22 adjoining sectors. Vanilla will crash here");
                 }
                 let fresh1 = h;
                 h += 1;
@@ -564,7 +564,7 @@ pub fn P_FindNextHighestFloor(state: &mut GameState, sec: SectorId, currentheigh
         }
     }
     if h == 0 {
-        return currentheight as fixed_t;
+        return currentheight as Fixed;
     }
     let mut min = heightlist[0];
     for i in 1..h {
@@ -572,14 +572,14 @@ pub fn P_FindNextHighestFloor(state: &mut GameState, sec: SectorId, currentheigh
             min = heightlist[i as usize];
         }
     }
-    min as fixed_t
+    min as Fixed
 }
-pub fn P_FindLowestCeilingSurrounding(state: &mut GameState, sec: SectorId) -> fixed_t {
-    let mut height: fixed_t = INT_MAX;
+pub fn find_lowest_ceiling_surrounding(state: &mut GameState, sec: SectorId) -> Fixed {
+    let mut height: Fixed = INT_MAX;
     let linecount = state.p_setup.sector_mut(sec).linecount;
     for i in 0..linecount {
         let check = state.p_setup.sector_mut(sec).lines[i as usize];
-        if let Some(other) = getNextSector(state, check, sec) {
+        if let Some(other) = get_next_sector(state, check, sec) {
             let other_ceiling = state.p_setup.sector_mut(other).ceilingheight;
             if other_ceiling < height {
                 height = other_ceiling;
@@ -588,12 +588,12 @@ pub fn P_FindLowestCeilingSurrounding(state: &mut GameState, sec: SectorId) -> f
     }
     height
 }
-pub fn P_FindHighestCeilingSurrounding(state: &mut GameState, sec: SectorId) -> fixed_t {
-    let mut height: fixed_t = 0;
+pub fn find_highest_ceiling_surrounding(state: &mut GameState, sec: SectorId) -> Fixed {
+    let mut height: Fixed = 0;
     let linecount = state.p_setup.sector_mut(sec).linecount;
     for i in 0..linecount {
         let check = state.p_setup.sector_mut(sec).lines[i as usize];
-        if let Some(other) = getNextSector(state, check, sec) {
+        if let Some(other) = get_next_sector(state, check, sec) {
             let other_ceiling = state.p_setup.sector_mut(other).ceilingheight;
             if other_ceiling > height {
                 height = other_ceiling;
@@ -602,7 +602,7 @@ pub fn P_FindHighestCeilingSurrounding(state: &mut GameState, sec: SectorId) -> 
     }
     height
 }
-pub fn P_FindSectorFromLineTag(state: &mut GameState, line: LineId, start: i32) -> i32 {
+pub fn find_sector_from_line_tag(state: &mut GameState, line: LineId, start: i32) -> i32 {
     let line_tag = state.p_setup.line(line).tag;
     for i in start + 1..state.p_setup.numsectors {
         if state.p_setup.sectors[i as usize].tag as i32 == line_tag as i32 {
@@ -611,12 +611,12 @@ pub fn P_FindSectorFromLineTag(state: &mut GameState, line: LineId, start: i32) 
     }
     -1
 }
-pub fn P_FindMinSurroundingLight(state: &mut GameState, sector: SectorId, max: i32) -> i32 {
+pub fn find_min_surrounding_light(state: &mut GameState, sector: SectorId, max: i32) -> i32 {
     let mut min = max;
     let linecount = state.p_setup.sector_mut(sector).linecount;
     for i in 0..linecount {
         let line = state.p_setup.sector_mut(sector).lines[i as usize];
-        if let Some(check) = getNextSector(state, line, sector) {
+        if let Some(check) = get_next_sector(state, line, sector) {
             let light = state.p_setup.sector_mut(check).lightlevel as i32;
             if light < min {
                 min = light;
@@ -625,7 +625,7 @@ pub fn P_FindMinSurroundingLight(state: &mut GameState, sector: SectorId, max: i
     }
     min
 }
-pub fn P_CrossSpecialLine(state: &mut GameState, linenum: i32, side: i32, thing: MobjId) {
+pub fn cross_special_line(state: &mut GameState, linenum: i32, side: i32, thing: MobjId) {
     let line: LineId = LineId(linenum as u32);
     let mut ok: i32;
     let special = state.p_setup.line(line).special;
@@ -647,268 +647,268 @@ pub fn P_CrossSpecialLine(state: &mut GameState, linenum: i32, side: i32, thing:
     }
     match special as i32 {
         2 => {
-            EV_DoDoor(state, line, VldoorE::vld_open);
+            do_door(state, line, VldoorE::Open);
             state.p_setup.line_mut(line).special = 0;
         }
         3 => {
-            EV_DoDoor(state, line, VldoorE::vld_close);
+            do_door(state, line, VldoorE::Close);
             state.p_setup.line_mut(line).special = 0;
         }
         4 => {
-            EV_DoDoor(state, line, VldoorE::vld_normal);
+            do_door(state, line, VldoorE::Normal);
             state.p_setup.line_mut(line).special = 0;
         }
         5 => {
-            EV_DoFloor(state, line, FloorE::raiseFloor);
+            do_floor(state, line, FloorE::RaiseFloor);
             state.p_setup.line_mut(line).special = 0;
         }
         6 => {
-            EV_DoCeiling(state, line, CeilingE::fastCrushAndRaise);
+            do_ceiling(state, line, CeilingE::FastCrushAndRaise);
             state.p_setup.line_mut(line).special = 0;
         }
         8 => {
-            EV_BuildStairs(state, line, StairE::build8);
+            build_stairs(state, line, StairE::Build8);
             state.p_setup.line_mut(line).special = 0;
         }
         10 => {
-            EV_DoPlat(state, line, PlattypeE::downWaitUpStay, 0);
+            do_plat(state, line, PlattypeE::DownWaitUpStay, 0);
             state.p_setup.line_mut(line).special = 0;
         }
         12 => {
-            EV_LightTurnOn(state, line, 0);
+            light_turn_on(state, line, 0);
             state.p_setup.line_mut(line).special = 0;
         }
         13 => {
-            EV_LightTurnOn(state, line, 255);
+            light_turn_on(state, line, 255);
             state.p_setup.line_mut(line).special = 0;
         }
         16 => {
-            EV_DoDoor(state, line, VldoorE::vld_close30ThenOpen);
+            do_door(state, line, VldoorE::Close30ThenOpen);
             state.p_setup.line_mut(line).special = 0;
         }
         17 => {
-            EV_StartLightStrobing(state, line);
+            start_light_strobing(state, line);
             state.p_setup.line_mut(line).special = 0;
         }
         19 => {
-            EV_DoFloor(state, line, FloorE::lowerFloor);
+            do_floor(state, line, FloorE::LowerFloor);
             state.p_setup.line_mut(line).special = 0;
         }
         22 => {
-            EV_DoPlat(state, line, PlattypeE::raiseToNearestAndChange, 0);
+            do_plat(state, line, PlattypeE::RaiseToNearestAndChange, 0);
             state.p_setup.line_mut(line).special = 0;
         }
         25 => {
-            EV_DoCeiling(state, line, CeilingE::crushAndRaise);
+            do_ceiling(state, line, CeilingE::CrushAndRaise);
             state.p_setup.line_mut(line).special = 0;
         }
         30 => {
-            EV_DoFloor(state, line, FloorE::raiseToTexture);
+            do_floor(state, line, FloorE::RaiseToTexture);
             state.p_setup.line_mut(line).special = 0;
         }
         35 => {
-            EV_LightTurnOn(state, line, 35);
+            light_turn_on(state, line, 35);
             state.p_setup.line_mut(line).special = 0;
         }
         36 => {
-            EV_DoFloor(state, line, FloorE::turboLower);
+            do_floor(state, line, FloorE::TurboLower);
             state.p_setup.line_mut(line).special = 0;
         }
         37 => {
-            EV_DoFloor(state, line, FloorE::lowerAndChange);
+            do_floor(state, line, FloorE::LowerAndChange);
             state.p_setup.line_mut(line).special = 0;
         }
         38 => {
-            EV_DoFloor(state, line, FloorE::lowerFloorToLowest);
+            do_floor(state, line, FloorE::LowerFloorToLowest);
             state.p_setup.line_mut(line).special = 0;
         }
         39 => {
-            EV_Teleport(state, line, side, thing);
+            teleport(state, line, side, thing);
             state.p_setup.line_mut(line).special = 0;
         }
         40 => {
-            EV_DoCeiling(state, line, CeilingE::raiseToHighest);
-            EV_DoFloor(state, line, FloorE::lowerFloorToLowest);
+            do_ceiling(state, line, CeilingE::RaiseToHighest);
+            do_floor(state, line, FloorE::LowerFloorToLowest);
             state.p_setup.line_mut(line).special = 0;
         }
         44 => {
-            EV_DoCeiling(state, line, CeilingE::lowerAndCrush);
+            do_ceiling(state, line, CeilingE::LowerAndCrush);
             state.p_setup.line_mut(line).special = 0;
         }
         52 => {
-            G_ExitLevel(state);
+            exit_level(state);
         }
         53 => {
-            EV_DoPlat(state, line, PlattypeE::perpetualRaise, 0);
+            do_plat(state, line, PlattypeE::PerpetualRaise, 0);
             state.p_setup.line_mut(line).special = 0;
         }
         54 => {
-            EV_StopPlat(state, state.p_setup.line(line).tag as i32);
+            stop_plat(state, state.p_setup.line(line).tag as i32);
             state.p_setup.line_mut(line).special = 0;
         }
         56 => {
-            EV_DoFloor(state, line, FloorE::raiseFloorCrush);
+            do_floor(state, line, FloorE::RaiseFloorCrush);
             state.p_setup.line_mut(line).special = 0;
         }
         57 => {
-            EV_CeilingCrushStop(state, state.p_setup.line(line).tag as i32);
+            ceiling_crush_stop(state, state.p_setup.line(line).tag as i32);
             state.p_setup.line_mut(line).special = 0;
         }
         58 => {
-            EV_DoFloor(state, line, FloorE::raiseFloor24);
+            do_floor(state, line, FloorE::RaiseFloor24);
             state.p_setup.line_mut(line).special = 0;
         }
         59 => {
-            EV_DoFloor(state, line, FloorE::raiseFloor24AndChange);
+            do_floor(state, line, FloorE::RaiseFloor24AndChange);
             state.p_setup.line_mut(line).special = 0;
         }
         104 => {
-            EV_TurnTagLightsOff(state, line);
+            turn_tag_lights_off(state, line);
             state.p_setup.line_mut(line).special = 0;
         }
         108 => {
-            EV_DoDoor(state, line, VldoorE::vld_blazeRaise);
+            do_door(state, line, VldoorE::BlazeRaise);
             state.p_setup.line_mut(line).special = 0;
         }
         109 => {
-            EV_DoDoor(state, line, VldoorE::vld_blazeOpen);
+            do_door(state, line, VldoorE::BlazeOpen);
             state.p_setup.line_mut(line).special = 0;
         }
         100 => {
-            EV_BuildStairs(state, line, StairE::turbo16);
+            build_stairs(state, line, StairE::Turbo16);
             state.p_setup.line_mut(line).special = 0;
         }
         110 => {
-            EV_DoDoor(state, line, VldoorE::vld_blazeClose);
+            do_door(state, line, VldoorE::BlazeClose);
             state.p_setup.line_mut(line).special = 0;
         }
         119 => {
-            EV_DoFloor(state, line, FloorE::raiseFloorToNearest);
+            do_floor(state, line, FloorE::RaiseFloorToNearest);
             state.p_setup.line_mut(line).special = 0;
         }
         121 => {
-            EV_DoPlat(state, line, PlattypeE::blazeDWUS, 0);
+            do_plat(state, line, PlattypeE::BlazeDWUS, 0);
             state.p_setup.line_mut(line).special = 0;
         }
         124 => {
-            G_SecretExitLevel(state);
+            secret_exit_level(state);
         }
         125 => {
             if state.p_mobj.mo(thing).player.is_none() {
-                EV_Teleport(state, line, side, thing);
+                teleport(state, line, side, thing);
                 state.p_setup.line_mut(line).special = 0;
             }
         }
         130 => {
-            EV_DoFloor(state, line, FloorE::raiseFloorTurbo);
+            do_floor(state, line, FloorE::RaiseFloorTurbo);
             state.p_setup.line_mut(line).special = 0;
         }
         141 => {
-            EV_DoCeiling(state, line, CeilingE::silentCrushAndRaise);
+            do_ceiling(state, line, CeilingE::SilentCrushAndRaise);
             state.p_setup.line_mut(line).special = 0;
         }
         72 => {
-            EV_DoCeiling(state, line, CeilingE::lowerAndCrush);
+            do_ceiling(state, line, CeilingE::LowerAndCrush);
         }
         73 => {
-            EV_DoCeiling(state, line, CeilingE::crushAndRaise);
+            do_ceiling(state, line, CeilingE::CrushAndRaise);
         }
         74 => {
-            EV_CeilingCrushStop(state, state.p_setup.line(line).tag as i32);
+            ceiling_crush_stop(state, state.p_setup.line(line).tag as i32);
         }
         75 => {
-            EV_DoDoor(state, line, VldoorE::vld_close);
+            do_door(state, line, VldoorE::Close);
         }
         76 => {
-            EV_DoDoor(state, line, VldoorE::vld_close30ThenOpen);
+            do_door(state, line, VldoorE::Close30ThenOpen);
         }
         77 => {
-            EV_DoCeiling(state, line, CeilingE::fastCrushAndRaise);
+            do_ceiling(state, line, CeilingE::FastCrushAndRaise);
         }
         79 => {
-            EV_LightTurnOn(state, line, 35);
+            light_turn_on(state, line, 35);
         }
         80 => {
-            EV_LightTurnOn(state, line, 0);
+            light_turn_on(state, line, 0);
         }
         81 => {
-            EV_LightTurnOn(state, line, 255);
+            light_turn_on(state, line, 255);
         }
         82 => {
-            EV_DoFloor(state, line, FloorE::lowerFloorToLowest);
+            do_floor(state, line, FloorE::LowerFloorToLowest);
         }
         83 => {
-            EV_DoFloor(state, line, FloorE::lowerFloor);
+            do_floor(state, line, FloorE::LowerFloor);
         }
         84 => {
-            EV_DoFloor(state, line, FloorE::lowerAndChange);
+            do_floor(state, line, FloorE::LowerAndChange);
         }
         86 => {
-            EV_DoDoor(state, line, VldoorE::vld_open);
+            do_door(state, line, VldoorE::Open);
         }
         87 => {
-            EV_DoPlat(state, line, PlattypeE::perpetualRaise, 0);
+            do_plat(state, line, PlattypeE::PerpetualRaise, 0);
         }
         88 => {
-            EV_DoPlat(state, line, PlattypeE::downWaitUpStay, 0);
+            do_plat(state, line, PlattypeE::DownWaitUpStay, 0);
         }
         89 => {
-            EV_StopPlat(state, state.p_setup.line(line).tag as i32);
+            stop_plat(state, state.p_setup.line(line).tag as i32);
         }
         90 => {
-            EV_DoDoor(state, line, VldoorE::vld_normal);
+            do_door(state, line, VldoorE::Normal);
         }
         91 => {
-            EV_DoFloor(state, line, FloorE::raiseFloor);
+            do_floor(state, line, FloorE::RaiseFloor);
         }
         92 => {
-            EV_DoFloor(state, line, FloorE::raiseFloor24);
+            do_floor(state, line, FloorE::RaiseFloor24);
         }
         93 => {
-            EV_DoFloor(state, line, FloorE::raiseFloor24AndChange);
+            do_floor(state, line, FloorE::RaiseFloor24AndChange);
         }
         94 => {
-            EV_DoFloor(state, line, FloorE::raiseFloorCrush);
+            do_floor(state, line, FloorE::RaiseFloorCrush);
         }
         95 => {
-            EV_DoPlat(state, line, PlattypeE::raiseToNearestAndChange, 0);
+            do_plat(state, line, PlattypeE::RaiseToNearestAndChange, 0);
         }
         96 => {
-            EV_DoFloor(state, line, FloorE::raiseToTexture);
+            do_floor(state, line, FloorE::RaiseToTexture);
         }
         97 => {
-            EV_Teleport(state, line, side, thing);
+            teleport(state, line, side, thing);
         }
         98 => {
-            EV_DoFloor(state, line, FloorE::turboLower);
+            do_floor(state, line, FloorE::TurboLower);
         }
         105 => {
-            EV_DoDoor(state, line, VldoorE::vld_blazeRaise);
+            do_door(state, line, VldoorE::BlazeRaise);
         }
         106 => {
-            EV_DoDoor(state, line, VldoorE::vld_blazeOpen);
+            do_door(state, line, VldoorE::BlazeOpen);
         }
         107 => {
-            EV_DoDoor(state, line, VldoorE::vld_blazeClose);
+            do_door(state, line, VldoorE::BlazeClose);
         }
         120 => {
-            EV_DoPlat(state, line, PlattypeE::blazeDWUS, 0);
+            do_plat(state, line, PlattypeE::BlazeDWUS, 0);
         }
         126 => {
             if state.p_mobj.mo(thing).player.is_none() {
-                EV_Teleport(state, line, side, thing);
+                teleport(state, line, side, thing);
             }
         }
         128 => {
-            EV_DoFloor(state, line, FloorE::raiseFloorToNearest);
+            do_floor(state, line, FloorE::RaiseFloorToNearest);
         }
         129 => {
-            EV_DoFloor(state, line, FloorE::raiseFloorTurbo);
+            do_floor(state, line, FloorE::RaiseFloorTurbo);
         }
         _ => {}
     };
 }
-pub fn P_ShootSpecialLine(state: &mut GameState, thing: MobjId, line: LineId) {
+pub fn shoot_special_line(state: &mut GameState, thing: MobjId, line: LineId) {
     let mut ok: i32;
     let special = state.p_setup.line(line).special;
     if state.p_mobj.mo(thing).player.is_none() {
@@ -922,21 +922,21 @@ pub fn P_ShootSpecialLine(state: &mut GameState, thing: MobjId, line: LineId) {
     }
     match special as i32 {
         24 => {
-            EV_DoFloor(state, line, FloorE::raiseFloor);
-            P_ChangeSwitchTexture(state, line, false);
+            do_floor(state, line, FloorE::RaiseFloor);
+            change_switch_texture(state, line, false);
         }
         46 => {
-            EV_DoDoor(state, line, VldoorE::vld_open);
-            P_ChangeSwitchTexture(state, line, true);
+            do_door(state, line, VldoorE::Open);
+            change_switch_texture(state, line, true);
         }
         47 => {
-            EV_DoPlat(state, line, PlattypeE::raiseToNearestAndChange, 0);
-            P_ChangeSwitchTexture(state, line, false);
+            do_plat(state, line, PlattypeE::RaiseToNearestAndChange, 0);
+            change_switch_texture(state, line, false);
         }
         _ => {}
     };
 }
-pub fn P_PlayerInSpecialSector(state: &mut GameState, player: PlayerId) {
+pub fn player_in_special_sector(state: &mut GameState, player: PlayerId) {
     let player_mo = state.g_game.player_mut(player).mo.unwrap();
     let (subsector, mo_z) = {
         let m = state.p_mobj.mo(player_mo);
@@ -952,25 +952,25 @@ pub fn P_PlayerInSpecialSector(state: &mut GameState, player: PlayerId) {
     }
     match special as i32 {
         5 => {
-            if state.g_game.player_mut(player).powers[PowerType::pw_ironfeet as usize] == 0
+            if state.g_game.player_mut(player).powers[PowerType::Ironfeet as usize] == 0
                 && state.p_tick.leveltime & 0x1f == 0
             {
-                P_DamageMobj(state, player_mo, None, None, 10);
+                damage_mobj(state, player_mo, None, None, 10);
             }
         }
         7 => {
-            if state.g_game.player_mut(player).powers[PowerType::pw_ironfeet as usize] == 0
+            if state.g_game.player_mut(player).powers[PowerType::Ironfeet as usize] == 0
                 && state.p_tick.leveltime & 0x1f == 0
             {
-                P_DamageMobj(state, player_mo, None, None, 5);
+                damage_mobj(state, player_mo, None, None, 5);
             }
         }
         16 | 4 => {
-            if (state.g_game.player_mut(player).powers[PowerType::pw_ironfeet as usize] == 0
-                || P_Random(&mut state.m_random) < 5)
+            if (state.g_game.player_mut(player).powers[PowerType::Ironfeet as usize] == 0
+                || p_random(&mut state.m_random) < 5)
                 && state.p_tick.leveltime & 0x1f == 0
             {
-                P_DamageMobj(state, player_mo, None, None, 20);
+                damage_mobj(state, player_mo, None, None, 20);
             }
         }
         9 => {
@@ -980,27 +980,27 @@ pub fn P_PlayerInSpecialSector(state: &mut GameState, player: PlayerId) {
         11 => {
             state.g_game.player_mut(player).cheats &= !CF_GODMODE;
             if state.p_tick.leveltime & 0x1f == 0 {
-                P_DamageMobj(state, player_mo, None, None, 20);
+                damage_mobj(state, player_mo, None, None, 20);
             }
             if state.g_game.player_mut(player).health <= 10 {
-                G_ExitLevel(state);
+                exit_level(state);
             }
         }
         _ => {
-            I_Error(&format!(
+            error(&format!(
                 "P_PlayerInSpecialSector: unknown special {}",
                 special as i32,
             ));
         }
     };
 }
-pub fn P_UpdateSpecials(state: &mut GameState) {
+pub fn update_specials(state: &mut GameState) {
     let mut pic: i32;
     let mut line: LineId;
-    if state.p_spec.levelTimer {
-        state.p_spec.levelTimeCount -= 1;
-        if state.p_spec.levelTimeCount == 0 {
-            G_ExitLevel(state);
+    if state.p_spec.level_timer {
+        state.p_spec.level_time_count -= 1;
+        if state.p_spec.level_time_count == 0 {
+            exit_level(state);
         }
     }
     for anim_idx in 0..state.p_spec.lastanim {
@@ -1028,26 +1028,26 @@ pub fn P_UpdateSpecials(state: &mut GameState) {
             if state.p_switch.buttonlist[i].btimer == 0 {
                 let button_line_id = state.p_switch.buttonlist[i].line;
                 match state.p_switch.buttonlist[i].position {
-                    BWhere::top => {
+                    BWhere::Top => {
                         state.p_setup.sides
                             [state.p_setup.lines[button_line_id.0 as usize].sidenum[0] as usize]
                             .toptexture = state.p_switch.buttonlist[i].btexture as i16;
                     }
-                    BWhere::middle => {
+                    BWhere::Middle => {
                         state.p_setup.sides
                             [state.p_setup.lines[button_line_id.0 as usize].sidenum[0] as usize]
                             .midtexture = state.p_switch.buttonlist[i].btexture as i16;
                     }
-                    BWhere::bottom => {
+                    BWhere::Bottom => {
                         state.p_setup.sides
                             [state.p_setup.lines[button_line_id.0 as usize].sidenum[0] as usize]
                             .bottomtexture = state.p_switch.buttonlist[i].btexture as i16;
                     }
                 }
-                S_StartSound(
+                s_start_sound(
                     state,
                     SoundOrigin::Sector(state.p_switch.buttonlist[i].soundorg),
-                    SfxName::sfx_swtchn as i32,
+                    SfxName::Swtchn as i32,
                 );
                 state.p_switch.buttonlist[i] = EMPTY_BUTTON;
             }
@@ -1056,18 +1056,18 @@ pub fn P_UpdateSpecials(state: &mut GameState) {
 }
 pub const DONUT_FLOORHEIGHT_DEFAULT: i32 = 0;
 pub const DONUT_FLOORPIC_DEFAULT: i32 = 0x16;
-fn DonutOverrun(state: &mut GameState) -> (fixed_t, i16) {
+fn donut_overrun(state: &mut GameState) -> (Fixed, i16) {
     if state.p_spec.donut_overrun_first {
         state.p_spec.donut_overrun_first = false;
         state.p_spec.donut_overrun_tmp_s3_floorheight = DONUT_FLOORHEIGHT_DEFAULT;
         state.p_spec.donut_overrun_tmp_s3_floorpic = DONUT_FLOORPIC_DEFAULT;
-        let p: i32 = M_CheckParmWithArgs(state, "-donut", 2);
+        let p: i32 = check_parm_with_args(state, "-donut", 2);
         if p > 0 {
-            M_StrToInt(
+            str_to_int(
                 state.m_argv.myargv[(p + 1) as usize].as_str(),
                 &mut state.p_spec.donut_overrun_tmp_s3_floorheight,
             );
-            M_StrToInt(
+            str_to_int(
                 state.m_argv.myargv[(p + 2) as usize].as_str(),
                 &mut state.p_spec.donut_overrun_tmp_s3_floorpic,
             );
@@ -1086,11 +1086,11 @@ fn DonutOverrun(state: &mut GameState) -> (fixed_t, i16) {
         state.p_spec.donut_overrun_tmp_s3_floorpic as i16,
     )
 }
-pub fn EV_DoDonut(state: &mut GameState, line: LineId) -> bool {
+pub fn do_donut(state: &mut GameState, line: LineId) -> bool {
     let mut secnum: i32 = -1;
     let mut rtn = false;
     loop {
-        secnum = P_FindSectorFromLineTag(state, line, secnum);
+        secnum = find_sector_from_line_tag(state, line, secnum);
         if secnum < 0 {
             break;
         }
@@ -1100,7 +1100,7 @@ pub fn EV_DoDonut(state: &mut GameState, line: LineId) -> bool {
         }
         rtn = true;
         let first_line = state.p_setup.sector_mut(s1).lines[0];
-        let Some(s2) = getNextSector(state, first_line, s1) else {
+        let Some(s2) = get_next_sector(state, first_line, s1) else {
             doom_eprintln!(state.platform,
                 "EV_DoDonut: linedef had no second sidedef! Unexpected behavior may occur in Vanilla Doom. "
             );
@@ -1122,36 +1122,36 @@ pub fn EV_DoDonut(state: &mut GameState, line: LineId) -> bool {
                     doom_eprintln!(state.platform,
                         "EV_DoDonut: WARNING: emulating buffer overrun due to NULL back sector. Unexpected behavior may occur in Vanilla Doom."
                     );
-                    DonutOverrun(state)
+                    donut_overrun(state)
                 }
             };
-            let mut floor = floormove_t::default();
-            floor.thinker.function = ThinkerFn::Floor(T_MoveFloor);
-            floor.kind = FloorE::donutRaise;
+            let mut floor = FloorMove::default();
+            floor.thinker.function = ThinkerFn::Floor(move_floor);
+            floor.kind = FloorE::DonutRaise;
             floor.crush = false;
             floor.direction = 1;
             floor.sector = s2;
-            floor.speed = (FLOORSPEED / 2) as fixed_t;
+            floor.speed = (FLOORSPEED / 2) as Fixed;
             floor.texture = s3_floorpic;
             floor.newspecial = 0;
             floor.floordestheight = s3_floorheight;
             let floor_arena_id = state.p_spec.spawn_floor(floor);
-            let floor_id = P_AddThinker(
+            let floor_id = add_thinker(
                 state,
                 ThinkerPayload::Floor(floor_arena_id),
                 ThinkerKind::Floor,
             );
             state.p_setup.sector_mut(s2).specialdata = Some(SectorSpecial::Floor(floor_id));
-            let mut floor = floormove_t::default();
-            floor.thinker.function = ThinkerFn::Floor(T_MoveFloor);
-            floor.kind = FloorE::lowerFloor;
+            let mut floor = FloorMove::default();
+            floor.thinker.function = ThinkerFn::Floor(move_floor);
+            floor.kind = FloorE::LowerFloor;
             floor.crush = false;
             floor.direction = -1;
             floor.sector = s1;
-            floor.speed = (FLOORSPEED / 2) as fixed_t;
+            floor.speed = (FLOORSPEED / 2) as Fixed;
             floor.floordestheight = s3_floorheight;
             let floor_arena_id = state.p_spec.spawn_floor(floor);
-            let floor_id = P_AddThinker(
+            let floor_id = add_thinker(
                 state,
                 ThinkerPayload::Floor(floor_arena_id),
                 ThinkerKind::Floor,
@@ -1162,12 +1162,12 @@ pub fn EV_DoDonut(state: &mut GameState, line: LineId) -> bool {
     }
     rtn
 }
-pub fn P_SpawnSpecials(state: &mut GameState) {
+pub fn spawn_specials(state: &mut GameState) {
     if state.g_game.timelimit > 0 && state.g_game.deathmatch != 0 {
-        state.p_spec.levelTimer = true;
-        state.p_spec.levelTimeCount = state.g_game.timelimit * 60 * TICRATE;
+        state.p_spec.level_timer = true;
+        state.p_spec.level_time_count = state.g_game.timelimit * 60 * TICRATE;
     } else {
-        state.p_spec.levelTimer = false;
+        state.p_spec.level_timer = false;
     }
     for i in 0..state.p_setup.numsectors {
         let secid = SectorId(i as u32);
@@ -1175,38 +1175,38 @@ pub fn P_SpawnSpecials(state: &mut GameState) {
         if special != 0 {
             match special as i32 {
                 1 => {
-                    P_SpawnLightFlash(state, secid);
+                    spawn_light_flash(state, secid);
                 }
                 2 => {
-                    P_SpawnStrobeFlash(state, secid, FASTDARK, 0);
+                    spawn_strobe_flash(state, secid, FASTDARK, 0);
                 }
                 3 => {
-                    P_SpawnStrobeFlash(state, secid, SLOWDARK, 0);
+                    spawn_strobe_flash(state, secid, SLOWDARK, 0);
                 }
                 4 => {
-                    P_SpawnStrobeFlash(state, secid, FASTDARK, 0);
+                    spawn_strobe_flash(state, secid, FASTDARK, 0);
                     state.p_setup.sector_mut(secid).special = 4;
                 }
                 8 => {
-                    P_SpawnGlowingLight(state, secid);
+                    spawn_glowing_light(state, secid);
                 }
                 9 => {
                     state.g_game.totalsecret += 1;
                 }
                 10 => {
-                    P_SpawnDoorCloseIn30(state, secid);
+                    spawn_door_close_in30(state, secid);
                 }
                 12 => {
-                    P_SpawnStrobeFlash(state, secid, SLOWDARK, 1);
+                    spawn_strobe_flash(state, secid, SLOWDARK, 1);
                 }
                 13 => {
-                    P_SpawnStrobeFlash(state, secid, FASTDARK, 1);
+                    spawn_strobe_flash(state, secid, FASTDARK, 1);
                 }
                 14 => {
-                    P_SpawnDoorRaiseIn5Mins(state, secid);
+                    spawn_door_raise_in5_mins(state, secid);
                 }
                 17 => {
-                    P_SpawnFireFlicker(state, secid);
+                    spawn_fire_flicker(state, secid);
                 }
                 _ => {}
             }
@@ -1216,7 +1216,7 @@ pub fn P_SpawnSpecials(state: &mut GameState) {
     for i in 0..state.p_setup.numlines {
         if state.p_setup.lines[i as usize].special as i32 == 48 {
             if state.p_spec.numlinespecials as i32 >= MAXLINEANIMS {
-                I_Error("Too many scrolling wall linedefs! (Vanilla limit is 64)");
+                error("Too many scrolling wall linedefs! (Vanilla limit is 64)");
             }
             state.p_spec.linespeciallist[state.p_spec.numlinespecials as usize] = LineId(i as u32);
             state.p_spec.numlinespecials += 1;

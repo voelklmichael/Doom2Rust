@@ -1,47 +1,47 @@
-use crate::d_mode::GameMode_t;
+use crate::d_mode::GameMode;
 use crate::game_state::GameState;
-use crate::i_sound::snddevice_t;
-use crate::i_sound::I_GetSfxLumpNum;
-use crate::i_sound::I_PauseSong;
-use crate::i_sound::I_PlaySong;
-use crate::i_sound::I_PrecacheSounds;
-use crate::i_sound::I_RegisterSong;
-use crate::i_sound::I_ResumeSong;
-use crate::i_sound::I_SetMusicVolume;
-use crate::i_sound::I_ShutdownSound;
-use crate::i_sound::I_SoundIsPlaying;
-use crate::i_sound::I_StartSound;
-use crate::i_sound::I_StopSong;
-use crate::i_sound::I_StopSound;
-use crate::i_sound::I_UnRegisterSong;
-use crate::i_sound::I_UpdateSound;
-use crate::i_sound::I_UpdateSoundParams;
-use crate::i_system::I_AtExit;
-use crate::i_system::I_Error;
-use crate::m_fixed::fixed_t;
-use crate::m_fixed::FixedMul;
+use crate::i_sound::get_sfx_lump_num;
+use crate::i_sound::i_set_music_volume;
+use crate::i_sound::i_start_sound;
+use crate::i_sound::i_stop_sound;
+use crate::i_sound::pause_song;
+use crate::i_sound::play_song;
+use crate::i_sound::precache_sounds;
+use crate::i_sound::register_song;
+use crate::i_sound::resume_song;
+use crate::i_sound::shutdown_sound;
+use crate::i_sound::sound_is_playing;
+use crate::i_sound::stop_song;
+use crate::i_sound::un_register_song;
+use crate::i_sound::update_sound;
+use crate::i_sound::update_sound_params;
+use crate::i_sound::SndDevice;
+use crate::i_system::at_exit;
+use crate::i_system::error;
+use crate::m_fixed::fixed_mul;
+use crate::m_fixed::Fixed;
 use crate::m_fixed::FRACBITS;
 use crate::m_fixed::FRACUNIT;
 use crate::p_mobj::MobjId;
 use crate::p_setup::SectorId;
-use crate::r_main::R_PointToAngle2;
+use crate::r_main::point_to_angle2;
 use crate::sounds::SfxId;
 use crate::sounds::NUMSFX;
 use crate::sounds::{MusicName, NUMMUSIC};
-use crate::tables::angle_t;
-use crate::tables::finesine;
+use crate::tables::Angle;
 use crate::tables::ANGLETOFINESHIFT;
-use crate::w_wad::W_GetNumForName;
-use crate::w_wad::W_LumpBytes;
-use crate::w_wad::W_LumpLength;
-use crate::w_wad::W_ReleaseLumpNum;
+use crate::tables::FINESINE;
+use crate::w_wad::get_num_for_name;
+use crate::w_wad::lump_bytes;
+use crate::w_wad::lump_length;
+use crate::w_wad::release_lump_num;
 use alloc::vec::Vec;
 
 pub struct SSoundState {
-    pub channels: Vec<channel_t>,
-    pub sfxVolume: i32,
-    pub musicVolume: i32,
-    pub snd_SfxVolume: i32,
+    pub channels: Vec<Channel>,
+    pub sfx_volume: i32,
+    pub music_volume: i32,
+    pub snd_sfx_volume: i32,
     pub mus_paused: bool,
     pub mus_playing: Option<i32>,
     pub snd_channels: i32,
@@ -57,9 +57,9 @@ impl SSoundState {
     pub const fn new() -> Self {
         SSoundState {
             channels: Vec::new(),
-            sfxVolume: 8,
-            musicVolume: 8,
-            snd_SfxVolume: 0,
+            sfx_volume: 8,
+            music_volume: 8,
+            snd_sfx_volume: 0,
             mus_paused: false,
             mus_playing: None,
             snd_channels: 8,
@@ -67,9 +67,9 @@ impl SSoundState {
     }
 }
 
-/// Vanilla Doom's S_StartSound takes a `void *origin` that's really always
-/// either a `mobj_t*` or a `sector_t::soundorg` (a `degenmobj_t`, which
-/// shares the `{thinker, x, y, z}` prefix of mobj_t by construction) --
+/// Vanilla Doom's s_start_sound takes a `void *origin` that's really always
+/// either a `Mobj*` or a `Sector::soundorg` (a `DegenMobj`, which
+/// shares the `{thinker, x, y, z}` prefix of Mobj by construction) --
 /// callers rely on that layout pun to pass a sector's position as if it
 /// were a thing. This enum replaces the pun with an explicit tag.
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -79,7 +79,7 @@ pub enum SoundOrigin {
     Sector(SectorId),
 }
 impl SoundOrigin {
-    fn xy(&self, state: &mut GameState) -> Option<(fixed_t, fixed_t)> {
+    fn xy(&self, state: &mut GameState) -> Option<(Fixed, Fixed)> {
         match *self {
             SoundOrigin::None => None,
             SoundOrigin::Mobj(id) => {
@@ -97,7 +97,7 @@ impl SoundOrigin {
     }
 }
 #[derive(Copy, Clone)]
-pub struct channel_t {
+pub struct Channel {
     pub sfxinfo: Option<SfxId>,
     pub origin: SoundOrigin,
     pub handle: i32,
@@ -107,12 +107,12 @@ pub const S_CLOSE_DIST: i32 = 200 * FRACUNIT;
 pub const S_ATTENUATOR: i32 = (S_CLIPPING_DIST - S_CLOSE_DIST) >> FRACBITS;
 pub const S_STEREO_SWING: i32 = 96 * FRACUNIT;
 pub const NORM_SEP: i32 = 128;
-pub fn S_Init(state: &mut GameState, sfxVolume_0: i32, musicVolume_0: i32) {
-    I_PrecacheSounds(&mut state.i_sound, &mut state.sounds.S_sfx);
-    S_SetSfxVolume(state, sfxVolume_0);
-    S_SetMusicVolume(state, musicVolume_0);
+pub fn s_init(state: &mut GameState, sfx_volume_0: i32, music_volume_0: i32) {
+    precache_sounds(&mut state.i_sound, &mut state.sounds.s_sfx);
+    set_sfx_volume(state, sfx_volume_0);
+    s_set_music_volume(state, music_volume_0);
     state.s_sound.channels = vec![
-        channel_t {
+        Channel {
             sfxinfo: None,
             origin: SoundOrigin::None,
             handle: 0,
@@ -121,71 +121,70 @@ pub fn S_Init(state: &mut GameState, sfxVolume_0: i32, musicVolume_0: i32) {
     ];
     state.s_sound.mus_paused = false;
     for i in 1..NUMSFX as usize {
-        state.sounds.S_sfx[i].usefulness = -1;
-        state.sounds.S_sfx[i].lumpnum = -1;
+        state.sounds.s_sfx[i].usefulness = -1;
+        state.sounds.s_sfx[i].lumpnum = -1;
     }
-    I_AtExit(
+    at_exit(
         &mut state.i_system,
-        Some(S_Shutdown as fn(&mut GameState) -> ()),
+        Some(shutdown as fn(&mut GameState) -> ()),
         true,
     );
 }
-pub fn S_Shutdown(state: &mut GameState) {
-    I_ShutdownSound(&mut state.i_sound);
+pub fn shutdown(state: &mut GameState) {
+    shutdown_sound(&mut state.i_sound);
 }
-fn S_StopChannel(state: &mut GameState, cnum: i32) {
+fn stop_channel(state: &mut GameState, cnum: i32) {
     let c = state.s_sound.channels[cnum as usize];
     if let Some(sfxinfo) = c.sfxinfo {
-        if I_SoundIsPlaying(&mut state.i_sound, c.handle) {
-            I_StopSound(&mut state.i_sound, c.handle);
+        if sound_is_playing(&mut state.i_sound, c.handle) {
+            i_stop_sound(&mut state.i_sound, c.handle);
         }
         state.sounds.sfx_mut(sfxinfo).usefulness -= 1;
         state.s_sound.channels[cnum as usize].sfxinfo = None;
     }
 }
-pub fn S_Start(state: &mut GameState) {
+pub fn s_start(state: &mut GameState) {
     let mnum: i32;
     for cnum in 0..state.s_sound.snd_channels {
         if state.s_sound.channels[cnum as usize].sfxinfo.is_some() {
-            S_StopChannel(state, cnum);
+            stop_channel(state, cnum);
         }
     }
     state.s_sound.mus_paused = false;
-    if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 {
-        mnum = MusicName::mus_runnin as i32 + state.g_game.gamemap - 1;
+    if state.doomstat.gamemode as u32 == GameMode::Commercial as i32 as u32 {
+        mnum = MusicName::Runnin as i32 + state.g_game.gamemap - 1;
     } else {
         let spmus: [i32; 9] = [
-            MusicName::mus_e3m4 as i32,
-            MusicName::mus_e3m2 as i32,
-            MusicName::mus_e3m3 as i32,
-            MusicName::mus_e1m5 as i32,
-            MusicName::mus_e2m7 as i32,
-            MusicName::mus_e2m4 as i32,
-            MusicName::mus_e2m6 as i32,
-            MusicName::mus_e2m5 as i32,
-            MusicName::mus_e1m9 as i32,
+            MusicName::E3m4 as i32,
+            MusicName::E3m2 as i32,
+            MusicName::E3m3 as i32,
+            MusicName::E1m5 as i32,
+            MusicName::E2m7 as i32,
+            MusicName::E2m4 as i32,
+            MusicName::E2m6 as i32,
+            MusicName::E2m5 as i32,
+            MusicName::E1m9 as i32,
         ];
         if state.g_game.gameepisode < 4 {
-            mnum = MusicName::mus_e1m1 as i32
-                + (state.g_game.gameepisode - 1) * 9
-                + state.g_game.gamemap
-                - 1;
+            mnum =
+                MusicName::E1m1 as i32 + (state.g_game.gameepisode - 1) * 9 + state.g_game.gamemap
+                    - 1;
         } else {
             mnum = spmus[(state.g_game.gamemap - 1) as usize];
         }
     }
-    S_ChangeMusic(state, mnum, true);
+    change_music(state, mnum, true);
 }
-pub fn S_StopSound(state: &mut GameState, origin: SoundOrigin) {
+pub fn s_stop_sound(state: &mut GameState, origin: SoundOrigin) {
     for cnum in 0..state.s_sound.snd_channels {
         let c = state.s_sound.channels[cnum as usize];
         if c.sfxinfo.is_some() && c.origin == origin {
-            S_StopChannel(state, cnum);
+            stop_channel(state, cnum);
             break;
         }
     }
 }
-fn S_GetChannel(state: &mut GameState, origin: SoundOrigin, sfxinfo: SfxId) -> i32 {
+fn get_channel(state: &mut GameState, origin: SoundOrigin, sfxinfo: SfxId) -> i32 {
     let mut cnum: i32 = 0;
     while cnum < state.s_sound.snd_channels {
         let c = state.s_sound.channels[cnum as usize];
@@ -193,7 +192,7 @@ fn S_GetChannel(state: &mut GameState, origin: SoundOrigin, sfxinfo: SfxId) -> i
             break;
         }
         if origin != SoundOrigin::None && c.origin == origin {
-            S_StopChannel(state, cnum);
+            stop_channel(state, cnum);
             break;
         } else {
             cnum += 1;
@@ -204,7 +203,7 @@ fn S_GetChannel(state: &mut GameState, origin: SoundOrigin, sfxinfo: SfxId) -> i
         while cnum < state.s_sound.snd_channels {
             let channel_sfx = state.s_sound.channels[cnum as usize].sfxinfo.unwrap();
             if state.sounds.sfx_mut(channel_sfx).priority
-                >= state.sounds.S_sfx[sfxinfo.0 as usize].priority
+                >= state.sounds.s_sfx[sfxinfo.0 as usize].priority
             {
                 break;
             }
@@ -213,7 +212,7 @@ fn S_GetChannel(state: &mut GameState, origin: SoundOrigin, sfxinfo: SfxId) -> i
         if cnum == state.s_sound.snd_channels {
             return -1;
         } else {
-            S_StopChannel(state, cnum);
+            stop_channel(state, cnum);
         }
     }
     let c = &mut state.s_sound.channels[cnum as usize];
@@ -223,7 +222,7 @@ fn S_GetChannel(state: &mut GameState, origin: SoundOrigin, sfxinfo: SfxId) -> i
 }
 /// Volume and stereo separation for a sound heard from `source`, or `None` if
 /// it is too far away (or too quiet) to be audible.
-fn S_AdjustSoundParams(
+fn adjust_sound_params(
     state: &mut GameState,
     listener: MobjId,
     source: SoundOrigin,
@@ -235,47 +234,47 @@ fn S_AdjustSoundParams(
         let l = state.p_mobj.mo(listener);
         (l.x, l.y, l.angle)
     };
-    let adx = (listener_x - source_x).abs() as fixed_t;
-    let ady = (listener_y - source_y).abs() as fixed_t;
+    let adx = (listener_x - source_x).abs() as Fixed;
+    let ady = (listener_y - source_y).abs() as Fixed;
     let mut approx_dist = adx + ady - ((if adx < ady { adx } else { ady }) >> 1);
     if state.g_game.gamemap != 8 && approx_dist > S_CLIPPING_DIST {
         return None;
     }
-    let mut angle: angle_t = R_PointToAngle2(state, listener_x, listener_y, source_x, source_y);
+    let mut angle: Angle = point_to_angle2(state, listener_x, listener_y, source_x, source_y);
     if angle > listener_angle {
         angle = angle.wrapping_sub(listener_angle);
     } else {
-        angle = angle.wrapping_add((0xffffffff as angle_t).wrapping_sub(listener_angle));
+        angle = angle.wrapping_add((0xffffffff as Angle).wrapping_sub(listener_angle));
     }
     angle >>= ANGLETOFINESHIFT;
-    let sep = 128 - (FixedMul(S_STEREO_SWING, finesine[angle as usize]) >> FRACBITS);
+    let sep = 128 - (fixed_mul(S_STEREO_SWING, FINESINE[angle as usize]) >> FRACBITS);
 
     let vol = if approx_dist < S_CLOSE_DIST {
-        state.s_sound.snd_SfxVolume
+        state.s_sound.snd_sfx_volume
     } else if state.g_game.gamemap == 8 {
         if approx_dist > S_CLIPPING_DIST {
-            approx_dist = S_CLIPPING_DIST as fixed_t;
+            approx_dist = S_CLIPPING_DIST as Fixed;
         }
-        15 + (state.s_sound.snd_SfxVolume - 15) * ((S_CLIPPING_DIST - approx_dist) >> FRACBITS)
+        15 + (state.s_sound.snd_sfx_volume - 15) * ((S_CLIPPING_DIST - approx_dist) >> FRACBITS)
             / S_ATTENUATOR
     } else {
-        state.s_sound.snd_SfxVolume * ((S_CLIPPING_DIST - approx_dist) >> FRACBITS) / S_ATTENUATOR
+        state.s_sound.snd_sfx_volume * ((S_CLIPPING_DIST - approx_dist) >> FRACBITS) / S_ATTENUATOR
     };
     (vol > 0).then_some((vol, sep))
 }
-pub fn S_StartSound(state: &mut GameState, origin: SoundOrigin, sfx_id: i32) {
-    let mut volume = state.s_sound.snd_SfxVolume;
+pub fn s_start_sound(state: &mut GameState, origin: SoundOrigin, sfx_id: i32) {
+    let mut volume = state.s_sound.snd_sfx_volume;
     if !(1..=NUMSFX).contains(&sfx_id) {
-        I_Error(&format!("Bad sfx #: {}", sfx_id));
+        error(&format!("Bad sfx #: {}", sfx_id));
     }
     let sfx_index = sfx_id as usize;
-    if state.sounds.S_sfx[sfx_index].link.is_some() {
-        volume += state.sounds.S_sfx[sfx_index].volume;
+    if state.sounds.s_sfx[sfx_index].link.is_some() {
+        volume += state.sounds.s_sfx[sfx_index].volume;
         if volume < 1 {
             return;
         }
-        if volume > state.s_sound.snd_SfxVolume {
-            volume = state.s_sound.snd_SfxVolume;
+        if volume > state.s_sound.snd_sfx_volume {
+            volume = state.s_sound.snd_sfx_volume;
         }
     }
     // listener_mo_id is only unwrapped when origin != None (short-circuit),
@@ -286,7 +285,7 @@ pub fn S_StartSound(state: &mut GameState, origin: SoundOrigin, sfx_id: i32) {
         && origin != SoundOrigin::Mobj(listener_mo_id.unwrap())
     {
         let listener = listener_mo_id.unwrap();
-        let Some((adjusted_volume, adjusted_sep)) = S_AdjustSoundParams(state, listener, origin)
+        let Some((adjusted_volume, adjusted_sep)) = adjust_sound_params(state, listener, origin)
         else {
             return;
         };
@@ -304,44 +303,44 @@ pub fn S_StartSound(state: &mut GameState, origin: SoundOrigin, sfx_id: i32) {
     } else {
         NORM_SEP
     };
-    S_StopSound(state, origin);
-    let cnum = S_GetChannel(state, origin, SfxId(sfx_id as u32));
+    s_stop_sound(state, origin);
+    let cnum = get_channel(state, origin, SfxId(sfx_id as u32));
     if cnum < 0 {
         return;
     }
-    let sfx = &mut state.sounds.S_sfx[sfx_index];
+    let sfx = &mut state.sounds.s_sfx[sfx_index];
     let fresh2 = sfx.usefulness;
     sfx.usefulness += 1;
     if fresh2 < 0 {
         sfx.usefulness = 1;
     }
     if sfx.lumpnum < 0 {
-        sfx.lumpnum = I_GetSfxLumpNum(&mut state.i_sound, sfx);
+        sfx.lumpnum = get_sfx_lump_num(&mut state.i_sound, sfx);
     }
     state.s_sound.channels[cnum as usize].handle =
-        I_StartSound(&mut state.i_sound, sfx, cnum, volume, sep);
+        i_start_sound(&mut state.i_sound, sfx, cnum, volume, sep);
 }
-pub fn S_PauseSound(state: &mut GameState) {
+pub fn pause_sound(state: &mut GameState) {
     if state.s_sound.mus_playing.is_some() && !state.s_sound.mus_paused {
-        I_PauseSong(&mut state.i_sound);
+        pause_song(&mut state.i_sound);
         state.s_sound.mus_paused = true;
     }
 }
-pub fn S_ResumeSound(state: &mut GameState) {
+pub fn resume_sound(state: &mut GameState) {
     if state.s_sound.mus_playing.is_some() && state.s_sound.mus_paused {
-        I_ResumeSong(&mut state.i_sound);
+        resume_song(&mut state.i_sound);
         state.s_sound.mus_paused = false;
     }
 }
-pub fn S_UpdateSounds(state: &mut GameState, listener: Option<MobjId>) {
-    I_UpdateSound(&mut state.i_sound);
+pub fn update_sounds(state: &mut GameState, listener: Option<MobjId>) {
+    update_sound(&mut state.i_sound);
     for cnum in 0..state.s_sound.snd_channels {
         let c = state.s_sound.channels[cnum as usize];
         let Some(sfxinfo) = c.sfxinfo else {
             continue;
         };
-        if !I_SoundIsPlaying(&mut state.i_sound, c.handle) {
-            S_StopChannel(state, cnum);
+        if !sound_is_playing(&mut state.i_sound, c.handle) {
+            stop_channel(state, cnum);
             continue;
         }
         let (has_link, link_volume) = {
@@ -349,75 +348,75 @@ pub fn S_UpdateSounds(state: &mut GameState, listener: Option<MobjId>) {
             (sfx.link.is_some(), sfx.volume)
         };
         // A linked sound too quiet to hear is stopped outright; audible ones
-        // get their volume from S_AdjustSoundParams below.
-        if has_link && state.s_sound.snd_SfxVolume + link_volume < 1 {
-            S_StopChannel(state, cnum);
+        // get their volume from adjust_sound_params below.
+        if has_link && state.s_sound.snd_sfx_volume + link_volume < 1 {
+            stop_channel(state, cnum);
             continue;
         }
         if c.origin != SoundOrigin::None
             && SoundOrigin::Mobj(listener.expect("positional sound needs a listener")) != c.origin
         {
             let listener = listener.unwrap();
-            match S_AdjustSoundParams(state, listener, c.origin) {
-                None => S_StopChannel(state, cnum),
+            match adjust_sound_params(state, listener, c.origin) {
+                None => stop_channel(state, cnum),
                 Some((volume, sep)) => {
-                    I_UpdateSoundParams(&mut state.i_sound, c.handle, volume, sep);
+                    update_sound_params(&mut state.i_sound, c.handle, volume, sep);
                 }
             }
         }
     }
 }
-pub fn S_SetMusicVolume(state: &mut GameState, volume: i32) {
+pub fn s_set_music_volume(state: &mut GameState, volume: i32) {
     if !(0..=127).contains(&volume) {
-        I_Error(&format!("Attempt to set music volume at {}", volume));
+        error(&format!("Attempt to set music volume at {}", volume));
     }
-    I_SetMusicVolume(&mut state.i_sound, volume);
+    i_set_music_volume(&mut state.i_sound, volume);
 }
-pub fn S_SetSfxVolume(state: &mut GameState, volume: i32) {
+pub fn set_sfx_volume(state: &mut GameState, volume: i32) {
     if !(0..=127).contains(&volume) {
-        I_Error(&format!("Attempt to set sfx volume at {}", volume));
+        error(&format!("Attempt to set sfx volume at {}", volume));
     }
-    state.s_sound.snd_SfxVolume = volume;
+    state.s_sound.snd_sfx_volume = volume;
 }
-pub fn S_StartMusic(state: &mut GameState, m_id: i32) {
-    S_ChangeMusic(state, m_id, false);
+pub fn start_music(state: &mut GameState, m_id: i32) {
+    change_music(state, m_id, false);
 }
-pub fn S_ChangeMusic(state: &mut GameState, mut musicnum: i32, looping: bool) {
-    if musicnum == MusicName::mus_intro as i32
-        && (state.i_sound.snd_musicdevice == snddevice_t::SNDDEVICE_ADLIB as i32
-            || state.i_sound.snd_musicdevice == snddevice_t::SNDDEVICE_SB as i32)
+pub fn change_music(state: &mut GameState, mut musicnum: i32, looping: bool) {
+    if musicnum == MusicName::Intro as i32
+        && (state.i_sound.snd_musicdevice == SndDevice::Adlib as i32
+            || state.i_sound.snd_musicdevice == SndDevice::Sb as i32)
     {
-        musicnum = MusicName::mus_introa as i32;
+        musicnum = MusicName::Introa as i32;
     }
-    if musicnum <= MusicName::mus_None as i32 || musicnum >= NUMMUSIC {
-        I_Error(&format!("Bad music number {}", musicnum));
+    if musicnum <= MusicName::MusNone as i32 || musicnum >= NUMMUSIC {
+        error(&format!("Bad music number {}", musicnum));
     }
     if state.s_sound.mus_playing == Some(musicnum) {
         return;
     }
-    S_StopMusic(state);
+    stop_music(state);
     let music_index = musicnum as usize;
-    if state.sounds.S_music[music_index].lumpnum == 0 {
-        let namebuf = format!("d_{}", state.sounds.S_music[music_index].name.as_str());
-        state.sounds.S_music[music_index].lumpnum = W_GetNumForName(&mut state.w_wad, &namebuf);
+    if state.sounds.s_music[music_index].lumpnum == 0 {
+        let namebuf = format!("d_{}", state.sounds.s_music[music_index].name.as_str());
+        state.sounds.s_music[music_index].lumpnum = get_num_for_name(&mut state.w_wad, &namebuf);
     }
-    let lumpnum = state.sounds.S_music[music_index].lumpnum;
-    let lumplen = W_LumpLength(&mut state.w_wad, lumpnum as u32) as usize;
-    let data = W_LumpBytes(state, lumpnum);
-    let handle = I_RegisterSong(&mut state.i_sound, &data[..lumplen]);
-    state.sounds.S_music[music_index].handle = handle;
-    I_PlaySong(&mut state.i_sound, handle, looping);
+    let lumpnum = state.sounds.s_music[music_index].lumpnum;
+    let lumplen = lump_length(&mut state.w_wad, lumpnum as u32) as usize;
+    let data = lump_bytes(state, lumpnum);
+    let handle = register_song(&mut state.i_sound, &data[..lumplen]);
+    state.sounds.s_music[music_index].handle = handle;
+    play_song(&mut state.i_sound, handle, looping);
     state.s_sound.mus_playing = Some(musicnum);
 }
-pub fn S_StopMusic(state: &mut GameState) {
+pub fn stop_music(state: &mut GameState) {
     if let Some(musicnum) = state.s_sound.mus_playing {
         if state.s_sound.mus_paused {
-            I_ResumeSong(&mut state.i_sound);
+            resume_song(&mut state.i_sound);
         }
-        I_StopSong(&mut state.i_sound);
-        let music = &state.sounds.S_music[musicnum as usize];
-        I_UnRegisterSong(&mut state.i_sound, music.handle);
-        W_ReleaseLumpNum(&mut state.w_wad, music.lumpnum);
+        stop_song(&mut state.i_sound);
+        let music = &state.sounds.s_music[musicnum as usize];
+        un_register_song(&mut state.i_sound, music.handle);
+        release_lump_num(&mut state.w_wad, music.lumpnum);
         state.s_sound.mus_playing = None;
     }
 }

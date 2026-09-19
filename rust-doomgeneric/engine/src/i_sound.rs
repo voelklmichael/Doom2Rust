@@ -1,73 +1,73 @@
-use crate::m_argv::M_CheckParm;
-use crate::m_config::M_BindVariable_int;
-use crate::m_config::M_BindVariable_string;
+use crate::m_argv::check_parm;
+use crate::m_config::bind_variable_int;
+use crate::m_config::bind_variable_string;
 
 use crate::game_state::GameState;
-use crate::sounds::sfxinfo_t;
+use crate::sounds::SfxInfo;
 #[derive(Copy, Clone, PartialEq, Eq)]
-pub enum snddevice_t {
-    SNDDEVICE_NONE = 0,
-    SNDDEVICE_PCSPEAKER = 1,
-    SNDDEVICE_ADLIB = 2,
-    SNDDEVICE_SB = 3,
-    SNDDEVICE_PAS = 4,
-    SNDDEVICE_GUS = 5,
-    SNDDEVICE_WAVEBLASTER = 6,
-    SNDDEVICE_SOUNDCANVAS = 7,
-    SNDDEVICE_GENMIDI = 8,
-    SNDDEVICE_AWE32 = 9,
-    SNDDEVICE_CD = 10,
+pub enum SndDevice {
+    SnddeviceNone = 0,
+    Pcspeaker = 1,
+    Adlib = 2,
+    Sb = 3,
+    Pas = 4,
+    Gus = 5,
+    Waveblaster = 6,
+    Soundcanvas = 7,
+    Genmidi = 8,
+    Awe32 = 9,
+    Cd = 10,
 }
-fn snddevice_from_raw(v: i32) -> snddevice_t {
+fn snddevice_from_raw(v: i32) -> SndDevice {
     match v {
-        0 => snddevice_t::SNDDEVICE_NONE,
-        1 => snddevice_t::SNDDEVICE_PCSPEAKER,
-        2 => snddevice_t::SNDDEVICE_ADLIB,
-        3 => snddevice_t::SNDDEVICE_SB,
-        4 => snddevice_t::SNDDEVICE_PAS,
-        5 => snddevice_t::SNDDEVICE_GUS,
-        6 => snddevice_t::SNDDEVICE_WAVEBLASTER,
-        7 => snddevice_t::SNDDEVICE_SOUNDCANVAS,
-        8 => snddevice_t::SNDDEVICE_GENMIDI,
-        9 => snddevice_t::SNDDEVICE_AWE32,
-        10 => snddevice_t::SNDDEVICE_CD,
+        0 => SndDevice::SnddeviceNone,
+        1 => SndDevice::Pcspeaker,
+        2 => SndDevice::Adlib,
+        3 => SndDevice::Sb,
+        4 => SndDevice::Pas,
+        5 => SndDevice::Gus,
+        6 => SndDevice::Waveblaster,
+        7 => SndDevice::Soundcanvas,
+        8 => SndDevice::Genmidi,
+        9 => SndDevice::Awe32,
+        10 => SndDevice::Cd,
         n => panic!("invalid snddevice {n}"),
     }
 }
-type StartSoundFn = fn(&mut sfxinfo_t, i32, i32, i32) -> i32;
+type StartSoundFn = fn(&mut SfxInfo, i32, i32, i32) -> i32;
 #[derive(Copy, Clone)]
-pub struct sound_module_t {
-    pub sound_devices: &'static [snddevice_t],
-    pub Init: Option<fn(bool) -> bool>,
-    pub Shutdown: Option<fn()>,
-    pub GetSfxLumpNum: Option<fn(&mut sfxinfo_t) -> i32>,
-    pub Update: Option<fn()>,
-    pub UpdateSoundParams: Option<fn(i32, i32, i32)>,
-    pub StartSound: Option<StartSoundFn>,
-    pub StopSound: Option<fn(i32)>,
-    pub SoundIsPlaying: Option<fn(i32) -> bool>,
-    pub CacheSounds: Option<fn(&mut [sfxinfo_t])>,
+pub struct SoundModule {
+    pub sound_devices: &'static [SndDevice],
+    pub init: Option<fn(bool) -> bool>,
+    pub shutdown: Option<fn()>,
+    pub get_sfx_lump_num: Option<fn(&mut SfxInfo) -> i32>,
+    pub update: Option<fn()>,
+    pub update_sound_params: Option<fn(i32, i32, i32)>,
+    pub start_sound: Option<StartSoundFn>,
+    pub stop_sound: Option<fn(i32)>,
+    pub sound_is_playing: Option<fn(i32) -> bool>,
+    pub cache_sounds: Option<fn(&mut [SfxInfo])>,
 }
 #[derive(Copy, Clone)]
-pub struct music_module_t {
-    pub Init: Option<fn() -> bool>,
-    pub Shutdown: Option<fn()>,
-    pub SetMusicVolume: Option<fn(i32)>,
-    pub PauseMusic: Option<fn()>,
-    pub ResumeMusic: Option<fn()>,
-    pub RegisterSong: Option<fn(&[u8]) -> usize>,
-    pub UnRegisterSong: Option<fn(usize)>,
-    pub PlaySong: Option<fn(usize, bool)>,
-    pub StopSong: Option<fn()>,
-    pub Poll: Option<fn()>,
+pub struct MusicModule {
+    pub init: Option<fn() -> bool>,
+    pub shutdown: Option<fn()>,
+    pub set_music_volume: Option<fn(i32)>,
+    pub pause_music: Option<fn()>,
+    pub resume_music: Option<fn()>,
+    pub register_song: Option<fn(&[u8]) -> usize>,
+    pub un_register_song: Option<fn(usize)>,
+    pub play_song: Option<fn(usize, bool)>,
+    pub stop_song: Option<fn()>,
+    pub poll: Option<fn()>,
 }
 pub struct ISoundState {
     pub snd_samplerate: i32,
     pub snd_cachesize: i32,
     pub snd_maxslicetime_ms: i32,
     pub snd_musiccmd: Option<&'static str>,
-    sound_module: Option<&'static sound_module_t>,
-    music_module: Option<&'static music_module_t>,
+    sound_module: Option<&'static SoundModule>,
+    music_module: Option<&'static MusicModule>,
     pub snd_musicdevice: i32,
     pub snd_sfxdevice: i32,
     snd_sbport: i32,
@@ -81,10 +81,10 @@ pub struct ISoundState {
     // sound support is ever added.
     pub use_libsamplerate: i32,
     pub libsamplerate_scale: f32,
-    // Always a single None entry -- see InitSfxModule, which never finds a
+    // Always a single None entry -- see init_sfx_module, which never finds a
     // real backend and always leaves sound_module None. Kept as-is (dead
     // stub), same rationale as above, rather than deleted as a drive-by.
-    sound_modules: [Option<&'static sound_module_t>; 1],
+    sound_modules: [Option<&'static SoundModule>; 1],
 }
 
 impl Default for ISoundState {
@@ -102,8 +102,8 @@ impl ISoundState {
             snd_musiccmd: None,
             sound_module: None,
             music_module: None,
-            snd_musicdevice: snddevice_t::SNDDEVICE_SB as i32,
-            snd_sfxdevice: snddevice_t::SNDDEVICE_SB as i32,
+            snd_musicdevice: SndDevice::Sb as i32,
+            snd_sfxdevice: SndDevice::Sb as i32,
             snd_sbport: 0,
             snd_sbirq: 0,
             snd_sbdma: 0,
@@ -114,169 +114,171 @@ impl ISoundState {
         }
     }
 }
-fn SndDeviceInList(device: snddevice_t, list: &[snddevice_t]) -> bool {
+fn snd_device_in_list(device: SndDevice, list: &[SndDevice]) -> bool {
     list.contains(&device)
 }
-fn InitSfxModule(state: &mut ISoundState, use_sfx_prefix: bool) {
+fn init_sfx_module(state: &mut ISoundState, use_sfx_prefix: bool) {
     state.sound_module = None;
     for i in 0..state.sound_modules.len() {
         let Some(module) = state.sound_modules[i] else {
             break;
         };
-        if SndDeviceInList(
+        if snd_device_in_list(
             snddevice_from_raw(state.snd_sfxdevice),
             module.sound_devices,
-        ) && (module.Init.expect("non-null function pointer"))(use_sfx_prefix)
+        ) && (module.init.expect("non-null function pointer"))(use_sfx_prefix)
         {
             state.sound_module = Some(module);
             return;
         }
     }
 }
-pub fn I_InitSound(state: &mut GameState, use_sfx_prefix: bool) {
-    let nosound: bool = M_CheckParm(state, "-nosound") > 0;
-    let nosfx: bool = M_CheckParm(state, "-nosfx") > 0;
+pub fn init_sound(state: &mut GameState, use_sfx_prefix: bool) {
+    let nosound: bool = check_parm(state, "-nosound") > 0;
+    let nosfx: bool = check_parm(state, "-nosfx") > 0;
     if !nosound && !state.i_video.screensaver_mode && !nosfx {
-        InitSfxModule(&mut state.i_sound, use_sfx_prefix);
+        init_sfx_module(&mut state.i_sound, use_sfx_prefix);
     }
 }
-pub fn I_ShutdownSound(state: &mut ISoundState) {
+pub fn shutdown_sound(state: &mut ISoundState) {
     if let Some(module) = state.sound_module {
-        (module.Shutdown.expect("non-null function pointer"))();
+        (module.shutdown.expect("non-null function pointer"))();
     }
     if let Some(module) = state.music_module {
-        (module.Shutdown.expect("non-null function pointer"))();
+        (module.shutdown.expect("non-null function pointer"))();
     }
 }
-pub fn I_GetSfxLumpNum(state: &mut ISoundState, sfxinfo: &mut sfxinfo_t) -> i32 {
+pub fn get_sfx_lump_num(state: &mut ISoundState, sfxinfo: &mut SfxInfo) -> i32 {
     match state.sound_module {
-        Some(module) => (module.GetSfxLumpNum.expect("non-null function pointer"))(sfxinfo),
+        Some(module) => (module.get_sfx_lump_num.expect("non-null function pointer"))(sfxinfo),
         None => 0,
     }
 }
-pub fn I_UpdateSound(state: &mut ISoundState) {
+pub fn update_sound(state: &mut ISoundState) {
     if let Some(module) = state.sound_module {
-        (module.Update.expect("non-null function pointer"))();
+        (module.update.expect("non-null function pointer"))();
     }
     if let Some(module) = state.music_module {
-        if let Some(poll) = module.Poll {
+        if let Some(poll) = module.poll {
             poll();
         }
     }
 }
-fn CheckVolumeSeparation(vol: &mut i32, sep: &mut i32) {
+fn check_volume_separation(vol: &mut i32, sep: &mut i32) {
     *sep = (*sep).clamp(0, 254);
     *vol = (*vol).clamp(0, 127);
 }
-pub fn I_UpdateSoundParams(state: &mut ISoundState, channel: i32, mut vol: i32, mut sep: i32) {
+pub fn update_sound_params(state: &mut ISoundState, channel: i32, mut vol: i32, mut sep: i32) {
     if let Some(module) = state.sound_module {
-        CheckVolumeSeparation(&mut vol, &mut sep);
-        (module.UpdateSoundParams.expect("non-null function pointer"))(channel, vol, sep);
+        check_volume_separation(&mut vol, &mut sep);
+        (module
+            .update_sound_params
+            .expect("non-null function pointer"))(channel, vol, sep);
     }
 }
-pub fn I_StartSound(
+pub fn i_start_sound(
     state: &mut ISoundState,
-    sfxinfo: &mut sfxinfo_t,
+    sfxinfo: &mut SfxInfo,
     channel: i32,
     mut vol: i32,
     mut sep: i32,
 ) -> i32 {
     match state.sound_module {
         Some(module) => {
-            CheckVolumeSeparation(&mut vol, &mut sep);
-            (module.StartSound.expect("non-null function pointer"))(sfxinfo, channel, vol, sep)
+            check_volume_separation(&mut vol, &mut sep);
+            (module.start_sound.expect("non-null function pointer"))(sfxinfo, channel, vol, sep)
         }
         None => 0,
     }
 }
-pub fn I_StopSound(state: &mut ISoundState, channel: i32) {
+pub fn i_stop_sound(state: &mut ISoundState, channel: i32) {
     if let Some(module) = state.sound_module {
-        (module.StopSound.expect("non-null function pointer"))(channel);
+        (module.stop_sound.expect("non-null function pointer"))(channel);
     }
 }
-pub fn I_SoundIsPlaying(state: &mut ISoundState, channel: i32) -> bool {
+pub fn sound_is_playing(state: &mut ISoundState, channel: i32) -> bool {
     match state.sound_module {
-        Some(module) => (module.SoundIsPlaying.expect("non-null function pointer"))(channel),
+        Some(module) => (module.sound_is_playing.expect("non-null function pointer"))(channel),
         None => false,
     }
 }
-pub fn I_PrecacheSounds(state: &mut ISoundState, sounds: &mut [sfxinfo_t]) {
+pub fn precache_sounds(state: &mut ISoundState, sounds: &mut [SfxInfo]) {
     if let Some(module) = state.sound_module {
-        if let Some(cache_sounds) = module.CacheSounds {
+        if let Some(cache_sounds) = module.cache_sounds {
             cache_sounds(sounds);
         }
     }
 }
-pub fn I_InitMusic(state: &mut ISoundState) {
+pub fn init_music(state: &mut ISoundState) {
     if let Some(module) = state.music_module {
-        (module.Init.expect("non-null function pointer"))();
+        (module.init.expect("non-null function pointer"))();
     }
 }
-pub fn I_SetMusicVolume(state: &mut ISoundState, volume: i32) {
+pub fn i_set_music_volume(state: &mut ISoundState, volume: i32) {
     if let Some(module) = state.music_module {
-        (module.SetMusicVolume.expect("non-null function pointer"))(volume);
+        (module.set_music_volume.expect("non-null function pointer"))(volume);
     }
 }
-pub fn I_PauseSong(state: &mut ISoundState) {
+pub fn pause_song(state: &mut ISoundState) {
     if let Some(module) = state.music_module {
-        (module.PauseMusic.expect("non-null function pointer"))();
+        (module.pause_music.expect("non-null function pointer"))();
     }
 }
-pub fn I_ResumeSong(state: &mut ISoundState) {
+pub fn resume_song(state: &mut ISoundState) {
     if let Some(module) = state.music_module {
-        (module.ResumeMusic.expect("non-null function pointer"))();
+        (module.resume_music.expect("non-null function pointer"))();
     }
 }
-pub fn I_RegisterSong(state: &mut ISoundState, data: &[u8]) -> usize {
+pub fn register_song(state: &mut ISoundState, data: &[u8]) -> usize {
     match state.music_module {
-        Some(module) => (module.RegisterSong.expect("non-null function pointer"))(data),
+        Some(module) => (module.register_song.expect("non-null function pointer"))(data),
         None => 0,
     }
 }
-pub fn I_UnRegisterSong(state: &mut ISoundState, handle: usize) {
+pub fn un_register_song(state: &mut ISoundState, handle: usize) {
     if let Some(module) = state.music_module {
-        (module.UnRegisterSong.expect("non-null function pointer"))(handle);
+        (module.un_register_song.expect("non-null function pointer"))(handle);
     }
 }
-pub fn I_PlaySong(state: &mut ISoundState, handle: usize, looping: bool) {
+pub fn play_song(state: &mut ISoundState, handle: usize, looping: bool) {
     if let Some(module) = state.music_module {
-        (module.PlaySong.expect("non-null function pointer"))(handle, looping);
+        (module.play_song.expect("non-null function pointer"))(handle, looping);
     }
 }
-pub fn I_StopSong(state: &mut ISoundState) {
+pub fn stop_song(state: &mut ISoundState) {
     if let Some(module) = state.music_module {
-        (module.StopSong.expect("non-null function pointer"))();
+        (module.stop_song.expect("non-null function pointer"))();
     }
 }
-pub fn I_BindSoundVariables(state: &mut GameState) {
-    M_BindVariable_int(&mut state.m_config, "snd_musicdevice", |s| {
+pub fn bind_sound_variables(state: &mut GameState) {
+    bind_variable_int(&mut state.m_config, "snd_musicdevice", |s| {
         &mut s.i_sound.snd_musicdevice
     });
-    M_BindVariable_int(&mut state.m_config, "snd_sfxdevice", |s| {
+    bind_variable_int(&mut state.m_config, "snd_sfxdevice", |s| {
         &mut s.i_sound.snd_sfxdevice
     });
-    M_BindVariable_int(&mut state.m_config, "snd_sbport", |s| {
+    bind_variable_int(&mut state.m_config, "snd_sbport", |s| {
         &mut s.i_sound.snd_sbport
     });
-    M_BindVariable_int(&mut state.m_config, "snd_sbirq", |s| {
+    bind_variable_int(&mut state.m_config, "snd_sbirq", |s| {
         &mut s.i_sound.snd_sbirq
     });
-    M_BindVariable_int(&mut state.m_config, "snd_sbdma", |s| {
+    bind_variable_int(&mut state.m_config, "snd_sbdma", |s| {
         &mut s.i_sound.snd_sbdma
     });
-    M_BindVariable_int(&mut state.m_config, "snd_mport", |s| {
+    bind_variable_int(&mut state.m_config, "snd_mport", |s| {
         &mut s.i_sound.snd_mport
     });
-    M_BindVariable_int(&mut state.m_config, "snd_maxslicetime_ms", |s| {
+    bind_variable_int(&mut state.m_config, "snd_maxslicetime_ms", |s| {
         &mut s.i_sound.snd_maxslicetime_ms
     });
-    M_BindVariable_string(&mut state.m_config, "snd_musiccmd", |s| {
+    bind_variable_string(&mut state.m_config, "snd_musiccmd", |s| {
         &mut s.i_sound.snd_musiccmd
     });
-    M_BindVariable_int(&mut state.m_config, "snd_samplerate", |s| {
+    bind_variable_int(&mut state.m_config, "snd_samplerate", |s| {
         &mut s.i_sound.snd_samplerate
     });
-    M_BindVariable_int(&mut state.m_config, "snd_cachesize", |s| {
+    bind_variable_int(&mut state.m_config, "snd_cachesize", |s| {
         &mut s.i_sound.snd_cachesize
     });
 }

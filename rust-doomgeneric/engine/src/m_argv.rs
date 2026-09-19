@@ -18,7 +18,7 @@ impl MArgvState {
     }
 }
 
-pub fn M_CheckParmWithArgs(state: &mut GameState, check: &str, num_args: i32) -> i32 {
+pub fn check_parm_with_args(state: &mut GameState, check: &str, num_args: i32) -> i32 {
     for i in 1..state.m_argv.myargv.len() as i32 - num_args {
         if state.m_argv.myargv[i as usize].eq_ignore_ascii_case(check) {
             return i;
@@ -26,13 +26,13 @@ pub fn M_CheckParmWithArgs(state: &mut GameState, check: &str, num_args: i32) ->
     }
     0
 }
-pub fn M_ParmExists(state: &mut GameState, check: &str) -> bool {
-    M_CheckParm(state, check) != 0
+pub fn parm_exists(state: &mut GameState, check: &str) -> bool {
+    check_parm(state, check) != 0
 }
-pub fn M_CheckParm(state: &mut GameState, check: &str) -> i32 {
-    M_CheckParmWithArgs(state, check, 0)
+pub fn check_parm(state: &mut GameState, check: &str) -> i32 {
+    check_parm_with_args(state, check, 0)
 }
-pub fn M_ArgvAtoi(arg: &str) -> i32 {
+pub fn argv_atoi(arg: &str) -> i32 {
     let bytes = arg.as_bytes();
     let mut i = 0;
     while i < bytes.len() && bytes[i].is_ascii_whitespace() {

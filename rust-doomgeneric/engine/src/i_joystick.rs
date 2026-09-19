@@ -1,5 +1,5 @@
 use crate::game_state::GameState;
-use crate::m_config::M_BindVariable_int;
+use crate::m_config::bind_variable_int;
 
 pub const NUM_VIRTUAL_BUTTONS: i32 = 10;
 
@@ -37,34 +37,34 @@ impl IJoystickState {
     }
 }
 
-pub fn I_BindJoystickVariables(state: &mut GameState) {
-    M_BindVariable_int(&mut state.m_config, "use_joystick", |s| {
+pub fn bind_joystick_variables(state: &mut GameState) {
+    bind_variable_int(&mut state.m_config, "use_joystick", |s| {
         &mut s.i_joystick.usejoystick
     });
-    M_BindVariable_int(&mut state.m_config, "joystick_index", |s| {
+    bind_variable_int(&mut state.m_config, "joystick_index", |s| {
         &mut s.i_joystick.joystick_index
     });
-    M_BindVariable_int(&mut state.m_config, "joystick_x_axis", |s| {
+    bind_variable_int(&mut state.m_config, "joystick_x_axis", |s| {
         &mut s.i_joystick.joystick_x_axis
     });
-    M_BindVariable_int(&mut state.m_config, "joystick_y_axis", |s| {
+    bind_variable_int(&mut state.m_config, "joystick_y_axis", |s| {
         &mut s.i_joystick.joystick_y_axis
     });
-    M_BindVariable_int(&mut state.m_config, "joystick_strafe_axis", |s| {
+    bind_variable_int(&mut state.m_config, "joystick_strafe_axis", |s| {
         &mut s.i_joystick.joystick_strafe_axis
     });
-    M_BindVariable_int(&mut state.m_config, "joystick_x_invert", |s| {
+    bind_variable_int(&mut state.m_config, "joystick_x_invert", |s| {
         &mut s.i_joystick.joystick_x_invert
     });
-    M_BindVariable_int(&mut state.m_config, "joystick_y_invert", |s| {
+    bind_variable_int(&mut state.m_config, "joystick_y_invert", |s| {
         &mut s.i_joystick.joystick_y_invert
     });
-    M_BindVariable_int(&mut state.m_config, "joystick_strafe_invert", |s| {
+    bind_variable_int(&mut state.m_config, "joystick_strafe_invert", |s| {
         &mut s.i_joystick.joystick_strafe_invert
     });
     for i in 0..NUM_VIRTUAL_BUTTONS {
         let name = format!("joystick_physical_button{}", i);
-        M_BindVariable_int(&mut state.m_config, &name, move |s| {
+        bind_variable_int(&mut state.m_config, &name, move |s| {
             &mut s.i_joystick.joystick_physical_buttons[i as usize]
         });
     }
