@@ -112,5 +112,12 @@ The key mapping, hold tracking and the TCP path are unit tested; the terminal gl
   reset ~3 s until the green LED lights to enter download mode.
 - `wifi.env` is read by `build.rs` from the crate directory; edit that file, not `wifi.env.example`.
 
+**Quitting switches the board off.** In the game, Esc, Up (it wraps to Quit Game), Enter, `y` make the
+engine call the platform's `quit()`, which now writes the AXP2101 soft power-off bit through the BSP
+(`src/power.rs`). Tested with USB connected: the board switched off (its USB port disappeared and stayed
+away). To start it again press the power button or replug USB (the button is per M5's docs, not tried).
+If the write ever fails or the chip leaves the board powered, `quit()` falls back to spinning, which
+needs a reset.
+
 **Not done / ideas:** no on-device key-echo or connection indicator beyond serial logs; the performance
 work from milestone 2 still applies (about 3 fps).
