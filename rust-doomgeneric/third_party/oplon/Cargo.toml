@@ -1,0 +1,27 @@
+# Local copy of oplon 1.0.0 (MIT, (c) Sebastien Bechet), used only by the core_s3 firmware through
+# `[patch.crates-io]`. It differs from the crates.io release in one way: with the `iram` feature the
+# chip's hot loop is linked into internal RAM (`.rwtext`), see `render_frame` in `src/chip.rs`.
+[package]
+edition = "2021"
+rust-version = "1.70"
+name = "oplon"
+version = "1.0.0"
+description = "oplon 1.0.0 with an optional IRAM placement of the hot loop"
+license = "MIT"
+publish = false
+
+[features]
+default = []
+# Places the synthesis loop in internal RAM (esp-hal's `.rwtext`), out of the flash cache.
+iram = []
+
+[lib]
+name = "oplon"
+path = "src/lib.rs"
+
+[[example]]
+name = "opl2_hash"
+path = "examples/opl2_hash.rs"
+
+# Not a member of the host workspace: only core_s3 uses this copy (see the header).
+[workspace]
