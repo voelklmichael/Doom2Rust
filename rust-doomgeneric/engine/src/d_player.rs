@@ -1,6 +1,7 @@
 use crate::d_ticcmd::ticcmd_t;
 use crate::m_fixed::fixed_t;
 use crate::p_mobj::{pspdef_t, MobjId};
+use alloc::string::String;
 pub const NUMAMMO: i32 = 4;
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum ammotype_t {

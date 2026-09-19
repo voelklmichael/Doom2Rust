@@ -39,6 +39,8 @@ use crate::st_lib::StDigitSet;
 use crate::st_lib::{st_binicon_t, st_multicon_t, st_number_t, st_percent_t};
 use crate::stdint_types::byte;
 use crate::v_video::Screen;
+use alloc::string::ToString;
+use alloc::vec::Vec;
 
 use crate::tables::angle_t;
 use crate::tables::ANG180;

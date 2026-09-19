@@ -65,7 +65,7 @@ fn LoadGameSettings(state: &mut GameState, settings: &mut net_gamesettings_t) {
     state.g_game.timelimit = settings.timelimit;
     state.g_game.consoleplayer = settings.consoleplayer;
     if state.g_game.lowres_turn {
-        println!(
+        doom_println!(state.platform,
             "NOTE: Turning resolution is reduced; this is probably because there is a client recording a Vanilla demo."
         );
     }
@@ -151,14 +151,16 @@ pub fn D_CheckNetGame(state: &mut GameState) {
     SaveGameSettings(state, &mut settings);
     D_StartNetGame(state, &mut settings);
     LoadGameSettings(state, &mut settings);
-    println!(
+    doom_println!(
+        state.platform,
         "startskill {}  deathmatch: {}  startmap: {}  startepisode: {}",
         state.d_main.startskill as i32,
         state.g_game.deathmatch,
         state.d_main.startmap,
         state.d_main.startepisode,
     );
-    println!(
+    doom_println!(
+        state.platform,
         "player {} of {} ({} nodes)",
         state.g_game.consoleplayer + 1_i32,
         settings.num_players,
@@ -166,13 +168,20 @@ pub fn D_CheckNetGame(state: &mut GameState) {
     );
     if state.g_game.timelimit > 0_i32 && state.g_game.deathmatch != 0 {
         if state.g_game.timelimit == 20_i32 && M_CheckParm(state, "-avg") != 0 {
-            println!("Austin Virtual Gaming: Levels will end after 20 minutes");
+            doom_println!(
+                state.platform,
+                "Austin Virtual Gaming: Levels will end after 20 minutes"
+            );
         } else {
-            print!("Levels will end after {} minute", state.g_game.timelimit);
+            doom_print!(
+                state.platform,
+                "Levels will end after {} minute",
+                state.g_game.timelimit
+            );
             if state.g_game.timelimit > 1_i32 {
-                print!("s");
+                doom_print!(state.platform, "s");
             }
-            println!(".");
+            doom_println!(state.platform, ".");
         }
     }
 }

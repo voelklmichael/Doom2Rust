@@ -10,6 +10,8 @@ use crate::p_spec::P_FindSectorFromLineTag;
 use crate::p_tick::P_AddThinker;
 use crate::p_tick::ThinkerKind;
 use crate::p_tick::ThinkerPayload;
+use alloc::boxed::Box;
+use alloc::vec::Vec;
 
 #[derive(Copy, Clone)]
 pub struct fireflicker_t {

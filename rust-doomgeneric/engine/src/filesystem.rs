@@ -1,3 +1,5 @@
+use alloc::string::String;
+use alloc::vec::Vec;
 /// Handle to a file opened through a [`DoomFileSystem`]. Only meaningful to
 /// the filesystem that returned it, and only until it is passed to `close`.
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
@@ -48,6 +50,8 @@ pub(crate) use mem::MemFileSystem;
 #[cfg(test)]
 mod mem {
     use super::{DoomFileSystem, FileId};
+    use alloc::string::{String, ToString};
+    use alloc::vec::Vec;
     use std::collections::BTreeMap;
 
     /// In-memory filesystem for tests: no disk access, and directories are
@@ -127,34 +131,5 @@ mod tests {
         assert_eq!(read_file(&mut fs, "missing.dsg"), None);
         // The slot from the first read was released and is reused.
         assert_eq!(fs.open("a.dsg"), Some(FileId(0)));
-    }
-
-    /// The engine reaches the host's files only through `DoomFileSystem`, so
-    /// that it can eventually build without `std`. Keep it that way.
-    #[test]
-    fn engine_sources_do_not_use_std_fs_or_io() {
-        let banned = [["std", "::fs"].concat(), ["std", "::io"].concat()];
-        let src = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("src");
-        for entry in std::fs::read_dir(src).unwrap() {
-            let path = entry.unwrap().path();
-            if path.extension().is_none_or(|e| e != "rs") || path.ends_with("filesystem.rs") {
-                continue;
-            }
-            let text = std::fs::read_to_string(&path).unwrap();
-            for (n, line) in text.lines().enumerate() {
-                if line.trim_start().starts_with("//") {
-                    continue;
-                }
-                for b in &banned {
-                    assert!(
-                        !line.contains(b.as_str()),
-                        "{}:{}: {}",
-                        path.display(),
-                        n + 1,
-                        b
-                    );
-                }
-            }
-        }
     }
 }

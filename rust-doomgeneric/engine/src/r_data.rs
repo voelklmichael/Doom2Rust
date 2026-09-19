@@ -4,6 +4,8 @@ use crate::i_system::I_ConsoleStdout;
 use crate::i_system::I_Error;
 use crate::m_fixed::fixed_t;
 use crate::m_fixed::FRACBITS;
+use alloc::boxed::Box;
+use alloc::vec::Vec;
 
 use crate::p_mobj::thinker_t;
 
@@ -245,7 +247,8 @@ pub fn R_GenerateLookup(state: &mut GameState, texnum: i32) {
     x = 0_i32;
     while x < texture_width {
         if patchcount[x as usize] == 0 {
-            println!(
+            doom_println!(
+                state.platform,
                 "R_GenerateLookup: column without a patch ({})",
                 state.r_data.textures[texnum as usize].name.as_str(),
             );
@@ -376,16 +379,16 @@ pub fn R_InitTextures(state: &mut GameState) {
     let temp3: i32 =
         (temp2 - temp1 + 63_i32) / 64_i32 + (state.r_data.numtextures + 63_i32) / 64_i32;
     if I_ConsoleStdout() {
-        print!("[");
+        doom_print!(state.platform, "[");
         i = 0_i32;
         while i < temp3 + 9_i32 {
-            print!(" ");
+            doom_print!(state.platform, " ");
             i += 1;
         }
-        print!("]");
+        doom_print!(state.platform, "]");
         i = 0_i32;
         while i < temp3 + 10_i32 {
-            print!("\x08");
+            doom_print!(state.platform, "\x08");
             i += 1;
         }
     }
@@ -394,7 +397,7 @@ pub fn R_InitTextures(state: &mut GameState) {
     i = 0_i32;
     while i < state.r_data.numtextures {
         if i & 63_i32 == 0 {
-            print!(".");
+            doom_print!(state.platform, ".");
         }
         if i == numtextures1 {
             current_maptex = maptex2.as_ref().unwrap();
@@ -511,7 +514,7 @@ pub fn R_InitSpriteLumps(state: &mut GameState) {
     i = 0_i32;
     while i < state.r_data.numspritelumps {
         if i & 63_i32 == 0 {
-            print!(".");
+            doom_print!(state.platform, ".");
         }
         // Only the fixed 8-byte patch_t header (width/height/leftoffset/
         // topoffset) is needed here -- decode those fields explicitly from
@@ -537,11 +540,11 @@ pub fn R_InitColormaps(state: &mut GameState) {
 }
 pub fn R_InitData(state: &mut GameState) {
     R_InitTextures(state);
-    print!(".");
+    doom_print!(state.platform, ".");
     R_InitFlats(state);
-    print!(".");
+    doom_print!(state.platform, ".");
     R_InitSpriteLumps(state);
-    print!(".");
+    doom_print!(state.platform, ".");
     R_InitColormaps(state);
 }
 pub fn R_FlatNumForName(state: &mut GameState, name: &str) -> i32 {

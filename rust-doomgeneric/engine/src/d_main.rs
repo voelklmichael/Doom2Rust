@@ -84,8 +84,9 @@ use crate::st_stuff::ST_Init;
 use crate::statdump::StatDump;
 use crate::v_video::Screen;
 use crate::v_video::V_CachePatchName;
+use alloc::string::String;
+use alloc::string::ToString;
 
-use crate::stdint_types::size_t;
 use crate::v_video::V_DrawMouseSpeedBox;
 use crate::v_video::V_DrawPatch;
 use crate::v_video::V_DrawPatchDirect;
@@ -341,7 +342,11 @@ pub fn D_Display(state: &mut GameState) {
         }
     }
     if state.g_game.testcontrols {
-        V_DrawMouseSpeedBox(&mut state.i_video, state.g_game.testcontrols_mousespeed);
+        V_DrawMouseSpeedBox(
+            &mut state.i_video,
+            &mut *state.platform,
+            state.g_game.testcontrols_mousespeed,
+        );
     }
     state.d_main.d_display_menuactivestate = state.m_menu.menuactive;
     state.d_main.d_display_viewactivestate = state.g_game.viewactive;
@@ -462,7 +467,7 @@ pub fn D_DoomLoop(state: &mut GameState) {
             || state.g_game.gameaction == GameAction::ga_playdemo
             || state.g_game.netgame)
     {
-        println!(
+        doom_println!(state.platform,
             " WARNING: You are playing using one of the Doom Classic\n IWAD files shipped with the Doom 3: BFG Edition. These are\n known to be incompatible with the regular IWAD files and\n may cause demos and network games to get out of sync."
         );
     }
@@ -588,9 +593,9 @@ fn SetMissionForPackName(state: &mut GameState, pack_name: &str) {
             return;
         }
     }
-    println!("Valid mission packs are:");
+    doom_println!(state.platform, "Valid mission packs are:");
     for pack in &PACKS {
-        println!("\t{}", pack.name);
+        doom_println!(state.platform, "\t{}", pack.name);
     }
     I_Error(&format!("Unknown mission pack name: {}", pack_name));
 }
@@ -639,8 +644,7 @@ pub fn D_IdentifyVersion(state: &mut GameState) {
         let p: i32 = M_CheckParmWithArgs(state, "-pack", 1_i32);
         if p > 0_i32 {
             let pack_name = state.m_argv.myargv[(p + 1_i32) as usize]
-                .to_str()
-                .unwrap()
+                .as_str()
                 .to_string();
             SetMissionForPackName(state, &pack_name);
         }
@@ -703,27 +707,8 @@ pub fn D_SetGameDescription(state: &mut GameState) {
     }
 }
 fn D_AddFile(state: &mut GameState, filename: &str) -> bool {
-    println!(" adding {}", filename);
+    doom_println!(state.platform, " adding {}", filename);
     W_AddFile(state, filename).is_some()
-}
-static COPYRIGHT_BANNERS: [&str; 3] = [
-    "===========================================================================\nATTENTION:  This version of DOOM has been modified.  If you would like to\nget a copy of the original game, call 1-800-IDGAMES or see the readme file.\n        You will not receive technical support for modified games.\n                      press enter to continue\n===========================================================================\n",
-    "===========================================================================\n                 Commercial product - do not distribute!\n         Please report software piracy to the SPA: 1-800-388-PIR8\n===========================================================================\n",
-    "===========================================================================\n                                Shareware!\n===========================================================================\n",
-];
-pub fn PrintDehackedBanners() {
-    let mut i: size_t;
-    i = 0 as size_t;
-    while i < COPYRIGHT_BANNERS.len() as size_t {
-        let deh_s_str: &str = COPYRIGHT_BANNERS[i];
-        if deh_s_str != COPYRIGHT_BANNERS[i] {
-            print!("{}", deh_s_str);
-            if !deh_s_str.ends_with('\n') {
-                println!();
-            }
-        }
-        i = i.wrapping_add(1);
-    }
 }
 fn InitGameVersion(state: &mut GameState) {
     let p: i32 = M_CheckParmWithArgs(state, "-gameversion", 1_i32);
@@ -737,13 +722,13 @@ fn InitGameVersion(state: &mut GameState) {
         if let Some(gv) = found {
             state.doomstat.gameversion = gv.version;
         } else {
-            println!("Supported game versions:");
+            doom_println!(state.platform, "Supported game versions:");
             for gv in &state.d_main.gameversions {
-                println!("\t{} ({})", gv.cmdline, gv.description);
+                doom_println!(state.platform, "\t{} ({})", gv.cmdline, gv.description);
             }
             I_Error(&format!(
                 "Unknown game version '{}'",
-                state.m_argv.myargv[(p + 1_i32) as usize].to_str().unwrap(),
+                state.m_argv.myargv[(p + 1_i32) as usize].as_str(),
             ));
         }
     } else if state.doomstat.gamemission as u32 == GameMission_t::pack_chex as i32 as u32 {
@@ -783,7 +768,8 @@ pub fn PrintGameVersion(state: &mut GameState) {
         .iter()
         .find(|gv| gv.version == state.doomstat.gameversion)
     {
-        println!(
+        doom_println!(
+            state.platform,
             "Emulating the behavior of the '{}' executable.",
             gv.description
         );
@@ -797,7 +783,7 @@ fn D_Endoom(state: &mut GameState) {
     {
         return;
     }
-    std::process::exit(0);
+    state.platform.quit();
 }
 fn D_QuitCheckDemoStatus(state: &mut GameState) {
     G_CheckDemoStatus(state);
@@ -811,7 +797,7 @@ pub fn D_DoomMain(state: &mut GameState) {
         Some(D_Endoom as fn(&mut GameState) -> ()),
         false,
     );
-    I_PrintBanner(&PACKAGE_STRING.as_str());
+    I_PrintBanner(&mut *state.platform, &PACKAGE_STRING.as_str());
     state.d_main.nomonsters = M_CheckParm(state, "-nomonsters") != 0;
     state.d_main.respawnparm = M_CheckParm(state, "-respawn") != 0;
     state.d_main.fastparm = M_CheckParm(state, "-fast") != 0;
@@ -823,9 +809,14 @@ pub fn D_DoomMain(state: &mut GameState) {
         state.g_game.deathmatch = 2_i32;
     }
     if state.d_main.devparm {
-        print!("{}", D_DEVSTR.as_str());
+        doom_print!(state.platform, "{}", D_DEVSTR.as_str());
     }
-    M_SetConfigDir(&mut state.m_config, &mut *state.fs, None);
+    M_SetConfigDir(
+        &mut state.m_config,
+        &mut *state.fs,
+        &mut *state.platform,
+        None,
+    );
     p = M_CheckParm(state, "-turbo");
     if p != 0 {
         let mut scale: i32 = 200_i32;
@@ -833,14 +824,14 @@ pub fn D_DoomMain(state: &mut GameState) {
             scale = M_ArgvAtoi(&state.m_argv.myargv[(p + 1_i32) as usize]);
         }
         scale = scale.clamp(10_i32, 400_i32);
-        println!("turbo scale: {}%", scale);
+        doom_println!(state.platform, "turbo scale: {}%", scale);
         state.g_game.forwardmove[0] = state.g_game.forwardmove[0] * scale / 100_i32;
         state.g_game.forwardmove[1] = state.g_game.forwardmove[1] * scale / 100_i32;
         state.g_game.sidemove[0] = state.g_game.sidemove[0] * scale / 100_i32;
         state.g_game.sidemove[1] = state.g_game.sidemove[1] * scale / 100_i32;
     }
-    println!("V_Init: allocate screens.");
-    println!("M_LoadDefaults: Load system defaults.");
+    doom_println!(state.platform, "V_Init: allocate screens.");
+    doom_println!(state.platform, "M_LoadDefaults: Load system defaults.");
     M_SetConfigFilenames(&mut state.m_config, "default.cfg", "doomgenericdoom.cfg");
     D_BindVariables(state);
     M_LoadDefaults(state);
@@ -867,14 +858,14 @@ pub fn D_DoomMain(state: &mut GameState) {
         );
     }
     state.doomstat.modifiedgame = false;
-    println!("W_Init: Init WADfiles.");
+    doom_println!(state.platform, "W_Init: Init WADfiles.");
     let iwadfile = state.d_main.iwadfile.clone();
     D_AddFile(state, &iwadfile);
     W_CheckCorrectIWAD(&mut state.w_wad, GameMission_t::doom);
     D_IdentifyVersion(state);
     InitGameVersion(state);
     if W_CheckNumForName(&mut state.w_wad, "dmenupic") >= 0_i32 {
-        println!("BFG Edition: Using workarounds as needed.");
+        doom_println!(state.platform, "BFG Edition: Using workarounds as needed.");
         state.d_main.bfgedition = true;
     }
     let modifiedgame = W_ParseCommandLine(state);
@@ -884,7 +875,7 @@ pub fn D_DoomMain(state: &mut GameState) {
         p = M_CheckParmWithArgs(state, "-timedemo", 1_i32);
     }
     if p != 0 {
-        let arg = state.m_argv.myargv[(p + 1_i32) as usize].to_str().unwrap();
+        let arg = state.m_argv.myargv[(p + 1_i32) as usize].as_str();
         if M_StringEndsWith(arg, ".lmp") {
             file = arg.to_string();
         } else {
@@ -897,7 +888,7 @@ pub fn D_DoomMain(state: &mut GameState) {
             let src_bytes = state.m_argv.myargv[(p + 1_i32) as usize].as_bytes();
             demolumpname = FixedCStr::from_bytes(src_bytes);
         }
-        println!("Playing demo {}.", file);
+        doom_println!(state.platform, "Playing demo {}.", file);
     }
     I_AtExit(
         &mut state.i_system,
@@ -909,6 +900,7 @@ pub fn D_DoomMain(state: &mut GameState) {
     state.d_main.savegamedir = M_GetSaveGameDir(
         &mut state.m_config,
         &mut *state.fs,
+        &mut *state.platform,
         D_SaveGameIWADName(state.doomstat.gamemission),
     );
     if state.doomstat.modifiedgame {
@@ -954,22 +946,21 @@ pub fn D_DoomMain(state: &mut GameState) {
     if W_CheckNumForName(&mut state.w_wad, "SS_START") >= 0_i32
         || W_CheckNumForName(&mut state.w_wad, "FF_END") >= 0_i32
     {
-        I_PrintDivider();
-        println!(
+        I_PrintDivider(&mut *state.platform);
+        doom_println!(state.platform,
             " WARNING: The loaded WAD file contains modified sprites or\n floor textures.  You may want to use the '-merge' command\n line option instead of '-file'."
         );
     }
-    I_PrintStartupBanner(state.doomstat.gamedescription);
-    PrintDehackedBanners();
+    I_PrintStartupBanner(&mut *state.platform, state.doomstat.gamedescription);
     if W_CheckNumForName(&mut state.w_wad, "FREEDOOM") >= 0_i32
         && W_CheckNumForName(&mut state.w_wad, "FREEDM") < 0_i32
     {
-        println!(
+        doom_println!(state.platform,
             " WARNING: You are playing using one of the Freedoom IWAD\n files, which might not work in this port. See this page\n for more information on how to play using Freedoom:\n   http://www.chocolate-doom.org/wiki/index.php/Freedoom"
         );
-        I_PrintDivider();
+        I_PrintDivider(&mut *state.platform);
     }
-    println!("I_Init: Setting up machine state.");
+    doom_println!(state.platform, "I_Init: Setting up machine state.");
     I_InitSound(state, true);
     I_InitMusic(&mut state.i_sound);
     D_ConnectNetGame(state);
@@ -1046,25 +1037,28 @@ pub fn D_DoomMain(state: &mut GameState) {
     } else {
         state.d_main.startloadgame = -1_i32;
     }
-    println!("M_Init: Init miscellaneous info.");
+    doom_println!(state.platform, "M_Init: Init miscellaneous info.");
     M_Init(state);
-    print!("R_Init: Init DOOM refresh daemon - ");
+    doom_print!(state.platform, "R_Init: Init DOOM refresh daemon - ");
     R_Init(state);
-    println!();
-    println!("P_Init: Init Playloop state.");
+    doom_println!(state.platform);
+    doom_println!(state.platform, "P_Init: Init Playloop state.");
     P_Init(state);
-    println!("S_Init: Setting up sound.");
+    doom_println!(state.platform, "S_Init: Setting up sound.");
     S_Init(
         state,
         state.s_sound.sfxVolume * 8_i32,
         state.s_sound.musicVolume * 8_i32,
     );
-    println!("D_CheckNetGame: Checking network game status.");
+    doom_println!(
+        state.platform,
+        "D_CheckNetGame: Checking network game status."
+    );
     D_CheckNetGame(state);
     PrintGameVersion(state);
-    println!("HU_Init: Setting up heads up display.");
+    doom_println!(state.platform, "HU_Init: Setting up heads up display.");
     HU_Init(state);
-    println!("ST_Init: Init status bar.");
+    doom_println!(state.platform, "ST_Init: Init status bar.");
     ST_Init(state);
     if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32
         && W_CheckNumForName(&mut state.w_wad, "map01") < 0_i32
@@ -1077,13 +1071,12 @@ pub fn D_DoomMain(state: &mut GameState) {
             Some(StatDump as fn(&mut GameState) -> ()),
             true,
         );
-        println!("External statistics registered.");
+        doom_println!(state.platform, "External statistics registered.");
     }
     p = M_CheckParmWithArgs(state, "-record", 1_i32);
     if p != 0 {
         let record_name = state.m_argv.myargv[(p + 1_i32) as usize]
-            .to_str()
-            .unwrap()
+            .as_str()
             .to_string();
         G_RecordDemo(state, &record_name);
         state.d_main.autostart = true;

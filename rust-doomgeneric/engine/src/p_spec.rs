@@ -8,6 +8,8 @@ use crate::m_argv::M_CheckParmWithArgs;
 use crate::m_fixed::fixed_t;
 use crate::m_misc::M_StrToInt;
 use crate::m_random::P_Random;
+use alloc::boxed::Box;
+use alloc::vec::Vec;
 
 use crate::p_ceilng::CeilingE;
 use crate::p_ceilng::EV_CeilingCrushStop;
@@ -1088,15 +1090,15 @@ fn DonutOverrun(state: &mut GameState) -> (fixed_t, i16) {
         let p: i32 = M_CheckParmWithArgs(state, "-donut", 2_i32);
         if p > 0_i32 {
             M_StrToInt(
-                state.m_argv.myargv[(p + 1_i32) as usize].to_str().unwrap(),
+                state.m_argv.myargv[(p + 1_i32) as usize].as_str(),
                 &mut state.p_spec.donut_overrun_tmp_s3_floorheight,
             );
             M_StrToInt(
-                state.m_argv.myargv[(p + 2_i32) as usize].to_str().unwrap(),
+                state.m_argv.myargv[(p + 2_i32) as usize].as_str(),
                 &mut state.p_spec.donut_overrun_tmp_s3_floorpic,
             );
             if state.p_spec.donut_overrun_tmp_s3_floorpic >= state.r_data.numflats {
-                eprintln!(
+                doom_eprintln!(state.platform,
                     "DonutOverrun: The second parameter for \"-donut\" switch should be greater than 0 and less than number of flats ({}). Using default value ({}) instead. ",
                     state.r_data.numflats,
                     DONUT_FLOORPIC_DEFAULT,
@@ -1125,7 +1127,7 @@ pub fn EV_DoDonut(state: &mut GameState, line: LineId) -> i32 {
         rtn = 1_i32;
         let first_line = state.p_setup.sector_mut(s1).lines[0];
         let Some(s2) = getNextSector(state, first_line, s1) else {
-            eprintln!(
+            doom_eprintln!(state.platform,
                 "EV_DoDonut: linedef had no second sidedef! Unexpected behavior may occur in Vanilla Doom. "
             );
             break;
@@ -1143,7 +1145,7 @@ pub fn EV_DoDonut(state: &mut GameState, line: LineId) -> i32 {
                     (s3.floorheight, s3.floorpic)
                 }
                 None => {
-                    eprintln!(
+                    doom_eprintln!(state.platform,
                         "EV_DoDonut: WARNING: emulating buffer overrun due to NULL back sector. Unexpected behavior may occur in Vanilla Doom."
                     );
                     DonutOverrun(state)

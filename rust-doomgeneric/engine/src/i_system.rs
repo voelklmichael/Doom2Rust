@@ -1,6 +1,8 @@
 use crate::game_state::GameState;
 use crate::m_argv::M_CheckParmWithArgs;
 use crate::m_misc::M_StrToInt;
+use crate::platform::DoomPlatform;
+use alloc::vec::Vec;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum DosMemDump {
@@ -56,22 +58,22 @@ pub fn I_AtExit(state: &mut ISystemState, func: atexit_func_t, run_on_error: boo
         .push(atexit_listentry_t { func, run_on_error });
 }
 pub fn I_Tactile() {}
-pub fn I_PrintBanner(msg: &str) {
+pub fn I_PrintBanner(platform: &mut dyn DoomPlatform, msg: &str) {
     let spaces = 35usize.saturating_sub(msg.len() / 2);
-    print!("{}", " ".repeat(spaces));
-    println!("{}", msg);
+    doom_print!(platform, "{}", " ".repeat(spaces));
+    doom_println!(platform, "{}", msg);
 }
-pub fn I_PrintDivider() {
-    println!("{}", "=".repeat(75));
+pub fn I_PrintDivider(platform: &mut dyn DoomPlatform) {
+    doom_println!(platform, "{}", "=".repeat(75));
 }
-pub fn I_PrintStartupBanner(gamedescription: &str) {
-    I_PrintDivider();
-    I_PrintBanner(gamedescription);
-    I_PrintDivider();
-    print!(
+pub fn I_PrintStartupBanner(platform: &mut dyn DoomPlatform, gamedescription: &str) {
+    I_PrintDivider(platform);
+    I_PrintBanner(platform, gamedescription);
+    I_PrintDivider(platform);
+    doom_print!(platform,
         " Doom Generic is free software, covered by the GNU General Public\n License.  There is NO warranty; not even for MERCHANTABILITY or FITNESS\n FOR A PARTICULAR PURPOSE. You are welcome to change and distribute\n copies under certain conditions. See the source for more information.\n"
     );
-    I_PrintDivider();
+    I_PrintDivider(platform);
 }
 pub fn I_ConsoleStdout() -> bool {
     false
@@ -155,7 +157,7 @@ pub fn I_GetMemoryValue(state: &mut GameState, offset: u32, size: i32) -> Option
                     {
                         break;
                     }
-                    M_StrToInt(state.m_argv.myargv[p as usize].to_str().unwrap(), &mut val);
+                    M_StrToInt(state.m_argv.myargv[p as usize].as_str(), &mut val);
                     let fresh0 = i;
                     i += 1;
                     state.i_system.mem_dump_custom[fresh0 as usize] = val as u8;

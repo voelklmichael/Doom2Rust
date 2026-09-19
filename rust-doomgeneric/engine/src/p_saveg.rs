@@ -34,6 +34,8 @@ use crate::p_tick::ThinkerKind;
 use crate::p_tick::ThinkerPayload;
 use crate::stdint_types::byte;
 use crate::tables::angle_t;
+use alloc::string::String;
+use alloc::vec::Vec;
 
 use crate::d_player::NUMAMMO;
 use crate::doomdef::MAXPLAYERS;
@@ -104,6 +106,16 @@ pub fn P_TempSaveGameFile(state: &mut GameState) -> String {
 pub fn P_SaveGameFile(state: &mut GameState, slot: i32) -> String {
     format!("{}doomsav{}.dsg", state.d_main.savegamedir, slot)
 }
+/// Prints the deferred "ran off the end of the file" diagnostic, if a
+/// `saveg_read8` hit one; call once when a load finishes or is abandoned.
+pub fn P_ReportSaveGameReadError(state: &mut GameState) {
+    if state.p_saveg.savegame_error {
+        doom_eprintln!(
+            state.platform,
+            "saveg_read8: Unexpected end of file while reading save game"
+        );
+    }
+}
 fn saveg_read8(state: &mut PSavegState) -> byte {
     match state.save_buffer.get(state.save_pos) {
         Some(&b) => {
@@ -111,10 +123,7 @@ fn saveg_read8(state: &mut PSavegState) -> byte {
             b
         }
         None => {
-            if !state.savegame_error {
-                eprintln!("saveg_read8: Unexpected end of file while reading save game");
-                state.savegame_error = true;
-            }
+            state.savegame_error = true;
             0
         }
     }
@@ -481,7 +490,7 @@ fn saveg_write_player_t(state: &mut PSavegState, str: &mut player_t) {
     saveg_writep(
         state,
         if str.message.is_some() {
-            std::ptr::dangling_mut::<::core::ffi::c_void>()
+            core::ptr::dangling_mut::<::core::ffi::c_void>()
         } else {
             ::core::ptr::null_mut()
         },

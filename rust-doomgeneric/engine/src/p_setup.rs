@@ -36,6 +36,7 @@ use crate::w_wad::W_LumpBytes;
 use crate::w_wad::W_LumpLength;
 use crate::w_wad::W_ReadLump;
 use crate::w_wad::W_ReleaseLumpNum;
+use alloc::vec::Vec;
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub struct SectorId(pub u32);
@@ -235,7 +236,7 @@ pub enum MapLump {
 }
 /// Bounds-checked little-endian reader over a map lump's raw bytes.
 struct LumpReader {
-    data: std::rc::Rc<[u8]>,
+    data: alloc::rc::Rc<[u8]>,
     pos: usize,
 }
 impl LumpReader {
@@ -635,9 +636,11 @@ fn PadRejectArray(state: &mut GameState, offset: usize, len: u32) {
     let pad_bytes = ::core::mem::size_of::<[u32; 4]>();
     let mut padvalue: u8 = 0;
     if len as usize > pad_bytes {
-        eprintln!(
+        doom_eprintln!(
+            state.platform,
             "PadRejectArray: REJECT lump too short to pad! ({} > {})",
-            len, pad_bytes as i32,
+            len,
+            pad_bytes as i32,
         );
         padvalue = if M_CheckParm(state, "-reject_pad_with_ff") != 0 {
             0xff

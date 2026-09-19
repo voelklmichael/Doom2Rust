@@ -1146,7 +1146,7 @@ fn SpechitOverrun(state: &mut GameState, ld: LineId) {
         if p > 0_i32 {
             let mut baseaddr: i32 = 0;
             M_StrToInt(
-                state.m_argv.myargv[(p + 1_i32) as usize].to_str().unwrap(),
+                state.m_argv.myargv[(p + 1_i32) as usize].as_str(),
                 &mut baseaddr,
             );
             state.p_map.baseaddr = baseaddr as u32;
@@ -1166,7 +1166,8 @@ fn SpechitOverrun(state: &mut GameState, ld: LineId) {
             state.p_map.nofit = addr != 0;
         }
         _ => {
-            eprintln!(
+            doom_eprintln!(
+                state.platform,
                 "SpechitOverrun: Warning: unable to emulatean overrun where numspechit={}",
                 state.p_map.numspechit,
             );

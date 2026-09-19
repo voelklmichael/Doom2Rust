@@ -46,6 +46,9 @@ use crate::m_fixed::FRACUNIT;
 use crate::m_menu::M_StartControlPanel;
 use crate::m_random::M_ClearRandom;
 use crate::m_random::P_Random;
+use alloc::string::String;
+use alloc::string::ToString;
+use alloc::vec::Vec;
 
 use crate::p_inter::maxammo;
 use crate::p_map::P_CheckPosition;
@@ -64,6 +67,7 @@ use crate::p_saveg::P_ArchiveThinkers;
 use crate::p_saveg::P_ArchiveWorld;
 use crate::p_saveg::P_ReadSaveGameEOF;
 use crate::p_saveg::P_ReadSaveGameHeader;
+use crate::p_saveg::P_ReportSaveGameReadError;
 use crate::p_saveg::P_SaveGameFile;
 use crate::p_saveg::P_TempSaveGameFile;
 use crate::p_saveg::P_UnArchivePlayers;
@@ -1375,6 +1379,7 @@ pub fn G_DoLoadGame(state: &mut GameState) {
     state.p_saveg.save_pos = 0;
     state.p_saveg.savegame_error = false;
     if !P_ReadSaveGameHeader(state) {
+        P_ReportSaveGameReadError(state);
         state.p_saveg.save_buffer = Vec::new();
         return;
     }
@@ -1391,8 +1396,10 @@ pub fn G_DoLoadGame(state: &mut GameState) {
     P_UnArchiveThinkers(state);
     P_UnArchiveSpecials(state);
     if !P_ReadSaveGameEOF(state) {
+        P_ReportSaveGameReadError(state);
         I_Error("Bad savegame");
     }
+    P_ReportSaveGameReadError(state);
     state.p_saveg.save_buffer = Vec::new();
     if state.r_main.setsizeneeded {
         R_ExecuteSetViewSize(state);
@@ -1422,7 +1429,7 @@ pub fn G_DoSaveGame(state: &mut GameState) {
     {
         I_Error("Savegame buffer overrun");
     }
-    let image = std::mem::take(&mut state.p_saveg.save_buffer);
+    let image = core::mem::take(&mut state.p_saveg.save_buffer);
     if !state.fs.write_file(&temp_savegame_file, &image) {
         let recovery_file = state.fs.temp_path("recovery.dsg");
         if !state.fs.write_file(&recovery_file, &image) {
@@ -1718,7 +1725,7 @@ pub fn G_DoPlayDemo(state: &mut GameState) {
     } else if demoversion == DOOM_191_VERSION {
         state.g_game.longtics = true;
     } else {
-        println!(
+        doom_println!(state.platform,
             "Demo is from a different game version!\n(read {}, should be {})\n\n*** You may need to upgrade your version of Doom to v1.9. ***\n    See: https://www.doomworld.com/classicdoom/info/patches.php\n    This appears to be {}.",
             demoversion,
             G_VanillaVersionCode(&mut state.doomstat),

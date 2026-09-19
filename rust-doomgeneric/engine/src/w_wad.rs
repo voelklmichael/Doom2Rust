@@ -6,6 +6,7 @@ use crate::fixed_cstr::FixedCStr;
 use crate::game_state::GameState;
 use crate::i_system::I_Error;
 use crate::m_misc::M_ExtractFileBase;
+use alloc::vec::Vec;
 
 use crate::filesystem::{DoomFileSystem, FileId};
 
@@ -37,7 +38,7 @@ pub struct lumpinfo_s {
     pub wad_file: FileId,
     pub position: i32,
     pub size: i32,
-    pub cache: Option<std::rc::Rc<[u8]>>,
+    pub cache: Option<alloc::rc::Rc<[u8]>>,
     pub next: Option<u32>,
 }
 pub type lumpinfo_t = lumpinfo_s;
@@ -79,7 +80,7 @@ pub fn W_AddFile(state: &mut GameState, filename: &str) -> Option<FileId> {
     let wad_file = match state.fs.open(filename) {
         Some(wad_file) => wad_file,
         None => {
-            println!(" couldn't open {}", filename);
+            doom_println!(state.platform, " couldn't open {}", filename);
             return None;
         }
     };
@@ -91,7 +92,7 @@ pub fn W_AddFile(state: &mut GameState, filename: &str) -> Option<FileId> {
             size: wad_length as i32,
             name: FixedCStr([0; 8]),
         };
-        M_ExtractFileBase(filename, &mut single.name);
+        M_ExtractFileBase(&mut *state.platform, filename, &mut single.name);
         vec![single]
     } else {
         let mut header_buf = [0u8; ::core::mem::size_of::<wadinfo_t>()];
@@ -192,12 +193,12 @@ pub fn W_ReadLump(state: &mut WWadState, fs: &dyn DoomFileSystem, lump: u32, des
         ));
     }
 }
-pub fn W_LumpBytes(state: &mut GameState, lumpnum: i32) -> std::rc::Rc<[u8]> {
+pub fn W_LumpBytes(state: &mut GameState, lumpnum: i32) -> alloc::rc::Rc<[u8]> {
     if lumpnum as u32 >= state.w_wad.numlumps {
         I_Error(&format!("W_CacheLumpNum: {} >= numlumps", lumpnum));
     }
     if let Some(cache) = state.w_wad.lumpinfo[lumpnum as usize].cache.as_ref() {
-        return std::rc::Rc::clone(cache);
+        return alloc::rc::Rc::clone(cache);
     }
     let lumplen = W_LumpLength(&mut state.w_wad, lumpnum as u32);
     // r_draw.rs's R_DrawColumn (and friends) reproduce vanilla's
@@ -218,11 +219,11 @@ pub fn W_LumpBytes(state: &mut GameState, lumpnum: i32) -> std::rc::Rc<[u8]> {
         lumpnum as u32,
         &mut buf[..lumplen as usize],
     );
-    let rc: std::rc::Rc<[u8]> = std::rc::Rc::from(buf);
-    state.w_wad.lumpinfo[lumpnum as usize].cache = Some(std::rc::Rc::clone(&rc));
+    let rc: alloc::rc::Rc<[u8]> = alloc::rc::Rc::from(buf);
+    state.w_wad.lumpinfo[lumpnum as usize].cache = Some(alloc::rc::Rc::clone(&rc));
     rc
 }
-pub fn W_LumpBytesName(state: &mut GameState, name: &str) -> std::rc::Rc<[u8]> {
+pub fn W_LumpBytesName(state: &mut GameState, name: &str) -> alloc::rc::Rc<[u8]> {
     let lumpnum = W_GetNumForName(&mut state.w_wad, name);
     W_LumpBytes(state, lumpnum)
 }

@@ -5,6 +5,7 @@ use crate::stdint_types::byte;
 use crate::v_video::Screen;
 use crate::v_video::V_DrawBlock;
 use crate::v_video::V_MarkRect;
+use alloc::vec::Vec;
 
 pub struct FWipeState {
     pub go: bool,
@@ -139,7 +140,7 @@ pub fn wipe_StartScreen(state: &mut GameState) -> i32 {
 }
 pub fn wipe_EndScreen(state: &mut GameState, x: i32, y_0: i32, width: i32, height: i32) -> i32 {
     state.f_wipe.wipe_scr_end = I_ReadScreen(state);
-    let wipe_scr_start = std::mem::take(&mut state.f_wipe.wipe_scr_start);
+    let wipe_scr_start = core::mem::take(&mut state.f_wipe.wipe_scr_start);
     V_DrawBlock(state, Screen::Video, x, y_0, width, height, &wipe_scr_start);
     state.f_wipe.wipe_scr_start = wipe_scr_start;
     0_i32

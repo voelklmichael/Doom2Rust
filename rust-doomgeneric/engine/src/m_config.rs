@@ -2,7 +2,11 @@ use crate::filesystem::DoomFileSystem;
 use crate::game_state::GameState;
 use crate::i_system::I_Error;
 use crate::m_argv::M_CheckParmWithArgs;
-use std::rc::Rc;
+use crate::platform::DoomPlatform;
+use alloc::rc::Rc;
+use alloc::string::String;
+use alloc::string::ToString;
+use alloc::vec::Vec;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum DefaultType {
@@ -1262,24 +1266,31 @@ pub fn M_LoadDefaults(state: &mut GameState) {
     i = M_CheckParmWithArgs(state, "-config", 1_i32);
     if i != 0 {
         state.m_config.doom_defaults.filename = state.m_argv.myargv[(i + 1_i32) as usize]
-            .to_str()
-            .unwrap()
+            .as_str()
             .to_string();
-        println!("\tdefault file: {}", state.m_config.doom_defaults.filename,);
+        doom_println!(
+            state.platform,
+            "\tdefault file: {}",
+            state.m_config.doom_defaults.filename,
+        );
     } else {
         state.m_config.doom_defaults.filename = format!(
             "{}{}",
             state.m_config.configdir, state.m_config.default_main_config
         );
     }
-    println!("saving config in {}", state.m_config.doom_defaults.filename);
+    doom_println!(
+        state.platform,
+        "saving config in {}",
+        state.m_config.doom_defaults.filename
+    );
     i = M_CheckParmWithArgs(state, "-extraconfig", 1_i32);
     if i != 0 {
         state.m_config.extra_defaults.filename = state.m_argv.myargv[(i + 1_i32) as usize]
-            .to_str()
-            .unwrap()
+            .as_str()
             .to_string();
-        println!(
+        doom_println!(
+            state.platform,
             "        extra configuration file: {}",
             state.m_config.extra_defaults.filename,
         );
@@ -1335,20 +1346,30 @@ pub fn M_BindVariable_string(
 fn GetDefaultConfigDir() -> String {
     ".".to_string()
 }
-pub fn M_SetConfigDir(state: &mut MConfigState, fs: &mut dyn DoomFileSystem, dir: Option<&str>) {
+pub fn M_SetConfigDir(
+    state: &mut MConfigState,
+    fs: &mut dyn DoomFileSystem,
+    platform: &mut dyn DoomPlatform,
+    dir: Option<&str>,
+) {
     if let Some(dir) = dir {
         state.configdir = dir.to_string();
     } else {
         state.configdir = GetDefaultConfigDir();
     }
     if !state.configdir.is_empty() {
-        println!("Using {} for configuration and saves", state.configdir);
+        doom_println!(
+            platform,
+            "Using {} for configuration and saves",
+            state.configdir
+        );
     }
     fs.create_dir(&state.configdir);
 }
 pub fn M_GetSaveGameDir(
     state: &mut MConfigState,
     fs: &mut dyn DoomFileSystem,
+    platform: &mut dyn DoomPlatform,
     _iwadname: &'static str,
 ) -> String {
     let savegamedir;
@@ -1357,7 +1378,7 @@ pub fn M_GetSaveGameDir(
     } else {
         savegamedir = format!("{}{}.savegame/", state.configdir, DIR_SEPARATOR_S);
         fs.create_dir(&savegamedir);
-        println!("Using {} for savegames", savegamedir);
+        doom_println!(platform, "Using {} for savegames", savegamedir);
     }
     savegamedir
 }

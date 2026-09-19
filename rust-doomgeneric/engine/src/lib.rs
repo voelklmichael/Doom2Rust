@@ -1,7 +1,16 @@
+#![no_std]
 #![deny(unsafe_code)]
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
+
+#[macro_use]
+extern crate alloc;
+#[cfg(test)]
+extern crate std;
+
+#[macro_use]
+mod console;
 
 pub(crate) mod am_map;
 pub(crate) mod d_event;

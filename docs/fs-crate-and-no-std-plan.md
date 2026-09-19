@@ -2,9 +2,8 @@
 
 ## Goal
 
-Long term: the `engine` crate (`rust_doomgeneric`) builds as `#![no_std]` with
-`extern crate alloc`. Everything that needs an operating system lives in the host
-crates. Two boundaries already exist or are being added:
+The `engine` crate (`rust_doomgeneric`) builds as `#![no_std]` with `extern crate alloc`.
+Everything that needs an operating system lives in the host crates, behind two traits:
 
 | Concern | Engine-side trait | Implementation |
 |---|---|---|
@@ -19,9 +18,8 @@ to `init_game_state(platform, fs)`, and the engine stores them as
 
 ## Track A: filesystem extraction (DONE, PRs #478-#481)
 
-Status: all four phases landed as a stack. `engine/src` no longer contains `std::fs` or
-`std::io`; a unit test (`filesystem::tests::engine_sources_do_not_use_std_fs_or_io`) fails
-if either comes back.
+Status: all four phases landed (main at 62dfccd). `engine/src` no longer contains `std::fs` or
+`std::io`; since Track B the compiler enforces that (`#![no_std]`).
 
 Where the engine touched the filesystem before this track:
 
@@ -55,41 +53,44 @@ Verification for each phase: build, `cargo test --release`, and the demo1/2/3 mo
 hash oracle (byte-identical to main). Phase 3 additionally compares a written `.dsg`
 byte-for-byte against main's.
 
-## Track B: `no_std` + `alloc` (future)
+## Track B: `no_std` + `alloc` (DONE)
 
-Not started. Blockers left after Track A, in rough order of effort:
+The engine crate is `#![no_std]` with `extern crate alloc`. Everything the engine needs
+from the OS goes through the two traits above. What it took:
 
-1. **Console output**: ~60 `println!`/`eprintln!`/`print!` sites (`d_main`, `d_net`,
-   `i_video`, `m_config`, `i_system`, ...). Route them through the platform trait
-   (for example `DoomPlatform::log(&str)`) or a `doom_print!` macro that calls it.
-2. **Process exit**: `std::process::exit(0)` in `D_Endoom` (`d_main.rs`). Becomes a
-   platform call (`DoomPlatform::quit`) or a returned "quit requested" state that the
-   host loop checks.
-3. **Command line**: `m_argv` stores `Vec<std::ffi::CString>` and takes `&CStr`. Both
-   types exist in `alloc::ffi` / `core::ffi`, so this is an import swap, but a plain
-   `Vec<String>` would be simpler still. `doomgeneric_Create` builds the `CString`s.
-4. **Mechanical `std` -> `core`/`alloc` swaps**: `std::rc::Rc` (9 uses, `m_config`,
-   `w_wad`) -> `alloc::rc::Rc`; `std::borrow::Cow` (`fixed_cstr`) -> `alloc::borrow`;
-   `std::mem::take` and `std::ptr::dangling_mut` -> `core::`; `Vec`, `String`, `Box`,
-   `format!` and `vec!` need explicit `alloc` imports (there is no prelude for them).
-5. **`sha1_smol`**: switch to `default-features = false` (it is `no_std` capable).
-6. **Panics and allocation**: `I_Error` is a bare `panic!`, which is fine in `no_std`;
-   the host binary supplies the panic handler and global allocator (on `x11` these are
-   already `std`'s). Test-only code (`MemFileSystem`, `p_tick` tests) stays behind
-   `#[cfg(test)]`, where `std` is available.
-7. **Floating point**: the `f64::abs` in `v_video.rs` is in `core` on the current
-   toolchain; check for any `f32`/`f64` method that is `std`-only (`sqrt`, `powi`, ...)
-   when the switch is made. A grep today finds none.
-8. **Enforcement**: flip `#![no_std]` on, add `extern crate alloc;`, and let the compiler
-   list what is left. A CI grep for `std::` in `engine/src` outside `#[cfg(test)]`
-   keeps it from regressing in the meantime.
+1. **Console output**: `DoomPlatform` gained `print` / `eprint`. The engine's ~85
+   `println!`/`print!`/`eprintln!`/`eprint!` sites became `doom_println!` etc.
+   (`engine/src/console.rs`), which format into a `String` and call the platform. Helpers
+   that had no `state` in scope (`I_PrintBanner`, `M_ExtractFileBase`, `I_GetPaletteIndex`,
+   `M_SetConfigDir`, ...) take a `&mut dyn DoomPlatform`. `saveg_read8` (narrow
+   `PSavegState`) only sets its error flag now, and `G_DoLoadGame` prints the message.
+2. **Process exit**: `D_Endoom` calls `DoomPlatform::quit()` (`-> !`) instead of
+   `std::process::exit`.
+3. **Command line**: `myargv` is `Vec<String>` (was `Vec<CString>`); `M_ArgvAtoi` takes `&str`.
+4. **`std` -> `core`/`alloc`**: `Rc`, `Cow`, `mem::take`, `ptr::dangling_mut`; `Vec`, `String`,
+   `Box`, `ToString`, `ToOwned` are imported from `alloc` where used (`vec!`/`format!` come
+   from `#[macro_use] extern crate alloc`).
+5. **`sha1_smol`**: nothing to do; it is `no_std` with no default features.
+6. **Panics and allocation**: `I_Error` is a bare `panic!`, which is fine in `no_std`. The host
+   binary supplies the panic handler and global allocator (on `x11` they are `std`'s).
+7. **Floating point**: the few `f64` operations in the engine (`abs`) are in `core`.
+8. **Tests** link `std` (`#[cfg(test)] extern crate std;`) for `MemFileSystem`'s `BTreeMap` and
+   nothing else; non-test code cannot name `std`, so the compiler now enforces what the
+   Track A source-scanning test used to.
 
-Related open question: `platform.init` passes a `*mut pixel_t` framebuffer pointer
-across the trait boundary. That is `no_std`-compatible but is the last raw pointer in
-the engine's public surface; it could become a `&'static mut [pixel_t]` later.
+Deviations from vanilla output: none on stdout; `PrintDehackedBanners` (dead code whose
+condition compared a string to itself) was deleted, and the "Unexpected end of file" savegame
+diagnostic is printed once when a load finishes rather than at the first bad read.
+
+Not verified: the crate has only been compiled for the host target (`x86_64-unknown-linux-gnu`,
+where `#![no_std]` is still enforced by the compiler). Building it for a bare-metal or wasm
+target would additionally need a global allocator and panic handler in that target's binary.
 
 ## Later ideas (not part of either track)
 
+- `platform.init` passes a `*mut pixel_t` framebuffer pointer across the trait boundary. That
+  is `no_std`-compatible but is the last raw pointer in the engine's public surface; it could
+  become a `&'static mut [pixel_t]` later.
 - Config-file persistence (`M_LoadDefaults` / `M_SaveDefaults`) is stubbed out. If it is
   ever implemented, it should use `DoomFileSystem` (read whole file, write whole file)
   rather than adding new trait methods.

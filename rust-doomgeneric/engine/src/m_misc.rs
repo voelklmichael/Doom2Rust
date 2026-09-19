@@ -1,4 +1,6 @@
 use crate::fixed_cstr::FixedCStr;
+use crate::platform::DoomPlatform;
+use alloc::string::String;
 fn m_strtoint_digit_prefix(s: &str, radix: u32) -> Option<i32> {
     let end = s.find(|c: char| !c.is_digit(radix)).unwrap_or(s.len());
     if end == 0 {
@@ -31,7 +33,7 @@ pub fn M_StrToInt(str: &str, result: &mut i32) -> bool {
         None => false,
     }
 }
-pub fn M_ExtractFileBase(path: &str, dest: &mut FixedCStr<8>) {
+pub fn M_ExtractFileBase(platform: &mut dyn DoomPlatform, path: &str, dest: &mut FixedCStr<8>) {
     let filename = match path.rfind('/') {
         Some(idx) => &path[idx + 1..],
         None => path,
@@ -44,9 +46,11 @@ pub fn M_ExtractFileBase(path: &str, dest: &mut FixedCStr<8>) {
     for (length, &b) in base.as_bytes().iter().enumerate() {
         if length >= 8 {
             let truncated = String::from_utf8_lossy(&buf[..length.min(8)]);
-            println!(
+            doom_println!(
+                platform,
                 "Warning: Truncated '{}' lump name to '{:.8}'.",
-                filename, truncated
+                filename,
+                truncated
             );
             break;
         }

@@ -2,6 +2,9 @@ use crate::d_event::{event_t, GameScreenState};
 use crate::d_main::D_StartTitle;
 use crate::dstrings::{doom1_endmsg, doom2_endmsg};
 use crate::i_system::I_Error;
+use alloc::string::String;
+use alloc::string::ToString;
+use alloc::vec::Vec;
 
 use crate::w_wad::W_LumpBytesName;
 
@@ -998,7 +1001,10 @@ pub fn M_Episode(state: &mut GameState, mut choice: i32) {
         return;
     }
     if state.doomstat.gamemode as u32 == GameMode_t::registered as i32 as u32 && choice > 2_i32 {
-        eprintln!("M_Episode: 4th episode requires UltimateDOOM");
+        doom_eprintln!(
+            state.platform,
+            "M_Episode: 4th episode requires UltimateDOOM"
+        );
         choice = 0_i32;
     }
     state.m_menu.epi = choice;

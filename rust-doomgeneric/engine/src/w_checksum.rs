@@ -1,5 +1,6 @@
 use crate::filesystem::FileId;
 use crate::game_state::GameState;
+use alloc::vec::Vec;
 use sha1_smol::Sha1;
 pub type sha1_digest_t = [u8; 20];
 pub struct WChecksumState {

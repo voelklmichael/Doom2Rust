@@ -13,6 +13,9 @@ use crate::p_setup::LineId;
 use crate::p_setup::SectorId;
 use crate::p_spec::P_FindLowestCeilingSurrounding;
 use crate::p_spec::P_FindSectorFromLineTag;
+use alloc::boxed::Box;
+use alloc::string::ToString;
+use alloc::vec::Vec;
 
 use crate::p_tick::P_AddThinker;
 use crate::p_tick::P_RemoveThinker;
@@ -432,7 +435,10 @@ pub fn EV_VerticalDoor(state: &mut GameState, line: LineId, thing: MobjId) {
                         if thing_player.is_none() {
                             return;
                         }
-                        eprintln!("EV_VerticalDoor: Tried to close something that wasn't a door.");
+                        doom_eprintln!(
+                            state.platform,
+                            "EV_VerticalDoor: Tried to close something that wasn't a door."
+                        );
                         let ceiling_id = state.p_tick.ceiling_payload(id);
                         state
                             .p_ceilng
@@ -444,7 +450,10 @@ pub fn EV_VerticalDoor(state: &mut GameState, line: LineId, thing: MobjId) {
                         if thing_player.is_none() {
                             return;
                         }
-                        eprintln!("EV_VerticalDoor: Tried to close something that wasn't a door.");
+                        doom_eprintln!(
+                            state.platform,
+                            "EV_VerticalDoor: Tried to close something that wasn't a door."
+                        );
                         let floor_id = state.p_tick.floor_payload(id);
                         state
                             .p_spec
