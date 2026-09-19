@@ -18,7 +18,8 @@ Chart: `loc_and_unsafe_over_time.png`. Raw per-commit data: `loc_unsafe_series.c
 | Commits / merged PRs | 765 commits, 358 merged PRs (highest PR number #501) |
 | Rust churn | +378k / -320k lines of `.rs` over the history (net +58k) |
 | Unsafe lines | 48,430 (c2rust output) -> **199** today (198 in the X11 window glue, 1 in firmware); **0 in the engine** |
-| Speed vs. C | ~1,000 fps vs ~1,150 fps on `-timedemo demo1`: Rust is about 13 % slower |
+| Safety net | 15 engine tests, incl. a **regression oracle** that hashes the whole simulation and rendered frames (section 7). Runs as `cargo test --release` in about 10 s |
+| Speed vs. C | Was ~13 % slower than C on `-timedemo demo1`. Profiling found two per-frame copies (PR #502); now about 6.5 G user cycles vs 10 to 11 G for C, i.e. **faster than C on this benchmark** (section 5) |
 
 ## 2. How long did I work?
 
@@ -134,16 +135,34 @@ Things worth a sentence in the post:
 
 Measured:
 
-- **Performance:** `-timedemo demo1`, 5,026 gametics, identical tic count in every build,
-  Xvfb, this machine, 2 to 3 runs each. C (`-Os`, the Makefile default): 152 to 159 realtics
-  (1,106 to 1,157 fps). C (`-O2`): 151 to 154 (1,142 to 1,165 fps). Rust `--release`: 176 to
-  177 (~994 to 999 fps). Roughly 13 % slower than C; the resolution is coarse (1/35 s).
+- **Performance:** `-timedemo demo1`, 5,026 gametics (identical in every build), shareware
+  `Doom1.WAD`, Xvfb, `perf stat` counting user-space cycles, pinned to one core. Two sessions
+  measured independently and agree:
+
+  | Build | User cycles | Instructions | L1 load misses |
+  |---|---|---|---|
+  | Rust before #502 | 12.5 to 13.0 G | 29.5 to 31.3 G | 0.51 to 0.53 G |
+  | Rust after #502 | 6.4 to 6.8 G | 19.4 G | 0.13 G |
+  | C (GCC 13 `-O2`) | 9.6 to 11.1 G | 30.1 G | 0.14 G |
+
+  The first measurement (wall clock, `realtics`) said Rust was ~13 % slower than C. Profiling
+  showed why: `i_video::finish_update` allocated and zeroed a fresh ~1 MB `Vec` per frame,
+  converted into it, repacked it into the screen buffer, and the X11 platform then copied it
+  once more. The C code converts straight into the screen buffer. PR #502 removed both copies;
+  the frame conversion itself was never the problem. It only shows in an uncapped timedemo:
+  in real play at 35 fps the copies cost about 0.1 ms per frame. The framebuffer golden hashes
+  passed unchanged, which is what showed the change did not alter a pixel (section 7).
+  Noise is large on this machine: the same C binary measured 9.6 G and 15.6 G cycles at an
+  identical instruction count when other work was running, so use the best of several runs.
+  Not explained by `-C target-cpu=native` or fat LTO (no reliable gain). Still open: the other
+  session's profile has `draw_column` ~30 % slower than C's `R_DrawColumn` (not re-checked).
 - **Binary size** (`size`, text section): C `-O2` 409 KB, Rust 1,266 KB (Rust statically
   includes std; the C binary links libc and X11 dynamically). Not a fair comparison; mention
   only with that caveat.
-- **Correctness safety net:** 38 tests including golden hashes of the full simulation state of
-  demo1 to demo3, frame hashes of a scripted demo, save/load round trips and a sweep of every
-  line special. Every one of the 11 idiomatic-review PRs kept the goldens byte-identical.
+- **Correctness safety net:** 15 engine tests (38 in the whole workspace), 4 of them driven by a
+  real WAD: golden hashes of the simulation state of demo1 to demo3, frame hashes of a scripted
+  tour, save/load round trips and a sweep of every line special. Every one of the 11
+  idiomatic-review PRs kept the goldens byte-identical. See section 7.
 - **Effort proxies:** 25,822 assistant turns and ~25,000 tool calls (v5, including 24
   subagent transcripts); 13.5 M output tokens; 10.7 B cache-read tokens (that is mostly the
   same context being re-read, not text I wrote). v4 for comparison: 12.0k turns, 6.6 M output
@@ -217,7 +236,7 @@ codebase" to be what makes it work.** The reasons come from this project:
 
 **What I would do if asked to try the direct route today:** build the oracle first (the C game
 instrumented to print a hash of the world state per tic for the three demos, which this project
-only added later), then translate module by module in dependency order with the Rust and C
+only added later and that is now a test, see section 7), then translate module by module in dependency order with the Rust and C
 linked together, so the game runs after every step, and accept a module only when the hashes
 match. With that harness I think a current model could plausibly do it without c2rust. Without
 it I would expect the same failure as in spring, whichever model is used.
@@ -231,7 +250,70 @@ project used ~13.5 M output tokens and ~25,000 tool calls in v5 alone.
 or `r_bsp.c`), give a model the oracle and the neighbouring C, and see whether it produces a
 hash-identical translation. That would turn this section from opinion into a measurement.
 
-## 7. What was done, at a high level
+## 7. The oracle: the most important thing in the repo
+
+An oracle is a program that answers one question: "does it still behave exactly as before?"
+Everything else in this project (358 PRs, ~700k lines of churn, 985 globals and 48k unsafe lines
+removed) was only trustworthy because of it. If the post has one lesson about working with an AI
+on a big refactor, it is this one.
+
+**What it is.** The real engine, run headlessly (no window, a virtual clock, input only from a
+script) against a WAD. It hashes:
+
+- the full simulation state (every map object, every sector, the player, both random-number
+  indices, the tic counter) at the end of demo1, demo2 and demo3;
+- frames rendered during a scripted tour of the menus, automap, intermission and finale, plus
+  frames of the visual effects (invisibility fuzz, player-colour translation, low detail);
+- a save/load round trip, and that two saves of the same state are byte-identical;
+- a 6,000-tic trace of the cast-call finale;
+- a sweep of every line special, on every side, for every actor type, restoring a save
+  between cases.
+
+The expected values live in `engine/golden/regression.txt` (1,502 lines). Doom is
+deterministic, so a hash that stays the same means nothing observable changed, and one wrong
+pixel or one extra random-number call changes it.
+
+**It is a test now.** It started as an external script kept outside the repo: patch
+`G_CheckDemoStatus` to print a hash, build into a separate directory, run under Xvfb, and diff
+the output of `main` against the branch. That was the rule for every gameplay-touching PR in the
+later tracks. On Sep 19, after the script stopped building when the engine went `no_std`, it
+became part of the repo: PR #484, the first of the 11 idiomatic-review PRs, added
+`engine/src/regression_tests.rs`. Now it is `cargo test --release`: 4 WAD-driven tests among 15,
+about 10 s. Anyone, and any AI, can run it, and `UPDATE_GOLDEN=1` re-records the values when a
+behaviour change is intended and understood.
+
+**Why it matters.**
+
+- **It replaces trust with a check.** Each PR either reproduces the hashes or it does not. Nobody
+  has to read 700k lines of diff to believe the result.
+- **It gives an AI a fast, objective feedback loop.** Run the tests, get yes or no in seconds.
+  That is what lets an agent work autonomously for hours and land dozens of PRs without
+  supervision, and it is what was missing in the January to April attempts (section 6).
+- **It makes risky rewrites possible.** The technique: record the expected values against the OLD
+  code first, then require the new code to reproduce them; then mutation-check the test by
+  breaking one arm on purpose and confirming the test fails. That check found that the first
+  version of the line-special sweep was too weak (the movers never ticked).
+- **It shows performance work is safe too.** PR #502 removed two frame copies from the display
+  path (section 5). The framebuffer hashes passing unchanged is the evidence that the speed-up
+  did not change a single pixel.
+
+**Limits, worth saying in the post.**
+
+1. **The expected values were recorded from this Rust engine, not from the original C.** The
+   oracle guards against drift from the c2rust-derived baseline; it does not prove equality with
+   C. I have not checked the values against the C game. The stronger version is a per-tic hash
+   dumped from an instrumented C build and compared directly. Not done.
+2. **Without a WAD it passes vacuously.** If neither `$DOOM_IWAD` nor `~/Downloads/doom1.wad`
+   exists, the tests print "skipping" and succeed, so a green run on a machine without the WAD
+   verifies nothing.
+3. **Which WAD.** The `doom1.wad` on this machine is a 14 MB, 36-map PWAD, while the shareware
+   IWAD is a different 4.2 MB file (`Doom1.WAD`). The test's comments call it "shareware". Worth
+   confirming which one the post should say.
+4. **Coverage is what the demos and scripts reach.** Not covered: sound and music (nothing
+   audible is produced or hashed, see section 11), Doom II-only paths (`G_WorldDone`), most other
+   levels and games, and the X11 and ESP32 front ends themselves (the tests use a null platform).
+
+## 8. What was done, at a high level
 
 **Before the pivot (three failed approaches, see section 6).** After the January to April direct-translation attempts, Aug 14 to Sep 5 went into two more: write our own C parser, then a
 transpiler with a type checker and a Rust code generator for `linuxdoom-1.10` (54.6k lines,
@@ -263,17 +345,17 @@ crate, `deny(unsafe_code)` switched on.
 **Step 7: platform boundary (Sep 12 and 19).** `DoomPlatform` trait, `x11` and `fs` crates,
 engine `no_std` + `alloc`.
 
-**Step 8: idiomatic review with a real test net (Sep 19).** Eleven stacked PRs: golden tests
-first, then literals, bool, loops, naming, clippy lints, `bitflags`, `Option` lookups.
+**Step 8: idiomatic review with a real test net (Sep 19).** Eleven stacked PRs: the oracle
+became a test first (section 7), then literals, bool, loops, naming, clippy lints, `bitflags`, `Option` lookups.
 
 **Step 9: hardware (Sep 19).** The unchanged engine crate on an ESP32-S3: display bring-up,
 demos, Wi-Fi keyboard input, own DMA display driver, its own Wi-Fi access point, power-off on quit.
 
-Why it worked: one small PR per step, a verification bar that never moved (no new warnings,
+Why it worked: the oracle (section 7), one small PR per step, a verification bar that never moved (no new warnings,
 identical simulation hashes on demo1 to demo3), and stacked PRs merged in order. The standing
 "continue until done" authorization let phases chain without waiting.
 
-## 8. What did not work
+## 9. What did not work
 
 - **Direct AI translation (January to April).** Fine for small independent files, a complete
   failure on the codebase as a whole (see section 6 for why I think so).
@@ -314,7 +396,7 @@ identical simulation hashes on demo1 to demo3), and stacked PRs merged in order.
   `while` loops, `Result`-based error handling, and the remaining `c_char` uses in cheat
   sequences and dead code.
 
-## 9. Method notes and caveats
+## 10. Method notes and caveats
 
 - **Time:** first-to-last event timestamps in the transcripts, union across all sessions and
   subagents, gaps over 10 minutes ignored. With a 5-minute gap the v5 total is 82 h, with 30
@@ -332,16 +414,33 @@ identical simulation hashes on demo1 to demo3), and stacked PRs merged in order.
   counting those too gives 1,639 at the start, which overstates the number of globals. It does
   not count `&'static mut` types. The per-commit CSV column `static_mut` also matches `&'static mut`, so
   it shows 5 to 7 at the end; ignore those.
-- **Performance:** one machine, Xvfb, 2 to 3 runs; `realtics` resolution is 1/35 s. The C copy was
-  built in a scratch directory (`-Os` and `-O2`), nothing in the repo was touched.
+- **Performance:** two sessions measured independently with `perf stat -e
+  cycles:u,instructions:u,L1-dcache-load-misses:u`, pinned to one core with `taskset`, on the same
+  machine (loaded by other sessions, so cycle counts vary by up to ~50 % between runs; the
+  instruction counts do not). Ranges in section 5 are best-of-several. The C game was built with
+  GCC 13 `-O2` in a scratch directory; nothing in the repo was touched. The first, wall-clock
+  numbers (1/35 s `realtics`) are superseded.
 - **Human-time estimates** in section 2 are my judgment.
 
-## 10. Open items (help needed)
+## 11. Open items (help needed)
 
-- **Verify the speedup: how to measure?** Current numbers are one machine, 2 to 3 runs of
-  `-timedemo demo1` under Xvfb (`realtics` resolution is 1/35 s) for Rust vs C, and the
-  ESP32 `[perf]` serial lines for the board. Needs an agreed, repeatable method before the
-  post quotes a speedup.
-- **Sound.**
-- **Testing of more games and levels.** So far only the shareware IWAD (E1) and its demos are
-  covered by the golden tests.
+- **Speed-up: how to measure.** There is now a repeatable method: `perf stat` on user cycles,
+  pinned core, `-timedemo demo1`, `Doom1.WAD`, C built with GCC `-O2`, compare absolute cycles
+  rather than percentages. It needs `kernel.perf_event_paranoid <= 2` (set to 1 here; it resets on
+  reboot). Still to decide: how many runs, and whether to quote best-of-N given the noise. The
+  ESP32 figures (2.9 to 29 fps) come from the `[perf]` serial lines and have not been re-verified.
+- **Sound and music.** Neither exists yet, on X11 or on the ESP32.
+  - `DoomPlatform` has no audio hooks. `i_sound.rs` has slots for a sound module and a music
+    module that are always empty (its own comments call the module table a stub).
+  - The game logic in `s_sound.rs` (channels, volume, stereo separation) runs, but nothing is
+    output.
+  - Music would need more than effects: MUS lumps converted to MIDI and a synthesizer. There is
+    no MUS-to-MIDI module in the tree.
+  - A separate worktree, `sound-sfx-linux`, has one unmerged commit, "Play sound effects: built-in
+    mixer, DoomPlatform audio hooks, Linux sink". I have only read its title, not the code, and
+    the title does not mention music.
+  - The oracle does not cover audio. One option is to hash the mixed sample stream per tic, so
+    sound work gets the same kind of check as the rest.
+- **Testing of more games and levels.** The oracle's coverage is what its demos and scripts
+  reach, on one WAD file (see the WAD caveat in section 7). Other games (Doom II, Ultimate Doom,
+  Final Doom), most levels and mods are untested.
