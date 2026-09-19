@@ -67,10 +67,12 @@ harmless.
 - **WAD:** `assets/doom1.wad` (gitignored, shareware, see `assets/README.md`) is embedded with
   `include_bytes!` and served by `EmbeddedWad`, a read-only `DoomFileSystem`. The default espflash
   partition table is too small, so `partitions.csv` gives the app 8 MB (image is 5.2 MB).
-- **Video:** the engine runs with `-scaling 1`; `CoreS3Platform::draw_frame` copies the middle
-  320 columns of its 640-wide rows to the LCD through the BSP's `blit_pixels`, centred vertically.
+- **Video:** originally the engine ran with `-scaling 1` and `draw_frame` copied the middle 320 columns
+  of its 640-wide rows through the BSP's `blit_pixels`. That path is gone: the engine now hands over its
+  320x200 indexed screen (`draw_indexed_frame`) and core 0 sends it to the LCD by DMA (`lcd.rs`, see
+  `SPEEDUP.md`).
 
-**Measured** (`[perf]` line on serial every 2 s): about 3 fps. The LCD transfer is about 58 ms per
+**Measured at the time of milestone 2** (before the work in `SPEEDUP.md`, which reaches about 20 fps): about 3 fps. The LCD transfer is about 58 ms per
 frame (the theoretical minimum at 40 MHz is about 26 ms); everything else is 200-280 ms per frame,
 so the engine side dominates. The split inside that is not measured yet. Candidates: the engine
 allocating and filling a ~512 KB frame in PSRAM every frame, all game data living in PSRAM, and the
@@ -93,7 +95,8 @@ The key mapping, hold tracking and the TCP path are unit tested; the terminal gl
 
 **Firmware layout**
 - Core 0: esp-rtos scheduler plus an embassy executor running the Wi-Fi station (reconnects on drop),
-  DHCP and the TCP command server (`net.rs`). One controller at a time; keep-alive frees the slot if it
+  DHCP and the TCP command server (`net.rs`), and the LCD pump that streams finished frames by DMA
+  (`lcd.rs`). One controller at a time; keep-alive frees the slot if it
   vanishes, and any keys it held are released on disconnect.
 - Core 1: builds and runs the game (`main.rs`), reading events through `get_key()`.
 - The controller address is shown on the LCD while starting and stays in the top black bar.

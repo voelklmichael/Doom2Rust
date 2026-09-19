@@ -1,33 +1,23 @@
 //! `DoomPlatform` for the CoreS3: LCD output, a millisecond clock and the serial console.
-//! Input arrives over Wi-Fi (see `net`).
+//! Input arrives over Wi-Fi (see `net`); the LCD is driven from core 0 (see `lcd`).
 
-use core_s3::{bsp::CoreS3Display, ui::Label};
 use core_s3_protocol::Command;
-use embedded_graphics::{
-    pixelcolor::Rgb565,
-    prelude::*,
-    primitives::Rectangle,
-};
+use embedded_graphics::{pixelcolor::Rgb565, prelude::*};
 use esp_hal::{delay::Delay, time::Instant};
 use esp_println::print;
-use heapless::String;
 use rust_doomgeneric::DoomPlatform;
 
-use crate::net;
-
-/// DOOM's native resolution. The engine is run with `-scaling 1`, which draws the 320x200
-/// image centred in each (wider) row of its frame buffer.
-const DOOM_WIDTH: usize = 320;
-const DOOM_HEIGHT: usize = 200;
-/// The LCD is 320x240, so the picture is centred vertically with black bars above and below.
-const LCD_TOP: i32 = 20;
+use crate::{lcd, net};
 
 /// Frame timing, printed over serial every couple of seconds.
 #[derive(Default)]
 struct FrameStats {
     window_start_us: u64,
     frames: u32,
-    blit_us: u64,
+    /// Time spent in `draw_indexed_frame`: waiting for the LCD, then converting the frame.
+    present_us: u64,
+    /// The part of that spent waiting for the previous frame to finish going out.
+    waiting_us: u64,
 }
 
 const STATS_WINDOW_US: u64 = 2_000_000;
@@ -36,18 +26,39 @@ fn now_us() -> u64 {
     Instant::now().duration_since_epoch().as_micros() as u64
 }
 
+#[derive(Default)]
 pub struct CoreS3Platform {
-    display: CoreS3Display,
-    /// Pixels per row of the engine's frame buffer, set in `init`.
-    stride: usize,
-    /// Shown in the top black bar, which the game never draws over (e.g. the controller address).
-    status: String<40>,
     stats: FrameStats,
 }
 
 impl CoreS3Platform {
-    pub fn new(display: CoreS3Display, status: String<40>) -> Self {
-        Self { display, stride: DOOM_WIDTH, status, stats: FrameStats::default() }
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Adds one frame to the timing and prints it once per window. `start` is when the frame came
+    /// in, `acquired` when the LCD buffer became free, `end` when the frame was handed over.
+    fn record(&mut self, start: u64, acquired: u64, end: u64) {
+        let stats = &mut self.stats;
+        if stats.window_start_us == 0 {
+            stats.window_start_us = start;
+        }
+        stats.frames += 1;
+        stats.present_us += end - start;
+        stats.waiting_us += acquired - start;
+        let elapsed = end - stats.window_start_us;
+        if elapsed >= STATS_WINDOW_US {
+            let frames = u64::from(stats.frames);
+            print!(
+                "[perf] {}.{} fps, present {} us/frame (waiting for the LCD {}), everything else {} us/frame\n",
+                frames * 1_000_000 / elapsed,
+                frames * 10_000_000 / elapsed % 10,
+                stats.present_us / frames,
+                stats.waiting_us / frames,
+                (elapsed - stats.present_us) / frames,
+            );
+            *stats = FrameStats { window_start_us: end, ..FrameStats::default() };
+        }
     }
 }
 
@@ -85,46 +96,23 @@ fn doom_key(command: Command) -> u8 {
 }
 
 impl DoomPlatform for CoreS3Platform {
-    fn init(&mut self, resx: i32, _resy: i32) {
-        self.stride = resx as usize;
-        self.display.clear(Rgb565::BLACK).expect("clear LCD");
-        Label { text: &self.status, top_left: Point::new(4, 5), color: Rgb565::CYAN }
-            .draw(&mut self.display)
-            .expect("draw status");
+    fn init(&mut self, _resx: i32, _resy: i32) {}
+
+    fn draw_frame(&mut self, _frame: &[u32]) {
+        // Only reached if `draw_indexed_frame` declines, which it never does.
     }
 
-    fn draw_frame(&mut self, frame: &[u32]) {
-        let x0 = (self.stride - DOOM_WIDTH) / 2;
-        let pixels = frame
-            .chunks_exact(self.stride)
-            .take(DOOM_HEIGHT)
-            .flat_map(|row| row[x0..x0 + DOOM_WIDTH].iter().map(|&p| to_rgb565(p)));
-        let area = Rectangle::new(
-            Point::new(0, LCD_TOP),
-            Size::new(DOOM_WIDTH as u32, DOOM_HEIGHT as u32),
-        );
-        let blit_start = now_us();
-        self.display.blit_pixels(&area, pixels).expect("blit frame");
-        let now = now_us();
-
-        let stats = &mut self.stats;
-        if stats.window_start_us == 0 {
-            stats.window_start_us = blit_start;
-        }
-        stats.frames += 1;
-        stats.blit_us += now - blit_start;
-        let elapsed = now - stats.window_start_us;
-        if elapsed >= STATS_WINDOW_US {
-            let frames = u64::from(stats.frames);
-            print!(
-                "[perf] {}.{} fps, blit {} us/frame, everything else {} us/frame\n",
-                frames * 1_000_000 / elapsed,
-                frames * 10_000_000 / elapsed % 10,
-                stats.blit_us / frames,
-                (elapsed - stats.blit_us) / frames,
-            );
-            *stats = FrameStats { window_start_us: now, ..FrameStats::default() };
-        }
+    fn draw_indexed_frame(&mut self, indices: &[u8], palette: &[u32; 256]) -> bool {
+        // The engine's 320x200 screen goes through a colour table into a buffer that core 0 then
+        // streams to the LCD by DMA, while the engine moves on to the next frame.
+        let start = now_us();
+        let colors = palette.map(|pixel| to_rgb565(pixel).into_storage().to_be_bytes());
+        let mut frame = lcd::acquire_frame();
+        let acquired = now_us();
+        frame.fill(indices, &colors);
+        lcd::submit_frame(frame);
+        self.record(start, acquired, now_us());
+        true
     }
 
     fn sleep_ms(&mut self, ms: u32) {

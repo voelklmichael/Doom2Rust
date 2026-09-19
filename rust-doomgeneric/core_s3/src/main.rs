@@ -1,21 +1,23 @@
 //! DOOM on the M5Stack CoreS3 Lite, controlled over Wi-Fi.
 //!
-//! Core 0 runs the esp-rtos scheduler, Wi-Fi and the TCP command server (`net`). Core 1 builds and
-//! runs the game. Before the game starts, core 0 shows the board's IP address on the LCD so the
-//! controller (`core_s3_sender`) knows where to connect.
+//! Core 0 runs the esp-rtos scheduler, Wi-Fi, the TCP command server (`net`) and the LCD (`lcd`).
+//! Core 1 builds and runs the game. Before the game starts, core 0 shows the board's IP address on
+//! the LCD so the controller (`core_s3_sender`) knows where to connect.
 #![no_std]
 #![no_main]
 
 extern crate alloc;
 
+mod lcd;
 mod net;
 mod platform;
 mod wad_fs;
 
 use alloc::{boxed::Box, string::ToString, vec::Vec};
-use core::fmt::Write as _;
+use core::{cell::RefCell, fmt::Write as _};
 use core_s3::{
-    bsp::{CoreS3Display, CoreS3DisplayParts, CoreS3DisplayResources},
+    bsp, devices,
+    display::{BusConfig, Display, DisplayGeometry, PanelConfig},
     ui::Label,
     CoreS3,
 };
@@ -26,10 +28,14 @@ use embedded_graphics::{pixelcolor::Rgb565, prelude::*};
 use esp_backtrace as _;
 use esp_hal::{
     clock::CpuClock,
+    delay::Delay,
+    gpio::{Level, Output, OutputConfig},
+    i2c::master::{Config as I2cConfig, I2c},
     interrupt::software::SoftwareInterruptControl,
-    psram::{PsramConfig, PsramMode},
+    psram::{PsramConfig, PsramMode, SpiRamFreq},
     ram,
     system::Stack,
+    time::Rate,
     timer::timg::TimerGroup,
 };
 use esp_println::println;
@@ -58,7 +64,11 @@ fn game_stack() -> &'static mut Stack<GAME_STACK_SIZE> {
 const WAIT_FOR_ADDRESS: Duration = Duration::from_secs(20);
 const SHOW_ADDRESS: Duration = Duration::from_secs(3);
 
-fn show(display: &mut CoreS3Display, lines: &[&str]) {
+fn show<D>(display: &mut D, lines: &[&str])
+where
+    D: DrawTarget<Color = Rgb565>,
+    D::Error: core::fmt::Debug,
+{
     display.clear(Rgb565::BLACK).expect("clear LCD");
     for (line, y) in lines.iter().zip((30..).step_by(30)) {
         Label { text: line, top_left: Point::new(20, y), color: Rgb565::CYAN }
@@ -79,7 +89,11 @@ async fn main(spawner: Spawner) {
     esp_alloc::psram_allocator!(
         peripherals.PSRAM,
         esp_hal::psram,
-        PsramConfig { mode: PsramMode::QuadSpi, ..Default::default() }
+        PsramConfig {
+            mode: PsramMode::QuadSpi,
+            ram_frequency: SpiRamFreq::Freq80m,
+            ..Default::default()
+        }
     );
     esp_alloc::heap_allocator!(#[ram(reclaimed)] size: 64 * 1024);
     esp_alloc::heap_allocator!(size: 36 * 1024);
@@ -89,19 +103,43 @@ async fn main(spawner: Spawner) {
     let software_interrupts = SoftwareInterruptControl::new(peripherals.SW_INTERRUPT);
     esp_rtos::start(timg0.timer0, software_interrupts.software_interrupt0);
 
-    let CoreS3DisplayParts { mut display, internal_i2c: _i2c } =
-        CoreS3::init_display(CoreS3DisplayResources {
-            i2c0: peripherals.I2C0,
-            i2c_sda: peripherals.GPIO12,
-            i2c_scl: peripherals.GPIO11,
-            spi2: peripherals.SPI2,
-            lcd_sclk: peripherals.GPIO36,
-            lcd_mosi: peripherals.GPIO37,
-            lcd_dc: peripherals.GPIO35,
-            lcd_cs: peripherals.GPIO3,
-            tf_card_cs: peripherals.GPIO4,
-        })
-        .expect("display");
+    // Panel power, reset and backlight come from the BSP; the SPI side is our own (`lcd`), because
+    // the BSP's display initialiser cannot hand the bus over to DMA.
+    let mut i2c = I2c::new(
+        peripherals.I2C0,
+        I2cConfig::default().with_frequency(Rate::from_hz(bsp::INTERNAL_I2C_HZ)),
+    )
+    .expect("I2C")
+    .with_sda(peripherals.GPIO12)
+    .with_scl(peripherals.GPIO11);
+    CoreS3::init_core_s3_power(&mut i2c).expect("LCD power");
+    let lcd = RefCell::new(lcd::Lcd::new(
+        peripherals.SPI2,
+        peripherals.GPIO36,
+        peripherals.GPIO37,
+        peripherals.GPIO3,
+        peripherals.GPIO35,
+        peripherals.DMA_CH0,
+    ));
+    lcd::init_frames();
+    // The TF-card slot shares the bus; keep its chip select high.
+    let sd_cs = Output::new(peripherals.GPIO4, Level::High, OutputConfig::default());
+    let mut display = Display::new(
+        lcd::LcdSpi(&lcd),
+        lcd::LcdDc(&lcd),
+        sd_cs,
+        BusConfig { write_hz: lcd::SPI_HZ },
+        PanelConfig {
+            invert_colors: true,
+            geometry: DisplayGeometry {
+                width: devices::display::WIDTH,
+                height: devices::display::HEIGHT,
+                offset_x: 0,
+                offset_y: 0,
+            },
+        },
+    );
+    display.init(&mut Delay::new()).expect("display");
 
     show(&mut display, &["CoreS3 DOOM", "starting Wi-Fi..."]);
     // What the game keeps showing in its top bar once it is running.
@@ -133,6 +171,13 @@ async fn main(spawner: Spawner) {
         },
     }
 
+    // What the game keeps showing: a black screen with the status in its top bar, which the game
+    // never draws over.
+    display.clear(Rgb565::BLACK).expect("clear LCD");
+    Label { text: &status, top_left: Point::new(4, 5), color: Rgb565::CYAN }
+        .draw(&mut display)
+        .expect("draw status");
+
     // The game runs on core 1, so the network never waits for a frame and the game never waits
     // for the radio. It builds its own state there, on the big stack.
     esp_rtos::start_second_core(
@@ -141,7 +186,7 @@ async fn main(spawner: Spawner) {
         game_stack(),
         move || {
             let state = init_game_state(
-                Box::new(CoreS3Platform::new(display, status)),
+                Box::new(CoreS3Platform::new()),
                 Box::new(EmbeddedWad::new("doom1.wad", WAD)),
             );
             println!(
@@ -160,8 +205,8 @@ async fn main(spawner: Spawner) {
         },
     );
 
-    // Core 0 has nothing left to do itself; the network tasks keep running on this executor.
-    loop {
-        Timer::after(Duration::from_secs(3600)).await;
-    }
+    // Core 0 streams the finished frames to the LCD; the network tasks keep running on this
+    // executor in between.
+    lcd::run_pump(&lcd).await
+
 }
