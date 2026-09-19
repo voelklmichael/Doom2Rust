@@ -45,7 +45,7 @@ pub fn HUlib_addCharToTextLine(t: &mut hu_textline_t, ch: u8) -> bool {
         false
     } else {
         t.l.push(ch as char);
-        t.needsupdate = 4_i32;
+        t.needsupdate = 4;
         true
     }
 }
@@ -54,7 +54,7 @@ pub fn HUlib_delCharFromTextLine(t: &mut hu_textline_t) -> bool {
         false
     } else {
         t.l.pop();
-        t.needsupdate = 4_i32;
+        t.needsupdate = 4;
         true
     }
 }
@@ -72,7 +72,7 @@ pub fn HUlib_drawTextLine(state: &mut GameState, l: &hu_textline_t, drawcursor: 
             V_DrawPatchDirect(state, Screen::Video, x, l.y, &patch);
             x += w;
         } else {
-            x += 4_i32;
+            x += 4;
             if x >= SCREENWIDTH {
                 break;
             }
@@ -90,7 +90,7 @@ pub fn HUlib_eraseTextLine(state: &mut GameState, l: &mut hu_textline_t) {
     if !state.am_map.automapactive && state.r_draw.viewwindowx != 0 && l.needsupdate != 0 {
         let glyph = state.hu_stuff.hu_font[0];
         let patch = V_CachePatchNum(state, glyph);
-        let lh = patch.height() + 1_i32;
+        let lh = patch.height() + 1;
         let mut y = l.y;
         let mut yoffset = y * SCREENWIDTH;
         while y < l.y + lh {
@@ -123,12 +123,12 @@ pub fn HUlib_initSText(
 ) {
     s.h = h;
     s.laston = true;
-    s.cl = 0_i32;
+    s.cl = 0;
     for i in 0..h {
         HUlib_initTextLine(
             &mut s.l[i as usize],
             x,
-            y - i * (font0_height + 1_i32),
+            y - i * (font0_height + 1),
             startchar,
         );
     }
@@ -136,11 +136,11 @@ pub fn HUlib_initSText(
 pub fn HUlib_addLineToSText(s: &mut hu_stext_t) {
     s.cl += 1;
     if s.cl == s.h {
-        s.cl = 0_i32;
+        s.cl = 0;
     }
     HUlib_clearTextLine(&mut s.l[s.cl as usize]);
     for i in 0..s.h {
-        s.l[i as usize].needsupdate = 4_i32;
+        s.l[i as usize].needsupdate = 4;
     }
 }
 pub fn HUlib_addMessageToSText(s: &mut hu_stext_t, prefix: Option<&str>, msg: &str) {
@@ -161,7 +161,7 @@ pub fn HUlib_drawSText(state: &mut GameState, s: &hu_stext_t, on: bool) {
     }
     for i in 0..s.h {
         let mut idx = s.cl - i;
-        if idx < 0_i32 {
+        if idx < 0 {
             idx += s.h;
         }
         HUlib_drawTextLine(state, &s.l[idx as usize], false);
@@ -170,14 +170,14 @@ pub fn HUlib_drawSText(state: &mut GameState, s: &hu_stext_t, on: bool) {
 pub fn HUlib_eraseSText(state: &mut GameState, s: &mut hu_stext_t, on: bool) {
     for i in 0..s.h {
         if s.laston && !on {
-            s.l[i as usize].needsupdate = 4_i32;
+            s.l[i as usize].needsupdate = 4;
         }
         HUlib_eraseTextLine(state, &mut s.l[i as usize]);
     }
     s.laston = on;
 }
 pub fn HUlib_initIText(it: &mut hu_itext_t, x: i32, y: i32, startchar: i32) {
-    it.lm = 0_i32;
+    it.lm = 0;
     it.laston = true;
     HUlib_initTextLine(&mut it.l, x, y, startchar);
 }
@@ -187,7 +187,7 @@ pub fn HUlib_delCharFromIText(it: &mut hu_itext_t) {
     }
 }
 pub fn HUlib_resetIText(it: &mut hu_itext_t) {
-    it.lm = 0_i32;
+    it.lm = 0;
     HUlib_clearTextLine(&mut it.l);
 }
 pub fn HUlib_keyInIText(it: &mut hu_itext_t, ch: u8) -> bool {
@@ -209,7 +209,7 @@ pub fn HUlib_drawIText(state: &mut GameState, it: &hu_itext_t, on: bool) {
 }
 pub fn HUlib_eraseIText(state: &mut GameState, it: &mut hu_itext_t, on: bool) {
     if it.laston && !on {
-        it.l.needsupdate = 4_i32;
+        it.l.needsupdate = 4;
     }
     HUlib_eraseTextLine(state, &mut it.l);
     it.laston = on;

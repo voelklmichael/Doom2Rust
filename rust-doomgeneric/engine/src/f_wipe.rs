@@ -46,7 +46,7 @@ fn wipe_shittyColMajorXform(array: &mut [byte], width: i32, height: i32) {
 fn wipe_initColorXForm(state: &mut GameState, width: i32, height: i32, _ticks: i32) -> i32 {
     let n = (width * height) as usize;
     state.i_video.I_VideoBuffer[..n].copy_from_slice(&state.f_wipe.wipe_scr_start[..n]);
-    0_i32
+    0
 }
 fn wipe_doColorXForm(state: &mut GameState, width: i32, height: i32, ticks: i32) -> i32 {
     let mut changed = false;
@@ -66,29 +66,29 @@ fn wipe_doColorXForm(state: &mut GameState, width: i32, height: i32, ticks: i32)
     (!changed) as i32
 }
 fn wipe_exitColorXForm(_state: &mut GameState, _width: i32, _height: i32, _ticks: i32) -> i32 {
-    0_i32
+    0
 }
 fn wipe_initMelt(state: &mut GameState, width: i32, height: i32, _ticks: i32) -> i32 {
     let n = (width * height) as usize;
     state.i_video.I_VideoBuffer[..n].copy_from_slice(&state.f_wipe.wipe_scr_start[..n]);
-    wipe_shittyColMajorXform(&mut state.f_wipe.wipe_scr_start, width / 2_i32, height);
-    wipe_shittyColMajorXform(&mut state.f_wipe.wipe_scr_end, width / 2_i32, height);
+    wipe_shittyColMajorXform(&mut state.f_wipe.wipe_scr_start, width / 2, height);
+    wipe_shittyColMajorXform(&mut state.f_wipe.wipe_scr_end, width / 2, height);
     state.f_wipe.y = vec![0i32; width as usize];
-    state.f_wipe.y[0] = -(M_Random(&mut state.m_random) % 16_i32);
+    state.f_wipe.y[0] = -(M_Random(&mut state.m_random) % 16);
     for i in 1..width as usize {
-        let r = M_Random(&mut state.m_random) % 3_i32 - 1_i32;
+        let r = M_Random(&mut state.m_random) % 3 - 1;
         state.f_wipe.y[i] = state.f_wipe.y[i - 1] + r;
-        if state.f_wipe.y[i] > 0_i32 {
-            state.f_wipe.y[i] = 0_i32;
-        } else if state.f_wipe.y[i] == -16_i32 {
-            state.f_wipe.y[i] = -15_i32;
+        if state.f_wipe.y[i] > 0 {
+            state.f_wipe.y[i] = 0;
+        } else if state.f_wipe.y[i] == -16 {
+            state.f_wipe.y[i] = -15;
         }
     }
-    0_i32
+    0
 }
 fn wipe_doMelt(state: &mut GameState, width: i32, height: i32, mut ticks: i32) -> i32 {
     let mut done = true;
-    let width = (width / 2_i32) as usize;
+    let width = (width / 2) as usize;
     let height_words = height as usize;
     let video = &mut state.i_video.I_VideoBuffer;
     let scr_start = &state.f_wipe.wipe_scr_start;
@@ -97,11 +97,11 @@ fn wipe_doMelt(state: &mut GameState, width: i32, height: i32, mut ticks: i32) -
     while ticks > 0 {
         ticks -= 1;
         for (i, y) in ys.iter_mut().enumerate().take(width) {
-            if *y < 0_i32 {
+            if *y < 0 {
                 *y += 1;
                 done = false;
             } else if *y < height {
-                let mut dy = if *y < 16_i32 { *y + 1_i32 } else { 8_i32 };
+                let mut dy = if *y < 16 { *y + 1 } else { 8 };
                 if *y + dy >= height {
                     dy = height - *y;
                 }
@@ -132,18 +132,18 @@ fn wipe_exitMelt(state: &mut GameState, _width: i32, _height: i32, _ticks: i32) 
     state.f_wipe.y = Vec::new();
     state.f_wipe.wipe_scr_start = Vec::new();
     state.f_wipe.wipe_scr_end = Vec::new();
-    0_i32
+    0
 }
 pub fn wipe_StartScreen(state: &mut GameState) -> i32 {
     state.f_wipe.wipe_scr_start = I_ReadScreen(state);
-    0_i32
+    0
 }
-pub fn wipe_EndScreen(state: &mut GameState, x: i32, y_0: i32, width: i32, height: i32) -> i32 {
+pub fn wipe_EndScreen(state: &mut GameState, x: i32, y: i32, width: i32, height: i32) -> i32 {
     state.f_wipe.wipe_scr_end = I_ReadScreen(state);
     let wipe_scr_start = core::mem::take(&mut state.f_wipe.wipe_scr_start);
-    V_DrawBlock(state, Screen::Video, x, y_0, width, height, &wipe_scr_start);
+    V_DrawBlock(state, Screen::Video, x, y, width, height, &wipe_scr_start);
     state.f_wipe.wipe_scr_start = wipe_scr_start;
-    0_i32
+    0
 }
 type WipeFn = fn(&mut GameState, i32, i32, i32) -> i32;
 pub fn wipe_ScreenWipe(
@@ -163,16 +163,16 @@ pub fn wipe_ScreenWipe(
     ];
     if !state.f_wipe.go {
         state.f_wipe.go = true;
-        let init_fn = wipes[(wipeno * 3_i32) as usize];
+        let init_fn = wipes[(wipeno * 3) as usize];
         init_fn(state, width, height, ticks);
     }
     let dest_screen = Screen::Video;
-    V_MarkRect(state, dest_screen, 0_i32, 0_i32, width, height);
-    let do_fn = wipes[(wipeno * 3_i32 + 1_i32) as usize];
+    V_MarkRect(state, dest_screen, 0, 0, width, height);
+    let do_fn = wipes[(wipeno * 3 + 1) as usize];
     let rc: i32 = do_fn(state, width, height, ticks);
     if rc != 0 {
         state.f_wipe.go = false;
-        let exit_fn = wipes[(wipeno * 3_i32 + 2_i32) as usize];
+        let exit_fn = wipes[(wipeno * 3 + 2) as usize];
         exit_fn(state, width, height, ticks);
     }
     (!state.f_wipe.go) as i32

@@ -76,11 +76,11 @@ pub fn R_ClearDrawSegs(state: &mut GameState) {
 }
 pub fn R_ClipSolidWallSegment(state: &mut GameState, first: i32, last: i32) {
     let mut start: usize = 0;
-    while state.r_bsp.solidsegs[start].last < first - 1_i32 {
+    while state.r_bsp.solidsegs[start].last < first - 1 {
         start += 1;
     }
     if first < state.r_bsp.solidsegs[start].first {
-        if last < state.r_bsp.solidsegs[start].first - 1_i32 {
+        if last < state.r_bsp.solidsegs[start].first - 1 {
             R_StoreWallRange(state, first, last);
             let mut next = state.r_bsp.newend;
             state.r_bsp.newend += 1;
@@ -93,7 +93,7 @@ pub fn R_ClipSolidWallSegment(state: &mut GameState, first: i32, last: i32) {
             return;
         }
         let start_first = state.r_bsp.solidsegs[start].first;
-        R_StoreWallRange(state, first, start_first - 1_i32);
+        R_StoreWallRange(state, first, start_first - 1);
         state.r_bsp.solidsegs[start].first = first;
     }
     if last <= state.r_bsp.solidsegs[start].last {
@@ -101,12 +101,12 @@ pub fn R_ClipSolidWallSegment(state: &mut GameState, first: i32, last: i32) {
     }
     let mut next = start;
     let reached_end_of_gap = loop {
-        if last < state.r_bsp.solidsegs[next + 1].first - 1_i32 {
+        if last < state.r_bsp.solidsegs[next + 1].first - 1 {
             break true;
         }
         let (from, to) = (
-            state.r_bsp.solidsegs[next].last + 1_i32,
-            state.r_bsp.solidsegs[next + 1].first - 1_i32,
+            state.r_bsp.solidsegs[next].last + 1,
+            state.r_bsp.solidsegs[next + 1].first - 1,
         );
         R_StoreWallRange(state, from, to);
         next += 1;
@@ -117,7 +117,7 @@ pub fn R_ClipSolidWallSegment(state: &mut GameState, first: i32, last: i32) {
         break false;
     };
     if reached_end_of_gap {
-        let from = state.r_bsp.solidsegs[next].last + 1_i32;
+        let from = state.r_bsp.solidsegs[next].last + 1;
         R_StoreWallRange(state, from, last);
         state.r_bsp.solidsegs[start].last = last;
     }
@@ -137,24 +137,24 @@ pub fn R_ClipSolidWallSegment(state: &mut GameState, first: i32, last: i32) {
 }
 pub fn R_ClipPassWallSegment(state: &mut GameState, first: i32, last: i32) {
     let mut start: usize = 0;
-    while state.r_bsp.solidsegs[start].last < first - 1_i32 {
+    while state.r_bsp.solidsegs[start].last < first - 1 {
         start += 1;
     }
     if first < state.r_bsp.solidsegs[start].first {
-        if last < state.r_bsp.solidsegs[start].first - 1_i32 {
+        if last < state.r_bsp.solidsegs[start].first - 1 {
             R_StoreWallRange(state, first, last);
             return;
         }
         let start_first = state.r_bsp.solidsegs[start].first;
-        R_StoreWallRange(state, first, start_first - 1_i32);
+        R_StoreWallRange(state, first, start_first - 1);
     }
     if last <= state.r_bsp.solidsegs[start].last {
         return;
     }
-    while last >= state.r_bsp.solidsegs[start + 1].first - 1_i32 {
+    while last >= state.r_bsp.solidsegs[start + 1].first - 1 {
         let (from, to) = (
-            state.r_bsp.solidsegs[start].last + 1_i32,
-            state.r_bsp.solidsegs[start + 1].first - 1_i32,
+            state.r_bsp.solidsegs[start].last + 1,
+            state.r_bsp.solidsegs[start + 1].first - 1,
         );
         R_StoreWallRange(state, from, to);
         start += 1;
@@ -162,14 +162,14 @@ pub fn R_ClipPassWallSegment(state: &mut GameState, first: i32, last: i32) {
             return;
         }
     }
-    let from = state.r_bsp.solidsegs[start].last + 1_i32;
+    let from = state.r_bsp.solidsegs[start].last + 1;
     R_StoreWallRange(state, from, last);
 }
 pub fn R_ClearClipSegs(state: &mut GameState) {
-    state.r_bsp.solidsegs[0].first = -0x7fffffff_i32;
-    state.r_bsp.solidsegs[0].last = -1_i32;
+    state.r_bsp.solidsegs[0].first = -0x7fffffff;
+    state.r_bsp.solidsegs[0].last = -1;
     state.r_bsp.solidsegs[1].first = state.r_draw.viewwidth;
-    state.r_bsp.solidsegs[1].last = 0x7fffffff_i32;
+    state.r_bsp.solidsegs[1].last = 0x7fffffff;
     state.r_bsp.newend = 2;
 }
 pub fn R_AddLine(state: &mut GameState, line: SegId) {
@@ -275,27 +275,27 @@ pub fn R_AddLine(state: &mut GameState, line: SegId) {
                 .p_setup
                 .side_mut(state.p_setup.seg(state.r_bsp.curline).sidedef)
                 .midtexture as i32
-                == 0_i32
+                == 0
         {
             return;
         }
-        R_ClipPassWallSegment(state, x1, x2 - 1_i32);
+        R_ClipPassWallSegment(state, x1, x2 - 1);
         return;
     }
-    R_ClipSolidWallSegment(state, x1, x2 - 1_i32);
+    R_ClipSolidWallSegment(state, x1, x2 - 1);
 }
 pub static checkcoord: [[i32; 4]; 12] = [
-    [3_i32, 0_i32, 2_i32, 1_i32],
-    [3_i32, 0_i32, 2_i32, 0_i32],
-    [3_i32, 1_i32, 2_i32, 0_i32],
-    [0_i32; 4],
-    [2_i32, 0_i32, 2_i32, 1_i32],
-    [0_i32, 0_i32, 0_i32, 0_i32],
-    [3_i32, 1_i32, 3_i32, 0_i32],
-    [0_i32; 4],
-    [2_i32, 0_i32, 3_i32, 1_i32],
-    [2_i32, 1_i32, 3_i32, 1_i32],
-    [2_i32, 1_i32, 3_i32, 0_i32],
+    [3, 0, 2, 1],
+    [3, 0, 2, 0],
+    [3, 1, 2, 0],
+    [0; 4],
+    [2, 0, 2, 1],
+    [0, 0, 0, 0],
+    [3, 1, 3, 0],
+    [0; 4],
+    [2, 0, 3, 1],
+    [2, 1, 3, 1],
+    [2, 1, 3, 0],
     [0; 4],
 ];
 pub fn R_CheckBBox(state: &mut GameState, bspcoord: [fixed_t; 4]) -> bool {
@@ -306,21 +306,21 @@ pub fn R_CheckBBox(state: &mut GameState, bspcoord: [fixed_t; 4]) -> bool {
 
     let mut sx2: i32;
     let boxx: i32 = if state.r_main.viewx <= bspcoord[BoxIndex::Left as usize] {
-        0_i32
+        0
     } else if state.r_main.viewx < bspcoord[BoxIndex::Right as usize] {
-        1_i32
+        1
     } else {
-        2_i32
+        2
     };
     let boxy: i32 = if state.r_main.viewy >= bspcoord[BoxIndex::Top as usize] {
-        0_i32
+        0
     } else if state.r_main.viewy > bspcoord[BoxIndex::Bottom as usize] {
-        1_i32
+        1
     } else {
-        2_i32
+        2
     };
-    let boxpos: i32 = (boxy << 2_i32) + boxx;
-    if boxpos == 5_i32 {
+    let boxpos: i32 = (boxy << 2) + boxx;
+    if boxpos == 5 {
         return true;
     }
     let x1: fixed_t = bspcoord[checkcoord[boxpos as usize][0] as usize];
@@ -413,8 +413,8 @@ pub fn R_Subsector(state: &mut GameState, num: i32) {
 }
 pub fn R_RenderBSPNode(state: &mut GameState, bspnum: i32) {
     if bspnum & NF_SUBSECTOR != 0 {
-        if bspnum == -1_i32 {
-            R_Subsector(state, 0_i32);
+        if bspnum == -1 {
+            R_Subsector(state, 0);
         } else {
             R_Subsector(state, bspnum & !NF_SUBSECTOR);
         }
@@ -423,7 +423,7 @@ pub fn R_RenderBSPNode(state: &mut GameState, bspnum: i32) {
     let bsp = state.p_setup.nodes[bspnum as usize];
     let side: i32 = R_PointOnSide(state.r_main.viewx, state.r_main.viewy, &bsp);
     R_RenderBSPNode(state, bsp.children[side as usize] as i32);
-    if R_CheckBBox(state, bsp.bbox[(side ^ 1_i32) as usize]) {
-        R_RenderBSPNode(state, bsp.children[(side ^ 1_i32) as usize] as i32);
+    if R_CheckBBox(state, bsp.bbox[(side ^ 1) as usize]) {
+        R_RenderBSPNode(state, bsp.children[(side ^ 1) as usize] as i32);
     }
 }

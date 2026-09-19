@@ -152,30 +152,30 @@ pub const FIELDOFVIEW: i32 = 2048;
 pub fn R_PointOnSide(x: fixed_t, y: fixed_t, node: &node_t) -> i32 {
     if node.dx == 0 {
         if x <= node.x {
-            return (node.dy > 0_i32) as i32;
+            return (node.dy > 0) as i32;
         }
-        return (node.dy < 0_i32) as i32;
+        return (node.dy < 0) as i32;
     }
     if node.dy == 0 {
         if y <= node.y {
-            return (node.dx < 0_i32) as i32;
+            return (node.dx < 0) as i32;
         }
-        return (node.dx > 0_i32) as i32;
+        return (node.dx > 0) as i32;
     }
     let dx = x - node.x;
     let dy = y - node.y;
-    if (node.dy ^ node.dx ^ dx ^ dy) as u32 & 0x80000000_u32 != 0 {
-        if (node.dy ^ dx) as u32 & 0x80000000_u32 != 0 {
-            return 1_i32;
+    if (node.dy ^ node.dx ^ dx ^ dy) as u32 & 0x80000000 != 0 {
+        if (node.dy ^ dx) as u32 & 0x80000000 != 0 {
+            return 1;
         }
-        return 0_i32;
+        return 0;
     }
     let left = FixedMul(node.dy >> FRACBITS, dx);
     let right = FixedMul(dy, node.dx >> FRACBITS);
     if right < left {
-        return 0_i32;
+        return 0;
     }
-    1_i32
+    1
 }
 pub fn R_PointOnSegSide(state: &mut GameState, x: fixed_t, y: fixed_t, line: SegId) -> i32 {
     let line_v1 = state.p_setup.vertexes[state.p_setup.seg(line).v1.0 as usize];
@@ -186,30 +186,30 @@ pub fn R_PointOnSegSide(state: &mut GameState, x: fixed_t, y: fixed_t, line: Seg
     let ldy: fixed_t = line_v2.y - ly;
     if ldx == 0 {
         if x <= lx {
-            return (ldy > 0_i32) as i32;
+            return (ldy > 0) as i32;
         }
-        return (ldy < 0_i32) as i32;
+        return (ldy < 0) as i32;
     }
     if ldy == 0 {
         if y <= ly {
-            return (ldx < 0_i32) as i32;
+            return (ldx < 0) as i32;
         }
-        return (ldx > 0_i32) as i32;
+        return (ldx > 0) as i32;
     }
     let dx: fixed_t = x - lx;
     let dy: fixed_t = y - ly;
-    if (ldy ^ ldx ^ dx ^ dy) as u32 & 0x80000000_u32 != 0 {
-        if (ldy ^ dx) as u32 & 0x80000000_u32 != 0 {
-            return 1_i32;
+    if (ldy ^ ldx ^ dx ^ dy) as u32 & 0x80000000 != 0 {
+        if (ldy ^ dx) as u32 & 0x80000000 != 0 {
+            return 1;
         }
-        return 0_i32;
+        return 0;
     }
     let left: fixed_t = FixedMul(ldy >> FRACBITS, dx);
     let right: fixed_t = FixedMul(dy, ldx >> FRACBITS);
     if right < left {
-        return 0_i32;
+        return 0;
     }
-    1_i32
+    1
 }
 pub fn R_PointToAngle(state: &mut GameState, mut x: fixed_t, mut y: fixed_t) -> angle_t {
     x -= state.r_main.viewx;
@@ -217,12 +217,12 @@ pub fn R_PointToAngle(state: &mut GameState, mut x: fixed_t, mut y: fixed_t) -> 
     if x == 0 && y == 0 {
         return 0 as angle_t;
     }
-    if x >= 0_i32 {
-        if y >= 0_i32 {
+    if x >= 0 {
+        if y >= 0 {
             if x > y {
                 tantoangle[SlopeDiv(y as u32, x as u32) as usize]
             } else {
-                ((ANG90 - 1_i32) as angle_t)
+                ((ANG90 - 1) as angle_t)
                     .wrapping_sub(tantoangle[SlopeDiv(x as u32, y as u32) as usize])
             }
         } else {
@@ -235,7 +235,7 @@ pub fn R_PointToAngle(state: &mut GameState, mut x: fixed_t, mut y: fixed_t) -> 
         }
     } else {
         x = -x;
-        if y >= 0_i32 {
+        if y >= 0 {
             if x > y {
                 ANG180
                     .wrapping_sub(1 as angle_t)
@@ -278,11 +278,7 @@ pub fn R_PointToDist(state: &mut GameState, x: fixed_t, y: fixed_t) -> fixed_t {
         dx = dy;
         dy = temp;
     }
-    let frac: fixed_t = if dx != 0_i32 {
-        FixedDiv(dy, dx)
-    } else {
-        0_i32 as fixed_t
-    };
+    let frac: fixed_t = if dx != 0 { FixedDiv(dy, dx) } else { 0 };
     let angle: i32 = (tantoangle[(frac >> DBITS) as usize].wrapping_add(ANG90 as angle_t)
         >> ANGLETOFINESHIFT) as i32;
     let dist: fixed_t = FixedDiv(dx, finesine[angle as usize]);
@@ -300,15 +296,15 @@ pub fn R_ScaleFromGlobalAngle(state: &mut GameState, visangle: angle_t) -> fixed
     let num: fixed_t =
         FixedMul(state.r_main.projection, sineb as fixed_t) << state.r_main.detailshift;
     let den: i32 = FixedMul(state.r_segs.rw_distance, sinea as fixed_t);
-    if den > num >> 16_i32 {
+    if den > num >> 16 {
         scale = FixedDiv(num, den as fixed_t);
-        if scale > 64_i32 * FRACUNIT {
-            scale = (64_i32 * FRACUNIT) as fixed_t;
-        } else if scale < 256_i32 {
-            scale = 256_i32 as fixed_t;
+        if scale > 64 * FRACUNIT {
+            scale = (64 * FRACUNIT) as fixed_t;
+        } else if scale < 256 {
+            scale = 256;
         }
     } else {
-        scale = (64_i32 * FRACUNIT) as fixed_t;
+        scale = (64 * FRACUNIT) as fixed_t;
     }
     scale
 }
@@ -319,40 +315,40 @@ pub fn R_InitTextureMapping(state: &mut GameState) {
 
     let focallength: fixed_t = FixedDiv(
         state.r_main.centerxfrac,
-        finetangent[(FINEANGLES / 4_i32 + FIELDOFVIEW / 2_i32) as usize],
+        finetangent[(FINEANGLES / 4 + FIELDOFVIEW / 2) as usize],
     );
-    i = 0_i32;
-    while i < FINEANGLES / 2_i32 {
-        if finetangent[i as usize] > FRACUNIT * 2_i32 {
-            t = -1_i32;
-        } else if finetangent[i as usize] < -FRACUNIT * 2_i32 {
-            t = state.r_draw.viewwidth + 1_i32;
+    i = 0;
+    while i < FINEANGLES / 2 {
+        if finetangent[i as usize] > FRACUNIT * 2 {
+            t = -1;
+        } else if finetangent[i as usize] < -FRACUNIT * 2 {
+            t = state.r_draw.viewwidth + 1;
         } else {
             t = FixedMul(finetangent[i as usize], focallength);
-            t = (state.r_main.centerxfrac - t + FRACUNIT - 1_i32) >> FRACBITS;
-            if t < -1_i32 {
-                t = -1_i32;
-            } else if t > state.r_draw.viewwidth + 1_i32 {
-                t = state.r_draw.viewwidth + 1_i32;
+            t = (state.r_main.centerxfrac - t + FRACUNIT - 1) >> FRACBITS;
+            if t < -1 {
+                t = -1;
+            } else if t > state.r_draw.viewwidth + 1 {
+                t = state.r_draw.viewwidth + 1;
             }
         }
         state.r_main.viewangletox[i as usize] = t;
         i += 1;
     }
-    x = 0_i32;
+    x = 0;
     while x <= state.r_draw.viewwidth {
-        i = 0_i32;
+        i = 0;
         while state.r_main.viewangletox[i as usize] > x {
             i += 1;
         }
         state.r_main.xtoviewangle[x as usize] = ((i << ANGLETOFINESHIFT) - ANG90) as angle_t;
         x += 1;
     }
-    i = 0_i32;
-    while i < FINEANGLES / 2_i32 {
-        if state.r_main.viewangletox[i as usize] == -1_i32 {
-            state.r_main.viewangletox[i as usize] = 0_i32;
-        } else if state.r_main.viewangletox[i as usize] == state.r_draw.viewwidth + 1_i32 {
+    i = 0;
+    while i < FINEANGLES / 2 {
+        if state.r_main.viewangletox[i as usize] == -1 {
+            state.r_main.viewangletox[i as usize] = 0;
+        } else if state.r_main.viewangletox[i as usize] == state.r_draw.viewwidth + 1 {
             state.r_main.viewangletox[i as usize] = state.r_draw.viewwidth;
         }
         i += 1;
@@ -366,22 +362,22 @@ pub fn R_InitLightTables(state: &mut GameState) {
     let mut level: i32;
     let mut startmap: i32;
     let mut scale: i32;
-    i = 0_i32;
+    i = 0;
     while i < LIGHTLEVELS {
-        startmap = (LIGHTLEVELS - 1_i32 - i) * 2_i32 * NUMCOLORMAPS / LIGHTLEVELS;
-        j = 0_i32;
+        startmap = (LIGHTLEVELS - 1 - i) * 2 * NUMCOLORMAPS / LIGHTLEVELS;
+        j = 0;
         while j < MAXLIGHTZ {
             scale = FixedDiv(
-                SCREENWIDTH / 2 as fixed_t * FRACUNIT,
-                (j as fixed_t + 1 as fixed_t) << LIGHTZSHIFT,
+                SCREENWIDTH / 2 * FRACUNIT,
+                (j as fixed_t + 1) << LIGHTZSHIFT,
             );
             scale >>= LIGHTSCALESHIFT;
             level = startmap - scale / DISTMAP;
-            if level < 0_i32 {
-                level = 0_i32;
+            if level < 0 {
+                level = 0;
             }
             if level >= NUMCOLORMAPS {
-                level = NUMCOLORMAPS - 1_i32;
+                level = NUMCOLORMAPS - 1;
             }
             state.r_main.zlight[i as usize][j as usize] = level;
             j += 1;
@@ -402,17 +398,17 @@ pub fn R_ExecuteSetViewSize(state: &mut GameState) {
     let mut level: i32;
     let mut startmap: i32;
     state.r_main.setsizeneeded = false;
-    if state.r_main.setblocks == 11_i32 {
+    if state.r_main.setblocks == 11 {
         state.r_draw.scaledviewwidth = SCREENWIDTH;
         state.r_draw.viewheight = SCREENHEIGHT;
     } else {
-        state.r_draw.scaledviewwidth = state.r_main.setblocks * 32_i32;
-        state.r_draw.viewheight = (state.r_main.setblocks * 168_i32 / 10_i32) & !7_i32;
+        state.r_draw.scaledviewwidth = state.r_main.setblocks * 32;
+        state.r_draw.viewheight = (state.r_main.setblocks * 168 / 10) & !7;
     }
     state.r_main.detailshift = state.r_main.setdetail;
     state.r_draw.viewwidth = state.r_draw.scaledviewwidth >> state.r_main.detailshift;
-    state.r_main.centery = state.r_draw.viewheight / 2_i32;
-    state.r_main.centerx = state.r_draw.viewwidth / 2_i32;
+    state.r_main.centery = state.r_draw.viewheight / 2;
+    state.r_main.centerx = state.r_draw.viewwidth / 2;
     state.r_main.centerxfrac = (state.r_main.centerx << FRACBITS) as fixed_t;
     state.r_main.centeryfrac = (state.r_main.centery << FRACBITS) as fixed_t;
     state.r_main.projection = state.r_main.centerxfrac;
@@ -435,41 +431,40 @@ pub fn R_ExecuteSetViewSize(state: &mut GameState) {
     R_InitTextureMapping(state);
     state.r_things.pspritescale = (FRACUNIT * state.r_draw.viewwidth / SCREENWIDTH) as fixed_t;
     state.r_things.pspriteiscale = (FRACUNIT * SCREENWIDTH / state.r_draw.viewwidth) as fixed_t;
-    i = 0_i32;
+    i = 0;
     while i < state.r_draw.viewwidth {
         state.r_things.screenheightarray[i as usize] = state.r_draw.viewheight as i16;
         i += 1;
     }
-    i = 0_i32;
+    i = 0;
     while i < state.r_draw.viewheight {
-        dy = (((i - state.r_draw.viewheight / 2_i32) << FRACBITS) + FRACUNIT / 2_i32) as fixed_t;
+        dy = (((i - state.r_draw.viewheight / 2) << FRACBITS) + FRACUNIT / 2) as fixed_t;
         dy = dy.abs() as fixed_t;
         state.r_plane.yslope[i as usize] = FixedDiv(
-            ((state.r_draw.viewwidth as fixed_t) << state.r_main.detailshift) / 2 as fixed_t
-                * FRACUNIT,
+            ((state.r_draw.viewwidth as fixed_t) << state.r_main.detailshift) / 2 * FRACUNIT,
             dy,
         );
         i += 1;
     }
-    i = 0_i32;
+    i = 0;
     while i < state.r_draw.viewwidth {
         cosadj = finecosine[(state.r_main.xtoviewangle[i as usize] >> ANGLETOFINESHIFT) as usize]
             .abs() as fixed_t;
         state.r_plane.distscale[i as usize] = FixedDiv(FRACUNIT, cosadj);
         i += 1;
     }
-    i = 0_i32;
+    i = 0;
     while i < LIGHTLEVELS {
-        startmap = (LIGHTLEVELS - 1_i32 - i) * 2_i32 * NUMCOLORMAPS / LIGHTLEVELS;
-        j = 0_i32;
+        startmap = (LIGHTLEVELS - 1 - i) * 2 * NUMCOLORMAPS / LIGHTLEVELS;
+        j = 0;
         while j < MAXLIGHTSCALE {
             level = startmap
                 - j * SCREENWIDTH / (state.r_draw.viewwidth << state.r_main.detailshift) / DISTMAP;
-            if level < 0_i32 {
-                level = 0_i32;
+            if level < 0 {
+                level = 0;
             }
             if level >= NUMCOLORMAPS {
-                level = NUMCOLORMAPS - 1_i32;
+                level = NUMCOLORMAPS - 1;
             }
             state.r_main.scalelight[i as usize][j as usize] = level;
             j += 1;
@@ -489,13 +484,13 @@ pub fn R_Init(state: &mut GameState) {
     R_InitSkyMap(state);
     R_InitTranslationTables(state);
     doom_print!(state.platform, ".");
-    state.r_main.framecount = 0_i32;
+    state.r_main.framecount = 0;
 }
 pub fn R_PointInSubsector(state: &mut GameState, x: fixed_t, y: fixed_t) -> SubsectorId {
     if state.p_setup.numnodes == 0 {
         return SubsectorId(0);
     }
-    let mut nodenum = state.p_setup.numnodes - 1_i32;
+    let mut nodenum = state.p_setup.numnodes - 1;
     while nodenum & NF_SUBSECTOR == 0 {
         let node = &state.p_setup.nodes[nodenum as usize];
         let side = R_PointOnSide(x, y, node);
@@ -523,12 +518,12 @@ pub fn R_SetupFrame(state: &mut GameState, player_id: PlayerId) {
     state.r_main.viewz = viewz;
     state.r_main.viewsin = finesine[(state.r_main.viewangle >> ANGLETOFINESHIFT) as usize];
     state.r_main.viewcos = finecosine[(state.r_main.viewangle >> ANGLETOFINESHIFT) as usize];
-    state.r_main.sscount = 0_i32;
+    state.r_main.sscount = 0;
     if fixedcolormap != 0 {
         let colormap = fixedcolormap;
         state.r_main.fixedcolormap = Some(colormap);
         state.r_segs.walllights = LightRow48::Fixed;
-        i = 0_i32;
+        i = 0;
         while i < MAXLIGHTSCALE {
             state.r_main.scalelightfixed[i as usize] = colormap;
             i += 1;
@@ -546,7 +541,7 @@ pub fn R_RenderPlayerView(state: &mut GameState, player_id: PlayerId) {
     R_ClearPlanes(state);
     R_ClearSprites(state);
     NetUpdate(state);
-    let root_bspnum = state.p_setup.numnodes - 1_i32;
+    let root_bspnum = state.p_setup.numnodes - 1;
     R_RenderBSPNode(state, root_bspnum);
     NetUpdate(state);
     R_DrawPlanes(state);

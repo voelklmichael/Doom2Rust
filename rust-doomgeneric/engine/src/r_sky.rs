@@ -24,5 +24,5 @@ impl RSkyState {
 }
 
 pub fn R_InitSkyMap(state: &mut GameState) {
-    state.r_sky.skytexturemid = 100_i32 * FRACUNIT;
+    state.r_sky.skytexturemid = 100 * FRACUNIT;
 }

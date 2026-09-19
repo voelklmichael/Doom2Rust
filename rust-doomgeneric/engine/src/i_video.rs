@@ -144,9 +144,9 @@ pub fn I_InitGraphics(state: &mut GameState) {
     state.i_video.s_Fb.yres = DOOMGENERIC_RESY as uint32_t;
     state.i_video.s_Fb.xres_virtual = state.i_video.s_Fb.xres;
     state.i_video.s_Fb.yres_virtual = state.i_video.s_Fb.yres;
-    let gfxmodeparm: i32 = M_CheckParmWithArgs(state, "-gfxmode", 1_i32);
+    let gfxmodeparm: i32 = M_CheckParmWithArgs(state, "-gfxmode", 1);
     let mode: &str = if gfxmodeparm != 0 {
-        state.m_argv.myargv[(gfxmodeparm + 1_i32) as usize].as_str()
+        state.m_argv.myargv[(gfxmodeparm + 1) as usize].as_str()
     } else {
         "rgba8888"
     };
@@ -199,9 +199,9 @@ pub fn I_InitGraphics(state: &mut GameState) {
         SCREENWIDTH,
         SCREENHEIGHT,
     );
-    i = M_CheckParmWithArgs(state, "-scaling", 1_i32);
-    if i > 0_i32 {
-        i = M_ArgvAtoi(&state.m_argv.myargv[(i + 1_i32) as usize]);
+    i = M_CheckParmWithArgs(state, "-scaling", 1);
+    if i > 0 {
+        i = M_ArgvAtoi(&state.m_argv.myargv[(i + 1) as usize]);
         state.i_video.fb_scaling = i;
         doom_println!(
             state.platform,
@@ -267,9 +267,9 @@ pub fn I_FinishUpdate(state: &mut GameState) {
         for &index in source {
             let c = state.i_video.colors[index as usize];
             if fb.bits_per_pixel == 16 {
-                let p: uint16_t = ((c.r() as i32 & 0xf8_i32) << 8_i32
-                    | (c.g() as i32 & 0xfc_i32) << 3_i32
-                    | c.b() as i32 >> 3_i32) as uint16_t;
+                let p: uint16_t = ((c.r() as i32 & 0xf8) << 8
+                    | (c.g() as i32 & 0xfc) << 3
+                    | c.b() as i32 >> 3) as uint16_t;
                 for _ in 0..scaling {
                     first_line[out..out + 2].copy_from_slice(&p.to_ne_bytes());
                     out += 2;
@@ -326,13 +326,13 @@ pub fn I_GetPaletteIndex(platform: &mut dyn DoomPlatform, r: i32, g: i32, b: i32
     let mut i: i32;
     let mut color: col_t = col_t { r: 0, g: 0, b: 0 };
     doom_println!(platform, "I_GetPaletteIndex");
-    best = 0_i32;
+    best = 0;
     best_diff = INT_MAX;
-    i = 0_i32;
-    while i < 256_i32 {
-        color.r = ((0xf800_i32 & RGB565_PALETTE[i as usize] as i32) >> 11_i32) as byte;
-        color.g = ((0x7e0_i32 & RGB565_PALETTE[i as usize] as i32) >> 5_i32) as byte;
-        color.b = (0x1f_i32 & RGB565_PALETTE[i as usize] as i32) as byte;
+    i = 0;
+    while i < 256 {
+        color.r = ((0xf800 & RGB565_PALETTE[i as usize] as i32) >> 11) as byte;
+        color.g = ((0x7e0 & RGB565_PALETTE[i as usize] as i32) >> 5) as byte;
+        color.b = (0x1f & RGB565_PALETTE[i as usize] as i32) as byte;
         diff = (r - color.r as i32) * (r - color.r as i32)
             + (g - color.g as i32) * (g - color.g as i32)
             + (b - color.b as i32) * (b - color.b as i32);
@@ -340,7 +340,7 @@ pub fn I_GetPaletteIndex(platform: &mut dyn DoomPlatform, r: i32, g: i32, b: i32
             best = i;
             best_diff = diff;
         }
-        if diff == 0_i32 {
+        if diff == 0 {
             break;
         }
         i += 1;

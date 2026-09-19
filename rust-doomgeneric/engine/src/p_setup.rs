@@ -158,7 +158,7 @@ impl PSetupState {
                 x: 0,
                 y: 0,
                 angle: 0,
-                type_0: 0,
+                kind: 0,
                 options: 0,
             }; 10],
             deathmatch_p: 0,
@@ -166,7 +166,7 @@ impl PSetupState {
                 x: 0,
                 y: 0,
                 angle: 0,
-                type_0: 0,
+                kind: 0,
                 options: 0,
             }; 4],
             null_sector_id: None,
@@ -290,10 +290,10 @@ pub fn P_LoadVertexes(state: &mut GameState, lump: i32) {
 pub fn GetSectorAtNullAddress(state: &mut GameState) -> SectorId {
     if state.p_setup.null_sector_id.is_none() {
         let mut sentinel = ZERO_SECTOR;
-        if let Some(value) = I_GetMemoryValue(state, 0_u32, 4_i32) {
+        if let Some(value) = I_GetMemoryValue(state, 0, 4) {
             sentinel.floorheight = value as i32;
         }
-        if let Some(value) = I_GetMemoryValue(state, 4_u32, 4_i32) {
+        if let Some(value) = I_GetMemoryValue(state, 4, 4) {
             sentinel.ceilingheight = value as i32;
         }
         let id = SectorId(state.p_setup.sectors.len() as u32);
@@ -310,17 +310,17 @@ pub fn P_LoadSegs(state: &mut GameState, lump: i32) {
     for _ in 0..numsegs {
         let v1 = VertexId(reader.i16() as u32);
         let v2 = VertexId(reader.i16() as u32);
-        let seg_angle = ((reader.i16() as i32) << 16_i32) as angle_t;
+        let seg_angle = ((reader.i16() as i32) << 16) as angle_t;
         let linedef = reader.i16() as i32;
         let side = reader.i16() as i32;
-        let seg_offset = ((reader.i16() as i32) << 16_i32) as fixed_t;
+        let seg_offset = ((reader.i16() as i32) << 16) as fixed_t;
         let seg_linedef = LineId(linedef as u32);
         let ldef = state.p_setup.line(seg_linedef);
         let seg_sidenum = ldef.sidenum[side as usize] as u32;
         let frontsector = Some(state.p_setup.sides[seg_sidenum as usize].sector);
         let backsector = if ldef.flags as i32 & ML_TWOSIDED != 0 {
-            let sidenum = ldef.sidenum[(side ^ 1_i32) as usize] as i32;
-            if sidenum < 0_i32 || sidenum >= state.p_setup.numsides {
+            let sidenum = ldef.sidenum[(side ^ 1) as usize] as i32;
+            if sidenum < 0 || sidenum >= state.p_setup.numsides {
                 Some(GetSectorAtNullAddress(state))
             } else {
                 Some(state.p_setup.sides[sidenum as usize].sector)
@@ -419,12 +419,12 @@ pub fn P_LoadThings(state: &mut GameState, lump: i32) {
             x: reader.i16(),
             y: reader.i16(),
             angle: reader.i16(),
-            type_0: reader.i16(),
+            kind: reader.i16(),
             options: reader.i16(),
         };
         let spawn = !(state.doomstat.gamemode as u32 != GameMode_t::commercial as i32 as u32
             && matches!(
-                spawnthing.type_0,
+                spawnthing.kind,
                 64 | 88 | 89 | 69 | 67 | 71 | 65 | 66 | 68 | 84
             ));
         if !spawn {
@@ -454,7 +454,7 @@ pub fn P_LoadLineDefs(state: &mut GameState, lump: i32) {
             ld.slopetype = SlopeType::ST_VERTICAL;
         } else if ld.dy == 0 {
             ld.slopetype = SlopeType::ST_HORIZONTAL;
-        } else if FixedDiv(ld.dy, ld.dx) > 0_i32 {
+        } else if FixedDiv(ld.dy, ld.dx) > 0 {
             ld.slopetype = SlopeType::ST_POSITIVE;
         } else {
             ld.slopetype = SlopeType::ST_NEGATIVE;
@@ -475,12 +475,12 @@ pub fn P_LoadLineDefs(state: &mut GameState, lump: i32) {
         }
         ld.sidenum[0] = reader.i16();
         ld.sidenum[1] = reader.i16();
-        if ld.sidenum[0] as i32 != -1_i32 {
+        if ld.sidenum[0] as i32 != -1 {
             ld.frontsector = Some(state.p_setup.sides[ld.sidenum[0] as usize].sector);
         } else {
             ld.frontsector = None;
         }
-        if ld.sidenum[1] as i32 != -1_i32 {
+        if ld.sidenum[1] as i32 != -1 {
             ld.backsector = Some(state.p_setup.sides[ld.sidenum[1] as usize].sector);
         } else {
             ld.backsector = None;
@@ -535,7 +535,7 @@ pub fn P_GroupLines(state: &mut GameState) {
     let mut j: i32;
     let mut bbox: [fixed_t; 4] = [0; 4];
     let mut block: i32;
-    i = 0_i32;
+    i = 0;
     while i < state.p_setup.numsubsectors {
         let firstline = state.p_setup.subsectors[i as usize].firstline;
         let seg_sidedef = state.p_setup.segs[firstline as usize].sidedef;
@@ -543,8 +543,8 @@ pub fn P_GroupLines(state: &mut GameState) {
             state.p_setup.sides[seg_sidedef.0 as usize].sector;
         i += 1;
     }
-    state.p_setup.totallines = 0_i32;
-    i = 0_i32;
+    state.p_setup.totallines = 0;
+    i = 0;
     while i < state.p_setup.numlines {
         state.p_setup.totallines += 1;
         let li = state.p_setup.lines[i as usize];
@@ -556,14 +556,14 @@ pub fn P_GroupLines(state: &mut GameState) {
         }
         i += 1;
     }
-    i = 0_i32;
+    i = 0;
     while i < state.p_setup.numsectors {
         let sec = &mut state.p_setup.sectors[i as usize];
         sec.lines = Vec::with_capacity(sec.linecount as usize);
-        sec.linecount = 0_i32;
+        sec.linecount = 0;
         i += 1;
     }
-    i = 0_i32;
+    i = 0;
     while i < state.p_setup.numlines {
         let li_id = LineId(i as u32);
         let li = state.p_setup.lines[i as usize];
@@ -581,10 +581,10 @@ pub fn P_GroupLines(state: &mut GameState) {
         }
         i += 1;
     }
-    i = 0_i32;
+    i = 0;
     while i < state.p_setup.numsectors {
         M_ClearBox(&mut bbox);
-        j = 0_i32;
+        j = 0;
         while j < state.p_setup.sectors[i as usize].linecount {
             let li_id = state.p_setup.sectors[i as usize].lines[j as usize];
             let li = state.p_setup.line(li_id);
@@ -596,42 +596,42 @@ pub fn P_GroupLines(state: &mut GameState) {
         }
         let sector = &mut state.p_setup.sectors[i as usize];
         sector.soundorg.x =
-            ((bbox[BoxIndex::Right as usize] + bbox[BoxIndex::Left as usize]) / 2_i32) as fixed_t;
+            ((bbox[BoxIndex::Right as usize] + bbox[BoxIndex::Left as usize]) / 2) as fixed_t;
         sector.soundorg.y =
-            ((bbox[BoxIndex::Top as usize] + bbox[BoxIndex::Bottom as usize]) / 2_i32) as fixed_t;
-        block = (bbox[BoxIndex::Top as usize] - state.p_setup.bmaporgy + 32_i32 * FRACUNIT)
+            ((bbox[BoxIndex::Top as usize] + bbox[BoxIndex::Bottom as usize]) / 2) as fixed_t;
+        block = (bbox[BoxIndex::Top as usize] - state.p_setup.bmaporgy + 32 * FRACUNIT)
             >> MAPBLOCKSHIFT;
         block = if block >= state.p_setup.bmapheight {
-            state.p_setup.bmapheight - 1_i32
+            state.p_setup.bmapheight - 1
         } else {
             block
         };
         sector.blockbox[BoxIndex::Top as usize] = block;
-        block = (bbox[BoxIndex::Bottom as usize] - state.p_setup.bmaporgy - 32_i32 * FRACUNIT)
+        block = (bbox[BoxIndex::Bottom as usize] - state.p_setup.bmaporgy - 32 * FRACUNIT)
             >> MAPBLOCKSHIFT;
-        block = if block < 0_i32 { 0_i32 } else { block };
+        block = if block < 0 { 0 } else { block };
         sector.blockbox[BoxIndex::Bottom as usize] = block;
-        block = (bbox[BoxIndex::Right as usize] - state.p_setup.bmaporgx + 32_i32 * FRACUNIT)
+        block = (bbox[BoxIndex::Right as usize] - state.p_setup.bmaporgx + 32 * FRACUNIT)
             >> MAPBLOCKSHIFT;
         block = if block >= state.p_setup.bmapwidth {
-            state.p_setup.bmapwidth - 1_i32
+            state.p_setup.bmapwidth - 1
         } else {
             block
         };
         sector.blockbox[BoxIndex::Right as usize] = block;
-        block = (bbox[BoxIndex::Left as usize] - state.p_setup.bmaporgx - 32_i32 * FRACUNIT)
+        block = (bbox[BoxIndex::Left as usize] - state.p_setup.bmaporgx - 32 * FRACUNIT)
             >> MAPBLOCKSHIFT;
-        block = if block < 0_i32 { 0_i32 } else { block };
+        block = if block < 0 { 0 } else { block };
         sector.blockbox[BoxIndex::Left as usize] = block;
         i += 1;
     }
 }
 fn PadRejectArray(state: &mut GameState, offset: usize, len: u32) {
     let rejectpad: [u32; 4] = [
-        (((state.p_setup.totallines * 4_i32 + 3_i32) & !3_i32) + 24_i32) as u32,
-        0_i32 as u32,
-        50_i32 as u32,
-        0x1d4a11_i32 as u32,
+        (((state.p_setup.totallines * 4 + 3) & !3) + 24) as u32,
+        0,
+        50,
+        0x1d4a11,
     ];
     let pad_bytes = ::core::mem::size_of::<[u32; 4]>();
     let mut padvalue: u8 = 0;
@@ -645,19 +645,20 @@ fn PadRejectArray(state: &mut GameState, offset: usize, len: u32) {
         padvalue = if M_CheckParm(state, "-reject_pad_with_ff") != 0 {
             0xff
         } else {
-            0xf00_u32 as u8
+            // Upstream writes 0xf00 into a byte, which truncates to zero.
+            0
         };
     }
     let array = &mut state.p_setup.rejectmatrix[offset..offset + len as usize];
     for (i, dest) in array.iter_mut().enumerate().take(pad_bytes) {
-        *dest = (rejectpad[i / 4] >> ((i % 4) as u32 * 8) & 0xff_u32) as byte;
+        *dest = (rejectpad[i / 4] >> ((i % 4) as u32 * 8) & 0xff) as byte;
     }
     if len as usize > pad_bytes {
         array[pad_bytes..].fill(padvalue);
     }
 }
 fn P_LoadReject(state: &mut GameState, lumpnum: i32) {
-    let minlength = (state.p_setup.numsectors * state.p_setup.numsectors + 7_i32) / 8_i32;
+    let minlength = (state.p_setup.numsectors * state.p_setup.numsectors + 7) / 8;
     let lumplen = W_LumpLength(&mut state.w_wad, lumpnum as u32);
     if lumplen >= minlength {
         state.p_setup.rejectmatrix = W_LumpBytes(state, lumpnum)[..minlength as usize].to_vec();
@@ -675,23 +676,23 @@ fn P_LoadReject(state: &mut GameState, lumpnum: i32) {
 pub fn P_SetupLevel(state: &mut GameState, episode: i32, map: i32) {
     let mut i: i32;
 
-    state.g_game.wminfo.maxfrags = 0_i32;
+    state.g_game.wminfo.maxfrags = 0;
     state.g_game.totalsecret = state.g_game.wminfo.maxfrags;
     state.g_game.totalitems = state.g_game.totalsecret;
     state.g_game.totalkills = state.g_game.totalitems;
-    state.g_game.wminfo.partime = 180_i32;
-    i = 0_i32;
+    state.g_game.wminfo.partime = 180;
+    i = 0;
     while i < MAXPLAYERS {
-        state.g_game.players[i as usize].itemcount = 0_i32;
+        state.g_game.players[i as usize].itemcount = 0;
         state.g_game.players[i as usize].secretcount = state.g_game.players[i as usize].itemcount;
         state.g_game.players[i as usize].killcount = state.g_game.players[i as usize].secretcount;
         i += 1;
     }
-    state.g_game.players[state.g_game.consoleplayer as usize].viewz = 1_i32 as fixed_t;
+    state.g_game.players[state.g_game.consoleplayer as usize].viewz = 1;
     S_Start(state);
     P_InitThinkers(state);
     let lumpname = if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 {
-        if map < 10_i32 {
+        if map < 10 {
             format!("map0{}", map)
         } else {
             format!("map{}", map)
@@ -704,7 +705,7 @@ pub fn P_SetupLevel(state: &mut GameState, episode: i32, map: i32) {
         )
     };
     let lumpnum: i32 = W_GetNumForName(&mut state.w_wad, &lumpname);
-    state.p_tick.leveltime = 0_i32;
+    state.p_tick.leveltime = 0;
     P_LoadBlockMap(state, lumpnum + MapLump::ML_BLOCKMAP as i32);
     P_LoadVertexes(state, lumpnum + MapLump::ML_VERTEXES as i32);
     P_LoadSectors(state, lumpnum + MapLump::ML_SECTORS as i32);
@@ -715,11 +716,11 @@ pub fn P_SetupLevel(state: &mut GameState, episode: i32, map: i32) {
     P_LoadSegs(state, lumpnum + MapLump::ML_SEGS as i32);
     P_GroupLines(state);
     P_LoadReject(state, lumpnum + MapLump::ML_REJECT as i32);
-    state.g_game.bodyqueslot = 0_i32;
+    state.g_game.bodyqueslot = 0;
     state.p_setup.deathmatch_p = 0;
     P_LoadThings(state, lumpnum + MapLump::ML_THINGS as i32);
     if state.g_game.deathmatch != 0 {
-        i = 0_i32;
+        i = 0;
         while i < MAXPLAYERS {
             if state.g_game.playeringame[i as usize] {
                 state.g_game.players[i as usize].mo = None;
@@ -729,7 +730,7 @@ pub fn P_SetupLevel(state: &mut GameState, episode: i32, map: i32) {
         }
     }
     let gs = state;
-    gs.p_mobj.iquetail = 0_i32;
+    gs.p_mobj.iquetail = 0;
     gs.p_mobj.iquehead = gs.p_mobj.iquetail;
     P_SpawnSpecials(gs);
     if gs.g_game.precache {

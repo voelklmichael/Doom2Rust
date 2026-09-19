@@ -175,10 +175,10 @@ pub fn T_MoveFloor(state: &mut GameState, id: FloorId) {
         floor.speed,
         floor.floordestheight,
         floor.crush,
-        0_i32,
+        0,
         floor.direction,
     );
-    if state.p_tick.leveltime & 7_i32 == 0 {
+    if state.p_tick.leveltime & 7 == 0 {
         S_StartSound(
             state,
             SoundOrigin::Sector(floor.sector),
@@ -188,12 +188,12 @@ pub fn T_MoveFloor(state: &mut GameState, id: FloorId) {
     if res == ResultE::pastdest {
         let sec = state.p_setup.sector_mut(floor.sector);
         sec.specialdata = None;
-        if floor.direction == 1_i32 {
-            if floor.type_0 == FloorE::donutRaise {
+        if floor.direction == 1 {
+            if floor.kind == FloorE::donutRaise {
                 sec.special = floor.newspecial as i16;
                 sec.floorpic = floor.texture;
             }
-        } else if floor.direction == -1_i32 && floor.type_0 == FloorE::lowerAndChange {
+        } else if floor.direction == -1 && floor.kind == FloorE::lowerAndChange {
             sec.special = floor.newspecial as i16;
             sec.floorpic = floor.texture;
         }
@@ -207,20 +207,20 @@ pub fn T_MoveFloor(state: &mut GameState, id: FloorId) {
 }
 pub fn EV_DoFloor(state: &mut GameState, line: LineId, floortype: FloorE) -> i32 {
     let mut rtn: i32 = 0;
-    let mut secnum: i32 = -1_i32;
+    let mut secnum: i32 = -1;
     loop {
         secnum = P_FindSectorFromLineTag(state, line, secnum);
-        if secnum < 0_i32 {
+        if secnum < 0 {
             break;
         }
         let sec = SectorId(secnum as u32);
         if state.p_setup.sector_mut(sec).specialdata.is_some() {
             continue;
         }
-        rtn = 1_i32;
+        rtn = 1;
         let mut floor = floormove_t::default();
         floor.thinker.function = ThinkerFn::Floor(T_MoveFloor);
-        floor.type_0 = floortype;
+        floor.kind = floortype;
         floor.crush = false;
         let (floorheight, ceilingheight, linecount) = {
             let s = state.p_setup.sector_mut(sec);
@@ -229,24 +229,24 @@ pub fn EV_DoFloor(state: &mut GameState, line: LineId, floortype: FloorE) -> i32
         let mut raise_lowest_ceiling = false;
         match floortype {
             FloorE::lowerFloor => {
-                floor.direction = -1_i32;
+                floor.direction = -1;
                 floor.sector = sec;
                 floor.speed = FLOORSPEED as fixed_t;
                 floor.floordestheight = P_FindHighestFloorSurrounding(state, sec);
             }
             FloorE::lowerFloorToLowest => {
-                floor.direction = -1_i32;
+                floor.direction = -1;
                 floor.sector = sec;
                 floor.speed = FLOORSPEED as fixed_t;
                 floor.floordestheight = P_FindLowestFloorSurrounding(state, sec);
             }
             FloorE::turboLower => {
-                floor.direction = -1_i32;
+                floor.direction = -1;
                 floor.sector = sec;
-                floor.speed = (FLOORSPEED * 4_i32) as fixed_t;
+                floor.speed = (FLOORSPEED * 4) as fixed_t;
                 floor.floordestheight = P_FindHighestFloorSurrounding(state, sec);
                 if floor.floordestheight != floorheight {
-                    floor.floordestheight += 8_i32 * FRACUNIT;
+                    floor.floordestheight += 8 * FRACUNIT;
                 }
             }
             FloorE::raiseFloorCrush => {
@@ -257,34 +257,34 @@ pub fn EV_DoFloor(state: &mut GameState, line: LineId, floortype: FloorE) -> i32
                 raise_lowest_ceiling = true;
             }
             FloorE::raiseFloorTurbo => {
-                floor.direction = 1_i32;
+                floor.direction = 1;
                 floor.sector = sec;
-                floor.speed = (FLOORSPEED * 4_i32) as fixed_t;
+                floor.speed = (FLOORSPEED * 4) as fixed_t;
                 floor.floordestheight = P_FindNextHighestFloor(state, sec, floorheight);
             }
             FloorE::raiseFloorToNearest => {
-                floor.direction = 1_i32;
+                floor.direction = 1;
                 floor.sector = sec;
                 floor.speed = FLOORSPEED as fixed_t;
                 floor.floordestheight = P_FindNextHighestFloor(state, sec, floorheight);
             }
             FloorE::raiseFloor24 => {
-                floor.direction = 1_i32;
+                floor.direction = 1;
                 floor.sector = sec;
                 floor.speed = FLOORSPEED as fixed_t;
-                floor.floordestheight = (floorheight + 24_i32 * FRACUNIT) as fixed_t;
+                floor.floordestheight = (floorheight + 24 * FRACUNIT) as fixed_t;
             }
             FloorE::raiseFloor512 => {
-                floor.direction = 1_i32;
+                floor.direction = 1;
                 floor.sector = sec;
                 floor.speed = FLOORSPEED as fixed_t;
-                floor.floordestheight = (floorheight + 512_i32 * FRACUNIT) as fixed_t;
+                floor.floordestheight = (floorheight + 512 * FRACUNIT) as fixed_t;
             }
             FloorE::raiseFloor24AndChange => {
-                floor.direction = 1_i32;
+                floor.direction = 1;
                 floor.sector = sec;
                 floor.speed = FLOORSPEED as fixed_t;
-                floor.floordestheight = (floorheight + 24_i32 * FRACUNIT) as fixed_t;
+                floor.floordestheight = (floorheight + 24 * FRACUNIT) as fixed_t;
                 let front = state.p_setup.line(line).frontsector.unwrap();
                 let (front_pic, front_special) = {
                     let fsec = state.p_setup.sector_mut(front);
@@ -296,7 +296,7 @@ pub fn EV_DoFloor(state: &mut GameState, line: LineId, floortype: FloorE) -> i32
             }
             FloorE::raiseToTexture => {
                 let mut minsize: i32 = INT_MAX;
-                floor.direction = 1_i32;
+                floor.direction = 1;
                 floor.sector = sec;
                 floor.speed = FLOORSPEED as fixed_t;
                 for i in 0..linecount {
@@ -304,7 +304,7 @@ pub fn EV_DoFloor(state: &mut GameState, line: LineId, floortype: FloorE) -> i32
                         for side_index in 0..2_i32 {
                             let side = getSide(state, secnum, i, side_index);
                             let bottomtexture = state.p_setup.side_mut(side).bottomtexture;
-                            if bottomtexture as i32 >= 0_i32
+                            if bottomtexture as i32 >= 0
                                 && state.r_data.textureheight[bottomtexture as usize] < minsize
                             {
                                 minsize = state.r_data.textureheight[bottomtexture as usize];
@@ -315,19 +315,19 @@ pub fn EV_DoFloor(state: &mut GameState, line: LineId, floortype: FloorE) -> i32
                 floor.floordestheight = (floorheight + minsize) as fixed_t;
             }
             FloorE::lowerAndChange => {
-                floor.direction = -1_i32;
+                floor.direction = -1;
                 floor.sector = sec;
                 floor.speed = FLOORSPEED as fixed_t;
                 floor.floordestheight = P_FindLowestFloorSurrounding(state, sec);
                 floor.texture = state.p_setup.sector_mut(sec).floorpic;
                 for i in 0..linecount {
                     if twoSided(state, secnum, i) != 0 {
-                        let side0 = getSide(state, secnum, i, 0_i32);
+                        let side0 = getSide(state, secnum, i, 0);
                         let side0_sector = state.p_setup.side_mut(side0).sector;
                         let other = if side0_sector.0 == secnum as u32 {
-                            getSector(state, secnum, i, 1_i32)
+                            getSector(state, secnum, i, 1)
                         } else {
-                            getSector(state, secnum, i, 0_i32)
+                            getSector(state, secnum, i, 0)
                         };
                         let (other_floor, other_pic, other_special) = {
                             let o = state.p_setup.sector_mut(other);
@@ -344,15 +344,14 @@ pub fn EV_DoFloor(state: &mut GameState, line: LineId, floortype: FloorE) -> i32
             _ => {}
         }
         if raise_lowest_ceiling {
-            floor.direction = 1_i32;
+            floor.direction = 1;
             floor.sector = sec;
             floor.speed = FLOORSPEED as fixed_t;
             floor.floordestheight = P_FindLowestCeilingSurrounding(state, sec);
             if floor.floordestheight > ceilingheight {
                 floor.floordestheight = ceilingheight;
             }
-            floor.floordestheight -=
-                8_i32 * FRACUNIT * (floortype == FloorE::raiseFloorCrush) as i32;
+            floor.floordestheight -= 8 * FRACUNIT * (floortype == FloorE::raiseFloorCrush) as i32;
         }
         let floor_arena_id = state.p_spec.spawn_floor(floor);
         let floor_id = P_AddThinker(
@@ -367,7 +366,7 @@ pub fn EV_DoFloor(state: &mut GameState, line: LineId, floortype: FloorE) -> i32
 fn spawn_stair(state: &mut GameState, sec: SectorId, speed: fixed_t, height: i32) {
     let mut floor = floormove_t::default();
     floor.thinker.function = ThinkerFn::Floor(T_MoveFloor);
-    floor.direction = 1_i32;
+    floor.direction = 1;
     floor.sector = sec;
     floor.speed = speed;
     floor.floordestheight = height as fixed_t;
@@ -379,28 +378,22 @@ fn spawn_stair(state: &mut GameState, sec: SectorId, speed: fixed_t, height: i32
     );
     state.p_setup.sector_mut(sec).specialdata = Some(SectorSpecial::Floor(floor_id));
 }
-pub fn EV_BuildStairs(state: &mut GameState, line: LineId, type_0: StairE) -> i32 {
+pub fn EV_BuildStairs(state: &mut GameState, line: LineId, kind: StairE) -> i32 {
     let mut rtn: i32 = 0;
-    let mut secnum: i32 = -1_i32;
+    let mut secnum: i32 = -1;
     loop {
         secnum = P_FindSectorFromLineTag(state, line, secnum);
-        if secnum < 0_i32 {
+        if secnum < 0 {
             break;
         }
         let mut sec = SectorId(secnum as u32);
         if state.p_setup.sector_mut(sec).specialdata.is_some() {
             continue;
         }
-        rtn = 1_i32;
-        let (speed, stairsize): (fixed_t, fixed_t) = match type_0 {
-            StairE::build8 => (
-                (FLOORSPEED / 4_i32) as fixed_t,
-                (8_i32 * FRACUNIT) as fixed_t,
-            ),
-            StairE::turbo16 => (
-                (FLOORSPEED * 4_i32) as fixed_t,
-                (16_i32 * FRACUNIT) as fixed_t,
-            ),
+        rtn = 1;
+        let (speed, stairsize): (fixed_t, fixed_t) = match kind {
+            StairE::build8 => ((FLOORSPEED / 4) as fixed_t, (8 * FRACUNIT) as fixed_t),
+            StairE::turbo16 => ((FLOORSPEED * 4) as fixed_t, (16 * FRACUNIT) as fixed_t),
         };
         let mut height: i32 = state.p_setup.sector_mut(sec).floorheight + stairsize;
         let texture = state.p_setup.sector_mut(sec).floorpic as i32;

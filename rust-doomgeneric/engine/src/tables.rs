@@ -1515,4 +1515,4 @@ pub const ANG180: u32 = 0x80000000;
 pub const ANG90: i32 = 0x40000000;
 pub const ANG270: u32 = 0xc0000000;
 pub const ANG45: i32 = 0x20000000;
-pub const FINEMASK: i32 = FINEANGLES - 1_i32;
+pub const FINEMASK: i32 = FINEANGLES - 1;

@@ -1,6 +1,5 @@
 use crate::d_mode::GameVersion;
 use crate::game_state::GameState;
-use crate::m_fixed::fixed_t;
 use crate::p_map::P_TeleportMove;
 use crate::p_mobj::MobjId;
 use crate::p_tick::ThinkerPayload;
@@ -19,10 +18,10 @@ use crate::tables::finesine;
 use crate::tables::ANGLETOFINESHIFT;
 pub fn EV_Teleport(state: &mut GameState, line: LineId, side: i32, thing: MobjId) -> i32 {
     if state.p_mobj.mo(thing).flags & MF_MISSILE != 0 {
-        return 0_i32;
+        return 0;
     }
-    if side == 1_i32 {
-        return 0_i32;
+    if side == 1 {
+        return 0;
     }
     let tag = state.p_setup.line(line).tag as i32;
     for i in 0..state.p_setup.numsectors {
@@ -36,7 +35,7 @@ pub fn EV_Teleport(state: &mut GameState, line: LineId, side: i32, thing: MobjId
                     let mo = state.p_mobj.mo(m);
                     (
                         matches!(mo.thinker.function, ThinkerFn::Mobj(_)),
-                        mo.type_0,
+                        mo.kind,
                         mo.subsector,
                         mo.x,
                         mo.y,
@@ -51,7 +50,7 @@ pub fn EV_Teleport(state: &mut GameState, line: LineId, side: i32, thing: MobjId
                             (t.x, t.y, t.z)
                         };
                         if !P_TeleportMove(state, thing, m_x, m_y) {
-                            return 0_i32;
+                            return 0;
                         }
                         if state.doomstat.gameversion != GameVersion::r#final {
                             let t = state.p_mobj.mo_mut(thing);
@@ -68,26 +67,26 @@ pub fn EV_Teleport(state: &mut GameState, line: LineId, side: i32, thing: MobjId
                         let thing_z = state.p_mobj.mo(thing).z;
                         let fog = P_SpawnMobj(
                             state,
-                            m_x + 20 as fixed_t * finecosine[an as usize],
-                            m_y + 20 as fixed_t * finesine[an as usize],
+                            m_x + 20 * finecosine[an as usize],
+                            m_y + 20 * finesine[an as usize],
                             thing_z,
                             MobjType::MT_TFOG,
                         );
                         S_StartSound(state, SoundOrigin::Mobj(fog), SfxName::sfx_telept as i32);
                         let t = state.p_mobj.mo_mut(thing);
                         if t.player.is_some() {
-                            t.reactiontime = 18_i32;
+                            t.reactiontime = 18;
                         }
                         t.angle = m_angle;
-                        t.momz = 0_i32 as fixed_t;
+                        t.momz = 0;
                         t.momy = t.momz;
                         t.momx = t.momy;
-                        return 1_i32;
+                        return 1;
                     }
                 }
             }
             cursor = state.p_tick.next(id);
         }
     }
-    0_i32
+    0
 }

@@ -30,7 +30,7 @@ fn PlayerQuitGame(state: &mut GameState, player_num: u32) {
 }
 fn RunTic(state: &mut GameState, cmds: &[ticcmd_t], ingame: &[bool]) {
     let mut i: u32;
-    i = 0_u32;
+    i = 0;
     while i < MAXPLAYERS as u32 {
         if !state.g_game.demoplayback
             && state.g_game.playeringame[i as usize]
@@ -69,7 +69,7 @@ fn LoadGameSettings(state: &mut GameState, settings: &mut net_gamesettings_t) {
             "NOTE: Turning resolution is reduced; this is probably because there is a client recording a Vanilla demo."
         );
     }
-    i = 0_u32;
+    i = 0;
     while i < MAXPLAYERS as u32 {
         state.g_game.playeringame[i as usize] = i < settings.num_players as u32;
         i = i.wrapping_add(1);
@@ -87,25 +87,25 @@ fn SaveGameSettings(state: &mut GameState, settings: &mut net_gamesettings_t) {
     settings.respawn_monsters = state.d_main.respawnparm as i32;
     settings.timelimit = state.g_game.timelimit;
     settings.lowres_turn =
-        (M_CheckParm(state, "-record") > 0_i32 && M_CheckParm(state, "-longtics") == 0_i32) as i32;
+        (M_CheckParm(state, "-record") > 0 && M_CheckParm(state, "-longtics") == 0) as i32;
 }
 fn InitConnectData(state: &mut GameState, connect_data: &mut net_connect_data_t) {
     connect_data.max_players = MAXPLAYERS;
     connect_data.drone = false_0;
-    if M_CheckParm(state, "-left") > 0_i32 {
+    if M_CheckParm(state, "-left") > 0 {
         state.r_main.viewangleoffset = ANG90;
         connect_data.drone = true_0;
     }
-    if M_CheckParm(state, "-right") > 0_i32 {
+    if M_CheckParm(state, "-right") > 0 {
         state.r_main.viewangleoffset = ANG270 as i32;
         connect_data.drone = true_0;
     }
     connect_data.gamemode = state.doomstat.gamemode as i32;
     connect_data.gamemission = state.doomstat.gamemission as i32;
     connect_data.lowres_turn =
-        (M_CheckParm(state, "-record") > 0_i32 && M_CheckParm(state, "-longtics") == 0_i32) as i32;
+        (M_CheckParm(state, "-record") > 0 && M_CheckParm(state, "-longtics") == 0) as i32;
     connect_data.wad_sha1sum = W_Checksum(state);
-    connect_data.is_freedoom = (W_CheckNumForName(&mut state.w_wad, "FREEDOOM") >= 0_i32) as i32;
+    connect_data.is_freedoom = (W_CheckNumForName(&mut state.w_wad, "FREEDOOM") >= 0) as i32;
 }
 pub fn D_ConnectNetGame(state: &mut GameState) {
     let mut connect_data: net_connect_data_t = net_connect_data_t {
@@ -120,7 +120,7 @@ pub fn D_ConnectNetGame(state: &mut GameState) {
     };
     InitConnectData(state, &mut connect_data);
     state.g_game.netgame = D_InitNetGame(state, &mut connect_data);
-    if M_CheckParm(state, "-solo-net") > 0_i32 {
+    if M_CheckParm(state, "-solo-net") > 0 {
         state.g_game.netgame = true;
     }
 }
@@ -162,12 +162,12 @@ pub fn D_CheckNetGame(state: &mut GameState) {
     doom_println!(
         state.platform,
         "player {} of {} ({} nodes)",
-        state.g_game.consoleplayer + 1_i32,
+        state.g_game.consoleplayer + 1,
         settings.num_players,
         settings.num_players,
     );
-    if state.g_game.timelimit > 0_i32 && state.g_game.deathmatch != 0 {
-        if state.g_game.timelimit == 20_i32 && M_CheckParm(state, "-avg") != 0 {
+    if state.g_game.timelimit > 0 && state.g_game.deathmatch != 0 {
+        if state.g_game.timelimit == 20 && M_CheckParm(state, "-avg") != 0 {
             doom_println!(
                 state.platform,
                 "Austin Virtual Gaming: Levels will end after 20 minutes"
@@ -178,7 +178,7 @@ pub fn D_CheckNetGame(state: &mut GameState) {
                 "Levels will end after {} minute",
                 state.g_game.timelimit
             );
-            if state.g_game.timelimit > 1_i32 {
+            if state.g_game.timelimit > 1 {
                 doom_print!(state.platform, "s");
             }
             doom_println!(state.platform, ".");

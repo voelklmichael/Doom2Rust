@@ -71,8 +71,8 @@ pub fn V_MarkRect(state: &mut GameState, dest: Screen, x: i32, y: i32, width: i3
         M_AddToBox(&mut state.v_video.dirtybox, x as fixed_t, y as fixed_t);
         M_AddToBox(
             &mut state.v_video.dirtybox,
-            x as fixed_t + width as fixed_t - 1 as fixed_t,
-            y as fixed_t + height as fixed_t - 1 as fixed_t,
+            x as fixed_t + width as fixed_t - 1,
+            y as fixed_t + height as fixed_t - 1,
         );
     }
 }
@@ -88,13 +88,13 @@ pub fn V_CopyRect(
     destx: i32,
     desty: i32,
 ) {
-    if srcx < 0_i32
+    if srcx < 0
         || srcx + width > SCREENWIDTH
-        || srcy < 0_i32
+        || srcy < 0
         || srcy + height > SCREENHEIGHT
-        || destx < 0_i32
+        || destx < 0
         || destx + width > SCREENWIDTH
-        || desty < 0_i32
+        || desty < 0
         || desty + height > SCREENHEIGHT
     {
         I_Error("Bad V_CopyRect");
@@ -139,11 +139,7 @@ fn blit_patch(screen: &mut [byte], patch: &Patch, x: i32, y: i32, flipped: bool)
 pub fn V_DrawPatch(state: &mut GameState, dest: Screen, x: i32, y: i32, patch: &Patch) {
     let y = y - patch.topoffset();
     let x = x - patch.leftoffset();
-    if x < 0_i32
-        || x + patch.width() > SCREENWIDTH
-        || y < 0_i32
-        || y + patch.height() > SCREENHEIGHT
-    {
+    if x < 0 || x + patch.width() > SCREENWIDTH || y < 0 || y + patch.height() > SCREENHEIGHT {
         I_Error(&format!(
             "Bad V_DrawPatch x={} y={} patch.width={} patch.height={} topoffset={} leftoffset={}",
             x,
@@ -160,11 +156,7 @@ pub fn V_DrawPatch(state: &mut GameState, dest: Screen, x: i32, y: i32, patch: &
 pub fn V_DrawPatchFlipped(state: &mut GameState, dest: Screen, x: i32, y: i32, patch: &Patch) {
     let y = y - patch.topoffset();
     let x = x - patch.leftoffset();
-    if x < 0_i32
-        || x + patch.width() > SCREENWIDTH
-        || y < 0_i32
-        || y + patch.height() > SCREENHEIGHT
-    {
+    if x < 0 || x + patch.width() > SCREENWIDTH || y < 0 || y + patch.height() > SCREENHEIGHT {
         I_Error("Bad V_DrawPatchFlipped");
     }
     V_MarkRect(state, dest, x, y, patch.width(), patch.height());
@@ -182,7 +174,7 @@ pub fn V_DrawBlock(
     height: i32,
     src: &[byte],
 ) {
-    if x < 0_i32 || x + width > SCREENWIDTH || y < 0_i32 || y + height > SCREENHEIGHT {
+    if x < 0 || x + width > SCREENWIDTH || y < 0 || y + height > SCREENHEIGHT {
         I_Error("Bad V_DrawBlock");
     }
     V_MarkRect(state, dest, x, y, width, height);
@@ -210,9 +202,9 @@ pub fn V_DrawVertLine(state: &mut IVideoState, x: i32, y: i32, h: i32, c: i32) {
 }
 pub fn V_DrawBox(state: &mut IVideoState, x: i32, y: i32, w: i32, h: i32, c: i32) {
     V_DrawHorizLine(state, x, y, w, c);
-    V_DrawHorizLine(state, x, y + h - 1_i32, w, c);
+    V_DrawHorizLine(state, x, y + h - 1, w, c);
     V_DrawVertLine(state, x, y, h, c);
-    V_DrawVertLine(state, x + w - 1_i32, y, h, c);
+    V_DrawVertLine(state, x + w - 1, y, h, c);
 }
 pub fn WritePCXfile(
     fs: &mut dyn DoomFileSystem,
@@ -223,24 +215,23 @@ pub fn WritePCXfile(
     palette: &[byte],
 ) {
     // 128-byte on-disk PCX header.
-    let mut pack: Vec<u8> =
-        Vec::with_capacity((128 + width * height * 2_i32 + 768_i32 + 1_i32) as usize);
-    pack.extend_from_slice(&[0xa_u8, 5_u8, 1_u8, 8_u8]);
+    let mut pack: Vec<u8> = Vec::with_capacity((128 + width * height * 2 + 768 + 1) as usize);
+    pack.extend_from_slice(&[0xa, 5, 1, 8]);
     pack.extend_from_slice(&0_u16.to_le_bytes());
     pack.extend_from_slice(&0_u16.to_le_bytes());
-    pack.extend_from_slice(&((width - 1_i32) as i16 as u16).to_le_bytes());
-    pack.extend_from_slice(&((height - 1_i32) as i16 as u16).to_le_bytes());
+    pack.extend_from_slice(&((width - 1) as i16 as u16).to_le_bytes());
+    pack.extend_from_slice(&((height - 1) as i16 as u16).to_le_bytes());
     pack.extend_from_slice(&(width as i16 as u16).to_le_bytes());
     pack.extend_from_slice(&(height as i16 as u16).to_le_bytes());
     pack.extend_from_slice(&[0u8; 48]);
     pack.push(0);
-    pack.push(1_u8);
+    pack.push(1);
     pack.extend_from_slice(&(width as i16 as u16).to_le_bytes());
-    pack.extend_from_slice(&(2_i32 as i16 as u16).to_le_bytes());
+    pack.extend_from_slice(&(2_i16 as u16).to_le_bytes());
     pack.extend_from_slice(&[0u8; 58]);
     debug_assert_eq!(pack.len(), 128);
     for &pixel in &data[..(width * height) as usize] {
-        if pixel as i32 & 0xc0_i32 != 0xc0_i32 {
+        if pixel as i32 & 0xc0 != 0xc0 {
             pack.push(pixel);
         } else {
             pack.push(0xc1 as byte);
@@ -261,7 +252,7 @@ pub fn V_ScreenShot(state: &mut GameState) {
         }
         i += 1;
     }
-    if i == 100_i32 {
+    if i == 100 {
         I_Error("V_ScreenShot: Couldn't create a PCX");
     }
     let palette = W_LumpBytesName(state, "PLAYPAL");
@@ -280,17 +271,17 @@ pub fn V_DrawMouseSpeedBox(state: &mut IVideoState, platform: &mut dyn DoomPlatf
     let mut original_speed: i32;
 
     let mut linelen: i32;
-    let bgcolor: i32 = I_GetPaletteIndex(platform, 0x77_i32, 0x77_i32, 0x77_i32);
-    let bordercolor: i32 = I_GetPaletteIndex(platform, 0x55_i32, 0x55_i32, 0x55_i32);
-    let red: i32 = I_GetPaletteIndex(platform, 0xff_i32, 0_i32, 0_i32);
-    let black: i32 = I_GetPaletteIndex(platform, 0_i32, 0_i32, 0_i32);
-    let yellow: i32 = I_GetPaletteIndex(platform, 0xff_i32, 0xff_i32, 0_i32);
-    let white: i32 = I_GetPaletteIndex(platform, 0xff_i32, 0xff_i32, 0xff_i32);
+    let bgcolor: i32 = I_GetPaletteIndex(platform, 0x77, 0x77, 0x77);
+    let bordercolor: i32 = I_GetPaletteIndex(platform, 0x55, 0x55, 0x55);
+    let red: i32 = I_GetPaletteIndex(platform, 0xff, 0, 0);
+    let black: i32 = I_GetPaletteIndex(platform, 0, 0, 0);
+    let yellow: i32 = I_GetPaletteIndex(platform, 0xff, 0xff, 0);
+    let white: i32 = I_GetPaletteIndex(platform, 0xff, 0xff, 0xff);
     if state.usemouse == 0 || ((state.mouse_acceleration - 1_f32) as f64).abs() < 0.01f64 {
         return;
     }
-    let box_x: i32 = SCREENWIDTH - MOUSE_SPEED_BOX_WIDTH - 10_i32;
-    let box_y: i32 = 15_i32;
+    let box_x: i32 = SCREENWIDTH - MOUSE_SPEED_BOX_WIDTH - 10;
+    let box_y: i32 = 15;
     V_DrawFilledBox(
         state,
         box_x,
@@ -307,7 +298,7 @@ pub fn V_DrawMouseSpeedBox(state: &mut IVideoState, platform: &mut dyn DoomPlatf
         MOUSE_SPEED_BOX_HEIGHT,
         bordercolor,
     );
-    let redline_x: i32 = MOUSE_SPEED_BOX_WIDTH / 3_i32;
+    let redline_x: i32 = MOUSE_SPEED_BOX_WIDTH / 3;
     if speed < state.mouse_threshold {
         original_speed = speed;
     } else {
@@ -316,36 +307,36 @@ pub fn V_DrawMouseSpeedBox(state: &mut IVideoState, platform: &mut dyn DoomPlatf
         original_speed += state.mouse_threshold;
     }
     linelen = original_speed * redline_x / state.mouse_threshold;
-    if linelen > MOUSE_SPEED_BOX_WIDTH - 1_i32 {
-        linelen = MOUSE_SPEED_BOX_WIDTH - 1_i32;
+    if linelen > MOUSE_SPEED_BOX_WIDTH - 1 {
+        linelen = MOUSE_SPEED_BOX_WIDTH - 1;
     }
     V_DrawHorizLine(
         state,
-        box_x + 1_i32,
-        box_y + 4_i32,
-        MOUSE_SPEED_BOX_WIDTH - 2_i32,
+        box_x + 1,
+        box_y + 4,
+        MOUSE_SPEED_BOX_WIDTH - 2,
         black,
     );
     if linelen < redline_x {
         V_DrawHorizLine(
             state,
-            box_x + 1_i32,
-            box_y + MOUSE_SPEED_BOX_HEIGHT / 2_i32,
+            box_x + 1,
+            box_y + MOUSE_SPEED_BOX_HEIGHT / 2,
             linelen,
             white,
         );
     } else {
         V_DrawHorizLine(
             state,
-            box_x + 1_i32,
-            box_y + MOUSE_SPEED_BOX_HEIGHT / 2_i32,
+            box_x + 1,
+            box_y + MOUSE_SPEED_BOX_HEIGHT / 2,
             redline_x,
             white,
         );
         V_DrawHorizLine(
             state,
             box_x + redline_x,
-            box_y + MOUSE_SPEED_BOX_HEIGHT / 2_i32,
+            box_y + MOUSE_SPEED_BOX_HEIGHT / 2,
             linelen - redline_x,
             yellow,
         );
@@ -353,8 +344,8 @@ pub fn V_DrawMouseSpeedBox(state: &mut IVideoState, platform: &mut dyn DoomPlatf
     V_DrawVertLine(
         state,
         box_x + redline_x,
-        box_y + 1_i32,
-        MOUSE_SPEED_BOX_HEIGHT - 2_i32,
+        box_y + 1,
+        MOUSE_SPEED_BOX_HEIGHT - 2,
         red,
     );
 }
