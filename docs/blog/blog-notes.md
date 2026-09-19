@@ -351,6 +351,17 @@ became a test first (section 7), then literals, bool, loops, naming, clippy lint
 **Step 9: hardware (Sep 19).** The unchanged engine crate on an ESP32-S3: display bring-up,
 demos, Wi-Fi keyboard input, own DMA display driver, its own Wi-Fi access point, power-off on quit.
 
+**The shareware game fits the IoT device; the full game does not.** The board has 16 MB of flash
+and 8 MB of PSRAM. The 4.2 MB shareware WAD is embedded in the firmware image and read in place
+from flash, giving a 5.2 MB image in an 8 MB app partition (the default partition table only has
+~4 MB, so it had to be enlarged). The commercial WADs on this machine are much bigger: `DOOM.WAD`
+is 11.2 MB and `DOOM2.WAD` is 14.6 MB. By simple arithmetic (about 1 MB of firmware plus the
+WAD) that is a ~12 MB image for Doom and ~15.6 MB for Doom II, which does not fit the 8 MB
+partition, and for Doom II would nearly fill the entire 16 MB flash. So on this board the game
+is limited to the shareware episode as things stand. Ways round it (a larger partition, a
+separate data partition, external storage) are untried, and so is whether the full game's level
+data would fit in the 8 MB of RAM. The image sizes are estimates, not builds.
+
 Why it worked: the oracle (section 7), one small PR per step, a verification bar that never moved (no new warnings,
 identical simulation hashes on demo1 to demo3), and stacked PRs merged in order. The standing
 "continue until done" authorization let phases chain without waiting.
@@ -443,4 +454,5 @@ identical simulation hashes on demo1 to demo3), and stacked PRs merged in order.
     sound work gets the same kind of check as the rest.
 - **Testing of more games and levels.** The oracle's coverage is what its demos and scripts
   reach, on one WAD file (see the WAD caveat in section 7). Other games (Doom II, Ultimate Doom,
-  Final Doom), most levels and mods are untested.
+  Final Doom), most levels and mods are untested. On the ESP32 the full game does not fit at all
+  (see the end of Step 9 in section 8): only the shareware episode does.
