@@ -218,8 +218,17 @@ async fn main(spawner: Spawner) {
                 core::mem::size_of_val(&*state),
                 esp_alloc::HEAP.free()
             );
-            let args: Vec<_> = ["doomgeneric", "-iwad", "doom1.wad", "-scaling", "1"]
-                .into_iter()
+            // `-nomusic`: the OPL music synthesizer is in the engine, but its cost on this chip is
+            // not measured yet; the device plays sound effects only until it is.
+            let args: Vec<_> = [
+                "doomgeneric",
+                "-iwad",
+                "doom1.wad",
+                "-scaling",
+                "1",
+                "-nomusic",
+            ]
+            .into_iter()
                 .map(ToString::to_string)
                 .collect();
             doomgeneric_create(state, args);
