@@ -85,7 +85,7 @@ pub fn R_MapPlane(state: &mut GameState, y: i32, x1: i32, x2: i32) {
     let distance: fixed_t;
 
     let mut index: u32;
-    if x2 < x1 || x1 < 0_i32 || x2 >= state.r_draw.viewwidth || y > state.r_draw.viewheight {
+    if x2 < x1 || x1 < 0 || x2 >= state.r_draw.viewwidth || y > state.r_draw.viewheight {
         I_Error(&format!("R_MapPlane: {}, {} at {}", x1, x2, y));
     }
     if state.r_plane.planeheight != state.r_plane.cachedheight[y as usize] {
@@ -115,7 +115,7 @@ pub fn R_MapPlane(state: &mut GameState, y: i32, x1: i32, x2: i32) {
     } else {
         index = (distance >> LIGHTZSHIFT) as u32;
         if index >= MAXLIGHTZ as u32 {
-            index = (MAXLIGHTZ - 1_i32) as u32;
+            index = (MAXLIGHTZ - 1) as u32;
         }
         state.r_draw.ds_colormap = state.r_main.zlight[state.r_plane.planezlight][index as usize];
     }
@@ -127,10 +127,10 @@ pub fn R_MapPlane(state: &mut GameState, y: i32, x1: i32, x2: i32) {
 pub fn R_ClearPlanes(state: &mut GameState) {
     let mut i: i32;
 
-    i = 0_i32;
+    i = 0;
     while i < state.r_draw.viewwidth {
         state.r_plane.floorclip[i as usize] = state.r_draw.viewheight as i16;
-        state.r_plane.ceilingclip[i as usize] = -1_i32 as i16;
+        state.r_plane.ceilingclip[i as usize] = -1_i16;
         i += 1;
     }
     state.r_plane.lastvisplane = 0;
@@ -148,8 +148,8 @@ pub fn R_FindPlane(
 ) -> usize {
     let mut check: usize = 0;
     if picnum == state.r_sky.skyflatnum {
-        height = 0_i32 as fixed_t;
-        lightlevel = 0_i32;
+        height = 0;
+        lightlevel = 0;
     }
     while check < state.r_plane.lastvisplane {
         let pl = state.r_plane.visplanes[check];
@@ -170,7 +170,7 @@ pub fn R_FindPlane(
     pl.picnum = picnum;
     pl.lightlevel = lightlevel;
     pl.minx = SCREENWIDTH;
-    pl.maxx = -1_i32;
+    pl.maxx = -1;
     pl.clear_top();
     check
 }
@@ -188,7 +188,7 @@ pub fn R_CheckPlane(state: &mut GameState, pl: usize, start: i32, stop: i32) -> 
     };
     let mut x = intrl;
     while x <= intrh {
-        if plv.top(x) as i32 != 0xff_i32 {
+        if plv.top(x) as i32 != 0xff {
             break;
         }
         x += 1;
@@ -220,12 +220,12 @@ pub fn R_MakeSpans(
 ) {
     while t1 < t2 && t1 <= b1 {
         let spanstart_t1 = state.r_plane.spanstart[t1 as usize];
-        R_MapPlane(state, t1, spanstart_t1, x - 1_i32);
+        R_MapPlane(state, t1, spanstart_t1, x - 1);
         t1 += 1;
     }
     while b1 > b2 && b1 >= t1 {
         let spanstart_b1 = state.r_plane.spanstart[b1 as usize];
-        R_MapPlane(state, b1, spanstart_b1, x - 1_i32);
+        R_MapPlane(state, b1, spanstart_b1, x - 1);
         b1 -= 1;
     }
     while t2 < t1 && t2 <= b2 {
@@ -256,7 +256,7 @@ pub fn R_DrawPlanes(state: &mut GameState) {
             state.r_plane.lastvisplane as i64,
         ));
     }
-    if state.r_plane.lastopening as i64 > (SCREENWIDTH * 64_i32) as i64 {
+    if state.r_plane.lastopening as i64 > (SCREENWIDTH * 64) as i64 {
         I_Error(&format!(
             "R_DrawPlanes: opening overflow ({})",
             state.r_plane.lastopening as i64,
@@ -298,23 +298,23 @@ pub fn R_DrawPlanes(state: &mut GameState) {
                 state.r_plane.planeheight = (plv.height - state.r_main.viewz).abs() as fixed_t;
                 light = (plv.lightlevel >> LIGHTSEGSHIFT) + state.r_main.extralight;
                 if light >= LIGHTLEVELS {
-                    light = LIGHTLEVELS - 1_i32;
+                    light = LIGHTLEVELS - 1;
                 }
-                if light < 0_i32 {
-                    light = 0_i32;
+                if light < 0 {
+                    light = 0;
                 }
                 state.r_plane.planezlight = light as usize;
-                plv.set_top(plv.maxx + 1_i32, 0xff as byte);
-                plv.set_top(plv.minx - 1_i32, 0xff as byte);
+                plv.set_top(plv.maxx + 1, 0xff as byte);
+                plv.set_top(plv.minx - 1, 0xff as byte);
                 state.r_plane.visplanes[pl] = plv;
-                stop = plv.maxx + 1_i32;
+                stop = plv.maxx + 1;
                 x = plv.minx;
                 while x <= stop {
                     R_MakeSpans(
                         state,
                         x,
-                        plv.top(x - 1_i32) as i32,
-                        plv.bottom(x - 1_i32) as i32,
+                        plv.top(x - 1) as i32,
+                        plv.bottom(x - 1) as i32,
                         plv.top(x) as i32,
                         plv.bottom(x) as i32,
                     );

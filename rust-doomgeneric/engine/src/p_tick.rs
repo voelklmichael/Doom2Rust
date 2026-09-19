@@ -448,11 +448,11 @@ pub fn P_Ticker(state: &mut GameState) {
     if !state.g_game.netgame
         && state.m_menu.menuactive
         && !state.g_game.demoplayback
-        && state.g_game.players[state.g_game.consoleplayer as usize].viewz != 1_i32
+        && state.g_game.players[state.g_game.consoleplayer as usize].viewz != 1
     {
         return;
     }
-    i = 0_i32;
+    i = 0;
     while i < MAXPLAYERS {
         if state.g_game.playeringame[i as usize] {
             P_PlayerThink(state, PlayerId(i as u8));

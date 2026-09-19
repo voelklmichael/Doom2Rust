@@ -12,7 +12,7 @@
 //! Set `UPDATE_GOLDEN=1` to rewrite the golden file from the current output.
 //! Only do that when a behaviour change is intended and understood.
 
-use crate::d_event::{D_PostEvent, EvType, event_t};
+use crate::d_event::{event_t, D_PostEvent, EvType};
 use crate::d_main::doomgeneric_Tick;
 use crate::doomdef::pixel_t;
 use crate::doomgeneric::doomgeneric_Create;
@@ -71,12 +71,16 @@ fn fnv(mut hash: u64, values: impl IntoIterator<Item = u32>) -> u64 {
 }
 
 fn fnv_bytes(bytes: &[u8]) -> u64 {
-    bytes.iter().fold(FNV_OFFSET, |h, &b| (h ^ u64::from(b)).wrapping_mul(FNV_PRIME))
+    bytes.iter().fold(FNV_OFFSET, |h, &b| {
+        (h ^ u64::from(b)).wrapping_mul(FNV_PRIME)
+    })
 }
 
 fn iwad_bytes() -> Option<Vec<u8>> {
     let path = std::env::var("DOOM_IWAD").ok().or_else(|| {
-        std::env::var("HOME").ok().map(|home| format!("{home}/Downloads/doom1.wad"))
+        std::env::var("HOME")
+            .ok()
+            .map(|home| format!("{home}/Downloads/doom1.wad"))
     })?;
     std::fs::read(path).ok()
 }
@@ -88,7 +92,11 @@ fn start(args: &[&str]) -> Option<&'static mut GameState> {
     let mut fs = MemFileSystem::default();
     fs.files.insert("doom1.wad".to_string(), wad);
     let state = init_game_state(Box::new(NullPlatform::default()), Box::new(fs));
-    let mut argv: Vec<String> = alloc::vec!["doom".to_string(), "-iwad".to_string(), "doom1.wad".to_string()];
+    let mut argv: Vec<String> = alloc::vec![
+        "doom".to_string(),
+        "-iwad".to_string(),
+        "doom1.wad".to_string()
+    ];
     argv.extend(args.iter().map(|a| (*a).to_string()));
     doomgeneric_Create(state, argv);
     Some(state)
@@ -123,18 +131,35 @@ fn world_summary(state: &mut GameState) -> String {
         let m = state.p_mobj.mo(id);
         mobj_hash = fnv(
             mobj_hash,
-            [m.x, m.y, m.z, m.health, m.momx, m.momy, m.type_0 as i32, m.flags, m.tics, m.movecount]
-                .map(|v| v as u32),
+            [
+                m.x,
+                m.y,
+                m.z,
+                m.health,
+                m.momx,
+                m.momy,
+                m.kind as i32,
+                m.flags,
+                m.tics,
+                m.movecount,
+            ]
+            .map(|v| v as u32),
         );
         count += 1;
     }
     let mut sector_hash = FNV_OFFSET;
     for i in 0..state.p_setup.numsectors {
         let s = state.p_setup.sector_mut(SectorId(i as u32));
-        sector_hash = fnv(sector_hash, [s.floorheight, s.ceilingheight, i32::from(s.lightlevel)].map(|v| v as u32));
+        sector_hash = fnv(
+            sector_hash,
+            [s.floorheight, s.ceilingheight, i32::from(s.lightlevel)].map(|v| v as u32),
+        );
     }
     let p = &state.g_game.players[state.g_game.consoleplayer as usize];
-    let player_hash = fnv(FNV_OFFSET, [p.health, p.armorpoints, p.viewz, p.readyweapon as i32].map(|v| v as u32));
+    let player_hash = fnv(
+        FNV_OFFSET,
+        [p.health, p.armorpoints, p.viewz, p.readyweapon as i32].map(|v| v as u32),
+    );
     format!("mobjs={count} mobjhash={mobj_hash:016x} sechash={sector_hash:016x} playerhash={player_hash:016x}")
 }
 
@@ -152,7 +177,13 @@ fn simulation_summary(state: &mut GameState) -> String {
 fn key(state: &mut GameState, k: i32) {
     D_PostEvent(
         &mut state.d_event,
-        event_t { type_0: EvType::ev_keydown, data1: k, data2: 0, data3: 0, data4: 0 },
+        event_t {
+            kind: EvType::ev_keydown,
+            data1: k,
+            data2: 0,
+            data3: 0,
+            data4: 0,
+        },
     );
 }
 
@@ -191,7 +222,8 @@ fn scripted_input(state: &mut GameState) {
         776 => key(state, i32::from(b'f')),
         778 => key(state, i32::from(b'a')),
         800 => G_ExitLevel(state),
-        950 | 1050 | 1150 | 1250 | 1350 | 1950 | 2050 | 2150 | 2250 | 2350 | 3150 | 3250 | 3350 | 3450 | 3550 => {
+        950 | 1050 | 1150 | 1250 | 1350 | 1950 | 2050 | 2150 | 2250 | 2350 | 3150 | 3250 | 3350
+        | 3450 | 3550 => {
             state.wi_stuff.acceleratestage = 1;
         }
         1800 => {
@@ -229,9 +261,17 @@ fn ui_frame_lines() -> Option<Vec<String>> {
         scripted_input(state);
         let g = state.d_loop.gametic;
         if g % 5 == 0 {
-            lines.push(format!("frame {g:05} {:016x}", fnv_bytes(&state.i_video.I_VideoBuffer)));
+            lines.push(format!(
+                "frame {g:05} {:016x}",
+                fnv_bytes(&state.i_video.I_VideoBuffer)
+            ));
             if g % 100 == 0 {
-                let bytes: Vec<u8> = state.i_video.dg_screen_buffer.iter().flat_map(|p| p.to_le_bytes()).collect();
+                let bytes: Vec<u8> = state
+                    .i_video
+                    .dg_screen_buffer
+                    .iter()
+                    .flat_map(|p| p.to_le_bytes())
+                    .collect();
                 lines.push(format!("dg {g:05} {:016x}", fnv_bytes(&bytes)));
             }
         }
@@ -262,11 +302,16 @@ fn simulation_and_frames_match_golden() {
         std::fs::write(GOLDEN_PATH, &actual).unwrap();
         return;
     }
-    let golden = std::fs::read_to_string(GOLDEN_PATH).expect("golden/regression.txt (run with UPDATE_GOLDEN=1)");
+    let golden = std::fs::read_to_string(GOLDEN_PATH)
+        .expect("golden/regression.txt (run with UPDATE_GOLDEN=1)");
     for (n, (want, got)) in golden.lines().zip(actual.lines()).enumerate() {
         assert_eq!(want, got, "first difference at golden line {}", n + 1);
     }
-    assert_eq!(golden.lines().count(), actual.lines().count(), "different number of checkpoints");
+    assert_eq!(
+        golden.lines().count(),
+        actual.lines().count(),
+        "different number of checkpoints"
+    );
 }
 
 /// Saves a game 350 tics into E1M1 and loads it back: the world must come
@@ -293,7 +338,11 @@ fn save_game_round_trips() {
     for _ in 0..40 {
         doomgeneric_Tick(state);
     }
-    assert_ne!(before, world_summary(state), "the world should have changed");
+    assert_ne!(
+        before,
+        world_summary(state),
+        "the world should have changed"
+    );
     G_LoadGame(state, &path);
     G_DoLoadGame(state);
     assert_eq!(before, world_summary(state));

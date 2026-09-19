@@ -86,408 +86,333 @@ impl WiStuffState {
         WiStuffState {
             epsd0animinfo: [
                 anim_t {
-                    type_0: AnimEnum::ANIM_ALWAYS,
-                    period: 35_i32 / 3_i32,
-                    nanims: 3_i32,
-                    loc: point_t {
-                        x: 224_i32,
-                        y: 104_i32,
-                    },
-                    data1: 0_i32,
-                    data2: 0_i32,
+                    kind: AnimEnum::ANIM_ALWAYS,
+                    period: 35 / 3,
+                    nanims: 3,
+                    loc: point_t { x: 224, y: 104 },
+                    data1: 0,
+                    data2: 0,
                     p: [-1, -1, -1],
-                    nexttic: 0_i32,
-                    lastdrawn: 0_i32,
-                    ctr: 0_i32,
-                    state: 0_i32,
+                    nexttic: 0,
+                    lastdrawn: 0,
+                    ctr: 0,
+                    state: 0,
                 },
                 anim_t {
-                    type_0: AnimEnum::ANIM_ALWAYS,
-                    period: 35_i32 / 3_i32,
-                    nanims: 3_i32,
-                    loc: point_t {
-                        x: 184_i32,
-                        y: 160_i32,
-                    },
-                    data1: 0_i32,
-                    data2: 0_i32,
+                    kind: AnimEnum::ANIM_ALWAYS,
+                    period: 35 / 3,
+                    nanims: 3,
+                    loc: point_t { x: 184, y: 160 },
+                    data1: 0,
+                    data2: 0,
                     p: [-1, -1, -1],
-                    nexttic: 0_i32,
-                    lastdrawn: 0_i32,
-                    ctr: 0_i32,
-                    state: 0_i32,
+                    nexttic: 0,
+                    lastdrawn: 0,
+                    ctr: 0,
+                    state: 0,
                 },
                 anim_t {
-                    type_0: AnimEnum::ANIM_ALWAYS,
-                    period: 35_i32 / 3_i32,
-                    nanims: 3_i32,
-                    loc: point_t {
-                        x: 112_i32,
-                        y: 136_i32,
-                    },
-                    data1: 0_i32,
-                    data2: 0_i32,
+                    kind: AnimEnum::ANIM_ALWAYS,
+                    period: 35 / 3,
+                    nanims: 3,
+                    loc: point_t { x: 112, y: 136 },
+                    data1: 0,
+                    data2: 0,
                     p: [-1, -1, -1],
-                    nexttic: 0_i32,
-                    lastdrawn: 0_i32,
-                    ctr: 0_i32,
-                    state: 0_i32,
+                    nexttic: 0,
+                    lastdrawn: 0,
+                    ctr: 0,
+                    state: 0,
                 },
                 anim_t {
-                    type_0: AnimEnum::ANIM_ALWAYS,
-                    period: 35_i32 / 3_i32,
-                    nanims: 3_i32,
-                    loc: point_t {
-                        x: 72_i32,
-                        y: 112_i32,
-                    },
-                    data1: 0_i32,
-                    data2: 0_i32,
+                    kind: AnimEnum::ANIM_ALWAYS,
+                    period: 35 / 3,
+                    nanims: 3,
+                    loc: point_t { x: 72, y: 112 },
+                    data1: 0,
+                    data2: 0,
                     p: [-1, -1, -1],
-                    nexttic: 0_i32,
-                    lastdrawn: 0_i32,
-                    ctr: 0_i32,
-                    state: 0_i32,
+                    nexttic: 0,
+                    lastdrawn: 0,
+                    ctr: 0,
+                    state: 0,
                 },
                 anim_t {
-                    type_0: AnimEnum::ANIM_ALWAYS,
-                    period: 35_i32 / 3_i32,
-                    nanims: 3_i32,
-                    loc: point_t {
-                        x: 88_i32,
-                        y: 96_i32,
-                    },
-                    data1: 0_i32,
-                    data2: 0_i32,
+                    kind: AnimEnum::ANIM_ALWAYS,
+                    period: 35 / 3,
+                    nanims: 3,
+                    loc: point_t { x: 88, y: 96 },
+                    data1: 0,
+                    data2: 0,
                     p: [-1, -1, -1],
-                    nexttic: 0_i32,
-                    lastdrawn: 0_i32,
-                    ctr: 0_i32,
-                    state: 0_i32,
+                    nexttic: 0,
+                    lastdrawn: 0,
+                    ctr: 0,
+                    state: 0,
                 },
                 anim_t {
-                    type_0: AnimEnum::ANIM_ALWAYS,
-                    period: 35_i32 / 3_i32,
-                    nanims: 3_i32,
-                    loc: point_t {
-                        x: 64_i32,
-                        y: 48_i32,
-                    },
-                    data1: 0_i32,
-                    data2: 0_i32,
+                    kind: AnimEnum::ANIM_ALWAYS,
+                    period: 35 / 3,
+                    nanims: 3,
+                    loc: point_t { x: 64, y: 48 },
+                    data1: 0,
+                    data2: 0,
                     p: [-1, -1, -1],
-                    nexttic: 0_i32,
-                    lastdrawn: 0_i32,
-                    ctr: 0_i32,
-                    state: 0_i32,
+                    nexttic: 0,
+                    lastdrawn: 0,
+                    ctr: 0,
+                    state: 0,
                 },
                 anim_t {
-                    type_0: AnimEnum::ANIM_ALWAYS,
-                    period: 35_i32 / 3_i32,
-                    nanims: 3_i32,
-                    loc: point_t {
-                        x: 192_i32,
-                        y: 40_i32,
-                    },
-                    data1: 0_i32,
-                    data2: 0_i32,
+                    kind: AnimEnum::ANIM_ALWAYS,
+                    period: 35 / 3,
+                    nanims: 3,
+                    loc: point_t { x: 192, y: 40 },
+                    data1: 0,
+                    data2: 0,
                     p: [-1, -1, -1],
-                    nexttic: 0_i32,
-                    lastdrawn: 0_i32,
-                    ctr: 0_i32,
-                    state: 0_i32,
+                    nexttic: 0,
+                    lastdrawn: 0,
+                    ctr: 0,
+                    state: 0,
                 },
                 anim_t {
-                    type_0: AnimEnum::ANIM_ALWAYS,
-                    period: 35_i32 / 3_i32,
-                    nanims: 3_i32,
-                    loc: point_t {
-                        x: 136_i32,
-                        y: 16_i32,
-                    },
-                    data1: 0_i32,
-                    data2: 0_i32,
+                    kind: AnimEnum::ANIM_ALWAYS,
+                    period: 35 / 3,
+                    nanims: 3,
+                    loc: point_t { x: 136, y: 16 },
+                    data1: 0,
+                    data2: 0,
                     p: [-1, -1, -1],
-                    nexttic: 0_i32,
-                    lastdrawn: 0_i32,
-                    ctr: 0_i32,
-                    state: 0_i32,
+                    nexttic: 0,
+                    lastdrawn: 0,
+                    ctr: 0,
+                    state: 0,
                 },
                 anim_t {
-                    type_0: AnimEnum::ANIM_ALWAYS,
-                    period: 35_i32 / 3_i32,
-                    nanims: 3_i32,
-                    loc: point_t {
-                        x: 80_i32,
-                        y: 16_i32,
-                    },
-                    data1: 0_i32,
-                    data2: 0_i32,
+                    kind: AnimEnum::ANIM_ALWAYS,
+                    period: 35 / 3,
+                    nanims: 3,
+                    loc: point_t { x: 80, y: 16 },
+                    data1: 0,
+                    data2: 0,
                     p: [-1, -1, -1],
-                    nexttic: 0_i32,
-                    lastdrawn: 0_i32,
-                    ctr: 0_i32,
-                    state: 0_i32,
+                    nexttic: 0,
+                    lastdrawn: 0,
+                    ctr: 0,
+                    state: 0,
                 },
                 anim_t {
-                    type_0: AnimEnum::ANIM_ALWAYS,
-                    period: 35_i32 / 3_i32,
-                    nanims: 3_i32,
-                    loc: point_t {
-                        x: 64_i32,
-                        y: 24_i32,
-                    },
-                    data1: 0_i32,
-                    data2: 0_i32,
+                    kind: AnimEnum::ANIM_ALWAYS,
+                    period: 35 / 3,
+                    nanims: 3,
+                    loc: point_t { x: 64, y: 24 },
+                    data1: 0,
+                    data2: 0,
                     p: [-1, -1, -1],
-                    nexttic: 0_i32,
-                    lastdrawn: 0_i32,
-                    ctr: 0_i32,
-                    state: 0_i32,
+                    nexttic: 0,
+                    lastdrawn: 0,
+                    ctr: 0,
+                    state: 0,
                 },
             ],
             epsd1animinfo: [
                 anim_t {
-                    type_0: AnimEnum::ANIM_LEVEL,
-                    period: 35_i32 / 3_i32,
-                    nanims: 1_i32,
-                    loc: point_t {
-                        x: 128_i32,
-                        y: 136_i32,
-                    },
-                    data1: 1_i32,
-                    data2: 0_i32,
+                    kind: AnimEnum::ANIM_LEVEL,
+                    period: 35 / 3,
+                    nanims: 1,
+                    loc: point_t { x: 128, y: 136 },
+                    data1: 1,
+                    data2: 0,
                     p: [-1, -1, -1],
-                    nexttic: 0_i32,
-                    lastdrawn: 0_i32,
-                    ctr: 0_i32,
-                    state: 0_i32,
+                    nexttic: 0,
+                    lastdrawn: 0,
+                    ctr: 0,
+                    state: 0,
                 },
                 anim_t {
-                    type_0: AnimEnum::ANIM_LEVEL,
-                    period: 35_i32 / 3_i32,
-                    nanims: 1_i32,
-                    loc: point_t {
-                        x: 128_i32,
-                        y: 136_i32,
-                    },
-                    data1: 2_i32,
-                    data2: 0_i32,
+                    kind: AnimEnum::ANIM_LEVEL,
+                    period: 35 / 3,
+                    nanims: 1,
+                    loc: point_t { x: 128, y: 136 },
+                    data1: 2,
+                    data2: 0,
                     p: [-1, -1, -1],
-                    nexttic: 0_i32,
-                    lastdrawn: 0_i32,
-                    ctr: 0_i32,
-                    state: 0_i32,
+                    nexttic: 0,
+                    lastdrawn: 0,
+                    ctr: 0,
+                    state: 0,
                 },
                 anim_t {
-                    type_0: AnimEnum::ANIM_LEVEL,
-                    period: 35_i32 / 3_i32,
-                    nanims: 1_i32,
-                    loc: point_t {
-                        x: 128_i32,
-                        y: 136_i32,
-                    },
-                    data1: 3_i32,
-                    data2: 0_i32,
+                    kind: AnimEnum::ANIM_LEVEL,
+                    period: 35 / 3,
+                    nanims: 1,
+                    loc: point_t { x: 128, y: 136 },
+                    data1: 3,
+                    data2: 0,
                     p: [-1, -1, -1],
-                    nexttic: 0_i32,
-                    lastdrawn: 0_i32,
-                    ctr: 0_i32,
-                    state: 0_i32,
+                    nexttic: 0,
+                    lastdrawn: 0,
+                    ctr: 0,
+                    state: 0,
                 },
                 anim_t {
-                    type_0: AnimEnum::ANIM_LEVEL,
-                    period: 35_i32 / 3_i32,
-                    nanims: 1_i32,
-                    loc: point_t {
-                        x: 128_i32,
-                        y: 136_i32,
-                    },
-                    data1: 4_i32,
-                    data2: 0_i32,
+                    kind: AnimEnum::ANIM_LEVEL,
+                    period: 35 / 3,
+                    nanims: 1,
+                    loc: point_t { x: 128, y: 136 },
+                    data1: 4,
+                    data2: 0,
                     p: [-1, -1, -1],
-                    nexttic: 0_i32,
-                    lastdrawn: 0_i32,
-                    ctr: 0_i32,
-                    state: 0_i32,
+                    nexttic: 0,
+                    lastdrawn: 0,
+                    ctr: 0,
+                    state: 0,
                 },
                 anim_t {
-                    type_0: AnimEnum::ANIM_LEVEL,
-                    period: 35_i32 / 3_i32,
-                    nanims: 1_i32,
-                    loc: point_t {
-                        x: 128_i32,
-                        y: 136_i32,
-                    },
-                    data1: 5_i32,
-                    data2: 0_i32,
+                    kind: AnimEnum::ANIM_LEVEL,
+                    period: 35 / 3,
+                    nanims: 1,
+                    loc: point_t { x: 128, y: 136 },
+                    data1: 5,
+                    data2: 0,
                     p: [-1, -1, -1],
-                    nexttic: 0_i32,
-                    lastdrawn: 0_i32,
-                    ctr: 0_i32,
-                    state: 0_i32,
+                    nexttic: 0,
+                    lastdrawn: 0,
+                    ctr: 0,
+                    state: 0,
                 },
                 anim_t {
-                    type_0: AnimEnum::ANIM_LEVEL,
-                    period: 35_i32 / 3_i32,
-                    nanims: 1_i32,
-                    loc: point_t {
-                        x: 128_i32,
-                        y: 136_i32,
-                    },
-                    data1: 6_i32,
-                    data2: 0_i32,
+                    kind: AnimEnum::ANIM_LEVEL,
+                    period: 35 / 3,
+                    nanims: 1,
+                    loc: point_t { x: 128, y: 136 },
+                    data1: 6,
+                    data2: 0,
                     p: [-1, -1, -1],
-                    nexttic: 0_i32,
-                    lastdrawn: 0_i32,
-                    ctr: 0_i32,
-                    state: 0_i32,
+                    nexttic: 0,
+                    lastdrawn: 0,
+                    ctr: 0,
+                    state: 0,
                 },
                 anim_t {
-                    type_0: AnimEnum::ANIM_LEVEL,
-                    period: 35_i32 / 3_i32,
-                    nanims: 1_i32,
-                    loc: point_t {
-                        x: 128_i32,
-                        y: 136_i32,
-                    },
-                    data1: 7_i32,
-                    data2: 0_i32,
+                    kind: AnimEnum::ANIM_LEVEL,
+                    period: 35 / 3,
+                    nanims: 1,
+                    loc: point_t { x: 128, y: 136 },
+                    data1: 7,
+                    data2: 0,
                     p: [-1, -1, -1],
-                    nexttic: 0_i32,
-                    lastdrawn: 0_i32,
-                    ctr: 0_i32,
-                    state: 0_i32,
+                    nexttic: 0,
+                    lastdrawn: 0,
+                    ctr: 0,
+                    state: 0,
                 },
                 anim_t {
-                    type_0: AnimEnum::ANIM_LEVEL,
-                    period: 35_i32 / 3_i32,
-                    nanims: 3_i32,
-                    loc: point_t {
-                        x: 192_i32,
-                        y: 144_i32,
-                    },
-                    data1: 8_i32,
-                    data2: 0_i32,
+                    kind: AnimEnum::ANIM_LEVEL,
+                    period: 35 / 3,
+                    nanims: 3,
+                    loc: point_t { x: 192, y: 144 },
+                    data1: 8,
+                    data2: 0,
                     p: [-1, -1, -1],
-                    nexttic: 0_i32,
-                    lastdrawn: 0_i32,
-                    ctr: 0_i32,
-                    state: 0_i32,
+                    nexttic: 0,
+                    lastdrawn: 0,
+                    ctr: 0,
+                    state: 0,
                 },
                 anim_t {
-                    type_0: AnimEnum::ANIM_LEVEL,
-                    period: 35_i32 / 3_i32,
-                    nanims: 1_i32,
-                    loc: point_t {
-                        x: 128_i32,
-                        y: 136_i32,
-                    },
-                    data1: 8_i32,
-                    data2: 0_i32,
+                    kind: AnimEnum::ANIM_LEVEL,
+                    period: 35 / 3,
+                    nanims: 1,
+                    loc: point_t { x: 128, y: 136 },
+                    data1: 8,
+                    data2: 0,
                     p: [-1, -1, -1],
-                    nexttic: 0_i32,
-                    lastdrawn: 0_i32,
-                    ctr: 0_i32,
-                    state: 0_i32,
+                    nexttic: 0,
+                    lastdrawn: 0,
+                    ctr: 0,
+                    state: 0,
                 },
             ],
             epsd2animinfo: [
                 anim_t {
-                    type_0: AnimEnum::ANIM_ALWAYS,
-                    period: 35_i32 / 3_i32,
-                    nanims: 3_i32,
-                    loc: point_t {
-                        x: 104_i32,
-                        y: 168_i32,
-                    },
-                    data1: 0_i32,
-                    data2: 0_i32,
+                    kind: AnimEnum::ANIM_ALWAYS,
+                    period: 35 / 3,
+                    nanims: 3,
+                    loc: point_t { x: 104, y: 168 },
+                    data1: 0,
+                    data2: 0,
                     p: [-1, -1, -1],
-                    nexttic: 0_i32,
-                    lastdrawn: 0_i32,
-                    ctr: 0_i32,
-                    state: 0_i32,
+                    nexttic: 0,
+                    lastdrawn: 0,
+                    ctr: 0,
+                    state: 0,
                 },
                 anim_t {
-                    type_0: AnimEnum::ANIM_ALWAYS,
-                    period: 35_i32 / 3_i32,
-                    nanims: 3_i32,
-                    loc: point_t {
-                        x: 40_i32,
-                        y: 136_i32,
-                    },
-                    data1: 0_i32,
-                    data2: 0_i32,
+                    kind: AnimEnum::ANIM_ALWAYS,
+                    period: 35 / 3,
+                    nanims: 3,
+                    loc: point_t { x: 40, y: 136 },
+                    data1: 0,
+                    data2: 0,
                     p: [-1, -1, -1],
-                    nexttic: 0_i32,
-                    lastdrawn: 0_i32,
-                    ctr: 0_i32,
-                    state: 0_i32,
+                    nexttic: 0,
+                    lastdrawn: 0,
+                    ctr: 0,
+                    state: 0,
                 },
                 anim_t {
-                    type_0: AnimEnum::ANIM_ALWAYS,
-                    period: 35_i32 / 3_i32,
-                    nanims: 3_i32,
-                    loc: point_t {
-                        x: 160_i32,
-                        y: 96_i32,
-                    },
-                    data1: 0_i32,
-                    data2: 0_i32,
+                    kind: AnimEnum::ANIM_ALWAYS,
+                    period: 35 / 3,
+                    nanims: 3,
+                    loc: point_t { x: 160, y: 96 },
+                    data1: 0,
+                    data2: 0,
                     p: [-1, -1, -1],
-                    nexttic: 0_i32,
-                    lastdrawn: 0_i32,
-                    ctr: 0_i32,
-                    state: 0_i32,
+                    nexttic: 0,
+                    lastdrawn: 0,
+                    ctr: 0,
+                    state: 0,
                 },
                 anim_t {
-                    type_0: AnimEnum::ANIM_ALWAYS,
-                    period: 35_i32 / 3_i32,
-                    nanims: 3_i32,
-                    loc: point_t {
-                        x: 104_i32,
-                        y: 80_i32,
-                    },
-                    data1: 0_i32,
-                    data2: 0_i32,
+                    kind: AnimEnum::ANIM_ALWAYS,
+                    period: 35 / 3,
+                    nanims: 3,
+                    loc: point_t { x: 104, y: 80 },
+                    data1: 0,
+                    data2: 0,
                     p: [-1, -1, -1],
-                    nexttic: 0_i32,
-                    lastdrawn: 0_i32,
-                    ctr: 0_i32,
-                    state: 0_i32,
+                    nexttic: 0,
+                    lastdrawn: 0,
+                    ctr: 0,
+                    state: 0,
                 },
                 anim_t {
-                    type_0: AnimEnum::ANIM_ALWAYS,
-                    period: 35_i32 / 3_i32,
-                    nanims: 3_i32,
-                    loc: point_t {
-                        x: 120_i32,
-                        y: 32_i32,
-                    },
-                    data1: 0_i32,
-                    data2: 0_i32,
+                    kind: AnimEnum::ANIM_ALWAYS,
+                    period: 35 / 3,
+                    nanims: 3,
+                    loc: point_t { x: 120, y: 32 },
+                    data1: 0,
+                    data2: 0,
                     p: [-1, -1, -1],
-                    nexttic: 0_i32,
-                    lastdrawn: 0_i32,
-                    ctr: 0_i32,
-                    state: 0_i32,
+                    nexttic: 0,
+                    lastdrawn: 0,
+                    ctr: 0,
+                    state: 0,
                 },
                 anim_t {
-                    type_0: AnimEnum::ANIM_ALWAYS,
-                    period: 35_i32 / 4_i32,
-                    nanims: 3_i32,
-                    loc: point_t {
-                        x: 40_i32,
-                        y: 0_i32,
-                    },
-                    data1: 0_i32,
-                    data2: 0_i32,
+                    kind: AnimEnum::ANIM_ALWAYS,
+                    period: 35 / 4,
+                    nanims: 3,
+                    loc: point_t { x: 40, y: 0 },
+                    data1: 0,
+                    data2: 0,
                     p: [-1, -1, -1],
-                    nexttic: 0_i32,
-                    lastdrawn: 0_i32,
-                    ctr: 0_i32,
-                    state: 0_i32,
+                    nexttic: 0,
+                    lastdrawn: 0,
+                    ctr: 0,
+                    state: 0,
                 },
             ],
             NUMANIMS: [0; 4],
@@ -552,7 +477,7 @@ impl WiStuffState {
 
 #[derive(Copy, Clone)]
 pub struct wbplayerstruct_t {
-    pub in_0: bool,
+    pub intercept: bool,
     pub skills: i32,
     pub sitems: i32,
     pub ssecret: i32,
@@ -582,7 +507,7 @@ pub enum StateEnum {
 }
 #[derive(Copy, Clone)]
 pub struct anim_t {
-    pub type_0: AnimEnum,
+    pub kind: AnimEnum,
     pub period: i32,
     pub nanims: i32,
     pub loc: point_t,
@@ -611,7 +536,7 @@ pub const WI_SPACINGY: i32 = 33;
 pub const SP_STATSX: i32 = 50;
 pub const SP_STATSY: i32 = 50;
 pub const SP_TIMEX: i32 = 16;
-pub const SP_TIMEY: i32 = SCREENHEIGHT - 32_i32;
+pub const SP_TIMEY: i32 = SCREENHEIGHT - 32;
 pub const NG_STATSY: i32 = 50;
 pub const NG_SPACINGX: i32 = 64;
 pub const DM_MATRIXX: i32 = 42;
@@ -624,118 +549,37 @@ pub const DM_VICTIMSX: i32 = 5;
 pub const DM_VICTIMSY: i32 = 50;
 static LNODES: [[point_t; 9]; 4] = [
     [
-        point_t {
-            x: 185_i32,
-            y: 164_i32,
-        },
-        point_t {
-            x: 148_i32,
-            y: 143_i32,
-        },
-        point_t {
-            x: 69_i32,
-            y: 122_i32,
-        },
-        point_t {
-            x: 209_i32,
-            y: 102_i32,
-        },
-        point_t {
-            x: 116_i32,
-            y: 89_i32,
-        },
-        point_t {
-            x: 166_i32,
-            y: 55_i32,
-        },
-        point_t {
-            x: 71_i32,
-            y: 56_i32,
-        },
-        point_t {
-            x: 135_i32,
-            y: 29_i32,
-        },
-        point_t {
-            x: 71_i32,
-            y: 24_i32,
-        },
+        point_t { x: 185, y: 164 },
+        point_t { x: 148, y: 143 },
+        point_t { x: 69, y: 122 },
+        point_t { x: 209, y: 102 },
+        point_t { x: 116, y: 89 },
+        point_t { x: 166, y: 55 },
+        point_t { x: 71, y: 56 },
+        point_t { x: 135, y: 29 },
+        point_t { x: 71, y: 24 },
     ],
     [
-        point_t {
-            x: 254_i32,
-            y: 25_i32,
-        },
-        point_t {
-            x: 97_i32,
-            y: 50_i32,
-        },
-        point_t {
-            x: 188_i32,
-            y: 64_i32,
-        },
-        point_t {
-            x: 128_i32,
-            y: 78_i32,
-        },
-        point_t {
-            x: 214_i32,
-            y: 92_i32,
-        },
-        point_t {
-            x: 133_i32,
-            y: 130_i32,
-        },
-        point_t {
-            x: 208_i32,
-            y: 136_i32,
-        },
-        point_t {
-            x: 148_i32,
-            y: 140_i32,
-        },
-        point_t {
-            x: 235_i32,
-            y: 158_i32,
-        },
+        point_t { x: 254, y: 25 },
+        point_t { x: 97, y: 50 },
+        point_t { x: 188, y: 64 },
+        point_t { x: 128, y: 78 },
+        point_t { x: 214, y: 92 },
+        point_t { x: 133, y: 130 },
+        point_t { x: 208, y: 136 },
+        point_t { x: 148, y: 140 },
+        point_t { x: 235, y: 158 },
     ],
     [
-        point_t {
-            x: 156_i32,
-            y: 168_i32,
-        },
-        point_t {
-            x: 48_i32,
-            y: 154_i32,
-        },
-        point_t {
-            x: 174_i32,
-            y: 95_i32,
-        },
-        point_t {
-            x: 265_i32,
-            y: 75_i32,
-        },
-        point_t {
-            x: 130_i32,
-            y: 48_i32,
-        },
-        point_t {
-            x: 279_i32,
-            y: 23_i32,
-        },
-        point_t {
-            x: 198_i32,
-            y: 48_i32,
-        },
-        point_t {
-            x: 140_i32,
-            y: 25_i32,
-        },
-        point_t {
-            x: 281_i32,
-            y: 136_i32,
-        },
+        point_t { x: 156, y: 168 },
+        point_t { x: 48, y: 154 },
+        point_t { x: 174, y: 95 },
+        point_t { x: 265, y: 75 },
+        point_t { x: 130, y: 48 },
+        point_t { x: 279, y: 23 },
+        point_t { x: 198, y: 48 },
+        point_t { x: 140, y: 25 },
+        point_t { x: 281, y: 136 },
     ],
     [point_t { x: 0, y: 0 }; 9],
 ];
@@ -743,7 +587,7 @@ pub const SHOWNEXTLOCDELAY: i32 = 4;
 pub fn WI_slamBackground(state: &mut GameState) {
     let patch = V_CachePatchNum(state, state.wi_stuff.background);
     let dest_screen = Screen::Video;
-    V_DrawPatch(state, dest_screen, 0_i32, 0_i32, &patch);
+    V_DrawPatch(state, dest_screen, 0, 0, &patch);
 }
 pub fn WI_drawLF(state: &mut GameState) {
     let mut y: i32 = WI_TITLEY;
@@ -757,17 +601,17 @@ pub fn WI_drawLF(state: &mut GameState) {
         V_DrawPatch(
             state,
             dest_screen,
-            (SCREENWIDTH - last_patch.width()) / 2_i32,
+            (SCREENWIDTH - last_patch.width()) / 2,
             y,
             &last_patch,
         );
-        y += 5_i32 * last_patch.height() / 4_i32;
+        y += 5 * last_patch.height() / 4;
         let finished_patch = V_CachePatchNum(state, state.wi_stuff.finished);
         let dest_screen = Screen::Video;
         V_DrawPatch(
             state,
             dest_screen,
-            (SCREENWIDTH - finished_patch.width()) / 2_i32,
+            (SCREENWIDTH - finished_patch.width()) / 2,
             y,
             &finished_patch,
         );
@@ -780,19 +624,19 @@ pub fn WI_drawEL(state: &mut GameState) {
     V_DrawPatch(
         state,
         dest_screen,
-        (SCREENWIDTH - entering_patch.width()) / 2_i32,
+        (SCREENWIDTH - entering_patch.width()) / 2,
         y,
         &entering_patch,
     );
     let index = state.wbs().next as usize;
     let next_lump = state.wi_stuff.lnames[index];
     let next_patch = V_CachePatchNum(state, next_lump);
-    y += 5_i32 * next_patch.height() / 4_i32;
+    y += 5 * next_patch.height() / 4;
     let dest_screen = Screen::Video;
     V_DrawPatch(
         state,
         dest_screen,
-        (SCREENWIDTH - next_patch.width()) / 2_i32,
+        (SCREENWIDTH - next_patch.width()) / 2,
         y,
         &next_patch,
     );
@@ -804,23 +648,23 @@ pub fn WI_drawOnLnode(state: &mut GameState, n: i32, c: &[i32]) {
     let mut right: i32;
     let mut bottom: i32;
     let mut fits: bool = false;
-    i = 0_i32;
+    i = 0;
     loop {
         let patch = V_CachePatchNum(state, c[i as usize]);
         left = LNODES[state.wbs().epsd as usize][n as usize].x - patch.leftoffset();
         top = LNODES[state.wbs().epsd as usize][n as usize].y - patch.topoffset();
         right = left + patch.width();
         bottom = top + patch.height();
-        if left >= 0_i32 && right < SCREENWIDTH && top >= 0_i32 && bottom < SCREENHEIGHT {
+        if left >= 0 && right < SCREENWIDTH && top >= 0 && bottom < SCREENHEIGHT {
             fits = true;
         } else {
             i += 1;
         }
-        if !(!fits && i != 2_i32 && c[i as usize] != -1) {
+        if !(!fits && i != 2 && c[i as usize] != -1) {
             break;
         }
     }
-    if fits && i < 2_i32 {
+    if fits && i < 2 {
         let patch = V_CachePatchNum(state, c[i as usize]);
         let index = state.wbs().epsd as usize;
         let dest_screen = Screen::Video;
@@ -832,11 +676,7 @@ pub fn WI_drawOnLnode(state: &mut GameState, n: i32, c: &[i32]) {
             &patch,
         );
     } else {
-        doom_print!(
-            state.platform,
-            "Could not place patch on level {}",
-            n + 1_i32
-        );
+        doom_print!(state.platform, "Could not place patch on level {}", n + 1);
     };
 }
 pub fn WI_initAnimatedBack(state: &mut GameState) {
@@ -844,21 +684,20 @@ pub fn WI_initAnimatedBack(state: &mut GameState) {
     if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 {
         return;
     }
-    if state.wbs().epsd > 2_i32 {
+    if state.wbs().epsd > 2 {
         return;
     }
-    i = 0_i32;
+    i = 0;
     while i < state.wi_stuff.NUMANIMS[state.wbs().epsd as usize] {
         let index = state.wbs().epsd as usize;
         let mut a = state.wi_stuff.anims()[index][i as usize];
-        a.ctr = -1_i32;
-        if a.type_0 == AnimEnum::ANIM_ALWAYS {
-            a.nexttic = state.wi_stuff.bcnt + 1_i32 + M_Random(&mut state.m_random) % a.period;
-        } else if a.type_0 == AnimEnum::ANIM_RANDOM {
-            a.nexttic =
-                state.wi_stuff.bcnt + 1_i32 + a.data2 + M_Random(&mut state.m_random) % a.data1;
-        } else if a.type_0 == AnimEnum::ANIM_LEVEL {
-            a.nexttic = state.wi_stuff.bcnt + 1_i32;
+        a.ctr = -1;
+        if a.kind == AnimEnum::ANIM_ALWAYS {
+            a.nexttic = state.wi_stuff.bcnt + 1 + M_Random(&mut state.m_random) % a.period;
+        } else if a.kind == AnimEnum::ANIM_RANDOM {
+            a.nexttic = state.wi_stuff.bcnt + 1 + a.data2 + M_Random(&mut state.m_random) % a.data1;
+        } else if a.kind == AnimEnum::ANIM_LEVEL {
+            a.nexttic = state.wi_stuff.bcnt + 1;
         }
         state.wi_stuff.anims()[index][i as usize] = a;
         i += 1;
@@ -869,33 +708,33 @@ pub fn WI_updateAnimatedBack(state: &mut GameState) {
     if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 {
         return;
     }
-    if state.wbs().epsd > 2_i32 {
+    if state.wbs().epsd > 2 {
         return;
     }
-    i = 0_i32;
+    i = 0;
     while i < state.wi_stuff.NUMANIMS[state.wbs().epsd as usize] {
         let index = state.wbs().epsd as usize;
         let mut a = state.wi_stuff.anims()[index][i as usize];
         if state.wi_stuff.bcnt == a.nexttic {
-            match a.type_0 as u32 {
+            match a.kind as u32 {
                 0 => {
                     a.ctr += 1;
                     if a.ctr >= a.nanims {
-                        a.ctr = 0_i32;
+                        a.ctr = 0;
                     }
                     a.nexttic = state.wi_stuff.bcnt + a.period;
                 }
                 1 => {
                     a.ctr += 1;
                     if a.ctr == a.nanims {
-                        a.ctr = -1_i32;
+                        a.ctr = -1;
                         a.nexttic =
                             state.wi_stuff.bcnt + a.data2 + M_Random(&mut state.m_random) % a.data1;
                     } else {
                         a.nexttic = state.wi_stuff.bcnt + a.period;
                     }
                 }
-                2 if !(state.wi_stuff.state == StateEnum::StatCount && i == 7_i32)
+                2 if !(state.wi_stuff.state == StateEnum::StatCount && i == 7)
                     && state.wbs().next == a.data1 =>
                 {
                     a.ctr += 1;
@@ -916,14 +755,14 @@ pub fn WI_drawAnimatedBack(state: &mut GameState) {
     if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 {
         return;
     }
-    if state.wbs().epsd > 2_i32 {
+    if state.wbs().epsd > 2 {
         return;
     }
-    i = 0_i32;
+    i = 0;
     while i < state.wi_stuff.NUMANIMS[state.wbs().epsd as usize] {
         let index = state.wbs().epsd as usize;
         let a = state.wi_stuff.anims()[index][i as usize];
-        if a.ctr >= 0_i32 {
+        if a.ctr >= 0 {
             let patch = V_CachePatchNum(state, a.p[a.ctr as usize]);
             let dest_screen = Screen::Video;
             V_DrawPatch(state, dest_screen, a.loc.x, a.loc.y, &patch);
@@ -936,24 +775,24 @@ pub fn WI_drawNum(state: &mut GameState, mut x: i32, y: i32, mut n: i32, mut dig
     let fontwidth: i32 = zero_patch.width();
 
     let mut temp: i32;
-    if digits < 0_i32 {
+    if digits < 0 {
         if n == 0 {
-            digits = 1_i32;
+            digits = 1;
         } else {
-            digits = 0_i32;
+            digits = 0;
             temp = n;
             while temp != 0 {
-                temp /= 10_i32;
+                temp /= 10;
                 digits += 1;
             }
         }
     }
-    let neg: i32 = (n < 0_i32) as i32;
+    let neg: i32 = (n < 0) as i32;
     if neg != 0 {
         n = -n;
     }
-    if n == 1994_i32 {
-        return 0_i32;
+    if n == 1994 {
+        return 0;
     }
     loop {
         let fresh0 = digits;
@@ -962,42 +801,42 @@ pub fn WI_drawNum(state: &mut GameState, mut x: i32, y: i32, mut n: i32, mut dig
             break;
         }
         x -= fontwidth;
-        let digit_patch = V_CachePatchNum(state, state.wi_stuff.num[(n % 10_i32) as usize]);
+        let digit_patch = V_CachePatchNum(state, state.wi_stuff.num[(n % 10) as usize]);
         let dest_screen = Screen::Video;
         V_DrawPatch(state, dest_screen, x, y, &digit_patch);
-        n /= 10_i32;
+        n /= 10;
     }
     if neg != 0 {
-        x -= 8_i32;
+        x -= 8;
         let minus_patch = V_CachePatchNum(state, state.wi_stuff.wiminus);
         let dest_screen = Screen::Video;
         V_DrawPatch(state, dest_screen, x, y, &minus_patch);
     }
     x
 }
-pub fn WI_drawPercent(state: &mut GameState, x: i32, y: i32, p_0: i32) {
-    if p_0 < 0_i32 {
+pub fn WI_drawPercent(state: &mut GameState, x: i32, y: i32, percent: i32) {
+    if percent < 0 {
         return;
     }
     let percent_patch = V_CachePatchNum(state, state.wi_stuff.percent);
     let dest_screen = Screen::Video;
     V_DrawPatch(state, dest_screen, x, y, &percent_patch);
-    WI_drawNum(state, x, y, p_0, -1_i32);
+    WI_drawNum(state, x, y, percent, -1);
 }
 pub fn WI_drawTime(state: &mut GameState, mut x: i32, y: i32, t: i32) {
     let mut div: i32;
     let mut n: i32;
-    if t < 0_i32 {
+    if t < 0 {
         return;
     }
-    if t <= 61_i32 * 59_i32 {
-        div = 1_i32;
+    if t <= 61 * 59 {
+        div = 1;
         loop {
-            n = t / div % 60_i32;
+            n = t / div % 60;
             let colon_patch = V_CachePatchNum(state, state.wi_stuff.colon);
-            x = WI_drawNum(state, x, y, n, 2_i32) - colon_patch.width();
-            div *= 60_i32;
-            if div == 60_i32 || t / div != 0 {
+            x = WI_drawNum(state, x, y, n, 2) - colon_patch.width();
+            div *= 60;
+            if div == 60 || t / div != 0 {
                 let dest_screen = Screen::Video;
                 V_DrawPatch(state, dest_screen, x, y, &colon_patch);
             }
@@ -1016,8 +855,8 @@ pub fn WI_End(state: &mut GameState) {
 }
 pub fn WI_initNoState(state: &mut GameState) {
     state.wi_stuff.state = StateEnum::NoState;
-    state.wi_stuff.acceleratestage = 0_i32;
-    state.wi_stuff.cnt = 10_i32;
+    state.wi_stuff.acceleratestage = 0;
+    state.wi_stuff.cnt = 10;
 }
 pub fn WI_updateNoState(state: &mut GameState) {
     WI_updateAnimatedBack(state);
@@ -1028,7 +867,7 @@ pub fn WI_updateNoState(state: &mut GameState) {
 }
 pub fn WI_initShowNextLoc(state: &mut GameState) {
     state.wi_stuff.state = StateEnum::ShowNextLoc;
-    state.wi_stuff.acceleratestage = 0_i32;
+    state.wi_stuff.acceleratestage = 0;
     state.wi_stuff.cnt = SHOWNEXTLOCDELAY * TICRATE;
     WI_initAnimatedBack(state);
 }
@@ -1038,7 +877,7 @@ pub fn WI_updateShowNextLoc(state: &mut GameState) {
     if state.wi_stuff.cnt == 0 || state.wi_stuff.acceleratestage != 0 {
         WI_initNoState(state);
     } else {
-        state.wi_stuff.snl_pointeron = (state.wi_stuff.cnt & 31_i32) < 20_i32;
+        state.wi_stuff.snl_pointeron = (state.wi_stuff.cnt & 31) < 20;
     };
 }
 pub fn WI_drawShowNextLoc(state: &mut GameState) {
@@ -1047,16 +886,16 @@ pub fn WI_drawShowNextLoc(state: &mut GameState) {
     WI_slamBackground(state);
     WI_drawAnimatedBack(state);
     if state.doomstat.gamemode as u32 != GameMode_t::commercial as i32 as u32 {
-        if state.wbs().epsd > 2_i32 {
+        if state.wbs().epsd > 2 {
             WI_drawEL(state);
             return;
         }
-        last = if state.wbs().last == 8_i32 {
-            state.wbs().next - 1_i32
+        last = if state.wbs().last == 8 {
+            state.wbs().next - 1
         } else {
             state.wbs().last
         };
-        i = 0_i32;
+        i = 0;
         while i <= last {
             let splat = state.wi_stuff.splat;
             WI_drawOnLnode(state, i, &splat);
@@ -1064,7 +903,7 @@ pub fn WI_drawShowNextLoc(state: &mut GameState) {
         }
         if state.wbs().didsecret {
             let splat = state.wi_stuff.splat;
-            WI_drawOnLnode(state, 8_i32, &splat);
+            WI_drawOnLnode(state, 8, &splat);
         }
         if state.wi_stuff.snl_pointeron {
             let next = state.wbs().next;
@@ -1073,7 +912,7 @@ pub fn WI_drawShowNextLoc(state: &mut GameState) {
         }
     }
     if state.doomstat.gamemode as u32 != GameMode_t::commercial as i32 as u32
-        || state.wbs().next != 30_i32
+        || state.wbs().next != 30
     {
         WI_drawEL(state);
     }
@@ -1084,35 +923,35 @@ pub fn WI_drawNoState(state: &mut GameState) {
 }
 pub fn WI_fragSum(state: &mut GameState, playernum: i32) -> i32 {
     let mut i: i32;
-    let mut frags_0: i32 = 0_i32;
-    i = 0_i32;
+    let mut total: i32 = 0;
+    i = 0;
     while i < MAXPLAYERS {
         if state.g_game.playeringame[i as usize] && i != playernum {
-            frags_0 += state.plyr_index(playernum).frags[i as usize];
+            total += state.plyr_index(playernum).frags[i as usize];
         }
         i += 1;
     }
-    frags_0 -= state.plyr_index(playernum).frags[playernum as usize];
-    frags_0
+    total -= state.plyr_index(playernum).frags[playernum as usize];
+    total
 }
 pub fn WI_initDeathmatchStats(state: &mut GameState) {
     let mut i: i32;
     let mut j: i32;
     state.wi_stuff.state = StateEnum::StatCount;
-    state.wi_stuff.acceleratestage = 0_i32;
-    state.wi_stuff.dm_state = 1_i32;
+    state.wi_stuff.acceleratestage = 0;
+    state.wi_stuff.dm_state = 1;
     state.wi_stuff.cnt_pause = TICRATE;
-    i = 0_i32;
+    i = 0;
     while i < MAXPLAYERS {
         if state.g_game.playeringame[i as usize] {
-            j = 0_i32;
+            j = 0;
             while j < MAXPLAYERS {
                 if state.g_game.playeringame[j as usize] {
-                    state.wi_stuff.dm_frags[i as usize][j as usize] = 0_i32;
+                    state.wi_stuff.dm_frags[i as usize][j as usize] = 0;
                 }
                 j += 1;
             }
-            state.wi_stuff.dm_totals[i as usize] = 0_i32;
+            state.wi_stuff.dm_totals[i as usize] = 0;
         }
         i += 1;
     }
@@ -1123,12 +962,12 @@ pub fn WI_updateDeathmatchStats(state: &mut GameState) {
     let mut j: i32;
     let mut stillticking: bool;
     WI_updateAnimatedBack(state);
-    if state.wi_stuff.acceleratestage != 0 && state.wi_stuff.dm_state != 4_i32 {
-        state.wi_stuff.acceleratestage = 0_i32;
-        i = 0_i32;
+    if state.wi_stuff.acceleratestage != 0 && state.wi_stuff.dm_state != 4 {
+        state.wi_stuff.acceleratestage = 0;
+        i = 0;
         while i < MAXPLAYERS {
             if state.g_game.playeringame[i as usize] {
-                j = 0_i32;
+                j = 0;
                 while j < MAXPLAYERS {
                     if state.g_game.playeringame[j as usize] {
                         state.wi_stuff.dm_frags[i as usize][j as usize] =
@@ -1141,36 +980,36 @@ pub fn WI_updateDeathmatchStats(state: &mut GameState) {
             i += 1;
         }
         S_StartSound(state, SoundOrigin::None, SfxName::sfx_barexp as i32);
-        state.wi_stuff.dm_state = 4_i32;
+        state.wi_stuff.dm_state = 4;
     }
-    if state.wi_stuff.dm_state == 2_i32 {
-        if state.wi_stuff.bcnt & 3_i32 == 0 {
+    if state.wi_stuff.dm_state == 2 {
+        if state.wi_stuff.bcnt & 3 == 0 {
             S_StartSound(state, SoundOrigin::None, SfxName::sfx_pistol as i32);
         }
         stillticking = false;
-        i = 0_i32;
+        i = 0;
         while i < MAXPLAYERS {
             if state.g_game.playeringame[i as usize] {
-                j = 0_i32;
+                j = 0;
                 while j < MAXPLAYERS {
                     if state.g_game.playeringame[j as usize]
                         && state.wi_stuff.dm_frags[i as usize][j as usize]
                             != state.plyr_index(i).frags[j as usize]
                     {
-                        if state.plyr_index(i).frags[j as usize] < 0_i32 {
+                        if state.plyr_index(i).frags[j as usize] < 0 {
                             state.wi_stuff.dm_frags[i as usize][j as usize] -= 1;
                         } else {
                             state.wi_stuff.dm_frags[i as usize][j as usize] += 1;
                         }
                         let frag = &mut state.wi_stuff.dm_frags[i as usize][j as usize];
-                        *frag = (*frag).clamp(-99_i32, 99_i32);
+                        *frag = (*frag).clamp(-99, 99);
                         stillticking = true;
                     }
                     j += 1;
                 }
                 state.wi_stuff.dm_totals[i as usize] = WI_fragSum(state, i);
                 let total = &mut state.wi_stuff.dm_totals[i as usize];
-                *total = (*total).clamp(-99_i32, 99_i32);
+                *total = (*total).clamp(-99, 99);
             }
             i += 1;
         }
@@ -1178,7 +1017,7 @@ pub fn WI_updateDeathmatchStats(state: &mut GameState) {
             S_StartSound(state, SoundOrigin::None, SfxName::sfx_barexp as i32);
             state.wi_stuff.dm_state += 1;
         }
-    } else if state.wi_stuff.dm_state == 4_i32 {
+    } else if state.wi_stuff.dm_state == 4 {
         if state.wi_stuff.acceleratestage != 0 {
             S_StartSound(state, SoundOrigin::None, SfxName::sfx_slop as i32);
             if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 {
@@ -1187,7 +1026,7 @@ pub fn WI_updateDeathmatchStats(state: &mut GameState) {
                 WI_initShowNextLoc(state);
             }
         }
-    } else if state.wi_stuff.dm_state & 1_i32 != 0 {
+    } else if state.wi_stuff.dm_state & 1 != 0 {
         state.wi_stuff.cnt_pause -= 1;
         if state.wi_stuff.cnt_pause == 0 {
             state.wi_stuff.dm_state += 1;
@@ -1209,8 +1048,8 @@ pub fn WI_drawDeathmatchStats(state: &mut GameState) {
     V_DrawPatch(
         state,
         dest_screen,
-        DM_TOTALSX - total_patch.width() / 2_i32,
-        DM_MATRIXY - WI_SPACINGY + 10_i32,
+        DM_TOTALSX - total_patch.width() / 2,
+        DM_MATRIXY - WI_SPACINGY + 10,
         &total_patch,
     );
     let killers_patch = V_CachePatchNum(state, state.wi_stuff.killers);
@@ -1221,7 +1060,7 @@ pub fn WI_drawDeathmatchStats(state: &mut GameState) {
     V_DrawPatch(state, dest_screen, DM_VICTIMSX, DM_VICTIMSY, &victims_patch);
     x = DM_MATRIXX + DM_SPACINGX;
     y = DM_MATRIXY;
-    i = 0_i32;
+    i = 0;
     while i < MAXPLAYERS {
         if state.g_game.playeringame[i as usize] {
             let p_patch = V_CachePatchNum(state, state.wi_stuff.p[i as usize]);
@@ -1229,7 +1068,7 @@ pub fn WI_drawDeathmatchStats(state: &mut GameState) {
             V_DrawPatch(
                 state,
                 dest_screen,
-                x - p_patch.width() / 2_i32,
+                x - p_patch.width() / 2,
                 DM_MATRIXY - WI_SPACINGY,
                 &p_patch,
             );
@@ -1237,7 +1076,7 @@ pub fn WI_drawDeathmatchStats(state: &mut GameState) {
             V_DrawPatch(
                 state,
                 dest_screen,
-                DM_MATRIXX - p_patch.width() / 2_i32,
+                DM_MATRIXX - p_patch.width() / 2,
                 y,
                 &p_patch,
             );
@@ -1247,7 +1086,7 @@ pub fn WI_drawDeathmatchStats(state: &mut GameState) {
                 V_DrawPatch(
                     state,
                     dest_screen,
-                    x - p_patch.width() / 2_i32,
+                    x - p_patch.width() / 2,
                     DM_MATRIXY - WI_SPACINGY,
                     &bstar_patch,
                 );
@@ -1256,7 +1095,7 @@ pub fn WI_drawDeathmatchStats(state: &mut GameState) {
                 V_DrawPatch(
                     state,
                     dest_screen,
-                    DM_MATRIXX - p_patch.width() / 2_i32,
+                    DM_MATRIXX - p_patch.width() / 2,
                     y,
                     &star_patch,
                 );
@@ -1266,24 +1105,24 @@ pub fn WI_drawDeathmatchStats(state: &mut GameState) {
         y += WI_SPACINGY;
         i += 1;
     }
-    y = DM_MATRIXY + 10_i32;
+    y = DM_MATRIXY + 10;
     let zero_patch = V_CachePatchNum(state, state.wi_stuff.num[0]);
     let w: i32 = zero_patch.width();
-    i = 0_i32;
+    i = 0;
     while i < MAXPLAYERS {
         x = DM_MATRIXX + DM_SPACINGX;
         if state.g_game.playeringame[i as usize] {
-            j = 0_i32;
+            j = 0;
             while j < MAXPLAYERS {
                 if state.g_game.playeringame[j as usize] {
                     let dm_frags = state.wi_stuff.dm_frags[i as usize][j as usize];
-                    WI_drawNum(state, x + w, y, dm_frags, 2_i32);
+                    WI_drawNum(state, x + w, y, dm_frags, 2);
                 }
                 x += DM_SPACINGX;
                 j += 1;
             }
             let dm_totals = state.wi_stuff.dm_totals[i as usize];
-            WI_drawNum(state, DM_TOTALSX + w, y, dm_totals, 2_i32);
+            WI_drawNum(state, DM_TOTALSX + w, y, dm_totals, 2);
         }
         y += WI_SPACINGY;
         i += 1;
@@ -1292,13 +1131,13 @@ pub fn WI_drawDeathmatchStats(state: &mut GameState) {
 pub fn WI_initNetgameStats(state: &mut GameState) {
     let mut i: i32;
     state.wi_stuff.state = StateEnum::StatCount;
-    state.wi_stuff.acceleratestage = 0_i32;
-    state.wi_stuff.ng_state = 1_i32;
+    state.wi_stuff.acceleratestage = 0;
+    state.wi_stuff.ng_state = 1;
     state.wi_stuff.cnt_pause = TICRATE;
-    i = 0_i32;
+    i = 0;
     while i < MAXPLAYERS {
         if state.g_game.playeringame[i as usize] {
-            state.wi_stuff.cnt_frags[i as usize] = 0_i32;
+            state.wi_stuff.cnt_frags[i as usize] = 0;
             state.wi_stuff.cnt_secret[i as usize] = state.wi_stuff.cnt_frags[i as usize];
             state.wi_stuff.cnt_items[i as usize] = state.wi_stuff.cnt_secret[i as usize];
             state.wi_stuff.cnt_kills[i as usize] = state.wi_stuff.cnt_items[i as usize];
@@ -1315,17 +1154,17 @@ pub fn WI_updateNetgameStats(state: &mut GameState) {
     let mut fsum: i32;
     let mut stillticking: bool;
     WI_updateAnimatedBack(state);
-    if state.wi_stuff.acceleratestage != 0 && state.wi_stuff.ng_state != 10_i32 {
-        state.wi_stuff.acceleratestage = 0_i32;
-        i = 0_i32;
+    if state.wi_stuff.acceleratestage != 0 && state.wi_stuff.ng_state != 10 {
+        state.wi_stuff.acceleratestage = 0;
+        i = 0;
         while i < MAXPLAYERS {
             if state.g_game.playeringame[i as usize] {
                 state.wi_stuff.cnt_kills[i as usize] =
-                    state.plyr_index(i).skills * 100_i32 / state.wbs().maxkills;
+                    state.plyr_index(i).skills * 100 / state.wbs().maxkills;
                 state.wi_stuff.cnt_items[i as usize] =
-                    state.plyr_index(i).sitems * 100_i32 / state.wbs().maxitems;
+                    state.plyr_index(i).sitems * 100 / state.wbs().maxitems;
                 state.wi_stuff.cnt_secret[i as usize] =
-                    state.plyr_index(i).ssecret * 100_i32 / state.wbs().maxsecret;
+                    state.plyr_index(i).ssecret * 100 / state.wbs().maxsecret;
                 if state.wi_stuff.dofrags != 0 {
                     state.wi_stuff.cnt_frags[i as usize] = WI_fragSum(state, i);
                 }
@@ -1333,22 +1172,22 @@ pub fn WI_updateNetgameStats(state: &mut GameState) {
             i += 1;
         }
         S_StartSound(state, SoundOrigin::None, SfxName::sfx_barexp as i32);
-        state.wi_stuff.ng_state = 10_i32;
+        state.wi_stuff.ng_state = 10;
     }
-    if state.wi_stuff.ng_state == 2_i32 {
-        if state.wi_stuff.bcnt & 3_i32 == 0 {
+    if state.wi_stuff.ng_state == 2 {
+        if state.wi_stuff.bcnt & 3 == 0 {
             S_StartSound(state, SoundOrigin::None, SfxName::sfx_pistol as i32);
         }
         stillticking = false;
-        i = 0_i32;
+        i = 0;
         while i < MAXPLAYERS {
             if state.g_game.playeringame[i as usize] {
-                state.wi_stuff.cnt_kills[i as usize] += 2_i32;
+                state.wi_stuff.cnt_kills[i as usize] += 2;
                 if state.wi_stuff.cnt_kills[i as usize]
-                    >= state.plyr_index(i).skills * 100_i32 / state.wbs().maxkills
+                    >= state.plyr_index(i).skills * 100 / state.wbs().maxkills
                 {
                     state.wi_stuff.cnt_kills[i as usize] =
-                        state.plyr_index(i).skills * 100_i32 / state.wbs().maxkills;
+                        state.plyr_index(i).skills * 100 / state.wbs().maxkills;
                 } else {
                     stillticking = true;
                 }
@@ -1359,20 +1198,20 @@ pub fn WI_updateNetgameStats(state: &mut GameState) {
             S_StartSound(state, SoundOrigin::None, SfxName::sfx_barexp as i32);
             state.wi_stuff.ng_state += 1;
         }
-    } else if state.wi_stuff.ng_state == 4_i32 {
-        if state.wi_stuff.bcnt & 3_i32 == 0 {
+    } else if state.wi_stuff.ng_state == 4 {
+        if state.wi_stuff.bcnt & 3 == 0 {
             S_StartSound(state, SoundOrigin::None, SfxName::sfx_pistol as i32);
         }
         stillticking = false;
-        i = 0_i32;
+        i = 0;
         while i < MAXPLAYERS {
             if state.g_game.playeringame[i as usize] {
-                state.wi_stuff.cnt_items[i as usize] += 2_i32;
+                state.wi_stuff.cnt_items[i as usize] += 2;
                 if state.wi_stuff.cnt_items[i as usize]
-                    >= state.plyr_index(i).sitems * 100_i32 / state.wbs().maxitems
+                    >= state.plyr_index(i).sitems * 100 / state.wbs().maxitems
                 {
                     state.wi_stuff.cnt_items[i as usize] =
-                        state.plyr_index(i).sitems * 100_i32 / state.wbs().maxitems;
+                        state.plyr_index(i).sitems * 100 / state.wbs().maxitems;
                 } else {
                     stillticking = true;
                 }
@@ -1383,20 +1222,20 @@ pub fn WI_updateNetgameStats(state: &mut GameState) {
             S_StartSound(state, SoundOrigin::None, SfxName::sfx_barexp as i32);
             state.wi_stuff.ng_state += 1;
         }
-    } else if state.wi_stuff.ng_state == 6_i32 {
-        if state.wi_stuff.bcnt & 3_i32 == 0 {
+    } else if state.wi_stuff.ng_state == 6 {
+        if state.wi_stuff.bcnt & 3 == 0 {
             S_StartSound(state, SoundOrigin::None, SfxName::sfx_pistol as i32);
         }
         stillticking = false;
-        i = 0_i32;
+        i = 0;
         while i < MAXPLAYERS {
             if state.g_game.playeringame[i as usize] {
-                state.wi_stuff.cnt_secret[i as usize] += 2_i32;
+                state.wi_stuff.cnt_secret[i as usize] += 2;
                 if state.wi_stuff.cnt_secret[i as usize]
-                    >= state.plyr_index(i).ssecret * 100_i32 / state.wbs().maxsecret
+                    >= state.plyr_index(i).ssecret * 100 / state.wbs().maxsecret
                 {
                     state.wi_stuff.cnt_secret[i as usize] =
-                        state.plyr_index(i).ssecret * 100_i32 / state.wbs().maxsecret;
+                        state.plyr_index(i).ssecret * 100 / state.wbs().maxsecret;
                 } else {
                     stillticking = true;
                 }
@@ -1405,17 +1244,17 @@ pub fn WI_updateNetgameStats(state: &mut GameState) {
         }
         if !stillticking {
             S_StartSound(state, SoundOrigin::None, SfxName::sfx_barexp as i32);
-            state.wi_stuff.ng_state += 1_i32 + 2_i32 * (state.wi_stuff.dofrags == 0) as i32;
+            state.wi_stuff.ng_state += 1 + 2 * (state.wi_stuff.dofrags == 0) as i32;
         }
-    } else if state.wi_stuff.ng_state == 8_i32 {
-        if state.wi_stuff.bcnt & 3_i32 == 0 {
+    } else if state.wi_stuff.ng_state == 8 {
+        if state.wi_stuff.bcnt & 3 == 0 {
             S_StartSound(state, SoundOrigin::None, SfxName::sfx_pistol as i32);
         }
         stillticking = false;
-        i = 0_i32;
+        i = 0;
         while i < MAXPLAYERS {
             if state.g_game.playeringame[i as usize] {
-                state.wi_stuff.cnt_frags[i as usize] += 1_i32;
+                state.wi_stuff.cnt_frags[i as usize] += 1;
                 fsum = WI_fragSum(state, i);
                 if state.wi_stuff.cnt_frags[i as usize] >= fsum {
                     state.wi_stuff.cnt_frags[i as usize] = fsum;
@@ -1429,7 +1268,7 @@ pub fn WI_updateNetgameStats(state: &mut GameState) {
             S_StartSound(state, SoundOrigin::None, SfxName::sfx_pldeth as i32);
             state.wi_stuff.ng_state += 1;
         }
-    } else if state.wi_stuff.ng_state == 10_i32 {
+    } else if state.wi_stuff.ng_state == 10 {
         if state.wi_stuff.acceleratestage != 0 {
             S_StartSound(state, SoundOrigin::None, SfxName::sfx_sgcock as i32);
             if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 {
@@ -1438,7 +1277,7 @@ pub fn WI_updateNetgameStats(state: &mut GameState) {
                 WI_initShowNextLoc(state);
             }
         }
-    } else if state.wi_stuff.ng_state & 1_i32 != 0 {
+    } else if state.wi_stuff.ng_state & 1 != 0 {
         state.wi_stuff.cnt_pause -= 1;
         if state.wi_stuff.cnt_pause == 0 {
             state.wi_stuff.ng_state += 1;
@@ -1462,7 +1301,7 @@ pub fn WI_drawNetgameStats(state: &mut GameState) {
     V_DrawPatch(
         state,
         dest_screen,
-        32_i32 + star_width / 2_i32 + 32_i32 * (state.wi_stuff.dofrags == 0) as i32 + NG_SPACINGX
+        32 + star_width / 2 + 32 * (state.wi_stuff.dofrags == 0) as i32 + NG_SPACINGX
             - kills_patch.width(),
         NG_STATSY,
         &kills_patch,
@@ -1472,10 +1311,7 @@ pub fn WI_drawNetgameStats(state: &mut GameState) {
     V_DrawPatch(
         state,
         dest_screen,
-        32_i32
-            + star_width / 2_i32
-            + 32_i32 * (state.wi_stuff.dofrags == 0) as i32
-            + 2_i32 * NG_SPACINGX
+        32 + star_width / 2 + 32 * (state.wi_stuff.dofrags == 0) as i32 + 2 * NG_SPACINGX
             - items_patch.width(),
         NG_STATSY,
         &items_patch,
@@ -1485,10 +1321,7 @@ pub fn WI_drawNetgameStats(state: &mut GameState) {
     V_DrawPatch(
         state,
         dest_screen,
-        32_i32
-            + star_width / 2_i32
-            + 32_i32 * (state.wi_stuff.dofrags == 0) as i32
-            + 3_i32 * NG_SPACINGX
+        32 + star_width / 2 + 32 * (state.wi_stuff.dofrags == 0) as i32 + 3 * NG_SPACINGX
             - secret_patch.width(),
         NG_STATSY,
         &secret_patch,
@@ -1499,20 +1332,17 @@ pub fn WI_drawNetgameStats(state: &mut GameState) {
         V_DrawPatch(
             state,
             dest_screen,
-            32_i32
-                + star_width / 2_i32
-                + 32_i32 * (state.wi_stuff.dofrags == 0) as i32
-                + 4_i32 * NG_SPACINGX
+            32 + star_width / 2 + 32 * (state.wi_stuff.dofrags == 0) as i32 + 4 * NG_SPACINGX
                 - frags_patch.width(),
             NG_STATSY,
             &frags_patch,
         );
     }
     y = NG_STATSY + kills_patch.height();
-    i = 0_i32;
+    i = 0;
     while i < MAXPLAYERS {
         if state.g_game.playeringame[i as usize] {
-            x = 32_i32 + star_width / 2_i32 + 32_i32 * (state.wi_stuff.dofrags == 0) as i32;
+            x = 32 + star_width / 2 + 32 * (state.wi_stuff.dofrags == 0) as i32;
             let p_patch = V_CachePatchNum(state, state.wi_stuff.p[i as usize]);
             let dest_screen = Screen::Video;
             V_DrawPatch(state, dest_screen, x - p_patch.width(), y, &p_patch);
@@ -1522,17 +1352,17 @@ pub fn WI_drawNetgameStats(state: &mut GameState) {
             }
             x += NG_SPACINGX;
             let cnt_kills = state.wi_stuff.cnt_kills[i as usize];
-            WI_drawPercent(state, x - pwidth, y + 10_i32, cnt_kills);
+            WI_drawPercent(state, x - pwidth, y + 10, cnt_kills);
             x += NG_SPACINGX;
             let cnt_items = state.wi_stuff.cnt_items[i as usize];
-            WI_drawPercent(state, x - pwidth, y + 10_i32, cnt_items);
+            WI_drawPercent(state, x - pwidth, y + 10, cnt_items);
             x += NG_SPACINGX;
             let cnt_secret = state.wi_stuff.cnt_secret[i as usize];
-            WI_drawPercent(state, x - pwidth, y + 10_i32, cnt_secret);
+            WI_drawPercent(state, x - pwidth, y + 10, cnt_secret);
             x += NG_SPACINGX;
             if state.wi_stuff.dofrags != 0 {
                 let cnt_frags = state.wi_stuff.cnt_frags[i as usize];
-                WI_drawNum(state, x, y + 10_i32, cnt_frags, -1_i32);
+                WI_drawNum(state, x, y + 10, cnt_frags, -1);
             }
             y += WI_SPACINGY;
         }
@@ -1541,79 +1371,79 @@ pub fn WI_drawNetgameStats(state: &mut GameState) {
 }
 pub fn WI_initStats(state: &mut GameState) {
     state.wi_stuff.state = StateEnum::StatCount;
-    state.wi_stuff.acceleratestage = 0_i32;
-    state.wi_stuff.sp_state = 1_i32;
-    state.wi_stuff.cnt_secret[0] = -1_i32;
+    state.wi_stuff.acceleratestage = 0;
+    state.wi_stuff.sp_state = 1;
+    state.wi_stuff.cnt_secret[0] = -1;
     state.wi_stuff.cnt_items[0] = state.wi_stuff.cnt_secret[0];
     state.wi_stuff.cnt_kills[0] = state.wi_stuff.cnt_items[0];
-    state.wi_stuff.cnt_par = -1_i32;
+    state.wi_stuff.cnt_par = -1;
     state.wi_stuff.cnt_time = state.wi_stuff.cnt_par;
     state.wi_stuff.cnt_pause = TICRATE;
     WI_initAnimatedBack(state);
 }
 pub fn WI_updateStats(state: &mut GameState) {
     WI_updateAnimatedBack(state);
-    if state.wi_stuff.acceleratestage != 0 && state.wi_stuff.sp_state != 10_i32 {
-        state.wi_stuff.acceleratestage = 0_i32;
+    if state.wi_stuff.acceleratestage != 0 && state.wi_stuff.sp_state != 10 {
+        state.wi_stuff.acceleratestage = 0;
         state.wi_stuff.cnt_kills[0] =
-            state.plyr_index(state.wi_stuff.me).skills * 100_i32 / state.wbs().maxkills;
+            state.plyr_index(state.wi_stuff.me).skills * 100 / state.wbs().maxkills;
         state.wi_stuff.cnt_items[0] =
-            state.plyr_index(state.wi_stuff.me).sitems * 100_i32 / state.wbs().maxitems;
+            state.plyr_index(state.wi_stuff.me).sitems * 100 / state.wbs().maxitems;
         state.wi_stuff.cnt_secret[0] =
-            state.plyr_index(state.wi_stuff.me).ssecret * 100_i32 / state.wbs().maxsecret;
+            state.plyr_index(state.wi_stuff.me).ssecret * 100 / state.wbs().maxsecret;
         state.wi_stuff.cnt_time = state.plyr_index(state.wi_stuff.me).stime / TICRATE;
         state.wi_stuff.cnt_par = state.wbs().partime / TICRATE;
         S_StartSound(state, SoundOrigin::None, SfxName::sfx_barexp as i32);
-        state.wi_stuff.sp_state = 10_i32;
+        state.wi_stuff.sp_state = 10;
     }
-    if state.wi_stuff.sp_state == 2_i32 {
-        state.wi_stuff.cnt_kills[0] += 2_i32;
-        if state.wi_stuff.bcnt & 3_i32 == 0 {
+    if state.wi_stuff.sp_state == 2 {
+        state.wi_stuff.cnt_kills[0] += 2;
+        if state.wi_stuff.bcnt & 3 == 0 {
             S_StartSound(state, SoundOrigin::None, SfxName::sfx_pistol as i32);
         }
         if state.wi_stuff.cnt_kills[0]
-            >= state.plyr_index(state.wi_stuff.me).skills * 100_i32 / state.wbs().maxkills
+            >= state.plyr_index(state.wi_stuff.me).skills * 100 / state.wbs().maxkills
         {
             state.wi_stuff.cnt_kills[0] =
-                state.plyr_index(state.wi_stuff.me).skills * 100_i32 / state.wbs().maxkills;
+                state.plyr_index(state.wi_stuff.me).skills * 100 / state.wbs().maxkills;
             S_StartSound(state, SoundOrigin::None, SfxName::sfx_barexp as i32);
             state.wi_stuff.sp_state += 1;
         }
-    } else if state.wi_stuff.sp_state == 4_i32 {
-        state.wi_stuff.cnt_items[0] += 2_i32;
-        if state.wi_stuff.bcnt & 3_i32 == 0 {
+    } else if state.wi_stuff.sp_state == 4 {
+        state.wi_stuff.cnt_items[0] += 2;
+        if state.wi_stuff.bcnt & 3 == 0 {
             S_StartSound(state, SoundOrigin::None, SfxName::sfx_pistol as i32);
         }
         if state.wi_stuff.cnt_items[0]
-            >= state.plyr_index(state.wi_stuff.me).sitems * 100_i32 / state.wbs().maxitems
+            >= state.plyr_index(state.wi_stuff.me).sitems * 100 / state.wbs().maxitems
         {
             state.wi_stuff.cnt_items[0] =
-                state.plyr_index(state.wi_stuff.me).sitems * 100_i32 / state.wbs().maxitems;
+                state.plyr_index(state.wi_stuff.me).sitems * 100 / state.wbs().maxitems;
             S_StartSound(state, SoundOrigin::None, SfxName::sfx_barexp as i32);
             state.wi_stuff.sp_state += 1;
         }
-    } else if state.wi_stuff.sp_state == 6_i32 {
-        state.wi_stuff.cnt_secret[0] += 2_i32;
-        if state.wi_stuff.bcnt & 3_i32 == 0 {
+    } else if state.wi_stuff.sp_state == 6 {
+        state.wi_stuff.cnt_secret[0] += 2;
+        if state.wi_stuff.bcnt & 3 == 0 {
             S_StartSound(state, SoundOrigin::None, SfxName::sfx_pistol as i32);
         }
         if state.wi_stuff.cnt_secret[0]
-            >= state.plyr_index(state.wi_stuff.me).ssecret * 100_i32 / state.wbs().maxsecret
+            >= state.plyr_index(state.wi_stuff.me).ssecret * 100 / state.wbs().maxsecret
         {
             state.wi_stuff.cnt_secret[0] =
-                state.plyr_index(state.wi_stuff.me).ssecret * 100_i32 / state.wbs().maxsecret;
+                state.plyr_index(state.wi_stuff.me).ssecret * 100 / state.wbs().maxsecret;
             S_StartSound(state, SoundOrigin::None, SfxName::sfx_barexp as i32);
             state.wi_stuff.sp_state += 1;
         }
-    } else if state.wi_stuff.sp_state == 8_i32 {
-        if state.wi_stuff.bcnt & 3_i32 == 0 {
+    } else if state.wi_stuff.sp_state == 8 {
+        if state.wi_stuff.bcnt & 3 == 0 {
             S_StartSound(state, SoundOrigin::None, SfxName::sfx_pistol as i32);
         }
-        state.wi_stuff.cnt_time += 3_i32;
+        state.wi_stuff.cnt_time += 3;
         if state.wi_stuff.cnt_time >= state.plyr_index(state.wi_stuff.me).stime / TICRATE {
             state.wi_stuff.cnt_time = state.plyr_index(state.wi_stuff.me).stime / TICRATE;
         }
-        state.wi_stuff.cnt_par += 3_i32;
+        state.wi_stuff.cnt_par += 3;
         if state.wi_stuff.cnt_par >= state.wbs().partime / TICRATE {
             state.wi_stuff.cnt_par = state.wbs().partime / TICRATE;
             if state.wi_stuff.cnt_time >= state.plyr_index(state.wi_stuff.me).stime / TICRATE {
@@ -1621,7 +1451,7 @@ pub fn WI_updateStats(state: &mut GameState) {
                 state.wi_stuff.sp_state += 1;
             }
         }
-    } else if state.wi_stuff.sp_state == 10_i32 {
+    } else if state.wi_stuff.sp_state == 10 {
         if state.wi_stuff.acceleratestage != 0 {
             S_StartSound(state, SoundOrigin::None, SfxName::sfx_sgcock as i32);
             if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 {
@@ -1630,7 +1460,7 @@ pub fn WI_updateStats(state: &mut GameState) {
                 WI_initShowNextLoc(state);
             }
         }
-    } else if state.wi_stuff.sp_state & 1_i32 != 0 {
+    } else if state.wi_stuff.sp_state & 1 != 0 {
         state.wi_stuff.cnt_pause -= 1;
         if state.wi_stuff.cnt_pause == 0 {
             state.wi_stuff.sp_state += 1;
@@ -1640,7 +1470,7 @@ pub fn WI_updateStats(state: &mut GameState) {
 }
 pub fn WI_drawStats(state: &mut GameState) {
     let zero_patch = V_CachePatchNum(state, state.wi_stuff.num[0]);
-    let lh: i32 = 3_i32 * zero_patch.height() / 2_i32;
+    let lh: i32 = 3 * zero_patch.height() / 2;
     WI_slamBackground(state);
     WI_drawAnimatedBack(state);
     WI_drawLF(state);
@@ -1660,28 +1490,28 @@ pub fn WI_drawStats(state: &mut GameState) {
         state,
         dest_screen,
         SP_STATSX,
-        SP_STATSY + 2_i32 * lh,
+        SP_STATSY + 2 * lh,
         &sp_secret_patch,
     );
     let cnt_secret = state.wi_stuff.cnt_secret[0];
     WI_drawPercent(
         state,
         SCREENWIDTH - SP_STATSX,
-        SP_STATSY + 2_i32 * lh,
+        SP_STATSY + 2 * lh,
         cnt_secret,
     );
     let timepatch_patch = V_CachePatchNum(state, state.wi_stuff.timepatch);
     let dest_screen = Screen::Video;
     V_DrawPatch(state, dest_screen, SP_TIMEX, SP_TIMEY, &timepatch_patch);
     let cnt_time = state.wi_stuff.cnt_time;
-    WI_drawTime(state, SCREENWIDTH / 2_i32 - SP_TIMEX, SP_TIMEY, cnt_time);
-    if state.wbs().epsd < 3_i32 {
+    WI_drawTime(state, SCREENWIDTH / 2 - SP_TIMEX, SP_TIMEY, cnt_time);
+    if state.wbs().epsd < 3 {
         let par_patch = V_CachePatchNum(state, state.wi_stuff.par);
         let dest_screen = Screen::Video;
         V_DrawPatch(
             state,
             dest_screen,
-            SCREENWIDTH / 2_i32 + SP_TIMEX,
+            SCREENWIDTH / 2 + SP_TIMEX,
             SP_TIMEY,
             &par_patch,
         );
@@ -1696,7 +1526,7 @@ pub fn WI_checkForAccelerate(state: &mut GameState) {
             let player = &state.g_game.players[i as usize];
             if player.cmd.buttons as i32 & BT_ATTACK != 0 {
                 if player.attackdown == 0 {
-                    state.wi_stuff.acceleratestage = 1_i32;
+                    state.wi_stuff.acceleratestage = 1;
                 }
                 state.g_game.players[i as usize].attackdown = true_0;
             } else {
@@ -1705,7 +1535,7 @@ pub fn WI_checkForAccelerate(state: &mut GameState) {
             let player = &state.g_game.players[i as usize];
             if player.cmd.buttons as i32 & BT_USE != 0 {
                 if player.usedown == 0 {
-                    state.wi_stuff.acceleratestage = 1_i32;
+                    state.wi_stuff.acceleratestage = 1;
                 }
                 state.g_game.players[i as usize].usedown = true_0;
             } else {
@@ -1717,7 +1547,7 @@ pub fn WI_checkForAccelerate(state: &mut GameState) {
 }
 pub fn WI_Ticker(state: &mut GameState) {
     state.wi_stuff.bcnt += 1;
-    if state.wi_stuff.bcnt == 1_i32 {
+    if state.wi_stuff.bcnt == 1 {
         if state.doomstat.gamemode as u32 == GameMode_t::commercial as i32 as u32 {
             S_ChangeMusic(state, MusicName::mus_dm2int as i32, true_0);
         } else {
@@ -1756,7 +1586,7 @@ fn WI_loadUnloadData(state: &mut GameState, callback: load_callback_t) {
         state.wi_stuff.yah[0] = callback(state, "WIURH0");
         state.wi_stuff.yah[1] = callback(state, "WIURH1");
         state.wi_stuff.splat[0] = callback(state, "WISPLAT");
-        if state.wbs().epsd < 3_i32 {
+        if state.wbs().epsd < 3 {
             let epsd = state.wbs().epsd as usize;
             for j in 0..state.wi_stuff.NUMANIMS[epsd] as usize {
                 let nanims = state.wi_stuff.anims()[epsd][j].nanims as usize;
@@ -1782,7 +1612,7 @@ fn WI_loadUnloadData(state: &mut GameState, callback: load_callback_t) {
     state.wi_stuff.kills = callback(state, "WIOSTK");
     state.wi_stuff.secret = callback(state, "WIOSTS");
     state.wi_stuff.sp_secret = callback(state, "WISCRT2");
-    let items_name = if W_CheckNumForName(&mut state.w_wad, "WIOBJ") >= 0_i32
+    let items_name = if W_CheckNumForName(&mut state.w_wad, "WIOBJ") >= 0
         && state.g_game.netgame
         && state.g_game.deathmatch == 0
     {
@@ -1804,7 +1634,7 @@ fn WI_loadUnloadData(state: &mut GameState, callback: load_callback_t) {
         state.wi_stuff.bp[i] = callback(state, &format!("WIBP{}", i + 1));
     }
     let name = if state.doomstat.gamemode == GameMode_t::commercial
-        || state.doomstat.gamemode == GameMode_t::retail && state.wbs().epsd == 3_i32
+        || state.doomstat.gamemode == GameMode_t::retail && state.wbs().epsd == 3
     {
         "INTERPIC".to_string()
     } else {
@@ -1856,22 +1686,22 @@ pub fn WI_Drawer(state: &mut GameState) {
     };
 }
 pub fn WI_initVariables(state: &mut GameState) {
-    state.wi_stuff.acceleratestage = 0_i32;
-    state.wi_stuff.bcnt = 0_i32;
+    state.wi_stuff.acceleratestage = 0;
+    state.wi_stuff.bcnt = 0;
     state.wi_stuff.cnt = state.wi_stuff.bcnt;
-    state.wi_stuff.firstrefresh = 1_i32;
+    state.wi_stuff.firstrefresh = 1;
     state.wi_stuff.me = state.wbs().pnum;
     if state.wbs().maxkills == 0 {
         state.wbs().maxkills = 1;
     }
     if state.wbs().maxitems == 0 {
-        state.wbs().maxitems = 1_i32;
+        state.wbs().maxitems = 1;
     }
     if state.wbs().maxsecret == 0 {
-        state.wbs().maxsecret = 1_i32;
+        state.wbs().maxsecret = 1;
     }
-    if state.doomstat.gamemode != GameMode_t::retail && state.wbs().epsd > 2_i32 {
-        state.wbs().epsd -= 3_i32;
+    if state.doomstat.gamemode != GameMode_t::retail && state.wbs().epsd > 2 {
+        state.wbs().epsd -= 3;
     }
 }
 pub fn WI_Start(state: &mut GameState) {

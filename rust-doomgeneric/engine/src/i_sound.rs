@@ -134,8 +134,8 @@ fn InitSfxModule(state: &mut ISoundState, use_sfx_prefix: bool) {
     }
 }
 pub fn I_InitSound(state: &mut GameState, use_sfx_prefix: bool) {
-    let nosound: bool = M_CheckParm(state, "-nosound") > 0_i32;
-    let nosfx: bool = M_CheckParm(state, "-nosfx") > 0_i32;
+    let nosound: bool = M_CheckParm(state, "-nosound") > 0;
+    let nosfx: bool = M_CheckParm(state, "-nosfx") > 0;
     if !nosound && !state.i_video.screensaver_mode && !nosfx {
         InitSfxModule(&mut state.i_sound, use_sfx_prefix);
     }
@@ -151,7 +151,7 @@ pub fn I_ShutdownSound(state: &mut ISoundState) {
 pub fn I_GetSfxLumpNum(state: &mut ISoundState, sfxinfo: &mut sfxinfo_t) -> i32 {
     match state.sound_module {
         Some(module) => (module.GetSfxLumpNum.expect("non-null function pointer"))(sfxinfo),
-        None => 0_i32,
+        None => 0,
     }
 }
 pub fn I_UpdateSound(state: &mut ISoundState) {
@@ -165,8 +165,8 @@ pub fn I_UpdateSound(state: &mut ISoundState) {
     }
 }
 fn CheckVolumeSeparation(vol: &mut i32, sep: &mut i32) {
-    *sep = (*sep).clamp(0_i32, 254_i32);
-    *vol = (*vol).clamp(0_i32, 127_i32);
+    *sep = (*sep).clamp(0, 254);
+    *vol = (*vol).clamp(0, 127);
 }
 pub fn I_UpdateSoundParams(state: &mut ISoundState, channel: i32, mut vol: i32, mut sep: i32) {
     if let Some(module) = state.sound_module {
@@ -186,7 +186,7 @@ pub fn I_StartSound(
             CheckVolumeSeparation(&mut vol, &mut sep);
             (module.StartSound.expect("non-null function pointer"))(sfxinfo, channel, vol, sep)
         }
-        None => 0_i32,
+        None => 0,
     }
 }
 pub fn I_StopSound(state: &mut ISoundState, channel: i32) {

@@ -162,7 +162,7 @@ fn search_directory_for_iwad(
     mission: &mut GameMission_t,
 ) -> Option<String> {
     for iwad in IWADS.iter() {
-        if 1_i32 << iwad.mission as i32 & mask == 0_i32 {
+        if 1 << iwad.mission as i32 & mask == 0 {
             continue;
         }
         if let Some(filename) = check_directory_has_iwad(fs, platform, dir, iwad.name) {
@@ -178,7 +178,7 @@ fn identify_iwad_by_name(name: &str, mask: i32) -> GameMission_t {
         None => name,
     };
     for iwad in IWADS.iter() {
-        if 1_i32 << iwad.mission as i32 & mask == 0_i32 {
+        if 1 << iwad.mission as i32 & mask == 0 {
             continue;
         }
         if name.eq_ignore_ascii_case(iwad.name) {
@@ -219,9 +219,9 @@ pub fn D_TryFindWADByName(
     D_FindWADByName(state, fs, filename).unwrap_or_else(|| filename.to_string())
 }
 pub fn D_FindIWAD(state: &mut GameState, mask: i32, mission: &mut GameMission_t) -> String {
-    let iwadparm = M_CheckParmWithArgs(state, "-iwad", 1_i32);
+    let iwadparm = M_CheckParmWithArgs(state, "-iwad", 1);
     if iwadparm != 0 {
-        let iwadfile = state.m_argv.myargv[(iwadparm + 1_i32) as usize]
+        let iwadfile = state.m_argv.myargv[(iwadparm + 1) as usize]
             .as_str()
             .to_string();
         let result = D_FindWADByName(&mut state.d_iwad, &*state.fs, &iwadfile);

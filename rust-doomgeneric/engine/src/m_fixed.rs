@@ -13,7 +13,7 @@ pub fn FixedDiv(a: fixed_t, b: fixed_t) -> fixed_t {
             INT_MAX
         }
     } else {
-        let result: i64 = ((a as i64) << 16_i32) / b as i64;
+        let result: i64 = ((a as i64) << 16) / b as i64;
         result as fixed_t
     }
 }

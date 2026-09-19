@@ -73,7 +73,7 @@ pub fn STlib_init(state: &mut GameState) {
 pub fn STlib_initNum(n: &mut st_number_t, x: i32, y: i32, pl: StDigitSet, width: i32) {
     n.x = x;
     n.y = y;
-    n.oldnum = 0_i32;
+    n.oldnum = 0;
     n.width = width;
     n.p = pl;
 }
@@ -86,17 +86,17 @@ pub fn STlib_drawNum(state: &mut GameState, n: &mut st_number_t, mut num: i32) {
     let mut x: i32;
 
     n.oldnum = num;
-    let neg: i32 = (num < 0_i32) as i32;
+    let neg: i32 = (num < 0) as i32;
     if neg != 0 {
-        if numdigits == 2_i32 && num < -9_i32 {
-            num = -9_i32;
-        } else if numdigits == 3_i32 && num < -99_i32 {
-            num = -99_i32;
+        if numdigits == 2 && num < -9 {
+            num = -9;
+        } else if numdigits == 3 && num < -99 {
+            num = -99;
         }
         num = -num;
     }
     x = n.x - numdigits * w;
-    if n.y - ST_Y < 0_i32 {
+    if n.y - ST_Y < 0 {
         I_Error("drawNum: n->y - ST_Y < 0");
     }
     let st_backing_screen = Screen::StatusBar;
@@ -112,7 +112,7 @@ pub fn STlib_drawNum(state: &mut GameState, n: &mut st_number_t, mut num: i32) {
         x,
         n.y,
     );
-    if num == 1994_i32 {
+    if num == 1994 {
         return;
     }
     x = n.x;
@@ -126,16 +126,16 @@ pub fn STlib_drawNum(state: &mut GameState, n: &mut st_number_t, mut num: i32) {
         fresh0 != 0
     } {
         x -= w;
-        let digit_lump = state.st_stuff.digit_set(n.p)[(num % 10_i32) as usize];
+        let digit_lump = state.st_stuff.digit_set(n.p)[(num % 10) as usize];
         let digit_patch = V_CachePatchNum(state, digit_lump);
         let dest_screen = Screen::Video;
         V_DrawPatch(state, dest_screen, x, n.y, &digit_patch);
-        num /= 10_i32;
+        num /= 10;
     }
     if neg != 0 {
         let patch = V_CachePatchNum(state, state.st_lib.sttminus);
         let dest_screen = Screen::Video;
-        V_DrawPatch(state, dest_screen, x - 8_i32, n.y, &patch);
+        V_DrawPatch(state, dest_screen, x - 8, n.y, &patch);
     }
 }
 pub fn STlib_updateNum(state: &mut GameState, n: &mut st_number_t, num: i32, on: bool) {
@@ -144,7 +144,7 @@ pub fn STlib_updateNum(state: &mut GameState, n: &mut st_number_t, num: i32, on:
     }
 }
 pub fn STlib_initPercent(p: &mut st_percent_t, x: i32, y: i32, pl: StDigitSet, percent: i32) {
-    STlib_initNum(&mut p.n, x, y, pl, 3_i32);
+    STlib_initNum(&mut p.n, x, y, pl, 3);
     p.p = percent;
 }
 pub fn STlib_updatePercent(
@@ -164,7 +164,7 @@ pub fn STlib_updatePercent(
 pub fn STlib_initMultIcon(i: &mut st_multicon_t, x: i32, y: i32, il: StDigitSet) {
     i.x = x;
     i.y = y;
-    i.oldinum = -1_i32;
+    i.oldinum = -1;
     i.p = il;
 }
 pub fn STlib_updateMultIcon(
@@ -178,15 +178,15 @@ pub fn STlib_updateMultIcon(
     let h: i32;
     let x: i32;
     let y: i32;
-    if on && (mi.oldinum != inum || refresh) && inum != -1_i32 {
-        if mi.oldinum != -1_i32 {
+    if on && (mi.oldinum != inum || refresh) && inum != -1 {
+        if mi.oldinum != -1 {
             let old_lump = state.st_stuff.digit_set(mi.p)[mi.oldinum as usize];
             let old_patch = V_CachePatchNum(state, old_lump);
             x = mi.x - old_patch.leftoffset();
             y = mi.y - old_patch.topoffset();
             w = old_patch.width();
             h = old_patch.height();
-            if y - ST_Y < 0_i32 {
+            if y - ST_Y < 0 {
                 I_Error("updateMultIcon: y - ST_Y < 0");
             }
             let st_backing_screen = Screen::StatusBar;
@@ -233,7 +233,7 @@ pub fn STlib_updateBinIcon(
         y = bi.y - patch.topoffset();
         w = patch.width();
         h = patch.height();
-        if y - ST_Y < 0_i32 {
+        if y - ST_Y < 0 {
             I_Error("updateBinIcon: y - ST_Y < 0");
         }
         if val {

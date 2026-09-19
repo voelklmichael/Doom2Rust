@@ -8,21 +8,21 @@ pub enum BoxIndex {
     Left = 2,
     Right = 3,
 }
-pub fn M_ClearBox(box_0: &mut [fixed_t; 4]) {
-    box_0[BoxIndex::Right as usize] = INT_MIN as fixed_t;
-    box_0[BoxIndex::Top as usize] = box_0[BoxIndex::Right as usize];
-    box_0[BoxIndex::Left as usize] = INT_MAX as fixed_t;
-    box_0[BoxIndex::Bottom as usize] = box_0[BoxIndex::Left as usize];
+pub fn M_ClearBox(bbox: &mut [fixed_t; 4]) {
+    bbox[BoxIndex::Right as usize] = INT_MIN as fixed_t;
+    bbox[BoxIndex::Top as usize] = bbox[BoxIndex::Right as usize];
+    bbox[BoxIndex::Left as usize] = INT_MAX as fixed_t;
+    bbox[BoxIndex::Bottom as usize] = bbox[BoxIndex::Left as usize];
 }
-pub fn M_AddToBox(box_0: &mut [fixed_t; 4], x: fixed_t, y: fixed_t) {
-    if x < box_0[BoxIndex::Left as usize] {
-        box_0[BoxIndex::Left as usize] = x;
-    } else if x > box_0[BoxIndex::Right as usize] {
-        box_0[BoxIndex::Right as usize] = x;
+pub fn M_AddToBox(bbox: &mut [fixed_t; 4], x: fixed_t, y: fixed_t) {
+    if x < bbox[BoxIndex::Left as usize] {
+        bbox[BoxIndex::Left as usize] = x;
+    } else if x > bbox[BoxIndex::Right as usize] {
+        bbox[BoxIndex::Right as usize] = x;
     }
-    if y < box_0[BoxIndex::Bottom as usize] {
-        box_0[BoxIndex::Bottom as usize] = y;
-    } else if y > box_0[BoxIndex::Top as usize] {
-        box_0[BoxIndex::Top as usize] = y;
+    if y < bbox[BoxIndex::Bottom as usize] {
+        bbox[BoxIndex::Bottom as usize] = y;
+    } else if y > bbox[BoxIndex::Top as usize] {
+        bbox[BoxIndex::Top as usize] = y;
     }
 }

@@ -25,39 +25,38 @@ impl IInputState {
 }
 
 static SHIFTXFORM: [u8; 128] = [
-    0_u8, 1_u8, 2_u8, 3_u8, 4_u8, 5_u8, 6_u8, 7_u8, 8_u8, 9_u8, 10_u8, 11_u8, 12_u8, 13_u8, 14_u8,
-    15_u8, 16_u8, 17_u8, 18_u8, 19_u8, 20_u8, 21_u8, 22_u8, 23_u8, 24_u8, 25_u8, 26_u8, 27_u8,
-    28_u8, 29_u8, 30_u8, 31_u8, b' ', b'!', b'"', b'#', b'$', b'%', b'&', b'"', b'(', b')', b'*',
-    b'+', b'<', b'_', b'>', b'?', b')', b'!', b'@', b'#', b'$', b'%', b'^', b'&', b'*', b'(', b':',
-    b':', b'<', b'+', b'>', b'?', b'@', b'A', b'B', b'C', b'D', b'E', b'F', b'G', b'H', b'I', b'J',
+    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25,
+    26, 27, 28, 29, 30, 31, b' ', b'!', b'"', b'#', b'$', b'%', b'&', b'"', b'(', b')', b'*', b'+',
+    b'<', b'_', b'>', b'?', b')', b'!', b'@', b'#', b'$', b'%', b'^', b'&', b'*', b'(', b':', b':',
+    b'<', b'+', b'>', b'?', b'@', b'A', b'B', b'C', b'D', b'E', b'F', b'G', b'H', b'I', b'J', b'K',
+    b'L', b'M', b'N', b'O', b'P', b'Q', b'R', b'S', b'T', b'U', b'V', b'W', b'X', b'Y', b'Z', b'[',
+    b'!', b']', b'"', b'_', b'\'', b'A', b'B', b'C', b'D', b'E', b'F', b'G', b'H', b'I', b'J',
     b'K', b'L', b'M', b'N', b'O', b'P', b'Q', b'R', b'S', b'T', b'U', b'V', b'W', b'X', b'Y', b'Z',
-    b'[', b'!', b']', b'"', b'_', b'\'', b'A', b'B', b'C', b'D', b'E', b'F', b'G', b'H', b'I',
-    b'J', b'K', b'L', b'M', b'N', b'O', b'P', b'Q', b'R', b'S', b'T', b'U', b'V', b'W', b'X', b'Y',
-    b'Z', b'{', b'|', b'}', b'~', 127_u8,
+    b'{', b'|', b'}', b'~', 127,
 ];
 fn TranslateKey(key: u8) -> u8 {
     key
 }
 fn GetTypedChar(state: &mut IInputState, mut key: u8) -> u8 {
     key = TranslateKey(key);
-    if state.shiftdown > 0_i32 {
-        if key as i32 >= 0_i32 && (key as usize) < SHIFTXFORM.len() {
+    if state.shiftdown > 0 {
+        if key as i32 >= 0 && (key as usize) < SHIFTXFORM.len() {
             key = SHIFTXFORM[key as usize];
         } else {
-            key = 0_u8;
+            key = 0;
         }
     }
     key
 }
 fn UpdateShiftStatus(state: &mut IInputState, pressed: i32, key: u8) {
-    let change: i32 = if pressed != 0 { 1_i32 } else { -1_i32 };
+    let change: i32 = if pressed != 0 { 1 } else { -1 };
     if key as i32 == KEY_RSHIFT {
         state.shiftdown += change;
     }
 }
 pub fn I_GetEvent(state: &mut GameState) {
     let mut event: event_t = event_t {
-        type_0: EvType::ev_keydown,
+        kind: EvType::ev_keydown,
         data1: 0,
         data2: 0,
         data3: 0,
@@ -67,17 +66,17 @@ pub fn I_GetEvent(state: &mut GameState) {
         let pressed = pressed as i32;
         UpdateShiftStatus(&mut state.i_input, pressed, key);
         if pressed != 0 {
-            event.type_0 = EvType::ev_keydown;
+            event.kind = EvType::ev_keydown;
             event.data1 = TranslateKey(key) as i32;
             event.data2 = GetTypedChar(&mut state.i_input, key) as i32;
-            if event.data1 != 0_i32 {
+            if event.data1 != 0 {
                 D_PostEvent(&mut state.d_event, event);
             }
         } else {
-            event.type_0 = EvType::ev_keyup;
+            event.kind = EvType::ev_keyup;
             event.data1 = TranslateKey(key) as i32;
-            event.data2 = 0_i32;
-            if event.data1 != 0_i32 {
+            event.data2 = 0;
+            if event.data1 != 0 {
                 D_PostEvent(&mut state.d_event, event);
             }
             break;

@@ -88,68 +88,35 @@ pub fn I_Error(message: &str) -> ! {
     panic!("{}", message)
 }
 pub const DOS_MEM_DUMP_SIZE: i32 = 10;
-static MEM_DUMP_DOS622: [u8; 10] = [
-    0x57_i32 as u8,
-    0x92_i32 as u8,
-    0x19_i32 as u8,
-    0_i32 as u8,
-    0xf4_i32 as u8,
-    0x6_i32 as u8,
-    0x70_i32 as u8,
-    0_i32 as u8,
-    0x16_i32 as u8,
-    0_i32 as u8,
-];
-static MEM_DUMP_WIN98: [u8; 10] = [
-    0x9e_i32 as u8,
-    0xf_i32 as u8,
-    0xc9_i32 as u8,
-    0_i32 as u8,
-    0x65_i32 as u8,
-    0x4_i32 as u8,
-    0x70_i32 as u8,
-    0_i32 as u8,
-    0x16_i32 as u8,
-    0_i32 as u8,
-];
-static MEM_DUMP_DOSBOX: [u8; 10] = [
-    0_i32 as u8,
-    0_i32 as u8,
-    0_i32 as u8,
-    0xf1_i32 as u8,
-    0_i32 as u8,
-    0_i32 as u8,
-    0_i32 as u8,
-    0_i32 as u8,
-    0x7_i32 as u8,
-    0_i32 as u8,
-];
+static MEM_DUMP_DOS622: [u8; 10] = [0x57, 0x92, 0x19, 0, 0xf4, 0x6, 0x70, 0, 0x16, 0];
+static MEM_DUMP_WIN98: [u8; 10] = [0x9e, 0xf, 0xc9, 0, 0x65, 0x4, 0x70, 0, 0x16, 0];
+static MEM_DUMP_DOSBOX: [u8; 10] = [0, 0, 0, 0xf1, 0, 0, 0, 0, 0x7, 0];
 pub fn I_GetMemoryValue(state: &mut GameState, offset: u32, size: i32) -> Option<u32> {
     if state.i_system.get_memory_value_firsttime {
         let mut p: i32;
         let mut i: i32;
         let mut val: i32 = 0;
         state.i_system.get_memory_value_firsttime = false;
-        p = M_CheckParmWithArgs(state, "-setmem", 1_i32);
-        if p > 0_i32 {
-            if state.m_argv.myargv[(p + 1_i32) as usize]
+        p = M_CheckParmWithArgs(state, "-setmem", 1);
+        if p > 0 {
+            if state.m_argv.myargv[(p + 1) as usize]
                 .as_bytes()
                 .eq_ignore_ascii_case(b"dos622")
             {
                 state.i_system.dos_mem_dump = DosMemDump::Dos622;
             }
-            if state.m_argv.myargv[(p + 1_i32) as usize]
+            if state.m_argv.myargv[(p + 1) as usize]
                 .as_bytes()
                 .eq_ignore_ascii_case(b"dos71")
             {
                 state.i_system.dos_mem_dump = DosMemDump::Win98;
-            } else if state.m_argv.myargv[(p + 1_i32) as usize]
+            } else if state.m_argv.myargv[(p + 1) as usize]
                 .as_bytes()
                 .eq_ignore_ascii_case(b"dosbox")
             {
                 state.i_system.dos_mem_dump = DosMemDump::DosBox;
             } else {
-                i = 0_i32;
+                i = 0;
                 while i < DOS_MEM_DUMP_SIZE {
                     p += 1;
                     if p >= state.m_argv.myargv.len() as i32

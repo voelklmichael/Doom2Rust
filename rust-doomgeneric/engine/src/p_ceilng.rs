@@ -131,12 +131,10 @@ pub fn T_MoveCeiling(state: &mut GameState, id: CeilingId) {
                 ceiling.speed,
                 ceiling.topheight,
                 false,
-                1_i32,
+                1,
                 ceiling.direction,
             );
-            if state.p_tick.leveltime & 7_i32 == 0
-                && ceiling.type_0 != CeilingE::silentCrushAndRaise
-            {
+            if state.p_tick.leveltime & 7 == 0 && ceiling.kind != CeilingE::silentCrushAndRaise {
                 S_StartSound(
                     state,
                     SoundOrigin::Sector(ceiling.sector),
@@ -144,7 +142,7 @@ pub fn T_MoveCeiling(state: &mut GameState, id: CeilingId) {
                 );
             }
             if res == ResultE::pastdest {
-                match ceiling.type_0 {
+                match ceiling.kind {
                     CeilingE::raiseToHighest => {
                         P_RemoveActiveCeiling(state, id);
                     }
@@ -154,10 +152,10 @@ pub fn T_MoveCeiling(state: &mut GameState, id: CeilingId) {
                             SoundOrigin::Sector(ceiling.sector),
                             SfxName::sfx_pstop as i32,
                         );
-                        state.p_ceilng.get_mut(id).expect("live ceiling").direction = -1_i32;
+                        state.p_ceilng.get_mut(id).expect("live ceiling").direction = -1;
                     }
                     CeilingE::fastCrushAndRaise | CeilingE::crushAndRaise => {
-                        state.p_ceilng.get_mut(id).expect("live ceiling").direction = -1_i32;
+                        state.p_ceilng.get_mut(id).expect("live ceiling").direction = -1;
                     }
                     _ => {}
                 }
@@ -170,12 +168,10 @@ pub fn T_MoveCeiling(state: &mut GameState, id: CeilingId) {
                 ceiling.speed,
                 ceiling.bottomheight,
                 ceiling.crush,
-                1_i32,
+                1,
                 ceiling.direction,
             );
-            if state.p_tick.leveltime & 7_i32 == 0
-                && ceiling.type_0 != CeilingE::silentCrushAndRaise
-            {
+            if state.p_tick.leveltime & 7 == 0 && ceiling.kind != CeilingE::silentCrushAndRaise {
                 S_StartSound(
                     state,
                     SoundOrigin::Sector(ceiling.sector),
@@ -183,7 +179,7 @@ pub fn T_MoveCeiling(state: &mut GameState, id: CeilingId) {
                 );
             }
             if res == ResultE::pastdest {
-                match ceiling.type_0 {
+                match ceiling.kind {
                     CeilingE::silentCrushAndRaise => {
                         S_StartSound(
                             state,
@@ -192,15 +188,15 @@ pub fn T_MoveCeiling(state: &mut GameState, id: CeilingId) {
                         );
                         let c = state.p_ceilng.get_mut(id).expect("live ceiling");
                         c.speed = CEILSPEED as fixed_t;
-                        c.direction = 1_i32;
+                        c.direction = 1;
                     }
                     CeilingE::crushAndRaise => {
                         let c = state.p_ceilng.get_mut(id).expect("live ceiling");
                         c.speed = CEILSPEED as fixed_t;
-                        c.direction = 1_i32;
+                        c.direction = 1;
                     }
                     CeilingE::fastCrushAndRaise => {
-                        state.p_ceilng.get_mut(id).expect("live ceiling").direction = 1_i32;
+                        state.p_ceilng.get_mut(id).expect("live ceiling").direction = 1;
                     }
                     CeilingE::lowerAndCrush | CeilingE::lowerToFloor => {
                         P_RemoveActiveCeiling(state, id);
@@ -208,12 +204,12 @@ pub fn T_MoveCeiling(state: &mut GameState, id: CeilingId) {
                     _ => {}
                 }
             } else if res == ResultE::crushed {
-                match ceiling.type_0 {
+                match ceiling.kind {
                     CeilingE::silentCrushAndRaise
                     | CeilingE::crushAndRaise
                     | CeilingE::lowerAndCrush => {
                         state.p_ceilng.get_mut(id).expect("live ceiling").speed =
-                            (CEILSPEED / 8_i32) as fixed_t;
+                            (CEILSPEED / 8) as fixed_t;
                     }
                     _ => {}
                 }
@@ -222,10 +218,10 @@ pub fn T_MoveCeiling(state: &mut GameState, id: CeilingId) {
         _ => {}
     };
 }
-pub fn EV_DoCeiling(state: &mut GameState, line: LineId, type_0: CeilingE) -> i32 {
+pub fn EV_DoCeiling(state: &mut GameState, line: LineId, kind: CeilingE) -> i32 {
     let mut rtn: i32 = 0;
-    let mut secnum: i32 = -1_i32;
-    match type_0 {
+    let mut secnum: i32 = -1;
+    match kind {
         CeilingE::fastCrushAndRaise | CeilingE::silentCrushAndRaise | CeilingE::crushAndRaise => {
             let tag = state.p_setup.line(line).tag as i32;
             P_ActivateInStasisCeiling(state, tag);
@@ -234,14 +230,14 @@ pub fn EV_DoCeiling(state: &mut GameState, line: LineId, type_0: CeilingE) -> i3
     }
     loop {
         secnum = P_FindSectorFromLineTag(state, line, secnum);
-        if secnum < 0_i32 {
+        if secnum < 0 {
             break;
         }
         let sec = SectorId(secnum as u32);
         if state.p_setup.sector_mut(sec).specialdata.is_some() {
             continue;
         }
-        rtn = 1_i32;
+        rtn = 1;
         let (ceilingheight, floorheight, tag) = {
             let s = state.p_setup.sector_mut(sec);
             (s.ceilingheight, s.floorheight, s.tag as i32)
@@ -251,13 +247,13 @@ pub fn EV_DoCeiling(state: &mut GameState, line: LineId, type_0: CeilingE) -> i3
         ceiling.sector = sec;
         ceiling.crush = false;
         let mut lower_block = false;
-        match type_0 {
+        match kind {
             CeilingE::fastCrushAndRaise => {
                 ceiling.crush = true;
                 ceiling.topheight = ceilingheight;
-                ceiling.bottomheight = (floorheight + 8_i32 * FRACUNIT) as fixed_t;
-                ceiling.direction = -1_i32;
-                ceiling.speed = (CEILSPEED * 2_i32) as fixed_t;
+                ceiling.bottomheight = (floorheight + 8 * FRACUNIT) as fixed_t;
+                ceiling.direction = -1;
+                ceiling.speed = (CEILSPEED * 2) as fixed_t;
             }
             CeilingE::silentCrushAndRaise | CeilingE::crushAndRaise => {
                 ceiling.crush = true;
@@ -269,20 +265,20 @@ pub fn EV_DoCeiling(state: &mut GameState, line: LineId, type_0: CeilingE) -> i3
             }
             CeilingE::raiseToHighest => {
                 ceiling.topheight = P_FindHighestCeilingSurrounding(state, sec);
-                ceiling.direction = 1_i32;
+                ceiling.direction = 1;
                 ceiling.speed = CEILSPEED as fixed_t;
             }
         }
         if lower_block {
             ceiling.bottomheight = floorheight;
-            if type_0 != CeilingE::lowerToFloor {
-                ceiling.bottomheight += 8_i32 * FRACUNIT;
+            if kind != CeilingE::lowerToFloor {
+                ceiling.bottomheight += 8 * FRACUNIT;
             }
-            ceiling.direction = -1_i32;
+            ceiling.direction = -1;
             ceiling.speed = CEILSPEED as fixed_t;
         }
         ceiling.tag = tag;
-        ceiling.type_0 = type_0;
+        ceiling.kind = kind;
         let ceiling_arena_id = state.p_ceilng.spawn(ceiling);
         let ceiling_id = P_AddThinker(
             state,
@@ -296,7 +292,7 @@ pub fn EV_DoCeiling(state: &mut GameState, line: LineId, type_0: CeilingE) -> i3
 }
 pub fn P_AddActiveCeiling(state: &mut PCeilngState, id: ThinkerId) {
     let mut i: i32;
-    i = 0_i32;
+    i = 0;
     while i < MAXCEILINGS {
         if state.activeceilings[i as usize].is_none() {
             state.activeceilings[i as usize] = Some(id);
@@ -324,7 +320,7 @@ pub fn P_ActivateInStasisCeiling(state: &mut GameState, tag: i32) {
         if let Some(id) = state.p_ceilng.activeceilings[i] {
             let ceiling_id = state.p_tick.ceiling_payload(id);
             let c = state.p_ceilng.get_mut(ceiling_id).expect("live ceiling");
-            if c.tag == tag && c.direction == 0_i32 {
+            if c.tag == tag && c.direction == 0 {
                 c.direction = c.olddirection;
                 c.thinker.function = ThinkerFn::Ceiling(T_MoveCeiling);
             }
@@ -332,16 +328,16 @@ pub fn P_ActivateInStasisCeiling(state: &mut GameState, tag: i32) {
     }
 }
 pub fn EV_CeilingCrushStop(state: &mut GameState, tag: i32) -> i32 {
-    let mut rtn: i32 = 0_i32;
+    let mut rtn: i32 = 0;
     for i in 0..MAXCEILINGS as usize {
         if let Some(id) = state.p_ceilng.activeceilings[i] {
             let ceiling_id = state.p_tick.ceiling_payload(id);
             let c = state.p_ceilng.get_mut(ceiling_id).expect("live ceiling");
-            if c.tag == tag && c.direction != 0_i32 {
+            if c.tag == tag && c.direction != 0 {
                 c.olddirection = c.direction;
                 c.thinker.function = ThinkerFn::Paused;
-                c.direction = 0_i32;
-                rtn = 1_i32;
+                c.direction = 0;
+                rtn = 1;
             }
         }
     }

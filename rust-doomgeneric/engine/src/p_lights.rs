@@ -363,24 +363,24 @@ pub fn T_FireFlicker(state: &mut GameState, id: FireFlickerId) {
     if flick.count != 0 {
         return;
     }
-    let amount = (P_Random(&mut state.m_random) & 3_i32) * 16_i32;
+    let amount = (P_Random(&mut state.m_random) & 3) * 16;
     let sec = state.p_setup.sector_mut(flick.sector);
     if sec.lightlevel as i32 - amount < flick.minlight {
         sec.lightlevel = flick.minlight as i16;
     } else {
         sec.lightlevel = (flick.maxlight - amount) as i16;
     }
-    flick.count = 4_i32;
+    flick.count = 4;
 }
 pub fn P_SpawnFireFlicker(state: &mut GameState, sector: SectorId) {
-    state.p_setup.sector_mut(sector).special = 0_i16;
+    state.p_setup.sector_mut(sector).special = 0;
     let lightlevel = state.p_setup.sector_mut(sector).lightlevel as i32;
     let mut flick = fireflicker_t::default();
     flick.thinker.function = ThinkerFn::FireFlicker(T_FireFlicker);
     flick.sector = sector;
     flick.maxlight = lightlevel;
-    flick.minlight = P_FindMinSurroundingLight(state, sector, lightlevel) + 16_i32;
-    flick.count = 4_i32;
+    flick.minlight = P_FindMinSurroundingLight(state, sector, lightlevel) + 16;
+    flick.count = 4;
     let flick_arena_id = state.p_lights.spawn_fireflicker(flick);
     P_AddThinker(
         state,
@@ -400,23 +400,23 @@ pub fn T_LightFlash(state: &mut GameState, id: LightFlashId) {
     let sec = state.p_setup.sector_mut(flash.sector);
     if sec.lightlevel as i32 == flash.maxlight {
         sec.lightlevel = flash.minlight as i16;
-        flash.count = (P_Random(&mut state.m_random) & flash.mintime) + 1_i32;
+        flash.count = (P_Random(&mut state.m_random) & flash.mintime) + 1;
     } else {
         sec.lightlevel = flash.maxlight as i16;
-        flash.count = (P_Random(&mut state.m_random) & flash.maxtime) + 1_i32;
+        flash.count = (P_Random(&mut state.m_random) & flash.maxtime) + 1;
     };
 }
 pub fn P_SpawnLightFlash(state: &mut GameState, sector: SectorId) {
-    state.p_setup.sector_mut(sector).special = 0_i16;
+    state.p_setup.sector_mut(sector).special = 0;
     let lightlevel = state.p_setup.sector_mut(sector).lightlevel as i32;
     let mut flash = lightflash_t::default();
     flash.thinker.function = ThinkerFn::LightFlash(T_LightFlash);
     flash.sector = sector;
     flash.maxlight = lightlevel;
     flash.minlight = P_FindMinSurroundingLight(state, sector, lightlevel);
-    flash.maxtime = 64_i32;
-    flash.mintime = 7_i32;
-    flash.count = (P_Random(&mut state.m_random) & flash.maxtime) + 1_i32;
+    flash.maxtime = 64;
+    flash.mintime = 7;
+    flash.count = (P_Random(&mut state.m_random) & flash.maxtime) + 1;
     let flash_arena_id = state.p_lights.spawn_lightflash(flash);
     P_AddThinker(
         state,
@@ -454,13 +454,13 @@ pub fn P_SpawnStrobeFlash(state: &mut GameState, sector: SectorId, fastOrSlow: i
     flash.maxlight = lightlevel;
     flash.minlight = P_FindMinSurroundingLight(state, sector, lightlevel);
     if flash.minlight == flash.maxlight {
-        flash.minlight = 0_i32;
+        flash.minlight = 0;
     }
-    state.p_setup.sector_mut(sector).special = 0_i16;
+    state.p_setup.sector_mut(sector).special = 0;
     if inSync == 0 {
-        flash.count = (P_Random(&mut state.m_random) & 7_i32) + 1_i32;
+        flash.count = (P_Random(&mut state.m_random) & 7) + 1;
     } else {
-        flash.count = 1_i32;
+        flash.count = 1;
     };
     let flash_arena_id = state.p_lights.spawn_strobe(flash);
     P_AddThinker(
@@ -471,17 +471,17 @@ pub fn P_SpawnStrobeFlash(state: &mut GameState, sector: SectorId, fastOrSlow: i
 }
 pub fn EV_StartLightStrobing(state: &mut GameState, line: LineId) {
     let mut secnum: i32;
-    secnum = -1_i32;
+    secnum = -1;
     loop {
         secnum = P_FindSectorFromLineTag(state, line, secnum);
-        if secnum < 0_i32 {
+        if secnum < 0 {
             break;
         }
         let sec = state.p_setup.sector_mut(SectorId(secnum as u32));
         if sec.specialdata.is_some() {
             continue;
         }
-        P_SpawnStrobeFlash(state, SectorId(secnum as u32), SLOWDARK, 0_i32);
+        P_SpawnStrobeFlash(state, SectorId(secnum as u32), SLOWDARK, 0);
     }
 }
 pub fn EV_TurnTagLightsOff(state: &mut GameState, line: LineId) {
@@ -536,14 +536,14 @@ pub fn T_Glow(state: &mut GameState, id: GlowId) {
             sec.lightlevel = (sec.lightlevel as i32 - GLOWSPEED) as i16;
             if sec.lightlevel as i32 <= g.minlight {
                 sec.lightlevel = (sec.lightlevel as i32 + GLOWSPEED) as i16;
-                g.direction = 1_i32;
+                g.direction = 1;
             }
         }
         1 => {
             sec.lightlevel = (sec.lightlevel as i32 + GLOWSPEED) as i16;
             if sec.lightlevel as i32 >= g.maxlight {
                 sec.lightlevel = (sec.lightlevel as i32 - GLOWSPEED) as i16;
-                g.direction = -1_i32;
+                g.direction = -1;
             }
         }
         _ => {}
@@ -558,8 +558,8 @@ pub fn P_SpawnGlowingLight(state: &mut GameState, sector: SectorId) {
         ..glow_t::default()
     };
     g.thinker.function = ThinkerFn::Glow(T_Glow);
-    g.direction = -1_i32;
+    g.direction = -1;
     let g_arena_id = state.p_lights.spawn_glow(g);
     P_AddThinker(state, ThinkerPayload::Glow(g_arena_id), ThinkerKind::Glow);
-    state.p_setup.sector_mut(sector).special = 0_i16;
+    state.p_setup.sector_mut(sector).special = 0;
 }

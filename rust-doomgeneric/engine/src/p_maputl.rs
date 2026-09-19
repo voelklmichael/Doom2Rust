@@ -191,7 +191,7 @@ pub struct intercepts_overrun_t {
 }
 pub const MAPBLOCKUNITS: i32 = 128;
 pub const MAPBLOCKSIZE: i32 = MAPBLOCKUNITS * FRACUNIT;
-pub const MAPBLOCKSHIFT: i32 = FRACBITS + 7_i32;
+pub const MAPBLOCKSHIFT: i32 = FRACBITS + 7;
 pub const MAPBTOFRAC: i32 = MAPBLOCKSHIFT - FRACBITS;
 pub const MAXINTERCEPTS_ORIGINAL: i32 = 128;
 pub const PT_ADDLINES: i32 = 1;
@@ -201,55 +201,55 @@ pub fn P_AproxDistance(mut dx: fixed_t, mut dy: fixed_t) -> fixed_t {
     dx = dx.abs() as fixed_t;
     dy = dy.abs() as fixed_t;
     if dx < dy {
-        return dx + dy - (dx >> 1_i32);
+        return dx + dy - (dx >> 1);
     }
-    dx + dy - (dy >> 1_i32)
+    dx + dy - (dy >> 1)
 }
 pub fn P_PointOnLineSide(state: &mut GameState, x: fixed_t, y: fixed_t, line: LineId) -> i32 {
     let line = state.p_setup.line(line);
     let line_v1 = state.p_setup.vertexes[line.v1.0 as usize];
     if line.dx == 0 {
         if x <= line_v1.x {
-            return (line.dy > 0_i32) as i32;
+            return (line.dy > 0) as i32;
         }
-        return (line.dy < 0_i32) as i32;
+        return (line.dy < 0) as i32;
     }
     if line.dy == 0 {
         if y <= line_v1.y {
-            return (line.dx < 0_i32) as i32;
+            return (line.dx < 0) as i32;
         }
-        return (line.dx > 0_i32) as i32;
+        return (line.dx > 0) as i32;
     }
     let dx: fixed_t = x - line_v1.x;
     let dy: fixed_t = y - line_v1.y;
     let left: fixed_t = FixedMul(line.dy >> FRACBITS, dx);
     let right: fixed_t = FixedMul(dy, line.dx >> FRACBITS);
     if right < left {
-        return 0_i32;
+        return 0;
     }
-    1_i32
+    1
 }
 pub fn P_BoxOnLineSide(state: &mut GameState, tmbox: [fixed_t; 4], ld: LineId) -> i32 {
-    let mut p1: i32 = 0_i32;
-    let mut p2: i32 = 0_i32;
+    let mut p1: i32 = 0;
+    let mut p2: i32 = 0;
     let ldv = state.p_setup.line(ld);
     match ldv.slopetype as u32 {
         0 => {
             let ld_v1 = state.p_setup.vertexes[ldv.v1.0 as usize];
             p1 = (tmbox[BoxIndex::Top as usize] > ld_v1.y) as i32;
             p2 = (tmbox[BoxIndex::Bottom as usize] > ld_v1.y) as i32;
-            if ldv.dx < 0_i32 {
-                p1 ^= 1_i32;
-                p2 ^= 1_i32;
+            if ldv.dx < 0 {
+                p1 ^= 1;
+                p2 ^= 1;
             }
         }
         1 => {
             let ld_v1 = state.p_setup.vertexes[ldv.v1.0 as usize];
             p1 = (tmbox[BoxIndex::Right as usize] < ld_v1.x) as i32;
             p2 = (tmbox[BoxIndex::Left as usize] < ld_v1.x) as i32;
-            if ldv.dy < 0_i32 {
-                p1 ^= 1_i32;
-                p2 ^= 1_i32;
+            if ldv.dy < 0 {
+                p1 ^= 1;
+                p2 ^= 1;
             }
         }
         2 => {
@@ -285,35 +285,35 @@ pub fn P_BoxOnLineSide(state: &mut GameState, tmbox: [fixed_t; 4], ld: LineId) -
     if p1 == p2 {
         return p1;
     }
-    -1_i32
+    -1
 }
 pub fn P_PointOnDivlineSide(x: fixed_t, y: fixed_t, line: &divline_t) -> i32 {
     if line.dx == 0 {
         if x <= line.x {
-            return (line.dy > 0_i32) as i32;
+            return (line.dy > 0) as i32;
         }
-        return (line.dy < 0_i32) as i32;
+        return (line.dy < 0) as i32;
     }
     if line.dy == 0 {
         if y <= line.y {
-            return (line.dx < 0_i32) as i32;
+            return (line.dx < 0) as i32;
         }
-        return (line.dx > 0_i32) as i32;
+        return (line.dx > 0) as i32;
     }
     let dx = x - line.x;
     let dy = y - line.y;
-    if (line.dy ^ line.dx ^ dx ^ dy) as u32 & 0x80000000_u32 != 0 {
-        if (line.dy ^ dx) as u32 & 0x80000000_u32 != 0 {
-            return 1_i32;
+    if (line.dy ^ line.dx ^ dx ^ dy) as u32 & 0x80000000 != 0 {
+        if (line.dy ^ dx) as u32 & 0x80000000 != 0 {
+            return 1;
         }
-        return 0_i32;
+        return 0;
     }
-    let left = FixedMul(line.dy >> 8_i32, dx >> 8_i32);
-    let right = FixedMul(dy >> 8_i32, line.dx >> 8_i32);
+    let left = FixedMul(line.dy >> 8, dx >> 8);
+    let right = FixedMul(dy >> 8, line.dx >> 8);
     if right < left {
-        return 0_i32;
+        return 0;
     }
-    1_i32
+    1
 }
 pub fn P_MakeDivline(state: &GameState, li: LineId) -> divline_t {
     let li = state.p_setup.line(li);
@@ -326,17 +326,17 @@ pub fn P_MakeDivline(state: &GameState, li: LineId) -> divline_t {
     }
 }
 pub fn P_InterceptVector(v2: &divline_t, v1: &divline_t) -> fixed_t {
-    let den = FixedMul(v1.dy >> 8_i32, v2.dx) - FixedMul(v1.dx >> 8_i32, v2.dy);
-    if den == 0_i32 {
-        return 0 as fixed_t;
+    let den = FixedMul(v1.dy >> 8, v2.dx) - FixedMul(v1.dx >> 8, v2.dy);
+    if den == 0 {
+        return 0;
     }
-    let num = FixedMul((v1.x - v2.x) >> 8_i32, v1.dy) + FixedMul((v2.y - v1.y) >> 8_i32, v1.dx);
+    let num = FixedMul((v1.x - v2.x) >> 8, v1.dy) + FixedMul((v2.y - v1.y) >> 8, v1.dx);
     FixedDiv(num, den)
 }
 pub fn P_LineOpening(state: &mut GameState, linedef: LineId) {
     let linedefv = state.p_setup.line(linedef);
-    if linedefv.sidenum[1] as i32 == -1_i32 {
-        state.p_maputl.openrange = 0_i32 as fixed_t;
+    if linedefv.sidenum[1] as i32 == -1 {
+        state.p_maputl.openrange = 0;
         return;
     }
     let (front_floor, front_ceiling) = {
@@ -407,9 +407,9 @@ pub fn P_UnsetThingPosition(state: &mut GameState, thing: MobjId) {
         } else {
             let blockx = (x - state.p_setup.bmaporgx) >> MAPBLOCKSHIFT;
             let blocky = (y - state.p_setup.bmaporgy) >> MAPBLOCKSHIFT;
-            if blockx >= 0_i32
+            if blockx >= 0
                 && blockx < state.p_setup.bmapwidth
-                && blocky >= 0_i32
+                && blocky >= 0
                 && blocky < state.p_setup.bmapheight
             {
                 state.p_setup.blocklinks[(blocky * state.p_setup.bmapwidth + blockx) as usize] =
@@ -445,9 +445,9 @@ pub fn P_SetThingPosition(state: &mut GameState, thing: MobjId) {
     if flags & MF_NOBLOCKMAP == 0 {
         let blockx = (x - state.p_setup.bmaporgx) >> MAPBLOCKSHIFT;
         let blocky = (y - state.p_setup.bmaporgy) >> MAPBLOCKSHIFT;
-        if blockx >= 0_i32
+        if blockx >= 0
             && blockx < state.p_setup.bmapwidth
-            && blocky >= 0_i32
+            && blocky >= 0
             && blocky < state.p_setup.bmapheight
         {
             let idx = (blocky * state.p_setup.bmapwidth + blockx) as usize;
@@ -478,12 +478,12 @@ pub fn P_BlockLinesIterator<F: FnMut(&mut GameState, LineId) -> bool>(
     y: i32,
     mut func: F,
 ) -> bool {
-    if x < 0_i32 || y < 0_i32 || x >= state.p_setup.bmapwidth || y >= state.p_setup.bmapheight {
+    if x < 0 || y < 0 || x >= state.p_setup.bmapwidth || y >= state.p_setup.bmapheight {
         return true;
     }
     let offset = y * state.p_setup.bmapwidth + x;
     let mut list = state.p_setup.blockmaplump[(4 + offset) as usize] as i32 as usize;
-    while state.p_setup.blockmaplump[list] as i32 != -1_i32 {
+    while state.p_setup.blockmaplump[list] as i32 != -1 {
         let ld = LineId(state.p_setup.blockmaplump[list] as u32);
         if state.p_setup.line(ld).validcount != state.r_main.validcount {
             state.p_setup.line_mut(ld).validcount = state.r_main.validcount;
@@ -501,7 +501,7 @@ pub fn P_BlockThingsIterator<F: FnMut(&mut GameState, MobjId) -> bool>(
     y: i32,
     mut func: F,
 ) -> bool {
-    if x < 0_i32 || y < 0_i32 || x >= state.p_setup.bmapwidth || y >= state.p_setup.bmapheight {
+    if x < 0 || y < 0 || x >= state.p_setup.bmapwidth || y >= state.p_setup.bmapheight {
         return true;
     }
     let mut cursor = state.p_setup.blocklinks[(y * state.p_setup.bmapwidth + x) as usize];
@@ -527,10 +527,10 @@ pub fn PIT_AddLineIntercepts(state: &mut GameState, ld: LineId) -> bool {
     let ldv = state.p_setup.line(ld);
     let trace = state.p_maputl.trace;
     let (s1, s2);
-    if trace.dx > FRACUNIT * 16_i32
-        || trace.dy > FRACUNIT * 16_i32
-        || trace.dx < -FRACUNIT * 16_i32
-        || trace.dy < -FRACUNIT * 16_i32
+    if trace.dx > FRACUNIT * 16
+        || trace.dy > FRACUNIT * 16
+        || trace.dx < -FRACUNIT * 16
+        || trace.dy < -FRACUNIT * 16
     {
         let ld_v1 = state.p_setup.vertexes[ldv.v1.0 as usize];
         let ld_v2 = state.p_setup.vertexes[ldv.v2.0 as usize];
@@ -545,7 +545,7 @@ pub fn PIT_AddLineIntercepts(state: &mut GameState, ld: LineId) -> bool {
     }
     let dl = P_MakeDivline(state, ld);
     let frac = P_InterceptVector(&trace, &dl);
-    if frac < 0_i32 {
+    if frac < 0 {
         return true;
     }
     if state.p_maputl.earlyout && frac < FRACUNIT && ldv.backsector.is_none() {
@@ -566,7 +566,7 @@ pub fn PIT_AddThingIntercepts(state: &mut GameState, thing_id: MobjId) -> bool {
         (thing.x, thing.y, thing.radius)
     };
     let trace = state.p_maputl.trace;
-    let tracepositive = trace.dx ^ trace.dy > 0_i32;
+    let tracepositive = trace.dx ^ trace.dy > 0;
     let (x1, y1, x2, y2);
     if tracepositive {
         x1 = thing_x - thing_radius;
@@ -591,7 +591,7 @@ pub fn PIT_AddThingIntercepts(state: &mut GameState, thing_id: MobjId) -> bool {
         dy: y2 - y1,
     };
     let frac = P_InterceptVector(&trace, &dl);
-    if frac < 0_i32 {
+    if frac < 0 {
         return true;
     }
     let idx = state.p_maputl.intercept_p;
@@ -635,8 +635,8 @@ pub fn P_TraverseIntercepts<F: FnMut(&mut GameState, intercept_t) -> bool>(
     true
 }
 fn InterceptsMemoryOverrun(state: &mut GameState, location: i32, value: i32) {
-    let mut i = 0_i32;
-    let mut offset = 0_i32;
+    let mut i = 0;
+    let mut offset = 0;
     while state.p_maputl.intercepts_overrun[i as usize].len != 0 {
         let entry_len = state.p_maputl.intercepts_overrun[i as usize].len;
         if offset + entry_len > location {
@@ -665,7 +665,7 @@ fn InterceptsMemoryOverrun(state: &mut GameState, location: i32, value: i32) {
                             0 => mt.x = lo,
                             1 => mt.y = lo,
                             2 => mt.angle = lo,
-                            3 => mt.type_0 = lo,
+                            3 => mt.kind = lo,
                             4 => mt.options = lo,
                             _ => unreachable!(),
                         }
@@ -681,7 +681,7 @@ fn InterceptsMemoryOverrun(state: &mut GameState, location: i32, value: i32) {
                                 0 => next_mt.x = hi,
                                 1 => next_mt.y = hi,
                                 2 => next_mt.angle = hi,
-                                3 => next_mt.type_0 = hi,
+                                3 => next_mt.kind = hi,
                                 4 => next_mt.options = hi,
                                 _ => unreachable!(),
                             }
@@ -700,7 +700,7 @@ fn InterceptsOverrun(state: &mut GameState, num_intercepts: i32, intercept: inte
     if num_intercepts <= MAXINTERCEPTS_ORIGINAL {
         return;
     }
-    let location = (num_intercepts - MAXINTERCEPTS_ORIGINAL - 1_i32) * 12_i32;
+    let location = (num_intercepts - MAXINTERCEPTS_ORIGINAL - 1) * 12;
     // Vanilla's overrun corrupts adjacent memory with the raw in-memory
     // representation of `isaline`/`d` (a bool then a pointer-sized union);
     // since this is an index now rather than a real heap address, the value
@@ -713,8 +713,8 @@ fn InterceptsOverrun(state: &mut GameState, num_intercepts: i32, intercept: inte
         InterceptTarget::Thing(id) => (false, id.raw_index() as i32),
     };
     InterceptsMemoryOverrun(state, location, intercept.frac);
-    InterceptsMemoryOverrun(state, location + 4_i32, isaline as i32);
-    InterceptsMemoryOverrun(state, location + 8_i32, target_value);
+    InterceptsMemoryOverrun(state, location + 4, isaline as i32);
+    InterceptsMemoryOverrun(state, location + 8, target_value);
 }
 pub fn P_PathTraverse<F: FnMut(&mut GameState, intercept_t) -> bool>(
     state: &mut GameState,
@@ -738,10 +738,10 @@ pub fn P_PathTraverse<F: FnMut(&mut GameState, intercept_t) -> bool>(
     state.p_maputl.earlyout = (flags & PT_EARLYOUT) != 0;
     state.r_main.validcount += 1;
     state.p_maputl.intercept_p = 0;
-    if (x1 - state.p_setup.bmaporgx) & (MAPBLOCKSIZE - 1_i32) == 0_i32 {
+    if (x1 - state.p_setup.bmaporgx) & (MAPBLOCKSIZE - 1) == 0 {
         x1 += FRACUNIT;
     }
-    if (y1 - state.p_setup.bmaporgy) & (MAPBLOCKSIZE - 1_i32) == 0_i32 {
+    if (y1 - state.p_setup.bmaporgy) & (MAPBLOCKSIZE - 1) == 0 {
         y1 += FRACUNIT;
     }
     state.p_maputl.trace.x = x1;
@@ -757,37 +757,37 @@ pub fn P_PathTraverse<F: FnMut(&mut GameState, intercept_t) -> bool>(
     let xt2: fixed_t = x2 >> MAPBLOCKSHIFT;
     let yt2: fixed_t = y2 >> MAPBLOCKSHIFT;
     if xt2 > xt1 {
-        mapxstep = 1_i32;
-        partial = (FRACUNIT - (x1 >> MAPBTOFRAC & (FRACUNIT - 1_i32))) as fixed_t;
+        mapxstep = 1;
+        partial = (FRACUNIT - (x1 >> MAPBTOFRAC & (FRACUNIT - 1))) as fixed_t;
         ystep = FixedDiv(y2 - y1, (x2 - x1).abs() as fixed_t);
     } else if xt2 < xt1 {
-        mapxstep = -1_i32;
-        partial = (x1 >> MAPBTOFRAC & (FRACUNIT - 1_i32)) as fixed_t;
+        mapxstep = -1;
+        partial = (x1 >> MAPBTOFRAC & (FRACUNIT - 1)) as fixed_t;
         ystep = FixedDiv(y2 - y1, (x2 - x1).abs() as fixed_t);
     } else {
-        mapxstep = 0_i32;
+        mapxstep = 0;
         partial = FRACUNIT as fixed_t;
-        ystep = (256_i32 * FRACUNIT) as fixed_t;
+        ystep = (256 * FRACUNIT) as fixed_t;
     }
     yintercept = (y1 >> MAPBTOFRAC) + FixedMul(partial, ystep);
     if yt2 > yt1 {
-        mapystep = 1_i32;
-        partial = (FRACUNIT - (y1 >> MAPBTOFRAC & (FRACUNIT - 1_i32))) as fixed_t;
+        mapystep = 1;
+        partial = (FRACUNIT - (y1 >> MAPBTOFRAC & (FRACUNIT - 1))) as fixed_t;
         xstep = FixedDiv(x2 - x1, (y2 - y1).abs() as fixed_t);
     } else if yt2 < yt1 {
-        mapystep = -1_i32;
-        partial = (y1 >> MAPBTOFRAC & (FRACUNIT - 1_i32)) as fixed_t;
+        mapystep = -1;
+        partial = (y1 >> MAPBTOFRAC & (FRACUNIT - 1)) as fixed_t;
         xstep = FixedDiv(x2 - x1, (y2 - y1).abs() as fixed_t);
     } else {
-        mapystep = 0_i32;
+        mapystep = 0;
         partial = FRACUNIT as fixed_t;
-        xstep = (256_i32 * FRACUNIT) as fixed_t;
+        xstep = (256 * FRACUNIT) as fixed_t;
     }
     xintercept = (x1 >> MAPBTOFRAC) + FixedMul(partial, xstep);
     mapx = xt1;
     mapy = yt1;
-    count = 0_i32;
-    while count < 64_i32 {
+    count = 0;
+    while count < 64 {
         if flags & PT_ADDLINES != 0
             && !P_BlockLinesIterator(state, mapx, mapy, PIT_AddLineIntercepts)
         {

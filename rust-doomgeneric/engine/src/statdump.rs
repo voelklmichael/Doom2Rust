@@ -30,7 +30,7 @@ impl StatDumpState {
                 partime: 0,
                 pnum: 0,
                 plyr: [wbplayerstruct_t {
-                    in_0: false,
+                    intercept: false,
                     skills: 0,
                     sitems: 0,
                     ssecret: 0,

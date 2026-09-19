@@ -142,10 +142,10 @@ pub fn R_RenderMaskedSegRange(state: &mut GameState, ds: &drawseg_t, x1: i32, x2
     } else if curline_v1.x == curline_v2.x {
         lightnum += 1;
     }
-    if lightnum < 0_i32 {
+    if lightnum < 0 {
         state.r_segs.walllights = LightRow48::Normal(0);
     } else if lightnum >= LIGHTLEVELS {
-        state.r_segs.walllights = LightRow48::Normal((LIGHTLEVELS - 1_i32) as usize);
+        state.r_segs.walllights = LightRow48::Normal((LIGHTLEVELS - 1) as usize);
     } else {
         state.r_segs.walllights = LightRow48::Normal(lightnum as usize);
     }
@@ -220,7 +220,7 @@ pub fn R_RenderMaskedSegRange(state: &mut GameState, ds: &drawseg_t, x1: i32, x2
             if state.r_main.fixedcolormap.is_none() {
                 index = (state.r_things.spryscale >> LIGHTSCALESHIFT) as u32;
                 if index >= MAXLIGHTSCALE as u32 {
-                    index = (MAXLIGHTSCALE - 1_i32) as u32;
+                    index = (MAXLIGHTSCALE - 1) as u32;
                 }
                 state.r_draw.dc_colormap =
                     Some(state.r_main.light_row48(state.r_segs.walllights)[index as usize]);
@@ -245,7 +245,7 @@ pub fn R_RenderMaskedSegRange(state: &mut GameState, ds: &drawseg_t, x1: i32, x2
     }
 }
 pub const HEIGHTBITS: i32 = 12;
-pub const HEIGHTUNIT: i32 = 1_i32 << HEIGHTBITS;
+pub const HEIGHTUNIT: i32 = 1 << HEIGHTBITS;
 pub fn R_RenderSegLoop(state: &mut GameState) {
     let mut angle: angle_t;
     let mut index: u32;
@@ -256,15 +256,15 @@ pub fn R_RenderSegLoop(state: &mut GameState) {
     let mut top: i32;
     let mut bottom: i32;
     while state.r_segs.rw_x < state.r_segs.rw_stopx {
-        yl = (state.r_segs.topfrac + HEIGHTUNIT - 1_i32) >> HEIGHTBITS;
-        if yl < state.r_plane.ceilingclip[state.r_segs.rw_x as usize] as i32 + 1_i32 {
-            yl = state.r_plane.ceilingclip[state.r_segs.rw_x as usize] as i32 + 1_i32;
+        yl = (state.r_segs.topfrac + HEIGHTUNIT - 1) >> HEIGHTBITS;
+        if yl < state.r_plane.ceilingclip[state.r_segs.rw_x as usize] as i32 + 1 {
+            yl = state.r_plane.ceilingclip[state.r_segs.rw_x as usize] as i32 + 1;
         }
         if state.r_segs.markceiling {
-            top = state.r_plane.ceilingclip[state.r_segs.rw_x as usize] as i32 + 1_i32;
-            bottom = yl - 1_i32;
+            top = state.r_plane.ceilingclip[state.r_segs.rw_x as usize] as i32 + 1;
+            bottom = yl - 1;
             if bottom >= state.r_plane.floorclip[state.r_segs.rw_x as usize] as i32 {
-                bottom = state.r_plane.floorclip[state.r_segs.rw_x as usize] as i32 - 1_i32;
+                bottom = state.r_plane.floorclip[state.r_segs.rw_x as usize] as i32 - 1;
             }
             if top <= bottom {
                 let ceilingplane = state.r_plane.ceilingplane.unwrap();
@@ -274,13 +274,13 @@ pub fn R_RenderSegLoop(state: &mut GameState) {
         }
         yh = state.r_segs.bottomfrac >> HEIGHTBITS;
         if yh >= state.r_plane.floorclip[state.r_segs.rw_x as usize] as i32 {
-            yh = state.r_plane.floorclip[state.r_segs.rw_x as usize] as i32 - 1_i32;
+            yh = state.r_plane.floorclip[state.r_segs.rw_x as usize] as i32 - 1;
         }
         if state.r_segs.markfloor {
-            top = yh + 1_i32;
-            bottom = state.r_plane.floorclip[state.r_segs.rw_x as usize] as i32 - 1_i32;
+            top = yh + 1;
+            bottom = state.r_plane.floorclip[state.r_segs.rw_x as usize] as i32 - 1;
             if top <= state.r_plane.ceilingclip[state.r_segs.rw_x as usize] as i32 {
-                top = state.r_plane.ceilingclip[state.r_segs.rw_x as usize] as i32 + 1_i32;
+                top = state.r_plane.ceilingclip[state.r_segs.rw_x as usize] as i32 + 1;
             }
             if top <= bottom {
                 let floorplane = state.r_plane.floorplane.unwrap();
@@ -302,7 +302,7 @@ pub fn R_RenderSegLoop(state: &mut GameState) {
             texturecolumn >>= FRACBITS;
             index = (state.r_segs.rw_scale >> LIGHTSCALESHIFT) as u32;
             if index >= MAXLIGHTSCALE as u32 {
-                index = (MAXLIGHTSCALE - 1_i32) as u32;
+                index = (MAXLIGHTSCALE - 1) as u32;
             }
             state.r_draw.dc_colormap =
                 Some(state.r_main.light_row48(state.r_segs.walllights)[index as usize]);
@@ -310,7 +310,7 @@ pub fn R_RenderSegLoop(state: &mut GameState) {
             state.r_draw.dc_iscale =
                 0xffffffff_u32.wrapping_div(state.r_segs.rw_scale as u32) as fixed_t;
         } else {
-            texturecolumn = 0_i32 as fixed_t;
+            texturecolumn = 0;
         }
         if state.r_segs.midtexture != 0 {
             state.r_draw.dc_yl = yl;
@@ -320,13 +320,13 @@ pub fn R_RenderSegLoop(state: &mut GameState) {
                 Some(R_GetColumn(state, state.r_segs.midtexture, texturecolumn));
             state.r_main.colfunc.expect("non-null function pointer")(state);
             state.r_plane.ceilingclip[state.r_segs.rw_x as usize] = state.r_draw.viewheight as i16;
-            state.r_plane.floorclip[state.r_segs.rw_x as usize] = -1_i32 as i16;
+            state.r_plane.floorclip[state.r_segs.rw_x as usize] = -1_i16;
         } else {
             if state.r_segs.toptexture != 0 {
                 mid = state.r_segs.pixhigh >> HEIGHTBITS;
                 state.r_segs.pixhigh += state.r_segs.pixhighstep;
                 if mid >= state.r_plane.floorclip[state.r_segs.rw_x as usize] as i32 {
-                    mid = state.r_plane.floorclip[state.r_segs.rw_x as usize] as i32 - 1_i32;
+                    mid = state.r_plane.floorclip[state.r_segs.rw_x as usize] as i32 - 1;
                 }
                 if mid >= yl {
                     state.r_draw.dc_yl = yl;
@@ -337,16 +337,16 @@ pub fn R_RenderSegLoop(state: &mut GameState) {
                     state.r_main.colfunc.expect("non-null function pointer")(state);
                     state.r_plane.ceilingclip[state.r_segs.rw_x as usize] = mid as i16;
                 } else {
-                    state.r_plane.ceilingclip[state.r_segs.rw_x as usize] = (yl - 1_i32) as i16;
+                    state.r_plane.ceilingclip[state.r_segs.rw_x as usize] = (yl - 1) as i16;
                 }
             } else if state.r_segs.markceiling {
-                state.r_plane.ceilingclip[state.r_segs.rw_x as usize] = (yl - 1_i32) as i16;
+                state.r_plane.ceilingclip[state.r_segs.rw_x as usize] = (yl - 1) as i16;
             }
             if state.r_segs.bottomtexture != 0 {
-                mid = (state.r_segs.pixlow + HEIGHTUNIT - 1_i32) >> HEIGHTBITS;
+                mid = (state.r_segs.pixlow + HEIGHTUNIT - 1) >> HEIGHTBITS;
                 state.r_segs.pixlow += state.r_segs.pixlowstep;
                 if mid <= state.r_plane.ceilingclip[state.r_segs.rw_x as usize] as i32 {
-                    mid = state.r_plane.ceilingclip[state.r_segs.rw_x as usize] as i32 + 1_i32;
+                    mid = state.r_plane.ceilingclip[state.r_segs.rw_x as usize] as i32 + 1;
                 }
                 if mid <= yh {
                     state.r_draw.dc_yl = mid;
@@ -360,10 +360,10 @@ pub fn R_RenderSegLoop(state: &mut GameState) {
                     state.r_main.colfunc.expect("non-null function pointer")(state);
                     state.r_plane.floorclip[state.r_segs.rw_x as usize] = mid as i16;
                 } else {
-                    state.r_plane.floorclip[state.r_segs.rw_x as usize] = (yh + 1_i32) as i16;
+                    state.r_plane.floorclip[state.r_segs.rw_x as usize] = (yh + 1) as i16;
                 }
             } else if state.r_segs.markfloor {
-                state.r_plane.floorclip[state.r_segs.rw_x as usize] = (yh + 1_i32) as i16;
+                state.r_plane.floorclip[state.r_segs.rw_x as usize] = (yh + 1) as i16;
             }
             if state.r_segs.maskedtexture {
                 let maskedtexturecol = state.r_segs.maskedtexturecol.unwrap();
@@ -415,7 +415,7 @@ pub fn R_StoreWallRange(state: &mut GameState, start: i32, stop: i32) {
     state.r_bsp.drawsegs[state.r_bsp.ds_p].x1 = state.r_segs.rw_x;
     state.r_bsp.drawsegs[state.r_bsp.ds_p].x2 = stop;
     state.r_bsp.drawsegs[state.r_bsp.ds_p].curline = state.r_bsp.curline;
-    state.r_segs.rw_stopx = stop + 1_i32;
+    state.r_segs.rw_stopx = stop + 1;
     let angle1 = state
         .r_main
         .viewangle
@@ -481,7 +481,7 @@ pub fn R_StoreWallRange(state: &mut GameState, start: i32, stop: i32) {
             state.r_bsp.drawsegs[state.r_bsp.ds_p].sprbottomclip = None;
             state.r_bsp.drawsegs[state.r_bsp.ds_p].sprtopclip =
                 state.r_bsp.drawsegs[state.r_bsp.ds_p].sprbottomclip;
-            state.r_bsp.drawsegs[state.r_bsp.ds_p].silhouette = 0_i32;
+            state.r_bsp.drawsegs[state.r_bsp.ds_p].silhouette = 0;
             if state
                 .p_setup
                 .sector_mut(state.r_bsp.frontsector.unwrap())
@@ -663,10 +663,10 @@ pub fn R_StoreWallRange(state: &mut GameState, start: i32, stop: i32) {
             } else if curline_v1.x == curline_v2.x {
                 lightnum += 1;
             }
-            if lightnum < 0_i32 {
+            if lightnum < 0 {
                 state.r_segs.walllights = LightRow48::Normal(0);
             } else if lightnum >= LIGHTLEVELS {
-                state.r_segs.walllights = LightRow48::Normal((LIGHTLEVELS - 1_i32) as usize);
+                state.r_segs.walllights = LightRow48::Normal((LIGHTLEVELS - 1) as usize);
             } else {
                 state.r_segs.walllights = LightRow48::Normal(lightnum as usize);
             }
@@ -693,28 +693,28 @@ pub fn R_StoreWallRange(state: &mut GameState, start: i32, stop: i32) {
     {
         state.r_segs.markceiling = false;
     }
-    state.r_segs.worldtop >>= 4_i32;
-    state.r_segs.worldbottom >>= 4_i32;
+    state.r_segs.worldtop >>= 4;
+    state.r_segs.worldbottom >>= 4;
     state.r_segs.topstep = -FixedMul(state.r_segs.rw_scalestep, state.r_segs.worldtop as fixed_t);
-    state.r_segs.topfrac = (state.r_main.centeryfrac >> 4_i32)
+    state.r_segs.topfrac = (state.r_main.centeryfrac >> 4)
         - FixedMul(state.r_segs.worldtop as fixed_t, state.r_segs.rw_scale);
     state.r_segs.bottomstep = -FixedMul(
         state.r_segs.rw_scalestep,
         state.r_segs.worldbottom as fixed_t,
     );
-    state.r_segs.bottomfrac = (state.r_main.centeryfrac >> 4_i32)
+    state.r_segs.bottomfrac = (state.r_main.centeryfrac >> 4)
         - FixedMul(state.r_segs.worldbottom as fixed_t, state.r_segs.rw_scale);
     if state.r_bsp.backsector.is_some() {
-        state.r_segs.worldhigh >>= 4_i32;
-        state.r_segs.worldlow >>= 4_i32;
+        state.r_segs.worldhigh >>= 4;
+        state.r_segs.worldlow >>= 4;
         if state.r_segs.worldhigh < state.r_segs.worldtop {
-            state.r_segs.pixhigh = (state.r_main.centeryfrac >> 4_i32)
+            state.r_segs.pixhigh = (state.r_main.centeryfrac >> 4)
                 - FixedMul(state.r_segs.worldhigh as fixed_t, state.r_segs.rw_scale);
             state.r_segs.pixhighstep =
                 -FixedMul(state.r_segs.rw_scalestep, state.r_segs.worldhigh as fixed_t);
         }
         if state.r_segs.worldlow > state.r_segs.worldbottom {
-            state.r_segs.pixlow = (state.r_main.centeryfrac >> 4_i32)
+            state.r_segs.pixlow = (state.r_main.centeryfrac >> 4)
                 - FixedMul(state.r_segs.worldlow as fixed_t, state.r_segs.rw_scale);
             state.r_segs.pixlowstep =
                 -FixedMul(state.r_segs.rw_scalestep, state.r_segs.worldlow as fixed_t);
@@ -724,7 +724,7 @@ pub fn R_StoreWallRange(state: &mut GameState, start: i32, stop: i32) {
         let (ceilingplane, rw_x, rw_stopx_1) = (
             state.r_plane.ceilingplane.unwrap(),
             state.r_segs.rw_x,
-            state.r_segs.rw_stopx - 1_i32,
+            state.r_segs.rw_stopx - 1,
         );
         state.r_plane.ceilingplane = Some(R_CheckPlane(state, ceilingplane, rw_x, rw_stopx_1));
     }
@@ -732,7 +732,7 @@ pub fn R_StoreWallRange(state: &mut GameState, start: i32, stop: i32) {
         let (floorplane, rw_x2, rw_stopx_2) = (
             state.r_plane.floorplane.unwrap(),
             state.r_segs.rw_x,
-            state.r_segs.rw_stopx - 1_i32,
+            state.r_segs.rw_stopx - 1,
         );
         state.r_plane.floorplane = Some(R_CheckPlane(state, floorplane, rw_x2, rw_stopx_2));
     }

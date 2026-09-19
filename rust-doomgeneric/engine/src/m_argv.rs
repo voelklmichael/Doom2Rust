@@ -19,23 +19,23 @@ impl MArgvState {
 }
 
 pub fn M_CheckParmWithArgs(state: &mut GameState, check: &str, num_args: i32) -> i32 {
-    let mut i: i32 = 1_i32;
+    let mut i: i32 = 1;
     while i < state.m_argv.myargv.len() as i32 - num_args {
         if state.m_argv.myargv[i as usize].eq_ignore_ascii_case(check) {
             return i;
         }
         i += 1;
     }
-    0_i32
+    0
 }
 pub fn M_ParmExists(state: &mut GameState, check: &str) -> bool {
-    M_CheckParm(state, check) != 0_i32
+    M_CheckParm(state, check) != 0
 }
 pub fn M_CheckParm(state: &mut GameState, check: &str) -> i32 {
-    M_CheckParmWithArgs(state, check, 0_i32)
+    M_CheckParmWithArgs(state, check, 0)
 }
 pub fn M_FindResponseFile(state: &mut GameState) {
-    let mut i: i32 = 1_i32;
+    let mut i: i32 = 1;
     while i < state.m_argv.myargv.len() as i32 {
         i += 1;
     }

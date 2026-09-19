@@ -199,7 +199,7 @@ pub struct animdef_t {
 #[derive(Copy, Clone)]
 pub struct button_t {
     pub line: LineId,
-    pub where_0: BWhere,
+    pub position: BWhere,
     pub btexture: i32,
     pub btimer: i32,
     pub soundorg: SectorId,
@@ -217,7 +217,7 @@ pub struct plat_t {
     pub oldstatus: PlatE,
     pub crush: bool,
     pub tag: i32,
-    pub type_0: PlattypeE,
+    pub kind: PlattypeE,
 }
 // Placeholder passed to PPlatsState::spawn() -- every real field is set by
 // the caller within a few lines of spawn() returning (EV_DoPlat, and
@@ -238,14 +238,14 @@ impl Default for plat_t {
             oldstatus: PlatE::up,
             crush: false,
             tag: 0,
-            type_0: PlattypeE::perpetualRaise,
+            kind: PlattypeE::perpetualRaise,
         }
     }
 }
 #[derive(Copy, Clone)]
 pub struct ceiling_t {
     pub thinker: thinker_t,
-    pub type_0: CeilingE,
+    pub kind: CeilingE,
     pub sector: SectorId,
     pub bottomheight: fixed_t,
     pub topheight: fixed_t,
@@ -264,7 +264,7 @@ impl Default for ceiling_t {
             thinker: thinker_t {
                 function: ThinkerFn::Unresolved,
             },
-            type_0: CeilingE::lowerToFloor,
+            kind: CeilingE::lowerToFloor,
             sector: SectorId(0),
             bottomheight: 0,
             topheight: 0,
@@ -279,7 +279,7 @@ impl Default for ceiling_t {
 #[derive(Copy, Clone)]
 pub struct floormove_t {
     pub thinker: thinker_t,
-    pub type_0: FloorE,
+    pub kind: FloorE,
     pub crush: bool,
     pub sector: SectorId,
     pub direction: i32,
@@ -298,7 +298,7 @@ impl Default for floormove_t {
             thinker: thinker_t {
                 function: ThinkerFn::Unresolved,
             },
-            type_0: FloorE::lowerFloor,
+            kind: FloorE::lowerFloor,
             crush: false,
             sector: SectorId(0),
             direction: 0,
@@ -316,139 +316,139 @@ pub static animdefs: [animdef_t; 23] = [
         istexture: false_0,
         endname: FixedCStr(*b"NUKAGE3\0\0"),
         startname: FixedCStr(*b"NUKAGE1\0\0"),
-        speed: 8_i32,
+        speed: 8,
     },
     animdef_t {
         istexture: false_0,
         endname: FixedCStr(*b"FWATER4\0\0"),
         startname: FixedCStr(*b"FWATER1\0\0"),
-        speed: 8_i32,
+        speed: 8,
     },
     animdef_t {
         istexture: false_0,
         endname: FixedCStr(*b"SWATER4\0\0"),
         startname: FixedCStr(*b"SWATER1\0\0"),
-        speed: 8_i32,
+        speed: 8,
     },
     animdef_t {
         istexture: false_0,
         endname: FixedCStr(*b"LAVA4\0\0\0\0"),
         startname: FixedCStr(*b"LAVA1\0\0\0\0"),
-        speed: 8_i32,
+        speed: 8,
     },
     animdef_t {
         istexture: false_0,
         endname: FixedCStr(*b"BLOOD3\0\0\0"),
         startname: FixedCStr(*b"BLOOD1\0\0\0"),
-        speed: 8_i32,
+        speed: 8,
     },
     animdef_t {
         istexture: false_0,
         endname: FixedCStr(*b"RROCK08\0\0"),
         startname: FixedCStr(*b"RROCK05\0\0"),
-        speed: 8_i32,
+        speed: 8,
     },
     animdef_t {
         istexture: false_0,
         endname: FixedCStr(*b"SLIME04\0\0"),
         startname: FixedCStr(*b"SLIME01\0\0"),
-        speed: 8_i32,
+        speed: 8,
     },
     animdef_t {
         istexture: false_0,
         endname: FixedCStr(*b"SLIME08\0\0"),
         startname: FixedCStr(*b"SLIME05\0\0"),
-        speed: 8_i32,
+        speed: 8,
     },
     animdef_t {
         istexture: false_0,
         endname: FixedCStr(*b"SLIME12\0\0"),
         startname: FixedCStr(*b"SLIME09\0\0"),
-        speed: 8_i32,
+        speed: 8,
     },
     animdef_t {
         istexture: true_0,
         endname: FixedCStr(*b"BLODGR4\0\0"),
         startname: FixedCStr(*b"BLODGR1\0\0"),
-        speed: 8_i32,
+        speed: 8,
     },
     animdef_t {
         istexture: true_0,
         endname: FixedCStr(*b"SLADRIP3\0"),
         startname: FixedCStr(*b"SLADRIP1\0"),
-        speed: 8_i32,
+        speed: 8,
     },
     animdef_t {
         istexture: true_0,
         endname: FixedCStr(*b"BLODRIP4\0"),
         startname: FixedCStr(*b"BLODRIP1\0"),
-        speed: 8_i32,
+        speed: 8,
     },
     animdef_t {
         istexture: true_0,
         endname: FixedCStr(*b"FIREWALL\0"),
         startname: FixedCStr(*b"FIREWALA\0"),
-        speed: 8_i32,
+        speed: 8,
     },
     animdef_t {
         istexture: true_0,
         endname: FixedCStr(*b"GSTFONT3\0"),
         startname: FixedCStr(*b"GSTFONT1\0"),
-        speed: 8_i32,
+        speed: 8,
     },
     animdef_t {
         istexture: true_0,
         endname: FixedCStr(*b"FIRELAVA\0"),
         startname: FixedCStr(*b"FIRELAV3\0"),
-        speed: 8_i32,
+        speed: 8,
     },
     animdef_t {
         istexture: true_0,
         endname: FixedCStr(*b"FIREMAG3\0"),
         startname: FixedCStr(*b"FIREMAG1\0"),
-        speed: 8_i32,
+        speed: 8,
     },
     animdef_t {
         istexture: true_0,
         endname: FixedCStr(*b"FIREBLU2\0"),
         startname: FixedCStr(*b"FIREBLU1\0"),
-        speed: 8_i32,
+        speed: 8,
     },
     animdef_t {
         istexture: true_0,
         endname: FixedCStr(*b"ROCKRED3\0"),
         startname: FixedCStr(*b"ROCKRED1\0"),
-        speed: 8_i32,
+        speed: 8,
     },
     animdef_t {
         istexture: true_0,
         endname: FixedCStr(*b"BFALL4\0\0\0"),
         startname: FixedCStr(*b"BFALL1\0\0\0"),
-        speed: 8_i32,
+        speed: 8,
     },
     animdef_t {
         istexture: true_0,
         endname: FixedCStr(*b"SFALL4\0\0\0"),
         startname: FixedCStr(*b"SFALL1\0\0\0"),
-        speed: 8_i32,
+        speed: 8,
     },
     animdef_t {
         istexture: true_0,
         endname: FixedCStr(*b"WFALL4\0\0\0"),
         startname: FixedCStr(*b"WFALL1\0\0\0"),
-        speed: 8_i32,
+        speed: 8,
     },
     animdef_t {
         istexture: true_0,
         endname: FixedCStr(*b"DBRAIN4\0\0"),
         startname: FixedCStr(*b"DBRAIN1\0\0"),
-        speed: 8_i32,
+        speed: 8,
     },
     animdef_t {
-        istexture: -1_i32,
+        istexture: -1,
         endname: FixedCStr(*b"\0\0\0\0\0\0\0\0\0"),
         startname: FixedCStr(*b"\0\0\0\0\0\0\0\0\0"),
-        speed: 0_i32,
+        speed: 0,
     },
 ];
 pub const MAXLINEANIMS: i32 = 64;
@@ -456,20 +456,20 @@ pub fn P_InitPicAnims(state: &mut GameState) {
     let mut i: i32;
     state.p_spec.lastanim = 0;
     let mut current_block_13: u64;
-    i = 0_i32;
-    while animdefs[i as usize].istexture != -1_i32 {
+    i = 0;
+    while animdefs[i as usize].istexture != -1 {
         let startname = animdefs[i as usize].startname.as_str();
         let endname = animdefs[i as usize].endname.as_str();
         let anim = &mut state.p_spec.anims[state.p_spec.lastanim];
         if animdefs[i as usize].istexture != 0 {
-            if R_CheckTextureNumForName(&state.r_data, &startname) == -1_i32 {
+            if R_CheckTextureNumForName(&state.r_data, &startname) == -1 {
                 current_block_13 = 12237857397564741460;
             } else {
                 anim.picnum = R_TextureNumForName(&mut state.r_data, &endname);
                 anim.basepic = R_TextureNumForName(&mut state.r_data, &startname);
                 current_block_13 = 11650488183268122163;
             }
-        } else if W_CheckNumForName(&mut state.w_wad, &startname) == -1_i32 {
+        } else if W_CheckNumForName(&mut state.w_wad, &startname) == -1 {
             current_block_13 = 12237857397564741460;
         } else {
             let picnum = R_FlatNumForName(state, &endname);
@@ -482,8 +482,8 @@ pub fn P_InitPicAnims(state: &mut GameState) {
         if current_block_13 == 11650488183268122163 {
             let anim = &mut state.p_spec.anims[state.p_spec.lastanim];
             anim.istexture = animdefs[i as usize].istexture != 0;
-            anim.numpics = anim.picnum - anim.basepic + 1_i32;
-            if anim.numpics < 2_i32 {
+            anim.numpics = anim.picnum - anim.basepic + 1;
+            if anim.numpics < 2 {
                 I_Error(&format!(
                     "P_InitPicAnims: bad cycle from {} to {}",
                     startname, endname,
@@ -542,7 +542,7 @@ pub fn P_FindLowestFloorSurrounding(state: &mut GameState, sec: SectorId) -> fix
     floor
 }
 pub fn P_FindHighestFloorSurrounding(state: &mut GameState, sec: SectorId) -> fixed_t {
-    let mut floor: fixed_t = -(500 as fixed_t) * FRACUNIT;
+    let mut floor: fixed_t = -(500) * FRACUNIT;
     let linecount = state.p_setup.sector_mut(sec).linecount;
     for i in 0..linecount {
         let check = state.p_setup.sector_mut(sec).lines[i as usize];
@@ -566,9 +566,9 @@ pub fn P_FindNextHighestFloor(state: &mut GameState, sec: SectorId, currentheigh
         if let Some(other) = getNextSector(state, check, sec) {
             let other_floor = state.p_setup.sector_mut(other).floorheight;
             if other_floor > height {
-                if h == MAX_ADJOINING_SECTORS + 1_i32 {
+                if h == MAX_ADJOINING_SECTORS + 1 {
                     height = other_floor;
-                } else if h == MAX_ADJOINING_SECTORS + 2_i32 {
+                } else if h == MAX_ADJOINING_SECTORS + 2 {
                     I_Error("Sector with more than 22 adjoining sectors. Vanilla will crash here");
                 }
                 let fresh1 = h;
@@ -603,7 +603,7 @@ pub fn P_FindLowestCeilingSurrounding(state: &mut GameState, sec: SectorId) -> f
     height
 }
 pub fn P_FindHighestCeilingSurrounding(state: &mut GameState, sec: SectorId) -> fixed_t {
-    let mut height: fixed_t = 0 as fixed_t;
+    let mut height: fixed_t = 0;
     let linecount = state.p_setup.sector_mut(sec).linecount;
     for i in 0..linecount {
         let check = state.p_setup.sector_mut(sec).lines[i as usize];
@@ -619,14 +619,14 @@ pub fn P_FindHighestCeilingSurrounding(state: &mut GameState, sec: SectorId) -> 
 pub fn P_FindSectorFromLineTag(state: &mut GameState, line: LineId, start: i32) -> i32 {
     let mut i: i32;
     let line_tag = state.p_setup.line(line).tag;
-    i = start + 1_i32;
+    i = start + 1;
     while i < state.p_setup.numsectors {
         if state.p_setup.sectors[i as usize].tag as i32 == line_tag as i32 {
             return i;
         }
         i += 1;
     }
-    -1_i32
+    -1
 }
 pub fn P_FindMinSurroundingLight(state: &mut GameState, sector: SectorId, max: i32) -> i32 {
     let mut min = max;
@@ -647,14 +647,14 @@ pub fn P_CrossSpecialLine(state: &mut GameState, linenum: i32, side: i32, thing:
     let mut ok: i32;
     let special = state.p_setup.line(line).special;
     if state.p_mobj.mo(thing).player.is_none() {
-        match state.p_mobj.mo(thing).type_0 as u32 {
+        match state.p_mobj.mo(thing).kind as u32 {
             33 | 34 | 35 | 31 | 32 | 16 => return,
             _ => {}
         }
-        ok = 0_i32;
+        ok = 0;
         match special as i32 {
             39 | 97 | 125 | 126 | 4 | 10 | 88 => {
-                ok = 1_i32;
+                ok = 1;
             }
             _ => {}
         }
@@ -665,147 +665,147 @@ pub fn P_CrossSpecialLine(state: &mut GameState, linenum: i32, side: i32, thing:
     match special as i32 {
         2 => {
             EV_DoDoor(state, line, VldoorE::vld_open);
-            state.p_setup.line_mut(line).special = 0_i16;
+            state.p_setup.line_mut(line).special = 0;
         }
         3 => {
             EV_DoDoor(state, line, VldoorE::vld_close);
-            state.p_setup.line_mut(line).special = 0_i16;
+            state.p_setup.line_mut(line).special = 0;
         }
         4 => {
             EV_DoDoor(state, line, VldoorE::vld_normal);
-            state.p_setup.line_mut(line).special = 0_i16;
+            state.p_setup.line_mut(line).special = 0;
         }
         5 => {
             EV_DoFloor(state, line, FloorE::raiseFloor);
-            state.p_setup.line_mut(line).special = 0_i16;
+            state.p_setup.line_mut(line).special = 0;
         }
         6 => {
             EV_DoCeiling(state, line, CeilingE::fastCrushAndRaise);
-            state.p_setup.line_mut(line).special = 0_i16;
+            state.p_setup.line_mut(line).special = 0;
         }
         8 => {
             EV_BuildStairs(state, line, StairE::build8);
-            state.p_setup.line_mut(line).special = 0_i16;
+            state.p_setup.line_mut(line).special = 0;
         }
         10 => {
-            EV_DoPlat(state, line, PlattypeE::downWaitUpStay, 0_i32);
-            state.p_setup.line_mut(line).special = 0_i16;
+            EV_DoPlat(state, line, PlattypeE::downWaitUpStay, 0);
+            state.p_setup.line_mut(line).special = 0;
         }
         12 => {
-            EV_LightTurnOn(state, line, 0_i32);
-            state.p_setup.line_mut(line).special = 0_i16;
+            EV_LightTurnOn(state, line, 0);
+            state.p_setup.line_mut(line).special = 0;
         }
         13 => {
-            EV_LightTurnOn(state, line, 255_i32);
-            state.p_setup.line_mut(line).special = 0_i16;
+            EV_LightTurnOn(state, line, 255);
+            state.p_setup.line_mut(line).special = 0;
         }
         16 => {
             EV_DoDoor(state, line, VldoorE::vld_close30ThenOpen);
-            state.p_setup.line_mut(line).special = 0_i16;
+            state.p_setup.line_mut(line).special = 0;
         }
         17 => {
             EV_StartLightStrobing(state, line);
-            state.p_setup.line_mut(line).special = 0_i16;
+            state.p_setup.line_mut(line).special = 0;
         }
         19 => {
             EV_DoFloor(state, line, FloorE::lowerFloor);
-            state.p_setup.line_mut(line).special = 0_i16;
+            state.p_setup.line_mut(line).special = 0;
         }
         22 => {
-            EV_DoPlat(state, line, PlattypeE::raiseToNearestAndChange, 0_i32);
-            state.p_setup.line_mut(line).special = 0_i16;
+            EV_DoPlat(state, line, PlattypeE::raiseToNearestAndChange, 0);
+            state.p_setup.line_mut(line).special = 0;
         }
         25 => {
             EV_DoCeiling(state, line, CeilingE::crushAndRaise);
-            state.p_setup.line_mut(line).special = 0_i16;
+            state.p_setup.line_mut(line).special = 0;
         }
         30 => {
             EV_DoFloor(state, line, FloorE::raiseToTexture);
-            state.p_setup.line_mut(line).special = 0_i16;
+            state.p_setup.line_mut(line).special = 0;
         }
         35 => {
-            EV_LightTurnOn(state, line, 35_i32);
-            state.p_setup.line_mut(line).special = 0_i16;
+            EV_LightTurnOn(state, line, 35);
+            state.p_setup.line_mut(line).special = 0;
         }
         36 => {
             EV_DoFloor(state, line, FloorE::turboLower);
-            state.p_setup.line_mut(line).special = 0_i16;
+            state.p_setup.line_mut(line).special = 0;
         }
         37 => {
             EV_DoFloor(state, line, FloorE::lowerAndChange);
-            state.p_setup.line_mut(line).special = 0_i16;
+            state.p_setup.line_mut(line).special = 0;
         }
         38 => {
             EV_DoFloor(state, line, FloorE::lowerFloorToLowest);
-            state.p_setup.line_mut(line).special = 0_i16;
+            state.p_setup.line_mut(line).special = 0;
         }
         39 => {
             EV_Teleport(state, line, side, thing);
-            state.p_setup.line_mut(line).special = 0_i16;
+            state.p_setup.line_mut(line).special = 0;
         }
         40 => {
             EV_DoCeiling(state, line, CeilingE::raiseToHighest);
             EV_DoFloor(state, line, FloorE::lowerFloorToLowest);
-            state.p_setup.line_mut(line).special = 0_i16;
+            state.p_setup.line_mut(line).special = 0;
         }
         44 => {
             EV_DoCeiling(state, line, CeilingE::lowerAndCrush);
-            state.p_setup.line_mut(line).special = 0_i16;
+            state.p_setup.line_mut(line).special = 0;
         }
         52 => {
             G_ExitLevel(state);
         }
         53 => {
-            EV_DoPlat(state, line, PlattypeE::perpetualRaise, 0_i32);
-            state.p_setup.line_mut(line).special = 0_i16;
+            EV_DoPlat(state, line, PlattypeE::perpetualRaise, 0);
+            state.p_setup.line_mut(line).special = 0;
         }
         54 => {
             EV_StopPlat(state, state.p_setup.line(line).tag as i32);
-            state.p_setup.line_mut(line).special = 0_i16;
+            state.p_setup.line_mut(line).special = 0;
         }
         56 => {
             EV_DoFloor(state, line, FloorE::raiseFloorCrush);
-            state.p_setup.line_mut(line).special = 0_i16;
+            state.p_setup.line_mut(line).special = 0;
         }
         57 => {
             EV_CeilingCrushStop(state, state.p_setup.line(line).tag as i32);
-            state.p_setup.line_mut(line).special = 0_i16;
+            state.p_setup.line_mut(line).special = 0;
         }
         58 => {
             EV_DoFloor(state, line, FloorE::raiseFloor24);
-            state.p_setup.line_mut(line).special = 0_i16;
+            state.p_setup.line_mut(line).special = 0;
         }
         59 => {
             EV_DoFloor(state, line, FloorE::raiseFloor24AndChange);
-            state.p_setup.line_mut(line).special = 0_i16;
+            state.p_setup.line_mut(line).special = 0;
         }
         104 => {
             EV_TurnTagLightsOff(state, line);
-            state.p_setup.line_mut(line).special = 0_i16;
+            state.p_setup.line_mut(line).special = 0;
         }
         108 => {
             EV_DoDoor(state, line, VldoorE::vld_blazeRaise);
-            state.p_setup.line_mut(line).special = 0_i16;
+            state.p_setup.line_mut(line).special = 0;
         }
         109 => {
             EV_DoDoor(state, line, VldoorE::vld_blazeOpen);
-            state.p_setup.line_mut(line).special = 0_i16;
+            state.p_setup.line_mut(line).special = 0;
         }
         100 => {
             EV_BuildStairs(state, line, StairE::turbo16);
-            state.p_setup.line_mut(line).special = 0_i16;
+            state.p_setup.line_mut(line).special = 0;
         }
         110 => {
             EV_DoDoor(state, line, VldoorE::vld_blazeClose);
-            state.p_setup.line_mut(line).special = 0_i16;
+            state.p_setup.line_mut(line).special = 0;
         }
         119 => {
             EV_DoFloor(state, line, FloorE::raiseFloorToNearest);
-            state.p_setup.line_mut(line).special = 0_i16;
+            state.p_setup.line_mut(line).special = 0;
         }
         121 => {
-            EV_DoPlat(state, line, PlattypeE::blazeDWUS, 0_i32);
-            state.p_setup.line_mut(line).special = 0_i16;
+            EV_DoPlat(state, line, PlattypeE::blazeDWUS, 0);
+            state.p_setup.line_mut(line).special = 0;
         }
         124 => {
             G_SecretExitLevel(state);
@@ -813,16 +813,16 @@ pub fn P_CrossSpecialLine(state: &mut GameState, linenum: i32, side: i32, thing:
         125 => {
             if state.p_mobj.mo(thing).player.is_none() {
                 EV_Teleport(state, line, side, thing);
-                state.p_setup.line_mut(line).special = 0_i16;
+                state.p_setup.line_mut(line).special = 0;
             }
         }
         130 => {
             EV_DoFloor(state, line, FloorE::raiseFloorTurbo);
-            state.p_setup.line_mut(line).special = 0_i16;
+            state.p_setup.line_mut(line).special = 0;
         }
         141 => {
             EV_DoCeiling(state, line, CeilingE::silentCrushAndRaise);
-            state.p_setup.line_mut(line).special = 0_i16;
+            state.p_setup.line_mut(line).special = 0;
         }
         72 => {
             EV_DoCeiling(state, line, CeilingE::lowerAndCrush);
@@ -843,13 +843,13 @@ pub fn P_CrossSpecialLine(state: &mut GameState, linenum: i32, side: i32, thing:
             EV_DoCeiling(state, line, CeilingE::fastCrushAndRaise);
         }
         79 => {
-            EV_LightTurnOn(state, line, 35_i32);
+            EV_LightTurnOn(state, line, 35);
         }
         80 => {
-            EV_LightTurnOn(state, line, 0_i32);
+            EV_LightTurnOn(state, line, 0);
         }
         81 => {
-            EV_LightTurnOn(state, line, 255_i32);
+            EV_LightTurnOn(state, line, 255);
         }
         82 => {
             EV_DoFloor(state, line, FloorE::lowerFloorToLowest);
@@ -864,10 +864,10 @@ pub fn P_CrossSpecialLine(state: &mut GameState, linenum: i32, side: i32, thing:
             EV_DoDoor(state, line, VldoorE::vld_open);
         }
         87 => {
-            EV_DoPlat(state, line, PlattypeE::perpetualRaise, 0_i32);
+            EV_DoPlat(state, line, PlattypeE::perpetualRaise, 0);
         }
         88 => {
-            EV_DoPlat(state, line, PlattypeE::downWaitUpStay, 0_i32);
+            EV_DoPlat(state, line, PlattypeE::downWaitUpStay, 0);
         }
         89 => {
             EV_StopPlat(state, state.p_setup.line(line).tag as i32);
@@ -888,7 +888,7 @@ pub fn P_CrossSpecialLine(state: &mut GameState, linenum: i32, side: i32, thing:
             EV_DoFloor(state, line, FloorE::raiseFloorCrush);
         }
         95 => {
-            EV_DoPlat(state, line, PlattypeE::raiseToNearestAndChange, 0_i32);
+            EV_DoPlat(state, line, PlattypeE::raiseToNearestAndChange, 0);
         }
         96 => {
             EV_DoFloor(state, line, FloorE::raiseToTexture);
@@ -909,7 +909,7 @@ pub fn P_CrossSpecialLine(state: &mut GameState, linenum: i32, side: i32, thing:
             EV_DoDoor(state, line, VldoorE::vld_blazeClose);
         }
         120 => {
-            EV_DoPlat(state, line, PlattypeE::blazeDWUS, 0_i32);
+            EV_DoPlat(state, line, PlattypeE::blazeDWUS, 0);
         }
         126 => {
             if state.p_mobj.mo(thing).player.is_none() {
@@ -929,9 +929,9 @@ pub fn P_ShootSpecialLine(state: &mut GameState, thing: MobjId, line: LineId) {
     let mut ok: i32;
     let special = state.p_setup.line(line).special;
     if state.p_mobj.mo(thing).player.is_none() {
-        ok = 0_i32;
+        ok = 0;
         if special as i32 == 46 {
-            ok = 1_i32;
+            ok = 1;
         }
         if ok == 0 {
             return;
@@ -940,15 +940,15 @@ pub fn P_ShootSpecialLine(state: &mut GameState, thing: MobjId, line: LineId) {
     match special as i32 {
         24 => {
             EV_DoFloor(state, line, FloorE::raiseFloor);
-            P_ChangeSwitchTexture(state, line, 0_i32);
+            P_ChangeSwitchTexture(state, line, 0);
         }
         46 => {
             EV_DoDoor(state, line, VldoorE::vld_open);
-            P_ChangeSwitchTexture(state, line, 1_i32);
+            P_ChangeSwitchTexture(state, line, 1);
         }
         47 => {
-            EV_DoPlat(state, line, PlattypeE::raiseToNearestAndChange, 0_i32);
-            P_ChangeSwitchTexture(state, line, 0_i32);
+            EV_DoPlat(state, line, PlattypeE::raiseToNearestAndChange, 0);
+            P_ChangeSwitchTexture(state, line, 0);
         }
         _ => {}
     };
@@ -970,36 +970,36 @@ pub fn P_PlayerInSpecialSector(state: &mut GameState, player: PlayerId) {
     match special as i32 {
         5 => {
             if state.g_game.player_mut(player).powers[PowerType::pw_ironfeet as usize] == 0
-                && state.p_tick.leveltime & 0x1f_i32 == 0
+                && state.p_tick.leveltime & 0x1f == 0
             {
-                P_DamageMobj(state, player_mo, None, None, 10_i32);
+                P_DamageMobj(state, player_mo, None, None, 10);
             }
         }
         7 => {
             if state.g_game.player_mut(player).powers[PowerType::pw_ironfeet as usize] == 0
-                && state.p_tick.leveltime & 0x1f_i32 == 0
+                && state.p_tick.leveltime & 0x1f == 0
             {
-                P_DamageMobj(state, player_mo, None, None, 5_i32);
+                P_DamageMobj(state, player_mo, None, None, 5);
             }
         }
         16 | 4 => {
             if (state.g_game.player_mut(player).powers[PowerType::pw_ironfeet as usize] == 0
-                || P_Random(&mut state.m_random) < 5_i32)
-                && state.p_tick.leveltime & 0x1f_i32 == 0
+                || P_Random(&mut state.m_random) < 5)
+                && state.p_tick.leveltime & 0x1f == 0
             {
-                P_DamageMobj(state, player_mo, None, None, 20_i32);
+                P_DamageMobj(state, player_mo, None, None, 20);
             }
         }
         9 => {
             state.g_game.player_mut(player).secretcount += 1;
-            state.p_setup.sector_mut(sector_id).special = 0_i16;
+            state.p_setup.sector_mut(sector_id).special = 0;
         }
         11 => {
             state.g_game.player_mut(player).cheats &= !CF_GODMODE;
-            if state.p_tick.leveltime & 0x1f_i32 == 0 {
-                P_DamageMobj(state, player_mo, None, None, 20_i32);
+            if state.p_tick.leveltime & 0x1f == 0 {
+                P_DamageMobj(state, player_mo, None, None, 20);
             }
-            if state.g_game.player_mut(player).health <= 10_i32 {
+            if state.g_game.player_mut(player).health <= 10 {
                 G_ExitLevel(state);
             }
         }
@@ -1036,7 +1036,7 @@ pub fn P_UpdateSpecials(state: &mut GameState) {
         }
         anim_idx += 1;
     }
-    i = 0_i32;
+    i = 0;
     while i < state.p_spec.numlinespecials as i32 {
         line = state.p_spec.linespeciallist[i as usize];
         let linev = state.p_setup.line(line);
@@ -1046,13 +1046,13 @@ pub fn P_UpdateSpecials(state: &mut GameState) {
         }
         i += 1;
     }
-    i = 0_i32;
+    i = 0;
     while i < MAXBUTTONS {
         if state.p_switch.buttonlist[i as usize].btimer != 0 {
             state.p_switch.buttonlist[i as usize].btimer -= 1;
             if state.p_switch.buttonlist[i as usize].btimer == 0 {
                 let button_line_id = state.p_switch.buttonlist[i as usize].line;
-                match state.p_switch.buttonlist[i as usize].where_0 {
+                match state.p_switch.buttonlist[i as usize].position {
                     BWhere::top => {
                         state.p_setup.sides
                             [state.p_setup.lines[button_line_id.0 as usize].sidenum[0] as usize]
@@ -1084,17 +1084,17 @@ pub const DONUT_FLOORHEIGHT_DEFAULT: i32 = 0;
 pub const DONUT_FLOORPIC_DEFAULT: i32 = 0x16;
 fn DonutOverrun(state: &mut GameState) -> (fixed_t, i16) {
     if state.p_spec.donut_overrun_first != 0 {
-        state.p_spec.donut_overrun_first = 0_i32;
+        state.p_spec.donut_overrun_first = 0;
         state.p_spec.donut_overrun_tmp_s3_floorheight = DONUT_FLOORHEIGHT_DEFAULT;
         state.p_spec.donut_overrun_tmp_s3_floorpic = DONUT_FLOORPIC_DEFAULT;
-        let p: i32 = M_CheckParmWithArgs(state, "-donut", 2_i32);
-        if p > 0_i32 {
+        let p: i32 = M_CheckParmWithArgs(state, "-donut", 2);
+        if p > 0 {
             M_StrToInt(
-                state.m_argv.myargv[(p + 1_i32) as usize].as_str(),
+                state.m_argv.myargv[(p + 1) as usize].as_str(),
                 &mut state.p_spec.donut_overrun_tmp_s3_floorheight,
             );
             M_StrToInt(
-                state.m_argv.myargv[(p + 2_i32) as usize].as_str(),
+                state.m_argv.myargv[(p + 2) as usize].as_str(),
                 &mut state.p_spec.donut_overrun_tmp_s3_floorpic,
             );
             if state.p_spec.donut_overrun_tmp_s3_floorpic >= state.r_data.numflats {
@@ -1113,18 +1113,18 @@ fn DonutOverrun(state: &mut GameState) -> (fixed_t, i16) {
     )
 }
 pub fn EV_DoDonut(state: &mut GameState, line: LineId) -> i32 {
-    let mut secnum: i32 = -1_i32;
-    let mut rtn: i32 = 0_i32;
+    let mut secnum: i32 = -1;
+    let mut rtn: i32 = 0;
     loop {
         secnum = P_FindSectorFromLineTag(state, line, secnum);
-        if secnum < 0_i32 {
+        if secnum < 0 {
             break;
         }
         let s1 = SectorId(secnum as u32);
         if state.p_setup.sector_mut(s1).specialdata.is_some() {
             continue;
         }
-        rtn = 1_i32;
+        rtn = 1;
         let first_line = state.p_setup.sector_mut(s1).lines[0];
         let Some(s2) = getNextSector(state, first_line, s1) else {
             doom_eprintln!(state.platform,
@@ -1153,13 +1153,13 @@ pub fn EV_DoDonut(state: &mut GameState, line: LineId) -> i32 {
             };
             let mut floor = floormove_t::default();
             floor.thinker.function = ThinkerFn::Floor(T_MoveFloor);
-            floor.type_0 = FloorE::donutRaise;
+            floor.kind = FloorE::donutRaise;
             floor.crush = false;
-            floor.direction = 1_i32;
+            floor.direction = 1;
             floor.sector = s2;
-            floor.speed = (FLOORSPEED / 2_i32) as fixed_t;
+            floor.speed = (FLOORSPEED / 2) as fixed_t;
             floor.texture = s3_floorpic;
-            floor.newspecial = 0_i32;
+            floor.newspecial = 0;
             floor.floordestheight = s3_floorheight;
             let floor_arena_id = state.p_spec.spawn_floor(floor);
             let floor_id = P_AddThinker(
@@ -1170,11 +1170,11 @@ pub fn EV_DoDonut(state: &mut GameState, line: LineId) -> i32 {
             state.p_setup.sector_mut(s2).specialdata = Some(SectorSpecial::Floor(floor_id));
             let mut floor = floormove_t::default();
             floor.thinker.function = ThinkerFn::Floor(T_MoveFloor);
-            floor.type_0 = FloorE::lowerFloor;
+            floor.kind = FloorE::lowerFloor;
             floor.crush = false;
-            floor.direction = -1_i32;
+            floor.direction = -1;
             floor.sector = s1;
-            floor.speed = (FLOORSPEED / 2_i32) as fixed_t;
+            floor.speed = (FLOORSPEED / 2) as fixed_t;
             floor.floordestheight = s3_floorheight;
             let floor_arena_id = state.p_spec.spawn_floor(floor);
             let floor_id = P_AddThinker(
@@ -1189,9 +1189,9 @@ pub fn EV_DoDonut(state: &mut GameState, line: LineId) -> i32 {
     rtn
 }
 pub fn P_SpawnSpecials(state: &mut GameState) {
-    if state.g_game.timelimit > 0_i32 && state.g_game.deathmatch != 0 {
+    if state.g_game.timelimit > 0 && state.g_game.deathmatch != 0 {
         state.p_spec.levelTimer = true;
-        state.p_spec.levelTimeCount = state.g_game.timelimit * 60_i32 * TICRATE;
+        state.p_spec.levelTimeCount = state.g_game.timelimit * 60 * TICRATE;
     } else {
         state.p_spec.levelTimer = false;
     }
@@ -1204,14 +1204,14 @@ pub fn P_SpawnSpecials(state: &mut GameState) {
                     P_SpawnLightFlash(state, secid);
                 }
                 2 => {
-                    P_SpawnStrobeFlash(state, secid, FASTDARK, 0_i32);
+                    P_SpawnStrobeFlash(state, secid, FASTDARK, 0);
                 }
                 3 => {
-                    P_SpawnStrobeFlash(state, secid, SLOWDARK, 0_i32);
+                    P_SpawnStrobeFlash(state, secid, SLOWDARK, 0);
                 }
                 4 => {
-                    P_SpawnStrobeFlash(state, secid, FASTDARK, 0_i32);
-                    state.p_setup.sector_mut(secid).special = 4_i16;
+                    P_SpawnStrobeFlash(state, secid, FASTDARK, 0);
+                    state.p_setup.sector_mut(secid).special = 4;
                 }
                 8 => {
                     P_SpawnGlowingLight(state, secid);
@@ -1223,10 +1223,10 @@ pub fn P_SpawnSpecials(state: &mut GameState) {
                     P_SpawnDoorCloseIn30(state, secid);
                 }
                 12 => {
-                    P_SpawnStrobeFlash(state, secid, SLOWDARK, 1_i32);
+                    P_SpawnStrobeFlash(state, secid, SLOWDARK, 1);
                 }
                 13 => {
-                    P_SpawnStrobeFlash(state, secid, FASTDARK, 1_i32);
+                    P_SpawnStrobeFlash(state, secid, FASTDARK, 1);
                 }
                 14 => {
                     P_SpawnDoorRaiseIn5Mins(state, secid);
@@ -1238,7 +1238,7 @@ pub fn P_SpawnSpecials(state: &mut GameState) {
             }
         }
     }
-    state.p_spec.numlinespecials = 0_i16;
+    state.p_spec.numlinespecials = 0;
     for i in 0..state.p_setup.numlines {
         if state.p_setup.lines[i as usize].special as i32 == 48 {
             if state.p_spec.numlinespecials as i32 >= MAXLINEANIMS {

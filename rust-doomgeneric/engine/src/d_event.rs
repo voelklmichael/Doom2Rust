@@ -29,7 +29,7 @@ pub enum EvType {
 }
 #[derive(Copy, Clone)]
 pub struct event_t {
-    pub type_0: EvType,
+    pub kind: EvType,
     pub data1: i32,
     pub data2: i32,
     pub data3: i32,
@@ -53,7 +53,7 @@ impl DEventState {
     pub const fn new() -> Self {
         DEventState {
             events: [event_t {
-                type_0: EvType::ev_keydown,
+                kind: EvType::ev_keydown,
                 data1: 0,
                 data2: 0,
                 data3: 0,

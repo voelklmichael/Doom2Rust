@@ -6,7 +6,7 @@ use crate::w_wad::W_AddFile;
 pub fn W_ParseCommandLine(state: &mut GameState) -> bool {
     let mut modifiedgame: bool = false;
     let mut p: i32;
-    p = M_CheckParmWithArgs(state, "-file", 1_i32);
+    p = M_CheckParmWithArgs(state, "-file", 1);
     if p != 0 {
         modifiedgame = true;
         loop {

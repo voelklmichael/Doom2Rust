@@ -47,40 +47,40 @@ impl PSightState {
 pub fn P_DivlineSide(x: fixed_t, y: fixed_t, node: &divline_t) -> i32 {
     if node.dx == 0 {
         if x == node.x {
-            return 2_i32;
+            return 2;
         }
         if x <= node.x {
-            return (node.dy > 0_i32) as i32;
+            return (node.dy > 0) as i32;
         }
-        return (node.dy < 0_i32) as i32;
+        return (node.dy < 0) as i32;
     }
     if node.dy == 0 {
         if x == node.y {
-            return 2_i32;
+            return 2;
         }
         if y <= node.y {
-            return (node.dx < 0_i32) as i32;
+            return (node.dx < 0) as i32;
         }
-        return (node.dx > 0_i32) as i32;
+        return (node.dx > 0) as i32;
     }
     let dx = x - node.x;
     let dy = y - node.y;
     let left = (node.dy >> FRACBITS) * (dx >> FRACBITS);
     let right = (dy >> FRACBITS) * (node.dx >> FRACBITS);
     if right < left {
-        return 0_i32;
+        return 0;
     }
     if left == right {
-        return 2_i32;
+        return 2;
     }
-    1_i32
+    1
 }
 pub fn P_InterceptVector2(v2: &divline_t, v1: &divline_t) -> fixed_t {
-    let den = FixedMul(v1.dy >> 8_i32, v2.dx) - FixedMul(v1.dx >> 8_i32, v2.dy);
-    if den == 0_i32 {
-        return 0 as fixed_t;
+    let den = FixedMul(v1.dy >> 8, v2.dx) - FixedMul(v1.dx >> 8, v2.dy);
+    if den == 0 {
+        return 0;
     }
-    let num = FixedMul((v1.x - v2.x) >> 8_i32, v1.dy) + FixedMul((v2.y - v1.y) >> 8_i32, v1.dx);
+    let num = FixedMul((v1.x - v2.x) >> 8, v1.dy) + FixedMul((v2.y - v1.y) >> 8, v1.dx);
     FixedDiv(num, den)
 }
 pub fn P_CrossSubsector(state: &mut GameState, num: i32) -> bool {
@@ -160,8 +160,8 @@ pub fn P_CrossSubsector(state: &mut GameState, num: i32) -> bool {
 }
 pub fn P_CrossBSPNode(state: &mut GameState, bspnum: i32) -> bool {
     if bspnum & NF_SUBSECTOR != 0 {
-        if bspnum == -1_i32 {
-            return P_CrossSubsector(state, 0_i32);
+        if bspnum == -1 {
+            return P_CrossSubsector(state, 0);
         } else {
             return P_CrossSubsector(state, bspnum & !NF_SUBSECTOR);
         }
@@ -175,8 +175,8 @@ pub fn P_CrossBSPNode(state: &mut GameState, bspnum: i32) -> bool {
     };
     let children = bsp.children;
     let mut side = P_DivlineSide(state.p_sight.strace.x, state.p_sight.strace.y, &divl);
-    if side == 2_i32 {
-        side = 0_i32;
+    if side == 2 {
+        side = 0;
     }
     if !P_CrossBSPNode(state, children[side as usize] as i32) {
         return false;
@@ -184,7 +184,7 @@ pub fn P_CrossBSPNode(state: &mut GameState, bspnum: i32) -> bool {
     if side == P_DivlineSide(state.p_sight.t2x, state.p_sight.t2y, &divl) {
         return true;
     }
-    P_CrossBSPNode(state, children[(side ^ 1_i32) as usize] as i32)
+    P_CrossBSPNode(state, children[(side ^ 1) as usize] as i32)
 }
 pub fn P_CheckSight(state: &mut GameState, t1: MobjId, t2: MobjId) -> bool {
     let (t1_subsector, t1_x, t1_y, t1_z, t1_height) = {
@@ -198,15 +198,15 @@ pub fn P_CheckSight(state: &mut GameState, t1: MobjId, t2: MobjId) -> bool {
     let s1 = state.p_setup.subsectors[t1_subsector.0 as usize].sector.0 as i32;
     let s2 = state.p_setup.subsectors[t2_subsector.0 as usize].sector.0 as i32;
     let pnum = s1 * state.p_setup.numsectors + s2;
-    let bytenum = pnum >> 3_i32;
-    let bitnum = 1_i32 << (pnum & 7_i32);
+    let bytenum = pnum >> 3;
+    let bitnum = 1 << (pnum & 7);
     if state.p_setup.rejectmatrix[bytenum as usize] as i32 & bitnum != 0 {
         state.p_sight.sightcounts[0] += 1;
         return false;
     }
     state.p_sight.sightcounts[1] += 1;
     state.r_main.validcount += 1;
-    state.p_sight.sightzstart = t1_z + t1_height - (t1_height >> 2_i32);
+    state.p_sight.sightzstart = t1_z + t1_height - (t1_height >> 2);
     state.p_sight.topslope = t2_z + t2_height - state.p_sight.sightzstart;
     state.p_sight.bottomslope = t2_z - state.p_sight.sightzstart;
     state.p_sight.strace.x = t1_x;
@@ -215,5 +215,5 @@ pub fn P_CheckSight(state: &mut GameState, t1: MobjId, t2: MobjId) -> bool {
     state.p_sight.t2y = t2_y;
     state.p_sight.strace.dx = t2_x - t1_x;
     state.p_sight.strace.dy = t2_y - t1_y;
-    P_CrossBSPNode(state, state.p_setup.numnodes - 1_i32)
+    P_CrossBSPNode(state, state.p_setup.numnodes - 1)
 }

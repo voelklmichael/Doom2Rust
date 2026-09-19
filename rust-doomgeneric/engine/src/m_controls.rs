@@ -259,30 +259,30 @@ pub const KEY_FIRE: i32 = 0xa3;
 pub const KEY_ESCAPE: i32 = 27;
 pub const KEY_ENTER: i32 = 13;
 pub const KEY_TAB: i32 = 9;
-pub const KEY_F1: i32 = 0x80 + 0x3b_i32;
-pub const KEY_F2: i32 = 0x80 + 0x3c_i32;
-pub const KEY_F3: i32 = 0x80 + 0x3d_i32;
-pub const KEY_F4: i32 = 0x80 + 0x3e_i32;
-pub const KEY_F5: i32 = 0x80 + 0x3f_i32;
-pub const KEY_F6: i32 = 0x80 + 0x40_i32;
-pub const KEY_F7: i32 = 0x80 + 0x41_i32;
-pub const KEY_F8: i32 = 0x80 + 0x42_i32;
-pub const KEY_F9: i32 = 0x80 + 0x43_i32;
-pub const KEY_F10: i32 = 0x80 + 0x44_i32;
-pub const KEY_F11: i32 = 0x80 + 0x57_i32;
-pub const KEY_F12: i32 = 0x80 + 0x58_i32;
+pub const KEY_F1: i32 = 0x80 + 0x3b;
+pub const KEY_F2: i32 = 0x80 + 0x3c;
+pub const KEY_F3: i32 = 0x80 + 0x3d;
+pub const KEY_F4: i32 = 0x80 + 0x3e;
+pub const KEY_F5: i32 = 0x80 + 0x3f;
+pub const KEY_F6: i32 = 0x80 + 0x40;
+pub const KEY_F7: i32 = 0x80 + 0x41;
+pub const KEY_F8: i32 = 0x80 + 0x42;
+pub const KEY_F9: i32 = 0x80 + 0x43;
+pub const KEY_F10: i32 = 0x80 + 0x44;
+pub const KEY_F11: i32 = 0x80 + 0x57;
+pub const KEY_F12: i32 = 0x80 + 0x58;
 pub const KEY_BACKSPACE: i32 = 0x7f;
 pub const KEY_PAUSE: i32 = 0xff;
 pub const KEY_EQUALS: i32 = 0x3d;
 pub const KEY_MINUS: i32 = 0x2d;
-pub const KEY_RSHIFT: i32 = 0x80 + 0x36_i32;
-pub const KEY_RALT: i32 = 0x80 + 0x38_i32;
-pub const KEY_HOME: i32 = 0x80 + 0x47_i32;
-pub const KEY_END: i32 = 0x80 + 0x4f_i32;
-pub const KEY_PGUP: i32 = 0x80 + 0x49_i32;
-pub const KEY_PGDN: i32 = 0x80 + 0x51_i32;
-pub const KEY_INS: i32 = 0x80 + 0x52_i32;
-pub const KEY_DEL: i32 = 0x80 + 0x53_i32;
+pub const KEY_RSHIFT: i32 = 0x80 + 0x36;
+pub const KEY_RALT: i32 = 0x80 + 0x38;
+pub const KEY_HOME: i32 = 0x80 + 0x47;
+pub const KEY_END: i32 = 0x80 + 0x4f;
+pub const KEY_PGUP: i32 = 0x80 + 0x49;
+pub const KEY_PGDN: i32 = 0x80 + 0x51;
+pub const KEY_INS: i32 = 0x80 + 0x52;
+pub const KEY_DEL: i32 = 0x80 + 0x53;
 pub fn M_BindBaseControls(state: &mut GameState) {
     M_BindVariable_int(&mut state.m_config, "key_right", |s| {
         &mut s.m_controls.key_right
@@ -528,7 +528,7 @@ pub fn M_BindChatControls(state: &mut GameState, num_players: u32) {
     M_BindVariable_int(&mut state.m_config, "key_multi_msg", |s| {
         &mut s.m_controls.key_multi_msg
     });
-    i = 0_u32;
+    i = 0;
     while i < num_players {
         let name = format!("key_multi_msgplayer{}", i.wrapping_add(1_u32));
         M_BindVariable_int(&mut state.m_config, &name, move |s| {
@@ -537,5 +537,5 @@ pub fn M_BindChatControls(state: &mut GameState, num_players: u32) {
         i = i.wrapping_add(1);
     }
 }
-pub const KEY_CAPSLOCK: i32 = 0x80 + 0x3a_i32;
-pub const KEY_SCRLCK: i32 = 0x80 + 0x46_i32;
+pub const KEY_CAPSLOCK: i32 = 0x80 + 0x3a;
+pub const KEY_SCRLCK: i32 = 0x80 + 0x46;
