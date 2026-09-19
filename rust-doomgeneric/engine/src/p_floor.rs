@@ -81,15 +81,14 @@ pub fn move_plane(
                         change_sector(state, sector, crush);
                     }
                     return ResultE::Pastdest;
-                } else {
-                    lastpos = state.p_setup.sector_mut(sector).floorheight;
-                    state.p_setup.sector_mut(sector).floorheight -= speed;
-                    flag = change_sector(state, sector, crush);
-                    if flag {
-                        state.p_setup.sector_mut(sector).floorheight = lastpos;
-                        change_sector(state, sector, crush);
-                        return ResultE::Crushed;
-                    }
+                }
+                lastpos = state.p_setup.sector_mut(sector).floorheight;
+                state.p_setup.sector_mut(sector).floorheight -= speed;
+                flag = change_sector(state, sector, crush);
+                if flag {
+                    state.p_setup.sector_mut(sector).floorheight = lastpos;
+                    change_sector(state, sector, crush);
+                    return ResultE::Crushed;
                 }
             }
             1 => {
@@ -102,18 +101,17 @@ pub fn move_plane(
                         change_sector(state, sector, crush);
                     }
                     return ResultE::Pastdest;
-                } else {
-                    lastpos = state.p_setup.sector_mut(sector).floorheight;
-                    state.p_setup.sector_mut(sector).floorheight += speed;
-                    flag = change_sector(state, sector, crush);
-                    if flag {
-                        if crush {
-                            return ResultE::Crushed;
-                        }
-                        state.p_setup.sector_mut(sector).floorheight = lastpos;
-                        change_sector(state, sector, crush);
+                }
+                lastpos = state.p_setup.sector_mut(sector).floorheight;
+                state.p_setup.sector_mut(sector).floorheight += speed;
+                flag = change_sector(state, sector, crush);
+                if flag {
+                    if crush {
                         return ResultE::Crushed;
                     }
+                    state.p_setup.sector_mut(sector).floorheight = lastpos;
+                    change_sector(state, sector, crush);
+                    return ResultE::Crushed;
                 }
             }
             _ => {}
@@ -129,18 +127,17 @@ pub fn move_plane(
                         change_sector(state, sector, crush);
                     }
                     return ResultE::Pastdest;
-                } else {
-                    lastpos = state.p_setup.sector_mut(sector).ceilingheight;
-                    state.p_setup.sector_mut(sector).ceilingheight -= speed;
-                    flag = change_sector(state, sector, crush);
-                    if flag {
-                        if crush {
-                            return ResultE::Crushed;
-                        }
-                        state.p_setup.sector_mut(sector).ceilingheight = lastpos;
-                        change_sector(state, sector, crush);
+                }
+                lastpos = state.p_setup.sector_mut(sector).ceilingheight;
+                state.p_setup.sector_mut(sector).ceilingheight -= speed;
+                flag = change_sector(state, sector, crush);
+                if flag {
+                    if crush {
                         return ResultE::Crushed;
                     }
+                    state.p_setup.sector_mut(sector).ceilingheight = lastpos;
+                    change_sector(state, sector, crush);
+                    return ResultE::Crushed;
                 }
             }
             1 => {
@@ -153,10 +150,9 @@ pub fn move_plane(
                         change_sector(state, sector, crush);
                     }
                     return ResultE::Pastdest;
-                } else {
-                    state.p_setup.sector_mut(sector).ceilingheight += speed;
-                    change_sector(state, sector, crush);
                 }
+                state.p_setup.sector_mut(sector).ceilingheight += speed;
+                change_sector(state, sector, crush);
             }
             _ => {}
         },

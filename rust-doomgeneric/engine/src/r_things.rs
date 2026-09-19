@@ -67,7 +67,7 @@ impl Default for RThingsState {
 
 impl RThingsState {
     pub const fn new() -> Self {
-        RThingsState {
+        Self {
             pspritescale: 0,
             pspriteiscale: 0,
             spritelights: LightRow48::Normal(0),
@@ -154,8 +154,7 @@ pub fn install_sprite_lump(
 ) {
     if frame >= 29 || rotation > 8 {
         error(&format!(
-            "R_InstallSpriteLump: Bad frame characters in lump {}",
-            lump
+            "R_InstallSpriteLump: Bad frame characters in lump {lump}"
         ));
     }
     if frame as i32 > state.r_things.maxframe {
@@ -234,7 +233,7 @@ pub fn init_sprite_defs(state: &mut GameState, namelist: &[&'static str]) {
                 rotation = state.w_wad.lumpinfo[l as usize].name[5] as i32 - '0' as i32;
                 if state.doomstat.modifiedgame {
                     let sprite_name = state.w_wad.lumpinfo[l as usize].name;
-                    patched = get_num_for_name(&mut state.w_wad, &sprite_name.as_str());
+                    patched = get_num_for_name(&state.w_wad, &sprite_name.as_str());
                 } else {
                     patched = l;
                 }
@@ -425,7 +424,10 @@ pub fn project_sprite(state: &mut GameState, thing_id: MobjId) {
         ));
     }
     let sprframe = sprdef.spriteframes[(thing_frame & FF_FRAMEMASK) as usize];
-    if sprframe.rotate != SpriteRotate::NonRotating {
+    if sprframe.rotate == SpriteRotate::NonRotating {
+        lump = sprframe.lump[0] as i32;
+        flip = sprframe.flip[0] != 0;
+    } else {
         ang = point_to_angle(state, thing_x, thing_y);
         rot = ang
             .wrapping_sub(thing_angle)
@@ -433,9 +435,6 @@ pub fn project_sprite(state: &mut GameState, thing_id: MobjId) {
             >> 29;
         lump = sprframe.lump[rot as usize] as i32;
         flip = sprframe.flip[rot as usize] != 0;
-    } else {
-        lump = sprframe.lump[0] as i32;
-        flip = sprframe.flip[0] != 0;
     }
     tx -= state.r_data.spriteoffset[lump as usize];
     let x1: i32 = (state.r_main.centerxfrac + fixed_mul(tx, xscale)) >> FRACBITS;
@@ -499,7 +498,7 @@ pub fn project_sprite(state: &mut GameState, thing_id: MobjId) {
             index = MAXLIGHTSCALE - 1;
         }
         vis.colormap = Some(state.r_main.light_row48(state.r_things.spritelights)[index as usize]);
-    };
+    }
     store_vis_sprite(state, vis);
 }
 pub fn add_sprites(state: &mut GameState, sec: SectorId) {

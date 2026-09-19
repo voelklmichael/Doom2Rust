@@ -55,7 +55,7 @@ impl Default for HuStuffState {
 
 impl HuStuffState {
     pub const fn new() -> Self {
-        HuStuffState {
+        Self {
             plr: PlayerId(0),
             hu_font: [-1; 63],
             w_title: HuTextLine {
@@ -312,7 +312,7 @@ pub static MAPNAMES_COMMERCIAL: [&str; 96] = [
 pub fn hu_init(state: &mut GameState) {
     for (i, code) in (HU_FONTSTART..HU_FONTSTART + HU_FONTSIZE).enumerate() {
         let buffer = format!("STCFN{code:03}");
-        let lumpnum = get_num_for_name(&mut state.w_wad, &buffer);
+        let lumpnum = get_num_for_name(&state.w_wad, &buffer);
         lump_bytes(state, lumpnum);
         state.hu_stuff.hu_font[i] = lumpnum;
     }
@@ -499,15 +499,15 @@ pub fn queue_chat_char(state: &mut GameState, c: u8) {
     } else {
         state.hu_stuff.chatchars[state.hu_stuff.head as usize] = c;
         state.hu_stuff.head = (state.hu_stuff.head + 1) & (QUEUESIZE - 1);
-    };
+    }
 }
 pub fn dequeue_chat_char(state: &mut HuStuffState) -> u8 {
     let c: u8;
-    if state.head != state.tail {
+    if state.head == state.tail {
+        c = 0;
+    } else {
         c = state.chatchars[state.tail as usize];
         state.tail = (state.tail + 1) & (QUEUESIZE - 1);
-    } else {
-        c = 0;
     }
     c
 }

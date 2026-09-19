@@ -17,7 +17,7 @@ impl Default for IInputState {
 
 impl IInputState {
     pub const fn new() -> Self {
-        IInputState {
+        Self {
             vanilla_keyboard_mapping: 1,
             shiftdown: 0,
         }
@@ -37,7 +37,7 @@ static SHIFTXFORM: [u8; 128] = [
 fn translate_key(key: u8) -> u8 {
     key
 }
-fn get_typed_char(state: &mut IInputState, mut key: u8) -> u8 {
+fn get_typed_char(state: &IInputState, mut key: u8) -> u8 {
     key = translate_key(key);
     if state.shiftdown > 0 {
         if key as i32 >= 0 && (key as usize) < SHIFTXFORM.len() {
@@ -68,7 +68,7 @@ pub fn get_event(state: &mut GameState) {
         if pressed != 0 {
             event.kind = EvType::Keydown;
             event.data1 = translate_key(key) as i32;
-            event.data2 = get_typed_char(&mut state.i_input, key) as i32;
+            event.data2 = get_typed_char(&state.i_input, key) as i32;
             if event.data1 != 0 {
                 post_event(&mut state.d_event, event);
             }

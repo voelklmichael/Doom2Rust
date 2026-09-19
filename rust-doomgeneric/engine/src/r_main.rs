@@ -99,7 +99,7 @@ impl Default for RMainState {
 
 impl RMainState {
     pub fn new() -> Self {
-        RMainState {
+        Self {
             viewangleoffset: 0,
             validcount: 1,
             fixedcolormap: None,
@@ -177,7 +177,7 @@ pub fn point_on_side(x: Fixed, y: Fixed, node: &Node) -> i32 {
     }
     1
 }
-pub fn point_on_seg_side(state: &mut GameState, x: Fixed, y: Fixed, line: SegId) -> i32 {
+pub fn point_on_seg_side(state: &GameState, x: Fixed, y: Fixed, line: SegId) -> i32 {
     let line_v1 = state.p_setup.vertexes[state.p_setup.seg(line).v1.0 as usize];
     let line_v2 = state.p_setup.vertexes[state.p_setup.seg(line).v2.0 as usize];
     let lx: Fixed = line_v1.x;
@@ -211,7 +211,7 @@ pub fn point_on_seg_side(state: &mut GameState, x: Fixed, y: Fixed, line: SegId)
     }
     1
 }
-pub fn point_to_angle(state: &mut GameState, mut x: Fixed, mut y: Fixed) -> Angle {
+pub fn point_to_angle(state: &GameState, mut x: Fixed, mut y: Fixed) -> Angle {
     x -= state.r_main.viewx;
     y -= state.r_main.viewy;
     if x == 0 && y == 0 {
@@ -260,7 +260,7 @@ pub fn point_to_angle2(state: &mut GameState, x1: Fixed, y1: Fixed, x2: Fixed, y
     state.r_main.viewy = y1;
     point_to_angle(state, x2, y2)
 }
-pub fn point_to_dist(state: &mut GameState, x: Fixed, y: Fixed) -> Fixed {
+pub fn point_to_dist(state: &GameState, x: Fixed, y: Fixed) -> Fixed {
     let mut dx: Fixed;
     let mut dy: Fixed;
     let temp: Fixed;
@@ -278,7 +278,7 @@ pub fn point_to_dist(state: &mut GameState, x: Fixed, y: Fixed) -> Fixed {
     let dist: Fixed = fixed_div(dx, FINESINE[angle as usize]);
     dist
 }
-pub fn scale_from_global_angle(state: &mut GameState, visangle: Angle) -> Fixed {
+pub fn scale_from_global_angle(state: &GameState, visangle: Angle) -> Fixed {
     let mut scale: Fixed;
 
     let anglea: Angle =
@@ -451,7 +451,7 @@ pub fn r_init(state: &mut GameState) {
     doom_print!(state.platform, ".");
     state.r_main.framecount = 0;
 }
-pub fn point_in_subsector(state: &mut GameState, x: Fixed, y: Fixed) -> SubsectorId {
+pub fn point_in_subsector(state: &GameState, x: Fixed, y: Fixed) -> SubsectorId {
     if state.p_setup.numnodes == 0 {
         return SubsectorId(0);
     }

@@ -21,7 +21,7 @@ pub struct Posts<'a> {
 
 impl Patch {
     pub fn new(data: Rc<[u8]>) -> Self {
-        Patch { data }
+        Self { data }
     }
 
     fn i16_at(&self, offset: usize) -> i32 {

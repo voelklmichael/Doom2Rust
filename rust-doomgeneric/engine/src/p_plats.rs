@@ -73,7 +73,7 @@ impl Default for PPlatsState {
 
 impl PPlatsState {
     pub const fn new() -> Self {
-        PPlatsState {
+        Self {
             activeplats: [None; 30],
             plats: Vec::new(),
             free_list: Vec::new(),
@@ -208,7 +208,7 @@ pub fn plat_raise(state: &mut GameState, id: PlatId) {
             }
         }
         PlatE::InStasis => {}
-    };
+    }
 }
 pub fn do_plat(state: &mut GameState, line: LineId, kind: PlattypeE, amount: i32) -> bool {
     let linev = state.p_setup.line(line);

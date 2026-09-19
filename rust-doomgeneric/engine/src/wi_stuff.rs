@@ -81,7 +81,7 @@ impl Default for WiStuffState {
 
 impl WiStuffState {
     pub const fn new() -> Self {
-        WiStuffState {
+        Self {
             epsd0animinfo: [
                 Anim {
                     kind: AnimEnum::Always,
@@ -675,7 +675,7 @@ pub fn draw_on_lnode(state: &mut GameState, n: i32, c: &[i32]) {
         );
     } else {
         doom_print!(state.platform, "Could not place patch on level {}", n + 1);
-    };
+    }
 }
 pub fn init_animated_back(state: &mut GameState) {
     if state.doomstat.gamemode as u32 == GameMode::Commercial as i32 as u32 {
@@ -837,7 +837,7 @@ pub fn draw_time(state: &mut GameState, mut x: i32, y: i32, t: i32) {
         let sucks_patch = cache_patch_num(state, state.wi_stuff.sucks);
         let dest_screen = Screen::Video;
         draw_patch(state, dest_screen, x - sucks_patch.width(), y, &sucks_patch);
-    };
+    }
 }
 pub fn wi_end(state: &mut GameState) {
     load_unload_data(state, unload_callback);
@@ -867,7 +867,7 @@ pub fn update_show_next_loc(state: &mut GameState) {
         init_no_state(state);
     } else {
         state.wi_stuff.snl_pointeron = (state.wi_stuff.cnt & 31) < 20;
-    };
+    }
 }
 pub fn draw_show_next_loc(state: &mut GameState) {
     let last: i32;
@@ -1509,12 +1509,12 @@ pub fn wi_ticker(state: &mut GameState) {
         StateEnum::NoState => {
             update_no_state(state);
         }
-    };
+    }
 }
 fn load_unload_data(state: &mut GameState, callback: LoadCallback) {
     if state.doomstat.gamemode as u32 == GameMode::Commercial as i32 as u32 {
         for i in 0..state.wi_stuff.numcmaps as usize {
-            state.wi_stuff.lnames[i] = callback(state, &format!("CWILV{:02}", i));
+            state.wi_stuff.lnames[i] = callback(state, &format!("CWILV{i:02}"));
         }
     } else {
         for i in 0..NUMMAPS as usize {
@@ -1530,7 +1530,7 @@ fn load_unload_data(state: &mut GameState, callback: LoadCallback) {
                 let nanims = state.wi_stuff.anims()[epsd][j].nanims as usize;
                 for i in 0..nanims {
                     let lump = if epsd != 1 || j != 8 {
-                        let name = format!("WIA{}{:02}{:02}", epsd, j, i);
+                        let name = format!("WIA{epsd}{j:02}{i:02}");
                         callback(state, &name)
                     } else {
                         state.wi_stuff.anims()[1][4].p[i]
@@ -1542,7 +1542,7 @@ fn load_unload_data(state: &mut GameState, callback: LoadCallback) {
     }
     state.wi_stuff.wiminus = callback(state, "WIMINUS");
     for i in 0..10_usize {
-        state.wi_stuff.num[i] = callback(state, &format!("WINUM{}", i));
+        state.wi_stuff.num[i] = callback(state, &format!("WINUM{i}"));
     }
     state.wi_stuff.percent = callback(state, "WIPCNT");
     state.wi_stuff.finished = callback(state, "WIF");
@@ -1550,7 +1550,7 @@ fn load_unload_data(state: &mut GameState, callback: LoadCallback) {
     state.wi_stuff.kills = callback(state, "WIOSTK");
     state.wi_stuff.secret = callback(state, "WIOSTS");
     state.wi_stuff.sp_secret = callback(state, "WISCRT2");
-    let items_name = if check_num_for_name(&mut state.w_wad, "WIOBJ") >= 0
+    let items_name = if check_num_for_name(&state.w_wad, "WIOBJ") >= 0
         && state.g_game.netgame
         && state.g_game.deathmatch == 0
     {
@@ -1568,7 +1568,7 @@ fn load_unload_data(state: &mut GameState, callback: LoadCallback) {
     state.wi_stuff.victims = callback(state, "WIVCTMS");
     state.wi_stuff.total = callback(state, "WIMSTT");
     for i in 0..MAXPLAYERS as usize {
-        state.wi_stuff.p[i] = callback(state, &format!("STPB{}", i));
+        state.wi_stuff.p[i] = callback(state, &format!("STPB{i}"));
         state.wi_stuff.bp[i] = callback(state, &format!("WIBP{}", i + 1));
     }
     let name = if state.doomstat.gamemode == GameMode::Commercial
@@ -1581,7 +1581,7 @@ fn load_unload_data(state: &mut GameState, callback: LoadCallback) {
     state.wi_stuff.background = callback(state, &name);
 }
 fn wi_load_callback(state: &mut GameState, name: &str) -> i32 {
-    let lumpnum = get_num_for_name(&mut state.w_wad, name);
+    let lumpnum = get_num_for_name(&state.w_wad, name);
     lump_bytes(state, lumpnum);
     lumpnum
 }
@@ -1593,15 +1593,15 @@ pub fn wi_load_data(state: &mut GameState) {
         state.wi_stuff.lnames = vec![-1; NUMMAPS as usize];
     }
     load_unload_data(state, wi_load_callback);
-    let star_lump = get_num_for_name(&mut state.w_wad, "STFST01");
+    let star_lump = get_num_for_name(&state.w_wad, "STFST01");
     lump_bytes(state, star_lump);
     state.wi_stuff.star = star_lump;
-    let bstar_lump = get_num_for_name(&mut state.w_wad, "STFDEAD0");
+    let bstar_lump = get_num_for_name(&state.w_wad, "STFDEAD0");
     lump_bytes(state, bstar_lump);
     state.wi_stuff.bstar = bstar_lump;
 }
 fn unload_callback(state: &mut GameState, name: &str) -> i32 {
-    release_lump_name(&mut state.w_wad, name);
+    release_lump_name(&state.w_wad, name);
     -1
 }
 pub fn wi_drawer(state: &mut GameState) {
@@ -1621,7 +1621,7 @@ pub fn wi_drawer(state: &mut GameState) {
         StateEnum::NoState => {
             draw_no_state(state);
         }
-    };
+    }
 }
 pub fn wi_init_variables(state: &mut GameState) {
     state.wi_stuff.acceleratestage = false;
@@ -1651,7 +1651,7 @@ pub fn wi_start(state: &mut GameState) {
         init_netgame_stats(state);
     } else {
         init_stats(state);
-    };
+    }
 }
 pub fn fixup_numanims(state: &mut GameState) {
     state.wi_stuff.numanims = [

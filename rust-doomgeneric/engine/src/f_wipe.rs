@@ -21,7 +21,7 @@ impl Default for FWipeState {
 
 impl FWipeState {
     pub const fn new() -> Self {
-        FWipeState {
+        Self {
             go: false,
             wipe_scr_start: Vec::new(),
             wipe_scr_end: Vec::new(),

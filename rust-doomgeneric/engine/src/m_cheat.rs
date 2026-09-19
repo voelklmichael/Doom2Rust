@@ -8,7 +8,7 @@ pub struct CheatSeq {
 }
 impl CheatSeq {
     pub const fn new(sequence: &'static str, parameter_chars: usize) -> Self {
-        CheatSeq {
+        Self {
             sequence: sequence.as_bytes(),
             parameter_chars,
             chars_read: 0,

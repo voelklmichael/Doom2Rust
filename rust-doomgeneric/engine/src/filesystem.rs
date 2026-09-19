@@ -114,7 +114,7 @@ mod mem {
             self.dirs.push(path.to_string());
         }
         fn temp_path(&self, name: &str) -> String {
-            format!("/tmp/{}", name)
+            format!("/tmp/{name}")
         }
     }
 }

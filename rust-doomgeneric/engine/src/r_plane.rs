@@ -53,7 +53,7 @@ impl Default for RPlaneState {
 
 impl RPlaneState {
     pub const fn new() -> Self {
-        RPlaneState {
+        Self {
             visplanes: [VisPlane::EMPTY; 128],
             lastvisplane: 0,
             floorplane: None,
@@ -85,9 +85,13 @@ pub fn map_plane(state: &mut GameState, y: i32, x1: i32, x2: i32) {
 
     let mut index: u32;
     if x2 < x1 || x1 < 0 || x2 >= state.r_draw.viewwidth || y > state.r_draw.viewheight {
-        error(&format!("R_MapPlane: {}, {} at {}", x1, x2, y));
+        error(&format!("R_MapPlane: {x1}, {x2} at {y}"));
     }
-    if state.r_plane.planeheight != state.r_plane.cachedheight[y as usize] {
+    if state.r_plane.planeheight == state.r_plane.cachedheight[y as usize] {
+        distance = state.r_plane.cacheddistance[y as usize];
+        state.r_draw.ds_xstep = state.r_plane.cachedxstep[y as usize];
+        state.r_draw.ds_ystep = state.r_plane.cachedystep[y as usize];
+    } else {
         state.r_plane.cachedheight[y as usize] = state.r_plane.planeheight;
         state.r_plane.cacheddistance[y as usize] =
             fixed_mul(state.r_plane.planeheight, state.r_plane.yslope[y as usize]);
@@ -95,10 +99,6 @@ pub fn map_plane(state: &mut GameState, y: i32, x1: i32, x2: i32) {
         state.r_plane.cachedxstep[y as usize] = fixed_mul(distance, state.r_plane.basexscale);
         state.r_draw.ds_xstep = state.r_plane.cachedxstep[y as usize];
         state.r_plane.cachedystep[y as usize] = fixed_mul(distance, state.r_plane.baseyscale);
-        state.r_draw.ds_ystep = state.r_plane.cachedystep[y as usize];
-    } else {
-        distance = state.r_plane.cacheddistance[y as usize];
-        state.r_draw.ds_xstep = state.r_plane.cachedxstep[y as usize];
         state.r_draw.ds_ystep = state.r_plane.cachedystep[y as usize];
     }
     let length: Fixed = fixed_mul(distance, state.r_plane.distscale[x1 as usize]);
@@ -308,7 +308,7 @@ pub fn draw_planes(state: &mut GameState) {
                         plv.bottom(x) as i32,
                     );
                 }
-                release_lump_num(&mut state.w_wad, lumpnum);
+                release_lump_num(&state.w_wad, lumpnum);
             }
         }
     }

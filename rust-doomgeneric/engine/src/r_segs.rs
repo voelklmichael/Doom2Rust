@@ -72,7 +72,7 @@ impl Default for RSegsState {
 
 impl RSegsState {
     pub const fn new() -> Self {
-        RSegsState {
+        Self {
             segtextured: false,
             markfloor: false,
             markceiling: false,
@@ -382,7 +382,7 @@ pub fn store_wall_range(state: &mut GameState, start: i32, stop: i32) {
         return;
     }
     if start >= state.r_draw.viewwidth || start > stop {
-        error(&format!("Bad R_RenderWallRange: {} to {}", start, stop));
+        error(&format!("Bad R_RenderWallRange: {start} to {stop}"));
     }
     state.r_bsp.sidedef = state.p_setup.seg(state.r_bsp.curline).sidedef;
     state.r_bsp.linedef = state.p_setup.seg(state.r_bsp.curline).linedef;

@@ -14,11 +14,11 @@ impl Default for MArgvState {
 
 impl MArgvState {
     pub const fn new() -> Self {
-        MArgvState { myargv: Vec::new() }
+        Self { myargv: Vec::new() }
     }
 }
 
-pub fn check_parm_with_args(state: &mut GameState, check: &str, num_args: i32) -> i32 {
+pub fn check_parm_with_args(state: &GameState, check: &str, num_args: i32) -> i32 {
     for i in 1..state.m_argv.myargv.len() as i32 - num_args {
         if state.m_argv.myargv[i as usize].eq_ignore_ascii_case(check) {
             return i;
@@ -26,10 +26,10 @@ pub fn check_parm_with_args(state: &mut GameState, check: &str, num_args: i32) -
     }
     0
 }
-pub fn parm_exists(state: &mut GameState, check: &str) -> bool {
+pub fn parm_exists(state: &GameState, check: &str) -> bool {
     check_parm(state, check) != 0
 }
-pub fn check_parm(state: &mut GameState, check: &str) -> i32 {
+pub fn check_parm(state: &GameState, check: &str) -> i32 {
     check_parm_with_args(state, check, 0)
 }
 pub fn argv_atoi(arg: &str) -> i32 {

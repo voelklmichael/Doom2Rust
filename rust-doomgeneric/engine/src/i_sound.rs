@@ -95,7 +95,7 @@ impl Default for ISoundState {
 
 impl ISoundState {
     pub const fn new() -> Self {
-        ISoundState {
+        Self {
             snd_samplerate: 44100,
             snd_cachesize: 64 * 1024 * 1024,
             snd_maxslicetime_ms: 28,
@@ -140,7 +140,7 @@ pub fn init_sound(state: &mut GameState, use_sfx_prefix: bool) {
         init_sfx_module(&mut state.i_sound, use_sfx_prefix);
     }
 }
-pub fn shutdown_sound(state: &mut ISoundState) {
+pub fn shutdown_sound(state: &ISoundState) {
     if let Some(module) = state.sound_module {
         (module.shutdown.expect("non-null function pointer"))();
     }
@@ -148,13 +148,13 @@ pub fn shutdown_sound(state: &mut ISoundState) {
         (module.shutdown.expect("non-null function pointer"))();
     }
 }
-pub fn get_sfx_lump_num(state: &mut ISoundState, sfxinfo: &mut SfxInfo) -> i32 {
+pub fn get_sfx_lump_num(state: &ISoundState, sfxinfo: &mut SfxInfo) -> i32 {
     match state.sound_module {
         Some(module) => (module.get_sfx_lump_num.expect("non-null function pointer"))(sfxinfo),
         None => 0,
     }
 }
-pub fn update_sound(state: &mut ISoundState) {
+pub fn update_sound(state: &ISoundState) {
     if let Some(module) = state.sound_module {
         (module.update.expect("non-null function pointer"))();
     }
@@ -168,7 +168,7 @@ fn check_volume_separation(vol: &mut i32, sep: &mut i32) {
     *sep = (*sep).clamp(0, 254);
     *vol = (*vol).clamp(0, 127);
 }
-pub fn update_sound_params(state: &mut ISoundState, channel: i32, mut vol: i32, mut sep: i32) {
+pub fn update_sound_params(state: &ISoundState, channel: i32, mut vol: i32, mut sep: i32) {
     if let Some(module) = state.sound_module {
         check_volume_separation(&mut vol, &mut sep);
         (module
@@ -177,7 +177,7 @@ pub fn update_sound_params(state: &mut ISoundState, channel: i32, mut vol: i32, 
     }
 }
 pub fn i_start_sound(
-    state: &mut ISoundState,
+    state: &ISoundState,
     sfxinfo: &mut SfxInfo,
     channel: i32,
     mut vol: i32,
@@ -191,61 +191,61 @@ pub fn i_start_sound(
         None => 0,
     }
 }
-pub fn i_stop_sound(state: &mut ISoundState, channel: i32) {
+pub fn i_stop_sound(state: &ISoundState, channel: i32) {
     if let Some(module) = state.sound_module {
         (module.stop_sound.expect("non-null function pointer"))(channel);
     }
 }
-pub fn sound_is_playing(state: &mut ISoundState, channel: i32) -> bool {
+pub fn sound_is_playing(state: &ISoundState, channel: i32) -> bool {
     match state.sound_module {
         Some(module) => (module.sound_is_playing.expect("non-null function pointer"))(channel),
         None => false,
     }
 }
-pub fn precache_sounds(state: &mut ISoundState, sounds: &mut [SfxInfo]) {
+pub fn precache_sounds(state: &ISoundState, sounds: &mut [SfxInfo]) {
     if let Some(module) = state.sound_module {
         if let Some(cache_sounds) = module.cache_sounds {
             cache_sounds(sounds);
         }
     }
 }
-pub fn init_music(state: &mut ISoundState) {
+pub fn init_music(state: &ISoundState) {
     if let Some(module) = state.music_module {
         (module.init.expect("non-null function pointer"))();
     }
 }
-pub fn i_set_music_volume(state: &mut ISoundState, volume: i32) {
+pub fn i_set_music_volume(state: &ISoundState, volume: i32) {
     if let Some(module) = state.music_module {
         (module.set_music_volume.expect("non-null function pointer"))(volume);
     }
 }
-pub fn pause_song(state: &mut ISoundState) {
+pub fn pause_song(state: &ISoundState) {
     if let Some(module) = state.music_module {
         (module.pause_music.expect("non-null function pointer"))();
     }
 }
-pub fn resume_song(state: &mut ISoundState) {
+pub fn resume_song(state: &ISoundState) {
     if let Some(module) = state.music_module {
         (module.resume_music.expect("non-null function pointer"))();
     }
 }
-pub fn register_song(state: &mut ISoundState, data: &[u8]) -> usize {
+pub fn register_song(state: &ISoundState, data: &[u8]) -> usize {
     match state.music_module {
         Some(module) => (module.register_song.expect("non-null function pointer"))(data),
         None => 0,
     }
 }
-pub fn un_register_song(state: &mut ISoundState, handle: usize) {
+pub fn un_register_song(state: &ISoundState, handle: usize) {
     if let Some(module) = state.music_module {
         (module.un_register_song.expect("non-null function pointer"))(handle);
     }
 }
-pub fn play_song(state: &mut ISoundState, handle: usize, looping: bool) {
+pub fn play_song(state: &ISoundState, handle: usize, looping: bool) {
     if let Some(module) = state.music_module {
         (module.play_song.expect("non-null function pointer"))(handle, looping);
     }
 }
-pub fn stop_song(state: &mut ISoundState) {
+pub fn stop_song(state: &ISoundState) {
     if let Some(module) = state.music_module {
         (module.stop_song.expect("non-null function pointer"))();
     }

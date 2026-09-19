@@ -16,7 +16,7 @@ impl Default for DoomstatState {
 
 impl DoomstatState {
     pub const fn new() -> Self {
-        DoomstatState {
+        Self {
             gamemode: GameMode::Indetermined,
             gamemission: GameMission::Doom,
             gameversion: GameVersion::Final2,

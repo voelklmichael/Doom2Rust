@@ -137,7 +137,7 @@ impl Default for DMainState {
 
 impl DMainState {
     pub const fn new() -> Self {
-        DMainState {
+        Self {
             savegamedir: String::new(),
             iwadfile: String::new(),
             devparm: false,
@@ -238,8 +238,8 @@ pub fn d_process_events(state: &mut GameState) {
     if state.d_main.storedemo {
         return;
     }
-    while let Some(mut ev) = pop_event(&mut state.d_event) {
-        if m_responder(state, &mut ev) {
+    while let Some(ev) = pop_event(&mut state.d_event) {
+        if m_responder(state, &ev) {
             continue;
         }
         g_responder(state, ev);
@@ -262,11 +262,11 @@ pub fn display(state: &mut GameState) {
         state.d_main.d_display_oldgamestate = GameScreenState::Wipped;
         state.d_main.d_display_borderdrawcount = 3;
     }
-    if state.g_game.gamestate != state.d_main.wipegamestate {
+    if state.g_game.gamestate == state.d_main.wipegamestate {
+        wipe = false;
+    } else {
         wipe = true;
         wipe_start_screen(state);
-    } else {
-        wipe = false;
     }
     if state.g_game.gamestate == GameScreenState::Level && state.d_loop.gametic != 0 {
         erase(state);
@@ -432,7 +432,7 @@ pub fn bind_variables(state: &mut GameState) {
         &mut s.d_main.show_endoom
     });
     for i in 0..10 {
-        let name = format!("chatmacro{}", i);
+        let name = format!("chatmacro{i}");
         bind_variable_string(&mut state.m_config, &name, move |s| {
             &mut s.hu_stuff.chat_macros[i as usize]
         });
@@ -547,7 +547,7 @@ pub fn do_advance_demo(state: &mut GameState) {
     }
     if state.d_main.bfgedition
         && state.d_main.pagename.eq_ignore_ascii_case("TITLEPIC")
-        && check_num_for_name(&mut state.w_wad, "titlepic") < 0
+        && check_num_for_name(&state.w_wad, "titlepic") < 0
     {
         state.d_main.pagename = "INTERPIC";
     }
@@ -582,7 +582,7 @@ fn set_mission_for_pack_name(state: &mut GameState, pack_name: &str) {
     for pack in &PACKS {
         doom_println!(state.platform, "\t{}", pack.name);
     }
-    error(&format!("Unknown mission pack name: {}", pack_name));
+    error(&format!("Unknown mission pack name: {pack_name}"));
 }
 pub fn identify_version(state: &mut GameState) {
     if state.doomstat.gamemission as u32 == GameMission::None as i32 as u32 {
@@ -601,9 +601,8 @@ pub fn identify_version(state: &mut GameState) {
             {
                 state.doomstat.gamemission = GameMission::Doom;
                 break;
-            } else {
-                i = i.wrapping_add(1);
             }
+            i = i.wrapping_add(1);
         }
         if state.doomstat.gamemission as u32 == GameMission::None as i32 as u32 {
             error("Unknown or invalid IWAD file.");
@@ -617,9 +616,9 @@ pub fn identify_version(state: &mut GameState) {
         state.doomstat.gamemission as u32
     }) == GameMission::Doom as i32 as u32
     {
-        if check_num_for_name(&mut state.w_wad, "E4M1") > 0 {
+        if check_num_for_name(&state.w_wad, "E4M1") > 0 {
             state.doomstat.gamemode = GameMode::Retail;
-        } else if check_num_for_name(&mut state.w_wad, "E3M1") > 0 {
+        } else if check_num_for_name(&state.w_wad, "E3M1") > 0 {
             state.doomstat.gamemode = GameMode::Registered;
         } else {
             state.doomstat.gamemode = GameMode::Shareware;
@@ -631,11 +630,11 @@ pub fn identify_version(state: &mut GameState) {
             let pack_name = state.m_argv.myargv[(p + 1) as usize].as_str().to_string();
             set_mission_for_pack_name(state, &pack_name);
         }
-    };
+    }
 }
 pub fn set_game_description(state: &mut GameState) {
-    let is_freedoom: bool = check_num_for_name(&mut state.w_wad, "FREEDOOM") >= 0;
-    let is_freedm: bool = check_num_for_name(&mut state.w_wad, "FREEDM") >= 0;
+    let is_freedoom: bool = check_num_for_name(&state.w_wad, "FREEDOOM") >= 0;
+    let is_freedm: bool = check_num_for_name(&state.w_wad, "FREEDM") >= 0;
     state.doomstat.gamedescription = "Unknown";
     if (if state.doomstat.gamemission as u32 == GameMission::PackChex as i32 as u32 {
         GameMission::Doom as i32 as u32
@@ -844,10 +843,10 @@ pub fn doom_main(state: &mut GameState) {
     doom_println!(state.platform, "W_Init: Init WADfiles.");
     let iwadfile = state.d_main.iwadfile.clone();
     d_add_file(state, &iwadfile);
-    check_correct_iwad(&mut state.w_wad, GameMission::Doom);
+    check_correct_iwad(&state.w_wad, GameMission::Doom);
     identify_version(state);
     init_game_version(state);
-    if check_num_for_name(&mut state.w_wad, "dmenupic") >= 0 {
+    if check_num_for_name(&state.w_wad, "dmenupic") >= 0 {
         doom_println!(state.platform, "BFG Edition: Using workarounds as needed.");
         state.d_main.bfgedition = true;
     }
@@ -862,7 +861,7 @@ pub fn doom_main(state: &mut GameState) {
         if string_ends_with(arg, ".lmp") {
             file = arg.to_string();
         } else {
-            file = format!("{}.lmp", arg);
+            file = format!("{arg}.lmp");
         }
         if d_add_file(state, &file) {
             demolumpname = state.w_wad.lumpinfo[state.w_wad.numlumps.wrapping_sub(1) as usize].name;
@@ -880,7 +879,7 @@ pub fn doom_main(state: &mut GameState) {
     generate_hash_table(state);
     set_game_description(state);
     state.d_main.savegamedir = get_save_game_dir(
-        &mut state.m_config,
+        &state.m_config,
         &mut *state.fs,
         &mut *state.platform,
         save_game_iwadname(state.doomstat.gamemission),
@@ -916,14 +915,14 @@ pub fn doom_main(state: &mut GameState) {
         }
         if state.doomstat.gamemode as u32 == GameMode::Registered as i32 as u32 {
             for lump_name in &name {
-                if check_num_for_name(&mut state.w_wad, &lump_name.as_str()) < 0 {
+                if check_num_for_name(&state.w_wad, &lump_name.as_str()) < 0 {
                     error("\nThis is not the registered version.");
                 }
             }
         }
     }
-    if check_num_for_name(&mut state.w_wad, "SS_START") >= 0
-        || check_num_for_name(&mut state.w_wad, "FF_END") >= 0
+    if check_num_for_name(&state.w_wad, "SS_START") >= 0
+        || check_num_for_name(&state.w_wad, "FF_END") >= 0
     {
         print_divider(&mut *state.platform);
         doom_println!(state.platform,
@@ -931,8 +930,8 @@ pub fn doom_main(state: &mut GameState) {
         );
     }
     print_startup_banner(&mut *state.platform, state.doomstat.gamedescription);
-    if check_num_for_name(&mut state.w_wad, "FREEDOOM") >= 0
-        && check_num_for_name(&mut state.w_wad, "FREEDM") < 0
+    if check_num_for_name(&state.w_wad, "FREEDOOM") >= 0
+        && check_num_for_name(&state.w_wad, "FREEDM") < 0
     {
         doom_println!(state.platform,
             " WARNING: You are playing using one of the Freedoom IWAD\n files, which might not work in this port. See this page\n for more information on how to play using Freedoom:\n   http://www.chocolate-doom.org/wiki/index.php/Freedoom"
@@ -941,7 +940,7 @@ pub fn doom_main(state: &mut GameState) {
     }
     doom_println!(state.platform, "I_Init: Setting up machine state.");
     init_sound(state, true);
-    init_music(&mut state.i_sound);
+    init_music(&state.i_sound);
     connect_net_game(state);
     state.d_main.startskill = SkillType::Medium;
     state.d_main.startepisode = 1;
@@ -1040,7 +1039,7 @@ pub fn doom_main(state: &mut GameState) {
     doom_println!(state.platform, "ST_Init: Init status bar.");
     st_init(state);
     if state.doomstat.gamemode as u32 == GameMode::Commercial as i32 as u32
-        && check_num_for_name(&mut state.w_wad, "map01") < 0
+        && check_num_for_name(&state.w_wad, "map01") < 0
     {
         state.d_main.storedemo = true;
     }

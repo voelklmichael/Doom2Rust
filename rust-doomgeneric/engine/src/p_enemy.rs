@@ -85,7 +85,7 @@ impl Default for PEnemyState {
 
 impl PEnemyState {
     pub const fn new() -> Self {
-        PEnemyState {
+        Self {
             soundtarget: None,
             corpsehit: None,
             vileobj: None,
@@ -145,6 +145,14 @@ pub static DIAGS: [DirType; 4] = [
     DirType::Southwest,
     DirType::Southeast,
 ];
+/// The mobj's target, unless that target has since been removed.
+fn live_target(state: &GameState, mobj: MobjId) -> Option<MobjId> {
+    state
+        .p_mobj
+        .mo(mobj)
+        .target
+        .filter(|&id| state.p_mobj.is_live(id))
+}
 pub fn recursive_sound(state: &mut GameState, sec: SectorId, soundblocks: i32) {
     let validcount = state.r_main.validcount;
     {
@@ -290,7 +298,9 @@ pub fn p_move(state: &mut GameState, actor: MobjId) -> bool {
         + state.info.mobjinfo_mut(state.p_mobj.mo(actor).kind).speed as Fixed
             * YSPEED[state.p_mobj.mo(actor).movedir as usize];
     let try_ok: bool = try_move(state, actor, tryx, tryy);
-    if !try_ok {
+    if try_ok {
+        state.p_mobj.mo_mut(actor).flags &= !MF_INFLOAT;
+    } else {
         if state.p_mobj.mo(actor).flags & MF_FLOAT != 0 && state.p_map.floatok {
             if state.p_mobj.mo(actor).z < state.p_map.tmfloorz {
                 state.p_mobj.mo_mut(actor).z += FLOATSPEED;
@@ -317,8 +327,6 @@ pub fn p_move(state: &mut GameState, actor: MobjId) -> bool {
             }
         }
         return good;
-    } else {
-        state.p_mobj.mo_mut(actor).flags &= !MF_INFLOAT;
     }
     if state.p_mobj.mo(actor).flags & MF_FLOAT == 0 {
         state.p_mobj.mo_mut(actor).z = state.p_mobj.mo(actor).floorz;
@@ -336,16 +344,8 @@ pub fn new_chase_dir(state: &mut GameState, actor: MobjId) {
     let mut d: [DirType; 3] = [DirType::East; 3];
     let mut tdir: i32;
 
-    let target = match state
-        .p_mobj
-        .mo(actor)
-        .target
-        .filter(|&id| state.p_mobj.is_live(id))
-    {
-        Some(target) => target,
-        None => {
-            error("P_NewChaseDir: called with no target");
-        }
+    let Some(target) = live_target(state, actor) else {
+        error("P_NewChaseDir: called with no target");
     };
     let olddir: DirType = dirtype_from_movedir(state.p_mobj.mo(actor).movedir);
     let turnaround: DirType = OPPOSITE[olddir as usize];
@@ -664,14 +664,8 @@ pub fn chase(state: &mut GameState, id: MobjId) {
 pub fn face_target(state: &mut GameState, id: MobjId) {
     {
         let actor = id;
-        let target = match state
-            .p_mobj
-            .mo(actor)
-            .target
-            .filter(|&id| state.p_mobj.is_live(id))
-        {
-            Some(target) => target,
-            None => return,
+        let Some(target) = live_target(state, actor) else {
+            return;
         };
         state.p_mobj.mo_mut(actor).flags &= !MF_AMBUSH;
         state.p_mobj.mo_mut(actor).angle = point_to_angle2(
@@ -816,14 +810,8 @@ pub fn spid_refire(state: &mut GameState, id: MobjId) {
 pub fn bspi_attack(state: &mut GameState, id: MobjId) {
     {
         let actor = id;
-        let target = match state
-            .p_mobj
-            .mo(actor)
-            .target
-            .filter(|&id| state.p_mobj.is_live(id))
-        {
-            Some(target) => target,
-            None => return,
+        let Some(target) = live_target(state, actor) else {
+            return;
         };
         face_target(state, actor);
         spawn_missile(state, actor, target, MobjType::Arachplaz);
@@ -833,14 +821,8 @@ pub fn troop_attack(state: &mut GameState, id: MobjId) {
     {
         let actor = id;
         let damage: i32;
-        let target = match state
-            .p_mobj
-            .mo(actor)
-            .target
-            .filter(|&id| state.p_mobj.is_live(id))
-        {
-            Some(target) => target,
-            None => return,
+        let Some(target) = live_target(state, actor) else {
+            return;
         };
         face_target(state, actor);
         if check_melee_range(state, actor) {
@@ -856,14 +838,8 @@ pub fn sarg_attack(state: &mut GameState, id: MobjId) {
     {
         let actor = id;
         let damage: i32;
-        let target = match state
-            .p_mobj
-            .mo(actor)
-            .target
-            .filter(|&id| state.p_mobj.is_live(id))
-        {
-            Some(target) => target,
-            None => return,
+        let Some(target) = live_target(state, actor) else {
+            return;
         };
         face_target(state, actor);
         if check_melee_range(state, actor) {
@@ -876,14 +852,8 @@ pub fn head_attack(state: &mut GameState, id: MobjId) {
     {
         let actor = id;
         let damage: i32;
-        let target = match state
-            .p_mobj
-            .mo(actor)
-            .target
-            .filter(|&id| state.p_mobj.is_live(id))
-        {
-            Some(target) => target,
-            None => return,
+        let Some(target) = live_target(state, actor) else {
+            return;
         };
         face_target(state, actor);
         if check_melee_range(state, actor) {
@@ -897,14 +867,8 @@ pub fn head_attack(state: &mut GameState, id: MobjId) {
 pub fn cyber_attack(state: &mut GameState, id: MobjId) {
     {
         let actor = id;
-        let target = match state
-            .p_mobj
-            .mo(actor)
-            .target
-            .filter(|&id| state.p_mobj.is_live(id))
-        {
-            Some(target) => target,
-            None => return,
+        let Some(target) = live_target(state, actor) else {
+            return;
         };
         face_target(state, actor);
         spawn_missile(state, actor, target, MobjType::Rocket);
@@ -914,14 +878,8 @@ pub fn bruis_attack(state: &mut GameState, id: MobjId) {
     {
         let actor = id;
         let damage: i32;
-        let target = match state
-            .p_mobj
-            .mo(actor)
-            .target
-            .filter(|&id| state.p_mobj.is_live(id))
-        {
-            Some(target) => target,
-            None => return,
+        let Some(target) = live_target(state, actor) else {
+            return;
         };
         if check_melee_range(state, actor) {
             s_start_sound(state, SoundOrigin::Mobj(actor), SfxName::Claw as i32);
@@ -936,14 +894,8 @@ pub fn skel_missile(state: &mut GameState, id: MobjId) {
     {
         let actor = id;
 
-        let target = match state
-            .p_mobj
-            .mo(actor)
-            .target
-            .filter(|&id| state.p_mobj.is_live(id))
-        {
-            Some(target) => target,
-            None => return,
+        let Some(target) = live_target(state, actor) else {
+            return;
         };
         face_target(state, actor);
         state.p_mobj.mo_mut(actor).z += 16 * FRACUNIT;
@@ -1041,7 +993,7 @@ pub fn a_tracer(state: &mut GameState, id: MobjId) {
             state.p_mobj.mo_mut(actor).momz -= FRACUNIT / 8;
         } else {
             state.p_mobj.mo_mut(actor).momz += FRACUNIT / 8;
-        };
+        }
     }
 }
 pub fn skel_whoosh(state: &mut GameState, id: MobjId) {
@@ -1058,14 +1010,8 @@ pub fn skel_fist(state: &mut GameState, id: MobjId) {
     {
         let actor = id;
         let damage: i32;
-        let target = match state
-            .p_mobj
-            .mo(actor)
-            .target
-            .filter(|&id| state.p_mobj.is_live(id))
-        {
-            Some(target) => target,
-            None => return,
+        let Some(target) = live_target(state, actor) else {
+            return;
         };
         face_target(state, actor);
         if check_melee_range(state, actor) {
@@ -1216,14 +1162,8 @@ pub fn vile_target(state: &mut GameState, id: MobjId) {
     {
         let actor = id;
 
-        let target = match state
-            .p_mobj
-            .mo(actor)
-            .target
-            .filter(|&id| state.p_mobj.is_live(id))
-        {
-            Some(target) => target,
-            None => return,
+        let Some(target) = live_target(state, actor) else {
+            return;
         };
         face_target(state, actor);
         let fog: MobjId = spawn_mobj(
@@ -1243,14 +1183,8 @@ pub fn vile_attack(state: &mut GameState, id: MobjId) {
     {
         let actor = id;
 
-        let target = match state
-            .p_mobj
-            .mo(actor)
-            .target
-            .filter(|&id| state.p_mobj.is_live(id))
-        {
-            Some(target) => target,
-            None => return,
+        let Some(target) = live_target(state, actor) else {
+            return;
         };
         face_target(state, actor);
         if !check_sight(state, actor, target) {
@@ -1520,7 +1454,7 @@ pub fn scream(state: &mut GameState, id: MobjId) {
             s_start_sound(state, SoundOrigin::None, sound);
         } else {
             s_start_sound(state, SoundOrigin::Mobj(actor), sound);
-        };
+        }
     }
 }
 pub fn xscream(state: &mut GameState, id: MobjId) {
@@ -1556,16 +1490,8 @@ pub fn explode(state: &mut GameState, id: MobjId) {
         .filter(|&id| state.p_mobj.is_live(id));
     p_radius_attack(state, thingy, target, 128);
 }
-fn check_boss_end(state: &mut GameState, motype: MobjType) -> bool {
-    if !state.doomstat.gameversion.is_ultimate_or_higher() {
-        if state.g_game.gamemap != 8 {
-            return false;
-        }
-        if motype as u32 == MobjType::Bruiser as i32 as u32 && state.g_game.gameepisode != 1 {
-            return false;
-        }
-        true
-    } else {
+fn check_boss_end(state: &GameState, motype: MobjType) -> bool {
+    if state.doomstat.gameversion.is_ultimate_or_higher() {
         match state.g_game.gameepisode {
             1 => state.g_game.gamemap == 8 && motype as u32 == MobjType::Bruiser as i32 as u32,
             2 => state.g_game.gamemap == 8 && motype as u32 == MobjType::Cyborg as i32 as u32,
@@ -1576,6 +1502,14 @@ fn check_boss_end(state: &mut GameState, motype: MobjType) -> bool {
             }
             _ => state.g_game.gamemap == 8,
         }
+    } else {
+        if state.g_game.gamemap != 8 {
+            return false;
+        }
+        if motype as u32 == MobjType::Bruiser as i32 as u32 && state.g_game.gameepisode != 1 {
+            return false;
+        }
+        true
     }
 }
 pub fn boss_death(state: &mut GameState, id: MobjId) {

@@ -32,7 +32,7 @@ impl Default for PMaputlState {
 
 impl PMaputlState {
     pub fn new() -> Self {
-        PMaputlState {
+        Self {
             opentop: 0,
             openbottom: 0,
             openrange: 0,
@@ -205,7 +205,7 @@ pub fn aprox_distance(mut dx: Fixed, mut dy: Fixed) -> Fixed {
     }
     dx + dy - (dy >> 1)
 }
-pub fn point_on_line_side(state: &mut GameState, x: Fixed, y: Fixed, line: LineId) -> i32 {
+pub fn point_on_line_side(state: &GameState, x: Fixed, y: Fixed, line: LineId) -> i32 {
     let line = state.p_setup.line(line);
     let line_v1 = state.p_setup.vertexes[line.v1.0 as usize];
     if line.dx == 0 {
@@ -229,7 +229,7 @@ pub fn point_on_line_side(state: &mut GameState, x: Fixed, y: Fixed, line: LineI
     }
     1
 }
-pub fn box_on_line_side(state: &mut GameState, tmbox: [Fixed; 4], ld: LineId) -> i32 {
+pub fn box_on_line_side(state: &GameState, tmbox: [Fixed; 4], ld: LineId) -> i32 {
     let mut p1: i32 = 0;
     let mut p2: i32 = 0;
     let ldv = state.p_setup.line(ld);
@@ -690,10 +690,9 @@ fn intercepts_memory_overrun(state: &mut GameState, location: i32, value: i32) {
                 }
             }
             break;
-        } else {
-            offset += entry_len;
-            i += 1;
         }
+        offset += entry_len;
+        i += 1;
     }
 }
 fn intercepts_overrun(state: &mut GameState, num_intercepts: i32, intercept: Intercept) {

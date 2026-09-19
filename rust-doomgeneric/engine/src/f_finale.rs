@@ -276,7 +276,7 @@ impl Default for FFinaleState {
 
 impl FFinaleState {
     pub const fn new() -> Self {
-        FFinaleState {
+        Self {
             finalestage: FinaleStage::Text,
             finalecount: 0,
             textscreens: INITIAL_TEXTSCREENS,
@@ -319,7 +319,7 @@ pub fn f_start_finale(state: &mut GameState) {
     } else {
         state.doomstat.gamemission
     };
-    for screen in state.f_finale.textscreens.iter_mut() {
+    for screen in &mut state.f_finale.textscreens {
         if state.doomstat.gameversion == GameVersion::Chex && screen.mission == GameMission::Doom {
             screen.level = 5;
         }
@@ -419,9 +419,7 @@ pub fn text_write(state: &mut GameState) {
             cy += 11;
         } else {
             c = (c as u8).to_ascii_uppercase() as i32 - HU_FONTSTART;
-            if !(0..=HU_FONTSIZE).contains(&c) {
-                cx += 4;
-            } else {
+            if (0..=HU_FONTSIZE).contains(&c) {
                 let font_patch = cache_patch_num(state, state.hu_stuff.hu_font[c as usize]);
                 w = font_patch.width();
                 if cx + w > SCREENWIDTH {
@@ -430,6 +428,8 @@ pub fn text_write(state: &mut GameState) {
                 let dest_screen = Screen::Video;
                 draw_patch(state, dest_screen, cx, cy, &font_patch);
                 cx += w;
+            } else {
+                cx += 4;
             }
         }
         count -= 1;
@@ -661,24 +661,24 @@ pub fn cast_print(state: &mut GameState, text: &str) {
     let mut width: i32 = 0;
     for b in text.bytes() {
         c = b.to_ascii_uppercase() as i32 - HU_FONTSTART;
-        if !(0..=HU_FONTSIZE).contains(&c) {
-            width += 4;
-        } else {
+        if (0..=HU_FONTSIZE).contains(&c) {
             w = cache_patch_num(state, state.hu_stuff.hu_font[c as usize]).width();
             width += w;
+        } else {
+            width += 4;
         }
     }
     cx = 160 - width / 2;
     for b in text.bytes() {
         c = b.to_ascii_uppercase() as i32 - HU_FONTSTART;
-        if !(0..=HU_FONTSIZE).contains(&c) {
-            cx += 4;
-        } else {
+        if (0..=HU_FONTSIZE).contains(&c) {
             let font_patch = cache_patch_num(state, state.hu_stuff.hu_font[c as usize]);
             w = font_patch.width();
             let dest_screen = Screen::Video;
             draw_patch(state, dest_screen, cx, 180, &font_patch);
             cx += w;
+        } else {
+            cx += 4;
         }
     }
 }
@@ -702,7 +702,7 @@ pub fn cast_drawer(state: &mut GameState) {
     } else {
         let dest_screen = Screen::Video;
         draw_patch(state, dest_screen, 160, 170, &patch);
-    };
+    }
 }
 fn draw_patch_col(state: &mut IVideoState, x: i32, patch: &Patch, col: i32) {
     for post in patch.posts(col) {
@@ -758,7 +758,7 @@ pub fn bunny_scroll(state: &mut GameState) {
         s_start_sound(state, SoundOrigin::None, SfxName::Pistol as i32);
         state.f_finale.laststage = stage;
     }
-    let name = format!("END{}", stage);
+    let name = format!("END{stage}");
     let __wcache990_2 = cache_patch_name(state, &name);
     let dest_screen = Screen::Video;
     draw_patch(
@@ -793,7 +793,7 @@ fn art_screen_drawer(state: &mut GameState) {
         let __wcache1026_1 = cache_patch_name(state, lumpname);
         let dest_screen = Screen::Video;
         draw_patch(state, dest_screen, 0, 0, &__wcache1026_1);
-    };
+    }
 }
 pub fn f_drawer(state: &mut GameState) {
     match state.f_finale.finalestage {
@@ -806,5 +806,5 @@ pub fn f_drawer(state: &mut GameState) {
         FinaleStage::ArtScreen => {
             art_screen_drawer(state);
         }
-    };
+    }
 }

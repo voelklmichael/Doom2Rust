@@ -51,7 +51,7 @@ impl Default for DEventState {
 
 impl DEventState {
     pub const fn new() -> Self {
-        DEventState {
+        Self {
             events: [Event {
                 kind: EvType::Keydown,
                 data1: 0,

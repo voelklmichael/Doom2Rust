@@ -55,7 +55,7 @@ impl Default for SSoundState {
 
 impl SSoundState {
     pub const fn new() -> Self {
-        SSoundState {
+        Self {
             channels: Vec::new(),
             sfx_volume: 8,
             music_volume: 8,
@@ -81,15 +81,15 @@ pub enum SoundOrigin {
 impl SoundOrigin {
     fn xy(&self, state: &mut GameState) -> Option<(Fixed, Fixed)> {
         match *self {
-            SoundOrigin::None => None,
-            SoundOrigin::Mobj(id) => {
+            Self::None => None,
+            Self::Mobj(id) => {
                 if !state.p_mobj.is_live(id) {
                     return None;
                 }
                 let mo = state.p_mobj.mo(id);
                 Some((mo.x, mo.y))
             }
-            SoundOrigin::Sector(id) => {
+            Self::Sector(id) => {
                 let sec = state.p_setup.sector_mut(id);
                 Some((sec.soundorg.x, sec.soundorg.y))
             }
@@ -108,7 +108,7 @@ pub const S_ATTENUATOR: i32 = (S_CLIPPING_DIST - S_CLOSE_DIST) >> FRACBITS;
 pub const S_STEREO_SWING: i32 = 96 * FRACUNIT;
 pub const NORM_SEP: i32 = 128;
 pub fn s_init(state: &mut GameState, sfx_volume_0: i32, music_volume_0: i32) {
-    precache_sounds(&mut state.i_sound, &mut state.sounds.s_sfx);
+    precache_sounds(&state.i_sound, &mut state.sounds.s_sfx);
     set_sfx_volume(state, sfx_volume_0);
     s_set_music_volume(state, music_volume_0);
     state.s_sound.channels = vec![
@@ -131,13 +131,13 @@ pub fn s_init(state: &mut GameState, sfx_volume_0: i32, music_volume_0: i32) {
     );
 }
 pub fn shutdown(state: &mut GameState) {
-    shutdown_sound(&mut state.i_sound);
+    shutdown_sound(&state.i_sound);
 }
 fn stop_channel(state: &mut GameState, cnum: i32) {
     let c = state.s_sound.channels[cnum as usize];
     if let Some(sfxinfo) = c.sfxinfo {
-        if sound_is_playing(&mut state.i_sound, c.handle) {
-            i_stop_sound(&mut state.i_sound, c.handle);
+        if sound_is_playing(&state.i_sound, c.handle) {
+            i_stop_sound(&state.i_sound, c.handle);
         }
         state.sounds.sfx_mut(sfxinfo).usefulness -= 1;
         state.s_sound.channels[cnum as usize].sfxinfo = None;
@@ -194,9 +194,8 @@ fn get_channel(state: &mut GameState, origin: SoundOrigin, sfxinfo: SfxId) -> i3
         if origin != SoundOrigin::None && c.origin == origin {
             stop_channel(state, cnum);
             break;
-        } else {
-            cnum += 1;
         }
+        cnum += 1;
     }
     if cnum == state.s_sound.snd_channels {
         cnum = 0;
@@ -211,9 +210,8 @@ fn get_channel(state: &mut GameState, origin: SoundOrigin, sfxinfo: SfxId) -> i3
         }
         if cnum == state.s_sound.snd_channels {
             return -1;
-        } else {
-            stop_channel(state, cnum);
         }
+        stop_channel(state, cnum);
     }
     let c = &mut state.s_sound.channels[cnum as usize];
     c.sfxinfo = Some(sfxinfo);
@@ -265,7 +263,7 @@ fn adjust_sound_params(
 pub fn s_start_sound(state: &mut GameState, origin: SoundOrigin, sfx_id: i32) {
     let mut volume = state.s_sound.snd_sfx_volume;
     if !(1..=NUMSFX).contains(&sfx_id) {
-        error(&format!("Bad sfx #: {}", sfx_id));
+        error(&format!("Bad sfx #: {sfx_id}"));
     }
     let sfx_index = sfx_id as usize;
     if state.sounds.s_sfx[sfx_index].link.is_some() {
@@ -315,31 +313,31 @@ pub fn s_start_sound(state: &mut GameState, origin: SoundOrigin, sfx_id: i32) {
         sfx.usefulness = 1;
     }
     if sfx.lumpnum < 0 {
-        sfx.lumpnum = get_sfx_lump_num(&mut state.i_sound, sfx);
+        sfx.lumpnum = get_sfx_lump_num(&state.i_sound, sfx);
     }
     state.s_sound.channels[cnum as usize].handle =
-        i_start_sound(&mut state.i_sound, sfx, cnum, volume, sep);
+        i_start_sound(&state.i_sound, sfx, cnum, volume, sep);
 }
 pub fn pause_sound(state: &mut GameState) {
     if state.s_sound.mus_playing.is_some() && !state.s_sound.mus_paused {
-        pause_song(&mut state.i_sound);
+        pause_song(&state.i_sound);
         state.s_sound.mus_paused = true;
     }
 }
 pub fn resume_sound(state: &mut GameState) {
     if state.s_sound.mus_playing.is_some() && state.s_sound.mus_paused {
-        resume_song(&mut state.i_sound);
+        resume_song(&state.i_sound);
         state.s_sound.mus_paused = false;
     }
 }
 pub fn update_sounds(state: &mut GameState, listener: Option<MobjId>) {
-    update_sound(&mut state.i_sound);
+    update_sound(&state.i_sound);
     for cnum in 0..state.s_sound.snd_channels {
         let c = state.s_sound.channels[cnum as usize];
         let Some(sfxinfo) = c.sfxinfo else {
             continue;
         };
-        if !sound_is_playing(&mut state.i_sound, c.handle) {
+        if !sound_is_playing(&state.i_sound, c.handle) {
             stop_channel(state, cnum);
             continue;
         }
@@ -360,21 +358,21 @@ pub fn update_sounds(state: &mut GameState, listener: Option<MobjId>) {
             match adjust_sound_params(state, listener, c.origin) {
                 None => stop_channel(state, cnum),
                 Some((volume, sep)) => {
-                    update_sound_params(&mut state.i_sound, c.handle, volume, sep);
+                    update_sound_params(&state.i_sound, c.handle, volume, sep);
                 }
             }
         }
     }
 }
-pub fn s_set_music_volume(state: &mut GameState, volume: i32) {
+pub fn s_set_music_volume(state: &GameState, volume: i32) {
     if !(0..=127).contains(&volume) {
-        error(&format!("Attempt to set music volume at {}", volume));
+        error(&format!("Attempt to set music volume at {volume}"));
     }
-    i_set_music_volume(&mut state.i_sound, volume);
+    i_set_music_volume(&state.i_sound, volume);
 }
 pub fn set_sfx_volume(state: &mut GameState, volume: i32) {
     if !(0..=127).contains(&volume) {
-        error(&format!("Attempt to set sfx volume at {}", volume));
+        error(&format!("Attempt to set sfx volume at {volume}"));
     }
     state.s_sound.snd_sfx_volume = volume;
 }
@@ -389,7 +387,7 @@ pub fn change_music(state: &mut GameState, mut musicnum: i32, looping: bool) {
         musicnum = MusicName::Introa as i32;
     }
     if musicnum <= MusicName::MusNone as i32 || musicnum >= NUMMUSIC {
-        error(&format!("Bad music number {}", musicnum));
+        error(&format!("Bad music number {musicnum}"));
     }
     if state.s_sound.mus_playing == Some(musicnum) {
         return;
@@ -398,25 +396,25 @@ pub fn change_music(state: &mut GameState, mut musicnum: i32, looping: bool) {
     let music_index = musicnum as usize;
     if state.sounds.s_music[music_index].lumpnum == 0 {
         let namebuf = format!("d_{}", state.sounds.s_music[music_index].name.as_str());
-        state.sounds.s_music[music_index].lumpnum = get_num_for_name(&mut state.w_wad, &namebuf);
+        state.sounds.s_music[music_index].lumpnum = get_num_for_name(&state.w_wad, &namebuf);
     }
     let lumpnum = state.sounds.s_music[music_index].lumpnum;
-    let lumplen = lump_length(&mut state.w_wad, lumpnum as u32) as usize;
+    let lumplen = lump_length(&state.w_wad, lumpnum as u32) as usize;
     let data = lump_bytes(state, lumpnum);
-    let handle = register_song(&mut state.i_sound, &data[..lumplen]);
+    let handle = register_song(&state.i_sound, &data[..lumplen]);
     state.sounds.s_music[music_index].handle = handle;
-    play_song(&mut state.i_sound, handle, looping);
+    play_song(&state.i_sound, handle, looping);
     state.s_sound.mus_playing = Some(musicnum);
 }
 pub fn stop_music(state: &mut GameState) {
     if let Some(musicnum) = state.s_sound.mus_playing {
         if state.s_sound.mus_paused {
-            resume_song(&mut state.i_sound);
+            resume_song(&state.i_sound);
         }
-        stop_song(&mut state.i_sound);
+        stop_song(&state.i_sound);
         let music = &state.sounds.s_music[musicnum as usize];
-        un_register_song(&mut state.i_sound, music.handle);
-        release_lump_num(&mut state.w_wad, music.lumpnum);
+        un_register_song(&state.i_sound, music.handle);
+        release_lump_num(&state.w_wad, music.lumpnum);
         state.s_sound.mus_playing = None;
     }
 }

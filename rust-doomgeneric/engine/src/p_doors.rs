@@ -52,7 +52,7 @@ pub struct VlDoor {
 // placeholder's values are never read, only its shape matters.
 impl Default for VlDoor {
     fn default() -> Self {
-        VlDoor {
+        Self {
             thinker: Thinker {
                 function: ThinkerFn::Unresolved,
             },
@@ -96,7 +96,7 @@ impl Default for PDoorsState {
 
 impl PDoorsState {
     pub const fn new() -> Self {
-        PDoorsState {
+        Self {
             doors: Vec::new(),
             free_list: Vec::new(),
         }
@@ -282,7 +282,7 @@ pub fn t_vertical_door(state: &mut GameState, id: DoorId) {
             }
         }
         _ => {}
-    };
+    }
 }
 pub fn do_locked_door(state: &mut GameState, line: LineId, kind: VldoorE, thing: MobjId) -> bool {
     let Some(player_id) = state.p_mobj.mo(thing).player else {

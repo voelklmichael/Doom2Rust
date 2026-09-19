@@ -58,41 +58,37 @@ pub enum GameVersion {
     Strife131 = 13,
 }
 impl GameVersion {
-    pub(crate) fn is_ultimate_or_higher(&self) -> bool {
+    pub(crate) fn is_ultimate_or_higher(self) -> bool {
         match self {
-            GameVersion::Doom12
-            | GameVersion::Doom1666
-            | GameVersion::Doom17
-            | GameVersion::Doom18
-            | GameVersion::Doom19
-            | GameVersion::Hacx => false,
-            GameVersion::Ultimate
-            | GameVersion::Final
-            | GameVersion::Final2
-            | GameVersion::Chex
-            | GameVersion::Heretic13
-            | GameVersion::Hexen11
-            | GameVersion::Strife12
-            | GameVersion::Strife131 => true,
+            Self::Doom12
+            | Self::Doom1666
+            | Self::Doom17
+            | Self::Doom18
+            | Self::Doom19
+            | Self::Hacx => false,
+            Self::Ultimate
+            | Self::Final
+            | Self::Final2
+            | Self::Chex
+            | Self::Heretic13
+            | Self::Hexen11
+            | Self::Strife12
+            | Self::Strife131 => true,
         }
     }
 
-    pub(crate) fn below_1_9(&self) -> bool {
+    pub(crate) fn below_1_9(self) -> bool {
         match self {
-            GameVersion::Doom12
-            | GameVersion::Doom1666
-            | GameVersion::Doom17
-            | GameVersion::Doom18
-            | GameVersion::Doom19 => true,
-            GameVersion::Hacx
-            | GameVersion::Ultimate
-            | GameVersion::Final
-            | GameVersion::Final2
-            | GameVersion::Chex
-            | GameVersion::Heretic13
-            | GameVersion::Hexen11
-            | GameVersion::Strife12
-            | GameVersion::Strife131 => false,
+            Self::Doom12 | Self::Doom1666 | Self::Doom17 | Self::Doom18 | Self::Doom19 => true,
+            Self::Hacx
+            | Self::Ultimate
+            | Self::Final
+            | Self::Final2
+            | Self::Chex
+            | Self::Heretic13
+            | Self::Hexen11
+            | Self::Strife12
+            | Self::Strife131 => false,
         }
     }
 }

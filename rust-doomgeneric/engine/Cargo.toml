@@ -8,3 +8,27 @@ autobins = false
 
 [dependencies]
 sha1_smol = "1.0.1"
+
+# Lints beyond clippy's defaults that the engine is clean against. They keep the
+# code from drifting back to C habits (needless `&mut`, repeated type names,
+# if/else after return, ...). Deliberately not enabled: `match_same_arms`
+# (identical arms in tables read better spelled out) and `option_if_let_else`.
+[lints.clippy]
+explicit_into_iter_loop = "warn"
+explicit_iter_loop = "warn"
+if_not_else = "warn"
+items_after_statements = "warn"
+manual_assert = "warn"
+manual_let_else = "warn"
+map_unwrap_or = "warn"
+needless_continue = "warn"
+needless_pass_by_ref_mut = "warn"
+needless_pass_by_value = "warn"
+redundant_closure_for_method_calls = "warn"
+redundant_else = "warn"
+semicolon_if_nothing_returned = "warn"
+trivially_copy_pass_by_ref = "warn"
+unnecessary_semicolon = "warn"
+unnested_or_patterns = "warn"
+use_self = "warn"
+uninlined_format_args = "warn"

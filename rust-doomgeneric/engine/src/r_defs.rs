@@ -27,21 +27,21 @@ pub enum ClipArray {
 impl ClipArray {
     pub fn get(self, state: &GameState, x: isize) -> i16 {
         match self {
-            ClipArray::Openings(offset) => state.r_plane.openings[(offset + x) as usize],
-            ClipArray::ScreenHeightArray => state.r_things.screenheightarray[x as usize],
-            ClipArray::NegOneArray => state.r_things.negonearray[x as usize],
-            ClipArray::ClipBot => state.r_things.clipbot[x as usize],
-            ClipArray::ClipTop => state.r_things.cliptop[x as usize],
+            Self::Openings(offset) => state.r_plane.openings[(offset + x) as usize],
+            Self::ScreenHeightArray => state.r_things.screenheightarray[x as usize],
+            Self::NegOneArray => state.r_things.negonearray[x as usize],
+            Self::ClipBot => state.r_things.clipbot[x as usize],
+            Self::ClipTop => state.r_things.cliptop[x as usize],
         }
     }
 
     pub fn set(self, state: &mut GameState, x: isize, value: i16) {
         match self {
-            ClipArray::Openings(offset) => state.r_plane.openings[(offset + x) as usize] = value,
-            ClipArray::ScreenHeightArray => state.r_things.screenheightarray[x as usize] = value,
-            ClipArray::NegOneArray => state.r_things.negonearray[x as usize] = value,
-            ClipArray::ClipBot => state.r_things.clipbot[x as usize] = value,
-            ClipArray::ClipTop => state.r_things.cliptop[x as usize] = value,
+            Self::Openings(offset) => state.r_plane.openings[(offset + x) as usize] = value,
+            Self::ScreenHeightArray => state.r_things.screenheightarray[x as usize] = value,
+            Self::NegOneArray => state.r_things.negonearray[x as usize] = value,
+            Self::ClipBot => state.r_things.clipbot[x as usize] = value,
+            Self::ClipTop => state.r_things.cliptop[x as usize] = value,
         }
     }
 }
@@ -110,7 +110,7 @@ pub struct VisPlane {
 }
 
 impl VisPlane {
-    pub const EMPTY: VisPlane = VisPlane {
+    pub const EMPTY: Self = Self {
         height: 0,
         picnum: 0,
         lightlevel: 0,

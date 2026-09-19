@@ -103,7 +103,7 @@ impl Default for PMapState {
 
 impl PMapState {
     pub const fn new() -> Self {
-        PMapState {
+        Self {
             tmbbox: [0; 4],
             tmthing: None,
             tmflags: 0,
@@ -1104,5 +1104,5 @@ fn spechit_overrun(state: &mut GameState, ld: LineId) {
                 state.p_map.numspechit,
             );
         }
-    };
+    }
 }

@@ -87,7 +87,7 @@ impl Default for RDrawState {
 
 impl RDrawState {
     pub const fn new() -> Self {
-        RDrawState {
+        Self {
             viewwidth: 0,
             scaledviewwidth: 0,
             viewheight: 0,
