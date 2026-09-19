@@ -234,8 +234,8 @@ no sense).
   joined the board's network, opened the controller and pressed the button, the log printed
   `[audio] muted`, and from then on the pump fed silence only (the fps is the same either way). The
   sender's `M` is only covered by host tests.
-- Build time: `SOUND=off cargo build --release` leaves the speaker unset up completely, `SOUND=muted`
-  starts muted, `MUSIC=off` leaves the music out (effects only; the synthesizer is not built), and
+- Build time: `SOUND=off cargo build --release` leaves the speaker unset up completely, the firmware starts MUTED (the user turns sound on with the controller's button or `M`);
+  `SOUND=on` starts with sound, `MUSIC=off` leaves the music out (effects only; the synthesizer is not built), and
   `SOUND_LEVEL=n` sets the master level.
 
 **Measured** (`[perf]`, same attract-mode demo, first 22 windows of 2 s, mean): built with

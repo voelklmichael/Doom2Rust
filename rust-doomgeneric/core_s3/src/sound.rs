@@ -59,8 +59,9 @@ const VOLUME_256THS: i32 = parse_level(option_env!("SOUND_LEVEL"), 8);
 
 /// The music's share of the master volume, in quarters. The synthesizer's output, with the
 /// engine's own gain for it, is about as loud as the effects at the same setting (that is how it
-/// is balanced on the desktop), so this keeps it a bit under them: it never overpowers an effect.
-const MUSIC_QUARTERS: i32 = 3;
+/// is balanced on the desktop). 3 kept it a bit under the effects, but that was too quiet to
+/// enjoy on the device, so it is now a little above them (5 is +4 dB compared with 3).
+const MUSIC_QUARTERS: i32 = 5;
 
 /// `SOUND_LEVEL` as a number; a plain digit string of at most 256, or `default` if unset.
 const fn parse_level(text: Option<&str>, default: i32) -> i32 {
@@ -87,10 +88,11 @@ pub fn music_sample(sample: i32) -> i16 {
 
 /// The engine's mixed audio for the speaker.
 static QUEUE: FrameQueue<QUEUE_FRAMES> = FrameQueue::new();
-/// Muted at run time (the controller's sound button, or the `M` key of `core_s3_sender`). The
-/// speaker keeps running and the game keeps mixing, so nothing changes for the game; the audio is
-/// just thrown away and the ring gets silence.
-static MUTED: AtomicBool = AtomicBool::new(false);
+/// Muted at run time (the controller's sound button, or the `M` key of `core_s3_sender` toggles
+/// it). The firmware STARTS muted: sound is off by default and the user turns it on. The speaker
+/// keeps running and the game keeps mixing, so nothing changes for the game; the audio is just
+/// thrown away and the ring gets silence.
+static MUTED: AtomicBool = AtomicBool::new(true);
 /// Set once the speaker works; the platform reports "no sound" to the engine until then.
 static READY: AtomicBool = AtomicBool::new(false);
 
@@ -113,11 +115,11 @@ pub fn start(
     ws: GPIO33<'static>,
     dout: GPIO13<'static>,
 ) {
-    // Build with SOUND=off for a firmware without any sound (the speaker is not even set up), or
-    // SOUND=muted to start muted.
+    // Sound starts muted. Build with SOUND=on to start with sound, or SOUND=off for a firmware
+    // without any sound (the speaker is not even set up).
     match option_env!("SOUND") {
         Some("off") => return println!("audio: built with SOUND=off; no sound"),
-        Some("muted") => MUTED.store(true, Ordering::Relaxed),
+        Some("on") => MUTED.store(false, Ordering::Relaxed),
         _ => {}
     }
     let speaker = match Speaker::open(i2s, dma, bclk, ws, dout) {
