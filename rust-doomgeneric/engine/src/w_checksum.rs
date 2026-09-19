@@ -1,9 +1,9 @@
+use crate::filesystem::FileId;
 use crate::game_state::GameState;
-use crate::w_file::wad_file_t;
 use sha1_smol::Sha1;
 pub type sha1_digest_t = [u8; 20];
 pub struct WChecksumState {
-    open_wadfiles: Vec<&'static wad_file_t>,
+    open_wadfiles: Vec<FileId>,
 }
 
 impl Default for WChecksumState {
@@ -20,12 +20,8 @@ impl WChecksumState {
     }
 }
 
-fn GetFileNumber(state: &mut WChecksumState, handle: &'static wad_file_t) -> i32 {
-    if let Some(pos) = state
-        .open_wadfiles
-        .iter()
-        .position(|&f| ::core::ptr::eq(f, handle))
-    {
+fn GetFileNumber(state: &mut WChecksumState, handle: FileId) -> i32 {
+    if let Some(pos) = state.open_wadfiles.iter().position(|&f| f == handle) {
         return pos as i32;
     }
     state.open_wadfiles.push(handle);

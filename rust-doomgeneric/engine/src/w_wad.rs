@@ -7,9 +7,7 @@ use crate::game_state::GameState;
 use crate::i_system::I_Error;
 use crate::m_misc::M_ExtractFileBase;
 
-use crate::w_file::wad_file_t;
-use crate::w_file::W_OpenFile;
-use crate::w_file::W_Read;
+use crate::filesystem::{DoomFileSystem, FileId};
 
 pub struct WWadState {
     pub lumpinfo: Vec<lumpinfo_t>,
@@ -36,7 +34,7 @@ impl WWadState {
 #[derive(Clone)]
 pub struct lumpinfo_s {
     pub name: FixedCStr<8>,
-    pub wad_file: &'static wad_file_t,
+    pub wad_file: FileId,
     pub position: i32,
     pub size: i32,
     pub cache: Option<std::rc::Rc<[u8]>>,
@@ -73,30 +71,31 @@ pub fn W_LumpNameHash(s: &[u8]) -> u32 {
     }
     result
 }
-pub fn W_AddFile(state: &mut GameState, filename: &str) -> Option<&'static wad_file_t> {
+pub fn W_AddFile(state: &mut GameState, filename: &str) -> Option<FileId> {
     // Scratch WAD-directory buffer -- built and consumed entirely within
     // this function, so a plain owned Vec replaces the old
     // Z_Malloc-then-Z_Free-at-the-end pair with no lifetime change.
 
-    let wad_file = match W_OpenFile(filename) {
+    let wad_file = match state.fs.open(filename) {
         Some(wad_file) => wad_file,
         None => {
             println!(" couldn't open {}", filename);
             return None;
         }
     };
+    let wad_length = state.fs.len(wad_file) as u32;
     let is_wad = filename.len() >= 3 && filename[filename.len() - 3..].eq_ignore_ascii_case("wad");
     let fileinfo: Vec<filelump_t> = if !is_wad {
         let mut single = filelump_t {
             filepos: 0_i32,
-            size: wad_file.length as i32,
+            size: wad_length as i32,
             name: FixedCStr([0; 8]),
         };
         M_ExtractFileBase(filename, &mut single.name);
         vec![single]
     } else {
         let mut header_buf = [0u8; ::core::mem::size_of::<wadinfo_t>()];
-        W_Read(wad_file, 0_u32, &mut header_buf);
+        state.fs.read_at(wad_file, 0, &mut header_buf);
         let header = wadinfo_t {
             identification: FixedCStr::from_bytes(&header_buf[0..4]),
             numlumps: i32::from_le_bytes(header_buf[4..8].try_into().unwrap()),
@@ -110,7 +109,9 @@ pub fn W_AddFile(state: &mut GameState, filename: &str) -> Option<&'static wad_f
         }
         let mut dir_buf =
             vec![0u8; (header.numlumps as usize) * ::core::mem::size_of::<filelump_t>()];
-        W_Read(wad_file, header.infotableofs as u32, &mut dir_buf);
+        state
+            .fs
+            .read_at(wad_file, header.infotableofs as u32 as u64, &mut dir_buf);
         dir_buf
             .as_chunks::<{ ::core::mem::size_of::<filelump_t>() }>()
             .0
@@ -178,12 +179,12 @@ pub fn W_LumpLength(state: &mut WWadState, lump: u32) -> i32 {
     }
     state.lumpinfo[lump as usize].size
 }
-pub fn W_ReadLump(state: &mut WWadState, lump: u32, dest: &mut [u8]) {
+pub fn W_ReadLump(state: &mut WWadState, fs: &dyn DoomFileSystem, lump: u32, dest: &mut [u8]) {
     if lump >= state.numlumps {
         I_Error(&format!("W_ReadLump: {} >= numlumps", lump));
     }
     let l = &state.lumpinfo[lump as usize];
-    let c = W_Read(l.wad_file, l.position as u32, dest) as i32;
+    let c = fs.read_at(l.wad_file, l.position as u32 as u64, dest) as i32;
     if c < l.size {
         I_Error(&format!(
             "W_ReadLump: only read {} of {} on lump {}",
@@ -213,6 +214,7 @@ pub fn W_LumpBytes(state: &mut GameState, lumpnum: i32) -> std::rc::Rc<[u8]> {
     let mut buf = vec![0u8; lumplen as usize + CACHE_PAD].into_boxed_slice();
     W_ReadLump(
         &mut state.w_wad,
+        &*state.fs,
         lumpnum as u32,
         &mut buf[..lumplen as usize],
     );
