@@ -94,6 +94,9 @@ pub(crate) mod w_main;
 pub(crate) mod w_wad;
 pub(crate) mod wi_stuff;
 
+#[cfg(test)]
+mod regression_tests;
+
 pub use d_main::doomgeneric_Tick;
 pub use doomgeneric::doomgeneric_Create;
 pub use filesystem::{DoomFileSystem, FileId};
