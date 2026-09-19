@@ -1,0 +1,9 @@
+[package]
+name = "doomgeneric_fs"
+authors = ["michaelvoelkl@zoho.com"]
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[dependencies]
+rust_doomgeneric = { path = "../engine" }

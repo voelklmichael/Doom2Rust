@@ -20,6 +20,7 @@ pub(crate) mod dstrings;
 pub(crate) mod dummy;
 pub(crate) mod f_finale;
 pub(crate) mod f_wipe;
+pub(crate) mod filesystem;
 pub(crate) mod fixed_cstr;
 pub(crate) mod g_game;
 pub(crate) mod game_state;
@@ -87,5 +88,6 @@ pub(crate) mod wi_stuff;
 
 pub use d_main::doomgeneric_Tick;
 pub use doomgeneric::doomgeneric_Create;
+pub use filesystem::{DoomFileSystem, FileId};
 pub use game_state::init_game_state;
 pub use platform::DoomPlatform;

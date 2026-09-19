@@ -468,6 +468,7 @@ pub fn P_Ticker(state: &mut GameState) {
 mod tests {
     use super::*;
     use crate::doomdef::pixel_t;
+    use crate::filesystem::MemFileSystem;
     use crate::game_state::init_game_state;
     use crate::p_doors::vldoor_t;
     use crate::p_lights::{fireflicker_t, glow_t};
@@ -495,7 +496,7 @@ mod tests {
     // after its arena slot is reused by a later spawn (generation check).
     #[test]
     fn door_thinker_lifecycle_via_id() {
-        let state = init_game_state(Box::new(NullPlatform));
+        let state = init_game_state(Box::new(NullPlatform), Box::new(MemFileSystem::default()));
 
         let door_id = state.p_doors.spawn(vldoor_t::default());
         let node_id = P_AddThinker(state, ThinkerPayload::Door(door_id), ThinkerKind::Door);
@@ -519,7 +520,7 @@ mod tests {
     // through ThinkerPayload::Mobj instead of a bare mobj_t pointer.
     #[test]
     fn mobj_thinker_lifecycle_via_id() {
-        let state = init_game_state(Box::new(NullPlatform));
+        let state = init_game_state(Box::new(NullPlatform), Box::new(MemFileSystem::default()));
 
         let value = state.p_mobj.dummy_mobj;
         let mobj_id = state.p_mobj.spawn(value);
@@ -543,7 +544,7 @@ mod tests {
     // Vec<Box<ceiling_t>> + pointer-equality dealloc.
     #[test]
     fn ceiling_thinker_lifecycle_via_id() {
-        let state = init_game_state(Box::new(NullPlatform));
+        let state = init_game_state(Box::new(NullPlatform), Box::new(MemFileSystem::default()));
 
         let ceiling_id = state.p_ceilng.spawn(ceiling_t::default());
         let node_id = P_AddThinker(
@@ -568,7 +569,7 @@ mod tests {
     // generation-checked floor arena (spawn_floor/get_floor/dealloc_floor).
     #[test]
     fn floor_thinker_lifecycle_via_id() {
-        let state = init_game_state(Box::new(NullPlatform));
+        let state = init_game_state(Box::new(NullPlatform), Box::new(MemFileSystem::default()));
 
         let floor_id = state.p_spec.spawn_floor(floormove_t::default());
         let node_id = P_AddThinker(state, ThinkerPayload::Floor(floor_id), ThinkerKind::Floor);
@@ -589,7 +590,7 @@ mod tests {
     // generation-checked arena (spawn/get/dealloc).
     #[test]
     fn plat_thinker_lifecycle_via_id() {
-        let state = init_game_state(Box::new(NullPlatform));
+        let state = init_game_state(Box::new(NullPlatform), Box::new(MemFileSystem::default()));
 
         let plat_id = state.p_plats.spawn(plat_t::default());
         let node_id = P_AddThinker(state, ThinkerPayload::Plat(plat_id), ThinkerKind::Plat);
@@ -612,7 +613,7 @@ mod tests {
     // Strobe follow the exact same pattern.
     #[test]
     fn fireflicker_thinker_lifecycle_via_id() {
-        let state = init_game_state(Box::new(NullPlatform));
+        let state = init_game_state(Box::new(NullPlatform), Box::new(MemFileSystem::default()));
 
         let fireflicker_id = state.p_lights.spawn_fireflicker(fireflicker_t::default());
         let node_id = P_AddThinker(
@@ -638,7 +639,7 @@ mod tests {
 
     #[test]
     fn glow_thinker_lifecycle_via_id() {
-        let state = init_game_state(Box::new(NullPlatform));
+        let state = init_game_state(Box::new(NullPlatform), Box::new(MemFileSystem::default()));
 
         let glow_id = state.p_lights.spawn_glow(glow_t::default());
         let node_id = P_AddThinker(state, ThinkerPayload::Glow(glow_id), ThinkerKind::Glow);
