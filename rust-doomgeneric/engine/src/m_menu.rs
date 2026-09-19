@@ -636,15 +636,16 @@ pub fn M_ReadSaveStrings(state: &mut GameState) {
     i = 0_i32;
     while i < load_end {
         let savegame_file = P_SaveGameFile(state, i);
-        match std::fs::File::open(&savegame_file) {
-            Err(_) => {
+        match state.fs.open(&savegame_file) {
+            None => {
                 state.m_menu.savegamestrings[i as usize] =
                     EMPTYSTRING.trim_end_matches('\0').to_string();
                 state.m_menu.defs.LoadDef.items[i as usize].status = 0_i16;
             }
-            Ok(mut handle) => {
+            Some(handle) => {
                 let mut buf: [u8; SAVESTRINGSIZE as usize] = [0; SAVESTRINGSIZE as usize];
-                let _ = std::io::Read::read(&mut handle, &mut buf);
+                state.fs.read_at(handle, 0, &mut buf);
+                state.fs.close(handle);
                 let len = buf.iter().position(|&b| b == 0).unwrap_or(buf.len());
                 state.m_menu.savegamestrings[i as usize] =
                     String::from_utf8_lossy(&buf[..len]).into_owned();

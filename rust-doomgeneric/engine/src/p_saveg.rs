@@ -34,7 +34,6 @@ use crate::p_tick::ThinkerKind;
 use crate::p_tick::ThinkerPayload;
 use crate::stdint_types::byte;
 use crate::tables::angle_t;
-use std::io::{Read, Seek, Write};
 
 use crate::d_player::NUMAMMO;
 use crate::doomdef::MAXPLAYERS;
@@ -51,7 +50,11 @@ use crate::p_mobj::P_MobjThinker;
 use crate::p_plats::T_PlatRaise;
 
 pub struct PSavegState {
-    pub save_stream: Option<std::fs::File>,
+    /// The savegame image: read from disk in full before a load, and built up
+    /// in memory before being written out by a save.
+    pub save_buffer: Vec<u8>,
+    /// Read cursor into `save_buffer` (also the write position while saving).
+    pub save_pos: usize,
     pub savegame_error: bool,
     pub temp_savegame_filename: Option<String>,
 }
@@ -65,7 +68,8 @@ impl Default for PSavegState {
 impl PSavegState {
     pub const fn new() -> Self {
         PSavegState {
-            save_stream: None,
+            save_buffer: Vec::new(),
+            save_pos: 0,
             savegame_error: false,
             temp_savegame_filename: None,
         }
@@ -101,34 +105,23 @@ pub fn P_SaveGameFile(state: &mut GameState, slot: i32) -> String {
     format!("{}doomsav{}.dsg", state.d_main.savegamedir, slot)
 }
 fn saveg_read8(state: &mut PSavegState) -> byte {
-    let mut result: [byte; 1] = [0];
-    if state
-        .save_stream
-        .as_mut()
-        .unwrap()
-        .read(&mut result)
-        .unwrap_or(0)
-        < 1
-        && !state.savegame_error
-    {
-        eprintln!("saveg_read8: Unexpected end of file while reading save game");
-        state.savegame_error = true;
+    match state.save_buffer.get(state.save_pos) {
+        Some(&b) => {
+            state.save_pos += 1;
+            b
+        }
+        None => {
+            if !state.savegame_error {
+                eprintln!("saveg_read8: Unexpected end of file while reading save game");
+                state.savegame_error = true;
+            }
+            0
+        }
     }
-    result[0]
 }
 fn saveg_write8(state: &mut PSavegState, value: byte) {
-    if state
-        .save_stream
-        .as_mut()
-        .unwrap()
-        .write(&[value])
-        .unwrap_or(0)
-        < 1
-        && !state.savegame_error
-    {
-        eprintln!("saveg_write8: Error while writing save game");
-        state.savegame_error = true;
-    }
+    state.save_buffer.push(value);
+    state.save_pos += 1;
 }
 fn saveg_read16(state: &mut PSavegState) -> i16 {
     let mut result: i32;
@@ -156,13 +149,7 @@ fn saveg_write32(state: &mut PSavegState, value: i32) {
 }
 fn saveg_read_pad(state: &mut PSavegState) {
     let mut i: i32;
-    let pos = state
-        .save_stream
-        .as_mut()
-        .unwrap()
-        .stream_position()
-        .unwrap_or(0);
-    let padding: i32 = (4_u64.wrapping_sub(pos & 3_u64) & 3_u64) as i32;
+    let padding: i32 = (4_usize.wrapping_sub(state.save_pos & 3) & 3) as i32;
     i = 0_i32;
     while i < padding {
         saveg_read8(state);
@@ -171,13 +158,7 @@ fn saveg_read_pad(state: &mut PSavegState) {
 }
 fn saveg_write_pad(state: &mut PSavegState) {
     let mut i: i32;
-    let pos = state
-        .save_stream
-        .as_mut()
-        .unwrap()
-        .stream_position()
-        .unwrap_or(0);
-    let padding: i32 = (4_u64.wrapping_sub(pos & 3_u64) & 3_u64) as i32;
+    let padding: i32 = (4_usize.wrapping_sub(state.save_pos & 3) & 3) as i32;
     i = 0_i32;
     while i < padding {
         saveg_write8(state, 0 as byte);
@@ -1328,5 +1309,39 @@ pub fn P_UnArchiveSpecials(state: &mut GameState) {
                 ));
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn primitives_round_trip_with_padding() {
+        let mut w = PSavegState::new();
+        saveg_write8(&mut w, 0x7f);
+        saveg_write_pad(&mut w);
+        saveg_write32(&mut w, -123456);
+        saveg_write16(&mut w, -2);
+        saveg_write_pad(&mut w);
+        assert_eq!(w.save_buffer.len(), 12);
+
+        let mut r = PSavegState::new();
+        r.save_buffer = w.save_buffer;
+        assert_eq!(saveg_read8(&mut r), 0x7f);
+        saveg_read_pad(&mut r);
+        assert_eq!(saveg_read32(&mut r), -123456);
+        assert_eq!(saveg_read16(&mut r), -2);
+        saveg_read_pad(&mut r);
+        assert_eq!(r.save_pos, 12);
+        assert!(!r.savegame_error);
+    }
+
+    #[test]
+    fn reading_past_the_end_flags_an_error_and_yields_zero() {
+        let mut r = PSavegState::new();
+        r.save_buffer = vec![1];
+        assert_eq!(saveg_read16(&mut r), 1);
+        assert!(r.savegame_error);
     }
 }

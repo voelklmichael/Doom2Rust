@@ -25,6 +25,23 @@ pub trait DoomFileSystem {
     fn temp_path(&self, name: &str) -> String;
 }
 
+/// Reads all of `path` into memory.
+pub(crate) fn read_file(fs: &mut dyn DoomFileSystem, path: &str) -> Option<Vec<u8>> {
+    let file = fs.open(path)?;
+    let mut data = vec![0u8; fs.len(file) as usize];
+    let mut filled = 0;
+    while filled < data.len() {
+        let n = fs.read_at(file, filled as u64, &mut data[filled..]);
+        if n == 0 {
+            break;
+        }
+        filled += n;
+    }
+    data.truncate(filled);
+    fs.close(file);
+    Some(data)
+}
+
 #[cfg(test)]
 pub(crate) use mem::MemFileSystem;
 
@@ -95,5 +112,20 @@ mod mem {
         fn temp_path(&self, name: &str) -> String {
             format!("/tmp/{}", name)
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn read_file_returns_whole_contents_and_closes() {
+        let mut fs = MemFileSystem::default();
+        fs.files.insert("a.dsg".into(), (0..=255u8).collect());
+        assert_eq!(read_file(&mut fs, "a.dsg"), Some((0..=255u8).collect()));
+        assert_eq!(read_file(&mut fs, "missing.dsg"), None);
+        // The slot from the first read was released and is reused.
+        assert_eq!(fs.open("a.dsg"), Some(FileId(0)));
     }
 }

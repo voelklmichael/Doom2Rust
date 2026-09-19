@@ -1,7 +1,6 @@
 use crate::fixed_cstr::FixedCStr;
 use std::io::Write;
 pub const EISDIR: i32 = 21;
-pub const DIR_SEPARATOR_S: &str = "/";
 pub fn M_MakeDirectory(path: &str) {
     use std::os::unix::fs::DirBuilderExt;
     let _ = std::fs::DirBuilder::new().mode(0o755).create(path);
@@ -18,9 +17,6 @@ pub fn M_WriteFile(name: &str, source: &[u8]) -> bool {
         Err(_) => return false,
     };
     handle.write_all(source).is_ok()
-}
-pub fn M_TempFile(s: &str) -> String {
-    format!("/tmp{}{}", DIR_SEPARATOR_S, s)
 }
 fn m_strtoint_digit_prefix(s: &str, radix: u32) -> Option<i32> {
     let end = s.find(|c: char| !c.is_digit(radix)).unwrap_or(s.len());
