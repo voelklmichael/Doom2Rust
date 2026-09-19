@@ -169,8 +169,8 @@ pub fn find_plane(
     pl.clear_top();
     check
 }
-pub fn check_plane(state: &mut GameState, pl: usize, start: i32, stop: i32) -> usize {
-    let plv = &mut state.r_plane.visplanes[pl];
+pub fn check_plane(r_plane: &mut RPlaneState, pl: usize, start: i32, stop: i32) -> usize {
+    let plv = &mut r_plane.visplanes[pl];
     let (intrl, unionl) = if start < plv.minx {
         (plv.minx, start)
     } else {
@@ -194,12 +194,12 @@ pub fn check_plane(state: &mut GameState, pl: usize, start: i32, stop: i32) -> u
         return pl;
     }
     let (height, picnum, lightlevel) = (plv.height, plv.picnum, plv.lightlevel);
-    let fresh0 = state.r_plane.lastvisplane;
-    state.r_plane.visplanes[fresh0].height = height;
-    state.r_plane.visplanes[fresh0].picnum = picnum;
-    state.r_plane.visplanes[fresh0].lightlevel = lightlevel;
-    state.r_plane.lastvisplane += 1;
-    let plv = &mut state.r_plane.visplanes[fresh0];
+    let fresh0 = r_plane.lastvisplane;
+    r_plane.visplanes[fresh0].height = height;
+    r_plane.visplanes[fresh0].picnum = picnum;
+    r_plane.visplanes[fresh0].lightlevel = lightlevel;
+    r_plane.lastvisplane += 1;
+    let plv = &mut r_plane.visplanes[fresh0];
     plv.minx = start;
     plv.maxx = stop;
     plv.clear_top();

@@ -317,14 +317,14 @@ pub fn hu_init(state: &mut GameState) {
         state.hu_stuff.hu_font[i] = lumpnum;
     }
 }
-pub fn hu_stop(state: &mut GameState) {
-    state.hu_stuff.headsupactive = false;
+pub fn hu_stop(hu_stuff: &mut HuStuffState) {
+    hu_stuff.headsupactive = false;
 }
 pub fn hu_start(state: &mut GameState) {
     let mut _i: i32 = 0;
     let mut s: &str;
     if state.hu_stuff.headsupactive {
-        hu_stop(state);
+        hu_stop(&mut state.hu_stuff);
     }
     state.hu_stuff.plr = PlayerId(state.g_game.consoleplayer as u8);
     state.hu_stuff.message_on = false;

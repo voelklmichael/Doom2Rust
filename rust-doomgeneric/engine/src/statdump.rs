@@ -45,7 +45,7 @@ impl StatDumpState {
 }
 
 pub fn stat_copy(state: &mut GameState) {
-    if parm_exists(state, "-statdump") && state.statdump.num_captured_stats < MAX_CAPTURES {
+    if parm_exists(&state.m_argv, "-statdump") && state.statdump.num_captured_stats < MAX_CAPTURES {
         state.statdump.captured_stats[state.statdump.num_captured_stats as usize] =
             state.g_game.wminfo;
         state.statdump.num_captured_stats += 1;

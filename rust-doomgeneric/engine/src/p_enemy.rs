@@ -453,7 +453,7 @@ pub fn look_for_players(state: &mut GameState, actor: MobjId, allaround: bool) -
                             let p = state.p_mobj.mo(player_mo);
                             (p.x, p.y)
                         };
-                        let an = point_to_angle2(state, actor_x, actor_y, pmo_x, pmo_y)
+                        let an = point_to_angle2(&mut state.r_main, actor_x, actor_y, pmo_x, pmo_y)
                             .wrapping_sub(actor_angle);
                         if an > ANG90 as Angle && an < ANG270 {
                             let dist = aprox_distance(pmo_x - actor_x, pmo_y - actor_y);
@@ -679,7 +679,7 @@ pub fn face_target(state: &mut GameState, id: MobjId) {
         };
         state.p_mobj.mo_mut(actor).flags &= !MobjFlags::AMBUSH;
         state.p_mobj.mo_mut(actor).angle = point_to_angle2(
-            state,
+            &mut state.r_main,
             state.p_mobj.mo(actor).x,
             state.p_mobj.mo(actor).y,
             state.p_mobj.mo(target).x,
@@ -953,7 +953,7 @@ pub fn a_tracer(state: &mut GameState, id: MobjId) {
             return;
         }
         exact = point_to_angle2(
-            state,
+            &mut state.r_main,
             state.p_mobj.mo(actor).x,
             state.p_mobj.mo(actor).y,
             state.p_mobj.mo(dest.unwrap()).x,
@@ -1594,7 +1594,7 @@ pub fn boss_death(state: &mut GameState, id: MobjId) {
                 _ => {}
             }
         }
-        exit_level(state);
+        exit_level(&mut state.g_game);
     }
 }
 pub fn hoof(state: &mut GameState, id: MobjId) {
@@ -1705,7 +1705,7 @@ pub fn brain_explode(state: &mut GameState, id: MobjId) {
     }
 }
 pub fn brain_die(state: &mut GameState, _id: MobjId) {
-    exit_level(state);
+    exit_level(&mut state.g_game);
 }
 pub fn brain_spit(state: &mut GameState, id: MobjId) {
     {

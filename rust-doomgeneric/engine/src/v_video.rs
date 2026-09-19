@@ -65,11 +65,11 @@ impl VVideoState {
         Self { dirtybox: [0; 4] }
     }
 }
-pub fn mark_rect(state: &mut GameState, dest: Screen, x: i32, y: i32, width: i32, height: i32) {
+pub fn mark_rect(v_video: &mut VVideoState, dest: Screen, x: i32, y: i32, width: i32, height: i32) {
     if dest == Screen::Video {
-        add_to_box(&mut state.v_video.dirtybox, x as Fixed, y as Fixed);
+        add_to_box(&mut v_video.dirtybox, x as Fixed, y as Fixed);
         add_to_box(
-            &mut state.v_video.dirtybox,
+            &mut v_video.dirtybox,
             x as Fixed + width as Fixed - 1,
             y as Fixed + height as Fixed - 1,
         );
@@ -98,7 +98,7 @@ pub fn copy_rect(
     {
         error("Bad V_CopyRect");
     }
-    mark_rect(state, dest, destx, desty, width, height);
+    mark_rect(&mut state.v_video, dest, destx, desty, width, height);
     let width = width as usize;
     let mut rows: Vec<u8> = Vec::with_capacity(width * height as usize);
     {
@@ -149,7 +149,14 @@ pub fn draw_patch(state: &mut GameState, dest: Screen, x: i32, y: i32, patch: &P
             patch.leftoffset(),
         ));
     }
-    mark_rect(state, dest, x, y, patch.width(), patch.height());
+    mark_rect(
+        &mut state.v_video,
+        dest,
+        x,
+        y,
+        patch.width(),
+        patch.height(),
+    );
     blit_patch(state.screen_mut(dest), patch, x, y, false);
 }
 pub fn draw_patch_flipped(state: &mut GameState, dest: Screen, x: i32, y: i32, patch: &Patch) {
@@ -158,7 +165,14 @@ pub fn draw_patch_flipped(state: &mut GameState, dest: Screen, x: i32, y: i32, p
     if x < 0 || x + patch.width() > SCREENWIDTH || y < 0 || y + patch.height() > SCREENHEIGHT {
         error("Bad V_DrawPatchFlipped");
     }
-    mark_rect(state, dest, x, y, patch.width(), patch.height());
+    mark_rect(
+        &mut state.v_video,
+        dest,
+        x,
+        y,
+        patch.width(),
+        patch.height(),
+    );
     blit_patch(state.screen_mut(dest), patch, x, y, true);
 }
 pub fn draw_patch_direct(state: &mut GameState, dest: Screen, x: i32, y: i32, patch: &Patch) {
@@ -176,7 +190,7 @@ pub fn draw_block(
     if x < 0 || x + width > SCREENWIDTH || y < 0 || y + height > SCREENHEIGHT {
         error("Bad V_DrawBlock");
     }
-    mark_rect(state, dest, x, y, width, height);
+    mark_rect(&mut state.v_video, dest, x, y, width, height);
     let width = width as usize;
     let dst = state.screen_mut(dest);
     for row in 0..height as usize {

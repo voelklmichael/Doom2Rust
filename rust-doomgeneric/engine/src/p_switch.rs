@@ -433,7 +433,7 @@ pub fn use_special_line(state: &mut GameState, thing: MobjId, line: LineId, side
         }
         11 => {
             change_switch_texture(state, line, false);
-            exit_level(state);
+            exit_level(&mut state.g_game);
         }
         14 => {
             if do_plat(state, line, PlattypeE::RaiseAndChange, 32) {
@@ -645,11 +645,11 @@ pub fn use_special_line(state: &mut GameState, thing: MobjId, line: LineId, side
             }
         }
         138 => {
-            light_turn_on(state, line, 255);
+            light_turn_on(&mut state.p_setup, line, 255);
             change_switch_texture(state, line, true);
         }
         139 => {
-            light_turn_on(state, line, 35);
+            light_turn_on(&mut state.p_setup, line, 35);
             change_switch_texture(state, line, true);
         }
         1 | 26 | 27 | 28 | 31 | 32 | 33 | 34 | 117 | 118 => {

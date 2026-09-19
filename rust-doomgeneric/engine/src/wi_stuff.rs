@@ -842,10 +842,10 @@ pub fn draw_time(state: &mut GameState, mut x: i32, y: i32, t: i32) {
 pub fn wi_end(state: &mut GameState) {
     load_unload_data(state, unload_callback);
 }
-pub fn init_no_state(state: &mut GameState) {
-    state.wi_stuff.state = StateEnum::NoState;
-    state.wi_stuff.acceleratestage = false;
-    state.wi_stuff.cnt = 10;
+pub fn init_no_state(wi_stuff: &mut WiStuffState) {
+    wi_stuff.state = StateEnum::NoState;
+    wi_stuff.acceleratestage = false;
+    wi_stuff.cnt = 10;
 }
 pub fn update_no_state(state: &mut GameState) {
     update_animated_back(state);
@@ -864,7 +864,7 @@ pub fn update_show_next_loc(state: &mut GameState) {
     update_animated_back(state);
     state.wi_stuff.cnt -= 1;
     if state.wi_stuff.cnt == 0 || state.wi_stuff.acceleratestage {
-        init_no_state(state);
+        init_no_state(&mut state.wi_stuff);
     } else {
         state.wi_stuff.snl_pointeron = (state.wi_stuff.cnt & 31) < 20;
     }
@@ -986,7 +986,7 @@ pub fn update_deathmatch_stats(state: &mut GameState) {
         if state.wi_stuff.acceleratestage {
             s_start_sound(state, SoundOrigin::None, SfxName::Slop as i32);
             if state.doomstat.gamemode as u32 == GameMode::Commercial as i32 as u32 {
-                init_no_state(state);
+                init_no_state(&mut state.wi_stuff);
             } else {
                 init_show_next_loc(state);
             }
@@ -1215,7 +1215,7 @@ pub fn update_netgame_stats(state: &mut GameState) {
         if state.wi_stuff.acceleratestage {
             s_start_sound(state, SoundOrigin::None, SfxName::Sgcock as i32);
             if state.doomstat.gamemode as u32 == GameMode::Commercial as i32 as u32 {
-                init_no_state(state);
+                init_no_state(&mut state.wi_stuff);
             } else {
                 init_show_next_loc(state);
             }
@@ -1395,7 +1395,7 @@ pub fn update_stats(state: &mut GameState) {
         if state.wi_stuff.acceleratestage {
             s_start_sound(state, SoundOrigin::None, SfxName::Sgcock as i32);
             if state.doomstat.gamemode as u32 == GameMode::Commercial as i32 as u32 {
-                init_no_state(state);
+                init_no_state(&mut state.wi_stuff);
             } else {
                 init_show_next_loc(state);
             }
@@ -1653,8 +1653,8 @@ pub fn wi_start(state: &mut GameState) {
         init_stats(state);
     }
 }
-pub fn fixup_numanims(state: &mut GameState) {
-    state.wi_stuff.numanims = [
+pub fn fixup_numanims(wi_stuff: &mut WiStuffState) {
+    wi_stuff.numanims = [
         ::core::mem::size_of::<[Anim; 10]>().wrapping_div(::core::mem::size_of::<Anim>()) as i32,
         ::core::mem::size_of::<[Anim; 9]>().wrapping_div(::core::mem::size_of::<Anim>()) as i32,
         ::core::mem::size_of::<[Anim; 6]>().wrapping_div(::core::mem::size_of::<Anim>()) as i32,

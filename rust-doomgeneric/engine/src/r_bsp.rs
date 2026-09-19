@@ -71,8 +71,8 @@ pub struct ClipRange {
     pub last: i32,
 }
 pub const NF_SUBSECTOR: i32 = 0x8000;
-pub fn clear_draw_segs(state: &mut GameState) {
-    state.r_bsp.ds_p = 0;
+pub fn clear_draw_segs(r_bsp: &mut RBspState) {
+    r_bsp.ds_p = 0;
 }
 pub fn clip_solid_wall_segment(state: &mut GameState, first: i32, last: i32) {
     let mut start: usize = 0;
@@ -180,8 +180,8 @@ pub fn add_line(state: &mut GameState, line: SegId) {
     state.r_bsp.curline = line;
     let line_v1 = state.p_setup.vertexes[state.p_setup.seg(line).v1.0 as usize];
     let line_v2 = state.p_setup.vertexes[state.p_setup.seg(line).v2.0 as usize];
-    angle1 = point_to_angle(state, line_v1.x, line_v1.y);
-    angle2 = point_to_angle(state, line_v2.x, line_v2.y);
+    angle1 = point_to_angle(&state.r_main, line_v1.x, line_v1.y);
+    angle2 = point_to_angle(&state.r_main, line_v2.x, line_v2.y);
     let span: Angle = angle1.wrapping_sub(angle2);
     if span >= ANG180 {
         return;
@@ -327,8 +327,8 @@ pub fn check_bbox(state: &GameState, bspcoord: [Fixed; 4]) -> bool {
     let y1: Fixed = bspcoord[CHECKCOORD[boxpos as usize][1] as usize];
     let x2: Fixed = bspcoord[CHECKCOORD[boxpos as usize][2] as usize];
     let y2: Fixed = bspcoord[CHECKCOORD[boxpos as usize][3] as usize];
-    angle1 = point_to_angle(state, x1, y1).wrapping_sub(state.r_main.viewangle);
-    angle2 = point_to_angle(state, x2, y2).wrapping_sub(state.r_main.viewangle);
+    angle1 = point_to_angle(&state.r_main, x1, y1).wrapping_sub(state.r_main.viewangle);
+    angle2 = point_to_angle(&state.r_main, x2, y2).wrapping_sub(state.r_main.viewangle);
     let span: Angle = angle1.wrapping_sub(angle2);
     if span >= ANG180 {
         return true;

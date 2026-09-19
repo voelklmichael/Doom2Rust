@@ -102,16 +102,16 @@ fn wipe_do_melt(state: &mut GameState, width: i32, height: i32, mut ticks: i32) 
     }
     done
 }
-fn wipe_exit_melt(state: &mut GameState) {
-    state.f_wipe.y = Vec::new();
-    state.f_wipe.wipe_scr_start = Vec::new();
-    state.f_wipe.wipe_scr_end = Vec::new();
+fn wipe_exit_melt(f_wipe: &mut FWipeState) {
+    f_wipe.y = Vec::new();
+    f_wipe.wipe_scr_start = Vec::new();
+    f_wipe.wipe_scr_end = Vec::new();
 }
 pub fn wipe_start_screen(state: &mut GameState) {
-    state.f_wipe.wipe_scr_start = read_screen(state);
+    state.f_wipe.wipe_scr_start = read_screen(&state.i_video);
 }
 pub fn wipe_end_screen(state: &mut GameState, x: i32, y: i32, width: i32, height: i32) {
-    state.f_wipe.wipe_scr_end = read_screen(state);
+    state.f_wipe.wipe_scr_end = read_screen(&state.i_video);
     let wipe_scr_start = core::mem::take(&mut state.f_wipe.wipe_scr_start);
     draw_block(state, Screen::Video, x, y, width, height, &wipe_scr_start);
     state.f_wipe.wipe_scr_start = wipe_scr_start;
@@ -122,10 +122,10 @@ pub fn wipe_screen_wipe(state: &mut GameState, width: i32, height: i32, ticks: i
         state.f_wipe.go = true;
         wipe_init_melt(state, width, height);
     }
-    mark_rect(state, Screen::Video, 0, 0, width, height);
+    mark_rect(&mut state.v_video, Screen::Video, 0, 0, width, height);
     if wipe_do_melt(state, width, height, ticks) {
         state.f_wipe.go = false;
-        wipe_exit_melt(state);
+        wipe_exit_melt(&mut state.f_wipe);
     }
     !state.f_wipe.go
 }

@@ -3098,7 +3098,7 @@ pub fn nightmare_respawn(state: &mut GameState, mobj: MobjId) {
         .floorheight;
     let fog = spawn_mobj(state, mobj_x, mobj_y, floorheight1, MobjType::Tfog);
     s_start_sound(state, SoundOrigin::Mobj(fog), SfxName::Telept as i32);
-    let ss = point_in_subsector(state, x, y);
+    let ss = point_in_subsector(&state.p_setup, x, y);
     let floorheight2 = state
         .p_setup
         .sector_mut(state.p_setup.subsectors[ss.0 as usize].sector)
@@ -3233,7 +3233,11 @@ pub fn spawn_mobj(state: &mut GameState, x: Fixed, y: Fixed, z: Fixed, kind: Mob
         m.z = final_z;
         m.thinker.function = ThinkerFn::Mobj(mobj_thinker);
     }
-    add_thinker(state, ThinkerPayload::Mobj(id), ThinkerKind::Mobj);
+    add_thinker(
+        &mut state.p_tick,
+        ThinkerPayload::Mobj(id),
+        ThinkerKind::Mobj,
+    );
     id
 }
 
@@ -3488,7 +3492,7 @@ pub fn respawn_specials(state: &mut GameState) {
     let mthing = state.p_mobj.itemrespawnque[state.p_mobj.iquetail as usize];
     let x = ((mthing.x as i32) << FRACBITS) as Fixed;
     let y = ((mthing.y as i32) << FRACBITS) as Fixed;
-    let ss = point_in_subsector(state, x, y);
+    let ss = point_in_subsector(&state.p_setup, x, y);
     let floorheight = state
         .p_setup
         .sector_mut(state.p_setup.subsectors[ss.0 as usize].sector)
@@ -3744,7 +3748,7 @@ pub fn spawn_missile(
         s_start_sound(state, SoundOrigin::Mobj(th), seesound);
     }
     state.p_mobj.mo_mut(th).target = Some(source);
-    let mut an: Angle = point_to_angle2(state, sx, sy, dx, dy);
+    let mut an: Angle = point_to_angle2(&mut state.r_main, sx, sy, dx, dy);
     if dflags.contains(MobjFlags::SHADOW) {
         an = an.wrapping_add(
             ((p_random(&mut state.m_random) - p_random(&mut state.m_random)) << 20) as Angle,

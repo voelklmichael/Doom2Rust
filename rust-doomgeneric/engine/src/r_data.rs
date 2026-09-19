@@ -272,25 +272,25 @@ pub fn get_column(state: &mut GameState, tex: i32, mut col: i32) -> ColumnSource
         offset: ofs as usize,
     }
 }
-fn generate_texture_hash_table(state: &mut GameState) {
+fn generate_texture_hash_table(r_data: &mut RDataState) {
     let mut key: i32;
-    state.r_data.textures_hashtable = vec![None; state.r_data.numtextures as usize];
-    for i in 0..state.r_data.numtextures {
-        state.r_data.textures[i as usize].index = i;
-        state.r_data.textures[i as usize].next = None;
-        key = lump_name_hash(state.r_data.textures[i as usize].name.as_bytes())
-            .wrapping_rem(state.r_data.numtextures as u32) as i32;
+    r_data.textures_hashtable = vec![None; r_data.numtextures as usize];
+    for i in 0..r_data.numtextures {
+        r_data.textures[i as usize].index = i;
+        r_data.textures[i as usize].next = None;
+        key = lump_name_hash(r_data.textures[i as usize].name.as_bytes())
+            .wrapping_rem(r_data.numtextures as u32) as i32;
         // Walk to the end of the bucket's chain, appending there (matches
         // the original pointer-to-pointer "rover" trick's tail-append order).
-        match state.r_data.textures_hashtable[key as usize] {
+        match r_data.textures_hashtable[key as usize] {
             None => {
-                state.r_data.textures_hashtable[key as usize] = Some(TextureId(i as u32));
+                r_data.textures_hashtable[key as usize] = Some(TextureId(i as u32));
             }
             Some(mut cursor) => {
-                while let Some(next) = state.r_data.textures[cursor.0 as usize].next {
+                while let Some(next) = r_data.textures[cursor.0 as usize].next {
                     cursor = next;
                 }
-                state.r_data.textures[cursor.0 as usize].next = Some(TextureId(i as u32));
+                r_data.textures[cursor.0 as usize].next = Some(TextureId(i as u32));
             }
         }
     }
@@ -459,7 +459,7 @@ pub fn init_textures(state: &mut GameState) {
     for i in 0..state.r_data.numtextures {
         state.r_data.texturetranslation[i as usize] = i;
     }
-    generate_texture_hash_table(state);
+    generate_texture_hash_table(&mut state.r_data);
 }
 pub fn init_flats(state: &mut GameState) {
     state.r_data.firstflat = get_num_for_name(&state.w_wad, "F_START") + 1;

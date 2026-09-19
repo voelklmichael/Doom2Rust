@@ -15,6 +15,7 @@ use crate::i_sound::stop_song;
 use crate::i_sound::un_register_song;
 use crate::i_sound::update_sound;
 use crate::i_sound::update_sound_params;
+use crate::i_sound::ISoundState;
 use crate::i_sound::SndDevice;
 use crate::i_system::at_exit;
 use crate::i_system::error;
@@ -109,8 +110,8 @@ pub const S_STEREO_SWING: i32 = 96 * FRACUNIT;
 pub const NORM_SEP: i32 = 128;
 pub fn s_init(state: &mut GameState, sfx_volume_0: i32, music_volume_0: i32) {
     precache_sounds(&state.i_sound, &mut state.sounds.s_sfx);
-    set_sfx_volume(state, sfx_volume_0);
-    s_set_music_volume(state, music_volume_0);
+    set_sfx_volume(&mut state.s_sound, sfx_volume_0);
+    s_set_music_volume(&state.i_sound, music_volume_0);
     state.s_sound.channels = vec![
         Channel {
             sfxinfo: None,
@@ -238,7 +239,13 @@ fn adjust_sound_params(
     if state.g_game.gamemap != 8 && approx_dist > S_CLIPPING_DIST {
         return None;
     }
-    let mut angle: Angle = point_to_angle2(state, listener_x, listener_y, source_x, source_y);
+    let mut angle: Angle = point_to_angle2(
+        &mut state.r_main,
+        listener_x,
+        listener_y,
+        source_x,
+        source_y,
+    );
     if angle > listener_angle {
         angle = angle.wrapping_sub(listener_angle);
     } else {
@@ -364,17 +371,17 @@ pub fn update_sounds(state: &mut GameState, listener: Option<MobjId>) {
         }
     }
 }
-pub fn s_set_music_volume(state: &GameState, volume: i32) {
+pub fn s_set_music_volume(i_sound: &ISoundState, volume: i32) {
     if !(0..=127).contains(&volume) {
         error(&format!("Attempt to set music volume at {volume}"));
     }
-    i_set_music_volume(&state.i_sound, volume);
+    i_set_music_volume(i_sound, volume);
 }
-pub fn set_sfx_volume(state: &mut GameState, volume: i32) {
+pub fn set_sfx_volume(s_sound: &mut SSoundState, volume: i32) {
     if !(0..=127).contains(&volume) {
         error(&format!("Attempt to set sfx volume at {volume}"));
     }
-    state.s_sound.snd_sfx_volume = volume;
+    s_sound.snd_sfx_volume = volume;
 }
 pub fn start_music(state: &mut GameState, m_id: i32) {
     change_music(state, m_id, false);

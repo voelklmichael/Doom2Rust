@@ -1,3 +1,4 @@
+use crate::d_main::DMainState;
 use crate::d_mode::skill_from_raw;
 use crate::d_player::CheatFlags;
 use crate::d_player::NUMPOWERS;
@@ -104,8 +105,8 @@ pub fn temp_save_game_file(state: &mut GameState) -> String {
     }
     state.p_saveg.temp_savegame_filename.clone().unwrap()
 }
-pub fn save_game_file(state: &GameState, slot: i32) -> String {
-    format!("{}doomsav{}.dsg", state.d_main.savegamedir, slot)
+pub fn save_game_file(d_main: &DMainState, slot: i32) -> String {
+    format!("{}doomsav{}.dsg", d_main.savegamedir, slot)
 }
 /// Prints the deferred "ran off the end of the file" diagnostic, if a
 /// `saveg_read8` hit one; call once when a load finishes or is abandoned.
@@ -737,12 +738,12 @@ pub fn read_save_game_header(state: &mut GameState) -> bool {
     state.p_tick.leveltime = ((a as i32) << 16) + ((b as i32) << 8) + c as i32;
     true
 }
-pub fn read_save_game_eof(state: &mut GameState) -> bool {
-    let value: i32 = saveg_read8(&mut state.p_saveg) as i32;
+pub fn read_save_game_eof(p_saveg: &mut PSavegState) -> bool {
+    let value: i32 = saveg_read8(p_saveg) as i32;
     value == SAVEGAME_EOF
 }
-pub fn write_save_game_eof(state: &mut GameState) {
-    saveg_write8(&mut state.p_saveg, SAVEGAME_EOF as u8);
+pub fn write_save_game_eof(p_saveg: &mut PSavegState) {
+    saveg_write8(p_saveg, SAVEGAME_EOF as u8);
 }
 pub fn archive_players(state: &mut GameState) {
     for i in 0..(MAXPLAYERS as usize) {
@@ -946,7 +947,7 @@ pub fn un_archive_thinkers(state: &mut GameState) {
         }
         cursor = next;
     }
-    init_thinkers(state);
+    init_thinkers(&mut state.p_tick);
     loop {
         tclass = saveg_read8(&mut state.p_saveg);
         match tclass as i32 {
@@ -982,7 +983,7 @@ pub fn un_archive_thinkers(state: &mut GameState) {
                     m.thinker.function = ThinkerFn::Mobj(mobj_thinker);
                 }
                 add_thinker(
-                    state,
+                    &mut state.p_tick,
                     ThinkerPayload::Mobj(mobj_arena_id),
                     ThinkerKind::Mobj,
                 );
@@ -1109,7 +1110,7 @@ pub fn un_archive_specials(state: &mut GameState) {
                     c.sector
                 };
                 let ceiling_id = add_thinker(
-                    state,
+                    &mut state.p_tick,
                     ThinkerPayload::Ceiling(ceiling_arena_id),
                     ThinkerKind::Ceiling,
                 );
@@ -1127,7 +1128,7 @@ pub fn un_archive_specials(state: &mut GameState) {
                     d.sector
                 };
                 let door_id = add_thinker(
-                    state,
+                    &mut state.p_tick,
                     ThinkerPayload::Door(door_arena_id),
                     ThinkerKind::Door,
                 );
@@ -1146,7 +1147,7 @@ pub fn un_archive_specials(state: &mut GameState) {
                     f.sector
                 };
                 let floor_id = add_thinker(
-                    state,
+                    &mut state.p_tick,
                     ThinkerPayload::Floor(floor_arena_id),
                     ThinkerKind::Floor,
                 );
@@ -1164,7 +1165,7 @@ pub fn un_archive_specials(state: &mut GameState) {
                     p.sector
                 };
                 let plat_id = add_thinker(
-                    state,
+                    &mut state.p_tick,
                     ThinkerPayload::Plat(plat_arena_id),
                     ThinkerKind::Plat,
                 );
@@ -1183,7 +1184,7 @@ pub fn un_archive_specials(state: &mut GameState) {
                     f.thinker.function = ThinkerFn::LightFlash(light_flash);
                 }
                 add_thinker(
-                    state,
+                    &mut state.p_tick,
                     ThinkerPayload::LightFlash(flash_arena_id),
                     ThinkerKind::LightFlash,
                 );
@@ -1200,7 +1201,7 @@ pub fn un_archive_specials(state: &mut GameState) {
                     s.thinker.function = ThinkerFn::Strobe(strobe_flash);
                 }
                 add_thinker(
-                    state,
+                    &mut state.p_tick,
                     ThinkerPayload::Strobe(strobe_arena_id),
                     ThinkerKind::Strobe,
                 );
@@ -1217,7 +1218,7 @@ pub fn un_archive_specials(state: &mut GameState) {
                     g.thinker.function = ThinkerFn::Glow(glow);
                 }
                 add_thinker(
-                    state,
+                    &mut state.p_tick,
                     ThinkerPayload::Glow(glow_arena_id),
                     ThinkerKind::Glow,
                 );

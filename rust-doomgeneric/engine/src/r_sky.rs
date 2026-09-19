@@ -1,4 +1,3 @@
-use crate::game_state::GameState;
 use crate::m_fixed::FRACUNIT;
 
 pub struct RSkyState {
@@ -23,6 +22,6 @@ impl RSkyState {
     }
 }
 
-pub fn init_sky_map(state: &mut GameState) {
-    state.r_sky.skytexturemid = 100 * FRACUNIT;
+pub fn init_sky_map(r_sky: &mut RSkyState) {
+    r_sky.skytexturemid = 100 * FRACUNIT;
 }

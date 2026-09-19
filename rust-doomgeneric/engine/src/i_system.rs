@@ -96,7 +96,7 @@ pub fn get_memory_value(state: &mut GameState, offset: u32, size: i32) -> Option
         let mut i: i32;
         let mut val: i32 = 0;
         state.i_system.get_memory_value_firsttime = false;
-        if let Some(mut p) = check_parm_with_args(state, "-setmem", 1) {
+        if let Some(mut p) = check_parm_with_args(&state.m_argv, "-setmem", 1) {
             if state.m_argv.myargv[p + 1]
                 .as_bytes()
                 .eq_ignore_ascii_case(b"dos622")

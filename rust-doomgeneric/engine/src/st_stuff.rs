@@ -597,7 +597,7 @@ pub fn st_responder(state: &mut GameState, ev: &Event) -> bool {
             state.g_game.player_mut(state.st_stuff.plyr).message =
                 Some("Changing Level...".to_string());
             let gameskill = state.g_game.gameskill;
-            defered_init_new(state, gameskill, epsd, map);
+            defered_init_new(&mut state.g_game, gameskill, epsd, map);
         }
     }
     false
@@ -665,7 +665,13 @@ pub fn update_face_widget(state: &mut GameState) {
             } else {
                 let plyr_attacker = state.p_mobj.mo(attacker_id);
                 let (attacker_x, attacker_y) = (plyr_attacker.x, plyr_attacker.y);
-                badguyangle = point_to_angle2(state, plyr_mo_x, plyr_mo_y, attacker_x, attacker_y);
+                badguyangle = point_to_angle2(
+                    &mut state.r_main,
+                    plyr_mo_x,
+                    plyr_mo_y,
+                    attacker_x,
+                    attacker_y,
+                );
                 if badguyangle > plyr_mo_angle {
                     diffang = badguyangle.wrapping_sub(plyr_mo_angle);
                     i = (diffang > ANG180) as i32;

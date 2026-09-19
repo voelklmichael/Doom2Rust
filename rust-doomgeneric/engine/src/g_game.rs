@@ -802,7 +802,7 @@ pub fn g_responder(state: &mut GameState, ev: Event) -> bool {
             || ev.kind == EvType::Mouse && ev.data1 != 0
             || ev.kind == EvType::Joystick && ev.data1 != 0
         {
-            start_control_panel(state);
+            start_control_panel(&mut state.m_menu);
             return true;
         }
         return false;
@@ -995,7 +995,7 @@ pub fn g_ticker(state: &mut GameState, netcmds: &[TicCmd]) {
             f_ticker(state);
         }
         GameScreenState::Demoscreen => {
-            page_ticker(state);
+            page_ticker(&mut state.d_main);
         }
         GameScreenState::Wipped => {}
     }
@@ -1061,7 +1061,7 @@ pub fn check_spot(state: &mut GameState, playernum: i32, mthing: &MapThing) -> b
     }
     state.g_game.bodyque[(state.g_game.bodyqueslot % BODYQUESIZE) as usize] = Some(player_mo_id);
     state.g_game.bodyqueslot += 1;
-    let ss = point_in_subsector(state, x, y);
+    let ss = point_in_subsector(&state.p_setup, x, y);
     let xa: Fixed;
     let ya: Fixed;
     let an: i32 = (ANG45 >> ANGLETOFINESHIFT) * (mthing.angle as i32 / 45);
@@ -1148,8 +1148,8 @@ pub fn do_reborn(state: &mut GameState, playernum: i32) {
         state.g_game.gameaction = GameAction::LoadLevel;
     }
 }
-pub fn g_screen_shot(state: &mut GameState) {
-    state.g_game.gameaction = GameAction::Screenshot;
+pub fn g_screen_shot(g_game: &mut GGameState) {
+    g_game.gameaction = GameAction::Screenshot;
 }
 pub static PARS: [[i32; 10]; 4] = [
     [0; 10],
@@ -1161,9 +1161,9 @@ pub static CPARS: [i32; 32] = [
     30, 90, 120, 120, 90, 150, 120, 120, 270, 90, 210, 150, 150, 150, 210, 150, 420, 150, 210, 150,
     240, 150, 180, 150, 150, 300, 330, 420, 300, 180, 120, 30,
 ];
-pub fn exit_level(state: &mut GameState) {
-    state.g_game.secretexit = false;
-    state.g_game.gameaction = GameAction::Completed;
+pub fn exit_level(g_game: &mut GGameState) {
+    g_game.secretexit = false;
+    g_game.gameaction = GameAction::Completed;
 }
 pub fn secret_exit_level(state: &mut GameState) {
     state.g_game.secretexit = !(state.doomstat.gamemode as u32 == GameMode::Commercial as u32
@@ -1306,9 +1306,9 @@ pub fn do_world_done(state: &mut GameState) {
     state.g_game.gameaction = GameAction::Nothing;
     state.g_game.viewactive = true;
 }
-pub fn g_load_game(state: &mut GameState, name: &str) {
-    state.g_game.savename = name.to_string();
-    state.g_game.gameaction = GameAction::LoadGame;
+pub fn g_load_game(g_game: &mut GGameState, name: &str) {
+    g_game.savename = name.to_string();
+    g_game.gameaction = GameAction::LoadGame;
 }
 pub fn do_load_game(state: &mut GameState) {
     state.g_game.gameaction = GameAction::Nothing;
@@ -1335,7 +1335,7 @@ pub fn do_load_game(state: &mut GameState) {
     un_archive_world(state);
     un_archive_thinkers(state);
     un_archive_specials(state);
-    if !read_save_game_eof(state) {
+    if !read_save_game_eof(&mut state.p_saveg) {
         report_save_game_read_error(state);
         error("Bad savegame");
     }
@@ -1346,14 +1346,14 @@ pub fn do_load_game(state: &mut GameState) {
     }
     fill_back_screen(state);
 }
-pub fn g_save_game(state: &mut GameState, slot: i32, description: &str) {
-    state.g_game.savegameslot = slot;
-    state.g_game.savedescription = description.to_string();
-    state.g_game.sendsave = true;
+pub fn g_save_game(g_game: &mut GGameState, slot: i32, description: &str) {
+    g_game.savegameslot = slot;
+    g_game.savedescription = description.to_string();
+    g_game.sendsave = true;
 }
 pub fn do_save_game(state: &mut GameState) {
     let temp_savegame_file = temp_save_game_file(state);
-    let savegame_file = save_game_file(state, state.g_game.savegameslot);
+    let savegame_file = save_game_file(&state.d_main, state.g_game.savegameslot);
     state.p_saveg.save_buffer = Vec::new();
     state.p_saveg.save_pos = 0;
     state.p_saveg.savegame_error = false;
@@ -1363,7 +1363,7 @@ pub fn do_save_game(state: &mut GameState) {
     archive_world(state);
     archive_thinkers(state);
     archive_specials(state);
-    write_save_game_eof(state);
+    write_save_game_eof(&mut state.p_saveg);
     if state.g_game.vanilla_savegame_limit != 0
         && state.p_saveg.save_buffer.len() > SAVEGAMESIZE as usize
     {
@@ -1389,11 +1389,11 @@ pub fn do_save_game(state: &mut GameState) {
         Some("game saved.".to_string());
     fill_back_screen(state);
 }
-pub fn defered_init_new(state: &mut GameState, skill: SkillType, episode: i32, map: i32) {
-    state.g_game.d_skill = skill;
-    state.g_game.d_episode = episode;
-    state.g_game.d_map = map;
-    state.g_game.gameaction = GameAction::NewGame;
+pub fn defered_init_new(g_game: &mut GGameState, skill: SkillType, episode: i32, map: i32) {
+    g_game.d_skill = skill;
+    g_game.d_episode = episode;
+    g_game.d_map = map;
+    g_game.gameaction = GameAction::NewGame;
 }
 pub fn do_new_game(state: &mut GameState) {
     state.g_game.demoplayback = false;
@@ -1522,10 +1522,10 @@ pub fn read_demo_ticcmd(state: &mut GameState, player_num: usize) {
     cmd.angleturn = new_angleturn;
     cmd.buttons = buttons;
 }
-fn increase_demo_buffer(state: &mut GameState) {
-    let new_length = state.g_game.demoend * 2_usize;
-    state.g_game.demobuffer.resize(new_length, 0);
-    state.g_game.demoend = new_length;
+fn increase_demo_buffer(g_game: &mut GGameState) {
+    let new_length = g_game.demoend * 2_usize;
+    g_game.demobuffer.resize(new_length, 0);
+    g_game.demoend = new_length;
 }
 pub fn write_demo_ticcmd(state: &mut GameState, player_num: usize) {
     if state.g_game.gamekeydown[state.m_controls.key_demo_quit as usize] {
@@ -1554,7 +1554,7 @@ pub fn write_demo_ticcmd(state: &mut GameState, player_num: usize) {
             check_demo_status(state);
             return;
         }
-        increase_demo_buffer(state);
+        increase_demo_buffer(&mut state.g_game);
     }
     read_demo_ticcmd(state, player_num);
 }
@@ -1563,7 +1563,7 @@ pub fn record_demo(state: &mut GameState, name: &str) {
     state.g_game.usergame = false;
     state.g_game.demoname = format!("{name}.lmp");
     maxsize = 0x20000;
-    if let Some(i) = check_parm_with_args(state, "-maxdemo", 1) {
+    if let Some(i) = check_parm_with_args(&state.m_argv, "-maxdemo", 1) {
         maxsize = argv_atoi(&state.m_argv.myargv[i + 1]) * 1024;
     }
     state.g_game.demobuffer = vec![0u8; maxsize as usize];
@@ -1583,7 +1583,7 @@ pub fn vanilla_version_code(state: &DoomstatState) -> i32 {
     106
 }
 pub fn begin_recording(state: &mut GameState) {
-    state.g_game.longtics = parm_exists(state, "-longtics");
+    state.g_game.longtics = parm_exists(&state.m_argv, "-longtics");
     state.g_game.lowres_turn = !state.g_game.longtics;
     state.g_game.demo_p = 0;
     if state.g_game.longtics {
@@ -1607,9 +1607,9 @@ pub fn begin_recording(state: &mut GameState) {
         state.g_game.demo_write_byte(b);
     }
 }
-pub fn defered_play_demo(state: &mut GameState, name: FixedCStr<8>) {
-    state.g_game.defdemoname = name;
-    state.g_game.gameaction = GameAction::PlayDemo;
+pub fn defered_play_demo(g_game: &mut GGameState, name: FixedCStr<8>) {
+    g_game.defdemoname = name;
+    g_game.gameaction = GameAction::PlayDemo;
 }
 fn demo_version_description(_state: &mut GameState, version: i32) -> String {
     match version {
@@ -1659,8 +1659,8 @@ pub fn do_play_demo(state: &mut GameState) {
         state.g_game.playeringame[i] = state.g_game.demo_read_byte() != 0;
     }
     if state.g_game.playeringame[1]
-        || parm_exists(state, "-solo-net")
-        || parm_exists(state, "-netdemo")
+        || parm_exists(&state.m_argv, "-solo-net")
+        || parm_exists(&state.m_argv, "-netdemo")
     {
         state.g_game.netgame = true;
         state.g_game.netdemo = true;
@@ -1673,7 +1673,7 @@ pub fn do_play_demo(state: &mut GameState) {
     state.g_game.demoplayback = true;
 }
 pub fn time_demo(state: &mut GameState, name: FixedCStr<8>) {
-    state.g_game.nodrawers = parm_exists(state, "-nodraw");
+    state.g_game.nodrawers = parm_exists(&state.m_argv, "-nodraw");
     state.g_game.timingdemo = true;
     state.d_loop.singletics = true;
     state.g_game.defdemoname = name;
@@ -1708,7 +1708,7 @@ pub fn check_demo_status(state: &mut GameState) -> bool {
         if state.g_game.singledemo {
             i_quit(state);
         } else {
-            advance_demo(state);
+            advance_demo(&mut state.d_main);
         }
         return true;
     }

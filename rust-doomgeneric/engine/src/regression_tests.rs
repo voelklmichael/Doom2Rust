@@ -226,7 +226,7 @@ fn scripted_input(state: &mut GameState) {
         774 => key(state, i32::from(b'k')),
         776 => key(state, i32::from(b'f')),
         778 => key(state, i32::from(b'a')),
-        800 => exit_level(state),
+        800 => exit_level(&mut state.g_game),
         950 | 1050 | 1150 | 1250 | 1350 | 1950 | 2050 | 2150 | 2250 | 2350 | 3150 | 3250 | 3350
         | 3450 | 3550 => {
             state.wi_stuff.acceleratestage = true;
@@ -234,12 +234,12 @@ fn scripted_input(state: &mut GameState) {
         1800 => {
             state.g_game.gameepisode = 1;
             state.g_game.gamemap = 8;
-            exit_level(state);
+            exit_level(&mut state.g_game);
         }
         3000 => {
             state.g_game.gameepisode = 3;
             state.g_game.gamemap = 8;
-            exit_level(state);
+            exit_level(&mut state.g_game);
         }
         3600 => state.f_finale.finalecount = 5000,
         3650 => state.f_finale.finalecount = 300,
@@ -340,7 +340,7 @@ fn use_special_line_trace() -> Option<String> {
         for side in 0..=1 {
             for player_uses in [true, false] {
                 // Every case starts from the same saved world.
-                g_load_game(state, &save_path);
+                g_load_game(&mut state.g_game, &save_path);
                 do_load_game(state);
                 let actor = if player_uses {
                     state.g_game.players[0].mo.unwrap()
@@ -442,10 +442,10 @@ fn start_e1m1() -> Option<&'static mut GameState> {
 /// request (which would trigger a second save on the next tick), and returns
 /// the file's path and contents.
 fn save_slot(state: &mut GameState, slot: i32) -> (String, Vec<u8>) {
-    g_save_game(state, slot, "roundtrip");
+    g_save_game(&mut state.g_game, slot, "roundtrip");
     state.g_game.sendsave = false;
     do_save_game(state);
-    let path = save_game_file(state, slot);
+    let path = save_game_file(&state.d_main, slot);
     let bytes =
         read_file(&mut *state.fs, &path).unwrap_or_else(|| panic!("no save file at {path}"));
     (path, bytes)
@@ -471,7 +471,7 @@ fn save_game_round_trips() {
         world_summary(state),
         "the world should have changed"
     );
-    g_load_game(state, &path);
+    g_load_game(&mut state.g_game, &path);
     do_load_game(state);
     assert_eq!(before, world_summary(state));
 

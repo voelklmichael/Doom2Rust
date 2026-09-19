@@ -226,7 +226,7 @@ pub fn do_ceiling(state: &mut GameState, line: LineId, kind: CeilingE) -> bool {
         }
         _ => {}
     }
-    for sector in sectors_with_line_tag(state, line) {
+    for sector in sectors_with_line_tag(&state.p_setup, line) {
         let sec = sector;
         if state.p_setup.sector_mut(sec).specialdata.is_some() {
             continue;
@@ -258,7 +258,7 @@ pub fn do_ceiling(state: &mut GameState, line: LineId, kind: CeilingE) -> bool {
                 lower_block = true;
             }
             CeilingE::RaiseToHighest => {
-                ceiling.topheight = find_highest_ceiling_surrounding(state, sec);
+                ceiling.topheight = find_highest_ceiling_surrounding(&mut state.p_setup, sec);
                 ceiling.direction = 1;
                 ceiling.speed = CEILSPEED as Fixed;
             }
@@ -275,7 +275,7 @@ pub fn do_ceiling(state: &mut GameState, line: LineId, kind: CeilingE) -> bool {
         ceiling.kind = kind;
         let ceiling_arena_id = state.p_ceilng.spawn(ceiling);
         let ceiling_id = add_thinker(
-            state,
+            &mut state.p_tick,
             ThinkerPayload::Ceiling(ceiling_arena_id),
             ThinkerKind::Ceiling,
         );

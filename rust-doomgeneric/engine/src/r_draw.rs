@@ -393,19 +393,19 @@ pub fn draw_translated_column_low(state: &mut GameState) {
         }
     }
 }
-pub fn init_translation_tables(state: &mut GameState) {
-    state.r_draw.translationtables = vec![0u8; 256 * 3];
+pub fn init_translation_tables(r_draw: &mut RDrawState) {
+    r_draw.translationtables = vec![0u8; 256 * 3];
     for i in 0..256 {
         if (0x70..=0x7f).contains(&i) {
-            state.r_draw.translationtables[i as usize] = (0x60 + (i & 0xf)) as u8;
-            state.r_draw.translationtables[(i + 256) as usize] = (0x40 + (i & 0xf)) as u8;
-            state.r_draw.translationtables[(i + 512) as usize] = (0x20 + (i & 0xf)) as u8;
+            r_draw.translationtables[i as usize] = (0x60 + (i & 0xf)) as u8;
+            r_draw.translationtables[(i + 256) as usize] = (0x40 + (i & 0xf)) as u8;
+            r_draw.translationtables[(i + 512) as usize] = (0x20 + (i & 0xf)) as u8;
         } else {
             let fresh11 = i as u8;
-            state.r_draw.translationtables[(i + 512) as usize] = fresh11;
+            r_draw.translationtables[(i + 512) as usize] = fresh11;
             let fresh12 = fresh11;
-            state.r_draw.translationtables[(i + 256) as usize] = fresh12;
-            state.r_draw.translationtables[i as usize] = fresh12;
+            r_draw.translationtables[(i + 256) as usize] = fresh12;
+            r_draw.translationtables[i as usize] = fresh12;
         }
     }
 }
@@ -499,18 +499,18 @@ pub fn draw_span_low(state: &mut GameState) {
         }
     }
 }
-pub fn init_buffer(state: &mut GameState, width: i32, height: i32) {
-    state.r_draw.viewwindowx = (SCREENWIDTH - width) >> 1;
+pub fn init_buffer(r_draw: &mut RDrawState, width: i32, height: i32) {
+    r_draw.viewwindowx = (SCREENWIDTH - width) >> 1;
     for i in 0..width {
-        state.r_draw.columnofs[i as usize] = state.r_draw.viewwindowx + i;
+        r_draw.columnofs[i as usize] = r_draw.viewwindowx + i;
     }
     if width == SCREENWIDTH {
-        state.r_draw.viewwindowy = 0;
+        r_draw.viewwindowy = 0;
     } else {
-        state.r_draw.viewwindowy = (SCREENHEIGHT - SBARHEIGHT - height) >> 1;
+        r_draw.viewwindowy = (SCREENHEIGHT - SBARHEIGHT - height) >> 1;
     }
     for i in 0..height {
-        state.r_draw.ylookup[i as usize] = ((i + state.r_draw.viewwindowy) * SCREENWIDTH) as usize;
+        r_draw.ylookup[i as usize] = ((i + r_draw.viewwindowy) * SCREENWIDTH) as usize;
     }
 }
 pub fn fill_back_screen(state: &mut GameState) {
@@ -652,7 +652,7 @@ pub fn draw_view_border(state: &mut GameState) {
     }
     let dest_screen = Screen::Video;
     mark_rect(
-        state,
+        &mut state.v_video,
         dest_screen,
         0,
         0,

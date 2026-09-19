@@ -1,4 +1,3 @@
-use crate::game_state::GameState;
 use alloc::string::String;
 use alloc::vec::Vec;
 
@@ -20,15 +19,15 @@ impl MArgvState {
 
 /// The index in `argv` of `check`, provided at least `num_args` more
 /// arguments follow it.
-pub fn check_parm_with_args(state: &GameState, check: &str, num_args: usize) -> Option<usize> {
-    let argv = &state.m_argv.myargv;
+pub fn check_parm_with_args(m_argv: &MArgvState, check: &str, num_args: usize) -> Option<usize> {
+    let argv = &m_argv.myargv;
     (1..argv.len().saturating_sub(num_args)).find(|&i| argv[i].eq_ignore_ascii_case(check))
 }
-pub fn parm_exists(state: &GameState, check: &str) -> bool {
-    check_parm(state, check).is_some()
+pub fn parm_exists(m_argv: &MArgvState, check: &str) -> bool {
+    check_parm(m_argv, check).is_some()
 }
-pub fn check_parm(state: &GameState, check: &str) -> Option<usize> {
-    check_parm_with_args(state, check, 0)
+pub fn check_parm(m_argv: &MArgvState, check: &str) -> Option<usize> {
+    check_parm_with_args(m_argv, check, 0)
 }
 pub fn argv_atoi(arg: &str) -> i32 {
     let bytes = arg.as_bytes();

@@ -390,13 +390,13 @@ pub fn display(state: &mut GameState) {
     }
 }
 pub fn bind_variables(state: &mut GameState) {
-    bind_joystick_variables(state);
-    bind_sound_variables(state);
-    bind_base_controls(state);
-    bind_weapon_controls(state);
-    bind_map_controls(state);
-    bind_menu_controls(state);
-    bind_chat_controls(state, MAXPLAYERS as u32);
+    bind_joystick_variables(&mut state.m_config);
+    bind_sound_variables(&mut state.m_config);
+    bind_base_controls(&mut state.m_config);
+    bind_weapon_controls(&mut state.m_config);
+    bind_map_controls(&mut state.m_config);
+    bind_menu_controls(&mut state.m_config);
+    bind_chat_controls(&mut state.m_config, MAXPLAYERS as u32);
     state.m_controls.key_multi_msgplayer[0] = HUSTR_KEYGREEN;
     state.m_controls.key_multi_msgplayer[1] = HUSTR_KEYINDIGO;
     state.m_controls.key_multi_msgplayer[2] = HUSTR_KEYBROWN;
@@ -471,10 +471,10 @@ pub fn doom_loop(state: &mut GameState) {
     }
     doomgeneric_tick(state);
 }
-pub fn page_ticker(state: &mut GameState) {
-    state.d_main.pagetic -= 1;
-    if state.d_main.pagetic < 0 {
-        advance_demo(state);
+pub fn page_ticker(d_main: &mut DMainState) {
+    d_main.pagetic -= 1;
+    if d_main.pagetic < 0 {
+        advance_demo(d_main);
     }
 }
 pub fn page_drawer(state: &mut GameState) {
@@ -482,8 +482,8 @@ pub fn page_drawer(state: &mut GameState) {
     let dest_screen = Screen::Video;
     draw_patch(state, dest_screen, 0, 0, &__wcache609_1);
 }
-pub fn advance_demo(state: &mut GameState) {
-    state.d_main.advancedemo = true;
+pub fn advance_demo(d_main: &mut DMainState) {
+    d_main.advancedemo = true;
 }
 pub fn do_advance_demo(state: &mut GameState) {
     state.g_game.players[state.g_game.consoleplayer as usize].playerstate = PlayerState::Live;
@@ -512,7 +512,7 @@ pub fn do_advance_demo(state: &mut GameState) {
             }
         }
         1 => {
-            defered_play_demo(state, FixedCStr::new("demo1"));
+            defered_play_demo(&mut state.g_game, FixedCStr::new("demo1"));
         }
         2 => {
             state.d_main.pagetic = 200;
@@ -520,7 +520,7 @@ pub fn do_advance_demo(state: &mut GameState) {
             state.d_main.pagename = "CREDIT";
         }
         3 => {
-            defered_play_demo(state, FixedCStr::new("demo2"));
+            defered_play_demo(&mut state.g_game, FixedCStr::new("demo2"));
         }
         4 => {
             state.g_game.gamestate = GameScreenState::Demoscreen;
@@ -538,10 +538,10 @@ pub fn do_advance_demo(state: &mut GameState) {
             }
         }
         5 => {
-            defered_play_demo(state, FixedCStr::new("demo3"));
+            defered_play_demo(&mut state.g_game, FixedCStr::new("demo3"));
         }
         6 => {
-            defered_play_demo(state, FixedCStr::new("demo4"));
+            defered_play_demo(&mut state.g_game, FixedCStr::new("demo4"));
         }
         _ => {}
     }
@@ -555,7 +555,7 @@ pub fn do_advance_demo(state: &mut GameState) {
 pub fn start_title(state: &mut GameState) {
     state.g_game.gameaction = GameAction::Nothing;
     state.d_main.demosequence = -1;
-    advance_demo(state);
+    advance_demo(&mut state.d_main);
 }
 fn set_mission_for_pack_name(state: &mut GameState, pack_name: &str) {
     const PACKS: [MissionPack; 3] = [
@@ -625,7 +625,7 @@ pub fn identify_version(state: &mut GameState) {
         }
     } else {
         state.doomstat.gamemode = GameMode::Commercial;
-        if let Some(p) = check_parm_with_args(state, "-pack", 1) {
+        if let Some(p) = check_parm_with_args(&state.m_argv, "-pack", 1) {
             let pack_name = state.m_argv.myargv[p + 1].as_str().to_string();
             set_mission_for_pack_name(state, &pack_name);
         }
@@ -692,7 +692,7 @@ fn d_add_file(state: &mut GameState, filename: &str) -> bool {
     w_add_file(state, filename).is_some()
 }
 fn init_game_version(state: &mut GameState) {
-    if let Some(p) = check_parm_with_args(state, "-gameversion", 1) {
+    if let Some(p) = check_parm_with_args(&state.m_argv, "-gameversion", 1) {
         let arg = state.m_argv.myargv[p + 1].as_bytes();
         let found = state
             .d_main
@@ -759,7 +759,7 @@ fn endoom(state: &mut GameState) {
     if state.d_main.show_endoom == 0
         || !state.d_main.main_loop_started
         || state.i_video.screensaver_mode
-        || parm_exists(state, "-testcontrols")
+        || parm_exists(&state.m_argv, "-testcontrols")
     {
         return;
     }
@@ -778,14 +778,14 @@ pub fn doom_main(state: &mut GameState) {
         false,
     );
     print_banner(&mut *state.platform, &PACKAGE_STRING.as_str());
-    state.d_main.nomonsters = parm_exists(state, "-nomonsters");
-    state.d_main.respawnparm = parm_exists(state, "-respawn");
-    state.d_main.fastparm = parm_exists(state, "-fast");
-    state.d_main.devparm = parm_exists(state, "-devparm");
-    if parm_exists(state, "-deathmatch") {
+    state.d_main.nomonsters = parm_exists(&state.m_argv, "-nomonsters");
+    state.d_main.respawnparm = parm_exists(&state.m_argv, "-respawn");
+    state.d_main.fastparm = parm_exists(&state.m_argv, "-fast");
+    state.d_main.devparm = parm_exists(&state.m_argv, "-devparm");
+    if parm_exists(&state.m_argv, "-deathmatch") {
         state.g_game.deathmatch = 1;
     }
-    if parm_exists(state, "-altdeath") {
+    if parm_exists(&state.m_argv, "-altdeath") {
         state.g_game.deathmatch = 2;
     }
     if state.d_main.devparm {
@@ -797,7 +797,7 @@ pub fn doom_main(state: &mut GameState) {
         &mut *state.platform,
         None,
     );
-    if let Some(p) = check_parm(state, "-turbo") {
+    if let Some(p) = check_parm(&state.m_argv, "-turbo") {
         let mut scale: i32 = 200;
         if let Some(arg) = state.m_argv.myargv.get(p + 1) {
             scale = argv_atoi(arg);
@@ -849,8 +849,8 @@ pub fn doom_main(state: &mut GameState) {
     }
     let modifiedgame = parse_command_line(state);
     state.doomstat.modifiedgame = modifiedgame;
-    let demo_parm = check_parm_with_args(state, "-playdemo", 1)
-        .or_else(|| check_parm_with_args(state, "-timedemo", 1));
+    let demo_parm = check_parm_with_args(&state.m_argv, "-playdemo", 1)
+        .or_else(|| check_parm_with_args(&state.m_argv, "-timedemo", 1));
     if let Some(p) = demo_parm {
         let arg = state.m_argv.myargv[p + 1].as_str();
         if string_ends_with(arg, ".lmp") {
@@ -871,7 +871,7 @@ pub fn doom_main(state: &mut GameState) {
         Some(quit_check_demo_status as fn(&mut GameState) -> ()),
         true,
     );
-    generate_hash_table(state);
+    generate_hash_table(&mut state.w_wad);
     set_game_description(state);
     state.d_main.savegamedir = get_save_game_dir(
         &state.m_config,
@@ -941,7 +941,7 @@ pub fn doom_main(state: &mut GameState) {
     state.d_main.startepisode = 1;
     state.d_main.startmap = 1;
     state.d_main.autostart = false;
-    if let Some(p) = check_parm_with_args(state, "-skill", 1) {
+    if let Some(p) = check_parm_with_args(&state.m_argv, "-skill", 1) {
         state.d_main.startskill = skill_from_raw(
             state.m_argv.myargv[p + 1]
                 .as_bytes()
@@ -952,7 +952,7 @@ pub fn doom_main(state: &mut GameState) {
         );
         state.d_main.autostart = true;
     }
-    if let Some(p) = check_parm_with_args(state, "-episode", 1) {
+    if let Some(p) = check_parm_with_args(&state.m_argv, "-episode", 1) {
         state.d_main.startepisode = state.m_argv.myargv[p + 1]
             .as_bytes()
             .first()
@@ -963,13 +963,13 @@ pub fn doom_main(state: &mut GameState) {
         state.d_main.autostart = true;
     }
     state.g_game.timelimit = 0;
-    if let Some(p) = check_parm_with_args(state, "-timer", 1) {
+    if let Some(p) = check_parm_with_args(&state.m_argv, "-timer", 1) {
         state.g_game.timelimit = argv_atoi(&state.m_argv.myargv[p + 1]);
     }
-    if let Some(_p) = check_parm(state, "-avg") {
+    if let Some(_p) = check_parm(&state.m_argv, "-avg") {
         state.g_game.timelimit = 20;
     }
-    if let Some(p) = check_parm_with_args(state, "-warp", 1) {
+    if let Some(p) = check_parm_with_args(&state.m_argv, "-warp", 1) {
         if state.doomstat.gamemode as u32 == GameMode::Commercial as i32 as u32 {
             state.d_main.startmap = argv_atoi(&state.m_argv.myargv[p + 1]);
         } else {
@@ -992,13 +992,13 @@ pub fn doom_main(state: &mut GameState) {
         }
         state.d_main.autostart = true;
     }
-    if let Some(_p) = check_parm(state, "-testcontrols") {
+    if let Some(_p) = check_parm(&state.m_argv, "-testcontrols") {
         state.d_main.startepisode = 1;
         state.d_main.startmap = 1;
         state.d_main.autostart = true;
         state.g_game.testcontrols = true;
     }
-    if let Some(p) = check_parm_with_args(state, "-loadgame", 1) {
+    if let Some(p) = check_parm_with_args(&state.m_argv, "-loadgame", 1) {
         state.d_main.startloadgame = argv_atoi(&state.m_argv.myargv[p + 1]);
     } else {
         state.d_main.startloadgame = -1;
@@ -1031,7 +1031,7 @@ pub fn doom_main(state: &mut GameState) {
     {
         state.d_main.storedemo = true;
     }
-    if check_parm_with_args(state, "-statdump", 1).is_some() {
+    if check_parm_with_args(&state.m_argv, "-statdump", 1).is_some() {
         at_exit(
             &mut state.i_system,
             Some(stat_dump as fn(&mut GameState) -> ()),
@@ -1039,25 +1039,25 @@ pub fn doom_main(state: &mut GameState) {
         );
         doom_println!(state.platform, "External statistics registered.");
     }
-    if let Some(p) = check_parm_with_args(state, "-record", 1) {
+    if let Some(p) = check_parm_with_args(&state.m_argv, "-record", 1) {
         let record_name = state.m_argv.myargv[p + 1].as_str().to_string();
         record_demo(state, &record_name);
         state.d_main.autostart = true;
     }
-    if let Some(_p) = check_parm_with_args(state, "-playdemo", 1) {
+    if let Some(_p) = check_parm_with_args(&state.m_argv, "-playdemo", 1) {
         state.g_game.singledemo = true;
-        defered_play_demo(state, demolumpname);
+        defered_play_demo(&mut state.g_game, demolumpname);
         doom_loop(state);
         return;
     }
-    if let Some(_p) = check_parm_with_args(state, "-timedemo", 1) {
+    if let Some(_p) = check_parm_with_args(&state.m_argv, "-timedemo", 1) {
         time_demo(state, demolumpname);
         doom_loop(state);
         return;
     }
     if state.d_main.startloadgame >= 0 {
-        let savegame_file = save_game_file(state, state.d_main.startloadgame);
-        g_load_game(state, &savegame_file);
+        let savegame_file = save_game_file(&state.d_main, state.d_main.startloadgame);
+        g_load_game(&mut state.g_game, &savegame_file);
     }
     if state.g_game.gameaction != GameAction::LoadGame {
         if state.d_main.autostart || state.g_game.netgame {

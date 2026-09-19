@@ -203,7 +203,7 @@ impl GameState {
 pub fn finish_init(state: &mut GameState) {
     {
         state.sounds.fixup_self_links();
-        fixup_numanims(state);
+        fixup_numanims(&mut state.wi_stuff);
     }
 }
 

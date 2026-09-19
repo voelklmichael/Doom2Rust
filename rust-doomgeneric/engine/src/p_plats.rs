@@ -215,7 +215,7 @@ pub fn do_plat(state: &mut GameState, line: LineId, kind: PlattypeE, amount: i32
     if kind == PlattypeE::PerpetualRaise {
         activate_in_stasis(state, linev.tag as i32);
     }
-    for sector in sectors_with_line_tag(state, line) {
+    for sector in sectors_with_line_tag(&state.p_setup, line) {
         let sec = sector;
         if state.p_setup.sector_mut(sec).specialdata.is_some() {
             continue;
@@ -236,7 +236,7 @@ pub fn do_plat(state: &mut GameState, line: LineId, kind: PlattypeE, amount: i32
                 let neighbor_sector_id = state.p_setup.sides[linev.sidenum[0] as usize].sector;
                 let neighbor_pic = state.p_setup.sector_mut(neighbor_sector_id).floorpic;
                 state.p_setup.sector_mut(sec).floorpic = neighbor_pic;
-                plat.high = find_next_highest_floor(state, sec, floorheight);
+                plat.high = find_next_highest_floor(&mut state.p_setup, sec, floorheight);
                 plat.wait = 0;
                 plat.status = PlatE::Up;
                 state.p_setup.sector_mut(sec).special = 0;
@@ -254,7 +254,7 @@ pub fn do_plat(state: &mut GameState, line: LineId, kind: PlattypeE, amount: i32
             }
             PlattypeE::DownWaitUpStay => {
                 plat.speed = (PLATSPEED * 4) as Fixed;
-                plat.low = find_lowest_floor_surrounding(state, sec);
+                plat.low = find_lowest_floor_surrounding(&mut state.p_setup, sec);
                 if plat.low > floorheight {
                     plat.low = floorheight;
                 }
@@ -265,7 +265,7 @@ pub fn do_plat(state: &mut GameState, line: LineId, kind: PlattypeE, amount: i32
             }
             PlattypeE::BlazeDWUS => {
                 plat.speed = (PLATSPEED * 8) as Fixed;
-                plat.low = find_lowest_floor_surrounding(state, sec);
+                plat.low = find_lowest_floor_surrounding(&mut state.p_setup, sec);
                 if plat.low > floorheight {
                     plat.low = floorheight;
                 }
@@ -276,11 +276,11 @@ pub fn do_plat(state: &mut GameState, line: LineId, kind: PlattypeE, amount: i32
             }
             PlattypeE::PerpetualRaise => {
                 plat.speed = PLATSPEED as Fixed;
-                plat.low = find_lowest_floor_surrounding(state, sec);
+                plat.low = find_lowest_floor_surrounding(&mut state.p_setup, sec);
                 if plat.low > floorheight {
                     plat.low = floorheight;
                 }
-                plat.high = find_highest_floor_surrounding(state, sec);
+                plat.high = find_highest_floor_surrounding(&mut state.p_setup, sec);
                 if plat.high < floorheight {
                     plat.high = floorheight;
                 }
@@ -295,7 +295,7 @@ pub fn do_plat(state: &mut GameState, line: LineId, kind: PlattypeE, amount: i32
         }
         let plat_arena_id = state.p_plats.spawn(plat);
         let plat_id = add_thinker(
-            state,
+            &mut state.p_tick,
             ThinkerPayload::Plat(plat_arena_id),
             ThinkerKind::Plat,
         );

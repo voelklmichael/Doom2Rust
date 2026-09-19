@@ -7,6 +7,7 @@ use crate::m_fixed::FRACBITS;
 use crate::m_fixed::FRACUNIT;
 use crate::m_fixed::INT_MAX;
 use crate::p_mobj::MobjFlags;
+use crate::p_setup::PSetupState;
 
 use crate::p_mobj::MobjId;
 use crate::p_setup::LineId;
@@ -206,9 +207,9 @@ pub fn aprox_distance(mut dx: Fixed, mut dy: Fixed) -> Fixed {
     }
     dx + dy - (dy >> 1)
 }
-pub fn point_on_line_side(state: &GameState, x: Fixed, y: Fixed, line: LineId) -> i32 {
-    let line = state.p_setup.line(line);
-    let line_v1 = state.p_setup.vertexes[line.v1.0 as usize];
+pub fn point_on_line_side(p_setup: &PSetupState, x: Fixed, y: Fixed, line: LineId) -> i32 {
+    let line = p_setup.line(line);
+    let line_v1 = p_setup.vertexes[line.v1.0 as usize];
     if line.dx == 0 {
         if x <= line_v1.x {
             return (line.dy > 0) as i32;
@@ -230,13 +231,13 @@ pub fn point_on_line_side(state: &GameState, x: Fixed, y: Fixed, line: LineId) -
     }
     1
 }
-pub fn box_on_line_side(state: &GameState, tmbox: [Fixed; 4], ld: LineId) -> i32 {
+pub fn box_on_line_side(p_setup: &PSetupState, tmbox: [Fixed; 4], ld: LineId) -> i32 {
     let mut p1: i32 = 0;
     let mut p2: i32 = 0;
-    let ldv = state.p_setup.line(ld);
+    let ldv = p_setup.line(ld);
     match ldv.slopetype as u32 {
         0 => {
-            let ld_v1 = state.p_setup.vertexes[ldv.v1.0 as usize];
+            let ld_v1 = p_setup.vertexes[ldv.v1.0 as usize];
             p1 = (tmbox[BoxIndex::Top as usize] > ld_v1.y) as i32;
             p2 = (tmbox[BoxIndex::Bottom as usize] > ld_v1.y) as i32;
             if ldv.dx < 0 {
@@ -245,7 +246,7 @@ pub fn box_on_line_side(state: &GameState, tmbox: [Fixed; 4], ld: LineId) -> i32
             }
         }
         1 => {
-            let ld_v1 = state.p_setup.vertexes[ldv.v1.0 as usize];
+            let ld_v1 = p_setup.vertexes[ldv.v1.0 as usize];
             p1 = (tmbox[BoxIndex::Right as usize] < ld_v1.x) as i32;
             p2 = (tmbox[BoxIndex::Left as usize] < ld_v1.x) as i32;
             if ldv.dy < 0 {
@@ -255,13 +256,13 @@ pub fn box_on_line_side(state: &GameState, tmbox: [Fixed; 4], ld: LineId) -> i32
         }
         2 => {
             p1 = point_on_line_side(
-                state,
+                p_setup,
                 tmbox[BoxIndex::Left as usize],
                 tmbox[BoxIndex::Top as usize],
                 ld,
             );
             p2 = point_on_line_side(
-                state,
+                p_setup,
                 tmbox[BoxIndex::Right as usize],
                 tmbox[BoxIndex::Bottom as usize],
                 ld,
@@ -269,13 +270,13 @@ pub fn box_on_line_side(state: &GameState, tmbox: [Fixed; 4], ld: LineId) -> i32
         }
         3 => {
             p1 = point_on_line_side(
-                state,
+                p_setup,
                 tmbox[BoxIndex::Right as usize],
                 tmbox[BoxIndex::Top as usize],
                 ld,
             );
             p2 = point_on_line_side(
-                state,
+                p_setup,
                 tmbox[BoxIndex::Left as usize],
                 tmbox[BoxIndex::Bottom as usize],
                 ld,
@@ -316,9 +317,9 @@ pub fn point_on_divline_side(x: Fixed, y: Fixed, line: &DivLine) -> i32 {
     }
     1
 }
-pub fn make_divline(state: &GameState, li: LineId) -> DivLine {
-    let li = state.p_setup.line(li);
-    let li_v1 = state.p_setup.vertexes[li.v1.0 as usize];
+pub fn make_divline(p_setup: &PSetupState, li: LineId) -> DivLine {
+    let li = p_setup.line(li);
+    let li_v1 = p_setup.vertexes[li.v1.0 as usize];
     DivLine {
         x: li_v1.x,
         y: li_v1.y,
@@ -424,7 +425,7 @@ pub fn set_thing_position(state: &mut GameState, thing: MobjId) {
         let t = state.p_mobj.mo(thing);
         (t.x, t.y, t.flags)
     };
-    let ss = point_in_subsector(state, x, y);
+    let ss = point_in_subsector(&state.p_setup, x, y);
     state.p_mobj.mo_mut(thing).subsector = ss;
     if !flags.contains(MobjFlags::NOSECTOR) {
         let sector = state.p_setup.subsectors[ss.0 as usize].sector;
@@ -538,13 +539,13 @@ pub fn add_line_intercepts(state: &mut GameState, ld: LineId) -> bool {
         s1 = point_on_divline_side(ld_v1.x, ld_v1.y, &trace);
         s2 = point_on_divline_side(ld_v2.x, ld_v2.y, &trace);
     } else {
-        s1 = point_on_line_side(state, trace.x, trace.y, ld);
-        s2 = point_on_line_side(state, trace.x + trace.dx, trace.y + trace.dy, ld);
+        s1 = point_on_line_side(&state.p_setup, trace.x, trace.y, ld);
+        s2 = point_on_line_side(&state.p_setup, trace.x + trace.dx, trace.y + trace.dy, ld);
     }
     if s1 == s2 {
         return true;
     }
-    let dl = make_divline(state, ld);
+    let dl = make_divline(&state.p_setup, ld);
     let frac = intercept_vector(&trace, &dl);
     if frac < 0 {
         return true;

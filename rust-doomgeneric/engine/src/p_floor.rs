@@ -204,7 +204,7 @@ pub fn move_floor(state: &mut GameState, id: FloorId) {
 }
 pub fn do_floor(state: &mut GameState, line: LineId, floortype: FloorE) -> bool {
     let mut rtn = false;
-    for sector in sectors_with_line_tag(state, line) {
+    for sector in sectors_with_line_tag(&state.p_setup, line) {
         let sec = sector;
         if state.p_setup.sector_mut(sec).specialdata.is_some() {
             continue;
@@ -224,19 +224,19 @@ pub fn do_floor(state: &mut GameState, line: LineId, floortype: FloorE) -> bool 
                 floor.direction = -1;
                 floor.sector = sec;
                 floor.speed = FLOORSPEED as Fixed;
-                floor.floordestheight = find_highest_floor_surrounding(state, sec);
+                floor.floordestheight = find_highest_floor_surrounding(&mut state.p_setup, sec);
             }
             FloorE::LowerFloorToLowest => {
                 floor.direction = -1;
                 floor.sector = sec;
                 floor.speed = FLOORSPEED as Fixed;
-                floor.floordestheight = find_lowest_floor_surrounding(state, sec);
+                floor.floordestheight = find_lowest_floor_surrounding(&mut state.p_setup, sec);
             }
             FloorE::TurboLower => {
                 floor.direction = -1;
                 floor.sector = sec;
                 floor.speed = (FLOORSPEED * 4) as Fixed;
-                floor.floordestheight = find_highest_floor_surrounding(state, sec);
+                floor.floordestheight = find_highest_floor_surrounding(&mut state.p_setup, sec);
                 if floor.floordestheight != floorheight {
                     floor.floordestheight += 8 * FRACUNIT;
                 }
@@ -252,13 +252,15 @@ pub fn do_floor(state: &mut GameState, line: LineId, floortype: FloorE) -> bool 
                 floor.direction = 1;
                 floor.sector = sec;
                 floor.speed = (FLOORSPEED * 4) as Fixed;
-                floor.floordestheight = find_next_highest_floor(state, sec, floorheight);
+                floor.floordestheight =
+                    find_next_highest_floor(&mut state.p_setup, sec, floorheight);
             }
             FloorE::RaiseFloorToNearest => {
                 floor.direction = 1;
                 floor.sector = sec;
                 floor.speed = FLOORSPEED as Fixed;
-                floor.floordestheight = find_next_highest_floor(state, sec, floorheight);
+                floor.floordestheight =
+                    find_next_highest_floor(&mut state.p_setup, sec, floorheight);
             }
             FloorE::RaiseFloor24 => {
                 floor.direction = 1;
@@ -294,7 +296,7 @@ pub fn do_floor(state: &mut GameState, line: LineId, floortype: FloorE) -> bool 
                 for i in 0..linecount {
                     if two_sided(state, sector, i) {
                         for side_index in 0..2_i32 {
-                            let side = get_side(state, sector, i, side_index);
+                            let side = get_side(&mut state.p_setup, sector, i, side_index);
                             let bottomtexture = state.p_setup.side_mut(side).bottomtexture;
                             if bottomtexture as i32 >= 0
                                 && state.r_data.textureheight[bottomtexture as usize] < minsize
@@ -310,16 +312,16 @@ pub fn do_floor(state: &mut GameState, line: LineId, floortype: FloorE) -> bool 
                 floor.direction = -1;
                 floor.sector = sec;
                 floor.speed = FLOORSPEED as Fixed;
-                floor.floordestheight = find_lowest_floor_surrounding(state, sec);
+                floor.floordestheight = find_lowest_floor_surrounding(&mut state.p_setup, sec);
                 floor.texture = state.p_setup.sector_mut(sec).floorpic;
                 for i in 0..linecount {
                     if two_sided(state, sector, i) {
-                        let side0 = get_side(state, sector, i, 0);
+                        let side0 = get_side(&mut state.p_setup, sector, i, 0);
                         let side0_sector = state.p_setup.side_mut(side0).sector;
                         let other = if side0_sector.0 == sector.0 {
-                            get_sector(state, sector, i, 1)
+                            get_sector(&mut state.p_setup, sector, i, 1)
                         } else {
-                            get_sector(state, sector, i, 0)
+                            get_sector(&mut state.p_setup, sector, i, 0)
                         };
                         let (other_floor, other_pic, other_special) = {
                             let o = state.p_setup.sector_mut(other);
@@ -339,7 +341,7 @@ pub fn do_floor(state: &mut GameState, line: LineId, floortype: FloorE) -> bool 
             floor.direction = 1;
             floor.sector = sec;
             floor.speed = FLOORSPEED as Fixed;
-            floor.floordestheight = find_lowest_ceiling_surrounding(state, sec);
+            floor.floordestheight = find_lowest_ceiling_surrounding(&mut state.p_setup, sec);
             if floor.floordestheight > ceilingheight {
                 floor.floordestheight = ceilingheight;
             }
@@ -347,7 +349,7 @@ pub fn do_floor(state: &mut GameState, line: LineId, floortype: FloorE) -> bool 
         }
         let floor_arena_id = state.p_spec.spawn_floor(floor);
         let floor_id = add_thinker(
-            state,
+            &mut state.p_tick,
             ThinkerPayload::Floor(floor_arena_id),
             ThinkerKind::Floor,
         );
@@ -364,7 +366,7 @@ fn spawn_stair(state: &mut GameState, sec: SectorId, speed: Fixed, height: i32) 
     floor.floordestheight = height as Fixed;
     let floor_arena_id = state.p_spec.spawn_floor(floor);
     let floor_id = add_thinker(
-        state,
+        &mut state.p_tick,
         ThinkerPayload::Floor(floor_arena_id),
         ThinkerKind::Floor,
     );
@@ -375,7 +377,7 @@ pub fn build_stairs(state: &mut GameState, line: LineId, kind: StairE) -> bool {
     let mut secnum: i32 = -1;
     // `secnum` is advanced inside the body, so the scan resumes after the
     // staircase just built (as vanilla does); a plain for loop would not.
-    while let Some(next) = find_sector_from_line_tag(state, line, secnum) {
+    while let Some(next) = find_sector_from_line_tag(&state.p_setup, line, secnum) {
         secnum = next;
         let mut sec = SectorId(secnum as u32);
         if state.p_setup.sector_mut(sec).specialdata.is_some() {

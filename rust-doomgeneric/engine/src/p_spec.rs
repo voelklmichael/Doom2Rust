@@ -1,6 +1,7 @@
 use crate::d_player::CheatFlags;
 use crate::d_player::PowerType;
 use crate::p_mobj::LineFlags;
+use crate::p_setup::PSetupState;
 
 use crate::fixed_cstr::FixedCStr;
 use crate::g_game::exit_level;
@@ -481,20 +482,25 @@ pub fn init_pic_anims(state: &mut GameState) {
         state.p_spec.lastanim += 1;
     }
 }
-pub fn get_side(state: &mut GameState, current_sector: SectorId, line: i32, side: i32) -> SideId {
-    let line_id = state.p_setup.sector_mut(current_sector).lines[line as usize];
-    let sidenum = state.p_setup.line(line_id).sidenum[side as usize];
+pub fn get_side(
+    p_setup: &mut PSetupState,
+    current_sector: SectorId,
+    line: i32,
+    side: i32,
+) -> SideId {
+    let line_id = p_setup.sector_mut(current_sector).lines[line as usize];
+    let sidenum = p_setup.line(line_id).sidenum[side as usize];
     SideId(sidenum as u32)
 }
 pub fn get_sector(
-    state: &mut GameState,
+    p_setup: &mut PSetupState,
     current_sector: SectorId,
     line: i32,
     side: i32,
 ) -> SectorId {
-    let line_id = state.p_setup.sector_mut(current_sector).lines[line as usize];
-    let sidenum = state.p_setup.line(line_id).sidenum[side as usize];
-    state.p_setup.sides[sidenum as usize].sector
+    let line_id = p_setup.sector_mut(current_sector).lines[line as usize];
+    let sidenum = p_setup.line(line_id).sidenum[side as usize];
+    p_setup.sides[sidenum as usize].sector
 }
 pub fn two_sided(state: &mut GameState, sector: SectorId, line: i32) -> bool {
     let sec = state.p_setup.sector_mut(sector);
@@ -505,8 +511,8 @@ pub fn two_sided(state: &mut GameState, sector: SectorId, line: i32) -> bool {
         .flags
         .contains(LineFlags::TWOSIDED)
 }
-pub fn get_next_sector(state: &GameState, line: LineId, sec: SectorId) -> Option<SectorId> {
-    let linev = state.p_setup.line(line);
+pub fn get_next_sector(p_setup: &PSetupState, line: LineId, sec: SectorId) -> Option<SectorId> {
+    let linev = p_setup.line(line);
     if !linev.flags.contains(LineFlags::TWOSIDED) {
         return None;
     }
@@ -516,13 +522,13 @@ pub fn get_next_sector(state: &GameState, line: LineId, sec: SectorId) -> Option
     }
     Some(front)
 }
-pub fn find_lowest_floor_surrounding(state: &mut GameState, sec: SectorId) -> Fixed {
-    let mut floor: Fixed = state.p_setup.sector_mut(sec).floorheight;
-    let linecount = state.p_setup.sector_mut(sec).linecount;
+pub fn find_lowest_floor_surrounding(p_setup: &mut PSetupState, sec: SectorId) -> Fixed {
+    let mut floor: Fixed = p_setup.sector_mut(sec).floorheight;
+    let linecount = p_setup.sector_mut(sec).linecount;
     for i in 0..linecount {
-        let check = state.p_setup.sector_mut(sec).lines[i as usize];
-        if let Some(other) = get_next_sector(state, check, sec) {
-            let other_floor = state.p_setup.sector_mut(other).floorheight;
+        let check = p_setup.sector_mut(sec).lines[i as usize];
+        if let Some(other) = get_next_sector(p_setup, check, sec) {
+            let other_floor = p_setup.sector_mut(other).floorheight;
             if other_floor < floor {
                 floor = other_floor;
             }
@@ -530,13 +536,13 @@ pub fn find_lowest_floor_surrounding(state: &mut GameState, sec: SectorId) -> Fi
     }
     floor
 }
-pub fn find_highest_floor_surrounding(state: &mut GameState, sec: SectorId) -> Fixed {
+pub fn find_highest_floor_surrounding(p_setup: &mut PSetupState, sec: SectorId) -> Fixed {
     let mut floor: Fixed = -(500) * FRACUNIT;
-    let linecount = state.p_setup.sector_mut(sec).linecount;
+    let linecount = p_setup.sector_mut(sec).linecount;
     for i in 0..linecount {
-        let check = state.p_setup.sector_mut(sec).lines[i as usize];
-        if let Some(other) = get_next_sector(state, check, sec) {
-            let other_floor = state.p_setup.sector_mut(other).floorheight;
+        let check = p_setup.sector_mut(sec).lines[i as usize];
+        if let Some(other) = get_next_sector(p_setup, check, sec) {
+            let other_floor = p_setup.sector_mut(other).floorheight;
             if other_floor > floor {
                 floor = other_floor;
             }
@@ -545,15 +551,19 @@ pub fn find_highest_floor_surrounding(state: &mut GameState, sec: SectorId) -> F
     floor
 }
 pub const MAX_ADJOINING_SECTORS: i32 = 20;
-pub fn find_next_highest_floor(state: &mut GameState, sec: SectorId, currentheight: i32) -> Fixed {
+pub fn find_next_highest_floor(
+    p_setup: &mut PSetupState,
+    sec: SectorId,
+    currentheight: i32,
+) -> Fixed {
     let mut height: Fixed = currentheight as Fixed;
     let mut heightlist: [Fixed; 22] = [0; 22];
     let mut h: i32 = 0;
-    let linecount = state.p_setup.sector_mut(sec).linecount;
+    let linecount = p_setup.sector_mut(sec).linecount;
     for i in 0..linecount {
-        let check = state.p_setup.sector_mut(sec).lines[i as usize];
-        if let Some(other) = get_next_sector(state, check, sec) {
-            let other_floor = state.p_setup.sector_mut(other).floorheight;
+        let check = p_setup.sector_mut(sec).lines[i as usize];
+        if let Some(other) = get_next_sector(p_setup, check, sec) {
+            let other_floor = p_setup.sector_mut(other).floorheight;
             if other_floor > height {
                 if h == MAX_ADJOINING_SECTORS + 1 {
                     height = other_floor;
@@ -577,13 +587,13 @@ pub fn find_next_highest_floor(state: &mut GameState, sec: SectorId, currentheig
     }
     min as Fixed
 }
-pub fn find_lowest_ceiling_surrounding(state: &mut GameState, sec: SectorId) -> Fixed {
+pub fn find_lowest_ceiling_surrounding(p_setup: &mut PSetupState, sec: SectorId) -> Fixed {
     let mut height: Fixed = INT_MAX;
-    let linecount = state.p_setup.sector_mut(sec).linecount;
+    let linecount = p_setup.sector_mut(sec).linecount;
     for i in 0..linecount {
-        let check = state.p_setup.sector_mut(sec).lines[i as usize];
-        if let Some(other) = get_next_sector(state, check, sec) {
-            let other_ceiling = state.p_setup.sector_mut(other).ceilingheight;
+        let check = p_setup.sector_mut(sec).lines[i as usize];
+        if let Some(other) = get_next_sector(p_setup, check, sec) {
+            let other_ceiling = p_setup.sector_mut(other).ceilingheight;
             if other_ceiling < height {
                 height = other_ceiling;
             }
@@ -591,13 +601,13 @@ pub fn find_lowest_ceiling_surrounding(state: &mut GameState, sec: SectorId) -> 
     }
     height
 }
-pub fn find_highest_ceiling_surrounding(state: &mut GameState, sec: SectorId) -> Fixed {
+pub fn find_highest_ceiling_surrounding(p_setup: &mut PSetupState, sec: SectorId) -> Fixed {
     let mut height: Fixed = 0;
-    let linecount = state.p_setup.sector_mut(sec).linecount;
+    let linecount = p_setup.sector_mut(sec).linecount;
     for i in 0..linecount {
-        let check = state.p_setup.sector_mut(sec).lines[i as usize];
-        if let Some(other) = get_next_sector(state, check, sec) {
-            let other_ceiling = state.p_setup.sector_mut(other).ceilingheight;
+        let check = p_setup.sector_mut(sec).lines[i as usize];
+        if let Some(other) = get_next_sector(p_setup, check, sec) {
+            let other_ceiling = p_setup.sector_mut(other).ceilingheight;
             if other_ceiling > height {
                 height = other_ceiling;
             }
@@ -607,28 +617,27 @@ pub fn find_highest_ceiling_surrounding(state: &mut GameState, sec: SectorId) ->
 }
 /// The next sector after `start` (`-1` to begin) that carries the same tag as
 /// `line`.
-pub fn find_sector_from_line_tag(state: &GameState, line: LineId, start: i32) -> Option<i32> {
-    let line_tag = state.p_setup.line(line).tag;
-    (start + 1..state.p_setup.numsectors)
-        .find(|&i| state.p_setup.sectors[i as usize].tag == line_tag)
+pub fn find_sector_from_line_tag(p_setup: &PSetupState, line: LineId, start: i32) -> Option<i32> {
+    let line_tag = p_setup.line(line).tag;
+    (start + 1..p_setup.numsectors).find(|&i| p_setup.sectors[i as usize].tag == line_tag)
 }
 /// The sectors that carry the same tag as `line`, in map order.
-pub fn sectors_with_line_tag(state: &GameState, line: LineId) -> Vec<SectorId> {
+pub fn sectors_with_line_tag(p_setup: &PSetupState, line: LineId) -> Vec<SectorId> {
     let mut found = Vec::new();
     let mut next = -1;
-    while let Some(i) = find_sector_from_line_tag(state, line, next) {
+    while let Some(i) = find_sector_from_line_tag(p_setup, line, next) {
         found.push(SectorId(i as u32));
         next = i;
     }
     found
 }
-pub fn find_min_surrounding_light(state: &mut GameState, sector: SectorId, max: i32) -> i32 {
+pub fn find_min_surrounding_light(p_setup: &mut PSetupState, sector: SectorId, max: i32) -> i32 {
     let mut min = max;
-    let linecount = state.p_setup.sector_mut(sector).linecount;
+    let linecount = p_setup.sector_mut(sector).linecount;
     for i in 0..linecount {
-        let line = state.p_setup.sector_mut(sector).lines[i as usize];
-        if let Some(check) = get_next_sector(state, line, sector) {
-            let light = state.p_setup.sector_mut(check).lightlevel as i32;
+        let line = p_setup.sector_mut(sector).lines[i as usize];
+        if let Some(check) = get_next_sector(p_setup, line, sector) {
+            let light = p_setup.sector_mut(check).lightlevel as i32;
             if light < min {
                 min = light;
             }
@@ -686,11 +695,11 @@ pub fn cross_special_line(state: &mut GameState, linenum: i32, side: i32, thing:
             state.p_setup.line_mut(line).special = 0;
         }
         12 => {
-            light_turn_on(state, line, 0);
+            light_turn_on(&mut state.p_setup, line, 0);
             state.p_setup.line_mut(line).special = 0;
         }
         13 => {
-            light_turn_on(state, line, 255);
+            light_turn_on(&mut state.p_setup, line, 255);
             state.p_setup.line_mut(line).special = 0;
         }
         16 => {
@@ -718,7 +727,7 @@ pub fn cross_special_line(state: &mut GameState, linenum: i32, side: i32, thing:
             state.p_setup.line_mut(line).special = 0;
         }
         35 => {
-            light_turn_on(state, line, 35);
+            light_turn_on(&mut state.p_setup, line, 35);
             state.p_setup.line_mut(line).special = 0;
         }
         36 => {
@@ -747,7 +756,7 @@ pub fn cross_special_line(state: &mut GameState, linenum: i32, side: i32, thing:
             state.p_setup.line_mut(line).special = 0;
         }
         52 => {
-            exit_level(state);
+            exit_level(&mut state.g_game);
         }
         53 => {
             do_plat(state, line, PlattypeE::PerpetualRaise, 0);
@@ -774,7 +783,7 @@ pub fn cross_special_line(state: &mut GameState, linenum: i32, side: i32, thing:
             state.p_setup.line_mut(line).special = 0;
         }
         104 => {
-            turn_tag_lights_off(state, line);
+            turn_tag_lights_off(&mut state.p_setup, line);
             state.p_setup.line_mut(line).special = 0;
         }
         108 => {
@@ -837,13 +846,13 @@ pub fn cross_special_line(state: &mut GameState, linenum: i32, side: i32, thing:
             do_ceiling(state, line, CeilingE::FastCrushAndRaise);
         }
         79 => {
-            light_turn_on(state, line, 35);
+            light_turn_on(&mut state.p_setup, line, 35);
         }
         80 => {
-            light_turn_on(state, line, 0);
+            light_turn_on(&mut state.p_setup, line, 0);
         }
         81 => {
-            light_turn_on(state, line, 255);
+            light_turn_on(&mut state.p_setup, line, 255);
         }
         82 => {
             do_floor(state, line, FloorE::LowerFloorToLowest);
@@ -994,7 +1003,7 @@ pub fn player_in_special_sector(state: &mut GameState, player: PlayerId) {
                 damage_mobj(state, player_mo, None, None, 20);
             }
             if state.g_game.player_mut(player).health <= 10 {
-                exit_level(state);
+                exit_level(&mut state.g_game);
             }
         }
         _ => {
@@ -1011,7 +1020,7 @@ pub fn update_specials(state: &mut GameState) {
     if state.p_spec.level_timer {
         state.p_spec.level_time_count -= 1;
         if state.p_spec.level_time_count == 0 {
-            exit_level(state);
+            exit_level(&mut state.g_game);
         }
     }
     for anim_idx in 0..state.p_spec.lastanim {
@@ -1072,7 +1081,7 @@ fn donut_overrun(state: &mut GameState) -> (Fixed, i16) {
         state.p_spec.donut_overrun_first = false;
         state.p_spec.donut_overrun_tmp_s3_floorheight = DONUT_FLOORHEIGHT_DEFAULT;
         state.p_spec.donut_overrun_tmp_s3_floorpic = DONUT_FLOORPIC_DEFAULT;
-        if let Some(p) = check_parm_with_args(state, "-donut", 2) {
+        if let Some(p) = check_parm_with_args(&state.m_argv, "-donut", 2) {
             str_to_int(
                 state.m_argv.myargv[p + 1].as_str(),
                 &mut state.p_spec.donut_overrun_tmp_s3_floorheight,
@@ -1098,14 +1107,14 @@ fn donut_overrun(state: &mut GameState) -> (Fixed, i16) {
 }
 pub fn do_donut(state: &mut GameState, line: LineId) -> bool {
     let mut rtn = false;
-    for sector in sectors_with_line_tag(state, line) {
+    for sector in sectors_with_line_tag(&state.p_setup, line) {
         let s1 = sector;
         if state.p_setup.sector_mut(s1).specialdata.is_some() {
             continue;
         }
         rtn = true;
         let first_line = state.p_setup.sector_mut(s1).lines[0];
-        let Some(s2) = get_next_sector(state, first_line, s1) else {
+        let Some(s2) = get_next_sector(&state.p_setup, first_line, s1) else {
             doom_eprintln!(state.platform,
                 "EV_DoDonut: linedef had no second sidedef! Unexpected behavior may occur in Vanilla Doom. "
             );
@@ -1139,7 +1148,7 @@ pub fn do_donut(state: &mut GameState, line: LineId) -> bool {
             floor.floordestheight = s3_floorheight;
             let floor_arena_id = state.p_spec.spawn_floor(floor);
             let floor_id = add_thinker(
-                state,
+                &mut state.p_tick,
                 ThinkerPayload::Floor(floor_arena_id),
                 ThinkerKind::Floor,
             );
@@ -1154,7 +1163,7 @@ pub fn do_donut(state: &mut GameState, line: LineId) -> bool {
             floor.floordestheight = s3_floorheight;
             let floor_arena_id = state.p_spec.spawn_floor(floor);
             let floor_id = add_thinker(
-                state,
+                &mut state.p_tick,
                 ThinkerPayload::Floor(floor_arena_id),
                 ThinkerKind::Floor,
             );
