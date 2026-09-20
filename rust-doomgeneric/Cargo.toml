@@ -1,3 +1,11 @@
 [workspace]
 members = ["engine", "cmdline", "fs", "x11", "wasm", "core_s3_protocol", "core_s3_sender", "core_s3_dhcp", "core_s3_audio", "core_s3_ws"]
 resolver = "2"
+
+# The browser build (wasm/build.sh): as small as it goes, and as fast as `release` within
+# measurement noise. A profile of its own keeps the desktop build untouched.
+[profile.wasm]
+inherits = "release"
+opt-level = "s"
+lto = true
+codegen-units = 1

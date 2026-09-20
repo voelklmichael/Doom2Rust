@@ -1,10 +1,11 @@
 # doomgeneric_wasm
 
-DOOM in the browser: the engine compiled to WebAssembly. The page is a static site of about 1 MB
+DOOM in the browser: the engine compiled to WebAssembly. The page is a static site of about 700 KB
 with **no game data in it**: you drop a DOOM IWAD (`doom1.wad`, `doom.wad`, `doom2.wad`, ...) onto
 the game window, or pick one with the button. The shareware `doom1.wad` works, and so does the WAD
-of a game you own. The file is not uploaded anywhere; it is read by your browser and remembered in
-its storage, so it only has to be dropped once.
+of a game you own. The game starts as soon as the file is chosen. The file is not uploaded
+anywhere; it is read by your browser and remembered in its storage, so it only has to be dropped
+once (on later visits the page says "Click to play").
 
 Saved games (and the game's config) are kept in the browser too, per game, so they are still there
 after a reload. The game stops, clock and sound included, while its tab is hidden.
@@ -45,6 +46,9 @@ that sub-path.
   the page as soon as it has a frame or sound instead of leaving them to be picked up after the
   tick. The page (`www/main.js`) draws the newest frame once per screen refresh, schedules the
   sound with Web Audio and sends the keyboard to the worker.
+* A browser holds sound back until the player has pressed a key or clicked, and dropping a file is
+  neither. The game therefore starts silent in that case, and the page lets the sound through at the
+  next key press or click.
 * `www/storage.js` keeps the WAD and the game's files in IndexedDB. Without it (a private window)
   the game still runs; it just remembers nothing.
 * To pause, the worker stops ticking and takes the paused time off the clock it gives the game, so

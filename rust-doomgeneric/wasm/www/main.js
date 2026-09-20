@@ -40,7 +40,7 @@ function idle(text) {
 function start() {
   if (worker || !wad) return;
   say('Loading…', '', false);
-  // Sound can only start after a click or a key press, which is why the game waits for one.
+  // The browser only lets sound start after a click or a key press (see `resumeAudio`).
   audio = new AudioContext();
   worker = new Worker('worker.js', { type: 'module' });
   worker.onmessage = ({ data }) => {
@@ -70,7 +70,8 @@ function start() {
   if (document.hidden) pause();
 }
 
-function stop(text) {
+// Ends the game that is running, if any.
+function teardown() {
   running = false;
   held.clear();
   worker?.terminate();
@@ -79,6 +80,10 @@ function stop(text) {
   audio?.close();
   audio = null;
   nextSoundTime = 0;
+}
+
+function stop(text) {
+  teardown();
   idle(text);
 }
 
@@ -99,9 +104,9 @@ async function takeFile(file) {
   }
   wad = { name: file.name, data };
   storage.put('wad', 'last', wad);
-  // A game that is running has been played with another WAD.
-  if (worker) stop();
-  else idle();
+  // The game starts right away, replacing one that is running with another WAD.
+  teardown();
+  start();
 }
 
 // ---- pausing --------------------------------------------------------------------------------
@@ -141,7 +146,9 @@ function drawFrame() {
 const SOUND_LEAD = 0.06;
 const SOUND_MAX_AHEAD = 0.3;
 function playSound({ samples, rate }) {
-  if (!audio) return;
+  // Nothing is played while the browser holds the sound back (or the page is hidden): what the
+  // game mixed in the meantime would come out late.
+  if (audio?.state !== 'running') return;
   const frames = samples.length / 2;
   const now = audio.currentTime;
   if (nextSoundTime < now) nextSoundTime = now + SOUND_LEAD;
@@ -162,6 +169,15 @@ function playSound({ samples, rate }) {
 }
 
 // ---- keyboard -------------------------------------------------------------------------------
+
+// A game that starts without a click (a dropped WAD is not one, and neither is choosing a file
+// after a long wait) gets its sound held back by the browser until the player presses a key or
+// clicks. Then it is let through.
+function resumeAudio() {
+  if (audio?.state === 'suspended' && !document.hidden) audio.resume();
+}
+window.addEventListener('keydown', resumeAudio, { capture: true });
+window.addEventListener('pointerdown', resumeAudio, { capture: true });
 
 function sendKey(pressed, code) {
   if (pressed) held.add(code);
