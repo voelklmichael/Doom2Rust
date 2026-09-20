@@ -180,11 +180,7 @@ pub fn move_floor(state: &mut GameState, id: FloorId) {
         floor.direction,
     );
     if state.world.p_tick.leveltime & 7 == 0 {
-        s_start_sound(
-            state,
-            SoundOrigin::Sector(floor.sector),
-            SfxName::Stnmov as i32,
-        );
+        s_start_sound(state, SoundOrigin::Sector(floor.sector), SfxName::Stnmov);
     }
     if res == ResultE::Pastdest {
         let sec = state.world.p_setup.sector_mut(floor.sector);
@@ -206,11 +202,7 @@ pub fn move_floor(state: &mut GameState, id: FloorId) {
                 .expect("live floor")
                 .thinker,
         );
-        s_start_sound(
-            state,
-            SoundOrigin::Sector(floor.sector),
-            SfxName::Pstop as i32,
-        );
+        s_start_sound(state, SoundOrigin::Sector(floor.sector), SfxName::Pstop);
     }
 }
 pub fn do_floor(state: &mut GameState, line: LineId, floortype: FloorE) -> bool {

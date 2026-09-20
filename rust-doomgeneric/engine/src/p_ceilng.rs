@@ -139,11 +139,7 @@ pub fn move_ceiling(state: &mut GameState, id: CeilingId) {
             if state.world.p_tick.leveltime & 7 == 0
                 && ceiling.kind != CeilingE::SilentCrushAndRaise
             {
-                s_start_sound(
-                    state,
-                    SoundOrigin::Sector(ceiling.sector),
-                    SfxName::Stnmov as i32,
-                );
+                s_start_sound(state, SoundOrigin::Sector(ceiling.sector), SfxName::Stnmov);
             }
             if res == ResultE::Pastdest {
                 match ceiling.kind {
@@ -156,11 +152,7 @@ pub fn move_ceiling(state: &mut GameState, id: CeilingId) {
                         );
                     }
                     CeilingE::SilentCrushAndRaise => {
-                        s_start_sound(
-                            state,
-                            SoundOrigin::Sector(ceiling.sector),
-                            SfxName::Pstop as i32,
-                        );
+                        s_start_sound(state, SoundOrigin::Sector(ceiling.sector), SfxName::Pstop);
                         state
                             .world
                             .p_ceilng
@@ -193,20 +185,12 @@ pub fn move_ceiling(state: &mut GameState, id: CeilingId) {
             if state.world.p_tick.leveltime & 7 == 0
                 && ceiling.kind != CeilingE::SilentCrushAndRaise
             {
-                s_start_sound(
-                    state,
-                    SoundOrigin::Sector(ceiling.sector),
-                    SfxName::Stnmov as i32,
-                );
+                s_start_sound(state, SoundOrigin::Sector(ceiling.sector), SfxName::Stnmov);
             }
             if res == ResultE::Pastdest {
                 match ceiling.kind {
                     CeilingE::SilentCrushAndRaise => {
-                        s_start_sound(
-                            state,
-                            SoundOrigin::Sector(ceiling.sector),
-                            SfxName::Pstop as i32,
-                        );
+                        s_start_sound(state, SoundOrigin::Sector(ceiling.sector), SfxName::Pstop);
                         let c = state.world.p_ceilng.get_mut(id).expect("live ceiling");
                         c.speed = CEILSPEED as Fixed;
                         c.direction = 1;

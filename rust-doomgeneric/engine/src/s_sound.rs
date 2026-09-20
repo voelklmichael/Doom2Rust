@@ -27,6 +27,7 @@ use crate::p_setup::SectorId;
 use crate::platform::DoomPlatform;
 use crate::r_main::point_to_angle2;
 use crate::sounds::SfxId;
+use crate::sounds::SfxName;
 use crate::sounds::SoundsState;
 use crate::sounds::NUMSFX;
 use crate::sounds::{MusicName, NUMMUSIC};
@@ -296,10 +297,10 @@ fn adjust_sound_params(
     };
     (vol > 0).then_some((vol, sep))
 }
-pub fn s_start_sound(state: &mut GameState, origin: SoundOrigin, sfx_id: i32) {
+pub fn s_start_sound(state: &mut GameState, origin: SoundOrigin, sfx_id: SfxName) {
     let mut volume = state.audio.s_sound.snd_sfx_volume;
-    if !(1..=NUMSFX).contains(&sfx_id) {
-        error(&format!("Bad sfx #: {sfx_id}"));
+    if sfx_id == SfxName::SfxNone {
+        error("Bad sfx #: 0");
     }
     let sfx_index = sfx_id as usize;
     if state.audio.sounds.s_sfx[sfx_index].link.is_some() {

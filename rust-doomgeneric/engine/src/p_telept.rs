@@ -69,7 +69,7 @@ pub fn teleport(state: &mut GameState, line: LineId, side: i32, thing: MobjId) -
                             p.viewz = thing_z + p.viewheight;
                         }
                         let fog = spawn_mobj(state, oldx, oldy, oldz, MobjType::Tfog);
-                        s_start_sound(state, SoundOrigin::Mobj(fog), SfxName::Telept as i32);
+                        s_start_sound(state, SoundOrigin::Mobj(fog), SfxName::Telept);
                         let an = m_angle >> ANGLETOFINESHIFT;
                         let thing_z = state.world.p_mobj.mo(thing).z;
                         let fog = spawn_mobj(
@@ -79,7 +79,7 @@ pub fn teleport(state: &mut GameState, line: LineId, side: i32, thing: MobjId) -
                             thing_z,
                             MobjType::Tfog,
                         );
-                        s_start_sound(state, SoundOrigin::Mobj(fog), SfxName::Telept as i32);
+                        s_start_sound(state, SoundOrigin::Mobj(fog), SfxName::Telept);
                         let t = state.world.p_mobj.mo_mut(thing);
                         if t.player.is_some() {
                             t.reactiontime = 18;

@@ -170,7 +170,7 @@ pub fn give_weapon(
         }
         state.game.g_game.players[player].pendingweapon = weapon;
         if player == state.game.g_game.consoleplayer {
-            s_start_sound(state, SoundOrigin::None, SfxName::Wpnup as i32);
+            s_start_sound(state, SoundOrigin::None, SfxName::Wpnup);
         }
         return false;
     }
@@ -272,12 +272,12 @@ pub fn give_power(
     true
 }
 pub fn touch_special_thing(state: &mut GameState, special: MobjId, toucher: MobjId) {
-    let mut sound: i32;
+    let mut sound: SfxName;
     let delta: Fixed = state.world.p_mobj.mo(special).z - state.world.p_mobj.mo(toucher).z;
     if delta > state.world.p_mobj.mo(toucher).height || delta < -8 * FRACUNIT {
         return;
     }
-    sound = SfxName::Itemup as i32;
+    sound = SfxName::Itemup;
     let player = state.world.p_mobj.mo(toucher).player.unwrap();
     if state.world.p_mobj.mo(toucher).health <= 0 {
         return;
@@ -326,7 +326,7 @@ pub fn touch_special_thing(state: &mut GameState, special: MobjId, toucher: Mobj
             }
             state.world.p_mobj.mo_mut(toucher).health = state.game.g_game.players[player].health;
             state.game.g_game.players[player].message = Some("Supercharge!".to_string());
-            sound = SfxName::Getpow as i32;
+            sound = SfxName::Getpow;
         }
         74 => {
             if state.game.doomstat.gamemode != GameMode::Commercial {
@@ -336,7 +336,7 @@ pub fn touch_special_thing(state: &mut GameState, special: MobjId, toucher: Mobj
             state.world.p_mobj.mo_mut(toucher).health = state.game.g_game.players[player].health;
             give_armor(&mut state.game.g_game.players[player], 2);
             state.game.g_game.players[player].message = Some("MegaSphere!".to_string());
-            sound = SfxName::Getpow as i32;
+            sound = SfxName::Getpow;
         }
         62 => {
             if !state.game.g_game.players[player].cards[CardType::Bluecard as usize] {
@@ -429,7 +429,7 @@ pub fn touch_special_thing(state: &mut GameState, special: MobjId, toucher: Mobj
                 return;
             }
             state.game.g_game.players[player].message = Some("Invulnerability!".to_string());
-            sound = SfxName::Getpow as i32;
+            sound = SfxName::Getpow;
         }
         72 => {
             if !give_power(
@@ -446,7 +446,7 @@ pub fn touch_special_thing(state: &mut GameState, special: MobjId, toucher: Mobj
             {
                 state.game.g_game.players[player].pendingweapon = WeaponType::Fist;
             }
-            sound = SfxName::Getpow as i32;
+            sound = SfxName::Getpow;
         }
         73 => {
             if !give_power(
@@ -458,7 +458,7 @@ pub fn touch_special_thing(state: &mut GameState, special: MobjId, toucher: Mobj
                 return;
             }
             state.game.g_game.players[player].message = Some("Partial Invisibility".to_string());
-            sound = SfxName::Getpow as i32;
+            sound = SfxName::Getpow;
         }
         75 => {
             if !give_power(
@@ -471,7 +471,7 @@ pub fn touch_special_thing(state: &mut GameState, special: MobjId, toucher: Mobj
             }
             state.game.g_game.players[player].message =
                 Some("Radiation Shielding Suit".to_string());
-            sound = SfxName::Getpow as i32;
+            sound = SfxName::Getpow;
         }
         76 => {
             if !give_power(
@@ -483,7 +483,7 @@ pub fn touch_special_thing(state: &mut GameState, special: MobjId, toucher: Mobj
                 return;
             }
             state.game.g_game.players[player].message = Some("Computer Area Map".to_string());
-            sound = SfxName::Getpow as i32;
+            sound = SfxName::Getpow;
         }
         77 => {
             if !give_power(
@@ -496,7 +496,7 @@ pub fn touch_special_thing(state: &mut GameState, special: MobjId, toucher: Mobj
             }
             state.game.g_game.players[player].message =
                 Some("Light Amplification Visor".to_string());
-            sound = SfxName::Getpow as i32;
+            sound = SfxName::Getpow;
         }
         78 => {
             if state
@@ -581,7 +581,7 @@ pub fn touch_special_thing(state: &mut GameState, special: MobjId, toucher: Mobj
             }
             state.game.g_game.players[player].message =
                 Some("You got the BFG9000!  Oh, yes.".to_string());
-            sound = SfxName::Wpnup as i32;
+            sound = SfxName::Wpnup;
         }
         88 => {
             if !give_weapon(
@@ -598,7 +598,7 @@ pub fn touch_special_thing(state: &mut GameState, special: MobjId, toucher: Mobj
                 return;
             }
             state.game.g_game.players[player].message = Some("You got the chaingun!".to_string());
-            sound = SfxName::Wpnup as i32;
+            sound = SfxName::Wpnup;
         }
         89 => {
             if !give_weapon(state, player, WeaponType::Chainsaw, false) {
@@ -606,7 +606,7 @@ pub fn touch_special_thing(state: &mut GameState, special: MobjId, toucher: Mobj
             }
             state.game.g_game.players[player].message =
                 Some("A chainsaw!  Find some meat!".to_string());
-            sound = SfxName::Wpnup as i32;
+            sound = SfxName::Wpnup;
         }
         90 => {
             if !give_weapon(state, player, WeaponType::Missile, false) {
@@ -614,14 +614,14 @@ pub fn touch_special_thing(state: &mut GameState, special: MobjId, toucher: Mobj
             }
             state.game.g_game.players[player].message =
                 Some("You got the rocket launcher!".to_string());
-            sound = SfxName::Wpnup as i32;
+            sound = SfxName::Wpnup;
         }
         91 => {
             if !give_weapon(state, player, WeaponType::Plasma, false) {
                 return;
             }
             state.game.g_game.players[player].message = Some("You got the plasma gun!".to_string());
-            sound = SfxName::Wpnup as i32;
+            sound = SfxName::Wpnup;
         }
         92 => {
             if !give_weapon(
@@ -638,7 +638,7 @@ pub fn touch_special_thing(state: &mut GameState, special: MobjId, toucher: Mobj
                 return;
             }
             state.game.g_game.players[player].message = Some("You got the shotgun!".to_string());
-            sound = SfxName::Wpnup as i32;
+            sound = SfxName::Wpnup;
         }
         93 => {
             if !give_weapon(
@@ -656,7 +656,7 @@ pub fn touch_special_thing(state: &mut GameState, special: MobjId, toucher: Mobj
             }
             state.game.g_game.players[player].message =
                 Some("You got the super shotgun!".to_string());
-            sound = SfxName::Wpnup as i32;
+            sound = SfxName::Wpnup;
         }
         _ => {
             error("P_SpecialThing: Unknown gettable thing");

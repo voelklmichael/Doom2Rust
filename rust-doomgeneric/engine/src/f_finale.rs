@@ -559,7 +559,7 @@ pub fn cast_ticker(state: &mut GameState) {
         if state.assets.info.mobjinfo
             [state.ui.f_finale.castorder[state.ui.f_finale.castnum as usize].kind as usize]
             .seesound
-            != 0
+            != SfxName::SfxNone
         {
             s_start_sound(
                 state,
@@ -582,26 +582,26 @@ pub fn cast_ticker(state: &mut GameState) {
         state.ui.f_finale.caststate = Some(StateId(st as u32));
         state.ui.f_finale.castframes += 1;
         let sfx = match st {
-            154 => SfxName::Dshtgn as i32,
-            185 => SfxName::Pistol as i32,
-            218 => SfxName::Shotgn as i32,
-            256 => SfxName::Vilatk as i32,
-            336 => SfxName::Skeswg as i32,
-            338 => SfxName::Skepch as i32,
-            340 => SfxName::Skeatk as i32,
-            383 | 380 | 377 => SfxName::Firsht as i32,
-            417..=419 => SfxName::Shotgn as i32,
-            454 => SfxName::Claw as i32,
-            486 => SfxName::Sgtatk as i32,
-            538 | 567 | 505 => SfxName::Firsht as i32,
-            590 => SfxName::Sklatk as i32,
-            616 | 617 => SfxName::Shotgn as i32,
-            648 => SfxName::Plasma as i32,
-            685 | 687 | 689 => SfxName::Rlaunc as i32,
-            710 => SfxName::Sklatk as i32,
-            _ => 0,
+            154 => SfxName::Dshtgn,
+            185 => SfxName::Pistol,
+            218 => SfxName::Shotgn,
+            256 => SfxName::Vilatk,
+            336 => SfxName::Skeswg,
+            338 => SfxName::Skepch,
+            340 => SfxName::Skeatk,
+            383 | 380 | 377 => SfxName::Firsht,
+            417..=419 => SfxName::Shotgn,
+            454 => SfxName::Claw,
+            486 => SfxName::Sgtatk,
+            538 | 567 | 505 => SfxName::Firsht,
+            590 => SfxName::Sklatk,
+            616 | 617 => SfxName::Shotgn,
+            648 => SfxName::Plasma,
+            685 | 687 | 689 => SfxName::Rlaunc,
+            710 => SfxName::Sklatk,
+            _ => SfxName::SfxNone,
         };
-        if sfx != 0 {
+        if sfx != SfxName::SfxNone {
             s_start_sound(state, SoundOrigin::None, sfx);
         }
     }
@@ -667,7 +667,7 @@ pub fn cast_responder(state: &mut GameState, ev: &Event) -> bool {
     if state.assets.info.mobjinfo
         [state.ui.f_finale.castorder[state.ui.f_finale.castnum as usize].kind as usize]
         .deathsound
-        != 0
+        != SfxName::SfxNone
     {
         s_start_sound(
             state,
@@ -804,7 +804,7 @@ pub fn bunny_scroll(state: &mut GameState) {
         stage = 6;
     }
     if stage > state.ui.f_finale.laststage {
-        s_start_sound(state, SoundOrigin::None, SfxName::Pistol as i32);
+        s_start_sound(state, SoundOrigin::None, SfxName::Pistol);
         state.ui.f_finale.laststage = stage;
     }
     let name = format!("END{stage}");
