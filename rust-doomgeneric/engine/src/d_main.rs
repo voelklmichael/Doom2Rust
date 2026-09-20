@@ -10,7 +10,7 @@ use crate::d_loop::try_run_tics;
 use crate::d_mode::GameMission;
 use crate::d_mode::GameMode;
 use crate::d_mode::GameVersion;
-use crate::d_mode::{skill_from_raw, SkillType};
+use crate::d_mode::SkillType;
 use crate::d_net::check_net_game;
 use crate::d_net::connect_net_game;
 use crate::d_player::PlayerState;
@@ -965,15 +965,20 @@ pub fn doom_main(state: &mut GameState) {
     state.game.d_main.startmap = 1;
     state.game.d_main.autostart = false;
     if let Some(p) = check_parm_with_args(&state.game.m_argv, "-skill", 1) {
-        state.game.d_main.startskill = skill_from_raw(
-            i32::from(
+        let level = i32::from(
+            state.game.m_argv.myargv[p + 1]
+                .as_bytes()
+                .first()
+                .copied()
+                .unwrap_or(0),
+        ) - '1' as i32;
+        let Some(skill) = SkillType::from_raw(level) else {
+            error(&format!(
+                "-skill {}: there is no such skill level (1 to 5)",
                 state.game.m_argv.myargv[p + 1]
-                    .as_bytes()
-                    .first()
-                    .copied()
-                    .unwrap_or(0),
-            ) - '1' as i32,
-        );
+            ));
+        };
+        state.game.d_main.startskill = skill;
         state.game.d_main.autostart = true;
     }
     if let Some(p) = check_parm_with_args(&state.game.m_argv, "-episode", 1) {

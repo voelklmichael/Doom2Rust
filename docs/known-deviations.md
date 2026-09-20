@@ -355,3 +355,13 @@ other than -1, 0, 1, 2) is read as `Direction::Still` (`Direction::from_save`). 
 raw value, which none of the mover `match`es handled; for ceilings, floors and glows that is the
 same as standing still, for a door "still" runs the top-wait countdown. Only a hand-edited or
 corrupt save can differ; saves written by this engine round-trip exactly.
+
+## `-skill 0` is a fatal error, not a broken game
+
+Vanilla computes the start skill as `argv[p+1][0] - '1'`, so `-skill 0` gives `sk_noitems` (-1).
+Nothing gave that value a meaning: it went into `gameskill`, and `P_SpawnMapThing`'s
+`1 << (gameskill - 1)` then shifted by a negative amount (undefined in C; in this port a panic in a
+debug build and a wrapped shift, so almost nothing spawned, in a release build). `SkillType` no
+longer has that variant; `SkillType::from_raw` returns `None` for it and `-skill 0` (or any other
+level outside 1..=5) stops with "there is no such skill level". A demo, savegame or net setting
+carrying an invalid skill was already fatal and still is.

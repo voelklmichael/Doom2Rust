@@ -1,22 +1,34 @@
-#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
+/// The difficulty levels. The values 0..=4 are what demo files, savegames and net game settings
+/// store, so `Baby = 0` is spelled out.
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum SkillType {
-    Noitems = -1,
-    Baby,
+    Baby = 0,
     Easy,
     Medium,
     Hard,
     Nightmare,
 }
-pub fn skill_from_raw(v: i32) -> SkillType {
-    match v {
-        -1 => SkillType::Noitems,
-        0 => SkillType::Baby,
-        1 => SkillType::Easy,
-        2 => SkillType::Medium,
-        3 => SkillType::Hard,
-        4 => SkillType::Nightmare,
-        n => panic!("invalid skill level {n}"),
+
+impl SkillType {
+    /// The level a stored or typed value stands for, `None` for anything outside 0..=4. That
+    /// includes vanilla's `sk_noitems = -1` "no skill": it existed but no path let it reach the
+    /// game (only `-skill 0` produced it, which then shifted by a negative amount).
+    pub const fn from_raw(value: i32) -> Option<Self> {
+        Some(match value {
+            0 => Self::Baby,
+            1 => Self::Easy,
+            2 => Self::Medium,
+            3 => Self::Hard,
+            4 => Self::Nightmare,
+            _ => return None,
+        })
     }
+}
+
+/// [`SkillType::from_raw`] for a value that must be a level (savegame, demo header, menu, net
+/// settings): anything else is fatal.
+pub fn skill_from_raw(v: i32) -> SkillType {
+    SkillType::from_raw(v).unwrap_or_else(|| panic!("invalid skill level {v}"))
 }
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum GameMission {
@@ -115,5 +127,31 @@ pub fn game_mission_string(mission: GameMission) -> &'static str {
         GameMission::Hexen => "hexen",
         GameMission::Strife => "strife",
         GameMission::None => "none",
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::SkillType;
+
+    #[test]
+    fn skill_levels_keep_the_values_the_file_formats_store() {
+        for (value, level) in [
+            (0, SkillType::Baby),
+            (1, SkillType::Easy),
+            (2, SkillType::Medium),
+            (3, SkillType::Hard),
+            (4, SkillType::Nightmare),
+        ] {
+            assert_eq!(SkillType::from_raw(value), Some(level));
+            assert_eq!(level as i32, value);
+        }
+    }
+
+    #[test]
+    fn a_value_outside_the_five_levels_is_no_skill() {
+        assert_eq!(SkillType::from_raw(-1), None); // vanilla's sk_noitems
+        assert_eq!(SkillType::from_raw(5), None);
+        assert_eq!(SkillType::from_raw(255), None);
     }
 }
