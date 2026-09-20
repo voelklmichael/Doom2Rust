@@ -25,6 +25,7 @@ use crate::p_mobj::MobjFlags;
 use crate::p_saveg::save_game_file;
 use crate::p_setup::LineId;
 use crate::p_setup::SectorId;
+use crate::p_spec::cross_special_line;
 use crate::p_switch::use_special_line;
 use crate::p_tick::mobj_thinker_ids;
 use crate::platform::DoomPlatform;
@@ -432,6 +433,16 @@ fn cast_trace() -> Option<String> {
 /// from a monster, on both sides, and hashes each outcome and the resulting
 /// world. Covers every arm of `use_special_line`.
 fn use_special_line_trace() -> Option<String> {
+    special_line_trace(false)
+}
+
+/// The same sweep, walking over the line instead: covers every arm of `cross_special_line`
+/// (the W1/WR doors, floors, ceilings, platforms, lights, stairs and donuts).
+fn cross_special_line_trace() -> Option<String> {
+    special_line_trace(true)
+}
+
+fn special_line_trace(walk: bool) -> Option<String> {
     let state = start_e1m1()?;
     let (save_path, _) = save_slot(state, 0);
     let line = (0..state.world.p_setup.numlines)
@@ -461,7 +472,12 @@ fn use_special_line_trace() -> Option<String> {
                 };
                 state.world.p_setup.line_mut(line).special = special;
                 state.world.p_setup.line_mut(line).tag = tag;
-                let used = use_special_line(state, actor, line, side);
+                let used = if walk {
+                    cross_special_line(state, line.0 as i32, side, actor);
+                    true
+                } else {
+                    use_special_line(state, actor, line, side)
+                };
                 // Let any mover that was started run for a few tics, and
                 // note what the use did to the line itself (a switch flips
                 // its textures and clears once-only specials).
@@ -475,6 +491,12 @@ fn use_special_line_trace() -> Option<String> {
                 };
                 let line_special = state.world.p_setup.line(line).special;
                 let world = world_summary(state);
+                // Then long enough for the slow movers to finish: a door waits 150 tics before
+                // it closes, a crusher cycles, a platform waits at each end.
+                for _ in 0..250 {
+                    crate::p_tick::run_thinkers(state);
+                }
+                let settled = world_summary(state);
                 hash = fnv(
                     hash,
                     [
@@ -484,11 +506,44 @@ fn use_special_line_trace() -> Option<String> {
                         side_textures[1] as u32,
                         side_textures[2] as u32,
                         fnv_bytes(world.as_bytes()) as u32,
+                        fnv_bytes(settled.as_bytes()) as u32,
                     ],
                 );
                 state.game.g_game.gameaction = crate::d_event::GameAction::Nothing;
             }
         }
+    }
+    Some(format!("{hash:016x}"))
+}
+
+/// Starts each crusher, stops it (stasis), starts it again and stops it with the repeatable
+/// stop, hashing the world after every step: exercises a ceiling's remembered direction.
+fn crusher_stasis_trace() -> Option<String> {
+    let state = start_e1m1()?;
+    let (save_path, _) = save_slot(state, 0);
+    let line = (0..state.world.p_setup.numlines)
+        .map(|i| LineId(i as u32))
+        .find(|&l| state.world.p_setup.line(l).backsector.is_some())?;
+    let tag = (0..state.world.p_setup.numsectors)
+        .map(|i| state.world.p_setup.sector_mut(SectorId(i as u32)).tag)
+        .find(|&t| t != 0)?;
+    let mut hash = FNV_OFFSET;
+    for start in [6i16, 25, 73, 77, 141] {
+        g_load_game(&mut state.game.g_game, &save_path);
+        do_load_game(state);
+        let player = state.game.g_game.players[0].mo.unwrap();
+        state.world.p_setup.line_mut(line).tag = tag;
+        // start, stop (57), start again from stasis, stop again (74), start once more
+        for (special, tics) in [(start, 30), (57, 20), (start, 40), (74, 10), (start, 30)] {
+            state.world.p_setup.line_mut(line).special = special;
+            cross_special_line(state, line.0 as i32, 0, player);
+            for _ in 0..tics {
+                crate::p_tick::run_thinkers(state);
+            }
+            let world = world_summary(state);
+            hash = fnv(hash, [fnv_bytes(world.as_bytes()) as u32]);
+        }
+        state.game.g_game.gameaction = crate::d_event::GameAction::Nothing;
     }
     Some(format!("{hash:016x}"))
 }
@@ -500,6 +555,8 @@ fn actual_output() -> Option<String> {
     }
     writeln!(out, "cast {}", cast_trace()?).unwrap();
     writeln!(out, "usespecial {}", use_special_line_trace()?).unwrap();
+    writeln!(out, "crossspecial {}", cross_special_line_trace()?).unwrap();
+    writeln!(out, "crusher {}", crusher_stasis_trace()?).unwrap();
     let state = start_e1m1()?;
     let (_, save) = save_slot(state, 0);
     writeln!(

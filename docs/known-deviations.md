@@ -347,3 +347,11 @@ DOS Doom or Chocolate Doom:
 - Only MUS lumps play; a PWAD with MIDI-format music is silent.
 - The output is raised by `MUSIC_GAIN` so music and effects are of similar loudness.
 - `-nomusic` turns it off. It needs an audio device and the `GENMIDI` lump.
+
+## Savegame: unknown mover directions read as "still"
+
+A door, ceiling, floor or glow `direction` in a savegame that this engine never writes (anything
+other than -1, 0, 1, 2) is read as `Direction::Still` (`Direction::from_save`). Vanilla kept the
+raw value, which none of the mover `match`es handled; for ceilings, floors and glows that is the
+same as standing still, for a door "still" runs the top-wait countdown. Only a hand-edited or
+corrupt save can differ; saves written by this engine round-trip exactly.

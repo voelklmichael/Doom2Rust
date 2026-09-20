@@ -4,6 +4,7 @@ use crate::m_fixed::FRACUNIT;
 use crate::p_floor::move_plane;
 use crate::p_floor::ResultE;
 use crate::p_setup::PSetupState;
+use crate::p_spec::{Direction, Plane};
 use crate::p_tick::PTickState;
 use alloc::boxed::Box;
 use alloc::vec::Vec;
@@ -126,14 +127,14 @@ pub fn move_ceiling(state: &mut GameState, id: CeilingId) {
         .get_ref(id)
         .expect("ThinkerFn::Ceiling id must reference a live ceiling");
     match ceiling.direction {
-        1 => {
+        Direction::Up => {
             let res = move_plane(
                 state,
                 ceiling.sector,
                 ceiling.speed,
                 ceiling.topheight,
                 false,
-                1,
+                Plane::Ceiling,
                 ceiling.direction,
             );
             if state.world.p_tick.leveltime & 7 == 0
@@ -158,7 +159,7 @@ pub fn move_ceiling(state: &mut GameState, id: CeilingId) {
                             .p_ceilng
                             .get_mut(id)
                             .expect("live ceiling")
-                            .direction = -1;
+                            .direction = Direction::Down;
                     }
                     CeilingE::FastCrushAndRaise | CeilingE::CrushAndRaise => {
                         state
@@ -166,20 +167,20 @@ pub fn move_ceiling(state: &mut GameState, id: CeilingId) {
                             .p_ceilng
                             .get_mut(id)
                             .expect("live ceiling")
-                            .direction = -1;
+                            .direction = Direction::Down;
                     }
                     _ => {}
                 }
             }
         }
-        -1 => {
+        Direction::Down => {
             let res = move_plane(
                 state,
                 ceiling.sector,
                 ceiling.speed,
                 ceiling.bottomheight,
                 ceiling.crush,
-                1,
+                Plane::Ceiling,
                 ceiling.direction,
             );
             if state.world.p_tick.leveltime & 7 == 0
@@ -193,12 +194,12 @@ pub fn move_ceiling(state: &mut GameState, id: CeilingId) {
                         s_start_sound(state, SoundOrigin::Sector(ceiling.sector), SfxName::Pstop);
                         let c = state.world.p_ceilng.get_mut(id).expect("live ceiling");
                         c.speed = CEILSPEED as Fixed;
-                        c.direction = 1;
+                        c.direction = Direction::Up;
                     }
                     CeilingE::CrushAndRaise => {
                         let c = state.world.p_ceilng.get_mut(id).expect("live ceiling");
                         c.speed = CEILSPEED as Fixed;
-                        c.direction = 1;
+                        c.direction = Direction::Up;
                     }
                     CeilingE::FastCrushAndRaise => {
                         state
@@ -206,7 +207,7 @@ pub fn move_ceiling(state: &mut GameState, id: CeilingId) {
                             .p_ceilng
                             .get_mut(id)
                             .expect("live ceiling")
-                            .direction = 1;
+                            .direction = Direction::Up;
                     }
                     CeilingE::LowerAndCrush | CeilingE::LowerToFloor => {
                         remove_active_ceiling(
@@ -272,7 +273,7 @@ pub fn do_ceiling(
                 ceiling.crush = true;
                 ceiling.topheight = ceilingheight;
                 ceiling.bottomheight = (floorheight + 8 * FRACUNIT) as Fixed;
-                ceiling.direction = -1;
+                ceiling.direction = Direction::Down;
                 ceiling.speed = (CEILSPEED * 2) as Fixed;
             }
             CeilingE::SilentCrushAndRaise | CeilingE::CrushAndRaise => {
@@ -285,7 +286,7 @@ pub fn do_ceiling(
             }
             CeilingE::RaiseToHighest => {
                 ceiling.topheight = find_highest_ceiling_surrounding(p_setup, sec);
-                ceiling.direction = 1;
+                ceiling.direction = Direction::Up;
                 ceiling.speed = CEILSPEED as Fixed;
             }
         }
@@ -294,7 +295,7 @@ pub fn do_ceiling(
             if kind != CeilingE::LowerToFloor {
                 ceiling.bottomheight += 8 * FRACUNIT;
             }
-            ceiling.direction = -1;
+            ceiling.direction = Direction::Down;
             ceiling.speed = CEILSPEED as Fixed;
         }
         ceiling.tag = tag;
@@ -342,7 +343,7 @@ pub fn activate_in_stasis_ceiling(p_ceilng: &mut PCeilngState, p_tick: &PTickSta
         if let Some(id) = p_ceilng.activeceilings[i] {
             let ceiling_id = p_tick.ceiling_payload(id);
             let c = p_ceilng.get_mut(ceiling_id).expect("live ceiling");
-            if c.tag == tag && c.direction == 0 {
+            if c.tag == tag && c.direction == Direction::Still {
                 c.direction = c.olddirection;
                 c.thinker.function = ThinkerFn::Ceiling(move_ceiling);
             }
@@ -355,10 +356,10 @@ pub fn ceiling_crush_stop(p_ceilng: &mut PCeilngState, p_tick: &PTickState, tag:
         if let Some(id) = p_ceilng.activeceilings[i] {
             let ceiling_id = p_tick.ceiling_payload(id);
             let c = p_ceilng.get_mut(ceiling_id).expect("live ceiling");
-            if c.tag == tag && c.direction != 0 {
+            if c.tag == tag && c.direction != Direction::Still {
                 c.olddirection = c.direction;
                 c.thinker.function = ThinkerFn::Paused;
-                c.direction = 0;
+                c.direction = Direction::Still;
                 rtn = true;
             }
         }

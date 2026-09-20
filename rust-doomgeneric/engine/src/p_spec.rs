@@ -245,6 +245,45 @@ impl Default for Plat {
         }
     }
 }
+/// Which way a moving sector plane (door, ceiling, floor) is heading: `direction` in the C source.
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+pub enum Direction {
+    /// Lowering / closing.
+    Down = -1,
+    /// Not moving: a ceiling in stasis, or a door waiting at the top for its countdown.
+    #[default]
+    Still = 0,
+    /// Raising / opening.
+    Up = 1,
+    /// A door that has not started its countdown yet (`P_SpawnDoorRaiseIn5Mins`).
+    InitialWait = 2,
+}
+
+impl Direction {
+    /// The value the savegame stores.
+    pub const fn to_save(self) -> i32 {
+        self as i32
+    }
+
+    /// The direction a savegame value stands for. A value this engine never writes is read as
+    /// [`Direction::Still`] (vanilla kept the garbage, which no thinker `match` handled).
+    pub const fn from_save(value: i32) -> Self {
+        match value {
+            -1 => Self::Down,
+            1 => Self::Up,
+            2 => Self::InitialWait,
+            _ => Self::Still,
+        }
+    }
+}
+
+/// Which surface `move_plane` moves: `floorOrCeiling` in the C source.
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+pub enum Plane {
+    Floor = 0,
+    Ceiling = 1,
+}
+
 #[derive(Copy, Clone)]
 pub struct Ceiling {
     pub thinker: Thinker,
@@ -254,9 +293,9 @@ pub struct Ceiling {
     pub topheight: Fixed,
     pub speed: Fixed,
     pub crush: bool,
-    pub direction: i32,
+    pub direction: Direction,
     pub tag: i32,
-    pub olddirection: i32,
+    pub olddirection: Direction,
 }
 // Placeholder passed to PCeilngState::spawn() -- every real field is set by
 // the caller within a few lines of spawn() returning (do_ceiling, and
@@ -273,9 +312,9 @@ impl Default for Ceiling {
             topheight: 0,
             speed: 0,
             crush: false,
-            direction: 0,
+            direction: Direction::Still,
             tag: 0,
-            olddirection: 0,
+            olddirection: Direction::Still,
         }
     }
 }
@@ -285,7 +324,7 @@ pub struct FloorMove {
     pub kind: FloorE,
     pub crush: bool,
     pub sector: SectorId,
-    pub direction: i32,
+    pub direction: Direction,
     pub newspecial: i32,
     pub texture: i16,
     pub floordestheight: Fixed,
@@ -304,7 +343,7 @@ impl Default for FloorMove {
             kind: FloorE::LowerFloor,
             crush: false,
             sector: SectorId(0),
-            direction: 0,
+            direction: Direction::Still,
             newspecial: 0,
             texture: 0,
             floordestheight: 0,
@@ -1222,7 +1261,7 @@ pub fn do_donut(state: &mut GameState, line: LineId) -> bool {
             floor.thinker.function = ThinkerFn::Floor(move_floor);
             floor.kind = FloorE::DonutRaise;
             floor.crush = false;
-            floor.direction = 1;
+            floor.direction = Direction::Up;
             floor.sector = s2;
             floor.speed = (FLOORSPEED / 2) as Fixed;
             floor.texture = s3_floorpic;
@@ -1239,7 +1278,7 @@ pub fn do_donut(state: &mut GameState, line: LineId) -> bool {
             floor.thinker.function = ThinkerFn::Floor(move_floor);
             floor.kind = FloorE::LowerFloor;
             floor.crush = false;
-            floor.direction = -1;
+            floor.direction = Direction::Down;
             floor.sector = s1;
             floor.speed = (FLOORSPEED / 2) as Fixed;
             floor.floordestheight = s3_floorheight;
@@ -1344,5 +1383,38 @@ pub fn spawn_specials(state: &mut GameState) {
     }
     for i in 0..(MAXBUTTONS as usize) {
         state.world.p_switch.buttonlist[i] = EMPTY_BUTTON;
+    }
+}
+
+#[cfg(test)]
+mod direction_tests {
+    use super::{Direction, Plane};
+
+    #[test]
+    fn directions_keep_the_values_the_c_code_and_savegames_use() {
+        assert_eq!(Direction::Down as i32, -1);
+        assert_eq!(Direction::Still as i32, 0);
+        assert_eq!(Direction::Up as i32, 1);
+        assert_eq!(Direction::InitialWait as i32, 2);
+        assert_eq!(Plane::Floor as i32, 0);
+        assert_eq!(Plane::Ceiling as i32, 1);
+    }
+
+    #[test]
+    fn a_direction_survives_the_savegame_round_trip() {
+        for direction in [
+            Direction::Down,
+            Direction::Still,
+            Direction::Up,
+            Direction::InitialWait,
+        ] {
+            assert_eq!(Direction::from_save(direction.to_save()), direction);
+        }
+    }
+
+    #[test]
+    fn a_value_the_engine_never_writes_reads_as_still() {
+        assert_eq!(Direction::from_save(7), Direction::Still);
+        assert_eq!(Direction::from_save(-5), Direction::Still);
     }
 }
