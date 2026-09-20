@@ -985,7 +985,7 @@ pub fn un_archive_thinkers(state: &mut GameState) {
                 );
             }
             _ => {
-                error(&format!("Unknown tclass {} in savegame", i32::from(tclass),));
+                error(&format!("Unknown tclass {} in savegame", i32::from(tclass)));
             }
         }
     }
@@ -1242,8 +1242,10 @@ mod tests {
         saveg_write_pad(&mut w);
         assert_eq!(w.save_buffer.len(), 12);
 
-        let mut r = PSavegState::default();
-        r.save_buffer = w.save_buffer;
+        let mut r = PSavegState {
+            save_buffer: w.save_buffer,
+            ..Default::default()
+        };
         assert_eq!(saveg_read8(&mut r), 0x7f);
         saveg_read_pad(&mut r);
         assert_eq!(saveg_read32(&mut r), -123456);
@@ -1255,8 +1257,10 @@ mod tests {
 
     #[test]
     fn reading_past_the_end_flags_an_error_and_yields_zero() {
-        let mut r = PSavegState::default();
-        r.save_buffer = vec![1];
+        let mut r = PSavegState {
+            save_buffer: vec![1],
+            ..Default::default()
+        };
         assert_eq!(saveg_read16(&mut r), 1);
         assert!(r.savegame_error);
     }

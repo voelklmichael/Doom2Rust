@@ -341,7 +341,7 @@ pub fn do_floor(state: &mut GameState, line: LineId, floortype: FloorE) -> bool 
                     }
                 }
             }
-            _ => {}
+            FloorE::DonutRaise => {}
         }
         if raise_lowest_ceiling {
             floor.direction = Direction::Up;

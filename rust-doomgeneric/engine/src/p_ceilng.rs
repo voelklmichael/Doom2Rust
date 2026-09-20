@@ -204,7 +204,7 @@ pub fn move_ceiling(state: &mut GameState, id: CeilingId) {
                             id,
                         );
                     }
-                    _ => {}
+                    CeilingE::RaiseToHighest => {}
                 }
             } else if res == ResultE::Crushed {
                 match ceiling.kind {

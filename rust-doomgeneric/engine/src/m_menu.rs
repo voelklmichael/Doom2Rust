@@ -1455,8 +1455,9 @@ pub fn m_responder(state: &mut GameState, ev: &Event) -> bool {
             }
             KEY_ESCAPE => {
                 state.ui.m_menu.save_string_enter = false;
-                state.ui.m_menu.savegamestrings[state.ui.m_menu.save_slot as usize] =
-                    state.ui.m_menu.save_old_string.clone();
+                let old_string = state.ui.m_menu.save_old_string.clone();
+                state.ui.m_menu.savegamestrings[state.ui.m_menu.save_slot as usize]
+                    .clone_from(&old_string);
             }
             KEY_ENTER => {
                 state.ui.m_menu.save_string_enter = false;

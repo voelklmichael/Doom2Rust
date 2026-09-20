@@ -153,15 +153,10 @@ pub fn plat_raise(state: &mut GameState, id: PlatId) {
                 p.status = PlatE::Waiting;
                 s_start_sound(state, SoundOrigin::Sector(plat.sector), SfxName::Pstop);
                 match plat.kind {
-                    PlattypeE::BlazeDWUS | PlattypeE::DownWaitUpStay => {
-                        remove_active_plat(
-                            &mut state.world.p_plats,
-                            &mut state.world.p_setup,
-                            &state.world.p_tick,
-                            id,
-                        );
-                    }
-                    PlattypeE::RaiseAndChange | PlattypeE::RaiseToNearestAndChange => {
+                    PlattypeE::BlazeDWUS
+                    | PlattypeE::DownWaitUpStay
+                    | PlattypeE::RaiseAndChange
+                    | PlattypeE::RaiseToNearestAndChange => {
                         remove_active_plat(
                             &mut state.world.p_plats,
                             &mut state.world.p_setup,

@@ -517,6 +517,36 @@ pub fn start_cast(state: &mut GameState) {
     state.ui.f_finale.castattacking = false;
     change_music(state, MusicName::Evil as i32, true);
 }
+/// The sound that starts when the cast member's animation enters `state` (none for most states).
+fn cast_attack_sound(state: StateNum) -> SfxName {
+    match state {
+        StateNum::PlayAtk1 => SfxName::Dshtgn,
+        StateNum::PossAtk2 => SfxName::Pistol,
+        StateNum::SposAtk2
+        | StateNum::CposAtk2
+        | StateNum::CposAtk3
+        | StateNum::CposAtk4
+        | StateNum::SpidAtk2
+        | StateNum::SpidAtk3 => SfxName::Shotgn,
+        StateNum::VileAtk2 => SfxName::Vilatk,
+        StateNum::SkelFist2 => SfxName::Skeswg,
+        StateNum::SkelFist4 => SfxName::Skepch,
+        StateNum::SkelMiss2 => SfxName::Skeatk,
+        StateNum::FattAtk8
+        | StateNum::FattAtk5
+        | StateNum::FattAtk2
+        | StateNum::BossAtk2
+        | StateNum::Bos2Atk2
+        | StateNum::HeadAtk2 => SfxName::Firsht,
+        StateNum::TrooAtk3 => SfxName::Claw,
+        StateNum::SargAtk2 => SfxName::Sgtatk,
+        StateNum::SkullAtk2 | StateNum::PainAtk3 => SfxName::Sklatk,
+        StateNum::BspiAtk2 => SfxName::Plasma,
+        StateNum::CyberAtk2 | StateNum::CyberAtk4 | StateNum::CyberAtk6 => SfxName::Rlaunc,
+        _ => SfxName::SfxNone,
+    }
+}
+
 pub fn cast_ticker(state: &mut GameState) {
     state.ui.f_finale.casttics -= 1;
     if state.ui.f_finale.casttics > 0 {
@@ -561,26 +591,7 @@ pub fn cast_ticker(state: &mut GameState) {
         let st = cur_caststate.nextstate as i32;
         state.ui.f_finale.caststate = Some(StateId(st as u32));
         state.ui.f_finale.castframes += 1;
-        let sfx = match st {
-            154 => SfxName::Dshtgn,
-            185 => SfxName::Pistol,
-            218 => SfxName::Shotgn,
-            256 => SfxName::Vilatk,
-            336 => SfxName::Skeswg,
-            338 => SfxName::Skepch,
-            340 => SfxName::Skeatk,
-            383 | 380 | 377 => SfxName::Firsht,
-            417..=419 => SfxName::Shotgn,
-            454 => SfxName::Claw,
-            486 => SfxName::Sgtatk,
-            538 | 567 | 505 => SfxName::Firsht,
-            590 => SfxName::Sklatk,
-            616 | 617 => SfxName::Shotgn,
-            648 => SfxName::Plasma,
-            685 | 687 | 689 => SfxName::Rlaunc,
-            710 => SfxName::Sklatk,
-            _ => SfxName::SfxNone,
-        };
+        let sfx = cast_attack_sound(cur_caststate.nextstate);
         if sfx != SfxName::SfxNone {
             s_start_sound(state, SoundOrigin::None, sfx);
         }
@@ -714,11 +725,10 @@ pub fn cast_drawer(state: &mut GameState) {
         &mut state.assets.w_wad,
         state.render.r_data.firstspritelump + lump,
     );
+    let dest_screen = Screen::Video;
     if flip {
-        let dest_screen = Screen::Video;
         draw_patch_flipped(state, dest_screen, 160, 170, &patch);
     } else {
-        let dest_screen = Screen::Video;
         draw_patch(state, dest_screen, 160, 170, &patch);
     }
 }
@@ -823,6 +833,47 @@ pub fn f_drawer(state: &mut GameState) {
         }
         FinaleStage::ArtScreen => {
             art_screen_drawer(state);
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::p_mobj::statenum_from_raw;
+
+    /// The mapping as it was written before it used state names: by raw state number.
+    #[allow(clippy::match_same_arms)] // deliberately kept as the original table
+    fn by_number(n: i32) -> SfxName {
+        match n {
+            154 => SfxName::Dshtgn,
+            185 => SfxName::Pistol,
+            218 => SfxName::Shotgn,
+            256 => SfxName::Vilatk,
+            336 => SfxName::Skeswg,
+            338 => SfxName::Skepch,
+            340 => SfxName::Skeatk,
+            383 | 380 | 377 => SfxName::Firsht,
+            417..=419 => SfxName::Shotgn,
+            454 => SfxName::Claw,
+            486 => SfxName::Sgtatk,
+            538 | 567 | 505 => SfxName::Firsht,
+            590 => SfxName::Sklatk,
+            616 | 617 => SfxName::Shotgn,
+            648 => SfxName::Plasma,
+            685 | 687 | 689 => SfxName::Rlaunc,
+            710 => SfxName::Sklatk,
+            _ => SfxName::SfxNone,
+        }
+    }
+
+    #[test]
+    fn every_state_makes_the_sound_it_made_by_number() {
+        for n in 0..=StateNum::Tech2lamp4 as i32 {
+            assert!(
+                cast_attack_sound(statenum_from_raw(n)) == by_number(n),
+                "state {n}"
+            );
         }
     }
 }

@@ -11,6 +11,7 @@ use crate::p_mobj::MobjFlags;
 use crate::p_mobj::PMobjState;
 use crate::p_pspr::PPsprState;
 use crate::p_setup::PSetupState;
+use core::cmp::Ordering;
 
 use crate::p_mobj::MobjId;
 use crate::p_setup::LineId;
@@ -547,18 +548,13 @@ pub fn add_thing_intercepts(state: &mut GameState, thing_id: MobjId) -> bool {
     };
     let trace = state.world.p_maputl.trace;
     let tracepositive = trace.dx ^ trace.dy > Fixed::ZERO;
-    let (x1, y1, x2, y2);
-    if tracepositive {
-        x1 = thing_x - thing_radius;
-        y1 = thing_y + thing_radius;
-        x2 = thing_x + thing_radius;
-        y2 = thing_y - thing_radius;
+    let x1 = thing_x - thing_radius;
+    let x2 = thing_x + thing_radius;
+    let (y1, y2) = if tracepositive {
+        (thing_y + thing_radius, thing_y - thing_radius)
     } else {
-        x1 = thing_x - thing_radius;
-        y1 = thing_y - thing_radius;
-        x2 = thing_x + thing_radius;
-        y2 = thing_y + thing_radius;
-    }
+        (thing_y - thing_radius, thing_y + thing_radius)
+    };
     let s1 = point_on_divline_side(x1, y1, &trace);
     let s2 = point_on_divline_side(x2, y2, &trace);
     if s1 == s2 {
@@ -742,36 +738,32 @@ pub fn path_traverse<F: FnMut(&mut GameState, Intercept) -> bool>(
     y2 -= state.world.p_setup.bmaporgy;
     let xt2: i32 = x2.to_block();
     let yt2: i32 = y2.to_block();
-    let (mapxstep, partial, ystep): (i32, Fixed, Fixed) = if xt2 > xt1 {
-        (
+    let (mapxstep, partial, ystep): (i32, Fixed, Fixed) = match xt2.cmp(&xt1) {
+        Ordering::Greater => (
             1,
             (FRACUNIT - (x1 >> MAPBTOFRAC & (FRACUNIT - Fixed(1)).to_bits())),
             fixed_div(y2 - y1, (x2 - x1).abs()),
-        )
-    } else if xt2 < xt1 {
-        (
+        ),
+        Ordering::Less => (
             -1,
             (x1 >> MAPBTOFRAC & (FRACUNIT - Fixed(1)).to_bits()),
             fixed_div(y2 - y1, (x2 - x1).abs()),
-        )
-    } else {
-        (0, FRACUNIT, (256 * FRACUNIT))
+        ),
+        Ordering::Equal => (0, FRACUNIT, (256 * FRACUNIT)),
     };
     let mut yintercept: Fixed = (y1 >> MAPBTOFRAC) + fixed_mul(partial, ystep);
-    let (mapystep, partial, xstep): (i32, Fixed, Fixed) = if yt2 > yt1 {
-        (
+    let (mapystep, partial, xstep): (i32, Fixed, Fixed) = match yt2.cmp(&yt1) {
+        Ordering::Greater => (
             1,
             (FRACUNIT - (y1 >> MAPBTOFRAC & (FRACUNIT - Fixed(1)).to_bits())),
             fixed_div(x2 - x1, (y2 - y1).abs()),
-        )
-    } else if yt2 < yt1 {
-        (
+        ),
+        Ordering::Less => (
             -1,
             (y1 >> MAPBTOFRAC & (FRACUNIT - Fixed(1)).to_bits()),
             fixed_div(x2 - x1, (y2 - y1).abs()),
-        )
-    } else {
-        (0, FRACUNIT, (256 * FRACUNIT))
+        ),
+        Ordering::Equal => (0, FRACUNIT, (256 * FRACUNIT)),
     };
     let mut xintercept: Fixed = (x1 >> MAPBTOFRAC) + fixed_mul(partial, xstep);
     let mut mapx: i32 = xt1;

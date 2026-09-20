@@ -345,19 +345,24 @@ pub fn hu_start(state: &mut GameState) {
         167 - hu_font0_height,
         HU_FONTSTART,
     );
-    let mut s: &str = match state.game.doomstat.gamemission.base() {
-        GameMission::Doom => {
-            MAPNAMES
-                [((state.game.g_game.gameepisode - 1) * 9 + state.game.g_game.gamemap - 1) as usize]
+    let s: &str = if state.game.doomstat.gameversion == GameVersion::Chex {
+        MAPNAMES[(state.game.g_game.gamemap - 1) as usize]
+    } else {
+        match state.game.doomstat.gamemission.base() {
+            GameMission::Doom => {
+                MAPNAMES[((state.game.g_game.gameepisode - 1) * 9 + state.game.g_game.gamemap - 1)
+                    as usize]
+            }
+            GameMission::Doom2 => MAPNAMES_COMMERCIAL[(state.game.g_game.gamemap - 1) as usize],
+            GameMission::PackPlut => {
+                MAPNAMES_COMMERCIAL[(state.game.g_game.gamemap - 1 + 32) as usize]
+            }
+            GameMission::PackTnt => {
+                MAPNAMES_COMMERCIAL[(state.game.g_game.gamemap - 1 + 64) as usize]
+            }
+            _ => "Unknown level",
         }
-        GameMission::Doom2 => MAPNAMES_COMMERCIAL[(state.game.g_game.gamemap - 1) as usize],
-        GameMission::PackPlut => MAPNAMES_COMMERCIAL[(state.game.g_game.gamemap - 1 + 32) as usize],
-        GameMission::PackTnt => MAPNAMES_COMMERCIAL[(state.game.g_game.gamemap - 1 + 64) as usize],
-        _ => "Unknown level",
     };
-    if state.game.doomstat.gameversion == GameVersion::Chex {
-        s = MAPNAMES[(state.game.g_game.gamemap - 1) as usize];
-    }
     for b in s.bytes() {
         hulib_add_char_to_text_line(&mut state.ui.hu_stuff.w_title, b);
     }

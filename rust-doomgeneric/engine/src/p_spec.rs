@@ -1040,14 +1040,8 @@ pub fn cross_special_line(state: &mut GameState, linenum: i32, side: i32, thing:
 }
 pub fn shoot_special_line(state: &mut GameState, thing: MobjId, line: LineId) {
     let special = state.world.p_setup.line(line).special;
-    if state.world.p_mobj.mo(thing).player.is_none() {
-        let mut ok: i32 = 0;
-        if i32::from(special) == 46 {
-            ok = 1;
-        }
-        if ok == 0 {
-            return;
-        }
+    if state.world.p_mobj.mo(thing).player.is_none() && i32::from(special) != 46 {
+        return;
     }
     match i32::from(special) {
         24 => {

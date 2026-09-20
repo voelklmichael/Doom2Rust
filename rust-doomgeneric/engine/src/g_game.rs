@@ -459,8 +459,8 @@ fn g_next_weapon(doomstat: &DoomstatState, g_game: &GGameState, direction: Weapo
         i = (i as usize)
             .wrapping_add(WEAPON_ORDER_TABLE.len())
             .wrapping_rem(WEAPON_ORDER_TABLE.len()) as i32;
-        if !(i != start_i
-            && !weapon_selectable(doomstat, g_game, WEAPON_ORDER_TABLE[i as usize].weapon))
+        if i == start_i
+            || weapon_selectable(doomstat, g_game, WEAPON_ORDER_TABLE[i as usize].weapon)
         {
             break;
         }
@@ -1561,10 +1561,9 @@ pub fn write_demo_ticcmd(state: &mut GameState, player_num: usize) {
 pub fn record_demo(g_game: &mut GGameState, options: &Options, name: &str) {
     g_game.usergame = false;
     g_game.demoname = format!("{name}.lmp");
-    let mut maxsize: i32 = 0x20000;
-    if let Some(kilobytes) = options.maxdemo {
-        maxsize = kilobytes * 1024;
-    }
+    let maxsize: i32 = options
+        .maxdemo
+        .map_or(0x20000, |kilobytes| kilobytes * 1024);
     g_game.demobuffer = vec![0u8; maxsize as usize];
     g_game.demoend = maxsize as usize;
     g_game.demorecording = true;
