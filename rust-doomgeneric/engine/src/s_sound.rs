@@ -267,13 +267,7 @@ fn adjust_sound_params(
     if state.game.g_game.gamemap != 8 && approx_dist > S_CLIPPING_DIST {
         return None;
     }
-    let mut angle: Angle = point_to_angle2(
-        &mut state.render.r_main,
-        listener_x,
-        listener_y,
-        source_x,
-        source_y,
-    );
+    let mut angle: Angle = point_to_angle2(listener_x, listener_y, source_x, source_y);
     if angle > listener_angle {
         angle = angle.wrapping_sub(listener_angle);
     } else {

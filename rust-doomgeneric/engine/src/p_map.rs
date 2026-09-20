@@ -30,6 +30,8 @@ use crate::p_maputl::PT_ADDLINES;
 use crate::p_maputl::PT_ADDTHINGS;
 use crate::p_mobj::LineFlags;
 use crate::p_mobj::MobjFlags;
+use crate::p_mobj::PMobjState;
+use crate::p_setup::PSetupState;
 use crate::platform::DoomPlatform;
 
 use crate::p_mobj::remove_mobj;
@@ -197,7 +199,7 @@ pub fn teleport_move(state: &mut GameState, thing: MobjId, x: Fixed, y: Fixed) -
         .p_setup
         .sector_mut(state.world.p_setup.subsectors[newsubsec.0 as usize].sector)
         .ceilingheight;
-    state.render.r_main.validcount += 1;
+    state.world.p_setup.validcount += 1;
     state.world.p_map.numspechit = 0;
     let xl: i32 =
         (state.world.p_map.tmbbox[BoxIndex::Left] - state.world.p_setup.bmaporgx - 32 * FRACUNIT)
@@ -446,7 +448,7 @@ pub fn check_position(state: &mut GameState, thing: MobjId, x: Fixed, y: Fixed) 
         .p_setup
         .sector_mut(state.world.p_setup.subsectors[newsubsec.0 as usize].sector)
         .ceilingheight;
-    state.render.r_main.validcount += 1;
+    state.world.p_setup.validcount += 1;
     state.world.p_map.numspechit = 0;
     if state.world.p_map.tmflags.contains(MobjFlags::NOCLIP) {
         return true;
@@ -588,44 +590,38 @@ pub fn thing_height_clip(state: &mut GameState, thing: MobjId) -> bool {
     }
     true
 }
-pub fn hit_slide_line(state: &mut GameState, ld: LineId) {
-    let ldv = state.world.p_setup.line(ld);
+pub fn hit_slide_line(
+    p_map: &mut PMapState,
+    p_mobj: &PMobjState,
+    p_setup: &PSetupState,
+    ld: LineId,
+) {
+    let ldv = p_setup.line(ld);
     if ldv.slopetype == SlopeType::Horizontal {
-        state.world.p_map.tmymove = 0;
+        p_map.tmymove = 0;
         return;
     }
     if ldv.slopetype == SlopeType::Vertical {
-        state.world.p_map.tmxmove = 0;
+        p_map.tmxmove = 0;
         return;
     }
-    let slidemo = state.world.p_map.slidemo.unwrap();
-    let side: i32 = point_on_line_side(
-        &state.world.p_setup,
-        state.world.p_mobj.mo(slidemo).x,
-        state.world.p_mobj.mo(slidemo).y,
-        ld,
-    );
-    let mut lineangle: Angle = point_to_angle2(&mut state.render.r_main, 0, 0, ldv.dx, ldv.dy);
+    let slidemo = p_map.slidemo.unwrap();
+    let side: i32 = point_on_line_side(p_setup, p_mobj.mo(slidemo).x, p_mobj.mo(slidemo).y, ld);
+    let mut lineangle: Angle = point_to_angle2(0, 0, ldv.dx, ldv.dy);
     if side == 1 {
         lineangle = lineangle.wrapping_add(ANG180) as Angle as Angle;
     }
-    let moveangle: Angle = point_to_angle2(
-        &mut state.render.r_main,
-        0,
-        0,
-        state.world.p_map.tmxmove,
-        state.world.p_map.tmymove,
-    );
+    let moveangle: Angle = point_to_angle2(0, 0, p_map.tmxmove, p_map.tmymove);
     let mut deltaangle: Angle = moveangle.wrapping_sub(lineangle);
     if deltaangle > ANG180 {
         deltaangle = deltaangle.wrapping_add(ANG180) as Angle as Angle;
     }
     lineangle >>= ANGLETOFINESHIFT;
     deltaangle >>= ANGLETOFINESHIFT;
-    let movelen: Fixed = aprox_distance(state.world.p_map.tmxmove, state.world.p_map.tmymove);
+    let movelen: Fixed = aprox_distance(p_map.tmxmove, p_map.tmymove);
     let newlen: Fixed = fixed_mul(movelen, FINECOSINE[deltaangle as usize]);
-    state.world.p_map.tmxmove = fixed_mul(newlen, FINECOSINE[lineangle as usize]);
-    state.world.p_map.tmymove = fixed_mul(newlen, FINESINE[lineangle as usize]);
+    p_map.tmxmove = fixed_mul(newlen, FINECOSINE[lineangle as usize]);
+    p_map.tmymove = fixed_mul(newlen, FINESINE[lineangle as usize]);
 }
 pub fn slide_traverse(state: &mut GameState, intercept: Intercept) -> bool {
     let li: LineId = match intercept.target {
@@ -736,7 +732,13 @@ pub fn slide_move(state: &mut GameState, mo: MobjId) {
         }
         state.world.p_map.tmxmove = fixed_mul(momx, state.world.p_map.bestslidefrac);
         state.world.p_map.tmymove = fixed_mul(momy, state.world.p_map.bestslidefrac);
-        hit_slide_line(state, state.world.p_map.bestslideline);
+        let bestslideline = state.world.p_map.bestslideline;
+        hit_slide_line(
+            &mut state.world.p_map,
+            &state.world.p_mobj,
+            &state.world.p_setup,
+            bestslideline,
+        );
         let (tmxmove, tmymove) = (state.world.p_map.tmxmove, state.world.p_map.tmymove);
         {
             let m = state.world.p_mobj.mo_mut(mo);

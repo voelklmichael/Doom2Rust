@@ -522,11 +522,12 @@ pub fn project_sprite(state: &mut GameState, thing_id: MobjId) {
     store_vis_sprite(&mut state.render.r_things, vis);
 }
 pub fn add_sprites(state: &mut GameState, sec: SectorId) {
+    let validcount = state.world.p_setup.validcount;
     let sector = state.world.p_setup.sector_mut(sec);
-    if sector.validcount == state.render.r_main.validcount {
+    if sector.validcount == validcount {
         return;
     }
-    sector.validcount = state.render.r_main.validcount;
+    sector.validcount = validcount;
     let (sector_lightlevel, thinglist) = (sector.lightlevel as i32, sector.thinglist);
     let lightnum = (sector_lightlevel >> LIGHTSEGSHIFT) + state.render.r_main.extralight;
     if lightnum < 0 {

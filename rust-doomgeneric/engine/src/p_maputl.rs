@@ -459,8 +459,8 @@ pub fn block_lines_iterator<F: FnMut(&mut GameState, LineId) -> bool>(
     let mut list = state.world.p_setup.blockmaplump[(4 + offset) as usize] as i32 as usize;
     while state.world.p_setup.blockmaplump[list] as i32 != -1 {
         let ld = LineId(state.world.p_setup.blockmaplump[list] as u32);
-        if state.world.p_setup.line(ld).validcount != state.render.r_main.validcount {
-            state.world.p_setup.line_mut(ld).validcount = state.render.r_main.validcount;
+        if state.world.p_setup.line(ld).validcount != state.world.p_setup.validcount {
+            state.world.p_setup.line_mut(ld).validcount = state.world.p_setup.validcount;
             if !func(state, ld) {
                 return false;
             }
@@ -727,7 +727,7 @@ pub fn path_traverse<F: FnMut(&mut GameState, Intercept) -> bool>(
     let mapxstep: i32;
     let mapystep: i32;
     state.world.p_maputl.earlyout = (flags & PT_EARLYOUT) != 0;
-    state.render.r_main.validcount += 1;
+    state.world.p_setup.validcount += 1;
     state.world.p_maputl.intercept_p = 0;
     if (x1 - state.world.p_setup.bmaporgx) & (MAPBLOCKSIZE - 1) == 0 {
         x1 += FRACUNIT;

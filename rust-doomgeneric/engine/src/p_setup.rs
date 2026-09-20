@@ -100,6 +100,9 @@ pub const ZERO_SECTOR: Sector = Sector {
 };
 
 pub struct PSetupState {
+    /// The counter that marks a line or sector as already visited during one traversal (the C
+    /// `validcount`); shared by the map code and the renderer.
+    pub validcount: i32,
     pub numvertexes: i32,
     pub vertexes: Vec<Vertex>,
     pub numsegs: i32,
@@ -138,6 +141,7 @@ impl Default for PSetupState {
 impl PSetupState {
     pub const fn new() -> Self {
         Self {
+            validcount: 1,
             numvertexes: 0,
             vertexes: Vec::new(),
             numsegs: 0,

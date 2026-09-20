@@ -149,7 +149,7 @@ fn live_target(p_mobj: &PMobjState, mobj: MobjId) -> Option<MobjId> {
     p_mobj.mo(mobj).target.filter(|&id| p_mobj.is_live(id))
 }
 pub fn recursive_sound(state: &mut GameState, sec: SectorId, soundblocks: i32) {
-    let validcount = state.render.r_main.validcount;
+    let validcount = state.world.p_setup.validcount;
     {
         let s = state.world.p_setup.sector_mut(sec);
         if s.validcount == validcount && s.soundtraversed <= soundblocks + 1 {
@@ -184,7 +184,7 @@ pub fn recursive_sound(state: &mut GameState, sec: SectorId, soundblocks: i32) {
 }
 pub fn noise_alert(state: &mut GameState, target: MobjId, emmiter: MobjId) {
     state.world.p_enemy.soundtarget = Some(target);
-    state.render.r_main.validcount += 1;
+    state.world.p_setup.validcount += 1;
     let emmiter_subsector = state.world.p_mobj.mo(emmiter).subsector;
     let sec = state.world.p_setup.subsectors[emmiter_subsector.0 as usize].sector;
     recursive_sound(state, sec, 0);
@@ -471,14 +471,8 @@ pub fn look_for_players(state: &mut GameState, actor: MobjId, allaround: bool) -
                             let p = state.world.p_mobj.mo(player_mo);
                             (p.x, p.y)
                         };
-                        let an = point_to_angle2(
-                            &mut state.render.r_main,
-                            actor_x,
-                            actor_y,
-                            pmo_x,
-                            pmo_y,
-                        )
-                        .wrapping_sub(actor_angle);
+                        let an = point_to_angle2(actor_x, actor_y, pmo_x, pmo_y)
+                            .wrapping_sub(actor_angle);
                         if an > ANG90 as Angle && an < ANG270 {
                             let dist = aprox_distance(pmo_x - actor_x, pmo_y - actor_y);
                             if dist > MELEERANGE {
@@ -722,7 +716,6 @@ pub fn face_target(state: &mut GameState, actor: MobjId) {
     };
     state.world.p_mobj.mo_mut(actor).flags &= !MobjFlags::AMBUSH;
     state.world.p_mobj.mo_mut(actor).angle = point_to_angle2(
-        &mut state.render.r_main,
         state.world.p_mobj.mo(actor).x,
         state.world.p_mobj.mo(actor).y,
         state.world.p_mobj.mo(target).x,
@@ -954,7 +947,6 @@ pub fn a_tracer(state: &mut GameState, actor: MobjId) {
         return;
     }
     let mut exact: Angle = point_to_angle2(
-        &mut state.render.r_main,
         state.world.p_mobj.mo(actor).x,
         state.world.p_mobj.mo(actor).y,
         state.world.p_mobj.mo(dest.unwrap()).x,

@@ -59,7 +59,6 @@ pub enum LightRow48 {
 
 pub struct RMainState {
     pub viewangleoffset: i32,
-    pub validcount: i32,
     pub fixedcolormap: Option<ColormapId>,
     pub centerx: i32,
     pub centery: i32,
@@ -105,7 +104,6 @@ impl RMainState {
     pub fn new() -> Self {
         Self {
             viewangleoffset: 0,
-            validcount: 1,
             fixedcolormap: None,
             centerx: 0,
             centery: 0,
@@ -215,9 +213,8 @@ pub fn point_on_seg_side(p_setup: &PSetupState, x: Fixed, y: Fixed, line: SegId)
     }
     1
 }
-pub fn point_to_angle(r_main: &RMainState, mut x: Fixed, mut y: Fixed) -> Angle {
-    x -= r_main.viewx;
-    y -= r_main.viewy;
+/// The angle of the vector `(x, y)`; 0 for the zero vector.
+fn vector_to_angle(mut x: Fixed, mut y: Fixed) -> Angle {
     if x == 0 && y == 0 {
         return 0 as Angle;
     }
@@ -259,16 +256,17 @@ pub fn point_to_angle(r_main: &RMainState, mut x: Fixed, mut y: Fixed) -> Angle 
         }
     }
 }
-pub fn point_to_angle2(
-    r_main: &mut RMainState,
-    x1: Fixed,
-    y1: Fixed,
-    x2: Fixed,
-    y2: Fixed,
-) -> Angle {
-    r_main.viewx = x1;
-    r_main.viewy = y1;
-    point_to_angle(r_main, x2, y2)
+
+/// The angle from the view point to `(x, y)`.
+pub fn point_to_angle(r_main: &RMainState, x: Fixed, y: Fixed) -> Angle {
+    vector_to_angle(x - r_main.viewx, y - r_main.viewy)
+}
+/// The angle of the line from `(x1, y1)` to `(x2, y2)`.
+///
+/// Vanilla's `R_PointToAngle2` does this by moving the view point to `(x1, y1)`, clobbering
+/// `viewx`/`viewy`; nothing reads them before `R_SetupFrame` sets them again, so this leaves them.
+pub fn point_to_angle2(x1: Fixed, y1: Fixed, x2: Fixed, y2: Fixed) -> Angle {
+    vector_to_angle(x2 - x1, y2 - y1)
 }
 pub fn point_to_dist(r_main: &RMainState, x: Fixed, y: Fixed) -> Fixed {
     let mut dx: Fixed = (x - r_main.viewx).abs() as Fixed;
@@ -500,7 +498,7 @@ pub fn setup_frame(state: &mut GameState, player_id: PlayerId) {
         state.render.r_main.fixedcolormap = None;
     }
     state.render.r_main.framecount += 1;
-    state.render.r_main.validcount += 1;
+    state.world.p_setup.validcount += 1;
 }
 pub fn render_player_view(state: &mut GameState, player_id: PlayerId) {
     setup_frame(state, player_id);

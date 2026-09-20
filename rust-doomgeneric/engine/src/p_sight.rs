@@ -9,7 +9,6 @@ use crate::p_mobj::LineFlags;
 use crate::p_mobj::MobjId;
 use crate::p_setup::PSetupState;
 use crate::p_setup::SubsectorId;
-use crate::r_main::RMainState;
 
 use crate::r_bsp::NF_SUBSECTOR;
 
@@ -86,12 +85,7 @@ pub fn intercept_vector2(v2: &DivLine, v1: &DivLine) -> Fixed {
     let num = fixed_mul((v1.x - v2.x) >> 8, v1.dy) + fixed_mul((v2.y - v1.y) >> 8, v1.dx);
     fixed_div(num, den)
 }
-pub fn cross_subsector(
-    p_setup: &mut PSetupState,
-    p_sight: &mut PSightState,
-    r_main: &RMainState,
-    num: i32,
-) -> bool {
+pub fn cross_subsector(p_setup: &mut PSetupState, p_sight: &mut PSightState, num: i32) -> bool {
     if num >= p_setup.numsubsectors {
         error(&format!(
             "P_CrossSubsector: ss {} with numss = {}",
@@ -102,13 +96,14 @@ pub fn cross_subsector(
     let strace = p_sight.strace;
     let (t2x, t2y) = (p_sight.t2x, p_sight.t2y);
     let first = sub.firstline as usize;
+    let validcount = p_setup.validcount;
     for seg_index in first..first + sub.numlines as usize {
         let seg = p_setup.segs[seg_index];
         let line = p_setup.line_mut(seg.linedef);
-        if line.validcount == r_main.validcount {
+        if line.validcount == validcount {
             continue;
         }
-        line.validcount = r_main.validcount;
+        line.validcount = validcount;
         let (v1_id, v2_id, has_back, flags) =
             (line.v1, line.v2, line.backsector.is_some(), line.flags);
         let v1 = p_setup.vertex(v1_id);
@@ -169,17 +164,11 @@ pub fn cross_subsector(
 pub fn cross_bspnode(state: &mut GameState, bspnum: i32) -> bool {
     if bspnum & NF_SUBSECTOR != 0 {
         if bspnum == -1 {
-            return cross_subsector(
-                &mut state.world.p_setup,
-                &mut state.world.p_sight,
-                &state.render.r_main,
-                0,
-            );
+            return cross_subsector(&mut state.world.p_setup, &mut state.world.p_sight, 0);
         }
         return cross_subsector(
             &mut state.world.p_setup,
             &mut state.world.p_sight,
-            &state.render.r_main,
             bspnum & !NF_SUBSECTOR,
         );
     }
@@ -230,7 +219,7 @@ pub fn check_sight(state: &mut GameState, t1: MobjId, t2: MobjId) -> bool {
         return false;
     }
     state.world.p_sight.sightcounts[1] += 1;
-    state.render.r_main.validcount += 1;
+    state.world.p_setup.validcount += 1;
     state.world.p_sight.sightzstart = t1_z + t1_height - (t1_height >> 2);
     state.world.p_sight.topslope = t2_z + t2_height - state.world.p_sight.sightzstart;
     state.world.p_sight.bottomslope = t2_z - state.world.p_sight.sightzstart;
