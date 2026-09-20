@@ -2,6 +2,7 @@ use crate::d_ticcmd::TicCmd;
 use crate::m_fixed::Fixed;
 use crate::p_mobj::{MobjId, PspDef};
 use alloc::string::String;
+use core::ops::{Index, IndexMut};
 pub const NUMAMMO: i32 = 4;
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum AmmoType {
@@ -83,6 +84,59 @@ bitflags::bitflags! {
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub struct PlayerId(pub u8);
+
+impl PlayerId {
+    /// Every player slot, in order.
+    pub fn all() -> impl Iterator<Item = Self> {
+        (0..4).map(Self)
+    }
+
+    /// The slot number as an array index.
+    pub const fn slot(self) -> usize {
+        self.0 as usize
+    }
+
+    /// The slot number where the C code used a plain `int`.
+    pub const fn as_i32(self) -> i32 {
+        self.0 as i32
+    }
+
+    /// The next slot, wrapping from the last player back to the first.
+    pub const fn next_wrapping(self) -> Self {
+        Self((self.0 + 1) % 4)
+    }
+}
+
+/// One `T` per player slot, indexed by [`PlayerId`] (or by a plain slot number in the loops
+/// that walk every slot).
+#[derive(Clone)]
+pub struct PerPlayer<T>(pub [T; 4]);
+
+impl<T> Index<PlayerId> for PerPlayer<T> {
+    type Output = T;
+    fn index(&self, player: PlayerId) -> &T {
+        &self.0[usize::from(player.0)]
+    }
+}
+
+impl<T> IndexMut<PlayerId> for PerPlayer<T> {
+    fn index_mut(&mut self, player: PlayerId) -> &mut T {
+        &mut self.0[usize::from(player.0)]
+    }
+}
+
+impl<T> Index<usize> for PerPlayer<T> {
+    type Output = T;
+    fn index(&self, slot: usize) -> &T {
+        &self.0[slot]
+    }
+}
+
+impl<T> IndexMut<usize> for PerPlayer<T> {
+    fn index_mut(&mut self, slot: usize) -> &mut T {
+        &mut self.0[slot]
+    }
+}
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum PlayerState {

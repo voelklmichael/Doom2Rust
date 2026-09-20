@@ -496,8 +496,8 @@ pub fn turn_tag_lights_off(p_setup: &mut PSetupState, line: LineId) {
         if p_setup.sector_mut(sector).tag as i32 == line_tag as i32 {
             let mut min = p_setup.sector_mut(sector).lightlevel as i32;
             let linecount = p_setup.sector_mut(sector).linecount;
-            for i in 0..linecount {
-                let templine = p_setup.sector_mut(sector).lines[i as usize];
+            for i in 0..linecount as usize {
+                let templine = p_setup.sector_mut(sector).lines[i];
                 if let Some(tsec) = get_next_sector(p_setup, templine, sector) {
                     let light = p_setup.sector_mut(tsec).lightlevel as i32;
                     if light < min {
@@ -516,8 +516,8 @@ pub fn light_turn_on(p_setup: &mut PSetupState, line: LineId, mut bright: i32) {
         if p_setup.sector_mut(sector).tag as i32 == line_tag as i32 {
             if bright == 0 {
                 let linecount = p_setup.sector_mut(sector).linecount;
-                for j in 0..linecount {
-                    let templine = p_setup.sector_mut(sector).lines[j as usize];
+                for j in 0..linecount as usize {
+                    let templine = p_setup.sector_mut(sector).lines[j];
                     if let Some(temp) = get_next_sector(p_setup, templine, sector) {
                         let light = p_setup.sector_mut(temp).lightlevel as i32;
                         if light > bright {

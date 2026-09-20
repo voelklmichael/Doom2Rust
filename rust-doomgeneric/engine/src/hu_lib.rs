@@ -156,8 +156,8 @@ pub fn hulib_add_line_to_stext(s: &mut HuSText) {
         s.cl = 0;
     }
     hulib_clear_text_line(&mut s.l[s.cl as usize]);
-    for i in 0..s.h {
-        s.l[i as usize].needsupdate = 4;
+    for i in 0..s.h as usize {
+        s.l[i].needsupdate = 4;
     }
 }
 pub fn hulib_add_message_to_stext(s: &mut HuSText, prefix: Option<&str>, msg: &str) {
@@ -185,11 +185,11 @@ pub fn hulib_draw_stext(state: &mut GameState, s: &HuSText, on: bool) {
     }
 }
 pub fn hulib_erase_stext(state: &mut GameState, s: &mut HuSText, on: bool) {
-    for i in 0..s.h {
+    for i in 0..s.h as usize {
         if s.laston && !on {
-            s.l[i as usize].needsupdate = 4;
+            s.l[i].needsupdate = 4;
         }
-        hulib_erase_text_line(state, &mut s.l[i as usize]);
+        hulib_erase_text_line(state, &mut s.l[i]);
     }
     s.laston = on;
 }

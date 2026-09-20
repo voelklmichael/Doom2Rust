@@ -594,7 +594,7 @@ pub fn st_responder(state: &mut GameState, ev: &Event) -> bool {
                 state.game.g_game.player_mut(state.ui.st_stuff.plyr).message =
                     Some("... doesn't suck - GM".to_string());
             } else if cht_check_cheat(&mut state.ui.st_stuff.cheat_mypos, ev.data2 as u8) {
-                let cp_mo_id = state.game.g_game.players[state.game.g_game.consoleplayer as usize]
+                let cp_mo_id = state.game.g_game.players[state.game.g_game.consoleplayer]
                     .mo
                     .unwrap();
                 let cp_mo = state.world.p_mobj.mo(cp_mo_id);
@@ -880,7 +880,7 @@ pub fn update_widgets(state: &mut GameState) {
         state.game.g_game.deathmatch != 0 && state.ui.st_stuff.st_statusbaron;
     state.ui.st_stuff.st_fragscount = 0;
     for i in 0..MAXPLAYERS {
-        if i == state.game.g_game.consoleplayer {
+        if i == state.game.g_game.consoleplayer.as_i32() {
             state.ui.st_stuff.st_fragscount -=
                 state.game.g_game.player_mut(state.ui.st_stuff.plyr).frags[i as usize];
         } else {
@@ -1078,7 +1078,7 @@ fn load_unload_graphics(state: &mut GameState, callback: LoadCallback) {
         state.ui.st_stuff.arms[i][1] = state.ui.st_stuff.shortnum[i + 2];
     }
     state.ui.st_stuff.faceback =
-        callback(state, &format!("STFB{}", state.game.g_game.consoleplayer));
+        callback(state, &format!("STFB{}", state.game.g_game.consoleplayer.0));
     state.ui.st_stuff.sbar = callback(state, "STBAR");
     let mut facenum = 0_usize;
     for i in 0..ST_NUMPAINFACES {
@@ -1115,7 +1115,7 @@ pub fn st_load_data(state: &mut GameState) {
 }
 pub fn st_init_data(state: &mut GameState) {
     state.ui.st_stuff.st_firsttime = true;
-    state.ui.st_stuff.plyr = PlayerId(state.game.g_game.consoleplayer as u8);
+    state.ui.st_stuff.plyr = state.game.g_game.consoleplayer;
     state.ui.st_stuff.st_clock = 0;
     state.ui.st_stuff.st_chatstate = StChatStateEnum::Start;
     state.ui.st_stuff.st_gamestate = StStateEnum::FirstPersonState;

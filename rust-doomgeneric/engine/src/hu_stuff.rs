@@ -330,7 +330,7 @@ pub fn hu_start(state: &mut GameState) {
     if state.ui.hu_stuff.headsupactive {
         hu_stop(&mut state.ui.hu_stuff);
     }
-    state.ui.hu_stuff.plr = PlayerId(state.game.g_game.consoleplayer as u8);
+    state.ui.hu_stuff.plr = state.game.g_game.consoleplayer;
     state.ui.hu_stuff.message_on = false;
     state.ui.hu_stuff.message_dontfuckwithme = false;
     state.ui.hu_stuff.message_nottobefuckedwith = false;
@@ -464,7 +464,7 @@ pub fn hu_ticker(state: &mut GameState) {
     if state.game.g_game.netgame {
         for i in 0..MAXPLAYERS {
             if state.game.g_game.playeringame[i as usize]
-                && i != state.game.g_game.consoleplayer
+                && i != state.game.g_game.consoleplayer.as_i32()
                 && {
                     c = state.game.g_game.players[i as usize].cmd.chatchar;
                     c as i32 != 0
@@ -478,7 +478,7 @@ pub fn hu_ticker(state: &mut GameState) {
                     if rc != 0 && c as i32 == KEY_ENTER {
                         if !state.ui.hu_stuff.w_inputbuffer[i as usize].l.l.is_empty()
                             && (state.ui.hu_stuff.chat_dest[i as usize] as i32
-                                == state.game.g_game.consoleplayer + 1
+                                == state.game.g_game.consoleplayer.as_i32() + 1
                                 || state.ui.hu_stuff.chat_dest[i as usize] as i32 == HU_BROADCAST)
                         {
                             hulib_add_message_to_stext(
@@ -559,13 +559,13 @@ pub fn hu_responder(
         } else if g_game.netgame && numplayers > 2 {
             for i in 0..MAXPLAYERS {
                 if ev.data2 == m_controls.key_multi_msgplayer[i as usize] {
-                    if g_game.playeringame[i as usize] && i != g_game.consoleplayer {
+                    if g_game.playeringame[i as usize] && i != g_game.consoleplayer.as_i32() {
                         hu_stuff.chat_on = true;
                         eatkey = hu_stuff.chat_on;
                         hulib_reset_itext(&mut hu_stuff.w_chat);
                         queue_chat_char(g_game, hu_stuff, (i + 1) as u8);
                         break;
-                    } else if i == g_game.consoleplayer {
+                    } else if i == g_game.consoleplayer.as_i32() {
                         hu_stuff.hu_responder_num_nobrainers += 1;
                         if hu_stuff.hu_responder_num_nobrainers < 3 {
                             g_game.player_mut(hu_stuff.plr).message =

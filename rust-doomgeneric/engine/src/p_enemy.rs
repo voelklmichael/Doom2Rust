@@ -161,8 +161,8 @@ pub fn recursive_sound(state: &mut GameState, sec: SectorId, soundblocks: i32) {
         s.soundtarget = state.world.p_enemy.soundtarget;
     }
     let linecount = state.world.p_setup.sector_mut(sec).linecount;
-    for i in 0..linecount {
-        let check = state.world.p_setup.sector_mut(sec).lines[i as usize];
+    for i in 0..linecount as usize {
+        let check = state.world.p_setup.sector_mut(sec).lines[i];
         let checkv = state.world.p_setup.line(check);
         if checkv.flags.contains(LineFlags::TWOSIDED) {
             line_opening(&mut state.world.p_maputl, &mut state.world.p_setup, check);
@@ -1818,7 +1818,7 @@ pub fn open_shotgun2(state: &mut GameState, player_id: PlayerId, _position: i32)
         let player = player_id;
         s_start_sound(
             state,
-            SoundOrigin::Mobj(state.game.g_game.players[player.0 as usize].mo.unwrap()),
+            SoundOrigin::Mobj(state.game.g_game.players[player].mo.unwrap()),
             SfxName::Dbopn as i32,
         );
     }
@@ -1828,7 +1828,7 @@ pub fn load_shotgun2(state: &mut GameState, player_id: PlayerId, _position: i32)
         let player = player_id;
         s_start_sound(
             state,
-            SoundOrigin::Mobj(state.game.g_game.players[player.0 as usize].mo.unwrap()),
+            SoundOrigin::Mobj(state.game.g_game.players[player].mo.unwrap()),
             SfxName::Dbload as i32,
         );
     }
@@ -1838,7 +1838,7 @@ pub fn close_shotgun2(state: &mut GameState, player_id: PlayerId, position: i32)
         let player = player_id;
         s_start_sound(
             state,
-            SoundOrigin::Mobj(state.game.g_game.players[player.0 as usize].mo.unwrap()),
+            SoundOrigin::Mobj(state.game.g_game.players[player].mo.unwrap()),
             SfxName::Dbcls as i32,
         );
         re_fire(state, player_id, position);

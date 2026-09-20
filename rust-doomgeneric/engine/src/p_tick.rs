@@ -449,7 +449,7 @@ pub fn p_ticker(state: &mut GameState) {
     if !state.game.g_game.netgame
         && state.ui.m_menu.menuactive
         && !state.game.g_game.demoplayback
-        && state.game.g_game.players[state.game.g_game.consoleplayer as usize].viewz != 1
+        && state.game.g_game.players[state.game.g_game.consoleplayer].viewz != 1
     {
         return;
     }

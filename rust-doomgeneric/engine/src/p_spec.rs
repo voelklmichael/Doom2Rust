@@ -523,8 +523,8 @@ pub fn get_next_sector(p_setup: &PSetupState, line: LineId, sec: SectorId) -> Op
 pub fn find_lowest_floor_surrounding(p_setup: &mut PSetupState, sec: SectorId) -> Fixed {
     let mut floor: Fixed = p_setup.sector_mut(sec).floorheight;
     let linecount = p_setup.sector_mut(sec).linecount;
-    for i in 0..linecount {
-        let check = p_setup.sector_mut(sec).lines[i as usize];
+    for i in 0..linecount as usize {
+        let check = p_setup.sector_mut(sec).lines[i];
         if let Some(other) = get_next_sector(p_setup, check, sec) {
             let other_floor = p_setup.sector_mut(other).floorheight;
             if other_floor < floor {
@@ -537,8 +537,8 @@ pub fn find_lowest_floor_surrounding(p_setup: &mut PSetupState, sec: SectorId) -
 pub fn find_highest_floor_surrounding(p_setup: &mut PSetupState, sec: SectorId) -> Fixed {
     let mut floor: Fixed = -(500) * FRACUNIT;
     let linecount = p_setup.sector_mut(sec).linecount;
-    for i in 0..linecount {
-        let check = p_setup.sector_mut(sec).lines[i as usize];
+    for i in 0..linecount as usize {
+        let check = p_setup.sector_mut(sec).lines[i];
         if let Some(other) = get_next_sector(p_setup, check, sec) {
             let other_floor = p_setup.sector_mut(other).floorheight;
             if other_floor > floor {
@@ -558,8 +558,8 @@ pub fn find_next_highest_floor(
     let mut heightlist: [Fixed; 22] = [0; 22];
     let mut h: i32 = 0;
     let linecount = p_setup.sector_mut(sec).linecount;
-    for i in 0..linecount {
-        let check = p_setup.sector_mut(sec).lines[i as usize];
+    for i in 0..linecount as usize {
+        let check = p_setup.sector_mut(sec).lines[i];
         if let Some(other) = get_next_sector(p_setup, check, sec) {
             let other_floor = p_setup.sector_mut(other).floorheight;
             if other_floor > height {
@@ -588,8 +588,8 @@ pub fn find_next_highest_floor(
 pub fn find_lowest_ceiling_surrounding(p_setup: &mut PSetupState, sec: SectorId) -> Fixed {
     let mut height: Fixed = INT_MAX;
     let linecount = p_setup.sector_mut(sec).linecount;
-    for i in 0..linecount {
-        let check = p_setup.sector_mut(sec).lines[i as usize];
+    for i in 0..linecount as usize {
+        let check = p_setup.sector_mut(sec).lines[i];
         if let Some(other) = get_next_sector(p_setup, check, sec) {
             let other_ceiling = p_setup.sector_mut(other).ceilingheight;
             if other_ceiling < height {
@@ -602,8 +602,8 @@ pub fn find_lowest_ceiling_surrounding(p_setup: &mut PSetupState, sec: SectorId)
 pub fn find_highest_ceiling_surrounding(p_setup: &mut PSetupState, sec: SectorId) -> Fixed {
     let mut height: Fixed = 0;
     let linecount = p_setup.sector_mut(sec).linecount;
-    for i in 0..linecount {
-        let check = p_setup.sector_mut(sec).lines[i as usize];
+    for i in 0..linecount as usize {
+        let check = p_setup.sector_mut(sec).lines[i];
         if let Some(other) = get_next_sector(p_setup, check, sec) {
             let other_ceiling = p_setup.sector_mut(other).ceilingheight;
             if other_ceiling > height {
@@ -632,8 +632,8 @@ pub fn sectors_with_line_tag(p_setup: &PSetupState, line: LineId) -> Vec<SectorI
 pub fn find_min_surrounding_light(p_setup: &mut PSetupState, sector: SectorId, max: i32) -> i32 {
     let mut min = max;
     let linecount = p_setup.sector_mut(sector).linecount;
-    for i in 0..linecount {
-        let line = p_setup.sector_mut(sector).lines[i as usize];
+    for i in 0..linecount as usize {
+        let line = p_setup.sector_mut(sector).lines[i];
         if let Some(check) = get_next_sector(p_setup, line, sector) {
             let light = p_setup.sector_mut(check).lightlevel as i32;
             if light < min {
@@ -1205,8 +1205,8 @@ pub fn do_donut(state: &mut GameState, line: LineId) -> bool {
             break;
         };
         let linecount = state.world.p_setup.sector_mut(s2).linecount;
-        for i in 0..linecount {
-            let s2_line_id = state.world.p_setup.sector_mut(s2).lines[i as usize];
+        for i in 0..linecount as usize {
+            let s2_line_id = state.world.p_setup.sector_mut(s2).lines[i];
             let s3 = state.world.p_setup.line(s2_line_id).backsector;
             if s3 == Some(s1) {
                 continue;

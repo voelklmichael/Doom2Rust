@@ -143,9 +143,9 @@ pub fn map_plane(state: &mut GameState, y: i32, x1: i32, x2: i32) {
         .expect("non-null function pointer")(state);
 }
 pub fn clear_planes(r_draw: &RDrawState, r_main: &RMainState, r_plane: &mut RPlaneState) {
-    for i in 0..r_draw.viewwidth {
-        r_plane.floorclip[i as usize] = r_draw.viewheight as i16;
-        r_plane.ceilingclip[i as usize] = -1_i16;
+    for i in 0..r_draw.viewwidth as usize {
+        r_plane.floorclip[i] = r_draw.viewheight as i16;
+        r_plane.ceilingclip[i] = -1_i16;
     }
     r_plane.lastvisplane = 0;
     r_plane.lastopening = 0;

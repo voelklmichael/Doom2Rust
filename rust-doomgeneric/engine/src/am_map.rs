@@ -580,8 +580,8 @@ pub fn am_init_variables(state: &mut GameState) {
         (state.ui.am_map.f_h as Fixed) << 16,
         state.ui.am_map.scale_ftom,
     );
-    if state.game.g_game.playeringame[state.game.g_game.consoleplayer as usize] {
-        state.ui.am_map.plr = PlayerId(state.game.g_game.consoleplayer as u8);
+    if state.game.g_game.playeringame[state.game.g_game.consoleplayer] {
+        state.ui.am_map.plr = state.game.g_game.consoleplayer;
     } else {
         state.ui.am_map.plr = PlayerId(0);
         pnum = 0;
@@ -614,7 +614,7 @@ pub fn load_pics(am_map: &mut AmMapState, fs: &dyn DoomFileSystem, w_wad: &mut W
         let namebuf = format!("AMMNUM{i}");
         let lumpnum = get_num_for_name(w_wad, &namebuf);
         lump_bytes(fs, w_wad, lumpnum);
-        am_map.marknums[i as usize] = lumpnum;
+        am_map.marknums[i] = lumpnum;
     }
 }
 pub fn unload_pics(am_map: &AmMapState, w_wad: &WWadState) {

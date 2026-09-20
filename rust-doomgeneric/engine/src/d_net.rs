@@ -5,6 +5,7 @@ use crate::d_loop::{LoopInterface, NetConnectData, NetGameSettings};
 use crate::d_main::do_advance_demo;
 use crate::d_main::DMainState;
 use crate::d_mode::skill_from_raw;
+use crate::d_player::PlayerId;
 use crate::d_ticcmd::TicCmd;
 use crate::g_game::check_demo_status;
 use crate::g_game::g_ticker;
@@ -24,7 +25,7 @@ use crate::tables::ANG270;
 use crate::tables::ANG90;
 fn player_quit_game(state: &mut GameState, player_num: u32) {
     state.game.g_game.playeringame[player_num as usize] = false;
-    state.game.g_game.players[state.game.g_game.consoleplayer as usize].message =
+    state.game.g_game.players[state.game.g_game.consoleplayer].message =
         Some(format!("Player {} left the game", player_num + 1));
     if state.game.g_game.demorecording {
         check_demo_status(state);
@@ -70,7 +71,7 @@ fn load_game_settings(
     d_main.fastparm = settings.fast_monsters != 0;
     d_main.respawnparm = settings.respawn_monsters != 0;
     g_game.timelimit = settings.timelimit;
-    g_game.consoleplayer = settings.consoleplayer;
+    g_game.consoleplayer = PlayerId(settings.consoleplayer as u8);
     if g_game.lowres_turn {
         doom_println!(platform,
             "NOTE: Turning resolution is reduced; this is probably because there is a client recording a Vanilla demo."
@@ -178,7 +179,7 @@ pub fn check_net_game(state: &mut GameState) {
     doom_println!(
         state.io.platform,
         "player {} of {} ({} nodes)",
-        state.game.g_game.consoleplayer + 1,
+        state.game.g_game.consoleplayer.as_i32() + 1,
         settings.num_players,
         settings.num_players,
     );

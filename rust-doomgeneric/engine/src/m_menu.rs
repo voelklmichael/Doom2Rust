@@ -1093,10 +1093,10 @@ pub fn options(state: &mut GameState, _choice: i32) {
 pub fn change_messages(state: &mut GameState, _choice: i32) {
     state.ui.m_menu.show_messages = 1 - state.ui.m_menu.show_messages;
     if state.ui.m_menu.show_messages == 0 {
-        state.game.g_game.players[state.game.g_game.consoleplayer as usize].message =
+        state.game.g_game.players[state.game.g_game.consoleplayer].message =
             Some("Messages OFF".to_string());
     } else {
-        state.game.g_game.players[state.game.g_game.consoleplayer as usize].message =
+        state.game.g_game.players[state.game.g_game.consoleplayer].message =
             Some("Messages ON".to_string());
     }
     state.ui.hu_stuff.message_dontfuckwithme = true;
@@ -1233,10 +1233,10 @@ pub fn change_detail(state: &mut GameState, _choice: i32) {
     let (screenblocks, detail_level) = (state.ui.m_menu.screenblocks, state.ui.m_menu.detail_level);
     set_view_size(&mut state.render.r_main, screenblocks, detail_level);
     if state.ui.m_menu.detail_level == 0 {
-        state.game.g_game.players[state.game.g_game.consoleplayer as usize].message =
+        state.game.g_game.players[state.game.g_game.consoleplayer].message =
             Some("High detail".to_string());
     } else {
-        state.game.g_game.players[state.game.g_game.consoleplayer as usize].message =
+        state.game.g_game.players[state.game.g_game.consoleplayer].message =
             Some("Low detail".to_string());
     }
 }
@@ -1634,7 +1634,7 @@ pub fn m_responder(state: &mut GameState, ev: &Event) -> bool {
             if state.io.i_video.usegamma > 4 {
                 state.io.i_video.usegamma = 0;
             }
-            state.game.g_game.players[state.game.g_game.consoleplayer as usize].message =
+            state.game.g_game.players[state.game.g_game.consoleplayer].message =
                 Some(GAMMAMSG[state.io.i_video.usegamma as usize].to_string());
             let pal = lump_bytes_name(&*state.assets.fs, &mut state.assets.w_wad, "PLAYPAL");
             set_palette(&mut state.io.i_video, &pal[..768]);
