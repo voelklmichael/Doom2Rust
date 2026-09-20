@@ -7,6 +7,7 @@ use crate::m_random::p_random;
 use crate::p_floor::move_plane;
 use crate::p_floor::ResultE;
 use crate::p_setup::PSetupState;
+use crate::p_spec::{Direction, Plane};
 use crate::p_tick::PTickState;
 use alloc::boxed::Box;
 use alloc::vec::Vec;
@@ -139,7 +140,15 @@ pub fn plat_raise(state: &mut GameState, id: PlatId) {
         .expect("ThinkerFn::Plat id must reference a live plat");
     match plat.status {
         PlatE::Up => {
-            let res = move_plane(state, plat.sector, plat.speed, plat.high, plat.crush, 0, 1);
+            let res = move_plane(
+                state,
+                plat.sector,
+                plat.speed,
+                plat.high,
+                plat.crush,
+                Plane::Floor,
+                Direction::Up,
+            );
             if (plat.kind == PlattypeE::RaiseAndChange
                 || plat.kind == PlattypeE::RaiseToNearestAndChange)
                 && state.world.p_tick.leveltime & 7 == 0
@@ -178,7 +187,15 @@ pub fn plat_raise(state: &mut GameState, id: PlatId) {
             }
         }
         PlatE::Down => {
-            let res = move_plane(state, plat.sector, plat.speed, plat.low, false, 0, -1);
+            let res = move_plane(
+                state,
+                plat.sector,
+                plat.speed,
+                plat.low,
+                false,
+                Plane::Floor,
+                Direction::Down,
+            );
             if res == ResultE::Pastdest {
                 let p = state.world.p_plats.get_mut(id).expect("live plat");
                 p.count = p.wait;

@@ -32,6 +32,7 @@ use crate::p_setup::PSetupState;
 use crate::p_setup::SectorId;
 use crate::p_setup::SideId;
 use crate::p_setup::SubsectorId;
+use crate::p_spec::Direction;
 use crate::p_spec::{Ceiling, FloorMove, Plat};
 use crate::p_tick::add_thinker;
 use crate::p_tick::init_thinkers;
@@ -483,9 +484,9 @@ fn saveg_read_ceiling_t(state: &mut PSavegState, str: &mut Ceiling) {
     str.topheight = saveg_read32(state) as Fixed;
     str.speed = saveg_read32(state) as Fixed;
     str.crush = saveg_read32(state) != 0;
-    str.direction = saveg_read32(state);
+    str.direction = Direction::from_save(saveg_read32(state));
     str.tag = saveg_read32(state);
-    str.olddirection = saveg_read32(state);
+    str.olddirection = Direction::from_save(saveg_read32(state));
 }
 fn saveg_write_ceiling_t(state: &mut PSavegState, str: &Ceiling) {
     saveg_write_thinker_t(state, &str.thinker);
@@ -495,9 +496,9 @@ fn saveg_write_ceiling_t(state: &mut PSavegState, str: &Ceiling) {
     saveg_write32(state, str.topheight);
     saveg_write32(state, str.speed);
     saveg_write32(state, str.crush as i32);
-    saveg_write32(state, str.direction);
+    saveg_write32(state, str.direction.to_save());
     saveg_write32(state, str.tag);
-    saveg_write32(state, str.olddirection);
+    saveg_write32(state, str.olddirection.to_save());
 }
 fn saveg_read_vldoor_e(state: &mut PSavegState) -> VldoorE {
     match saveg_read32(state) {
@@ -519,7 +520,7 @@ fn saveg_read_vldoor_t(state: &mut PSavegState, str: &mut VlDoor) {
     str.sector = SectorId(sector as u32);
     str.topheight = saveg_read32(state) as Fixed;
     str.speed = saveg_read32(state) as Fixed;
-    str.direction = saveg_read32(state);
+    str.direction = Direction::from_save(saveg_read32(state));
     str.topwait = saveg_read32(state);
     str.topcountdown = saveg_read32(state);
 }
@@ -529,7 +530,7 @@ fn saveg_write_vldoor_t(state: &mut PSavegState, str: &VlDoor) {
     saveg_write32(state, str.sector.0 as i32);
     saveg_write32(state, str.topheight);
     saveg_write32(state, str.speed);
-    saveg_write32(state, str.direction);
+    saveg_write32(state, str.direction.to_save());
     saveg_write32(state, str.topwait);
     saveg_write32(state, str.topcountdown);
 }
@@ -557,7 +558,7 @@ fn saveg_read_floormove_t(state: &mut PSavegState, str: &mut FloorMove) {
     str.crush = saveg_read32(state) != 0;
     let sector: i32 = saveg_read32(state);
     str.sector = SectorId(sector as u32);
-    str.direction = saveg_read32(state);
+    str.direction = Direction::from_save(saveg_read32(state));
     str.newspecial = saveg_read32(state);
     str.texture = saveg_read16(state);
     str.floordestheight = saveg_read32(state) as Fixed;
@@ -568,7 +569,7 @@ fn saveg_write_floormove_t(state: &mut PSavegState, str: &FloorMove) {
     saveg_write32(state, str.kind as i32);
     saveg_write32(state, str.crush as i32);
     saveg_write32(state, str.sector.0 as i32);
-    saveg_write32(state, str.direction);
+    saveg_write32(state, str.direction.to_save());
     saveg_write32(state, str.newspecial);
     saveg_write16(state, str.texture);
     saveg_write32(state, str.floordestheight);
@@ -666,14 +667,14 @@ fn saveg_read_glow_t(state: &mut PSavegState, str: &mut Glow) {
     str.sector = SectorId(sector as u32);
     str.minlight = saveg_read32(state);
     str.maxlight = saveg_read32(state);
-    str.direction = saveg_read32(state);
+    str.direction = Direction::from_save(saveg_read32(state));
 }
 fn saveg_write_glow_t(state: &mut PSavegState, str: &Glow) {
     saveg_write_thinker_t(state, &str.thinker);
     saveg_write32(state, str.sector.0 as i32);
     saveg_write32(state, str.minlight);
     saveg_write32(state, str.maxlight);
-    saveg_write32(state, str.direction);
+    saveg_write32(state, str.direction.to_save());
 }
 pub fn write_save_game_header(state: &mut GameState, description: &str) {
     let mut i: i32 = 0;

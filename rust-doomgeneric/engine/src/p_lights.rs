@@ -9,6 +9,7 @@ use crate::p_setup::SectorId;
 use crate::p_spec::find_min_surrounding_light;
 use crate::p_spec::get_next_sector;
 use crate::p_spec::sectors_with_line_tag;
+use crate::p_spec::Direction;
 use crate::p_tick::add_thinker;
 use crate::p_tick::PTickState;
 use crate::p_tick::ThinkerKind;
@@ -93,7 +94,7 @@ pub struct Glow {
     pub sector: SectorId,
     pub minlight: i32,
     pub maxlight: i32,
-    pub direction: i32,
+    pub direction: Direction,
 }
 impl Default for Glow {
     fn default() -> Self {
@@ -104,7 +105,7 @@ impl Default for Glow {
             sector: SectorId(0),
             minlight: 0,
             maxlight: 0,
-            direction: 0,
+            direction: Direction::Still,
         }
     }
 }
@@ -538,18 +539,18 @@ pub fn glow(state: &mut GameState, id: GlowId) {
         .expect("ThinkerFn::Glow id must reference a live glow");
     let sec = state.world.p_setup.sector_mut(g.sector);
     match g.direction {
-        -1 => {
+        Direction::Down => {
             sec.lightlevel = (sec.lightlevel as i32 - GLOWSPEED) as i16;
             if sec.lightlevel as i32 <= g.minlight {
                 sec.lightlevel = (sec.lightlevel as i32 + GLOWSPEED) as i16;
-                g.direction = 1;
+                g.direction = Direction::Up;
             }
         }
-        1 => {
+        Direction::Up => {
             sec.lightlevel = (sec.lightlevel as i32 + GLOWSPEED) as i16;
             if sec.lightlevel as i32 >= g.maxlight {
                 sec.lightlevel = (sec.lightlevel as i32 - GLOWSPEED) as i16;
-                g.direction = -1;
+                g.direction = Direction::Down;
             }
         }
         _ => {}
@@ -569,7 +570,7 @@ pub fn spawn_glowing_light(
         ..Glow::default()
     };
     g.thinker.function = ThinkerFn::Glow(glow);
-    g.direction = -1;
+    g.direction = Direction::Down;
     let g_arena_id = p_lights.spawn_glow(g);
     add_thinker(p_tick, ThinkerPayload::Glow(g_arena_id), ThinkerKind::Glow);
     p_setup.sector_mut(sector).special = 0;
