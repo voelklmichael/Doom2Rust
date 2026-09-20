@@ -44,6 +44,7 @@ pub(crate) mod i_timer;
 pub(crate) mod i_video;
 pub(crate) mod info;
 pub(crate) mod le;
+pub(crate) mod line_effects;
 pub(crate) mod m_bbox;
 pub(crate) mod m_cheat;
 pub(crate) mod m_config;
