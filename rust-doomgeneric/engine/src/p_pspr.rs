@@ -110,7 +110,7 @@ pub fn bring_up_weapon(state: &mut GameState, player_id: PlayerId) {
     }
     if state.game.g_game.players[player].pendingweapon as u32 == WeaponType::Chainsaw as i32 as u32
     {
-        s_start_sound(state, SoundOrigin::Mobj(player_mo), SfxName::Sawup as i32);
+        s_start_sound(state, SoundOrigin::Mobj(player_mo), SfxName::Sawup);
     }
     let newstate: StateNum =
         WEAPONINFO[state.game.g_game.players[player].pendingweapon as usize].upstate;
@@ -225,7 +225,7 @@ pub fn weapon_ready(state: &mut GameState, player_id: PlayerId, position: i32) {
             && state.game.g_game.players[player_id].psprites[position as usize].state
                 == Some(StateId(StateNum::Saw as u32))
         {
-            s_start_sound(state, SoundOrigin::Mobj(player_mo), SfxName::Sawidl as i32);
+            s_start_sound(state, SoundOrigin::Mobj(player_mo), SfxName::Sawidl);
         }
         if state.game.g_game.players[player].pendingweapon as u32
             != WeaponType::Nochange as i32 as u32
@@ -351,7 +351,7 @@ pub fn punch(state: &mut GameState, player_id: PlayerId, _position: i32) {
     if let Some(linetarget) = state.world.p_map.linetarget {
         let linetarget = state.world.p_mobj.mo(linetarget);
         let (linetarget_x, linetarget_y) = (linetarget.x, linetarget.y);
-        s_start_sound(state, SoundOrigin::Mobj(player_mo), SfxName::Punch as i32);
+        s_start_sound(state, SoundOrigin::Mobj(player_mo), SfxName::Punch);
         state.world.p_mobj.mo_mut(player_mo).angle = point_to_angle2(
             &mut state.render.r_main,
             state.world.p_mobj.mo(player_mo).x,
@@ -382,10 +382,10 @@ pub fn saw(state: &mut GameState, player_id: PlayerId, _position: i32) {
         damage,
     );
     if state.world.p_map.linetarget.is_none() {
-        s_start_sound(state, SoundOrigin::Mobj(player_mo), SfxName::Sawful as i32);
+        s_start_sound(state, SoundOrigin::Mobj(player_mo), SfxName::Sawful);
         return;
     }
-    s_start_sound(state, SoundOrigin::Mobj(player_mo), SfxName::Sawhit as i32);
+    s_start_sound(state, SoundOrigin::Mobj(player_mo), SfxName::Sawhit);
     let linetarget = state.world.p_mobj.mo(state.world.p_map.linetarget.unwrap());
     let (linetarget_x, linetarget_y) = (linetarget.x, linetarget.y);
     angle = point_to_angle2(
@@ -498,7 +498,7 @@ pub fn fire_pistol(state: &mut GameState, player_id: PlayerId, _position: i32) {
     {
         let player = player_id;
         let player_mo = state.game.g_game.players[player].mo.unwrap();
-        s_start_sound(state, SoundOrigin::Mobj(player_mo), SfxName::Pistol as i32);
+        s_start_sound(state, SoundOrigin::Mobj(player_mo), SfxName::Pistol);
         set_mobj_state(state, player_mo, StateNum::PlayAtk2);
         let ammo_type =
             WEAPONINFO[state.game.g_game.players[player].readyweapon as usize].ammo as i32;
@@ -521,7 +521,7 @@ pub fn fire_shotgun(state: &mut GameState, player_id: PlayerId, _position: i32) 
     {
         let player = player_id;
         let player_mo = state.game.g_game.players[player].mo.unwrap();
-        s_start_sound(state, SoundOrigin::Mobj(player_mo), SfxName::Shotgn as i32);
+        s_start_sound(state, SoundOrigin::Mobj(player_mo), SfxName::Shotgn);
         set_mobj_state(state, player_mo, StateNum::PlayAtk2);
         let ammo_type =
             WEAPONINFO[state.game.g_game.players[player].readyweapon as usize].ammo as i32;
@@ -544,7 +544,7 @@ pub fn fire_shotgun2(state: &mut GameState, player_id: PlayerId, _position: i32)
         let player_mo = state.game.g_game.players[player].mo.unwrap();
         let mut angle: Angle;
         let mut damage: i32;
-        s_start_sound(state, SoundOrigin::Mobj(player_mo), SfxName::Dshtgn as i32);
+        s_start_sound(state, SoundOrigin::Mobj(player_mo), SfxName::Dshtgn);
         set_mobj_state(state, player_mo, StateNum::PlayAtk2);
         let ammo_type =
             WEAPONINFO[state.game.g_game.players[player].readyweapon as usize].ammo as i32;
@@ -575,7 +575,7 @@ pub fn fire_cgun(state: &mut GameState, player_id: PlayerId, position: i32) {
     {
         let player = player_id;
         let player_mo = state.game.g_game.players[player].mo.unwrap();
-        s_start_sound(state, SoundOrigin::Mobj(player_mo), SfxName::Pistol as i32);
+        s_start_sound(state, SoundOrigin::Mobj(player_mo), SfxName::Pistol);
         if state.game.g_game.players[player].ammo
             [WEAPONINFO[state.game.g_game.players[player].readyweapon as usize].ammo as usize]
             == 0
@@ -661,7 +661,7 @@ pub fn bfgsound(state: &mut GameState, player_id: PlayerId, _position: i32) {
     {
         let player = player_id;
         let player_mo = state.game.g_game.players[player].mo.unwrap();
-        s_start_sound(state, SoundOrigin::Mobj(player_mo), SfxName::Bfg as i32);
+        s_start_sound(state, SoundOrigin::Mobj(player_mo), SfxName::Bfg);
     }
 }
 pub fn setup_psprites(state: &mut GameState, player_id: PlayerId) {

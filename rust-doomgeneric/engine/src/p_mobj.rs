@@ -2673,23 +2673,23 @@ pub struct MobjInfo {
     pub spawnstate: StateNum,
     pub spawnhealth: i32,
     pub seestate: StateNum,
-    pub seesound: i32,
+    pub seesound: SfxName,
     pub reactiontime: i32,
-    pub attacksound: i32,
+    pub attacksound: SfxName,
     pub painstate: StateNum,
     pub painchance: i32,
-    pub painsound: i32,
+    pub painsound: SfxName,
     pub meleestate: StateNum,
     pub missilestate: StateNum,
     pub deathstate: StateNum,
     pub xdeathstate: StateNum,
-    pub deathsound: i32,
+    pub deathsound: SfxName,
     pub speed: i32,
     pub radius: i32,
     pub height: i32,
     pub mass: i32,
     pub damage: i32,
-    pub activesound: i32,
+    pub activesound: SfxName,
     pub flags: MobjFlags,
     pub raisestate: StateNum,
 }
@@ -2854,7 +2854,7 @@ pub fn explode_missile(state: &mut GameState, mo: MobjId) {
         .info
         .mobjinfo_mut(state.world.p_mobj.mo(mo).kind)
         .deathsound;
-    if deathsound != 0 {
+    if deathsound != SfxName::SfxNone {
         s_start_sound(state, SoundOrigin::Mobj(mo), deathsound);
     }
 }
@@ -3066,7 +3066,7 @@ pub fn zmovement(state: &mut GameState, mo: MobjId) {
                     .g_game
                     .player_mut(state.world.p_mobj.mo(mo).player.unwrap())
                     .deltaviewheight = state.world.p_mobj.mo(mo).momz >> 3;
-                s_start_sound(state, SoundOrigin::Mobj(mo), SfxName::Oof as i32);
+                s_start_sound(state, SoundOrigin::Mobj(mo), SfxName::Oof);
             }
             state.world.p_mobj.mo_mut(mo).momz = 0;
         }
@@ -3141,7 +3141,7 @@ pub fn nightmare_respawn(state: &mut GameState, mobj: MobjId) {
         .sector_mut(state.world.p_setup.subsectors[mobj_subsector.0 as usize].sector)
         .floorheight;
     let fog = spawn_mobj(state, mobj_x, mobj_y, floorheight1, MobjType::Tfog);
-    s_start_sound(state, SoundOrigin::Mobj(fog), SfxName::Telept as i32);
+    s_start_sound(state, SoundOrigin::Mobj(fog), SfxName::Telept);
     let ss = point_in_subsector(&state.world.p_setup, x, y);
     let floorheight2 = state
         .world
@@ -3149,7 +3149,7 @@ pub fn nightmare_respawn(state: &mut GameState, mobj: MobjId) {
         .sector_mut(state.world.p_setup.subsectors[ss.0 as usize].sector)
         .floorheight;
     let fog = spawn_mobj(state, x, y, floorheight2, MobjType::Tfog);
-    s_start_sound(state, SoundOrigin::Mobj(fog), SfxName::Telept as i32);
+    s_start_sound(state, SoundOrigin::Mobj(fog), SfxName::Telept);
     let z = if state
         .assets
         .info
@@ -3562,7 +3562,7 @@ pub fn respawn_specials(state: &mut GameState) {
         .sector_mut(state.world.p_setup.subsectors[ss.0 as usize].sector)
         .floorheight;
     let fog = spawn_mobj(state, x, y, floorheight, MobjType::Ifog);
-    s_start_sound(state, SoundOrigin::Mobj(fog), SfxName::Itmbk as i32);
+    s_start_sound(state, SoundOrigin::Mobj(fog), SfxName::Itmbk);
     let mut i: i32 = 0;
     while i < NUMMOBJTYPES {
         if mthing.kind as i32 == state.assets.info.mobjinfo[i as usize].doomednum {
@@ -3808,7 +3808,7 @@ pub fn spawn_missile(
     let th = spawn_mobj(state, sx, sy, sz + 4 * 8 * FRACUNIT, kind);
     let th_type = state.world.p_mobj.mo(th).kind;
     let seesound = state.assets.info.mobjinfo_mut(th_type).seesound;
-    if seesound != 0 {
+    if seesound != SfxName::SfxNone {
         s_start_sound(state, SoundOrigin::Mobj(th), seesound);
     }
     state.world.p_mobj.mo_mut(th).target = Some(source);
@@ -3859,7 +3859,7 @@ pub fn spawn_player_missile(state: &mut GameState, source: MobjId, kind: MobjTyp
     let th = spawn_mobj(state, x, y, z, kind);
     let th_type = state.world.p_mobj.mo(th).kind;
     let seesound = state.assets.info.mobjinfo_mut(th_type).seesound;
-    if seesound != 0 {
+    if seesound != SfxName::SfxNone {
         s_start_sound(state, SoundOrigin::Mobj(th), seesound);
     }
     let speed = state.assets.info.mobjinfo_mut(th_type).speed;

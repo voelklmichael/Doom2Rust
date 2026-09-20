@@ -1000,12 +1000,12 @@ pub fn update_deathmatch_stats(state: &mut GameState) {
                 state.ui.wi_stuff.dm_totals[i as usize] = frag_sum(state, i);
             }
         }
-        s_start_sound(state, SoundOrigin::None, SfxName::Barexp as i32);
+        s_start_sound(state, SoundOrigin::None, SfxName::Barexp);
         state.ui.wi_stuff.dm_state = 4;
     }
     if state.ui.wi_stuff.dm_state == 2 {
         if state.ui.wi_stuff.bcnt & 3 == 0 {
-            s_start_sound(state, SoundOrigin::None, SfxName::Pistol as i32);
+            s_start_sound(state, SoundOrigin::None, SfxName::Pistol);
         }
         stillticking = false;
         for i in 0..MAXPLAYERS {
@@ -1030,12 +1030,12 @@ pub fn update_deathmatch_stats(state: &mut GameState) {
             }
         }
         if !stillticking {
-            s_start_sound(state, SoundOrigin::None, SfxName::Barexp as i32);
+            s_start_sound(state, SoundOrigin::None, SfxName::Barexp);
             state.ui.wi_stuff.dm_state += 1;
         }
     } else if state.ui.wi_stuff.dm_state == 4 {
         if state.ui.wi_stuff.acceleratestage {
-            s_start_sound(state, SoundOrigin::None, SfxName::Slop as i32);
+            s_start_sound(state, SoundOrigin::None, SfxName::Slop);
             if state.game.doomstat.gamemode == GameMode::Commercial {
                 init_no_state(&mut state.ui.wi_stuff);
             } else {
@@ -1201,12 +1201,12 @@ pub fn update_netgame_stats(state: &mut GameState) {
                 }
             }
         }
-        s_start_sound(state, SoundOrigin::None, SfxName::Barexp as i32);
+        s_start_sound(state, SoundOrigin::None, SfxName::Barexp);
         state.ui.wi_stuff.ng_state = 10;
     }
     if state.ui.wi_stuff.ng_state == 2 {
         if state.ui.wi_stuff.bcnt & 3 == 0 {
-            s_start_sound(state, SoundOrigin::None, SfxName::Pistol as i32);
+            s_start_sound(state, SoundOrigin::None, SfxName::Pistol);
         }
         stillticking = false;
         for i in 0..MAXPLAYERS {
@@ -1223,12 +1223,12 @@ pub fn update_netgame_stats(state: &mut GameState) {
             }
         }
         if !stillticking {
-            s_start_sound(state, SoundOrigin::None, SfxName::Barexp as i32);
+            s_start_sound(state, SoundOrigin::None, SfxName::Barexp);
             state.ui.wi_stuff.ng_state += 1;
         }
     } else if state.ui.wi_stuff.ng_state == 4 {
         if state.ui.wi_stuff.bcnt & 3 == 0 {
-            s_start_sound(state, SoundOrigin::None, SfxName::Pistol as i32);
+            s_start_sound(state, SoundOrigin::None, SfxName::Pistol);
         }
         stillticking = false;
         for i in 0..MAXPLAYERS {
@@ -1245,12 +1245,12 @@ pub fn update_netgame_stats(state: &mut GameState) {
             }
         }
         if !stillticking {
-            s_start_sound(state, SoundOrigin::None, SfxName::Barexp as i32);
+            s_start_sound(state, SoundOrigin::None, SfxName::Barexp);
             state.ui.wi_stuff.ng_state += 1;
         }
     } else if state.ui.wi_stuff.ng_state == 6 {
         if state.ui.wi_stuff.bcnt & 3 == 0 {
-            s_start_sound(state, SoundOrigin::None, SfxName::Pistol as i32);
+            s_start_sound(state, SoundOrigin::None, SfxName::Pistol);
         }
         stillticking = false;
         for i in 0..MAXPLAYERS {
@@ -1267,12 +1267,12 @@ pub fn update_netgame_stats(state: &mut GameState) {
             }
         }
         if !stillticking {
-            s_start_sound(state, SoundOrigin::None, SfxName::Barexp as i32);
+            s_start_sound(state, SoundOrigin::None, SfxName::Barexp);
             state.ui.wi_stuff.ng_state += 1 + 2 * (!state.ui.wi_stuff.dofrags) as i32;
         }
     } else if state.ui.wi_stuff.ng_state == 8 {
         if state.ui.wi_stuff.bcnt & 3 == 0 {
-            s_start_sound(state, SoundOrigin::None, SfxName::Pistol as i32);
+            s_start_sound(state, SoundOrigin::None, SfxName::Pistol);
         }
         stillticking = false;
         for i in 0..MAXPLAYERS {
@@ -1287,12 +1287,12 @@ pub fn update_netgame_stats(state: &mut GameState) {
             }
         }
         if !stillticking {
-            s_start_sound(state, SoundOrigin::None, SfxName::Pldeth as i32);
+            s_start_sound(state, SoundOrigin::None, SfxName::Pldeth);
             state.ui.wi_stuff.ng_state += 1;
         }
     } else if state.ui.wi_stuff.ng_state == 10 {
         if state.ui.wi_stuff.acceleratestage {
-            s_start_sound(state, SoundOrigin::None, SfxName::Sgcock as i32);
+            s_start_sound(state, SoundOrigin::None, SfxName::Sgcock);
             if state.game.doomstat.gamemode == GameMode::Commercial {
                 init_no_state(&mut state.ui.wi_stuff);
             } else {
@@ -1440,51 +1440,51 @@ pub fn update_stats(state: &mut GameState) {
             state.plyr_index(state.ui.wi_stuff.me).ssecret * 100 / state.wbs().maxsecret;
         state.ui.wi_stuff.cnt_time = state.plyr_index(state.ui.wi_stuff.me).stime / TICRATE;
         state.ui.wi_stuff.cnt_par = state.wbs().partime / TICRATE;
-        s_start_sound(state, SoundOrigin::None, SfxName::Barexp as i32);
+        s_start_sound(state, SoundOrigin::None, SfxName::Barexp);
         state.ui.wi_stuff.sp_state = 10;
     }
     if state.ui.wi_stuff.sp_state == 2 {
         state.ui.wi_stuff.cnt_kills[0] += 2;
         if state.ui.wi_stuff.bcnt & 3 == 0 {
-            s_start_sound(state, SoundOrigin::None, SfxName::Pistol as i32);
+            s_start_sound(state, SoundOrigin::None, SfxName::Pistol);
         }
         if state.ui.wi_stuff.cnt_kills[0]
             >= state.plyr_index(state.ui.wi_stuff.me).skills * 100 / state.wbs().maxkills
         {
             state.ui.wi_stuff.cnt_kills[0] =
                 state.plyr_index(state.ui.wi_stuff.me).skills * 100 / state.wbs().maxkills;
-            s_start_sound(state, SoundOrigin::None, SfxName::Barexp as i32);
+            s_start_sound(state, SoundOrigin::None, SfxName::Barexp);
             state.ui.wi_stuff.sp_state += 1;
         }
     } else if state.ui.wi_stuff.sp_state == 4 {
         state.ui.wi_stuff.cnt_items[0] += 2;
         if state.ui.wi_stuff.bcnt & 3 == 0 {
-            s_start_sound(state, SoundOrigin::None, SfxName::Pistol as i32);
+            s_start_sound(state, SoundOrigin::None, SfxName::Pistol);
         }
         if state.ui.wi_stuff.cnt_items[0]
             >= state.plyr_index(state.ui.wi_stuff.me).sitems * 100 / state.wbs().maxitems
         {
             state.ui.wi_stuff.cnt_items[0] =
                 state.plyr_index(state.ui.wi_stuff.me).sitems * 100 / state.wbs().maxitems;
-            s_start_sound(state, SoundOrigin::None, SfxName::Barexp as i32);
+            s_start_sound(state, SoundOrigin::None, SfxName::Barexp);
             state.ui.wi_stuff.sp_state += 1;
         }
     } else if state.ui.wi_stuff.sp_state == 6 {
         state.ui.wi_stuff.cnt_secret[0] += 2;
         if state.ui.wi_stuff.bcnt & 3 == 0 {
-            s_start_sound(state, SoundOrigin::None, SfxName::Pistol as i32);
+            s_start_sound(state, SoundOrigin::None, SfxName::Pistol);
         }
         if state.ui.wi_stuff.cnt_secret[0]
             >= state.plyr_index(state.ui.wi_stuff.me).ssecret * 100 / state.wbs().maxsecret
         {
             state.ui.wi_stuff.cnt_secret[0] =
                 state.plyr_index(state.ui.wi_stuff.me).ssecret * 100 / state.wbs().maxsecret;
-            s_start_sound(state, SoundOrigin::None, SfxName::Barexp as i32);
+            s_start_sound(state, SoundOrigin::None, SfxName::Barexp);
             state.ui.wi_stuff.sp_state += 1;
         }
     } else if state.ui.wi_stuff.sp_state == 8 {
         if state.ui.wi_stuff.bcnt & 3 == 0 {
-            s_start_sound(state, SoundOrigin::None, SfxName::Pistol as i32);
+            s_start_sound(state, SoundOrigin::None, SfxName::Pistol);
         }
         state.ui.wi_stuff.cnt_time += 3;
         if state.ui.wi_stuff.cnt_time >= state.plyr_index(state.ui.wi_stuff.me).stime / TICRATE {
@@ -1495,13 +1495,13 @@ pub fn update_stats(state: &mut GameState) {
             state.ui.wi_stuff.cnt_par = state.wbs().partime / TICRATE;
             if state.ui.wi_stuff.cnt_time >= state.plyr_index(state.ui.wi_stuff.me).stime / TICRATE
             {
-                s_start_sound(state, SoundOrigin::None, SfxName::Barexp as i32);
+                s_start_sound(state, SoundOrigin::None, SfxName::Barexp);
                 state.ui.wi_stuff.sp_state += 1;
             }
         }
     } else if state.ui.wi_stuff.sp_state == 10 {
         if state.ui.wi_stuff.acceleratestage {
-            s_start_sound(state, SoundOrigin::None, SfxName::Sgcock as i32);
+            s_start_sound(state, SoundOrigin::None, SfxName::Sgcock);
             if state.game.doomstat.gamemode == GameMode::Commercial {
                 init_no_state(&mut state.ui.wi_stuff);
             } else {

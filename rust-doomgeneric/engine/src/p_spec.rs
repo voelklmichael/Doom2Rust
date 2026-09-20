@@ -1151,7 +1151,7 @@ pub fn update_specials(state: &mut GameState) {
                 s_start_sound(
                     state,
                     SoundOrigin::Sector(state.world.p_switch.buttonlist[i].soundorg),
-                    SfxName::Swtchn as i32,
+                    SfxName::Swtchn,
                 );
                 state.world.p_switch.buttonlist[i] = EMPTY_BUTTON;
             }

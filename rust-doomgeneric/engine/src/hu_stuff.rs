@@ -484,9 +484,9 @@ pub fn hu_ticker(state: &mut GameState) {
                             state.ui.hu_stuff.message_on = true;
                             state.ui.hu_stuff.message_counter = HU_MSGTIMEOUT;
                             if state.game.doomstat.gamemode == GameMode::Commercial {
-                                s_start_sound(state, SoundOrigin::None, SfxName::Radio as i32);
+                                s_start_sound(state, SoundOrigin::None, SfxName::Radio);
                             } else {
-                                s_start_sound(state, SoundOrigin::None, SfxName::Tink as i32);
+                                s_start_sound(state, SoundOrigin::None, SfxName::Tink);
                             }
                         }
                         hulib_reset_itext(&mut state.ui.hu_stuff.w_inputbuffer[i as usize]);

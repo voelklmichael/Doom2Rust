@@ -346,7 +346,7 @@ pub fn start_button(
     error("P_StartButton: no button slots left!");
 }
 pub fn change_switch_texture(state: &mut GameState, line: LineId, use_again: bool) {
-    let mut sound: i32;
+    let mut sound: SfxName;
     if !use_again {
         state.world.p_setup.line_mut(line).special = 0;
     }
@@ -354,9 +354,9 @@ pub fn change_switch_texture(state: &mut GameState, line: LineId, use_again: boo
     let tex_top: i32 = state.world.p_setup.sides[sidenum0 as usize].toptexture as i32;
     let tex_mid: i32 = state.world.p_setup.sides[sidenum0 as usize].midtexture as i32;
     let tex_bot: i32 = state.world.p_setup.sides[sidenum0 as usize].bottomtexture as i32;
-    sound = SfxName::Swtchn as i32;
+    sound = SfxName::Swtchn;
     if state.world.p_setup.line(line).special as i32 == 11 {
-        sound = SfxName::Swtchx as i32;
+        sound = SfxName::Swtchx;
     }
     for i in 0..state.world.p_switch.numswitches * 2 {
         if state.world.p_switch.switchlist[i as usize] == tex_top {

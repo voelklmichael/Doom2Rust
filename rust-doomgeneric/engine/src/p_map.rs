@@ -1103,7 +1103,7 @@ pub fn use_traverse(state: &mut GameState, intercept: Intercept) -> bool {
     if state.world.p_setup.line(li).special == 0 {
         line_opening(&mut state.world.p_maputl, &mut state.world.p_setup, li);
         if state.world.p_maputl.openrange <= 0 {
-            s_start_sound(state, SoundOrigin::Mobj(usething), SfxName::Noway as i32);
+            s_start_sound(state, SoundOrigin::Mobj(usething), SfxName::Noway);
             return false;
         }
         return true;

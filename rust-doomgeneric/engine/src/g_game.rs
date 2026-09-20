@@ -1133,7 +1133,7 @@ pub fn check_spot(state: &mut GameState, playernum: i32, mthing: &MapThing) -> b
         .floorheight;
     let mo = spawn_mobj(state, x + 20 * xa, y + 20 * ya, floorheight, MobjType::Tfog);
     if state.game.g_game.players[state.game.g_game.consoleplayer].viewz != 1 {
-        s_start_sound(state, SoundOrigin::Mobj(mo), SfxName::Telept as i32);
+        s_start_sound(state, SoundOrigin::Mobj(mo), SfxName::Telept);
     }
     true
 }

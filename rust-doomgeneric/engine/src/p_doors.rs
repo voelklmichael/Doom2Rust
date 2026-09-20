@@ -173,27 +173,15 @@ pub fn t_vertical_door(state: &mut GameState, id: DoorId) {
                 match door.kind {
                     VldoorE::BlazeRaise => {
                         door_mut!().direction = -1;
-                        s_start_sound(
-                            state,
-                            SoundOrigin::Sector(door.sector),
-                            SfxName::Bdcls as i32,
-                        );
+                        s_start_sound(state, SoundOrigin::Sector(door.sector), SfxName::Bdcls);
                     }
                     VldoorE::Normal => {
                         door_mut!().direction = -1;
-                        s_start_sound(
-                            state,
-                            SoundOrigin::Sector(door.sector),
-                            SfxName::Dorcls as i32,
-                        );
+                        s_start_sound(state, SoundOrigin::Sector(door.sector), SfxName::Dorcls);
                     }
                     VldoorE::Close30ThenOpen => {
                         door_mut!().direction = 1;
-                        s_start_sound(
-                            state,
-                            SoundOrigin::Sector(door.sector),
-                            SfxName::Doropn as i32,
-                        );
+                        s_start_sound(state, SoundOrigin::Sector(door.sector), SfxName::Doropn);
                     }
                     _ => {}
                 }
@@ -205,11 +193,7 @@ pub fn t_vertical_door(state: &mut GameState, id: DoorId) {
                 let d = door_mut!();
                 d.direction = 1;
                 d.kind = VldoorE::Normal;
-                s_start_sound(
-                    state,
-                    SoundOrigin::Sector(door.sector),
-                    SfxName::Doropn as i32,
-                );
+                s_start_sound(state, SoundOrigin::Sector(door.sector), SfxName::Doropn);
             }
         }
         -1 => {
@@ -228,11 +212,7 @@ pub fn t_vertical_door(state: &mut GameState, id: DoorId) {
                     VldoorE::BlazeRaise | VldoorE::BlazeClose => {
                         state.world.p_setup.sector_mut(door.sector).specialdata = None;
                         remove_thinker(&mut door_mut!().thinker);
-                        s_start_sound(
-                            state,
-                            SoundOrigin::Sector(door.sector),
-                            SfxName::Bdcls as i32,
-                        );
+                        s_start_sound(state, SoundOrigin::Sector(door.sector), SfxName::Bdcls);
                     }
                     VldoorE::Normal | VldoorE::Close => {
                         state.world.p_setup.sector_mut(door.sector).specialdata = None;
@@ -250,11 +230,7 @@ pub fn t_vertical_door(state: &mut GameState, id: DoorId) {
                     VldoorE::BlazeClose | VldoorE::Close => {}
                     _ => {
                         door_mut!().direction = 1;
-                        s_start_sound(
-                            state,
-                            SoundOrigin::Sector(door.sector),
-                            SfxName::Doropn as i32,
-                        );
+                        s_start_sound(state, SoundOrigin::Sector(door.sector), SfxName::Doropn);
                     }
                 }
             }
@@ -307,7 +283,7 @@ pub fn do_locked_door(state: &mut GameState, line: LineId, kind: VldoorE, thing:
     };
     if let Some(message) = missing {
         state.game.g_game.player_mut(player_id).message = Some(message.to_string());
-        s_start_sound(state, SoundOrigin::None, SfxName::Oof as i32);
+        s_start_sound(state, SoundOrigin::None, SfxName::Oof);
         return false;
     }
     do_door(state, line, kind)
@@ -333,18 +309,18 @@ pub fn do_door(state: &mut GameState, line: LineId, kind: VldoorE) -> bool {
                 door.topheight -= 4 * FRACUNIT;
                 door.direction = -1;
                 door.speed = (FRACUNIT * 2 * 4) as Fixed;
-                s_start_sound(state, SoundOrigin::Sector(sec), SfxName::Bdcls as i32);
+                s_start_sound(state, SoundOrigin::Sector(sec), SfxName::Bdcls);
             }
             VldoorE::Close => {
                 door.topheight = find_lowest_ceiling_surrounding(&mut state.world.p_setup, sec);
                 door.topheight -= 4 * FRACUNIT;
                 door.direction = -1;
-                s_start_sound(state, SoundOrigin::Sector(sec), SfxName::Dorcls as i32);
+                s_start_sound(state, SoundOrigin::Sector(sec), SfxName::Dorcls);
             }
             VldoorE::Close30ThenOpen => {
                 door.topheight = ceilingheight;
                 door.direction = -1;
-                s_start_sound(state, SoundOrigin::Sector(sec), SfxName::Dorcls as i32);
+                s_start_sound(state, SoundOrigin::Sector(sec), SfxName::Dorcls);
             }
             VldoorE::BlazeRaise | VldoorE::BlazeOpen => {
                 door.direction = 1;
@@ -352,7 +328,7 @@ pub fn do_door(state: &mut GameState, line: LineId, kind: VldoorE) -> bool {
                 door.topheight -= 4 * FRACUNIT;
                 door.speed = (FRACUNIT * 2 * 4) as Fixed;
                 if door.topheight != ceilingheight {
-                    s_start_sound(state, SoundOrigin::Sector(sec), SfxName::Bdopn as i32);
+                    s_start_sound(state, SoundOrigin::Sector(sec), SfxName::Bdopn);
                 }
             }
             VldoorE::Normal | VldoorE::Open => {
@@ -360,7 +336,7 @@ pub fn do_door(state: &mut GameState, line: LineId, kind: VldoorE) -> bool {
                 door.topheight = find_lowest_ceiling_surrounding(&mut state.world.p_setup, sec);
                 door.topheight -= 4 * FRACUNIT;
                 if door.topheight != ceilingheight {
-                    s_start_sound(state, SoundOrigin::Sector(sec), SfxName::Doropn as i32);
+                    s_start_sound(state, SoundOrigin::Sector(sec), SfxName::Doropn);
                 }
             }
             _ => {}
@@ -397,7 +373,7 @@ pub fn ev_vertical_door(state: &mut GameState, line: LineId, thing: MobjId) {
         };
         if let Some(message) = missing {
             state.game.g_game.player_mut(player_id).message = Some(message.to_string());
-            s_start_sound(state, SoundOrigin::None, SfxName::Oof as i32);
+            s_start_sound(state, SoundOrigin::None, SfxName::Oof);
             return;
         }
     } else if matches!(linev.special as i32, 26 | 32 | 27 | 34 | 28 | 33) {
@@ -473,18 +449,10 @@ pub fn ev_vertical_door(state: &mut GameState, line: LineId, thing: MobjId) {
     }
     match linev.special as i32 {
         117 | 118 => {
-            s_start_sound(
-                state,
-                SoundOrigin::Sector(door_sector_id),
-                SfxName::Bdopn as i32,
-            );
+            s_start_sound(state, SoundOrigin::Sector(door_sector_id), SfxName::Bdopn);
         }
         _ => {
-            s_start_sound(
-                state,
-                SoundOrigin::Sector(door_sector_id),
-                SfxName::Doropn as i32,
-            );
+            s_start_sound(state, SoundOrigin::Sector(door_sector_id), SfxName::Doropn);
         }
     }
     let mut door = VlDoor::default();

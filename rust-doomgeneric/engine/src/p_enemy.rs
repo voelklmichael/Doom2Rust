@@ -563,23 +563,21 @@ pub fn look(state: &mut GameState, id: MobjId) {
             .info
             .mobjinfo_mut(state.world.p_mobj.mo(actor).kind)
             .seesound
-            != 0
+            != SfxName::SfxNone
         {
-            let sound: i32 = match state
+            let seesound = state
                 .assets
                 .info
                 .mobjinfo_mut(state.world.p_mobj.mo(actor).kind)
-                .seesound
-            {
-                36..=38 => SfxName::Posit1 as i32 + p_random(&mut state.world.m_random) % 3,
-                39 | 40 => SfxName::Bgsit1 as i32 + p_random(&mut state.world.m_random) % 2,
-                _ => {
-                    state
-                        .assets
-                        .info
-                        .mobjinfo_mut(state.world.p_mobj.mo(actor).kind)
-                        .seesound
+                .seesound;
+            let sound = match seesound {
+                SfxName::Posit1 | SfxName::Posit2 | SfxName::Posit3 => {
+                    [SfxName::Posit1, SfxName::Posit2, SfxName::Posit3]
+                        [(p_random(&mut state.world.m_random) % 3) as usize]
                 }
+                SfxName::Bgsit1 | SfxName::Bgsit2 => [SfxName::Bgsit1, SfxName::Bgsit2]
+                    [(p_random(&mut state.world.m_random) % 2) as usize],
+                other => other,
             };
             if state.world.p_mobj.mo(actor).kind as u32 == MobjType::Spider as i32 as u32
                 || state.world.p_mobj.mo(actor).kind as u32 == MobjType::Cyborg as i32 as u32
@@ -684,7 +682,7 @@ pub fn chase(state: &mut GameState, id: MobjId) {
                 .info
                 .mobjinfo_mut(state.world.p_mobj.mo(actor).kind)
                 .attacksound;
-            if attacksound != 0 {
+            if attacksound != SfxName::SfxNone {
                 s_start_sound(state, SoundOrigin::Mobj(actor), attacksound);
             }
             let meleestate = state
@@ -731,7 +729,7 @@ pub fn chase(state: &mut GameState, id: MobjId) {
             .info
             .mobjinfo_mut(state.world.p_mobj.mo(actor).kind)
             .activesound;
-        if activesound != 0 && p_random(&mut state.world.m_random) < 3 {
+        if activesound != SfxName::SfxNone && p_random(&mut state.world.m_random) < 3 {
             s_start_sound(state, SoundOrigin::Mobj(actor), activesound);
         }
     }
@@ -776,7 +774,7 @@ pub fn pos_attack(state: &mut GameState, id: MobjId) {
         face_target(state, actor);
         angle = state.world.p_mobj.mo(actor).angle as i32;
         let slope: i32 = aim_line_attack(state, Some(actor), angle as Angle, MISSILERANGE);
-        s_start_sound(state, SoundOrigin::Mobj(actor), SfxName::Pistol as i32);
+        s_start_sound(state, SoundOrigin::Mobj(actor), SfxName::Pistol);
         angle += (p_random(&mut state.world.m_random) - p_random(&mut state.world.m_random)) << 20;
         let damage: i32 = (p_random(&mut state.world.m_random) % 5 + 1) * 3;
         line_attack(
@@ -799,7 +797,7 @@ pub fn spos_attack(state: &mut GameState, id: MobjId) {
         if state.world.p_mobj.mo(actor).target.is_none() {
             return;
         }
-        s_start_sound(state, SoundOrigin::Mobj(actor), SfxName::Shotgn as i32);
+        s_start_sound(state, SoundOrigin::Mobj(actor), SfxName::Shotgn);
         face_target(state, actor);
         let bangle: i32 = state.world.p_mobj.mo(actor).angle as i32;
         let slope: i32 = aim_line_attack(state, Some(actor), bangle as Angle, MISSILERANGE);
@@ -826,7 +824,7 @@ pub fn cpos_attack(state: &mut GameState, id: MobjId) {
         if state.world.p_mobj.mo(actor).target.is_none() {
             return;
         }
-        s_start_sound(state, SoundOrigin::Mobj(actor), SfxName::Shotgn as i32);
+        s_start_sound(state, SoundOrigin::Mobj(actor), SfxName::Shotgn);
         face_target(state, actor);
         let bangle: i32 = state.world.p_mobj.mo(actor).angle as i32;
         let slope: i32 = aim_line_attack(state, Some(actor), bangle as Angle, MISSILERANGE);
@@ -914,7 +912,7 @@ pub fn troop_attack(state: &mut GameState, id: MobjId) {
         };
         face_target(state, actor);
         if check_melee_range(state, actor) {
-            s_start_sound(state, SoundOrigin::Mobj(actor), SfxName::Claw as i32);
+            s_start_sound(state, SoundOrigin::Mobj(actor), SfxName::Claw);
             damage = (p_random(&mut state.world.m_random) % 8 + 1) * 3;
             damage_mobj(state, target, Some(actor), Some(actor), damage);
             return;
@@ -970,7 +968,7 @@ pub fn bruis_attack(state: &mut GameState, id: MobjId) {
             return;
         };
         if check_melee_range(state, actor) {
-            s_start_sound(state, SoundOrigin::Mobj(actor), SfxName::Claw as i32);
+            s_start_sound(state, SoundOrigin::Mobj(actor), SfxName::Claw);
             damage = (p_random(&mut state.world.m_random) % 8 + 1) * 10;
             damage_mobj(state, target, Some(actor), Some(actor), damage);
             return;
@@ -1108,7 +1106,7 @@ pub fn skel_whoosh(state: &mut GameState, id: MobjId) {
             return;
         }
         face_target(state, actor);
-        s_start_sound(state, SoundOrigin::Mobj(actor), SfxName::Skeswg as i32);
+        s_start_sound(state, SoundOrigin::Mobj(actor), SfxName::Skeswg);
     }
 }
 pub fn skel_fist(state: &mut GameState, id: MobjId) {
@@ -1121,7 +1119,7 @@ pub fn skel_fist(state: &mut GameState, id: MobjId) {
         face_target(state, actor);
         if check_melee_range(state, actor) {
             damage = (p_random(&mut state.world.m_random) % 10 + 1) * 6;
-            s_start_sound(state, SoundOrigin::Mobj(actor), SfxName::Skepch as i32);
+            s_start_sound(state, SoundOrigin::Mobj(actor), SfxName::Skepch);
             damage_mobj(state, target, Some(actor), Some(actor), damage);
         }
     }
@@ -1218,7 +1216,7 @@ pub fn vile_chase(state: &mut GameState, id: MobjId) {
                     face_target(state, actor);
                     state.world.p_mobj.mo_mut(actor).target = temp;
                     set_mobj_state(state, actor, StateNum::VileHeal1);
-                    s_start_sound(state, SoundOrigin::Mobj(corpsehit_id), SfxName::Slop as i32);
+                    s_start_sound(state, SoundOrigin::Mobj(corpsehit_id), SfxName::Slop);
                     let info = state
                         .assets
                         .info
@@ -1240,20 +1238,20 @@ pub fn vile_chase(state: &mut GameState, id: MobjId) {
 pub fn vile_start(state: &mut GameState, id: MobjId) {
     {
         let actor = id;
-        s_start_sound(state, SoundOrigin::Mobj(actor), SfxName::Vilatk as i32);
+        s_start_sound(state, SoundOrigin::Mobj(actor), SfxName::Vilatk);
     }
 }
 pub fn start_fire(state: &mut GameState, id: MobjId) {
     {
         let actor = id;
-        s_start_sound(state, SoundOrigin::Mobj(actor), SfxName::Flamst as i32);
+        s_start_sound(state, SoundOrigin::Mobj(actor), SfxName::Flamst);
         a_fire(state, actor);
     }
 }
 pub fn fire_crackle(state: &mut GameState, id: MobjId) {
     {
         let actor = id;
-        s_start_sound(state, SoundOrigin::Mobj(actor), SfxName::Flame as i32);
+        s_start_sound(state, SoundOrigin::Mobj(actor), SfxName::Flame);
         a_fire(state, actor);
     }
 }
@@ -1323,7 +1321,7 @@ pub fn vile_attack(state: &mut GameState, id: MobjId) {
         if !check_sight(state, actor, target) {
             return;
         }
-        s_start_sound(state, SoundOrigin::Mobj(actor), SfxName::Barexp as i32);
+        s_start_sound(state, SoundOrigin::Mobj(actor), SfxName::Barexp);
         damage_mobj(state, target, Some(actor), Some(actor), 20);
         state.world.p_mobj.mo_mut(target).momz = (1000 * FRACUNIT
             / state
@@ -1353,7 +1351,7 @@ pub fn fat_raise(state: &mut GameState, id: MobjId) {
     {
         let actor = id;
         face_target(state, actor);
-        s_start_sound(state, SoundOrigin::Mobj(actor), SfxName::Manatk as i32);
+        s_start_sound(state, SoundOrigin::Mobj(actor), SfxName::Manatk);
     }
 }
 pub fn fat_attack1(state: &mut GameState, id: MobjId) {
@@ -1629,22 +1627,20 @@ pub fn scream(state: &mut GameState, id: MobjId) {
     {
         let actor = id;
 
-        let sound: i32 = match state
+        let deathsound = state
             .assets
             .info
             .mobjinfo_mut(state.world.p_mobj.mo(actor).kind)
-            .deathsound
-        {
-            0 => return,
-            59..=61 => SfxName::Podth1 as i32 + p_random(&mut state.world.m_random) % 3,
-            62 | 63 => SfxName::Bgdth1 as i32 + p_random(&mut state.world.m_random) % 2,
-            _ => {
-                state
-                    .assets
-                    .info
-                    .mobjinfo_mut(state.world.p_mobj.mo(actor).kind)
-                    .deathsound
+            .deathsound;
+        let sound = match deathsound {
+            SfxName::SfxNone => return,
+            SfxName::Podth1 | SfxName::Podth2 | SfxName::Podth3 => {
+                [SfxName::Podth1, SfxName::Podth2, SfxName::Podth3]
+                    [(p_random(&mut state.world.m_random) % 3) as usize]
             }
+            SfxName::Bgdth1 | SfxName::Bgdth2 => [SfxName::Bgdth1, SfxName::Bgdth2]
+                [(p_random(&mut state.world.m_random) % 2) as usize],
+            other => other,
         };
         if state.world.p_mobj.mo(actor).kind as u32 == MobjType::Spider as i32 as u32
             || state.world.p_mobj.mo(actor).kind as u32 == MobjType::Cyborg as i32 as u32
@@ -1658,7 +1654,7 @@ pub fn scream(state: &mut GameState, id: MobjId) {
 pub fn xscream(state: &mut GameState, id: MobjId) {
     {
         let actor = id;
-        s_start_sound(state, SoundOrigin::Mobj(actor), SfxName::Slop as i32);
+        s_start_sound(state, SoundOrigin::Mobj(actor), SfxName::Slop);
     }
 }
 pub fn pain(state: &mut GameState, id: MobjId) {
@@ -1669,7 +1665,7 @@ pub fn pain(state: &mut GameState, id: MobjId) {
             .info
             .mobjinfo_mut(state.world.p_mobj.mo(actor).kind)
             .painsound;
-        if painsound != 0 {
+        if painsound != SfxName::SfxNone {
             s_start_sound(state, SoundOrigin::Mobj(actor), painsound);
         }
     }
@@ -1795,21 +1791,21 @@ pub fn boss_death(state: &mut GameState, id: MobjId) {
 pub fn hoof(state: &mut GameState, id: MobjId) {
     {
         let mo = id;
-        s_start_sound(state, SoundOrigin::Mobj(mo), SfxName::Hoof as i32);
+        s_start_sound(state, SoundOrigin::Mobj(mo), SfxName::Hoof);
         chase(state, mo);
     }
 }
 pub fn metal(state: &mut GameState, id: MobjId) {
     {
         let mo = id;
-        s_start_sound(state, SoundOrigin::Mobj(mo), SfxName::Metal as i32);
+        s_start_sound(state, SoundOrigin::Mobj(mo), SfxName::Metal);
         chase(state, mo);
     }
 }
 pub fn baby_metal(state: &mut GameState, id: MobjId) {
     {
         let mo = id;
-        s_start_sound(state, SoundOrigin::Mobj(mo), SfxName::Bspwlk as i32);
+        s_start_sound(state, SoundOrigin::Mobj(mo), SfxName::Bspwlk);
         chase(state, mo);
     }
 }
@@ -1819,7 +1815,7 @@ pub fn open_shotgun2(state: &mut GameState, player_id: PlayerId, _position: i32)
         s_start_sound(
             state,
             SoundOrigin::Mobj(state.game.g_game.players[player].mo.unwrap()),
-            SfxName::Dbopn as i32,
+            SfxName::Dbopn,
         );
     }
 }
@@ -1829,7 +1825,7 @@ pub fn load_shotgun2(state: &mut GameState, player_id: PlayerId, _position: i32)
         s_start_sound(
             state,
             SoundOrigin::Mobj(state.game.g_game.players[player].mo.unwrap()),
-            SfxName::Dbload as i32,
+            SfxName::Dbload,
         );
     }
 }
@@ -1839,7 +1835,7 @@ pub fn close_shotgun2(state: &mut GameState, player_id: PlayerId, position: i32)
         s_start_sound(
             state,
             SoundOrigin::Mobj(state.game.g_game.players[player].mo.unwrap()),
-            SfxName::Dbcls as i32,
+            SfxName::Dbcls,
         );
         re_fire(state, player_id, position);
     }
@@ -1854,10 +1850,10 @@ pub fn brain_awake(state: &mut GameState, _id: MobjId) {
             state.world.p_enemy.numbraintargets += 1;
         }
     }
-    s_start_sound(state, SoundOrigin::None, SfxName::Bossit as i32);
+    s_start_sound(state, SoundOrigin::None, SfxName::Bossit);
 }
 pub fn brain_pain(state: &mut GameState, _id: MobjId) {
-    s_start_sound(state, SoundOrigin::None, SfxName::Bospn as i32);
+    s_start_sound(state, SoundOrigin::None, SfxName::Bospn);
 }
 pub fn brain_scream(state: &mut GameState, id: MobjId) {
     {
@@ -1880,7 +1876,7 @@ pub fn brain_scream(state: &mut GameState, id: MobjId) {
             }
             x += FRACUNIT * 8;
         }
-        s_start_sound(state, SoundOrigin::None, SfxName::Bosdth as i32);
+        s_start_sound(state, SoundOrigin::None, SfxName::Bosdth);
     }
 }
 pub fn brain_explode(state: &mut GameState, id: MobjId) {
@@ -1926,13 +1922,13 @@ pub fn brain_spit(state: &mut GameState, id: MobjId) {
                 .info
                 .state_mut(state.world.p_mobj.mo(newmobj).state.unwrap())
                 .tics;
-        s_start_sound(state, SoundOrigin::None, SfxName::Bospit as i32);
+        s_start_sound(state, SoundOrigin::None, SfxName::Bospit);
     }
 }
 pub fn spawn_sound(state: &mut GameState, id: MobjId) {
     {
         let mo = id;
-        s_start_sound(state, SoundOrigin::Mobj(mo), SfxName::Boscub as i32);
+        s_start_sound(state, SoundOrigin::Mobj(mo), SfxName::Boscub);
         spawn_fly(state, mo);
     }
 }
@@ -1959,7 +1955,7 @@ pub fn spawn_fly(state: &mut GameState, id: MobjId) {
             state.world.p_mobj.mo(targ).z,
             MobjType::Spawnfire,
         );
-        s_start_sound(state, SoundOrigin::Mobj(fog), SfxName::Telept as i32);
+        s_start_sound(state, SoundOrigin::Mobj(fog), SfxName::Telept);
         let r: i32 = p_random(&mut state.world.m_random);
         let kind: MobjType = if r < 50 {
             MobjType::Troop
@@ -2011,11 +2007,11 @@ pub fn spawn_fly(state: &mut GameState, id: MobjId) {
 pub fn player_scream(state: &mut GameState, id: MobjId) {
     {
         let mo = id;
-        let mut sound: i32 = SfxName::Pldeth as i32;
+        let mut sound: SfxName = SfxName::Pldeth;
         if state.game.doomstat.gamemode == GameMode::Commercial
             && state.world.p_mobj.mo(mo).health < -50
         {
-            sound = SfxName::Pdiehi as i32;
+            sound = SfxName::Pdiehi;
         }
         s_start_sound(state, SoundOrigin::Mobj(mo), sound);
     }

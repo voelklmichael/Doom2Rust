@@ -144,30 +144,18 @@ pub fn plat_raise(state: &mut GameState, id: PlatId) {
                 || plat.kind == PlattypeE::RaiseToNearestAndChange)
                 && state.world.p_tick.leveltime & 7 == 0
             {
-                s_start_sound(
-                    state,
-                    SoundOrigin::Sector(plat.sector),
-                    SfxName::Stnmov as i32,
-                );
+                s_start_sound(state, SoundOrigin::Sector(plat.sector), SfxName::Stnmov);
             }
             if res == ResultE::Crushed && !plat.crush {
                 let p = state.world.p_plats.get_mut(id).expect("live plat");
                 p.count = p.wait;
                 p.status = PlatE::Down;
-                s_start_sound(
-                    state,
-                    SoundOrigin::Sector(plat.sector),
-                    SfxName::Pstart as i32,
-                );
+                s_start_sound(state, SoundOrigin::Sector(plat.sector), SfxName::Pstart);
             } else if res == ResultE::Pastdest {
                 let p = state.world.p_plats.get_mut(id).expect("live plat");
                 p.count = p.wait;
                 p.status = PlatE::Waiting;
-                s_start_sound(
-                    state,
-                    SoundOrigin::Sector(plat.sector),
-                    SfxName::Pstop as i32,
-                );
+                s_start_sound(state, SoundOrigin::Sector(plat.sector), SfxName::Pstop);
                 match plat.kind {
                     PlattypeE::BlazeDWUS | PlattypeE::DownWaitUpStay => {
                         remove_active_plat(
@@ -195,11 +183,7 @@ pub fn plat_raise(state: &mut GameState, id: PlatId) {
                 let p = state.world.p_plats.get_mut(id).expect("live plat");
                 p.count = p.wait;
                 p.status = PlatE::Waiting;
-                s_start_sound(
-                    state,
-                    SoundOrigin::Sector(plat.sector),
-                    SfxName::Pstop as i32,
-                );
+                s_start_sound(state, SoundOrigin::Sector(plat.sector), SfxName::Pstop);
             }
         }
         PlatE::Waiting => {
@@ -212,11 +196,7 @@ pub fn plat_raise(state: &mut GameState, id: PlatId) {
                 } else {
                     state.world.p_plats.get_mut(id).expect("live plat").status = PlatE::Down;
                 }
-                s_start_sound(
-                    state,
-                    SoundOrigin::Sector(plat.sector),
-                    SfxName::Pstart as i32,
-                );
+                s_start_sound(state, SoundOrigin::Sector(plat.sector), SfxName::Pstart);
             }
         }
         PlatE::InStasis => {}
@@ -258,7 +238,7 @@ pub fn do_plat(state: &mut GameState, line: LineId, kind: PlattypeE, amount: i32
                 plat.wait = 0;
                 plat.status = PlatE::Up;
                 state.world.p_setup.sector_mut(sec).special = 0;
-                s_start_sound(state, SoundOrigin::Sector(sec), SfxName::Stnmov as i32);
+                s_start_sound(state, SoundOrigin::Sector(sec), SfxName::Stnmov);
             }
             PlattypeE::RaiseAndChange => {
                 plat.speed = (PLATSPEED / 2) as Fixed;
@@ -269,7 +249,7 @@ pub fn do_plat(state: &mut GameState, line: LineId, kind: PlattypeE, amount: i32
                 plat.high = (floorheight + amount * FRACUNIT) as Fixed;
                 plat.wait = 0;
                 plat.status = PlatE::Up;
-                s_start_sound(state, SoundOrigin::Sector(sec), SfxName::Stnmov as i32);
+                s_start_sound(state, SoundOrigin::Sector(sec), SfxName::Stnmov);
             }
             PlattypeE::DownWaitUpStay => {
                 plat.speed = (PLATSPEED * 4) as Fixed;
@@ -280,7 +260,7 @@ pub fn do_plat(state: &mut GameState, line: LineId, kind: PlattypeE, amount: i32
                 plat.high = floorheight;
                 plat.wait = TICRATE * PLATWAIT;
                 plat.status = PlatE::Down;
-                s_start_sound(state, SoundOrigin::Sector(sec), SfxName::Pstart as i32);
+                s_start_sound(state, SoundOrigin::Sector(sec), SfxName::Pstart);
             }
             PlattypeE::BlazeDWUS => {
                 plat.speed = (PLATSPEED * 8) as Fixed;
@@ -291,7 +271,7 @@ pub fn do_plat(state: &mut GameState, line: LineId, kind: PlattypeE, amount: i32
                 plat.high = floorheight;
                 plat.wait = TICRATE * PLATWAIT;
                 plat.status = PlatE::Down;
-                s_start_sound(state, SoundOrigin::Sector(sec), SfxName::Pstart as i32);
+                s_start_sound(state, SoundOrigin::Sector(sec), SfxName::Pstart);
             }
             PlattypeE::PerpetualRaise => {
                 plat.speed = PLATSPEED as Fixed;
@@ -309,7 +289,7 @@ pub fn do_plat(state: &mut GameState, line: LineId, kind: PlattypeE, amount: i32
                 } else {
                     PlatE::Up
                 };
-                s_start_sound(state, SoundOrigin::Sector(sec), SfxName::Pstart as i32);
+                s_start_sound(state, SoundOrigin::Sector(sec), SfxName::Pstart);
             }
         }
         let plat_arena_id = state.world.p_plats.spawn(plat);
