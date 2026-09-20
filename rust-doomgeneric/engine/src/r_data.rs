@@ -159,8 +159,6 @@ pub fn generate_composite(
     let texture_width = r_data.textures[texnum as usize].width as i32;
     let texture_height = r_data.textures[texnum as usize].height as i32;
     for i in 0..texture_patchcount as usize {
-        let mut x: i32;
-
         let tex_patch = r_data.textures[texnum as usize].patches[i];
         // `realpatch` is the raw picture-format lump ("patch_t": width:i16,
         // height:i16, leftoffset:i16, topoffset:i16, then `width` many i32
@@ -172,11 +170,7 @@ pub fn generate_composite(
         let realpatch_width = i16::from_le_bytes(realpatch[0..2].try_into().unwrap()) as i32;
         let x1: i32 = tex_patch.originx as i32;
         let mut x2: i32 = x1 + realpatch_width;
-        if x1 < 0 {
-            x = 0;
-        } else {
-            x = x1;
-        }
+        let mut x: i32 = if x1 < 0 { 0 } else { x1 };
         if x2 > texture_width {
             x2 = texture_width;
         }

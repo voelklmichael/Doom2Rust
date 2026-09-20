@@ -1271,7 +1271,6 @@ pub fn load_defaults(
     m_config: &mut MConfigState,
     platform: &mut dyn DoomPlatform,
 ) {
-    let _i: i32;
     if let Some(i) = check_parm_with_args(m_argv, "-config", 1) {
         m_config.doom_defaults.filename = m_argv.myargv[i + 1].as_str().to_string();
         doom_println!(

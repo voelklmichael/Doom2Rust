@@ -765,7 +765,6 @@ fn quit_check_demo_status(state: &mut GameState) {
     check_demo_status(state);
 }
 pub fn doom_main(state: &mut GameState) {
-    let _p: i32;
     let mut demolumpname: FixedCStr<8> = FixedCStr::from_array([0; 8]);
     at_exit(
         &mut state.io.i_system,
