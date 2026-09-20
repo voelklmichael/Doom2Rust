@@ -1,8 +1,9 @@
 use crate::d_ticcmd::TicCmd;
+use crate::enum_array::{ArrayIndex, EnumArray};
 use crate::m_fixed::Fixed;
+use crate::p_inter::CardType;
 use crate::p_mobj::{MobjId, PspDef};
 use alloc::string::String;
-use core::ops::{Index, IndexMut};
 pub const NUMAMMO: i32 = 4;
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum AmmoType {
@@ -11,6 +12,12 @@ pub enum AmmoType {
     Cell = 2,
     Misl = 3,
     Noammo = 5,
+}
+impl ArrayIndex for AmmoType {
+    #[inline(always)]
+    fn slot(self) -> usize {
+        self as usize
+    }
 }
 pub fn ammotype_from_raw(v: i32) -> AmmoType {
     match v {
@@ -41,6 +48,24 @@ pub enum PowerType {
     Allmap = 4,
     Infrared = 5,
 }
+impl PowerType {
+    /// Every power-up, in slot order.
+    pub const ALL: [Self; 6] = [
+        Self::Invulnerability,
+        Self::Strength,
+        Self::Invisibility,
+        Self::Ironfeet,
+        Self::Allmap,
+        Self::Infrared,
+    ];
+}
+
+impl ArrayIndex for PowerType {
+    #[inline(always)]
+    fn slot(self) -> usize {
+        self as usize
+    }
+}
 
 pub const NUMWEAPONS: i32 = 9;
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -55,6 +80,12 @@ pub enum WeaponType {
     Chainsaw = 7,
     Supershotgun = 8,
     Nochange = 10,
+}
+impl ArrayIndex for WeaponType {
+    #[inline(always)]
+    fn slot(self) -> usize {
+        self as usize
+    }
 }
 pub fn weapontype_from_raw(v: i32) -> WeaponType {
     match v {
@@ -109,32 +140,12 @@ impl PlayerId {
 
 /// One `T` per player slot, indexed by [`PlayerId`] (or by a plain slot number in the loops
 /// that walk every slot).
-#[derive(Clone)]
-pub struct PerPlayer<T>(pub [T; 4]);
+pub type PerPlayer<T> = EnumArray<PlayerId, T, 4>;
 
-impl<T> Index<PlayerId> for PerPlayer<T> {
-    type Output = T;
-    fn index(&self, player: PlayerId) -> &T {
-        &self.0[usize::from(player.0)]
-    }
-}
-
-impl<T> IndexMut<PlayerId> for PerPlayer<T> {
-    fn index_mut(&mut self, player: PlayerId) -> &mut T {
-        &mut self.0[usize::from(player.0)]
-    }
-}
-
-impl<T> Index<usize> for PerPlayer<T> {
-    type Output = T;
-    fn index(&self, slot: usize) -> &T {
-        &self.0[slot]
-    }
-}
-
-impl<T> IndexMut<usize> for PerPlayer<T> {
-    fn index_mut(&mut self, slot: usize) -> &mut T {
-        &mut self.0[slot]
+impl ArrayIndex for PlayerId {
+    #[inline(always)]
+    fn slot(self) -> usize {
+        usize::from(self.0)
     }
 }
 
@@ -157,15 +168,15 @@ pub struct Player {
     pub health: i32,
     pub armorpoints: i32,
     pub armortype: i32,
-    pub powers: [i32; 6],
-    pub cards: [bool; 6],
+    pub powers: EnumArray<PowerType, i32, 6>,
+    pub cards: EnumArray<CardType, bool, 6>,
     pub backpack: bool,
     pub frags: [i32; 4],
     pub readyweapon: WeaponType,
     pub pendingweapon: WeaponType,
-    pub weaponowned: [bool; 9],
-    pub ammo: [i32; 4],
-    pub maxammo: [i32; 4],
+    pub weaponowned: EnumArray<WeaponType, bool, 9>,
+    pub ammo: EnumArray<AmmoType, i32, 4>,
+    pub maxammo: EnumArray<AmmoType, i32, 4>,
     pub attackdown: bool,
     pub usedown: bool,
     pub cheats: CheatFlags,

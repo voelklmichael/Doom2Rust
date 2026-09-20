@@ -1252,7 +1252,7 @@ pub fn draw_players(state: &mut GameState) {
     for i in 0..MAXPLAYERS {
         their_color += 1;
         let p = &state.game.g_game.players[i as usize];
-        let (p_invisibility, p_mo_id) = (p.powers[PowerType::Invisibility as usize], p.mo);
+        let (p_invisibility, p_mo_id) = (p.powers[PowerType::Invisibility], p.mo);
         if !(state.game.g_game.deathmatch != 0
             && !state.game.g_game.singledemo
             && PlayerId(i as u8) != state.ui.am_map.plr)

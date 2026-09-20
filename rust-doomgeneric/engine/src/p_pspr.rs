@@ -134,39 +134,39 @@ pub fn check_ammo(state: &mut GameState, player_id: PlayerId) -> bool {
             1
         };
     if ammo as u32 == AmmoType::Noammo as i32 as u32
-        || state.game.g_game.players[player].ammo[ammo as usize] >= count
+        || state.game.g_game.players[player].ammo[ammo] >= count
     {
         return true;
     }
     loop {
-        if state.game.g_game.players[player].weaponowned[WeaponType::Plasma as usize]
-            && state.game.g_game.players[player].ammo[AmmoType::Cell as usize] != 0
+        if state.game.g_game.players[player].weaponowned[WeaponType::Plasma]
+            && state.game.g_game.players[player].ammo[AmmoType::Cell] != 0
             && state.game.doomstat.gamemode != GameMode::Shareware
         {
             state.game.g_game.players[player].pendingweapon = WeaponType::Plasma;
-        } else if state.game.g_game.players[player].weaponowned[WeaponType::Supershotgun as usize]
-            && state.game.g_game.players[player].ammo[AmmoType::Shell as usize] > 2
+        } else if state.game.g_game.players[player].weaponowned[WeaponType::Supershotgun]
+            && state.game.g_game.players[player].ammo[AmmoType::Shell] > 2
             && state.game.doomstat.gamemode == GameMode::Commercial
         {
             state.game.g_game.players[player].pendingweapon = WeaponType::Supershotgun;
-        } else if state.game.g_game.players[player].weaponowned[WeaponType::Chaingun as usize]
-            && state.game.g_game.players[player].ammo[AmmoType::Clip as usize] != 0
+        } else if state.game.g_game.players[player].weaponowned[WeaponType::Chaingun]
+            && state.game.g_game.players[player].ammo[AmmoType::Clip] != 0
         {
             state.game.g_game.players[player].pendingweapon = WeaponType::Chaingun;
-        } else if state.game.g_game.players[player].weaponowned[WeaponType::Shotgun as usize]
-            && state.game.g_game.players[player].ammo[AmmoType::Shell as usize] != 0
+        } else if state.game.g_game.players[player].weaponowned[WeaponType::Shotgun]
+            && state.game.g_game.players[player].ammo[AmmoType::Shell] != 0
         {
             state.game.g_game.players[player].pendingweapon = WeaponType::Shotgun;
-        } else if state.game.g_game.players[player].ammo[AmmoType::Clip as usize] != 0 {
+        } else if state.game.g_game.players[player].ammo[AmmoType::Clip] != 0 {
             state.game.g_game.players[player].pendingweapon = WeaponType::Pistol;
-        } else if state.game.g_game.players[player].weaponowned[WeaponType::Chainsaw as usize] {
+        } else if state.game.g_game.players[player].weaponowned[WeaponType::Chainsaw] {
             state.game.g_game.players[player].pendingweapon = WeaponType::Chainsaw;
-        } else if state.game.g_game.players[player].weaponowned[WeaponType::Missile as usize]
-            && state.game.g_game.players[player].ammo[AmmoType::Misl as usize] != 0
+        } else if state.game.g_game.players[player].weaponowned[WeaponType::Missile]
+            && state.game.g_game.players[player].ammo[AmmoType::Misl] != 0
         {
             state.game.g_game.players[player].pendingweapon = WeaponType::Missile;
-        } else if state.game.g_game.players[player].weaponowned[WeaponType::Bfg as usize]
-            && state.game.g_game.players[player].ammo[AmmoType::Cell as usize] > 40
+        } else if state.game.g_game.players[player].weaponowned[WeaponType::Bfg]
+            && state.game.g_game.players[player].ammo[AmmoType::Cell] > 40
             && state.game.doomstat.gamemode != GameMode::Shareware
         {
             state.game.g_game.players[player].pendingweapon = WeaponType::Bfg;
@@ -315,7 +315,7 @@ pub fn punch(state: &mut GameState, player_id: PlayerId, _position: i32) {
     let player_mo = state.game.g_game.players[player].mo.unwrap();
 
     let mut damage: i32 = (p_random(&mut state.world.m_random) % 10 + 1) << 1;
-    if state.game.g_game.players[player].powers[PowerType::Strength as usize] != 0 {
+    if state.game.g_game.players[player].powers[PowerType::Strength] != 0 {
         damage *= 10;
     }
     let mut angle: Angle = state.world.p_mobj.mo(player_mo).angle;

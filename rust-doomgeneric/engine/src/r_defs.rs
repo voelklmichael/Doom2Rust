@@ -1,4 +1,5 @@
 use crate::game_state::GameState;
+use crate::m_bbox::BBox;
 use crate::m_fixed::Fixed;
 use crate::p_setup::LineId;
 use crate::p_setup::SectorId;
@@ -74,7 +75,7 @@ pub struct Node {
     pub y: Fixed,
     pub dx: Fixed,
     pub dy: Fixed,
-    pub bbox: [[Fixed; 4]; 2],
+    pub bbox: [BBox; 2],
     pub children: [u16; 2],
 }
 

@@ -3,6 +3,7 @@ use crate::game_state::GameState;
 use crate::i_system::error;
 use crate::m_argv::check_parm_with_args;
 use crate::m_argv::MArgvState;
+use crate::m_bbox::BBox;
 use crate::m_bbox::BoxIndex;
 use crate::m_fixed::fixed_div;
 use crate::m_fixed::fixed_mul;
@@ -61,7 +62,7 @@ use crate::tables::FINECOSINE;
 use crate::tables::FINESINE;
 
 pub struct PMapState {
-    pub tmbbox: [Fixed; 4],
+    pub tmbbox: BBox,
     pub tmthing: Option<MobjId>,
     pub tmflags: MobjFlags,
     pub tmx: Fixed,
@@ -104,7 +105,7 @@ impl Default for PMapState {
 impl PMapState {
     pub const fn new() -> Self {
         Self {
-            tmbbox: [0; 4],
+            tmbbox: BBox::new([0; 4]),
             tmthing: None,
             tmflags: MobjFlags::empty(),
             tmx: 0,
@@ -179,10 +180,10 @@ pub fn teleport_move(state: &mut GameState, thing: MobjId, x: Fixed, y: Fixed) -
     state.world.p_map.tmflags = state.world.p_mobj.mo(thing).flags;
     state.world.p_map.tmx = x;
     state.world.p_map.tmy = y;
-    state.world.p_map.tmbbox[BoxIndex::Top as usize] = y + state.world.p_mobj.mo(thing).radius;
-    state.world.p_map.tmbbox[BoxIndex::Bottom as usize] = y - state.world.p_mobj.mo(thing).radius;
-    state.world.p_map.tmbbox[BoxIndex::Right as usize] = x + state.world.p_mobj.mo(thing).radius;
-    state.world.p_map.tmbbox[BoxIndex::Left as usize] = x - state.world.p_mobj.mo(thing).radius;
+    state.world.p_map.tmbbox[BoxIndex::Top] = y + state.world.p_mobj.mo(thing).radius;
+    state.world.p_map.tmbbox[BoxIndex::Bottom] = y - state.world.p_mobj.mo(thing).radius;
+    state.world.p_map.tmbbox[BoxIndex::Right] = x + state.world.p_mobj.mo(thing).radius;
+    state.world.p_map.tmbbox[BoxIndex::Left] = x - state.world.p_mobj.mo(thing).radius;
     let newsubsec: SubsectorId = point_in_subsector(&state.world.p_setup, x, y);
     state.world.p_map.ceilingline = None;
     state.world.p_map.tmdropoffz = state
@@ -198,19 +199,16 @@ pub fn teleport_move(state: &mut GameState, thing: MobjId, x: Fixed, y: Fixed) -
         .ceilingheight;
     state.render.r_main.validcount += 1;
     state.world.p_map.numspechit = 0;
-    let xl: i32 = (state.world.p_map.tmbbox[BoxIndex::Left as usize]
-        - state.world.p_setup.bmaporgx
-        - 32 * FRACUNIT)
-        >> MAPBLOCKSHIFT;
-    let xh: i32 = (state.world.p_map.tmbbox[BoxIndex::Right as usize]
-        - state.world.p_setup.bmaporgx
+    let xl: i32 =
+        (state.world.p_map.tmbbox[BoxIndex::Left] - state.world.p_setup.bmaporgx - 32 * FRACUNIT)
+            >> MAPBLOCKSHIFT;
+    let xh: i32 = (state.world.p_map.tmbbox[BoxIndex::Right] - state.world.p_setup.bmaporgx
         + 32 * FRACUNIT)
         >> MAPBLOCKSHIFT;
-    let yl: i32 = (state.world.p_map.tmbbox[BoxIndex::Bottom as usize]
-        - state.world.p_setup.bmaporgy
-        - 32 * FRACUNIT)
-        >> MAPBLOCKSHIFT;
-    let yh: i32 = (state.world.p_map.tmbbox[BoxIndex::Top as usize] - state.world.p_setup.bmaporgy
+    let yl: i32 =
+        (state.world.p_map.tmbbox[BoxIndex::Bottom] - state.world.p_setup.bmaporgy - 32 * FRACUNIT)
+            >> MAPBLOCKSHIFT;
+    let yh: i32 = (state.world.p_map.tmbbox[BoxIndex::Top] - state.world.p_setup.bmaporgy
         + 32 * FRACUNIT)
         >> MAPBLOCKSHIFT;
     for bx in xl..=xh {
@@ -230,10 +228,10 @@ pub fn teleport_move(state: &mut GameState, thing: MobjId, x: Fixed, y: Fixed) -
 }
 pub fn check_line(state: &mut GameState, ld: LineId) -> bool {
     let ldv = state.world.p_setup.line(ld);
-    if state.world.p_map.tmbbox[BoxIndex::Right as usize] <= ldv.bbox[BoxIndex::Left as usize]
-        || state.world.p_map.tmbbox[BoxIndex::Left as usize] >= ldv.bbox[BoxIndex::Right as usize]
-        || state.world.p_map.tmbbox[BoxIndex::Top as usize] <= ldv.bbox[BoxIndex::Bottom as usize]
-        || state.world.p_map.tmbbox[BoxIndex::Bottom as usize] >= ldv.bbox[BoxIndex::Top as usize]
+    if state.world.p_map.tmbbox[BoxIndex::Right] <= ldv.bbox[BoxIndex::Left]
+        || state.world.p_map.tmbbox[BoxIndex::Left] >= ldv.bbox[BoxIndex::Right]
+        || state.world.p_map.tmbbox[BoxIndex::Top] <= ldv.bbox[BoxIndex::Bottom]
+        || state.world.p_map.tmbbox[BoxIndex::Bottom] >= ldv.bbox[BoxIndex::Top]
     {
         return true;
     }
@@ -432,10 +430,10 @@ pub fn check_position(state: &mut GameState, thing: MobjId, x: Fixed, y: Fixed) 
     state.world.p_map.tmflags = state.world.p_mobj.mo(thing).flags;
     state.world.p_map.tmx = x;
     state.world.p_map.tmy = y;
-    state.world.p_map.tmbbox[BoxIndex::Top as usize] = y + state.world.p_mobj.mo(thing).radius;
-    state.world.p_map.tmbbox[BoxIndex::Bottom as usize] = y - state.world.p_mobj.mo(thing).radius;
-    state.world.p_map.tmbbox[BoxIndex::Right as usize] = x + state.world.p_mobj.mo(thing).radius;
-    state.world.p_map.tmbbox[BoxIndex::Left as usize] = x - state.world.p_mobj.mo(thing).radius;
+    state.world.p_map.tmbbox[BoxIndex::Top] = y + state.world.p_mobj.mo(thing).radius;
+    state.world.p_map.tmbbox[BoxIndex::Bottom] = y - state.world.p_mobj.mo(thing).radius;
+    state.world.p_map.tmbbox[BoxIndex::Right] = x + state.world.p_mobj.mo(thing).radius;
+    state.world.p_map.tmbbox[BoxIndex::Left] = x - state.world.p_mobj.mo(thing).radius;
     let newsubsec: SubsectorId = point_in_subsector(&state.world.p_setup, x, y);
     state.world.p_map.ceilingline = None;
     state.world.p_map.tmdropoffz = state
@@ -454,20 +452,16 @@ pub fn check_position(state: &mut GameState, thing: MobjId, x: Fixed, y: Fixed) 
     if state.world.p_map.tmflags.contains(MobjFlags::NOCLIP) {
         return true;
     }
-    let mut xl: i32 = (state.world.p_map.tmbbox[BoxIndex::Left as usize]
-        - state.world.p_setup.bmaporgx
-        - 32 * FRACUNIT)
-        >> MAPBLOCKSHIFT;
-    let mut xh: i32 = (state.world.p_map.tmbbox[BoxIndex::Right as usize]
-        - state.world.p_setup.bmaporgx
+    let mut xl: i32 =
+        (state.world.p_map.tmbbox[BoxIndex::Left] - state.world.p_setup.bmaporgx - 32 * FRACUNIT)
+            >> MAPBLOCKSHIFT;
+    let mut xh: i32 = (state.world.p_map.tmbbox[BoxIndex::Right] - state.world.p_setup.bmaporgx
         + 32 * FRACUNIT)
         >> MAPBLOCKSHIFT;
-    let mut yl: i32 = (state.world.p_map.tmbbox[BoxIndex::Bottom as usize]
-        - state.world.p_setup.bmaporgy
-        - 32 * FRACUNIT)
-        >> MAPBLOCKSHIFT;
-    let mut yh: i32 = (state.world.p_map.tmbbox[BoxIndex::Top as usize]
-        - state.world.p_setup.bmaporgy
+    let mut yl: i32 =
+        (state.world.p_map.tmbbox[BoxIndex::Bottom] - state.world.p_setup.bmaporgy - 32 * FRACUNIT)
+            >> MAPBLOCKSHIFT;
+    let mut yh: i32 = (state.world.p_map.tmbbox[BoxIndex::Top] - state.world.p_setup.bmaporgy
         + 32 * FRACUNIT)
         >> MAPBLOCKSHIFT;
     for bx in xl..=xh {
@@ -477,14 +471,12 @@ pub fn check_position(state: &mut GameState, thing: MobjId, x: Fixed, y: Fixed) 
             }
         }
     }
-    xl = (state.world.p_map.tmbbox[BoxIndex::Left as usize] - state.world.p_setup.bmaporgx)
+    xl = (state.world.p_map.tmbbox[BoxIndex::Left] - state.world.p_setup.bmaporgx) >> MAPBLOCKSHIFT;
+    xh =
+        (state.world.p_map.tmbbox[BoxIndex::Right] - state.world.p_setup.bmaporgx) >> MAPBLOCKSHIFT;
+    yl = (state.world.p_map.tmbbox[BoxIndex::Bottom] - state.world.p_setup.bmaporgy)
         >> MAPBLOCKSHIFT;
-    xh = (state.world.p_map.tmbbox[BoxIndex::Right as usize] - state.world.p_setup.bmaporgx)
-        >> MAPBLOCKSHIFT;
-    yl = (state.world.p_map.tmbbox[BoxIndex::Bottom as usize] - state.world.p_setup.bmaporgy)
-        >> MAPBLOCKSHIFT;
-    yh = (state.world.p_map.tmbbox[BoxIndex::Top as usize] - state.world.p_setup.bmaporgy)
-        >> MAPBLOCKSHIFT;
+    yh = (state.world.p_map.tmbbox[BoxIndex::Top] - state.world.p_setup.bmaporgy) >> MAPBLOCKSHIFT;
     for bx in xl..=xh {
         for by in yl..=yh {
             if !block_lines_iterator(state, bx, by, check_line) {
@@ -1228,8 +1220,8 @@ pub fn p_change_sector(state: &mut GameState, sector: SectorId, crunch: bool) ->
     state.world.p_map.nofit = false;
     state.world.p_map.crushchange = crunch;
     let blockbox = state.world.p_setup.sector_mut(sector).blockbox;
-    for x in blockbox[BoxIndex::Left as usize]..=blockbox[BoxIndex::Right as usize] {
-        for y in blockbox[BoxIndex::Bottom as usize]..=blockbox[BoxIndex::Top as usize] {
+    for x in blockbox[BoxIndex::Left]..=blockbox[BoxIndex::Right] {
+        for y in blockbox[BoxIndex::Bottom]..=blockbox[BoxIndex::Top] {
             block_things_iterator(state, x, y, pit_change_sector);
         }
     }

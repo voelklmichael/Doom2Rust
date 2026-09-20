@@ -540,23 +540,19 @@ pub fn st_responder(state: &mut GameState, ev: &Event) -> bool {
                         Some("No Clipping Mode OFF".to_string());
                 }
             }
-            for i in 0..6 {
-                if cht_check_cheat(
-                    &mut state.ui.st_stuff.cheat_powerup[i as usize],
-                    ev.data2 as u8,
-                ) {
-                    if state.game.g_game.player_mut(state.ui.st_stuff.plyr).powers[i as usize] == 0
-                    {
+            for (i, power) in PowerType::ALL.into_iter().enumerate() {
+                if cht_check_cheat(&mut state.ui.st_stuff.cheat_powerup[i], ev.data2 as u8) {
+                    if state.game.g_game.player_mut(state.ui.st_stuff.plyr).powers[power] == 0 {
                         give_power(
                             &mut state.game.g_game,
                             &mut state.world.p_mobj,
                             state.ui.st_stuff.plyr,
-                            i,
+                            power,
                         );
-                    } else if i != PowerType::Strength as i32 {
-                        state.game.g_game.player_mut(state.ui.st_stuff.plyr).powers[i as usize] = 1;
+                    } else if power != PowerType::Strength {
+                        state.game.g_game.player_mut(state.ui.st_stuff.plyr).powers[power] = 1;
                     } else {
-                        state.game.g_game.player_mut(state.ui.st_stuff.plyr).powers[i as usize] = 0;
+                        state.game.g_game.player_mut(state.ui.st_stuff.plyr).powers[power] = 0;
                     }
                     state.game.g_game.player_mut(state.ui.st_stuff.plyr).message =
                         Some("Power-up Toggled".to_string());
@@ -570,7 +566,7 @@ pub fn st_responder(state: &mut GameState, ev: &Event) -> bool {
                     .game
                     .g_game
                     .player_mut(state.ui.st_stuff.plyr)
-                    .weaponowned[WeaponType::Chainsaw as usize] = true;
+                    .weaponowned[WeaponType::Chainsaw] = true;
                 state.game.g_game.player_mut(state.ui.st_stuff.plyr).powers
                     [PowerType::Invulnerability as usize] = 1;
                 state.game.g_game.player_mut(state.ui.st_stuff.plyr).message =
@@ -881,9 +877,7 @@ pub fn do_palette_stuff(state: &mut GameState) {
         .g_game
         .player_mut(state.ui.st_stuff.plyr)
         .damagecount;
-    if state.game.g_game.player_mut(state.ui.st_stuff.plyr).powers[PowerType::Strength as usize]
-        != 0
-    {
+    if state.game.g_game.player_mut(state.ui.st_stuff.plyr).powers[PowerType::Strength] != 0 {
         bzc = 12
             - (state.game.g_game.player_mut(state.ui.st_stuff.plyr).powers
                 [PowerType::Strength as usize]
@@ -919,9 +913,7 @@ pub fn do_palette_stuff(state: &mut GameState) {
     } else if state.game.g_game.player_mut(state.ui.st_stuff.plyr).powers
         [PowerType::Ironfeet as usize]
         > 4 * 32
-        || state.game.g_game.player_mut(state.ui.st_stuff.plyr).powers[PowerType::Ironfeet as usize]
-            & 8
-            != 0
+        || state.game.g_game.player_mut(state.ui.st_stuff.plyr).powers[PowerType::Ironfeet] & 8 != 0
     {
         palette = RADIATIONPAL;
     } else {
@@ -958,7 +950,7 @@ pub fn draw_widgets(state: &mut GameState, refresh: bool) {
     let ready_ammo_num = if ready_weapon_ammo as u32 == AmmoType::Noammo as i32 as u32 {
         1994
     } else {
-        state.game.g_game.player_mut(state.ui.st_stuff.plyr).ammo[ready_weapon_ammo as usize]
+        state.game.g_game.player_mut(state.ui.st_stuff.plyr).ammo[ready_weapon_ammo]
     };
     let mut w_ready = state.ui.st_stuff.w_ready;
     stlib_update_num(state, &mut w_ready, ready_ammo_num, statusbaron);

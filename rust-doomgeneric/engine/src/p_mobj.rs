@@ -1,5 +1,8 @@
 use crate::d_mode::SkillType;
 use crate::d_player::CheatFlags;
+use crate::enum_array::EnumArray;
+use crate::m_bbox::BBox;
+use crate::m_bbox::BoxIndex;
 
 use crate::doomdef::MAXPLAYERS;
 use crate::doomdef::TICRATE;
@@ -2756,7 +2759,7 @@ pub struct Sector {
     pub tag: i16,
     pub soundtraversed: i32,
     pub soundtarget: Option<MobjId>,
-    pub blockbox: [i32; 4],
+    pub blockbox: EnumArray<BoxIndex, i32, 4>,
     pub soundorg: DegenMobj,
     pub validcount: i32,
     pub thinglist: Option<MobjId>,
@@ -2774,7 +2777,7 @@ pub struct Line {
     pub special: i16,
     pub tag: i16,
     pub sidenum: [i16; 2],
-    pub bbox: [Fixed; 4],
+    pub bbox: BBox,
     pub slopetype: SlopeType,
     pub frontsector: Option<SectorId>,
     pub backsector: Option<SectorId>,

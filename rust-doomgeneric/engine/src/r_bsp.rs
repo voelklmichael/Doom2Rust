@@ -1,5 +1,6 @@
 use crate::game_state::GameState;
 use crate::i_system::error;
+use crate::m_bbox::BBox;
 use crate::m_bbox::BoxIndex;
 use crate::m_fixed::Fixed;
 use crate::p_setup::LineId;
@@ -307,17 +308,17 @@ pub static CHECKCOORD: [[i32; 4]; 12] = [
     [2, 1, 3, 0],
     [0; 4],
 ];
-pub fn check_bbox(r_bsp: &RBspState, r_main: &RMainState, bspcoord: [Fixed; 4]) -> bool {
-    let boxx: i32 = if r_main.viewx <= bspcoord[BoxIndex::Left as usize] {
+pub fn check_bbox(r_bsp: &RBspState, r_main: &RMainState, bspcoord: BBox) -> bool {
+    let boxx: i32 = if r_main.viewx <= bspcoord[BoxIndex::Left] {
         0
-    } else if r_main.viewx < bspcoord[BoxIndex::Right as usize] {
+    } else if r_main.viewx < bspcoord[BoxIndex::Right] {
         1
     } else {
         2
     };
-    let boxy: i32 = if r_main.viewy >= bspcoord[BoxIndex::Top as usize] {
+    let boxy: i32 = if r_main.viewy >= bspcoord[BoxIndex::Top] {
         0
-    } else if r_main.viewy > bspcoord[BoxIndex::Bottom as usize] {
+    } else if r_main.viewy > bspcoord[BoxIndex::Bottom] {
         1
     } else {
         2

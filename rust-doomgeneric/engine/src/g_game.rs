@@ -13,11 +13,11 @@ use crate::d_mode::GameMission;
 use crate::d_mode::GameMode;
 use crate::d_mode::GameVersion;
 use crate::d_mode::{skill_from_raw, SkillType};
+use crate::d_player::AmmoType;
 use crate::d_player::CheatFlags;
 use crate::d_player::PerPlayer;
 use crate::d_player::PowerType;
 use crate::d_player::WeaponType;
-use crate::d_player::{AmmoType, NUMAMMO};
 use crate::d_player::{Player, PlayerId, PlayerState};
 use crate::d_ticcmd::TicCmd;
 use crate::d_ticcmd::{
@@ -27,6 +27,7 @@ use crate::d_ticcmd::{
 use crate::doomdef::MAXPLAYERS;
 use crate::doomdef::TICRATE;
 use crate::doomstat::DoomstatState;
+use crate::enum_array::EnumArray;
 use crate::f_finale::f_responder;
 use crate::f_finale::f_start_finale;
 use crate::f_finale::f_ticker;
@@ -212,15 +213,15 @@ const NEW_PLAYER: Player = Player {
     health: 0,
     armorpoints: 0,
     armortype: 0,
-    powers: [0; 6],
-    cards: [false; 6],
+    powers: EnumArray::new([0; 6]),
+    cards: EnumArray::new([false; 6]),
     backpack: false,
     frags: [0; 4],
     readyweapon: WeaponType::Fist,
     pendingweapon: WeaponType::Fist,
-    weaponowned: [false; 9],
-    ammo: [0; 4],
-    maxammo: [0; 4],
+    weaponowned: EnumArray::new([false; 9]),
+    ammo: EnumArray::new([0; 4]),
+    maxammo: EnumArray::new([0; 4]),
     attackdown: false,
     usedown: false,
     cheats: CheatFlags::empty(),
@@ -271,8 +272,8 @@ impl GGameState {
             viewactive: false,
             deathmatch: 0,
             netgame: false,
-            playeringame: PerPlayer([false; 4]),
-            players: PerPlayer([NEW_PLAYER, NEW_PLAYER, NEW_PLAYER, NEW_PLAYER]),
+            playeringame: PerPlayer::new([false; 4]),
+            players: PerPlayer::new([NEW_PLAYER, NEW_PLAYER, NEW_PLAYER, NEW_PLAYER]),
             turbodetected: [false; 4],
             consoleplayer: PlayerId(0),
             displayplayer: PlayerId(0),
@@ -432,12 +433,12 @@ fn weapon_selectable(doomstat: &DoomstatState, g_game: &GGameState, weapon: Weap
     {
         return false;
     }
-    if !g_game.players[g_game.consoleplayer].weaponowned[weapon as usize] {
+    if !g_game.players[g_game.consoleplayer].weaponowned[weapon] {
         return false;
     }
     if weapon as u32 == WeaponType::Fist as u32
-        && g_game.players[g_game.consoleplayer].weaponowned[WeaponType::Chainsaw as usize]
-        && g_game.players[g_game.consoleplayer].powers[PowerType::Strength as usize] == 0
+        && g_game.players[g_game.consoleplayer].weaponowned[WeaponType::Chainsaw]
+        && g_game.players[g_game.consoleplayer].powers[PowerType::Strength] == 0
     {
         return false;
     }
@@ -1032,8 +1033,8 @@ pub fn g_ticker(state: &mut GameState, netcmds: &[TicCmd]) {
 }
 pub fn player_finish_level(g_game: &mut GGameState, p_mobj: &mut PMobjState, player: i32) {
     let p = &mut g_game.players[player as usize];
-    p.powers = [0; 6];
-    p.cards = [false; 6];
+    p.powers = EnumArray::new([0; 6]);
+    p.cards = EnumArray::new([false; 6]);
     let mo_id = p.mo.unwrap();
     p.extralight = 0;
     p.fixedcolormap = 0;
@@ -1057,10 +1058,10 @@ pub fn player_reborn(state: &mut GGameState, player: i32) {
     p.health = DEH_INITIAL_HEALTH;
     p.pendingweapon = WeaponType::Pistol;
     p.readyweapon = p.pendingweapon;
-    p.weaponowned[WeaponType::Fist as usize] = true;
-    p.weaponowned[WeaponType::Pistol as usize] = true;
-    p.ammo[AmmoType::Clip as usize] = DEH_INITIAL_BULLETS;
-    p.maxammo[..NUMAMMO as usize].copy_from_slice(&MAXAMMO[..NUMAMMO as usize]);
+    p.weaponowned[WeaponType::Fist] = true;
+    p.weaponowned[WeaponType::Pistol] = true;
+    p.ammo[AmmoType::Clip] = DEH_INITIAL_BULLETS;
+    p.maxammo.as_mut_slice().copy_from_slice(MAXAMMO.as_slice());
 }
 pub fn check_spot(state: &mut GameState, playernum: i32, mthing: &MapThing) -> bool {
     if state.game.g_game.players[playernum as usize].mo.is_none() {
