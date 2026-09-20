@@ -24,6 +24,12 @@ extern "C" {
     fn error(message: &str);
 }
 
+/// Which build this is (date and commit, see build.sh), for the page to compare with its own.
+#[wasm_bindgen]
+pub fn build_version() -> String {
+    option_env!("DOOM_BUILD").unwrap_or("unknown").to_string()
+}
+
 #[wasm_bindgen]
 pub struct Doom {
     state: &'static mut GameState,

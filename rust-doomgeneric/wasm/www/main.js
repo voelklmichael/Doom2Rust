@@ -1,6 +1,7 @@
 // The page: takes the WAD, shows the frames the worker sends, plays its sound and forwards the
 // keyboard.
 import * as storage from './storage.js';
+import { VERSION, FILES } from './version.js';
 
 const stage = document.getElementById('stage');
 const canvas = document.getElementById('screen');
@@ -11,6 +12,9 @@ const hint = document.getElementById('hint');
 const getWad = document.getElementById('getwad');
 const chooser = document.getElementById('chooser');
 const fileInput = document.getElementById('file');
+const versionLabel = document.getElementById('version');
+const updateButton = document.getElementById('update');
+const note = document.getElementById('note');
 
 // The WAD to play, `{ name, data }` (data an ArrayBuffer), or null while there is none. It is kept
 // in the browser (see storage.js), so that it only has to be dropped once.
@@ -55,6 +59,12 @@ function start() {
         break;
       case 'audio':
         playSound(data);
+        break;
+      case 'version':
+        // The game is the wasm file; the page is everything else. The browser keeps them apart.
+        if (data.version !== VERSION) {
+          tell(`The game is ${data.version}. Press Update.`, true);
+        }
         break;
       case 'ready':
         running = true;
@@ -113,6 +123,53 @@ async function takeFile(file) {
   teardown();
   start();
 }
+
+// ---- version and update ---------------------------------------------------------------------
+
+versionLabel.textContent = VERSION;
+
+function tell(text, attention = false) {
+  note.textContent = text;
+  note.classList.toggle('attention', attention);
+}
+
+// The browser may keep the page, the game and its script for a while and never ask the server
+// whether there is something newer. Fetching every file with `cache: 'reload'` skips that cache
+// and puts the answer into it; the page then loads from there.
+async function update() {
+  if (running && !confirm('Updating restarts the game. Continue?')) return;
+  updateButton.disabled = true;
+  tell('Updating…');
+  try {
+    const urls = ['./', ...FILES];
+    await Promise.all(
+      urls.map(async (url) => {
+        const response = await fetch(url, { cache: 'reload' });
+        if (!response.ok) throw new Error(`${url}: ${response.status}`);
+      }),
+    );
+    location.reload();
+  } catch (error) {
+    console.error(error);
+    tell(`Update failed (${error.message}).`, true);
+    updateButton.disabled = false;
+  }
+}
+
+updateButton.addEventListener('click', update);
+
+// Is there a newer build on the server? version.json is the only thing asked for without the
+// cache, and only says which one it is.
+async function checkForUpdate() {
+  try {
+    const response = await fetch('version.json', { cache: 'no-store' });
+    const latest = (await response.json()).version;
+    if (latest !== VERSION) tell(`${latest} is available.`, true);
+  } catch (error) {
+    // Offline or not served from a build: there is nothing to say.
+  }
+}
+checkForUpdate();
 
 // ---- pausing --------------------------------------------------------------------------------
 
@@ -202,7 +259,7 @@ function leaveToBrowser(event) {
 
 window.addEventListener('keydown', (event) => {
   if (!worker) {
-    if (wad && (event.code === 'Enter' || event.code === 'Space')) {
+    if (wad && !event.target.closest('button') && (event.code === 'Enter' || event.code === 'Space')) {
       event.preventDefault();
       start();
     }
