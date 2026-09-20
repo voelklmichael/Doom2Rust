@@ -74,6 +74,7 @@ use crate::m_menu::m_responder;
 use crate::m_misc::string_ends_with;
 use crate::p_saveg::save_game_file;
 use crate::p_setup::p_init;
+use crate::platform::DoomPlatform;
 use crate::r_draw::draw_view_border;
 use crate::r_draw::fill_back_screen;
 use crate::r_main::execute_set_view_size;
@@ -375,12 +376,12 @@ pub fn display(state: &mut GameState) {
         return;
     }
     wipe_end_screen(state, 0, 0, SCREENWIDTH, SCREENHEIGHT);
-    wipestart = get_time(state) - 1;
+    wipestart = get_time(&mut state.i_timer, &mut *state.platform) - 1;
     loop {
         loop {
-            nowtime = get_time(state);
+            nowtime = get_time(&mut state.i_timer, &mut *state.platform);
             tics = nowtime - wipestart;
-            sleep(state, 1);
+            sleep(&mut *state.platform, 1);
             if tics > 0 {
                 break;
             }
@@ -452,9 +453,9 @@ pub fn doom_loop(state: &mut GameState) {
     }
     state.d_main.main_loop_started = true;
     try_run_tics(state);
-    i_set_window_title(state, state.doomstat.gamedescription);
+    i_set_window_title(&mut *state.platform, state.doomstat.gamedescription);
     set_grab_mouse_callback();
-    init_graphics(state);
+    init_graphics(&mut state.i_video, &state.m_argv, &mut *state.platform);
     execute_set_view_size(state);
     start_game_loop(state);
     if state.g_game.testcontrols {
@@ -548,7 +549,11 @@ pub fn start_title(d_main: &mut DMainState, g_game: &mut GGameState) {
     d_main.demosequence = -1;
     advance_demo(d_main);
 }
-fn set_mission_for_pack_name(state: &mut GameState, pack_name: &str) {
+fn set_mission_for_pack_name(
+    doomstat: &mut DoomstatState,
+    platform: &mut dyn DoomPlatform,
+    pack_name: &str,
+) {
     const PACKS: [MissionPack; 3] = [
         MissionPack {
             name: "doom2",
@@ -565,13 +570,13 @@ fn set_mission_for_pack_name(state: &mut GameState, pack_name: &str) {
     ];
     for pack in &PACKS {
         if pack_name.eq_ignore_ascii_case(pack.name) {
-            state.doomstat.gamemission = pack.mission;
+            doomstat.gamemission = pack.mission;
             return;
         }
     }
-    doom_println!(state.platform, "Valid mission packs are:");
+    doom_println!(platform, "Valid mission packs are:");
     for pack in &PACKS {
-        doom_println!(state.platform, "\t{}", pack.name);
+        doom_println!(platform, "\t{}", pack.name);
     }
     error(&format!("Unknown mission pack name: {pack_name}"));
 }
@@ -618,7 +623,7 @@ pub fn identify_version(state: &mut GameState) {
         state.doomstat.gamemode = GameMode::Commercial;
         if let Some(p) = check_parm_with_args(&state.m_argv, "-pack", 1) {
             let pack_name = state.m_argv.myargv[p + 1].as_str().to_string();
-            set_mission_for_pack_name(state, &pack_name);
+            set_mission_for_pack_name(&mut state.doomstat, &mut *state.platform, &pack_name);
         }
     }
 }
@@ -804,7 +809,7 @@ pub fn doom_main(state: &mut GameState) {
     doom_println!(state.platform, "M_LoadDefaults: Load system defaults.");
     set_config_filenames(&mut state.m_config, "default.cfg", "doomgenericdoom.cfg");
     bind_variables(&mut state.m_config, &mut state.m_controls);
-    load_defaults(state);
+    load_defaults(&state.m_argv, &mut state.m_config, &mut *state.platform);
     at_exit(
         &mut state.i_system,
         Some(save_defaults as fn(&mut GameState) -> ()),

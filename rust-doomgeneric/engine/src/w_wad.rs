@@ -186,15 +186,19 @@ pub fn read_lump(state: &WWadState, fs: &dyn DoomFileSystem, lump: u32, dest: &m
         ));
     }
 }
-pub fn lump_bytes(state: &mut GameState, lumpnum: i32) -> alloc::rc::Rc<[u8]> {
+pub fn lump_bytes(
+    fs: &dyn DoomFileSystem,
+    w_wad: &mut WWadState,
+    lumpnum: i32,
+) -> alloc::rc::Rc<[u8]> {
     const CACHE_PAD: usize = 128;
-    if lumpnum as u32 >= state.w_wad.numlumps {
+    if lumpnum as u32 >= w_wad.numlumps {
         error(&format!("W_CacheLumpNum: {lumpnum} >= numlumps"));
     }
-    if let Some(cache) = state.w_wad.lumpinfo[lumpnum as usize].cache.as_ref() {
+    if let Some(cache) = w_wad.lumpinfo[lumpnum as usize].cache.as_ref() {
         return alloc::rc::Rc::clone(cache);
     }
-    let lumplen = lump_length(&state.w_wad, lumpnum as u32);
+    let lumplen = lump_length(w_wad, lumpnum as u32);
     // r_draw.rs's draw_column (and friends) reproduce vanilla's
     // `dc_source[(frac>>FRACBITS) & 127]` column read verbatim, which
     // vanilla itself only gets away with because its zone allocator
@@ -206,19 +210,14 @@ pub fn lump_bytes(state: &mut GameState, lumpnum: i32) -> alloc::rc::Rc<[u8]> {
     // -- pad every cached lump by the mask's full range to give it the
     // same harmless slack vanilla relied on.
     let mut buf = vec![0u8; lumplen as usize + CACHE_PAD].into_boxed_slice();
-    read_lump(
-        &state.w_wad,
-        &*state.fs,
-        lumpnum as u32,
-        &mut buf[..lumplen as usize],
-    );
+    read_lump(w_wad, fs, lumpnum as u32, &mut buf[..lumplen as usize]);
     let rc: alloc::rc::Rc<[u8]> = alloc::rc::Rc::from(buf);
-    state.w_wad.lumpinfo[lumpnum as usize].cache = Some(alloc::rc::Rc::clone(&rc));
+    w_wad.lumpinfo[lumpnum as usize].cache = Some(alloc::rc::Rc::clone(&rc));
     rc
 }
 pub fn lump_bytes_name(state: &mut GameState, name: &str) -> alloc::rc::Rc<[u8]> {
     let lumpnum = get_num_for_name(&state.w_wad, name);
-    lump_bytes(state, lumpnum)
+    lump_bytes(&*state.fs, &mut state.w_wad, lumpnum)
 }
 pub fn release_lump_num(state: &WWadState, lumpnum: i32) {
     // Releasing a cached lump is a no-op now -- nothing purges cached blocks

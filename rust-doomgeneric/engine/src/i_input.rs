@@ -1,8 +1,9 @@
 use crate::d_event::post_event;
+use crate::d_event::DEventState;
 use crate::d_event::EvType;
 use crate::d_event::Event;
-use crate::game_state::GameState;
 use crate::m_controls::KEY_RSHIFT;
+use crate::platform::DoomPlatform;
 
 pub struct IInputState {
     pub vanilla_keyboard_mapping: i32,
@@ -54,7 +55,11 @@ fn update_shift_status(state: &mut IInputState, pressed: i32, key: u8) {
         state.shiftdown += change;
     }
 }
-pub fn get_event(state: &mut GameState) {
+pub fn get_event(
+    d_event: &mut DEventState,
+    i_input: &mut IInputState,
+    platform: &mut dyn DoomPlatform,
+) {
     let mut event: Event = Event {
         kind: EvType::Keydown,
         data1: 0,
@@ -62,22 +67,22 @@ pub fn get_event(state: &mut GameState) {
         data3: 0,
         data4: 0,
     };
-    while let Some((pressed, key)) = state.platform.get_key() {
+    while let Some((pressed, key)) = platform.get_key() {
         let pressed = pressed as i32;
-        update_shift_status(&mut state.i_input, pressed, key);
+        update_shift_status(i_input, pressed, key);
         if pressed != 0 {
             event.kind = EvType::Keydown;
             event.data1 = translate_key(key) as i32;
-            event.data2 = get_typed_char(&state.i_input, key) as i32;
+            event.data2 = get_typed_char(i_input, key) as i32;
             if event.data1 != 0 {
-                post_event(&mut state.d_event, event);
+                post_event(d_event, event);
             }
         } else {
             event.kind = EvType::Keyup;
             event.data1 = translate_key(key) as i32;
             event.data2 = 0;
             if event.data1 != 0 {
-                post_event(&mut state.d_event, event);
+                post_event(d_event, event);
             }
             break;
         }

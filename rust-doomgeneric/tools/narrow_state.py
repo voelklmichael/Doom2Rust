@@ -17,25 +17,26 @@ call also borrows: hoist it into a local) and run `cargo clippy --fix` plus
 import re,glob,sys,os,collections,json
 sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
 from rslex import *
-SKIP_FIELDS={'platform','fs'}
+# Boxed trait-object fields: (parameter type, module of the trait, reborrow used at call sites).
+DYN_FIELDS={'fs':('dyn DoomFileSystem','filesystem'),'platform':('dyn DoomPlatform','platform')}
+SKIP_FIELDS=set(filter(None,os.environ.get('SKIP','').split(',')))
 MAXF=int(os.environ.get('MAXF','3'))
 gs=open('engine/src/game_state.rs').read()
 ftype=dict(re.findall(r'pub (\w+): (\w+State|\w+),',gs))
+for _f,(_t,_m) in DYN_FIELDS.items(): ftype[_f]=_t
 blacklist=set(json.load(open(os.path.dirname(os.path.abspath(__file__))+'/narrow_blacklist.json'))) if os.path.exists(os.path.dirname(os.path.abspath(__file__))+'/narrow_blacklist.json') else set()
 files=[f for f in sorted(glob.glob('engine/src/*.rs')) if not f.endswith(('regression_tests.rs','game_state.rs'))]
 src={f:open(f).read() for f in files}
 TESTF='engine/src/regression_tests.rs'
 src[TESTF]=open(TESTF).read()
 allsrc='\n'.join(src.values())
+# `use` statements (including multi-line brace lists) and comments never make a name a value.
+valsrc=re.sub(r'(?ms)^[ \t]*(?:pub(?:\([a-z]+\))? )?use [^;]*;',lambda m:re.sub(r'[^\n]','',m.group(0)),allsrc)
+valsrc=re.sub(r'//[^\n]*','',valsrc)
 def used_as_value(name):
-    # appears as identifier not followed by '(' and not in fn definition
-    for m in re.finditer(r'(?<![\w.])'+re.escape(name)+r'\b(?!\s*\()',allsrc):
-        pre=allsrc[max(0,m.start()-4):m.start()]
-        if pre.endswith('fn '): continue
-        # in use statements: ignore
-        ls=allsrc.rfind('\n',0,m.start())+1; line=allsrc[ls:allsrc.find('\n',m.start())]
-        if re.match(r'\s*(pub(\(crate\))? )?use ',line) or re.match(r'\s+[\w:{}, ]+,?$',line) and False: continue
-        if line.strip().startswith('//'): continue
+    # appears as an identifier not followed by '(' and not in a fn definition
+    for m in re.finditer(r'(?<![\w.])'+re.escape(name)+r'\b(?!\s*\()',valsrc):
+        if valsrc[max(0,m.start()-4):m.start()].endswith('fn '): continue
         return True
     return False
 cands={}
@@ -83,7 +84,7 @@ for n,(f,Xs,mu) in cands.items():
 # callers
 for n,(f0,Xs,mu) in cands.items():
     rx=re.compile(r'(?<![\w.])'+n+r'\(\s*state\b(?!\.)')
-    args=', '.join((('&mut state.'+X) if mu else ('&state.'+X)) for X in Xs)
+    args=', '.join(((('&mut ' if mu else '&')+('*' if X in DYN_FIELDS else '')+'state.'+X)) for X in Xs)
     for f in files+[TESTF]:
         s=src[f]
         s2=rx.sub(lambda m:m.group(0)[:-5]+args,s)
@@ -93,6 +94,12 @@ tmod={}
 for f in files: pass
 for (f,T),X in typemod.items():
     s=src[f]
+    if X in DYN_FIELDS:
+        T=T.split(' ')[1]
+        if not re.search(r'\b'+T+r'\b',s.split('fn ')[0]):
+            s=re.sub(r'(?m)^use [^\n]*\n',lambda mm:f'use crate::{DYN_FIELDS[X][1]}::{T};\n'+mm.group(0),s,count=1)
+            src[f]=s
+        continue
     if re.search(r'\b'+T+r'\b',s) and not re.search(r'use crate::\w+::[^;]*\b'+T+r'\b',s) and not re.search(r'(?m)^(pub )?struct '+T+r'\b',s):
         mod=X  # module named like the field
         s=re.sub(r'(?m)^use [^\n]*\n',lambda mm:f'use crate::{mod}::{T};\n'+mm.group(0),s,count=1)

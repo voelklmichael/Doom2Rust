@@ -5,6 +5,7 @@ use crate::i_video::IVideoState;
 use crate::p_mobj::LineFlags;
 use crate::p_mobj::PMobjState;
 use crate::p_setup::PSetupState;
+use crate::platform::DoomPlatform;
 use crate::w_wad::WWadState;
 use alloc::string::ToString;
 
@@ -600,7 +601,7 @@ pub fn load_pics(state: &mut GameState) {
     for i in 0..10 {
         let namebuf = format!("AMMNUM{i}");
         let lumpnum = get_num_for_name(&state.w_wad, &namebuf);
-        lump_bytes(state, lumpnum);
+        lump_bytes(&*state.fs, &mut state.w_wad, lumpnum);
         state.am_map.marknums[i as usize] = lumpnum;
     }
 }
@@ -910,23 +911,29 @@ pub fn clip_mline(am_map: &AmMapState, ml: &MLine, fl: &mut FLine) -> bool {
     }
     true
 }
-pub fn draw_fline(state: &mut GameState, fl: &FLine, color: i32) {
+pub fn draw_fline(
+    am_map: &mut AmMapState,
+    i_video: &mut IVideoState,
+    platform: &mut dyn DoomPlatform,
+    fl: &FLine,
+    color: i32,
+) {
     let mut x: i32;
     let mut y: i32;
 
     let mut d: i32;
     if fl.a.x < 0
-        || fl.a.x >= state.am_map.f_w
+        || fl.a.x >= am_map.f_w
         || fl.a.y < 0
-        || fl.a.y >= state.am_map.f_h
+        || fl.a.y >= am_map.f_h
         || fl.b.x < 0
-        || fl.b.x >= state.am_map.f_w
+        || fl.b.x >= am_map.f_w
         || fl.b.y < 0
-        || fl.b.y >= state.am_map.f_h
+        || fl.b.y >= am_map.f_h
     {
-        let fresh0 = state.am_map.am_drawfline_fuck;
-        state.am_map.am_drawfline_fuck += 1;
-        doom_eprint!(state.platform, "fuck {} \r", fresh0);
+        let fresh0 = am_map.am_drawfline_fuck;
+        am_map.am_drawfline_fuck += 1;
+        doom_eprint!(platform, "fuck {} \r", fresh0);
         return;
     }
     let dx: i32 = fl.b.x - fl.a.x;
@@ -940,7 +947,7 @@ pub fn draw_fline(state: &mut GameState, fl: &FLine, color: i32) {
     if ax > ay {
         d = ay - ax / 2;
         loop {
-            state.i_video.i_video_buffer[(y * state.am_map.f_w + x) as usize] = color as u8;
+            i_video.i_video_buffer[(y * am_map.f_w + x) as usize] = color as u8;
             if x == fl.b.x {
                 return;
             }
@@ -954,7 +961,7 @@ pub fn draw_fline(state: &mut GameState, fl: &FLine, color: i32) {
     } else {
         d = ax - ay / 2;
         loop {
-            state.i_video.i_video_buffer[(y * state.am_map.f_w + x) as usize] = color as u8;
+            i_video.i_video_buffer[(y * am_map.f_w + x) as usize] = color as u8;
             if y == fl.b.y {
                 return;
             }
@@ -973,7 +980,13 @@ pub fn draw_mline(state: &mut GameState, ml: &MLine, color: i32) {
         b: FPoint { x: 0, y: 0 },
     };
     if clip_mline(&state.am_map, ml, &mut fl) {
-        draw_fline(state, &fl, color);
+        draw_fline(
+            &mut state.am_map,
+            &mut state.i_video,
+            &mut *state.platform,
+            &fl,
+            color,
+        );
     }
 }
 pub fn draw_grid(state: &mut GameState, color: i32) {

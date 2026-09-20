@@ -284,7 +284,7 @@ pub fn draw_planes(state: &mut GameState) {
             } else {
                 lumpnum =
                     state.r_data.firstflat + state.r_data.flattranslation[plv.picnum as usize];
-                lump_bytes(state, lumpnum);
+                lump_bytes(&*state.fs, &mut state.w_wad, lumpnum);
                 state.r_draw.ds_source = Some(ColumnSource::Lump {
                     lump: lumpnum,
                     offset: 0,

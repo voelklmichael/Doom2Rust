@@ -2,6 +2,7 @@ use crate::d_player::PlayerId;
 use crate::game_state::GameState;
 use crate::i_system::error;
 use crate::m_argv::check_parm_with_args;
+use crate::m_argv::MArgvState;
 use crate::m_bbox::BoxIndex;
 use crate::m_fixed::fixed_div;
 use crate::m_fixed::fixed_mul;
@@ -28,6 +29,7 @@ use crate::p_maputl::PT_ADDLINES;
 use crate::p_maputl::PT_ADDTHINGS;
 use crate::p_mobj::LineFlags;
 use crate::p_mobj::MobjFlags;
+use crate::platform::DoomPlatform;
 
 use crate::p_mobj::remove_mobj;
 use crate::p_mobj::set_mobj_state;
@@ -255,7 +257,7 @@ pub fn check_line(state: &mut GameState, ld: LineId) -> bool {
         state.p_map.spechit[state.p_map.numspechit as usize] = ld;
         state.p_map.numspechit += 1;
         if state.p_map.numspechit > MAXSPECIALCROSS_ORIGINAL {
-            spechit_overrun(state, ld);
+            spechit_overrun(&state.m_argv, &mut state.p_map, &mut *state.platform, ld);
         }
     }
     true
@@ -1087,32 +1089,37 @@ pub fn p_change_sector(state: &mut GameState, sector: SectorId, crunch: bool) ->
     }
     state.p_map.nofit
 }
-fn spechit_overrun(state: &mut GameState, ld: LineId) {
-    if state.p_map.baseaddr == 0 {
-        if let Some(p) = check_parm_with_args(&state.m_argv, "-spechit", 1) {
+fn spechit_overrun(
+    m_argv: &MArgvState,
+    p_map: &mut PMapState,
+    platform: &mut dyn DoomPlatform,
+    ld: LineId,
+) {
+    if p_map.baseaddr == 0 {
+        if let Some(p) = check_parm_with_args(m_argv, "-spechit", 1) {
             let mut baseaddr: i32 = 0;
-            str_to_int(state.m_argv.myargv[p + 1].as_str(), &mut baseaddr);
-            state.p_map.baseaddr = baseaddr as u32;
+            str_to_int(m_argv.myargv[p + 1].as_str(), &mut baseaddr);
+            p_map.baseaddr = baseaddr as u32;
         } else {
-            state.p_map.baseaddr = DEFAULT_SPECHIT_MAGIC as u32;
+            p_map.baseaddr = DEFAULT_SPECHIT_MAGIC as u32;
         }
     }
-    let addr: u32 = (state.p_map.baseaddr as i64 + ld.0 as i64 * 0x3e) as u32;
-    match state.p_map.numspechit {
+    let addr: u32 = (p_map.baseaddr as i64 + ld.0 as i64 * 0x3e) as u32;
+    match p_map.numspechit {
         9..=12 => {
-            state.p_map.tmbbox[(state.p_map.numspechit - 9) as usize] = addr as Fixed;
+            p_map.tmbbox[(p_map.numspechit - 9) as usize] = addr as Fixed;
         }
         13 => {
-            state.p_map.crushchange = addr != 0;
+            p_map.crushchange = addr != 0;
         }
         14 => {
-            state.p_map.nofit = addr != 0;
+            p_map.nofit = addr != 0;
         }
         _ => {
             doom_eprintln!(
-                state.platform,
+                platform,
                 "SpechitOverrun: Warning: unable to emulatean overrun where numspechit={}",
-                state.p_map.numspechit,
+                p_map.numspechit,
             );
         }
     }

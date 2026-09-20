@@ -6,6 +6,7 @@ use crate::doomgeneric::DOOMGENERIC_RESY;
 use crate::game_state::GameState;
 use crate::i_input::get_event;
 use crate::i_system::error;
+use crate::m_argv::MArgvState;
 use crate::m_argv::{argv_atoi, check_parm_with_args};
 use crate::m_fixed::INT_MAX;
 use crate::platform::DoomPlatform;
@@ -132,93 +133,94 @@ pub struct Column {
     pub b: u8,
 }
 static RGB565_PALETTE: [u16; 256] = [0; 256];
-pub fn init_graphics(state: &mut GameState) {
+pub fn init_graphics(
+    i_video: &mut IVideoState,
+    m_argv: &MArgvState,
+    platform: &mut dyn DoomPlatform,
+) {
     let _i: i32;
 
-    state.i_video.s_fb = FBScreenInfo::ZERO;
-    state.i_video.s_fb.xres = DOOMGENERIC_RESX as u32;
-    state.i_video.s_fb.yres = DOOMGENERIC_RESY as u32;
-    state.i_video.s_fb.xres_virtual = state.i_video.s_fb.xres;
-    state.i_video.s_fb.yres_virtual = state.i_video.s_fb.yres;
-    let mode: &str = match check_parm_with_args(&state.m_argv, "-gfxmode", 1) {
-        Some(p) => state.m_argv.myargv[p + 1].as_str(),
+    i_video.s_fb = FBScreenInfo::ZERO;
+    i_video.s_fb.xres = DOOMGENERIC_RESX as u32;
+    i_video.s_fb.yres = DOOMGENERIC_RESY as u32;
+    i_video.s_fb.xres_virtual = i_video.s_fb.xres;
+    i_video.s_fb.yres_virtual = i_video.s_fb.yres;
+    let mode: &str = match check_parm_with_args(m_argv, "-gfxmode", 1) {
+        Some(p) => m_argv.myargv[p + 1].as_str(),
         None => "rgba8888",
     };
     if mode == "rgba8888" {
-        state.i_video.s_fb.bits_per_pixel = 32_u32;
-        state.i_video.s_fb.blue.length = 8_u32;
-        state.i_video.s_fb.green.length = 8_u32;
-        state.i_video.s_fb.red.length = 8_u32;
-        state.i_video.s_fb.transp.length = 8_u32;
-        state.i_video.s_fb.blue.offset = 0_u32;
-        state.i_video.s_fb.green.offset = 8_u32;
-        state.i_video.s_fb.red.offset = 16_u32;
-        state.i_video.s_fb.transp.offset = 24_u32;
+        i_video.s_fb.bits_per_pixel = 32_u32;
+        i_video.s_fb.blue.length = 8_u32;
+        i_video.s_fb.green.length = 8_u32;
+        i_video.s_fb.red.length = 8_u32;
+        i_video.s_fb.transp.length = 8_u32;
+        i_video.s_fb.blue.offset = 0_u32;
+        i_video.s_fb.green.offset = 8_u32;
+        i_video.s_fb.red.offset = 16_u32;
+        i_video.s_fb.transp.offset = 24_u32;
     } else if mode == "rgb565" {
-        state.i_video.s_fb.bits_per_pixel = 16_u32;
-        state.i_video.s_fb.blue.length = 5_u32;
-        state.i_video.s_fb.green.length = 6_u32;
-        state.i_video.s_fb.red.length = 5_u32;
-        state.i_video.s_fb.transp.length = 0_u32;
-        state.i_video.s_fb.blue.offset = 11_u32;
-        state.i_video.s_fb.green.offset = 5_u32;
-        state.i_video.s_fb.red.offset = 0_u32;
-        state.i_video.s_fb.transp.offset = 16_u32;
+        i_video.s_fb.bits_per_pixel = 16_u32;
+        i_video.s_fb.blue.length = 5_u32;
+        i_video.s_fb.green.length = 6_u32;
+        i_video.s_fb.red.length = 5_u32;
+        i_video.s_fb.transp.length = 0_u32;
+        i_video.s_fb.blue.offset = 11_u32;
+        i_video.s_fb.green.offset = 5_u32;
+        i_video.s_fb.red.offset = 0_u32;
+        i_video.s_fb.transp.offset = 16_u32;
     } else {
         error(&format!("Unknown gfxmode value: {mode}\n"));
     }
     doom_println!(
-        state.platform,
+        platform,
         "I_InitGraphics: framebuffer: x_res: {}, y_res: {}, x_virtual: {}, y_virtual: {}, bpp: {}",
-        state.i_video.s_fb.xres,
-        state.i_video.s_fb.yres,
-        state.i_video.s_fb.xres_virtual,
-        state.i_video.s_fb.yres_virtual,
-        state.i_video.s_fb.bits_per_pixel,
+        i_video.s_fb.xres,
+        i_video.s_fb.yres,
+        i_video.s_fb.xres_virtual,
+        i_video.s_fb.yres_virtual,
+        i_video.s_fb.bits_per_pixel,
     );
-    doom_println!(state.platform,
+    doom_println!(platform,
         "I_InitGraphics: framebuffer: RGBA: {}{}{}{}, red_off: {}, green_off: {}, blue_off: {}, transp_off: {}",
-        state.i_video.s_fb.red.length,
-        state.i_video.s_fb.green.length,
-        state.i_video.s_fb.blue.length,
-        state.i_video.s_fb.transp.length,
-        state.i_video.s_fb.red.offset,
-        state.i_video.s_fb.green.offset,
-        state.i_video.s_fb.blue.offset,
-        state.i_video.s_fb.transp.offset,
+        i_video.s_fb.red.length,
+        i_video.s_fb.green.length,
+        i_video.s_fb.blue.length,
+        i_video.s_fb.transp.length,
+        i_video.s_fb.red.offset,
+        i_video.s_fb.green.offset,
+        i_video.s_fb.blue.offset,
+        i_video.s_fb.transp.offset,
     );
     doom_println!(
-        state.platform,
+        platform,
         "I_InitGraphics: DOOM screen size: w x h: {} x {}",
         SCREENWIDTH,
         SCREENHEIGHT,
     );
-    if let Some(i) = check_parm_with_args(&state.m_argv, "-scaling", 1) {
-        state.i_video.fb_scaling = argv_atoi(&state.m_argv.myargv[i + 1]);
+    if let Some(i) = check_parm_with_args(m_argv, "-scaling", 1) {
+        i_video.fb_scaling = argv_atoi(&m_argv.myargv[i + 1]);
         doom_println!(
-            state.platform,
+            platform,
             "I_InitGraphics: Scaling factor: {}",
-            state.i_video.fb_scaling
+            i_video.fb_scaling
         );
     } else {
-        state.i_video.fb_scaling = state.i_video.s_fb.xres.wrapping_div(SCREENWIDTH as u32) as i32;
-        if state.i_video.s_fb.yres.wrapping_div(SCREENHEIGHT as u32)
-            < state.i_video.fb_scaling as u32
-        {
-            state.i_video.fb_scaling =
-                state.i_video.s_fb.yres.wrapping_div(SCREENHEIGHT as u32) as i32;
+        i_video.fb_scaling = i_video.s_fb.xres.wrapping_div(SCREENWIDTH as u32) as i32;
+        if i_video.s_fb.yres.wrapping_div(SCREENHEIGHT as u32) < i_video.fb_scaling as u32 {
+            i_video.fb_scaling = i_video.s_fb.yres.wrapping_div(SCREENHEIGHT as u32) as i32;
         }
         doom_println!(
-            state.platform,
+            platform,
             "I_InitGraphics: Auto-scaling factor: {}",
-            state.i_video.fb_scaling
+            i_video.fb_scaling
         );
     }
-    state.i_video.i_video_buffer = vec![0u8; (SCREENWIDTH * SCREENHEIGHT) as usize];
-    state.i_video.screenvisible = true;
+    i_video.i_video_buffer = vec![0u8; (SCREENWIDTH * SCREENHEIGHT) as usize];
+    i_video.screenvisible = true;
 }
 pub fn start_tic(state: &mut GameState) {
-    get_event(state);
+    get_event(&mut state.d_event, &mut state.i_input, &mut *state.platform);
 }
 pub fn finish_update(state: &mut GameState) {
     let palette = state
@@ -365,7 +367,7 @@ pub fn get_palette_index(platform: &mut dyn DoomPlatform, r: i32, g: i32, b: i32
     }
     best
 }
-pub fn i_set_window_title(state: &mut GameState, title: &str) {
-    state.platform.set_window_title(title);
+pub fn i_set_window_title(platform: &mut dyn DoomPlatform, title: &str) {
+    platform.set_window_title(title);
 }
 pub fn set_grab_mouse_callback() {}

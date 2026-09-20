@@ -461,7 +461,7 @@ pub fn change_music(state: &mut GameState, mut musicnum: i32, looping: bool) {
     }
     let lumpnum = state.sounds.s_music[music_index].lumpnum;
     let lumplen = lump_length(&state.w_wad, lumpnum as u32) as usize;
-    let data = lump_bytes(state, lumpnum);
+    let data = lump_bytes(&*state.fs, &mut state.w_wad, lumpnum);
     let handle = register_song(&mut state.i_sound, &mut *state.platform, &data[..lumplen]);
     state.sounds.s_music[music_index].handle = handle;
     play_song(&mut state.i_sound, &mut *state.platform, handle, looping);

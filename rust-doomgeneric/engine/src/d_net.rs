@@ -3,11 +3,14 @@ use crate::d_loop::register_loop_callbacks;
 use crate::d_loop::start_net_game;
 use crate::d_loop::{LoopInterface, NetConnectData, NetGameSettings};
 use crate::d_main::do_advance_demo;
+use crate::d_main::DMainState;
 use crate::d_mode::skill_from_raw;
 use crate::d_ticcmd::TicCmd;
 use crate::g_game::check_demo_status;
 use crate::g_game::g_ticker;
+use crate::g_game::GGameState;
 use crate::m_argv::parm_exists;
+use crate::platform::DoomPlatform;
 use crate::w_checksum::checksum;
 use crate::w_wad::check_num_for_name;
 
@@ -49,27 +52,32 @@ const DOOM_LOOP_INTERFACE: LoopInterface = LoopInterface {
     run_tic: Some(run_tic),
     run_menu: Some(m_ticker),
 };
-fn load_game_settings(state: &mut GameState, settings: &NetGameSettings) {
+fn load_game_settings(
+    d_main: &mut DMainState,
+    g_game: &mut GGameState,
+    platform: &mut dyn DoomPlatform,
+    settings: &NetGameSettings,
+) {
     let mut i: u32;
-    state.g_game.deathmatch = settings.deathmatch;
-    state.d_main.startepisode = settings.episode;
-    state.d_main.startmap = settings.map;
-    state.d_main.startskill = skill_from_raw(settings.skill);
-    state.d_main.startloadgame = settings.loadgame;
-    state.g_game.lowres_turn = settings.lowres_turn != 0;
-    state.d_main.nomonsters = settings.nomonsters != 0;
-    state.d_main.fastparm = settings.fast_monsters != 0;
-    state.d_main.respawnparm = settings.respawn_monsters != 0;
-    state.g_game.timelimit = settings.timelimit;
-    state.g_game.consoleplayer = settings.consoleplayer;
-    if state.g_game.lowres_turn {
-        doom_println!(state.platform,
+    g_game.deathmatch = settings.deathmatch;
+    d_main.startepisode = settings.episode;
+    d_main.startmap = settings.map;
+    d_main.startskill = skill_from_raw(settings.skill);
+    d_main.startloadgame = settings.loadgame;
+    g_game.lowres_turn = settings.lowres_turn != 0;
+    d_main.nomonsters = settings.nomonsters != 0;
+    d_main.fastparm = settings.fast_monsters != 0;
+    d_main.respawnparm = settings.respawn_monsters != 0;
+    g_game.timelimit = settings.timelimit;
+    g_game.consoleplayer = settings.consoleplayer;
+    if g_game.lowres_turn {
+        doom_println!(platform,
             "NOTE: Turning resolution is reduced; this is probably because there is a client recording a Vanilla demo."
         );
     }
     i = 0;
     while i < MAXPLAYERS as u32 {
-        state.g_game.playeringame[i as usize] = i < settings.num_players as u32;
+        g_game.playeringame[i as usize] = i < settings.num_players as u32;
         i = i.wrapping_add(1);
     }
 }
@@ -148,7 +156,12 @@ pub fn check_net_game(state: &mut GameState) {
     register_loop_callbacks(&mut state.d_loop, DOOM_LOOP_INTERFACE);
     save_game_settings(state, &mut settings);
     start_net_game(&mut state.d_loop, &mut settings);
-    load_game_settings(state, &settings);
+    load_game_settings(
+        &mut state.d_main,
+        &mut state.g_game,
+        &mut *state.platform,
+        &settings,
+    );
     doom_println!(
         state.platform,
         "startskill {}  deathmatch: {}  startmap: {}  startepisode: {}",

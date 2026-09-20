@@ -315,7 +315,7 @@ pub fn hu_init(state: &mut GameState) {
     for (i, code) in (HU_FONTSTART..HU_FONTSTART + HU_FONTSIZE).enumerate() {
         let buffer = format!("STCFN{code:03}");
         let lumpnum = get_num_for_name(&state.w_wad, &buffer);
-        lump_bytes(state, lumpnum);
+        lump_bytes(&*state.fs, &mut state.w_wad, lumpnum);
         state.hu_stuff.hu_font[i] = lumpnum;
     }
 }
