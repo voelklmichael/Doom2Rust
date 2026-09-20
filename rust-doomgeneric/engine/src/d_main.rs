@@ -13,7 +13,7 @@ use crate::d_mode::GameVersion;
 use crate::d_mode::{skill_from_raw, SkillType};
 use crate::d_net::check_net_game;
 use crate::d_net::connect_net_game;
-use crate::d_player::{PlayerId, PlayerState};
+use crate::d_player::PlayerState;
 use crate::doomdef::MAXPLAYERS;
 use crate::doomdef::SCREENHEIGHT;
 use crate::doomdef::SCREENWIDTH;
@@ -314,7 +314,7 @@ pub fn display(state: &mut GameState) {
         && !state.ui.am_map.automapactive
         && state.game.d_loop.gametic != 0
     {
-        render_player_view(state, PlayerId(state.game.g_game.displayplayer as u8));
+        render_player_view(state, state.game.g_game.displayplayer);
     }
     if state.game.g_game.gamestate == GameScreenState::Level && state.game.d_loop.gametic != 0 {
         hu_drawer(state);
@@ -440,14 +440,12 @@ pub fn bind_variables(m_config: &mut MConfigState, m_controls: &mut MControlsSta
     bind_variable_int(m_config, "show_endoom", |s| &mut s.game.d_main.show_endoom);
     for i in 0..10 {
         let name = format!("chatmacro{i}");
-        bind_variable_string(m_config, &name, move |s| {
-            &mut s.ui.hu_stuff.chat_macros[i as usize]
-        });
+        bind_variable_string(m_config, &name, move |s| &mut s.ui.hu_stuff.chat_macros[i]);
     }
 }
 pub fn doomgeneric_tick(state: &mut GameState) {
     try_run_tics(state);
-    let listener_id = state.game.g_game.players[state.game.g_game.consoleplayer as usize].mo;
+    let listener_id = state.game.g_game.players[state.game.g_game.consoleplayer].mo;
     update_sounds(state, listener_id);
     if state.io.i_video.screenvisible {
         display(state);
@@ -505,8 +503,7 @@ pub fn advance_demo(d_main: &mut DMainState) {
     d_main.advancedemo = true;
 }
 pub fn do_advance_demo(state: &mut GameState) {
-    state.game.g_game.players[state.game.g_game.consoleplayer as usize].playerstate =
-        PlayerState::Live;
+    state.game.g_game.players[state.game.g_game.consoleplayer].playerstate = PlayerState::Live;
     state.game.d_main.advancedemo = false;
     state.game.g_game.usergame = false;
     state.game.g_game.paused = false;

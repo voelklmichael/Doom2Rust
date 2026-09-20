@@ -598,8 +598,8 @@ pub fn group_lines(p_setup: &mut PSetupState) {
     }
     for i in 0..(p_setup.numsectors as usize) {
         clear_box(&mut bbox);
-        for j in 0..p_setup.sectors[i].linecount {
-            let li_id = p_setup.sectors[i].lines[j as usize];
+        for j in 0..(p_setup.sectors[i].linecount) as usize {
+            let li_id = p_setup.sectors[i].lines[j];
             let li = p_setup.line(li_id);
             let li_v1 = p_setup.vertexes[li.v1.0 as usize];
             let li_v2 = p_setup.vertexes[li.v2.0 as usize];
@@ -707,7 +707,7 @@ pub fn setup_level(state: &mut GameState, episode: i32, map: i32) {
         state.game.g_game.players[i].secretcount = state.game.g_game.players[i].itemcount;
         state.game.g_game.players[i].killcount = state.game.g_game.players[i].secretcount;
     }
-    state.game.g_game.players[state.game.g_game.consoleplayer as usize].viewz = 1;
+    state.game.g_game.players[state.game.g_game.consoleplayer].viewz = 1;
     s_start(state);
     init_thinkers(&mut state.world.p_tick);
     let lumpname = if state.game.doomstat.gamemode as u32 == GameMode::Commercial as i32 as u32 {

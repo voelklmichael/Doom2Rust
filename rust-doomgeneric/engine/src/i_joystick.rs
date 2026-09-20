@@ -62,10 +62,10 @@ pub fn bind_joystick_variables(m_config: &mut MConfigState) {
     bind_variable_int(m_config, "joystick_strafe_invert", |s| {
         &mut s.io.i_joystick.joystick_strafe_invert
     });
-    for i in 0..NUM_VIRTUAL_BUTTONS {
+    for i in 0..NUM_VIRTUAL_BUTTONS as usize {
         let name = format!("joystick_physical_button{i}");
         bind_variable_int(m_config, &name, move |s| {
-            &mut s.io.i_joystick.joystick_physical_buttons[i as usize]
+            &mut s.io.i_joystick.joystick_physical_buttons[i]
         });
     }
 }

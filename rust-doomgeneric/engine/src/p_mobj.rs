@@ -2943,7 +2943,7 @@ pub fn xymovement(state: &mut GameState, mo: MobjId) {
         }
     }
     if let Some(player_id) = player {
-        if state.game.g_game.players[player_id.0 as usize]
+        if state.game.g_game.players[player_id]
             .cheats
             .contains(CheatFlags::NOMOMENTUM)
         {
@@ -2978,7 +2978,7 @@ pub fn xymovement(state: &mut GameState, mo: MobjId) {
     let player_idle = match player {
         None => true,
         Some(player_id) => {
-            let cmd = &state.game.g_game.players[player_id.0 as usize].cmd;
+            let cmd = &state.game.g_game.players[player_id].cmd;
             cmd.forwardmove as i32 == 0 && cmd.sidemove as i32 == 0
         }
     };
@@ -3631,7 +3631,7 @@ pub fn spawn_player(state: &mut GameState, mthing: MapThing) {
             state.game.g_game.players[player_index].cards[i] = true;
         }
     }
-    if mthing.kind as i32 - 1 == state.game.g_game.consoleplayer {
+    if mthing.kind as i32 - 1 == state.game.g_game.consoleplayer.as_i32() {
         {
             st_start(state);
             hu_start(state);

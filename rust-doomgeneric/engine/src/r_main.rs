@@ -317,13 +317,17 @@ pub fn init_texture_mapping(r_draw: &RDrawState, r_main: &mut RMainState) {
         r_main.centerxfrac,
         FINETANGENT[(FINEANGLES / 4 + FIELDOFVIEW / 2) as usize],
     );
-    for i in 0..FINEANGLES / 2 {
-        if FINETANGENT[i as usize] > FRACUNIT * 2 {
+    for (i, &tangent) in FINETANGENT
+        .iter()
+        .enumerate()
+        .take((FINEANGLES / 2) as usize)
+    {
+        if tangent > FRACUNIT * 2 {
             t = -1;
-        } else if FINETANGENT[i as usize] < -FRACUNIT * 2 {
+        } else if tangent < -FRACUNIT * 2 {
             t = r_draw.viewwidth + 1;
         } else {
-            t = fixed_mul(FINETANGENT[i as usize], focallength);
+            t = fixed_mul(tangent, focallength);
             t = (r_main.centerxfrac - t + FRACUNIT - 1) >> FRACBITS;
             if t < -1 {
                 t = -1;
@@ -331,7 +335,7 @@ pub fn init_texture_mapping(r_draw: &RDrawState, r_main: &mut RMainState) {
                 t = r_draw.viewwidth + 1;
             }
         }
-        r_main.viewangletox[i as usize] = t;
+        r_main.viewangletox[i] = t;
     }
     for x in 0..=r_draw.viewwidth {
         i = 0;
@@ -340,11 +344,11 @@ pub fn init_texture_mapping(r_draw: &RDrawState, r_main: &mut RMainState) {
         }
         r_main.xtoviewangle[x as usize] = ((i << ANGLETOFINESHIFT) - ANG90) as Angle;
     }
-    for i in 0..FINEANGLES / 2 {
-        if r_main.viewangletox[i as usize] == -1 {
-            r_main.viewangletox[i as usize] = 0;
-        } else if r_main.viewangletox[i as usize] == r_draw.viewwidth + 1 {
-            r_main.viewangletox[i as usize] = r_draw.viewwidth;
+    for i in 0..(FINEANGLES / 2) as usize {
+        if r_main.viewangletox[i] == -1 {
+            r_main.viewangletox[i] = 0;
+        } else if r_main.viewangletox[i] == r_draw.viewwidth + 1 {
+            r_main.viewangletox[i] = r_draw.viewwidth;
         }
     }
     r_main.clipangle = r_main.xtoviewangle[0];
@@ -414,8 +418,8 @@ pub fn execute_set_view_size(render: &mut Render) {
     init_texture_mapping(&render.r_draw, &mut render.r_main);
     render.r_things.pspritescale = (FRACUNIT * render.r_draw.viewwidth / SCREENWIDTH) as Fixed;
     render.r_things.pspriteiscale = (FRACUNIT * SCREENWIDTH / render.r_draw.viewwidth) as Fixed;
-    for i in 0..render.r_draw.viewwidth {
-        render.r_things.screenheightarray[i as usize] = render.r_draw.viewheight as i16;
+    for i in 0..render.r_draw.viewwidth as usize {
+        render.r_things.screenheightarray[i] = render.r_draw.viewheight as i16;
     }
     for i in 0..render.r_draw.viewheight {
         dy = (((i - render.r_draw.viewheight / 2) << FRACBITS) + FRACUNIT / 2) as Fixed;
@@ -425,10 +429,10 @@ pub fn execute_set_view_size(render: &mut Render) {
             dy,
         );
     }
-    for i in 0..render.r_draw.viewwidth {
-        cosadj = FINECOSINE[(render.r_main.xtoviewangle[i as usize] >> ANGLETOFINESHIFT) as usize]
-            .abs() as Fixed;
-        render.r_plane.distscale[i as usize] = fixed_div(FRACUNIT, cosadj);
+    for i in 0..render.r_draw.viewwidth as usize {
+        cosadj =
+            FINECOSINE[(render.r_main.xtoviewangle[i] >> ANGLETOFINESHIFT) as usize].abs() as Fixed;
+        render.r_plane.distscale[i] = fixed_div(FRACUNIT, cosadj);
     }
     for i in 0..LIGHTLEVELS {
         startmap = (LIGHTLEVELS - 1 - i) * 2 * NUMCOLORMAPS / LIGHTLEVELS;

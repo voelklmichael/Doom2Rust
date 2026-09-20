@@ -230,7 +230,7 @@ fn world_summary(state: &mut GameState) -> String {
             [s.floorheight, s.ceilingheight, i32::from(s.lightlevel)].map(|v| v as u32),
         );
     }
-    let p = &state.game.g_game.players[state.game.g_game.consoleplayer as usize];
+    let p = &state.game.g_game.players[state.game.g_game.consoleplayer];
     let player_hash = fnv(
         FNV_OFFSET,
         [p.health, p.armorpoints, p.viewz, p.readyweapon as i32].map(|v| v as u32),

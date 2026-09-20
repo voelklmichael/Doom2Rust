@@ -163,8 +163,8 @@ pub fn generate_composite(
     let texture_patchcount = r_data.textures[texnum as usize].patchcount as i32;
     let texture_width = r_data.textures[texnum as usize].width as i32;
     let texture_height = r_data.textures[texnum as usize].height as i32;
-    for i in 0..texture_patchcount {
-        let tex_patch = r_data.textures[texnum as usize].patches[i as usize];
+    for i in 0..texture_patchcount as usize {
+        let tex_patch = r_data.textures[texnum as usize].patches[i];
         // `realpatch` is the raw picture-format lump ("patch_t": width:i16,
         // height:i16, leftoffset:i16, topoffset:i16, then `width` many i32
         // columnofs entries) -- decoded field-by-field below instead of via
@@ -213,8 +213,8 @@ pub fn generate_lookup(state: &mut GameState, texnum: i32) {
     let texture_width = state.render.r_data.textures[texnum as usize].width as i32;
     let texture_height = state.render.r_data.textures[texnum as usize].height as i32;
     patchcount = vec![0u8; texture_width as usize];
-    for i in 0..texture_patchcount {
-        let tex_patch = state.render.r_data.textures[texnum as usize].patches[i as usize];
+    for i in 0..texture_patchcount as usize {
+        let tex_patch = state.render.r_data.textures[texnum as usize].patches[i];
         let realpatch_len = lump_length(&state.assets.w_wad, tex_patch.patch as u32) as usize;
         let realpatch_lump =
             lump_bytes(&*state.assets.fs, &mut state.assets.w_wad, tex_patch.patch);
@@ -242,8 +242,8 @@ pub fn generate_lookup(state: &mut GameState, texnum: i32) {
             x += 1;
         }
     }
-    for x in 0..texture_width {
-        if patchcount[x as usize] == 0 {
+    for (x, &count) in patchcount.iter().enumerate().take(texture_width as usize) {
+        if count == 0 {
             doom_println!(
                 state.io.platform,
                 "R_GenerateLookup: column without a patch ({})",
@@ -251,9 +251,9 @@ pub fn generate_lookup(state: &mut GameState, texnum: i32) {
             );
             return;
         }
-        if patchcount[x as usize] as i32 > 1 {
-            state.render.r_data.texturecolumnlump[texnum as usize][x as usize] = -1_i16;
-            state.render.r_data.texturecolumnofs[texnum as usize][x as usize] =
+        if count > 1 {
+            state.render.r_data.texturecolumnlump[texnum as usize][x] = -1_i16;
+            state.render.r_data.texturecolumnofs[texnum as usize][x] =
                 state.render.r_data.texturecompositesize[texnum as usize] as u16;
             if state.render.r_data.texturecompositesize[texnum as usize] > 0x10000 - texture_height
             {
@@ -607,8 +607,8 @@ pub fn precache_level(state: &mut GameState) {
     for (i, &present) in texturepresent.iter().enumerate() {
         if present != 0 {
             let patchcount = state.render.r_data.textures[i].patchcount as i32;
-            for j in 0..patchcount {
-                lump = state.render.r_data.textures[i].patches[j as usize].patch;
+            for j in 0..patchcount as usize {
+                lump = state.render.r_data.textures[i].patches[j].patch;
                 state.render.r_data.texturememory +=
                     state.assets.w_wad.lumpinfo[lump as usize].size;
                 lump_bytes(&*state.assets.fs, &mut state.assets.w_wad, lump);
@@ -622,10 +622,10 @@ pub fn precache_level(state: &mut GameState) {
     state.render.r_data.spritememory = 0;
     for (i, &present) in spritepresent.iter().enumerate() {
         if present != 0 {
-            for j in 0..state.render.r_things.sprites[i].numframes {
+            for j in 0..(state.render.r_things.sprites[i].numframes) as usize {
                 for k in 0..8 {
                     lump = state.render.r_data.firstspritelump
-                        + state.render.r_things.sprites[i].spriteframes[j as usize].lump[k] as i32;
+                        + state.render.r_things.sprites[i].spriteframes[j].lump[k] as i32;
                     state.render.r_data.spritememory +=
                         state.assets.w_wad.lumpinfo[lump as usize].size;
                     lump_bytes(&*state.assets.fs, &mut state.assets.w_wad, lump);

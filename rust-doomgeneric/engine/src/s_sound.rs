@@ -314,7 +314,7 @@ pub fn s_start_sound(state: &mut GameState, origin: SoundOrigin, sfx_id: i32) {
     // listener_mo_id is only unwrapped when origin != None (short-circuit),
     // matching the vanilla invariant that a non-null sound origin implies
     // the console player's mobj already exists.
-    let listener_mo_id = state.game.g_game.players[state.game.g_game.consoleplayer as usize].mo;
+    let listener_mo_id = state.game.g_game.players[state.game.g_game.consoleplayer].mo;
     let sep: i32 = if origin != SoundOrigin::None
         && origin != SoundOrigin::Mobj(listener_mo_id.unwrap())
     {

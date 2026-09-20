@@ -423,8 +423,8 @@ pub fn build_stairs(
         loop {
             let mut found = false;
             let linecount = p_setup.sector_mut(sec).linecount;
-            for i in 0..linecount {
-                let line_id = p_setup.sector_mut(sec).lines[i as usize];
+            for i in 0..linecount as usize {
+                let line_id = p_setup.sector_mut(sec).lines[i];
                 let iline = p_setup.line(line_id);
                 if iline.flags.contains(LineFlags::TWOSIDED) {
                     let front_id = iline.frontsector.unwrap();

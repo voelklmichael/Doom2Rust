@@ -14,6 +14,7 @@ use crate::d_mode::GameMode;
 use crate::d_mode::GameVersion;
 use crate::d_mode::{skill_from_raw, SkillType};
 use crate::d_player::CheatFlags;
+use crate::d_player::PerPlayer;
 use crate::d_player::PowerType;
 use crate::d_player::WeaponType;
 use crate::d_player::{AmmoType, NUMAMMO};
@@ -132,11 +133,11 @@ pub struct GGameState {
     pub viewactive: bool,
     pub deathmatch: i32,
     pub netgame: bool,
-    pub playeringame: [bool; 4],
-    pub players: [Player; 4],
+    pub playeringame: PerPlayer<bool>,
+    pub players: PerPlayer<Player>,
     pub turbodetected: [bool; 4],
-    pub consoleplayer: i32,
-    pub displayplayer: i32,
+    pub consoleplayer: PlayerId,
+    pub displayplayer: PlayerId,
     pub levelstarttic: i32,
     pub totalsecret: i32,
     pub totalkills: i32,
@@ -270,11 +271,11 @@ impl GGameState {
             viewactive: false,
             deathmatch: 0,
             netgame: false,
-            playeringame: [false; 4],
-            players: [NEW_PLAYER, NEW_PLAYER, NEW_PLAYER, NEW_PLAYER],
+            playeringame: PerPlayer([false; 4]),
+            players: PerPlayer([NEW_PLAYER, NEW_PLAYER, NEW_PLAYER, NEW_PLAYER]),
             turbodetected: [false; 4],
-            consoleplayer: 0,
-            displayplayer: 0,
+            consoleplayer: PlayerId(0),
+            displayplayer: PlayerId(0),
             levelstarttic: 0,
             totalsecret: 0,
             totalkills: 0,
@@ -349,7 +350,7 @@ impl GGameState {
     }
 
     pub fn player_mut(&mut self, id: PlayerId) -> &mut Player {
-        &mut self.players[id.0 as usize]
+        &mut self.players[id]
     }
 
     fn demo_read_byte(&mut self) -> u8 {
@@ -437,12 +438,12 @@ fn weapon_selectable(doomstat: &DoomstatState, g_game: &GGameState, weapon: Weap
     {
         return false;
     }
-    if !g_game.players[g_game.consoleplayer as usize].weaponowned[weapon as usize] {
+    if !g_game.players[g_game.consoleplayer].weaponowned[weapon as usize] {
         return false;
     }
     if weapon as u32 == WeaponType::Fist as u32
-        && g_game.players[g_game.consoleplayer as usize].weaponowned[WeaponType::Chainsaw as usize]
-        && g_game.players[g_game.consoleplayer as usize].powers[PowerType::Strength as usize] == 0
+        && g_game.players[g_game.consoleplayer].weaponowned[WeaponType::Chainsaw as usize]
+        && g_game.players[g_game.consoleplayer].powers[PowerType::Strength as usize] == 0
     {
         return false;
     }
@@ -450,12 +451,12 @@ fn weapon_selectable(doomstat: &DoomstatState, g_game: &GGameState, weapon: Weap
 }
 fn g_next_weapon(doomstat: &DoomstatState, g_game: &GGameState, direction: i32) -> i32 {
     let mut i: i32;
-    let weapon: WeaponType = if g_game.players[g_game.consoleplayer as usize].pendingweapon as u32
+    let weapon: WeaponType = if g_game.players[g_game.consoleplayer].pendingweapon as u32
         == WeaponType::Nochange as u32
     {
-        g_game.players[g_game.consoleplayer as usize].readyweapon
+        g_game.players[g_game.consoleplayer].readyweapon
     } else {
-        g_game.players[g_game.consoleplayer as usize].pendingweapon
+        g_game.players[g_game.consoleplayer].pendingweapon
     };
     i = 0;
     while (i as usize)
@@ -506,7 +507,7 @@ pub fn g_build_ticcmd(state: &mut GameState, cmd: &mut TicCmd, maketic: i32) {
         lookfly: 0,
         arti: 0,
     };
-    cmd.consistancy = state.game.g_game.consistancy[state.game.g_game.consoleplayer as usize]
+    cmd.consistancy = state.game.g_game.consistancy[state.game.g_game.consoleplayer.slot()]
         [(maketic % BACKUPTICS) as usize];
     let strafe: bool = state.game.g_game.gamekeydown[state.game.m_controls.key_strafe as usize]
         || state.game.g_game.mousearray[(state.game.m_controls.mousebstrafe + 1) as usize]
@@ -755,7 +756,7 @@ pub fn do_load_level(state: &mut GameState) {
     state.game.g_game.mousearray = [false; 9];
     state.game.g_game.joyarray = [false; 21];
     if state.game.g_game.testcontrols {
-        state.game.g_game.players[state.game.g_game.consoleplayer as usize].message =
+        state.game.g_game.players[state.game.g_game.consoleplayer].message =
             Some("Press escape to quit.".to_string());
     }
 }
@@ -792,12 +793,9 @@ pub fn g_responder(state: &mut GameState, ev: Event) -> bool {
         && (state.game.g_game.singledemo || state.game.g_game.deathmatch == 0)
     {
         loop {
-            state.game.g_game.displayplayer += 1;
-            if state.game.g_game.displayplayer == MAXPLAYERS {
-                state.game.g_game.displayplayer = 0;
-            }
-            if !(!state.game.g_game.playeringame[state.game.g_game.displayplayer as usize]
-                && state.game.g_game.displayplayer != state.game.g_game.consoleplayer)
+            state.game.g_game.displayplayer = state.game.g_game.displayplayer.next_wrapping();
+            if state.game.g_game.playeringame[state.game.g_game.displayplayer]
+                || state.game.g_game.displayplayer == state.game.g_game.consoleplayer
             {
                 break;
             }
@@ -925,7 +923,7 @@ pub fn g_ticker(state: &mut GameState, netcmds: &[TicCmd]) {
                     &state.io.i_video,
                     &mut state.assets.w_wad,
                 );
-                state.game.g_game.players[state.game.g_game.consoleplayer as usize].message =
+                state.game.g_game.players[state.game.g_game.consoleplayer].message =
                     Some("screen shot".to_string());
                 state.game.g_game.gameaction = GameAction::Nothing;
             }
@@ -950,7 +948,7 @@ pub fn g_ticker(state: &mut GameState, netcmds: &[TicCmd]) {
                 && state.game.g_game.turbodetected[i as usize]
             {
                 let player_name = PLAYER_NAMES[i as usize];
-                state.game.g_game.players[state.game.g_game.consoleplayer as usize].message =
+                state.game.g_game.players[state.game.g_game.consoleplayer].message =
                     Some(format!("{player_name} is turbo!"));
                 state.game.g_game.turbodetected[i as usize] = false;
             }
@@ -1075,11 +1073,11 @@ pub fn player_reborn(state: &mut GGameState, player: i32) {
 }
 pub fn check_spot(state: &mut GameState, playernum: i32, mthing: &MapThing) -> bool {
     if state.game.g_game.players[playernum as usize].mo.is_none() {
-        for i in 0..playernum {
+        for i in 0..playernum as usize {
             let other_mo = state
                 .world
                 .p_mobj
-                .mo(state.game.g_game.players[i as usize].mo.unwrap());
+                .mo(state.game.g_game.players[i].mo.unwrap());
             if other_mo.x == (mthing.x as i32) << FRACBITS
                 && other_mo.y == (mthing.y as i32) << FRACBITS
             {
@@ -1140,7 +1138,7 @@ pub fn check_spot(state: &mut GameState, playernum: i32, mthing: &MapThing) -> b
         .sector_mut(state.world.p_setup.subsectors[ss.0 as usize].sector)
         .floorheight;
     let mo = spawn_mobj(state, x + 20 * xa, y + 20 * ya, floorheight, MobjType::Tfog);
-    if state.game.g_game.players[state.game.g_game.consoleplayer as usize].viewz != 1 {
+    if state.game.g_game.players[state.game.g_game.consoleplayer].viewz != 1 {
         s_start_sound(state, SoundOrigin::Mobj(mo), SfxName::Telept as i32);
     }
     true
@@ -1260,7 +1258,7 @@ pub fn do_completed(state: &mut GameState) {
         }
     }
     state.game.g_game.wminfo.didsecret =
-        state.game.g_game.players[state.game.g_game.consoleplayer as usize].didsecret;
+        state.game.g_game.players[state.game.g_game.consoleplayer].didsecret;
     state.game.g_game.wminfo.epsd = state.game.g_game.gameepisode - 1;
     state.game.g_game.wminfo.last = state.game.g_game.gamemap - 1;
     if state.game.doomstat.gamemode as u32 == GameMode::Commercial as u32 {
@@ -1318,7 +1316,7 @@ pub fn do_completed(state: &mut GameState) {
     } else {
         state.game.g_game.wminfo.partime = TICRATE * CPARS[state.game.g_game.gamemap as usize];
     }
-    state.game.g_game.wminfo.pnum = state.game.g_game.consoleplayer;
+    state.game.g_game.wminfo.pnum = state.game.g_game.consoleplayer.as_i32();
     for i in 0..(MAXPLAYERS as usize) {
         state.game.g_game.wminfo.plyr[i].intercept = state.game.g_game.playeringame[i];
         state.game.g_game.wminfo.plyr[i].skills = state.game.g_game.players[i].killcount;
@@ -1340,7 +1338,7 @@ pub fn do_completed(state: &mut GameState) {
 pub fn world_done(state: &mut GameState) {
     state.game.g_game.gameaction = GameAction::WorldDone;
     if state.game.g_game.secretexit {
-        state.game.g_game.players[state.game.g_game.consoleplayer as usize].didsecret = true;
+        state.game.g_game.players[state.game.g_game.consoleplayer].didsecret = true;
     }
     if state.game.doomstat.gamemode as u32 == GameMode::Commercial as u32 {
         let start_finale = match state.game.g_game.gamemap {
@@ -1439,7 +1437,7 @@ pub fn do_save_game(state: &mut GameState) {
     state.assets.fs.rename(&temp_savegame_file, &savegame_file);
     state.game.g_game.gameaction = GameAction::Nothing;
     state.game.g_game.savedescription.clear();
-    state.game.g_game.players[state.game.g_game.consoleplayer as usize].message =
+    state.game.g_game.players[state.game.g_game.consoleplayer].message =
         Some("game saved.".to_string());
     fill_back_screen(state);
 }
@@ -1460,7 +1458,7 @@ pub fn do_new_game(state: &mut GameState) {
     state.game.d_main.respawnparm = false;
     state.game.d_main.fastparm = false;
     state.game.d_main.nomonsters = false;
-    state.game.g_game.consoleplayer = 0;
+    state.game.g_game.consoleplayer = PlayerId(0);
     let (d_skill, d_episode, d_map) = (
         state.game.g_game.d_skill,
         state.game.g_game.d_episode,
@@ -1661,7 +1659,7 @@ pub fn begin_recording(game: &mut Game) {
     game.g_game.demo_write_byte(game.d_main.respawnparm as u8);
     game.g_game.demo_write_byte(game.d_main.fastparm as u8);
     game.g_game.demo_write_byte(game.d_main.nomonsters as u8);
-    game.g_game.demo_write_byte(game.g_game.consoleplayer as u8);
+    game.g_game.demo_write_byte(game.g_game.consoleplayer.0);
     for i in 0..(MAXPLAYERS as usize) {
         let b = game.g_game.playeringame[i] as u8;
         game.g_game.demo_write_byte(b);
@@ -1716,7 +1714,7 @@ pub fn do_play_demo(state: &mut GameState) {
     state.game.d_main.respawnparm = state.game.g_game.demo_read_byte() != 0;
     state.game.d_main.fastparm = state.game.g_game.demo_read_byte() != 0;
     state.game.d_main.nomonsters = state.game.g_game.demo_read_byte() != 0;
-    state.game.g_game.consoleplayer = state.game.g_game.demo_read_byte() as i32;
+    state.game.g_game.consoleplayer = PlayerId(state.game.g_game.demo_read_byte());
     for i in 0..(MAXPLAYERS as usize) {
         state.game.g_game.playeringame[i] = state.game.g_game.demo_read_byte() != 0;
     }
@@ -1771,7 +1769,7 @@ pub fn check_demo_status(state: &mut GameState) -> bool {
         state.game.d_main.respawnparm = false;
         state.game.d_main.fastparm = false;
         state.game.d_main.nomonsters = false;
-        state.game.g_game.consoleplayer = 0;
+        state.game.g_game.consoleplayer = PlayerId(0);
         if state.game.g_game.singledemo {
             i_quit(state);
         } else {
