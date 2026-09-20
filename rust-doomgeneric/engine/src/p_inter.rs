@@ -272,12 +272,11 @@ pub fn give_power(
     true
 }
 pub fn touch_special_thing(state: &mut GameState, special: MobjId, toucher: MobjId) {
-    let mut sound: SfxName;
     let delta: Fixed = state.world.p_mobj.mo(special).z - state.world.p_mobj.mo(toucher).z;
     if delta > state.world.p_mobj.mo(toucher).height || delta < -8 * FRACUNIT {
         return;
     }
-    sound = SfxName::Itemup;
+    let mut sound: SfxName = SfxName::Itemup;
     let player = state.world.p_mobj.mo(toucher).player.unwrap();
     if state.world.p_mobj.mo(toucher).health <= 0 {
         return;

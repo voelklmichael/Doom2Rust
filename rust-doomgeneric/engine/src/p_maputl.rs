@@ -750,10 +750,6 @@ pub fn path_traverse<F: FnMut(&mut GameState, Intercept) -> bool>(
     let xstep: Fixed;
     let ystep: Fixed;
     let mut partial: Fixed;
-    let mut xintercept: Fixed;
-    let mut yintercept: Fixed;
-    let mut mapx: i32;
-    let mut mapy: i32;
     let mapxstep: i32;
     let mapystep: i32;
     state.world.p_maputl.earlyout = (flags & PT_EARLYOUT) != 0;
@@ -790,7 +786,7 @@ pub fn path_traverse<F: FnMut(&mut GameState, Intercept) -> bool>(
         partial = FRACUNIT as Fixed;
         ystep = (256 * FRACUNIT) as Fixed;
     }
-    yintercept = (y1 >> MAPBTOFRAC) + fixed_mul(partial, ystep);
+    let mut yintercept: Fixed = (y1 >> MAPBTOFRAC) + fixed_mul(partial, ystep);
     if yt2 > yt1 {
         mapystep = 1;
         partial = (FRACUNIT - (y1 >> MAPBTOFRAC & (FRACUNIT - 1))) as Fixed;
@@ -804,9 +800,9 @@ pub fn path_traverse<F: FnMut(&mut GameState, Intercept) -> bool>(
         partial = FRACUNIT as Fixed;
         xstep = (256 * FRACUNIT) as Fixed;
     }
-    xintercept = (x1 >> MAPBTOFRAC) + fixed_mul(partial, xstep);
-    mapx = xt1;
-    mapy = yt1;
+    let mut xintercept: Fixed = (x1 >> MAPBTOFRAC) + fixed_mul(partial, xstep);
+    let mut mapx: i32 = xt1;
+    let mut mapy: i32 = yt1;
     for _ in 0..64 {
         if flags & PT_ADDLINES != 0 && !block_lines_iterator(state, mapx, mapy, add_line_intercepts)
         {

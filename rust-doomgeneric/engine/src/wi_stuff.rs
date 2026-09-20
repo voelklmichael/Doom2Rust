@@ -657,13 +657,12 @@ pub fn draw_el(state: &mut GameState) {
     );
 }
 pub fn draw_on_lnode(state: &mut GameState, n: i32, c: &[i32]) {
-    let mut i: i32;
     let mut left: i32;
     let mut top: i32;
     let mut right: i32;
     let mut bottom: i32;
     let mut fits: bool = false;
-    i = 0;
+    let mut i: i32 = 0;
     loop {
         let patch = cache_patch_num(&*state.assets.fs, &mut state.assets.w_wad, c[i as usize]);
         left = LNODES[state.wbs().epsd as usize][n as usize].x - patch.leftoffset();
@@ -1051,9 +1050,6 @@ pub fn update_deathmatch_stats(state: &mut GameState) {
     }
 }
 pub fn draw_deathmatch_stats(state: &mut GameState) {
-    let mut x: i32;
-    let mut y: i32;
-
     slam_background(state);
     draw_animated_back(state);
     draw_lf(state);
@@ -1084,8 +1080,8 @@ pub fn draw_deathmatch_stats(state: &mut GameState) {
     );
     let dest_screen = Screen::Video;
     draw_patch(state, dest_screen, DM_VICTIMSX, DM_VICTIMSY, &victims_patch);
-    x = DM_MATRIXX + DM_SPACINGX;
-    y = DM_MATRIXY;
+    let mut x: i32 = DM_MATRIXX + DM_SPACINGX;
+    let mut y: i32 = DM_MATRIXY;
     for i in 0..MAXPLAYERS {
         if state.game.g_game.playeringame[i as usize] {
             let p_patch = cache_patch_num(
@@ -1309,7 +1305,6 @@ pub fn update_netgame_stats(state: &mut GameState) {
 }
 pub fn draw_netgame_stats(state: &mut GameState) {
     let mut x: i32;
-    let mut y: i32;
     let percent_patch = cache_patch_num(
         &*state.assets.fs,
         &mut state.assets.w_wad,
@@ -1383,7 +1378,7 @@ pub fn draw_netgame_stats(state: &mut GameState) {
             &frags_patch,
         );
     }
-    y = NG_STATSY + kills_patch.height();
+    let mut y: i32 = NG_STATSY + kills_patch.height();
     for i in 0..MAXPLAYERS {
         if state.game.g_game.playeringame[i as usize] {
             x = 32 + star_width / 2 + 32 * (!state.ui.wi_stuff.dofrags) as i32;

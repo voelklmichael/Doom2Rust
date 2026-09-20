@@ -32,8 +32,7 @@ fn player_quit_game(state: &mut GameState, player_num: u32) {
     }
 }
 fn run_tic(state: &mut GameState, cmds: &[TicCmd], ingame: &[bool]) {
-    let mut i: u32;
-    i = 0;
+    let mut i: u32 = 0;
     while i < MAXPLAYERS as u32 {
         if !state.game.g_game.demoplayback
             && state.game.g_game.playeringame[i as usize]
@@ -60,7 +59,6 @@ fn load_game_settings(
     platform: &mut dyn DoomPlatform,
     settings: &NetGameSettings,
 ) {
-    let mut i: u32;
     g_game.deathmatch = settings.deathmatch;
     d_main.startepisode = settings.episode;
     d_main.startmap = settings.map;
@@ -77,7 +75,7 @@ fn load_game_settings(
             "NOTE: Turning resolution is reduced; this is probably because there is a client recording a Vanilla demo."
         );
     }
-    i = 0;
+    let mut i: u32 = 0;
     while i < MAXPLAYERS as u32 {
         g_game.playeringame[i as usize] = i < settings.num_players as u32;
         i = i.wrapping_add(1);

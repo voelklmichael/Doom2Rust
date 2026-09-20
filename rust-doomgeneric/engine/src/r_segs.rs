@@ -117,7 +117,6 @@ pub const SIL_BOTH: i32 = 3;
 pub const MAXDRAWSEGS: i32 = 256;
 pub fn render_masked_seg_range(state: &mut GameState, ds: &DrawSeg, x1: i32, x2: i32) {
     let mut index: u32;
-    let mut lightnum: i32;
 
     state.render.r_bsp.curline = ds.curline;
     state.render.r_bsp.frontsector = state
@@ -135,7 +134,7 @@ pub fn render_masked_seg_range(state: &mut GameState, ds: &DrawSeg, x1: i32, x2:
         .p_setup
         .side_mut(state.world.p_setup.seg(state.render.r_bsp.curline).sidedef)
         .midtexture as usize];
-    lightnum = (state
+    let mut lightnum: i32 = (state
         .world
         .p_setup
         .sector_mut(state.render.r_bsp.frontsector.unwrap())
@@ -451,9 +450,6 @@ pub fn render_seg_loop(state: &mut GameState) {
     }
 }
 pub fn store_wall_range(state: &mut GameState, start: i32, stop: i32) {
-    let mut sineval: Fixed;
-
-    let mut offsetangle: Angle;
     let vtop: Fixed;
     let mut lightnum: i32;
     if state.render.r_bsp.ds_p == MAXDRAWSEGS as usize {
@@ -476,11 +472,12 @@ pub fn store_wall_range(state: &mut GameState, start: i32, stop: i32) {
         .seg(state.render.r_bsp.curline)
         .angle
         .wrapping_add(ANG90 as Angle);
-    offsetangle = (state
+    let mut offsetangle: Angle = (state
         .render
         .r_segs
         .rw_normalangle
-        .wrapping_sub(state.render.r_segs.rw_angle1 as Angle) as i32)
+        .wrapping_sub(state.render.r_segs.rw_angle1 as Angle)
+        as i32)
         .unsigned_abs();
     if offsetangle > ANG90 as Angle {
         offsetangle = ANG90 as Angle;
@@ -490,7 +487,7 @@ pub fn store_wall_range(state: &mut GameState, start: i32, stop: i32) {
         [state.world.p_setup.seg(state.render.r_bsp.curline).v1.0 as usize];
     let (v1x, v1y) = (curline_v1.x, curline_v1.y);
     let hyp: Fixed = point_to_dist(&state.render.r_main, v1x, v1y);
-    sineval = FINESINE[(distangle >> ANGLETOFINESHIFT) as usize];
+    let mut sineval: Fixed = FINESINE[(distangle >> ANGLETOFINESHIFT) as usize];
     state.render.r_segs.rw_distance = fixed_mul(hyp, sineval);
     state.render.r_segs.rw_x = start;
     state.render.r_bsp.drawsegs[state.render.r_bsp.ds_p].x1 = state.render.r_segs.rw_x;

@@ -274,8 +274,7 @@ static UNIQUE_LUMPS: [UniqueLump; 4] = [
     },
 ];
 pub fn check_correct_iwad(state: &WWadState, mission: GameMission) {
-    let mut i: i32;
-    i = 0;
+    let mut i: i32 = 0;
     while (i as usize)
         < ::core::mem::size_of::<[UniqueLump; 4]>()
             .wrapping_div(::core::mem::size_of::<UniqueLump>())

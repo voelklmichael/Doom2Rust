@@ -685,9 +685,8 @@ pub fn max_out_window_scale(am_map: &mut AmMapState) {
     activate_new_scale(am_map);
 }
 pub fn am_responder(state: &mut GameState, ev: &Event) -> bool {
-    let mut rc: bool;
     let key: i32;
-    rc = false;
+    let mut rc: bool = false;
     if !state.ui.am_map.automapactive {
         if ev.kind == EvType::Keydown && ev.data1 == state.game.m_controls.key_map_toggle {
             am_start(state);
@@ -943,9 +942,6 @@ pub fn draw_fline(
     fl: &FLine,
     color: i32,
 ) {
-    let mut x: i32;
-    let mut y: i32;
-
     let mut d: i32;
     if fl.a.x < 0
         || fl.a.x >= am_map.f_w
@@ -967,8 +963,8 @@ pub fn draw_fline(
     let dy: i32 = fl.b.y - fl.a.y;
     let ay: i32 = 2 * (if dy < 0 { -dy } else { dy });
     let sy: i32 = if dy < 0 { -1 } else { 1 };
-    x = fl.a.x;
-    y = fl.a.y;
+    let mut x: i32 = fl.a.x;
+    let mut y: i32 = fl.a.y;
     if ax > ay {
         d = ay - ax / 2;
         loop {
@@ -1017,18 +1013,16 @@ pub fn draw_mline(
 pub fn draw_grid(state: &mut GameState, color: i32) {
     let mut x: Fixed;
     let mut y: Fixed;
-    let mut start: Fixed;
-    let mut end: Fixed;
     let mut ml: MLine = MLine {
         a: MPoint { x: 0, y: 0 },
         b: MPoint { x: 0, y: 0 },
     };
-    start = state.ui.am_map.m_x;
+    let mut start: Fixed = state.ui.am_map.m_x;
     if (start - state.world.p_setup.bmaporgx) % (MAPBLOCKUNITS << FRACBITS) != 0 {
         start += (MAPBLOCKUNITS << FRACBITS)
             - (start - state.world.p_setup.bmaporgx) % (MAPBLOCKUNITS << FRACBITS);
     }
-    end = state.ui.am_map.m_x + state.ui.am_map.m_w;
+    let mut end: Fixed = state.ui.am_map.m_x + state.ui.am_map.m_w;
     ml.a.y = state.ui.am_map.m_y;
     ml.b.y = state.ui.am_map.m_y + state.ui.am_map.m_h;
     x = start;

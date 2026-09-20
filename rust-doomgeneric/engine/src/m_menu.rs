@@ -1250,8 +1250,7 @@ pub fn size_display(state: &mut GameState, choice: i32) {
     set_view_size(&mut state.render.r_main, screenblocks, detail_level);
 }
 pub fn draw_thermo(state: &mut GameState, x: i32, y: i32, therm_width: i32, therm_dot: i32) {
-    let mut xx: i32;
-    xx = x;
+    let mut xx: i32 = x;
     let __wcache1619_9 = cache_patch_name(&*state.assets.fs, &mut state.assets.w_wad, "M_THERML");
     let dest_screen = Screen::Video;
     draw_patch_direct(state, dest_screen, xx, y, &__wcache1619_9);
@@ -1315,9 +1314,8 @@ pub fn string_height(
     w_wad: &mut WWadState,
     string: &str,
 ) -> i32 {
-    let mut h: i32;
     let height: i32 = cache_patch_num(fs, w_wad, hu_stuff.hu_font[0]).height();
-    h = height;
+    let mut h: i32 = height;
     for b in string.bytes() {
         if b == b'\n' {
             h += height;
@@ -1328,10 +1326,8 @@ pub fn string_height(
 pub fn write_text(state: &mut GameState, x: i32, y: i32, string: &str) {
     let mut w: i32;
     let mut c: i32;
-    let mut cx: i32;
-    let mut cy: i32;
-    cx = x;
-    cy = y;
+    let mut cx: i32 = x;
+    let mut cy: i32 = y;
     'outer: for b in string.bytes() {
         c = b as i32;
         if c == '\n' as i32 {
@@ -1362,8 +1358,6 @@ fn is_null_key(key: i32) -> bool {
     key == KEY_PAUSE || key == KEY_CAPSLOCK || key == KEY_SCRLCK || key == KEY_NUMLOCK
 }
 pub fn m_responder(state: &mut GameState, ev: &Event) -> bool {
-    let mut ch: i32;
-    let mut key: i32;
     let mut i: i32;
     if state.game.g_game.testcontrols {
         if ev.kind == EvType::Quit
@@ -1389,8 +1383,8 @@ pub fn m_responder(state: &mut GameState, ev: &Event) -> bool {
         }
         return true;
     }
-    ch = 0;
-    key = -1;
+    let mut ch: i32 = 0;
+    let mut key: i32 = -1;
     if ev.kind == EvType::Joystick
         && state.ui.m_menu.responder_joywait
             < get_time(&mut state.io.i_timer, &mut *state.io.platform)
@@ -1742,8 +1736,6 @@ pub fn start_control_panel(m_menu: &mut MMenuState) {
     m_menu.item_on = m_menu.current().last_on;
 }
 pub fn m_drawer(state: &mut GameState) {
-    let mut i: u32;
-
     state.ui.m_menu.inhelpscreens = false;
     if state.ui.m_menu.message_to_print != 0 {
         let message_string = state.ui.m_menu.message_string.clone();
@@ -1789,7 +1781,7 @@ pub fn m_drawer(state: &mut GameState) {
     state.ui.m_menu.drawer_x = state.ui.m_menu.current().x;
     state.ui.m_menu.drawer_y = state.ui.m_menu.current().y;
     let max: u32 = state.ui.m_menu.current().numitems as u32;
-    i = 0;
+    let mut i: u32 = 0;
     while i < max {
         let item_name = state.ui.m_menu.current().items[i as usize].name;
         if !item_name.is_empty() {

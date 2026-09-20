@@ -271,12 +271,10 @@ pub fn point_to_angle2(
     point_to_angle(r_main, x2, y2)
 }
 pub fn point_to_dist(r_main: &RMainState, x: Fixed, y: Fixed) -> Fixed {
-    let mut dx: Fixed;
-    let mut dy: Fixed;
     let temp: Fixed;
 
-    dx = (x - r_main.viewx).abs() as Fixed;
-    dy = (y - r_main.viewy).abs() as Fixed;
+    let mut dx: Fixed = (x - r_main.viewx).abs() as Fixed;
+    let mut dy: Fixed = (y - r_main.viewy).abs() as Fixed;
     if dy > dx {
         temp = dx;
         dx = dy;

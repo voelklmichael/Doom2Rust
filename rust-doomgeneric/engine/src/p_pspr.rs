@@ -212,7 +212,6 @@ pub fn drop_weapon(state: &mut GameState, player_id: PlayerId) {
 pub fn weapon_ready(state: &mut GameState, player: PlayerId, position: i32) {
     let player_mo = state.game.g_game.players[player].mo.unwrap();
     let newstate: StateNum;
-    let mut angle: i32;
     if state.world.p_mobj.mo(player_mo).state == Some(StateId(StateNum::PlayAtk1 as u32))
         || state.world.p_mobj.mo(player_mo).state == Some(StateId(StateNum::PlayAtk2 as u32))
     {
@@ -245,7 +244,7 @@ pub fn weapon_ready(state: &mut GameState, player: PlayerId, position: i32) {
     } else {
         state.game.g_game.players[player].attackdown = false;
     }
-    angle = (128 * state.world.p_tick.leveltime) & FINEMASK;
+    let mut angle: i32 = (128 * state.world.p_tick.leveltime) & FINEMASK;
     state.game.g_game.players[player].psprites[position as usize].sx = FRACUNIT
         + fixed_mul(
             state.game.g_game.players[player].bob,
@@ -314,14 +313,12 @@ pub fn gun_flash(state: &mut GameState, player: PlayerId, _position: i32) {
 pub fn punch(state: &mut GameState, player_id: PlayerId, _position: i32) {
     let player = player_id;
     let player_mo = state.game.g_game.players[player].mo.unwrap();
-    let mut angle: Angle;
-    let mut damage: i32;
 
-    damage = (p_random(&mut state.world.m_random) % 10 + 1) << 1;
+    let mut damage: i32 = (p_random(&mut state.world.m_random) % 10 + 1) << 1;
     if state.game.g_game.players[player].powers[PowerType::Strength as usize] != 0 {
         damage *= 10;
     }
-    angle = state.world.p_mobj.mo(player_mo).angle;
+    let mut angle: Angle = state.world.p_mobj.mo(player_mo).angle;
     angle = angle.wrapping_add(
         ((p_random(&mut state.world.m_random) - p_random(&mut state.world.m_random)) << 18)
             as Angle,
@@ -344,10 +341,9 @@ pub fn punch(state: &mut GameState, player_id: PlayerId, _position: i32) {
 pub fn saw(state: &mut GameState, player_id: PlayerId, _position: i32) {
     let player = player_id;
     let player_mo = state.game.g_game.players[player].mo.unwrap();
-    let mut angle: Angle;
 
     let damage: i32 = 2 * (p_random(&mut state.world.m_random) % 10 + 1);
-    angle = state.world.p_mobj.mo(player_mo).angle;
+    let mut angle: Angle = state.world.p_mobj.mo(player_mo).angle;
     angle = angle.wrapping_add(
         ((p_random(&mut state.world.m_random) - p_random(&mut state.world.m_random)) << 18)
             as Angle,
@@ -435,8 +431,7 @@ pub fn fire_plasma(state: &mut GameState, player: PlayerId, _position: i32) {
     spawn_player_missile(state, player_mo, MobjType::Plasma);
 }
 pub fn bullet_slope(state: &mut GameState, mo: MobjId) {
-    let mut an: Angle;
-    an = state.world.p_mobj.mo(mo).angle;
+    let mut an: Angle = state.world.p_mobj.mo(mo).angle;
     state.world.p_pspr.bulletslope = aim_line_attack(state, Some(mo), an, 16 * 64 * FRACUNIT);
     if state.world.p_map.linetarget.is_none() {
         an = an.wrapping_add((1 << 26) as Angle);
@@ -449,10 +444,8 @@ pub fn bullet_slope(state: &mut GameState, mo: MobjId) {
     }
 }
 pub fn gun_shot(state: &mut GameState, mo: MobjId, accurate: bool) {
-    let mut angle: Angle;
-
     let damage: i32 = 5 * (p_random(&mut state.world.m_random) % 3 + 1);
-    angle = state.world.p_mobj.mo(mo).angle;
+    let mut angle: Angle = state.world.p_mobj.mo(mo).angle;
     if !accurate {
         angle = angle.wrapping_add(
             ((p_random(&mut state.world.m_random) - p_random(&mut state.world.m_random)) << 18)

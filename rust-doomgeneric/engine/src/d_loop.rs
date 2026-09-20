@@ -137,8 +137,7 @@ fn get_adjusted_time(
     i_timer: &mut ITimerState,
     platform: &mut dyn DoomPlatform,
 ) -> i32 {
-    let mut time_ms: i32;
-    time_ms = get_time_ms(i_timer, &mut *platform);
+    let mut time_ms: i32 = get_time_ms(i_timer, &mut *platform);
     if d_loop.new_sync {
         time_ms += OFFSETMS / FRACUNIT;
     }
@@ -206,7 +205,6 @@ fn build_new_tic(state: &mut GameState) -> bool {
     true
 }
 pub fn net_update(state: &mut GameState) {
-    let mut newtics: i32;
     if state.game.d_loop.singletics {
         return;
     }
@@ -215,7 +213,7 @@ pub fn net_update(state: &mut GameState) {
         &mut state.io.i_timer,
         &mut *state.io.platform,
     ) / state.game.d_loop.ticdup;
-    newtics = nowtime - state.game.d_loop.lasttime;
+    let mut newtics: i32 = nowtime - state.game.d_loop.lasttime;
     state.game.d_loop.lasttime = nowtime;
     if state.game.d_loop.skiptics <= newtics {
         newtics -= state.game.d_loop.skiptics;
@@ -267,10 +265,9 @@ fn get_low_tic(d_loop: &DLoopState) -> i32 {
     lowtic
 }
 fn old_net_sync(d_loop: &mut DLoopState) {
-    let mut i: u32;
     let mut keyplayer: i32 = -1;
     d_loop.frameon += 1;
-    i = 0;
+    let mut i: u32 = 0;
     while i < NET_MAXPLAYERS as u32 {
         if d_loop.local_playeringame[i as usize] {
             keyplayer = i as i32;
@@ -313,8 +310,7 @@ fn players_in_game(d_loop: &DLoopState) -> bool {
     result
 }
 fn ticdup_squash(set: &mut TicCmdSet) {
-    let mut i: u32;
-    i = 0;
+    let mut i: u32 = 0;
     while i < NET_MAXPLAYERS as u32 {
         let cmd = &mut set.cmds[i as usize];
         cmd.chatchar = 0_u8;
@@ -325,8 +321,7 @@ fn ticdup_squash(set: &mut TicCmdSet) {
     }
 }
 fn single_player_clear(set: &mut TicCmdSet) {
-    let mut i: u32;
-    i = 0;
+    let mut i: u32 = 0;
     while i < NET_MAXPLAYERS as u32 {
         if i != LOCALPLAYER as u32 {
             set.ingame[i as usize] = false;
@@ -335,8 +330,6 @@ fn single_player_clear(set: &mut TicCmdSet) {
     }
 }
 pub fn try_run_tics(state: &mut GameState) {
-    let mut lowtic: i32;
-
     let mut counts: i32;
     let entertic: i32 =
         get_time(&mut state.io.i_timer, &mut *state.io.platform) / state.game.d_loop.ticdup;
@@ -347,7 +340,7 @@ pub fn try_run_tics(state: &mut GameState) {
     } else {
         net_update(state);
     }
-    lowtic = get_low_tic(&state.game.d_loop);
+    let mut lowtic: i32 = get_low_tic(&state.game.d_loop);
     let availabletics: i32 = lowtic - state.game.d_loop.gametic / state.game.d_loop.ticdup;
     if state.game.d_loop.new_sync {
         counts = availabletics;
