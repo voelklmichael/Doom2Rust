@@ -159,7 +159,7 @@ pub struct GGameState {
     pub consistancy: [[u8; 128]; 4],
     pub forwardmove: [Fixed; 2],
     pub sidemove: [Fixed; 2],
-    pub next_weapon: i32,
+    pub next_weapon: Option<WeaponCycle>,
     pub gamekeydown: [bool; 256],
     pub turnheld: i32,
     pub mousearray: [bool; 9],
@@ -317,7 +317,7 @@ impl GGameState {
             consistancy: [[0; 128]; 4],
             forwardmove: [0x19, 0x32],
             sidemove: [0x18, 0x28],
-            next_weapon: 0,
+            next_weapon: None,
             gamekeydown: [false; 256],
             turnheld: 0,
             mousearray: [false; 9],
@@ -443,7 +443,14 @@ fn weapon_selectable(doomstat: &DoomstatState, g_game: &GGameState, weapon: Weap
     }
     true
 }
-fn g_next_weapon(doomstat: &DoomstatState, g_game: &GGameState, direction: i32) -> i32 {
+/// Which way a "previous/next weapon" key or button steps through the weapon order.
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+pub enum WeaponCycle {
+    Previous = -1,
+    Next = 1,
+}
+
+fn g_next_weapon(doomstat: &DoomstatState, g_game: &GGameState, direction: WeaponCycle) -> i32 {
     let weapon: WeaponType = if g_game.players[g_game.consoleplayer].pendingweapon as u32
         == WeaponType::Nochange as u32
     {
@@ -452,10 +459,7 @@ fn g_next_weapon(doomstat: &DoomstatState, g_game: &GGameState, direction: i32) 
         g_game.players[g_game.consoleplayer].pendingweapon
     };
     let mut i: i32 = 0;
-    while (i as usize)
-        < ::core::mem::size_of::<[WeaponOrder; 9]>()
-            .wrapping_div(::core::mem::size_of::<WeaponOrder>())
-    {
+    while (i as usize) < WEAPON_ORDER_TABLE.len() {
         if WEAPON_ORDER_TABLE[i as usize].weapon as u32 == weapon as u32 {
             break;
         }
@@ -463,16 +467,10 @@ fn g_next_weapon(doomstat: &DoomstatState, g_game: &GGameState, direction: i32) 
     }
     let start_i: i32 = i;
     loop {
-        i += direction;
+        i += direction as i32;
         i = (i as usize)
-            .wrapping_add(
-                ::core::mem::size_of::<[WeaponOrder; 9]>()
-                    .wrapping_div(::core::mem::size_of::<WeaponOrder>()),
-            )
-            .wrapping_rem(
-                ::core::mem::size_of::<[WeaponOrder; 9]>()
-                    .wrapping_div(::core::mem::size_of::<WeaponOrder>()),
-            ) as i32;
+            .wrapping_add(WEAPON_ORDER_TABLE.len())
+            .wrapping_rem(WEAPON_ORDER_TABLE.len()) as i32;
         if !(i != start_i
             && !weapon_selectable(doomstat, g_game, WEAPON_ORDER_TABLE[i as usize].weapon))
         {
@@ -590,8 +588,12 @@ pub fn g_build_ticcmd(state: &mut GameState, cmd: &mut TicCmd, maketic: i32) {
         cmd.buttons = (cmd.buttons as i32 | BT_USE) as u8;
         state.game.g_game.dclicks = 0;
     }
-    if state.game.g_game.gamestate == GameScreenState::Level && state.game.g_game.next_weapon != 0 {
-        let next_weapon = state.game.g_game.next_weapon;
+    if let Some(next_weapon) = state
+        .game
+        .g_game
+        .next_weapon
+        .filter(|_| state.game.g_game.gamestate == GameScreenState::Level)
+    {
         i = g_next_weapon(&state.game.doomstat, &state.game.g_game, next_weapon);
         cmd.buttons = (cmd.buttons as i32 | BT_CHANGE) as u8;
         cmd.buttons = (cmd.buttons as i32 | i << BT_WEAPONSHIFT) as u8;
@@ -608,7 +610,7 @@ pub fn g_build_ticcmd(state: &mut GameState, cmd: &mut TicCmd, maketic: i32) {
             i += 1;
         }
     }
-    state.game.g_game.next_weapon = 0;
+    state.game.g_game.next_weapon = None;
     if state.game.g_game.mousearray[(state.game.m_controls.mousebforward + 1) as usize] {
         forward += state.game.g_game.forwardmove[speed as usize];
     }
@@ -756,9 +758,9 @@ fn set_joy_buttons(g_game: &mut GGameState, m_controls: &MControlsState, buttons
         let button_on: i32 = (buttons_mask & (1 << i) as u32 != 0) as i32;
         if !g_game.joyarray[(i + 1) as usize] && button_on != 0 {
             if i == m_controls.joybprevweapon {
-                g_game.next_weapon = -1;
+                g_game.next_weapon = Some(WeaponCycle::Previous);
             } else if i == m_controls.joybnextweapon {
-                g_game.next_weapon = 1;
+                g_game.next_weapon = Some(WeaponCycle::Next);
             }
         }
         g_game.joyarray[(i + 1) as usize] = button_on != 0;
@@ -769,9 +771,9 @@ fn set_mouse_buttons(g_game: &mut GGameState, m_controls: &MControlsState, butto
         let button_on: u32 = (buttons_mask & (1 << i) as u32 != 0) as u32;
         if !g_game.mousearray[(i + 1) as usize] && button_on != 0 {
             if i == m_controls.mousebprevweapon {
-                g_game.next_weapon = -1;
+                g_game.next_weapon = Some(WeaponCycle::Previous);
             } else if i == m_controls.mousebnextweapon {
-                g_game.next_weapon = 1;
+                g_game.next_weapon = Some(WeaponCycle::Next);
             }
         }
         g_game.mousearray[(i + 1) as usize] = button_on != 0;
@@ -830,9 +832,9 @@ pub fn g_responder(state: &mut GameState, ev: Event) -> bool {
         state.game.g_game.testcontrols_mousespeed = (ev.data2).abs();
     }
     if ev.kind == EvType::Keydown && ev.data1 == state.game.m_controls.key_prevweapon {
-        state.game.g_game.next_weapon = -1;
+        state.game.g_game.next_weapon = Some(WeaponCycle::Previous);
     } else if ev.kind == EvType::Keydown && ev.data1 == state.game.m_controls.key_nextweapon {
-        state.game.g_game.next_weapon = 1;
+        state.game.g_game.next_weapon = Some(WeaponCycle::Next);
     }
     match ev.kind as u32 {
         0 => {
