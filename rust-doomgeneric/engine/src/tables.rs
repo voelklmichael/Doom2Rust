@@ -3,11 +3,10 @@ pub type Angle = u32;
 pub const FINEANGLES: i32 = 8192;
 pub const SLOPERANGE: i32 = 2048;
 pub fn slope_div(num: u32, den: u32) -> i32 {
-    let ans: u32;
     if den < 512 {
         SLOPERANGE
     } else {
-        ans = (num << 3).wrapping_div(den >> 8);
+        let ans: u32 = (num << 3).wrapping_div(den >> 8);
         if ans <= SLOPERANGE as u32 {
             ans as i32
         } else {

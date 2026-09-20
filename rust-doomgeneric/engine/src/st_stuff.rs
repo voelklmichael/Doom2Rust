@@ -485,7 +485,6 @@ pub fn st_responder(state: &mut GameState, ev: &Event) -> bool {
                 state.game.g_game.player_mut(state.ui.st_stuff.plyr).message =
                     Some("Very Happy Ammo Added".to_string());
             } else if cht_check_cheat(&mut state.ui.st_stuff.cheat_mus, ev.data2 as u8) {
-                let musnum: i32;
                 state.game.g_game.player_mut(state.ui.st_stuff.plyr).message =
                     Some("Music Change".to_string());
                 let buf: [u8; 2] = [
@@ -495,7 +494,7 @@ pub fn st_responder(state: &mut GameState, ev: &Event) -> bool {
                 if state.game.doomstat.gamemode == GameMode::Commercial
                     || !state.game.doomstat.gameversion.is_ultimate_or_higher()
                 {
-                    musnum = MusicName::Runnin as i32
+                    let musnum: i32 = MusicName::Runnin as i32
                         + (buf[0] as i32 - '0' as i32) * 10
                         + buf[1] as i32
                         - '0' as i32
@@ -507,7 +506,7 @@ pub fn st_responder(state: &mut GameState, ev: &Event) -> bool {
                         change_music(state, musnum, true);
                     }
                 } else {
-                    musnum = MusicName::E1m1 as i32
+                    let musnum: i32 = MusicName::E1m1 as i32
                         + (buf[0] as i32 - '1' as i32) * 9
                         + (buf[1] as i32 - '1' as i32);
                     if (buf[0] as i32 - '1' as i32) * 9 + buf[1] as i32 - '1' as i32 > 31 {
@@ -642,9 +641,6 @@ pub fn calc_pain_offset(g_game: &mut GGameState, st_stuff: &mut StStuffState) ->
 }
 pub fn update_face_widget(state: &mut GameState) {
     let i: i32;
-    let badguyangle: Angle;
-    let diffang: Angle;
-    let mut doevilgrin: bool;
     if state.ui.st_stuff.st_updatefacewidget_priority < 10
         && state.game.g_game.player_mut(state.ui.st_stuff.plyr).health == 0
     {
@@ -660,7 +656,7 @@ pub fn update_face_widget(state: &mut GameState) {
             .bonuscount
             != 0
     {
-        doevilgrin = false;
+        let mut doevilgrin: bool = false;
         for i in 0..(NUMWEAPONS as usize) {
             if state.ui.st_stuff.oldweaponsowned[i]
                 != state
@@ -717,9 +713,11 @@ pub fn update_face_widget(state: &mut GameState) {
                     calc_pain_offset(&mut state.game.g_game, &mut state.ui.st_stuff)
                         + ST_OUCHOFFSET;
             } else {
+                let diffang: Angle;
+
                 let plyr_attacker = state.world.p_mobj.mo(attacker_id);
                 let (attacker_x, attacker_y) = (plyr_attacker.x, plyr_attacker.y);
-                badguyangle = point_to_angle2(
+                let badguyangle: Angle = point_to_angle2(
                     &mut state.render.r_main,
                     plyr_mo_x,
                     plyr_mo_y,
@@ -871,14 +869,13 @@ pub fn st_ticker(state: &mut GameState) {
 }
 pub fn do_palette_stuff(state: &mut GameState) {
     let mut palette: i32;
-    let bzc: i32;
     let mut cnt: i32 = state
         .game
         .g_game
         .player_mut(state.ui.st_stuff.plyr)
         .damagecount;
     if state.game.g_game.player_mut(state.ui.st_stuff.plyr).powers[PowerType::Strength] != 0 {
-        bzc = 12
+        let bzc: i32 = 12
             - (state.game.g_game.player_mut(state.ui.st_stuff.plyr).powers
                 [PowerType::Strength as usize]
                 >> 6);

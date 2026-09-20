@@ -253,10 +253,6 @@ pub fn d_process_events(state: &mut GameState) {
     }
 }
 pub fn display(state: &mut GameState) {
-    let mut nowtime: i32;
-    let mut tics: i32;
-    let y: i32;
-    let mut done: bool;
     let wipe: bool;
     if state.game.g_game.nodrawers {
         return;
@@ -361,11 +357,11 @@ pub fn display(state: &mut GameState) {
     state.game.d_main.wipegamestate = state.game.g_game.gamestate;
     state.game.d_main.d_display_oldgamestate = state.game.d_main.wipegamestate;
     if state.game.g_game.paused {
-        if state.ui.am_map.automapactive {
-            y = 4;
+        let y: i32 = if state.ui.am_map.automapactive {
+            4
         } else {
-            y = state.render.r_draw.viewwindowy + 4;
-        }
+            state.render.r_draw.viewwindowy + 4
+        };
         let __wcache429_2 = cache_patch_name(&*state.assets.fs, &mut state.assets.w_wad, "M_PAUSE");
         let dest_screen = Screen::Video;
         draw_patch_direct(
@@ -385,6 +381,10 @@ pub fn display(state: &mut GameState) {
     wipe_end_screen(state, 0, 0, SCREENWIDTH, SCREENHEIGHT);
     let mut wipestart: i32 = get_time(&mut state.io.i_timer, &mut *state.io.platform) - 1;
     loop {
+        let mut tics: i32;
+
+        let mut nowtime: i32;
+
         loop {
             nowtime = get_time(&mut state.io.i_timer, &mut *state.io.platform);
             tics = nowtime - wipestart;
@@ -394,7 +394,7 @@ pub fn display(state: &mut GameState) {
             }
         }
         wipestart = nowtime;
-        done = wipe_screen_wipe(state, SCREENWIDTH, SCREENHEIGHT, tics);
+        let done: bool = wipe_screen_wipe(state, SCREENWIDTH, SCREENHEIGHT, tics);
         m_drawer(state);
         finish_update(&mut state.io.i_video, &mut *state.io.platform);
         if done {
@@ -766,7 +766,6 @@ fn quit_check_demo_status(state: &mut GameState) {
 }
 pub fn doom_main(state: &mut GameState) {
     let _p: i32;
-    let file: String;
     let mut demolumpname: FixedCStr<8> = FixedCStr::from_array([0; 8]);
     at_exit(
         &mut state.io.i_system,
@@ -865,11 +864,11 @@ pub fn doom_main(state: &mut GameState) {
         .or_else(|| check_parm_with_args(&state.game.m_argv, "-timedemo", 1));
     if let Some(p) = demo_parm {
         let arg = state.game.m_argv.myargv[p + 1].as_str();
-        if string_ends_with(arg, ".lmp") {
-            file = arg.to_string();
+        let file: String = if string_ends_with(arg, ".lmp") {
+            arg.to_string()
         } else {
-            file = format!("{arg}.lmp");
-        }
+            format!("{arg}.lmp")
+        };
         if d_add_file(
             &mut *state.assets.fs,
             &mut *state.io.platform,

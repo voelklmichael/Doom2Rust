@@ -211,7 +211,6 @@ pub fn drop_weapon(state: &mut GameState, player_id: PlayerId) {
 }
 pub fn weapon_ready(state: &mut GameState, player: PlayerId, position: i32) {
     let player_mo = state.game.g_game.players[player].mo.unwrap();
-    let newstate: StateNum;
     if state.world.p_mobj.mo(player_mo).state == Some(StateId(StateNum::PlayAtk1 as u32))
         || state.world.p_mobj.mo(player_mo).state == Some(StateId(StateNum::PlayAtk2 as u32))
     {
@@ -226,7 +225,8 @@ pub fn weapon_ready(state: &mut GameState, player: PlayerId, position: i32) {
     if state.game.g_game.players[player].pendingweapon as u32 != WeaponType::Nochange as i32 as u32
         || state.game.g_game.players[player].health == 0
     {
-        newstate = WEAPONINFO[state.game.g_game.players[player].readyweapon as usize].downstate;
+        let newstate: StateNum =
+            WEAPONINFO[state.game.g_game.players[player].readyweapon as usize].downstate;
         set_psprite(state, player, PSpriteNum::Weapon as i32, newstate);
         return;
     }
@@ -493,8 +493,6 @@ pub fn fire_shotgun(state: &mut GameState, player: PlayerId, _position: i32) {
 }
 pub fn fire_shotgun2(state: &mut GameState, player: PlayerId, _position: i32) {
     let player_mo = state.game.g_game.players[player].mo.unwrap();
-    let mut angle: Angle;
-    let mut damage: i32;
     s_start_sound(state, SoundOrigin::Mobj(player_mo), SfxName::Dshtgn);
     set_mobj_state(state, player_mo, StateNum::PlayAtk2);
     let ammo_type = WEAPONINFO[state.game.g_game.players[player].readyweapon as usize].ammo as i32;
@@ -507,8 +505,8 @@ pub fn fire_shotgun2(state: &mut GameState, player: PlayerId, _position: i32) {
     );
     bullet_slope(state, player_mo);
     for _ in 0..20 {
-        damage = 5 * (p_random(&mut state.world.m_random) % 3 + 1);
-        angle = state.world.p_mobj.mo(player_mo).angle;
+        let damage: i32 = 5 * (p_random(&mut state.world.m_random) % 3 + 1);
+        let mut angle: Angle = state.world.p_mobj.mo(player_mo).angle;
         angle = angle.wrapping_add(
             ((p_random(&mut state.world.m_random) - p_random(&mut state.world.m_random)) << 19)
                 as Angle,

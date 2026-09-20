@@ -271,14 +271,10 @@ pub fn point_to_angle2(
     point_to_angle(r_main, x2, y2)
 }
 pub fn point_to_dist(r_main: &RMainState, x: Fixed, y: Fixed) -> Fixed {
-    let temp: Fixed;
-
     let mut dx: Fixed = (x - r_main.viewx).abs() as Fixed;
     let mut dy: Fixed = (y - r_main.viewy).abs() as Fixed;
     if dy > dx {
-        temp = dx;
-        dx = dy;
-        dy = temp;
+        core::mem::swap(&mut dx, &mut dy);
     }
     let frac: Fixed = if dx != 0 { fixed_div(dy, dx) } else { 0 };
     let angle: i32 = (TANTOANGLE[(frac >> DBITS) as usize].wrapping_add(ANG90 as Angle)
@@ -309,7 +305,6 @@ pub fn scale_from_global_angle(r_main: &RMainState, r_segs: &RSegsState, visangl
 }
 pub fn init_texture_mapping(r_draw: &RDrawState, r_main: &mut RMainState) {
     let mut i: i32;
-    let mut t: i32;
 
     let focallength: Fixed = fixed_div(
         r_main.centerxfrac,
@@ -320,6 +315,8 @@ pub fn init_texture_mapping(r_draw: &RDrawState, r_main: &mut RMainState) {
         .enumerate()
         .take((FINEANGLES / 2) as usize)
     {
+        let mut t: i32;
+
         if tangent > FRACUNIT * 2 {
             t = -1;
         } else if tangent < -FRACUNIT * 2 {
@@ -353,15 +350,13 @@ pub fn init_texture_mapping(r_draw: &RDrawState, r_main: &mut RMainState) {
 }
 pub const DISTMAP: i32 = 2;
 pub fn init_light_tables(r_main: &mut RMainState) {
-    let mut level: i32;
-    let mut startmap: i32;
-    let mut scale: i32;
     for i in 0..LIGHTLEVELS {
-        startmap = (LIGHTLEVELS - 1 - i) * 2 * NUMCOLORMAPS / LIGHTLEVELS;
+        let startmap: i32 = (LIGHTLEVELS - 1 - i) * 2 * NUMCOLORMAPS / LIGHTLEVELS;
         for j in 0..MAXLIGHTZ {
-            scale = fixed_div(SCREENWIDTH / 2 * FRACUNIT, (j as Fixed + 1) << LIGHTZSHIFT);
+            let mut scale: i32 =
+                fixed_div(SCREENWIDTH / 2 * FRACUNIT, (j as Fixed + 1) << LIGHTZSHIFT);
             scale >>= LIGHTSCALESHIFT;
-            level = startmap - scale / DISTMAP;
+            let mut level: i32 = startmap - scale / DISTMAP;
             if level < 0 {
                 level = 0;
             }
@@ -378,10 +373,6 @@ pub fn set_view_size(r_main: &mut RMainState, blocks: i32, detail: i32) {
     r_main.setdetail = detail;
 }
 pub fn execute_set_view_size(render: &mut Render) {
-    let mut cosadj: Fixed;
-    let mut dy: Fixed;
-    let mut level: i32;
-    let mut startmap: i32;
     render.r_main.setsizeneeded = false;
     if render.r_main.setblocks == 11 {
         render.r_draw.scaledviewwidth = SCREENWIDTH;
@@ -420,7 +411,8 @@ pub fn execute_set_view_size(render: &mut Render) {
         render.r_things.screenheightarray[i] = render.r_draw.viewheight as i16;
     }
     for i in 0..render.r_draw.viewheight {
-        dy = (((i - render.r_draw.viewheight / 2) << FRACBITS) + FRACUNIT / 2) as Fixed;
+        let mut dy: Fixed =
+            (((i - render.r_draw.viewheight / 2) << FRACBITS) + FRACUNIT / 2) as Fixed;
         dy = dy.abs() as Fixed;
         render.r_plane.yslope[i as usize] = fixed_div(
             ((render.r_draw.viewwidth as Fixed) << render.r_main.detailshift) / 2 * FRACUNIT,
@@ -428,14 +420,14 @@ pub fn execute_set_view_size(render: &mut Render) {
         );
     }
     for i in 0..render.r_draw.viewwidth as usize {
-        cosadj =
+        let cosadj: Fixed =
             FINECOSINE[(render.r_main.xtoviewangle[i] >> ANGLETOFINESHIFT) as usize].abs() as Fixed;
         render.r_plane.distscale[i] = fixed_div(FRACUNIT, cosadj);
     }
     for i in 0..LIGHTLEVELS {
-        startmap = (LIGHTLEVELS - 1 - i) * 2 * NUMCOLORMAPS / LIGHTLEVELS;
+        let startmap: i32 = (LIGHTLEVELS - 1 - i) * 2 * NUMCOLORMAPS / LIGHTLEVELS;
         for j in 0..MAXLIGHTSCALE {
-            level = startmap
+            let mut level: i32 = startmap
                 - j * SCREENWIDTH
                     / (render.r_draw.viewwidth << render.r_main.detailshift)
                     / DISTMAP;

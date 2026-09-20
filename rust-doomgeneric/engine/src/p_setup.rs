@@ -560,7 +560,6 @@ pub fn load_block_map(
 }
 pub fn group_lines(p_setup: &mut PSetupState) {
     let mut bbox = BBox::new([0; 4]);
-    let mut block: i32;
     for i in 0..(p_setup.numsubsectors as usize) {
         let firstline = p_setup.subsectors[i].firstline;
         let seg_sidedef = p_setup.segs[firstline as usize].sidedef;
@@ -611,7 +610,8 @@ pub fn group_lines(p_setup: &mut PSetupState) {
         let sector = &mut p_setup.sectors[i];
         sector.soundorg.x = ((bbox[BoxIndex::Right] + bbox[BoxIndex::Left]) / 2) as Fixed;
         sector.soundorg.y = ((bbox[BoxIndex::Top] + bbox[BoxIndex::Bottom]) / 2) as Fixed;
-        block = (bbox[BoxIndex::Top] - p_setup.bmaporgy + 32 * FRACUNIT) >> MAPBLOCKSHIFT;
+        let mut block: i32 =
+            (bbox[BoxIndex::Top] - p_setup.bmaporgy + 32 * FRACUNIT) >> MAPBLOCKSHIFT;
         block = if block >= p_setup.bmapheight {
             p_setup.bmapheight - 1
         } else {

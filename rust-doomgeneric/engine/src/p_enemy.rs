@@ -285,9 +285,6 @@ pub fn check_missile_range(state: &mut GameState, actor: MobjId) -> bool {
 pub static XSPEED: [Fixed; 8] = [FRACUNIT, 47000, 0, -47000, -FRACUNIT, -47000, 0, 47000];
 pub static YSPEED: [Fixed; 8] = [0, 47000, FRACUNIT, 47000, 0, -47000, -FRACUNIT, -47000];
 pub fn p_move(state: &mut GameState, actor: MobjId) -> bool {
-    let mut ld: LineId;
-
-    let mut good: bool;
     if state.world.p_mobj.mo(actor).movedir == DirType::Nodir as i32 {
         return false;
     }
@@ -332,10 +329,10 @@ pub fn p_move(state: &mut GameState, actor: MobjId) -> bool {
             return false;
         }
         state.world.p_mobj.mo_mut(actor).movedir = DirType::Nodir as i32;
-        good = false;
+        let mut good: bool = false;
         while state.world.p_map.numspechit > 0 {
             state.world.p_map.numspechit -= 1;
-            ld = state.world.p_map.spechit[state.world.p_map.numspechit as usize];
+            let ld: LineId = state.world.p_map.spechit[state.world.p_map.numspechit as usize];
             if use_special_line(state, actor, ld, 0) {
                 good = true;
             }
@@ -362,7 +359,6 @@ pub fn try_walk(state: &mut GameState, actor: MobjId) -> bool {
 }
 pub fn new_chase_dir(state: &mut GameState, actor: MobjId) {
     let mut d: [DirType; 3] = [DirType::East; 3];
-    let mut tdir: i32;
 
     let Some(target) = live_target(&state.world.p_mobj, actor) else {
         error("P_NewChaseDir: called with no target");
@@ -420,6 +416,8 @@ pub fn new_chase_dir(state: &mut GameState, actor: MobjId) {
         }
     }
     if p_random(&mut state.world.m_random) & 1 != 0 {
+        let _tdir: i32;
+
         for tdir in DirType::East as i32..=DirType::Southeast as i32 {
             if tdir != turnaround as i32 {
                 state.world.p_mobj.mo_mut(actor).movedir = tdir;
@@ -429,7 +427,7 @@ pub fn new_chase_dir(state: &mut GameState, actor: MobjId) {
             }
         }
     } else {
-        tdir = DirType::Southeast as i32;
+        let mut tdir: i32 = DirType::Southeast as i32;
         while tdir != DirType::East as i32 - 1 {
             if tdir != turnaround as i32 {
                 state.world.p_mobj.mo_mut(actor).movedir = tdir;
@@ -586,7 +584,6 @@ pub fn look(state: &mut GameState, actor: MobjId) {
     set_mobj_state(state, actor, seestate);
 }
 pub fn chase(state: &mut GameState, actor: MobjId) {
-    let delta: i32;
     if state.world.p_mobj.mo(actor).reactiontime != 0 {
         state.world.p_mobj.mo_mut(actor).reactiontime -= 1;
     }
@@ -605,7 +602,7 @@ pub fn chase(state: &mut GameState, actor: MobjId) {
     }
     if state.world.p_mobj.mo(actor).movedir < 8 {
         state.world.p_mobj.mo_mut(actor).angle &= (7 << 29) as Angle;
-        delta = state
+        let delta: i32 = state
             .world
             .p_mobj
             .mo(actor)
@@ -766,10 +763,6 @@ pub fn pos_attack(state: &mut GameState, actor: MobjId) {
     );
 }
 pub fn spos_attack(state: &mut GameState, actor: MobjId) {
-    let mut angle: i32;
-
-    let mut damage: i32;
-
     if state.world.p_mobj.mo(actor).target.is_none() {
         return;
     }
@@ -778,9 +771,9 @@ pub fn spos_attack(state: &mut GameState, actor: MobjId) {
     let bangle: i32 = state.world.p_mobj.mo(actor).angle as i32;
     let slope: i32 = aim_line_attack(state, Some(actor), bangle as Angle, MISSILERANGE);
     for _ in 0..3 {
-        angle = bangle
+        let angle: i32 = bangle
             + ((p_random(&mut state.world.m_random) - p_random(&mut state.world.m_random)) << 20);
-        damage = (p_random(&mut state.world.m_random) % 5 + 1) * 3;
+        let damage: i32 = (p_random(&mut state.world.m_random) % 5 + 1) * 3;
         line_attack(
             state,
             actor,
@@ -865,38 +858,35 @@ pub fn bspi_attack(state: &mut GameState, actor: MobjId) {
     spawn_missile(state, actor, target, MobjType::Arachplaz);
 }
 pub fn troop_attack(state: &mut GameState, actor: MobjId) {
-    let damage: i32;
     let Some(target) = live_target(&state.world.p_mobj, actor) else {
         return;
     };
     face_target(state, actor);
     if check_melee_range(state, actor) {
         s_start_sound(state, SoundOrigin::Mobj(actor), SfxName::Claw);
-        damage = (p_random(&mut state.world.m_random) % 8 + 1) * 3;
+        let damage: i32 = (p_random(&mut state.world.m_random) % 8 + 1) * 3;
         damage_mobj(state, target, Some(actor), Some(actor), damage);
         return;
     }
     spawn_missile(state, actor, target, MobjType::Troopshot);
 }
 pub fn sarg_attack(state: &mut GameState, actor: MobjId) {
-    let damage: i32;
     let Some(target) = live_target(&state.world.p_mobj, actor) else {
         return;
     };
     face_target(state, actor);
     if check_melee_range(state, actor) {
-        damage = (p_random(&mut state.world.m_random) % 10 + 1) * 4;
+        let damage: i32 = (p_random(&mut state.world.m_random) % 10 + 1) * 4;
         damage_mobj(state, target, Some(actor), Some(actor), damage);
     }
 }
 pub fn head_attack(state: &mut GameState, actor: MobjId) {
-    let damage: i32;
     let Some(target) = live_target(&state.world.p_mobj, actor) else {
         return;
     };
     face_target(state, actor);
     if check_melee_range(state, actor) {
-        damage = (p_random(&mut state.world.m_random) % 6 + 1) * 10;
+        let damage: i32 = (p_random(&mut state.world.m_random) % 6 + 1) * 10;
         damage_mobj(state, target, Some(actor), Some(actor), damage);
         return;
     }
@@ -910,13 +900,12 @@ pub fn cyber_attack(state: &mut GameState, actor: MobjId) {
     spawn_missile(state, actor, target, MobjType::Rocket);
 }
 pub fn bruis_attack(state: &mut GameState, actor: MobjId) {
-    let damage: i32;
     let Some(target) = live_target(&state.world.p_mobj, actor) else {
         return;
     };
     if check_melee_range(state, actor) {
         s_start_sound(state, SoundOrigin::Mobj(actor), SfxName::Claw);
-        damage = (p_random(&mut state.world.m_random) % 8 + 1) * 10;
+        let damage: i32 = (p_random(&mut state.world.m_random) % 8 + 1) * 10;
         damage_mobj(state, target, Some(actor), Some(actor), damage);
         return;
     }
@@ -1043,13 +1032,12 @@ pub fn skel_whoosh(state: &mut GameState, actor: MobjId) {
     s_start_sound(state, SoundOrigin::Mobj(actor), SfxName::Skeswg);
 }
 pub fn skel_fist(state: &mut GameState, actor: MobjId) {
-    let damage: i32;
     let Some(target) = live_target(&state.world.p_mobj, actor) else {
         return;
     };
     face_target(state, actor);
     if check_melee_range(state, actor) {
-        damage = (p_random(&mut state.world.m_random) % 10 + 1) * 6;
+        let damage: i32 = (p_random(&mut state.world.m_random) % 10 + 1) * 6;
         s_start_sound(state, SoundOrigin::Mobj(actor), SfxName::Skepch);
         damage_mobj(state, target, Some(actor), Some(actor), damage);
     }
@@ -1107,11 +1095,6 @@ pub fn vile_check(state: &mut GameState, thing_id: MobjId) -> bool {
 }
 pub fn vile_chase(state: &mut GameState, id: MobjId) {
     let actor = id;
-    let xl: i32;
-    let xh: i32;
-    let yl: i32;
-    let yh: i32;
-    let temp: Option<MobjId>;
     if state.world.p_mobj.mo(actor).movedir != DirType::Nodir as i32 {
         state.world.p_enemy.viletryx = state.world.p_mobj.mo(actor).x
             + state
@@ -1127,13 +1110,17 @@ pub fn vile_chase(state: &mut GameState, id: MobjId) {
                 .mobjinfo_mut(state.world.p_mobj.mo(actor).kind)
                 .speed as Fixed
                 * YSPEED[state.world.p_mobj.mo(actor).movedir as usize];
-        xl = (state.world.p_enemy.viletryx - state.world.p_setup.bmaporgx - 32 * FRACUNIT * 2)
+        let xl: i32 =
+            (state.world.p_enemy.viletryx - state.world.p_setup.bmaporgx - 32 * FRACUNIT * 2)
+                >> MAPBLOCKSHIFT;
+        let xh: i32 = (state.world.p_enemy.viletryx - state.world.p_setup.bmaporgx
+            + 32 * FRACUNIT * 2)
             >> MAPBLOCKSHIFT;
-        xh = (state.world.p_enemy.viletryx - state.world.p_setup.bmaporgx + 32 * FRACUNIT * 2)
-            >> MAPBLOCKSHIFT;
-        yl = (state.world.p_enemy.viletryy - state.world.p_setup.bmaporgy - 32 * FRACUNIT * 2)
-            >> MAPBLOCKSHIFT;
-        yh = (state.world.p_enemy.viletryy - state.world.p_setup.bmaporgy + 32 * FRACUNIT * 2)
+        let yl: i32 =
+            (state.world.p_enemy.viletryy - state.world.p_setup.bmaporgy - 32 * FRACUNIT * 2)
+                >> MAPBLOCKSHIFT;
+        let yh: i32 = (state.world.p_enemy.viletryy - state.world.p_setup.bmaporgy
+            + 32 * FRACUNIT * 2)
             >> MAPBLOCKSHIFT;
         state.world.p_enemy.vileobj = Some(actor);
         for bx in xl..=xh {
@@ -1141,7 +1128,7 @@ pub fn vile_chase(state: &mut GameState, id: MobjId) {
                 if !block_things_iterator(state, bx, by, vile_check) {
                     let corpsehit_id = state.world.p_enemy.corpsehit.unwrap();
                     let corpsehit = corpsehit_id;
-                    temp = state.world.p_mobj.mo(actor).target;
+                    let temp: Option<MobjId> = state.world.p_mobj.mo(actor).target;
                     state.world.p_mobj.mo_mut(actor).target = Some(corpsehit_id);
                     face_target(state, actor);
                     state.world.p_mobj.mo_mut(actor).target = temp;
@@ -1696,14 +1683,11 @@ pub fn brain_pain(state: &mut GameState, _id: MobjId) {
     s_start_sound(state, SoundOrigin::None, SfxName::Bospn);
 }
 pub fn brain_scream(state: &mut GameState, mo: MobjId) {
-    let mut y: i32;
-    let mut z: i32;
-    let mut th: MobjId;
     let mut x: i32 = state.world.p_mobj.mo(mo).x - 196 * FRACUNIT;
     while x < state.world.p_mobj.mo(mo).x + 320 * FRACUNIT {
-        y = state.world.p_mobj.mo(mo).y - 320 * FRACUNIT;
-        z = 128 + p_random(&mut state.world.m_random) * 2 * FRACUNIT;
-        th = spawn_mobj(state, x as Fixed, y as Fixed, z as Fixed, MobjType::Rocket);
+        let y: i32 = state.world.p_mobj.mo(mo).y - 320 * FRACUNIT;
+        let z: i32 = 128 + p_random(&mut state.world.m_random) * 2 * FRACUNIT;
+        let th: MobjId = spawn_mobj(state, x as Fixed, y as Fixed, z as Fixed, MobjType::Rocket);
         state.world.p_mobj.mo_mut(th).momz = (p_random(&mut state.world.m_random) * 512) as Fixed;
         set_mobj_state(state, th, StateNum::Brainexplode1);
         state.world.p_mobj.mo_mut(th).tics -= p_random(&mut state.world.m_random) & 7;

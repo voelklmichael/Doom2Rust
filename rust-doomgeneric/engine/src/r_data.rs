@@ -115,15 +115,13 @@ pub struct TexPatch {
 // index instead of pointer arithmetic, so an out-of-bounds/corrupt post
 // panics instead of reading adjacent memory.
 pub fn draw_column_in_cache(patch: &[u8], cache: &mut [u8], originy: i32, cacheheight: i32) {
-    let mut count: i32;
-    let mut position: i32;
     let mut cursor: usize = 0;
     while patch[cursor] as i32 != 0xff {
         let topdelta = patch[cursor] as i32;
         let length = patch[cursor + 1] as i32;
         let source = &patch[cursor + 3..cursor + 3 + length as usize];
-        count = length;
-        position = originy + topdelta;
+        let mut count: i32 = length;
+        let mut position: i32 = originy + topdelta;
         if position < 0 {
             count += position;
             position = 0;
@@ -144,9 +142,6 @@ pub fn generate_composite(
     w_wad: &mut WWadState,
     texnum: i32,
 ) {
-    let mut x: i32;
-    let mut x1: i32;
-    let mut x2: i32;
     // Built locally and only stored into texturecomposite once fully drawn,
     // unlike the old Z_Malloc user-backpointer trick which wrote the
     // (still-empty) allocation into that slot immediately -- safe here
@@ -164,6 +159,8 @@ pub fn generate_composite(
     let texture_width = r_data.textures[texnum as usize].width as i32;
     let texture_height = r_data.textures[texnum as usize].height as i32;
     for i in 0..texture_patchcount as usize {
+        let mut x: i32;
+
         let tex_patch = r_data.textures[texnum as usize].patches[i];
         // `realpatch` is the raw picture-format lump ("patch_t": width:i16,
         // height:i16, leftoffset:i16, topoffset:i16, then `width` many i32
@@ -173,8 +170,8 @@ pub fn generate_composite(
         let realpatch_lump = lump_bytes(fs, w_wad, tex_patch.patch);
         let realpatch = &realpatch_lump[..realpatch_len];
         let realpatch_width = i16::from_le_bytes(realpatch[0..2].try_into().unwrap()) as i32;
-        x1 = tex_patch.originx as i32;
-        x2 = x1 + realpatch_width;
+        let x1: i32 = tex_patch.originx as i32;
+        let mut x2: i32 = x1 + realpatch_width;
         if x1 < 0 {
             x = 0;
         } else {
@@ -204,8 +201,6 @@ pub fn generate_composite(
 }
 pub fn generate_lookup(state: &mut GameState, texnum: i32) {
     let mut x: i32;
-    let mut x1: i32;
-    let mut x2: i32;
     state.render.r_data.texturecomposite[texnum as usize] = None;
     state.render.r_data.texturecompositesize[texnum as usize] = 0;
     let texture_patchcount = state.render.r_data.textures[texnum as usize].patchcount as i32;
@@ -219,8 +214,8 @@ pub fn generate_lookup(state: &mut GameState, texnum: i32) {
             lump_bytes(&*state.assets.fs, &mut state.assets.w_wad, tex_patch.patch);
         let realpatch = &realpatch_lump[..realpatch_len];
         let realpatch_width = i16::from_le_bytes(realpatch[0..2].try_into().unwrap()) as i32;
-        x1 = tex_patch.originx as i32;
-        x2 = x1 + realpatch_width;
+        let x1: i32 = tex_patch.originx as i32;
+        let mut x2: i32 = x1 + realpatch_width;
         if x1 < 0 {
             x = 0;
         } else {
@@ -288,12 +283,11 @@ pub fn get_column(
     }
 }
 fn generate_texture_hash_table(r_data: &mut RDataState) {
-    let mut key: i32;
     r_data.textures_hashtable = vec![None; r_data.numtextures as usize];
     for i in 0..r_data.numtextures {
         r_data.textures[i as usize].index = i;
         r_data.textures[i as usize].next = None;
-        key = lump_name_hash(r_data.textures[i as usize].name.as_bytes())
+        let key: i32 = lump_name_hash(r_data.textures[i as usize].name.as_bytes())
             .wrapping_rem(r_data.numtextures as u32) as i32;
         // Walk to the end of the bucket's chain, appending there (matches
         // the original pointer-to-pointer "rover" trick's tail-append order).
@@ -312,9 +306,7 @@ fn generate_texture_hash_table(r_data: &mut RDataState) {
 }
 pub fn init_textures(state: &mut GameState) {
     let mut i: i32;
-    let mut j: i32;
 
-    let mut offset: i32;
     let maxoff2: i32;
 
     let numtextures2: i32;
@@ -395,6 +387,8 @@ pub fn init_textures(state: &mut GameState) {
     let mut dir_index: i32 = 0;
     i = 0;
     while i < state.render.r_data.numtextures {
+        let mut j: i32;
+
         if i & 63 == 0 {
             doom_print!(state.io.platform, ".");
         }
@@ -404,7 +398,8 @@ pub fn init_textures(state: &mut GameState) {
             dir_index = 0;
         }
         let dir_off = 4 + (dir_index * 4) as usize;
-        offset = i32::from_le_bytes(current_maptex[dir_off..dir_off + 4].try_into().unwrap());
+        let offset: i32 =
+            i32::from_le_bytes(current_maptex[dir_off..dir_off + 4].try_into().unwrap());
         if offset > maxoff {
             error("R_InitTextures: bad texture directory");
         }

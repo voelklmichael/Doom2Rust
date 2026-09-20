@@ -3009,8 +3009,6 @@ pub fn xymovement(state: &mut GameState, mo: MobjId) {
     }
 }
 pub fn zmovement(state: &mut GameState, mo: MobjId) {
-    let dist: Fixed;
-    let delta: Fixed;
     if state.world.p_mobj.mo(mo).player.is_some()
         && state.world.p_mobj.mo(mo).z < state.world.p_mobj.mo(mo).floorz
     {
@@ -3034,11 +3032,12 @@ pub fn zmovement(state: &mut GameState, mo: MobjId) {
             && !mo_flags.contains(MobjFlags::SKULLFLY)
             && !mo_flags.contains(MobjFlags::INFLOAT)
     }) {
-        dist = aprox_distance(
+        let dist: Fixed = aprox_distance(
             state.world.p_mobj.mo(mo).x - state.world.p_mobj.mo(target).x,
             state.world.p_mobj.mo(mo).y - state.world.p_mobj.mo(target).y,
         );
-        delta = state.world.p_mobj.mo(target).z + (state.world.p_mobj.mo(mo).height >> 1)
+        let delta: Fixed = state.world.p_mobj.mo(target).z
+            + (state.world.p_mobj.mo(mo).height >> 1)
             - state.world.p_mobj.mo(mo).z;
         if delta < 0 && dist < -(delta * 3) {
             state.world.p_mobj.mo_mut(mo).z -= FLOATSPEED;

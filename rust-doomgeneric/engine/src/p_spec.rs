@@ -683,14 +683,13 @@ pub fn find_min_surrounding_light(p_setup: &mut PSetupState, sector: SectorId, m
 }
 pub fn cross_special_line(state: &mut GameState, linenum: i32, side: i32, thing: MobjId) {
     let line: LineId = LineId(linenum as u32);
-    let mut ok: i32;
     let special = state.world.p_setup.line(line).special;
     if state.world.p_mobj.mo(thing).player.is_none() {
         match state.world.p_mobj.mo(thing).kind as u32 {
             33 | 34 | 35 | 31 | 32 | 16 => return,
             _ => {}
         }
-        ok = 0;
+        let mut ok: i32 = 0;
         match special as i32 {
             39 | 97 | 125 | 126 | 4 | 10 | 88 => {
                 ok = 1;
@@ -1045,10 +1044,9 @@ pub fn cross_special_line(state: &mut GameState, linenum: i32, side: i32, thing:
     }
 }
 pub fn shoot_special_line(state: &mut GameState, thing: MobjId, line: LineId) {
-    let mut ok: i32;
     let special = state.world.p_setup.line(line).special;
     if state.world.p_mobj.mo(thing).player.is_none() {
-        ok = 0;
+        let mut ok: i32 = 0;
         if special as i32 == 46 {
             ok = 1;
         }
@@ -1131,8 +1129,6 @@ pub fn player_in_special_sector(state: &mut GameState, player: PlayerId) {
     }
 }
 pub fn update_specials(state: &mut GameState) {
-    let mut pic: i32;
-    let mut line: LineId;
     if state.world.p_spec.level_timer {
         state.world.p_spec.level_time_count -= 1;
         if state.world.p_spec.level_time_count == 0 {
@@ -1142,7 +1138,8 @@ pub fn update_specials(state: &mut GameState) {
     for anim_idx in 0..state.world.p_spec.lastanim {
         let anim = &state.world.p_spec.anims[anim_idx];
         for i in anim.basepic..anim.basepic + anim.numpics {
-            pic = anim.basepic + (state.world.p_tick.leveltime / anim.speed + i) % anim.numpics;
+            let pic: i32 =
+                anim.basepic + (state.world.p_tick.leveltime / anim.speed + i) % anim.numpics;
             if anim.istexture {
                 state.render.r_data.texturetranslation[i as usize] = pic;
             } else {
@@ -1151,7 +1148,7 @@ pub fn update_specials(state: &mut GameState) {
         }
     }
     for i in 0..(state.world.p_spec.numlinespecials as usize) {
-        line = state.world.p_spec.linespeciallist[i];
+        let line: LineId = state.world.p_spec.linespeciallist[i];
         let linev = state.world.p_setup.line(line);
         if linev.special as i32 == 48 {
             state.world.p_setup.sides[linev.sidenum[0] as usize].textureoffset += FRACUNIT;

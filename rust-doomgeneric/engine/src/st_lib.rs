@@ -176,18 +176,14 @@ pub fn stlib_update_mult_icon(
     on: bool,
     refresh: bool,
 ) {
-    let w: i32;
-    let h: i32;
-    let x: i32;
-    let y: i32;
     if on && (mi.oldinum != inum || refresh) && inum != -1 {
         if mi.oldinum != -1 {
             let old_lump = state.ui.st_stuff.digit_set(mi.p)[mi.oldinum as usize];
             let old_patch = cache_patch_num(&*state.assets.fs, &mut state.assets.w_wad, old_lump);
-            x = mi.x - old_patch.leftoffset();
-            y = mi.y - old_patch.topoffset();
-            w = old_patch.width();
-            h = old_patch.height();
+            let x: i32 = mi.x - old_patch.leftoffset();
+            let y: i32 = mi.y - old_patch.topoffset();
+            let w: i32 = old_patch.width();
+            let h: i32 = old_patch.height();
             if y - ST_Y < 0 {
                 error("updateMultIcon: y - ST_Y < 0");
             }
@@ -225,16 +221,12 @@ pub fn stlib_update_bin_icon(
     on: bool,
     refresh: bool,
 ) {
-    let x: i32;
-    let y: i32;
-    let w: i32;
-    let h: i32;
     if on && (bi.oldval != val || refresh) {
         let patch = cache_patch_num(&*state.assets.fs, &mut state.assets.w_wad, bi.p);
-        x = bi.x - patch.leftoffset();
-        y = bi.y - patch.topoffset();
-        w = patch.width();
-        h = patch.height();
+        let x: i32 = bi.x - patch.leftoffset();
+        let y: i32 = bi.y - patch.topoffset();
+        let w: i32 = patch.width();
+        let h: i32 = patch.height();
         if y - ST_Y < 0 {
             error("updateBinIcon: y - ST_Y < 0");
         }

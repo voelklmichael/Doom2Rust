@@ -657,18 +657,14 @@ pub fn draw_el(state: &mut GameState) {
     );
 }
 pub fn draw_on_lnode(state: &mut GameState, n: i32, c: &[i32]) {
-    let mut left: i32;
-    let mut top: i32;
-    let mut right: i32;
-    let mut bottom: i32;
     let mut fits: bool = false;
     let mut i: i32 = 0;
     loop {
         let patch = cache_patch_num(&*state.assets.fs, &mut state.assets.w_wad, c[i as usize]);
-        left = LNODES[state.wbs().epsd as usize][n as usize].x - patch.leftoffset();
-        top = LNODES[state.wbs().epsd as usize][n as usize].y - patch.topoffset();
-        right = left + patch.width();
-        bottom = top + patch.height();
+        let left: i32 = LNODES[state.wbs().epsd as usize][n as usize].x - patch.leftoffset();
+        let top: i32 = LNODES[state.wbs().epsd as usize][n as usize].y - patch.topoffset();
+        let right: i32 = left + patch.width();
+        let bottom: i32 = top + patch.height();
         if left >= 0 && right < SCREENWIDTH && top >= 0 && bottom < SCREENHEIGHT {
             fits = true;
         } else {
@@ -795,13 +791,12 @@ pub fn draw_num(state: &mut GameState, mut x: i32, y: i32, mut n: i32, mut digit
     );
     let fontwidth: i32 = zero_patch.width();
 
-    let mut temp: i32;
     if digits < 0 {
         if n == 0 {
             digits = 1;
         } else {
             digits = 0;
-            temp = n;
+            let mut temp: i32 = n;
             while temp != 0 {
                 temp /= 10;
                 digits += 1;
@@ -852,15 +847,13 @@ pub fn draw_percent(state: &mut GameState, x: i32, y: i32, percent: i32) {
     draw_num(state, x, y, percent, -1);
 }
 pub fn draw_time(state: &mut GameState, mut x: i32, y: i32, t: i32) {
-    let mut div: i32;
-    let mut n: i32;
     if t < 0 {
         return;
     }
     if t <= 61 * 59 {
-        div = 1;
+        let mut div: i32 = 1;
         loop {
-            n = t / div % 60;
+            let n: i32 = t / div % 60;
             let colon_patch = cache_patch_num(
                 &*state.assets.fs,
                 &mut state.assets.w_wad,
@@ -917,7 +910,6 @@ pub fn update_show_next_loc(state: &mut GameState) {
     }
 }
 pub fn draw_show_next_loc(state: &mut GameState) {
-    let last: i32;
     slam_background(state);
     draw_animated_back(state);
     if state.game.doomstat.gamemode != GameMode::Commercial {
@@ -925,7 +917,7 @@ pub fn draw_show_next_loc(state: &mut GameState) {
             draw_el(state);
             return;
         }
-        last = if state.wbs().last == 8 {
+        let last: i32 = if state.wbs().last == 8 {
             state.wbs().next - 1
         } else {
             state.wbs().last
@@ -980,7 +972,6 @@ pub fn init_deathmatch_stats(state: &mut GameState) {
     init_animated_back(state);
 }
 pub fn update_deathmatch_stats(state: &mut GameState) {
-    let mut stillticking: bool;
     update_animated_back(state);
     if state.ui.wi_stuff.acceleratestage && state.ui.wi_stuff.dm_state != 4 {
         state.ui.wi_stuff.acceleratestage = false;
@@ -1001,7 +992,7 @@ pub fn update_deathmatch_stats(state: &mut GameState) {
         if state.ui.wi_stuff.bcnt & 3 == 0 {
             s_start_sound(state, SoundOrigin::None, SfxName::Pistol);
         }
-        stillticking = false;
+        let mut stillticking: bool = false;
         for i in 0..MAXPLAYERS {
             if state.game.g_game.playeringame[i as usize] {
                 for j in 0..(MAXPLAYERS as usize) {
@@ -1174,8 +1165,6 @@ pub fn init_netgame_stats(state: &mut GameState) {
     init_animated_back(state);
 }
 pub fn update_netgame_stats(state: &mut GameState) {
-    let mut fsum: i32;
-    let mut stillticking: bool;
     update_animated_back(state);
     if state.ui.wi_stuff.acceleratestage && state.ui.wi_stuff.ng_state != 10 {
         state.ui.wi_stuff.acceleratestage = false;
@@ -1199,7 +1188,7 @@ pub fn update_netgame_stats(state: &mut GameState) {
         if state.ui.wi_stuff.bcnt & 3 == 0 {
             s_start_sound(state, SoundOrigin::None, SfxName::Pistol);
         }
-        stillticking = false;
+        let mut stillticking: bool = false;
         for i in 0..MAXPLAYERS {
             if state.game.g_game.playeringame[i as usize] {
                 state.ui.wi_stuff.cnt_kills[i as usize] += 2;
@@ -1221,7 +1210,7 @@ pub fn update_netgame_stats(state: &mut GameState) {
         if state.ui.wi_stuff.bcnt & 3 == 0 {
             s_start_sound(state, SoundOrigin::None, SfxName::Pistol);
         }
-        stillticking = false;
+        let mut stillticking: bool = false;
         for i in 0..MAXPLAYERS {
             if state.game.g_game.playeringame[i as usize] {
                 state.ui.wi_stuff.cnt_items[i as usize] += 2;
@@ -1243,7 +1232,7 @@ pub fn update_netgame_stats(state: &mut GameState) {
         if state.ui.wi_stuff.bcnt & 3 == 0 {
             s_start_sound(state, SoundOrigin::None, SfxName::Pistol);
         }
-        stillticking = false;
+        let mut stillticking: bool = false;
         for i in 0..MAXPLAYERS {
             if state.game.g_game.playeringame[i as usize] {
                 state.ui.wi_stuff.cnt_secret[i as usize] += 2;
@@ -1265,11 +1254,11 @@ pub fn update_netgame_stats(state: &mut GameState) {
         if state.ui.wi_stuff.bcnt & 3 == 0 {
             s_start_sound(state, SoundOrigin::None, SfxName::Pistol);
         }
-        stillticking = false;
+        let mut stillticking: bool = false;
         for i in 0..MAXPLAYERS {
             if state.game.g_game.playeringame[i as usize] {
                 state.ui.wi_stuff.cnt_frags[i as usize] += 1;
-                fsum = frag_sum(state, i);
+                let fsum: i32 = frag_sum(state, i);
                 if state.ui.wi_stuff.cnt_frags[i as usize] >= fsum {
                     state.ui.wi_stuff.cnt_frags[i as usize] = fsum;
                 } else {
@@ -1299,7 +1288,6 @@ pub fn update_netgame_stats(state: &mut GameState) {
     }
 }
 pub fn draw_netgame_stats(state: &mut GameState) {
-    let mut x: i32;
     let percent_patch = cache_patch_num(
         &*state.assets.fs,
         &mut state.assets.w_wad,
@@ -1376,7 +1364,7 @@ pub fn draw_netgame_stats(state: &mut GameState) {
     let mut y: i32 = NG_STATSY + kills_patch.height();
     for i in 0..MAXPLAYERS {
         if state.game.g_game.playeringame[i as usize] {
-            x = 32 + star_width / 2 + 32 * (!state.ui.wi_stuff.dofrags) as i32;
+            let mut x: i32 = 32 + star_width / 2 + 32 * (!state.ui.wi_stuff.dofrags) as i32;
             let p_patch = cache_patch_num(
                 &*state.assets.fs,
                 &mut state.assets.w_wad,

@@ -344,7 +344,6 @@ pub fn set_palette(i_video: &mut IVideoState, palette: &[u8]) {
     }
 }
 pub fn get_palette_index(platform: &mut dyn DoomPlatform, r: i32, g: i32, b: i32) -> i32 {
-    let mut diff: i32;
     let mut color: Column = Column { r: 0, g: 0, b: 0 };
     doom_println!(platform, "I_GetPaletteIndex");
     let mut best: i32 = 0;
@@ -353,7 +352,7 @@ pub fn get_palette_index(platform: &mut dyn DoomPlatform, r: i32, g: i32, b: i32
         color.r = ((0xf800 & RGB565_PALETTE[i as usize] as i32) >> 11) as u8;
         color.g = ((0x7e0 & RGB565_PALETTE[i as usize] as i32) >> 5) as u8;
         color.b = (0x1f & RGB565_PALETTE[i as usize] as i32) as u8;
-        diff = (r - color.r as i32) * (r - color.r as i32)
+        let diff: i32 = (r - color.r as i32) * (r - color.r as i32)
             + (g - color.g as i32) * (g - color.g as i32)
             + (b - color.b as i32) * (b - color.b as i32);
         if diff < best_diff {

@@ -116,8 +116,6 @@ pub const SIL_TOP: i32 = 2;
 pub const SIL_BOTH: i32 = 3;
 pub const MAXDRAWSEGS: i32 = 256;
 pub fn render_masked_seg_range(state: &mut GameState, ds: &DrawSeg, x1: i32, x2: i32) {
-    let mut index: u32;
-
     state.render.r_bsp.curline = ds.curline;
     state.render.r_bsp.frontsector = state
         .world
@@ -235,7 +233,7 @@ pub fn render_masked_seg_range(state: &mut GameState, ds: &DrawSeg, x1: i32, x2:
     while state.render.r_draw.dc_x <= x2 {
         if maskedtexturecol.get(state, state.render.r_draw.dc_x as isize) as i32 != SHRT_MAX {
             if state.render.r_main.fixedcolormap.is_none() {
-                index = (state.render.r_things.spryscale >> LIGHTSCALESHIFT) as u32;
+                let mut index: u32 = (state.render.r_things.spryscale >> LIGHTSCALESHIFT) as u32;
                 if index >= MAXLIGHTSCALE as u32 {
                     index = (MAXLIGHTSCALE - 1) as u32;
                 }
@@ -274,16 +272,14 @@ pub fn render_masked_seg_range(state: &mut GameState, ds: &DrawSeg, x1: i32, x2:
 pub const HEIGHTBITS: i32 = 12;
 pub const HEIGHTUNIT: i32 = 1 << HEIGHTBITS;
 pub fn render_seg_loop(state: &mut GameState) {
-    let mut angle: Angle;
-    let mut index: u32;
-    let mut yl: i32;
-    let mut yh: i32;
-    let mut mid: i32;
-    let mut texturecolumn: Fixed;
-    let mut top: i32;
-    let mut bottom: i32;
     while state.render.r_segs.rw_x < state.render.r_segs.rw_stopx {
-        yl = (state.render.r_segs.topfrac + HEIGHTUNIT - 1) >> HEIGHTBITS;
+        let mut bottom: i32;
+
+        let mut top: i32;
+
+        let mut texturecolumn: Fixed;
+
+        let mut yl: i32 = (state.render.r_segs.topfrac + HEIGHTUNIT - 1) >> HEIGHTBITS;
         if yl < state.render.r_plane.ceilingclip[state.render.r_segs.rw_x as usize] as i32 + 1 {
             yl = state.render.r_plane.ceilingclip[state.render.r_segs.rw_x as usize] as i32 + 1;
         }
@@ -302,7 +298,7 @@ pub fn render_seg_loop(state: &mut GameState) {
                     .set_bottom(state.render.r_segs.rw_x, bottom as u8);
             }
         }
-        yh = state.render.r_segs.bottomfrac >> HEIGHTBITS;
+        let mut yh: i32 = state.render.r_segs.bottomfrac >> HEIGHTBITS;
         if yh >= state.render.r_plane.floorclip[state.render.r_segs.rw_x as usize] as i32 {
             yh = state.render.r_plane.floorclip[state.render.r_segs.rw_x as usize] as i32 - 1;
         }
@@ -322,7 +318,7 @@ pub fn render_seg_loop(state: &mut GameState) {
             }
         }
         if state.render.r_segs.segtextured {
-            angle =
+            let mut angle: Angle =
                 state.render.r_segs.rw_centerangle.wrapping_add(
                     state.render.r_main.xtoviewangle[state.render.r_segs.rw_x as usize],
                 ) >> ANGLETOFINESHIFT;
@@ -332,7 +328,7 @@ pub fn render_seg_loop(state: &mut GameState) {
             texturecolumn = state.render.r_segs.rw_offset
                 - fixed_mul(FINETANGENT[angle as usize], state.render.r_segs.rw_distance);
             texturecolumn >>= FRACBITS;
-            index = (state.render.r_segs.rw_scale >> LIGHTSCALESHIFT) as u32;
+            let mut index: u32 = (state.render.r_segs.rw_scale >> LIGHTSCALESHIFT) as u32;
             if index >= MAXLIGHTSCALE as u32 {
                 index = (MAXLIGHTSCALE - 1) as u32;
             }
@@ -368,6 +364,8 @@ pub fn render_seg_loop(state: &mut GameState) {
                 state.render.r_draw.viewheight as i16;
             state.render.r_plane.floorclip[state.render.r_segs.rw_x as usize] = -1_i16;
         } else {
+            let mut mid: i32;
+
             if state.render.r_segs.toptexture != 0 {
                 mid = state.render.r_segs.pixhigh >> HEIGHTBITS;
                 state.render.r_segs.pixhigh += state.render.r_segs.pixhighstep;
@@ -451,7 +449,6 @@ pub fn render_seg_loop(state: &mut GameState) {
 }
 pub fn store_wall_range(state: &mut GameState, start: i32, stop: i32) {
     let vtop: Fixed;
-    let mut lightnum: i32;
     if state.render.r_bsp.ds_p == MAXDRAWSEGS as usize {
         return;
     }
@@ -821,7 +818,7 @@ pub fn store_wall_range(state: &mut GameState, start: i32, stop: i32) {
             .wrapping_add(state.render.r_main.viewangle)
             .wrapping_sub(state.render.r_segs.rw_normalangle);
         if state.render.r_main.fixedcolormap.is_none() {
-            lightnum = (state
+            let mut lightnum: i32 = (state
                 .world
                 .p_setup
                 .sector_mut(state.render.r_bsp.frontsector.unwrap())
