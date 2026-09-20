@@ -90,7 +90,6 @@ impl MMenuDefsHolder {
     pub fn new() -> Self {
         Self {
             main_def: Menu {
-                numitems: MAIN_END as i16,
                 prev_menu: None,
                 items: vec![
                     MenuItem {
@@ -136,7 +135,6 @@ impl MMenuDefsHolder {
                 last_on: 0,
             },
             epi_def: Menu {
-                numitems: EP_END as i16,
                 prev_menu: Some(MenuId::Main),
                 items: vec![
                     MenuItem {
@@ -170,7 +168,6 @@ impl MMenuDefsHolder {
                 last_on: EpisodeMenu::Ep1 as i32 as i16,
             },
             new_def: Menu {
-                numitems: NEWG_END as i16,
                 prev_menu: Some(MenuId::Epi),
                 items: vec![
                     MenuItem {
@@ -210,7 +207,6 @@ impl MMenuDefsHolder {
                 last_on: NewGameMenu::Hurtme as i32 as i16,
             },
             options_def: Menu {
-                numitems: OPT_END as i16,
                 prev_menu: Some(MenuId::Main),
                 items: vec![
                     MenuItem {
@@ -268,7 +264,6 @@ impl MMenuDefsHolder {
                 last_on: 0,
             },
             read_def1: Menu {
-                numitems: READ1_END as i16,
                 prev_menu: Some(MenuId::Main),
                 items: vec![MenuItem {
                     status: 1,
@@ -282,7 +277,6 @@ impl MMenuDefsHolder {
                 last_on: 0,
             },
             read_def2: Menu {
-                numitems: READ2_END as i16,
                 prev_menu: Some(MenuId::Read1),
                 items: vec![MenuItem {
                     status: 1,
@@ -296,7 +290,6 @@ impl MMenuDefsHolder {
                 last_on: 0,
             },
             sound_def: Menu {
-                numitems: SOUND_END as i16,
                 prev_menu: Some(MenuId::Options),
                 items: vec![
                     MenuItem {
@@ -330,7 +323,6 @@ impl MMenuDefsHolder {
                 last_on: 0,
             },
             load_def: Menu {
-                numitems: LOAD_END as i16,
                 prev_menu: Some(MenuId::Main),
                 items: vec![
                     MenuItem {
@@ -376,7 +368,6 @@ impl MMenuDefsHolder {
                 last_on: 0,
             },
             save_def: Menu {
-                numitems: LOAD_END as i16,
                 prev_menu: Some(MenuId::Main),
                 items: vec![
                     MenuItem {
@@ -568,7 +559,6 @@ pub struct MenuItem {
 }
 #[derive(Clone)]
 pub struct Menu {
-    pub numitems: i16,
     pub prev_menu: Option<MenuId>,
     pub items: Vec<MenuItem>,
     pub routine: Option<fn(&mut GameState) -> ()>,
@@ -576,9 +566,8 @@ pub struct Menu {
     pub y: i16,
     pub last_on: i16,
 }
-pub const READ2_END: i32 = 1;
-pub const READ1_END: i32 = 1;
-pub const LOAD_END: i32 = 6;
+/// Rows in the load and save menus; also the number of save slots on screen.
+pub const SAVE_SLOTS: usize = 6;
 #[derive(Copy, Clone, PartialEq, Eq)]
 #[allow(dead_code)] // mirrors a C index table; variant order must stay
 pub enum OptionsMenu {
@@ -591,7 +580,6 @@ pub enum OptionsMenu {
     OptionEmpty2,
     Soundvol,
 }
-pub const OPT_END: i32 = 8;
 #[derive(Copy, Clone, PartialEq, Eq)]
 #[allow(dead_code)] // mirrors a C index table; variant order must stay
 pub enum SoundMenu {
@@ -600,7 +588,6 @@ pub enum SoundMenu {
     MusicVol,
     SfxEmpty2,
 }
-pub const SOUND_END: i32 = 4;
 #[derive(Copy, Clone, PartialEq, Eq)]
 #[allow(dead_code)] // mirrors a C index table; variant order must stay
 pub enum EpisodeMenu {
@@ -609,7 +596,6 @@ pub enum EpisodeMenu {
     Ep3,
     Ep4,
 }
-pub const EP_END: i32 = 4;
 #[derive(Copy, Clone, PartialEq, Eq)]
 #[allow(dead_code)] // mirrors a C index table; variant order must stay
 pub enum NewGameMenu {
@@ -619,7 +605,6 @@ pub enum NewGameMenu {
     Violence,
     Nightmare,
 }
-pub const NEWG_END: i32 = 5;
 #[derive(Copy, Clone, PartialEq, Eq)]
 #[allow(dead_code)] // mirrors a C index table; variant order must stay
 pub enum MainMenu {
@@ -630,7 +615,6 @@ pub enum MainMenu {
     Readthis,
     Quitdoom,
 }
-pub const MAIN_END: i32 = 6;
 pub const KEY_NUMLOCK: i32 = 0x80 + 0x45;
 pub const GAMMALVL0: &str = "Gamma correction OFF\0";
 pub const GAMMALVL1: &str = "Gamma correction level 1\0";
@@ -649,21 +633,20 @@ pub fn read_save_strings(
     fs: &mut dyn DoomFileSystem,
     m_menu: &mut MMenuState,
 ) {
-    for i in 0..LOAD_END {
-        let savegame_file = save_game_file(d_main, i);
+    for i in 0..SAVE_SLOTS {
+        let savegame_file = save_game_file(d_main, i as i32);
         match fs.open(&savegame_file) {
             None => {
-                m_menu.savegamestrings[i as usize] = EMPTYSTRING.trim_end_matches('\0').to_string();
-                m_menu.defs.load_def.items[i as usize].status = 0;
+                m_menu.savegamestrings[i] = EMPTYSTRING.trim_end_matches('\0').to_string();
+                m_menu.defs.load_def.items[i].status = 0;
             }
             Some(handle) => {
                 let mut buf: [u8; SAVESTRINGSIZE as usize] = [0; SAVESTRINGSIZE as usize];
                 fs.read_at(handle, 0, &mut buf);
                 fs.close(handle);
                 let len = buf.iter().position(|&b| b == 0).unwrap_or(buf.len());
-                m_menu.savegamestrings[i as usize] =
-                    String::from_utf8_lossy(&buf[..len]).into_owned();
-                m_menu.defs.load_def.items[i as usize].status = 1;
+                m_menu.savegamestrings[i] = String::from_utf8_lossy(&buf[..len]).into_owned();
+                m_menu.defs.load_def.items[i].status = 1;
             }
         }
     }
@@ -672,11 +655,11 @@ pub fn draw_load(state: &mut GameState) {
     let __wcache890_24 = cache_patch_name(&*state.assets.fs, &mut state.assets.w_wad, "M_LOADG");
     let dest_screen = Screen::Video;
     draw_patch_direct(state, dest_screen, 72, 28, &__wcache890_24);
-    for i in 0..LOAD_END {
+    for i in 0..SAVE_SLOTS {
         let loaddef_x = i32::from(state.ui.m_menu.defs.load_def.x);
-        let loaddef_y = i32::from(state.ui.m_menu.defs.load_def.y) + LINEHEIGHT * i;
+        let loaddef_y = i32::from(state.ui.m_menu.defs.load_def.y) + LINEHEIGHT * i as i32;
         draw_save_load_border(state, loaddef_x, loaddef_y);
-        let savestr = state.ui.m_menu.savegamestrings[i as usize].clone();
+        let savestr = state.ui.m_menu.savegamestrings[i].clone();
         write_text(state, loaddef_x, loaddef_y, &savestr);
     }
 }
@@ -723,11 +706,11 @@ pub fn draw_save(state: &mut GameState) {
     let __wcache961_20 = cache_patch_name(&*state.assets.fs, &mut state.assets.w_wad, "M_SAVEG");
     let dest_screen = Screen::Video;
     draw_patch_direct(state, dest_screen, 72, 28, &__wcache961_20);
-    for i in 0..LOAD_END {
+    for i in 0..SAVE_SLOTS {
         let loaddef_x = i32::from(state.ui.m_menu.defs.load_def.x);
-        let loaddef_y = i32::from(state.ui.m_menu.defs.load_def.y) + LINEHEIGHT * i;
+        let loaddef_y = i32::from(state.ui.m_menu.defs.load_def.y) + LINEHEIGHT * i as i32;
         draw_save_load_border(state, loaddef_x, loaddef_y);
-        let savestr = state.ui.m_menu.savegamestrings[i as usize].clone();
+        let savestr = state.ui.m_menu.savegamestrings[i].clone();
         write_text(state, loaddef_x, loaddef_y, &savestr);
     }
     if state.ui.m_menu.save_string_enter {
@@ -1636,9 +1619,7 @@ pub fn m_responder(state: &mut GameState, ev: &Event) -> bool {
     }
     if key == state.game.m_controls.key_menu_down {
         loop {
-            if i32::from(state.ui.m_menu.item_on) + 1
-                > i32::from(state.ui.m_menu.current().numitems) - 1
-            {
+            if state.ui.m_menu.item_on as usize + 1 >= state.ui.m_menu.current().items.len() {
                 state.ui.m_menu.item_on = 0;
             } else {
                 state.ui.m_menu.item_on += 1;
@@ -1654,8 +1635,7 @@ pub fn m_responder(state: &mut GameState, ev: &Event) -> bool {
     } else if key == state.game.m_controls.key_menu_up {
         loop {
             if state.ui.m_menu.item_on == 0 {
-                state.ui.m_menu.item_on =
-                    (i32::from(state.ui.m_menu.current().numitems) - 1) as i16;
+                state.ui.m_menu.item_on = (state.ui.m_menu.current().items.len() - 1) as i16;
             } else {
                 state.ui.m_menu.item_on -= 1;
             }
@@ -1715,7 +1695,7 @@ pub fn m_responder(state: &mut GameState, ev: &Event) -> bool {
         let mut i: i32;
 
         for i in
-            i32::from(state.ui.m_menu.item_on) + 1..i32::from(state.ui.m_menu.current().numitems)
+            i32::from(state.ui.m_menu.item_on) + 1..state.ui.m_menu.current().items.len() as i32
         {
             if i32::from(state.ui.m_menu.current().items[i as usize].alpha_key) == ch {
                 state.ui.m_menu.item_on = i as i16;
@@ -1788,9 +1768,8 @@ pub fn m_drawer(state: &mut GameState) {
     }
     state.ui.m_menu.drawer_x = state.ui.m_menu.current().x;
     state.ui.m_menu.drawer_y = state.ui.m_menu.current().y;
-    let max: u32 = state.ui.m_menu.current().numitems as u32;
-    for i in 0..max {
-        let item_name = state.ui.m_menu.current().items[i as usize].name;
+    for i in 0..state.ui.m_menu.current().items.len() {
+        let item_name = state.ui.m_menu.current().items[i].name;
         if !item_name.is_empty() {
             let __wcache2221_2 = cache_patch_name(
                 &*state.assets.fs,
@@ -1849,13 +1828,16 @@ pub fn m_init(doomstat: &DoomstatState, m_menu: &mut MMenuState) {
     m_menu.message_last_menu_active = i32::from(m_menu.menuactive);
     m_menu.quick_save_slot = -1;
     if doomstat.gamemode == GameMode::Commercial {
-        m_menu.defs.main_def.items[MainMenu::Readthis as usize] =
-            m_menu.defs.main_def.items[MainMenu::Quitdoom as usize];
-        m_menu.defs.main_def.numitems -= 1;
+        // Commercial has no "read this": Quit Doom moves up into its slot.
+        m_menu
+            .defs
+            .main_def
+            .items
+            .remove(MainMenu::Readthis as usize);
         m_menu.defs.main_def.y = (i32::from(m_menu.defs.main_def.y) + 8) as i16;
         m_menu.defs.new_def.prev_menu = Some(MenuId::Main);
     }
     if !doomstat.gameversion.is_ultimate_or_higher() {
-        m_menu.defs.epi_def.numitems -= 1;
+        m_menu.defs.epi_def.items.pop();
     }
 }
