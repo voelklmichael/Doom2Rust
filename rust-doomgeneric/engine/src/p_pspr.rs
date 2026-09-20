@@ -103,17 +103,14 @@ pub fn bring_up_weapon(state: &mut GameState, player_id: PlayerId) {
     let player = player_id;
     let player_mo = state.game.g_game.players[player].mo.unwrap();
 
-    if state.game.g_game.players[player].pendingweapon as u32 == WeaponType::Nochange as i32 as u32
-    {
+    if state.game.g_game.players[player].pendingweapon == WeaponType::Nochange {
         state.game.g_game.players[player].pendingweapon =
             state.game.g_game.players[player].readyweapon;
     }
-    if state.game.g_game.players[player].pendingweapon as u32 == WeaponType::Chainsaw as i32 as u32
-    {
+    if state.game.g_game.players[player].pendingweapon == WeaponType::Chainsaw {
         s_start_sound(state, SoundOrigin::Mobj(player_mo), SfxName::Sawup);
     }
-    let newstate: StateNum =
-        WEAPONINFO[state.game.g_game.players[player].pendingweapon as usize].upstate;
+    let newstate: StateNum = WEAPONINFO[state.game.g_game.players[player].pendingweapon].upstate;
     state.game.g_game.players[player].pendingweapon = WeaponType::Nochange;
     state.game.g_game.players[player].psprites[PSpriteNum::Weapon as usize].sy =
         (128 * FRACUNIT) as Fixed;
@@ -122,20 +119,15 @@ pub fn bring_up_weapon(state: &mut GameState, player_id: PlayerId) {
 pub fn check_ammo(state: &mut GameState, player_id: PlayerId) -> bool {
     let player = player_id;
 
-    let ammo: AmmoType = WEAPONINFO[state.game.g_game.players[player].readyweapon as usize].ammo;
-    let count: i32 =
-        if state.game.g_game.players[player].readyweapon as u32 == WeaponType::Bfg as i32 as u32 {
-            DEH_BFG_CELLS_PER_SHOT
-        } else if state.game.g_game.players[player].readyweapon as u32
-            == WeaponType::Supershotgun as i32 as u32
-        {
-            2
-        } else {
-            1
-        };
-    if ammo as u32 == AmmoType::Noammo as i32 as u32
-        || state.game.g_game.players[player].ammo[ammo] >= count
-    {
+    let ammo: AmmoType = WEAPONINFO[state.game.g_game.players[player].readyweapon].ammo;
+    let count: i32 = if state.game.g_game.players[player].readyweapon == WeaponType::Bfg {
+        DEH_BFG_CELLS_PER_SHOT
+    } else if state.game.g_game.players[player].readyweapon == WeaponType::Supershotgun {
+        2
+    } else {
+        1
+    };
+    if ammo == AmmoType::Noammo || state.game.g_game.players[player].ammo[ammo] >= count {
         return true;
     }
     loop {
@@ -173,9 +165,7 @@ pub fn check_ammo(state: &mut GameState, player_id: PlayerId) -> bool {
         } else {
             state.game.g_game.players[player].pendingweapon = WeaponType::Fist;
         }
-        if state.game.g_game.players[player].pendingweapon as u32
-            != WeaponType::Nochange as i32 as u32
-        {
+        if state.game.g_game.players[player].pendingweapon != WeaponType::Nochange {
             break;
         }
     }
@@ -183,7 +173,7 @@ pub fn check_ammo(state: &mut GameState, player_id: PlayerId) -> bool {
         state,
         player_id,
         PSpriteNum::Weapon as i32,
-        WEAPONINFO[state.game.g_game.players[player].readyweapon as usize].downstate,
+        WEAPONINFO[state.game.g_game.players[player].readyweapon].downstate,
     );
     false
 }
@@ -195,8 +185,7 @@ pub fn fire_weapon(state: &mut GameState, player_id: PlayerId) {
         return;
     }
     set_mobj_state(state, player_mo, StateNum::PlayAtk1);
-    let newstate: StateNum =
-        WEAPONINFO[state.game.g_game.players[player].readyweapon as usize].atkstate;
+    let newstate: StateNum = WEAPONINFO[state.game.g_game.players[player].readyweapon].atkstate;
     set_psprite(state, player_id, PSpriteNum::Weapon as i32, newstate);
     noise_alert(state, player_mo, player_mo);
 }
@@ -206,7 +195,7 @@ pub fn drop_weapon(state: &mut GameState, player_id: PlayerId) {
         state,
         player_id,
         PSpriteNum::Weapon as i32,
-        WEAPONINFO[state.game.g_game.players[player].readyweapon as usize].downstate,
+        WEAPONINFO[state.game.g_game.players[player].readyweapon].downstate,
     );
 }
 pub fn weapon_ready(state: &mut GameState, player: PlayerId, position: i32) {
@@ -216,26 +205,24 @@ pub fn weapon_ready(state: &mut GameState, player: PlayerId, position: i32) {
     {
         set_mobj_state(state, player_mo, StateNum::Play);
     }
-    if state.game.g_game.players[player].readyweapon as u32 == WeaponType::Chainsaw as i32 as u32
+    if state.game.g_game.players[player].readyweapon == WeaponType::Chainsaw
         && state.game.g_game.players[player].psprites[position as usize].state
             == Some(StateId(StateNum::Saw as u32))
     {
         s_start_sound(state, SoundOrigin::Mobj(player_mo), SfxName::Sawidl);
     }
-    if state.game.g_game.players[player].pendingweapon as u32 != WeaponType::Nochange as i32 as u32
+    if state.game.g_game.players[player].pendingweapon != WeaponType::Nochange
         || state.game.g_game.players[player].health == 0
     {
         let newstate: StateNum =
-            WEAPONINFO[state.game.g_game.players[player].readyweapon as usize].downstate;
+            WEAPONINFO[state.game.g_game.players[player].readyweapon].downstate;
         set_psprite(state, player, PSpriteNum::Weapon as i32, newstate);
         return;
     }
     if i32::from(state.game.g_game.players[player].cmd.buttons) & BT_ATTACK != 0 {
         if !state.game.g_game.players[player].attackdown
-            || state.game.g_game.players[player].readyweapon as u32
-                != WeaponType::Missile as i32 as u32
-                && state.game.g_game.players[player].readyweapon as u32
-                    != WeaponType::Bfg as i32 as u32
+            || state.game.g_game.players[player].readyweapon != WeaponType::Missile
+                && state.game.g_game.players[player].readyweapon != WeaponType::Bfg
         {
             state.game.g_game.players[player].attackdown = true;
             fire_weapon(state, player);
@@ -259,8 +246,7 @@ pub fn weapon_ready(state: &mut GameState, player: PlayerId, position: i32) {
 }
 pub fn re_fire(state: &mut GameState, player: PlayerId, _position: i32) {
     if i32::from(state.game.g_game.players[player].cmd.buttons) & BT_ATTACK != 0
-        && state.game.g_game.players[player].pendingweapon as u32
-            == WeaponType::Nochange as i32 as u32
+        && state.game.g_game.players[player].pendingweapon == WeaponType::Nochange
         && state.game.g_game.players[player].health != 0
     {
         state.game.g_game.players[player].refire += 1;
@@ -296,8 +282,7 @@ pub fn raise(state: &mut GameState, player: PlayerId, position: i32) {
         return;
     }
     state.game.g_game.players[player].psprites[position as usize].sy = (32 * FRACUNIT) as Fixed;
-    let newstate: StateNum =
-        WEAPONINFO[state.game.g_game.players[player].readyweapon as usize].readystate;
+    let newstate: StateNum = WEAPONINFO[state.game.g_game.players[player].readyweapon].readystate;
     set_psprite(state, player, PSpriteNum::Weapon as i32, newstate);
 }
 pub fn gun_flash(state: &mut GameState, player: PlayerId, _position: i32) {
@@ -307,7 +292,7 @@ pub fn gun_flash(state: &mut GameState, player: PlayerId, _position: i32) {
         state,
         player,
         PSpriteNum::Flash as i32,
-        WEAPONINFO[state.game.g_game.players[player].readyweapon as usize].flashstate,
+        WEAPONINFO[state.game.g_game.players[player].readyweapon].flashstate,
     );
 }
 pub fn punch(state: &mut GameState, player_id: PlayerId, _position: i32) {
@@ -402,13 +387,13 @@ fn decrease_ammo(g_game: &mut GGameState, player: PlayerId, ammonum: i32, amount
 }
 pub fn fire_missile(state: &mut GameState, player: PlayerId, _position: i32) {
     let player_mo = state.game.g_game.players[player].mo.unwrap();
-    let ammo_type = WEAPONINFO[state.game.g_game.players[player].readyweapon as usize].ammo as i32;
+    let ammo_type = WEAPONINFO[state.game.g_game.players[player].readyweapon].ammo as i32;
     decrease_ammo(&mut state.game.g_game, player, ammo_type, 1);
     spawn_player_missile(state, player_mo, MobjType::Rocket);
 }
 pub fn fire_bfg(state: &mut GameState, player: PlayerId, _position: i32) {
     let player_mo = state.game.g_game.players[player].mo.unwrap();
-    let ammo_type = WEAPONINFO[state.game.g_game.players[player].readyweapon as usize].ammo as i32;
+    let ammo_type = WEAPONINFO[state.game.g_game.players[player].readyweapon].ammo as i32;
     decrease_ammo(
         &mut state.game.g_game,
         player,
@@ -419,10 +404,10 @@ pub fn fire_bfg(state: &mut GameState, player: PlayerId, _position: i32) {
 }
 pub fn fire_plasma(state: &mut GameState, player: PlayerId, _position: i32) {
     let player_mo = state.game.g_game.players[player].mo.unwrap();
-    let ammo_type = WEAPONINFO[state.game.g_game.players[player].readyweapon as usize].ammo as i32;
+    let ammo_type = WEAPONINFO[state.game.g_game.players[player].readyweapon].ammo as i32;
     decrease_ammo(&mut state.game.g_game, player, ammo_type, 1);
     let flashstate = statenum_from_raw(
-        WEAPONINFO[state.game.g_game.players[player].readyweapon as usize].flashstate as i32
+        WEAPONINFO[state.game.g_game.players[player].readyweapon].flashstate as i32
             + (p_random(&mut state.world.m_random) & 1),
     );
     set_psprite(state, player, PSpriteNum::Flash as i32, flashstate);
@@ -457,13 +442,13 @@ pub fn fire_pistol(state: &mut GameState, player: PlayerId, _position: i32) {
     let player_mo = state.game.g_game.players[player].mo.unwrap();
     s_start_sound(state, SoundOrigin::Mobj(player_mo), SfxName::Pistol);
     set_mobj_state(state, player_mo, StateNum::PlayAtk2);
-    let ammo_type = WEAPONINFO[state.game.g_game.players[player].readyweapon as usize].ammo as i32;
+    let ammo_type = WEAPONINFO[state.game.g_game.players[player].readyweapon].ammo as i32;
     decrease_ammo(&mut state.game.g_game, player, ammo_type, 1);
     set_psprite(
         state,
         player,
         PSpriteNum::Flash as i32,
-        WEAPONINFO[state.game.g_game.players[player].readyweapon as usize].flashstate,
+        WEAPONINFO[state.game.g_game.players[player].readyweapon].flashstate,
     );
     bullet_slope(state, player_mo);
     gun_shot(
@@ -476,13 +461,13 @@ pub fn fire_shotgun(state: &mut GameState, player: PlayerId, _position: i32) {
     let player_mo = state.game.g_game.players[player].mo.unwrap();
     s_start_sound(state, SoundOrigin::Mobj(player_mo), SfxName::Shotgn);
     set_mobj_state(state, player_mo, StateNum::PlayAtk2);
-    let ammo_type = WEAPONINFO[state.game.g_game.players[player].readyweapon as usize].ammo as i32;
+    let ammo_type = WEAPONINFO[state.game.g_game.players[player].readyweapon].ammo as i32;
     decrease_ammo(&mut state.game.g_game, player, ammo_type, 1);
     set_psprite(
         state,
         player,
         PSpriteNum::Flash as i32,
-        WEAPONINFO[state.game.g_game.players[player].readyweapon as usize].flashstate,
+        WEAPONINFO[state.game.g_game.players[player].readyweapon].flashstate,
     );
     bullet_slope(state, player_mo);
     for _ in 0..7 {
@@ -493,13 +478,13 @@ pub fn fire_shotgun2(state: &mut GameState, player: PlayerId, _position: i32) {
     let player_mo = state.game.g_game.players[player].mo.unwrap();
     s_start_sound(state, SoundOrigin::Mobj(player_mo), SfxName::Dshtgn);
     set_mobj_state(state, player_mo, StateNum::PlayAtk2);
-    let ammo_type = WEAPONINFO[state.game.g_game.players[player].readyweapon as usize].ammo as i32;
+    let ammo_type = WEAPONINFO[state.game.g_game.players[player].readyweapon].ammo as i32;
     decrease_ammo(&mut state.game.g_game, player, ammo_type, 2);
     set_psprite(
         state,
         player,
         PSpriteNum::Flash as i32,
-        WEAPONINFO[state.game.g_game.players[player].readyweapon as usize].flashstate,
+        WEAPONINFO[state.game.g_game.players[player].readyweapon].flashstate,
     );
     bullet_slope(state, player_mo);
     for _ in 0..20 {
@@ -520,20 +505,20 @@ pub fn fire_cgun(state: &mut GameState, player: PlayerId, position: i32) {
     let player_mo = state.game.g_game.players[player].mo.unwrap();
     s_start_sound(state, SoundOrigin::Mobj(player_mo), SfxName::Pistol);
     if state.game.g_game.players[player].ammo
-        [WEAPONINFO[state.game.g_game.players[player].readyweapon as usize].ammo as usize]
+        [WEAPONINFO[state.game.g_game.players[player].readyweapon].ammo as usize]
         == 0
     {
         return;
     }
     set_mobj_state(state, player_mo, StateNum::PlayAtk2);
-    let ammo_type = WEAPONINFO[state.game.g_game.players[player].readyweapon as usize].ammo as i32;
+    let ammo_type = WEAPONINFO[state.game.g_game.players[player].readyweapon].ammo as i32;
     decrease_ammo(&mut state.game.g_game, player, ammo_type, 1);
     set_psprite(
         state,
         player,
         PSpriteNum::Flash as i32,
         statenum_from_raw(
-            (WEAPONINFO[state.game.g_game.players[player].readyweapon as usize].flashstate as i64
+            (WEAPONINFO[state.game.g_game.players[player].readyweapon].flashstate as i64
                 + i64::from(
                     state.game.g_game.players[player].psprites[position as usize]
                         .state

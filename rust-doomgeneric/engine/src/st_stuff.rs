@@ -869,9 +869,9 @@ pub fn draw_widgets(state: &mut GameState, refresh: bool) {
         .game
         .g_game
         .player_mut(state.ui.st_stuff.plyr)
-        .readyweapon as usize]
+        .readyweapon]
         .ammo;
-    let ready_ammo_num = if ready_weapon_ammo as u32 == AmmoType::Noammo as i32 as u32 {
+    let ready_ammo_num = if ready_weapon_ammo == AmmoType::Noammo {
         1994
     } else {
         state.game.g_game.player_mut(state.ui.st_stuff.plyr).ammo[ready_weapon_ammo]

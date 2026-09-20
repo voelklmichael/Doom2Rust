@@ -144,9 +144,8 @@ impl VisPlane {
 }
 
 #[derive(Copy, Clone, PartialEq, Eq)]
-#[repr(i32)]
 pub enum SpriteRotate {
-    Unset = -1,
+    Unset,
     NonRotating,
     Rotating,
 }

@@ -269,15 +269,15 @@ pub fn init_sprite_defs(state: &mut GameState, namelist: &[&'static str]) {
         } else {
             state.render.r_things.maxframe += 1;
             for frame in 0..state.render.r_things.maxframe {
-                match state.render.r_things.sprtemp[frame as usize].rotate as i32 {
-                    -1 => {
+                match state.render.r_things.sprtemp[frame as usize].rotate {
+                    SpriteRotate::Unset => {
                         error(&format!(
                             "R_InitSprites: No patches found for {} frame {}",
                             state.render.r_things.spritename,
                             (frame + 'A' as i32) as u8 as char,
                         ));
                     }
-                    1 => {
+                    SpriteRotate::Rotating => {
                         for rotation in 0..8 {
                             if i32::from(
                                 state.render.r_things.sprtemp[frame as usize].lump[rotation],
@@ -291,7 +291,7 @@ pub fn init_sprite_defs(state: &mut GameState, namelist: &[&'static str]) {
                             }
                         }
                     }
-                    _ => {}
+                    SpriteRotate::NonRotating => {}
                 }
             }
             state.render.r_things.sprites.push(SpriteDef {
