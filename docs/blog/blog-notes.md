@@ -116,6 +116,10 @@ rule tables). The engine's 91 files include its tests and the golden-test harnes
 was checked by running it on the Sep 19 commit (`e44bcd8`), where it gives the Sep 19 numbers
 exactly.
 
+**Comment on all the line counts in this document:** exact line numbers have little value, because
+the data tables overshadow everything (laying them out differently moved the engine by 13.4k lines
+in a single commit, `04230cd`). They are still useful for a rough estimate of how much changed.
+
 ## 4. Unsafe lines
 
 "Unsafe lines" = lines inside an `unsafe { }` block or the body of an `unsafe fn`.
