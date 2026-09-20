@@ -35,7 +35,7 @@ pub enum CeilingE {
     SilentCrushAndRaise,
 }
 pub const CEILSPEED: i32 = FRACUNIT;
-pub const MAXCEILINGS: i32 = 30;
+pub const MAXCEILINGS: usize = 30;
 
 // Generation-checked handle into PCeilngState's arena -- mirrors DoorId.
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
@@ -312,7 +312,7 @@ pub fn do_ceiling(
     rtn
 }
 pub fn add_active_ceiling(state: &mut PCeilngState, id: ThinkerId) {
-    for i in 0..(MAXCEILINGS as usize) {
+    for i in 0..MAXCEILINGS {
         if state.activeceilings[i].is_none() {
             state.activeceilings[i] = Some(id);
             return;
@@ -325,7 +325,7 @@ pub fn remove_active_ceiling(
     p_tick: &PTickState,
     ceiling_id: CeilingId,
 ) {
-    for i in 0..MAXCEILINGS as usize {
+    for i in 0..MAXCEILINGS {
         if let Some(id) = p_ceilng.activeceilings[i] {
             if p_tick.ceiling_payload(id) == ceiling_id {
                 let c = p_ceilng.get_mut(ceiling_id).expect("live ceiling");
@@ -339,7 +339,7 @@ pub fn remove_active_ceiling(
     }
 }
 pub fn activate_in_stasis_ceiling(p_ceilng: &mut PCeilngState, p_tick: &PTickState, tag: i32) {
-    for i in 0..MAXCEILINGS as usize {
+    for i in 0..MAXCEILINGS {
         if let Some(id) = p_ceilng.activeceilings[i] {
             let ceiling_id = p_tick.ceiling_payload(id);
             let c = p_ceilng.get_mut(ceiling_id).expect("live ceiling");
@@ -352,7 +352,7 @@ pub fn activate_in_stasis_ceiling(p_ceilng: &mut PCeilngState, p_tick: &PTickSta
 }
 pub fn ceiling_crush_stop(p_ceilng: &mut PCeilngState, p_tick: &PTickState, tag: i32) -> bool {
     let mut rtn = false;
-    for i in 0..MAXCEILINGS as usize {
+    for i in 0..MAXCEILINGS {
         if let Some(id) = p_ceilng.activeceilings[i] {
             let ceiling_id = p_tick.ceiling_payload(id);
             let c = p_ceilng.get_mut(ceiling_id).expect("live ceiling");

@@ -143,7 +143,7 @@ pub struct VisSprite {
 }
 pub const FF_FULLBRIGHT: i32 = 0x8000;
 pub const FF_FRAMEMASK: i32 = 0x7fff;
-pub const MAXVISSPRITES: i32 = 128;
+pub const MAXVISSPRITES: usize = 128;
 pub const MINZ: i32 = FRACUNIT * 4;
 pub const BASEYCENTER: i32 = 100;
 pub fn install_sprite_lump(
@@ -313,7 +313,7 @@ pub fn clear_sprites(r_things: &mut RThingsState) {
     r_things.vissprite_p = 0;
 }
 pub fn store_vis_sprite(r_things: &mut RThingsState, vis: VisSprite) {
-    if r_things.vissprite_p == MAXVISSPRITES as usize {
+    if r_things.vissprite_p == MAXVISSPRITES {
         r_things.overflowsprite = vis;
         return;
     }

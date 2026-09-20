@@ -146,7 +146,7 @@ pub const DEH_DEFAULT_SPECIES_INFIGHTING: i32 = 0;
 pub const DEH_SPECIES_INFIGHTING: i32 = DEH_DEFAULT_SPECIES_INFIGHTING;
 pub const USERANGE: i32 = 64 * FRACUNIT;
 pub const MAXSPECIALCROSS_ORIGINAL: i32 = 8;
-pub const DEFAULT_SPECHIT_MAGIC: i32 = 0x1c09c98;
+pub const DEFAULT_SPECHIT_MAGIC: u32 = 0x1c09c98;
 pub fn stomp_thing(state: &mut GameState, thing_id: MobjId) -> bool {
     let thing = thing_id;
     let tmthing = state.world.p_map.tmthing.unwrap();
@@ -1237,7 +1237,7 @@ fn spechit_overrun(
             str_to_int(address, &mut baseaddr);
             p_map.baseaddr = baseaddr as u32;
         } else {
-            p_map.baseaddr = DEFAULT_SPECHIT_MAGIC as u32;
+            p_map.baseaddr = DEFAULT_SPECHIT_MAGIC;
         }
     }
     let addr: u32 = (i64::from(p_map.baseaddr) + i64::from(ld.0) * 0x3e) as u32;

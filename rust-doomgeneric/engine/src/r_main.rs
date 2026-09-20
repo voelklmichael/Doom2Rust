@@ -361,7 +361,7 @@ pub fn init_light_tables(r_main: &mut RMainState) {
             if level >= NUMCOLORMAPS {
                 level = NUMCOLORMAPS - 1;
             }
-            r_main.zlight[i as usize][j as usize] = level;
+            r_main.zlight[i as usize][j] = level;
         }
     }
 }
@@ -522,7 +522,7 @@ pub fn render_player_view(state: &mut GameState, player_id: PlayerId) {
 pub const LIGHTLEVELS: i32 = 16;
 pub const MAXLIGHTSCALE: i32 = 48;
 pub const LIGHTSCALESHIFT: i32 = 12;
-pub const MAXLIGHTZ: i32 = 128;
-pub const LIGHTZSHIFT: i32 = 20;
+pub const MAXLIGHTZ: usize = 128;
+pub const LIGHTZSHIFT: u32 = 20;
 pub const NUMCOLORMAPS: i32 = 32;
-pub const LIGHTSEGSHIFT: i32 = 4;
+pub const LIGHTSEGSHIFT: u32 = 4;

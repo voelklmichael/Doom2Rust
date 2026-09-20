@@ -1508,7 +1508,7 @@ pub static GAMMATABLE: [[u8; 256]; 5] = [
         248, 249, 249, 250, 250, 251, 251, 252, 252, 253, 254, 254, 255, 255,
     ],
 ];
-pub const ANGLETOFINESHIFT: i32 = 19;
+pub const ANGLETOFINESHIFT: u32 = 19;
 pub const ANG180: u32 = 0x80000000;
 pub const ANG90: i32 = 0x40000000;
 pub const ANG270: u32 = 0xc0000000;

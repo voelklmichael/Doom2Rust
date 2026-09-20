@@ -45,8 +45,8 @@ pub struct SwitchList {
     pub name2: FixedCStr<9>,
     pub episode: i16,
 }
-pub const MAXSWITCHES: i32 = 50;
-pub const MAXBUTTONS: i32 = 16;
+pub const MAXSWITCHES: usize = 50;
+pub const MAXBUTTONS: usize = 16;
 pub const BUTTONTIME: i32 = 35;
 pub static ALPH_SWITCH_LIST: [SwitchList; 41] = [
     SwitchList {
@@ -297,18 +297,18 @@ pub fn init_switch_list(
         episode = 3;
     }
     let mut index: i32 = 0;
-    for i in 0..MAXSWITCHES {
-        if ALPH_SWITCH_LIST[i as usize].episode == 0 {
+    for entry in ALPH_SWITCH_LIST.iter().take(MAXSWITCHES) {
+        if entry.episode == 0 {
             p_switch.numswitches = index / 2;
             p_switch.switchlist[index as usize] = -1;
             break;
         }
-        if i32::from(ALPH_SWITCH_LIST[i as usize].episode) <= episode {
+        if i32::from(entry.episode) <= episode {
             p_switch.switchlist[index as usize] =
-                texture_num_for_name(r_data, &ALPH_SWITCH_LIST[i as usize].name1.as_str());
+                texture_num_for_name(r_data, &entry.name1.as_str());
             index += 1;
             p_switch.switchlist[index as usize] =
-                texture_num_for_name(r_data, &ALPH_SWITCH_LIST[i as usize].name2.as_str());
+                texture_num_for_name(r_data, &entry.name2.as_str());
             index += 1;
         }
     }
@@ -321,12 +321,12 @@ pub fn start_button(
     texture: i32,
     time: i32,
 ) {
-    for i in 0..(MAXBUTTONS as usize) {
+    for i in 0..MAXBUTTONS {
         if p_switch.buttonlist[i].btimer != 0 && p_switch.buttonlist[i].line == line {
             return;
         }
     }
-    for i in 0..(MAXBUTTONS as usize) {
+    for i in 0..MAXBUTTONS {
         if p_switch.buttonlist[i].btimer == 0 {
             p_switch.buttonlist[i].line = line;
             p_switch.buttonlist[i].position = w;

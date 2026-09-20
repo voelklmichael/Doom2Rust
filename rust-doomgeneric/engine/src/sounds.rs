@@ -203,7 +203,7 @@ pub enum SfxName {
     Skeatk,
     Radio,
 }
-pub const NUMSFX: i32 = 109;
+pub const NUMSFX: usize = 109;
 const INITIAL_S_MUSIC: [MusicInfo; 68] = [
     MusicInfo {
         name: FixedCStr([0u8; 7]),

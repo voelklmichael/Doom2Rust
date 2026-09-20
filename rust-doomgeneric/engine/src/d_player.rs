@@ -38,7 +38,7 @@ pub enum PSpriteNum {
 // CheatFlags::NOCLIP/CheatFlags::GODMODE/CheatFlags::NOMOMENTUM are bit flags (1/2/4) combined with
 // bitwise OR/AND/XOR into a single `cheats` field, not mutually-exclusive
 // enum variants - not a candidate for enum conversion.
-pub const NUMPOWERS: i32 = 6;
+pub const NUMPOWERS: usize = 6;
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum PowerType {
     Invulnerability,
@@ -67,7 +67,7 @@ impl ArrayIndex for PowerType {
     }
 }
 
-pub const NUMWEAPONS: i32 = 9;
+pub const NUMWEAPONS: usize = 9;
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum WeaponType {
     Fist,

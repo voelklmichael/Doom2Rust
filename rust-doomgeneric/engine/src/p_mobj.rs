@@ -2651,7 +2651,7 @@ bitflags::bitflags! {
 impl MobjFlags {
     /// Bit position of the two-bit player colour-translation field, which
     /// `TRANSLATION` masks.
-    pub const TRANSLATION_SHIFT: i32 = 26;
+    pub const TRANSLATION_SHIFT: u32 = 26;
 }
 bitflags::bitflags! {
     /// Flags of a map line (`ML_*` in the C source).
@@ -3628,7 +3628,7 @@ pub fn spawn_player(state: &mut GameState, mthing: MapThing) {
     }
     setup_psprites(state, PlayerId(player_index as u8));
     if state.game.g_game.deathmatch != 0 {
-        for i in 0..(NUMCARDS as usize) {
+        for i in 0..NUMCARDS {
             state.game.g_game.players[player_index].cards[i] = true;
         }
     }

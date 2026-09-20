@@ -114,7 +114,7 @@ pub const SHRT_MAX: i32 = __SHRT_MAX__;
 pub const SIL_BOTTOM: i32 = 1;
 pub const SIL_TOP: i32 = 2;
 pub const SIL_BOTH: i32 = 3;
-pub const MAXDRAWSEGS: i32 = 256;
+pub const MAXDRAWSEGS: usize = 256;
 pub fn render_masked_seg_range(state: &mut GameState, ds: &DrawSeg, x1: i32, x2: i32) {
     state.render.r_bsp.curline = ds.curline;
     state.render.r_bsp.frontsector = state
@@ -270,7 +270,7 @@ pub fn render_masked_seg_range(state: &mut GameState, ds: &DrawSeg, x1: i32, x2:
         state.render.r_draw.dc_x += 1;
     }
 }
-pub const HEIGHTBITS: i32 = 12;
+pub const HEIGHTBITS: u32 = 12;
 pub const HEIGHTUNIT: i32 = 1 << HEIGHTBITS;
 pub fn render_seg_loop(state: &mut GameState) {
     while state.render.r_segs.rw_x < state.render.r_segs.rw_stopx {
@@ -463,7 +463,7 @@ pub fn render_seg_loop(state: &mut GameState) {
 }
 pub fn store_wall_range(state: &mut GameState, start: i32, stop: i32) {
     let vtop: Fixed;
-    if state.render.r_bsp.ds_p == MAXDRAWSEGS as usize {
+    if state.render.r_bsp.ds_p == MAXDRAWSEGS {
         return;
     }
     if start >= state.render.r_draw.viewwidth || start > stop {

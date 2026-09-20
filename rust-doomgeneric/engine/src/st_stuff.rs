@@ -445,7 +445,7 @@ pub fn st_responder(state: &mut GameState, ev: &Event) -> bool {
                     .g_game
                     .player_mut(state.ui.st_stuff.plyr)
                     .armortype = DEH_IDFA_ARMOR_CLASS;
-                for i in 0..(NUMWEAPONS as usize) {
+                for i in 0..NUMWEAPONS {
                     state
                         .game
                         .g_game
@@ -469,7 +469,7 @@ pub fn st_responder(state: &mut GameState, ev: &Event) -> bool {
                     .g_game
                     .player_mut(state.ui.st_stuff.plyr)
                     .armortype = DEH_IDKFA_ARMOR_CLASS;
-                for i in 0..(NUMWEAPONS as usize) {
+                for i in 0..NUMWEAPONS {
                     state
                         .game
                         .g_game
@@ -480,7 +480,7 @@ pub fn st_responder(state: &mut GameState, ev: &Event) -> bool {
                     state.game.g_game.player_mut(state.ui.st_stuff.plyr).ammo[i] =
                         state.game.g_game.player_mut(state.ui.st_stuff.plyr).maxammo[i];
                 }
-                for i in 0..(NUMCARDS as usize) {
+                for i in 0..NUMCARDS {
                     state.game.g_game.player_mut(state.ui.st_stuff.plyr).cards[i] = true;
                 }
                 state.game.g_game.player_mut(state.ui.st_stuff.plyr).message =
@@ -653,7 +653,7 @@ pub fn update_face_widget(
     if st_stuff.st_updatefacewidget_priority < 9 && g_game.player_mut(st_stuff.plyr).bonuscount != 0
     {
         let mut doevilgrin: bool = false;
-        for i in 0..(NUMWEAPONS as usize) {
+        for i in 0..NUMWEAPONS {
             if st_stuff.oldweaponsowned[i] != g_game.player_mut(st_stuff.plyr).weaponowned[i] {
                 doevilgrin = true;
                 st_stuff.oldweaponsowned[i] = g_game.player_mut(st_stuff.plyr).weaponowned[i];
@@ -964,7 +964,7 @@ fn load_unload_graphics(state: &mut GameState, callback: LoadCallback) {
         state.ui.st_stuff.shortnum[i] = callback(state, &format!("STYSNUM{i}"));
     }
     state.ui.st_stuff.tallpercent = callback(state, "STTPRCNT");
-    for i in 0..NUMCARDS as usize {
+    for i in 0..NUMCARDS {
         state.ui.st_stuff.keys[i] = callback(state, &format!("STKEYS{i}"));
     }
     state.ui.st_stuff.armsbg = callback(state, "STARMS");
@@ -1021,7 +1021,7 @@ pub fn st_init_data(state: &mut GameState) {
     state.ui.st_stuff.st_faceindex = 0;
     state.ui.st_stuff.st_palette = -1;
     state.ui.st_stuff.st_oldhealth = -1;
-    for i in 0..(NUMWEAPONS as usize) {
+    for i in 0..NUMWEAPONS {
         state.ui.st_stuff.oldweaponsowned[i] = state
             .game
             .g_game
