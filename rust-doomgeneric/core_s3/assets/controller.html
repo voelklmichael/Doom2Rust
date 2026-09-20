@@ -144,9 +144,10 @@ const ACTIONS = [
   [22, 'Sound on/off'],
 ];
 const RELEASE = 0x80;
-// A press shorter than this is stretched: the game only looks at held keys once per tic (28 ms),
-// so a quick click would otherwise be missed.
-const MIN_HOLD_MS = 120;
+// A press shorter than this is stretched, so a tap is more than a blip (about two game tics of
+// 28 ms). The board makes sure the game sees every press before it sees the release, so this does
+// not have to guard against a tap being missed; it is also how long a tap on the text box lasts.
+const MIN_HOLD_MS = 60;
 
 const DEFAULT_KEYS = {
   ArrowUp: 0, KeyW: 0, ArrowDown: 1, KeyS: 1, ArrowLeft: 2, KeyA: 2, ArrowRight: 3, KeyD: 3,
@@ -212,6 +213,7 @@ function send(bytes) {
 const count = new Array(256).fill(0);
 const since = new Array(256).fill(0);
 const pending = new Array(256).fill(null);
+const forgetPointers = [];    // one function per button: drops the pointers it thinks are down
 
 function press(action) {
   count[action]++;
@@ -246,6 +248,7 @@ function releaseAll() {
     }
   }
   document.querySelectorAll('button.down').forEach((b) => b.classList.remove('down'));
+  forgetPointers.forEach((forget) => forget());
   keysDown.clear();
   runToggle.classList.remove('on');
 }
@@ -258,6 +261,7 @@ function forgetHolds() {
     count[action] = 0;
   }
   document.querySelectorAll('button.down').forEach((b) => b.classList.remove('down'));
+  forgetPointers.forEach((forget) => forget());
   keysDown.clear();
   runToggle.classList.remove('on');
 }
@@ -268,14 +272,21 @@ const runToggle = $('run');
 
 document.querySelectorAll('button[data-a]').forEach((button) => {
   const action = Number(button.dataset.a);
+  // Every finger (or mouse) on the button, so a second finger on the same button neither presses it
+  // twice nor, worse, leaves it counted as held after both have lifted.
+  const pointers = new Set();
+  forgetPointers.push(() => pointers.clear());
   button.addEventListener('pointerdown', (e) => {
     e.preventDefault();
     button.setPointerCapture(e.pointerId);
+    if (pointers.has(e.pointerId)) return;
+    pointers.add(e.pointerId);
+    if (pointers.size > 1) return;
     button.classList.add('down');
     press(action);
   });
-  const up = () => {
-    if (!button.classList.contains('down')) return;
+  const up = (e) => {
+    if (!pointers.delete(e.pointerId) || pointers.size > 0) return;
     button.classList.remove('down');
     release(action);
   };
@@ -454,7 +465,7 @@ const box = $('text');
 const HINTS = {
   keys: 'Each key you press does what its binding does (w forward, space fire, f use...), found the same ' +
         'way as in the key list below. Holding a key keeps the action going; a pasted run like wwwd ' +
-        'plays one key every 0.2 s.',
+        'plays one key every 0.08 s.',
   text: 'Every character goes to the game as typed: cheat codes, save names. Enter, Backspace and Esc ' +
         'work as in the menu.',
 };
@@ -462,8 +473,11 @@ const PLACEHOLDERS = {
   keys: 'Type keys: w a s d, space to fire…',
   text: 'Type text: every character is sent at once',
 };
-const MACRO_STEP_MS = 200;
-const CHAR_GAP_MS = 25;
+// A pasted run of keys is played one key per step (a tap and a short gap).
+const MACRO_STEP_MS = 80;
+// Text mode sends one character (a press and a release) per gap. The game takes one such pair per tic
+// (28 ms), so a shorter gap would build a backlog on the board (the board queues 128 events).
+const CHAR_GAP_MS = 30;
 const CHAR_CODES = {
   ' ': 'Space', ',': 'Comma', '.': 'Period', '/': 'Slash', ';': 'Semicolon', "'": 'Quote',
   '[': 'BracketLeft', ']': 'BracketRight', '\\': 'Backslash', '-': 'Minus', '=': 'Equal', '`': 'Backquote',
@@ -547,16 +561,29 @@ function pump() {
   setTimeout(pump, CHAR_GAP_MS);
 }
 
+// A phone keyboard that predicts words builds each word in the box as a "composition" and only
+// commits it at the space, so waiting for the commit would hold everything back until then (a whole
+// word of keys arriving at once, then played one by one). Instead every character is played the
+// moment it shows up: `taken` is how much of the box's text has been played, and a composition
+// grows in place. The box is emptied when nothing is being composed.
+let composing = false;
+let taken = 0;
+
 function drainBox() {
   const chars = [...box.value];
-  box.value = '';
-  if (mode === 'text') chars.forEach(typeChar);
-  else if (chars.length === 1) tapChar(chars[0]);
-  else playKeys(chars);
+  const fresh = chars.length > taken ? chars.slice(taken) : [];   // shorter = something was deleted
+  taken = chars.length;
+  if (!composing) { box.value = ''; taken = 0; }
+  if (mode === 'text') fresh.forEach(typeChar);
+  else if (fresh.length === 1) tapChar(fresh[0]);
+  else if (fresh.length > 1) playKeys(fresh);
 }
 
-box.addEventListener('input', (e) => { if (!e.isComposing) drainBox(); });
-box.addEventListener('compositionend', drainBox);
+box.addEventListener('compositionstart', () => { composing = true; });
+box.addEventListener('compositionend', () => { composing = false; drainBox(); });
+box.addEventListener('input', drainBox);
+// Leaving the box in the middle of a composition must not leave it "composing" for good.
+box.addEventListener('blur', () => { composing = false; box.value = ''; taken = 0; });
 box.addEventListener('keydown', (e) => {
   if (mode !== 'text' || e.isComposing) return;
   const special = { Enter: [9, '⏎'], Backspace: [21, '⌫'], Escape: [10, '⎋'] }[e.key];

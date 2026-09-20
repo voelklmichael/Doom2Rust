@@ -246,6 +246,58 @@ impl HeldKeys {
     }
 }
 
+/// Sits between the queue of received events and the game's input polls, so that every press is
+/// seen by the game before its release.
+///
+/// The game (the engine's `I_GetEvent`) drains the events once per tic and stops after the first
+/// release it sees. A tap whose press and release were both waiting in the queue at that moment
+/// (they arrived close together, or the frame was slow) was therefore over before the game's next
+/// tic looked at which keys are held, and the tap was lost. `PollGate::next` holds such a release
+/// back: it ends the poll (returns `None`) and hands the release out first thing in the next poll,
+/// so the key is down for at least one tic. Typed characters are not held keys (the game acts on
+/// the press), so their releases pass straight through.
+///
+/// `pop` returns the next queued event, if any. A poll is the run of calls up to a `None` or a
+/// release.
+#[derive(Clone, Copy, Debug, Default)]
+pub struct PollGate {
+    /// A release held back for the next poll.
+    held_back: Option<KeyEvent>,
+    /// The commands (bit per code) pressed earlier in this poll.
+    pressed_this_poll: u32,
+}
+
+impl PollGate {
+    pub const fn new() -> Self {
+        Self { held_back: None, pressed_this_poll: 0 }
+    }
+
+    /// The next event for the game, or `None` to end this poll.
+    pub fn next(&mut self, mut pop: impl FnMut() -> Option<KeyEvent>) -> Option<KeyEvent> {
+        let Some(event) = self.held_back.take().or_else(&mut pop) else {
+            self.pressed_this_poll = 0;
+            return None;
+        };
+        let bit = match event.command {
+            Command::Char(_) => 0,
+            command => 1 << u32::from(command.code()),
+        };
+        if event.pressed {
+            self.pressed_this_poll |= bit;
+            return Some(event);
+        }
+        if self.pressed_this_poll & bit != 0 {
+            // Pressed in this very poll: the game has not had its tic with the key down yet.
+            self.held_back = Some(event);
+            self.pressed_this_poll = 0;
+            return None;
+        }
+        // A release ends the game's poll.
+        self.pressed_this_poll = 0;
+        Some(event)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -374,5 +426,101 @@ mod tests {
         ] {
             assert_eq!(decode_fps(message), None, "{:?}", core::str::from_utf8(message));
         }
+    }
+
+    /// What the game sees over several polls: each inner list is one poll, ended by `None` or by
+    /// a release (which the game's loop stops at).
+    fn polls(gate: &mut PollGate, queue: &mut Vec<KeyEvent>, polls: usize) -> Vec<Vec<KeyEvent>> {
+        let mut out = Vec::new();
+        for _ in 0..polls {
+            let mut seen = Vec::new();
+            while let Some(event) = gate.next(|| (!queue.is_empty()).then(|| queue.remove(0))) {
+                seen.push(event);
+                if !event.pressed {
+                    break;
+                }
+            }
+            out.push(seen);
+        }
+        out
+    }
+
+    #[test]
+    fn a_tap_that_arrived_whole_is_seen_held_for_a_poll() {
+        let mut gate = PollGate::new();
+        let mut queue = std::vec![KeyEvent::press(Command::Fire), KeyEvent::release(Command::Fire)];
+        assert_eq!(
+            polls(&mut gate, &mut queue, 3),
+            [
+                std::vec![KeyEvent::press(Command::Fire)],
+                std::vec![KeyEvent::release(Command::Fire)],
+                std::vec![],
+            ]
+        );
+    }
+
+    #[test]
+    fn a_release_after_an_earlier_poll_goes_straight_through() {
+        let mut gate = PollGate::new();
+        let mut queue = std::vec![KeyEvent::press(Command::Forward)];
+        assert_eq!(polls(&mut gate, &mut queue, 1), [std::vec![KeyEvent::press(Command::Forward)]]);
+        queue.push(KeyEvent::release(Command::Forward));
+        assert_eq!(polls(&mut gate, &mut queue, 1), [std::vec![KeyEvent::release(Command::Forward)]]);
+    }
+
+    #[test]
+    fn releasing_another_key_is_not_held_back() {
+        let mut gate = PollGate::new();
+        let mut queue = std::vec![
+            KeyEvent::press(Command::Fire),
+            KeyEvent::release(Command::Forward),
+            KeyEvent::release(Command::Fire),
+        ];
+        assert_eq!(
+            polls(&mut gate, &mut queue, 2),
+            [
+                std::vec![KeyEvent::press(Command::Fire), KeyEvent::release(Command::Forward)],
+                std::vec![KeyEvent::release(Command::Fire)],
+            ]
+        );
+    }
+
+    #[test]
+    fn typed_characters_pass_with_their_releases() {
+        let mut gate = PollGate::new();
+        let mut queue = std::vec![
+            KeyEvent::press(Command::Char(b'i')),
+            KeyEvent::release(Command::Char(b'i')),
+            KeyEvent::press(Command::Char(b'd')),
+            KeyEvent::release(Command::Char(b'd')),
+        ];
+        assert_eq!(
+            polls(&mut gate, &mut queue, 2),
+            [
+                std::vec![KeyEvent::press(Command::Char(b'i')), KeyEvent::release(Command::Char(b'i'))],
+                std::vec![KeyEvent::press(Command::Char(b'd')), KeyEvent::release(Command::Char(b'd'))],
+            ]
+        );
+    }
+
+    #[test]
+    fn a_held_back_release_keeps_its_place_and_nothing_is_lost() {
+        let mut gate = PollGate::new();
+        let mut queue = std::vec![
+            KeyEvent::press(Command::Use),
+            KeyEvent::release(Command::Use),
+            KeyEvent::press(Command::Use),
+            KeyEvent::release(Command::Use),
+        ];
+        let seen: Vec<KeyEvent> = polls(&mut gate, &mut queue, 6).into_iter().flatten().collect();
+        assert_eq!(
+            seen,
+            [
+                KeyEvent::press(Command::Use),
+                KeyEvent::release(Command::Use),
+                KeyEvent::press(Command::Use),
+                KeyEvent::release(Command::Use),
+            ]
+        );
     }
 }

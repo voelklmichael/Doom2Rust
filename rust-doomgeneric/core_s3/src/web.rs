@@ -41,8 +41,7 @@ pub async fn web_server(stack: Stack<'static>) {
     loop {
         let mut socket = TcpSocket::new(stack, &mut rx_buffer, &mut tx_buffer);
         // A phone that goes to sleep or leaves the network must not hold a slot forever.
-        socket.set_keep_alive(Some(Duration::from_secs(5)));
-        socket.set_timeout(Some(Duration::from_secs(20)));
+        net::tune(&mut socket);
         if let Err(err) = socket.accept(PORT).await {
             println!("web: accept failed: {err:?}");
             continue;

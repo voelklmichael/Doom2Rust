@@ -3,7 +3,7 @@
 
 use core::sync::atomic::{AtomicU32, Ordering};
 
-use core_s3_protocol::Command;
+use core_s3_protocol::{Command, KeyEvent, PollGate};
 use embedded_graphics::{pixelcolor::Rgb565, prelude::*};
 use esp_hal::{delay::Delay, time::Instant};
 use esp_println::print;
@@ -75,6 +75,8 @@ pub struct CoreS3Platform {
     fps_window: FpsWindow,
     /// When the engine last started on a chunk of sound (see `FrameStats::audio_us`).
     audio_mark_us: u64,
+    /// Keeps a tap's release from reaching the game in the same poll as its press.
+    input_gate: PollGate,
 }
 
 impl CoreS3Platform {
@@ -217,14 +219,20 @@ impl DoomPlatform for CoreS3Platform {
     }
 
     fn get_key(&mut self) -> Option<(bool, u8)> {
-        loop {
-            let event = net::next_key_event()?;
-            match doom_key(event.command) {
-                Some(key) => return Some((event.pressed, key)),
-                None if event.pressed => sound::toggle_mute(),
-                None => {}
+        // The firmware's own keys (the sound toggle) are dealt with here; the game never sees them.
+        let mut source = || -> Option<KeyEvent> {
+            loop {
+                let event = net::next_key_event()?;
+                if doom_key(event.command).is_some() {
+                    return Some(event);
+                }
+                if event.pressed {
+                    sound::toggle_mute();
+                }
             }
-        }
+        };
+        let event = self.input_gate.next(&mut source)?;
+        doom_key(event.command).map(|key| (event.pressed, key))
     }
 
     fn set_window_title(&mut self, _title: &str) {}

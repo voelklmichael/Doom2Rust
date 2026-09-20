@@ -50,6 +50,12 @@ static_cell = "2.1"
 # game core shares (about 2 fps of the game's 28 otherwise).
 oplon = { version = "1.0.0", default-features = false, features = ["iram"] }
 
+[features]
+# Input-latency probes (see src/lagprobe.rs): `--features lagprobe` prints scheduling and key-queue
+# latencies every 5 s, `lagprobe-keys` also injects synthetic key events. Off in normal builds.
+lagprobe = []
+lagprobe-keys = ["lagprobe"]
+
 [patch.crates-io]
 oplon = { path = "../third_party/oplon" }
 
