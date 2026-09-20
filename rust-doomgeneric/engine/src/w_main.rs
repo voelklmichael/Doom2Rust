@@ -17,7 +17,12 @@ pub fn parse_command_line(state: &mut GameState) -> bool {
         for file in files {
             let filename = try_find_wadby_name(&mut state.game.d_iwad, &*state.assets.fs, &file);
             doom_println!(state.io.platform, " adding {}", filename);
-            w_add_file(state, &filename);
+            w_add_file(
+                &mut *state.assets.fs,
+                &mut *state.io.platform,
+                &mut state.assets.w_wad,
+                &filename,
+            );
         }
     }
     modifiedgame

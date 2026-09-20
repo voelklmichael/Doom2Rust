@@ -588,7 +588,11 @@ static LNODES: [[Point; 9]; 4] = [
 ];
 pub const SHOWNEXTLOCDELAY: i32 = 4;
 pub fn slam_background(state: &mut GameState) {
-    let patch = cache_patch_num(state, state.ui.wi_stuff.background);
+    let patch = cache_patch_num(
+        &*state.assets.fs,
+        &mut state.assets.w_wad,
+        state.ui.wi_stuff.background,
+    );
     let dest_screen = Screen::Video;
     draw_patch(state, dest_screen, 0, 0, &patch);
 }
@@ -599,7 +603,7 @@ pub fn draw_lf(state: &mut GameState) {
     {
         let index = state.wbs().last as usize;
         let last_lump = state.ui.wi_stuff.lnames[index];
-        let last_patch = cache_patch_num(state, last_lump);
+        let last_patch = cache_patch_num(&*state.assets.fs, &mut state.assets.w_wad, last_lump);
         let dest_screen = Screen::Video;
         draw_patch(
             state,
@@ -609,7 +613,11 @@ pub fn draw_lf(state: &mut GameState) {
             &last_patch,
         );
         y += 5 * last_patch.height() / 4;
-        let finished_patch = cache_patch_num(state, state.ui.wi_stuff.finished);
+        let finished_patch = cache_patch_num(
+            &*state.assets.fs,
+            &mut state.assets.w_wad,
+            state.ui.wi_stuff.finished,
+        );
         let dest_screen = Screen::Video;
         draw_patch(
             state,
@@ -622,7 +630,11 @@ pub fn draw_lf(state: &mut GameState) {
 }
 pub fn draw_el(state: &mut GameState) {
     let mut y: i32 = WI_TITLEY;
-    let entering_patch = cache_patch_num(state, state.ui.wi_stuff.entering);
+    let entering_patch = cache_patch_num(
+        &*state.assets.fs,
+        &mut state.assets.w_wad,
+        state.ui.wi_stuff.entering,
+    );
     let dest_screen = Screen::Video;
     draw_patch(
         state,
@@ -633,7 +645,7 @@ pub fn draw_el(state: &mut GameState) {
     );
     let index = state.wbs().next as usize;
     let next_lump = state.ui.wi_stuff.lnames[index];
-    let next_patch = cache_patch_num(state, next_lump);
+    let next_patch = cache_patch_num(&*state.assets.fs, &mut state.assets.w_wad, next_lump);
     y += 5 * next_patch.height() / 4;
     let dest_screen = Screen::Video;
     draw_patch(
@@ -653,7 +665,7 @@ pub fn draw_on_lnode(state: &mut GameState, n: i32, c: &[i32]) {
     let mut fits: bool = false;
     i = 0;
     loop {
-        let patch = cache_patch_num(state, c[i as usize]);
+        let patch = cache_patch_num(&*state.assets.fs, &mut state.assets.w_wad, c[i as usize]);
         left = LNODES[state.wbs().epsd as usize][n as usize].x - patch.leftoffset();
         top = LNODES[state.wbs().epsd as usize][n as usize].y - patch.topoffset();
         right = left + patch.width();
@@ -668,7 +680,7 @@ pub fn draw_on_lnode(state: &mut GameState, n: i32, c: &[i32]) {
         }
     }
     if fits && i < 2 {
-        let patch = cache_patch_num(state, c[i as usize]);
+        let patch = cache_patch_num(&*state.assets.fs, &mut state.assets.w_wad, c[i as usize]);
         let index = state.wbs().epsd as usize;
         let dest_screen = Screen::Video;
         draw_patch(
@@ -766,14 +778,22 @@ pub fn draw_animated_back(state: &mut GameState) {
         let index = state.wbs().epsd as usize;
         let a = state.ui.wi_stuff.anims()[index][i as usize];
         if a.ctr >= 0 {
-            let patch = cache_patch_num(state, a.p[a.ctr as usize]);
+            let patch = cache_patch_num(
+                &*state.assets.fs,
+                &mut state.assets.w_wad,
+                a.p[a.ctr as usize],
+            );
             let dest_screen = Screen::Video;
             draw_patch(state, dest_screen, a.loc.x, a.loc.y, &patch);
         }
     }
 }
 pub fn draw_num(state: &mut GameState, mut x: i32, y: i32, mut n: i32, mut digits: i32) -> i32 {
-    let zero_patch = cache_patch_num(state, state.ui.wi_stuff.num[0]);
+    let zero_patch = cache_patch_num(
+        &*state.assets.fs,
+        &mut state.assets.w_wad,
+        state.ui.wi_stuff.num[0],
+    );
     let fontwidth: i32 = zero_patch.width();
 
     let mut temp: i32;
@@ -803,14 +823,22 @@ pub fn draw_num(state: &mut GameState, mut x: i32, y: i32, mut n: i32, mut digit
             break;
         }
         x -= fontwidth;
-        let digit_patch = cache_patch_num(state, state.ui.wi_stuff.num[(n % 10) as usize]);
+        let digit_patch = cache_patch_num(
+            &*state.assets.fs,
+            &mut state.assets.w_wad,
+            state.ui.wi_stuff.num[(n % 10) as usize],
+        );
         let dest_screen = Screen::Video;
         draw_patch(state, dest_screen, x, y, &digit_patch);
         n /= 10;
     }
     if neg != 0 {
         x -= 8;
-        let minus_patch = cache_patch_num(state, state.ui.wi_stuff.wiminus);
+        let minus_patch = cache_patch_num(
+            &*state.assets.fs,
+            &mut state.assets.w_wad,
+            state.ui.wi_stuff.wiminus,
+        );
         let dest_screen = Screen::Video;
         draw_patch(state, dest_screen, x, y, &minus_patch);
     }
@@ -820,7 +848,11 @@ pub fn draw_percent(state: &mut GameState, x: i32, y: i32, percent: i32) {
     if percent < 0 {
         return;
     }
-    let percent_patch = cache_patch_num(state, state.ui.wi_stuff.percent);
+    let percent_patch = cache_patch_num(
+        &*state.assets.fs,
+        &mut state.assets.w_wad,
+        state.ui.wi_stuff.percent,
+    );
     let dest_screen = Screen::Video;
     draw_patch(state, dest_screen, x, y, &percent_patch);
     draw_num(state, x, y, percent, -1);
@@ -835,7 +867,11 @@ pub fn draw_time(state: &mut GameState, mut x: i32, y: i32, t: i32) {
         div = 1;
         loop {
             n = t / div % 60;
-            let colon_patch = cache_patch_num(state, state.ui.wi_stuff.colon);
+            let colon_patch = cache_patch_num(
+                &*state.assets.fs,
+                &mut state.assets.w_wad,
+                state.ui.wi_stuff.colon,
+            );
             x = draw_num(state, x, y, n, 2) - colon_patch.width();
             div *= 60;
             if div == 60 || t / div != 0 {
@@ -847,7 +883,11 @@ pub fn draw_time(state: &mut GameState, mut x: i32, y: i32, t: i32) {
             }
         }
     } else {
-        let sucks_patch = cache_patch_num(state, state.ui.wi_stuff.sucks);
+        let sucks_patch = cache_patch_num(
+            &*state.assets.fs,
+            &mut state.assets.w_wad,
+            state.ui.wi_stuff.sucks,
+        );
         let dest_screen = Screen::Video;
         draw_patch(state, dest_screen, x - sucks_patch.width(), y, &sucks_patch);
     }
@@ -1019,7 +1059,11 @@ pub fn draw_deathmatch_stats(state: &mut GameState) {
     slam_background(state);
     draw_animated_back(state);
     draw_lf(state);
-    let total_patch = cache_patch_num(state, state.ui.wi_stuff.total);
+    let total_patch = cache_patch_num(
+        &*state.assets.fs,
+        &mut state.assets.w_wad,
+        state.ui.wi_stuff.total,
+    );
     let dest_screen = Screen::Video;
     draw_patch(
         state,
@@ -1028,17 +1072,29 @@ pub fn draw_deathmatch_stats(state: &mut GameState) {
         DM_MATRIXY - WI_SPACINGY + 10,
         &total_patch,
     );
-    let killers_patch = cache_patch_num(state, state.ui.wi_stuff.killers);
+    let killers_patch = cache_patch_num(
+        &*state.assets.fs,
+        &mut state.assets.w_wad,
+        state.ui.wi_stuff.killers,
+    );
     let dest_screen = Screen::Video;
     draw_patch(state, dest_screen, DM_KILLERSX, DM_KILLERSY, &killers_patch);
-    let victims_patch = cache_patch_num(state, state.ui.wi_stuff.victims);
+    let victims_patch = cache_patch_num(
+        &*state.assets.fs,
+        &mut state.assets.w_wad,
+        state.ui.wi_stuff.victims,
+    );
     let dest_screen = Screen::Video;
     draw_patch(state, dest_screen, DM_VICTIMSX, DM_VICTIMSY, &victims_patch);
     x = DM_MATRIXX + DM_SPACINGX;
     y = DM_MATRIXY;
     for i in 0..MAXPLAYERS {
         if state.game.g_game.playeringame[i as usize] {
-            let p_patch = cache_patch_num(state, state.ui.wi_stuff.p[i as usize]);
+            let p_patch = cache_patch_num(
+                &*state.assets.fs,
+                &mut state.assets.w_wad,
+                state.ui.wi_stuff.p[i as usize],
+            );
             let dest_screen = Screen::Video;
             draw_patch(
                 state,
@@ -1056,7 +1112,11 @@ pub fn draw_deathmatch_stats(state: &mut GameState) {
                 &p_patch,
             );
             if i == state.ui.wi_stuff.me {
-                let bstar_patch = cache_patch_num(state, state.ui.wi_stuff.bstar);
+                let bstar_patch = cache_patch_num(
+                    &*state.assets.fs,
+                    &mut state.assets.w_wad,
+                    state.ui.wi_stuff.bstar,
+                );
                 let dest_screen = Screen::Video;
                 draw_patch(
                     state,
@@ -1065,7 +1125,11 @@ pub fn draw_deathmatch_stats(state: &mut GameState) {
                     DM_MATRIXY - WI_SPACINGY,
                     &bstar_patch,
                 );
-                let star_patch = cache_patch_num(state, state.ui.wi_stuff.star);
+                let star_patch = cache_patch_num(
+                    &*state.assets.fs,
+                    &mut state.assets.w_wad,
+                    state.ui.wi_stuff.star,
+                );
                 let dest_screen = Screen::Video;
                 draw_patch(
                     state,
@@ -1080,7 +1144,11 @@ pub fn draw_deathmatch_stats(state: &mut GameState) {
         y += WI_SPACINGY;
     }
     y = DM_MATRIXY + 10;
-    let zero_patch = cache_patch_num(state, state.ui.wi_stuff.num[0]);
+    let zero_patch = cache_patch_num(
+        &*state.assets.fs,
+        &mut state.assets.w_wad,
+        state.ui.wi_stuff.num[0],
+    );
     let w: i32 = zero_patch.width();
     for i in 0..(MAXPLAYERS as usize) {
         x = DM_MATRIXX + DM_SPACINGX;
@@ -1244,14 +1312,26 @@ pub fn update_netgame_stats(state: &mut GameState) {
 pub fn draw_netgame_stats(state: &mut GameState) {
     let mut x: i32;
     let mut y: i32;
-    let percent_patch = cache_patch_num(state, state.ui.wi_stuff.percent);
+    let percent_patch = cache_patch_num(
+        &*state.assets.fs,
+        &mut state.assets.w_wad,
+        state.ui.wi_stuff.percent,
+    );
     let pwidth: i32 = percent_patch.width();
     slam_background(state);
     draw_animated_back(state);
     draw_lf(state);
-    let star_patch = cache_patch_num(state, state.ui.wi_stuff.star);
+    let star_patch = cache_patch_num(
+        &*state.assets.fs,
+        &mut state.assets.w_wad,
+        state.ui.wi_stuff.star,
+    );
     let star_width = star_patch.width();
-    let kills_patch = cache_patch_num(state, state.ui.wi_stuff.kills);
+    let kills_patch = cache_patch_num(
+        &*state.assets.fs,
+        &mut state.assets.w_wad,
+        state.ui.wi_stuff.kills,
+    );
     let dest_screen = Screen::Video;
     draw_patch(
         state,
@@ -1261,7 +1341,11 @@ pub fn draw_netgame_stats(state: &mut GameState) {
         NG_STATSY,
         &kills_patch,
     );
-    let items_patch = cache_patch_num(state, state.ui.wi_stuff.items);
+    let items_patch = cache_patch_num(
+        &*state.assets.fs,
+        &mut state.assets.w_wad,
+        state.ui.wi_stuff.items,
+    );
     let dest_screen = Screen::Video;
     draw_patch(
         state,
@@ -1271,7 +1355,11 @@ pub fn draw_netgame_stats(state: &mut GameState) {
         NG_STATSY,
         &items_patch,
     );
-    let secret_patch = cache_patch_num(state, state.ui.wi_stuff.secret);
+    let secret_patch = cache_patch_num(
+        &*state.assets.fs,
+        &mut state.assets.w_wad,
+        state.ui.wi_stuff.secret,
+    );
     let dest_screen = Screen::Video;
     draw_patch(
         state,
@@ -1282,7 +1370,11 @@ pub fn draw_netgame_stats(state: &mut GameState) {
         &secret_patch,
     );
     if state.ui.wi_stuff.dofrags {
-        let frags_patch = cache_patch_num(state, state.ui.wi_stuff.frags);
+        let frags_patch = cache_patch_num(
+            &*state.assets.fs,
+            &mut state.assets.w_wad,
+            state.ui.wi_stuff.frags,
+        );
         let dest_screen = Screen::Video;
         draw_patch(
             state,
@@ -1297,7 +1389,11 @@ pub fn draw_netgame_stats(state: &mut GameState) {
     for i in 0..MAXPLAYERS {
         if state.game.g_game.playeringame[i as usize] {
             x = 32 + star_width / 2 + 32 * (!state.ui.wi_stuff.dofrags) as i32;
-            let p_patch = cache_patch_num(state, state.ui.wi_stuff.p[i as usize]);
+            let p_patch = cache_patch_num(
+                &*state.assets.fs,
+                &mut state.assets.w_wad,
+                state.ui.wi_stuff.p[i as usize],
+            );
             let dest_screen = Screen::Video;
             draw_patch(state, dest_screen, x - p_patch.width(), y, &p_patch);
             if i == state.ui.wi_stuff.me {
@@ -1423,22 +1519,38 @@ pub fn update_stats(state: &mut GameState) {
     }
 }
 pub fn draw_stats(state: &mut GameState) {
-    let zero_patch = cache_patch_num(state, state.ui.wi_stuff.num[0]);
+    let zero_patch = cache_patch_num(
+        &*state.assets.fs,
+        &mut state.assets.w_wad,
+        state.ui.wi_stuff.num[0],
+    );
     let lh: i32 = 3 * zero_patch.height() / 2;
     slam_background(state);
     draw_animated_back(state);
     draw_lf(state);
-    let kills_patch = cache_patch_num(state, state.ui.wi_stuff.kills);
+    let kills_patch = cache_patch_num(
+        &*state.assets.fs,
+        &mut state.assets.w_wad,
+        state.ui.wi_stuff.kills,
+    );
     let dest_screen = Screen::Video;
     draw_patch(state, dest_screen, SP_STATSX, SP_STATSY, &kills_patch);
     let cnt_kills = state.ui.wi_stuff.cnt_kills[0];
     draw_percent(state, SCREENWIDTH - SP_STATSX, SP_STATSY, cnt_kills);
-    let items_patch = cache_patch_num(state, state.ui.wi_stuff.items);
+    let items_patch = cache_patch_num(
+        &*state.assets.fs,
+        &mut state.assets.w_wad,
+        state.ui.wi_stuff.items,
+    );
     let dest_screen = Screen::Video;
     draw_patch(state, dest_screen, SP_STATSX, SP_STATSY + lh, &items_patch);
     let cnt_items = state.ui.wi_stuff.cnt_items[0];
     draw_percent(state, SCREENWIDTH - SP_STATSX, SP_STATSY + lh, cnt_items);
-    let sp_secret_patch = cache_patch_num(state, state.ui.wi_stuff.sp_secret);
+    let sp_secret_patch = cache_patch_num(
+        &*state.assets.fs,
+        &mut state.assets.w_wad,
+        state.ui.wi_stuff.sp_secret,
+    );
     let dest_screen = Screen::Video;
     draw_patch(
         state,
@@ -1454,13 +1566,21 @@ pub fn draw_stats(state: &mut GameState) {
         SP_STATSY + 2 * lh,
         cnt_secret,
     );
-    let timepatch_patch = cache_patch_num(state, state.ui.wi_stuff.timepatch);
+    let timepatch_patch = cache_patch_num(
+        &*state.assets.fs,
+        &mut state.assets.w_wad,
+        state.ui.wi_stuff.timepatch,
+    );
     let dest_screen = Screen::Video;
     draw_patch(state, dest_screen, SP_TIMEX, SP_TIMEY, &timepatch_patch);
     let cnt_time = state.ui.wi_stuff.cnt_time;
     draw_time(state, SCREENWIDTH / 2 - SP_TIMEX, SP_TIMEY, cnt_time);
     if state.wbs().epsd < 3 {
-        let par_patch = cache_patch_num(state, state.ui.wi_stuff.par);
+        let par_patch = cache_patch_num(
+            &*state.assets.fs,
+            &mut state.assets.w_wad,
+            state.ui.wi_stuff.par,
+        );
         let dest_screen = Screen::Video;
         draw_patch(
             state,

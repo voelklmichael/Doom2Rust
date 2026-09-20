@@ -11,6 +11,7 @@ use crate::patch::Patch;
 use crate::platform::DoomPlatform;
 use crate::w_wad::lump_bytes;
 use crate::w_wad::lump_bytes_name;
+use crate::w_wad::WWadState;
 use alloc::string::String;
 use alloc::vec::Vec;
 
@@ -118,15 +119,11 @@ pub fn copy_rect(
 }
 /// Resolves a WAD lump number to its cached patch data. Cheap and
 /// idempotent: the lump cache never evicts.
-pub fn cache_patch_num(state: &mut GameState, lumpnum: i32) -> Patch {
-    Patch::new(lump_bytes(
-        &*state.assets.fs,
-        &mut state.assets.w_wad,
-        lumpnum,
-    ))
+pub fn cache_patch_num(fs: &dyn DoomFileSystem, w_wad: &mut WWadState, lumpnum: i32) -> Patch {
+    Patch::new(lump_bytes(fs, w_wad, lumpnum))
 }
-pub fn cache_patch_name(state: &mut GameState, name: &str) -> Patch {
-    Patch::new(lump_bytes_name(state, name))
+pub fn cache_patch_name(fs: &dyn DoomFileSystem, w_wad: &mut WWadState, name: &str) -> Patch {
+    Patch::new(lump_bytes_name(fs, w_wad, name))
 }
 fn blit_patch(screen: &mut [u8], patch: &Patch, x: i32, y: i32, flipped: bool) {
     let w = patch.width();
@@ -261,12 +258,12 @@ pub fn write_pcxfile(
     pack.extend_from_slice(&palette[..768]);
     fs.write_file(filename, &pack);
 }
-pub fn v_screen_shot(state: &mut GameState) {
+pub fn v_screen_shot(fs: &mut dyn DoomFileSystem, i_video: &IVideoState, w_wad: &mut WWadState) {
     let mut i = 0i32;
     let mut lbmname = String::new();
     while i <= 99 {
         lbmname = format!("DOOM{i:02}.pcx");
-        if !state.assets.fs.exists(&lbmname) {
+        if !fs.exists(&lbmname) {
             break;
         }
         i += 1;
@@ -274,11 +271,11 @@ pub fn v_screen_shot(state: &mut GameState) {
     if i == 100 {
         error("V_ScreenShot: Couldn't create a PCX");
     }
-    let palette = lump_bytes_name(state, "PLAYPAL");
+    let palette = lump_bytes_name(&*fs, w_wad, "PLAYPAL");
     write_pcxfile(
-        &mut *state.assets.fs,
+        &mut *fs,
         &lbmname,
-        &state.io.i_video.i_video_buffer,
+        &i_video.i_video_buffer,
         SCREENWIDTH,
         SCREENHEIGHT,
         &palette,

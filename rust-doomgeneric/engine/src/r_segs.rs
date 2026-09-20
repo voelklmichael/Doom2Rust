@@ -254,11 +254,14 @@ pub fn render_masked_seg_range(state: &mut GameState, ds: &DrawSeg, x1: i32, x2:
                 );
             state.render.r_draw.dc_iscale =
                 0xffffffff_u32.wrapping_div(state.render.r_things.spryscale as u32) as Fixed;
+            let column = maskedtexturecol.get(state, state.render.r_draw.dc_x as isize) as i32;
             let col = advance_source(
                 get_column(
-                    state,
+                    &*state.assets.fs,
+                    &mut state.render.r_data,
+                    &mut state.assets.w_wad,
                     texnum,
-                    maskedtexturecol.get(state, state.render.r_draw.dc_x as isize) as i32,
+                    column,
                 ),
                 (-3_isize) as usize,
             );
@@ -351,7 +354,9 @@ pub fn render_seg_loop(state: &mut GameState) {
             state.render.r_draw.dc_yh = yh;
             state.render.r_draw.dc_texturemid = state.render.r_segs.rw_midtexturemid;
             state.render.r_draw.dc_source = Some(get_column(
-                state,
+                &*state.assets.fs,
+                &mut state.render.r_data,
+                &mut state.assets.w_wad,
                 state.render.r_segs.midtexture,
                 texturecolumn,
             ));
@@ -376,7 +381,9 @@ pub fn render_seg_loop(state: &mut GameState) {
                     state.render.r_draw.dc_yh = mid;
                     state.render.r_draw.dc_texturemid = state.render.r_segs.rw_toptexturemid;
                     state.render.r_draw.dc_source = Some(get_column(
-                        state,
+                        &*state.assets.fs,
+                        &mut state.render.r_data,
+                        &mut state.assets.w_wad,
                         state.render.r_segs.toptexture,
                         texturecolumn,
                     ));
@@ -409,7 +416,9 @@ pub fn render_seg_loop(state: &mut GameState) {
                     state.render.r_draw.dc_yh = yh;
                     state.render.r_draw.dc_texturemid = state.render.r_segs.rw_bottomtexturemid;
                     state.render.r_draw.dc_source = Some(get_column(
-                        state,
+                        &*state.assets.fs,
+                        &mut state.render.r_data,
+                        &mut state.assets.w_wad,
                         state.render.r_segs.bottomtexture,
                         texturecolumn,
                     ));

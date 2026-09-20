@@ -220,12 +220,12 @@ pub fn teleport_move(state: &mut GameState, thing: MobjId, x: Fixed, y: Fixed) -
             }
         }
     }
-    unset_thing_position(state, thing);
+    unset_thing_position(&mut state.world.p_mobj, &mut state.world.p_setup, thing);
     state.world.p_mobj.mo_mut(thing).floorz = state.world.p_map.tmfloorz;
     state.world.p_mobj.mo_mut(thing).ceilingz = state.world.p_map.tmceilingz;
     state.world.p_mobj.mo_mut(thing).x = x;
     state.world.p_mobj.mo_mut(thing).y = y;
-    set_thing_position(state, thing);
+    set_thing_position(&mut state.world.p_mobj, &mut state.world.p_setup, thing);
     true
 }
 pub fn check_line(state: &mut GameState, ld: LineId) -> bool {
@@ -550,14 +550,14 @@ pub fn try_move(state: &mut GameState, thing: MobjId, x: Fixed, y: Fixed) -> boo
             return false;
         }
     }
-    unset_thing_position(state, thing);
+    unset_thing_position(&mut state.world.p_mobj, &mut state.world.p_setup, thing);
     let oldx: Fixed = state.world.p_mobj.mo(thing).x;
     let oldy: Fixed = state.world.p_mobj.mo(thing).y;
     state.world.p_mobj.mo_mut(thing).floorz = state.world.p_map.tmfloorz;
     state.world.p_mobj.mo_mut(thing).ceilingz = state.world.p_map.tmceilingz;
     state.world.p_mobj.mo_mut(thing).x = x;
     state.world.p_mobj.mo_mut(thing).y = y;
-    set_thing_position(state, thing);
+    set_thing_position(&mut state.world.p_mobj, &mut state.world.p_setup, thing);
     if !state
         .world
         .p_mobj

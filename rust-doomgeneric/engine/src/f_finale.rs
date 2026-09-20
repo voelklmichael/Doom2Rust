@@ -394,7 +394,11 @@ pub fn text_write(state: &mut GameState) {
     let mut c: i32;
     let mut cx: i32;
     let mut cy: i32;
-    let flat = lump_bytes_name(state, state.ui.f_finale.finaleflat);
+    let flat = lump_bytes_name(
+        &*state.assets.fs,
+        &mut state.assets.w_wad,
+        state.ui.f_finale.finaleflat,
+    );
     let video = &mut state.io.i_video.i_video_buffer;
     for y in 0..SCREENHEIGHT as usize {
         let row = &flat[(y & 63) << 6..][..64];
@@ -430,7 +434,11 @@ pub fn text_write(state: &mut GameState) {
         } else {
             c = (c as u8).to_ascii_uppercase() as i32 - HU_FONTSTART;
             if (0..=HU_FONTSIZE).contains(&c) {
-                let font_patch = cache_patch_num(state, state.ui.hu_stuff.hu_font[c as usize]);
+                let font_patch = cache_patch_num(
+                    &*state.assets.fs,
+                    &mut state.assets.w_wad,
+                    state.ui.hu_stuff.hu_font[c as usize],
+                );
                 w = font_patch.width();
                 if cx + w > SCREENWIDTH {
                     break;
@@ -688,7 +696,12 @@ pub fn cast_print(state: &mut GameState, text: &str) {
     for b in text.bytes() {
         c = b.to_ascii_uppercase() as i32 - HU_FONTSTART;
         if (0..=HU_FONTSIZE).contains(&c) {
-            w = cache_patch_num(state, state.ui.hu_stuff.hu_font[c as usize]).width();
+            w = cache_patch_num(
+                &*state.assets.fs,
+                &mut state.assets.w_wad,
+                state.ui.hu_stuff.hu_font[c as usize],
+            )
+            .width();
             width += w;
         } else {
             width += 4;
@@ -698,7 +711,11 @@ pub fn cast_print(state: &mut GameState, text: &str) {
     for b in text.bytes() {
         c = b.to_ascii_uppercase() as i32 - HU_FONTSTART;
         if (0..=HU_FONTSIZE).contains(&c) {
-            let font_patch = cache_patch_num(state, state.ui.hu_stuff.hu_font[c as usize]);
+            let font_patch = cache_patch_num(
+                &*state.assets.fs,
+                &mut state.assets.w_wad,
+                state.ui.hu_stuff.hu_font[c as usize],
+            );
             w = font_patch.width();
             let dest_screen = Screen::Video;
             draw_patch(state, dest_screen, cx, 180, &font_patch);
@@ -709,7 +726,7 @@ pub fn cast_print(state: &mut GameState, text: &str) {
     }
 }
 pub fn cast_drawer(state: &mut GameState) {
-    let __wcache865_4 = cache_patch_name(state, "BOSSBACK");
+    let __wcache865_4 = cache_patch_name(&*state.assets.fs, &mut state.assets.w_wad, "BOSSBACK");
     let dest_screen = Screen::Video;
     draw_patch(state, dest_screen, 0, 0, &__wcache865_4);
     let cast_name = state.ui.f_finale.castorder[state.ui.f_finale.castnum as usize]
@@ -724,7 +741,11 @@ pub fn cast_drawer(state: &mut GameState) {
         [(cur_caststate.frame & FF_FRAMEMASK) as usize];
     let lump: i32 = sprframe.lump[0] as i32;
     let flip: bool = sprframe.flip[0] != 0;
-    let patch: Patch = cache_patch_num(state, lump + state.render.r_data.firstspritelump);
+    let patch: Patch = cache_patch_num(
+        &*state.assets.fs,
+        &mut state.assets.w_wad,
+        lump + state.render.r_data.firstspritelump,
+    );
     if flip {
         let dest_screen = Screen::Video;
         draw_patch_flipped(state, dest_screen, 160, 170, &patch);
@@ -746,8 +767,8 @@ pub fn bunny_scroll(state: &mut GameState) {
     let mut scrolled: i32;
 
     let mut stage: i32;
-    let p1: Patch = cache_patch_name(state, "PFUB2");
-    let p2: Patch = cache_patch_name(state, "PFUB1");
+    let p1: Patch = cache_patch_name(&*state.assets.fs, &mut state.assets.w_wad, "PFUB2");
+    let p2: Patch = cache_patch_name(&*state.assets.fs, &mut state.assets.w_wad, "PFUB1");
     let dest_screen = Screen::Video;
     mark_rect(
         &mut state.io.v_video,
@@ -770,7 +791,7 @@ pub fn bunny_scroll(state: &mut GameState) {
         return;
     }
     if state.ui.f_finale.finalecount < 1180 {
-        let __wcache963_3 = cache_patch_name(state, "END0");
+        let __wcache963_3 = cache_patch_name(&*state.assets.fs, &mut state.assets.w_wad, "END0");
         let dest_screen = Screen::Video;
         draw_patch(
             state,
@@ -796,7 +817,7 @@ pub fn bunny_scroll(state: &mut GameState) {
         state.ui.f_finale.laststage = stage;
     }
     let name = format!("END{stage}");
-    let __wcache990_2 = cache_patch_name(state, &name);
+    let __wcache990_2 = cache_patch_name(&*state.assets.fs, &mut state.assets.w_wad, &name);
     let dest_screen = Screen::Video;
     draw_patch(
         state,
@@ -827,7 +848,7 @@ fn art_screen_drawer(state: &mut GameState) {
             }
             _ => return,
         }
-        let __wcache1026_1 = cache_patch_name(state, lumpname);
+        let __wcache1026_1 = cache_patch_name(&*state.assets.fs, &mut state.assets.w_wad, lumpname);
         let dest_screen = Screen::Video;
         draw_patch(state, dest_screen, 0, 0, &__wcache1026_1);
     }

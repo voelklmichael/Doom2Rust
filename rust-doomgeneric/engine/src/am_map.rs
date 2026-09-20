@@ -1,5 +1,6 @@
 use crate::d_event::EvType;
 use crate::d_event::Event;
+use crate::filesystem::DoomFileSystem;
 use crate::g_game::GGameState;
 use crate::i_video::IVideoState;
 use crate::p_mobj::LineFlags;
@@ -608,12 +609,12 @@ pub fn am_init_variables(state: &mut GameState) {
     state.ui.am_map.old_m_h = state.ui.am_map.m_h;
     st_responder(state, &ST_NOTIFY);
 }
-pub fn load_pics(state: &mut GameState) {
+pub fn load_pics(am_map: &mut AmMapState, fs: &dyn DoomFileSystem, w_wad: &mut WWadState) {
     for i in 0..10 {
         let namebuf = format!("AMMNUM{i}");
-        let lumpnum = get_num_for_name(&state.assets.w_wad, &namebuf);
-        lump_bytes(&*state.assets.fs, &mut state.assets.w_wad, lumpnum);
-        state.ui.am_map.marknums[i as usize] = lumpnum;
+        let lumpnum = get_num_for_name(w_wad, &namebuf);
+        lump_bytes(fs, w_wad, lumpnum);
+        am_map.marknums[i as usize] = lumpnum;
     }
 }
 pub fn unload_pics(am_map: &AmMapState, w_wad: &WWadState) {
@@ -667,7 +668,11 @@ pub fn am_start(state: &mut GameState) {
         state.ui.am_map.am_start_lastepisode = state.game.g_game.gameepisode;
     }
     am_init_variables(state);
-    load_pics(state);
+    load_pics(
+        &mut state.ui.am_map,
+        &*state.assets.fs,
+        &mut state.assets.w_wad,
+    );
 }
 pub fn min_out_window_scale(am_map: &mut AmMapState) {
     am_map.scale_mtof = am_map.min_scale_mtof;
@@ -994,19 +999,19 @@ pub fn draw_fline(
         }
     };
 }
-pub fn draw_mline(state: &mut GameState, ml: &MLine, color: i32) {
+pub fn draw_mline(
+    am_map: &mut AmMapState,
+    i_video: &mut IVideoState,
+    platform: &mut dyn DoomPlatform,
+    ml: &MLine,
+    color: i32,
+) {
     let mut fl: FLine = FLine {
         a: FPoint { x: 0, y: 0 },
         b: FPoint { x: 0, y: 0 },
     };
-    if clip_mline(&state.ui.am_map, ml, &mut fl) {
-        draw_fline(
-            &mut state.ui.am_map,
-            &mut state.io.i_video,
-            &mut *state.io.platform,
-            &fl,
-            color,
-        );
+    if clip_mline(am_map, ml, &mut fl) {
+        draw_fline(am_map, i_video, &mut *platform, &fl, color);
     }
 }
 pub fn draw_grid(state: &mut GameState, color: i32) {
@@ -1030,7 +1035,13 @@ pub fn draw_grid(state: &mut GameState, color: i32) {
     while x < end {
         ml.a.x = x;
         ml.b.x = x;
-        draw_mline(state, &ml, color);
+        draw_mline(
+            &mut state.ui.am_map,
+            &mut state.io.i_video,
+            &mut *state.io.platform,
+            &ml,
+            color,
+        );
         x += MAPBLOCKUNITS << FRACBITS;
     }
     start = state.ui.am_map.m_y;
@@ -1045,7 +1056,13 @@ pub fn draw_grid(state: &mut GameState, color: i32) {
     while y < end {
         ml.a.y = y;
         ml.b.y = y;
-        draw_mline(state, &ml, color);
+        draw_mline(
+            &mut state.ui.am_map,
+            &mut state.io.i_video,
+            &mut *state.io.platform,
+            &ml,
+            color,
+        );
         y += MAPBLOCKUNITS << FRACBITS;
     }
 }
@@ -1069,16 +1086,40 @@ pub fn draw_walls(state: &mut GameState) {
             if !(li_flags.contains(LineFlags::DONTDRAW) && state.ui.am_map.cheating == 0) {
                 match li_backsector {
                     None => {
-                        draw_mline(state, &l, WALLCOLORS + lightlev);
+                        draw_mline(
+                            &mut state.ui.am_map,
+                            &mut state.io.i_video,
+                            &mut *state.io.platform,
+                            &l,
+                            WALLCOLORS + lightlev,
+                        );
                     }
                     Some(li_backsector) => {
                         if li_special == 39 {
-                            draw_mline(state, &l, WALLCOLORS + WALLRANGE / 2);
+                            draw_mline(
+                                &mut state.ui.am_map,
+                                &mut state.io.i_video,
+                                &mut *state.io.platform,
+                                &l,
+                                WALLCOLORS + WALLRANGE / 2,
+                            );
                         } else if li_flags.contains(LineFlags::SECRET) {
                             if state.ui.am_map.cheating != 0 {
-                                draw_mline(state, &l, SECRETWALLCOLORS + lightlev);
+                                draw_mline(
+                                    &mut state.ui.am_map,
+                                    &mut state.io.i_video,
+                                    &mut *state.io.platform,
+                                    &l,
+                                    SECRETWALLCOLORS + lightlev,
+                                );
                             } else {
-                                draw_mline(state, &l, WALLCOLORS + lightlev);
+                                draw_mline(
+                                    &mut state.ui.am_map,
+                                    &mut state.io.i_video,
+                                    &mut *state.io.platform,
+                                    &l,
+                                    WALLCOLORS + lightlev,
+                                );
                             }
                         } else if state.world.p_setup.sector_mut(li_backsector).floorheight
                             != state
@@ -1087,7 +1128,13 @@ pub fn draw_walls(state: &mut GameState) {
                                 .sector_mut(li_frontsector.unwrap())
                                 .floorheight
                         {
-                            draw_mline(state, &l, FDWALLCOLORS + lightlev);
+                            draw_mline(
+                                &mut state.ui.am_map,
+                                &mut state.io.i_video,
+                                &mut *state.io.platform,
+                                &l,
+                                FDWALLCOLORS + lightlev,
+                            );
                         } else if state.world.p_setup.sector_mut(li_backsector).ceilingheight
                             != state
                                 .world
@@ -1095,9 +1142,21 @@ pub fn draw_walls(state: &mut GameState) {
                                 .sector_mut(li_frontsector.unwrap())
                                 .ceilingheight
                         {
-                            draw_mline(state, &l, CDWALLCOLORS + lightlev);
+                            draw_mline(
+                                &mut state.ui.am_map,
+                                &mut state.io.i_video,
+                                &mut *state.io.platform,
+                                &l,
+                                CDWALLCOLORS + lightlev,
+                            );
                         } else if state.ui.am_map.cheating != 0 {
-                            draw_mline(state, &l, TSWALLCOLORS + lightlev);
+                            draw_mline(
+                                &mut state.ui.am_map,
+                                &mut state.io.i_video,
+                                &mut *state.io.platform,
+                                &l,
+                                TSWALLCOLORS + lightlev,
+                            );
                         }
                     }
                 }
@@ -1107,7 +1166,13 @@ pub fn draw_walls(state: &mut GameState) {
             != 0
             && !li_flags.contains(LineFlags::DONTDRAW)
         {
-            draw_mline(state, &l, GRAYS + 3);
+            draw_mline(
+                &mut state.ui.am_map,
+                &mut state.io.i_video,
+                &mut *state.io.platform,
+                &l,
+                GRAYS + 3,
+            );
         }
     }
 }
@@ -1154,7 +1219,13 @@ pub fn draw_line_character(
         }
         l.b.x += x;
         l.b.y += y;
-        draw_mline(state, &l, color);
+        draw_mline(
+            &mut state.ui.am_map,
+            &mut state.io.i_video,
+            &mut *state.io.platform,
+            &l,
+            color,
+        );
     }
 }
 pub fn draw_players(state: &mut GameState) {
@@ -1251,7 +1322,7 @@ pub fn draw_marks(state: &mut GameState) {
                 && fy <= state.ui.am_map.f_h - h
             {
                 let lumpnum = state.ui.am_map.marknums[i];
-                let patch = cache_patch_num(state, lumpnum);
+                let patch = cache_patch_num(&*state.assets.fs, &mut state.assets.w_wad, lumpnum);
                 let dest_screen = Screen::Video;
                 draw_patch(state, dest_screen, fx, fy, &patch);
             }

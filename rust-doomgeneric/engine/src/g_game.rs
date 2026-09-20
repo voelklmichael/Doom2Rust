@@ -31,6 +31,7 @@ use crate::f_finale::f_start_finale;
 use crate::f_finale::f_ticker;
 use crate::filesystem::read_file;
 use crate::fixed_cstr::FixedCStr;
+use crate::game_state::Game;
 use crate::game_state::GameState;
 use crate::hu_stuff::dequeue_chat_char;
 use crate::hu_stuff::hu_responder;
@@ -919,7 +920,11 @@ pub fn g_ticker(state: &mut GameState, netcmds: &[TicCmd]) {
                 do_world_done(state);
             }
             GameAction::Screenshot => {
-                v_screen_shot(state);
+                v_screen_shot(
+                    &mut *state.assets.fs,
+                    &state.io.i_video,
+                    &mut state.assets.w_wad,
+                );
                 state.game.g_game.players[state.game.g_game.consoleplayer as usize].message =
                     Some("screen shot".to_string());
                 state.game.g_game.gameaction = GameAction::Nothing;
@@ -1383,7 +1388,7 @@ pub fn do_load_game(state: &mut GameState) {
     un_archive_players(&mut state.game.g_game, &mut state.world.p_saveg);
     un_archive_world(&mut state.world.p_saveg, &mut state.world.p_setup);
     un_archive_thinkers(state);
-    un_archive_specials(state);
+    un_archive_specials(&mut state.world);
     if !read_save_game_eof(&mut state.world.p_saveg) {
         report_save_game_read_error(&state.world.p_saveg, &mut *state.io.platform);
         error("Bad savegame");
@@ -1391,7 +1396,7 @@ pub fn do_load_game(state: &mut GameState) {
     report_save_game_read_error(&state.world.p_saveg, &mut *state.io.platform);
     state.world.p_saveg.save_buffer = Vec::new();
     if state.render.r_main.setsizeneeded {
-        execute_set_view_size(state);
+        execute_set_view_size(&mut state.render);
     }
     fill_back_screen(state);
 }
@@ -1410,8 +1415,8 @@ pub fn do_save_game(state: &mut GameState) {
     write_save_game_header(state, &savedescription);
     archive_players(&state.game.g_game, &mut state.world.p_saveg);
     archive_world(&mut state.world.p_saveg, &mut state.world.p_setup);
-    archive_thinkers(state);
-    archive_specials(state);
+    archive_thinkers(&mut state.world);
+    archive_specials(&mut state.world);
     write_save_game_eof(&mut state.world.p_saveg);
     if state.game.g_game.vanilla_savegame_limit != 0
         && state.world.p_saveg.save_buffer.len() > SAVEGAMESIZE as usize
@@ -1639,51 +1644,27 @@ pub fn vanilla_version_code(state: &DoomstatState) -> i32 {
     }
     106
 }
-pub fn begin_recording(state: &mut GameState) {
-    state.game.g_game.longtics = parm_exists(&state.game.m_argv, "-longtics");
-    state.game.g_game.lowres_turn = !state.game.g_game.longtics;
-    state.game.g_game.demo_p = 0;
-    if state.game.g_game.longtics {
-        state.game.g_game.demo_write_byte(DOOM_191_VERSION as u8);
+pub fn begin_recording(game: &mut Game) {
+    game.g_game.longtics = parm_exists(&game.m_argv, "-longtics");
+    game.g_game.lowres_turn = !game.g_game.longtics;
+    game.g_game.demo_p = 0;
+    if game.g_game.longtics {
+        game.g_game.demo_write_byte(DOOM_191_VERSION as u8);
     } else {
-        let version = vanilla_version_code(&state.game.doomstat) as u8;
-        state.game.g_game.demo_write_byte(version);
+        let version = vanilla_version_code(&game.doomstat) as u8;
+        game.g_game.demo_write_byte(version);
     }
-    state
-        .game
-        .g_game
-        .demo_write_byte(state.game.g_game.gameskill as u8);
-    state
-        .game
-        .g_game
-        .demo_write_byte(state.game.g_game.gameepisode as u8);
-    state
-        .game
-        .g_game
-        .demo_write_byte(state.game.g_game.gamemap as u8);
-    state
-        .game
-        .g_game
-        .demo_write_byte(state.game.g_game.deathmatch as u8);
-    state
-        .game
-        .g_game
-        .demo_write_byte(state.game.d_main.respawnparm as u8);
-    state
-        .game
-        .g_game
-        .demo_write_byte(state.game.d_main.fastparm as u8);
-    state
-        .game
-        .g_game
-        .demo_write_byte(state.game.d_main.nomonsters as u8);
-    state
-        .game
-        .g_game
-        .demo_write_byte(state.game.g_game.consoleplayer as u8);
+    game.g_game.demo_write_byte(game.g_game.gameskill as u8);
+    game.g_game.demo_write_byte(game.g_game.gameepisode as u8);
+    game.g_game.demo_write_byte(game.g_game.gamemap as u8);
+    game.g_game.demo_write_byte(game.g_game.deathmatch as u8);
+    game.g_game.demo_write_byte(game.d_main.respawnparm as u8);
+    game.g_game.demo_write_byte(game.d_main.fastparm as u8);
+    game.g_game.demo_write_byte(game.d_main.nomonsters as u8);
+    game.g_game.demo_write_byte(game.g_game.consoleplayer as u8);
     for i in 0..(MAXPLAYERS as usize) {
-        let b = state.game.g_game.playeringame[i] as u8;
-        state.game.g_game.demo_write_byte(b);
+        let b = game.g_game.playeringame[i] as u8;
+        game.g_game.demo_write_byte(b);
     }
 }
 pub fn defered_play_demo(g_game: &mut GGameState, name: FixedCStr<8>) {

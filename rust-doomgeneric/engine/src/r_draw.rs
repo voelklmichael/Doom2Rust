@@ -624,7 +624,7 @@ pub fn fill_back_screen(state: &mut GameState) {
     } else {
         name1
     };
-    let flat = lump_bytes_name(state, name);
+    let flat = lump_bytes_name(&*state.assets.fs, &mut state.assets.w_wad, name);
     let background = state.render.r_draw.background_buffer.as_mut().unwrap();
     for y in 0..(SCREENHEIGHT - SBARHEIGHT) as usize {
         let row = &flat[(y & 63) << 6..][..64];
@@ -634,7 +634,7 @@ pub fn fill_back_screen(state: &mut GameState) {
         }
     }
     let backdrop = Screen::Background;
-    patch = cache_patch_name(state, "brdr_t");
+    patch = cache_patch_name(&*state.assets.fs, &mut state.assets.w_wad, "brdr_t");
     x = 0;
     while x < state.render.r_draw.scaledviewwidth {
         draw_patch(
@@ -646,7 +646,7 @@ pub fn fill_back_screen(state: &mut GameState) {
         );
         x += 8;
     }
-    patch = cache_patch_name(state, "brdr_b");
+    patch = cache_patch_name(&*state.assets.fs, &mut state.assets.w_wad, "brdr_b");
     x = 0;
     while x < state.render.r_draw.scaledviewwidth {
         draw_patch(
@@ -658,7 +658,7 @@ pub fn fill_back_screen(state: &mut GameState) {
         );
         x += 8;
     }
-    patch = cache_patch_name(state, "brdr_l");
+    patch = cache_patch_name(&*state.assets.fs, &mut state.assets.w_wad, "brdr_l");
     y = 0;
     while y < state.render.r_draw.viewheight {
         draw_patch(
@@ -670,7 +670,7 @@ pub fn fill_back_screen(state: &mut GameState) {
         );
         y += 8;
     }
-    patch = cache_patch_name(state, "brdr_r");
+    patch = cache_patch_name(&*state.assets.fs, &mut state.assets.w_wad, "brdr_r");
     y = 0;
     while y < state.render.r_draw.viewheight {
         draw_patch(
@@ -682,7 +682,7 @@ pub fn fill_back_screen(state: &mut GameState) {
         );
         y += 8;
     }
-    let __wcache654_4 = cache_patch_name(state, "brdr_tl");
+    let __wcache654_4 = cache_patch_name(&*state.assets.fs, &mut state.assets.w_wad, "brdr_tl");
     draw_patch(
         state,
         backdrop,
@@ -690,7 +690,7 @@ pub fn fill_back_screen(state: &mut GameState) {
         state.render.r_draw.viewwindowy - 8,
         &__wcache654_4,
     );
-    let __wcache660_3 = cache_patch_name(state, "brdr_tr");
+    let __wcache660_3 = cache_patch_name(&*state.assets.fs, &mut state.assets.w_wad, "brdr_tr");
     draw_patch(
         state,
         backdrop,
@@ -698,7 +698,7 @@ pub fn fill_back_screen(state: &mut GameState) {
         state.render.r_draw.viewwindowy - 8,
         &__wcache660_3,
     );
-    let __wcache666_2 = cache_patch_name(state, "brdr_bl");
+    let __wcache666_2 = cache_patch_name(&*state.assets.fs, &mut state.assets.w_wad, "brdr_bl");
     draw_patch(
         state,
         backdrop,
@@ -706,7 +706,7 @@ pub fn fill_back_screen(state: &mut GameState) {
         state.render.r_draw.viewwindowy + state.render.r_draw.viewheight,
         &__wcache666_2,
     );
-    let __wcache672_1 = cache_patch_name(state, "brdr_br");
+    let __wcache672_1 = cache_patch_name(&*state.assets.fs, &mut state.assets.w_wad, "brdr_br");
     draw_patch(
         state,
         backdrop,

@@ -9,6 +9,7 @@ use crate::d_ticcmd::TicCmd;
 use crate::g_game::check_demo_status;
 use crate::g_game::g_ticker;
 use crate::g_game::GGameState;
+use crate::game_state::Game;
 use crate::m_argv::parm_exists;
 use crate::platform::DoomPlatform;
 use crate::w_checksum::checksum;
@@ -81,19 +82,19 @@ fn load_game_settings(
         i = i.wrapping_add(1);
     }
 }
-fn save_game_settings(state: &GameState, settings: &mut NetGameSettings) {
-    settings.deathmatch = state.game.g_game.deathmatch;
-    settings.episode = state.game.d_main.startepisode;
-    settings.map = state.game.d_main.startmap;
-    settings.skill = state.game.d_main.startskill as i32;
-    settings.loadgame = state.game.d_main.startloadgame;
-    settings.gameversion = state.game.doomstat.gameversion as i32;
-    settings.nomonsters = state.game.d_main.nomonsters as i32;
-    settings.fast_monsters = state.game.d_main.fastparm as i32;
-    settings.respawn_monsters = state.game.d_main.respawnparm as i32;
-    settings.timelimit = state.game.g_game.timelimit;
-    settings.lowres_turn = (parm_exists(&state.game.m_argv, "-record")
-        && !parm_exists(&state.game.m_argv, "-longtics")) as i32;
+fn save_game_settings(game: &Game, settings: &mut NetGameSettings) {
+    settings.deathmatch = game.g_game.deathmatch;
+    settings.episode = game.d_main.startepisode;
+    settings.map = game.d_main.startmap;
+    settings.skill = game.d_main.startskill as i32;
+    settings.loadgame = game.d_main.startloadgame;
+    settings.gameversion = game.doomstat.gameversion as i32;
+    settings.nomonsters = game.d_main.nomonsters as i32;
+    settings.fast_monsters = game.d_main.fastparm as i32;
+    settings.respawn_monsters = game.d_main.respawnparm as i32;
+    settings.timelimit = game.g_game.timelimit;
+    settings.lowres_turn =
+        (parm_exists(&game.m_argv, "-record") && !parm_exists(&game.m_argv, "-longtics")) as i32;
 }
 fn init_connect_data(state: &mut GameState, connect_data: &mut NetConnectData) {
     connect_data.max_players = MAXPLAYERS;
@@ -158,7 +159,7 @@ pub fn check_net_game(state: &mut GameState) {
         state.game.d_main.autostart = true;
     }
     register_loop_callbacks(&mut state.game.d_loop, DOOM_LOOP_INTERFACE);
-    save_game_settings(state, &mut settings);
+    save_game_settings(&state.game, &mut settings);
     start_net_game(&mut state.game.d_loop, &mut settings);
     load_game_settings(
         &mut state.game.d_main,

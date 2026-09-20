@@ -7,6 +7,7 @@ use crate::m_fixed::FRACBITS;
 use crate::m_fixed::FRACUNIT;
 use crate::m_fixed::INT_MAX;
 use crate::p_mobj::MobjFlags;
+use crate::p_mobj::PMobjState;
 use crate::p_pspr::PPsprState;
 use crate::p_setup::PSetupState;
 
@@ -360,9 +361,9 @@ pub fn line_opening(p_maputl: &mut PMaputlState, p_setup: &mut PSetupState, line
     }
     p_maputl.openrange = p_maputl.opentop - p_maputl.openbottom;
 }
-pub fn unset_thing_position(state: &mut GameState, thing: MobjId) {
+pub fn unset_thing_position(p_mobj: &mut PMobjState, p_setup: &mut PSetupState, thing: MobjId) {
     let (flags, snext, sprev, subsector, bnext, bprev, x, y) = {
-        let t = state.world.p_mobj.mo(thing);
+        let t = p_mobj.mo(thing);
         (
             t.flags,
             t.snext,
@@ -376,106 +377,89 @@ pub fn unset_thing_position(state: &mut GameState, thing: MobjId) {
     };
     if !flags.contains(MobjFlags::NOSECTOR) {
         if let Some(id) = snext {
-            state
-                .world
-                .p_mobj
+            p_mobj
                 .mobj_mut(id)
                 .expect("sector-list snext neighbor is always live")
                 .sprev = sprev;
         }
         if let Some(id) = sprev {
-            state
-                .world
-                .p_mobj
+            p_mobj
                 .mobj_mut(id)
                 .expect("sector-list sprev neighbor is always live")
                 .snext = snext;
         } else {
-            let sector = state.world.p_setup.subsectors[subsector.0 as usize].sector;
-            state.world.p_setup.sector_mut(sector).thinglist = snext;
+            let sector = p_setup.subsectors[subsector.0 as usize].sector;
+            p_setup.sector_mut(sector).thinglist = snext;
         }
     }
     if !flags.contains(MobjFlags::NOBLOCKMAP) {
         if let Some(id) = bnext {
-            state
-                .world
-                .p_mobj
+            p_mobj
                 .mobj_mut(id)
                 .expect("blockmap-list bnext neighbor is always live")
                 .bprev = bprev;
         }
         if let Some(id) = bprev {
-            state
-                .world
-                .p_mobj
+            p_mobj
                 .mobj_mut(id)
                 .expect("blockmap-list bprev neighbor is always live")
                 .bnext = bnext;
         } else {
-            let blockx = (x - state.world.p_setup.bmaporgx) >> MAPBLOCKSHIFT;
-            let blocky = (y - state.world.p_setup.bmaporgy) >> MAPBLOCKSHIFT;
+            let blockx = (x - p_setup.bmaporgx) >> MAPBLOCKSHIFT;
+            let blocky = (y - p_setup.bmaporgy) >> MAPBLOCKSHIFT;
             if blockx >= 0
-                && blockx < state.world.p_setup.bmapwidth
+                && blockx < p_setup.bmapwidth
                 && blocky >= 0
-                && blocky < state.world.p_setup.bmapheight
+                && blocky < p_setup.bmapheight
             {
-                state.world.p_setup.blocklinks
-                    [(blocky * state.world.p_setup.bmapwidth + blockx) as usize] = bnext;
+                p_setup.blocklinks[(blocky * p_setup.bmapwidth + blockx) as usize] = bnext;
             }
         }
     }
 }
-pub fn set_thing_position(state: &mut GameState, thing: MobjId) {
+pub fn set_thing_position(p_mobj: &mut PMobjState, p_setup: &mut PSetupState, thing: MobjId) {
     let (x, y, flags) = {
-        let t = state.world.p_mobj.mo(thing);
+        let t = p_mobj.mo(thing);
         (t.x, t.y, t.flags)
     };
-    let ss = point_in_subsector(&state.world.p_setup, x, y);
-    state.world.p_mobj.mo_mut(thing).subsector = ss;
+    let ss = point_in_subsector(p_setup, x, y);
+    p_mobj.mo_mut(thing).subsector = ss;
     if !flags.contains(MobjFlags::NOSECTOR) {
-        let sector = state.world.p_setup.subsectors[ss.0 as usize].sector;
-        let old_head = state.world.p_setup.sector_mut(sector).thinglist;
+        let sector = p_setup.subsectors[ss.0 as usize].sector;
+        let old_head = p_setup.sector_mut(sector).thinglist;
         {
-            let t = state.world.p_mobj.mo_mut(thing);
+            let t = p_mobj.mo_mut(thing);
             t.sprev = None;
             t.snext = old_head;
         }
         if let Some(head_id) = old_head {
-            state
-                .world
-                .p_mobj
+            p_mobj
                 .mobj_mut(head_id)
                 .expect("sector thinglist head is always live")
                 .sprev = Some(thing);
         }
-        state.world.p_setup.sector_mut(sector).thinglist = Some(thing);
+        p_setup.sector_mut(sector).thinglist = Some(thing);
     }
     if !flags.contains(MobjFlags::NOBLOCKMAP) {
-        let blockx = (x - state.world.p_setup.bmaporgx) >> MAPBLOCKSHIFT;
-        let blocky = (y - state.world.p_setup.bmaporgy) >> MAPBLOCKSHIFT;
-        if blockx >= 0
-            && blockx < state.world.p_setup.bmapwidth
-            && blocky >= 0
-            && blocky < state.world.p_setup.bmapheight
-        {
-            let idx = (blocky * state.world.p_setup.bmapwidth + blockx) as usize;
-            let old_head = state.world.p_setup.blocklinks[idx];
+        let blockx = (x - p_setup.bmaporgx) >> MAPBLOCKSHIFT;
+        let blocky = (y - p_setup.bmaporgy) >> MAPBLOCKSHIFT;
+        if blockx >= 0 && blockx < p_setup.bmapwidth && blocky >= 0 && blocky < p_setup.bmapheight {
+            let idx = (blocky * p_setup.bmapwidth + blockx) as usize;
+            let old_head = p_setup.blocklinks[idx];
             {
-                let t = state.world.p_mobj.mo_mut(thing);
+                let t = p_mobj.mo_mut(thing);
                 t.bprev = None;
                 t.bnext = old_head;
             }
             if let Some(head_id) = old_head {
-                state
-                    .world
-                    .p_mobj
+                p_mobj
                     .mobj_mut(head_id)
                     .expect("blockmap-list head is always live")
                     .bprev = Some(thing);
             }
-            state.world.p_setup.blocklinks[idx] = Some(thing);
+            p_setup.blocklinks[idx] = Some(thing);
         } else {
-            let t = state.world.p_mobj.mo_mut(thing);
+            let t = p_mobj.mo_mut(thing);
             t.bprev = None;
             t.bnext = None;
         }
