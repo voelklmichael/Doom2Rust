@@ -281,8 +281,6 @@ pub fn point_to_dist(r_main: &RMainState, x: Fixed, y: Fixed) -> Fixed {
     dist
 }
 pub fn scale_from_global_angle(r_main: &RMainState, r_segs: &RSegsState, visangle: Angle) -> Fixed {
-    let mut scale: Fixed;
-
     let anglea: Angle = (ANG90 as Angle).wrapping_add(visangle.wrapping_sub(r_main.viewangle));
     let angleb: Angle = (ANG90 as Angle).wrapping_add(visangle.wrapping_sub(r_segs.rw_normalangle));
     let sinea: i32 = FINESINE[(anglea >> ANGLETOFINESHIFT) as usize];
@@ -290,20 +288,12 @@ pub fn scale_from_global_angle(r_main: &RMainState, r_segs: &RSegsState, visangl
     let num: Fixed = fixed_mul(r_main.projection, sineb as Fixed) << r_main.detailshift;
     let den: i32 = fixed_mul(r_segs.rw_distance, sinea as Fixed);
     if den > num >> 16 {
-        scale = fixed_div(num, den as Fixed);
-        if scale > 64 * FRACUNIT {
-            scale = (64 * FRACUNIT) as Fixed;
-        } else if scale < 256 {
-            scale = 256;
-        }
+        fixed_div(num, den as Fixed).clamp(256, (64 * FRACUNIT) as Fixed)
     } else {
-        scale = (64 * FRACUNIT) as Fixed;
+        (64 * FRACUNIT) as Fixed
     }
-    scale
 }
 pub fn init_texture_mapping(r_draw: &RDrawState, r_main: &mut RMainState) {
-    let mut i: i32;
-
     let focallength: Fixed = fixed_div(
         r_main.centerxfrac,
         FINETANGENT[(FINEANGLES / 4 + FIELDOFVIEW / 2) as usize],
@@ -313,25 +303,18 @@ pub fn init_texture_mapping(r_draw: &RDrawState, r_main: &mut RMainState) {
         .enumerate()
         .take((FINEANGLES / 2) as usize)
     {
-        let mut t: i32;
-
-        if tangent > FRACUNIT * 2 {
-            t = -1;
+        let t: i32 = if tangent > FRACUNIT * 2 {
+            -1
         } else if tangent < -FRACUNIT * 2 {
-            t = r_draw.viewwidth + 1;
+            r_draw.viewwidth + 1
         } else {
-            t = fixed_mul(tangent, focallength);
-            t = (r_main.centerxfrac - t + FRACUNIT - 1) >> FRACBITS;
-            if t < -1 {
-                t = -1;
-            } else if t > r_draw.viewwidth + 1 {
-                t = r_draw.viewwidth + 1;
-            }
-        }
+            let t = fixed_mul(tangent, focallength);
+            ((r_main.centerxfrac - t + FRACUNIT - 1) >> FRACBITS).clamp(-1, r_draw.viewwidth + 1)
+        };
         r_main.viewangletox[i] = t;
     }
     for x in 0..=r_draw.viewwidth {
-        i = 0;
+        let mut i: i32 = 0;
         while r_main.viewangletox[i as usize] > x {
             i += 1;
         }

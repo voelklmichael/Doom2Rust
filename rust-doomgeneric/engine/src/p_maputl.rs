@@ -723,9 +723,6 @@ pub fn path_traverse<F: FnMut(&mut GameState, Intercept) -> bool>(
     flags: i32,
     trav: F,
 ) -> bool {
-    let mut partial: Fixed;
-    let mapxstep: i32;
-    let mapystep: i32;
     state.world.p_maputl.earlyout = (flags & PT_EARLYOUT) != 0;
     state.world.p_setup.validcount += 1;
     state.world.p_maputl.intercept_p = 0;
@@ -747,32 +744,36 @@ pub fn path_traverse<F: FnMut(&mut GameState, Intercept) -> bool>(
     y2 -= state.world.p_setup.bmaporgy;
     let xt2: Fixed = x2 >> MAPBLOCKSHIFT;
     let yt2: Fixed = y2 >> MAPBLOCKSHIFT;
-    let ystep: Fixed = if xt2 > xt1 {
-        mapxstep = 1;
-        partial = (FRACUNIT - (x1 >> MAPBTOFRAC & (FRACUNIT - 1))) as Fixed;
-        fixed_div(y2 - y1, (x2 - x1).abs() as Fixed)
+    let (mapxstep, partial, ystep): (i32, Fixed, Fixed) = if xt2 > xt1 {
+        (
+            1,
+            (FRACUNIT - (x1 >> MAPBTOFRAC & (FRACUNIT - 1))) as Fixed,
+            fixed_div(y2 - y1, (x2 - x1).abs() as Fixed),
+        )
     } else if xt2 < xt1 {
-        mapxstep = -1;
-        partial = (x1 >> MAPBTOFRAC & (FRACUNIT - 1)) as Fixed;
-        fixed_div(y2 - y1, (x2 - x1).abs() as Fixed)
+        (
+            -1,
+            (x1 >> MAPBTOFRAC & (FRACUNIT - 1)) as Fixed,
+            fixed_div(y2 - y1, (x2 - x1).abs() as Fixed),
+        )
     } else {
-        mapxstep = 0;
-        partial = FRACUNIT as Fixed;
-        (256 * FRACUNIT) as Fixed
+        (0, FRACUNIT as Fixed, (256 * FRACUNIT) as Fixed)
     };
     let mut yintercept: Fixed = (y1 >> MAPBTOFRAC) + fixed_mul(partial, ystep);
-    let xstep: Fixed = if yt2 > yt1 {
-        mapystep = 1;
-        partial = (FRACUNIT - (y1 >> MAPBTOFRAC & (FRACUNIT - 1))) as Fixed;
-        fixed_div(x2 - x1, (y2 - y1).abs() as Fixed)
+    let (mapystep, partial, xstep): (i32, Fixed, Fixed) = if yt2 > yt1 {
+        (
+            1,
+            (FRACUNIT - (y1 >> MAPBTOFRAC & (FRACUNIT - 1))) as Fixed,
+            fixed_div(x2 - x1, (y2 - y1).abs() as Fixed),
+        )
     } else if yt2 < yt1 {
-        mapystep = -1;
-        partial = (y1 >> MAPBTOFRAC & (FRACUNIT - 1)) as Fixed;
-        fixed_div(x2 - x1, (y2 - y1).abs() as Fixed)
+        (
+            -1,
+            (y1 >> MAPBTOFRAC & (FRACUNIT - 1)) as Fixed,
+            fixed_div(x2 - x1, (y2 - y1).abs() as Fixed),
+        )
     } else {
-        mapystep = 0;
-        partial = FRACUNIT as Fixed;
-        (256 * FRACUNIT) as Fixed
+        (0, FRACUNIT as Fixed, (256 * FRACUNIT) as Fixed)
     };
     let mut xintercept: Fixed = (x1 >> MAPBTOFRAC) + fixed_mul(partial, xstep);
     let mut mapx: i32 = xt1;

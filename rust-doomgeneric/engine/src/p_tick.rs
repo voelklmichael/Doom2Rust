@@ -303,15 +303,14 @@ fn unlink_thinker_node(p_tick: &mut PTickState, id: ThinkerId) {
 pub fn run_thinkers(state: &mut GameState) {
     let mut cursor = state.world.p_tick.head();
     while let Some(id) = cursor {
-        let next;
-        match thinker_function(&mut state.world, id) {
+        let next = match thinker_function(&mut state.world, id) {
             ThinkerFn::Removed => {
                 // Capture next before unlinking/freeing -- unlike the
                 // pointer-chasing version this replaces, `next` lives in our
                 // own node table, not inside the freed payload, so there's
                 // no use-after-free hazard either way, but this ordering
                 // matches the original semantics most directly.
-                next = state.world.p_tick.next(id);
+                let next = state.world.p_tick.next(id);
                 let kind = state.world.p_tick.kind(id);
                 unlink_thinker_node(&mut state.world.p_tick, id);
                 // Every kind's memory is now owned by its own arena (Mobj
@@ -374,10 +373,9 @@ pub fn run_thinkers(state: &mut GameState) {
                         }
                     }
                 }
+                next
             }
-            ThinkerFn::Paused | ThinkerFn::Unresolved => {
-                next = state.world.p_tick.next(id);
-            }
+            ThinkerFn::Paused | ThinkerFn::Unresolved => state.world.p_tick.next(id),
             ThinkerFn::Mobj(f) => {
                 if let ThinkerPayload::Mobj(mobj_id) = state.world.p_tick.payload(id) {
                     f(state, mobj_id);
@@ -387,58 +385,58 @@ pub fn run_thinkers(state: &mut GameState) {
                 // node was previously the tail, that newly spawned thinker
                 // becomes reachable via .next immediately -- preserving
                 // vanilla's same-tick-think-on-spawn behavior.
-                next = state.world.p_tick.next(id);
+                state.world.p_tick.next(id)
             }
             ThinkerFn::Ceiling(f) => {
                 if let ThinkerPayload::Ceiling(ceiling_id) = state.world.p_tick.payload(id) {
                     f(state, ceiling_id);
                 }
-                next = state.world.p_tick.next(id);
+                state.world.p_tick.next(id)
             }
             ThinkerFn::Door(f) => {
                 if let ThinkerPayload::Door(door_id) = state.world.p_tick.payload(id) {
                     f(state, door_id);
                 }
-                next = state.world.p_tick.next(id);
+                state.world.p_tick.next(id)
             }
             ThinkerFn::Floor(f) => {
                 if let ThinkerPayload::Floor(floor_id) = state.world.p_tick.payload(id) {
                     f(state, floor_id);
                 }
-                next = state.world.p_tick.next(id);
+                state.world.p_tick.next(id)
             }
             ThinkerFn::Plat(f) => {
                 if let ThinkerPayload::Plat(plat_id) = state.world.p_tick.payload(id) {
                     f(state, plat_id);
                 }
-                next = state.world.p_tick.next(id);
+                state.world.p_tick.next(id)
             }
             ThinkerFn::FireFlicker(f) => {
                 if let ThinkerPayload::FireFlicker(fireflicker_id) = state.world.p_tick.payload(id)
                 {
                     f(state, fireflicker_id);
                 }
-                next = state.world.p_tick.next(id);
+                state.world.p_tick.next(id)
             }
             ThinkerFn::LightFlash(f) => {
                 if let ThinkerPayload::LightFlash(lightflash_id) = state.world.p_tick.payload(id) {
                     f(state, lightflash_id);
                 }
-                next = state.world.p_tick.next(id);
+                state.world.p_tick.next(id)
             }
             ThinkerFn::Strobe(f) => {
                 if let ThinkerPayload::Strobe(strobe_id) = state.world.p_tick.payload(id) {
                     f(state, strobe_id);
                 }
-                next = state.world.p_tick.next(id);
+                state.world.p_tick.next(id)
             }
             ThinkerFn::Glow(f) => {
                 if let ThinkerPayload::Glow(glow_id) = state.world.p_tick.payload(id) {
                     f(state, glow_id);
                 }
-                next = state.world.p_tick.next(id);
+                state.world.p_tick.next(id)
             }
-        }
+        };
         cursor = next;
     }
 }

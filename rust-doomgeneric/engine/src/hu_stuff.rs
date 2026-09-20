@@ -325,8 +325,6 @@ pub fn hu_stop(hu_stuff: &mut HuStuffState) {
     hu_stuff.headsupactive = false;
 }
 pub fn hu_start(state: &mut GameState) {
-    let mut _i: i32 = 0;
-    let mut s: &str;
     if state.ui.hu_stuff.headsupactive {
         hu_stop(&mut state.ui.hu_stuff);
     }
@@ -352,24 +350,16 @@ pub fn hu_start(state: &mut GameState) {
         167 - hu_font0_height,
         HU_FONTSTART,
     );
-    match state.game.doomstat.gamemission.base() {
+    let mut s: &str = match state.game.doomstat.gamemission.base() {
         GameMission::Doom => {
-            s = MAPNAMES[((state.game.g_game.gameepisode - 1) * 9 + state.game.g_game.gamemap - 1)
-                as usize];
+            MAPNAMES
+                [((state.game.g_game.gameepisode - 1) * 9 + state.game.g_game.gamemap - 1) as usize]
         }
-        GameMission::Doom2 => {
-            s = MAPNAMES_COMMERCIAL[(state.game.g_game.gamemap - 1) as usize];
-        }
-        GameMission::PackPlut => {
-            s = MAPNAMES_COMMERCIAL[(state.game.g_game.gamemap - 1 + 32) as usize];
-        }
-        GameMission::PackTnt => {
-            s = MAPNAMES_COMMERCIAL[(state.game.g_game.gamemap - 1 + 64) as usize];
-        }
-        _ => {
-            s = "Unknown level";
-        }
-    }
+        GameMission::Doom2 => MAPNAMES_COMMERCIAL[(state.game.g_game.gamemap - 1) as usize],
+        GameMission::PackPlut => MAPNAMES_COMMERCIAL[(state.game.g_game.gamemap - 1 + 32) as usize],
+        GameMission::PackTnt => MAPNAMES_COMMERCIAL[(state.game.g_game.gamemap - 1 + 64) as usize],
+        _ => "Unknown level",
+    };
     if state.game.doomstat.gameversion == GameVersion::Chex {
         s = MAPNAMES[(state.game.g_game.gamemap - 1) as usize];
     }
@@ -455,18 +445,15 @@ pub fn hu_ticker(state: &mut GameState) {
     }
     if state.game.g_game.netgame {
         for (i, player_name) in PLAYER_NAMES.iter().enumerate() {
-            let rc: i32;
-
-            let c: u8;
-
-            if state.game.g_game.playeringame[i] && i != state.game.g_game.consoleplayer.slot() && {
-                c = state.game.g_game.players[i].cmd.chatchar;
-                i32::from(c) != 0
-            } {
+            let c: u8 = state.game.g_game.players[i].cmd.chatchar;
+            if state.game.g_game.playeringame[i]
+                && i != state.game.g_game.consoleplayer.slot()
+                && c != 0
+            {
                 if c <= HU_BROADCAST {
                     state.ui.hu_stuff.chat_dest[i] = c;
                 } else {
-                    rc = i32::from(hulib_key_in_itext(
+                    let rc = i32::from(hulib_key_in_itext(
                         &mut state.ui.hu_stuff.w_inputbuffer[i],
                         c,
                     ));
@@ -508,14 +495,13 @@ pub fn queue_chat_char(g_game: &mut GGameState, hu_stuff: &mut HuStuffState, c: 
     }
 }
 pub fn dequeue_chat_char(state: &mut HuStuffState) -> u8 {
-    let c: u8;
     if state.head == state.tail {
-        c = 0;
+        0
     } else {
-        c = state.chatchars[state.tail as usize];
+        let c = state.chatchars[state.tail as usize];
         state.tail = (state.tail + 1) & (QUEUESIZE - 1);
+        c
     }
-    c
 }
 pub fn hu_responder(
     g_game: &mut GGameState,

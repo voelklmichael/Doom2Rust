@@ -2902,19 +2902,17 @@ pub fn xymovement(state: &mut GameState, mo: MobjId) {
             let m = state.world.p_mobj.mo(mo);
             (m.x, m.y)
         };
-        let ptryx: Fixed;
-        let ptryy: Fixed;
-        if xmove > MAXMOVE / 2 || ymove > MAXMOVE / 2 {
-            ptryx = (mx + xmove / 2) as Fixed;
-            ptryy = (my + ymove / 2) as Fixed;
+        let (ptryx, ptryy): (Fixed, Fixed) = if xmove > MAXMOVE / 2 || ymove > MAXMOVE / 2 {
+            let ptry = (mx + xmove / 2, my + ymove / 2);
             xmove >>= 1;
             ymove >>= 1;
+            ptry
         } else {
-            ptryx = mx + xmove;
-            ptryy = my + ymove;
+            let ptry = (mx + xmove, my + ymove);
             ymove = 0;
             xmove = ymove;
-        }
+            ptry
+        };
         if !try_move(state, mo, ptryx, ptryy) {
             if player.is_some() {
                 slide_move(state, mo);

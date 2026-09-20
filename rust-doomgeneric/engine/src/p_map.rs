@@ -289,7 +289,6 @@ pub fn check_thing(state: &mut GameState, thing_id: MobjId) -> bool {
     let thing = thing_id;
     let tmthing = state.world.p_map.tmthing.unwrap();
 
-    let damage: i32;
     if !state
         .world
         .p_mobj
@@ -316,7 +315,7 @@ pub fn check_thing(state: &mut GameState, thing_id: MobjId) -> bool {
         .flags
         .contains(MobjFlags::SKULLFLY)
     {
-        damage = (p_random(&mut state.world.m_random) % 8 + 1)
+        let damage: i32 = (p_random(&mut state.world.m_random) % 8 + 1)
             * state
                 .assets
                 .info
@@ -391,7 +390,7 @@ pub fn check_thing(state: &mut GameState, thing_id: MobjId) -> bool {
                 .flags
                 .contains(MobjFlags::SOLID);
         }
-        damage = (p_random(&mut state.world.m_random) % 8 + 1)
+        let damage: i32 = (p_random(&mut state.world.m_random) % 8 + 1)
             * state
                 .assets
                 .info
@@ -766,10 +765,7 @@ pub fn slide_move(state: &mut GameState, mo: MobjId) {
     }
 }
 pub fn aim_traverse(state: &mut GameState, intercept: Intercept) -> bool {
-    let dist: Fixed;
     if let InterceptTarget::Line(li) = intercept.target {
-        let mut slope: Fixed;
-
         let liv = state.world.p_setup.line(li);
         if !liv.flags.contains(LineFlags::TWOSIDED) {
             return false;
@@ -778,7 +774,7 @@ pub fn aim_traverse(state: &mut GameState, intercept: Intercept) -> bool {
         if state.world.p_maputl.openbottom >= state.world.p_maputl.opentop {
             return false;
         }
-        dist = fixed_mul(state.world.p_map.attackrange, intercept.frac);
+        let dist: Fixed = fixed_mul(state.world.p_map.attackrange, intercept.frac);
         if liv.backsector.is_none()
             || state
                 .world
@@ -791,7 +787,7 @@ pub fn aim_traverse(state: &mut GameState, intercept: Intercept) -> bool {
                     .sector_mut(liv.backsector.unwrap())
                     .floorheight
         {
-            slope = fixed_div(
+            let slope = fixed_div(
                 state.world.p_maputl.openbottom - state.world.p_map.shootz,
                 dist,
             );
@@ -811,7 +807,7 @@ pub fn aim_traverse(state: &mut GameState, intercept: Intercept) -> bool {
                     .sector_mut(liv.backsector.unwrap())
                     .ceilingheight
         {
-            slope = fixed_div(
+            let slope = fixed_div(
                 state.world.p_maputl.opentop - state.world.p_map.shootz,
                 dist,
             );
@@ -840,7 +836,7 @@ pub fn aim_traverse(state: &mut GameState, intercept: Intercept) -> bool {
     {
         return true;
     }
-    dist = fixed_mul(state.world.p_map.attackrange, intercept.frac);
+    let dist: Fixed = fixed_mul(state.world.p_map.attackrange, intercept.frac);
     let mut thingtopslope: Fixed = fixed_div(
         state.world.p_mobj.mo(th).z + state.world.p_mobj.mo(th).height - state.world.p_map.shootz,
         dist,

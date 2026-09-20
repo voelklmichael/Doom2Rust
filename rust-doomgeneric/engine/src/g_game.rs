@@ -1088,34 +1088,15 @@ pub fn check_spot(state: &mut GameState, playernum: PlayerId, mthing: &MapThing)
     state.game.g_game.bodyque[state.game.g_game.bodyqueslot % BODYQUESIZE] = Some(player_mo_id);
     state.game.g_game.bodyqueslot += 1;
     let ss = point_in_subsector(&state.world.p_setup, x, y);
-    let xa: Fixed;
-    let ya: Fixed;
     let an: i32 = (ANG45 >> ANGLETOFINESHIFT) * (i32::from(mthing.angle) / 45);
-    match an {
-        4096 => {
-            xa = FINETANGENT[2048];
-            ya = FINETANGENT[0];
-        }
-        5120 => {
-            xa = FINETANGENT[3072];
-            ya = FINETANGENT[1024];
-        }
-        6144 => {
-            xa = FINESINE[0];
-            ya = FINETANGENT[2048];
-        }
-        7168 => {
-            xa = FINESINE[1024];
-            ya = FINETANGENT[3072];
-        }
-        0 | 1024 | 2048 | 3072 => {
-            xa = FINECOSINE[an as usize];
-            ya = FINESINE[an as usize];
-        }
-        _ => {
-            error(&format!("G_CheckSpot: unexpected angle {an}\n"));
-        }
-    }
+    let (xa, ya): (Fixed, Fixed) = match an {
+        4096 => (FINETANGENT[2048], FINETANGENT[0]),
+        5120 => (FINETANGENT[3072], FINETANGENT[1024]),
+        6144 => (FINESINE[0], FINETANGENT[2048]),
+        7168 => (FINESINE[1024], FINETANGENT[3072]),
+        0 | 1024 | 2048 | 3072 => (FINECOSINE[an as usize], FINESINE[an as usize]),
+        _ => error(&format!("G_CheckSpot: unexpected angle {an}\n")),
+    };
     let floorheight = state
         .world
         .p_setup
@@ -1448,7 +1429,6 @@ pub fn do_new_game(state: &mut GameState) {
     state.game.g_game.gameaction = GameAction::Nothing;
 }
 pub fn init_new(state: &mut GameState, mut skill: SkillType, mut episode: i32, mut map: i32) {
-    let skytexturename: &str;
     if state.game.g_game.paused {
         state.game.g_game.paused = false;
         resume_sound(
@@ -1508,30 +1488,22 @@ pub fn init_new(state: &mut GameState, mut skill: SkillType, mut episode: i32, m
     state.game.g_game.gamemap = map;
     state.game.g_game.gameskill = skill;
     state.game.g_game.viewactive = true;
-    if state.game.doomstat.gamemode == GameMode::Commercial {
+    let skytexturename: &str = if state.game.doomstat.gamemode == GameMode::Commercial {
         if state.game.g_game.gamemap < 12 {
-            skytexturename = "SKY1";
+            "SKY1"
         } else if state.game.g_game.gamemap < 21 {
-            skytexturename = "SKY2";
+            "SKY2"
         } else {
-            skytexturename = "SKY3";
+            "SKY3"
         }
     } else {
         match state.game.g_game.gameepisode {
-            2 => {
-                skytexturename = "SKY2";
-            }
-            3 => {
-                skytexturename = "SKY3";
-            }
-            4 => {
-                skytexturename = "SKY4";
-            }
-            _ => {
-                skytexturename = "SKY1";
-            }
+            2 => "SKY2",
+            3 => "SKY3",
+            4 => "SKY4",
+            _ => "SKY1",
         }
-    }
+    };
     state.render.r_sky.skytexture = texture_num_for_name(&state.render.r_data, skytexturename);
     do_load_level(state);
 }

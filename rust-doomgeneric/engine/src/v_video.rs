@@ -287,8 +287,6 @@ pub fn v_screen_shot(fs: &mut dyn DoomFileSystem, i_video: &IVideoState, w_wad: 
 pub const MOUSE_SPEED_BOX_WIDTH: i32 = 120;
 pub const MOUSE_SPEED_BOX_HEIGHT: i32 = 9;
 pub fn draw_mouse_speed_box(state: &mut IVideoState, platform: &mut dyn DoomPlatform, speed: i32) {
-    let mut original_speed: i32;
-
     let bgcolor: i32 = get_palette_index(platform, 0x77, 0x77, 0x77);
     let bordercolor: i32 = get_palette_index(platform, 0x55, 0x55, 0x55);
     let red: i32 = get_palette_index(platform, 0xff, 0, 0);
@@ -317,13 +315,12 @@ pub fn draw_mouse_speed_box(state: &mut IVideoState, platform: &mut dyn DoomPlat
         bordercolor,
     );
     let redline_x: i32 = MOUSE_SPEED_BOX_WIDTH / 3;
-    if speed < state.mouse_threshold {
-        original_speed = speed;
+    let original_speed: i32 = if speed < state.mouse_threshold {
+        speed
     } else {
-        original_speed = speed - state.mouse_threshold;
-        original_speed = (original_speed as f32 / state.mouse_acceleration) as i32;
-        original_speed += state.mouse_threshold;
-    }
+        let above_threshold = speed - state.mouse_threshold;
+        (above_threshold as f32 / state.mouse_acceleration) as i32 + state.mouse_threshold
+    };
     let mut linelen: i32 = original_speed * redline_x / state.mouse_threshold;
     if linelen > MOUSE_SPEED_BOX_WIDTH - 1 {
         linelen = MOUSE_SPEED_BOX_WIDTH - 1;

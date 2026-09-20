@@ -148,8 +148,6 @@ pub fn give_weapon(
     weapon: WeaponType,
     dropped: bool,
 ) -> bool {
-    let gaveammo: bool;
-    let gaveweapon: bool;
     if state.game.g_game.netgame && state.game.g_game.deathmatch != 2 && !dropped {
         if state.game.g_game.players[player].weaponowned[weapon] {
             return false;
@@ -167,19 +165,15 @@ pub fn give_weapon(
         }
         return false;
     }
-    if WEAPONINFO[weapon].ammo == AmmoType::Noammo {
-        gaveammo = false;
-    } else {
-        if dropped {
-            gaveammo = give_ammo(&mut state.game.g_game, player, WEAPONINFO[weapon].ammo, 1);
-        } else {
-            gaveammo = give_ammo(&mut state.game.g_game, player, WEAPONINFO[weapon].ammo, 2);
-        }
-    }
-    if state.game.g_game.players[player].weaponowned[weapon] {
-        gaveweapon = false;
-    } else {
-        gaveweapon = true;
+    let gaveammo: bool = WEAPONINFO[weapon].ammo != AmmoType::Noammo
+        && give_ammo(
+            &mut state.game.g_game,
+            player,
+            WEAPONINFO[weapon].ammo,
+            if dropped { 1 } else { 2 },
+        );
+    let gaveweapon: bool = !state.game.g_game.players[player].weaponowned[weapon];
+    if gaveweapon {
         state.game.g_game.players[player].weaponowned[weapon] = true;
         state.game.g_game.players[player].pendingweapon = weapon;
     }

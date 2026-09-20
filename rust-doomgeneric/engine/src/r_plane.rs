@@ -84,8 +84,6 @@ impl RPlaneState {
 pub const ANGLETOSKYSHIFT: u32 = 22;
 pub const MAXVISPLANES: usize = 128;
 pub fn map_plane(state: &mut GameState, y: i32, x1: i32, x2: i32) {
-    let distance: Fixed;
-
     if x2 < x1
         || x1 < 0
         || x2 >= state.render.r_draw.viewwidth
@@ -93,24 +91,26 @@ pub fn map_plane(state: &mut GameState, y: i32, x1: i32, x2: i32) {
     {
         error(&format!("R_MapPlane: {x1}, {x2} at {y}"));
     }
-    if state.render.r_plane.planeheight == state.render.r_plane.cachedheight[y as usize] {
-        distance = state.render.r_plane.cacheddistance[y as usize];
-        state.render.r_draw.ds_xstep = state.render.r_plane.cachedxstep[y as usize];
-        state.render.r_draw.ds_ystep = state.render.r_plane.cachedystep[y as usize];
-    } else {
-        state.render.r_plane.cachedheight[y as usize] = state.render.r_plane.planeheight;
-        state.render.r_plane.cacheddistance[y as usize] = fixed_mul(
-            state.render.r_plane.planeheight,
-            state.render.r_plane.yslope[y as usize],
-        );
-        distance = state.render.r_plane.cacheddistance[y as usize];
-        state.render.r_plane.cachedxstep[y as usize] =
-            fixed_mul(distance, state.render.r_plane.basexscale);
-        state.render.r_draw.ds_xstep = state.render.r_plane.cachedxstep[y as usize];
-        state.render.r_plane.cachedystep[y as usize] =
-            fixed_mul(distance, state.render.r_plane.baseyscale);
-        state.render.r_draw.ds_ystep = state.render.r_plane.cachedystep[y as usize];
-    }
+    let distance: Fixed =
+        if state.render.r_plane.planeheight == state.render.r_plane.cachedheight[y as usize] {
+            state.render.r_draw.ds_xstep = state.render.r_plane.cachedxstep[y as usize];
+            state.render.r_draw.ds_ystep = state.render.r_plane.cachedystep[y as usize];
+            state.render.r_plane.cacheddistance[y as usize]
+        } else {
+            state.render.r_plane.cachedheight[y as usize] = state.render.r_plane.planeheight;
+            state.render.r_plane.cacheddistance[y as usize] = fixed_mul(
+                state.render.r_plane.planeheight,
+                state.render.r_plane.yslope[y as usize],
+            );
+            let distance = state.render.r_plane.cacheddistance[y as usize];
+            state.render.r_plane.cachedxstep[y as usize] =
+                fixed_mul(distance, state.render.r_plane.basexscale);
+            state.render.r_draw.ds_xstep = state.render.r_plane.cachedxstep[y as usize];
+            state.render.r_plane.cachedystep[y as usize] =
+                fixed_mul(distance, state.render.r_plane.baseyscale);
+            state.render.r_draw.ds_ystep = state.render.r_plane.cachedystep[y as usize];
+            distance
+        };
     let length: Fixed = fixed_mul(distance, state.render.r_plane.distscale[x1 as usize]);
     let angle: usize = (state
         .render
