@@ -521,72 +521,319 @@ pub fn keen_die(state: &mut GameState, id: MobjId) {
     let junk = state.world.p_setup.junk_line(666_i16);
     do_door(state, junk, VldoorE::Open);
 }
-pub fn look(state: &mut GameState, id: MobjId) {
-    {
-        let actor = id;
-
-        state.world.p_mobj.mo_mut(actor).threshold = 0;
-        let targ: Option<MobjId> = state
+pub fn look(state: &mut GameState, actor: MobjId) {
+    state.world.p_mobj.mo_mut(actor).threshold = 0;
+    let targ: Option<MobjId> = state
+        .world
+        .p_setup
+        .sector_mut(
+            state.world.p_setup.subsectors[state.world.p_mobj.mo(actor).subsector.0 as usize]
+                .sector,
+        )
+        .soundtarget
+        .filter(|&target| state.world.p_mobj.is_live(target));
+    // Whether the actor already sees its target (and so skips looking around).
+    let sees_target = if let Some(targ) = targ.filter(|&t| {
+        state
             .world
-            .p_setup
-            .sector_mut(
-                state.world.p_setup.subsectors[state.world.p_mobj.mo(actor).subsector.0 as usize]
-                    .sector,
-            )
-            .soundtarget
-            .filter(|&id| state.world.p_mobj.is_live(id));
-        // Whether the actor already sees its target (and so skips looking around).
-        let sees_target = if let Some(targ) = targ.filter(|&t| {
-            state
-                .world
-                .p_mobj
-                .mo(t)
-                .flags
-                .contains(MobjFlags::SHOOTABLE)
-        }) {
-            state.world.p_mobj.mo_mut(actor).target = Some(targ);
-            !state
-                .world
-                .p_mobj
-                .mo(actor)
-                .flags
-                .contains(MobjFlags::AMBUSH)
-                || check_sight(state, actor, targ)
-        } else {
-            false
-        };
-        if !sees_target && !look_for_players(state, actor, false) {
-            return;
-        }
-        if state
+            .p_mobj
+            .mo(t)
+            .flags
+            .contains(MobjFlags::SHOOTABLE)
+    }) {
+        state.world.p_mobj.mo_mut(actor).target = Some(targ);
+        !state
+            .world
+            .p_mobj
+            .mo(actor)
+            .flags
+            .contains(MobjFlags::AMBUSH)
+            || check_sight(state, actor, targ)
+    } else {
+        false
+    };
+    if !sees_target && !look_for_players(state, actor, false) {
+        return;
+    }
+    if state
+        .assets
+        .info
+        .mobjinfo_mut(state.world.p_mobj.mo(actor).kind)
+        .seesound
+        != SfxName::SfxNone
+    {
+        let seesound = state
             .assets
             .info
             .mobjinfo_mut(state.world.p_mobj.mo(actor).kind)
-            .seesound
-            != SfxName::SfxNone
-        {
-            let seesound = state
-                .assets
-                .info
-                .mobjinfo_mut(state.world.p_mobj.mo(actor).kind)
-                .seesound;
-            let sound = match seesound {
-                SfxName::Posit1 | SfxName::Posit2 | SfxName::Posit3 => {
-                    [SfxName::Posit1, SfxName::Posit2, SfxName::Posit3]
-                        [(p_random(&mut state.world.m_random) % 3) as usize]
-                }
-                SfxName::Bgsit1 | SfxName::Bgsit2 => [SfxName::Bgsit1, SfxName::Bgsit2]
-                    [(p_random(&mut state.world.m_random) % 2) as usize],
-                other => other,
-            };
-            if state.world.p_mobj.mo(actor).kind as u32 == MobjType::Spider as i32 as u32
-                || state.world.p_mobj.mo(actor).kind as u32 == MobjType::Cyborg as i32 as u32
-            {
-                s_start_sound(state, SoundOrigin::None, sound);
-            } else {
-                s_start_sound(state, SoundOrigin::Mobj(actor), sound);
+            .seesound;
+        let sound = match seesound {
+            SfxName::Posit1 | SfxName::Posit2 | SfxName::Posit3 => {
+                [SfxName::Posit1, SfxName::Posit2, SfxName::Posit3]
+                    [(p_random(&mut state.world.m_random) % 3) as usize]
             }
+            SfxName::Bgsit1 | SfxName::Bgsit2 => [SfxName::Bgsit1, SfxName::Bgsit2]
+                [(p_random(&mut state.world.m_random) % 2) as usize],
+            other => other,
+        };
+        if state.world.p_mobj.mo(actor).kind as u32 == MobjType::Spider as i32 as u32
+            || state.world.p_mobj.mo(actor).kind as u32 == MobjType::Cyborg as i32 as u32
+        {
+            s_start_sound(state, SoundOrigin::None, sound);
+        } else {
+            s_start_sound(state, SoundOrigin::Mobj(actor), sound);
         }
+    }
+    let seestate = state
+        .assets
+        .info
+        .mobjinfo_mut(state.world.p_mobj.mo(actor).kind)
+        .seestate;
+    set_mobj_state(state, actor, seestate);
+}
+pub fn chase(state: &mut GameState, actor: MobjId) {
+    let delta: i32;
+    if state.world.p_mobj.mo(actor).reactiontime != 0 {
+        state.world.p_mobj.mo_mut(actor).reactiontime -= 1;
+    }
+    let target = state
+        .world
+        .p_mobj
+        .mo(actor)
+        .target
+        .filter(|&target| state.world.p_mobj.is_live(target));
+    if state.world.p_mobj.mo(actor).threshold != 0 {
+        if target.is_none() || state.world.p_mobj.mo(target.unwrap()).health <= 0 {
+            state.world.p_mobj.mo_mut(actor).threshold = 0;
+        } else {
+            state.world.p_mobj.mo_mut(actor).threshold -= 1;
+        }
+    }
+    if state.world.p_mobj.mo(actor).movedir < 8 {
+        state.world.p_mobj.mo_mut(actor).angle &= (7 << 29) as Angle;
+        delta = state
+            .world
+            .p_mobj
+            .mo(actor)
+            .angle
+            .wrapping_sub((state.world.p_mobj.mo(actor).movedir << 29) as Angle)
+            as i32;
+        if delta > 0 {
+            state.world.p_mobj.mo_mut(actor).angle = state
+                .world
+                .p_mobj
+                .mo(actor)
+                .angle
+                .wrapping_sub((ANG90 / 2) as Angle);
+        } else if delta < 0 {
+            state.world.p_mobj.mo_mut(actor).angle = state
+                .world
+                .p_mobj
+                .mo(actor)
+                .angle
+                .wrapping_add((ANG90 / 2) as Angle);
+        }
+    }
+    if target.is_none()
+        || !state
+            .world
+            .p_mobj
+            .mo(target.unwrap())
+            .flags
+            .contains(MobjFlags::SHOOTABLE)
+    {
+        if look_for_players(state, actor, true) {
+            return;
+        }
+        let spawnstate = state
+            .assets
+            .info
+            .mobjinfo_mut(state.world.p_mobj.mo(actor).kind)
+            .spawnstate;
+        set_mobj_state(state, actor, spawnstate);
+        return;
+    }
+    if state
+        .world
+        .p_mobj
+        .mo(actor)
+        .flags
+        .contains(MobjFlags::JUSTATTACKED)
+    {
+        state.world.p_mobj.mo_mut(actor).flags &= !MobjFlags::JUSTATTACKED;
+        if state.game.g_game.gameskill != SkillType::Nightmare && !state.game.d_main.fastparm {
+            new_chase_dir(state, actor);
+        }
+        return;
+    }
+    let actor_info = state
+        .assets
+        .info
+        .mobjinfo_mut(state.world.p_mobj.mo(actor).kind);
+    if actor_info.meleestate != StateNum::Null && check_melee_range(state, actor) {
+        let attacksound = state
+            .assets
+            .info
+            .mobjinfo_mut(state.world.p_mobj.mo(actor).kind)
+            .attacksound;
+        if attacksound != SfxName::SfxNone {
+            s_start_sound(state, SoundOrigin::Mobj(actor), attacksound);
+        }
+        let meleestate = state
+            .assets
+            .info
+            .mobjinfo_mut(state.world.p_mobj.mo(actor).kind)
+            .meleestate;
+        set_mobj_state(state, actor, meleestate);
+        return;
+    }
+    if state
+        .assets
+        .info
+        .mobjinfo_mut(state.world.p_mobj.mo(actor).kind)
+        .missilestate
+        != StateNum::Null
+        && !(state.game.g_game.gameskill < SkillType::Nightmare
+            && !state.game.d_main.fastparm
+            && state.world.p_mobj.mo(actor).movecount != 0)
+        && check_missile_range(state, actor)
+    {
+        let missilestate = state
+            .assets
+            .info
+            .mobjinfo_mut(state.world.p_mobj.mo(actor).kind)
+            .missilestate;
+        set_mobj_state(state, actor, missilestate);
+        state.world.p_mobj.mo_mut(actor).flags |= MobjFlags::JUSTATTACKED;
+        return;
+    }
+    if state.game.g_game.netgame
+        && state.world.p_mobj.mo(actor).threshold == 0
+        && !check_sight(state, actor, state.world.p_mobj.mo(target.unwrap()).id)
+        && look_for_players(state, actor, true)
+    {
+        return;
+    }
+    state.world.p_mobj.mo_mut(actor).movecount -= 1;
+    if state.world.p_mobj.mo(actor).movecount < 0 || !p_move(state, actor) {
+        new_chase_dir(state, actor);
+    }
+    let activesound = state
+        .assets
+        .info
+        .mobjinfo_mut(state.world.p_mobj.mo(actor).kind)
+        .activesound;
+    if activesound != SfxName::SfxNone && p_random(&mut state.world.m_random) < 3 {
+        s_start_sound(state, SoundOrigin::Mobj(actor), activesound);
+    }
+}
+pub fn face_target(state: &mut GameState, actor: MobjId) {
+    let Some(target) = live_target(&state.world.p_mobj, actor) else {
+        return;
+    };
+    state.world.p_mobj.mo_mut(actor).flags &= !MobjFlags::AMBUSH;
+    state.world.p_mobj.mo_mut(actor).angle = point_to_angle2(
+        &mut state.render.r_main,
+        state.world.p_mobj.mo(actor).x,
+        state.world.p_mobj.mo(actor).y,
+        state.world.p_mobj.mo(target).x,
+        state.world.p_mobj.mo(target).y,
+    );
+    if state
+        .world
+        .p_mobj
+        .mo(target)
+        .flags
+        .contains(MobjFlags::SHADOW)
+    {
+        state.world.p_mobj.mo_mut(actor).angle = state.world.p_mobj.mo(actor).angle.wrapping_add(
+            ((p_random(&mut state.world.m_random) - p_random(&mut state.world.m_random)) << 21)
+                as Angle,
+        );
+    }
+}
+pub fn pos_attack(state: &mut GameState, actor: MobjId) {
+    let mut angle: i32;
+
+    if state.world.p_mobj.mo(actor).target.is_none() {
+        return;
+    }
+    face_target(state, actor);
+    angle = state.world.p_mobj.mo(actor).angle as i32;
+    let slope: i32 = aim_line_attack(state, Some(actor), angle as Angle, MISSILERANGE);
+    s_start_sound(state, SoundOrigin::Mobj(actor), SfxName::Pistol);
+    angle += (p_random(&mut state.world.m_random) - p_random(&mut state.world.m_random)) << 20;
+    let damage: i32 = (p_random(&mut state.world.m_random) % 5 + 1) * 3;
+    line_attack(
+        state,
+        actor,
+        angle as Angle,
+        MISSILERANGE,
+        slope as Fixed,
+        damage,
+    );
+}
+pub fn spos_attack(state: &mut GameState, actor: MobjId) {
+    let mut angle: i32;
+
+    let mut damage: i32;
+
+    if state.world.p_mobj.mo(actor).target.is_none() {
+        return;
+    }
+    s_start_sound(state, SoundOrigin::Mobj(actor), SfxName::Shotgn);
+    face_target(state, actor);
+    let bangle: i32 = state.world.p_mobj.mo(actor).angle as i32;
+    let slope: i32 = aim_line_attack(state, Some(actor), bangle as Angle, MISSILERANGE);
+    for _ in 0..3 {
+        angle = bangle
+            + ((p_random(&mut state.world.m_random) - p_random(&mut state.world.m_random)) << 20);
+        damage = (p_random(&mut state.world.m_random) % 5 + 1) * 3;
+        line_attack(
+            state,
+            actor,
+            angle as Angle,
+            MISSILERANGE,
+            slope as Fixed,
+            damage,
+        );
+    }
+}
+pub fn cpos_attack(state: &mut GameState, actor: MobjId) {
+    if state.world.p_mobj.mo(actor).target.is_none() {
+        return;
+    }
+    s_start_sound(state, SoundOrigin::Mobj(actor), SfxName::Shotgn);
+    face_target(state, actor);
+    let bangle: i32 = state.world.p_mobj.mo(actor).angle as i32;
+    let slope: i32 = aim_line_attack(state, Some(actor), bangle as Angle, MISSILERANGE);
+    let angle: i32 = bangle
+        + ((p_random(&mut state.world.m_random) - p_random(&mut state.world.m_random)) << 20);
+    let damage: i32 = (p_random(&mut state.world.m_random) % 5 + 1) * 3;
+    line_attack(
+        state,
+        actor,
+        angle as Angle,
+        MISSILERANGE,
+        slope as Fixed,
+        damage,
+    );
+}
+pub fn cpos_refire(state: &mut GameState, actor: MobjId) {
+    face_target(state, actor);
+    if p_random(&mut state.world.m_random) < 40 {
+        return;
+    }
+    let target = state
+        .world
+        .p_mobj
+        .mo(actor)
+        .target
+        .filter(|&target| state.world.p_mobj.is_live(target));
+    if target.is_none()
+        || state.world.p_mobj.mo(target.unwrap()).health <= 0
+        || !check_sight(state, actor, state.world.p_mobj.mo(target.unwrap()).id)
+    {
         let seestate = state
             .assets
             .info
@@ -595,533 +842,227 @@ pub fn look(state: &mut GameState, id: MobjId) {
         set_mobj_state(state, actor, seestate);
     }
 }
-pub fn chase(state: &mut GameState, id: MobjId) {
+pub fn spid_refire(state: &mut GameState, actor: MobjId) {
+    face_target(state, actor);
+    if p_random(&mut state.world.m_random) < 10 {
+        return;
+    }
+    let target = state
+        .world
+        .p_mobj
+        .mo(actor)
+        .target
+        .filter(|&target| state.world.p_mobj.is_live(target));
+    if target.is_none()
+        || state.world.p_mobj.mo(target.unwrap()).health <= 0
+        || !check_sight(state, actor, state.world.p_mobj.mo(target.unwrap()).id)
     {
-        let actor = id;
-        let delta: i32;
-        if state.world.p_mobj.mo(actor).reactiontime != 0 {
-            state.world.p_mobj.mo_mut(actor).reactiontime -= 1;
-        }
-        let target = state
-            .world
-            .p_mobj
-            .mo(actor)
-            .target
-            .filter(|&id| state.world.p_mobj.is_live(id));
-        if state.world.p_mobj.mo(actor).threshold != 0 {
-            if target.is_none() || state.world.p_mobj.mo(target.unwrap()).health <= 0 {
-                state.world.p_mobj.mo_mut(actor).threshold = 0;
-            } else {
-                state.world.p_mobj.mo_mut(actor).threshold -= 1;
-            }
-        }
-        if state.world.p_mobj.mo(actor).movedir < 8 {
-            state.world.p_mobj.mo_mut(actor).angle &= (7 << 29) as Angle;
-            delta = state
+        let seestate = state
+            .assets
+            .info
+            .mobjinfo_mut(state.world.p_mobj.mo(actor).kind)
+            .seestate;
+        set_mobj_state(state, actor, seestate);
+    }
+}
+pub fn bspi_attack(state: &mut GameState, actor: MobjId) {
+    let Some(target) = live_target(&state.world.p_mobj, actor) else {
+        return;
+    };
+    face_target(state, actor);
+    spawn_missile(state, actor, target, MobjType::Arachplaz);
+}
+pub fn troop_attack(state: &mut GameState, actor: MobjId) {
+    let damage: i32;
+    let Some(target) = live_target(&state.world.p_mobj, actor) else {
+        return;
+    };
+    face_target(state, actor);
+    if check_melee_range(state, actor) {
+        s_start_sound(state, SoundOrigin::Mobj(actor), SfxName::Claw);
+        damage = (p_random(&mut state.world.m_random) % 8 + 1) * 3;
+        damage_mobj(state, target, Some(actor), Some(actor), damage);
+        return;
+    }
+    spawn_missile(state, actor, target, MobjType::Troopshot);
+}
+pub fn sarg_attack(state: &mut GameState, actor: MobjId) {
+    let damage: i32;
+    let Some(target) = live_target(&state.world.p_mobj, actor) else {
+        return;
+    };
+    face_target(state, actor);
+    if check_melee_range(state, actor) {
+        damage = (p_random(&mut state.world.m_random) % 10 + 1) * 4;
+        damage_mobj(state, target, Some(actor), Some(actor), damage);
+    }
+}
+pub fn head_attack(state: &mut GameState, actor: MobjId) {
+    let damage: i32;
+    let Some(target) = live_target(&state.world.p_mobj, actor) else {
+        return;
+    };
+    face_target(state, actor);
+    if check_melee_range(state, actor) {
+        damage = (p_random(&mut state.world.m_random) % 6 + 1) * 10;
+        damage_mobj(state, target, Some(actor), Some(actor), damage);
+        return;
+    }
+    spawn_missile(state, actor, target, MobjType::Headshot);
+}
+pub fn cyber_attack(state: &mut GameState, actor: MobjId) {
+    let Some(target) = live_target(&state.world.p_mobj, actor) else {
+        return;
+    };
+    face_target(state, actor);
+    spawn_missile(state, actor, target, MobjType::Rocket);
+}
+pub fn bruis_attack(state: &mut GameState, actor: MobjId) {
+    let damage: i32;
+    let Some(target) = live_target(&state.world.p_mobj, actor) else {
+        return;
+    };
+    if check_melee_range(state, actor) {
+        s_start_sound(state, SoundOrigin::Mobj(actor), SfxName::Claw);
+        damage = (p_random(&mut state.world.m_random) % 8 + 1) * 10;
+        damage_mobj(state, target, Some(actor), Some(actor), damage);
+        return;
+    }
+    spawn_missile(state, actor, target, MobjType::Bruisershot);
+}
+pub fn skel_missile(state: &mut GameState, actor: MobjId) {
+    let Some(target) = live_target(&state.world.p_mobj, actor) else {
+        return;
+    };
+    face_target(state, actor);
+    state.world.p_mobj.mo_mut(actor).z += 16 * FRACUNIT;
+    let mo: MobjId = spawn_missile(state, actor, target, MobjType::Tracer);
+    state.world.p_mobj.mo_mut(actor).z -= 16 * FRACUNIT;
+    state.world.p_mobj.mo_mut(mo).x += state.world.p_mobj.mo(mo).momx;
+    state.world.p_mobj.mo_mut(mo).y += state.world.p_mobj.mo(mo).momy;
+    state.world.p_mobj.mo_mut(mo).tracer = state.world.p_mobj.mo(actor).target;
+}
+pub static TRACEANGLE: i32 = 0xc000000;
+pub fn a_tracer(state: &mut GameState, actor: MobjId) {
+    let mut exact: Angle;
+    let mut dist: Fixed;
+
+    if state.game.d_loop.gametic & 3 != 0 {
+        return;
+    }
+    spawn_puff(
+        state,
+        state.world.p_mobj.mo(actor).x,
+        state.world.p_mobj.mo(actor).y,
+        state.world.p_mobj.mo(actor).z,
+    );
+    let th: MobjId = spawn_mobj(
+        state,
+        state.world.p_mobj.mo(actor).x - state.world.p_mobj.mo(actor).momx,
+        state.world.p_mobj.mo(actor).y - state.world.p_mobj.mo(actor).momy,
+        state.world.p_mobj.mo(actor).z,
+        MobjType::Smoke,
+    );
+    state.world.p_mobj.mo_mut(th).momz = FRACUNIT as Fixed;
+    state.world.p_mobj.mo_mut(th).tics -= p_random(&mut state.world.m_random) & 3;
+    if state.world.p_mobj.mo(th).tics < 1 {
+        state.world.p_mobj.mo_mut(th).tics = 1;
+    }
+    let dest: Option<MobjId> = state
+        .world
+        .p_mobj
+        .mo(actor)
+        .tracer
+        .filter(|&target| state.world.p_mobj.is_live(target));
+    if dest.is_none() || state.world.p_mobj.mo(dest.unwrap()).health <= 0 {
+        return;
+    }
+    exact = point_to_angle2(
+        &mut state.render.r_main,
+        state.world.p_mobj.mo(actor).x,
+        state.world.p_mobj.mo(actor).y,
+        state.world.p_mobj.mo(dest.unwrap()).x,
+        state.world.p_mobj.mo(dest.unwrap()).y,
+    );
+    if exact != state.world.p_mobj.mo(actor).angle {
+        if exact.wrapping_sub(state.world.p_mobj.mo(actor).angle) > 0x80000000 {
+            state.world.p_mobj.mo_mut(actor).angle = state
                 .world
                 .p_mobj
                 .mo(actor)
                 .angle
-                .wrapping_sub((state.world.p_mobj.mo(actor).movedir << 29) as Angle)
-                as i32;
-            if delta > 0 {
-                state.world.p_mobj.mo_mut(actor).angle = state
-                    .world
-                    .p_mobj
-                    .mo(actor)
-                    .angle
-                    .wrapping_sub((ANG90 / 2) as Angle);
-            } else if delta < 0 {
-                state.world.p_mobj.mo_mut(actor).angle = state
-                    .world
-                    .p_mobj
-                    .mo(actor)
-                    .angle
-                    .wrapping_add((ANG90 / 2) as Angle);
+                .wrapping_sub(TRACEANGLE as Angle);
+            if exact.wrapping_sub(state.world.p_mobj.mo(actor).angle) < 0x80000000 {
+                state.world.p_mobj.mo_mut(actor).angle = exact;
             }
-        }
-        if target.is_none()
-            || !state
+        } else {
+            state.world.p_mobj.mo_mut(actor).angle = state
                 .world
                 .p_mobj
-                .mo(target.unwrap())
-                .flags
-                .contains(MobjFlags::SHOOTABLE)
-        {
-            if look_for_players(state, actor, true) {
-                return;
-            }
-            let spawnstate = state
-                .assets
-                .info
-                .mobjinfo_mut(state.world.p_mobj.mo(actor).kind)
-                .spawnstate;
-            set_mobj_state(state, actor, spawnstate);
-            return;
-        }
-        if state
-            .world
-            .p_mobj
-            .mo(actor)
-            .flags
-            .contains(MobjFlags::JUSTATTACKED)
-        {
-            state.world.p_mobj.mo_mut(actor).flags &= !MobjFlags::JUSTATTACKED;
-            if state.game.g_game.gameskill != SkillType::Nightmare && !state.game.d_main.fastparm {
-                new_chase_dir(state, actor);
-            }
-            return;
-        }
-        let actor_info = state
-            .assets
-            .info
-            .mobjinfo_mut(state.world.p_mobj.mo(actor).kind);
-        if actor_info.meleestate != StateNum::Null && check_melee_range(state, actor) {
-            let attacksound = state
-                .assets
-                .info
-                .mobjinfo_mut(state.world.p_mobj.mo(actor).kind)
-                .attacksound;
-            if attacksound != SfxName::SfxNone {
-                s_start_sound(state, SoundOrigin::Mobj(actor), attacksound);
-            }
-            let meleestate = state
-                .assets
-                .info
-                .mobjinfo_mut(state.world.p_mobj.mo(actor).kind)
-                .meleestate;
-            set_mobj_state(state, actor, meleestate);
-            return;
-        }
-        if state
-            .assets
-            .info
-            .mobjinfo_mut(state.world.p_mobj.mo(actor).kind)
-            .missilestate
-            != StateNum::Null
-            && !(state.game.g_game.gameskill < SkillType::Nightmare
-                && !state.game.d_main.fastparm
-                && state.world.p_mobj.mo(actor).movecount != 0)
-            && check_missile_range(state, actor)
-        {
-            let missilestate = state
-                .assets
-                .info
-                .mobjinfo_mut(state.world.p_mobj.mo(actor).kind)
-                .missilestate;
-            set_mobj_state(state, actor, missilestate);
-            state.world.p_mobj.mo_mut(actor).flags |= MobjFlags::JUSTATTACKED;
-            return;
-        }
-        if state.game.g_game.netgame
-            && state.world.p_mobj.mo(actor).threshold == 0
-            && !check_sight(state, actor, state.world.p_mobj.mo(target.unwrap()).id)
-            && look_for_players(state, actor, true)
-        {
-            return;
-        }
-        state.world.p_mobj.mo_mut(actor).movecount -= 1;
-        if state.world.p_mobj.mo(actor).movecount < 0 || !p_move(state, actor) {
-            new_chase_dir(state, actor);
-        }
-        let activesound = state
-            .assets
-            .info
-            .mobjinfo_mut(state.world.p_mobj.mo(actor).kind)
-            .activesound;
-        if activesound != SfxName::SfxNone && p_random(&mut state.world.m_random) < 3 {
-            s_start_sound(state, SoundOrigin::Mobj(actor), activesound);
-        }
-    }
-}
-pub fn face_target(state: &mut GameState, id: MobjId) {
-    {
-        let actor = id;
-        let Some(target) = live_target(&state.world.p_mobj, actor) else {
-            return;
-        };
-        state.world.p_mobj.mo_mut(actor).flags &= !MobjFlags::AMBUSH;
-        state.world.p_mobj.mo_mut(actor).angle = point_to_angle2(
-            &mut state.render.r_main,
-            state.world.p_mobj.mo(actor).x,
-            state.world.p_mobj.mo(actor).y,
-            state.world.p_mobj.mo(target).x,
-            state.world.p_mobj.mo(target).y,
-        );
-        if state
-            .world
-            .p_mobj
-            .mo(target)
-            .flags
-            .contains(MobjFlags::SHADOW)
-        {
-            state.world.p_mobj.mo_mut(actor).angle =
-                state.world.p_mobj.mo(actor).angle.wrapping_add(
-                    ((p_random(&mut state.world.m_random) - p_random(&mut state.world.m_random))
-                        << 21) as Angle,
-                );
-        }
-    }
-}
-pub fn pos_attack(state: &mut GameState, id: MobjId) {
-    {
-        let actor = id;
-        let mut angle: i32;
-
-        if state.world.p_mobj.mo(actor).target.is_none() {
-            return;
-        }
-        face_target(state, actor);
-        angle = state.world.p_mobj.mo(actor).angle as i32;
-        let slope: i32 = aim_line_attack(state, Some(actor), angle as Angle, MISSILERANGE);
-        s_start_sound(state, SoundOrigin::Mobj(actor), SfxName::Pistol);
-        angle += (p_random(&mut state.world.m_random) - p_random(&mut state.world.m_random)) << 20;
-        let damage: i32 = (p_random(&mut state.world.m_random) % 5 + 1) * 3;
-        line_attack(
-            state,
-            actor,
-            angle as Angle,
-            MISSILERANGE,
-            slope as Fixed,
-            damage,
-        );
-    }
-}
-pub fn spos_attack(state: &mut GameState, id: MobjId) {
-    {
-        let actor = id;
-        let mut angle: i32;
-
-        let mut damage: i32;
-
-        if state.world.p_mobj.mo(actor).target.is_none() {
-            return;
-        }
-        s_start_sound(state, SoundOrigin::Mobj(actor), SfxName::Shotgn);
-        face_target(state, actor);
-        let bangle: i32 = state.world.p_mobj.mo(actor).angle as i32;
-        let slope: i32 = aim_line_attack(state, Some(actor), bangle as Angle, MISSILERANGE);
-        for _ in 0..3 {
-            angle = bangle
-                + ((p_random(&mut state.world.m_random) - p_random(&mut state.world.m_random))
-                    << 20);
-            damage = (p_random(&mut state.world.m_random) % 5 + 1) * 3;
-            line_attack(
-                state,
-                actor,
-                angle as Angle,
-                MISSILERANGE,
-                slope as Fixed,
-                damage,
-            );
-        }
-    }
-}
-pub fn cpos_attack(state: &mut GameState, id: MobjId) {
-    {
-        let actor = id;
-
-        if state.world.p_mobj.mo(actor).target.is_none() {
-            return;
-        }
-        s_start_sound(state, SoundOrigin::Mobj(actor), SfxName::Shotgn);
-        face_target(state, actor);
-        let bangle: i32 = state.world.p_mobj.mo(actor).angle as i32;
-        let slope: i32 = aim_line_attack(state, Some(actor), bangle as Angle, MISSILERANGE);
-        let angle: i32 = bangle
-            + ((p_random(&mut state.world.m_random) - p_random(&mut state.world.m_random)) << 20);
-        let damage: i32 = (p_random(&mut state.world.m_random) % 5 + 1) * 3;
-        line_attack(
-            state,
-            actor,
-            angle as Angle,
-            MISSILERANGE,
-            slope as Fixed,
-            damage,
-        );
-    }
-}
-pub fn cpos_refire(state: &mut GameState, id: MobjId) {
-    {
-        let actor = id;
-        face_target(state, actor);
-        if p_random(&mut state.world.m_random) < 40 {
-            return;
-        }
-        let target = state
-            .world
-            .p_mobj
-            .mo(actor)
-            .target
-            .filter(|&id| state.world.p_mobj.is_live(id));
-        if target.is_none()
-            || state.world.p_mobj.mo(target.unwrap()).health <= 0
-            || !check_sight(state, actor, state.world.p_mobj.mo(target.unwrap()).id)
-        {
-            let seestate = state
-                .assets
-                .info
-                .mobjinfo_mut(state.world.p_mobj.mo(actor).kind)
-                .seestate;
-            set_mobj_state(state, actor, seestate);
-        }
-    }
-}
-pub fn spid_refire(state: &mut GameState, id: MobjId) {
-    {
-        let actor = id;
-        face_target(state, actor);
-        if p_random(&mut state.world.m_random) < 10 {
-            return;
-        }
-        let target = state
-            .world
-            .p_mobj
-            .mo(actor)
-            .target
-            .filter(|&id| state.world.p_mobj.is_live(id));
-        if target.is_none()
-            || state.world.p_mobj.mo(target.unwrap()).health <= 0
-            || !check_sight(state, actor, state.world.p_mobj.mo(target.unwrap()).id)
-        {
-            let seestate = state
-                .assets
-                .info
-                .mobjinfo_mut(state.world.p_mobj.mo(actor).kind)
-                .seestate;
-            set_mobj_state(state, actor, seestate);
-        }
-    }
-}
-pub fn bspi_attack(state: &mut GameState, id: MobjId) {
-    {
-        let actor = id;
-        let Some(target) = live_target(&state.world.p_mobj, actor) else {
-            return;
-        };
-        face_target(state, actor);
-        spawn_missile(state, actor, target, MobjType::Arachplaz);
-    }
-}
-pub fn troop_attack(state: &mut GameState, id: MobjId) {
-    {
-        let actor = id;
-        let damage: i32;
-        let Some(target) = live_target(&state.world.p_mobj, actor) else {
-            return;
-        };
-        face_target(state, actor);
-        if check_melee_range(state, actor) {
-            s_start_sound(state, SoundOrigin::Mobj(actor), SfxName::Claw);
-            damage = (p_random(&mut state.world.m_random) % 8 + 1) * 3;
-            damage_mobj(state, target, Some(actor), Some(actor), damage);
-            return;
-        }
-        spawn_missile(state, actor, target, MobjType::Troopshot);
-    }
-}
-pub fn sarg_attack(state: &mut GameState, id: MobjId) {
-    {
-        let actor = id;
-        let damage: i32;
-        let Some(target) = live_target(&state.world.p_mobj, actor) else {
-            return;
-        };
-        face_target(state, actor);
-        if check_melee_range(state, actor) {
-            damage = (p_random(&mut state.world.m_random) % 10 + 1) * 4;
-            damage_mobj(state, target, Some(actor), Some(actor), damage);
-        }
-    }
-}
-pub fn head_attack(state: &mut GameState, id: MobjId) {
-    {
-        let actor = id;
-        let damage: i32;
-        let Some(target) = live_target(&state.world.p_mobj, actor) else {
-            return;
-        };
-        face_target(state, actor);
-        if check_melee_range(state, actor) {
-            damage = (p_random(&mut state.world.m_random) % 6 + 1) * 10;
-            damage_mobj(state, target, Some(actor), Some(actor), damage);
-            return;
-        }
-        spawn_missile(state, actor, target, MobjType::Headshot);
-    }
-}
-pub fn cyber_attack(state: &mut GameState, id: MobjId) {
-    {
-        let actor = id;
-        let Some(target) = live_target(&state.world.p_mobj, actor) else {
-            return;
-        };
-        face_target(state, actor);
-        spawn_missile(state, actor, target, MobjType::Rocket);
-    }
-}
-pub fn bruis_attack(state: &mut GameState, id: MobjId) {
-    {
-        let actor = id;
-        let damage: i32;
-        let Some(target) = live_target(&state.world.p_mobj, actor) else {
-            return;
-        };
-        if check_melee_range(state, actor) {
-            s_start_sound(state, SoundOrigin::Mobj(actor), SfxName::Claw);
-            damage = (p_random(&mut state.world.m_random) % 8 + 1) * 10;
-            damage_mobj(state, target, Some(actor), Some(actor), damage);
-            return;
-        }
-        spawn_missile(state, actor, target, MobjType::Bruisershot);
-    }
-}
-pub fn skel_missile(state: &mut GameState, id: MobjId) {
-    {
-        let actor = id;
-
-        let Some(target) = live_target(&state.world.p_mobj, actor) else {
-            return;
-        };
-        face_target(state, actor);
-        state.world.p_mobj.mo_mut(actor).z += 16 * FRACUNIT;
-        let mo: MobjId = spawn_missile(state, actor, target, MobjType::Tracer);
-        state.world.p_mobj.mo_mut(actor).z -= 16 * FRACUNIT;
-        state.world.p_mobj.mo_mut(mo).x += state.world.p_mobj.mo(mo).momx;
-        state.world.p_mobj.mo_mut(mo).y += state.world.p_mobj.mo(mo).momy;
-        state.world.p_mobj.mo_mut(mo).tracer = state.world.p_mobj.mo(actor).target;
-    }
-}
-pub static TRACEANGLE: i32 = 0xc000000;
-pub fn a_tracer(state: &mut GameState, id: MobjId) {
-    {
-        let actor = id;
-        let mut exact: Angle;
-        let mut dist: Fixed;
-
-        if state.game.d_loop.gametic & 3 != 0 {
-            return;
-        }
-        spawn_puff(
-            state,
-            state.world.p_mobj.mo(actor).x,
-            state.world.p_mobj.mo(actor).y,
-            state.world.p_mobj.mo(actor).z,
-        );
-        let th: MobjId = spawn_mobj(
-            state,
-            state.world.p_mobj.mo(actor).x - state.world.p_mobj.mo(actor).momx,
-            state.world.p_mobj.mo(actor).y - state.world.p_mobj.mo(actor).momy,
-            state.world.p_mobj.mo(actor).z,
-            MobjType::Smoke,
-        );
-        state.world.p_mobj.mo_mut(th).momz = FRACUNIT as Fixed;
-        state.world.p_mobj.mo_mut(th).tics -= p_random(&mut state.world.m_random) & 3;
-        if state.world.p_mobj.mo(th).tics < 1 {
-            state.world.p_mobj.mo_mut(th).tics = 1;
-        }
-        let dest: Option<MobjId> = state
-            .world
-            .p_mobj
-            .mo(actor)
-            .tracer
-            .filter(|&id| state.world.p_mobj.is_live(id));
-        if dest.is_none() || state.world.p_mobj.mo(dest.unwrap()).health <= 0 {
-            return;
-        }
-        exact = point_to_angle2(
-            &mut state.render.r_main,
-            state.world.p_mobj.mo(actor).x,
-            state.world.p_mobj.mo(actor).y,
-            state.world.p_mobj.mo(dest.unwrap()).x,
-            state.world.p_mobj.mo(dest.unwrap()).y,
-        );
-        if exact != state.world.p_mobj.mo(actor).angle {
+                .mo(actor)
+                .angle
+                .wrapping_add(TRACEANGLE as Angle);
             if exact.wrapping_sub(state.world.p_mobj.mo(actor).angle) > 0x80000000 {
-                state.world.p_mobj.mo_mut(actor).angle = state
-                    .world
-                    .p_mobj
-                    .mo(actor)
-                    .angle
-                    .wrapping_sub(TRACEANGLE as Angle);
-                if exact.wrapping_sub(state.world.p_mobj.mo(actor).angle) < 0x80000000 {
-                    state.world.p_mobj.mo_mut(actor).angle = exact;
-                }
-            } else {
-                state.world.p_mobj.mo_mut(actor).angle = state
-                    .world
-                    .p_mobj
-                    .mo(actor)
-                    .angle
-                    .wrapping_add(TRACEANGLE as Angle);
-                if exact.wrapping_sub(state.world.p_mobj.mo(actor).angle) > 0x80000000 {
-                    state.world.p_mobj.mo_mut(actor).angle = exact;
-                }
+                state.world.p_mobj.mo_mut(actor).angle = exact;
             }
         }
-        exact = state.world.p_mobj.mo(actor).angle >> ANGLETOFINESHIFT;
-        state.world.p_mobj.mo_mut(actor).momx = fixed_mul(
-            state
-                .assets
-                .info
-                .mobjinfo_mut(state.world.p_mobj.mo(actor).kind)
-                .speed as Fixed,
-            FINECOSINE[exact as usize],
-        );
-        state.world.p_mobj.mo_mut(actor).momy = fixed_mul(
-            state
-                .assets
-                .info
-                .mobjinfo_mut(state.world.p_mobj.mo(actor).kind)
-                .speed as Fixed,
-            FINESINE[exact as usize],
-        );
-        dist = aprox_distance(
-            state.world.p_mobj.mo(dest.unwrap()).x - state.world.p_mobj.mo(actor).x,
-            state.world.p_mobj.mo(dest.unwrap()).y - state.world.p_mobj.mo(actor).y,
-        );
-        dist = (dist
-            / state
-                .assets
-                .info
-                .mobjinfo_mut(state.world.p_mobj.mo(actor).kind)
-                .speed) as Fixed;
-        if dist < 1 {
-            dist = 1;
-        }
-        let slope: Fixed = (state.world.p_mobj.mo(dest.unwrap()).z + 40 * FRACUNIT
-            - state.world.p_mobj.mo(actor).z)
-            / dist;
-        if slope < state.world.p_mobj.mo(actor).momz {
-            state.world.p_mobj.mo_mut(actor).momz -= FRACUNIT / 8;
-        } else {
-            state.world.p_mobj.mo_mut(actor).momz += FRACUNIT / 8;
-        }
+    }
+    exact = state.world.p_mobj.mo(actor).angle >> ANGLETOFINESHIFT;
+    state.world.p_mobj.mo_mut(actor).momx = fixed_mul(
+        state
+            .assets
+            .info
+            .mobjinfo_mut(state.world.p_mobj.mo(actor).kind)
+            .speed as Fixed,
+        FINECOSINE[exact as usize],
+    );
+    state.world.p_mobj.mo_mut(actor).momy = fixed_mul(
+        state
+            .assets
+            .info
+            .mobjinfo_mut(state.world.p_mobj.mo(actor).kind)
+            .speed as Fixed,
+        FINESINE[exact as usize],
+    );
+    dist = aprox_distance(
+        state.world.p_mobj.mo(dest.unwrap()).x - state.world.p_mobj.mo(actor).x,
+        state.world.p_mobj.mo(dest.unwrap()).y - state.world.p_mobj.mo(actor).y,
+    );
+    dist = (dist
+        / state
+            .assets
+            .info
+            .mobjinfo_mut(state.world.p_mobj.mo(actor).kind)
+            .speed) as Fixed;
+    if dist < 1 {
+        dist = 1;
+    }
+    let slope: Fixed = (state.world.p_mobj.mo(dest.unwrap()).z + 40 * FRACUNIT
+        - state.world.p_mobj.mo(actor).z)
+        / dist;
+    if slope < state.world.p_mobj.mo(actor).momz {
+        state.world.p_mobj.mo_mut(actor).momz -= FRACUNIT / 8;
+    } else {
+        state.world.p_mobj.mo_mut(actor).momz += FRACUNIT / 8;
     }
 }
-pub fn skel_whoosh(state: &mut GameState, id: MobjId) {
-    {
-        let actor = id;
-        if state.world.p_mobj.mo(actor).target.is_none() {
-            return;
-        }
-        face_target(state, actor);
-        s_start_sound(state, SoundOrigin::Mobj(actor), SfxName::Skeswg);
+pub fn skel_whoosh(state: &mut GameState, actor: MobjId) {
+    if state.world.p_mobj.mo(actor).target.is_none() {
+        return;
     }
+    face_target(state, actor);
+    s_start_sound(state, SoundOrigin::Mobj(actor), SfxName::Skeswg);
 }
-pub fn skel_fist(state: &mut GameState, id: MobjId) {
-    {
-        let actor = id;
-        let damage: i32;
-        let Some(target) = live_target(&state.world.p_mobj, actor) else {
-            return;
-        };
-        face_target(state, actor);
-        if check_melee_range(state, actor) {
-            damage = (p_random(&mut state.world.m_random) % 10 + 1) * 6;
-            s_start_sound(state, SoundOrigin::Mobj(actor), SfxName::Skepch);
-            damage_mobj(state, target, Some(actor), Some(actor), damage);
-        }
+pub fn skel_fist(state: &mut GameState, actor: MobjId) {
+    let damage: i32;
+    let Some(target) = live_target(&state.world.p_mobj, actor) else {
+        return;
+    };
+    face_target(state, actor);
+    if check_melee_range(state, actor) {
+        damage = (p_random(&mut state.world.m_random) % 10 + 1) * 6;
+        s_start_sound(state, SoundOrigin::Mobj(actor), SfxName::Skepch);
+        damage_mobj(state, target, Some(actor), Some(actor), damage);
     }
 }
 pub fn vile_check(state: &mut GameState, thing_id: MobjId) -> bool {
@@ -1235,322 +1176,283 @@ pub fn vile_chase(state: &mut GameState, id: MobjId) {
     }
     chase(state, actor);
 }
-pub fn vile_start(state: &mut GameState, id: MobjId) {
-    {
-        let actor = id;
-        s_start_sound(state, SoundOrigin::Mobj(actor), SfxName::Vilatk);
-    }
+pub fn vile_start(state: &mut GameState, actor: MobjId) {
+    s_start_sound(state, SoundOrigin::Mobj(actor), SfxName::Vilatk);
 }
-pub fn start_fire(state: &mut GameState, id: MobjId) {
-    {
-        let actor = id;
-        s_start_sound(state, SoundOrigin::Mobj(actor), SfxName::Flamst);
-        a_fire(state, actor);
-    }
+pub fn start_fire(state: &mut GameState, actor: MobjId) {
+    s_start_sound(state, SoundOrigin::Mobj(actor), SfxName::Flamst);
+    a_fire(state, actor);
 }
-pub fn fire_crackle(state: &mut GameState, id: MobjId) {
-    {
-        let actor = id;
-        s_start_sound(state, SoundOrigin::Mobj(actor), SfxName::Flame);
-        a_fire(state, actor);
-    }
+pub fn fire_crackle(state: &mut GameState, actor: MobjId) {
+    s_start_sound(state, SoundOrigin::Mobj(actor), SfxName::Flame);
+    a_fire(state, actor);
 }
-pub fn a_fire(state: &mut GameState, id: MobjId) {
-    {
-        let actor = id;
-
-        let dest: Option<MobjId> = state
-            .world
-            .p_mobj
-            .mo(actor)
-            .tracer
-            .filter(|&id| state.world.p_mobj.is_live(id));
-        if dest.is_none() {
-            return;
-        }
-        let target_subst = state
-            .world
-            .p_mobj
-            .mo(actor)
-            .target
-            .filter(|&id| state.world.p_mobj.is_live(id));
-        let target_id = subst_null_mobj(&mut state.world.p_mobj, target_subst);
-        let target: MobjId = target_id;
-        if !check_sight(state, target, dest.unwrap()) {
-            return;
-        }
-        let an: u32 = state.world.p_mobj.mo(dest.unwrap()).angle >> ANGLETOFINESHIFT;
-        unset_thing_position(&mut state.world.p_mobj, &mut state.world.p_setup, actor);
-        state.world.p_mobj.mo_mut(actor).x = state.world.p_mobj.mo(dest.unwrap()).x
-            + fixed_mul(24 * FRACUNIT, FINECOSINE[an as usize]);
-        state.world.p_mobj.mo_mut(actor).y = state.world.p_mobj.mo(dest.unwrap()).y
-            + fixed_mul(24 * FRACUNIT, FINESINE[an as usize]);
-        state.world.p_mobj.mo_mut(actor).z = state.world.p_mobj.mo(dest.unwrap()).z;
-        set_thing_position(&mut state.world.p_mobj, &mut state.world.p_setup, actor);
+pub fn a_fire(state: &mut GameState, actor: MobjId) {
+    let dest: Option<MobjId> = state
+        .world
+        .p_mobj
+        .mo(actor)
+        .tracer
+        .filter(|&target| state.world.p_mobj.is_live(target));
+    if dest.is_none() {
+        return;
     }
-}
-pub fn vile_target(state: &mut GameState, id: MobjId) {
-    {
-        let actor = id;
-
-        let Some(target) = live_target(&state.world.p_mobj, actor) else {
-            return;
-        };
-        face_target(state, actor);
-        let fog: MobjId = spawn_mobj(
-            state,
-            state.world.p_mobj.mo(target).x,
-            state.world.p_mobj.mo(target).x,
-            state.world.p_mobj.mo(target).z,
-            MobjType::Fire,
-        );
-        state.world.p_mobj.mo_mut(actor).tracer = Some(fog);
-        state.world.p_mobj.mo_mut(fog).target = Some(actor);
-        state.world.p_mobj.mo_mut(fog).tracer = state.world.p_mobj.mo(actor).target;
-        a_fire(state, fog);
+    let target_subst = state
+        .world
+        .p_mobj
+        .mo(actor)
+        .target
+        .filter(|&target| state.world.p_mobj.is_live(target));
+    let target_id = subst_null_mobj(&mut state.world.p_mobj, target_subst);
+    let target: MobjId = target_id;
+    if !check_sight(state, target, dest.unwrap()) {
+        return;
     }
+    let an: u32 = state.world.p_mobj.mo(dest.unwrap()).angle >> ANGLETOFINESHIFT;
+    unset_thing_position(&mut state.world.p_mobj, &mut state.world.p_setup, actor);
+    state.world.p_mobj.mo_mut(actor).x =
+        state.world.p_mobj.mo(dest.unwrap()).x + fixed_mul(24 * FRACUNIT, FINECOSINE[an as usize]);
+    state.world.p_mobj.mo_mut(actor).y =
+        state.world.p_mobj.mo(dest.unwrap()).y + fixed_mul(24 * FRACUNIT, FINESINE[an as usize]);
+    state.world.p_mobj.mo_mut(actor).z = state.world.p_mobj.mo(dest.unwrap()).z;
+    set_thing_position(&mut state.world.p_mobj, &mut state.world.p_setup, actor);
 }
-pub fn vile_attack(state: &mut GameState, id: MobjId) {
-    {
-        let actor = id;
-
-        let Some(target) = live_target(&state.world.p_mobj, actor) else {
-            return;
-        };
-        face_target(state, actor);
-        if !check_sight(state, actor, target) {
-            return;
-        }
-        s_start_sound(state, SoundOrigin::Mobj(actor), SfxName::Barexp);
-        damage_mobj(state, target, Some(actor), Some(actor), 20);
-        state.world.p_mobj.mo_mut(target).momz = (1000 * FRACUNIT
-            / state
-                .assets
-                .info
-                .mobjinfo_mut(state.world.p_mobj.mo(target).kind)
-                .mass) as Fixed;
-        let an: i32 = (state.world.p_mobj.mo(actor).angle >> ANGLETOFINESHIFT) as i32;
-        let fire: Option<MobjId> = state
-            .world
-            .p_mobj
-            .mo(actor)
-            .tracer
-            .filter(|&id| state.world.p_mobj.is_live(id));
-        if fire.is_none() {
-            return;
-        }
-        state.world.p_mobj.mo_mut(fire.unwrap()).x =
-            state.world.p_mobj.mo(target).x - fixed_mul(24 * FRACUNIT, FINECOSINE[an as usize]);
-        state.world.p_mobj.mo_mut(fire.unwrap()).y =
-            state.world.p_mobj.mo(target).y - fixed_mul(24 * FRACUNIT, FINESINE[an as usize]);
-        p_radius_attack(state, fire.unwrap(), Some(actor), 70);
+pub fn vile_target(state: &mut GameState, actor: MobjId) {
+    let Some(target) = live_target(&state.world.p_mobj, actor) else {
+        return;
+    };
+    face_target(state, actor);
+    let fog: MobjId = spawn_mobj(
+        state,
+        state.world.p_mobj.mo(target).x,
+        state.world.p_mobj.mo(target).x,
+        state.world.p_mobj.mo(target).z,
+        MobjType::Fire,
+    );
+    state.world.p_mobj.mo_mut(actor).tracer = Some(fog);
+    state.world.p_mobj.mo_mut(fog).target = Some(actor);
+    state.world.p_mobj.mo_mut(fog).tracer = state.world.p_mobj.mo(actor).target;
+    a_fire(state, fog);
+}
+pub fn vile_attack(state: &mut GameState, actor: MobjId) {
+    let Some(target) = live_target(&state.world.p_mobj, actor) else {
+        return;
+    };
+    face_target(state, actor);
+    if !check_sight(state, actor, target) {
+        return;
     }
-}
-pub const FATSPREAD: i32 = ANG90 / 8;
-pub fn fat_raise(state: &mut GameState, id: MobjId) {
-    {
-        let actor = id;
-        face_target(state, actor);
-        s_start_sound(state, SoundOrigin::Mobj(actor), SfxName::Manatk);
-    }
-}
-pub fn fat_attack1(state: &mut GameState, id: MobjId) {
-    {
-        let actor = id;
-
-        face_target(state, actor);
-        state.world.p_mobj.mo_mut(actor).angle = state
-            .world
-            .p_mobj
-            .mo(actor)
-            .angle
-            .wrapping_add(FATSPREAD as Angle);
-        let target_subst = state
-            .world
-            .p_mobj
-            .mo(actor)
-            .target
-            .filter(|&id| state.world.p_mobj.is_live(id));
-        let target_id = subst_null_mobj(&mut state.world.p_mobj, target_subst);
-        let target: MobjId = target_id;
-        spawn_missile(state, actor, target, MobjType::Fatshot);
-        let mo: MobjId = spawn_missile(state, actor, target, MobjType::Fatshot);
-        state.world.p_mobj.mo_mut(mo).angle = state
-            .world
-            .p_mobj
-            .mo(mo)
-            .angle
-            .wrapping_add(FATSPREAD as Angle);
-        let an: i32 = (state.world.p_mobj.mo(mo).angle >> ANGLETOFINESHIFT) as i32;
-        state.world.p_mobj.mo_mut(mo).momx = fixed_mul(
-            state
-                .assets
-                .info
-                .mobjinfo_mut(state.world.p_mobj.mo(mo).kind)
-                .speed as Fixed,
-            FINECOSINE[an as usize],
-        );
-        state.world.p_mobj.mo_mut(mo).momy = fixed_mul(
-            state
-                .assets
-                .info
-                .mobjinfo_mut(state.world.p_mobj.mo(mo).kind)
-                .speed as Fixed,
-            FINESINE[an as usize],
-        );
-    }
-}
-pub fn fat_attack2(state: &mut GameState, id: MobjId) {
-    {
-        let actor = id;
-
-        face_target(state, actor);
-        state.world.p_mobj.mo_mut(actor).angle = state
-            .world
-            .p_mobj
-            .mo(actor)
-            .angle
-            .wrapping_sub(FATSPREAD as Angle);
-        let target_subst = state
-            .world
-            .p_mobj
-            .mo(actor)
-            .target
-            .filter(|&id| state.world.p_mobj.is_live(id));
-        let target_id = subst_null_mobj(&mut state.world.p_mobj, target_subst);
-        let target: MobjId = target_id;
-        spawn_missile(state, actor, target, MobjType::Fatshot);
-        let mo: MobjId = spawn_missile(state, actor, target, MobjType::Fatshot);
-        state.world.p_mobj.mo_mut(mo).angle = state
-            .world
-            .p_mobj
-            .mo(mo)
-            .angle
-            .wrapping_sub((FATSPREAD * 2) as Angle);
-        let an: i32 = (state.world.p_mobj.mo(mo).angle >> ANGLETOFINESHIFT) as i32;
-        state.world.p_mobj.mo_mut(mo).momx = fixed_mul(
-            state
-                .assets
-                .info
-                .mobjinfo_mut(state.world.p_mobj.mo(mo).kind)
-                .speed as Fixed,
-            FINECOSINE[an as usize],
-        );
-        state.world.p_mobj.mo_mut(mo).momy = fixed_mul(
-            state
-                .assets
-                .info
-                .mobjinfo_mut(state.world.p_mobj.mo(mo).kind)
-                .speed as Fixed,
-            FINESINE[an as usize],
-        );
-    }
-}
-pub fn fat_attack3(state: &mut GameState, id: MobjId) {
-    {
-        let actor = id;
-        let mut mo: MobjId;
-
-        let mut an: i32;
-        face_target(state, actor);
-        let target_subst = state
-            .world
-            .p_mobj
-            .mo(actor)
-            .target
-            .filter(|&id| state.world.p_mobj.is_live(id));
-        let target_id = subst_null_mobj(&mut state.world.p_mobj, target_subst);
-        let target: MobjId = target_id;
-        mo = spawn_missile(state, actor, target, MobjType::Fatshot);
-        state.world.p_mobj.mo_mut(mo).angle = state
-            .world
-            .p_mobj
-            .mo(mo)
-            .angle
-            .wrapping_sub((FATSPREAD / 2) as Angle);
-        an = (state.world.p_mobj.mo(mo).angle >> ANGLETOFINESHIFT) as i32;
-        state.world.p_mobj.mo_mut(mo).momx = fixed_mul(
-            state
-                .assets
-                .info
-                .mobjinfo_mut(state.world.p_mobj.mo(mo).kind)
-                .speed as Fixed,
-            FINECOSINE[an as usize],
-        );
-        state.world.p_mobj.mo_mut(mo).momy = fixed_mul(
-            state
-                .assets
-                .info
-                .mobjinfo_mut(state.world.p_mobj.mo(mo).kind)
-                .speed as Fixed,
-            FINESINE[an as usize],
-        );
-        mo = spawn_missile(state, actor, target, MobjType::Fatshot);
-        state.world.p_mobj.mo_mut(mo).angle = state
-            .world
-            .p_mobj
-            .mo(mo)
-            .angle
-            .wrapping_add((FATSPREAD / 2) as Angle);
-        an = (state.world.p_mobj.mo(mo).angle >> ANGLETOFINESHIFT) as i32;
-        state.world.p_mobj.mo_mut(mo).momx = fixed_mul(
-            state
-                .assets
-                .info
-                .mobjinfo_mut(state.world.p_mobj.mo(mo).kind)
-                .speed as Fixed,
-            FINECOSINE[an as usize],
-        );
-        state.world.p_mobj.mo_mut(mo).momy = fixed_mul(
-            state
-                .assets
-                .info
-                .mobjinfo_mut(state.world.p_mobj.mo(mo).kind)
-                .speed as Fixed,
-            FINESINE[an as usize],
-        );
-    }
-}
-pub const SKULLSPEED: i32 = 20 * FRACUNIT;
-pub fn skull_attack(state: &mut GameState, id: MobjId) {
-    {
-        let actor = id;
-
-        let mut dist: i32;
-        let dest: MobjId = match state
-            .world
-            .p_mobj
-            .mo(actor)
-            .target
-            .filter(|&id| state.world.p_mobj.is_live(id))
-        {
-            Some(dest) => dest,
-            None => return,
-        };
-        state.world.p_mobj.mo_mut(actor).flags |= MobjFlags::SKULLFLY;
-        let attacksound = state
+    s_start_sound(state, SoundOrigin::Mobj(actor), SfxName::Barexp);
+    damage_mobj(state, target, Some(actor), Some(actor), 20);
+    state.world.p_mobj.mo_mut(target).momz = (1000 * FRACUNIT
+        / state
             .assets
             .info
-            .mobjinfo_mut(state.world.p_mobj.mo(actor).kind)
-            .attacksound;
-        s_start_sound(state, SoundOrigin::Mobj(actor), attacksound);
-        face_target(state, actor);
-        let an: Angle = state.world.p_mobj.mo(actor).angle >> ANGLETOFINESHIFT;
-        state.world.p_mobj.mo_mut(actor).momx = fixed_mul(SKULLSPEED, FINECOSINE[an as usize]);
-        state.world.p_mobj.mo_mut(actor).momy = fixed_mul(SKULLSPEED, FINESINE[an as usize]);
-        dist = aprox_distance(
-            state.world.p_mobj.mo(dest).x - state.world.p_mobj.mo(actor).x,
-            state.world.p_mobj.mo(dest).y - state.world.p_mobj.mo(actor).y,
-        );
-        dist /= SKULLSPEED;
-        if dist < 1 {
-            dist = 1;
-        }
-        state.world.p_mobj.mo_mut(actor).momz = ((state.world.p_mobj.mo(dest).z
-            + (state.world.p_mobj.mo(dest).height >> 1)
-            - state.world.p_mobj.mo(actor).z)
-            / dist) as Fixed;
+            .mobjinfo_mut(state.world.p_mobj.mo(target).kind)
+            .mass) as Fixed;
+    let an: i32 = (state.world.p_mobj.mo(actor).angle >> ANGLETOFINESHIFT) as i32;
+    let fire: Option<MobjId> = state
+        .world
+        .p_mobj
+        .mo(actor)
+        .tracer
+        .filter(|&target| state.world.p_mobj.is_live(target));
+    if fire.is_none() {
+        return;
     }
+    state.world.p_mobj.mo_mut(fire.unwrap()).x =
+        state.world.p_mobj.mo(target).x - fixed_mul(24 * FRACUNIT, FINECOSINE[an as usize]);
+    state.world.p_mobj.mo_mut(fire.unwrap()).y =
+        state.world.p_mobj.mo(target).y - fixed_mul(24 * FRACUNIT, FINESINE[an as usize]);
+    p_radius_attack(state, fire.unwrap(), Some(actor), 70);
+}
+pub const FATSPREAD: i32 = ANG90 / 8;
+pub fn fat_raise(state: &mut GameState, actor: MobjId) {
+    face_target(state, actor);
+    s_start_sound(state, SoundOrigin::Mobj(actor), SfxName::Manatk);
+}
+pub fn fat_attack1(state: &mut GameState, actor: MobjId) {
+    face_target(state, actor);
+    state.world.p_mobj.mo_mut(actor).angle = state
+        .world
+        .p_mobj
+        .mo(actor)
+        .angle
+        .wrapping_add(FATSPREAD as Angle);
+    let target_subst = state
+        .world
+        .p_mobj
+        .mo(actor)
+        .target
+        .filter(|&target| state.world.p_mobj.is_live(target));
+    let target_id = subst_null_mobj(&mut state.world.p_mobj, target_subst);
+    let target: MobjId = target_id;
+    spawn_missile(state, actor, target, MobjType::Fatshot);
+    let mo: MobjId = spawn_missile(state, actor, target, MobjType::Fatshot);
+    state.world.p_mobj.mo_mut(mo).angle = state
+        .world
+        .p_mobj
+        .mo(mo)
+        .angle
+        .wrapping_add(FATSPREAD as Angle);
+    let an: i32 = (state.world.p_mobj.mo(mo).angle >> ANGLETOFINESHIFT) as i32;
+    state.world.p_mobj.mo_mut(mo).momx = fixed_mul(
+        state
+            .assets
+            .info
+            .mobjinfo_mut(state.world.p_mobj.mo(mo).kind)
+            .speed as Fixed,
+        FINECOSINE[an as usize],
+    );
+    state.world.p_mobj.mo_mut(mo).momy = fixed_mul(
+        state
+            .assets
+            .info
+            .mobjinfo_mut(state.world.p_mobj.mo(mo).kind)
+            .speed as Fixed,
+        FINESINE[an as usize],
+    );
+}
+pub fn fat_attack2(state: &mut GameState, actor: MobjId) {
+    face_target(state, actor);
+    state.world.p_mobj.mo_mut(actor).angle = state
+        .world
+        .p_mobj
+        .mo(actor)
+        .angle
+        .wrapping_sub(FATSPREAD as Angle);
+    let target_subst = state
+        .world
+        .p_mobj
+        .mo(actor)
+        .target
+        .filter(|&target| state.world.p_mobj.is_live(target));
+    let target_id = subst_null_mobj(&mut state.world.p_mobj, target_subst);
+    let target: MobjId = target_id;
+    spawn_missile(state, actor, target, MobjType::Fatshot);
+    let mo: MobjId = spawn_missile(state, actor, target, MobjType::Fatshot);
+    state.world.p_mobj.mo_mut(mo).angle = state
+        .world
+        .p_mobj
+        .mo(mo)
+        .angle
+        .wrapping_sub((FATSPREAD * 2) as Angle);
+    let an: i32 = (state.world.p_mobj.mo(mo).angle >> ANGLETOFINESHIFT) as i32;
+    state.world.p_mobj.mo_mut(mo).momx = fixed_mul(
+        state
+            .assets
+            .info
+            .mobjinfo_mut(state.world.p_mobj.mo(mo).kind)
+            .speed as Fixed,
+        FINECOSINE[an as usize],
+    );
+    state.world.p_mobj.mo_mut(mo).momy = fixed_mul(
+        state
+            .assets
+            .info
+            .mobjinfo_mut(state.world.p_mobj.mo(mo).kind)
+            .speed as Fixed,
+        FINESINE[an as usize],
+    );
+}
+pub fn fat_attack3(state: &mut GameState, actor: MobjId) {
+    let mut mo: MobjId;
+
+    let mut an: i32;
+    face_target(state, actor);
+    let target_subst = state
+        .world
+        .p_mobj
+        .mo(actor)
+        .target
+        .filter(|&target| state.world.p_mobj.is_live(target));
+    let target_id = subst_null_mobj(&mut state.world.p_mobj, target_subst);
+    let target: MobjId = target_id;
+    mo = spawn_missile(state, actor, target, MobjType::Fatshot);
+    state.world.p_mobj.mo_mut(mo).angle = state
+        .world
+        .p_mobj
+        .mo(mo)
+        .angle
+        .wrapping_sub((FATSPREAD / 2) as Angle);
+    an = (state.world.p_mobj.mo(mo).angle >> ANGLETOFINESHIFT) as i32;
+    state.world.p_mobj.mo_mut(mo).momx = fixed_mul(
+        state
+            .assets
+            .info
+            .mobjinfo_mut(state.world.p_mobj.mo(mo).kind)
+            .speed as Fixed,
+        FINECOSINE[an as usize],
+    );
+    state.world.p_mobj.mo_mut(mo).momy = fixed_mul(
+        state
+            .assets
+            .info
+            .mobjinfo_mut(state.world.p_mobj.mo(mo).kind)
+            .speed as Fixed,
+        FINESINE[an as usize],
+    );
+    mo = spawn_missile(state, actor, target, MobjType::Fatshot);
+    state.world.p_mobj.mo_mut(mo).angle = state
+        .world
+        .p_mobj
+        .mo(mo)
+        .angle
+        .wrapping_add((FATSPREAD / 2) as Angle);
+    an = (state.world.p_mobj.mo(mo).angle >> ANGLETOFINESHIFT) as i32;
+    state.world.p_mobj.mo_mut(mo).momx = fixed_mul(
+        state
+            .assets
+            .info
+            .mobjinfo_mut(state.world.p_mobj.mo(mo).kind)
+            .speed as Fixed,
+        FINECOSINE[an as usize],
+    );
+    state.world.p_mobj.mo_mut(mo).momy = fixed_mul(
+        state
+            .assets
+            .info
+            .mobjinfo_mut(state.world.p_mobj.mo(mo).kind)
+            .speed as Fixed,
+        FINESINE[an as usize],
+    );
+}
+pub const SKULLSPEED: i32 = 20 * FRACUNIT;
+pub fn skull_attack(state: &mut GameState, actor: MobjId) {
+    let mut dist: i32;
+    let dest: MobjId = match state
+        .world
+        .p_mobj
+        .mo(actor)
+        .target
+        .filter(|&target| state.world.p_mobj.is_live(target))
+    {
+        Some(dest) => dest,
+        None => return,
+    };
+    state.world.p_mobj.mo_mut(actor).flags |= MobjFlags::SKULLFLY;
+    let attacksound = state
+        .assets
+        .info
+        .mobjinfo_mut(state.world.p_mobj.mo(actor).kind)
+        .attacksound;
+    s_start_sound(state, SoundOrigin::Mobj(actor), attacksound);
+    face_target(state, actor);
+    let an: Angle = state.world.p_mobj.mo(actor).angle >> ANGLETOFINESHIFT;
+    state.world.p_mobj.mo_mut(actor).momx = fixed_mul(SKULLSPEED, FINECOSINE[an as usize]);
+    state.world.p_mobj.mo_mut(actor).momy = fixed_mul(SKULLSPEED, FINESINE[an as usize]);
+    dist = aprox_distance(
+        state.world.p_mobj.mo(dest).x - state.world.p_mobj.mo(actor).x,
+        state.world.p_mobj.mo(dest).y - state.world.p_mobj.mo(actor).y,
+    );
+    dist /= SKULLSPEED;
+    if dist < 1 {
+        dist = 1;
+    }
+    state.world.p_mobj.mo_mut(actor).momz = ((state.world.p_mobj.mo(dest).z
+        + (state.world.p_mobj.mo(dest).height >> 1)
+        - state.world.p_mobj.mo(actor).z)
+        / dist) as Fixed;
 }
 pub fn pain_shoot_skull(state: &mut GameState, actor: MobjId, angle: Angle) {
     let mut count: i32 = 0;
@@ -1587,94 +1489,76 @@ pub fn pain_shoot_skull(state: &mut GameState, actor: MobjId, angle: Angle) {
     state.world.p_mobj.mo_mut(newmobj).target = state.world.p_mobj.mo(actor).target;
     skull_attack(state, newmobj);
 }
-pub fn pain_attack(state: &mut GameState, id: MobjId) {
-    {
-        let actor = id;
-        if state.world.p_mobj.mo(actor).target.is_none() {
-            return;
+pub fn pain_attack(state: &mut GameState, actor: MobjId) {
+    if state.world.p_mobj.mo(actor).target.is_none() {
+        return;
+    }
+    face_target(state, actor);
+    pain_shoot_skull(state, actor, state.world.p_mobj.mo(actor).angle);
+}
+pub fn pain_die(state: &mut GameState, actor: MobjId) {
+    fall(state, actor);
+    pain_shoot_skull(
+        state,
+        actor,
+        state
+            .world
+            .p_mobj
+            .mo(actor)
+            .angle
+            .wrapping_add(ANG90 as Angle),
+    );
+    pain_shoot_skull(
+        state,
+        actor,
+        state.world.p_mobj.mo(actor).angle.wrapping_add(ANG180),
+    );
+    pain_shoot_skull(
+        state,
+        actor,
+        state.world.p_mobj.mo(actor).angle.wrapping_add(ANG270),
+    );
+}
+pub fn scream(state: &mut GameState, actor: MobjId) {
+    let deathsound = state
+        .assets
+        .info
+        .mobjinfo_mut(state.world.p_mobj.mo(actor).kind)
+        .deathsound;
+    let sound = match deathsound {
+        SfxName::SfxNone => return,
+        SfxName::Podth1 | SfxName::Podth2 | SfxName::Podth3 => {
+            [SfxName::Podth1, SfxName::Podth2, SfxName::Podth3]
+                [(p_random(&mut state.world.m_random) % 3) as usize]
         }
-        face_target(state, actor);
-        pain_shoot_skull(state, actor, state.world.p_mobj.mo(actor).angle);
-    }
-}
-pub fn pain_die(state: &mut GameState, id: MobjId) {
-    {
-        let actor = id;
-        fall(state, actor);
-        pain_shoot_skull(
-            state,
-            actor,
-            state
-                .world
-                .p_mobj
-                .mo(actor)
-                .angle
-                .wrapping_add(ANG90 as Angle),
-        );
-        pain_shoot_skull(
-            state,
-            actor,
-            state.world.p_mobj.mo(actor).angle.wrapping_add(ANG180),
-        );
-        pain_shoot_skull(
-            state,
-            actor,
-            state.world.p_mobj.mo(actor).angle.wrapping_add(ANG270),
-        );
-    }
-}
-pub fn scream(state: &mut GameState, id: MobjId) {
-    {
-        let actor = id;
-
-        let deathsound = state
-            .assets
-            .info
-            .mobjinfo_mut(state.world.p_mobj.mo(actor).kind)
-            .deathsound;
-        let sound = match deathsound {
-            SfxName::SfxNone => return,
-            SfxName::Podth1 | SfxName::Podth2 | SfxName::Podth3 => {
-                [SfxName::Podth1, SfxName::Podth2, SfxName::Podth3]
-                    [(p_random(&mut state.world.m_random) % 3) as usize]
-            }
-            SfxName::Bgdth1 | SfxName::Bgdth2 => [SfxName::Bgdth1, SfxName::Bgdth2]
-                [(p_random(&mut state.world.m_random) % 2) as usize],
-            other => other,
-        };
-        if state.world.p_mobj.mo(actor).kind as u32 == MobjType::Spider as i32 as u32
-            || state.world.p_mobj.mo(actor).kind as u32 == MobjType::Cyborg as i32 as u32
-        {
-            s_start_sound(state, SoundOrigin::None, sound);
-        } else {
-            s_start_sound(state, SoundOrigin::Mobj(actor), sound);
+        SfxName::Bgdth1 | SfxName::Bgdth2 => {
+            [SfxName::Bgdth1, SfxName::Bgdth2][(p_random(&mut state.world.m_random) % 2) as usize]
         }
+        other => other,
+    };
+    if state.world.p_mobj.mo(actor).kind as u32 == MobjType::Spider as i32 as u32
+        || state.world.p_mobj.mo(actor).kind as u32 == MobjType::Cyborg as i32 as u32
+    {
+        s_start_sound(state, SoundOrigin::None, sound);
+    } else {
+        s_start_sound(state, SoundOrigin::Mobj(actor), sound);
     }
 }
-pub fn xscream(state: &mut GameState, id: MobjId) {
-    {
-        let actor = id;
-        s_start_sound(state, SoundOrigin::Mobj(actor), SfxName::Slop);
+pub fn xscream(state: &mut GameState, actor: MobjId) {
+    s_start_sound(state, SoundOrigin::Mobj(actor), SfxName::Slop);
+}
+pub fn pain(state: &mut GameState, actor: MobjId) {
+    let painsound = state
+        .assets
+        .info
+        .mobjinfo_mut(state.world.p_mobj.mo(actor).kind)
+        .painsound;
+    if painsound != SfxName::SfxNone {
+        s_start_sound(state, SoundOrigin::Mobj(actor), painsound);
     }
 }
-pub fn pain(state: &mut GameState, id: MobjId) {
-    {
-        let actor = id;
-        let painsound = state
-            .assets
-            .info
-            .mobjinfo_mut(state.world.p_mobj.mo(actor).kind)
-            .painsound;
-        if painsound != SfxName::SfxNone {
-            s_start_sound(state, SoundOrigin::Mobj(actor), painsound);
-        }
-    }
-}
-pub fn fall(state: &mut GameState, id: MobjId) {
-    {
-        let actor = id;
-        state.world.p_mobj.mo_mut(actor).flags &= !MobjFlags::SOLID;
-    }
+pub fn fall(state: &mut GameState, actor: MobjId) {
+    state.world.p_mobj.mo_mut(actor).flags &= !MobjFlags::SOLID;
 }
 pub fn explode(state: &mut GameState, id: MobjId) {
     let thingy = id;
@@ -1708,137 +1592,116 @@ fn check_boss_end(doomstat: &DoomstatState, g_game: &GGameState, motype: MobjTyp
         true
     }
 }
-pub fn boss_death(state: &mut GameState, id: MobjId) {
-    {
-        let mo = id;
-        let mut i: i32;
-        if state.game.doomstat.gamemode == GameMode::Commercial {
-            if state.game.g_game.gamemap != 7 {
-                return;
-            }
-            if state.world.p_mobj.mo(mo).kind as u32 != MobjType::Fatso as i32 as u32
-                && state.world.p_mobj.mo(mo).kind as u32 != MobjType::Baby as i32 as u32
-            {
-                return;
-            }
-        } else if !check_boss_end(
-            &state.game.doomstat,
-            &state.game.g_game,
-            state.world.p_mobj.mo(mo).kind,
-        ) {
+pub fn boss_death(state: &mut GameState, mo: MobjId) {
+    let mut i: i32;
+    if state.game.doomstat.gamemode == GameMode::Commercial {
+        if state.game.g_game.gamemap != 7 {
             return;
         }
-        i = 0;
-        while i < MAXPLAYERS {
-            if state.game.g_game.playeringame[i as usize]
-                && state.game.g_game.players[i as usize].health > 0
-            {
-                break;
-            }
-            i += 1;
-        }
-        if i == MAXPLAYERS {
+        if state.world.p_mobj.mo(mo).kind as u32 != MobjType::Fatso as i32 as u32
+            && state.world.p_mobj.mo(mo).kind as u32 != MobjType::Baby as i32 as u32
+        {
             return;
         }
-        let mo_type = state.world.p_mobj.mo(mo).kind;
-        for mo2 in mobj_thinker_ids(&state.world.p_mobj, &state.world.p_tick) {
-            if mo2 != mo
-                && state.world.p_mobj.mo(mo2).kind as u32 == mo_type as u32
-                && state.world.p_mobj.mo(mo2).health > 0
-            {
+    } else if !check_boss_end(
+        &state.game.doomstat,
+        &state.game.g_game,
+        state.world.p_mobj.mo(mo).kind,
+    ) {
+        return;
+    }
+    i = 0;
+    while i < MAXPLAYERS {
+        if state.game.g_game.playeringame[i as usize]
+            && state.game.g_game.players[i as usize].health > 0
+        {
+            break;
+        }
+        i += 1;
+    }
+    if i == MAXPLAYERS {
+        return;
+    }
+    let mo_type = state.world.p_mobj.mo(mo).kind;
+    for mo2 in mobj_thinker_ids(&state.world.p_mobj, &state.world.p_tick) {
+        if mo2 != mo
+            && state.world.p_mobj.mo(mo2).kind as u32 == mo_type as u32
+            && state.world.p_mobj.mo(mo2).health > 0
+        {
+            return;
+        }
+    }
+    if state.game.doomstat.gamemode == GameMode::Commercial {
+        if state.game.g_game.gamemap == 7 {
+            if state.world.p_mobj.mo(mo).kind as u32 == MobjType::Fatso as i32 as u32 {
+                let junk = state.world.p_setup.junk_line(666_i16);
+                do_floor(state, junk, FloorE::LowerFloorToLowest);
+                return;
+            }
+            if state.world.p_mobj.mo(mo).kind as u32 == MobjType::Baby as i32 as u32 {
+                let junk = state.world.p_setup.junk_line(667_i16);
+                do_floor(state, junk, FloorE::RaiseToTexture);
                 return;
             }
         }
-        if state.game.doomstat.gamemode == GameMode::Commercial {
-            if state.game.g_game.gamemap == 7 {
-                if state.world.p_mobj.mo(mo).kind as u32 == MobjType::Fatso as i32 as u32 {
+    } else {
+        match state.game.g_game.gameepisode {
+            1 => {
+                let junk = state.world.p_setup.junk_line(666_i16);
+                do_floor(state, junk, FloorE::LowerFloorToLowest);
+                return;
+            }
+            4 => match state.game.g_game.gamemap {
+                6 => {
+                    let junk = state.world.p_setup.junk_line(666_i16);
+                    do_door(state, junk, VldoorE::BlazeOpen);
+                    return;
+                }
+                8 => {
                     let junk = state.world.p_setup.junk_line(666_i16);
                     do_floor(state, junk, FloorE::LowerFloorToLowest);
                     return;
                 }
-                if state.world.p_mobj.mo(mo).kind as u32 == MobjType::Baby as i32 as u32 {
-                    let junk = state.world.p_setup.junk_line(667_i16);
-                    do_floor(state, junk, FloorE::RaiseToTexture);
-                    return;
-                }
-            }
-        } else {
-            match state.game.g_game.gameepisode {
-                1 => {
-                    let junk = state.world.p_setup.junk_line(666_i16);
-                    do_floor(state, junk, FloorE::LowerFloorToLowest);
-                    return;
-                }
-                4 => match state.game.g_game.gamemap {
-                    6 => {
-                        let junk = state.world.p_setup.junk_line(666_i16);
-                        do_door(state, junk, VldoorE::BlazeOpen);
-                        return;
-                    }
-                    8 => {
-                        let junk = state.world.p_setup.junk_line(666_i16);
-                        do_floor(state, junk, FloorE::LowerFloorToLowest);
-                        return;
-                    }
-                    _ => {}
-                },
                 _ => {}
-            }
+            },
+            _ => {}
         }
-        exit_level(&mut state.game.g_game);
     }
+    exit_level(&mut state.game.g_game);
 }
-pub fn hoof(state: &mut GameState, id: MobjId) {
-    {
-        let mo = id;
-        s_start_sound(state, SoundOrigin::Mobj(mo), SfxName::Hoof);
-        chase(state, mo);
-    }
+pub fn hoof(state: &mut GameState, mo: MobjId) {
+    s_start_sound(state, SoundOrigin::Mobj(mo), SfxName::Hoof);
+    chase(state, mo);
 }
-pub fn metal(state: &mut GameState, id: MobjId) {
-    {
-        let mo = id;
-        s_start_sound(state, SoundOrigin::Mobj(mo), SfxName::Metal);
-        chase(state, mo);
-    }
+pub fn metal(state: &mut GameState, mo: MobjId) {
+    s_start_sound(state, SoundOrigin::Mobj(mo), SfxName::Metal);
+    chase(state, mo);
 }
-pub fn baby_metal(state: &mut GameState, id: MobjId) {
-    {
-        let mo = id;
-        s_start_sound(state, SoundOrigin::Mobj(mo), SfxName::Bspwlk);
-        chase(state, mo);
-    }
+pub fn baby_metal(state: &mut GameState, mo: MobjId) {
+    s_start_sound(state, SoundOrigin::Mobj(mo), SfxName::Bspwlk);
+    chase(state, mo);
 }
-pub fn open_shotgun2(state: &mut GameState, player_id: PlayerId, _position: i32) {
-    {
-        let player = player_id;
-        s_start_sound(
-            state,
-            SoundOrigin::Mobj(state.game.g_game.players[player].mo.unwrap()),
-            SfxName::Dbopn,
-        );
-    }
+pub fn open_shotgun2(state: &mut GameState, player: PlayerId, _position: i32) {
+    s_start_sound(
+        state,
+        SoundOrigin::Mobj(state.game.g_game.players[player].mo.unwrap()),
+        SfxName::Dbopn,
+    );
 }
-pub fn load_shotgun2(state: &mut GameState, player_id: PlayerId, _position: i32) {
-    {
-        let player = player_id;
-        s_start_sound(
-            state,
-            SoundOrigin::Mobj(state.game.g_game.players[player].mo.unwrap()),
-            SfxName::Dbload,
-        );
-    }
+pub fn load_shotgun2(state: &mut GameState, player: PlayerId, _position: i32) {
+    s_start_sound(
+        state,
+        SoundOrigin::Mobj(state.game.g_game.players[player].mo.unwrap()),
+        SfxName::Dbload,
+    );
 }
-pub fn close_shotgun2(state: &mut GameState, player_id: PlayerId, position: i32) {
-    {
-        let player = player_id;
-        s_start_sound(
-            state,
-            SoundOrigin::Mobj(state.game.g_game.players[player].mo.unwrap()),
-            SfxName::Dbcls,
-        );
-        re_fire(state, player_id, position);
-    }
+pub fn close_shotgun2(state: &mut GameState, player: PlayerId, position: i32) {
+    s_start_sound(
+        state,
+        SoundOrigin::Mobj(state.game.g_game.players[player].mo.unwrap()),
+        SfxName::Dbcls,
+    );
+    re_fire(state, player, position);
 }
 pub fn brain_awake(state: &mut GameState, _id: MobjId) {
     state.world.p_enemy.numbraintargets = 0;
@@ -1855,164 +1718,142 @@ pub fn brain_awake(state: &mut GameState, _id: MobjId) {
 pub fn brain_pain(state: &mut GameState, _id: MobjId) {
     s_start_sound(state, SoundOrigin::None, SfxName::Bospn);
 }
-pub fn brain_scream(state: &mut GameState, id: MobjId) {
-    {
-        let mo = id;
-        let mut x: i32;
-        let mut y: i32;
-        let mut z: i32;
-        let mut th: MobjId;
-        x = state.world.p_mobj.mo(mo).x - 196 * FRACUNIT;
-        while x < state.world.p_mobj.mo(mo).x + 320 * FRACUNIT {
-            y = state.world.p_mobj.mo(mo).y - 320 * FRACUNIT;
-            z = 128 + p_random(&mut state.world.m_random) * 2 * FRACUNIT;
-            th = spawn_mobj(state, x as Fixed, y as Fixed, z as Fixed, MobjType::Rocket);
-            state.world.p_mobj.mo_mut(th).momz =
-                (p_random(&mut state.world.m_random) * 512) as Fixed;
-            set_mobj_state(state, th, StateNum::Brainexplode1);
-            state.world.p_mobj.mo_mut(th).tics -= p_random(&mut state.world.m_random) & 7;
-            if state.world.p_mobj.mo(th).tics < 1 {
-                state.world.p_mobj.mo_mut(th).tics = 1;
-            }
-            x += FRACUNIT * 8;
-        }
-        s_start_sound(state, SoundOrigin::None, SfxName::Bosdth);
-    }
-}
-pub fn brain_explode(state: &mut GameState, id: MobjId) {
-    {
-        let mo = id;
-
-        let x: i32 = state.world.p_mobj.mo(mo).x
-            + (p_random(&mut state.world.m_random) - p_random(&mut state.world.m_random)) * 2048;
-        let y: i32 = state.world.p_mobj.mo(mo).y;
-        let z: i32 = 128 + p_random(&mut state.world.m_random) * 2 * FRACUNIT;
-        let th: MobjId = spawn_mobj(state, x as Fixed, y as Fixed, z as Fixed, MobjType::Rocket);
+pub fn brain_scream(state: &mut GameState, mo: MobjId) {
+    let mut x: i32;
+    let mut y: i32;
+    let mut z: i32;
+    let mut th: MobjId;
+    x = state.world.p_mobj.mo(mo).x - 196 * FRACUNIT;
+    while x < state.world.p_mobj.mo(mo).x + 320 * FRACUNIT {
+        y = state.world.p_mobj.mo(mo).y - 320 * FRACUNIT;
+        z = 128 + p_random(&mut state.world.m_random) * 2 * FRACUNIT;
+        th = spawn_mobj(state, x as Fixed, y as Fixed, z as Fixed, MobjType::Rocket);
         state.world.p_mobj.mo_mut(th).momz = (p_random(&mut state.world.m_random) * 512) as Fixed;
         set_mobj_state(state, th, StateNum::Brainexplode1);
         state.world.p_mobj.mo_mut(th).tics -= p_random(&mut state.world.m_random) & 7;
         if state.world.p_mobj.mo(th).tics < 1 {
             state.world.p_mobj.mo_mut(th).tics = 1;
         }
+        x += FRACUNIT * 8;
+    }
+    s_start_sound(state, SoundOrigin::None, SfxName::Bosdth);
+}
+pub fn brain_explode(state: &mut GameState, mo: MobjId) {
+    let x: i32 = state.world.p_mobj.mo(mo).x
+        + (p_random(&mut state.world.m_random) - p_random(&mut state.world.m_random)) * 2048;
+    let y: i32 = state.world.p_mobj.mo(mo).y;
+    let z: i32 = 128 + p_random(&mut state.world.m_random) * 2 * FRACUNIT;
+    let th: MobjId = spawn_mobj(state, x as Fixed, y as Fixed, z as Fixed, MobjType::Rocket);
+    state.world.p_mobj.mo_mut(th).momz = (p_random(&mut state.world.m_random) * 512) as Fixed;
+    set_mobj_state(state, th, StateNum::Brainexplode1);
+    state.world.p_mobj.mo_mut(th).tics -= p_random(&mut state.world.m_random) & 7;
+    if state.world.p_mobj.mo(th).tics < 1 {
+        state.world.p_mobj.mo_mut(th).tics = 1;
     }
 }
 pub fn brain_die(state: &mut GameState, _id: MobjId) {
     exit_level(&mut state.game.g_game);
 }
-pub fn brain_spit(state: &mut GameState, id: MobjId) {
-    {
-        let mo = id;
-
-        state.world.p_enemy.easy ^= 1;
-        if state.game.g_game.gameskill <= SkillType::Easy && state.world.p_enemy.easy == 0 {
-            return;
-        }
-        let targ_id =
-            state.world.p_enemy.braintargets[state.world.p_enemy.braintargeton as usize].unwrap();
-        let targ: MobjId = targ_id;
-        state.world.p_enemy.braintargeton =
-            (state.world.p_enemy.braintargeton + 1) % state.world.p_enemy.numbraintargets;
-        let newmobj: MobjId = spawn_missile(state, mo, targ, MobjType::Spawnshot);
-        state.world.p_mobj.mo_mut(newmobj).target = Some(targ);
-        state.world.p_mobj.mo_mut(newmobj).reactiontime = (state.world.p_mobj.mo(targ).y
-            - state.world.p_mobj.mo(mo).y)
-            / state.world.p_mobj.mo(newmobj).momy
-            / state
-                .assets
-                .info
-                .state_mut(state.world.p_mobj.mo(newmobj).state.unwrap())
-                .tics;
-        s_start_sound(state, SoundOrigin::None, SfxName::Bospit);
+pub fn brain_spit(state: &mut GameState, mo: MobjId) {
+    state.world.p_enemy.easy ^= 1;
+    if state.game.g_game.gameskill <= SkillType::Easy && state.world.p_enemy.easy == 0 {
+        return;
     }
+    let targ_id =
+        state.world.p_enemy.braintargets[state.world.p_enemy.braintargeton as usize].unwrap();
+    let targ: MobjId = targ_id;
+    state.world.p_enemy.braintargeton =
+        (state.world.p_enemy.braintargeton + 1) % state.world.p_enemy.numbraintargets;
+    let newmobj: MobjId = spawn_missile(state, mo, targ, MobjType::Spawnshot);
+    state.world.p_mobj.mo_mut(newmobj).target = Some(targ);
+    state.world.p_mobj.mo_mut(newmobj).reactiontime = (state.world.p_mobj.mo(targ).y
+        - state.world.p_mobj.mo(mo).y)
+        / state.world.p_mobj.mo(newmobj).momy
+        / state
+            .assets
+            .info
+            .state_mut(state.world.p_mobj.mo(newmobj).state.unwrap())
+            .tics;
+    s_start_sound(state, SoundOrigin::None, SfxName::Bospit);
 }
-pub fn spawn_sound(state: &mut GameState, id: MobjId) {
-    {
-        let mo = id;
-        s_start_sound(state, SoundOrigin::Mobj(mo), SfxName::Boscub);
-        spawn_fly(state, mo);
-    }
+pub fn spawn_sound(state: &mut GameState, mo: MobjId) {
+    s_start_sound(state, SoundOrigin::Mobj(mo), SfxName::Boscub);
+    spawn_fly(state, mo);
 }
-pub fn spawn_fly(state: &mut GameState, id: MobjId) {
-    {
-        let mo = id;
-
-        state.world.p_mobj.mo_mut(mo).reactiontime -= 1;
-        if state.world.p_mobj.mo(mo).reactiontime != 0 {
-            return;
-        }
-        let targ_subst = state
-            .world
-            .p_mobj
-            .mo(mo)
-            .target
-            .filter(|&id| state.world.p_mobj.is_live(id));
-        let targ_id = subst_null_mobj(&mut state.world.p_mobj, targ_subst);
-        let targ: MobjId = targ_id;
-        let fog: MobjId = spawn_mobj(
-            state,
-            state.world.p_mobj.mo(targ).x,
-            state.world.p_mobj.mo(targ).y,
-            state.world.p_mobj.mo(targ).z,
-            MobjType::Spawnfire,
-        );
-        s_start_sound(state, SoundOrigin::Mobj(fog), SfxName::Telept);
-        let r: i32 = p_random(&mut state.world.m_random);
-        let kind: MobjType = if r < 50 {
-            MobjType::Troop
-        } else if r < 90 {
-            MobjType::Sergeant
-        } else if r < 120 {
-            MobjType::Shadows
-        } else if r < 130 {
-            MobjType::Pain
-        } else if r < 160 {
-            MobjType::Head
-        } else if r < 162 {
-            MobjType::Vile
-        } else if r < 172 {
-            MobjType::Undead
-        } else if r < 192 {
-            MobjType::Baby
-        } else if r < 222 {
-            MobjType::Fatso
-        } else if r < 246 {
-            MobjType::Knight
-        } else {
-            MobjType::Bruiser
-        };
-        let newmobj: MobjId = spawn_mobj(
-            state,
-            state.world.p_mobj.mo(targ).x,
-            state.world.p_mobj.mo(targ).y,
-            state.world.p_mobj.mo(targ).z,
-            kind,
-        );
-        if look_for_players(state, newmobj, true) {
-            let seestate = state
-                .assets
-                .info
-                .mobjinfo_mut(state.world.p_mobj.mo(newmobj).kind)
-                .seestate;
-            set_mobj_state(state, newmobj, seestate);
-        }
-        teleport_move(
-            state,
-            newmobj,
-            state.world.p_mobj.mo(newmobj).x,
-            state.world.p_mobj.mo(newmobj).y,
-        );
-        remove_mobj(state, mo);
+pub fn spawn_fly(state: &mut GameState, mo: MobjId) {
+    state.world.p_mobj.mo_mut(mo).reactiontime -= 1;
+    if state.world.p_mobj.mo(mo).reactiontime != 0 {
+        return;
     }
+    let targ_subst = state
+        .world
+        .p_mobj
+        .mo(mo)
+        .target
+        .filter(|&mo| state.world.p_mobj.is_live(mo));
+    let targ_id = subst_null_mobj(&mut state.world.p_mobj, targ_subst);
+    let targ: MobjId = targ_id;
+    let fog: MobjId = spawn_mobj(
+        state,
+        state.world.p_mobj.mo(targ).x,
+        state.world.p_mobj.mo(targ).y,
+        state.world.p_mobj.mo(targ).z,
+        MobjType::Spawnfire,
+    );
+    s_start_sound(state, SoundOrigin::Mobj(fog), SfxName::Telept);
+    let r: i32 = p_random(&mut state.world.m_random);
+    let kind: MobjType = if r < 50 {
+        MobjType::Troop
+    } else if r < 90 {
+        MobjType::Sergeant
+    } else if r < 120 {
+        MobjType::Shadows
+    } else if r < 130 {
+        MobjType::Pain
+    } else if r < 160 {
+        MobjType::Head
+    } else if r < 162 {
+        MobjType::Vile
+    } else if r < 172 {
+        MobjType::Undead
+    } else if r < 192 {
+        MobjType::Baby
+    } else if r < 222 {
+        MobjType::Fatso
+    } else if r < 246 {
+        MobjType::Knight
+    } else {
+        MobjType::Bruiser
+    };
+    let newmobj: MobjId = spawn_mobj(
+        state,
+        state.world.p_mobj.mo(targ).x,
+        state.world.p_mobj.mo(targ).y,
+        state.world.p_mobj.mo(targ).z,
+        kind,
+    );
+    if look_for_players(state, newmobj, true) {
+        let seestate = state
+            .assets
+            .info
+            .mobjinfo_mut(state.world.p_mobj.mo(newmobj).kind)
+            .seestate;
+        set_mobj_state(state, newmobj, seestate);
+    }
+    teleport_move(
+        state,
+        newmobj,
+        state.world.p_mobj.mo(newmobj).x,
+        state.world.p_mobj.mo(newmobj).y,
+    );
+    remove_mobj(state, mo);
 }
-pub fn player_scream(state: &mut GameState, id: MobjId) {
+pub fn player_scream(state: &mut GameState, mo: MobjId) {
+    let mut sound: SfxName = SfxName::Pldeth;
+    if state.game.doomstat.gamemode == GameMode::Commercial
+        && state.world.p_mobj.mo(mo).health < -50
     {
-        let mo = id;
-        let mut sound: SfxName = SfxName::Pldeth;
-        if state.game.doomstat.gamemode == GameMode::Commercial
-            && state.world.p_mobj.mo(mo).health < -50
-        {
-            sound = SfxName::Pdiehi;
-        }
-        s_start_sound(state, SoundOrigin::Mobj(mo), sound);
+        sound = SfxName::Pdiehi;
     }
+    s_start_sound(state, SoundOrigin::Mobj(mo), sound);
 }
