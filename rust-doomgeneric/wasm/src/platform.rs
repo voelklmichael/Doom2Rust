@@ -5,6 +5,7 @@
 //! whenever it has a frame or sound.
 
 use crate::audio::AudioClock;
+use crate::fs::Persist;
 use crate::keys::doom_key;
 use rust_doomgeneric::DoomPlatform;
 use std::cell::RefCell;
@@ -38,6 +39,22 @@ extern "C" {
     /// The game has finished.
     #[wasm_bindgen(method)]
     fn quit(this: &Host);
+    /// The game wrote a file (a savegame, the config): keep it for the next visit. The bytes are
+    /// only valid during the call.
+    #[wasm_bindgen(method)]
+    fn store(this: &Host, path: &str, data: &[u8]);
+    /// The game deleted a file it wrote earlier.
+    #[wasm_bindgen(method)]
+    fn remove(this: &Host, path: &str);
+}
+
+impl Persist for Rc<Host> {
+    fn store(&self, path: &str, data: &[u8]) {
+        Host::store(self, path, data);
+    }
+    fn remove(&self, path: &str) {
+        Host::remove(self, path);
+    }
 }
 
 /// Key events from the page, in the order they happened: `(pressed, engine key code)`.
@@ -50,14 +67,14 @@ pub fn push_key(keys: &KeyQueue, pressed: bool, code: &str) {
 }
 
 pub struct BrowserPlatform {
-    host: Host,
+    host: Rc<Host>,
     keys: KeyQueue,
     rgba: Vec<u8>,
     audio: Option<AudioClock>,
 }
 
 impl BrowserPlatform {
-    pub fn new(host: Host, keys: KeyQueue) -> Self {
+    pub fn new(host: Rc<Host>, keys: KeyQueue) -> Self {
         Self {
             host,
             keys,

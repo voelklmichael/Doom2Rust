@@ -22,7 +22,11 @@
     #overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; background: rgb(0 0 0 / 0.8); cursor: pointer; text-align: center; padding: 16px; }
     #overlay[hidden] { display: none; }
     #message { font-size: 1.5rem; color: var(--accent); font-weight: 700; }
-    #overlay small { color: var(--dim); }
+    #overlay small { color: var(--dim); max-width: 32em; }
+    .button { margin-top: 8px; padding: 6px 14px; border: 1px solid var(--dim); border-radius: 4px; color: var(--fg); font-size: 0.9rem; cursor: pointer; }
+    .button:hover { border-color: var(--fg); }
+    #dropzone { position: absolute; inset: 8px; display: none; align-items: center; justify-content: center; border: 3px dashed var(--accent); border-radius: 8px; background: rgb(0 0 0 / 0.85); font-size: 1.5rem; font-weight: 700; pointer-events: none; }
+    .stage.dragging #dropzone { display: flex; }
     dl.keys { display: grid; grid-template-columns: repeat(6, auto); gap: 2px 16px; margin: 0; color: var(--dim); font-size: 0.85rem; }
     dl.keys dt { color: var(--fg); text-align: right; }
     dl.keys dd { margin: 0; }
@@ -31,12 +35,16 @@
   </style>
 </head>
 <body>
-  <div class="stage">
+  <div class="stage" id="stage">
     <canvas id="screen" width="320" height="200"></canvas>
     <div id="overlay">
-      <div id="message">Click to play</div>
-      <small>DOOM shareware, running in your browser as WebAssembly</small>
+      <div id="message">Loading…</div>
+      <small id="hint"></small>
+      <label id="chooser" class="button" hidden>Choose a .wad file
+        <input id="file" type="file" accept=".wad" hidden>
+      </label>
     </div>
+    <div id="dropzone">Drop the WAD here</div>
   </div>
   <dl class="keys">
     <dt>Arrows</dt><dd>move, turn</dd>

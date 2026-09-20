@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 # Builds the game for the browser into www/pkg. Needs the wasm32 target
 # (rustup target add wasm32-unknown-unknown) and the wasm-bindgen command line tool at the
-# version pinned in Cargo.toml (cargo install wasm-bindgen-cli --version 0.2.121), and the IWAD
-# in assets/ (see assets/README.md).
+# version pinned in Cargo.toml (cargo install wasm-bindgen-cli --version 0.2.121).
 #
 #   wasm/build.sh          build
 #   wasm/build.sh serve    build, then serve www/ on http://localhost:8000
