@@ -399,11 +399,8 @@ pub fn text_write(state: &mut GameState) {
     let mut cx: i32 = 10;
     let mut cy: i32 = 10;
     let mut chars = state.ui.f_finale.finaletext.bytes();
-    let mut count: i32 = (state.ui.f_finale.finalecount as i32 - 10) / TEXTSPEED;
-    if count < 0 {
-        count = 0;
-    }
-    while count != 0 {
+    let count: i32 = ((state.ui.f_finale.finalecount as i32 - 10) / TEXTSPEED).max(0);
+    for _ in 0..count {
         let mut c: i32 = match chars.next() {
             Some(b) => i32::from(b),
             None => break,
@@ -430,7 +427,6 @@ pub fn text_write(state: &mut GameState) {
                 cx += 4;
             }
         }
-        count -= 1;
     }
 }
 const INITIAL_CASTORDER: [CastInfo; 18] = [

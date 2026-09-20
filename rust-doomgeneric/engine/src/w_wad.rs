@@ -268,23 +268,16 @@ static UNIQUE_LUMPS: [UniqueLump; 4] = [
     },
 ];
 pub fn check_correct_iwad(state: &WWadState, mission: GameMission) {
-    let mut i: i32 = 0;
-    while (i as usize)
-        < ::core::mem::size_of::<[UniqueLump; 4]>()
-            .wrapping_div(::core::mem::size_of::<UniqueLump>())
-    {
-        if mission as u32 != UNIQUE_LUMPS[i as usize].mission as u32
-            && check_num_for_name(state, UNIQUE_LUMPS[i as usize].lumpname).is_some()
-        {
+    for unique in &UNIQUE_LUMPS {
+        if mission != unique.mission && check_num_for_name(state, unique.lumpname).is_some() {
             error(&format!(
                     "\nYou are trying to use a {} IWAD file with the {}{} binary.\nThis isn't going to work.\nYou probably want to use the {}{} binary.",
-                    suggest_game_name(UNIQUE_LUMPS[i as usize].mission, GameMode::Indetermined),
+                    suggest_game_name(unique.mission, GameMode::Indetermined),
                     PROGRAM_PREFIX.as_str(),
                     game_mission_string(mission),
                     PROGRAM_PREFIX.as_str(),
-                    game_mission_string(UNIQUE_LUMPS[i as usize].mission),
+                    game_mission_string(unique.mission),
                 ));
         }
-        i += 1;
     }
 }

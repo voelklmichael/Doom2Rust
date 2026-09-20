@@ -596,8 +596,7 @@ fn set_mission_for_pack_name(
 }
 pub fn identify_version(state: &mut GameState) {
     if state.game.doomstat.gamemission == GameMission::None {
-        let mut i: u32 = 0;
-        while i < state.assets.w_wad.numlumps {
+        for i in 0..state.assets.w_wad.numlumps {
             if state.assets.w_wad.lumpinfo[i as usize]
                 .name
                 .eq_str_ignore_ascii_case("MAP01")
@@ -611,7 +610,6 @@ pub fn identify_version(state: &mut GameState) {
                 state.game.doomstat.gamemission = GameMission::Doom;
                 break;
             }
-            i = i.wrapping_add(1);
         }
         if state.game.doomstat.gamemission == GameMission::None {
             error("Unknown or invalid IWAD file.");
