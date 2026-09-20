@@ -1,6 +1,6 @@
 # doom_v5
 
-DOOM in Rust, for two platforms: a Linux desktop (X11) and the
+DOOM in Rust, for three platforms: a Linux desktop (X11), a web browser (WebAssembly), and the
 [M5Stack CoreS3 Lite](https://docs.m5stack.com/en/core/CoreS3-Lite) (ESP32-S3 microcontroller,
 320x240 LCD, controlled over Wi-Fi).
 
@@ -8,11 +8,12 @@ The Rust code is a port of [doomgeneric](https://github.com/ozkl/doomgeneric), a
 platform-independent version of the original DOOM source. It began as a mechanical `c2rust`
 translation and was then reworked by hand into safe, idiomatic Rust. The engine has no `unsafe`
 code (`deny(unsafe_code)`) and is `#![no_std]` + `alloc`, which is what lets it run on the
-microcontroller. Where its behaviour differs from the C original on purpose, it is listed in
+microcontroller and in WebAssembly. Where its behaviour differs from the C original on purpose, it is listed in
 [docs/known-deviations.md](docs/known-deviations.md).
 
 You need a DOOM IWAD (game data). It is not included; the freely available shareware
-`doom1.wad` works.
+`doom1.wad` works. On Linux you pass its path, in the browser you drop the file onto the page, and on
+the CoreS3 it is built into the firmware.
 
 ## Layout
 
@@ -22,6 +23,7 @@ You need a DOOM IWAD (game data). It is not included; the freely available share
 | `rust-doomgeneric/engine` | The game engine (`rust_doomgeneric`), platform independent |
 | `rust-doomgeneric/fs` | File-access abstraction the engine uses (`doomgeneric_fs`) |
 | `rust-doomgeneric/x11` | Linux front end: X11 window, sound through `aplay`/`paplay` |
+| `rust-doomgeneric/wasm` | Browser front end: WebAssembly module, page and Web Worker (`doomgeneric_wasm`) |
 | `rust-doomgeneric/core_s3` | CoreS3 Lite firmware (bare-metal `esp-hal`) |
 | `rust-doomgeneric/core_s3_*` | Host and firmware helpers: input protocol, keyboard sender, DHCP server, audio, WebSocket |
 | `rust-doomgeneric/third_party/oplon` | Local copy of the OPL2 music synthesizer |
@@ -47,6 +49,31 @@ fixed-point math relies on. The binary ends up in `rust-doomgeneric/target/relea
 Sound is on by default. Pass `-nosound` (or set `DOOM_AUDIO=off`) to silence a run.
 
 Run the tests with `cargo test --release` from `rust-doomgeneric/`.
+
+## Build and run in the browser (WebAssembly)
+
+The game also runs in a browser, from a static web page that contains no game data: you drop your
+IWAD onto the game window (or pick it with the button), and the page remembers it. Saved games are
+kept in the browser and survive a reload, and the game pauses while its tab is hidden. Sound works;
+mouse and touch input do not yet.
+
+```bash
+rustup target add wasm32-unknown-unknown
+cargo install wasm-bindgen-cli --version 0.2.121   # has to match the wasm-bindgen crate
+rust-doomgeneric/wasm/build.sh serve               # then open http://localhost:8000
+```
+
+`build.sh` without `serve` only builds the site into `rust-doomgeneric/wasm/www`, which any web
+server can host (browsers do not run it from `file:`). Controls: arrows move, Ctrl fires, Space
+opens doors, Shift runs, Alt with the arrows (or `,` and `.`) strafes, `1`-`7` pick weapons, Tab
+opens the map, Esc the menu; double-click the game window for full screen.
+
+**Publishing on GitHub Pages.** `.github/workflows/pages.yml` builds the site and deploys it on
+every push to `main` that touches the engine or the `wasm` crate. It needs one setting, once:
+in the GitHub repository, **Settings > Pages > Build and deployment > Source: GitHub Actions**
+(the repository has to be public, unless you have a paid plan). The site is then at
+`https://<user>.github.io/<repo>/`. More in
+[rust-doomgeneric/wasm/README.md](rust-doomgeneric/wasm/README.md).
 
 ## Build and flash the CoreS3 Lite
 

@@ -1,0 +1,71 @@
+# Publishes the browser version (rust-doomgeneric/wasm) with GitHub Pages: a static site of about
+# 1 MB. It contains no game data; the player drops their own WAD on the page.
+#
+# One-time setup in the repository: Settings > Pages > Build and deployment > Source: GitHub Actions.
+name: Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "rust-doomgeneric/wasm/**"
+      - "rust-doomgeneric/engine/**"
+      - "rust-doomgeneric/Cargo.lock"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deployment at a time; a newer push replaces one that is still running.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+env:
+  # Has to be the version of the `wasm-bindgen` crate in wasm/Cargo.toml.
+  WASM_BINDGEN_VERSION: 0.2.121
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust-doomgeneric
+
+      - name: Cache the wasm-bindgen command line tool
+        id: cli
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/bin/wasm-bindgen
+          key: wasm-bindgen-cli-${{ env.WASM_BINDGEN_VERSION }}
+
+      - name: Install the wasm-bindgen command line tool
+        if: steps.cli.outputs.cache-hit != 'true'
+        run: cargo install wasm-bindgen-cli --version "$WASM_BINDGEN_VERSION" --locked
+
+      - name: Build
+        run: rust-doomgeneric/wasm/build.sh
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: rust-doomgeneric/wasm/www
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
