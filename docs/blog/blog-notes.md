@@ -567,6 +567,21 @@ and that is what made the same engine portable to a chip with a different ABI.
     still need its own target and toolchain)? Gate `x11` behind `cfg(target_os)` so the whole host
     workspace builds on Windows and macOS? And where should the crates shared by both sides
     (`core_s3_protocol` and friends) live so the firmware and the host tools cannot drift apart?
+  - Related question: how to get clippy to improve ALL the crates. Today it runs once per
+    workspace, and the strictness is not shared:
+    - Only `engine/Cargo.toml` has a `[lints.clippy]` table (18 extra lints, from the Sep 19
+      "stricter clippy set" PR, #490). There is no `[workspace.lints]`, no `clippy.toml`, and the
+      other crates (`fs`, `x11`, the `core_s3_*` helpers) get clippy's defaults. `x11/src/main.rs`
+      starts with a large `#![allow(...)]` block, left over from the c2rust output.
+    - `cargo clippy --workspace` on the host never reaches the firmware, because `core_s3` is its
+      own workspace; it has to be linted separately, inside `core_s3`, with the `esp` toolchain
+      (whether that toolchain ships clippy is unverified).
+    - Ideas, none tried: a `[workspace.lints]` table in the host workspace with
+      `[lints] workspace = true` in each member (Cargo has supported this since 1.74) gives one lint
+      set for all host crates, but it cannot span two workspaces, so the firmware would carry a
+      copy; one script or CI job that runs `cargo clippy --workspace --all-targets -- -D warnings`
+      in both workspaces (the same task-runner question as above); and applying the engine's lint
+      set to the other crates once to count what it finds before deciding which lints to keep.
 - **Executable size comparison, in megabytes (to look into later).** Four builds to compare: the
   C version, the Rust X11 build, the CoreS3 firmware and the WebAssembly module. Only pieces exist
   so far, and they are not comparable yet:
