@@ -27,12 +27,12 @@ use crate::sounds::SfxName;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum CeilingE {
-    LowerToFloor = 0,
-    RaiseToHighest = 1,
-    LowerAndCrush = 2,
-    CrushAndRaise = 3,
-    FastCrushAndRaise = 4,
-    SilentCrushAndRaise = 5,
+    LowerToFloor,
+    RaiseToHighest,
+    LowerAndCrush,
+    CrushAndRaise,
+    FastCrushAndRaise,
+    SilentCrushAndRaise,
 }
 pub const CEILSPEED: i32 = FRACUNIT;
 pub const MAXCEILINGS: i32 = 30;

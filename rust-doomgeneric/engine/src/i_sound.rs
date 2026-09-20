@@ -23,17 +23,17 @@ use alloc::string::String;
 #[allow(dead_code)]
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum SndDevice {
-    SnddeviceNone = 0,
-    Pcspeaker = 1,
-    Adlib = 2,
-    Sb = 3,
-    Pas = 4,
-    Gus = 5,
-    Waveblaster = 6,
-    Soundcanvas = 7,
-    Genmidi = 8,
-    Awe32 = 9,
-    Cd = 10,
+    SnddeviceNone,
+    Pcspeaker,
+    Adlib,
+    Sb,
+    Pas,
+    Gus,
+    Waveblaster,
+    Soundcanvas,
+    Genmidi,
+    Awe32,
+    Cd,
 }
 pub struct ISoundState {
     pub snd_samplerate: i32,

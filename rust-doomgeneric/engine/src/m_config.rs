@@ -11,11 +11,11 @@ use alloc::vec::Vec;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum DefaultType {
-    Int = 0,
-    IntHex = 1,
-    String = 2,
-    Float = 3,
-    Key = 4,
+    Int,
+    IntHex,
+    String,
+    Float,
+    Key,
 }
 /// Where a bound configuration variable lives: an accessor that projects the
 /// variable out of the game state.

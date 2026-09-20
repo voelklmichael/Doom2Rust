@@ -42,12 +42,12 @@ use crate::tables::FINESINE;
 pub const NUMCARDS: i32 = 6;
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum CardType {
-    Bluecard = 0,
-    Yellowcard = 1,
-    Redcard = 2,
-    Blueskull = 3,
-    Yellowskull = 4,
-    Redskull = 5,
+    Bluecard,
+    Yellowcard,
+    Redcard,
+    Blueskull,
+    Yellowskull,
+    Redskull,
 }
 impl ArrayIndex for CardType {
     #[inline(always)]

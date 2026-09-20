@@ -1,11 +1,11 @@
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub enum SkillType {
     Noitems = -1,
-    Baby = 0,
-    Easy = 1,
-    Medium = 2,
-    Hard = 3,
-    Nightmare = 4,
+    Baby,
+    Easy,
+    Medium,
+    Hard,
+    Nightmare,
 }
 pub fn skill_from_raw(v: i32) -> SkillType {
     match v {
@@ -20,16 +20,16 @@ pub fn skill_from_raw(v: i32) -> SkillType {
 }
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum GameMission {
-    Doom = 0,
-    Doom2 = 1,
-    PackTnt = 2,
-    PackPlut = 3,
-    PackChex = 4,
-    PackHacx = 5,
-    Heretic = 6,
-    Hexen = 7,
-    Strife = 8,
-    None = 9,
+    Doom,
+    Doom2,
+    PackTnt,
+    PackPlut,
+    PackChex,
+    PackHacx,
+    Heretic,
+    Hexen,
+    Strife,
+    None,
 }
 
 impl GameMission {
@@ -44,29 +44,29 @@ impl GameMission {
 }
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum GameMode {
-    Shareware = 0,
-    Registered = 1,
-    Commercial = 2,
-    Retail = 3,
-    Indetermined = 4,
+    Shareware,
+    Registered,
+    Commercial,
+    Retail,
+    Indetermined,
 }
 
 #[derive(Copy, Clone, PartialEq)]
 pub enum GameVersion {
-    Doom12 = 0,
-    Doom1666 = 1,
-    Doom17 = 2,
-    Doom18 = 3,
-    Doom19 = 4,
-    Hacx = 5,
-    Ultimate = 6,
-    Final = 7,
-    Final2 = 8,
-    Chex = 9,
-    Heretic13 = 10,
-    Hexen11 = 11,
-    Strife12 = 12,
-    Strife131 = 13,
+    Doom12,
+    Doom1666,
+    Doom17,
+    Doom18,
+    Doom19,
+    Hacx,
+    Ultimate,
+    Final,
+    Final2,
+    Chex,
+    Heretic13,
+    Hexen11,
+    Strife12,
+    Strife131,
 }
 impl GameVersion {
     pub(crate) fn is_ultimate_or_higher(self) -> bool {

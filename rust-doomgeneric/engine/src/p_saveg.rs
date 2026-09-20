@@ -87,19 +87,19 @@ impl PSavegState {
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum ThinkerClass {
-    End = 0,
-    Mobj = 1,
+    End,
+    Mobj,
 }
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum SpecialThinkerClass {
-    Ceiling = 0,
-    Door = 1,
-    Floor = 2,
-    Plat = 3,
-    Flash = 4,
-    Strobe = 5,
-    Glow = 6,
-    Endspecials = 7,
+    Ceiling,
+    Door,
+    Floor,
+    Plat,
+    Flash,
+    Strobe,
+    Glow,
+    Endspecials,
 }
 pub const SAVEGAME_EOF: i32 = 0x1d;
 pub const VERSIONSIZE: i32 = 16;

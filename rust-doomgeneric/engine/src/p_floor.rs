@@ -34,30 +34,30 @@ use crate::sounds::SfxName;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum FloorE {
-    LowerFloor = 0,
-    LowerFloorToLowest = 1,
-    TurboLower = 2,
-    RaiseFloor = 3,
-    RaiseFloorToNearest = 4,
-    RaiseToTexture = 5,
-    LowerAndChange = 6,
-    RaiseFloor24 = 7,
-    RaiseFloor24AndChange = 8,
-    RaiseFloorCrush = 9,
-    RaiseFloorTurbo = 10,
-    DonutRaise = 11,
-    RaiseFloor512 = 12,
+    LowerFloor,
+    LowerFloorToLowest,
+    TurboLower,
+    RaiseFloor,
+    RaiseFloorToNearest,
+    RaiseToTexture,
+    LowerAndChange,
+    RaiseFloor24,
+    RaiseFloor24AndChange,
+    RaiseFloorCrush,
+    RaiseFloorTurbo,
+    DonutRaise,
+    RaiseFloor512,
 }
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum StairE {
-    Build8 = 0,
-    Turbo16 = 1,
+    Build8,
+    Turbo16,
 }
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum ResultE {
-    Ok = 0,
-    Crushed = 1,
-    Pastdest = 2,
+    Ok,
+    Crushed,
+    Pastdest,
 }
 pub const FLOORSPEED: i32 = FRACUNIT;
 fn change_sector(state: &mut GameState, sector: SectorId, crush: bool) -> bool {

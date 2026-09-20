@@ -274,14 +274,14 @@ impl StStuffState {
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum StStateEnum {
-    AutomapState = 0,
-    FirstPersonState = 1,
+    AutomapState,
+    FirstPersonState,
 }
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum StChatStateEnum {
-    Start = 0,
-    WaitDest = 1,
-    Get = 2,
+    Start,
+    WaitDest,
+    Get,
 }
 pub type LoadCallback = fn(&mut GameState, &str) -> i32;
 pub const DEH_DEFAULT_GOD_MODE_HEALTH: i32 = 100;

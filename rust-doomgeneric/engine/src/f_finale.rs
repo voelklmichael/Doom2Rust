@@ -36,9 +36,9 @@ use crate::w_wad::lump_bytes_name;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum FinaleStage {
-    Text = 0,
-    ArtScreen = 1,
-    Cast = 2,
+    Text,
+    ArtScreen,
+    Cast,
 }
 #[derive(Copy, Clone)]
 pub struct TextScreen {

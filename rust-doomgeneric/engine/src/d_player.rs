@@ -7,10 +7,10 @@ use alloc::string::String;
 pub const NUMAMMO: i32 = 4;
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum AmmoType {
-    Clip = 0,
-    Shell = 1,
-    Cell = 2,
-    Misl = 3,
+    Clip,
+    Shell,
+    Cell,
+    Misl,
     Noammo = 5,
 }
 impl ArrayIndex for AmmoType {
@@ -32,8 +32,8 @@ pub fn ammotype_from_raw(v: i32) -> AmmoType {
 pub const NUMPSPRITES: i32 = 2;
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum PSpriteNum {
-    Weapon = 0,
-    Flash = 1,
+    Weapon,
+    Flash,
 }
 // CheatFlags::NOCLIP/CheatFlags::GODMODE/CheatFlags::NOMOMENTUM are bit flags (1/2/4) combined with
 // bitwise OR/AND/XOR into a single `cheats` field, not mutually-exclusive
@@ -41,12 +41,12 @@ pub enum PSpriteNum {
 pub const NUMPOWERS: i32 = 6;
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum PowerType {
-    Invulnerability = 0,
-    Strength = 1,
-    Invisibility = 2,
-    Ironfeet = 3,
-    Allmap = 4,
-    Infrared = 5,
+    Invulnerability,
+    Strength,
+    Invisibility,
+    Ironfeet,
+    Allmap,
+    Infrared,
 }
 impl PowerType {
     /// Every power-up, in slot order.
@@ -70,15 +70,15 @@ impl ArrayIndex for PowerType {
 pub const NUMWEAPONS: i32 = 9;
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum WeaponType {
-    Fist = 0,
-    Pistol = 1,
-    Shotgun = 2,
-    Chaingun = 3,
-    Missile = 4,
-    Plasma = 5,
-    Bfg = 6,
-    Chainsaw = 7,
-    Supershotgun = 8,
+    Fist,
+    Pistol,
+    Shotgun,
+    Chaingun,
+    Missile,
+    Plasma,
+    Bfg,
+    Chainsaw,
+    Supershotgun,
     Nochange = 10,
 }
 impl ArrayIndex for WeaponType {
@@ -151,9 +151,9 @@ impl ArrayIndex for PlayerId {
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum PlayerState {
-    Live = 0,
-    Dead = 1,
-    Reborn = 2,
+    Live,
+    Dead,
+    Reborn,
 }
 
 #[derive(Clone)]
