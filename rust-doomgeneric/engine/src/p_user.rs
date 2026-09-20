@@ -45,7 +45,7 @@ pub fn p_thrust(p_mobj: &mut PMobjState, mo: MobjId, angle: Angle, amount: Fixed
 pub fn calc_height(state: &mut GameState, player_id: PlayerId) {
     let player = &mut state.game.g_game.players[player_id];
 
-    let player_mo = player.mo.unwrap();
+    let player_mo = player.mobj();
     player.bob = fixed_mul(
         state.world.p_mobj.mo(player_mo).momx,
         state.world.p_mobj.mo(player_mo).momx,
@@ -93,7 +93,7 @@ pub fn calc_height(state: &mut GameState, player_id: PlayerId) {
 }
 pub fn move_player(state: &mut GameState, player_id: PlayerId) {
     let cmd = state.game.g_game.players[player_id].cmd;
-    let player_mo = state.game.g_game.players[player_id].mo.unwrap();
+    let player_mo = state.game.g_game.players[player_id].mobj();
     {
         let mo = state.world.p_mobj.mo_mut(player_mo);
         mo.angle += Angle((i32::from(cmd.angleturn) << 16) as u32);
@@ -136,7 +136,7 @@ pub fn death_think(state: &mut GameState, player_id: PlayerId) {
         state.game.g_game.players[player].viewheight = 6 * FRACUNIT;
     }
     state.game.g_game.players[player].deltaviewheight = Fixed::ZERO;
-    let player_mo = state.game.g_game.players[player].mo.unwrap();
+    let player_mo = state.game.g_game.players[player].mobj();
     state.world.p_user.onground =
         state.world.p_mobj.mo(player_mo).z <= state.world.p_mobj.mo(player_mo).floorz;
     calc_height(state, player);
@@ -172,7 +172,7 @@ pub fn death_think(state: &mut GameState, player_id: PlayerId) {
 }
 pub fn player_think(state: &mut GameState, player_id: PlayerId) {
     let player = player_id;
-    let player_mo = state.game.g_game.players[player].mo.unwrap();
+    let player_mo = state.game.g_game.players[player].mobj();
     if state.game.g_game.players[player]
         .cheats
         .contains(CheatFlags::NOCLIP)

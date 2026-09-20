@@ -1595,21 +1595,21 @@ pub fn baby_metal(state: &mut GameState, mo: MobjId) {
 pub fn open_shotgun2(state: &mut GameState, player: PlayerId, _position: i32) {
     s_start_sound(
         state,
-        SoundOrigin::Mobj(state.game.g_game.players[player].mo.unwrap()),
+        SoundOrigin::Mobj(state.game.g_game.players[player].mobj()),
         SfxName::Dbopn,
     );
 }
 pub fn load_shotgun2(state: &mut GameState, player: PlayerId, _position: i32) {
     s_start_sound(
         state,
-        SoundOrigin::Mobj(state.game.g_game.players[player].mo.unwrap()),
+        SoundOrigin::Mobj(state.game.g_game.players[player].mobj()),
         SfxName::Dbload,
     );
 }
 pub fn close_shotgun2(state: &mut GameState, player: PlayerId, position: i32) {
     s_start_sound(
         state,
-        SoundOrigin::Mobj(state.game.g_game.players[player].mo.unwrap()),
+        SoundOrigin::Mobj(state.game.g_game.players[player].mobj()),
         SfxName::Dbcls,
     );
     re_fire(state, player, position);

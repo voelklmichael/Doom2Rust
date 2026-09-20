@@ -12,6 +12,7 @@
 //! `right = sep * vol / 127` (each clamped to 0..=255, 255 meaning unity) and
 //! saturating addition when channels overlap.
 
+use crate::le::{le_u16, le_u32};
 use alloc::rc::Rc;
 use core::ops::Range;
 
@@ -45,8 +46,8 @@ impl Sample {
         if lump_len < HEADER_LEN || data[0] != 0x03 || data[1] != 0x00 {
             return None;
         }
-        let rate = u32::from(u16::from_le_bytes([data[2], data[3]]));
-        let length = u32::from_le_bytes([data[4], data[5], data[6], data[7]]) as usize;
+        let rate = u32::from(le_u16(&data, 2));
+        let length = le_u32(&data, 4) as usize;
         if length > lump_len - HEADER_LEN || length <= MIN_LENGTH || rate == 0 {
             return None;
         }

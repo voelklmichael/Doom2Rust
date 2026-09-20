@@ -572,9 +572,7 @@ pub fn st_responder(state: &mut GameState, ev: &Event) -> bool {
                 state.game.g_game.player_mut(state.ui.st_stuff.plyr).message =
                     Some("... doesn't suck - GM".to_string());
             } else if cht_check_cheat(&mut state.ui.st_stuff.cheat_mypos, ev.data2 as u8) {
-                let cp_mo_id = state.game.g_game.players[state.game.g_game.consoleplayer]
-                    .mo
-                    .unwrap();
+                let cp_mo_id = state.game.g_game.players[state.game.g_game.consoleplayer].mobj();
                 let cp_mo = state.world.p_mobj.mo(cp_mo_id);
                 state.game.g_game.player_mut(state.ui.st_stuff.plyr).message = Some(format!(
                     "ang=0x{:x};x,y=(0x{:x},0x{:x})",
@@ -679,7 +677,7 @@ pub fn update_face_widget(
                 && Some(a) != g_game.player_mut(st_stuff.plyr).mo
         }) {
             st_stuff.st_updatefacewidget_priority = 7;
-            let plyr_mo = p_mobj.mo(g_game.player_mut(st_stuff.plyr).mo.unwrap());
+            let plyr_mo = p_mobj.mo(g_game.player_mut(st_stuff.plyr).mobj());
             let (plyr_mo_x, plyr_mo_y, plyr_mo_angle) = (plyr_mo.x, plyr_mo.y, plyr_mo.angle);
             if g_game.player_mut(st_stuff.plyr).health - st_stuff.st_oldhealth > ST_MUCHPAIN {
                 st_stuff.st_facecount = ST_TURNCOUNT;

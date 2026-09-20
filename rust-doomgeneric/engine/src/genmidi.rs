@@ -5,6 +5,7 @@
 //! followed by 47 percussion ones, keys 35..=81), then 175 32-byte names that
 //! are not needed for playback.
 
+use crate::le::{le_i16, le_u16};
 pub const NUM_INSTRUMENTS: usize = 175;
 /// Index of the first percussion instrument; key 35 plays this one.
 const PERCUSSION_BASE: usize = 128;
@@ -77,7 +78,7 @@ fn voice(b: &[u8]) -> Voice {
         feedback: b[6],
         carrier: operator(&b[7..13]),
         // b[13] is unused.
-        base_note_offset: i16::from_le_bytes([b[14], b[15]]),
+        base_note_offset: le_i16(b, 14),
     }
 }
 
@@ -95,7 +96,7 @@ impl GenMidi {
             .zip(body.chunks_exact(INSTRUMENT_LEN))
         {
             *instrument = Instrument {
-                flags: u16::from_le_bytes([b[0], b[1]]),
+                flags: le_u16(b, 0),
                 fine_tuning: b[2],
                 fixed_note: b[3],
                 voices: [voice(&b[4..4 + VOICE_LEN]), voice(&b[4 + VOICE_LEN..])],

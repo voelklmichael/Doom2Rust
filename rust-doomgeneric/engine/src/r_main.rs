@@ -450,7 +450,7 @@ pub fn setup_frame(state: &mut GameState, player_id: PlayerId) {
     let player = state.game.g_game.player_mut(player_id);
     state.render.r_main.viewplayer = player_id;
     let (player_mo_id, extralight, viewz, fixedcolormap) = (
-        player.mo.unwrap(),
+        player.mobj(),
         player.extralight,
         player.viewz,
         player.fixedcolormap,

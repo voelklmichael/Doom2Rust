@@ -6,6 +6,7 @@
 //! ticks follows. One tick is 1/140 s. `mus2mid.c` translates this into a MIDI
 //! file for `SDL_mixer`; the OPL driver here works from the events directly.
 
+use crate::le::le_u16;
 use alloc::vec::Vec;
 
 /// MUS ticks per second.
@@ -61,8 +62,8 @@ impl Song {
         if lump.len() < HEADER_LEN || lump[..4] != HEADER_ID {
             return None;
         }
-        let score_len = usize::from(u16::from_le_bytes([lump[4], lump[5]]));
-        let score_start = usize::from(u16::from_le_bytes([lump[6], lump[7]]));
+        let score_len = usize::from(le_u16(lump, 4));
+        let score_start = usize::from(le_u16(lump, 6));
         if score_start < HEADER_LEN || score_start > lump.len() {
             return None;
         }

@@ -4,6 +4,7 @@ use crate::d_mode::GameMission;
 use crate::d_mode::GameMode;
 use crate::fixed_cstr::FixedCStr;
 use crate::i_system::error;
+use crate::le::le_i32;
 use crate::m_misc::extract_file_base;
 use crate::platform::DoomPlatform;
 use alloc::vec::Vec;
@@ -121,8 +122,8 @@ pub fn w_add_file(
         fs.read_at(wad_file, 0, &mut header_buf);
         let header = wadinfo_t {
             identification: FixedCStr::from_bytes(&header_buf[0..4]),
-            numlumps: i32::from_le_bytes(header_buf[4..8].try_into().unwrap()),
-            infotableofs: i32::from_le_bytes(header_buf[8..12].try_into().unwrap()),
+            numlumps: le_i32(header_buf, 4),
+            infotableofs: le_i32(header_buf, 8),
         };
         if header.identification.0 != *b"IWAD" && header.identification.0 != *b"PWAD" {
             error(&format!(
@@ -141,8 +142,8 @@ pub fn w_add_file(
             .0
             .iter()
             .map(|c| filelump_t {
-                filepos: i32::from_le_bytes(c[0..4].try_into().unwrap()),
-                size: i32::from_le_bytes(c[4..8].try_into().unwrap()),
+                filepos: le_i32(c, 0),
+                size: le_i32(c, 4),
                 name: FixedCStr::from_bytes(&c[8..16]),
             })
             .collect()

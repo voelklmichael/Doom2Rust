@@ -525,7 +525,7 @@ pub fn restore_scale_and_loc(
     am_map.m_w = am_map.old_m_w;
     am_map.m_h = am_map.old_m_h;
     if am_map.followplayer {
-        let plr_mo_id = g_game.player_mut(am_map.plr).mo.unwrap();
+        let plr_mo_id = g_game.player_mut(am_map.plr).mobj();
         let plr_mo = p_mobj.mo(plr_mo_id);
         am_map.m_x = plr_mo.x - am_map.m_w / 2;
         am_map.m_y = plr_mo.y - am_map.m_h / 2;
@@ -625,12 +625,7 @@ pub fn am_init_variables(state: &mut GameState) {
             }
         }
     }
-    let plr_mo_id = state
-        .game
-        .g_game
-        .player_mut(state.ui.am_map.plr)
-        .mo
-        .unwrap();
+    let plr_mo_id = state.game.g_game.player_mut(state.ui.am_map.plr).mobj();
     let plr_mo = state.world.p_mobj.mo(plr_mo_id);
     state.ui.am_map.m_x = plr_mo.x - state.ui.am_map.m_w / 2;
     state.ui.am_map.m_y = plr_mo.y - state.ui.am_map.m_h / 2;
@@ -850,7 +845,7 @@ pub fn change_window_scale(am_map: &mut AmMapState) {
     }
 }
 pub fn do_follow_player(am_map: &mut AmMapState, g_game: &mut GGameState, p_mobj: &PMobjState) {
-    let plr_mo_id = g_game.player_mut(am_map.plr).mo.unwrap();
+    let plr_mo_id = g_game.player_mut(am_map.plr).mobj();
     let plr_mo = p_mobj.mo(plr_mo_id);
     let (plr_x, plr_y) = (plr_mo.x, plr_mo.y);
     if am_map.f_oldloc.x != plr_x || am_map.f_oldloc.y != plr_y {
@@ -1273,12 +1268,7 @@ pub fn draw_line_character(
 pub fn draw_players(state: &mut GameState) {
     const THEIR_COLORS: [i32; 4] = [GREENS, GRAYS, BROWNS, REDS];
     if !state.game.g_game.netgame {
-        let plr_mo_id = state
-            .game
-            .g_game
-            .player_mut(state.ui.am_map.plr)
-            .mo
-            .unwrap();
+        let plr_mo_id = state.game.g_game.player_mut(state.ui.am_map.plr).mobj();
         let plr_mo = state.world.p_mobj.mo(plr_mo_id);
         let (plr_angle, plr_x, plr_y) = (plr_mo.angle, plr_mo.x, plr_mo.y);
         if state.ui.am_map.cheating != 0 {

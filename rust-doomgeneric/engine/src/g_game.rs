@@ -1018,7 +1018,7 @@ pub fn player_finish_level(g_game: &mut GGameState, p_mobj: &mut PMobjState, pla
     let p = &mut g_game.players[player];
     p.powers = EnumArray::new([0; 6]);
     p.cards = EnumArray::new([false; 6]);
-    let mo_id = p.mo.unwrap();
+    let mo_id = p.mobj();
     p.extralight = 0;
     p.fixedcolormap = 0;
     p.damagecount = 0;
@@ -1049,10 +1049,7 @@ pub fn player_reborn(state: &mut GGameState, player: PlayerId) {
 pub fn check_spot(state: &mut GameState, playernum: PlayerId, mthing: &MapThing) -> bool {
     if state.game.g_game.players[playernum].mo.is_none() {
         for i in 0..playernum.slot() {
-            let other_mo = state
-                .world
-                .p_mobj
-                .mo(state.game.g_game.players[i].mo.unwrap());
+            let other_mo = state.world.p_mobj.mo(state.game.g_game.players[i].mobj());
             if other_mo.x == Fixed::from_int(i32::from(mthing.x))
                 && other_mo.y == Fixed::from_int(i32::from(mthing.y))
             {
@@ -1063,7 +1060,7 @@ pub fn check_spot(state: &mut GameState, playernum: PlayerId, mthing: &MapThing)
     }
     let x: Fixed = Fixed::from_int(i32::from(mthing.x));
     let y: Fixed = Fixed::from_int(i32::from(mthing.y));
-    let player_mo_id = state.game.g_game.players[playernum].mo.unwrap();
+    let player_mo_id = state.game.g_game.players[playernum].mobj();
     if !check_position(state, player_mo_id, x, y) {
         return false;
     }
@@ -1117,7 +1114,7 @@ pub fn death_match_spawn_player(state: &mut GameState, playernum: PlayerId) {
 }
 pub fn do_reborn(state: &mut GameState, playernum: PlayerId) {
     if state.game.g_game.netgame {
-        let player_mo_id = state.game.g_game.players[playernum].mo.unwrap();
+        let player_mo_id = state.game.g_game.players[playernum].mobj();
         state.world.p_mobj.mo_mut(player_mo_id).player = None;
         if state.game.g_game.deathmatch != 0 {
             death_match_spawn_player(state, playernum);

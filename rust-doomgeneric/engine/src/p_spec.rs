@@ -1066,7 +1066,7 @@ pub fn shoot_special_line(state: &mut GameState, thing: MobjId, line: LineId) {
     }
 }
 pub fn player_in_special_sector(state: &mut GameState, player: PlayerId) {
-    let player_mo = state.game.g_game.player_mut(player).mo.unwrap();
+    let player_mo = state.game.g_game.player_mut(player).mobj();
     let (subsector, mo_z) = {
         let m = state.world.p_mobj.mo(player_mo);
         (m.subsector, m.z)
