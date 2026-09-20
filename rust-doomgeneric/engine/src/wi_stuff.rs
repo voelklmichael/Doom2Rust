@@ -598,7 +598,7 @@ pub fn slam_background(state: &mut GameState) {
 }
 pub fn draw_lf(state: &mut GameState) {
     let mut y: i32 = WI_TITLEY;
-    if state.game.doomstat.gamemode as u32 != GameMode::Commercial as i32 as u32
+    if state.game.doomstat.gamemode != GameMode::Commercial
         || state.wbs().last < state.ui.wi_stuff.numcmaps
     {
         let index = state.wbs().last as usize;
@@ -699,7 +699,7 @@ pub fn draw_on_lnode(state: &mut GameState, n: i32, c: &[i32]) {
     }
 }
 pub fn init_animated_back(state: &mut GameState) {
-    if state.game.doomstat.gamemode as u32 == GameMode::Commercial as i32 as u32 {
+    if state.game.doomstat.gamemode == GameMode::Commercial {
         return;
     }
     if state.wbs().epsd > 2 {
@@ -723,7 +723,7 @@ pub fn init_animated_back(state: &mut GameState) {
     }
 }
 pub fn update_animated_back(state: &mut GameState) {
-    if state.game.doomstat.gamemode as u32 == GameMode::Commercial as i32 as u32 {
+    if state.game.doomstat.gamemode == GameMode::Commercial {
         return;
     }
     if state.wbs().epsd > 2 {
@@ -768,7 +768,7 @@ pub fn update_animated_back(state: &mut GameState) {
     }
 }
 pub fn draw_animated_back(state: &mut GameState) {
-    if state.game.doomstat.gamemode as u32 == GameMode::Commercial as i32 as u32 {
+    if state.game.doomstat.gamemode == GameMode::Commercial {
         return;
     }
     if state.wbs().epsd > 2 {
@@ -926,7 +926,7 @@ pub fn draw_show_next_loc(state: &mut GameState) {
     let last: i32;
     slam_background(state);
     draw_animated_back(state);
-    if state.game.doomstat.gamemode as u32 != GameMode::Commercial as i32 as u32 {
+    if state.game.doomstat.gamemode != GameMode::Commercial {
         if state.wbs().epsd > 2 {
             draw_el(state);
             return;
@@ -950,9 +950,7 @@ pub fn draw_show_next_loc(state: &mut GameState) {
             draw_on_lnode(state, next, &yah);
         }
     }
-    if state.game.doomstat.gamemode as u32 != GameMode::Commercial as i32 as u32
-        || state.wbs().next != 30
-    {
+    if state.game.doomstat.gamemode != GameMode::Commercial || state.wbs().next != 30 {
         draw_el(state);
     }
 }
@@ -1038,7 +1036,7 @@ pub fn update_deathmatch_stats(state: &mut GameState) {
     } else if state.ui.wi_stuff.dm_state == 4 {
         if state.ui.wi_stuff.acceleratestage {
             s_start_sound(state, SoundOrigin::None, SfxName::Slop as i32);
-            if state.game.doomstat.gamemode as u32 == GameMode::Commercial as i32 as u32 {
+            if state.game.doomstat.gamemode == GameMode::Commercial {
                 init_no_state(&mut state.ui.wi_stuff);
             } else {
                 init_show_next_loc(state);
@@ -1295,7 +1293,7 @@ pub fn update_netgame_stats(state: &mut GameState) {
     } else if state.ui.wi_stuff.ng_state == 10 {
         if state.ui.wi_stuff.acceleratestage {
             s_start_sound(state, SoundOrigin::None, SfxName::Sgcock as i32);
-            if state.game.doomstat.gamemode as u32 == GameMode::Commercial as i32 as u32 {
+            if state.game.doomstat.gamemode == GameMode::Commercial {
                 init_no_state(&mut state.ui.wi_stuff);
             } else {
                 init_show_next_loc(state);
@@ -1504,7 +1502,7 @@ pub fn update_stats(state: &mut GameState) {
     } else if state.ui.wi_stuff.sp_state == 10 {
         if state.ui.wi_stuff.acceleratestage {
             s_start_sound(state, SoundOrigin::None, SfxName::Sgcock as i32);
-            if state.game.doomstat.gamemode as u32 == GameMode::Commercial as i32 as u32 {
+            if state.game.doomstat.gamemode == GameMode::Commercial {
                 init_no_state(&mut state.ui.wi_stuff);
             } else {
                 init_show_next_loc(state);
@@ -1620,7 +1618,7 @@ pub fn check_for_accelerate(g_game: &mut GGameState, wi_stuff: &mut WiStuffState
 pub fn wi_ticker(state: &mut GameState) {
     state.ui.wi_stuff.bcnt += 1;
     if state.ui.wi_stuff.bcnt == 1 {
-        if state.game.doomstat.gamemode as u32 == GameMode::Commercial as i32 as u32 {
+        if state.game.doomstat.gamemode == GameMode::Commercial {
             change_music(state, MusicName::Dm2int as i32, true);
         } else {
             change_music(state, MusicName::Inter as i32, true);
@@ -1646,7 +1644,7 @@ pub fn wi_ticker(state: &mut GameState) {
     }
 }
 fn load_unload_data(state: &mut GameState, callback: LoadCallback) {
-    if state.game.doomstat.gamemode as u32 == GameMode::Commercial as i32 as u32 {
+    if state.game.doomstat.gamemode == GameMode::Commercial {
         for i in 0..state.ui.wi_stuff.numcmaps as usize {
             state.ui.wi_stuff.lnames[i] = callback(state, &format!("CWILV{i:02}"));
         }

@@ -1716,7 +1716,7 @@ pub fn boss_death(state: &mut GameState, id: MobjId) {
     {
         let mo = id;
         let mut i: i32;
-        if state.game.doomstat.gamemode as u32 == GameMode::Commercial as i32 as u32 {
+        if state.game.doomstat.gamemode == GameMode::Commercial {
             if state.game.g_game.gamemap != 7 {
                 return;
             }
@@ -1753,7 +1753,7 @@ pub fn boss_death(state: &mut GameState, id: MobjId) {
                 return;
             }
         }
-        if state.game.doomstat.gamemode as u32 == GameMode::Commercial as i32 as u32 {
+        if state.game.doomstat.gamemode == GameMode::Commercial {
             if state.game.g_game.gamemap == 7 {
                 if state.world.p_mobj.mo(mo).kind as u32 == MobjType::Fatso as i32 as u32 {
                     let junk = state.world.p_setup.junk_line(666_i16);
@@ -2012,7 +2012,7 @@ pub fn player_scream(state: &mut GameState, id: MobjId) {
     {
         let mo = id;
         let mut sound: i32 = SfxName::Pldeth as i32;
-        if state.game.doomstat.gamemode as u32 == GameMode::Commercial as i32 as u32
+        if state.game.doomstat.gamemode == GameMode::Commercial
             && state.world.p_mobj.mo(mo).health < -50
         {
             sound = SfxName::Pdiehi as i32;

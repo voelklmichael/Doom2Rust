@@ -619,7 +619,7 @@ pub fn fill_back_screen(state: &mut GameState) {
                 as usize
         ]);
     }
-    let name: &str = if state.game.doomstat.gamemode as u32 == GameMode::Commercial as i32 as u32 {
+    let name: &str = if state.game.doomstat.gamemode == GameMode::Commercial {
         name2
     } else {
         name1

@@ -352,24 +352,18 @@ pub fn hu_start(state: &mut GameState) {
         167 - hu_font0_height,
         HU_FONTSTART,
     );
-    match if state.game.doomstat.gamemission as u32 == GameMission::PackChex as i32 as u32 {
-        GameMission::Doom as i32 as u32
-    } else if state.game.doomstat.gamemission as u32 == GameMission::PackHacx as i32 as u32 {
-        GameMission::Doom2 as i32 as u32
-    } else {
-        state.game.doomstat.gamemission as u32
-    } {
-        0 => {
+    match state.game.doomstat.gamemission.base() {
+        GameMission::Doom => {
             s = MAPNAMES[((state.game.g_game.gameepisode - 1) * 9 + state.game.g_game.gamemap - 1)
                 as usize];
         }
-        1 => {
+        GameMission::Doom2 => {
             s = MAPNAMES_COMMERCIAL[(state.game.g_game.gamemap - 1) as usize];
         }
-        3 => {
+        GameMission::PackPlut => {
             s = MAPNAMES_COMMERCIAL[(state.game.g_game.gamemap - 1 + 32) as usize];
         }
-        2 => {
+        GameMission::PackTnt => {
             s = MAPNAMES_COMMERCIAL[(state.game.g_game.gamemap - 1 + 64) as usize];
         }
         _ => {
@@ -489,9 +483,7 @@ pub fn hu_ticker(state: &mut GameState) {
                             state.ui.hu_stuff.message_nottobefuckedwith = true;
                             state.ui.hu_stuff.message_on = true;
                             state.ui.hu_stuff.message_counter = HU_MSGTIMEOUT;
-                            if state.game.doomstat.gamemode as u32
-                                == GameMode::Commercial as i32 as u32
-                            {
+                            if state.game.doomstat.gamemode == GameMode::Commercial {
                                 s_start_sound(state, SoundOrigin::None, SfxName::Radio as i32);
                             } else {
                                 s_start_sound(state, SoundOrigin::None, SfxName::Tink as i32);

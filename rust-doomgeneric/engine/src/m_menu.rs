@@ -860,7 +860,7 @@ pub fn draw_read_this1(state: &mut GameState) {
     state.ui.m_menu.inhelpscreens = true;
     match state.game.doomstat.gameversion as u32 {
         1..=5 => {
-            if state.game.doomstat.gamemode as u32 == GameMode::Commercial as i32 as u32 {
+            if state.game.doomstat.gamemode == GameMode::Commercial {
                 lumpname = "HELP";
                 skullx = 330;
                 skully = 165;
@@ -970,7 +970,7 @@ pub fn new_game(state: &mut GameState, _choice: i32) {
         );
         return;
     }
-    if state.game.doomstat.gamemode as u32 == GameMode::Commercial as i32 as u32
+    if state.game.doomstat.gamemode == GameMode::Commercial
         || state.game.doomstat.gameversion == GameVersion::Chex
     {
         let menudef = MenuId::New;
@@ -1016,7 +1016,7 @@ pub fn choose_skill(state: &mut GameState, choice: i32) {
     clear_menus(&mut state.ui.m_menu);
 }
 pub fn m_episode(state: &mut GameState, mut choice: i32) {
-    if state.game.doomstat.gamemode as u32 == GameMode::Shareware as i32 as u32 && choice != 0 {
+    if state.game.doomstat.gamemode == GameMode::Shareware && choice != 0 {
         start_message(
             &mut state.ui.m_menu,
             "this is the shareware version of doom.\n\n\
@@ -1029,7 +1029,7 @@ pub fn m_episode(state: &mut GameState, mut choice: i32) {
         setup_next_menu(&mut state.ui.m_menu, menudef);
         return;
     }
-    if state.game.doomstat.gamemode as u32 == GameMode::Registered as i32 as u32 && choice > 2 {
+    if state.game.doomstat.gamemode == GameMode::Registered && choice > 2 {
         doom_eprintln!(
             state.io.platform,
             "M_Episode: 4th episode requires UltimateDOOM"
@@ -1137,7 +1137,7 @@ pub fn read_this(state: &mut GameState, _choice: i32) {
 }
 pub fn read_this2(state: &mut GameState, _choice: i32) {
     if state.game.doomstat.gameversion.below_1_9()
-        && state.game.doomstat.gamemode as u32 != GameMode::Commercial as i32 as u32
+        && state.game.doomstat.gamemode != GameMode::Commercial
     {
         let menudef = MenuId::Read2;
         setup_next_menu(&mut state.ui.m_menu, menudef);
@@ -1174,7 +1174,7 @@ pub fn quit_response(state: &mut GameState, key: i32) {
         return;
     }
     if !state.game.g_game.netgame {
-        if state.game.doomstat.gamemode as u32 == GameMode::Commercial as i32 as u32 {
+        if state.game.doomstat.gamemode == GameMode::Commercial {
             s_start_sound(
                 state,
                 SoundOrigin::None,
@@ -1191,19 +1191,11 @@ pub fn quit_response(state: &mut GameState, key: i32) {
     i_quit(state);
 }
 fn select_end_message(d_loop: &DLoopState, doomstat: &DoomstatState) -> &'static str {
-    let endmsg: &'static [&'static str; 8] =
-        if (if doomstat.gamemission as u32 == GameMission::PackChex as i32 as u32 {
-            GameMission::Doom as i32 as u32
-        } else if doomstat.gamemission as u32 == GameMission::PackHacx as i32 as u32 {
-            GameMission::Doom2 as i32 as u32
-        } else {
-            doomstat.gamemission as u32
-        }) == GameMission::Doom as i32 as u32
-        {
-            &DOOM1_ENDMSG
-        } else {
-            &DOOM2_ENDMSG
-        };
+    let endmsg: &'static [&'static str; 8] = if doomstat.gamemission.base() == GameMission::Doom {
+        &DOOM1_ENDMSG
+    } else {
+        &DOOM2_ENDMSG
+    };
     endmsg[(d_loop.gametic % NUM_QUITMESSAGES) as usize]
 }
 pub fn quit_doom(state: &mut GameState, _choice: i32) {
@@ -1581,7 +1573,7 @@ pub fn m_responder(state: &mut GameState, ev: &Event) -> bool {
             return true;
         } else if key == state.game.m_controls.key_menu_help {
             start_control_panel(&mut state.ui.m_menu);
-            if state.game.doomstat.gamemode as u32 == GameMode::Retail as i32 as u32 {
+            if state.game.doomstat.gamemode == GameMode::Retail {
                 state.ui.m_menu.current_menu = MenuId::Read2;
             } else {
                 state.ui.m_menu.current_menu = MenuId::Read1;
@@ -1857,16 +1849,12 @@ pub fn m_init(doomstat: &DoomstatState, m_menu: &mut MMenuState) {
     m_menu.message_string = String::new();
     m_menu.message_last_menu_active = m_menu.menuactive as i32;
     m_menu.quick_save_slot = -1;
-    match doomstat.gamemode as u32 {
-        2 => {
-            m_menu.defs.main_def.items[MainMenu::Readthis as usize] =
-                m_menu.defs.main_def.items[MainMenu::Quitdoom as usize];
-            m_menu.defs.main_def.numitems -= 1;
-            m_menu.defs.main_def.y = (m_menu.defs.main_def.y as i32 + 8) as i16;
-            m_menu.defs.new_def.prev_menu = Some(MenuId::Main);
-        }
-        0 => {}
-        _ => {}
+    if doomstat.gamemode == GameMode::Commercial {
+        m_menu.defs.main_def.items[MainMenu::Readthis as usize] =
+            m_menu.defs.main_def.items[MainMenu::Quitdoom as usize];
+        m_menu.defs.main_def.numitems -= 1;
+        m_menu.defs.main_def.y = (m_menu.defs.main_def.y as i32 + 8) as i16;
+        m_menu.defs.new_def.prev_menu = Some(MenuId::Main);
     }
     if !doomstat.gameversion.is_ultimate_or_higher() {
         m_menu.defs.epi_def.numitems -= 1;

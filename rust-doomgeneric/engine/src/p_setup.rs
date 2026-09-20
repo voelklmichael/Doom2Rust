@@ -442,7 +442,7 @@ pub fn load_things(state: &mut GameState, lump: i32) {
             kind: reader.i16(),
             options: reader.i16(),
         };
-        let spawn = !(state.game.doomstat.gamemode as u32 != GameMode::Commercial as i32 as u32
+        let spawn = !(state.game.doomstat.gamemode != GameMode::Commercial
             && matches!(
                 spawnthing.kind,
                 64 | 88 | 89 | 69 | 67 | 71 | 65 | 66 | 68 | 84
@@ -710,7 +710,7 @@ pub fn setup_level(state: &mut GameState, episode: i32, map: i32) {
     state.game.g_game.players[state.game.g_game.consoleplayer].viewz = 1;
     s_start(state);
     init_thinkers(&mut state.world.p_tick);
-    let lumpname = if state.game.doomstat.gamemode as u32 == GameMode::Commercial as i32 as u32 {
+    let lumpname = if state.game.doomstat.gamemode == GameMode::Commercial {
         if map < 10 {
             format!("map0{map}")
         } else {

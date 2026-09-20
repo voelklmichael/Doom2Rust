@@ -141,12 +141,12 @@ pub fn check_ammo(state: &mut GameState, player_id: PlayerId) -> bool {
     loop {
         if state.game.g_game.players[player].weaponowned[WeaponType::Plasma as usize]
             && state.game.g_game.players[player].ammo[AmmoType::Cell as usize] != 0
-            && state.game.doomstat.gamemode as u32 != GameMode::Shareware as i32 as u32
+            && state.game.doomstat.gamemode != GameMode::Shareware
         {
             state.game.g_game.players[player].pendingweapon = WeaponType::Plasma;
         } else if state.game.g_game.players[player].weaponowned[WeaponType::Supershotgun as usize]
             && state.game.g_game.players[player].ammo[AmmoType::Shell as usize] > 2
-            && state.game.doomstat.gamemode as u32 == GameMode::Commercial as i32 as u32
+            && state.game.doomstat.gamemode == GameMode::Commercial
         {
             state.game.g_game.players[player].pendingweapon = WeaponType::Supershotgun;
         } else if state.game.g_game.players[player].weaponowned[WeaponType::Chaingun as usize]
@@ -167,7 +167,7 @@ pub fn check_ammo(state: &mut GameState, player_id: PlayerId) -> bool {
             state.game.g_game.players[player].pendingweapon = WeaponType::Missile;
         } else if state.game.g_game.players[player].weaponowned[WeaponType::Bfg as usize]
             && state.game.g_game.players[player].ammo[AmmoType::Cell as usize] > 40
-            && state.game.doomstat.gamemode as u32 != GameMode::Shareware as i32 as u32
+            && state.game.doomstat.gamemode != GameMode::Shareware
         {
             state.game.g_game.players[player].pendingweapon = WeaponType::Bfg;
         } else {
