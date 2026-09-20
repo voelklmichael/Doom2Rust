@@ -62,7 +62,7 @@ pub fn hulib_draw_text_line(state: &mut GameState, l: &HuTextLine, drawcursor: b
     for i in 0..l.l.len() {
         let c = l.l.as_bytes()[i].to_ascii_uppercase();
         if c as i32 != ' ' as i32 && c as i32 >= l.sc && c as i32 <= '_' as i32 {
-            let glyph = state.hu_stuff.hu_font[(c as i32 - l.sc) as usize];
+            let glyph = state.ui.hu_stuff.hu_font[(c as i32 - l.sc) as usize];
             let patch = cache_patch_num(state, glyph);
             let w = patch.width();
             if x + w > SCREENWIDTH {
@@ -78,7 +78,7 @@ pub fn hulib_draw_text_line(state: &mut GameState, l: &HuTextLine, drawcursor: b
         }
     }
     if drawcursor {
-        let cursor_glyph = state.hu_stuff.hu_font[('_' as i32 - l.sc) as usize];
+        let cursor_glyph = state.ui.hu_stuff.hu_font[('_' as i32 - l.sc) as usize];
         let cursor_patch = cache_patch_num(state, cursor_glyph);
         if x + cursor_patch.width() <= SCREENWIDTH {
             draw_patch_direct(state, Screen::Video, x, l.y, &cursor_patch);
@@ -86,33 +86,40 @@ pub fn hulib_draw_text_line(state: &mut GameState, l: &HuTextLine, drawcursor: b
     }
 }
 pub fn hulib_erase_text_line(state: &mut GameState, l: &mut HuTextLine) {
-    if !state.am_map.automapactive && state.r_draw.viewwindowx != 0 && l.needsupdate != 0 {
-        let glyph = state.hu_stuff.hu_font[0];
+    if !state.ui.am_map.automapactive && state.render.r_draw.viewwindowx != 0 && l.needsupdate != 0
+    {
+        let glyph = state.ui.hu_stuff.hu_font[0];
         let patch = cache_patch_num(state, glyph);
         let lh = patch.height() + 1;
         let mut y = l.y;
         let mut yoffset = y * SCREENWIDTH;
         while y < l.y + lh {
-            if y < state.r_draw.viewwindowy
-                || y >= state.r_draw.viewwindowy + state.r_draw.viewheight
+            if y < state.render.r_draw.viewwindowy
+                || y >= state.render.r_draw.viewwindowy + state.render.r_draw.viewheight
             {
                 video_erase(
-                    &mut state.i_video,
-                    &state.r_draw,
+                    &mut state.io.i_video,
+                    &state.render.r_draw,
                     yoffset as u32,
                     SCREENWIDTH,
                 );
             } else {
-                let viewwindowx = state.r_draw.viewwindowx;
-                let second_ofs =
-                    (yoffset + state.r_draw.viewwindowx + state.r_draw.viewwidth) as u32;
+                let viewwindowx = state.render.r_draw.viewwindowx;
+                let second_ofs = (yoffset
+                    + state.render.r_draw.viewwindowx
+                    + state.render.r_draw.viewwidth) as u32;
                 video_erase(
-                    &mut state.i_video,
-                    &state.r_draw,
+                    &mut state.io.i_video,
+                    &state.render.r_draw,
                     yoffset as u32,
                     viewwindowx,
                 );
-                video_erase(&mut state.i_video, &state.r_draw, second_ofs, viewwindowx);
+                video_erase(
+                    &mut state.io.i_video,
+                    &state.render.r_draw,
+                    second_ofs,
+                    viewwindowx,
+                );
             }
             y += 1;
             yoffset += SCREENWIDTH;

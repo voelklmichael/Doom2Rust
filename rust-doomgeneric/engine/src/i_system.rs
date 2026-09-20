@@ -79,7 +79,7 @@ pub fn console_stdout() -> bool {
     false
 }
 pub fn i_quit(state: &mut GameState) {
-    let entries = state.i_system.exit_funcs.clone();
+    let entries = state.io.i_system.exit_funcs.clone();
     for entry in entries.iter().rev() {
         entry.func.expect("non-null function pointer")(state);
     }

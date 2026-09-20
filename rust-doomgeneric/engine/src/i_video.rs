@@ -220,27 +220,36 @@ pub fn init_graphics(
     i_video.screenvisible = true;
 }
 pub fn start_tic(state: &mut GameState) {
-    get_event(&mut state.d_event, &mut state.i_input, &mut *state.platform);
+    get_event(
+        &mut state.game.d_event,
+        &mut state.io.i_input,
+        &mut *state.io.platform,
+    );
 }
 pub fn finish_update(state: &mut GameState) {
     let palette = state
+        .io
         .i_video
         .colors
         .map(|c| (u32::from(c.r()) << 16) | (u32::from(c.g()) << 8) | u32::from(c.b()));
     if state
+        .io
         .platform
-        .draw_indexed_frame(&state.i_video.i_video_buffer, &palette)
+        .draw_indexed_frame(&state.io.i_video.i_video_buffer, &palette)
     {
         return;
     }
-    match state.i_video.s_fb.bits_per_pixel {
-        32 => convert_frame_rgb32(&mut state.i_video),
-        16 => convert_frame_rgb565(&mut state.i_video),
+    match state.io.i_video.s_fb.bits_per_pixel {
+        32 => convert_frame_rgb32(&mut state.io.i_video),
+        16 => convert_frame_rgb565(&mut state.io.i_video),
         bits_per_pixel => error(&format!(
             "No idea how to convert {bits_per_pixel} bpp pixels"
         )),
     }
-    state.platform.draw_frame(&state.i_video.dg_screen_buffer);
+    state
+        .io
+        .platform
+        .draw_frame(&state.io.i_video.dg_screen_buffer);
 }
 /// Byte offset that centres a scaled Doom screen in a framebuffer line.
 fn line_offset_bytes(i_video: &IVideoState) -> usize {
@@ -329,8 +338,9 @@ pub fn read_screen(i_video: &IVideoState) -> Vec<u8> {
     i_video.i_video_buffer[..(SCREENWIDTH * SCREENHEIGHT) as usize].to_vec()
 }
 pub fn set_palette(state: &mut GameState, palette: &[u8]) {
-    let gamma = &GAMMATABLE[state.i_video.usegamma as usize];
+    let gamma = &GAMMATABLE[state.io.i_video.usegamma as usize];
     for (color, rgb) in state
+        .io
         .i_video
         .colors
         .iter_mut()

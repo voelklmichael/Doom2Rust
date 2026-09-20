@@ -18,22 +18,28 @@ use crate::tables::ANGLETOFINESHIFT;
 use crate::tables::FINECOSINE;
 use crate::tables::FINESINE;
 pub fn teleport(state: &mut GameState, line: LineId, side: i32, thing: MobjId) -> bool {
-    if state.p_mobj.mo(thing).flags.contains(MobjFlags::MISSILE) {
+    if state
+        .world
+        .p_mobj
+        .mo(thing)
+        .flags
+        .contains(MobjFlags::MISSILE)
+    {
         return false;
     }
     if side == 1 {
         return false;
     }
-    let tag = state.p_setup.line(line).tag as i32;
-    for i in 0..state.p_setup.numsectors {
-        if state.p_setup.sectors[i as usize].tag as i32 != tag {
+    let tag = state.world.p_setup.line(line).tag as i32;
+    for i in 0..state.world.p_setup.numsectors {
+        if state.world.p_setup.sectors[i as usize].tag as i32 != tag {
             continue;
         }
-        let mut cursor = state.p_tick.head();
+        let mut cursor = state.world.p_tick.head();
         while let Some(id) = cursor {
-            if let ThinkerPayload::Mobj(m) = state.p_tick.payload(id) {
+            if let ThinkerPayload::Mobj(m) = state.world.p_tick.payload(id) {
                 let (is_live_mobj, m_type, m_subsector, m_x, m_y, m_angle) = {
-                    let mo = state.p_mobj.mo(m);
+                    let mo = state.world.p_mobj.mo(m);
                     (
                         matches!(mo.thinker.function, ThinkerFn::Mobj(_)),
                         mo.kind,
@@ -44,28 +50,28 @@ pub fn teleport(state: &mut GameState, line: LineId, side: i32, thing: MobjId) -
                     )
                 };
                 if is_live_mobj && m_type as u32 == MobjType::Teleportman as i32 as u32 {
-                    let sector = state.p_setup.subsectors[m_subsector.0 as usize].sector;
+                    let sector = state.world.p_setup.subsectors[m_subsector.0 as usize].sector;
                     if sector.0 == i as u32 {
                         let (oldx, oldy, oldz) = {
-                            let t = state.p_mobj.mo(thing);
+                            let t = state.world.p_mobj.mo(thing);
                             (t.x, t.y, t.z)
                         };
                         if !teleport_move(state, thing, m_x, m_y) {
                             return false;
                         }
-                        if state.doomstat.gameversion != GameVersion::Final {
-                            let t = state.p_mobj.mo_mut(thing);
+                        if state.game.doomstat.gameversion != GameVersion::Final {
+                            let t = state.world.p_mobj.mo_mut(thing);
                             t.z = t.floorz;
                         }
-                        if let Some(thing_player) = state.p_mobj.mo(thing).player {
-                            let thing_z = state.p_mobj.mo(thing).z;
-                            let p = state.g_game.player_mut(thing_player);
+                        if let Some(thing_player) = state.world.p_mobj.mo(thing).player {
+                            let thing_z = state.world.p_mobj.mo(thing).z;
+                            let p = state.game.g_game.player_mut(thing_player);
                             p.viewz = thing_z + p.viewheight;
                         }
                         let fog = spawn_mobj(state, oldx, oldy, oldz, MobjType::Tfog);
                         s_start_sound(state, SoundOrigin::Mobj(fog), SfxName::Telept as i32);
                         let an = m_angle >> ANGLETOFINESHIFT;
-                        let thing_z = state.p_mobj.mo(thing).z;
+                        let thing_z = state.world.p_mobj.mo(thing).z;
                         let fog = spawn_mobj(
                             state,
                             m_x + 20 * FINECOSINE[an as usize],
@@ -74,7 +80,7 @@ pub fn teleport(state: &mut GameState, line: LineId, side: i32, thing: MobjId) -
                             MobjType::Tfog,
                         );
                         s_start_sound(state, SoundOrigin::Mobj(fog), SfxName::Telept as i32);
-                        let t = state.p_mobj.mo_mut(thing);
+                        let t = state.world.p_mobj.mo_mut(thing);
                         if t.player.is_some() {
                             t.reactiontime = 18;
                         }
@@ -86,7 +92,7 @@ pub fn teleport(state: &mut GameState, line: LineId, side: i32, thing: MobjId) -
                     }
                 }
             }
-            cursor = state.p_tick.next(id);
+            cursor = state.world.p_tick.next(id);
         }
     }
     false

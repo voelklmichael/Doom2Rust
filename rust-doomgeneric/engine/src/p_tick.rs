@@ -150,9 +150,10 @@ impl PTickState {
 // field PTickState has no access to. (A retired-but-not-yet-freed mobj still
 // resolves: the reaper has to see ThinkerFn::Removed.)
 pub fn thinker_mut(state: &mut GameState, id: ThinkerId) -> &mut Thinker {
-    match state.p_tick.payload(id) {
+    match state.world.p_tick.payload(id) {
         ThinkerPayload::Mobj(mobj_id) => {
             &mut state
+                .world
                 .p_mobj
                 .mobj_mut(mobj_id)
                 .expect("ThinkerNode payload must reference a live mobj")
@@ -160,6 +161,7 @@ pub fn thinker_mut(state: &mut GameState, id: ThinkerId) -> &mut Thinker {
         }
         ThinkerPayload::Ceiling(ceiling_id) => {
             &mut state
+                .world
                 .p_ceilng
                 .get_mut(ceiling_id)
                 .expect("ThinkerNode payload must reference a live ceiling")
@@ -167,6 +169,7 @@ pub fn thinker_mut(state: &mut GameState, id: ThinkerId) -> &mut Thinker {
         }
         ThinkerPayload::Door(door_id) => {
             &mut state
+                .world
                 .p_doors
                 .get_mut(door_id)
                 .expect("ThinkerNode payload must reference a live door")
@@ -174,6 +177,7 @@ pub fn thinker_mut(state: &mut GameState, id: ThinkerId) -> &mut Thinker {
         }
         ThinkerPayload::Floor(floor_id) => {
             &mut state
+                .world
                 .p_spec
                 .get_floor_mut(floor_id)
                 .expect("ThinkerNode payload must reference a live floor")
@@ -181,6 +185,7 @@ pub fn thinker_mut(state: &mut GameState, id: ThinkerId) -> &mut Thinker {
         }
         ThinkerPayload::Plat(plat_id) => {
             &mut state
+                .world
                 .p_plats
                 .get_mut(plat_id)
                 .expect("ThinkerNode payload must reference a live plat")
@@ -188,6 +193,7 @@ pub fn thinker_mut(state: &mut GameState, id: ThinkerId) -> &mut Thinker {
         }
         ThinkerPayload::FireFlicker(fireflicker_id) => {
             &mut state
+                .world
                 .p_lights
                 .get_fireflicker_mut(fireflicker_id)
                 .expect("ThinkerNode payload must reference a live fireflicker")
@@ -195,6 +201,7 @@ pub fn thinker_mut(state: &mut GameState, id: ThinkerId) -> &mut Thinker {
         }
         ThinkerPayload::LightFlash(lightflash_id) => {
             &mut state
+                .world
                 .p_lights
                 .get_lightflash_mut(lightflash_id)
                 .expect("ThinkerNode payload must reference a live lightflash")
@@ -202,6 +209,7 @@ pub fn thinker_mut(state: &mut GameState, id: ThinkerId) -> &mut Thinker {
         }
         ThinkerPayload::Strobe(strobe_id) => {
             &mut state
+                .world
                 .p_lights
                 .get_strobe_mut(strobe_id)
                 .expect("ThinkerNode payload must reference a live strobe")
@@ -209,6 +217,7 @@ pub fn thinker_mut(state: &mut GameState, id: ThinkerId) -> &mut Thinker {
         }
         ThinkerPayload::Glow(glow_id) => {
             &mut state
+                .world
                 .p_lights
                 .get_glow_mut(glow_id)
                 .expect("ThinkerNode payload must reference a live glow")
@@ -300,7 +309,7 @@ fn unlink_thinker_node(p_tick: &mut PTickState, id: ThinkerId) {
 }
 
 pub fn run_thinkers(state: &mut GameState) {
-    let mut cursor = state.p_tick.head();
+    let mut cursor = state.world.p_tick.head();
     while let Some(id) = cursor {
         let next;
         match thinker_function(state, id) {
@@ -310,9 +319,9 @@ pub fn run_thinkers(state: &mut GameState) {
                 // own node table, not inside the freed payload, so there's
                 // no use-after-free hazard either way, but this ordering
                 // matches the original semantics most directly.
-                next = state.p_tick.next(id);
-                let kind = state.p_tick.kind(id);
-                unlink_thinker_node(&mut state.p_tick, id);
+                next = state.world.p_tick.next(id);
+                let kind = state.world.p_tick.kind(id);
+                unlink_thinker_node(&mut state.world.p_tick, id);
                 // Every kind's memory is now owned by its own arena (Mobj
                 // by PMobjState, VlDoor by PDoorsState, Ceiling by
                 // PCeilngState, Plat by PPlatsState, FloorMove by
@@ -323,60 +332,62 @@ pub fn run_thinkers(state: &mut GameState) {
                 // no longer exists -- every kind is id-based now.
                 match kind {
                     ThinkerKind::Mobj => {
-                        if let ThinkerPayload::Mobj(mobj_id) = state.p_tick.payload(id) {
-                            state.p_mobj.deallocate(mobj_id);
+                        if let ThinkerPayload::Mobj(mobj_id) = state.world.p_tick.payload(id) {
+                            state.world.p_mobj.deallocate(mobj_id);
                         }
                     }
                     ThinkerKind::Door => {
-                        if let ThinkerPayload::Door(door_id) = state.p_tick.payload(id) {
-                            state.p_doors.dealloc(door_id);
+                        if let ThinkerPayload::Door(door_id) = state.world.p_tick.payload(id) {
+                            state.world.p_doors.dealloc(door_id);
                         }
                     }
                     ThinkerKind::Ceiling => {
-                        if let ThinkerPayload::Ceiling(ceiling_id) = state.p_tick.payload(id) {
-                            state.p_ceilng.dealloc(ceiling_id);
+                        if let ThinkerPayload::Ceiling(ceiling_id) = state.world.p_tick.payload(id)
+                        {
+                            state.world.p_ceilng.dealloc(ceiling_id);
                         }
                     }
                     ThinkerKind::Plat => {
-                        if let ThinkerPayload::Plat(plat_id) = state.p_tick.payload(id) {
-                            state.p_plats.dealloc(plat_id);
+                        if let ThinkerPayload::Plat(plat_id) = state.world.p_tick.payload(id) {
+                            state.world.p_plats.dealloc(plat_id);
                         }
                     }
                     ThinkerKind::Floor => {
-                        if let ThinkerPayload::Floor(floor_id) = state.p_tick.payload(id) {
-                            state.p_spec.dealloc_floor(floor_id);
+                        if let ThinkerPayload::Floor(floor_id) = state.world.p_tick.payload(id) {
+                            state.world.p_spec.dealloc_floor(floor_id);
                         }
                     }
                     ThinkerKind::FireFlicker => {
                         if let ThinkerPayload::FireFlicker(fireflicker_id) =
-                            state.p_tick.payload(id)
+                            state.world.p_tick.payload(id)
                         {
-                            state.p_lights.dealloc_fireflicker(fireflicker_id);
+                            state.world.p_lights.dealloc_fireflicker(fireflicker_id);
                         }
                     }
                     ThinkerKind::LightFlash => {
-                        if let ThinkerPayload::LightFlash(lightflash_id) = state.p_tick.payload(id)
+                        if let ThinkerPayload::LightFlash(lightflash_id) =
+                            state.world.p_tick.payload(id)
                         {
-                            state.p_lights.dealloc_lightflash(lightflash_id);
+                            state.world.p_lights.dealloc_lightflash(lightflash_id);
                         }
                     }
                     ThinkerKind::Strobe => {
-                        if let ThinkerPayload::Strobe(strobe_id) = state.p_tick.payload(id) {
-                            state.p_lights.dealloc_strobe(strobe_id);
+                        if let ThinkerPayload::Strobe(strobe_id) = state.world.p_tick.payload(id) {
+                            state.world.p_lights.dealloc_strobe(strobe_id);
                         }
                     }
                     ThinkerKind::Glow => {
-                        if let ThinkerPayload::Glow(glow_id) = state.p_tick.payload(id) {
-                            state.p_lights.dealloc_glow(glow_id);
+                        if let ThinkerPayload::Glow(glow_id) = state.world.p_tick.payload(id) {
+                            state.world.p_lights.dealloc_glow(glow_id);
                         }
                     }
                 }
             }
             ThinkerFn::Paused | ThinkerFn::Unresolved => {
-                next = state.p_tick.next(id);
+                next = state.world.p_tick.next(id);
             }
             ThinkerFn::Mobj(f) => {
-                if let ThinkerPayload::Mobj(mobj_id) = state.p_tick.payload(id) {
+                if let ThinkerPayload::Mobj(mobj_id) = state.world.p_tick.payload(id) {
                     f(state, mobj_id);
                 }
                 // Read after the call, not before: a think function can spawn
@@ -384,80 +395,81 @@ pub fn run_thinkers(state: &mut GameState) {
                 // node was previously the tail, that newly spawned thinker
                 // becomes reachable via .next immediately -- preserving
                 // vanilla's same-tick-think-on-spawn behavior.
-                next = state.p_tick.next(id);
+                next = state.world.p_tick.next(id);
             }
             ThinkerFn::Ceiling(f) => {
-                if let ThinkerPayload::Ceiling(ceiling_id) = state.p_tick.payload(id) {
+                if let ThinkerPayload::Ceiling(ceiling_id) = state.world.p_tick.payload(id) {
                     f(state, ceiling_id);
                 }
-                next = state.p_tick.next(id);
+                next = state.world.p_tick.next(id);
             }
             ThinkerFn::Door(f) => {
-                if let ThinkerPayload::Door(door_id) = state.p_tick.payload(id) {
+                if let ThinkerPayload::Door(door_id) = state.world.p_tick.payload(id) {
                     f(state, door_id);
                 }
-                next = state.p_tick.next(id);
+                next = state.world.p_tick.next(id);
             }
             ThinkerFn::Floor(f) => {
-                if let ThinkerPayload::Floor(floor_id) = state.p_tick.payload(id) {
+                if let ThinkerPayload::Floor(floor_id) = state.world.p_tick.payload(id) {
                     f(state, floor_id);
                 }
-                next = state.p_tick.next(id);
+                next = state.world.p_tick.next(id);
             }
             ThinkerFn::Plat(f) => {
-                if let ThinkerPayload::Plat(plat_id) = state.p_tick.payload(id) {
+                if let ThinkerPayload::Plat(plat_id) = state.world.p_tick.payload(id) {
                     f(state, plat_id);
                 }
-                next = state.p_tick.next(id);
+                next = state.world.p_tick.next(id);
             }
             ThinkerFn::FireFlicker(f) => {
-                if let ThinkerPayload::FireFlicker(fireflicker_id) = state.p_tick.payload(id) {
+                if let ThinkerPayload::FireFlicker(fireflicker_id) = state.world.p_tick.payload(id)
+                {
                     f(state, fireflicker_id);
                 }
-                next = state.p_tick.next(id);
+                next = state.world.p_tick.next(id);
             }
             ThinkerFn::LightFlash(f) => {
-                if let ThinkerPayload::LightFlash(lightflash_id) = state.p_tick.payload(id) {
+                if let ThinkerPayload::LightFlash(lightflash_id) = state.world.p_tick.payload(id) {
                     f(state, lightflash_id);
                 }
-                next = state.p_tick.next(id);
+                next = state.world.p_tick.next(id);
             }
             ThinkerFn::Strobe(f) => {
-                if let ThinkerPayload::Strobe(strobe_id) = state.p_tick.payload(id) {
+                if let ThinkerPayload::Strobe(strobe_id) = state.world.p_tick.payload(id) {
                     f(state, strobe_id);
                 }
-                next = state.p_tick.next(id);
+                next = state.world.p_tick.next(id);
             }
             ThinkerFn::Glow(f) => {
-                if let ThinkerPayload::Glow(glow_id) = state.p_tick.payload(id) {
+                if let ThinkerPayload::Glow(glow_id) = state.world.p_tick.payload(id) {
                     f(state, glow_id);
                 }
-                next = state.p_tick.next(id);
+                next = state.world.p_tick.next(id);
             }
         }
         cursor = next;
     }
 }
 pub fn p_ticker(state: &mut GameState) {
-    if state.g_game.paused {
+    if state.game.g_game.paused {
         return;
     }
-    if !state.g_game.netgame
-        && state.m_menu.menuactive
-        && !state.g_game.demoplayback
-        && state.g_game.players[state.g_game.consoleplayer as usize].viewz != 1
+    if !state.game.g_game.netgame
+        && state.ui.m_menu.menuactive
+        && !state.game.g_game.demoplayback
+        && state.game.g_game.players[state.game.g_game.consoleplayer as usize].viewz != 1
     {
         return;
     }
     for i in 0..MAXPLAYERS {
-        if state.g_game.playeringame[i as usize] {
+        if state.game.g_game.playeringame[i as usize] {
             player_think(state, PlayerId(i as u8));
         }
     }
     run_thinkers(state);
     update_specials(state);
     respawn_specials(state);
-    state.p_tick.leveltime += 1;
+    state.world.p_tick.leveltime += 1;
 }
 
 #[cfg(test)]
@@ -500,9 +512,9 @@ mod tests {
     fn door_thinker_lifecycle_via_id() {
         let state = init_game_state(Box::new(NullPlatform), Box::new(MemFileSystem::default()));
 
-        let door_id = state.p_doors.spawn(VlDoor::default());
+        let door_id = state.world.p_doors.spawn(VlDoor::default());
         let node_id = add_thinker(
-            &mut state.p_tick,
+            &mut state.world.p_tick,
             ThinkerPayload::Door(door_id),
             ThinkerKind::Door,
         );
@@ -510,15 +522,15 @@ mod tests {
         remove_thinker(thinker_mut(state, node_id));
         run_thinkers(state);
         assert!(
-            state.p_doors.get_ref(door_id).is_none(),
+            state.world.p_doors.get_ref(door_id).is_none(),
             "reaper should have deallocated the door via its DoorId"
         );
 
         // Reuse: a fresh spawn may land on the same freed slot, but the old
         // id must not resolve to the new door's memory.
-        let door_id2 = state.p_doors.spawn(VlDoor::default());
-        assert!(state.p_doors.get_ref(door_id).is_none());
-        assert!(state.p_doors.get_ref(door_id2).is_some());
+        let door_id2 = state.world.p_doors.spawn(VlDoor::default());
+        assert!(state.world.p_doors.get_ref(door_id).is_none());
+        assert!(state.world.p_doors.get_ref(door_id2).is_some());
     }
 
     // Same lifecycle as door_thinker_lifecycle_via_id, but for the Mobj
@@ -528,10 +540,10 @@ mod tests {
     fn mobj_thinker_lifecycle_via_id() {
         let state = init_game_state(Box::new(NullPlatform), Box::new(MemFileSystem::default()));
 
-        let value = state.p_mobj.dummy_mobj;
-        let mobj_id = state.p_mobj.spawn(value);
+        let value = state.world.p_mobj.dummy_mobj;
+        let mobj_id = state.world.p_mobj.spawn(value);
         let node_id = add_thinker(
-            &mut state.p_tick,
+            &mut state.world.p_tick,
             ThinkerPayload::Mobj(mobj_id),
             ThinkerKind::Mobj,
         );
@@ -539,14 +551,14 @@ mod tests {
         remove_thinker(thinker_mut(state, node_id));
         run_thinkers(state);
         assert!(
-            state.p_mobj.mobj_ref(mobj_id).is_none(),
+            state.world.p_mobj.mobj_ref(mobj_id).is_none(),
             "reaper should have deallocated the mobj via its MobjId"
         );
 
-        let value2 = state.p_mobj.dummy_mobj;
-        let mobj_id2 = state.p_mobj.spawn(value2);
-        assert!(state.p_mobj.mobj_ref(mobj_id).is_none());
-        assert!(state.p_mobj.mobj_ref(mobj_id2).is_some());
+        let value2 = state.world.p_mobj.dummy_mobj;
+        let mobj_id2 = state.world.p_mobj.spawn(value2);
+        assert!(state.world.p_mobj.mobj_ref(mobj_id).is_none());
+        assert!(state.world.p_mobj.mobj_ref(mobj_id2).is_some());
     }
 
     // Same lifecycle, Ceiling kind -- exercises PCeilngState's new
@@ -556,9 +568,9 @@ mod tests {
     fn ceiling_thinker_lifecycle_via_id() {
         let state = init_game_state(Box::new(NullPlatform), Box::new(MemFileSystem::default()));
 
-        let ceiling_id = state.p_ceilng.spawn(Ceiling::default());
+        let ceiling_id = state.world.p_ceilng.spawn(Ceiling::default());
         let node_id = add_thinker(
-            &mut state.p_tick,
+            &mut state.world.p_tick,
             ThinkerPayload::Ceiling(ceiling_id),
             ThinkerKind::Ceiling,
         );
@@ -566,13 +578,13 @@ mod tests {
         remove_thinker(thinker_mut(state, node_id));
         run_thinkers(state);
         assert!(
-            state.p_ceilng.get_ref(ceiling_id).is_none(),
+            state.world.p_ceilng.get_ref(ceiling_id).is_none(),
             "reaper should have deallocated the ceiling via its CeilingId"
         );
 
-        let ceiling_id2 = state.p_ceilng.spawn(Ceiling::default());
-        assert!(state.p_ceilng.get_ref(ceiling_id).is_none());
-        assert!(state.p_ceilng.get_ref(ceiling_id2).is_some());
+        let ceiling_id2 = state.world.p_ceilng.spawn(Ceiling::default());
+        assert!(state.world.p_ceilng.get_ref(ceiling_id).is_none());
+        assert!(state.world.p_ceilng.get_ref(ceiling_id2).is_some());
     }
 
     // Same lifecycle, Floor kind -- exercises PSpecState's new
@@ -581,9 +593,9 @@ mod tests {
     fn floor_thinker_lifecycle_via_id() {
         let state = init_game_state(Box::new(NullPlatform), Box::new(MemFileSystem::default()));
 
-        let floor_id = state.p_spec.spawn_floor(FloorMove::default());
+        let floor_id = state.world.p_spec.spawn_floor(FloorMove::default());
         let node_id = add_thinker(
-            &mut state.p_tick,
+            &mut state.world.p_tick,
             ThinkerPayload::Floor(floor_id),
             ThinkerKind::Floor,
         );
@@ -591,13 +603,13 @@ mod tests {
         remove_thinker(thinker_mut(state, node_id));
         run_thinkers(state);
         assert!(
-            state.p_spec.get_floor_ref(floor_id).is_none(),
+            state.world.p_spec.get_floor_ref(floor_id).is_none(),
             "reaper should have deallocated the floor via its FloorId"
         );
 
-        let floor_id2 = state.p_spec.spawn_floor(FloorMove::default());
-        assert!(state.p_spec.get_floor_ref(floor_id).is_none());
-        assert!(state.p_spec.get_floor_ref(floor_id2).is_some());
+        let floor_id2 = state.world.p_spec.spawn_floor(FloorMove::default());
+        assert!(state.world.p_spec.get_floor_ref(floor_id).is_none());
+        assert!(state.world.p_spec.get_floor_ref(floor_id2).is_some());
     }
 
     // Same lifecycle, Plat kind -- exercises PPlatsState's new
@@ -606,9 +618,9 @@ mod tests {
     fn plat_thinker_lifecycle_via_id() {
         let state = init_game_state(Box::new(NullPlatform), Box::new(MemFileSystem::default()));
 
-        let plat_id = state.p_plats.spawn(Plat::default());
+        let plat_id = state.world.p_plats.spawn(Plat::default());
         let node_id = add_thinker(
-            &mut state.p_tick,
+            &mut state.world.p_tick,
             ThinkerPayload::Plat(plat_id),
             ThinkerKind::Plat,
         );
@@ -616,13 +628,13 @@ mod tests {
         remove_thinker(thinker_mut(state, node_id));
         run_thinkers(state);
         assert!(
-            state.p_plats.get_ref(plat_id).is_none(),
+            state.world.p_plats.get_ref(plat_id).is_none(),
             "reaper should have deallocated the plat via its PlatId"
         );
 
-        let plat_id2 = state.p_plats.spawn(Plat::default());
-        assert!(state.p_plats.get_ref(plat_id).is_none());
-        assert!(state.p_plats.get_ref(plat_id2).is_some());
+        let plat_id2 = state.world.p_plats.spawn(Plat::default());
+        assert!(state.world.p_plats.get_ref(plat_id).is_none());
+        assert!(state.world.p_plats.get_ref(plat_id2).is_some());
     }
 
     // The 4 light-effect kinds (FireFlicker/LightFlash/Strobe/Glow) share
@@ -633,9 +645,12 @@ mod tests {
     fn fireflicker_thinker_lifecycle_via_id() {
         let state = init_game_state(Box::new(NullPlatform), Box::new(MemFileSystem::default()));
 
-        let fireflicker_id = state.p_lights.spawn_fireflicker(FireFlicker::default());
+        let fireflicker_id = state
+            .world
+            .p_lights
+            .spawn_fireflicker(FireFlicker::default());
         let node_id = add_thinker(
-            &mut state.p_tick,
+            &mut state.world.p_tick,
             ThinkerPayload::FireFlicker(fireflicker_id),
             ThinkerKind::FireFlicker,
         );
@@ -643,13 +658,25 @@ mod tests {
         remove_thinker(thinker_mut(state, node_id));
         run_thinkers(state);
         assert!(
-            state.p_lights.get_fireflicker_ref(fireflicker_id).is_none(),
+            state
+                .world
+                .p_lights
+                .get_fireflicker_ref(fireflicker_id)
+                .is_none(),
             "reaper should have deallocated the fireflicker via its FireFlickerId"
         );
 
-        let fireflicker_id2 = state.p_lights.spawn_fireflicker(FireFlicker::default());
-        assert!(state.p_lights.get_fireflicker_ref(fireflicker_id).is_none());
+        let fireflicker_id2 = state
+            .world
+            .p_lights
+            .spawn_fireflicker(FireFlicker::default());
         assert!(state
+            .world
+            .p_lights
+            .get_fireflicker_ref(fireflicker_id)
+            .is_none());
+        assert!(state
+            .world
             .p_lights
             .get_fireflicker_ref(fireflicker_id2)
             .is_some());
@@ -659,9 +686,9 @@ mod tests {
     fn glow_thinker_lifecycle_via_id() {
         let state = init_game_state(Box::new(NullPlatform), Box::new(MemFileSystem::default()));
 
-        let glow_id = state.p_lights.spawn_glow(Glow::default());
+        let glow_id = state.world.p_lights.spawn_glow(Glow::default());
         let node_id = add_thinker(
-            &mut state.p_tick,
+            &mut state.world.p_tick,
             ThinkerPayload::Glow(glow_id),
             ThinkerKind::Glow,
         );
@@ -669,12 +696,12 @@ mod tests {
         remove_thinker(thinker_mut(state, node_id));
         run_thinkers(state);
         assert!(
-            state.p_lights.get_glow_ref(glow_id).is_none(),
+            state.world.p_lights.get_glow_ref(glow_id).is_none(),
             "reaper should have deallocated the glow via its GlowId"
         );
 
-        let glow_id2 = state.p_lights.spawn_glow(Glow::default());
-        assert!(state.p_lights.get_glow_ref(glow_id).is_none());
-        assert!(state.p_lights.get_glow_ref(glow_id2).is_some());
+        let glow_id2 = state.world.p_lights.spawn_glow(Glow::default());
+        assert!(state.world.p_lights.get_glow_ref(glow_id).is_none());
+        assert!(state.world.p_lights.get_glow_ref(glow_id2).is_some());
     }
 }

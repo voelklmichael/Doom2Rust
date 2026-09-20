@@ -202,8 +202,8 @@ fn run_until_exit(state: &mut GameState, mut before_tick: impl FnMut(&mut GameSt
 fn world_summary(state: &mut GameState) -> String {
     let mut mobj_hash = FNV_OFFSET;
     let mut count = 0;
-    for id in mobj_thinker_ids(&state.p_mobj, &state.p_tick) {
-        let m = state.p_mobj.mo(id);
+    for id in mobj_thinker_ids(&state.world.p_mobj, &state.world.p_tick) {
+        let m = state.world.p_mobj.mo(id);
         mobj_hash = fnv(
             mobj_hash,
             [
@@ -223,14 +223,14 @@ fn world_summary(state: &mut GameState) -> String {
         count += 1;
     }
     let mut sector_hash = FNV_OFFSET;
-    for i in 0..state.p_setup.numsectors {
-        let s = state.p_setup.sector_mut(SectorId(i as u32));
+    for i in 0..state.world.p_setup.numsectors {
+        let s = state.world.p_setup.sector_mut(SectorId(i as u32));
         sector_hash = fnv(
             sector_hash,
             [s.floorheight, s.ceilingheight, i32::from(s.lightlevel)].map(|v| v as u32),
         );
     }
-    let p = &state.g_game.players[state.g_game.consoleplayer as usize];
+    let p = &state.game.g_game.players[state.game.g_game.consoleplayer as usize];
     let player_hash = fnv(
         FNV_OFFSET,
         [p.health, p.armorpoints, p.viewz, p.readyweapon as i32].map(|v| v as u32),
@@ -243,15 +243,15 @@ fn simulation_summary(state: &mut GameState) -> String {
     format!(
         "{} prnd={} rnd={} gametic={}",
         world_summary(state),
-        state.m_random.prndindex,
-        state.m_random.rndindex,
-        state.d_loop.gametic
+        state.world.m_random.prndindex,
+        state.world.m_random.rndindex,
+        state.game.d_loop.gametic
     )
 }
 
 fn key(state: &mut GameState, k: i32) {
     post_event(
-        &mut state.d_event,
+        &mut state.game.d_event,
         Event {
             kind: EvType::Keydown,
             data1: k,
@@ -265,9 +265,9 @@ fn key(state: &mut GameState, k: i32) {
 /// Drives menus, the automap, cheats, intermissions and finales during
 /// `-timedemo demo3` so that the frame hashes cover the whole UI.
 fn scripted_input(state: &mut GameState) {
-    let g = state.d_loop.gametic;
+    let g = state.game.d_loop.gametic;
     if g == 50 {
-        state.g_game.singledemo = true;
+        state.game.g_game.singledemo = true;
     }
     match g {
         100 | 200 => key(state, 9),
@@ -296,26 +296,26 @@ fn scripted_input(state: &mut GameState) {
         774 => key(state, i32::from(b'k')),
         776 => key(state, i32::from(b'f')),
         778 => key(state, i32::from(b'a')),
-        800 => exit_level(&mut state.g_game),
+        800 => exit_level(&mut state.game.g_game),
         950 | 1050 | 1150 | 1250 | 1350 | 1950 | 2050 | 2150 | 2250 | 2350 | 3150 | 3250 | 3350
         | 3450 | 3550 => {
-            state.wi_stuff.acceleratestage = true;
+            state.ui.wi_stuff.acceleratestage = true;
         }
         1800 => {
-            state.g_game.gameepisode = 1;
-            state.g_game.gamemap = 8;
-            exit_level(&mut state.g_game);
+            state.game.g_game.gameepisode = 1;
+            state.game.g_game.gamemap = 8;
+            exit_level(&mut state.game.g_game);
         }
         3000 => {
-            state.g_game.gameepisode = 3;
-            state.g_game.gamemap = 8;
-            exit_level(&mut state.g_game);
+            state.game.g_game.gameepisode = 3;
+            state.game.g_game.gamemap = 8;
+            exit_level(&mut state.game.g_game);
         }
-        3600 => state.f_finale.finalecount = 5000,
-        3650 => state.f_finale.finalecount = 300,
-        3700 => state.f_finale.finalecount = 700,
-        3750 => state.f_finale.finalecount = 1150,
-        3800 => state.f_finale.finalecount = 1200,
+        3600 => state.ui.f_finale.finalecount = 5000,
+        3650 => state.ui.f_finale.finalecount = 300,
+        3700 => state.ui.f_finale.finalecount = 700,
+        3750 => state.ui.f_finale.finalecount = 1150,
+        3800 => state.ui.f_finale.finalecount = 1200,
         _ => {}
     }
 }
@@ -334,14 +334,15 @@ fn ui_frame_lines() -> Option<Vec<String>> {
     let mut lines = Vec::new();
     let message = run_until_exit(state, |state| {
         scripted_input(state);
-        let g = state.d_loop.gametic;
+        let g = state.game.d_loop.gametic;
         if g % 5 == 0 {
             lines.push(format!(
                 "frame {g:05} {:016x}",
-                fnv_bytes(&state.i_video.i_video_buffer)
+                fnv_bytes(&state.io.i_video.i_video_buffer)
             ));
             if g % 100 == 0 {
                 let bytes: Vec<u8> = state
+                    .io
                     .i_video
                     .dg_screen_buffer
                     .iter()
@@ -363,14 +364,14 @@ fn effect_frame_lines(detail: i32) -> Option<Vec<String>> {
     let state = start(&["-timedemo", "demo1"])?;
     let mut lines = Vec::new();
     let message = run_until_exit(state, |state| {
-        let g = state.d_loop.gametic;
+        let g = state.game.d_loop.gametic;
         if g == 10 {
-            let blocks = state.m_menu.screenblocks;
-            set_view_size(&mut state.r_main, blocks, detail);
+            let blocks = state.ui.m_menu.screenblocks;
+            set_view_size(&mut state.render.r_main, blocks, detail);
         }
-        let ids = mobj_thinker_ids(&state.p_mobj, &state.p_tick);
+        let ids = mobj_thinker_ids(&state.world.p_mobj, &state.world.p_tick);
         for (n, id) in ids.into_iter().enumerate() {
-            let flags = &mut state.p_mobj.mo_mut(id).flags;
+            let flags = &mut state.world.p_mobj.mo_mut(id).flags;
             if flags.contains(MobjFlags::COUNTKILL) {
                 *flags |= match n % 3 {
                     0 => MobjFlags::SHADOW,
@@ -383,7 +384,7 @@ fn effect_frame_lines(detail: i32) -> Option<Vec<String>> {
         if g % 5 == 0 {
             lines.push(format!(
                 "fx{detail} {g:05} {:016x}",
-                fnv_bytes(&state.i_video.i_video_buffer)
+                fnv_bytes(&state.io.i_video.i_video_buffer)
             ));
         }
     });
@@ -397,19 +398,19 @@ fn effect_frame_lines(detail: i32) -> Option<Vec<String>> {
 fn cast_trace() -> Option<String> {
     let state = start(&[])?;
     // What start_cast sets up, minus the Doom II music that doom1.wad lacks.
-    let first = state.f_finale.castorder[0].kind;
-    let see = StateId(state.info.mobjinfo[first as usize].seestate as u32);
-    state.f_finale.castnum = 0;
-    state.f_finale.caststate = Some(see);
-    state.f_finale.casttics = state.info.state_mut(see).tics;
-    state.f_finale.castdeath = false;
-    state.f_finale.castframes = 0;
-    state.f_finale.castonmelee = 0;
-    state.f_finale.castattacking = false;
+    let first = state.ui.f_finale.castorder[0].kind;
+    let see = StateId(state.assets.info.mobjinfo[first as usize].seestate as u32);
+    state.ui.f_finale.castnum = 0;
+    state.ui.f_finale.caststate = Some(see);
+    state.ui.f_finale.casttics = state.assets.info.state_mut(see).tics;
+    state.ui.f_finale.castdeath = false;
+    state.ui.f_finale.castframes = 0;
+    state.ui.f_finale.castonmelee = 0;
+    state.ui.f_finale.castattacking = false;
     let mut hash = FNV_OFFSET;
     for _ in 0..6000 {
         cast_ticker(state);
-        let f = &state.f_finale;
+        let f = &state.ui.f_finale;
         hash = fnv(
             hash,
             [
@@ -424,7 +425,7 @@ fn cast_trace() -> Option<String> {
             .map(|v| v as u32),
         );
     }
-    Some(format!("{hash:016x} castnum={}", state.f_finale.castnum))
+    Some(format!("{hash:016x} castnum={}", state.ui.f_finale.castnum))
 }
 
 /// Uses the first two-sided line of E1M1 with every line special in turn, from the player and
@@ -433,33 +434,33 @@ fn cast_trace() -> Option<String> {
 fn use_special_line_trace() -> Option<String> {
     let state = start_e1m1()?;
     let (save_path, _) = save_slot(state, 0);
-    let line = (0..state.p_setup.numlines)
+    let line = (0..state.world.p_setup.numlines)
         .map(|i| LineId(i as u32))
-        .find(|&l| state.p_setup.line(l).backsector.is_some())?;
+        .find(|&l| state.world.p_setup.line(l).backsector.is_some())?;
     // A tag carried by only a few sectors, as real maps use, so that one
     // activation does not affect every untagged sector.
-    let tag = (0..state.p_setup.numsectors)
-        .map(|i| state.p_setup.sector_mut(SectorId(i as u32)).tag)
+    let tag = (0..state.world.p_setup.numsectors)
+        .map(|i| state.world.p_setup.sector_mut(SectorId(i as u32)).tag)
         .find(|&t| t != 0)?;
     let mut hash = FNV_OFFSET;
     for special in 0..=145i16 {
         for side in 0..=1 {
             for player_uses in [true, false] {
                 // Every case starts from the same saved world.
-                g_load_game(&mut state.g_game, &save_path);
+                g_load_game(&mut state.game.g_game, &save_path);
                 do_load_game(state);
                 let actor = if player_uses {
-                    state.g_game.players[0].mo.unwrap()
+                    state.game.g_game.players[0].mo.unwrap()
                 } else {
-                    mobj_thinker_ids(&state.p_mobj, &state.p_tick)
+                    mobj_thinker_ids(&state.world.p_mobj, &state.world.p_tick)
                         .into_iter()
                         .find(|&id| {
-                            let m = state.p_mobj.mo(id);
+                            let m = state.world.p_mobj.mo(id);
                             m.player.is_none() && m.flags.contains(MobjFlags::COUNTKILL)
                         })?
                 };
-                state.p_setup.line_mut(line).special = special;
-                state.p_setup.line_mut(line).tag = tag;
+                state.world.p_setup.line_mut(line).special = special;
+                state.world.p_setup.line_mut(line).tag = tag;
                 let used = use_special_line(state, actor, line, side);
                 // Let any mover that was started run for a few tics, and
                 // note what the use did to the line itself (a switch flips
@@ -467,12 +468,12 @@ fn use_special_line_trace() -> Option<String> {
                 for _ in 0..8 {
                     crate::p_tick::run_thinkers(state);
                 }
-                let sidenum = state.p_setup.line(line).sidenum[0] as usize;
+                let sidenum = state.world.p_setup.line(line).sidenum[0] as usize;
                 let side_textures = {
-                    let s = &state.p_setup.sides[sidenum];
+                    let s = &state.world.p_setup.sides[sidenum];
                     [s.toptexture, s.midtexture, s.bottomtexture].map(|t| t as i32)
                 };
-                let line_special = state.p_setup.line(line).special;
+                let line_special = state.world.p_setup.line(line).special;
                 let world = world_summary(state);
                 hash = fnv(
                     hash,
@@ -485,7 +486,7 @@ fn use_special_line_trace() -> Option<String> {
                         fnv_bytes(world.as_bytes()) as u32,
                     ],
                 );
-                state.g_game.gameaction = crate::d_event::GameAction::Nothing;
+                state.game.g_game.gameaction = crate::d_event::GameAction::Nothing;
             }
         }
     }
@@ -545,7 +546,7 @@ fn simulation_and_frames_match_golden() {
 /// Plays 350 tics of E1M1 and returns the engine, ready to save.
 fn start_e1m1() -> Option<&'static mut GameState> {
     let state = start(&["-warp", "1", "1", "-skill", "3"])?;
-    while state.d_loop.gametic < 350 {
+    while state.game.d_loop.gametic < 350 {
         doomgeneric_tick(state);
     }
     Some(state)
@@ -555,12 +556,12 @@ fn start_e1m1() -> Option<&'static mut GameState> {
 /// request (which would trigger a second save on the next tick), and returns
 /// the file's path and contents.
 fn save_slot(state: &mut GameState, slot: i32) -> (String, Vec<u8>) {
-    g_save_game(&mut state.g_game, slot, "roundtrip");
-    state.g_game.sendsave = false;
+    g_save_game(&mut state.game.g_game, slot, "roundtrip");
+    state.game.g_game.sendsave = false;
     do_save_game(state);
-    let path = save_game_file(&state.d_main, slot);
+    let path = save_game_file(&state.game.d_main, slot);
     let bytes =
-        read_file(&mut *state.fs, &path).unwrap_or_else(|| panic!("no save file at {path}"));
+        read_file(&mut *state.assets.fs, &path).unwrap_or_else(|| panic!("no save file at {path}"));
     (path, bytes)
 }
 
@@ -584,7 +585,7 @@ fn save_game_round_trips() {
         world_summary(state),
         "the world should have changed"
     );
-    g_load_game(&mut state.g_game, &path);
+    g_load_game(&mut state.game.g_game, &path);
     do_load_game(state);
     assert_eq!(before, world_summary(state));
 

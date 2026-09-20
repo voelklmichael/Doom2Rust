@@ -2809,17 +2809,17 @@ pub const ITEMQUESIZE: i32 = 128;
 pub fn set_mobj_state(state: &mut GameState, mobj: MobjId, mut statenum: StateNum) -> bool {
     loop {
         if statenum == StateNum::Null {
-            state.p_mobj.mo_mut(mobj).state = None;
+            state.world.p_mobj.mo_mut(mobj).state = None;
             remove_mobj(state, mobj);
             return false;
         }
         let state_id = StateId(statenum as u32);
         let (tics, sprite, frame, action, nextstate) = {
-            let st = state.info.state_mut(state_id);
+            let st = state.assets.info.state_mut(state_id);
             (st.tics, st.sprite, st.frame, st.action, st.nextstate)
         };
         {
-            let m = state.p_mobj.mo_mut(mobj);
+            let m = state.world.p_mobj.mo_mut(mobj);
             m.state = Some(state_id);
             m.tics = tics;
             m.sprite = sprite;
@@ -2829,27 +2829,31 @@ pub fn set_mobj_state(state: &mut GameState, mobj: MobjId, mut statenum: StateNu
             f(state, mobj);
         }
         statenum = nextstate;
-        if state.p_mobj.mo(mobj).tics != 0 {
+        if state.world.p_mobj.mo(mobj).tics != 0 {
             break;
         }
     }
     true
 }
 pub fn explode_missile(state: &mut GameState, mo: MobjId) {
-    state.p_mobj.mo_mut(mo).momz = 0;
-    state.p_mobj.mo_mut(mo).momy = state.p_mobj.mo(mo).momz;
-    state.p_mobj.mo_mut(mo).momx = state.p_mobj.mo(mo).momy;
+    state.world.p_mobj.mo_mut(mo).momz = 0;
+    state.world.p_mobj.mo_mut(mo).momy = state.world.p_mobj.mo(mo).momz;
+    state.world.p_mobj.mo_mut(mo).momx = state.world.p_mobj.mo(mo).momy;
     set_mobj_state(
         state,
         mo,
-        state.info.mobjinfo[state.p_mobj.mo(mo).kind as usize].deathstate,
+        state.assets.info.mobjinfo[state.world.p_mobj.mo(mo).kind as usize].deathstate,
     );
-    state.p_mobj.mo_mut(mo).tics -= p_random(&mut state.m_random) & 3;
-    if state.p_mobj.mo(mo).tics < 1 {
-        state.p_mobj.mo_mut(mo).tics = 1;
+    state.world.p_mobj.mo_mut(mo).tics -= p_random(&mut state.world.m_random) & 3;
+    if state.world.p_mobj.mo(mo).tics < 1 {
+        state.world.p_mobj.mo_mut(mo).tics = 1;
     }
-    state.p_mobj.mo_mut(mo).flags &= !MobjFlags::MISSILE;
-    let deathsound = state.info.mobjinfo_mut(state.p_mobj.mo(mo).kind).deathsound;
+    state.world.p_mobj.mo_mut(mo).flags &= !MobjFlags::MISSILE;
+    let deathsound = state
+        .assets
+        .info
+        .mobjinfo_mut(state.world.p_mobj.mo(mo).kind)
+        .deathsound;
     if deathsound != 0 {
         s_start_sound(state, SoundOrigin::Mobj(mo), deathsound);
     }
@@ -2858,27 +2862,27 @@ pub const STOPSPEED: i32 = 0x1000;
 pub const FRICTION: i32 = 0xe800;
 pub fn xymovement(state: &mut GameState, mo: MobjId) {
     let (momx, momy, flags) = {
-        let m = state.p_mobj.mo(mo);
+        let m = state.world.p_mobj.mo(mo);
         (m.momx, m.momy, m.flags)
     };
     if momx == 0 && momy == 0 {
         if flags.contains(MobjFlags::SKULLFLY) {
             let mo_type = {
-                let m = state.p_mobj.mo_mut(mo);
+                let m = state.world.p_mobj.mo_mut(mo);
                 m.flags &= !MobjFlags::SKULLFLY;
                 m.momz = 0;
                 m.momy = m.momz;
                 m.momx = m.momy;
                 m.kind
             };
-            let spawnstate = state.info.mobjinfo_mut(mo_type).spawnstate;
+            let spawnstate = state.assets.info.mobjinfo_mut(mo_type).spawnstate;
             set_mobj_state(state, mo, spawnstate);
         }
         return;
     }
-    let player = state.p_mobj.mo(mo).player;
+    let player = state.world.p_mobj.mo(mo).player;
     let (mut xmove, mut ymove) = {
-        let m = state.p_mobj.mo_mut(mo);
+        let m = state.world.p_mobj.mo_mut(mo);
         if m.momx > MAXMOVE {
             m.momx = MAXMOVE as Fixed;
         } else if m.momx < -MAXMOVE {
@@ -2893,7 +2897,7 @@ pub fn xymovement(state: &mut GameState, mo: MobjId) {
     };
     loop {
         let (mx, my) = {
-            let m = state.p_mobj.mo(mo);
+            let m = state.world.p_mobj.mo(mo);
             (m.x, m.y)
         };
         let ptryx: Fixed;
@@ -2912,15 +2916,16 @@ pub fn xymovement(state: &mut GameState, mo: MobjId) {
         if !try_move(state, mo, ptryx, ptryy) {
             if player.is_some() {
                 slide_move(state, mo);
-            } else if state.p_mobj.mo(mo).flags.contains(MobjFlags::MISSILE) {
-                if state.p_map.ceilingline.is_some_and(|ceilingline| {
+            } else if state.world.p_mobj.mo(mo).flags.contains(MobjFlags::MISSILE) {
+                if state.world.p_map.ceilingline.is_some_and(|ceilingline| {
                     state
+                        .world
                         .p_setup
                         .line(ceilingline)
                         .backsector
                         .is_some_and(|backsector| {
-                            state.p_setup.sector_mut(backsector).ceilingpic as i32
-                                == state.r_sky.skyflatnum
+                            state.world.p_setup.sector_mut(backsector).ceilingpic as i32
+                                == state.render.r_sky.skyflatnum
                         })
                 }) {
                     remove_mobj(state, mo);
@@ -2928,7 +2933,7 @@ pub fn xymovement(state: &mut GameState, mo: MobjId) {
                 }
                 explode_missile(state, mo);
             } else {
-                let m = state.p_mobj.mo_mut(mo);
+                let m = state.world.p_mobj.mo_mut(mo);
                 m.momy = 0;
                 m.momx = m.momy;
             }
@@ -2938,18 +2943,18 @@ pub fn xymovement(state: &mut GameState, mo: MobjId) {
         }
     }
     if let Some(player_id) = player {
-        if state.g_game.players[player_id.0 as usize]
+        if state.game.g_game.players[player_id.0 as usize]
             .cheats
             .contains(CheatFlags::NOMOMENTUM)
         {
-            let m = state.p_mobj.mo_mut(mo);
+            let m = state.world.p_mobj.mo_mut(mo);
             m.momy = 0;
             m.momx = m.momy;
             return;
         }
     }
     let (flags, z, floorz, momx, momy, subsector) = {
-        let m = state.p_mobj.mo(mo);
+        let m = state.world.p_mobj.mo(mo);
         (m.flags, m.z, m.floorz, m.momx, m.momy, m.subsector)
     };
     if flags.intersects(MobjFlags::MISSILE | MobjFlags::SKULLFLY) {
@@ -2963,8 +2968,9 @@ pub fn xymovement(state: &mut GameState, mo: MobjId) {
             || !(-FRACUNIT / 4..=FRACUNIT / 4).contains(&momy))
         && floorz
             != state
+                .world
                 .p_setup
-                .sector_mut(state.p_setup.subsectors[subsector.0 as usize].sector)
+                .sector_mut(state.world.p_setup.subsectors[subsector.0 as usize].sector)
                 .floorheight
     {
         return;
@@ -2972,7 +2978,7 @@ pub fn xymovement(state: &mut GameState, mo: MobjId) {
     let player_idle = match player {
         None => true,
         Some(player_id) => {
-            let cmd = &state.g_game.players[player_id.0 as usize].cmd;
+            let cmd = &state.game.g_game.players[player_id.0 as usize].cmd;
             cmd.forwardmove as i32 == 0 && cmd.sidemove as i32 == 0
         }
     };
@@ -2980,6 +2986,7 @@ pub fn xymovement(state: &mut GameState, mo: MobjId) {
     {
         if player.is_some()
             && (state
+                .world
                 .p_mobj
                 .mo(mo)
                 .state
@@ -2990,11 +2997,11 @@ pub fn xymovement(state: &mut GameState, mo: MobjId) {
         {
             set_mobj_state(state, mo, StateNum::Play);
         }
-        let m = state.p_mobj.mo_mut(mo);
+        let m = state.world.p_mobj.mo_mut(mo);
         m.momx = 0;
         m.momy = 0;
     } else {
-        let m = state.p_mobj.mo_mut(mo);
+        let m = state.world.p_mobj.mo_mut(mo);
         m.momx = fixed_mul(m.momx, FRICTION);
         m.momy = fixed_mul(m.momy, FRICTION);
     }
@@ -3002,110 +3009,149 @@ pub fn xymovement(state: &mut GameState, mo: MobjId) {
 pub fn zmovement(state: &mut GameState, mo: MobjId) {
     let dist: Fixed;
     let delta: Fixed;
-    if state.p_mobj.mo(mo).player.is_some() && state.p_mobj.mo(mo).z < state.p_mobj.mo(mo).floorz {
-        let mo_player = state.g_game.player_mut(state.p_mobj.mo(mo).player.unwrap());
-        mo_player.viewheight -= state.p_mobj.mo(mo).floorz - state.p_mobj.mo(mo).z;
+    if state.world.p_mobj.mo(mo).player.is_some()
+        && state.world.p_mobj.mo(mo).z < state.world.p_mobj.mo(mo).floorz
+    {
+        let mo_player = state
+            .game
+            .g_game
+            .player_mut(state.world.p_mobj.mo(mo).player.unwrap());
+        mo_player.viewheight -= state.world.p_mobj.mo(mo).floorz - state.world.p_mobj.mo(mo).z;
         mo_player.deltaviewheight = (VIEWHEIGHT - mo_player.viewheight) >> 3;
     }
-    state.p_mobj.mo_mut(mo).z += state.p_mobj.mo(mo).momz;
+    state.world.p_mobj.mo_mut(mo).z += state.world.p_mobj.mo(mo).momz;
     let mo_target = state
+        .world
         .p_mobj
         .mo(mo)
         .target
-        .filter(|&id| state.p_mobj.is_live(id));
-    let mo_flags = state.p_mobj.mo(mo).flags;
+        .filter(|&id| state.world.p_mobj.is_live(id));
+    let mo_flags = state.world.p_mobj.mo(mo).flags;
     if let Some(target) = mo_target.filter(|_| {
         mo_flags.contains(MobjFlags::FLOAT)
             && !mo_flags.contains(MobjFlags::SKULLFLY)
             && !mo_flags.contains(MobjFlags::INFLOAT)
     }) {
         dist = aprox_distance(
-            state.p_mobj.mo(mo).x - state.p_mobj.mo(target).x,
-            state.p_mobj.mo(mo).y - state.p_mobj.mo(target).y,
+            state.world.p_mobj.mo(mo).x - state.world.p_mobj.mo(target).x,
+            state.world.p_mobj.mo(mo).y - state.world.p_mobj.mo(target).y,
         );
-        delta =
-            state.p_mobj.mo(target).z + (state.p_mobj.mo(mo).height >> 1) - state.p_mobj.mo(mo).z;
+        delta = state.world.p_mobj.mo(target).z + (state.world.p_mobj.mo(mo).height >> 1)
+            - state.world.p_mobj.mo(mo).z;
         if delta < 0 && dist < -(delta * 3) {
-            state.p_mobj.mo_mut(mo).z -= FLOATSPEED;
+            state.world.p_mobj.mo_mut(mo).z -= FLOATSPEED;
         } else if delta > 0 && dist < delta * 3 {
-            state.p_mobj.mo_mut(mo).z += FLOATSPEED;
+            state.world.p_mobj.mo_mut(mo).z += FLOATSPEED;
         }
     }
-    if state.p_mobj.mo(mo).z <= state.p_mobj.mo(mo).floorz {
+    if state.world.p_mobj.mo(mo).z <= state.world.p_mobj.mo(mo).floorz {
         let correct_lost_soul_bounce: i32 =
-            (state.doomstat.gameversion.is_ultimate_or_higher()) as i32;
-        if correct_lost_soul_bounce != 0 && state.p_mobj.mo(mo).flags.contains(MobjFlags::SKULLFLY)
+            (state.game.doomstat.gameversion.is_ultimate_or_higher()) as i32;
+        if correct_lost_soul_bounce != 0
+            && state
+                .world
+                .p_mobj
+                .mo(mo)
+                .flags
+                .contains(MobjFlags::SKULLFLY)
         {
-            state.p_mobj.mo_mut(mo).momz = -state.p_mobj.mo(mo).momz;
+            state.world.p_mobj.mo_mut(mo).momz = -state.world.p_mobj.mo(mo).momz;
         }
-        if state.p_mobj.mo(mo).momz < 0 {
-            if state.p_mobj.mo(mo).player.is_some() && state.p_mobj.mo(mo).momz < -GRAVITY * 8 {
+        if state.world.p_mobj.mo(mo).momz < 0 {
+            if state.world.p_mobj.mo(mo).player.is_some()
+                && state.world.p_mobj.mo(mo).momz < -GRAVITY * 8
+            {
                 state
+                    .game
                     .g_game
-                    .player_mut(state.p_mobj.mo(mo).player.unwrap())
-                    .deltaviewheight = state.p_mobj.mo(mo).momz >> 3;
+                    .player_mut(state.world.p_mobj.mo(mo).player.unwrap())
+                    .deltaviewheight = state.world.p_mobj.mo(mo).momz >> 3;
                 s_start_sound(state, SoundOrigin::Mobj(mo), SfxName::Oof as i32);
             }
-            state.p_mobj.mo_mut(mo).momz = 0;
+            state.world.p_mobj.mo_mut(mo).momz = 0;
         }
-        state.p_mobj.mo_mut(mo).z = state.p_mobj.mo(mo).floorz;
-        if correct_lost_soul_bounce == 0 && state.p_mobj.mo(mo).flags.contains(MobjFlags::SKULLFLY)
+        state.world.p_mobj.mo_mut(mo).z = state.world.p_mobj.mo(mo).floorz;
+        if correct_lost_soul_bounce == 0
+            && state
+                .world
+                .p_mobj
+                .mo(mo)
+                .flags
+                .contains(MobjFlags::SKULLFLY)
         {
-            state.p_mobj.mo_mut(mo).momz = -state.p_mobj.mo(mo).momz;
+            state.world.p_mobj.mo_mut(mo).momz = -state.world.p_mobj.mo(mo).momz;
         }
-        if state.p_mobj.mo(mo).flags.contains(MobjFlags::MISSILE)
-            && !state.p_mobj.mo(mo).flags.contains(MobjFlags::NOCLIP)
+        if state.world.p_mobj.mo(mo).flags.contains(MobjFlags::MISSILE)
+            && !state.world.p_mobj.mo(mo).flags.contains(MobjFlags::NOCLIP)
         {
             explode_missile(state, mo);
             return;
         }
-    } else if !state.p_mobj.mo(mo).flags.contains(MobjFlags::NOGRAVITY) {
-        if state.p_mobj.mo(mo).momz == 0 {
-            state.p_mobj.mo_mut(mo).momz = (-GRAVITY * 2) as Fixed;
+    } else if !state
+        .world
+        .p_mobj
+        .mo(mo)
+        .flags
+        .contains(MobjFlags::NOGRAVITY)
+    {
+        if state.world.p_mobj.mo(mo).momz == 0 {
+            state.world.p_mobj.mo_mut(mo).momz = (-GRAVITY * 2) as Fixed;
         } else {
-            state.p_mobj.mo_mut(mo).momz -= GRAVITY;
+            state.world.p_mobj.mo_mut(mo).momz -= GRAVITY;
         }
     }
-    if state.p_mobj.mo(mo).z + state.p_mobj.mo(mo).height > state.p_mobj.mo(mo).ceilingz {
-        if state.p_mobj.mo(mo).momz > 0 {
-            state.p_mobj.mo_mut(mo).momz = 0;
+    if state.world.p_mobj.mo(mo).z + state.world.p_mobj.mo(mo).height
+        > state.world.p_mobj.mo(mo).ceilingz
+    {
+        if state.world.p_mobj.mo(mo).momz > 0 {
+            state.world.p_mobj.mo_mut(mo).momz = 0;
         }
-        state.p_mobj.mo_mut(mo).z = state.p_mobj.mo(mo).ceilingz - state.p_mobj.mo(mo).height;
-        if state.p_mobj.mo(mo).flags.contains(MobjFlags::SKULLFLY) {
-            state.p_mobj.mo_mut(mo).momz = -state.p_mobj.mo(mo).momz;
+        state.world.p_mobj.mo_mut(mo).z =
+            state.world.p_mobj.mo(mo).ceilingz - state.world.p_mobj.mo(mo).height;
+        if state
+            .world
+            .p_mobj
+            .mo(mo)
+            .flags
+            .contains(MobjFlags::SKULLFLY)
+        {
+            state.world.p_mobj.mo_mut(mo).momz = -state.world.p_mobj.mo(mo).momz;
         }
-        if state.p_mobj.mo(mo).flags.contains(MobjFlags::MISSILE)
-            && !state.p_mobj.mo(mo).flags.contains(MobjFlags::NOCLIP)
+        if state.world.p_mobj.mo(mo).flags.contains(MobjFlags::MISSILE)
+            && !state.world.p_mobj.mo(mo).flags.contains(MobjFlags::NOCLIP)
         {
             explode_missile(state, mo);
         }
     }
 }
 pub fn nightmare_respawn(state: &mut GameState, mobj: MobjId) {
-    let spawnpoint = state.p_mobj.mo(mobj).spawnpoint;
+    let spawnpoint = state.world.p_mobj.mo(mobj).spawnpoint;
     let x = ((spawnpoint.x as i32) << FRACBITS) as Fixed;
     let y = ((spawnpoint.y as i32) << FRACBITS) as Fixed;
     if !check_position(state, mobj, x, y) {
         return;
     }
     let (mobj_x, mobj_y, mobj_subsector, mobj_type) = {
-        let m = state.p_mobj.mo(mobj);
+        let m = state.world.p_mobj.mo(mobj);
         (m.x, m.y, m.subsector, m.kind)
     };
     let floorheight1 = state
+        .world
         .p_setup
-        .sector_mut(state.p_setup.subsectors[mobj_subsector.0 as usize].sector)
+        .sector_mut(state.world.p_setup.subsectors[mobj_subsector.0 as usize].sector)
         .floorheight;
     let fog = spawn_mobj(state, mobj_x, mobj_y, floorheight1, MobjType::Tfog);
     s_start_sound(state, SoundOrigin::Mobj(fog), SfxName::Telept as i32);
-    let ss = point_in_subsector(&state.p_setup, x, y);
+    let ss = point_in_subsector(&state.world.p_setup, x, y);
     let floorheight2 = state
+        .world
         .p_setup
-        .sector_mut(state.p_setup.subsectors[ss.0 as usize].sector)
+        .sector_mut(state.world.p_setup.subsectors[ss.0 as usize].sector)
         .floorheight;
     let fog = spawn_mobj(state, x, y, floorheight2, MobjType::Tfog);
     s_start_sound(state, SoundOrigin::Mobj(fog), SfxName::Telept as i32);
     let z = if state
+        .assets
         .info
         .mobjinfo_mut(mobj_type)
         .flags
@@ -3117,7 +3163,7 @@ pub fn nightmare_respawn(state: &mut GameState, mobj: MobjId) {
     };
     let mo = spawn_mobj(state, x, y, z, mobj_type);
     {
-        let m = state.p_mobj.mo_mut(mo);
+        let m = state.world.p_mobj.mo_mut(mo);
         m.spawnpoint = spawnpoint;
         m.angle = (ANG45 * (spawnpoint.angle as i32 / 45)) as Angle;
         if spawnpoint.options as i32 & MTF_AMBUSH != 0 {
@@ -3128,10 +3174,14 @@ pub fn nightmare_respawn(state: &mut GameState, mobj: MobjId) {
     remove_mobj(state, mobj);
 }
 pub fn mobj_thinker(state: &mut GameState, id: MobjId) {
-    let removed =
-        |state: &GameState| matches!(state.p_mobj.mo(id).thinker.function, ThinkerFn::Removed);
+    let removed = |state: &GameState| {
+        matches!(
+            state.world.p_mobj.mo(id).thinker.function,
+            ThinkerFn::Removed
+        )
+    };
     {
-        let m = state.p_mobj.mo(id);
+        let m = state.world.p_mobj.mo(id);
         if m.momx != 0 || m.momy != 0 || m.flags.contains(MobjFlags::SKULLFLY) {
             xymovement(state, id);
             if removed(state) {
@@ -3140,7 +3190,7 @@ pub fn mobj_thinker(state: &mut GameState, id: MobjId) {
         }
     }
     {
-        let m = state.p_mobj.mo(id);
+        let m = state.world.p_mobj.mo(id);
         if m.z != m.floorz || m.momz != 0 {
             zmovement(state, id);
             if removed(state) {
@@ -3148,29 +3198,35 @@ pub fn mobj_thinker(state: &mut GameState, id: MobjId) {
             }
         }
     }
-    if state.p_mobj.mo(id).tics == -1 {
-        if !state.p_mobj.mo(id).flags.contains(MobjFlags::COUNTKILL) {
+    if state.world.p_mobj.mo(id).tics == -1 {
+        if !state
+            .world
+            .p_mobj
+            .mo(id)
+            .flags
+            .contains(MobjFlags::COUNTKILL)
+        {
             return;
         }
-        if !state.g_game.respawnmonsters {
+        if !state.game.g_game.respawnmonsters {
             return;
         }
-        state.p_mobj.mo_mut(id).movecount += 1;
-        if state.p_mobj.mo(id).movecount < 12 * TICRATE {
+        state.world.p_mobj.mo_mut(id).movecount += 1;
+        if state.world.p_mobj.mo(id).movecount < 12 * TICRATE {
             return;
         }
-        if state.p_tick.leveltime & 31 != 0 {
+        if state.world.p_tick.leveltime & 31 != 0 {
             return;
         }
-        if p_random(&mut state.m_random) > 4 {
+        if p_random(&mut state.world.m_random) > 4 {
             return;
         }
         nightmare_respawn(state, id);
     } else {
-        state.p_mobj.mo_mut(id).tics -= 1;
-        if state.p_mobj.mo(id).tics == 0 {
-            let current = state.p_mobj.mo(id).state.unwrap();
-            let nextstate = state.info.state_mut(current).nextstate;
+        state.world.p_mobj.mo_mut(id).tics -= 1;
+        if state.world.p_mobj.mo(id).tics == 0 {
+            let current = state.world.p_mobj.mo(id).state.unwrap();
+            let nextstate = state.assets.info.state_mut(current).nextstate;
             set_mobj_state(state, id, nextstate);
         }
     }
@@ -3179,9 +3235,9 @@ pub fn spawn_mobj(state: &mut GameState, x: Fixed, y: Fixed, z: Fixed, kind: Mob
     // Built as a local value (starting from the same all-defaults template
     // used for PMobjState::dummy_mobj); spawn() moves it into the arena once
     // fully populated.
-    let mut value = state.p_mobj.dummy_mobj;
+    let mut value = state.world.p_mobj.dummy_mobj;
     let (radius, height, flags, spawnhealth, reactiontime, spawnstate) = {
-        let info = state.info.mobjinfo_mut(kind);
+        let info = state.assets.info.mobjinfo_mut(kind);
         (
             info.radius,
             info.height,
@@ -3198,43 +3254,43 @@ pub fn spawn_mobj(state: &mut GameState, x: Fixed, y: Fixed, z: Fixed, kind: Mob
     value.height = height as Fixed;
     value.flags = flags;
     value.health = spawnhealth;
-    if state.g_game.gameskill != SkillType::Nightmare {
+    if state.game.g_game.gameskill != SkillType::Nightmare {
         value.reactiontime = reactiontime;
     }
-    value.lastlook = p_random(&mut state.m_random) % MAXPLAYERS;
+    value.lastlook = p_random(&mut state.world.m_random) % MAXPLAYERS;
     let spawnstate_id = StateId(spawnstate as u32);
     let (tics, sprite, frame) = {
-        let st = state.info.state_mut(spawnstate_id);
+        let st = state.assets.info.state_mut(spawnstate_id);
         (st.tics, st.sprite, st.frame)
     };
     value.state = Some(spawnstate_id);
     value.tics = tics;
     value.sprite = sprite;
     value.frame = frame;
-    let id = state.p_mobj.spawn(value);
+    let id = state.world.p_mobj.spawn(value);
     set_thing_position(state, id);
-    let subsector = state.p_mobj.mo(id).subsector;
-    let sector = state.p_setup.subsectors[subsector.0 as usize].sector;
+    let subsector = state.world.p_mobj.mo(id).subsector;
+    let sector = state.world.p_setup.subsectors[subsector.0 as usize].sector;
     let (floorz, ceilingz) = {
-        let s = state.p_setup.sector_mut(sector);
+        let s = state.world.p_setup.sector_mut(sector);
         (s.floorheight, s.ceilingheight)
     };
     let final_z = if z == ONFLOORZ {
         floorz
     } else if z == ONCEILINGZ {
-        (ceilingz - state.info.mobjinfo_mut(kind).height) as Fixed
+        (ceilingz - state.assets.info.mobjinfo_mut(kind).height) as Fixed
     } else {
         z
     };
     {
-        let m = state.p_mobj.mo_mut(id);
+        let m = state.world.p_mobj.mo_mut(id);
         m.floorz = floorz;
         m.ceilingz = ceilingz;
         m.z = final_z;
         m.thinker.function = ThinkerFn::Mobj(mobj_thinker);
     }
     add_thinker(
-        &mut state.p_tick,
+        &mut state.world.p_tick,
         ThinkerPayload::Mobj(id),
         ThinkerKind::Mobj,
     );
@@ -3456,9 +3512,9 @@ impl PMobjState {
 }
 
 pub fn remove_mobj(state: &mut GameState, mobj: MobjId) {
-    state.p_mobj.retire(mobj);
+    state.world.p_mobj.retire(mobj);
     let (flags, kind, spawnpoint) = {
-        let m = state.p_mobj.mo(mobj);
+        let m = state.world.p_mobj.mo(mobj);
         (m.flags, m.kind, m.spawnpoint)
     };
     if flags.contains(MobjFlags::SPECIAL)
@@ -3466,52 +3522,55 @@ pub fn remove_mobj(state: &mut GameState, mobj: MobjId) {
         && kind as u32 != MobjType::Inv as i32 as u32
         && kind as u32 != MobjType::Ins as i32 as u32
     {
-        state.p_mobj.itemrespawnque[state.p_mobj.iquehead as usize] = spawnpoint;
-        state.p_mobj.itemrespawntime[state.p_mobj.iquehead as usize] = state.p_tick.leveltime;
-        state.p_mobj.iquehead = (state.p_mobj.iquehead + 1) & (ITEMQUESIZE - 1);
-        if state.p_mobj.iquehead == state.p_mobj.iquetail {
-            state.p_mobj.iquetail = (state.p_mobj.iquetail + 1) & (ITEMQUESIZE - 1);
+        state.world.p_mobj.itemrespawnque[state.world.p_mobj.iquehead as usize] = spawnpoint;
+        state.world.p_mobj.itemrespawntime[state.world.p_mobj.iquehead as usize] =
+            state.world.p_tick.leveltime;
+        state.world.p_mobj.iquehead = (state.world.p_mobj.iquehead + 1) & (ITEMQUESIZE - 1);
+        if state.world.p_mobj.iquehead == state.world.p_mobj.iquetail {
+            state.world.p_mobj.iquetail = (state.world.p_mobj.iquetail + 1) & (ITEMQUESIZE - 1);
         }
     }
     unset_thing_position(state, mobj);
     s_stop_sound(
-        &mut state.i_sound,
-        &mut state.s_sound,
-        &mut state.sounds,
+        &mut state.audio.i_sound,
+        &mut state.audio.s_sound,
+        &mut state.audio.sounds,
         SoundOrigin::Mobj(mobj),
     );
-    remove_thinker(&mut state.p_mobj.mo_mut(mobj).thinker);
+    remove_thinker(&mut state.world.p_mobj.mo_mut(mobj).thinker);
 }
 pub fn respawn_specials(state: &mut GameState) {
-    if state.g_game.deathmatch != 2 {
+    if state.game.g_game.deathmatch != 2 {
         return;
     }
-    if state.p_mobj.iquehead == state.p_mobj.iquetail {
+    if state.world.p_mobj.iquehead == state.world.p_mobj.iquetail {
         return;
     }
-    if state.p_tick.leveltime - state.p_mobj.itemrespawntime[state.p_mobj.iquetail as usize]
+    if state.world.p_tick.leveltime
+        - state.world.p_mobj.itemrespawntime[state.world.p_mobj.iquetail as usize]
         < 30 * TICRATE
     {
         return;
     }
-    let mthing = state.p_mobj.itemrespawnque[state.p_mobj.iquetail as usize];
+    let mthing = state.world.p_mobj.itemrespawnque[state.world.p_mobj.iquetail as usize];
     let x = ((mthing.x as i32) << FRACBITS) as Fixed;
     let y = ((mthing.y as i32) << FRACBITS) as Fixed;
-    let ss = point_in_subsector(&state.p_setup, x, y);
+    let ss = point_in_subsector(&state.world.p_setup, x, y);
     let floorheight = state
+        .world
         .p_setup
-        .sector_mut(state.p_setup.subsectors[ss.0 as usize].sector)
+        .sector_mut(state.world.p_setup.subsectors[ss.0 as usize].sector)
         .floorheight;
     let fog = spawn_mobj(state, x, y, floorheight, MobjType::Ifog);
     s_start_sound(state, SoundOrigin::Mobj(fog), SfxName::Itmbk as i32);
     let mut i: i32 = 0;
     while i < NUMMOBJTYPES {
-        if mthing.kind as i32 == state.info.mobjinfo[i as usize].doomednum {
+        if mthing.kind as i32 == state.assets.info.mobjinfo[i as usize].doomednum {
             break;
         }
         i += 1;
     }
-    let z = if state.info.mobjinfo[i as usize]
+    let z = if state.assets.info.mobjinfo[i as usize]
         .flags
         .contains(MobjFlags::SPAWNCEILING)
     {
@@ -3521,30 +3580,30 @@ pub fn respawn_specials(state: &mut GameState) {
     };
     let mo = spawn_mobj(state, x, y, z, mobjtype_from_raw(i));
     {
-        let m = state.p_mobj.mo_mut(mo);
+        let m = state.world.p_mobj.mo_mut(mo);
         m.spawnpoint = mthing;
         m.angle = (ANG45 * (mthing.angle as i32 / 45)) as Angle;
     }
-    state.p_mobj.iquetail = (state.p_mobj.iquetail + 1) & (ITEMQUESIZE - 1);
+    state.world.p_mobj.iquetail = (state.world.p_mobj.iquetail + 1) & (ITEMQUESIZE - 1);
 }
 pub fn spawn_player(state: &mut GameState, mthing: MapThing) {
     if mthing.kind as i32 == 0 {
         return;
     }
     let player_index = (mthing.kind as i32 - 1) as usize;
-    if !state.g_game.playeringame[player_index] {
+    if !state.game.g_game.playeringame[player_index] {
         return;
     }
-    if state.g_game.players[player_index].playerstate == PlayerState::Reborn {
-        player_reborn(&mut state.g_game, mthing.kind as i32 - 1);
+    if state.game.g_game.players[player_index].playerstate == PlayerState::Reborn {
+        player_reborn(&mut state.game.g_game, mthing.kind as i32 - 1);
     }
     let x = ((mthing.x as i32) << FRACBITS) as Fixed;
     let y = ((mthing.y as i32) << FRACBITS) as Fixed;
     let z = ONFLOORZ as Fixed;
     let mobj = spawn_mobj(state, x, y, z, MobjType::Player);
-    let player_health = state.g_game.players[player_index].health;
+    let player_health = state.game.g_game.players[player_index].health;
     {
-        let m = state.p_mobj.mo_mut(mobj);
+        let m = state.world.p_mobj.mo_mut(mobj);
         if mthing.kind as i32 > 1 {
             m.flags |= MobjFlags::from_bits_retain(
                 (mthing.kind as i32 - 1) << MobjFlags::TRANSLATION_SHIFT,
@@ -3555,7 +3614,7 @@ pub fn spawn_player(state: &mut GameState, mthing: MapThing) {
         m.health = player_health;
     }
     {
-        let p = &mut state.g_game.players[player_index];
+        let p = &mut state.game.g_game.players[player_index];
         p.mo = Some(mobj);
         p.playerstate = PlayerState::Live;
         p.refire = 0;
@@ -3567,12 +3626,12 @@ pub fn spawn_player(state: &mut GameState, mthing: MapThing) {
         p.viewheight = VIEWHEIGHT as Fixed;
     }
     setup_psprites(state, PlayerId(player_index as u8));
-    if state.g_game.deathmatch != 0 {
+    if state.game.g_game.deathmatch != 0 {
         for i in 0..(NUMCARDS as usize) {
-            state.g_game.players[player_index].cards[i] = true;
+            state.game.g_game.players[player_index].cards[i] = true;
         }
     }
-    if mthing.kind as i32 - 1 == state.g_game.consoleplayer {
+    if mthing.kind as i32 - 1 == state.game.g_game.consoleplayer {
         {
             st_start(state);
             hu_start(state);
@@ -3581,10 +3640,10 @@ pub fn spawn_player(state: &mut GameState, mthing: MapThing) {
 }
 pub fn spawn_map_thing(state: &mut GameState, mthing: MapThing) {
     if mthing.kind as i32 == 11 {
-        if state.p_setup.deathmatch_p < 10 {
-            let idx = state.p_setup.deathmatch_p;
-            state.p_setup.deathmatchstarts[idx] = mthing;
-            state.p_setup.deathmatch_p += 1;
+        if state.world.p_setup.deathmatch_p < 10 {
+            let idx = state.world.p_setup.deathmatch_p;
+            state.world.p_setup.deathmatchstarts[idx] = mthing;
+            state.world.p_setup.deathmatch_p += 1;
         }
         return;
     }
@@ -3592,28 +3651,28 @@ pub fn spawn_map_thing(state: &mut GameState, mthing: MapThing) {
         return;
     }
     if mthing.kind as i32 <= 4 {
-        state.p_setup.playerstarts[(mthing.kind as i32 - 1) as usize] = mthing;
-        if state.g_game.deathmatch == 0 {
+        state.world.p_setup.playerstarts[(mthing.kind as i32 - 1) as usize] = mthing;
+        if state.game.g_game.deathmatch == 0 {
             spawn_player(state, mthing);
         }
         return;
     }
-    if !state.g_game.netgame && mthing.options as i32 & 16 != 0 {
+    if !state.game.g_game.netgame && mthing.options as i32 & 16 != 0 {
         return;
     }
-    let bit: i32 = if state.g_game.gameskill == SkillType::Baby {
+    let bit: i32 = if state.game.g_game.gameskill == SkillType::Baby {
         1
-    } else if state.g_game.gameskill == SkillType::Nightmare {
+    } else if state.game.g_game.gameskill == SkillType::Nightmare {
         4
     } else {
-        1 << (state.g_game.gameskill as i32 - 1)
+        1 << (state.game.g_game.gameskill as i32 - 1)
     };
     if mthing.options as i32 & bit == 0 {
         return;
     }
     let mut i: i32 = 0;
     while i < NUMMOBJTYPES {
-        if mthing.kind as i32 == state.info.mobjinfo[i as usize].doomednum {
+        if mthing.kind as i32 == state.assets.info.mobjinfo[i as usize].doomednum {
             break;
         }
         i += 1;
@@ -3624,16 +3683,16 @@ pub fn spawn_map_thing(state: &mut GameState, mthing: MapThing) {
             mthing.kind as i32, mthing.x as i32, mthing.y as i32,
         ));
     }
-    if state.g_game.deathmatch != 0
-        && state.info.mobjinfo[i as usize]
+    if state.game.g_game.deathmatch != 0
+        && state.assets.info.mobjinfo[i as usize]
             .flags
             .contains(MobjFlags::NOTDMATCH)
     {
         return;
     }
-    if state.d_main.nomonsters
+    if state.game.d_main.nomonsters
         && (i == MobjType::Skull as i32
-            || state.info.mobjinfo[i as usize]
+            || state.assets.info.mobjinfo[i as usize]
                 .flags
                 .contains(MobjFlags::COUNTKILL))
     {
@@ -3641,7 +3700,7 @@ pub fn spawn_map_thing(state: &mut GameState, mthing: MapThing) {
     }
     let x = ((mthing.x as i32) << FRACBITS) as Fixed;
     let y = ((mthing.y as i32) << FRACBITS) as Fixed;
-    let z = if state.info.mobjinfo[i as usize]
+    let z = if state.assets.info.mobjinfo[i as usize]
         .flags
         .contains(MobjFlags::SPAWNCEILING)
     {
@@ -3650,43 +3709,43 @@ pub fn spawn_map_thing(state: &mut GameState, mthing: MapThing) {
         ONFLOORZ as Fixed
     };
     let mobj = spawn_mobj(state, x, y, z, mobjtype_from_raw(i));
-    state.p_mobj.mo_mut(mobj).spawnpoint = mthing;
-    if state.p_mobj.mo(mobj).tics > 0 {
-        let tics = state.p_mobj.mo(mobj).tics;
-        state.p_mobj.mo_mut(mobj).tics = 1 + p_random(&mut state.m_random) % tics;
+    state.world.p_mobj.mo_mut(mobj).spawnpoint = mthing;
+    if state.world.p_mobj.mo(mobj).tics > 0 {
+        let tics = state.world.p_mobj.mo(mobj).tics;
+        state.world.p_mobj.mo_mut(mobj).tics = 1 + p_random(&mut state.world.m_random) % tics;
     }
-    let flags = state.p_mobj.mo(mobj).flags;
+    let flags = state.world.p_mobj.mo(mobj).flags;
     if flags.contains(MobjFlags::COUNTKILL) {
-        state.g_game.totalkills += 1;
+        state.game.g_game.totalkills += 1;
     }
     if flags.contains(MobjFlags::COUNTITEM) {
-        state.g_game.totalitems += 1;
+        state.game.g_game.totalitems += 1;
     }
-    let m = state.p_mobj.mo_mut(mobj);
+    let m = state.world.p_mobj.mo_mut(mobj);
     m.angle = (ANG45 * (mthing.angle as i32 / 45)) as Angle;
     if mthing.options as i32 & MTF_AMBUSH != 0 {
         m.flags |= MobjFlags::AMBUSH;
     }
 }
 pub fn spawn_puff(state: &mut GameState, x: Fixed, y: Fixed, mut z: Fixed) {
-    z += (p_random(&mut state.m_random) - p_random(&mut state.m_random)) << 10;
+    z += (p_random(&mut state.world.m_random) - p_random(&mut state.world.m_random)) << 10;
     let th = spawn_mobj(state, x, y, z, MobjType::Puff);
-    state.p_mobj.mo_mut(th).momz = FRACUNIT as Fixed;
-    state.p_mobj.mo_mut(th).tics -= p_random(&mut state.m_random) & 3;
-    if state.p_mobj.mo(th).tics < 1 {
-        state.p_mobj.mo_mut(th).tics = 1;
+    state.world.p_mobj.mo_mut(th).momz = FRACUNIT as Fixed;
+    state.world.p_mobj.mo_mut(th).tics -= p_random(&mut state.world.m_random) & 3;
+    if state.world.p_mobj.mo(th).tics < 1 {
+        state.world.p_mobj.mo_mut(th).tics = 1;
     }
-    if state.p_map.attackrange == MELEERANGE {
+    if state.world.p_map.attackrange == MELEERANGE {
         set_mobj_state(state, th, StateNum::Puff3);
     }
 }
 pub fn spawn_blood(state: &mut GameState, x: Fixed, y: Fixed, mut z: Fixed, damage: i32) {
-    z += (p_random(&mut state.m_random) - p_random(&mut state.m_random)) << 10;
+    z += (p_random(&mut state.world.m_random) - p_random(&mut state.world.m_random)) << 10;
     let th = spawn_mobj(state, x, y, z, MobjType::Blood);
-    state.p_mobj.mo_mut(th).momz = (FRACUNIT * 2) as Fixed;
-    state.p_mobj.mo_mut(th).tics -= p_random(&mut state.m_random) & 3;
-    if state.p_mobj.mo(th).tics < 1 {
-        state.p_mobj.mo_mut(th).tics = 1;
+    state.world.p_mobj.mo_mut(th).momz = (FRACUNIT * 2) as Fixed;
+    state.world.p_mobj.mo_mut(th).tics -= p_random(&mut state.world.m_random) & 3;
+    if state.world.p_mobj.mo(th).tics < 1 {
+        state.world.p_mobj.mo_mut(th).tics = 1;
     }
     if (9..=12).contains(&damage) {
         set_mobj_state(state, th, StateNum::Blood2);
@@ -3695,9 +3754,9 @@ pub fn spawn_blood(state: &mut GameState, x: Fixed, y: Fixed, mut z: Fixed, dama
     }
 }
 pub fn check_missile_spawn(state: &mut GameState, th: MobjId) {
-    state.p_mobj.mo_mut(th).tics -= p_random(&mut state.m_random) & 3;
+    state.world.p_mobj.mo_mut(th).tics -= p_random(&mut state.world.m_random) & 3;
     let (x, y) = {
-        let t = state.p_mobj.mo_mut(th);
+        let t = state.world.p_mobj.mo_mut(th);
         if t.tics < 1 {
             t.tics = 1;
         }
@@ -3739,31 +3798,32 @@ pub fn spawn_missile(
     kind: MobjType,
 ) -> MobjId {
     let (sx, sy, sz) = {
-        let s = state.p_mobj.mo(source);
+        let s = state.world.p_mobj.mo(source);
         (s.x, s.y, s.z)
     };
     let (dx, dy, dz, dflags) = {
-        let d = state.p_mobj.mo(dest);
+        let d = state.world.p_mobj.mo(dest);
         (d.x, d.y, d.z, d.flags)
     };
     let th = spawn_mobj(state, sx, sy, sz + 4 * 8 * FRACUNIT, kind);
-    let th_type = state.p_mobj.mo(th).kind;
-    let seesound = state.info.mobjinfo_mut(th_type).seesound;
+    let th_type = state.world.p_mobj.mo(th).kind;
+    let seesound = state.assets.info.mobjinfo_mut(th_type).seesound;
     if seesound != 0 {
         s_start_sound(state, SoundOrigin::Mobj(th), seesound);
     }
-    state.p_mobj.mo_mut(th).target = Some(source);
-    let mut an: Angle = point_to_angle2(&mut state.r_main, sx, sy, dx, dy);
+    state.world.p_mobj.mo_mut(th).target = Some(source);
+    let mut an: Angle = point_to_angle2(&mut state.render.r_main, sx, sy, dx, dy);
     if dflags.contains(MobjFlags::SHADOW) {
         an = an.wrapping_add(
-            ((p_random(&mut state.m_random) - p_random(&mut state.m_random)) << 20) as Angle,
+            ((p_random(&mut state.world.m_random) - p_random(&mut state.world.m_random)) << 20)
+                as Angle,
         );
     }
-    state.p_mobj.mo_mut(th).angle = an;
+    state.world.p_mobj.mo_mut(th).angle = an;
     an >>= ANGLETOFINESHIFT;
-    let speed = state.info.mobjinfo_mut(th_type).speed;
+    let speed = state.assets.info.mobjinfo_mut(th_type).speed;
     {
-        let t = state.p_mobj.mo_mut(th);
+        let t = state.world.p_mobj.mo_mut(th);
         t.momx = fixed_mul(speed as Fixed, FINECOSINE[an as usize]);
         t.momy = fixed_mul(speed as Fixed, FINESINE[an as usize]);
     }
@@ -3772,39 +3832,39 @@ pub fn spawn_missile(
     if dist < 1 {
         dist = 1;
     }
-    state.p_mobj.mo_mut(th).momz = ((dz - sz) / dist) as Fixed;
+    state.world.p_mobj.mo_mut(th).momz = ((dz - sz) / dist) as Fixed;
     check_missile_spawn(state, th);
     th
 }
 
 pub fn spawn_player_missile(state: &mut GameState, source: MobjId, kind: MobjType) {
-    let mut an: Angle = state.p_mobj.mo(source).angle;
+    let mut an: Angle = state.world.p_mobj.mo(source).angle;
     let mut slope = aim_line_attack(state, Some(source), an, 16 * 64 * FRACUNIT);
-    if state.p_map.linetarget.is_none() {
+    if state.world.p_map.linetarget.is_none() {
         an = an.wrapping_add((1 << 26) as Angle);
         slope = aim_line_attack(state, Some(source), an, 16 * 64 * FRACUNIT);
-        if state.p_map.linetarget.is_none() {
+        if state.world.p_map.linetarget.is_none() {
             an = an.wrapping_sub((2 << 26) as Angle);
             slope = aim_line_attack(state, Some(source), an, 16 * 64 * FRACUNIT);
         }
-        if state.p_map.linetarget.is_none() {
-            an = state.p_mobj.mo(source).angle;
+        if state.world.p_map.linetarget.is_none() {
+            an = state.world.p_mobj.mo(source).angle;
             slope = 0;
         }
     }
     let (x, y, z) = {
-        let s = state.p_mobj.mo(source);
+        let s = state.world.p_mobj.mo(source);
         (s.x, s.y, (s.z + 4 * 8 * FRACUNIT) as Fixed)
     };
     let th = spawn_mobj(state, x, y, z, kind);
-    let th_type = state.p_mobj.mo(th).kind;
-    let seesound = state.info.mobjinfo_mut(th_type).seesound;
+    let th_type = state.world.p_mobj.mo(th).kind;
+    let seesound = state.assets.info.mobjinfo_mut(th_type).seesound;
     if seesound != 0 {
         s_start_sound(state, SoundOrigin::Mobj(th), seesound);
     }
-    let speed = state.info.mobjinfo_mut(th_type).speed;
+    let speed = state.assets.info.mobjinfo_mut(th_type).speed;
     {
-        let t = state.p_mobj.mo_mut(th);
+        let t = state.world.p_mobj.mo_mut(th);
         t.target = Some(source);
         t.angle = an;
         t.momx = fixed_mul(

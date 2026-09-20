@@ -133,6 +133,7 @@ impl PPlatsState {
 
 pub fn plat_raise(state: &mut GameState, id: PlatId) {
     let plat = *state
+        .world
         .p_plats
         .get_ref(id)
         .expect("ThinkerFn::Plat id must reference a live plat");
@@ -141,7 +142,7 @@ pub fn plat_raise(state: &mut GameState, id: PlatId) {
             let res = move_plane(state, plat.sector, plat.speed, plat.high, plat.crush, 0, 1);
             if (plat.kind == PlattypeE::RaiseAndChange
                 || plat.kind == PlattypeE::RaiseToNearestAndChange)
-                && state.p_tick.leveltime & 7 == 0
+                && state.world.p_tick.leveltime & 7 == 0
             {
                 s_start_sound(
                     state,
@@ -150,7 +151,7 @@ pub fn plat_raise(state: &mut GameState, id: PlatId) {
                 );
             }
             if res == ResultE::Crushed && !plat.crush {
-                let p = state.p_plats.get_mut(id).expect("live plat");
+                let p = state.world.p_plats.get_mut(id).expect("live plat");
                 p.count = p.wait;
                 p.status = PlatE::Down;
                 s_start_sound(
@@ -159,7 +160,7 @@ pub fn plat_raise(state: &mut GameState, id: PlatId) {
                     SfxName::Pstart as i32,
                 );
             } else if res == ResultE::Pastdest {
-                let p = state.p_plats.get_mut(id).expect("live plat");
+                let p = state.world.p_plats.get_mut(id).expect("live plat");
                 p.count = p.wait;
                 p.status = PlatE::Waiting;
                 s_start_sound(
@@ -170,17 +171,17 @@ pub fn plat_raise(state: &mut GameState, id: PlatId) {
                 match plat.kind {
                     PlattypeE::BlazeDWUS | PlattypeE::DownWaitUpStay => {
                         remove_active_plat(
-                            &mut state.p_plats,
-                            &mut state.p_setup,
-                            &state.p_tick,
+                            &mut state.world.p_plats,
+                            &mut state.world.p_setup,
+                            &state.world.p_tick,
                             id,
                         );
                     }
                     PlattypeE::RaiseAndChange | PlattypeE::RaiseToNearestAndChange => {
                         remove_active_plat(
-                            &mut state.p_plats,
-                            &mut state.p_setup,
-                            &state.p_tick,
+                            &mut state.world.p_plats,
+                            &mut state.world.p_setup,
+                            &state.world.p_tick,
                             id,
                         );
                     }
@@ -191,7 +192,7 @@ pub fn plat_raise(state: &mut GameState, id: PlatId) {
         PlatE::Down => {
             let res = move_plane(state, plat.sector, plat.speed, plat.low, false, 0, -1);
             if res == ResultE::Pastdest {
-                let p = state.p_plats.get_mut(id).expect("live plat");
+                let p = state.world.p_plats.get_mut(id).expect("live plat");
                 p.count = p.wait;
                 p.status = PlatE::Waiting;
                 s_start_sound(
@@ -202,14 +203,14 @@ pub fn plat_raise(state: &mut GameState, id: PlatId) {
             }
         }
         PlatE::Waiting => {
-            let p = state.p_plats.get_mut(id).expect("live plat");
+            let p = state.world.p_plats.get_mut(id).expect("live plat");
             p.count -= 1;
             if p.count == 0 {
                 let low = p.low;
-                if state.p_setup.sector_mut(plat.sector).floorheight == low {
-                    state.p_plats.get_mut(id).expect("live plat").status = PlatE::Up;
+                if state.world.p_setup.sector_mut(plat.sector).floorheight == low {
+                    state.world.p_plats.get_mut(id).expect("live plat").status = PlatE::Up;
                 } else {
-                    state.p_plats.get_mut(id).expect("live plat").status = PlatE::Down;
+                    state.world.p_plats.get_mut(id).expect("live plat").status = PlatE::Down;
                 }
                 s_start_sound(
                     state,
@@ -222,14 +223,18 @@ pub fn plat_raise(state: &mut GameState, id: PlatId) {
     }
 }
 pub fn do_plat(state: &mut GameState, line: LineId, kind: PlattypeE, amount: i32) -> bool {
-    let linev = state.p_setup.line(line);
+    let linev = state.world.p_setup.line(line);
     let mut rtn = false;
     if kind == PlattypeE::PerpetualRaise {
-        activate_in_stasis(&mut state.p_plats, &state.p_tick, linev.tag as i32);
+        activate_in_stasis(
+            &mut state.world.p_plats,
+            &state.world.p_tick,
+            linev.tag as i32,
+        );
     }
-    for sector in sectors_with_line_tag(&state.p_setup, line) {
+    for sector in sectors_with_line_tag(&state.world.p_setup, line) {
         let sec = sector;
-        if state.p_setup.sector_mut(sec).specialdata.is_some() {
+        if state.world.p_setup.sector_mut(sec).specialdata.is_some() {
             continue;
         }
         rtn = true;
@@ -241,24 +246,26 @@ pub fn do_plat(state: &mut GameState, line: LineId, kind: PlattypeE, amount: i32
         plat.thinker.function = ThinkerFn::Plat(plat_raise);
         plat.crush = false;
         plat.tag = linev.tag as i32;
-        let floorheight = state.p_setup.sector_mut(sec).floorheight;
+        let floorheight = state.world.p_setup.sector_mut(sec).floorheight;
         match kind {
             PlattypeE::RaiseToNearestAndChange => {
                 plat.speed = (PLATSPEED / 2) as Fixed;
-                let neighbor_sector_id = state.p_setup.sides[linev.sidenum[0] as usize].sector;
-                let neighbor_pic = state.p_setup.sector_mut(neighbor_sector_id).floorpic;
-                state.p_setup.sector_mut(sec).floorpic = neighbor_pic;
-                plat.high = find_next_highest_floor(&mut state.p_setup, sec, floorheight);
+                let neighbor_sector_id =
+                    state.world.p_setup.sides[linev.sidenum[0] as usize].sector;
+                let neighbor_pic = state.world.p_setup.sector_mut(neighbor_sector_id).floorpic;
+                state.world.p_setup.sector_mut(sec).floorpic = neighbor_pic;
+                plat.high = find_next_highest_floor(&mut state.world.p_setup, sec, floorheight);
                 plat.wait = 0;
                 plat.status = PlatE::Up;
-                state.p_setup.sector_mut(sec).special = 0;
+                state.world.p_setup.sector_mut(sec).special = 0;
                 s_start_sound(state, SoundOrigin::Sector(sec), SfxName::Stnmov as i32);
             }
             PlattypeE::RaiseAndChange => {
                 plat.speed = (PLATSPEED / 2) as Fixed;
-                let neighbor_sector_id = state.p_setup.sides[linev.sidenum[0] as usize].sector;
-                let neighbor_pic = state.p_setup.sector_mut(neighbor_sector_id).floorpic;
-                state.p_setup.sector_mut(sec).floorpic = neighbor_pic;
+                let neighbor_sector_id =
+                    state.world.p_setup.sides[linev.sidenum[0] as usize].sector;
+                let neighbor_pic = state.world.p_setup.sector_mut(neighbor_sector_id).floorpic;
+                state.world.p_setup.sector_mut(sec).floorpic = neighbor_pic;
                 plat.high = (floorheight + amount * FRACUNIT) as Fixed;
                 plat.wait = 0;
                 plat.status = PlatE::Up;
@@ -266,7 +273,7 @@ pub fn do_plat(state: &mut GameState, line: LineId, kind: PlattypeE, amount: i32
             }
             PlattypeE::DownWaitUpStay => {
                 plat.speed = (PLATSPEED * 4) as Fixed;
-                plat.low = find_lowest_floor_surrounding(&mut state.p_setup, sec);
+                plat.low = find_lowest_floor_surrounding(&mut state.world.p_setup, sec);
                 if plat.low > floorheight {
                     plat.low = floorheight;
                 }
@@ -277,7 +284,7 @@ pub fn do_plat(state: &mut GameState, line: LineId, kind: PlattypeE, amount: i32
             }
             PlattypeE::BlazeDWUS => {
                 plat.speed = (PLATSPEED * 8) as Fixed;
-                plat.low = find_lowest_floor_surrounding(&mut state.p_setup, sec);
+                plat.low = find_lowest_floor_surrounding(&mut state.world.p_setup, sec);
                 if plat.low > floorheight {
                     plat.low = floorheight;
                 }
@@ -288,16 +295,16 @@ pub fn do_plat(state: &mut GameState, line: LineId, kind: PlattypeE, amount: i32
             }
             PlattypeE::PerpetualRaise => {
                 plat.speed = PLATSPEED as Fixed;
-                plat.low = find_lowest_floor_surrounding(&mut state.p_setup, sec);
+                plat.low = find_lowest_floor_surrounding(&mut state.world.p_setup, sec);
                 if plat.low > floorheight {
                     plat.low = floorheight;
                 }
-                plat.high = find_highest_floor_surrounding(&mut state.p_setup, sec);
+                plat.high = find_highest_floor_surrounding(&mut state.world.p_setup, sec);
                 if plat.high < floorheight {
                     plat.high = floorheight;
                 }
                 plat.wait = TICRATE * PLATWAIT;
-                plat.status = if p_random(&mut state.m_random) & 1 != 0 {
+                plat.status = if p_random(&mut state.world.m_random) & 1 != 0 {
                     PlatE::Down
                 } else {
                     PlatE::Up
@@ -305,14 +312,14 @@ pub fn do_plat(state: &mut GameState, line: LineId, kind: PlattypeE, amount: i32
                 s_start_sound(state, SoundOrigin::Sector(sec), SfxName::Pstart as i32);
             }
         }
-        let plat_arena_id = state.p_plats.spawn(plat);
+        let plat_arena_id = state.world.p_plats.spawn(plat);
         let plat_id = add_thinker(
-            &mut state.p_tick,
+            &mut state.world.p_tick,
             ThinkerPayload::Plat(plat_arena_id),
             ThinkerKind::Plat,
         );
-        state.p_setup.sector_mut(sec).specialdata = Some(SectorSpecial::Plat(plat_id));
-        add_active_plat(&mut state.p_plats, plat_id);
+        state.world.p_setup.sector_mut(sec).specialdata = Some(SectorSpecial::Plat(plat_id));
+        add_active_plat(&mut state.world.p_plats, plat_id);
     }
     rtn
 }

@@ -296,91 +296,94 @@ impl FFinaleState {
 }
 
 pub fn f_start_finale(state: &mut GameState) {
-    state.g_game.gameaction = GameAction::Nothing;
-    state.g_game.gamestate = GameScreenState::Finale;
-    state.g_game.viewactive = false;
-    state.am_map.automapactive = false;
-    if (if state.doomstat.gamemission as u32 == GameMission::PackChex as i32 as u32 {
+    state.game.g_game.gameaction = GameAction::Nothing;
+    state.game.g_game.gamestate = GameScreenState::Finale;
+    state.game.g_game.viewactive = false;
+    state.ui.am_map.automapactive = false;
+    if (if state.game.doomstat.gamemission as u32 == GameMission::PackChex as i32 as u32 {
         GameMission::Doom as i32 as u32
-    } else if state.doomstat.gamemission as u32 == GameMission::PackHacx as i32 as u32 {
+    } else if state.game.doomstat.gamemission as u32 == GameMission::PackHacx as i32 as u32 {
         GameMission::Doom2 as i32 as u32
     } else {
-        state.doomstat.gamemission as u32
+        state.game.doomstat.gamemission as u32
     }) == GameMission::Doom as i32 as u32
     {
         change_music(state, MusicName::Victor as i32, true);
     } else {
         change_music(state, MusicName::ReadM as i32, true);
     }
-    let gamemission = if state.doomstat.gamemission == GameMission::PackChex {
+    let gamemission = if state.game.doomstat.gamemission == GameMission::PackChex {
         GameMission::Doom
-    } else if state.doomstat.gamemission == GameMission::PackHacx {
+    } else if state.game.doomstat.gamemission == GameMission::PackHacx {
         GameMission::Doom2
     } else {
-        state.doomstat.gamemission
+        state.game.doomstat.gamemission
     };
-    for screen in &mut state.f_finale.textscreens {
-        if state.doomstat.gameversion == GameVersion::Chex && screen.mission == GameMission::Doom {
+    for screen in &mut state.ui.f_finale.textscreens {
+        if state.game.doomstat.gameversion == GameVersion::Chex
+            && screen.mission == GameMission::Doom
+        {
             screen.level = 5;
         }
         if gamemission == screen.mission
-            && (gamemission != GameMission::Doom || state.g_game.gameepisode == screen.episode)
-            && state.g_game.gamemap == screen.level
+            && (gamemission != GameMission::Doom || state.game.g_game.gameepisode == screen.episode)
+            && state.game.g_game.gamemap == screen.level
         {
-            state.f_finale.finaletext = screen.text;
-            state.f_finale.finaleflat = screen.background;
+            state.ui.f_finale.finaletext = screen.text;
+            state.ui.f_finale.finaleflat = screen.background;
         }
     }
-    state.f_finale.finalestage = FinaleStage::Text;
-    state.f_finale.finalecount = 0;
+    state.ui.f_finale.finalestage = FinaleStage::Text;
+    state.ui.f_finale.finalecount = 0;
 }
 pub fn f_responder(state: &mut GameState, event: &Event) -> bool {
-    if state.f_finale.finalestage == FinaleStage::Cast {
+    if state.ui.f_finale.finalestage == FinaleStage::Cast {
         return cast_responder(state, event);
     }
     false
 }
 pub fn f_ticker(state: &mut GameState) {
     let mut i: usize;
-    if state.doomstat.gamemode as u32 == GameMode::Commercial as i32 as u32
-        && state.f_finale.finalecount > 50
+    if state.game.doomstat.gamemode as u32 == GameMode::Commercial as i32 as u32
+        && state.ui.f_finale.finalecount > 50
     {
         i = 0_usize;
         while i < MAXPLAYERS as usize {
-            if state.g_game.players[i].cmd.buttons != 0 {
+            if state.game.g_game.players[i].cmd.buttons != 0 {
                 break;
             }
             i = i.wrapping_add(1);
         }
         if i < MAXPLAYERS as usize {
-            if state.g_game.gamemap == 30 {
+            if state.game.g_game.gamemap == 30 {
                 start_cast(state);
             } else {
-                state.g_game.gameaction = GameAction::WorldDone;
+                state.game.g_game.gameaction = GameAction::WorldDone;
             }
         }
     }
-    state.f_finale.finalecount = state.f_finale.finalecount.wrapping_add(1);
-    if state.f_finale.finalestage == FinaleStage::Cast {
+    state.ui.f_finale.finalecount = state.ui.f_finale.finalecount.wrapping_add(1);
+    if state.ui.f_finale.finalestage == FinaleStage::Cast {
         cast_ticker(state);
         return;
     }
-    if state.doomstat.gamemode as u32 == GameMode::Commercial as i32 as u32 {
+    if state.game.doomstat.gamemode as u32 == GameMode::Commercial as i32 as u32 {
         return;
     }
-    if state.f_finale.finalestage == FinaleStage::Text
-        && state.f_finale.finalecount as usize
+    if state.ui.f_finale.finalestage == FinaleStage::Text
+        && state.ui.f_finale.finalecount as usize
             > state
+                .ui
                 .f_finale
                 .finaletext
                 .len()
                 .wrapping_mul(TEXTSPEED as usize)
                 .wrapping_add(TEXTWAIT as usize)
     {
-        state.f_finale.finalecount = 0;
-        state.f_finale.finalestage = FinaleStage::ArtScreen;
-        state.d_main.wipegamestate = GameScreenState::Wipped;
-        if state.g_game.gameepisode == 3 {
+        state.ui.f_finale.finalecount = 0;
+        state.ui.f_finale.finalestage = FinaleStage::ArtScreen;
+        state.game.d_main.wipegamestate = GameScreenState::Wipped;
+        if state.game.g_game.gameepisode == 3 {
             start_music(state, MusicName::Bunny as i32);
         }
     }
@@ -391,8 +394,8 @@ pub fn text_write(state: &mut GameState) {
     let mut c: i32;
     let mut cx: i32;
     let mut cy: i32;
-    let flat = lump_bytes_name(state, state.f_finale.finaleflat);
-    let video = &mut state.i_video.i_video_buffer;
+    let flat = lump_bytes_name(state, state.ui.f_finale.finaleflat);
+    let video = &mut state.io.i_video.i_video_buffer;
     for y in 0..SCREENHEIGHT as usize {
         let row = &flat[(y & 63) << 6..][..64];
         let line = &mut video[y * SCREENWIDTH as usize..][..SCREENWIDTH as usize];
@@ -402,7 +405,7 @@ pub fn text_write(state: &mut GameState) {
     }
     let dest_screen = Screen::Video;
     mark_rect(
-        &mut state.v_video,
+        &mut state.io.v_video,
         dest_screen,
         0,
         0,
@@ -411,8 +414,8 @@ pub fn text_write(state: &mut GameState) {
     );
     cx = 10;
     cy = 10;
-    let mut chars = state.f_finale.finaletext.bytes();
-    count = (state.f_finale.finalecount as i32 - 10) / TEXTSPEED;
+    let mut chars = state.ui.f_finale.finaletext.bytes();
+    count = (state.ui.f_finale.finalecount as i32 - 10) / TEXTSPEED;
     if count < 0 {
         count = 0;
     }
@@ -427,7 +430,7 @@ pub fn text_write(state: &mut GameState) {
         } else {
             c = (c as u8).to_ascii_uppercase() as i32 - HU_FONTSTART;
             if (0..=HU_FONTSIZE).contains(&c) {
-                let font_patch = cache_patch_num(state, state.hu_stuff.hu_font[c as usize]);
+                let font_patch = cache_patch_num(state, state.ui.hu_stuff.hu_font[c as usize]);
                 w = font_patch.width();
                 if cx + w > SCREENWIDTH {
                     break;
@@ -517,61 +520,68 @@ const INITIAL_CASTORDER: [CastInfo; 18] = [
     },
 ];
 pub fn start_cast(state: &mut GameState) {
-    state.d_main.wipegamestate = GameScreenState::Wipped;
-    state.f_finale.castnum = 0;
-    let cast_type = state.f_finale.castorder[state.f_finale.castnum as usize].kind;
-    state.f_finale.caststate = Some(StateId(
-        state.info.mobjinfo[cast_type as usize].seestate as u32,
+    state.game.d_main.wipegamestate = GameScreenState::Wipped;
+    state.ui.f_finale.castnum = 0;
+    let cast_type = state.ui.f_finale.castorder[state.ui.f_finale.castnum as usize].kind;
+    state.ui.f_finale.caststate = Some(StateId(
+        state.assets.info.mobjinfo[cast_type as usize].seestate as u32,
     ));
-    state.f_finale.casttics = state.info.state_mut(state.f_finale.caststate.unwrap()).tics;
-    state.f_finale.castdeath = false;
-    state.f_finale.finalestage = FinaleStage::Cast;
-    state.f_finale.castframes = 0;
-    state.f_finale.castonmelee = 0;
-    state.f_finale.castattacking = false;
+    state.ui.f_finale.casttics = state
+        .assets
+        .info
+        .state_mut(state.ui.f_finale.caststate.unwrap())
+        .tics;
+    state.ui.f_finale.castdeath = false;
+    state.ui.f_finale.finalestage = FinaleStage::Cast;
+    state.ui.f_finale.castframes = 0;
+    state.ui.f_finale.castonmelee = 0;
+    state.ui.f_finale.castattacking = false;
     change_music(state, MusicName::Evil as i32, true);
 }
 pub fn cast_ticker(state: &mut GameState) {
-    state.f_finale.casttics -= 1;
-    if state.f_finale.casttics > 0 {
+    state.ui.f_finale.casttics -= 1;
+    if state.ui.f_finale.casttics > 0 {
         return;
     }
     let mut stop_attack = false;
-    let cur_caststate = state.info.state_mut(state.f_finale.caststate.unwrap());
+    let cur_caststate = state
+        .assets
+        .info
+        .state_mut(state.ui.f_finale.caststate.unwrap());
     if cur_caststate.tics == -1 || cur_caststate.nextstate as u32 == StateNum::Null as i32 as u32 {
-        state.f_finale.castnum += 1;
-        state.f_finale.castdeath = false;
-        if state.f_finale.castorder[state.f_finale.castnum as usize]
+        state.ui.f_finale.castnum += 1;
+        state.ui.f_finale.castdeath = false;
+        if state.ui.f_finale.castorder[state.ui.f_finale.castnum as usize]
             .name
             .is_none()
         {
-            state.f_finale.castnum = 0;
+            state.ui.f_finale.castnum = 0;
         }
-        if state.info.mobjinfo
-            [state.f_finale.castorder[state.f_finale.castnum as usize].kind as usize]
+        if state.assets.info.mobjinfo
+            [state.ui.f_finale.castorder[state.ui.f_finale.castnum as usize].kind as usize]
             .seesound
             != 0
         {
             s_start_sound(
                 state,
                 SoundOrigin::None,
-                state.info.mobjinfo
-                    [state.f_finale.castorder[state.f_finale.castnum as usize].kind as usize]
+                state.assets.info.mobjinfo
+                    [state.ui.f_finale.castorder[state.ui.f_finale.castnum as usize].kind as usize]
                     .seesound,
             );
         }
-        let cast_type = state.f_finale.castorder[state.f_finale.castnum as usize].kind;
-        state.f_finale.caststate = Some(StateId(
-            state.info.mobjinfo[cast_type as usize].seestate as u32,
+        let cast_type = state.ui.f_finale.castorder[state.ui.f_finale.castnum as usize].kind;
+        state.ui.f_finale.caststate = Some(StateId(
+            state.assets.info.mobjinfo[cast_type as usize].seestate as u32,
         ));
-        state.f_finale.castframes = 0;
-    } else if state.f_finale.caststate == Some(StateId(StateNum::PlayAtk1 as u32)) {
+        state.ui.f_finale.castframes = 0;
+    } else if state.ui.f_finale.caststate == Some(StateId(StateNum::PlayAtk1 as u32)) {
         // The player's attack frame ends the attack at once.
         stop_attack = true;
     } else {
         let st = cur_caststate.nextstate as i32;
-        state.f_finale.caststate = Some(StateId(st as u32));
-        state.f_finale.castframes += 1;
+        state.ui.f_finale.caststate = Some(StateId(st as u32));
+        state.ui.f_finale.castframes += 1;
         let sfx = match st {
             154 => SfxName::Dshtgn as i32,
             185 => SfxName::Pistol as i32,
@@ -597,65 +607,74 @@ pub fn cast_ticker(state: &mut GameState) {
         }
     }
     if !stop_attack {
-        let cast_type = state.f_finale.castorder[state.f_finale.castnum as usize].kind;
-        let cast_info = state.info.mobjinfo[cast_type as usize];
-        if state.f_finale.castframes == 12 {
-            state.f_finale.castattacking = true;
-            if state.f_finale.castonmelee != 0 {
-                state.f_finale.caststate = Some(StateId(cast_info.meleestate as u32));
+        let cast_type = state.ui.f_finale.castorder[state.ui.f_finale.castnum as usize].kind;
+        let cast_info = state.assets.info.mobjinfo[cast_type as usize];
+        if state.ui.f_finale.castframes == 12 {
+            state.ui.f_finale.castattacking = true;
+            if state.ui.f_finale.castonmelee != 0 {
+                state.ui.f_finale.caststate = Some(StateId(cast_info.meleestate as u32));
             } else {
-                state.f_finale.caststate = Some(StateId(cast_info.missilestate as u32));
+                state.ui.f_finale.caststate = Some(StateId(cast_info.missilestate as u32));
             }
-            state.f_finale.castonmelee ^= 1;
-            if state.f_finale.caststate == Some(StateId(StateNum::Null as u32)) {
-                if state.f_finale.castonmelee != 0 {
-                    state.f_finale.caststate = Some(StateId(cast_info.meleestate as u32));
+            state.ui.f_finale.castonmelee ^= 1;
+            if state.ui.f_finale.caststate == Some(StateId(StateNum::Null as u32)) {
+                if state.ui.f_finale.castonmelee != 0 {
+                    state.ui.f_finale.caststate = Some(StateId(cast_info.meleestate as u32));
                 } else {
-                    state.f_finale.caststate = Some(StateId(cast_info.missilestate as u32));
+                    state.ui.f_finale.caststate = Some(StateId(cast_info.missilestate as u32));
                 }
             }
         }
-        stop_attack = state.f_finale.castattacking
-            && (state.f_finale.castframes == 24
-                || state.f_finale.caststate == Some(StateId(cast_info.seestate as u32)));
+        stop_attack = state.ui.f_finale.castattacking
+            && (state.ui.f_finale.castframes == 24
+                || state.ui.f_finale.caststate == Some(StateId(cast_info.seestate as u32)));
     }
     if stop_attack {
-        state.f_finale.castattacking = false;
-        state.f_finale.castframes = 0;
-        let cast_type = state.f_finale.castorder[state.f_finale.castnum as usize].kind;
-        state.f_finale.caststate = Some(StateId(
-            state.info.mobjinfo[cast_type as usize].seestate as u32,
+        state.ui.f_finale.castattacking = false;
+        state.ui.f_finale.castframes = 0;
+        let cast_type = state.ui.f_finale.castorder[state.ui.f_finale.castnum as usize].kind;
+        state.ui.f_finale.caststate = Some(StateId(
+            state.assets.info.mobjinfo[cast_type as usize].seestate as u32,
         ));
     }
-    state.f_finale.casttics = state.info.state_mut(state.f_finale.caststate.unwrap()).tics;
-    if state.f_finale.casttics == -1 {
-        state.f_finale.casttics = 15;
+    state.ui.f_finale.casttics = state
+        .assets
+        .info
+        .state_mut(state.ui.f_finale.caststate.unwrap())
+        .tics;
+    if state.ui.f_finale.casttics == -1 {
+        state.ui.f_finale.casttics = 15;
     }
 }
 pub fn cast_responder(state: &mut GameState, ev: &Event) -> bool {
     if ev.kind != EvType::Keydown {
         return false;
     }
-    if state.f_finale.castdeath {
+    if state.ui.f_finale.castdeath {
         return true;
     }
-    state.f_finale.castdeath = true;
-    let cast_type = state.f_finale.castorder[state.f_finale.castnum as usize].kind;
-    state.f_finale.caststate = Some(StateId(
-        state.info.mobjinfo[cast_type as usize].deathstate as u32,
+    state.ui.f_finale.castdeath = true;
+    let cast_type = state.ui.f_finale.castorder[state.ui.f_finale.castnum as usize].kind;
+    state.ui.f_finale.caststate = Some(StateId(
+        state.assets.info.mobjinfo[cast_type as usize].deathstate as u32,
     ));
-    state.f_finale.casttics = state.info.state_mut(state.f_finale.caststate.unwrap()).tics;
-    state.f_finale.castframes = 0;
-    state.f_finale.castattacking = false;
-    if state.info.mobjinfo[state.f_finale.castorder[state.f_finale.castnum as usize].kind as usize]
+    state.ui.f_finale.casttics = state
+        .assets
+        .info
+        .state_mut(state.ui.f_finale.caststate.unwrap())
+        .tics;
+    state.ui.f_finale.castframes = 0;
+    state.ui.f_finale.castattacking = false;
+    if state.assets.info.mobjinfo
+        [state.ui.f_finale.castorder[state.ui.f_finale.castnum as usize].kind as usize]
         .deathsound
         != 0
     {
         s_start_sound(
             state,
             SoundOrigin::None,
-            state.info.mobjinfo
-                [state.f_finale.castorder[state.f_finale.castnum as usize].kind as usize]
+            state.assets.info.mobjinfo
+                [state.ui.f_finale.castorder[state.ui.f_finale.castnum as usize].kind as usize]
                 .deathsound,
         );
     }
@@ -669,7 +688,7 @@ pub fn cast_print(state: &mut GameState, text: &str) {
     for b in text.bytes() {
         c = b.to_ascii_uppercase() as i32 - HU_FONTSTART;
         if (0..=HU_FONTSIZE).contains(&c) {
-            w = cache_patch_num(state, state.hu_stuff.hu_font[c as usize]).width();
+            w = cache_patch_num(state, state.ui.hu_stuff.hu_font[c as usize]).width();
             width += w;
         } else {
             width += 4;
@@ -679,7 +698,7 @@ pub fn cast_print(state: &mut GameState, text: &str) {
     for b in text.bytes() {
         c = b.to_ascii_uppercase() as i32 - HU_FONTSTART;
         if (0..=HU_FONTSIZE).contains(&c) {
-            let font_patch = cache_patch_num(state, state.hu_stuff.hu_font[c as usize]);
+            let font_patch = cache_patch_num(state, state.ui.hu_stuff.hu_font[c as usize]);
             w = font_patch.width();
             let dest_screen = Screen::Video;
             draw_patch(state, dest_screen, cx, 180, &font_patch);
@@ -693,16 +712,19 @@ pub fn cast_drawer(state: &mut GameState) {
     let __wcache865_4 = cache_patch_name(state, "BOSSBACK");
     let dest_screen = Screen::Video;
     draw_patch(state, dest_screen, 0, 0, &__wcache865_4);
-    let cast_name = state.f_finale.castorder[state.f_finale.castnum as usize]
+    let cast_name = state.ui.f_finale.castorder[state.ui.f_finale.castnum as usize]
         .name
         .unwrap();
     cast_print(state, cast_name);
-    let cur_caststate = state.info.state_mut(state.f_finale.caststate.unwrap());
-    let sprframe = &state.r_things.sprites[cur_caststate.sprite as usize].spriteframes
+    let cur_caststate = state
+        .assets
+        .info
+        .state_mut(state.ui.f_finale.caststate.unwrap());
+    let sprframe = &state.render.r_things.sprites[cur_caststate.sprite as usize].spriteframes
         [(cur_caststate.frame & FF_FRAMEMASK) as usize];
     let lump: i32 = sprframe.lump[0] as i32;
     let flip: bool = sprframe.flip[0] != 0;
-    let patch: Patch = cache_patch_num(state, lump + state.r_data.firstspritelump);
+    let patch: Patch = cache_patch_num(state, lump + state.render.r_data.firstspritelump);
     if flip {
         let dest_screen = Screen::Video;
         draw_patch_flipped(state, dest_screen, 160, 170, &patch);
@@ -728,26 +750,26 @@ pub fn bunny_scroll(state: &mut GameState) {
     let p2: Patch = cache_patch_name(state, "PFUB1");
     let dest_screen = Screen::Video;
     mark_rect(
-        &mut state.v_video,
+        &mut state.io.v_video,
         dest_screen,
         0,
         0,
         SCREENWIDTH,
         SCREENHEIGHT,
     );
-    scrolled = 320 - (state.f_finale.finalecount as i32 - 230) / 2;
+    scrolled = 320 - (state.ui.f_finale.finalecount as i32 - 230) / 2;
     scrolled = scrolled.clamp(0, 320);
     for x in 0..SCREENWIDTH {
         if x + scrolled < 320 {
-            draw_patch_col(&mut state.i_video, x, &p1, x + scrolled);
+            draw_patch_col(&mut state.io.i_video, x, &p1, x + scrolled);
         } else {
-            draw_patch_col(&mut state.i_video, x, &p2, x + scrolled - 320);
+            draw_patch_col(&mut state.io.i_video, x, &p2, x + scrolled - 320);
         }
     }
-    if state.f_finale.finalecount < 1130 {
+    if state.ui.f_finale.finalecount < 1130 {
         return;
     }
-    if state.f_finale.finalecount < 1180 {
+    if state.ui.f_finale.finalecount < 1180 {
         let __wcache963_3 = cache_patch_name(state, "END0");
         let dest_screen = Screen::Video;
         draw_patch(
@@ -757,10 +779,11 @@ pub fn bunny_scroll(state: &mut GameState) {
             (SCREENHEIGHT - 8 * 8) / 2,
             &__wcache963_3,
         );
-        state.f_finale.laststage = 0;
+        state.ui.f_finale.laststage = 0;
         return;
     }
     stage = state
+        .ui
         .f_finale
         .finalecount
         .wrapping_sub(1180)
@@ -768,9 +791,9 @@ pub fn bunny_scroll(state: &mut GameState) {
     if stage > 6 {
         stage = 6;
     }
-    if stage > state.f_finale.laststage {
+    if stage > state.ui.f_finale.laststage {
         s_start_sound(state, SoundOrigin::None, SfxName::Pistol as i32);
-        state.f_finale.laststage = stage;
+        state.ui.f_finale.laststage = stage;
     }
     let name = format!("END{stage}");
     let __wcache990_2 = cache_patch_name(state, &name);
@@ -785,12 +808,12 @@ pub fn bunny_scroll(state: &mut GameState) {
 }
 fn art_screen_drawer(state: &mut GameState) {
     let lumpname: &str;
-    if state.g_game.gameepisode == 3 {
+    if state.game.g_game.gameepisode == 3 {
         bunny_scroll(state);
     } else {
-        match state.g_game.gameepisode {
+        match state.game.g_game.gameepisode {
             1 => {
-                if state.doomstat.gamemode as u32 == GameMode::Retail as i32 as u32 {
+                if state.game.doomstat.gamemode as u32 == GameMode::Retail as i32 as u32 {
                     lumpname = "CREDIT";
                 } else {
                     lumpname = "HELP2";
@@ -810,7 +833,7 @@ fn art_screen_drawer(state: &mut GameState) {
     }
 }
 pub fn f_drawer(state: &mut GameState) {
-    match state.f_finale.finalestage {
+    match state.ui.f_finale.finalestage {
         FinaleStage::Cast => {
             cast_drawer(state);
         }

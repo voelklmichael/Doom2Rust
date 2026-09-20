@@ -204,21 +204,23 @@ pub fn i_start_sound(
     mut vol: i32,
     mut sep: i32,
 ) -> i32 {
-    if state.i_sound.mixer.is_none() {
+    if state.audio.i_sound.mixer.is_none() {
         return 0;
     }
     check_volume_separation(&mut vol, &mut sep);
-    let lumpnum = state.sounds.s_sfx[sfx.0 as usize].lumpnum;
+    let lumpnum = state.audio.sounds.s_sfx[sfx.0 as usize].lumpnum;
     if lumpnum < 0 {
         return -1;
     }
-    let lump_len = lump_length(&state.w_wad, lumpnum as u32) as usize;
-    let Some(sample) =
-        Sample::from_lump(lump_bytes(&*state.fs, &mut state.w_wad, lumpnum), lump_len)
-    else {
+    let lump_len = lump_length(&state.assets.w_wad, lumpnum as u32) as usize;
+    let Some(sample) = Sample::from_lump(
+        lump_bytes(&*state.assets.fs, &mut state.assets.w_wad, lumpnum),
+        lump_len,
+    ) else {
         return -1;
     };
     let started = state
+        .audio
         .i_sound
         .mixer
         .as_mut()
@@ -243,21 +245,21 @@ pub fn sound_is_playing(state: &ISoundState, channel: i32) -> bool {
 /// Starts the music synthesizer, if there is an audio device and the WAD has
 /// the `GENMIDI` instrument lump (`-nomusic` leaves it off).
 pub fn init_music(state: &mut GameState) {
-    let Some(rate) = state.i_sound.mixer.as_ref().map(Mixer::sample_rate) else {
+    let Some(rate) = state.audio.i_sound.mixer.as_ref().map(Mixer::sample_rate) else {
         return;
     };
-    if parm_exists(&state.m_argv, "-nomusic") {
+    if parm_exists(&state.game.m_argv, "-nomusic") {
         return;
     }
-    let Some(lumpnum) = check_num_for_name(&state.w_wad, "GENMIDI") else {
+    let Some(lumpnum) = check_num_for_name(&state.assets.w_wad, "GENMIDI") else {
         return;
     };
-    let lump_len = lump_length(&state.w_wad, lumpnum as u32) as usize;
-    let lump = lump_bytes(&*state.fs, &mut state.w_wad, lumpnum);
-    if state.platform.music_open(&lump[..lump_len]) {
-        state.i_sound.platform_music = true;
+    let lump_len = lump_length(&state.assets.w_wad, lumpnum as u32) as usize;
+    let lump = lump_bytes(&*state.assets.fs, &mut state.assets.w_wad, lumpnum);
+    if state.io.platform.music_open(&lump[..lump_len]) {
+        state.audio.i_sound.platform_music = true;
     } else if let Some(bank) = GenMidi::parse(&lump[..lump_len]) {
-        state.i_sound.music = Some(MusicPlayer::new(bank, rate));
+        state.audio.i_sound.music = Some(MusicPlayer::new(bank, rate));
     }
 }
 pub fn i_set_music_volume(state: &mut ISoundState, platform: &mut dyn DoomPlatform, volume: i32) {
@@ -297,19 +299,25 @@ pub fn stop_song(state: &mut ISoundState, platform: &mut dyn DoomPlatform) {
 }
 pub fn bind_sound_variables(m_config: &mut MConfigState) {
     bind_variable_int(m_config, "snd_musicdevice", |s| {
-        &mut s.i_sound.snd_musicdevice
+        &mut s.audio.i_sound.snd_musicdevice
     });
-    bind_variable_int(m_config, "snd_sfxdevice", |s| &mut s.i_sound.snd_sfxdevice);
-    bind_variable_int(m_config, "snd_sbport", |s| &mut s.i_sound.snd_sbport);
-    bind_variable_int(m_config, "snd_sbirq", |s| &mut s.i_sound.snd_sbirq);
-    bind_variable_int(m_config, "snd_sbdma", |s| &mut s.i_sound.snd_sbdma);
-    bind_variable_int(m_config, "snd_mport", |s| &mut s.i_sound.snd_mport);
+    bind_variable_int(m_config, "snd_sfxdevice", |s| {
+        &mut s.audio.i_sound.snd_sfxdevice
+    });
+    bind_variable_int(m_config, "snd_sbport", |s| &mut s.audio.i_sound.snd_sbport);
+    bind_variable_int(m_config, "snd_sbirq", |s| &mut s.audio.i_sound.snd_sbirq);
+    bind_variable_int(m_config, "snd_sbdma", |s| &mut s.audio.i_sound.snd_sbdma);
+    bind_variable_int(m_config, "snd_mport", |s| &mut s.audio.i_sound.snd_mport);
     bind_variable_int(m_config, "snd_maxslicetime_ms", |s| {
-        &mut s.i_sound.snd_maxslicetime_ms
+        &mut s.audio.i_sound.snd_maxslicetime_ms
     });
-    bind_variable_string(m_config, "snd_musiccmd", |s| &mut s.i_sound.snd_musiccmd);
+    bind_variable_string(m_config, "snd_musiccmd", |s| {
+        &mut s.audio.i_sound.snd_musiccmd
+    });
     bind_variable_int(m_config, "snd_samplerate", |s| {
-        &mut s.i_sound.snd_samplerate
+        &mut s.audio.i_sound.snd_samplerate
     });
-    bind_variable_int(m_config, "snd_cachesize", |s| &mut s.i_sound.snd_cachesize);
+    bind_variable_int(m_config, "snd_cachesize", |s| {
+        &mut s.audio.i_sound.snd_cachesize
+    });
 }
