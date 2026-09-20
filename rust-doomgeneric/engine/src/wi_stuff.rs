@@ -1587,7 +1587,7 @@ fn load_unload_data(state: &mut GameState, callback: LoadCallback) {
 }
 fn wi_load_callback(state: &mut GameState, name: &str) -> i32 {
     let lumpnum = get_num_for_name(&state.w_wad, name);
-    lump_bytes(state, lumpnum);
+    lump_bytes(&*state.fs, &mut state.w_wad, lumpnum);
     lumpnum
 }
 pub fn wi_load_data(state: &mut GameState) {
@@ -1599,10 +1599,10 @@ pub fn wi_load_data(state: &mut GameState) {
     }
     load_unload_data(state, wi_load_callback);
     let star_lump = get_num_for_name(&state.w_wad, "STFST01");
-    lump_bytes(state, star_lump);
+    lump_bytes(&*state.fs, &mut state.w_wad, star_lump);
     state.wi_stuff.star = star_lump;
     let bstar_lump = get_num_for_name(&state.w_wad, "STFDEAD0");
-    lump_bytes(state, bstar_lump);
+    lump_bytes(&*state.fs, &mut state.w_wad, bstar_lump);
     state.wi_stuff.bstar = bstar_lump;
 }
 fn unload_callback(state: &mut GameState, name: &str) -> i32 {

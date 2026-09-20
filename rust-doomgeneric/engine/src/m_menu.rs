@@ -1,8 +1,10 @@
 use crate::d_event::{Event, GameScreenState};
 use crate::d_loop::DLoopState;
 use crate::d_main::start_title;
+use crate::d_main::DMainState;
 use crate::doomstat::DoomstatState;
 use crate::dstrings::{DOOM1_ENDMSG, DOOM2_ENDMSG};
+use crate::filesystem::DoomFileSystem;
 use crate::g_game::GGameState;
 use crate::i_system::error;
 use alloc::string::String;
@@ -640,23 +642,26 @@ pub static GAMMAMSG: [&str; 5] = [GAMMALVL0, GAMMALVL1, GAMMALVL2, GAMMALVL3, GA
 pub const SKULLXOFF: i32 = -32;
 pub const LINEHEIGHT: i32 = 16;
 pub static SKULL_NAME: [&str; 2] = ["M_SKULL1", "M_SKULL2"];
-pub fn read_save_strings(state: &mut GameState) {
+pub fn read_save_strings(
+    d_main: &DMainState,
+    fs: &mut dyn DoomFileSystem,
+    m_menu: &mut MMenuState,
+) {
     for i in 0..LOAD_END {
-        let savegame_file = save_game_file(&state.d_main, i);
-        match state.fs.open(&savegame_file) {
+        let savegame_file = save_game_file(d_main, i);
+        match fs.open(&savegame_file) {
             None => {
-                state.m_menu.savegamestrings[i as usize] =
-                    EMPTYSTRING.trim_end_matches('\0').to_string();
-                state.m_menu.defs.load_def.items[i as usize].status = 0;
+                m_menu.savegamestrings[i as usize] = EMPTYSTRING.trim_end_matches('\0').to_string();
+                m_menu.defs.load_def.items[i as usize].status = 0;
             }
             Some(handle) => {
                 let mut buf: [u8; SAVESTRINGSIZE as usize] = [0; SAVESTRINGSIZE as usize];
-                state.fs.read_at(handle, 0, &mut buf);
-                state.fs.close(handle);
+                fs.read_at(handle, 0, &mut buf);
+                fs.close(handle);
                 let len = buf.iter().position(|&b| b == 0).unwrap_or(buf.len());
-                state.m_menu.savegamestrings[i as usize] =
+                m_menu.savegamestrings[i as usize] =
                     String::from_utf8_lossy(&buf[..len]).into_owned();
-                state.m_menu.defs.load_def.items[i as usize].status = 1;
+                m_menu.defs.load_def.items[i as usize].status = 1;
             }
         }
     }
@@ -704,7 +709,7 @@ pub fn m_load_game(state: &mut GameState, _choice: i32) {
     }
     let menudef = MenuId::Load;
     setup_next_menu(&mut state.m_menu, menudef);
-    read_save_strings(state);
+    read_save_strings(&state.d_main, &mut *state.fs, &mut state.m_menu);
 }
 pub fn draw_save(state: &mut GameState) {
     let i: i32;
@@ -758,7 +763,7 @@ pub fn m_save_game(state: &mut GameState, _choice: i32) {
     }
     let menudef = MenuId::Save;
     setup_next_menu(&mut state.m_menu, menudef);
-    read_save_strings(state);
+    read_save_strings(&state.d_main, &mut *state.fs, &mut state.m_menu);
 }
 pub fn quick_save_response(state: &mut GameState, key: i32) {
     if key == state.m_controls.key_menu_confirm {
@@ -777,7 +782,7 @@ pub fn quick_save(state: &mut GameState) {
     }
     if state.m_menu.quick_save_slot < 0 {
         start_control_panel(&mut state.m_menu);
-        read_save_strings(state);
+        read_save_strings(&state.d_main, &mut *state.fs, &mut state.m_menu);
         let menudef = MenuId::Save;
         setup_next_menu(&mut state.m_menu, menudef);
         state.m_menu.quick_save_slot = -2;
@@ -1341,65 +1346,75 @@ pub fn m_responder(state: &mut GameState, ev: &Event) -> bool {
     }
     ch = 0;
     key = -1;
-    if ev.kind == EvType::Joystick && state.m_menu.responder_joywait < get_time(state) {
+    if ev.kind == EvType::Joystick
+        && state.m_menu.responder_joywait < get_time(&mut state.i_timer, &mut *state.platform)
+    {
         if ev.data3 < 0 {
             key = state.m_controls.key_menu_up;
-            state.m_menu.responder_joywait = get_time(state) + 5;
+            state.m_menu.responder_joywait = get_time(&mut state.i_timer, &mut *state.platform) + 5;
         } else if ev.data3 > 0 {
             key = state.m_controls.key_menu_down;
-            state.m_menu.responder_joywait = get_time(state) + 5;
+            state.m_menu.responder_joywait = get_time(&mut state.i_timer, &mut *state.platform) + 5;
         }
         if ev.data2 < 0 {
             key = state.m_controls.key_menu_left;
-            state.m_menu.responder_joywait = get_time(state) + 2;
+            state.m_menu.responder_joywait = get_time(&mut state.i_timer, &mut *state.platform) + 2;
         } else if ev.data2 > 0 {
             key = state.m_controls.key_menu_right;
-            state.m_menu.responder_joywait = get_time(state) + 2;
+            state.m_menu.responder_joywait = get_time(&mut state.i_timer, &mut *state.platform) + 2;
         }
         if ev.data1 & 1 != 0 {
             key = state.m_controls.key_menu_forward;
-            state.m_menu.responder_joywait = get_time(state) + 5;
+            state.m_menu.responder_joywait = get_time(&mut state.i_timer, &mut *state.platform) + 5;
         }
         if ev.data1 & 2 != 0 {
             key = state.m_controls.key_menu_back;
-            state.m_menu.responder_joywait = get_time(state) + 5;
+            state.m_menu.responder_joywait = get_time(&mut state.i_timer, &mut *state.platform) + 5;
         }
         if state.m_controls.joybmenu >= 0 && ev.data1 & 1 << state.m_controls.joybmenu != 0 {
             key = state.m_controls.key_menu_activate;
-            state.m_menu.responder_joywait = get_time(state) + 5;
+            state.m_menu.responder_joywait = get_time(&mut state.i_timer, &mut *state.platform) + 5;
         }
-    } else if ev.kind == EvType::Mouse && state.m_menu.responder_mousewait < get_time(state) {
+    } else if ev.kind == EvType::Mouse
+        && state.m_menu.responder_mousewait < get_time(&mut state.i_timer, &mut *state.platform)
+    {
         state.m_menu.responder_mousey += ev.data3;
         if state.m_menu.responder_mousey < state.m_menu.responder_lasty - 30 {
             key = state.m_controls.key_menu_down;
-            state.m_menu.responder_mousewait = get_time(state) + 5;
+            state.m_menu.responder_mousewait =
+                get_time(&mut state.i_timer, &mut *state.platform) + 5;
             state.m_menu.responder_lasty -= 30;
             state.m_menu.responder_mousey = state.m_menu.responder_lasty;
         } else if state.m_menu.responder_mousey > state.m_menu.responder_lasty + 30 {
             key = state.m_controls.key_menu_up;
-            state.m_menu.responder_mousewait = get_time(state) + 5;
+            state.m_menu.responder_mousewait =
+                get_time(&mut state.i_timer, &mut *state.platform) + 5;
             state.m_menu.responder_lasty += 30;
             state.m_menu.responder_mousey = state.m_menu.responder_lasty;
         }
         state.m_menu.responder_mousex += ev.data2;
         if state.m_menu.responder_mousex < state.m_menu.responder_lastx - 30 {
             key = state.m_controls.key_menu_left;
-            state.m_menu.responder_mousewait = get_time(state) + 5;
+            state.m_menu.responder_mousewait =
+                get_time(&mut state.i_timer, &mut *state.platform) + 5;
             state.m_menu.responder_lastx -= 30;
             state.m_menu.responder_mousex = state.m_menu.responder_lastx;
         } else if state.m_menu.responder_mousex > state.m_menu.responder_lastx + 30 {
             key = state.m_controls.key_menu_right;
-            state.m_menu.responder_mousewait = get_time(state) + 5;
+            state.m_menu.responder_mousewait =
+                get_time(&mut state.i_timer, &mut *state.platform) + 5;
             state.m_menu.responder_lastx += 30;
             state.m_menu.responder_mousex = state.m_menu.responder_lastx;
         }
         if ev.data1 & 1 != 0 {
             key = state.m_controls.key_menu_forward;
-            state.m_menu.responder_mousewait = get_time(state) + 15;
+            state.m_menu.responder_mousewait =
+                get_time(&mut state.i_timer, &mut *state.platform) + 15;
         }
         if ev.data1 & 2 != 0 {
             key = state.m_controls.key_menu_back;
-            state.m_menu.responder_mousewait = get_time(state) + 15;
+            state.m_menu.responder_mousewait =
+                get_time(&mut state.i_timer, &mut *state.platform) + 15;
         }
     } else if ev.kind == EvType::Keydown {
         key = ev.data1;

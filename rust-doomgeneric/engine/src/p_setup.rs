@@ -1,5 +1,6 @@
 use crate::d_mode::GameMode;
 use crate::doomdef::MAXPLAYERS;
+use crate::filesystem::DoomFileSystem;
 use crate::fixed_cstr::FixedCStr;
 use crate::g_game::death_match_spawn_player;
 use crate::game_state::GameState;
@@ -22,6 +23,8 @@ use crate::p_mobj::{
 };
 use crate::p_spec::init_pic_anims;
 use crate::p_spec::spawn_specials;
+use crate::platform::DoomPlatform;
+use crate::w_wad::WWadState;
 
 use crate::p_switch::init_switch_list;
 use crate::p_tick::init_thinkers;
@@ -242,7 +245,7 @@ struct LumpReader {
 impl LumpReader {
     fn new(state: &mut GameState, lump: i32) -> Self {
         Self {
-            data: lump_bytes(state, lump),
+            data: lump_bytes(&*state.fs, &mut state.w_wad, lump),
             pos: 0,
         }
     }
@@ -522,22 +525,26 @@ pub fn load_side_defs(state: &mut GameState, lump: i32) {
     }
     release_lump_num(&state.w_wad, lump);
 }
-pub fn load_block_map(state: &mut GameState, lump: i32) {
-    let lumplen: i32 = lump_length(&state.w_wad, lump as u32);
+pub fn load_block_map(
+    fs: &dyn DoomFileSystem,
+    p_setup: &mut PSetupState,
+    w_wad: &WWadState,
+    lump: i32,
+) {
+    let lumplen: i32 = lump_length(w_wad, lump as u32);
     let mut raw = vec![0u8; lumplen as usize];
-    read_lump(&state.w_wad, &*state.fs, lump as u32, &mut raw);
-    state.p_setup.blockmaplump = raw
+    read_lump(w_wad, fs, lump as u32, &mut raw);
+    p_setup.blockmaplump = raw
         .as_chunks::<2>()
         .0
         .iter()
         .map(|c| i16::from_le_bytes([c[0], c[1]]))
         .collect();
-    state.p_setup.bmaporgx = ((state.p_setup.blockmaplump[0] as i32) << FRACBITS) as Fixed;
-    state.p_setup.bmaporgy = ((state.p_setup.blockmaplump[1] as i32) << FRACBITS) as Fixed;
-    state.p_setup.bmapwidth = state.p_setup.blockmaplump[2] as i32;
-    state.p_setup.bmapheight = state.p_setup.blockmaplump[3] as i32;
-    state.p_setup.blocklinks =
-        vec![None; (state.p_setup.bmapwidth as usize) * (state.p_setup.bmapheight as usize)];
+    p_setup.bmaporgx = ((p_setup.blockmaplump[0] as i32) << FRACBITS) as Fixed;
+    p_setup.bmaporgy = ((p_setup.blockmaplump[1] as i32) << FRACBITS) as Fixed;
+    p_setup.bmapwidth = p_setup.blockmaplump[2] as i32;
+    p_setup.bmapheight = p_setup.blockmaplump[3] as i32;
+    p_setup.blocklinks = vec![None; (p_setup.bmapwidth as usize) * (p_setup.bmapheight as usize)];
 }
 pub fn group_lines(p_setup: &mut PSetupState) {
     let mut bbox: [Fixed; 4] = [0; 4];
@@ -618,9 +625,15 @@ pub fn group_lines(p_setup: &mut PSetupState) {
         sector.blockbox[BoxIndex::Left as usize] = block;
     }
 }
-fn pad_reject_array(state: &mut GameState, offset: usize, len: u32) {
+fn pad_reject_array(
+    m_argv: &MArgvState,
+    p_setup: &mut PSetupState,
+    platform: &mut dyn DoomPlatform,
+    offset: usize,
+    len: u32,
+) {
     let rejectpad: [u32; 4] = [
-        (((state.p_setup.totallines * 4 + 3) & !3) + 24) as u32,
+        (((p_setup.totallines * 4 + 3) & !3) + 24) as u32,
         0,
         50,
         0x1d4a11,
@@ -629,19 +642,19 @@ fn pad_reject_array(state: &mut GameState, offset: usize, len: u32) {
     let mut padvalue: u8 = 0;
     if len as usize > pad_bytes {
         doom_eprintln!(
-            state.platform,
+            platform,
             "PadRejectArray: REJECT lump too short to pad! ({} > {})",
             len,
             pad_bytes as i32,
         );
-        padvalue = if parm_exists(&state.m_argv, "-reject_pad_with_ff") {
+        padvalue = if parm_exists(m_argv, "-reject_pad_with_ff") {
             0xff
         } else {
             // Upstream writes 0xf00 into a byte, which truncates to zero.
             0
         };
     }
-    let array = &mut state.p_setup.rejectmatrix[offset..offset + len as usize];
+    let array = &mut p_setup.rejectmatrix[offset..offset + len as usize];
     for (i, dest) in array.iter_mut().enumerate().take(pad_bytes) {
         *dest = (rejectpad[i / 4] >> ((i % 4) as u32 * 8) & 0xff) as u8;
     }
@@ -653,7 +666,8 @@ fn load_reject(state: &mut GameState, lumpnum: i32) {
     let minlength = (state.p_setup.numsectors * state.p_setup.numsectors + 7) / 8;
     let lumplen = lump_length(&state.w_wad, lumpnum as u32);
     if lumplen >= minlength {
-        state.p_setup.rejectmatrix = lump_bytes(state, lumpnum)[..minlength as usize].to_vec();
+        state.p_setup.rejectmatrix =
+            lump_bytes(&*state.fs, &mut state.w_wad, lumpnum)[..minlength as usize].to_vec();
     } else {
         state.p_setup.rejectmatrix = vec![0u8; minlength as usize];
         read_lump(
@@ -662,7 +676,13 @@ fn load_reject(state: &mut GameState, lumpnum: i32) {
             lumpnum as u32,
             &mut state.p_setup.rejectmatrix,
         );
-        pad_reject_array(state, lumplen as usize, (minlength - lumplen) as u32);
+        pad_reject_array(
+            &state.m_argv,
+            &mut state.p_setup,
+            &mut *state.platform,
+            lumplen as usize,
+            (minlength - lumplen) as u32,
+        );
     }
 }
 pub fn setup_level(state: &mut GameState, episode: i32, map: i32) {
@@ -694,7 +714,12 @@ pub fn setup_level(state: &mut GameState, episode: i32, map: i32) {
     };
     let lumpnum: i32 = get_num_for_name(&state.w_wad, &lumpname);
     state.p_tick.leveltime = 0;
-    load_block_map(state, lumpnum + MapLump::Blockmap as i32);
+    load_block_map(
+        &*state.fs,
+        &mut state.p_setup,
+        &state.w_wad,
+        lumpnum + MapLump::Blockmap as i32,
+    );
     load_vertexes(state, lumpnum + MapLump::Vertexes as i32);
     load_sectors(state, lumpnum + MapLump::Sectors as i32);
     load_side_defs(state, lumpnum + MapLump::Sidedefs as i32);

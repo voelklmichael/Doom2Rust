@@ -213,7 +213,9 @@ pub fn i_start_sound(
         return -1;
     }
     let lump_len = lump_length(&state.w_wad, lumpnum as u32) as usize;
-    let Some(sample) = Sample::from_lump(lump_bytes(state, lumpnum), lump_len) else {
+    let Some(sample) =
+        Sample::from_lump(lump_bytes(&*state.fs, &mut state.w_wad, lumpnum), lump_len)
+    else {
         return -1;
     };
     let started = state
@@ -251,7 +253,7 @@ pub fn init_music(state: &mut GameState) {
         return;
     };
     let lump_len = lump_length(&state.w_wad, lumpnum as u32) as usize;
-    let lump = lump_bytes(state, lumpnum);
+    let lump = lump_bytes(&*state.fs, &mut state.w_wad, lumpnum);
     if state.platform.music_open(&lump[..lump_len]) {
         state.i_sound.platform_music = true;
     } else if let Some(bank) = GenMidi::parse(&lump[..lump_len]) {

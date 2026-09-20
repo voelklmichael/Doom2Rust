@@ -165,7 +165,7 @@ pub fn generate_composite(state: &mut GameState, texnum: i32) {
         // columnofs entries) -- decoded field-by-field below instead of via
         // pointer-cast, same reasoning as init_textures's maptexture_t.
         let realpatch_len = lump_length(&state.w_wad, tex_patch.patch as u32) as usize;
-        let realpatch_lump = lump_bytes(state, tex_patch.patch);
+        let realpatch_lump = lump_bytes(&*state.fs, &mut state.w_wad, tex_patch.patch);
         let realpatch = &realpatch_lump[..realpatch_len];
         let realpatch_width = i16::from_le_bytes(realpatch[0..2].try_into().unwrap()) as i32;
         x1 = tex_patch.originx as i32;
@@ -211,7 +211,7 @@ pub fn generate_lookup(state: &mut GameState, texnum: i32) {
     for i in 0..texture_patchcount {
         let tex_patch = state.r_data.textures[texnum as usize].patches[i as usize];
         let realpatch_len = lump_length(&state.w_wad, tex_patch.patch as u32) as usize;
-        let realpatch_lump = lump_bytes(state, tex_patch.patch);
+        let realpatch_lump = lump_bytes(&*state.fs, &mut state.w_wad, tex_patch.patch);
         let realpatch = &realpatch_lump[..realpatch_len];
         let realpatch_width = i16::from_le_bytes(realpatch[0..2].try_into().unwrap()) as i32;
         x1 = tex_patch.originx as i32;
@@ -259,7 +259,7 @@ pub fn get_column(state: &mut GameState, tex: i32, mut col: i32) -> ColumnSource
     let lump: i32 = state.r_data.texturecolumnlump[tex as usize][col as usize] as i32;
     let ofs: i32 = state.r_data.texturecolumnofs[tex as usize][col as usize] as i32;
     if lump > 0 {
-        lump_bytes(state, lump);
+        lump_bytes(&*state.fs, &mut state.w_wad, lump);
         return ColumnSource::Lump {
             lump,
             offset: ofs as usize,
@@ -488,7 +488,11 @@ pub fn init_sprite_lumps(state: &mut GameState) {
         // this loop body doesn't need to know the lump's true length (the
         // header is always present regardless of `width`, unlike
         // `columnofs`, which is a true flexible-array tail elsewhere).
-        let lump = lump_bytes(state, state.r_data.firstspritelump + i);
+        let lump = lump_bytes(
+            &*state.fs,
+            &mut state.w_wad,
+            state.r_data.firstspritelump + i,
+        );
         let header = &lump[..8];
         let width = i16::from_le_bytes(header[0..2].try_into().unwrap());
         let leftoffset = i16::from_le_bytes(header[4..6].try_into().unwrap());
@@ -501,7 +505,7 @@ pub fn init_sprite_lumps(state: &mut GameState) {
 pub fn init_colormaps(state: &mut GameState) {
     let lump: i32 = get_num_for_name(&state.w_wad, "COLORMAP");
     let lumplen = lump_length(&state.w_wad, lump as u32) as usize;
-    state.r_data.colormaps = lump_bytes(state, lump)[..lumplen].to_vec();
+    state.r_data.colormaps = lump_bytes(&*state.fs, &mut state.w_wad, lump)[..lumplen].to_vec();
 }
 pub fn r_init_data(state: &mut GameState) {
     init_textures(state);
@@ -556,7 +560,7 @@ pub fn precache_level(state: &mut GameState) {
         if flatpresent[i as usize] != 0 {
             lump = state.r_data.firstflat + i;
             state.r_data.flatmemory += state.w_wad.lumpinfo[lump as usize].size;
-            lump_bytes(state, lump);
+            lump_bytes(&*state.fs, &mut state.w_wad, lump);
         }
     }
     texturepresent = vec![0u8; state.r_data.numtextures as usize];
@@ -573,7 +577,7 @@ pub fn precache_level(state: &mut GameState) {
             for j in 0..patchcount {
                 lump = state.r_data.textures[i].patches[j as usize].patch;
                 state.r_data.texturememory += state.w_wad.lumpinfo[lump as usize].size;
-                lump_bytes(state, lump);
+                lump_bytes(&*state.fs, &mut state.w_wad, lump);
             }
         }
     }
@@ -589,7 +593,7 @@ pub fn precache_level(state: &mut GameState) {
                     lump = state.r_data.firstspritelump
                         + state.r_things.sprites[i].spriteframes[j as usize].lump[k] as i32;
                     state.r_data.spritememory += state.w_wad.lumpinfo[lump as usize].size;
-                    lump_bytes(state, lump);
+                    lump_bytes(&*state.fs, &mut state.w_wad, lump);
                 }
             }
         }

@@ -37,6 +37,7 @@ use crate::p_tick::init_thinkers;
 use crate::p_tick::thinker_function;
 use crate::p_tick::ThinkerKind;
 use crate::p_tick::ThinkerPayload;
+use crate::platform::DoomPlatform;
 use crate::tables::Angle;
 use alloc::string::String;
 use alloc::vec::Vec;
@@ -111,10 +112,10 @@ pub fn save_game_file(d_main: &DMainState, slot: i32) -> String {
 }
 /// Prints the deferred "ran off the end of the file" diagnostic, if a
 /// `saveg_read8` hit one; call once when a load finishes or is abandoned.
-pub fn report_save_game_read_error(state: &mut GameState) {
-    if state.p_saveg.savegame_error {
+pub fn report_save_game_read_error(p_saveg: &PSavegState, platform: &mut dyn DoomPlatform) {
+    if p_saveg.savegame_error {
         doom_eprintln!(
-            state.platform,
+            platform,
             "saveg_read8: Unexpected end of file while reading save game"
         );
     }

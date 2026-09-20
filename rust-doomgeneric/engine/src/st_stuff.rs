@@ -835,7 +835,7 @@ pub fn do_palette_stuff(state: &mut GameState) {
     }
     if palette != state.st_stuff.st_palette {
         state.st_stuff.st_palette = palette;
-        let pal = lump_bytes(state, state.st_stuff.lu_palette);
+        let pal = lump_bytes(&*state.fs, &mut state.w_wad, state.st_stuff.lu_palette);
         let offset = (palette * 768) as usize;
         set_palette(state, &pal[offset..offset + 768]);
     }
@@ -962,7 +962,7 @@ fn load_unload_graphics(state: &mut GameState, callback: LoadCallback) {
 }
 fn st_load_callback(state: &mut GameState, lumpname: &str) -> i32 {
     let lumpnum = get_num_for_name(&state.w_wad, lumpname);
-    lump_bytes(state, lumpnum);
+    lump_bytes(&*state.fs, &mut state.w_wad, lumpnum);
     lumpnum
 }
 pub fn load_graphics(state: &mut GameState) {
@@ -1131,7 +1131,7 @@ pub fn st_stop(state: &mut GameState) {
     if state.st_stuff.st_stopped {
         return;
     }
-    let pal = lump_bytes(state, state.st_stuff.lu_palette);
+    let pal = lump_bytes(&*state.fs, &mut state.w_wad, state.st_stuff.lu_palette);
     set_palette(state, &pal[..768]);
     state.st_stuff.st_stopped = true;
 }

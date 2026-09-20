@@ -1327,7 +1327,7 @@ pub fn do_load_game(state: &mut GameState) {
     state.p_saveg.save_pos = 0;
     state.p_saveg.savegame_error = false;
     if !read_save_game_header(state) {
-        report_save_game_read_error(state);
+        report_save_game_read_error(&state.p_saveg, &mut *state.platform);
         state.p_saveg.save_buffer = Vec::new();
         return;
     }
@@ -1344,10 +1344,10 @@ pub fn do_load_game(state: &mut GameState) {
     un_archive_thinkers(state);
     un_archive_specials(state);
     if !read_save_game_eof(&mut state.p_saveg) {
-        report_save_game_read_error(state);
+        report_save_game_read_error(&state.p_saveg, &mut *state.platform);
         error("Bad savegame");
     }
-    report_save_game_read_error(state);
+    report_save_game_read_error(&state.p_saveg, &mut *state.platform);
     state.p_saveg.save_buffer = Vec::new();
     if state.r_main.setsizeneeded {
         execute_set_view_size(state);
@@ -1640,7 +1640,8 @@ pub fn do_play_demo(state: &mut GameState) {
     let demo_lumpname = state.g_game.defdemoname.as_str().into_owned();
     let demo_lumpnum = get_num_for_name(&state.w_wad, &demo_lumpname);
     let demo_lumplen = lump_length(&state.w_wad, demo_lumpnum as u32) as usize;
-    state.g_game.demobuffer = lump_bytes(state, demo_lumpnum)[..demo_lumplen].to_vec();
+    state.g_game.demobuffer =
+        lump_bytes(&*state.fs, &mut state.w_wad, demo_lumpnum)[..demo_lumplen].to_vec();
     state.g_game.demo_p = 0;
     let demoversion: i32 = state.g_game.demo_read_byte() as i32;
     if demoversion == vanilla_version_code(&state.doomstat) {
@@ -1676,7 +1677,7 @@ pub fn do_play_demo(state: &mut GameState) {
     state.g_game.precache = false;
     init_new(state, skill, episode, map);
     state.g_game.precache = true;
-    state.g_game.starttime = get_time(state);
+    state.g_game.starttime = get_time(&mut state.i_timer, &mut *state.platform);
     state.g_game.usergame = false;
     state.g_game.demoplayback = true;
 }
@@ -1695,7 +1696,7 @@ pub fn time_demo(
 pub fn check_demo_status(state: &mut GameState) -> bool {
     let endtime: i32;
     if state.g_game.timingdemo {
-        endtime = get_time(state);
+        endtime = get_time(&mut state.i_timer, &mut *state.platform);
         let realtics: i32 = endtime - state.g_game.starttime;
         let fps: f32 = state.d_loop.gametic as f32 * TICRATE as f32 / realtics as f32;
         state.g_game.timingdemo = false;

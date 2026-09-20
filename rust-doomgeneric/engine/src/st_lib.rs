@@ -67,7 +67,7 @@ impl StLibState {
 
 pub fn stlib_init(state: &mut GameState) {
     let lumpnum = get_num_for_name(&state.w_wad, "STTMINUS");
-    lump_bytes(state, lumpnum);
+    lump_bytes(&*state.fs, &mut state.w_wad, lumpnum);
     state.st_lib.sttminus = lumpnum;
 }
 pub fn stlib_init_num(n: &mut StNumber, x: i32, y: i32, pl: StDigitSet, width: i32) {

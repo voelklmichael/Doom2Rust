@@ -117,7 +117,7 @@ pub fn copy_rect(
 /// Resolves a WAD lump number to its cached patch data. Cheap and
 /// idempotent: the lump cache never evicts.
 pub fn cache_patch_num(state: &mut GameState, lumpnum: i32) -> Patch {
-    Patch::new(lump_bytes(state, lumpnum))
+    Patch::new(lump_bytes(&*state.fs, &mut state.w_wad, lumpnum))
 }
 pub fn cache_patch_name(state: &mut GameState, name: &str) -> Patch {
     Patch::new(lump_bytes_name(state, name))
