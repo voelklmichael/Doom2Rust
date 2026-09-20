@@ -433,7 +433,7 @@ pub struct MMenuState {
     pub screenblocks: i32,
     pub screen_size: i32,
     pub quick_save_slot: i32,
-    pub message_to_print: i32,
+    pub message_to_print: bool,
     pub message_string: String,
     pub messx: i32,
     pub messy: i32,
@@ -442,7 +442,7 @@ pub struct MMenuState {
     pub message_routine: Option<fn(&mut GameState, i32)>,
     /// True while the pending message is the quit confirmation from `quit_doom`.
     pub message_is_quit_prompt: bool,
-    pub save_string_enter: i32,
+    pub save_string_enter: bool,
     pub save_slot: i32,
     pub save_char_index: i32,
     pub save_old_string: String,
@@ -480,7 +480,7 @@ impl MMenuState {
             screenblocks: 10,
             screen_size: 0,
             quick_save_slot: 0,
-            message_to_print: 0,
+            message_to_print: false,
             message_string: String::new(),
             messx: 0,
             messy: 0,
@@ -488,7 +488,7 @@ impl MMenuState {
             message_needs_input: false,
             message_routine: None,
             message_is_quit_prompt: false,
-            save_string_enter: 0,
+            save_string_enter: false,
             save_slot: 0,
             save_char_index: 0,
             save_old_string: String::new(),
@@ -730,7 +730,7 @@ pub fn draw_save(state: &mut GameState) {
         let savestr = state.ui.m_menu.savegamestrings[i as usize].clone();
         write_text(state, loaddef_x, loaddef_y, &savestr);
     }
-    if state.ui.m_menu.save_string_enter != 0 {
+    if state.ui.m_menu.save_string_enter {
         let savestr = state.ui.m_menu.savegamestrings[state.ui.m_menu.save_slot as usize].clone();
         i = string_width(
             &*state.assets.fs,
@@ -753,7 +753,7 @@ pub fn do_save(g_game: &mut GGameState, m_menu: &mut MMenuState, slot: i32) {
     }
 }
 pub fn save_select(state: &mut GameState, choice: i32) {
-    state.ui.m_menu.save_string_enter = 1;
+    state.ui.m_menu.save_string_enter = true;
     state.ui.m_menu.save_slot = choice;
     state.ui.m_menu.save_old_string = state.ui.m_menu.savegamestrings[choice as usize].clone();
     if state.ui.m_menu.savegamestrings[choice as usize] == EMPTYSTRING.trim_end_matches('\0') {
@@ -1282,7 +1282,7 @@ pub fn start_message(
     input: bool,
 ) {
     m_menu.message_last_menu_active = m_menu.menuactive as i32;
-    m_menu.message_to_print = 1;
+    m_menu.message_to_print = true;
     m_menu.message_string = string.to_string();
     m_menu.message_routine = routine;
     m_menu.message_is_quit_prompt = false;
@@ -1372,7 +1372,7 @@ pub fn m_responder(state: &mut GameState, ev: &Event) -> bool {
     }
     if ev.kind == EvType::Quit {
         if state.ui.m_menu.menuactive
-            && state.ui.m_menu.message_to_print != 0
+            && state.ui.m_menu.message_to_print
             && state.ui.m_menu.message_is_quit_prompt
         {
             let key_menu_confirm = state.game.m_controls.key_menu_confirm;
@@ -1473,7 +1473,7 @@ pub fn m_responder(state: &mut GameState, ev: &Event) -> bool {
     if key == -1 {
         return false;
     }
-    if state.ui.m_menu.save_string_enter != 0 {
+    if state.ui.m_menu.save_string_enter {
         match key {
             KEY_BACKSPACE => {
                 if state.ui.m_menu.save_char_index > 0 {
@@ -1483,12 +1483,12 @@ pub fn m_responder(state: &mut GameState, ev: &Event) -> bool {
                 }
             }
             KEY_ESCAPE => {
-                state.ui.m_menu.save_string_enter = 0;
+                state.ui.m_menu.save_string_enter = false;
                 state.ui.m_menu.savegamestrings[state.ui.m_menu.save_slot as usize] =
                     state.ui.m_menu.save_old_string.clone();
             }
             KEY_ENTER => {
-                state.ui.m_menu.save_string_enter = 0;
+                state.ui.m_menu.save_string_enter = false;
                 if !state.ui.m_menu.savegamestrings[state.ui.m_menu.save_slot as usize].is_empty() {
                     let save_slot = state.ui.m_menu.save_slot;
                     do_save(&mut state.game.g_game, &mut state.ui.m_menu, save_slot);
@@ -1522,7 +1522,7 @@ pub fn m_responder(state: &mut GameState, ev: &Event) -> bool {
         }
         return true;
     }
-    if state.ui.m_menu.message_to_print != 0 {
+    if state.ui.m_menu.message_to_print {
         if state.ui.m_menu.message_needs_input
             && key != ' ' as i32
             && key != KEY_ESCAPE
@@ -1532,7 +1532,7 @@ pub fn m_responder(state: &mut GameState, ev: &Event) -> bool {
             return false;
         }
         state.ui.m_menu.menuactive = state.ui.m_menu.message_last_menu_active != 0;
-        state.ui.m_menu.message_to_print = 0;
+        state.ui.m_menu.message_to_print = false;
         if state.ui.m_menu.message_routine.is_some() {
             state
                 .ui
@@ -1737,7 +1737,7 @@ pub fn start_control_panel(m_menu: &mut MMenuState) {
 }
 pub fn m_drawer(state: &mut GameState) {
     state.ui.m_menu.inhelpscreens = false;
-    if state.ui.m_menu.message_to_print != 0 {
+    if state.ui.m_menu.message_to_print {
         let message_string = state.ui.m_menu.message_string.clone();
         state.ui.m_menu.drawer_y = (SCREENHEIGHT / 2
             - string_height(
@@ -1837,7 +1837,7 @@ pub fn m_init(doomstat: &DoomstatState, m_menu: &mut MMenuState) {
     m_menu.which_skull = 0;
     m_menu.skull_anim_counter = 10;
     m_menu.screen_size = m_menu.screenblocks - 3;
-    m_menu.message_to_print = 0;
+    m_menu.message_to_print = false;
     m_menu.message_string = String::new();
     m_menu.message_last_menu_active = m_menu.menuactive as i32;
     m_menu.quick_save_slot = -1;
