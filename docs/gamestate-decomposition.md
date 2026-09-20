@@ -83,11 +83,12 @@ remove it.
 
 ## Possible next steps (not done)
 
-1. Make what is really pure into free functions: the `p_*` code reaches `RMainState` for
-   `validcount` (shared traversal state that arguably belongs in `World`) and `point_to_angle2`,
-   which mutates `viewx`/`viewy` as a side effect (vanilla behaviour, harmless because the view is
-   reset every frame, but it must be preserved or shown unobservable). Simulated: +15 single-aggregate
-   functions.
+1. ~~Make what is really pure into free functions~~ **Done** (`point_to_angle2` is pure, `validcount`
+   lives in `PSetupState`): world code no longer touches `RMainState`. Simulated +15 single-aggregate
+   functions, actual payoff only 3 narrowed functions (404 -> 401), because the tool can only narrow
+   a function that does not pass `state` on, and the callbacks and hubs still pin most of them. The
+   "fns needing one aggregate" figures above are an upper bound on what the tool can free, not a
+   forecast.
 2. Consolidate the five screens into `VVideoState` (in `Io`), so drawing helpers take
    `&mut VVideoState` instead of the whole state.
 3. Re-run `narrow_state.py` after each; leaf functions unlock in waves.
