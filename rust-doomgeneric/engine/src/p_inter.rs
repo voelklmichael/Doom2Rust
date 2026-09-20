@@ -193,7 +193,7 @@ pub fn give_body(
     if player.health > MAXHEALTH {
         player.health = MAXHEALTH;
     }
-    let player_mo = player.mo.unwrap();
+    let player_mo = player.mobj();
     p_mobj.mo_mut(player_mo).health = player.health;
     true
 }
@@ -225,7 +225,7 @@ pub fn give_power(
     }
     if power == PowerType::Invisibility {
         g_game.players[player].powers[power] = INVISTICS;
-        let player_mo = g_game.players[player].mo.unwrap();
+        let player_mo = g_game.players[player].mobj();
         p_mobj.mo_mut(player_mo).flags |= MobjFlags::SHADOW;
         return true;
     }

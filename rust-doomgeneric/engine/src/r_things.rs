@@ -639,7 +639,7 @@ pub fn draw_psprite(state: &mut GameState, psp: &PspDef) {
 pub fn draw_player_sprites(state: &mut GameState) {
     let viewplayer = state.game.g_game.player_mut(state.render.r_main.viewplayer);
     let psprites = viewplayer.psprites;
-    let viewplayer_mo_id = viewplayer.mo.unwrap();
+    let viewplayer_mo_id = viewplayer.mobj();
     let viewplayer_subsector = state.world.p_mobj.mo(viewplayer_mo_id).subsector;
     let lightnum = (i32::from(
         state

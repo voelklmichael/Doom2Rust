@@ -497,7 +497,7 @@ fn special_line_trace(walk: bool) -> Option<String> {
                 g_load_game(&mut state.game.g_game, &save_path);
                 do_load_game(state);
                 let actor = if player_uses {
-                    state.game.g_game.players[0].mo.unwrap()
+                    state.game.g_game.players[0].mobj()
                 } else {
                     mobj_thinker_ids(&state.world.p_mobj, &state.world.p_tick)
                         .into_iter()
@@ -567,7 +567,7 @@ fn crusher_stasis_trace() -> Option<String> {
     for start in [6i16, 25, 73, 77, 141] {
         g_load_game(&mut state.game.g_game, &save_path);
         do_load_game(state);
-        let player = state.game.g_game.players[0].mo.unwrap();
+        let player = state.game.g_game.players[0].mobj();
         state.world.p_setup.line_mut(line).tag = tag;
         // start, stop (57), start again from stasis, stop again (74), start once more
         for (special, tics) in [(start, 30), (57, 20), (start, 40), (74, 10), (start, 30)] {

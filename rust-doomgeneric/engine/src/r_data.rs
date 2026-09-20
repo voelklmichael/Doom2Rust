@@ -3,6 +3,7 @@ use crate::fixed_cstr::FixedCStr;
 use crate::game_state::GameState;
 use crate::i_system::console_stdout;
 use crate::i_system::error;
+use crate::le::{le_i16, le_i32};
 use crate::m_fixed::Fixed;
 use crate::w_wad::LumpNum;
 use crate::w_wad::WWadState;
@@ -167,14 +168,13 @@ pub fn generate_composite(
         let realpatch_len = lump_length(w_wad, tex_patch.patch) as usize;
         let realpatch_lump = lump_bytes(fs, w_wad, tex_patch.patch);
         let realpatch = &realpatch_lump[..realpatch_len];
-        let realpatch_width = i32::from(i16::from_le_bytes(realpatch[0..2].try_into().unwrap()));
+        let realpatch_width = i32::from(le_i16(realpatch, 0));
         let x1: i32 = i32::from(tex_patch.originx);
         let x2: i32 = (x1 + realpatch_width).min(texture_width);
         for x in x1.max(0)..x2 {
             if i32::from(r_data.texturecolumnlump[texnum as usize][x as usize]) < 0 {
                 let colofs_off = (8 + (x - x1) * 4) as usize;
-                let columnofs =
-                    i32::from_le_bytes(realpatch[colofs_off..colofs_off + 4].try_into().unwrap());
+                let columnofs = le_i32(realpatch, colofs_off);
                 let patchcol = &realpatch[columnofs as usize..];
                 let cache_off = r_data.texturecolumnofs[texnum as usize][x as usize] as usize;
                 draw_column_in_cache(
@@ -201,7 +201,7 @@ pub fn generate_lookup(state: &mut GameState, texnum: i32) {
         let realpatch_lump =
             lump_bytes(&*state.assets.fs, &mut state.assets.w_wad, tex_patch.patch);
         let realpatch = &realpatch_lump[..realpatch_len];
-        let realpatch_width = i32::from(i16::from_le_bytes(realpatch[0..2].try_into().unwrap()));
+        let realpatch_width = i32::from(le_i16(realpatch, 0));
         let x1: i32 = i32::from(tex_patch.originx);
         let mut x2: i32 = x1 + realpatch_width;
         if x2 > texture_width {
@@ -212,8 +212,7 @@ pub fn generate_lookup(state: &mut GameState, texnum: i32) {
             state.render.r_data.texturecolumnlump[texnum as usize][x as usize] =
                 tex_patch.patch.0 as i16;
             let colofs_off = (8 + (x - x1) * 4) as usize;
-            let columnofs =
-                i32::from_le_bytes(realpatch[colofs_off..colofs_off + 4].try_into().unwrap());
+            let columnofs = le_i32(realpatch, colofs_off);
             state.render.r_data.texturecolumnofs[texnum as usize][x as usize] =
                 (columnofs + 3) as u16;
         }
@@ -301,7 +300,7 @@ pub fn init_textures(state: &mut GameState) {
     let pnames = lump_bytes_name(&*state.assets.fs, &mut state.assets.w_wad, "PNAMES")
         [..pnames_len]
         .to_vec();
-    let nummappatches: i32 = i32::from_le_bytes(pnames[0..4].try_into().unwrap());
+    let nummappatches: i32 = le_i32(&pnames, 0);
     let mut patchlookup: Vec<Option<LumpNum>> = vec![None; nummappatches as usize];
     for i in 0..nummappatches {
         let name_off = 4 + (i * 8) as usize;
@@ -316,7 +315,7 @@ pub fn init_textures(state: &mut GameState) {
     let maptex1 = lump_bytes_name(&*state.assets.fs, &mut state.assets.w_wad, "TEXTURE1")
         [..maxoff as usize]
         .to_vec();
-    let numtextures1: i32 = i32::from_le_bytes(maptex1[0..4].try_into().unwrap());
+    let numtextures1: i32 = le_i32(&maptex1, 0);
     let (maptex2, maxoff2, numtextures2) =
         if check_num_for_name(&state.assets.w_wad, "TEXTURE2").is_none() {
             (None, 0, 0)
@@ -326,7 +325,7 @@ pub fn init_textures(state: &mut GameState) {
             let maptex2 = lump_bytes_name(&*state.assets.fs, &mut state.assets.w_wad, "TEXTURE2")
                 [..maxoff2 as usize]
                 .to_vec();
-            let numtextures2 = i32::from_le_bytes(maptex2[0..4].try_into().unwrap());
+            let numtextures2 = le_i32(&maptex2, 0);
             (Some(maptex2), maxoff2, numtextures2)
         };
     state.render.r_data.numtextures = numtextures1 + numtextures2;
@@ -370,8 +369,7 @@ pub fn init_textures(state: &mut GameState) {
             dir_index = 0;
         }
         let dir_off = 4 + (dir_index * 4) as usize;
-        let offset: i32 =
-            i32::from_le_bytes(current_maptex[dir_off..dir_off + 4].try_into().unwrap());
+        let offset: i32 = le_i32(current_maptex, dir_off);
         if offset > maxoff {
             error("R_InitTextures: bad texture directory");
         }
@@ -382,9 +380,9 @@ pub fn init_textures(state: &mut GameState) {
         // member tail the old code reached via `&raw mut (*mtexture).patches`).
         let mt = &current_maptex[offset as usize..];
         let mt_name = FixedCStr::<8>::from_bytes(&mt[0..8]);
-        let mt_width = i16::from_le_bytes(mt[12..14].try_into().unwrap());
-        let mt_height = i16::from_le_bytes(mt[14..16].try_into().unwrap());
-        let mt_patchcount = i16::from_le_bytes(mt[20..22].try_into().unwrap());
+        let mt_width = le_i16(mt, 12);
+        let mt_height = le_i16(mt, 14);
+        let mt_patchcount = le_i16(mt, 20);
         // patches is built directly as a Vec (pushed patchcount times below)
         // instead of over-allocating size_of::<Texture>() +
         // size_of::<TexPatch>()*(patchcount-1) raw bytes for a C flexible
@@ -393,9 +391,9 @@ pub fn init_textures(state: &mut GameState) {
         for j in 0..i32::from(mt_patchcount) {
             let p_off = 22 + (j * 10) as usize;
             let p = &mt[p_off..p_off + 10];
-            let p_originx = i16::from_le_bytes(p[0..2].try_into().unwrap());
-            let p_originy = i16::from_le_bytes(p[2..4].try_into().unwrap());
-            let p_patch = i16::from_le_bytes(p[4..6].try_into().unwrap());
+            let p_originx = le_i16(p, 0);
+            let p_originy = le_i16(p, 2);
+            let p_patch = le_i16(p, 4);
             let Some(patch) = patchlookup[p_patch as usize] else {
                 error(&format!(
                     "R_InitTextures: Missing patch in texture {}",
@@ -487,9 +485,9 @@ pub fn init_sprite_lumps(state: &mut GameState) {
             state.render.r_data.firstspritelump + i,
         );
         let header = &lump[..8];
-        let width = i16::from_le_bytes(header[0..2].try_into().unwrap());
-        let leftoffset = i16::from_le_bytes(header[4..6].try_into().unwrap());
-        let topoffset = i16::from_le_bytes(header[6..8].try_into().unwrap());
+        let width = le_i16(header, 0);
+        let leftoffset = le_i16(header, 4);
+        let topoffset = le_i16(header, 6);
         state.render.r_data.spritewidth[i as usize] = Fixed::from_int(i32::from(width));
         state.render.r_data.spriteoffset[i as usize] = Fixed::from_int(i32::from(leftoffset));
         state.render.r_data.spritetopoffset[i as usize] = Fixed::from_int(i32::from(topoffset));

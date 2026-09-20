@@ -200,3 +200,10 @@ pub struct Player {
     pub psprites: [PspDef; 2],
     pub didsecret: bool,
 }
+
+impl Player {
+    /// The player's map object, which exists whenever the player is in a level.
+    pub fn mobj(&self) -> MobjId {
+        self.mo.expect("player has no map object")
+    }
+}

@@ -211,81 +211,81 @@ pub fn add_line(state: &mut GameState, line: SegId) {
         && !(state
             .world
             .p_setup
-            .sector(state.render.r_bsp.backsector.unwrap())
+            .sector(state.render.r_bsp.back())
             .ceilingheight
             <= state
                 .world
                 .p_setup
-                .sector(state.render.r_bsp.frontsector.unwrap())
+                .sector(state.render.r_bsp.front())
                 .floorheight
             || state
                 .world
                 .p_setup
-                .sector(state.render.r_bsp.backsector.unwrap())
+                .sector(state.render.r_bsp.back())
                 .floorheight
                 >= state
                     .world
                     .p_setup
-                    .sector(state.render.r_bsp.frontsector.unwrap())
+                    .sector(state.render.r_bsp.front())
                     .ceilingheight)
     {
         if !(state
             .world
             .p_setup
-            .sector(state.render.r_bsp.backsector.unwrap())
+            .sector(state.render.r_bsp.back())
             .ceilingheight
             != state
                 .world
                 .p_setup
-                .sector(state.render.r_bsp.frontsector.unwrap())
+                .sector(state.render.r_bsp.front())
                 .ceilingheight
             || state
                 .world
                 .p_setup
-                .sector(state.render.r_bsp.backsector.unwrap())
+                .sector(state.render.r_bsp.back())
                 .floorheight
                 != state
                     .world
                     .p_setup
-                    .sector(state.render.r_bsp.frontsector.unwrap())
+                    .sector(state.render.r_bsp.front())
                     .floorheight)
             && i32::from(
                 state
                     .world
                     .p_setup
-                    .sector(state.render.r_bsp.backsector.unwrap())
+                    .sector(state.render.r_bsp.back())
                     .ceilingpic,
             ) == i32::from(
                 state
                     .world
                     .p_setup
-                    .sector(state.render.r_bsp.frontsector.unwrap())
+                    .sector(state.render.r_bsp.front())
                     .ceilingpic,
             )
             && i32::from(
                 state
                     .world
                     .p_setup
-                    .sector(state.render.r_bsp.backsector.unwrap())
+                    .sector(state.render.r_bsp.back())
                     .floorpic,
             ) == i32::from(
                 state
                     .world
                     .p_setup
-                    .sector(state.render.r_bsp.frontsector.unwrap())
+                    .sector(state.render.r_bsp.front())
                     .floorpic,
             )
             && i32::from(
                 state
                     .world
                     .p_setup
-                    .sector(state.render.r_bsp.backsector.unwrap())
+                    .sector(state.render.r_bsp.back())
                     .lightlevel,
             ) == i32::from(
                 state
                     .world
                     .p_setup
-                    .sector(state.render.r_bsp.frontsector.unwrap())
+                    .sector(state.render.r_bsp.front())
                     .lightlevel,
             )
             && i32::from(
@@ -391,7 +391,7 @@ pub fn r_subsector(state: &mut GameState, num: i32) {
     state.render.r_bsp.frontsector = Some(sub.sector);
     let count: i32 = i32::from(sub.numlines);
     let mut line: SegId = SegId(sub.firstline as u32);
-    let frontsector_id = state.render.r_bsp.frontsector.unwrap();
+    let frontsector_id = state.render.r_bsp.front();
     let frontsector = state.world.p_setup.sector(frontsector_id);
     let (floorheight, floorpic, ceilingheight, ceilingpic, lightlevel) = (
         frontsector.floorheight,
@@ -446,5 +446,17 @@ pub fn render_bspnode(state: &mut GameState, bspnum: i32) {
         bsp.bbox[(side ^ 1) as usize],
     ) {
         render_bspnode(state, i32::from(bsp.children[(side ^ 1) as usize]));
+    }
+}
+
+impl RBspState {
+    /// The sector in front of the line being processed (always set while walls are drawn).
+    pub fn front(&self) -> SectorId {
+        self.frontsector.expect("no current front sector")
+    }
+
+    /// The sector behind the line being processed (set for two-sided lines).
+    pub fn back(&self) -> SectorId {
+        self.backsector.expect("no current back sector")
     }
 }

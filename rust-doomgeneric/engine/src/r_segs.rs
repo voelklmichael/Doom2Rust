@@ -136,7 +136,7 @@ pub fn render_masked_seg_range(state: &mut GameState, ds: &DrawSeg, x1: i32, x2:
         state
             .world
             .p_setup
-            .sector(state.render.r_bsp.frontsector.unwrap())
+            .sector(state.render.r_bsp.front())
             .lightlevel,
     ) >> LIGHTSEGSHIFT)
         + state.render.r_main.extralight;
@@ -171,24 +171,24 @@ pub fn render_masked_seg_range(state: &mut GameState, ds: &DrawSeg, x1: i32, x2:
         state.render.r_draw.dc_texturemid = if state
             .world
             .p_setup
-            .sector(state.render.r_bsp.frontsector.unwrap())
+            .sector(state.render.r_bsp.front())
             .floorheight
             > state
                 .world
                 .p_setup
-                .sector(state.render.r_bsp.backsector.unwrap())
+                .sector(state.render.r_bsp.back())
                 .floorheight
         {
             state
                 .world
                 .p_setup
-                .sector(state.render.r_bsp.frontsector.unwrap())
+                .sector(state.render.r_bsp.front())
                 .floorheight
         } else {
             state
                 .world
                 .p_setup
-                .sector(state.render.r_bsp.backsector.unwrap())
+                .sector(state.render.r_bsp.back())
                 .floorheight
         };
         state.render.r_draw.dc_texturemid = state.render.r_draw.dc_texturemid
@@ -198,24 +198,24 @@ pub fn render_masked_seg_range(state: &mut GameState, ds: &DrawSeg, x1: i32, x2:
         state.render.r_draw.dc_texturemid = if state
             .world
             .p_setup
-            .sector(state.render.r_bsp.frontsector.unwrap())
+            .sector(state.render.r_bsp.front())
             .ceilingheight
             < state
                 .world
                 .p_setup
-                .sector(state.render.r_bsp.backsector.unwrap())
+                .sector(state.render.r_bsp.back())
                 .ceilingheight
         {
             state
                 .world
                 .p_setup
-                .sector(state.render.r_bsp.frontsector.unwrap())
+                .sector(state.render.r_bsp.front())
                 .ceilingheight
         } else {
             state
                 .world
                 .p_setup
-                .sector(state.render.r_bsp.backsector.unwrap())
+                .sector(state.render.r_bsp.back())
                 .ceilingheight
         };
         state.render.r_draw.dc_texturemid -= state.render.r_main.viewz;
@@ -520,13 +520,13 @@ pub fn store_wall_range(state: &mut GameState, start: i32, stop: i32) {
     state.render.r_segs.worldtop = state
         .world
         .p_setup
-        .sector(state.render.r_bsp.frontsector.unwrap())
+        .sector(state.render.r_bsp.front())
         .ceilingheight
         - state.render.r_main.viewz;
     state.render.r_segs.worldbottom = state
         .world
         .p_setup
-        .sector(state.render.r_bsp.frontsector.unwrap())
+        .sector(state.render.r_bsp.front())
         .floorheight
         - state.render.r_main.viewz;
     state.render.r_segs.maskedtexture = false;
@@ -554,7 +554,7 @@ pub fn store_wall_range(state: &mut GameState, start: i32, stop: i32) {
                 let vtop = state
                     .world
                     .p_setup
-                    .sector(state.render.r_bsp.frontsector.unwrap())
+                    .sector(state.render.r_bsp.front())
                     .floorheight
                     + state.render.r_data.textureheight[state
                         .world
@@ -587,7 +587,7 @@ pub fn store_wall_range(state: &mut GameState, start: i32, stop: i32) {
             if state
                 .world
                 .p_setup
-                .sector(state.render.r_bsp.frontsector.unwrap())
+                .sector(state.render.r_bsp.front())
                 .floorheight
                 > state.world.p_setup.sector(backsector).floorheight
             {
@@ -595,7 +595,7 @@ pub fn store_wall_range(state: &mut GameState, start: i32, stop: i32) {
                 state.render.r_bsp.drawsegs[state.render.r_bsp.ds_p].bsilheight = state
                     .world
                     .p_setup
-                    .sector(state.render.r_bsp.frontsector.unwrap())
+                    .sector(state.render.r_bsp.front())
                     .floorheight;
             } else if state.world.p_setup.sector(backsector).floorheight > state.render.r_main.viewz
             {
@@ -605,7 +605,7 @@ pub fn store_wall_range(state: &mut GameState, start: i32, stop: i32) {
             if state
                 .world
                 .p_setup
-                .sector(state.render.r_bsp.frontsector.unwrap())
+                .sector(state.render.r_bsp.front())
                 .ceilingheight
                 < state.world.p_setup.sector(backsector).ceilingheight
             {
@@ -613,7 +613,7 @@ pub fn store_wall_range(state: &mut GameState, start: i32, stop: i32) {
                 state.render.r_bsp.drawsegs[state.render.r_bsp.ds_p].tsilheight = state
                     .world
                     .p_setup
-                    .sector(state.render.r_bsp.frontsector.unwrap())
+                    .sector(state.render.r_bsp.front())
                     .ceilingheight;
             } else if state.world.p_setup.sector(backsector).ceilingheight
                 < state.render.r_main.viewz
@@ -625,7 +625,7 @@ pub fn store_wall_range(state: &mut GameState, start: i32, stop: i32) {
                 <= state
                     .world
                     .p_setup
-                    .sector(state.render.r_bsp.frontsector.unwrap())
+                    .sector(state.render.r_bsp.front())
                     .floorheight
             {
                 state.render.r_bsp.drawsegs[state.render.r_bsp.ds_p].sprbottomclip =
@@ -637,7 +637,7 @@ pub fn store_wall_range(state: &mut GameState, start: i32, stop: i32) {
                 >= state
                     .world
                     .p_setup
-                    .sector(state.render.r_bsp.frontsector.unwrap())
+                    .sector(state.render.r_bsp.front())
                     .ceilingheight
             {
                 state.render.r_bsp.drawsegs[state.render.r_bsp.ds_p].sprtopclip =
@@ -653,7 +653,7 @@ pub fn store_wall_range(state: &mut GameState, start: i32, stop: i32) {
                 state
                     .world
                     .p_setup
-                    .sector(state.render.r_bsp.frontsector.unwrap())
+                    .sector(state.render.r_bsp.front())
                     .ceilingpic,
             ) == state.render.r_sky.skyflatnum
                 && i32::from(state.world.p_setup.sector(backsector).ceilingpic)
@@ -668,7 +668,7 @@ pub fn store_wall_range(state: &mut GameState, start: i32, stop: i32) {
                         state
                             .world
                             .p_setup
-                            .sector(state.render.r_bsp.frontsector.unwrap())
+                            .sector(state.render.r_bsp.front())
                             .floorpic,
                     )
                 || i32::from(state.world.p_setup.sector(backsector).lightlevel)
@@ -676,7 +676,7 @@ pub fn store_wall_range(state: &mut GameState, start: i32, stop: i32) {
                         state
                             .world
                             .p_setup
-                            .sector(state.render.r_bsp.frontsector.unwrap())
+                            .sector(state.render.r_bsp.front())
                             .lightlevel,
                     );
             state.render.r_segs.markceiling = state.render.r_segs.worldhigh
@@ -686,7 +686,7 @@ pub fn store_wall_range(state: &mut GameState, start: i32, stop: i32) {
                         state
                             .world
                             .p_setup
-                            .sector(state.render.r_bsp.frontsector.unwrap())
+                            .sector(state.render.r_bsp.front())
                             .ceilingpic,
                     )
                 || i32::from(state.world.p_setup.sector(backsector).lightlevel)
@@ -694,20 +694,20 @@ pub fn store_wall_range(state: &mut GameState, start: i32, stop: i32) {
                         state
                             .world
                             .p_setup
-                            .sector(state.render.r_bsp.frontsector.unwrap())
+                            .sector(state.render.r_bsp.front())
                             .lightlevel,
                     );
             if state.world.p_setup.sector(backsector).ceilingheight
                 <= state
                     .world
                     .p_setup
-                    .sector(state.render.r_bsp.frontsector.unwrap())
+                    .sector(state.render.r_bsp.front())
                     .floorheight
                 || state.world.p_setup.sector(backsector).floorheight
                     >= state
                         .world
                         .p_setup
-                        .sector(state.render.r_bsp.frontsector.unwrap())
+                        .sector(state.render.r_bsp.front())
                         .ceilingheight
             {
                 state.render.r_segs.markfloor = true;
@@ -817,7 +817,7 @@ pub fn store_wall_range(state: &mut GameState, start: i32, stop: i32) {
                 state
                     .world
                     .p_setup
-                    .sector(state.render.r_bsp.frontsector.unwrap())
+                    .sector(state.render.r_bsp.front())
                     .lightlevel,
             ) >> LIGHTSEGSHIFT)
                 + state.render.r_main.extralight;
@@ -842,7 +842,7 @@ pub fn store_wall_range(state: &mut GameState, start: i32, stop: i32) {
     if state
         .world
         .p_setup
-        .sector(state.render.r_bsp.frontsector.unwrap())
+        .sector(state.render.r_bsp.front())
         .floorheight
         >= state.render.r_main.viewz
     {
@@ -851,14 +851,14 @@ pub fn store_wall_range(state: &mut GameState, start: i32, stop: i32) {
     if state
         .world
         .p_setup
-        .sector(state.render.r_bsp.frontsector.unwrap())
+        .sector(state.render.r_bsp.front())
         .ceilingheight
         <= state.render.r_main.viewz
         && i32::from(
             state
                 .world
                 .p_setup
-                .sector(state.render.r_bsp.frontsector.unwrap())
+                .sector(state.render.r_bsp.front())
                 .ceilingpic,
         ) != state.render.r_sky.skyflatnum
     {

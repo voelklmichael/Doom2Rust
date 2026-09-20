@@ -8,6 +8,7 @@ use crate::g_game::death_match_spawn_player;
 use crate::game_state::GameState;
 use crate::i_system::get_memory_value;
 use crate::i_system::ISystemState;
+use crate::le::le_i16;
 use crate::m_bbox::add_to_box;
 use crate::m_bbox::clear_box;
 use crate::m_bbox::BBox;
@@ -550,7 +551,7 @@ pub fn load_block_map(
         .as_chunks::<2>()
         .0
         .iter()
-        .map(|c| i16::from_le_bytes([c[0], c[1]]))
+        .map(|c| le_i16(c, 0))
         .collect();
     p_setup.bmaporgx = Fixed::from_int(i32::from(p_setup.blockmaplump[0]));
     p_setup.bmaporgy = Fixed::from_int(i32::from(p_setup.blockmaplump[1]));

@@ -818,28 +818,29 @@ mod tests {
 #[cfg(test)]
 mod wad_tests {
     use super::*;
+    use crate::le::le_u32;
     use crate::regression_tests::iwad_bytes;
     use alloc::string::String;
     use alloc::vec::Vec;
 
     /// The lump called `name` in a WAD image.
     fn lump<'a>(wad: &'a [u8], name: &str) -> Option<&'a [u8]> {
-        let count = u32::from_le_bytes(wad[4..8].try_into().unwrap()) as usize;
-        let dir = u32::from_le_bytes(wad[8..12].try_into().unwrap()) as usize;
+        let count = le_u32(wad, 4) as usize;
+        let dir = le_u32(wad, 8) as usize;
         (0..count).find_map(|i| {
             let e = &wad[dir + 16 * i..dir + 16 * i + 16];
             let entry_name = e[8..16].split(|&b| b == 0).next().unwrap();
             (entry_name == name.as_bytes()).then(|| {
-                let pos = u32::from_le_bytes(e[0..4].try_into().unwrap()) as usize;
-                let len = u32::from_le_bytes(e[4..8].try_into().unwrap()) as usize;
+                let pos = le_u32(e, 0) as usize;
+                let len = le_u32(e, 4) as usize;
                 &wad[pos..pos + len]
             })
         })
     }
 
     fn song_names(wad: &[u8]) -> Vec<String> {
-        let count = u32::from_le_bytes(wad[4..8].try_into().unwrap()) as usize;
-        let dir = u32::from_le_bytes(wad[8..12].try_into().unwrap()) as usize;
+        let count = le_u32(wad, 4) as usize;
+        let dir = le_u32(wad, 8) as usize;
         (0..count)
             .filter_map(|i| {
                 let e = &wad[dir + 16 * i..dir + 16 * i + 16];
