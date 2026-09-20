@@ -330,7 +330,6 @@ pub fn punch(state: &mut GameState, player_id: PlayerId, _position: i32) {
         let (linetarget_x, linetarget_y) = (linetarget.x, linetarget.y);
         s_start_sound(state, SoundOrigin::Mobj(player_mo), SfxName::Punch);
         state.world.p_mobj.mo_mut(player_mo).angle = point_to_angle2(
-            &mut state.render.r_main,
             state.world.p_mobj.mo(player_mo).x,
             state.world.p_mobj.mo(player_mo).y,
             linetarget_x,
@@ -365,7 +364,6 @@ pub fn saw(state: &mut GameState, player_id: PlayerId, _position: i32) {
     let linetarget = state.world.p_mobj.mo(state.world.p_map.linetarget.unwrap());
     let (linetarget_x, linetarget_y) = (linetarget.x, linetarget.y);
     angle = point_to_angle2(
-        &mut state.render.r_main,
         state.world.p_mobj.mo(player_mo).x,
         state.world.p_mobj.mo(player_mo).y,
         linetarget_x,

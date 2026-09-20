@@ -774,13 +774,7 @@ pub fn damage_mobj(
                 let t = state.world.p_mobj.mo(target);
                 (t.x, t.y, t.z, t.kind)
             };
-            let mut ang: u32 = point_to_angle2(
-                &mut state.render.r_main,
-                inflictor_x,
-                inflictor_y,
-                target_x,
-                target_y,
-            );
+            let mut ang: u32 = point_to_angle2(inflictor_x, inflictor_y, target_x, target_y);
             let mut thrust: Fixed = (damage * (FRACUNIT >> 3) * 100
                 / state.assets.info.mobjinfo_mut(target_type).mass)
                 as Fixed;

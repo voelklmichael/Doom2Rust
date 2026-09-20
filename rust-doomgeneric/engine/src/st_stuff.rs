@@ -717,13 +717,8 @@ pub fn update_face_widget(state: &mut GameState) {
 
                 let plyr_attacker = state.world.p_mobj.mo(attacker_id);
                 let (attacker_x, attacker_y) = (plyr_attacker.x, plyr_attacker.y);
-                let badguyangle: Angle = point_to_angle2(
-                    &mut state.render.r_main,
-                    plyr_mo_x,
-                    plyr_mo_y,
-                    attacker_x,
-                    attacker_y,
-                );
+                let badguyangle: Angle =
+                    point_to_angle2(plyr_mo_x, plyr_mo_y, attacker_x, attacker_y);
                 if badguyangle > plyr_mo_angle {
                     diffang = badguyangle.wrapping_sub(plyr_mo_angle);
                     i = (diffang > ANG180) as i32;

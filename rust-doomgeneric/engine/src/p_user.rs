@@ -159,7 +159,6 @@ pub fn death_think(state: &mut GameState, player_id: PlayerId) {
     {
         let attacker = state.game.g_game.players[player].attacker.unwrap();
         let angle: Angle = point_to_angle2(
-            &mut state.render.r_main,
             state.world.p_mobj.mo(player_mo).x,
             state.world.p_mobj.mo(player_mo).y,
             state.world.p_mobj.mo(attacker).x,

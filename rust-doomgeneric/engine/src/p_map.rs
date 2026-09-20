@@ -197,7 +197,7 @@ pub fn teleport_move(state: &mut GameState, thing: MobjId, x: Fixed, y: Fixed) -
         .p_setup
         .sector_mut(state.world.p_setup.subsectors[newsubsec.0 as usize].sector)
         .ceilingheight;
-    state.render.r_main.validcount += 1;
+    state.world.p_setup.validcount += 1;
     state.world.p_map.numspechit = 0;
     let xl: i32 =
         (state.world.p_map.tmbbox[BoxIndex::Left] - state.world.p_setup.bmaporgx - 32 * FRACUNIT)
@@ -446,7 +446,7 @@ pub fn check_position(state: &mut GameState, thing: MobjId, x: Fixed, y: Fixed) 
         .p_setup
         .sector_mut(state.world.p_setup.subsectors[newsubsec.0 as usize].sector)
         .ceilingheight;
-    state.render.r_main.validcount += 1;
+    state.world.p_setup.validcount += 1;
     state.world.p_map.numspechit = 0;
     if state.world.p_map.tmflags.contains(MobjFlags::NOCLIP) {
         return true;
@@ -605,17 +605,12 @@ pub fn hit_slide_line(state: &mut GameState, ld: LineId) {
         state.world.p_mobj.mo(slidemo).y,
         ld,
     );
-    let mut lineangle: Angle = point_to_angle2(&mut state.render.r_main, 0, 0, ldv.dx, ldv.dy);
+    let mut lineangle: Angle = point_to_angle2(0, 0, ldv.dx, ldv.dy);
     if side == 1 {
         lineangle = lineangle.wrapping_add(ANG180) as Angle as Angle;
     }
-    let moveangle: Angle = point_to_angle2(
-        &mut state.render.r_main,
-        0,
-        0,
-        state.world.p_map.tmxmove,
-        state.world.p_map.tmymove,
-    );
+    let moveangle: Angle =
+        point_to_angle2(0, 0, state.world.p_map.tmxmove, state.world.p_map.tmymove);
     let mut deltaangle: Angle = moveangle.wrapping_sub(lineangle);
     if deltaangle > ANG180 {
         deltaangle = deltaangle.wrapping_add(ANG180) as Angle as Angle;

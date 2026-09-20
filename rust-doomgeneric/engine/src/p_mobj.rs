@@ -3812,7 +3812,7 @@ pub fn spawn_missile(
         s_start_sound(state, SoundOrigin::Mobj(th), seesound);
     }
     state.world.p_mobj.mo_mut(th).target = Some(source);
-    let mut an: Angle = point_to_angle2(&mut state.render.r_main, sx, sy, dx, dy);
+    let mut an: Angle = point_to_angle2(sx, sy, dx, dy);
     if dflags.contains(MobjFlags::SHADOW) {
         an = an.wrapping_add(
             ((p_random(&mut state.world.m_random) - p_random(&mut state.world.m_random)) << 20)
