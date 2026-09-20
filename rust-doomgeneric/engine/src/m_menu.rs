@@ -1329,284 +1329,253 @@ pub fn write_text(state: &mut GameState, x: i32, y: i32, string: &str) {
 fn is_null_key(key: i32) -> bool {
     key == KEY_PAUSE || key == KEY_CAPSLOCK || key == KEY_SCRLCK || key == KEY_NUMLOCK
 }
-pub fn m_responder(state: &mut GameState, ev: &Event) -> bool {
-    if state.game.g_game.testcontrols {
-        if ev.kind == EvType::Quit
-            || ev.kind == EvType::Keydown
-                && (ev.data1 == state.game.m_controls.key_menu_activate
-                    || ev.data1 == state.game.m_controls.key_menu_quit)
-        {
-            i_quit(state);
-            return true;
-        }
-        return false;
+/// The key an input event stands for in the menu, and the character typed if it is a key press.
+/// Joystick and mouse movement become arrow keys, and make the menu ignore that device for a few
+/// tics afterwards.
+fn event_key(state: &mut GameState, ev: &Event) -> Option<(i32, i32)> {
+    match ev.kind {
+        EvType::Keydown => Some((ev.data1, ev.data2)),
+        EvType::Joystick => joystick_key(state, ev).map(|key| (key, 0)),
+        EvType::Mouse => mouse_key(state, ev).map(|key| (key, 0)),
+        _ => None,
     }
-    if ev.kind == EvType::Quit {
-        if state.ui.m_menu.menuactive
-            && state.ui.m_menu.message_to_print
-            && state.ui.m_menu.message_is_quit_prompt
-        {
-            let key_menu_confirm = state.game.m_controls.key_menu_confirm;
-            quit_response(state, key_menu_confirm);
-        } else {
-            s_start_sound(state, SoundOrigin::None, SfxName::Swtchn);
-            quit_doom(state, 0);
-        }
-        return true;
+}
+
+fn joystick_key(state: &mut GameState, ev: &Event) -> Option<i32> {
+    let now = get_time(&mut state.io.i_timer, &mut *state.io.platform);
+    if state.ui.m_menu.responder_joywait >= now {
+        return None;
     }
-    let mut ch: i32 = 0;
-    let mut key: i32 = -1;
-    if ev.kind == EvType::Joystick
-        && state.ui.m_menu.responder_joywait
-            < get_time(&mut state.io.i_timer, &mut *state.io.platform)
-    {
-        if ev.data3 < 0 {
-            key = state.game.m_controls.key_menu_up;
-            state.ui.m_menu.responder_joywait =
-                get_time(&mut state.io.i_timer, &mut *state.io.platform) + 5;
-        } else if ev.data3 > 0 {
-            key = state.game.m_controls.key_menu_down;
-            state.ui.m_menu.responder_joywait =
-                get_time(&mut state.io.i_timer, &mut *state.io.platform) + 5;
-        }
-        if ev.data2 < 0 {
-            key = state.game.m_controls.key_menu_left;
-            state.ui.m_menu.responder_joywait =
-                get_time(&mut state.io.i_timer, &mut *state.io.platform) + 2;
-        } else if ev.data2 > 0 {
-            key = state.game.m_controls.key_menu_right;
-            state.ui.m_menu.responder_joywait =
-                get_time(&mut state.io.i_timer, &mut *state.io.platform) + 2;
-        }
-        if ev.data1 & 1 != 0 {
-            key = state.game.m_controls.key_menu_forward;
-            state.ui.m_menu.responder_joywait =
-                get_time(&mut state.io.i_timer, &mut *state.io.platform) + 5;
-        }
-        if ev.data1 & 2 != 0 {
-            key = state.game.m_controls.key_menu_back;
-            state.ui.m_menu.responder_joywait =
-                get_time(&mut state.io.i_timer, &mut *state.io.platform) + 5;
-        }
-        if state.game.m_controls.joybmenu >= 0
-            && ev.data1 & 1 << state.game.m_controls.joybmenu != 0
-        {
-            key = state.game.m_controls.key_menu_activate;
-            state.ui.m_menu.responder_joywait =
-                get_time(&mut state.io.i_timer, &mut *state.io.platform) + 5;
-        }
-    } else if ev.kind == EvType::Mouse
-        && state.ui.m_menu.responder_mousewait
-            < get_time(&mut state.io.i_timer, &mut *state.io.platform)
-    {
-        state.ui.m_menu.responder_mousey += ev.data3;
-        if state.ui.m_menu.responder_mousey < state.ui.m_menu.responder_lasty - 30 {
-            key = state.game.m_controls.key_menu_down;
-            state.ui.m_menu.responder_mousewait =
-                get_time(&mut state.io.i_timer, &mut *state.io.platform) + 5;
-            state.ui.m_menu.responder_lasty -= 30;
-            state.ui.m_menu.responder_mousey = state.ui.m_menu.responder_lasty;
-        } else if state.ui.m_menu.responder_mousey > state.ui.m_menu.responder_lasty + 30 {
-            key = state.game.m_controls.key_menu_up;
-            state.ui.m_menu.responder_mousewait =
-                get_time(&mut state.io.i_timer, &mut *state.io.platform) + 5;
-            state.ui.m_menu.responder_lasty += 30;
-            state.ui.m_menu.responder_mousey = state.ui.m_menu.responder_lasty;
-        }
-        state.ui.m_menu.responder_mousex += ev.data2;
-        if state.ui.m_menu.responder_mousex < state.ui.m_menu.responder_lastx - 30 {
-            key = state.game.m_controls.key_menu_left;
-            state.ui.m_menu.responder_mousewait =
-                get_time(&mut state.io.i_timer, &mut *state.io.platform) + 5;
-            state.ui.m_menu.responder_lastx -= 30;
-            state.ui.m_menu.responder_mousex = state.ui.m_menu.responder_lastx;
-        } else if state.ui.m_menu.responder_mousex > state.ui.m_menu.responder_lastx + 30 {
-            key = state.game.m_controls.key_menu_right;
-            state.ui.m_menu.responder_mousewait =
-                get_time(&mut state.io.i_timer, &mut *state.io.platform) + 5;
-            state.ui.m_menu.responder_lastx += 30;
-            state.ui.m_menu.responder_mousex = state.ui.m_menu.responder_lastx;
-        }
-        if ev.data1 & 1 != 0 {
-            key = state.game.m_controls.key_menu_forward;
-            state.ui.m_menu.responder_mousewait =
-                get_time(&mut state.io.i_timer, &mut *state.io.platform) + 15;
-        }
-        if ev.data1 & 2 != 0 {
-            key = state.game.m_controls.key_menu_back;
-            state.ui.m_menu.responder_mousewait =
-                get_time(&mut state.io.i_timer, &mut *state.io.platform) + 15;
-        }
-    } else if ev.kind == EvType::Keydown {
-        key = ev.data1;
-        ch = ev.data2;
+    let c = &state.game.m_controls;
+    // The last rule that applies wins, together with how long the joystick is then ignored.
+    let mut pressed = None;
+    if ev.data3 < 0 {
+        pressed = Some((c.key_menu_up, 5));
+    } else if ev.data3 > 0 {
+        pressed = Some((c.key_menu_down, 5));
     }
-    if key == -1 {
-        return false;
+    if ev.data2 < 0 {
+        pressed = Some((c.key_menu_left, 2));
+    } else if ev.data2 > 0 {
+        pressed = Some((c.key_menu_right, 2));
     }
-    if state.ui.m_menu.save_string_enter {
-        match key {
-            KEY_BACKSPACE => {
-                if state.ui.m_menu.save_char_index > 0 {
-                    state.ui.m_menu.save_char_index -= 1;
-                    state.ui.m_menu.savegamestrings[state.ui.m_menu.save_slot as usize]
-                        .truncate(state.ui.m_menu.save_char_index);
-                }
-            }
-            KEY_ESCAPE => {
-                state.ui.m_menu.save_string_enter = false;
-                let old_string = state.ui.m_menu.save_old_string.clone();
+    if ev.data1 & 1 != 0 {
+        pressed = Some((c.key_menu_forward, 5));
+    }
+    if ev.data1 & 2 != 0 {
+        pressed = Some((c.key_menu_back, 5));
+    }
+    if c.joybmenu >= 0 && ev.data1 & 1 << c.joybmenu != 0 {
+        pressed = Some((c.key_menu_activate, 5));
+    }
+    let (key, wait) = pressed?;
+    state.ui.m_menu.responder_joywait = now + wait;
+    Some(key)
+}
+
+fn mouse_key(state: &mut GameState, ev: &Event) -> Option<i32> {
+    let now = get_time(&mut state.io.i_timer, &mut *state.io.platform);
+    let m = &mut state.ui.m_menu;
+    if m.responder_mousewait >= now {
+        return None;
+    }
+    let c = &state.game.m_controls;
+    let mut pressed = None;
+    // Moving the mouse 30 units in a direction counts as one press of that arrow.
+    m.responder_mousey += ev.data3;
+    if m.responder_mousey < m.responder_lasty - 30 {
+        pressed = Some((c.key_menu_down, 5));
+        m.responder_lasty -= 30;
+        m.responder_mousey = m.responder_lasty;
+    } else if m.responder_mousey > m.responder_lasty + 30 {
+        pressed = Some((c.key_menu_up, 5));
+        m.responder_lasty += 30;
+        m.responder_mousey = m.responder_lasty;
+    }
+    m.responder_mousex += ev.data2;
+    if m.responder_mousex < m.responder_lastx - 30 {
+        pressed = Some((c.key_menu_left, 5));
+        m.responder_lastx -= 30;
+        m.responder_mousex = m.responder_lastx;
+    } else if m.responder_mousex > m.responder_lastx + 30 {
+        pressed = Some((c.key_menu_right, 5));
+        m.responder_lastx += 30;
+        m.responder_mousex = m.responder_lastx;
+    }
+    if ev.data1 & 1 != 0 {
+        pressed = Some((c.key_menu_forward, 15));
+    }
+    if ev.data1 & 2 != 0 {
+        pressed = Some((c.key_menu_back, 15));
+    }
+    let (key, wait) = pressed?;
+    m.responder_mousewait = now + wait;
+    Some(key)
+}
+
+/// A key press while a save game name is being typed.
+fn edit_save_name(state: &mut GameState, key: i32, mut ch: i32) -> bool {
+    match key {
+        KEY_BACKSPACE => {
+            if state.ui.m_menu.save_char_index > 0 {
+                state.ui.m_menu.save_char_index -= 1;
                 state.ui.m_menu.savegamestrings[state.ui.m_menu.save_slot as usize]
-                    .clone_from(&old_string);
+                    .truncate(state.ui.m_menu.save_char_index);
             }
-            KEY_ENTER => {
-                state.ui.m_menu.save_string_enter = false;
-                if !state.ui.m_menu.savegamestrings[state.ui.m_menu.save_slot as usize].is_empty() {
-                    let save_slot = state.ui.m_menu.save_slot;
-                    do_save(&mut state.game.g_game, &mut state.ui.m_menu, save_slot);
-                }
+        }
+        KEY_ESCAPE => {
+            state.ui.m_menu.save_string_enter = false;
+            let old_string = state.ui.m_menu.save_old_string.clone();
+            state.ui.m_menu.savegamestrings[state.ui.m_menu.save_slot as usize]
+                .clone_from(&old_string);
+        }
+        KEY_ENTER => {
+            state.ui.m_menu.save_string_enter = false;
+            if !state.ui.m_menu.savegamestrings[state.ui.m_menu.save_slot as usize].is_empty() {
+                let save_slot = state.ui.m_menu.save_slot;
+                do_save(&mut state.game.g_game, &mut state.ui.m_menu, save_slot);
             }
-            _ => {
-                if state.io.i_input.vanilla_keyboard_mapping != 0 {
-                    ch = key;
-                }
-                ch = i32::from((ch as u8).to_ascii_uppercase());
-                if !(ch != ' ' as i32
-                    && (ch - HU_FONTSTART < 0 || ch - HU_FONTSTART >= HU_FONTSIZE))
+        }
+        _ => {
+            if state.io.i_input.vanilla_keyboard_mapping != 0 {
+                ch = key;
+            }
+            ch = i32::from((ch as u8).to_ascii_uppercase());
+            if !(ch != ' ' as i32 && (ch - HU_FONTSTART < 0 || ch - HU_FONTSTART >= HU_FONTSIZE)) {
+                let savestr =
+                    state.ui.m_menu.savegamestrings[state.ui.m_menu.save_slot as usize].clone();
+                if (32..=127).contains(&ch)
+                    && state.ui.m_menu.save_char_index < SAVESTRINGSIZE - 1
+                    && string_width(
+                        &*state.assets.fs,
+                        &state.ui.hu_stuff,
+                        &mut state.assets.w_wad,
+                        &savestr,
+                    ) < (SAVESTRINGSIZE as i32 - 2) * 8
                 {
-                    let savestr =
-                        state.ui.m_menu.savegamestrings[state.ui.m_menu.save_slot as usize].clone();
-                    if (32..=127).contains(&ch)
-                        && state.ui.m_menu.save_char_index < SAVESTRINGSIZE - 1
-                        && string_width(
-                            &*state.assets.fs,
-                            &state.ui.hu_stuff,
-                            &mut state.assets.w_wad,
-                            &savestr,
-                        ) < (SAVESTRINGSIZE as i32 - 2) * 8
-                    {
-                        state.ui.m_menu.save_char_index += 1;
-                        state.ui.m_menu.savegamestrings[state.ui.m_menu.save_slot as usize]
-                            .push(ch as u8 as char);
-                    }
+                    state.ui.m_menu.save_char_index += 1;
+                    state.ui.m_menu.savegamestrings[state.ui.m_menu.save_slot as usize]
+                        .push(ch as u8 as char);
                 }
             }
         }
-        return true;
     }
-    if state.ui.m_menu.message_to_print {
-        if state.ui.m_menu.message_needs_input
-            && key != ' ' as i32
-            && key != KEY_ESCAPE
-            && key != state.game.m_controls.key_menu_confirm
-            && key != state.game.m_controls.key_menu_abort
-        {
+    true
+}
+
+/// A key press while a message is on the screen: answers it, if it is one of the answer keys.
+fn answer_message(state: &mut GameState, key: i32) -> bool {
+    if state.ui.m_menu.message_needs_input
+        && key != ' ' as i32
+        && key != KEY_ESCAPE
+        && key != state.game.m_controls.key_menu_confirm
+        && key != state.game.m_controls.key_menu_abort
+    {
+        return false;
+    }
+    state.ui.m_menu.menuactive = state.ui.m_menu.message_last_menu_active != 0;
+    state.ui.m_menu.message_to_print = false;
+    if state.ui.m_menu.message_routine.is_some() {
+        state
+            .ui
+            .m_menu
+            .message_routine
+            .expect("non-null function pointer")(state, key);
+    }
+    state.ui.m_menu.menuactive = false;
+    s_start_sound(state, SoundOrigin::None, SfxName::Swtchx);
+    true
+}
+
+/// A key press with no menu open: the function keys and the screen size keys, or the key that
+/// opens the menu.
+fn inactive_menu_key(state: &mut GameState, key: i32) -> bool {
+    if key == state.game.m_controls.key_menu_decscreen {
+        if state.ui.am_map.automapactive || state.ui.hu_stuff.chat_on {
             return false;
         }
-        state.ui.m_menu.menuactive = state.ui.m_menu.message_last_menu_active != 0;
-        state.ui.m_menu.message_to_print = false;
-        if state.ui.m_menu.message_routine.is_some() {
-            state
-                .ui
-                .m_menu
-                .message_routine
-                .expect("non-null function pointer")(state, key);
+        size_display(state, 0);
+        s_start_sound(state, SoundOrigin::None, SfxName::Stnmov);
+        return true;
+    } else if key == state.game.m_controls.key_menu_incscreen {
+        if state.ui.am_map.automapactive || state.ui.hu_stuff.chat_on {
+            return false;
         }
-        state.ui.m_menu.menuactive = false;
-        s_start_sound(state, SoundOrigin::None, SfxName::Swtchx);
+        size_display(state, 1);
+        s_start_sound(state, SoundOrigin::None, SfxName::Stnmov);
+        return true;
+    } else if key == state.game.m_controls.key_menu_help {
+        start_control_panel(&mut state.ui.m_menu);
+        if state.game.doomstat.gamemode == GameMode::Retail {
+            state.ui.m_menu.current_menu = MenuId::Read2;
+        } else {
+            state.ui.m_menu.current_menu = MenuId::Read1;
+        }
+        state.ui.m_menu.item_on = 0;
+        s_start_sound(state, SoundOrigin::None, SfxName::Swtchn);
+        return true;
+    } else if key == state.game.m_controls.key_menu_save {
+        start_control_panel(&mut state.ui.m_menu);
+        s_start_sound(state, SoundOrigin::None, SfxName::Swtchn);
+        m_save_game(state, 0);
+        return true;
+    } else if key == state.game.m_controls.key_menu_load {
+        start_control_panel(&mut state.ui.m_menu);
+        s_start_sound(state, SoundOrigin::None, SfxName::Swtchn);
+        m_load_game(state, 0);
+        return true;
+    } else if key == state.game.m_controls.key_menu_volume {
+        start_control_panel(&mut state.ui.m_menu);
+        state.ui.m_menu.current_menu = MenuId::Sound;
+        state.ui.m_menu.item_on = SoundMenu::SfxVol as i32 as i16;
+        s_start_sound(state, SoundOrigin::None, SfxName::Swtchn);
+        return true;
+    } else if key == state.game.m_controls.key_menu_detail {
+        change_detail(state, 0);
+        s_start_sound(state, SoundOrigin::None, SfxName::Swtchn);
+        return true;
+    } else if key == state.game.m_controls.key_menu_qsave {
+        s_start_sound(state, SoundOrigin::None, SfxName::Swtchn);
+        quick_save(state);
+        return true;
+    } else if key == state.game.m_controls.key_menu_endgame {
+        s_start_sound(state, SoundOrigin::None, SfxName::Swtchn);
+        end_game(state, 0);
+        return true;
+    } else if key == state.game.m_controls.key_menu_messages {
+        change_messages(state, 0);
+        s_start_sound(state, SoundOrigin::None, SfxName::Swtchn);
+        return true;
+    } else if key == state.game.m_controls.key_menu_qload {
+        s_start_sound(state, SoundOrigin::None, SfxName::Swtchn);
+        quick_load(&state.game.g_game, &mut state.ui.m_menu);
+        return true;
+    } else if key == state.game.m_controls.key_menu_quit {
+        s_start_sound(state, SoundOrigin::None, SfxName::Swtchn);
+        quit_doom(state, 0);
+        return true;
+    } else if key == state.game.m_controls.key_menu_gamma {
+        state.io.i_video.usegamma += 1;
+        if state.io.i_video.usegamma > 4 {
+            state.io.i_video.usegamma = 0;
+        }
+        state.game.g_game.players[state.game.g_game.consoleplayer].message =
+            Some(GAMMAMSG[state.io.i_video.usegamma as usize].to_string());
+        let pal = lump_bytes_name(&*state.assets.fs, &mut state.assets.w_wad, "PLAYPAL");
+        set_palette(&mut state.io.i_video, &pal[..768]);
         return true;
     }
-    if state.game.d_main.devparm && key == state.game.m_controls.key_menu_help
-        || key != 0 && key == state.game.m_controls.key_menu_screenshot
-    {
-        g_screen_shot(&mut state.game.g_game);
+    if key == state.game.m_controls.key_menu_activate {
+        start_control_panel(&mut state.ui.m_menu);
+        s_start_sound(state, SoundOrigin::None, SfxName::Swtchn);
         return true;
     }
-    if !state.ui.m_menu.menuactive {
-        if key == state.game.m_controls.key_menu_decscreen {
-            if state.ui.am_map.automapactive || state.ui.hu_stuff.chat_on {
-                return false;
-            }
-            size_display(state, 0);
-            s_start_sound(state, SoundOrigin::None, SfxName::Stnmov);
-            return true;
-        } else if key == state.game.m_controls.key_menu_incscreen {
-            if state.ui.am_map.automapactive || state.ui.hu_stuff.chat_on {
-                return false;
-            }
-            size_display(state, 1);
-            s_start_sound(state, SoundOrigin::None, SfxName::Stnmov);
-            return true;
-        } else if key == state.game.m_controls.key_menu_help {
-            start_control_panel(&mut state.ui.m_menu);
-            if state.game.doomstat.gamemode == GameMode::Retail {
-                state.ui.m_menu.current_menu = MenuId::Read2;
-            } else {
-                state.ui.m_menu.current_menu = MenuId::Read1;
-            }
-            state.ui.m_menu.item_on = 0;
-            s_start_sound(state, SoundOrigin::None, SfxName::Swtchn);
-            return true;
-        } else if key == state.game.m_controls.key_menu_save {
-            start_control_panel(&mut state.ui.m_menu);
-            s_start_sound(state, SoundOrigin::None, SfxName::Swtchn);
-            m_save_game(state, 0);
-            return true;
-        } else if key == state.game.m_controls.key_menu_load {
-            start_control_panel(&mut state.ui.m_menu);
-            s_start_sound(state, SoundOrigin::None, SfxName::Swtchn);
-            m_load_game(state, 0);
-            return true;
-        } else if key == state.game.m_controls.key_menu_volume {
-            start_control_panel(&mut state.ui.m_menu);
-            state.ui.m_menu.current_menu = MenuId::Sound;
-            state.ui.m_menu.item_on = SoundMenu::SfxVol as i32 as i16;
-            s_start_sound(state, SoundOrigin::None, SfxName::Swtchn);
-            return true;
-        } else if key == state.game.m_controls.key_menu_detail {
-            change_detail(state, 0);
-            s_start_sound(state, SoundOrigin::None, SfxName::Swtchn);
-            return true;
-        } else if key == state.game.m_controls.key_menu_qsave {
-            s_start_sound(state, SoundOrigin::None, SfxName::Swtchn);
-            quick_save(state);
-            return true;
-        } else if key == state.game.m_controls.key_menu_endgame {
-            s_start_sound(state, SoundOrigin::None, SfxName::Swtchn);
-            end_game(state, 0);
-            return true;
-        } else if key == state.game.m_controls.key_menu_messages {
-            change_messages(state, 0);
-            s_start_sound(state, SoundOrigin::None, SfxName::Swtchn);
-            return true;
-        } else if key == state.game.m_controls.key_menu_qload {
-            s_start_sound(state, SoundOrigin::None, SfxName::Swtchn);
-            quick_load(&state.game.g_game, &mut state.ui.m_menu);
-            return true;
-        } else if key == state.game.m_controls.key_menu_quit {
-            s_start_sound(state, SoundOrigin::None, SfxName::Swtchn);
-            quit_doom(state, 0);
-            return true;
-        } else if key == state.game.m_controls.key_menu_gamma {
-            state.io.i_video.usegamma += 1;
-            if state.io.i_video.usegamma > 4 {
-                state.io.i_video.usegamma = 0;
-            }
-            state.game.g_game.players[state.game.g_game.consoleplayer].message =
-                Some(GAMMAMSG[state.io.i_video.usegamma as usize].to_string());
-            let pal = lump_bytes_name(&*state.assets.fs, &mut state.assets.w_wad, "PLAYPAL");
-            set_palette(&mut state.io.i_video, &pal[..768]);
-            return true;
-        }
-    }
-    if !state.ui.m_menu.menuactive {
-        if key == state.game.m_controls.key_menu_activate {
-            start_control_panel(&mut state.ui.m_menu);
-            s_start_sound(state, SoundOrigin::None, SfxName::Swtchn);
-            return true;
-        }
-        return false;
-    }
+    false
+}
+
+/// A key press in an open menu: move the selection, change a setting, go back or close the menu,
+/// or jump to the item that starts with the typed letter.
+fn menu_navigate(state: &mut GameState, key: i32, ch: i32) -> bool {
     if key == state.game.m_controls.key_menu_down {
         loop {
             if state.ui.m_menu.item_on as usize + 1 >= state.ui.m_menu.current().items.len() {
@@ -1701,6 +1670,77 @@ pub fn m_responder(state: &mut GameState, ev: &Event) -> bool {
     }
     false
 }
+
+pub fn m_responder(state: &mut GameState, ev: &Event) -> bool {
+    if state.game.g_game.testcontrols {
+        if ev.kind == EvType::Quit
+            || ev.kind == EvType::Keydown
+                && (ev.data1 == state.game.m_controls.key_menu_activate
+                    || ev.data1 == state.game.m_controls.key_menu_quit)
+        {
+            i_quit(state);
+            return true;
+        }
+        return false;
+    }
+    if ev.kind == EvType::Quit {
+        if state.ui.m_menu.menuactive
+            && state.ui.m_menu.message_to_print
+            && state.ui.m_menu.message_is_quit_prompt
+        {
+            let key_menu_confirm = state.game.m_controls.key_menu_confirm;
+            quit_response(state, key_menu_confirm);
+        } else {
+            s_start_sound(state, SoundOrigin::None, SfxName::Swtchn);
+            quit_doom(state, 0);
+        }
+        return true;
+    }
+    if state.game.g_game.testcontrols {
+        if ev.kind == EvType::Quit
+            || ev.kind == EvType::Keydown
+                && (ev.data1 == state.game.m_controls.key_menu_activate
+                    || ev.data1 == state.game.m_controls.key_menu_quit)
+        {
+            i_quit(state);
+            return true;
+        }
+        return false;
+    }
+    if ev.kind == EvType::Quit {
+        if state.ui.m_menu.menuactive
+            && state.ui.m_menu.message_to_print
+            && state.ui.m_menu.message_is_quit_prompt
+        {
+            let key_menu_confirm = state.game.m_controls.key_menu_confirm;
+            quit_response(state, key_menu_confirm);
+        } else {
+            s_start_sound(state, SoundOrigin::None, SfxName::Swtchn);
+            quit_doom(state, 0);
+        }
+        return true;
+    }
+    let Some((key, ch)) = event_key(state, ev) else {
+        return false;
+    };
+    if state.ui.m_menu.save_string_enter {
+        return edit_save_name(state, key, ch);
+    }
+    if state.ui.m_menu.message_to_print {
+        return answer_message(state, key);
+    }
+    if state.game.d_main.devparm && key == state.game.m_controls.key_menu_help
+        || key != 0 && key == state.game.m_controls.key_menu_screenshot
+    {
+        g_screen_shot(&mut state.game.g_game);
+        return true;
+    }
+    if !state.ui.m_menu.menuactive {
+        return inactive_menu_key(state, key);
+    }
+    menu_navigate(state, key, ch)
+}
+
 pub fn start_control_panel(m_menu: &mut MMenuState) {
     if m_menu.menuactive {
         return;
