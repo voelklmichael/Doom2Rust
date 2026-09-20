@@ -1,67 +1,89 @@
 # Decomposing `GameState`
 
-## Where things stand (2026-09-19)
+## Where things stand (2026-09-20)
 
-`GameState` (`engine/src/game_state.rs`) bundles 57 per-module state structs
-plus the boxed platform and filesystem. It replaced the C globals one module at
-a time (see `track16-gamestate-plan.md`), and almost every function started out
-taking `state: &mut GameState`, which hides what it really needs and forces
-borrow-checker workarounds (copy fields into locals before calling anything).
+`GameState` (`engine/src/game_state.rs`) owns seven domain aggregates plus nothing else:
 
-A function only needs `&mut GameState` if it needs *several* subsystems at once
-or passes the whole state to something that does. Measured on the engine:
-
-| | functions taking the whole `GameState` |
+| aggregate | holds |
 |---|---|
-| before the narrowing pass | 631 |
-| after (this change) | 453 |
+| `World` | the simulation: p_setup, p_mobj, p_tick, p_spec, p_map, p_maputl, p_sight, p_ceilng/doors/lights/plats/switch, p_enemy, p_pspr, p_user, p_saveg, m_random |
+| `Render` | r_main, r_segs, r_draw, r_data, r_plane, r_bsp, r_things, r_sky |
+| `Ui` | m_menu, hu_stuff, st_lib, st_stuff, wi_stuff, am_map, f_finale, f_wipe, statdump |
+| `Audio` | s_sound, i_sound, sounds |
+| `Assets` | w_wad, w_checksum, info, and the boxed `DoomFileSystem` |
+| `Game` | g_game, doomstat, d_main, d_loop, d_event, d_iwad, m_argv, m_config, m_controls |
+| `Io` | the boxed `DoomPlatform`, i_input, i_joystick, i_system, i_timer, i_video, v_video |
 
-178 functions now take only the subsystems they use, for example
-`activate_in_stasis(p_plats: &mut PPlatsState, p_tick: &PTickState, tag: i32)`
-or `point_to_angle(r_main: &RMainState, ...)`. `m_controls`, `m_argv`, `r_sky`,
-`i_joystick` and `m_random` no longer mention `GameState` at all.
+A use is a path `state.<aggregate>.<module>`. The grouping was chosen by measuring, over every
+function that took `&mut GameState`, how many touch exactly one aggregate; the alternatives tried
+(merging io into game, render into world, moving v_video or audio) scored within a few functions
+of it.
 
-## How it was done
+A function only needs `&mut GameState` if it needs *several* aggregates at once or passes the
+whole state to something that does. Functions taking the whole state:
 
-`tools/narrow_state.py` (run from `rust-doomgeneric/`) finds functions whose
-body touches at most three `state.<field>` paths and never passes `state`
-itself onwards, rewrites the signature to one parameter per field, and rewrites
-every caller. It works bottom-up: narrowing a leaf makes its callers narrower,
-so it is re-run until it finds nothing (single-field pass: 71, 15, 2
-candidates; up-to-three-field pass: 70, 12). Then `cargo clippy --fix` tightens
-parameters that turned out to be read-only from `&mut` to `&`, and the
-compiler's remaining complaints are fixed by hand. In this pass those were:
-a call argument that read a field the same call borrows mutably (hoist it into
-a local, 10 sites), and a parameter named `m_random` shadowing the function
-`m_random`.
+| | count |
+|---|---|
+| original flat `GameState` (before the 2026-09-19 narrowing) | 631 |
+| after the 2026-09-19 narrowing pass | 455 |
+| after aggregates + the tools below (this change) | 404 |
 
-## What is left, and why the script stops
+## Tools (all in `tools/`, run from `rust-doomgeneric/`)
 
-The 453 remaining functions mostly *pass `state` on*, and a few hubs are called
-from everywhere and genuinely need several subsystems:
+- `narrow_state.py` - gives a function that never uses `state` as a whole one parameter per
+  module it touches (<= 3), or its aggregate (`world: &mut World`) when it touches more modules of
+  one aggregate; rewrites every caller; skips callbacks, duplicate names and anything that would
+  exceed clippy's 7-argument limit. Handles the boxed `fs`/`platform` fields (`&dyn
+  DoomFileSystem`, `&mut dyn DoomPlatform`). Run to a fixpoint: narrowing a leaf makes its callers
+  narrower.
+- `tighten_mut.py` - applies clippy's `needless_pass_by_ref_mut` suggestions (which `cargo clippy
+  --fix` does not) and the matching call-site `&mut` -> `&`, to a fixpoint. Run after
+  `narrow_state.py`.
+- `regroup_state.py` - the one-off `state.<module>` -> `state.<aggregate>.<module>` rewrite; keeps
+  the membership table, so a different grouping is a table edit plus a re-run.
+- Then `cargo fmt`, fix what the compiler reports (usually a call argument that reads a field the
+  same call borrows mutably: hoist it into a local), and `cargo test --release`.
 
-| hub | call sites | needs |
-|---|---|---|
-| `s_start_sound` | 155 | sound state, mobj positions, platform, WAD |
-| `saveg_write32` / `saveg_read32` | 124 / 121 | already narrow; callers are the save-game readers/writers |
-| `cache_patch_num` / `draw_patch` | 58 / 57 | WAD + lump cache + video buffers + filesystem |
-| `change_switch_texture` | 53 | level geometry, switch table, sound |
-| `set_mobj_state`, `do_floor`, `do_door` | 33 / 44 / 31 | level, mobjs, thinkers, RNG, sound |
+## Why it stops at ~400
 
-Going further means giving those a *context* instead of the whole state.
-Suggested order, each step verifiable with the golden tests:
+Measured on the stack tip (a by-name transitive closure of "who passes `state` to whom", plus
+direct aggregate use):
 
-1. **Group the 57 structs into a few domain aggregates** owned by `GameState`:
-   for example `world` (p_setup, p_mobj, p_tick, p_spec, p_map, p_maputl,
-   p_sight, the sector-special modules), `render` (r_*), `ui` (m_menu, hu_*,
-   st_*, wi_*, am_map, f_*), `audio` (s_sound, i_sound, sounds) and `sys`
-   (platform, fs, d_loop, i_*). Functions then take `&mut World` and so on.
-2. **Give `s_start_sound` an `Audio` plus a `Listener`/position argument**
-   instead of the whole state; that alone frees ~155 call sites.
-3. **Split the WAD and lump cache from the rest of `w_wad`** so patch and lump
-   access takes `&Wad` instead of `&mut GameState` (58 + 57 sites).
-4. Only then re-run `tools/narrow_state.py`; each of the steps above unlocks a
-   new wave of leaf functions.
+- Only 46 of the remaining state-taking functions transitively need a single aggregate; 65 need
+  two, 89 need three, and 130 need five or more.
+- **Sound is the linchpin.** `s_start_sound` needs assets, audio, game, render and world at once
+  (origin position, listener, `gamemap`, `point_to_angle2`, lump loading, the platform mixer), and
+  it is called from ~155 sites in door/floor/plat/enemy/switch code that otherwise touch only
+  `World`. Every one of those inherits its 5-aggregate need. A "context struct" bundling what it
+  reads would be the whole `GameState` again, so the bundle is not a way out.
+- **Callbacks pin the whole state.** 150 state-taking functions are used as values
+  (`StateAction`, weapon actions, menu routines, `p_map` traversal callbacks); `narrow_state.py`
+  cannot change a function whose type is fixed by a `fn(&mut GameState, ...)` alias. 39 of them
+  touch only `World` directly, but all of those reach `s_start_sound`.
+- `GameState::screen()`/`screen_mut()` spans three aggregates (io, ui, render): the five C
+  `screens[]` live in `i_video`, `st_stuff` and `r_draw`, so every drawing helper needs all three.
 
-Verification for every step is the same: `cargo test --release` (the golden
-simulation/frame/save tests must not change), clippy, and `cargo fmt --check`.
+## Possible next steps (not done)
+
+1. **Decouple sound from the simulation.** Have simulation code push a `SoundRequest { origin,
+   sfx, resolved volume/separation }` onto a queue owned by `World`, drained into `Audio` by the
+   game loop. That removes `Audio`/`Assets`/`Io`/`Render` from every mover and monster function
+   and would let the ~39 world-only callbacks retype to `fn(&mut World, ..)`. It changes *when* a
+   sound starts relative to other world code, so it needs an audio-trace golden first (record
+   `(origin, sfx, volume, sep, channel)` for every `s_start_sound` over demo1-3 against the old
+   code).
+2. **Consolidate the five screens** into `VVideoState` (in `Io`), so drawing helpers take
+   `&mut VVideoState` instead of the whole state.
+3. Only then re-run `narrow_state.py`; each step unlocks a new wave of leaf functions.
+
+## A performance trap found along the way
+
+Grouping the fields changed no instruction, but `-timedemo demo1` got 5-8% slower (identical
+instruction counts, identical L1 misses): `i_video::finish_update`, 45% of all cycles, read its
+palette from an inline table whose address moved with the regroup. Padding the old `GameState` did
+not reproduce it, so it is specific to relative field placement. Packing the palette once per
+frame (one table load per pixel) removed the dependence and made the demo 19% faster than before
+(6.36G -> 5.15G cycles). Lesson: after moving state around, re-run the timedemo (recipe in the
+perf notes: `perf stat -e cycles:u,instructions:u`, `taskset -c 4`, `Doom1.WAD`, `-nosound`) and
+compare *cycles against instructions* - equal instructions with more cycles means a layout effect,
+not a code change.
