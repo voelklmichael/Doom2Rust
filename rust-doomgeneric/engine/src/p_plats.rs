@@ -248,7 +248,7 @@ pub fn do_plat(state: &mut GameState, line: LineId, kind: PlattypeE, amount: i32
             PlattypeE::RaiseToNearestAndChange => {
                 plat.speed = PLATSPEED / 2;
                 let neighbor_sector_id =
-                    state.world.p_setup.sides[linev.sidenum[0] as usize].sector;
+                    state.world.p_setup.sides[linev.front_side().0 as usize].sector;
                 let neighbor_pic = state.world.p_setup.sector_mut(neighbor_sector_id).floorpic;
                 state.world.p_setup.sector_mut(sec).floorpic = neighbor_pic;
                 plat.high = find_next_highest_floor(&mut state.world.p_setup, sec, floorheight);
@@ -260,7 +260,7 @@ pub fn do_plat(state: &mut GameState, line: LineId, kind: PlattypeE, amount: i32
             PlattypeE::RaiseAndChange => {
                 plat.speed = PLATSPEED / 2;
                 let neighbor_sector_id =
-                    state.world.p_setup.sides[linev.sidenum[0] as usize].sector;
+                    state.world.p_setup.sides[linev.front_side().0 as usize].sector;
                 let neighbor_pic = state.world.p_setup.sector_mut(neighbor_sector_id).floorpic;
                 state.world.p_setup.sector_mut(sec).floorpic = neighbor_pic;
                 plat.high = floorheight + amount * FRACUNIT;

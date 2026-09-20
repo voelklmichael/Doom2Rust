@@ -28,6 +28,7 @@ use crate::s_sound::SoundOrigin;
 use crate::sounds::MusicName;
 use crate::sounds::SfxName;
 
+use crate::v_video::cache_loaded_patch;
 use crate::v_video::cache_patch_num;
 use crate::v_video::draw_patch;
 use crate::v_video::draw_patch_flipped;
@@ -411,7 +412,7 @@ pub fn text_write(state: &mut GameState) {
         } else {
             c = i32::from((c as u8).to_ascii_uppercase()) - HU_FONTSTART;
             if (0..=HU_FONTSIZE).contains(&c) {
-                let font_patch = cache_patch_num(
+                let font_patch = cache_loaded_patch(
                     &*state.assets.fs,
                     &mut state.assets.w_wad,
                     state.ui.hu_stuff.hu_font[c as usize],
@@ -669,7 +670,7 @@ pub fn cast_print(state: &mut GameState, text: &str) {
     for b in text.bytes() {
         let c: i32 = i32::from(b.to_ascii_uppercase()) - HU_FONTSTART;
         if (0..=HU_FONTSIZE).contains(&c) {
-            let w: i32 = cache_patch_num(
+            let w: i32 = cache_loaded_patch(
                 &*state.assets.fs,
                 &mut state.assets.w_wad,
                 state.ui.hu_stuff.hu_font[c as usize],
@@ -684,7 +685,7 @@ pub fn cast_print(state: &mut GameState, text: &str) {
     for b in text.bytes() {
         let c: i32 = i32::from(b.to_ascii_uppercase()) - HU_FONTSTART;
         if (0..=HU_FONTSIZE).contains(&c) {
-            let font_patch = cache_patch_num(
+            let font_patch = cache_loaded_patch(
                 &*state.assets.fs,
                 &mut state.assets.w_wad,
                 state.ui.hu_stuff.hu_font[c as usize],
@@ -717,7 +718,7 @@ pub fn cast_drawer(state: &mut GameState) {
     let patch: Patch = cache_patch_num(
         &*state.assets.fs,
         &mut state.assets.w_wad,
-        lump + state.render.r_data.firstspritelump,
+        state.render.r_data.firstspritelump + lump,
     );
     if flip {
         let dest_screen = Screen::Video;

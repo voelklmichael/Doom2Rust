@@ -23,7 +23,8 @@ use crate::m_controls::KEY_RSHIFT;
 use crate::s_sound::s_start_sound;
 use crate::s_sound::SoundOrigin;
 use crate::sounds::SfxName;
-use crate::v_video::cache_patch_num;
+use crate::v_video::cache_loaded_patch;
+use crate::w_wad::LumpNum;
 use crate::w_wad::WWadState;
 use crate::w_wad::{get_num_for_name, lump_bytes};
 use alloc::string::String;
@@ -31,7 +32,7 @@ use alloc::string::ToString;
 
 pub struct HuStuffState {
     pub plr: PlayerId,
-    pub hu_font: [i32; 63],
+    pub hu_font: [Option<LumpNum>; 63],
     pub w_title: HuTextLine,
     pub chat_on: bool,
     pub w_chat: HuIText,
@@ -61,7 +62,7 @@ impl HuStuffState {
     pub const fn new() -> Self {
         Self {
             plr: PlayerId(0),
-            hu_font: [-1; 63],
+            hu_font: [None; 63],
             w_title: HuTextLine {
                 x: 0,
                 y: 0,
@@ -318,7 +319,7 @@ pub fn hu_init(fs: &dyn DoomFileSystem, hu_stuff: &mut HuStuffState, w_wad: &mut
         let buffer = format!("STCFN{code:03}");
         let lumpnum = get_num_for_name(w_wad, &buffer);
         lump_bytes(fs, w_wad, lumpnum);
-        hu_stuff.hu_font[i] = lumpnum;
+        hu_stuff.hu_font[i] = Some(lumpnum);
     }
 }
 pub fn hu_stop(hu_stuff: &mut HuStuffState) {
@@ -335,7 +336,7 @@ pub fn hu_start(state: &mut GameState) {
     state.ui.hu_stuff.chat_on = false;
     let hu_font0 = state.ui.hu_stuff.hu_font[0];
     let hu_font0_height =
-        cache_patch_num(&*state.assets.fs, &mut state.assets.w_wad, hu_font0).height();
+        cache_loaded_patch(&*state.assets.fs, &mut state.assets.w_wad, hu_font0).height();
     hulib_init_stext(
         &mut state.ui.hu_stuff.w_message,
         HU_MSGX,

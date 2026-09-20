@@ -3,7 +3,7 @@ use crate::game_state::GameState;
 use crate::m_controls::KEY_BACKSPACE;
 use crate::m_controls::KEY_ENTER;
 use crate::r_draw::video_erase;
-use crate::v_video::cache_patch_num;
+use crate::v_video::cache_loaded_patch;
 use crate::v_video::draw_patch_direct;
 use crate::v_video::Screen;
 use alloc::string::String;
@@ -63,7 +63,7 @@ pub fn hulib_draw_text_line(state: &mut GameState, l: &HuTextLine, drawcursor: b
         let c = l.l.as_bytes()[i].to_ascii_uppercase();
         if i32::from(c) != ' ' as i32 && i32::from(c) >= l.sc && i32::from(c) <= '_' as i32 {
             let glyph = state.ui.hu_stuff.hu_font[(i32::from(c) - l.sc) as usize];
-            let patch = cache_patch_num(&*state.assets.fs, &mut state.assets.w_wad, glyph);
+            let patch = cache_loaded_patch(&*state.assets.fs, &mut state.assets.w_wad, glyph);
             let w = patch.width();
             if x + w > SCREENWIDTH {
                 break;
@@ -80,7 +80,7 @@ pub fn hulib_draw_text_line(state: &mut GameState, l: &HuTextLine, drawcursor: b
     if drawcursor {
         let cursor_glyph = state.ui.hu_stuff.hu_font[('_' as i32 - l.sc) as usize];
         let cursor_patch =
-            cache_patch_num(&*state.assets.fs, &mut state.assets.w_wad, cursor_glyph);
+            cache_loaded_patch(&*state.assets.fs, &mut state.assets.w_wad, cursor_glyph);
         if x + cursor_patch.width() <= SCREENWIDTH {
             draw_patch_direct(state, Screen::Video, x, l.y, &cursor_patch);
         }
@@ -90,7 +90,7 @@ pub fn hulib_erase_text_line(state: &mut GameState, l: &mut HuTextLine) {
     if !state.ui.am_map.automapactive && state.render.r_draw.viewwindowx != 0 && l.needsupdate != 0
     {
         let glyph = state.ui.hu_stuff.hu_font[0];
-        let patch = cache_patch_num(&*state.assets.fs, &mut state.assets.w_wad, glyph);
+        let patch = cache_loaded_patch(&*state.assets.fs, &mut state.assets.w_wad, glyph);
         let lh = patch.height() + 1;
         for y in l.y..l.y + lh {
             let yoffset = y * SCREENWIDTH;

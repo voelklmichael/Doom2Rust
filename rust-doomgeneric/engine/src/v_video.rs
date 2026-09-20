@@ -12,6 +12,7 @@ use crate::patch::Patch;
 use crate::platform::DoomPlatform;
 use crate::w_wad::lump_bytes;
 use crate::w_wad::lump_bytes_name;
+use crate::w_wad::LumpNum;
 use crate::w_wad::WWadState;
 use alloc::vec::Vec;
 
@@ -121,8 +122,21 @@ pub fn copy_rect(
 }
 /// Resolves a WAD lump number to its cached patch data. Cheap and
 /// idempotent: the lump cache never evicts.
-pub fn cache_patch_num(fs: &dyn DoomFileSystem, w_wad: &mut WWadState, lumpnum: i32) -> Patch {
+pub fn cache_patch_num(fs: &dyn DoomFileSystem, w_wad: &mut WWadState, lumpnum: LumpNum) -> Patch {
     Patch::new(lump_bytes(fs, w_wad, lumpnum))
+}
+/// [`cache_patch_num`] for a graphic whose lump number is looked up when its screen is set up
+/// (the status bar, intermission, ...); drawing one that was never loaded is a bug.
+pub fn cache_loaded_patch(
+    fs: &dyn DoomFileSystem,
+    w_wad: &mut WWadState,
+    lumpnum: Option<LumpNum>,
+) -> Patch {
+    cache_patch_num(
+        fs,
+        w_wad,
+        lumpnum.expect("patch drawn before its lump was loaded"),
+    )
 }
 pub fn cache_patch_name(fs: &dyn DoomFileSystem, w_wad: &mut WWadState, name: &str) -> Patch {
     Patch::new(lump_bytes_name(fs, w_wad, name))

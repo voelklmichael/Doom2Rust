@@ -11,6 +11,7 @@ use crate::r_data::RDataState;
 use crate::v_video::cache_patch_name;
 use crate::v_video::Screen;
 use crate::v_video::VVideoState;
+use crate::w_wad::LumpNum;
 use crate::w_wad::WWadState;
 use alloc::vec::Vec;
 
@@ -22,7 +23,7 @@ use crate::w_wad::lump_bytes_name;
 
 #[derive(Clone, Copy)]
 pub enum ColumnSource {
-    Lump { lump: i32, offset: usize },
+    Lump { lump: LumpNum, offset: usize },
     Composite { tex: i32, offset: usize },
 }
 
@@ -48,7 +49,7 @@ fn source_bytes<'a>(
 ) -> (&'a [u8], isize) {
     match src {
         ColumnSource::Lump { lump, offset } => (
-            &w_wad.lumpinfo[lump as usize].cache.as_ref().unwrap()[..],
+            &w_wad.lumpinfo[lump.index()].cache.as_ref().unwrap()[..],
             offset as isize,
         ),
         ColumnSource::Composite { tex, offset } => (

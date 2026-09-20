@@ -35,6 +35,7 @@ use crate::p_maputl::set_thing_position;
 use crate::p_maputl::unset_thing_position;
 use crate::p_plats::PlatId;
 use crate::p_pspr::setup_psprites;
+use crate::p_setup::SideId;
 use crate::p_setup::{LineId, SectorId, SubsectorId, VertexId};
 use crate::p_spec::FloorId;
 use crate::p_tick::add_thinker;
@@ -2773,12 +2774,19 @@ pub struct Line {
     pub flags: LineFlags,
     pub special: i16,
     pub tag: i16,
-    pub sidenum: [i16; 2],
+    /// The sides in front of and behind the line (`None` where the line has no such side).
+    pub sidenum: [Option<SideId>; 2],
     pub bbox: BBox,
     pub slopetype: SlopeType,
     pub frontsector: Option<SectorId>,
     pub backsector: Option<SectorId>,
     pub validcount: i32,
+}
+impl Line {
+    /// The side in front of the line, which every line of a valid map has.
+    pub fn front_side(&self) -> SideId {
+        self.sidenum[0].expect("line without a front side")
+    }
 }
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum SlopeType {

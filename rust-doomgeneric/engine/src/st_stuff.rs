@@ -45,17 +45,18 @@ use alloc::vec::Vec;
 use crate::tables::Angle;
 use crate::tables::ANG180;
 use crate::tables::ANG45;
-use crate::v_video::cache_patch_num;
+use crate::v_video::cache_loaded_patch;
 use crate::v_video::copy_rect;
 use crate::v_video::draw_patch;
 use crate::w_wad::get_num_for_name;
 use crate::w_wad::lump_bytes;
+use crate::w_wad::LumpNum;
 
 pub struct StStuffState {
     pub st_backing_screen: Vec<u8>,
     pub plyr: PlayerId,
     pub st_firsttime: bool,
-    pub lu_palette: i32,
+    pub lu_palette: LumpNum,
     pub st_clock: u32,
     pub st_msgcounter: i32,
     pub st_chatstate: StChatStateEnum,
@@ -67,15 +68,15 @@ pub struct StStuffState {
     pub st_notdeathmatch: bool,
     pub st_armson: bool,
     pub st_fragson: bool,
-    pub sbar: i32,
-    pub tallnum: [i32; 10],
-    pub tallpercent: i32,
-    pub shortnum: [i32; 10],
-    pub keys: [i32; 6],
-    pub faces: [i32; 42],
-    pub faceback: i32,
-    pub armsbg: i32,
-    pub arms: [[i32; 2]; 6],
+    pub sbar: Option<LumpNum>,
+    pub tallnum: [Option<LumpNum>; 10],
+    pub tallpercent: Option<LumpNum>,
+    pub shortnum: [Option<LumpNum>; 10],
+    pub keys: [Option<LumpNum>; 6],
+    pub faces: [Option<LumpNum>; 42],
+    pub faceback: Option<LumpNum>,
+    pub armsbg: Option<LumpNum>,
+    pub arms: [[Option<LumpNum>; 2]; 6],
     pub w_ready: StNumber,
     pub w_frags: StNumber,
     pub w_health: StPercent,
@@ -105,8 +106,9 @@ pub struct StStuffState {
     pub cheat_clev: CheatSeq,
     pub cheat_mypos: CheatSeq,
     pub st_calcpainoffset_lastcalc: i32,
-    pub st_calcpainoffset_oldhealth: i32,
-    pub st_updatefacewidget_lastattackdown: i32,
+    pub st_calcpainoffset_oldhealth: Option<i32>,
+    /// Tics left until the rampage face, while the fire button is held.
+    pub st_updatefacewidget_lastattackdown: Option<i32>,
     pub st_updatefacewidget_priority: i32,
     pub st_palette: i32,
     pub st_stopped: bool,
@@ -124,7 +126,7 @@ impl StStuffState {
             st_backing_screen: Vec::new(),
             plyr: PlayerId(0),
             st_firsttime: false,
-            lu_palette: 0,
+            lu_palette: LumpNum(0),
             st_clock: 0,
             st_msgcounter: 0,
             st_chatstate: StChatStateEnum::Start,
@@ -136,15 +138,15 @@ impl StStuffState {
             st_notdeathmatch: false,
             st_armson: false,
             st_fragson: false,
-            sbar: -1,
-            tallnum: [-1; 10],
-            tallpercent: -1,
-            shortnum: [-1; 10],
-            keys: [-1; 6],
-            faces: [-1; 42],
-            faceback: -1,
-            armsbg: -1,
-            arms: [[-1; 2]; 6],
+            sbar: None,
+            tallnum: [None; 10],
+            tallpercent: None,
+            shortnum: [None; 10],
+            keys: [None; 6],
+            faces: [None; 42],
+            faceback: None,
+            armsbg: None,
+            arms: [[None; 2]; 6],
             w_ready: StNumber {
                 x: 0,
                 y: 0,
@@ -170,13 +172,13 @@ impl StStuffState {
                     p: StDigitSet::TallNum,
                     data: 0,
                 },
-                p: -1,
+                p: None,
             },
             w_armsbg: StBinIcon {
                 x: 0,
                 y: 0,
                 oldval: false,
-                p: -1,
+                p: None,
                 data: 0,
             },
             w_arms_owned: [0; 6],
@@ -210,7 +212,7 @@ impl StStuffState {
                     p: StDigitSet::TallNum,
                     data: 0,
                 },
-                p: -1,
+                p: None,
             },
             w_ammo: [StNumber {
                 x: 0,
@@ -254,15 +256,15 @@ impl StStuffState {
             cheat_clev: CheatSeq::new("idclev", 2),
             cheat_mypos: CheatSeq::new("idmypos", 0),
             st_calcpainoffset_lastcalc: 0,
-            st_calcpainoffset_oldhealth: -1,
-            st_updatefacewidget_lastattackdown: -1,
+            st_calcpainoffset_oldhealth: None,
+            st_updatefacewidget_lastattackdown: None,
             st_updatefacewidget_priority: 0,
             st_palette: 0,
             st_stopped: true,
         }
     }
 
-    pub fn digit_set(&self, id: StDigitSet) -> &[i32] {
+    pub fn digit_set(&self, id: StDigitSet) -> &[Option<LumpNum>] {
         match id {
             StDigitSet::TallNum => &self.tallnum,
             StDigitSet::ShortNum => &self.shortnum,
@@ -284,7 +286,9 @@ pub enum StChatStateEnum {
     WaitDest,
     Get,
 }
-pub type LoadCallback = fn(&mut GameState, &str) -> i32;
+/// Called for every graphic of a screen: loads it and returns its lump number, or (when the screen
+/// is being torn down) releases it and returns `None`.
+pub type LoadCallback = fn(&mut GameState, &str) -> Option<LumpNum>;
 pub const DEH_DEFAULT_GOD_MODE_HEALTH: i32 = 100;
 pub const DEH_DEFAULT_IDFA_ARMOR: i32 = 200;
 pub const DEH_DEFAULT_IDFA_ARMOR_CLASS: i32 = 2;
@@ -372,14 +376,14 @@ pub const ST_MAXAMMO3Y: i32 = 185;
 pub fn refresh_background(state: &mut GameState) {
     if state.ui.st_stuff.st_statusbaron {
         let st_backing_screen = Screen::StatusBar;
-        let sbar_patch = cache_patch_num(
+        let sbar_patch = cache_loaded_patch(
             &*state.assets.fs,
             &mut state.assets.w_wad,
             state.ui.st_stuff.sbar,
         );
         draw_patch(state, st_backing_screen, ST_X, 0, &sbar_patch);
         if state.game.g_game.netgame {
-            let faceback_patch = cache_patch_num(
+            let faceback_patch = cache_loaded_patch(
                 &*state.assets.fs,
                 &mut state.assets.w_wad,
                 state.ui.st_stuff.faceback,
@@ -640,10 +644,10 @@ pub fn calc_pain_offset(g_game: &mut GGameState, st_stuff: &mut StStuffState) ->
     } else {
         g_game.player_mut(st_stuff.plyr).health
     };
-    if health != st_stuff.st_calcpainoffset_oldhealth {
+    if Some(health) != st_stuff.st_calcpainoffset_oldhealth {
         st_stuff.st_calcpainoffset_lastcalc =
             ST_FACESTRIDE * ((100 - health) * ST_NUMPAINFACES / 101);
-        st_stuff.st_calcpainoffset_oldhealth = health;
+        st_stuff.st_calcpainoffset_oldhealth = Some(health);
     }
     st_stuff.st_calcpainoffset_lastcalc
 }
@@ -723,19 +727,21 @@ pub fn update_face_widget(
     }
     if st_stuff.st_updatefacewidget_priority < 6 {
         if g_game.player_mut(st_stuff.plyr).attackdown {
-            if st_stuff.st_updatefacewidget_lastattackdown == -1 {
-                st_stuff.st_updatefacewidget_lastattackdown = ST_RAMPAGEDELAY;
-            } else {
-                st_stuff.st_updatefacewidget_lastattackdown -= 1;
-                if st_stuff.st_updatefacewidget_lastattackdown == 0 {
-                    st_stuff.st_updatefacewidget_priority = 5;
-                    st_stuff.st_faceindex = calc_pain_offset(g_game, st_stuff) + ST_RAMPAGEOFFSET;
-                    st_stuff.st_facecount = 1;
-                    st_stuff.st_updatefacewidget_lastattackdown = 1;
+            match st_stuff.st_updatefacewidget_lastattackdown {
+                None => st_stuff.st_updatefacewidget_lastattackdown = Some(ST_RAMPAGEDELAY),
+                Some(tics) => {
+                    st_stuff.st_updatefacewidget_lastattackdown = Some(tics - 1);
+                    if tics - 1 == 0 {
+                        st_stuff.st_updatefacewidget_priority = 5;
+                        st_stuff.st_faceindex =
+                            calc_pain_offset(g_game, st_stuff) + ST_RAMPAGEOFFSET;
+                        st_stuff.st_facecount = 1;
+                        st_stuff.st_updatefacewidget_lastattackdown = Some(1);
+                    }
                 }
             }
         } else {
-            st_stuff.st_updatefacewidget_lastattackdown = -1;
+            st_stuff.st_updatefacewidget_lastattackdown = None;
         }
     }
     if st_stuff.st_updatefacewidget_priority < 5
@@ -993,10 +999,10 @@ fn load_unload_graphics(state: &mut GameState, callback: LoadCallback) {
     facenum += 1;
     state.ui.st_stuff.faces[facenum] = callback(state, "STFDEAD0");
 }
-fn st_load_callback(state: &mut GameState, lumpname: &str) -> i32 {
+fn st_load_callback(state: &mut GameState, lumpname: &str) -> Option<LumpNum> {
     let lumpnum = get_num_for_name(&state.assets.w_wad, lumpname);
     lump_bytes(&*state.assets.fs, &mut state.assets.w_wad, lumpnum);
-    lumpnum
+    Some(lumpnum)
 }
 pub fn load_graphics(state: &mut GameState) {
     load_unload_graphics(state, st_load_callback);

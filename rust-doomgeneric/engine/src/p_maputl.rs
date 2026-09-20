@@ -320,7 +320,7 @@ pub fn intercept_vector(v2: &DivLine, v1: &DivLine) -> Fixed {
 }
 pub fn line_opening(p_maputl: &mut PMaputlState, p_setup: &mut PSetupState, linedef: LineId) {
     let linedefv = p_setup.line(linedef);
-    if i32::from(linedefv.sidenum[1]) == -1 {
+    if linedefv.sidenum[1].is_none() {
         p_maputl.openrange = Fixed::ZERO;
         return;
     }

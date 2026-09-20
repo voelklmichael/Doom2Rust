@@ -36,6 +36,7 @@ use crate::tables::Angle;
 use crate::tables::ANG45;
 
 use crate::w_wad::get_num_for_name;
+use crate::w_wad::LumpNum;
 
 pub struct RThingsState {
     pub pspritescale: Fixed,
@@ -149,7 +150,7 @@ pub const BASEYCENTER: i32 = 100;
 pub fn install_sprite_lump(
     r_data: &RDataState,
     r_things: &mut RThingsState,
-    lump: i32,
+    lump: LumpNum,
     frame: u32,
     mut rotation: u32,
     flipped: bool,
@@ -211,8 +212,10 @@ pub fn init_sprite_defs(state: &mut GameState, namelist: &[&'static str]) {
         return;
     }
     state.render.r_things.sprites = Vec::with_capacity(state.render.r_things.numsprites as usize);
-    let start: i32 = state.render.r_data.firstspritelump - 1;
-    let end: i32 = state.render.r_data.lastspritelump + 1;
+    let (first, last) = (
+        state.render.r_data.firstspritelump.0,
+        state.render.r_data.lastspritelump.0,
+    );
     for &name in namelist {
         state.render.r_things.spritename = name;
         state.render.r_things.sprtemp = [SpriteFrame {
@@ -221,7 +224,7 @@ pub fn init_sprite_defs(state: &mut GameState, namelist: &[&'static str]) {
             flip: [0xff; 8],
         }; 29];
         state.render.r_things.maxframe = -1;
-        for l in start + 1..end {
+        for l in first..=last {
             if state.assets.w_wad.lumpinfo[l as usize]
                 .name
                 .eq_bytes_ignore_ascii_case_n(state.render.r_things.spritename.as_bytes(), 4)
@@ -229,11 +232,11 @@ pub fn init_sprite_defs(state: &mut GameState, namelist: &[&'static str]) {
                 let frame = i32::from(state.assets.w_wad.lumpinfo[l as usize].name[4]) - 'A' as i32;
                 let rotation =
                     i32::from(state.assets.w_wad.lumpinfo[l as usize].name[5]) - '0' as i32;
-                let patched: i32 = if state.game.doomstat.modifiedgame {
+                let patched = if state.game.doomstat.modifiedgame {
                     let sprite_name = state.assets.w_wad.lumpinfo[l as usize].name;
                     get_num_for_name(&state.assets.w_wad, &sprite_name.as_str())
                 } else {
-                    l
+                    LumpNum(l)
                 };
                 install_sprite_lump(
                     &state.render.r_data,
@@ -251,7 +254,7 @@ pub fn init_sprite_defs(state: &mut GameState, namelist: &[&'static str]) {
                     install_sprite_lump(
                         &state.render.r_data,
                         &mut state.render.r_things,
-                        l,
+                        LumpNum(l),
                         frame as u32,
                         rotation as u32,
                         true,
@@ -356,7 +359,7 @@ pub fn draw_masked_column(state: &mut GameState, mut post: ColumnSource) {
     state.render.r_draw.dc_texturemid = basetexturemid;
 }
 pub fn draw_vis_sprite(state: &mut GameState, vis: &VisSprite) {
-    let sprite_lump = vis.patch + state.render.r_data.firstspritelump;
+    let sprite_lump = state.render.r_data.firstspritelump + vis.patch;
     let patch: Patch = cache_patch_num(&*state.assets.fs, &mut state.assets.w_wad, sprite_lump);
     state.render.r_draw.dc_colormap = vis.colormap;
     if state.render.r_draw.dc_colormap.is_none() {

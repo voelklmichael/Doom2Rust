@@ -164,11 +164,15 @@ pub fn recursive_sound(state: &mut GameState, sec: SectorId, soundblocks: i32) {
         if checkv.flags.contains(LineFlags::TWOSIDED) {
             line_opening(&mut state.world.p_maputl, &mut state.world.p_setup, check);
             if state.world.p_maputl.openrange > Fixed::ZERO {
-                let other = if state.world.p_setup.sides[checkv.sidenum[0] as usize].sector == sec {
-                    state.world.p_setup.sides[checkv.sidenum[1] as usize].sector
-                } else {
-                    state.world.p_setup.sides[checkv.sidenum[0] as usize].sector
-                };
+                let other =
+                    if state.world.p_setup.sides[checkv.front_side().0 as usize].sector == sec {
+                        state.world.p_setup.sides[checkv.sidenum[1]
+                            .expect("two-sided line without a back side")
+                            .0 as usize]
+                            .sector
+                    } else {
+                        state.world.p_setup.sides[checkv.front_side().0 as usize].sector
+                    };
                 if checkv.flags.contains(LineFlags::SOUNDBLOCK) {
                     if soundblocks == 0 {
                         recursive_sound(state, other, 1);

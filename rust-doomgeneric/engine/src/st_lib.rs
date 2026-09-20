@@ -2,10 +2,11 @@ use crate::filesystem::DoomFileSystem;
 use crate::game_state::GameState;
 use crate::i_system::error;
 use crate::st_stuff::ST_Y;
-use crate::v_video::cache_patch_num;
+use crate::v_video::cache_loaded_patch;
 use crate::v_video::copy_rect;
 use crate::v_video::draw_patch;
 use crate::v_video::Screen;
+use crate::w_wad::LumpNum;
 use crate::w_wad::WWadState;
 use crate::w_wad::{get_num_for_name, lump_bytes};
 
@@ -33,7 +34,7 @@ pub struct StNumber {
 #[derive(Copy, Clone)]
 pub struct StPercent {
     pub n: StNumber,
-    pub p: i32,
+    pub p: Option<LumpNum>,
 }
 #[derive(Copy, Clone)]
 pub struct StMultiIcon {
@@ -48,11 +49,11 @@ pub struct StBinIcon {
     pub x: i32,
     pub y: i32,
     pub oldval: bool,
-    pub p: i32,
+    pub p: Option<LumpNum>,
     pub data: i32,
 }
 pub struct StLibState {
-    sttminus: i32,
+    sttminus: Option<LumpNum>,
 }
 
 impl Default for StLibState {
@@ -63,14 +64,14 @@ impl Default for StLibState {
 
 impl StLibState {
     pub const fn new() -> Self {
-        Self { sttminus: -1 }
+        Self { sttminus: None }
     }
 }
 
 pub fn stlib_init(fs: &dyn DoomFileSystem, st_lib: &mut StLibState, w_wad: &mut WWadState) {
     let lumpnum = get_num_for_name(w_wad, "STTMINUS");
     lump_bytes(fs, w_wad, lumpnum);
-    st_lib.sttminus = lumpnum;
+    st_lib.sttminus = Some(lumpnum);
 }
 pub fn stlib_init_num(n: &mut StNumber, x: i32, y: i32, pl: StDigitSet, width: i32) {
     n.x = x;
@@ -82,7 +83,7 @@ pub fn stlib_init_num(n: &mut StNumber, x: i32, y: i32, pl: StDigitSet, width: i
 pub fn stlib_draw_num(state: &mut GameState, n: &mut StNumber, mut num: i32) {
     let mut numdigits: i32 = n.width;
     let zero_lump = state.ui.st_stuff.digit_set(n.p)[0];
-    let zero_patch = cache_patch_num(&*state.assets.fs, &mut state.assets.w_wad, zero_lump);
+    let zero_patch = cache_loaded_patch(&*state.assets.fs, &mut state.assets.w_wad, zero_lump);
     let w: i32 = zero_patch.width();
     let h: i32 = zero_patch.height();
 
@@ -125,13 +126,14 @@ pub fn stlib_draw_num(state: &mut GameState, n: &mut StNumber, mut num: i32) {
         numdigits -= 1;
         x -= w;
         let digit_lump = state.ui.st_stuff.digit_set(n.p)[(num % 10) as usize];
-        let digit_patch = cache_patch_num(&*state.assets.fs, &mut state.assets.w_wad, digit_lump);
+        let digit_patch =
+            cache_loaded_patch(&*state.assets.fs, &mut state.assets.w_wad, digit_lump);
         let dest_screen = Screen::Video;
         draw_patch(state, dest_screen, x, n.y, &digit_patch);
         num /= 10;
     }
     if neg != 0 {
-        let patch = cache_patch_num(
+        let patch = cache_loaded_patch(
             &*state.assets.fs,
             &mut state.assets.w_wad,
             state.ui.st_lib.sttminus,
@@ -145,7 +147,13 @@ pub fn stlib_update_num(state: &mut GameState, n: &mut StNumber, num: i32, on: b
         stlib_draw_num(state, n, num);
     }
 }
-pub fn stlib_init_percent(p: &mut StPercent, x: i32, y: i32, pl: StDigitSet, percent: i32) {
+pub fn stlib_init_percent(
+    p: &mut StPercent,
+    x: i32,
+    y: i32,
+    pl: StDigitSet,
+    percent: Option<LumpNum>,
+) {
     stlib_init_num(&mut p.n, x, y, pl, 3);
     p.p = percent;
 }
@@ -157,7 +165,7 @@ pub fn stlib_update_percent(
     refresh: i32,
 ) {
     if refresh != 0 && on {
-        let patch = cache_patch_num(&*state.assets.fs, &mut state.assets.w_wad, per.p);
+        let patch = cache_loaded_patch(&*state.assets.fs, &mut state.assets.w_wad, per.p);
         let dest_screen = Screen::Video;
         draw_patch(state, dest_screen, per.n.x, per.n.y, &patch);
     }
@@ -179,7 +187,8 @@ pub fn stlib_update_mult_icon(
     if on && (mi.oldinum != inum || refresh) && inum != -1 {
         if mi.oldinum != -1 {
             let old_lump = state.ui.st_stuff.digit_set(mi.p)[mi.oldinum as usize];
-            let old_patch = cache_patch_num(&*state.assets.fs, &mut state.assets.w_wad, old_lump);
+            let old_patch =
+                cache_loaded_patch(&*state.assets.fs, &mut state.assets.w_wad, old_lump);
             let x: i32 = mi.x - old_patch.leftoffset();
             let y: i32 = mi.y - old_patch.topoffset();
             let w: i32 = old_patch.width();
@@ -202,13 +211,13 @@ pub fn stlib_update_mult_icon(
             );
         }
         let new_lump = state.ui.st_stuff.digit_set(mi.p)[inum as usize];
-        let new_patch = cache_patch_num(&*state.assets.fs, &mut state.assets.w_wad, new_lump);
+        let new_patch = cache_loaded_patch(&*state.assets.fs, &mut state.assets.w_wad, new_lump);
         let dest_screen = Screen::Video;
         draw_patch(state, dest_screen, mi.x, mi.y, &new_patch);
         mi.oldinum = inum;
     }
 }
-pub fn stlib_init_bin_icon(b: &mut StBinIcon, x: i32, y: i32, i: i32) {
+pub fn stlib_init_bin_icon(b: &mut StBinIcon, x: i32, y: i32, i: Option<LumpNum>) {
     b.x = x;
     b.y = y;
     b.oldval = false;
@@ -222,7 +231,7 @@ pub fn stlib_update_bin_icon(
     refresh: bool,
 ) {
     if on && (bi.oldval != val || refresh) {
-        let patch = cache_patch_num(&*state.assets.fs, &mut state.assets.w_wad, bi.p);
+        let patch = cache_loaded_patch(&*state.assets.fs, &mut state.assets.w_wad, bi.p);
         let x: i32 = bi.x - patch.leftoffset();
         let y: i32 = bi.y - patch.topoffset();
         let w: i32 = patch.width();

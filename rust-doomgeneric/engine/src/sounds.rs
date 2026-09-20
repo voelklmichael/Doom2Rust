@@ -1,4 +1,5 @@
 use crate::fixed_cstr::FixedCStr;
+use crate::w_wad::LumpNum;
 #[derive(Copy, Clone, PartialEq, Eq)]
 #[allow(dead_code)] // mirrors a C index table; variant order must stay
 pub enum MusicName {
@@ -81,13 +82,13 @@ pub struct SfxInfo {
     pub pitch: i32,
     pub volume: i32,
     pub usefulness: i32,
-    pub lumpnum: i32,
+    pub lumpnum: Option<LumpNum>,
     pub numchannels: i32,
 }
 #[derive(Copy, Clone)]
 pub struct MusicInfo {
     pub name: FixedCStr<7>,
-    pub lumpnum: i32,
+    pub lumpnum: Option<LumpNum>,
     pub handle: usize,
 }
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -207,342 +208,342 @@ pub const NUMSFX: usize = 109;
 const INITIAL_S_MUSIC: [MusicInfo; 68] = [
     MusicInfo {
         name: FixedCStr([0u8; 7]),
-        lumpnum: 0,
+        lumpnum: None,
         handle: 0,
     },
     MusicInfo {
         name: FixedCStr(*b"e1m1\x00\x00\x00"),
-        lumpnum: 0,
+        lumpnum: None,
         handle: 0,
     },
     MusicInfo {
         name: FixedCStr(*b"e1m2\x00\x00\x00"),
-        lumpnum: 0,
+        lumpnum: None,
         handle: 0,
     },
     MusicInfo {
         name: FixedCStr(*b"e1m3\x00\x00\x00"),
-        lumpnum: 0,
+        lumpnum: None,
         handle: 0,
     },
     MusicInfo {
         name: FixedCStr(*b"e1m4\x00\x00\x00"),
-        lumpnum: 0,
+        lumpnum: None,
         handle: 0,
     },
     MusicInfo {
         name: FixedCStr(*b"e1m5\x00\x00\x00"),
-        lumpnum: 0,
+        lumpnum: None,
         handle: 0,
     },
     MusicInfo {
         name: FixedCStr(*b"e1m6\x00\x00\x00"),
-        lumpnum: 0,
+        lumpnum: None,
         handle: 0,
     },
     MusicInfo {
         name: FixedCStr(*b"e1m7\x00\x00\x00"),
-        lumpnum: 0,
+        lumpnum: None,
         handle: 0,
     },
     MusicInfo {
         name: FixedCStr(*b"e1m8\x00\x00\x00"),
-        lumpnum: 0,
+        lumpnum: None,
         handle: 0,
     },
     MusicInfo {
         name: FixedCStr(*b"e1m9\x00\x00\x00"),
-        lumpnum: 0,
+        lumpnum: None,
         handle: 0,
     },
     MusicInfo {
         name: FixedCStr(*b"e2m1\x00\x00\x00"),
-        lumpnum: 0,
+        lumpnum: None,
         handle: 0,
     },
     MusicInfo {
         name: FixedCStr(*b"e2m2\x00\x00\x00"),
-        lumpnum: 0,
+        lumpnum: None,
         handle: 0,
     },
     MusicInfo {
         name: FixedCStr(*b"e2m3\x00\x00\x00"),
-        lumpnum: 0,
+        lumpnum: None,
         handle: 0,
     },
     MusicInfo {
         name: FixedCStr(*b"e2m4\x00\x00\x00"),
-        lumpnum: 0,
+        lumpnum: None,
         handle: 0,
     },
     MusicInfo {
         name: FixedCStr(*b"e2m5\x00\x00\x00"),
-        lumpnum: 0,
+        lumpnum: None,
         handle: 0,
     },
     MusicInfo {
         name: FixedCStr(*b"e2m6\x00\x00\x00"),
-        lumpnum: 0,
+        lumpnum: None,
         handle: 0,
     },
     MusicInfo {
         name: FixedCStr(*b"e2m7\x00\x00\x00"),
-        lumpnum: 0,
+        lumpnum: None,
         handle: 0,
     },
     MusicInfo {
         name: FixedCStr(*b"e2m8\x00\x00\x00"),
-        lumpnum: 0,
+        lumpnum: None,
         handle: 0,
     },
     MusicInfo {
         name: FixedCStr(*b"e2m9\x00\x00\x00"),
-        lumpnum: 0,
+        lumpnum: None,
         handle: 0,
     },
     MusicInfo {
         name: FixedCStr(*b"e3m1\x00\x00\x00"),
-        lumpnum: 0,
+        lumpnum: None,
         handle: 0,
     },
     MusicInfo {
         name: FixedCStr(*b"e3m2\x00\x00\x00"),
-        lumpnum: 0,
+        lumpnum: None,
         handle: 0,
     },
     MusicInfo {
         name: FixedCStr(*b"e3m3\x00\x00\x00"),
-        lumpnum: 0,
+        lumpnum: None,
         handle: 0,
     },
     MusicInfo {
         name: FixedCStr(*b"e3m4\x00\x00\x00"),
-        lumpnum: 0,
+        lumpnum: None,
         handle: 0,
     },
     MusicInfo {
         name: FixedCStr(*b"e3m5\x00\x00\x00"),
-        lumpnum: 0,
+        lumpnum: None,
         handle: 0,
     },
     MusicInfo {
         name: FixedCStr(*b"e3m6\x00\x00\x00"),
-        lumpnum: 0,
+        lumpnum: None,
         handle: 0,
     },
     MusicInfo {
         name: FixedCStr(*b"e3m7\x00\x00\x00"),
-        lumpnum: 0,
+        lumpnum: None,
         handle: 0,
     },
     MusicInfo {
         name: FixedCStr(*b"e3m8\x00\x00\x00"),
-        lumpnum: 0,
+        lumpnum: None,
         handle: 0,
     },
     MusicInfo {
         name: FixedCStr(*b"e3m9\x00\x00\x00"),
-        lumpnum: 0,
+        lumpnum: None,
         handle: 0,
     },
     MusicInfo {
         name: FixedCStr(*b"inter\x00\x00"),
-        lumpnum: 0,
+        lumpnum: None,
         handle: 0,
     },
     MusicInfo {
         name: FixedCStr(*b"intro\x00\x00"),
-        lumpnum: 0,
+        lumpnum: None,
         handle: 0,
     },
     MusicInfo {
         name: FixedCStr(*b"bunny\x00\x00"),
-        lumpnum: 0,
+        lumpnum: None,
         handle: 0,
     },
     MusicInfo {
         name: FixedCStr(*b"victor\x00"),
-        lumpnum: 0,
+        lumpnum: None,
         handle: 0,
     },
     MusicInfo {
         name: FixedCStr(*b"introa\x00"),
-        lumpnum: 0,
+        lumpnum: None,
         handle: 0,
     },
     MusicInfo {
         name: FixedCStr(*b"runnin\x00"),
-        lumpnum: 0,
+        lumpnum: None,
         handle: 0,
     },
     MusicInfo {
         name: FixedCStr(*b"stalks\x00"),
-        lumpnum: 0,
+        lumpnum: None,
         handle: 0,
     },
     MusicInfo {
         name: FixedCStr(*b"countd\x00"),
-        lumpnum: 0,
+        lumpnum: None,
         handle: 0,
     },
     MusicInfo {
         name: FixedCStr(*b"betwee\x00"),
-        lumpnum: 0,
+        lumpnum: None,
         handle: 0,
     },
     MusicInfo {
         name: FixedCStr(*b"doom\x00\x00\x00"),
-        lumpnum: 0,
+        lumpnum: None,
         handle: 0,
     },
     MusicInfo {
         name: FixedCStr(*b"the_da\x00"),
-        lumpnum: 0,
+        lumpnum: None,
         handle: 0,
     },
     MusicInfo {
         name: FixedCStr(*b"shawn\x00\x00"),
-        lumpnum: 0,
+        lumpnum: None,
         handle: 0,
     },
     MusicInfo {
         name: FixedCStr(*b"ddtblu\x00"),
-        lumpnum: 0,
+        lumpnum: None,
         handle: 0,
     },
     MusicInfo {
         name: FixedCStr(*b"in_cit\x00"),
-        lumpnum: 0,
+        lumpnum: None,
         handle: 0,
     },
     MusicInfo {
         name: FixedCStr(*b"dead\x00\x00\x00"),
-        lumpnum: 0,
+        lumpnum: None,
         handle: 0,
     },
     MusicInfo {
         name: FixedCStr(*b"stlks2\x00"),
-        lumpnum: 0,
+        lumpnum: None,
         handle: 0,
     },
     MusicInfo {
         name: FixedCStr(*b"theda2\x00"),
-        lumpnum: 0,
+        lumpnum: None,
         handle: 0,
     },
     MusicInfo {
         name: FixedCStr(*b"doom2\x00\x00"),
-        lumpnum: 0,
+        lumpnum: None,
         handle: 0,
     },
     MusicInfo {
         name: FixedCStr(*b"ddtbl2\x00"),
-        lumpnum: 0,
+        lumpnum: None,
         handle: 0,
     },
     MusicInfo {
         name: FixedCStr(*b"runni2\x00"),
-        lumpnum: 0,
+        lumpnum: None,
         handle: 0,
     },
     MusicInfo {
         name: FixedCStr(*b"dead2\x00\x00"),
-        lumpnum: 0,
+        lumpnum: None,
         handle: 0,
     },
     MusicInfo {
         name: FixedCStr(*b"stlks3\x00"),
-        lumpnum: 0,
+        lumpnum: None,
         handle: 0,
     },
     MusicInfo {
         name: FixedCStr(*b"romero\x00"),
-        lumpnum: 0,
+        lumpnum: None,
         handle: 0,
     },
     MusicInfo {
         name: FixedCStr(*b"shawn2\x00"),
-        lumpnum: 0,
+        lumpnum: None,
         handle: 0,
     },
     MusicInfo {
         name: FixedCStr(*b"messag\x00"),
-        lumpnum: 0,
+        lumpnum: None,
         handle: 0,
     },
     MusicInfo {
         name: FixedCStr(*b"count2\x00"),
-        lumpnum: 0,
+        lumpnum: None,
         handle: 0,
     },
     MusicInfo {
         name: FixedCStr(*b"ddtbl3\x00"),
-        lumpnum: 0,
+        lumpnum: None,
         handle: 0,
     },
     MusicInfo {
         name: FixedCStr(*b"ampie\x00\x00"),
-        lumpnum: 0,
+        lumpnum: None,
         handle: 0,
     },
     MusicInfo {
         name: FixedCStr(*b"theda3\x00"),
-        lumpnum: 0,
+        lumpnum: None,
         handle: 0,
     },
     MusicInfo {
         name: FixedCStr(*b"adrian\x00"),
-        lumpnum: 0,
+        lumpnum: None,
         handle: 0,
     },
     MusicInfo {
         name: FixedCStr(*b"messg2\x00"),
-        lumpnum: 0,
+        lumpnum: None,
         handle: 0,
     },
     MusicInfo {
         name: FixedCStr(*b"romer2\x00"),
-        lumpnum: 0,
+        lumpnum: None,
         handle: 0,
     },
     MusicInfo {
         name: FixedCStr(*b"tense\x00\x00"),
-        lumpnum: 0,
+        lumpnum: None,
         handle: 0,
     },
     MusicInfo {
         name: FixedCStr(*b"shawn3\x00"),
-        lumpnum: 0,
+        lumpnum: None,
         handle: 0,
     },
     MusicInfo {
         name: FixedCStr(*b"openin\x00"),
-        lumpnum: 0,
+        lumpnum: None,
         handle: 0,
     },
     MusicInfo {
         name: FixedCStr(*b"evil\x00\x00\x00"),
-        lumpnum: 0,
+        lumpnum: None,
         handle: 0,
     },
     MusicInfo {
         name: FixedCStr(*b"ultima\x00"),
-        lumpnum: 0,
+        lumpnum: None,
         handle: 0,
     },
     MusicInfo {
         name: FixedCStr(*b"read_m\x00"),
-        lumpnum: 0,
+        lumpnum: None,
         handle: 0,
     },
     MusicInfo {
         name: FixedCStr(*b"dm2ttl\x00"),
-        lumpnum: 0,
+        lumpnum: None,
         handle: 0,
     },
     MusicInfo {
         name: FixedCStr(*b"dm2int\x00"),
-        lumpnum: 0,
+        lumpnum: None,
         handle: 0,
     },
 ];
@@ -582,7 +583,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -593,7 +594,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -604,7 +605,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -615,7 +616,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -626,7 +627,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -637,7 +638,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -648,7 +649,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -659,7 +660,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -670,7 +671,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -681,7 +682,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -692,7 +693,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -703,7 +704,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -714,7 +715,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -725,7 +726,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -736,7 +737,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -747,7 +748,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -758,7 +759,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -769,7 +770,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -780,7 +781,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -791,7 +792,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -802,7 +803,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -813,7 +814,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -824,7 +825,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -835,7 +836,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -846,7 +847,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -857,7 +858,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -868,7 +869,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -879,7 +880,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -890,7 +891,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -901,7 +902,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -912,7 +913,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -923,7 +924,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -934,7 +935,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -945,7 +946,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -956,7 +957,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -967,7 +968,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -978,7 +979,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -989,7 +990,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -1000,7 +1001,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -1011,7 +1012,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -1022,7 +1023,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -1033,7 +1034,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -1044,7 +1045,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -1055,7 +1056,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -1066,7 +1067,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -1077,7 +1078,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -1088,7 +1089,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -1099,7 +1100,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -1110,7 +1111,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -1121,7 +1122,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -1132,7 +1133,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -1143,7 +1144,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -1154,7 +1155,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -1165,7 +1166,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -1176,7 +1177,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -1187,7 +1188,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -1198,7 +1199,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -1209,7 +1210,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -1220,7 +1221,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -1231,7 +1232,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -1242,7 +1243,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -1253,7 +1254,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -1264,7 +1265,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -1275,7 +1276,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -1286,7 +1287,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -1297,7 +1298,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -1308,7 +1309,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -1319,7 +1320,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -1330,7 +1331,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -1341,7 +1342,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -1352,7 +1353,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -1363,7 +1364,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -1374,7 +1375,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -1385,7 +1386,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -1396,7 +1397,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -1407,7 +1408,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -1418,7 +1419,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -1429,7 +1430,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -1440,7 +1441,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -1451,7 +1452,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -1462,7 +1463,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -1473,7 +1474,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -1484,7 +1485,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -1495,7 +1496,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -1506,7 +1507,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -1517,7 +1518,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -1528,7 +1529,7 @@ impl SoundsState {
                     pitch: 150,
                     volume: 0,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -1539,7 +1540,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -1550,7 +1551,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -1561,7 +1562,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -1572,7 +1573,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -1583,7 +1584,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -1594,7 +1595,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -1605,7 +1606,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -1616,7 +1617,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -1627,7 +1628,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -1638,7 +1639,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -1649,7 +1650,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -1660,7 +1661,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -1671,7 +1672,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -1682,7 +1683,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -1693,7 +1694,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -1704,7 +1705,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -1715,7 +1716,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -1726,7 +1727,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -1737,7 +1738,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -1748,7 +1749,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -1759,7 +1760,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
                 SfxInfo {
@@ -1770,7 +1771,7 @@ impl SoundsState {
                     pitch: -1,
                     volume: -1,
                     usefulness: 0,
-                    lumpnum: 0,
+                    lumpnum: None,
                     numchannels: -1,
                 },
             ],
