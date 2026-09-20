@@ -52,7 +52,7 @@ pub const RING_FRAMES: usize = RING_CHUNKS * CHUNK_FRAMES;
 const FRAME_BYTES: usize = 4;
 const RING_BYTES: usize = RING_FRAMES * FRAME_BYTES;
 // esp-hal cuts a circular buffer of up to two default chunks (4092 bytes) into three descriptors.
-const _: () = assert!(RING_BYTES <= 2 * 4092 && RING_BYTES % 3 == 0);
+const _: () = assert!(RING_BYTES <= 2 * 4092 && RING_BYTES.is_multiple_of(3));
 
 const AMP_ADDRESS: u8 = 0x36;
 /// The AW9523B I/O expander, whose output port 0 bit 2 is the amp's reset line (high = running).
@@ -141,6 +141,7 @@ impl Speaker {
 
     /// Starts over with a ring of silence and forgets earlier restarts. For after setup work that
     /// took longer than the ring lasts.
+    #[allow(dead_code)] // the sound_test example includes this file but never rearms
     pub fn rearm(&mut self) {
         self.start();
         self.restarts = 0;

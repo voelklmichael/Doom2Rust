@@ -33,7 +33,7 @@ pub const SFX_RATE: u32 = 11_025;
 
 /// Ring frames per effect frame.
 const UPSAMPLE: usize = (audio::SAMPLE_RATE / SFX_RATE) as usize;
-const _: () = assert!(audio::SAMPLE_RATE % SFX_RATE == 0);
+const _: () = assert!(audio::SAMPLE_RATE.is_multiple_of(SFX_RATE));
 
 /// Effect frames in one ring chunk.
 const SFX_CHUNK_FRAMES: usize = CHUNK_FRAMES / UPSAMPLE;
