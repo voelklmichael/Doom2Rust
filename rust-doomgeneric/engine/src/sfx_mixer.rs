@@ -149,11 +149,23 @@ impl Mixer {
     /// Adds the next `acc.len() / 2` frames of every playing voice to `acc`
     /// (interleaved stereo, unclipped). Voices that run out of samples are
     /// dropped, which is what makes [`is_playing`](Self::is_playing) turn false.
+    ///
+    /// The voices add `sample * gain` (gain 0..=255, unity 255) into a scratch
+    /// buffer and the division by 255 happens once per output sample, not once
+    /// per voice and sample: on the ESP32 the divide was the mixer's main cost.
     pub fn mix_add(&mut self, acc: &mut [i32]) {
-        for slot in &mut self.voices {
-            let Some(voice) = slot else { continue };
-            if voice.render_into(acc) {
-                *slot = None;
+        const CHUNK_FRAMES: usize = 256;
+        for out in acc.chunks_mut(CHUNK_FRAMES * 2) {
+            let mut scaled = [0i32; CHUNK_FRAMES * 2];
+            let scaled = &mut scaled[..out.len() / 2 * 2];
+            for slot in &mut self.voices {
+                let Some(voice) = slot else { continue };
+                if voice.render_into(scaled) {
+                    *slot = None;
+                }
+            }
+            for (sum, scaled) in out.iter_mut().zip(scaled.iter()) {
+                *sum += scaled / 255;
             }
         }
     }
@@ -174,8 +186,9 @@ impl Mixer {
 }
 
 impl Voice {
-    /// Adds this voice to `acc` (interleaved stereo). Returns `true` once the
-    /// sample has been played to its end.
+    /// Adds this voice, scaled by its gains but not yet divided by 255, to `acc`
+    /// (interleaved stereo). Returns `true` once the sample has been played to
+    /// its end.
     #[allow(clippy::chunks_exact_to_as_chunks)] // as_chunks needs a newer toolchain than the ESP one
     fn render_into(&mut self, acc: &mut [i32]) -> bool {
         let pcm = &self.sample.data[self.sample.samples.clone()];
@@ -186,8 +199,8 @@ impl Voice {
             // Widen 8 -> 16 bits the way the C code does: `b | b << 8`, then
             // recentre from unsigned.
             let s = i32::from(byte) * 257 - 32768;
-            frame[0] += s * self.left / 255;
-            frame[1] += s * self.right / 255;
+            frame[0] += s * self.left;
+            frame[1] += s * self.right;
             let pos = self.frac + self.step;
             self.index += (pos >> 16) as usize;
             self.frac = pos & 0xffff;
@@ -320,6 +333,25 @@ mod tests {
         assert!(!m.is_playing(0));
         // Past the end it renders silence.
         assert_eq!(out[2..], [0; 18]);
+    }
+
+    #[test]
+    fn voices_share_one_division() {
+        // Two voices with gains 127 and 90: the sum of the scaled samples is
+        // divided by 255 once, so it can differ from the sum of two separate
+        // divisions by less than one step per voice.
+        let mut m = Mixer::new(11025);
+        let mut a = [128u8; 20];
+        a[0] = 200;
+        let mut b = [128u8; 20];
+        b[0] = 40;
+        m.start(0, sample(11025, &a), 127, 254); // right gain 254
+        m.start(1, sample(11025, &b), 90, 254); // right gain 180
+        let mut out = [0i16; 2];
+        m.mix(&mut out);
+        let s = |byte: i32| byte * 257 - 32768;
+        assert_eq!(i32::from(out[1]), (s(200) * 254 + s(40) * 180) / 255);
+        assert_eq!(out[0], 0);
     }
 
     #[test]

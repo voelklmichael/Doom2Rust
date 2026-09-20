@@ -660,7 +660,8 @@ impl DoomPlatform for AudioPlatform {
     }
     fn music_open(&mut self, genmidi: &[u8]) -> bool {
         let Some(log) = &self.music else { return false };
-        log.borrow_mut().push(std::format!("open {}", genmidi.starts_with(b"#OPL_II#")));
+        log.borrow_mut()
+            .push(std::format!("open {}", genmidi.starts_with(b"#OPL_II#")));
         true
     }
     fn music_command(&mut self, command: crate::MusicCommand<'_>) {
@@ -771,11 +772,21 @@ fn a_platform_can_take_the_music_over() {
         return;
     };
     let log = log.take();
-    assert_eq!(log.first().map(String::as_str), Some("open true"), "{log:?}");
-    assert_eq!(log.iter().filter(|line| line.starts_with("open")).count(), 1);
+    assert_eq!(
+        log.first().map(String::as_str),
+        Some("open true"),
+        "{log:?}"
+    );
+    assert_eq!(
+        log.iter().filter(|line| line.starts_with("open")).count(),
+        1
+    );
     let register = log.iter().position(|line| line == "register mus=true");
     let play = log.iter().position(|line| line.starts_with("Play"));
-    assert!(register.is_some() && play > register, "song not registered then played: {log:?}");
+    assert!(
+        register.is_some() && play > register,
+        "song not registered then played: {log:?}"
+    );
     assert!(log.iter().any(|line| line.starts_with("Volume")), "{log:?}");
 
     // The same run with the engine's own player mixes music into the stream, so it is louder
@@ -783,5 +794,8 @@ fn a_platform_can_take_the_music_over() {
     let Some((_, with_engine_music)) = demo_audio_music(&[], 400, None) else {
         return;
     };
-    assert_ne!(samples, with_engine_music, "the engine still mixed music of its own");
+    assert_ne!(
+        samples, with_engine_music,
+        "the engine still mixed music of its own"
+    );
 }
