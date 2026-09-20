@@ -28,9 +28,10 @@ pub enum Screen {
 impl GameState {
     pub fn screen(&self, screen: Screen) -> &[u8] {
         match screen {
-            Screen::Video => &self.i_video.i_video_buffer,
-            Screen::StatusBar => &self.st_stuff.st_backing_screen,
+            Screen::Video => &self.io.i_video.i_video_buffer,
+            Screen::StatusBar => &self.ui.st_stuff.st_backing_screen,
             Screen::Background => self
+                .render
                 .r_draw
                 .background_buffer
                 .as_deref()
@@ -40,9 +41,10 @@ impl GameState {
 
     pub fn screen_mut(&mut self, screen: Screen) -> &mut [u8] {
         match screen {
-            Screen::Video => &mut self.i_video.i_video_buffer,
-            Screen::StatusBar => &mut self.st_stuff.st_backing_screen,
+            Screen::Video => &mut self.io.i_video.i_video_buffer,
+            Screen::StatusBar => &mut self.ui.st_stuff.st_backing_screen,
             Screen::Background => self
+                .render
                 .r_draw
                 .background_buffer
                 .as_deref_mut()
@@ -98,7 +100,7 @@ pub fn copy_rect(
     {
         error("Bad V_CopyRect");
     }
-    mark_rect(&mut state.v_video, dest, destx, desty, width, height);
+    mark_rect(&mut state.io.v_video, dest, destx, desty, width, height);
     let width = width as usize;
     let mut rows: Vec<u8> = Vec::with_capacity(width * height as usize);
     {
@@ -117,7 +119,11 @@ pub fn copy_rect(
 /// Resolves a WAD lump number to its cached patch data. Cheap and
 /// idempotent: the lump cache never evicts.
 pub fn cache_patch_num(state: &mut GameState, lumpnum: i32) -> Patch {
-    Patch::new(lump_bytes(&*state.fs, &mut state.w_wad, lumpnum))
+    Patch::new(lump_bytes(
+        &*state.assets.fs,
+        &mut state.assets.w_wad,
+        lumpnum,
+    ))
 }
 pub fn cache_patch_name(state: &mut GameState, name: &str) -> Patch {
     Patch::new(lump_bytes_name(state, name))
@@ -150,7 +156,7 @@ pub fn draw_patch(state: &mut GameState, dest: Screen, x: i32, y: i32, patch: &P
         ));
     }
     mark_rect(
-        &mut state.v_video,
+        &mut state.io.v_video,
         dest,
         x,
         y,
@@ -166,7 +172,7 @@ pub fn draw_patch_flipped(state: &mut GameState, dest: Screen, x: i32, y: i32, p
         error("Bad V_DrawPatchFlipped");
     }
     mark_rect(
-        &mut state.v_video,
+        &mut state.io.v_video,
         dest,
         x,
         y,
@@ -190,7 +196,7 @@ pub fn draw_block(
     if x < 0 || x + width > SCREENWIDTH || y < 0 || y + height > SCREENHEIGHT {
         error("Bad V_DrawBlock");
     }
-    mark_rect(&mut state.v_video, dest, x, y, width, height);
+    mark_rect(&mut state.io.v_video, dest, x, y, width, height);
     let width = width as usize;
     let dst = state.screen_mut(dest);
     for row in 0..height as usize {
@@ -260,7 +266,7 @@ pub fn v_screen_shot(state: &mut GameState) {
     let mut lbmname = String::new();
     while i <= 99 {
         lbmname = format!("DOOM{i:02}.pcx");
-        if !state.fs.exists(&lbmname) {
+        if !state.assets.fs.exists(&lbmname) {
             break;
         }
         i += 1;
@@ -270,9 +276,9 @@ pub fn v_screen_shot(state: &mut GameState) {
     }
     let palette = lump_bytes_name(state, "PLAYPAL");
     write_pcxfile(
-        &mut *state.fs,
+        &mut *state.assets.fs,
         &lbmname,
-        &state.i_video.i_video_buffer,
+        &state.io.i_video.i_video_buffer,
         SCREENWIDTH,
         SCREENHEIGHT,
         &palette,

@@ -679,35 +679,44 @@ fn saveg_write_glow_t(state: &mut PSavegState, str: &Glow) {
 pub fn write_save_game_header(state: &mut GameState, description: &str) {
     let mut i: i32 = 0;
     for &b in description.as_bytes() {
-        saveg_write8(&mut state.p_saveg, b);
+        saveg_write8(&mut state.world.p_saveg, b);
         i += 1;
     }
     while i < SAVESTRINGSIZE {
-        saveg_write8(&mut state.p_saveg, 0_u8);
+        saveg_write8(&mut state.world.p_saveg, 0_u8);
         i += 1;
     }
-    let name = format!("version {}", vanilla_version_code(&state.doomstat));
+    let name = format!("version {}", vanilla_version_code(&state.game.doomstat));
     let mut name_bytes = [0u8; 16];
     let copy_len = name.len().min(16);
     name_bytes[..copy_len].copy_from_slice(&name.as_bytes()[..copy_len]);
     for &byte in name_bytes.iter().take(VERSIONSIZE as usize) {
-        saveg_write8(&mut state.p_saveg, byte);
+        saveg_write8(&mut state.world.p_saveg, byte);
     }
-    saveg_write8(&mut state.p_saveg, state.g_game.gameskill as u8);
-    saveg_write8(&mut state.p_saveg, state.g_game.gameepisode as u8);
-    saveg_write8(&mut state.p_saveg, state.g_game.gamemap as u8);
+    saveg_write8(&mut state.world.p_saveg, state.game.g_game.gameskill as u8);
+    saveg_write8(
+        &mut state.world.p_saveg,
+        state.game.g_game.gameepisode as u8,
+    );
+    saveg_write8(&mut state.world.p_saveg, state.game.g_game.gamemap as u8);
     for i in 0..(MAXPLAYERS as usize) {
-        saveg_write8(&mut state.p_saveg, state.g_game.playeringame[i] as u8);
+        saveg_write8(
+            &mut state.world.p_saveg,
+            state.game.g_game.playeringame[i] as u8,
+        );
     }
     saveg_write8(
-        &mut state.p_saveg,
-        (state.p_tick.leveltime >> 16 & 0xff) as u8,
+        &mut state.world.p_saveg,
+        (state.world.p_tick.leveltime >> 16 & 0xff) as u8,
     );
     saveg_write8(
-        &mut state.p_saveg,
-        (state.p_tick.leveltime >> 8 & 0xff) as u8,
+        &mut state.world.p_saveg,
+        (state.world.p_tick.leveltime >> 8 & 0xff) as u8,
     );
-    saveg_write8(&mut state.p_saveg, (state.p_tick.leveltime & 0xff) as u8);
+    saveg_write8(
+        &mut state.world.p_saveg,
+        (state.world.p_tick.leveltime & 0xff) as u8,
+    );
 }
 pub fn read_save_game_header(state: &mut GameState) -> bool {
     fn cstr_prefix(buf: &[u8]) -> &[u8] {
@@ -716,28 +725,28 @@ pub fn read_save_game_header(state: &mut GameState) -> bool {
     }
     let mut read_vcheck: [u8; 16] = [0; 16];
     for _ in 0..SAVESTRINGSIZE {
-        saveg_read8(&mut state.p_saveg);
+        saveg_read8(&mut state.world.p_saveg);
     }
     for slot in read_vcheck.iter_mut().take(VERSIONSIZE as usize) {
-        *slot = saveg_read8(&mut state.p_saveg);
+        *slot = saveg_read8(&mut state.world.p_saveg);
     }
-    let version_name = format!("version {}", vanilla_version_code(&state.doomstat));
+    let version_name = format!("version {}", vanilla_version_code(&state.game.doomstat));
     let mut vcheck: [u8; 16] = [0; 16];
     let copy_len = version_name.len().min(16);
     vcheck[..copy_len].copy_from_slice(&version_name.as_bytes()[..copy_len]);
     if cstr_prefix(&read_vcheck) != cstr_prefix(&vcheck) {
         return false;
     }
-    state.g_game.gameskill = skill_from_raw(saveg_read8(&mut state.p_saveg) as i32);
-    state.g_game.gameepisode = saveg_read8(&mut state.p_saveg) as i32;
-    state.g_game.gamemap = saveg_read8(&mut state.p_saveg) as i32;
+    state.game.g_game.gameskill = skill_from_raw(saveg_read8(&mut state.world.p_saveg) as i32);
+    state.game.g_game.gameepisode = saveg_read8(&mut state.world.p_saveg) as i32;
+    state.game.g_game.gamemap = saveg_read8(&mut state.world.p_saveg) as i32;
     for i in 0..(MAXPLAYERS as usize) {
-        state.g_game.playeringame[i] = saveg_read8(&mut state.p_saveg) != 0;
+        state.game.g_game.playeringame[i] = saveg_read8(&mut state.world.p_saveg) != 0;
     }
-    let a: u8 = saveg_read8(&mut state.p_saveg);
-    let b: u8 = saveg_read8(&mut state.p_saveg);
-    let c: u8 = saveg_read8(&mut state.p_saveg);
-    state.p_tick.leveltime = ((a as i32) << 16) + ((b as i32) << 8) + c as i32;
+    let a: u8 = saveg_read8(&mut state.world.p_saveg);
+    let b: u8 = saveg_read8(&mut state.world.p_saveg);
+    let c: u8 = saveg_read8(&mut state.world.p_saveg);
+    state.world.p_tick.leveltime = ((a as i32) << 16) + ((b as i32) << 8) + c as i32;
     true
 }
 pub fn read_save_game_eof(p_saveg: &mut PSavegState) -> bool {
@@ -858,29 +867,29 @@ pub fn un_archive_world(p_saveg: &mut PSavegState, p_setup: &mut PSetupState) {
     }
 }
 pub fn archive_thinkers(state: &mut GameState) {
-    let mut cursor = state.p_tick.head();
+    let mut cursor = state.world.p_tick.head();
     while let Some(id) = cursor {
-        if let ThinkerPayload::Mobj(mobj_id) = state.p_tick.payload(id) {
+        if let ThinkerPayload::Mobj(mobj_id) = state.world.p_tick.payload(id) {
             if matches!(thinker_function(state, id), ThinkerFn::Mobj(_)) {
-                saveg_write8(&mut state.p_saveg, ThinkerClass::Mobj as i32 as u8);
-                saveg_write_pad(&mut state.p_saveg);
-                let mobj = state.p_mobj.mobj_mut(mobj_id).expect("live mobj");
-                saveg_write_mobj_t(&mut state.p_saveg, mobj);
+                saveg_write8(&mut state.world.p_saveg, ThinkerClass::Mobj as i32 as u8);
+                saveg_write_pad(&mut state.world.p_saveg);
+                let mobj = state.world.p_mobj.mobj_mut(mobj_id).expect("live mobj");
+                saveg_write_mobj_t(&mut state.world.p_saveg, mobj);
             }
         }
-        cursor = state.p_tick.next(id);
+        cursor = state.world.p_tick.next(id);
     }
-    saveg_write8(&mut state.p_saveg, ThinkerClass::End as i32 as u8);
+    saveg_write8(&mut state.world.p_saveg, ThinkerClass::End as i32 as u8);
 }
 pub fn un_archive_thinkers(state: &mut GameState) {
     let mut tclass: u8;
-    let mut cursor = state.p_tick.head();
+    let mut cursor = state.world.p_tick.head();
     while let Some(id) = cursor {
         // Unlike the raw-pointer version this replaces, `next` lives in our
         // own node table, not inside the payload memory Z_Free/deallocate
         // below may free -- capturing it first just mirrors the original
         // ordering, not a use-after-free workaround.
-        let next = state.p_tick.next(id);
+        let next = state.world.p_tick.next(id);
         // Dispatch on the node's recorded kind, not `.function` -- every
         // payload type's memory is now owned by its own arena (Mobj and
         // all 8 thinker specials), not the zone allocator, so each needs
@@ -889,9 +898,9 @@ pub fn un_archive_thinkers(state: &mut GameState) {
         // for the Mobj case specifically, which is why the original code
         // could match on it directly -- but `kind` works uniformly for all
         // 9 and doesn't depend on that.)
-        match state.p_tick.kind(id) {
+        match state.world.p_tick.kind(id) {
             ThinkerKind::Mobj => {
-                if let ThinkerPayload::Mobj(mobj_id) = state.p_tick.payload(id) {
+                if let ThinkerPayload::Mobj(mobj_id) = state.world.p_tick.payload(id) {
                     remove_mobj(state, mobj_id);
                     // remove_mobj only retires (see PMobjState::retire) --
                     // it never itself frees the mobj's memory, and
@@ -902,89 +911,93 @@ pub fn un_archive_thinkers(state: &mut GameState) {
                     // pre-existing leak: every live mobj at the moment a
                     // savegame is loaded used to leak its Z_Malloc'd
                     // block).
-                    state.p_mobj.deallocate(mobj_id);
+                    state.world.p_mobj.deallocate(mobj_id);
                 }
             }
             ThinkerKind::Door => {
-                if let ThinkerPayload::Door(door_id) = state.p_tick.payload(id) {
-                    state.p_doors.dealloc(door_id);
+                if let ThinkerPayload::Door(door_id) = state.world.p_tick.payload(id) {
+                    state.world.p_doors.dealloc(door_id);
                 }
             }
             ThinkerKind::Ceiling => {
-                if let ThinkerPayload::Ceiling(ceiling_id) = state.p_tick.payload(id) {
-                    state.p_ceilng.dealloc(ceiling_id);
+                if let ThinkerPayload::Ceiling(ceiling_id) = state.world.p_tick.payload(id) {
+                    state.world.p_ceilng.dealloc(ceiling_id);
                 }
             }
             ThinkerKind::Plat => {
-                if let ThinkerPayload::Plat(plat_id) = state.p_tick.payload(id) {
-                    state.p_plats.dealloc(plat_id);
+                if let ThinkerPayload::Plat(plat_id) = state.world.p_tick.payload(id) {
+                    state.world.p_plats.dealloc(plat_id);
                 }
             }
             ThinkerKind::Floor => {
-                if let ThinkerPayload::Floor(floor_id) = state.p_tick.payload(id) {
-                    state.p_spec.dealloc_floor(floor_id);
+                if let ThinkerPayload::Floor(floor_id) = state.world.p_tick.payload(id) {
+                    state.world.p_spec.dealloc_floor(floor_id);
                 }
             }
             ThinkerKind::FireFlicker => {
-                if let ThinkerPayload::FireFlicker(fireflicker_id) = state.p_tick.payload(id) {
-                    state.p_lights.dealloc_fireflicker(fireflicker_id);
+                if let ThinkerPayload::FireFlicker(fireflicker_id) = state.world.p_tick.payload(id)
+                {
+                    state.world.p_lights.dealloc_fireflicker(fireflicker_id);
                 }
             }
             ThinkerKind::LightFlash => {
-                if let ThinkerPayload::LightFlash(lightflash_id) = state.p_tick.payload(id) {
-                    state.p_lights.dealloc_lightflash(lightflash_id);
+                if let ThinkerPayload::LightFlash(lightflash_id) = state.world.p_tick.payload(id) {
+                    state.world.p_lights.dealloc_lightflash(lightflash_id);
                 }
             }
             ThinkerKind::Strobe => {
-                if let ThinkerPayload::Strobe(strobe_id) = state.p_tick.payload(id) {
-                    state.p_lights.dealloc_strobe(strobe_id);
+                if let ThinkerPayload::Strobe(strobe_id) = state.world.p_tick.payload(id) {
+                    state.world.p_lights.dealloc_strobe(strobe_id);
                 }
             }
             ThinkerKind::Glow => {
-                if let ThinkerPayload::Glow(glow_id) = state.p_tick.payload(id) {
-                    state.p_lights.dealloc_glow(glow_id);
+                if let ThinkerPayload::Glow(glow_id) = state.world.p_tick.payload(id) {
+                    state.world.p_lights.dealloc_glow(glow_id);
                 }
             }
         }
         cursor = next;
     }
-    init_thinkers(&mut state.p_tick);
+    init_thinkers(&mut state.world.p_tick);
     loop {
-        tclass = saveg_read8(&mut state.p_saveg);
+        tclass = saveg_read8(&mut state.world.p_saveg);
         match tclass as i32 {
             0 => return,
             1 => {
-                saveg_read_pad(&mut state.p_saveg);
+                saveg_read_pad(&mut state.world.p_saveg);
                 // spawn() assigns a fresh MobjId and moves this placeholder
                 // onto the heap; saveg_read_mobj_t overwrites every field
                 // except `.id` (never part of the on-disk format), so the id
                 // spawn() just assigned survives the read untouched below.
-                let placeholder = state.p_mobj.dummy_mobj;
-                let mobj_arena_id = state.p_mobj.spawn(placeholder);
-                saveg_read_mobj_t(&mut state.p_saveg, state.p_mobj.mo_mut(mobj_arena_id));
-                if let Some(player_id) = state.p_mobj.mo(mobj_arena_id).player {
-                    state.g_game.player_mut(player_id).mo = Some(mobj_arena_id);
+                let placeholder = state.world.p_mobj.dummy_mobj;
+                let mobj_arena_id = state.world.p_mobj.spawn(placeholder);
+                saveg_read_mobj_t(
+                    &mut state.world.p_saveg,
+                    state.world.p_mobj.mo_mut(mobj_arena_id),
+                );
+                if let Some(player_id) = state.world.p_mobj.mo(mobj_arena_id).player {
+                    state.game.g_game.player_mut(player_id).mo = Some(mobj_arena_id);
                 }
                 {
-                    let m = state.p_mobj.mo_mut(mobj_arena_id);
+                    let m = state.world.p_mobj.mo_mut(mobj_arena_id);
                     m.target = None;
                     m.tracer = None;
                 }
                 set_thing_position(state, mobj_arena_id);
-                let subsector = state.p_mobj.mo(mobj_arena_id).subsector;
-                let sector = state.p_setup.subsectors[subsector.0 as usize].sector;
+                let subsector = state.world.p_mobj.mo(mobj_arena_id).subsector;
+                let sector = state.world.p_setup.subsectors[subsector.0 as usize].sector;
                 let (floorheight, ceilingheight) = {
-                    let s = state.p_setup.sector_mut(sector);
+                    let s = state.world.p_setup.sector_mut(sector);
                     (s.floorheight, s.ceilingheight)
                 };
                 {
-                    let m = state.p_mobj.mo_mut(mobj_arena_id);
+                    let m = state.world.p_mobj.mo_mut(mobj_arena_id);
                     m.floorz = floorheight;
                     m.ceilingz = ceilingheight;
                     m.thinker.function = ThinkerFn::Mobj(mobj_thinker);
                 }
                 add_thinker(
-                    &mut state.p_tick,
+                    &mut state.world.p_tick,
                     ThinkerPayload::Mobj(mobj_arena_id),
                     ThinkerKind::Mobj,
                 );
@@ -996,230 +1009,283 @@ pub fn un_archive_thinkers(state: &mut GameState) {
     }
 }
 pub fn archive_specials(state: &mut GameState) {
-    let mut cursor = state.p_tick.head();
+    let mut cursor = state.world.p_tick.head();
     while let Some(id) = cursor {
         match thinker_function(state, id) {
             ThinkerFn::Paused => {
                 let in_stasis = state
+                    .world
                     .p_ceilng
                     .activeceilings
                     .iter()
                     .take(MAXCEILINGS as usize)
                     .any(|&entry| entry == Some(id));
                 if in_stasis {
-                    let ceiling_id = state.p_tick.ceiling_payload(id);
+                    let ceiling_id = state.world.p_tick.ceiling_payload(id);
                     saveg_write8(
-                        &mut state.p_saveg,
+                        &mut state.world.p_saveg,
                         SpecialThinkerClass::Ceiling as i32 as u8,
                     );
-                    saveg_write_pad(&mut state.p_saveg);
-                    let c = state.p_ceilng.get_mut(ceiling_id).expect("live ceiling");
-                    saveg_write_ceiling_t(&mut state.p_saveg, c);
+                    saveg_write_pad(&mut state.world.p_saveg);
+                    let c = state
+                        .world
+                        .p_ceilng
+                        .get_mut(ceiling_id)
+                        .expect("live ceiling");
+                    saveg_write_ceiling_t(&mut state.world.p_saveg, c);
                 }
             }
             ThinkerFn::Ceiling(_) => {
-                let ceiling_id = state.p_tick.ceiling_payload(id);
+                let ceiling_id = state.world.p_tick.ceiling_payload(id);
                 saveg_write8(
-                    &mut state.p_saveg,
+                    &mut state.world.p_saveg,
                     SpecialThinkerClass::Ceiling as i32 as u8,
                 );
-                saveg_write_pad(&mut state.p_saveg);
-                let c = state.p_ceilng.get_mut(ceiling_id).expect("live ceiling");
-                saveg_write_ceiling_t(&mut state.p_saveg, c);
+                saveg_write_pad(&mut state.world.p_saveg);
+                let c = state
+                    .world
+                    .p_ceilng
+                    .get_mut(ceiling_id)
+                    .expect("live ceiling");
+                saveg_write_ceiling_t(&mut state.world.p_saveg, c);
             }
             ThinkerFn::Door(_) => {
-                let door_id = state.p_tick.door_payload(id);
-                saveg_write8(&mut state.p_saveg, SpecialThinkerClass::Door as i32 as u8);
-                saveg_write_pad(&mut state.p_saveg);
-                let d = state.p_doors.get_mut(door_id).expect("live door");
-                saveg_write_vldoor_t(&mut state.p_saveg, d);
+                let door_id = state.world.p_tick.door_payload(id);
+                saveg_write8(
+                    &mut state.world.p_saveg,
+                    SpecialThinkerClass::Door as i32 as u8,
+                );
+                saveg_write_pad(&mut state.world.p_saveg);
+                let d = state.world.p_doors.get_mut(door_id).expect("live door");
+                saveg_write_vldoor_t(&mut state.world.p_saveg, d);
             }
             ThinkerFn::Floor(_) => {
-                let floor_id = state.p_tick.floor_payload(id);
-                saveg_write8(&mut state.p_saveg, SpecialThinkerClass::Floor as i32 as u8);
-                saveg_write_pad(&mut state.p_saveg);
-                let f = state.p_spec.get_floor_mut(floor_id).expect("live floor");
-                saveg_write_floormove_t(&mut state.p_saveg, f);
+                let floor_id = state.world.p_tick.floor_payload(id);
+                saveg_write8(
+                    &mut state.world.p_saveg,
+                    SpecialThinkerClass::Floor as i32 as u8,
+                );
+                saveg_write_pad(&mut state.world.p_saveg);
+                let f = state
+                    .world
+                    .p_spec
+                    .get_floor_mut(floor_id)
+                    .expect("live floor");
+                saveg_write_floormove_t(&mut state.world.p_saveg, f);
             }
             ThinkerFn::Plat(_) => {
-                let plat_id = state.p_tick.plat_payload(id);
-                saveg_write8(&mut state.p_saveg, SpecialThinkerClass::Plat as i32 as u8);
-                saveg_write_pad(&mut state.p_saveg);
-                let p = state.p_plats.get_mut(plat_id).expect("live plat");
-                saveg_write_plat_t(&mut state.p_saveg, p);
+                let plat_id = state.world.p_tick.plat_payload(id);
+                saveg_write8(
+                    &mut state.world.p_saveg,
+                    SpecialThinkerClass::Plat as i32 as u8,
+                );
+                saveg_write_pad(&mut state.world.p_saveg);
+                let p = state.world.p_plats.get_mut(plat_id).expect("live plat");
+                saveg_write_plat_t(&mut state.world.p_saveg, p);
             }
             ThinkerFn::LightFlash(_) => {
-                let ThinkerPayload::LightFlash(flash_id) = state.p_tick.payload(id) else {
+                let ThinkerPayload::LightFlash(flash_id) = state.world.p_tick.payload(id) else {
                     unreachable!()
                 };
-                saveg_write8(&mut state.p_saveg, SpecialThinkerClass::Flash as i32 as u8);
-                saveg_write_pad(&mut state.p_saveg);
+                saveg_write8(
+                    &mut state.world.p_saveg,
+                    SpecialThinkerClass::Flash as i32 as u8,
+                );
+                saveg_write_pad(&mut state.world.p_saveg);
                 let f = state
+                    .world
                     .p_lights
                     .get_lightflash_mut(flash_id)
                     .expect("live lightflash");
-                saveg_write_lightflash_t(&mut state.p_saveg, f);
+                saveg_write_lightflash_t(&mut state.world.p_saveg, f);
             }
             ThinkerFn::Strobe(_) => {
-                let ThinkerPayload::Strobe(strobe_id) = state.p_tick.payload(id) else {
+                let ThinkerPayload::Strobe(strobe_id) = state.world.p_tick.payload(id) else {
                     unreachable!()
                 };
-                saveg_write8(&mut state.p_saveg, SpecialThinkerClass::Strobe as i32 as u8);
-                saveg_write_pad(&mut state.p_saveg);
+                saveg_write8(
+                    &mut state.world.p_saveg,
+                    SpecialThinkerClass::Strobe as i32 as u8,
+                );
+                saveg_write_pad(&mut state.world.p_saveg);
                 let s = state
+                    .world
                     .p_lights
                     .get_strobe_mut(strobe_id)
                     .expect("live strobe");
-                saveg_write_strobe_t(&mut state.p_saveg, s);
+                saveg_write_strobe_t(&mut state.world.p_saveg, s);
             }
             ThinkerFn::Glow(_) => {
-                let ThinkerPayload::Glow(glow_id) = state.p_tick.payload(id) else {
+                let ThinkerPayload::Glow(glow_id) = state.world.p_tick.payload(id) else {
                     unreachable!()
                 };
-                saveg_write8(&mut state.p_saveg, SpecialThinkerClass::Glow as i32 as u8);
-                saveg_write_pad(&mut state.p_saveg);
-                let g = state.p_lights.get_glow_mut(glow_id).expect("live glow");
-                saveg_write_glow_t(&mut state.p_saveg, g);
+                saveg_write8(
+                    &mut state.world.p_saveg,
+                    SpecialThinkerClass::Glow as i32 as u8,
+                );
+                saveg_write_pad(&mut state.world.p_saveg);
+                let g = state
+                    .world
+                    .p_lights
+                    .get_glow_mut(glow_id)
+                    .expect("live glow");
+                saveg_write_glow_t(&mut state.world.p_saveg, g);
             }
             _ => {}
         }
-        cursor = state.p_tick.next(id);
+        cursor = state.world.p_tick.next(id);
     }
     saveg_write8(
-        &mut state.p_saveg,
+        &mut state.world.p_saveg,
         SpecialThinkerClass::Endspecials as i32 as u8,
     );
 }
 pub fn un_archive_specials(state: &mut GameState) {
     let mut tclass: u8;
     loop {
-        tclass = saveg_read8(&mut state.p_saveg);
+        tclass = saveg_read8(&mut state.world.p_saveg);
         match tclass as i32 {
             7 => return,
             0 => {
-                saveg_read_pad(&mut state.p_saveg);
-                let ceiling_arena_id = state.p_ceilng.spawn(Ceiling::default());
+                saveg_read_pad(&mut state.world.p_saveg);
+                let ceiling_arena_id = state.world.p_ceilng.spawn(Ceiling::default());
                 let sector = {
                     let c = state
+                        .world
                         .p_ceilng
                         .get_mut(ceiling_arena_id)
                         .expect("live ceiling");
-                    saveg_read_ceiling_t(&mut state.p_saveg, c);
+                    saveg_read_ceiling_t(&mut state.world.p_saveg, c);
                     if matches!(c.thinker.function, ThinkerFn::Unresolved) {
                         c.thinker.function = ThinkerFn::Ceiling(move_ceiling);
                     }
                     c.sector
                 };
                 let ceiling_id = add_thinker(
-                    &mut state.p_tick,
+                    &mut state.world.p_tick,
                     ThinkerPayload::Ceiling(ceiling_arena_id),
                     ThinkerKind::Ceiling,
                 );
-                state.p_setup.sector_mut(sector).specialdata =
+                state.world.p_setup.sector_mut(sector).specialdata =
                     Some(SectorSpecial::Ceiling(ceiling_id));
-                add_active_ceiling(&mut state.p_ceilng, ceiling_id);
+                add_active_ceiling(&mut state.world.p_ceilng, ceiling_id);
             }
             1 => {
-                saveg_read_pad(&mut state.p_saveg);
-                let door_arena_id = state.p_doors.spawn(VlDoor::default());
+                saveg_read_pad(&mut state.world.p_saveg);
+                let door_arena_id = state.world.p_doors.spawn(VlDoor::default());
                 let sector = {
-                    let d = state.p_doors.get_mut(door_arena_id).expect("live door");
-                    saveg_read_vldoor_t(&mut state.p_saveg, d);
+                    let d = state
+                        .world
+                        .p_doors
+                        .get_mut(door_arena_id)
+                        .expect("live door");
+                    saveg_read_vldoor_t(&mut state.world.p_saveg, d);
                     d.thinker.function = ThinkerFn::Door(t_vertical_door);
                     d.sector
                 };
                 let door_id = add_thinker(
-                    &mut state.p_tick,
+                    &mut state.world.p_tick,
                     ThinkerPayload::Door(door_arena_id),
                     ThinkerKind::Door,
                 );
-                state.p_setup.sector_mut(sector).specialdata = Some(SectorSpecial::Door(door_id));
+                state.world.p_setup.sector_mut(sector).specialdata =
+                    Some(SectorSpecial::Door(door_id));
             }
             2 => {
-                saveg_read_pad(&mut state.p_saveg);
-                let floor_arena_id = state.p_spec.spawn_floor(FloorMove::default());
+                saveg_read_pad(&mut state.world.p_saveg);
+                let floor_arena_id = state.world.p_spec.spawn_floor(FloorMove::default());
                 let sector = {
                     let f = state
+                        .world
                         .p_spec
                         .get_floor_mut(floor_arena_id)
                         .expect("live floor");
-                    saveg_read_floormove_t(&mut state.p_saveg, f);
+                    saveg_read_floormove_t(&mut state.world.p_saveg, f);
                     f.thinker.function = ThinkerFn::Floor(move_floor);
                     f.sector
                 };
                 let floor_id = add_thinker(
-                    &mut state.p_tick,
+                    &mut state.world.p_tick,
                     ThinkerPayload::Floor(floor_arena_id),
                     ThinkerKind::Floor,
                 );
-                state.p_setup.sector_mut(sector).specialdata = Some(SectorSpecial::Floor(floor_id));
+                state.world.p_setup.sector_mut(sector).specialdata =
+                    Some(SectorSpecial::Floor(floor_id));
             }
             3 => {
-                saveg_read_pad(&mut state.p_saveg);
-                let plat_arena_id = state.p_plats.spawn(Plat::default());
+                saveg_read_pad(&mut state.world.p_saveg);
+                let plat_arena_id = state.world.p_plats.spawn(Plat::default());
                 let sector = {
-                    let p = state.p_plats.get_mut(plat_arena_id).expect("live plat");
-                    saveg_read_plat_t(&mut state.p_saveg, p);
+                    let p = state
+                        .world
+                        .p_plats
+                        .get_mut(plat_arena_id)
+                        .expect("live plat");
+                    saveg_read_plat_t(&mut state.world.p_saveg, p);
                     if matches!(p.thinker.function, ThinkerFn::Unresolved) {
                         p.thinker.function = ThinkerFn::Plat(plat_raise);
                     }
                     p.sector
                 };
                 let plat_id = add_thinker(
-                    &mut state.p_tick,
+                    &mut state.world.p_tick,
                     ThinkerPayload::Plat(plat_arena_id),
                     ThinkerKind::Plat,
                 );
-                state.p_setup.sector_mut(sector).specialdata = Some(SectorSpecial::Plat(plat_id));
-                add_active_plat(&mut state.p_plats, plat_id);
+                state.world.p_setup.sector_mut(sector).specialdata =
+                    Some(SectorSpecial::Plat(plat_id));
+                add_active_plat(&mut state.world.p_plats, plat_id);
             }
             4 => {
-                saveg_read_pad(&mut state.p_saveg);
-                let flash_arena_id = state.p_lights.spawn_lightflash(LightFlash::default());
+                saveg_read_pad(&mut state.world.p_saveg);
+                let flash_arena_id = state.world.p_lights.spawn_lightflash(LightFlash::default());
                 {
                     let f = state
+                        .world
                         .p_lights
                         .get_lightflash_mut(flash_arena_id)
                         .expect("live lightflash");
-                    saveg_read_lightflash_t(&mut state.p_saveg, f);
+                    saveg_read_lightflash_t(&mut state.world.p_saveg, f);
                     f.thinker.function = ThinkerFn::LightFlash(light_flash);
                 }
                 add_thinker(
-                    &mut state.p_tick,
+                    &mut state.world.p_tick,
                     ThinkerPayload::LightFlash(flash_arena_id),
                     ThinkerKind::LightFlash,
                 );
             }
             5 => {
-                saveg_read_pad(&mut state.p_saveg);
-                let strobe_arena_id = state.p_lights.spawn_strobe(Strobe::default());
+                saveg_read_pad(&mut state.world.p_saveg);
+                let strobe_arena_id = state.world.p_lights.spawn_strobe(Strobe::default());
                 {
                     let s = state
+                        .world
                         .p_lights
                         .get_strobe_mut(strobe_arena_id)
                         .expect("live strobe");
-                    saveg_read_strobe_t(&mut state.p_saveg, s);
+                    saveg_read_strobe_t(&mut state.world.p_saveg, s);
                     s.thinker.function = ThinkerFn::Strobe(strobe_flash);
                 }
                 add_thinker(
-                    &mut state.p_tick,
+                    &mut state.world.p_tick,
                     ThinkerPayload::Strobe(strobe_arena_id),
                     ThinkerKind::Strobe,
                 );
             }
             6 => {
-                saveg_read_pad(&mut state.p_saveg);
-                let glow_arena_id = state.p_lights.spawn_glow(Glow::default());
+                saveg_read_pad(&mut state.world.p_saveg);
+                let glow_arena_id = state.world.p_lights.spawn_glow(Glow::default());
                 {
                     let g = state
+                        .world
                         .p_lights
                         .get_glow_mut(glow_arena_id)
                         .expect("live glow");
-                    saveg_read_glow_t(&mut state.p_saveg, g);
+                    saveg_read_glow_t(&mut state.world.p_saveg, g);
                     g.thinker.function = ThinkerFn::Glow(glow);
                 }
                 add_thinker(
-                    &mut state.p_tick,
+                    &mut state.world.p_tick,
                     ThinkerPayload::Glow(glow_arena_id),
                     ThinkerKind::Glow,
                 );

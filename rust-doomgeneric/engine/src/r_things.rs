@@ -210,48 +210,48 @@ pub fn init_sprite_defs(state: &mut GameState, namelist: &[&'static str]) {
     let mut rotation: i32;
 
     let mut patched: i32;
-    state.r_things.numsprites = namelist.len() as i32;
-    if state.r_things.numsprites == 0 {
+    state.render.r_things.numsprites = namelist.len() as i32;
+    if state.render.r_things.numsprites == 0 {
         return;
     }
-    state.r_things.sprites = Vec::with_capacity(state.r_things.numsprites as usize);
-    let start: i32 = state.r_data.firstspritelump - 1;
-    let end: i32 = state.r_data.lastspritelump + 1;
+    state.render.r_things.sprites = Vec::with_capacity(state.render.r_things.numsprites as usize);
+    let start: i32 = state.render.r_data.firstspritelump - 1;
+    let end: i32 = state.render.r_data.lastspritelump + 1;
     for &name in namelist {
-        state.r_things.spritename = name;
-        state.r_things.sprtemp = [SpriteFrame {
+        state.render.r_things.spritename = name;
+        state.render.r_things.sprtemp = [SpriteFrame {
             rotate: SpriteRotate::Unset,
             lump: [-1; 8],
             flip: [0xff; 8],
         }; 29];
-        state.r_things.maxframe = -1;
+        state.render.r_things.maxframe = -1;
         for l in start + 1..end {
-            if state.w_wad.lumpinfo[l as usize]
+            if state.assets.w_wad.lumpinfo[l as usize]
                 .name
-                .eq_bytes_ignore_ascii_case_n(state.r_things.spritename.as_bytes(), 4)
+                .eq_bytes_ignore_ascii_case_n(state.render.r_things.spritename.as_bytes(), 4)
             {
-                frame = state.w_wad.lumpinfo[l as usize].name[4] as i32 - 'A' as i32;
-                rotation = state.w_wad.lumpinfo[l as usize].name[5] as i32 - '0' as i32;
-                if state.doomstat.modifiedgame {
-                    let sprite_name = state.w_wad.lumpinfo[l as usize].name;
-                    patched = get_num_for_name(&state.w_wad, &sprite_name.as_str());
+                frame = state.assets.w_wad.lumpinfo[l as usize].name[4] as i32 - 'A' as i32;
+                rotation = state.assets.w_wad.lumpinfo[l as usize].name[5] as i32 - '0' as i32;
+                if state.game.doomstat.modifiedgame {
+                    let sprite_name = state.assets.w_wad.lumpinfo[l as usize].name;
+                    patched = get_num_for_name(&state.assets.w_wad, &sprite_name.as_str());
                 } else {
                     patched = l;
                 }
                 install_sprite_lump(
-                    &state.r_data,
-                    &mut state.r_things,
+                    &state.render.r_data,
+                    &mut state.render.r_things,
                     patched,
                     frame as u32,
                     rotation as u32,
                     false,
                 );
-                if state.w_wad.lumpinfo[l as usize].name[6] != 0 {
-                    frame = state.w_wad.lumpinfo[l as usize].name[6] as i32 - 'A' as i32;
-                    rotation = state.w_wad.lumpinfo[l as usize].name[7] as i32 - '0' as i32;
+                if state.assets.w_wad.lumpinfo[l as usize].name[6] != 0 {
+                    frame = state.assets.w_wad.lumpinfo[l as usize].name[6] as i32 - 'A' as i32;
+                    rotation = state.assets.w_wad.lumpinfo[l as usize].name[7] as i32 - '0' as i32;
                     install_sprite_lump(
-                        &state.r_data,
-                        &mut state.r_things,
+                        &state.render.r_data,
+                        &mut state.render.r_things,
                         l,
                         frame as u32,
                         rotation as u32,
@@ -260,28 +260,30 @@ pub fn init_sprite_defs(state: &mut GameState, namelist: &[&'static str]) {
                 }
             }
         }
-        if state.r_things.maxframe == -1 {
-            state.r_things.sprites.push(SpriteDef {
+        if state.render.r_things.maxframe == -1 {
+            state.render.r_things.sprites.push(SpriteDef {
                 numframes: 0,
                 spriteframes: Vec::new(),
             });
         } else {
-            state.r_things.maxframe += 1;
-            for frame in 0..state.r_things.maxframe {
-                match state.r_things.sprtemp[frame as usize].rotate as i32 {
+            state.render.r_things.maxframe += 1;
+            for frame in 0..state.render.r_things.maxframe {
+                match state.render.r_things.sprtemp[frame as usize].rotate as i32 {
                     -1 => {
                         error(&format!(
                             "R_InitSprites: No patches found for {} frame {}",
-                            state.r_things.spritename,
+                            state.render.r_things.spritename,
                             (frame + 'A' as i32) as u8 as char,
                         ));
                     }
                     1 => {
                         for rotation in 0..8 {
-                            if state.r_things.sprtemp[frame as usize].lump[rotation] as i32 == -1 {
+                            if state.render.r_things.sprtemp[frame as usize].lump[rotation] as i32
+                                == -1
+                            {
                                 error(&format!(
                                     "R_InitSprites: Sprite {} frame {} is missing rotations",
-                                    state.r_things.spritename,
+                                    state.render.r_things.spritename,
                                     (frame + 'A' as i32) as u8 as char,
                                 ));
                             }
@@ -290,16 +292,18 @@ pub fn init_sprite_defs(state: &mut GameState, namelist: &[&'static str]) {
                     _ => {}
                 }
             }
-            state.r_things.sprites.push(SpriteDef {
-                numframes: state.r_things.maxframe,
-                spriteframes: state.r_things.sprtemp[..state.r_things.maxframe as usize].to_vec(),
+            state.render.r_things.sprites.push(SpriteDef {
+                numframes: state.render.r_things.maxframe,
+                spriteframes: state.render.r_things.sprtemp
+                    [..state.render.r_things.maxframe as usize]
+                    .to_vec(),
             });
         }
     }
 }
 pub fn init_sprites(state: &mut GameState, namelist: &[&'static str]) {
     for i in 0..(SCREENWIDTH as usize) {
-        state.r_things.negonearray[i] = -1_i16;
+        state.render.r_things.negonearray[i] = -1_i16;
     }
     init_sprite_defs(state, namelist);
 }
@@ -318,60 +322,69 @@ pub fn draw_masked_column(state: &mut GameState, mut post: ColumnSource) {
     let mut topscreen: i32;
     let mut bottomscreen: i32;
 
-    let basetexturemid: Fixed = state.r_draw.dc_texturemid;
-    let mfloorclip = state.r_things.mfloorclip.unwrap();
-    let mceilingclip = state.r_things.mceilingclip.unwrap();
+    let basetexturemid: Fixed = state.render.r_draw.dc_texturemid;
+    let mfloorclip = state.render.r_things.mfloorclip.unwrap();
+    let mceilingclip = state.render.r_things.mceilingclip.unwrap();
     loop {
-        let topdelta = read_source(&state.r_data, &state.w_wad, post, 0);
+        let topdelta = read_source(&state.render.r_data, &state.assets.w_wad, post, 0);
         if topdelta as i32 == 0xff {
             break;
         }
-        let length = read_source(&state.r_data, &state.w_wad, post, 1);
-        topscreen = state.r_things.sprtopscreen + state.r_things.spryscale * topdelta as i32;
-        bottomscreen = topscreen + state.r_things.spryscale * length as i32;
-        state.r_draw.dc_yl = (topscreen + FRACUNIT - 1) >> FRACBITS;
-        state.r_draw.dc_yh = (bottomscreen - 1) >> FRACBITS;
-        let floorclip = mfloorclip.get(state, state.r_draw.dc_x as isize) as i32;
-        let ceilingclip = mceilingclip.get(state, state.r_draw.dc_x as isize) as i32;
-        if state.r_draw.dc_yh >= floorclip {
-            state.r_draw.dc_yh = floorclip - 1;
+        let length = read_source(&state.render.r_data, &state.assets.w_wad, post, 1);
+        topscreen =
+            state.render.r_things.sprtopscreen + state.render.r_things.spryscale * topdelta as i32;
+        bottomscreen = topscreen + state.render.r_things.spryscale * length as i32;
+        state.render.r_draw.dc_yl = (topscreen + FRACUNIT - 1) >> FRACBITS;
+        state.render.r_draw.dc_yh = (bottomscreen - 1) >> FRACBITS;
+        let floorclip = mfloorclip.get(state, state.render.r_draw.dc_x as isize) as i32;
+        let ceilingclip = mceilingclip.get(state, state.render.r_draw.dc_x as isize) as i32;
+        if state.render.r_draw.dc_yh >= floorclip {
+            state.render.r_draw.dc_yh = floorclip - 1;
         }
-        if state.r_draw.dc_yl <= ceilingclip {
-            state.r_draw.dc_yl = ceilingclip + 1;
+        if state.render.r_draw.dc_yl <= ceilingclip {
+            state.render.r_draw.dc_yl = ceilingclip + 1;
         }
-        if state.r_draw.dc_yl <= state.r_draw.dc_yh {
-            state.r_draw.dc_source = Some(advance_source(post, 3));
-            state.r_draw.dc_texturemid =
+        if state.render.r_draw.dc_yl <= state.render.r_draw.dc_yh {
+            state.render.r_draw.dc_source = Some(advance_source(post, 3));
+            state.render.r_draw.dc_texturemid =
                 (basetexturemid - ((topdelta as i32) << FRACBITS)) as Fixed;
-            state.r_main.colfunc.expect("non-null function pointer")(state);
+            state
+                .render
+                .r_main
+                .colfunc
+                .expect("non-null function pointer")(state);
         }
         post = advance_source(post, length as usize + 4);
     }
-    state.r_draw.dc_texturemid = basetexturemid;
+    state.render.r_draw.dc_texturemid = basetexturemid;
 }
 pub fn draw_vis_sprite(state: &mut GameState, vis: &VisSprite) {
     let mut texturecolumn: i32;
     let mut frac: Fixed;
 
-    let sprite_lump = vis.patch + state.r_data.firstspritelump;
+    let sprite_lump = vis.patch + state.render.r_data.firstspritelump;
     let patch: Patch = cache_patch_num(state, sprite_lump);
-    state.r_draw.dc_colormap = vis.colormap;
-    if state.r_draw.dc_colormap.is_none() {
-        state.r_main.colfunc = state.r_main.fuzzcolfunc;
+    state.render.r_draw.dc_colormap = vis.colormap;
+    if state.render.r_draw.dc_colormap.is_none() {
+        state.render.r_main.colfunc = state.render.r_main.fuzzcolfunc;
     } else if vis.mobjflags.contains(MobjFlags::TRANSLATION) {
-        state.r_main.colfunc = state.r_main.transcolfunc;
-        state.r_draw.dc_translation = ((vis.mobjflags & MobjFlags::TRANSLATION).bits()
-            >> (MobjFlags::TRANSLATION_SHIFT - 8)) as usize
+        state.render.r_main.colfunc = state.render.r_main.transcolfunc;
+        state.render.r_draw.dc_translation = ((vis.mobjflags & MobjFlags::TRANSLATION).bits()
+            >> (MobjFlags::TRANSLATION_SHIFT - 8))
+            as usize
             - 256;
     }
-    state.r_draw.dc_iscale = (vis.xiscale.abs() >> state.r_main.detailshift) as Fixed;
-    state.r_draw.dc_texturemid = vis.texturemid;
+    state.render.r_draw.dc_iscale = (vis.xiscale.abs() >> state.render.r_main.detailshift) as Fixed;
+    state.render.r_draw.dc_texturemid = vis.texturemid;
     frac = vis.startfrac;
-    state.r_things.spryscale = vis.scale;
-    state.r_things.sprtopscreen =
-        state.r_main.centeryfrac - fixed_mul(state.r_draw.dc_texturemid, state.r_things.spryscale);
-    state.r_draw.dc_x = vis.x1;
-    while state.r_draw.dc_x <= vis.x2 {
+    state.render.r_things.spryscale = vis.scale;
+    state.render.r_things.sprtopscreen = state.render.r_main.centeryfrac
+        - fixed_mul(
+            state.render.r_draw.dc_texturemid,
+            state.render.r_things.spryscale,
+        );
+    state.render.r_draw.dc_x = vis.x1;
+    while state.render.r_draw.dc_x <= vis.x2 {
         texturecolumn = frac >> FRACBITS;
         if texturecolumn < 0 || texturecolumn >= patch.width() {
             error("R_DrawSpriteRange: bad texturecolumn");
@@ -384,13 +397,13 @@ pub fn draw_vis_sprite(state: &mut GameState, vis: &VisSprite) {
                 offset: column_offset,
             },
         );
-        state.r_draw.dc_x += 1;
+        state.render.r_draw.dc_x += 1;
         frac += vis.xiscale;
     }
-    state.r_main.colfunc = state.r_main.basecolfunc;
+    state.render.r_main.colfunc = state.render.r_main.basecolfunc;
 }
 pub fn project_sprite(state: &mut GameState, thing_id: MobjId) {
-    let thing = state.p_mobj.mo(thing_id);
+    let thing = state.world.p_mobj.mo(thing_id);
     let (thing_x, thing_y, thing_z, thing_sprite, thing_frame, thing_angle, thing_flags) = (
         thing.x,
         thing.y,
@@ -411,28 +424,28 @@ pub fn project_sprite(state: &mut GameState, thing_id: MobjId) {
     let mut index: i32;
     let ang: Angle;
 
-    let tr_x: Fixed = thing_x - state.r_main.viewx;
-    let tr_y: Fixed = thing_y - state.r_main.viewy;
-    gxt = fixed_mul(tr_x, state.r_main.viewcos);
-    gyt = -fixed_mul(tr_y, state.r_main.viewsin);
+    let tr_x: Fixed = thing_x - state.render.r_main.viewx;
+    let tr_y: Fixed = thing_y - state.render.r_main.viewy;
+    gxt = fixed_mul(tr_x, state.render.r_main.viewcos);
+    gyt = -fixed_mul(tr_y, state.render.r_main.viewsin);
     let tz: Fixed = gxt - gyt;
     if tz < MINZ {
         return;
     }
-    let xscale: Fixed = fixed_div(state.r_main.projection, tz);
-    gxt = -fixed_mul(tr_x, state.r_main.viewsin);
-    gyt = fixed_mul(tr_y, state.r_main.viewcos);
+    let xscale: Fixed = fixed_div(state.render.r_main.projection, tz);
+    gxt = -fixed_mul(tr_x, state.render.r_main.viewsin);
+    gyt = fixed_mul(tr_y, state.render.r_main.viewcos);
     tx = -(gyt + gxt);
     if tx.abs() > tz << 2 {
         return;
     }
-    if thing_sprite as u32 >= state.r_things.numsprites as u32 {
+    if thing_sprite as u32 >= state.render.r_things.numsprites as u32 {
         error(&format!(
             "R_ProjectSprite: invalid sprite number {} ",
             thing_sprite as u32,
         ));
     }
-    let sprdef = &state.r_things.sprites[thing_sprite as usize];
+    let sprdef = &state.render.r_things.sprites[thing_sprite as usize];
     if thing_frame & FF_FRAMEMASK >= sprdef.numframes {
         error(&format!(
             "R_ProjectSprite: invalid sprite frame {} : {} ",
@@ -444,7 +457,7 @@ pub fn project_sprite(state: &mut GameState, thing_id: MobjId) {
         lump = sprframe.lump[0] as i32;
         flip = sprframe.flip[0] != 0;
     } else {
-        ang = point_to_angle(&state.r_main, thing_x, thing_y);
+        ang = point_to_angle(&state.render.r_main, thing_x, thing_y);
         rot = ang
             .wrapping_sub(thing_angle)
             .wrapping_add(((ANG45 / 2) as u32).wrapping_mul(9))
@@ -452,13 +465,13 @@ pub fn project_sprite(state: &mut GameState, thing_id: MobjId) {
         lump = sprframe.lump[rot as usize] as i32;
         flip = sprframe.flip[rot as usize] != 0;
     }
-    tx -= state.r_data.spriteoffset[lump as usize];
-    let x1: i32 = (state.r_main.centerxfrac + fixed_mul(tx, xscale)) >> FRACBITS;
-    if x1 > state.r_draw.viewwidth {
+    tx -= state.render.r_data.spriteoffset[lump as usize];
+    let x1: i32 = (state.render.r_main.centerxfrac + fixed_mul(tx, xscale)) >> FRACBITS;
+    if x1 > state.render.r_draw.viewwidth {
         return;
     }
-    tx += state.r_data.spritewidth[lump as usize];
-    let x2: i32 = ((state.r_main.centerxfrac + fixed_mul(tx, xscale)) >> FRACBITS) - 1;
+    tx += state.render.r_data.spritewidth[lump as usize];
+    let x2: i32 = ((state.render.r_main.centerxfrac + fixed_mul(tx, xscale)) >> FRACBITS) - 1;
     if x2 < 0 {
         return;
     }
@@ -478,21 +491,21 @@ pub fn project_sprite(state: &mut GameState, thing_id: MobjId) {
         mobjflags: MobjFlags::empty(),
     };
     vis.mobjflags = thing_flags;
-    vis.scale = xscale << state.r_main.detailshift;
+    vis.scale = xscale << state.render.r_main.detailshift;
     vis.gx = thing_x;
     vis.gy = thing_y;
     vis.gz = thing_z;
-    vis.gzt = thing_z + state.r_data.spritetopoffset[lump as usize];
-    vis.texturemid = vis.gzt - state.r_main.viewz;
+    vis.gzt = thing_z + state.render.r_data.spritetopoffset[lump as usize];
+    vis.texturemid = vis.gzt - state.render.r_main.viewz;
     vis.x1 = if x1 < 0 { 0 } else { x1 };
-    vis.x2 = if x2 >= state.r_draw.viewwidth {
-        state.r_draw.viewwidth - 1
+    vis.x2 = if x2 >= state.render.r_draw.viewwidth {
+        state.render.r_draw.viewwidth - 1
     } else {
         x2
     };
     let iscale: Fixed = fixed_div(FRACUNIT, xscale);
     if flip {
-        vis.startfrac = (state.r_data.spritewidth[lump as usize] - 1) as Fixed;
+        vis.startfrac = (state.render.r_data.spritewidth[lump as usize] - 1) as Fixed;
         vis.xiscale = -iscale;
     } else {
         vis.startfrac = 0;
@@ -504,37 +517,42 @@ pub fn project_sprite(state: &mut GameState, thing_id: MobjId) {
     vis.patch = lump;
     if thing_flags.contains(MobjFlags::SHADOW) {
         vis.colormap = None;
-    } else if let Some(colormap) = state.r_main.fixedcolormap {
+    } else if let Some(colormap) = state.render.r_main.fixedcolormap {
         vis.colormap = Some(colormap);
     } else if thing_frame & FF_FULLBRIGHT != 0 {
         vis.colormap = Some(0);
     } else {
-        index = xscale >> (LIGHTSCALESHIFT - state.r_main.detailshift);
+        index = xscale >> (LIGHTSCALESHIFT - state.render.r_main.detailshift);
         if index >= MAXLIGHTSCALE {
             index = MAXLIGHTSCALE - 1;
         }
-        vis.colormap = Some(state.r_main.light_row48(state.r_things.spritelights)[index as usize]);
+        vis.colormap = Some(
+            state
+                .render
+                .r_main
+                .light_row48(state.render.r_things.spritelights)[index as usize],
+        );
     }
-    store_vis_sprite(&mut state.r_things, vis);
+    store_vis_sprite(&mut state.render.r_things, vis);
 }
 pub fn add_sprites(state: &mut GameState, sec: SectorId) {
-    let sector = state.p_setup.sector_mut(sec);
-    if sector.validcount == state.r_main.validcount {
+    let sector = state.world.p_setup.sector_mut(sec);
+    if sector.validcount == state.render.r_main.validcount {
         return;
     }
-    sector.validcount = state.r_main.validcount;
+    sector.validcount = state.render.r_main.validcount;
     let (sector_lightlevel, thinglist) = (sector.lightlevel as i32, sector.thinglist);
-    let lightnum = (sector_lightlevel >> LIGHTSEGSHIFT) + state.r_main.extralight;
+    let lightnum = (sector_lightlevel >> LIGHTSEGSHIFT) + state.render.r_main.extralight;
     if lightnum < 0 {
-        state.r_things.spritelights = LightRow48::Normal(0);
+        state.render.r_things.spritelights = LightRow48::Normal(0);
     } else if lightnum >= LIGHTLEVELS {
-        state.r_things.spritelights = LightRow48::Normal((LIGHTLEVELS - 1) as usize);
+        state.render.r_things.spritelights = LightRow48::Normal((LIGHTLEVELS - 1) as usize);
     } else {
-        state.r_things.spritelights = LightRow48::Normal(lightnum as usize);
+        state.render.r_things.spritelights = LightRow48::Normal(lightnum as usize);
     }
     let mut cursor = thinglist;
     while let Some(id) = cursor {
-        let snext = state.p_mobj.mo(id).snext;
+        let snext = state.world.p_mobj.mo(id).snext;
         project_sprite(state, id);
         cursor = snext;
     }
@@ -557,15 +575,15 @@ pub fn draw_psprite(state: &mut GameState, psp: &PspDef) {
         colormap: None,
         mobjflags: MobjFlags::empty(),
     };
-    let psp_state = state.info.state_mut(psp.state.unwrap());
+    let psp_state = state.assets.info.state_mut(psp.state.unwrap());
     let (psp_state_sprite, psp_state_frame) = (psp_state.sprite, psp_state.frame);
-    if psp_state_sprite as u32 >= state.r_things.numsprites as u32 {
+    if psp_state_sprite as u32 >= state.render.r_things.numsprites as u32 {
         error(&format!(
             "R_ProjectSprite: invalid sprite number {} ",
             psp_state_sprite as u32,
         ));
     }
-    let sprdef = &state.r_things.sprites[psp_state_sprite as usize];
+    let sprdef = &state.render.r_things.sprites[psp_state_sprite as usize];
     if psp_state_frame & FF_FRAMEMASK >= sprdef.numframes {
         error(&format!(
             "R_ProjectSprite: invalid sprite frame {} : {} ",
@@ -576,74 +594,84 @@ pub fn draw_psprite(state: &mut GameState, psp: &PspDef) {
     let lump: i32 = sprframe.lump[0] as i32;
     let flip: bool = sprframe.flip[0] != 0;
     tx = (psp.sx - 160 * FRACUNIT) as Fixed;
-    tx -= state.r_data.spriteoffset[lump as usize];
-    let x1: i32 =
-        (state.r_main.centerxfrac + fixed_mul(tx, state.r_things.pspritescale)) >> FRACBITS;
-    if x1 > state.r_draw.viewwidth {
+    tx -= state.render.r_data.spriteoffset[lump as usize];
+    let x1: i32 = (state.render.r_main.centerxfrac
+        + fixed_mul(tx, state.render.r_things.pspritescale))
+        >> FRACBITS;
+    if x1 > state.render.r_draw.viewwidth {
         return;
     }
-    tx += state.r_data.spritewidth[lump as usize];
-    let x2: i32 =
-        ((state.r_main.centerxfrac + fixed_mul(tx, state.r_things.pspritescale)) >> FRACBITS) - 1;
+    tx += state.render.r_data.spritewidth[lump as usize];
+    let x2: i32 = ((state.render.r_main.centerxfrac
+        + fixed_mul(tx, state.render.r_things.pspritescale))
+        >> FRACBITS)
+        - 1;
     if x2 < 0 {
         return;
     }
     avis.mobjflags = MobjFlags::empty();
     avis.texturemid = (BASEYCENTER << FRACBITS) + FRACUNIT / 2
-        - (psp.sy - state.r_data.spritetopoffset[lump as usize]);
+        - (psp.sy - state.render.r_data.spritetopoffset[lump as usize]);
     avis.x1 = if x1 < 0 { 0 } else { x1 };
-    avis.x2 = if x2 >= state.r_draw.viewwidth {
-        state.r_draw.viewwidth - 1
+    avis.x2 = if x2 >= state.render.r_draw.viewwidth {
+        state.render.r_draw.viewwidth - 1
     } else {
         x2
     };
-    avis.scale = state.r_things.pspritescale << state.r_main.detailshift;
+    avis.scale = state.render.r_things.pspritescale << state.render.r_main.detailshift;
     if flip {
-        avis.xiscale = -state.r_things.pspriteiscale;
-        avis.startfrac = (state.r_data.spritewidth[lump as usize] - 1) as Fixed;
+        avis.xiscale = -state.render.r_things.pspriteiscale;
+        avis.startfrac = (state.render.r_data.spritewidth[lump as usize] - 1) as Fixed;
     } else {
-        avis.xiscale = state.r_things.pspriteiscale;
+        avis.xiscale = state.render.r_things.pspriteiscale;
         avis.startfrac = 0;
     }
     if avis.x1 > x1 {
         avis.startfrac += avis.xiscale * (avis.x1 - x1);
     }
     avis.patch = lump;
-    let invisibility =
-        state.g_game.player_mut(state.r_main.viewplayer).powers[PowerType::Invisibility as usize];
+    let invisibility = state
+        .game
+        .g_game
+        .player_mut(state.render.r_main.viewplayer)
+        .powers[PowerType::Invisibility as usize];
     if invisibility > 4 * 32 || invisibility & 8 != 0 {
         avis.colormap = None;
-    } else if let Some(colormap) = state.r_main.fixedcolormap {
+    } else if let Some(colormap) = state.render.r_main.fixedcolormap {
         avis.colormap = Some(colormap);
     } else if psp_state_frame & FF_FULLBRIGHT != 0 {
         avis.colormap = Some(0);
     } else {
         avis.colormap = Some(
-            state.r_main.light_row48(state.r_things.spritelights)[(MAXLIGHTSCALE - 1) as usize],
+            state
+                .render
+                .r_main
+                .light_row48(state.render.r_things.spritelights)[(MAXLIGHTSCALE - 1) as usize],
         );
     }
     draw_vis_sprite(state, &avis);
 }
 pub fn draw_player_sprites(state: &mut GameState) {
-    let viewplayer = state.g_game.player_mut(state.r_main.viewplayer);
+    let viewplayer = state.game.g_game.player_mut(state.render.r_main.viewplayer);
     let psprites = viewplayer.psprites;
     let viewplayer_mo_id = viewplayer.mo.unwrap();
-    let viewplayer_subsector = state.p_mobj.mo(viewplayer_mo_id).subsector;
+    let viewplayer_subsector = state.world.p_mobj.mo(viewplayer_mo_id).subsector;
     let lightnum = (state
+        .world
         .p_setup
-        .sector_mut(state.p_setup.subsectors[viewplayer_subsector.0 as usize].sector)
+        .sector_mut(state.world.p_setup.subsectors[viewplayer_subsector.0 as usize].sector)
         .lightlevel as i32
         >> LIGHTSEGSHIFT)
-        + state.r_main.extralight;
+        + state.render.r_main.extralight;
     if lightnum < 0 {
-        state.r_things.spritelights = LightRow48::Normal(0);
+        state.render.r_things.spritelights = LightRow48::Normal(0);
     } else if lightnum >= LIGHTLEVELS {
-        state.r_things.spritelights = LightRow48::Normal((LIGHTLEVELS - 1) as usize);
+        state.render.r_things.spritelights = LightRow48::Normal((LIGHTLEVELS - 1) as usize);
     } else {
-        state.r_things.spritelights = LightRow48::Normal(lightnum as usize);
+        state.render.r_things.spritelights = LightRow48::Normal(lightnum as usize);
     }
-    state.r_things.mfloorclip = Some(ClipArray::ScreenHeightArray);
-    state.r_things.mceilingclip = Some(ClipArray::NegOneArray);
+    state.render.r_things.mfloorclip = Some(ClipArray::ScreenHeightArray);
+    state.render.r_things.mceilingclip = Some(ClipArray::NegOneArray);
     for psp in psprites.iter().take(NUMPSPRITES as usize) {
         if psp.state.is_some() {
             draw_psprite(state, psp);
@@ -669,11 +697,11 @@ pub fn draw_sprite(state: &mut GameState, spr: &VisSprite) {
     let mut lowscale: Fixed;
     let mut silhouette: i32;
     for x in spr.x1..=spr.x2 {
-        state.r_things.cliptop[x as usize] = -2_i16;
-        state.r_things.clipbot[x as usize] = state.r_things.cliptop[x as usize];
+        state.render.r_things.cliptop[x as usize] = -2_i16;
+        state.render.r_things.clipbot[x as usize] = state.render.r_things.cliptop[x as usize];
     }
-    for ds_idx in (0..state.r_bsp.ds_p).rev() {
-        let ds = state.r_bsp.drawsegs[ds_idx];
+    for ds_idx in (0..state.render.r_bsp.ds_p).rev() {
+        let ds = state.render.r_bsp.drawsegs[ds_idx];
         if !(ds.x1 > spr.x2
             || ds.x2 < spr.x1
             || ds.silhouette == 0 && ds.maskedtexturecol.is_none())
@@ -689,7 +717,7 @@ pub fn draw_sprite(state: &mut GameState, spr: &VisSprite) {
             }
             if scale < spr.scale
                 || lowscale < spr.scale
-                    && point_on_seg_side(&state.p_setup, spr.gx, spr.gy, ds.curline) == 0
+                    && point_on_seg_side(&state.world.p_setup, spr.gx, spr.gy, ds.curline) == 0
             {
                 if ds.maskedtexturecol.is_some() {
                     render_masked_seg_range(state, &ds, r1, r2);
@@ -705,28 +733,30 @@ pub fn draw_sprite(state: &mut GameState, spr: &VisSprite) {
                 if silhouette == 1 {
                     let sprbottomclip = ds.sprbottomclip.unwrap();
                     for x in r1..=r2 {
-                        if state.r_things.clipbot[x as usize] as i32 == -2 {
-                            state.r_things.clipbot[x as usize] =
+                        if state.render.r_things.clipbot[x as usize] as i32 == -2 {
+                            state.render.r_things.clipbot[x as usize] =
                                 sprbottomclip.get(state, x as isize);
                         }
                     }
                 } else if silhouette == 2 {
                     let sprtopclip = ds.sprtopclip.unwrap();
                     for x in r1..=r2 {
-                        if state.r_things.cliptop[x as usize] as i32 == -2 {
-                            state.r_things.cliptop[x as usize] = sprtopclip.get(state, x as isize);
+                        if state.render.r_things.cliptop[x as usize] as i32 == -2 {
+                            state.render.r_things.cliptop[x as usize] =
+                                sprtopclip.get(state, x as isize);
                         }
                     }
                 } else if silhouette == 3 {
                     let sprbottomclip = ds.sprbottomclip.unwrap();
                     let sprtopclip = ds.sprtopclip.unwrap();
                     for x in r1..=r2 {
-                        if state.r_things.clipbot[x as usize] as i32 == -2 {
-                            state.r_things.clipbot[x as usize] =
+                        if state.render.r_things.clipbot[x as usize] as i32 == -2 {
+                            state.render.r_things.clipbot[x as usize] =
                                 sprbottomclip.get(state, x as isize);
                         }
-                        if state.r_things.cliptop[x as usize] as i32 == -2 {
-                            state.r_things.cliptop[x as usize] = sprtopclip.get(state, x as isize);
+                        if state.render.r_things.cliptop[x as usize] as i32 == -2 {
+                            state.render.r_things.cliptop[x as usize] =
+                                sprtopclip.get(state, x as isize);
                         }
                     }
                 }
@@ -734,31 +764,31 @@ pub fn draw_sprite(state: &mut GameState, spr: &VisSprite) {
         }
     }
     for x in spr.x1..=spr.x2 {
-        if state.r_things.clipbot[x as usize] as i32 == -2 {
-            state.r_things.clipbot[x as usize] = state.r_draw.viewheight as i16;
+        if state.render.r_things.clipbot[x as usize] as i32 == -2 {
+            state.render.r_things.clipbot[x as usize] = state.render.r_draw.viewheight as i16;
         }
-        if state.r_things.cliptop[x as usize] as i32 == -2 {
-            state.r_things.cliptop[x as usize] = -1_i16;
+        if state.render.r_things.cliptop[x as usize] as i32 == -2 {
+            state.render.r_things.cliptop[x as usize] = -1_i16;
         }
     }
-    state.r_things.mfloorclip = Some(ClipArray::ClipBot);
-    state.r_things.mceilingclip = Some(ClipArray::ClipTop);
+    state.render.r_things.mfloorclip = Some(ClipArray::ClipBot);
+    state.render.r_things.mceilingclip = Some(ClipArray::ClipTop);
     draw_vis_sprite(state, spr);
 }
 pub fn draw_masked(state: &mut GameState) {
-    sort_vis_sprites(&mut state.r_things);
-    for i in 0..state.r_things.vissprite_order.len() {
-        let idx = state.r_things.vissprite_order[i];
-        let spr = state.r_things.vissprites[idx];
+    sort_vis_sprites(&mut state.render.r_things);
+    for i in 0..state.render.r_things.vissprite_order.len() {
+        let idx = state.render.r_things.vissprite_order[i];
+        let spr = state.render.r_things.vissprites[idx];
         draw_sprite(state, &spr);
     }
-    for ds_idx in (0..state.r_bsp.ds_p).rev() {
-        let ds = state.r_bsp.drawsegs[ds_idx];
+    for ds_idx in (0..state.render.r_bsp.ds_p).rev() {
+        let ds = state.render.r_bsp.drawsegs[ds_idx];
         if ds.maskedtexturecol.is_some() {
             render_masked_seg_range(state, &ds, ds.x1, ds.x2);
         }
     }
-    if state.r_main.viewangleoffset == 0 {
+    if state.render.r_main.viewangleoffset == 0 {
         draw_player_sprites(state);
     }
 }

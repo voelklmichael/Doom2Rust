@@ -358,6 +358,7 @@ impl PLightsState {
 }
 pub fn fire_flicker(state: &mut GameState, id: FireFlickerId) {
     let flick = state
+        .world
         .p_lights
         .get_fireflicker_mut(id)
         .expect("ThinkerFn::FireFlicker id must reference a live fireflicker");
@@ -365,8 +366,8 @@ pub fn fire_flicker(state: &mut GameState, id: FireFlickerId) {
     if flick.count != 0 {
         return;
     }
-    let amount = (p_random(&mut state.m_random) & 3) * 16;
-    let sec = state.p_setup.sector_mut(flick.sector);
+    let amount = (p_random(&mut state.world.m_random) & 3) * 16;
+    let sec = state.world.p_setup.sector_mut(flick.sector);
     if sec.lightlevel as i32 - amount < flick.minlight {
         sec.lightlevel = flick.minlight as i16;
     } else {
@@ -397,6 +398,7 @@ pub fn spawn_fire_flicker(
 }
 pub fn light_flash(state: &mut GameState, id: LightFlashId) {
     let flash = state
+        .world
         .p_lights
         .get_lightflash_mut(id)
         .expect("ThinkerFn::LightFlash id must reference a live lightflash");
@@ -404,35 +406,36 @@ pub fn light_flash(state: &mut GameState, id: LightFlashId) {
     if flash.count != 0 {
         return;
     }
-    let sec = state.p_setup.sector_mut(flash.sector);
+    let sec = state.world.p_setup.sector_mut(flash.sector);
     if sec.lightlevel as i32 == flash.maxlight {
         sec.lightlevel = flash.minlight as i16;
-        flash.count = (p_random(&mut state.m_random) & flash.mintime) + 1;
+        flash.count = (p_random(&mut state.world.m_random) & flash.mintime) + 1;
     } else {
         sec.lightlevel = flash.maxlight as i16;
-        flash.count = (p_random(&mut state.m_random) & flash.maxtime) + 1;
+        flash.count = (p_random(&mut state.world.m_random) & flash.maxtime) + 1;
     }
 }
 pub fn spawn_light_flash(state: &mut GameState, sector: SectorId) {
-    state.p_setup.sector_mut(sector).special = 0;
-    let lightlevel = state.p_setup.sector_mut(sector).lightlevel as i32;
+    state.world.p_setup.sector_mut(sector).special = 0;
+    let lightlevel = state.world.p_setup.sector_mut(sector).lightlevel as i32;
     let mut flash = LightFlash::default();
     flash.thinker.function = ThinkerFn::LightFlash(light_flash);
     flash.sector = sector;
     flash.maxlight = lightlevel;
-    flash.minlight = find_min_surrounding_light(&mut state.p_setup, sector, lightlevel);
+    flash.minlight = find_min_surrounding_light(&mut state.world.p_setup, sector, lightlevel);
     flash.maxtime = 64;
     flash.mintime = 7;
-    flash.count = (p_random(&mut state.m_random) & flash.maxtime) + 1;
-    let flash_arena_id = state.p_lights.spawn_lightflash(flash);
+    flash.count = (p_random(&mut state.world.m_random) & flash.maxtime) + 1;
+    let flash_arena_id = state.world.p_lights.spawn_lightflash(flash);
     add_thinker(
-        &mut state.p_tick,
+        &mut state.world.p_tick,
         ThinkerPayload::LightFlash(flash_arena_id),
         ThinkerKind::LightFlash,
     );
 }
 pub fn strobe_flash(state: &mut GameState, id: StrobeId) {
     let flash = state
+        .world
         .p_lights
         .get_strobe_mut(id)
         .expect("ThinkerFn::Strobe id must reference a live strobe");
@@ -440,7 +443,7 @@ pub fn strobe_flash(state: &mut GameState, id: StrobeId) {
     if flash.count != 0 {
         return;
     }
-    let sec = state.p_setup.sector_mut(flash.sector);
+    let sec = state.world.p_setup.sector_mut(flash.sector);
     if sec.lightlevel as i32 == flash.minlight {
         sec.lightlevel = flash.maxlight as i16;
         flash.count = flash.brighttime;
@@ -455,7 +458,7 @@ pub fn spawn_strobe_flash(
     fast_or_slow: i32,
     in_sync: i32,
 ) {
-    let lightlevel = state.p_setup.sector_mut(sector).lightlevel as i32;
+    let lightlevel = state.world.p_setup.sector_mut(sector).lightlevel as i32;
     let mut flash = Strobe {
         sector,
         darktime: fast_or_slow,
@@ -464,26 +467,26 @@ pub fn spawn_strobe_flash(
     };
     flash.thinker.function = ThinkerFn::Strobe(strobe_flash);
     flash.maxlight = lightlevel;
-    flash.minlight = find_min_surrounding_light(&mut state.p_setup, sector, lightlevel);
+    flash.minlight = find_min_surrounding_light(&mut state.world.p_setup, sector, lightlevel);
     if flash.minlight == flash.maxlight {
         flash.minlight = 0;
     }
-    state.p_setup.sector_mut(sector).special = 0;
+    state.world.p_setup.sector_mut(sector).special = 0;
     if in_sync == 0 {
-        flash.count = (p_random(&mut state.m_random) & 7) + 1;
+        flash.count = (p_random(&mut state.world.m_random) & 7) + 1;
     } else {
         flash.count = 1;
     }
-    let flash_arena_id = state.p_lights.spawn_strobe(flash);
+    let flash_arena_id = state.world.p_lights.spawn_strobe(flash);
     add_thinker(
-        &mut state.p_tick,
+        &mut state.world.p_tick,
         ThinkerPayload::Strobe(flash_arena_id),
         ThinkerKind::Strobe,
     );
 }
 pub fn start_light_strobing(state: &mut GameState, line: LineId) {
-    for sector in sectors_with_line_tag(&state.p_setup, line) {
-        let sec = state.p_setup.sector_mut(sector);
+    for sector in sectors_with_line_tag(&state.world.p_setup, line) {
+        let sec = state.world.p_setup.sector_mut(sector);
         if sec.specialdata.is_some() {
             continue;
         }
@@ -533,10 +536,11 @@ pub fn light_turn_on(p_setup: &mut PSetupState, line: LineId, mut bright: i32) {
 }
 pub fn glow(state: &mut GameState, id: GlowId) {
     let g = state
+        .world
         .p_lights
         .get_glow_mut(id)
         .expect("ThinkerFn::Glow id must reference a live glow");
-    let sec = state.p_setup.sector_mut(g.sector);
+    let sec = state.world.p_setup.sector_mut(g.sector);
     match g.direction {
         -1 => {
             sec.lightlevel = (sec.lightlevel as i32 - GLOWSPEED) as i16;

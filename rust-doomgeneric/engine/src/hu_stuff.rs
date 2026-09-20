@@ -314,9 +314,9 @@ pub static MAPNAMES_COMMERCIAL: [&str; 96] = [
 pub fn hu_init(state: &mut GameState) {
     for (i, code) in (HU_FONTSTART..HU_FONTSTART + HU_FONTSIZE).enumerate() {
         let buffer = format!("STCFN{code:03}");
-        let lumpnum = get_num_for_name(&state.w_wad, &buffer);
-        lump_bytes(&*state.fs, &mut state.w_wad, lumpnum);
-        state.hu_stuff.hu_font[i] = lumpnum;
+        let lumpnum = get_num_for_name(&state.assets.w_wad, &buffer);
+        lump_bytes(&*state.assets.fs, &mut state.assets.w_wad, lumpnum);
+        state.ui.hu_stuff.hu_font[i] = lumpnum;
     }
 }
 pub fn hu_stop(hu_stuff: &mut HuStuffState) {
@@ -325,18 +325,18 @@ pub fn hu_stop(hu_stuff: &mut HuStuffState) {
 pub fn hu_start(state: &mut GameState) {
     let mut _i: i32 = 0;
     let mut s: &str;
-    if state.hu_stuff.headsupactive {
-        hu_stop(&mut state.hu_stuff);
+    if state.ui.hu_stuff.headsupactive {
+        hu_stop(&mut state.ui.hu_stuff);
     }
-    state.hu_stuff.plr = PlayerId(state.g_game.consoleplayer as u8);
-    state.hu_stuff.message_on = false;
-    state.hu_stuff.message_dontfuckwithme = false;
-    state.hu_stuff.message_nottobefuckedwith = false;
-    state.hu_stuff.chat_on = false;
-    let hu_font0 = state.hu_stuff.hu_font[0];
+    state.ui.hu_stuff.plr = PlayerId(state.game.g_game.consoleplayer as u8);
+    state.ui.hu_stuff.message_on = false;
+    state.ui.hu_stuff.message_dontfuckwithme = false;
+    state.ui.hu_stuff.message_nottobefuckedwith = false;
+    state.ui.hu_stuff.chat_on = false;
+    let hu_font0 = state.ui.hu_stuff.hu_font[0];
     let hu_font0_height = cache_patch_num(state, hu_font0).height();
     hulib_init_stext(
-        &mut state.hu_stuff.w_message,
+        &mut state.ui.hu_stuff.w_message,
         HU_MSGX,
         HU_MSGY,
         HU_MSGHEIGHT,
@@ -344,152 +344,160 @@ pub fn hu_start(state: &mut GameState) {
         hu_font0_height,
     );
     hulib_init_text_line(
-        &mut state.hu_stuff.w_title,
+        &mut state.ui.hu_stuff.w_title,
         HU_TITLEX,
         167 - hu_font0_height,
         HU_FONTSTART,
     );
-    match if state.doomstat.gamemission as u32 == GameMission::PackChex as i32 as u32 {
+    match if state.game.doomstat.gamemission as u32 == GameMission::PackChex as i32 as u32 {
         GameMission::Doom as i32 as u32
-    } else if state.doomstat.gamemission as u32 == GameMission::PackHacx as i32 as u32 {
+    } else if state.game.doomstat.gamemission as u32 == GameMission::PackHacx as i32 as u32 {
         GameMission::Doom2 as i32 as u32
     } else {
-        state.doomstat.gamemission as u32
+        state.game.doomstat.gamemission as u32
     } {
         0 => {
-            s = MAPNAMES[((state.g_game.gameepisode - 1) * 9 + state.g_game.gamemap - 1) as usize];
+            s = MAPNAMES[((state.game.g_game.gameepisode - 1) * 9 + state.game.g_game.gamemap - 1)
+                as usize];
         }
         1 => {
-            s = MAPNAMES_COMMERCIAL[(state.g_game.gamemap - 1) as usize];
+            s = MAPNAMES_COMMERCIAL[(state.game.g_game.gamemap - 1) as usize];
         }
         3 => {
-            s = MAPNAMES_COMMERCIAL[(state.g_game.gamemap - 1 + 32) as usize];
+            s = MAPNAMES_COMMERCIAL[(state.game.g_game.gamemap - 1 + 32) as usize];
         }
         2 => {
-            s = MAPNAMES_COMMERCIAL[(state.g_game.gamemap - 1 + 64) as usize];
+            s = MAPNAMES_COMMERCIAL[(state.game.g_game.gamemap - 1 + 64) as usize];
         }
         _ => {
             s = "Unknown level";
         }
     }
-    if state.doomstat.gameversion == GameVersion::Chex {
-        s = MAPNAMES[(state.g_game.gamemap - 1) as usize];
+    if state.game.doomstat.gameversion == GameVersion::Chex {
+        s = MAPNAMES[(state.game.g_game.gamemap - 1) as usize];
     }
     for b in s.bytes() {
-        hulib_add_char_to_text_line(&mut state.hu_stuff.w_title, b);
+        hulib_add_char_to_text_line(&mut state.ui.hu_stuff.w_title, b);
     }
     hulib_init_itext(
-        &mut state.hu_stuff.w_chat,
+        &mut state.ui.hu_stuff.w_chat,
         HU_INPUTX,
         HU_MSGY + HU_MSGHEIGHT * (hu_font0_height + 1),
         HU_FONTSTART,
     );
     for i in 0..(MAXPLAYERS as usize) {
-        hulib_init_itext(&mut state.hu_stuff.w_inputbuffer[i], 0, 0, 0);
+        hulib_init_itext(&mut state.ui.hu_stuff.w_inputbuffer[i], 0, 0, 0);
     }
-    state.hu_stuff.headsupactive = true;
+    state.ui.hu_stuff.headsupactive = true;
 }
 pub fn hu_drawer(state: &mut GameState) {
-    let message_on = state.hu_stuff.message_on;
-    let w_message = state.hu_stuff.w_message.clone();
+    let message_on = state.ui.hu_stuff.message_on;
+    let w_message = state.ui.hu_stuff.w_message.clone();
     hulib_draw_stext(state, &w_message, message_on);
-    let chat_on = state.hu_stuff.chat_on;
-    let w_chat = state.hu_stuff.w_chat.clone();
+    let chat_on = state.ui.hu_stuff.chat_on;
+    let w_chat = state.ui.hu_stuff.w_chat.clone();
     hulib_draw_itext(state, &w_chat, chat_on);
-    if state.am_map.automapactive {
-        let w_title = state.hu_stuff.w_title.clone();
+    if state.ui.am_map.automapactive {
+        let w_title = state.ui.hu_stuff.w_title.clone();
         hulib_draw_text_line(state, &w_title, false);
     }
 }
 pub fn erase(state: &mut GameState) {
-    let message_on = state.hu_stuff.message_on;
-    let mut w_message = state.hu_stuff.w_message.clone();
+    let message_on = state.ui.hu_stuff.message_on;
+    let mut w_message = state.ui.hu_stuff.w_message.clone();
     hulib_erase_stext(state, &mut w_message, message_on);
-    state.hu_stuff.w_message = w_message;
-    let chat_on = state.hu_stuff.chat_on;
-    let mut w_chat = state.hu_stuff.w_chat.clone();
+    state.ui.hu_stuff.w_message = w_message;
+    let chat_on = state.ui.hu_stuff.chat_on;
+    let mut w_chat = state.ui.hu_stuff.w_chat.clone();
     hulib_erase_itext(state, &mut w_chat, chat_on);
-    state.hu_stuff.w_chat = w_chat;
-    let mut w_title = state.hu_stuff.w_title.clone();
+    state.ui.hu_stuff.w_chat = w_chat;
+    let mut w_title = state.ui.hu_stuff.w_title.clone();
     hulib_erase_text_line(state, &mut w_title);
-    state.hu_stuff.w_title = w_title;
+    state.ui.hu_stuff.w_title = w_title;
 }
 pub fn hu_ticker(state: &mut GameState) {
     let mut rc: i32;
     let mut c: u8;
-    if state.hu_stuff.message_counter != 0 && {
-        state.hu_stuff.message_counter -= 1;
-        state.hu_stuff.message_counter == 0
+    if state.ui.hu_stuff.message_counter != 0 && {
+        state.ui.hu_stuff.message_counter -= 1;
+        state.ui.hu_stuff.message_counter == 0
     } {
-        state.hu_stuff.message_on = false;
-        state.hu_stuff.message_nottobefuckedwith = false;
+        state.ui.hu_stuff.message_on = false;
+        state.ui.hu_stuff.message_nottobefuckedwith = false;
     }
-    if (state.m_menu.show_messages != 0 || state.hu_stuff.message_dontfuckwithme)
+    if (state.ui.m_menu.show_messages != 0 || state.ui.hu_stuff.message_dontfuckwithme)
         && (state
+            .game
             .g_game
-            .player_mut(state.hu_stuff.plr)
+            .player_mut(state.ui.hu_stuff.plr)
             .message
             .is_some()
-            && !state.hu_stuff.message_nottobefuckedwith
+            && !state.ui.hu_stuff.message_nottobefuckedwith
             || state
+                .game
                 .g_game
-                .player_mut(state.hu_stuff.plr)
+                .player_mut(state.ui.hu_stuff.plr)
                 .message
                 .is_some()
-                && state.hu_stuff.message_dontfuckwithme)
+                && state.ui.hu_stuff.message_dontfuckwithme)
     {
         hulib_add_message_to_stext(
-            &mut state.hu_stuff.w_message,
+            &mut state.ui.hu_stuff.w_message,
             None,
             state
+                .game
                 .g_game
-                .player_mut(state.hu_stuff.plr)
+                .player_mut(state.ui.hu_stuff.plr)
                 .message
                 .as_deref()
                 .unwrap(),
         );
-        state.g_game.player_mut(state.hu_stuff.plr).message = None;
-        state.hu_stuff.message_on = true;
-        state.hu_stuff.message_counter = HU_MSGTIMEOUT;
-        state.hu_stuff.message_nottobefuckedwith = state.hu_stuff.message_dontfuckwithme;
-        state.hu_stuff.message_dontfuckwithme = false;
+        state.game.g_game.player_mut(state.ui.hu_stuff.plr).message = None;
+        state.ui.hu_stuff.message_on = true;
+        state.ui.hu_stuff.message_counter = HU_MSGTIMEOUT;
+        state.ui.hu_stuff.message_nottobefuckedwith = state.ui.hu_stuff.message_dontfuckwithme;
+        state.ui.hu_stuff.message_dontfuckwithme = false;
     }
-    if state.g_game.netgame {
+    if state.game.g_game.netgame {
         for i in 0..MAXPLAYERS {
-            if state.g_game.playeringame[i as usize] && i != state.g_game.consoleplayer && {
-                c = state.g_game.players[i as usize].cmd.chatchar;
-                c as i32 != 0
-            } {
+            if state.game.g_game.playeringame[i as usize]
+                && i != state.game.g_game.consoleplayer
+                && {
+                    c = state.game.g_game.players[i as usize].cmd.chatchar;
+                    c as i32 != 0
+                }
+            {
                 if c as i32 <= HU_BROADCAST {
-                    state.hu_stuff.chat_dest[i as usize] = c;
+                    state.ui.hu_stuff.chat_dest[i as usize] = c;
                 } else {
-                    rc =
-                        hulib_key_in_itext(&mut state.hu_stuff.w_inputbuffer[i as usize], c) as i32;
+                    rc = hulib_key_in_itext(&mut state.ui.hu_stuff.w_inputbuffer[i as usize], c)
+                        as i32;
                     if rc != 0 && c as i32 == KEY_ENTER {
-                        if !state.hu_stuff.w_inputbuffer[i as usize].l.l.is_empty()
-                            && (state.hu_stuff.chat_dest[i as usize] as i32
-                                == state.g_game.consoleplayer + 1
-                                || state.hu_stuff.chat_dest[i as usize] as i32 == HU_BROADCAST)
+                        if !state.ui.hu_stuff.w_inputbuffer[i as usize].l.l.is_empty()
+                            && (state.ui.hu_stuff.chat_dest[i as usize] as i32
+                                == state.game.g_game.consoleplayer + 1
+                                || state.ui.hu_stuff.chat_dest[i as usize] as i32 == HU_BROADCAST)
                         {
                             hulib_add_message_to_stext(
-                                &mut state.hu_stuff.w_message,
+                                &mut state.ui.hu_stuff.w_message,
                                 Some(PLAYER_NAMES[i as usize]),
-                                &state.hu_stuff.w_inputbuffer[i as usize].l.l,
+                                &state.ui.hu_stuff.w_inputbuffer[i as usize].l.l,
                             );
-                            state.hu_stuff.message_nottobefuckedwith = true;
-                            state.hu_stuff.message_on = true;
-                            state.hu_stuff.message_counter = HU_MSGTIMEOUT;
-                            if state.doomstat.gamemode as u32 == GameMode::Commercial as i32 as u32
+                            state.ui.hu_stuff.message_nottobefuckedwith = true;
+                            state.ui.hu_stuff.message_on = true;
+                            state.ui.hu_stuff.message_counter = HU_MSGTIMEOUT;
+                            if state.game.doomstat.gamemode as u32
+                                == GameMode::Commercial as i32 as u32
                             {
                                 s_start_sound(state, SoundOrigin::None, SfxName::Radio as i32);
                             } else {
                                 s_start_sound(state, SoundOrigin::None, SfxName::Tink as i32);
                             }
                         }
-                        hulib_reset_itext(&mut state.hu_stuff.w_inputbuffer[i as usize]);
+                        hulib_reset_itext(&mut state.ui.hu_stuff.w_inputbuffer[i as usize]);
                     }
                 }
-                state.g_game.players[i as usize].cmd.chatchar = 0_u8;
+                state.game.g_game.players[i as usize].cmd.chatchar = 0_u8;
             }
         }
     }

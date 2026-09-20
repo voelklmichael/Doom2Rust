@@ -1,7 +1,7 @@
 //! Console output for the engine. `println!` and friends need `std`, so the
 //! engine formats into a `String` and hands it to `DoomPlatform::print` /
 //! `eprint`. The first argument is anything with those methods, normally
-//! `state.platform`.
+//! `state.io.platform`.
 
 macro_rules! doom_print {
     ($p:expr, $($arg:tt)*) => {{

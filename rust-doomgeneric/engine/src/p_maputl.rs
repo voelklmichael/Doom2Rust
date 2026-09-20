@@ -362,7 +362,7 @@ pub fn line_opening(p_maputl: &mut PMaputlState, p_setup: &mut PSetupState, line
 }
 pub fn unset_thing_position(state: &mut GameState, thing: MobjId) {
     let (flags, snext, sprev, subsector, bnext, bprev, x, y) = {
-        let t = state.p_mobj.mo(thing);
+        let t = state.world.p_mobj.mo(thing);
         (
             t.flags,
             t.snext,
@@ -377,6 +377,7 @@ pub fn unset_thing_position(state: &mut GameState, thing: MobjId) {
     if !flags.contains(MobjFlags::NOSECTOR) {
         if let Some(id) = snext {
             state
+                .world
                 .p_mobj
                 .mobj_mut(id)
                 .expect("sector-list snext neighbor is always live")
@@ -384,18 +385,20 @@ pub fn unset_thing_position(state: &mut GameState, thing: MobjId) {
         }
         if let Some(id) = sprev {
             state
+                .world
                 .p_mobj
                 .mobj_mut(id)
                 .expect("sector-list sprev neighbor is always live")
                 .snext = snext;
         } else {
-            let sector = state.p_setup.subsectors[subsector.0 as usize].sector;
-            state.p_setup.sector_mut(sector).thinglist = snext;
+            let sector = state.world.p_setup.subsectors[subsector.0 as usize].sector;
+            state.world.p_setup.sector_mut(sector).thinglist = snext;
         }
     }
     if !flags.contains(MobjFlags::NOBLOCKMAP) {
         if let Some(id) = bnext {
             state
+                .world
                 .p_mobj
                 .mobj_mut(id)
                 .expect("blockmap-list bnext neighbor is always live")
@@ -403,73 +406,76 @@ pub fn unset_thing_position(state: &mut GameState, thing: MobjId) {
         }
         if let Some(id) = bprev {
             state
+                .world
                 .p_mobj
                 .mobj_mut(id)
                 .expect("blockmap-list bprev neighbor is always live")
                 .bnext = bnext;
         } else {
-            let blockx = (x - state.p_setup.bmaporgx) >> MAPBLOCKSHIFT;
-            let blocky = (y - state.p_setup.bmaporgy) >> MAPBLOCKSHIFT;
+            let blockx = (x - state.world.p_setup.bmaporgx) >> MAPBLOCKSHIFT;
+            let blocky = (y - state.world.p_setup.bmaporgy) >> MAPBLOCKSHIFT;
             if blockx >= 0
-                && blockx < state.p_setup.bmapwidth
+                && blockx < state.world.p_setup.bmapwidth
                 && blocky >= 0
-                && blocky < state.p_setup.bmapheight
+                && blocky < state.world.p_setup.bmapheight
             {
-                state.p_setup.blocklinks[(blocky * state.p_setup.bmapwidth + blockx) as usize] =
-                    bnext;
+                state.world.p_setup.blocklinks
+                    [(blocky * state.world.p_setup.bmapwidth + blockx) as usize] = bnext;
             }
         }
     }
 }
 pub fn set_thing_position(state: &mut GameState, thing: MobjId) {
     let (x, y, flags) = {
-        let t = state.p_mobj.mo(thing);
+        let t = state.world.p_mobj.mo(thing);
         (t.x, t.y, t.flags)
     };
-    let ss = point_in_subsector(&state.p_setup, x, y);
-    state.p_mobj.mo_mut(thing).subsector = ss;
+    let ss = point_in_subsector(&state.world.p_setup, x, y);
+    state.world.p_mobj.mo_mut(thing).subsector = ss;
     if !flags.contains(MobjFlags::NOSECTOR) {
-        let sector = state.p_setup.subsectors[ss.0 as usize].sector;
-        let old_head = state.p_setup.sector_mut(sector).thinglist;
+        let sector = state.world.p_setup.subsectors[ss.0 as usize].sector;
+        let old_head = state.world.p_setup.sector_mut(sector).thinglist;
         {
-            let t = state.p_mobj.mo_mut(thing);
+            let t = state.world.p_mobj.mo_mut(thing);
             t.sprev = None;
             t.snext = old_head;
         }
         if let Some(head_id) = old_head {
             state
+                .world
                 .p_mobj
                 .mobj_mut(head_id)
                 .expect("sector thinglist head is always live")
                 .sprev = Some(thing);
         }
-        state.p_setup.sector_mut(sector).thinglist = Some(thing);
+        state.world.p_setup.sector_mut(sector).thinglist = Some(thing);
     }
     if !flags.contains(MobjFlags::NOBLOCKMAP) {
-        let blockx = (x - state.p_setup.bmaporgx) >> MAPBLOCKSHIFT;
-        let blocky = (y - state.p_setup.bmaporgy) >> MAPBLOCKSHIFT;
+        let blockx = (x - state.world.p_setup.bmaporgx) >> MAPBLOCKSHIFT;
+        let blocky = (y - state.world.p_setup.bmaporgy) >> MAPBLOCKSHIFT;
         if blockx >= 0
-            && blockx < state.p_setup.bmapwidth
+            && blockx < state.world.p_setup.bmapwidth
             && blocky >= 0
-            && blocky < state.p_setup.bmapheight
+            && blocky < state.world.p_setup.bmapheight
         {
-            let idx = (blocky * state.p_setup.bmapwidth + blockx) as usize;
-            let old_head = state.p_setup.blocklinks[idx];
+            let idx = (blocky * state.world.p_setup.bmapwidth + blockx) as usize;
+            let old_head = state.world.p_setup.blocklinks[idx];
             {
-                let t = state.p_mobj.mo_mut(thing);
+                let t = state.world.p_mobj.mo_mut(thing);
                 t.bprev = None;
                 t.bnext = old_head;
             }
             if let Some(head_id) = old_head {
                 state
+                    .world
                     .p_mobj
                     .mobj_mut(head_id)
                     .expect("blockmap-list head is always live")
                     .bprev = Some(thing);
             }
-            state.p_setup.blocklinks[idx] = Some(thing);
+            state.world.p_setup.blocklinks[idx] = Some(thing);
         } else {
-            let t = state.p_mobj.mo_mut(thing);
+            let t = state.world.p_mobj.mo_mut(thing);
             t.bprev = None;
             t.bnext = None;
         }
@@ -481,15 +487,15 @@ pub fn block_lines_iterator<F: FnMut(&mut GameState, LineId) -> bool>(
     y: i32,
     mut func: F,
 ) -> bool {
-    if x < 0 || y < 0 || x >= state.p_setup.bmapwidth || y >= state.p_setup.bmapheight {
+    if x < 0 || y < 0 || x >= state.world.p_setup.bmapwidth || y >= state.world.p_setup.bmapheight {
         return true;
     }
-    let offset = y * state.p_setup.bmapwidth + x;
-    let mut list = state.p_setup.blockmaplump[(4 + offset) as usize] as i32 as usize;
-    while state.p_setup.blockmaplump[list] as i32 != -1 {
-        let ld = LineId(state.p_setup.blockmaplump[list] as u32);
-        if state.p_setup.line(ld).validcount != state.r_main.validcount {
-            state.p_setup.line_mut(ld).validcount = state.r_main.validcount;
+    let offset = y * state.world.p_setup.bmapwidth + x;
+    let mut list = state.world.p_setup.blockmaplump[(4 + offset) as usize] as i32 as usize;
+    while state.world.p_setup.blockmaplump[list] as i32 != -1 {
+        let ld = LineId(state.world.p_setup.blockmaplump[list] as u32);
+        if state.world.p_setup.line(ld).validcount != state.render.r_main.validcount {
+            state.world.p_setup.line_mut(ld).validcount = state.render.r_main.validcount;
             if !func(state, ld) {
                 return false;
             }
@@ -504,12 +510,14 @@ pub fn block_things_iterator<F: FnMut(&mut GameState, MobjId) -> bool>(
     y: i32,
     mut func: F,
 ) -> bool {
-    if x < 0 || y < 0 || x >= state.p_setup.bmapwidth || y >= state.p_setup.bmapheight {
+    if x < 0 || y < 0 || x >= state.world.p_setup.bmapwidth || y >= state.world.p_setup.bmapheight {
         return true;
     }
-    let mut cursor = state.p_setup.blocklinks[(y * state.p_setup.bmapwidth + x) as usize];
+    let mut cursor =
+        state.world.p_setup.blocklinks[(y * state.world.p_setup.bmapwidth + x) as usize];
     while let Some(id) = cursor {
         state
+            .world
             .p_mobj
             .mobj_ref(id)
             .expect("blockmap-list entry is always live");
@@ -519,6 +527,7 @@ pub fn block_things_iterator<F: FnMut(&mut GameState, MobjId) -> bool>(
         // Read after the callback on purpose (as vanilla does): the callback
         // may have removed this mobj, whose bnext is still its old successor.
         cursor = state
+            .world
             .p_mobj
             .mobj_ref(id)
             .expect("blockmap-list entry survives its own callback")
@@ -527,48 +536,53 @@ pub fn block_things_iterator<F: FnMut(&mut GameState, MobjId) -> bool>(
     true
 }
 pub fn add_line_intercepts(state: &mut GameState, ld: LineId) -> bool {
-    let ldv = state.p_setup.line(ld);
-    let trace = state.p_maputl.trace;
+    let ldv = state.world.p_setup.line(ld);
+    let trace = state.world.p_maputl.trace;
     let (s1, s2);
     if trace.dx > FRACUNIT * 16
         || trace.dy > FRACUNIT * 16
         || trace.dx < -FRACUNIT * 16
         || trace.dy < -FRACUNIT * 16
     {
-        let ld_v1 = state.p_setup.vertexes[ldv.v1.0 as usize];
-        let ld_v2 = state.p_setup.vertexes[ldv.v2.0 as usize];
+        let ld_v1 = state.world.p_setup.vertexes[ldv.v1.0 as usize];
+        let ld_v2 = state.world.p_setup.vertexes[ldv.v2.0 as usize];
         s1 = point_on_divline_side(ld_v1.x, ld_v1.y, &trace);
         s2 = point_on_divline_side(ld_v2.x, ld_v2.y, &trace);
     } else {
-        s1 = point_on_line_side(&state.p_setup, trace.x, trace.y, ld);
-        s2 = point_on_line_side(&state.p_setup, trace.x + trace.dx, trace.y + trace.dy, ld);
+        s1 = point_on_line_side(&state.world.p_setup, trace.x, trace.y, ld);
+        s2 = point_on_line_side(
+            &state.world.p_setup,
+            trace.x + trace.dx,
+            trace.y + trace.dy,
+            ld,
+        );
     }
     if s1 == s2 {
         return true;
     }
-    let dl = make_divline(&state.p_setup, ld);
+    let dl = make_divline(&state.world.p_setup, ld);
     let frac = intercept_vector(&trace, &dl);
     if frac < 0 {
         return true;
     }
-    if state.p_maputl.earlyout && frac < FRACUNIT && ldv.backsector.is_none() {
+    if state.world.p_maputl.earlyout && frac < FRACUNIT && ldv.backsector.is_none() {
         return false;
     }
-    let idx = state.p_maputl.intercept_p;
-    state.p_maputl.intercepts[idx].frac = frac;
-    state.p_maputl.intercepts[idx].target = InterceptTarget::Line(ld);
+    let idx = state.world.p_maputl.intercept_p;
+    state.world.p_maputl.intercepts[idx].frac = frac;
+    state.world.p_maputl.intercepts[idx].target = InterceptTarget::Line(ld);
     let num_intercepts = idx as i32;
-    let intercept = state.p_maputl.intercepts[idx];
+    let intercept = state.world.p_maputl.intercepts[idx];
     intercepts_overrun(state, num_intercepts, intercept);
-    state.p_maputl.intercept_p += 1;
+    state.world.p_maputl.intercept_p += 1;
     true
 }
 pub fn add_thing_intercepts(state: &mut GameState, thing_id: MobjId) -> bool {
     let (thing_x, thing_y, thing_radius) = {
-        let thing = state.p_mobj.mobj_ref(thing_id).unwrap();
+        let thing = state.world.p_mobj.mobj_ref(thing_id).unwrap();
         (thing.x, thing.y, thing.radius)
     };
-    let trace = state.p_maputl.trace;
+    let trace = state.world.p_maputl.trace;
     let tracepositive = trace.dx ^ trace.dy > 0;
     let (x1, y1, x2, y2);
     if tracepositive {
@@ -597,13 +611,13 @@ pub fn add_thing_intercepts(state: &mut GameState, thing_id: MobjId) -> bool {
     if frac < 0 {
         return true;
     }
-    let idx = state.p_maputl.intercept_p;
-    state.p_maputl.intercepts[idx].frac = frac;
-    state.p_maputl.intercepts[idx].target = InterceptTarget::Thing(thing_id);
+    let idx = state.world.p_maputl.intercept_p;
+    state.world.p_maputl.intercepts[idx].frac = frac;
+    state.world.p_maputl.intercepts[idx].target = InterceptTarget::Thing(thing_id);
     let num_intercepts = idx as i32;
-    let intercept = state.p_maputl.intercepts[idx];
+    let intercept = state.world.p_maputl.intercepts[idx];
     intercepts_overrun(state, num_intercepts, intercept);
-    state.p_maputl.intercept_p += 1;
+    state.world.p_maputl.intercept_p += 1;
     true
 }
 pub fn traverse_intercepts<F: FnMut(&mut GameState, Intercept) -> bool>(
@@ -611,7 +625,7 @@ pub fn traverse_intercepts<F: FnMut(&mut GameState, Intercept) -> bool>(
     mut func: F,
     maxfrac: Fixed,
 ) -> bool {
-    let mut count = state.p_maputl.intercept_p as i32;
+    let mut count = state.world.p_maputl.intercept_p as i32;
     let mut in_idx = 0_usize;
     loop {
         let fresh0 = count;
@@ -620,20 +634,20 @@ pub fn traverse_intercepts<F: FnMut(&mut GameState, Intercept) -> bool>(
             break;
         }
         let mut dist = INT_MAX as Fixed;
-        for scan_idx in 0..state.p_maputl.intercept_p {
-            if state.p_maputl.intercepts[scan_idx].frac < dist {
-                dist = state.p_maputl.intercepts[scan_idx].frac;
+        for scan_idx in 0..state.world.p_maputl.intercept_p {
+            if state.world.p_maputl.intercepts[scan_idx].frac < dist {
+                dist = state.world.p_maputl.intercepts[scan_idx].frac;
                 in_idx = scan_idx;
             }
         }
         if dist > maxfrac {
             return true;
         }
-        let intercept = state.p_maputl.intercepts[in_idx];
+        let intercept = state.world.p_maputl.intercepts[in_idx];
         if !func(state, intercept) {
             return false;
         }
-        state.p_maputl.intercepts[in_idx].frac = INT_MAX as Fixed;
+        state.world.p_maputl.intercepts[in_idx].frac = INT_MAX as Fixed;
     }
     true
 }
@@ -719,23 +733,23 @@ fn intercepts_overrun(state: &mut GameState, num_intercepts: i32, intercept: Int
         InterceptTarget::Thing(id) => (false, id.raw_index() as i32),
     };
     intercepts_memory_overrun(
-        &mut state.p_maputl,
-        &mut state.p_pspr,
-        &mut state.p_setup,
+        &mut state.world.p_maputl,
+        &mut state.world.p_pspr,
+        &mut state.world.p_setup,
         location,
         intercept.frac,
     );
     intercepts_memory_overrun(
-        &mut state.p_maputl,
-        &mut state.p_pspr,
-        &mut state.p_setup,
+        &mut state.world.p_maputl,
+        &mut state.world.p_pspr,
+        &mut state.world.p_setup,
         location + 4,
         isaline as i32,
     );
     intercepts_memory_overrun(
-        &mut state.p_maputl,
-        &mut state.p_pspr,
-        &mut state.p_setup,
+        &mut state.world.p_maputl,
+        &mut state.world.p_pspr,
+        &mut state.world.p_setup,
         location + 8,
         target_value,
     );
@@ -758,25 +772,25 @@ pub fn path_traverse<F: FnMut(&mut GameState, Intercept) -> bool>(
     let mut mapy: i32;
     let mapxstep: i32;
     let mapystep: i32;
-    state.p_maputl.earlyout = (flags & PT_EARLYOUT) != 0;
-    state.r_main.validcount += 1;
-    state.p_maputl.intercept_p = 0;
-    if (x1 - state.p_setup.bmaporgx) & (MAPBLOCKSIZE - 1) == 0 {
+    state.world.p_maputl.earlyout = (flags & PT_EARLYOUT) != 0;
+    state.render.r_main.validcount += 1;
+    state.world.p_maputl.intercept_p = 0;
+    if (x1 - state.world.p_setup.bmaporgx) & (MAPBLOCKSIZE - 1) == 0 {
         x1 += FRACUNIT;
     }
-    if (y1 - state.p_setup.bmaporgy) & (MAPBLOCKSIZE - 1) == 0 {
+    if (y1 - state.world.p_setup.bmaporgy) & (MAPBLOCKSIZE - 1) == 0 {
         y1 += FRACUNIT;
     }
-    state.p_maputl.trace.x = x1;
-    state.p_maputl.trace.y = y1;
-    state.p_maputl.trace.dx = x2 - x1;
-    state.p_maputl.trace.dy = y2 - y1;
-    x1 -= state.p_setup.bmaporgx;
-    y1 -= state.p_setup.bmaporgy;
+    state.world.p_maputl.trace.x = x1;
+    state.world.p_maputl.trace.y = y1;
+    state.world.p_maputl.trace.dx = x2 - x1;
+    state.world.p_maputl.trace.dy = y2 - y1;
+    x1 -= state.world.p_setup.bmaporgx;
+    y1 -= state.world.p_setup.bmaporgy;
     let xt1: Fixed = x1 >> MAPBLOCKSHIFT;
     let yt1: Fixed = y1 >> MAPBLOCKSHIFT;
-    x2 -= state.p_setup.bmaporgx;
-    y2 -= state.p_setup.bmaporgy;
+    x2 -= state.world.p_setup.bmaporgx;
+    y2 -= state.world.p_setup.bmaporgy;
     let xt2: Fixed = x2 >> MAPBLOCKSHIFT;
     let yt2: Fixed = y2 >> MAPBLOCKSHIFT;
     if xt2 > xt1 {
