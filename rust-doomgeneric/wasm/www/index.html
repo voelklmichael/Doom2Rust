@@ -23,6 +23,8 @@
     #overlay[hidden] { display: none; }
     #message { font-size: 1.5rem; color: var(--accent); font-weight: 700; }
     #overlay small { color: var(--dim); max-width: 32em; }
+    #overlay a { color: var(--fg); }
+    #overlay code { color: var(--fg); }
     .button { margin-top: 8px; padding: 6px 14px; border: 1px solid var(--dim); border-radius: 4px; color: var(--fg); font-size: 0.9rem; cursor: pointer; }
     .button:hover { border-color: var(--fg); }
     #dropzone { position: absolute; inset: 8px; display: none; align-items: center; justify-content: center; border: 3px dashed var(--accent); border-radius: 8px; background: rgb(0 0 0 / 0.85); font-size: 1.5rem; font-weight: 700; pointer-events: none; }
@@ -40,6 +42,8 @@
     <div id="overlay">
       <div id="message">Loading…</div>
       <small id="hint"></small>
+      <small id="getwad" hidden>No WAD yet? The shareware version is a free download:
+        <a href="https://archive.org/download/DoomsharewareEpisode/DoomV1.9sw1995idSoftwareInc.action.zip" target="_blank" rel="noopener">DOOM v1.9 shareware (zip)</a>, with <code>DOOM1.WAD</code> inside.</small>
       <label id="chooser" class="button" hidden>Choose a .wad file
         <input id="file" type="file" accept=".wad" hidden>
       </label>

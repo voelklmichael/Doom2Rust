@@ -8,6 +8,7 @@ const context = canvas.getContext('2d');
 const overlay = document.getElementById('overlay');
 const message = document.getElementById('message');
 const hint = document.getElementById('hint');
+const getWad = document.getElementById('getwad');
 const chooser = document.getElementById('chooser');
 const fileInput = document.getElementById('file');
 
@@ -28,13 +29,17 @@ function say(text, subtext, canChoose) {
   message.textContent = text;
   hint.textContent = subtext;
   chooser.hidden = !canChoose;
+  getWad.hidden = true;
   overlay.hidden = false;
 }
 
 // Waiting for the player: to drop a WAD, or to start the game.
 function idle(text) {
   if (wad) say(text ?? 'Click to play', `${wad.name} · drop another .wad here to replace it`, true);
-  else say(text ?? 'Drop a DOOM .wad here', DROP_HINT, true);
+  else {
+    say(text ?? 'Drop a DOOM .wad here', DROP_HINT, true);
+    getWad.hidden = false;
+  }
 }
 
 function start() {
@@ -252,9 +257,9 @@ fileInput.addEventListener('change', () => {
   if (file) takeFile(file);
 });
 
-// Clicking anywhere on the overlay starts the game, except on the file chooser.
+// Clicking anywhere on the overlay starts the game, except on the file chooser and links.
 overlay.addEventListener('click', (event) => {
-  if (!event.target.closest('#chooser')) start();
+  if (!event.target.closest('#chooser, a')) start();
 });
 
 canvas.addEventListener('dblclick', () => {
