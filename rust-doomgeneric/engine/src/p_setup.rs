@@ -1,4 +1,5 @@
 use crate::d_mode::GameMode;
+use crate::d_player::PlayerId;
 use crate::doomdef::MAXPLAYERS;
 use crate::enum_array::EnumArray;
 use crate::filesystem::DoomFileSystem;
@@ -126,7 +127,7 @@ pub struct PSetupState {
     pub rejectmatrix: Vec<u8>,
     pub deathmatchstarts: [MapThing; 10],
     pub deathmatch_p: usize,
-    pub playerstarts: [MapThing; 4],
+    pub playerstarts: [MapThing; MAXPLAYERS],
     pub null_sector_id: Option<SectorId>,
     pub junk_line_id: Option<LineId>,
 }
@@ -177,7 +178,7 @@ impl PSetupState {
                 angle: 0,
                 kind: 0,
                 options: 0,
-            }; 4],
+            }; MAXPLAYERS],
             null_sector_id: None,
             junk_line_id: None,
         }
@@ -703,7 +704,7 @@ pub fn setup_level(state: &mut GameState, episode: i32, map: i32) {
     state.game.g_game.totalitems = state.game.g_game.totalsecret;
     state.game.g_game.totalkills = state.game.g_game.totalitems;
     state.game.g_game.wminfo.partime = 180;
-    for i in 0..(MAXPLAYERS as usize) {
+    for i in 0..MAXPLAYERS {
         state.game.g_game.players[i].itemcount = 0;
         state.game.g_game.players[i].secretcount = state.game.g_game.players[i].itemcount;
         state.game.g_game.players[i].killcount = state.game.g_game.players[i].secretcount;
@@ -745,10 +746,10 @@ pub fn setup_level(state: &mut GameState, episode: i32, map: i32) {
     state.world.p_setup.deathmatch_p = 0;
     load_things(state, lumpnum + MapLump::Things as i32);
     if state.game.g_game.deathmatch != 0 {
-        for i in 0..MAXPLAYERS {
-            if state.game.g_game.playeringame[i as usize] {
-                state.game.g_game.players[i as usize].mo = None;
-                death_match_spawn_player(state, i);
+        for player in PlayerId::all() {
+            if state.game.g_game.playeringame[player] {
+                state.game.g_game.players[player].mo = None;
+                death_match_spawn_player(state, player);
             }
         }
     }

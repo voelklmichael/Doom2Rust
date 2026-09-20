@@ -2651,7 +2651,7 @@ bitflags::bitflags! {
 impl MobjFlags {
     /// Bit position of the two-bit player colour-translation field, which
     /// `TRANSLATION` masks.
-    pub const TRANSLATION_SHIFT: i32 = 26;
+    pub const TRANSLATION_SHIFT: u32 = 26;
 }
 bitflags::bitflags! {
     /// Flags of a map line (`ML_*` in the C source).
@@ -2728,7 +2728,7 @@ pub struct Mobj {
     pub reactiontime: i32,
     pub threshold: i32,
     pub player: Option<PlayerId>,
-    pub lastlook: i32,
+    pub lastlook: PlayerId,
     pub spawnpoint: MapThing,
     pub tracer: Option<MobjId>,
     pub id: MobjId,
@@ -3258,7 +3258,7 @@ pub fn spawn_mobj(state: &mut GameState, x: Fixed, y: Fixed, z: Fixed, kind: Mob
     if state.game.g_game.gameskill != SkillType::Nightmare {
         value.reactiontime = reactiontime;
     }
-    value.lastlook = p_random(&mut state.world.m_random) % MAXPLAYERS;
+    value.lastlook = PlayerId((p_random(&mut state.world.m_random) % MAXPLAYERS as i32) as u8);
     let spawnstate_id = StateId(spawnstate as u32);
     let (tics, sprite, frame) = {
         let st = state.assets.info.state_mut(spawnstate_id);
@@ -3494,7 +3494,7 @@ impl PMobjState {
                 reactiontime: 0,
                 threshold: 0,
                 player: None,
-                lastlook: 0,
+                lastlook: PlayerId(0),
                 spawnpoint: MapThing {
                     x: 0,
                     y: 0,
@@ -3596,7 +3596,7 @@ pub fn spawn_player(state: &mut GameState, mthing: MapThing) {
         return;
     }
     if state.game.g_game.players[player_index].playerstate == PlayerState::Reborn {
-        player_reborn(&mut state.game.g_game, i32::from(mthing.kind) - 1);
+        player_reborn(&mut state.game.g_game, PlayerId(player_index as u8));
     }
     let x = (i32::from(mthing.x) << FRACBITS) as Fixed;
     let y = (i32::from(mthing.y) << FRACBITS) as Fixed;
@@ -3628,7 +3628,7 @@ pub fn spawn_player(state: &mut GameState, mthing: MapThing) {
     }
     setup_psprites(state, PlayerId(player_index as u8));
     if state.game.g_game.deathmatch != 0 {
-        for i in 0..(NUMCARDS as usize) {
+        for i in 0..NUMCARDS {
             state.game.g_game.players[player_index].cards[i] = true;
         }
     }

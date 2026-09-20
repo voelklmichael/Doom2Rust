@@ -76,7 +76,7 @@ pub struct RMainState {
     pub viewcos: Fixed,
     pub viewsin: Fixed,
     pub viewplayer: PlayerId,
-    pub detailshift: i32,
+    pub detailshift: u32,
     pub clipangle: Angle,
     pub viewangletox: [i32; 4096],
     pub xtoviewangle: [Angle; 321],
@@ -148,8 +148,8 @@ impl RMainState {
     }
 }
 
-pub const SLOPEBITS: i32 = 11;
-pub const DBITS: i32 = FRACBITS - SLOPEBITS;
+pub const SLOPEBITS: u32 = 11;
+pub const DBITS: u32 = FRACBITS - SLOPEBITS;
 pub const FIELDOFVIEW: i32 = 2048;
 pub fn point_on_side(x: Fixed, y: Fixed, node: &Node) -> i32 {
     if node.dx == 0 {
@@ -361,7 +361,7 @@ pub fn init_light_tables(r_main: &mut RMainState) {
             if level >= NUMCOLORMAPS {
                 level = NUMCOLORMAPS - 1;
             }
-            r_main.zlight[i as usize][j as usize] = level;
+            r_main.zlight[i as usize][j] = level;
         }
     }
 }
@@ -379,7 +379,7 @@ pub fn execute_set_view_size(render: &mut Render) {
         render.r_draw.scaledviewwidth = render.r_main.setblocks * 32;
         render.r_draw.viewheight = (render.r_main.setblocks * 168 / 10) & !7;
     }
-    render.r_main.detailshift = render.r_main.setdetail;
+    render.r_main.detailshift = render.r_main.setdetail as u32;
     render.r_draw.viewwidth = render.r_draw.scaledviewwidth >> render.r_main.detailshift;
     render.r_main.centery = render.r_draw.viewheight / 2;
     render.r_main.centerx = render.r_draw.viewwidth / 2;
@@ -424,7 +424,7 @@ pub fn execute_set_view_size(render: &mut Render) {
     }
     for i in 0..LIGHTLEVELS {
         let startmap: i32 = (LIGHTLEVELS - 1 - i) * 2 * NUMCOLORMAPS / LIGHTLEVELS;
-        for j in 0..MAXLIGHTSCALE {
+        for j in 0..MAXLIGHTSCALE as i32 {
             let mut level: i32 = startmap
                 - j * SCREENWIDTH
                     / (render.r_draw.viewwidth << render.r_main.detailshift)
@@ -491,7 +491,7 @@ pub fn setup_frame(state: &mut GameState, player_id: PlayerId) {
         let colormap = fixedcolormap;
         state.render.r_main.fixedcolormap = Some(colormap);
         state.render.r_segs.walllights = LightRow48::Fixed;
-        for i in 0..(MAXLIGHTSCALE as usize) {
+        for i in 0..MAXLIGHTSCALE {
             state.render.r_main.scalelightfixed[i] = colormap;
         }
     } else {
@@ -520,9 +520,9 @@ pub fn render_player_view(state: &mut GameState, player_id: PlayerId) {
     net_update(state);
 }
 pub const LIGHTLEVELS: i32 = 16;
-pub const MAXLIGHTSCALE: i32 = 48;
-pub const LIGHTSCALESHIFT: i32 = 12;
-pub const MAXLIGHTZ: i32 = 128;
-pub const LIGHTZSHIFT: i32 = 20;
+pub const MAXLIGHTSCALE: usize = 48;
+pub const LIGHTSCALESHIFT: u32 = 12;
+pub const MAXLIGHTZ: usize = 128;
+pub const LIGHTZSHIFT: u32 = 20;
 pub const NUMCOLORMAPS: i32 = 32;
-pub const LIGHTSEGSHIFT: i32 = 4;
+pub const LIGHTSEGSHIFT: u32 = 4;

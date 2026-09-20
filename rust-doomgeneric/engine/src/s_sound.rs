@@ -126,7 +126,7 @@ pub fn s_init(state: &mut GameState, sfx_volume_0: i32, music_volume_0: i32) {
         state.audio.s_sound.snd_channels as usize
     ];
     state.audio.s_sound.mus_paused = false;
-    for i in 1..NUMSFX as usize {
+    for i in 1..NUMSFX {
         state.audio.sounds.s_sfx[i].usefulness = -1;
         state.audio.sounds.s_sfx[i].lumpnum = -1;
     }

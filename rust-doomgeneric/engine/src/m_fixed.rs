@@ -1,7 +1,7 @@
 pub type Fixed = i32;
 pub const INT_MAX: i32 = i32::MAX;
 pub const INT_MIN: i32 = i32::MIN;
-pub const FRACBITS: i32 = 16;
+pub const FRACBITS: u32 = 16;
 pub fn fixed_mul(a: Fixed, b: Fixed) -> Fixed {
     ((i64::from(a) * i64::from(b)) >> FRACBITS) as Fixed
 }

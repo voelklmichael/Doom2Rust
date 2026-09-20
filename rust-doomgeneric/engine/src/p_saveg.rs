@@ -101,8 +101,8 @@ pub enum SpecialThinkerClass {
     Glow,
     Endspecials,
 }
-pub const SAVEGAME_EOF: i32 = 0x1d;
-pub const VERSIONSIZE: i32 = 16;
+pub const SAVEGAME_EOF: u8 = 0x1d;
+pub const VERSIONSIZE: usize = 16;
 pub fn temp_save_game_file(d_main: &DMainState, p_saveg: &mut PSavegState) -> String {
     if p_saveg.temp_savegame_filename.is_none() {
         p_saveg.temp_savegame_filename = Some(format!("{}temp.dsg", d_main.savegamedir));
@@ -268,7 +268,7 @@ fn saveg_read_mobj_t(state: &mut PSavegState, str: &mut Mobj) {
     } else {
         str.player = None;
     }
-    str.lastlook = saveg_read32(state);
+    str.lastlook = PlayerId(saveg_read32(state) as u8 % MAXPLAYERS as u8);
     saveg_read_mapthing_t(state, &mut str.spawnpoint);
     saveg_read32(state);
     str.tracer = None;
@@ -310,7 +310,7 @@ fn saveg_write_mobj_t(state: &mut PSavegState, str: &Mobj) {
     } else {
         saveg_write32(state, 0);
     }
-    saveg_write32(state, str.lastlook);
+    saveg_write32(state, str.lastlook.as_i32());
     saveg_write_mapthing_t(state, &str.spawnpoint);
     saveg_write32(state, 0);
 }
@@ -368,25 +368,25 @@ fn saveg_read_player_t(state: &mut PSavegState, str: &mut Player) {
     str.health = saveg_read32(state);
     str.armorpoints = saveg_read32(state);
     str.armortype = saveg_read32(state);
-    for i in 0..(NUMPOWERS as usize) {
+    for i in 0..NUMPOWERS {
         str.powers[i] = saveg_read32(state);
     }
-    for i in 0..(NUMCARDS as usize) {
+    for i in 0..NUMCARDS {
         str.cards[i] = saveg_read32(state) != 0;
     }
     str.backpack = saveg_read32(state) != 0;
-    for i in 0..(MAXPLAYERS as usize) {
+    for i in 0..MAXPLAYERS {
         str.frags[i] = saveg_read32(state);
     }
     str.readyweapon = weapontype_from_raw(saveg_read32(state));
     str.pendingweapon = weapontype_from_raw(saveg_read32(state));
-    for i in 0..(NUMWEAPONS as usize) {
+    for i in 0..NUMWEAPONS {
         str.weaponowned[i] = saveg_read32(state) != 0;
     }
-    for i in 0..(NUMAMMO as usize) {
+    for i in 0..NUMAMMO {
         str.ammo[i] = saveg_read32(state);
     }
-    for i in 0..(NUMAMMO as usize) {
+    for i in 0..NUMAMMO {
         str.maxammo[i] = saveg_read32(state);
     }
     str.attackdown = saveg_read32(state) != 0;
@@ -405,7 +405,7 @@ fn saveg_read_player_t(state: &mut PSavegState, str: &mut Player) {
     str.extralight = saveg_read32(state);
     str.fixedcolormap = saveg_read32(state);
     str.colormap = saveg_read32(state);
-    for i in 0..(NUMPSPRITES as usize) {
+    for i in 0..NUMPSPRITES {
         saveg_read_pspdef_t(state, &mut str.psprites[i]);
     }
     str.didsecret = saveg_read32(state) != 0;
@@ -424,25 +424,25 @@ fn saveg_write_player_t(state: &mut PSavegState, str: &Player) {
     saveg_write32(state, str.health);
     saveg_write32(state, str.armorpoints);
     saveg_write32(state, str.armortype);
-    for i in 0..(NUMPOWERS as usize) {
+    for i in 0..NUMPOWERS {
         saveg_write32(state, str.powers[i]);
     }
-    for i in 0..(NUMCARDS as usize) {
+    for i in 0..NUMCARDS {
         saveg_write32(state, i32::from(str.cards[i]));
     }
     saveg_write32(state, i32::from(str.backpack));
-    for i in 0..(MAXPLAYERS as usize) {
+    for i in 0..MAXPLAYERS {
         saveg_write32(state, str.frags[i]);
     }
     saveg_write32(state, str.readyweapon as i32);
     saveg_write32(state, str.pendingweapon as i32);
-    for i in 0..(NUMWEAPONS as usize) {
+    for i in 0..NUMWEAPONS {
         saveg_write32(state, i32::from(str.weaponowned[i]));
     }
-    for i in 0..(NUMAMMO as usize) {
+    for i in 0..NUMAMMO {
         saveg_write32(state, str.ammo[i]);
     }
-    for i in 0..(NUMAMMO as usize) {
+    for i in 0..NUMAMMO {
         saveg_write32(state, str.maxammo[i]);
     }
     saveg_write32(state, i32::from(str.attackdown));
@@ -459,7 +459,7 @@ fn saveg_write_player_t(state: &mut PSavegState, str: &Player) {
     saveg_write32(state, str.extralight);
     saveg_write32(state, str.fixedcolormap);
     saveg_write32(state, str.colormap);
-    for i in 0..(NUMPSPRITES as usize) {
+    for i in 0..NUMPSPRITES {
         saveg_write_pspdef_t(state, &str.psprites[i]);
     }
     saveg_write32(state, i32::from(str.didsecret));
@@ -677,7 +677,7 @@ fn saveg_write_glow_t(state: &mut PSavegState, str: &Glow) {
     saveg_write32(state, str.direction.to_save());
 }
 pub fn write_save_game_header(state: &mut GameState, description: &str) {
-    let mut i: i32 = 0;
+    let mut i: usize = 0;
     for &b in description.as_bytes() {
         saveg_write8(&mut state.world.p_saveg, b);
         i += 1;
@@ -690,7 +690,7 @@ pub fn write_save_game_header(state: &mut GameState, description: &str) {
     let mut name_bytes = [0u8; 16];
     let copy_len = name.len().min(16);
     name_bytes[..copy_len].copy_from_slice(&name.as_bytes()[..copy_len]);
-    for &byte in name_bytes.iter().take(VERSIONSIZE as usize) {
+    for &byte in name_bytes.iter().take(VERSIONSIZE) {
         saveg_write8(&mut state.world.p_saveg, byte);
     }
     saveg_write8(&mut state.world.p_saveg, state.game.g_game.gameskill as u8);
@@ -699,7 +699,7 @@ pub fn write_save_game_header(state: &mut GameState, description: &str) {
         state.game.g_game.gameepisode as u8,
     );
     saveg_write8(&mut state.world.p_saveg, state.game.g_game.gamemap as u8);
-    for i in 0..(MAXPLAYERS as usize) {
+    for i in 0..MAXPLAYERS {
         saveg_write8(
             &mut state.world.p_saveg,
             u8::from(state.game.g_game.playeringame[i]),
@@ -727,7 +727,7 @@ pub fn read_save_game_header(state: &mut GameState) -> bool {
     for _ in 0..SAVESTRINGSIZE {
         saveg_read8(&mut state.world.p_saveg);
     }
-    for slot in read_vcheck.iter_mut().take(VERSIONSIZE as usize) {
+    for slot in read_vcheck.iter_mut().take(VERSIONSIZE) {
         *slot = saveg_read8(&mut state.world.p_saveg);
     }
     let version_name = format!("version {}", vanilla_version_code(&state.game.doomstat));
@@ -740,7 +740,7 @@ pub fn read_save_game_header(state: &mut GameState) -> bool {
     state.game.g_game.gameskill = skill_from_raw(i32::from(saveg_read8(&mut state.world.p_saveg)));
     state.game.g_game.gameepisode = i32::from(saveg_read8(&mut state.world.p_saveg));
     state.game.g_game.gamemap = i32::from(saveg_read8(&mut state.world.p_saveg));
-    for i in 0..(MAXPLAYERS as usize) {
+    for i in 0..MAXPLAYERS {
         state.game.g_game.playeringame[i] = saveg_read8(&mut state.world.p_saveg) != 0;
     }
     let a: u8 = saveg_read8(&mut state.world.p_saveg);
@@ -750,14 +750,13 @@ pub fn read_save_game_header(state: &mut GameState) -> bool {
     true
 }
 pub fn read_save_game_eof(p_saveg: &mut PSavegState) -> bool {
-    let value: i32 = i32::from(saveg_read8(p_saveg));
-    value == SAVEGAME_EOF
+    saveg_read8(p_saveg) == SAVEGAME_EOF
 }
 pub fn write_save_game_eof(p_saveg: &mut PSavegState) {
-    saveg_write8(p_saveg, SAVEGAME_EOF as u8);
+    saveg_write8(p_saveg, SAVEGAME_EOF);
 }
 pub fn archive_players(g_game: &GGameState, p_saveg: &mut PSavegState) {
-    for i in 0..(MAXPLAYERS as usize) {
+    for i in 0..MAXPLAYERS {
         if g_game.playeringame[i] {
             saveg_write_pad(p_saveg);
             saveg_write_player_t(p_saveg, &g_game.players[i]);
@@ -765,7 +764,7 @@ pub fn archive_players(g_game: &GGameState, p_saveg: &mut PSavegState) {
     }
 }
 pub fn un_archive_players(g_game: &mut GGameState, p_saveg: &mut PSavegState) {
-    for i in 0..(MAXPLAYERS as usize) {
+    for i in 0..MAXPLAYERS {
         if g_game.playeringame[i] {
             saveg_read_pad(p_saveg);
             saveg_read_player_t(p_saveg, &mut g_game.players[i]);
@@ -1020,7 +1019,7 @@ pub fn archive_specials(world: &mut World) {
                     .p_ceilng
                     .activeceilings
                     .iter()
-                    .take(MAXCEILINGS as usize)
+                    .take(MAXCEILINGS)
                     .any(|&entry| entry == Some(id));
                 if in_stasis {
                     let ceiling_id = world.p_tick.ceiling_payload(id);

@@ -47,7 +47,7 @@ pub enum PlattypeE {
 }
 pub const PLATWAIT: i32 = 3;
 pub const PLATSPEED: i32 = FRACUNIT;
-pub const MAXPLATS: i32 = 30;
+pub const MAXPLATS: usize = 30;
 
 // Generation-checked handle into PPlatsState's arena -- mirrors DoorId.
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
@@ -321,7 +321,7 @@ pub fn do_plat(state: &mut GameState, line: LineId, kind: PlattypeE, amount: i32
     rtn
 }
 pub fn activate_in_stasis(p_plats: &mut PPlatsState, p_tick: &PTickState, tag: i32) {
-    for i in 0..MAXPLATS as usize {
+    for i in 0..MAXPLATS {
         if let Some(id) = p_plats.activeplats[i] {
             let plat_id = p_tick.plat_payload(id);
             let p = p_plats.get_mut(plat_id).expect("live plat");
@@ -333,7 +333,7 @@ pub fn activate_in_stasis(p_plats: &mut PPlatsState, p_tick: &PTickState, tag: i
     }
 }
 pub fn stop_plat(p_plats: &mut PPlatsState, p_tick: &PTickState, tag: i32) {
-    for j in 0..MAXPLATS as usize {
+    for j in 0..MAXPLATS {
         if let Some(id) = p_plats.activeplats[j] {
             let plat_id = p_tick.plat_payload(id);
             let p = p_plats.get_mut(plat_id).expect("live plat");
@@ -346,7 +346,7 @@ pub fn stop_plat(p_plats: &mut PPlatsState, p_tick: &PTickState, tag: i32) {
     }
 }
 pub fn add_active_plat(state: &mut PPlatsState, id: ThinkerId) {
-    for i in 0..(MAXPLATS as usize) {
+    for i in 0..MAXPLATS {
         if state.activeplats[i].is_none() {
             state.activeplats[i] = Some(id);
             return;
@@ -360,7 +360,7 @@ pub fn remove_active_plat(
     p_tick: &PTickState,
     plat_id: PlatId,
 ) {
-    for i in 0..MAXPLATS as usize {
+    for i in 0..MAXPLATS {
         if let Some(id) = p_plats.activeplats[i] {
             if p_tick.plat_payload(id) == plat_id {
                 let p = p_plats.get_mut(plat_id).expect("live plat");

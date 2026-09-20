@@ -93,7 +93,7 @@ pub const CC_SPIDER: &str = "THE SPIDER MASTERMIND";
 pub const CC_CYBER: &str = "THE CYBERDEMON";
 pub const CC_HERO: &str = "OUR HERO";
 pub const TEXTSPEED: i32 = 3;
-pub const TEXTWAIT: i32 = 250;
+pub const TEXTWAIT: usize = 250;
 const INITIAL_TEXTSCREENS: [TextScreen; 22] = [
     TextScreen {
         mission: GameMission::Doom,
@@ -363,7 +363,7 @@ pub fn f_ticker(state: &mut GameState) {
                 .finaletext
                 .len()
                 .wrapping_mul(TEXTSPEED as usize)
-                .wrapping_add(TEXTWAIT as usize)
+                .wrapping_add(TEXTWAIT)
     {
         state.ui.f_finale.finalecount = 0;
         state.ui.f_finale.finalestage = FinaleStage::ArtScreen;

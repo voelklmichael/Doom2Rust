@@ -1,10 +1,11 @@
 use crate::d_ticcmd::TicCmd;
+use crate::doomdef::MAXPLAYERS;
 use crate::enum_array::{ArrayIndex, EnumArray};
 use crate::m_fixed::Fixed;
 use crate::p_inter::CardType;
 use crate::p_mobj::{MobjId, PspDef};
 use alloc::string::String;
-pub const NUMAMMO: i32 = 4;
+pub const NUMAMMO: usize = 4;
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum AmmoType {
     Clip,
@@ -29,7 +30,7 @@ pub fn ammotype_from_raw(v: i32) -> AmmoType {
         n => panic!("invalid ammotype {n}"),
     }
 }
-pub const NUMPSPRITES: i32 = 2;
+pub const NUMPSPRITES: usize = 2;
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum PSpriteNum {
     Weapon,
@@ -38,7 +39,7 @@ pub enum PSpriteNum {
 // CheatFlags::NOCLIP/CheatFlags::GODMODE/CheatFlags::NOMOMENTUM are bit flags (1/2/4) combined with
 // bitwise OR/AND/XOR into a single `cheats` field, not mutually-exclusive
 // enum variants - not a candidate for enum conversion.
-pub const NUMPOWERS: i32 = 6;
+pub const NUMPOWERS: usize = 6;
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum PowerType {
     Invulnerability,
@@ -67,7 +68,7 @@ impl ArrayIndex for PowerType {
     }
 }
 
-pub const NUMWEAPONS: i32 = 9;
+pub const NUMWEAPONS: usize = 9;
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum WeaponType {
     Fist,
@@ -119,7 +120,7 @@ pub struct PlayerId(pub u8);
 impl PlayerId {
     /// Every player slot, in order.
     pub fn all() -> impl Iterator<Item = Self> {
-        (0..4).map(Self)
+        (0..MAXPLAYERS as u8).map(Self)
     }
 
     /// The slot number as an array index.
@@ -134,13 +135,18 @@ impl PlayerId {
 
     /// The next slot, wrapping from the last player back to the first.
     pub const fn next_wrapping(self) -> Self {
-        Self((self.0 + 1) % 4)
+        Self((self.0 + 1) % MAXPLAYERS as u8)
+    }
+
+    /// The previous slot, wrapping from the first player back to the last.
+    pub const fn previous_wrapping(self) -> Self {
+        Self((self.0 + MAXPLAYERS as u8 - 1) % MAXPLAYERS as u8)
     }
 }
 
 /// One `T` per player slot, indexed by [`PlayerId`] (or by a plain slot number in the loops
 /// that walk every slot).
-pub type PerPlayer<T> = EnumArray<PlayerId, T, 4>;
+pub type PerPlayer<T> = EnumArray<PlayerId, T, MAXPLAYERS>;
 
 impl ArrayIndex for PlayerId {
     #[inline(always)]
@@ -171,7 +177,7 @@ pub struct Player {
     pub powers: EnumArray<PowerType, i32, 6>,
     pub cards: EnumArray<CardType, bool, 6>,
     pub backpack: bool,
-    pub frags: [i32; 4],
+    pub frags: [i32; MAXPLAYERS],
     pub readyweapon: WeaponType,
     pub pendingweapon: WeaponType,
     pub weaponowned: EnumArray<WeaponType, bool, 9>,

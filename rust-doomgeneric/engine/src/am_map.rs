@@ -78,7 +78,7 @@ pub struct AmMapState {
     pub plr: PlayerId,
     pub marknums: [i32; 10],
     pub markpoints: [MPoint; 10],
-    pub markpointnum: i32,
+    pub markpointnum: usize,
     pub followplayer: bool,
     pub cheat_amap: CheatSeq,
     pub stopped: bool,
@@ -224,7 +224,7 @@ pub const THINGCOLORS: i32 = GREENS;
 pub const SECRETWALLCOLORS: i32 = WALLCOLORS;
 pub const GRIDCOLORS: i32 = GRAYS + GRAYSRANGE / 2;
 pub const XHAIRCOLORS: i32 = GRAYS;
-pub const AM_NUMMARKPOINTS: i32 = 10;
+pub const AM_NUMMARKPOINTS: usize = 10;
 pub const INITSCALEMTOF: f64 = 0.2f64 * FRACUNIT as f64;
 pub const M_ZOOMIN: i32 = (1.02f64 * FRACUNIT as f64) as i32;
 pub const M_ZOOMOUT: i32 = (FRACUNIT as f64 / 1.02f64) as i32;
@@ -504,8 +504,8 @@ pub fn restore_scale_and_loc(
     am_map.scale_ftom = fixed_div(FRACUNIT, am_map.scale_mtof);
 }
 pub fn add_mark(am_map: &mut AmMapState) {
-    am_map.markpoints[am_map.markpointnum as usize].x = (am_map.m_x + am_map.m_w / 2) as Fixed;
-    am_map.markpoints[am_map.markpointnum as usize].y = (am_map.m_y + am_map.m_h / 2) as Fixed;
+    am_map.markpoints[am_map.markpointnum].x = (am_map.m_x + am_map.m_w / 2) as Fixed;
+    am_map.markpoints[am_map.markpointnum].y = (am_map.m_y + am_map.m_h / 2) as Fixed;
     am_map.markpointnum = (am_map.markpointnum + 1) % AM_NUMMARKPOINTS;
 }
 pub fn find_min_max_boundaries(am_map: &mut AmMapState, p_setup: &PSetupState) {
@@ -584,7 +584,7 @@ pub fn am_init_variables(state: &mut GameState) {
     } else {
         state.ui.am_map.plr = PlayerId(0);
         for pnum in 0..MAXPLAYERS {
-            if state.game.g_game.playeringame[pnum as usize] {
+            if state.game.g_game.playeringame[pnum] {
                 state.ui.am_map.plr = PlayerId(pnum as u8);
                 break;
             }
@@ -620,7 +620,7 @@ pub fn unload_pics(am_map: &AmMapState, w_wad: &WWadState) {
     }
 }
 pub fn clear_marks(am_map: &mut AmMapState) {
-    for i in 0..(AM_NUMMARKPOINTS as usize) {
+    for i in 0..AM_NUMMARKPOINTS {
         am_map.markpoints[i].x = -1;
     }
     am_map.markpointnum = 0;
@@ -1241,12 +1241,12 @@ pub fn draw_players(state: &mut GameState) {
     }
     for i in 0..MAXPLAYERS {
         their_color += 1;
-        let p = &state.game.g_game.players[i as usize];
+        let p = &state.game.g_game.players[i];
         let (p_invisibility, p_mo_id) = (p.powers[PowerType::Invisibility], p.mo);
         if !(state.game.g_game.deathmatch != 0
             && !state.game.g_game.singledemo
             && PlayerId(i as u8) != state.ui.am_map.plr)
-            && state.game.g_game.playeringame[i as usize]
+            && state.game.g_game.playeringame[i]
         {
             let color: i32 = if p_invisibility != 0 {
                 246
@@ -1280,7 +1280,7 @@ pub fn draw_things(state: &mut GameState, colors: i32) {
     }
 }
 pub fn draw_marks(state: &mut GameState) {
-    for i in 0..(AM_NUMMARKPOINTS as usize) {
+    for i in 0..AM_NUMMARKPOINTS {
         if state.ui.am_map.markpoints[i].x != -1 {
             let w: i32 = 5;
             let h: i32 = 6;

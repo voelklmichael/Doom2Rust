@@ -143,7 +143,7 @@ pub struct VisSprite {
 }
 pub const FF_FULLBRIGHT: i32 = 0x8000;
 pub const FF_FRAMEMASK: i32 = 0x7fff;
-pub const MAXVISSPRITES: i32 = 128;
+pub const MAXVISSPRITES: usize = 128;
 pub const MINZ: i32 = FRACUNIT * 4;
 pub const BASEYCENTER: i32 = 100;
 pub fn install_sprite_lump(
@@ -313,7 +313,7 @@ pub fn clear_sprites(r_things: &mut RThingsState) {
     r_things.vissprite_p = 0;
 }
 pub fn store_vis_sprite(r_things: &mut RThingsState, vis: VisSprite) {
-    if r_things.vissprite_p == MAXVISSPRITES as usize {
+    if r_things.vissprite_p == MAXVISSPRITES {
         r_things.overflowsprite = vis;
         return;
     }
@@ -510,7 +510,7 @@ pub fn project_sprite(state: &mut GameState, thing_id: MobjId) {
     } else if thing_frame & FF_FULLBRIGHT != 0 {
         vis.colormap = Some(0);
     } else {
-        let mut index: i32 = xscale >> (LIGHTSCALESHIFT - state.render.r_main.detailshift);
+        let mut index = (xscale >> (LIGHTSCALESHIFT - state.render.r_main.detailshift)) as usize;
         if index >= MAXLIGHTSCALE {
             index = MAXLIGHTSCALE - 1;
         }
@@ -633,7 +633,7 @@ pub fn draw_psprite(state: &mut GameState, psp: &PspDef) {
             state
                 .render
                 .r_main
-                .light_row48(state.render.r_things.spritelights)[(MAXLIGHTSCALE - 1) as usize],
+                .light_row48(state.render.r_things.spritelights)[MAXLIGHTSCALE - 1],
         );
     }
     draw_vis_sprite(state, &avis);
@@ -660,7 +660,7 @@ pub fn draw_player_sprites(state: &mut GameState) {
     }
     state.render.r_things.mfloorclip = Some(ClipArray::ScreenHeightArray);
     state.render.r_things.mceilingclip = Some(ClipArray::NegOneArray);
-    for psp in psprites.iter().take(NUMPSPRITES as usize) {
+    for psp in psprites.iter().take(NUMPSPRITES) {
         if psp.state.is_some() {
             draw_psprite(state, psp);
         }
