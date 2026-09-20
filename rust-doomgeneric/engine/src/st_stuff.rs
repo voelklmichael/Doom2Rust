@@ -585,21 +585,27 @@ pub fn st_responder(state: &mut GameState, ev: &Event) -> bool {
         if !state.game.g_game.netgame
             && cht_check_cheat(&mut state.ui.st_stuff.cheat_clev, ev.data2 as u8)
         {
-            let mut epsd: i32;
             let digits: [u8; 2] = [
                 state.ui.st_stuff.cheat_clev.param()[0],
                 state.ui.st_stuff.cheat_clev.param()[1],
             ];
-            let map: i32 = if state.game.doomstat.gamemode == GameMode::Commercial {
-                epsd = 1;
-                (i32::from(digits[0]) - '0' as i32) * 10 + i32::from(digits[1]) - '0' as i32
+            let (episode, map): (i32, i32) = if state.game.doomstat.gamemode == GameMode::Commercial
+            {
+                (
+                    1,
+                    (i32::from(digits[0]) - '0' as i32) * 10 + i32::from(digits[1]) - '0' as i32,
+                )
             } else {
-                epsd = i32::from(digits[0]) - '0' as i32;
-                i32::from(digits[1]) - '0' as i32
+                (
+                    i32::from(digits[0]) - '0' as i32,
+                    i32::from(digits[1]) - '0' as i32,
+                )
             };
-            if state.game.doomstat.gameversion == GameVersion::Chex {
-                epsd = 1;
-            }
+            let epsd: i32 = if state.game.doomstat.gameversion == GameVersion::Chex {
+                1
+            } else {
+                episode
+            };
             if epsd < 1 {
                 return false;
             }
@@ -644,7 +650,6 @@ pub fn update_face_widget(
     p_mobj: &PMobjState,
     st_stuff: &mut StStuffState,
 ) {
-    let i: i32;
     if st_stuff.st_updatefacewidget_priority < 10 && g_game.player_mut(st_stuff.plyr).health == 0 {
         st_stuff.st_updatefacewidget_priority = 9;
         st_stuff.st_faceindex = ST_DEADFACE;
@@ -678,24 +683,22 @@ pub fn update_face_widget(
                 st_stuff.st_facecount = ST_TURNCOUNT;
                 st_stuff.st_faceindex = calc_pain_offset(g_game, st_stuff) + ST_OUCHOFFSET;
             } else {
-                let diffang: Angle;
-
                 let plyr_attacker = p_mobj.mo(attacker_id);
                 let (attacker_x, attacker_y) = (plyr_attacker.x, plyr_attacker.y);
                 let badguyangle: Angle =
                     point_to_angle2(plyr_mo_x, plyr_mo_y, attacker_x, attacker_y);
-                if badguyangle > plyr_mo_angle {
-                    diffang = badguyangle.wrapping_sub(plyr_mo_angle);
-                    i = i32::from(diffang > ANG180);
+                let (diffang, turn_right): (Angle, bool) = if badguyangle > plyr_mo_angle {
+                    let diffang = badguyangle.wrapping_sub(plyr_mo_angle);
+                    (diffang, diffang > ANG180)
                 } else {
-                    diffang = plyr_mo_angle.wrapping_sub(badguyangle);
-                    i = i32::from(diffang <= ANG180);
-                }
+                    let diffang = plyr_mo_angle.wrapping_sub(badguyangle);
+                    (diffang, diffang <= ANG180)
+                };
                 st_stuff.st_facecount = ST_TURNCOUNT;
                 st_stuff.st_faceindex = calc_pain_offset(g_game, st_stuff);
                 if diffang < ANG45 as Angle {
                     st_stuff.st_faceindex += ST_RAMPAGEOFFSET;
-                } else if i != 0 {
+                } else if turn_right {
                     st_stuff.st_faceindex += ST_TURNOFFSET;
                 } else {
                     st_stuff.st_faceindex += ST_TURNOFFSET + 1;
@@ -795,7 +798,6 @@ pub fn st_ticker(state: &mut GameState) {
     state.ui.st_stuff.st_oldhealth = state.game.g_game.player_mut(state.ui.st_stuff.plyr).health;
 }
 pub fn do_palette_stuff(state: &mut GameState) {
-    let mut palette: i32;
     let mut cnt: i32 = state
         .game
         .g_game
@@ -810,12 +812,8 @@ pub fn do_palette_stuff(state: &mut GameState) {
             cnt = bzc;
         }
     }
-    if cnt != 0 {
-        palette = (cnt + 7) >> 3;
-        if palette >= NUMREDPALS {
-            palette = NUMREDPALS - 1;
-        }
-        palette += STARTREDPALS;
+    let mut palette: i32 = if cnt != 0 {
+        ((cnt + 7) >> 3).min(NUMREDPALS - 1) + STARTREDPALS
     } else if state
         .game
         .g_game
@@ -823,26 +821,23 @@ pub fn do_palette_stuff(state: &mut GameState) {
         .bonuscount
         != 0
     {
-        palette = (state
+        let palette = (state
             .game
             .g_game
             .player_mut(state.ui.st_stuff.plyr)
             .bonuscount
             + 7)
             >> 3;
-        if palette >= NUMBONUSPALS {
-            palette = NUMBONUSPALS - 1;
-        }
-        palette += STARTBONUSPALS;
+        palette.min(NUMBONUSPALS - 1) + STARTBONUSPALS
     } else if state.game.g_game.player_mut(state.ui.st_stuff.plyr).powers
         [PowerType::Ironfeet as usize]
         > 4 * 32
         || state.game.g_game.player_mut(state.ui.st_stuff.plyr).powers[PowerType::Ironfeet] & 8 != 0
     {
-        palette = RADIATIONPAL;
+        RADIATIONPAL
     } else {
-        palette = 0;
-    }
+        0
+    };
     if state.game.doomstat.gameversion == GameVersion::Chex
         && (STARTREDPALS..STARTREDPALS + NUMREDPALS).contains(&palette)
     {

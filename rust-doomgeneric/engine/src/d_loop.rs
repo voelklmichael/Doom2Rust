@@ -321,7 +321,6 @@ fn single_player_clear(set: &mut TicCmdSet) {
     }
 }
 pub fn try_run_tics(state: &mut GameState) {
-    let mut counts: i32;
     let entertic: i32 =
         get_time(&mut state.io.i_timer, &mut *state.io.platform) / state.game.d_loop.ticdup;
     let realtics: i32 = entertic - state.game.d_loop.try_run_tics_oldentertics;
@@ -333,26 +332,21 @@ pub fn try_run_tics(state: &mut GameState) {
     }
     let mut lowtic: i32 = get_low_tic(&state.game.d_loop);
     let availabletics: i32 = lowtic - state.game.d_loop.gametic / state.game.d_loop.ticdup;
-    if state.game.d_loop.new_sync {
-        counts = availabletics;
+    let wanted: i32 = if state.game.d_loop.new_sync {
+        availabletics
     } else {
-        if realtics < availabletics - 1 {
-            counts = realtics + 1;
-        } else if realtics < availabletics {
-            counts = realtics;
-        } else {
-            counts = availabletics;
-        }
-        if counts < 1 {
-            counts = 1;
-        }
         if NET_CLIENT_CONNECTED {
             old_net_sync(&mut state.game.d_loop);
         }
-    }
-    if counts < 1 {
-        counts = 1;
-    }
+        if realtics < availabletics - 1 {
+            realtics + 1
+        } else if realtics < availabletics {
+            realtics
+        } else {
+            availabletics
+        }
+    };
+    let counts: i32 = wanted.max(1);
     while !players_in_game(&state.game.d_loop)
         || lowtic < state.game.d_loop.gametic / state.game.d_loop.ticdup + counts
     {

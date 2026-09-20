@@ -702,7 +702,6 @@ pub fn m_load_game(state: &mut GameState, _choice: i32) {
     );
 }
 pub fn draw_save(state: &mut GameState) {
-    let i: i32;
     let __wcache961_20 = cache_patch_name(&*state.assets.fs, &mut state.assets.w_wad, "M_SAVEG");
     let dest_screen = Screen::Video;
     draw_patch_direct(state, dest_screen, 72, 28, &__wcache961_20);
@@ -715,13 +714,13 @@ pub fn draw_save(state: &mut GameState) {
     }
     if state.ui.m_menu.save_string_enter {
         let savestr = state.ui.m_menu.savegamestrings[state.ui.m_menu.save_slot as usize].clone();
-        i = string_width(
+        let width: i32 = string_width(
             &*state.assets.fs,
             &state.ui.hu_stuff,
             &mut state.assets.w_wad,
             &savestr,
         );
-        let text_x = i32::from(state.ui.m_menu.defs.load_def.x) + i;
+        let text_x = i32::from(state.ui.m_menu.defs.load_def.x) + width;
         let text_y =
             i32::from(state.ui.m_menu.defs.load_def.y) + LINEHEIGHT * state.ui.m_menu.save_slot;
         write_text(state, text_x, text_y, "_");
@@ -837,32 +836,20 @@ pub fn quick_load(g_game: &GGameState, m_menu: &mut MMenuState) {
     start_message(m_menu, &msg, routine, true);
 }
 pub fn draw_read_this1(state: &mut GameState) {
-    let lumpname: &str;
-    let mut skullx: i32 = 330;
-    let mut skully: i32 = 175;
     state.ui.m_menu.inhelpscreens = true;
-    match state.game.doomstat.gameversion as u32 {
+    let (lumpname, skullx, skully): (&str, i32, i32) = match state.game.doomstat.gameversion as u32
+    {
         1..=5 => {
             if state.game.doomstat.gamemode == GameMode::Commercial {
-                lumpname = "HELP";
-                skullx = 330;
-                skully = 165;
+                ("HELP", 330, 165)
             } else {
-                lumpname = "HELP2";
-                skullx = 280;
-                skully = 185;
+                ("HELP2", 280, 185)
             }
         }
-        6 | 9 => {
-            lumpname = "HELP1";
-        }
-        7 | 8 => {
-            lumpname = "HELP";
-        }
-        _ => {
-            error("Unhandled game version");
-        }
-    }
+        6 | 9 => ("HELP1", 330, 175),
+        7 | 8 => ("HELP", 330, 175),
+        _ => error("Unhandled game version"),
+    };
     let __wcache1158_19 = cache_patch_name(&*state.assets.fs, &mut state.assets.w_wad, lumpname);
     let dest_screen = Screen::Video;
     draw_patch_direct(state, dest_screen, 0, 0, &__wcache1158_19);
@@ -1307,24 +1294,22 @@ pub fn string_height(
     h
 }
 pub fn write_text(state: &mut GameState, x: i32, y: i32, string: &str) {
-    let mut w: i32;
-    let mut c: i32;
     let mut cx: i32 = x;
     let mut cy: i32 = y;
     'outer: for b in string.bytes() {
-        c = i32::from(b);
+        let c: i32 = i32::from(b);
         if c == '\n' as i32 {
             cx = x;
             cy += 12;
         } else {
-            c = i32::from((c as u8).to_ascii_uppercase()) - HU_FONTSTART;
+            let c: i32 = i32::from((c as u8).to_ascii_uppercase()) - HU_FONTSTART;
             if (0..HU_FONTSIZE).contains(&c) {
                 let font_patch = cache_patch_num(
                     &*state.assets.fs,
                     &mut state.assets.w_wad,
                     state.ui.hu_stuff.hu_font[c as usize],
                 );
-                w = font_patch.width();
+                let w: i32 = font_patch.width();
                 if cx + w > SCREENWIDTH {
                     break 'outer;
                 }
@@ -1692,8 +1677,6 @@ pub fn m_responder(state: &mut GameState, ev: &Event) -> bool {
         }
         return true;
     } else if ch != 0 || is_null_key(key) {
-        let mut i: i32;
-
         for i in
             i32::from(state.ui.m_menu.item_on) + 1..state.ui.m_menu.current().items.len() as i32
         {
@@ -1703,14 +1686,12 @@ pub fn m_responder(state: &mut GameState, ev: &Event) -> bool {
                 return true;
             }
         }
-        i = 0;
-        while i <= i32::from(state.ui.m_menu.item_on) {
+        for i in 0..=i32::from(state.ui.m_menu.item_on) {
             if i32::from(state.ui.m_menu.current().items[i as usize].alpha_key) == ch {
                 state.ui.m_menu.item_on = i as i16;
                 s_start_sound(state, SoundOrigin::None, SfxName::Pstop);
                 return true;
             }
-            i += 1;
         }
     }
     false

@@ -72,24 +72,22 @@ pub fn move_plane(
     floor_or_ceiling: Plane,
     direction: Direction,
 ) -> ResultE {
-    let flag: bool;
-    let lastpos: Fixed;
     match floor_or_ceiling {
         Plane::Floor => match direction {
             Direction::Down => {
                 if state.world.p_setup.sector_mut(sector).floorheight - speed < dest {
-                    lastpos = state.world.p_setup.sector_mut(sector).floorheight;
+                    let lastpos = state.world.p_setup.sector_mut(sector).floorheight;
                     state.world.p_setup.sector_mut(sector).floorheight = dest;
-                    flag = change_sector(state, sector, crush);
+                    let flag: bool = change_sector(state, sector, crush);
                     if flag {
                         state.world.p_setup.sector_mut(sector).floorheight = lastpos;
                         change_sector(state, sector, crush);
                     }
                     return ResultE::Pastdest;
                 }
-                lastpos = state.world.p_setup.sector_mut(sector).floorheight;
+                let lastpos = state.world.p_setup.sector_mut(sector).floorheight;
                 state.world.p_setup.sector_mut(sector).floorheight -= speed;
-                flag = change_sector(state, sector, crush);
+                let flag: bool = change_sector(state, sector, crush);
                 if flag {
                     state.world.p_setup.sector_mut(sector).floorheight = lastpos;
                     change_sector(state, sector, crush);
@@ -98,18 +96,18 @@ pub fn move_plane(
             }
             Direction::Up => {
                 if state.world.p_setup.sector_mut(sector).floorheight + speed > dest {
-                    lastpos = state.world.p_setup.sector_mut(sector).floorheight;
+                    let lastpos = state.world.p_setup.sector_mut(sector).floorheight;
                     state.world.p_setup.sector_mut(sector).floorheight = dest;
-                    flag = change_sector(state, sector, crush);
+                    let flag: bool = change_sector(state, sector, crush);
                     if flag {
                         state.world.p_setup.sector_mut(sector).floorheight = lastpos;
                         change_sector(state, sector, crush);
                     }
                     return ResultE::Pastdest;
                 }
-                lastpos = state.world.p_setup.sector_mut(sector).floorheight;
+                let lastpos = state.world.p_setup.sector_mut(sector).floorheight;
                 state.world.p_setup.sector_mut(sector).floorheight += speed;
-                flag = change_sector(state, sector, crush);
+                let flag: bool = change_sector(state, sector, crush);
                 if flag {
                     if crush {
                         return ResultE::Crushed;
@@ -124,18 +122,18 @@ pub fn move_plane(
         Plane::Ceiling => match direction {
             Direction::Down => {
                 if state.world.p_setup.sector_mut(sector).ceilingheight - speed < dest {
-                    lastpos = state.world.p_setup.sector_mut(sector).ceilingheight;
+                    let lastpos = state.world.p_setup.sector_mut(sector).ceilingheight;
                     state.world.p_setup.sector_mut(sector).ceilingheight = dest;
-                    flag = change_sector(state, sector, crush);
+                    let flag: bool = change_sector(state, sector, crush);
                     if flag {
                         state.world.p_setup.sector_mut(sector).ceilingheight = lastpos;
                         change_sector(state, sector, crush);
                     }
                     return ResultE::Pastdest;
                 }
-                lastpos = state.world.p_setup.sector_mut(sector).ceilingheight;
+                let lastpos = state.world.p_setup.sector_mut(sector).ceilingheight;
                 state.world.p_setup.sector_mut(sector).ceilingheight -= speed;
-                flag = change_sector(state, sector, crush);
+                let flag: bool = change_sector(state, sector, crush);
                 if flag {
                     if crush {
                         return ResultE::Crushed;
@@ -147,9 +145,9 @@ pub fn move_plane(
             }
             Direction::Up => {
                 if state.world.p_setup.sector_mut(sector).ceilingheight + speed > dest {
-                    lastpos = state.world.p_setup.sector_mut(sector).ceilingheight;
+                    let lastpos = state.world.p_setup.sector_mut(sector).ceilingheight;
                     state.world.p_setup.sector_mut(sector).ceilingheight = dest;
-                    flag = change_sector(state, sector, crush);
+                    let flag: bool = change_sector(state, sector, crush);
                     if flag {
                         state.world.p_setup.sector_mut(sector).ceilingheight = lastpos;
                         change_sector(state, sector, crush);

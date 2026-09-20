@@ -214,10 +214,6 @@ pub fn init_sprite_defs(state: &mut GameState, namelist: &[&'static str]) {
     let start: i32 = state.render.r_data.firstspritelump - 1;
     let end: i32 = state.render.r_data.lastspritelump + 1;
     for &name in namelist {
-        let mut rotation: i32;
-
-        let mut frame: i32;
-
         state.render.r_things.spritename = name;
         state.render.r_things.sprtemp = [SpriteFrame {
             rotate: SpriteRotate::Unset,
@@ -230,8 +226,9 @@ pub fn init_sprite_defs(state: &mut GameState, namelist: &[&'static str]) {
                 .name
                 .eq_bytes_ignore_ascii_case_n(state.render.r_things.spritename.as_bytes(), 4)
             {
-                frame = i32::from(state.assets.w_wad.lumpinfo[l as usize].name[4]) - 'A' as i32;
-                rotation = i32::from(state.assets.w_wad.lumpinfo[l as usize].name[5]) - '0' as i32;
+                let frame = i32::from(state.assets.w_wad.lumpinfo[l as usize].name[4]) - 'A' as i32;
+                let rotation =
+                    i32::from(state.assets.w_wad.lumpinfo[l as usize].name[5]) - '0' as i32;
                 let patched: i32 = if state.game.doomstat.modifiedgame {
                     let sprite_name = state.assets.w_wad.lumpinfo[l as usize].name;
                     get_num_for_name(&state.assets.w_wad, &sprite_name.as_str())
@@ -247,8 +244,9 @@ pub fn init_sprite_defs(state: &mut GameState, namelist: &[&'static str]) {
                     false,
                 );
                 if state.assets.w_wad.lumpinfo[l as usize].name[6] != 0 {
-                    frame = i32::from(state.assets.w_wad.lumpinfo[l as usize].name[6]) - 'A' as i32;
-                    rotation =
+                    let frame =
+                        i32::from(state.assets.w_wad.lumpinfo[l as usize].name[6]) - 'A' as i32;
+                    let rotation =
                         i32::from(state.assets.w_wad.lumpinfo[l as usize].name[7]) - '0' as i32;
                     install_sprite_lump(
                         &state.render.r_data,
@@ -410,8 +408,6 @@ pub fn project_sprite(state: &mut GameState, thing_id: MobjId) {
         thing.flags,
     );
 
-    let lump: i32;
-
     let tr_x: Fixed = thing_x - state.render.r_main.viewx;
     let tr_y: Fixed = thing_y - state.render.r_main.viewy;
     let mut gxt: Fixed = fixed_mul(tr_x, state.render.r_main.viewcos);
@@ -441,17 +437,18 @@ pub fn project_sprite(state: &mut GameState, thing_id: MobjId) {
         ));
     }
     let sprframe = sprdef.spriteframes[(thing_frame & FF_FRAMEMASK) as usize];
-    let flip: bool = if sprframe.rotate == SpriteRotate::NonRotating {
-        lump = i32::from(sprframe.lump[0]);
-        sprframe.flip[0] != 0
+    let (lump, flip): (i32, bool) = if sprframe.rotate == SpriteRotate::NonRotating {
+        (i32::from(sprframe.lump[0]), sprframe.flip[0] != 0)
     } else {
         let ang: Angle = point_to_angle(&state.render.r_main, thing_x, thing_y);
         let rot: usize = (ang
             .wrapping_sub(thing_angle)
             .wrapping_add(((ANG45 / 2) as u32).wrapping_mul(9))
             >> 29) as usize;
-        lump = i32::from(sprframe.lump[rot as usize]);
-        sprframe.flip[rot as usize] != 0
+        (
+            i32::from(sprframe.lump[rot as usize]),
+            sprframe.flip[rot as usize] != 0,
+        )
     };
     tx -= state.render.r_data.spriteoffset[lump as usize];
     let x1: i32 = (state.render.r_main.centerxfrac + fixed_mul(tx, xscale)) >> FRACBITS;
@@ -689,16 +686,12 @@ pub fn draw_sprite(state: &mut GameState, spr: &VisSprite) {
             || ds.x2 < spr.x1
             || ds.silhouette == 0 && ds.maskedtexturecol.is_none())
         {
-            let lowscale: Fixed;
-
             let r1: i32 = if ds.x1 < spr.x1 { spr.x1 } else { ds.x1 };
             let r2: i32 = if ds.x2 > spr.x2 { spr.x2 } else { ds.x2 };
-            let scale: Fixed = if ds.scale1 > ds.scale2 {
-                lowscale = ds.scale2;
-                ds.scale1
+            let (scale, lowscale): (Fixed, Fixed) = if ds.scale1 > ds.scale2 {
+                (ds.scale1, ds.scale2)
             } else {
-                lowscale = ds.scale1;
-                ds.scale2
+                (ds.scale2, ds.scale1)
             };
             if scale < spr.scale
                 || lowscale < spr.scale

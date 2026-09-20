@@ -511,7 +511,6 @@ pub fn init_buffer(r_draw: &mut RDrawState, width: i32, height: i32) {
     }
 }
 pub fn fill_back_screen(state: &mut GameState) {
-    let mut y: i32;
     let name1: &str = "FLOOR7_2";
     let name2: &str = "GRNROCK";
 
@@ -542,8 +541,7 @@ pub fn fill_back_screen(state: &mut GameState) {
     }
     let backdrop = Screen::Background;
     let mut patch: Patch = cache_patch_name(&*state.assets.fs, &mut state.assets.w_wad, "brdr_t");
-    let mut x: i32 = 0;
-    while x < state.render.r_draw.scaledviewwidth {
+    for x in (0..state.render.r_draw.scaledviewwidth).step_by(8) {
         draw_patch(
             state,
             backdrop,
@@ -551,11 +549,9 @@ pub fn fill_back_screen(state: &mut GameState) {
             state.render.r_draw.viewwindowy - 8,
             &patch,
         );
-        x += 8;
     }
     patch = cache_patch_name(&*state.assets.fs, &mut state.assets.w_wad, "brdr_b");
-    x = 0;
-    while x < state.render.r_draw.scaledviewwidth {
+    for x in (0..state.render.r_draw.scaledviewwidth).step_by(8) {
         draw_patch(
             state,
             backdrop,
@@ -563,11 +559,9 @@ pub fn fill_back_screen(state: &mut GameState) {
             state.render.r_draw.viewwindowy + state.render.r_draw.viewheight,
             &patch,
         );
-        x += 8;
     }
     patch = cache_patch_name(&*state.assets.fs, &mut state.assets.w_wad, "brdr_l");
-    y = 0;
-    while y < state.render.r_draw.viewheight {
+    for y in (0..state.render.r_draw.viewheight).step_by(8) {
         draw_patch(
             state,
             backdrop,
@@ -575,11 +569,9 @@ pub fn fill_back_screen(state: &mut GameState) {
             state.render.r_draw.viewwindowy + y,
             &patch,
         );
-        y += 8;
     }
     patch = cache_patch_name(&*state.assets.fs, &mut state.assets.w_wad, "brdr_r");
-    y = 0;
-    while y < state.render.r_draw.viewheight {
+    for y in (0..state.render.r_draw.viewheight).step_by(8) {
         draw_patch(
             state,
             backdrop,
@@ -587,7 +579,6 @@ pub fn fill_back_screen(state: &mut GameState) {
             state.render.r_draw.viewwindowy + y,
             &patch,
         );
-        y += 8;
     }
     let __wcache654_4 = cache_patch_name(&*state.assets.fs, &mut state.assets.w_wad, "brdr_tl");
     draw_patch(

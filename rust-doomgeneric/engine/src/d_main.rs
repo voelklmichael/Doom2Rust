@@ -251,7 +251,6 @@ pub fn d_process_events(state: &mut GameState) {
     }
 }
 pub fn display(state: &mut GameState) {
-    let wipe: bool;
     if state.game.g_game.nodrawers {
         return;
     }
@@ -261,10 +260,8 @@ pub fn display(state: &mut GameState) {
         state.game.d_main.d_display_oldgamestate = GameScreenState::Wipped;
         state.game.d_main.d_display_borderdrawcount = 3;
     }
-    if state.game.g_game.gamestate == state.game.d_main.wipegamestate {
-        wipe = false;
-    } else {
-        wipe = true;
+    let wipe: bool = state.game.g_game.gamestate != state.game.d_main.wipegamestate;
+    if wipe {
         wipe_start_screen(&mut state.ui.f_wipe, &state.io.i_video);
     }
     if state.game.g_game.gamestate == GameScreenState::Level && state.game.d_loop.gametic != 0 {
@@ -379,18 +376,14 @@ pub fn display(state: &mut GameState) {
     wipe_end_screen(state, 0, 0, SCREENWIDTH, SCREENHEIGHT);
     let mut wipestart: i32 = get_time(&mut state.io.i_timer, &mut *state.io.platform) - 1;
     loop {
-        let mut tics: i32;
-
-        let mut nowtime: i32;
-
-        loop {
-            nowtime = get_time(&mut state.io.i_timer, &mut *state.io.platform);
-            tics = nowtime - wipestart;
+        let (nowtime, tics): (i32, i32) = loop {
+            let nowtime = get_time(&mut state.io.i_timer, &mut *state.io.platform);
+            let tics = nowtime - wipestart;
             sleep(&mut *state.io.platform, 1);
             if tics > 0 {
-                break;
+                break (nowtime, tics);
             }
-        }
+        };
         wipestart = nowtime;
         let done: bool = wipe_screen_wipe(state, SCREENWIDTH, SCREENHEIGHT, tics);
         m_drawer(state);

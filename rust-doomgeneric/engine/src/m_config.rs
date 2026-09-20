@@ -1367,13 +1367,12 @@ pub fn get_save_game_dir(
     platform: &mut dyn DoomPlatform,
     _iwadname: &'static str,
 ) -> String {
-    let savegamedir;
     if state.configdir.is_empty() {
-        savegamedir = String::new();
+        String::new()
     } else {
-        savegamedir = format!("{}{}.savegame/", state.configdir, DIR_SEPARATOR_S);
+        let savegamedir = format!("{}{}.savegame/", state.configdir, DIR_SEPARATOR_S);
         fs.create_dir(&savegamedir);
         doom_println!(platform, "Using {} for savegames", savegamedir);
+        savegamedir
     }
-    savegamedir
 }

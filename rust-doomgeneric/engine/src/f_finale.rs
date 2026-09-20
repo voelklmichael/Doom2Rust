@@ -669,13 +669,11 @@ pub fn cast_responder(state: &mut GameState, ev: &Event) -> bool {
     true
 }
 pub fn cast_print(state: &mut GameState, text: &str) {
-    let mut c: i32;
-    let mut w: i32;
     let mut width: i32 = 0;
     for b in text.bytes() {
-        c = i32::from(b.to_ascii_uppercase()) - HU_FONTSTART;
+        let c: i32 = i32::from(b.to_ascii_uppercase()) - HU_FONTSTART;
         if (0..=HU_FONTSIZE).contains(&c) {
-            w = cache_patch_num(
+            let w: i32 = cache_patch_num(
                 &*state.assets.fs,
                 &mut state.assets.w_wad,
                 state.ui.hu_stuff.hu_font[c as usize],
@@ -688,14 +686,14 @@ pub fn cast_print(state: &mut GameState, text: &str) {
     }
     let mut cx: i32 = 160 - width / 2;
     for b in text.bytes() {
-        c = i32::from(b.to_ascii_uppercase()) - HU_FONTSTART;
+        let c: i32 = i32::from(b.to_ascii_uppercase()) - HU_FONTSTART;
         if (0..=HU_FONTSIZE).contains(&c) {
             let font_patch = cache_patch_num(
                 &*state.assets.fs,
                 &mut state.assets.w_wad,
                 state.ui.hu_stuff.hu_font[c as usize],
             );
-            w = font_patch.width();
+            let w: i32 = font_patch.width();
             let dest_screen = Screen::Video;
             draw_patch(state, dest_screen, cx, 180, &font_patch);
             cx += w;
@@ -807,24 +805,18 @@ fn art_screen_drawer(state: &mut GameState) {
     if state.game.g_game.gameepisode == 3 {
         bunny_scroll(state);
     } else {
-        let lumpname: &str;
-
-        match state.game.g_game.gameepisode {
+        let lumpname: &str = match state.game.g_game.gameepisode {
             1 => {
                 if state.game.doomstat.gamemode == GameMode::Retail {
-                    lumpname = "CREDIT";
+                    "CREDIT"
                 } else {
-                    lumpname = "HELP2";
+                    "HELP2"
                 }
             }
-            2 => {
-                lumpname = "VICTORY2";
-            }
-            4 => {
-                lumpname = "ENDPIC";
-            }
+            2 => "VICTORY2",
+            4 => "ENDPIC",
             _ => return,
-        }
+        };
         let __wcache1026_1 = cache_patch_name(&*state.assets.fs, &mut state.assets.w_wad, lumpname);
         let dest_screen = Screen::Video;
         draw_patch(state, dest_screen, 0, 0, &__wcache1026_1);

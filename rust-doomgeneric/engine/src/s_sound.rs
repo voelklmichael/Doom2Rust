@@ -155,7 +155,6 @@ fn stop_channel(
     }
 }
 pub fn s_start(state: &mut GameState) {
-    let mnum: i32;
     for cnum in 0..state.audio.s_sound.snd_channels {
         if state.audio.s_sound.channels[cnum as usize]
             .sfxinfo
@@ -170,8 +169,8 @@ pub fn s_start(state: &mut GameState) {
         }
     }
     state.audio.s_sound.mus_paused = false;
-    if state.game.doomstat.gamemode == GameMode::Commercial {
-        mnum = MusicName::Runnin as i32 + state.game.g_game.gamemap - 1;
+    let mnum: i32 = if state.game.doomstat.gamemode == GameMode::Commercial {
+        MusicName::Runnin as i32 + state.game.g_game.gamemap - 1
     } else {
         let spmus: [i32; 9] = [
             MusicName::E3m4 as i32,
@@ -185,14 +184,14 @@ pub fn s_start(state: &mut GameState) {
             MusicName::E1m9 as i32,
         ];
         if state.game.g_game.gameepisode < 4 {
-            mnum = MusicName::E1m1 as i32
+            MusicName::E1m1 as i32
                 + (state.game.g_game.gameepisode - 1) * 9
                 + state.game.g_game.gamemap
-                - 1;
+                - 1
         } else {
-            mnum = spmus[(state.game.g_game.gamemap - 1) as usize];
+            spmus[(state.game.g_game.gamemap - 1) as usize]
         }
-    }
+    };
     change_music(state, mnum, true);
 }
 pub fn s_stop_sound(

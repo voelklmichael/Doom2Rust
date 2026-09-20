@@ -939,7 +939,6 @@ pub fn draw_fline(
     fl: &FLine,
     color: i32,
 ) {
-    let mut d: i32;
     if fl.a.x < 0
         || fl.a.x >= am_map.f_w
         || fl.a.y < 0
@@ -962,7 +961,7 @@ pub fn draw_fline(
     let mut x: i32 = fl.a.x;
     let mut y: i32 = fl.a.y;
     if ax > ay {
-        d = ay - ax / 2;
+        let mut d: i32 = ay - ax / 2;
         loop {
             i_video.i_video_buffer[(y * am_map.f_w + x) as usize] = color as u8;
             if x == fl.b.x {
@@ -976,7 +975,7 @@ pub fn draw_fline(
             d += ay;
         }
     } else {
-        d = ax - ay / 2;
+        let mut d: i32 = ax - ay / 2;
         loop {
             i_video.i_video_buffer[(y * am_map.f_w + x) as usize] = color as u8;
             if y == fl.b.y {

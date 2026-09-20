@@ -194,7 +194,6 @@ pub fn generate_composite(
     r_data.texturecomposite[texnum as usize] = Some(block.into_boxed_slice());
 }
 pub fn generate_lookup(state: &mut GameState, texnum: i32) {
-    let mut x: i32;
     state.render.r_data.texturecomposite[texnum as usize] = None;
     state.render.r_data.texturecompositesize[texnum as usize] = 0;
     let texture_patchcount = i32::from(state.render.r_data.textures[texnum as usize].patchcount);
@@ -210,15 +209,10 @@ pub fn generate_lookup(state: &mut GameState, texnum: i32) {
         let realpatch_width = i32::from(i16::from_le_bytes(realpatch[0..2].try_into().unwrap()));
         let x1: i32 = i32::from(tex_patch.originx);
         let mut x2: i32 = x1 + realpatch_width;
-        if x1 < 0 {
-            x = 0;
-        } else {
-            x = x1;
-        }
         if x2 > texture_width {
             x2 = texture_width;
         }
-        while x < x2 {
+        for x in x1.max(0)..x2 {
             patchcount[x as usize] = patchcount[x as usize].wrapping_add(1);
             state.render.r_data.texturecolumnlump[texnum as usize][x as usize] =
                 tex_patch.patch as i16;
@@ -227,7 +221,6 @@ pub fn generate_lookup(state: &mut GameState, texnum: i32) {
                 i32::from_le_bytes(realpatch[colofs_off..colofs_off + 4].try_into().unwrap());
             state.render.r_data.texturecolumnofs[texnum as usize][x as usize] =
                 (columnofs + 3) as u16;
-            x += 1;
         }
     }
     for (x, &count) in patchcount.iter().enumerate().take(texture_width as usize) {
@@ -299,12 +292,6 @@ fn generate_texture_hash_table(r_data: &mut RDataState) {
     }
 }
 pub fn init_textures(state: &mut GameState) {
-    let mut i: i32;
-
-    let maxoff2: i32;
-
-    let numtextures2: i32;
-
     // PNAMES/TEXTURE1/TEXTURE2 are on-disk WAD lumps (raw bytes, not typed
     // Rust structs), so each is captured as a plain byte buffer once here
     // and decoded field-by-field with explicit little-endian reads below --
@@ -335,19 +322,18 @@ pub fn init_textures(state: &mut GameState) {
         [..maxoff as usize]
         .to_vec();
     let numtextures1: i32 = i32::from_le_bytes(maptex1[0..4].try_into().unwrap());
-    let maptex2 = if check_num_for_name(&state.assets.w_wad, "TEXTURE2").is_none() {
-        numtextures2 = 0;
-        maxoff2 = 0;
-        None
-    } else {
-        let texture2_lump = get_num_for_name(&state.assets.w_wad, "TEXTURE2") as u32;
-        maxoff2 = lump_length(&state.assets.w_wad, texture2_lump);
-        let maptex2 = lump_bytes_name(&*state.assets.fs, &mut state.assets.w_wad, "TEXTURE2")
-            [..maxoff2 as usize]
-            .to_vec();
-        numtextures2 = i32::from_le_bytes(maptex2[0..4].try_into().unwrap());
-        Some(maptex2)
-    };
+    let (maptex2, maxoff2, numtextures2) =
+        if check_num_for_name(&state.assets.w_wad, "TEXTURE2").is_none() {
+            (None, 0, 0)
+        } else {
+            let texture2_lump = get_num_for_name(&state.assets.w_wad, "TEXTURE2") as u32;
+            let maxoff2 = lump_length(&state.assets.w_wad, texture2_lump);
+            let maptex2 = lump_bytes_name(&*state.assets.fs, &mut state.assets.w_wad, "TEXTURE2")
+                [..maxoff2 as usize]
+                .to_vec();
+            let numtextures2 = i32::from_le_bytes(maptex2[0..4].try_into().unwrap());
+            (Some(maptex2), maxoff2, numtextures2)
+        };
     state.render.r_data.numtextures = numtextures1 + numtextures2;
     // textures/texturecolumnlump/texturecolumnofs are built via push() in
     // the loop below instead of pre-sized-then-indexed -- the loop always
@@ -379,10 +365,7 @@ pub fn init_textures(state: &mut GameState) {
     }
     let mut current_maptex: &Vec<u8> = &maptex1;
     let mut dir_index: i32 = 0;
-    i = 0;
-    while i < state.render.r_data.numtextures {
-        let mut j: i32;
-
+    for i in 0..state.render.r_data.numtextures {
         if i & 63 == 0 {
             doom_print!(state.io.platform, ".");
         }
@@ -452,14 +435,13 @@ pub fn init_textures(state: &mut GameState) {
             .r_data
             .texturecolumnofs
             .push(vec![0u16; texture_width as usize]);
-        j = 1;
+        let mut j: i32 = 1;
         while j * 2 <= i32::from(texture_width) {
             j <<= 1;
         }
         state.render.r_data.texturewidthmask[i as usize] = j - 1;
         state.render.r_data.textureheight[i as usize] =
             (i32::from(texture_height) << FRACBITS) as Fixed;
-        i += 1;
         dir_index += 1;
     }
     release_lump_name(&state.assets.w_wad, "TEXTURE1");
@@ -563,7 +545,6 @@ pub fn texture_num_for_name(state: &RDataState, name: &str) -> i32 {
         .unwrap_or_else(|| error(&format!("R_TextureNumForName: {name} not found")))
 }
 pub fn precache_level(state: &mut GameState) {
-    let mut lump: i32;
     if state.game.g_game.demoplayback {
         return;
     }
@@ -575,7 +556,7 @@ pub fn precache_level(state: &mut GameState) {
     state.render.r_data.flatmemory = 0;
     for i in 0..state.render.r_data.numflats {
         if flatpresent[i as usize] != 0 {
-            lump = state.render.r_data.firstflat + i;
+            let lump: i32 = state.render.r_data.firstflat + i;
             state.render.r_data.flatmemory += state.assets.w_wad.lumpinfo[lump as usize].size;
             lump_bytes(&*state.assets.fs, &mut state.assets.w_wad, lump);
         }
@@ -592,7 +573,7 @@ pub fn precache_level(state: &mut GameState) {
         if present != 0 {
             let patchcount = i32::from(state.render.r_data.textures[i].patchcount);
             for j in 0..patchcount as usize {
-                lump = state.render.r_data.textures[i].patches[j].patch;
+                let lump: i32 = state.render.r_data.textures[i].patches[j].patch;
                 state.render.r_data.texturememory +=
                     state.assets.w_wad.lumpinfo[lump as usize].size;
                 lump_bytes(&*state.assets.fs, &mut state.assets.w_wad, lump);
@@ -608,7 +589,7 @@ pub fn precache_level(state: &mut GameState) {
         if present != 0 {
             for j in 0..(state.render.r_things.sprites[i].numframes) as usize {
                 for k in 0..8 {
-                    lump = state.render.r_data.firstspritelump
+                    let lump: i32 = state.render.r_data.firstspritelump
                         + i32::from(state.render.r_things.sprites[i].spriteframes[j].lump[k]);
                     state.render.r_data.spritememory +=
                         state.assets.w_wad.lumpinfo[lump as usize].size;
