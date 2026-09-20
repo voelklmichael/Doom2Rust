@@ -32,15 +32,13 @@ fn player_quit_game(state: &mut GameState, player_num: u32) {
     }
 }
 fn run_tic(state: &mut GameState, cmds: &[TicCmd], ingame: &[bool]) {
-    let mut i: u32 = 0;
-    while i < MAXPLAYERS as u32 {
+    for i in 0..MAXPLAYERS as u32 {
         if !state.game.g_game.demoplayback
             && state.game.g_game.playeringame[i as usize]
             && !ingame[i as usize]
         {
             player_quit_game(state, i);
         }
-        i = i.wrapping_add(1);
     }
     if state.game.d_main.advancedemo {
         do_advance_demo(state);
@@ -75,10 +73,8 @@ fn load_game_settings(
             "NOTE: Turning resolution is reduced; this is probably because there is a client recording a Vanilla demo."
         );
     }
-    let mut i: u32 = 0;
-    while i < MAXPLAYERS as u32 {
+    for i in 0..MAXPLAYERS as u32 {
         g_game.playeringame[i as usize] = i < settings.num_players as u32;
-        i = i.wrapping_add(1);
     }
 }
 fn save_game_settings(game: &Game, settings: &mut NetGameSettings) {

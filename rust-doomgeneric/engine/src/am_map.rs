@@ -563,7 +563,6 @@ pub fn am_init_variables(state: &mut GameState) {
         data3: 0,
         data4: 0,
     };
-    let mut pnum: i32;
     state.ui.am_map.automapactive = true;
     state.ui.am_map.f_oldloc.x = INT_MAX as Fixed;
     state.ui.am_map.amclock = 0;
@@ -584,13 +583,11 @@ pub fn am_init_variables(state: &mut GameState) {
         state.ui.am_map.plr = state.game.g_game.consoleplayer;
     } else {
         state.ui.am_map.plr = PlayerId(0);
-        pnum = 0;
-        while pnum < MAXPLAYERS {
+        for pnum in 0..MAXPLAYERS {
             if state.game.g_game.playeringame[pnum as usize] {
                 state.ui.am_map.plr = PlayerId(pnum as u8);
                 break;
             }
-            pnum += 1;
         }
     }
     let plr_mo_id = state

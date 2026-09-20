@@ -503,13 +503,11 @@ pub fn bind_chat_controls(m_config: &mut MConfigState, num_players: u32) {
     bind_variable_int(m_config, "key_multi_msg", |s| {
         &mut s.game.m_controls.key_multi_msg
     });
-    let mut i: u32 = 0;
-    while i < num_players {
+    for i in 0..num_players {
         let name = format!("key_multi_msgplayer{}", i.wrapping_add(1_u32));
         bind_variable_int(m_config, &name, move |s| {
             &mut s.game.m_controls.key_multi_msgplayer[i as usize]
         });
-        i = i.wrapping_add(1);
     }
 }
 pub const KEY_CAPSLOCK: i32 = 0x80 + 0x3a;

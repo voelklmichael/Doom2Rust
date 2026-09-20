@@ -267,13 +267,11 @@ fn get_low_tic(d_loop: &DLoopState) -> i32 {
 fn old_net_sync(d_loop: &mut DLoopState) {
     let mut keyplayer: i32 = -1;
     d_loop.frameon += 1;
-    let mut i: u32 = 0;
-    while i < NET_MAXPLAYERS as u32 {
+    for i in 0..NET_MAXPLAYERS as u32 {
         if d_loop.local_playeringame[i as usize] {
             keyplayer = i as i32;
             break;
         }
-        i = i.wrapping_add(1);
     }
     if keyplayer < 0 {
         return;
@@ -296,12 +294,9 @@ fn old_net_sync(d_loop: &mut DLoopState) {
 }
 fn players_in_game(d_loop: &DLoopState) -> bool {
     let mut result: bool = false;
-    let mut i: u32;
     if NET_CLIENT_CONNECTED {
-        i = 0;
-        while i < NET_MAXPLAYERS as u32 {
+        for i in 0..NET_MAXPLAYERS as u32 {
             result = result || d_loop.local_playeringame[i as usize];
-            i = i.wrapping_add(1);
         }
     }
     if !DRONE {
@@ -310,23 +305,19 @@ fn players_in_game(d_loop: &DLoopState) -> bool {
     result
 }
 fn ticdup_squash(set: &mut TicCmdSet) {
-    let mut i: u32 = 0;
-    while i < NET_MAXPLAYERS as u32 {
+    for i in 0..NET_MAXPLAYERS as u32 {
         let cmd = &mut set.cmds[i as usize];
         cmd.chatchar = 0_u8;
         if cmd.buttons as i32 & BT_SPECIAL != 0 {
             cmd.buttons = 0_u8;
         }
-        i = i.wrapping_add(1);
     }
 }
 fn single_player_clear(set: &mut TicCmdSet) {
-    let mut i: u32 = 0;
-    while i < NET_MAXPLAYERS as u32 {
+    for i in 0..NET_MAXPLAYERS as u32 {
         if i != LOCALPLAYER as u32 {
             set.ingame[i as usize] = false;
         }
-        i = i.wrapping_add(1);
     }
 }
 pub fn try_run_tics(state: &mut GameState) {
