@@ -13,6 +13,7 @@ Chart: `loc_and_unsafe_over_time.png`. Raw per-commit data: `loc_unsafe_series.c
 |---|---|
 | Result | Doom (shareware, E1) runs from a Rust engine with **zero `unsafe`**, `#![deny(unsafe_code)]`, `#![no_std]` + `alloc` |
 | Also runs on | an ESP32-S3 (M5Stack CoreS3 Lite), 2.9 fps at first bring-up, ~29 fps after tuning |
+| Also runs in | a web browser, as WebAssembly (a first version, on the unmerged `wasm` branch as of Sep 20; see Step 10 in section 8). It needed one changed line in the engine, because the engine is `#![no_std]` |
 | Elapsed working time (final approach, v5) | **about 89 h** over 12 calendar days (Sep 5 to Sep 19); range 82 to 98 h depending on how idle gaps are counted |
 | Elapsed working time, whole effort (measured) | **about 140 h** over 37 days (Aug 14 to Sep 19), including ~53 h in two approaches that were abandoned. Excludes the January to April attempts, for which there are no records |
 | Commits / merged PRs | 765 commits, 358 merged PRs (highest PR number #501) |
@@ -362,6 +363,38 @@ is limited to the shareware episode as things stand. Ways round it (a larger par
 separate data partition, external storage) are untried, and so is whether the full game's level
 data would fit in the 8 MB of RAM. The image sizes are estimates, not builds.
 
+**Step 10: the browser (Sep 20).** `#![no_std]` + `alloc` is what made this cheap, though not
+because WebAssembly needs it: `wasm32-unknown-unknown` has `std`, only without files, threads or a
+usable clock. What `no_std` did was make the compiler refuse `std::fs`, `std::time` and `println!`
+anywhere in the engine, so everything outside the game had to go through two traits:
+`DoomPlatform` (clock, sleep, keys, drawing, sound) and `DoomFileSystem` (the WAD, savegames,
+config). A new target is then two implementations, not a port of the engine. The Sep 19 plan
+document for the `fs` crate had already named a browser file system as the natural first consumer
+of a `no_std` engine; the next day it was one.
+
+A first WebAssembly version exists (commit `d7ff93e`, crate `doomgeneric_wasm`):
+
+- About 560 lines of Rust in `src/` (a `DoomPlatform`, a `DoomFileSystem` that keeps savegames
+  and config in memory, key mapping, a hand-off to Web Audio), a 31-line `build.rs`, and about
+  260 lines of JavaScript and HTML. **The engine itself changed by one line**, a re-export of
+  `GameState`.
+- The game runs in a Web Worker. The engine draws the screen melt in a loop inside a single tick,
+  which would freeze the page's own thread for about a second, so the platform pushes each frame
+  and each chunk of sound to the page as soon as it has one. The page draws the newest frame once
+  per screen refresh and schedules the sound with Web Audio. Frames use the same 320 x 200
+  indexed-screen path as the ESP32.
+- Build: the `wasm32-unknown-unknown` target, `wasm-bindgen` 0.2.121 and `wasm/build.sh serve`
+  (a static site on port 8000). The shareware WAD is linked into a ~5 MB module, so nothing is
+  downloaded but the page, a script and the module.
+- Not there yet, per its README: mouse and touch input, saving to `localStorage`, the full game's
+  WAD (or picking a WAD), pausing when the tab is hidden.
+
+Status, to be honest in the post: "a WebAssembly version is available" is true of the repository
+on Sep 20, not yet of anything a reader can open. It sits on the local `wasm` branch (one commit,
+not pushed, no PR, not in `main`), its working tree was still being changed (WAD handling) when
+this was written, and I have read the code and README but have not built or run it. Either wait
+for the merge, ideally with a hosted page, or say so.
+
 Why it worked: the oracle (section 7), one small PR per step, a verification bar that never moved (no new warnings,
 identical simulation hashes on demo1 to demo3), and stacked PRs merged in order. The standing
 "continue until done" authorization let phases chain without waiting.
@@ -534,3 +567,17 @@ and that is what made the same engine portable to a chip with a different ABI.
     still need its own target and toolchain)? Gate `x11` behind `cfg(target_os)` so the whole host
     workspace builds on Windows and macOS? And where should the crates shared by both sides
     (`core_s3_protocol` and friends) live so the firmware and the host tools cannot drift apart?
+- **Executable size comparison, in megabytes (to look into later).** Four builds to compare: the
+  C version, the Rust X11 build, the CoreS3 firmware and the WebAssembly module. Only pieces exist
+  so far, and they are not comparable yet:
+  - Section 5 has the C and Rust X11 figures, but as `size` text sections in KB (C `-O2` 409 KB,
+    Rust 1,266 KB), not as file sizes.
+  - The CoreS3 image is about 5.2 MB, of which the 4.2 MB shareware WAD is embedded (roughly 1 MB
+    of firmware). The WASM module is about 5 MB according to its README, also with the WAD linked
+    in. Neither figure was measured for this comparison.
+  - Things to control for: whether the WAD is inside the file (C and X11 read it from disk;
+    ESP32 and WASM embed it), static versus dynamic linking (the Rust build includes `std`, the C
+    binary links libc and X11 dynamically), debug symbols and stripping, `opt-level` (3 on the
+    board, `"s"` was tried and shrank `.text` from 1.16 MB to 0.85 MB), and `wasm-opt` on the WASM
+    module. A fair table would give each build's file size in MB stripped, with and without the WAD,
+    from one fixed commit.
