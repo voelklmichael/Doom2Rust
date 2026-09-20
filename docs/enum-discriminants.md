@@ -1,6 +1,6 @@
 # Enums that still spell out numbers, and why
 
-Rust numbers the variants of an enum 0, 1, 2, ... by itself, so `= n` says something only where it *differs* from that running value. `tools/enum_discriminants.py` removed every redundant number from the engine (1,643 of them), and two more turned out never to be observed and were dropped by hand (`StateEnum::NoState = -1`, and `SpriteRotate::Unset = -1`, whose one integer `match` is now a match on the variants). What is left are the enums below, where a number does work.
+Rust numbers the variants of an enum 0, 1, 2, ... by itself, so `= n` says something only where it *differs* from that running value. `tools/enum_discriminants.py` removed every redundant number from the engine (1,643 of them), and two more turned out never to be observed and were dropped by hand (`StateEnum::NoState = -1`, and `SpriteRotate::Unset = -1`, whose one integer `match` is now a match on the variants); `SkillType::Noitems = -1` was replaced by an `Option`. What is left are the enums below, where a number does work.
 
 **How the sites were found.** `tools/enum_number_uses.py` temporarily gives an enum a data-carrying variant, which turns every `enum as i32` / `as usize` / `as u8` cast of that type into a compile error, and reads the positions off the compiler. So the "where the number is used" lists are exact for casts. The integer-to-enum direction (`*_from_raw`) is listed separately, and comparing or matching variants is not a use of the number. Line numbers are as of the commit that added this file; regenerate with the tool if the code has moved.
 
@@ -8,9 +8,11 @@ In every case below the number is required for one of two reasons: it is **writt
 
 ---
 
-## `SkillType` — `Noitems = -1` ([d_mode.rs:3](../rust-doomgeneric/engine/src/d_mode.rs#L3))
+## `SkillType` — `Baby = 0` ([d_mode.rs:5](../rust-doomgeneric/engine/src/d_mode.rs#L5))
 
-**Why the `-1` is necessary.** `Noitems` is the C `sk_noitems = -1` "no skill chosen" sentinel and it comes *before* the five real levels. Writing `-1` is what makes `Baby`..`Nightmare` equal **0..4**, which is the value every external format stores. Without it `Noitems` would be 0 and every skill would shift up by one.
+**Why it is spelled out.** This one is a choice, not a necessity: `Baby` is 0 by Rust's numbering anyway. It stays written because the five values 0..=4 are what every external format stores, and the enum no longer has vanilla's `sk_noitems = -1` "no skill" variant that used to make `Baby` 0 (see below). The `skill_levels_keep_the_values_the_file_formats_store` test in `d_mode.rs` pins them.
+
+**The `Noitems` sentinel is gone.** It was only ever produced by `-skill 0` (`argv[p+1][0] - '1'` = -1), which then reached `gameskill` and made `P_SpawnMapThing` shift by a negative amount. "No skill" is now `None` from [`SkillType::from_raw`](../rust-doomgeneric/engine/src/d_mode.rs#L16), and `-skill` outside 1..=5 stops with an error (`docs/known-deviations.md`).
 
 **Where the number is used:**
 
@@ -18,9 +20,8 @@ In every case below the number is required for one of two reasons: it is **writt
 - [p_saveg.rs:696](../rust-doomgeneric/engine/src/p_saveg.rs#L696) — the savegame header byte (`gameskill as u8`).
 - [d_net.rs:84](../rust-doomgeneric/engine/src/d_net.rs#L84) — the net game settings `skill` field (`startskill as i32`); [d_net.rs:169](../rust-doomgeneric/engine/src/d_net.rs#L169) prints it.
 - [p_mobj.rs:3669](../rust-doomgeneric/engine/src/p_mobj.rs#L3669) — `1 << (gameskill - 1)` builds the "spawn on this skill" bit of a map thing's options (Easy/Medium/Hard are bits 0..2; `Baby` and `Nightmare` are special-cased just above).
-- Integer → enum, [`skill_from_raw`](../rust-doomgeneric/engine/src/d_mode.rs#L10): `-1 → Noitems`, `0..=4 →` the levels, anything else panics. Callers: [p_saveg.rs:740](../rust-doomgeneric/engine/src/p_saveg.rs#L740), [g_game.rs:1695](../rust-doomgeneric/engine/src/g_game.rs#L1695), [d_main.rs:968](../rust-doomgeneric/engine/src/d_main.rs#L968), [d_net.rs:63](../rust-doomgeneric/engine/src/d_net.rs#L63), [m_menu.rs:994](../rust-doomgeneric/engine/src/m_menu.rs#L994), [m_menu.rs:1012](../rust-doomgeneric/engine/src/m_menu.rs#L1012).
-
-**Could it go?** Only by making "no skill" an `Option<SkillType>` and spelling `Baby = 0` instead. The `-1` is the smaller change.
+- Integer → enum, [`skill_from_raw`](../rust-doomgeneric/engine/src/d_mode.rs#L30) (panics on an invalid value; a thin wrapper over `SkillType::from_raw`). Callers: [p_saveg.rs:740](../rust-doomgeneric/engine/src/p_saveg.rs#L740), [g_game.rs:1695](../rust-doomgeneric/engine/src/g_game.rs#L1695), [d_net.rs:63](../rust-doomgeneric/engine/src/d_net.rs#L63), [m_menu.rs:994](../rust-doomgeneric/engine/src/m_menu.rs#L994), [m_menu.rs:1012](../rust-doomgeneric/engine/src/m_menu.rs#L1012).
+- The `-skill` argument uses `SkillType::from_raw` directly: [d_main.rs:975](../rust-doomgeneric/engine/src/d_main.rs#L975).
 
 ## `AmmoType` — `Noammo = 5` ([d_player.rs:14](../rust-doomgeneric/engine/src/d_player.rs#L14))
 
@@ -72,11 +73,11 @@ Removing the `= n` did not remove the dependence where the value is cast: these 
 | `PSpriteNum` | [d_player.rs:34](../rust-doomgeneric/engine/src/d_player.rs#L34) | 18 | [p_pspr.rs:115](../rust-doomgeneric/engine/src/p_pspr.rs#L115), [p_pspr.rs:117](../rust-doomgeneric/engine/src/p_pspr.rs#L117), [p_pspr.rs:175](../rust-doomgeneric/engine/src/p_pspr.rs#L175) … |
 | `DirType` | [p_enemy.rs:103](../rust-doomgeneric/engine/src/p_enemy.rs#L103) | 16 | [p_enemy.rs:288](../rust-doomgeneric/engine/src/p_enemy.rs#L288), [p_enemy.rs:331](../rust-doomgeneric/engine/src/p_enemy.rs#L331), [p_enemy.rs:367](../rust-doomgeneric/engine/src/p_enemy.rs#L367) … |
 | `SpriteNum` | [p_mobj.rs:102](../rust-doomgeneric/engine/src/p_mobj.rs#L102) | 12 | [f_finale.rs:719](../rust-doomgeneric/engine/src/f_finale.rs#L719), [p_inter.rs:267](../rust-doomgeneric/engine/src/p_inter.rs#L267), [p_saveg.rs:284](../rust-doomgeneric/engine/src/p_saveg.rs#L284) … |
-| `GameMission` | [d_mode.rs:22](../rust-doomgeneric/engine/src/d_mode.rs#L22) | 10 | [d_iwad.rs:165](../rust-doomgeneric/engine/src/d_iwad.rs#L165), [d_iwad.rs:181](../rust-doomgeneric/engine/src/d_iwad.rs#L181), [d_main.rs:827](../rust-doomgeneric/engine/src/d_main.rs#L827) … |
+| `GameMission` | [d_mode.rs:34](../rust-doomgeneric/engine/src/d_mode.rs#L34) | 10 | [d_iwad.rs:165](../rust-doomgeneric/engine/src/d_iwad.rs#L165), [d_iwad.rs:181](../rust-doomgeneric/engine/src/d_iwad.rs#L181), [d_main.rs:827](../rust-doomgeneric/engine/src/d_main.rs#L827) … |
 | `MapLump` | [p_setup.rs:233](../rust-doomgeneric/engine/src/p_setup.rs#L233) | 10 | [p_setup.rs:734](../rust-doomgeneric/engine/src/p_setup.rs#L734), [p_setup.rs:736](../rust-doomgeneric/engine/src/p_setup.rs#L736), [p_setup.rs:737](../rust-doomgeneric/engine/src/p_setup.rs#L737) … |
 | `SpecialThinkerClass` | [p_saveg.rs:94](../rust-doomgeneric/engine/src/p_saveg.rs#L94) | 9 | [p_saveg.rs:1029](../rust-doomgeneric/engine/src/p_saveg.rs#L1029), [p_saveg.rs:1040](../rust-doomgeneric/engine/src/p_saveg.rs#L1040), [p_saveg.rs:1048](../rust-doomgeneric/engine/src/p_saveg.rs#L1048) … |
 | `PowerType` | [d_player.rs:43](../rust-doomgeneric/engine/src/d_player.rs#L43) | 6 | [am_map.rs:1149](../rust-doomgeneric/engine/src/am_map.rs#L1149), [d_player.rs:66](../rust-doomgeneric/engine/src/d_player.rs#L66), [st_stuff.rs:571](../rust-doomgeneric/engine/src/st_stuff.rs#L571) … |
-| `GameVersion` | [d_mode.rs:55](../rust-doomgeneric/engine/src/d_mode.rs#L55) | 4 | [d_main.rs:729](../rust-doomgeneric/engine/src/d_main.rs#L729), [d_net.rs:86](../rust-doomgeneric/engine/src/d_net.rs#L86), [g_game.rs:1617](../rust-doomgeneric/engine/src/g_game.rs#L1617) … |
+| `GameVersion` | [d_mode.rs:67](../rust-doomgeneric/engine/src/d_mode.rs#L67) | 4 | [d_main.rs:729](../rust-doomgeneric/engine/src/d_main.rs#L729), [d_net.rs:86](../rust-doomgeneric/engine/src/d_net.rs#L86), [g_game.rs:1617](../rust-doomgeneric/engine/src/g_game.rs#L1617) … |
 | `OptionsMenu` | [m_menu.rs:584](../rust-doomgeneric/engine/src/m_menu.rs#L584) | 4 | [m_menu.rs:1059](../rust-doomgeneric/engine/src/m_menu.rs#L1059), [m_menu.rs:1072](../rust-doomgeneric/engine/src/m_menu.rs#L1072), [m_menu.rs:1078](../rust-doomgeneric/engine/src/m_menu.rs#L1078) … |
 | `SfxName` | [sounds.rs:95](../rust-doomgeneric/engine/src/sounds.rs#L95) | 4 | [s_sound.rs:299](../rust-doomgeneric/engine/src/s_sound.rs#L299), [s_sound.rs:346](../rust-doomgeneric/engine/src/s_sound.rs#L346), [s_sound.rs:357](../rust-doomgeneric/engine/src/s_sound.rs#L357) … |
 | `SndDevice` | [i_sound.rs:25](../rust-doomgeneric/engine/src/i_sound.rs#L25) | 4 | [i_sound.rs:81](../rust-doomgeneric/engine/src/i_sound.rs#L81), [i_sound.rs:82](../rust-doomgeneric/engine/src/i_sound.rs#L82), [s_sound.rs:456](../rust-doomgeneric/engine/src/s_sound.rs#L456) … |
@@ -92,7 +93,7 @@ Removing the `= n` did not remove the dependence where the value is cast: these 
 | `CeilingE` | [p_ceilng.rs:29](../rust-doomgeneric/engine/src/p_ceilng.rs#L29) | 1 | [p_saveg.rs:493](../rust-doomgeneric/engine/src/p_saveg.rs#L493) |
 | `EpisodeMenu` | [m_menu.rs:606](../rust-doomgeneric/engine/src/m_menu.rs#L606) | 1 | [m_menu.rs:170](../rust-doomgeneric/engine/src/m_menu.rs#L170) |
 | `FloorE` | [p_floor.rs:36](../rust-doomgeneric/engine/src/p_floor.rs#L36) | 1 | [p_saveg.rs:569](../rust-doomgeneric/engine/src/p_saveg.rs#L569) |
-| `GameMode` | [d_mode.rs:46](../rust-doomgeneric/engine/src/d_mode.rs#L46) | 1 | [d_net.rs:105](../rust-doomgeneric/engine/src/d_net.rs#L105) |
+| `GameMode` | [d_mode.rs:58](../rust-doomgeneric/engine/src/d_mode.rs#L58) | 1 | [d_net.rs:105](../rust-doomgeneric/engine/src/d_net.rs#L105) |
 | `PlattypeE` | [p_plats.rs:41](../rust-doomgeneric/engine/src/p_plats.rs#L41) | 1 | [p_saveg.rs:624](../rust-doomgeneric/engine/src/p_saveg.rs#L624) |
 | `PlayerState` | [d_player.rs:153](../rust-doomgeneric/engine/src/d_player.rs#L153) | 1 | [p_saveg.rs:418](../rust-doomgeneric/engine/src/p_saveg.rs#L418) |
 | `SlopeType` | [p_mobj.rs:2786](../rust-doomgeneric/engine/src/p_mobj.rs#L2786) | 1 | [p_maputl.rs:241](../rust-doomgeneric/engine/src/p_maputl.rs#L241) |
