@@ -23,11 +23,11 @@ use crate::i_system::ISystemState;
 use crate::i_timer::ITimerState;
 use crate::i_video::IVideoState;
 use crate::info::InfoState;
-use crate::m_argv::MArgvState;
 use crate::m_config::MConfigState;
 use crate::m_controls::MControlsState;
 use crate::m_menu::MMenuState;
 use crate::m_random::MRandomState;
+use crate::options::Options;
 use crate::p_ceilng::PCeilngState;
 use crate::p_doors::PDoorsState;
 use crate::p_enemy::PEnemyState;
@@ -208,7 +208,7 @@ pub struct Game {
     pub d_loop: DLoopState,
     pub d_event: DEventState,
     pub d_iwad: DIwadState,
-    pub m_argv: MArgvState,
+    pub options: Options,
     pub m_config: MConfigState,
     pub m_controls: MControlsState,
 }
@@ -222,7 +222,7 @@ impl Game {
             d_loop: DLoopState::new(),
             d_event: DEventState::new(),
             d_iwad: DIwadState::new(),
-            m_argv: MArgvState::new(),
+            options: Options::default(),
             m_config: MConfigState::new(),
             m_controls: MControlsState::new(),
         }

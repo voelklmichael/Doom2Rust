@@ -1143,7 +1143,10 @@ impl DoomPlatform for X11Platform {
 
 pub fn main() {
     let state = init_game_state(Box::new(X11Platform::new()), Box::new(StdFileSystem::new()));
-    doomgeneric_create(state, ::std::env::args().collect());
+    doomgeneric_create(
+        state,
+        ::doomgeneric_cmdline::parse(&::std::env::args().collect::<Vec<_>>()),
+    );
     loop {
         doomgeneric_tick(state);
     }

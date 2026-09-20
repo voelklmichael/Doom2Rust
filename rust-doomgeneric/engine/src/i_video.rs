@@ -7,9 +7,8 @@ use crate::doomgeneric::DOOMGENERIC_RESY;
 use crate::i_input::get_event;
 use crate::i_input::IInputState;
 use crate::i_system::error;
-use crate::m_argv::MArgvState;
-use crate::m_argv::{argv_atoi, check_parm_with_args};
 use crate::m_fixed::INT_MAX;
+use crate::options::Options;
 use crate::platform::DoomPlatform;
 use crate::tables::GAMMATABLE;
 use alloc::vec::Vec;
@@ -136,7 +135,7 @@ pub struct Column {
 static RGB565_PALETTE: [u16; 256] = [0; 256];
 pub fn init_graphics(
     i_video: &mut IVideoState,
-    m_argv: &MArgvState,
+    options: &Options,
     platform: &mut dyn DoomPlatform,
 ) {
     i_video.s_fb = FBScreenInfo::ZERO;
@@ -144,10 +143,7 @@ pub fn init_graphics(
     i_video.s_fb.yres = DOOMGENERIC_RESY as u32;
     i_video.s_fb.xres_virtual = i_video.s_fb.xres;
     i_video.s_fb.yres_virtual = i_video.s_fb.yres;
-    let mode: &str = match check_parm_with_args(m_argv, "-gfxmode", 1) {
-        Some(p) => m_argv.myargv[p + 1].as_str(),
-        None => "rgba8888",
-    };
+    let mode: &str = options.gfxmode.as_deref().unwrap_or("rgba8888");
     if mode == "rgba8888" {
         i_video.s_fb.bits_per_pixel = 32_u32;
         i_video.s_fb.blue.length = 8_u32;
@@ -197,8 +193,8 @@ pub fn init_graphics(
         SCREENWIDTH,
         SCREENHEIGHT,
     );
-    if let Some(i) = check_parm_with_args(m_argv, "-scaling", 1) {
-        i_video.fb_scaling = argv_atoi(&m_argv.myargv[i + 1]);
+    if let Some(scaling) = options.scaling {
+        i_video.fb_scaling = scaling;
         doom_println!(
             platform,
             "I_InitGraphics: Scaling factor: {}",

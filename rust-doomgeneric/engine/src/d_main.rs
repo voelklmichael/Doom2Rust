@@ -54,7 +54,6 @@ use crate::i_video::i_set_window_title;
 use crate::i_video::init_graphics;
 use crate::i_video::set_grab_mouse_callback;
 use crate::i_video::set_palette;
-use crate::m_argv::{argv_atoi, check_parm, check_parm_with_args, parm_exists};
 use crate::m_config::bind_variable_int;
 use crate::m_config::bind_variable_string;
 use crate::m_config::get_save_game_dir;
@@ -92,7 +91,6 @@ use crate::v_video::cache_patch_name;
 use crate::v_video::Screen;
 use crate::w_wad::WWadState;
 use alloc::string::String;
-use alloc::string::ToString;
 
 use crate::v_video::draw_mouse_speed_box;
 use crate::v_video::draw_patch;
@@ -176,47 +174,47 @@ impl DMainState {
             gameversions: [
                 GameVersionInfo {
                     description: "Doom 1.666",
-                    cmdline: "1.666",
+                    options: "1.666",
                     version: GameVersion::Doom1666,
                 },
                 GameVersionInfo {
                     description: "Doom 1.7/1.7a",
-                    cmdline: "1.7",
+                    options: "1.7",
                     version: GameVersion::Doom17,
                 },
                 GameVersionInfo {
                     description: "Doom 1.8",
-                    cmdline: "1.8",
+                    options: "1.8",
                     version: GameVersion::Doom18,
                 },
                 GameVersionInfo {
                     description: "Doom 1.9",
-                    cmdline: "1.9",
+                    options: "1.9",
                     version: GameVersion::Doom19,
                 },
                 GameVersionInfo {
                     description: "Hacx",
-                    cmdline: "hacx",
+                    options: "hacx",
                     version: GameVersion::Hacx,
                 },
                 GameVersionInfo {
                     description: "Ultimate Doom",
-                    cmdline: "ultimate",
+                    options: "ultimate",
                     version: GameVersion::Ultimate,
                 },
                 GameVersionInfo {
                     description: "Final Doom",
-                    cmdline: "final",
+                    options: "final",
                     version: GameVersion::Final,
                 },
                 GameVersionInfo {
                     description: "Final Doom (alt)",
-                    cmdline: "final2",
+                    options: "final2",
                     version: GameVersion::Final2,
                 },
                 GameVersionInfo {
                     description: "Chex Quest",
-                    cmdline: "chex",
+                    options: "chex",
                     version: GameVersion::Chex,
                 },
             ],
@@ -232,7 +230,7 @@ pub struct MissionPack {
 #[derive(Copy, Clone)]
 pub struct GameVersionInfo {
     pub description: &'static str,
-    pub cmdline: &'static str,
+    pub options: &'static str,
     pub version: GameVersion,
 }
 pub const PACKAGE_STRING: FixedCStr<17> = FixedCStr(*b"Doom Generic 0.1\0");
@@ -468,7 +466,7 @@ pub fn doom_loop(state: &mut GameState) {
     set_grab_mouse_callback();
     init_graphics(
         &mut state.io.i_video,
-        &state.game.m_argv,
+        &state.game.options,
         &mut *state.io.platform,
     );
     execute_set_view_size(&mut state.render);
@@ -636,8 +634,7 @@ pub fn identify_version(state: &mut GameState) {
         }
     } else {
         state.game.doomstat.gamemode = GameMode::Commercial;
-        if let Some(p) = check_parm_with_args(&state.game.m_argv, "-pack", 1) {
-            let pack_name = state.game.m_argv.myargv[p + 1].as_str().to_string();
+        if let Some(pack_name) = state.game.options.pack.clone() {
             set_mission_for_pack_name(
                 &mut state.game.doomstat,
                 &mut *state.io.platform,
@@ -684,25 +681,22 @@ fn d_add_file(
     w_add_file(&mut *fs, &mut *platform, w_wad, filename).is_some()
 }
 fn init_game_version(state: &mut GameState) {
-    if let Some(p) = check_parm_with_args(&state.game.m_argv, "-gameversion", 1) {
-        let arg = state.game.m_argv.myargv[p + 1].as_bytes();
+    if let Some(name) = state.game.options.gameversion.clone() {
+        let arg = name.as_bytes();
         let found = state
             .game
             .d_main
             .gameversions
             .iter()
-            .find(|gv| gv.cmdline.as_bytes() == arg);
+            .find(|gv| gv.options.as_bytes() == arg);
         if let Some(gv) = found {
             state.game.doomstat.gameversion = gv.version;
         } else {
             doom_println!(state.io.platform, "Supported game versions:");
             for gv in &state.game.d_main.gameversions {
-                doom_println!(state.io.platform, "\t{} ({})", gv.cmdline, gv.description);
+                doom_println!(state.io.platform, "\t{} ({})", gv.options, gv.description);
             }
-            error(&format!(
-                "Unknown game version '{}'",
-                state.game.m_argv.myargv[p + 1].as_str(),
-            ));
+            error(&format!("Unknown game version '{name}'"));
         }
     } else if state.game.doomstat.gamemission == GameMission::PackChex {
         state.game.doomstat.gameversion = GameVersion::Chex;
@@ -755,7 +749,7 @@ fn endoom(state: &mut GameState) {
     if state.game.d_main.show_endoom == 0
         || !state.game.d_main.main_loop_started
         || state.io.i_video.screensaver_mode
-        || parm_exists(&state.game.m_argv, "-testcontrols")
+        || state.game.options.testcontrols
     {
         return;
     }
@@ -772,14 +766,14 @@ pub fn doom_main(state: &mut GameState) {
         false,
     );
     print_banner(&mut *state.io.platform, &PACKAGE_STRING.as_str());
-    state.game.d_main.nomonsters = parm_exists(&state.game.m_argv, "-nomonsters");
-    state.game.d_main.respawnparm = parm_exists(&state.game.m_argv, "-respawn");
-    state.game.d_main.fastparm = parm_exists(&state.game.m_argv, "-fast");
-    state.game.d_main.devparm = parm_exists(&state.game.m_argv, "-devparm");
-    if parm_exists(&state.game.m_argv, "-deathmatch") {
+    state.game.d_main.nomonsters = state.game.options.nomonsters;
+    state.game.d_main.respawnparm = state.game.options.respawn;
+    state.game.d_main.fastparm = state.game.options.fast;
+    state.game.d_main.devparm = state.game.options.devparm;
+    if state.game.options.deathmatch {
         state.game.g_game.deathmatch = 1;
     }
-    if parm_exists(&state.game.m_argv, "-altdeath") {
+    if state.game.options.altdeath {
         state.game.g_game.deathmatch = 2;
     }
     if state.game.d_main.devparm {
@@ -791,12 +785,8 @@ pub fn doom_main(state: &mut GameState) {
         &mut *state.io.platform,
         None,
     );
-    if let Some(p) = check_parm(&state.game.m_argv, "-turbo") {
-        let mut scale: i32 = 200;
-        if let Some(arg) = state.game.m_argv.myargv.get(p + 1) {
-            scale = argv_atoi(arg);
-        }
-        scale = scale.clamp(10, 400);
+    if let Some(percent) = state.game.options.turbo {
+        let scale: i32 = percent.unwrap_or(200).clamp(10, 400);
         doom_println!(state.io.platform, "turbo scale: {}%", scale);
         state.game.g_game.forwardmove[0] = state.game.g_game.forwardmove[0] * scale / 100;
         state.game.g_game.forwardmove[1] = state.game.g_game.forwardmove[1] * scale / 100;
@@ -812,7 +802,7 @@ pub fn doom_main(state: &mut GameState) {
     );
     bind_variables(&mut state.game.m_config, &mut state.game.m_controls);
     load_defaults(
-        &state.game.m_argv,
+        &state.game.options,
         &mut state.game.m_config,
         &mut *state.io.platform,
     );
@@ -859,12 +849,15 @@ pub fn doom_main(state: &mut GameState) {
     }
     let modifiedgame = parse_command_line(state);
     state.game.doomstat.modifiedgame = modifiedgame;
-    let demo_parm = check_parm_with_args(&state.game.m_argv, "-playdemo", 1)
-        .or_else(|| check_parm_with_args(&state.game.m_argv, "-timedemo", 1));
-    if let Some(p) = demo_parm {
-        let arg = state.game.m_argv.myargv[p + 1].as_str();
-        let file: String = if string_ends_with(arg, ".lmp") {
-            arg.to_string()
+    let demo_arg = state
+        .game
+        .options
+        .playdemo
+        .clone()
+        .or_else(|| state.game.options.timedemo.clone());
+    if let Some(arg) = demo_arg {
+        let file: String = if string_ends_with(&arg, ".lmp") {
+            arg.clone()
         } else {
             format!("{arg}.lmp")
         };
@@ -878,8 +871,7 @@ pub fn doom_main(state: &mut GameState) {
                 [state.assets.w_wad.numlumps.wrapping_sub(1) as usize]
                 .name;
         } else {
-            let src_bytes = state.game.m_argv.myargv[p + 1].as_bytes();
-            demolumpname = FixedCStr::from_bytes(src_bytes);
+            demolumpname = FixedCStr::from_bytes(arg.as_bytes());
         }
         doom_println!(state.io.platform, "Playing demo {}.", file);
     }
@@ -954,7 +946,7 @@ pub fn doom_main(state: &mut GameState) {
     init_sound(
         &mut state.audio.i_sound,
         &state.io.i_video,
-        &state.game.m_argv,
+        &state.game.options,
         &mut *state.io.platform,
         true,
     );
@@ -964,77 +956,43 @@ pub fn doom_main(state: &mut GameState) {
     state.game.d_main.startepisode = 1;
     state.game.d_main.startmap = 1;
     state.game.d_main.autostart = false;
-    if let Some(p) = check_parm_with_args(&state.game.m_argv, "-skill", 1) {
-        let level = i32::from(
-            state.game.m_argv.myargv[p + 1]
-                .as_bytes()
-                .first()
-                .copied()
-                .unwrap_or(0),
-        ) - '1' as i32;
-        let Some(skill) = SkillType::from_raw(level) else {
+    if let Some(level) = state.game.options.skill {
+        let Some(skill) = SkillType::from_raw(level - 1) else {
             error(&format!(
-                "-skill {}: there is no such skill level (1 to 5)",
-                state.game.m_argv.myargv[p + 1]
+                "-skill {level}: there is no such skill level (1 to 5)"
             ));
         };
         state.game.d_main.startskill = skill;
         state.game.d_main.autostart = true;
     }
-    if let Some(p) = check_parm_with_args(&state.game.m_argv, "-episode", 1) {
-        state.game.d_main.startepisode = i32::from(
-            state.game.m_argv.myargv[p + 1]
-                .as_bytes()
-                .first()
-                .copied()
-                .unwrap_or(0),
-        ) - '0' as i32;
+    if let Some(episode) = state.game.options.episode {
+        state.game.d_main.startepisode = episode;
         state.game.d_main.startmap = 1;
         state.game.d_main.autostart = true;
     }
     state.game.g_game.timelimit = 0;
-    if let Some(p) = check_parm_with_args(&state.game.m_argv, "-timer", 1) {
-        state.game.g_game.timelimit = argv_atoi(&state.game.m_argv.myargv[p + 1]);
+    if let Some(minutes) = state.game.options.timer {
+        state.game.g_game.timelimit = minutes;
     }
-    if let Some(_p) = check_parm(&state.game.m_argv, "-avg") {
+    if state.game.options.avg {
         state.game.g_game.timelimit = 20;
     }
-    if let Some(p) = check_parm_with_args(&state.game.m_argv, "-warp", 1) {
+    if let Some(warp) = state.game.options.warp {
         if state.game.doomstat.gamemode == GameMode::Commercial {
-            state.game.d_main.startmap = argv_atoi(&state.game.m_argv.myargv[p + 1]);
+            state.game.d_main.startmap = warp.map_number;
         } else {
-            state.game.d_main.startepisode = i32::from(
-                state.game.m_argv.myargv[p + 1]
-                    .as_bytes()
-                    .first()
-                    .copied()
-                    .unwrap_or(0),
-            ) - '0' as i32;
-            if p + 2 < state.game.m_argv.myargv.len() {
-                state.game.d_main.startmap = i32::from(
-                    state.game.m_argv.myargv[p + 2]
-                        .as_bytes()
-                        .first()
-                        .copied()
-                        .unwrap_or(0),
-                ) - '0' as i32;
-            } else {
-                state.game.d_main.startmap = 1;
-            }
+            state.game.d_main.startepisode = warp.episode;
+            state.game.d_main.startmap = warp.episode_map;
         }
         state.game.d_main.autostart = true;
     }
-    if let Some(_p) = check_parm(&state.game.m_argv, "-testcontrols") {
+    if state.game.options.testcontrols {
         state.game.d_main.startepisode = 1;
         state.game.d_main.startmap = 1;
         state.game.d_main.autostart = true;
         state.game.g_game.testcontrols = true;
     }
-    if let Some(p) = check_parm_with_args(&state.game.m_argv, "-loadgame", 1) {
-        state.game.d_main.startloadgame = argv_atoi(&state.game.m_argv.myargv[p + 1]);
-    } else {
-        state.game.d_main.startloadgame = -1;
-    }
+    state.game.d_main.startloadgame = state.game.options.loadgame.unwrap_or(-1);
     doom_println!(state.io.platform, "M_Init: Init miscellaneous info.");
     m_init(&state.game.doomstat, &mut state.ui.m_menu);
     doom_print!(state.io.platform, "R_Init: Init DOOM refresh daemon - ");
@@ -1071,7 +1029,7 @@ pub fn doom_main(state: &mut GameState) {
     {
         state.game.d_main.storedemo = true;
     }
-    if check_parm_with_args(&state.game.m_argv, "-statdump", 1).is_some() {
+    if state.game.options.statdump_file.is_some() {
         at_exit(
             &mut state.io.i_system,
             Some(stat_dump as fn(&mut GameState) -> ()),
@@ -1079,22 +1037,21 @@ pub fn doom_main(state: &mut GameState) {
         );
         doom_println!(state.io.platform, "External statistics registered.");
     }
-    if let Some(p) = check_parm_with_args(&state.game.m_argv, "-record", 1) {
-        let record_name = state.game.m_argv.myargv[p + 1].as_str().to_string();
-        record_demo(&mut state.game.g_game, &state.game.m_argv, &record_name);
+    if let Some(record_name) = state.game.options.record_file.clone() {
+        record_demo(&mut state.game.g_game, &state.game.options, &record_name);
         state.game.d_main.autostart = true;
     }
-    if let Some(_p) = check_parm_with_args(&state.game.m_argv, "-playdemo", 1) {
+    if state.game.options.playdemo.is_some() {
         state.game.g_game.singledemo = true;
         defered_play_demo(&mut state.game.g_game, demolumpname);
         doom_loop(state);
         return;
     }
-    if let Some(_p) = check_parm_with_args(&state.game.m_argv, "-timedemo", 1) {
+    if state.game.options.timedemo.is_some() {
         time_demo(
             &mut state.game.d_loop,
             &mut state.game.g_game,
-            &state.game.m_argv,
+            &state.game.options,
             demolumpname,
         );
         doom_loop(state);

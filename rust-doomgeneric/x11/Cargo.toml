@@ -13,3 +13,4 @@ path = "src/main.rs"
 libc = "0.2"
 doomgeneric_fs = { path = "../fs" }
 rust_doomgeneric = { path = "../engine" }
+doomgeneric_cmdline = { path = "../cmdline" }

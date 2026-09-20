@@ -7,8 +7,6 @@ use crate::g_game::death_match_spawn_player;
 use crate::game_state::GameState;
 use crate::i_system::get_memory_value;
 use crate::i_system::ISystemState;
-use crate::m_argv::parm_exists;
-use crate::m_argv::MArgvState;
 use crate::m_bbox::add_to_box;
 use crate::m_bbox::clear_box;
 use crate::m_bbox::BBox;
@@ -17,6 +15,7 @@ use crate::m_fixed::fixed_div;
 use crate::m_fixed::Fixed;
 use crate::m_fixed::FRACBITS;
 use crate::m_fixed::FRACUNIT;
+use crate::options::Options;
 use crate::p_maputl::MAPBLOCKSHIFT;
 use crate::p_mobj::spawn_map_thing;
 use crate::p_mobj::LineFlags;
@@ -298,15 +297,15 @@ pub fn load_vertexes(state: &mut GameState, lump: i32) {
 }
 pub fn get_sector_at_null_address(
     i_system: &mut ISystemState,
-    m_argv: &MArgvState,
+    options: &Options,
     p_setup: &mut PSetupState,
 ) -> SectorId {
     if p_setup.null_sector_id.is_none() {
         let mut sentinel = ZERO_SECTOR;
-        if let Some(value) = get_memory_value(i_system, m_argv, 0, 4) {
+        if let Some(value) = get_memory_value(i_system, options, 0, 4) {
             sentinel.floorheight = value as i32;
         }
-        if let Some(value) = get_memory_value(i_system, m_argv, 4, 4) {
+        if let Some(value) = get_memory_value(i_system, options, 4, 4) {
             sentinel.ceilingheight = value as i32;
         }
         let id = SectorId(p_setup.sectors.len() as u32);
@@ -336,7 +335,7 @@ pub fn load_segs(state: &mut GameState, lump: i32) {
             if sidenum < 0 || sidenum >= state.world.p_setup.numsides {
                 Some(get_sector_at_null_address(
                     &mut state.io.i_system,
-                    &state.game.m_argv,
+                    &state.game.options,
                     &mut state.world.p_setup,
                 ))
             } else {
@@ -638,7 +637,7 @@ pub fn group_lines(p_setup: &mut PSetupState) {
     }
 }
 fn pad_reject_array(
-    m_argv: &MArgvState,
+    options: &Options,
     p_setup: &mut PSetupState,
     platform: &mut dyn DoomPlatform,
     offset: usize,
@@ -659,7 +658,7 @@ fn pad_reject_array(
             len,
             pad_bytes as i32,
         );
-        padvalue = if parm_exists(m_argv, "-reject_pad_with_ff") {
+        padvalue = if options.reject_pad_with_ff {
             0xff
         } else {
             // Upstream writes 0xf00 into a byte, which truncates to zero.
@@ -690,7 +689,7 @@ fn load_reject(state: &mut GameState, lumpnum: i32) {
             &mut state.world.p_setup.rejectmatrix,
         );
         pad_reject_array(
-            &state.game.m_argv,
+            &state.game.options,
             &mut state.world.p_setup,
             &mut *state.io.platform,
             lumplen as usize,

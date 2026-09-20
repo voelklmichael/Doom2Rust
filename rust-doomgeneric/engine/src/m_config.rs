@@ -1,8 +1,7 @@
 use crate::filesystem::DoomFileSystem;
 use crate::game_state::GameState;
 use crate::i_system::error;
-use crate::m_argv::check_parm_with_args;
-use crate::m_argv::MArgvState;
+use crate::options::Options;
 use crate::platform::DoomPlatform;
 use alloc::rc::Rc;
 use alloc::string::String;
@@ -1267,12 +1266,12 @@ pub fn set_config_filenames(
 }
 pub fn save_defaults(_state: &mut GameState) {}
 pub fn load_defaults(
-    m_argv: &MArgvState,
+    options: &Options,
     m_config: &mut MConfigState,
     platform: &mut dyn DoomPlatform,
 ) {
-    if let Some(i) = check_parm_with_args(m_argv, "-config", 1) {
-        m_config.doom_defaults.filename = m_argv.myargv[i + 1].as_str().to_string();
+    if let Some(file) = &options.config {
+        m_config.doom_defaults.filename = file.clone();
         doom_println!(
             platform,
             "\tdefault file: {}",
@@ -1287,8 +1286,8 @@ pub fn load_defaults(
         "saving config in {}",
         m_config.doom_defaults.filename
     );
-    if let Some(i) = check_parm_with_args(m_argv, "-extraconfig", 1) {
-        m_config.extra_defaults.filename = m_argv.myargv[i + 1].as_str().to_string();
+    if let Some(file) = &options.extraconfig {
+        m_config.extra_defaults.filename = file.clone();
         doom_println!(
             platform,
             "        extra configuration file: {}",
