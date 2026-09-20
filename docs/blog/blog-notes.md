@@ -181,13 +181,14 @@ PR "tracks" (about 25 named ones in my notes).
 
 ## 6. Failed previous attempts
 
-Three approaches were tried and dropped before the one that worked.
+Four approaches were tried and dropped before the one that worked.
 
 | When | Approach | Outcome |
 |---|---|---|
 | January to April | Ask an AI to translate the C codebase to Rust directly. No c2rust, no transpiler | Worked for small, independent files; **failed completely** on the codebase as a whole |
 | Aug 14 to 18 (v3) | Own C parser for `linuxdoom-1.10` | Parser only; function bodies were opaque. ~9 to 15 h, 103 commits |
 | Aug 18 to Sep 5 (v4) | Own type checker + Rust code generator, function by function | 168 of 210 gameplay function bodies translated, no running game. ~41 h, 295 commits |
+| Date not recorded | Cross-compile the C codebase to a microcontroller, driven through Rust | **Failed**: the C code did not cross-compile to the microcontroller |
 
 I have no records of the January to April attempts (the earliest session transcript on this
 machine is from Aug 20), so everything about them here is what you told me. `~/rust_ideas/`
@@ -196,6 +197,11 @@ dated Feb 12; they may be from that period, but I cannot tell.
 
 *To fill in before publishing: which model and tool were used, how many files were tried, and
 what specifically broke.*
+
+*To fill in for the cross-compilation attempt: when it was tried, which microcontroller and
+toolchain (which Rust target, and whether the C was built through the `cc` crate or another
+route), and what specifically failed. No records of it exist in the repository or the session
+transcripts, so the table row only repeats what you told me.*
 
 ### Why direct translation probably failed (my inference, not from records)
 
