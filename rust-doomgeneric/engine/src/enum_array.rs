@@ -10,7 +10,6 @@ use core::ops::{Index, IndexMut};
 /// A type that names a slot of an [`EnumArray`].
 pub trait ArrayIndex: Copy {
     /// The array position this value stands for.
-    #[inline(always)]
     fn slot(self) -> usize;
 }
 

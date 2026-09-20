@@ -50,6 +50,7 @@ pub enum CardType {
     Redskull = 5,
 }
 impl ArrayIndex for CardType {
+    #[inline(always)]
     fn slot(self) -> usize {
         self as usize
     }

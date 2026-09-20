@@ -14,6 +14,7 @@ pub enum AmmoType {
     Noammo = 5,
 }
 impl ArrayIndex for AmmoType {
+    #[inline(always)]
     fn slot(self) -> usize {
         self as usize
     }
@@ -60,6 +61,7 @@ impl PowerType {
 }
 
 impl ArrayIndex for PowerType {
+    #[inline(always)]
     fn slot(self) -> usize {
         self as usize
     }
@@ -80,6 +82,7 @@ pub enum WeaponType {
     Nochange = 10,
 }
 impl ArrayIndex for WeaponType {
+    #[inline(always)]
     fn slot(self) -> usize {
         self as usize
     }
@@ -140,6 +143,7 @@ impl PlayerId {
 pub type PerPlayer<T> = EnumArray<PlayerId, T, 4>;
 
 impl ArrayIndex for PlayerId {
+    #[inline(always)]
     fn slot(self) -> usize {
         usize::from(self.0)
     }

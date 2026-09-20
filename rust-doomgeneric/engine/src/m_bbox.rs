@@ -13,6 +13,7 @@ pub enum BoxIndex {
 pub type BBox = EnumArray<BoxIndex, Fixed, 4>;
 
 impl ArrayIndex for BoxIndex {
+    #[inline(always)]
     fn slot(self) -> usize {
         self as usize
     }
