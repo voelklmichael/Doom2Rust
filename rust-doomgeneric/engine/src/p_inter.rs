@@ -799,7 +799,7 @@ pub fn damage_mobj(
             .p_setup
             .sector_mut(state.world.p_setup.subsectors[target_subsector.0 as usize].sector)
             .special;
-        if sector_special as i32 == 11 && damage >= target_health {
+        if i32::from(sector_special) == 11 && damage >= target_health {
             damage = target_health - 1;
         }
         let player = state.game.g_game.player_mut(player_id);

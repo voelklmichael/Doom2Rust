@@ -84,12 +84,12 @@ fn save_game_settings(game: &Game, settings: &mut NetGameSettings) {
     settings.skill = game.d_main.startskill as i32;
     settings.loadgame = game.d_main.startloadgame;
     settings.gameversion = game.doomstat.gameversion as i32;
-    settings.nomonsters = game.d_main.nomonsters as i32;
-    settings.fast_monsters = game.d_main.fastparm as i32;
-    settings.respawn_monsters = game.d_main.respawnparm as i32;
+    settings.nomonsters = i32::from(game.d_main.nomonsters);
+    settings.fast_monsters = i32::from(game.d_main.fastparm);
+    settings.respawn_monsters = i32::from(game.d_main.respawnparm);
     settings.timelimit = game.g_game.timelimit;
     settings.lowres_turn =
-        (parm_exists(&game.m_argv, "-record") && !parm_exists(&game.m_argv, "-longtics")) as i32;
+        i32::from(parm_exists(&game.m_argv, "-record") && !parm_exists(&game.m_argv, "-longtics"));
 }
 fn init_connect_data(state: &mut GameState, connect_data: &mut NetConnectData) {
     connect_data.max_players = MAXPLAYERS;
@@ -104,8 +104,9 @@ fn init_connect_data(state: &mut GameState, connect_data: &mut NetConnectData) {
     }
     connect_data.gamemode = state.game.doomstat.gamemode as i32;
     connect_data.gamemission = state.game.doomstat.gamemission as i32;
-    connect_data.lowres_turn = (parm_exists(&state.game.m_argv, "-record")
-        && !parm_exists(&state.game.m_argv, "-longtics")) as i32;
+    connect_data.lowres_turn = i32::from(
+        parm_exists(&state.game.m_argv, "-record") && !parm_exists(&state.game.m_argv, "-longtics"),
+    );
     connect_data.wad_sha1sum = checksum(&mut state.assets.w_checksum, &state.assets.w_wad);
     connect_data.is_freedoom = check_num_for_name(&state.assets.w_wad, "FREEDOOM").is_some();
 }

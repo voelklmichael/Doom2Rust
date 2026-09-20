@@ -463,19 +463,22 @@ pub fn hu_ticker(state: &mut GameState) {
                 && i != state.game.g_game.consoleplayer.as_i32()
                 && {
                     c = state.game.g_game.players[i as usize].cmd.chatchar;
-                    c as i32 != 0
+                    i32::from(c) != 0
                 }
             {
-                if c as i32 <= HU_BROADCAST {
+                if i32::from(c) <= HU_BROADCAST {
                     state.ui.hu_stuff.chat_dest[i as usize] = c;
                 } else {
-                    rc = hulib_key_in_itext(&mut state.ui.hu_stuff.w_inputbuffer[i as usize], c)
-                        as i32;
-                    if rc != 0 && c as i32 == KEY_ENTER {
+                    rc = i32::from(hulib_key_in_itext(
+                        &mut state.ui.hu_stuff.w_inputbuffer[i as usize],
+                        c,
+                    ));
+                    if rc != 0 && i32::from(c) == KEY_ENTER {
                         if !state.ui.hu_stuff.w_inputbuffer[i as usize].l.l.is_empty()
-                            && (state.ui.hu_stuff.chat_dest[i as usize] as i32
+                            && (i32::from(state.ui.hu_stuff.chat_dest[i as usize])
                                 == state.game.g_game.consoleplayer.as_i32() + 1
-                                || state.ui.hu_stuff.chat_dest[i as usize] as i32 == HU_BROADCAST)
+                                || i32::from(state.ui.hu_stuff.chat_dest[i as usize])
+                                    == HU_BROADCAST)
                         {
                             hulib_add_message_to_stext(
                                 &mut state.ui.hu_stuff.w_message,
@@ -527,7 +530,7 @@ pub fn hu_responder(
     let mut eatkey: bool = false;
     let mut numplayers: i32 = 0;
     for i in 0..(MAXPLAYERS as usize) {
-        numplayers += g_game.playeringame[i] as i32;
+        numplayers += i32::from(g_game.playeringame[i]);
     }
     if ev.data1 == KEY_RSHIFT {
         return false;
@@ -581,7 +584,7 @@ pub fn hu_responder(
         }
     } else if hu_stuff.hu_responder_altdown {
         let c: u8 = (ev.data1 - '0' as i32) as u8;
-        if c as i32 > 9 {
+        if i32::from(c) > 9 {
             return false;
         }
         let macromessage = hu_stuff.chat_macros[c as usize].unwrap_or("");
@@ -599,12 +602,12 @@ pub fn hu_responder(
         if eatkey {
             queue_chat_char(g_game, hu_stuff, c);
         }
-        if c as i32 == KEY_ENTER {
+        if i32::from(c) == KEY_ENTER {
             hu_stuff.chat_on = false;
             if !hu_stuff.w_chat.l.l.is_empty() {
                 g_game.player_mut(hu_stuff.plr).message = Some(hu_stuff.w_chat.l.l.clone());
             }
-        } else if c as i32 == KEY_ESCAPE {
+        } else if i32::from(c) == KEY_ESCAPE {
             hu_stuff.chat_on = false;
         }
     }

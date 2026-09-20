@@ -860,7 +860,7 @@ pub fn aim_traverse(state: &mut GameState, intercept: Intercept) -> bool {
     if thingbottomslope < state.world.p_sight.bottomslope {
         thingbottomslope = state.world.p_sight.bottomslope;
     }
-    state.world.p_map.aimslope = ((thingtopslope + thingbottomslope) / 2) as Fixed;
+    state.world.p_map.aimslope = i32::midpoint(thingtopslope, thingbottomslope) as Fixed;
     state.world.p_map.linetarget = Some(th);
     false
 }
@@ -920,12 +920,13 @@ pub fn shoot_traverse(state: &mut GameState, intercept: Intercept) -> bool {
                 state.world.p_map.aimslope,
                 fixed_mul(frac, state.world.p_map.attackrange),
             );
-        if state
-            .world
-            .p_setup
-            .sector_mut(state.world.p_setup.line(li).frontsector.unwrap())
-            .ceilingpic as i32
-            == state.render.r_sky.skyflatnum
+        if i32::from(
+            state
+                .world
+                .p_setup
+                .sector_mut(state.world.p_setup.line(li).frontsector.unwrap())
+                .ceilingpic,
+        ) == state.render.r_sky.skyflatnum
         {
             if z > state
                 .world
@@ -936,12 +937,13 @@ pub fn shoot_traverse(state: &mut GameState, intercept: Intercept) -> bool {
                 return false;
             }
             if state.world.p_setup.line(li).backsector.is_some()
-                && state
-                    .world
-                    .p_setup
-                    .sector_mut(state.world.p_setup.line(li).backsector.unwrap())
-                    .ceilingpic as i32
-                    == state.render.r_sky.skyflatnum
+                && i32::from(
+                    state
+                        .world
+                        .p_setup
+                        .sector_mut(state.world.p_setup.line(li).backsector.unwrap())
+                        .ceilingpic,
+                ) == state.render.r_sky.skyflatnum
             {
                 return false;
             }
@@ -1239,7 +1241,7 @@ fn spechit_overrun(
             p_map.baseaddr = DEFAULT_SPECHIT_MAGIC as u32;
         }
     }
-    let addr: u32 = (p_map.baseaddr as i64 + ld.0 as i64 * 0x3e) as u32;
+    let addr: u32 = (i64::from(p_map.baseaddr) + i64::from(ld.0) * 0x3e) as u32;
     match p_map.numspechit {
         9..=12 => {
             p_map.tmbbox[(p_map.numspechit - 9) as usize] = addr as Fixed;

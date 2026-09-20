@@ -275,7 +275,7 @@ pub fn do_locked_door(state: &mut GameState, line: LineId, kind: VldoorE, thing:
             p.cards[CardType::Yellowcard] || p.cards[CardType::Yellowskull],
         )
     };
-    let missing = match state.world.p_setup.line(line).special as i32 {
+    let missing = match i32::from(state.world.p_setup.line(line).special) {
         99 | 133 if !blue => Some("You need a blue key to activate this object"),
         134 | 135 if !red => Some("You need a red key to activate this object"),
         136 | 137 if !yellow => Some("You need a yellow key to activate this object"),
@@ -365,7 +365,7 @@ pub fn ev_vertical_door(state: &mut GameState, line: LineId, thing: MobjId) {
                 p.cards[CardType::Yellowcard] || p.cards[CardType::Yellowskull],
             )
         };
-        let missing = match linev.special as i32 {
+        let missing = match i32::from(linev.special) {
             26 | 32 => key_message(blue, "You need a blue key to open this door"),
             27 | 34 => key_message(yellow, "You need a yellow key to open this door"),
             28 | 33 => key_message(red, "You need a red key to open this door"),
@@ -376,13 +376,13 @@ pub fn ev_vertical_door(state: &mut GameState, line: LineId, thing: MobjId) {
             s_start_sound(state, SoundOrigin::None, SfxName::Oof);
             return;
         }
-    } else if matches!(linev.special as i32, 26 | 32 | 27 | 34 | 28 | 33) {
+    } else if matches!(i32::from(linev.special), 26 | 32 | 27 | 34 | 28 | 33) {
         return;
     }
     let door_sector_id =
         state.world.p_setup.sides[linev.sidenum[(side ^ 1) as usize] as usize].sector;
     if let Some(special) = state.world.p_setup.sector_mut(door_sector_id).specialdata {
-        match linev.special as i32 {
+        match i32::from(linev.special) {
             1 | 26 | 27 | 28 | 117 => {
                 match special {
                     SectorSpecial::Door(id) => {
@@ -447,7 +447,7 @@ pub fn ev_vertical_door(state: &mut GameState, line: LineId, thing: MobjId) {
             _ => {}
         }
     }
-    match linev.special as i32 {
+    match i32::from(linev.special) {
         117 | 118 => {
             s_start_sound(state, SoundOrigin::Sector(door_sector_id), SfxName::Bdopn);
         }
@@ -461,7 +461,7 @@ pub fn ev_vertical_door(state: &mut GameState, line: LineId, thing: MobjId) {
     door.direction = Direction::Up;
     door.speed = (FRACUNIT * 2) as Fixed;
     door.topwait = VDOORWAIT;
-    match linev.special as i32 {
+    match i32::from(linev.special) {
         1 | 26 | 27 | 28 => {
             door.kind = VldoorE::Normal;
         }

@@ -43,7 +43,7 @@ pub fn argv_atoi(arg: &str) -> i32 {
     while i < bytes.len() && bytes[i].is_ascii_digit() {
         value = value
             .wrapping_mul(10)
-            .wrapping_add((bytes[i] - b'0') as i32);
+            .wrapping_add(i32::from(bytes[i] - b'0'));
         i += 1;
     }
     if negative {

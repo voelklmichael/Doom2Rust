@@ -180,7 +180,7 @@ pub fn install_sprite_lump(
         r_things.sprtemp[frame as usize].rotate = SpriteRotate::NonRotating;
         for r in 0..8 {
             r_things.sprtemp[frame as usize].lump[r] = (lump - r_data.firstspritelump) as i16;
-            r_things.sprtemp[frame as usize].flip[r] = flipped as u8;
+            r_things.sprtemp[frame as usize].flip[r] = u8::from(flipped);
         }
         return;
     }
@@ -193,7 +193,7 @@ pub fn install_sprite_lump(
     }
     r_things.sprtemp[frame as usize].rotate = SpriteRotate::Rotating;
     rotation = rotation.wrapping_sub(1);
-    if r_things.sprtemp[frame as usize].lump[rotation as usize] as i32 != -1 {
+    if i32::from(r_things.sprtemp[frame as usize].lump[rotation as usize]) != -1 {
         error(&format!(
             "R_InitSprites: Sprite {} : {} : {} has two lumps mapped to it",
             r_things.spritename,
@@ -203,7 +203,7 @@ pub fn install_sprite_lump(
     }
     r_things.sprtemp[frame as usize].lump[rotation as usize] =
         (lump - r_data.firstspritelump) as i16;
-    r_things.sprtemp[frame as usize].flip[rotation as usize] = flipped as u8;
+    r_things.sprtemp[frame as usize].flip[rotation as usize] = u8::from(flipped);
 }
 pub fn init_sprite_defs(state: &mut GameState, namelist: &[&'static str]) {
     state.render.r_things.numsprites = namelist.len() as i32;
@@ -230,8 +230,8 @@ pub fn init_sprite_defs(state: &mut GameState, namelist: &[&'static str]) {
                 .name
                 .eq_bytes_ignore_ascii_case_n(state.render.r_things.spritename.as_bytes(), 4)
             {
-                frame = state.assets.w_wad.lumpinfo[l as usize].name[4] as i32 - 'A' as i32;
-                rotation = state.assets.w_wad.lumpinfo[l as usize].name[5] as i32 - '0' as i32;
+                frame = i32::from(state.assets.w_wad.lumpinfo[l as usize].name[4]) - 'A' as i32;
+                rotation = i32::from(state.assets.w_wad.lumpinfo[l as usize].name[5]) - '0' as i32;
                 let patched: i32 = if state.game.doomstat.modifiedgame {
                     let sprite_name = state.assets.w_wad.lumpinfo[l as usize].name;
                     get_num_for_name(&state.assets.w_wad, &sprite_name.as_str())
@@ -247,8 +247,9 @@ pub fn init_sprite_defs(state: &mut GameState, namelist: &[&'static str]) {
                     false,
                 );
                 if state.assets.w_wad.lumpinfo[l as usize].name[6] != 0 {
-                    frame = state.assets.w_wad.lumpinfo[l as usize].name[6] as i32 - 'A' as i32;
-                    rotation = state.assets.w_wad.lumpinfo[l as usize].name[7] as i32 - '0' as i32;
+                    frame = i32::from(state.assets.w_wad.lumpinfo[l as usize].name[6]) - 'A' as i32;
+                    rotation =
+                        i32::from(state.assets.w_wad.lumpinfo[l as usize].name[7]) - '0' as i32;
                     install_sprite_lump(
                         &state.render.r_data,
                         &mut state.render.r_things,
@@ -278,8 +279,9 @@ pub fn init_sprite_defs(state: &mut GameState, namelist: &[&'static str]) {
                     }
                     1 => {
                         for rotation in 0..8 {
-                            if state.render.r_things.sprtemp[frame as usize].lump[rotation] as i32
-                                == -1
+                            if i32::from(
+                                state.render.r_things.sprtemp[frame as usize].lump[rotation],
+                            ) == -1
                             {
                                 error(&format!(
                                     "R_InitSprites: Sprite {} frame {} is missing rotations",
@@ -324,17 +326,17 @@ pub fn draw_masked_column(state: &mut GameState, mut post: ColumnSource) {
     let mceilingclip = state.render.r_things.mceilingclip.unwrap();
     loop {
         let topdelta = read_source(&state.render.r_data, &state.assets.w_wad, post, 0);
-        if topdelta as i32 == 0xff {
+        if i32::from(topdelta) == 0xff {
             break;
         }
         let length = read_source(&state.render.r_data, &state.assets.w_wad, post, 1);
-        let topscreen: i32 =
-            state.render.r_things.sprtopscreen + state.render.r_things.spryscale * topdelta as i32;
-        let bottomscreen: i32 = topscreen + state.render.r_things.spryscale * length as i32;
+        let topscreen: i32 = state.render.r_things.sprtopscreen
+            + state.render.r_things.spryscale * i32::from(topdelta);
+        let bottomscreen: i32 = topscreen + state.render.r_things.spryscale * i32::from(length);
         state.render.r_draw.dc_yl = (topscreen + FRACUNIT - 1) >> FRACBITS;
         state.render.r_draw.dc_yh = (bottomscreen - 1) >> FRACBITS;
-        let floorclip = mfloorclip.get(state, state.render.r_draw.dc_x as isize) as i32;
-        let ceilingclip = mceilingclip.get(state, state.render.r_draw.dc_x as isize) as i32;
+        let floorclip = i32::from(mfloorclip.get(state, state.render.r_draw.dc_x as isize));
+        let ceilingclip = i32::from(mceilingclip.get(state, state.render.r_draw.dc_x as isize));
         if state.render.r_draw.dc_yh >= floorclip {
             state.render.r_draw.dc_yh = floorclip - 1;
         }
@@ -344,7 +346,7 @@ pub fn draw_masked_column(state: &mut GameState, mut post: ColumnSource) {
         if state.render.r_draw.dc_yl <= state.render.r_draw.dc_yh {
             state.render.r_draw.dc_source = Some(advance_source(post, 3));
             state.render.r_draw.dc_texturemid =
-                (basetexturemid - ((topdelta as i32) << FRACBITS)) as Fixed;
+                (basetexturemid - (i32::from(topdelta) << FRACBITS)) as Fixed;
             state
                 .render
                 .r_main
@@ -440,15 +442,15 @@ pub fn project_sprite(state: &mut GameState, thing_id: MobjId) {
     }
     let sprframe = sprdef.spriteframes[(thing_frame & FF_FRAMEMASK) as usize];
     let flip: bool = if sprframe.rotate == SpriteRotate::NonRotating {
-        lump = sprframe.lump[0] as i32;
+        lump = i32::from(sprframe.lump[0]);
         sprframe.flip[0] != 0
     } else {
         let ang: Angle = point_to_angle(&state.render.r_main, thing_x, thing_y);
-        let rot: u32 = ang
+        let rot: usize = (ang
             .wrapping_sub(thing_angle)
             .wrapping_add(((ANG45 / 2) as u32).wrapping_mul(9))
-            >> 29;
-        lump = sprframe.lump[rot as usize] as i32;
+            >> 29) as usize;
+        lump = i32::from(sprframe.lump[rot as usize]);
         sprframe.flip[rot as usize] != 0
     };
     tx -= state.render.r_data.spriteoffset[lump as usize];
@@ -528,7 +530,7 @@ pub fn add_sprites(state: &mut GameState, sec: SectorId) {
         return;
     }
     sector.validcount = validcount;
-    let (sector_lightlevel, thinglist) = (sector.lightlevel as i32, sector.thinglist);
+    let (sector_lightlevel, thinglist) = (i32::from(sector.lightlevel), sector.thinglist);
     let lightnum = (sector_lightlevel >> LIGHTSEGSHIFT) + state.render.r_main.extralight;
     if lightnum < 0 {
         state.render.r_things.spritelights = LightRow48::Normal(0);
@@ -576,7 +578,7 @@ pub fn draw_psprite(state: &mut GameState, psp: &PspDef) {
         ));
     }
     let sprframe = &sprdef.spriteframes[(psp_state_frame & FF_FRAMEMASK) as usize];
-    let lump: i32 = sprframe.lump[0] as i32;
+    let lump: i32 = i32::from(sprframe.lump[0]);
     let flip: bool = sprframe.flip[0] != 0;
     let mut tx: Fixed = (psp.sx - 160 * FRACUNIT) as Fixed;
     tx -= state.render.r_data.spriteoffset[lump as usize];
@@ -641,12 +643,13 @@ pub fn draw_player_sprites(state: &mut GameState) {
     let psprites = viewplayer.psprites;
     let viewplayer_mo_id = viewplayer.mo.unwrap();
     let viewplayer_subsector = state.world.p_mobj.mo(viewplayer_mo_id).subsector;
-    let lightnum = (state
-        .world
-        .p_setup
-        .sector_mut(state.world.p_setup.subsectors[viewplayer_subsector.0 as usize].sector)
-        .lightlevel as i32
-        >> LIGHTSEGSHIFT)
+    let lightnum = (i32::from(
+        state
+            .world
+            .p_setup
+            .sector_mut(state.world.p_setup.subsectors[viewplayer_subsector.0 as usize].sector)
+            .lightlevel,
+    ) >> LIGHTSEGSHIFT)
         + state.render.r_main.extralight;
     if lightnum < 0 {
         state.render.r_things.spritelights = LightRow48::Normal(0);
@@ -715,7 +718,7 @@ pub fn draw_sprite(state: &mut GameState, spr: &VisSprite) {
                 if silhouette == 1 {
                     let sprbottomclip = ds.sprbottomclip.unwrap();
                     for x in r1..=r2 {
-                        if state.render.r_things.clipbot[x as usize] as i32 == -2 {
+                        if i32::from(state.render.r_things.clipbot[x as usize]) == -2 {
                             state.render.r_things.clipbot[x as usize] =
                                 sprbottomclip.get(state, x as isize);
                         }
@@ -723,7 +726,7 @@ pub fn draw_sprite(state: &mut GameState, spr: &VisSprite) {
                 } else if silhouette == 2 {
                     let sprtopclip = ds.sprtopclip.unwrap();
                     for x in r1..=r2 {
-                        if state.render.r_things.cliptop[x as usize] as i32 == -2 {
+                        if i32::from(state.render.r_things.cliptop[x as usize]) == -2 {
                             state.render.r_things.cliptop[x as usize] =
                                 sprtopclip.get(state, x as isize);
                         }
@@ -732,11 +735,11 @@ pub fn draw_sprite(state: &mut GameState, spr: &VisSprite) {
                     let sprbottomclip = ds.sprbottomclip.unwrap();
                     let sprtopclip = ds.sprtopclip.unwrap();
                     for x in r1..=r2 {
-                        if state.render.r_things.clipbot[x as usize] as i32 == -2 {
+                        if i32::from(state.render.r_things.clipbot[x as usize]) == -2 {
                             state.render.r_things.clipbot[x as usize] =
                                 sprbottomclip.get(state, x as isize);
                         }
-                        if state.render.r_things.cliptop[x as usize] as i32 == -2 {
+                        if i32::from(state.render.r_things.cliptop[x as usize]) == -2 {
                             state.render.r_things.cliptop[x as usize] =
                                 sprtopclip.get(state, x as isize);
                         }
@@ -746,10 +749,10 @@ pub fn draw_sprite(state: &mut GameState, spr: &VisSprite) {
         }
     }
     for x in spr.x1..=spr.x2 {
-        if state.render.r_things.clipbot[x as usize] as i32 == -2 {
+        if i32::from(state.render.r_things.clipbot[x as usize]) == -2 {
             state.render.r_things.clipbot[x as usize] = state.render.r_draw.viewheight as i16;
         }
-        if state.render.r_things.cliptop[x as usize] as i32 == -2 {
+        if i32::from(state.render.r_things.cliptop[x as usize]) == -2 {
             state.render.r_things.cliptop[x as usize] = -1_i16;
         }
     }

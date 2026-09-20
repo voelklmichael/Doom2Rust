@@ -148,7 +148,7 @@ fn fnv_bytes(bytes: &[u8]) -> u64 {
     })
 }
 
-pub(crate) fn iwad_bytes() -> Option<Vec<u8>> {
+pub fn iwad_bytes() -> Option<Vec<u8>> {
     let path = std::env::var("DOOM_IWAD").ok().or_else(|| {
         std::env::var("HOME")
             .ok()
@@ -487,7 +487,7 @@ fn special_line_trace(walk: bool) -> Option<String> {
                 let sidenum = state.world.p_setup.line(line).sidenum[0] as usize;
                 let side_textures = {
                     let s = &state.world.p_setup.sides[sidenum];
-                    [s.toptexture, s.midtexture, s.bottomtexture].map(|t| t as i32)
+                    [s.toptexture, s.midtexture, s.bottomtexture].map(i32::from)
                 };
                 let line_special = state.world.p_setup.line(line).special;
                 let world = world_summary(state);

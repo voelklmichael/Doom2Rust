@@ -226,7 +226,7 @@ pub fn do_plat(state: &mut GameState, line: LineId, kind: PlattypeE, amount: i32
         activate_in_stasis(
             &mut state.world.p_plats,
             &state.world.p_tick,
-            linev.tag as i32,
+            i32::from(linev.tag),
         );
     }
     for sector in sectors_with_line_tag(&state.world.p_setup, line) {
@@ -242,7 +242,7 @@ pub fn do_plat(state: &mut GameState, line: LineId, kind: PlattypeE, amount: i32
         };
         plat.thinker.function = ThinkerFn::Plat(plat_raise);
         plat.crush = false;
-        plat.tag = linev.tag as i32;
+        plat.tag = i32::from(linev.tag);
         let floorheight = state.world.p_setup.sector_mut(sec).floorheight;
         match kind {
             PlattypeE::RaiseToNearestAndChange => {

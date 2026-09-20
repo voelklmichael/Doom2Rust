@@ -1,4 +1,4 @@
-//! Music the way DOS Doom played it on an AdLib / Sound Blaster: the MUS score
+//! Music the way DOS Doom played it on an `AdLib` / Sound Blaster: the MUS score
 //! drives an OPL2 FM chip, programmed from the WAD's `GENMIDI` instrument
 //! patches. The chip itself is the `oplon` crate; this module is the driver in
 //! front of it (what `i_oplmusic.c` is in Chocolate Doom): it keeps MIDI-style

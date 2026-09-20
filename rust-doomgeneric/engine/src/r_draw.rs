@@ -26,7 +26,7 @@ pub enum ColumnSource {
     Composite { tex: i32, offset: usize },
 }
 
-pub(crate) fn advance_source(src: ColumnSource, delta: usize) -> ColumnSource {
+pub fn advance_source(src: ColumnSource, delta: usize) -> ColumnSource {
     match src {
         ColumnSource::Lump { lump, offset } => ColumnSource::Lump {
             lump,
@@ -69,12 +69,7 @@ fn translation_row(tables: &[u8], offset: usize) -> &[u8; 256] {
     (&tables[offset..offset + 256]).try_into().unwrap()
 }
 
-pub(crate) fn read_source(
-    r_data: &RDataState,
-    w_wad: &WWadState,
-    src: ColumnSource,
-    idx: i32,
-) -> u8 {
+pub fn read_source(r_data: &RDataState, w_wad: &WWadState, src: ColumnSource, idx: i32) -> u8 {
     let (bytes, base) = source_bytes(r_data, w_wad, src);
     bytes[(base + idx as isize) as usize]
 }

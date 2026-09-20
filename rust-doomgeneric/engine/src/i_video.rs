@@ -265,9 +265,9 @@ fn convert_frame_rgb32(i_video: &mut IVideoState) {
     let lines = i_video.dg_screen_buffer.len() / width;
     // Pack the palette once per frame, so the per-pixel work is one table load.
     let palette: [u32; 256] = i_video.colors.map(|c| {
-        ((c.r() as i32) << fb.red.offset
-            | (c.g() as i32) << fb.green.offset
-            | (c.b() as i32) << fb.blue.offset) as u32
+        (i32::from(c.r()) << fb.red.offset
+            | i32::from(c.g()) << fb.green.offset
+            | i32::from(c.b()) << fb.blue.offset) as u32
     });
     for row in 0..SCREENHEIGHT as usize {
         let source = &i_video.i_video_buffer[row * SCREENWIDTH as usize..][..SCREENWIDTH as usize];
@@ -301,9 +301,9 @@ fn convert_frame_rgb565(i_video: &mut IVideoState) {
         let mut out = x_offset;
         for &index in source {
             let c = i_video.colors[index as usize];
-            let p: u16 = ((c.r() as i32 & 0xf8) << 8
-                | (c.g() as i32 & 0xfc) << 3
-                | c.b() as i32 >> 3) as u16;
+            let p: u16 = ((i32::from(c.r()) & 0xf8) << 8
+                | (i32::from(c.g()) & 0xfc) << 3
+                | i32::from(c.b()) >> 3) as u16;
             for _ in 0..scaling {
                 first_line[out..out + 2].copy_from_slice(&p.to_ne_bytes());
                 out += 2;
@@ -336,9 +336,9 @@ pub fn set_palette(i_video: &mut IVideoState, palette: &[u8]) {
         .zip(palette.as_chunks::<3>().0.iter())
     {
         color.set_a(0_u32);
-        color.set_r(gamma[rgb[0] as usize] as u32);
-        color.set_g(gamma[rgb[1] as usize] as u32);
-        color.set_b(gamma[rgb[2] as usize] as u32);
+        color.set_r(u32::from(gamma[rgb[0] as usize]));
+        color.set_g(u32::from(gamma[rgb[1] as usize]));
+        color.set_b(u32::from(gamma[rgb[2] as usize]));
     }
 }
 pub fn get_palette_index(platform: &mut dyn DoomPlatform, r: i32, g: i32, b: i32) -> i32 {
@@ -347,12 +347,12 @@ pub fn get_palette_index(platform: &mut dyn DoomPlatform, r: i32, g: i32, b: i32
     let mut best: i32 = 0;
     let mut best_diff: i32 = INT_MAX;
     for i in 0..256 {
-        color.r = ((0xf800 & RGB565_PALETTE[i as usize] as i32) >> 11) as u8;
-        color.g = ((0x7e0 & RGB565_PALETTE[i as usize] as i32) >> 5) as u8;
-        color.b = (0x1f & RGB565_PALETTE[i as usize] as i32) as u8;
-        let diff: i32 = (r - color.r as i32) * (r - color.r as i32)
-            + (g - color.g as i32) * (g - color.g as i32)
-            + (b - color.b as i32) * (b - color.b as i32);
+        color.r = ((0xf800 & i32::from(RGB565_PALETTE[i as usize])) >> 11) as u8;
+        color.g = ((0x7e0 & i32::from(RGB565_PALETTE[i as usize])) >> 5) as u8;
+        color.b = (0x1f & i32::from(RGB565_PALETTE[i as usize])) as u8;
+        let diff: i32 = (r - i32::from(color.r)) * (r - i32::from(color.r))
+            + (g - i32::from(color.g)) * (g - i32::from(color.g))
+            + (b - i32::from(color.b)) * (b - i32::from(color.b));
         if diff < best_diff {
             best = i;
             best_diff = diff;

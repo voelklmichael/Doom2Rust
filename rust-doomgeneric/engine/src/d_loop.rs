@@ -281,7 +281,7 @@ fn old_net_sync(d_loop: &mut DLoopState) {
             d_loop.lasttime -= 1;
         }
         d_loop.frameskip[(d_loop.frameon & 3) as usize] =
-            (d_loop.oldnettics > d_loop.recvtic) as i32;
+            i32::from(d_loop.oldnettics > d_loop.recvtic);
         d_loop.oldnettics = d_loop.maketic;
         if d_loop.frameskip[0] != 0
             && d_loop.frameskip[1] != 0
@@ -308,7 +308,7 @@ fn ticdup_squash(set: &mut TicCmdSet) {
     for i in 0..NET_MAXPLAYERS as u32 {
         let cmd = &mut set.cmds[i as usize];
         cmd.chatchar = 0_u8;
-        if cmd.buttons as i32 & BT_SPECIAL != 0 {
+        if i32::from(cmd.buttons) & BT_SPECIAL != 0 {
             cmd.buttons = 0_u8;
         }
     }

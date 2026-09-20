@@ -673,8 +673,8 @@ pub fn draw_load(state: &mut GameState) {
     let dest_screen = Screen::Video;
     draw_patch_direct(state, dest_screen, 72, 28, &__wcache890_24);
     for i in 0..LOAD_END {
-        let loaddef_x = state.ui.m_menu.defs.load_def.x as i32;
-        let loaddef_y = state.ui.m_menu.defs.load_def.y as i32 + LINEHEIGHT * i;
+        let loaddef_x = i32::from(state.ui.m_menu.defs.load_def.x);
+        let loaddef_y = i32::from(state.ui.m_menu.defs.load_def.y) + LINEHEIGHT * i;
         draw_save_load_border(state, loaddef_x, loaddef_y);
         let savestr = state.ui.m_menu.savegamestrings[i as usize].clone();
         write_text(state, loaddef_x, loaddef_y, &savestr);
@@ -724,8 +724,8 @@ pub fn draw_save(state: &mut GameState) {
     let dest_screen = Screen::Video;
     draw_patch_direct(state, dest_screen, 72, 28, &__wcache961_20);
     for i in 0..LOAD_END {
-        let loaddef_x = state.ui.m_menu.defs.load_def.x as i32;
-        let loaddef_y = state.ui.m_menu.defs.load_def.y as i32 + LINEHEIGHT * i;
+        let loaddef_x = i32::from(state.ui.m_menu.defs.load_def.x);
+        let loaddef_y = i32::from(state.ui.m_menu.defs.load_def.y) + LINEHEIGHT * i;
         draw_save_load_border(state, loaddef_x, loaddef_y);
         let savestr = state.ui.m_menu.savegamestrings[i as usize].clone();
         write_text(state, loaddef_x, loaddef_y, &savestr);
@@ -738,9 +738,9 @@ pub fn draw_save(state: &mut GameState) {
             &mut state.assets.w_wad,
             &savestr,
         );
-        let text_x = state.ui.m_menu.defs.load_def.x as i32 + i;
+        let text_x = i32::from(state.ui.m_menu.defs.load_def.x) + i;
         let text_y =
-            state.ui.m_menu.defs.load_def.y as i32 + LINEHEIGHT * state.ui.m_menu.save_slot;
+            i32::from(state.ui.m_menu.defs.load_def.y) + LINEHEIGHT * state.ui.m_menu.save_slot;
         write_text(state, text_x, text_y, "_");
     }
 }
@@ -897,14 +897,14 @@ pub fn draw_sound(state: &mut GameState) {
     let dest_screen = Screen::Video;
     draw_patch_direct(state, dest_screen, 60, 38, &__wcache1179_17);
     let (x, y, vol) = (
-        state.ui.m_menu.defs.sound_def.x as i32,
-        state.ui.m_menu.defs.sound_def.y as i32 + LINEHEIGHT * (SoundMenu::SfxVol as i32 + 1),
+        i32::from(state.ui.m_menu.defs.sound_def.x),
+        i32::from(state.ui.m_menu.defs.sound_def.y) + LINEHEIGHT * (SoundMenu::SfxVol as i32 + 1),
         state.audio.s_sound.sfx_volume,
     );
     draw_thermo(state, x, y, 16, vol);
     let (x, y, vol) = (
-        state.ui.m_menu.defs.sound_def.x as i32,
-        state.ui.m_menu.defs.sound_def.y as i32 + LINEHEIGHT * (SoundMenu::MusicVol as i32 + 1),
+        i32::from(state.ui.m_menu.defs.sound_def.x),
+        i32::from(state.ui.m_menu.defs.sound_def.y) + LINEHEIGHT * (SoundMenu::MusicVol as i32 + 1),
         state.audio.s_sound.music_volume,
     );
     draw_thermo(state, x, y, 16, vol);
@@ -1055,8 +1055,8 @@ pub fn draw_options(state: &mut GameState) {
     draw_patch_direct(
         state,
         dest_screen,
-        state.ui.m_menu.defs.options_def.x as i32 + 175,
-        state.ui.m_menu.defs.options_def.y as i32 + LINEHEIGHT * OptionsMenu::Detail as i32,
+        i32::from(state.ui.m_menu.defs.options_def.x) + 175,
+        i32::from(state.ui.m_menu.defs.options_def.y) + LINEHEIGHT * OptionsMenu::Detail as i32,
         &__wcache1364_11,
     );
     let __wcache1373_10 = cache_patch_name(
@@ -1068,20 +1068,21 @@ pub fn draw_options(state: &mut GameState) {
     draw_patch_direct(
         state,
         dest_screen,
-        state.ui.m_menu.defs.options_def.x as i32 + 120,
-        state.ui.m_menu.defs.options_def.y as i32 + LINEHEIGHT * OptionsMenu::Messages as i32,
+        i32::from(state.ui.m_menu.defs.options_def.x) + 120,
+        i32::from(state.ui.m_menu.defs.options_def.y) + LINEHEIGHT * OptionsMenu::Messages as i32,
         &__wcache1373_10,
     );
     let (x, y, sens) = (
-        state.ui.m_menu.defs.options_def.x as i32,
-        state.ui.m_menu.defs.options_def.y as i32
+        i32::from(state.ui.m_menu.defs.options_def.x),
+        i32::from(state.ui.m_menu.defs.options_def.y)
             + LINEHEIGHT * (OptionsMenu::Mousesens as i32 + 1),
         state.ui.m_menu.mouse_sensitivity,
     );
     draw_thermo(state, x, y, 10, sens);
     let (x, y, sz) = (
-        state.ui.m_menu.defs.options_def.x as i32,
-        state.ui.m_menu.defs.options_def.y as i32 + LINEHEIGHT * (OptionsMenu::Scrnsize as i32 + 1),
+        i32::from(state.ui.m_menu.defs.options_def.x),
+        i32::from(state.ui.m_menu.defs.options_def.y)
+            + LINEHEIGHT * (OptionsMenu::Scrnsize as i32 + 1),
         state.ui.m_menu.screen_size,
     );
     draw_thermo(state, x, y, 9, sz);
@@ -1281,7 +1282,7 @@ pub fn start_message(
     routine: Option<fn(&mut GameState, i32)>,
     input: bool,
 ) {
-    m_menu.message_last_menu_active = m_menu.menuactive as i32;
+    m_menu.message_last_menu_active = i32::from(m_menu.menuactive);
     m_menu.message_to_print = true;
     m_menu.message_string = string.to_string();
     m_menu.message_routine = routine;
@@ -1297,7 +1298,7 @@ pub fn string_width(
 ) -> i32 {
     let mut w: i32 = 0;
     for b in string.bytes() {
-        let c: i32 = b.to_ascii_uppercase() as i32 - HU_FONTSTART;
+        let c: i32 = i32::from(b.to_ascii_uppercase()) - HU_FONTSTART;
         if (0..HU_FONTSIZE).contains(&c) {
             let font_patch = cache_patch_num(fs, w_wad, hu_stuff.hu_font[c as usize]);
             w += font_patch.width();
@@ -1328,12 +1329,12 @@ pub fn write_text(state: &mut GameState, x: i32, y: i32, string: &str) {
     let mut cx: i32 = x;
     let mut cy: i32 = y;
     'outer: for b in string.bytes() {
-        c = b as i32;
+        c = i32::from(b);
         if c == '\n' as i32 {
             cx = x;
             cy += 12;
         } else {
-            c = (c as u8).to_ascii_uppercase() as i32 - HU_FONTSTART;
+            c = i32::from((c as u8).to_ascii_uppercase()) - HU_FONTSTART;
             if (0..HU_FONTSIZE).contains(&c) {
                 let font_patch = cache_patch_num(
                     &*state.assets.fs,
@@ -1496,7 +1497,7 @@ pub fn m_responder(state: &mut GameState, ev: &Event) -> bool {
                 if state.io.i_input.vanilla_keyboard_mapping != 0 {
                     ch = key;
                 }
-                ch = (ch as u8).to_ascii_uppercase() as i32;
+                ch = i32::from((ch as u8).to_ascii_uppercase());
                 if !(ch != ' ' as i32
                     && (ch - HU_FONTSTART < 0 || ch - HU_FONTSTART >= HU_FONTSIZE))
                 {
@@ -1635,13 +1636,16 @@ pub fn m_responder(state: &mut GameState, ev: &Event) -> bool {
     }
     if key == state.game.m_controls.key_menu_down {
         loop {
-            if state.ui.m_menu.item_on as i32 + 1 > state.ui.m_menu.current().numitems as i32 - 1 {
+            if i32::from(state.ui.m_menu.item_on) + 1
+                > i32::from(state.ui.m_menu.current().numitems) - 1
+            {
                 state.ui.m_menu.item_on = 0;
             } else {
                 state.ui.m_menu.item_on += 1;
             }
             s_start_sound(state, SoundOrigin::None, SfxName::Pstop);
-            if state.ui.m_menu.current().items[state.ui.m_menu.item_on as usize].status as i32 != -1
+            if i32::from(state.ui.m_menu.current().items[state.ui.m_menu.item_on as usize].status)
+                != -1
             {
                 break;
             }
@@ -1650,12 +1654,14 @@ pub fn m_responder(state: &mut GameState, ev: &Event) -> bool {
     } else if key == state.game.m_controls.key_menu_up {
         loop {
             if state.ui.m_menu.item_on == 0 {
-                state.ui.m_menu.item_on = (state.ui.m_menu.current().numitems as i32 - 1) as i16;
+                state.ui.m_menu.item_on =
+                    (i32::from(state.ui.m_menu.current().numitems) - 1) as i16;
             } else {
                 state.ui.m_menu.item_on -= 1;
             }
             s_start_sound(state, SoundOrigin::None, SfxName::Pstop);
-            if state.ui.m_menu.current().items[state.ui.m_menu.item_on as usize].status as i32 != -1
+            if i32::from(state.ui.m_menu.current().items[state.ui.m_menu.item_on as usize].status)
+                != -1
             {
                 break;
             }
@@ -1663,28 +1669,28 @@ pub fn m_responder(state: &mut GameState, ev: &Event) -> bool {
         return true;
     } else if key == state.game.m_controls.key_menu_left {
         let item = state.ui.m_menu.current().items[state.ui.m_menu.item_on as usize];
-        if let Some(routine) = item.routine.filter(|_| item.status as i32 == 2) {
+        if let Some(routine) = item.routine.filter(|_| i32::from(item.status) == 2) {
             s_start_sound(state, SoundOrigin::None, SfxName::Stnmov);
             routine(state, 0);
         }
         return true;
     } else if key == state.game.m_controls.key_menu_right {
         let item = state.ui.m_menu.current().items[state.ui.m_menu.item_on as usize];
-        if let Some(routine) = item.routine.filter(|_| item.status as i32 == 2) {
+        if let Some(routine) = item.routine.filter(|_| i32::from(item.status) == 2) {
             s_start_sound(state, SoundOrigin::None, SfxName::Stnmov);
             routine(state, 1);
         }
         return true;
     } else if key == state.game.m_controls.key_menu_forward {
         let item = state.ui.m_menu.current().items[state.ui.m_menu.item_on as usize];
-        if let Some(routine) = item.routine.filter(|_| item.status as i32 != 0) {
+        if let Some(routine) = item.routine.filter(|_| i32::from(item.status) != 0) {
             let item_on = state.ui.m_menu.item_on;
             state.ui.m_menu.current_mut().last_on = item_on;
-            if item.status as i32 == 2 {
+            if i32::from(item.status) == 2 {
                 routine(state, 1);
                 s_start_sound(state, SoundOrigin::None, SfxName::Stnmov);
             } else {
-                let item_on = state.ui.m_menu.item_on as i32;
+                let item_on = i32::from(state.ui.m_menu.item_on);
                 routine(state, item_on);
                 s_start_sound(state, SoundOrigin::None, SfxName::Pistol);
             }
@@ -1708,16 +1714,18 @@ pub fn m_responder(state: &mut GameState, ev: &Event) -> bool {
     } else if ch != 0 || is_null_key(key) {
         let mut i: i32;
 
-        for i in state.ui.m_menu.item_on as i32 + 1..state.ui.m_menu.current().numitems as i32 {
-            if state.ui.m_menu.current().items[i as usize].alpha_key as i32 == ch {
+        for i in
+            i32::from(state.ui.m_menu.item_on) + 1..i32::from(state.ui.m_menu.current().numitems)
+        {
+            if i32::from(state.ui.m_menu.current().items[i as usize].alpha_key) == ch {
                 state.ui.m_menu.item_on = i as i16;
                 s_start_sound(state, SoundOrigin::None, SfxName::Pstop);
                 return true;
             }
         }
         i = 0;
-        while i <= state.ui.m_menu.item_on as i32 {
-            if state.ui.m_menu.current().items[i as usize].alpha_key as i32 == ch {
+        while i <= i32::from(state.ui.m_menu.item_on) {
+            if i32::from(state.ui.m_menu.current().items[i as usize].alpha_key) == ch {
                 state.ui.m_menu.item_on = i as i16;
                 s_start_sound(state, SoundOrigin::None, SfxName::Pstop);
                 return true;
@@ -1757,11 +1765,11 @@ pub fn m_drawer(state: &mut GameState) {
                 ) / 2) as i16;
             write_text(
                 state,
-                state.ui.m_menu.drawer_x as i32,
-                state.ui.m_menu.drawer_y as i32,
+                i32::from(state.ui.m_menu.drawer_x),
+                i32::from(state.ui.m_menu.drawer_y),
                 line,
             );
-            state.ui.m_menu.drawer_y = (state.ui.m_menu.drawer_y as i32
+            state.ui.m_menu.drawer_y = (i32::from(state.ui.m_menu.drawer_y)
                 + cache_patch_num(
                     &*state.assets.fs,
                     &mut state.assets.w_wad,
@@ -1793,12 +1801,12 @@ pub fn m_drawer(state: &mut GameState) {
             draw_patch_direct(
                 state,
                 dest_screen,
-                state.ui.m_menu.drawer_x as i32,
-                state.ui.m_menu.drawer_y as i32,
+                i32::from(state.ui.m_menu.drawer_x),
+                i32::from(state.ui.m_menu.drawer_y),
                 &__wcache2221_2,
             );
         }
-        state.ui.m_menu.drawer_y = (state.ui.m_menu.drawer_y as i32 + LINEHEIGHT) as i16;
+        state.ui.m_menu.drawer_y = (i32::from(state.ui.m_menu.drawer_y) + LINEHEIGHT) as i16;
     }
     let __wcache2231_1 = cache_patch_name(
         &*state.assets.fs,
@@ -1809,8 +1817,9 @@ pub fn m_drawer(state: &mut GameState) {
     draw_patch_direct(
         state,
         dest_screen,
-        state.ui.m_menu.drawer_x as i32 + SKULLXOFF,
-        state.ui.m_menu.current().y as i32 - 5 + state.ui.m_menu.item_on as i32 * LINEHEIGHT,
+        i32::from(state.ui.m_menu.drawer_x) + SKULLXOFF,
+        i32::from(state.ui.m_menu.current().y) - 5
+            + i32::from(state.ui.m_menu.item_on) * LINEHEIGHT,
         &__wcache2231_1,
     );
 }
@@ -1823,8 +1832,8 @@ pub fn setup_next_menu(m_menu: &mut MMenuState, menudef: MenuId) {
 }
 pub fn m_ticker(state: &mut GameState) {
     state.ui.m_menu.skull_anim_counter -= 1;
-    if state.ui.m_menu.skull_anim_counter as i32 <= 0 {
-        state.ui.m_menu.which_skull = (state.ui.m_menu.which_skull as i32 ^ 1) as i16;
+    if i32::from(state.ui.m_menu.skull_anim_counter) <= 0 {
+        state.ui.m_menu.which_skull = (i32::from(state.ui.m_menu.which_skull) ^ 1) as i16;
         state.ui.m_menu.skull_anim_counter = 8;
     }
 }
@@ -1837,13 +1846,13 @@ pub fn m_init(doomstat: &DoomstatState, m_menu: &mut MMenuState) {
     m_menu.screen_size = m_menu.screenblocks - 3;
     m_menu.message_to_print = false;
     m_menu.message_string = String::new();
-    m_menu.message_last_menu_active = m_menu.menuactive as i32;
+    m_menu.message_last_menu_active = i32::from(m_menu.menuactive);
     m_menu.quick_save_slot = -1;
     if doomstat.gamemode == GameMode::Commercial {
         m_menu.defs.main_def.items[MainMenu::Readthis as usize] =
             m_menu.defs.main_def.items[MainMenu::Quitdoom as usize];
         m_menu.defs.main_def.numitems -= 1;
-        m_menu.defs.main_def.y = (m_menu.defs.main_def.y as i32 + 8) as i16;
+        m_menu.defs.main_def.y = (i32::from(m_menu.defs.main_def.y) + 8) as i16;
         m_menu.defs.new_def.prev_menu = Some(MenuId::Main);
     }
     if !doomstat.gameversion.is_ultimate_or_higher() {

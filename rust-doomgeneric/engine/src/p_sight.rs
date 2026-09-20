@@ -52,18 +52,18 @@ pub fn divline_side(x: Fixed, y: Fixed, node: &DivLine) -> i32 {
             return 2;
         }
         if x <= node.x {
-            return (node.dy > 0) as i32;
+            return i32::from(node.dy > 0);
         }
-        return (node.dy < 0) as i32;
+        return i32::from(node.dy < 0);
     }
     if node.dy == 0 {
         if x == node.y {
             return 2;
         }
         if y <= node.y {
-            return (node.dx < 0) as i32;
+            return i32::from(node.dx < 0);
         }
-        return (node.dx > 0) as i32;
+        return i32::from(node.dx > 0);
     }
     let dx = x - node.x;
     let dy = y - node.y;
@@ -188,13 +188,13 @@ pub fn cross_bspnode(state: &mut GameState, bspnum: i32) -> bool {
     if side == 2 {
         side = 0;
     }
-    if !cross_bspnode(state, children[side as usize] as i32) {
+    if !cross_bspnode(state, i32::from(children[side as usize])) {
         return false;
     }
     if side == divline_side(state.world.p_sight.t2x, state.world.p_sight.t2y, &divl) {
         return true;
     }
-    cross_bspnode(state, children[(side ^ 1) as usize] as i32)
+    cross_bspnode(state, i32::from(children[(side ^ 1) as usize]))
 }
 pub fn check_sight(state: &mut GameState, t1: MobjId, t2: MobjId) -> bool {
     let (t1_subsector, t1_x, t1_y, t1_z, t1_height) = {
@@ -214,7 +214,7 @@ pub fn check_sight(state: &mut GameState, t1: MobjId, t2: MobjId) -> bool {
     let pnum = s1 * state.world.p_setup.numsectors + s2;
     let bytenum = pnum >> 3;
     let bitnum = 1 << (pnum & 7);
-    if state.world.p_setup.rejectmatrix[bytenum as usize] as i32 & bitnum != 0 {
+    if i32::from(state.world.p_setup.rejectmatrix[bytenum as usize]) & bitnum != 0 {
         state.world.p_sight.sightcounts[0] += 1;
         return false;
     }

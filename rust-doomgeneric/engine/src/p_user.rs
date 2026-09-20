@@ -110,30 +110,30 @@ pub fn move_player(state: &mut GameState, player_id: PlayerId) {
         let mo = state.world.p_mobj.mo_mut(player_mo);
         mo.angle = mo
             .angle
-            .wrapping_add(((cmd.angleturn as i32) << 16) as Angle);
+            .wrapping_add((i32::from(cmd.angleturn) << 16) as Angle);
     }
     let (z, floorz, angle) = {
         let mo = state.world.p_mobj.mo(player_mo);
         (mo.z, mo.floorz, mo.angle)
     };
     state.world.p_user.onground = z <= floorz;
-    if cmd.forwardmove as i32 != 0 && state.world.p_user.onground {
+    if i32::from(cmd.forwardmove) != 0 && state.world.p_user.onground {
         p_thrust(
             &mut state.world.p_mobj,
             player_mo,
             angle,
-            cmd.forwardmove as Fixed * 2048,
+            Fixed::from(cmd.forwardmove) * 2048,
         );
     }
-    if cmd.sidemove as i32 != 0 && state.world.p_user.onground {
+    if i32::from(cmd.sidemove) != 0 && state.world.p_user.onground {
         p_thrust(
             &mut state.world.p_mobj,
             player_mo,
             angle.wrapping_sub(ANG90 as Angle),
-            cmd.sidemove as Fixed * 2048,
+            Fixed::from(cmd.sidemove) * 2048,
         );
     }
-    if (cmd.forwardmove as i32 != 0 || cmd.sidemove as i32 != 0)
+    if (i32::from(cmd.forwardmove) != 0 || i32::from(cmd.sidemove) != 0)
         && state.world.p_mobj.mo(player_mo).state == Some(StateId(StateNum::Play as u32))
     {
         set_mobj_state(state, player_mo, StateNum::PlayRun1);
@@ -188,7 +188,7 @@ pub fn death_think(state: &mut GameState, player_id: PlayerId) {
     } else if state.game.g_game.players[player].damagecount != 0 {
         state.game.g_game.players[player].damagecount -= 1;
     }
-    if state.game.g_game.players[player].cmd.buttons as i32 & BT_USE != 0 {
+    if i32::from(state.game.g_game.players[player].cmd.buttons) & BT_USE != 0 {
         state.game.g_game.players[player].playerstate = PlayerState::Reborn;
     }
 }
@@ -237,12 +237,12 @@ pub fn player_think(state: &mut GameState, player_id: PlayerId) {
     {
         player_in_special_sector(state, player_id);
     }
-    if state.game.g_game.players[player_id].cmd.buttons as i32 & BT_SPECIAL != 0 {
+    if i32::from(state.game.g_game.players[player_id].cmd.buttons) & BT_SPECIAL != 0 {
         state.game.g_game.players[player_id].cmd.buttons = 0_u8;
     }
-    if state.game.g_game.players[player_id].cmd.buttons as i32 & BT_CHANGE != 0 {
+    if i32::from(state.game.g_game.players[player_id].cmd.buttons) & BT_CHANGE != 0 {
         let mut newweapon: WeaponType = weapontype_from_raw(
-            (state.game.g_game.players[player_id].cmd.buttons as i32 & BT_WEAPONMASK)
+            (i32::from(state.game.g_game.players[player_id].cmd.buttons) & BT_WEAPONMASK)
                 >> BT_WEAPONSHIFT,
         );
         if newweapon as u32 == WeaponType::Fist as i32 as u32
@@ -270,7 +270,7 @@ pub fn player_think(state: &mut GameState, player_id: PlayerId) {
             state.game.g_game.players[player].pendingweapon = newweapon;
         }
     }
-    if state.game.g_game.players[player_id].cmd.buttons as i32 & BT_USE != 0 {
+    if i32::from(state.game.g_game.players[player_id].cmd.buttons) & BT_USE != 0 {
         if !state.game.g_game.players[player].usedown {
             use_lines(state, player_id);
             state.game.g_game.players[player].usedown = true;

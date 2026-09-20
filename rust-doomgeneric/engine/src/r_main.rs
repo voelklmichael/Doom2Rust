@@ -154,15 +154,15 @@ pub const FIELDOFVIEW: i32 = 2048;
 pub fn point_on_side(x: Fixed, y: Fixed, node: &Node) -> i32 {
     if node.dx == 0 {
         if x <= node.x {
-            return (node.dy > 0) as i32;
+            return i32::from(node.dy > 0);
         }
-        return (node.dy < 0) as i32;
+        return i32::from(node.dy < 0);
     }
     if node.dy == 0 {
         if y <= node.y {
-            return (node.dx < 0) as i32;
+            return i32::from(node.dx < 0);
         }
-        return (node.dx > 0) as i32;
+        return i32::from(node.dx > 0);
     }
     let dx = x - node.x;
     let dy = y - node.y;
@@ -188,15 +188,15 @@ pub fn point_on_seg_side(p_setup: &PSetupState, x: Fixed, y: Fixed, line: SegId)
     let ldy: Fixed = line_v2.y - ly;
     if ldx == 0 {
         if x <= lx {
-            return (ldy > 0) as i32;
+            return i32::from(ldy > 0);
         }
-        return (ldy < 0) as i32;
+        return i32::from(ldy < 0);
     }
     if ldy == 0 {
         if y <= ly {
-            return (ldx < 0) as i32;
+            return i32::from(ldx < 0);
         }
-        return (ldx > 0) as i32;
+        return i32::from(ldx > 0);
     }
     let dx: Fixed = x - lx;
     let dy: Fixed = y - ly;
@@ -461,7 +461,7 @@ pub fn point_in_subsector(p_setup: &PSetupState, x: Fixed, y: Fixed) -> Subsecto
     while nodenum & NF_SUBSECTOR == 0 {
         let node = &p_setup.nodes[nodenum as usize];
         let side = point_on_side(x, y, node);
-        nodenum = node.children[side as usize] as i32;
+        nodenum = i32::from(node.children[side as usize]);
     }
     SubsectorId((nodenum & !NF_SUBSECTOR) as u32)
 }

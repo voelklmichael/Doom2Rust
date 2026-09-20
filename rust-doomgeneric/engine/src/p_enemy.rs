@@ -383,7 +383,7 @@ pub fn new_chase_dir(state: &mut GameState, actor: MobjId) {
     }
     if d[1] != DirType::Nodir && d[2] != DirType::Nodir {
         state.world.p_mobj.mo_mut(actor).movedir =
-            DIAGS[((((deltay < 0) as i32) << 1) + (deltax > 0) as i32) as usize] as i32;
+            DIAGS[((i32::from(deltay < 0) << 1) + i32::from(deltax > 0)) as usize] as i32;
         if state.world.p_mobj.mo(actor).movedir != turnaround as i32 && try_walk(state, actor) {
             return;
         }
@@ -1174,12 +1174,12 @@ pub fn a_fire(state: &mut GameState, actor: MobjId) {
     if !check_sight(state, target, dest.unwrap()) {
         return;
     }
-    let an: u32 = state.world.p_mobj.mo(dest.unwrap()).angle >> ANGLETOFINESHIFT;
+    let an: usize = (state.world.p_mobj.mo(dest.unwrap()).angle >> ANGLETOFINESHIFT) as usize;
     unset_thing_position(&mut state.world.p_mobj, &mut state.world.p_setup, actor);
     state.world.p_mobj.mo_mut(actor).x =
-        state.world.p_mobj.mo(dest.unwrap()).x + fixed_mul(24 * FRACUNIT, FINECOSINE[an as usize]);
+        state.world.p_mobj.mo(dest.unwrap()).x + fixed_mul(24 * FRACUNIT, FINECOSINE[an]);
     state.world.p_mobj.mo_mut(actor).y =
-        state.world.p_mobj.mo(dest.unwrap()).y + fixed_mul(24 * FRACUNIT, FINESINE[an as usize]);
+        state.world.p_mobj.mo(dest.unwrap()).y + fixed_mul(24 * FRACUNIT, FINESINE[an]);
     state.world.p_mobj.mo_mut(actor).z = state.world.p_mobj.mo(dest.unwrap()).z;
     set_thing_position(&mut state.world.p_mobj, &mut state.world.p_setup, actor);
 }
@@ -1216,7 +1216,7 @@ pub fn vile_attack(state: &mut GameState, actor: MobjId) {
             .info
             .mobjinfo_mut(state.world.p_mobj.mo(target).kind)
             .mass) as Fixed;
-    let an: i32 = (state.world.p_mobj.mo(actor).angle >> ANGLETOFINESHIFT) as i32;
+    let an: usize = (state.world.p_mobj.mo(actor).angle >> ANGLETOFINESHIFT) as i32 as usize;
     let fire: Option<MobjId> = state
         .world
         .p_mobj
@@ -1227,9 +1227,9 @@ pub fn vile_attack(state: &mut GameState, actor: MobjId) {
         return;
     }
     state.world.p_mobj.mo_mut(fire.unwrap()).x =
-        state.world.p_mobj.mo(target).x - fixed_mul(24 * FRACUNIT, FINECOSINE[an as usize]);
+        state.world.p_mobj.mo(target).x - fixed_mul(24 * FRACUNIT, FINECOSINE[an]);
     state.world.p_mobj.mo_mut(fire.unwrap()).y =
-        state.world.p_mobj.mo(target).y - fixed_mul(24 * FRACUNIT, FINESINE[an as usize]);
+        state.world.p_mobj.mo(target).y - fixed_mul(24 * FRACUNIT, FINESINE[an]);
     p_radius_attack(state, fire.unwrap(), Some(actor), 70);
 }
 pub const FATSPREAD: i32 = ANG90 / 8;
@@ -1261,14 +1261,14 @@ pub fn fat_attack1(state: &mut GameState, actor: MobjId) {
         .mo(mo)
         .angle
         .wrapping_add(FATSPREAD as Angle);
-    let an: i32 = (state.world.p_mobj.mo(mo).angle >> ANGLETOFINESHIFT) as i32;
+    let an: usize = (state.world.p_mobj.mo(mo).angle >> ANGLETOFINESHIFT) as i32 as usize;
     state.world.p_mobj.mo_mut(mo).momx = fixed_mul(
         state
             .assets
             .info
             .mobjinfo_mut(state.world.p_mobj.mo(mo).kind)
             .speed as Fixed,
-        FINECOSINE[an as usize],
+        FINECOSINE[an],
     );
     state.world.p_mobj.mo_mut(mo).momy = fixed_mul(
         state
@@ -1276,7 +1276,7 @@ pub fn fat_attack1(state: &mut GameState, actor: MobjId) {
             .info
             .mobjinfo_mut(state.world.p_mobj.mo(mo).kind)
             .speed as Fixed,
-        FINESINE[an as usize],
+        FINESINE[an],
     );
 }
 pub fn fat_attack2(state: &mut GameState, actor: MobjId) {
@@ -1303,14 +1303,14 @@ pub fn fat_attack2(state: &mut GameState, actor: MobjId) {
         .mo(mo)
         .angle
         .wrapping_sub((FATSPREAD * 2) as Angle);
-    let an: i32 = (state.world.p_mobj.mo(mo).angle >> ANGLETOFINESHIFT) as i32;
+    let an: usize = (state.world.p_mobj.mo(mo).angle >> ANGLETOFINESHIFT) as i32 as usize;
     state.world.p_mobj.mo_mut(mo).momx = fixed_mul(
         state
             .assets
             .info
             .mobjinfo_mut(state.world.p_mobj.mo(mo).kind)
             .speed as Fixed,
-        FINECOSINE[an as usize],
+        FINECOSINE[an],
     );
     state.world.p_mobj.mo_mut(mo).momy = fixed_mul(
         state
@@ -1318,7 +1318,7 @@ pub fn fat_attack2(state: &mut GameState, actor: MobjId) {
             .info
             .mobjinfo_mut(state.world.p_mobj.mo(mo).kind)
             .speed as Fixed,
-        FINESINE[an as usize],
+        FINESINE[an],
     );
 }
 pub fn fat_attack3(state: &mut GameState, actor: MobjId) {
@@ -1400,9 +1400,9 @@ pub fn skull_attack(state: &mut GameState, actor: MobjId) {
         .attacksound;
     s_start_sound(state, SoundOrigin::Mobj(actor), attacksound);
     face_target(state, actor);
-    let an: Angle = state.world.p_mobj.mo(actor).angle >> ANGLETOFINESHIFT;
-    state.world.p_mobj.mo_mut(actor).momx = fixed_mul(SKULLSPEED, FINECOSINE[an as usize]);
-    state.world.p_mobj.mo_mut(actor).momy = fixed_mul(SKULLSPEED, FINESINE[an as usize]);
+    let an: usize = (state.world.p_mobj.mo(actor).angle >> ANGLETOFINESHIFT) as usize;
+    state.world.p_mobj.mo_mut(actor).momx = fixed_mul(SKULLSPEED, FINECOSINE[an]);
+    state.world.p_mobj.mo_mut(actor).momy = fixed_mul(SKULLSPEED, FINESINE[an]);
     let mut dist: i32 = aprox_distance(
         state.world.p_mobj.mo(dest).x - state.world.p_mobj.mo(actor).x,
         state.world.p_mobj.mo(dest).y - state.world.p_mobj.mo(actor).y,
@@ -1425,7 +1425,7 @@ pub fn pain_shoot_skull(state: &mut GameState, actor: MobjId, angle: Angle) {
     if count > 20 {
         return;
     }
-    let an: Angle = angle >> ANGLETOFINESHIFT;
+    let an: usize = (angle >> ANGLETOFINESHIFT) as usize;
     let prestep: i32 = 4 * FRACUNIT
         + 3 * (state
             .assets
@@ -1434,10 +1434,8 @@ pub fn pain_shoot_skull(state: &mut GameState, actor: MobjId, angle: Angle) {
             .radius
             + state.assets.info.mobjinfo[MobjType::Skull as usize].radius)
             / 2;
-    let x: Fixed =
-        state.world.p_mobj.mo(actor).x + fixed_mul(prestep as Fixed, FINECOSINE[an as usize]);
-    let y: Fixed =
-        state.world.p_mobj.mo(actor).y + fixed_mul(prestep as Fixed, FINESINE[an as usize]);
+    let x: Fixed = state.world.p_mobj.mo(actor).x + fixed_mul(prestep as Fixed, FINECOSINE[an]);
+    let y: Fixed = state.world.p_mobj.mo(actor).y + fixed_mul(prestep as Fixed, FINESINE[an]);
     let z: Fixed = (state.world.p_mobj.mo(actor).z + 8 * FRACUNIT) as Fixed;
     let newmobj: MobjId = spawn_mobj(state, x, y, z, MobjType::Skull);
     let (new_x, new_y) = {

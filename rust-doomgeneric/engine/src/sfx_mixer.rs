@@ -1,6 +1,6 @@
 //! Software mixer for sound effects.
 //!
-//! Replaces the SDL_mixer / Allegro backends of the C original. It turns Doom's
+//! Replaces the `SDL_mixer` / Allegro backends of the C original. It turns Doom's
 //! DMX sound lumps (unsigned 8-bit mono, any rate) into interleaved stereo
 //! `i16` at the output device's rate. It has no I/O of its own: the platform
 //! says how many frames it wants (`DoomPlatform::audio_frames_wanted`) and the

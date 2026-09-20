@@ -61,8 +61,8 @@ pub fn hulib_draw_text_line(state: &mut GameState, l: &HuTextLine, drawcursor: b
     let mut x = l.x;
     for i in 0..l.l.len() {
         let c = l.l.as_bytes()[i].to_ascii_uppercase();
-        if c as i32 != ' ' as i32 && c as i32 >= l.sc && c as i32 <= '_' as i32 {
-            let glyph = state.ui.hu_stuff.hu_font[(c as i32 - l.sc) as usize];
+        if i32::from(c) != ' ' as i32 && i32::from(c) >= l.sc && i32::from(c) <= '_' as i32 {
+            let glyph = state.ui.hu_stuff.hu_font[(i32::from(c) - l.sc) as usize];
             let patch = cache_patch_num(&*state.assets.fs, &mut state.assets.w_wad, glyph);
             let w = patch.width();
             if x + w > SCREENWIDTH {
@@ -209,11 +209,11 @@ pub fn hulib_reset_itext(it: &mut HuIText) {
 }
 pub fn hulib_key_in_itext(it: &mut HuIText, ch: u8) -> bool {
     let ch = ch.to_ascii_uppercase();
-    if ch as i32 >= ' ' as i32 && ch as i32 <= '_' as i32 {
+    if i32::from(ch) >= ' ' as i32 && i32::from(ch) <= '_' as i32 {
         hulib_add_char_to_text_line(&mut it.l, ch);
-    } else if ch as i32 == KEY_BACKSPACE {
+    } else if i32::from(ch) == KEY_BACKSPACE {
         hulib_del_char_from_itext(it);
-    } else if ch as i32 != KEY_ENTER {
+    } else if i32::from(ch) != KEY_ENTER {
         return false;
     }
     true

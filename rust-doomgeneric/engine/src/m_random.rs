@@ -35,11 +35,11 @@ impl MRandomState {
 
 pub fn p_random(state: &mut MRandomState) -> i32 {
     state.prndindex += 1;
-    RNDTABLE[state.prndindex as usize] as i32
+    i32::from(RNDTABLE[state.prndindex as usize])
 }
 pub fn m_random(state: &mut MRandomState) -> i32 {
     state.rndindex += 1;
-    RNDTABLE[state.rndindex as usize] as i32
+    i32::from(RNDTABLE[state.rndindex as usize])
 }
 pub fn clear_random(state: &mut MRandomState) {
     state.prndindex = 0;

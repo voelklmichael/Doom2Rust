@@ -370,7 +370,7 @@ pub fn fire_flicker(state: &mut GameState, id: FireFlickerId) {
     }
     let amount = (p_random(&mut state.world.m_random) & 3) * 16;
     let sec = state.world.p_setup.sector_mut(flick.sector);
-    if sec.lightlevel as i32 - amount < flick.minlight {
+    if i32::from(sec.lightlevel) - amount < flick.minlight {
         sec.lightlevel = flick.minlight as i16;
     } else {
         sec.lightlevel = (flick.maxlight - amount) as i16;
@@ -384,7 +384,7 @@ pub fn spawn_fire_flicker(
     sector: SectorId,
 ) {
     p_setup.sector_mut(sector).special = 0;
-    let lightlevel = p_setup.sector_mut(sector).lightlevel as i32;
+    let lightlevel = i32::from(p_setup.sector_mut(sector).lightlevel);
     let mut flick = FireFlicker::default();
     flick.thinker.function = ThinkerFn::FireFlicker(fire_flicker);
     flick.sector = sector;
@@ -409,7 +409,7 @@ pub fn light_flash(state: &mut GameState, id: LightFlashId) {
         return;
     }
     let sec = state.world.p_setup.sector_mut(flash.sector);
-    if sec.lightlevel as i32 == flash.maxlight {
+    if i32::from(sec.lightlevel) == flash.maxlight {
         sec.lightlevel = flash.minlight as i16;
         flash.count = (p_random(&mut state.world.m_random) & flash.mintime) + 1;
     } else {
@@ -419,7 +419,7 @@ pub fn light_flash(state: &mut GameState, id: LightFlashId) {
 }
 pub fn spawn_light_flash(world: &mut World, sector: SectorId) {
     world.p_setup.sector_mut(sector).special = 0;
-    let lightlevel = world.p_setup.sector_mut(sector).lightlevel as i32;
+    let lightlevel = i32::from(world.p_setup.sector_mut(sector).lightlevel);
     let mut flash = LightFlash::default();
     flash.thinker.function = ThinkerFn::LightFlash(light_flash);
     flash.sector = sector;
@@ -446,7 +446,7 @@ pub fn strobe_flash(state: &mut GameState, id: StrobeId) {
         return;
     }
     let sec = state.world.p_setup.sector_mut(flash.sector);
-    if sec.lightlevel as i32 == flash.minlight {
+    if i32::from(sec.lightlevel) == flash.minlight {
         sec.lightlevel = flash.maxlight as i16;
         flash.count = flash.brighttime;
     } else {
@@ -455,7 +455,7 @@ pub fn strobe_flash(state: &mut GameState, id: StrobeId) {
     }
 }
 pub fn spawn_strobe_flash(world: &mut World, sector: SectorId, fast_or_slow: i32, in_sync: i32) {
-    let lightlevel = world.p_setup.sector_mut(sector).lightlevel as i32;
+    let lightlevel = i32::from(world.p_setup.sector_mut(sector).lightlevel);
     let mut flash = Strobe {
         sector,
         darktime: fast_or_slow,
@@ -494,13 +494,13 @@ pub fn turn_tag_lights_off(p_setup: &mut PSetupState, line: LineId) {
     let line_tag = p_setup.line(line).tag;
     for j in 0..p_setup.numsectors {
         let sector = SectorId(j as u32);
-        if p_setup.sector_mut(sector).tag as i32 == line_tag as i32 {
-            let mut min = p_setup.sector_mut(sector).lightlevel as i32;
+        if i32::from(p_setup.sector_mut(sector).tag) == i32::from(line_tag) {
+            let mut min = i32::from(p_setup.sector_mut(sector).lightlevel);
             let linecount = p_setup.sector_mut(sector).linecount;
             for i in 0..linecount as usize {
                 let templine = p_setup.sector_mut(sector).lines[i];
                 if let Some(tsec) = get_next_sector(p_setup, templine, sector) {
-                    let light = p_setup.sector_mut(tsec).lightlevel as i32;
+                    let light = i32::from(p_setup.sector_mut(tsec).lightlevel);
                     if light < min {
                         min = light;
                     }
@@ -514,13 +514,13 @@ pub fn light_turn_on(p_setup: &mut PSetupState, line: LineId, mut bright: i32) {
     let line_tag = p_setup.line(line).tag;
     for i in 0..p_setup.numsectors {
         let sector = SectorId(i as u32);
-        if p_setup.sector_mut(sector).tag as i32 == line_tag as i32 {
+        if i32::from(p_setup.sector_mut(sector).tag) == i32::from(line_tag) {
             if bright == 0 {
                 let linecount = p_setup.sector_mut(sector).linecount;
                 for j in 0..linecount as usize {
                     let templine = p_setup.sector_mut(sector).lines[j];
                     if let Some(temp) = get_next_sector(p_setup, templine, sector) {
-                        let light = p_setup.sector_mut(temp).lightlevel as i32;
+                        let light = i32::from(p_setup.sector_mut(temp).lightlevel);
                         if light > bright {
                             bright = light;
                         }
@@ -540,16 +540,16 @@ pub fn glow(state: &mut GameState, id: GlowId) {
     let sec = state.world.p_setup.sector_mut(g.sector);
     match g.direction {
         Direction::Down => {
-            sec.lightlevel = (sec.lightlevel as i32 - GLOWSPEED) as i16;
-            if sec.lightlevel as i32 <= g.minlight {
-                sec.lightlevel = (sec.lightlevel as i32 + GLOWSPEED) as i16;
+            sec.lightlevel = (i32::from(sec.lightlevel) - GLOWSPEED) as i16;
+            if i32::from(sec.lightlevel) <= g.minlight {
+                sec.lightlevel = (i32::from(sec.lightlevel) + GLOWSPEED) as i16;
                 g.direction = Direction::Up;
             }
         }
         Direction::Up => {
-            sec.lightlevel = (sec.lightlevel as i32 + GLOWSPEED) as i16;
-            if sec.lightlevel as i32 >= g.maxlight {
-                sec.lightlevel = (sec.lightlevel as i32 - GLOWSPEED) as i16;
+            sec.lightlevel = (i32::from(sec.lightlevel) + GLOWSPEED) as i16;
+            if i32::from(sec.lightlevel) >= g.maxlight {
+                sec.lightlevel = (i32::from(sec.lightlevel) - GLOWSPEED) as i16;
                 g.direction = Direction::Down;
             }
         }
@@ -562,7 +562,7 @@ pub fn spawn_glowing_light(
     p_tick: &mut PTickState,
     sector: SectorId,
 ) {
-    let lightlevel = p_setup.sector_mut(sector).lightlevel as i32;
+    let lightlevel = i32::from(p_setup.sector_mut(sector).lightlevel);
     let mut g = Glow {
         sector,
         minlight: find_min_surrounding_light(p_setup, sector, lightlevel),
