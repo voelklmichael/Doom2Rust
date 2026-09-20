@@ -563,7 +563,6 @@ pub fn am_init_variables(state: &mut GameState) {
         data3: 0,
         data4: 0,
     };
-    let mut pnum: i32;
     state.ui.am_map.automapactive = true;
     state.ui.am_map.f_oldloc.x = INT_MAX as Fixed;
     state.ui.am_map.amclock = 0;
@@ -584,13 +583,11 @@ pub fn am_init_variables(state: &mut GameState) {
         state.ui.am_map.plr = state.game.g_game.consoleplayer;
     } else {
         state.ui.am_map.plr = PlayerId(0);
-        pnum = 0;
-        while pnum < MAXPLAYERS {
+        for pnum in 0..MAXPLAYERS {
             if state.game.g_game.playeringame[pnum as usize] {
                 state.ui.am_map.plr = PlayerId(pnum as u8);
                 break;
             }
-            pnum += 1;
         }
     }
     let plr_mo_id = state
@@ -1010,8 +1007,6 @@ pub fn draw_mline(
     }
 }
 pub fn draw_grid(state: &mut GameState, color: i32) {
-    let mut x: Fixed;
-    let mut y: Fixed;
     let mut ml: MLine = MLine {
         a: MPoint { x: 0, y: 0 },
         b: MPoint { x: 0, y: 0 },
@@ -1024,8 +1019,7 @@ pub fn draw_grid(state: &mut GameState, color: i32) {
     let mut end: Fixed = state.ui.am_map.m_x + state.ui.am_map.m_w;
     ml.a.y = state.ui.am_map.m_y;
     ml.b.y = state.ui.am_map.m_y + state.ui.am_map.m_h;
-    x = start;
-    while x < end {
+    for x in (start..end).step_by((MAPBLOCKUNITS << FRACBITS) as usize) {
         ml.a.x = x;
         ml.b.x = x;
         draw_mline(
@@ -1035,7 +1029,6 @@ pub fn draw_grid(state: &mut GameState, color: i32) {
             &ml,
             color,
         );
-        x += MAPBLOCKUNITS << FRACBITS;
     }
     start = state.ui.am_map.m_y;
     if (start - state.world.p_setup.bmaporgy) % (MAPBLOCKUNITS << FRACBITS) != 0 {
@@ -1045,8 +1038,7 @@ pub fn draw_grid(state: &mut GameState, color: i32) {
     end = state.ui.am_map.m_y + state.ui.am_map.m_h;
     ml.a.x = state.ui.am_map.m_x;
     ml.b.x = state.ui.am_map.m_x + state.ui.am_map.m_w;
-    y = start;
-    while y < end {
+    for y in (start..end).step_by((MAPBLOCKUNITS << FRACBITS) as usize) {
         ml.a.y = y;
         ml.b.y = y;
         draw_mline(
@@ -1056,7 +1048,6 @@ pub fn draw_grid(state: &mut GameState, color: i32) {
             &ml,
             color,
         );
-        y += MAPBLOCKUNITS << FRACBITS;
     }
 }
 pub fn draw_walls(state: &mut GameState) {

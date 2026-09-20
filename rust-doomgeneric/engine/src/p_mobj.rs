@@ -2334,7 +2334,6 @@ pub struct State {
     pub misc1: i32,
     pub misc2: i32,
 }
-pub const NUMMOBJTYPES: i32 = 137;
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum MobjType {
     Player = 0,
@@ -3566,14 +3565,14 @@ pub fn respawn_specials(state: &mut GameState) {
         .floorheight;
     let fog = spawn_mobj(state, x, y, floorheight, MobjType::Ifog);
     s_start_sound(state, SoundOrigin::Mobj(fog), SfxName::Itmbk);
-    let mut i: i32 = 0;
-    while i < NUMMOBJTYPES {
-        if mthing.kind as i32 == state.assets.info.mobjinfo[i as usize].doomednum {
-            break;
-        }
-        i += 1;
-    }
-    let z = if state.assets.info.mobjinfo[i as usize]
+    let i = state
+        .assets
+        .info
+        .mobjinfo
+        .iter()
+        .position(|info| info.doomednum == mthing.kind as i32)
+        .expect("a respawned map thing has a known type");
+    let z = if state.assets.info.mobjinfo[i]
         .flags
         .contains(MobjFlags::SPAWNCEILING)
     {
@@ -3581,7 +3580,7 @@ pub fn respawn_specials(state: &mut GameState) {
     } else {
         ONFLOORZ as Fixed
     };
-    let mo = spawn_mobj(state, x, y, z, mobjtype_from_raw(i));
+    let mo = spawn_mobj(state, x, y, z, mobjtype_from_raw(i as i32));
     {
         let m = state.world.p_mobj.mo_mut(mo);
         m.spawnpoint = mthing;
@@ -3673,29 +3672,28 @@ pub fn spawn_map_thing(state: &mut GameState, mthing: MapThing) {
     if mthing.options as i32 & bit == 0 {
         return;
     }
-    let mut i: i32 = 0;
-    while i < NUMMOBJTYPES {
-        if mthing.kind as i32 == state.assets.info.mobjinfo[i as usize].doomednum {
-            break;
-        }
-        i += 1;
-    }
-    if i == NUMMOBJTYPES {
+    let Some(i) = state
+        .assets
+        .info
+        .mobjinfo
+        .iter()
+        .position(|info| info.doomednum == mthing.kind as i32)
+    else {
         error(&format!(
             "P_SpawnMapThing: Unknown type {} at ({}, {})",
             mthing.kind as i32, mthing.x as i32, mthing.y as i32,
         ));
-    }
+    };
     if state.game.g_game.deathmatch != 0
-        && state.assets.info.mobjinfo[i as usize]
+        && state.assets.info.mobjinfo[i]
             .flags
             .contains(MobjFlags::NOTDMATCH)
     {
         return;
     }
     if state.game.d_main.nomonsters
-        && (i == MobjType::Skull as i32
-            || state.assets.info.mobjinfo[i as usize]
+        && (i == MobjType::Skull as usize
+            || state.assets.info.mobjinfo[i]
                 .flags
                 .contains(MobjFlags::COUNTKILL))
     {
@@ -3703,7 +3701,7 @@ pub fn spawn_map_thing(state: &mut GameState, mthing: MapThing) {
     }
     let x = ((mthing.x as i32) << FRACBITS) as Fixed;
     let y = ((mthing.y as i32) << FRACBITS) as Fixed;
-    let z = if state.assets.info.mobjinfo[i as usize]
+    let z = if state.assets.info.mobjinfo[i]
         .flags
         .contains(MobjFlags::SPAWNCEILING)
     {
@@ -3711,7 +3709,7 @@ pub fn spawn_map_thing(state: &mut GameState, mthing: MapThing) {
     } else {
         ONFLOORZ as Fixed
     };
-    let mobj = spawn_mobj(state, x, y, z, mobjtype_from_raw(i));
+    let mobj = spawn_mobj(state, x, y, z, mobjtype_from_raw(i as i32));
     state.world.p_mobj.mo_mut(mobj).spawnpoint = mthing;
     if state.world.p_mobj.mo(mobj).tics > 0 {
         let tics = state.world.p_mobj.mo(mobj).tics;

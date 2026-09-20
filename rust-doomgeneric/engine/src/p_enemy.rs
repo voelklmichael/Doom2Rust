@@ -53,7 +53,6 @@ use crate::tables::Angle;
 use crate::tables::FINECOSINE;
 use crate::tables::FINESINE;
 
-use crate::doomdef::MAXPLAYERS;
 use crate::game_state::GameState;
 use crate::m_fixed::FRACUNIT;
 use crate::p_maputl::MAPBLOCKSHIFT;
@@ -1595,16 +1594,9 @@ pub fn boss_death(state: &mut GameState, mo: MobjId) {
     ) {
         return;
     }
-    let mut i: i32 = 0;
-    while i < MAXPLAYERS {
-        if state.game.g_game.playeringame[i as usize]
-            && state.game.g_game.players[i as usize].health > 0
-        {
-            break;
-        }
-        i += 1;
-    }
-    if i == MAXPLAYERS {
+    let anyone_alive = PlayerId::all()
+        .any(|p| state.game.g_game.playeringame[p] && state.game.g_game.players[p].health > 0);
+    if !anyone_alive {
         return;
     }
     let mo_type = state.world.p_mobj.mo(mo).kind;

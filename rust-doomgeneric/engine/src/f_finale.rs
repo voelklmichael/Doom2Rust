@@ -5,7 +5,7 @@ use crate::d_event::GameScreenState;
 use crate::d_mode::GameMission;
 use crate::d_mode::GameMode;
 use crate::d_mode::GameVersion;
-use crate::doomdef::MAXPLAYERS;
+use crate::d_player::PlayerId;
 use crate::doomdef::SCREENHEIGHT;
 use crate::doomdef::SCREENWIDTH;
 use crate::game_state::GameState;
@@ -336,16 +336,10 @@ pub fn f_responder(state: &mut GameState, event: &Event) -> bool {
     false
 }
 pub fn f_ticker(state: &mut GameState) {
-    let mut i: usize;
     if state.game.doomstat.gamemode == GameMode::Commercial && state.ui.f_finale.finalecount > 50 {
-        i = 0_usize;
-        while i < MAXPLAYERS as usize {
-            if state.game.g_game.players[i].cmd.buttons != 0 {
-                break;
-            }
-            i = i.wrapping_add(1);
-        }
-        if i < MAXPLAYERS as usize {
+        let anyone_pressing =
+            PlayerId::all().any(|p| state.game.g_game.players[p].cmd.buttons != 0);
+        if anyone_pressing {
             if state.game.g_game.gamemap == 30 {
                 start_cast(state);
             } else {

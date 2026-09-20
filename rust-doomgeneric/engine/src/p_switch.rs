@@ -297,8 +297,7 @@ pub fn init_switch_list(
         episode = 3;
     }
     let mut index: i32 = 0;
-    let mut i: i32 = 0;
-    while i < MAXSWITCHES {
+    for i in 0..MAXSWITCHES {
         if ALPH_SWITCH_LIST[i as usize].episode == 0 {
             p_switch.numswitches = index / 2;
             p_switch.switchlist[index as usize] = -1;
@@ -312,7 +311,6 @@ pub fn init_switch_list(
                 texture_num_for_name(r_data, &ALPH_SWITCH_LIST[i as usize].name2.as_str());
             index += 1;
         }
-        i += 1;
     }
 }
 pub fn start_button(

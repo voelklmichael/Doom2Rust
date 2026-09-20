@@ -1781,8 +1781,7 @@ pub fn m_drawer(state: &mut GameState) {
     state.ui.m_menu.drawer_x = state.ui.m_menu.current().x;
     state.ui.m_menu.drawer_y = state.ui.m_menu.current().y;
     let max: u32 = state.ui.m_menu.current().numitems as u32;
-    let mut i: u32 = 0;
-    while i < max {
+    for i in 0..max {
         let item_name = state.ui.m_menu.current().items[i as usize].name;
         if !item_name.is_empty() {
             let __wcache2221_2 = cache_patch_name(
@@ -1800,7 +1799,6 @@ pub fn m_drawer(state: &mut GameState) {
             );
         }
         state.ui.m_menu.drawer_y = (state.ui.m_menu.drawer_y as i32 + LINEHEIGHT) as i16;
-        i = i.wrapping_add(1);
     }
     let __wcache2231_1 = cache_patch_name(
         &*state.assets.fs,
