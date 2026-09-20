@@ -1,2 +1,4 @@
 # Output of build.sh.
 /www/pkg
+/www/version.js
+/www/version.json

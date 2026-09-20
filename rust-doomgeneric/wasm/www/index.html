@@ -32,6 +32,11 @@
     dl.keys { display: grid; grid-template-columns: repeat(6, auto); gap: 2px 16px; margin: 0; color: var(--dim); font-size: 0.85rem; }
     dl.keys dt { color: var(--fg); text-align: right; }
     dl.keys dd { margin: 0; }
+    .build { margin: 0; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 4px 12px; color: var(--dim); font-size: 0.85rem; }
+    .build button { font: inherit; color: var(--fg); background: none; padding: 2px 10px; border: 1px solid var(--dim); border-radius: 4px; cursor: pointer; }
+    .build button:hover:not(:disabled) { border-color: var(--fg); }
+    .build button:disabled { cursor: default; opacity: 0.6; }
+    .build .note.attention { color: var(--accent); }
     @media (max-width: 800px) { dl.keys { grid-template-columns: repeat(4, auto); } }
     @media (max-width: 480px) { dl.keys { grid-template-columns: repeat(2, auto); } }
   </style>
@@ -62,6 +67,11 @@
     <dt>F2 / F3</dt><dd>save / load</dd>
     <dt>Double click</dt><dd>full screen</dd>
   </dl>
+  <p class="build">
+    <span>Version <span id="version">…</span></span>
+    <button id="update" type="button" title="Fetch the page and the game again, ignoring what the browser has kept">Update</button>
+    <span id="note" class="note"></span>
+  </p>
   <script type="module" src="main.js"></script>
 </body>
 </html>

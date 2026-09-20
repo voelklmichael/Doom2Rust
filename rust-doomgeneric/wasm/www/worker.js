@@ -1,6 +1,6 @@
 // Runs the game. Everything the game shows or plays is sent to the page (main.js) as it happens,
 // and the page's keys arrive as messages between two ticks.
-import init, { Setup } from './pkg/doomgeneric_wasm.js';
+import init, { Setup, build_version } from './pkg/doomgeneric_wasm.js';
 import * as storage from './storage.js';
 
 // One tic of game time, 1/35 s.
@@ -76,6 +76,7 @@ async function start(wad) {
   let setup;
   try {
     await init();
+    postMessage({ type: 'version', version: build_version() });
     try {
       setup = new Setup(new Uint8Array(wad));
     } catch (error) {

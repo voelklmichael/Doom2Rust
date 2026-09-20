@@ -34,6 +34,21 @@ touches the engine or this crate (and on demand from the Actions tab). Once, in 
 `https://<user>.github.io/<repo>/`. Everything the page loads is a relative path, so it works under
 that sub-path.
 
+## Version and updating
+
+The page shows the build it is (`2026-09-20 19:23 UTC ec625a9`, with `-dirty` when it was built from
+uncommitted changes) under the key list. `build.sh` sets it: it bakes it into the wasm
+(`build_version`) and writes `www/version.js` (what the page is) and `www/version.json` (what the
+server has now; both are generated and not in git). The page asks for `version.json` without the
+browser cache and says when a newer build is available; when the game reports another build than
+the page, it says so too.
+
+Browsers keep files for a while without asking the server (GitHub Pages allows 10 minutes; a plain
+static server may not say, and the browser then guesses). The **Update** button fetches every file
+of the site again with `cache: 'reload'`, which skips that cache and replaces what is in it, and then
+reloads the page. `build.sh` lists the files in `version.js`, so a new file is picked up by
+rebuilding.
+
 ## How it fits together
 
 * `src/lib.rs` exports `Setup` (checks the IWAD, takes the files kept from earlier visits, and
