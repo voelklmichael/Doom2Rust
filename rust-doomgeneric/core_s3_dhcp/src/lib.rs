@@ -1,4 +1,4 @@
-//! A minimal DHCP server for the CoreS3's own Wi-Fi network, so that a laptop that joins it gets
+//! A minimal DHCP server for the `CoreS3`'s own Wi-Fi network, so that a laptop that joins it gets
 //! an address without any setup. `no_std`, and independent of the network stack: the firmware
 //! feeds it one received datagram at a time and broadcasts whatever it returns.
 //!

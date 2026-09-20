@@ -2,6 +2,45 @@
 members = ["engine", "cmdline", "fs", "x11", "wasm", "core_s3_protocol", "core_s3_sender", "core_s3_dhcp", "core_s3_audio", "core_s3_ws"]
 resolver = "2"
 
+# Lints beyond clippy's defaults, shared by every member (each opts in with `[lints] workspace =
+# true`). They keep the code from drifting back to C habits (needless `&mut`, repeated type names,
+# `let x; if ... { x = ... }`, `_ =>` hiding the last variant, ...). Deliberately not enabled:
+# `option_if_let_else`, `verbose_bit_mask` (`x & 31 == 0` reads better than `trailing_zeros()`)
+# and the cast lints, which the fixed-point and pixel code cannot satisfy.
+[workspace.lints.clippy]
+assigning_clones = "warn"
+cast_lossless = "warn"
+comparison_chain = "warn"
+derive_partial_eq_without_eq = "warn"
+doc_markdown = "warn"
+explicit_into_iter_loop = "warn"
+explicit_iter_loop = "warn"
+if_not_else = "warn"
+items_after_statements = "warn"
+manual_assert = "warn"
+manual_let_else = "warn"
+manual_midpoint = "warn"
+map_unwrap_or = "warn"
+match_same_arms = "warn"
+match_wildcard_for_single_variants = "warn"
+needless_continue = "warn"
+needless_pass_by_ref_mut = "warn"
+needless_pass_by_value = "warn"
+needless_type_cast = "warn"
+nonminimal_bool = "warn"
+range_plus_one = "warn"
+redundant_closure_for_method_calls = "warn"
+redundant_else = "warn"
+redundant_pub_crate = "warn"
+semicolon_if_nothing_returned = "warn"
+trivially_copy_pass_by_ref = "warn"
+uninlined_format_args = "warn"
+unnecessary_semicolon = "warn"
+unnecessary_trailing_comma = "warn"
+unnested_or_patterns = "warn"
+use_self = "warn"
+useless_let_if_seq = "warn"
+
 # The browser build (wasm/build.sh): as small as it goes, and as fast as `release` within
 # measurement noise. A profile of its own keeps the desktop build untouched.
 [profile.wasm]

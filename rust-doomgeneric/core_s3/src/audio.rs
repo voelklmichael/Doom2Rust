@@ -1,14 +1,14 @@
-//! The CoreS3's speaker: an AW88298 amplifier fed by I2S1 with a circular DMA ring.
+//! The `CoreS3`'s speaker: an AW88298 amplifier fed by I2S1 with a circular DMA ring.
 //!
-//! Hardware facts (M5Unified's CoreS3 code, the `core-s3` BSP and its `sound_wav` example):
+//! Hardware facts (`M5Unified`'s `CoreS3` code, the `core-s3` BSP and its `sound_wav` example):
 //! * The amp is on the internal I2C (0x36, SDA GPIO12 / SCL GPIO11) and is held in reset by the
-//!   AW9523B expander's P0_2, which the BSP's `CoreS3::init_core_s3_power` already releases.
+//!   AW9523B expander's `P0_2`, which the BSP's `CoreS3::init_core_s3_power` already releases.
 //! * Audio goes ESP32-S3 I2S1 -> AW88298 over BCLK = GPIO34, WS = GPIO33, DOUT = GPIO13. The amp is
 //!   an I2S *slave* and derives its clocks from BCLK/WS with its own PLL, so no MCLK (GPIO0) is
 //!   needed. The format is Philips I2S, 16 bit slots, 32 BCLK per frame.
 //! * The amp needs a running BCLK before it is enabled, so [`Speaker::open`] starts the I2S clock
 //!   (sending silence) first and [`init_amp`] comes second.
-//! * The amp's own volume register stays at "full" (M5Unified does the same and scales the samples
+//! * The amp's own volume register stays at "full" (`M5Unified` does the same and scales the samples
 //!   instead); volume is the caller's business.
 //!
 //! The ring is [`RING_CHUNKS`] = 3 DMA descriptors of [`CHUNK_FRAMES`] stereo frames each, in
@@ -86,11 +86,11 @@ impl Speaker {
         dout: GPIO13<'static>,
     ) -> Result<Self, &'static str> {
         static TAKEN: AtomicBool = AtomicBool::new(false);
+        static TX: StaticCell<Tx> = StaticCell::new();
         assert!(
             !TAKEN.swap(true, Ordering::SeqCst),
             "Speaker::open called twice"
         );
-        static TX: StaticCell<Tx> = StaticCell::new();
 
         let (_, _, ring, descriptors) = dma_circular_buffers!(0, RING_BYTES);
         let ring: *mut [u8; RING_BYTES] = ring;
@@ -187,7 +187,7 @@ impl Speaker {
     }
 }
 
-/// The AW88298's sample-rate setting for `rate` Hz (register 0x06's low bits), the way M5Unified
+/// The AW88298's sample-rate setting for `rate` Hz (register 0x06's low bits), the way `M5Unified`
 /// works it out: 0 = 8k, 1 = 11k, 2 = 12k, 3 = 16k, 4 = 22.05k, 5 = 24k, 6 = 32k, 7 = 44.1k, 8 = 48k.
 fn rate_code(rate: u32) -> u16 {
     const LIMITS: [u32; 10] = [4, 5, 6, 8, 10, 11, 15, 20, 22, 44];
@@ -215,7 +215,7 @@ fn write16(i2c: &mut I2c<'_, Blocking>, register: u8, value: u16) -> Result<(), 
     i2c.write(AMP_ADDRESS, &[register, high, low])
 }
 
-/// Drives the amp's reset line (AW9523B P0_2, output register 0x02 bit 2).
+/// Drives the amp's reset line (AW9523B `P0_2`, output register 0x02 bit 2).
 #[inline(never)]
 fn amp_reset_line(i2c: &mut I2c<'_, Blocking>, high: bool) -> Result<(), I2cError> {
     let mut port = [0u8];
@@ -242,10 +242,10 @@ pub fn log_amp(i2c: &mut I2c<'_, Blocking>, when: &str) {
     );
 }
 
-/// Sets the amp up for [`SAMPLE_RATE`] (M5Unified's sequence) and unmutes it. Start the I2S clock
+/// Sets the amp up for [`SAMPLE_RATE`] (`M5Unified`'s sequence) and unmutes it. Start the I2S clock
 /// ([`Speaker::open`]) first. Call it while the caller still owns the internal I2C.
 ///
-/// The amp is reset first (AW9523B P0_2 low, then high): it keeps its registers across an ESP32
+/// The amp is reset first (AW9523B `P0_2` low, then high): it keeps its registers across an ESP32
 /// reset, so without this a working setup could hide a broken sequence.
 pub fn init_amp(i2c: &mut I2c<'_, Blocking>) -> Result<(), I2cError> {
     log_amp(i2c, "before reset");

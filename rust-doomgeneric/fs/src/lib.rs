@@ -86,6 +86,6 @@ impl DoomFileSystem for StdFileSystem {
     }
 
     fn temp_path(&self, name: &str) -> String {
-        format!("/tmp/{}", name)
+        format!("/tmp/{name}")
     }
 }

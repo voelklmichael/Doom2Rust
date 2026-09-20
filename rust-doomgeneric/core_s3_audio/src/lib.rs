@@ -1,4 +1,4 @@
-//! The hardware-free half of the CoreS3's sound output, so it can be unit tested on the host.
+//! The hardware-free half of the `CoreS3`'s sound output, so it can be unit tested on the host.
 //!
 //! The game (core 1) mixes sound into a [`FrameQueue`]; a task on core 0 moves it from there into
 //! the I2S DMA ring, one DMA chunk at a time. The queue keeps the game from ever waiting on the

@@ -48,9 +48,9 @@ pub struct Setup {
 impl Setup {
     /// Fails, saying why, if `wad` is not an IWAD the game can run.
     #[wasm_bindgen(constructor)]
-    pub fn new(wad: Vec<u8>) -> Result<Setup, JsError> {
+    pub fn new(wad: Vec<u8>) -> Result<Self, JsError> {
         let wad_name = wad::identify(&wad).map_err(|reason| JsError::new(&reason))?;
-        Ok(Setup {
+        Ok(Self {
             wad_name,
             wad,
             saved: Vec::new(),

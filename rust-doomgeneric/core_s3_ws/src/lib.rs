@@ -1,4 +1,4 @@
-//! Just enough HTTP and WebSocket (RFC 6455) for the CoreS3's web controller: read a request, hand
+//! Just enough HTTP and WebSocket (RFC 6455) for the `CoreS3`'s web controller: read a request, hand
 //! out the page or upgrade to a WebSocket, and decode the frames a browser sends. `no_std`, and
 //! independent of the network stack, so it is tested on the host.
 //!

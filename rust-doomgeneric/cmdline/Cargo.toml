@@ -8,5 +8,8 @@ edition = "2021"
 # Turns a command line into the engine's `Options`. The engine does not read a command line
 # itself; a frontend that has one (x11) uses this, a frontend that does not (the CoreS3 firmware,
 # tests) fills in `Options` directly.
+[lints]
+workspace = true
+
 [dependencies]
 rust_doomgeneric = { path = "../engine" }

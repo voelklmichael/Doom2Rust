@@ -111,6 +111,8 @@ This:
   `nightly-2023-04-15` — the translated code uses unstable features
   (`c_variadic`, `extern_types`, `raw_ref_op`) that require a nightly
   compiler.
+  (Historical: the pin was later removed and the crate builds on stable Rust; see
+  `docs/rust-build.md`.)
 - Depends on the `libc` and `c2rust-bitfields` crates.
 
 `rustfmt` printed `rustfmt failed, code may not be well-formatted` /

@@ -63,7 +63,7 @@ mod tests {
     use super::*;
 
     /// A WAD with empty lumps of the given names.
-    fn wad(magic: &[u8; 4], lumps: &[&str]) -> Vec<u8> {
+    fn wad(magic: [u8; 4], lumps: &[&str]) -> Vec<u8> {
         let mut bytes = magic.to_vec();
         bytes.extend((lumps.len() as u32).to_le_bytes());
         bytes.extend(12u32.to_le_bytes());
@@ -78,7 +78,7 @@ mod tests {
 
     #[test]
     fn games_are_told_apart_by_their_levels() {
-        let iwad = |lumps: &[&str]| identify(&wad(b"IWAD", lumps));
+        let iwad = |lumps: &[&str]| identify(&wad(*b"IWAD", lumps));
         assert_eq!(iwad(&["PLAYPAL", "E1M1", "E1M2"]), Ok("doom1.wad"));
         assert_eq!(iwad(&["E1M1", "E2M1", "E3M1"]), Ok("doom.wad"));
         assert_eq!(iwad(&["E1M1", "E2M1", "E3M1", "E4M1"]), Ok("doom.wad"));
@@ -90,9 +90,9 @@ mod tests {
     #[test]
     fn full_lump_names_are_not_confused_with_longer_ones() {
         // A lump called E1M1X is not E1M1.
-        assert!(identify(&wad(b"IWAD", &["E1M1X"])).is_err());
+        assert!(identify(&wad(*b"IWAD", &["E1M1X"])).is_err());
         assert_eq!(
-            identify(&wad(b"IWAD", &["E1M12345"])),
+            identify(&wad(*b"IWAD", &["E1M12345"])),
             Err(NO_LEVELS.to_string())
         );
     }
@@ -102,20 +102,20 @@ mod tests {
 
     #[test]
     fn files_that_are_not_runnable_iwads_say_why() {
-        assert!(identify(&wad(b"PWAD", &["MAP01"]))
+        assert!(identify(&wad(*b"PWAD", &["MAP01"]))
             .unwrap_err()
             .contains("PWAD"));
         assert!(identify(b"hello, world").unwrap_err().contains("not a WAD"));
         assert!(identify(b"").unwrap_err().contains("not a WAD"));
         assert_eq!(
-            identify(&wad(b"IWAD", &["PLAYPAL"])),
+            identify(&wad(*b"IWAD", &["PLAYPAL"])),
             Err(NO_LEVELS.to_string())
         );
-        let mut cut = wad(b"IWAD", &["MAP01", "MAP02"]);
+        let mut cut = wad(*b"IWAD", &["MAP01", "MAP02"]);
         cut.truncate(cut.len() - 1);
         assert!(identify(&cut).unwrap_err().contains("truncated"));
         // A directory that claims to be enormous does not overflow anything.
-        let mut huge = wad(b"IWAD", &[]);
+        let mut huge = wad(*b"IWAD", &[]);
         huge[4..8].copy_from_slice(&u32::MAX.to_le_bytes());
         assert!(identify(&huge).unwrap_err().contains("truncated"));
         assert!(identify(b"IWAD").unwrap_err().contains("truncated"));

@@ -1,4 +1,4 @@
-//! `DoomPlatform` for the CoreS3: LCD output, a millisecond clock and the serial console.
+//! `DoomPlatform` for the `CoreS3`: LCD output, a millisecond clock and the serial console.
 //! Input arrives over Wi-Fi (see `net`); the LCD is driven from core 0 (see `lcd`).
 
 use core::sync::atomic::{AtomicU32, Ordering};
@@ -138,7 +138,7 @@ fn to_rgb565(pixel: u32) -> Rgb565 {
     Rgb565::new(r >> 3, g >> 2, b >> 3)
 }
 
-/// The engine key code for a command: what the engine's default bindings (m_controls.rs) expect.
+/// The engine key code for a command: what the engine's default bindings (`m_controls.rs`) expect.
 /// `None` for a command that is not a game key.
 fn doom_key(command: Command) -> Option<u8> {
     Some(match command {

@@ -1,4 +1,4 @@
-//! Keyboard controller for DOOM running on the CoreS3: connects to the board over TCP and sends
+//! Keyboard controller for DOOM running on the `CoreS3`: connects to the board over TCP and sends
 //! one byte per key press or release (see `core_s3_protocol`).
 //!
 //! ```text
@@ -8,7 +8,7 @@
 //! Keys: arrows or WASD move/turn, Q/E strafe, Space fire, F use, 1-7 weapons, Tab map,
 //! Enter/Esc/Y/N menus, R toggles run, Ctrl-C quits.
 //!
-//! Terminals that support the kitty keyboard protocol (kitty, WezTerm, foot, Ghostty, ...) report
+//! Terminals that support the kitty keyboard protocol (kitty, `WezTerm`, foot, Ghostty, ...) report
 //! real key releases. On other terminals a key counts as released `--hold-ms` (default 150) after
 //! its last press or auto-repeat, so holding a key briefly stutters until auto-repeat starts.
 

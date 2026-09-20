@@ -8,6 +8,9 @@ edition = "2021"
 [lib]
 crate-type = ["cdylib", "rlib"]
 
+[lints]
+workspace = true
+
 [dependencies]
 rust_doomgeneric = { path = "../engine" }
 # The version has to match the `wasm-bindgen` command line tool that build.sh runs.
