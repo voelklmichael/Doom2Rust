@@ -366,6 +366,62 @@ Why it worked: the oracle (section 7), one small PR per step, a verification bar
 identical simulation hashes on demo1 to demo3), and stacked PRs merged in order. The standing
 "continue until done" authorization let phases chain without waiting.
 
+### Function pointers and calling conventions: a portability bug that came with the C
+
+Doom stores what each animation state and each thinker does in a union, `actionf_t`, of three
+function-pointer types: no arguments (`acv`), one pointer (`acp1`), two pointers (`acp2`). The
+mechanism, as the c2rust output showed it (checked against the code before commit `9b67e93`):
+
+- `info.c` declares all ~74 `A_*` action functions with empty parentheses, i.e. "arguments
+  unspecified", and fills the 967-entry `states[]` table through the no-argument member.
+- The game later reads the member with the arity it needs: `acp1(mobj)` for monsters and
+  thinkers, `acp2(player, psp)` for weapon states.
+- Concrete case: `A_Light0` was declared `fn A_Light0();` in `info.rs`, defined as
+  `A_Light0(player, psp)` in `p_pspr.rs`, and called through `acp2`. Three different
+  signatures for one function. The transpiled Rust even had a compiler warning about
+  `A_ReFire` being redeclared with a different signature; it disappeared with the fix.
+
+That is undefined behaviour in C and in Rust: a call through a pointer whose type is not the
+function's real type. It works only on platforms whose calling convention passes arguments the
+same way whatever the callee declares, which is why nobody noticed. It is the kind of thing that
+breaks on targets that check the signature of an indirect call (WebAssembly is the usual
+example, not tested here) or when an optimiser gets smarter. In the Rust translation it was
+also the reason the ~125 `A_*` action functions had to stay `extern "C"` while the other
+vestigial ones were being stripped: Rust's own ABI makes no such promise, so the C ABI was doing
+load-bearing work.
+
+What was done:
+
+- **Sep 6 (`9b67e93`):** the union became two enums, `StateAction` and `ThinkerFn`, whose variants
+  carry each function's real signature. The fake forward declarations became ordinary imports.
+  Checked then by a smoke test (boot, movement, weapon fire); the golden-hash tests came later.
+- **Sep 12 (PRs #312 to #316):** every remaining internal `extern "C"` function pointer became a
+  plain Rust `fn`. Along the way two more instances of the same trick turned up: an exit
+  handler whose return type did not match (`G_CheckDemoStatus`, fixed with a small wrapper) and
+  a menu callback passed as `*mut c_void` and transmuted in and out at six call sites.
+- **Sep 12 (`2a1178b`):** the platform hooks (`DG_DrawFrame`, `DG_GetKey`, ...), which were
+  `extern "C"` symbols matched by name between the engine and the X11 program, became the
+  `DoomPlatform` trait.
+- **Sep 18 (PRs #451 to #459):** the function-pointer types became safe `fn`s taking typed ids
+  instead of raw pointers.
+
+Today the engine, `fs` and the firmware contain no `transmute`, no `extern "C"` and no
+`#[no_mangle]`; the only C ABI left is the real Xlib FFI in the `x11` crate.
+
+**Would the old assumption have held on the ESP32-S3?** Probably in practice, not by any
+guarantee (my reasoning from the Xtensa windowed ABI, not tested): arguments travel in
+registers `a2` to `a7`, and Doom's actions take one or two 32-bit pointers. But the device build
+needs Espressif's fork of Rust and LLVM, so relying on undefined behaviour there would have been
+an extra unknown. In the event it did not matter: the firmware crate was created on Sep 19, 13
+days after the fix, and I found no commit that needed a calling-convention change for the
+device. The one engine change made for the chip was `#[inline(never)]` on five state
+constructors, because the Xtensa linker failed (`l32r: literal target out of range`) once
+`init_game_state` grew past 256 KB.
+
+Worth a sentence in the post: the original compiled, ran and passed every check on the desktop,
+and was still wrong. Moving to a stricter language forced each function to say what it takes,
+and that is what made the same engine portable to a chip with a different ABI.
+
 ## 9. What did not work
 
 - **Direct AI translation (January to April).** Fine for small independent files, a complete
