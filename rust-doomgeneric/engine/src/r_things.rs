@@ -69,8 +69,8 @@ impl Default for RThingsState {
 impl RThingsState {
     pub const fn new() -> Self {
         Self {
-            pspritescale: 0,
-            pspriteiscale: 0,
+            pspritescale: Fixed::ZERO,
+            pspriteiscale: Fixed::ZERO,
             spritelights: LightRow48::Normal(0),
             negonearray: [0; 320],
             screenheightarray: [0; 320],
@@ -86,14 +86,14 @@ impl RThingsState {
             vissprites: [VisSprite {
                 x1: 0,
                 x2: 0,
-                gx: 0,
-                gy: 0,
-                gz: 0,
-                gzt: 0,
-                startfrac: 0,
-                scale: 0,
-                xiscale: 0,
-                texturemid: 0,
+                gx: Fixed::ZERO,
+                gy: Fixed::ZERO,
+                gz: Fixed::ZERO,
+                gzt: Fixed::ZERO,
+                startfrac: Fixed::ZERO,
+                scale: Fixed::ZERO,
+                xiscale: Fixed::ZERO,
+                texturemid: Fixed::ZERO,
                 patch: 0,
                 colormap: None,
                 mobjflags: MobjFlags::empty(),
@@ -102,22 +102,22 @@ impl RThingsState {
             overflowsprite: VisSprite {
                 x1: 0,
                 x2: 0,
-                gx: 0,
-                gy: 0,
-                gz: 0,
-                gzt: 0,
-                startfrac: 0,
-                scale: 0,
-                xiscale: 0,
-                texturemid: 0,
+                gx: Fixed::ZERO,
+                gy: Fixed::ZERO,
+                gz: Fixed::ZERO,
+                gzt: Fixed::ZERO,
+                startfrac: Fixed::ZERO,
+                scale: Fixed::ZERO,
+                xiscale: Fixed::ZERO,
+                texturemid: Fixed::ZERO,
                 patch: 0,
                 colormap: None,
                 mobjflags: MobjFlags::empty(),
             },
             mfloorclip: None,
             mceilingclip: None,
-            spryscale: 0,
-            sprtopscreen: 0,
+            spryscale: Fixed::ZERO,
+            sprtopscreen: Fixed::ZERO,
             vissprite_order: Vec::new(),
             clipbot: [0; 320],
             cliptop: [0; 320],
@@ -144,7 +144,7 @@ pub struct VisSprite {
 pub const FF_FULLBRIGHT: i32 = 0x8000;
 pub const FF_FRAMEMASK: i32 = 0x7fff;
 pub const MAXVISSPRITES: usize = 128;
-pub const MINZ: i32 = FRACUNIT * 4;
+pub const MINZ: Fixed = Fixed::from_int(4);
 pub const BASEYCENTER: i32 = 100;
 pub fn install_sprite_lump(
     r_data: &RDataState,
@@ -328,11 +328,11 @@ pub fn draw_masked_column(state: &mut GameState, mut post: ColumnSource) {
             break;
         }
         let length = read_source(&state.render.r_data, &state.assets.w_wad, post, 1);
-        let topscreen: i32 = state.render.r_things.sprtopscreen
+        let topscreen: Fixed = state.render.r_things.sprtopscreen
             + state.render.r_things.spryscale * i32::from(topdelta);
-        let bottomscreen: i32 = topscreen + state.render.r_things.spryscale * i32::from(length);
-        state.render.r_draw.dc_yl = (topscreen + FRACUNIT - 1) >> FRACBITS;
-        state.render.r_draw.dc_yh = (bottomscreen - 1) >> FRACBITS;
+        let bottomscreen: Fixed = topscreen + state.render.r_things.spryscale * i32::from(length);
+        state.render.r_draw.dc_yl = (topscreen + FRACUNIT - Fixed(1)).to_int();
+        state.render.r_draw.dc_yh = (bottomscreen - Fixed(1)).to_int();
         let floorclip = i32::from(mfloorclip.get(state, state.render.r_draw.dc_x as isize));
         let ceilingclip = i32::from(mceilingclip.get(state, state.render.r_draw.dc_x as isize));
         if state.render.r_draw.dc_yh >= floorclip {
@@ -344,7 +344,7 @@ pub fn draw_masked_column(state: &mut GameState, mut post: ColumnSource) {
         if state.render.r_draw.dc_yl <= state.render.r_draw.dc_yh {
             state.render.r_draw.dc_source = Some(advance_source(post, 3));
             state.render.r_draw.dc_texturemid =
-                (basetexturemid - (i32::from(topdelta) << FRACBITS)) as Fixed;
+                basetexturemid - Fixed::from_int(i32::from(topdelta));
             state
                 .render
                 .r_main
@@ -368,7 +368,7 @@ pub fn draw_vis_sprite(state: &mut GameState, vis: &VisSprite) {
             as usize
             - 256;
     }
-    state.render.r_draw.dc_iscale = (vis.xiscale.abs() >> state.render.r_main.detailshift) as Fixed;
+    state.render.r_draw.dc_iscale = vis.xiscale.abs() >> state.render.r_main.detailshift;
     state.render.r_draw.dc_texturemid = vis.texturemid;
     let mut frac: Fixed = vis.startfrac;
     state.render.r_things.spryscale = vis.scale;
@@ -379,7 +379,7 @@ pub fn draw_vis_sprite(state: &mut GameState, vis: &VisSprite) {
         );
     state.render.r_draw.dc_x = vis.x1;
     while state.render.r_draw.dc_x <= vis.x2 {
-        let texturecolumn: i32 = frac >> FRACBITS;
+        let texturecolumn: i32 = frac.to_int();
         if texturecolumn < 0 || texturecolumn >= patch.width() {
             error("R_DrawSpriteRange: bad texturecolumn");
         }
@@ -445,26 +445,28 @@ pub fn project_sprite(state: &mut GameState, thing_id: MobjId) {
         (i32::from(sprframe.lump[rot]), sprframe.flip[rot] != 0)
     };
     tx -= state.render.r_data.spriteoffset[lump as usize];
-    let x1: i32 = (state.render.r_main.centerxfrac + fixed_mul(tx, xscale)) >> FRACBITS;
+    let x1: i32 = (state.render.r_main.centerxfrac + fixed_mul(tx, xscale)).to_int();
     if x1 > state.render.r_draw.viewwidth {
         return;
     }
     tx += state.render.r_data.spritewidth[lump as usize];
-    let x2: i32 = ((state.render.r_main.centerxfrac + fixed_mul(tx, xscale)) >> FRACBITS) - 1;
+    let x2: i32 = (((state.render.r_main.centerxfrac + fixed_mul(tx, xscale)) >> FRACBITS)
+        - Fixed(1))
+    .to_bits();
     if x2 < 0 {
         return;
     }
     let mut vis = VisSprite {
         x1: 0,
         x2: 0,
-        gx: 0,
-        gy: 0,
-        gz: 0,
-        gzt: 0,
-        startfrac: 0,
-        scale: 0,
-        xiscale: 0,
-        texturemid: 0,
+        gx: Fixed::ZERO,
+        gy: Fixed::ZERO,
+        gz: Fixed::ZERO,
+        gzt: Fixed::ZERO,
+        startfrac: Fixed::ZERO,
+        scale: Fixed::ZERO,
+        xiscale: Fixed::ZERO,
+        texturemid: Fixed::ZERO,
         patch: 0,
         colormap: None,
         mobjflags: MobjFlags::empty(),
@@ -484,10 +486,10 @@ pub fn project_sprite(state: &mut GameState, thing_id: MobjId) {
     };
     let iscale: Fixed = fixed_div(FRACUNIT, xscale);
     if flip {
-        vis.startfrac = (state.render.r_data.spritewidth[lump as usize] - 1) as Fixed;
+        vis.startfrac = state.render.r_data.spritewidth[lump as usize] - Fixed(1);
         vis.xiscale = -iscale;
     } else {
-        vis.startfrac = 0;
+        vis.startfrac = Fixed::ZERO;
         vis.xiscale = iscale;
     }
     if vis.x1 > x1 {
@@ -501,7 +503,8 @@ pub fn project_sprite(state: &mut GameState, thing_id: MobjId) {
     } else if thing_frame & FF_FULLBRIGHT != 0 {
         vis.colormap = Some(0);
     } else {
-        let mut index = (xscale >> (LIGHTSCALESHIFT - state.render.r_main.detailshift)) as usize;
+        let mut index =
+            (xscale >> (LIGHTSCALESHIFT - state.render.r_main.detailshift)).to_bits() as usize;
         if index >= MAXLIGHTSCALE {
             index = MAXLIGHTSCALE - 1;
         }
@@ -509,7 +512,7 @@ pub fn project_sprite(state: &mut GameState, thing_id: MobjId) {
             state
                 .render
                 .r_main
-                .light_row48(state.render.r_things.spritelights)[index as usize],
+                .light_row48(state.render.r_things.spritelights)[index],
         );
     }
     store_vis_sprite(&mut state.render.r_things, vis);
@@ -541,14 +544,14 @@ pub fn draw_psprite(state: &mut GameState, psp: &PspDef) {
     let mut avis: VisSprite = VisSprite {
         x1: 0,
         x2: 0,
-        gx: 0,
-        gy: 0,
-        gz: 0,
-        gzt: 0,
-        startfrac: 0,
-        scale: 0,
-        xiscale: 0,
-        texturemid: 0,
+        gx: Fixed::ZERO,
+        gy: Fixed::ZERO,
+        gz: Fixed::ZERO,
+        gzt: Fixed::ZERO,
+        startfrac: Fixed::ZERO,
+        scale: Fixed::ZERO,
+        xiscale: Fixed::ZERO,
+        texturemid: Fixed::ZERO,
         patch: 0,
         colormap: None,
         mobjflags: MobjFlags::empty(),
@@ -571,24 +574,25 @@ pub fn draw_psprite(state: &mut GameState, psp: &PspDef) {
     let sprframe = &sprdef.spriteframes[(psp_state_frame & FF_FRAMEMASK) as usize];
     let lump: i32 = i32::from(sprframe.lump[0]);
     let flip: bool = sprframe.flip[0] != 0;
-    let mut tx: Fixed = (psp.sx - 160 * FRACUNIT) as Fixed;
+    let mut tx: Fixed = psp.sx - 160 * FRACUNIT;
     tx -= state.render.r_data.spriteoffset[lump as usize];
     let x1: i32 = (state.render.r_main.centerxfrac
         + fixed_mul(tx, state.render.r_things.pspritescale))
-        >> FRACBITS;
+    .to_int();
     if x1 > state.render.r_draw.viewwidth {
         return;
     }
     tx += state.render.r_data.spritewidth[lump as usize];
-    let x2: i32 = ((state.render.r_main.centerxfrac
+    let x2: i32 = (((state.render.r_main.centerxfrac
         + fixed_mul(tx, state.render.r_things.pspritescale))
         >> FRACBITS)
-        - 1;
+        - Fixed(1))
+    .to_bits();
     if x2 < 0 {
         return;
     }
     avis.mobjflags = MobjFlags::empty();
-    avis.texturemid = (BASEYCENTER << FRACBITS) + FRACUNIT / 2
+    avis.texturemid = Fixed::from_int(BASEYCENTER) + FRACUNIT / 2
         - (psp.sy - state.render.r_data.spritetopoffset[lump as usize]);
     avis.x1 = if x1 < 0 { 0 } else { x1 };
     avis.x2 = if x2 >= state.render.r_draw.viewwidth {
@@ -599,10 +603,10 @@ pub fn draw_psprite(state: &mut GameState, psp: &PspDef) {
     avis.scale = state.render.r_things.pspritescale << state.render.r_main.detailshift;
     if flip {
         avis.xiscale = -state.render.r_things.pspriteiscale;
-        avis.startfrac = (state.render.r_data.spritewidth[lump as usize] - 1) as Fixed;
+        avis.startfrac = state.render.r_data.spritewidth[lump as usize] - Fixed(1);
     } else {
         avis.xiscale = state.render.r_things.pspriteiscale;
-        avis.startfrac = 0;
+        avis.startfrac = Fixed::ZERO;
     }
     if avis.x1 > x1 {
         avis.startfrac += avis.xiscale * (avis.x1 - x1);

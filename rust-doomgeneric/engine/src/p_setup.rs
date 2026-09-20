@@ -14,10 +14,8 @@ use crate::m_bbox::BBox;
 use crate::m_bbox::BoxIndex;
 use crate::m_fixed::fixed_div;
 use crate::m_fixed::Fixed;
-use crate::m_fixed::FRACBITS;
 use crate::m_fixed::FRACUNIT;
 use crate::options::Options;
-use crate::p_maputl::MAPBLOCKSHIFT;
 use crate::p_mobj::spawn_map_thing;
 use crate::p_mobj::LineFlags;
 use crate::p_mobj::{
@@ -60,13 +58,13 @@ pub struct SegId(pub u32);
 pub const ZERO_LINE: Line = Line {
     v1: VertexId(0),
     v2: VertexId(0),
-    dx: 0,
-    dy: 0,
+    dx: Fixed::ZERO,
+    dy: Fixed::ZERO,
     flags: LineFlags::empty(),
     special: 0,
     tag: 0,
     sidenum: [0; 2],
-    bbox: BBox::new([0; 4]),
+    bbox: BBox::new([Fixed::ZERO; 4]),
     slopetype: SlopeType::Horizontal,
     frontsector: None,
     backsector: None,
@@ -74,8 +72,8 @@ pub const ZERO_LINE: Line = Line {
 };
 
 pub const ZERO_SECTOR: Sector = Sector {
-    floorheight: 0,
-    ceilingheight: 0,
+    floorheight: Fixed::ZERO,
+    ceilingheight: Fixed::ZERO,
     floorpic: 0,
     ceilingpic: 0,
     lightlevel: 0,
@@ -88,9 +86,9 @@ pub const ZERO_SECTOR: Sector = Sector {
         thinker: Thinker {
             function: ThinkerFn::Paused,
         },
-        x: 0,
-        y: 0,
-        z: 0,
+        x: Fixed::ZERO,
+        y: Fixed::ZERO,
+        z: Fixed::ZERO,
     },
     validcount: 0,
     thinglist: None,
@@ -160,8 +158,8 @@ impl PSetupState {
             bmapwidth: 0,
             bmapheight: 0,
             blockmaplump: Vec::new(),
-            bmaporgx: 0,
-            bmaporgy: 0,
+            bmaporgx: Fixed::ZERO,
+            bmaporgy: Fixed::ZERO,
             blocklinks: Vec::new(),
             rejectmatrix: Vec::new(),
             deathmatchstarts: [MapThing {
@@ -184,6 +182,9 @@ impl PSetupState {
         }
     }
 
+    pub fn sector(&self, id: SectorId) -> &Sector {
+        &self.sectors[id.0 as usize]
+    }
     pub fn sector_mut(&mut self, id: SectorId) -> &mut Sector {
         &mut self.sectors[id.0 as usize]
     }
@@ -290,8 +291,8 @@ pub fn load_vertexes(state: &mut GameState, lump: i32) {
         let x = i32::from(reader.i16());
         let y = i32::from(reader.i16());
         state.world.p_setup.vertexes.push(Vertex {
-            x: (x << FRACBITS) as Fixed,
-            y: (y << FRACBITS) as Fixed,
+            x: Fixed::from_int(x),
+            y: Fixed::from_int(y),
         });
     }
     release_lump_num(&state.assets.w_wad, lump);
@@ -304,10 +305,10 @@ pub fn get_sector_at_null_address(
     if p_setup.null_sector_id.is_none() {
         let mut sentinel = ZERO_SECTOR;
         if let Some(value) = get_memory_value(i_system, options, 0, 4) {
-            sentinel.floorheight = value as i32;
+            sentinel.floorheight = Fixed(value as i32);
         }
         if let Some(value) = get_memory_value(i_system, options, 4, 4) {
-            sentinel.ceilingheight = value as i32;
+            sentinel.ceilingheight = Fixed(value as i32);
         }
         let id = SectorId(p_setup.sectors.len() as u32);
         p_setup.sectors.push(sentinel);
@@ -326,7 +327,7 @@ pub fn load_segs(state: &mut GameState, lump: i32) {
         let seg_angle = Angle((i32::from(reader.i16()) << 16) as u32);
         let linedef = i32::from(reader.i16());
         let side = i32::from(reader.i16());
-        let seg_offset = (i32::from(reader.i16()) << 16) as Fixed;
+        let seg_offset = i32::from(reader.i16()) << 16;
         let seg_linedef = LineId(linedef as u32);
         let ldef = state.world.p_setup.line(seg_linedef);
         let seg_sidenum = ldef.sidenum[side as usize] as u32;
@@ -348,7 +349,7 @@ pub fn load_segs(state: &mut GameState, lump: i32) {
         state.world.p_setup.segs.push(Seg {
             v1,
             v2,
-            offset: seg_offset,
+            offset: Fixed(seg_offset),
             angle: seg_angle,
             sidedef: SideId(seg_sidenum),
             linedef: seg_linedef,
@@ -400,8 +401,8 @@ pub fn load_sectors(state: &mut GameState, lump: i32) {
             &ceilingpic_name.as_str(),
         ) as i16;
         let ss = &mut state.world.p_setup.sectors[i];
-        ss.floorheight = (i32::from(floorheight) << FRACBITS) as Fixed;
-        ss.ceilingheight = (i32::from(ceilingheight) << FRACBITS) as Fixed;
+        ss.floorheight = Fixed::from_int(i32::from(floorheight));
+        ss.ceilingheight = Fixed::from_int(i32::from(ceilingheight));
         ss.floorpic = floorpic;
         ss.ceilingpic = ceilingpic;
         ss.lightlevel = lightlevel;
@@ -418,16 +419,16 @@ pub fn load_nodes(state: &mut GameState, lump: i32) {
     let mut reader = LumpReader::new(state, lump);
     for _ in 0..state.world.p_setup.numnodes {
         let mut no = Node {
-            x: (i32::from(reader.i16()) << FRACBITS) as Fixed,
-            y: (i32::from(reader.i16()) << FRACBITS) as Fixed,
-            dx: (i32::from(reader.i16()) << FRACBITS) as Fixed,
-            dy: (i32::from(reader.i16()) << FRACBITS) as Fixed,
-            bbox: [BBox::new([0; 4]); 2],
+            x: Fixed::from_int(i32::from(reader.i16())),
+            y: Fixed::from_int(i32::from(reader.i16())),
+            dx: Fixed::from_int(i32::from(reader.i16())),
+            dy: Fixed::from_int(i32::from(reader.i16())),
+            bbox: [BBox::new([Fixed::ZERO; 4]); 2],
             children: [0; 2],
         };
         for j in 0..2 {
             for k in 0..4 {
-                no.bbox[j][k] = (i32::from(reader.i16()) << FRACBITS) as Fixed;
+                no.bbox[j][k] = Fixed::from_int(i32::from(reader.i16()));
             }
         }
         for j in 0..2 {
@@ -476,11 +477,11 @@ pub fn load_line_defs(state: &mut GameState, lump: i32) {
         let v2 = state.world.p_setup.vertex(ld.v2);
         ld.dx = v2.x - v1.x;
         ld.dy = v2.y - v1.y;
-        if ld.dx == 0 {
+        if ld.dx == Fixed::ZERO {
             ld.slopetype = SlopeType::Vertical;
-        } else if ld.dy == 0 {
+        } else if ld.dy == Fixed::ZERO {
             ld.slopetype = SlopeType::Horizontal;
-        } else if fixed_div(ld.dy, ld.dx) > 0 {
+        } else if fixed_div(ld.dy, ld.dx) > Fixed::ZERO {
             ld.slopetype = SlopeType::Positive;
         } else {
             ld.slopetype = SlopeType::Negative;
@@ -529,8 +530,8 @@ pub fn load_side_defs(state: &mut GameState, lump: i32) {
         let midtexture = reader.name8();
         let sector = reader.i16();
         let sd = Side {
-            textureoffset: (i32::from(textureoffset) << FRACBITS) as Fixed,
-            rowoffset: (i32::from(rowoffset) << FRACBITS) as Fixed,
+            textureoffset: Fixed::from_int(i32::from(textureoffset)),
+            rowoffset: Fixed::from_int(i32::from(rowoffset)),
             toptexture: texture_num_for_name(&state.render.r_data, &toptexture.as_str()) as i16,
             bottomtexture: texture_num_for_name(&state.render.r_data, &bottomtexture.as_str())
                 as i16,
@@ -556,14 +557,14 @@ pub fn load_block_map(
         .iter()
         .map(|c| i16::from_le_bytes([c[0], c[1]]))
         .collect();
-    p_setup.bmaporgx = (i32::from(p_setup.blockmaplump[0]) << FRACBITS) as Fixed;
-    p_setup.bmaporgy = (i32::from(p_setup.blockmaplump[1]) << FRACBITS) as Fixed;
+    p_setup.bmaporgx = Fixed::from_int(i32::from(p_setup.blockmaplump[0]));
+    p_setup.bmaporgy = Fixed::from_int(i32::from(p_setup.blockmaplump[1]));
     p_setup.bmapwidth = i32::from(p_setup.blockmaplump[2]);
     p_setup.bmapheight = i32::from(p_setup.blockmaplump[3]);
     p_setup.blocklinks = vec![None; (p_setup.bmapwidth as usize) * (p_setup.bmapheight as usize)];
 }
 pub fn group_lines(p_setup: &mut PSetupState) {
-    let mut bbox = BBox::new([0; 4]);
+    let mut bbox = BBox::new([Fixed::ZERO; 4]);
     for i in 0..(p_setup.numsubsectors as usize) {
         let firstline = p_setup.subsectors[i].firstline;
         let seg_sidedef = p_setup.segs[firstline as usize].sidedef;
@@ -612,27 +613,26 @@ pub fn group_lines(p_setup: &mut PSetupState) {
             add_to_box(&mut bbox, li_v2.x, li_v2.y);
         }
         let sector = &mut p_setup.sectors[i];
-        sector.soundorg.x = i32::midpoint(bbox[BoxIndex::Right], bbox[BoxIndex::Left]) as Fixed;
-        sector.soundorg.y = i32::midpoint(bbox[BoxIndex::Top], bbox[BoxIndex::Bottom]) as Fixed;
-        let mut block: i32 =
-            (bbox[BoxIndex::Top] - p_setup.bmaporgy + 32 * FRACUNIT) >> MAPBLOCKSHIFT;
+        sector.soundorg.x = bbox[BoxIndex::Right].midpoint(bbox[BoxIndex::Left]);
+        sector.soundorg.y = bbox[BoxIndex::Top].midpoint(bbox[BoxIndex::Bottom]);
+        let mut block: i32 = (bbox[BoxIndex::Top] - p_setup.bmaporgy + 32 * FRACUNIT).to_block();
         block = if block >= p_setup.bmapheight {
             p_setup.bmapheight - 1
         } else {
             block
         };
         sector.blockbox[BoxIndex::Top] = block;
-        block = (bbox[BoxIndex::Bottom] - p_setup.bmaporgy - 32 * FRACUNIT) >> MAPBLOCKSHIFT;
+        block = (bbox[BoxIndex::Bottom] - p_setup.bmaporgy - 32 * FRACUNIT).to_block();
         block = if block < 0 { 0 } else { block };
         sector.blockbox[BoxIndex::Bottom] = block;
-        block = (bbox[BoxIndex::Right] - p_setup.bmaporgx + 32 * FRACUNIT) >> MAPBLOCKSHIFT;
+        block = (bbox[BoxIndex::Right] - p_setup.bmaporgx + 32 * FRACUNIT).to_block();
         block = if block >= p_setup.bmapwidth {
             p_setup.bmapwidth - 1
         } else {
             block
         };
         sector.blockbox[BoxIndex::Right] = block;
-        block = (bbox[BoxIndex::Left] - p_setup.bmaporgx - 32 * FRACUNIT) >> MAPBLOCKSHIFT;
+        block = (bbox[BoxIndex::Left] - p_setup.bmaporgx - 32 * FRACUNIT).to_block();
         block = if block < 0 { 0 } else { block };
         sector.blockbox[BoxIndex::Left] = block;
     }
@@ -709,7 +709,7 @@ pub fn setup_level(state: &mut GameState, episode: i32, map: i32) {
         state.game.g_game.players[i].secretcount = state.game.g_game.players[i].itemcount;
         state.game.g_game.players[i].killcount = state.game.g_game.players[i].secretcount;
     }
-    state.game.g_game.players[state.game.g_game.consoleplayer].viewz = 1;
+    state.game.g_game.players[state.game.g_game.consoleplayer].viewz = Fixed(1);
     s_start(state);
     init_thinkers(&mut state.world.p_tick);
     let lumpname = if state.game.doomstat.gamemode == GameMode::Commercial {

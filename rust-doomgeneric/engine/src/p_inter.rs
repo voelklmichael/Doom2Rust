@@ -34,10 +34,10 @@ use crate::r_main::point_to_angle2;
 use crate::s_sound::s_start_sound;
 use crate::s_sound::SoundOrigin;
 use crate::sounds::SfxName;
+use crate::tables::fine_cosine;
+use crate::tables::fine_sine;
 use crate::tables::Angle;
 use crate::tables::ANG180;
-use crate::tables::FINECOSINE;
-use crate::tables::FINESINE;
 
 pub const NUMCARDS: usize = 6;
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -722,7 +722,7 @@ pub fn kill_mobj(state: &mut GameState, source: Option<MobjId>, target: MobjId) 
         let t = state.world.p_mobj.mo(target);
         (t.x, t.y)
     };
-    let mo = spawn_mobj(state, target_x, target_y, ONFLOORZ, item);
+    let mo = spawn_mobj(state, target_x, target_y, Fixed(ONFLOORZ), item);
     state.world.p_mobj.mo_mut(mo).flags |= MobjFlags::DROPPED;
 }
 pub fn damage_mobj(
@@ -744,7 +744,7 @@ pub fn damage_mobj(
     }
     if target_flags.contains(MobjFlags::SKULLFLY) {
         let t = state.world.p_mobj.mo_mut(target);
-        t.momz = 0;
+        t.momz = Fixed::ZERO;
         t.momy = t.momz;
         t.momx = t.momy;
     }
@@ -767,9 +767,8 @@ pub fn damage_mobj(
                 (t.x, t.y, t.z, t.kind)
             };
             let mut ang: Angle = point_to_angle2(inflictor_x, inflictor_y, target_x, target_y);
-            let mut thrust: Fixed = (damage * (FRACUNIT >> 3) * 100
-                / state.assets.info.mobjinfo_mut(target_type).mass)
-                as Fixed;
+            let mut thrust: Fixed =
+                damage * (FRACUNIT >> 3) * 100 / state.assets.info.mobjinfo_mut(target_type).mass;
             if damage < 40
                 && damage > target_health
                 && target_z - inflictor_z > 64 * FRACUNIT
@@ -780,8 +779,8 @@ pub fn damage_mobj(
             }
             let ang = ang.fine();
             let t = state.world.p_mobj.mo_mut(target);
-            t.momx += fixed_mul(thrust, FINECOSINE[ang]);
-            t.momy += fixed_mul(thrust, FINESINE[ang]);
+            t.momx += fixed_mul(thrust, fine_cosine(ang));
+            t.momy += fixed_mul(thrust, fine_sine(ang));
         }
     }
     if let Some(player_id) = target_player_id {

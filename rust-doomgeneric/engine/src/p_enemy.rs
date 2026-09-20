@@ -49,13 +49,12 @@ use crate::r_main::point_to_angle2;
 use crate::s_sound::s_start_sound;
 use crate::s_sound::SoundOrigin;
 use crate::sounds::SfxName;
+use crate::tables::fine_cosine;
+use crate::tables::fine_sine;
 use crate::tables::Angle;
-use crate::tables::FINECOSINE;
-use crate::tables::FINESINE;
 
 use crate::game_state::GameState;
 use crate::m_fixed::FRACUNIT;
-use crate::p_maputl::MAPBLOCKSHIFT;
 use crate::p_mobj::StateNum;
 use crate::p_mobj::FLOATSPEED;
 use crate::p_pspr::re_fire;
@@ -88,8 +87,8 @@ impl PEnemyState {
             soundtarget: None,
             corpsehit: None,
             vileobj: None,
-            viletryx: 0,
-            viletryy: 0,
+            viletryx: Fixed::ZERO,
+            viletryy: Fixed::ZERO,
             braintargets: [None; 32],
             numbraintargets: 0,
             braintargeton: 0,
@@ -124,8 +123,8 @@ fn dirtype_from_movedir(movedir: i32) -> DirType {
         n => panic!("P_NewChaseDir: invalid movedir {n}"),
     }
 }
-pub const MELEERANGE: i32 = 64 * FRACUNIT;
-pub const MISSILERANGE: i32 = 32 * 64 * FRACUNIT;
+pub const MELEERANGE: Fixed = Fixed::from_int(64);
+pub const MISSILERANGE: Fixed = Fixed::from_int(32 * 64);
 pub static OPPOSITE: [DirType; 9] = [
     DirType::West,
     DirType::Southwest,
@@ -164,7 +163,7 @@ pub fn recursive_sound(state: &mut GameState, sec: SectorId, soundblocks: i32) {
         let checkv = state.world.p_setup.line(check);
         if checkv.flags.contains(LineFlags::TWOSIDED) {
             line_opening(&mut state.world.p_maputl, &mut state.world.p_setup, check);
-            if state.world.p_maputl.openrange > 0 {
+            if state.world.p_maputl.openrange > Fixed::ZERO {
                 let other = if state.world.p_setup.sides[checkv.sidenum[0] as usize].sector == sec {
                     state.world.p_setup.sides[checkv.sidenum[1] as usize].sector
                 } else {
@@ -249,17 +248,16 @@ pub fn check_missile_range(state: &mut GameState, actor: MobjId) -> bool {
         let t = state.world.p_mobj.mo(target);
         (t.x, t.y)
     };
-    let mut dist: Fixed =
-        (aprox_distance(actor_x - target_x, actor_y - target_y) - 64 * FRACUNIT) as Fixed;
+    let mut dist: Fixed = aprox_distance(actor_x - target_x, actor_y - target_y) - 64 * FRACUNIT;
     if state.assets.info.mobjinfo_mut(actor_type).meleestate == StateNum::Null {
         dist -= 128 * FRACUNIT;
     }
     dist >>= 16;
-    if actor_type as u32 == MobjType::Vile as i32 as u32 && dist > 14 * 64 {
+    if actor_type as u32 == MobjType::Vile as i32 as u32 && dist > Fixed(14 * 64) {
         return false;
     }
     if actor_type as u32 == MobjType::Undead as i32 as u32 {
-        if dist < 196 {
+        if dist < Fixed(196) {
             return false;
         }
         dist >>= 1;
@@ -270,19 +268,37 @@ pub fn check_missile_range(state: &mut GameState, actor: MobjId) -> bool {
     {
         dist >>= 1;
     }
-    if dist > 200 {
-        dist = 200;
+    if dist > Fixed(200) {
+        dist = Fixed(200);
     }
-    if actor_type as u32 == MobjType::Cyborg as i32 as u32 && dist > 160 {
-        dist = 160;
+    if actor_type as u32 == MobjType::Cyborg as i32 as u32 && dist > Fixed(160) {
+        dist = Fixed(160);
     }
-    if p_random(&mut state.world.m_random) < dist {
+    if p_random(&mut state.world.m_random) < dist.to_bits() {
         return false;
     }
     true
 }
-pub static XSPEED: [Fixed; 8] = [FRACUNIT, 47000, 0, -47000, -FRACUNIT, -47000, 0, 47000];
-pub static YSPEED: [Fixed; 8] = [0, 47000, FRACUNIT, 47000, 0, -47000, -FRACUNIT, -47000];
+pub static XSPEED: [Fixed; 8] = [
+    FRACUNIT,
+    Fixed(47000),
+    Fixed::ZERO,
+    Fixed(-47000),
+    Fixed::from_int(-1),
+    Fixed(-47000),
+    Fixed::ZERO,
+    Fixed(47000),
+];
+pub static YSPEED: [Fixed; 8] = [
+    Fixed::ZERO,
+    Fixed(47000),
+    FRACUNIT,
+    Fixed(47000),
+    Fixed::ZERO,
+    Fixed(-47000),
+    Fixed::from_int(-1),
+    Fixed(-47000),
+];
 pub fn p_move(state: &mut GameState, actor: MobjId) -> bool {
     if state.world.p_mobj.mo(actor).movedir == DirType::Nodir as i32 {
         return false;
@@ -291,18 +307,18 @@ pub fn p_move(state: &mut GameState, actor: MobjId) -> bool {
         error("Weird actor->movedir!");
     }
     let tryx: Fixed = state.world.p_mobj.mo(actor).x
-        + state
+        + (state
             .assets
             .info
             .mobjinfo_mut(state.world.p_mobj.mo(actor).kind)
-            .speed as Fixed
+            .speed)
             * XSPEED[state.world.p_mobj.mo(actor).movedir as usize];
     let tryy: Fixed = state.world.p_mobj.mo(actor).y
-        + state
+        + (state
             .assets
             .info
             .mobjinfo_mut(state.world.p_mobj.mo(actor).kind)
-            .speed as Fixed
+            .speed)
             * YSPEED[state.world.p_mobj.mo(actor).movedir as usize];
     let try_ok: bool = try_move(state, actor, tryx, tryy);
     if try_ok {
@@ -381,8 +397,9 @@ pub fn new_chase_dir(state: &mut GameState, actor: MobjId) {
         d[2] = DirType::Nodir;
     }
     if d[1] != DirType::Nodir && d[2] != DirType::Nodir {
-        state.world.p_mobj.mo_mut(actor).movedir =
-            DIAGS[((i32::from(deltay < 0) << 1) + i32::from(deltax > 0)) as usize] as i32;
+        state.world.p_mobj.mo_mut(actor).movedir = DIAGS
+            [((i32::from(deltay < Fixed::ZERO) << 1) + i32::from(deltax > Fixed::ZERO)) as usize]
+            as i32;
         if state.world.p_mobj.mo(actor).movedir != turnaround as i32 && try_walk(state, actor) {
             return;
         }
@@ -726,7 +743,7 @@ pub fn pos_attack(state: &mut GameState, actor: MobjId) {
     }
     face_target(state, actor);
     let mut angle: i32 = (state.world.p_mobj.mo(actor).angle).to_signed();
-    let slope: i32 = aim_line_attack(state, Some(actor), Angle(angle as u32), MISSILERANGE);
+    let slope: Fixed = aim_line_attack(state, Some(actor), Angle(angle as u32), MISSILERANGE);
     s_start_sound(state, SoundOrigin::Mobj(actor), SfxName::Pistol);
     angle += (p_random(&mut state.world.m_random) - p_random(&mut state.world.m_random)) << 20;
     let damage: i32 = (p_random(&mut state.world.m_random) % 5 + 1) * 3;
@@ -735,7 +752,7 @@ pub fn pos_attack(state: &mut GameState, actor: MobjId) {
         actor,
         Angle(angle as u32),
         MISSILERANGE,
-        slope as Fixed,
+        slope,
         damage,
     );
 }
@@ -746,7 +763,7 @@ pub fn spos_attack(state: &mut GameState, actor: MobjId) {
     s_start_sound(state, SoundOrigin::Mobj(actor), SfxName::Shotgn);
     face_target(state, actor);
     let bangle: i32 = (state.world.p_mobj.mo(actor).angle).to_signed();
-    let slope: i32 = aim_line_attack(state, Some(actor), Angle(bangle as u32), MISSILERANGE);
+    let slope: Fixed = aim_line_attack(state, Some(actor), Angle(bangle as u32), MISSILERANGE);
     for _ in 0..3 {
         let angle: i32 = bangle
             + ((p_random(&mut state.world.m_random) - p_random(&mut state.world.m_random)) << 20);
@@ -756,7 +773,7 @@ pub fn spos_attack(state: &mut GameState, actor: MobjId) {
             actor,
             Angle(angle as u32),
             MISSILERANGE,
-            slope as Fixed,
+            slope,
             damage,
         );
     }
@@ -768,7 +785,7 @@ pub fn cpos_attack(state: &mut GameState, actor: MobjId) {
     s_start_sound(state, SoundOrigin::Mobj(actor), SfxName::Shotgn);
     face_target(state, actor);
     let bangle: i32 = (state.world.p_mobj.mo(actor).angle).to_signed();
-    let slope: i32 = aim_line_attack(state, Some(actor), Angle(bangle as u32), MISSILERANGE);
+    let slope: Fixed = aim_line_attack(state, Some(actor), Angle(bangle as u32), MISSILERANGE);
     let angle: i32 = bangle
         + ((p_random(&mut state.world.m_random) - p_random(&mut state.world.m_random)) << 20);
     let damage: i32 = (p_random(&mut state.world.m_random) % 5 + 1) * 3;
@@ -777,7 +794,7 @@ pub fn cpos_attack(state: &mut GameState, actor: MobjId) {
         actor,
         Angle(angle as u32),
         MISSILERANGE,
-        slope as Fixed,
+        slope,
         damage,
     );
 }
@@ -896,8 +913,12 @@ pub fn skel_missile(state: &mut GameState, actor: MobjId) {
     state.world.p_mobj.mo_mut(actor).z += 16 * FRACUNIT;
     let mo: MobjId = spawn_missile(state, actor, target, MobjType::Tracer);
     state.world.p_mobj.mo_mut(actor).z -= 16 * FRACUNIT;
-    state.world.p_mobj.mo_mut(mo).x += state.world.p_mobj.mo(mo).momx;
-    state.world.p_mobj.mo_mut(mo).y += state.world.p_mobj.mo(mo).momy;
+    let (momx, momy) = (
+        state.world.p_mobj.mo(mo).momx,
+        state.world.p_mobj.mo(mo).momy,
+    );
+    state.world.p_mobj.mo_mut(mo).x += momx;
+    state.world.p_mobj.mo_mut(mo).y += momy;
     state.world.p_mobj.mo_mut(mo).tracer = state.world.p_mobj.mo(actor).target;
 }
 pub const TRACEANGLE: Angle = Angle(0x0c00_0000);
@@ -918,7 +939,7 @@ pub fn a_tracer(state: &mut GameState, actor: MobjId) {
         state.world.p_mobj.mo(actor).z,
         MobjType::Smoke,
     );
-    state.world.p_mobj.mo_mut(th).momz = FRACUNIT as Fixed;
+    state.world.p_mobj.mo_mut(th).momz = FRACUNIT;
     state.world.p_mobj.mo_mut(th).tics -= p_random(&mut state.world.m_random) & 3;
     if state.world.p_mobj.mo(th).tics < 1 {
         state.world.p_mobj.mo_mut(th).tics = 1;
@@ -955,37 +976,41 @@ pub fn a_tracer(state: &mut GameState, actor: MobjId) {
     }
     let exact = state.world.p_mobj.mo(actor).angle.fine();
     state.world.p_mobj.mo_mut(actor).momx = fixed_mul(
-        state
-            .assets
-            .info
-            .mobjinfo_mut(state.world.p_mobj.mo(actor).kind)
-            .speed as Fixed,
-        FINECOSINE[exact],
+        Fixed(
+            state
+                .assets
+                .info
+                .mobjinfo_mut(state.world.p_mobj.mo(actor).kind)
+                .speed,
+        ),
+        fine_cosine(exact),
     );
     state.world.p_mobj.mo_mut(actor).momy = fixed_mul(
-        state
-            .assets
-            .info
-            .mobjinfo_mut(state.world.p_mobj.mo(actor).kind)
-            .speed as Fixed,
-        FINESINE[exact],
+        Fixed(
+            state
+                .assets
+                .info
+                .mobjinfo_mut(state.world.p_mobj.mo(actor).kind)
+                .speed,
+        ),
+        fine_sine(exact),
     );
     let mut dist: Fixed = aprox_distance(
         state.world.p_mobj.mo(dest.unwrap()).x - state.world.p_mobj.mo(actor).x,
         state.world.p_mobj.mo(dest.unwrap()).y - state.world.p_mobj.mo(actor).y,
     );
-    dist = (dist
-        / state
-            .assets
-            .info
-            .mobjinfo_mut(state.world.p_mobj.mo(actor).kind)
-            .speed) as Fixed;
-    if dist < 1 {
-        dist = 1;
+    dist /= state
+        .assets
+        .info
+        .mobjinfo_mut(state.world.p_mobj.mo(actor).kind)
+        .speed;
+    if dist < Fixed(1) {
+        dist = Fixed(1);
     }
-    let slope: Fixed = (state.world.p_mobj.mo(dest.unwrap()).z + 40 * FRACUNIT
-        - state.world.p_mobj.mo(actor).z)
-        / dist;
+    let slope: Fixed = Fixed(
+        (state.world.p_mobj.mo(dest.unwrap()).z + 40 * FRACUNIT - state.world.p_mobj.mo(actor).z)
+            / dist,
+    );
     if slope < state.world.p_mobj.mo(actor).momz {
         state.world.p_mobj.mo_mut(actor).momz -= FRACUNIT / 8;
     } else {
@@ -1034,7 +1059,7 @@ pub fn vile_check(state: &mut GameState, thing_id: MobjId) -> bool {
     {
         return true;
     }
-    let maxdist: i32 = state
+    let maxdist: Fixed = state
         .assets
         .info
         .mobjinfo_mut(state.world.p_mobj.mo(thing).kind)
@@ -1046,7 +1071,7 @@ pub fn vile_check(state: &mut GameState, thing_id: MobjId) -> bool {
         return true;
     }
     state.world.p_enemy.corpsehit = Some(thing);
-    state.world.p_mobj.mo_mut(thing).momy = 0;
+    state.world.p_mobj.mo_mut(thing).momy = Fixed::ZERO;
     state.world.p_mobj.mo_mut(thing).momx = state.world.p_mobj.mo(thing).momy;
     state.world.p_mobj.mo_mut(thing).height <<= 2;
     let check: bool = check_position(
@@ -1065,31 +1090,31 @@ pub fn vile_chase(state: &mut GameState, id: MobjId) {
     let actor = id;
     if state.world.p_mobj.mo(actor).movedir != DirType::Nodir as i32 {
         state.world.p_enemy.viletryx = state.world.p_mobj.mo(actor).x
-            + state
+            + (state
                 .assets
                 .info
                 .mobjinfo_mut(state.world.p_mobj.mo(actor).kind)
-                .speed as Fixed
+                .speed)
                 * XSPEED[state.world.p_mobj.mo(actor).movedir as usize];
         state.world.p_enemy.viletryy = state.world.p_mobj.mo(actor).y
-            + state
+            + (state
                 .assets
                 .info
                 .mobjinfo_mut(state.world.p_mobj.mo(actor).kind)
-                .speed as Fixed
+                .speed)
                 * YSPEED[state.world.p_mobj.mo(actor).movedir as usize];
         let xl: i32 =
             (state.world.p_enemy.viletryx - state.world.p_setup.bmaporgx - 32 * FRACUNIT * 2)
-                >> MAPBLOCKSHIFT;
+                .to_block();
         let xh: i32 = (state.world.p_enemy.viletryx - state.world.p_setup.bmaporgx
             + 32 * FRACUNIT * 2)
-            >> MAPBLOCKSHIFT;
+            .to_block();
         let yl: i32 =
             (state.world.p_enemy.viletryy - state.world.p_setup.bmaporgy - 32 * FRACUNIT * 2)
-                >> MAPBLOCKSHIFT;
+                .to_block();
         let yh: i32 = (state.world.p_enemy.viletryy - state.world.p_setup.bmaporgy
             + 32 * FRACUNIT * 2)
-            >> MAPBLOCKSHIFT;
+            .to_block();
         state.world.p_enemy.vileobj = Some(actor);
         for bx in xl..=xh {
             for by in yl..=yh {
@@ -1155,9 +1180,9 @@ pub fn a_fire(state: &mut GameState, actor: MobjId) {
     let an: usize = state.world.p_mobj.mo(dest.unwrap()).angle.fine();
     unset_thing_position(&mut state.world.p_mobj, &mut state.world.p_setup, actor);
     state.world.p_mobj.mo_mut(actor).x =
-        state.world.p_mobj.mo(dest.unwrap()).x + fixed_mul(24 * FRACUNIT, FINECOSINE[an]);
+        state.world.p_mobj.mo(dest.unwrap()).x + fixed_mul(24 * FRACUNIT, fine_cosine(an));
     state.world.p_mobj.mo_mut(actor).y =
-        state.world.p_mobj.mo(dest.unwrap()).y + fixed_mul(24 * FRACUNIT, FINESINE[an]);
+        state.world.p_mobj.mo(dest.unwrap()).y + fixed_mul(24 * FRACUNIT, fine_sine(an));
     state.world.p_mobj.mo_mut(actor).z = state.world.p_mobj.mo(dest.unwrap()).z;
     set_thing_position(&mut state.world.p_mobj, &mut state.world.p_setup, actor);
 }
@@ -1188,12 +1213,12 @@ pub fn vile_attack(state: &mut GameState, actor: MobjId) {
     }
     s_start_sound(state, SoundOrigin::Mobj(actor), SfxName::Barexp);
     damage_mobj(state, target, Some(actor), Some(actor), 20);
-    state.world.p_mobj.mo_mut(target).momz = (1000 * FRACUNIT
+    state.world.p_mobj.mo_mut(target).momz = 1000 * FRACUNIT
         / state
             .assets
             .info
             .mobjinfo_mut(state.world.p_mobj.mo(target).kind)
-            .mass) as Fixed;
+            .mass;
     let an: usize = state.world.p_mobj.mo(actor).angle.fine();
     let fire: Option<MobjId> = state
         .world
@@ -1205,9 +1230,9 @@ pub fn vile_attack(state: &mut GameState, actor: MobjId) {
         return;
     }
     state.world.p_mobj.mo_mut(fire.unwrap()).x =
-        state.world.p_mobj.mo(target).x - fixed_mul(24 * FRACUNIT, FINECOSINE[an]);
+        state.world.p_mobj.mo(target).x - fixed_mul(24 * FRACUNIT, fine_cosine(an));
     state.world.p_mobj.mo_mut(fire.unwrap()).y =
-        state.world.p_mobj.mo(target).y - fixed_mul(24 * FRACUNIT, FINESINE[an]);
+        state.world.p_mobj.mo(target).y - fixed_mul(24 * FRACUNIT, fine_sine(an));
     p_radius_attack(state, fire.unwrap(), Some(actor), 70);
 }
 pub const FATSPREAD: Angle = Angle(ANG90.to_bits() / 8);
@@ -1231,20 +1256,24 @@ pub fn fat_attack1(state: &mut GameState, actor: MobjId) {
     state.world.p_mobj.mo_mut(mo).angle = state.world.p_mobj.mo(mo).angle + FATSPREAD;
     let an: usize = state.world.p_mobj.mo(mo).angle.fine();
     state.world.p_mobj.mo_mut(mo).momx = fixed_mul(
-        state
-            .assets
-            .info
-            .mobjinfo_mut(state.world.p_mobj.mo(mo).kind)
-            .speed as Fixed,
-        FINECOSINE[an],
+        Fixed(
+            state
+                .assets
+                .info
+                .mobjinfo_mut(state.world.p_mobj.mo(mo).kind)
+                .speed,
+        ),
+        fine_cosine(an),
     );
     state.world.p_mobj.mo_mut(mo).momy = fixed_mul(
-        state
-            .assets
-            .info
-            .mobjinfo_mut(state.world.p_mobj.mo(mo).kind)
-            .speed as Fixed,
-        FINESINE[an],
+        Fixed(
+            state
+                .assets
+                .info
+                .mobjinfo_mut(state.world.p_mobj.mo(mo).kind)
+                .speed,
+        ),
+        fine_sine(an),
     );
 }
 pub fn fat_attack2(state: &mut GameState, actor: MobjId) {
@@ -1263,20 +1292,24 @@ pub fn fat_attack2(state: &mut GameState, actor: MobjId) {
     state.world.p_mobj.mo_mut(mo).angle = state.world.p_mobj.mo(mo).angle - FATSPREAD * 2;
     let an: usize = state.world.p_mobj.mo(mo).angle.fine();
     state.world.p_mobj.mo_mut(mo).momx = fixed_mul(
-        state
-            .assets
-            .info
-            .mobjinfo_mut(state.world.p_mobj.mo(mo).kind)
-            .speed as Fixed,
-        FINECOSINE[an],
+        Fixed(
+            state
+                .assets
+                .info
+                .mobjinfo_mut(state.world.p_mobj.mo(mo).kind)
+                .speed,
+        ),
+        fine_cosine(an),
     );
     state.world.p_mobj.mo_mut(mo).momy = fixed_mul(
-        state
-            .assets
-            .info
-            .mobjinfo_mut(state.world.p_mobj.mo(mo).kind)
-            .speed as Fixed,
-        FINESINE[an],
+        Fixed(
+            state
+                .assets
+                .info
+                .mobjinfo_mut(state.world.p_mobj.mo(mo).kind)
+                .speed,
+        ),
+        fine_sine(an),
     );
 }
 pub fn fat_attack3(state: &mut GameState, actor: MobjId) {
@@ -1293,42 +1326,50 @@ pub fn fat_attack3(state: &mut GameState, actor: MobjId) {
     state.world.p_mobj.mo_mut(mo).angle = state.world.p_mobj.mo(mo).angle - FATSPREAD / 2;
     let mut an: i32 = state.world.p_mobj.mo(mo).angle.fine() as i32;
     state.world.p_mobj.mo_mut(mo).momx = fixed_mul(
-        state
-            .assets
-            .info
-            .mobjinfo_mut(state.world.p_mobj.mo(mo).kind)
-            .speed as Fixed,
-        FINECOSINE[an as usize],
+        Fixed(
+            state
+                .assets
+                .info
+                .mobjinfo_mut(state.world.p_mobj.mo(mo).kind)
+                .speed,
+        ),
+        fine_cosine(an as usize),
     );
     state.world.p_mobj.mo_mut(mo).momy = fixed_mul(
-        state
-            .assets
-            .info
-            .mobjinfo_mut(state.world.p_mobj.mo(mo).kind)
-            .speed as Fixed,
-        FINESINE[an as usize],
+        Fixed(
+            state
+                .assets
+                .info
+                .mobjinfo_mut(state.world.p_mobj.mo(mo).kind)
+                .speed,
+        ),
+        fine_sine(an as usize),
     );
     mo = spawn_missile(state, actor, target, MobjType::Fatshot);
     state.world.p_mobj.mo_mut(mo).angle = state.world.p_mobj.mo(mo).angle + FATSPREAD / 2;
     an = state.world.p_mobj.mo(mo).angle.fine() as i32;
     state.world.p_mobj.mo_mut(mo).momx = fixed_mul(
-        state
-            .assets
-            .info
-            .mobjinfo_mut(state.world.p_mobj.mo(mo).kind)
-            .speed as Fixed,
-        FINECOSINE[an as usize],
+        Fixed(
+            state
+                .assets
+                .info
+                .mobjinfo_mut(state.world.p_mobj.mo(mo).kind)
+                .speed,
+        ),
+        fine_cosine(an as usize),
     );
     state.world.p_mobj.mo_mut(mo).momy = fixed_mul(
-        state
-            .assets
-            .info
-            .mobjinfo_mut(state.world.p_mobj.mo(mo).kind)
-            .speed as Fixed,
-        FINESINE[an as usize],
+        Fixed(
+            state
+                .assets
+                .info
+                .mobjinfo_mut(state.world.p_mobj.mo(mo).kind)
+                .speed,
+        ),
+        fine_sine(an as usize),
     );
 }
-pub const SKULLSPEED: i32 = 20 * FRACUNIT;
+pub const SKULLSPEED: Fixed = Fixed::from_int(20);
 pub fn skull_attack(state: &mut GameState, actor: MobjId) {
     let dest: MobjId = match state
         .world
@@ -1349,20 +1390,21 @@ pub fn skull_attack(state: &mut GameState, actor: MobjId) {
     s_start_sound(state, SoundOrigin::Mobj(actor), attacksound);
     face_target(state, actor);
     let an: usize = state.world.p_mobj.mo(actor).angle.fine();
-    state.world.p_mobj.mo_mut(actor).momx = fixed_mul(SKULLSPEED, FINECOSINE[an]);
-    state.world.p_mobj.mo_mut(actor).momy = fixed_mul(SKULLSPEED, FINESINE[an]);
-    let mut dist: i32 = aprox_distance(
+    state.world.p_mobj.mo_mut(actor).momx = fixed_mul(SKULLSPEED, fine_cosine(an));
+    state.world.p_mobj.mo_mut(actor).momy = fixed_mul(SKULLSPEED, fine_sine(an));
+    let mut dist: Fixed = aprox_distance(
         state.world.p_mobj.mo(dest).x - state.world.p_mobj.mo(actor).x,
         state.world.p_mobj.mo(dest).y - state.world.p_mobj.mo(actor).y,
     );
-    dist /= SKULLSPEED;
-    if dist < 1 {
-        dist = 1;
+    dist /= SKULLSPEED.to_bits();
+    if dist < Fixed(1) {
+        dist = Fixed(1);
     }
-    state.world.p_mobj.mo_mut(actor).momz = ((state.world.p_mobj.mo(dest).z
-        + (state.world.p_mobj.mo(dest).height >> 1)
-        - state.world.p_mobj.mo(actor).z)
-        / dist) as Fixed;
+    state.world.p_mobj.mo_mut(actor).momz = Fixed(
+        (state.world.p_mobj.mo(dest).z + (state.world.p_mobj.mo(dest).height >> 1)
+            - state.world.p_mobj.mo(actor).z)
+            / dist,
+    );
 }
 pub fn pain_shoot_skull(state: &mut GameState, actor: MobjId, angle: Angle) {
     let mut count: i32 = 0;
@@ -1374,17 +1416,20 @@ pub fn pain_shoot_skull(state: &mut GameState, actor: MobjId, angle: Angle) {
         return;
     }
     let an: usize = angle.fine();
-    let prestep: i32 = 4 * FRACUNIT
-        + 3 * (state
-            .assets
-            .info
-            .mobjinfo_mut(state.world.p_mobj.mo(actor).kind)
-            .radius
-            + state.assets.info.mobjinfo[MobjType::Skull as usize].radius)
-            / 2;
-    let x: Fixed = state.world.p_mobj.mo(actor).x + fixed_mul(prestep as Fixed, FINECOSINE[an]);
-    let y: Fixed = state.world.p_mobj.mo(actor).y + fixed_mul(prestep as Fixed, FINESINE[an]);
-    let z: Fixed = (state.world.p_mobj.mo(actor).z + 8 * FRACUNIT) as Fixed;
+    let prestep: Fixed = 4 * FRACUNIT
+        + Fixed(
+            (3 * (state
+                .assets
+                .info
+                .mobjinfo_mut(state.world.p_mobj.mo(actor).kind)
+                .radius
+                + state.assets.info.mobjinfo[MobjType::Skull as usize].radius)
+                / 2)
+            .to_bits(),
+        );
+    let x: Fixed = state.world.p_mobj.mo(actor).x + fixed_mul(prestep, fine_cosine(an));
+    let y: Fixed = state.world.p_mobj.mo(actor).y + fixed_mul(prestep, fine_sine(an));
+    let z: Fixed = state.world.p_mobj.mo(actor).z + 8 * FRACUNIT;
     let newmobj: MobjId = spawn_mobj(state, x, y, z, MobjType::Skull);
     let (new_x, new_y) = {
         let n = state.world.p_mobj.mo(newmobj);
@@ -1602,12 +1647,17 @@ pub fn brain_pain(state: &mut GameState, _id: MobjId) {
     s_start_sound(state, SoundOrigin::None, SfxName::Bospn);
 }
 pub fn brain_scream(state: &mut GameState, mo: MobjId) {
-    let brain_x: i32 = state.world.p_mobj.mo(mo).x;
-    for x in (brain_x - 196 * FRACUNIT..brain_x + 320 * FRACUNIT).step_by(8 * FRACUNIT as usize) {
-        let y: i32 = state.world.p_mobj.mo(mo).y - 320 * FRACUNIT;
-        let z: i32 = 128 + p_random(&mut state.world.m_random) * 2 * FRACUNIT;
-        let th: MobjId = spawn_mobj(state, x as Fixed, y as Fixed, z as Fixed, MobjType::Rocket);
-        state.world.p_mobj.mo_mut(th).momz = (p_random(&mut state.world.m_random) * 512) as Fixed;
+    let brain_x: Fixed = state.world.p_mobj.mo(mo).x;
+    let (first_x, last_x) = (
+        (brain_x - 196 * FRACUNIT).to_bits(),
+        (brain_x + 320 * FRACUNIT).to_bits(),
+    );
+    for x in (first_x..last_x).step_by(8 * FRACUNIT.to_bits() as usize) {
+        let x = Fixed(x);
+        let y: Fixed = state.world.p_mobj.mo(mo).y - 320 * FRACUNIT;
+        let z = Fixed(128) + p_random(&mut state.world.m_random) * 2 * FRACUNIT;
+        let th: MobjId = spawn_mobj(state, x, y, z, MobjType::Rocket);
+        state.world.p_mobj.mo_mut(th).momz = Fixed(p_random(&mut state.world.m_random) * 512);
         set_mobj_state(state, th, StateNum::Brainexplode1);
         state.world.p_mobj.mo_mut(th).tics -= p_random(&mut state.world.m_random) & 7;
         if state.world.p_mobj.mo(th).tics < 1 {
@@ -1617,12 +1667,12 @@ pub fn brain_scream(state: &mut GameState, mo: MobjId) {
     s_start_sound(state, SoundOrigin::None, SfxName::Bosdth);
 }
 pub fn brain_explode(state: &mut GameState, mo: MobjId) {
-    let x: i32 = state.world.p_mobj.mo(mo).x
-        + (p_random(&mut state.world.m_random) - p_random(&mut state.world.m_random)) * 2048;
-    let y: i32 = state.world.p_mobj.mo(mo).y;
-    let z: i32 = 128 + p_random(&mut state.world.m_random) * 2 * FRACUNIT;
-    let th: MobjId = spawn_mobj(state, x as Fixed, y as Fixed, z as Fixed, MobjType::Rocket);
-    state.world.p_mobj.mo_mut(th).momz = (p_random(&mut state.world.m_random) * 512) as Fixed;
+    let x: Fixed = state.world.p_mobj.mo(mo).x
+        + Fixed((p_random(&mut state.world.m_random) - p_random(&mut state.world.m_random)) * 2048);
+    let y: Fixed = state.world.p_mobj.mo(mo).y;
+    let z = Fixed(128) + p_random(&mut state.world.m_random) * 2 * FRACUNIT;
+    let th: MobjId = spawn_mobj(state, x, y, z, MobjType::Rocket);
+    state.world.p_mobj.mo_mut(th).momz = Fixed(p_random(&mut state.world.m_random) * 512);
     set_mobj_state(state, th, StateNum::Brainexplode1);
     state.world.p_mobj.mo_mut(th).tics -= p_random(&mut state.world.m_random) & 7;
     if state.world.p_mobj.mo(th).tics < 1 {

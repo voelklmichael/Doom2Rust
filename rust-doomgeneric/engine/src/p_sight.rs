@@ -31,44 +31,44 @@ impl Default for PSightState {
 impl PSightState {
     pub const fn new() -> Self {
         Self {
-            sightzstart: 0,
-            topslope: 0,
-            bottomslope: 0,
+            sightzstart: Fixed::ZERO,
+            topslope: Fixed::ZERO,
+            bottomslope: Fixed::ZERO,
             strace: DivLine {
-                x: 0,
-                y: 0,
-                dx: 0,
-                dy: 0,
+                x: Fixed::ZERO,
+                y: Fixed::ZERO,
+                dx: Fixed::ZERO,
+                dy: Fixed::ZERO,
             },
-            t2x: 0,
-            t2y: 0,
+            t2x: Fixed::ZERO,
+            t2y: Fixed::ZERO,
             sightcounts: [0; 2],
         }
     }
 }
 pub fn divline_side(x: Fixed, y: Fixed, node: &DivLine) -> i32 {
-    if node.dx == 0 {
+    if node.dx == Fixed::ZERO {
         if x == node.x {
             return 2;
         }
         if x <= node.x {
-            return i32::from(node.dy > 0);
+            return i32::from(node.dy > Fixed::ZERO);
         }
-        return i32::from(node.dy < 0);
+        return i32::from(node.dy < Fixed::ZERO);
     }
-    if node.dy == 0 {
+    if node.dy == Fixed::ZERO {
         if x == node.y {
             return 2;
         }
         if y <= node.y {
-            return i32::from(node.dx < 0);
+            return i32::from(node.dx < Fixed::ZERO);
         }
-        return i32::from(node.dx > 0);
+        return i32::from(node.dx > Fixed::ZERO);
     }
     let dx = x - node.x;
     let dy = y - node.y;
-    let left = (node.dy >> FRACBITS) * (dx >> FRACBITS);
-    let right = (dy >> FRACBITS) * (node.dx >> FRACBITS);
+    let left = (node.dy >> FRACBITS) * dx.to_int();
+    let right = (dy >> FRACBITS) * node.dx.to_int();
     if right < left {
         return 0;
     }
@@ -79,8 +79,8 @@ pub fn divline_side(x: Fixed, y: Fixed, node: &DivLine) -> i32 {
 }
 pub fn intercept_vector2(v2: &DivLine, v1: &DivLine) -> Fixed {
     let den = fixed_mul(v1.dy >> 8, v2.dx) - fixed_mul(v1.dx >> 8, v2.dy);
-    if den == 0 {
-        return 0;
+    if den == Fixed::ZERO {
+        return Fixed::ZERO;
     }
     let num = fixed_mul((v1.x - v2.x) >> 8, v1.dy) + fixed_mul((v2.y - v1.y) >> 8, v1.dx);
     fixed_div(num, den)

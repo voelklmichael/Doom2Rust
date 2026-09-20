@@ -30,9 +30,9 @@ use crate::v_video::Screen;
 
 use crate::st_stuff::st_responder;
 
+use crate::tables::fine_cosine;
+use crate::tables::fine_sine;
 use crate::tables::Angle;
-use crate::tables::FINECOSINE;
-use crate::tables::FINESINE;
 use crate::v_video::draw_patch;
 use crate::v_video::mark_rect;
 use crate::w_wad::{get_num_for_name, lump_bytes, release_lump_num};
@@ -108,35 +108,44 @@ impl AmMapState {
             f_h: 0,
             lightlev: 0,
             amclock: 0,
-            m_paninc: MPoint { x: 0, y: 0 },
-            mtof_zoommul: 0,
-            ftom_zoommul: 0,
-            m_y: 0,
-            m_x: 0,
-            m_x2: 0,
-            m_y2: 0,
-            m_w: 0,
-            m_h: 0,
-            min_x: 0,
-            min_y: 0,
-            max_x: 0,
-            max_y: 0,
-            max_w: 0,
-            max_h: 0,
-            min_w: 0,
-            min_h: 0,
-            min_scale_mtof: 0,
-            max_scale_mtof: 0,
-            old_m_h: 0,
-            old_m_w: 0,
-            old_m_y: 0,
-            old_m_x: 0,
-            f_oldloc: MPoint { x: 0, y: 0 },
-            scale_mtof: INITSCALEMTOF as Fixed,
-            scale_ftom: 0,
+            m_paninc: MPoint {
+                x: Fixed::ZERO,
+                y: Fixed::ZERO,
+            },
+            mtof_zoommul: Fixed::ZERO,
+            ftom_zoommul: Fixed::ZERO,
+            m_y: Fixed::ZERO,
+            m_x: Fixed::ZERO,
+            m_x2: Fixed::ZERO,
+            m_y2: Fixed::ZERO,
+            m_w: Fixed::ZERO,
+            m_h: Fixed::ZERO,
+            min_x: Fixed::ZERO,
+            min_y: Fixed::ZERO,
+            max_x: Fixed::ZERO,
+            max_y: Fixed::ZERO,
+            max_w: Fixed::ZERO,
+            max_h: Fixed::ZERO,
+            min_w: Fixed::ZERO,
+            min_h: Fixed::ZERO,
+            min_scale_mtof: Fixed::ZERO,
+            max_scale_mtof: Fixed::ZERO,
+            old_m_h: Fixed::ZERO,
+            old_m_w: Fixed::ZERO,
+            old_m_y: Fixed::ZERO,
+            old_m_x: Fixed::ZERO,
+            f_oldloc: MPoint {
+                x: Fixed::ZERO,
+                y: Fixed::ZERO,
+            },
+            scale_mtof: Fixed((INITSCALEMTOF) as i32),
+            scale_ftom: Fixed::ZERO,
             plr: PlayerId(0),
             marknums: [-1; 10],
-            markpoints: [MPoint { x: 0, y: 0 }; 10],
+            markpoints: [MPoint {
+                x: Fixed::ZERO,
+                y: Fixed::ZERO,
+            }; 10],
             markpointnum: 0,
             followplayer: true,
             cheat_amap: CheatSeq::new("iddt", 0),
@@ -224,209 +233,242 @@ pub const SECRETWALLCOLORS: i32 = WALLCOLORS;
 pub const GRIDCOLORS: i32 = GRAYS + GRAYSRANGE / 2;
 pub const XHAIRCOLORS: i32 = GRAYS;
 pub const AM_NUMMARKPOINTS: usize = 10;
-pub const INITSCALEMTOF: f64 = 0.2f64 * FRACUNIT as f64;
-pub const M_ZOOMIN: i32 = (1.02f64 * FRACUNIT as f64) as i32;
-pub const M_ZOOMOUT: i32 = (FRACUNIT as f64 / 1.02f64) as i32;
-pub const R_0: i32 = 8 * 16 * FRACUNIT / 7;
+pub const INITSCALEMTOF: f64 = 0.2f64 * (FRACUNIT).to_bits() as f64;
+pub const M_ZOOMIN: i32 = (1.02f64 * (FRACUNIT).to_bits() as f64) as i32;
+pub const M_ZOOMOUT: i32 = ((FRACUNIT).to_bits() as f64 / 1.02f64) as i32;
+pub const R_0: i32 = 8 * 16 * FRACUNIT.to_bits() / 7;
 pub static PLAYER_ARROW: [MLine; 7] = [
     MLine {
         a: MPoint {
-            x: -R_0 + R_0 / 8,
-            y: 0,
+            x: Fixed(-R_0 + R_0 / 8),
+            y: Fixed::ZERO,
         },
-        b: MPoint { x: R_0, y: 0 },
-    },
-    MLine {
-        a: MPoint { x: R_0, y: 0 },
         b: MPoint {
-            x: R_0 - R_0 / 2,
-            y: R_0 / 4,
-        },
-    },
-    MLine {
-        a: MPoint { x: R_0, y: 0 },
-        b: MPoint {
-            x: R_0 - R_0 / 2,
-            y: -R_0 / 4,
+            x: Fixed(R_0),
+            y: Fixed::ZERO,
         },
     },
     MLine {
         a: MPoint {
-            x: -R_0 + R_0 / 8,
-            y: 0,
+            x: Fixed(R_0),
+            y: Fixed::ZERO,
         },
         b: MPoint {
-            x: -R_0 - R_0 / 8,
-            y: R_0 / 4,
+            x: Fixed(R_0 - R_0 / 2),
+            y: Fixed(R_0 / 4),
         },
     },
     MLine {
         a: MPoint {
-            x: -R_0 + R_0 / 8,
-            y: 0,
+            x: Fixed(R_0),
+            y: Fixed::ZERO,
         },
         b: MPoint {
-            x: -R_0 - R_0 / 8,
-            y: -R_0 / 4,
+            x: Fixed(R_0 - R_0 / 2),
+            y: Fixed(-R_0 / 4),
         },
     },
     MLine {
         a: MPoint {
-            x: -R_0 + 3 * R_0 / 8,
-            y: 0,
+            x: Fixed(-R_0 + R_0 / 8),
+            y: Fixed::ZERO,
         },
         b: MPoint {
-            x: -R_0 + R_0 / 8,
-            y: R_0 / 4,
+            x: Fixed(-R_0 - R_0 / 8),
+            y: Fixed(R_0 / 4),
         },
     },
     MLine {
         a: MPoint {
-            x: -R_0 + 3 * R_0 / 8,
-            y: 0,
+            x: Fixed(-R_0 + R_0 / 8),
+            y: Fixed::ZERO,
         },
         b: MPoint {
-            x: -R_0 + R_0 / 8,
-            y: -R_0 / 4,
+            x: Fixed(-R_0 - R_0 / 8),
+            y: Fixed(-R_0 / 4),
+        },
+    },
+    MLine {
+        a: MPoint {
+            x: Fixed(-R_0 + 3 * R_0 / 8),
+            y: Fixed::ZERO,
+        },
+        b: MPoint {
+            x: Fixed(-R_0 + R_0 / 8),
+            y: Fixed(R_0 / 4),
+        },
+    },
+    MLine {
+        a: MPoint {
+            x: Fixed(-R_0 + 3 * R_0 / 8),
+            y: Fixed::ZERO,
+        },
+        b: MPoint {
+            x: Fixed(-R_0 + R_0 / 8),
+            y: Fixed(-R_0 / 4),
         },
     },
 ];
-pub const R_1: i32 = 8 * 16 * FRACUNIT / 7;
+pub const R_1: i32 = 8 * 16 * FRACUNIT.to_bits() / 7;
 pub static CHEAT_PLAYER_ARROW: [MLine; 16] = [
     MLine {
         a: MPoint {
-            x: -R_1 + R_1 / 8,
-            y: 0,
+            x: Fixed(-R_1 + R_1 / 8),
+            y: Fixed::ZERO,
         },
-        b: MPoint { x: R_1, y: 0 },
-    },
-    MLine {
-        a: MPoint { x: R_1, y: 0 },
         b: MPoint {
-            x: R_1 - R_1 / 2,
-            y: R_1 / 6,
-        },
-    },
-    MLine {
-        a: MPoint { x: R_1, y: 0 },
-        b: MPoint {
-            x: R_1 - R_1 / 2,
-            y: -R_1 / 6,
+            x: Fixed(R_1),
+            y: Fixed::ZERO,
         },
     },
     MLine {
         a: MPoint {
-            x: -R_1 + R_1 / 8,
-            y: 0,
+            x: Fixed(R_1),
+            y: Fixed::ZERO,
         },
         b: MPoint {
-            x: -R_1 - R_1 / 8,
-            y: R_1 / 6,
+            x: Fixed(R_1 - R_1 / 2),
+            y: Fixed(R_1 / 6),
         },
     },
     MLine {
         a: MPoint {
-            x: -R_1 + R_1 / 8,
-            y: 0,
+            x: Fixed(R_1),
+            y: Fixed::ZERO,
         },
         b: MPoint {
-            x: -R_1 - R_1 / 8,
-            y: -R_1 / 6,
+            x: Fixed(R_1 - R_1 / 2),
+            y: Fixed(-R_1 / 6),
         },
     },
     MLine {
         a: MPoint {
-            x: -R_1 + 3 * R_1 / 8,
-            y: 0,
+            x: Fixed(-R_1 + R_1 / 8),
+            y: Fixed::ZERO,
         },
         b: MPoint {
-            x: -R_1 + R_1 / 8,
-            y: R_1 / 6,
+            x: Fixed(-R_1 - R_1 / 8),
+            y: Fixed(R_1 / 6),
         },
     },
     MLine {
         a: MPoint {
-            x: -R_1 + 3 * R_1 / 8,
-            y: 0,
+            x: Fixed(-R_1 + R_1 / 8),
+            y: Fixed::ZERO,
         },
         b: MPoint {
-            x: -R_1 + R_1 / 8,
-            y: -R_1 / 6,
-        },
-    },
-    MLine {
-        a: MPoint { x: -R_1 / 2, y: 0 },
-        b: MPoint {
-            x: -R_1 / 2,
-            y: -R_1 / 6,
+            x: Fixed(-R_1 - R_1 / 8),
+            y: Fixed(-R_1 / 6),
         },
     },
     MLine {
         a: MPoint {
-            x: -R_1 / 2,
-            y: -R_1 / 6,
+            x: Fixed(-R_1 + 3 * R_1 / 8),
+            y: Fixed::ZERO,
         },
         b: MPoint {
-            x: -R_1 / 2 + R_1 / 6,
-            y: -R_1 / 6,
+            x: Fixed(-R_1 + R_1 / 8),
+            y: Fixed(R_1 / 6),
         },
     },
     MLine {
         a: MPoint {
-            x: -R_1 / 2 + R_1 / 6,
-            y: -R_1 / 6,
+            x: Fixed(-R_1 + 3 * R_1 / 8),
+            y: Fixed::ZERO,
         },
         b: MPoint {
-            x: -R_1 / 2 + R_1 / 6,
-            y: R_1 / 4,
-        },
-    },
-    MLine {
-        a: MPoint { x: -R_1 / 6, y: 0 },
-        b: MPoint {
-            x: -R_1 / 6,
-            y: -R_1 / 6,
+            x: Fixed(-R_1 + R_1 / 8),
+            y: Fixed(-R_1 / 6),
         },
     },
     MLine {
         a: MPoint {
-            x: -R_1 / 6,
-            y: -R_1 / 6,
-        },
-        b: MPoint { x: 0, y: -R_1 / 6 },
-    },
-    MLine {
-        a: MPoint { x: 0, y: -R_1 / 6 },
-        b: MPoint { x: 0, y: R_1 / 4 },
-    },
-    MLine {
-        a: MPoint {
-            x: R_1 / 6,
-            y: R_1 / 4,
+            x: Fixed(-R_1 / 2),
+            y: Fixed::ZERO,
         },
         b: MPoint {
-            x: R_1 / 6,
-            y: -R_1 / 7,
+            x: Fixed(-R_1 / 2),
+            y: Fixed(-R_1 / 6),
         },
     },
     MLine {
         a: MPoint {
-            x: R_1 / 6,
-            y: -R_1 / 7,
+            x: Fixed(-R_1 / 2),
+            y: Fixed(-R_1 / 6),
         },
         b: MPoint {
-            x: R_1 / 6 + R_1 / 32,
-            y: -R_1 / 7 - R_1 / 32,
+            x: Fixed(-R_1 / 2 + R_1 / 6),
+            y: Fixed(-R_1 / 6),
         },
     },
     MLine {
         a: MPoint {
-            x: R_1 / 6 + R_1 / 32,
-            y: -R_1 / 7 - R_1 / 32,
+            x: Fixed(-R_1 / 2 + R_1 / 6),
+            y: Fixed(-R_1 / 6),
         },
         b: MPoint {
-            x: R_1 / 6 + R_1 / 10,
-            y: -R_1 / 7,
+            x: Fixed(-R_1 / 2 + R_1 / 6),
+            y: Fixed(R_1 / 4),
+        },
+    },
+    MLine {
+        a: MPoint {
+            x: Fixed(-R_1 / 6),
+            y: Fixed::ZERO,
+        },
+        b: MPoint {
+            x: Fixed(-R_1 / 6),
+            y: Fixed(-R_1 / 6),
+        },
+    },
+    MLine {
+        a: MPoint {
+            x: Fixed(-R_1 / 6),
+            y: Fixed(-R_1 / 6),
+        },
+        b: MPoint {
+            x: Fixed::ZERO,
+            y: Fixed(-R_1 / 6),
+        },
+    },
+    MLine {
+        a: MPoint {
+            x: Fixed::ZERO,
+            y: Fixed(-R_1 / 6),
+        },
+        b: MPoint {
+            x: Fixed::ZERO,
+            y: Fixed(R_1 / 4),
+        },
+    },
+    MLine {
+        a: MPoint {
+            x: Fixed(R_1 / 6),
+            y: Fixed(R_1 / 4),
+        },
+        b: MPoint {
+            x: Fixed(R_1 / 6),
+            y: Fixed(-R_1 / 7),
+        },
+    },
+    MLine {
+        a: MPoint {
+            x: Fixed(R_1 / 6),
+            y: Fixed(-R_1 / 7),
+        },
+        b: MPoint {
+            x: Fixed(R_1 / 6 + R_1 / 32),
+            y: Fixed(-R_1 / 7 - R_1 / 32),
+        },
+    },
+    MLine {
+        a: MPoint {
+            x: Fixed(R_1 / 6 + R_1 / 32),
+            y: Fixed(-R_1 / 7 - R_1 / 32),
+        },
+        b: MPoint {
+            x: Fixed(R_1 / 6 + R_1 / 10),
+            y: Fixed(-R_1 / 7),
         },
     },
 ];
@@ -434,32 +476,32 @@ pub const R: i32 = 1 << FRACBITS;
 pub static THINTRIANGLE_GUY: [MLine; 3] = [
     MLine {
         a: MPoint {
-            x: (-0.5f64 * R as f64) as Fixed,
-            y: (-0.7f64 * R as f64) as Fixed,
+            x: Fixed((-0.5f64 * R as f64) as i32),
+            y: Fixed((-0.7f64 * R as f64) as i32),
         },
         b: MPoint {
-            x: 1 << FRACBITS,
-            y: 0,
+            x: Fixed(1 << FRACBITS),
+            y: Fixed::ZERO,
         },
     },
     MLine {
         a: MPoint {
-            x: 1 << FRACBITS,
-            y: 0,
+            x: Fixed(1 << FRACBITS),
+            y: Fixed::ZERO,
         },
         b: MPoint {
-            x: (-0.5f64 * R as f64) as Fixed,
-            y: (0.7f64 * R as f64) as Fixed,
+            x: Fixed((-0.5f64 * R as f64) as i32),
+            y: Fixed((0.7f64 * R as f64) as i32),
         },
     },
     MLine {
         a: MPoint {
-            x: (-0.5f64 * R as f64) as Fixed,
-            y: (0.7f64 * R as f64) as Fixed,
+            x: Fixed((-0.5f64 * R as f64) as i32),
+            y: Fixed((0.7f64 * R as f64) as i32),
         },
         b: MPoint {
-            x: (-0.5f64 * R as f64) as Fixed,
-            y: (-0.7f64 * R as f64) as Fixed,
+            x: Fixed((-0.5f64 * R as f64) as i32),
+            y: Fixed((-0.7f64 * R as f64) as i32),
         },
     },
 ];
@@ -468,8 +510,8 @@ static FINIT_HEIGHT: i32 = SCREENHEIGHT - 32;
 pub fn activate_new_scale(am_map: &mut AmMapState) {
     am_map.m_x += am_map.m_w / 2;
     am_map.m_y += am_map.m_h / 2;
-    am_map.m_w = fixed_mul((am_map.f_w as Fixed) << 16, am_map.scale_ftom);
-    am_map.m_h = fixed_mul((am_map.f_h as Fixed) << 16, am_map.scale_ftom);
+    am_map.m_w = fixed_mul(Fixed::from_int(am_map.f_w), am_map.scale_ftom);
+    am_map.m_h = fixed_mul(Fixed::from_int(am_map.f_h), am_map.scale_ftom);
     am_map.m_x -= am_map.m_w / 2;
     am_map.m_y -= am_map.m_h / 2;
     am_map.m_x2 = am_map.m_x + am_map.m_w;
@@ -491,26 +533,26 @@ pub fn restore_scale_and_loc(
     if am_map.followplayer {
         let plr_mo_id = g_game.player_mut(am_map.plr).mo.unwrap();
         let plr_mo = p_mobj.mo(plr_mo_id);
-        am_map.m_x = (plr_mo.x - am_map.m_w / 2) as Fixed;
-        am_map.m_y = (plr_mo.y - am_map.m_h / 2) as Fixed;
+        am_map.m_x = plr_mo.x - am_map.m_w / 2;
+        am_map.m_y = plr_mo.y - am_map.m_h / 2;
     } else {
         am_map.m_x = am_map.old_m_x;
         am_map.m_y = am_map.old_m_y;
     }
     am_map.m_x2 = am_map.m_x + am_map.m_w;
     am_map.m_y2 = am_map.m_y + am_map.m_h;
-    am_map.scale_mtof = fixed_div((am_map.f_w as Fixed) << FRACBITS, am_map.m_w);
+    am_map.scale_mtof = fixed_div(Fixed::from_int(am_map.f_w), am_map.m_w);
     am_map.scale_ftom = fixed_div(FRACUNIT, am_map.scale_mtof);
 }
 pub fn add_mark(am_map: &mut AmMapState) {
-    am_map.markpoints[am_map.markpointnum].x = (am_map.m_x + am_map.m_w / 2) as Fixed;
-    am_map.markpoints[am_map.markpointnum].y = (am_map.m_y + am_map.m_h / 2) as Fixed;
+    am_map.markpoints[am_map.markpointnum].x = am_map.m_x + am_map.m_w / 2;
+    am_map.markpoints[am_map.markpointnum].y = am_map.m_y + am_map.m_h / 2;
     am_map.markpointnum = (am_map.markpointnum + 1) % AM_NUMMARKPOINTS;
 }
 pub fn find_min_max_boundaries(am_map: &mut AmMapState, p_setup: &PSetupState) {
-    am_map.min_y = INT_MAX as Fixed;
+    am_map.min_y = Fixed(INT_MAX);
     am_map.min_x = am_map.min_y;
-    am_map.max_y = -INT_MAX as Fixed;
+    am_map.max_y = Fixed(-INT_MAX);
     am_map.max_x = am_map.max_y;
     for i in 0..(p_setup.numvertexes as usize) {
         let v = p_setup.vertexes[i];
@@ -527,29 +569,29 @@ pub fn find_min_max_boundaries(am_map: &mut AmMapState, p_setup: &PSetupState) {
     }
     am_map.max_w = am_map.max_x - am_map.min_x;
     am_map.max_h = am_map.max_y - am_map.min_y;
-    am_map.min_w = (2 * 16 * FRACUNIT) as Fixed;
-    am_map.min_h = (2 * 16 * FRACUNIT) as Fixed;
-    let a: Fixed = fixed_div((am_map.f_w as Fixed) << FRACBITS, am_map.max_w);
-    let b: Fixed = fixed_div((am_map.f_h as Fixed) << FRACBITS, am_map.max_h);
+    am_map.min_w = 2 * 16 * FRACUNIT;
+    am_map.min_h = 2 * 16 * FRACUNIT;
+    let a: Fixed = fixed_div(Fixed::from_int(am_map.f_w), am_map.max_w);
+    let b: Fixed = fixed_div(Fixed::from_int(am_map.f_h), am_map.max_h);
     am_map.min_scale_mtof = if a < b { a } else { b };
-    am_map.max_scale_mtof = fixed_div((am_map.f_h as Fixed) << FRACBITS, 2 * 16 * FRACUNIT);
+    am_map.max_scale_mtof = fixed_div(Fixed::from_int(am_map.f_h), 2 * 16 * FRACUNIT);
 }
 pub fn change_window_loc(am_map: &mut AmMapState) {
-    if am_map.m_paninc.x != 0 || am_map.m_paninc.y != 0 {
+    if am_map.m_paninc.x != Fixed::ZERO || am_map.m_paninc.y != Fixed::ZERO {
         am_map.followplayer = false;
-        am_map.f_oldloc.x = INT_MAX as Fixed;
+        am_map.f_oldloc.x = Fixed(INT_MAX);
     }
     am_map.m_x += am_map.m_paninc.x;
     am_map.m_y += am_map.m_paninc.y;
     if am_map.m_x + am_map.m_w / 2 > am_map.max_x {
-        am_map.m_x = (am_map.max_x - am_map.m_w / 2) as Fixed;
+        am_map.m_x = am_map.max_x - am_map.m_w / 2;
     } else if (am_map.m_x + am_map.m_w / 2) < am_map.min_x {
-        am_map.m_x = (am_map.min_x - am_map.m_w / 2) as Fixed;
+        am_map.m_x = am_map.min_x - am_map.m_w / 2;
     }
     if am_map.m_y + am_map.m_h / 2 > am_map.max_y {
-        am_map.m_y = (am_map.max_y - am_map.m_h / 2) as Fixed;
+        am_map.m_y = am_map.max_y - am_map.m_h / 2;
     } else if (am_map.m_y + am_map.m_h / 2) < am_map.min_y {
-        am_map.m_y = (am_map.min_y - am_map.m_h / 2) as Fixed;
+        am_map.m_y = am_map.min_y - am_map.m_h / 2;
     }
     am_map.m_x2 = am_map.m_x + am_map.m_w;
     am_map.m_y2 = am_map.m_y + am_map.m_h;
@@ -563,19 +605,19 @@ pub fn am_init_variables(state: &mut GameState) {
         data4: 0,
     };
     state.ui.am_map.automapactive = true;
-    state.ui.am_map.f_oldloc.x = INT_MAX as Fixed;
+    state.ui.am_map.f_oldloc.x = Fixed(INT_MAX);
     state.ui.am_map.amclock = 0;
     state.ui.am_map.lightlev = 0;
-    state.ui.am_map.m_paninc.y = 0;
+    state.ui.am_map.m_paninc.y = Fixed::ZERO;
     state.ui.am_map.m_paninc.x = state.ui.am_map.m_paninc.y;
-    state.ui.am_map.ftom_zoommul = FRACUNIT as Fixed;
-    state.ui.am_map.mtof_zoommul = FRACUNIT as Fixed;
+    state.ui.am_map.ftom_zoommul = FRACUNIT;
+    state.ui.am_map.mtof_zoommul = FRACUNIT;
     state.ui.am_map.m_w = fixed_mul(
-        (state.ui.am_map.f_w as Fixed) << 16,
+        Fixed::from_int(state.ui.am_map.f_w),
         state.ui.am_map.scale_ftom,
     );
     state.ui.am_map.m_h = fixed_mul(
-        (state.ui.am_map.f_h as Fixed) << 16,
+        Fixed::from_int(state.ui.am_map.f_h),
         state.ui.am_map.scale_ftom,
     );
     if state.game.g_game.playeringame[state.game.g_game.consoleplayer] {
@@ -596,8 +638,8 @@ pub fn am_init_variables(state: &mut GameState) {
         .mo
         .unwrap();
     let plr_mo = state.world.p_mobj.mo(plr_mo_id);
-    state.ui.am_map.m_x = (plr_mo.x - state.ui.am_map.m_w / 2) as Fixed;
-    state.ui.am_map.m_y = (plr_mo.y - state.ui.am_map.m_h / 2) as Fixed;
+    state.ui.am_map.m_x = plr_mo.x - state.ui.am_map.m_w / 2;
+    state.ui.am_map.m_y = plr_mo.y - state.ui.am_map.m_h / 2;
     change_window_loc(&mut state.ui.am_map);
     state.ui.am_map.old_m_x = state.ui.am_map.m_x;
     state.ui.am_map.old_m_y = state.ui.am_map.m_y;
@@ -620,7 +662,7 @@ pub fn unload_pics(am_map: &AmMapState, w_wad: &WWadState) {
 }
 pub fn clear_marks(am_map: &mut AmMapState) {
     for i in 0..AM_NUMMARKPOINTS {
-        am_map.markpoints[i].x = -1;
+        am_map.markpoints[i].x = Fixed(-1);
     }
     am_map.markpointnum = 0;
 }
@@ -634,7 +676,7 @@ pub fn level_init(am_map: &mut AmMapState, p_setup: &PSetupState) {
     find_min_max_boundaries(am_map, p_setup);
     am_map.scale_mtof = fixed_div(
         am_map.min_scale_mtof,
-        (0.7f64 * f64::from(FRACUNIT)) as Fixed,
+        Fixed((0.7f64 * f64::from(FRACUNIT.to_bits())) as i32),
     );
     if am_map.scale_mtof > am_map.max_scale_mtof {
         am_map.scale_mtof = am_map.min_scale_mtof;
@@ -698,32 +740,36 @@ pub fn am_responder(state: &mut GameState, ev: &Event) -> bool {
             if state.ui.am_map.followplayer {
                 rc = false;
             } else {
-                state.ui.am_map.m_paninc.x = fixed_mul((4) << 16, state.ui.am_map.scale_ftom);
+                state.ui.am_map.m_paninc.x =
+                    fixed_mul(Fixed::from_int(4), state.ui.am_map.scale_ftom);
             }
         } else if key == state.game.m_controls.key_map_west {
             if state.ui.am_map.followplayer {
                 rc = false;
             } else {
-                state.ui.am_map.m_paninc.x = -fixed_mul((4) << 16, state.ui.am_map.scale_ftom);
+                state.ui.am_map.m_paninc.x =
+                    -fixed_mul(Fixed::from_int(4), state.ui.am_map.scale_ftom);
             }
         } else if key == state.game.m_controls.key_map_north {
             if state.ui.am_map.followplayer {
                 rc = false;
             } else {
-                state.ui.am_map.m_paninc.y = fixed_mul((4) << 16, state.ui.am_map.scale_ftom);
+                state.ui.am_map.m_paninc.y =
+                    fixed_mul(Fixed::from_int(4), state.ui.am_map.scale_ftom);
             }
         } else if key == state.game.m_controls.key_map_south {
             if state.ui.am_map.followplayer {
                 rc = false;
             } else {
-                state.ui.am_map.m_paninc.y = -fixed_mul((4) << 16, state.ui.am_map.scale_ftom);
+                state.ui.am_map.m_paninc.y =
+                    -fixed_mul(Fixed::from_int(4), state.ui.am_map.scale_ftom);
             }
         } else if key == state.game.m_controls.key_map_zoomout {
-            state.ui.am_map.mtof_zoommul = M_ZOOMOUT as Fixed;
-            state.ui.am_map.ftom_zoommul = M_ZOOMIN as Fixed;
+            state.ui.am_map.mtof_zoommul = Fixed(M_ZOOMOUT);
+            state.ui.am_map.ftom_zoommul = Fixed(M_ZOOMIN);
         } else if key == state.game.m_controls.key_map_zoomin {
-            state.ui.am_map.mtof_zoommul = M_ZOOMIN as Fixed;
-            state.ui.am_map.ftom_zoommul = M_ZOOMOUT as Fixed;
+            state.ui.am_map.mtof_zoommul = Fixed(M_ZOOMIN);
+            state.ui.am_map.ftom_zoommul = Fixed(M_ZOOMOUT);
         } else if key == state.game.m_controls.key_map_toggle {
             state.ui.am_map.am_responder_bigstate = false;
             state.game.g_game.viewactive = true;
@@ -742,7 +788,7 @@ pub fn am_responder(state: &mut GameState, ev: &Event) -> bool {
             }
         } else if key == state.game.m_controls.key_map_follow {
             state.ui.am_map.followplayer = !state.ui.am_map.followplayer;
-            state.ui.am_map.f_oldloc.x = INT_MAX as Fixed;
+            state.ui.am_map.f_oldloc.x = Fixed(INT_MAX);
             if state.ui.am_map.followplayer {
                 state.game.g_game.player_mut(state.ui.am_map.plr).message =
                     Some("Follow Mode ON".to_string());
@@ -781,19 +827,19 @@ pub fn am_responder(state: &mut GameState, ev: &Event) -> bool {
         let key: i32 = ev.data1;
         if key == state.game.m_controls.key_map_east || key == state.game.m_controls.key_map_west {
             if !state.ui.am_map.followplayer {
-                state.ui.am_map.m_paninc.x = 0;
+                state.ui.am_map.m_paninc.x = Fixed::ZERO;
             }
         } else if key == state.game.m_controls.key_map_north
             || key == state.game.m_controls.key_map_south
         {
             if !state.ui.am_map.followplayer {
-                state.ui.am_map.m_paninc.y = 0;
+                state.ui.am_map.m_paninc.y = Fixed::ZERO;
             }
         } else if key == state.game.m_controls.key_map_zoomout
             || key == state.game.m_controls.key_map_zoomin
         {
-            state.ui.am_map.mtof_zoommul = FRACUNIT as Fixed;
-            state.ui.am_map.ftom_zoommul = FRACUNIT as Fixed;
+            state.ui.am_map.mtof_zoommul = FRACUNIT;
+            state.ui.am_map.ftom_zoommul = FRACUNIT;
         }
     }
     rc
@@ -814,14 +860,14 @@ pub fn do_follow_player(am_map: &mut AmMapState, g_game: &mut GGameState, p_mobj
     let plr_mo = p_mobj.mo(plr_mo_id);
     let (plr_x, plr_y) = (plr_mo.x, plr_mo.y);
     if am_map.f_oldloc.x != plr_x || am_map.f_oldloc.y != plr_y {
-        am_map.m_x = (fixed_mul(
-            (fixed_mul(plr_x, am_map.scale_mtof) >> 16) << 16,
+        am_map.m_x = fixed_mul(
+            Fixed::from_int(fixed_mul(plr_x, am_map.scale_mtof).to_int()),
             am_map.scale_ftom,
-        ) - am_map.m_w / 2) as Fixed;
-        am_map.m_y = (fixed_mul(
-            (fixed_mul(plr_y, am_map.scale_mtof) >> 16) << 16,
+        ) - am_map.m_w / 2;
+        am_map.m_y = fixed_mul(
+            Fixed::from_int(fixed_mul(plr_y, am_map.scale_mtof).to_int()),
             am_map.scale_ftom,
-        ) - am_map.m_h / 2) as Fixed;
+        ) - am_map.m_h / 2;
         am_map.m_x2 = am_map.m_x + am_map.m_w;
         am_map.m_y2 = am_map.m_y + am_map.m_h;
         am_map.f_oldloc.x = plr_x;
@@ -839,7 +885,7 @@ pub fn am_ticker(am_map: &mut AmMapState, g_game: &mut GGameState, p_mobj: &PMob
     if am_map.ftom_zoommul != FRACUNIT {
         change_window_scale(am_map);
     }
-    if am_map.m_paninc.x != 0 || am_map.m_paninc.y != 0 {
+    if am_map.m_paninc.x != Fixed::ZERO || am_map.m_paninc.y != Fixed::ZERO {
         change_window_loc(am_map);
     }
 }
@@ -877,12 +923,10 @@ pub fn clip_mline(am_map: &AmMapState, ml: &MLine, fl: &mut FLine) -> bool {
     if outcode1.intersects(outcode2) {
         return false;
     }
-    fl.a.x = am_map.f_x as Fixed + (fixed_mul(ml.a.x - am_map.m_x, am_map.scale_mtof) >> 16);
-    fl.a.y = am_map.f_y as Fixed
-        + (am_map.f_h as Fixed - (fixed_mul(ml.a.y - am_map.m_y, am_map.scale_mtof) >> 16));
-    fl.b.x = am_map.f_x as Fixed + (fixed_mul(ml.b.x - am_map.m_x, am_map.scale_mtof) >> 16);
-    fl.b.y = am_map.f_y as Fixed
-        + (am_map.f_h as Fixed - (fixed_mul(ml.b.y - am_map.m_y, am_map.scale_mtof) >> 16));
+    fl.a.x = am_map.f_x + fixed_mul(ml.a.x - am_map.m_x, am_map.scale_mtof).to_int();
+    fl.a.y = am_map.f_y + (am_map.f_h - fixed_mul(ml.a.y - am_map.m_y, am_map.scale_mtof).to_int());
+    fl.b.x = am_map.f_x + fixed_mul(ml.b.x - am_map.m_x, am_map.scale_mtof).to_int();
+    fl.b.y = am_map.f_y + (am_map.f_h - fixed_mul(ml.b.y - am_map.m_y, am_map.scale_mtof).to_int());
     outcode1 = Outcode::of_screen_point(fl.a, am_map.f_w, am_map.f_h);
     outcode2 = Outcode::of_screen_point(fl.b, am_map.f_w, am_map.f_h);
     if outcode1.intersects(outcode2) {
@@ -1006,18 +1050,27 @@ pub fn draw_mline(
 }
 pub fn draw_grid(state: &mut GameState, color: i32) {
     let mut ml: MLine = MLine {
-        a: MPoint { x: 0, y: 0 },
-        b: MPoint { x: 0, y: 0 },
+        a: MPoint {
+            x: Fixed::ZERO,
+            y: Fixed::ZERO,
+        },
+        b: MPoint {
+            x: Fixed::ZERO,
+            y: Fixed::ZERO,
+        },
     };
     let mut start: Fixed = state.ui.am_map.m_x;
     if (start - state.world.p_setup.bmaporgx) % (MAPBLOCKUNITS << FRACBITS) != 0 {
-        start += (MAPBLOCKUNITS << FRACBITS)
-            - (start - state.world.p_setup.bmaporgx) % (MAPBLOCKUNITS << FRACBITS);
+        start += Fixed(
+            (MAPBLOCKUNITS << FRACBITS)
+                - (start - state.world.p_setup.bmaporgx) % (MAPBLOCKUNITS << FRACBITS),
+        );
     }
     let mut end: Fixed = state.ui.am_map.m_x + state.ui.am_map.m_w;
     ml.a.y = state.ui.am_map.m_y;
     ml.b.y = state.ui.am_map.m_y + state.ui.am_map.m_h;
-    for x in (start..end).step_by((MAPBLOCKUNITS << FRACBITS) as usize) {
+    for x in (start.to_bits()..end.to_bits()).step_by((MAPBLOCKUNITS << FRACBITS) as usize) {
+        let x = Fixed(x);
         ml.a.x = x;
         ml.b.x = x;
         draw_mline(
@@ -1030,13 +1083,16 @@ pub fn draw_grid(state: &mut GameState, color: i32) {
     }
     start = state.ui.am_map.m_y;
     if (start - state.world.p_setup.bmaporgy) % (MAPBLOCKUNITS << FRACBITS) != 0 {
-        start += (MAPBLOCKUNITS << FRACBITS)
-            - (start - state.world.p_setup.bmaporgy) % (MAPBLOCKUNITS << FRACBITS);
+        start += Fixed(
+            (MAPBLOCKUNITS << FRACBITS)
+                - (start - state.world.p_setup.bmaporgy) % (MAPBLOCKUNITS << FRACBITS),
+        );
     }
     end = state.ui.am_map.m_y + state.ui.am_map.m_h;
     ml.a.x = state.ui.am_map.m_x;
     ml.b.x = state.ui.am_map.m_x + state.ui.am_map.m_w;
-    for y in (start..end).step_by((MAPBLOCKUNITS << FRACBITS) as usize) {
+    for y in (start.to_bits()..end.to_bits()).step_by((MAPBLOCKUNITS << FRACBITS) as usize) {
+        let y = Fixed(y);
         ml.a.y = y;
         ml.b.y = y;
         draw_mline(
@@ -1050,8 +1106,14 @@ pub fn draw_grid(state: &mut GameState, color: i32) {
 }
 pub fn draw_walls(state: &mut GameState) {
     let mut l: MLine = MLine {
-        a: MPoint { x: 0, y: 0 },
-        b: MPoint { x: 0, y: 0 },
+        a: MPoint {
+            x: Fixed::ZERO,
+            y: Fixed::ZERO,
+        },
+        b: MPoint {
+            x: Fixed::ZERO,
+            y: Fixed::ZERO,
+        },
     };
     for i in 0..(state.world.p_setup.numlines as usize) {
         let li = &state.world.p_setup.lines[i];
@@ -1103,11 +1165,11 @@ pub fn draw_walls(state: &mut GameState) {
                                     WALLCOLORS + lightlev,
                                 );
                             }
-                        } else if state.world.p_setup.sector_mut(li_backsector).floorheight
+                        } else if state.world.p_setup.sector(li_backsector).floorheight
                             != state
                                 .world
                                 .p_setup
-                                .sector_mut(li_frontsector.unwrap())
+                                .sector(li_frontsector.unwrap())
                                 .floorheight
                         {
                             draw_mline(
@@ -1117,11 +1179,11 @@ pub fn draw_walls(state: &mut GameState) {
                                 &l,
                                 FDWALLCOLORS + lightlev,
                             );
-                        } else if state.world.p_setup.sector_mut(li_backsector).ceilingheight
+                        } else if state.world.p_setup.sector(li_backsector).ceilingheight
                             != state
                                 .world
                                 .p_setup
-                                .sector_mut(li_frontsector.unwrap())
+                                .sector(li_frontsector.unwrap())
                                 .ceilingheight
                         {
                             draw_mline(
@@ -1159,8 +1221,8 @@ pub fn draw_walls(state: &mut GameState) {
     }
 }
 pub fn am_rotate(x: &mut Fixed, y: &mut Fixed, a: Angle) {
-    let tmpx: Fixed = fixed_mul(*x, FINECOSINE[a.fine()]) - fixed_mul(*y, FINESINE[a.fine()]);
-    *y = fixed_mul(*x, FINESINE[a.fine()]) + fixed_mul(*y, FINECOSINE[a.fine()]);
+    let tmpx: Fixed = fixed_mul(*x, fine_cosine(a.fine())) - fixed_mul(*y, fine_sine(a.fine()));
+    *y = fixed_mul(*x, fine_sine(a.fine())) + fixed_mul(*y, fine_cosine(a.fine()));
     *x = tmpx;
 }
 pub fn draw_line_character(
@@ -1173,13 +1235,19 @@ pub fn draw_line_character(
     y: Fixed,
 ) {
     let mut l: MLine = MLine {
-        a: MPoint { x: 0, y: 0 },
-        b: MPoint { x: 0, y: 0 },
+        a: MPoint {
+            x: Fixed::ZERO,
+            y: Fixed::ZERO,
+        },
+        b: MPoint {
+            x: Fixed::ZERO,
+            y: Fixed::ZERO,
+        },
     };
     for line in lineguy {
         l.a.x = line.a.x;
         l.a.y = line.a.y;
-        if scale != 0 {
+        if scale != Fixed::ZERO {
             l.a.x = fixed_mul(scale, l.a.x);
             l.a.y = fixed_mul(scale, l.a.y);
         }
@@ -1190,7 +1258,7 @@ pub fn draw_line_character(
         l.a.y += y;
         l.b.x = line.b.x;
         l.b.y = line.b.y;
-        if scale != 0 {
+        if scale != Fixed::ZERO {
             l.b.x = fixed_mul(scale, l.b.x);
             l.b.y = fixed_mul(scale, l.b.y);
         }
@@ -1224,14 +1292,22 @@ pub fn draw_players(state: &mut GameState) {
             draw_line_character(
                 state,
                 &CHEAT_PLAYER_ARROW,
-                0,
+                Fixed::ZERO,
                 plr_angle,
                 WHITE,
                 plr_x,
                 plr_y,
             );
         } else {
-            draw_line_character(state, &PLAYER_ARROW, 0, plr_angle, WHITE, plr_x, plr_y);
+            draw_line_character(
+                state,
+                &PLAYER_ARROW,
+                Fixed::ZERO,
+                plr_angle,
+                WHITE,
+                plr_x,
+                plr_y,
+            );
         }
         return;
     }
@@ -1251,7 +1327,7 @@ pub fn draw_players(state: &mut GameState) {
             };
             let p_mo = state.world.p_mobj.mo(p_mo_id.unwrap());
             let (p_angle, p_x, p_y) = (p_mo.angle, p_mo.x, p_mo.y);
-            draw_line_character(state, &PLAYER_ARROW, 0, p_angle, color, p_x, p_y);
+            draw_line_character(state, &PLAYER_ARROW, Fixed::ZERO, p_angle, color, p_x, p_y);
         }
     }
 }
@@ -1265,7 +1341,7 @@ pub fn draw_things(state: &mut GameState, colors: i32) {
             draw_line_character(
                 state,
                 &THINTRIANGLE_GUY,
-                (16) << FRACBITS,
+                Fixed::from_int(16),
                 t_angle,
                 colors + lightlev,
                 t_x,
@@ -1277,20 +1353,22 @@ pub fn draw_things(state: &mut GameState, colors: i32) {
 }
 pub fn draw_marks(state: &mut GameState) {
     for i in 0..AM_NUMMARKPOINTS {
-        if state.ui.am_map.markpoints[i].x != -1 {
+        if state.ui.am_map.markpoints[i].x != Fixed(-1) {
             let w: i32 = 5;
             let h: i32 = 6;
-            let fx: i32 = state.ui.am_map.f_x as Fixed
-                + (fixed_mul(
+            let fx: i32 = state.ui.am_map.f_x
+                + fixed_mul(
                     state.ui.am_map.markpoints[i].x - state.ui.am_map.m_x,
                     state.ui.am_map.scale_mtof,
-                ) >> 16);
-            let fy: i32 = state.ui.am_map.f_y as Fixed
-                + (state.ui.am_map.f_h as Fixed
-                    - (fixed_mul(
+                )
+                .to_int();
+            let fy: i32 = state.ui.am_map.f_y
+                + (state.ui.am_map.f_h
+                    - fixed_mul(
                         state.ui.am_map.markpoints[i].y - state.ui.am_map.m_y,
                         state.ui.am_map.scale_mtof,
-                    ) >> 16));
+                    )
+                    .to_int());
             if fx >= state.ui.am_map.f_x
                 && fx <= state.ui.am_map.f_w - w
                 && fy >= state.ui.am_map.f_y

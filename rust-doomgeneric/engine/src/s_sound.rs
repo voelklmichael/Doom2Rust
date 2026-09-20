@@ -20,8 +20,6 @@ use crate::i_system::at_exit;
 use crate::i_system::error;
 use crate::m_fixed::fixed_mul;
 use crate::m_fixed::Fixed;
-use crate::m_fixed::FRACBITS;
-use crate::m_fixed::FRACUNIT;
 use crate::p_mobj::MobjId;
 use crate::p_setup::SectorId;
 use crate::platform::DoomPlatform;
@@ -31,8 +29,8 @@ use crate::sounds::SfxName;
 use crate::sounds::SoundsState;
 use crate::sounds::NUMSFX;
 use crate::sounds::{MusicName, NUMMUSIC};
+use crate::tables::fine_sine;
 use crate::tables::Angle;
-use crate::tables::FINESINE;
 use crate::w_wad::get_num_for_name;
 use crate::w_wad::lump_bytes;
 use crate::w_wad::lump_length;
@@ -104,10 +102,10 @@ pub struct Channel {
     pub origin: SoundOrigin,
     pub handle: i32,
 }
-pub const S_CLIPPING_DIST: i32 = 1200 * FRACUNIT;
-pub const S_CLOSE_DIST: i32 = 200 * FRACUNIT;
-pub const S_ATTENUATOR: i32 = (S_CLIPPING_DIST - S_CLOSE_DIST) >> FRACBITS;
-pub const S_STEREO_SWING: i32 = 96 * FRACUNIT;
+pub const S_CLIPPING_DIST: Fixed = Fixed::from_int(1200);
+pub const S_CLOSE_DIST: Fixed = Fixed::from_int(200);
+pub const S_ATTENUATOR: i32 = S_CLIPPING_DIST.to_int() - S_CLOSE_DIST.to_int();
+pub const S_STEREO_SWING: Fixed = Fixed::from_int(96);
 pub const NORM_SEP: i32 = 128;
 pub fn s_init(state: &mut GameState, sfx_volume_0: i32, music_volume_0: i32) {
     set_sfx_volume(&mut state.audio.s_sound, sfx_volume_0);
@@ -259,8 +257,8 @@ fn adjust_sound_params(
         let l = state.world.p_mobj.mo(listener);
         (l.x, l.y, l.angle)
     };
-    let adx = (listener_x - source_x).abs() as Fixed;
-    let ady = (listener_y - source_y).abs() as Fixed;
+    let adx = (listener_x - source_x).abs();
+    let ady = (listener_y - source_y).abs();
     let mut approx_dist = adx + ady - ((if adx < ady { adx } else { ady }) >> 1);
     if state.game.g_game.gamemap != 8 && approx_dist > S_CLIPPING_DIST {
         return None;
@@ -272,20 +270,18 @@ fn adjust_sound_params(
         angle += Angle(u32::MAX) - listener_angle;
     }
     let angle = angle.fine();
-    let sep = 128 - (fixed_mul(S_STEREO_SWING, FINESINE[angle]) >> FRACBITS);
+    let sep = 128 - fixed_mul(S_STEREO_SWING, fine_sine(angle)).to_int();
 
     let vol = if approx_dist < S_CLOSE_DIST {
         state.audio.s_sound.snd_sfx_volume
     } else if state.game.g_game.gamemap == 8 {
         if approx_dist > S_CLIPPING_DIST {
-            approx_dist = S_CLIPPING_DIST as Fixed;
+            approx_dist = S_CLIPPING_DIST;
         }
-        15 + (state.audio.s_sound.snd_sfx_volume - 15)
-            * ((S_CLIPPING_DIST - approx_dist) >> FRACBITS)
+        15 + (state.audio.s_sound.snd_sfx_volume - 15) * (S_CLIPPING_DIST - approx_dist).to_int()
             / S_ATTENUATOR
     } else {
-        state.audio.s_sound.snd_sfx_volume * ((S_CLIPPING_DIST - approx_dist) >> FRACBITS)
-            / S_ATTENUATOR
+        state.audio.s_sound.snd_sfx_volume * (S_CLIPPING_DIST - approx_dist).to_int() / S_ATTENUATOR
     };
     (vol > 0).then_some((vol, sep))
 }

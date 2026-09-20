@@ -95,7 +95,7 @@ pub struct PSpecState {
     pub numlinespecials: i16,
     pub linespeciallist: [LineId; 64],
     pub donut_overrun_first: bool,
-    pub donut_overrun_tmp_s3_floorheight: i32,
+    pub donut_overrun_tmp_s3_floorheight: Fixed,
     pub donut_overrun_tmp_s3_floorpic: i32,
     floors: Vec<FloorSlot>,
     floor_free_list: Vec<u32>,
@@ -123,7 +123,7 @@ impl PSpecState {
             numlinespecials: 0,
             linespeciallist: [LineId(0); 64],
             donut_overrun_first: true,
-            donut_overrun_tmp_s3_floorheight: 0,
+            donut_overrun_tmp_s3_floorheight: Fixed::ZERO,
             donut_overrun_tmp_s3_floorpic: 0,
             floors: Vec::new(),
             floor_free_list: Vec::new(),
@@ -231,9 +231,9 @@ impl Default for Plat {
                 function: ThinkerFn::Unresolved,
             },
             sector: SectorId(0),
-            speed: 0,
-            low: 0,
-            high: 0,
+            speed: Fixed::ZERO,
+            low: Fixed::ZERO,
+            high: Fixed::ZERO,
             wait: 0,
             count: 0,
             status: PlatE::Up,
@@ -307,9 +307,9 @@ impl Default for Ceiling {
             },
             kind: CeilingE::LowerToFloor,
             sector: SectorId(0),
-            bottomheight: 0,
-            topheight: 0,
-            speed: 0,
+            bottomheight: Fixed::ZERO,
+            topheight: Fixed::ZERO,
+            speed: Fixed::ZERO,
             crush: false,
             direction: Direction::Still,
             tag: 0,
@@ -345,8 +345,8 @@ impl Default for FloorMove {
             direction: Direction::Still,
             newspecial: 0,
             texture: 0,
-            floordestheight: 0,
-            speed: 0,
+            floordestheight: Fixed::ZERO,
+            speed: Fixed::ZERO,
         }
     }
 }
@@ -590,10 +590,10 @@ pub const MAX_ADJOINING_SECTORS: i32 = 20;
 pub fn find_next_highest_floor(
     p_setup: &mut PSetupState,
     sec: SectorId,
-    currentheight: i32,
+    currentheight: Fixed,
 ) -> Fixed {
-    let mut height: Fixed = currentheight as Fixed;
-    let mut heightlist: [Fixed; 22] = [0; 22];
+    let mut height: Fixed = currentheight;
+    let mut heightlist: [Fixed; 22] = [Fixed::ZERO; 22];
     let mut h: i32 = 0;
     let linecount = p_setup.sector_mut(sec).linecount;
     for i in 0..linecount as usize {
@@ -612,7 +612,7 @@ pub fn find_next_highest_floor(
         }
     }
     if h == 0 {
-        return currentheight as Fixed;
+        return currentheight;
     }
     let mut min = heightlist[0];
     for i in 1..h {
@@ -620,10 +620,10 @@ pub fn find_next_highest_floor(
             min = heightlist[i as usize];
         }
     }
-    min as Fixed
+    min
 }
 pub fn find_lowest_ceiling_surrounding(p_setup: &mut PSetupState, sec: SectorId) -> Fixed {
-    let mut height: Fixed = INT_MAX;
+    let mut height: Fixed = Fixed(INT_MAX);
     let linecount = p_setup.sector_mut(sec).linecount;
     for i in 0..linecount as usize {
         let check = p_setup.sector_mut(sec).lines[i];
@@ -637,7 +637,7 @@ pub fn find_lowest_ceiling_surrounding(p_setup: &mut PSetupState, sec: SectorId)
     height
 }
 pub fn find_highest_ceiling_surrounding(p_setup: &mut PSetupState, sec: SectorId) -> Fixed {
-    let mut height: Fixed = 0;
+    let mut height: Fixed = Fixed::ZERO;
     let linecount = p_setup.sector_mut(sec).linecount;
     for i in 0..linecount as usize {
         let check = p_setup.sector_mut(sec).lines[i];
@@ -1196,13 +1196,16 @@ pub const DONUT_FLOORPIC_DEFAULT: i32 = 0x16;
 fn donut_overrun(state: &mut GameState) -> (Fixed, i16) {
     if state.world.p_spec.donut_overrun_first {
         state.world.p_spec.donut_overrun_first = false;
-        state.world.p_spec.donut_overrun_tmp_s3_floorheight = DONUT_FLOORHEIGHT_DEFAULT;
+        state.world.p_spec.donut_overrun_tmp_s3_floorheight = Fixed(DONUT_FLOORHEIGHT_DEFAULT);
         state.world.p_spec.donut_overrun_tmp_s3_floorpic = DONUT_FLOORPIC_DEFAULT;
         if let Some((floorheight, floorpic)) = &state.game.options.donut {
-            str_to_int(
-                floorheight,
-                &mut state.world.p_spec.donut_overrun_tmp_s3_floorheight,
-            );
+            let mut height = state
+                .world
+                .p_spec
+                .donut_overrun_tmp_s3_floorheight
+                .to_bits();
+            str_to_int(floorheight, &mut height);
+            state.world.p_spec.donut_overrun_tmp_s3_floorheight = Fixed(height);
             str_to_int(
                 floorpic,
                 &mut state.world.p_spec.donut_overrun_tmp_s3_floorpic,
@@ -1259,7 +1262,7 @@ pub fn do_donut(state: &mut GameState, line: LineId) -> bool {
             floor.crush = false;
             floor.direction = Direction::Up;
             floor.sector = s2;
-            floor.speed = (FLOORSPEED / 2) as Fixed;
+            floor.speed = FLOORSPEED / 2;
             floor.texture = s3_floorpic;
             floor.newspecial = 0;
             floor.floordestheight = s3_floorheight;
@@ -1276,7 +1279,7 @@ pub fn do_donut(state: &mut GameState, line: LineId) -> bool {
             floor.crush = false;
             floor.direction = Direction::Down;
             floor.sector = s1;
-            floor.speed = (FLOORSPEED / 2) as Fixed;
+            floor.speed = FLOORSPEED / 2;
             floor.floordestheight = s3_floorheight;
             let floor_arena_id = state.world.p_spec.spawn_floor(floor);
             let floor_id = add_thinker(

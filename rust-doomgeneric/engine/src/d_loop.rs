@@ -131,7 +131,7 @@ pub struct TicCmdSet {
 pub const NET_MAXPLAYERS: u32 = 8;
 pub const BACKUPTICS: i32 = 128;
 static LOCALPLAYER: i32 = 0;
-pub static OFFSETMS: Fixed = 0;
+pub static OFFSETMS: Fixed = Fixed::ZERO;
 fn get_adjusted_time(
     d_loop: &DLoopState,
     i_timer: &mut ITimerState,

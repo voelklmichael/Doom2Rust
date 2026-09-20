@@ -4,7 +4,6 @@ use crate::game_state::GameState;
 use crate::i_system::console_stdout;
 use crate::i_system::error;
 use crate::m_fixed::Fixed;
-use crate::m_fixed::FRACBITS;
 use crate::w_wad::WWadState;
 use alloc::boxed::Box;
 use alloc::vec::Vec;
@@ -344,7 +343,7 @@ pub fn init_textures(state: &mut GameState) {
     state.render.r_data.texturecomposite = vec![None; state.render.r_data.numtextures as usize];
     state.render.r_data.texturecompositesize = vec![0; state.render.r_data.numtextures as usize];
     state.render.r_data.texturewidthmask = vec![0; state.render.r_data.numtextures as usize];
-    state.render.r_data.textureheight = vec![0; state.render.r_data.numtextures as usize];
+    state.render.r_data.textureheight = vec![Fixed::ZERO; state.render.r_data.numtextures as usize];
     let temp1: i32 = get_num_for_name(&state.assets.w_wad, "S_START");
     let temp2: i32 = get_num_for_name(&state.assets.w_wad, "S_END") - 1;
     let temp3: i32 = (temp2 - temp1 + 63) / 64 + (state.render.r_data.numtextures + 63) / 64;
@@ -435,8 +434,7 @@ pub fn init_textures(state: &mut GameState) {
             j <<= 1;
         }
         state.render.r_data.texturewidthmask[i as usize] = j - 1;
-        state.render.r_data.textureheight[i as usize] =
-            (i32::from(texture_height) << FRACBITS) as Fixed;
+        state.render.r_data.textureheight[i as usize] = Fixed::from_int(i32::from(texture_height));
         dir_index += 1;
     }
     release_lump_name(&state.assets.w_wad, "TEXTURE1");
@@ -467,9 +465,12 @@ pub fn init_sprite_lumps(state: &mut GameState) {
     state.render.r_data.lastspritelump = get_num_for_name(&state.assets.w_wad, "S_END") - 1;
     state.render.r_data.numspritelumps =
         state.render.r_data.lastspritelump - state.render.r_data.firstspritelump + 1;
-    state.render.r_data.spritewidth = vec![0; state.render.r_data.numspritelumps as usize];
-    state.render.r_data.spriteoffset = vec![0; state.render.r_data.numspritelumps as usize];
-    state.render.r_data.spritetopoffset = vec![0; state.render.r_data.numspritelumps as usize];
+    state.render.r_data.spritewidth =
+        vec![Fixed::ZERO; state.render.r_data.numspritelumps as usize];
+    state.render.r_data.spriteoffset =
+        vec![Fixed::ZERO; state.render.r_data.numspritelumps as usize];
+    state.render.r_data.spritetopoffset =
+        vec![Fixed::ZERO; state.render.r_data.numspritelumps as usize];
     for i in 0..state.render.r_data.numspritelumps {
         if i & 63 == 0 {
             doom_print!(state.io.platform, ".");
@@ -489,10 +490,9 @@ pub fn init_sprite_lumps(state: &mut GameState) {
         let width = i16::from_le_bytes(header[0..2].try_into().unwrap());
         let leftoffset = i16::from_le_bytes(header[4..6].try_into().unwrap());
         let topoffset = i16::from_le_bytes(header[6..8].try_into().unwrap());
-        state.render.r_data.spritewidth[i as usize] = (i32::from(width) << FRACBITS) as Fixed;
-        state.render.r_data.spriteoffset[i as usize] = (i32::from(leftoffset) << FRACBITS) as Fixed;
-        state.render.r_data.spritetopoffset[i as usize] =
-            (i32::from(topoffset) << FRACBITS) as Fixed;
+        state.render.r_data.spritewidth[i as usize] = Fixed::from_int(i32::from(width));
+        state.render.r_data.spriteoffset[i as usize] = Fixed::from_int(i32::from(leftoffset));
+        state.render.r_data.spritetopoffset[i as usize] = Fixed::from_int(i32::from(topoffset));
     }
 }
 pub fn init_colormaps(fs: &dyn DoomFileSystem, r_data: &mut RDataState, w_wad: &mut WWadState) {

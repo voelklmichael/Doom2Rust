@@ -233,12 +233,12 @@ fn world_summary(state: &mut GameState) -> String {
         mobj_hash = fnv(
             mobj_hash,
             [
-                m.x,
-                m.y,
-                m.z,
+                m.x.to_bits(),
+                m.y.to_bits(),
+                m.z.to_bits(),
                 m.health,
-                m.momx,
-                m.momy,
+                m.momx.to_bits(),
+                m.momy.to_bits(),
                 m.kind as i32,
                 m.flags.bits(),
                 m.tics,
@@ -253,13 +253,24 @@ fn world_summary(state: &mut GameState) -> String {
         let s = state.world.p_setup.sector_mut(SectorId(i as u32));
         sector_hash = fnv(
             sector_hash,
-            [s.floorheight, s.ceilingheight, i32::from(s.lightlevel)].map(|v| v as u32),
+            [
+                s.floorheight.to_bits(),
+                s.ceilingheight.to_bits(),
+                i32::from(s.lightlevel),
+            ]
+            .map(|v| v as u32),
         );
     }
     let p = &state.game.g_game.players[state.game.g_game.consoleplayer];
     let player_hash = fnv(
         FNV_OFFSET,
-        [p.health, p.armorpoints, p.viewz, p.readyweapon as i32].map(|v| v as u32),
+        [
+            p.health,
+            p.armorpoints,
+            p.viewz.to_bits(),
+            p.readyweapon as i32,
+        ]
+        .map(|v| v as u32),
     );
     format!("mobjs={count} mobjhash={mobj_hash:016x} sechash={sector_hash:016x} playerhash={player_hash:016x}")
 }

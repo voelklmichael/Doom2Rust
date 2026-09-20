@@ -127,8 +127,8 @@ impl RDrawState {
             dc_x: 0,
             dc_yl: 0,
             dc_yh: 0,
-            dc_iscale: 0,
-            dc_texturemid: 0,
+            dc_iscale: Fixed::ZERO,
+            dc_texturemid: Fixed::ZERO,
             dc_source: None,
             dccount: 0,
             fuzzpos: 0,
@@ -138,10 +138,10 @@ impl RDrawState {
             ds_x1: 0,
             ds_x2: 0,
             ds_colormap: 0,
-            ds_xfrac: 0,
-            ds_yfrac: 0,
-            ds_xstep: 0,
-            ds_ystep: 0,
+            ds_xfrac: Fixed::ZERO,
+            ds_yfrac: Fixed::ZERO,
+            ds_xstep: Fixed::ZERO,
+            ds_ystep: Fixed::ZERO,
             ds_source: None,
             dscount: 0,
         }
@@ -167,7 +167,7 @@ pub fn draw_column(state: &mut GameState) {
         + state.render.r_draw.columnofs[state.render.r_draw.dc_x as usize] as usize;
     let fracstep: Fixed = state.render.r_draw.dc_iscale;
     let mut frac: Fixed = state.render.r_draw.dc_texturemid
-        + (state.render.r_draw.dc_yl as Fixed - state.render.r_main.centery as Fixed) * fracstep;
+        + (state.render.r_draw.dc_yl - state.render.r_main.centery) * fracstep;
     let (source, base) = source_bytes(
         &state.render.r_data,
         &state.assets.w_wad,
@@ -179,7 +179,7 @@ pub fn draw_column(state: &mut GameState) {
     );
     let screen = &mut state.io.i_video.i_video_buffer[..];
     for _ in 0..=count {
-        let src_pixel = source[(base + (frac >> FRACBITS & 127) as isize) as usize];
+        let src_pixel = source[(base + (frac >> FRACBITS & 127).to_bits() as isize) as usize];
         screen[idx] = colormap[usize::from(src_pixel)];
         idx += SCREENWIDTH as usize;
         frac += fracstep;
@@ -206,7 +206,7 @@ pub fn draw_column_low(state: &mut GameState) {
         + state.render.r_draw.columnofs[(x + 1) as usize] as usize;
     let fracstep: Fixed = state.render.r_draw.dc_iscale;
     let mut frac: Fixed = state.render.r_draw.dc_texturemid
-        + (state.render.r_draw.dc_yl as Fixed - state.render.r_main.centery as Fixed) * fracstep;
+        + (state.render.r_draw.dc_yl - state.render.r_main.centery) * fracstep;
     let (source, base) = source_bytes(
         &state.render.r_data,
         &state.assets.w_wad,
@@ -218,7 +218,7 @@ pub fn draw_column_low(state: &mut GameState) {
     );
     let screen = &mut state.io.i_video.i_video_buffer[..];
     for _ in 0..=count {
-        let src_pixel = source[(base + (frac >> FRACBITS & 127) as isize) as usize];
+        let src_pixel = source[(base + (frac >> FRACBITS & 127).to_bits() as isize) as usize];
         let pixel = colormap[usize::from(src_pixel)];
         screen[idx] = pixel;
         screen[idx2] = pixel;
@@ -334,7 +334,7 @@ pub fn draw_translated_column(state: &mut GameState) {
         + state.render.r_draw.columnofs[state.render.r_draw.dc_x as usize] as usize;
     let fracstep: Fixed = state.render.r_draw.dc_iscale;
     let mut frac: Fixed = state.render.r_draw.dc_texturemid
-        + (state.render.r_draw.dc_yl as Fixed - state.render.r_main.centery as Fixed) * fracstep;
+        + (state.render.r_draw.dc_yl - state.render.r_main.centery) * fracstep;
     let (source, base) = source_bytes(
         &state.render.r_data,
         &state.assets.w_wad,
@@ -350,7 +350,7 @@ pub fn draw_translated_column(state: &mut GameState) {
     );
     let screen = &mut state.io.i_video.i_video_buffer[..];
     for _ in 0..=count {
-        let raw_pixel = source[(base + (frac >> FRACBITS) as isize) as usize];
+        let raw_pixel = source[(base + (frac >> FRACBITS).to_bits() as isize) as usize];
         let src_pixel = translation[usize::from(raw_pixel)];
         screen[idx] = colormap[usize::from(src_pixel)];
         idx += SCREENWIDTH as usize;
@@ -378,7 +378,7 @@ pub fn draw_translated_column_low(state: &mut GameState) {
         + state.render.r_draw.columnofs[(x + 1) as usize] as usize;
     let fracstep: Fixed = state.render.r_draw.dc_iscale;
     let mut frac: Fixed = state.render.r_draw.dc_texturemid
-        + (state.render.r_draw.dc_yl as Fixed - state.render.r_main.centery as Fixed) * fracstep;
+        + (state.render.r_draw.dc_yl - state.render.r_main.centery) * fracstep;
     let (source, base) = source_bytes(
         &state.render.r_data,
         &state.assets.w_wad,
@@ -394,7 +394,7 @@ pub fn draw_translated_column_low(state: &mut GameState) {
     );
     let screen = &mut state.io.i_video.i_video_buffer[..];
     for _ in 0..=count {
-        let raw_pixel = source[(base + (frac >> FRACBITS) as isize) as usize];
+        let raw_pixel = source[(base + (frac >> FRACBITS).to_bits() as isize) as usize];
         let src_pixel = translation[usize::from(raw_pixel)];
         let pixel = colormap[usize::from(src_pixel)];
         screen[idx] = pixel;
@@ -430,10 +430,10 @@ pub fn draw_span(state: &mut GameState) {
             state.render.r_draw.ds_x1, state.render.r_draw.ds_x2, state.render.r_draw.ds_y
         ));
     }
-    let mut position: u32 = (state.render.r_draw.ds_xfrac << 10) as u32 & 0xffff0000
-        | (state.render.r_draw.ds_yfrac >> 6 & 0xffff) as u32;
-    let step: u32 = (state.render.r_draw.ds_xstep << 10) as u32 & 0xffff0000
-        | (state.render.r_draw.ds_ystep >> 6 & 0xffff) as u32;
+    let mut position: u32 = (state.render.r_draw.ds_xfrac << 10).to_bits() as u32 & 0xffff0000
+        | (state.render.r_draw.ds_yfrac >> 6 & 0xffff).to_bits() as u32;
+    let step: u32 = (state.render.r_draw.ds_xstep << 10).to_bits() as u32 & 0xffff0000
+        | (state.render.r_draw.ds_ystep >> 6 & 0xffff).to_bits() as u32;
     let idx: usize = state.render.r_draw.ylookup[state.render.r_draw.ds_y as usize]
         + state.render.r_draw.columnofs[state.render.r_draw.ds_x1 as usize] as usize;
     let count: i32 = state.render.r_draw.ds_x2 - state.render.r_draw.ds_x1;
@@ -468,10 +468,10 @@ pub fn draw_span_low(state: &mut GameState) {
             state.render.r_draw.ds_x1, state.render.r_draw.ds_x2, state.render.r_draw.ds_y
         ));
     }
-    let mut position: u32 = (state.render.r_draw.ds_xfrac << 10) as u32 & 0xffff0000
-        | (state.render.r_draw.ds_yfrac >> 6 & 0xffff) as u32;
-    let step: u32 = (state.render.r_draw.ds_xstep << 10) as u32 & 0xffff0000
-        | (state.render.r_draw.ds_ystep >> 6 & 0xffff) as u32;
+    let mut position: u32 = (state.render.r_draw.ds_xfrac << 10).to_bits() as u32 & 0xffff0000
+        | (state.render.r_draw.ds_yfrac >> 6 & 0xffff).to_bits() as u32;
+    let step: u32 = (state.render.r_draw.ds_xstep << 10).to_bits() as u32 & 0xffff0000
+        | (state.render.r_draw.ds_ystep >> 6 & 0xffff).to_bits() as u32;
     let count: i32 = state.render.r_draw.ds_x2 - state.render.r_draw.ds_x1;
     state.render.r_draw.ds_x1 <<= 1;
     state.render.r_draw.ds_x2 <<= 1;

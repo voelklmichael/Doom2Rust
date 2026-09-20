@@ -2,6 +2,7 @@ use crate::d_player::PlayerId;
 use crate::doomdef::MAXPLAYERS;
 use crate::game_state::GameState;
 use crate::game_state::World;
+use crate::m_fixed::Fixed;
 use crate::p_ceilng::CeilingId;
 use crate::p_doors::DoorId;
 use crate::p_lights::{FireFlickerId, GlowId, LightFlashId, StrobeId};
@@ -447,7 +448,7 @@ pub fn p_ticker(state: &mut GameState) {
     if !state.game.g_game.netgame
         && state.ui.m_menu.menuactive
         && !state.game.g_game.demoplayback
-        && state.game.g_game.players[state.game.g_game.consoleplayer].viewz != 1
+        && state.game.g_game.players[state.game.g_game.consoleplayer].viewz != Fixed(1)
     {
         return;
     }

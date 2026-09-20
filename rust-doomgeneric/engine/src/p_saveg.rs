@@ -219,9 +219,9 @@ fn saveg_write_thinker_t(state: &mut PSavegState, str: &Thinker) {
 }
 fn saveg_read_mobj_t(state: &mut PSavegState, str: &mut Mobj) {
     saveg_read_thinker_t(state, &mut str.thinker);
-    str.x = saveg_read32(state) as Fixed;
-    str.y = saveg_read32(state) as Fixed;
-    str.z = saveg_read32(state) as Fixed;
+    str.x = Fixed(saveg_read32(state));
+    str.y = Fixed(saveg_read32(state));
+    str.z = Fixed(saveg_read32(state));
     // set_thing_position (called on every reconstructed mobj right after this,
     // see un_archive_thinkers) fully rebuilds snext/sprev from scratch, so
     // these on-disk bytes are already dead -- discard, same treatment as
@@ -241,13 +241,13 @@ fn saveg_read_mobj_t(state: &mut PSavegState, str: &mut Mobj) {
     str.bprev = None;
     saveg_read32(state);
     str.subsector = SubsectorId(0);
-    str.floorz = saveg_read32(state) as Fixed;
-    str.ceilingz = saveg_read32(state) as Fixed;
-    str.radius = saveg_read32(state) as Fixed;
-    str.height = saveg_read32(state) as Fixed;
-    str.momx = saveg_read32(state) as Fixed;
-    str.momy = saveg_read32(state) as Fixed;
-    str.momz = saveg_read32(state) as Fixed;
+    str.floorz = Fixed(saveg_read32(state));
+    str.ceilingz = Fixed(saveg_read32(state));
+    str.radius = Fixed(saveg_read32(state));
+    str.height = Fixed(saveg_read32(state));
+    str.momx = Fixed(saveg_read32(state));
+    str.momy = Fixed(saveg_read32(state));
+    str.momz = Fixed(saveg_read32(state));
     str.validcount = saveg_read32(state);
     str.kind = mobjtype_from_raw(saveg_read32(state));
     saveg_read32(state);
@@ -275,9 +275,9 @@ fn saveg_read_mobj_t(state: &mut PSavegState, str: &mut Mobj) {
 }
 fn saveg_write_mobj_t(state: &mut PSavegState, str: &Mobj) {
     saveg_write_thinker_t(state, &str.thinker);
-    saveg_write32(state, str.x);
-    saveg_write32(state, str.y);
-    saveg_write32(state, str.z);
+    saveg_write32(state, str.x.to_bits());
+    saveg_write32(state, str.y.to_bits());
+    saveg_write32(state, str.z.to_bits());
     saveg_write32(state, 0);
     saveg_write32(state, 0);
     saveg_write32(state, (str.angle).to_signed());
@@ -286,13 +286,13 @@ fn saveg_write_mobj_t(state: &mut PSavegState, str: &Mobj) {
     saveg_write32(state, 0);
     saveg_write32(state, 0);
     saveg_write32(state, 0);
-    saveg_write32(state, str.floorz);
-    saveg_write32(state, str.ceilingz);
-    saveg_write32(state, str.radius);
-    saveg_write32(state, str.height);
-    saveg_write32(state, str.momx);
-    saveg_write32(state, str.momy);
-    saveg_write32(state, str.momz);
+    saveg_write32(state, str.floorz.to_bits());
+    saveg_write32(state, str.ceilingz.to_bits());
+    saveg_write32(state, str.radius.to_bits());
+    saveg_write32(state, str.height.to_bits());
+    saveg_write32(state, str.momx.to_bits());
+    saveg_write32(state, str.momy.to_bits());
+    saveg_write32(state, str.momz.to_bits());
     saveg_write32(state, str.validcount);
     saveg_write32(state, str.kind as i32);
     saveg_write32(state, 0);
@@ -338,8 +338,8 @@ fn saveg_read_pspdef_t(state: &mut PSavegState, str: &mut PspDef) {
         str.state = None;
     }
     str.tics = saveg_read32(state);
-    str.sx = saveg_read32(state) as Fixed;
-    str.sy = saveg_read32(state) as Fixed;
+    str.sx = Fixed(saveg_read32(state));
+    str.sy = Fixed(saveg_read32(state));
 }
 fn saveg_write_pspdef_t(state: &mut PSavegState, str: &PspDef) {
     if let Some(state_id) = str.state {
@@ -348,8 +348,8 @@ fn saveg_write_pspdef_t(state: &mut PSavegState, str: &PspDef) {
         saveg_write32(state, 0);
     }
     saveg_write32(state, str.tics);
-    saveg_write32(state, str.sx);
-    saveg_write32(state, str.sy);
+    saveg_write32(state, str.sx.to_bits());
+    saveg_write32(state, str.sy.to_bits());
 }
 fn saveg_read_player_t(state: &mut PSavegState, str: &mut Player) {
     // Placeholder value, discarded -- see saveg_write_player_t.
@@ -361,10 +361,10 @@ fn saveg_read_player_t(state: &mut PSavegState, str: &mut Player) {
         n => panic!("P_UnArchivePlayers: invalid playerstate {n} in savegame"),
     };
     saveg_read_ticcmd_t(state, &mut str.cmd);
-    str.viewz = saveg_read32(state) as Fixed;
-    str.viewheight = saveg_read32(state) as Fixed;
-    str.deltaviewheight = saveg_read32(state) as Fixed;
-    str.bob = saveg_read32(state) as Fixed;
+    str.viewz = Fixed(saveg_read32(state));
+    str.viewheight = Fixed(saveg_read32(state));
+    str.deltaviewheight = Fixed(saveg_read32(state));
+    str.bob = Fixed(saveg_read32(state));
     str.health = saveg_read32(state);
     str.armorpoints = saveg_read32(state);
     str.armortype = saveg_read32(state);
@@ -417,10 +417,10 @@ fn saveg_write_player_t(state: &mut PSavegState, str: &Player) {
     saveg_write_present(state, false);
     saveg_write32(state, str.playerstate as i32);
     saveg_write_ticcmd_t(state, &str.cmd);
-    saveg_write32(state, str.viewz);
-    saveg_write32(state, str.viewheight);
-    saveg_write32(state, str.deltaviewheight);
-    saveg_write32(state, str.bob);
+    saveg_write32(state, str.viewz.to_bits());
+    saveg_write32(state, str.viewheight.to_bits());
+    saveg_write32(state, str.deltaviewheight.to_bits());
+    saveg_write32(state, str.bob.to_bits());
     saveg_write32(state, str.health);
     saveg_write32(state, str.armorpoints);
     saveg_write32(state, str.armortype);
@@ -480,9 +480,9 @@ fn saveg_read_ceiling_t(state: &mut PSavegState, str: &mut Ceiling) {
     str.kind = saveg_read_ceiling_e(state);
     let sector: i32 = saveg_read32(state);
     str.sector = SectorId(sector as u32);
-    str.bottomheight = saveg_read32(state) as Fixed;
-    str.topheight = saveg_read32(state) as Fixed;
-    str.speed = saveg_read32(state) as Fixed;
+    str.bottomheight = Fixed(saveg_read32(state));
+    str.topheight = Fixed(saveg_read32(state));
+    str.speed = Fixed(saveg_read32(state));
     str.crush = saveg_read32(state) != 0;
     str.direction = Direction::from_save(saveg_read32(state));
     str.tag = saveg_read32(state);
@@ -492,9 +492,9 @@ fn saveg_write_ceiling_t(state: &mut PSavegState, str: &Ceiling) {
     saveg_write_thinker_t(state, &str.thinker);
     saveg_write32(state, str.kind as i32);
     saveg_write32(state, str.sector.0 as i32);
-    saveg_write32(state, str.bottomheight);
-    saveg_write32(state, str.topheight);
-    saveg_write32(state, str.speed);
+    saveg_write32(state, str.bottomheight.to_bits());
+    saveg_write32(state, str.topheight.to_bits());
+    saveg_write32(state, str.speed.to_bits());
     saveg_write32(state, i32::from(str.crush));
     saveg_write32(state, str.direction.to_save());
     saveg_write32(state, str.tag);
@@ -518,8 +518,8 @@ fn saveg_read_vldoor_t(state: &mut PSavegState, str: &mut VlDoor) {
     str.kind = saveg_read_vldoor_e(state);
     let sector: i32 = saveg_read32(state);
     str.sector = SectorId(sector as u32);
-    str.topheight = saveg_read32(state) as Fixed;
-    str.speed = saveg_read32(state) as Fixed;
+    str.topheight = Fixed(saveg_read32(state));
+    str.speed = Fixed(saveg_read32(state));
     str.direction = Direction::from_save(saveg_read32(state));
     str.topwait = saveg_read32(state);
     str.topcountdown = saveg_read32(state);
@@ -528,8 +528,8 @@ fn saveg_write_vldoor_t(state: &mut PSavegState, str: &VlDoor) {
     saveg_write_thinker_t(state, &str.thinker);
     saveg_write32(state, str.kind as i32);
     saveg_write32(state, str.sector.0 as i32);
-    saveg_write32(state, str.topheight);
-    saveg_write32(state, str.speed);
+    saveg_write32(state, str.topheight.to_bits());
+    saveg_write32(state, str.speed.to_bits());
     saveg_write32(state, str.direction.to_save());
     saveg_write32(state, str.topwait);
     saveg_write32(state, str.topcountdown);
@@ -561,8 +561,8 @@ fn saveg_read_floormove_t(state: &mut PSavegState, str: &mut FloorMove) {
     str.direction = Direction::from_save(saveg_read32(state));
     str.newspecial = saveg_read32(state);
     str.texture = saveg_read16(state);
-    str.floordestheight = saveg_read32(state) as Fixed;
-    str.speed = saveg_read32(state) as Fixed;
+    str.floordestheight = Fixed(saveg_read32(state));
+    str.speed = Fixed(saveg_read32(state));
 }
 fn saveg_write_floormove_t(state: &mut PSavegState, str: &FloorMove) {
     saveg_write_thinker_t(state, &str.thinker);
@@ -572,8 +572,8 @@ fn saveg_write_floormove_t(state: &mut PSavegState, str: &FloorMove) {
     saveg_write32(state, str.direction.to_save());
     saveg_write32(state, str.newspecial);
     saveg_write16(state, str.texture);
-    saveg_write32(state, str.floordestheight);
-    saveg_write32(state, str.speed);
+    saveg_write32(state, str.floordestheight.to_bits());
+    saveg_write32(state, str.speed.to_bits());
 }
 fn saveg_read_plat_e(state: &mut PSavegState) -> PlatE {
     match saveg_read32(state) {
@@ -598,9 +598,9 @@ fn saveg_read_plat_t(state: &mut PSavegState, str: &mut Plat) {
     saveg_read_thinker_t(state, &mut str.thinker);
     let sector: i32 = saveg_read32(state);
     str.sector = SectorId(sector as u32);
-    str.speed = saveg_read32(state) as Fixed;
-    str.low = saveg_read32(state) as Fixed;
-    str.high = saveg_read32(state) as Fixed;
+    str.speed = Fixed(saveg_read32(state));
+    str.low = Fixed(saveg_read32(state));
+    str.high = Fixed(saveg_read32(state));
     str.wait = saveg_read32(state);
     str.count = saveg_read32(state);
     str.status = saveg_read_plat_e(state);
@@ -612,9 +612,9 @@ fn saveg_read_plat_t(state: &mut PSavegState, str: &mut Plat) {
 fn saveg_write_plat_t(state: &mut PSavegState, str: &Plat) {
     saveg_write_thinker_t(state, &str.thinker);
     saveg_write32(state, str.sector.0 as i32);
-    saveg_write32(state, str.speed);
-    saveg_write32(state, str.low);
-    saveg_write32(state, str.high);
+    saveg_write32(state, str.speed.to_bits());
+    saveg_write32(state, str.low.to_bits());
+    saveg_write32(state, str.high.to_bits());
     saveg_write32(state, str.wait);
     saveg_write32(state, str.count);
     saveg_write32(state, str.status as i32);
@@ -783,8 +783,8 @@ pub fn archive_world(p_saveg: &mut PSavegState, p_setup: &mut PSetupState) {
             sec.special,
             sec.tag,
         );
-        saveg_write16(p_saveg, (floorheight >> FRACBITS) as i16);
-        saveg_write16(p_saveg, (ceilingheight >> FRACBITS) as i16);
+        saveg_write16(p_saveg, (floorheight >> FRACBITS).to_bits() as i16);
+        saveg_write16(p_saveg, (ceilingheight >> FRACBITS).to_bits() as i16);
         saveg_write16(p_saveg, floorpic);
         saveg_write16(p_saveg, ceilingpic);
         saveg_write16(p_saveg, lightlevel);
@@ -807,8 +807,8 @@ pub fn archive_world(p_saveg: &mut PSavegState, p_setup: &mut PSetupState) {
                     si.bottomtexture,
                     si.midtexture,
                 );
-                saveg_write16(p_saveg, (textureoffset >> FRACBITS) as i16);
-                saveg_write16(p_saveg, (rowoffset >> FRACBITS) as i16);
+                saveg_write16(p_saveg, (textureoffset >> FRACBITS).to_bits() as i16);
+                saveg_write16(p_saveg, (rowoffset >> FRACBITS).to_bits() as i16);
                 saveg_write16(p_saveg, toptexture);
                 saveg_write16(p_saveg, bottomtexture);
                 saveg_write16(p_saveg, midtexture);
@@ -818,16 +818,16 @@ pub fn archive_world(p_saveg: &mut PSavegState, p_setup: &mut PSetupState) {
 }
 pub fn un_archive_world(p_saveg: &mut PSavegState, p_setup: &mut PSetupState) {
     for i in 0..p_setup.numsectors {
-        let floorheight = (i32::from(saveg_read16(p_saveg)) << FRACBITS) as Fixed;
-        let ceilingheight = (i32::from(saveg_read16(p_saveg)) << FRACBITS) as Fixed;
+        let floorheight = i32::from(saveg_read16(p_saveg)) << FRACBITS;
+        let ceilingheight = i32::from(saveg_read16(p_saveg)) << FRACBITS;
         let floorpic = saveg_read16(p_saveg);
         let ceilingpic = saveg_read16(p_saveg);
         let lightlevel = saveg_read16(p_saveg);
         let special = saveg_read16(p_saveg);
         let tag = saveg_read16(p_saveg);
         let sec = p_setup.sector_mut(SectorId(i as u32));
-        sec.floorheight = floorheight;
-        sec.ceilingheight = ceilingheight;
+        sec.floorheight = Fixed(floorheight);
+        sec.ceilingheight = Fixed(ceilingheight);
         sec.floorpic = floorpic;
         sec.ceilingpic = ceilingpic;
         sec.lightlevel = lightlevel;
@@ -847,14 +847,14 @@ pub fn un_archive_world(p_saveg: &mut PSavegState, p_setup: &mut PSetupState) {
         let sidenum = li.sidenum;
         for &side in &sidenum {
             if i32::from(side) != -1 {
-                let textureoffset = (i32::from(saveg_read16(p_saveg)) << FRACBITS) as Fixed;
-                let rowoffset = (i32::from(saveg_read16(p_saveg)) << FRACBITS) as Fixed;
+                let textureoffset = i32::from(saveg_read16(p_saveg)) << FRACBITS;
+                let rowoffset = i32::from(saveg_read16(p_saveg)) << FRACBITS;
                 let toptexture = saveg_read16(p_saveg);
                 let bottomtexture = saveg_read16(p_saveg);
                 let midtexture = saveg_read16(p_saveg);
                 let si = p_setup.side_mut(SideId(side as u32));
-                si.textureoffset = textureoffset;
-                si.rowoffset = rowoffset;
+                si.textureoffset = Fixed(textureoffset);
+                si.rowoffset = Fixed(rowoffset);
                 si.toptexture = toptexture;
                 si.bottomtexture = bottomtexture;
                 si.midtexture = midtexture;

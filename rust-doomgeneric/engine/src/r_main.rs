@@ -31,6 +31,9 @@ use crate::r_segs::RSegsState;
 use crate::r_sky::init_sky_map;
 use crate::r_things::clear_sprites;
 use crate::r_things::draw_masked;
+use crate::tables::fine_cosine;
+use crate::tables::fine_sine;
+use crate::tables::fine_tangent;
 use crate::tables::slope_div;
 use crate::tables::tan_to_angle;
 use crate::tables::Angle;
@@ -39,9 +42,6 @@ use crate::tables::ANG270;
 use crate::tables::ANG90;
 use crate::tables::ANGLETOFINESHIFT;
 use crate::tables::FINEANGLES;
-use crate::tables::FINECOSINE;
-use crate::tables::FINESINE;
-use crate::tables::FINETANGENT;
 
 // A colormap is identified by its row index into r_data.colormaps (each row
 // is 256 bytes) rather than a raw pointer into that Vec.
@@ -107,19 +107,19 @@ impl RMainState {
             fixedcolormap: None,
             centerx: 0,
             centery: 0,
-            centerxfrac: 0,
-            centeryfrac: 0,
-            projection: 0,
+            centerxfrac: Fixed::ZERO,
+            centeryfrac: Fixed::ZERO,
+            projection: Fixed::ZERO,
             framecount: 0,
             sscount: 0,
             linecount: 0,
             loopcount: 0,
-            viewx: 0,
-            viewy: 0,
-            viewz: 0,
+            viewx: Fixed::ZERO,
+            viewy: Fixed::ZERO,
+            viewz: Fixed::ZERO,
             viewangle: Angle::ZERO,
-            viewcos: 0,
-            viewsin: 0,
+            viewcos: Fixed::ZERO,
+            viewsin: Fixed::ZERO,
             viewplayer: PlayerId(0),
             detailshift: 0,
             clipangle: Angle::ZERO,
@@ -152,22 +152,22 @@ pub const SLOPEBITS: u32 = 11;
 pub const DBITS: u32 = FRACBITS - SLOPEBITS;
 pub const FIELDOFVIEW: i32 = 2048;
 pub fn point_on_side(x: Fixed, y: Fixed, node: &Node) -> i32 {
-    if node.dx == 0 {
+    if node.dx == Fixed::ZERO {
         if x <= node.x {
-            return i32::from(node.dy > 0);
+            return i32::from(node.dy > Fixed::ZERO);
         }
-        return i32::from(node.dy < 0);
+        return i32::from(node.dy < Fixed::ZERO);
     }
-    if node.dy == 0 {
+    if node.dy == Fixed::ZERO {
         if y <= node.y {
-            return i32::from(node.dx < 0);
+            return i32::from(node.dx < Fixed::ZERO);
         }
-        return i32::from(node.dx > 0);
+        return i32::from(node.dx > Fixed::ZERO);
     }
     let dx = x - node.x;
     let dy = y - node.y;
-    if (node.dy ^ node.dx ^ dx ^ dy) as u32 & 0x80000000 != 0 {
-        if (node.dy ^ dx) as u32 & 0x80000000 != 0 {
+    if (node.dy ^ node.dx ^ dx ^ dy).to_bits() as u32 & 0x80000000 != 0 {
+        if (node.dy ^ dx).to_bits() as u32 & 0x80000000 != 0 {
             return 1;
         }
         return 0;
@@ -186,22 +186,22 @@ pub fn point_on_seg_side(p_setup: &PSetupState, x: Fixed, y: Fixed, line: SegId)
     let ly: Fixed = line_v1.y;
     let ldx: Fixed = line_v2.x - lx;
     let ldy: Fixed = line_v2.y - ly;
-    if ldx == 0 {
+    if ldx == Fixed::ZERO {
         if x <= lx {
-            return i32::from(ldy > 0);
+            return i32::from(ldy > Fixed::ZERO);
         }
-        return i32::from(ldy < 0);
+        return i32::from(ldy < Fixed::ZERO);
     }
-    if ldy == 0 {
+    if ldy == Fixed::ZERO {
         if y <= ly {
-            return i32::from(ldx < 0);
+            return i32::from(ldx < Fixed::ZERO);
         }
-        return i32::from(ldx > 0);
+        return i32::from(ldx > Fixed::ZERO);
     }
     let dx: Fixed = x - lx;
     let dy: Fixed = y - ly;
-    if (ldy ^ ldx ^ dx ^ dy) as u32 & 0x80000000 != 0 {
-        if (ldy ^ dx) as u32 & 0x80000000 != 0 {
+    if (ldy ^ ldx ^ dx ^ dy).to_bits() as u32 & 0x80000000 != 0 {
+        if (ldy ^ dx).to_bits() as u32 & 0x80000000 != 0 {
             return 1;
         }
         return 0;
@@ -215,38 +215,43 @@ pub fn point_on_seg_side(p_setup: &PSetupState, x: Fixed, y: Fixed, line: SegId)
 }
 /// The angle of the vector `(x, y)`; 0 for the zero vector.
 fn vector_to_angle(mut x: Fixed, mut y: Fixed) -> Angle {
-    if x == 0 && y == 0 {
+    if x == Fixed::ZERO && y == Fixed::ZERO {
         return Angle(0);
     }
-    if x >= 0 {
-        if y >= 0 {
+    if x >= Fixed::ZERO {
+        if y >= Fixed::ZERO {
             if x > y {
-                tan_to_angle(slope_div(y as u32, x as u32) as usize)
+                tan_to_angle(slope_div((y).to_bits() as u32, (x).to_bits() as u32) as usize)
             } else {
-                (ANG90 - Angle(1)) - tan_to_angle(slope_div(x as u32, y as u32) as usize)
+                (ANG90 - Angle(1))
+                    - tan_to_angle(slope_div((x).to_bits() as u32, (y).to_bits() as u32) as usize)
             }
         } else {
             y = -y;
             if x > y {
-                -tan_to_angle(slope_div(y as u32, x as u32) as usize)
+                -tan_to_angle(slope_div((y).to_bits() as u32, (x).to_bits() as u32) as usize)
             } else {
-                ANG270 + tan_to_angle(slope_div(x as u32, y as u32) as usize)
+                ANG270
+                    + tan_to_angle(slope_div((x).to_bits() as u32, (y).to_bits() as u32) as usize)
             }
         }
     } else {
         x = -x;
-        if y >= 0 {
+        if y >= Fixed::ZERO {
             if x > y {
-                (ANG180 - Angle(1)) - tan_to_angle(slope_div(y as u32, x as u32) as usize)
+                (ANG180 - Angle(1))
+                    - tan_to_angle(slope_div((y).to_bits() as u32, (x).to_bits() as u32) as usize)
             } else {
-                ANG90 + tan_to_angle(slope_div(x as u32, y as u32) as usize)
+                ANG90 + tan_to_angle(slope_div((x).to_bits() as u32, (y).to_bits() as u32) as usize)
             }
         } else {
             y = -y;
             if x > y {
-                ANG180 + tan_to_angle(slope_div(y as u32, x as u32) as usize)
+                ANG180
+                    + tan_to_angle(slope_div((y).to_bits() as u32, (x).to_bits() as u32) as usize)
             } else {
-                (ANG270 - Angle(1)) - tan_to_angle(slope_div(x as u32, y as u32) as usize)
+                (ANG270 - Angle(1))
+                    - tan_to_angle(slope_div((x).to_bits() as u32, (y).to_bits() as u32) as usize)
             }
         }
     }
@@ -264,46 +269,49 @@ pub fn point_to_angle2(x1: Fixed, y1: Fixed, x2: Fixed, y2: Fixed) -> Angle {
     vector_to_angle(x2 - x1, y2 - y1)
 }
 pub fn point_to_dist(r_main: &RMainState, x: Fixed, y: Fixed) -> Fixed {
-    let mut dx: Fixed = (x - r_main.viewx).abs() as Fixed;
-    let mut dy: Fixed = (y - r_main.viewy).abs() as Fixed;
+    let mut dx: Fixed = (x - r_main.viewx).abs();
+    let mut dy: Fixed = (y - r_main.viewy).abs();
     if dy > dx {
         core::mem::swap(&mut dx, &mut dy);
     }
-    let frac: Fixed = if dx != 0 { fixed_div(dy, dx) } else { 0 };
-    let angle: i32 = (tan_to_angle((frac >> DBITS) as usize) + ANG90).fine() as i32;
-    let dist: Fixed = fixed_div(dx, FINESINE[angle as usize]);
+    let frac: Fixed = if dx == Fixed::ZERO {
+        Fixed::ZERO
+    } else {
+        fixed_div(dy, dx)
+    };
+    let angle: i32 = (tan_to_angle((frac >> DBITS).to_bits() as usize) + ANG90).fine() as i32;
+    let dist: Fixed = fixed_div(dx, fine_sine(angle as usize));
     dist
 }
 pub fn scale_from_global_angle(r_main: &RMainState, r_segs: &RSegsState, visangle: Angle) -> Fixed {
     let anglea: Angle = ANG90 + (visangle - r_main.viewangle);
     let angleb: Angle = ANG90 + (visangle - r_segs.rw_normalangle);
-    let sinea: i32 = FINESINE[anglea.fine()];
-    let sineb: i32 = FINESINE[angleb.fine()];
-    let num: Fixed = fixed_mul(r_main.projection, sineb as Fixed) << r_main.detailshift;
-    let den: i32 = fixed_mul(r_segs.rw_distance, sinea as Fixed);
-    if den > num >> 16 {
-        fixed_div(num, den as Fixed).clamp(256, (64 * FRACUNIT) as Fixed)
+    let sinea: Fixed = fine_sine(anglea.fine());
+    let sineb: Fixed = fine_sine(angleb.fine());
+    let num: Fixed = fixed_mul(r_main.projection, sineb) << r_main.detailshift;
+    let den: Fixed = fixed_mul(r_segs.rw_distance, sinea);
+    if den.to_bits() > num.to_int() {
+        fixed_div(num, den).clamp(Fixed(256), 64 * FRACUNIT)
     } else {
-        (64 * FRACUNIT) as Fixed
+        64 * FRACUNIT
     }
 }
 pub fn init_texture_mapping(r_draw: &RDrawState, r_main: &mut RMainState) {
     let focallength: Fixed = fixed_div(
         r_main.centerxfrac,
-        FINETANGENT[(FINEANGLES / 4 + FIELDOFVIEW / 2) as usize],
+        fine_tangent((FINEANGLES / 4 + FIELDOFVIEW / 2) as usize),
     );
-    for (i, &tangent) in FINETANGENT
-        .iter()
-        .enumerate()
-        .take((FINEANGLES / 2) as usize)
-    {
+    for i in 0..(FINEANGLES / 2) as usize {
+        let tangent = fine_tangent(i);
         let t: i32 = if tangent > FRACUNIT * 2 {
             -1
         } else if tangent < -FRACUNIT * 2 {
             r_draw.viewwidth + 1
         } else {
             let t = fixed_mul(tangent, focallength);
-            ((r_main.centerxfrac - t + FRACUNIT - 1) >> FRACBITS).clamp(-1, r_draw.viewwidth + 1)
+            (r_main.centerxfrac - t + FRACUNIT - Fixed(1))
+                .to_int()
+                .clamp(-1, r_draw.viewwidth + 1)
         };
         r_main.viewangletox[i] = t;
     }
@@ -328,10 +336,12 @@ pub fn init_light_tables(r_main: &mut RMainState) {
     for i in 0..LIGHTLEVELS {
         let startmap: i32 = (LIGHTLEVELS - 1 - i) * 2 * NUMCOLORMAPS / LIGHTLEVELS;
         for j in 0..MAXLIGHTZ {
-            let mut scale: i32 =
-                fixed_div(SCREENWIDTH / 2 * FRACUNIT, (j as Fixed + 1) << LIGHTZSHIFT);
+            let mut scale: Fixed = fixed_div(
+                SCREENWIDTH / 2 * FRACUNIT,
+                Fixed((j as i32 + 1) << LIGHTZSHIFT),
+            );
             scale >>= LIGHTSCALESHIFT;
-            let mut level: i32 = startmap - scale / DISTMAP;
+            let mut level: i32 = startmap - scale.to_bits() / DISTMAP;
             if level < 0 {
                 level = 0;
             }
@@ -360,8 +370,8 @@ pub fn execute_set_view_size(render: &mut Render) {
     render.r_draw.viewwidth = render.r_draw.scaledviewwidth >> render.r_main.detailshift;
     render.r_main.centery = render.r_draw.viewheight / 2;
     render.r_main.centerx = render.r_draw.viewwidth / 2;
-    render.r_main.centerxfrac = (render.r_main.centerx << FRACBITS) as Fixed;
-    render.r_main.centeryfrac = (render.r_main.centery << FRACBITS) as Fixed;
+    render.r_main.centerxfrac = Fixed::from_int(render.r_main.centerx);
+    render.r_main.centeryfrac = Fixed::from_int(render.r_main.centery);
     render.r_main.projection = render.r_main.centerxfrac;
     if render.r_main.detailshift == 0 {
         render.r_main.basecolfunc = Some(draw_column);
@@ -380,22 +390,21 @@ pub fn execute_set_view_size(render: &mut Render) {
     let viewheight = render.r_draw.viewheight;
     init_buffer(&mut render.r_draw, scaledviewwidth, viewheight);
     init_texture_mapping(&render.r_draw, &mut render.r_main);
-    render.r_things.pspritescale = (FRACUNIT * render.r_draw.viewwidth / SCREENWIDTH) as Fixed;
-    render.r_things.pspriteiscale = (FRACUNIT * SCREENWIDTH / render.r_draw.viewwidth) as Fixed;
+    render.r_things.pspritescale = FRACUNIT * render.r_draw.viewwidth / SCREENWIDTH;
+    render.r_things.pspriteiscale = FRACUNIT * SCREENWIDTH / render.r_draw.viewwidth;
     for i in 0..render.r_draw.viewwidth as usize {
         render.r_things.screenheightarray[i] = render.r_draw.viewheight as i16;
     }
     for i in 0..render.r_draw.viewheight {
-        let mut dy: Fixed =
-            (((i - render.r_draw.viewheight / 2) << FRACBITS) + FRACUNIT / 2) as Fixed;
-        dy = dy.abs() as Fixed;
+        let mut dy: Fixed = Fixed::from_int(i - render.r_draw.viewheight / 2) + FRACUNIT / 2;
+        dy = dy.abs();
         render.r_plane.yslope[i as usize] = fixed_div(
-            ((render.r_draw.viewwidth as Fixed) << render.r_main.detailshift) / 2 * FRACUNIT,
+            (render.r_draw.viewwidth << render.r_main.detailshift) / 2 * FRACUNIT,
             dy,
         );
     }
     for i in 0..render.r_draw.viewwidth as usize {
-        let cosadj: Fixed = FINECOSINE[render.r_main.xtoviewangle[i].fine()].abs() as Fixed;
+        let cosadj: Fixed = fine_cosine(render.r_main.xtoviewangle[i].fine()).abs();
         render.r_plane.distscale[i] = fixed_div(FRACUNIT, cosadj);
     }
     for i in 0..LIGHTLEVELS {
@@ -456,8 +465,8 @@ pub fn setup_frame(state: &mut GameState, player_id: PlayerId) {
     state.render.r_main.viewangle = player_mo.angle + state.render.r_main.viewangleoffset;
     state.render.r_main.extralight = extralight;
     state.render.r_main.viewz = viewz;
-    state.render.r_main.viewsin = FINESINE[state.render.r_main.viewangle.fine()];
-    state.render.r_main.viewcos = FINECOSINE[state.render.r_main.viewangle.fine()];
+    state.render.r_main.viewsin = fine_sine(state.render.r_main.viewangle.fine());
+    state.render.r_main.viewcos = fine_cosine(state.render.r_main.viewangle.fine());
     state.render.r_main.sscount = 0;
     if fixedcolormap != 0 {
         let colormap = fixedcolormap;

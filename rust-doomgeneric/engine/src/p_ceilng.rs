@@ -34,7 +34,7 @@ pub enum CeilingE {
     FastCrushAndRaise,
     SilentCrushAndRaise,
 }
-pub const CEILSPEED: i32 = FRACUNIT;
+pub const CEILSPEED: Fixed = FRACUNIT;
 pub const MAXCEILINGS: usize = 30;
 
 // Generation-checked handle into PCeilngState's arena -- mirrors DoorId.
@@ -193,12 +193,12 @@ pub fn move_ceiling(state: &mut GameState, id: CeilingId) {
                     CeilingE::SilentCrushAndRaise => {
                         s_start_sound(state, SoundOrigin::Sector(ceiling.sector), SfxName::Pstop);
                         let c = state.world.p_ceilng.get_mut(id).expect("live ceiling");
-                        c.speed = CEILSPEED as Fixed;
+                        c.speed = CEILSPEED;
                         c.direction = Direction::Up;
                     }
                     CeilingE::CrushAndRaise => {
                         let c = state.world.p_ceilng.get_mut(id).expect("live ceiling");
-                        c.speed = CEILSPEED as Fixed;
+                        c.speed = CEILSPEED;
                         c.direction = Direction::Up;
                     }
                     CeilingE::FastCrushAndRaise => {
@@ -229,7 +229,7 @@ pub fn move_ceiling(state: &mut GameState, id: CeilingId) {
                             .p_ceilng
                             .get_mut(id)
                             .expect("live ceiling")
-                            .speed = (CEILSPEED / 8) as Fixed;
+                            .speed = CEILSPEED / 8;
                     }
                     _ => {}
                 }
@@ -272,9 +272,9 @@ pub fn do_ceiling(
             CeilingE::FastCrushAndRaise => {
                 ceiling.crush = true;
                 ceiling.topheight = ceilingheight;
-                ceiling.bottomheight = (floorheight + 8 * FRACUNIT) as Fixed;
+                ceiling.bottomheight = floorheight + 8 * FRACUNIT;
                 ceiling.direction = Direction::Down;
-                ceiling.speed = (CEILSPEED * 2) as Fixed;
+                ceiling.speed = CEILSPEED * 2;
             }
             CeilingE::SilentCrushAndRaise | CeilingE::CrushAndRaise => {
                 ceiling.crush = true;
@@ -287,7 +287,7 @@ pub fn do_ceiling(
             CeilingE::RaiseToHighest => {
                 ceiling.topheight = find_highest_ceiling_surrounding(p_setup, sec);
                 ceiling.direction = Direction::Up;
-                ceiling.speed = CEILSPEED as Fixed;
+                ceiling.speed = CEILSPEED;
             }
         }
         if lower_block {
@@ -296,7 +296,7 @@ pub fn do_ceiling(
                 ceiling.bottomheight += 8 * FRACUNIT;
             }
             ceiling.direction = Direction::Down;
-            ceiling.speed = CEILSPEED as Fixed;
+            ceiling.speed = CEILSPEED;
         }
         ceiling.tag = tag;
         ceiling.kind = kind;

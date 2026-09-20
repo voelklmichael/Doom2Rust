@@ -112,7 +112,7 @@ pub struct VisPlane {
 
 impl VisPlane {
     pub const EMPTY: Self = Self {
-        height: 0,
+        height: Fixed::ZERO,
         picnum: 0,
         lightlevel: 0,
         minx: 0,

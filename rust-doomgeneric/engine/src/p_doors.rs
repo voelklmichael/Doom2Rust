@@ -61,8 +61,8 @@ impl Default for VlDoor {
             },
             kind: VldoorE::Normal,
             sector: SectorId(0),
-            topheight: 0,
-            speed: 0,
+            topheight: Fixed::ZERO,
+            speed: Fixed::ZERO,
             direction: Direction::Still,
             topwait: 0,
             topcountdown: 0,
@@ -302,13 +302,13 @@ pub fn do_door(state: &mut GameState, line: LineId, kind: VldoorE) -> bool {
         door.sector = sec;
         door.kind = kind;
         door.topwait = VDOORWAIT;
-        door.speed = (FRACUNIT * 2) as Fixed;
+        door.speed = FRACUNIT * 2;
         match kind {
             VldoorE::BlazeClose => {
                 door.topheight = find_lowest_ceiling_surrounding(&mut state.world.p_setup, sec);
                 door.topheight -= 4 * FRACUNIT;
                 door.direction = Direction::Down;
-                door.speed = (FRACUNIT * 2 * 4) as Fixed;
+                door.speed = FRACUNIT * 2 * 4;
                 s_start_sound(state, SoundOrigin::Sector(sec), SfxName::Bdcls);
             }
             VldoorE::Close => {
@@ -326,7 +326,7 @@ pub fn do_door(state: &mut GameState, line: LineId, kind: VldoorE) -> bool {
                 door.direction = Direction::Up;
                 door.topheight = find_lowest_ceiling_surrounding(&mut state.world.p_setup, sec);
                 door.topheight -= 4 * FRACUNIT;
-                door.speed = (FRACUNIT * 2 * 4) as Fixed;
+                door.speed = FRACUNIT * 2 * 4;
                 if door.topheight != ceilingheight {
                     s_start_sound(state, SoundOrigin::Sector(sec), SfxName::Bdopn);
                 }
@@ -459,7 +459,7 @@ pub fn ev_vertical_door(state: &mut GameState, line: LineId, thing: MobjId) {
     door.thinker.function = ThinkerFn::Door(t_vertical_door);
     door.sector = door_sector_id;
     door.direction = Direction::Up;
-    door.speed = (FRACUNIT * 2) as Fixed;
+    door.speed = FRACUNIT * 2;
     door.topwait = VDOORWAIT;
     match i32::from(linev.special) {
         1 | 26 | 27 | 28 => {
@@ -471,12 +471,12 @@ pub fn ev_vertical_door(state: &mut GameState, line: LineId, thing: MobjId) {
         }
         117 => {
             door.kind = VldoorE::BlazeRaise;
-            door.speed = (FRACUNIT * 2 * 4) as Fixed;
+            door.speed = FRACUNIT * 2 * 4;
         }
         118 => {
             door.kind = VldoorE::BlazeOpen;
             state.world.p_setup.line_mut(line).special = 0;
-            door.speed = (FRACUNIT * 2 * 4) as Fixed;
+            door.speed = FRACUNIT * 2 * 4;
         }
         _ => {}
     }
@@ -501,7 +501,7 @@ pub fn spawn_door_close_in30(
     door.sector = sector;
     door.direction = Direction::Still;
     door.kind = VldoorE::Normal;
-    door.speed = (FRACUNIT * 2) as Fixed;
+    door.speed = FRACUNIT * 2;
     door.topcountdown = 30 * TICRATE;
     let door_arena_id = p_doors.spawn(door);
     let door_id = add_thinker(
@@ -524,7 +524,7 @@ pub fn spawn_door_raise_in5_mins(
     door.sector = sector;
     door.direction = Direction::InitialWait;
     door.kind = VldoorE::RaiseIn5Mins;
-    door.speed = (FRACUNIT * 2) as Fixed;
+    door.speed = FRACUNIT * 2;
     door.topheight = find_lowest_ceiling_surrounding(p_setup, sector);
     door.topheight -= 4 * FRACUNIT;
     door.topwait = VDOORWAIT;

@@ -12,7 +12,6 @@ use crate::game_state::GameState;
 use crate::info::StateId;
 use crate::m_fixed::fixed_mul;
 use crate::m_fixed::Fixed;
-use crate::m_fixed::FRACBITS;
 use crate::m_fixed::FRACUNIT;
 use crate::m_random::p_random;
 use crate::p_enemy::noise_alert;
@@ -34,13 +33,13 @@ use crate::r_main::point_to_angle2;
 use crate::s_sound::s_start_sound;
 use crate::s_sound::SoundOrigin;
 use crate::sounds::SfxName;
+use crate::tables::fine_cosine;
+use crate::tables::fine_sine;
 use crate::tables::Angle;
 use crate::tables::ANG180;
 use crate::tables::ANG90;
 use crate::tables::FINEANGLES;
-use crate::tables::FINECOSINE;
 use crate::tables::FINEMASK;
-use crate::tables::FINESINE;
 
 pub const DEH_DEFAULT_BFG_CELLS_PER_SHOT: i32 = 40;
 pub const DEH_BFG_CELLS_PER_SHOT: i32 = DEH_DEFAULT_BFG_CELLS_PER_SHOT;
@@ -61,8 +60,8 @@ pub fn set_psprite(state: &mut GameState, player_id: PlayerId, position: i32, mu
             psp.state = Some(state_id);
             psp.tics = tics;
             if misc1 != 0 {
-                psp.sx = (misc1 << FRACBITS) as Fixed;
-                psp.sy = (misc2 << FRACBITS) as Fixed;
+                psp.sx = Fixed::from_int(misc1);
+                psp.sy = Fixed::from_int(misc2);
             }
         }
         if let StateAction::Weapon(f) = action {
@@ -95,7 +94,9 @@ impl Default for PPsprState {
 
 impl PPsprState {
     pub const fn new() -> Self {
-        Self { bulletslope: 0 }
+        Self {
+            bulletslope: Fixed::ZERO,
+        }
     }
 }
 
@@ -112,8 +113,7 @@ pub fn bring_up_weapon(state: &mut GameState, player_id: PlayerId) {
     }
     let newstate: StateNum = WEAPONINFO[state.game.g_game.players[player].pendingweapon].upstate;
     state.game.g_game.players[player].pendingweapon = WeaponType::Nochange;
-    state.game.g_game.players[player].psprites[PSpriteNum::Weapon as usize].sy =
-        (128 * FRACUNIT) as Fixed;
+    state.game.g_game.players[player].psprites[PSpriteNum::Weapon as usize].sy = 128 * FRACUNIT;
     set_psprite(state, player_id, PSpriteNum::Weapon as i32, newstate);
 }
 pub fn check_ammo(state: &mut GameState, player_id: PlayerId) -> bool {
@@ -235,13 +235,13 @@ pub fn weapon_ready(state: &mut GameState, player: PlayerId, position: i32) {
     state.game.g_game.players[player].psprites[position as usize].sx = FRACUNIT
         + fixed_mul(
             state.game.g_game.players[player].bob,
-            FINECOSINE[angle as usize],
+            fine_cosine(angle as usize),
         );
     angle &= FINEANGLES / 2 - 1;
     state.game.g_game.players[player].psprites[position as usize].sy = 32 * FRACUNIT
         + fixed_mul(
             state.game.g_game.players[player].bob,
-            FINESINE[angle as usize],
+            fine_sine(angle as usize),
         );
 }
 pub fn re_fire(state: &mut GameState, player: PlayerId, _position: i32) {
@@ -265,8 +265,7 @@ pub fn lower(state: &mut GameState, player: PlayerId, position: i32) {
         return;
     }
     if state.game.g_game.players[player].playerstate == PlayerState::Dead {
-        state.game.g_game.players[player].psprites[position as usize].sy =
-            (128 * FRACUNIT) as Fixed;
+        state.game.g_game.players[player].psprites[position as usize].sy = 128 * FRACUNIT;
         return;
     }
     if state.game.g_game.players[player].health == 0 {
@@ -281,7 +280,7 @@ pub fn raise(state: &mut GameState, player: PlayerId, position: i32) {
     if state.game.g_game.players[player].psprites[position as usize].sy > 32 * FRACUNIT {
         return;
     }
-    state.game.g_game.players[player].psprites[position as usize].sy = (32 * FRACUNIT) as Fixed;
+    state.game.g_game.players[player].psprites[position as usize].sy = 32 * FRACUNIT;
     let newstate: StateNum = WEAPONINFO[state.game.g_game.players[player].readyweapon].readystate;
     set_psprite(state, player, PSpriteNum::Weapon as i32, newstate);
 }
@@ -307,8 +306,8 @@ pub fn punch(state: &mut GameState, player_id: PlayerId, _position: i32) {
     angle += Angle(
         ((p_random(&mut state.world.m_random) - p_random(&mut state.world.m_random)) << 18) as u32,
     );
-    let slope: i32 = aim_line_attack(state, Some(player_mo), angle, MELEERANGE);
-    line_attack(state, player_mo, angle, MELEERANGE, slope as Fixed, damage);
+    let slope: Fixed = aim_line_attack(state, Some(player_mo), angle, MELEERANGE);
+    line_attack(state, player_mo, angle, MELEERANGE, slope, damage);
     if let Some(linetarget) = state.world.p_map.linetarget {
         let linetarget = state.world.p_mobj.mo(linetarget);
         let (linetarget_x, linetarget_y) = (linetarget.x, linetarget.y);
@@ -330,13 +329,13 @@ pub fn saw(state: &mut GameState, player_id: PlayerId, _position: i32) {
     angle += Angle(
         ((p_random(&mut state.world.m_random) - p_random(&mut state.world.m_random)) << 18) as u32,
     );
-    let slope: i32 = aim_line_attack(state, Some(player_mo), angle, MELEERANGE + 1);
+    let slope: Fixed = aim_line_attack(state, Some(player_mo), angle, MELEERANGE + Fixed(1));
     line_attack(
         state,
         player_mo,
         angle,
-        MELEERANGE + 1,
-        slope as Fixed,
+        MELEERANGE + Fixed(1),
+        slope,
         damage,
     );
     if state.world.p_map.linetarget.is_none() {
@@ -486,9 +485,10 @@ pub fn fire_shotgun2(state: &mut GameState, player: PlayerId, _position: i32) {
                 as u32,
         );
         let slope = state.world.p_pspr.bulletslope
-            + ((p_random(&mut state.world.m_random) as Fixed
-                - p_random(&mut state.world.m_random) as Fixed)
-                << 5);
+            + Fixed(
+                ((p_random(&mut state.world.m_random)) - (p_random(&mut state.world.m_random)))
+                    << 5,
+            );
         line_attack(state, player_mo, angle, MISSILERANGE, slope, damage);
     }
 }

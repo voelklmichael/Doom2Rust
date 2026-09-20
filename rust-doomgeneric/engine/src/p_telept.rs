@@ -1,5 +1,6 @@
 use crate::d_mode::GameVersion;
 use crate::game_state::GameState;
+use crate::m_fixed::Fixed;
 use crate::p_map::teleport_move;
 use crate::p_mobj::MobjFlags;
 use crate::p_mobj::MobjId;
@@ -14,8 +15,8 @@ use crate::p_setup::LineId;
 use crate::s_sound::s_start_sound;
 use crate::s_sound::SoundOrigin;
 use crate::sounds::SfxName;
-use crate::tables::FINECOSINE;
-use crate::tables::FINESINE;
+use crate::tables::fine_cosine;
+use crate::tables::fine_sine;
 pub fn teleport(state: &mut GameState, line: LineId, side: i32, thing: MobjId) -> bool {
     if state
         .world
@@ -73,8 +74,8 @@ pub fn teleport(state: &mut GameState, line: LineId, side: i32, thing: MobjId) -
                         let thing_z = state.world.p_mobj.mo(thing).z;
                         let fog = spawn_mobj(
                             state,
-                            m_x + 20 * FINECOSINE[an],
-                            m_y + 20 * FINESINE[an],
+                            m_x + 20 * fine_cosine(an),
+                            m_y + 20 * fine_sine(an),
                             thing_z,
                             MobjType::Tfog,
                         );
@@ -84,7 +85,7 @@ pub fn teleport(state: &mut GameState, line: LineId, side: i32, thing: MobjId) -
                             t.reactiontime = 18;
                         }
                         t.angle = m_angle;
-                        t.momz = 0;
+                        t.momz = Fixed::ZERO;
                         t.momy = t.momz;
                         t.momx = t.momy;
                         return true;
