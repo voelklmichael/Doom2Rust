@@ -14,7 +14,8 @@ use core::fmt::Write as _;
 
 use core_s3_protocol::{encode_fps, HeldKeys, FPS_MESSAGE_MAX};
 use core_s3_ws::{
-    handshake_response, head_length, parse_request, pong_frame, text_frame, Decoder, Output,
+    accepts_gzip, handshake_response, head_length, parse_request, pong_frame, text_frame, Decoder,
+    Output,
     Request, CLOSE_FRAME, MAX_CONTROL_PAYLOAD, MAX_HEAD, MAX_TEXT_PAYLOAD,
 };
 use embassy_futures::select::{select, Either};
@@ -29,6 +30,9 @@ use heapless::String;
 use crate::{net, platform};
 
 const PAGE: &str = include_str!("../assets/controller.html");
+/// The same page, gzipped by `build.rs`: about a third of the size, so it takes a third of the
+/// round trips through the 1 KB TCP buffer. Sent to browsers that say they accept it.
+const PAGE_GZ: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/controller.html.gz"));
 const PORT: u16 = 80;
 /// How often a connection looks for a new frame rate sample to send.
 const FPS_POLL: Duration = Duration::from_millis(500);
@@ -74,7 +78,12 @@ async fn serve(socket: &mut TcpSocket<'_>, head: &mut [u8; MAX_HEAD]) -> Result<
     match parse_request(&head[..end]) {
         Request::WebSocket { key } => websocket(socket, key).await,
         Request::Get { path: "/" | "/index.html" } => {
-            respond(socket, "200 OK", "text/html; charset=utf-8", PAGE.as_bytes()).await
+            if accepts_gzip(&head[..end]) {
+                respond_with(socket, "200 OK", "text/html; charset=utf-8", Some("gzip"), PAGE_GZ)
+                    .await
+            } else {
+                respond(socket, "200 OK", "text/html; charset=utf-8", PAGE.as_bytes()).await
+            }
         }
         Request::Get { path: "/favicon.ico" } => respond(socket, "204 No Content", "text/plain", b"").await,
         Request::Get { .. } => respond(socket, "404 Not Found", "text/plain", b"not found").await,
@@ -88,13 +97,27 @@ async fn respond(
     content_type: &str,
     body: &[u8],
 ) -> Result<(), Error> {
-    let mut header = String::<192>::new();
+    respond_with(socket, status, content_type, None, body).await
+}
+
+/// Like [`respond`], with a `Content-Encoding` for a body that is already compressed.
+async fn respond_with(
+    socket: &mut TcpSocket<'_>,
+    status: &str,
+    content_type: &str,
+    encoding: Option<&str>,
+    body: &[u8],
+) -> Result<(), Error> {
+    let mut header = String::<256>::new();
     let _ = write!(
         header,
-        "HTTP/1.1 {status}\r\nContent-Type: {content_type}\r\nContent-Length: {}\r\n\
-         Cache-Control: no-cache\r\nConnection: close\r\n\r\n",
+        "HTTP/1.1 {status}\r\nContent-Type: {content_type}\r\nContent-Length: {}\r\n",
         body.len()
     );
+    if let Some(encoding) = encoding {
+        let _ = write!(header, "Content-Encoding: {encoding}\r\nVary: Accept-Encoding\r\n");
+    }
+    let _ = header.push_str("Cache-Control: no-cache\r\nConnection: close\r\n\r\n");
     write_all(socket, header.as_bytes()).await?;
     write_all(socket, body).await
 }

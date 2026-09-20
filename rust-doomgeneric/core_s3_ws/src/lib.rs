@@ -34,6 +34,28 @@ pub fn head_length(bytes: &[u8]) -> Option<usize> {
     bytes.windows(4).position(|window| window == b"\r\n\r\n").map(|at| at + 4)
 }
 
+/// Whether a request head (as delimited by [`head_length`]) says the client accepts gzip-compressed
+/// bodies: an `Accept-Encoding` header listing `gzip` (any case) that is not refused with `q=0`.
+pub fn accepts_gzip(head: &[u8]) -> bool {
+    let Ok(head) = core::str::from_utf8(head) else { return false };
+    head.split("\r\n").skip(1).any(|line| {
+        let Some((name, value)) = line.split_once(':') else { return false };
+        name.trim().eq_ignore_ascii_case("accept-encoding")
+            && value.split(',').any(|coding| {
+                let mut parts = coding.split(';');
+                let is_gzip = parts.next().is_some_and(|token| token.trim().eq_ignore_ascii_case("gzip"));
+                // `q=0`, `q=0.0`, ... mean "not acceptable".
+                let refused = parts.any(|param| {
+                    param
+                        .trim()
+                        .strip_prefix("q=")
+                        .is_some_and(|q| !q.is_empty() && q.chars().all(|c| c == '0' || c == '.'))
+                });
+                is_gzip && !refused
+            })
+    })
+}
+
 /// Parses a request head, as delimited by [`head_length`].
 pub fn parse_request(head: &[u8]) -> Request<'_> {
     let Ok(head) = core::str::from_utf8(head) else { return Request::Other };
@@ -307,8 +329,27 @@ impl Decoder {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn accepts_gzip_reads_the_accept_encoding_header() {
+        let head = |line: &str| format!("GET / HTTP/1.1\r\nHost: 192.168.4.1\r\n{line}\r\nAccept: */*\r\n\r\n");
+        assert!(accepts_gzip(head("Accept-Encoding: gzip, deflate, br").as_bytes()));
+        assert!(accepts_gzip(head("accept-encoding:gzip").as_bytes()));
+        assert!(accepts_gzip(head("ACCEPT-ENCODING: br;q=1.0, GZIP ;q=0.5").as_bytes()));
+        assert!(!accepts_gzip(head("Accept-Encoding: identity").as_bytes()));
+        assert!(!accepts_gzip(head("Accept-Encoding: deflate, br").as_bytes()));
+        assert!(!accepts_gzip(head("Accept-Encoding: gzip;q=0, identity").as_bytes()));
+        assert!(!accepts_gzip(head("Accept-Encoding: gzip; q=0.0").as_bytes()));
+        assert!(!accepts_gzip(head("X-Accept-Encoding: gzip").as_bytes()));
+        assert!(!accepts_gzip(head("Accept: gzip").as_bytes()));
+        assert!(!accepts_gzip(b"GET / HTTP/1.1\r\n\r\n"));
+        assert!(!accepts_gzip(&[0xff, 0xfe]));
+        // The request line is not a header.
+        assert!(!accepts_gzip(b"GET /accept-encoding:gzip HTTP/1.1\r\n\r\n"));
+    }
+
     extern crate std;
     use super::*;
+    use std::format;
     use std::vec::Vec;
 
     #[test]

@@ -59,6 +59,10 @@ lagprobe-keys = ["lagprobe"]
 [patch.crates-io]
 oplon = { path = "../third_party/oplon" }
 
+# Compresses the web page at build time (host only).
+[build-dependencies]
+flate2 = "1"
+
 [profile.dev]
 # Debug builds are too slow (and too big) to be useful on the device.
 opt-level = "s"
