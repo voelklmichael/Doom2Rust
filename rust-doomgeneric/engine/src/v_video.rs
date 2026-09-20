@@ -260,10 +260,8 @@ pub fn write_pcxfile(
     for &pixel in &data[..(width * height) as usize] {
         if i32::from(pixel) & 0xc0 == 0xc0 {
             pack.push(0xc1_u8);
-            pack.push(pixel);
-        } else {
-            pack.push(pixel);
         }
+        pack.push(pixel);
     }
     pack.push(0xc_u8);
     pack.extend_from_slice(&palette[..768]);

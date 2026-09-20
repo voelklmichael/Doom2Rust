@@ -308,7 +308,7 @@ pub fn load_defaults(
     platform: &mut dyn DoomPlatform,
 ) {
     if let Some(file) = &options.config {
-        m_config.doom_defaults.filename = file.clone();
+        m_config.doom_defaults.filename.clone_from(file);
         doom_println!(
             platform,
             "\tdefault file: {}",
@@ -324,7 +324,7 @@ pub fn load_defaults(
         m_config.doom_defaults.filename
     );
     if let Some(file) = &options.extraconfig {
-        m_config.extra_defaults.filename = file.clone();
+        m_config.extra_defaults.filename.clone_from(file);
         doom_println!(
             platform,
             "        extra configuration file: {}",

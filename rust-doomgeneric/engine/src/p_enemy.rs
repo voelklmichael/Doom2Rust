@@ -1760,11 +1760,12 @@ pub fn spawn_fly(state: &mut GameState, mo: MobjId) {
     remove_mobj(state, mo);
 }
 pub fn player_scream(state: &mut GameState, mo: MobjId) {
-    let mut sound: SfxName = SfxName::Pldeth;
-    if state.game.doomstat.gamemode == GameMode::Commercial
+    let sound = if state.game.doomstat.gamemode == GameMode::Commercial
         && state.world.p_mobj.mo(mo).health < -50
     {
-        sound = SfxName::Pdiehi;
-    }
+        SfxName::Pdiehi
+    } else {
+        SfxName::Pldeth
+    };
     s_start_sound(state, SoundOrigin::Mobj(mo), sound);
 }

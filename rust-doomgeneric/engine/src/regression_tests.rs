@@ -301,6 +301,8 @@ fn key(state: &mut GameState, k: i32) {
 
 /// Drives menus, the automap, cheats, intermissions and finales during
 /// `-timedemo demo3` so that the frame hashes cover the whole UI.
+// One row per tic reads better than merging the rows that press the same key.
+#[allow(clippy::match_same_arms)]
 fn scripted_input(state: &mut GameState) {
     let g = state.game.d_loop.gametic;
     if g == 50 {

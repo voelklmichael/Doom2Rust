@@ -327,7 +327,7 @@ pub fn do_door(state: &mut GameState, line: LineId, kind: VldoorE) -> bool {
                     s_start_sound(state, SoundOrigin::Sector(sec), SfxName::Doropn);
                 }
             }
-            _ => {}
+            VldoorE::RaiseIn5Mins => {}
         }
         let door_arena_id = state.world.p_doors.spawn(door);
         let door_id = add_thinker(

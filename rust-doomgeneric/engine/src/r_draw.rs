@@ -442,7 +442,7 @@ pub fn draw_span(state: &mut GameState) {
         state.render.r_draw.ds_colormap,
     );
     let screen = &mut state.io.i_video.i_video_buffer[..];
-    for dst in &mut screen[idx..idx + count as usize + 1] {
+    for dst in &mut screen[idx..=(idx + count as usize)] {
         let ytemp = position >> 4 & 0xfc0;
         let xtemp = position >> 26;
         let spot = (xtemp | ytemp) as i32;

@@ -340,10 +340,11 @@ pub fn change_switch_texture(state: &mut GameState, line: LineId, use_again: boo
     let tex_top: i32 = i32::from(state.world.p_setup.sides[sidenum0 as usize].toptexture);
     let tex_mid: i32 = i32::from(state.world.p_setup.sides[sidenum0 as usize].midtexture);
     let tex_bot: i32 = i32::from(state.world.p_setup.sides[sidenum0 as usize].bottomtexture);
-    let mut sound: SfxName = SfxName::Swtchn;
-    if i32::from(state.world.p_setup.line(line).special) == 11 {
-        sound = SfxName::Swtchx;
-    }
+    let sound = if i32::from(state.world.p_setup.line(line).special) == 11 {
+        SfxName::Swtchx
+    } else {
+        SfxName::Swtchn
+    };
     for i in 0..state.world.p_switch.numswitches * 2 {
         if state.world.p_switch.switchlist[i as usize] == tex_top {
             s_start_sound(

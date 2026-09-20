@@ -643,21 +643,22 @@ fn pad_reject_array(
         0x1d4a11,
     ];
     let pad_bytes = ::core::mem::size_of::<[u32; 4]>();
-    let mut padvalue: u8 = 0;
-    if len as usize > pad_bytes {
+    let padvalue: u8 = if len as usize > pad_bytes {
         doom_eprintln!(
             platform,
             "PadRejectArray: REJECT lump too short to pad! ({} > {})",
             len,
             pad_bytes as i32,
         );
-        padvalue = if options.reject_pad_with_ff {
+        if options.reject_pad_with_ff {
             0xff
         } else {
             // Upstream writes 0xf00 into a byte, which truncates to zero.
             0
-        };
-    }
+        }
+    } else {
+        0
+    };
     let array = &mut p_setup.rejectmatrix[offset..offset + len as usize];
     for (i, dest) in array.iter_mut().enumerate().take(pad_bytes) {
         *dest = (rejectpad[i / 4] >> ((i % 4) as u32 * 8) & 0xff) as u8;
