@@ -512,3 +512,25 @@ and that is what made the same engine portable to a chip with a different ABI.
   reach, on one WAD file (see the WAD caveat in section 7). Other games (Doom II, Ultimate Doom,
   Final Doom), most levels and mods are untested. On the ESP32 the full game does not fit at all
   (see the end of Step 9 in section 8): only the shareware episode does.
+- **How to organise a workspace with crates that only build on certain platforms.** Where things
+  stand (as of `main` on Sep 20):
+  - The host workspace (`rust-doomgeneric/Cargo.toml`) has the engine, `fs`, `x11` and the
+    `core_s3_*` helper crates (`protocol`, `sender`, `dhcp`, `audio`, `ws`). `x11` links Xlib, so
+    it builds on Linux only (its `build.rs` has an empty macOS branch).
+  - The firmware, `core_s3`, is deliberately NOT in it. It declares its own empty `[workspace]`
+    because `cargo build --workspace` on the host would otherwise try to build it. It has its own
+    `Cargo.lock`, a `.cargo/config.toml` that fixes the target to `xtensa-esp32s3-none-elf`, and a
+    `rust-toolchain.toml` selecting the `esp` toolchain (installed by `espup`, not upstream Rust).
+    Its `esp-hal` versions must match its board crate's exactly (`links` crate rule), which the host
+    lock file knows nothing about.
+  - Consequences: two lock files, no single command that builds everything, and host `cargo test`
+    never touches the firmware. A real example: on Sep 19 an engine change (the music merge) made
+    the firmware fail to link (`l32r: literal target out of range`), and nothing noticed until
+    someone built the firmware by hand. There is no CI and no task runner (no `justfile`, `xtask` or
+    cargo aliases) in the repo.
+  - Questions: keep the firmware as a separate workspace and add a script or CI matrix that builds
+    each part with its own toolchain? Use one workspace with `default-members` limited to the host
+    crates (per-package targets are, as far as I know, still nightly-only, so the firmware would
+    still need its own target and toolchain)? Gate `x11` behind `cfg(target_os)` so the whole host
+    workspace builds on Windows and macOS? And where should the crates shared by both sides
+    (`core_s3_protocol` and friends) live so the firmware and the host tools cannot drift apart?
