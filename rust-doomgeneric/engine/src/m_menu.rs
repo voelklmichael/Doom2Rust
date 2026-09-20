@@ -435,7 +435,7 @@ pub struct MMenuState {
     pub message_is_quit_prompt: bool,
     pub save_string_enter: bool,
     pub save_slot: i32,
-    pub save_char_index: i32,
+    pub save_char_index: usize,
     pub save_old_string: String,
     pub inhelpscreens: bool,
     pub menuactive: bool,
@@ -623,7 +623,7 @@ pub const GAMMALVL3: &str = "Gamma correction level 3\0";
 pub const GAMMALVL4: &str = "Gamma correction level 4\0";
 pub const EMPTYSTRING: &str = "empty slot\0";
 pub const NUM_QUITMESSAGES: i32 = 8;
-pub const SAVESTRINGSIZE: i32 = 24;
+pub const SAVESTRINGSIZE: usize = 24;
 pub static GAMMAMSG: [&str; 5] = [GAMMALVL0, GAMMALVL1, GAMMALVL2, GAMMALVL3, GAMMALVL4];
 pub const SKULLXOFF: i32 = -32;
 pub const LINEHEIGHT: i32 = 16;
@@ -641,7 +641,7 @@ pub fn read_save_strings(
                 m_menu.defs.load_def.items[i].status = 0;
             }
             Some(handle) => {
-                let mut buf: [u8; SAVESTRINGSIZE as usize] = [0; SAVESTRINGSIZE as usize];
+                let mut buf: [u8; SAVESTRINGSIZE] = [0; SAVESTRINGSIZE];
                 fs.read_at(handle, 0, &mut buf);
                 fs.close(handle);
                 let len = buf.iter().position(|&b| b == 0).unwrap_or(buf.len());
@@ -742,7 +742,7 @@ pub fn save_select(state: &mut GameState, choice: i32) {
     if state.ui.m_menu.savegamestrings[choice as usize] == EMPTYSTRING.trim_end_matches('\0') {
         state.ui.m_menu.savegamestrings[choice as usize].clear();
     }
-    state.ui.m_menu.save_char_index = state.ui.m_menu.savegamestrings[choice as usize].len() as i32;
+    state.ui.m_menu.save_char_index = state.ui.m_menu.savegamestrings[choice as usize].len();
 }
 pub fn m_save_game(state: &mut GameState, _choice: i32) {
     if !state.game.g_game.usergame {
@@ -1461,7 +1461,7 @@ pub fn m_responder(state: &mut GameState, ev: &Event) -> bool {
                 if state.ui.m_menu.save_char_index > 0 {
                     state.ui.m_menu.save_char_index -= 1;
                     state.ui.m_menu.savegamestrings[state.ui.m_menu.save_slot as usize]
-                        .truncate(state.ui.m_menu.save_char_index as usize);
+                        .truncate(state.ui.m_menu.save_char_index);
                 }
             }
             KEY_ESCAPE => {
@@ -1493,7 +1493,7 @@ pub fn m_responder(state: &mut GameState, ev: &Event) -> bool {
                             &state.ui.hu_stuff,
                             &mut state.assets.w_wad,
                             &savestr,
-                        ) < (SAVESTRINGSIZE - 2) * 8
+                        ) < (SAVESTRINGSIZE as i32 - 2) * 8
                     {
                         state.ui.m_menu.save_char_index += 1;
                         state.ui.m_menu.savegamestrings[state.ui.m_menu.save_slot as usize]

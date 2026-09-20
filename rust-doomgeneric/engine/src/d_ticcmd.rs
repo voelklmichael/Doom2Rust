@@ -1,14 +1,14 @@
 pub const BTS_SAVESHIFT: u32 = 2;
-pub const BTS_SAVEMASK: i32 = 28;
-pub const BTS_SAVEGAME: i32 = 2;
-pub const BTS_PAUSE: i32 = 1;
+pub const BTS_SAVEMASK: u8 = 28;
+pub const BTS_SAVEGAME: u8 = 2;
+pub const BTS_PAUSE: u8 = 1;
 pub const BT_WEAPONSHIFT: u32 = 3;
-pub const BT_WEAPONMASK: i32 = 56;
-pub const BT_CHANGE: i32 = 4;
-pub const BT_SPECIALMASK: i32 = 3;
-pub const BT_SPECIAL: i32 = 128;
-pub const BT_USE: i32 = 2;
-pub const BT_ATTACK: i32 = 1;
+pub const BT_WEAPONMASK: u8 = 56;
+pub const BT_CHANGE: u8 = 4;
+pub const BT_SPECIALMASK: u8 = 3;
+pub const BT_SPECIAL: u8 = 128;
+pub const BT_USE: u8 = 2;
+pub const BT_ATTACK: u8 = 1;
 
 #[derive(Copy, Clone)]
 pub struct TicCmd {

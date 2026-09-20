@@ -188,7 +188,7 @@ pub fn death_think(state: &mut GameState, player_id: PlayerId) {
     } else if state.game.g_game.players[player].damagecount != 0 {
         state.game.g_game.players[player].damagecount -= 1;
     }
-    if i32::from(state.game.g_game.players[player].cmd.buttons) & BT_USE != 0 {
+    if state.game.g_game.players[player].cmd.buttons & BT_USE != 0 {
         state.game.g_game.players[player].playerstate = PlayerState::Reborn;
     }
 }
@@ -237,14 +237,13 @@ pub fn player_think(state: &mut GameState, player_id: PlayerId) {
     {
         player_in_special_sector(state, player_id);
     }
-    if i32::from(state.game.g_game.players[player_id].cmd.buttons) & BT_SPECIAL != 0 {
+    if state.game.g_game.players[player_id].cmd.buttons & BT_SPECIAL != 0 {
         state.game.g_game.players[player_id].cmd.buttons = 0_u8;
     }
-    if i32::from(state.game.g_game.players[player_id].cmd.buttons) & BT_CHANGE != 0 {
-        let mut newweapon: WeaponType = weapontype_from_raw(
-            (i32::from(state.game.g_game.players[player_id].cmd.buttons) & BT_WEAPONMASK)
-                >> BT_WEAPONSHIFT,
-        );
+    if state.game.g_game.players[player_id].cmd.buttons & BT_CHANGE != 0 {
+        let mut newweapon: WeaponType = weapontype_from_raw(i32::from(
+            (state.game.g_game.players[player_id].cmd.buttons & BT_WEAPONMASK) >> BT_WEAPONSHIFT,
+        ));
         if newweapon == WeaponType::Fist
             && state.game.g_game.players[player].weaponowned[WeaponType::Chainsaw]
             && !(state.game.g_game.players[player].readyweapon == WeaponType::Chainsaw
@@ -267,7 +266,7 @@ pub fn player_think(state: &mut GameState, player_id: PlayerId) {
             state.game.g_game.players[player].pendingweapon = newweapon;
         }
     }
-    if i32::from(state.game.g_game.players[player_id].cmd.buttons) & BT_USE != 0 {
+    if state.game.g_game.players[player_id].cmd.buttons & BT_USE != 0 {
         if !state.game.g_game.players[player].usedown {
             use_lines(state, player_id);
             state.game.g_game.players[player].usedown = true;

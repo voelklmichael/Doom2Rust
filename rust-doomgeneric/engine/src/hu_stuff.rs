@@ -129,7 +129,7 @@ pub const KEY_LALT: i32 = KEY_RALT;
 pub const HU_FONTSTART: i32 = '!' as i32;
 pub const HU_FONTEND: i32 = '_' as i32;
 pub const HU_FONTSIZE: i32 = HU_FONTEND - HU_FONTSTART + 1;
-pub const HU_BROADCAST: i32 = 5;
+pub const HU_BROADCAST: u8 = 5;
 pub const HU_MSGX: i32 = 0;
 pub const HU_MSGY: i32 = 0;
 pub const HU_MSGHEIGHT: i32 = 1;
@@ -466,7 +466,7 @@ pub fn hu_ticker(state: &mut GameState) {
                     i32::from(c) != 0
                 }
             {
-                if i32::from(c) <= HU_BROADCAST {
+                if c <= HU_BROADCAST {
                     state.ui.hu_stuff.chat_dest[i as usize] = c;
                 } else {
                     rc = i32::from(hulib_key_in_itext(
@@ -477,8 +477,7 @@ pub fn hu_ticker(state: &mut GameState) {
                         if !state.ui.hu_stuff.w_inputbuffer[i as usize].l.l.is_empty()
                             && (i32::from(state.ui.hu_stuff.chat_dest[i as usize])
                                 == state.game.g_game.consoleplayer.as_i32() + 1
-                                || i32::from(state.ui.hu_stuff.chat_dest[i as usize])
-                                    == HU_BROADCAST)
+                                || state.ui.hu_stuff.chat_dest[i as usize] == HU_BROADCAST)
                         {
                             hulib_add_message_to_stext(
                                 &mut state.ui.hu_stuff.w_message,
@@ -550,7 +549,7 @@ pub fn hu_responder(
             hu_stuff.chat_on = true;
             eatkey = hu_stuff.chat_on;
             hulib_reset_itext(&mut hu_stuff.w_chat);
-            queue_chat_char(g_game, hu_stuff, HU_BROADCAST as u8);
+            queue_chat_char(g_game, hu_stuff, HU_BROADCAST);
         } else if g_game.netgame && numplayers > 2 {
             for i in 0..MAXPLAYERS {
                 if ev.data2 == m_controls.key_multi_msgplayer[i as usize] {

@@ -452,7 +452,7 @@ pub fn st_responder(state: &mut GameState, ev: &Event) -> bool {
                         .player_mut(state.ui.st_stuff.plyr)
                         .weaponowned[i] = true;
                 }
-                for i in 0..(NUMAMMO as usize) {
+                for i in 0..NUMAMMO {
                     state.game.g_game.player_mut(state.ui.st_stuff.plyr).ammo[i] =
                         state.game.g_game.player_mut(state.ui.st_stuff.plyr).maxammo[i];
                 }
@@ -476,7 +476,7 @@ pub fn st_responder(state: &mut GameState, ev: &Event) -> bool {
                         .player_mut(state.ui.st_stuff.plyr)
                         .weaponowned[i] = true;
                 }
-                for i in 0..(NUMAMMO as usize) {
+                for i in 0..NUMAMMO {
                     state.game.g_game.player_mut(state.ui.st_stuff.plyr).ammo[i] =
                         state.game.g_game.player_mut(state.ui.st_stuff.plyr).maxammo[i];
                 }
