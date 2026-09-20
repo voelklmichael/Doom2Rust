@@ -17,7 +17,7 @@ Chart: `loc_and_unsafe_over_time.png`. Raw per-commit data: `loc_unsafe_series.c
 | Elapsed working time (final approach, v5) | **about 89 h** over 12 calendar days (Sep 5 to Sep 19); range 82 to 98 h depending on how idle gaps are counted |
 | Elapsed working time, whole effort (measured) | **about 140 h** over 37 days (Aug 14 to Sep 19), including ~53 h in two approaches that were abandoned. Excludes the January to April attempts, for which there are no records |
 | Commits / merged PRs | 765 commits, 358 merged PRs (highest PR number #501) |
-| Rust churn | +378k / -320k lines of `.rs` over the history (net +58k) |
+| Rust churn | +412k / -358k lines of `.rs` over the history (net +55k), as of Sep 20 (`main` at PR #559); it was +378k / -320k on Sep 19 |
 | Unsafe lines | 48,430 (c2rust output) -> **199** today (198 in the X11 window glue, 1 in firmware); **0 in the engine** |
 | Safety net | 15 engine tests, incl. a **regression oracle** that hashes the whole simulation and rendered frames (section 7). Runs as `cargo test --release` in about 10 s |
 | Speed vs. C | Was ~13 % slower than C on `-timedemo demo1`. Profiling found two per-frame copies (PR #502); now about 6.5 G user cycles vs 10 to 11 G for C, i.e. **faster than C on this benchmark** (section 5) |
@@ -98,15 +98,23 @@ Non-blank, non-comment lines (approximate counter, see method notes):
 | Sep 6 afternoon | 117,000 | type dedup, extern-fn-pointer work |
 | Sep 6 evening | ~60,000 | most of the c2rust boilerplate gone |
 | Sep 12 | ~59,000 | |
-| Today | **56,036** | engine 53,312 (83 files), X11 1,124, firmware + Wi-Fi/DHCP/sender crates 1,528, fs 72 |
+| Sep 19 | 56,036 | engine 53,312 (83 files), X11 1,124, firmware + Wi-Fi/DHCP/sender crates 1,528, fs 72 |
+| Today (Sep 20, `main` at PR #559) | **48,979** | engine **42,668** (91 files), X11 1,277, firmware and its helper crates 3,951 (`core_s3` 2,035, `core_s3_ws` 522, `core_s3_protocol` 476, `core_s3_sender` 389, `core_s3_dhcp` 343, `core_s3_audio` 186), `wasm` 664, `cmdline` 347, `fs` 72. Not counted: 1,526 lines of `third_party/oplon`, a local copy of an external OPL emulator (50,505 with it) |
 
 The four biggest one-PR drops explain most of the 145k -> 60k fall: `extern-c-removal-phase3`
 (-35.5k), `minor_event_references` (-21k), `type-dedup-phase10-stdint-types` (-14k),
 `bool-phase19` (-13.5k). c2rust repeats every extern declaration and type alias in every file,
 so this was mostly redundancy, not game logic.
 
-Today's engine is larger than the C it came from (53k vs 42k non-blank lines), mainly because
-rustfmt puts one item per line, plus 38 tests and the golden-test harness.
+Today's engine (42.7k non-blank lines) is about the size of the C it came from (~42.2k). On
+Sep 19 it was 53k, larger mainly because rustfmt puts one item per line. The largest single drop
+since is commit `04230cd` (Sep 20, "data tables as rows, one variant list per big enum", -13.4k
+raw lines), which lays the big data tables out as one row per entry and each big enum as a single
+variant list. The rest of the fall is many small commits (deferred declarations folded into their
+first assignment, redundant body blocks dropped, `Default` implemented directly, line specials as
+rule tables). The engine's 91 files include its tests and the golden-test harness. The counter
+was checked by running it on the Sep 19 commit (`e44bcd8`), where it gives the Sep 19 numbers
+exactly.
 
 ## 4. Unsafe lines
 
