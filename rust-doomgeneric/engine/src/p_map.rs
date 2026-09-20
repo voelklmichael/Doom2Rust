@@ -562,12 +562,8 @@ pub fn try_move(state: &mut GameState, thing: MobjId, x: Fixed, y: Fixed) -> boo
         .flags
         .intersects(MobjFlags::TELEPORT | MobjFlags::NOCLIP)
     {
-        loop {
-            let fresh0 = state.world.p_map.numspechit;
+        while state.world.p_map.numspechit > 0 {
             state.world.p_map.numspechit -= 1;
-            if fresh0 == 0 {
-                break;
-            }
             ld = state.world.p_map.spechit[state.world.p_map.numspechit as usize];
             side = point_on_line_side(
                 &state.world.p_setup,

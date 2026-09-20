@@ -609,14 +609,9 @@ pub fn traverse_intercepts<F: FnMut(&mut GameState, Intercept) -> bool>(
     mut func: F,
     maxfrac: Fixed,
 ) -> bool {
-    let mut count = state.world.p_maputl.intercept_p as i32;
+    let count = state.world.p_maputl.intercept_p as i32;
     let mut in_idx = 0_usize;
-    loop {
-        let fresh0 = count;
-        count -= 1;
-        if fresh0 == 0 {
-            break;
-        }
+    for _ in 0..count {
         let mut dist = INT_MAX as Fixed;
         for scan_idx in 0..state.world.p_maputl.intercept_p {
             if state.world.p_maputl.intercepts[scan_idx].frac < dist {

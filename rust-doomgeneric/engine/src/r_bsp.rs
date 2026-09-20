@@ -126,12 +126,8 @@ pub fn clip_solid_wall_segment(state: &mut GameState, first: i32, last: i32) {
     if next == start {
         return;
     }
-    loop {
-        let fresh0 = next;
+    while next != state.render.r_bsp.newend {
         next += 1;
-        if fresh0 == state.render.r_bsp.newend {
-            break;
-        }
         start += 1;
         state.render.r_bsp.solidsegs[start] = state.render.r_bsp.solidsegs[next];
     }
@@ -383,7 +379,7 @@ pub fn r_subsector(state: &mut GameState, num: i32) {
     state.render.r_main.sscount += 1;
     let sub = state.world.p_setup.subsector(SubsectorId(num as u32));
     state.render.r_bsp.frontsector = Some(sub.sector);
-    let mut count: i32 = sub.numlines as i32;
+    let count: i32 = sub.numlines as i32;
     let mut line: SegId = SegId(sub.firstline as u32);
     let frontsector_id = state.render.r_bsp.frontsector.unwrap();
     let frontsector = state.world.p_setup.sector_mut(frontsector_id);
@@ -417,12 +413,7 @@ pub fn r_subsector(state: &mut GameState, num: i32) {
         state.render.r_plane.ceilingplane = None;
     }
     add_sprites(state, frontsector_id);
-    loop {
-        let fresh1 = count;
-        count -= 1;
-        if fresh1 == 0 {
-            break;
-        }
+    for _ in 0..count {
         add_line(state, line);
         line = SegId(line.0 + 1);
     }

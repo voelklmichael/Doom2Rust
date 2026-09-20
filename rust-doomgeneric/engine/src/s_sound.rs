@@ -355,10 +355,10 @@ pub fn s_start_sound(state: &mut GameState, origin: SoundOrigin, sfx_id: SfxName
         return;
     }
     let sfx = &mut state.audio.sounds.s_sfx[sfx_index];
-    let fresh2 = sfx.usefulness;
-    sfx.usefulness += 1;
-    if fresh2 < 0 {
+    if sfx.usefulness < 0 {
         sfx.usefulness = 1;
+    } else {
+        sfx.usefulness += 1;
     }
     let sfx_id = SfxId(sfx_id as u32);
     if state.audio.sounds.s_sfx[sfx_index].lumpnum < 0 {

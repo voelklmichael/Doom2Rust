@@ -952,9 +952,8 @@ pub fn draw_fline(
         || fl.b.y < 0
         || fl.b.y >= am_map.f_h
     {
-        let fresh0 = am_map.am_drawfline_fuck;
+        doom_eprint!(platform, "fuck {} \r", am_map.am_drawfline_fuck);
         am_map.am_drawfline_fuck += 1;
-        doom_eprint!(platform, "fuck {} \r", fresh0);
         return;
     }
     let dx: i32 = fl.b.x - fl.a.x;

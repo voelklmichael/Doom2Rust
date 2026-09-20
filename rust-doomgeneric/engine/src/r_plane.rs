@@ -214,16 +214,16 @@ pub fn check_plane(r_plane: &mut RPlaneState, pl: usize, start: i32, stop: i32) 
         return pl;
     }
     let (height, picnum, lightlevel) = (plv.height, plv.picnum, plv.lightlevel);
-    let fresh0 = r_plane.lastvisplane;
-    r_plane.visplanes[fresh0].height = height;
-    r_plane.visplanes[fresh0].picnum = picnum;
-    r_plane.visplanes[fresh0].lightlevel = lightlevel;
+    let new_plane = r_plane.lastvisplane;
+    r_plane.visplanes[new_plane].height = height;
+    r_plane.visplanes[new_plane].picnum = picnum;
+    r_plane.visplanes[new_plane].lightlevel = lightlevel;
     r_plane.lastvisplane += 1;
-    let plv = &mut r_plane.visplanes[fresh0];
+    let plv = &mut r_plane.visplanes[new_plane];
     plv.minx = start;
     plv.maxx = stop;
     plv.clear_top();
-    fresh0
+    new_plane
 }
 pub fn make_spans(
     state: &mut GameState,

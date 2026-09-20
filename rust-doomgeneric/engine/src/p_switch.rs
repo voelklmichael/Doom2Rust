@@ -305,14 +305,12 @@ pub fn init_switch_list(
             break;
         }
         if ALPH_SWITCH_LIST[i as usize].episode as i32 <= episode {
-            let fresh0 = index;
-            index += 1;
-            p_switch.switchlist[fresh0 as usize] =
+            p_switch.switchlist[index as usize] =
                 texture_num_for_name(r_data, &ALPH_SWITCH_LIST[i as usize].name1.as_str());
-            let fresh1 = index;
             index += 1;
-            p_switch.switchlist[fresh1 as usize] =
+            p_switch.switchlist[index as usize] =
                 texture_num_for_name(r_data, &ALPH_SWITCH_LIST[i as usize].name2.as_str());
+            index += 1;
         }
         i += 1;
     }

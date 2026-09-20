@@ -129,10 +129,8 @@ pub fn get_memory_value(
                         break;
                     }
                     str_to_int(m_argv.myargv[p].as_str(), &mut val);
-                    let fresh0 = i;
-                    i += 1;
-                    i_system.mem_dump_custom[fresh0 as usize] = val as u8;
-                    i += 1;
+                    i_system.mem_dump_custom[i as usize] = val as u8;
+                    i += 2;
                 }
                 i_system.dos_mem_dump = DosMemDump::Custom;
             }

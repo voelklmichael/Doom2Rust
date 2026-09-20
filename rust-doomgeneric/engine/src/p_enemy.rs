@@ -334,12 +334,8 @@ pub fn p_move(state: &mut GameState, actor: MobjId) -> bool {
         }
         state.world.p_mobj.mo_mut(actor).movedir = DirType::Nodir as i32;
         good = false;
-        loop {
-            let fresh0 = state.world.p_map.numspechit;
+        while state.world.p_map.numspechit > 0 {
             state.world.p_map.numspechit -= 1;
-            if fresh0 == 0 {
-                break;
-            }
             ld = state.world.p_map.spechit[state.world.p_map.numspechit as usize];
             if use_special_line(state, actor, ld, 0) {
                 good = true;
@@ -459,11 +455,10 @@ pub fn look_for_players(state: &mut GameState, actor: MobjId, allaround: bool) -
     loop {
         let lastlook = state.world.p_mobj.mo(actor).lastlook;
         if state.game.g_game.playeringame[lastlook as usize] {
-            let fresh1 = c;
-            c += 1;
-            if fresh1 == 2 || lastlook == stop {
+            if c == 2 || lastlook == stop {
                 return false;
             }
+            c += 1;
             let (health, player_mo) = {
                 let player = &state.game.g_game.players[lastlook as usize];
                 (player.health, player.mo)
