@@ -579,8 +579,8 @@ pub fn st_responder(state: &mut GameState, ev: &Event) -> bool {
                 state.game.g_game.player_mut(state.ui.st_stuff.plyr).message = Some(format!(
                     "ang=0x{:x};x,y=(0x{:x},0x{:x})",
                     cp_mo.angle.to_bits(),
-                    cp_mo.x,
-                    cp_mo.y,
+                    cp_mo.x.to_bits(),
+                    cp_mo.y.to_bits(),
                 ));
             }
         }

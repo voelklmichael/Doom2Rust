@@ -20,15 +20,15 @@ use crate::p_mobj::StateNum;
 use crate::p_pspr::move_psprites;
 use crate::p_spec::player_in_special_sector;
 use crate::r_main::point_to_angle2;
+use crate::tables::fine_cosine;
+use crate::tables::fine_sine;
 use crate::tables::Angle;
 use crate::tables::ANG180;
 use crate::tables::ANG90;
 use crate::tables::FINEANGLES;
-use crate::tables::FINECOSINE;
 use crate::tables::FINEMASK;
-use crate::tables::FINESINE;
 
-pub const VIEWHEIGHT: i32 = 41 * FRACUNIT;
+pub const VIEWHEIGHT: Fixed = Fixed::from_int(41);
 pub const INVERSECOLORMAP: i32 = 32;
 pub const MAXBOB: i32 = 0x100000;
 pub struct PUserState {
@@ -50,8 +50,8 @@ impl PUserState {
 pub fn p_thrust(p_mobj: &mut PMobjState, mo: MobjId, angle: Angle, amount: Fixed) {
     let angle = angle.fine();
     let mo = p_mobj.mo_mut(mo);
-    mo.momx += fixed_mul(amount, FINECOSINE[angle]);
-    mo.momy += fixed_mul(amount, FINESINE[angle]);
+    mo.momx += fixed_mul(amount, fine_cosine(angle));
+    mo.momy += fixed_mul(amount, fine_sine(angle));
 }
 pub fn calc_height(state: &mut GameState, player_id: PlayerId) {
     let player = &mut state.game.g_game.players[player_id];
@@ -65,41 +65,41 @@ pub fn calc_height(state: &mut GameState, player_id: PlayerId) {
         state.world.p_mobj.mo(player_mo).momy,
     );
     player.bob >>= 2;
-    if player.bob > MAXBOB {
-        player.bob = MAXBOB as Fixed;
+    if player.bob > Fixed(MAXBOB) {
+        player.bob = Fixed(MAXBOB);
     }
     if player.cheats.contains(CheatFlags::NOMOMENTUM) || !state.world.p_user.onground {
-        player.viewz = (state.world.p_mobj.mo(player_mo).z + VIEWHEIGHT) as Fixed;
+        player.viewz = state.world.p_mobj.mo(player_mo).z + VIEWHEIGHT;
         if player.viewz > state.world.p_mobj.mo(player_mo).ceilingz - 4 * FRACUNIT {
-            player.viewz = (state.world.p_mobj.mo(player_mo).ceilingz - 4 * FRACUNIT) as Fixed;
+            player.viewz = state.world.p_mobj.mo(player_mo).ceilingz - 4 * FRACUNIT;
         }
         player.viewz = state.world.p_mobj.mo(player_mo).z + player.viewheight;
         return;
     }
     let angle: i32 = (FINEANGLES / 20 * state.world.p_tick.leveltime) & FINEMASK;
-    let bob: Fixed = fixed_mul(player.bob / 2, FINESINE[angle as usize]);
+    let bob: Fixed = fixed_mul(player.bob / 2, fine_sine(angle as usize));
     if player.playerstate == PlayerState::Live {
         player.viewheight += player.deltaviewheight;
         if player.viewheight > VIEWHEIGHT {
-            player.viewheight = VIEWHEIGHT as Fixed;
-            player.deltaviewheight = 0;
+            player.viewheight = VIEWHEIGHT;
+            player.deltaviewheight = Fixed::ZERO;
         }
-        if player.viewheight < VIEWHEIGHT / 2 {
-            player.viewheight = (VIEWHEIGHT / 2) as Fixed;
-            if player.deltaviewheight <= 0 {
-                player.deltaviewheight = 1;
+        if player.viewheight < (VIEWHEIGHT / 2) {
+            player.viewheight = VIEWHEIGHT / 2;
+            if player.deltaviewheight <= Fixed::ZERO {
+                player.deltaviewheight = Fixed(1);
             }
         }
-        if player.deltaviewheight != 0 {
+        if player.deltaviewheight != Fixed::ZERO {
             player.deltaviewheight += FRACUNIT / 4;
-            if player.deltaviewheight == 0 {
-                player.deltaviewheight = 1;
+            if player.deltaviewheight == Fixed::ZERO {
+                player.deltaviewheight = Fixed(1);
             }
         }
     }
     player.viewz = state.world.p_mobj.mo(player_mo).z + player.viewheight + bob;
     if player.viewz > state.world.p_mobj.mo(player_mo).ceilingz - 4 * FRACUNIT {
-        player.viewz = (state.world.p_mobj.mo(player_mo).ceilingz - 4 * FRACUNIT) as Fixed;
+        player.viewz = state.world.p_mobj.mo(player_mo).ceilingz - 4 * FRACUNIT;
     }
 }
 pub fn move_player(state: &mut GameState, player_id: PlayerId) {
@@ -119,7 +119,7 @@ pub fn move_player(state: &mut GameState, player_id: PlayerId) {
             &mut state.world.p_mobj,
             player_mo,
             angle,
-            Fixed::from(cmd.forwardmove) * 2048,
+            Fixed(i32::from(cmd.forwardmove) * 2048),
         );
     }
     if i32::from(cmd.sidemove) != 0 && state.world.p_user.onground {
@@ -127,7 +127,7 @@ pub fn move_player(state: &mut GameState, player_id: PlayerId) {
             &mut state.world.p_mobj,
             player_mo,
             angle - ANG90,
-            Fixed::from(cmd.sidemove) * 2048,
+            Fixed(i32::from(cmd.sidemove) * 2048),
         );
     }
     if (i32::from(cmd.forwardmove) != 0 || i32::from(cmd.sidemove) != 0)
@@ -144,9 +144,9 @@ pub fn death_think(state: &mut GameState, player_id: PlayerId) {
         state.game.g_game.players[player].viewheight -= FRACUNIT;
     }
     if state.game.g_game.players[player].viewheight < 6 * FRACUNIT {
-        state.game.g_game.players[player].viewheight = (6 * FRACUNIT) as Fixed;
+        state.game.g_game.players[player].viewheight = 6 * FRACUNIT;
     }
-    state.game.g_game.players[player].deltaviewheight = 0;
+    state.game.g_game.players[player].deltaviewheight = Fixed::ZERO;
     let player_mo = state.game.g_game.players[player].mo.unwrap();
     state.world.p_user.onground =
         state.world.p_mobj.mo(player_mo).z <= state.world.p_mobj.mo(player_mo).floorz;

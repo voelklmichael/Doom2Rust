@@ -46,7 +46,7 @@ pub enum PlattypeE {
     BlazeDWUS,
 }
 pub const PLATWAIT: i32 = 3;
-pub const PLATSPEED: i32 = FRACUNIT;
+pub const PLATSPEED: Fixed = FRACUNIT;
 pub const MAXPLATS: usize = 30;
 
 // Generation-checked handle into PPlatsState's arena -- mirrors DoorId.
@@ -246,7 +246,7 @@ pub fn do_plat(state: &mut GameState, line: LineId, kind: PlattypeE, amount: i32
         let floorheight = state.world.p_setup.sector_mut(sec).floorheight;
         match kind {
             PlattypeE::RaiseToNearestAndChange => {
-                plat.speed = (PLATSPEED / 2) as Fixed;
+                plat.speed = PLATSPEED / 2;
                 let neighbor_sector_id =
                     state.world.p_setup.sides[linev.sidenum[0] as usize].sector;
                 let neighbor_pic = state.world.p_setup.sector_mut(neighbor_sector_id).floorpic;
@@ -258,18 +258,18 @@ pub fn do_plat(state: &mut GameState, line: LineId, kind: PlattypeE, amount: i32
                 s_start_sound(state, SoundOrigin::Sector(sec), SfxName::Stnmov);
             }
             PlattypeE::RaiseAndChange => {
-                plat.speed = (PLATSPEED / 2) as Fixed;
+                plat.speed = PLATSPEED / 2;
                 let neighbor_sector_id =
                     state.world.p_setup.sides[linev.sidenum[0] as usize].sector;
                 let neighbor_pic = state.world.p_setup.sector_mut(neighbor_sector_id).floorpic;
                 state.world.p_setup.sector_mut(sec).floorpic = neighbor_pic;
-                plat.high = (floorheight + amount * FRACUNIT) as Fixed;
+                plat.high = floorheight + amount * FRACUNIT;
                 plat.wait = 0;
                 plat.status = PlatE::Up;
                 s_start_sound(state, SoundOrigin::Sector(sec), SfxName::Stnmov);
             }
             PlattypeE::DownWaitUpStay => {
-                plat.speed = (PLATSPEED * 4) as Fixed;
+                plat.speed = PLATSPEED * 4;
                 plat.low = find_lowest_floor_surrounding(&mut state.world.p_setup, sec);
                 if plat.low > floorheight {
                     plat.low = floorheight;
@@ -280,7 +280,7 @@ pub fn do_plat(state: &mut GameState, line: LineId, kind: PlattypeE, amount: i32
                 s_start_sound(state, SoundOrigin::Sector(sec), SfxName::Pstart);
             }
             PlattypeE::BlazeDWUS => {
-                plat.speed = (PLATSPEED * 8) as Fixed;
+                plat.speed = PLATSPEED * 8;
                 plat.low = find_lowest_floor_surrounding(&mut state.world.p_setup, sec);
                 if plat.low > floorheight {
                     plat.low = floorheight;
@@ -291,7 +291,7 @@ pub fn do_plat(state: &mut GameState, line: LineId, kind: PlattypeE, amount: i32
                 s_start_sound(state, SoundOrigin::Sector(sec), SfxName::Pstart);
             }
             PlattypeE::PerpetualRaise => {
-                plat.speed = PLATSPEED as Fixed;
+                plat.speed = PLATSPEED;
                 plat.low = find_lowest_floor_surrounding(&mut state.world.p_setup, sec);
                 if plat.low > floorheight {
                     plat.low = floorheight;

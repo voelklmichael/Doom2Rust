@@ -66,17 +66,17 @@ impl Default for VVideoState {
 impl VVideoState {
     pub const fn new() -> Self {
         Self {
-            dirtybox: BBox::new([0; 4]),
+            dirtybox: BBox::new([Fixed::ZERO; 4]),
         }
     }
 }
 pub fn mark_rect(v_video: &mut VVideoState, dest: Screen, x: i32, y: i32, width: i32, height: i32) {
     if dest == Screen::Video {
-        add_to_box(&mut v_video.dirtybox, x as Fixed, y as Fixed);
+        add_to_box(&mut v_video.dirtybox, Fixed(x), Fixed(y));
         add_to_box(
             &mut v_video.dirtybox,
-            x as Fixed + width as Fixed - 1,
-            y as Fixed + height as Fixed - 1,
+            Fixed(x + width - 1),
+            Fixed(y + height - 1),
         );
     }
 }

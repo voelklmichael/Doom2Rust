@@ -20,9 +20,9 @@ impl ArrayIndex for BoxIndex {
 }
 
 pub fn clear_box(bbox: &mut BBox) {
-    bbox[BoxIndex::Right] = INT_MIN as Fixed;
+    bbox[BoxIndex::Right] = Fixed(INT_MIN);
     bbox[BoxIndex::Top] = bbox[BoxIndex::Right];
-    bbox[BoxIndex::Left] = INT_MAX as Fixed;
+    bbox[BoxIndex::Left] = Fixed(INT_MAX);
     bbox[BoxIndex::Bottom] = bbox[BoxIndex::Left];
 }
 pub fn add_to_box(bbox: &mut BBox, x: Fixed, y: Fixed) {

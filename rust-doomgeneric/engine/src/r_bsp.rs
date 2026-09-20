@@ -50,12 +50,12 @@ impl RBspState {
                 curline: SegId(0),
                 x1: 0,
                 x2: 0,
-                scale1: 0,
-                scale2: 0,
-                scalestep: 0,
+                scale1: Fixed::ZERO,
+                scale2: Fixed::ZERO,
+                scalestep: Fixed::ZERO,
                 silhouette: 0,
-                bsilheight: 0,
-                tsilheight: 0,
+                bsilheight: Fixed::ZERO,
+                tsilheight: Fixed::ZERO,
                 sprtopclip: None,
                 sprbottomclip: None,
                 maskedtexturecol: None,
@@ -211,81 +211,81 @@ pub fn add_line(state: &mut GameState, line: SegId) {
         && !(state
             .world
             .p_setup
-            .sector_mut(state.render.r_bsp.backsector.unwrap())
+            .sector(state.render.r_bsp.backsector.unwrap())
             .ceilingheight
             <= state
                 .world
                 .p_setup
-                .sector_mut(state.render.r_bsp.frontsector.unwrap())
+                .sector(state.render.r_bsp.frontsector.unwrap())
                 .floorheight
             || state
                 .world
                 .p_setup
-                .sector_mut(state.render.r_bsp.backsector.unwrap())
+                .sector(state.render.r_bsp.backsector.unwrap())
                 .floorheight
                 >= state
                     .world
                     .p_setup
-                    .sector_mut(state.render.r_bsp.frontsector.unwrap())
+                    .sector(state.render.r_bsp.frontsector.unwrap())
                     .ceilingheight)
     {
         if !(state
             .world
             .p_setup
-            .sector_mut(state.render.r_bsp.backsector.unwrap())
+            .sector(state.render.r_bsp.backsector.unwrap())
             .ceilingheight
             != state
                 .world
                 .p_setup
-                .sector_mut(state.render.r_bsp.frontsector.unwrap())
+                .sector(state.render.r_bsp.frontsector.unwrap())
                 .ceilingheight
             || state
                 .world
                 .p_setup
-                .sector_mut(state.render.r_bsp.backsector.unwrap())
+                .sector(state.render.r_bsp.backsector.unwrap())
                 .floorheight
                 != state
                     .world
                     .p_setup
-                    .sector_mut(state.render.r_bsp.frontsector.unwrap())
+                    .sector(state.render.r_bsp.frontsector.unwrap())
                     .floorheight)
             && i32::from(
                 state
                     .world
                     .p_setup
-                    .sector_mut(state.render.r_bsp.backsector.unwrap())
+                    .sector(state.render.r_bsp.backsector.unwrap())
                     .ceilingpic,
             ) == i32::from(
                 state
                     .world
                     .p_setup
-                    .sector_mut(state.render.r_bsp.frontsector.unwrap())
+                    .sector(state.render.r_bsp.frontsector.unwrap())
                     .ceilingpic,
             )
             && i32::from(
                 state
                     .world
                     .p_setup
-                    .sector_mut(state.render.r_bsp.backsector.unwrap())
+                    .sector(state.render.r_bsp.backsector.unwrap())
                     .floorpic,
             ) == i32::from(
                 state
                     .world
                     .p_setup
-                    .sector_mut(state.render.r_bsp.frontsector.unwrap())
+                    .sector(state.render.r_bsp.frontsector.unwrap())
                     .floorpic,
             )
             && i32::from(
                 state
                     .world
                     .p_setup
-                    .sector_mut(state.render.r_bsp.backsector.unwrap())
+                    .sector(state.render.r_bsp.backsector.unwrap())
                     .lightlevel,
             ) == i32::from(
                 state
                     .world
                     .p_setup
-                    .sector_mut(state.render.r_bsp.frontsector.unwrap())
+                    .sector(state.render.r_bsp.frontsector.unwrap())
                     .lightlevel,
             )
             && i32::from(
@@ -392,7 +392,7 @@ pub fn r_subsector(state: &mut GameState, num: i32) {
     let count: i32 = i32::from(sub.numlines);
     let mut line: SegId = SegId(sub.firstline as u32);
     let frontsector_id = state.render.r_bsp.frontsector.unwrap();
-    let frontsector = state.world.p_setup.sector_mut(frontsector_id);
+    let frontsector = state.world.p_setup.sector(frontsector_id);
     let (floorheight, floorpic, ceilingheight, ceilingpic, lightlevel) = (
         frontsector.floorheight,
         i32::from(frontsector.floorpic),

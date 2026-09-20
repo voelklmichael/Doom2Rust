@@ -44,7 +44,6 @@ use crate::i_system::i_quit;
 use crate::i_timer::get_time;
 use crate::m_controls::MControlsState;
 use crate::m_fixed::Fixed;
-use crate::m_fixed::FRACBITS;
 use crate::m_fixed::FRACUNIT;
 use crate::m_menu::start_control_panel;
 use crate::m_random::clear_random;
@@ -100,10 +99,10 @@ use crate::st_stuff::st_responder;
 use crate::st_stuff::st_ticker;
 use crate::statdump::stat_copy;
 
+use crate::tables::fine_cosine;
+use crate::tables::fine_sine;
+use crate::tables::fine_tangent;
 use crate::tables::ANG45;
-use crate::tables::FINECOSINE;
-use crate::tables::FINESINE;
-use crate::tables::FINETANGENT;
 use crate::v_video::v_screen_shot;
 use crate::w_wad::{
     check_num_for_name, get_num_for_name, lump_bytes, lump_length, release_lump_name,
@@ -156,8 +155,8 @@ pub struct GGameState {
     pub testcontrols_mousespeed: i32,
     pub wminfo: WbStartStruct,
     pub consistancy: [[u8; 128]; MAXPLAYERS],
-    pub forwardmove: [Fixed; 2],
-    pub sidemove: [Fixed; 2],
+    pub forwardmove: [i32; 2],
+    pub sidemove: [i32; 2],
     pub next_weapon: Option<WeaponCycle>,
     pub gamekeydown: [bool; 256],
     pub turnheld: i32,
@@ -204,10 +203,10 @@ const NEW_PLAYER: Player = Player {
         lookfly: 0,
         arti: 0,
     },
-    viewz: 0,
-    viewheight: 0,
-    deltaviewheight: 0,
-    bob: 0,
+    viewz: Fixed::ZERO,
+    viewheight: Fixed::ZERO,
+    deltaviewheight: Fixed::ZERO,
+    bob: Fixed::ZERO,
     health: 0,
     armorpoints: 0,
     armortype: 0,
@@ -237,8 +236,8 @@ const NEW_PLAYER: Player = Player {
     psprites: [PspDef {
         state: None,
         tics: 0,
-        sx: 0,
-        sy: 0,
+        sx: Fixed::ZERO,
+        sy: Fixed::ZERO,
     }; 2],
     didsecret: false,
 };
@@ -376,7 +375,7 @@ pub const DEH_INITIAL_BULLETS: i32 = DEH_DEFAULT_INITIAL_BULLETS;
 pub const DOOM_191_VERSION: u8 = 111;
 pub const SAVEGAMESIZE: usize = 0x2c000;
 pub const TURBOTHRESHOLD: i32 = 0x32;
-pub static ANGLETURN: [Fixed; 3] = [640, 1280, 320];
+pub static ANGLETURN: [i32; 3] = [640, 1280, 320];
 static WEAPON_ORDER_TABLE: [WeaponOrder; 9] = [
     WeaponOrder {
         weapon: WeaponType::Fist,
@@ -948,7 +947,8 @@ pub fn g_ticker(state: &mut GameState, netcmds: &[TicCmd]) {
                     ));
                 }
                 if let Some(mo_id) = state.game.g_game.players[i].mo {
-                    state.game.g_game.consistancy[i][buf] = state.world.p_mobj.mo(mo_id).x as u8;
+                    state.game.g_game.consistancy[i][buf] =
+                        (state.world.p_mobj.mo(mo_id).x).to_bits() as u8;
                 } else {
                     state.game.g_game.consistancy[i][buf] = state.world.m_random.rndindex;
                 }
@@ -1057,16 +1057,16 @@ pub fn check_spot(state: &mut GameState, playernum: PlayerId, mthing: &MapThing)
                 .world
                 .p_mobj
                 .mo(state.game.g_game.players[i].mo.unwrap());
-            if other_mo.x == i32::from(mthing.x) << FRACBITS
-                && other_mo.y == i32::from(mthing.y) << FRACBITS
+            if other_mo.x == Fixed::from_int(i32::from(mthing.x))
+                && other_mo.y == Fixed::from_int(i32::from(mthing.y))
             {
                 return false;
             }
         }
         return true;
     }
-    let x: Fixed = (i32::from(mthing.x) << FRACBITS) as Fixed;
-    let y: Fixed = (i32::from(mthing.y) << FRACBITS) as Fixed;
+    let x: Fixed = Fixed::from_int(i32::from(mthing.x));
+    let y: Fixed = Fixed::from_int(i32::from(mthing.y));
     let player_mo_id = state.game.g_game.players[playernum].mo.unwrap();
     if !check_position(state, player_mo_id, x, y) {
         return false;
@@ -1083,11 +1083,11 @@ pub fn check_spot(state: &mut GameState, playernum: PlayerId, mthing: &MapThing)
     let ss = point_in_subsector(&state.world.p_setup, x, y);
     let an: i32 = ANG45.fine() as i32 * (i32::from(mthing.angle) / 45);
     let (xa, ya): (Fixed, Fixed) = match an {
-        4096 => (FINETANGENT[2048], FINETANGENT[0]),
-        5120 => (FINETANGENT[3072], FINETANGENT[1024]),
-        6144 => (FINESINE[0], FINETANGENT[2048]),
-        7168 => (FINESINE[1024], FINETANGENT[3072]),
-        0 | 1024 | 2048 | 3072 => (FINECOSINE[an as usize], FINESINE[an as usize]),
+        4096 => (fine_tangent(2048), fine_tangent(0)),
+        5120 => (fine_tangent(3072), fine_tangent(1024)),
+        6144 => (fine_sine(0), fine_tangent(2048)),
+        7168 => (fine_sine(1024), fine_tangent(3072)),
+        0 | 1024 | 2048 | 3072 => (fine_cosine(an as usize), fine_sine(an as usize)),
         _ => error(&format!("G_CheckSpot: unexpected angle {an}\n")),
     };
     let floorheight = state
@@ -1096,7 +1096,7 @@ pub fn check_spot(state: &mut GameState, playernum: PlayerId, mthing: &MapThing)
         .sector_mut(state.world.p_setup.subsectors[ss.0 as usize].sector)
         .floorheight;
     let mo = spawn_mobj(state, x + 20 * xa, y + 20 * ya, floorheight, MobjType::Tfog);
-    if state.game.g_game.players[state.game.g_game.consoleplayer].viewz != 1 {
+    if state.game.g_game.players[state.game.g_game.consoleplayer].viewz != Fixed(1) {
         s_start_sound(state, SoundOrigin::Mobj(mo), SfxName::Telept);
     }
     true
@@ -1458,16 +1458,18 @@ pub fn init_new(state: &mut GameState, mut skill: SkillType, mut episode: i32, m
         for i in StateNum::SargRun1 as i32..=StateNum::SargPain2 as i32 {
             state.assets.info.states[i as usize].tics >>= 1;
         }
-        state.assets.info.mobjinfo[MobjType::Bruisershot as usize].speed = 20 * FRACUNIT;
-        state.assets.info.mobjinfo[MobjType::Headshot as usize].speed = 20 * FRACUNIT;
-        state.assets.info.mobjinfo[MobjType::Troopshot as usize].speed = 20 * FRACUNIT;
+        state.assets.info.mobjinfo[MobjType::Bruisershot as usize].speed =
+            (20 * FRACUNIT).to_bits();
+        state.assets.info.mobjinfo[MobjType::Headshot as usize].speed = (20 * FRACUNIT).to_bits();
+        state.assets.info.mobjinfo[MobjType::Troopshot as usize].speed = (20 * FRACUNIT).to_bits();
     } else if skill != SkillType::Nightmare && state.game.g_game.gameskill == SkillType::Nightmare {
         for i in StateNum::SargRun1 as i32..=StateNum::SargPain2 as i32 {
             state.assets.info.states[i as usize].tics <<= 1;
         }
-        state.assets.info.mobjinfo[MobjType::Bruisershot as usize].speed = 15 * FRACUNIT;
-        state.assets.info.mobjinfo[MobjType::Headshot as usize].speed = 10 * FRACUNIT;
-        state.assets.info.mobjinfo[MobjType::Troopshot as usize].speed = 10 * FRACUNIT;
+        state.assets.info.mobjinfo[MobjType::Bruisershot as usize].speed =
+            (15 * FRACUNIT).to_bits();
+        state.assets.info.mobjinfo[MobjType::Headshot as usize].speed = (10 * FRACUNIT).to_bits();
+        state.assets.info.mobjinfo[MobjType::Troopshot as usize].speed = (10 * FRACUNIT).to_bits();
     }
     for i in 0..MAXPLAYERS {
         state.game.g_game.players[i].playerstate = PlayerState::Reborn;

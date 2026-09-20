@@ -17,9 +17,9 @@ use crate::r_main::LIGHTZSHIFT;
 use crate::r_main::MAXLIGHTZ;
 use crate::r_segs::MAXDRAWSEGS;
 
+use crate::tables::fine_cosine;
+use crate::tables::fine_sine;
 use crate::tables::ANG90;
-use crate::tables::FINECOSINE;
-use crate::tables::FINESINE;
 use crate::w_wad::lump_bytes;
 use crate::w_wad::release_lump_num;
 
@@ -66,15 +66,15 @@ impl RPlaneState {
             spanstart: [0; 200],
             spanstop: [0; 200],
             planezlight: 0,
-            planeheight: 0,
-            yslope: [0; 200],
-            distscale: [0; 320],
-            basexscale: 0,
-            baseyscale: 0,
-            cachedheight: [0; 200],
-            cacheddistance: [0; 200],
-            cachedxstep: [0; 200],
-            cachedystep: [0; 200],
+            planeheight: Fixed::ZERO,
+            yslope: [Fixed::ZERO; 200],
+            distscale: [Fixed::ZERO; 320],
+            basexscale: Fixed::ZERO,
+            baseyscale: Fixed::ZERO,
+            cachedheight: [Fixed::ZERO; 200],
+            cacheddistance: [Fixed::ZERO; 200],
+            cachedxstep: [Fixed::ZERO; 200],
+            cachedystep: [Fixed::ZERO; 200],
         }
     }
 }
@@ -112,12 +112,13 @@ pub fn map_plane(state: &mut GameState, y: i32, x1: i32, x2: i32) {
     let length: Fixed = fixed_mul(distance, state.render.r_plane.distscale[x1 as usize]);
     let angle: usize =
         (state.render.r_main.viewangle + state.render.r_main.xtoviewangle[x1 as usize]).fine();
-    state.render.r_draw.ds_xfrac = state.render.r_main.viewx + fixed_mul(FINECOSINE[angle], length);
-    state.render.r_draw.ds_yfrac = -state.render.r_main.viewy - fixed_mul(FINESINE[angle], length);
+    state.render.r_draw.ds_xfrac =
+        state.render.r_main.viewx + fixed_mul(fine_cosine(angle), length);
+    state.render.r_draw.ds_yfrac = -state.render.r_main.viewy - fixed_mul(fine_sine(angle), length);
     if let Some(colormap) = state.render.r_main.fixedcolormap {
         state.render.r_draw.ds_colormap = colormap;
     } else {
-        let mut index = (distance >> LIGHTZSHIFT) as usize;
+        let mut index = (distance >> LIGHTZSHIFT).to_bits() as usize;
         if index >= MAXLIGHTZ {
             index = MAXLIGHTZ - 1;
         }
@@ -140,10 +141,10 @@ pub fn clear_planes(r_draw: &RDrawState, r_main: &RMainState, r_plane: &mut RPla
     }
     r_plane.lastvisplane = 0;
     r_plane.lastopening = 0;
-    r_plane.cachedheight = [0; 200];
+    r_plane.cachedheight = [Fixed::ZERO; 200];
     let angle: usize = (r_main.viewangle - ANG90).fine();
-    r_plane.basexscale = fixed_div(FINECOSINE[angle], r_main.centerxfrac);
-    r_plane.baseyscale = -fixed_div(FINESINE[angle], r_main.centerxfrac);
+    r_plane.basexscale = fixed_div(fine_cosine(angle), r_main.centerxfrac);
+    r_plane.baseyscale = -fixed_div(fine_sine(angle), r_main.centerxfrac);
 }
 pub fn find_plane(
     r_plane: &mut RPlaneState,
@@ -153,7 +154,7 @@ pub fn find_plane(
     mut lightlevel: i32,
 ) -> usize {
     if picnum == r_sky.skyflatnum {
-        height = 0;
+        height = Fixed::ZERO;
         lightlevel = 0;
     }
     if let Some(found) = r_plane.visplanes[..r_plane.lastvisplane]
@@ -258,7 +259,7 @@ pub fn draw_planes(state: &mut GameState) {
                 state.render.r_draw.dc_iscale =
                     state.render.r_things.pspriteiscale >> state.render.r_main.detailshift;
                 state.render.r_draw.dc_colormap = Some(0);
-                state.render.r_draw.dc_texturemid = state.render.r_sky.skytexturemid as Fixed;
+                state.render.r_draw.dc_texturemid = state.render.r_sky.skytexturemid;
                 for x in plv.minx..=plv.maxx {
                     state.render.r_draw.dc_yl = i32::from(plv.top(x));
                     state.render.r_draw.dc_yh = i32::from(plv.bottom(x));
@@ -290,8 +291,7 @@ pub fn draw_planes(state: &mut GameState) {
                     lump: lumpnum,
                     offset: 0,
                 });
-                state.render.r_plane.planeheight =
-                    (plv.height - state.render.r_main.viewz).abs() as Fixed;
+                state.render.r_plane.planeheight = (plv.height - state.render.r_main.viewz).abs();
                 let mut light: i32 =
                     (plv.lightlevel >> LIGHTSEGSHIFT) + state.render.r_main.extralight;
                 if light >= LIGHTLEVELS {
