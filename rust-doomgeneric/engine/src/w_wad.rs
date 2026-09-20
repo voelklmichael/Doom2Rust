@@ -138,30 +138,23 @@ pub fn w_add_file(
 }
 /// The number of the last lump called `name`, if there is one.
 pub fn check_num_for_name(state: &WWadState, name: &str) -> Option<i32> {
-    let mut i: i32;
     if state.lumphash.is_empty() {
-        i = state.numlumps.wrapping_sub(1) as i32;
-        while i >= 0 {
-            if state.lumpinfo[i as usize]
-                .name
-                .eq_str_ignore_ascii_case(name)
-            {
-                return Some(i);
-            }
-            i -= 1;
+        // The last lump with the name wins, as in vanilla.
+        return (0..state.numlumps as usize)
+            .rev()
+            .find(|&i| state.lumpinfo[i].name.eq_str_ignore_ascii_case(name))
+            .map(|i| i as i32);
+    }
+    let hash: u32 = lump_name_hash(name.as_bytes()).wrapping_rem(state.numlumps);
+    let mut cur = state.lumphash[hash as usize];
+    while let Some(idx) = cur {
+        if state.lumpinfo[idx as usize]
+            .name
+            .eq_str_ignore_ascii_case(name)
+        {
+            return Some(idx as i32);
         }
-    } else {
-        let hash: u32 = lump_name_hash(name.as_bytes()).wrapping_rem(state.numlumps);
-        let mut cur = state.lumphash[hash as usize];
-        while let Some(idx) = cur {
-            if state.lumpinfo[idx as usize]
-                .name
-                .eq_str_ignore_ascii_case(name)
-            {
-                return Some(idx as i32);
-            }
-            cur = state.lumpinfo[idx as usize].next;
-        }
+        cur = state.lumpinfo[idx as usize].next;
     }
     None
 }
@@ -240,18 +233,15 @@ pub fn release_lump_name(state: &WWadState, name: &str) {
     release_lump_num(state, lumpnum);
 }
 pub fn generate_hash_table(w_wad: &mut WWadState) {
-    let mut i: u32;
     w_wad.lumphash = Vec::new();
     if w_wad.numlumps > 0 {
         w_wad.lumphash = vec![None; w_wad.numlumps as usize];
-        i = 0;
-        while i < w_wad.numlumps {
+        for i in 0..w_wad.numlumps {
             let hash: u32 = lump_name_hash(w_wad.lumpinfo[i as usize].name.as_bytes())
                 .wrapping_rem(w_wad.numlumps);
             let old_head = w_wad.lumphash[hash as usize];
             w_wad.lumpinfo[i as usize].next = old_head;
             w_wad.lumphash[hash as usize] = Some(i);
-            i = i.wrapping_add(1);
         }
     }
 }
