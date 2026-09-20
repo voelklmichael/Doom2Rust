@@ -1,15 +1,15 @@
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum GameAction {
-    Nothing = 0,
-    LoadLevel = 1,
-    NewGame = 2,
-    LoadGame = 3,
-    SaveGame = 4,
-    PlayDemo = 5,
-    Completed = 6,
-    Victory = 7,
-    WorldDone = 8,
-    Screenshot = 9,
+    Nothing,
+    LoadLevel,
+    NewGame,
+    LoadGame,
+    SaveGame,
+    PlayDemo,
+    Completed,
+    Victory,
+    WorldDone,
+    Screenshot,
 }
 #[derive(Copy, Clone, PartialEq)]
 pub enum GameScreenState {
@@ -21,11 +21,11 @@ pub enum GameScreenState {
 }
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum EvType {
-    Keydown = 0,
-    Keyup = 1,
-    Mouse = 2,
-    Joystick = 3,
-    Quit = 4,
+    Keydown,
+    Keyup,
+    Mouse,
+    Joystick,
+    Quit,
 }
 #[derive(Copy, Clone)]
 pub struct Event {

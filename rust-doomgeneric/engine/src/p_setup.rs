@@ -229,19 +229,19 @@ impl PSetupState {
 }
 
 #[derive(Copy, Clone, PartialEq, Eq)]
-#[allow(dead_code)] // mirrors a C index table; discriminants must stay
+#[allow(dead_code)] // mirrors a C index table; variant order must stay
 pub enum MapLump {
-    Label = 0,
-    Things = 1,
-    Linedefs = 2,
-    Sidedefs = 3,
-    Vertexes = 4,
-    Segs = 5,
-    Ssectors = 6,
-    Nodes = 7,
-    Sectors = 8,
-    Reject = 9,
-    Blockmap = 10,
+    Label,
+    Things,
+    Linedefs,
+    Sidedefs,
+    Vertexes,
+    Segs,
+    Ssectors,
+    Nodes,
+    Sectors,
+    Reject,
+    Blockmap,
 }
 /// Bounds-checked little-endian reader over a map lump's raw bytes.
 struct LumpReader {

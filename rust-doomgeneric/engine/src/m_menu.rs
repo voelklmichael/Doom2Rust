@@ -580,55 +580,55 @@ pub const READ2_END: i32 = 1;
 pub const READ1_END: i32 = 1;
 pub const LOAD_END: i32 = 6;
 #[derive(Copy, Clone, PartialEq, Eq)]
-#[allow(dead_code)] // mirrors a C index table; discriminants must stay
+#[allow(dead_code)] // mirrors a C index table; variant order must stay
 pub enum OptionsMenu {
-    Endgame = 0,
-    Messages = 1,
-    Detail = 2,
-    Scrnsize = 3,
-    OptionEmpty1 = 4,
-    Mousesens = 5,
-    OptionEmpty2 = 6,
-    Soundvol = 7,
+    Endgame,
+    Messages,
+    Detail,
+    Scrnsize,
+    OptionEmpty1,
+    Mousesens,
+    OptionEmpty2,
+    Soundvol,
 }
 pub const OPT_END: i32 = 8;
 #[derive(Copy, Clone, PartialEq, Eq)]
-#[allow(dead_code)] // mirrors a C index table; discriminants must stay
+#[allow(dead_code)] // mirrors a C index table; variant order must stay
 pub enum SoundMenu {
-    SfxVol = 0,
-    SfxEmpty1 = 1,
-    MusicVol = 2,
-    SfxEmpty2 = 3,
+    SfxVol,
+    SfxEmpty1,
+    MusicVol,
+    SfxEmpty2,
 }
 pub const SOUND_END: i32 = 4;
 #[derive(Copy, Clone, PartialEq, Eq)]
-#[allow(dead_code)] // mirrors a C index table; discriminants must stay
+#[allow(dead_code)] // mirrors a C index table; variant order must stay
 pub enum EpisodeMenu {
-    Ep1 = 0,
-    Ep2 = 1,
-    Ep3 = 2,
-    Ep4 = 3,
+    Ep1,
+    Ep2,
+    Ep3,
+    Ep4,
 }
 pub const EP_END: i32 = 4;
 #[derive(Copy, Clone, PartialEq, Eq)]
-#[allow(dead_code)] // mirrors a C index table; discriminants must stay
+#[allow(dead_code)] // mirrors a C index table; variant order must stay
 pub enum NewGameMenu {
-    Killthings = 0,
-    Toorough = 1,
-    Hurtme = 2,
-    Violence = 3,
-    Nightmare = 4,
+    Killthings,
+    Toorough,
+    Hurtme,
+    Violence,
+    Nightmare,
 }
 pub const NEWG_END: i32 = 5;
 #[derive(Copy, Clone, PartialEq, Eq)]
-#[allow(dead_code)] // mirrors a C index table; discriminants must stay
+#[allow(dead_code)] // mirrors a C index table; variant order must stay
 pub enum MainMenu {
-    Newgame = 0,
-    Options = 1,
-    Loadgame = 2,
-    Savegame = 3,
-    Readthis = 4,
-    Quitdoom = 5,
+    Newgame,
+    Options,
+    Loadgame,
+    Savegame,
+    Readthis,
+    Quitdoom,
 }
 pub const MAIN_END: i32 = 6;
 pub const KEY_NUMLOCK: i32 = 0x80 + 0x45;

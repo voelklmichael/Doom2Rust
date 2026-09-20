@@ -101,15 +101,15 @@ impl PEnemyState {
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum DirType {
-    East = 0,
-    Northeast = 1,
-    North = 2,
-    Northwest = 3,
-    West = 4,
-    Southwest = 5,
-    South = 6,
-    Southeast = 7,
-    Nodir = 8,
+    East,
+    Northeast,
+    North,
+    Northwest,
+    West,
+    Southwest,
+    South,
+    Southeast,
+    Nodir,
 }
 fn dirtype_from_movedir(movedir: i32) -> DirType {
     match movedir {

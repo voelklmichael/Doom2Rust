@@ -35,9 +35,9 @@ use crate::sounds::SfxName;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum BWhere {
-    Top = 0,
-    Middle = 1,
-    Bottom = 2,
+    Top,
+    Middle,
+    Bottom,
 }
 #[derive(Copy, Clone)]
 pub struct SwitchList {

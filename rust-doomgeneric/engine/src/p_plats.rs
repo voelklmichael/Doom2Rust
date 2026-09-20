@@ -32,18 +32,18 @@ use crate::sounds::SfxName;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum PlatE {
-    Up = 0,
-    Down = 1,
-    Waiting = 2,
-    InStasis = 3,
+    Up,
+    Down,
+    Waiting,
+    InStasis,
 }
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum PlattypeE {
-    PerpetualRaise = 0,
-    DownWaitUpStay = 1,
-    RaiseAndChange = 2,
-    RaiseToNearestAndChange = 3,
-    BlazeDWUS = 4,
+    PerpetualRaise,
+    DownWaitUpStay,
+    RaiseAndChange,
+    RaiseToNearestAndChange,
+    BlazeDWUS,
 }
 pub const PLATWAIT: i32 = 3;
 pub const PLATSPEED: i32 = FRACUNIT;

@@ -30,14 +30,14 @@ use crate::s_sound::SoundOrigin;
 use crate::sounds::SfxName;
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum VldoorE {
-    Normal = 0,
-    Close30ThenOpen = 1,
-    Close = 2,
-    Open = 3,
-    RaiseIn5Mins = 4,
-    BlazeRaise = 5,
-    BlazeOpen = 6,
-    BlazeClose = 7,
+    Normal,
+    Close30ThenOpen,
+    Close,
+    Open,
+    RaiseIn5Mins,
+    BlazeRaise,
+    BlazeOpen,
+    BlazeClose,
 }
 #[derive(Copy, Clone)]
 pub struct VlDoor {

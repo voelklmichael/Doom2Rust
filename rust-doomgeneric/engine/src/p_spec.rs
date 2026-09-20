@@ -252,11 +252,11 @@ pub enum Direction {
     Down = -1,
     /// Not moving: a ceiling in stasis, or a door waiting at the top for its countdown.
     #[default]
-    Still = 0,
+    Still,
     /// Raising / opening.
-    Up = 1,
+    Up,
     /// A door that has not started its countdown yet (`P_SpawnDoorRaiseIn5Mins`).
-    InitialWait = 2,
+    InitialWait,
 }
 
 impl Direction {
@@ -280,8 +280,8 @@ impl Direction {
 /// Which surface `move_plane` moves: `floorOrCeiling` in the C source.
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub enum Plane {
-    Floor = 0,
-    Ceiling = 1,
+    Floor,
+    Ceiling,
 }
 
 #[derive(Copy, Clone)]

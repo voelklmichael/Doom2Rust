@@ -4,10 +4,10 @@ use crate::m_fixed::INT_MAX;
 use crate::m_fixed::INT_MIN;
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum BoxIndex {
-    Top = 0,
-    Bottom = 1,
-    Left = 2,
-    Right = 3,
+    Top,
+    Bottom,
+    Left,
+    Right,
 }
 /// A bounding box: the four `BoxIndex` extents.
 pub type BBox = EnumArray<BoxIndex, Fixed, 4>;

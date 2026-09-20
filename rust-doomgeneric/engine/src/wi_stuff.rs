@@ -505,8 +505,8 @@ pub struct WbStartStruct {
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum StateEnum {
     NoState = -1,
-    StatCount = 0,
-    ShowNextLoc = 1,
+    StatCount,
+    ShowNextLoc,
 }
 #[derive(Copy, Clone)]
 pub struct Anim {
@@ -529,9 +529,9 @@ pub struct Point {
 }
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum AnimEnum {
-    Always = 0,
-    Random = 1,
-    Level = 2,
+    Always,
+    Random,
+    Level,
 }
 pub const NUMMAPS: i32 = 9;
 pub const WI_TITLEY: i32 = 2;
