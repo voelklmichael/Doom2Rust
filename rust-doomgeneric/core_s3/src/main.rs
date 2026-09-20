@@ -19,7 +19,7 @@ mod sound;
 mod wad_fs;
 mod web;
 
-use alloc::{boxed::Box, string::ToString, vec::Vec};
+use alloc::{boxed::Box, string::ToString};
 use core::{cell::RefCell, fmt::Write as _};
 use core_s3::{
     bsp, devices,
