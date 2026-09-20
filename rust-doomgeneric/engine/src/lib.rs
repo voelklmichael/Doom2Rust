@@ -8,6 +8,8 @@ extern crate std;
 
 #[macro_use]
 mod console;
+#[macro_use]
+mod raw_enum;
 
 pub(crate) mod am_map;
 pub(crate) mod d_event;
