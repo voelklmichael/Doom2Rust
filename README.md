@@ -1,4 +1,4 @@
-# doom_v5
+# Doom2Rust
 
 DOOM in Rust, for three platforms: a Linux desktop (X11), a web browser (WebAssembly), and the
 [M5Stack CoreS3 Lite](https://docs.m5stack.com/en/core/CoreS3-Lite) (ESP32-S3 microcontroller,
@@ -73,7 +73,7 @@ opens the map, Esc the menu; double-click the game window for full screen.
 every push to `main` that touches the engine or the `wasm` crate. It needs one setting, once:
 in the GitHub repository, **Settings > Pages > Build and deployment > Source: GitHub Actions**
 (the repository has to be public, unless you have a paid plan). The site is then at
-`https://<user>.github.io/<repo>/`. More in
+`https://voelklmichael.github.io/Doom2Rust/`. More in
 [rust-doomgeneric/wasm/README.md](rust-doomgeneric/wasm/README.md).
 
 ## Build and flash the CoreS3 Lite
