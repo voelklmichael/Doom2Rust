@@ -46,35 +46,54 @@ whole state to something that does. Functions taking the whole state:
 
 ## Why it stops at ~400
 
-Measured on the stack tip (a by-name transitive closure of "who passes `state` to whom", plus
-direct aggregate use):
+The whole-state functions are not stuck because of one bad edge: the call graph is entangled. Measured
+on the merged tree (a by-name transitive closure of "who passes `state` to whom", plus direct module
+use; callbacks are not even counted, so this is a lower bound):
 
-- Only 46 of the remaining state-taking functions transitively need a single aggregate; 65 need
-  two, 89 need three, 52 need four, and 160 need five or more.
-- **Sound is the linchpin.** `s_start_sound` needs assets, audio, game, render and world at once
-  (origin position, listener, `gamemap`, `point_to_angle2`, lump loading, the platform mixer), and
-  it is called from ~155 sites in door/floor/plat/enemy/switch code that otherwise touch only
-  `World`. Every one of those inherits its 5-aggregate need. A "context struct" bundling what it
-  reads would be the whole `GameState` again, so the bundle is not a way out.
-- **Callbacks pin the whole state.** 150 state-taking functions are used as values
-  (`StateAction`, weapon actions, menu routines, `p_map` traversal callbacks); `narrow_state.py`
-  cannot change a function whose type is fixed by a `fn(&mut GameState, ...)` alias. 39 of them
-  touch only `World` directly, but all of those reach `s_start_sound`.
-- `GameState::screen()`/`screen_mut()` spans three aggregates (io, ui, render): the five C
-  `screens[]` live in `i_video`, `st_stuff` and `r_draw`, so every drawing helper needs all three.
+- Only 46 of the 412 state-taking functions transitively need a single aggregate; 65 need two, 89
+  three, 52 four, and 160 need five or more.
+- The extra aggregates come from a handful of roots: `remove_mobj` stops the mobj's sound (`audio`, 56
+  functions inherit it), `change_music` and `draw_patch` (`io`), `check_position`/`check_sight`/
+  `damage_mobj` read `RMainState` (`render`), `kill_mobj` reaches the HUD (`ui`), and `spawn_mobj`/
+  `set_psprite` read the `info` tables that live in `Assets`.
+- 150 state-taking functions are callbacks (`StateAction`, weapon actions, menu routines, `p_map`
+  traversals) whose `fn(&mut GameState, ..)` type pins them.
+- `GameState::screen()`/`screen_mut()` spans three aggregates (io, ui, render).
+
+### Simulated payoff of specific decouplings (current grouping)
+
+| change | fns needing one aggregate | fns needing only `World` |
+|---|---|---|
+| today | 46 | 20 |
+| sound calls removed from the graph (e.g. a `SoundRequest` queue) | 48 | 21 |
+| ... and `info` tables moved into `World` | 49 | 22 |
+| ... and `p_*` code not needing `RMainState` | 64 | 37 |
+| ... and `change_music`/`draw_patch` cut too | 69 | 37 |
+
+An earlier version of this document called sound "the linchpin" and proposed the queue as the way
+forward. **That was wrong**: `s_start_sound` needs five aggregates, but removing it from the graph
+frees only two functions, because they reach the other roots above anyway. A queue would change when
+sounds start relative to other world code, and would need mirrored listener state to stay
+bit-exact, for that return. It is not worth doing for narrowing.
+
+A hill-climb over the module-to-aggregate assignment (minimising mean transitive exposure) only
+reaches ~19 of 57 modules by lumping unrelated modules together (`p_map` with audio, `p_enemy` with
+UI), so the grouping is not the problem either; regrouping by statistics would hide the coupling, not
+remove it.
 
 ## Possible next steps (not done)
 
-1. **Decouple sound from the simulation.** Have simulation code push a `SoundRequest { origin,
-   sfx, resolved volume/separation }` onto a queue owned by `World`, drained into `Audio` by the
-   game loop. That removes `Audio`/`Assets`/`Io`/`Render` from every mover and monster function
-   and would let the ~39 world-only callbacks retype to `fn(&mut World, ..)`. It changes *when* a
-   sound starts relative to other world code, so it needs an audio-trace golden first (record
-   `(origin, sfx, volume, sep, channel)` for every `s_start_sound` over demo1-3 against the old
-   code).
-2. **Consolidate the five screens** into `VVideoState` (in `Io`), so drawing helpers take
+1. Make what is really pure into free functions: the `p_*` code reaches `RMainState` for
+   `validcount` (shared traversal state that arguably belongs in `World`) and `point_to_angle2`,
+   which mutates `viewx`/`viewy` as a side effect (vanilla behaviour, harmless because the view is
+   reset every frame, but it must be preserved or shown unobservable). Simulated: +15 single-aggregate
+   functions.
+2. Consolidate the five screens into `VVideoState` (in `Io`), so drawing helpers take
    `&mut VVideoState` instead of the whole state.
-3. Only then re-run `narrow_state.py`; each step unlocks a new wave of leaf functions.
+3. Re-run `narrow_state.py` after each; leaf functions unlock in waves.
+
+Do not expect the whole-state count to fall much below ~350 without changing what a "tic" is
+(e.g. one explicit context struct); it is a global-state program at heart.
 
 ## A performance trap found along the way
 
