@@ -27,6 +27,7 @@ use crate::p_mobj::remove_mobj;
 use crate::p_mobj::set_mobj_state;
 use crate::p_mobj::spawn_mobj;
 use crate::p_mobj::MobjType;
+use crate::p_mobj::SpriteNum;
 use crate::p_mobj::StateNum;
 use crate::p_mobj::ONFLOORZ;
 use crate::p_pspr::drop_weapon;
@@ -248,300 +249,203 @@ pub fn give_power(
     g_game.players[player].powers[power] = 1;
     true
 }
-pub fn touch_special_thing(state: &mut GameState, special: MobjId, toucher: MobjId) {
-    let delta: Fixed = state.world.p_mobj.mo(special).z - state.world.p_mobj.mo(toucher).z;
-    if delta > state.world.p_mobj.mo(toucher).height || delta < -8 * FRACUNIT {
-        return;
+/// The key (and the message for a key the player did not have yet) that a sprite stands for.
+const fn key_pickup(sprite: SpriteNum) -> Option<(CardType, &'static str)> {
+    Some(match sprite {
+        SpriteNum::Bkey => (CardType::Bluecard, "Picked up a blue keycard."),
+        SpriteNum::Ykey => (CardType::Yellowcard, "Picked up a yellow keycard."),
+        SpriteNum::Rkey => (CardType::Redcard, "Picked up a red keycard."),
+        SpriteNum::Bsku => (CardType::Blueskull, "Picked up a blue skull key."),
+        SpriteNum::Ysku => (CardType::Yellowskull, "Picked up a yellow skull key."),
+        SpriteNum::Rsku => (CardType::Redskull, "Picked up a red skull key."),
+        _ => return None,
+    })
+}
+
+/// The ammo, the amount (in clips or boxes) and the message of an ammo pickup. A clip dropped by
+/// a monster gives half a clip, which is what `give_ammo` makes of an amount of 0.
+const fn ammo_pickup(sprite: SpriteNum, dropped: bool) -> Option<(AmmoType, i32, &'static str)> {
+    Some(match sprite {
+        SpriteNum::Clip => (
+            AmmoType::Clip,
+            if dropped { 0 } else { 1 },
+            "Picked up a clip.",
+        ),
+        SpriteNum::Ammo => (AmmoType::Clip, 5, "Picked up a box of bullets."),
+        SpriteNum::Rock => (AmmoType::Misl, 1, "Picked up a rocket."),
+        SpriteNum::Brok => (AmmoType::Misl, 5, "Picked up a box of rockets."),
+        SpriteNum::Cell => (AmmoType::Cell, 1, "Picked up an energy cell."),
+        SpriteNum::Celp => (AmmoType::Cell, 5, "Picked up an energy cell pack."),
+        SpriteNum::Shel => (AmmoType::Shell, 1, "Picked up 4 shotgun shells."),
+        SpriteNum::Sbox => (AmmoType::Shell, 5, "Picked up a box of shotgun shells."),
+        _ => return None,
+    })
+}
+
+/// The power and the message of a power-up.
+const fn power_pickup(sprite: SpriteNum) -> Option<(PowerType, &'static str)> {
+    Some(match sprite {
+        SpriteNum::Pinv => (PowerType::Invulnerability, "Invulnerability!"),
+        SpriteNum::Pstr => (PowerType::Strength, "Berserk!"),
+        SpriteNum::Pins => (PowerType::Invisibility, "Partial Invisibility"),
+        SpriteNum::Suit => (PowerType::Ironfeet, "Radiation Shielding Suit"),
+        SpriteNum::Pmap => (PowerType::Allmap, "Computer Area Map"),
+        SpriteNum::Pvis => (PowerType::Infrared, "Light Amplification Visor"),
+        _ => return None,
+    })
+}
+
+/// The weapon and the message of a weapon pickup, and whether a weapon dropped by a monster is
+/// worth less ammo than one lying on the level.
+const fn weapon_pickup(sprite: SpriteNum) -> Option<(WeaponType, bool, &'static str)> {
+    Some(match sprite {
+        SpriteNum::Bfug => (WeaponType::Bfg, false, "You got the BFG9000!  Oh, yes."),
+        SpriteNum::Mgun => (WeaponType::Chaingun, true, "You got the chaingun!"),
+        SpriteNum::Csaw => (WeaponType::Chainsaw, false, "A chainsaw!  Find some meat!"),
+        SpriteNum::Laun => (WeaponType::Missile, false, "You got the rocket launcher!"),
+        SpriteNum::Plas => (WeaponType::Plasma, false, "You got the plasma gun!"),
+        SpriteNum::Shot => (WeaponType::Shotgun, true, "You got the shotgun!"),
+        SpriteNum::Sgn2 => (WeaponType::Supershotgun, true, "You got the super shotgun!"),
+        _ => return None,
+    })
+}
+
+fn set_message(state: &mut GameState, player: PlayerId, message: &str) {
+    state.game.g_game.players[player].message = Some(message.to_string());
+}
+
+/// Applies a pickup to the player. `None` means the thing is left where it lies (the player could
+/// not use it, or is in a netgame where keys stay); `Some(sound)` means it was taken.
+fn pick_up(
+    state: &mut GameState,
+    special: MobjId,
+    toucher: MobjId,
+    player: PlayerId,
+) -> Option<SfxName> {
+    let sprite = state.world.p_mobj.mo(special).sprite;
+    let dropped = state
+        .world
+        .p_mobj
+        .mo(special)
+        .flags
+        .contains(MobjFlags::DROPPED);
+    if let Some((card, message)) = key_pickup(sprite) {
+        if !state.game.g_game.players[player].cards[card] {
+            set_message(state, player, message);
+        }
+        give_card(&mut state.game.g_game.players[player], card);
+        return (!state.game.g_game.netgame).then_some(SfxName::Itemup);
     }
-    let mut sound: SfxName = SfxName::Itemup;
-    let player = state.world.p_mobj.mo(toucher).player.unwrap();
-    if state.world.p_mobj.mo(toucher).health <= 0 {
-        return;
+    if let Some((ammo, amount, message)) = ammo_pickup(sprite, dropped) {
+        if !give_ammo(&mut state.game.g_game, player, ammo, amount) {
+            return None;
+        }
+        set_message(state, player, message);
+        return Some(SfxName::Itemup);
     }
-    match state.world.p_mobj.mo(special).sprite as u32 {
-        55 => {
-            if !give_armor(
-                &mut state.game.g_game.players[player],
-                DEH_GREEN_ARMOR_CLASS,
-            ) {
-                return;
-            }
-            state.game.g_game.players[player].message = Some("Picked up the armor.".to_string());
+    if let Some((power, message)) = power_pickup(sprite) {
+        if !give_power(
+            &mut state.game.g_game,
+            &mut state.world.p_mobj,
+            player,
+            power,
+        ) {
+            return None;
         }
-        56 => {
-            if !give_armor(&mut state.game.g_game.players[player], DEH_BLUE_ARMOR_CLASS) {
-                return;
-            }
-            state.game.g_game.players[player].message =
-                Some("Picked up the MegaArmor!".to_string());
+        set_message(state, player, message);
+        let p = &mut state.game.g_game.players[player];
+        if power == PowerType::Strength && p.readyweapon != WeaponType::Fist {
+            p.pendingweapon = WeaponType::Fist;
         }
-        60 => {
-            state.game.g_game.players[player].health += 1;
-            if state.game.g_game.players[player].health > DEH_MAX_HEALTH {
-                state.game.g_game.players[player].health = DEH_MAX_HEALTH;
-            }
-            state.world.p_mobj.mo_mut(toucher).health = state.game.g_game.players[player].health;
-            state.game.g_game.players[player].message =
-                Some("Picked up a health bonus.".to_string());
+        return Some(SfxName::Getpow);
+    }
+    if let Some((weapon, dropped_matters, message)) = weapon_pickup(sprite) {
+        if !give_weapon(state, player, weapon, dropped_matters && dropped) {
+            return None;
         }
-        61 => {
-            state.game.g_game.players[player].armorpoints += 1;
-            if state.game.g_game.players[player].armorpoints > DEH_MAX_ARMOR {
-                state.game.g_game.players[player].armorpoints = DEH_MAX_ARMOR;
-            }
-            if state.game.g_game.players[player].armortype == 0 {
-                state.game.g_game.players[player].armortype = 1;
-            }
-            state.game.g_game.players[player].message =
-                Some("Picked up an armor bonus.".to_string());
-        }
-        70 => {
-            state.game.g_game.players[player].health += DEH_SOULSPHERE_HEALTH;
-            if state.game.g_game.players[player].health > DEH_MAX_SOULSPHERE {
-                state.game.g_game.players[player].health = DEH_MAX_SOULSPHERE;
-            }
-            state.world.p_mobj.mo_mut(toucher).health = state.game.g_game.players[player].health;
-            state.game.g_game.players[player].message = Some("Supercharge!".to_string());
-            sound = SfxName::Getpow;
-        }
-        74 => {
-            if state.game.doomstat.gamemode != GameMode::Commercial {
-                return;
-            }
-            state.game.g_game.players[player].health = DEH_MEGASPHERE_HEALTH;
-            state.world.p_mobj.mo_mut(toucher).health = state.game.g_game.players[player].health;
-            give_armor(&mut state.game.g_game.players[player], 2);
-            state.game.g_game.players[player].message = Some("MegaSphere!".to_string());
-            sound = SfxName::Getpow;
-        }
-        62 => {
-            if !state.game.g_game.players[player].cards[CardType::Bluecard] {
-                state.game.g_game.players[player].message =
-                    Some("Picked up a blue keycard.".to_string());
-            }
-            give_card(&mut state.game.g_game.players[player], CardType::Bluecard);
-            if state.game.g_game.netgame {
-                return;
-            }
-        }
-        64 => {
-            if !state.game.g_game.players[player].cards[CardType::Yellowcard] {
-                state.game.g_game.players[player].message =
-                    Some("Picked up a yellow keycard.".to_string());
-            }
-            give_card(&mut state.game.g_game.players[player], CardType::Yellowcard);
-            if state.game.g_game.netgame {
-                return;
-            }
-        }
-        63 => {
-            if !state.game.g_game.players[player].cards[CardType::Redcard] {
-                state.game.g_game.players[player].message =
-                    Some("Picked up a red keycard.".to_string());
-            }
-            give_card(&mut state.game.g_game.players[player], CardType::Redcard);
-            if state.game.g_game.netgame {
-                return;
-            }
-        }
-        65 => {
-            if !state.game.g_game.players[player].cards[CardType::Blueskull] {
-                state.game.g_game.players[player].message =
-                    Some("Picked up a blue skull key.".to_string());
-            }
-            give_card(&mut state.game.g_game.players[player], CardType::Blueskull);
-            if state.game.g_game.netgame {
-                return;
-            }
-        }
-        67 => {
-            if !state.game.g_game.players[player].cards[CardType::Yellowskull] {
-                state.game.g_game.players[player].message =
-                    Some("Picked up a yellow skull key.".to_string());
-            }
-            give_card(
-                &mut state.game.g_game.players[player],
-                CardType::Yellowskull,
-            );
-            if state.game.g_game.netgame {
-                return;
-            }
-        }
-        66 => {
-            if !state.game.g_game.players[player].cards[CardType::Redskull] {
-                state.game.g_game.players[player].message =
-                    Some("Picked up a red skull key.".to_string());
-            }
-            give_card(&mut state.game.g_game.players[player], CardType::Redskull);
-            if state.game.g_game.netgame {
-                return;
-            }
-        }
-        68 => {
-            if !give_body(&mut state.game.g_game, &mut state.world.p_mobj, player, 10) {
-                return;
-            }
-            state.game.g_game.players[player].message = Some("Picked up a stimpack.".to_string());
-        }
-        69 => {
-            if !give_body(&mut state.game.g_game, &mut state.world.p_mobj, player, 25) {
-                return;
-            }
-            if state.game.g_game.players[player].health < 25 {
-                state.game.g_game.players[player].message =
-                    Some("Picked up a medikit that you REALLY need!".to_string());
+        set_message(state, player, message);
+        return Some(SfxName::Wpnup);
+    }
+    match sprite {
+        SpriteNum::Arm1 | SpriteNum::Arm2 => {
+            let class = if sprite == SpriteNum::Arm1 {
+                DEH_GREEN_ARMOR_CLASS
             } else {
-                state.game.g_game.players[player].message =
-                    Some("Picked up a medikit.".to_string());
+                DEH_BLUE_ARMOR_CLASS
+            };
+            if !give_armor(&mut state.game.g_game.players[player], class) {
+                return None;
             }
+            let message = if sprite == SpriteNum::Arm1 {
+                "Picked up the armor."
+            } else {
+                "Picked up the MegaArmor!"
+            };
+            set_message(state, player, message);
+            Some(SfxName::Itemup)
         }
-        71 => {
-            if !give_power(
-                &mut state.game.g_game,
-                &mut state.world.p_mobj,
-                player,
-                PowerType::Invulnerability,
-            ) {
-                return;
-            }
-            state.game.g_game.players[player].message = Some("Invulnerability!".to_string());
-            sound = SfxName::Getpow;
+        SpriteNum::Bon1 => {
+            let p = &mut state.game.g_game.players[player];
+            p.health = (p.health + 1).min(DEH_MAX_HEALTH);
+            let health = p.health;
+            state.world.p_mobj.mo_mut(toucher).health = health;
+            set_message(state, player, "Picked up a health bonus.");
+            Some(SfxName::Itemup)
         }
-        72 => {
-            if !give_power(
-                &mut state.game.g_game,
-                &mut state.world.p_mobj,
-                player,
-                PowerType::Strength,
-            ) {
-                return;
+        SpriteNum::Bon2 => {
+            let p = &mut state.game.g_game.players[player];
+            p.armorpoints = (p.armorpoints + 1).min(DEH_MAX_ARMOR);
+            if p.armortype == 0 {
+                p.armortype = 1;
             }
-            state.game.g_game.players[player].message = Some("Berserk!".to_string());
-            if state.game.g_game.players[player].readyweapon != WeaponType::Fist {
-                state.game.g_game.players[player].pendingweapon = WeaponType::Fist;
-            }
-            sound = SfxName::Getpow;
+            set_message(state, player, "Picked up an armor bonus.");
+            Some(SfxName::Itemup)
         }
-        73 => {
-            if !give_power(
-                &mut state.game.g_game,
-                &mut state.world.p_mobj,
-                player,
-                PowerType::Invisibility,
-            ) {
-                return;
-            }
-            state.game.g_game.players[player].message = Some("Partial Invisibility".to_string());
-            sound = SfxName::Getpow;
+        SpriteNum::Soul => {
+            let p = &mut state.game.g_game.players[player];
+            p.health = (p.health + DEH_SOULSPHERE_HEALTH).min(DEH_MAX_SOULSPHERE);
+            let health = p.health;
+            state.world.p_mobj.mo_mut(toucher).health = health;
+            set_message(state, player, "Supercharge!");
+            Some(SfxName::Getpow)
         }
-        75 => {
-            if !give_power(
-                &mut state.game.g_game,
-                &mut state.world.p_mobj,
-                player,
-                PowerType::Ironfeet,
-            ) {
-                return;
+        SpriteNum::Mega => {
+            if state.game.doomstat.gamemode != GameMode::Commercial {
+                return None;
             }
-            state.game.g_game.players[player].message =
-                Some("Radiation Shielding Suit".to_string());
-            sound = SfxName::Getpow;
+            let p = &mut state.game.g_game.players[player];
+            p.health = DEH_MEGASPHERE_HEALTH;
+            state.world.p_mobj.mo_mut(toucher).health = DEH_MEGASPHERE_HEALTH;
+            give_armor(&mut state.game.g_game.players[player], 2);
+            set_message(state, player, "MegaSphere!");
+            Some(SfxName::Getpow)
         }
-        76 => {
-            if !give_power(
-                &mut state.game.g_game,
-                &mut state.world.p_mobj,
-                player,
-                PowerType::Allmap,
-            ) {
-                return;
+        SpriteNum::Stim => {
+            if !give_body(&mut state.game.g_game, &mut state.world.p_mobj, player, 10) {
+                return None;
             }
-            state.game.g_game.players[player].message = Some("Computer Area Map".to_string());
-            sound = SfxName::Getpow;
+            set_message(state, player, "Picked up a stimpack.");
+            Some(SfxName::Itemup)
         }
-        77 => {
-            if !give_power(
-                &mut state.game.g_game,
-                &mut state.world.p_mobj,
-                player,
-                PowerType::Infrared,
-            ) {
-                return;
+        SpriteNum::Medi => {
+            if !give_body(&mut state.game.g_game, &mut state.world.p_mobj, player, 25) {
+                return None;
             }
-            state.game.g_game.players[player].message =
-                Some("Light Amplification Visor".to_string());
-            sound = SfxName::Getpow;
+            let message = if state.game.g_game.players[player].health < 25 {
+                "Picked up a medikit that you REALLY need!"
+            } else {
+                "Picked up a medikit."
+            };
+            set_message(state, player, message);
+            Some(SfxName::Itemup)
         }
-        78 => {
-            if state
-                .world
-                .p_mobj
-                .mo(special)
-                .flags
-                .contains(MobjFlags::DROPPED)
-            {
-                if !give_ammo(&mut state.game.g_game, player, AmmoType::Clip, 0) {
-                    return;
-                }
-            } else if !give_ammo(&mut state.game.g_game, player, AmmoType::Clip, 1) {
-                return;
-            }
-            state.game.g_game.players[player].message = Some("Picked up a clip.".to_string());
-        }
-        79 => {
-            if !give_ammo(&mut state.game.g_game, player, AmmoType::Clip, 5) {
-                return;
-            }
-            state.game.g_game.players[player].message =
-                Some("Picked up a box of bullets.".to_string());
-        }
-        80 => {
-            if !give_ammo(&mut state.game.g_game, player, AmmoType::Misl, 1) {
-                return;
-            }
-            state.game.g_game.players[player].message = Some("Picked up a rocket.".to_string());
-        }
-        81 => {
-            if !give_ammo(&mut state.game.g_game, player, AmmoType::Misl, 5) {
-                return;
-            }
-            state.game.g_game.players[player].message =
-                Some("Picked up a box of rockets.".to_string());
-        }
-        82 => {
-            if !give_ammo(&mut state.game.g_game, player, AmmoType::Cell, 1) {
-                return;
-            }
-            state.game.g_game.players[player].message =
-                Some("Picked up an energy cell.".to_string());
-        }
-        83 => {
-            if !give_ammo(&mut state.game.g_game, player, AmmoType::Cell, 5) {
-                return;
-            }
-            state.game.g_game.players[player].message =
-                Some("Picked up an energy cell pack.".to_string());
-        }
-        84 => {
-            if !give_ammo(&mut state.game.g_game, player, AmmoType::Shell, 1) {
-                return;
-            }
-            state.game.g_game.players[player].message =
-                Some("Picked up 4 shotgun shells.".to_string());
-        }
-        85 => {
-            if !give_ammo(&mut state.game.g_game, player, AmmoType::Shell, 5) {
-                return;
-            }
-            state.game.g_game.players[player].message =
-                Some("Picked up a box of shotgun shells.".to_string());
-        }
-        86 => {
-            if !state.game.g_game.players[player].backpack {
+        SpriteNum::Bpak => {
+            let p = &mut state.game.g_game.players[player];
+            if !p.backpack {
                 for i in 0..NUMAMMO {
-                    state.game.g_game.players[player].maxammo[i] *= 2;
+                    p.maxammo[i] *= 2;
                 }
-                state.game.g_game.players[player].backpack = true;
+                p.backpack = true;
             }
             for i in 0..NUMAMMO {
                 give_ammo(
@@ -551,96 +455,25 @@ pub fn touch_special_thing(state: &mut GameState, special: MobjId, toucher: Mobj
                     1,
                 );
             }
-            state.game.g_game.players[player].message =
-                Some("Picked up a backpack full of ammo!".to_string());
+            set_message(state, player, "Picked up a backpack full of ammo!");
+            Some(SfxName::Itemup)
         }
-        87 => {
-            if !give_weapon(state, player, WeaponType::Bfg, false) {
-                return;
-            }
-            state.game.g_game.players[player].message =
-                Some("You got the BFG9000!  Oh, yes.".to_string());
-            sound = SfxName::Wpnup;
-        }
-        88 => {
-            if !give_weapon(
-                state,
-                player,
-                WeaponType::Chaingun,
-                state
-                    .world
-                    .p_mobj
-                    .mo(special)
-                    .flags
-                    .contains(MobjFlags::DROPPED),
-            ) {
-                return;
-            }
-            state.game.g_game.players[player].message = Some("You got the chaingun!".to_string());
-            sound = SfxName::Wpnup;
-        }
-        89 => {
-            if !give_weapon(state, player, WeaponType::Chainsaw, false) {
-                return;
-            }
-            state.game.g_game.players[player].message =
-                Some("A chainsaw!  Find some meat!".to_string());
-            sound = SfxName::Wpnup;
-        }
-        90 => {
-            if !give_weapon(state, player, WeaponType::Missile, false) {
-                return;
-            }
-            state.game.g_game.players[player].message =
-                Some("You got the rocket launcher!".to_string());
-            sound = SfxName::Wpnup;
-        }
-        91 => {
-            if !give_weapon(state, player, WeaponType::Plasma, false) {
-                return;
-            }
-            state.game.g_game.players[player].message = Some("You got the plasma gun!".to_string());
-            sound = SfxName::Wpnup;
-        }
-        92 => {
-            if !give_weapon(
-                state,
-                player,
-                WeaponType::Shotgun,
-                state
-                    .world
-                    .p_mobj
-                    .mo(special)
-                    .flags
-                    .contains(MobjFlags::DROPPED),
-            ) {
-                return;
-            }
-            state.game.g_game.players[player].message = Some("You got the shotgun!".to_string());
-            sound = SfxName::Wpnup;
-        }
-        93 => {
-            if !give_weapon(
-                state,
-                player,
-                WeaponType::Supershotgun,
-                state
-                    .world
-                    .p_mobj
-                    .mo(special)
-                    .flags
-                    .contains(MobjFlags::DROPPED),
-            ) {
-                return;
-            }
-            state.game.g_game.players[player].message =
-                Some("You got the super shotgun!".to_string());
-            sound = SfxName::Wpnup;
-        }
-        _ => {
-            error("P_SpecialThing: Unknown gettable thing");
-        }
+        _ => error("P_SpecialThing: Unknown gettable thing"),
     }
+}
+
+pub fn touch_special_thing(state: &mut GameState, special: MobjId, toucher: MobjId) {
+    let delta: Fixed = state.world.p_mobj.mo(special).z - state.world.p_mobj.mo(toucher).z;
+    if delta > state.world.p_mobj.mo(toucher).height || delta < -8 * FRACUNIT {
+        return;
+    }
+    let player = state.world.p_mobj.mo(toucher).player.unwrap();
+    if state.world.p_mobj.mo(toucher).health <= 0 {
+        return;
+    }
+    let Some(sound) = pick_up(state, special, toucher, player) else {
+        return;
+    };
     if state
         .world
         .p_mobj
