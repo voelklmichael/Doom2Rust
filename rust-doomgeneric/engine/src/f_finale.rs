@@ -381,10 +381,7 @@ pub fn f_ticker(state: &mut GameState) {
 }
 pub fn text_write(state: &mut GameState) {
     let mut w: i32;
-    let mut count: i32;
     let mut c: i32;
-    let mut cx: i32;
-    let mut cy: i32;
     let flat = lump_bytes_name(
         &*state.assets.fs,
         &mut state.assets.w_wad,
@@ -407,10 +404,10 @@ pub fn text_write(state: &mut GameState) {
         SCREENWIDTH,
         SCREENHEIGHT,
     );
-    cx = 10;
-    cy = 10;
+    let mut cx: i32 = 10;
+    let mut cy: i32 = 10;
     let mut chars = state.ui.f_finale.finaletext.bytes();
-    count = (state.ui.f_finale.finalecount as i32 - 10) / TEXTSPEED;
+    let mut count: i32 = (state.ui.f_finale.finalecount as i32 - 10) / TEXTSPEED;
     if count < 0 {
         count = 0;
     }
@@ -681,7 +678,6 @@ pub fn cast_responder(state: &mut GameState, ev: &Event) -> bool {
 }
 pub fn cast_print(state: &mut GameState, text: &str) {
     let mut c: i32;
-    let mut cx: i32;
     let mut w: i32;
     let mut width: i32 = 0;
     for b in text.bytes() {
@@ -698,7 +694,7 @@ pub fn cast_print(state: &mut GameState, text: &str) {
             width += 4;
         }
     }
-    cx = 160 - width / 2;
+    let mut cx: i32 = 160 - width / 2;
     for b in text.bytes() {
         c = b.to_ascii_uppercase() as i32 - HU_FONTSTART;
         if (0..=HU_FONTSIZE).contains(&c) {
@@ -755,9 +751,6 @@ fn draw_patch_col(state: &mut IVideoState, x: i32, patch: &Patch, col: i32) {
     }
 }
 pub fn bunny_scroll(state: &mut GameState) {
-    let mut scrolled: i32;
-
-    let mut stage: i32;
     let p1: Patch = cache_patch_name(&*state.assets.fs, &mut state.assets.w_wad, "PFUB2");
     let p2: Patch = cache_patch_name(&*state.assets.fs, &mut state.assets.w_wad, "PFUB1");
     let dest_screen = Screen::Video;
@@ -769,7 +762,7 @@ pub fn bunny_scroll(state: &mut GameState) {
         SCREENWIDTH,
         SCREENHEIGHT,
     );
-    scrolled = 320 - (state.ui.f_finale.finalecount as i32 - 230) / 2;
+    let mut scrolled: i32 = 320 - (state.ui.f_finale.finalecount as i32 - 230) / 2;
     scrolled = scrolled.clamp(0, 320);
     for x in 0..SCREENWIDTH {
         if x + scrolled < 320 {
@@ -794,7 +787,7 @@ pub fn bunny_scroll(state: &mut GameState) {
         state.ui.f_finale.laststage = 0;
         return;
     }
-    stage = state
+    let mut stage: i32 = state
         .ui
         .f_finale
         .finalecount

@@ -875,9 +875,8 @@ pub fn st_ticker(state: &mut GameState) {
 }
 pub fn do_palette_stuff(state: &mut GameState) {
     let mut palette: i32;
-    let mut cnt: i32;
     let bzc: i32;
-    cnt = state
+    let mut cnt: i32 = state
         .game
         .g_game
         .player_mut(state.ui.st_stuff.plyr)

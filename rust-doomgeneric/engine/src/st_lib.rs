@@ -85,7 +85,6 @@ pub fn stlib_draw_num(state: &mut GameState, n: &mut StNumber, mut num: i32) {
     let zero_patch = cache_patch_num(&*state.assets.fs, &mut state.assets.w_wad, zero_lump);
     let w: i32 = zero_patch.width();
     let h: i32 = zero_patch.height();
-    let mut x: i32;
 
     n.oldnum = num;
     let neg: i32 = (num < 0) as i32;
@@ -97,7 +96,7 @@ pub fn stlib_draw_num(state: &mut GameState, n: &mut StNumber, mut num: i32) {
         }
         num = -num;
     }
-    x = n.x - numdigits * w;
+    let mut x: i32 = n.x - numdigits * w;
     if n.y - ST_Y < 0 {
         error("drawNum: n->y - ST_Y < 0");
     }

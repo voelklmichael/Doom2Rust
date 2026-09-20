@@ -255,15 +255,13 @@ pub fn d_process_events(state: &mut GameState) {
 pub fn display(state: &mut GameState) {
     let mut nowtime: i32;
     let mut tics: i32;
-    let mut wipestart: i32;
     let y: i32;
     let mut done: bool;
     let wipe: bool;
-    let mut redrawsbar: bool;
     if state.game.g_game.nodrawers {
         return;
     }
-    redrawsbar = false;
+    let mut redrawsbar: bool = false;
     if state.render.r_main.setsizeneeded {
         execute_set_view_size(&mut state.render);
         state.game.d_main.d_display_oldgamestate = GameScreenState::Wipped;
@@ -385,7 +383,7 @@ pub fn display(state: &mut GameState) {
         return;
     }
     wipe_end_screen(state, 0, 0, SCREENWIDTH, SCREENHEIGHT);
-    wipestart = get_time(&mut state.io.i_timer, &mut *state.io.platform) - 1;
+    let mut wipestart: i32 = get_time(&mut state.io.i_timer, &mut *state.io.platform) - 1;
     loop {
         loop {
             nowtime = get_time(&mut state.io.i_timer, &mut *state.io.platform);
@@ -607,8 +605,7 @@ fn set_mission_for_pack_name(
 }
 pub fn identify_version(state: &mut GameState) {
     if state.game.doomstat.gamemission == GameMission::None {
-        let mut i: u32;
-        i = 0;
+        let mut i: u32 = 0;
         while i < state.assets.w_wad.numlumps {
             if state.assets.w_wad.lumpinfo[i as usize]
                 .name

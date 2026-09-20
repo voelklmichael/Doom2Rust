@@ -286,7 +286,6 @@ pub const MOUSE_SPEED_BOX_HEIGHT: i32 = 9;
 pub fn draw_mouse_speed_box(state: &mut IVideoState, platform: &mut dyn DoomPlatform, speed: i32) {
     let mut original_speed: i32;
 
-    let mut linelen: i32;
     let bgcolor: i32 = get_palette_index(platform, 0x77, 0x77, 0x77);
     let bordercolor: i32 = get_palette_index(platform, 0x55, 0x55, 0x55);
     let red: i32 = get_palette_index(platform, 0xff, 0, 0);
@@ -322,7 +321,7 @@ pub fn draw_mouse_speed_box(state: &mut IVideoState, platform: &mut dyn DoomPlat
         original_speed = (original_speed as f32 / state.mouse_acceleration) as i32;
         original_speed += state.mouse_threshold;
     }
-    linelen = original_speed * redline_x / state.mouse_threshold;
+    let mut linelen: i32 = original_speed * redline_x / state.mouse_threshold;
     if linelen > MOUSE_SPEED_BOX_WIDTH - 1 {
         linelen = MOUSE_SPEED_BOX_WIDTH - 1;
     }

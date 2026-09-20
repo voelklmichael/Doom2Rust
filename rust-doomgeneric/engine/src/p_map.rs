@@ -428,11 +428,6 @@ pub fn check_thing(state: &mut GameState, thing_id: MobjId) -> bool {
         .contains(MobjFlags::SOLID)
 }
 pub fn check_position(state: &mut GameState, thing: MobjId, x: Fixed, y: Fixed) -> bool {
-    let mut xl: i32;
-    let mut xh: i32;
-    let mut yl: i32;
-    let mut yh: i32;
-
     state.world.p_map.tmthing = Some(thing);
     state.world.p_map.tmflags = state.world.p_mobj.mo(thing).flags;
     state.world.p_map.tmx = x;
@@ -459,18 +454,20 @@ pub fn check_position(state: &mut GameState, thing: MobjId, x: Fixed, y: Fixed) 
     if state.world.p_map.tmflags.contains(MobjFlags::NOCLIP) {
         return true;
     }
-    xl = (state.world.p_map.tmbbox[BoxIndex::Left as usize]
+    let mut xl: i32 = (state.world.p_map.tmbbox[BoxIndex::Left as usize]
         - state.world.p_setup.bmaporgx
         - 32 * FRACUNIT)
         >> MAPBLOCKSHIFT;
-    xh = (state.world.p_map.tmbbox[BoxIndex::Right as usize] - state.world.p_setup.bmaporgx
+    let mut xh: i32 = (state.world.p_map.tmbbox[BoxIndex::Right as usize]
+        - state.world.p_setup.bmaporgx
         + 32 * FRACUNIT)
         >> MAPBLOCKSHIFT;
-    yl = (state.world.p_map.tmbbox[BoxIndex::Bottom as usize]
+    let mut yl: i32 = (state.world.p_map.tmbbox[BoxIndex::Bottom as usize]
         - state.world.p_setup.bmaporgy
         - 32 * FRACUNIT)
         >> MAPBLOCKSHIFT;
-    yh = (state.world.p_map.tmbbox[BoxIndex::Top as usize] - state.world.p_setup.bmaporgy
+    let mut yh: i32 = (state.world.p_map.tmbbox[BoxIndex::Top as usize]
+        - state.world.p_setup.bmaporgy
         + 32 * FRACUNIT)
         >> MAPBLOCKSHIFT;
     for bx in xl..=xh {
@@ -608,10 +605,6 @@ pub fn thing_height_clip(state: &mut GameState, thing: MobjId) -> bool {
     true
 }
 pub fn hit_slide_line(state: &mut GameState, ld: LineId) {
-    let mut lineangle: Angle;
-
-    let mut deltaangle: Angle;
-
     let ldv = state.world.p_setup.line(ld);
     if ldv.slopetype == SlopeType::Horizontal {
         state.world.p_map.tmymove = 0;
@@ -628,7 +621,7 @@ pub fn hit_slide_line(state: &mut GameState, ld: LineId) {
         state.world.p_mobj.mo(slidemo).y,
         ld,
     );
-    lineangle = point_to_angle2(&mut state.render.r_main, 0, 0, ldv.dx, ldv.dy);
+    let mut lineangle: Angle = point_to_angle2(&mut state.render.r_main, 0, 0, ldv.dx, ldv.dy);
     if side == 1 {
         lineangle = lineangle.wrapping_add(ANG180) as Angle as Angle;
     }
@@ -639,7 +632,7 @@ pub fn hit_slide_line(state: &mut GameState, ld: LineId) {
         state.world.p_map.tmxmove,
         state.world.p_map.tmymove,
     );
-    deltaangle = moveangle.wrapping_sub(lineangle);
+    let mut deltaangle: Angle = moveangle.wrapping_sub(lineangle);
     if deltaangle > ANG180 {
         deltaangle = deltaangle.wrapping_add(ANG180) as Angle as Angle;
     }
@@ -789,8 +782,6 @@ pub fn slide_move(state: &mut GameState, mo: MobjId) {
 }
 pub fn aim_traverse(state: &mut GameState, intercept: Intercept) -> bool {
     let mut slope: Fixed;
-    let mut thingtopslope: Fixed;
-    let mut thingbottomslope: Fixed;
     let dist: Fixed;
     if let InterceptTarget::Line(li) = intercept.target {
         let liv = state.world.p_setup.line(li);
@@ -864,14 +855,15 @@ pub fn aim_traverse(state: &mut GameState, intercept: Intercept) -> bool {
         return true;
     }
     dist = fixed_mul(state.world.p_map.attackrange, intercept.frac);
-    thingtopslope = fixed_div(
+    let mut thingtopslope: Fixed = fixed_div(
         state.world.p_mobj.mo(th).z + state.world.p_mobj.mo(th).height - state.world.p_map.shootz,
         dist,
     );
     if thingtopslope < state.world.p_sight.bottomslope {
         return true;
     }
-    thingbottomslope = fixed_div(state.world.p_mobj.mo(th).z - state.world.p_map.shootz, dist);
+    let mut thingbottomslope: Fixed =
+        fixed_div(state.world.p_mobj.mo(th).z - state.world.p_map.shootz, dist);
     if thingbottomslope > state.world.p_sight.topslope {
         return true;
     }
@@ -1094,7 +1086,6 @@ pub fn line_attack(
     );
 }
 pub fn use_traverse(state: &mut GameState, intercept: Intercept) -> bool {
-    let mut side: i32;
     let li = match intercept.target {
         InterceptTarget::Line(id) => id,
         InterceptTarget::Thing(_) => unreachable!(),
@@ -1108,7 +1099,7 @@ pub fn use_traverse(state: &mut GameState, intercept: Intercept) -> bool {
         }
         return true;
     }
-    side = 0;
+    let mut side: i32 = 0;
     let (use_x, use_y) = {
         let u = state.world.p_mobj.mo(usething);
         (u.x, u.y)
@@ -1134,7 +1125,6 @@ pub fn use_lines(state: &mut GameState, player: PlayerId) {
 pub fn pit_radius_attack(state: &mut GameState, thing_id: MobjId) -> bool {
     let thing = thing_id;
 
-    let mut dist: Fixed;
     if !state
         .world
         .p_mobj
@@ -1159,7 +1149,7 @@ pub fn pit_radius_attack(state: &mut GameState, thing_id: MobjId) -> bool {
         (state.world.p_mobj.mo(thing).x - state.world.p_mobj.mo(bombspot).x).abs() as Fixed;
     let dy: Fixed =
         (state.world.p_mobj.mo(thing).y - state.world.p_mobj.mo(bombspot).y).abs() as Fixed;
-    dist = if dx > dy { dx } else { dy };
+    let mut dist: Fixed = if dx > dy { dx } else { dy };
     dist = (dist - state.world.p_mobj.mo(thing).radius) >> FRACBITS;
     if dist < 0 {
         dist = 0;

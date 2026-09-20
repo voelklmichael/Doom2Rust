@@ -524,8 +524,7 @@ pub fn hu_responder(
 ) -> bool {
     let mut eatkey: bool = false;
     let c: u8;
-    let mut numplayers: i32;
-    numplayers = 0;
+    let mut numplayers: i32 = 0;
     for i in 0..(MAXPLAYERS as usize) {
         numplayers += g_game.playeringame[i] as i32;
     }

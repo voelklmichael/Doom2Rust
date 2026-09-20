@@ -175,15 +175,11 @@ pub fn clear_clip_segs(r_bsp: &mut RBspState, r_draw: &RDrawState) {
     r_bsp.newend = 2;
 }
 pub fn add_line(state: &mut GameState, line: SegId) {
-    let mut angle1: Angle;
-    let mut angle2: Angle;
-
-    let mut tspan: Angle;
     state.render.r_bsp.curline = line;
     let line_v1 = state.world.p_setup.vertexes[state.world.p_setup.seg(line).v1.0 as usize];
     let line_v2 = state.world.p_setup.vertexes[state.world.p_setup.seg(line).v2.0 as usize];
-    angle1 = point_to_angle(&state.render.r_main, line_v1.x, line_v1.y);
-    angle2 = point_to_angle(&state.render.r_main, line_v2.x, line_v2.y);
+    let mut angle1: Angle = point_to_angle(&state.render.r_main, line_v1.x, line_v1.y);
+    let mut angle2: Angle = point_to_angle(&state.render.r_main, line_v2.x, line_v2.y);
     let span: Angle = angle1.wrapping_sub(angle2);
     if span >= ANG180 {
         return;
@@ -191,7 +187,7 @@ pub fn add_line(state: &mut GameState, line: SegId) {
     state.render.r_segs.rw_angle1 = angle1 as i32;
     angle1 = angle1.wrapping_sub(state.render.r_main.viewangle);
     angle2 = angle2.wrapping_sub(state.render.r_main.viewangle);
-    tspan = angle1.wrapping_add(state.render.r_main.clipangle);
+    let mut tspan: Angle = angle1.wrapping_add(state.render.r_main.clipangle);
     if tspan > (2 as Angle).wrapping_mul(state.render.r_main.clipangle) {
         tspan = tspan.wrapping_sub((2 as Angle).wrapping_mul(state.render.r_main.clipangle));
         if tspan >= span {
@@ -316,12 +312,6 @@ pub static CHECKCOORD: [[i32; 4]; 12] = [
     [0; 4],
 ];
 pub fn check_bbox(r_bsp: &RBspState, r_main: &RMainState, bspcoord: [Fixed; 4]) -> bool {
-    let mut angle1: Angle;
-    let mut angle2: Angle;
-
-    let mut tspan: Angle;
-
-    let mut sx2: i32;
     let boxx: i32 = if r_main.viewx <= bspcoord[BoxIndex::Left as usize] {
         0
     } else if r_main.viewx < bspcoord[BoxIndex::Right as usize] {
@@ -344,13 +334,13 @@ pub fn check_bbox(r_bsp: &RBspState, r_main: &RMainState, bspcoord: [Fixed; 4]) 
     let y1: Fixed = bspcoord[CHECKCOORD[boxpos as usize][1] as usize];
     let x2: Fixed = bspcoord[CHECKCOORD[boxpos as usize][2] as usize];
     let y2: Fixed = bspcoord[CHECKCOORD[boxpos as usize][3] as usize];
-    angle1 = point_to_angle(r_main, x1, y1).wrapping_sub(r_main.viewangle);
-    angle2 = point_to_angle(r_main, x2, y2).wrapping_sub(r_main.viewangle);
+    let mut angle1: Angle = point_to_angle(r_main, x1, y1).wrapping_sub(r_main.viewangle);
+    let mut angle2: Angle = point_to_angle(r_main, x2, y2).wrapping_sub(r_main.viewangle);
     let span: Angle = angle1.wrapping_sub(angle2);
     if span >= ANG180 {
         return true;
     }
-    tspan = angle1.wrapping_add(r_main.clipangle);
+    let mut tspan: Angle = angle1.wrapping_add(r_main.clipangle);
     if tspan > (2 as Angle).wrapping_mul(r_main.clipangle) {
         tspan = tspan.wrapping_sub((2 as Angle).wrapping_mul(r_main.clipangle));
         if tspan >= span {
@@ -369,7 +359,7 @@ pub fn check_bbox(r_bsp: &RBspState, r_main: &RMainState, bspcoord: [Fixed; 4]) 
     angle1 = angle1.wrapping_add(ANG90 as Angle) >> ANGLETOFINESHIFT;
     angle2 = angle2.wrapping_add(ANG90 as Angle) >> ANGLETOFINESHIFT;
     let sx1: i32 = r_main.viewangletox[angle1 as usize];
-    sx2 = r_main.viewangletox[angle2 as usize];
+    let mut sx2: i32 = r_main.viewangletox[angle2 as usize];
     if sx1 == sx2 {
         return false;
     }
@@ -384,8 +374,6 @@ pub fn check_bbox(r_bsp: &RBspState, r_main: &RMainState, bspcoord: [Fixed; 4]) 
     true
 }
 pub fn r_subsector(state: &mut GameState, num: i32) {
-    let mut count: i32;
-    let mut line: SegId;
     if num >= state.world.p_setup.numsubsectors {
         error(&format!(
             "R_Subsector: ss {} with numss = {}",
@@ -395,8 +383,8 @@ pub fn r_subsector(state: &mut GameState, num: i32) {
     state.render.r_main.sscount += 1;
     let sub = state.world.p_setup.subsector(SubsectorId(num as u32));
     state.render.r_bsp.frontsector = Some(sub.sector);
-    count = sub.numlines as i32;
-    line = SegId(sub.firstline as u32);
+    let mut count: i32 = sub.numlines as i32;
+    let mut line: SegId = SegId(sub.firstline as u32);
     let frontsector_id = state.render.r_bsp.frontsector.unwrap();
     let frontsector = state.world.p_setup.sector_mut(frontsector_id);
     let (floorheight, floorpic, ceilingheight, ceilingpic, lightlevel) = (

@@ -360,7 +360,6 @@ pub fn draw_masked_column(state: &mut GameState, mut post: ColumnSource) {
 }
 pub fn draw_vis_sprite(state: &mut GameState, vis: &VisSprite) {
     let mut texturecolumn: i32;
-    let mut frac: Fixed;
 
     let sprite_lump = vis.patch + state.render.r_data.firstspritelump;
     let patch: Patch = cache_patch_num(&*state.assets.fs, &mut state.assets.w_wad, sprite_lump);
@@ -376,7 +375,7 @@ pub fn draw_vis_sprite(state: &mut GameState, vis: &VisSprite) {
     }
     state.render.r_draw.dc_iscale = (vis.xiscale.abs() >> state.render.r_main.detailshift) as Fixed;
     state.render.r_draw.dc_texturemid = vis.texturemid;
-    frac = vis.startfrac;
+    let mut frac: Fixed = vis.startfrac;
     state.render.r_things.spryscale = vis.scale;
     state.render.r_things.sprtopscreen = state.render.r_main.centeryfrac
         - fixed_mul(
@@ -414,10 +413,6 @@ pub fn project_sprite(state: &mut GameState, thing_id: MobjId) {
         thing.flags,
     );
 
-    let mut gxt: Fixed;
-    let mut gyt: Fixed;
-    let mut tx: Fixed;
-
     let lump: i32;
     let rot: u32;
     let flip: bool;
@@ -426,8 +421,8 @@ pub fn project_sprite(state: &mut GameState, thing_id: MobjId) {
 
     let tr_x: Fixed = thing_x - state.render.r_main.viewx;
     let tr_y: Fixed = thing_y - state.render.r_main.viewy;
-    gxt = fixed_mul(tr_x, state.render.r_main.viewcos);
-    gyt = -fixed_mul(tr_y, state.render.r_main.viewsin);
+    let mut gxt: Fixed = fixed_mul(tr_x, state.render.r_main.viewcos);
+    let mut gyt: Fixed = -fixed_mul(tr_y, state.render.r_main.viewsin);
     let tz: Fixed = gxt - gyt;
     if tz < MINZ {
         return;
@@ -435,7 +430,7 @@ pub fn project_sprite(state: &mut GameState, thing_id: MobjId) {
     let xscale: Fixed = fixed_div(state.render.r_main.projection, tz);
     gxt = -fixed_mul(tr_x, state.render.r_main.viewsin);
     gyt = fixed_mul(tr_y, state.render.r_main.viewcos);
-    tx = -(gyt + gxt);
+    let mut tx: Fixed = -(gyt + gxt);
     if tx.abs() > tz << 2 {
         return;
     }
@@ -558,8 +553,6 @@ pub fn add_sprites(state: &mut GameState, sec: SectorId) {
     }
 }
 pub fn draw_psprite(state: &mut GameState, psp: &PspDef) {
-    let mut tx: Fixed;
-
     let mut avis: VisSprite = VisSprite {
         x1: 0,
         x2: 0,
@@ -593,7 +586,7 @@ pub fn draw_psprite(state: &mut GameState, psp: &PspDef) {
     let sprframe = &sprdef.spriteframes[(psp_state_frame & FF_FRAMEMASK) as usize];
     let lump: i32 = sprframe.lump[0] as i32;
     let flip: bool = sprframe.flip[0] != 0;
-    tx = (psp.sx - 160 * FRACUNIT) as Fixed;
+    let mut tx: Fixed = (psp.sx - 160 * FRACUNIT) as Fixed;
     tx -= state.render.r_data.spriteoffset[lump as usize];
     let x1: i32 = (state.render.r_main.centerxfrac
         + fixed_mul(tx, state.render.r_things.pspritescale))

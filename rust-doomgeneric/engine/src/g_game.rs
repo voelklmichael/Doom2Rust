@@ -444,7 +444,6 @@ fn weapon_selectable(doomstat: &DoomstatState, g_game: &GGameState, weapon: Weap
     true
 }
 fn g_next_weapon(doomstat: &DoomstatState, g_game: &GGameState, direction: i32) -> i32 {
-    let mut i: i32;
     let weapon: WeaponType = if g_game.players[g_game.consoleplayer].pendingweapon as u32
         == WeaponType::Nochange as u32
     {
@@ -452,7 +451,7 @@ fn g_next_weapon(doomstat: &DoomstatState, g_game: &GGameState, direction: i32) 
     } else {
         g_game.players[g_game.consoleplayer].pendingweapon
     };
-    i = 0;
+    let mut i: i32 = 0;
     while (i as usize)
         < ::core::mem::size_of::<[WeaponOrder; 9]>()
             .wrapping_div(::core::mem::size_of::<WeaponOrder>())
@@ -487,8 +486,6 @@ pub fn g_build_ticcmd(state: &mut GameState, cmd: &mut TicCmd, maketic: i32) {
 
     let bstrafe: bool;
 
-    let mut forward: i32;
-    let mut side: i32;
     *cmd = TicCmd {
         forwardmove: 0,
         sidemove: 0,
@@ -511,8 +508,8 @@ pub fn g_build_ticcmd(state: &mut GameState, cmd: &mut TicCmd, maketic: i32) {
         || state.game.g_game.gamekeydown[state.game.m_controls.key_speed as usize]
         || state.game.g_game.joyarray[(state.game.m_controls.joybspeed + 1) as usize])
         as i32;
-    side = 0;
-    forward = side;
+    let mut side: i32 = 0;
+    let mut forward: i32 = side;
     if state.game.g_game.joyxmove != 0
         || state.game.g_game.gamekeydown[state.game.m_controls.key_right as usize]
         || state.game.g_game.gamekeydown[state.game.m_controls.key_left as usize]
@@ -1609,10 +1606,9 @@ pub fn write_demo_ticcmd(state: &mut GameState, player_num: usize) {
     read_demo_ticcmd(state, player_num);
 }
 pub fn record_demo(g_game: &mut GGameState, m_argv: &MArgvState, name: &str) {
-    let mut maxsize: i32;
     g_game.usergame = false;
     g_game.demoname = format!("{name}.lmp");
-    maxsize = 0x20000;
+    let mut maxsize: i32 = 0x20000;
     if let Some(i) = check_parm_with_args(m_argv, "-maxdemo", 1) {
         maxsize = argv_atoi(&m_argv.myargv[i + 1]) * 1024;
     }

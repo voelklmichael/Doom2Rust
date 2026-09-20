@@ -753,13 +753,11 @@ pub fn face_target(state: &mut GameState, actor: MobjId) {
     }
 }
 pub fn pos_attack(state: &mut GameState, actor: MobjId) {
-    let mut angle: i32;
-
     if state.world.p_mobj.mo(actor).target.is_none() {
         return;
     }
     face_target(state, actor);
-    angle = state.world.p_mobj.mo(actor).angle as i32;
+    let mut angle: i32 = state.world.p_mobj.mo(actor).angle as i32;
     let slope: i32 = aim_line_attack(state, Some(actor), angle as Angle, MISSILERANGE);
     s_start_sound(state, SoundOrigin::Mobj(actor), SfxName::Pistol);
     angle += (p_random(&mut state.world.m_random) - p_random(&mut state.world.m_random)) << 20;
@@ -944,9 +942,6 @@ pub fn skel_missile(state: &mut GameState, actor: MobjId) {
 }
 pub static TRACEANGLE: i32 = 0xc000000;
 pub fn a_tracer(state: &mut GameState, actor: MobjId) {
-    let mut exact: Angle;
-    let mut dist: Fixed;
-
     if state.game.d_loop.gametic & 3 != 0 {
         return;
     }
@@ -977,7 +972,7 @@ pub fn a_tracer(state: &mut GameState, actor: MobjId) {
     if dest.is_none() || state.world.p_mobj.mo(dest.unwrap()).health <= 0 {
         return;
     }
-    exact = point_to_angle2(
+    let mut exact: Angle = point_to_angle2(
         &mut state.render.r_main,
         state.world.p_mobj.mo(actor).x,
         state.world.p_mobj.mo(actor).y,
@@ -1024,7 +1019,7 @@ pub fn a_tracer(state: &mut GameState, actor: MobjId) {
             .speed as Fixed,
         FINESINE[exact as usize],
     );
-    dist = aprox_distance(
+    let mut dist: Fixed = aprox_distance(
         state.world.p_mobj.mo(dest.unwrap()).x - state.world.p_mobj.mo(actor).x,
         state.world.p_mobj.mo(dest.unwrap()).y - state.world.p_mobj.mo(actor).y,
     );
@@ -1356,9 +1351,6 @@ pub fn fat_attack2(state: &mut GameState, actor: MobjId) {
     );
 }
 pub fn fat_attack3(state: &mut GameState, actor: MobjId) {
-    let mut mo: MobjId;
-
-    let mut an: i32;
     face_target(state, actor);
     let target_subst = state
         .world
@@ -1368,14 +1360,14 @@ pub fn fat_attack3(state: &mut GameState, actor: MobjId) {
         .filter(|&target| state.world.p_mobj.is_live(target));
     let target_id = subst_null_mobj(&mut state.world.p_mobj, target_subst);
     let target: MobjId = target_id;
-    mo = spawn_missile(state, actor, target, MobjType::Fatshot);
+    let mut mo: MobjId = spawn_missile(state, actor, target, MobjType::Fatshot);
     state.world.p_mobj.mo_mut(mo).angle = state
         .world
         .p_mobj
         .mo(mo)
         .angle
         .wrapping_sub((FATSPREAD / 2) as Angle);
-    an = (state.world.p_mobj.mo(mo).angle >> ANGLETOFINESHIFT) as i32;
+    let mut an: i32 = (state.world.p_mobj.mo(mo).angle >> ANGLETOFINESHIFT) as i32;
     state.world.p_mobj.mo_mut(mo).momx = fixed_mul(
         state
             .assets
@@ -1419,7 +1411,6 @@ pub fn fat_attack3(state: &mut GameState, actor: MobjId) {
 }
 pub const SKULLSPEED: i32 = 20 * FRACUNIT;
 pub fn skull_attack(state: &mut GameState, actor: MobjId) {
-    let mut dist: i32;
     let dest: MobjId = match state
         .world
         .p_mobj
@@ -1441,7 +1432,7 @@ pub fn skull_attack(state: &mut GameState, actor: MobjId) {
     let an: Angle = state.world.p_mobj.mo(actor).angle >> ANGLETOFINESHIFT;
     state.world.p_mobj.mo_mut(actor).momx = fixed_mul(SKULLSPEED, FINECOSINE[an as usize]);
     state.world.p_mobj.mo_mut(actor).momy = fixed_mul(SKULLSPEED, FINESINE[an as usize]);
-    dist = aprox_distance(
+    let mut dist: i32 = aprox_distance(
         state.world.p_mobj.mo(dest).x - state.world.p_mobj.mo(actor).x,
         state.world.p_mobj.mo(dest).y - state.world.p_mobj.mo(actor).y,
     );
@@ -1593,7 +1584,6 @@ fn check_boss_end(doomstat: &DoomstatState, g_game: &GGameState, motype: MobjTyp
     }
 }
 pub fn boss_death(state: &mut GameState, mo: MobjId) {
-    let mut i: i32;
     if state.game.doomstat.gamemode == GameMode::Commercial {
         if state.game.g_game.gamemap != 7 {
             return;
@@ -1610,7 +1600,7 @@ pub fn boss_death(state: &mut GameState, mo: MobjId) {
     ) {
         return;
     }
-    i = 0;
+    let mut i: i32 = 0;
     while i < MAXPLAYERS {
         if state.game.g_game.playeringame[i as usize]
             && state.game.g_game.players[i as usize].health > 0
@@ -1719,11 +1709,10 @@ pub fn brain_pain(state: &mut GameState, _id: MobjId) {
     s_start_sound(state, SoundOrigin::None, SfxName::Bospn);
 }
 pub fn brain_scream(state: &mut GameState, mo: MobjId) {
-    let mut x: i32;
     let mut y: i32;
     let mut z: i32;
     let mut th: MobjId;
-    x = state.world.p_mobj.mo(mo).x - 196 * FRACUNIT;
+    let mut x: i32 = state.world.p_mobj.mo(mo).x - 196 * FRACUNIT;
     while x < state.world.p_mobj.mo(mo).x + 320 * FRACUNIT {
         y = state.world.p_mobj.mo(mo).y - 320 * FRACUNIT;
         z = 128 + p_random(&mut state.world.m_random) * 2 * FRACUNIT;

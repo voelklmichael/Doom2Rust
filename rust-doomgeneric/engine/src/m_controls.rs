@@ -500,11 +500,10 @@ pub fn bind_menu_controls(m_config: &mut MConfigState) {
     bind_variable_int(m_config, "key_spy", |s| &mut s.game.m_controls.key_spy);
 }
 pub fn bind_chat_controls(m_config: &mut MConfigState, num_players: u32) {
-    let mut i: u32;
     bind_variable_int(m_config, "key_multi_msg", |s| {
         &mut s.game.m_controls.key_multi_msg
     });
-    i = 0;
+    let mut i: u32 = 0;
     while i < num_players {
         let name = format!("key_multi_msgplayer{}", i.wrapping_add(1_u32));
         bind_variable_int(m_config, &name, move |s| {

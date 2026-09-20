@@ -135,8 +135,7 @@ fn saveg_write8(state: &mut PSavegState, value: u8) {
     state.save_pos += 1;
 }
 fn saveg_read16(state: &mut PSavegState) -> i16 {
-    let mut result: i32;
-    result = saveg_read8(state) as i32;
+    let mut result: i32 = saveg_read8(state) as i32;
     result |= (saveg_read8(state) as i32) << 8;
     result as i16
 }
@@ -145,8 +144,7 @@ fn saveg_write16(state: &mut PSavegState, value: i16) {
     saveg_write8(state, (value as i32 >> 8 & 0xff) as u8);
 }
 fn saveg_read32(state: &mut PSavegState) -> i32 {
-    let mut result: i32;
-    result = saveg_read8(state) as i32;
+    let mut result: i32 = saveg_read8(state) as i32;
     result |= (saveg_read8(state) as i32) << 8;
     result |= (saveg_read8(state) as i32) << 16;
     result |= (saveg_read8(state) as i32) << 24;

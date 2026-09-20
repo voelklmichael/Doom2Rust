@@ -290,17 +290,14 @@ pub fn init_switch_list(
     p_switch: &mut PSwitchState,
     r_data: &RDataState,
 ) {
-    let mut i: i32;
-    let mut index: i32;
-    let mut episode: i32;
-    episode = 1;
+    let mut episode: i32 = 1;
     if doomstat.gamemode == GameMode::Registered || doomstat.gamemode == GameMode::Retail {
         episode = 2;
     } else if doomstat.gamemode == GameMode::Commercial {
         episode = 3;
     }
-    index = 0;
-    i = 0;
+    let mut index: i32 = 0;
+    let mut i: i32 = 0;
     while i < MAXSWITCHES {
         if ALPH_SWITCH_LIST[i as usize].episode == 0 {
             p_switch.numswitches = index / 2;
@@ -346,7 +343,6 @@ pub fn start_button(
     error("P_StartButton: no button slots left!");
 }
 pub fn change_switch_texture(state: &mut GameState, line: LineId, use_again: bool) {
-    let mut sound: SfxName;
     if !use_again {
         state.world.p_setup.line_mut(line).special = 0;
     }
@@ -354,7 +350,7 @@ pub fn change_switch_texture(state: &mut GameState, line: LineId, use_again: boo
     let tex_top: i32 = state.world.p_setup.sides[sidenum0 as usize].toptexture as i32;
     let tex_mid: i32 = state.world.p_setup.sides[sidenum0 as usize].midtexture as i32;
     let tex_bot: i32 = state.world.p_setup.sides[sidenum0 as usize].bottomtexture as i32;
-    sound = SfxName::Swtchn;
+    let mut sound: SfxName = SfxName::Swtchn;
     if state.world.p_setup.line(line).special as i32 == 11 {
         sound = SfxName::Swtchx;
     }
