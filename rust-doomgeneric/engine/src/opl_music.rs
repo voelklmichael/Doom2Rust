@@ -56,10 +56,9 @@ const PITCH_TABLE: [u64; STEPS_PER_OCTAVE] = {
 fn f_number_and_block(position: i32) -> (u16, u8) {
     let position = position.clamp(0, MAX_POSITION) as usize;
     let at_block_0 = PITCH_TABLE[position % STEPS_PER_OCTAVE] << (position / STEPS_PER_OCTAVE);
-    let mut block = 0;
-    while block < 7 && (at_block_0 >> (40 + block)) > 1023 {
-        block += 1;
-    }
+    let block = (0..7)
+        .find(|&block| (at_block_0 >> (40 + block)) <= 1023)
+        .unwrap_or(7);
     let f_number = (at_block_0 >> (40 + block)).min(1023) as u16;
     (f_number, block as u8)
 }

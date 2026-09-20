@@ -169,12 +169,8 @@ pub fn generate_composite(
         let realpatch = &realpatch_lump[..realpatch_len];
         let realpatch_width = i32::from(i16::from_le_bytes(realpatch[0..2].try_into().unwrap()));
         let x1: i32 = i32::from(tex_patch.originx);
-        let mut x2: i32 = x1 + realpatch_width;
-        let mut x: i32 = if x1 < 0 { 0 } else { x1 };
-        if x2 > texture_width {
-            x2 = texture_width;
-        }
-        while x < x2 {
+        let x2: i32 = (x1 + realpatch_width).min(texture_width);
+        for x in x1.max(0)..x2 {
             if i32::from(r_data.texturecolumnlump[texnum as usize][x as usize]) < 0 {
                 let colofs_off = (8 + (x - x1) * 4) as usize;
                 let columnofs =
@@ -188,7 +184,6 @@ pub fn generate_composite(
                     texture_height,
                 );
             }
-            x += 1;
         }
     }
     r_data.texturecomposite[texnum as usize] = Some(block.into_boxed_slice());

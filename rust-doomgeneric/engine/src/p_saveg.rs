@@ -677,14 +677,11 @@ fn saveg_write_glow_t(state: &mut PSavegState, str: &Glow) {
     saveg_write32(state, str.direction.to_save());
 }
 pub fn write_save_game_header(state: &mut GameState, description: &str) {
-    let mut i: usize = 0;
     for &b in description.as_bytes() {
         saveg_write8(&mut state.world.p_saveg, b);
-        i += 1;
     }
-    while i < SAVESTRINGSIZE {
+    for _ in description.len()..SAVESTRINGSIZE {
         saveg_write8(&mut state.world.p_saveg, 0_u8);
-        i += 1;
     }
     let name = format!("version {}", vanilla_version_code(&state.game.doomstat));
     let mut name_bytes = [0u8; 16];

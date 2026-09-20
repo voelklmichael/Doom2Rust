@@ -425,15 +425,13 @@ pub fn new_chase_dir(state: &mut GameState, actor: MobjId) {
             }
         }
     } else {
-        let mut tdir: i32 = DirType::Southeast as i32;
-        while tdir != DirType::East as i32 - 1 {
+        for tdir in (DirType::East as i32..=DirType::Southeast as i32).rev() {
             if tdir != turnaround as i32 {
                 state.world.p_mobj.mo_mut(actor).movedir = tdir;
                 if try_walk(state, actor) {
                     return;
                 }
             }
-            tdir -= 1;
         }
     }
     if turnaround != DirType::Nodir {
@@ -1671,8 +1669,8 @@ pub fn brain_pain(state: &mut GameState, _id: MobjId) {
     s_start_sound(state, SoundOrigin::None, SfxName::Bospn);
 }
 pub fn brain_scream(state: &mut GameState, mo: MobjId) {
-    let mut x: i32 = state.world.p_mobj.mo(mo).x - 196 * FRACUNIT;
-    while x < state.world.p_mobj.mo(mo).x + 320 * FRACUNIT {
+    let brain_x: i32 = state.world.p_mobj.mo(mo).x;
+    for x in (brain_x - 196 * FRACUNIT..brain_x + 320 * FRACUNIT).step_by(8 * FRACUNIT as usize) {
         let y: i32 = state.world.p_mobj.mo(mo).y - 320 * FRACUNIT;
         let z: i32 = 128 + p_random(&mut state.world.m_random) * 2 * FRACUNIT;
         let th: MobjId = spawn_mobj(state, x as Fixed, y as Fixed, z as Fixed, MobjType::Rocket);
@@ -1682,7 +1680,6 @@ pub fn brain_scream(state: &mut GameState, mo: MobjId) {
         if state.world.p_mobj.mo(th).tics < 1 {
             state.world.p_mobj.mo_mut(th).tics = 1;
         }
-        x += FRACUNIT * 8;
     }
     s_start_sound(state, SoundOrigin::None, SfxName::Bosdth);
 }

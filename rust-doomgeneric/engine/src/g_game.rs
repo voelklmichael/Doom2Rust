@@ -455,13 +455,10 @@ fn g_next_weapon(doomstat: &DoomstatState, g_game: &GGameState, direction: Weapo
         } else {
             g_game.players[g_game.consoleplayer].pendingweapon
         };
-    let mut i: i32 = 0;
-    while (i as usize) < WEAPON_ORDER_TABLE.len() {
-        if WEAPON_ORDER_TABLE[i as usize].weapon == weapon {
-            break;
-        }
-        i += 1;
-    }
+    let mut i: i32 = WEAPON_ORDER_TABLE
+        .iter()
+        .position(|entry| entry.weapon == weapon)
+        .unwrap_or(WEAPON_ORDER_TABLE.len()) as i32;
     let start_i: i32 = i;
     loop {
         i += direction as i32;
@@ -593,15 +590,12 @@ pub fn g_build_ticcmd(state: &mut GameState, cmd: &mut TicCmd, maketic: i32) {
         cmd.buttons |= (i << BT_WEAPONSHIFT) as u8;
     } else {
         let weapon_keys = state.game.m_controls.weapon_keys();
-        let mut i: i32 = 0;
-        while (i as usize) < weapon_keys.len() {
-            let key: i32 = weapon_keys[i as usize];
+        for (i, &key) in weapon_keys.iter().enumerate() {
             if state.game.g_game.gamekeydown[key as usize] {
                 cmd.buttons |= BT_CHANGE;
-                cmd.buttons |= (i << BT_WEAPONSHIFT) as u8;
+                cmd.buttons |= ((i as i32) << BT_WEAPONSHIFT) as u8;
                 break;
             }
-            i += 1;
         }
     }
     state.game.g_game.next_weapon = None;

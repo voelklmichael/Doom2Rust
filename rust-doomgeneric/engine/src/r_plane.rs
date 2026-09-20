@@ -158,21 +158,17 @@ pub fn find_plane(
     picnum: i32,
     mut lightlevel: i32,
 ) -> usize {
-    let mut check: usize = 0;
     if picnum == r_sky.skyflatnum {
         height = 0;
         lightlevel = 0;
     }
-    while check < r_plane.lastvisplane {
-        let pl = r_plane.visplanes[check];
-        if height == pl.height && picnum == pl.picnum && lightlevel == pl.lightlevel {
-            break;
-        }
-        check += 1;
+    if let Some(found) = r_plane.visplanes[..r_plane.lastvisplane]
+        .iter()
+        .position(|pl| height == pl.height && picnum == pl.picnum && lightlevel == pl.lightlevel)
+    {
+        return found;
     }
-    if check < r_plane.lastvisplane {
-        return check;
-    }
+    let check: usize = r_plane.lastvisplane;
     if r_plane.lastvisplane == MAXVISPLANES {
         error("R_FindPlane: no more visplanes");
     }
@@ -198,14 +194,7 @@ pub fn check_plane(r_plane: &mut RPlaneState, pl: usize, start: i32, stop: i32) 
     } else {
         (stop, plv.maxx)
     };
-    let mut x = intrl;
-    while x <= intrh {
-        if i32::from(plv.top(x)) != 0xff {
-            break;
-        }
-        x += 1;
-    }
-    if x > intrh {
+    if (intrl..=intrh).all(|x| i32::from(plv.top(x)) == 0xff) {
         plv.minx = unionl;
         plv.maxx = unionh;
         return pl;

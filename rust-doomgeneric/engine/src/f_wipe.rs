@@ -73,7 +73,7 @@ fn wipe_do_melt(
     i_video: &mut IVideoState,
     width: i32,
     height: i32,
-    mut ticks: i32,
+    ticks: i32,
 ) -> bool {
     let mut done = true;
     let width = (width / 2) as usize;
@@ -82,8 +82,7 @@ fn wipe_do_melt(
     let scr_start = &f_wipe.wipe_scr_start;
     let scr_end = &f_wipe.wipe_scr_end;
     let ys = &mut f_wipe.y;
-    while ticks > 0 {
-        ticks -= 1;
+    for _ in 0..ticks {
         for (i, y) in ys.iter_mut().enumerate().take(width) {
             if *y < 0 {
                 *y += 1;

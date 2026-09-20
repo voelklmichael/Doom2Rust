@@ -13,7 +13,6 @@ use crate::platform::DoomPlatform;
 use crate::w_wad::lump_bytes;
 use crate::w_wad::lump_bytes_name;
 use crate::w_wad::WWadState;
-use alloc::string::String;
 use alloc::vec::Vec;
 
 /// Which framebuffer a drawing call targets.
@@ -262,18 +261,10 @@ pub fn write_pcxfile(
     fs.write_file(filename, &pack);
 }
 pub fn v_screen_shot(fs: &mut dyn DoomFileSystem, i_video: &IVideoState, w_wad: &mut WWadState) {
-    let mut i = 0i32;
-    let mut lbmname = String::new();
-    while i <= 99 {
-        lbmname = format!("DOOM{i:02}.pcx");
-        if !fs.exists(&lbmname) {
-            break;
-        }
-        i += 1;
-    }
-    if i == 100 {
+    let Some(i) = (0..100).find(|i| !fs.exists(&format!("DOOM{i:02}.pcx"))) else {
         error("V_ScreenShot: Couldn't create a PCX");
-    }
+    };
+    let lbmname = format!("DOOM{i:02}.pcx");
     let palette = lump_bytes_name(&*fs, w_wad, "PLAYPAL");
     write_pcxfile(
         &mut *fs,

@@ -92,9 +92,8 @@ pub fn hulib_erase_text_line(state: &mut GameState, l: &mut HuTextLine) {
         let glyph = state.ui.hu_stuff.hu_font[0];
         let patch = cache_patch_num(&*state.assets.fs, &mut state.assets.w_wad, glyph);
         let lh = patch.height() + 1;
-        let mut y = l.y;
-        let mut yoffset = y * SCREENWIDTH;
-        while y < l.y + lh {
+        for y in l.y..l.y + lh {
+            let yoffset = y * SCREENWIDTH;
             if y < state.render.r_draw.viewwindowy
                 || y >= state.render.r_draw.viewwindowy + state.render.r_draw.viewheight
             {
@@ -122,8 +121,6 @@ pub fn hulib_erase_text_line(state: &mut GameState, l: &mut HuTextLine) {
                     viewwindowx,
                 );
             }
-            y += 1;
-            yoffset += SCREENWIDTH;
         }
     }
     if l.needsupdate != 0 {
