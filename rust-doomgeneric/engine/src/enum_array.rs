@@ -10,6 +10,7 @@ use core::ops::{Index, IndexMut};
 /// A type that names a slot of an [`EnumArray`].
 pub trait ArrayIndex: Copy {
     /// The array position this value stands for.
+    #[inline(always)]
     fn slot(self) -> usize;
 }
 
@@ -17,6 +18,7 @@ pub trait ArrayIndex: Copy {
 pub struct EnumArray<K, V, const N: usize>([V; N], PhantomData<fn(K)>);
 
 impl<K, V, const N: usize> EnumArray<K, V, N> {
+    #[inline(always)]
     pub const fn new(values: [V; N]) -> Self {
         Self(values, PhantomData)
     }
@@ -48,12 +50,14 @@ impl<K, V, const N: usize> EnumArray<K, V, N> {
 
 impl<K: ArrayIndex, V, const N: usize> Index<K> for EnumArray<K, V, N> {
     type Output = V;
+    #[inline(always)]
     fn index(&self, key: K) -> &V {
         &self.0[key.slot()]
     }
 }
 
 impl<K: ArrayIndex, V, const N: usize> IndexMut<K> for EnumArray<K, V, N> {
+    #[inline(always)]
     fn index_mut(&mut self, key: K) -> &mut V {
         &mut self.0[key.slot()]
     }
@@ -61,12 +65,14 @@ impl<K: ArrayIndex, V, const N: usize> IndexMut<K> for EnumArray<K, V, N> {
 
 impl<K, V, const N: usize> Index<usize> for EnumArray<K, V, N> {
     type Output = V;
+    #[inline(always)]
     fn index(&self, slot: usize) -> &V {
         &self.0[slot]
     }
 }
 
 impl<K, V, const N: usize> IndexMut<usize> for EnumArray<K, V, N> {
+    #[inline(always)]
     fn index_mut(&mut self, slot: usize) -> &mut V {
         &mut self.0[slot]
     }
