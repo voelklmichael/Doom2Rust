@@ -1502,3 +1502,4 @@ fx1 01700 9e3e4956bbdf55ce
 fx1 01705 1b1d42a4117fb7a8
 fx1 01710 d69c0069dc633a92
 fx1 end timed 1710 gametics in 99 realtics (604.545471 fps)
+pickup 4ee63546ae9ec3dd

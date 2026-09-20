@@ -14,6 +14,7 @@
 
 use crate::d_event::{post_event, EvType, Event};
 use crate::d_main::doomgeneric_tick;
+use crate::d_mode::GameMode;
 use crate::doomdef::{Pixel, SCREENHEIGHT, SCREENWIDTH};
 use crate::doomgeneric::{doomgeneric_create, DOOMGENERIC_RESX};
 use crate::f_finale::cast_ticker;
@@ -22,7 +23,8 @@ use crate::g_game::{do_load_game, do_save_game, exit_level, g_load_game, g_save_
 use crate::game_state::{init_game_state, GameState};
 use crate::info::StateId;
 use crate::options::{Options, Warp};
-use crate::p_mobj::MobjFlags;
+use crate::p_inter::touch_special_thing;
+use crate::p_mobj::{spawn_mobj, spritenum_from_raw, MobjFlags, MobjType};
 use crate::p_saveg::save_game_file;
 use crate::p_setup::LineId;
 use crate::p_setup::SectorId;
@@ -586,6 +588,122 @@ fn crusher_stasis_trace() -> Option<String> {
     Some(format!("{hash:016x}"))
 }
 
+/// Touches every kind of pickup in the situations that change what it does (a dropped item, the
+/// commercial game mode, a netgame, and a player who is hurt and empty-handed, average, or already
+/// maxed out so most pickups are refused), and hashes the player, the message, the sound chosen
+/// and whether the item disappeared.
+fn pickup_trace() -> Option<String> {
+    let state = start_e1m1()?;
+    let (save_path, _) = save_slot(state, 0);
+    let mut hash = FNV_OFFSET;
+    let original_mode = state.game.doomstat.gamemode;
+    // The sprites of everything that can be picked up (57 to 59 are not pickups).
+    for sprite in (55..=56).chain(60..=93) {
+        for scenario in 0..24 {
+            let (dropped, commercial, netgame) =
+                (scenario & 1 != 0, scenario & 2 != 0, scenario & 4 != 0);
+            let condition = scenario >> 3;
+            // Load in the original game (the other mode has music the IWAD does not have).
+            state.game.doomstat.gamemode = original_mode;
+            state.game.g_game.netgame = false;
+            g_load_game(&mut state.game.g_game, &save_path);
+            do_load_game(state);
+            state.game.doomstat.gamemode = if commercial {
+                GameMode::Commercial
+            } else {
+                GameMode::Retail
+            };
+            state.game.g_game.netgame = netgame;
+            let toucher = state.game.g_game.players[0].mobj();
+            {
+                let p = &mut state.game.g_game.players[0];
+                match condition {
+                    0 => {
+                        p.health = 10;
+                        p.armorpoints = 0;
+                        p.armortype = 0;
+                        p.backpack = false;
+                        for i in 0..4 {
+                            p.ammo[i] = 0;
+                        }
+                        for i in 0..9 {
+                            p.weaponowned[i] = i < 2;
+                        }
+                        for i in 0..6 {
+                            p.powers[i] = 0;
+                            p.cards[i] = false;
+                        }
+                    }
+                    1 => {
+                        for i in 0..6 {
+                            p.cards[i] = false;
+                        }
+                    }
+                    _ => {
+                        p.health = 200;
+                        p.armorpoints = 200;
+                        p.armortype = 2;
+                        p.backpack = true;
+                        for i in 0..4 {
+                            p.maxammo[i] *= 2;
+                            p.ammo[i] = p.maxammo[i];
+                        }
+                        for i in 0..9 {
+                            p.weaponowned[i] = true;
+                        }
+                        for i in 0..6 {
+                            p.powers[i] = 1000;
+                            p.cards[i] = true;
+                        }
+                    }
+                }
+                p.message = None;
+            }
+            let health = state.game.g_game.players[0].health;
+            state.world.p_mobj.mo_mut(toucher).health = health;
+            let (x, y, z) = {
+                let m = state.world.p_mobj.mo(toucher);
+                (m.x, m.y, m.z)
+            };
+            let special = spawn_mobj(state, x, y, z, MobjType::Clip);
+            {
+                let m = state.world.p_mobj.mo_mut(special);
+                m.sprite = spritenum_from_raw(sprite);
+                m.flags |= MobjFlags::COUNTITEM;
+                if dropped {
+                    m.flags |= MobjFlags::DROPPED;
+                }
+            }
+            for c in 0..state.audio.s_sound.snd_channels as usize {
+                state.audio.s_sound.channels[c].sfxinfo = None;
+            }
+            touch_special_thing(state, special, toucher);
+            let p = &state.game.g_game.players[0];
+            let mut values = Vec::new();
+            values.extend([p.health, p.armorpoints, p.armortype, i32::from(p.backpack)]);
+            values.extend([p.readyweapon as i32, p.pendingweapon as i32]);
+            values.extend([p.itemcount, p.bonuscount]);
+            values.extend((0..4).flat_map(|i| [p.ammo[i], p.maxammo[i]]));
+            values.extend((0..9).map(|i| i32::from(p.weaponowned[i])));
+            values.extend((0..6).map(|i| p.powers[i]));
+            values.extend((0..6).map(|i| i32::from(p.cards[i])));
+            values.push(state.world.p_mobj.mo(toucher).health);
+            values.push(i32::from(state.world.p_mobj.is_live(special)));
+            for c in 0..state.audio.s_sound.snd_channels as usize {
+                values.push(
+                    state.audio.s_sound.channels[c]
+                        .sfxinfo
+                        .map_or(-1, |id| id.0 as i32),
+                );
+            }
+            let message = p.message.clone().unwrap_or_default();
+            hash = fnv(hash, values.iter().map(|&v| v as u32));
+            hash = fnv(hash, [fnv_bytes(message.as_bytes()) as u32]);
+        }
+    }
+    Some(format!("{hash:016x}"))
+}
+
 fn actual_output() -> Option<String> {
     let mut out = String::new();
     for demo in ["demo1", "demo2", "demo3"] {
@@ -612,6 +730,7 @@ fn actual_output() -> Option<String> {
             writeln!(out, "{line}").unwrap();
         }
     }
+    writeln!(out, "pickup {}", pickup_trace()?).unwrap();
     Some(out)
 }
 
