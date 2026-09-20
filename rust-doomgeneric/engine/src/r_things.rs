@@ -409,7 +409,6 @@ pub fn project_sprite(state: &mut GameState, thing_id: MobjId) {
     );
 
     let lump: i32;
-    let flip: bool;
 
     let tr_x: Fixed = thing_x - state.render.r_main.viewx;
     let tr_y: Fixed = thing_y - state.render.r_main.viewy;
@@ -440,9 +439,9 @@ pub fn project_sprite(state: &mut GameState, thing_id: MobjId) {
         ));
     }
     let sprframe = sprdef.spriteframes[(thing_frame & FF_FRAMEMASK) as usize];
-    if sprframe.rotate == SpriteRotate::NonRotating {
+    let flip: bool = if sprframe.rotate == SpriteRotate::NonRotating {
         lump = sprframe.lump[0] as i32;
-        flip = sprframe.flip[0] != 0;
+        sprframe.flip[0] != 0
     } else {
         let ang: Angle = point_to_angle(&state.render.r_main, thing_x, thing_y);
         let rot: u32 = ang
@@ -450,8 +449,8 @@ pub fn project_sprite(state: &mut GameState, thing_id: MobjId) {
             .wrapping_add(((ANG45 / 2) as u32).wrapping_mul(9))
             >> 29;
         lump = sprframe.lump[rot as usize] as i32;
-        flip = sprframe.flip[rot as usize] != 0;
-    }
+        sprframe.flip[rot as usize] != 0
+    };
     tx -= state.render.r_data.spriteoffset[lump as usize];
     let x1: i32 = (state.render.r_main.centerxfrac + fixed_mul(tx, xscale)) >> FRACBITS;
     if x1 > state.render.r_draw.viewwidth {
@@ -686,19 +685,17 @@ pub fn draw_sprite(state: &mut GameState, spr: &VisSprite) {
             || ds.x2 < spr.x1
             || ds.silhouette == 0 && ds.maskedtexturecol.is_none())
         {
-            let scale: Fixed;
-
             let lowscale: Fixed;
 
             let r1: i32 = if ds.x1 < spr.x1 { spr.x1 } else { ds.x1 };
             let r2: i32 = if ds.x2 > spr.x2 { spr.x2 } else { ds.x2 };
-            if ds.scale1 > ds.scale2 {
+            let scale: Fixed = if ds.scale1 > ds.scale2 {
                 lowscale = ds.scale2;
-                scale = ds.scale1;
+                ds.scale1
             } else {
                 lowscale = ds.scale1;
-                scale = ds.scale2;
-            }
+                ds.scale2
+            };
             if scale < spr.scale
                 || lowscale < spr.scale
                     && point_on_seg_side(&state.world.p_setup, spr.gx, spr.gy, ds.curline) == 0

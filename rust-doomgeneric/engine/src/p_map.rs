@@ -875,8 +875,6 @@ pub fn shoot_traverse(state: &mut GameState, intercept: Intercept) -> bool {
             .flags
             .contains(LineFlags::TWOSIDED)
         {
-            let _dist: Fixed;
-
             line_opening(&mut state.world.p_maputl, &mut state.world.p_setup, li);
             let dist = fixed_mul(state.world.p_map.attackrange, intercept.frac);
             // A missing back side (emulated) leaves both openings to check.

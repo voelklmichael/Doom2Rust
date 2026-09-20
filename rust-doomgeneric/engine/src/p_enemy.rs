@@ -416,8 +416,6 @@ pub fn new_chase_dir(state: &mut GameState, actor: MobjId) {
         }
     }
     if p_random(&mut state.world.m_random) & 1 != 0 {
-        let _tdir: i32;
-
         for tdir in DirType::East as i32..=DirType::Southeast as i32 {
             if tdir != turnaround as i32 {
                 state.world.p_mobj.mo_mut(actor).movedir = tdir;

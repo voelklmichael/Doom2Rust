@@ -98,7 +98,6 @@ pub fn get_memory_value(
     size: i32,
 ) -> Option<u32> {
     if i_system.get_memory_value_firsttime {
-        let _p: i32;
         let mut val: i32 = 0;
         i_system.get_memory_value_firsttime = false;
         if let Some(mut p) = check_parm_with_args(m_argv, "-setmem", 1) {

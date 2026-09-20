@@ -585,18 +585,17 @@ pub fn st_responder(state: &mut GameState, ev: &Event) -> bool {
             && cht_check_cheat(&mut state.ui.st_stuff.cheat_clev, ev.data2 as u8)
         {
             let mut epsd: i32;
-            let map: i32;
             let digits: [u8; 2] = [
                 state.ui.st_stuff.cheat_clev.param()[0],
                 state.ui.st_stuff.cheat_clev.param()[1],
             ];
-            if state.game.doomstat.gamemode == GameMode::Commercial {
+            let map: i32 = if state.game.doomstat.gamemode == GameMode::Commercial {
                 epsd = 1;
-                map = (digits[0] as i32 - '0' as i32) * 10 + digits[1] as i32 - '0' as i32;
+                (digits[0] as i32 - '0' as i32) * 10 + digits[1] as i32 - '0' as i32
             } else {
                 epsd = digits[0] as i32 - '0' as i32;
-                map = digits[1] as i32 - '0' as i32;
-            }
+                digits[1] as i32 - '0' as i32
+            };
             if state.game.doomstat.gameversion == GameVersion::Chex {
                 epsd = 1;
             }

@@ -139,8 +139,6 @@ pub fn init_graphics(
     m_argv: &MArgvState,
     platform: &mut dyn DoomPlatform,
 ) {
-    let _i: i32;
-
     i_video.s_fb = FBScreenInfo::ZERO;
     i_video.s_fb.xres = DOOMGENERIC_RESX as u32;
     i_video.s_fb.yres = DOOMGENERIC_RESY as u32;
