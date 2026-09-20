@@ -746,9 +746,13 @@ fn sound_effects_reach_the_audio_output() {
     assert!(samples.len() >= 1500 * per_call);
     let peak = samples.iter().map(|s| i32::from(s.unsigned_abs())).max();
     assert!(peak > Some(1000), "demo1 is silent: peak {peak:?}");
-    let panned = samples.chunks_exact(2).any(|f| f[0] != f[1]);
+    let panned = samples.as_chunks::<2>().0.iter().any(|f| f[0] != f[1]);
     assert!(panned, "every sound came out dead centre");
-    let sounding = samples.chunks_exact(2).filter(|f| f[0] != 0 || f[1] != 0);
+    let sounding = samples
+        .as_chunks::<2>()
+        .0
+        .iter()
+        .filter(|f| f[0] != 0 || f[1] != 0);
     assert!(sounding.count() > 11025, "less than a second of sound");
 }
 

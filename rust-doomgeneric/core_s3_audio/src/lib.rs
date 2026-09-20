@@ -55,6 +55,7 @@ impl<const N: usize> FrameQueue<N> {
 
     /// Producer side. Queues as many frames of interleaved `samples` as fit and returns how many
     /// it took (a trailing odd sample is ignored).
+    #[allow(clippy::chunks_exact_to_as_chunks)] // as_chunks needs a newer toolchain than the ESP one
     pub fn push(&self, samples: &[i16]) -> usize {
         let head = self.head.load(Ordering::Relaxed);
         let free = N - head.wrapping_sub(self.tail.load(Ordering::Acquire));
@@ -70,6 +71,7 @@ impl<const N: usize> FrameQueue<N> {
 
     /// Consumer side. Fills `out` (interleaved) with up to `out.len() / 2` frames and returns how
     /// many it wrote.
+    #[allow(clippy::chunks_exact_to_as_chunks)] // as_chunks needs a newer toolchain than the ESP one
     pub fn pop(&self, out: &mut [i16]) -> usize {
         let tail = self.tail.load(Ordering::Relaxed);
         let queued = self.head.load(Ordering::Acquire).wrapping_sub(tail);
