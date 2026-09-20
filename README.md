@@ -53,7 +53,8 @@ Run the tests with `cargo test --release` from `rust-doomgeneric/`.
 ## Build and run in the browser (WebAssembly)
 
 The game also runs in a browser, from a static web page that contains no game data: you drop your
-IWAD onto the game window (or pick it with the button), and the page remembers it. Saved games are
+IWAD onto the game window (or pick it with the button), the game starts at once, and the page
+remembers the file. Saved games are
 kept in the browser and survive a reload, and the game pauses while its tab is hidden. Sound works;
 mouse and touch input do not yet.
 
