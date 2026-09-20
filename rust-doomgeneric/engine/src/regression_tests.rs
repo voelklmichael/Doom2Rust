@@ -704,6 +704,233 @@ fn pickup_trace() -> Option<String> {
     Some(format!("{hash:016x}"))
 }
 
+fn menu_test_message_routine(state: &mut GameState, key: i32) {
+    // Records which key answered the prompt.
+    state.ui.m_menu.epi = 1000 + key;
+}
+
+/// Feeds the menu every kind of input in every kind of situation and hashes what it did: each
+/// menu key, letters and special keys against the menus (inactive, every menu at its first and
+/// last item, a message that needs an answer and one that does not, a save name being typed),
+/// plus grids of joystick and mouse events. Covers `m_responder`'s event translation, the hotkeys,
+/// the message and save-name handling and the menu navigation.
+fn menu_trace() -> Option<String> {
+    use crate::m_controls::{KEY_BACKSPACE, KEY_ENTER, KEY_ESCAPE, KEY_PAUSE};
+    use crate::m_menu::{m_responder, start_message, MenuId, QuickSaveSlot};
+    let state = start_e1m1()?;
+    let c = &state.game.m_controls;
+    let mut keys: Vec<i32> = vec![
+        c.key_menu_activate,
+        c.key_menu_up,
+        c.key_menu_down,
+        c.key_menu_left,
+        c.key_menu_right,
+        c.key_menu_back,
+        c.key_menu_forward,
+        c.key_menu_confirm,
+        c.key_menu_abort,
+        c.key_menu_help,
+        c.key_menu_save,
+        c.key_menu_load,
+        c.key_menu_volume,
+        c.key_menu_detail,
+        c.key_menu_qsave,
+        c.key_menu_endgame,
+        c.key_menu_messages,
+        c.key_menu_qload,
+        c.key_menu_quit,
+        c.key_menu_gamma,
+        c.key_menu_incscreen,
+        c.key_menu_decscreen,
+        c.key_menu_screenshot,
+        KEY_ESCAPE,
+        KEY_ENTER,
+        KEY_BACKSPACE,
+        KEY_PAUSE,
+        0x80 + 0x3a,
+        i32::from(b' '),
+        i32::from(b'-'),
+        i32::from(b'='),
+        i32::from(b'0'),
+        i32::from(b'1'),
+    ];
+    keys.extend((b'a'..=b'z').map(i32::from));
+    keys.sort_unstable();
+    keys.dedup();
+    let menus = [
+        MenuId::Main,
+        MenuId::Epi,
+        MenuId::New,
+        MenuId::Options,
+        MenuId::Read1,
+        MenuId::Read2,
+        MenuId::Sound,
+        MenuId::Load,
+        MenuId::Save,
+    ];
+    let mut hash = FNV_OFFSET;
+    // Situations: 0 = no menu, then every item of every menu, then the prompts and the save name.
+    let items: Vec<(MenuId, i16)> = menus
+        .iter()
+        .flat_map(|&menu| {
+            state.ui.m_menu.current_menu = menu;
+            (0..state.ui.m_menu.current().items.len() as i16).map(move |i| (menu, i))
+        })
+        .collect();
+    let situations = 1 + items.len() as i32 + 3;
+    let one_event = |state: &mut GameState, situation: i32, ev: Event, hash: &mut u64| {
+        let m = &mut state.ui.m_menu;
+        m.menuactive = false;
+        m.current_menu = MenuId::Main;
+        m.item_on = 0;
+        m.message_to_print = false;
+        m.save_string_enter = false;
+        m.quick_save_slot = QuickSaveSlot::Unset;
+        m.epi = 0;
+        m.responder_joywait = i32::MIN;
+        m.responder_mousewait = i32::MIN;
+        m.responder_mousey = 0;
+        m.responder_lasty = 0;
+        m.responder_mousex = 0;
+        m.responder_lastx = 0;
+        state.game.g_game.players[0].message = None;
+        state.game.g_game.gameaction = crate::d_event::GameAction::Nothing;
+        for c in 0..state.audio.s_sound.snd_channels as usize {
+            state.audio.s_sound.channels[c].sfxinfo = None;
+        }
+        let m = &mut state.ui.m_menu;
+        match situation {
+            0 => {}
+            n if (n as usize) <= items.len() => {
+                m.menuactive = true;
+                (m.current_menu, m.item_on) = items[n as usize - 1];
+            }
+            n if n as usize == items.len() + 1 || n as usize == items.len() + 2 => {
+                m.menuactive = true;
+                start_message(
+                    m,
+                    "prompt",
+                    Some(menu_test_message_routine),
+                    n as usize == items.len() + 1,
+                );
+            }
+            _ => {
+                m.menuactive = true;
+                m.current_menu = MenuId::Save;
+                m.save_string_enter = true;
+                m.save_slot = 0;
+                m.save_char_index = 3;
+                m.savegamestrings[0] = "abc".to_string();
+                m.save_old_string = "old".to_string();
+            }
+        }
+        let handled = m_responder(state, &ev);
+        let m = &state.ui.m_menu;
+        let mut values = vec![
+            i32::from(handled),
+            i32::from(m.menuactive),
+            m.current_menu as i32,
+            i32::from(m.item_on),
+            i32::from(m.message_to_print),
+            i32::from(m.message_needs_input),
+            i32::from(m.message_is_quit_prompt),
+            i32::from(m.save_string_enter),
+            m.save_char_index as i32,
+            match m.quick_save_slot {
+                QuickSaveSlot::Unset => -1,
+                QuickSaveSlot::Choosing => -2,
+                QuickSaveSlot::Slot(n) => n,
+            },
+            m.screenblocks,
+            m.screen_size,
+            m.detail_level,
+            m.show_messages,
+            m.mouse_sensitivity,
+            m.epi,
+            state.audio.s_sound.sfx_volume,
+            state.audio.s_sound.music_volume,
+            i32::from(m.current().last_on),
+            state.io.i_video.usegamma,
+            state.game.g_game.gameaction as i32,
+            // The waits depend on the clock; only whether the event moved them.
+            i32::from(m.responder_joywait != i32::MIN),
+            i32::from(m.responder_mousewait != i32::MIN),
+            m.responder_mousey,
+            m.responder_lasty,
+            m.responder_mousex,
+            m.responder_lastx,
+        ];
+        for c in 0..state.audio.s_sound.snd_channels as usize {
+            values.push(
+                state.audio.s_sound.channels[c]
+                    .sfxinfo
+                    .map_or(-1, |id| id.0 as i32),
+            );
+        }
+        *hash = fnv(*hash, values.iter().map(|&v| v as u32));
+        let text = format!(
+            "{}|{}|{}|{}",
+            m.savegamestrings[0],
+            m.message_string,
+            state.game.g_game.players[0]
+                .message
+                .clone()
+                .unwrap_or_default(),
+            m.savegamestrings[m.save_slot.clamp(0, 9) as usize],
+        );
+        *hash = fnv(*hash, [fnv_bytes(text.as_bytes()) as u32]);
+    };
+    for situation in 0..situations {
+        for &key in &keys {
+            let printable = (32..127).contains(&key);
+            let ev = Event {
+                kind: EvType::Keydown,
+                data1: key,
+                data2: if printable { key } else { 0 },
+                data3: 0,
+                data4: 0,
+            };
+            one_event(state, situation, ev, &mut hash);
+        }
+    }
+    // Joystick and mouse: in a menu and with no menu.
+    for situation in [0, 1, 2, 30] {
+        for joybmenu in [-1, 2] {
+            state.game.m_controls.joybmenu = joybmenu;
+            for data1 in [0, 1, 2, 4, 7] {
+                for data2 in [-1, 0, 1] {
+                    for data3 in [-1, 0, 1] {
+                        let ev = Event {
+                            kind: EvType::Joystick,
+                            data1,
+                            data2,
+                            data3,
+                            data4: 0,
+                        };
+                        one_event(state, situation, ev, &mut hash);
+                    }
+                }
+            }
+        }
+        state.game.m_controls.joybmenu = -1;
+        for data1 in [0, 1, 2, 3] {
+            for data2 in [-40, -31, -30, -10, 0, 10, 30, 31, 40] {
+                for data3 in [-40, -31, -30, -10, 0, 10, 30, 31, 40] {
+                    let ev = Event {
+                        kind: EvType::Mouse,
+                        data1,
+                        data2,
+                        data3,
+                        data4: 0,
+                    };
+                    one_event(state, situation, ev, &mut hash);
+                }
+            }
+        }
+    }
+    Some(format!("{hash:016x}"))
+}
+
 fn actual_output() -> Option<String> {
     let mut out = String::new();
     for demo in ["demo1", "demo2", "demo3"] {
@@ -731,6 +958,7 @@ fn actual_output() -> Option<String> {
         }
     }
     writeln!(out, "pickup {}", pickup_trace()?).unwrap();
+    writeln!(out, "menu {}", menu_trace()?).unwrap();
     Some(out)
 }
 
