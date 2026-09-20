@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DOOM</title>
+  <link rel="icon" href="data:,">
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #111;
+      --fg: #ddd;
+      --dim: #888;
+      --accent: #c33;
+    }
+    html, body { margin: 0; height: 100%; background: var(--bg); color: var(--fg); font: 16px/1.4 system-ui, sans-serif; }
+    body { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 16px; box-sizing: border-box; }
+    /* The game's 320x200 pixels are meant to be shown at 4:3. */
+    .stage { position: relative; width: min(100%, calc((100vh - 170px) * 4 / 3)); aspect-ratio: 4 / 3; background: #000; }
+    canvas { width: 100%; height: 100%; display: block; image-rendering: pixelated; }
+    canvas:fullscreen { background: #000; object-fit: contain; }
+    #overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; background: rgb(0 0 0 / 0.8); cursor: pointer; text-align: center; padding: 16px; }
+    #overlay[hidden] { display: none; }
+    #message { font-size: 1.5rem; color: var(--accent); font-weight: 700; }
+    #overlay small { color: var(--dim); }
+    dl.keys { display: grid; grid-template-columns: repeat(6, auto); gap: 2px 16px; margin: 0; color: var(--dim); font-size: 0.85rem; }
+    dl.keys dt { color: var(--fg); text-align: right; }
+    dl.keys dd { margin: 0; }
+    @media (max-width: 800px) { dl.keys { grid-template-columns: repeat(4, auto); } }
+    @media (max-width: 480px) { dl.keys { grid-template-columns: repeat(2, auto); } }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <canvas id="screen" width="320" height="200"></canvas>
+    <div id="overlay">
+      <div id="message">Click to play</div>
+      <small>DOOM shareware, running in your browser as WebAssembly</small>
+    </div>
+  </div>
+  <dl class="keys">
+    <dt>Arrows</dt><dd>move, turn</dd>
+    <dt>Ctrl</dt><dd>fire</dd>
+    <dt>Space</dt><dd>open, use</dd>
+    <dt>Shift</dt><dd>run</dd>
+    <dt>Alt + arrows, , .</dt><dd>strafe</dd>
+    <dt>1-7</dt><dd>weapon</dd>
+    <dt>Tab</dt><dd>map</dd>
+    <dt>Esc</dt><dd>menu</dd>
+    <dt>F2 / F3</dt><dd>save / load</dd>
+    <dt>Double click</dt><dd>full screen</dd>
+  </dl>
+  <script type="module" src="main.js"></script>
+</body>
+</html>

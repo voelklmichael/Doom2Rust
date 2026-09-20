@@ -1,0 +1,4 @@
+# The IWAD is not committed; see assets/README.md.
+/assets/*.wad
+# Output of build.sh.
+/www/pkg

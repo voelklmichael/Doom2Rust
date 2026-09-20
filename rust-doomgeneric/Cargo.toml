@@ -1,3 +1,3 @@
 [workspace]
-members = ["engine", "cmdline", "fs", "x11", "core_s3_protocol", "core_s3_sender", "core_s3_dhcp", "core_s3_audio", "core_s3_ws"]
+members = ["engine", "cmdline", "fs", "x11", "wasm", "core_s3_protocol", "core_s3_sender", "core_s3_dhcp", "core_s3_audio", "core_s3_ws"]
 resolver = "2"
