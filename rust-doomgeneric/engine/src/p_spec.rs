@@ -1,45 +1,38 @@
 use crate::d_player::CheatFlags;
 use crate::d_player::PowerType;
 use crate::p_mobj::LineFlags;
+use crate::p_mobj::MobjType;
 use crate::p_setup::PSetupState;
 use crate::r_data::RDataState;
 use crate::w_wad::WWadState;
 
 use crate::fixed_cstr::FixedCStr;
 use crate::g_game::exit_level;
-use crate::g_game::secret_exit_level;
 use crate::i_system::error;
+use crate::line_effects::walk_rule;
 use crate::m_fixed::Fixed;
 use crate::m_misc::str_to_int;
 use crate::m_random::p_random;
 use alloc::boxed::Box;
 use alloc::vec::Vec;
 
-use crate::p_ceilng::ceiling_crush_stop;
-use crate::p_ceilng::do_ceiling;
 use crate::p_ceilng::CeilingE;
 use crate::p_doors::do_door;
 use crate::p_doors::spawn_door_close_in30;
 use crate::p_doors::spawn_door_raise_in5_mins;
 use crate::p_doors::VldoorE;
-use crate::p_floor::build_stairs;
 use crate::p_floor::do_floor;
 use crate::p_floor::FloorE;
-use crate::p_floor::StairE;
 use crate::p_inter::damage_mobj;
-use crate::p_lights::light_turn_on;
 use crate::p_lights::spawn_fire_flicker;
 use crate::p_lights::spawn_glowing_light;
 use crate::p_lights::spawn_light_flash;
 use crate::p_lights::spawn_strobe_flash;
-use crate::p_lights::start_light_strobing;
-use crate::p_lights::turn_tag_lights_off;
 
 use crate::p_mobj::SectorSpecial;
 use crate::p_mobj::Thinker;
 use crate::p_mobj::ThinkerFn;
 use crate::p_plats::do_plat;
-use crate::p_plats::stop_plat;
 use crate::p_plats::PlatE;
 use crate::p_plats::PlattypeE;
 use crate::p_setup::LineId;
@@ -47,7 +40,6 @@ use crate::p_setup::SectorId;
 use crate::p_setup::SideId;
 use crate::p_switch::change_switch_texture;
 use crate::p_switch::BWhere;
-use crate::p_telept::teleport;
 use crate::p_tick::add_thinker;
 use crate::p_tick::ThinkerKind;
 use crate::p_tick::ThinkerPayload;
@@ -677,365 +669,37 @@ pub fn find_min_surrounding_light(p_setup: &mut PSetupState, sector: SectorId, m
     min
 }
 pub fn cross_special_line(state: &mut GameState, linenum: i32, side: i32, thing: MobjId) {
-    let line: LineId = LineId(linenum as u32);
+    let line = LineId(linenum as u32);
     let special = state.world.p_setup.line(line).special;
-    if state.world.p_mobj.mo(thing).player.is_none() {
-        match state.world.p_mobj.mo(thing).kind as u32 {
-            33 | 34 | 35 | 31 | 32 | 16 => return,
-            _ => {}
+    let by_player = state.world.p_mobj.mo(thing).player.is_some();
+    if !by_player {
+        // Missiles never set off a line, and monsters only a few kinds.
+        if matches!(
+            state.world.p_mobj.mo(thing).kind,
+            MobjType::Rocket
+                | MobjType::Plasma
+                | MobjType::Bfg
+                | MobjType::Troopshot
+                | MobjType::Headshot
+                | MobjType::Bruisershot
+        ) {
+            return;
         }
-        let mut ok: i32 = 0;
-        match i32::from(special) {
-            39 | 97 | 125 | 126 | 4 | 10 | 88 => {
-                ok = 1;
-            }
-            _ => {}
-        }
-        if ok == 0 {
+        if !matches!(special, 39 | 97 | 125 | 126 | 4 | 10 | 88) {
             return;
         }
     }
-    match i32::from(special) {
-        2 => {
-            do_door(state, line, VldoorE::Open);
-            state.world.p_setup.line_mut(line).special = 0;
-        }
-        3 => {
-            do_door(state, line, VldoorE::Close);
-            state.world.p_setup.line_mut(line).special = 0;
-        }
-        4 => {
-            do_door(state, line, VldoorE::Normal);
-            state.world.p_setup.line_mut(line).special = 0;
-        }
-        5 => {
-            do_floor(state, line, FloorE::RaiseFloor);
-            state.world.p_setup.line_mut(line).special = 0;
-        }
-        6 => {
-            do_ceiling(
-                &mut state.world.p_ceilng,
-                &mut state.world.p_setup,
-                &mut state.world.p_tick,
-                line,
-                CeilingE::FastCrushAndRaise,
-            );
-            state.world.p_setup.line_mut(line).special = 0;
-        }
-        8 => {
-            build_stairs(
-                &mut state.world.p_setup,
-                &mut state.world.p_spec,
-                &mut state.world.p_tick,
-                line,
-                StairE::Build8,
-            );
-            state.world.p_setup.line_mut(line).special = 0;
-        }
-        10 => {
-            do_plat(state, line, PlattypeE::DownWaitUpStay, 0);
-            state.world.p_setup.line_mut(line).special = 0;
-        }
-        12 => {
-            light_turn_on(&mut state.world.p_setup, line, 0);
-            state.world.p_setup.line_mut(line).special = 0;
-        }
-        13 => {
-            light_turn_on(&mut state.world.p_setup, line, 255);
-            state.world.p_setup.line_mut(line).special = 0;
-        }
-        16 => {
-            do_door(state, line, VldoorE::Close30ThenOpen);
-            state.world.p_setup.line_mut(line).special = 0;
-        }
-        17 => {
-            start_light_strobing(&mut state.world, line);
-            state.world.p_setup.line_mut(line).special = 0;
-        }
-        19 => {
-            do_floor(state, line, FloorE::LowerFloor);
-            state.world.p_setup.line_mut(line).special = 0;
-        }
-        22 => {
-            do_plat(state, line, PlattypeE::RaiseToNearestAndChange, 0);
-            state.world.p_setup.line_mut(line).special = 0;
-        }
-        25 => {
-            do_ceiling(
-                &mut state.world.p_ceilng,
-                &mut state.world.p_setup,
-                &mut state.world.p_tick,
-                line,
-                CeilingE::CrushAndRaise,
-            );
-            state.world.p_setup.line_mut(line).special = 0;
-        }
-        30 => {
-            do_floor(state, line, FloorE::RaiseToTexture);
-            state.world.p_setup.line_mut(line).special = 0;
-        }
-        35 => {
-            light_turn_on(&mut state.world.p_setup, line, 35);
-            state.world.p_setup.line_mut(line).special = 0;
-        }
-        36 => {
-            do_floor(state, line, FloorE::TurboLower);
-            state.world.p_setup.line_mut(line).special = 0;
-        }
-        37 => {
-            do_floor(state, line, FloorE::LowerAndChange);
-            state.world.p_setup.line_mut(line).special = 0;
-        }
-        38 => {
-            do_floor(state, line, FloorE::LowerFloorToLowest);
-            state.world.p_setup.line_mut(line).special = 0;
-        }
-        39 => {
-            teleport(state, line, side, thing);
-            state.world.p_setup.line_mut(line).special = 0;
-        }
-        40 => {
-            do_ceiling(
-                &mut state.world.p_ceilng,
-                &mut state.world.p_setup,
-                &mut state.world.p_tick,
-                line,
-                CeilingE::RaiseToHighest,
-            );
-            do_floor(state, line, FloorE::LowerFloorToLowest);
-            state.world.p_setup.line_mut(line).special = 0;
-        }
-        44 => {
-            do_ceiling(
-                &mut state.world.p_ceilng,
-                &mut state.world.p_setup,
-                &mut state.world.p_tick,
-                line,
-                CeilingE::LowerAndCrush,
-            );
-            state.world.p_setup.line_mut(line).special = 0;
-        }
-        52 => {
-            exit_level(&mut state.game.g_game);
-        }
-        53 => {
-            do_plat(state, line, PlattypeE::PerpetualRaise, 0);
-            state.world.p_setup.line_mut(line).special = 0;
-        }
-        54 => {
-            stop_plat(
-                &mut state.world.p_plats,
-                &state.world.p_tick,
-                i32::from(state.world.p_setup.line(line).tag),
-            );
-            state.world.p_setup.line_mut(line).special = 0;
-        }
-        56 => {
-            do_floor(state, line, FloorE::RaiseFloorCrush);
-            state.world.p_setup.line_mut(line).special = 0;
-        }
-        57 => {
-            ceiling_crush_stop(
-                &mut state.world.p_ceilng,
-                &state.world.p_tick,
-                i32::from(state.world.p_setup.line(line).tag),
-            );
-            state.world.p_setup.line_mut(line).special = 0;
-        }
-        58 => {
-            do_floor(state, line, FloorE::RaiseFloor24);
-            state.world.p_setup.line_mut(line).special = 0;
-        }
-        59 => {
-            do_floor(state, line, FloorE::RaiseFloor24AndChange);
-            state.world.p_setup.line_mut(line).special = 0;
-        }
-        104 => {
-            turn_tag_lights_off(&mut state.world.p_setup, line);
-            state.world.p_setup.line_mut(line).special = 0;
-        }
-        108 => {
-            do_door(state, line, VldoorE::BlazeRaise);
-            state.world.p_setup.line_mut(line).special = 0;
-        }
-        109 => {
-            do_door(state, line, VldoorE::BlazeOpen);
-            state.world.p_setup.line_mut(line).special = 0;
-        }
-        100 => {
-            build_stairs(
-                &mut state.world.p_setup,
-                &mut state.world.p_spec,
-                &mut state.world.p_tick,
-                line,
-                StairE::Turbo16,
-            );
-            state.world.p_setup.line_mut(line).special = 0;
-        }
-        110 => {
-            do_door(state, line, VldoorE::BlazeClose);
-            state.world.p_setup.line_mut(line).special = 0;
-        }
-        119 => {
-            do_floor(state, line, FloorE::RaiseFloorToNearest);
-            state.world.p_setup.line_mut(line).special = 0;
-        }
-        121 => {
-            do_plat(state, line, PlattypeE::BlazeDWUS, 0);
-            state.world.p_setup.line_mut(line).special = 0;
-        }
-        124 => {
-            secret_exit_level(
-                &state.game.doomstat,
-                &mut state.game.g_game,
-                &state.assets.w_wad,
-            );
-        }
-        125 => {
-            if state.world.p_mobj.mo(thing).player.is_none() {
-                teleport(state, line, side, thing);
-                state.world.p_setup.line_mut(line).special = 0;
-            }
-        }
-        130 => {
-            do_floor(state, line, FloorE::RaiseFloorTurbo);
-            state.world.p_setup.line_mut(line).special = 0;
-        }
-        141 => {
-            do_ceiling(
-                &mut state.world.p_ceilng,
-                &mut state.world.p_setup,
-                &mut state.world.p_tick,
-                line,
-                CeilingE::SilentCrushAndRaise,
-            );
-            state.world.p_setup.line_mut(line).special = 0;
-        }
-        72 => {
-            do_ceiling(
-                &mut state.world.p_ceilng,
-                &mut state.world.p_setup,
-                &mut state.world.p_tick,
-                line,
-                CeilingE::LowerAndCrush,
-            );
-        }
-        73 => {
-            do_ceiling(
-                &mut state.world.p_ceilng,
-                &mut state.world.p_setup,
-                &mut state.world.p_tick,
-                line,
-                CeilingE::CrushAndRaise,
-            );
-        }
-        74 => {
-            ceiling_crush_stop(
-                &mut state.world.p_ceilng,
-                &state.world.p_tick,
-                i32::from(state.world.p_setup.line(line).tag),
-            );
-        }
-        75 => {
-            do_door(state, line, VldoorE::Close);
-        }
-        76 => {
-            do_door(state, line, VldoorE::Close30ThenOpen);
-        }
-        77 => {
-            do_ceiling(
-                &mut state.world.p_ceilng,
-                &mut state.world.p_setup,
-                &mut state.world.p_tick,
-                line,
-                CeilingE::FastCrushAndRaise,
-            );
-        }
-        79 => {
-            light_turn_on(&mut state.world.p_setup, line, 35);
-        }
-        80 => {
-            light_turn_on(&mut state.world.p_setup, line, 0);
-        }
-        81 => {
-            light_turn_on(&mut state.world.p_setup, line, 255);
-        }
-        82 => {
-            do_floor(state, line, FloorE::LowerFloorToLowest);
-        }
-        83 => {
-            do_floor(state, line, FloorE::LowerFloor);
-        }
-        84 => {
-            do_floor(state, line, FloorE::LowerAndChange);
-        }
-        86 => {
-            do_door(state, line, VldoorE::Open);
-        }
-        87 => {
-            do_plat(state, line, PlattypeE::PerpetualRaise, 0);
-        }
-        88 => {
-            do_plat(state, line, PlattypeE::DownWaitUpStay, 0);
-        }
-        89 => {
-            stop_plat(
-                &mut state.world.p_plats,
-                &state.world.p_tick,
-                i32::from(state.world.p_setup.line(line).tag),
-            );
-        }
-        90 => {
-            do_door(state, line, VldoorE::Normal);
-        }
-        91 => {
-            do_floor(state, line, FloorE::RaiseFloor);
-        }
-        92 => {
-            do_floor(state, line, FloorE::RaiseFloor24);
-        }
-        93 => {
-            do_floor(state, line, FloorE::RaiseFloor24AndChange);
-        }
-        94 => {
-            do_floor(state, line, FloorE::RaiseFloorCrush);
-        }
-        95 => {
-            do_plat(state, line, PlattypeE::RaiseToNearestAndChange, 0);
-        }
-        96 => {
-            do_floor(state, line, FloorE::RaiseToTexture);
-        }
-        97 => {
-            teleport(state, line, side, thing);
-        }
-        98 => {
-            do_floor(state, line, FloorE::TurboLower);
-        }
-        105 => {
-            do_door(state, line, VldoorE::BlazeRaise);
-        }
-        106 => {
-            do_door(state, line, VldoorE::BlazeOpen);
-        }
-        107 => {
-            do_door(state, line, VldoorE::BlazeClose);
-        }
-        120 => {
-            do_plat(state, line, PlattypeE::BlazeDWUS, 0);
-        }
-        126 => {
-            if state.world.p_mobj.mo(thing).player.is_none() {
-                teleport(state, line, side, thing);
-            }
-        }
-        128 => {
-            do_floor(state, line, FloorE::RaiseFloorToNearest);
-        }
-        129 => {
-            do_floor(state, line, FloorE::RaiseFloorTurbo);
-        }
-        _ => {}
+    let Some(rule) = walk_rule(special) else {
+        return;
+    };
+    if rule.monsters_only && by_player {
+        return;
+    }
+    for effect in rule.effects {
+        effect.run(state, line, side, thing);
+    }
+    if rule.clears {
+        state.world.p_setup.line_mut(line).special = 0;
     }
 }
 pub fn shoot_special_line(state: &mut GameState, thing: MobjId, line: LineId) {
