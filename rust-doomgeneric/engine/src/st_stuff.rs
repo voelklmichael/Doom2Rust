@@ -23,6 +23,7 @@ use crate::m_cheat::CheatSeq;
 use crate::m_random::m_random;
 use crate::p_inter::give_power;
 use crate::p_inter::NUMCARDS;
+use crate::p_mobj::PMobjState;
 use crate::r_main::point_to_angle2;
 use crate::s_sound::change_music;
 use crate::sounds::MusicName;
@@ -639,83 +640,48 @@ pub fn calc_pain_offset(g_game: &mut GGameState, st_stuff: &mut StStuffState) ->
     }
     st_stuff.st_calcpainoffset_lastcalc
 }
-pub fn update_face_widget(state: &mut GameState) {
+pub fn update_face_widget(
+    g_game: &mut GGameState,
+    p_mobj: &PMobjState,
+    st_stuff: &mut StStuffState,
+) {
     let i: i32;
-    if state.ui.st_stuff.st_updatefacewidget_priority < 10
-        && state.game.g_game.player_mut(state.ui.st_stuff.plyr).health == 0
-    {
-        state.ui.st_stuff.st_updatefacewidget_priority = 9;
-        state.ui.st_stuff.st_faceindex = ST_DEADFACE;
-        state.ui.st_stuff.st_facecount = 1;
+    if st_stuff.st_updatefacewidget_priority < 10 && g_game.player_mut(st_stuff.plyr).health == 0 {
+        st_stuff.st_updatefacewidget_priority = 9;
+        st_stuff.st_faceindex = ST_DEADFACE;
+        st_stuff.st_facecount = 1;
     }
-    if state.ui.st_stuff.st_updatefacewidget_priority < 9
-        && state
-            .game
-            .g_game
-            .player_mut(state.ui.st_stuff.plyr)
-            .bonuscount
-            != 0
+    if st_stuff.st_updatefacewidget_priority < 9 && g_game.player_mut(st_stuff.plyr).bonuscount != 0
     {
         let mut doevilgrin: bool = false;
         for i in 0..(NUMWEAPONS as usize) {
-            if state.ui.st_stuff.oldweaponsowned[i]
-                != state
-                    .game
-                    .g_game
-                    .player_mut(state.ui.st_stuff.plyr)
-                    .weaponowned[i]
-            {
+            if st_stuff.oldweaponsowned[i] != g_game.player_mut(st_stuff.plyr).weaponowned[i] {
                 doevilgrin = true;
-                state.ui.st_stuff.oldweaponsowned[i] = state
-                    .game
-                    .g_game
-                    .player_mut(state.ui.st_stuff.plyr)
-                    .weaponowned[i];
+                st_stuff.oldweaponsowned[i] = g_game.player_mut(st_stuff.plyr).weaponowned[i];
             }
         }
         if doevilgrin {
-            state.ui.st_stuff.st_updatefacewidget_priority = 8;
-            state.ui.st_stuff.st_facecount = ST_EVILGRINCOUNT;
-            state.ui.st_stuff.st_faceindex =
-                calc_pain_offset(&mut state.game.g_game, &mut state.ui.st_stuff)
-                    + ST_EVILGRINOFFSET;
+            st_stuff.st_updatefacewidget_priority = 8;
+            st_stuff.st_facecount = ST_EVILGRINCOUNT;
+            st_stuff.st_faceindex = calc_pain_offset(g_game, st_stuff) + ST_EVILGRINOFFSET;
         }
     }
-    if state.ui.st_stuff.st_updatefacewidget_priority < 8 {
-        let plyr_attacker_id = state
-            .game
-            .g_game
-            .player_mut(state.ui.st_stuff.plyr)
-            .attacker;
+    if st_stuff.st_updatefacewidget_priority < 8 {
+        let plyr_attacker_id = g_game.player_mut(st_stuff.plyr).attacker;
         if let Some(attacker_id) = plyr_attacker_id.filter(|&a| {
-            state
-                .game
-                .g_game
-                .player_mut(state.ui.st_stuff.plyr)
-                .damagecount
-                != 0
-                && Some(a) != state.game.g_game.player_mut(state.ui.st_stuff.plyr).mo
+            g_game.player_mut(st_stuff.plyr).damagecount != 0
+                && Some(a) != g_game.player_mut(st_stuff.plyr).mo
         }) {
-            state.ui.st_stuff.st_updatefacewidget_priority = 7;
-            let plyr_mo = state.world.p_mobj.mo(state
-                .game
-                .g_game
-                .player_mut(state.ui.st_stuff.plyr)
-                .mo
-                .unwrap());
+            st_stuff.st_updatefacewidget_priority = 7;
+            let plyr_mo = p_mobj.mo(g_game.player_mut(st_stuff.plyr).mo.unwrap());
             let (plyr_mo_x, plyr_mo_y, plyr_mo_angle) = (plyr_mo.x, plyr_mo.y, plyr_mo.angle);
-            if state.game.g_game.player_mut(state.ui.st_stuff.plyr).health
-                - state.ui.st_stuff.st_oldhealth
-                > ST_MUCHPAIN
-            {
-                state.ui.st_stuff.st_facecount = ST_TURNCOUNT;
-                state.ui.st_stuff.st_faceindex =
-                    calc_pain_offset(&mut state.game.g_game, &mut state.ui.st_stuff)
-                        + ST_OUCHOFFSET;
+            if g_game.player_mut(st_stuff.plyr).health - st_stuff.st_oldhealth > ST_MUCHPAIN {
+                st_stuff.st_facecount = ST_TURNCOUNT;
+                st_stuff.st_faceindex = calc_pain_offset(g_game, st_stuff) + ST_OUCHOFFSET;
             } else {
                 let diffang: Angle;
 
-                let plyr_attacker = state.world.p_mobj.mo(attacker_id);
+                let plyr_attacker = p_mobj.mo(attacker_id);
                 let (attacker_x, attacker_y) = (plyr_attacker.x, plyr_attacker.y);
                 let badguyangle: Angle =
                     point_to_angle2(plyr_mo_x, plyr_mo_y, attacker_x, attacker_y);
@@ -726,140 +692,107 @@ pub fn update_face_widget(state: &mut GameState) {
                     diffang = plyr_mo_angle.wrapping_sub(badguyangle);
                     i = (diffang <= ANG180) as i32;
                 }
-                state.ui.st_stuff.st_facecount = ST_TURNCOUNT;
-                state.ui.st_stuff.st_faceindex =
-                    calc_pain_offset(&mut state.game.g_game, &mut state.ui.st_stuff);
+                st_stuff.st_facecount = ST_TURNCOUNT;
+                st_stuff.st_faceindex = calc_pain_offset(g_game, st_stuff);
                 if diffang < ANG45 as Angle {
-                    state.ui.st_stuff.st_faceindex += ST_RAMPAGEOFFSET;
+                    st_stuff.st_faceindex += ST_RAMPAGEOFFSET;
                 } else if i != 0 {
-                    state.ui.st_stuff.st_faceindex += ST_TURNOFFSET;
+                    st_stuff.st_faceindex += ST_TURNOFFSET;
                 } else {
-                    state.ui.st_stuff.st_faceindex += ST_TURNOFFSET + 1;
+                    st_stuff.st_faceindex += ST_TURNOFFSET + 1;
                 }
             }
         }
     }
-    if state.ui.st_stuff.st_updatefacewidget_priority < 7
-        && state
-            .game
-            .g_game
-            .player_mut(state.ui.st_stuff.plyr)
-            .damagecount
-            != 0
+    if st_stuff.st_updatefacewidget_priority < 7
+        && g_game.player_mut(st_stuff.plyr).damagecount != 0
     {
-        if state.game.g_game.player_mut(state.ui.st_stuff.plyr).health
-            - state.ui.st_stuff.st_oldhealth
-            > ST_MUCHPAIN
-        {
-            state.ui.st_stuff.st_updatefacewidget_priority = 7;
-            state.ui.st_stuff.st_facecount = ST_TURNCOUNT;
-            state.ui.st_stuff.st_faceindex =
-                calc_pain_offset(&mut state.game.g_game, &mut state.ui.st_stuff) + ST_OUCHOFFSET;
+        if g_game.player_mut(st_stuff.plyr).health - st_stuff.st_oldhealth > ST_MUCHPAIN {
+            st_stuff.st_updatefacewidget_priority = 7;
+            st_stuff.st_facecount = ST_TURNCOUNT;
+            st_stuff.st_faceindex = calc_pain_offset(g_game, st_stuff) + ST_OUCHOFFSET;
         } else {
-            state.ui.st_stuff.st_updatefacewidget_priority = 6;
-            state.ui.st_stuff.st_facecount = ST_TURNCOUNT;
-            state.ui.st_stuff.st_faceindex =
-                calc_pain_offset(&mut state.game.g_game, &mut state.ui.st_stuff) + ST_RAMPAGEOFFSET;
+            st_stuff.st_updatefacewidget_priority = 6;
+            st_stuff.st_facecount = ST_TURNCOUNT;
+            st_stuff.st_faceindex = calc_pain_offset(g_game, st_stuff) + ST_RAMPAGEOFFSET;
         }
     }
-    if state.ui.st_stuff.st_updatefacewidget_priority < 6 {
-        if state
-            .game
-            .g_game
-            .player_mut(state.ui.st_stuff.plyr)
-            .attackdown
-        {
-            if state.ui.st_stuff.st_updatefacewidget_lastattackdown == -1 {
-                state.ui.st_stuff.st_updatefacewidget_lastattackdown = ST_RAMPAGEDELAY;
+    if st_stuff.st_updatefacewidget_priority < 6 {
+        if g_game.player_mut(st_stuff.plyr).attackdown {
+            if st_stuff.st_updatefacewidget_lastattackdown == -1 {
+                st_stuff.st_updatefacewidget_lastattackdown = ST_RAMPAGEDELAY;
             } else {
-                state.ui.st_stuff.st_updatefacewidget_lastattackdown -= 1;
-                if state.ui.st_stuff.st_updatefacewidget_lastattackdown == 0 {
-                    state.ui.st_stuff.st_updatefacewidget_priority = 5;
-                    state.ui.st_stuff.st_faceindex =
-                        calc_pain_offset(&mut state.game.g_game, &mut state.ui.st_stuff)
-                            + ST_RAMPAGEOFFSET;
-                    state.ui.st_stuff.st_facecount = 1;
-                    state.ui.st_stuff.st_updatefacewidget_lastattackdown = 1;
+                st_stuff.st_updatefacewidget_lastattackdown -= 1;
+                if st_stuff.st_updatefacewidget_lastattackdown == 0 {
+                    st_stuff.st_updatefacewidget_priority = 5;
+                    st_stuff.st_faceindex = calc_pain_offset(g_game, st_stuff) + ST_RAMPAGEOFFSET;
+                    st_stuff.st_facecount = 1;
+                    st_stuff.st_updatefacewidget_lastattackdown = 1;
                 }
             }
         } else {
-            state.ui.st_stuff.st_updatefacewidget_lastattackdown = -1;
+            st_stuff.st_updatefacewidget_lastattackdown = -1;
         }
     }
-    if state.ui.st_stuff.st_updatefacewidget_priority < 5
-        && (state
-            .game
-            .g_game
-            .player_mut(state.ui.st_stuff.plyr)
+    if st_stuff.st_updatefacewidget_priority < 5
+        && (g_game
+            .player_mut(st_stuff.plyr)
             .cheats
             .contains(CheatFlags::GODMODE)
-            || state.game.g_game.player_mut(state.ui.st_stuff.plyr).powers
-                [PowerType::Invulnerability as usize]
-                != 0)
+            || g_game.player_mut(st_stuff.plyr).powers[PowerType::Invulnerability as usize] != 0)
     {
-        state.ui.st_stuff.st_updatefacewidget_priority = 4;
-        state.ui.st_stuff.st_faceindex = ST_GODFACE;
-        state.ui.st_stuff.st_facecount = 1;
+        st_stuff.st_updatefacewidget_priority = 4;
+        st_stuff.st_faceindex = ST_GODFACE;
+        st_stuff.st_facecount = 1;
     }
-    if state.ui.st_stuff.st_facecount == 0 {
-        state.ui.st_stuff.st_faceindex =
-            calc_pain_offset(&mut state.game.g_game, &mut state.ui.st_stuff)
-                + state.ui.st_stuff.st_randomnumber % 3;
-        state.ui.st_stuff.st_facecount = ST_STRAIGHTFACECOUNT;
-        state.ui.st_stuff.st_updatefacewidget_priority = 0;
+    if st_stuff.st_facecount == 0 {
+        st_stuff.st_faceindex = calc_pain_offset(g_game, st_stuff) + st_stuff.st_randomnumber % 3;
+        st_stuff.st_facecount = ST_STRAIGHTFACECOUNT;
+        st_stuff.st_updatefacewidget_priority = 0;
     }
-    state.ui.st_stuff.st_facecount -= 1;
+    st_stuff.st_facecount -= 1;
 }
-pub fn update_widgets(state: &mut GameState) {
-    state.ui.st_stuff.w_ready.data = state
-        .game
-        .g_game
-        .player_mut(state.ui.st_stuff.plyr)
-        .readyweapon as i32;
+pub fn update_widgets(g_game: &mut GGameState, p_mobj: &PMobjState, st_stuff: &mut StStuffState) {
+    st_stuff.w_ready.data = g_game.player_mut(st_stuff.plyr).readyweapon as i32;
     for i in 0..6 {
-        state.ui.st_stuff.w_arms_owned[i as usize] = state
-            .game
-            .g_game
-            .player_mut(state.ui.st_stuff.plyr)
-            .weaponowned[(i + 1) as usize]
-            as i32;
+        st_stuff.w_arms_owned[i as usize] =
+            g_game.player_mut(st_stuff.plyr).weaponowned[(i + 1) as usize] as i32;
     }
     for i in 0..3 {
-        state.ui.st_stuff.keyboxes[i as usize] =
-            if state.game.g_game.player_mut(state.ui.st_stuff.plyr).cards[i as usize] {
-                i
-            } else {
-                -1
-            };
-        if state.game.g_game.player_mut(state.ui.st_stuff.plyr).cards[(i + 3) as usize] {
-            state.ui.st_stuff.keyboxes[i as usize] = i + 3;
-        }
-    }
-    update_face_widget(state);
-    state.ui.st_stuff.st_notdeathmatch = state.game.g_game.deathmatch == 0;
-    state.ui.st_stuff.st_armson =
-        state.ui.st_stuff.st_statusbaron && state.game.g_game.deathmatch == 0;
-    state.ui.st_stuff.st_fragson =
-        state.game.g_game.deathmatch != 0 && state.ui.st_stuff.st_statusbaron;
-    state.ui.st_stuff.st_fragscount = 0;
-    for i in 0..MAXPLAYERS {
-        if i == state.game.g_game.consoleplayer.as_i32() {
-            state.ui.st_stuff.st_fragscount -=
-                state.game.g_game.player_mut(state.ui.st_stuff.plyr).frags[i as usize];
+        st_stuff.keyboxes[i as usize] = if g_game.player_mut(st_stuff.plyr).cards[i as usize] {
+            i
         } else {
-            state.ui.st_stuff.st_fragscount +=
-                state.game.g_game.player_mut(state.ui.st_stuff.plyr).frags[i as usize];
+            -1
+        };
+        if g_game.player_mut(st_stuff.plyr).cards[(i + 3) as usize] {
+            st_stuff.keyboxes[i as usize] = i + 3;
         }
     }
-    state.ui.st_stuff.st_msgcounter -= 1;
-    if state.ui.st_stuff.st_msgcounter == 0 {
-        state.ui.st_stuff.st_chat = state.ui.st_stuff.st_oldchat;
+    update_face_widget(g_game, p_mobj, st_stuff);
+    st_stuff.st_notdeathmatch = g_game.deathmatch == 0;
+    st_stuff.st_armson = st_stuff.st_statusbaron && g_game.deathmatch == 0;
+    st_stuff.st_fragson = g_game.deathmatch != 0 && st_stuff.st_statusbaron;
+    st_stuff.st_fragscount = 0;
+    for i in 0..MAXPLAYERS {
+        if i == g_game.consoleplayer.as_i32() {
+            st_stuff.st_fragscount -= g_game.player_mut(st_stuff.plyr).frags[i as usize];
+        } else {
+            st_stuff.st_fragscount += g_game.player_mut(st_stuff.plyr).frags[i as usize];
+        }
+    }
+    st_stuff.st_msgcounter -= 1;
+    if st_stuff.st_msgcounter == 0 {
+        st_stuff.st_chat = st_stuff.st_oldchat;
     }
 }
 pub fn st_ticker(state: &mut GameState) {
     state.ui.st_stuff.st_clock = state.ui.st_stuff.st_clock.wrapping_add(1);
     state.ui.st_stuff.st_randomnumber = m_random(&mut state.world.m_random);
-    update_widgets(state);
+    update_widgets(
+        &mut state.game.g_game,
+        &state.world.p_mobj,
+        &mut state.ui.st_stuff,
+    );
     state.ui.st_stuff.st_oldhealth = state.game.g_game.player_mut(state.ui.st_stuff.plyr).health;
 }
 pub fn do_palette_stuff(state: &mut GameState) {
