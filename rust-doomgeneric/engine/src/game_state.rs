@@ -292,10 +292,8 @@ impl GameState {
 // GameState this reference points at is constructed and will never move
 // again.
 pub fn finish_init(state: &mut GameState) {
-    {
-        state.audio.sounds.fixup_self_links();
-        fixup_numanims(&mut state.ui.wi_stuff);
-    }
+    state.audio.sounds.fixup_self_links();
+    fixup_numanims(&mut state.ui.wi_stuff);
 }
 
 /// Constructs the single `GameState`, wired to the given platform and
