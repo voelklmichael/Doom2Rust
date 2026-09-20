@@ -4,6 +4,7 @@ use crate::doomstat::DoomstatState;
 use crate::g_game::GGameState;
 use crate::p_mobj::LineFlags;
 use crate::p_mobj::MobjFlags;
+use crate::p_mobj::PMobjState;
 
 use crate::d_player::PlayerId;
 use crate::g_game::exit_level;
@@ -145,13 +146,8 @@ pub static DIAGS: [DirType; 4] = [
     DirType::Southeast,
 ];
 /// The mobj's target, unless that target has since been removed.
-fn live_target(state: &GameState, mobj: MobjId) -> Option<MobjId> {
-    state
-        .world
-        .p_mobj
-        .mo(mobj)
-        .target
-        .filter(|&id| state.world.p_mobj.is_live(id))
+fn live_target(p_mobj: &PMobjState, mobj: MobjId) -> Option<MobjId> {
+    p_mobj.mo(mobj).target.filter(|&id| p_mobj.is_live(id))
 }
 pub fn recursive_sound(state: &mut GameState, sec: SectorId, soundblocks: i32) {
     let validcount = state.render.r_main.validcount;
@@ -373,7 +369,7 @@ pub fn new_chase_dir(state: &mut GameState, actor: MobjId) {
     let mut d: [DirType; 3] = [DirType::East; 3];
     let mut tdir: i32;
 
-    let Some(target) = live_target(state, actor) else {
+    let Some(target) = live_target(&state.world.p_mobj, actor) else {
         error("P_NewChaseDir: called with no target");
     };
     let olddir: DirType = dirtype_from_movedir(state.world.p_mobj.mo(actor).movedir);
@@ -743,7 +739,7 @@ pub fn chase(state: &mut GameState, id: MobjId) {
 pub fn face_target(state: &mut GameState, id: MobjId) {
     {
         let actor = id;
-        let Some(target) = live_target(state, actor) else {
+        let Some(target) = live_target(&state.world.p_mobj, actor) else {
             return;
         };
         state.world.p_mobj.mo_mut(actor).flags &= !MobjFlags::AMBUSH;
@@ -902,7 +898,7 @@ pub fn spid_refire(state: &mut GameState, id: MobjId) {
 pub fn bspi_attack(state: &mut GameState, id: MobjId) {
     {
         let actor = id;
-        let Some(target) = live_target(state, actor) else {
+        let Some(target) = live_target(&state.world.p_mobj, actor) else {
             return;
         };
         face_target(state, actor);
@@ -913,7 +909,7 @@ pub fn troop_attack(state: &mut GameState, id: MobjId) {
     {
         let actor = id;
         let damage: i32;
-        let Some(target) = live_target(state, actor) else {
+        let Some(target) = live_target(&state.world.p_mobj, actor) else {
             return;
         };
         face_target(state, actor);
@@ -930,7 +926,7 @@ pub fn sarg_attack(state: &mut GameState, id: MobjId) {
     {
         let actor = id;
         let damage: i32;
-        let Some(target) = live_target(state, actor) else {
+        let Some(target) = live_target(&state.world.p_mobj, actor) else {
             return;
         };
         face_target(state, actor);
@@ -944,7 +940,7 @@ pub fn head_attack(state: &mut GameState, id: MobjId) {
     {
         let actor = id;
         let damage: i32;
-        let Some(target) = live_target(state, actor) else {
+        let Some(target) = live_target(&state.world.p_mobj, actor) else {
             return;
         };
         face_target(state, actor);
@@ -959,7 +955,7 @@ pub fn head_attack(state: &mut GameState, id: MobjId) {
 pub fn cyber_attack(state: &mut GameState, id: MobjId) {
     {
         let actor = id;
-        let Some(target) = live_target(state, actor) else {
+        let Some(target) = live_target(&state.world.p_mobj, actor) else {
             return;
         };
         face_target(state, actor);
@@ -970,7 +966,7 @@ pub fn bruis_attack(state: &mut GameState, id: MobjId) {
     {
         let actor = id;
         let damage: i32;
-        let Some(target) = live_target(state, actor) else {
+        let Some(target) = live_target(&state.world.p_mobj, actor) else {
             return;
         };
         if check_melee_range(state, actor) {
@@ -986,7 +982,7 @@ pub fn skel_missile(state: &mut GameState, id: MobjId) {
     {
         let actor = id;
 
-        let Some(target) = live_target(state, actor) else {
+        let Some(target) = live_target(&state.world.p_mobj, actor) else {
             return;
         };
         face_target(state, actor);
@@ -1119,7 +1115,7 @@ pub fn skel_fist(state: &mut GameState, id: MobjId) {
     {
         let actor = id;
         let damage: i32;
-        let Some(target) = live_target(state, actor) else {
+        let Some(target) = live_target(&state.world.p_mobj, actor) else {
             return;
         };
         face_target(state, actor);
@@ -1286,20 +1282,20 @@ pub fn a_fire(state: &mut GameState, id: MobjId) {
             return;
         }
         let an: u32 = state.world.p_mobj.mo(dest.unwrap()).angle >> ANGLETOFINESHIFT;
-        unset_thing_position(state, actor);
+        unset_thing_position(&mut state.world.p_mobj, &mut state.world.p_setup, actor);
         state.world.p_mobj.mo_mut(actor).x = state.world.p_mobj.mo(dest.unwrap()).x
             + fixed_mul(24 * FRACUNIT, FINECOSINE[an as usize]);
         state.world.p_mobj.mo_mut(actor).y = state.world.p_mobj.mo(dest.unwrap()).y
             + fixed_mul(24 * FRACUNIT, FINESINE[an as usize]);
         state.world.p_mobj.mo_mut(actor).z = state.world.p_mobj.mo(dest.unwrap()).z;
-        set_thing_position(state, actor);
+        set_thing_position(&mut state.world.p_mobj, &mut state.world.p_setup, actor);
     }
 }
 pub fn vile_target(state: &mut GameState, id: MobjId) {
     {
         let actor = id;
 
-        let Some(target) = live_target(state, actor) else {
+        let Some(target) = live_target(&state.world.p_mobj, actor) else {
             return;
         };
         face_target(state, actor);
@@ -1320,7 +1316,7 @@ pub fn vile_attack(state: &mut GameState, id: MobjId) {
     {
         let actor = id;
 
-        let Some(target) = live_target(state, actor) else {
+        let Some(target) = live_target(&state.world.p_mobj, actor) else {
             return;
         };
         face_target(state, actor);

@@ -1,4 +1,5 @@
 use crate::game_state::GameState;
+use crate::game_state::World;
 use crate::m_random::p_random;
 use crate::p_mobj::Thinker;
 use crate::p_mobj::ThinkerFn;
@@ -415,20 +416,20 @@ pub fn light_flash(state: &mut GameState, id: LightFlashId) {
         flash.count = (p_random(&mut state.world.m_random) & flash.maxtime) + 1;
     }
 }
-pub fn spawn_light_flash(state: &mut GameState, sector: SectorId) {
-    state.world.p_setup.sector_mut(sector).special = 0;
-    let lightlevel = state.world.p_setup.sector_mut(sector).lightlevel as i32;
+pub fn spawn_light_flash(world: &mut World, sector: SectorId) {
+    world.p_setup.sector_mut(sector).special = 0;
+    let lightlevel = world.p_setup.sector_mut(sector).lightlevel as i32;
     let mut flash = LightFlash::default();
     flash.thinker.function = ThinkerFn::LightFlash(light_flash);
     flash.sector = sector;
     flash.maxlight = lightlevel;
-    flash.minlight = find_min_surrounding_light(&mut state.world.p_setup, sector, lightlevel);
+    flash.minlight = find_min_surrounding_light(&mut world.p_setup, sector, lightlevel);
     flash.maxtime = 64;
     flash.mintime = 7;
-    flash.count = (p_random(&mut state.world.m_random) & flash.maxtime) + 1;
-    let flash_arena_id = state.world.p_lights.spawn_lightflash(flash);
+    flash.count = (p_random(&mut world.m_random) & flash.maxtime) + 1;
+    let flash_arena_id = world.p_lights.spawn_lightflash(flash);
     add_thinker(
-        &mut state.world.p_tick,
+        &mut world.p_tick,
         ThinkerPayload::LightFlash(flash_arena_id),
         ThinkerKind::LightFlash,
     );
@@ -452,13 +453,8 @@ pub fn strobe_flash(state: &mut GameState, id: StrobeId) {
         flash.count = flash.darktime;
     }
 }
-pub fn spawn_strobe_flash(
-    state: &mut GameState,
-    sector: SectorId,
-    fast_or_slow: i32,
-    in_sync: i32,
-) {
-    let lightlevel = state.world.p_setup.sector_mut(sector).lightlevel as i32;
+pub fn spawn_strobe_flash(world: &mut World, sector: SectorId, fast_or_slow: i32, in_sync: i32) {
+    let lightlevel = world.p_setup.sector_mut(sector).lightlevel as i32;
     let mut flash = Strobe {
         sector,
         darktime: fast_or_slow,
@@ -467,30 +463,30 @@ pub fn spawn_strobe_flash(
     };
     flash.thinker.function = ThinkerFn::Strobe(strobe_flash);
     flash.maxlight = lightlevel;
-    flash.minlight = find_min_surrounding_light(&mut state.world.p_setup, sector, lightlevel);
+    flash.minlight = find_min_surrounding_light(&mut world.p_setup, sector, lightlevel);
     if flash.minlight == flash.maxlight {
         flash.minlight = 0;
     }
-    state.world.p_setup.sector_mut(sector).special = 0;
+    world.p_setup.sector_mut(sector).special = 0;
     if in_sync == 0 {
-        flash.count = (p_random(&mut state.world.m_random) & 7) + 1;
+        flash.count = (p_random(&mut world.m_random) & 7) + 1;
     } else {
         flash.count = 1;
     }
-    let flash_arena_id = state.world.p_lights.spawn_strobe(flash);
+    let flash_arena_id = world.p_lights.spawn_strobe(flash);
     add_thinker(
-        &mut state.world.p_tick,
+        &mut world.p_tick,
         ThinkerPayload::Strobe(flash_arena_id),
         ThinkerKind::Strobe,
     );
 }
-pub fn start_light_strobing(state: &mut GameState, line: LineId) {
-    for sector in sectors_with_line_tag(&state.world.p_setup, line) {
-        let sec = state.world.p_setup.sector_mut(sector);
+pub fn start_light_strobing(world: &mut World, line: LineId) {
+    for sector in sectors_with_line_tag(&world.p_setup, line) {
+        let sec = world.p_setup.sector_mut(sector);
         if sec.specialdata.is_some() {
             continue;
         }
-        spawn_strobe_flash(state, sector, SLOWDARK, 0);
+        spawn_strobe_flash(world, sector, SLOWDARK, 0);
     }
 }
 pub fn turn_tag_lights_off(p_setup: &mut PSetupState, line: LineId) {

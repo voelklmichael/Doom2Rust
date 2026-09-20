@@ -1,3 +1,4 @@
+use crate::filesystem::DoomFileSystem;
 use crate::game_state::GameState;
 use crate::i_system::error;
 use crate::st_stuff::ST_Y;
@@ -5,6 +6,7 @@ use crate::v_video::cache_patch_num;
 use crate::v_video::copy_rect;
 use crate::v_video::draw_patch;
 use crate::v_video::Screen;
+use crate::w_wad::WWadState;
 use crate::w_wad::{get_num_for_name, lump_bytes};
 
 // Identifies one of StStuffState's own fixed lump-number arrays -- always
@@ -65,10 +67,10 @@ impl StLibState {
     }
 }
 
-pub fn stlib_init(state: &mut GameState) {
-    let lumpnum = get_num_for_name(&state.assets.w_wad, "STTMINUS");
-    lump_bytes(&*state.assets.fs, &mut state.assets.w_wad, lumpnum);
-    state.ui.st_lib.sttminus = lumpnum;
+pub fn stlib_init(fs: &dyn DoomFileSystem, st_lib: &mut StLibState, w_wad: &mut WWadState) {
+    let lumpnum = get_num_for_name(w_wad, "STTMINUS");
+    lump_bytes(fs, w_wad, lumpnum);
+    st_lib.sttminus = lumpnum;
 }
 pub fn stlib_init_num(n: &mut StNumber, x: i32, y: i32, pl: StDigitSet, width: i32) {
     n.x = x;
@@ -80,7 +82,7 @@ pub fn stlib_init_num(n: &mut StNumber, x: i32, y: i32, pl: StDigitSet, width: i
 pub fn stlib_draw_num(state: &mut GameState, n: &mut StNumber, mut num: i32) {
     let mut numdigits: i32 = n.width;
     let zero_lump = state.ui.st_stuff.digit_set(n.p)[0];
-    let zero_patch = cache_patch_num(state, zero_lump);
+    let zero_patch = cache_patch_num(&*state.assets.fs, &mut state.assets.w_wad, zero_lump);
     let w: i32 = zero_patch.width();
     let h: i32 = zero_patch.height();
     let mut x: i32;
@@ -127,13 +129,17 @@ pub fn stlib_draw_num(state: &mut GameState, n: &mut StNumber, mut num: i32) {
     } {
         x -= w;
         let digit_lump = state.ui.st_stuff.digit_set(n.p)[(num % 10) as usize];
-        let digit_patch = cache_patch_num(state, digit_lump);
+        let digit_patch = cache_patch_num(&*state.assets.fs, &mut state.assets.w_wad, digit_lump);
         let dest_screen = Screen::Video;
         draw_patch(state, dest_screen, x, n.y, &digit_patch);
         num /= 10;
     }
     if neg != 0 {
-        let patch = cache_patch_num(state, state.ui.st_lib.sttminus);
+        let patch = cache_patch_num(
+            &*state.assets.fs,
+            &mut state.assets.w_wad,
+            state.ui.st_lib.sttminus,
+        );
         let dest_screen = Screen::Video;
         draw_patch(state, dest_screen, x - 8, n.y, &patch);
     }
@@ -155,7 +161,7 @@ pub fn stlib_update_percent(
     refresh: i32,
 ) {
     if refresh != 0 && on {
-        let patch = cache_patch_num(state, per.p);
+        let patch = cache_patch_num(&*state.assets.fs, &mut state.assets.w_wad, per.p);
         let dest_screen = Screen::Video;
         draw_patch(state, dest_screen, per.n.x, per.n.y, &patch);
     }
@@ -181,7 +187,7 @@ pub fn stlib_update_mult_icon(
     if on && (mi.oldinum != inum || refresh) && inum != -1 {
         if mi.oldinum != -1 {
             let old_lump = state.ui.st_stuff.digit_set(mi.p)[mi.oldinum as usize];
-            let old_patch = cache_patch_num(state, old_lump);
+            let old_patch = cache_patch_num(&*state.assets.fs, &mut state.assets.w_wad, old_lump);
             x = mi.x - old_patch.leftoffset();
             y = mi.y - old_patch.topoffset();
             w = old_patch.width();
@@ -204,7 +210,7 @@ pub fn stlib_update_mult_icon(
             );
         }
         let new_lump = state.ui.st_stuff.digit_set(mi.p)[inum as usize];
-        let new_patch = cache_patch_num(state, new_lump);
+        let new_patch = cache_patch_num(&*state.assets.fs, &mut state.assets.w_wad, new_lump);
         let dest_screen = Screen::Video;
         draw_patch(state, dest_screen, mi.x, mi.y, &new_patch);
         mi.oldinum = inum;
@@ -228,7 +234,7 @@ pub fn stlib_update_bin_icon(
     let w: i32;
     let h: i32;
     if on && (bi.oldval != val || refresh) {
-        let patch = cache_patch_num(state, bi.p);
+        let patch = cache_patch_num(&*state.assets.fs, &mut state.assets.w_wad, bi.p);
         x = bi.x - patch.leftoffset();
         y = bi.y - patch.topoffset();
         w = patch.width();

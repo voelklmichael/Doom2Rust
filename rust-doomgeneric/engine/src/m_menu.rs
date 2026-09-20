@@ -6,7 +6,9 @@ use crate::doomstat::DoomstatState;
 use crate::dstrings::{DOOM1_ENDMSG, DOOM2_ENDMSG};
 use crate::filesystem::DoomFileSystem;
 use crate::g_game::GGameState;
+use crate::hu_stuff::HuStuffState;
 use crate::i_system::error;
+use crate::w_wad::WWadState;
 use alloc::string::String;
 use alloc::string::ToString;
 use alloc::vec::Vec;
@@ -667,7 +669,7 @@ pub fn read_save_strings(
     }
 }
 pub fn draw_load(state: &mut GameState) {
-    let __wcache890_24 = cache_patch_name(state, "M_LOADG");
+    let __wcache890_24 = cache_patch_name(&*state.assets.fs, &mut state.assets.w_wad, "M_LOADG");
     let dest_screen = Screen::Video;
     draw_patch_direct(state, dest_screen, 72, 28, &__wcache890_24);
     for i in 0..LOAD_END {
@@ -679,16 +681,17 @@ pub fn draw_load(state: &mut GameState) {
     }
 }
 pub fn draw_save_load_border(state: &mut GameState, mut x: i32, y: i32) {
-    let __wcache908_23 = cache_patch_name(state, "M_LSLEFT");
+    let __wcache908_23 = cache_patch_name(&*state.assets.fs, &mut state.assets.w_wad, "M_LSLEFT");
     let dest_screen = Screen::Video;
     draw_patch_direct(state, dest_screen, x - 8, y + 7, &__wcache908_23);
     for _ in 0..24 {
-        let __wcache916_22 = cache_patch_name(state, "M_LSCNTR");
+        let __wcache916_22 =
+            cache_patch_name(&*state.assets.fs, &mut state.assets.w_wad, "M_LSCNTR");
         let dest_screen = Screen::Video;
         draw_patch_direct(state, dest_screen, x, y + 7, &__wcache916_22);
         x += 8;
     }
-    let __wcache925_21 = cache_patch_name(state, "M_LSRGHT");
+    let __wcache925_21 = cache_patch_name(&*state.assets.fs, &mut state.assets.w_wad, "M_LSRGHT");
     let dest_screen = Screen::Video;
     draw_patch_direct(state, dest_screen, x, y + 7, &__wcache925_21);
 }
@@ -717,7 +720,7 @@ pub fn m_load_game(state: &mut GameState, _choice: i32) {
 }
 pub fn draw_save(state: &mut GameState) {
     let i: i32;
-    let __wcache961_20 = cache_patch_name(state, "M_SAVEG");
+    let __wcache961_20 = cache_patch_name(&*state.assets.fs, &mut state.assets.w_wad, "M_SAVEG");
     let dest_screen = Screen::Video;
     draw_patch_direct(state, dest_screen, 72, 28, &__wcache961_20);
     for i in 0..LOAD_END {
@@ -729,7 +732,12 @@ pub fn draw_save(state: &mut GameState) {
     }
     if state.ui.m_menu.save_string_enter != 0 {
         let savestr = state.ui.m_menu.savegamestrings[state.ui.m_menu.save_slot as usize].clone();
-        i = string_width(state, &savestr);
+        i = string_width(
+            &*state.assets.fs,
+            &state.ui.hu_stuff,
+            &mut state.assets.w_wad,
+            &savestr,
+        );
         let text_x = state.ui.m_menu.defs.load_def.x as i32 + i;
         let text_y =
             state.ui.m_menu.defs.load_def.y as i32 + LINEHEIGHT * state.ui.m_menu.save_slot;
@@ -872,7 +880,7 @@ pub fn draw_read_this1(state: &mut GameState) {
             error("Unhandled game version");
         }
     }
-    let __wcache1158_19 = cache_patch_name(state, lumpname);
+    let __wcache1158_19 = cache_patch_name(&*state.assets.fs, &mut state.assets.w_wad, lumpname);
     let dest_screen = Screen::Video;
     draw_patch_direct(state, dest_screen, 0, 0, &__wcache1158_19);
     state.ui.m_menu.defs.read_def1.x = skullx as i16;
@@ -880,12 +888,12 @@ pub fn draw_read_this1(state: &mut GameState) {
 }
 pub fn draw_read_this2(state: &mut GameState) {
     state.ui.m_menu.inhelpscreens = true;
-    let __wcache1170_18 = cache_patch_name(state, "HELP1");
+    let __wcache1170_18 = cache_patch_name(&*state.assets.fs, &mut state.assets.w_wad, "HELP1");
     let dest_screen = Screen::Video;
     draw_patch_direct(state, dest_screen, 0, 0, &__wcache1170_18);
 }
 pub fn draw_sound(state: &mut GameState) {
-    let __wcache1179_17 = cache_patch_name(state, "M_SVOL");
+    let __wcache1179_17 = cache_patch_name(&*state.assets.fs, &mut state.assets.w_wad, "M_SVOL");
     let dest_screen = Screen::Video;
     draw_patch_direct(state, dest_screen, 60, 38, &__wcache1179_17);
     let (x, y, vol) = (
@@ -940,15 +948,15 @@ pub fn music_vol(state: &mut GameState, choice: i32) {
     );
 }
 pub fn draw_main_menu(state: &mut GameState) {
-    let __wcache1241_16 = cache_patch_name(state, "M_DOOM");
+    let __wcache1241_16 = cache_patch_name(&*state.assets.fs, &mut state.assets.w_wad, "M_DOOM");
     let dest_screen = Screen::Video;
     draw_patch_direct(state, dest_screen, 94, 2, &__wcache1241_16);
 }
 pub fn draw_new_game(state: &mut GameState) {
-    let __wcache1250_15 = cache_patch_name(state, "M_NEWG");
+    let __wcache1250_15 = cache_patch_name(&*state.assets.fs, &mut state.assets.w_wad, "M_NEWG");
     let dest_screen = Screen::Video;
     draw_patch_direct(state, dest_screen, 96, 14, &__wcache1250_15);
-    let __wcache1256_14 = cache_patch_name(state, "M_SKILL");
+    let __wcache1256_14 = cache_patch_name(&*state.assets.fs, &mut state.assets.w_wad, "M_SKILL");
     let dest_screen = Screen::Video;
     draw_patch_direct(state, dest_screen, 54, 38, &__wcache1256_14);
 }
@@ -973,7 +981,7 @@ pub fn new_game(state: &mut GameState, _choice: i32) {
     }
 }
 pub fn draw_episode(state: &mut GameState) {
-    let __wcache1286_13 = cache_patch_name(state, "M_EPISOD");
+    let __wcache1286_13 = cache_patch_name(&*state.assets.fs, &mut state.assets.w_wad, "M_EPISOD");
     let dest_screen = Screen::Video;
     draw_patch_direct(state, dest_screen, 54, 38, &__wcache1286_13);
 }
@@ -1035,11 +1043,14 @@ pub fn m_episode(state: &mut GameState, mut choice: i32) {
 static DETAIL_NAMES: [&str; 2] = ["M_GDHIGH", "M_GDLOW"];
 static MSG_NAMES: [&str; 2] = ["M_MSGOFF", "M_MSGON"];
 pub fn draw_options(state: &mut GameState) {
-    let __wcache1358_12 = cache_patch_name(state, "M_OPTTTL");
+    let __wcache1358_12 = cache_patch_name(&*state.assets.fs, &mut state.assets.w_wad, "M_OPTTTL");
     let dest_screen = Screen::Video;
     draw_patch_direct(state, dest_screen, 108, 15, &__wcache1358_12);
-    let __wcache1364_11 =
-        cache_patch_name(state, DETAIL_NAMES[state.ui.m_menu.detail_level as usize]);
+    let __wcache1364_11 = cache_patch_name(
+        &*state.assets.fs,
+        &mut state.assets.w_wad,
+        DETAIL_NAMES[state.ui.m_menu.detail_level as usize],
+    );
     let dest_screen = Screen::Video;
     draw_patch_direct(
         state,
@@ -1048,8 +1059,11 @@ pub fn draw_options(state: &mut GameState) {
         state.ui.m_menu.defs.options_def.y as i32 + LINEHEIGHT * OptionsMenu::Detail as i32,
         &__wcache1364_11,
     );
-    let __wcache1373_10 =
-        cache_patch_name(state, MSG_NAMES[state.ui.m_menu.show_messages as usize]);
+    let __wcache1373_10 = cache_patch_name(
+        &*state.assets.fs,
+        &mut state.assets.w_wad,
+        MSG_NAMES[state.ui.m_menu.show_messages as usize],
+    );
     let dest_screen = Screen::Video;
     draw_patch_direct(
         state,
@@ -1246,20 +1260,21 @@ pub fn size_display(state: &mut GameState, choice: i32) {
 pub fn draw_thermo(state: &mut GameState, x: i32, y: i32, therm_width: i32, therm_dot: i32) {
     let mut xx: i32;
     xx = x;
-    let __wcache1619_9 = cache_patch_name(state, "M_THERML");
+    let __wcache1619_9 = cache_patch_name(&*state.assets.fs, &mut state.assets.w_wad, "M_THERML");
     let dest_screen = Screen::Video;
     draw_patch_direct(state, dest_screen, xx, y, &__wcache1619_9);
     xx += 8;
     for _ in 0..therm_width {
-        let __wcache1628_8 = cache_patch_name(state, "M_THERMM");
+        let __wcache1628_8 =
+            cache_patch_name(&*state.assets.fs, &mut state.assets.w_wad, "M_THERMM");
         let dest_screen = Screen::Video;
         draw_patch_direct(state, dest_screen, xx, y, &__wcache1628_8);
         xx += 8;
     }
-    let __wcache1637_7 = cache_patch_name(state, "M_THERMR");
+    let __wcache1637_7 = cache_patch_name(&*state.assets.fs, &mut state.assets.w_wad, "M_THERMR");
     let dest_screen = Screen::Video;
     draw_patch_direct(state, dest_screen, xx, y, &__wcache1637_7);
-    let __wcache1643_6 = cache_patch_name(state, "M_THERMO");
+    let __wcache1643_6 = cache_patch_name(&*state.assets.fs, &mut state.assets.w_wad, "M_THERMO");
     let dest_screen = Screen::Video;
     draw_patch_direct(
         state,
@@ -1283,13 +1298,18 @@ pub fn start_message(
     m_menu.message_needs_input = input;
     m_menu.menuactive = true;
 }
-pub fn string_width(state: &mut GameState, string: &str) -> i32 {
+pub fn string_width(
+    fs: &dyn DoomFileSystem,
+    hu_stuff: &HuStuffState,
+    w_wad: &mut WWadState,
+    string: &str,
+) -> i32 {
     let mut w: i32 = 0;
     let mut c: i32;
     for b in string.bytes() {
         c = b.to_ascii_uppercase() as i32 - HU_FONTSTART;
         if (0..HU_FONTSIZE).contains(&c) {
-            let font_patch = cache_patch_num(state, state.ui.hu_stuff.hu_font[c as usize]);
+            let font_patch = cache_patch_num(fs, w_wad, hu_stuff.hu_font[c as usize]);
             w += font_patch.width();
         } else {
             w += 4;
@@ -1297,9 +1317,14 @@ pub fn string_width(state: &mut GameState, string: &str) -> i32 {
     }
     w
 }
-pub fn string_height(state: &mut GameState, string: &str) -> i32 {
+pub fn string_height(
+    fs: &dyn DoomFileSystem,
+    hu_stuff: &HuStuffState,
+    w_wad: &mut WWadState,
+    string: &str,
+) -> i32 {
     let mut h: i32;
-    let height: i32 = cache_patch_num(state, state.ui.hu_stuff.hu_font[0]).height();
+    let height: i32 = cache_patch_num(fs, w_wad, hu_stuff.hu_font[0]).height();
     h = height;
     for b in string.bytes() {
         if b == b'\n' {
@@ -1323,7 +1348,11 @@ pub fn write_text(state: &mut GameState, x: i32, y: i32, string: &str) {
         } else {
             c = (c as u8).to_ascii_uppercase() as i32 - HU_FONTSTART;
             if (0..HU_FONTSIZE).contains(&c) {
-                let font_patch = cache_patch_num(state, state.ui.hu_stuff.hu_font[c as usize]);
+                let font_patch = cache_patch_num(
+                    &*state.assets.fs,
+                    &mut state.assets.w_wad,
+                    state.ui.hu_stuff.hu_font[c as usize],
+                );
                 w = font_patch.width();
                 if cx + w > SCREENWIDTH {
                     break 'outer;
@@ -1491,7 +1520,12 @@ pub fn m_responder(state: &mut GameState, ev: &Event) -> bool {
                         state.ui.m_menu.savegamestrings[state.ui.m_menu.save_slot as usize].clone();
                     if (32..=127).contains(&ch)
                         && state.ui.m_menu.save_char_index < SAVESTRINGSIZE - 1
-                        && string_width(state, &savestr) < (SAVESTRINGSIZE - 2) * 8
+                        && string_width(
+                            &*state.assets.fs,
+                            &state.ui.hu_stuff,
+                            &mut state.assets.w_wad,
+                            &savestr,
+                        ) < (SAVESTRINGSIZE - 2) * 8
                     {
                         state.ui.m_menu.save_char_index += 1;
                         state.ui.m_menu.savegamestrings[state.ui.m_menu.save_slot as usize]
@@ -1602,8 +1636,8 @@ pub fn m_responder(state: &mut GameState, ev: &Event) -> bool {
             }
             state.game.g_game.players[state.game.g_game.consoleplayer as usize].message =
                 Some(GAMMAMSG[state.io.i_video.usegamma as usize].to_string());
-            let pal = lump_bytes_name(state, "PLAYPAL");
-            set_palette(state, &pal[..768]);
+            let pal = lump_bytes_name(&*state.assets.fs, &mut state.assets.w_wad, "PLAYPAL");
+            set_palette(&mut state.io.i_video, &pal[..768]);
             return true;
         }
     }
@@ -1721,11 +1755,22 @@ pub fn m_drawer(state: &mut GameState) {
     state.ui.m_menu.inhelpscreens = false;
     if state.ui.m_menu.message_to_print != 0 {
         let message_string = state.ui.m_menu.message_string.clone();
-        state.ui.m_menu.drawer_y =
-            (SCREENHEIGHT / 2 - string_height(state, &message_string) / 2) as i16;
+        state.ui.m_menu.drawer_y = (SCREENHEIGHT / 2
+            - string_height(
+                &*state.assets.fs,
+                &state.ui.hu_stuff,
+                &mut state.assets.w_wad,
+                &message_string,
+            ) / 2) as i16;
         for line in message_string.split('\n') {
             let line = if line.len() > 79 { &line[..79] } else { line };
-            state.ui.m_menu.drawer_x = (SCREENWIDTH / 2 - string_width(state, line) / 2) as i16;
+            state.ui.m_menu.drawer_x = (SCREENWIDTH / 2
+                - string_width(
+                    &*state.assets.fs,
+                    &state.ui.hu_stuff,
+                    &mut state.assets.w_wad,
+                    line,
+                ) / 2) as i16;
             write_text(
                 state,
                 state.ui.m_menu.drawer_x as i32,
@@ -1733,8 +1778,12 @@ pub fn m_drawer(state: &mut GameState) {
                 line,
             );
             state.ui.m_menu.drawer_y = (state.ui.m_menu.drawer_y as i32
-                + cache_patch_num(state, state.ui.hu_stuff.hu_font[0]).height())
-                as i16;
+                + cache_patch_num(
+                    &*state.assets.fs,
+                    &mut state.assets.w_wad,
+                    state.ui.hu_stuff.hu_font[0],
+                )
+                .height()) as i16;
         }
         return;
     }
@@ -1752,7 +1801,11 @@ pub fn m_drawer(state: &mut GameState) {
     while i < max {
         let item_name = state.ui.m_menu.current().items[i as usize].name;
         if !item_name.is_empty() {
-            let __wcache2221_2 = cache_patch_name(state, &item_name.as_str());
+            let __wcache2221_2 = cache_patch_name(
+                &*state.assets.fs,
+                &mut state.assets.w_wad,
+                &item_name.as_str(),
+            );
             let dest_screen = Screen::Video;
             draw_patch_direct(
                 state,
@@ -1765,7 +1818,11 @@ pub fn m_drawer(state: &mut GameState) {
         state.ui.m_menu.drawer_y = (state.ui.m_menu.drawer_y as i32 + LINEHEIGHT) as i16;
         i = i.wrapping_add(1);
     }
-    let __wcache2231_1 = cache_patch_name(state, SKULL_NAME[state.ui.m_menu.which_skull as usize]);
+    let __wcache2231_1 = cache_patch_name(
+        &*state.assets.fs,
+        &mut state.assets.w_wad,
+        SKULL_NAME[state.ui.m_menu.which_skull as usize],
+    );
     let dest_screen = Screen::Video;
     draw_patch_direct(
         state,

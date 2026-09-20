@@ -363,7 +363,7 @@ pub fn draw_vis_sprite(state: &mut GameState, vis: &VisSprite) {
     let mut frac: Fixed;
 
     let sprite_lump = vis.patch + state.render.r_data.firstspritelump;
-    let patch: Patch = cache_patch_num(state, sprite_lump);
+    let patch: Patch = cache_patch_num(&*state.assets.fs, &mut state.assets.w_wad, sprite_lump);
     state.render.r_draw.dc_colormap = vis.colormap;
     if state.render.r_draw.dc_colormap.is_none() {
         state.render.r_main.colfunc = state.render.r_main.fuzzcolfunc;

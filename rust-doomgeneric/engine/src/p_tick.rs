@@ -1,6 +1,7 @@
 use crate::d_player::PlayerId;
 use crate::doomdef::MAXPLAYERS;
 use crate::game_state::GameState;
+use crate::game_state::World;
 use crate::p_ceilng::CeilingId;
 use crate::p_doors::DoorId;
 use crate::p_lights::{FireFlickerId, GlowId, LightFlashId, StrobeId};
@@ -149,75 +150,66 @@ impl PTickState {
 // its owning arena. Takes the whole GameState because the arena is a sibling
 // field PTickState has no access to. (A retired-but-not-yet-freed mobj still
 // resolves: the reaper has to see ThinkerFn::Removed.)
-pub fn thinker_mut(state: &mut GameState, id: ThinkerId) -> &mut Thinker {
-    match state.world.p_tick.payload(id) {
+pub fn thinker_mut(world: &mut World, id: ThinkerId) -> &mut Thinker {
+    match world.p_tick.payload(id) {
         ThinkerPayload::Mobj(mobj_id) => {
-            &mut state
-                .world
+            &mut world
                 .p_mobj
                 .mobj_mut(mobj_id)
                 .expect("ThinkerNode payload must reference a live mobj")
                 .thinker
         }
         ThinkerPayload::Ceiling(ceiling_id) => {
-            &mut state
-                .world
+            &mut world
                 .p_ceilng
                 .get_mut(ceiling_id)
                 .expect("ThinkerNode payload must reference a live ceiling")
                 .thinker
         }
         ThinkerPayload::Door(door_id) => {
-            &mut state
-                .world
+            &mut world
                 .p_doors
                 .get_mut(door_id)
                 .expect("ThinkerNode payload must reference a live door")
                 .thinker
         }
         ThinkerPayload::Floor(floor_id) => {
-            &mut state
-                .world
+            &mut world
                 .p_spec
                 .get_floor_mut(floor_id)
                 .expect("ThinkerNode payload must reference a live floor")
                 .thinker
         }
         ThinkerPayload::Plat(plat_id) => {
-            &mut state
-                .world
+            &mut world
                 .p_plats
                 .get_mut(plat_id)
                 .expect("ThinkerNode payload must reference a live plat")
                 .thinker
         }
         ThinkerPayload::FireFlicker(fireflicker_id) => {
-            &mut state
-                .world
+            &mut world
                 .p_lights
                 .get_fireflicker_mut(fireflicker_id)
                 .expect("ThinkerNode payload must reference a live fireflicker")
                 .thinker
         }
         ThinkerPayload::LightFlash(lightflash_id) => {
-            &mut state
-                .world
+            &mut world
                 .p_lights
                 .get_lightflash_mut(lightflash_id)
                 .expect("ThinkerNode payload must reference a live lightflash")
                 .thinker
         }
         ThinkerPayload::Strobe(strobe_id) => {
-            &mut state
-                .world
+            &mut world
                 .p_lights
                 .get_strobe_mut(strobe_id)
                 .expect("ThinkerNode payload must reference a live strobe")
                 .thinker
         }
         ThinkerPayload::Glow(glow_id) => {
-            &mut state
-                .world
+            &mut world
                 .p_lights
                 .get_glow_mut(glow_id)
                 .expect("ThinkerNode payload must reference a live glow")
@@ -226,8 +218,8 @@ pub fn thinker_mut(state: &mut GameState, id: ThinkerId) -> &mut Thinker {
     }
 }
 
-pub fn thinker_function(state: &mut GameState, id: ThinkerId) -> ThinkerFn {
-    thinker_mut(state, id).function
+pub fn thinker_function(world: &mut World, id: ThinkerId) -> ThinkerFn {
+    thinker_mut(world, id).function
 }
 
 // Every mobj that is still an active Mobj thinker (not yet Removed), in
@@ -312,7 +304,7 @@ pub fn run_thinkers(state: &mut GameState) {
     let mut cursor = state.world.p_tick.head();
     while let Some(id) = cursor {
         let next;
-        match thinker_function(state, id) {
+        match thinker_function(&mut state.world, id) {
             ThinkerFn::Removed => {
                 // Capture next before unlinking/freeing -- unlike the
                 // pointer-chasing version this replaces, `next` lives in our
@@ -519,7 +511,7 @@ mod tests {
             ThinkerKind::Door,
         );
 
-        remove_thinker(thinker_mut(state, node_id));
+        remove_thinker(thinker_mut(&mut state.world, node_id));
         run_thinkers(state);
         assert!(
             state.world.p_doors.get_ref(door_id).is_none(),
@@ -548,7 +540,7 @@ mod tests {
             ThinkerKind::Mobj,
         );
 
-        remove_thinker(thinker_mut(state, node_id));
+        remove_thinker(thinker_mut(&mut state.world, node_id));
         run_thinkers(state);
         assert!(
             state.world.p_mobj.mobj_ref(mobj_id).is_none(),
@@ -575,7 +567,7 @@ mod tests {
             ThinkerKind::Ceiling,
         );
 
-        remove_thinker(thinker_mut(state, node_id));
+        remove_thinker(thinker_mut(&mut state.world, node_id));
         run_thinkers(state);
         assert!(
             state.world.p_ceilng.get_ref(ceiling_id).is_none(),
@@ -600,7 +592,7 @@ mod tests {
             ThinkerKind::Floor,
         );
 
-        remove_thinker(thinker_mut(state, node_id));
+        remove_thinker(thinker_mut(&mut state.world, node_id));
         run_thinkers(state);
         assert!(
             state.world.p_spec.get_floor_ref(floor_id).is_none(),
@@ -625,7 +617,7 @@ mod tests {
             ThinkerKind::Plat,
         );
 
-        remove_thinker(thinker_mut(state, node_id));
+        remove_thinker(thinker_mut(&mut state.world, node_id));
         run_thinkers(state);
         assert!(
             state.world.p_plats.get_ref(plat_id).is_none(),
@@ -655,7 +647,7 @@ mod tests {
             ThinkerKind::FireFlicker,
         );
 
-        remove_thinker(thinker_mut(state, node_id));
+        remove_thinker(thinker_mut(&mut state.world, node_id));
         run_thinkers(state);
         assert!(
             state
@@ -693,7 +685,7 @@ mod tests {
             ThinkerKind::Glow,
         );
 
-        remove_thinker(thinker_mut(state, node_id));
+        remove_thinker(thinker_mut(&mut state.world, node_id));
         run_thinkers(state);
         assert!(
             state.world.p_lights.get_glow_ref(glow_id).is_none(),

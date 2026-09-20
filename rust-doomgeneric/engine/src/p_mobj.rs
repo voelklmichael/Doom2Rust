@@ -3268,7 +3268,7 @@ pub fn spawn_mobj(state: &mut GameState, x: Fixed, y: Fixed, z: Fixed, kind: Mob
     value.sprite = sprite;
     value.frame = frame;
     let id = state.world.p_mobj.spawn(value);
-    set_thing_position(state, id);
+    set_thing_position(&mut state.world.p_mobj, &mut state.world.p_setup, id);
     let subsector = state.world.p_mobj.mo(id).subsector;
     let sector = state.world.p_setup.subsectors[subsector.0 as usize].sector;
     let (floorz, ceilingz) = {
@@ -3530,7 +3530,7 @@ pub fn remove_mobj(state: &mut GameState, mobj: MobjId) {
             state.world.p_mobj.iquetail = (state.world.p_mobj.iquetail + 1) & (ITEMQUESIZE - 1);
         }
     }
-    unset_thing_position(state, mobj);
+    unset_thing_position(&mut state.world.p_mobj, &mut state.world.p_setup, mobj);
     s_stop_sound(
         &mut state.audio.i_sound,
         &mut state.audio.s_sound,

@@ -294,8 +294,13 @@ pub fn draw_planes(state: &mut GameState) {
                             .wrapping_add(state.render.r_main.xtoviewangle[x as usize])
                             >> ANGLETOSKYSHIFT) as i32;
                         state.render.r_draw.dc_x = x;
-                        state.render.r_draw.dc_source =
-                            Some(get_column(state, state.render.r_sky.skytexture, angle));
+                        state.render.r_draw.dc_source = Some(get_column(
+                            &*state.assets.fs,
+                            &mut state.render.r_data,
+                            &mut state.assets.w_wad,
+                            state.render.r_sky.skytexture,
+                            angle,
+                        ));
                         state
                             .render
                             .r_main

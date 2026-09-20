@@ -371,10 +371,18 @@ pub const ST_MAXAMMO3Y: i32 = 185;
 pub fn refresh_background(state: &mut GameState) {
     if state.ui.st_stuff.st_statusbaron {
         let st_backing_screen = Screen::StatusBar;
-        let sbar_patch = cache_patch_num(state, state.ui.st_stuff.sbar);
+        let sbar_patch = cache_patch_num(
+            &*state.assets.fs,
+            &mut state.assets.w_wad,
+            state.ui.st_stuff.sbar,
+        );
         draw_patch(state, st_backing_screen, ST_X, 0, &sbar_patch);
         if state.game.g_game.netgame {
-            let faceback_patch = cache_patch_num(state, state.ui.st_stuff.faceback);
+            let faceback_patch = cache_patch_num(
+                &*state.assets.fs,
+                &mut state.assets.w_wad,
+                state.ui.st_stuff.faceback,
+            );
             draw_patch(state, st_backing_screen, ST_FX, 0, &faceback_patch);
         }
         let dest_screen = Screen::Video;
@@ -959,7 +967,7 @@ pub fn do_palette_stuff(state: &mut GameState) {
             state.ui.st_stuff.lu_palette,
         );
         let offset = (palette * 768) as usize;
-        set_palette(state, &pal[offset..offset + 768]);
+        set_palette(&mut state.io.i_video, &pal[offset..offset + 768]);
     }
 }
 pub fn draw_widgets(state: &mut GameState, refresh: bool) {
@@ -1128,7 +1136,11 @@ pub fn st_init_data(state: &mut GameState) {
     for i in 0..3 {
         state.ui.st_stuff.keyboxes[i] = -1;
     }
-    stlib_init(state);
+    stlib_init(
+        &*state.assets.fs,
+        &mut state.ui.st_lib,
+        &mut state.assets.w_wad,
+    );
 }
 pub fn create_widgets(g_game: &mut GGameState, st_stuff: &mut StStuffState) {
     stlib_init_num(
@@ -1272,7 +1284,7 @@ pub fn st_stop(state: &mut GameState) {
         &mut state.assets.w_wad,
         state.ui.st_stuff.lu_palette,
     );
-    set_palette(state, &pal[..768]);
+    set_palette(&mut state.io.i_video, &pal[..768]);
     state.ui.st_stuff.st_stopped = true;
 }
 pub fn st_init(state: &mut GameState) {

@@ -308,7 +308,7 @@ pub fn do_floor(state: &mut GameState, line: LineId, floortype: FloorE) -> bool 
                 floor.sector = sec;
                 floor.speed = FLOORSPEED as Fixed;
                 for i in 0..linecount {
-                    if two_sided(state, sector, i) {
+                    if two_sided(&mut state.world.p_setup, sector, i) {
                         for side_index in 0..2_i32 {
                             let side = get_side(&mut state.world.p_setup, sector, i, side_index);
                             let bottomtexture = state.world.p_setup.side_mut(side).bottomtexture;
@@ -331,7 +331,7 @@ pub fn do_floor(state: &mut GameState, line: LineId, floortype: FloorE) -> bool 
                     find_lowest_floor_surrounding(&mut state.world.p_setup, sec);
                 floor.texture = state.world.p_setup.sector_mut(sec).floorpic;
                 for i in 0..linecount {
-                    if two_sided(state, sector, i) {
+                    if two_sided(&mut state.world.p_setup, sector, i) {
                         let side0 = get_side(&mut state.world.p_setup, sector, i, 0);
                         let side0_sector = state.world.p_setup.side_mut(side0).sector;
                         let other = if side0_sector.0 == sector.0 {

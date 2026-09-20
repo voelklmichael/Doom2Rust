@@ -1,3 +1,4 @@
+use crate::filesystem::DoomFileSystem;
 use crate::fixed_cstr::FixedCStr;
 use crate::game_state::GameState;
 use crate::i_system::console_stdout;
@@ -137,7 +138,12 @@ pub fn draw_column_in_cache(patch: &[u8], cache: &mut [u8], originy: i32, cacheh
         cursor += length as usize + 4;
     }
 }
-pub fn generate_composite(state: &mut GameState, texnum: i32) {
+pub fn generate_composite(
+    fs: &dyn DoomFileSystem,
+    r_data: &mut RDataState,
+    w_wad: &mut WWadState,
+    texnum: i32,
+) {
     let mut x: i32;
     let mut x1: i32;
     let mut x2: i32;
@@ -153,20 +159,18 @@ pub fn generate_composite(state: &mut GameState, texnum: i32) {
     // to 127 bytes past a short column's real data when that column sits
     // near the end of the buffer. Vanilla's zone allocator happened to leave
     // slack there; an exactly-sized Vec doesn't, so it panics instead.
-    let mut block: Vec<u8> =
-        vec![0u8; state.render.r_data.texturecompositesize[texnum as usize] as usize + 128];
-    let texture_patchcount = state.render.r_data.textures[texnum as usize].patchcount as i32;
-    let texture_width = state.render.r_data.textures[texnum as usize].width as i32;
-    let texture_height = state.render.r_data.textures[texnum as usize].height as i32;
+    let mut block: Vec<u8> = vec![0u8; r_data.texturecompositesize[texnum as usize] as usize + 128];
+    let texture_patchcount = r_data.textures[texnum as usize].patchcount as i32;
+    let texture_width = r_data.textures[texnum as usize].width as i32;
+    let texture_height = r_data.textures[texnum as usize].height as i32;
     for i in 0..texture_patchcount {
-        let tex_patch = state.render.r_data.textures[texnum as usize].patches[i as usize];
+        let tex_patch = r_data.textures[texnum as usize].patches[i as usize];
         // `realpatch` is the raw picture-format lump ("patch_t": width:i16,
         // height:i16, leftoffset:i16, topoffset:i16, then `width` many i32
         // columnofs entries) -- decoded field-by-field below instead of via
         // pointer-cast, same reasoning as init_textures's maptexture_t.
-        let realpatch_len = lump_length(&state.assets.w_wad, tex_patch.patch as u32) as usize;
-        let realpatch_lump =
-            lump_bytes(&*state.assets.fs, &mut state.assets.w_wad, tex_patch.patch);
+        let realpatch_len = lump_length(w_wad, tex_patch.patch as u32) as usize;
+        let realpatch_lump = lump_bytes(fs, w_wad, tex_patch.patch);
         let realpatch = &realpatch_lump[..realpatch_len];
         let realpatch_width = i16::from_le_bytes(realpatch[0..2].try_into().unwrap()) as i32;
         x1 = tex_patch.originx as i32;
@@ -180,13 +184,12 @@ pub fn generate_composite(state: &mut GameState, texnum: i32) {
             x2 = texture_width;
         }
         while x < x2 {
-            if (state.render.r_data.texturecolumnlump[texnum as usize][x as usize] as i32) < 0 {
+            if (r_data.texturecolumnlump[texnum as usize][x as usize] as i32) < 0 {
                 let colofs_off = (8 + (x - x1) * 4) as usize;
                 let columnofs =
                     i32::from_le_bytes(realpatch[colofs_off..colofs_off + 4].try_into().unwrap());
                 let patchcol = &realpatch[columnofs as usize..];
-                let cache_off =
-                    state.render.r_data.texturecolumnofs[texnum as usize][x as usize] as usize;
+                let cache_off = r_data.texturecolumnofs[texnum as usize][x as usize] as usize;
                 draw_column_in_cache(
                     patchcol,
                     &mut block[cache_off..],
@@ -197,7 +200,7 @@ pub fn generate_composite(state: &mut GameState, texnum: i32) {
             x += 1;
         }
     }
-    state.render.r_data.texturecomposite[texnum as usize] = Some(block.into_boxed_slice());
+    r_data.texturecomposite[texnum as usize] = Some(block.into_boxed_slice());
 }
 pub fn generate_lookup(state: &mut GameState, texnum: i32) {
     let mut patchcount: Vec<u8>;
@@ -260,19 +263,25 @@ pub fn generate_lookup(state: &mut GameState, texnum: i32) {
         }
     }
 }
-pub fn get_column(state: &mut GameState, tex: i32, mut col: i32) -> ColumnSource {
-    col &= state.render.r_data.texturewidthmask[tex as usize];
-    let lump: i32 = state.render.r_data.texturecolumnlump[tex as usize][col as usize] as i32;
-    let ofs: i32 = state.render.r_data.texturecolumnofs[tex as usize][col as usize] as i32;
+pub fn get_column(
+    fs: &dyn DoomFileSystem,
+    r_data: &mut RDataState,
+    w_wad: &mut WWadState,
+    tex: i32,
+    mut col: i32,
+) -> ColumnSource {
+    col &= r_data.texturewidthmask[tex as usize];
+    let lump: i32 = r_data.texturecolumnlump[tex as usize][col as usize] as i32;
+    let ofs: i32 = r_data.texturecolumnofs[tex as usize][col as usize] as i32;
     if lump > 0 {
-        lump_bytes(&*state.assets.fs, &mut state.assets.w_wad, lump);
+        lump_bytes(fs, w_wad, lump);
         return ColumnSource::Lump {
             lump,
             offset: ofs as usize,
         };
     }
-    if state.render.r_data.texturecomposite[tex as usize].is_none() {
-        generate_composite(state, tex);
+    if r_data.texturecomposite[tex as usize].is_none() {
+        generate_composite(fs, r_data, w_wad, tex);
     }
     ColumnSource::Composite {
         tex,
@@ -323,7 +332,9 @@ pub fn init_textures(state: &mut GameState) {
     // scattering pointer arithmetic through the whole parse.
     let pnames_lump = get_num_for_name(&state.assets.w_wad, "PNAMES") as u32;
     let pnames_len = lump_length(&state.assets.w_wad, pnames_lump) as usize;
-    let pnames = lump_bytes_name(state, "PNAMES")[..pnames_len].to_vec();
+    let pnames = lump_bytes_name(&*state.assets.fs, &mut state.assets.w_wad, "PNAMES")
+        [..pnames_len]
+        .to_vec();
     let nummappatches: i32 = i32::from_le_bytes(pnames[0..4].try_into().unwrap());
     patchlookup = vec![0i32; nummappatches as usize];
     for i in 0..nummappatches {
@@ -337,7 +348,9 @@ pub fn init_textures(state: &mut GameState) {
     release_lump_name(&state.assets.w_wad, "PNAMES");
     let texture1_lump = get_num_for_name(&state.assets.w_wad, "TEXTURE1") as u32;
     maxoff = lump_length(&state.assets.w_wad, texture1_lump);
-    let maptex1 = lump_bytes_name(state, "TEXTURE1")[..maxoff as usize].to_vec();
+    let maptex1 = lump_bytes_name(&*state.assets.fs, &mut state.assets.w_wad, "TEXTURE1")
+        [..maxoff as usize]
+        .to_vec();
     let numtextures1: i32 = i32::from_le_bytes(maptex1[0..4].try_into().unwrap());
     let maptex2 = if check_num_for_name(&state.assets.w_wad, "TEXTURE2").is_none() {
         numtextures2 = 0;
@@ -346,7 +359,9 @@ pub fn init_textures(state: &mut GameState) {
     } else {
         let texture2_lump = get_num_for_name(&state.assets.w_wad, "TEXTURE2") as u32;
         maxoff2 = lump_length(&state.assets.w_wad, texture2_lump);
-        let maptex2 = lump_bytes_name(state, "TEXTURE2")[..maxoff2 as usize].to_vec();
+        let maptex2 = lump_bytes_name(&*state.assets.fs, &mut state.assets.w_wad, "TEXTURE2")
+            [..maxoff2 as usize]
+            .to_vec();
         numtextures2 = i32::from_le_bytes(maptex2[0..4].try_into().unwrap());
         Some(maptex2)
     };
@@ -516,11 +531,10 @@ pub fn init_sprite_lumps(state: &mut GameState) {
         state.render.r_data.spritetopoffset[i as usize] = ((topoffset as i32) << FRACBITS) as Fixed;
     }
 }
-pub fn init_colormaps(state: &mut GameState) {
-    let lump: i32 = get_num_for_name(&state.assets.w_wad, "COLORMAP");
-    let lumplen = lump_length(&state.assets.w_wad, lump as u32) as usize;
-    state.render.r_data.colormaps =
-        lump_bytes(&*state.assets.fs, &mut state.assets.w_wad, lump)[..lumplen].to_vec();
+pub fn init_colormaps(fs: &dyn DoomFileSystem, r_data: &mut RDataState, w_wad: &mut WWadState) {
+    let lump: i32 = get_num_for_name(w_wad, "COLORMAP");
+    let lumplen = lump_length(w_wad, lump as u32) as usize;
+    r_data.colormaps = lump_bytes(fs, w_wad, lump)[..lumplen].to_vec();
 }
 pub fn r_init_data(state: &mut GameState) {
     init_textures(state);
@@ -529,7 +543,11 @@ pub fn r_init_data(state: &mut GameState) {
     doom_print!(state.io.platform, ".");
     init_sprite_lumps(state);
     doom_print!(state.io.platform, ".");
-    init_colormaps(state);
+    init_colormaps(
+        &*state.assets.fs,
+        &mut state.render.r_data,
+        &mut state.assets.w_wad,
+    );
 }
 pub fn flat_num_for_name(r_data: &RDataState, w_wad: &WWadState, name: &str) -> i32 {
     let i = check_num_for_name(w_wad, name)

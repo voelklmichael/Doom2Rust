@@ -504,15 +504,10 @@ pub fn get_sector(
     let sidenum = p_setup.line(line_id).sidenum[side as usize];
     p_setup.sides[sidenum as usize].sector
 }
-pub fn two_sided(state: &mut GameState, sector: SectorId, line: i32) -> bool {
-    let sec = state.world.p_setup.sector_mut(sector);
+pub fn two_sided(p_setup: &mut PSetupState, sector: SectorId, line: i32) -> bool {
+    let sec = p_setup.sector_mut(sector);
     let line_id = sec.lines[line as usize];
-    state
-        .world
-        .p_setup
-        .line(line_id)
-        .flags
-        .contains(LineFlags::TWOSIDED)
+    p_setup.line(line_id).flags.contains(LineFlags::TWOSIDED)
 }
 pub fn get_next_sector(p_setup: &PSetupState, line: LineId, sec: SectorId) -> Option<SectorId> {
     let linev = p_setup.line(line);
@@ -722,7 +717,7 @@ pub fn cross_special_line(state: &mut GameState, linenum: i32, side: i32, thing:
             state.world.p_setup.line_mut(line).special = 0;
         }
         17 => {
-            start_light_strobing(state, line);
+            start_light_strobing(&mut state.world, line);
             state.world.p_setup.line_mut(line).special = 0;
         }
         19 => {
@@ -1275,16 +1270,16 @@ pub fn spawn_specials(state: &mut GameState) {
         if special != 0 {
             match special as i32 {
                 1 => {
-                    spawn_light_flash(state, secid);
+                    spawn_light_flash(&mut state.world, secid);
                 }
                 2 => {
-                    spawn_strobe_flash(state, secid, FASTDARK, 0);
+                    spawn_strobe_flash(&mut state.world, secid, FASTDARK, 0);
                 }
                 3 => {
-                    spawn_strobe_flash(state, secid, SLOWDARK, 0);
+                    spawn_strobe_flash(&mut state.world, secid, SLOWDARK, 0);
                 }
                 4 => {
-                    spawn_strobe_flash(state, secid, FASTDARK, 0);
+                    spawn_strobe_flash(&mut state.world, secid, FASTDARK, 0);
                     state.world.p_setup.sector_mut(secid).special = 4;
                 }
                 8 => {
@@ -1307,10 +1302,10 @@ pub fn spawn_specials(state: &mut GameState) {
                     );
                 }
                 12 => {
-                    spawn_strobe_flash(state, secid, SLOWDARK, 1);
+                    spawn_strobe_flash(&mut state.world, secid, SLOWDARK, 1);
                 }
                 13 => {
-                    spawn_strobe_flash(state, secid, FASTDARK, 1);
+                    spawn_strobe_flash(&mut state.world, secid, FASTDARK, 1);
                 }
                 14 => {
                     spawn_door_raise_in5_mins(

@@ -23,6 +23,7 @@ use crate::f_finale::f_drawer;
 use crate::f_wipe::wipe_end_screen;
 use crate::f_wipe::wipe_screen_wipe;
 use crate::f_wipe::wipe_start_screen;
+use crate::filesystem::DoomFileSystem;
 use crate::fixed_cstr::FixedCStr;
 use crate::g_game::begin_recording;
 use crate::g_game::check_demo_status;
@@ -264,7 +265,7 @@ pub fn display(state: &mut GameState) {
     }
     redrawsbar = false;
     if state.render.r_main.setsizeneeded {
-        execute_set_view_size(state);
+        execute_set_view_size(&mut state.render);
         state.game.d_main.d_display_oldgamestate = GameScreenState::Wipped;
         state.game.d_main.d_display_borderdrawcount = 3;
     }
@@ -321,8 +322,8 @@ pub fn display(state: &mut GameState) {
     if state.game.g_game.gamestate != state.game.d_main.d_display_oldgamestate
         && state.game.g_game.gamestate != GameScreenState::Level
     {
-        let pal = lump_bytes_name(state, "PLAYPAL");
-        set_palette(state, &pal[..768]);
+        let pal = lump_bytes_name(&*state.assets.fs, &mut state.assets.w_wad, "PLAYPAL");
+        set_palette(&mut state.io.i_video, &pal[..768]);
     }
     if state.game.g_game.gamestate == GameScreenState::Level
         && state.game.d_main.d_display_oldgamestate != GameScreenState::Level
@@ -367,7 +368,7 @@ pub fn display(state: &mut GameState) {
         } else {
             y = state.render.r_draw.viewwindowy + 4;
         }
-        let __wcache429_2 = cache_patch_name(state, "M_PAUSE");
+        let __wcache429_2 = cache_patch_name(&*state.assets.fs, &mut state.assets.w_wad, "M_PAUSE");
         let dest_screen = Screen::Video;
         draw_patch_direct(
             state,
@@ -380,7 +381,7 @@ pub fn display(state: &mut GameState) {
     m_drawer(state);
     net_update(state);
     if !wipe {
-        finish_update(state);
+        finish_update(&mut state.io.i_video, &mut *state.io.platform);
         return;
     }
     wipe_end_screen(state, 0, 0, SCREENWIDTH, SCREENHEIGHT);
@@ -397,7 +398,7 @@ pub fn display(state: &mut GameState) {
         wipestart = nowtime;
         done = wipe_screen_wipe(state, SCREENWIDTH, SCREENHEIGHT, tics);
         m_drawer(state);
-        finish_update(state);
+        finish_update(&mut state.io.i_video, &mut *state.io.platform);
         if done {
             break;
         }
@@ -463,7 +464,7 @@ pub fn doom_loop(state: &mut GameState) {
         );
     }
     if state.game.g_game.demorecording {
-        begin_recording(state);
+        begin_recording(&mut state.game);
     }
     state.game.d_main.main_loop_started = true;
     try_run_tics(state);
@@ -474,8 +475,12 @@ pub fn doom_loop(state: &mut GameState) {
         &state.game.m_argv,
         &mut *state.io.platform,
     );
-    execute_set_view_size(state);
-    start_game_loop(state);
+    execute_set_view_size(&mut state.render);
+    start_game_loop(
+        &mut state.game.d_loop,
+        &mut state.io.i_timer,
+        &mut *state.io.platform,
+    );
     if state.game.g_game.testcontrols {
         state.game.d_main.wipegamestate = state.game.g_game.gamestate;
     }
@@ -488,7 +493,11 @@ pub fn page_ticker(d_main: &mut DMainState) {
     }
 }
 pub fn page_drawer(state: &mut GameState) {
-    let __wcache609_1 = cache_patch_name(state, state.game.d_main.pagename);
+    let __wcache609_1 = cache_patch_name(
+        &*state.assets.fs,
+        &mut state.assets.w_wad,
+        state.game.d_main.pagename,
+    );
     let dest_screen = Screen::Video;
     draw_patch(state, dest_screen, 0, 0, &__wcache609_1);
 }
@@ -706,9 +715,14 @@ pub fn set_game_description(doomstat: &mut DoomstatState, w_wad: &WWadState) {
         doomstat.gamedescription = "DOOM 2: TNT - Evilution";
     }
 }
-fn d_add_file(state: &mut GameState, filename: &str) -> bool {
-    doom_println!(state.io.platform, " adding {}", filename);
-    w_add_file(state, filename).is_some()
+fn d_add_file(
+    fs: &mut dyn DoomFileSystem,
+    platform: &mut dyn DoomPlatform,
+    w_wad: &mut WWadState,
+    filename: &str,
+) -> bool {
+    doom_println!(platform, " adding {}", filename);
+    w_add_file(&mut *fs, &mut *platform, w_wad, filename).is_some()
 }
 fn init_game_version(state: &mut GameState) {
     if let Some(p) = check_parm_with_args(&state.game.m_argv, "-gameversion", 1) {
@@ -761,16 +775,18 @@ fn init_game_version(state: &mut GameState) {
         state.game.doomstat.gamemission = GameMission::Doom2;
     }
 }
-pub fn print_game_version(state: &mut GameState) {
-    if let Some(gv) = state
-        .game
-        .d_main
+pub fn print_game_version(
+    d_main: &DMainState,
+    doomstat: &DoomstatState,
+    platform: &mut dyn DoomPlatform,
+) {
+    if let Some(gv) = d_main
         .gameversions
         .iter()
-        .find(|gv| gv.version == state.game.doomstat.gameversion)
+        .find(|gv| gv.version == doomstat.gameversion)
     {
         doom_println!(
-            state.io.platform,
+            platform,
             "Emulating the behavior of the '{}' executable.",
             gv.description
         );
@@ -868,7 +884,12 @@ pub fn doom_main(state: &mut GameState) {
     state.game.doomstat.modifiedgame = false;
     doom_println!(state.io.platform, "W_Init: Init WADfiles.");
     let iwadfile = state.game.d_main.iwadfile.clone();
-    d_add_file(state, &iwadfile);
+    d_add_file(
+        &mut *state.assets.fs,
+        &mut *state.io.platform,
+        &mut state.assets.w_wad,
+        &iwadfile,
+    );
     check_correct_iwad(&state.assets.w_wad, GameMission::Doom);
     identify_version(state);
     init_game_version(state);
@@ -890,7 +911,12 @@ pub fn doom_main(state: &mut GameState) {
         } else {
             file = format!("{arg}.lmp");
         }
-        if d_add_file(state, &file) {
+        if d_add_file(
+            &mut *state.assets.fs,
+            &mut *state.io.platform,
+            &mut state.assets.w_wad,
+            &file,
+        ) {
             demolumpname = state.assets.w_wad.lumpinfo
                 [state.assets.w_wad.numlumps.wrapping_sub(1) as usize]
                 .name;
@@ -1061,9 +1087,17 @@ pub fn doom_main(state: &mut GameState) {
         "D_CheckNetGame: Checking network game status."
     );
     check_net_game(state);
-    print_game_version(state);
+    print_game_version(
+        &state.game.d_main,
+        &state.game.doomstat,
+        &mut *state.io.platform,
+    );
     doom_println!(state.io.platform, "HU_Init: Setting up heads up display.");
-    hu_init(state);
+    hu_init(
+        &*state.assets.fs,
+        &mut state.ui.hu_stuff,
+        &mut state.assets.w_wad,
+    );
     doom_println!(state.io.platform, "ST_Init: Init status bar.");
     st_init(state);
     if state.game.doomstat.gamemode as u32 == GameMode::Commercial as i32 as u32

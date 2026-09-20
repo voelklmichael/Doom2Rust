@@ -6,6 +6,7 @@ use crate::d_mode::GameVersion;
 use crate::d_player::PlayerId;
 use crate::doomdef::MAXPLAYERS;
 use crate::doomdef::TICRATE;
+use crate::filesystem::DoomFileSystem;
 use crate::g_game::GGameState;
 use crate::game_state::GameState;
 use crate::hu_lib::{
@@ -23,6 +24,7 @@ use crate::s_sound::s_start_sound;
 use crate::s_sound::SoundOrigin;
 use crate::sounds::SfxName;
 use crate::v_video::cache_patch_num;
+use crate::w_wad::WWadState;
 use crate::w_wad::{get_num_for_name, lump_bytes};
 use alloc::string::String;
 use alloc::string::ToString;
@@ -311,12 +313,12 @@ pub static MAPNAMES_COMMERCIAL: [&str; 96] = [
     THUSTR_24, THUSTR_25, THUSTR_26, THUSTR_27, THUSTR_28, THUSTR_29, THUSTR_30, THUSTR_31,
     THUSTR_32,
 ];
-pub fn hu_init(state: &mut GameState) {
+pub fn hu_init(fs: &dyn DoomFileSystem, hu_stuff: &mut HuStuffState, w_wad: &mut WWadState) {
     for (i, code) in (HU_FONTSTART..HU_FONTSTART + HU_FONTSIZE).enumerate() {
         let buffer = format!("STCFN{code:03}");
-        let lumpnum = get_num_for_name(&state.assets.w_wad, &buffer);
-        lump_bytes(&*state.assets.fs, &mut state.assets.w_wad, lumpnum);
-        state.ui.hu_stuff.hu_font[i] = lumpnum;
+        let lumpnum = get_num_for_name(w_wad, &buffer);
+        lump_bytes(fs, w_wad, lumpnum);
+        hu_stuff.hu_font[i] = lumpnum;
     }
 }
 pub fn hu_stop(hu_stuff: &mut HuStuffState) {
@@ -334,7 +336,8 @@ pub fn hu_start(state: &mut GameState) {
     state.ui.hu_stuff.message_nottobefuckedwith = false;
     state.ui.hu_stuff.chat_on = false;
     let hu_font0 = state.ui.hu_stuff.hu_font[0];
-    let hu_font0_height = cache_patch_num(state, hu_font0).height();
+    let hu_font0_height =
+        cache_patch_num(&*state.assets.fs, &mut state.assets.w_wad, hu_font0).height();
     hulib_init_stext(
         &mut state.ui.hu_stuff.w_message,
         HU_MSGX,

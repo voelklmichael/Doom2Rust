@@ -9,9 +9,11 @@ use crate::i_system::ISystemState;
 use crate::i_timer::get_time;
 use crate::i_timer::get_time_ms;
 use crate::i_timer::sleep;
+use crate::i_timer::ITimerState;
 use crate::i_video::start_tic;
 use crate::m_fixed::Fixed;
 use crate::m_fixed::FRACUNIT;
+use crate::platform::DoomPlatform;
 use crate::w_checksum::Sha1Digest;
 
 pub struct DLoopState {
@@ -130,10 +132,14 @@ pub const NET_MAXPLAYERS: i32 = 8;
 pub const BACKUPTICS: i32 = 128;
 static LOCALPLAYER: i32 = 0;
 pub static OFFSETMS: Fixed = 0;
-fn get_adjusted_time(state: &mut GameState) -> i32 {
+fn get_adjusted_time(
+    d_loop: &DLoopState,
+    i_timer: &mut ITimerState,
+    platform: &mut dyn DoomPlatform,
+) -> i32 {
     let mut time_ms: i32;
-    time_ms = get_time_ms(&mut state.io.i_timer, &mut *state.io.platform);
-    if state.game.d_loop.new_sync {
+    time_ms = get_time_ms(i_timer, &mut *platform);
+    if d_loop.new_sync {
         time_ms += OFFSETMS / FRACUNIT;
     }
     time_ms * TICRATE / 1000
@@ -152,7 +158,11 @@ fn build_new_tic(state: &mut GameState) -> bool {
         arti: 0,
     };
     let gameticdiv: i32 = state.game.d_loop.gametic / state.game.d_loop.ticdup;
-    start_tic(state);
+    start_tic(
+        &mut state.game.d_event,
+        &mut state.io.i_input,
+        &mut *state.io.platform,
+    );
     let process_events = state
         .game
         .d_loop
@@ -200,7 +210,11 @@ pub fn net_update(state: &mut GameState) {
     if state.game.d_loop.singletics {
         return;
     }
-    let nowtime: i32 = get_adjusted_time(state) / state.game.d_loop.ticdup;
+    let nowtime: i32 = get_adjusted_time(
+        &state.game.d_loop,
+        &mut state.io.i_timer,
+        &mut *state.io.platform,
+    ) / state.game.d_loop.ticdup;
     newtics = nowtime - state.game.d_loop.lasttime;
     state.game.d_loop.lasttime = nowtime;
     if state.game.d_loop.skiptics <= newtics {
@@ -216,8 +230,12 @@ pub fn net_update(state: &mut GameState) {
         }
     }
 }
-pub fn start_game_loop(state: &mut GameState) {
-    state.game.d_loop.lasttime = get_adjusted_time(state) / state.game.d_loop.ticdup;
+pub fn start_game_loop(
+    d_loop: &mut DLoopState,
+    i_timer: &mut ITimerState,
+    platform: &mut dyn DoomPlatform,
+) {
+    d_loop.lasttime = get_adjusted_time(d_loop, i_timer, &mut *platform) / d_loop.ticdup;
 }
 pub fn start_net_game(d_loop: &mut DLoopState, settings: &mut NetGameSettings) {
     settings.consoleplayer = 0;
