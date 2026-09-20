@@ -1,8 +1,6 @@
 use crate::d_player::PlayerId;
 use crate::game_state::GameState;
 use crate::i_system::error;
-use crate::m_argv::check_parm_with_args;
-use crate::m_argv::MArgvState;
 use crate::m_bbox::BBox;
 use crate::m_bbox::BoxIndex;
 use crate::m_fixed::fixed_div;
@@ -12,6 +10,7 @@ use crate::m_fixed::FRACBITS;
 use crate::m_fixed::FRACUNIT;
 use crate::m_misc::str_to_int;
 use crate::m_random::p_random;
+use crate::options::Options;
 use crate::p_inter::damage_mobj;
 use crate::p_inter::touch_special_thing;
 use crate::p_maputl::aprox_distance;
@@ -277,7 +276,7 @@ pub fn check_line(state: &mut GameState, ld: LineId) -> bool {
         state.world.p_map.numspechit += 1;
         if state.world.p_map.numspechit > MAXSPECIALCROSS_ORIGINAL {
             spechit_overrun(
-                &state.game.m_argv,
+                &state.game.options,
                 &mut state.world.p_map,
                 &mut *state.io.platform,
                 ld,
@@ -1227,15 +1226,15 @@ pub fn p_change_sector(state: &mut GameState, sector: SectorId, crunch: bool) ->
     state.world.p_map.nofit
 }
 fn spechit_overrun(
-    m_argv: &MArgvState,
+    options: &Options,
     p_map: &mut PMapState,
     platform: &mut dyn DoomPlatform,
     ld: LineId,
 ) {
     if p_map.baseaddr == 0 {
-        if let Some(p) = check_parm_with_args(m_argv, "-spechit", 1) {
+        if let Some(address) = &options.spechit {
             let mut baseaddr: i32 = 0;
-            str_to_int(m_argv.myargv[p + 1].as_str(), &mut baseaddr);
+            str_to_int(address, &mut baseaddr);
             p_map.baseaddr = baseaddr as u32;
         } else {
             p_map.baseaddr = DEFAULT_SPECHIT_MAGIC as u32;

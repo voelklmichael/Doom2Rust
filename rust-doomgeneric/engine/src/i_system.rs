@@ -1,7 +1,6 @@
 use crate::game_state::GameState;
-use crate::m_argv::check_parm_with_args;
-use crate::m_argv::MArgvState;
 use crate::m_misc::str_to_int;
+use crate::options::Options;
 use crate::platform::DoomPlatform;
 use alloc::vec::Vec;
 
@@ -93,42 +92,32 @@ static MEM_DUMP_WIN98: [u8; 10] = [0x9e, 0xf, 0xc9, 0, 0x65, 0x4, 0x70, 0, 0x16,
 static MEM_DUMP_DOSBOX: [u8; 10] = [0, 0, 0, 0xf1, 0, 0, 0, 0, 0x7, 0];
 pub fn get_memory_value(
     i_system: &mut ISystemState,
-    m_argv: &MArgvState,
+    options: &Options,
     offset: u32,
     size: i32,
 ) -> Option<u32> {
     if i_system.get_memory_value_firsttime {
         let mut val: i32 = 0;
         i_system.get_memory_value_firsttime = false;
-        if let Some(mut p) = check_parm_with_args(m_argv, "-setmem", 1) {
-            if m_argv.myargv[p + 1]
-                .as_bytes()
-                .eq_ignore_ascii_case(b"dos622")
-            {
+        // `-setmem` always has at least one argument after it.
+        if let Some(args) = &options.setmem {
+            if args[0].as_bytes().eq_ignore_ascii_case(b"dos622") {
                 i_system.dos_mem_dump = DosMemDump::Dos622;
             }
-            if m_argv.myargv[p + 1]
-                .as_bytes()
-                .eq_ignore_ascii_case(b"dos71")
-            {
+            if args[0].as_bytes().eq_ignore_ascii_case(b"dos71") {
                 i_system.dos_mem_dump = DosMemDump::Win98;
-            } else if m_argv.myargv[p + 1]
-                .as_bytes()
-                .eq_ignore_ascii_case(b"dosbox")
-            {
+            } else if args[0].as_bytes().eq_ignore_ascii_case(b"dosbox") {
                 i_system.dos_mem_dump = DosMemDump::DosBox;
             } else {
-                let mut i: i32 = 0;
-                while i < DOS_MEM_DUMP_SIZE {
-                    p += 1;
-                    if p >= m_argv.myargv.len()
-                        || m_argv.myargv[p].as_bytes().first() == Some(&b'-')
-                    {
+                // A run of numbers, up to the next option, one every other byte.
+                let mut slot: i32 = 0;
+                for arg in args {
+                    if slot >= DOS_MEM_DUMP_SIZE || arg.as_bytes().first() == Some(&b'-') {
                         break;
                     }
-                    str_to_int(m_argv.myargv[p].as_str(), &mut val);
-                    i_system.mem_dump_custom[i as usize] = val as u8;
-                    i += 2;
+                    str_to_int(arg, &mut val);
+                    i_system.mem_dump_custom[slot as usize] = val as u8;
+                    slot += 2;
                 }
                 i_system.dos_mem_dump = DosMemDump::Custom;
             }

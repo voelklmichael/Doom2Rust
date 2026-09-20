@@ -3,7 +3,6 @@ use crate::d_mode::GameMode;
 use crate::filesystem::DoomFileSystem;
 use crate::game_state::GameState;
 use crate::i_system::error;
-use crate::m_argv::check_parm_with_args;
 use crate::platform::DoomPlatform;
 use alloc::string::String;
 use alloc::string::ToString;
@@ -219,8 +218,7 @@ pub fn try_find_wadby_name(
     find_wadby_name(state, fs, filename).unwrap_or_else(|| filename.to_string())
 }
 pub fn find_iwad(state: &mut GameState, mask: i32, mission: &mut GameMission) -> String {
-    if let Some(iwadparm) = check_parm_with_args(&state.game.m_argv, "-iwad", 1) {
-        let iwadfile = state.game.m_argv.myargv[iwadparm + 1].as_str().to_string();
+    if let Some(iwadfile) = state.game.options.iwad.clone() {
         let result = find_wadby_name(&mut state.game.d_iwad, &*state.assets.fs, &iwadfile);
         let Some(result) = result else {
             error(&format!("IWAD file '{iwadfile}' not found!"));

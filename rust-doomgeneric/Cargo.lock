@@ -109,6 +109,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "doomgeneric_cmdline"
+version = "0.0.0"
+dependencies = [
+ "rust_doomgeneric",
+]
+
+[[package]]
 name = "doomgeneric_fs"
 version = "0.0.0"
 dependencies = [
@@ -119,6 +126,7 @@ dependencies = [
 name = "doomgeneric_xlib"
 version = "0.0.0"
 dependencies = [
+ "doomgeneric_cmdline",
  "doomgeneric_fs",
  "libc",
  "rust_doomgeneric",

@@ -51,7 +51,7 @@ use esp_hal::{
 };
 use esp_println::println;
 use heapless::String;
-use rust_doomgeneric::{doomgeneric_create, doomgeneric_tick, init_game_state};
+use rust_doomgeneric::{doomgeneric_create, doomgeneric_tick, init_game_state, Options};
 
 use platform::CoreS3Platform;
 use wad_fs::EmbeddedWad;
@@ -254,15 +254,14 @@ async fn main(spawner: Spawner) {
                 core::mem::size_of_val(&*state),
                 esp_alloc::HEAP.free()
             );
-            let mut args: Vec<_> = ["doomgeneric", "-iwad", "doom1.wad", "-scaling", "1"]
-                .into_iter()
-                .map(ToString::to_string)
-                .collect();
-            // Build with MUSIC=off for sound effects only (the synthesizer is not even built).
-            if option_env!("MUSIC") == Some("off") {
-                args.push("-nomusic".to_string());
-            }
-            doomgeneric_create(state, args);
+            let options = Options {
+                iwad: Some("doom1.wad".to_string()),
+                scaling: Some(1),
+                // Build with MUSIC=off for sound effects only (the synthesizer is not even built).
+                nomusic: option_env!("MUSIC") == Some("off"),
+                ..Options::default()
+            };
+            doomgeneric_create(state, options);
             loop {
                 doomgeneric_tick(state);
             }

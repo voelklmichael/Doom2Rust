@@ -42,8 +42,6 @@ use crate::hu_stuff::PLAYER_NAMES;
 use crate::i_system::error;
 use crate::i_system::i_quit;
 use crate::i_timer::get_time;
-use crate::m_argv::MArgvState;
-use crate::m_argv::{argv_atoi, check_parm_with_args, parm_exists};
 use crate::m_controls::MControlsState;
 use crate::m_fixed::Fixed;
 use crate::m_fixed::FRACBITS;
@@ -51,6 +49,7 @@ use crate::m_fixed::FRACUNIT;
 use crate::m_menu::start_control_panel;
 use crate::m_random::clear_random;
 use crate::m_random::p_random;
+use crate::options::Options;
 use crate::p_mobj::MobjFlags;
 use crate::p_mobj::PMobjState;
 use crate::w_wad::WWadState;
@@ -1314,7 +1313,7 @@ pub fn do_completed(state: &mut GameState) {
     state.ui.am_map.automapactive = false;
     stat_copy(
         &state.game.g_game,
-        &state.game.m_argv,
+        &state.game.options,
         &mut state.ui.statdump,
     );
     wi_start(state);
@@ -1602,12 +1601,12 @@ pub fn write_demo_ticcmd(state: &mut GameState, player_num: usize) {
     }
     read_demo_ticcmd(state, player_num);
 }
-pub fn record_demo(g_game: &mut GGameState, m_argv: &MArgvState, name: &str) {
+pub fn record_demo(g_game: &mut GGameState, options: &Options, name: &str) {
     g_game.usergame = false;
     g_game.demoname = format!("{name}.lmp");
     let mut maxsize: i32 = 0x20000;
-    if let Some(i) = check_parm_with_args(m_argv, "-maxdemo", 1) {
-        maxsize = argv_atoi(&m_argv.myargv[i + 1]) * 1024;
+    if let Some(kilobytes) = options.maxdemo {
+        maxsize = kilobytes * 1024;
     }
     g_game.demobuffer = vec![0u8; maxsize as usize];
     g_game.demoend = maxsize as usize;
@@ -1626,7 +1625,7 @@ pub fn vanilla_version_code(state: &DoomstatState) -> i32 {
     106
 }
 pub fn begin_recording(game: &mut Game) {
-    game.g_game.longtics = parm_exists(&game.m_argv, "-longtics");
+    game.g_game.longtics = game.options.longtics;
     game.g_game.lowres_turn = !game.g_game.longtics;
     game.g_game.demo_p = 0;
     if game.g_game.longtics {
@@ -1704,8 +1703,8 @@ pub fn do_play_demo(state: &mut GameState) {
         state.game.g_game.playeringame[i] = state.game.g_game.demo_read_byte() != 0;
     }
     if state.game.g_game.playeringame[1]
-        || parm_exists(&state.game.m_argv, "-solo-net")
-        || parm_exists(&state.game.m_argv, "-netdemo")
+        || state.game.options.solo_net
+        || state.game.options.netdemo
     {
         state.game.g_game.netgame = true;
         state.game.g_game.netdemo = true;
@@ -1720,10 +1719,10 @@ pub fn do_play_demo(state: &mut GameState) {
 pub fn time_demo(
     d_loop: &mut DLoopState,
     g_game: &mut GGameState,
-    m_argv: &MArgvState,
+    options: &Options,
     name: FixedCStr<8>,
 ) {
-    g_game.nodrawers = parm_exists(m_argv, "-nodraw");
+    g_game.nodrawers = options.nodraw;
     g_game.timingdemo = true;
     d_loop.singletics = true;
     g_game.defdemoname = name;

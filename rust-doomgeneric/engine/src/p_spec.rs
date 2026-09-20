@@ -9,7 +9,6 @@ use crate::fixed_cstr::FixedCStr;
 use crate::g_game::exit_level;
 use crate::g_game::secret_exit_level;
 use crate::i_system::error;
-use crate::m_argv::check_parm_with_args;
 use crate::m_fixed::Fixed;
 use crate::m_misc::str_to_int;
 use crate::m_random::p_random;
@@ -1199,13 +1198,13 @@ fn donut_overrun(state: &mut GameState) -> (Fixed, i16) {
         state.world.p_spec.donut_overrun_first = false;
         state.world.p_spec.donut_overrun_tmp_s3_floorheight = DONUT_FLOORHEIGHT_DEFAULT;
         state.world.p_spec.donut_overrun_tmp_s3_floorpic = DONUT_FLOORPIC_DEFAULT;
-        if let Some(p) = check_parm_with_args(&state.game.m_argv, "-donut", 2) {
+        if let Some((floorheight, floorpic)) = &state.game.options.donut {
             str_to_int(
-                state.game.m_argv.myargv[p + 1].as_str(),
+                floorheight,
                 &mut state.world.p_spec.donut_overrun_tmp_s3_floorheight,
             );
             str_to_int(
-                state.game.m_argv.myargv[p + 2].as_str(),
+                floorpic,
                 &mut state.world.p_spec.donut_overrun_tmp_s3_floorpic,
             );
             if state.world.p_spec.donut_overrun_tmp_s3_floorpic >= state.render.r_data.numflats {

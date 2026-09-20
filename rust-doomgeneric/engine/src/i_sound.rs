@@ -1,12 +1,11 @@
 use crate::game_state::GameState;
 use crate::genmidi::GenMidi;
 use crate::i_video::IVideoState;
-use crate::m_argv::parm_exists;
-use crate::m_argv::MArgvState;
 use crate::m_config::bind_variable_int;
 use crate::m_config::bind_variable_string;
 use crate::m_config::MConfigState;
 use crate::opl_music::MusicPlayer;
+use crate::options::Options;
 use crate::platform::{DoomPlatform, MusicCommand};
 use crate::sfx_mixer::Mixer;
 use crate::sfx_mixer::Sample;
@@ -94,12 +93,12 @@ impl ISoundState {
 pub fn init_sound(
     i_sound: &mut ISoundState,
     i_video: &IVideoState,
-    m_argv: &MArgvState,
+    options: &Options,
     platform: &mut dyn DoomPlatform,
     use_sfx_prefix: bool,
 ) {
-    let nosound: bool = parm_exists(m_argv, "-nosound");
-    let nosfx: bool = parm_exists(m_argv, "-nosfx");
+    let nosound: bool = options.nosound;
+    let nosfx: bool = options.nosfx;
     if !nosound && !i_video.screensaver_mode && !nosfx {
         let preferred = u32::try_from(i_sound.snd_samplerate)
             .ok()
@@ -248,7 +247,7 @@ pub fn init_music(state: &mut GameState) {
     let Some(rate) = state.audio.i_sound.mixer.as_ref().map(Mixer::sample_rate) else {
         return;
     };
-    if parm_exists(&state.game.m_argv, "-nomusic") {
+    if state.game.options.nomusic {
         return;
     }
     let Some(lumpnum) = check_num_for_name(&state.assets.w_wad, "GENMIDI") else {

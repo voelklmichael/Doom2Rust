@@ -21,6 +21,7 @@ use crate::filesystem::{read_file, MemFileSystem};
 use crate::g_game::{do_load_game, do_save_game, exit_level, g_load_game, g_save_game};
 use crate::game_state::{init_game_state, GameState};
 use crate::info::StateId;
+use crate::options::{Options, Warp};
 use crate::p_mobj::MobjFlags;
 use crate::p_saveg::save_game_file;
 use crate::p_setup::LineId;
@@ -157,6 +158,36 @@ pub fn iwad_bytes() -> Option<Vec<u8>> {
     std::fs::read(path).ok()
 }
 
+/// The options the tests start the engine with, from the switch spelling they use. The engine
+/// takes an [`Options`], not a command line, so this only knows the switches these tests need.
+fn test_options(args: &[&str]) -> Options {
+    let mut options = Options {
+        iwad: Some("doom1.wad".to_string()),
+        ..Options::default()
+    };
+    let mut args = args.iter().copied();
+    while let Some(arg) = args.next() {
+        match arg {
+            "-timedemo" => options.timedemo = args.next().map(str::to_string),
+            "-skill" => options.skill = args.next().map(|n| n.parse().unwrap()),
+            "-warp" => {
+                // `-warp episode map`, both single digits
+                let episode: i32 = args.next().unwrap().parse().unwrap();
+                let map: i32 = args.next().unwrap().parse().unwrap();
+                options.warp = Some(Warp {
+                    map_number: episode,
+                    episode,
+                    episode_map: map,
+                });
+            }
+            "-nosound" => options.nosound = true,
+            "-nomusic" => options.nomusic = true,
+            other => panic!("the test options do not know {other}"),
+        }
+    }
+    options
+}
+
 /// A freshly created engine reading the IWAD from memory, plus a handle for
 /// the panic the engine raises when a timedemo finishes.
 fn start(args: &[&str]) -> Option<&'static mut GameState> {
@@ -168,13 +199,7 @@ fn start_with(platform: Box<dyn DoomPlatform>, args: &[&str]) -> Option<&'static
     let mut fs = MemFileSystem::default();
     fs.files.insert("doom1.wad".to_string(), wad);
     let state = init_game_state(platform, Box::new(fs));
-    let mut argv: Vec<String> = alloc::vec![
-        "doom".to_string(),
-        "-iwad".to_string(),
-        "doom1.wad".to_string()
-    ];
-    argv.extend(args.iter().map(|a| (*a).to_string()));
-    doomgeneric_create(state, argv);
+    doomgeneric_create(state, test_options(args));
     Some(state)
 }
 
