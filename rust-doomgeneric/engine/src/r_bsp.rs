@@ -250,42 +250,52 @@ pub fn add_line(state: &mut GameState, line: SegId) {
                     .p_setup
                     .sector_mut(state.render.r_bsp.frontsector.unwrap())
                     .floorheight)
-            && state
-                .world
-                .p_setup
-                .sector_mut(state.render.r_bsp.backsector.unwrap())
-                .ceilingpic as i32
-                == state
+            && i32::from(
+                state
+                    .world
+                    .p_setup
+                    .sector_mut(state.render.r_bsp.backsector.unwrap())
+                    .ceilingpic,
+            ) == i32::from(
+                state
                     .world
                     .p_setup
                     .sector_mut(state.render.r_bsp.frontsector.unwrap())
-                    .ceilingpic as i32
-            && state
-                .world
-                .p_setup
-                .sector_mut(state.render.r_bsp.backsector.unwrap())
-                .floorpic as i32
-                == state
+                    .ceilingpic,
+            )
+            && i32::from(
+                state
+                    .world
+                    .p_setup
+                    .sector_mut(state.render.r_bsp.backsector.unwrap())
+                    .floorpic,
+            ) == i32::from(
+                state
                     .world
                     .p_setup
                     .sector_mut(state.render.r_bsp.frontsector.unwrap())
-                    .floorpic as i32
-            && state
-                .world
-                .p_setup
-                .sector_mut(state.render.r_bsp.backsector.unwrap())
-                .lightlevel as i32
-                == state
+                    .floorpic,
+            )
+            && i32::from(
+                state
+                    .world
+                    .p_setup
+                    .sector_mut(state.render.r_bsp.backsector.unwrap())
+                    .lightlevel,
+            ) == i32::from(
+                state
                     .world
                     .p_setup
                     .sector_mut(state.render.r_bsp.frontsector.unwrap())
-                    .lightlevel as i32
-            && state
-                .world
-                .p_setup
-                .side_mut(state.world.p_setup.seg(state.render.r_bsp.curline).sidedef)
-                .midtexture as i32
-                == 0
+                    .lightlevel,
+            )
+            && i32::from(
+                state
+                    .world
+                    .p_setup
+                    .side_mut(state.world.p_setup.seg(state.render.r_bsp.curline).sidedef)
+                    .midtexture,
+            ) == 0
         {
             return;
         }
@@ -380,16 +390,16 @@ pub fn r_subsector(state: &mut GameState, num: i32) {
     state.render.r_main.sscount += 1;
     let sub = state.world.p_setup.subsector(SubsectorId(num as u32));
     state.render.r_bsp.frontsector = Some(sub.sector);
-    let count: i32 = sub.numlines as i32;
+    let count: i32 = i32::from(sub.numlines);
     let mut line: SegId = SegId(sub.firstline as u32);
     let frontsector_id = state.render.r_bsp.frontsector.unwrap();
     let frontsector = state.world.p_setup.sector_mut(frontsector_id);
     let (floorheight, floorpic, ceilingheight, ceilingpic, lightlevel) = (
         frontsector.floorheight,
-        frontsector.floorpic as i32,
+        i32::from(frontsector.floorpic),
         frontsector.ceilingheight,
-        frontsector.ceilingpic as i32,
-        frontsector.lightlevel as i32,
+        i32::from(frontsector.ceilingpic),
+        i32::from(frontsector.lightlevel),
     );
     if floorheight < state.render.r_main.viewz {
         state.render.r_plane.floorplane = Some(find_plane(
@@ -430,12 +440,12 @@ pub fn render_bspnode(state: &mut GameState, bspnum: i32) {
     }
     let bsp = state.world.p_setup.nodes[bspnum as usize];
     let side: i32 = point_on_side(state.render.r_main.viewx, state.render.r_main.viewy, &bsp);
-    render_bspnode(state, bsp.children[side as usize] as i32);
+    render_bspnode(state, i32::from(bsp.children[side as usize]));
     if check_bbox(
         &state.render.r_bsp,
         &state.render.r_main,
         bsp.bbox[(side ^ 1) as usize],
     ) {
-        render_bspnode(state, bsp.children[(side ^ 1) as usize] as i32);
+        render_bspnode(state, i32::from(bsp.children[(side ^ 1) as usize]));
     }
 }

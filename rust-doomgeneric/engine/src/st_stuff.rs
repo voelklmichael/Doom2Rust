@@ -496,11 +496,11 @@ pub fn st_responder(state: &mut GameState, ev: &Event) -> bool {
                     || !state.game.doomstat.gameversion.is_ultimate_or_higher()
                 {
                     let musnum: i32 = MusicName::Runnin as i32
-                        + (buf[0] as i32 - '0' as i32) * 10
-                        + buf[1] as i32
+                        + (i32::from(buf[0]) - '0' as i32) * 10
+                        + i32::from(buf[1])
                         - '0' as i32
                         - 1;
-                    if (buf[0] as i32 - '0' as i32) * 10 + buf[1] as i32 - '0' as i32 > 35 {
+                    if (i32::from(buf[0]) - '0' as i32) * 10 + i32::from(buf[1]) - '0' as i32 > 35 {
                         state.game.g_game.player_mut(state.ui.st_stuff.plyr).message =
                             Some("IMPOSSIBLE SELECTION".to_string());
                     } else {
@@ -508,9 +508,9 @@ pub fn st_responder(state: &mut GameState, ev: &Event) -> bool {
                     }
                 } else {
                     let musnum: i32 = MusicName::E1m1 as i32
-                        + (buf[0] as i32 - '1' as i32) * 9
-                        + (buf[1] as i32 - '1' as i32);
-                    if (buf[0] as i32 - '1' as i32) * 9 + buf[1] as i32 - '1' as i32 > 31 {
+                        + (i32::from(buf[0]) - '1' as i32) * 9
+                        + (i32::from(buf[1]) - '1' as i32);
+                    if (i32::from(buf[0]) - '1' as i32) * 9 + i32::from(buf[1]) - '1' as i32 > 31 {
                         state.game.g_game.player_mut(state.ui.st_stuff.plyr).message =
                             Some("IMPOSSIBLE SELECTION".to_string());
                     } else {
@@ -592,10 +592,10 @@ pub fn st_responder(state: &mut GameState, ev: &Event) -> bool {
             ];
             let map: i32 = if state.game.doomstat.gamemode == GameMode::Commercial {
                 epsd = 1;
-                (digits[0] as i32 - '0' as i32) * 10 + digits[1] as i32 - '0' as i32
+                (i32::from(digits[0]) - '0' as i32) * 10 + i32::from(digits[1]) - '0' as i32
             } else {
-                epsd = digits[0] as i32 - '0' as i32;
-                digits[1] as i32 - '0' as i32
+                epsd = i32::from(digits[0]) - '0' as i32;
+                i32::from(digits[1]) - '0' as i32
             };
             if state.game.doomstat.gameversion == GameVersion::Chex {
                 epsd = 1;
@@ -686,10 +686,10 @@ pub fn update_face_widget(
                     point_to_angle2(plyr_mo_x, plyr_mo_y, attacker_x, attacker_y);
                 if badguyangle > plyr_mo_angle {
                     diffang = badguyangle.wrapping_sub(plyr_mo_angle);
-                    i = (diffang > ANG180) as i32;
+                    i = i32::from(diffang > ANG180);
                 } else {
                     diffang = plyr_mo_angle.wrapping_sub(badguyangle);
-                    i = (diffang <= ANG180) as i32;
+                    i = i32::from(diffang <= ANG180);
                 }
                 st_stuff.st_facecount = ST_TURNCOUNT;
                 st_stuff.st_faceindex = calc_pain_offset(g_game, st_stuff);
@@ -755,7 +755,7 @@ pub fn update_widgets(g_game: &mut GGameState, p_mobj: &PMobjState, st_stuff: &m
     st_stuff.w_ready.data = g_game.player_mut(st_stuff.plyr).readyweapon as i32;
     for i in 0..6 {
         st_stuff.w_arms_owned[i as usize] =
-            g_game.player_mut(st_stuff.plyr).weaponowned[(i + 1) as usize] as i32;
+            i32::from(g_game.player_mut(st_stuff.plyr).weaponowned[(i + 1) as usize]);
     }
     for i in 0..3 {
         st_stuff.keyboxes[i as usize] = if g_game.player_mut(st_stuff.plyr).cards[i as usize] {
@@ -896,7 +896,7 @@ pub fn draw_widgets(state: &mut GameState, refresh: bool) {
         &mut w_health,
         health_num,
         statusbaron,
-        refresh as i32,
+        i32::from(refresh),
     );
     state.ui.st_stuff.w_health = w_health;
     let armor_num = state
@@ -905,7 +905,13 @@ pub fn draw_widgets(state: &mut GameState, refresh: bool) {
         .player_mut(state.ui.st_stuff.plyr)
         .armorpoints;
     let mut w_armor = state.ui.st_stuff.w_armor;
-    stlib_update_percent(state, &mut w_armor, armor_num, statusbaron, refresh as i32);
+    stlib_update_percent(
+        state,
+        &mut w_armor,
+        armor_num,
+        statusbaron,
+        i32::from(refresh),
+    );
     state.ui.st_stuff.w_armor = w_armor;
     let notdeathmatch = state.ui.st_stuff.st_notdeathmatch;
     let mut w_armsbg = state.ui.st_stuff.w_armsbg;

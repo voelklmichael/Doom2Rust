@@ -67,7 +67,7 @@ pub fn lump_name_hash(s: &[u8]) -> u32 {
         if b == 0 {
             break;
         }
-        result = result << 5 ^ result ^ b.to_ascii_uppercase() as u32;
+        result = result << 5 ^ result ^ u32::from(b.to_ascii_uppercase());
     }
     result
 }
@@ -102,7 +102,11 @@ pub fn w_add_file(
         }
         let mut dir_buf =
             vec![0u8; (header.numlumps as usize) * ::core::mem::size_of::<filelump_t>()];
-        fs.read_at(wad_file, header.infotableofs as u32 as u64, &mut dir_buf);
+        fs.read_at(
+            wad_file,
+            u64::from(header.infotableofs as u32),
+            &mut dir_buf,
+        );
         dir_buf
             .as_chunks::<{ ::core::mem::size_of::<filelump_t>() }>()
             .0
@@ -173,7 +177,7 @@ pub fn read_lump(state: &WWadState, fs: &dyn DoomFileSystem, lump: u32, dest: &m
         error(&format!("W_ReadLump: {lump} >= numlumps"));
     }
     let l = &state.lumpinfo[lump as usize];
-    let c = fs.read_at(l.wad_file, l.position as u32 as u64, dest) as i32;
+    let c = fs.read_at(l.wad_file, u64::from(l.position as u32), dest) as i32;
     if c < l.size {
         error(&format!(
             "W_ReadLump: only read {} of {} on lump {}",
@@ -237,11 +241,11 @@ pub fn generate_hash_table(w_wad: &mut WWadState) {
     if w_wad.numlumps > 0 {
         w_wad.lumphash = vec![None; w_wad.numlumps as usize];
         for i in 0..w_wad.numlumps {
-            let hash: u32 = lump_name_hash(w_wad.lumpinfo[i as usize].name.as_bytes())
-                .wrapping_rem(w_wad.numlumps);
-            let old_head = w_wad.lumphash[hash as usize];
+            let hash: usize = lump_name_hash(w_wad.lumpinfo[i as usize].name.as_bytes())
+                .wrapping_rem(w_wad.numlumps) as usize;
+            let old_head = w_wad.lumphash[hash];
             w_wad.lumpinfo[i as usize].next = old_head;
-            w_wad.lumphash[hash as usize] = Some(i);
+            w_wad.lumphash[hash] = Some(i);
         }
     }
 }

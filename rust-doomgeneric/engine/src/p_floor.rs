@@ -304,7 +304,7 @@ pub fn do_floor(state: &mut GameState, line: LineId, floortype: FloorE) -> bool 
                         for side_index in 0..2_i32 {
                             let side = get_side(&mut state.world.p_setup, sector, i, side_index);
                             let bottomtexture = state.world.p_setup.side_mut(side).bottomtexture;
-                            if bottomtexture as i32 >= 0
+                            if i32::from(bottomtexture) >= 0
                                 && state.render.r_data.textureheight[bottomtexture as usize]
                                     < minsize
                             {
@@ -337,7 +337,7 @@ pub fn do_floor(state: &mut GameState, line: LineId, floortype: FloorE) -> bool 
                         };
                         if other_floor == floor.floordestheight {
                             floor.texture = other_pic;
-                            floor.newspecial = other_special as i32;
+                            floor.newspecial = i32::from(other_special);
                             break;
                         }
                     }
@@ -353,7 +353,7 @@ pub fn do_floor(state: &mut GameState, line: LineId, floortype: FloorE) -> bool 
             if floor.floordestheight > ceilingheight {
                 floor.floordestheight = ceilingheight;
             }
-            floor.floordestheight -= 8 * FRACUNIT * (floortype == FloorE::RaiseFloorCrush) as i32;
+            floor.floordestheight -= 8 * FRACUNIT * i32::from(floortype == FloorE::RaiseFloorCrush);
         }
         let floor_arena_id = state.world.p_spec.spawn_floor(floor);
         let floor_id = add_thinker(
@@ -410,7 +410,7 @@ pub fn build_stairs(
             StairE::Turbo16 => ((FLOORSPEED * 4) as Fixed, (16 * FRACUNIT) as Fixed),
         };
         let mut height: i32 = p_setup.sector_mut(sec).floorheight + stairsize;
-        let texture = p_setup.sector_mut(sec).floorpic as i32;
+        let texture = i32::from(p_setup.sector_mut(sec).floorpic);
         spawn_stair(p_setup, p_spec, p_tick, sec, speed, height);
         loop {
             let mut found = false;
@@ -424,7 +424,7 @@ pub fn build_stairs(
                         let back_id = iline.backsector.unwrap();
                         let (back_pic, back_free) = {
                             let tsec = p_setup.sector_mut(back_id);
-                            (tsec.floorpic as i32, tsec.specialdata.is_none())
+                            (i32::from(tsec.floorpic), tsec.specialdata.is_none())
                         };
                         if back_pic == texture {
                             height += stairsize;

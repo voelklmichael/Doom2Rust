@@ -30,9 +30,9 @@ pub fn teleport(state: &mut GameState, line: LineId, side: i32, thing: MobjId) -
     if side == 1 {
         return false;
     }
-    let tag = state.world.p_setup.line(line).tag as i32;
+    let tag = i32::from(state.world.p_setup.line(line).tag);
     for i in 0..state.world.p_setup.numsectors {
-        if state.world.p_setup.sectors[i as usize].tag as i32 != tag {
+        if i32::from(state.world.p_setup.sectors[i as usize].tag) != tag {
             continue;
         }
         let mut cursor = state.world.p_tick.head();

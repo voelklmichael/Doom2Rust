@@ -405,14 +405,14 @@ pub fn text_write(state: &mut GameState) {
     }
     while count != 0 {
         let mut c: i32 = match chars.next() {
-            Some(b) => b as i32,
+            Some(b) => i32::from(b),
             None => break,
         };
         if c == '\n' as i32 {
             cx = 10;
             cy += 11;
         } else {
-            c = (c as u8).to_ascii_uppercase() as i32 - HU_FONTSTART;
+            c = i32::from((c as u8).to_ascii_uppercase()) - HU_FONTSTART;
             if (0..=HU_FONTSIZE).contains(&c) {
                 let font_patch = cache_patch_num(
                     &*state.assets.fs,
@@ -673,7 +673,7 @@ pub fn cast_print(state: &mut GameState, text: &str) {
     let mut w: i32;
     let mut width: i32 = 0;
     for b in text.bytes() {
-        c = b.to_ascii_uppercase() as i32 - HU_FONTSTART;
+        c = i32::from(b.to_ascii_uppercase()) - HU_FONTSTART;
         if (0..=HU_FONTSIZE).contains(&c) {
             w = cache_patch_num(
                 &*state.assets.fs,
@@ -688,7 +688,7 @@ pub fn cast_print(state: &mut GameState, text: &str) {
     }
     let mut cx: i32 = 160 - width / 2;
     for b in text.bytes() {
-        c = b.to_ascii_uppercase() as i32 - HU_FONTSTART;
+        c = i32::from(b.to_ascii_uppercase()) - HU_FONTSTART;
         if (0..=HU_FONTSIZE).contains(&c) {
             let font_patch = cache_patch_num(
                 &*state.assets.fs,
@@ -718,7 +718,7 @@ pub fn cast_drawer(state: &mut GameState) {
         .state_mut(state.ui.f_finale.caststate.unwrap());
     let sprframe = &state.render.r_things.sprites[cur_caststate.sprite as usize].spriteframes
         [(cur_caststate.frame & FF_FRAMEMASK) as usize];
-    let lump: i32 = sprframe.lump[0] as i32;
+    let lump: i32 = i32::from(sprframe.lump[0]);
     let flip: bool = sprframe.flip[0] != 0;
     let patch: Patch = cache_patch_num(
         &*state.assets.fs,

@@ -51,7 +51,7 @@ pub enum GameMode {
     Indetermined,
 }
 
-#[derive(Copy, Clone, PartialEq)]
+#[derive(Copy, Clone, PartialEq, Eq)]
 pub enum GameVersion {
     Doom12,
     Doom1666,

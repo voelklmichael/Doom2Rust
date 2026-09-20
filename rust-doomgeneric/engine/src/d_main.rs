@@ -966,22 +966,24 @@ pub fn doom_main(state: &mut GameState) {
     state.game.d_main.autostart = false;
     if let Some(p) = check_parm_with_args(&state.game.m_argv, "-skill", 1) {
         state.game.d_main.startskill = skill_from_raw(
-            state.game.m_argv.myargv[p + 1]
-                .as_bytes()
-                .first()
-                .copied()
-                .unwrap_or(0) as i32
-                - '1' as i32,
+            i32::from(
+                state.game.m_argv.myargv[p + 1]
+                    .as_bytes()
+                    .first()
+                    .copied()
+                    .unwrap_or(0),
+            ) - '1' as i32,
         );
         state.game.d_main.autostart = true;
     }
     if let Some(p) = check_parm_with_args(&state.game.m_argv, "-episode", 1) {
-        state.game.d_main.startepisode = state.game.m_argv.myargv[p + 1]
-            .as_bytes()
-            .first()
-            .copied()
-            .unwrap_or(0) as i32
-            - '0' as i32;
+        state.game.d_main.startepisode = i32::from(
+            state.game.m_argv.myargv[p + 1]
+                .as_bytes()
+                .first()
+                .copied()
+                .unwrap_or(0),
+        ) - '0' as i32;
         state.game.d_main.startmap = 1;
         state.game.d_main.autostart = true;
     }
@@ -996,19 +998,21 @@ pub fn doom_main(state: &mut GameState) {
         if state.game.doomstat.gamemode == GameMode::Commercial {
             state.game.d_main.startmap = argv_atoi(&state.game.m_argv.myargv[p + 1]);
         } else {
-            state.game.d_main.startepisode = state.game.m_argv.myargv[p + 1]
-                .as_bytes()
-                .first()
-                .copied()
-                .unwrap_or(0) as i32
-                - '0' as i32;
-            if p + 2 < state.game.m_argv.myargv.len() {
-                state.game.d_main.startmap = state.game.m_argv.myargv[p + 2]
+            state.game.d_main.startepisode = i32::from(
+                state.game.m_argv.myargv[p + 1]
                     .as_bytes()
                     .first()
                     .copied()
-                    .unwrap_or(0) as i32
-                    - '0' as i32;
+                    .unwrap_or(0),
+            ) - '0' as i32;
+            if p + 2 < state.game.m_argv.myargv.len() {
+                state.game.d_main.startmap = i32::from(
+                    state.game.m_argv.myargv[p + 2]
+                        .as_bytes()
+                        .first()
+                        .copied()
+                        .unwrap_or(0),
+                ) - '0' as i32;
             } else {
                 state.game.d_main.startmap = 1;
             }

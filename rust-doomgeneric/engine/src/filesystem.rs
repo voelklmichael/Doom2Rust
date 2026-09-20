@@ -28,7 +28,7 @@ pub trait DoomFileSystem {
 }
 
 /// Reads all of `path` into memory.
-pub(crate) fn read_file(fs: &mut dyn DoomFileSystem, path: &str) -> Option<Vec<u8>> {
+pub fn read_file(fs: &mut dyn DoomFileSystem, path: &str) -> Option<Vec<u8>> {
     let file = fs.open(path)?;
     let mut data = vec![0u8; fs.len(file) as usize];
     let mut filled = 0;
@@ -45,7 +45,7 @@ pub(crate) fn read_file(fs: &mut dyn DoomFileSystem, path: &str) -> Option<Vec<u
 }
 
 #[cfg(test)]
-pub(crate) use mem::MemFileSystem;
+pub use mem::MemFileSystem;
 
 #[cfg(test)]
 mod mem {
@@ -57,7 +57,7 @@ mod mem {
     /// In-memory filesystem for tests: no disk access, and directories are
     /// only tracked as names.
     #[derive(Default)]
-    pub(crate) struct MemFileSystem {
+    pub struct MemFileSystem {
         pub files: BTreeMap<String, Vec<u8>>,
         pub dirs: Vec<String>,
         open: Vec<Option<Vec<u8>>>,

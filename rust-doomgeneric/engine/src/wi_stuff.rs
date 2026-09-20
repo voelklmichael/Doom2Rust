@@ -803,7 +803,7 @@ pub fn draw_num(state: &mut GameState, mut x: i32, y: i32, mut n: i32, mut digit
             }
         }
     }
-    let neg: i32 = (n < 0) as i32;
+    let neg: i32 = i32::from(n < 0);
     if neg != 0 {
         n = -n;
     }
@@ -1248,7 +1248,7 @@ pub fn update_netgame_stats(state: &mut GameState) {
         }
         if !stillticking {
             s_start_sound(state, SoundOrigin::None, SfxName::Barexp);
-            state.ui.wi_stuff.ng_state += 1 + 2 * (!state.ui.wi_stuff.dofrags) as i32;
+            state.ui.wi_stuff.ng_state += 1 + 2 * i32::from(!state.ui.wi_stuff.dofrags);
         }
     } else if state.ui.wi_stuff.ng_state == 8 {
         if state.ui.wi_stuff.bcnt & 3 == 0 {
@@ -1312,7 +1312,7 @@ pub fn draw_netgame_stats(state: &mut GameState) {
     draw_patch(
         state,
         dest_screen,
-        32 + star_width / 2 + 32 * (!state.ui.wi_stuff.dofrags) as i32 + NG_SPACINGX
+        32 + star_width / 2 + 32 * i32::from(!state.ui.wi_stuff.dofrags) + NG_SPACINGX
             - kills_patch.width(),
         NG_STATSY,
         &kills_patch,
@@ -1326,7 +1326,7 @@ pub fn draw_netgame_stats(state: &mut GameState) {
     draw_patch(
         state,
         dest_screen,
-        32 + star_width / 2 + 32 * (!state.ui.wi_stuff.dofrags) as i32 + 2 * NG_SPACINGX
+        32 + star_width / 2 + 32 * i32::from(!state.ui.wi_stuff.dofrags) + 2 * NG_SPACINGX
             - items_patch.width(),
         NG_STATSY,
         &items_patch,
@@ -1340,7 +1340,7 @@ pub fn draw_netgame_stats(state: &mut GameState) {
     draw_patch(
         state,
         dest_screen,
-        32 + star_width / 2 + 32 * (!state.ui.wi_stuff.dofrags) as i32 + 3 * NG_SPACINGX
+        32 + star_width / 2 + 32 * i32::from(!state.ui.wi_stuff.dofrags) + 3 * NG_SPACINGX
             - secret_patch.width(),
         NG_STATSY,
         &secret_patch,
@@ -1355,7 +1355,7 @@ pub fn draw_netgame_stats(state: &mut GameState) {
         draw_patch(
             state,
             dest_screen,
-            32 + star_width / 2 + 32 * (!state.ui.wi_stuff.dofrags) as i32 + 4 * NG_SPACINGX
+            32 + star_width / 2 + 32 * i32::from(!state.ui.wi_stuff.dofrags) + 4 * NG_SPACINGX
                 - frags_patch.width(),
             NG_STATSY,
             &frags_patch,
@@ -1364,7 +1364,7 @@ pub fn draw_netgame_stats(state: &mut GameState) {
     let mut y: i32 = NG_STATSY + kills_patch.height();
     for i in 0..MAXPLAYERS {
         if state.game.g_game.playeringame[i as usize] {
-            let mut x: i32 = 32 + star_width / 2 + 32 * (!state.ui.wi_stuff.dofrags) as i32;
+            let mut x: i32 = 32 + star_width / 2 + 32 * i32::from(!state.ui.wi_stuff.dofrags);
             let p_patch = cache_patch_num(
                 &*state.assets.fs,
                 &mut state.assets.w_wad,
@@ -1573,7 +1573,7 @@ pub fn check_for_accelerate(g_game: &mut GGameState, wi_stuff: &mut WiStuffState
     for i in 0..(MAXPLAYERS as usize) {
         if g_game.playeringame[i] {
             let player = &g_game.players[i];
-            if player.cmd.buttons as i32 & BT_ATTACK != 0 {
+            if i32::from(player.cmd.buttons) & BT_ATTACK != 0 {
                 if !player.attackdown {
                     wi_stuff.acceleratestage = true;
                 }
@@ -1582,7 +1582,7 @@ pub fn check_for_accelerate(g_game: &mut GGameState, wi_stuff: &mut WiStuffState
                 g_game.players[i].attackdown = false;
             }
             let player = &g_game.players[i];
-            if player.cmd.buttons as i32 & BT_USE != 0 {
+            if i32::from(player.cmd.buttons) & BT_USE != 0 {
                 if !player.usedown {
                     wi_stuff.acceleratestage = true;
                 }

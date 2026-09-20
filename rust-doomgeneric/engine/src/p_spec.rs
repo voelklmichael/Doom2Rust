@@ -673,7 +673,7 @@ pub fn find_min_surrounding_light(p_setup: &mut PSetupState, sector: SectorId, m
     for i in 0..linecount as usize {
         let line = p_setup.sector_mut(sector).lines[i];
         if let Some(check) = get_next_sector(p_setup, line, sector) {
-            let light = p_setup.sector_mut(check).lightlevel as i32;
+            let light = i32::from(p_setup.sector_mut(check).lightlevel);
             if light < min {
                 min = light;
             }
@@ -690,7 +690,7 @@ pub fn cross_special_line(state: &mut GameState, linenum: i32, side: i32, thing:
             _ => {}
         }
         let mut ok: i32 = 0;
-        match special as i32 {
+        match i32::from(special) {
             39 | 97 | 125 | 126 | 4 | 10 | 88 => {
                 ok = 1;
             }
@@ -700,7 +700,7 @@ pub fn cross_special_line(state: &mut GameState, linenum: i32, side: i32, thing:
             return;
         }
     }
-    match special as i32 {
+    match i32::from(special) {
         2 => {
             do_door(state, line, VldoorE::Open);
             state.world.p_setup.line_mut(line).special = 0;
@@ -831,7 +831,7 @@ pub fn cross_special_line(state: &mut GameState, linenum: i32, side: i32, thing:
             stop_plat(
                 &mut state.world.p_plats,
                 &state.world.p_tick,
-                state.world.p_setup.line(line).tag as i32,
+                i32::from(state.world.p_setup.line(line).tag),
             );
             state.world.p_setup.line_mut(line).special = 0;
         }
@@ -843,7 +843,7 @@ pub fn cross_special_line(state: &mut GameState, linenum: i32, side: i32, thing:
             ceiling_crush_stop(
                 &mut state.world.p_ceilng,
                 &state.world.p_tick,
-                state.world.p_setup.line(line).tag as i32,
+                i32::from(state.world.p_setup.line(line).tag),
             );
             state.world.p_setup.line_mut(line).special = 0;
         }
@@ -938,7 +938,7 @@ pub fn cross_special_line(state: &mut GameState, linenum: i32, side: i32, thing:
             ceiling_crush_stop(
                 &mut state.world.p_ceilng,
                 &state.world.p_tick,
-                state.world.p_setup.line(line).tag as i32,
+                i32::from(state.world.p_setup.line(line).tag),
             );
         }
         75 => {
@@ -987,7 +987,7 @@ pub fn cross_special_line(state: &mut GameState, linenum: i32, side: i32, thing:
             stop_plat(
                 &mut state.world.p_plats,
                 &state.world.p_tick,
-                state.world.p_setup.line(line).tag as i32,
+                i32::from(state.world.p_setup.line(line).tag),
             );
         }
         90 => {
@@ -1047,14 +1047,14 @@ pub fn shoot_special_line(state: &mut GameState, thing: MobjId, line: LineId) {
     let special = state.world.p_setup.line(line).special;
     if state.world.p_mobj.mo(thing).player.is_none() {
         let mut ok: i32 = 0;
-        if special as i32 == 46 {
+        if i32::from(special) == 46 {
             ok = 1;
         }
         if ok == 0 {
             return;
         }
     }
-    match special as i32 {
+    match i32::from(special) {
         24 => {
             do_floor(state, line, FloorE::RaiseFloor);
             change_switch_texture(state, line, false);
@@ -1084,7 +1084,7 @@ pub fn player_in_special_sector(state: &mut GameState, player: PlayerId) {
     if mo_z != floorheight {
         return;
     }
-    match special as i32 {
+    match i32::from(special) {
         5 => {
             if state.game.g_game.player_mut(player).powers[PowerType::Ironfeet] == 0
                 && state.world.p_tick.leveltime & 0x1f == 0
@@ -1123,7 +1123,7 @@ pub fn player_in_special_sector(state: &mut GameState, player: PlayerId) {
         _ => {
             error(&format!(
                 "P_PlayerInSpecialSector: unknown special {}",
-                special as i32,
+                i32::from(special),
             ));
         }
     }
@@ -1150,7 +1150,7 @@ pub fn update_specials(state: &mut GameState) {
     for i in 0..(state.world.p_spec.numlinespecials as usize) {
         let line: LineId = state.world.p_spec.linespeciallist[i];
         let linev = state.world.p_setup.line(line);
-        if linev.special as i32 == 48 {
+        if i32::from(linev.special) == 48 {
             state.world.p_setup.sides[linev.sidenum[0] as usize].textureoffset += FRACUNIT;
         }
     }
@@ -1302,7 +1302,7 @@ pub fn spawn_specials(state: &mut GameState) {
         let secid = SectorId(i as u32);
         let special = state.world.p_setup.sector_mut(secid).special;
         if special != 0 {
-            match special as i32 {
+            match i32::from(special) {
                 1 => {
                     spawn_light_flash(&mut state.world, secid);
                 }
@@ -1363,8 +1363,8 @@ pub fn spawn_specials(state: &mut GameState) {
     }
     state.world.p_spec.numlinespecials = 0;
     for i in 0..state.world.p_setup.numlines {
-        if state.world.p_setup.lines[i as usize].special as i32 == 48 {
-            if state.world.p_spec.numlinespecials as i32 >= MAXLINEANIMS {
+        if i32::from(state.world.p_setup.lines[i as usize].special) == 48 {
+            if i32::from(state.world.p_spec.numlinespecials) >= MAXLINEANIMS {
                 error("Too many scrolling wall linedefs! (Vanilla limit is 64)");
             }
             state.world.p_spec.linespeciallist[state.world.p_spec.numlinespecials as usize] =

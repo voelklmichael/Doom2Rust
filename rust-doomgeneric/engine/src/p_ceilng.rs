@@ -248,7 +248,7 @@ pub fn do_ceiling(
     let mut rtn = false;
     match kind {
         CeilingE::FastCrushAndRaise | CeilingE::SilentCrushAndRaise | CeilingE::CrushAndRaise => {
-            let tag = p_setup.line(line).tag as i32;
+            let tag = i32::from(p_setup.line(line).tag);
             activate_in_stasis_ceiling(p_ceilng, p_tick, tag);
         }
         _ => {}
@@ -261,7 +261,7 @@ pub fn do_ceiling(
         rtn = true;
         let (ceilingheight, floorheight, tag) = {
             let s = p_setup.sector_mut(sec);
-            (s.ceilingheight, s.floorheight, s.tag as i32)
+            (s.ceilingheight, s.floorheight, i32::from(s.tag))
         };
         let mut ceiling = Ceiling::default();
         ceiling.thinker.function = ThinkerFn::Ceiling(move_ceiling);

@@ -215,15 +215,15 @@ pub fn point_on_line_side(p_setup: &PSetupState, x: Fixed, y: Fixed, line: LineI
     let line_v1 = p_setup.vertexes[line.v1.0 as usize];
     if line.dx == 0 {
         if x <= line_v1.x {
-            return (line.dy > 0) as i32;
+            return i32::from(line.dy > 0);
         }
-        return (line.dy < 0) as i32;
+        return i32::from(line.dy < 0);
     }
     if line.dy == 0 {
         if y <= line_v1.y {
-            return (line.dx < 0) as i32;
+            return i32::from(line.dx < 0);
         }
-        return (line.dx > 0) as i32;
+        return i32::from(line.dx > 0);
     }
     let dx: Fixed = x - line_v1.x;
     let dy: Fixed = y - line_v1.y;
@@ -241,8 +241,8 @@ pub fn box_on_line_side(p_setup: &PSetupState, tmbox: BBox, ld: LineId) -> i32 {
     match ldv.slopetype as u32 {
         0 => {
             let ld_v1 = p_setup.vertexes[ldv.v1.0 as usize];
-            p1 = (tmbox[BoxIndex::Top] > ld_v1.y) as i32;
-            p2 = (tmbox[BoxIndex::Bottom] > ld_v1.y) as i32;
+            p1 = i32::from(tmbox[BoxIndex::Top] > ld_v1.y);
+            p2 = i32::from(tmbox[BoxIndex::Bottom] > ld_v1.y);
             if ldv.dx < 0 {
                 p1 ^= 1;
                 p2 ^= 1;
@@ -250,8 +250,8 @@ pub fn box_on_line_side(p_setup: &PSetupState, tmbox: BBox, ld: LineId) -> i32 {
         }
         1 => {
             let ld_v1 = p_setup.vertexes[ldv.v1.0 as usize];
-            p1 = (tmbox[BoxIndex::Right] < ld_v1.x) as i32;
-            p2 = (tmbox[BoxIndex::Left] < ld_v1.x) as i32;
+            p1 = i32::from(tmbox[BoxIndex::Right] < ld_v1.x);
+            p2 = i32::from(tmbox[BoxIndex::Left] < ld_v1.x);
             if ldv.dy < 0 {
                 p1 ^= 1;
                 p2 ^= 1;
@@ -275,15 +275,15 @@ pub fn box_on_line_side(p_setup: &PSetupState, tmbox: BBox, ld: LineId) -> i32 {
 pub fn point_on_divline_side(x: Fixed, y: Fixed, line: &DivLine) -> i32 {
     if line.dx == 0 {
         if x <= line.x {
-            return (line.dy > 0) as i32;
+            return i32::from(line.dy > 0);
         }
-        return (line.dy < 0) as i32;
+        return i32::from(line.dy < 0);
     }
     if line.dy == 0 {
         if y <= line.y {
-            return (line.dx < 0) as i32;
+            return i32::from(line.dx < 0);
         }
-        return (line.dx > 0) as i32;
+        return i32::from(line.dx > 0);
     }
     let dx = x - line.x;
     let dy = y - line.y;
@@ -320,7 +320,7 @@ pub fn intercept_vector(v2: &DivLine, v1: &DivLine) -> Fixed {
 }
 pub fn line_opening(p_maputl: &mut PMaputlState, p_setup: &mut PSetupState, linedef: LineId) {
     let linedefv = p_setup.line(linedef);
-    if linedefv.sidenum[1] as i32 == -1 {
+    if i32::from(linedefv.sidenum[1]) == -1 {
         p_maputl.openrange = 0;
         return;
     }
@@ -456,8 +456,8 @@ pub fn block_lines_iterator<F: FnMut(&mut GameState, LineId) -> bool>(
         return true;
     }
     let offset = y * state.world.p_setup.bmapwidth + x;
-    let mut list = state.world.p_setup.blockmaplump[(4 + offset) as usize] as i32 as usize;
-    while state.world.p_setup.blockmaplump[list] as i32 != -1 {
+    let mut list = i32::from(state.world.p_setup.blockmaplump[(4 + offset) as usize]) as usize;
+    while i32::from(state.world.p_setup.blockmaplump[list]) != -1 {
         let ld = LineId(state.world.p_setup.blockmaplump[list] as u32);
         if state.world.p_setup.line(ld).validcount != state.world.p_setup.validcount {
             state.world.p_setup.line_mut(ld).validcount = state.world.p_setup.validcount;
@@ -704,7 +704,7 @@ fn intercepts_overrun(state: &mut GameState, num_intercepts: i32, intercept: Int
         &mut state.world.p_pspr,
         &mut state.world.p_setup,
         location + 4,
-        isaline as i32,
+        i32::from(isaline),
     );
     intercepts_memory_overrun(
         &mut state.world.p_maputl,

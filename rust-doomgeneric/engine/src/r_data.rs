@@ -116,9 +116,9 @@ pub struct TexPatch {
 // panics instead of reading adjacent memory.
 pub fn draw_column_in_cache(patch: &[u8], cache: &mut [u8], originy: i32, cacheheight: i32) {
     let mut cursor: usize = 0;
-    while patch[cursor] as i32 != 0xff {
-        let topdelta = patch[cursor] as i32;
-        let length = patch[cursor + 1] as i32;
+    while i32::from(patch[cursor]) != 0xff {
+        let topdelta = i32::from(patch[cursor]);
+        let length = i32::from(patch[cursor + 1]);
         let source = &patch[cursor + 3..cursor + 3 + length as usize];
         let mut count: i32 = length;
         let mut position: i32 = originy + topdelta;
@@ -155,9 +155,9 @@ pub fn generate_composite(
     // near the end of the buffer. Vanilla's zone allocator happened to leave
     // slack there; an exactly-sized Vec doesn't, so it panics instead.
     let mut block: Vec<u8> = vec![0u8; r_data.texturecompositesize[texnum as usize] as usize + 128];
-    let texture_patchcount = r_data.textures[texnum as usize].patchcount as i32;
-    let texture_width = r_data.textures[texnum as usize].width as i32;
-    let texture_height = r_data.textures[texnum as usize].height as i32;
+    let texture_patchcount = i32::from(r_data.textures[texnum as usize].patchcount);
+    let texture_width = i32::from(r_data.textures[texnum as usize].width);
+    let texture_height = i32::from(r_data.textures[texnum as usize].height);
     for i in 0..texture_patchcount as usize {
         let tex_patch = r_data.textures[texnum as usize].patches[i];
         // `realpatch` is the raw picture-format lump ("patch_t": width:i16,
@@ -167,15 +167,15 @@ pub fn generate_composite(
         let realpatch_len = lump_length(w_wad, tex_patch.patch as u32) as usize;
         let realpatch_lump = lump_bytes(fs, w_wad, tex_patch.patch);
         let realpatch = &realpatch_lump[..realpatch_len];
-        let realpatch_width = i16::from_le_bytes(realpatch[0..2].try_into().unwrap()) as i32;
-        let x1: i32 = tex_patch.originx as i32;
+        let realpatch_width = i32::from(i16::from_le_bytes(realpatch[0..2].try_into().unwrap()));
+        let x1: i32 = i32::from(tex_patch.originx);
         let mut x2: i32 = x1 + realpatch_width;
         let mut x: i32 = if x1 < 0 { 0 } else { x1 };
         if x2 > texture_width {
             x2 = texture_width;
         }
         while x < x2 {
-            if (r_data.texturecolumnlump[texnum as usize][x as usize] as i32) < 0 {
+            if i32::from(r_data.texturecolumnlump[texnum as usize][x as usize]) < 0 {
                 let colofs_off = (8 + (x - x1) * 4) as usize;
                 let columnofs =
                     i32::from_le_bytes(realpatch[colofs_off..colofs_off + 4].try_into().unwrap());
@@ -184,7 +184,7 @@ pub fn generate_composite(
                 draw_column_in_cache(
                     patchcol,
                     &mut block[cache_off..],
-                    tex_patch.originy as i32,
+                    i32::from(tex_patch.originy),
                     texture_height,
                 );
             }
@@ -197,9 +197,9 @@ pub fn generate_lookup(state: &mut GameState, texnum: i32) {
     let mut x: i32;
     state.render.r_data.texturecomposite[texnum as usize] = None;
     state.render.r_data.texturecompositesize[texnum as usize] = 0;
-    let texture_patchcount = state.render.r_data.textures[texnum as usize].patchcount as i32;
-    let texture_width = state.render.r_data.textures[texnum as usize].width as i32;
-    let texture_height = state.render.r_data.textures[texnum as usize].height as i32;
+    let texture_patchcount = i32::from(state.render.r_data.textures[texnum as usize].patchcount);
+    let texture_width = i32::from(state.render.r_data.textures[texnum as usize].width);
+    let texture_height = i32::from(state.render.r_data.textures[texnum as usize].height);
     let mut patchcount: Vec<u8> = vec![0u8; texture_width as usize];
     for i in 0..texture_patchcount as usize {
         let tex_patch = state.render.r_data.textures[texnum as usize].patches[i];
@@ -207,8 +207,8 @@ pub fn generate_lookup(state: &mut GameState, texnum: i32) {
         let realpatch_lump =
             lump_bytes(&*state.assets.fs, &mut state.assets.w_wad, tex_patch.patch);
         let realpatch = &realpatch_lump[..realpatch_len];
-        let realpatch_width = i16::from_le_bytes(realpatch[0..2].try_into().unwrap()) as i32;
-        let x1: i32 = tex_patch.originx as i32;
+        let realpatch_width = i32::from(i16::from_le_bytes(realpatch[0..2].try_into().unwrap()));
+        let x1: i32 = i32::from(tex_patch.originx);
         let mut x2: i32 = x1 + realpatch_width;
         if x1 < 0 {
             x = 0;
@@ -259,8 +259,8 @@ pub fn get_column(
     mut col: i32,
 ) -> ColumnSource {
     col &= r_data.texturewidthmask[tex as usize];
-    let lump: i32 = r_data.texturecolumnlump[tex as usize][col as usize] as i32;
-    let ofs: i32 = r_data.texturecolumnofs[tex as usize][col as usize] as i32;
+    let lump: i32 = i32::from(r_data.texturecolumnlump[tex as usize][col as usize]);
+    let ofs: i32 = i32::from(r_data.texturecolumnofs[tex as usize][col as usize]);
     if lump > 0 {
         lump_bytes(fs, w_wad, lump);
         return ColumnSource::Lump {
@@ -281,13 +281,13 @@ fn generate_texture_hash_table(r_data: &mut RDataState) {
     for i in 0..r_data.numtextures {
         r_data.textures[i as usize].index = i;
         r_data.textures[i as usize].next = None;
-        let key: i32 = lump_name_hash(r_data.textures[i as usize].name.as_bytes())
-            .wrapping_rem(r_data.numtextures as u32) as i32;
+        let key: usize = lump_name_hash(r_data.textures[i as usize].name.as_bytes())
+            .wrapping_rem(r_data.numtextures as u32) as i32 as usize;
         // Walk to the end of the bucket's chain, appending there (matches
         // the original pointer-to-pointer "rover" trick's tail-append order).
-        match r_data.textures_hashtable[key as usize] {
+        match r_data.textures_hashtable[key] {
             None => {
-                r_data.textures_hashtable[key as usize] = Some(TextureId(i as u32));
+                r_data.textures_hashtable[key] = Some(TextureId(i as u32));
             }
             Some(mut cursor) => {
                 while let Some(next) = r_data.textures[cursor.0 as usize].next {
@@ -412,7 +412,7 @@ pub fn init_textures(state: &mut GameState) {
         // size_of::<TexPatch>()*(patchcount-1) raw bytes for a C flexible
         // array member tail.
         let mut patches: Vec<TexPatch> = Vec::with_capacity(mt_patchcount.max(0) as usize);
-        for j in 0..mt_patchcount as i32 {
+        for j in 0..i32::from(mt_patchcount) {
             let p_off = 22 + (j * 10) as usize;
             let p = &mt[p_off..p_off + 10];
             let p_originx = i16::from_le_bytes(p[0..2].try_into().unwrap());
@@ -453,12 +453,12 @@ pub fn init_textures(state: &mut GameState) {
             .texturecolumnofs
             .push(vec![0u16; texture_width as usize]);
         j = 1;
-        while j * 2 <= texture_width as i32 {
+        while j * 2 <= i32::from(texture_width) {
             j <<= 1;
         }
         state.render.r_data.texturewidthmask[i as usize] = j - 1;
         state.render.r_data.textureheight[i as usize] =
-            ((texture_height as i32) << FRACBITS) as Fixed;
+            (i32::from(texture_height) << FRACBITS) as Fixed;
         i += 1;
         dir_index += 1;
     }
@@ -512,9 +512,10 @@ pub fn init_sprite_lumps(state: &mut GameState) {
         let width = i16::from_le_bytes(header[0..2].try_into().unwrap());
         let leftoffset = i16::from_le_bytes(header[4..6].try_into().unwrap());
         let topoffset = i16::from_le_bytes(header[6..8].try_into().unwrap());
-        state.render.r_data.spritewidth[i as usize] = ((width as i32) << FRACBITS) as Fixed;
-        state.render.r_data.spriteoffset[i as usize] = ((leftoffset as i32) << FRACBITS) as Fixed;
-        state.render.r_data.spritetopoffset[i as usize] = ((topoffset as i32) << FRACBITS) as Fixed;
+        state.render.r_data.spritewidth[i as usize] = (i32::from(width) << FRACBITS) as Fixed;
+        state.render.r_data.spriteoffset[i as usize] = (i32::from(leftoffset) << FRACBITS) as Fixed;
+        state.render.r_data.spritetopoffset[i as usize] =
+            (i32::from(topoffset) << FRACBITS) as Fixed;
     }
 }
 pub fn init_colormaps(fs: &dyn DoomFileSystem, r_data: &mut RDataState, w_wad: &mut WWadState) {
@@ -589,7 +590,7 @@ pub fn precache_level(state: &mut GameState) {
     state.render.r_data.texturememory = 0;
     for (i, &present) in texturepresent.iter().enumerate() {
         if present != 0 {
-            let patchcount = state.render.r_data.textures[i].patchcount as i32;
+            let patchcount = i32::from(state.render.r_data.textures[i].patchcount);
             for j in 0..patchcount as usize {
                 lump = state.render.r_data.textures[i].patches[j].patch;
                 state.render.r_data.texturememory +=
@@ -608,7 +609,7 @@ pub fn precache_level(state: &mut GameState) {
             for j in 0..(state.render.r_things.sprites[i].numframes) as usize {
                 for k in 0..8 {
                     lump = state.render.r_data.firstspritelump
-                        + state.render.r_things.sprites[i].spriteframes[j].lump[k] as i32;
+                        + i32::from(state.render.r_things.sprites[i].spriteframes[j].lump[k]);
                     state.render.r_data.spritememory +=
                         state.assets.w_wad.lumpinfo[lump as usize].size;
                     lump_bytes(&*state.assets.fs, &mut state.assets.w_wad, lump);

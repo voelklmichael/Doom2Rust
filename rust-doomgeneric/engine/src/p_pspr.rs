@@ -230,7 +230,7 @@ pub fn weapon_ready(state: &mut GameState, player: PlayerId, position: i32) {
         set_psprite(state, player, PSpriteNum::Weapon as i32, newstate);
         return;
     }
-    if state.game.g_game.players[player].cmd.buttons as i32 & BT_ATTACK != 0 {
+    if i32::from(state.game.g_game.players[player].cmd.buttons) & BT_ATTACK != 0 {
         if !state.game.g_game.players[player].attackdown
             || state.game.g_game.players[player].readyweapon as u32
                 != WeaponType::Missile as i32 as u32
@@ -258,7 +258,7 @@ pub fn weapon_ready(state: &mut GameState, player: PlayerId, position: i32) {
         );
 }
 pub fn re_fire(state: &mut GameState, player: PlayerId, _position: i32) {
-    if state.game.g_game.players[player].cmd.buttons as i32 & BT_ATTACK != 0
+    if i32::from(state.game.g_game.players[player].cmd.buttons) & BT_ATTACK != 0
         && state.game.g_game.players[player].pendingweapon as u32
             == WeaponType::Nochange as i32 as u32
         && state.game.g_game.players[player].health != 0
@@ -534,10 +534,12 @@ pub fn fire_cgun(state: &mut GameState, player: PlayerId, position: i32) {
         PSpriteNum::Flash as i32,
         statenum_from_raw(
             (WEAPONINFO[state.game.g_game.players[player].readyweapon as usize].flashstate as i64
-                + state.game.g_game.players[player].psprites[position as usize]
-                    .state
-                    .unwrap()
-                    .0 as i64
+                + i64::from(
+                    state.game.g_game.players[player].psprites[position as usize]
+                        .state
+                        .unwrap()
+                        .0,
+                )
                 - StateNum::Chain1 as i64) as i32,
         ),
     );

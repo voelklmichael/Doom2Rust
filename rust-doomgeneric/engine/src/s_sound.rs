@@ -70,7 +70,7 @@ impl SSoundState {
     }
 }
 
-/// Vanilla Doom's s_start_sound takes a `void *origin` that's really always
+/// Vanilla Doom's `s_start_sound` takes a `void *origin` that's really always
 /// either a `Mobj*` or a `Sector::soundorg` (a `DegenMobj`, which
 /// shares the `{thinker, x, y, z}` prefix of Mobj by construction) --
 /// callers rely on that layout pun to pass a sector's position as if it

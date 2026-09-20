@@ -2926,7 +2926,7 @@ pub fn xymovement(state: &mut GameState, mo: MobjId) {
                         .line(ceilingline)
                         .backsector
                         .is_some_and(|backsector| {
-                            state.world.p_setup.sector_mut(backsector).ceilingpic as i32
+                            i32::from(state.world.p_setup.sector_mut(backsector).ceilingpic)
                                 == state.render.r_sky.skyflatnum
                         })
                 }) {
@@ -2981,7 +2981,7 @@ pub fn xymovement(state: &mut GameState, mo: MobjId) {
         None => true,
         Some(player_id) => {
             let cmd = &state.game.g_game.players[player_id].cmd;
-            cmd.forwardmove as i32 == 0 && cmd.sidemove as i32 == 0
+            i32::from(cmd.forwardmove) == 0 && i32::from(cmd.sidemove) == 0
         }
     };
     if momx > -STOPSPEED && momx < STOPSPEED && momy > -STOPSPEED && momy < STOPSPEED && player_idle
@@ -3047,7 +3047,7 @@ pub fn zmovement(state: &mut GameState, mo: MobjId) {
     }
     if state.world.p_mobj.mo(mo).z <= state.world.p_mobj.mo(mo).floorz {
         let correct_lost_soul_bounce: i32 =
-            (state.game.doomstat.gameversion.is_ultimate_or_higher()) as i32;
+            i32::from(state.game.doomstat.gameversion.is_ultimate_or_higher());
         if correct_lost_soul_bounce != 0
             && state
                 .world
@@ -3127,8 +3127,8 @@ pub fn zmovement(state: &mut GameState, mo: MobjId) {
 }
 pub fn nightmare_respawn(state: &mut GameState, mobj: MobjId) {
     let spawnpoint = state.world.p_mobj.mo(mobj).spawnpoint;
-    let x = ((spawnpoint.x as i32) << FRACBITS) as Fixed;
-    let y = ((spawnpoint.y as i32) << FRACBITS) as Fixed;
+    let x = (i32::from(spawnpoint.x) << FRACBITS) as Fixed;
+    let y = (i32::from(spawnpoint.y) << FRACBITS) as Fixed;
     if !check_position(state, mobj, x, y) {
         return;
     }
@@ -3166,8 +3166,8 @@ pub fn nightmare_respawn(state: &mut GameState, mobj: MobjId) {
     {
         let m = state.world.p_mobj.mo_mut(mo);
         m.spawnpoint = spawnpoint;
-        m.angle = (ANG45 * (spawnpoint.angle as i32 / 45)) as Angle;
-        if spawnpoint.options as i32 & MTF_AMBUSH != 0 {
+        m.angle = (ANG45 * (i32::from(spawnpoint.angle) / 45)) as Angle;
+        if i32::from(spawnpoint.options) & MTF_AMBUSH != 0 {
             m.flags |= MobjFlags::AMBUSH;
         }
         m.reactiontime = 18;
@@ -3308,7 +3308,7 @@ impl MobjId {
     /// Exposes the raw arena slot index. Not meant for constructing or
     /// comparing ids (generation is deliberately hidden for that) -- just
     /// for callers that need a plain distinguishing number, e.g. the
-    /// vanilla-demo-compatibility overrun emulation in p_maputl.rs.
+    /// vanilla-demo-compatibility overrun emulation in `p_maputl.rs`.
     pub fn raw_index(self) -> u32 {
         self.index
     }
@@ -3554,8 +3554,8 @@ pub fn respawn_specials(state: &mut GameState) {
         return;
     }
     let mthing = state.world.p_mobj.itemrespawnque[state.world.p_mobj.iquetail as usize];
-    let x = ((mthing.x as i32) << FRACBITS) as Fixed;
-    let y = ((mthing.y as i32) << FRACBITS) as Fixed;
+    let x = (i32::from(mthing.x) << FRACBITS) as Fixed;
+    let y = (i32::from(mthing.y) << FRACBITS) as Fixed;
     let ss = point_in_subsector(&state.world.p_setup, x, y);
     let floorheight = state
         .world
@@ -3569,7 +3569,7 @@ pub fn respawn_specials(state: &mut GameState) {
         .info
         .mobjinfo
         .iter()
-        .position(|info| info.doomednum == mthing.kind as i32)
+        .position(|info| info.doomednum == i32::from(mthing.kind))
         .expect("a respawned map thing has a known type");
     let z = if state.assets.info.mobjinfo[i]
         .flags
@@ -3583,34 +3583,34 @@ pub fn respawn_specials(state: &mut GameState) {
     {
         let m = state.world.p_mobj.mo_mut(mo);
         m.spawnpoint = mthing;
-        m.angle = (ANG45 * (mthing.angle as i32 / 45)) as Angle;
+        m.angle = (ANG45 * (i32::from(mthing.angle) / 45)) as Angle;
     }
     state.world.p_mobj.iquetail = (state.world.p_mobj.iquetail + 1) & (ITEMQUESIZE - 1);
 }
 pub fn spawn_player(state: &mut GameState, mthing: MapThing) {
-    if mthing.kind as i32 == 0 {
+    if i32::from(mthing.kind) == 0 {
         return;
     }
-    let player_index = (mthing.kind as i32 - 1) as usize;
+    let player_index = (i32::from(mthing.kind) - 1) as usize;
     if !state.game.g_game.playeringame[player_index] {
         return;
     }
     if state.game.g_game.players[player_index].playerstate == PlayerState::Reborn {
-        player_reborn(&mut state.game.g_game, mthing.kind as i32 - 1);
+        player_reborn(&mut state.game.g_game, i32::from(mthing.kind) - 1);
     }
-    let x = ((mthing.x as i32) << FRACBITS) as Fixed;
-    let y = ((mthing.y as i32) << FRACBITS) as Fixed;
+    let x = (i32::from(mthing.x) << FRACBITS) as Fixed;
+    let y = (i32::from(mthing.y) << FRACBITS) as Fixed;
     let z = ONFLOORZ as Fixed;
     let mobj = spawn_mobj(state, x, y, z, MobjType::Player);
     let player_health = state.game.g_game.players[player_index].health;
     {
         let m = state.world.p_mobj.mo_mut(mobj);
-        if mthing.kind as i32 > 1 {
+        if i32::from(mthing.kind) > 1 {
             m.flags |= MobjFlags::from_bits_retain(
-                (mthing.kind as i32 - 1) << MobjFlags::TRANSLATION_SHIFT,
+                (i32::from(mthing.kind) - 1) << MobjFlags::TRANSLATION_SHIFT,
             );
         }
-        m.angle = (ANG45 * (mthing.angle as i32 / 45)) as Angle;
+        m.angle = (ANG45 * (i32::from(mthing.angle) / 45)) as Angle;
         m.player = Some(PlayerId(player_index as u8));
         m.health = player_health;
     }
@@ -3632,7 +3632,7 @@ pub fn spawn_player(state: &mut GameState, mthing: MapThing) {
             state.game.g_game.players[player_index].cards[i] = true;
         }
     }
-    if mthing.kind as i32 - 1 == state.game.g_game.consoleplayer.as_i32() {
+    if i32::from(mthing.kind) - 1 == state.game.g_game.consoleplayer.as_i32() {
         {
             st_start(state);
             hu_start(state);
@@ -3640,7 +3640,7 @@ pub fn spawn_player(state: &mut GameState, mthing: MapThing) {
     }
 }
 pub fn spawn_map_thing(state: &mut GameState, mthing: MapThing) {
-    if mthing.kind as i32 == 11 {
+    if i32::from(mthing.kind) == 11 {
         if state.world.p_setup.deathmatch_p < 10 {
             let idx = state.world.p_setup.deathmatch_p;
             state.world.p_setup.deathmatchstarts[idx] = mthing;
@@ -3648,17 +3648,17 @@ pub fn spawn_map_thing(state: &mut GameState, mthing: MapThing) {
         }
         return;
     }
-    if mthing.kind as i32 <= 0 {
+    if i32::from(mthing.kind) <= 0 {
         return;
     }
-    if mthing.kind as i32 <= 4 {
-        state.world.p_setup.playerstarts[(mthing.kind as i32 - 1) as usize] = mthing;
+    if i32::from(mthing.kind) <= 4 {
+        state.world.p_setup.playerstarts[(i32::from(mthing.kind) - 1) as usize] = mthing;
         if state.game.g_game.deathmatch == 0 {
             spawn_player(state, mthing);
         }
         return;
     }
-    if !state.game.g_game.netgame && mthing.options as i32 & 16 != 0 {
+    if !state.game.g_game.netgame && i32::from(mthing.options) & 16 != 0 {
         return;
     }
     let bit: i32 = if state.game.g_game.gameskill == SkillType::Baby {
@@ -3668,7 +3668,7 @@ pub fn spawn_map_thing(state: &mut GameState, mthing: MapThing) {
     } else {
         1 << (state.game.g_game.gameskill as i32 - 1)
     };
-    if mthing.options as i32 & bit == 0 {
+    if i32::from(mthing.options) & bit == 0 {
         return;
     }
     let Some(i) = state
@@ -3676,11 +3676,13 @@ pub fn spawn_map_thing(state: &mut GameState, mthing: MapThing) {
         .info
         .mobjinfo
         .iter()
-        .position(|info| info.doomednum == mthing.kind as i32)
+        .position(|info| info.doomednum == i32::from(mthing.kind))
     else {
         error(&format!(
             "P_SpawnMapThing: Unknown type {} at ({}, {})",
-            mthing.kind as i32, mthing.x as i32, mthing.y as i32,
+            i32::from(mthing.kind),
+            i32::from(mthing.x),
+            i32::from(mthing.y),
         ));
     };
     if state.game.g_game.deathmatch != 0
@@ -3698,8 +3700,8 @@ pub fn spawn_map_thing(state: &mut GameState, mthing: MapThing) {
     {
         return;
     }
-    let x = ((mthing.x as i32) << FRACBITS) as Fixed;
-    let y = ((mthing.y as i32) << FRACBITS) as Fixed;
+    let x = (i32::from(mthing.x) << FRACBITS) as Fixed;
+    let y = (i32::from(mthing.y) << FRACBITS) as Fixed;
     let z = if state.assets.info.mobjinfo[i]
         .flags
         .contains(MobjFlags::SPAWNCEILING)
@@ -3722,8 +3724,8 @@ pub fn spawn_map_thing(state: &mut GameState, mthing: MapThing) {
         state.game.g_game.totalitems += 1;
     }
     let m = state.world.p_mobj.mo_mut(mobj);
-    m.angle = (ANG45 * (mthing.angle as i32 / 45)) as Angle;
-    if mthing.options as i32 & MTF_AMBUSH != 0 {
+    m.angle = (ANG45 * (i32::from(mthing.angle) / 45)) as Angle;
+    if i32::from(mthing.options) & MTF_AMBUSH != 0 {
         m.flags |= MobjFlags::AMBUSH;
     }
 }

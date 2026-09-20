@@ -25,7 +25,10 @@ impl Patch {
     }
 
     fn i16_at(&self, offset: usize) -> i32 {
-        i16::from_le_bytes([self.data[offset], self.data[offset + 1]]) as i32
+        i32::from(i16::from_le_bytes([
+            self.data[offset],
+            self.data[offset + 1],
+        ]))
     }
 
     pub fn width(&self) -> i32 {

@@ -204,8 +204,8 @@ impl PSetupState {
     }
     /// Returns a `LineId` for a scratch line that isn't part of the map,
     /// with only `.tag` set -- for vanilla Doom's "tag 666/667 boss death
-    /// trigger" idiom, which calls do_door/do_floor with a fabricated
-    /// line that exists only to carry a tag for find_sector_from_line_tag to
+    /// trigger" idiom, which calls `do_door/do_floor` with a fabricated
+    /// line that exists only to carry a tag for `find_sector_from_line_tag` to
     /// match against. One slot is reused across all such calls; they never
     /// overlap (each EV_* call fully finishes before the next one reuses it).
     pub fn junk_line(&mut self, tag: i16) -> LineId {
@@ -287,8 +287,8 @@ pub fn load_vertexes(state: &mut GameState, lump: i32) {
     state.world.p_setup.vertexes = Vec::with_capacity(numvertexes as usize);
     let mut reader = LumpReader::new(state, lump);
     for _ in 0..numvertexes {
-        let x = reader.i16() as i32;
-        let y = reader.i16() as i32;
+        let x = i32::from(reader.i16());
+        let y = i32::from(reader.i16());
         state.world.p_setup.vertexes.push(Vertex {
             x: (x << FRACBITS) as Fixed,
             y: (y << FRACBITS) as Fixed,
@@ -323,16 +323,16 @@ pub fn load_segs(state: &mut GameState, lump: i32) {
     for _ in 0..numsegs {
         let v1 = VertexId(reader.i16() as u32);
         let v2 = VertexId(reader.i16() as u32);
-        let seg_angle = ((reader.i16() as i32) << 16) as Angle;
-        let linedef = reader.i16() as i32;
-        let side = reader.i16() as i32;
-        let seg_offset = ((reader.i16() as i32) << 16) as Fixed;
+        let seg_angle = (i32::from(reader.i16()) << 16) as Angle;
+        let linedef = i32::from(reader.i16());
+        let side = i32::from(reader.i16());
+        let seg_offset = (i32::from(reader.i16()) << 16) as Fixed;
         let seg_linedef = LineId(linedef as u32);
         let ldef = state.world.p_setup.line(seg_linedef);
         let seg_sidenum = ldef.sidenum[side as usize] as u32;
         let frontsector = Some(state.world.p_setup.sides[seg_sidenum as usize].sector);
         let backsector = if ldef.flags.contains(LineFlags::TWOSIDED) {
-            let sidenum = ldef.sidenum[(side ^ 1) as usize] as i32;
+            let sidenum = i32::from(ldef.sidenum[(side ^ 1) as usize]);
             if sidenum < 0 || sidenum >= state.world.p_setup.numsides {
                 Some(get_sector_at_null_address(
                     &mut state.io.i_system,
@@ -400,8 +400,8 @@ pub fn load_sectors(state: &mut GameState, lump: i32) {
             &ceilingpic_name.as_str(),
         ) as i16;
         let ss = &mut state.world.p_setup.sectors[i];
-        ss.floorheight = ((floorheight as i32) << FRACBITS) as Fixed;
-        ss.ceilingheight = ((ceilingheight as i32) << FRACBITS) as Fixed;
+        ss.floorheight = (i32::from(floorheight) << FRACBITS) as Fixed;
+        ss.ceilingheight = (i32::from(ceilingheight) << FRACBITS) as Fixed;
         ss.floorpic = floorpic;
         ss.ceilingpic = ceilingpic;
         ss.lightlevel = lightlevel;
@@ -418,16 +418,16 @@ pub fn load_nodes(state: &mut GameState, lump: i32) {
     let mut reader = LumpReader::new(state, lump);
     for _ in 0..state.world.p_setup.numnodes {
         let mut no = Node {
-            x: ((reader.i16() as i32) << FRACBITS) as Fixed,
-            y: ((reader.i16() as i32) << FRACBITS) as Fixed,
-            dx: ((reader.i16() as i32) << FRACBITS) as Fixed,
-            dy: ((reader.i16() as i32) << FRACBITS) as Fixed,
+            x: (i32::from(reader.i16()) << FRACBITS) as Fixed,
+            y: (i32::from(reader.i16()) << FRACBITS) as Fixed,
+            dx: (i32::from(reader.i16()) << FRACBITS) as Fixed,
+            dy: (i32::from(reader.i16()) << FRACBITS) as Fixed,
             bbox: [BBox::new([0; 4]); 2],
             children: [0; 2],
         };
         for j in 0..2 {
             for k in 0..4 {
-                no.bbox[j][k] = ((reader.i16() as i32) << FRACBITS) as Fixed;
+                no.bbox[j][k] = (i32::from(reader.i16()) << FRACBITS) as Fixed;
             }
         }
         for j in 0..2 {
@@ -501,12 +501,12 @@ pub fn load_line_defs(state: &mut GameState, lump: i32) {
         }
         ld.sidenum[0] = reader.i16();
         ld.sidenum[1] = reader.i16();
-        if ld.sidenum[0] as i32 == -1 {
+        if i32::from(ld.sidenum[0]) == -1 {
             ld.frontsector = None;
         } else {
             ld.frontsector = Some(state.world.p_setup.sides[ld.sidenum[0] as usize].sector);
         }
-        if ld.sidenum[1] as i32 == -1 {
+        if i32::from(ld.sidenum[1]) == -1 {
             ld.backsector = None;
         } else {
             ld.backsector = Some(state.world.p_setup.sides[ld.sidenum[1] as usize].sector);
@@ -529,8 +529,8 @@ pub fn load_side_defs(state: &mut GameState, lump: i32) {
         let midtexture = reader.name8();
         let sector = reader.i16();
         let sd = Side {
-            textureoffset: ((textureoffset as i32) << FRACBITS) as Fixed,
-            rowoffset: ((rowoffset as i32) << FRACBITS) as Fixed,
+            textureoffset: (i32::from(textureoffset) << FRACBITS) as Fixed,
+            rowoffset: (i32::from(rowoffset) << FRACBITS) as Fixed,
             toptexture: texture_num_for_name(&state.render.r_data, &toptexture.as_str()) as i16,
             bottomtexture: texture_num_for_name(&state.render.r_data, &bottomtexture.as_str())
                 as i16,
@@ -556,10 +556,10 @@ pub fn load_block_map(
         .iter()
         .map(|c| i16::from_le_bytes([c[0], c[1]]))
         .collect();
-    p_setup.bmaporgx = ((p_setup.blockmaplump[0] as i32) << FRACBITS) as Fixed;
-    p_setup.bmaporgy = ((p_setup.blockmaplump[1] as i32) << FRACBITS) as Fixed;
-    p_setup.bmapwidth = p_setup.blockmaplump[2] as i32;
-    p_setup.bmapheight = p_setup.blockmaplump[3] as i32;
+    p_setup.bmaporgx = (i32::from(p_setup.blockmaplump[0]) << FRACBITS) as Fixed;
+    p_setup.bmaporgy = (i32::from(p_setup.blockmaplump[1]) << FRACBITS) as Fixed;
+    p_setup.bmapwidth = i32::from(p_setup.blockmaplump[2]);
+    p_setup.bmapheight = i32::from(p_setup.blockmaplump[3]);
     p_setup.blocklinks = vec![None; (p_setup.bmapwidth as usize) * (p_setup.bmapheight as usize)];
 }
 pub fn group_lines(p_setup: &mut PSetupState) {
@@ -612,8 +612,8 @@ pub fn group_lines(p_setup: &mut PSetupState) {
             add_to_box(&mut bbox, li_v2.x, li_v2.y);
         }
         let sector = &mut p_setup.sectors[i];
-        sector.soundorg.x = ((bbox[BoxIndex::Right] + bbox[BoxIndex::Left]) / 2) as Fixed;
-        sector.soundorg.y = ((bbox[BoxIndex::Top] + bbox[BoxIndex::Bottom]) / 2) as Fixed;
+        sector.soundorg.x = i32::midpoint(bbox[BoxIndex::Right], bbox[BoxIndex::Left]) as Fixed;
+        sector.soundorg.y = i32::midpoint(bbox[BoxIndex::Top], bbox[BoxIndex::Bottom]) as Fixed;
         let mut block: i32 =
             (bbox[BoxIndex::Top] - p_setup.bmaporgy + 32 * FRACUNIT) >> MAPBLOCKSHIFT;
         block = if block >= p_setup.bmapheight {

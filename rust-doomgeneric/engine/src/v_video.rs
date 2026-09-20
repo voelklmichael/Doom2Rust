@@ -250,7 +250,7 @@ pub fn write_pcxfile(
     pack.extend_from_slice(&[0u8; 58]);
     debug_assert_eq!(pack.len(), 128);
     for &pixel in &data[..(width * height) as usize] {
-        if pixel as i32 & 0xc0 == 0xc0 {
+        if i32::from(pixel) & 0xc0 == 0xc0 {
             pack.push(0xc1_u8);
             pack.push(pixel);
         } else {
@@ -295,7 +295,7 @@ pub fn draw_mouse_speed_box(state: &mut IVideoState, platform: &mut dyn DoomPlat
     let black: i32 = get_palette_index(platform, 0, 0, 0);
     let yellow: i32 = get_palette_index(platform, 0xff, 0xff, 0);
     let white: i32 = get_palette_index(platform, 0xff, 0xff, 0xff);
-    if state.usemouse == 0 || ((state.mouse_acceleration - 1_f32) as f64).abs() < 0.01f64 {
+    if state.usemouse == 0 || f64::from(state.mouse_acceleration - 1_f32).abs() < 0.01f64 {
         return;
     }
     let box_x: i32 = SCREENWIDTH - MOUSE_SPEED_BOX_WIDTH - 10;

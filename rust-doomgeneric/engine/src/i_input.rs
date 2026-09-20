@@ -41,7 +41,7 @@ fn translate_key(key: u8) -> u8 {
 fn get_typed_char(state: &IInputState, mut key: u8) -> u8 {
     key = translate_key(key);
     if state.shiftdown > 0 {
-        if key as i32 >= 0 && (key as usize) < SHIFTXFORM.len() {
+        if i32::from(key) >= 0 && (key as usize) < SHIFTXFORM.len() {
             key = SHIFTXFORM[key as usize];
         } else {
             key = 0;
@@ -51,7 +51,7 @@ fn get_typed_char(state: &IInputState, mut key: u8) -> u8 {
 }
 fn update_shift_status(state: &mut IInputState, pressed: i32, key: u8) {
     let change: i32 = if pressed != 0 { 1 } else { -1 };
-    if key as i32 == KEY_RSHIFT {
+    if i32::from(key) == KEY_RSHIFT {
         state.shiftdown += change;
     }
 }
@@ -68,18 +68,18 @@ pub fn get_event(
         data4: 0,
     };
     while let Some((pressed, key)) = platform.get_key() {
-        let pressed = pressed as i32;
+        let pressed = i32::from(pressed);
         update_shift_status(i_input, pressed, key);
         if pressed != 0 {
             event.kind = EvType::Keydown;
-            event.data1 = translate_key(key) as i32;
-            event.data2 = get_typed_char(i_input, key) as i32;
+            event.data1 = i32::from(translate_key(key));
+            event.data2 = i32::from(get_typed_char(i_input, key));
             if event.data1 != 0 {
                 post_event(d_event, event);
             }
         } else {
             event.kind = EvType::Keyup;
-            event.data1 = translate_key(key) as i32;
+            event.data1 = i32::from(translate_key(key));
             event.data2 = 0;
             if event.data1 != 0 {
                 post_event(d_event, event);

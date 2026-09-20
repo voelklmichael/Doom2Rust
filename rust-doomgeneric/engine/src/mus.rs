@@ -4,7 +4,7 @@
 //! a "last event of this group" flag, a channel (0..=15, where 15 is the drum
 //! channel) and an event type; when the flag is set a variable-length delay in
 //! ticks follows. One tick is 1/140 s. `mus2mid.c` translates this into a MIDI
-//! file for SDL_mixer; the OPL driver here works from the events directly.
+//! file for `SDL_mixer`; the OPL driver here works from the events directly.
 
 use alloc::vec::Vec;
 

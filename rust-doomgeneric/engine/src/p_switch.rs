@@ -303,7 +303,7 @@ pub fn init_switch_list(
             p_switch.switchlist[index as usize] = -1;
             break;
         }
-        if ALPH_SWITCH_LIST[i as usize].episode as i32 <= episode {
+        if i32::from(ALPH_SWITCH_LIST[i as usize].episode) <= episode {
             p_switch.switchlist[index as usize] =
                 texture_num_for_name(r_data, &ALPH_SWITCH_LIST[i as usize].name1.as_str());
             index += 1;
@@ -343,11 +343,11 @@ pub fn change_switch_texture(state: &mut GameState, line: LineId, use_again: boo
         state.world.p_setup.line_mut(line).special = 0;
     }
     let sidenum0 = state.world.p_setup.line(line).sidenum[0];
-    let tex_top: i32 = state.world.p_setup.sides[sidenum0 as usize].toptexture as i32;
-    let tex_mid: i32 = state.world.p_setup.sides[sidenum0 as usize].midtexture as i32;
-    let tex_bot: i32 = state.world.p_setup.sides[sidenum0 as usize].bottomtexture as i32;
+    let tex_top: i32 = i32::from(state.world.p_setup.sides[sidenum0 as usize].toptexture);
+    let tex_mid: i32 = i32::from(state.world.p_setup.sides[sidenum0 as usize].midtexture);
+    let tex_bot: i32 = i32::from(state.world.p_setup.sides[sidenum0 as usize].bottomtexture);
     let mut sound: SfxName = SfxName::Swtchn;
-    if state.world.p_setup.line(line).special as i32 == 11 {
+    if i32::from(state.world.p_setup.line(line).special) == 11 {
         sound = SfxName::Swtchx;
     }
     for i in 0..state.world.p_switch.numswitches * 2 {
@@ -416,21 +416,21 @@ pub fn change_switch_texture(state: &mut GameState, line: LineId, use_again: boo
 }
 pub fn use_special_line(state: &mut GameState, thing: MobjId, line: LineId, side: i32) -> bool {
     let linev = state.world.p_setup.line(line);
-    if side != 0 && linev.special as i32 != 124 {
+    if side != 0 && i32::from(linev.special) != 124 {
         return false;
     }
     if state.world.p_mobj.mo(thing).player.is_none() {
         if linev.flags.contains(LineFlags::SECRET) {
             return false;
         }
-        if !matches!(linev.special as i32, 1 | 32 | 33 | 34) {
+        if !matches!(i32::from(linev.special), 1 | 32 | 33 | 34) {
             return false;
         }
     }
     // Arms call the EV_* function for its effect and then flip the switch if it
     // did anything; folding that call into a guard would hide the side effect.
     #[allow(clippy::collapsible_match)]
-    match linev.special as i32 {
+    match i32::from(linev.special) {
         7 => {
             if build_stairs(
                 &mut state.world.p_setup,

@@ -3,7 +3,7 @@ pub const INT_MAX: i32 = i32::MAX;
 pub const INT_MIN: i32 = i32::MIN;
 pub const FRACBITS: i32 = 16;
 pub fn fixed_mul(a: Fixed, b: Fixed) -> Fixed {
-    ((a as i64 * b as i64) >> FRACBITS) as Fixed
+    ((i64::from(a) * i64::from(b)) >> FRACBITS) as Fixed
 }
 pub fn fixed_div(a: Fixed, b: Fixed) -> Fixed {
     if a.abs() >> 14 >= b.abs() {
@@ -13,7 +13,7 @@ pub fn fixed_div(a: Fixed, b: Fixed) -> Fixed {
             INT_MAX
         }
     } else {
-        let result: i64 = ((a as i64) << 16) / b as i64;
+        let result: i64 = (i64::from(a) << 16) / i64::from(b);
         result as Fixed
     }
 }

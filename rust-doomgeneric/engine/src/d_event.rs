@@ -11,7 +11,7 @@ pub enum GameAction {
     WorldDone,
     Screenshot,
 }
-#[derive(Copy, Clone, PartialEq)]
+#[derive(Copy, Clone, PartialEq, Eq)]
 pub enum GameScreenState {
     Level,
     Intermission,

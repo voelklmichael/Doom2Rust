@@ -137,13 +137,13 @@ pub fn get_memory_value(
     let dump = i_system.dos_mem_dump_bytes();
     let offset = offset as usize;
     match size {
-        1 => Some(dump[offset] as u32),
-        2 => Some(dump[offset] as u32 | (dump[offset + 1] as u32) << 8),
+        1 => Some(u32::from(dump[offset])),
+        2 => Some(u32::from(dump[offset]) | u32::from(dump[offset + 1]) << 8),
         4 => Some(
-            dump[offset] as u32
-                | (dump[offset + 1] as u32) << 8
-                | (dump[offset + 2] as u32) << 16
-                | (dump[offset + 3] as u32) << 24,
+            u32::from(dump[offset])
+                | u32::from(dump[offset + 1]) << 8
+                | u32::from(dump[offset + 2]) << 16
+                | u32::from(dump[offset + 3]) << 24,
         ),
         _ => None,
     }

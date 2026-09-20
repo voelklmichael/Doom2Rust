@@ -112,16 +112,14 @@ pub fn map_plane(state: &mut GameState, y: i32, x1: i32, x2: i32) {
         state.render.r_draw.ds_ystep = state.render.r_plane.cachedystep[y as usize];
     }
     let length: Fixed = fixed_mul(distance, state.render.r_plane.distscale[x1 as usize]);
-    let angle: Angle = state
+    let angle: usize = (state
         .render
         .r_main
         .viewangle
         .wrapping_add(state.render.r_main.xtoviewangle[x1 as usize])
-        >> ANGLETOFINESHIFT;
-    state.render.r_draw.ds_xfrac =
-        state.render.r_main.viewx + fixed_mul(FINECOSINE[angle as usize], length);
-    state.render.r_draw.ds_yfrac =
-        -state.render.r_main.viewy - fixed_mul(FINESINE[angle as usize], length);
+        >> ANGLETOFINESHIFT) as usize;
+    state.render.r_draw.ds_xfrac = state.render.r_main.viewx + fixed_mul(FINECOSINE[angle], length);
+    state.render.r_draw.ds_yfrac = -state.render.r_main.viewy - fixed_mul(FINESINE[angle], length);
     if let Some(colormap) = state.render.r_main.fixedcolormap {
         state.render.r_draw.ds_colormap = colormap;
     } else {
@@ -149,9 +147,9 @@ pub fn clear_planes(r_draw: &RDrawState, r_main: &RMainState, r_plane: &mut RPla
     r_plane.lastvisplane = 0;
     r_plane.lastopening = 0;
     r_plane.cachedheight = [0; 200];
-    let angle: Angle = r_main.viewangle.wrapping_sub(ANG90 as Angle) >> ANGLETOFINESHIFT;
-    r_plane.basexscale = fixed_div(FINECOSINE[angle as usize], r_main.centerxfrac);
-    r_plane.baseyscale = -fixed_div(FINESINE[angle as usize], r_main.centerxfrac);
+    let angle: usize = (r_main.viewangle.wrapping_sub(ANG90 as Angle) >> ANGLETOFINESHIFT) as usize;
+    r_plane.basexscale = fixed_div(FINECOSINE[angle], r_main.centerxfrac);
+    r_plane.baseyscale = -fixed_div(FINESINE[angle], r_main.centerxfrac);
 }
 pub fn find_plane(
     r_plane: &mut RPlaneState,
@@ -202,7 +200,7 @@ pub fn check_plane(r_plane: &mut RPlaneState, pl: usize, start: i32, stop: i32) 
     };
     let mut x = intrl;
     while x <= intrh {
-        if plv.top(x) as i32 != 0xff {
+        if i32::from(plv.top(x)) != 0xff {
             break;
         }
         x += 1;
@@ -252,19 +250,19 @@ pub fn make_spans(
     }
 }
 pub fn draw_planes(state: &mut GameState) {
-    if state.render.r_bsp.ds_p as i64 > MAXDRAWSEGS as i64 {
+    if state.render.r_bsp.ds_p as i64 > i64::from(MAXDRAWSEGS) {
         error(&format!(
             "R_DrawPlanes: drawsegs overflow ({})",
             state.render.r_bsp.ds_p as i64,
         ));
     }
-    if state.render.r_plane.lastvisplane as i64 > MAXVISPLANES as i64 {
+    if state.render.r_plane.lastvisplane as i64 > i64::from(MAXVISPLANES) {
         error(&format!(
             "R_DrawPlanes: visplane overflow ({})",
             state.render.r_plane.lastvisplane as i64,
         ));
     }
-    if state.render.r_plane.lastopening as i64 > (SCREENWIDTH * 64) as i64 {
+    if state.render.r_plane.lastopening as i64 > i64::from(SCREENWIDTH * 64) {
         error(&format!(
             "R_DrawPlanes: opening overflow ({})",
             state.render.r_plane.lastopening as i64,
@@ -279,8 +277,8 @@ pub fn draw_planes(state: &mut GameState) {
                 state.render.r_draw.dc_colormap = Some(0);
                 state.render.r_draw.dc_texturemid = state.render.r_sky.skytexturemid as Fixed;
                 for x in plv.minx..=plv.maxx {
-                    state.render.r_draw.dc_yl = plv.top(x) as i32;
-                    state.render.r_draw.dc_yh = plv.bottom(x) as i32;
+                    state.render.r_draw.dc_yl = i32::from(plv.top(x));
+                    state.render.r_draw.dc_yh = i32::from(plv.bottom(x));
                     if state.render.r_draw.dc_yl <= state.render.r_draw.dc_yh {
                         let angle: i32 = (state
                             .render
@@ -330,10 +328,10 @@ pub fn draw_planes(state: &mut GameState) {
                     make_spans(
                         state,
                         x,
-                        plv.top(x - 1) as i32,
-                        plv.bottom(x - 1) as i32,
-                        plv.top(x) as i32,
-                        plv.bottom(x) as i32,
+                        i32::from(plv.top(x - 1)),
+                        i32::from(plv.bottom(x - 1)),
+                        i32::from(plv.top(x)),
+                        i32::from(plv.bottom(x)),
                     );
                 }
                 release_lump_num(&state.assets.w_wad, lumpnum);

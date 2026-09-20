@@ -633,7 +633,10 @@ pub fn level_init(am_map: &mut AmMapState, p_setup: &PSetupState) {
     am_map.f_h = FINIT_HEIGHT;
     clear_marks(am_map);
     find_min_max_boundaries(am_map, p_setup);
-    am_map.scale_mtof = fixed_div(am_map.min_scale_mtof, (0.7f64 * FRACUNIT as f64) as Fixed);
+    am_map.scale_mtof = fixed_div(
+        am_map.min_scale_mtof,
+        (0.7f64 * f64::from(FRACUNIT)) as Fixed,
+    );
     if am_map.scale_mtof > am_map.max_scale_mtof {
         am_map.scale_mtof = am_map.min_scale_mtof;
     }
@@ -1054,7 +1057,7 @@ pub fn draw_walls(state: &mut GameState) {
     };
     for i in 0..(state.world.p_setup.numlines as usize) {
         let li = &state.world.p_setup.lines[i];
-        let (li_flags, li_special) = (li.flags, li.special as i32);
+        let (li_flags, li_special) = (li.flags, i32::from(li.special));
         let (li_backsector, li_frontsector) = (li.backsector, li.frontsector);
         let li_v1 = state.world.p_setup.vertexes[li.v1.0 as usize];
         let li_v2 = state.world.p_setup.vertexes[li.v2.0 as usize];
