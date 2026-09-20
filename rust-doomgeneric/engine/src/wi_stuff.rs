@@ -504,7 +504,7 @@ pub struct WbStartStruct {
 }
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum StateEnum {
-    NoState = -1,
+    NoState,
     StatCount,
     ShowNextLoc,
 }

@@ -422,12 +422,10 @@ pub const NUMKEYS: i32 = 256;
 pub const MAX_JOY_BUTTONS: i32 = 20;
 pub const BODYQUESIZE: i32 = 32;
 fn weapon_selectable(doomstat: &DoomstatState, g_game: &GGameState, weapon: WeaponType) -> bool {
-    if weapon as u32 == WeaponType::Supershotgun as u32
-        && doomstat.gamemission.base() == GameMission::Doom
-    {
+    if weapon == WeaponType::Supershotgun && doomstat.gamemission.base() == GameMission::Doom {
         return false;
     }
-    if (weapon as u32 == WeaponType::Plasma as u32 || weapon as u32 == WeaponType::Bfg as u32)
+    if (weapon == WeaponType::Plasma || weapon == WeaponType::Bfg)
         && doomstat.gamemission == GameMission::Doom
         && doomstat.gamemode == GameMode::Shareware
     {
@@ -436,7 +434,7 @@ fn weapon_selectable(doomstat: &DoomstatState, g_game: &GGameState, weapon: Weap
     if !g_game.players[g_game.consoleplayer].weaponowned[weapon] {
         return false;
     }
-    if weapon as u32 == WeaponType::Fist as u32
+    if weapon == WeaponType::Fist
         && g_game.players[g_game.consoleplayer].weaponowned[WeaponType::Chainsaw]
         && g_game.players[g_game.consoleplayer].powers[PowerType::Strength] == 0
     {
@@ -452,16 +450,15 @@ pub enum WeaponCycle {
 }
 
 fn g_next_weapon(doomstat: &DoomstatState, g_game: &GGameState, direction: WeaponCycle) -> i32 {
-    let weapon: WeaponType = if g_game.players[g_game.consoleplayer].pendingweapon as u32
-        == WeaponType::Nochange as u32
-    {
-        g_game.players[g_game.consoleplayer].readyweapon
-    } else {
-        g_game.players[g_game.consoleplayer].pendingweapon
-    };
+    let weapon: WeaponType =
+        if g_game.players[g_game.consoleplayer].pendingweapon == WeaponType::Nochange {
+            g_game.players[g_game.consoleplayer].readyweapon
+        } else {
+            g_game.players[g_game.consoleplayer].pendingweapon
+        };
     let mut i: i32 = 0;
     while (i as usize) < WEAPON_ORDER_TABLE.len() {
-        if WEAPON_ORDER_TABLE[i as usize].weapon as u32 == weapon as u32 {
+        if WEAPON_ORDER_TABLE[i as usize].weapon == weapon {
             break;
         }
         i += 1;

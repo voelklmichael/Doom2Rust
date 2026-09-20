@@ -245,26 +245,23 @@ pub fn player_think(state: &mut GameState, player_id: PlayerId) {
             (i32::from(state.game.g_game.players[player_id].cmd.buttons) & BT_WEAPONMASK)
                 >> BT_WEAPONSHIFT,
         );
-        if newweapon as u32 == WeaponType::Fist as i32 as u32
+        if newweapon == WeaponType::Fist
             && state.game.g_game.players[player].weaponowned[WeaponType::Chainsaw]
-            && !(state.game.g_game.players[player].readyweapon as u32
-                == WeaponType::Chainsaw as i32 as u32
+            && !(state.game.g_game.players[player].readyweapon == WeaponType::Chainsaw
                 && state.game.g_game.players[player].powers[PowerType::Strength] != 0)
         {
             newweapon = WeaponType::Chainsaw;
         }
         if state.game.doomstat.gamemode == GameMode::Commercial
-            && newweapon as u32 == WeaponType::Shotgun as i32 as u32
+            && newweapon == WeaponType::Shotgun
             && state.game.g_game.players[player].weaponowned[WeaponType::Supershotgun]
-            && state.game.g_game.players[player].readyweapon as u32
-                != WeaponType::Supershotgun as i32 as u32
+            && state.game.g_game.players[player].readyweapon != WeaponType::Supershotgun
         {
             newweapon = WeaponType::Supershotgun;
         }
         if state.game.g_game.players[player].weaponowned[newweapon]
-            && newweapon as u32 != state.game.g_game.players[player].readyweapon as u32
-            && (newweapon as u32 != WeaponType::Plasma as i32 as u32
-                && newweapon as u32 != WeaponType::Bfg as i32 as u32
+            && newweapon != state.game.g_game.players[player].readyweapon
+            && (newweapon != WeaponType::Plasma && newweapon != WeaponType::Bfg
                 || state.game.doomstat.gamemode != GameMode::Shareware)
         {
             state.game.g_game.players[player].pendingweapon = newweapon;

@@ -86,7 +86,7 @@ pub fn give_ammo(
 ) -> bool {
     let player = &mut g_game.players[player_id];
 
-    if ammo as u32 == AmmoType::Noammo as i32 as u32 {
+    if ammo == AmmoType::Noammo {
         return false;
     }
     if ammo as u32 > NUMAMMO as u32 {
@@ -113,7 +113,7 @@ pub fn give_ammo(
     }
     match ammo as u32 {
         0 => {
-            if player.readyweapon as u32 == WeaponType::Fist as i32 as u32 {
+            if player.readyweapon == WeaponType::Fist {
                 if player.weaponowned[WeaponType::Chaingun] {
                     player.pendingweapon = WeaponType::Chaingun;
                 } else {
@@ -122,24 +122,20 @@ pub fn give_ammo(
             }
         }
         1 => {
-            if (player.readyweapon as u32 == WeaponType::Fist as i32 as u32
-                || player.readyweapon as u32 == WeaponType::Pistol as i32 as u32)
+            if (player.readyweapon == WeaponType::Fist || player.readyweapon == WeaponType::Pistol)
                 && player.weaponowned[WeaponType::Shotgun]
             {
                 player.pendingweapon = WeaponType::Shotgun;
             }
         }
         2 => {
-            if (player.readyweapon as u32 == WeaponType::Fist as i32 as u32
-                || player.readyweapon as u32 == WeaponType::Pistol as i32 as u32)
+            if (player.readyweapon == WeaponType::Fist || player.readyweapon == WeaponType::Pistol)
                 && player.weaponowned[WeaponType::Plasma]
             {
                 player.pendingweapon = WeaponType::Plasma;
             }
         }
-        3 if player.readyweapon as u32 == WeaponType::Fist as i32 as u32
-            && player.weaponowned[WeaponType::Missile] =>
-        {
+        3 if player.readyweapon == WeaponType::Fist && player.weaponowned[WeaponType::Missile] => {
             player.pendingweapon = WeaponType::Missile;
         }
         _ => {}
@@ -171,7 +167,7 @@ pub fn give_weapon(
         }
         return false;
     }
-    if WEAPONINFO[weapon].ammo as u32 == AmmoType::Noammo as i32 as u32 {
+    if WEAPONINFO[weapon].ammo == AmmoType::Noammo {
         gaveammo = false;
     } else {
         if dropped {
@@ -427,9 +423,7 @@ pub fn touch_special_thing(state: &mut GameState, special: MobjId, toucher: Mobj
                 return;
             }
             state.game.g_game.players[player].message = Some("Berserk!".to_string());
-            if state.game.g_game.players[player].readyweapon as u32
-                != WeaponType::Fist as i32 as u32
-            {
+            if state.game.g_game.players[player].readyweapon != WeaponType::Fist {
                 state.game.g_game.players[player].pendingweapon = WeaponType::Fist;
             }
             sound = SfxName::Getpow;
@@ -761,8 +755,7 @@ pub fn damage_mobj(
     }
     let source_player = source.and_then(|id| state.world.p_mobj.mo(id).player);
     let source_uses_chainsaw = source_player.is_some_and(|source_player_id| {
-        state.game.g_game.players[source_player_id].readyweapon as u32
-            == WeaponType::Chainsaw as i32 as u32
+        state.game.g_game.players[source_player_id].readyweapon == WeaponType::Chainsaw
     });
     if let Some(inflictor) = inflictor {
         if !target_flags.contains(MobjFlags::NOCLIP) && !source_uses_chainsaw {
