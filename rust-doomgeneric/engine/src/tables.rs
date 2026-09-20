@@ -1,5 +1,85 @@
 use crate::m_fixed::Fixed;
-pub type Angle = u32;
+/// A binary angle: the full circle is `2^32`, so addition and subtraction wrap around
+/// exactly like the original 32-bit `angle_t`.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[repr(transparent)]
+pub struct Angle(pub u32);
+
+impl Angle {
+    pub const ZERO: Self = Self(0);
+
+    /// The raw 32-bit binary angle.
+    #[inline(always)]
+    pub const fn to_bits(self) -> u32 {
+        self.0
+    }
+
+    /// The angle reinterpreted as a signed offset (`-2^31..2^31`), for "which side" comparisons.
+    #[inline(always)]
+    pub const fn to_signed(self) -> i32 {
+        self.0 as i32
+    }
+
+    /// Index into the `FINESINE` / `FINECOSINE` tables (and `FINETANGENT` after a half turn).
+    #[inline(always)]
+    pub const fn fine(self) -> usize {
+        (self.0 >> ANGLETOFINESHIFT) as usize
+    }
+}
+
+impl core::ops::Add for Angle {
+    type Output = Self;
+    #[inline(always)]
+    fn add(self, rhs: Self) -> Self {
+        Self(self.0.wrapping_add(rhs.0))
+    }
+}
+
+impl core::ops::Sub for Angle {
+    type Output = Self;
+    #[inline(always)]
+    fn sub(self, rhs: Self) -> Self {
+        Self(self.0.wrapping_sub(rhs.0))
+    }
+}
+
+impl core::ops::Neg for Angle {
+    type Output = Self;
+    #[inline(always)]
+    fn neg(self) -> Self {
+        Self(self.0.wrapping_neg())
+    }
+}
+
+impl core::ops::AddAssign for Angle {
+    #[inline(always)]
+    fn add_assign(&mut self, rhs: Self) {
+        *self = *self + rhs;
+    }
+}
+
+impl core::ops::SubAssign for Angle {
+    #[inline(always)]
+    fn sub_assign(&mut self, rhs: Self) {
+        *self = *self - rhs;
+    }
+}
+
+impl core::ops::Div<u32> for Angle {
+    type Output = Self;
+    #[inline(always)]
+    fn div(self, rhs: u32) -> Self {
+        Self(self.0 / rhs)
+    }
+}
+
+impl core::ops::Mul<u32> for Angle {
+    type Output = Self;
+    #[inline(always)]
+    fn mul(self, rhs: u32) -> Self {
+        Self(self.0.wrapping_mul(rhs))
+    }
+}
 pub const FINEANGLES: i32 = 8192;
 pub const SLOPERANGE: i32 = 2048;
 pub fn slope_div(num: u32, den: u32) -> i32 {
@@ -1173,7 +1253,7 @@ impl core::ops::Index<usize> for FineCosine {
     }
 }
 pub static FINECOSINE: FineCosine = FineCosine;
-pub static TANTOANGLE: [Angle; 2049] = [
+static TANTOANGLE: [u32; 2049] = [
     0, 333772, 667544, 1001315, 1335086, 1668857, 2002626, 2336395, 2670163, 3003929, 3337694,
     3671457, 4005219, 4338979, 4672736, 5006492, 5340245, 5673995, 6007743, 6341488, 6675230,
     7008968, 7342704, 7676435, 8010164, 8343888, 8677609, 9011325, 9345037, 9678744, 10012447,
@@ -1508,9 +1588,50 @@ pub static GAMMATABLE: [[u8; 256]; 5] = [
         248, 249, 249, 250, 250, 251, 251, 252, 252, 253, 254, 254, 255, 255,
     ],
 ];
+/// `TANTOANGLE[i]` as an [`Angle`]: the angle in the first octant whose slope is `i / 2048`.
+#[inline(always)]
+pub fn tan_to_angle(slope: usize) -> Angle {
+    Angle(TANTOANGLE[slope])
+}
 pub const ANGLETOFINESHIFT: u32 = 19;
-pub const ANG180: u32 = 0x80000000;
-pub const ANG90: i32 = 0x40000000;
-pub const ANG270: u32 = 0xc0000000;
-pub const ANG45: i32 = 0x20000000;
+pub const ANG45: Angle = Angle(0x2000_0000);
+pub const ANG90: Angle = Angle(0x4000_0000);
+pub const ANG180: Angle = Angle(0x8000_0000);
+pub const ANG270: Angle = Angle(0xc000_0000);
 pub const FINEMASK: i32 = FINEANGLES - 1;
+
+#[cfg(test)]
+mod angle_tests {
+    use super::*;
+
+    #[test]
+    fn arithmetic_wraps_like_the_32_bit_original() {
+        assert_eq!(ANG270 + ANG180, ANG90);
+        assert_eq!(ANG90 - ANG180, ANG270);
+        assert_eq!(-ANG90, ANG270);
+        assert_eq!(ANG90 * 4, Angle::ZERO);
+        // the sprite-rotation offset used by `R_ProjectSprite`: 4.5 * 45 degrees
+        assert_eq!(ANG45 / 2 * 9, ANG180 + ANG45 / 2);
+    }
+
+    #[test]
+    fn fine_index_covers_the_table() {
+        assert_eq!(Angle::ZERO.fine(), 0);
+        assert_eq!(ANG90.fine(), FINEANGLES as usize / 4);
+        assert_eq!(ANG180.fine(), FINEANGLES as usize / 2);
+        assert_eq!(Angle(u32::MAX).fine(), FINEANGLES as usize - 1);
+    }
+
+    #[test]
+    fn signed_view_splits_the_circle_at_180() {
+        assert_eq!(ANG90.to_signed(), 0x4000_0000);
+        assert_eq!(ANG180.to_signed(), i32::MIN);
+        assert!(ANG270.to_signed() < 0);
+    }
+
+    #[test]
+    fn first_octant_table_endpoints() {
+        assert_eq!(tan_to_angle(0), Angle::ZERO);
+        assert_eq!(tan_to_angle(SLOPERANGE as usize), ANG45);
+    }
+}

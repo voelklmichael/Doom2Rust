@@ -31,7 +31,6 @@ use crate::v_video::Screen;
 use crate::st_stuff::st_responder;
 
 use crate::tables::Angle;
-use crate::tables::ANGLETOFINESHIFT;
 use crate::tables::FINECOSINE;
 use crate::tables::FINESINE;
 use crate::v_video::draw_patch;
@@ -1160,10 +1159,8 @@ pub fn draw_walls(state: &mut GameState) {
     }
 }
 pub fn am_rotate(x: &mut Fixed, y: &mut Fixed, a: Angle) {
-    let tmpx: Fixed = fixed_mul(*x, FINECOSINE[(a >> ANGLETOFINESHIFT) as usize])
-        - fixed_mul(*y, FINESINE[(a >> ANGLETOFINESHIFT) as usize]);
-    *y = fixed_mul(*x, FINESINE[(a >> ANGLETOFINESHIFT) as usize])
-        + fixed_mul(*y, FINECOSINE[(a >> ANGLETOFINESHIFT) as usize]);
+    let tmpx: Fixed = fixed_mul(*x, FINECOSINE[a.fine()]) - fixed_mul(*y, FINESINE[a.fine()]);
+    *y = fixed_mul(*x, FINESINE[a.fine()]) + fixed_mul(*y, FINECOSINE[a.fine()]);
     *x = tmpx;
 }
 pub fn draw_line_character(
@@ -1186,7 +1183,7 @@ pub fn draw_line_character(
             l.a.x = fixed_mul(scale, l.a.x);
             l.a.y = fixed_mul(scale, l.a.y);
         }
-        if angle != 0 {
+        if angle != Angle::ZERO {
             am_rotate(&mut l.a.x, &mut l.a.y, angle);
         }
         l.a.x += x;
@@ -1197,7 +1194,7 @@ pub fn draw_line_character(
             l.b.x = fixed_mul(scale, l.b.x);
             l.b.y = fixed_mul(scale, l.b.y);
         }
-        if angle != 0 {
+        if angle != Angle::ZERO {
             am_rotate(&mut l.b.x, &mut l.b.y, angle);
         }
         l.b.x += x;

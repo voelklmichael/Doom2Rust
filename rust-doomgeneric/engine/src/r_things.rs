@@ -441,14 +441,8 @@ pub fn project_sprite(state: &mut GameState, thing_id: MobjId) {
         (i32::from(sprframe.lump[0]), sprframe.flip[0] != 0)
     } else {
         let ang: Angle = point_to_angle(&state.render.r_main, thing_x, thing_y);
-        let rot: usize = (ang
-            .wrapping_sub(thing_angle)
-            .wrapping_add(((ANG45 / 2) as u32).wrapping_mul(9))
-            >> 29) as usize;
-        (
-            i32::from(sprframe.lump[rot as usize]),
-            sprframe.flip[rot as usize] != 0,
-        )
+        let rot: usize = ((ang - thing_angle + ANG45 / 2 * 9).to_bits() >> 29) as usize;
+        (i32::from(sprframe.lump[rot]), sprframe.flip[rot] != 0)
     };
     tx -= state.render.r_data.spriteoffset[lump as usize];
     let x1: i32 = (state.render.r_main.centerxfrac + fixed_mul(tx, xscale)) >> FRACBITS;
@@ -766,7 +760,7 @@ pub fn draw_masked(state: &mut GameState) {
             render_masked_seg_range(state, &ds, ds.x1, ds.x2);
         }
     }
-    if state.render.r_main.viewangleoffset == 0 {
+    if state.render.r_main.viewangleoffset == Angle::ZERO {
         draw_player_sprites(state);
     }
 }

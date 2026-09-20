@@ -63,7 +63,6 @@ use crate::p_pspr::re_fire;
 use crate::tables::ANG180;
 use crate::tables::ANG270;
 use crate::tables::ANG90;
-use crate::tables::ANGLETOFINESHIFT;
 
 pub struct PEnemyState {
     pub soundtarget: Option<MobjId>,
@@ -469,9 +468,8 @@ pub fn look_for_players(state: &mut GameState, actor: MobjId, allaround: bool) -
                             let p = state.world.p_mobj.mo(player_mo);
                             (p.x, p.y)
                         };
-                        let an = point_to_angle2(actor_x, actor_y, pmo_x, pmo_y)
-                            .wrapping_sub(actor_angle);
-                        if an > ANG90 as Angle && an < ANG270 {
+                        let an = point_to_angle2(actor_x, actor_y, pmo_x, pmo_y) - actor_angle;
+                        if an > ANG90 && an < ANG270 {
                             let dist = aprox_distance(pmo_x - actor_x, pmo_y - actor_y);
                             if dist > MELEERANGE {
                                 skip = true;
@@ -591,28 +589,17 @@ pub fn chase(state: &mut GameState, actor: MobjId) {
         }
     }
     if state.world.p_mobj.mo(actor).movedir < 8 {
-        state.world.p_mobj.mo_mut(actor).angle &= (7 << 29) as Angle;
-        let delta: i32 = state
-            .world
-            .p_mobj
-            .mo(actor)
-            .angle
-            .wrapping_sub((state.world.p_mobj.mo(actor).movedir << 29) as Angle)
-            as i32;
+        state.world.p_mobj.mo_mut(actor).angle =
+            Angle(state.world.p_mobj.mo(actor).angle.to_bits() & (7 << 29));
+        let delta: i32 = (state.world.p_mobj.mo(actor).angle
+            - Angle((state.world.p_mobj.mo(actor).movedir << 29) as u32))
+        .to_signed();
         if delta > 0 {
-            state.world.p_mobj.mo_mut(actor).angle = state
-                .world
-                .p_mobj
-                .mo(actor)
-                .angle
-                .wrapping_sub((ANG90 / 2) as Angle);
+            state.world.p_mobj.mo_mut(actor).angle =
+                state.world.p_mobj.mo(actor).angle - (ANG90 / 2);
         } else if delta < 0 {
-            state.world.p_mobj.mo_mut(actor).angle = state
-                .world
-                .p_mobj
-                .mo(actor)
-                .angle
-                .wrapping_add((ANG90 / 2) as Angle);
+            state.world.p_mobj.mo_mut(actor).angle =
+                state.world.p_mobj.mo(actor).angle + (ANG90 / 2);
         }
     }
     if target.is_none()
@@ -726,10 +713,11 @@ pub fn face_target(state: &mut GameState, actor: MobjId) {
         .flags
         .contains(MobjFlags::SHADOW)
     {
-        state.world.p_mobj.mo_mut(actor).angle = state.world.p_mobj.mo(actor).angle.wrapping_add(
-            ((p_random(&mut state.world.m_random) - p_random(&mut state.world.m_random)) << 21)
-                as Angle,
-        );
+        state.world.p_mobj.mo_mut(actor).angle = state.world.p_mobj.mo(actor).angle
+            + Angle(
+                ((p_random(&mut state.world.m_random) - p_random(&mut state.world.m_random)) << 21)
+                    as u32,
+            );
     }
 }
 pub fn pos_attack(state: &mut GameState, actor: MobjId) {
@@ -737,15 +725,15 @@ pub fn pos_attack(state: &mut GameState, actor: MobjId) {
         return;
     }
     face_target(state, actor);
-    let mut angle: i32 = state.world.p_mobj.mo(actor).angle as i32;
-    let slope: i32 = aim_line_attack(state, Some(actor), angle as Angle, MISSILERANGE);
+    let mut angle: i32 = (state.world.p_mobj.mo(actor).angle).to_signed();
+    let slope: i32 = aim_line_attack(state, Some(actor), Angle(angle as u32), MISSILERANGE);
     s_start_sound(state, SoundOrigin::Mobj(actor), SfxName::Pistol);
     angle += (p_random(&mut state.world.m_random) - p_random(&mut state.world.m_random)) << 20;
     let damage: i32 = (p_random(&mut state.world.m_random) % 5 + 1) * 3;
     line_attack(
         state,
         actor,
-        angle as Angle,
+        Angle(angle as u32),
         MISSILERANGE,
         slope as Fixed,
         damage,
@@ -757,8 +745,8 @@ pub fn spos_attack(state: &mut GameState, actor: MobjId) {
     }
     s_start_sound(state, SoundOrigin::Mobj(actor), SfxName::Shotgn);
     face_target(state, actor);
-    let bangle: i32 = state.world.p_mobj.mo(actor).angle as i32;
-    let slope: i32 = aim_line_attack(state, Some(actor), bangle as Angle, MISSILERANGE);
+    let bangle: i32 = (state.world.p_mobj.mo(actor).angle).to_signed();
+    let slope: i32 = aim_line_attack(state, Some(actor), Angle(bangle as u32), MISSILERANGE);
     for _ in 0..3 {
         let angle: i32 = bangle
             + ((p_random(&mut state.world.m_random) - p_random(&mut state.world.m_random)) << 20);
@@ -766,7 +754,7 @@ pub fn spos_attack(state: &mut GameState, actor: MobjId) {
         line_attack(
             state,
             actor,
-            angle as Angle,
+            Angle(angle as u32),
             MISSILERANGE,
             slope as Fixed,
             damage,
@@ -779,15 +767,15 @@ pub fn cpos_attack(state: &mut GameState, actor: MobjId) {
     }
     s_start_sound(state, SoundOrigin::Mobj(actor), SfxName::Shotgn);
     face_target(state, actor);
-    let bangle: i32 = state.world.p_mobj.mo(actor).angle as i32;
-    let slope: i32 = aim_line_attack(state, Some(actor), bangle as Angle, MISSILERANGE);
+    let bangle: i32 = (state.world.p_mobj.mo(actor).angle).to_signed();
+    let slope: i32 = aim_line_attack(state, Some(actor), Angle(bangle as u32), MISSILERANGE);
     let angle: i32 = bangle
         + ((p_random(&mut state.world.m_random) - p_random(&mut state.world.m_random)) << 20);
     let damage: i32 = (p_random(&mut state.world.m_random) % 5 + 1) * 3;
     line_attack(
         state,
         actor,
-        angle as Angle,
+        Angle(angle as u32),
         MISSILERANGE,
         slope as Fixed,
         damage,
@@ -912,7 +900,7 @@ pub fn skel_missile(state: &mut GameState, actor: MobjId) {
     state.world.p_mobj.mo_mut(mo).y += state.world.p_mobj.mo(mo).momy;
     state.world.p_mobj.mo_mut(mo).tracer = state.world.p_mobj.mo(actor).target;
 }
-pub static TRACEANGLE: i32 = 0xc000000;
+pub const TRACEANGLE: Angle = Angle(0x0c00_0000);
 pub fn a_tracer(state: &mut GameState, actor: MobjId) {
     if state.game.d_loop.gametic & 3 != 0 {
         return;
@@ -944,43 +932,35 @@ pub fn a_tracer(state: &mut GameState, actor: MobjId) {
     if dest.is_none() || state.world.p_mobj.mo(dest.unwrap()).health <= 0 {
         return;
     }
-    let mut exact: Angle = point_to_angle2(
+    let exact: Angle = point_to_angle2(
         state.world.p_mobj.mo(actor).x,
         state.world.p_mobj.mo(actor).y,
         state.world.p_mobj.mo(dest.unwrap()).x,
         state.world.p_mobj.mo(dest.unwrap()).y,
     );
     if exact != state.world.p_mobj.mo(actor).angle {
-        if exact.wrapping_sub(state.world.p_mobj.mo(actor).angle) > 0x80000000 {
-            state.world.p_mobj.mo_mut(actor).angle = state
-                .world
-                .p_mobj
-                .mo(actor)
-                .angle
-                .wrapping_sub(TRACEANGLE as Angle);
-            if exact.wrapping_sub(state.world.p_mobj.mo(actor).angle) < 0x80000000 {
+        if (exact - state.world.p_mobj.mo(actor).angle) > ANG180 {
+            state.world.p_mobj.mo_mut(actor).angle =
+                state.world.p_mobj.mo(actor).angle - TRACEANGLE;
+            if (exact - state.world.p_mobj.mo(actor).angle) < ANG180 {
                 state.world.p_mobj.mo_mut(actor).angle = exact;
             }
         } else {
-            state.world.p_mobj.mo_mut(actor).angle = state
-                .world
-                .p_mobj
-                .mo(actor)
-                .angle
-                .wrapping_add(TRACEANGLE as Angle);
-            if exact.wrapping_sub(state.world.p_mobj.mo(actor).angle) > 0x80000000 {
+            state.world.p_mobj.mo_mut(actor).angle =
+                state.world.p_mobj.mo(actor).angle + TRACEANGLE;
+            if (exact - state.world.p_mobj.mo(actor).angle) > ANG180 {
                 state.world.p_mobj.mo_mut(actor).angle = exact;
             }
         }
     }
-    exact = state.world.p_mobj.mo(actor).angle >> ANGLETOFINESHIFT;
+    let exact = state.world.p_mobj.mo(actor).angle.fine();
     state.world.p_mobj.mo_mut(actor).momx = fixed_mul(
         state
             .assets
             .info
             .mobjinfo_mut(state.world.p_mobj.mo(actor).kind)
             .speed as Fixed,
-        FINECOSINE[exact as usize],
+        FINECOSINE[exact],
     );
     state.world.p_mobj.mo_mut(actor).momy = fixed_mul(
         state
@@ -988,7 +968,7 @@ pub fn a_tracer(state: &mut GameState, actor: MobjId) {
             .info
             .mobjinfo_mut(state.world.p_mobj.mo(actor).kind)
             .speed as Fixed,
-        FINESINE[exact as usize],
+        FINESINE[exact],
     );
     let mut dist: Fixed = aprox_distance(
         state.world.p_mobj.mo(dest.unwrap()).x - state.world.p_mobj.mo(actor).x,
@@ -1172,7 +1152,7 @@ pub fn a_fire(state: &mut GameState, actor: MobjId) {
     if !check_sight(state, target, dest.unwrap()) {
         return;
     }
-    let an: usize = (state.world.p_mobj.mo(dest.unwrap()).angle >> ANGLETOFINESHIFT) as usize;
+    let an: usize = state.world.p_mobj.mo(dest.unwrap()).angle.fine();
     unset_thing_position(&mut state.world.p_mobj, &mut state.world.p_setup, actor);
     state.world.p_mobj.mo_mut(actor).x =
         state.world.p_mobj.mo(dest.unwrap()).x + fixed_mul(24 * FRACUNIT, FINECOSINE[an]);
@@ -1214,7 +1194,7 @@ pub fn vile_attack(state: &mut GameState, actor: MobjId) {
             .info
             .mobjinfo_mut(state.world.p_mobj.mo(target).kind)
             .mass) as Fixed;
-    let an: usize = (state.world.p_mobj.mo(actor).angle >> ANGLETOFINESHIFT) as i32 as usize;
+    let an: usize = state.world.p_mobj.mo(actor).angle.fine();
     let fire: Option<MobjId> = state
         .world
         .p_mobj
@@ -1230,19 +1210,14 @@ pub fn vile_attack(state: &mut GameState, actor: MobjId) {
         state.world.p_mobj.mo(target).y - fixed_mul(24 * FRACUNIT, FINESINE[an]);
     p_radius_attack(state, fire.unwrap(), Some(actor), 70);
 }
-pub const FATSPREAD: i32 = ANG90 / 8;
+pub const FATSPREAD: Angle = Angle(ANG90.to_bits() / 8);
 pub fn fat_raise(state: &mut GameState, actor: MobjId) {
     face_target(state, actor);
     s_start_sound(state, SoundOrigin::Mobj(actor), SfxName::Manatk);
 }
 pub fn fat_attack1(state: &mut GameState, actor: MobjId) {
     face_target(state, actor);
-    state.world.p_mobj.mo_mut(actor).angle = state
-        .world
-        .p_mobj
-        .mo(actor)
-        .angle
-        .wrapping_add(FATSPREAD as Angle);
+    state.world.p_mobj.mo_mut(actor).angle = state.world.p_mobj.mo(actor).angle + FATSPREAD;
     let target_subst = state
         .world
         .p_mobj
@@ -1253,13 +1228,8 @@ pub fn fat_attack1(state: &mut GameState, actor: MobjId) {
     let target: MobjId = target_id;
     spawn_missile(state, actor, target, MobjType::Fatshot);
     let mo: MobjId = spawn_missile(state, actor, target, MobjType::Fatshot);
-    state.world.p_mobj.mo_mut(mo).angle = state
-        .world
-        .p_mobj
-        .mo(mo)
-        .angle
-        .wrapping_add(FATSPREAD as Angle);
-    let an: usize = (state.world.p_mobj.mo(mo).angle >> ANGLETOFINESHIFT) as i32 as usize;
+    state.world.p_mobj.mo_mut(mo).angle = state.world.p_mobj.mo(mo).angle + FATSPREAD;
+    let an: usize = state.world.p_mobj.mo(mo).angle.fine();
     state.world.p_mobj.mo_mut(mo).momx = fixed_mul(
         state
             .assets
@@ -1279,12 +1249,7 @@ pub fn fat_attack1(state: &mut GameState, actor: MobjId) {
 }
 pub fn fat_attack2(state: &mut GameState, actor: MobjId) {
     face_target(state, actor);
-    state.world.p_mobj.mo_mut(actor).angle = state
-        .world
-        .p_mobj
-        .mo(actor)
-        .angle
-        .wrapping_sub(FATSPREAD as Angle);
+    state.world.p_mobj.mo_mut(actor).angle = state.world.p_mobj.mo(actor).angle - FATSPREAD;
     let target_subst = state
         .world
         .p_mobj
@@ -1295,13 +1260,8 @@ pub fn fat_attack2(state: &mut GameState, actor: MobjId) {
     let target: MobjId = target_id;
     spawn_missile(state, actor, target, MobjType::Fatshot);
     let mo: MobjId = spawn_missile(state, actor, target, MobjType::Fatshot);
-    state.world.p_mobj.mo_mut(mo).angle = state
-        .world
-        .p_mobj
-        .mo(mo)
-        .angle
-        .wrapping_sub((FATSPREAD * 2) as Angle);
-    let an: usize = (state.world.p_mobj.mo(mo).angle >> ANGLETOFINESHIFT) as i32 as usize;
+    state.world.p_mobj.mo_mut(mo).angle = state.world.p_mobj.mo(mo).angle - FATSPREAD * 2;
+    let an: usize = state.world.p_mobj.mo(mo).angle.fine();
     state.world.p_mobj.mo_mut(mo).momx = fixed_mul(
         state
             .assets
@@ -1330,13 +1290,8 @@ pub fn fat_attack3(state: &mut GameState, actor: MobjId) {
     let target_id = subst_null_mobj(&mut state.world.p_mobj, target_subst);
     let target: MobjId = target_id;
     let mut mo: MobjId = spawn_missile(state, actor, target, MobjType::Fatshot);
-    state.world.p_mobj.mo_mut(mo).angle = state
-        .world
-        .p_mobj
-        .mo(mo)
-        .angle
-        .wrapping_sub((FATSPREAD / 2) as Angle);
-    let mut an: i32 = (state.world.p_mobj.mo(mo).angle >> ANGLETOFINESHIFT) as i32;
+    state.world.p_mobj.mo_mut(mo).angle = state.world.p_mobj.mo(mo).angle - FATSPREAD / 2;
+    let mut an: i32 = state.world.p_mobj.mo(mo).angle.fine() as i32;
     state.world.p_mobj.mo_mut(mo).momx = fixed_mul(
         state
             .assets
@@ -1354,13 +1309,8 @@ pub fn fat_attack3(state: &mut GameState, actor: MobjId) {
         FINESINE[an as usize],
     );
     mo = spawn_missile(state, actor, target, MobjType::Fatshot);
-    state.world.p_mobj.mo_mut(mo).angle = state
-        .world
-        .p_mobj
-        .mo(mo)
-        .angle
-        .wrapping_add((FATSPREAD / 2) as Angle);
-    an = (state.world.p_mobj.mo(mo).angle >> ANGLETOFINESHIFT) as i32;
+    state.world.p_mobj.mo_mut(mo).angle = state.world.p_mobj.mo(mo).angle + FATSPREAD / 2;
+    an = state.world.p_mobj.mo(mo).angle.fine() as i32;
     state.world.p_mobj.mo_mut(mo).momx = fixed_mul(
         state
             .assets
@@ -1398,7 +1348,7 @@ pub fn skull_attack(state: &mut GameState, actor: MobjId) {
         .attacksound;
     s_start_sound(state, SoundOrigin::Mobj(actor), attacksound);
     face_target(state, actor);
-    let an: usize = (state.world.p_mobj.mo(actor).angle >> ANGLETOFINESHIFT) as usize;
+    let an: usize = state.world.p_mobj.mo(actor).angle.fine();
     state.world.p_mobj.mo_mut(actor).momx = fixed_mul(SKULLSPEED, FINECOSINE[an]);
     state.world.p_mobj.mo_mut(actor).momy = fixed_mul(SKULLSPEED, FINESINE[an]);
     let mut dist: i32 = aprox_distance(
@@ -1423,7 +1373,7 @@ pub fn pain_shoot_skull(state: &mut GameState, actor: MobjId, angle: Angle) {
     if count > 20 {
         return;
     }
-    let an: usize = (angle >> ANGLETOFINESHIFT) as usize;
+    let an: usize = angle.fine();
     let prestep: i32 = 4 * FRACUNIT
         + 3 * (state
             .assets
@@ -1456,26 +1406,9 @@ pub fn pain_attack(state: &mut GameState, actor: MobjId) {
 }
 pub fn pain_die(state: &mut GameState, actor: MobjId) {
     fall(state, actor);
-    pain_shoot_skull(
-        state,
-        actor,
-        state
-            .world
-            .p_mobj
-            .mo(actor)
-            .angle
-            .wrapping_add(ANG90 as Angle),
-    );
-    pain_shoot_skull(
-        state,
-        actor,
-        state.world.p_mobj.mo(actor).angle.wrapping_add(ANG180),
-    );
-    pain_shoot_skull(
-        state,
-        actor,
-        state.world.p_mobj.mo(actor).angle.wrapping_add(ANG270),
-    );
+    pain_shoot_skull(state, actor, state.world.p_mobj.mo(actor).angle + ANG90);
+    pain_shoot_skull(state, actor, state.world.p_mobj.mo(actor).angle + ANG180);
+    pain_shoot_skull(state, actor, state.world.p_mobj.mo(actor).angle + ANG270);
 }
 pub fn scream(state: &mut GameState, actor: MobjId) {
     let deathsound = state

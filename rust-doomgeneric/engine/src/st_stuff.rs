@@ -578,7 +578,9 @@ pub fn st_responder(state: &mut GameState, ev: &Event) -> bool {
                 let cp_mo = state.world.p_mobj.mo(cp_mo_id);
                 state.game.g_game.player_mut(state.ui.st_stuff.plyr).message = Some(format!(
                     "ang=0x{:x};x,y=(0x{:x},0x{:x})",
-                    cp_mo.angle, cp_mo.x, cp_mo.y,
+                    cp_mo.angle.to_bits(),
+                    cp_mo.x,
+                    cp_mo.y,
                 ));
             }
         }
@@ -688,15 +690,15 @@ pub fn update_face_widget(
                 let badguyangle: Angle =
                     point_to_angle2(plyr_mo_x, plyr_mo_y, attacker_x, attacker_y);
                 let (diffang, turn_right): (Angle, bool) = if badguyangle > plyr_mo_angle {
-                    let diffang = badguyangle.wrapping_sub(plyr_mo_angle);
+                    let diffang = badguyangle - plyr_mo_angle;
                     (diffang, diffang > ANG180)
                 } else {
-                    let diffang = plyr_mo_angle.wrapping_sub(badguyangle);
+                    let diffang = plyr_mo_angle - badguyangle;
                     (diffang, diffang <= ANG180)
                 };
                 st_stuff.st_facecount = ST_TURNCOUNT;
                 st_stuff.st_faceindex = calc_pain_offset(g_game, st_stuff);
-                if diffang < ANG45 as Angle {
+                if diffang < ANG45 {
                     st_stuff.st_faceindex += ST_RAMPAGEOFFSET;
                 } else if turn_right {
                     st_stuff.st_faceindex += ST_TURNOFFSET;

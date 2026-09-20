@@ -304,9 +304,8 @@ pub fn punch(state: &mut GameState, player_id: PlayerId, _position: i32) {
         damage *= 10;
     }
     let mut angle: Angle = state.world.p_mobj.mo(player_mo).angle;
-    angle = angle.wrapping_add(
-        ((p_random(&mut state.world.m_random) - p_random(&mut state.world.m_random)) << 18)
-            as Angle,
+    angle += Angle(
+        ((p_random(&mut state.world.m_random) - p_random(&mut state.world.m_random)) << 18) as u32,
     );
     let slope: i32 = aim_line_attack(state, Some(player_mo), angle, MELEERANGE);
     line_attack(state, player_mo, angle, MELEERANGE, slope as Fixed, damage);
@@ -328,9 +327,8 @@ pub fn saw(state: &mut GameState, player_id: PlayerId, _position: i32) {
 
     let damage: i32 = 2 * (p_random(&mut state.world.m_random) % 10 + 1);
     let mut angle: Angle = state.world.p_mobj.mo(player_mo).angle;
-    angle = angle.wrapping_add(
-        ((p_random(&mut state.world.m_random) - p_random(&mut state.world.m_random)) << 18)
-            as Angle,
+    angle += Angle(
+        ((p_random(&mut state.world.m_random) - p_random(&mut state.world.m_random)) << 18) as u32,
     );
     let slope: i32 = aim_line_attack(state, Some(player_mo), angle, MELEERANGE + 1);
     line_attack(
@@ -354,26 +352,19 @@ pub fn saw(state: &mut GameState, player_id: PlayerId, _position: i32) {
         linetarget_x,
         linetarget_y,
     );
-    if angle.wrapping_sub(state.world.p_mobj.mo(player_mo).angle) > ANG180 {
-        if (angle.wrapping_sub(state.world.p_mobj.mo(player_mo).angle) as i32) < -ANG90 / 20 {
-            state.world.p_mobj.mo_mut(player_mo).angle = angle.wrapping_add((ANG90 / 21) as Angle);
+    if (angle - state.world.p_mobj.mo(player_mo).angle) > ANG180 {
+        if (angle - state.world.p_mobj.mo(player_mo).angle).to_signed() < -(ANG90.to_signed() / 20)
+        {
+            state.world.p_mobj.mo_mut(player_mo).angle = angle + (ANG90 / 21);
         } else {
-            state.world.p_mobj.mo_mut(player_mo).angle = state
-                .world
-                .p_mobj
-                .mo(player_mo)
-                .angle
-                .wrapping_sub((ANG90 / 20) as Angle);
+            state.world.p_mobj.mo_mut(player_mo).angle =
+                state.world.p_mobj.mo(player_mo).angle - (ANG90 / 20);
         }
-    } else if angle.wrapping_sub(state.world.p_mobj.mo(player_mo).angle) > (ANG90 / 20) as Angle {
-        state.world.p_mobj.mo_mut(player_mo).angle = angle.wrapping_sub((ANG90 / 21) as Angle);
+    } else if (angle - state.world.p_mobj.mo(player_mo).angle) > ANG90 / 20 {
+        state.world.p_mobj.mo_mut(player_mo).angle = angle - (ANG90 / 21);
     } else {
-        state.world.p_mobj.mo_mut(player_mo).angle = state
-            .world
-            .p_mobj
-            .mo(player_mo)
-            .angle
-            .wrapping_add((ANG90 / 20) as Angle);
+        state.world.p_mobj.mo_mut(player_mo).angle =
+            state.world.p_mobj.mo(player_mo).angle + (ANG90 / 20);
     }
     state.world.p_mobj.mo_mut(player_mo).flags |= MobjFlags::JUSTATTACKED;
 }
@@ -417,10 +408,10 @@ pub fn bullet_slope(state: &mut GameState, mo: MobjId) {
     let mut an: Angle = state.world.p_mobj.mo(mo).angle;
     state.world.p_pspr.bulletslope = aim_line_attack(state, Some(mo), an, 16 * 64 * FRACUNIT);
     if state.world.p_map.linetarget.is_none() {
-        an = an.wrapping_add((1 << 26) as Angle);
+        an += Angle((1 << 26) as u32);
         state.world.p_pspr.bulletslope = aim_line_attack(state, Some(mo), an, 16 * 64 * FRACUNIT);
         if state.world.p_map.linetarget.is_none() {
-            an = an.wrapping_sub((2 << 26) as Angle);
+            an -= Angle((2 << 26) as u32);
             state.world.p_pspr.bulletslope =
                 aim_line_attack(state, Some(mo), an, 16 * 64 * FRACUNIT);
         }
@@ -430,9 +421,9 @@ pub fn gun_shot(state: &mut GameState, mo: MobjId, accurate: bool) {
     let damage: i32 = 5 * (p_random(&mut state.world.m_random) % 3 + 1);
     let mut angle: Angle = state.world.p_mobj.mo(mo).angle;
     if !accurate {
-        angle = angle.wrapping_add(
+        angle += Angle(
             ((p_random(&mut state.world.m_random) - p_random(&mut state.world.m_random)) << 18)
-                as Angle,
+                as u32,
         );
     }
     let bulletslope = state.world.p_pspr.bulletslope;
@@ -490,9 +481,9 @@ pub fn fire_shotgun2(state: &mut GameState, player: PlayerId, _position: i32) {
     for _ in 0..20 {
         let damage: i32 = 5 * (p_random(&mut state.world.m_random) % 3 + 1);
         let mut angle: Angle = state.world.p_mobj.mo(player_mo).angle;
-        angle = angle.wrapping_add(
+        angle += Angle(
             ((p_random(&mut state.world.m_random) - p_random(&mut state.world.m_random)) << 19)
-                as Angle,
+                as u32,
         );
         let slope = state.world.p_pspr.bulletslope
             + ((p_random(&mut state.world.m_random) as Fixed
@@ -552,14 +543,8 @@ pub fn bfgspray(state: &mut GameState, id: MobjId) {
         .mo(mo)
         .target
         .filter(|&target| state.world.p_mobj.is_live(target));
-    for i in 0..40_i32 {
-        let an: Angle = state
-            .world
-            .p_mobj
-            .mo(mo)
-            .angle
-            .wrapping_sub((ANG90 / 2) as Angle)
-            .wrapping_add((ANG90 / 40 * i) as Angle);
+    for i in 0..40_u32 {
+        let an: Angle = state.world.p_mobj.mo(mo).angle - ANG90 / 2 + ANG90 / 40 * i;
         aim_line_attack(state, mo_target, an, 16 * 64 * FRACUNIT);
         if let Some(linetarget) = state.world.p_map.linetarget {
             let (lx, ly, lz, lheight) = {

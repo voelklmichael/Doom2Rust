@@ -230,7 +230,7 @@ fn saveg_read_mobj_t(state: &mut PSavegState, str: &mut Mobj) {
     str.snext = None;
     saveg_read32(state);
     str.sprev = None;
-    str.angle = saveg_read32(state) as Angle;
+    str.angle = Angle((saveg_read32(state)) as u32);
     str.sprite = spritenum_from_raw(saveg_read32(state));
     str.frame = saveg_read32(state);
     // set_thing_position also fully rebuilds bnext/bprev from scratch --
@@ -280,7 +280,7 @@ fn saveg_write_mobj_t(state: &mut PSavegState, str: &Mobj) {
     saveg_write32(state, str.z);
     saveg_write32(state, 0);
     saveg_write32(state, 0);
-    saveg_write32(state, str.angle as i32);
+    saveg_write32(state, (str.angle).to_signed());
     saveg_write32(state, str.sprite as i32);
     saveg_write32(state, str.frame);
     saveg_write32(state, 0);

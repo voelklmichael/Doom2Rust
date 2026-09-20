@@ -17,9 +17,7 @@ use crate::r_main::LIGHTZSHIFT;
 use crate::r_main::MAXLIGHTZ;
 use crate::r_segs::MAXDRAWSEGS;
 
-use crate::tables::Angle;
 use crate::tables::ANG90;
-use crate::tables::ANGLETOFINESHIFT;
 use crate::tables::FINECOSINE;
 use crate::tables::FINESINE;
 use crate::w_wad::lump_bytes;
@@ -112,12 +110,8 @@ pub fn map_plane(state: &mut GameState, y: i32, x1: i32, x2: i32) {
             distance
         };
     let length: Fixed = fixed_mul(distance, state.render.r_plane.distscale[x1 as usize]);
-    let angle: usize = (state
-        .render
-        .r_main
-        .viewangle
-        .wrapping_add(state.render.r_main.xtoviewangle[x1 as usize])
-        >> ANGLETOFINESHIFT) as usize;
+    let angle: usize =
+        (state.render.r_main.viewangle + state.render.r_main.xtoviewangle[x1 as usize]).fine();
     state.render.r_draw.ds_xfrac = state.render.r_main.viewx + fixed_mul(FINECOSINE[angle], length);
     state.render.r_draw.ds_yfrac = -state.render.r_main.viewy - fixed_mul(FINESINE[angle], length);
     if let Some(colormap) = state.render.r_main.fixedcolormap {
@@ -147,7 +141,7 @@ pub fn clear_planes(r_draw: &RDrawState, r_main: &RMainState, r_plane: &mut RPla
     r_plane.lastvisplane = 0;
     r_plane.lastopening = 0;
     r_plane.cachedheight = [0; 200];
-    let angle: usize = (r_main.viewangle.wrapping_sub(ANG90 as Angle) >> ANGLETOFINESHIFT) as usize;
+    let angle: usize = (r_main.viewangle - ANG90).fine();
     r_plane.basexscale = fixed_div(FINECOSINE[angle], r_main.centerxfrac);
     r_plane.baseyscale = -fixed_div(FINESINE[angle], r_main.centerxfrac);
 }
@@ -269,11 +263,9 @@ pub fn draw_planes(state: &mut GameState) {
                     state.render.r_draw.dc_yl = i32::from(plv.top(x));
                     state.render.r_draw.dc_yh = i32::from(plv.bottom(x));
                     if state.render.r_draw.dc_yl <= state.render.r_draw.dc_yh {
-                        let angle: i32 = (state
-                            .render
-                            .r_main
-                            .viewangle
-                            .wrapping_add(state.render.r_main.xtoviewangle[x as usize])
+                        let angle: i32 = ((state.render.r_main.viewangle
+                            + state.render.r_main.xtoviewangle[x as usize])
+                            .to_bits()
                             >> ANGLETOSKYSHIFT) as i32;
                         state.render.r_draw.dc_x = x;
                         state.render.r_draw.dc_source = Some(get_column(
