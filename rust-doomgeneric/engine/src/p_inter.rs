@@ -34,8 +34,8 @@ use crate::r_main::point_to_angle2;
 use crate::s_sound::s_start_sound;
 use crate::s_sound::SoundOrigin;
 use crate::sounds::SfxName;
+use crate::tables::Angle;
 use crate::tables::ANG180;
-use crate::tables::ANGLETOFINESHIFT;
 use crate::tables::FINECOSINE;
 use crate::tables::FINESINE;
 
@@ -766,7 +766,7 @@ pub fn damage_mobj(
                 let t = state.world.p_mobj.mo(target);
                 (t.x, t.y, t.z, t.kind)
             };
-            let mut ang: u32 = point_to_angle2(inflictor_x, inflictor_y, target_x, target_y);
+            let mut ang: Angle = point_to_angle2(inflictor_x, inflictor_y, target_x, target_y);
             let mut thrust: Fixed = (damage * (FRACUNIT >> 3) * 100
                 / state.assets.info.mobjinfo_mut(target_type).mass)
                 as Fixed;
@@ -775,13 +775,13 @@ pub fn damage_mobj(
                 && target_z - inflictor_z > 64 * FRACUNIT
                 && p_random(&mut state.world.m_random) & 1 != 0
             {
-                ang = ang.wrapping_add(ANG180);
+                ang += ANG180;
                 thrust *= 4;
             }
-            ang >>= ANGLETOFINESHIFT;
+            let ang = ang.fine();
             let t = state.world.p_mobj.mo_mut(target);
-            t.momx += fixed_mul(thrust, FINECOSINE[ang as usize]);
-            t.momy += fixed_mul(thrust, FINESINE[ang as usize]);
+            t.momx += fixed_mul(thrust, FINECOSINE[ang]);
+            t.momy += fixed_mul(thrust, FINESINE[ang]);
         }
     }
     if let Some(player_id) = target_player_id {

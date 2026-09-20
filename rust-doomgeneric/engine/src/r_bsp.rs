@@ -19,7 +19,6 @@ use crate::r_things::add_sprites;
 use crate::tables::Angle;
 use crate::tables::ANG180;
 use crate::tables::ANG90;
-use crate::tables::ANGLETOFINESHIFT;
 
 pub struct RBspState {
     pub curline: SegId,
@@ -177,33 +176,33 @@ pub fn add_line(state: &mut GameState, line: SegId) {
     let line_v2 = state.world.p_setup.vertexes[state.world.p_setup.seg(line).v2.0 as usize];
     let mut angle1: Angle = point_to_angle(&state.render.r_main, line_v1.x, line_v1.y);
     let mut angle2: Angle = point_to_angle(&state.render.r_main, line_v2.x, line_v2.y);
-    let span: Angle = angle1.wrapping_sub(angle2);
+    let span: Angle = angle1 - angle2;
     if span >= ANG180 {
         return;
     }
-    state.render.r_segs.rw_angle1 = angle1 as i32;
-    angle1 = angle1.wrapping_sub(state.render.r_main.viewangle);
-    angle2 = angle2.wrapping_sub(state.render.r_main.viewangle);
-    let mut tspan: Angle = angle1.wrapping_add(state.render.r_main.clipangle);
-    if tspan > (2 as Angle).wrapping_mul(state.render.r_main.clipangle) {
-        tspan = tspan.wrapping_sub((2 as Angle).wrapping_mul(state.render.r_main.clipangle));
+    state.render.r_segs.rw_angle1 = angle1;
+    angle1 -= state.render.r_main.viewangle;
+    angle2 -= state.render.r_main.viewangle;
+    let mut tspan: Angle = angle1 + state.render.r_main.clipangle;
+    if tspan > state.render.r_main.clipangle * 2 {
+        tspan -= state.render.r_main.clipangle * 2;
         if tspan >= span {
             return;
         }
         angle1 = state.render.r_main.clipangle;
     }
-    tspan = state.render.r_main.clipangle.wrapping_sub(angle2);
-    if tspan > (2 as Angle).wrapping_mul(state.render.r_main.clipangle) {
-        tspan = tspan.wrapping_sub((2 as Angle).wrapping_mul(state.render.r_main.clipangle));
+    tspan = state.render.r_main.clipangle - angle2;
+    if tspan > state.render.r_main.clipangle * 2 {
+        tspan -= state.render.r_main.clipangle * 2;
         if tspan >= span {
             return;
         }
-        angle2 = state.render.r_main.clipangle.wrapping_neg();
+        angle2 = -state.render.r_main.clipangle;
     }
-    angle1 = angle1.wrapping_add(ANG90 as Angle) >> ANGLETOFINESHIFT;
-    angle2 = angle2.wrapping_add(ANG90 as Angle) >> ANGLETOFINESHIFT;
-    let x1: i32 = state.render.r_main.viewangletox[angle1 as usize];
-    let x2: i32 = state.render.r_main.viewangletox[angle2 as usize];
+    let angle1 = (angle1 + ANG90).fine();
+    let angle2 = (angle2 + ANG90).fine();
+    let x1: i32 = state.render.r_main.viewangletox[angle1];
+    let x2: i32 = state.render.r_main.viewangletox[angle2];
     if x1 == x2 {
         return;
     }
@@ -341,32 +340,32 @@ pub fn check_bbox(r_bsp: &RBspState, r_main: &RMainState, bspcoord: BBox) -> boo
     let y1: Fixed = bspcoord[CHECKCOORD[boxpos as usize][1] as usize];
     let x2: Fixed = bspcoord[CHECKCOORD[boxpos as usize][2] as usize];
     let y2: Fixed = bspcoord[CHECKCOORD[boxpos as usize][3] as usize];
-    let mut angle1: Angle = point_to_angle(r_main, x1, y1).wrapping_sub(r_main.viewangle);
-    let mut angle2: Angle = point_to_angle(r_main, x2, y2).wrapping_sub(r_main.viewangle);
-    let span: Angle = angle1.wrapping_sub(angle2);
+    let mut angle1: Angle = point_to_angle(r_main, x1, y1) - r_main.viewangle;
+    let mut angle2: Angle = point_to_angle(r_main, x2, y2) - r_main.viewangle;
+    let span: Angle = angle1 - angle2;
     if span >= ANG180 {
         return true;
     }
-    let mut tspan: Angle = angle1.wrapping_add(r_main.clipangle);
-    if tspan > (2 as Angle).wrapping_mul(r_main.clipangle) {
-        tspan = tspan.wrapping_sub((2 as Angle).wrapping_mul(r_main.clipangle));
+    let mut tspan: Angle = angle1 + r_main.clipangle;
+    if tspan > r_main.clipangle * 2 {
+        tspan -= r_main.clipangle * 2;
         if tspan >= span {
             return false;
         }
         angle1 = r_main.clipangle;
     }
-    tspan = r_main.clipangle.wrapping_sub(angle2);
-    if tspan > (2 as Angle).wrapping_mul(r_main.clipangle) {
-        tspan = tspan.wrapping_sub((2 as Angle).wrapping_mul(r_main.clipangle));
+    tspan = r_main.clipangle - angle2;
+    if tspan > r_main.clipangle * 2 {
+        tspan -= r_main.clipangle * 2;
         if tspan >= span {
             return false;
         }
-        angle2 = r_main.clipangle.wrapping_neg();
+        angle2 = -r_main.clipangle;
     }
-    angle1 = angle1.wrapping_add(ANG90 as Angle) >> ANGLETOFINESHIFT;
-    angle2 = angle2.wrapping_add(ANG90 as Angle) >> ANGLETOFINESHIFT;
-    let sx1: i32 = r_main.viewangletox[angle1 as usize];
-    let mut sx2: i32 = r_main.viewangletox[angle2 as usize];
+    let angle1 = (angle1 + ANG90).fine();
+    let angle2 = (angle2 + ANG90).fine();
+    let sx1: i32 = r_main.viewangletox[angle1];
+    let mut sx2: i32 = r_main.viewangletox[angle2];
     if sx1 == sx2 {
         return false;
     }

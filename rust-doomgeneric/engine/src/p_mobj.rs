@@ -54,7 +54,6 @@ use crate::st_stuff::st_start;
 
 use crate::tables::Angle;
 use crate::tables::ANG45;
-use crate::tables::ANGLETOFINESHIFT;
 use crate::tables::FINECOSINE;
 use crate::tables::FINESINE;
 
@@ -3164,7 +3163,7 @@ pub fn nightmare_respawn(state: &mut GameState, mobj: MobjId) {
     {
         let m = state.world.p_mobj.mo_mut(mo);
         m.spawnpoint = spawnpoint;
-        m.angle = (ANG45 * (i32::from(spawnpoint.angle) / 45)) as Angle;
+        m.angle = ANG45 * (i32::from(spawnpoint.angle) / 45) as u32;
         if i32::from(spawnpoint.options) & MTF_AMBUSH != 0 {
             m.flags |= MobjFlags::AMBUSH;
         }
@@ -3467,7 +3466,7 @@ impl PMobjState {
                 z: 0,
                 snext: None,
                 sprev: None,
-                angle: 0,
+                angle: Angle::ZERO,
                 sprite: SpriteNum::Troo,
                 frame: 0,
                 bnext: None,
@@ -3581,7 +3580,7 @@ pub fn respawn_specials(state: &mut GameState) {
     {
         let m = state.world.p_mobj.mo_mut(mo);
         m.spawnpoint = mthing;
-        m.angle = (ANG45 * (i32::from(mthing.angle) / 45)) as Angle;
+        m.angle = ANG45 * (i32::from(mthing.angle) / 45) as u32;
     }
     state.world.p_mobj.iquetail = (state.world.p_mobj.iquetail + 1) & (ITEMQUESIZE - 1);
 }
@@ -3608,7 +3607,7 @@ pub fn spawn_player(state: &mut GameState, mthing: MapThing) {
                 (i32::from(mthing.kind) - 1) << MobjFlags::TRANSLATION_SHIFT,
             );
         }
-        m.angle = (ANG45 * (i32::from(mthing.angle) / 45)) as Angle;
+        m.angle = ANG45 * (i32::from(mthing.angle) / 45) as u32;
         m.player = Some(PlayerId(player_index as u8));
         m.health = player_health;
     }
@@ -3722,7 +3721,7 @@ pub fn spawn_map_thing(state: &mut GameState, mthing: MapThing) {
         state.game.g_game.totalitems += 1;
     }
     let m = state.world.p_mobj.mo_mut(mobj);
-    m.angle = (ANG45 * (i32::from(mthing.angle) / 45)) as Angle;
+    m.angle = ANG45 * (i32::from(mthing.angle) / 45) as u32;
     if i32::from(mthing.options) & MTF_AMBUSH != 0 {
         m.flags |= MobjFlags::AMBUSH;
     }
@@ -3814,18 +3813,18 @@ pub fn spawn_missile(
     state.world.p_mobj.mo_mut(th).target = Some(source);
     let mut an: Angle = point_to_angle2(sx, sy, dx, dy);
     if dflags.contains(MobjFlags::SHADOW) {
-        an = an.wrapping_add(
+        an += Angle(
             ((p_random(&mut state.world.m_random) - p_random(&mut state.world.m_random)) << 20)
-                as Angle,
+                as u32,
         );
     }
     state.world.p_mobj.mo_mut(th).angle = an;
-    an >>= ANGLETOFINESHIFT;
+    let an = an.fine();
     let speed = state.assets.info.mobjinfo_mut(th_type).speed;
     {
         let t = state.world.p_mobj.mo_mut(th);
-        t.momx = fixed_mul(speed as Fixed, FINECOSINE[an as usize]);
-        t.momy = fixed_mul(speed as Fixed, FINESINE[an as usize]);
+        t.momx = fixed_mul(speed as Fixed, FINECOSINE[an]);
+        t.momy = fixed_mul(speed as Fixed, FINESINE[an]);
     }
     let mut dist: i32 = aprox_distance(dx - sx, dy - sy);
     dist /= speed;
@@ -3841,10 +3840,10 @@ pub fn spawn_player_missile(state: &mut GameState, source: MobjId, kind: MobjTyp
     let mut an: Angle = state.world.p_mobj.mo(source).angle;
     let mut slope = aim_line_attack(state, Some(source), an, 16 * 64 * FRACUNIT);
     if state.world.p_map.linetarget.is_none() {
-        an = an.wrapping_add((1 << 26) as Angle);
+        an += Angle((1 << 26) as u32);
         slope = aim_line_attack(state, Some(source), an, 16 * 64 * FRACUNIT);
         if state.world.p_map.linetarget.is_none() {
-            an = an.wrapping_sub((2 << 26) as Angle);
+            an -= Angle((2 << 26) as u32);
             slope = aim_line_attack(state, Some(source), an, 16 * 64 * FRACUNIT);
         }
         if state.world.p_map.linetarget.is_none() {
@@ -3867,11 +3866,8 @@ pub fn spawn_player_missile(state: &mut GameState, source: MobjId, kind: MobjTyp
         let t = state.world.p_mobj.mo_mut(th);
         t.target = Some(source);
         t.angle = an;
-        t.momx = fixed_mul(
-            speed as Fixed,
-            FINECOSINE[(an >> ANGLETOFINESHIFT) as usize],
-        );
-        t.momy = fixed_mul(speed as Fixed, FINESINE[(an >> ANGLETOFINESHIFT) as usize]);
+        t.momx = fixed_mul(speed as Fixed, FINECOSINE[an.fine()]);
+        t.momy = fixed_mul(speed as Fixed, FINESINE[an.fine()]);
         t.momz = fixed_mul(speed as Fixed, slope);
     }
     check_missile_spawn(state, th);

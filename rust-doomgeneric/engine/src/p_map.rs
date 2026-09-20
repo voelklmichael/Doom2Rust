@@ -58,7 +58,6 @@ use crate::s_sound::SoundOrigin;
 use crate::sounds::SfxName;
 use crate::tables::Angle;
 use crate::tables::ANG180;
-use crate::tables::ANGLETOFINESHIFT;
 use crate::tables::FINECOSINE;
 use crate::tables::FINESINE;
 
@@ -607,19 +606,19 @@ pub fn hit_slide_line(
     let side: i32 = point_on_line_side(p_setup, p_mobj.mo(slidemo).x, p_mobj.mo(slidemo).y, ld);
     let mut lineangle: Angle = point_to_angle2(0, 0, ldv.dx, ldv.dy);
     if side == 1 {
-        lineangle = lineangle.wrapping_add(ANG180) as Angle as Angle;
+        lineangle += ANG180;
     }
     let moveangle: Angle = point_to_angle2(0, 0, p_map.tmxmove, p_map.tmymove);
-    let mut deltaangle: Angle = moveangle.wrapping_sub(lineangle);
+    let mut deltaangle: Angle = moveangle - lineangle;
     if deltaangle > ANG180 {
-        deltaangle = deltaangle.wrapping_add(ANG180) as Angle as Angle;
+        deltaangle += ANG180;
     }
-    lineangle >>= ANGLETOFINESHIFT;
-    deltaangle >>= ANGLETOFINESHIFT;
+    let lineangle = lineangle.fine();
+    let deltaangle = deltaangle.fine();
     let movelen: Fixed = aprox_distance(p_map.tmxmove, p_map.tmymove);
-    let newlen: Fixed = fixed_mul(movelen, FINECOSINE[deltaangle as usize]);
-    p_map.tmxmove = fixed_mul(newlen, FINECOSINE[lineangle as usize]);
-    p_map.tmymove = fixed_mul(newlen, FINESINE[lineangle as usize]);
+    let newlen: Fixed = fixed_mul(movelen, FINECOSINE[deltaangle]);
+    p_map.tmxmove = fixed_mul(newlen, FINECOSINE[lineangle]);
+    p_map.tmymove = fixed_mul(newlen, FINESINE[lineangle]);
 }
 pub fn slide_traverse(state: &mut GameState, intercept: Intercept) -> bool {
     let li: LineId = match intercept.target {
@@ -1010,14 +1009,14 @@ pub fn aim_line_attack(
     distance: Fixed,
 ) -> Fixed {
     let t1 = subst_null_mobj(&mut state.world.p_mobj, t1);
-    let angle = angle >> ANGLETOFINESHIFT;
+    let angle = angle.fine();
     let (x1, y1, z1, height1) = {
         let m = state.world.p_mobj.mo(t1);
         (m.x, m.y, m.z, m.height)
     };
     state.world.p_map.shootthing = Some(t1);
-    let x2 = x1 + (distance >> FRACBITS) * FINECOSINE[angle as usize];
-    let y2 = y1 + (distance >> FRACBITS) * FINESINE[angle as usize];
+    let x2 = x1 + (distance >> FRACBITS) * FINECOSINE[angle];
+    let y2 = y1 + (distance >> FRACBITS) * FINESINE[angle];
     state.world.p_map.shootz = (z1 + (height1 >> 1) + 8 * FRACUNIT) as Fixed;
     state.world.p_sight.topslope = (100 * FRACUNIT / 160) as Fixed;
     state.world.p_sight.bottomslope = (-100 * FRACUNIT / 160) as Fixed;
@@ -1045,15 +1044,15 @@ pub fn line_attack(
     slope: Fixed,
     damage: i32,
 ) {
-    let angle = angle >> ANGLETOFINESHIFT;
+    let angle = angle.fine();
     let (x1, y1, z1, height1) = {
         let m = state.world.p_mobj.mo(t1);
         (m.x, m.y, m.z, m.height)
     };
     state.world.p_map.shootthing = Some(t1);
     state.world.p_map.la_damage = damage;
-    let x2 = x1 + (distance >> FRACBITS) * FINECOSINE[angle as usize];
-    let y2 = y1 + (distance >> FRACBITS) * FINESINE[angle as usize];
+    let x2 = x1 + (distance >> FRACBITS) * FINECOSINE[angle];
+    let y2 = y1 + (distance >> FRACBITS) * FINESINE[angle];
     state.world.p_map.shootz = (z1 + (height1 >> 1) + 8 * FRACUNIT) as Fixed;
     state.world.p_map.attackrange = distance;
     state.world.p_map.aimslope = slope;
@@ -1098,7 +1097,7 @@ pub fn use_lines(state: &mut GameState, player: PlayerId) {
     let player_mo = player_mo.unwrap();
     let (angle, x1, y1) = {
         let m = state.world.p_mobj.mo(player_mo);
-        ((m.angle >> ANGLETOFINESHIFT) as i32, m.x, m.y)
+        (m.angle.fine() as i32, m.x, m.y)
     };
     let x2 = x1 + (USERANGE >> FRACBITS) * FINECOSINE[angle as usize];
     let y2 = y1 + (USERANGE >> FRACBITS) * FINESINE[angle as usize];

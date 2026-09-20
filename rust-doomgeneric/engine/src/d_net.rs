@@ -97,7 +97,7 @@ fn init_connect_data(state: &mut GameState, connect_data: &mut NetConnectData) {
         connect_data.drone = true;
     }
     if state.game.options.right {
-        state.render.r_main.viewangleoffset = ANG270 as i32;
+        state.render.r_main.viewangleoffset = ANG270;
         connect_data.drone = true;
     }
     connect_data.gamemode = state.game.doomstat.gamemode as i32;

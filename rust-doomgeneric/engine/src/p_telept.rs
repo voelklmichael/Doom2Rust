@@ -14,7 +14,6 @@ use crate::p_setup::LineId;
 use crate::s_sound::s_start_sound;
 use crate::s_sound::SoundOrigin;
 use crate::sounds::SfxName;
-use crate::tables::ANGLETOFINESHIFT;
 use crate::tables::FINECOSINE;
 use crate::tables::FINESINE;
 pub fn teleport(state: &mut GameState, line: LineId, side: i32, thing: MobjId) -> bool {
@@ -70,12 +69,12 @@ pub fn teleport(state: &mut GameState, line: LineId, side: i32, thing: MobjId) -
                         }
                         let fog = spawn_mobj(state, oldx, oldy, oldz, MobjType::Tfog);
                         s_start_sound(state, SoundOrigin::Mobj(fog), SfxName::Telept);
-                        let an = m_angle >> ANGLETOFINESHIFT;
+                        let an = m_angle.fine();
                         let thing_z = state.world.p_mobj.mo(thing).z;
                         let fog = spawn_mobj(
                             state,
-                            m_x + 20 * FINECOSINE[an as usize],
-                            m_y + 20 * FINESINE[an as usize],
+                            m_x + 20 * FINECOSINE[an],
+                            m_y + 20 * FINESINE[an],
                             thing_z,
                             MobjType::Tfog,
                         );

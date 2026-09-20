@@ -32,7 +32,6 @@ use crate::sounds::SoundsState;
 use crate::sounds::NUMSFX;
 use crate::sounds::{MusicName, NUMMUSIC};
 use crate::tables::Angle;
-use crate::tables::ANGLETOFINESHIFT;
 use crate::tables::FINESINE;
 use crate::w_wad::get_num_for_name;
 use crate::w_wad::lump_bytes;
@@ -268,12 +267,12 @@ fn adjust_sound_params(
     }
     let mut angle: Angle = point_to_angle2(listener_x, listener_y, source_x, source_y);
     if angle > listener_angle {
-        angle = angle.wrapping_sub(listener_angle);
+        angle -= listener_angle;
     } else {
-        angle = angle.wrapping_add((0xffffffff as Angle).wrapping_sub(listener_angle));
+        angle += Angle(u32::MAX) - listener_angle;
     }
-    angle >>= ANGLETOFINESHIFT;
-    let sep = 128 - (fixed_mul(S_STEREO_SWING, FINESINE[angle as usize]) >> FRACBITS);
+    let angle = angle.fine();
+    let sep = 128 - (fixed_mul(S_STEREO_SWING, FINESINE[angle]) >> FRACBITS);
 
     let vol = if approx_dist < S_CLOSE_DIST {
         state.audio.s_sound.snd_sfx_volume

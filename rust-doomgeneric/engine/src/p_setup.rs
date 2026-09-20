@@ -323,7 +323,7 @@ pub fn load_segs(state: &mut GameState, lump: i32) {
     for _ in 0..numsegs {
         let v1 = VertexId(reader.i16() as u32);
         let v2 = VertexId(reader.i16() as u32);
-        let seg_angle = (i32::from(reader.i16()) << 16) as Angle;
+        let seg_angle = Angle((i32::from(reader.i16()) << 16) as u32);
         let linedef = i32::from(reader.i16());
         let side = i32::from(reader.i16());
         let seg_offset = (i32::from(reader.i16()) << 16) as Fixed;

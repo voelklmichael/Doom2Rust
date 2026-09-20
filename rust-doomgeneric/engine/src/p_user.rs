@@ -23,7 +23,6 @@ use crate::r_main::point_to_angle2;
 use crate::tables::Angle;
 use crate::tables::ANG180;
 use crate::tables::ANG90;
-use crate::tables::ANGLETOFINESHIFT;
 use crate::tables::FINEANGLES;
 use crate::tables::FINECOSINE;
 use crate::tables::FINEMASK;
@@ -48,11 +47,11 @@ impl PUserState {
     }
 }
 
-pub fn p_thrust(p_mobj: &mut PMobjState, mo: MobjId, mut angle: Angle, amount: Fixed) {
-    angle >>= ANGLETOFINESHIFT;
+pub fn p_thrust(p_mobj: &mut PMobjState, mo: MobjId, angle: Angle, amount: Fixed) {
+    let angle = angle.fine();
     let mo = p_mobj.mo_mut(mo);
-    mo.momx += fixed_mul(amount, FINECOSINE[angle as usize]);
-    mo.momy += fixed_mul(amount, FINESINE[angle as usize]);
+    mo.momx += fixed_mul(amount, FINECOSINE[angle]);
+    mo.momy += fixed_mul(amount, FINESINE[angle]);
 }
 pub fn calc_height(state: &mut GameState, player_id: PlayerId) {
     let player = &mut state.game.g_game.players[player_id];
@@ -108,9 +107,7 @@ pub fn move_player(state: &mut GameState, player_id: PlayerId) {
     let player_mo = state.game.g_game.players[player_id].mo.unwrap();
     {
         let mo = state.world.p_mobj.mo_mut(player_mo);
-        mo.angle = mo
-            .angle
-            .wrapping_add((i32::from(cmd.angleturn) << 16) as Angle);
+        mo.angle += Angle((i32::from(cmd.angleturn) << 16) as u32);
     }
     let (z, floorz, angle) = {
         let mo = state.world.p_mobj.mo(player_mo);
@@ -129,7 +126,7 @@ pub fn move_player(state: &mut GameState, player_id: PlayerId) {
         p_thrust(
             &mut state.world.p_mobj,
             player_mo,
-            angle.wrapping_sub(ANG90 as Angle),
+            angle - ANG90,
             Fixed::from(cmd.sidemove) * 2048,
         );
     }
@@ -139,7 +136,7 @@ pub fn move_player(state: &mut GameState, player_id: PlayerId) {
         set_mobj_state(state, player_mo, StateNum::PlayRun1);
     }
 }
-pub const ANG5: i32 = ANG90 / 18;
+pub const ANG5: Angle = Angle(ANG90.to_bits() / 18);
 pub fn death_think(state: &mut GameState, player_id: PlayerId) {
     let player = player_id;
     move_psprites(state, player_id);
@@ -164,26 +161,18 @@ pub fn death_think(state: &mut GameState, player_id: PlayerId) {
             state.world.p_mobj.mo(attacker).x,
             state.world.p_mobj.mo(attacker).y,
         );
-        let delta: Angle = angle.wrapping_sub(state.world.p_mobj.mo(player_mo).angle);
-        if delta < ANG5 as Angle || delta > -ANG5 as u32 {
+        let delta: Angle = angle - state.world.p_mobj.mo(player_mo).angle;
+        if delta < ANG5 || delta > -ANG5 {
             state.world.p_mobj.mo_mut(player_mo).angle = angle;
             if state.game.g_game.players[player].damagecount != 0 {
                 state.game.g_game.players[player].damagecount -= 1;
             }
         } else if delta < ANG180 {
-            state.world.p_mobj.mo_mut(player_mo).angle = state
-                .world
-                .p_mobj
-                .mo(player_mo)
-                .angle
-                .wrapping_add(ANG5 as Angle);
+            state.world.p_mobj.mo_mut(player_mo).angle =
+                state.world.p_mobj.mo(player_mo).angle + ANG5;
         } else {
-            state.world.p_mobj.mo_mut(player_mo).angle = state
-                .world
-                .p_mobj
-                .mo(player_mo)
-                .angle
-                .wrapping_sub(ANG5 as Angle);
+            state.world.p_mobj.mo_mut(player_mo).angle =
+                state.world.p_mobj.mo(player_mo).angle - ANG5;
         }
     } else if state.game.g_game.players[player].damagecount != 0 {
         state.game.g_game.players[player].damagecount -= 1;

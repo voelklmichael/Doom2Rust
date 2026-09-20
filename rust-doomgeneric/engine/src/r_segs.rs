@@ -24,7 +24,6 @@ use crate::r_things::draw_masked_column;
 use crate::tables::Angle;
 use crate::tables::ANG180;
 use crate::tables::ANG90;
-use crate::tables::ANGLETOFINESHIFT;
 use crate::tables::FINESINE;
 use crate::tables::FINETANGENT;
 
@@ -37,7 +36,7 @@ pub struct RSegsState {
     pub bottomtexture: i32,
     pub midtexture: i32,
     pub rw_normalangle: Angle,
-    pub rw_angle1: i32,
+    pub rw_angle1: Angle,
     pub rw_x: i32,
     pub rw_stopx: i32,
     pub rw_centerangle: Angle,
@@ -80,11 +79,11 @@ impl RSegsState {
             toptexture: 0,
             bottomtexture: 0,
             midtexture: 0,
-            rw_normalangle: 0,
-            rw_angle1: 0,
+            rw_normalangle: Angle::ZERO,
+            rw_angle1: Angle::ZERO,
             rw_x: 0,
             rw_stopx: 0,
-            rw_centerangle: 0,
+            rw_centerangle: Angle::ZERO,
             rw_offset: 0,
             rw_distance: 0,
             rw_scale: 0,
@@ -320,15 +319,14 @@ pub fn render_seg_loop(state: &mut GameState) {
             }
         }
         let texturecolumn: Fixed = if state.render.r_segs.segtextured {
-            let mut angle: Angle =
-                state.render.r_segs.rw_centerangle.wrapping_add(
-                    state.render.r_main.xtoviewangle[state.render.r_segs.rw_x as usize],
-                ) >> ANGLETOFINESHIFT;
+            let mut angle: usize = (state.render.r_segs.rw_centerangle
+                + state.render.r_main.xtoviewangle[state.render.r_segs.rw_x as usize])
+                .fine();
             // A column at a seg's clipped edge can land just outside the
             // front half-plane; vanilla reads past finetangent[] there.
-            angle = angle.min(FINETANGENT.len() as Angle - 1);
+            angle = angle.min(FINETANGENT.len() - 1);
             let column = (state.render.r_segs.rw_offset
-                - fixed_mul(FINETANGENT[angle as usize], state.render.r_segs.rw_distance))
+                - fixed_mul(FINETANGENT[angle], state.render.r_segs.rw_distance))
                 >> FRACBITS;
             let mut index: u32 = (state.render.r_segs.rw_scale >> LIGHTSCALESHIFT) as u32;
             if index >= MAXLIGHTSCALE as u32 {
@@ -469,49 +467,36 @@ pub fn store_wall_range(state: &mut GameState, start: i32, stop: i32) {
         .line_mut(state.render.r_bsp.linedef)
         .flags
         .insert(LineFlags::MAPPED);
-    state.render.r_segs.rw_normalangle = state
-        .world
-        .p_setup
-        .seg(state.render.r_bsp.curline)
-        .angle
-        .wrapping_add(ANG90 as Angle);
-    let mut offsetangle: Angle = (state
-        .render
-        .r_segs
-        .rw_normalangle
-        .wrapping_sub(state.render.r_segs.rw_angle1 as Angle)
-        as i32)
-        .unsigned_abs();
-    if offsetangle > ANG90 as Angle {
-        offsetangle = ANG90 as Angle;
+    state.render.r_segs.rw_normalangle =
+        state.world.p_setup.seg(state.render.r_bsp.curline).angle + ANG90;
+    let mut offsetangle = Angle(
+        (state.render.r_segs.rw_normalangle - state.render.r_segs.rw_angle1)
+            .to_signed()
+            .unsigned_abs(),
+    );
+    if offsetangle > ANG90 {
+        offsetangle = ANG90;
     }
-    let distangle: Angle = (ANG90 as Angle).wrapping_sub(offsetangle);
+    let distangle: Angle = ANG90 - offsetangle;
     let curline_v1 = state.world.p_setup.vertexes
         [state.world.p_setup.seg(state.render.r_bsp.curline).v1.0 as usize];
     let (v1x, v1y) = (curline_v1.x, curline_v1.y);
     let hyp: Fixed = point_to_dist(&state.render.r_main, v1x, v1y);
-    let mut sineval: Fixed = FINESINE[(distangle >> ANGLETOFINESHIFT) as usize];
+    let mut sineval: Fixed = FINESINE[distangle.fine()];
     state.render.r_segs.rw_distance = fixed_mul(hyp, sineval);
     state.render.r_segs.rw_x = start;
     state.render.r_bsp.drawsegs[state.render.r_bsp.ds_p].x1 = state.render.r_segs.rw_x;
     state.render.r_bsp.drawsegs[state.render.r_bsp.ds_p].x2 = stop;
     state.render.r_bsp.drawsegs[state.render.r_bsp.ds_p].curline = state.render.r_bsp.curline;
     state.render.r_segs.rw_stopx = stop + 1;
-    let angle1 = state
-        .render
-        .r_main
-        .viewangle
-        .wrapping_add(state.render.r_main.xtoviewangle[start as usize]);
+    let angle1 = state.render.r_main.viewangle + state.render.r_main.xtoviewangle[start as usize];
     state.render.r_segs.rw_scale =
         scale_from_global_angle(&state.render.r_main, &state.render.r_segs, angle1);
     state.render.r_bsp.drawsegs[state.render.r_bsp.ds_p].scale1 = state.render.r_segs.rw_scale;
     if stop > start {
         state.render.r_bsp.drawsegs[state.render.r_bsp.ds_p].scale2 = {
-            let angle2 = state
-                .render
-                .r_main
-                .viewangle
-                .wrapping_add(state.render.r_main.xtoviewangle[stop as usize]);
+            let angle2 =
+                state.render.r_main.viewangle + state.render.r_main.xtoviewangle[stop as usize];
             scale_from_global_angle(&state.render.r_main, &state.render.r_segs, angle2)
         };
         state.render.r_segs.rw_scalestep = ((state.render.r_bsp.drawsegs[state.render.r_bsp.ds_p]
@@ -801,26 +786,16 @@ pub fn store_wall_range(state: &mut GameState, start: i32, stop: i32) {
         != 0
         || state.render.r_segs.maskedtexture;
     if state.render.r_segs.segtextured {
-        offsetangle = state
-            .render
-            .r_segs
-            .rw_normalangle
-            .wrapping_sub(state.render.r_segs.rw_angle1 as Angle);
+        offsetangle = state.render.r_segs.rw_normalangle - state.render.r_segs.rw_angle1;
         if offsetangle > ANG180 {
-            offsetangle = offsetangle.wrapping_neg();
+            offsetangle = -offsetangle;
         }
-        if offsetangle > ANG90 as Angle {
-            offsetangle = ANG90 as Angle;
+        if offsetangle > ANG90 {
+            offsetangle = ANG90;
         }
-        sineval = FINESINE[(offsetangle >> ANGLETOFINESHIFT) as usize];
+        sineval = FINESINE[offsetangle.fine()];
         state.render.r_segs.rw_offset = fixed_mul(hyp, sineval);
-        if state
-            .render
-            .r_segs
-            .rw_normalangle
-            .wrapping_sub(state.render.r_segs.rw_angle1 as Angle)
-            < ANG180
-        {
+        if (state.render.r_segs.rw_normalangle - state.render.r_segs.rw_angle1) < ANG180 {
             state.render.r_segs.rw_offset = -state.render.r_segs.rw_offset;
         }
         state.render.r_segs.rw_offset += state
@@ -829,9 +804,8 @@ pub fn store_wall_range(state: &mut GameState, start: i32, stop: i32) {
             .side_mut(state.render.r_bsp.sidedef)
             .textureoffset
             + state.world.p_setup.seg(state.render.r_bsp.curline).offset;
-        state.render.r_segs.rw_centerangle = (ANG90 as Angle)
-            .wrapping_add(state.render.r_main.viewangle)
-            .wrapping_sub(state.render.r_segs.rw_normalangle);
+        state.render.r_segs.rw_centerangle =
+            (ANG90 + state.render.r_main.viewangle) - state.render.r_segs.rw_normalangle;
         if state.render.r_main.fixedcolormap.is_none() {
             let mut lightnum: i32 = (i32::from(
                 state

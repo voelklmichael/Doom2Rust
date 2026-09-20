@@ -101,7 +101,6 @@ use crate::st_stuff::st_ticker;
 use crate::statdump::stat_copy;
 
 use crate::tables::ANG45;
-use crate::tables::ANGLETOFINESHIFT;
 use crate::tables::FINECOSINE;
 use crate::tables::FINESINE;
 use crate::tables::FINETANGENT;
@@ -1082,7 +1081,7 @@ pub fn check_spot(state: &mut GameState, playernum: PlayerId, mthing: &MapThing)
     state.game.g_game.bodyque[state.game.g_game.bodyqueslot % BODYQUESIZE] = Some(player_mo_id);
     state.game.g_game.bodyqueslot += 1;
     let ss = point_in_subsector(&state.world.p_setup, x, y);
-    let an: i32 = (ANG45 >> ANGLETOFINESHIFT) * (i32::from(mthing.angle) / 45);
+    let an: i32 = ANG45.fine() as i32 * (i32::from(mthing.angle) / 45);
     let (xa, ya): (Fixed, Fixed) = match an {
         4096 => (FINETANGENT[2048], FINETANGENT[0]),
         5120 => (FINETANGENT[3072], FINETANGENT[1024]),
