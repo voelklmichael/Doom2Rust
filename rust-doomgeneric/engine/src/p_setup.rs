@@ -1,5 +1,6 @@
 use crate::d_mode::GameMode;
 use crate::doomdef::MAXPLAYERS;
+use crate::enum_array::EnumArray;
 use crate::filesystem::DoomFileSystem;
 use crate::fixed_cstr::FixedCStr;
 use crate::g_game::death_match_spawn_player;
@@ -10,6 +11,7 @@ use crate::m_argv::parm_exists;
 use crate::m_argv::MArgvState;
 use crate::m_bbox::add_to_box;
 use crate::m_bbox::clear_box;
+use crate::m_bbox::BBox;
 use crate::m_bbox::BoxIndex;
 use crate::m_fixed::fixed_div;
 use crate::m_fixed::Fixed;
@@ -64,7 +66,7 @@ pub const ZERO_LINE: Line = Line {
     special: 0,
     tag: 0,
     sidenum: [0; 2],
-    bbox: [0; 4],
+    bbox: BBox::new([0; 4]),
     slopetype: SlopeType::Horizontal,
     frontsector: None,
     backsector: None,
@@ -81,7 +83,7 @@ pub const ZERO_SECTOR: Sector = Sector {
     tag: 0,
     soundtraversed: 0,
     soundtarget: None,
-    blockbox: [0; 4],
+    blockbox: EnumArray::new([0; 4]),
     soundorg: DegenMobj {
         thinker: Thinker {
             function: ThinkerFn::Paused,
@@ -416,7 +418,7 @@ pub fn load_nodes(state: &mut GameState, lump: i32) {
             y: ((reader.i16() as i32) << FRACBITS) as Fixed,
             dx: ((reader.i16() as i32) << FRACBITS) as Fixed,
             dy: ((reader.i16() as i32) << FRACBITS) as Fixed,
-            bbox: [[0; 4]; 2],
+            bbox: [BBox::new([0; 4]); 2],
             children: [0; 2],
         };
         for j in 0..2 {
@@ -480,18 +482,18 @@ pub fn load_line_defs(state: &mut GameState, lump: i32) {
             ld.slopetype = SlopeType::Negative;
         }
         if v1.x < v2.x {
-            ld.bbox[BoxIndex::Left as usize] = v1.x;
-            ld.bbox[BoxIndex::Right as usize] = v2.x;
+            ld.bbox[BoxIndex::Left] = v1.x;
+            ld.bbox[BoxIndex::Right] = v2.x;
         } else {
-            ld.bbox[BoxIndex::Left as usize] = v2.x;
-            ld.bbox[BoxIndex::Right as usize] = v1.x;
+            ld.bbox[BoxIndex::Left] = v2.x;
+            ld.bbox[BoxIndex::Right] = v1.x;
         }
         if v1.y < v2.y {
-            ld.bbox[BoxIndex::Bottom as usize] = v1.y;
-            ld.bbox[BoxIndex::Top as usize] = v2.y;
+            ld.bbox[BoxIndex::Bottom] = v1.y;
+            ld.bbox[BoxIndex::Top] = v2.y;
         } else {
-            ld.bbox[BoxIndex::Bottom as usize] = v2.y;
-            ld.bbox[BoxIndex::Top as usize] = v1.y;
+            ld.bbox[BoxIndex::Bottom] = v2.y;
+            ld.bbox[BoxIndex::Top] = v1.y;
         }
         ld.sidenum[0] = reader.i16();
         ld.sidenum[1] = reader.i16();
@@ -557,7 +559,7 @@ pub fn load_block_map(
     p_setup.blocklinks = vec![None; (p_setup.bmapwidth as usize) * (p_setup.bmapheight as usize)];
 }
 pub fn group_lines(p_setup: &mut PSetupState) {
-    let mut bbox: [Fixed; 4] = [0; 4];
+    let mut bbox = BBox::new([0; 4]);
     let mut block: i32;
     for i in 0..(p_setup.numsubsectors as usize) {
         let firstline = p_setup.subsectors[i].firstline;
@@ -607,32 +609,28 @@ pub fn group_lines(p_setup: &mut PSetupState) {
             add_to_box(&mut bbox, li_v2.x, li_v2.y);
         }
         let sector = &mut p_setup.sectors[i];
-        sector.soundorg.x =
-            ((bbox[BoxIndex::Right as usize] + bbox[BoxIndex::Left as usize]) / 2) as Fixed;
-        sector.soundorg.y =
-            ((bbox[BoxIndex::Top as usize] + bbox[BoxIndex::Bottom as usize]) / 2) as Fixed;
-        block = (bbox[BoxIndex::Top as usize] - p_setup.bmaporgy + 32 * FRACUNIT) >> MAPBLOCKSHIFT;
+        sector.soundorg.x = ((bbox[BoxIndex::Right] + bbox[BoxIndex::Left]) / 2) as Fixed;
+        sector.soundorg.y = ((bbox[BoxIndex::Top] + bbox[BoxIndex::Bottom]) / 2) as Fixed;
+        block = (bbox[BoxIndex::Top] - p_setup.bmaporgy + 32 * FRACUNIT) >> MAPBLOCKSHIFT;
         block = if block >= p_setup.bmapheight {
             p_setup.bmapheight - 1
         } else {
             block
         };
-        sector.blockbox[BoxIndex::Top as usize] = block;
-        block =
-            (bbox[BoxIndex::Bottom as usize] - p_setup.bmaporgy - 32 * FRACUNIT) >> MAPBLOCKSHIFT;
+        sector.blockbox[BoxIndex::Top] = block;
+        block = (bbox[BoxIndex::Bottom] - p_setup.bmaporgy - 32 * FRACUNIT) >> MAPBLOCKSHIFT;
         block = if block < 0 { 0 } else { block };
-        sector.blockbox[BoxIndex::Bottom as usize] = block;
-        block =
-            (bbox[BoxIndex::Right as usize] - p_setup.bmaporgx + 32 * FRACUNIT) >> MAPBLOCKSHIFT;
+        sector.blockbox[BoxIndex::Bottom] = block;
+        block = (bbox[BoxIndex::Right] - p_setup.bmaporgx + 32 * FRACUNIT) >> MAPBLOCKSHIFT;
         block = if block >= p_setup.bmapwidth {
             p_setup.bmapwidth - 1
         } else {
             block
         };
-        sector.blockbox[BoxIndex::Right as usize] = block;
-        block = (bbox[BoxIndex::Left as usize] - p_setup.bmaporgx - 32 * FRACUNIT) >> MAPBLOCKSHIFT;
+        sector.blockbox[BoxIndex::Right] = block;
+        block = (bbox[BoxIndex::Left] - p_setup.bmaporgx - 32 * FRACUNIT) >> MAPBLOCKSHIFT;
         block = if block < 0 { 0 } else { block };
-        sector.blockbox[BoxIndex::Left as usize] = block;
+        sector.blockbox[BoxIndex::Left] = block;
     }
 }
 fn pad_reject_array(

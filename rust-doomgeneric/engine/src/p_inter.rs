@@ -5,6 +5,7 @@ use crate::d_mode::{GameMode, GameVersion};
 use crate::d_player::CheatFlags;
 use crate::d_player::PowerType;
 use crate::d_player::WeaponType;
+use crate::enum_array::{ArrayIndex, EnumArray};
 use crate::g_game::GGameState;
 use crate::p_mobj::MobjFlags;
 use crate::p_mobj::PMobjState;
@@ -48,6 +49,11 @@ pub enum CardType {
     Yellowskull = 4,
     Redskull = 5,
 }
+impl ArrayIndex for CardType {
+    fn slot(self) -> usize {
+        self as usize
+    }
+}
 pub const IRONTICS: i32 = 2100;
 pub const INFRATICS: i32 = 4200;
 pub const INVISTICS: i32 = 2100;
@@ -69,8 +75,8 @@ pub const DEH_MEGASPHERE_HEALTH: i32 = DEH_DEFAULT_MEGASPHERE_HEALTH;
 pub const MAXHEALTH: i32 = 100;
 pub const BASETHRESHOLD: i32 = 100;
 pub const BONUSADD: i32 = 6;
-pub static MAXAMMO: [i32; 4] = [200, 50, 300, 50];
-pub static CLIPAMMO: [i32; 4] = [10, 4, 20, 1];
+pub static MAXAMMO: EnumArray<AmmoType, i32, 4> = EnumArray::new([200, 50, 300, 50]);
+pub static CLIPAMMO: EnumArray<AmmoType, i32, 4> = EnumArray::new([10, 4, 20, 1]);
 pub fn give_ammo(
     g_game: &mut GGameState,
     player_id: PlayerId,
@@ -85,21 +91,21 @@ pub fn give_ammo(
     if ammo as u32 > NUMAMMO as u32 {
         error(&format!("P_GiveAmmo: bad type {}", ammo as u32));
     }
-    if player.ammo[ammo as usize] == player.maxammo[ammo as usize] {
+    if player.ammo[ammo] == player.maxammo[ammo] {
         return false;
     }
     if num != 0 {
-        num *= CLIPAMMO[ammo as usize];
+        num *= CLIPAMMO[ammo];
     } else {
-        num = CLIPAMMO[ammo as usize] / 2;
+        num = CLIPAMMO[ammo] / 2;
     }
     if g_game.gameskill == SkillType::Baby || g_game.gameskill == SkillType::Nightmare {
         num <<= 1;
     }
-    let oldammo: i32 = player.ammo[ammo as usize];
-    player.ammo[ammo as usize] += num;
-    if player.ammo[ammo as usize] > player.maxammo[ammo as usize] {
-        player.ammo[ammo as usize] = player.maxammo[ammo as usize];
+    let oldammo: i32 = player.ammo[ammo];
+    player.ammo[ammo] += num;
+    if player.ammo[ammo] > player.maxammo[ammo] {
+        player.ammo[ammo] = player.maxammo[ammo];
     }
     if oldammo != 0 {
         return true;
@@ -107,7 +113,7 @@ pub fn give_ammo(
     match ammo as u32 {
         0 => {
             if player.readyweapon as u32 == WeaponType::Fist as i32 as u32 {
-                if player.weaponowned[WeaponType::Chaingun as usize] {
+                if player.weaponowned[WeaponType::Chaingun] {
                     player.pendingweapon = WeaponType::Chaingun;
                 } else {
                     player.pendingweapon = WeaponType::Pistol;
@@ -117,7 +123,7 @@ pub fn give_ammo(
         1 => {
             if (player.readyweapon as u32 == WeaponType::Fist as i32 as u32
                 || player.readyweapon as u32 == WeaponType::Pistol as i32 as u32)
-                && player.weaponowned[WeaponType::Shotgun as usize]
+                && player.weaponowned[WeaponType::Shotgun]
             {
                 player.pendingweapon = WeaponType::Shotgun;
             }
@@ -125,13 +131,13 @@ pub fn give_ammo(
         2 => {
             if (player.readyweapon as u32 == WeaponType::Fist as i32 as u32
                 || player.readyweapon as u32 == WeaponType::Pistol as i32 as u32)
-                && player.weaponowned[WeaponType::Plasma as usize]
+                && player.weaponowned[WeaponType::Plasma]
             {
                 player.pendingweapon = WeaponType::Plasma;
             }
         }
         3 if player.readyweapon as u32 == WeaponType::Fist as i32 as u32
-            && player.weaponowned[WeaponType::Missile as usize] =>
+            && player.weaponowned[WeaponType::Missile] =>
         {
             player.pendingweapon = WeaponType::Missile;
         }
@@ -148,25 +154,15 @@ pub fn give_weapon(
     let gaveammo: bool;
     let gaveweapon: bool;
     if state.game.g_game.netgame && state.game.g_game.deathmatch != 2 && !dropped {
-        if state.game.g_game.players[player].weaponowned[weapon as usize] {
+        if state.game.g_game.players[player].weaponowned[weapon] {
             return false;
         }
         state.game.g_game.players[player].bonuscount += BONUSADD;
-        state.game.g_game.players[player].weaponowned[weapon as usize] = true;
+        state.game.g_game.players[player].weaponowned[weapon] = true;
         if state.game.g_game.deathmatch != 0 {
-            give_ammo(
-                &mut state.game.g_game,
-                player,
-                WEAPONINFO[weapon as usize].ammo,
-                5,
-            );
+            give_ammo(&mut state.game.g_game, player, WEAPONINFO[weapon].ammo, 5);
         } else {
-            give_ammo(
-                &mut state.game.g_game,
-                player,
-                WEAPONINFO[weapon as usize].ammo,
-                2,
-            );
+            give_ammo(&mut state.game.g_game, player, WEAPONINFO[weapon].ammo, 2);
         }
         state.game.g_game.players[player].pendingweapon = weapon;
         if player == state.game.g_game.consoleplayer {
@@ -174,30 +170,20 @@ pub fn give_weapon(
         }
         return false;
     }
-    if WEAPONINFO[weapon as usize].ammo as u32 == AmmoType::Noammo as i32 as u32 {
+    if WEAPONINFO[weapon].ammo as u32 == AmmoType::Noammo as i32 as u32 {
         gaveammo = false;
     } else {
         if dropped {
-            gaveammo = give_ammo(
-                &mut state.game.g_game,
-                player,
-                WEAPONINFO[weapon as usize].ammo,
-                1,
-            );
+            gaveammo = give_ammo(&mut state.game.g_game, player, WEAPONINFO[weapon].ammo, 1);
         } else {
-            gaveammo = give_ammo(
-                &mut state.game.g_game,
-                player,
-                WEAPONINFO[weapon as usize].ammo,
-                2,
-            );
+            gaveammo = give_ammo(&mut state.game.g_game, player, WEAPONINFO[weapon].ammo, 2);
         }
     }
-    if state.game.g_game.players[player].weaponowned[weapon as usize] {
+    if state.game.g_game.players[player].weaponowned[weapon] {
         gaveweapon = false;
     } else {
         gaveweapon = true;
-        state.game.g_game.players[player].weaponowned[weapon as usize] = true;
+        state.game.g_game.players[player].weaponowned[weapon] = true;
         state.game.g_game.players[player].pendingweapon = weapon;
     }
     gaveweapon || gaveammo
@@ -230,45 +216,45 @@ pub fn give_armor(player: &mut Player, armortype: i32) -> bool {
     true
 }
 pub fn give_card(player: &mut Player, card: CardType) {
-    if player.cards[card as usize] {
+    if player.cards[card] {
         return;
     }
     player.bonuscount = BONUSADD;
-    player.cards[card as usize] = true;
+    player.cards[card] = true;
 }
 pub fn give_power(
     g_game: &mut GGameState,
     p_mobj: &mut PMobjState,
     player: PlayerId,
-    power: i32,
+    power: PowerType,
 ) -> bool {
-    if power == PowerType::Invulnerability as i32 {
-        g_game.players[player].powers[power as usize] = INVULNTICS;
+    if power == PowerType::Invulnerability {
+        g_game.players[player].powers[power] = INVULNTICS;
         return true;
     }
-    if power == PowerType::Invisibility as i32 {
-        g_game.players[player].powers[power as usize] = INVISTICS;
+    if power == PowerType::Invisibility {
+        g_game.players[player].powers[power] = INVISTICS;
         let player_mo = g_game.players[player].mo.unwrap();
         p_mobj.mo_mut(player_mo).flags |= MobjFlags::SHADOW;
         return true;
     }
-    if power == PowerType::Infrared as i32 {
-        g_game.players[player].powers[power as usize] = INFRATICS;
+    if power == PowerType::Infrared {
+        g_game.players[player].powers[power] = INFRATICS;
         return true;
     }
-    if power == PowerType::Ironfeet as i32 {
-        g_game.players[player].powers[power as usize] = IRONTICS;
+    if power == PowerType::Ironfeet {
+        g_game.players[player].powers[power] = IRONTICS;
         return true;
     }
-    if power == PowerType::Strength as i32 {
+    if power == PowerType::Strength {
         give_body(g_game, p_mobj, player, 100);
-        g_game.players[player].powers[power as usize] = 1;
+        g_game.players[player].powers[power] = 1;
         return true;
     }
-    if g_game.players[player].powers[power as usize] != 0 {
+    if g_game.players[player].powers[power] != 0 {
         return false;
     }
-    g_game.players[player].powers[power as usize] = 1;
+    g_game.players[player].powers[power] = 1;
     true
 }
 pub fn touch_special_thing(state: &mut GameState, special: MobjId, toucher: MobjId) {
@@ -338,7 +324,7 @@ pub fn touch_special_thing(state: &mut GameState, special: MobjId, toucher: Mobj
             sound = SfxName::Getpow;
         }
         62 => {
-            if !state.game.g_game.players[player].cards[CardType::Bluecard as usize] {
+            if !state.game.g_game.players[player].cards[CardType::Bluecard] {
                 state.game.g_game.players[player].message =
                     Some("Picked up a blue keycard.".to_string());
             }
@@ -348,7 +334,7 @@ pub fn touch_special_thing(state: &mut GameState, special: MobjId, toucher: Mobj
             }
         }
         64 => {
-            if !state.game.g_game.players[player].cards[CardType::Yellowcard as usize] {
+            if !state.game.g_game.players[player].cards[CardType::Yellowcard] {
                 state.game.g_game.players[player].message =
                     Some("Picked up a yellow keycard.".to_string());
             }
@@ -358,7 +344,7 @@ pub fn touch_special_thing(state: &mut GameState, special: MobjId, toucher: Mobj
             }
         }
         63 => {
-            if !state.game.g_game.players[player].cards[CardType::Redcard as usize] {
+            if !state.game.g_game.players[player].cards[CardType::Redcard] {
                 state.game.g_game.players[player].message =
                     Some("Picked up a red keycard.".to_string());
             }
@@ -368,7 +354,7 @@ pub fn touch_special_thing(state: &mut GameState, special: MobjId, toucher: Mobj
             }
         }
         65 => {
-            if !state.game.g_game.players[player].cards[CardType::Blueskull as usize] {
+            if !state.game.g_game.players[player].cards[CardType::Blueskull] {
                 state.game.g_game.players[player].message =
                     Some("Picked up a blue skull key.".to_string());
             }
@@ -378,7 +364,7 @@ pub fn touch_special_thing(state: &mut GameState, special: MobjId, toucher: Mobj
             }
         }
         67 => {
-            if !state.game.g_game.players[player].cards[CardType::Yellowskull as usize] {
+            if !state.game.g_game.players[player].cards[CardType::Yellowskull] {
                 state.game.g_game.players[player].message =
                     Some("Picked up a yellow skull key.".to_string());
             }
@@ -391,7 +377,7 @@ pub fn touch_special_thing(state: &mut GameState, special: MobjId, toucher: Mobj
             }
         }
         66 => {
-            if !state.game.g_game.players[player].cards[CardType::Redskull as usize] {
+            if !state.game.g_game.players[player].cards[CardType::Redskull] {
                 state.game.g_game.players[player].message =
                     Some("Picked up a red skull key.".to_string());
             }
@@ -423,7 +409,7 @@ pub fn touch_special_thing(state: &mut GameState, special: MobjId, toucher: Mobj
                 &mut state.game.g_game,
                 &mut state.world.p_mobj,
                 player,
-                PowerType::Invulnerability as i32,
+                PowerType::Invulnerability,
             ) {
                 return;
             }
@@ -435,7 +421,7 @@ pub fn touch_special_thing(state: &mut GameState, special: MobjId, toucher: Mobj
                 &mut state.game.g_game,
                 &mut state.world.p_mobj,
                 player,
-                PowerType::Strength as i32,
+                PowerType::Strength,
             ) {
                 return;
             }
@@ -452,7 +438,7 @@ pub fn touch_special_thing(state: &mut GameState, special: MobjId, toucher: Mobj
                 &mut state.game.g_game,
                 &mut state.world.p_mobj,
                 player,
-                PowerType::Invisibility as i32,
+                PowerType::Invisibility,
             ) {
                 return;
             }
@@ -464,7 +450,7 @@ pub fn touch_special_thing(state: &mut GameState, special: MobjId, toucher: Mobj
                 &mut state.game.g_game,
                 &mut state.world.p_mobj,
                 player,
-                PowerType::Ironfeet as i32,
+                PowerType::Ironfeet,
             ) {
                 return;
             }
@@ -477,7 +463,7 @@ pub fn touch_special_thing(state: &mut GameState, special: MobjId, toucher: Mobj
                 &mut state.game.g_game,
                 &mut state.world.p_mobj,
                 player,
-                PowerType::Allmap as i32,
+                PowerType::Allmap,
             ) {
                 return;
             }
@@ -489,7 +475,7 @@ pub fn touch_special_thing(state: &mut GameState, special: MobjId, toucher: Mobj
                 &mut state.game.g_game,
                 &mut state.world.p_mobj,
                 player,
-                PowerType::Infrared as i32,
+                PowerType::Infrared,
             ) {
                 return;
             }
@@ -824,7 +810,7 @@ pub fn damage_mobj(
         let player = state.game.g_game.player_mut(player_id);
         if damage < 1000
             && (player.cheats.contains(CheatFlags::GODMODE)
-                || player.powers[PowerType::Invulnerability as usize] != 0)
+                || player.powers[PowerType::Invulnerability] != 0)
         {
             return;
         }

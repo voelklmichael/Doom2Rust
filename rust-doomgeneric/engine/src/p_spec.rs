@@ -1049,21 +1049,21 @@ pub fn player_in_special_sector(state: &mut GameState, player: PlayerId) {
     }
     match special as i32 {
         5 => {
-            if state.game.g_game.player_mut(player).powers[PowerType::Ironfeet as usize] == 0
+            if state.game.g_game.player_mut(player).powers[PowerType::Ironfeet] == 0
                 && state.world.p_tick.leveltime & 0x1f == 0
             {
                 damage_mobj(state, player_mo, None, None, 10);
             }
         }
         7 => {
-            if state.game.g_game.player_mut(player).powers[PowerType::Ironfeet as usize] == 0
+            if state.game.g_game.player_mut(player).powers[PowerType::Ironfeet] == 0
                 && state.world.p_tick.leveltime & 0x1f == 0
             {
                 damage_mobj(state, player_mo, None, None, 5);
             }
         }
         16 | 4 => {
-            if (state.game.g_game.player_mut(player).powers[PowerType::Ironfeet as usize] == 0
+            if (state.game.g_game.player_mut(player).powers[PowerType::Ironfeet] == 0
                 || p_random(&mut state.world.m_random) < 5)
                 && state.world.p_tick.leveltime & 0x1f == 0
             {

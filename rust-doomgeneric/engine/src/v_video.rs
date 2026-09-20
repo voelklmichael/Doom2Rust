@@ -6,6 +6,7 @@ use crate::i_system::error;
 use crate::i_video::get_palette_index;
 use crate::i_video::IVideoState;
 use crate::m_bbox::add_to_box;
+use crate::m_bbox::BBox;
 use crate::m_fixed::Fixed;
 use crate::patch::Patch;
 use crate::platform::DoomPlatform;
@@ -55,7 +56,7 @@ impl GameState {
 }
 
 pub struct VVideoState {
-    pub dirtybox: [i32; 4],
+    pub dirtybox: BBox,
 }
 impl Default for VVideoState {
     fn default() -> Self {
@@ -65,7 +66,9 @@ impl Default for VVideoState {
 
 impl VVideoState {
     pub const fn new() -> Self {
-        Self { dirtybox: [0; 4] }
+        Self {
+            dirtybox: BBox::new([0; 4]),
+        }
     }
 }
 pub fn mark_rect(v_video: &mut VVideoState, dest: Screen, x: i32, y: i32, width: i32, height: i32) {

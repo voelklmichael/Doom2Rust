@@ -627,7 +627,7 @@ pub fn draw_psprite(state: &mut GameState, psp: &PspDef) {
         .game
         .g_game
         .player_mut(state.render.r_main.viewplayer)
-        .powers[PowerType::Invisibility as usize];
+        .powers[PowerType::Invisibility];
     if invisibility > 4 * 32 || invisibility & 8 != 0 {
         avis.colormap = None;
     } else if let Some(colormap) = state.render.r_main.fixedcolormap {

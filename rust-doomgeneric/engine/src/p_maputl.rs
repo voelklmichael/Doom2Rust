@@ -1,4 +1,5 @@
 use crate::game_state::GameState;
+use crate::m_bbox::BBox;
 use crate::m_bbox::BoxIndex;
 use crate::m_fixed::fixed_div;
 use crate::m_fixed::fixed_mul;
@@ -233,15 +234,15 @@ pub fn point_on_line_side(p_setup: &PSetupState, x: Fixed, y: Fixed, line: LineI
     }
     1
 }
-pub fn box_on_line_side(p_setup: &PSetupState, tmbox: [Fixed; 4], ld: LineId) -> i32 {
+pub fn box_on_line_side(p_setup: &PSetupState, tmbox: BBox, ld: LineId) -> i32 {
     let mut p1: i32 = 0;
     let mut p2: i32 = 0;
     let ldv = p_setup.line(ld);
     match ldv.slopetype as u32 {
         0 => {
             let ld_v1 = p_setup.vertexes[ldv.v1.0 as usize];
-            p1 = (tmbox[BoxIndex::Top as usize] > ld_v1.y) as i32;
-            p2 = (tmbox[BoxIndex::Bottom as usize] > ld_v1.y) as i32;
+            p1 = (tmbox[BoxIndex::Top] > ld_v1.y) as i32;
+            p2 = (tmbox[BoxIndex::Bottom] > ld_v1.y) as i32;
             if ldv.dx < 0 {
                 p1 ^= 1;
                 p2 ^= 1;
@@ -249,40 +250,20 @@ pub fn box_on_line_side(p_setup: &PSetupState, tmbox: [Fixed; 4], ld: LineId) ->
         }
         1 => {
             let ld_v1 = p_setup.vertexes[ldv.v1.0 as usize];
-            p1 = (tmbox[BoxIndex::Right as usize] < ld_v1.x) as i32;
-            p2 = (tmbox[BoxIndex::Left as usize] < ld_v1.x) as i32;
+            p1 = (tmbox[BoxIndex::Right] < ld_v1.x) as i32;
+            p2 = (tmbox[BoxIndex::Left] < ld_v1.x) as i32;
             if ldv.dy < 0 {
                 p1 ^= 1;
                 p2 ^= 1;
             }
         }
         2 => {
-            p1 = point_on_line_side(
-                p_setup,
-                tmbox[BoxIndex::Left as usize],
-                tmbox[BoxIndex::Top as usize],
-                ld,
-            );
-            p2 = point_on_line_side(
-                p_setup,
-                tmbox[BoxIndex::Right as usize],
-                tmbox[BoxIndex::Bottom as usize],
-                ld,
-            );
+            p1 = point_on_line_side(p_setup, tmbox[BoxIndex::Left], tmbox[BoxIndex::Top], ld);
+            p2 = point_on_line_side(p_setup, tmbox[BoxIndex::Right], tmbox[BoxIndex::Bottom], ld);
         }
         3 => {
-            p1 = point_on_line_side(
-                p_setup,
-                tmbox[BoxIndex::Right as usize],
-                tmbox[BoxIndex::Top as usize],
-                ld,
-            );
-            p2 = point_on_line_side(
-                p_setup,
-                tmbox[BoxIndex::Left as usize],
-                tmbox[BoxIndex::Bottom as usize],
-                ld,
-            );
+            p1 = point_on_line_side(p_setup, tmbox[BoxIndex::Right], tmbox[BoxIndex::Top], ld);
+            p2 = point_on_line_side(p_setup, tmbox[BoxIndex::Left], tmbox[BoxIndex::Bottom], ld);
         }
         _ => {}
     }

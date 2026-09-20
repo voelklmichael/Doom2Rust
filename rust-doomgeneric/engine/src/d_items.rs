@@ -1,4 +1,6 @@
 use crate::d_player::AmmoType;
+use crate::d_player::WeaponType;
+use crate::enum_array::EnumArray;
 use crate::p_mobj::StateNum;
 #[derive(Copy, Clone)]
 pub struct WeaponInfo {
@@ -9,7 +11,7 @@ pub struct WeaponInfo {
     pub atkstate: StateNum,
     pub flashstate: StateNum,
 }
-pub static WEAPONINFO: [WeaponInfo; 9] = [
+pub static WEAPONINFO: EnumArray<WeaponType, WeaponInfo, 9> = EnumArray::new([
     WeaponInfo {
         ammo: AmmoType::Noammo,
         upstate: StateNum::Punchup,
@@ -82,4 +84,4 @@ pub static WEAPONINFO: [WeaponInfo; 9] = [
         atkstate: StateNum::Dsgun1,
         flashstate: StateNum::Dsgunflash1,
     },
-];
+]);

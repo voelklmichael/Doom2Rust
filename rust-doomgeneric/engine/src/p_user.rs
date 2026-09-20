@@ -250,22 +250,22 @@ pub fn player_think(state: &mut GameState, player_id: PlayerId) {
                 >> BT_WEAPONSHIFT,
         );
         if newweapon as u32 == WeaponType::Fist as i32 as u32
-            && state.game.g_game.players[player].weaponowned[WeaponType::Chainsaw as usize]
+            && state.game.g_game.players[player].weaponowned[WeaponType::Chainsaw]
             && !(state.game.g_game.players[player].readyweapon as u32
                 == WeaponType::Chainsaw as i32 as u32
-                && state.game.g_game.players[player].powers[PowerType::Strength as usize] != 0)
+                && state.game.g_game.players[player].powers[PowerType::Strength] != 0)
         {
             newweapon = WeaponType::Chainsaw;
         }
         if state.game.doomstat.gamemode == GameMode::Commercial
             && newweapon as u32 == WeaponType::Shotgun as i32 as u32
-            && state.game.g_game.players[player].weaponowned[WeaponType::Supershotgun as usize]
+            && state.game.g_game.players[player].weaponowned[WeaponType::Supershotgun]
             && state.game.g_game.players[player].readyweapon as u32
                 != WeaponType::Supershotgun as i32 as u32
         {
             newweapon = WeaponType::Supershotgun;
         }
-        if state.game.g_game.players[player].weaponowned[newweapon as usize]
+        if state.game.g_game.players[player].weaponowned[newweapon]
             && newweapon as u32 != state.game.g_game.players[player].readyweapon as u32
             && (newweapon as u32 != WeaponType::Plasma as i32 as u32
                 && newweapon as u32 != WeaponType::Bfg as i32 as u32
@@ -283,23 +283,23 @@ pub fn player_think(state: &mut GameState, player_id: PlayerId) {
         state.game.g_game.players[player].usedown = false;
     }
     move_psprites(state, player_id);
-    if state.game.g_game.players[player].powers[PowerType::Strength as usize] != 0 {
-        state.game.g_game.players[player].powers[PowerType::Strength as usize] += 1;
+    if state.game.g_game.players[player].powers[PowerType::Strength] != 0 {
+        state.game.g_game.players[player].powers[PowerType::Strength] += 1;
     }
-    if state.game.g_game.players[player].powers[PowerType::Invulnerability as usize] != 0 {
-        state.game.g_game.players[player].powers[PowerType::Invulnerability as usize] -= 1;
+    if state.game.g_game.players[player].powers[PowerType::Invulnerability] != 0 {
+        state.game.g_game.players[player].powers[PowerType::Invulnerability] -= 1;
     }
-    if state.game.g_game.players[player].powers[PowerType::Invisibility as usize] != 0 {
-        state.game.g_game.players[player].powers[PowerType::Invisibility as usize] -= 1;
-        if state.game.g_game.players[player].powers[PowerType::Invisibility as usize] == 0 {
+    if state.game.g_game.players[player].powers[PowerType::Invisibility] != 0 {
+        state.game.g_game.players[player].powers[PowerType::Invisibility] -= 1;
+        if state.game.g_game.players[player].powers[PowerType::Invisibility] == 0 {
             state.world.p_mobj.mo_mut(player_mo).flags &= !MobjFlags::SHADOW;
         }
     }
-    if state.game.g_game.players[player].powers[PowerType::Infrared as usize] != 0 {
-        state.game.g_game.players[player].powers[PowerType::Infrared as usize] -= 1;
+    if state.game.g_game.players[player].powers[PowerType::Infrared] != 0 {
+        state.game.g_game.players[player].powers[PowerType::Infrared] -= 1;
     }
-    if state.game.g_game.players[player].powers[PowerType::Ironfeet as usize] != 0 {
-        state.game.g_game.players[player].powers[PowerType::Ironfeet as usize] -= 1;
+    if state.game.g_game.players[player].powers[PowerType::Ironfeet] != 0 {
+        state.game.g_game.players[player].powers[PowerType::Ironfeet] -= 1;
     }
     if state.game.g_game.players[player].damagecount != 0 {
         state.game.g_game.players[player].damagecount -= 1;
@@ -307,18 +307,17 @@ pub fn player_think(state: &mut GameState, player_id: PlayerId) {
     if state.game.g_game.players[player].bonuscount != 0 {
         state.game.g_game.players[player].bonuscount -= 1;
     }
-    if state.game.g_game.players[player].powers[PowerType::Invulnerability as usize] != 0 {
-        if state.game.g_game.players[player].powers[PowerType::Invulnerability as usize] > 4 * 32
-            || state.game.g_game.players[player].powers[PowerType::Invulnerability as usize] & 8
-                != 0
+    if state.game.g_game.players[player].powers[PowerType::Invulnerability] != 0 {
+        if state.game.g_game.players[player].powers[PowerType::Invulnerability] > 4 * 32
+            || state.game.g_game.players[player].powers[PowerType::Invulnerability] & 8 != 0
         {
             state.game.g_game.players[player].fixedcolormap = INVERSECOLORMAP;
         } else {
             state.game.g_game.players[player].fixedcolormap = 0;
         }
-    } else if state.game.g_game.players[player].powers[PowerType::Infrared as usize] != 0 {
-        if state.game.g_game.players[player].powers[PowerType::Infrared as usize] > 4 * 32
-            || state.game.g_game.players[player].powers[PowerType::Infrared as usize] & 8 != 0
+    } else if state.game.g_game.players[player].powers[PowerType::Infrared] != 0 {
+        if state.game.g_game.players[player].powers[PowerType::Infrared] > 4 * 32
+            || state.game.g_game.players[player].powers[PowerType::Infrared] & 8 != 0
         {
             state.game.g_game.players[player].fixedcolormap = 1;
         } else {

@@ -24,6 +24,7 @@ pub(crate) mod doomgeneric;
 pub(crate) mod doomstat;
 pub(crate) mod dstrings;
 pub(crate) mod dummy;
+pub(crate) mod enum_array;
 pub(crate) mod f_finale;
 pub(crate) mod f_wipe;
 pub(crate) mod filesystem;

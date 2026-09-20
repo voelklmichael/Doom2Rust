@@ -270,9 +270,9 @@ pub fn do_locked_door(state: &mut GameState, line: LineId, kind: VldoorE, thing:
     let (blue, red, yellow) = {
         let p = state.game.g_game.player_mut(player_id);
         (
-            p.cards[CardType::Bluecard as usize] || p.cards[CardType::Blueskull as usize],
-            p.cards[CardType::Redcard as usize] || p.cards[CardType::Redskull as usize],
-            p.cards[CardType::Yellowcard as usize] || p.cards[CardType::Yellowskull as usize],
+            p.cards[CardType::Bluecard] || p.cards[CardType::Blueskull],
+            p.cards[CardType::Redcard] || p.cards[CardType::Redskull],
+            p.cards[CardType::Yellowcard] || p.cards[CardType::Yellowskull],
         )
     };
     let missing = match state.world.p_setup.line(line).special as i32 {
@@ -360,9 +360,9 @@ pub fn ev_vertical_door(state: &mut GameState, line: LineId, thing: MobjId) {
         let (blue, red, yellow) = {
             let p = state.game.g_game.player_mut(player_id);
             (
-                p.cards[CardType::Bluecard as usize] || p.cards[CardType::Blueskull as usize],
-                p.cards[CardType::Redcard as usize] || p.cards[CardType::Redskull as usize],
-                p.cards[CardType::Yellowcard as usize] || p.cards[CardType::Yellowskull as usize],
+                p.cards[CardType::Bluecard] || p.cards[CardType::Blueskull],
+                p.cards[CardType::Redcard] || p.cards[CardType::Redskull],
+                p.cards[CardType::Yellowcard] || p.cards[CardType::Yellowskull],
             )
         };
         let missing = match linev.special as i32 {
