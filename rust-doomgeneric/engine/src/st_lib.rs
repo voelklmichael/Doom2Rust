@@ -121,11 +121,8 @@ pub fn stlib_draw_num(state: &mut GameState, n: &mut StNumber, mut num: i32) {
         let dest_screen = Screen::Video;
         draw_patch(state, dest_screen, x - w, n.y, &zero_patch);
     }
-    while num != 0 && {
-        let fresh0 = numdigits;
+    while num != 0 && numdigits != 0 {
         numdigits -= 1;
-        fresh0 != 0
-    } {
         x -= w;
         let digit_lump = state.ui.st_stuff.digit_set(n.p)[(num % 10) as usize];
         let digit_patch = cache_patch_num(&*state.assets.fs, &mut state.assets.w_wad, digit_lump);

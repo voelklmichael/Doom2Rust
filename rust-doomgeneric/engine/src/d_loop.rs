@@ -378,12 +378,7 @@ pub fn try_run_tics(state: &mut GameState) {
         }
         sleep(&mut *state.io.platform, 1);
     }
-    loop {
-        let fresh0 = counts;
-        counts -= 1;
-        if fresh0 == 0 {
-            break;
-        }
+    for _ in 0..counts {
         if !players_in_game(&state.game.d_loop) {
             return;
         }

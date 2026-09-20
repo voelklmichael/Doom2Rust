@@ -815,12 +815,7 @@ pub fn draw_num(state: &mut GameState, mut x: i32, y: i32, mut n: i32, mut digit
     if n == 1994 {
         return 0;
     }
-    loop {
-        let fresh0 = digits;
-        digits -= 1;
-        if fresh0 == 0 {
-            break;
-        }
+    for _ in 0..digits {
         x -= fontwidth;
         let digit_patch = cache_patch_num(
             &*state.assets.fs,

@@ -568,9 +568,8 @@ pub fn find_next_highest_floor(
                 } else if h == MAX_ADJOINING_SECTORS + 2 {
                     error("Sector with more than 22 adjoining sectors. Vanilla will crash here");
                 }
-                let fresh1 = h;
+                heightlist[h as usize] = other_floor;
                 h += 1;
-                heightlist[fresh1 as usize] = other_floor;
             }
         }
     }
@@ -1116,8 +1115,7 @@ pub fn update_specials(state: &mut GameState) {
         line = state.world.p_spec.linespeciallist[i];
         let linev = state.world.p_setup.line(line);
         if linev.special as i32 == 48 {
-            let fresh0 = &mut state.world.p_setup.sides[linev.sidenum[0] as usize].textureoffset;
-            *fresh0 += FRACUNIT;
+            state.world.p_setup.sides[linev.sidenum[0] as usize].textureoffset += FRACUNIT;
         }
     }
     for i in 0..(MAXBUTTONS as usize) {
