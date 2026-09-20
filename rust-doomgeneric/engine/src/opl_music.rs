@@ -787,7 +787,7 @@ mod tests {
             127, // note on (last)
             0x81,
             0x0c, // delay 140
-            0x00 | 0x80,
+            0x80, // release-note event (type 0) with the last-event flag
             69,
             0x00, // note off (last), delay 0
             0x60,
