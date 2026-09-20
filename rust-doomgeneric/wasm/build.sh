@@ -8,9 +8,12 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
-cargo build --release --target wasm32-unknown-unknown
+# The `wasm` profile (see the workspace Cargo.toml) optimizes for size; the name section is only
+# useful for debugging and is 12% of the file.
+cargo build --profile wasm --target wasm32-unknown-unknown
 wasm-bindgen --target web --out-dir www/pkg --no-typescript \
-    ../target/wasm32-unknown-unknown/release/doomgeneric_wasm.wasm
+    --remove-name-section --remove-producers-section \
+    ../target/wasm32-unknown-unknown/wasm/doomgeneric_wasm.wasm
 
 if [ "${1:-}" = serve ]; then
     echo "http://localhost:8000"

@@ -1,6 +1,6 @@
 # doomgeneric_wasm
 
-DOOM in the browser: the engine compiled to WebAssembly. The page is a static site of about 1 MB
+DOOM in the browser: the engine compiled to WebAssembly. The page is a static site of about 700 KB
 with **no game data in it**: you drop a DOOM IWAD (`doom1.wad`, `doom.wad`, `doom2.wad`, ...) onto
 the game window, or pick one with the button. The shareware `doom1.wad` works, and so does the WAD
 of a game you own. The game starts as soon as the file is chosen. The file is not uploaded

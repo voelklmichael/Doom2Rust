@@ -1,5 +1,5 @@
 # Publishes the browser version (rust-doomgeneric/wasm) with GitHub Pages: a static site of about
-# 1 MB. It contains no game data; the player drops their own WAD on the page.
+# 700 KB. It contains no game data; the player drops their own WAD on the page.
 #
 # One-time setup in the repository: Settings > Pages > Build and deployment > Source: GitHub Actions.
 name: Pages
