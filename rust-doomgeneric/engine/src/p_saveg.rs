@@ -882,7 +882,6 @@ pub fn archive_thinkers(world: &mut World) {
     saveg_write8(&mut world.p_saveg, ThinkerClass::End as i32 as u8);
 }
 pub fn un_archive_thinkers(state: &mut GameState) {
-    let mut tclass: u8;
     let mut cursor = state.world.p_tick.head();
     while let Some(id) = cursor {
         // Unlike the raw-pointer version this replaces, `next` lives in our
@@ -960,7 +959,7 @@ pub fn un_archive_thinkers(state: &mut GameState) {
     }
     init_thinkers(&mut state.world.p_tick);
     loop {
-        tclass = saveg_read8(&mut state.world.p_saveg);
+        let tclass: u8 = saveg_read8(&mut state.world.p_saveg);
         match tclass as i32 {
             0 => return,
             1 => {
@@ -1108,9 +1107,8 @@ pub fn archive_specials(world: &mut World) {
     );
 }
 pub fn un_archive_specials(world: &mut World) {
-    let mut tclass: u8;
     loop {
-        tclass = saveg_read8(&mut world.p_saveg);
+        let tclass: u8 = saveg_read8(&mut world.p_saveg);
         match tclass as i32 {
             7 => return,
             0 => {

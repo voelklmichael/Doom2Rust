@@ -682,7 +682,6 @@ pub fn max_out_window_scale(am_map: &mut AmMapState) {
     activate_new_scale(am_map);
 }
 pub fn am_responder(state: &mut GameState, ev: &Event) -> bool {
-    let key: i32;
     let mut rc: bool = false;
     if !state.ui.am_map.automapactive {
         if ev.kind == EvType::Keydown && ev.data1 == state.game.m_controls.key_map_toggle {
@@ -692,7 +691,7 @@ pub fn am_responder(state: &mut GameState, ev: &Event) -> bool {
         }
     } else if ev.kind == EvType::Keydown {
         rc = true;
-        key = ev.data1;
+        let key: i32 = ev.data1;
         if key == state.game.m_controls.key_map_east {
             if state.ui.am_map.followplayer {
                 rc = false;
@@ -777,7 +776,7 @@ pub fn am_responder(state: &mut GameState, ev: &Event) -> bool {
         }
     } else if ev.kind == EvType::Keyup {
         rc = false;
-        key = ev.data1;
+        let key: i32 = ev.data1;
         if key == state.game.m_controls.key_map_east || key == state.game.m_controls.key_map_west {
             if !state.ui.am_map.followplayer {
                 state.ui.am_map.m_paninc.x = 0;
@@ -850,8 +849,6 @@ pub fn clip_mline(am_map: &AmMapState, ml: &MLine, fl: &mut FLine) -> bool {
     let mut outcode1 = Outcode::empty();
     let mut outcode2 = Outcode::empty();
     let mut tmp: FPoint = FPoint { x: 0, y: 0 };
-    let mut dx: i32;
-    let mut dy: i32;
     if ml.a.y > am_map.m_y2 {
         outcode1 = Outcode::TOP;
     } else if ml.a.y < am_map.m_y {
@@ -896,23 +893,23 @@ pub fn clip_mline(am_map: &AmMapState, ml: &MLine, fl: &mut FLine) -> bool {
             outcode1
         };
         if outside.contains(Outcode::TOP) {
-            dy = fl.a.y - fl.b.y;
-            dx = fl.b.x - fl.a.x;
+            let dy: i32 = fl.a.y - fl.b.y;
+            let dx: i32 = fl.b.x - fl.a.x;
             tmp.x = fl.a.x + dx * fl.a.y / dy;
             tmp.y = 0;
         } else if outside.contains(Outcode::BOTTOM) {
-            dy = fl.a.y - fl.b.y;
-            dx = fl.b.x - fl.a.x;
+            let dy: i32 = fl.a.y - fl.b.y;
+            let dx: i32 = fl.b.x - fl.a.x;
             tmp.x = fl.a.x + dx * (fl.a.y - am_map.f_h) / dy;
             tmp.y = am_map.f_h - 1;
         } else if outside.contains(Outcode::RIGHT) {
-            dy = fl.b.y - fl.a.y;
-            dx = fl.b.x - fl.a.x;
+            let dy: i32 = fl.b.y - fl.a.y;
+            let dx: i32 = fl.b.x - fl.a.x;
             tmp.y = fl.a.y + dy * (am_map.f_w - 1 - fl.a.x) / dx;
             tmp.x = am_map.f_w - 1;
         } else if outside.contains(Outcode::LEFT) {
-            dy = fl.b.y - fl.a.y;
-            dx = fl.b.x - fl.a.x;
+            let dy: i32 = fl.b.y - fl.a.y;
+            let dx: i32 = fl.b.x - fl.a.x;
             tmp.y = fl.a.y + dy * -fl.a.x / dx;
             tmp.x = 0;
         } else {
@@ -1215,7 +1212,6 @@ pub fn draw_line_character(
 pub fn draw_players(state: &mut GameState) {
     const THEIR_COLORS: [i32; 4] = [GREENS, GRAYS, BROWNS, REDS];
     let mut their_color: i32 = -1;
-    let mut color: i32;
     if !state.game.g_game.netgame {
         let plr_mo_id = state
             .game
@@ -1249,11 +1245,11 @@ pub fn draw_players(state: &mut GameState) {
             && PlayerId(i as u8) != state.ui.am_map.plr)
             && state.game.g_game.playeringame[i as usize]
         {
-            if p_invisibility != 0 {
-                color = 246;
+            let color: i32 = if p_invisibility != 0 {
+                246
             } else {
-                color = THEIR_COLORS[their_color as usize];
-            }
+                THEIR_COLORS[their_color as usize]
+            };
             let p_mo = state.world.p_mobj.mo(p_mo_id.unwrap());
             let (p_angle, p_x, p_y) = (p_mo.angle, p_mo.x, p_mo.y);
             draw_line_character(state, &PLAYER_ARROW, 0, p_angle, color, p_x, p_y);
@@ -1281,20 +1277,16 @@ pub fn draw_things(state: &mut GameState, colors: i32) {
     }
 }
 pub fn draw_marks(state: &mut GameState) {
-    let mut fx: i32;
-    let mut fy: i32;
-    let mut w: i32;
-    let mut h: i32;
     for i in 0..(AM_NUMMARKPOINTS as usize) {
         if state.ui.am_map.markpoints[i].x != -1 {
-            w = 5;
-            h = 6;
-            fx = state.ui.am_map.f_x as Fixed
+            let w: i32 = 5;
+            let h: i32 = 6;
+            let fx: i32 = state.ui.am_map.f_x as Fixed
                 + (fixed_mul(
                     state.ui.am_map.markpoints[i].x - state.ui.am_map.m_x,
                     state.ui.am_map.scale_mtof,
                 ) >> 16);
-            fy = state.ui.am_map.f_y as Fixed
+            let fy: i32 = state.ui.am_map.f_y as Fixed
                 + (state.ui.am_map.f_h as Fixed
                     - (fixed_mul(
                         state.ui.am_map.markpoints[i].y - state.ui.am_map.m_y,

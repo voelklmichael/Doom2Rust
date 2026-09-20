@@ -1296,9 +1296,8 @@ pub fn string_width(
     string: &str,
 ) -> i32 {
     let mut w: i32 = 0;
-    let mut c: i32;
     for b in string.bytes() {
-        c = b.to_ascii_uppercase() as i32 - HU_FONTSTART;
+        let c: i32 = b.to_ascii_uppercase() as i32 - HU_FONTSTART;
         if (0..HU_FONTSIZE).contains(&c) {
             let font_patch = cache_patch_num(fs, w_wad, hu_stuff.hu_font[c as usize]);
             w += font_patch.width();
@@ -1358,7 +1357,6 @@ fn is_null_key(key: i32) -> bool {
     key == KEY_PAUSE || key == KEY_CAPSLOCK || key == KEY_SCRLCK || key == KEY_NUMLOCK
 }
 pub fn m_responder(state: &mut GameState, ev: &Event) -> bool {
-    let mut i: i32;
     if state.game.g_game.testcontrols {
         if ev.kind == EvType::Quit
             || ev.kind == EvType::Keydown
@@ -1708,6 +1706,8 @@ pub fn m_responder(state: &mut GameState, ev: &Event) -> bool {
         }
         return true;
     } else if ch != 0 || is_null_key(key) {
+        let mut i: i32;
+
         for i in state.ui.m_menu.item_on as i32 + 1..state.ui.m_menu.current().numitems as i32 {
             if state.ui.m_menu.current().items[i as usize].alpha_key as i32 == ch {
                 state.ui.m_menu.item_on = i as i16;

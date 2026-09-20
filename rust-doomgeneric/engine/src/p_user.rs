@@ -142,8 +142,6 @@ pub fn move_player(state: &mut GameState, player_id: PlayerId) {
 pub const ANG5: i32 = ANG90 / 18;
 pub fn death_think(state: &mut GameState, player_id: PlayerId) {
     let player = player_id;
-    let angle: Angle;
-    let delta: Angle;
     move_psprites(state, player_id);
     if state.game.g_game.players[player].viewheight > 6 * FRACUNIT {
         state.game.g_game.players[player].viewheight -= FRACUNIT;
@@ -160,14 +158,14 @@ pub fn death_think(state: &mut GameState, player_id: PlayerId) {
         && state.game.g_game.players[player].attacker != state.game.g_game.players[player].mo
     {
         let attacker = state.game.g_game.players[player].attacker.unwrap();
-        angle = point_to_angle2(
+        let angle: Angle = point_to_angle2(
             &mut state.render.r_main,
             state.world.p_mobj.mo(player_mo).x,
             state.world.p_mobj.mo(player_mo).y,
             state.world.p_mobj.mo(attacker).x,
             state.world.p_mobj.mo(attacker).y,
         );
-        delta = angle.wrapping_sub(state.world.p_mobj.mo(player_mo).angle);
+        let delta: Angle = angle.wrapping_sub(state.world.p_mobj.mo(player_mo).angle);
         if delta < ANG5 as Angle || delta > -ANG5 as u32 {
             state.world.p_mobj.mo_mut(player_mo).angle = angle;
             if state.game.g_game.players[player].damagecount != 0 {
@@ -197,7 +195,6 @@ pub fn death_think(state: &mut GameState, player_id: PlayerId) {
 }
 pub fn player_think(state: &mut GameState, player_id: PlayerId) {
     let player = player_id;
-    let mut newweapon: WeaponType;
     let player_mo = state.game.g_game.players[player].mo.unwrap();
     if state.game.g_game.players[player]
         .cheats
@@ -245,7 +242,7 @@ pub fn player_think(state: &mut GameState, player_id: PlayerId) {
         state.game.g_game.players[player_id].cmd.buttons = 0_u8;
     }
     if state.game.g_game.players[player_id].cmd.buttons as i32 & BT_CHANGE != 0 {
-        newweapon = weapontype_from_raw(
+        let mut newweapon: WeaponType = weapontype_from_raw(
             (state.game.g_game.players[player_id].cmd.buttons as i32 & BT_WEAPONMASK)
                 >> BT_WEAPONSHIFT,
         );

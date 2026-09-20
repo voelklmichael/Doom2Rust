@@ -288,7 +288,6 @@ pub fn check_thing(state: &mut GameState, thing_id: MobjId) -> bool {
     let thing = thing_id;
     let tmthing = state.world.p_map.tmthing.unwrap();
 
-    let solid: bool;
     let damage: i32;
     if !state
         .world
@@ -407,7 +406,7 @@ pub fn check_thing(state: &mut GameState, thing_id: MobjId) -> bool {
         .flags
         .contains(MobjFlags::SPECIAL)
     {
-        solid = state
+        let solid: bool = state
             .world
             .p_mobj
             .mo(thing)
@@ -487,9 +486,6 @@ pub fn check_position(state: &mut GameState, thing: MobjId, x: Fixed, y: Fixed) 
     true
 }
 pub fn try_move(state: &mut GameState, thing: MobjId, x: Fixed, y: Fixed) -> bool {
-    let mut side: i32;
-    let mut oldside: i32;
-    let mut ld: LineId;
     state.world.p_map.floatok = false;
     if !check_position(state, thing, x, y) {
         return false;
@@ -556,14 +552,14 @@ pub fn try_move(state: &mut GameState, thing: MobjId, x: Fixed, y: Fixed) -> boo
     {
         while state.world.p_map.numspechit > 0 {
             state.world.p_map.numspechit -= 1;
-            ld = state.world.p_map.spechit[state.world.p_map.numspechit as usize];
-            side = point_on_line_side(
+            let ld: LineId = state.world.p_map.spechit[state.world.p_map.numspechit as usize];
+            let side: i32 = point_on_line_side(
                 &state.world.p_setup,
                 state.world.p_mobj.mo(thing).x,
                 state.world.p_mobj.mo(thing).y,
                 ld,
             );
-            oldside = point_on_line_side(&state.world.p_setup, oldx, oldy, ld);
+            let oldside: i32 = point_on_line_side(&state.world.p_setup, oldx, oldy, ld);
             if side != oldside && state.world.p_setup.line(ld).special != 0 {
                 cross_special_line(state, ld.0 as i32, oldside, thing);
             }
@@ -769,9 +765,10 @@ pub fn slide_move(state: &mut GameState, mo: MobjId) {
     }
 }
 pub fn aim_traverse(state: &mut GameState, intercept: Intercept) -> bool {
-    let mut slope: Fixed;
     let dist: Fixed;
     if let InterceptTarget::Line(li) = intercept.target {
+        let mut slope: Fixed;
+
         let liv = state.world.p_setup.line(li);
         if !liv.flags.contains(LineFlags::TWOSIDED) {
             return false;
@@ -866,13 +863,6 @@ pub fn aim_traverse(state: &mut GameState, intercept: Intercept) -> bool {
     false
 }
 pub fn shoot_traverse(state: &mut GameState, intercept: Intercept) -> bool {
-    let x: Fixed;
-    let y: Fixed;
-    let z: Fixed;
-    let frac: Fixed;
-    let dist: Fixed;
-    let thingtopslope: Fixed;
-    let thingbottomslope: Fixed;
     let shootthing = state.world.p_map.shootthing.unwrap();
     if let InterceptTarget::Line(li) = intercept.target {
         if state.world.p_setup.line(li).special != 0 {
@@ -885,6 +875,8 @@ pub fn shoot_traverse(state: &mut GameState, intercept: Intercept) -> bool {
             .flags
             .contains(LineFlags::TWOSIDED)
         {
+            let _dist: Fixed;
+
             line_opening(&mut state.world.p_maputl, &mut state.world.p_setup, li);
             let dist = fixed_mul(state.world.p_map.attackrange, intercept.frac);
             // A missing back side (emulated) leaves both openings to check.
@@ -918,10 +910,12 @@ pub fn shoot_traverse(state: &mut GameState, intercept: Intercept) -> bool {
                 return true;
             }
         }
-        frac = intercept.frac - fixed_div(4 * FRACUNIT, state.world.p_map.attackrange);
-        x = state.world.p_maputl.trace.x + fixed_mul(state.world.p_maputl.trace.dx, frac);
-        y = state.world.p_maputl.trace.y + fixed_mul(state.world.p_maputl.trace.dy, frac);
-        z = state.world.p_map.shootz
+        let frac: Fixed = intercept.frac - fixed_div(4 * FRACUNIT, state.world.p_map.attackrange);
+        let x: Fixed =
+            state.world.p_maputl.trace.x + fixed_mul(state.world.p_maputl.trace.dx, frac);
+        let y: Fixed =
+            state.world.p_maputl.trace.y + fixed_mul(state.world.p_maputl.trace.dy, frac);
+        let z: Fixed = state.world.p_map.shootz
             + fixed_mul(
                 state.world.p_map.aimslope,
                 fixed_mul(frac, state.world.p_map.attackrange),
@@ -971,8 +965,8 @@ pub fn shoot_traverse(state: &mut GameState, intercept: Intercept) -> bool {
         {
             return true;
         }
-        dist = fixed_mul(state.world.p_map.attackrange, intercept.frac);
-        thingtopslope = fixed_div(
+        let dist: Fixed = fixed_mul(state.world.p_map.attackrange, intercept.frac);
+        let thingtopslope: Fixed = fixed_div(
             state.world.p_mobj.mo(th).z + state.world.p_mobj.mo(th).height
                 - state.world.p_map.shootz,
             dist,
@@ -980,14 +974,17 @@ pub fn shoot_traverse(state: &mut GameState, intercept: Intercept) -> bool {
         if thingtopslope < state.world.p_map.aimslope {
             return true;
         }
-        thingbottomslope = fixed_div(state.world.p_mobj.mo(th).z - state.world.p_map.shootz, dist);
+        let thingbottomslope: Fixed =
+            fixed_div(state.world.p_mobj.mo(th).z - state.world.p_map.shootz, dist);
         if thingbottomslope > state.world.p_map.aimslope {
             return true;
         }
-        frac = intercept.frac - fixed_div(10 * FRACUNIT, state.world.p_map.attackrange);
-        x = state.world.p_maputl.trace.x + fixed_mul(state.world.p_maputl.trace.dx, frac);
-        y = state.world.p_maputl.trace.y + fixed_mul(state.world.p_maputl.trace.dy, frac);
-        z = state.world.p_map.shootz
+        let frac: Fixed = intercept.frac - fixed_div(10 * FRACUNIT, state.world.p_map.attackrange);
+        let x: Fixed =
+            state.world.p_maputl.trace.x + fixed_mul(state.world.p_maputl.trace.dx, frac);
+        let y: Fixed =
+            state.world.p_maputl.trace.y + fixed_mul(state.world.p_maputl.trace.dy, frac);
+        let z: Fixed = state.world.p_map.shootz
             + fixed_mul(
                 state.world.p_map.aimslope,
                 fixed_mul(frac, state.world.p_map.attackrange),

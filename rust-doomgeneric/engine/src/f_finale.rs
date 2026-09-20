@@ -374,8 +374,6 @@ pub fn f_ticker(state: &mut GameState) {
     }
 }
 pub fn text_write(state: &mut GameState) {
-    let mut w: i32;
-    let mut c: i32;
     let flat = lump_bytes_name(
         &*state.assets.fs,
         &mut state.assets.w_wad,
@@ -406,7 +404,7 @@ pub fn text_write(state: &mut GameState) {
         count = 0;
     }
     while count != 0 {
-        c = match chars.next() {
+        let mut c: i32 = match chars.next() {
             Some(b) => b as i32,
             None => break,
         };
@@ -421,7 +419,7 @@ pub fn text_write(state: &mut GameState) {
                     &mut state.assets.w_wad,
                     state.ui.hu_stuff.hu_font[c as usize],
                 );
-                w = font_patch.width();
+                let w: i32 = font_patch.width();
                 if cx + w > SCREENWIDTH {
                     break;
                 }
@@ -806,10 +804,11 @@ pub fn bunny_scroll(state: &mut GameState) {
     );
 }
 fn art_screen_drawer(state: &mut GameState) {
-    let lumpname: &str;
     if state.game.g_game.gameepisode == 3 {
         bunny_scroll(state);
     } else {
+        let lumpname: &str;
+
         match state.game.g_game.gameepisode {
             1 => {
                 if state.game.doomstat.gamemode == GameMode::Retail {

@@ -99,7 +99,6 @@ pub fn get_memory_value(
 ) -> Option<u32> {
     if i_system.get_memory_value_firsttime {
         let _p: i32;
-        let mut i: i32;
         let mut val: i32 = 0;
         i_system.get_memory_value_firsttime = false;
         if let Some(mut p) = check_parm_with_args(m_argv, "-setmem", 1) {
@@ -120,7 +119,7 @@ pub fn get_memory_value(
             {
                 i_system.dos_mem_dump = DosMemDump::DosBox;
             } else {
-                i = 0;
+                let mut i: i32 = 0;
                 while i < DOS_MEM_DUMP_SIZE {
                     p += 1;
                     if p >= m_argv.myargv.len()

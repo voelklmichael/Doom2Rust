@@ -481,10 +481,6 @@ fn g_next_weapon(doomstat: &DoomstatState, g_game: &GGameState, direction: Weapo
     WEAPON_ORDER_TABLE[i as usize].weapon_num as i32
 }
 pub fn g_build_ticcmd(state: &mut GameState, cmd: &mut TicCmd, maketic: i32) {
-    let mut i: i32;
-
-    let bstrafe: bool;
-
     *cmd = TicCmd {
         forwardmove: 0,
         sidemove: 0,
@@ -595,12 +591,12 @@ pub fn g_build_ticcmd(state: &mut GameState, cmd: &mut TicCmd, maketic: i32) {
         .next_weapon
         .filter(|_| state.game.g_game.gamestate == GameScreenState::Level)
     {
-        i = g_next_weapon(&state.game.doomstat, &state.game.g_game, next_weapon);
+        let i: i32 = g_next_weapon(&state.game.doomstat, &state.game.g_game, next_weapon);
         cmd.buttons = (cmd.buttons as i32 | BT_CHANGE) as u8;
         cmd.buttons = (cmd.buttons as i32 | i << BT_WEAPONSHIFT) as u8;
     } else {
         let weapon_keys = state.game.m_controls.weapon_keys();
-        i = 0;
+        let mut i: i32 = 0;
         while (i as usize) < weapon_keys.len() {
             let key: i32 = weapon_keys[i as usize];
             if state.game.g_game.gamekeydown[key as usize] {
@@ -641,7 +637,8 @@ pub fn g_build_ticcmd(state: &mut GameState, cmd: &mut TicCmd, maketic: i32) {
                 state.game.g_game.dclickstate = false;
             }
         }
-        bstrafe = state.game.g_game.mousearray[(state.game.m_controls.mousebstrafe + 1) as usize]
+        let bstrafe: bool = state.game.g_game.mousearray
+            [(state.game.m_controls.mousebstrafe + 1) as usize]
             || state.game.g_game.joyarray[(state.game.m_controls.joybstrafe + 1) as usize];
         if bstrafe != state.game.g_game.dclickstate2 && state.game.g_game.dclicktime2 > 1 {
             state.game.g_game.dclickstate2 = bstrafe;
@@ -1734,9 +1731,8 @@ pub fn time_demo(
     g_game.gameaction = GameAction::PlayDemo;
 }
 pub fn check_demo_status(state: &mut GameState) -> bool {
-    let endtime: i32;
     if state.game.g_game.timingdemo {
-        endtime = get_time(&mut state.io.i_timer, &mut *state.io.platform);
+        let endtime: i32 = get_time(&mut state.io.i_timer, &mut *state.io.platform);
         let realtics: i32 = endtime - state.game.g_game.starttime;
         let fps: f32 = state.game.d_loop.gametic as f32 * TICRATE as f32 / realtics as f32;
         state.game.g_game.timingdemo = false;

@@ -86,7 +86,6 @@ pub const MAXVISPLANES: i32 = 128;
 pub fn map_plane(state: &mut GameState, y: i32, x1: i32, x2: i32) {
     let distance: Fixed;
 
-    let mut index: u32;
     if x2 < x1
         || x1 < 0
         || x2 >= state.render.r_draw.viewwidth
@@ -126,7 +125,7 @@ pub fn map_plane(state: &mut GameState, y: i32, x1: i32, x2: i32) {
     if let Some(colormap) = state.render.r_main.fixedcolormap {
         state.render.r_draw.ds_colormap = colormap;
     } else {
-        index = (distance >> LIGHTZSHIFT) as u32;
+        let mut index: u32 = (distance >> LIGHTZSHIFT) as u32;
         if index >= MAXLIGHTZ as u32 {
             index = (MAXLIGHTZ - 1) as u32;
         }
@@ -253,10 +252,6 @@ pub fn make_spans(
     }
 }
 pub fn draw_planes(state: &mut GameState) {
-    let mut light: i32;
-    let mut stop: i32;
-    let mut angle: i32;
-    let mut lumpnum: i32;
     if state.render.r_bsp.ds_p as i64 > MAXDRAWSEGS as i64 {
         error(&format!(
             "R_DrawPlanes: drawsegs overflow ({})",
@@ -287,7 +282,7 @@ pub fn draw_planes(state: &mut GameState) {
                     state.render.r_draw.dc_yl = plv.top(x) as i32;
                     state.render.r_draw.dc_yh = plv.bottom(x) as i32;
                     if state.render.r_draw.dc_yl <= state.render.r_draw.dc_yh {
-                        angle = (state
+                        let angle: i32 = (state
                             .render
                             .r_main
                             .viewangle
@@ -309,7 +304,7 @@ pub fn draw_planes(state: &mut GameState) {
                     }
                 }
             } else {
-                lumpnum = state.render.r_data.firstflat
+                let lumpnum: i32 = state.render.r_data.firstflat
                     + state.render.r_data.flattranslation[plv.picnum as usize];
                 lump_bytes(&*state.assets.fs, &mut state.assets.w_wad, lumpnum);
                 state.render.r_draw.ds_source = Some(ColumnSource::Lump {
@@ -318,7 +313,8 @@ pub fn draw_planes(state: &mut GameState) {
                 });
                 state.render.r_plane.planeheight =
                     (plv.height - state.render.r_main.viewz).abs() as Fixed;
-                light = (plv.lightlevel >> LIGHTSEGSHIFT) + state.render.r_main.extralight;
+                let mut light: i32 =
+                    (plv.lightlevel >> LIGHTSEGSHIFT) + state.render.r_main.extralight;
                 if light >= LIGHTLEVELS {
                     light = LIGHTLEVELS - 1;
                 }
@@ -329,7 +325,7 @@ pub fn draw_planes(state: &mut GameState) {
                 plv.set_top(plv.maxx + 1, 0xff_u8);
                 plv.set_top(plv.minx - 1, 0xff_u8);
                 state.render.r_plane.visplanes[pl] = plv;
-                stop = plv.maxx + 1;
+                let stop: i32 = plv.maxx + 1;
                 for x in plv.minx..=stop {
                     make_spans(
                         state,

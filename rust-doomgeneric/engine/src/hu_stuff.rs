@@ -413,8 +413,6 @@ pub fn erase(state: &mut GameState) {
     state.ui.hu_stuff.w_title = w_title;
 }
 pub fn hu_ticker(state: &mut GameState) {
-    let mut rc: i32;
-    let mut c: u8;
     if state.ui.hu_stuff.message_counter != 0 && {
         state.ui.hu_stuff.message_counter -= 1;
         state.ui.hu_stuff.message_counter == 0
@@ -457,6 +455,10 @@ pub fn hu_ticker(state: &mut GameState) {
     }
     if state.game.g_game.netgame {
         for i in 0..MAXPLAYERS {
+            let rc: i32;
+
+            let c: u8;
+
             if state.game.g_game.playeringame[i as usize]
                 && i != state.game.g_game.consoleplayer.as_i32()
                 && {
@@ -523,7 +525,6 @@ pub fn hu_responder(
     ev: &Event,
 ) -> bool {
     let mut eatkey: bool = false;
-    let c: u8;
     let mut numplayers: i32 = 0;
     for i in 0..(MAXPLAYERS as usize) {
         numplayers += g_game.playeringame[i] as i32;
@@ -579,7 +580,7 @@ pub fn hu_responder(
             }
         }
     } else if hu_stuff.hu_responder_altdown {
-        c = (ev.data1 - '0' as i32) as u8;
+        let c: u8 = (ev.data1 - '0' as i32) as u8;
         if c as i32 > 9 {
             return false;
         }
@@ -593,7 +594,7 @@ pub fn hu_responder(
         g_game.player_mut(hu_stuff.plr).message = Some(macromessage.to_string());
         eatkey = true;
     } else {
-        c = ev.data2 as u8;
+        let c: u8 = ev.data2 as u8;
         eatkey = hulib_key_in_itext(&mut hu_stuff.w_chat, c);
         if eatkey {
             queue_chat_char(g_game, hu_stuff, c);
