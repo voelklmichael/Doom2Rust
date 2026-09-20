@@ -22,7 +22,10 @@ fn main() {
             .map(|(_, value)| value.trim().trim_matches('"').to_owned())
     };
     for key in ["WIFI_SSID", "WIFI_PASSWORD"] {
-        let value = env::var(key).ok().or_else(|| from_file(key)).unwrap_or_default();
+        let value = env::var(key)
+            .ok()
+            .or_else(|| from_file(key))
+            .unwrap_or_default();
         println!("cargo:rustc-env={key}={value}");
     }
 }

@@ -41,7 +41,8 @@ pub struct Network {
 }
 
 /// Events wait here between the network tasks (core 0) and the game (core 1).
-static KEY_EVENTS: Channel<CriticalSectionRawMutex, (KeyEvent, lagprobe::Stamp), 128> = Channel::new();
+static KEY_EVENTS: Channel<CriticalSectionRawMutex, (KeyEvent, lagprobe::Stamp), 128> =
+    Channel::new();
 
 /// The oldest event the controller has sent that the game has not seen yet.
 pub fn next_key_event() -> Option<KeyEvent> {
@@ -66,7 +67,9 @@ fn queue(event: KeyEvent, stamp: lagprobe::Stamp) {
 /// code are ignored.
 pub fn handle_command_byte(byte: u8, held: &mut HeldKeys) {
     let stamp = lagprobe::stamp();
-    let Some(event) = KeyEvent::decode(byte) else { return };
+    let Some(event) = KeyEvent::decode(byte) else {
+        return;
+    };
     // No log line per event: esp-println writes the USB port with interrupts off and waits for the host
     // to drain it, which measured 0.25 to 1.7 ms per line on this board, for every press and release.
     held.update(event);
@@ -92,7 +95,11 @@ pub fn tune(socket: &mut TcpSocket<'_>) {
 
 /// The tasks both Wi-Fi modes run: the network stack, the plain TCP command server and the web
 /// controller (three tasks, so there is always one listening; see `web`).
-fn spawn_network_tasks(spawner: Spawner, stack: Stack<'static>, runner: Runner<'static, Interface>) {
+fn spawn_network_tasks(
+    spawner: Spawner,
+    stack: Stack<'static>,
+    runner: Runner<'static, Interface>,
+) {
     spawner.spawn(net_task(runner).expect("spawn net_task"));
     spawner.spawn(command_server(stack).expect("spawn command_server"));
     for _ in 0..3 {
@@ -135,14 +142,19 @@ pub fn start(spawner: Spawner, wifi: WIFI<'static>) -> Network {
         spawner.spawn(access_point_task(controller).expect("spawn access_point_task"));
         spawner.spawn(dhcp_server(stack).expect("spawn dhcp_server"));
         spawn_network_tasks(spawner, stack, runner);
-        return Network { stack, own_network: Some(AP_SSID) };
+        return Network {
+            stack,
+            own_network: Some(AP_SSID),
+        };
     }
 
     let mut controller =
         WifiController::new(wifi, ControllerConfig::default()).expect("wifi controller");
     controller
         .set_config(&Config::Station(
-            StationConfig::default().with_ssid(WIFI_SSID).with_password(WIFI_PASSWORD.into()),
+            StationConfig::default()
+                .with_ssid(WIFI_SSID)
+                .with_password(WIFI_PASSWORD.into()),
         ))
         .expect("wifi config");
     let (stack, runner) = embassy_net::new(
@@ -153,14 +165,20 @@ pub fn start(spawner: Spawner, wifi: WIFI<'static>) -> Network {
     );
     spawner.spawn(wifi_task(controller).expect("spawn wifi_task"));
     spawn_network_tasks(spawner, stack, runner);
-    Network { stack, own_network: None }
+    Network {
+        stack,
+        own_network: None,
+    }
 }
 
 /// Keeps the access point up (it stops when the controller is dropped) and logs who joins.
 #[embassy_executor::task]
 async fn access_point_task(controller: WifiController<'static>) {
     loop {
-        match controller.wait_for_access_point_connected_event_async().await {
+        match controller
+            .wait_for_access_point_connected_event_async()
+            .await
+        {
             Ok(event) => println!("wifi: {event:?}"),
             Err(err) => {
                 println!("wifi: access point event error: {err:?}");
@@ -177,17 +195,33 @@ async fn dhcp_server(stack: Stack<'static>) {
     let mut rx_buffer = [0u8; 1024];
     let mut tx_meta = [PacketMetadata::EMPTY; 2];
     let mut tx_buffer = [0u8; 1024];
-    let mut socket = UdpSocket::new(stack, &mut rx_meta, &mut rx_buffer, &mut tx_meta, &mut tx_buffer);
+    let mut socket = UdpSocket::new(
+        stack,
+        &mut rx_meta,
+        &mut rx_buffer,
+        &mut tx_meta,
+        &mut tx_buffer,
+    );
     socket.bind(SERVER_PORT).expect("bind the DHCP server port");
 
     let mut server = DhcpServer::new(AP_ADDRESS.octets());
     let mut request = [0u8; 576];
     let mut reply = [0u8; REPLY_LEN];
     loop {
-        let Ok((length, _)) = socket.recv_from(&mut request).await else { continue };
-        let Some(reply_length) = server.handle(&request[..length], &mut reply) else { continue };
+        let Ok((length, _)) = socket.recv_from(&mut request).await else {
+            continue;
+        };
+        let Some(reply_length) = server.handle(&request[..length], &mut reply) else {
+            continue;
+        };
         // The client has no address yet, so the answer goes to everyone.
-        match socket.send_to(&reply[..reply_length], (Ipv4Address::BROADCAST, CLIENT_PORT)).await {
+        match socket
+            .send_to(
+                &reply[..reply_length],
+                (Ipv4Address::BROADCAST, CLIENT_PORT),
+            )
+            .await
+        {
             Ok(()) => println!("dhcp: answered a client"),
             Err(err) => println!("dhcp: send failed: {err:?}"),
         }

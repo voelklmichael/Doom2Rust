@@ -37,7 +37,9 @@ enum Message {
     /// The synthesizer, built on the game core from the WAD's GENMIDI lump. Sent once.
     Attach(&'static mut MusicPlayer),
     Register(Vec<u8>),
-    Play { looping: bool },
+    Play {
+        looping: bool,
+    },
     Stop,
     Pause,
     Resume,

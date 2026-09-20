@@ -26,7 +26,9 @@ mod imp {
     pub type Stamp = u32;
 
     pub fn stamp() -> Stamp {
-        esp_hal::time::Instant::now().duration_since_epoch().as_micros() as u32
+        esp_hal::time::Instant::now()
+            .duration_since_epoch()
+            .as_micros() as u32
     }
 
     const BUCKETS: usize = 64;
@@ -40,7 +42,10 @@ mod imp {
 
     impl<const BUCKET_US: u32> Hist<BUCKET_US> {
         pub const fn new() -> Self {
-            Self { buckets: [const { AtomicU32::new(0) }; BUCKETS], max: AtomicU32::new(0) }
+            Self {
+                buckets: [const { AtomicU32::new(0) }; BUCKETS],
+                max: AtomicU32::new(0),
+            }
         }
 
         pub fn record(&self, us: u32) {
@@ -52,7 +57,8 @@ mod imp {
         /// (count, median, 99th percentile, max), the two percentiles as the upper edge of their
         /// bucket, and the histogram is cleared.
         fn take(&self) -> (u32, u32, u32, u32) {
-            let counts: [u32; BUCKETS] = core::array::from_fn(|i| self.buckets[i].swap(0, Ordering::Relaxed));
+            let counts: [u32; BUCKETS] =
+                core::array::from_fn(|i| self.buckets[i].swap(0, Ordering::Relaxed));
             let max = self.max.swap(0, Ordering::Relaxed);
             let total: u32 = counts.iter().sum();
             let percentile = |per_cent: u32| {
@@ -102,14 +108,21 @@ mod imp {
         loop {
             let before = Instant::now();
             Timer::after(SLEEP).await;
-            let late = before.elapsed().as_micros().saturating_sub(SLEEP.as_micros());
+            let late = before
+                .elapsed()
+                .as_micros()
+                .saturating_sub(SLEEP.as_micros());
             SCHED.record(late as u32);
             if Instant::now() >= report_at {
                 report_at += Duration::from_secs(5);
                 let (n, p50, p99, max) = SCHED.take();
-                println!("[lag] sched: {n} wakeups, late p50 <{p50} us, p99 <{p99} us, max {max} us");
+                println!(
+                    "[lag] sched: {n} wakeups, late p50 <{p50} us, p99 <{p99} us, max {max} us"
+                );
                 let (n, p50, p99, max) = KEY.take();
-                println!("[lag] key: {n} events, queue wait p50 <{p50} us, p99 <{p99} us, max {max} us");
+                println!(
+                    "[lag] key: {n} events, queue wait p50 <{p50} us, p99 <{p99} us, max {max} us"
+                );
                 println!(
                     "[lag] longest music slice {} us; input polls that found nothing {}, events taken {}",
                     SLICE_MAX_US.swap(0, Ordering::Relaxed),

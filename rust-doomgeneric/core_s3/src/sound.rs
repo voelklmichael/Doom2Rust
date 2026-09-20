@@ -67,10 +67,16 @@ const MUSIC_QUARTERS: i32 = 5;
 const fn parse_level(text: Option<&str>, default: i32) -> i32 {
     let Some(text) = text else { return default };
     let digits = text.as_bytes();
-    assert!(!digits.is_empty(), "SOUND_LEVEL must be a number from 0 to 256");
+    assert!(
+        !digits.is_empty(),
+        "SOUND_LEVEL must be a number from 0 to 256"
+    );
     let (mut level, mut i) = (0, 0);
     while i < digits.len() {
-        assert!(digits[i].is_ascii_digit(), "SOUND_LEVEL must be a number from 0 to 256");
+        assert!(
+            digits[i].is_ascii_digit(),
+            "SOUND_LEVEL must be a number from 0 to 256"
+        );
         level = level * 10 + (digits[i] - b'0') as i32;
         assert!(level <= 256, "SOUND_LEVEL must be a number from 0 to 256");
         i += 1;

@@ -86,7 +86,10 @@ impl Speaker {
         dout: GPIO13<'static>,
     ) -> Result<Self, &'static str> {
         static TAKEN: AtomicBool = AtomicBool::new(false);
-        assert!(!TAKEN.swap(true, Ordering::SeqCst), "Speaker::open called twice");
+        assert!(
+            !TAKEN.swap(true, Ordering::SeqCst),
+            "Speaker::open called twice"
+        );
         static TX: StaticCell<Tx> = StaticCell::new();
 
         let (_, _, ring, descriptors) = dma_circular_buffers!(0, RING_BYTES);
@@ -100,9 +103,20 @@ impl Speaker {
                 .with_channels(Channels::STEREO),
         )
         .map_err(|_| "I2S configuration rejected")?;
-        let tx = TX.init(i2s.i2s_tx.with_bclk(bclk).with_ws(ws).with_dout(dout).build(descriptors));
+        let tx = TX.init(
+            i2s.i2s_tx
+                .with_bclk(bclk)
+                .with_ws(ws)
+                .with_dout(dout)
+                .build(descriptors),
+        );
         let tx: *mut Tx = tx;
-        let mut speaker = Self { tx, ring, transfer: None, restarts: 0 };
+        let mut speaker = Self {
+            tx,
+            ring,
+            transfer: None,
+            restarts: 0,
+        };
         if !speaker.start() {
             return Err("I2S DMA did not start");
         }
@@ -146,7 +160,10 @@ impl Speaker {
                 self.restarts += 1;
                 let started = self.start();
                 if self.restarts.is_power_of_two() {
-                    println!("[audio] DMA ran dry, restart #{} (ok: {started})", self.restarts);
+                    println!(
+                        "[audio] DMA ran dry, restart #{} (ok: {started})",
+                        self.restarts
+                    );
                 }
                 0
             }
@@ -157,7 +174,9 @@ impl Speaker {
     /// [`free_frames`](Self::free_frames) is at least a chunk (esp-hal's bookkeeping goes wrong
     /// with partial chunks, so it is always exactly one). Returns whether it went in.
     pub fn push_chunk(&mut self, samples: &[i16; 2 * CHUNK_FRAMES]) -> bool {
-        let Some(transfer) = self.transfer.as_mut() else { return false };
+        let Some(transfer) = self.transfer.as_mut() else {
+            return false;
+        };
         // Little endian, left slot first.
         let mut bytes = [0u8; CHUNK_FRAMES * FRAME_BYTES];
         for (out, sample) in bytes.chunks_exact_mut(2).zip(samples) {
@@ -172,7 +191,10 @@ impl Speaker {
 fn rate_code(rate: u32) -> u16 {
     const LIMITS: [u32; 10] = [4, 5, 6, 8, 10, 11, 15, 20, 22, 44];
     let units = (rate + 1102) / 2205;
-    LIMITS.iter().position(|&limit| units <= limit).unwrap_or(LIMITS.len() - 1) as u16
+    LIMITS
+        .iter()
+        .position(|&limit| units <= limit)
+        .unwrap_or(LIMITS.len() - 1) as u16
 }
 
 // The I2C helpers use esp-hal's own I2C type and are kept out of line: written generically over
@@ -197,7 +219,11 @@ fn write16(i2c: &mut I2c<'_, Blocking>, register: u8, value: u16) -> Result<(), 
 fn amp_reset_line(i2c: &mut I2c<'_, Blocking>, high: bool) -> Result<(), I2cError> {
     let mut port = [0u8];
     i2c.write_read(AW9523B_ADDRESS, &[AW9523B_OUTPUT_P0], &mut port)?;
-    let port = if high { port[0] | AMP_RESET_BIT } else { port[0] & !AMP_RESET_BIT };
+    let port = if high {
+        port[0] | AMP_RESET_BIT
+    } else {
+        port[0] & !AMP_RESET_BIT
+    };
     i2c.write(AW9523B_ADDRESS, &[AW9523B_OUTPUT_P0, port])
 }
 

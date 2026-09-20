@@ -52,7 +52,10 @@ pub struct Server {
 impl Server {
     /// A server on `address` (its own address on a `/24`); clients get the next addresses up.
     pub const fn new(address: [u8; 4]) -> Self {
-        Self { address, clients: [None; MAX_CLIENTS] }
+        Self {
+            address,
+            clients: [None; MAX_CLIENTS],
+        }
     }
 
     /// Handles one datagram received on [`SERVER_PORT`]. Returns how many bytes of `reply` to
@@ -153,7 +156,11 @@ struct Options {
 
 impl Options {
     fn parse(mut bytes: &[u8]) -> Self {
-        let mut options = Self { message_type: None, server_id: None, requested_address: None };
+        let mut options = Self {
+            message_type: None,
+            server_id: None,
+            requested_address: None,
+        };
         while let [code, rest @ ..] = bytes {
             match *code {
                 OPT_END => break,
@@ -209,7 +216,12 @@ mod tests {
         (packet, at + 1)
     }
 
-    fn ask(server: &mut Server, mac: Mac, kind: u8, extra: &[(u8, &[u8])]) -> Option<[u8; REPLY_LEN]> {
+    fn ask(
+        server: &mut Server,
+        mac: Mac,
+        kind: u8,
+        extra: &[(u8, &[u8])],
+    ) -> Option<[u8; REPLY_LEN]> {
         let (packet, len) = request(mac, kind, extra);
         let mut reply = [0u8; REPLY_LEN];
         server.handle(&packet[..len], &mut reply).map(|n| {
@@ -233,7 +245,11 @@ mod tests {
         assert_eq!(message_type(&reply), OFFER);
         assert_eq!(your_address(&reply), [192, 168, 4, 2]);
         assert_eq!(reply[0], BOOT_REPLY);
-        assert_eq!(&reply[4..8], &[0x12, 0x34, 0x56, 0x78], "transaction id is echoed");
+        assert_eq!(
+            &reply[4..8],
+            &[0x12, 0x34, 0x56, 0x78],
+            "transaction id is echoed"
+        );
         assert_eq!(reply[10], 0x80, "flags are echoed");
         assert_eq!(&reply[28..34], &LAPTOP, "client hardware address is echoed");
         assert_eq!(&reply[20..24], &SERVER);
@@ -274,7 +290,10 @@ mod tests {
             &mut server,
             LAPTOP,
             REQUEST,
-            &[(OPT_REQUESTED_ADDRESS, &[192, 168, 4, 2]), (OPT_SERVER_ID, &SERVER)],
+            &[
+                (OPT_REQUESTED_ADDRESS, &[192, 168, 4, 2]),
+                (OPT_SERVER_ID, &SERVER),
+            ],
         )
         .unwrap();
         assert_eq!(message_type(&reply), ACK);
@@ -307,7 +326,13 @@ mod tests {
     #[test]
     fn request_for_a_wrong_address_is_refused() {
         let mut server = Server::new(SERVER);
-        let reply = ask(&mut server, LAPTOP, REQUEST, &[(OPT_REQUESTED_ADDRESS, &[10, 0, 0, 9])]).unwrap();
+        let reply = ask(
+            &mut server,
+            LAPTOP,
+            REQUEST,
+            &[(OPT_REQUESTED_ADDRESS, &[10, 0, 0, 9])],
+        )
+        .unwrap();
         assert_eq!(message_type(&reply), NAK);
         assert_eq!(your_address(&reply), [0; 4]);
     }
@@ -319,7 +344,10 @@ mod tests {
             &mut server,
             LAPTOP,
             REQUEST,
-            &[(OPT_REQUESTED_ADDRESS, &[192, 168, 4, 2]), (OPT_SERVER_ID, &[10, 0, 0, 1])],
+            &[
+                (OPT_REQUESTED_ADDRESS, &[192, 168, 4, 2]),
+                (OPT_SERVER_ID, &[10, 0, 0, 1]),
+            ],
         );
         assert!(reply.is_none());
     }
@@ -346,10 +374,16 @@ mod tests {
         assert!(server.handle(&[0u8; 100], &mut reply).is_none());
         let (mut packet, len) = request(LAPTOP, DISCOVER, &[]);
         packet[0] = BOOT_REPLY;
-        assert!(server.handle(&packet[..len], &mut reply).is_none(), "a reply is not a request");
+        assert!(
+            server.handle(&packet[..len], &mut reply).is_none(),
+            "a reply is not a request"
+        );
         let (mut packet, len) = request(LAPTOP, DISCOVER, &[]);
         packet[HEADER_LEN] = 0;
-        assert!(server.handle(&packet[..len], &mut reply).is_none(), "bad magic cookie");
+        assert!(
+            server.handle(&packet[..len], &mut reply).is_none(),
+            "bad magic cookie"
+        );
     }
 
     #[test]

@@ -41,7 +41,9 @@ impl<const N: usize> FrameQueue<N> {
 
     /// Frames waiting to be popped.
     pub fn len(&self) -> usize {
-        self.head.load(Ordering::Acquire).wrapping_sub(self.tail.load(Ordering::Acquire))
+        self.head
+            .load(Ordering::Acquire)
+            .wrapping_sub(self.tail.load(Ordering::Acquire))
     }
 
     pub fn is_empty(&self) -> bool {
@@ -65,7 +67,8 @@ impl<const N: usize> FrameQueue<N> {
             self.frames[head.wrapping_add(frame) % N].store(packed, Ordering::Relaxed);
             pushed += 1;
         }
-        self.head.store(head.wrapping_add(pushed), Ordering::Release);
+        self.head
+            .store(head.wrapping_add(pushed), Ordering::Release);
         pushed
     }
 
@@ -82,7 +85,8 @@ impl<const N: usize> FrameQueue<N> {
             pair[1] = (packed >> 16) as u16 as i16;
             popped += 1;
         }
-        self.tail.store(tail.wrapping_add(popped), Ordering::Release);
+        self.tail
+            .store(tail.wrapping_add(popped), Ordering::Release);
         popped
     }
 }
@@ -124,7 +128,12 @@ mod tests {
         let mut expected = 0i16;
         for round in 0..20 {
             let n = 1 + round % 3;
-            let input: Vec<i16> = (0..n * 2).map(|_| { next += 1; next }).collect();
+            let input: Vec<i16> = (0..n * 2)
+                .map(|_| {
+                    next += 1;
+                    next
+                })
+                .collect();
             assert_eq!(q.push(&input), n);
             let popped = q.pop(&mut out[..n * 2]);
             assert_eq!(popped, n);

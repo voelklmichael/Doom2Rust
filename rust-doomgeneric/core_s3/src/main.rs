@@ -14,10 +14,10 @@ mod lcd;
 mod music;
 mod net;
 mod platform;
-mod web;
 mod power;
 mod sound;
 mod wad_fs;
+mod web;
 
 use alloc::{boxed::Box, string::ToString, vec::Vec};
 use core::{cell::RefCell, fmt::Write as _};
@@ -82,9 +82,13 @@ where
 {
     display.clear(Rgb565::BLACK).expect("clear LCD");
     for (line, y) in lines.iter().zip((30..).step_by(30)) {
-        Label { text: line, top_left: Point::new(20, y), color: Rgb565::CYAN }
-            .draw(display)
-            .expect("draw text");
+        Label {
+            text: line,
+            top_left: Point::new(20, y),
+            color: Rgb565::CYAN,
+        }
+        .draw(display)
+        .expect("draw text");
     }
 }
 
@@ -152,7 +156,9 @@ async fn main(spawner: Spawner) {
         lcd::LcdSpi(&lcd),
         lcd::LcdDc(&lcd),
         sd_cs,
-        BusConfig { write_hz: lcd::SPI_HZ },
+        BusConfig {
+            write_hz: lcd::SPI_HZ,
+        },
         PanelConfig {
             invert_colors: true,
             geometry: DisplayGeometry {
@@ -183,23 +189,38 @@ async fn main(spawner: Spawner) {
             let _ = write!(url, "http://{address}");
             let mut sender = String::<40>::new();
             let _ = write!(sender, "or sender: {address}:{DEFAULT_PORT}");
-            println!("wifi: address {address}, web controller on port 80, sender port {DEFAULT_PORT}");
+            println!(
+                "wifi: address {address}, web controller on port 80, sender port {DEFAULT_PORT}"
+            );
             if let Some(ssid) = network.own_network {
                 // The board made its own network: the controller has to join it first.
                 show(
                     &mut display,
-                    &["CoreS3 DOOM", "join Wi-Fi:", ssid, "then open in a browser:", &url, &sender],
+                    &[
+                        "CoreS3 DOOM",
+                        "join Wi-Fi:",
+                        ssid,
+                        "then open in a browser:",
+                        &url,
+                        &sender,
+                    ],
                 );
                 let _ = write!(status, "{ssid} {address}:{DEFAULT_PORT}");
             } else {
-                show(&mut display, &["CoreS3 DOOM", "open in a browser:", &url, &sender]);
+                show(
+                    &mut display,
+                    &["CoreS3 DOOM", "open in a browser:", &url, &sender],
+                );
                 let _ = write!(status, "{address}:{DEFAULT_PORT}");
             }
             Timer::after(SHOW_ADDRESS).await;
         }
         Err(_) => {
             println!("wifi: no address after {WAIT_FOR_ADDRESS:?}; starting the game anyway");
-            show(&mut display, &["CoreS3 DOOM", "no Wi-Fi yet", "still retrying"]);
+            show(
+                &mut display,
+                &["CoreS3 DOOM", "no Wi-Fi yet", "still retrying"],
+            );
             let _ = write!(status, "no Wi-Fi yet");
             Timer::after(SHOW_ADDRESS).await;
         }
@@ -209,9 +230,13 @@ async fn main(spawner: Spawner) {
     // never draws over. The bar is the 20 rows above the picture; text is positioned by its
     // baseline, so 15 puts the 10-row font in rows 8-17.
     display.clear(Rgb565::BLACK).expect("clear LCD");
-    Label { text: &status, top_left: Point::new(4, 15), color: Rgb565::CYAN }
-        .draw(&mut display)
-        .expect("draw status");
+    Label {
+        text: &status,
+        top_left: Point::new(4, 15),
+        color: Rgb565::CYAN,
+    }
+    .draw(&mut display)
+    .expect("draw status");
 
     // The game runs on core 1, so the network never waits for a frame and the game never waits
     // for the radio. It builds its own state there, on the big stack.
@@ -257,7 +282,9 @@ async fn main(spawner: Spawner) {
     let mut fps_shown = None;
     lcd::run_pump(&lcd, || {
         // A new sample is about once a second; the rest of the time this is one atomic load.
-        let Some((counter, tenths)) = platform::fps_sample() else { return };
+        let Some((counter, tenths)) = platform::fps_sample() else {
+            return;
+        };
         if fps_shown == Some(counter) {
             return;
         }
@@ -269,5 +296,4 @@ async fn main(spawner: Spawner) {
         let _ = Text::new(&text, Point::new(fps_x, 15), fps_style).draw(&mut display);
     })
     .await
-
 }

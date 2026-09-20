@@ -81,7 +81,10 @@ pub struct HoldTracker {
 
 impl HoldTracker {
     pub fn new(hold: Duration) -> Self {
-        Self { hold, held: Vec::new() }
+        Self {
+            hold,
+            held: Vec::new(),
+        }
     }
 
     /// A press (or auto-repeat) of `command` was seen. Returns the press event the first time.
@@ -110,7 +113,10 @@ impl HoldTracker {
 
     /// Releases everything, for shutdown.
     pub fn release_all(&mut self) -> Vec<KeyEvent> {
-        self.held.drain(..).map(|(command, _)| KeyEvent::release(command)).collect()
+        self.held
+            .drain(..)
+            .map(|(command, _)| KeyEvent::release(command))
+            .collect()
     }
 }
 
@@ -140,8 +146,15 @@ mod tests {
             if command_for(KeyCode::Char(c)).is_none() {
                 continue;
             }
-            let label = if c == ' ' { "Space".to_owned() } else { c.to_ascii_uppercase().to_string() };
-            assert!(KEY_MAP.contains(&label), "{c:?} is bound but {label:?} is not in KEY_MAP");
+            let label = if c == ' ' {
+                "Space".to_owned()
+            } else {
+                c.to_ascii_uppercase().to_string()
+            };
+            assert!(
+                KEY_MAP.contains(&label),
+                "{c:?} is bound but {label:?} is not in KEY_MAP"
+            );
         }
         for (code, label) in [
             (KeyCode::Up, "Arrow"),
@@ -154,7 +167,10 @@ mod tests {
             (KeyCode::Backspace, "Backspace"),
         ] {
             assert!(command_for(code).is_some(), "{code:?} should be bound");
-            assert!(KEY_MAP.contains(label), "{code:?} is bound but {label:?} is not in KEY_MAP");
+            assert!(
+                KEY_MAP.contains(label),
+                "{code:?} is bound but {label:?} is not in KEY_MAP"
+            );
         }
         // Run is a toggle on `r` in main.rs, not in `command_for`.
         assert!(KEY_MAP.contains('R'));
@@ -176,11 +192,28 @@ mod tests {
     #[test]
     fn every_command_has_a_key() {
         let keys = [
-            KeyCode::Up, KeyCode::Down, KeyCode::Left, KeyCode::Right, KeyCode::Enter,
-            KeyCode::Esc, KeyCode::Tab, KeyCode::Backspace, KeyCode::Char('q'), KeyCode::Char('e'),
-            KeyCode::Char(' '), KeyCode::Char('f'), KeyCode::Char('m'), KeyCode::Char('y'), KeyCode::Char('n'),
-            KeyCode::Char('1'), KeyCode::Char('2'), KeyCode::Char('3'), KeyCode::Char('4'),
-            KeyCode::Char('5'), KeyCode::Char('6'), KeyCode::Char('7'),
+            KeyCode::Up,
+            KeyCode::Down,
+            KeyCode::Left,
+            KeyCode::Right,
+            KeyCode::Enter,
+            KeyCode::Esc,
+            KeyCode::Tab,
+            KeyCode::Backspace,
+            KeyCode::Char('q'),
+            KeyCode::Char('e'),
+            KeyCode::Char(' '),
+            KeyCode::Char('f'),
+            KeyCode::Char('m'),
+            KeyCode::Char('y'),
+            KeyCode::Char('n'),
+            KeyCode::Char('1'),
+            KeyCode::Char('2'),
+            KeyCode::Char('3'),
+            KeyCode::Char('4'),
+            KeyCode::Char('5'),
+            KeyCode::Char('6'),
+            KeyCode::Char('7'),
         ];
         let bound: Vec<Command> = keys.into_iter().filter_map(command_for).collect();
         // Run is the only command without a plain key (it is the `r` toggle in main.rs).
@@ -193,7 +226,10 @@ mod tests {
     fn a_held_key_presses_once_and_releases_after_the_hold_time() {
         let mut tracker = HoldTracker::new(HOLD);
         let t0 = Instant::now();
-        assert_eq!(tracker.key_seen(Command::Forward, t0), Some(KeyEvent::press(Command::Forward)));
+        assert_eq!(
+            tracker.key_seen(Command::Forward, t0),
+            Some(KeyEvent::press(Command::Forward))
+        );
         // Auto-repeat keeps it held without sending anything new.
         let t1 = t0 + Duration::from_millis(80);
         assert_eq!(tracker.key_seen(Command::Forward, t1), None);
@@ -204,7 +240,10 @@ mod tests {
         );
         // Once released, the next press is a fresh press event.
         let t2 = t1 + Duration::from_secs(1);
-        assert_eq!(tracker.key_seen(Command::Forward, t2), Some(KeyEvent::press(Command::Forward)));
+        assert_eq!(
+            tracker.key_seen(Command::Forward, t2),
+            Some(KeyEvent::press(Command::Forward))
+        );
     }
 
     #[test]
@@ -213,7 +252,10 @@ mod tests {
         let t0 = Instant::now();
         tracker.key_seen(Command::Forward, t0);
         tracker.key_seen(Command::Fire, t0 + Duration::from_millis(60));
-        assert_eq!(tracker.expire(t0 + HOLD), vec![KeyEvent::release(Command::Forward)]);
+        assert_eq!(
+            tracker.expire(t0 + HOLD),
+            vec![KeyEvent::release(Command::Forward)]
+        );
         assert_eq!(
             tracker.release_all(),
             vec![KeyEvent::release(Command::Fire)]
@@ -243,7 +285,10 @@ mod tests {
         let events: Vec<_> = received.into_iter().map(KeyEvent::decode).collect();
         assert_eq!(
             events,
-            vec![Some(KeyEvent::press(Command::Fire)), Some(KeyEvent::release(Command::Fire))]
+            vec![
+                Some(KeyEvent::press(Command::Fire)),
+                Some(KeyEvent::release(Command::Fire))
+            ]
         );
     }
 }
