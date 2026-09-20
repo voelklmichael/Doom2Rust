@@ -294,11 +294,9 @@ pub fn init_switch_list(
     let mut index: i32;
     let mut episode: i32;
     episode = 1;
-    if doomstat.gamemode as u32 == GameMode::Registered as i32 as u32
-        || doomstat.gamemode as u32 == GameMode::Retail as i32 as u32
-    {
+    if doomstat.gamemode == GameMode::Registered || doomstat.gamemode == GameMode::Retail {
         episode = 2;
-    } else if doomstat.gamemode as u32 == GameMode::Commercial as i32 as u32 {
+    } else if doomstat.gamemode == GameMode::Commercial {
         episode = 3;
     }
     index = 0;

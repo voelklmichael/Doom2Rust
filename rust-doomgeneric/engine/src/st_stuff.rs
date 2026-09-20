@@ -492,7 +492,7 @@ pub fn st_responder(state: &mut GameState, ev: &Event) -> bool {
                     state.ui.st_stuff.cheat_mus.param()[0],
                     state.ui.st_stuff.cheat_mus.param()[1],
                 ];
-                if state.game.doomstat.gamemode as u32 == GameMode::Commercial as i32 as u32
+                if state.game.doomstat.gamemode == GameMode::Commercial
                     || !state.game.doomstat.gameversion.is_ultimate_or_higher()
                 {
                     musnum = MusicName::Runnin as i32
@@ -517,27 +517,9 @@ pub fn st_responder(state: &mut GameState, ev: &Event) -> bool {
                         change_music(state, musnum, true);
                     }
                 }
-            } else if (if state.game.doomstat.gamemission as u32
-                == GameMission::PackChex as i32 as u32
-            {
-                GameMission::Doom as i32 as u32
-            } else if state.game.doomstat.gamemission as u32 == GameMission::PackHacx as i32 as u32
-            {
-                GameMission::Doom2 as i32 as u32
-            } else {
-                state.game.doomstat.gamemission as u32
-            }) == GameMission::Doom as i32 as u32
+            } else if state.game.doomstat.gamemission.base() == GameMission::Doom
                 && cht_check_cheat(&mut state.ui.st_stuff.cheat_noclip, ev.data2 as u8)
-                || (if state.game.doomstat.gamemission as u32 == GameMission::PackChex as i32 as u32
-                {
-                    GameMission::Doom as i32 as u32
-                } else if state.game.doomstat.gamemission as u32
-                    == GameMission::PackHacx as i32 as u32
-                {
-                    GameMission::Doom2 as i32 as u32
-                } else {
-                    state.game.doomstat.gamemission as u32
-                }) != GameMission::Doom as i32 as u32
+                || state.game.doomstat.gamemission.base() != GameMission::Doom
                     && cht_check_cheat(
                         &mut state.ui.st_stuff.cheat_commercial_noclip,
                         ev.data2 as u8,
@@ -613,7 +595,7 @@ pub fn st_responder(state: &mut GameState, ev: &Event) -> bool {
                 state.ui.st_stuff.cheat_clev.param()[0],
                 state.ui.st_stuff.cheat_clev.param()[1],
             ];
-            if state.game.doomstat.gamemode as u32 == GameMode::Commercial as i32 as u32 {
+            if state.game.doomstat.gamemode == GameMode::Commercial {
                 epsd = 1;
                 map = (digits[0] as i32 - '0' as i32) * 10 + digits[1] as i32 - '0' as i32;
             } else {
@@ -629,24 +611,16 @@ pub fn st_responder(state: &mut GameState, ev: &Event) -> bool {
             if map < 1 {
                 return false;
             }
-            if state.game.doomstat.gamemode as u32 == GameMode::Retail as i32 as u32
-                && (epsd > 4 || map > 9)
-            {
+            if state.game.doomstat.gamemode == GameMode::Retail && (epsd > 4 || map > 9) {
                 return false;
             }
-            if state.game.doomstat.gamemode as u32 == GameMode::Registered as i32 as u32
-                && (epsd > 3 || map > 9)
-            {
+            if state.game.doomstat.gamemode == GameMode::Registered && (epsd > 3 || map > 9) {
                 return false;
             }
-            if state.game.doomstat.gamemode as u32 == GameMode::Shareware as i32 as u32
-                && (epsd > 1 || map > 9)
-            {
+            if state.game.doomstat.gamemode == GameMode::Shareware && (epsd > 1 || map > 9) {
                 return false;
             }
-            if state.game.doomstat.gamemode as u32 == GameMode::Commercial as i32 as u32
-                && (epsd > 1 || map > 40)
-            {
+            if state.game.doomstat.gamemode == GameMode::Commercial && (epsd > 1 || map > 40) {
                 return false;
             }
             state.game.g_game.player_mut(state.ui.st_stuff.plyr).message =

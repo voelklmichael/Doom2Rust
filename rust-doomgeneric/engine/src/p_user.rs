@@ -257,7 +257,7 @@ pub fn player_think(state: &mut GameState, player_id: PlayerId) {
         {
             newweapon = WeaponType::Chainsaw;
         }
-        if state.game.doomstat.gamemode as u32 == GameMode::Commercial as i32 as u32
+        if state.game.doomstat.gamemode == GameMode::Commercial
             && newweapon as u32 == WeaponType::Shotgun as i32 as u32
             && state.game.g_game.players[player].weaponowned[WeaponType::Supershotgun as usize]
             && state.game.g_game.players[player].readyweapon as u32
@@ -269,7 +269,7 @@ pub fn player_think(state: &mut GameState, player_id: PlayerId) {
             && newweapon as u32 != state.game.g_game.players[player].readyweapon as u32
             && (newweapon as u32 != WeaponType::Plasma as i32 as u32
                 && newweapon as u32 != WeaponType::Bfg as i32 as u32
-                || state.game.doomstat.gamemode as u32 != GameMode::Shareware as i32 as u32)
+                || state.game.doomstat.gamemode != GameMode::Shareware)
         {
             state.game.g_game.players[player].pendingweapon = newweapon;
         }

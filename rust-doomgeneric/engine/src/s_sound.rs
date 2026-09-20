@@ -169,7 +169,7 @@ pub fn s_start(state: &mut GameState) {
         }
     }
     state.audio.s_sound.mus_paused = false;
-    if state.game.doomstat.gamemode as u32 == GameMode::Commercial as i32 as u32 {
+    if state.game.doomstat.gamemode == GameMode::Commercial {
         mnum = MusicName::Runnin as i32 + state.game.g_game.gamemap - 1;
     } else {
         let spmus: [i32; 9] = [

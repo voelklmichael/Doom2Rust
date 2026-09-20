@@ -300,14 +300,7 @@ pub fn f_start_finale(state: &mut GameState) {
     state.game.g_game.gamestate = GameScreenState::Finale;
     state.game.g_game.viewactive = false;
     state.ui.am_map.automapactive = false;
-    if (if state.game.doomstat.gamemission as u32 == GameMission::PackChex as i32 as u32 {
-        GameMission::Doom as i32 as u32
-    } else if state.game.doomstat.gamemission as u32 == GameMission::PackHacx as i32 as u32 {
-        GameMission::Doom2 as i32 as u32
-    } else {
-        state.game.doomstat.gamemission as u32
-    }) == GameMission::Doom as i32 as u32
-    {
+    if state.game.doomstat.gamemission.base() == GameMission::Doom {
         change_music(state, MusicName::Victor as i32, true);
     } else {
         change_music(state, MusicName::ReadM as i32, true);
@@ -344,9 +337,7 @@ pub fn f_responder(state: &mut GameState, event: &Event) -> bool {
 }
 pub fn f_ticker(state: &mut GameState) {
     let mut i: usize;
-    if state.game.doomstat.gamemode as u32 == GameMode::Commercial as i32 as u32
-        && state.ui.f_finale.finalecount > 50
-    {
+    if state.game.doomstat.gamemode == GameMode::Commercial && state.ui.f_finale.finalecount > 50 {
         i = 0_usize;
         while i < MAXPLAYERS as usize {
             if state.game.g_game.players[i].cmd.buttons != 0 {
@@ -367,7 +358,7 @@ pub fn f_ticker(state: &mut GameState) {
         cast_ticker(state);
         return;
     }
-    if state.game.doomstat.gamemode as u32 == GameMode::Commercial as i32 as u32 {
+    if state.game.doomstat.gamemode == GameMode::Commercial {
         return;
     }
     if state.ui.f_finale.finalestage == FinaleStage::Text
@@ -834,7 +825,7 @@ fn art_screen_drawer(state: &mut GameState) {
     } else {
         match state.game.g_game.gameepisode {
             1 => {
-                if state.game.doomstat.gamemode as u32 == GameMode::Retail as i32 as u32 {
+                if state.game.doomstat.gamemode == GameMode::Retail {
                     lumpname = "CREDIT";
                 } else {
                     lumpname = "HELP2";

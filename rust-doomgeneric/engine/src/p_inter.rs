@@ -329,7 +329,7 @@ pub fn touch_special_thing(state: &mut GameState, special: MobjId, toucher: Mobj
             sound = SfxName::Getpow as i32;
         }
         74 => {
-            if state.game.doomstat.gamemode as u32 != GameMode::Commercial as i32 as u32 {
+            if state.game.doomstat.gamemode != GameMode::Commercial {
                 return;
             }
             state.game.g_game.players[player].health = DEH_MEGASPHERE_HEALTH;

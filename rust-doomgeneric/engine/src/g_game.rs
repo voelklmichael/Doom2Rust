@@ -422,19 +422,13 @@ pub const MAX_JOY_BUTTONS: i32 = 20;
 pub const BODYQUESIZE: i32 = 32;
 fn weapon_selectable(doomstat: &DoomstatState, g_game: &GGameState, weapon: WeaponType) -> bool {
     if weapon as u32 == WeaponType::Supershotgun as u32
-        && (if doomstat.gamemission as u32 == GameMission::PackChex as u32 {
-            GameMission::Doom as u32
-        } else if doomstat.gamemission as u32 == GameMission::PackHacx as u32 {
-            GameMission::Doom2 as u32
-        } else {
-            doomstat.gamemission as u32
-        }) == GameMission::Doom as u32
+        && doomstat.gamemission.base() == GameMission::Doom
     {
         return false;
     }
     if (weapon as u32 == WeaponType::Plasma as u32 || weapon as u32 == WeaponType::Bfg as u32)
-        && doomstat.gamemission as u32 == GameMission::Doom as u32
-        && doomstat.gamemode as u32 == GameMode::Shareware as u32
+        && doomstat.gamemission == GameMission::Doom
+        && doomstat.gamemode == GameMode::Shareware
     {
         return false;
     }
@@ -711,7 +705,7 @@ pub fn g_build_ticcmd(state: &mut GameState, cmd: &mut TicCmd, maketic: i32) {
 pub fn do_load_level(state: &mut GameState) {
     state.render.r_sky.skyflatnum =
         flat_num_for_name(&state.render.r_data, &state.assets.w_wad, "F_SKY1");
-    if state.game.doomstat.gamemode as u32 == GameMode::Commercial as u32
+    if state.game.doomstat.gamemode == GameMode::Commercial
         && [GameVersion::Final2, GameVersion::Chex].contains(&state.game.doomstat.gameversion)
     {
         let skytexturename: &str = if state.game.g_game.gamemap < 12 {
@@ -1209,7 +1203,7 @@ pub fn exit_level(g_game: &mut GGameState) {
     g_game.gameaction = GameAction::Completed;
 }
 pub fn secret_exit_level(doomstat: &DoomstatState, g_game: &mut GGameState, w_wad: &WWadState) {
-    g_game.secretexit = !(doomstat.gamemode as u32 == GameMode::Commercial as u32
+    g_game.secretexit = !(doomstat.gamemode == GameMode::Commercial
         && check_num_for_name(w_wad, "map31").is_none());
     g_game.gameaction = GameAction::Completed;
 }
@@ -1223,7 +1217,7 @@ pub fn do_completed(state: &mut GameState) {
     if state.ui.am_map.automapactive {
         am_stop(state);
     }
-    if state.game.doomstat.gamemode as u32 != GameMode::Commercial as u32 {
+    if state.game.doomstat.gamemode != GameMode::Commercial {
         if state.game.doomstat.gameversion == GameVersion::Chex {
             if state.game.g_game.gamemap == 5 {
                 state.game.g_game.gameaction = GameAction::Victory;
@@ -1244,15 +1238,11 @@ pub fn do_completed(state: &mut GameState) {
             }
         }
     }
-    if state.game.g_game.gamemap == 8
-        && state.game.doomstat.gamemode as u32 != GameMode::Commercial as u32
-    {
+    if state.game.g_game.gamemap == 8 && state.game.doomstat.gamemode != GameMode::Commercial {
         state.game.g_game.gameaction = GameAction::Victory;
         return;
     }
-    if state.game.g_game.gamemap == 9
-        && state.game.doomstat.gamemode as u32 != GameMode::Commercial as u32
-    {
+    if state.game.g_game.gamemap == 9 && state.game.doomstat.gamemode != GameMode::Commercial {
         for i in 0..(MAXPLAYERS as usize) {
             state.game.g_game.players[i].didsecret = true;
         }
@@ -1261,7 +1251,7 @@ pub fn do_completed(state: &mut GameState) {
         state.game.g_game.players[state.game.g_game.consoleplayer].didsecret;
     state.game.g_game.wminfo.epsd = state.game.g_game.gameepisode - 1;
     state.game.g_game.wminfo.last = state.game.g_game.gamemap - 1;
-    if state.game.doomstat.gamemode as u32 == GameMode::Commercial as u32 {
+    if state.game.doomstat.gamemode == GameMode::Commercial {
         if state.game.g_game.secretexit {
             match state.game.g_game.gamemap {
                 15 => {
@@ -1307,7 +1297,7 @@ pub fn do_completed(state: &mut GameState) {
     state.game.g_game.wminfo.maxitems = state.game.g_game.totalitems;
     state.game.g_game.wminfo.maxsecret = state.game.g_game.totalsecret;
     state.game.g_game.wminfo.maxfrags = 0;
-    if state.game.doomstat.gamemode as u32 == GameMode::Commercial as u32 {
+    if state.game.doomstat.gamemode == GameMode::Commercial {
         state.game.g_game.wminfo.partime =
             TICRATE * CPARS[(state.game.g_game.gamemap - 1) as usize];
     } else if state.game.g_game.gameepisode < 4 {
@@ -1340,7 +1330,7 @@ pub fn world_done(state: &mut GameState) {
     if state.game.g_game.secretexit {
         state.game.g_game.players[state.game.g_game.consoleplayer].didsecret = true;
     }
-    if state.game.doomstat.gamemode as u32 == GameMode::Commercial as u32 {
+    if state.game.doomstat.gamemode == GameMode::Commercial {
         let start_finale = match state.game.g_game.gamemap {
             15 | 31 => state.game.g_game.secretexit,
             6 | 11 | 20 | 30 => true,
@@ -1487,13 +1477,13 @@ pub fn init_new(state: &mut GameState, mut skill: SkillType, mut episode: i32, m
     } else {
         episode = episode.clamp(1, 3);
     }
-    if episode > 1 && state.game.doomstat.gamemode as u32 == GameMode::Shareware as u32 {
+    if episode > 1 && state.game.doomstat.gamemode == GameMode::Shareware {
         episode = 1;
     }
     if map < 1 {
         map = 1;
     }
-    if map > 9 && state.game.doomstat.gamemode as u32 != GameMode::Commercial as u32 {
+    if map > 9 && state.game.doomstat.gamemode != GameMode::Commercial {
         map = 9;
     }
     clear_random(&mut state.world.m_random);
@@ -1528,7 +1518,7 @@ pub fn init_new(state: &mut GameState, mut skill: SkillType, mut episode: i32, m
     state.game.g_game.gamemap = map;
     state.game.g_game.gameskill = skill;
     state.game.g_game.viewactive = true;
-    if state.game.doomstat.gamemode as u32 == GameMode::Commercial as u32 {
+    if state.game.doomstat.gamemode == GameMode::Commercial {
         if state.game.g_game.gamemap < 12 {
             skytexturename = "SKY1";
         } else if state.game.g_game.gamemap < 21 {
