@@ -87,23 +87,23 @@ pub struct World {
 impl World {
     fn new() -> Self {
         Self {
-            p_setup: PSetupState::new(),
-            p_mobj: PMobjState::new(),
-            p_tick: PTickState::new(),
-            p_spec: PSpecState::new(),
-            p_map: PMapState::new(),
-            p_maputl: PMaputlState::new(),
-            p_sight: PSightState::new(),
-            p_ceilng: PCeilngState::new(),
-            p_doors: PDoorsState::new(),
-            p_lights: PLightsState::new(),
-            p_plats: PPlatsState::new(),
-            p_switch: PSwitchState::new(),
-            p_enemy: PEnemyState::new(),
-            p_pspr: PPsprState::new(),
-            p_user: PUserState::new(),
-            p_saveg: PSavegState::new(),
-            m_random: MRandomState::new(),
+            p_setup: PSetupState::default(),
+            p_mobj: PMobjState::default(),
+            p_tick: PTickState::default(),
+            p_spec: PSpecState::default(),
+            p_map: PMapState::default(),
+            p_maputl: PMaputlState::default(),
+            p_sight: PSightState::default(),
+            p_ceilng: PCeilngState::default(),
+            p_doors: PDoorsState::default(),
+            p_lights: PLightsState::default(),
+            p_plats: PPlatsState::default(),
+            p_switch: PSwitchState::default(),
+            p_enemy: PEnemyState::default(),
+            p_pspr: PPsprState::default(),
+            p_user: PUserState::default(),
+            p_saveg: PSavegState::default(),
+            m_random: MRandomState::default(),
         }
     }
 }
@@ -123,14 +123,14 @@ pub struct Render {
 impl Render {
     fn new() -> Self {
         Self {
-            r_main: RMainState::new(),
-            r_segs: RSegsState::new(),
-            r_draw: RDrawState::new(),
-            r_data: RDataState::new(),
-            r_plane: RPlaneState::new(),
-            r_bsp: RBspState::new(),
-            r_things: RThingsState::new(),
-            r_sky: RSkyState::new(),
+            r_main: RMainState::default(),
+            r_segs: RSegsState::default(),
+            r_draw: RDrawState::default(),
+            r_data: RDataState::default(),
+            r_plane: RPlaneState::default(),
+            r_bsp: RBspState::default(),
+            r_things: RThingsState::default(),
+            r_sky: RSkyState::default(),
         }
     }
 }
@@ -151,15 +151,15 @@ pub struct Ui {
 impl Ui {
     fn new() -> Self {
         Self {
-            m_menu: MMenuState::new(),
-            hu_stuff: HuStuffState::new(),
-            st_lib: StLibState::new(),
-            st_stuff: StStuffState::new(),
-            wi_stuff: WiStuffState::new(),
-            am_map: AmMapState::new(),
-            f_finale: FFinaleState::new(),
-            f_wipe: FWipeState::new(),
-            statdump: StatDumpState::new(),
+            m_menu: MMenuState::default(),
+            hu_stuff: HuStuffState::default(),
+            st_lib: StLibState::default(),
+            st_stuff: StStuffState::default(),
+            wi_stuff: WiStuffState::default(),
+            am_map: AmMapState::default(),
+            f_finale: FFinaleState::default(),
+            f_wipe: FWipeState::default(),
+            statdump: StatDumpState::default(),
         }
     }
 }
@@ -174,9 +174,9 @@ pub struct Audio {
 impl Audio {
     fn new() -> Self {
         Self {
-            s_sound: SSoundState::new(),
-            i_sound: ISoundState::new(),
-            sounds: SoundsState::new(),
+            s_sound: SSoundState::default(),
+            i_sound: ISoundState::default(),
+            sounds: SoundsState::default(),
         }
     }
 }
@@ -192,9 +192,9 @@ pub struct Assets {
 impl Assets {
     fn new(fs: Box<dyn DoomFileSystem>) -> Self {
         Self {
-            w_wad: WWadState::new(),
-            w_checksum: WChecksumState::new(),
-            info: InfoState::new(),
+            w_wad: WWadState::default(),
+            w_checksum: WChecksumState::default(),
+            info: InfoState::default(),
             fs,
         }
     }
@@ -216,15 +216,15 @@ pub struct Game {
 impl Game {
     fn new() -> Self {
         Self {
-            g_game: GGameState::new(),
-            doomstat: DoomstatState::new(),
-            d_main: DMainState::new(),
-            d_loop: DLoopState::new(),
-            d_event: DEventState::new(),
-            d_iwad: DIwadState::new(),
+            g_game: GGameState::default(),
+            doomstat: DoomstatState::default(),
+            d_main: DMainState::default(),
+            d_loop: DLoopState::default(),
+            d_event: DEventState::default(),
+            d_iwad: DIwadState::default(),
             options: Options::default(),
-            m_config: MConfigState::new(),
-            m_controls: MControlsState::new(),
+            m_config: MConfigState::default(),
+            m_controls: MControlsState::default(),
         }
     }
 }
@@ -244,12 +244,12 @@ impl Io {
     fn new(platform: Box<dyn DoomPlatform>) -> Self {
         Self {
             platform,
-            i_input: IInputState::new(),
-            i_joystick: IJoystickState::new(),
-            i_system: ISystemState::new(),
-            i_timer: ITimerState::new(),
-            i_video: IVideoState::new(),
-            v_video: VVideoState::new(),
+            i_input: IInputState::default(),
+            i_joystick: IJoystickState::default(),
+            i_system: ISystemState::default(),
+            i_timer: ITimerState::default(),
+            i_video: IVideoState::default(),
+            v_video: VVideoState::default(),
         }
     }
 }

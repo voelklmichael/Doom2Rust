@@ -49,27 +49,14 @@ struct CeilingSlot {
     ceiling: Option<Box<Ceiling>>,
 }
 
+#[derive(Default)]
 pub struct PCeilngState {
     pub activeceilings: [Option<ThinkerId>; 30],
     ceilings: Vec<CeilingSlot>,
     free_list: Vec<u32>,
 }
 
-impl Default for PCeilngState {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 impl PCeilngState {
-    pub const fn new() -> Self {
-        Self {
-            activeceilings: [None; 30],
-            ceilings: Vec::new(),
-            free_list: Vec::new(),
-        }
-    }
-
     // Moves a fully-defaulted (then caller-filled) Ceiling onto the heap
     // and hands back both a stable generation-checked handle (stored in
     // ThinkerNode's payload by p_tick.rs, replacing what used to be a bare

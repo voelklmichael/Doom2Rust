@@ -63,6 +63,7 @@ use crate::tables::ANG180;
 use crate::tables::ANG270;
 use crate::tables::ANG90;
 
+#[derive(Default)]
 pub struct PEnemyState {
     pub soundtarget: Option<MobjId>,
     pub corpsehit: Option<MobjId>,
@@ -73,28 +74,6 @@ pub struct PEnemyState {
     pub numbraintargets: i32,
     pub braintargeton: i32,
     pub easy: i32,
-}
-
-impl Default for PEnemyState {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl PEnemyState {
-    pub const fn new() -> Self {
-        Self {
-            soundtarget: None,
-            corpsehit: None,
-            vileobj: None,
-            viletryx: Fixed::ZERO,
-            viletryy: Fixed::ZERO,
-            braintargets: [None; 32],
-            numbraintargets: 0,
-            braintargeton: 0,
-            easy: 0,
-        }
-    }
 }
 
 #[derive(Copy, Clone, PartialEq, Eq)]

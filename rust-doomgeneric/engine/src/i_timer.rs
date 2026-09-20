@@ -1,19 +1,8 @@
 use crate::doomdef::TICRATE;
 use crate::platform::DoomPlatform;
+#[derive(Default)]
 pub struct ITimerState {
     basetime: u32,
-}
-
-impl Default for ITimerState {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl ITimerState {
-    pub const fn new() -> Self {
-        Self { basetime: 0 }
-    }
 }
 
 pub fn get_time(i_timer: &mut ITimerState, platform: &mut dyn DoomPlatform) -> i32 {

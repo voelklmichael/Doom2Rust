@@ -76,17 +76,11 @@ pub struct WiStuffState {
 }
 
 impl Default for WiStuffState {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl WiStuffState {
     // Kept out of line: `GameState::new` inlines every state constructor, and once
     // `init_game_state` passes 256 KB the Xtensa linker fails ("dangerous relocation:
     // l32r: literal target out of range") building the firmware. These are the biggest.
     #[inline(never)]
-    pub const fn new() -> Self {
+    fn default() -> Self {
         Self {
             epsd0animinfo: [
                 Anim {
@@ -468,7 +462,9 @@ impl WiStuffState {
             sp_state: 0,
         }
     }
+}
 
+impl WiStuffState {
     pub fn anims(&mut self) -> [&mut [Anim]; 4] {
         [
             &mut self.epsd0animinfo,

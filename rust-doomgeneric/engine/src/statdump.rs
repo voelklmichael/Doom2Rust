@@ -13,12 +13,6 @@ pub struct StatDumpState {
 
 impl Default for StatDumpState {
     fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl StatDumpState {
-    pub const fn new() -> Self {
         Self {
             captured_stats: [WbStartStruct {
                 epsd: 0,

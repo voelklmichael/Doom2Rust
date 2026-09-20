@@ -163,6 +163,7 @@ struct GlowSlot {
 // id/slot/free_list -- not unified into one generic table, matching this
 // codebase's existing style of separate per-kind tables (e.g. PSpecState
 // keeps its floor arena separate from its other state).
+#[derive(Default)]
 pub struct PLightsState {
     fireflickers: Vec<FireFlickerSlot>,
     fireflicker_free_list: Vec<u32>,
@@ -174,26 +175,7 @@ pub struct PLightsState {
     glow_free_list: Vec<u32>,
 }
 
-impl Default for PLightsState {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 impl PLightsState {
-    pub const fn new() -> Self {
-        Self {
-            fireflickers: Vec::new(),
-            fireflicker_free_list: Vec::new(),
-            lightflashes: Vec::new(),
-            lightflash_free_list: Vec::new(),
-            strobes: Vec::new(),
-            strobe_free_list: Vec::new(),
-            glows: Vec::new(),
-            glow_free_list: Vec::new(),
-        }
-    }
-
     pub fn spawn_fireflicker(&mut self, value: FireFlicker) -> FireFlickerId {
         let (index, generation) = if let Some(index) = self.fireflicker_free_list.pop() {
             let slot = &mut self.fireflickers[index as usize];

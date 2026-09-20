@@ -104,24 +104,10 @@ static IWADS: [Iwad; 14] = [
     },
 ];
 
+#[derive(Default)]
 pub struct DIwadState {
     iwad_dirs_built: bool,
     iwad_dirs: Vec<String>,
-}
-
-impl Default for DIwadState {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl DIwadState {
-    pub const fn new() -> Self {
-        Self {
-            iwad_dirs_built: false,
-            iwad_dirs: Vec::new(),
-        }
-    }
 }
 
 fn add_iwad_dir(state: &mut DIwadState, dir: &str) {

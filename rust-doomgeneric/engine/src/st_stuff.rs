@@ -116,12 +116,6 @@ pub struct StStuffState {
 
 impl Default for StStuffState {
     fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl StStuffState {
-    pub const fn new() -> Self {
         Self {
             st_backing_screen: Vec::new(),
             plyr: PlayerId(0),
@@ -263,7 +257,9 @@ impl StStuffState {
             st_stopped: true,
         }
     }
+}
 
+impl StStuffState {
     pub fn digit_set(&self, id: StDigitSet) -> &[Option<LumpNum>] {
         match id {
             StDigitSet::TallNum => &self.tallnum,

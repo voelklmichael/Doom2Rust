@@ -34,12 +34,6 @@ pub struct RBspState {
 
 impl Default for RBspState {
     fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl RBspState {
-    pub const fn new() -> Self {
         Self {
             curline: SegId(0),
             sidedef: SideId(0),

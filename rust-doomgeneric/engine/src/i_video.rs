@@ -32,12 +32,6 @@ pub struct IVideoState {
 
 impl Default for IVideoState {
     fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl IVideoState {
-    pub const fn new() -> Self {
         Self {
             s_fb: FBScreenInfo::ZERO,
             fb_scaling: 1,

@@ -8,28 +8,12 @@ use crate::v_video::mark_rect;
 use crate::v_video::Screen;
 use alloc::vec::Vec;
 
+#[derive(Default)]
 pub struct FWipeState {
     pub go: bool,
     pub wipe_scr_start: Vec<u8>,
     pub wipe_scr_end: Vec<u8>,
     pub y: Vec<i32>,
-}
-
-impl Default for FWipeState {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl FWipeState {
-    pub const fn new() -> Self {
-        Self {
-            go: false,
-            wipe_scr_start: Vec::new(),
-            wipe_scr_end: Vec::new(),
-            y: Vec::new(),
-        }
-    }
 }
 
 fn wipe_shitty_col_major_xform(array: &mut [u8], width: i32, height: i32) {

@@ -86,25 +86,13 @@ struct DoorSlot {
     door: Option<Box<VlDoor>>,
 }
 
+#[derive(Default)]
 pub struct PDoorsState {
     doors: Vec<DoorSlot>,
     free_list: Vec<u32>,
 }
 
-impl Default for PDoorsState {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 impl PDoorsState {
-    pub const fn new() -> Self {
-        Self {
-            doors: Vec::new(),
-            free_list: Vec::new(),
-        }
-    }
-
     // Moves a fully-defaulted (then caller-filled) VlDoor onto the heap
     // and hands back both a stable generation-checked handle (stored in
     // ThinkerNode's payload by p_tick.rs, replacing what used to be a bare

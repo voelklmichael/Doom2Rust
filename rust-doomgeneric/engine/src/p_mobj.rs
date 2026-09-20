@@ -2101,7 +2101,70 @@ pub struct PMobjState {
 
 impl Default for PMobjState {
     fn default() -> Self {
-        Self::new()
+        Self {
+            test: 0,
+            itemrespawnque: [MapThing {
+                x: 0,
+                y: 0,
+                angle: 0,
+                kind: 0,
+                options: 0,
+            }; 128],
+            itemrespawntime: [0; 128],
+            iquehead: 0,
+            iquetail: 0,
+            mobjs: Vec::new(),
+            free_list: Vec::new(),
+            dummy_id: None,
+            dummy_mobj: Mobj {
+                thinker: Thinker {
+                    function: ThinkerFn::Paused,
+                },
+                x: Fixed::ZERO,
+                y: Fixed::ZERO,
+                z: Fixed::ZERO,
+                snext: None,
+                sprev: None,
+                angle: Angle::ZERO,
+                sprite: SpriteNum::Troo,
+                frame: 0,
+                bnext: None,
+                bprev: None,
+                subsector: SubsectorId(0),
+                floorz: Fixed::ZERO,
+                ceilingz: Fixed::ZERO,
+                radius: Fixed::ZERO,
+                height: Fixed::ZERO,
+                momx: Fixed::ZERO,
+                momy: Fixed::ZERO,
+                momz: Fixed::ZERO,
+                validcount: 0,
+                kind: MobjType::Player,
+                tics: 0,
+                state: None,
+                flags: MobjFlags::empty(),
+                health: 0,
+                movedir: 0,
+                movecount: 0,
+                target: None,
+                reactiontime: 0,
+                threshold: 0,
+                player: None,
+                lastlook: PlayerId(0),
+                spawnpoint: MapThing {
+                    x: 0,
+                    y: 0,
+                    angle: 0,
+                    kind: 0,
+                    options: 0,
+                },
+                tracer: None,
+                id: MobjId {
+                    index: 0,
+                    generation: 0,
+                },
+            },
+        }
     }
 }
 
@@ -2200,73 +2263,6 @@ impl PMobjState {
         self.mobjs.get(id.index as usize).is_some_and(|slot| {
             slot.generation == id.generation && !slot.retired && slot.mobj.is_some()
         })
-    }
-
-    pub const fn new() -> Self {
-        Self {
-            test: 0,
-            itemrespawnque: [MapThing {
-                x: 0,
-                y: 0,
-                angle: 0,
-                kind: 0,
-                options: 0,
-            }; 128],
-            itemrespawntime: [0; 128],
-            iquehead: 0,
-            iquetail: 0,
-            mobjs: Vec::new(),
-            free_list: Vec::new(),
-            dummy_id: None,
-            dummy_mobj: Mobj {
-                thinker: Thinker {
-                    function: ThinkerFn::Paused,
-                },
-                x: Fixed::ZERO,
-                y: Fixed::ZERO,
-                z: Fixed::ZERO,
-                snext: None,
-                sprev: None,
-                angle: Angle::ZERO,
-                sprite: SpriteNum::Troo,
-                frame: 0,
-                bnext: None,
-                bprev: None,
-                subsector: SubsectorId(0),
-                floorz: Fixed::ZERO,
-                ceilingz: Fixed::ZERO,
-                radius: Fixed::ZERO,
-                height: Fixed::ZERO,
-                momx: Fixed::ZERO,
-                momy: Fixed::ZERO,
-                momz: Fixed::ZERO,
-                validcount: 0,
-                kind: MobjType::Player,
-                tics: 0,
-                state: None,
-                flags: MobjFlags::empty(),
-                health: 0,
-                movedir: 0,
-                movecount: 0,
-                target: None,
-                reactiontime: 0,
-                threshold: 0,
-                player: None,
-                lastlook: PlayerId(0),
-                spawnpoint: MapThing {
-                    x: 0,
-                    y: 0,
-                    angle: 0,
-                    kind: 0,
-                    options: 0,
-                },
-                tracer: None,
-                id: MobjId {
-                    index: 0,
-                    generation: 0,
-                },
-            },
-        }
     }
 }
 

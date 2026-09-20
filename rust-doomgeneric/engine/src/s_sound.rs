@@ -49,12 +49,6 @@ pub struct SSoundState {
 
 impl Default for SSoundState {
     fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl SSoundState {
-    pub const fn new() -> Self {
         Self {
             channels: Vec::new(),
             sfx_volume: 8,

@@ -54,26 +54,11 @@ impl core::fmt::Display for LumpNum {
     }
 }
 
+#[derive(Default)]
 pub struct WWadState {
     pub lumpinfo: Vec<LumpInfo>,
     pub numlumps: u32,
     pub lumphash: Vec<Option<u32>>,
-}
-
-impl Default for WWadState {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl WWadState {
-    pub const fn new() -> Self {
-        Self {
-            lumpinfo: Vec::new(),
-            numlumps: 0,
-            lumphash: Vec::new(),
-        }
-    }
 }
 
 #[derive(Clone)]
@@ -341,7 +326,7 @@ mod tests {
     }
 
     fn wad_with(names: &[&str]) -> WWadState {
-        let mut w_wad = WWadState::new();
+        let mut w_wad = WWadState::default();
         for name in names {
             w_wad.lumpinfo.push(LumpInfo {
                 name: FixedCStr::from_bytes(name.as_bytes()),

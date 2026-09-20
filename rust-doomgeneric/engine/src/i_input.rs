@@ -12,12 +12,6 @@ pub struct IInputState {
 
 impl Default for IInputState {
     fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl IInputState {
-    pub const fn new() -> Self {
         Self {
             vanilla_keyboard_mapping: 1,
             shiftdown: 0,

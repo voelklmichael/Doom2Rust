@@ -133,12 +133,6 @@ pub struct PSetupState {
 
 impl Default for PSetupState {
     fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl PSetupState {
-    pub const fn new() -> Self {
         Self {
             validcount: 1,
             numvertexes: 0,
@@ -182,7 +176,9 @@ impl PSetupState {
             junk_line_id: None,
         }
     }
+}
 
+impl PSetupState {
     pub fn sector(&self, id: SectorId) -> &Sector {
         &self.sectors[id.0 as usize]
     }

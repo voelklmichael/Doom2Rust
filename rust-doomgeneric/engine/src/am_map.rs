@@ -92,12 +92,6 @@ pub struct AmMapState {
 
 impl Default for AmMapState {
     fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl AmMapState {
-    pub const fn new() -> Self {
         Self {
             cheating: 0,
             grid: false,

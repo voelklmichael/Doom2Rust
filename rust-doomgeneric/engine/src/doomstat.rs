@@ -10,12 +10,6 @@ pub struct DoomstatState {
 }
 impl Default for DoomstatState {
     fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl DoomstatState {
-    pub const fn new() -> Self {
         Self {
             gamemode: GameMode::Indetermined,
             gamemission: GameMission::Doom,

@@ -52,20 +52,9 @@ pub struct StBinIcon {
     pub p: Option<LumpNum>,
     pub data: i32,
 }
+#[derive(Default)]
 pub struct StLibState {
     sttminus: Option<LumpNum>,
-}
-
-impl Default for StLibState {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl StLibState {
-    pub const fn new() -> Self {
-        Self { sttminus: None }
-    }
 }
 
 pub fn stlib_init(fs: &dyn DoomFileSystem, st_lib: &mut StLibState, w_wad: &mut WWadState) {

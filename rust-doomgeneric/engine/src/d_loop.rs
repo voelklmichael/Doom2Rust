@@ -37,12 +37,6 @@ pub struct DLoopState {
 
 impl Default for DLoopState {
     fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl DLoopState {
-    pub fn new() -> Self {
         Self {
             ticdata: [TicCmdSet {
                 cmds: [TicCmd {

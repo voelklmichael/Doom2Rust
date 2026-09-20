@@ -24,12 +24,6 @@ pub struct PSightState {
 
 impl Default for PSightState {
     fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl PSightState {
-    pub const fn new() -> Self {
         Self {
             sightzstart: Fixed::ZERO,
             topslope: Fixed::ZERO,
@@ -46,6 +40,7 @@ impl PSightState {
         }
     }
 }
+
 pub fn divline_side(x: Fixed, y: Fixed, node: &DivLine) -> i32 {
     if node.dx == Fixed::ZERO {
         if x == node.x {

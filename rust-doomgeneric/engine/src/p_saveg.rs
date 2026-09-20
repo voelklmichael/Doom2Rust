@@ -57,6 +57,7 @@ use crate::p_lights::{glow, light_flash, strobe_flash};
 use crate::p_mobj::mobj_thinker;
 use crate::p_plats::plat_raise;
 
+#[derive(Default)]
 pub struct PSavegState {
     /// The savegame image: read from disk in full before a load, and built up
     /// in memory before being written out by a save.
@@ -65,23 +66,6 @@ pub struct PSavegState {
     pub save_pos: usize,
     pub savegame_error: bool,
     pub temp_savegame_filename: Option<String>,
-}
-
-impl Default for PSavegState {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl PSavegState {
-    pub const fn new() -> Self {
-        Self {
-            save_buffer: Vec::new(),
-            save_pos: 0,
-            savegame_error: false,
-            temp_savegame_filename: None,
-        }
-    }
 }
 
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -1250,7 +1234,7 @@ mod tests {
 
     #[test]
     fn primitives_round_trip_with_padding() {
-        let mut w = PSavegState::new();
+        let mut w = PSavegState::default();
         saveg_write8(&mut w, 0x7f);
         saveg_write_pad(&mut w);
         saveg_write32(&mut w, -123456);
@@ -1258,7 +1242,7 @@ mod tests {
         saveg_write_pad(&mut w);
         assert_eq!(w.save_buffer.len(), 12);
 
-        let mut r = PSavegState::new();
+        let mut r = PSavegState::default();
         r.save_buffer = w.save_buffer;
         assert_eq!(saveg_read8(&mut r), 0x7f);
         saveg_read_pad(&mut r);
@@ -1271,7 +1255,7 @@ mod tests {
 
     #[test]
     fn reading_past_the_end_flags_an_error_and_yields_zero() {
-        let mut r = PSavegState::new();
+        let mut r = PSavegState::default();
         r.save_buffer = vec![1];
         assert_eq!(saveg_read16(&mut r), 1);
         assert!(r.savegame_error);

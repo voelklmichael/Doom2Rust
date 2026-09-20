@@ -13,24 +13,10 @@ static RNDTABLE: [u8; 256] = [
     231, 232, 76, 31, 221, 84, 37, 216, 165, 212, 106, 197, 242, 98, 43, 39, 175, 254, 145, 190,
     84, 118, 222, 187, 136, 120, 163, 236, 249,
 ];
+#[derive(Default)]
 pub struct MRandomState {
     pub rndindex: u8,
     pub prndindex: u8,
-}
-
-impl Default for MRandomState {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl MRandomState {
-    pub const fn new() -> Self {
-        Self {
-            rndindex: 0,
-            prndindex: 0,
-        }
-    }
 }
 
 pub fn p_random(state: &mut MRandomState) -> i32 {

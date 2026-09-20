@@ -338,22 +338,12 @@ pub struct SoundsState {
 }
 
 impl Default for SoundsState {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl SoundsState {
-    pub fn sfx_mut(&mut self, id: SfxId) -> &mut SfxInfo {
-        &mut self.s_sfx[id.0 as usize]
-    }
-
     // Kept out of line: `GameState::new` inlines every state constructor, and once
     // `init_game_state` passes 256 KB the Xtensa linker fails ("dangerous relocation:
     // l32r: literal target out of range") building the firmware. (They were the biggest
     // constructors before their tables became compact rows; not re-measured on the firmware.)
     #[inline(never)]
-    pub fn new() -> Self {
+    fn default() -> Self {
         let mut s_sfx: [SfxInfo; NUMSFX] = core::array::from_fn(|i| {
             let (name, priority) = SFX_TABLE[i];
             SfxInfo {
@@ -382,6 +372,12 @@ impl SoundsState {
             s_sfx,
         }
     }
+}
+
+impl SoundsState {
+    pub fn sfx_mut(&mut self, id: SfxId) -> &mut SfxInfo {
+        &mut self.s_sfx[id.0 as usize]
+    }
 
     // Must run only after `self` is at its final, permanently-stable address
     // (i.e. once already moved into GameState's 'static storage via
@@ -399,7 +395,7 @@ mod tests {
 
     #[test]
     fn tables_are_built_from_the_rows() {
-        let sounds = SoundsState::new();
+        let sounds = SoundsState::default();
         let pistol = &sounds.s_sfx[SfxName::Pistol as usize];
         assert_eq!(pistol.name.as_str(), "pistol");
         assert_eq!(pistol.priority, 64);
@@ -415,7 +411,7 @@ mod tests {
 
     #[test]
     fn only_the_chaingun_has_a_fixed_pitch_and_volume() {
-        let sounds = SoundsState::new();
+        let sounds = SoundsState::default();
         for (i, sfx) in sounds.s_sfx.iter().enumerate() {
             let chaingun = i == SfxName::Chgun as usize;
             assert_eq!(sfx.pitch == 150 && sfx.volume == 0, chaingun, "sfx {i}");

@@ -271,12 +271,6 @@ pub struct FFinaleState {
 
 impl Default for FFinaleState {
     fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl FFinaleState {
-    pub const fn new() -> Self {
         Self {
             finalestage: FinaleStage::Text,
             finalecount: 0,

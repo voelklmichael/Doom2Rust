@@ -54,12 +54,6 @@ pub struct HuStuffState {
 
 impl Default for HuStuffState {
     fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl HuStuffState {
-    pub const fn new() -> Self {
         Self {
             plr: PlayerId(0),
             hu_font: [None; 63],

@@ -262,18 +262,12 @@ fn unbound_variables(table: &[(&'static str, DefaultType)]) -> Vec<ConfigVariabl
 }
 
 impl Default for MConfigState {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl MConfigState {
     // Kept out of line: `GameState::new` inlines every state constructor, and once
     // `init_game_state` passes 256 KB the Xtensa linker fails ("dangerous relocation:
     // l32r: literal target out of range") building the firmware. (They were the biggest
     // constructors before their tables became compact rows; not re-measured on the firmware.)
     #[inline(never)]
-    pub fn new() -> Self {
+    fn default() -> Self {
         Self {
             configdir: String::new(),
             default_main_config: "",

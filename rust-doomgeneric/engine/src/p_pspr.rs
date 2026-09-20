@@ -82,22 +82,9 @@ pub fn set_psprite(state: &mut GameState, player_id: PlayerId, position: i32, mu
         }
     }
 }
+#[derive(Default)]
 pub struct PPsprState {
     pub bulletslope: Fixed,
-}
-
-impl Default for PPsprState {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl PPsprState {
-    pub const fn new() -> Self {
-        Self {
-            bulletslope: Fixed::ZERO,
-        }
-    }
 }
 
 pub fn bring_up_weapon(state: &mut GameState, player_id: PlayerId) {
