@@ -11,6 +11,7 @@ use crate::patch::Patch;
 use crate::platform::DoomPlatform;
 use crate::w_wad::lump_bytes;
 use crate::w_wad::lump_bytes_name;
+use crate::w_wad::WWadState;
 use alloc::string::String;
 use alloc::vec::Vec;
 
@@ -28,9 +29,10 @@ pub enum Screen {
 impl GameState {
     pub fn screen(&self, screen: Screen) -> &[u8] {
         match screen {
-            Screen::Video => &self.i_video.i_video_buffer,
-            Screen::StatusBar => &self.st_stuff.st_backing_screen,
+            Screen::Video => &self.io.i_video.i_video_buffer,
+            Screen::StatusBar => &self.ui.st_stuff.st_backing_screen,
             Screen::Background => self
+                .render
                 .r_draw
                 .background_buffer
                 .as_deref()
@@ -40,9 +42,10 @@ impl GameState {
 
     pub fn screen_mut(&mut self, screen: Screen) -> &mut [u8] {
         match screen {
-            Screen::Video => &mut self.i_video.i_video_buffer,
-            Screen::StatusBar => &mut self.st_stuff.st_backing_screen,
+            Screen::Video => &mut self.io.i_video.i_video_buffer,
+            Screen::StatusBar => &mut self.ui.st_stuff.st_backing_screen,
             Screen::Background => self
+                .render
                 .r_draw
                 .background_buffer
                 .as_deref_mut()
@@ -98,7 +101,7 @@ pub fn copy_rect(
     {
         error("Bad V_CopyRect");
     }
-    mark_rect(&mut state.v_video, dest, destx, desty, width, height);
+    mark_rect(&mut state.io.v_video, dest, destx, desty, width, height);
     let width = width as usize;
     let mut rows: Vec<u8> = Vec::with_capacity(width * height as usize);
     {
@@ -116,11 +119,11 @@ pub fn copy_rect(
 }
 /// Resolves a WAD lump number to its cached patch data. Cheap and
 /// idempotent: the lump cache never evicts.
-pub fn cache_patch_num(state: &mut GameState, lumpnum: i32) -> Patch {
-    Patch::new(lump_bytes(state, lumpnum))
+pub fn cache_patch_num(fs: &dyn DoomFileSystem, w_wad: &mut WWadState, lumpnum: i32) -> Patch {
+    Patch::new(lump_bytes(fs, w_wad, lumpnum))
 }
-pub fn cache_patch_name(state: &mut GameState, name: &str) -> Patch {
-    Patch::new(lump_bytes_name(state, name))
+pub fn cache_patch_name(fs: &dyn DoomFileSystem, w_wad: &mut WWadState, name: &str) -> Patch {
+    Patch::new(lump_bytes_name(fs, w_wad, name))
 }
 fn blit_patch(screen: &mut [u8], patch: &Patch, x: i32, y: i32, flipped: bool) {
     let w = patch.width();
@@ -150,7 +153,7 @@ pub fn draw_patch(state: &mut GameState, dest: Screen, x: i32, y: i32, patch: &P
         ));
     }
     mark_rect(
-        &mut state.v_video,
+        &mut state.io.v_video,
         dest,
         x,
         y,
@@ -166,7 +169,7 @@ pub fn draw_patch_flipped(state: &mut GameState, dest: Screen, x: i32, y: i32, p
         error("Bad V_DrawPatchFlipped");
     }
     mark_rect(
-        &mut state.v_video,
+        &mut state.io.v_video,
         dest,
         x,
         y,
@@ -190,7 +193,7 @@ pub fn draw_block(
     if x < 0 || x + width > SCREENWIDTH || y < 0 || y + height > SCREENHEIGHT {
         error("Bad V_DrawBlock");
     }
-    mark_rect(&mut state.v_video, dest, x, y, width, height);
+    mark_rect(&mut state.io.v_video, dest, x, y, width, height);
     let width = width as usize;
     let dst = state.screen_mut(dest);
     for row in 0..height as usize {
@@ -255,12 +258,12 @@ pub fn write_pcxfile(
     pack.extend_from_slice(&palette[..768]);
     fs.write_file(filename, &pack);
 }
-pub fn v_screen_shot(state: &mut GameState) {
+pub fn v_screen_shot(fs: &mut dyn DoomFileSystem, i_video: &IVideoState, w_wad: &mut WWadState) {
     let mut i = 0i32;
     let mut lbmname = String::new();
     while i <= 99 {
         lbmname = format!("DOOM{i:02}.pcx");
-        if !state.fs.exists(&lbmname) {
+        if !fs.exists(&lbmname) {
             break;
         }
         i += 1;
@@ -268,11 +271,11 @@ pub fn v_screen_shot(state: &mut GameState) {
     if i == 100 {
         error("V_ScreenShot: Couldn't create a PCX");
     }
-    let palette = lump_bytes_name(state, "PLAYPAL");
+    let palette = lump_bytes_name(&*fs, w_wad, "PLAYPAL");
     write_pcxfile(
-        &mut *state.fs,
+        &mut *fs,
         &lbmname,
-        &state.i_video.i_video_buffer,
+        &i_video.i_video_buffer,
         SCREENWIDTH,
         SCREENHEIGHT,
         &palette,
@@ -283,7 +286,6 @@ pub const MOUSE_SPEED_BOX_HEIGHT: i32 = 9;
 pub fn draw_mouse_speed_box(state: &mut IVideoState, platform: &mut dyn DoomPlatform, speed: i32) {
     let mut original_speed: i32;
 
-    let mut linelen: i32;
     let bgcolor: i32 = get_palette_index(platform, 0x77, 0x77, 0x77);
     let bordercolor: i32 = get_palette_index(platform, 0x55, 0x55, 0x55);
     let red: i32 = get_palette_index(platform, 0xff, 0, 0);
@@ -319,7 +321,7 @@ pub fn draw_mouse_speed_box(state: &mut IVideoState, platform: &mut dyn DoomPlat
         original_speed = (original_speed as f32 / state.mouse_acceleration) as i32;
         original_speed += state.mouse_threshold;
     }
-    linelen = original_speed * redline_x / state.mouse_threshold;
+    let mut linelen: i32 = original_speed * redline_x / state.mouse_threshold;
     if linelen > MOUSE_SPEED_BOX_WIDTH - 1 {
         linelen = MOUSE_SPEED_BOX_WIDTH - 1;
     }

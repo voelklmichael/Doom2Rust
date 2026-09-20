@@ -8,11 +8,16 @@
 
 extern crate alloc;
 
+mod audio;
+mod lagprobe;
 mod lcd;
+mod music;
 mod net;
 mod platform;
 mod power;
+mod sound;
 mod wad_fs;
+mod web;
 
 use alloc::{boxed::Box, string::ToString, vec::Vec};
 use core::{cell::RefCell, fmt::Write as _};
@@ -25,7 +30,12 @@ use core_s3::{
 use core_s3_protocol::DEFAULT_PORT;
 use embassy_executor::Spawner;
 use embassy_time::{with_timeout, Duration, Timer};
-use embedded_graphics::{pixelcolor::Rgb565, prelude::*};
+use embedded_graphics::{
+    mono_font::{ascii::FONT_6X10, MonoTextStyleBuilder},
+    pixelcolor::Rgb565,
+    prelude::*,
+    text::Text,
+};
 use esp_backtrace as _;
 use esp_hal::{
     clock::CpuClock,
@@ -72,9 +82,13 @@ where
 {
     display.clear(Rgb565::BLACK).expect("clear LCD");
     for (line, y) in lines.iter().zip((30..).step_by(30)) {
-        Label { text: line, top_left: Point::new(20, y), color: Rgb565::CYAN }
-            .draw(display)
-            .expect("draw text");
+        Label {
+            text: line,
+            top_left: Point::new(20, y),
+            color: Rgb565::CYAN,
+        }
+        .draw(display)
+        .expect("draw text");
     }
 }
 
@@ -114,6 +128,17 @@ async fn main(spawner: Spawner) {
     .with_sda(peripherals.GPIO12)
     .with_scl(peripherals.GPIO11);
     CoreS3::init_core_s3_power(&mut i2c).expect("LCD power");
+    // The speaker, set up over the same I2C bus (which is why this comes before the power chip
+    // takes the bus). Its pump runs on this core; the game reaches it through `sound`.
+    sound::start(
+        spawner,
+        &mut i2c,
+        peripherals.I2S1,
+        peripherals.DMA_CH1,
+        peripherals.GPIO34,
+        peripherals.GPIO33,
+        peripherals.GPIO13,
+    );
     // Nothing else needs the bus; the power chip keeps it so that quitting can switch the board off.
     power::init(i2c);
     let lcd = RefCell::new(lcd::Lcd::new(
@@ -131,7 +156,9 @@ async fn main(spawner: Spawner) {
         lcd::LcdSpi(&lcd),
         lcd::LcdDc(&lcd),
         sd_cs,
-        BusConfig { write_hz: lcd::SPI_HZ },
+        BusConfig {
+            write_hz: lcd::SPI_HZ,
+        },
         PanelConfig {
             invert_colors: true,
             geometry: DisplayGeometry {
@@ -145,6 +172,10 @@ async fn main(spawner: Spawner) {
     display.init(&mut Delay::new()).expect("display");
 
     show(&mut display, &["CoreS3 DOOM", "starting Wi-Fi..."]);
+    #[cfg(feature = "lagprobe")]
+    spawner.spawn(lagprobe::task().expect("spawn lagprobe"));
+    #[cfg(feature = "lagprobe-keys")]
+    spawner.spawn(lagprobe::keys().expect("spawn lagprobe keys"));
     // What the game keeps showing in its top bar once it is running.
     let mut status = String::<40>::new();
     let network = net::start(spawner, peripherals.WIFI);
@@ -154,25 +185,42 @@ async fn main(spawner: Spawner) {
             if let Some(config) = network.stack.config_v4() {
                 let _ = write!(address, "{}", config.address.address());
             }
-            let mut port = String::<40>::new();
-            let _ = write!(port, "port {DEFAULT_PORT}");
-            println!("wifi: address {address}, controller port {DEFAULT_PORT}");
+            let mut url = String::<40>::new();
+            let _ = write!(url, "http://{address}");
+            let mut sender = String::<40>::new();
+            let _ = write!(sender, "or sender: {address}:{DEFAULT_PORT}");
+            println!(
+                "wifi: address {address}, web controller on port 80, sender port {DEFAULT_PORT}"
+            );
             if let Some(ssid) = network.own_network {
                 // The board made its own network: the controller has to join it first.
                 show(
                     &mut display,
-                    &["CoreS3 DOOM", "join Wi-Fi:", ssid, "then controller:", &address, &port],
+                    &[
+                        "CoreS3 DOOM",
+                        "join Wi-Fi:",
+                        ssid,
+                        "then open in a browser:",
+                        &url,
+                        &sender,
+                    ],
                 );
                 let _ = write!(status, "{ssid} {address}:{DEFAULT_PORT}");
             } else {
-                show(&mut display, &["CoreS3 DOOM", "controller address:", &address, &port]);
+                show(
+                    &mut display,
+                    &["CoreS3 DOOM", "open in a browser:", &url, &sender],
+                );
                 let _ = write!(status, "{address}:{DEFAULT_PORT}");
             }
             Timer::after(SHOW_ADDRESS).await;
         }
         Err(_) => {
             println!("wifi: no address after {WAIT_FOR_ADDRESS:?}; starting the game anyway");
-            show(&mut display, &["CoreS3 DOOM", "no Wi-Fi yet", "still retrying"]);
+            show(
+                &mut display,
+                &["CoreS3 DOOM", "no Wi-Fi yet", "still retrying"],
+            );
             let _ = write!(status, "no Wi-Fi yet");
             Timer::after(SHOW_ADDRESS).await;
         }
@@ -182,9 +230,13 @@ async fn main(spawner: Spawner) {
     // never draws over. The bar is the 20 rows above the picture; text is positioned by its
     // baseline, so 15 puts the 10-row font in rows 8-17.
     display.clear(Rgb565::BLACK).expect("clear LCD");
-    Label { text: &status, top_left: Point::new(4, 15), color: Rgb565::CYAN }
-        .draw(&mut display)
-        .expect("draw status");
+    Label {
+        text: &status,
+        top_left: Point::new(4, 15),
+        color: Rgb565::CYAN,
+    }
+    .draw(&mut display)
+    .expect("draw status");
 
     // The game runs on core 1, so the network never waits for a frame and the game never waits
     // for the radio. It builds its own state there, on the big stack.
@@ -202,10 +254,14 @@ async fn main(spawner: Spawner) {
                 core::mem::size_of_val(&*state),
                 esp_alloc::HEAP.free()
             );
-            let args: Vec<_> = ["doomgeneric", "-iwad", "doom1.wad", "-scaling", "1"]
+            let mut args: Vec<_> = ["doomgeneric", "-iwad", "doom1.wad", "-scaling", "1"]
                 .into_iter()
                 .map(ToString::to_string)
                 .collect();
+            // Build with MUSIC=off for sound effects only (the synthesizer is not even built).
+            if option_env!("MUSIC") == Some("off") {
+                args.push("-nomusic".to_string());
+            }
             doomgeneric_create(state, args);
             loop {
                 doomgeneric_tick(state);
@@ -214,7 +270,30 @@ async fn main(spawner: Spawner) {
     );
 
     // Core 0 streams the finished frames to the LCD; the network tasks keep running on this
-    // executor in between.
-    lcd::run_pump(&lcd).await
-
+    // executor in between. Where the frame rate goes in the status bar: right after the address, in a cell of a fixed
+    // width so a shorter number never leaves old digits behind. `status` holds at most 40
+    // characters, so the cell always fits the 320 pixels.
+    let fps_x = 4 + 6 * status.len() as i32 + 2 * 6;
+    let fps_style = MonoTextStyleBuilder::new()
+        .font(&FONT_6X10)
+        .text_color(Rgb565::YELLOW)
+        .background_color(Rgb565::BLACK)
+        .build();
+    let mut fps_shown = None;
+    lcd::run_pump(&lcd, || {
+        // A new sample is about once a second; the rest of the time this is one atomic load.
+        let Some((counter, tenths)) = platform::fps_sample() else {
+            return;
+        };
+        if fps_shown == Some(counter) {
+            return;
+        }
+        fps_shown = Some(counter);
+        // Always eight characters (" 9.9 fps", "28.4 fps"); the game cannot run above 35 anyway.
+        let tenths = tenths.min(999);
+        let mut text = String::<8>::new();
+        let _ = write!(text, "{:>2}.{} fps", tenths / 10, tenths % 10);
+        let _ = Text::new(&text, Point::new(fps_x, 15), fps_style).draw(&mut display);
+    })
+    .await
 }

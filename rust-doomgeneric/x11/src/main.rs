@@ -14,6 +14,8 @@ use ::rust_doomgeneric::doomgeneric_tick;
 use ::rust_doomgeneric::init_game_state;
 use ::rust_doomgeneric::DoomPlatform;
 use libc::memset;
+
+mod audio;
 // Opaque Xlib types, only ever used behind raw pointers.
 #[repr(C)]
 pub struct _XDisplay {
@@ -850,6 +852,7 @@ struct X11Platform {
     s_KeyQueue: [u16; KEYQUEUE_SIZE as usize],
     s_KeyQueueWriteIndex: u32,
     s_KeyQueueReadIndex: u32,
+    audio: Option<audio::AudioSink>,
 }
 
 impl X11Platform {
@@ -863,6 +866,7 @@ impl X11Platform {
             s_KeyQueue: [0; KEYQUEUE_SIZE as usize],
             s_KeyQueueWriteIndex: 0,
             s_KeyQueueReadIndex: 0,
+            audio: None,
         }
     }
 
@@ -1055,6 +1059,23 @@ impl DoomPlatform for X11Platform {
         }
     }
 
+    fn audio_open(&mut self, preferred_rate: u32) -> Option<u32> {
+        self.audio = audio::AudioSink::open(preferred_rate);
+        self.audio.is_some().then_some(preferred_rate)
+    }
+
+    fn audio_frames_wanted(&mut self) -> usize {
+        self.audio
+            .as_mut()
+            .map_or(0, audio::AudioSink::frames_wanted)
+    }
+
+    fn audio_write(&mut self, samples: &[i16]) {
+        if let Some(audio) = self.audio.as_mut() {
+            audio.write(samples);
+        }
+    }
+
     fn sleep_ms(&mut self, ms: u32) {
         unsafe {
             usleep((ms as __useconds_t).wrapping_mul(1000 as __useconds_t));
@@ -1114,6 +1135,8 @@ impl DoomPlatform for X11Platform {
         eprint!("{}", message);
     }
     fn quit(&mut self) -> ! {
+        // Let the player finish what it has queued (the quit sound).
+        self.audio = None;
         ::std::process::exit(0)
     }
 }

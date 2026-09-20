@@ -3,6 +3,7 @@ use crate::d_player::PlayerId;
 use crate::doomdef::SCREENHEIGHT;
 use crate::doomdef::SCREENWIDTH;
 use crate::game_state::GameState;
+use crate::game_state::Render;
 use crate::m_fixed::fixed_div;
 use crate::m_fixed::fixed_mul;
 use crate::m_fixed::Fixed;
@@ -270,12 +271,10 @@ pub fn point_to_angle2(
     point_to_angle(r_main, x2, y2)
 }
 pub fn point_to_dist(r_main: &RMainState, x: Fixed, y: Fixed) -> Fixed {
-    let mut dx: Fixed;
-    let mut dy: Fixed;
     let temp: Fixed;
 
-    dx = (x - r_main.viewx).abs() as Fixed;
-    dy = (y - r_main.viewy).abs() as Fixed;
+    let mut dx: Fixed = (x - r_main.viewx).abs() as Fixed;
+    let mut dy: Fixed = (y - r_main.viewy).abs() as Fixed;
     if dy > dx {
         temp = dx;
         dx = dy;
@@ -316,13 +315,17 @@ pub fn init_texture_mapping(r_draw: &RDrawState, r_main: &mut RMainState) {
         r_main.centerxfrac,
         FINETANGENT[(FINEANGLES / 4 + FIELDOFVIEW / 2) as usize],
     );
-    for i in 0..FINEANGLES / 2 {
-        if FINETANGENT[i as usize] > FRACUNIT * 2 {
+    for (i, &tangent) in FINETANGENT
+        .iter()
+        .enumerate()
+        .take((FINEANGLES / 2) as usize)
+    {
+        if tangent > FRACUNIT * 2 {
             t = -1;
-        } else if FINETANGENT[i as usize] < -FRACUNIT * 2 {
+        } else if tangent < -FRACUNIT * 2 {
             t = r_draw.viewwidth + 1;
         } else {
-            t = fixed_mul(FINETANGENT[i as usize], focallength);
+            t = fixed_mul(tangent, focallength);
             t = (r_main.centerxfrac - t + FRACUNIT - 1) >> FRACBITS;
             if t < -1 {
                 t = -1;
@@ -330,7 +333,7 @@ pub fn init_texture_mapping(r_draw: &RDrawState, r_main: &mut RMainState) {
                 t = r_draw.viewwidth + 1;
             }
         }
-        r_main.viewangletox[i as usize] = t;
+        r_main.viewangletox[i] = t;
     }
     for x in 0..=r_draw.viewwidth {
         i = 0;
@@ -339,11 +342,11 @@ pub fn init_texture_mapping(r_draw: &RDrawState, r_main: &mut RMainState) {
         }
         r_main.xtoviewangle[x as usize] = ((i << ANGLETOFINESHIFT) - ANG90) as Angle;
     }
-    for i in 0..FINEANGLES / 2 {
-        if r_main.viewangletox[i as usize] == -1 {
-            r_main.viewangletox[i as usize] = 0;
-        } else if r_main.viewangletox[i as usize] == r_draw.viewwidth + 1 {
-            r_main.viewangletox[i as usize] = r_draw.viewwidth;
+    for i in 0..(FINEANGLES / 2) as usize {
+        if r_main.viewangletox[i] == -1 {
+            r_main.viewangletox[i] = 0;
+        } else if r_main.viewangletox[i] == r_draw.viewwidth + 1 {
+            r_main.viewangletox[i] = r_draw.viewwidth;
         }
     }
     r_main.clipangle = r_main.xtoviewangle[0];
@@ -374,89 +377,91 @@ pub fn set_view_size(r_main: &mut RMainState, blocks: i32, detail: i32) {
     r_main.setblocks = blocks;
     r_main.setdetail = detail;
 }
-pub fn execute_set_view_size(state: &mut GameState) {
+pub fn execute_set_view_size(render: &mut Render) {
     let mut cosadj: Fixed;
     let mut dy: Fixed;
     let mut level: i32;
     let mut startmap: i32;
-    state.r_main.setsizeneeded = false;
-    if state.r_main.setblocks == 11 {
-        state.r_draw.scaledviewwidth = SCREENWIDTH;
-        state.r_draw.viewheight = SCREENHEIGHT;
+    render.r_main.setsizeneeded = false;
+    if render.r_main.setblocks == 11 {
+        render.r_draw.scaledviewwidth = SCREENWIDTH;
+        render.r_draw.viewheight = SCREENHEIGHT;
     } else {
-        state.r_draw.scaledviewwidth = state.r_main.setblocks * 32;
-        state.r_draw.viewheight = (state.r_main.setblocks * 168 / 10) & !7;
+        render.r_draw.scaledviewwidth = render.r_main.setblocks * 32;
+        render.r_draw.viewheight = (render.r_main.setblocks * 168 / 10) & !7;
     }
-    state.r_main.detailshift = state.r_main.setdetail;
-    state.r_draw.viewwidth = state.r_draw.scaledviewwidth >> state.r_main.detailshift;
-    state.r_main.centery = state.r_draw.viewheight / 2;
-    state.r_main.centerx = state.r_draw.viewwidth / 2;
-    state.r_main.centerxfrac = (state.r_main.centerx << FRACBITS) as Fixed;
-    state.r_main.centeryfrac = (state.r_main.centery << FRACBITS) as Fixed;
-    state.r_main.projection = state.r_main.centerxfrac;
-    if state.r_main.detailshift == 0 {
-        state.r_main.basecolfunc = Some(draw_column);
-        state.r_main.colfunc = state.r_main.basecolfunc;
-        state.r_main.fuzzcolfunc = Some(draw_fuzz_column);
-        state.r_main.transcolfunc = Some(draw_translated_column);
-        state.r_main.spanfunc = Some(draw_span);
+    render.r_main.detailshift = render.r_main.setdetail;
+    render.r_draw.viewwidth = render.r_draw.scaledviewwidth >> render.r_main.detailshift;
+    render.r_main.centery = render.r_draw.viewheight / 2;
+    render.r_main.centerx = render.r_draw.viewwidth / 2;
+    render.r_main.centerxfrac = (render.r_main.centerx << FRACBITS) as Fixed;
+    render.r_main.centeryfrac = (render.r_main.centery << FRACBITS) as Fixed;
+    render.r_main.projection = render.r_main.centerxfrac;
+    if render.r_main.detailshift == 0 {
+        render.r_main.basecolfunc = Some(draw_column);
+        render.r_main.colfunc = render.r_main.basecolfunc;
+        render.r_main.fuzzcolfunc = Some(draw_fuzz_column);
+        render.r_main.transcolfunc = Some(draw_translated_column);
+        render.r_main.spanfunc = Some(draw_span);
     } else {
-        state.r_main.basecolfunc = Some(draw_column_low);
-        state.r_main.colfunc = state.r_main.basecolfunc;
-        state.r_main.fuzzcolfunc = Some(draw_fuzz_column_low);
-        state.r_main.transcolfunc = Some(draw_translated_column_low);
-        state.r_main.spanfunc = Some(draw_span_low);
+        render.r_main.basecolfunc = Some(draw_column_low);
+        render.r_main.colfunc = render.r_main.basecolfunc;
+        render.r_main.fuzzcolfunc = Some(draw_fuzz_column_low);
+        render.r_main.transcolfunc = Some(draw_translated_column_low);
+        render.r_main.spanfunc = Some(draw_span_low);
     }
-    let scaledviewwidth = state.r_draw.scaledviewwidth;
-    let viewheight = state.r_draw.viewheight;
-    init_buffer(&mut state.r_draw, scaledviewwidth, viewheight);
-    init_texture_mapping(&state.r_draw, &mut state.r_main);
-    state.r_things.pspritescale = (FRACUNIT * state.r_draw.viewwidth / SCREENWIDTH) as Fixed;
-    state.r_things.pspriteiscale = (FRACUNIT * SCREENWIDTH / state.r_draw.viewwidth) as Fixed;
-    for i in 0..state.r_draw.viewwidth {
-        state.r_things.screenheightarray[i as usize] = state.r_draw.viewheight as i16;
+    let scaledviewwidth = render.r_draw.scaledviewwidth;
+    let viewheight = render.r_draw.viewheight;
+    init_buffer(&mut render.r_draw, scaledviewwidth, viewheight);
+    init_texture_mapping(&render.r_draw, &mut render.r_main);
+    render.r_things.pspritescale = (FRACUNIT * render.r_draw.viewwidth / SCREENWIDTH) as Fixed;
+    render.r_things.pspriteiscale = (FRACUNIT * SCREENWIDTH / render.r_draw.viewwidth) as Fixed;
+    for i in 0..render.r_draw.viewwidth as usize {
+        render.r_things.screenheightarray[i] = render.r_draw.viewheight as i16;
     }
-    for i in 0..state.r_draw.viewheight {
-        dy = (((i - state.r_draw.viewheight / 2) << FRACBITS) + FRACUNIT / 2) as Fixed;
+    for i in 0..render.r_draw.viewheight {
+        dy = (((i - render.r_draw.viewheight / 2) << FRACBITS) + FRACUNIT / 2) as Fixed;
         dy = dy.abs() as Fixed;
-        state.r_plane.yslope[i as usize] = fixed_div(
-            ((state.r_draw.viewwidth as Fixed) << state.r_main.detailshift) / 2 * FRACUNIT,
+        render.r_plane.yslope[i as usize] = fixed_div(
+            ((render.r_draw.viewwidth as Fixed) << render.r_main.detailshift) / 2 * FRACUNIT,
             dy,
         );
     }
-    for i in 0..state.r_draw.viewwidth {
-        cosadj = FINECOSINE[(state.r_main.xtoviewangle[i as usize] >> ANGLETOFINESHIFT) as usize]
-            .abs() as Fixed;
-        state.r_plane.distscale[i as usize] = fixed_div(FRACUNIT, cosadj);
+    for i in 0..render.r_draw.viewwidth as usize {
+        cosadj =
+            FINECOSINE[(render.r_main.xtoviewangle[i] >> ANGLETOFINESHIFT) as usize].abs() as Fixed;
+        render.r_plane.distscale[i] = fixed_div(FRACUNIT, cosadj);
     }
     for i in 0..LIGHTLEVELS {
         startmap = (LIGHTLEVELS - 1 - i) * 2 * NUMCOLORMAPS / LIGHTLEVELS;
         for j in 0..MAXLIGHTSCALE {
             level = startmap
-                - j * SCREENWIDTH / (state.r_draw.viewwidth << state.r_main.detailshift) / DISTMAP;
+                - j * SCREENWIDTH
+                    / (render.r_draw.viewwidth << render.r_main.detailshift)
+                    / DISTMAP;
             if level < 0 {
                 level = 0;
             }
             if level >= NUMCOLORMAPS {
                 level = NUMCOLORMAPS - 1;
             }
-            state.r_main.scalelight[i as usize][j as usize] = level;
+            render.r_main.scalelight[i as usize][j as usize] = level;
         }
     }
 }
 pub fn r_init(state: &mut GameState) {
     r_init_data(state);
-    doom_print!(state.platform, ".");
-    doom_print!(state.platform, ".");
-    let (screenblocks, detail_level) = (state.m_menu.screenblocks, state.m_menu.detail_level);
-    set_view_size(&mut state.r_main, screenblocks, detail_level);
-    doom_print!(state.platform, ".");
-    init_light_tables(&mut state.r_main);
-    doom_print!(state.platform, ".");
-    init_sky_map(&mut state.r_sky);
-    init_translation_tables(&mut state.r_draw);
-    doom_print!(state.platform, ".");
-    state.r_main.framecount = 0;
+    doom_print!(state.io.platform, ".");
+    doom_print!(state.io.platform, ".");
+    let (screenblocks, detail_level) = (state.ui.m_menu.screenblocks, state.ui.m_menu.detail_level);
+    set_view_size(&mut state.render.r_main, screenblocks, detail_level);
+    doom_print!(state.io.platform, ".");
+    init_light_tables(&mut state.render.r_main);
+    doom_print!(state.io.platform, ".");
+    init_sky_map(&mut state.render.r_sky);
+    init_translation_tables(&mut state.render.r_draw);
+    doom_print!(state.io.platform, ".");
+    state.render.r_main.framecount = 0;
 }
 pub fn point_in_subsector(p_setup: &PSetupState, x: Fixed, y: Fixed) -> SubsectorId {
     if p_setup.numnodes == 0 {
@@ -471,46 +476,52 @@ pub fn point_in_subsector(p_setup: &PSetupState, x: Fixed, y: Fixed) -> Subsecto
     SubsectorId((nodenum & !NF_SUBSECTOR) as u32)
 }
 pub fn setup_frame(state: &mut GameState, player_id: PlayerId) {
-    let player = state.g_game.player_mut(player_id);
-    state.r_main.viewplayer = player_id;
+    let player = state.game.g_game.player_mut(player_id);
+    state.render.r_main.viewplayer = player_id;
     let (player_mo_id, extralight, viewz, fixedcolormap) = (
         player.mo.unwrap(),
         player.extralight,
         player.viewz,
         player.fixedcolormap,
     );
-    let player_mo = state.p_mobj.mo(player_mo_id);
-    state.r_main.viewx = player_mo.x;
-    state.r_main.viewy = player_mo.y;
-    state.r_main.viewangle = player_mo
+    let player_mo = state.world.p_mobj.mo(player_mo_id);
+    state.render.r_main.viewx = player_mo.x;
+    state.render.r_main.viewy = player_mo.y;
+    state.render.r_main.viewangle = player_mo
         .angle
-        .wrapping_add(state.r_main.viewangleoffset as Angle);
-    state.r_main.extralight = extralight;
-    state.r_main.viewz = viewz;
-    state.r_main.viewsin = FINESINE[(state.r_main.viewangle >> ANGLETOFINESHIFT) as usize];
-    state.r_main.viewcos = FINECOSINE[(state.r_main.viewangle >> ANGLETOFINESHIFT) as usize];
-    state.r_main.sscount = 0;
+        .wrapping_add(state.render.r_main.viewangleoffset as Angle);
+    state.render.r_main.extralight = extralight;
+    state.render.r_main.viewz = viewz;
+    state.render.r_main.viewsin =
+        FINESINE[(state.render.r_main.viewangle >> ANGLETOFINESHIFT) as usize];
+    state.render.r_main.viewcos =
+        FINECOSINE[(state.render.r_main.viewangle >> ANGLETOFINESHIFT) as usize];
+    state.render.r_main.sscount = 0;
     if fixedcolormap != 0 {
         let colormap = fixedcolormap;
-        state.r_main.fixedcolormap = Some(colormap);
-        state.r_segs.walllights = LightRow48::Fixed;
+        state.render.r_main.fixedcolormap = Some(colormap);
+        state.render.r_segs.walllights = LightRow48::Fixed;
         for i in 0..(MAXLIGHTSCALE as usize) {
-            state.r_main.scalelightfixed[i] = colormap;
+            state.render.r_main.scalelightfixed[i] = colormap;
         }
     } else {
-        state.r_main.fixedcolormap = None;
+        state.render.r_main.fixedcolormap = None;
     }
-    state.r_main.framecount += 1;
-    state.r_main.validcount += 1;
+    state.render.r_main.framecount += 1;
+    state.render.r_main.validcount += 1;
 }
 pub fn render_player_view(state: &mut GameState, player_id: PlayerId) {
     setup_frame(state, player_id);
-    clear_clip_segs(&mut state.r_bsp, &state.r_draw);
-    clear_draw_segs(&mut state.r_bsp);
-    clear_planes(&state.r_draw, &state.r_main, &mut state.r_plane);
-    clear_sprites(&mut state.r_things);
+    clear_clip_segs(&mut state.render.r_bsp, &state.render.r_draw);
+    clear_draw_segs(&mut state.render.r_bsp);
+    clear_planes(
+        &state.render.r_draw,
+        &state.render.r_main,
+        &mut state.render.r_plane,
+    );
+    clear_sprites(&mut state.render.r_things);
     net_update(state);
-    let root_bspnum = state.p_setup.numnodes - 1;
+    let root_bspnum = state.world.p_setup.numnodes - 1;
     render_bspnode(state, root_bspnum);
     net_update(state);
     draw_planes(state);

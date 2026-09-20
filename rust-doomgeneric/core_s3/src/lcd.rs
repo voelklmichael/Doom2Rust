@@ -10,7 +10,11 @@
 //! chunks of 50 rows. Between chunks chip select goes high for a moment, which the panel does not mind
 //! (the BSP's own blit already sends 256-byte chunks that way).
 
-use core::{cell::RefCell, convert::Infallible, sync::atomic::{AtomicBool, Ordering}};
+use core::{
+    cell::RefCell,
+    convert::Infallible,
+    sync::atomic::{AtomicBool, Ordering},
+};
 
 use critical_section::Mutex;
 use embassy_time::{Duration, Timer};
@@ -76,7 +80,9 @@ impl Lcd {
 
         let spi = Spi::new(
             spi2,
-            SpiConfig::default().with_frequency(Rate::from_hz(SPI_HZ)).with_mode(Mode::_0),
+            SpiConfig::default()
+                .with_frequency(Rate::from_hz(SPI_HZ))
+                .with_mode(Mode::_0),
         )
         .expect("LCD SPI")
         .with_sck(sclk)
@@ -125,7 +131,10 @@ impl Lcd {
     fn start_frame(&mut self) -> Result<(), Error> {
         let (x1, y0, y1) = ((WIDTH - 1) as u16, TOP, TOP + HEIGHT as u16 - 1);
         self.command(CMD_COLUMN_ADDRESS_SET, &[0, 0, (x1 >> 8) as u8, x1 as u8])?;
-        self.command(CMD_ROW_ADDRESS_SET, &[(y0 >> 8) as u8, y0 as u8, (y1 >> 8) as u8, y1 as u8])?;
+        self.command(
+            CMD_ROW_ADDRESS_SET,
+            &[(y0 >> 8) as u8, y0 as u8, (y1 >> 8) as u8, y1 as u8],
+        )?;
         self.command(CMD_MEMORY_WRITE, &[])
     }
 }
@@ -194,7 +203,11 @@ impl Frame {
     /// two bytes of its RGB565 pixel.
     pub fn fill(&mut self, indices: &[u8], colors: &[[u8; 2]; 256]) {
         assert_eq!(indices.len(), WIDTH * HEIGHT);
-        for (chunk, pixels) in self.chunks.iter_mut().zip(indices.chunks_exact(CHUNK_PIXELS)) {
+        for (chunk, pixels) in self
+            .chunks
+            .iter_mut()
+            .zip(indices.chunks_exact(CHUNK_PIXELS))
+        {
             let bytes = chunk.as_mut().expect("frame chunk").as_mut_slice();
             for (out, &index) in bytes.chunks_exact_mut(2).zip(pixels) {
                 out.copy_from_slice(&colors[usize::from(index)]);
@@ -211,7 +224,10 @@ static READY: Mutex<RefCell<Option<Frame>>> = Mutex::new(RefCell::new(None));
 /// Makes the frame buffer available to the game. Call once, before the game starts.
 pub fn init_frames() {
     static TAKEN: AtomicBool = AtomicBool::new(false);
-    assert!(!TAKEN.swap(true, Ordering::SeqCst), "init_frames called twice");
+    assert!(
+        !TAKEN.swap(true, Ordering::SeqCst),
+        "init_frames called twice"
+    );
     let frame = Frame::new();
     critical_section::with(|cs| *FREE.borrow_ref_mut(cs) = Some(frame));
 }
@@ -233,13 +249,18 @@ pub fn submit_frame(frame: Frame) {
 
 /// Streams submitted frames to the panel, forever. Runs on core 0; it sleeps between DMA chunks, so
 /// the network tasks sharing the executor keep running.
-pub async fn run_pump(lcd: &RefCell<Lcd>) -> ! {
+///
+/// `between_frames` runs once per frame, just before it goes out: the one moment the pump is not
+/// using the SPI bus, so it may draw through the [`Display`](core_s3::display::Display) (over
+/// [`LcdSpi`]), which is how the status bar above the picture is updated. It has to be quick.
+pub async fn run_pump(lcd: &RefCell<Lcd>, mut between_frames: impl FnMut()) -> ! {
     loop {
         let ready = critical_section::with(|cs| READY.borrow_ref_mut(cs).take());
         let Some(frame) = ready else {
             Timer::after(POLL_FRAME).await;
             continue;
         };
+        between_frames();
         let frame = send(lcd, frame).await;
         critical_section::with(|cs| *FREE.borrow_ref_mut(cs) = Some(frame));
     }

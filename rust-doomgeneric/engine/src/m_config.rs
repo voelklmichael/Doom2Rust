@@ -2,6 +2,7 @@ use crate::filesystem::DoomFileSystem;
 use crate::game_state::GameState;
 use crate::i_system::error;
 use crate::m_argv::check_parm_with_args;
+use crate::m_argv::MArgvState;
 use crate::platform::DoomPlatform;
 use alloc::rc::Rc;
 use alloc::string::String;
@@ -52,6 +53,10 @@ impl Default for MConfigState {
 }
 
 impl MConfigState {
+    // Kept out of line: `GameState::new` inlines every state constructor, and once
+    // `init_game_state` passes 256 KB the Xtensa linker fails ("dangerous relocation:
+    // l32r: literal target out of range") building the firmware. These are the biggest.
+    #[inline(never)]
     pub fn new() -> Self {
         let doom_defaults_list = vec![
             ConfigVariable {
@@ -1261,38 +1266,38 @@ pub fn set_config_filenames(
     state.default_extra_config = extra_config;
 }
 pub fn save_defaults(_state: &mut GameState) {}
-pub fn load_defaults(state: &mut GameState) {
+pub fn load_defaults(
+    m_argv: &MArgvState,
+    m_config: &mut MConfigState,
+    platform: &mut dyn DoomPlatform,
+) {
     let _i: i32;
-    if let Some(i) = check_parm_with_args(&state.m_argv, "-config", 1) {
-        state.m_config.doom_defaults.filename = state.m_argv.myargv[i + 1].as_str().to_string();
+    if let Some(i) = check_parm_with_args(m_argv, "-config", 1) {
+        m_config.doom_defaults.filename = m_argv.myargv[i + 1].as_str().to_string();
         doom_println!(
-            state.platform,
+            platform,
             "\tdefault file: {}",
-            state.m_config.doom_defaults.filename,
+            m_config.doom_defaults.filename,
         );
     } else {
-        state.m_config.doom_defaults.filename = format!(
-            "{}{}",
-            state.m_config.configdir, state.m_config.default_main_config
-        );
+        m_config.doom_defaults.filename =
+            format!("{}{}", m_config.configdir, m_config.default_main_config);
     }
     doom_println!(
-        state.platform,
+        platform,
         "saving config in {}",
-        state.m_config.doom_defaults.filename
+        m_config.doom_defaults.filename
     );
-    if let Some(i) = check_parm_with_args(&state.m_argv, "-extraconfig", 1) {
-        state.m_config.extra_defaults.filename = state.m_argv.myargv[i + 1].as_str().to_string();
+    if let Some(i) = check_parm_with_args(m_argv, "-extraconfig", 1) {
+        m_config.extra_defaults.filename = m_argv.myargv[i + 1].as_str().to_string();
         doom_println!(
-            state.platform,
+            platform,
             "        extra configuration file: {}",
-            state.m_config.extra_defaults.filename,
+            m_config.extra_defaults.filename,
         );
     } else {
-        state.m_config.extra_defaults.filename = format!(
-            "{}{}",
-            state.m_config.configdir, state.m_config.default_extra_config
-        );
+        m_config.extra_defaults.filename =
+            format!("{}{}", m_config.configdir, m_config.default_extra_config);
     }
 }
 fn get_default_for_name<'a>(state: &'a mut MConfigState, name: &str) -> &'a mut ConfigVariable {

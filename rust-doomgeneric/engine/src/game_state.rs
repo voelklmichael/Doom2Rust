@@ -63,46 +63,53 @@ use crate::w_checksum::WChecksumState;
 use crate::w_wad::WWadState;
 use crate::wi_stuff::{fixup_numanims, WiStuffState};
 
-pub struct GameState {
-    pub am_map: AmMapState,
-    pub d_event: DEventState,
-    pub d_iwad: DIwadState,
-    pub d_loop: DLoopState,
-    pub d_main: DMainState,
-    pub doomstat: DoomstatState,
-    pub f_finale: FFinaleState,
-    pub f_wipe: FWipeState,
-    pub g_game: GGameState,
-    pub hu_stuff: HuStuffState,
-    pub i_input: IInputState,
-    pub i_joystick: IJoystickState,
-    pub i_sound: ISoundState,
-    pub i_video: IVideoState,
-    pub i_system: ISystemState,
-    pub i_timer: ITimerState,
-    pub info: InfoState,
-    pub m_argv: MArgvState,
-    pub m_config: MConfigState,
-    pub m_controls: MControlsState,
-    pub m_menu: MMenuState,
-    pub m_random: MRandomState,
-    pub p_ceilng: PCeilngState,
-    pub p_doors: PDoorsState,
-    pub p_enemy: PEnemyState,
-    pub p_lights: PLightsState,
+/// The simulation: level geometry, map objects, thinkers, sector specials, the random-number table.
+pub struct World {
+    pub p_setup: PSetupState,
+    pub p_mobj: PMobjState,
+    pub p_tick: PTickState,
+    pub p_spec: PSpecState,
     pub p_map: PMapState,
     pub p_maputl: PMaputlState,
-    pub r_sky: RSkyState,
-    pub p_mobj: PMobjState,
-    pub p_plats: PPlatsState,
-    pub p_pspr: PPsprState,
-    pub p_saveg: PSavegState,
-    pub p_setup: PSetupState,
     pub p_sight: PSightState,
-    pub p_spec: PSpecState,
+    pub p_ceilng: PCeilngState,
+    pub p_doors: PDoorsState,
+    pub p_lights: PLightsState,
+    pub p_plats: PPlatsState,
     pub p_switch: PSwitchState,
-    pub p_tick: PTickState,
+    pub p_enemy: PEnemyState,
+    pub p_pspr: PPsprState,
     pub p_user: PUserState,
+    pub p_saveg: PSavegState,
+    pub m_random: MRandomState,
+}
+
+impl World {
+    fn new() -> Self {
+        Self {
+            p_setup: PSetupState::new(),
+            p_mobj: PMobjState::new(),
+            p_tick: PTickState::new(),
+            p_spec: PSpecState::new(),
+            p_map: PMapState::new(),
+            p_maputl: PMaputlState::new(),
+            p_sight: PSightState::new(),
+            p_ceilng: PCeilngState::new(),
+            p_doors: PDoorsState::new(),
+            p_lights: PLightsState::new(),
+            p_plats: PPlatsState::new(),
+            p_switch: PSwitchState::new(),
+            p_enemy: PEnemyState::new(),
+            p_pspr: PPsprState::new(),
+            p_user: PUserState::new(),
+            p_saveg: PSavegState::new(),
+            m_random: MRandomState::new(),
+        }
+    }
+}
+
+/// The software renderer: view setup, BSP walk, walls, flats, sprites, column/span drawers.
+pub struct Render {
     pub r_main: RMainState,
     pub r_segs: RSegsState,
     pub r_draw: RDrawState,
@@ -110,61 +117,12 @@ pub struct GameState {
     pub r_plane: RPlaneState,
     pub r_bsp: RBspState,
     pub r_things: RThingsState,
-    pub s_sound: SSoundState,
-    pub sounds: SoundsState,
-    pub st_lib: StLibState,
-    pub st_stuff: StStuffState,
-    pub statdump: StatDumpState,
-    pub v_video: VVideoState,
-    pub w_checksum: WChecksumState,
-    pub w_wad: WWadState,
-    pub wi_stuff: WiStuffState,
-    pub platform: Box<dyn DoomPlatform>,
-    pub fs: Box<dyn DoomFileSystem>,
+    pub r_sky: RSkyState,
 }
 
-impl GameState {
-    fn new(platform: Box<dyn DoomPlatform>, fs: Box<dyn DoomFileSystem>) -> Self {
+impl Render {
+    fn new() -> Self {
         Self {
-            am_map: AmMapState::new(),
-            d_event: DEventState::new(),
-            d_iwad: DIwadState::new(),
-            d_loop: DLoopState::new(),
-            d_main: DMainState::new(),
-            doomstat: DoomstatState::new(),
-            f_finale: FFinaleState::new(),
-            f_wipe: FWipeState::new(),
-            g_game: GGameState::new(),
-            hu_stuff: HuStuffState::new(),
-            i_input: IInputState::new(),
-            i_joystick: IJoystickState::new(),
-            i_sound: ISoundState::new(),
-            i_video: IVideoState::new(),
-            i_system: ISystemState::new(),
-            i_timer: ITimerState::new(),
-            info: InfoState::new(),
-            m_argv: MArgvState::new(),
-            m_config: MConfigState::new(),
-            m_controls: MControlsState::new(),
-            m_menu: MMenuState::new(),
-            m_random: MRandomState::new(),
-            p_ceilng: PCeilngState::new(),
-            p_doors: PDoorsState::new(),
-            p_enemy: PEnemyState::new(),
-            p_lights: PLightsState::new(),
-            p_map: PMapState::new(),
-            p_maputl: PMaputlState::new(),
-            r_sky: RSkyState::new(),
-            p_mobj: PMobjState::new(),
-            p_plats: PPlatsState::new(),
-            p_pspr: PPsprState::new(),
-            p_saveg: PSavegState::new(),
-            p_setup: PSetupState::new(),
-            p_sight: PSightState::new(),
-            p_spec: PSpecState::new(),
-            p_switch: PSwitchState::new(),
-            p_tick: PTickState::new(),
-            p_user: PUserState::new(),
             r_main: RMainState::new(),
             r_segs: RSegsState::new(),
             r_draw: RDrawState::new(),
@@ -172,26 +130,159 @@ impl GameState {
             r_plane: RPlaneState::new(),
             r_bsp: RBspState::new(),
             r_things: RThingsState::new(),
-            s_sound: SSoundState::new(),
-            sounds: SoundsState::new(),
+            r_sky: RSkyState::new(),
+        }
+    }
+}
+
+/// Everything drawn on top of the world: menus, HUD, status bar, automap, intermission, finale, wipe.
+pub struct Ui {
+    pub m_menu: MMenuState,
+    pub hu_stuff: HuStuffState,
+    pub st_lib: StLibState,
+    pub st_stuff: StStuffState,
+    pub wi_stuff: WiStuffState,
+    pub am_map: AmMapState,
+    pub f_finale: FFinaleState,
+    pub f_wipe: FWipeState,
+    pub statdump: StatDumpState,
+}
+
+impl Ui {
+    fn new() -> Self {
+        Self {
+            m_menu: MMenuState::new(),
+            hu_stuff: HuStuffState::new(),
             st_lib: StLibState::new(),
             st_stuff: StStuffState::new(),
-            statdump: StatDumpState::new(),
-            v_video: VVideoState::new(),
-            w_checksum: WChecksumState::new(),
-            w_wad: WWadState::new(),
             wi_stuff: WiStuffState::new(),
-            platform,
+            am_map: AmMapState::new(),
+            f_finale: FFinaleState::new(),
+            f_wipe: FWipeState::new(),
+            statdump: StatDumpState::new(),
+        }
+    }
+}
+
+/// Sound effects and music: channels, the sfx/music tables and the sound driver.
+pub struct Audio {
+    pub s_sound: SSoundState,
+    pub i_sound: ISoundState,
+    pub sounds: SoundsState,
+}
+
+impl Audio {
+    fn new() -> Self {
+        Self {
+            s_sound: SSoundState::new(),
+            i_sound: ISoundState::new(),
+            sounds: SoundsState::new(),
+        }
+    }
+}
+
+/// WAD lumps and the tables loaded from them, plus the filesystem they are read through.
+pub struct Assets {
+    pub w_wad: WWadState,
+    pub w_checksum: WChecksumState,
+    pub info: InfoState,
+    pub fs: Box<dyn DoomFileSystem>,
+}
+
+impl Assets {
+    fn new(fs: Box<dyn DoomFileSystem>) -> Self {
+        Self {
+            w_wad: WWadState::new(),
+            w_checksum: WChecksumState::new(),
+            info: InfoState::new(),
             fs,
+        }
+    }
+}
+
+/// Game session: players, skill and mode, the demo/tic loop, events and configuration.
+pub struct Game {
+    pub g_game: GGameState,
+    pub doomstat: DoomstatState,
+    pub d_main: DMainState,
+    pub d_loop: DLoopState,
+    pub d_event: DEventState,
+    pub d_iwad: DIwadState,
+    pub m_argv: MArgvState,
+    pub m_config: MConfigState,
+    pub m_controls: MControlsState,
+}
+
+impl Game {
+    fn new() -> Self {
+        Self {
+            g_game: GGameState::new(),
+            doomstat: DoomstatState::new(),
+            d_main: DMainState::new(),
+            d_loop: DLoopState::new(),
+            d_event: DEventState::new(),
+            d_iwad: DIwadState::new(),
+            m_argv: MArgvState::new(),
+            m_config: MConfigState::new(),
+            m_controls: MControlsState::new(),
+        }
+    }
+}
+
+/// Talking to the host: the platform backend, input, timing and the video output.
+pub struct Io {
+    pub platform: Box<dyn DoomPlatform>,
+    pub i_input: IInputState,
+    pub i_joystick: IJoystickState,
+    pub i_system: ISystemState,
+    pub i_timer: ITimerState,
+    pub i_video: IVideoState,
+    pub v_video: VVideoState,
+}
+
+impl Io {
+    fn new(platform: Box<dyn DoomPlatform>) -> Self {
+        Self {
+            platform,
+            i_input: IInputState::new(),
+            i_joystick: IJoystickState::new(),
+            i_system: ISystemState::new(),
+            i_timer: ITimerState::new(),
+            i_video: IVideoState::new(),
+            v_video: VVideoState::new(),
+        }
+    }
+}
+
+pub struct GameState {
+    pub world: World,
+    pub render: Render,
+    pub ui: Ui,
+    pub audio: Audio,
+    pub assets: Assets,
+    pub game: Game,
+    pub io: Io,
+}
+
+impl GameState {
+    fn new(platform: Box<dyn DoomPlatform>, fs: Box<dyn DoomFileSystem>) -> Self {
+        Self {
+            world: World::new(),
+            render: Render::new(),
+            ui: Ui::new(),
+            audio: Audio::new(),
+            assets: Assets::new(fs),
+            game: Game::new(),
+            io: Io::new(platform),
         }
     }
 
     pub fn wbs(&mut self) -> &mut crate::wi_stuff::WbStartStruct {
-        &mut self.g_game.wminfo
+        &mut self.game.g_game.wminfo
     }
 
     pub fn plyr_index(&mut self, index: i32) -> &mut crate::wi_stuff::WbPlayerStruct {
-        &mut self.g_game.wminfo.plyr[index as usize]
+        &mut self.game.g_game.wminfo.plyr[index as usize]
     }
 }
 
@@ -201,10 +292,8 @@ impl GameState {
 // GameState this reference points at is constructed and will never move
 // again.
 pub fn finish_init(state: &mut GameState) {
-    {
-        state.sounds.fixup_self_links();
-        fixup_numanims(&mut state.wi_stuff);
-    }
+    state.audio.sounds.fixup_self_links();
+    fixup_numanims(&mut state.ui.wi_stuff);
 }
 
 /// Constructs the single `GameState`, wired to the given platform and

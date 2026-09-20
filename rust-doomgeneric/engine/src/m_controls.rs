@@ -284,197 +284,230 @@ pub const KEY_PGDN: i32 = 0x80 + 0x51;
 pub const KEY_INS: i32 = 0x80 + 0x52;
 pub const KEY_DEL: i32 = 0x80 + 0x53;
 pub fn bind_base_controls(m_config: &mut MConfigState) {
-    bind_variable_int(m_config, "key_right", |s| &mut s.m_controls.key_right);
-    bind_variable_int(m_config, "key_left", |s| &mut s.m_controls.key_left);
-    bind_variable_int(m_config, "key_up", |s| &mut s.m_controls.key_up);
-    bind_variable_int(m_config, "key_down", |s| &mut s.m_controls.key_down);
+    bind_variable_int(m_config, "key_right", |s| &mut s.game.m_controls.key_right);
+    bind_variable_int(m_config, "key_left", |s| &mut s.game.m_controls.key_left);
+    bind_variable_int(m_config, "key_up", |s| &mut s.game.m_controls.key_up);
+    bind_variable_int(m_config, "key_down", |s| &mut s.game.m_controls.key_down);
     bind_variable_int(m_config, "key_strafeleft", |s| {
-        &mut s.m_controls.key_strafeleft
+        &mut s.game.m_controls.key_strafeleft
     });
     bind_variable_int(m_config, "key_straferight", |s| {
-        &mut s.m_controls.key_straferight
+        &mut s.game.m_controls.key_straferight
     });
-    bind_variable_int(m_config, "key_fire", |s| &mut s.m_controls.key_fire);
-    bind_variable_int(m_config, "key_use", |s| &mut s.m_controls.key_use);
-    bind_variable_int(m_config, "key_strafe", |s| &mut s.m_controls.key_strafe);
-    bind_variable_int(m_config, "key_speed", |s| &mut s.m_controls.key_speed);
-    bind_variable_int(m_config, "mouseb_fire", |s| &mut s.m_controls.mousebfire);
+    bind_variable_int(m_config, "key_fire", |s| &mut s.game.m_controls.key_fire);
+    bind_variable_int(m_config, "key_use", |s| &mut s.game.m_controls.key_use);
+    bind_variable_int(m_config, "key_strafe", |s| {
+        &mut s.game.m_controls.key_strafe
+    });
+    bind_variable_int(m_config, "key_speed", |s| &mut s.game.m_controls.key_speed);
+    bind_variable_int(m_config, "mouseb_fire", |s| {
+        &mut s.game.m_controls.mousebfire
+    });
     bind_variable_int(m_config, "mouseb_strafe", |s| {
-        &mut s.m_controls.mousebstrafe
+        &mut s.game.m_controls.mousebstrafe
     });
     bind_variable_int(m_config, "mouseb_forward", |s| {
-        &mut s.m_controls.mousebforward
+        &mut s.game.m_controls.mousebforward
     });
-    bind_variable_int(m_config, "joyb_fire", |s| &mut s.m_controls.joybfire);
-    bind_variable_int(m_config, "joyb_strafe", |s| &mut s.m_controls.joybstrafe);
-    bind_variable_int(m_config, "joyb_use", |s| &mut s.m_controls.joybuse);
-    bind_variable_int(m_config, "joyb_speed", |s| &mut s.m_controls.joybspeed);
+    bind_variable_int(m_config, "joyb_fire", |s| &mut s.game.m_controls.joybfire);
+    bind_variable_int(m_config, "joyb_strafe", |s| {
+        &mut s.game.m_controls.joybstrafe
+    });
+    bind_variable_int(m_config, "joyb_use", |s| &mut s.game.m_controls.joybuse);
+    bind_variable_int(m_config, "joyb_speed", |s| &mut s.game.m_controls.joybspeed);
     bind_variable_int(m_config, "joyb_menu_activate", |s| {
-        &mut s.m_controls.joybmenu
+        &mut s.game.m_controls.joybmenu
     });
     bind_variable_int(m_config, "joyb_strafeleft", |s| {
-        &mut s.m_controls.joybstrafeleft
+        &mut s.game.m_controls.joybstrafeleft
     });
     bind_variable_int(m_config, "joyb_straferight", |s| {
-        &mut s.m_controls.joybstraferight
+        &mut s.game.m_controls.joybstraferight
     });
     bind_variable_int(m_config, "mouseb_strafeleft", |s| {
-        &mut s.m_controls.mousebstrafeleft
+        &mut s.game.m_controls.mousebstrafeleft
     });
     bind_variable_int(m_config, "mouseb_straferight", |s| {
-        &mut s.m_controls.mousebstraferight
+        &mut s.game.m_controls.mousebstraferight
     });
-    bind_variable_int(m_config, "mouseb_use", |s| &mut s.m_controls.mousebuse);
+    bind_variable_int(m_config, "mouseb_use", |s| &mut s.game.m_controls.mousebuse);
     bind_variable_int(m_config, "mouseb_backward", |s| {
-        &mut s.m_controls.mousebbackward
+        &mut s.game.m_controls.mousebbackward
     });
-    bind_variable_int(m_config, "dclick_use", |s| &mut s.m_controls.dclick_use);
-    bind_variable_int(m_config, "key_pause", |s| &mut s.m_controls.key_pause);
+    bind_variable_int(m_config, "dclick_use", |s| {
+        &mut s.game.m_controls.dclick_use
+    });
+    bind_variable_int(m_config, "key_pause", |s| &mut s.game.m_controls.key_pause);
     bind_variable_int(m_config, "key_message_refresh", |s| {
-        &mut s.m_controls.key_message_refresh
+        &mut s.game.m_controls.key_message_refresh
     });
 }
 pub fn bind_weapon_controls(m_config: &mut MConfigState) {
-    bind_variable_int(m_config, "key_weapon1", |s| &mut s.m_controls.key_weapon1);
-    bind_variable_int(m_config, "key_weapon2", |s| &mut s.m_controls.key_weapon2);
-    bind_variable_int(m_config, "key_weapon3", |s| &mut s.m_controls.key_weapon3);
-    bind_variable_int(m_config, "key_weapon4", |s| &mut s.m_controls.key_weapon4);
-    bind_variable_int(m_config, "key_weapon5", |s| &mut s.m_controls.key_weapon5);
-    bind_variable_int(m_config, "key_weapon6", |s| &mut s.m_controls.key_weapon6);
-    bind_variable_int(m_config, "key_weapon7", |s| &mut s.m_controls.key_weapon7);
-    bind_variable_int(m_config, "key_weapon8", |s| &mut s.m_controls.key_weapon8);
+    bind_variable_int(m_config, "key_weapon1", |s| {
+        &mut s.game.m_controls.key_weapon1
+    });
+    bind_variable_int(m_config, "key_weapon2", |s| {
+        &mut s.game.m_controls.key_weapon2
+    });
+    bind_variable_int(m_config, "key_weapon3", |s| {
+        &mut s.game.m_controls.key_weapon3
+    });
+    bind_variable_int(m_config, "key_weapon4", |s| {
+        &mut s.game.m_controls.key_weapon4
+    });
+    bind_variable_int(m_config, "key_weapon5", |s| {
+        &mut s.game.m_controls.key_weapon5
+    });
+    bind_variable_int(m_config, "key_weapon6", |s| {
+        &mut s.game.m_controls.key_weapon6
+    });
+    bind_variable_int(m_config, "key_weapon7", |s| {
+        &mut s.game.m_controls.key_weapon7
+    });
+    bind_variable_int(m_config, "key_weapon8", |s| {
+        &mut s.game.m_controls.key_weapon8
+    });
     bind_variable_int(m_config, "key_prevweapon", |s| {
-        &mut s.m_controls.key_prevweapon
+        &mut s.game.m_controls.key_prevweapon
     });
     bind_variable_int(m_config, "key_nextweapon", |s| {
-        &mut s.m_controls.key_nextweapon
+        &mut s.game.m_controls.key_nextweapon
     });
     bind_variable_int(m_config, "joyb_prevweapon", |s| {
-        &mut s.m_controls.joybprevweapon
+        &mut s.game.m_controls.joybprevweapon
     });
     bind_variable_int(m_config, "joyb_nextweapon", |s| {
-        &mut s.m_controls.joybnextweapon
+        &mut s.game.m_controls.joybnextweapon
     });
     bind_variable_int(m_config, "mouseb_prevweapon", |s| {
-        &mut s.m_controls.mousebprevweapon
+        &mut s.game.m_controls.mousebprevweapon
     });
     bind_variable_int(m_config, "mouseb_nextweapon", |s| {
-        &mut s.m_controls.mousebnextweapon
+        &mut s.game.m_controls.mousebnextweapon
     });
 }
 pub fn bind_map_controls(m_config: &mut MConfigState) {
     bind_variable_int(m_config, "key_map_north", |s| {
-        &mut s.m_controls.key_map_north
+        &mut s.game.m_controls.key_map_north
     });
     bind_variable_int(m_config, "key_map_south", |s| {
-        &mut s.m_controls.key_map_south
+        &mut s.game.m_controls.key_map_south
     });
-    bind_variable_int(m_config, "key_map_east", |s| &mut s.m_controls.key_map_east);
-    bind_variable_int(m_config, "key_map_west", |s| &mut s.m_controls.key_map_west);
+    bind_variable_int(m_config, "key_map_east", |s| {
+        &mut s.game.m_controls.key_map_east
+    });
+    bind_variable_int(m_config, "key_map_west", |s| {
+        &mut s.game.m_controls.key_map_west
+    });
     bind_variable_int(m_config, "key_map_zoomin", |s| {
-        &mut s.m_controls.key_map_zoomin
+        &mut s.game.m_controls.key_map_zoomin
     });
     bind_variable_int(m_config, "key_map_zoomout", |s| {
-        &mut s.m_controls.key_map_zoomout
+        &mut s.game.m_controls.key_map_zoomout
     });
     bind_variable_int(m_config, "key_map_toggle", |s| {
-        &mut s.m_controls.key_map_toggle
+        &mut s.game.m_controls.key_map_toggle
     });
     bind_variable_int(m_config, "key_map_maxzoom", |s| {
-        &mut s.m_controls.key_map_maxzoom
+        &mut s.game.m_controls.key_map_maxzoom
     });
     bind_variable_int(m_config, "key_map_follow", |s| {
-        &mut s.m_controls.key_map_follow
+        &mut s.game.m_controls.key_map_follow
     });
-    bind_variable_int(m_config, "key_map_grid", |s| &mut s.m_controls.key_map_grid);
-    bind_variable_int(m_config, "key_map_mark", |s| &mut s.m_controls.key_map_mark);
+    bind_variable_int(m_config, "key_map_grid", |s| {
+        &mut s.game.m_controls.key_map_grid
+    });
+    bind_variable_int(m_config, "key_map_mark", |s| {
+        &mut s.game.m_controls.key_map_mark
+    });
     bind_variable_int(m_config, "key_map_clearmark", |s| {
-        &mut s.m_controls.key_map_clearmark
+        &mut s.game.m_controls.key_map_clearmark
     });
 }
 pub fn bind_menu_controls(m_config: &mut MConfigState) {
     bind_variable_int(m_config, "key_menu_activate", |s| {
-        &mut s.m_controls.key_menu_activate
+        &mut s.game.m_controls.key_menu_activate
     });
-    bind_variable_int(m_config, "key_menu_up", |s| &mut s.m_controls.key_menu_up);
+    bind_variable_int(m_config, "key_menu_up", |s| {
+        &mut s.game.m_controls.key_menu_up
+    });
     bind_variable_int(m_config, "key_menu_down", |s| {
-        &mut s.m_controls.key_menu_down
+        &mut s.game.m_controls.key_menu_down
     });
     bind_variable_int(m_config, "key_menu_left", |s| {
-        &mut s.m_controls.key_menu_left
+        &mut s.game.m_controls.key_menu_left
     });
     bind_variable_int(m_config, "key_menu_right", |s| {
-        &mut s.m_controls.key_menu_right
+        &mut s.game.m_controls.key_menu_right
     });
     bind_variable_int(m_config, "key_menu_back", |s| {
-        &mut s.m_controls.key_menu_back
+        &mut s.game.m_controls.key_menu_back
     });
     bind_variable_int(m_config, "key_menu_forward", |s| {
-        &mut s.m_controls.key_menu_forward
+        &mut s.game.m_controls.key_menu_forward
     });
     bind_variable_int(m_config, "key_menu_confirm", |s| {
-        &mut s.m_controls.key_menu_confirm
+        &mut s.game.m_controls.key_menu_confirm
     });
     bind_variable_int(m_config, "key_menu_abort", |s| {
-        &mut s.m_controls.key_menu_abort
+        &mut s.game.m_controls.key_menu_abort
     });
     bind_variable_int(m_config, "key_menu_help", |s| {
-        &mut s.m_controls.key_menu_help
+        &mut s.game.m_controls.key_menu_help
     });
     bind_variable_int(m_config, "key_menu_save", |s| {
-        &mut s.m_controls.key_menu_save
+        &mut s.game.m_controls.key_menu_save
     });
     bind_variable_int(m_config, "key_menu_load", |s| {
-        &mut s.m_controls.key_menu_load
+        &mut s.game.m_controls.key_menu_load
     });
     bind_variable_int(m_config, "key_menu_volume", |s| {
-        &mut s.m_controls.key_menu_volume
+        &mut s.game.m_controls.key_menu_volume
     });
     bind_variable_int(m_config, "key_menu_detail", |s| {
-        &mut s.m_controls.key_menu_detail
+        &mut s.game.m_controls.key_menu_detail
     });
     bind_variable_int(m_config, "key_menu_qsave", |s| {
-        &mut s.m_controls.key_menu_qsave
+        &mut s.game.m_controls.key_menu_qsave
     });
     bind_variable_int(m_config, "key_menu_endgame", |s| {
-        &mut s.m_controls.key_menu_endgame
+        &mut s.game.m_controls.key_menu_endgame
     });
     bind_variable_int(m_config, "key_menu_messages", |s| {
-        &mut s.m_controls.key_menu_messages
+        &mut s.game.m_controls.key_menu_messages
     });
     bind_variable_int(m_config, "key_menu_qload", |s| {
-        &mut s.m_controls.key_menu_qload
+        &mut s.game.m_controls.key_menu_qload
     });
     bind_variable_int(m_config, "key_menu_quit", |s| {
-        &mut s.m_controls.key_menu_quit
+        &mut s.game.m_controls.key_menu_quit
     });
     bind_variable_int(m_config, "key_menu_gamma", |s| {
-        &mut s.m_controls.key_menu_gamma
+        &mut s.game.m_controls.key_menu_gamma
     });
     bind_variable_int(m_config, "key_menu_incscreen", |s| {
-        &mut s.m_controls.key_menu_incscreen
+        &mut s.game.m_controls.key_menu_incscreen
     });
     bind_variable_int(m_config, "key_menu_decscreen", |s| {
-        &mut s.m_controls.key_menu_decscreen
+        &mut s.game.m_controls.key_menu_decscreen
     });
     bind_variable_int(m_config, "key_menu_screenshot", |s| {
-        &mut s.m_controls.key_menu_screenshot
+        &mut s.game.m_controls.key_menu_screenshot
     });
     bind_variable_int(m_config, "key_demo_quit", |s| {
-        &mut s.m_controls.key_demo_quit
+        &mut s.game.m_controls.key_demo_quit
     });
-    bind_variable_int(m_config, "key_spy", |s| &mut s.m_controls.key_spy);
+    bind_variable_int(m_config, "key_spy", |s| &mut s.game.m_controls.key_spy);
 }
 pub fn bind_chat_controls(m_config: &mut MConfigState, num_players: u32) {
-    let mut i: u32;
     bind_variable_int(m_config, "key_multi_msg", |s| {
-        &mut s.m_controls.key_multi_msg
+        &mut s.game.m_controls.key_multi_msg
     });
-    i = 0;
+    let mut i: u32 = 0;
     while i < num_players {
         let name = format!("key_multi_msgplayer{}", i.wrapping_add(1_u32));
         bind_variable_int(m_config, &name, move |s| {
-            &mut s.m_controls.key_multi_msgplayer[i as usize]
+            &mut s.game.m_controls.key_multi_msgplayer[i as usize]
         });
         i = i.wrapping_add(1);
     }

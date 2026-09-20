@@ -38,32 +38,34 @@ impl IJoystickState {
 }
 
 pub fn bind_joystick_variables(m_config: &mut MConfigState) {
-    bind_variable_int(m_config, "use_joystick", |s| &mut s.i_joystick.usejoystick);
+    bind_variable_int(m_config, "use_joystick", |s| {
+        &mut s.io.i_joystick.usejoystick
+    });
     bind_variable_int(m_config, "joystick_index", |s| {
-        &mut s.i_joystick.joystick_index
+        &mut s.io.i_joystick.joystick_index
     });
     bind_variable_int(m_config, "joystick_x_axis", |s| {
-        &mut s.i_joystick.joystick_x_axis
+        &mut s.io.i_joystick.joystick_x_axis
     });
     bind_variable_int(m_config, "joystick_y_axis", |s| {
-        &mut s.i_joystick.joystick_y_axis
+        &mut s.io.i_joystick.joystick_y_axis
     });
     bind_variable_int(m_config, "joystick_strafe_axis", |s| {
-        &mut s.i_joystick.joystick_strafe_axis
+        &mut s.io.i_joystick.joystick_strafe_axis
     });
     bind_variable_int(m_config, "joystick_x_invert", |s| {
-        &mut s.i_joystick.joystick_x_invert
+        &mut s.io.i_joystick.joystick_x_invert
     });
     bind_variable_int(m_config, "joystick_y_invert", |s| {
-        &mut s.i_joystick.joystick_y_invert
+        &mut s.io.i_joystick.joystick_y_invert
     });
     bind_variable_int(m_config, "joystick_strafe_invert", |s| {
-        &mut s.i_joystick.joystick_strafe_invert
+        &mut s.io.i_joystick.joystick_strafe_invert
     });
-    for i in 0..NUM_VIRTUAL_BUTTONS {
+    for i in 0..NUM_VIRTUAL_BUTTONS as usize {
         let name = format!("joystick_physical_button{i}");
         bind_variable_int(m_config, &name, move |s| {
-            &mut s.i_joystick.joystick_physical_buttons[i as usize]
+            &mut s.io.i_joystick.joystick_physical_buttons[i]
         });
     }
 }

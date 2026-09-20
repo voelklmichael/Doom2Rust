@@ -290,19 +290,14 @@ pub fn init_switch_list(
     p_switch: &mut PSwitchState,
     r_data: &RDataState,
 ) {
-    let mut i: i32;
-    let mut index: i32;
-    let mut episode: i32;
-    episode = 1;
-    if doomstat.gamemode as u32 == GameMode::Registered as i32 as u32
-        || doomstat.gamemode as u32 == GameMode::Retail as i32 as u32
-    {
+    let mut episode: i32 = 1;
+    if doomstat.gamemode == GameMode::Registered || doomstat.gamemode == GameMode::Retail {
         episode = 2;
-    } else if doomstat.gamemode as u32 == GameMode::Commercial as i32 as u32 {
+    } else if doomstat.gamemode == GameMode::Commercial {
         episode = 3;
     }
-    index = 0;
-    i = 0;
+    let mut index: i32 = 0;
+    let mut i: i32 = 0;
     while i < MAXSWITCHES {
         if ALPH_SWITCH_LIST[i as usize].episode == 0 {
             p_switch.numswitches = index / 2;
@@ -310,14 +305,12 @@ pub fn init_switch_list(
             break;
         }
         if ALPH_SWITCH_LIST[i as usize].episode as i32 <= episode {
-            let fresh0 = index;
-            index += 1;
-            p_switch.switchlist[fresh0 as usize] =
+            p_switch.switchlist[index as usize] =
                 texture_num_for_name(r_data, &ALPH_SWITCH_LIST[i as usize].name1.as_str());
-            let fresh1 = index;
             index += 1;
-            p_switch.switchlist[fresh1 as usize] =
+            p_switch.switchlist[index as usize] =
                 texture_num_for_name(r_data, &ALPH_SWITCH_LIST[i as usize].name2.as_str());
+            index += 1;
         }
         i += 1;
     }
@@ -348,32 +341,31 @@ pub fn start_button(
     error("P_StartButton: no button slots left!");
 }
 pub fn change_switch_texture(state: &mut GameState, line: LineId, use_again: bool) {
-    let mut sound: i32;
     if !use_again {
-        state.p_setup.line_mut(line).special = 0;
+        state.world.p_setup.line_mut(line).special = 0;
     }
-    let sidenum0 = state.p_setup.line(line).sidenum[0];
-    let tex_top: i32 = state.p_setup.sides[sidenum0 as usize].toptexture as i32;
-    let tex_mid: i32 = state.p_setup.sides[sidenum0 as usize].midtexture as i32;
-    let tex_bot: i32 = state.p_setup.sides[sidenum0 as usize].bottomtexture as i32;
-    sound = SfxName::Swtchn as i32;
-    if state.p_setup.line(line).special as i32 == 11 {
-        sound = SfxName::Swtchx as i32;
+    let sidenum0 = state.world.p_setup.line(line).sidenum[0];
+    let tex_top: i32 = state.world.p_setup.sides[sidenum0 as usize].toptexture as i32;
+    let tex_mid: i32 = state.world.p_setup.sides[sidenum0 as usize].midtexture as i32;
+    let tex_bot: i32 = state.world.p_setup.sides[sidenum0 as usize].bottomtexture as i32;
+    let mut sound: SfxName = SfxName::Swtchn;
+    if state.world.p_setup.line(line).special as i32 == 11 {
+        sound = SfxName::Swtchx;
     }
-    for i in 0..state.p_switch.numswitches * 2 {
-        if state.p_switch.switchlist[i as usize] == tex_top {
+    for i in 0..state.world.p_switch.numswitches * 2 {
+        if state.world.p_switch.switchlist[i as usize] == tex_top {
             s_start_sound(
                 state,
-                SoundOrigin::Sector(state.p_switch.buttonlist[0].soundorg),
+                SoundOrigin::Sector(state.world.p_switch.buttonlist[0].soundorg),
                 sound,
             );
-            state.p_setup.sides[sidenum0 as usize].toptexture =
-                state.p_switch.switchlist[(i ^ 1) as usize] as i16;
+            state.world.p_setup.sides[sidenum0 as usize].toptexture =
+                state.world.p_switch.switchlist[(i ^ 1) as usize] as i16;
             if use_again {
-                let texture = state.p_switch.switchlist[i as usize];
+                let texture = state.world.p_switch.switchlist[i as usize];
                 start_button(
-                    &state.p_setup,
-                    &mut state.p_switch,
+                    &state.world.p_setup,
+                    &mut state.world.p_switch,
                     line,
                     BWhere::Top,
                     texture,
@@ -381,19 +373,19 @@ pub fn change_switch_texture(state: &mut GameState, line: LineId, use_again: boo
                 );
             }
             return;
-        } else if state.p_switch.switchlist[i as usize] == tex_mid {
+        } else if state.world.p_switch.switchlist[i as usize] == tex_mid {
             s_start_sound(
                 state,
-                SoundOrigin::Sector(state.p_switch.buttonlist[0].soundorg),
+                SoundOrigin::Sector(state.world.p_switch.buttonlist[0].soundorg),
                 sound,
             );
-            state.p_setup.sides[sidenum0 as usize].midtexture =
-                state.p_switch.switchlist[(i ^ 1) as usize] as i16;
+            state.world.p_setup.sides[sidenum0 as usize].midtexture =
+                state.world.p_switch.switchlist[(i ^ 1) as usize] as i16;
             if use_again {
-                let texture = state.p_switch.switchlist[i as usize];
+                let texture = state.world.p_switch.switchlist[i as usize];
                 start_button(
-                    &state.p_setup,
-                    &mut state.p_switch,
+                    &state.world.p_setup,
+                    &mut state.world.p_switch,
                     line,
                     BWhere::Middle,
                     texture,
@@ -401,19 +393,19 @@ pub fn change_switch_texture(state: &mut GameState, line: LineId, use_again: boo
                 );
             }
             return;
-        } else if state.p_switch.switchlist[i as usize] == tex_bot {
+        } else if state.world.p_switch.switchlist[i as usize] == tex_bot {
             s_start_sound(
                 state,
-                SoundOrigin::Sector(state.p_switch.buttonlist[0].soundorg),
+                SoundOrigin::Sector(state.world.p_switch.buttonlist[0].soundorg),
                 sound,
             );
-            state.p_setup.sides[sidenum0 as usize].bottomtexture =
-                state.p_switch.switchlist[(i ^ 1) as usize] as i16;
+            state.world.p_setup.sides[sidenum0 as usize].bottomtexture =
+                state.world.p_switch.switchlist[(i ^ 1) as usize] as i16;
             if use_again {
-                let texture = state.p_switch.switchlist[i as usize];
+                let texture = state.world.p_switch.switchlist[i as usize];
                 start_button(
-                    &state.p_setup,
-                    &mut state.p_switch,
+                    &state.world.p_setup,
+                    &mut state.world.p_switch,
                     line,
                     BWhere::Bottom,
                     texture,
@@ -425,11 +417,11 @@ pub fn change_switch_texture(state: &mut GameState, line: LineId, use_again: boo
     }
 }
 pub fn use_special_line(state: &mut GameState, thing: MobjId, line: LineId, side: i32) -> bool {
-    let linev = state.p_setup.line(line);
+    let linev = state.world.p_setup.line(line);
     if side != 0 && linev.special as i32 != 124 {
         return false;
     }
-    if state.p_mobj.mo(thing).player.is_none() {
+    if state.world.p_mobj.mo(thing).player.is_none() {
         if linev.flags.contains(LineFlags::SECRET) {
             return false;
         }
@@ -443,9 +435,9 @@ pub fn use_special_line(state: &mut GameState, thing: MobjId, line: LineId, side
     match linev.special as i32 {
         7 => {
             if build_stairs(
-                &mut state.p_setup,
-                &mut state.p_spec,
-                &mut state.p_tick,
+                &mut state.world.p_setup,
+                &mut state.world.p_spec,
+                &mut state.world.p_tick,
                 line,
                 StairE::Build8,
             ) {
@@ -459,7 +451,7 @@ pub fn use_special_line(state: &mut GameState, thing: MobjId, line: LineId, side
         }
         11 => {
             change_switch_texture(state, line, false);
-            exit_level(&mut state.g_game);
+            exit_level(&mut state.game.g_game);
         }
         14 => {
             if do_plat(state, line, PlattypeE::RaiseAndChange, 32) {
@@ -498,9 +490,9 @@ pub fn use_special_line(state: &mut GameState, thing: MobjId, line: LineId, side
         }
         41 => {
             if do_ceiling(
-                &mut state.p_ceilng,
-                &mut state.p_setup,
-                &mut state.p_tick,
+                &mut state.world.p_ceilng,
+                &mut state.world.p_setup,
+                &mut state.world.p_tick,
                 line,
                 CeilingE::LowerToFloor,
             ) {
@@ -514,9 +506,9 @@ pub fn use_special_line(state: &mut GameState, thing: MobjId, line: LineId, side
         }
         49 => {
             if do_ceiling(
-                &mut state.p_ceilng,
-                &mut state.p_setup,
-                &mut state.p_tick,
+                &mut state.world.p_ceilng,
+                &mut state.world.p_setup,
+                &mut state.world.p_tick,
                 line,
                 CeilingE::CrushAndRaise,
             ) {
@@ -530,7 +522,11 @@ pub fn use_special_line(state: &mut GameState, thing: MobjId, line: LineId, side
         }
         51 => {
             change_switch_texture(state, line, false);
-            secret_exit_level(&state.doomstat, &mut state.g_game, &state.w_wad);
+            secret_exit_level(
+                &state.game.doomstat,
+                &mut state.game.g_game,
+                &state.assets.w_wad,
+            );
         }
         55 => {
             if do_floor(state, line, FloorE::RaiseFloorCrush) {
@@ -574,9 +570,9 @@ pub fn use_special_line(state: &mut GameState, thing: MobjId, line: LineId, side
         }
         127 => {
             if build_stairs(
-                &mut state.p_setup,
-                &mut state.p_spec,
-                &mut state.p_tick,
+                &mut state.world.p_setup,
+                &mut state.world.p_spec,
+                &mut state.world.p_tick,
                 line,
                 StairE::Turbo16,
             ) {
@@ -600,9 +596,9 @@ pub fn use_special_line(state: &mut GameState, thing: MobjId, line: LineId, side
         }
         43 => {
             if do_ceiling(
-                &mut state.p_ceilng,
-                &mut state.p_setup,
-                &mut state.p_tick,
+                &mut state.world.p_ceilng,
+                &mut state.world.p_setup,
+                &mut state.world.p_tick,
                 line,
                 CeilingE::LowerToFloor,
             ) {
@@ -695,11 +691,11 @@ pub fn use_special_line(state: &mut GameState, thing: MobjId, line: LineId, side
             }
         }
         138 => {
-            light_turn_on(&mut state.p_setup, line, 255);
+            light_turn_on(&mut state.world.p_setup, line, 255);
             change_switch_texture(state, line, true);
         }
         139 => {
-            light_turn_on(&mut state.p_setup, line, 35);
+            light_turn_on(&mut state.world.p_setup, line, 35);
             change_switch_texture(state, line, true);
         }
         1 | 26 | 27 | 28 | 31 | 32 | 33 | 34 | 117 | 118 => {

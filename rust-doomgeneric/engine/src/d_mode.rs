@@ -31,6 +31,17 @@ pub enum GameMission {
     Strife = 8,
     None = 9,
 }
+
+impl GameMission {
+    /// The game whose rules a mission pack plays by: Chex Quest is Doom, Hacx is Doom II.
+    pub const fn base(self) -> Self {
+        match self {
+            Self::PackChex => Self::Doom,
+            Self::PackHacx => Self::Doom2,
+            other => other,
+        }
+    }
+}
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum GameMode {
     Shareware = 0,

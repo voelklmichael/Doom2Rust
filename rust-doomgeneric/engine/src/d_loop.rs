@@ -9,9 +9,11 @@ use crate::i_system::ISystemState;
 use crate::i_timer::get_time;
 use crate::i_timer::get_time_ms;
 use crate::i_timer::sleep;
+use crate::i_timer::ITimerState;
 use crate::i_video::start_tic;
 use crate::m_fixed::Fixed;
 use crate::m_fixed::FRACUNIT;
+use crate::platform::DoomPlatform;
 use crate::w_checksum::Sha1Digest;
 
 pub struct DLoopState {
@@ -130,10 +132,13 @@ pub const NET_MAXPLAYERS: i32 = 8;
 pub const BACKUPTICS: i32 = 128;
 static LOCALPLAYER: i32 = 0;
 pub static OFFSETMS: Fixed = 0;
-fn get_adjusted_time(state: &mut GameState) -> i32 {
-    let mut time_ms: i32;
-    time_ms = get_time_ms(state);
-    if state.d_loop.new_sync {
+fn get_adjusted_time(
+    d_loop: &DLoopState,
+    i_timer: &mut ITimerState,
+    platform: &mut dyn DoomPlatform,
+) -> i32 {
+    let mut time_ms: i32 = get_time_ms(i_timer, &mut *platform);
+    if d_loop.new_sync {
         time_ms += OFFSETMS / FRACUNIT;
     }
     time_ms * TICRATE / 1000
@@ -151,15 +156,21 @@ fn build_new_tic(state: &mut GameState) -> bool {
         lookfly: 0,
         arti: 0,
     };
-    let gameticdiv: i32 = state.d_loop.gametic / state.d_loop.ticdup;
-    start_tic(state);
+    let gameticdiv: i32 = state.game.d_loop.gametic / state.game.d_loop.ticdup;
+    start_tic(
+        &mut state.game.d_event,
+        &mut state.io.i_input,
+        &mut *state.io.platform,
+    );
     let process_events = state
+        .game
         .d_loop
         .loop_interface
         .process_events
         .expect("non-null function pointer");
     process_events(state);
     let run_menu = state
+        .game
         .d_loop
         .loop_interface
         .run_menu
@@ -168,43 +179,47 @@ fn build_new_tic(state: &mut GameState) -> bool {
     if DRONE {
         return false;
     }
-    if state.d_loop.new_sync {
-        if !NET_CLIENT_CONNECTED && state.d_loop.maketic - gameticdiv > 2 {
+    if state.game.d_loop.new_sync {
+        if !NET_CLIENT_CONNECTED && state.game.d_loop.maketic - gameticdiv > 2 {
             return false;
         }
-        if state.d_loop.maketic - gameticdiv > 8 {
+        if state.game.d_loop.maketic - gameticdiv > 8 {
             return false;
         }
-    } else if state.d_loop.maketic - gameticdiv >= 5 {
+    } else if state.game.d_loop.maketic - gameticdiv >= 5 {
         return false;
     }
     let build_ticcmd = state
+        .game
         .d_loop
         .loop_interface
         .build_ticcmd
         .expect("non-null function pointer");
-    let maketic = state.d_loop.maketic;
+    let maketic = state.game.d_loop.maketic;
     build_ticcmd(state, &mut cmd, maketic);
-    state.d_loop.ticdata[(state.d_loop.maketic % BACKUPTICS) as usize].cmds[LOCALPLAYER as usize] =
-        cmd;
-    state.d_loop.ticdata[(state.d_loop.maketic % BACKUPTICS) as usize].ingame
+    state.game.d_loop.ticdata[(state.game.d_loop.maketic % BACKUPTICS) as usize].cmds
+        [LOCALPLAYER as usize] = cmd;
+    state.game.d_loop.ticdata[(state.game.d_loop.maketic % BACKUPTICS) as usize].ingame
         [LOCALPLAYER as usize] = true;
-    state.d_loop.maketic += 1;
+    state.game.d_loop.maketic += 1;
     true
 }
 pub fn net_update(state: &mut GameState) {
-    let mut newtics: i32;
-    if state.d_loop.singletics {
+    if state.game.d_loop.singletics {
         return;
     }
-    let nowtime: i32 = get_adjusted_time(state) / state.d_loop.ticdup;
-    newtics = nowtime - state.d_loop.lasttime;
-    state.d_loop.lasttime = nowtime;
-    if state.d_loop.skiptics <= newtics {
-        newtics -= state.d_loop.skiptics;
-        state.d_loop.skiptics = 0;
+    let nowtime: i32 = get_adjusted_time(
+        &state.game.d_loop,
+        &mut state.io.i_timer,
+        &mut *state.io.platform,
+    ) / state.game.d_loop.ticdup;
+    let mut newtics: i32 = nowtime - state.game.d_loop.lasttime;
+    state.game.d_loop.lasttime = nowtime;
+    if state.game.d_loop.skiptics <= newtics {
+        newtics -= state.game.d_loop.skiptics;
+        state.game.d_loop.skiptics = 0;
     } else {
-        state.d_loop.skiptics -= newtics;
+        state.game.d_loop.skiptics -= newtics;
         newtics = 0;
     }
     for _ in 0..newtics {
@@ -213,8 +228,12 @@ pub fn net_update(state: &mut GameState) {
         }
     }
 }
-pub fn start_game_loop(state: &mut GameState) {
-    state.d_loop.lasttime = get_adjusted_time(state) / state.d_loop.ticdup;
+pub fn start_game_loop(
+    d_loop: &mut DLoopState,
+    i_timer: &mut ITimerState,
+    platform: &mut dyn DoomPlatform,
+) {
+    d_loop.lasttime = get_adjusted_time(d_loop, i_timer, &mut *platform) / d_loop.ticdup;
 }
 pub fn start_net_game(d_loop: &mut DLoopState, settings: &mut NetGameSettings) {
     settings.consoleplayer = 0;
@@ -246,10 +265,9 @@ fn get_low_tic(d_loop: &DLoopState) -> i32 {
     lowtic
 }
 fn old_net_sync(d_loop: &mut DLoopState) {
-    let mut i: u32;
     let mut keyplayer: i32 = -1;
     d_loop.frameon += 1;
-    i = 0;
+    let mut i: u32 = 0;
     while i < NET_MAXPLAYERS as u32 {
         if d_loop.local_playeringame[i as usize] {
             keyplayer = i as i32;
@@ -292,8 +310,7 @@ fn players_in_game(d_loop: &DLoopState) -> bool {
     result
 }
 fn ticdup_squash(set: &mut TicCmdSet) {
-    let mut i: u32;
-    i = 0;
+    let mut i: u32 = 0;
     while i < NET_MAXPLAYERS as u32 {
         let cmd = &mut set.cmds[i as usize];
         cmd.chatchar = 0_u8;
@@ -304,8 +321,7 @@ fn ticdup_squash(set: &mut TicCmdSet) {
     }
 }
 fn single_player_clear(set: &mut TicCmdSet) {
-    let mut i: u32;
-    i = 0;
+    let mut i: u32 = 0;
     while i < NET_MAXPLAYERS as u32 {
         if i != LOCALPLAYER as u32 {
             set.ingame[i as usize] = false;
@@ -314,20 +330,19 @@ fn single_player_clear(set: &mut TicCmdSet) {
     }
 }
 pub fn try_run_tics(state: &mut GameState) {
-    let mut lowtic: i32;
-
     let mut counts: i32;
-    let entertic: i32 = get_time(state) / state.d_loop.ticdup;
-    let realtics: i32 = entertic - state.d_loop.try_run_tics_oldentertics;
-    state.d_loop.try_run_tics_oldentertics = entertic;
-    if state.d_loop.singletics {
+    let entertic: i32 =
+        get_time(&mut state.io.i_timer, &mut *state.io.platform) / state.game.d_loop.ticdup;
+    let realtics: i32 = entertic - state.game.d_loop.try_run_tics_oldentertics;
+    state.game.d_loop.try_run_tics_oldentertics = entertic;
+    if state.game.d_loop.singletics {
         build_new_tic(state);
     } else {
         net_update(state);
     }
-    lowtic = get_low_tic(&state.d_loop);
-    let availabletics: i32 = lowtic - state.d_loop.gametic / state.d_loop.ticdup;
-    if state.d_loop.new_sync {
+    let mut lowtic: i32 = get_low_tic(&state.game.d_loop);
+    let availabletics: i32 = lowtic - state.game.d_loop.gametic / state.game.d_loop.ticdup;
+    if state.game.d_loop.new_sync {
         counts = availabletics;
     } else {
         if realtics < availabletics - 1 {
@@ -341,54 +356,54 @@ pub fn try_run_tics(state: &mut GameState) {
             counts = 1;
         }
         if NET_CLIENT_CONNECTED {
-            old_net_sync(&mut state.d_loop);
+            old_net_sync(&mut state.game.d_loop);
         }
     }
     if counts < 1 {
         counts = 1;
     }
-    while !players_in_game(&state.d_loop)
-        || lowtic < state.d_loop.gametic / state.d_loop.ticdup + counts
+    while !players_in_game(&state.game.d_loop)
+        || lowtic < state.game.d_loop.gametic / state.game.d_loop.ticdup + counts
     {
         net_update(state);
-        lowtic = get_low_tic(&state.d_loop);
-        if lowtic < state.d_loop.gametic / state.d_loop.ticdup {
+        lowtic = get_low_tic(&state.game.d_loop);
+        if lowtic < state.game.d_loop.gametic / state.game.d_loop.ticdup {
             error("TryRunTics: lowtic < gametic");
         }
-        if get_time(state) / state.d_loop.ticdup - entertic > 0 {
+        if get_time(&mut state.io.i_timer, &mut *state.io.platform) / state.game.d_loop.ticdup
+            - entertic
+            > 0
+        {
             return;
         }
-        sleep(state, 1);
+        sleep(&mut *state.io.platform, 1);
     }
-    loop {
-        let fresh0 = counts;
-        counts -= 1;
-        if fresh0 == 0 {
-            break;
-        }
-        if !players_in_game(&state.d_loop) {
+    for _ in 0..counts {
+        if !players_in_game(&state.game.d_loop) {
             return;
         }
-        let set_index = (state.d_loop.gametic / state.d_loop.ticdup % BACKUPTICS) as usize;
-        let mut set = state.d_loop.ticdata[set_index];
+        let set_index =
+            (state.game.d_loop.gametic / state.game.d_loop.ticdup % BACKUPTICS) as usize;
+        let mut set = state.game.d_loop.ticdata[set_index];
         if !NET_CLIENT_CONNECTED {
             single_player_clear(&mut set);
         }
-        for _ in 0..state.d_loop.ticdup {
-            if state.d_loop.gametic / state.d_loop.ticdup > lowtic {
+        for _ in 0..state.game.d_loop.ticdup {
+            if state.game.d_loop.gametic / state.game.d_loop.ticdup > lowtic {
                 error("gametic>lowtic");
             }
-            state.d_loop.local_playeringame = set.ingame;
+            state.game.d_loop.local_playeringame = set.ingame;
             let run_tic = state
+                .game
                 .d_loop
                 .loop_interface
                 .run_tic
                 .expect("non-null function pointer");
             run_tic(state, &set.cmds, &set.ingame);
-            state.d_loop.gametic += 1;
+            state.game.d_loop.gametic += 1;
             ticdup_squash(&mut set);
         }
-        state.d_loop.ticdata[set_index] = set;
+        state.game.d_loop.ticdata[set_index] = set;
         net_update(state);
     }
 }

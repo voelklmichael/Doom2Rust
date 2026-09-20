@@ -504,14 +504,10 @@ pub fn get_sector(
     let sidenum = p_setup.line(line_id).sidenum[side as usize];
     p_setup.sides[sidenum as usize].sector
 }
-pub fn two_sided(state: &mut GameState, sector: SectorId, line: i32) -> bool {
-    let sec = state.p_setup.sector_mut(sector);
+pub fn two_sided(p_setup: &mut PSetupState, sector: SectorId, line: i32) -> bool {
+    let sec = p_setup.sector_mut(sector);
     let line_id = sec.lines[line as usize];
-    state
-        .p_setup
-        .line(line_id)
-        .flags
-        .contains(LineFlags::TWOSIDED)
+    p_setup.line(line_id).flags.contains(LineFlags::TWOSIDED)
 }
 pub fn get_next_sector(p_setup: &PSetupState, line: LineId, sec: SectorId) -> Option<SectorId> {
     let linev = p_setup.line(line);
@@ -527,8 +523,8 @@ pub fn get_next_sector(p_setup: &PSetupState, line: LineId, sec: SectorId) -> Op
 pub fn find_lowest_floor_surrounding(p_setup: &mut PSetupState, sec: SectorId) -> Fixed {
     let mut floor: Fixed = p_setup.sector_mut(sec).floorheight;
     let linecount = p_setup.sector_mut(sec).linecount;
-    for i in 0..linecount {
-        let check = p_setup.sector_mut(sec).lines[i as usize];
+    for i in 0..linecount as usize {
+        let check = p_setup.sector_mut(sec).lines[i];
         if let Some(other) = get_next_sector(p_setup, check, sec) {
             let other_floor = p_setup.sector_mut(other).floorheight;
             if other_floor < floor {
@@ -541,8 +537,8 @@ pub fn find_lowest_floor_surrounding(p_setup: &mut PSetupState, sec: SectorId) -
 pub fn find_highest_floor_surrounding(p_setup: &mut PSetupState, sec: SectorId) -> Fixed {
     let mut floor: Fixed = -(500) * FRACUNIT;
     let linecount = p_setup.sector_mut(sec).linecount;
-    for i in 0..linecount {
-        let check = p_setup.sector_mut(sec).lines[i as usize];
+    for i in 0..linecount as usize {
+        let check = p_setup.sector_mut(sec).lines[i];
         if let Some(other) = get_next_sector(p_setup, check, sec) {
             let other_floor = p_setup.sector_mut(other).floorheight;
             if other_floor > floor {
@@ -562,8 +558,8 @@ pub fn find_next_highest_floor(
     let mut heightlist: [Fixed; 22] = [0; 22];
     let mut h: i32 = 0;
     let linecount = p_setup.sector_mut(sec).linecount;
-    for i in 0..linecount {
-        let check = p_setup.sector_mut(sec).lines[i as usize];
+    for i in 0..linecount as usize {
+        let check = p_setup.sector_mut(sec).lines[i];
         if let Some(other) = get_next_sector(p_setup, check, sec) {
             let other_floor = p_setup.sector_mut(other).floorheight;
             if other_floor > height {
@@ -572,9 +568,8 @@ pub fn find_next_highest_floor(
                 } else if h == MAX_ADJOINING_SECTORS + 2 {
                     error("Sector with more than 22 adjoining sectors. Vanilla will crash here");
                 }
-                let fresh1 = h;
+                heightlist[h as usize] = other_floor;
                 h += 1;
-                heightlist[fresh1 as usize] = other_floor;
             }
         }
     }
@@ -592,8 +587,8 @@ pub fn find_next_highest_floor(
 pub fn find_lowest_ceiling_surrounding(p_setup: &mut PSetupState, sec: SectorId) -> Fixed {
     let mut height: Fixed = INT_MAX;
     let linecount = p_setup.sector_mut(sec).linecount;
-    for i in 0..linecount {
-        let check = p_setup.sector_mut(sec).lines[i as usize];
+    for i in 0..linecount as usize {
+        let check = p_setup.sector_mut(sec).lines[i];
         if let Some(other) = get_next_sector(p_setup, check, sec) {
             let other_ceiling = p_setup.sector_mut(other).ceilingheight;
             if other_ceiling < height {
@@ -606,8 +601,8 @@ pub fn find_lowest_ceiling_surrounding(p_setup: &mut PSetupState, sec: SectorId)
 pub fn find_highest_ceiling_surrounding(p_setup: &mut PSetupState, sec: SectorId) -> Fixed {
     let mut height: Fixed = 0;
     let linecount = p_setup.sector_mut(sec).linecount;
-    for i in 0..linecount {
-        let check = p_setup.sector_mut(sec).lines[i as usize];
+    for i in 0..linecount as usize {
+        let check = p_setup.sector_mut(sec).lines[i];
         if let Some(other) = get_next_sector(p_setup, check, sec) {
             let other_ceiling = p_setup.sector_mut(other).ceilingheight;
             if other_ceiling > height {
@@ -636,8 +631,8 @@ pub fn sectors_with_line_tag(p_setup: &PSetupState, line: LineId) -> Vec<SectorI
 pub fn find_min_surrounding_light(p_setup: &mut PSetupState, sector: SectorId, max: i32) -> i32 {
     let mut min = max;
     let linecount = p_setup.sector_mut(sector).linecount;
-    for i in 0..linecount {
-        let line = p_setup.sector_mut(sector).lines[i as usize];
+    for i in 0..linecount as usize {
+        let line = p_setup.sector_mut(sector).lines[i];
         if let Some(check) = get_next_sector(p_setup, line, sector) {
             let light = p_setup.sector_mut(check).lightlevel as i32;
             if light < min {
@@ -650,9 +645,9 @@ pub fn find_min_surrounding_light(p_setup: &mut PSetupState, sector: SectorId, m
 pub fn cross_special_line(state: &mut GameState, linenum: i32, side: i32, thing: MobjId) {
     let line: LineId = LineId(linenum as u32);
     let mut ok: i32;
-    let special = state.p_setup.line(line).special;
-    if state.p_mobj.mo(thing).player.is_none() {
-        match state.p_mobj.mo(thing).kind as u32 {
+    let special = state.world.p_setup.line(line).special;
+    if state.world.p_mobj.mo(thing).player.is_none() {
+        match state.world.p_mobj.mo(thing).kind as u32 {
             33 | 34 | 35 | 31 | 32 | 16 => return,
             _ => {}
         }
@@ -670,238 +665,242 @@ pub fn cross_special_line(state: &mut GameState, linenum: i32, side: i32, thing:
     match special as i32 {
         2 => {
             do_door(state, line, VldoorE::Open);
-            state.p_setup.line_mut(line).special = 0;
+            state.world.p_setup.line_mut(line).special = 0;
         }
         3 => {
             do_door(state, line, VldoorE::Close);
-            state.p_setup.line_mut(line).special = 0;
+            state.world.p_setup.line_mut(line).special = 0;
         }
         4 => {
             do_door(state, line, VldoorE::Normal);
-            state.p_setup.line_mut(line).special = 0;
+            state.world.p_setup.line_mut(line).special = 0;
         }
         5 => {
             do_floor(state, line, FloorE::RaiseFloor);
-            state.p_setup.line_mut(line).special = 0;
+            state.world.p_setup.line_mut(line).special = 0;
         }
         6 => {
             do_ceiling(
-                &mut state.p_ceilng,
-                &mut state.p_setup,
-                &mut state.p_tick,
+                &mut state.world.p_ceilng,
+                &mut state.world.p_setup,
+                &mut state.world.p_tick,
                 line,
                 CeilingE::FastCrushAndRaise,
             );
-            state.p_setup.line_mut(line).special = 0;
+            state.world.p_setup.line_mut(line).special = 0;
         }
         8 => {
             build_stairs(
-                &mut state.p_setup,
-                &mut state.p_spec,
-                &mut state.p_tick,
+                &mut state.world.p_setup,
+                &mut state.world.p_spec,
+                &mut state.world.p_tick,
                 line,
                 StairE::Build8,
             );
-            state.p_setup.line_mut(line).special = 0;
+            state.world.p_setup.line_mut(line).special = 0;
         }
         10 => {
             do_plat(state, line, PlattypeE::DownWaitUpStay, 0);
-            state.p_setup.line_mut(line).special = 0;
+            state.world.p_setup.line_mut(line).special = 0;
         }
         12 => {
-            light_turn_on(&mut state.p_setup, line, 0);
-            state.p_setup.line_mut(line).special = 0;
+            light_turn_on(&mut state.world.p_setup, line, 0);
+            state.world.p_setup.line_mut(line).special = 0;
         }
         13 => {
-            light_turn_on(&mut state.p_setup, line, 255);
-            state.p_setup.line_mut(line).special = 0;
+            light_turn_on(&mut state.world.p_setup, line, 255);
+            state.world.p_setup.line_mut(line).special = 0;
         }
         16 => {
             do_door(state, line, VldoorE::Close30ThenOpen);
-            state.p_setup.line_mut(line).special = 0;
+            state.world.p_setup.line_mut(line).special = 0;
         }
         17 => {
-            start_light_strobing(state, line);
-            state.p_setup.line_mut(line).special = 0;
+            start_light_strobing(&mut state.world, line);
+            state.world.p_setup.line_mut(line).special = 0;
         }
         19 => {
             do_floor(state, line, FloorE::LowerFloor);
-            state.p_setup.line_mut(line).special = 0;
+            state.world.p_setup.line_mut(line).special = 0;
         }
         22 => {
             do_plat(state, line, PlattypeE::RaiseToNearestAndChange, 0);
-            state.p_setup.line_mut(line).special = 0;
+            state.world.p_setup.line_mut(line).special = 0;
         }
         25 => {
             do_ceiling(
-                &mut state.p_ceilng,
-                &mut state.p_setup,
-                &mut state.p_tick,
+                &mut state.world.p_ceilng,
+                &mut state.world.p_setup,
+                &mut state.world.p_tick,
                 line,
                 CeilingE::CrushAndRaise,
             );
-            state.p_setup.line_mut(line).special = 0;
+            state.world.p_setup.line_mut(line).special = 0;
         }
         30 => {
             do_floor(state, line, FloorE::RaiseToTexture);
-            state.p_setup.line_mut(line).special = 0;
+            state.world.p_setup.line_mut(line).special = 0;
         }
         35 => {
-            light_turn_on(&mut state.p_setup, line, 35);
-            state.p_setup.line_mut(line).special = 0;
+            light_turn_on(&mut state.world.p_setup, line, 35);
+            state.world.p_setup.line_mut(line).special = 0;
         }
         36 => {
             do_floor(state, line, FloorE::TurboLower);
-            state.p_setup.line_mut(line).special = 0;
+            state.world.p_setup.line_mut(line).special = 0;
         }
         37 => {
             do_floor(state, line, FloorE::LowerAndChange);
-            state.p_setup.line_mut(line).special = 0;
+            state.world.p_setup.line_mut(line).special = 0;
         }
         38 => {
             do_floor(state, line, FloorE::LowerFloorToLowest);
-            state.p_setup.line_mut(line).special = 0;
+            state.world.p_setup.line_mut(line).special = 0;
         }
         39 => {
             teleport(state, line, side, thing);
-            state.p_setup.line_mut(line).special = 0;
+            state.world.p_setup.line_mut(line).special = 0;
         }
         40 => {
             do_ceiling(
-                &mut state.p_ceilng,
-                &mut state.p_setup,
-                &mut state.p_tick,
+                &mut state.world.p_ceilng,
+                &mut state.world.p_setup,
+                &mut state.world.p_tick,
                 line,
                 CeilingE::RaiseToHighest,
             );
             do_floor(state, line, FloorE::LowerFloorToLowest);
-            state.p_setup.line_mut(line).special = 0;
+            state.world.p_setup.line_mut(line).special = 0;
         }
         44 => {
             do_ceiling(
-                &mut state.p_ceilng,
-                &mut state.p_setup,
-                &mut state.p_tick,
+                &mut state.world.p_ceilng,
+                &mut state.world.p_setup,
+                &mut state.world.p_tick,
                 line,
                 CeilingE::LowerAndCrush,
             );
-            state.p_setup.line_mut(line).special = 0;
+            state.world.p_setup.line_mut(line).special = 0;
         }
         52 => {
-            exit_level(&mut state.g_game);
+            exit_level(&mut state.game.g_game);
         }
         53 => {
             do_plat(state, line, PlattypeE::PerpetualRaise, 0);
-            state.p_setup.line_mut(line).special = 0;
+            state.world.p_setup.line_mut(line).special = 0;
         }
         54 => {
             stop_plat(
-                &mut state.p_plats,
-                &state.p_tick,
-                state.p_setup.line(line).tag as i32,
+                &mut state.world.p_plats,
+                &state.world.p_tick,
+                state.world.p_setup.line(line).tag as i32,
             );
-            state.p_setup.line_mut(line).special = 0;
+            state.world.p_setup.line_mut(line).special = 0;
         }
         56 => {
             do_floor(state, line, FloorE::RaiseFloorCrush);
-            state.p_setup.line_mut(line).special = 0;
+            state.world.p_setup.line_mut(line).special = 0;
         }
         57 => {
             ceiling_crush_stop(
-                &mut state.p_ceilng,
-                &state.p_tick,
-                state.p_setup.line(line).tag as i32,
+                &mut state.world.p_ceilng,
+                &state.world.p_tick,
+                state.world.p_setup.line(line).tag as i32,
             );
-            state.p_setup.line_mut(line).special = 0;
+            state.world.p_setup.line_mut(line).special = 0;
         }
         58 => {
             do_floor(state, line, FloorE::RaiseFloor24);
-            state.p_setup.line_mut(line).special = 0;
+            state.world.p_setup.line_mut(line).special = 0;
         }
         59 => {
             do_floor(state, line, FloorE::RaiseFloor24AndChange);
-            state.p_setup.line_mut(line).special = 0;
+            state.world.p_setup.line_mut(line).special = 0;
         }
         104 => {
-            turn_tag_lights_off(&mut state.p_setup, line);
-            state.p_setup.line_mut(line).special = 0;
+            turn_tag_lights_off(&mut state.world.p_setup, line);
+            state.world.p_setup.line_mut(line).special = 0;
         }
         108 => {
             do_door(state, line, VldoorE::BlazeRaise);
-            state.p_setup.line_mut(line).special = 0;
+            state.world.p_setup.line_mut(line).special = 0;
         }
         109 => {
             do_door(state, line, VldoorE::BlazeOpen);
-            state.p_setup.line_mut(line).special = 0;
+            state.world.p_setup.line_mut(line).special = 0;
         }
         100 => {
             build_stairs(
-                &mut state.p_setup,
-                &mut state.p_spec,
-                &mut state.p_tick,
+                &mut state.world.p_setup,
+                &mut state.world.p_spec,
+                &mut state.world.p_tick,
                 line,
                 StairE::Turbo16,
             );
-            state.p_setup.line_mut(line).special = 0;
+            state.world.p_setup.line_mut(line).special = 0;
         }
         110 => {
             do_door(state, line, VldoorE::BlazeClose);
-            state.p_setup.line_mut(line).special = 0;
+            state.world.p_setup.line_mut(line).special = 0;
         }
         119 => {
             do_floor(state, line, FloorE::RaiseFloorToNearest);
-            state.p_setup.line_mut(line).special = 0;
+            state.world.p_setup.line_mut(line).special = 0;
         }
         121 => {
             do_plat(state, line, PlattypeE::BlazeDWUS, 0);
-            state.p_setup.line_mut(line).special = 0;
+            state.world.p_setup.line_mut(line).special = 0;
         }
         124 => {
-            secret_exit_level(&state.doomstat, &mut state.g_game, &state.w_wad);
+            secret_exit_level(
+                &state.game.doomstat,
+                &mut state.game.g_game,
+                &state.assets.w_wad,
+            );
         }
         125 => {
-            if state.p_mobj.mo(thing).player.is_none() {
+            if state.world.p_mobj.mo(thing).player.is_none() {
                 teleport(state, line, side, thing);
-                state.p_setup.line_mut(line).special = 0;
+                state.world.p_setup.line_mut(line).special = 0;
             }
         }
         130 => {
             do_floor(state, line, FloorE::RaiseFloorTurbo);
-            state.p_setup.line_mut(line).special = 0;
+            state.world.p_setup.line_mut(line).special = 0;
         }
         141 => {
             do_ceiling(
-                &mut state.p_ceilng,
-                &mut state.p_setup,
-                &mut state.p_tick,
+                &mut state.world.p_ceilng,
+                &mut state.world.p_setup,
+                &mut state.world.p_tick,
                 line,
                 CeilingE::SilentCrushAndRaise,
             );
-            state.p_setup.line_mut(line).special = 0;
+            state.world.p_setup.line_mut(line).special = 0;
         }
         72 => {
             do_ceiling(
-                &mut state.p_ceilng,
-                &mut state.p_setup,
-                &mut state.p_tick,
+                &mut state.world.p_ceilng,
+                &mut state.world.p_setup,
+                &mut state.world.p_tick,
                 line,
                 CeilingE::LowerAndCrush,
             );
         }
         73 => {
             do_ceiling(
-                &mut state.p_ceilng,
-                &mut state.p_setup,
-                &mut state.p_tick,
+                &mut state.world.p_ceilng,
+                &mut state.world.p_setup,
+                &mut state.world.p_tick,
                 line,
                 CeilingE::CrushAndRaise,
             );
         }
         74 => {
             ceiling_crush_stop(
-                &mut state.p_ceilng,
-                &state.p_tick,
-                state.p_setup.line(line).tag as i32,
+                &mut state.world.p_ceilng,
+                &state.world.p_tick,
+                state.world.p_setup.line(line).tag as i32,
             );
         }
         75 => {
@@ -912,21 +911,21 @@ pub fn cross_special_line(state: &mut GameState, linenum: i32, side: i32, thing:
         }
         77 => {
             do_ceiling(
-                &mut state.p_ceilng,
-                &mut state.p_setup,
-                &mut state.p_tick,
+                &mut state.world.p_ceilng,
+                &mut state.world.p_setup,
+                &mut state.world.p_tick,
                 line,
                 CeilingE::FastCrushAndRaise,
             );
         }
         79 => {
-            light_turn_on(&mut state.p_setup, line, 35);
+            light_turn_on(&mut state.world.p_setup, line, 35);
         }
         80 => {
-            light_turn_on(&mut state.p_setup, line, 0);
+            light_turn_on(&mut state.world.p_setup, line, 0);
         }
         81 => {
-            light_turn_on(&mut state.p_setup, line, 255);
+            light_turn_on(&mut state.world.p_setup, line, 255);
         }
         82 => {
             do_floor(state, line, FloorE::LowerFloorToLowest);
@@ -948,9 +947,9 @@ pub fn cross_special_line(state: &mut GameState, linenum: i32, side: i32, thing:
         }
         89 => {
             stop_plat(
-                &mut state.p_plats,
-                &state.p_tick,
-                state.p_setup.line(line).tag as i32,
+                &mut state.world.p_plats,
+                &state.world.p_tick,
+                state.world.p_setup.line(line).tag as i32,
             );
         }
         90 => {
@@ -993,7 +992,7 @@ pub fn cross_special_line(state: &mut GameState, linenum: i32, side: i32, thing:
             do_plat(state, line, PlattypeE::BlazeDWUS, 0);
         }
         126 => {
-            if state.p_mobj.mo(thing).player.is_none() {
+            if state.world.p_mobj.mo(thing).player.is_none() {
                 teleport(state, line, side, thing);
             }
         }
@@ -1008,8 +1007,8 @@ pub fn cross_special_line(state: &mut GameState, linenum: i32, side: i32, thing:
 }
 pub fn shoot_special_line(state: &mut GameState, thing: MobjId, line: LineId) {
     let mut ok: i32;
-    let special = state.p_setup.line(line).special;
-    if state.p_mobj.mo(thing).player.is_none() {
+    let special = state.world.p_setup.line(line).special;
+    if state.world.p_mobj.mo(thing).player.is_none() {
         ok = 0;
         if special as i32 == 46 {
             ok = 1;
@@ -1035,14 +1034,14 @@ pub fn shoot_special_line(state: &mut GameState, thing: MobjId, line: LineId) {
     }
 }
 pub fn player_in_special_sector(state: &mut GameState, player: PlayerId) {
-    let player_mo = state.g_game.player_mut(player).mo.unwrap();
+    let player_mo = state.game.g_game.player_mut(player).mo.unwrap();
     let (subsector, mo_z) = {
-        let m = state.p_mobj.mo(player_mo);
+        let m = state.world.p_mobj.mo(player_mo);
         (m.subsector, m.z)
     };
-    let sector_id = state.p_setup.subsectors[subsector.0 as usize].sector;
+    let sector_id = state.world.p_setup.subsectors[subsector.0 as usize].sector;
     let (floorheight, special) = {
-        let s = state.p_setup.sector_mut(sector_id);
+        let s = state.world.p_setup.sector_mut(sector_id);
         (s.floorheight, s.special)
     };
     if mo_z != floorheight {
@@ -1050,38 +1049,38 @@ pub fn player_in_special_sector(state: &mut GameState, player: PlayerId) {
     }
     match special as i32 {
         5 => {
-            if state.g_game.player_mut(player).powers[PowerType::Ironfeet as usize] == 0
-                && state.p_tick.leveltime & 0x1f == 0
+            if state.game.g_game.player_mut(player).powers[PowerType::Ironfeet as usize] == 0
+                && state.world.p_tick.leveltime & 0x1f == 0
             {
                 damage_mobj(state, player_mo, None, None, 10);
             }
         }
         7 => {
-            if state.g_game.player_mut(player).powers[PowerType::Ironfeet as usize] == 0
-                && state.p_tick.leveltime & 0x1f == 0
+            if state.game.g_game.player_mut(player).powers[PowerType::Ironfeet as usize] == 0
+                && state.world.p_tick.leveltime & 0x1f == 0
             {
                 damage_mobj(state, player_mo, None, None, 5);
             }
         }
         16 | 4 => {
-            if (state.g_game.player_mut(player).powers[PowerType::Ironfeet as usize] == 0
-                || p_random(&mut state.m_random) < 5)
-                && state.p_tick.leveltime & 0x1f == 0
+            if (state.game.g_game.player_mut(player).powers[PowerType::Ironfeet as usize] == 0
+                || p_random(&mut state.world.m_random) < 5)
+                && state.world.p_tick.leveltime & 0x1f == 0
             {
                 damage_mobj(state, player_mo, None, None, 20);
             }
         }
         9 => {
-            state.g_game.player_mut(player).secretcount += 1;
-            state.p_setup.sector_mut(sector_id).special = 0;
+            state.game.g_game.player_mut(player).secretcount += 1;
+            state.world.p_setup.sector_mut(sector_id).special = 0;
         }
         11 => {
-            state.g_game.player_mut(player).cheats &= !CheatFlags::GODMODE;
-            if state.p_tick.leveltime & 0x1f == 0 {
+            state.game.g_game.player_mut(player).cheats &= !CheatFlags::GODMODE;
+            if state.world.p_tick.leveltime & 0x1f == 0 {
                 damage_mobj(state, player_mo, None, None, 20);
             }
-            if state.g_game.player_mut(player).health <= 10 {
-                exit_level(&mut state.g_game);
+            if state.game.g_game.player_mut(player).health <= 10 {
+                exit_level(&mut state.game.g_game);
             }
         }
         _ => {
@@ -1095,59 +1094,64 @@ pub fn player_in_special_sector(state: &mut GameState, player: PlayerId) {
 pub fn update_specials(state: &mut GameState) {
     let mut pic: i32;
     let mut line: LineId;
-    if state.p_spec.level_timer {
-        state.p_spec.level_time_count -= 1;
-        if state.p_spec.level_time_count == 0 {
-            exit_level(&mut state.g_game);
+    if state.world.p_spec.level_timer {
+        state.world.p_spec.level_time_count -= 1;
+        if state.world.p_spec.level_time_count == 0 {
+            exit_level(&mut state.game.g_game);
         }
     }
-    for anim_idx in 0..state.p_spec.lastanim {
-        let anim = &state.p_spec.anims[anim_idx];
+    for anim_idx in 0..state.world.p_spec.lastanim {
+        let anim = &state.world.p_spec.anims[anim_idx];
         for i in anim.basepic..anim.basepic + anim.numpics {
-            pic = anim.basepic + (state.p_tick.leveltime / anim.speed + i) % anim.numpics;
+            pic = anim.basepic + (state.world.p_tick.leveltime / anim.speed + i) % anim.numpics;
             if anim.istexture {
-                state.r_data.texturetranslation[i as usize] = pic;
+                state.render.r_data.texturetranslation[i as usize] = pic;
             } else {
-                state.r_data.flattranslation[i as usize] = pic;
+                state.render.r_data.flattranslation[i as usize] = pic;
             }
         }
     }
-    for i in 0..(state.p_spec.numlinespecials as usize) {
-        line = state.p_spec.linespeciallist[i];
-        let linev = state.p_setup.line(line);
+    for i in 0..(state.world.p_spec.numlinespecials as usize) {
+        line = state.world.p_spec.linespeciallist[i];
+        let linev = state.world.p_setup.line(line);
         if linev.special as i32 == 48 {
-            let fresh0 = &mut state.p_setup.sides[linev.sidenum[0] as usize].textureoffset;
-            *fresh0 += FRACUNIT;
+            state.world.p_setup.sides[linev.sidenum[0] as usize].textureoffset += FRACUNIT;
         }
     }
     for i in 0..(MAXBUTTONS as usize) {
-        if state.p_switch.buttonlist[i].btimer != 0 {
-            state.p_switch.buttonlist[i].btimer -= 1;
-            if state.p_switch.buttonlist[i].btimer == 0 {
-                let button_line_id = state.p_switch.buttonlist[i].line;
-                match state.p_switch.buttonlist[i].position {
+        if state.world.p_switch.buttonlist[i].btimer != 0 {
+            state.world.p_switch.buttonlist[i].btimer -= 1;
+            if state.world.p_switch.buttonlist[i].btimer == 0 {
+                let button_line_id = state.world.p_switch.buttonlist[i].line;
+                match state.world.p_switch.buttonlist[i].position {
                     BWhere::Top => {
-                        state.p_setup.sides
-                            [state.p_setup.lines[button_line_id.0 as usize].sidenum[0] as usize]
-                            .toptexture = state.p_switch.buttonlist[i].btexture as i16;
+                        state.world.p_setup.sides[state.world.p_setup.lines
+                            [button_line_id.0 as usize]
+                            .sidenum[0]
+                            as usize]
+                            .toptexture = state.world.p_switch.buttonlist[i].btexture as i16;
                     }
                     BWhere::Middle => {
-                        state.p_setup.sides
-                            [state.p_setup.lines[button_line_id.0 as usize].sidenum[0] as usize]
-                            .midtexture = state.p_switch.buttonlist[i].btexture as i16;
+                        state.world.p_setup.sides[state.world.p_setup.lines
+                            [button_line_id.0 as usize]
+                            .sidenum[0]
+                            as usize]
+                            .midtexture = state.world.p_switch.buttonlist[i].btexture as i16;
                     }
                     BWhere::Bottom => {
-                        state.p_setup.sides
-                            [state.p_setup.lines[button_line_id.0 as usize].sidenum[0] as usize]
-                            .bottomtexture = state.p_switch.buttonlist[i].btexture as i16;
+                        state.world.p_setup.sides[state.world.p_setup.lines
+                            [button_line_id.0 as usize]
+                            .sidenum[0]
+                            as usize]
+                            .bottomtexture = state.world.p_switch.buttonlist[i].btexture as i16;
                     }
                 }
                 s_start_sound(
                     state,
-                    SoundOrigin::Sector(state.p_switch.buttonlist[i].soundorg),
-                    SfxName::Swtchn as i32,
+                    SoundOrigin::Sector(state.world.p_switch.buttonlist[i].soundorg),
+                    SfxName::Swtchn,
                 );
-                state.p_switch.buttonlist[i] = EMPTY_BUTTON;
+                state.world.p_switch.buttonlist[i] = EMPTY_BUTTON;
             }
         }
     }
@@ -1155,61 +1159,61 @@ pub fn update_specials(state: &mut GameState) {
 pub const DONUT_FLOORHEIGHT_DEFAULT: i32 = 0;
 pub const DONUT_FLOORPIC_DEFAULT: i32 = 0x16;
 fn donut_overrun(state: &mut GameState) -> (Fixed, i16) {
-    if state.p_spec.donut_overrun_first {
-        state.p_spec.donut_overrun_first = false;
-        state.p_spec.donut_overrun_tmp_s3_floorheight = DONUT_FLOORHEIGHT_DEFAULT;
-        state.p_spec.donut_overrun_tmp_s3_floorpic = DONUT_FLOORPIC_DEFAULT;
-        if let Some(p) = check_parm_with_args(&state.m_argv, "-donut", 2) {
+    if state.world.p_spec.donut_overrun_first {
+        state.world.p_spec.donut_overrun_first = false;
+        state.world.p_spec.donut_overrun_tmp_s3_floorheight = DONUT_FLOORHEIGHT_DEFAULT;
+        state.world.p_spec.donut_overrun_tmp_s3_floorpic = DONUT_FLOORPIC_DEFAULT;
+        if let Some(p) = check_parm_with_args(&state.game.m_argv, "-donut", 2) {
             str_to_int(
-                state.m_argv.myargv[p + 1].as_str(),
-                &mut state.p_spec.donut_overrun_tmp_s3_floorheight,
+                state.game.m_argv.myargv[p + 1].as_str(),
+                &mut state.world.p_spec.donut_overrun_tmp_s3_floorheight,
             );
             str_to_int(
-                state.m_argv.myargv[p + 2].as_str(),
-                &mut state.p_spec.donut_overrun_tmp_s3_floorpic,
+                state.game.m_argv.myargv[p + 2].as_str(),
+                &mut state.world.p_spec.donut_overrun_tmp_s3_floorpic,
             );
-            if state.p_spec.donut_overrun_tmp_s3_floorpic >= state.r_data.numflats {
-                doom_eprintln!(state.platform,
+            if state.world.p_spec.donut_overrun_tmp_s3_floorpic >= state.render.r_data.numflats {
+                doom_eprintln!(state.io.platform,
                     "DonutOverrun: The second parameter for \"-donut\" switch should be greater than 0 and less than number of flats ({}). Using default value ({}) instead. ",
-                    state.r_data.numflats,
+                    state.render.r_data.numflats,
                     DONUT_FLOORPIC_DEFAULT,
                 );
-                state.p_spec.donut_overrun_tmp_s3_floorpic = DONUT_FLOORPIC_DEFAULT;
+                state.world.p_spec.donut_overrun_tmp_s3_floorpic = DONUT_FLOORPIC_DEFAULT;
             }
         }
     }
     (
-        state.p_spec.donut_overrun_tmp_s3_floorheight,
-        state.p_spec.donut_overrun_tmp_s3_floorpic as i16,
+        state.world.p_spec.donut_overrun_tmp_s3_floorheight,
+        state.world.p_spec.donut_overrun_tmp_s3_floorpic as i16,
     )
 }
 pub fn do_donut(state: &mut GameState, line: LineId) -> bool {
     let mut rtn = false;
-    for sector in sectors_with_line_tag(&state.p_setup, line) {
+    for sector in sectors_with_line_tag(&state.world.p_setup, line) {
         let s1 = sector;
-        if state.p_setup.sector_mut(s1).specialdata.is_some() {
+        if state.world.p_setup.sector_mut(s1).specialdata.is_some() {
             continue;
         }
         rtn = true;
-        let first_line = state.p_setup.sector_mut(s1).lines[0];
-        let Some(s2) = get_next_sector(&state.p_setup, first_line, s1) else {
-            doom_eprintln!(state.platform,
+        let first_line = state.world.p_setup.sector_mut(s1).lines[0];
+        let Some(s2) = get_next_sector(&state.world.p_setup, first_line, s1) else {
+            doom_eprintln!(state.io.platform,
                 "EV_DoDonut: linedef had no second sidedef! Unexpected behavior may occur in Vanilla Doom. "
             );
             break;
         };
-        let linecount = state.p_setup.sector_mut(s2).linecount;
-        for i in 0..linecount {
-            let s2_line_id = state.p_setup.sector_mut(s2).lines[i as usize];
-            let s3 = state.p_setup.line(s2_line_id).backsector;
+        let linecount = state.world.p_setup.sector_mut(s2).linecount;
+        for i in 0..linecount as usize {
+            let s2_line_id = state.world.p_setup.sector_mut(s2).lines[i];
+            let s3 = state.world.p_setup.line(s2_line_id).backsector;
             if s3 == Some(s1) {
                 continue;
             }
             let (s3_floorheight, s3_floorpic) = if let Some(id) = s3 {
-                let s3 = state.p_setup.sector_mut(id);
+                let s3 = state.world.p_setup.sector_mut(id);
                 (s3.floorheight, s3.floorpic)
             } else {
-                doom_eprintln!(state.platform,
+                doom_eprintln!(state.io.platform,
                     "EV_DoDonut: WARNING: emulating buffer overrun due to NULL back sector. Unexpected behavior may occur in Vanilla Doom."
                 );
                 donut_overrun(state)
@@ -1224,13 +1228,13 @@ pub fn do_donut(state: &mut GameState, line: LineId) -> bool {
             floor.texture = s3_floorpic;
             floor.newspecial = 0;
             floor.floordestheight = s3_floorheight;
-            let floor_arena_id = state.p_spec.spawn_floor(floor);
+            let floor_arena_id = state.world.p_spec.spawn_floor(floor);
             let floor_id = add_thinker(
-                &mut state.p_tick,
+                &mut state.world.p_tick,
                 ThinkerPayload::Floor(floor_arena_id),
                 ThinkerKind::Floor,
             );
-            state.p_setup.sector_mut(s2).specialdata = Some(SectorSpecial::Floor(floor_id));
+            state.world.p_setup.sector_mut(s2).specialdata = Some(SectorSpecial::Floor(floor_id));
             let mut floor = FloorMove::default();
             floor.thinker.function = ThinkerFn::Floor(move_floor);
             floor.kind = FloorE::LowerFloor;
@@ -1239,81 +1243,81 @@ pub fn do_donut(state: &mut GameState, line: LineId) -> bool {
             floor.sector = s1;
             floor.speed = (FLOORSPEED / 2) as Fixed;
             floor.floordestheight = s3_floorheight;
-            let floor_arena_id = state.p_spec.spawn_floor(floor);
+            let floor_arena_id = state.world.p_spec.spawn_floor(floor);
             let floor_id = add_thinker(
-                &mut state.p_tick,
+                &mut state.world.p_tick,
                 ThinkerPayload::Floor(floor_arena_id),
                 ThinkerKind::Floor,
             );
-            state.p_setup.sector_mut(s1).specialdata = Some(SectorSpecial::Floor(floor_id));
+            state.world.p_setup.sector_mut(s1).specialdata = Some(SectorSpecial::Floor(floor_id));
             break;
         }
     }
     rtn
 }
 pub fn spawn_specials(state: &mut GameState) {
-    if state.g_game.timelimit > 0 && state.g_game.deathmatch != 0 {
-        state.p_spec.level_timer = true;
-        state.p_spec.level_time_count = state.g_game.timelimit * 60 * TICRATE;
+    if state.game.g_game.timelimit > 0 && state.game.g_game.deathmatch != 0 {
+        state.world.p_spec.level_timer = true;
+        state.world.p_spec.level_time_count = state.game.g_game.timelimit * 60 * TICRATE;
     } else {
-        state.p_spec.level_timer = false;
+        state.world.p_spec.level_timer = false;
     }
-    for i in 0..state.p_setup.numsectors {
+    for i in 0..state.world.p_setup.numsectors {
         let secid = SectorId(i as u32);
-        let special = state.p_setup.sector_mut(secid).special;
+        let special = state.world.p_setup.sector_mut(secid).special;
         if special != 0 {
             match special as i32 {
                 1 => {
-                    spawn_light_flash(state, secid);
+                    spawn_light_flash(&mut state.world, secid);
                 }
                 2 => {
-                    spawn_strobe_flash(state, secid, FASTDARK, 0);
+                    spawn_strobe_flash(&mut state.world, secid, FASTDARK, 0);
                 }
                 3 => {
-                    spawn_strobe_flash(state, secid, SLOWDARK, 0);
+                    spawn_strobe_flash(&mut state.world, secid, SLOWDARK, 0);
                 }
                 4 => {
-                    spawn_strobe_flash(state, secid, FASTDARK, 0);
-                    state.p_setup.sector_mut(secid).special = 4;
+                    spawn_strobe_flash(&mut state.world, secid, FASTDARK, 0);
+                    state.world.p_setup.sector_mut(secid).special = 4;
                 }
                 8 => {
                     spawn_glowing_light(
-                        &mut state.p_lights,
-                        &mut state.p_setup,
-                        &mut state.p_tick,
+                        &mut state.world.p_lights,
+                        &mut state.world.p_setup,
+                        &mut state.world.p_tick,
                         secid,
                     );
                 }
                 9 => {
-                    state.g_game.totalsecret += 1;
+                    state.game.g_game.totalsecret += 1;
                 }
                 10 => {
                     spawn_door_close_in30(
-                        &mut state.p_doors,
-                        &mut state.p_setup,
-                        &mut state.p_tick,
+                        &mut state.world.p_doors,
+                        &mut state.world.p_setup,
+                        &mut state.world.p_tick,
                         secid,
                     );
                 }
                 12 => {
-                    spawn_strobe_flash(state, secid, SLOWDARK, 1);
+                    spawn_strobe_flash(&mut state.world, secid, SLOWDARK, 1);
                 }
                 13 => {
-                    spawn_strobe_flash(state, secid, FASTDARK, 1);
+                    spawn_strobe_flash(&mut state.world, secid, FASTDARK, 1);
                 }
                 14 => {
                     spawn_door_raise_in5_mins(
-                        &mut state.p_doors,
-                        &mut state.p_setup,
-                        &mut state.p_tick,
+                        &mut state.world.p_doors,
+                        &mut state.world.p_setup,
+                        &mut state.world.p_tick,
                         secid,
                     );
                 }
                 17 => {
                     spawn_fire_flicker(
-                        &mut state.p_lights,
-                        &mut state.p_setup,
-                        &mut state.p_tick,
+                        &mut state.world.p_lights,
+                        &mut state.world.p_setup,
+                        &mut state.world.p_tick,
                         secid,
                     );
                 }
@@ -1321,23 +1325,24 @@ pub fn spawn_specials(state: &mut GameState) {
             }
         }
     }
-    state.p_spec.numlinespecials = 0;
-    for i in 0..state.p_setup.numlines {
-        if state.p_setup.lines[i as usize].special as i32 == 48 {
-            if state.p_spec.numlinespecials as i32 >= MAXLINEANIMS {
+    state.world.p_spec.numlinespecials = 0;
+    for i in 0..state.world.p_setup.numlines {
+        if state.world.p_setup.lines[i as usize].special as i32 == 48 {
+            if state.world.p_spec.numlinespecials as i32 >= MAXLINEANIMS {
                 error("Too many scrolling wall linedefs! (Vanilla limit is 64)");
             }
-            state.p_spec.linespeciallist[state.p_spec.numlinespecials as usize] = LineId(i as u32);
-            state.p_spec.numlinespecials += 1;
+            state.world.p_spec.linespeciallist[state.world.p_spec.numlinespecials as usize] =
+                LineId(i as u32);
+            state.world.p_spec.numlinespecials += 1;
         }
     }
     for i in 0..(MAXCEILINGS as usize) {
-        state.p_ceilng.activeceilings[i] = None;
+        state.world.p_ceilng.activeceilings[i] = None;
     }
     for i in 0..(MAXPLATS as usize) {
-        state.p_plats.activeplats[i] = None;
+        state.world.p_plats.activeplats[i] = None;
     }
     for i in 0..(MAXBUTTONS as usize) {
-        state.p_switch.buttonlist[i] = EMPTY_BUTTON;
+        state.world.p_switch.buttonlist[i] = EMPTY_BUTTON;
     }
 }

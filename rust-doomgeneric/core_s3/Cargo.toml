@@ -34,6 +34,8 @@ embedded-hal = { version = "1.0.0", default-features = false }
 rust_doomgeneric = { path = "../engine" }
 core_s3_protocol = { path = "../core_s3_protocol" }
 core_s3_dhcp = { path = "../core_s3_dhcp" }
+core_s3_audio = { path = "../core_s3_audio" }
+core_s3_ws = { path = "../core_s3_ws" }
 # Wi-Fi input. esp-radio needs the esp-rtos scheduler underneath, and embassy-net for TCP.
 esp-radio = { version = "=1.0.0-beta.0", default-features = false, features = ["esp32s3", "wifi", "unstable", "esp-alloc"] }
 esp-rtos = { version = "=0.3.0", features = ["esp32s3", "embassy", "esp-radio", "esp-alloc"] }
@@ -41,7 +43,25 @@ embassy-executor = { version = "0.10", default-features = false }
 embassy-net = { version = "0.9", default-features = false, features = ["tcp", "udp", "dhcpv4", "medium-ethernet"] }
 embassy-sync = "0.8"
 embassy-time = "0.5"
+embassy-futures = "0.1"
 static_cell = "2.1"
+# The engine's OPL2 emulator, from the local copy (see ../third_party/oplon/LOCAL_CHANGES.md): with
+# `iram` its hot loop and tables sit in internal RAM instead of behind the flash cache, which the
+# game core shares (about 2 fps of the game's 28 otherwise).
+oplon = { version = "1.0.0", default-features = false, features = ["iram"] }
+
+[features]
+# Input-latency probes (see src/lagprobe.rs): `--features lagprobe` prints scheduling and key-queue
+# latencies every 5 s, `lagprobe-keys` also injects synthetic key events. Off in normal builds.
+lagprobe = []
+lagprobe-keys = ["lagprobe"]
+
+[patch.crates-io]
+oplon = { path = "../third_party/oplon" }
+
+# Compresses the web page at build time (host only).
+[build-dependencies]
+flate2 = "1"
 
 [profile.dev]
 # Debug builds are too slow (and too big) to be useful on the device.

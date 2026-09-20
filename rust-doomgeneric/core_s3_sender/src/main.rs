@@ -18,8 +18,8 @@ use crossterm::event::{
     self, Event, KeyCode, KeyEventKind, KeyModifiers, KeyboardEnhancementFlags,
     PopKeyboardEnhancementFlags, PushKeyboardEnhancementFlags,
 };
-use crossterm::terminal::{self, disable_raw_mode, enable_raw_mode};
 use crossterm::execute;
+use crossterm::terminal::{self, disable_raw_mode, enable_raw_mode};
 use std::io::{self, Write};
 use std::net::TcpStream;
 use std::process::ExitCode;
@@ -72,7 +72,9 @@ fn parse_args() -> Result<Args, String> {
     while let Some(arg) = args.next() {
         if arg == "--hold-ms" {
             let value = args.next().ok_or("--hold-ms needs a value")?;
-            let ms = value.parse().map_err(|_| format!("bad --hold-ms value: {value}"))?;
+            let ms = value
+                .parse()
+                .map_err(|_| format!("bad --hold-ms value: {value}"))?;
             hold = Duration::from_millis(ms);
         } else if address.is_none() {
             address = Some(with_default_port(&arg));
@@ -98,16 +100,26 @@ fn run(args: &Args) -> io::Result<()> {
     let result = (|| -> io::Result<()> {
         loop {
             if event::poll(POLL_INTERVAL)? {
-                let Event::Key(key) = event::read()? else { continue };
+                let Event::Key(key) = event::read()? else {
+                    continue;
+                };
                 if key.modifiers.contains(KeyModifiers::CONTROL) && key.code == KeyCode::Char('c') {
                     return Ok(());
                 }
                 if key.kind == KeyEventKind::Press && key.code == KeyCode::Char('r') {
                     run_on = !run_on;
-                    send(&mut stream, KeyEvent { command: Command::Run, pressed: run_on })?;
+                    send(
+                        &mut stream,
+                        KeyEvent {
+                            command: Command::Run,
+                            pressed: run_on,
+                        },
+                    )?;
                     continue;
                 }
-                let Some(command) = command_for(key.code) else { continue };
+                let Some(command) = command_for(key.code) else {
+                    continue;
+                };
                 if terminal.reports_releases {
                     match key.kind {
                         KeyEventKind::Press => send(&mut stream, KeyEvent::press(command))?,

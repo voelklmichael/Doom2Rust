@@ -219,9 +219,9 @@ pub fn try_find_wadby_name(
     find_wadby_name(state, fs, filename).unwrap_or_else(|| filename.to_string())
 }
 pub fn find_iwad(state: &mut GameState, mask: i32, mission: &mut GameMission) -> String {
-    if let Some(iwadparm) = check_parm_with_args(&state.m_argv, "-iwad", 1) {
-        let iwadfile = state.m_argv.myargv[iwadparm + 1].as_str().to_string();
-        let result = find_wadby_name(&mut state.d_iwad, &*state.fs, &iwadfile);
+    if let Some(iwadparm) = check_parm_with_args(&state.game.m_argv, "-iwad", 1) {
+        let iwadfile = state.game.m_argv.myargv[iwadparm + 1].as_str().to_string();
+        let result = find_wadby_name(&mut state.game.d_iwad, &*state.assets.fs, &iwadfile);
         let Some(result) = result else {
             error(&format!("IWAD file '{iwadfile}' not found!"));
         };
@@ -229,14 +229,18 @@ pub fn find_iwad(state: &mut GameState, mask: i32, mission: &mut GameMission) ->
         result
     } else {
         doom_println!(
-            state.platform,
+            state.io.platform,
             "-iwad not specified, trying a few iwad names"
         );
-        build_iwad_dir_list(&mut state.d_iwad);
-        for dir in &state.d_iwad.iwad_dirs {
-            if let Some(found) =
-                search_directory_for_iwad(&*state.fs, &mut *state.platform, dir, mask, mission)
-            {
+        build_iwad_dir_list(&mut state.game.d_iwad);
+        for dir in &state.game.d_iwad.iwad_dirs {
+            if let Some(found) = search_directory_for_iwad(
+                &*state.assets.fs,
+                &mut *state.io.platform,
+                dir,
+                mask,
+                mission,
+            ) {
                 return found;
             }
         }
