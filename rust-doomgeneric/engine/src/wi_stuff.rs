@@ -27,14 +27,14 @@ pub struct WiStuffState {
     pub epsd2animinfo: [Anim; 6],
     pub numanims: [i32; 4],
     pub acceleratestage: bool,
-    pub me: i32,
+    pub me: usize,
     pub state: StateEnum,
     pub cnt: i32,
     pub bcnt: i32,
     pub firstrefresh: bool,
-    pub cnt_kills: [i32; 4],
-    pub cnt_items: [i32; 4],
-    pub cnt_secret: [i32; 4],
+    pub cnt_kills: [i32; MAXPLAYERS],
+    pub cnt_items: [i32; MAXPLAYERS],
+    pub cnt_secret: [i32; MAXPLAYERS],
     pub cnt_time: i32,
     pub cnt_par: i32,
     pub cnt_pause: i32,
@@ -60,15 +60,15 @@ pub struct WiStuffState {
     pub total: i32,
     pub star: i32,
     pub bstar: i32,
-    pub p: [i32; 4],
-    pub bp: [i32; 4],
+    pub p: [i32; MAXPLAYERS],
+    pub bp: [i32; MAXPLAYERS],
     pub lnames: Vec<i32>,
     pub background: i32,
     pub snl_pointeron: bool,
     pub dm_state: i32,
-    pub dm_frags: [[i32; 4]; 4],
-    pub dm_totals: [i32; 4],
-    pub cnt_frags: [i32; 4],
+    pub dm_frags: [[i32; MAXPLAYERS]; MAXPLAYERS],
+    pub dm_totals: [i32; MAXPLAYERS],
+    pub cnt_frags: [i32; MAXPLAYERS],
     pub dofrags: bool,
     pub ng_state: i32,
     pub sp_state: i32,
@@ -425,9 +425,9 @@ impl WiStuffState {
             cnt: 0,
             bcnt: 0,
             firstrefresh: false,
-            cnt_kills: [0; 4],
-            cnt_items: [0; 4],
-            cnt_secret: [0; 4],
+            cnt_kills: [0; MAXPLAYERS],
+            cnt_items: [0; MAXPLAYERS],
+            cnt_secret: [0; MAXPLAYERS],
             cnt_time: 0,
             cnt_par: 0,
             cnt_pause: 0,
@@ -453,15 +453,15 @@ impl WiStuffState {
             total: -1,
             star: -1,
             bstar: -1,
-            p: [-1; 4],
-            bp: [-1; 4],
+            p: [-1; MAXPLAYERS],
+            bp: [-1; MAXPLAYERS],
             lnames: Vec::new(),
             background: -1,
             snl_pointeron: false,
             dm_state: 0,
-            dm_frags: [[0; 4]; 4],
-            dm_totals: [0; 4],
-            cnt_frags: [0; 4],
+            dm_frags: [[0; MAXPLAYERS]; MAXPLAYERS],
+            dm_totals: [0; MAXPLAYERS],
+            cnt_frags: [0; MAXPLAYERS],
             dofrags: false,
             ng_state: 0,
             sp_state: 0,
@@ -485,7 +485,7 @@ pub struct WbPlayerStruct {
     pub sitems: i32,
     pub ssecret: i32,
     pub stime: i32,
-    pub frags: [i32; 4],
+    pub frags: [i32; MAXPLAYERS],
     pub score: i32,
 }
 #[derive(Copy, Clone)]
@@ -499,8 +499,8 @@ pub struct WbStartStruct {
     pub maxsecret: i32,
     pub maxfrags: i32,
     pub partime: i32,
-    pub pnum: i32,
-    pub plyr: [WbPlayerStruct; 4],
+    pub pnum: usize,
+    pub plyr: [WbPlayerStruct; MAXPLAYERS],
 }
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum StateEnum {
@@ -944,14 +944,14 @@ pub fn draw_no_state(state: &mut GameState) {
     state.ui.wi_stuff.snl_pointeron = true;
     draw_show_next_loc(state);
 }
-pub fn frag_sum(state: &mut GameState, playernum: i32) -> i32 {
+pub fn frag_sum(state: &mut GameState, playernum: usize) -> i32 {
     let mut total: i32 = 0;
     for i in 0..MAXPLAYERS {
-        if state.game.g_game.playeringame[i as usize] && i != playernum {
-            total += state.plyr_index(playernum).frags[i as usize];
+        if state.game.g_game.playeringame[i] && i != playernum {
+            total += state.plyr_index(playernum).frags[i];
         }
     }
-    total -= state.plyr_index(playernum).frags[playernum as usize];
+    total -= state.plyr_index(playernum).frags[playernum];
     total
 }
 pub fn init_deathmatch_stats(state: &mut GameState) {
@@ -959,9 +959,9 @@ pub fn init_deathmatch_stats(state: &mut GameState) {
     state.ui.wi_stuff.acceleratestage = false;
     state.ui.wi_stuff.dm_state = 1;
     state.ui.wi_stuff.cnt_pause = TICRATE;
-    for i in 0..(MAXPLAYERS as usize) {
+    for i in 0..MAXPLAYERS {
         if state.game.g_game.playeringame[i] {
-            for j in 0..(MAXPLAYERS as usize) {
+            for j in 0..MAXPLAYERS {
                 if state.game.g_game.playeringame[j] {
                     state.ui.wi_stuff.dm_frags[i][j] = 0;
                 }
@@ -976,13 +976,13 @@ pub fn update_deathmatch_stats(state: &mut GameState) {
     if state.ui.wi_stuff.acceleratestage && state.ui.wi_stuff.dm_state != 4 {
         state.ui.wi_stuff.acceleratestage = false;
         for i in 0..MAXPLAYERS {
-            if state.game.g_game.playeringame[i as usize] {
-                for j in 0..(MAXPLAYERS as usize) {
+            if state.game.g_game.playeringame[i] {
+                for j in 0..MAXPLAYERS {
                     if state.game.g_game.playeringame[j] {
-                        state.ui.wi_stuff.dm_frags[i as usize][j] = state.plyr_index(i).frags[j];
+                        state.ui.wi_stuff.dm_frags[i][j] = state.plyr_index(i).frags[j];
                     }
                 }
-                state.ui.wi_stuff.dm_totals[i as usize] = frag_sum(state, i);
+                state.ui.wi_stuff.dm_totals[i] = frag_sum(state, i);
             }
         }
         s_start_sound(state, SoundOrigin::None, SfxName::Barexp);
@@ -994,23 +994,23 @@ pub fn update_deathmatch_stats(state: &mut GameState) {
         }
         let mut stillticking: bool = false;
         for i in 0..MAXPLAYERS {
-            if state.game.g_game.playeringame[i as usize] {
-                for j in 0..(MAXPLAYERS as usize) {
+            if state.game.g_game.playeringame[i] {
+                for j in 0..MAXPLAYERS {
                     if state.game.g_game.playeringame[j]
-                        && state.ui.wi_stuff.dm_frags[i as usize][j] != state.plyr_index(i).frags[j]
+                        && state.ui.wi_stuff.dm_frags[i][j] != state.plyr_index(i).frags[j]
                     {
                         if state.plyr_index(i).frags[j] < 0 {
-                            state.ui.wi_stuff.dm_frags[i as usize][j] -= 1;
+                            state.ui.wi_stuff.dm_frags[i][j] -= 1;
                         } else {
-                            state.ui.wi_stuff.dm_frags[i as usize][j] += 1;
+                            state.ui.wi_stuff.dm_frags[i][j] += 1;
                         }
-                        let frag = &mut state.ui.wi_stuff.dm_frags[i as usize][j];
+                        let frag = &mut state.ui.wi_stuff.dm_frags[i][j];
                         *frag = (*frag).clamp(-99, 99);
                         stillticking = true;
                     }
                 }
-                state.ui.wi_stuff.dm_totals[i as usize] = frag_sum(state, i);
-                let total = &mut state.ui.wi_stuff.dm_totals[i as usize];
+                state.ui.wi_stuff.dm_totals[i] = frag_sum(state, i);
+                let total = &mut state.ui.wi_stuff.dm_totals[i];
                 *total = (*total).clamp(-99, 99);
             }
         }
@@ -1069,11 +1069,11 @@ pub fn draw_deathmatch_stats(state: &mut GameState) {
     let mut x: i32 = DM_MATRIXX + DM_SPACINGX;
     let mut y: i32 = DM_MATRIXY;
     for i in 0..MAXPLAYERS {
-        if state.game.g_game.playeringame[i as usize] {
+        if state.game.g_game.playeringame[i] {
             let p_patch = cache_patch_num(
                 &*state.assets.fs,
                 &mut state.assets.w_wad,
-                state.ui.wi_stuff.p[i as usize],
+                state.ui.wi_stuff.p[i],
             );
             let dest_screen = Screen::Video;
             draw_patch(
@@ -1130,10 +1130,10 @@ pub fn draw_deathmatch_stats(state: &mut GameState) {
         state.ui.wi_stuff.num[0],
     );
     let w: i32 = zero_patch.width();
-    for i in 0..(MAXPLAYERS as usize) {
+    for i in 0..MAXPLAYERS {
         x = DM_MATRIXX + DM_SPACINGX;
         if state.game.g_game.playeringame[i] {
-            for j in 0..(MAXPLAYERS as usize) {
+            for j in 0..MAXPLAYERS {
                 if state.game.g_game.playeringame[j] {
                     let dm_frags = state.ui.wi_stuff.dm_frags[i][j];
                     draw_num(state, x + w, y, dm_frags, 2);
@@ -1153,11 +1153,11 @@ pub fn init_netgame_stats(state: &mut GameState) {
     state.ui.wi_stuff.cnt_pause = TICRATE;
     let mut total_frags = 0;
     for i in 0..MAXPLAYERS {
-        if state.game.g_game.playeringame[i as usize] {
-            state.ui.wi_stuff.cnt_frags[i as usize] = 0;
-            state.ui.wi_stuff.cnt_secret[i as usize] = state.ui.wi_stuff.cnt_frags[i as usize];
-            state.ui.wi_stuff.cnt_items[i as usize] = state.ui.wi_stuff.cnt_secret[i as usize];
-            state.ui.wi_stuff.cnt_kills[i as usize] = state.ui.wi_stuff.cnt_items[i as usize];
+        if state.game.g_game.playeringame[i] {
+            state.ui.wi_stuff.cnt_frags[i] = 0;
+            state.ui.wi_stuff.cnt_secret[i] = state.ui.wi_stuff.cnt_frags[i];
+            state.ui.wi_stuff.cnt_items[i] = state.ui.wi_stuff.cnt_secret[i];
+            state.ui.wi_stuff.cnt_kills[i] = state.ui.wi_stuff.cnt_items[i];
             total_frags += frag_sum(state, i);
         }
     }
@@ -1169,15 +1169,15 @@ pub fn update_netgame_stats(state: &mut GameState) {
     if state.ui.wi_stuff.acceleratestage && state.ui.wi_stuff.ng_state != 10 {
         state.ui.wi_stuff.acceleratestage = false;
         for i in 0..MAXPLAYERS {
-            if state.game.g_game.playeringame[i as usize] {
-                state.ui.wi_stuff.cnt_kills[i as usize] =
+            if state.game.g_game.playeringame[i] {
+                state.ui.wi_stuff.cnt_kills[i] =
                     state.plyr_index(i).skills * 100 / state.wbs().maxkills;
-                state.ui.wi_stuff.cnt_items[i as usize] =
+                state.ui.wi_stuff.cnt_items[i] =
                     state.plyr_index(i).sitems * 100 / state.wbs().maxitems;
-                state.ui.wi_stuff.cnt_secret[i as usize] =
+                state.ui.wi_stuff.cnt_secret[i] =
                     state.plyr_index(i).ssecret * 100 / state.wbs().maxsecret;
                 if state.ui.wi_stuff.dofrags {
-                    state.ui.wi_stuff.cnt_frags[i as usize] = frag_sum(state, i);
+                    state.ui.wi_stuff.cnt_frags[i] = frag_sum(state, i);
                 }
             }
         }
@@ -1190,12 +1190,12 @@ pub fn update_netgame_stats(state: &mut GameState) {
         }
         let mut stillticking: bool = false;
         for i in 0..MAXPLAYERS {
-            if state.game.g_game.playeringame[i as usize] {
-                state.ui.wi_stuff.cnt_kills[i as usize] += 2;
-                if state.ui.wi_stuff.cnt_kills[i as usize]
+            if state.game.g_game.playeringame[i] {
+                state.ui.wi_stuff.cnt_kills[i] += 2;
+                if state.ui.wi_stuff.cnt_kills[i]
                     >= state.plyr_index(i).skills * 100 / state.wbs().maxkills
                 {
-                    state.ui.wi_stuff.cnt_kills[i as usize] =
+                    state.ui.wi_stuff.cnt_kills[i] =
                         state.plyr_index(i).skills * 100 / state.wbs().maxkills;
                 } else {
                     stillticking = true;
@@ -1212,12 +1212,12 @@ pub fn update_netgame_stats(state: &mut GameState) {
         }
         let mut stillticking: bool = false;
         for i in 0..MAXPLAYERS {
-            if state.game.g_game.playeringame[i as usize] {
-                state.ui.wi_stuff.cnt_items[i as usize] += 2;
-                if state.ui.wi_stuff.cnt_items[i as usize]
+            if state.game.g_game.playeringame[i] {
+                state.ui.wi_stuff.cnt_items[i] += 2;
+                if state.ui.wi_stuff.cnt_items[i]
                     >= state.plyr_index(i).sitems * 100 / state.wbs().maxitems
                 {
-                    state.ui.wi_stuff.cnt_items[i as usize] =
+                    state.ui.wi_stuff.cnt_items[i] =
                         state.plyr_index(i).sitems * 100 / state.wbs().maxitems;
                 } else {
                     stillticking = true;
@@ -1234,12 +1234,12 @@ pub fn update_netgame_stats(state: &mut GameState) {
         }
         let mut stillticking: bool = false;
         for i in 0..MAXPLAYERS {
-            if state.game.g_game.playeringame[i as usize] {
-                state.ui.wi_stuff.cnt_secret[i as usize] += 2;
-                if state.ui.wi_stuff.cnt_secret[i as usize]
+            if state.game.g_game.playeringame[i] {
+                state.ui.wi_stuff.cnt_secret[i] += 2;
+                if state.ui.wi_stuff.cnt_secret[i]
                     >= state.plyr_index(i).ssecret * 100 / state.wbs().maxsecret
                 {
-                    state.ui.wi_stuff.cnt_secret[i as usize] =
+                    state.ui.wi_stuff.cnt_secret[i] =
                         state.plyr_index(i).ssecret * 100 / state.wbs().maxsecret;
                 } else {
                     stillticking = true;
@@ -1256,11 +1256,11 @@ pub fn update_netgame_stats(state: &mut GameState) {
         }
         let mut stillticking: bool = false;
         for i in 0..MAXPLAYERS {
-            if state.game.g_game.playeringame[i as usize] {
-                state.ui.wi_stuff.cnt_frags[i as usize] += 1;
+            if state.game.g_game.playeringame[i] {
+                state.ui.wi_stuff.cnt_frags[i] += 1;
                 let fsum: i32 = frag_sum(state, i);
-                if state.ui.wi_stuff.cnt_frags[i as usize] >= fsum {
-                    state.ui.wi_stuff.cnt_frags[i as usize] = fsum;
+                if state.ui.wi_stuff.cnt_frags[i] >= fsum {
+                    state.ui.wi_stuff.cnt_frags[i] = fsum;
                 } else {
                     stillticking = true;
                 }
@@ -1363,12 +1363,12 @@ pub fn draw_netgame_stats(state: &mut GameState) {
     }
     let mut y: i32 = NG_STATSY + kills_patch.height();
     for i in 0..MAXPLAYERS {
-        if state.game.g_game.playeringame[i as usize] {
+        if state.game.g_game.playeringame[i] {
             let mut x: i32 = 32 + star_width / 2 + 32 * i32::from(!state.ui.wi_stuff.dofrags);
             let p_patch = cache_patch_num(
                 &*state.assets.fs,
                 &mut state.assets.w_wad,
-                state.ui.wi_stuff.p[i as usize],
+                state.ui.wi_stuff.p[i],
             );
             let dest_screen = Screen::Video;
             draw_patch(state, dest_screen, x - p_patch.width(), y, &p_patch);
@@ -1377,17 +1377,17 @@ pub fn draw_netgame_stats(state: &mut GameState) {
                 draw_patch(state, dest_screen, x - p_patch.width(), y, &star_patch);
             }
             x += NG_SPACINGX;
-            let cnt_kills = state.ui.wi_stuff.cnt_kills[i as usize];
+            let cnt_kills = state.ui.wi_stuff.cnt_kills[i];
             draw_percent(state, x - pwidth, y + 10, cnt_kills);
             x += NG_SPACINGX;
-            let cnt_items = state.ui.wi_stuff.cnt_items[i as usize];
+            let cnt_items = state.ui.wi_stuff.cnt_items[i];
             draw_percent(state, x - pwidth, y + 10, cnt_items);
             x += NG_SPACINGX;
-            let cnt_secret = state.ui.wi_stuff.cnt_secret[i as usize];
+            let cnt_secret = state.ui.wi_stuff.cnt_secret[i];
             draw_percent(state, x - pwidth, y + 10, cnt_secret);
             x += NG_SPACINGX;
             if state.ui.wi_stuff.dofrags {
-                let cnt_frags = state.ui.wi_stuff.cnt_frags[i as usize];
+                let cnt_frags = state.ui.wi_stuff.cnt_frags[i];
                 draw_num(state, x, y + 10, cnt_frags, -1);
             }
             y += WI_SPACINGY;
@@ -1570,7 +1570,7 @@ pub fn draw_stats(state: &mut GameState) {
     }
 }
 pub fn check_for_accelerate(g_game: &mut GGameState, wi_stuff: &mut WiStuffState) {
-    for i in 0..(MAXPLAYERS as usize) {
+    for i in 0..MAXPLAYERS {
         if g_game.playeringame[i] {
             let player = &g_game.players[i];
             if player.cmd.buttons & BT_ATTACK != 0 {
@@ -1677,7 +1677,7 @@ fn load_unload_data(state: &mut GameState, callback: LoadCallback) {
     state.ui.wi_stuff.killers = callback(state, "WIKILRS");
     state.ui.wi_stuff.victims = callback(state, "WIVCTMS");
     state.ui.wi_stuff.total = callback(state, "WIMSTT");
-    for i in 0..MAXPLAYERS as usize {
+    for i in 0..MAXPLAYERS {
         state.ui.wi_stuff.p[i] = callback(state, &format!("STPB{i}"));
         state.ui.wi_stuff.bp[i] = callback(state, &format!("WIBP{}", i + 1));
     }

@@ -407,7 +407,7 @@ pub fn bind_variables(m_config: &mut MConfigState, m_controls: &mut MControlsSta
     bind_weapon_controls(m_config);
     bind_map_controls(m_config);
     bind_menu_controls(m_config);
-    bind_chat_controls(m_config, MAXPLAYERS as u32);
+    bind_chat_controls(m_config, MAXPLAYERS);
     m_controls.key_multi_msgplayer[0] = HUSTR_KEYGREEN;
     m_controls.key_multi_msgplayer[1] = HUSTR_KEYINDIGO;
     m_controls.key_multi_msgplayer[2] = HUSTR_KEYBROWN;

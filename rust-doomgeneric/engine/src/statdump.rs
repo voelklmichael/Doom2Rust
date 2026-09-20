@@ -1,3 +1,4 @@
+use crate::doomdef::MAXPLAYERS;
 use crate::g_game::GGameState;
 use crate::game_state::GameState;
 use crate::options::Options;
@@ -36,9 +37,9 @@ impl StatDumpState {
                     sitems: 0,
                     ssecret: 0,
                     stime: 0,
-                    frags: [0; 4],
+                    frags: [0; MAXPLAYERS],
                     score: 0,
-                }; 4],
+                }; MAXPLAYERS],
             }; 32],
             num_captured_stats: 0,
         }

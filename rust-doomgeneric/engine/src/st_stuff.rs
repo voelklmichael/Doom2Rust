@@ -773,10 +773,10 @@ pub fn update_widgets(g_game: &mut GGameState, p_mobj: &PMobjState, st_stuff: &m
     st_stuff.st_fragson = g_game.deathmatch != 0 && st_stuff.st_statusbaron;
     st_stuff.st_fragscount = 0;
     for i in 0..MAXPLAYERS {
-        if i == g_game.consoleplayer.as_i32() {
-            st_stuff.st_fragscount -= g_game.player_mut(st_stuff.plyr).frags[i as usize];
+        if i == g_game.consoleplayer.slot() {
+            st_stuff.st_fragscount -= g_game.player_mut(st_stuff.plyr).frags[i];
         } else {
-            st_stuff.st_fragscount += g_game.player_mut(st_stuff.plyr).frags[i as usize];
+            st_stuff.st_fragscount += g_game.player_mut(st_stuff.plyr).frags[i];
         }
     }
     st_stuff.st_msgcounter -= 1;

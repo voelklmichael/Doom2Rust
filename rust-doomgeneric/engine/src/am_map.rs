@@ -584,7 +584,7 @@ pub fn am_init_variables(state: &mut GameState) {
     } else {
         state.ui.am_map.plr = PlayerId(0);
         for pnum in 0..MAXPLAYERS {
-            if state.game.g_game.playeringame[pnum as usize] {
+            if state.game.g_game.playeringame[pnum] {
                 state.ui.am_map.plr = PlayerId(pnum as u8);
                 break;
             }
@@ -1241,12 +1241,12 @@ pub fn draw_players(state: &mut GameState) {
     }
     for i in 0..MAXPLAYERS {
         their_color += 1;
-        let p = &state.game.g_game.players[i as usize];
+        let p = &state.game.g_game.players[i];
         let (p_invisibility, p_mo_id) = (p.powers[PowerType::Invisibility], p.mo);
         if !(state.game.g_game.deathmatch != 0
             && !state.game.g_game.singledemo
             && PlayerId(i as u8) != state.ui.am_map.plr)
-            && state.game.g_game.playeringame[i as usize]
+            && state.game.g_game.playeringame[i]
         {
             let color: i32 = if p_invisibility != 0 {
                 246

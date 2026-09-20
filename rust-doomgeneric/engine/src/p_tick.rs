@@ -454,7 +454,7 @@ pub fn p_ticker(state: &mut GameState) {
         return;
     }
     for i in 0..MAXPLAYERS {
-        if state.game.g_game.playeringame[i as usize] {
+        if state.game.g_game.playeringame[i] {
             player_think(state, PlayerId(i as u8));
         }
     }

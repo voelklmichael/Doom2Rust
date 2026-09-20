@@ -499,14 +499,14 @@ pub fn bind_menu_controls(m_config: &mut MConfigState) {
     });
     bind_variable_int(m_config, "key_spy", |s| &mut s.game.m_controls.key_spy);
 }
-pub fn bind_chat_controls(m_config: &mut MConfigState, num_players: u32) {
+pub fn bind_chat_controls(m_config: &mut MConfigState, num_players: usize) {
     bind_variable_int(m_config, "key_multi_msg", |s| {
         &mut s.game.m_controls.key_multi_msg
     });
     for i in 0..num_players {
-        let name = format!("key_multi_msgplayer{}", i.wrapping_add(1_u32));
+        let name = format!("key_multi_msgplayer{}", i + 1);
         bind_variable_int(m_config, &name, move |s| {
-            &mut s.game.m_controls.key_multi_msgplayer[i as usize]
+            &mut s.game.m_controls.key_multi_msgplayer[i]
         });
     }
 }

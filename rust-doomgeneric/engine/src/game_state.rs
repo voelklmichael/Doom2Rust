@@ -281,8 +281,8 @@ impl GameState {
         &mut self.game.g_game.wminfo
     }
 
-    pub fn plyr_index(&mut self, index: i32) -> &mut crate::wi_stuff::WbPlayerStruct {
-        &mut self.game.g_game.wminfo.plyr[index as usize]
+    pub fn plyr_index(&mut self, index: usize) -> &mut crate::wi_stuff::WbPlayerStruct {
+        &mut self.game.g_game.wminfo.plyr[index]
     }
 }
 
