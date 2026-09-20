@@ -50,7 +50,7 @@ Measured on the stack tip (a by-name transitive closure of "who passes `state` t
 direct aggregate use):
 
 - Only 46 of the remaining state-taking functions transitively need a single aggregate; 65 need
-  two, 89 need three, and 130 need five or more.
+  two, 89 need three, 52 need four, and 160 need five or more.
 - **Sound is the linchpin.** `s_start_sound` needs assets, audio, game, render and world at once
   (origin position, listener, `gamemap`, `point_to_angle2`, lump loading, the platform mixer), and
   it is called from ~155 sites in door/floor/plat/enemy/switch code that otherwise touch only
