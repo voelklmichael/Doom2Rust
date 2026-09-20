@@ -145,12 +145,17 @@ impl Command {
 
     /// The typed character for the ASCII byte `byte`, if it is printable.
     pub fn typed(byte: u8) -> Option<Self> {
-        (FIRST_CHAR..=LAST_CHAR).contains(&byte).then_some(Self::Char(byte))
+        (FIRST_CHAR..=LAST_CHAR)
+            .contains(&byte)
+            .then_some(Self::Char(byte))
     }
 
     /// The command with wire code `code`, if there is one.
     pub fn from_code(code: u8) -> Option<Self> {
-        Self::ALL.get(usize::from(code)).copied().or_else(|| Self::typed(code))
+        Self::ALL
+            .get(usize::from(code))
+            .copied()
+            .or_else(|| Self::typed(code))
     }
 
     /// The wire code, in bits 6..=0.
@@ -193,11 +198,17 @@ pub struct KeyEvent {
 
 impl KeyEvent {
     pub fn press(command: Command) -> Self {
-        Self { command, pressed: true }
+        Self {
+            command,
+            pressed: true,
+        }
     }
 
     pub fn release(command: Command) -> Self {
-        Self { command, pressed: false }
+        Self {
+            command,
+            pressed: false,
+        }
     }
 
     pub fn encode(self) -> u8 {
@@ -269,7 +280,10 @@ pub struct PollGate {
 
 impl PollGate {
     pub const fn new() -> Self {
-        Self { held_back: None, pressed_this_poll: 0 }
+        Self {
+            held_back: None,
+            pressed_this_poll: 0,
+        }
     }
 
     /// The next event for the game, or `None` to end this poll.
@@ -326,7 +340,11 @@ mod tests {
     fn every_printable_character_round_trips_as_press_and_release() {
         for byte in b' '..=b'~' {
             let command = Command::typed(byte).unwrap();
-            assert_eq!(command.code(), byte, "the code of a character is its ASCII value");
+            assert_eq!(
+                command.code(),
+                byte,
+                "the code of a character is its ASCII value"
+            );
             for pressed in [true, false] {
                 let event = KeyEvent { command, pressed };
                 assert_eq!(KeyEvent::decode(event.encode()), Some(event));
@@ -380,7 +398,10 @@ mod tests {
         let releases: Vec<_> = held.take_releases().collect();
         assert_eq!(
             releases,
-            [KeyEvent::release(Command::Forward), KeyEvent::release(Command::Fire)]
+            [
+                KeyEvent::release(Command::Forward),
+                KeyEvent::release(Command::Fire)
+            ]
         );
         assert_eq!(held.take_releases().count(), 0);
     }
@@ -420,11 +441,28 @@ mod tests {
     #[test]
     fn other_messages_are_not_a_frame_rate() {
         for message in [
-            &b""[..], b"fps", b"fps ", b"fps 28", b"fps 28.", b"fps .4", b"fps 28.44", b"fps -1.0",
-            b"fps 2x.4", b"fps 28,4", b"FPS 28.4", b"fps 28.4 ", b"ping", b"fps 99999999999.0",
+            &b""[..],
+            b"fps",
+            b"fps ",
+            b"fps 28",
+            b"fps 28.",
+            b"fps .4",
+            b"fps 28.44",
+            b"fps -1.0",
+            b"fps 2x.4",
+            b"fps 28,4",
+            b"FPS 28.4",
+            b"fps 28.4 ",
+            b"ping",
+            b"fps 99999999999.0",
             b"fps 429496729.6",
         ] {
-            assert_eq!(decode_fps(message), None, "{:?}", core::str::from_utf8(message));
+            assert_eq!(
+                decode_fps(message),
+                None,
+                "{:?}",
+                core::str::from_utf8(message)
+            );
         }
     }
 
@@ -448,7 +486,10 @@ mod tests {
     #[test]
     fn a_tap_that_arrived_whole_is_seen_held_for_a_poll() {
         let mut gate = PollGate::new();
-        let mut queue = std::vec![KeyEvent::press(Command::Fire), KeyEvent::release(Command::Fire)];
+        let mut queue = std::vec![
+            KeyEvent::press(Command::Fire),
+            KeyEvent::release(Command::Fire)
+        ];
         assert_eq!(
             polls(&mut gate, &mut queue, 3),
             [
@@ -463,9 +504,15 @@ mod tests {
     fn a_release_after_an_earlier_poll_goes_straight_through() {
         let mut gate = PollGate::new();
         let mut queue = std::vec![KeyEvent::press(Command::Forward)];
-        assert_eq!(polls(&mut gate, &mut queue, 1), [std::vec![KeyEvent::press(Command::Forward)]]);
+        assert_eq!(
+            polls(&mut gate, &mut queue, 1),
+            [std::vec![KeyEvent::press(Command::Forward)]]
+        );
         queue.push(KeyEvent::release(Command::Forward));
-        assert_eq!(polls(&mut gate, &mut queue, 1), [std::vec![KeyEvent::release(Command::Forward)]]);
+        assert_eq!(
+            polls(&mut gate, &mut queue, 1),
+            [std::vec![KeyEvent::release(Command::Forward)]]
+        );
     }
 
     #[test]
@@ -479,7 +526,10 @@ mod tests {
         assert_eq!(
             polls(&mut gate, &mut queue, 2),
             [
-                std::vec![KeyEvent::press(Command::Fire), KeyEvent::release(Command::Forward)],
+                std::vec![
+                    KeyEvent::press(Command::Fire),
+                    KeyEvent::release(Command::Forward)
+                ],
                 std::vec![KeyEvent::release(Command::Fire)],
             ]
         );
@@ -497,8 +547,14 @@ mod tests {
         assert_eq!(
             polls(&mut gate, &mut queue, 2),
             [
-                std::vec![KeyEvent::press(Command::Char(b'i')), KeyEvent::release(Command::Char(b'i'))],
-                std::vec![KeyEvent::press(Command::Char(b'd')), KeyEvent::release(Command::Char(b'd'))],
+                std::vec![
+                    KeyEvent::press(Command::Char(b'i')),
+                    KeyEvent::release(Command::Char(b'i'))
+                ],
+                std::vec![
+                    KeyEvent::press(Command::Char(b'd')),
+                    KeyEvent::release(Command::Char(b'd'))
+                ],
             ]
         );
     }
@@ -512,7 +568,10 @@ mod tests {
             KeyEvent::press(Command::Use),
             KeyEvent::release(Command::Use),
         ];
-        let seen: Vec<KeyEvent> = polls(&mut gate, &mut queue, 6).into_iter().flatten().collect();
+        let seen: Vec<KeyEvent> = polls(&mut gate, &mut queue, 6)
+            .into_iter()
+            .flatten()
+            .collect();
         assert_eq!(
             seen,
             [

@@ -15,8 +15,7 @@ use core::fmt::Write as _;
 use core_s3_protocol::{encode_fps, HeldKeys, FPS_MESSAGE_MAX};
 use core_s3_ws::{
     accepts_gzip, handshake_response, head_length, parse_request, pong_frame, text_frame, Decoder,
-    Output,
-    Request, CLOSE_FRAME, MAX_CONTROL_PAYLOAD, MAX_HEAD, MAX_TEXT_PAYLOAD,
+    Output, Request, CLOSE_FRAME, MAX_CONTROL_PAYLOAD, MAX_HEAD, MAX_TEXT_PAYLOAD,
 };
 use embassy_futures::select::{select, Either};
 use embassy_net::{
@@ -67,7 +66,13 @@ async fn serve(socket: &mut TcpSocket<'_>, head: &mut [u8; MAX_HEAD]) -> Result<
             break end;
         }
         if length == head.len() {
-            return respond(socket, "431 Request Header Fields Too Large", "text/plain", b"").await;
+            return respond(
+                socket,
+                "431 Request Header Fields Too Large",
+                "text/plain",
+                b"",
+            )
+            .await;
         }
         let read = socket.read(&mut head[length..]).await?;
         if read == 0 {
@@ -77,15 +82,31 @@ async fn serve(socket: &mut TcpSocket<'_>, head: &mut [u8; MAX_HEAD]) -> Result<
     };
     match parse_request(&head[..end]) {
         Request::WebSocket { key } => websocket(socket, key).await,
-        Request::Get { path: "/" | "/index.html" } => {
+        Request::Get {
+            path: "/" | "/index.html",
+        } => {
             if accepts_gzip(&head[..end]) {
-                respond_with(socket, "200 OK", "text/html; charset=utf-8", Some("gzip"), PAGE_GZ)
-                    .await
+                respond_with(
+                    socket,
+                    "200 OK",
+                    "text/html; charset=utf-8",
+                    Some("gzip"),
+                    PAGE_GZ,
+                )
+                .await
             } else {
-                respond(socket, "200 OK", "text/html; charset=utf-8", PAGE.as_bytes()).await
+                respond(
+                    socket,
+                    "200 OK",
+                    "text/html; charset=utf-8",
+                    PAGE.as_bytes(),
+                )
+                .await
             }
         }
-        Request::Get { path: "/favicon.ico" } => respond(socket, "204 No Content", "text/plain", b"").await,
+        Request::Get {
+            path: "/favicon.ico",
+        } => respond(socket, "204 No Content", "text/plain", b"").await,
         Request::Get { .. } => respond(socket, "404 Not Found", "text/plain", b"not found").await,
         Request::Other => respond(socket, "405 Method Not Allowed", "text/plain", b"").await,
     }
@@ -115,7 +136,10 @@ async fn respond_with(
         body.len()
     );
     if let Some(encoding) = encoding {
-        let _ = write!(header, "Content-Encoding: {encoding}\r\nVary: Accept-Encoding\r\n");
+        let _ = write!(
+            header,
+            "Content-Encoding: {encoding}\r\nVary: Accept-Encoding\r\n"
+        );
     }
     let _ = header.push_str("Cache-Control: no-cache\r\nConnection: close\r\n\r\n");
     write_all(socket, header.as_bytes()).await?;
@@ -178,7 +202,9 @@ async fn websocket(socket: &mut TcpSocket<'_>, key: &str) -> Result<(), Error> {
 
 /// Sends the latest frame rate to the browser if the game has measured a new one since `sent`.
 async fn send_fps(socket: &mut TcpSocket<'_>, sent: &mut Option<u16>) -> Result<(), Error> {
-    let Some((counter, tenths)) = platform::fps_sample() else { return Ok(()) };
+    let Some((counter, tenths)) = platform::fps_sample() else {
+        return Ok(());
+    };
     if *sent == Some(counter) {
         return Ok(());
     }

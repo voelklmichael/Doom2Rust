@@ -50,7 +50,10 @@ fn publish_fps(tenths: u64) {
     let counter = (FPS_SAMPLE.load(Ordering::Relaxed) >> 16).wrapping_add(1) & 0xffff;
     // Counter 0 is skipped on wrap-around so a sample is never mistaken for "nothing yet".
     let counter = if counter == 0 { 1 } else { counter };
-    FPS_SAMPLE.store(counter << 16 | tenths.min(u64::from(u16::MAX)) as u32, Ordering::Relaxed);
+    FPS_SAMPLE.store(
+        counter << 16 | tenths.min(u64::from(u16::MAX)) as u32,
+        Ordering::Relaxed,
+    );
 }
 
 fn now_us() -> u64 {
@@ -95,7 +98,10 @@ impl CoreS3Platform {
         let elapsed = end - window.start_us;
         if elapsed >= FPS_WINDOW_US {
             publish_fps(fps_tenths(window.frames, elapsed));
-            *window = FpsWindow { start_us: end, frames: 0 };
+            *window = FpsWindow {
+                start_us: end,
+                frames: 0,
+            };
         }
 
         let stats = &mut self.stats;
@@ -118,7 +124,10 @@ impl CoreS3Platform {
                 (elapsed - stats.present_us) / frames,
                 stats.audio_us / frames,
             );
-            *stats = FrameStats { window_start_us: end, ..FrameStats::default() };
+            *stats = FrameStats {
+                window_start_us: end,
+                ..FrameStats::default()
+            };
         }
     }
 }

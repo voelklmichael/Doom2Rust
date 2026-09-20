@@ -31,19 +31,28 @@ pub enum Request<'a> {
 
 /// Where the request head ends in `bytes` (the index just past the blank line), if it has arrived.
 pub fn head_length(bytes: &[u8]) -> Option<usize> {
-    bytes.windows(4).position(|window| window == b"\r\n\r\n").map(|at| at + 4)
+    bytes
+        .windows(4)
+        .position(|window| window == b"\r\n\r\n")
+        .map(|at| at + 4)
 }
 
 /// Whether a request head (as delimited by [`head_length`]) says the client accepts gzip-compressed
 /// bodies: an `Accept-Encoding` header listing `gzip` (any case) that is not refused with `q=0`.
 pub fn accepts_gzip(head: &[u8]) -> bool {
-    let Ok(head) = core::str::from_utf8(head) else { return false };
+    let Ok(head) = core::str::from_utf8(head) else {
+        return false;
+    };
     head.split("\r\n").skip(1).any(|line| {
-        let Some((name, value)) = line.split_once(':') else { return false };
+        let Some((name, value)) = line.split_once(':') else {
+            return false;
+        };
         name.trim().eq_ignore_ascii_case("accept-encoding")
             && value.split(',').any(|coding| {
                 let mut parts = coding.split(';');
-                let is_gzip = parts.next().is_some_and(|token| token.trim().eq_ignore_ascii_case("gzip"));
+                let is_gzip = parts
+                    .next()
+                    .is_some_and(|token| token.trim().eq_ignore_ascii_case("gzip"));
                 // `q=0`, `q=0.0`, ... mean "not acceptable".
                 let refused = parts.any(|param| {
                     param
@@ -58,12 +67,16 @@ pub fn accepts_gzip(head: &[u8]) -> bool {
 
 /// Parses a request head, as delimited by [`head_length`].
 pub fn parse_request(head: &[u8]) -> Request<'_> {
-    let Ok(head) = core::str::from_utf8(head) else { return Request::Other };
+    let Ok(head) = core::str::from_utf8(head) else {
+        return Request::Other;
+    };
     let mut lines = head.split("\r\n");
     let mut request_line = lines.next().unwrap_or("").split(' ');
-    let (Some("GET"), Some(target), Some(version)) =
-        (request_line.next(), request_line.next(), request_line.next())
-    else {
+    let (Some("GET"), Some(target), Some(version)) = (
+        request_line.next(),
+        request_line.next(),
+        request_line.next(),
+    ) else {
         return Request::Other;
     };
     if !version.starts_with("HTTP/1.") {
@@ -75,13 +88,16 @@ pub fn parse_request(head: &[u8]) -> Request<'_> {
     let mut connection_upgrade = false;
     let mut key = None;
     for line in lines {
-        let Some((name, value)) = line.split_once(':') else { continue };
+        let Some((name, value)) = line.split_once(':') else {
+            continue;
+        };
         let (name, value) = (name.trim(), value.trim());
         if name.eq_ignore_ascii_case("upgrade") {
             upgrade = value.eq_ignore_ascii_case("websocket");
         } else if name.eq_ignore_ascii_case("connection") {
-            connection_upgrade =
-                value.split(',').any(|token| token.trim().eq_ignore_ascii_case("upgrade"));
+            connection_upgrade = value
+                .split(',')
+                .any(|token| token.trim().eq_ignore_ascii_case("upgrade"));
         } else if name.eq_ignore_ascii_case("sec-websocket-key") {
             key = Some(value);
         }
@@ -107,7 +123,9 @@ fn base64(digest: &[u8; 20]) -> [u8; 28] {
     const ALPHABET: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
     let mut out = [b'='; 28];
     for (group, chunk) in digest.chunks(3).enumerate() {
-        let bits = chunk.iter().fold(0u32, |bits, &byte| bits << 8 | u32::from(byte))
+        let bits = chunk
+            .iter()
+            .fold(0u32, |bits, &byte| bits << 8 | u32::from(byte))
             << (8 * (3 - chunk.len()));
         for i in 0..=chunk.len() {
             out[group * 4 + i] = ALPHABET[(bits >> (18 - 6 * i) & 63) as usize];
@@ -181,8 +199,12 @@ enum State {
     /// Waiting for the mask bit and the 7-bit length.
     Length,
     /// Reading the 2-byte extended length; `have` bytes so far.
-    ExtendedLength { have: u8 },
-    MaskKey { have: u8 },
+    ExtendedLength {
+        have: u8,
+    },
+    MaskKey {
+        have: u8,
+    },
     Payload,
     /// A frame that failed; every further byte is ignored.
     Failed,
@@ -271,7 +293,11 @@ impl Decoder {
                 }
             }
             State::Payload => {
-                let byte = if self.masked { byte ^ self.mask[self.seen % 4] } else { byte };
+                let byte = if self.masked {
+                    byte ^ self.mask[self.seen % 4]
+                } else {
+                    byte
+                };
                 if self.opcode == 9 && self.seen < MAX_CONTROL_PAYLOAD {
                     self.ping[self.seen] = byte;
                 }
@@ -331,14 +357,26 @@ impl Decoder {
 mod tests {
     #[test]
     fn accepts_gzip_reads_the_accept_encoding_header() {
-        let head = |line: &str| format!("GET / HTTP/1.1\r\nHost: 192.168.4.1\r\n{line}\r\nAccept: */*\r\n\r\n");
-        assert!(accepts_gzip(head("Accept-Encoding: gzip, deflate, br").as_bytes()));
+        let head = |line: &str| {
+            format!("GET / HTTP/1.1\r\nHost: 192.168.4.1\r\n{line}\r\nAccept: */*\r\n\r\n")
+        };
+        assert!(accepts_gzip(
+            head("Accept-Encoding: gzip, deflate, br").as_bytes()
+        ));
         assert!(accepts_gzip(head("accept-encoding:gzip").as_bytes()));
-        assert!(accepts_gzip(head("ACCEPT-ENCODING: br;q=1.0, GZIP ;q=0.5").as_bytes()));
+        assert!(accepts_gzip(
+            head("ACCEPT-ENCODING: br;q=1.0, GZIP ;q=0.5").as_bytes()
+        ));
         assert!(!accepts_gzip(head("Accept-Encoding: identity").as_bytes()));
-        assert!(!accepts_gzip(head("Accept-Encoding: deflate, br").as_bytes()));
-        assert!(!accepts_gzip(head("Accept-Encoding: gzip;q=0, identity").as_bytes()));
-        assert!(!accepts_gzip(head("Accept-Encoding: gzip; q=0.0").as_bytes()));
+        assert!(!accepts_gzip(
+            head("Accept-Encoding: deflate, br").as_bytes()
+        ));
+        assert!(!accepts_gzip(
+            head("Accept-Encoding: gzip;q=0, identity").as_bytes()
+        ));
+        assert!(!accepts_gzip(
+            head("Accept-Encoding: gzip; q=0.0").as_bytes()
+        ));
         assert!(!accepts_gzip(head("X-Accept-Encoding: gzip").as_bytes()));
         assert!(!accepts_gzip(head("Accept: gzip").as_bytes()));
         assert!(!accepts_gzip(b"GET / HTTP/1.1\r\n\r\n"));
@@ -355,7 +393,10 @@ mod tests {
     #[test]
     fn accept_key_matches_the_rfc_example() {
         // RFC 6455, section 1.3.
-        assert_eq!(&accept_key("dGhlIHNhbXBsZSBub25jZQ=="), b"s3pPLMBiTxaQ9kYGzzhZRbK+xOo=");
+        assert_eq!(
+            &accept_key("dGhlIHNhbXBsZSBub25jZQ=="),
+            b"s3pPLMBiTxaQ9kYGzzhZRbK+xOo="
+        );
     }
 
     #[test]
@@ -372,7 +413,9 @@ mod tests {
     fn a_browsers_upgrade_request_is_recognised() {
         assert_eq!(
             parse_request(UPGRADE),
-            Request::WebSocket { key: "dGhlIHNhbXBsZSBub25jZQ==" }
+            Request::WebSocket {
+                key: "dGhlIHNhbXBsZSBub25jZQ=="
+            }
         );
     }
 
@@ -385,10 +428,15 @@ mod tests {
 
     #[test]
     fn plain_gets_give_their_path_without_the_query() {
-        assert_eq!(parse_request(b"GET / HTTP/1.1\r\nHost: x\r\n\r\n"), Request::Get { path: "/" });
+        assert_eq!(
+            parse_request(b"GET / HTTP/1.1\r\nHost: x\r\n\r\n"),
+            Request::Get { path: "/" }
+        );
         assert_eq!(
             parse_request(b"GET /index.html?x=1#top HTTP/1.1\r\n\r\n"),
-            Request::Get { path: "/index.html" }
+            Request::Get {
+                path: "/index.html"
+            }
         );
     }
 
@@ -433,7 +481,10 @@ mod tests {
 
     fn decode(bytes: &[u8]) -> Vec<Output> {
         let mut decoder = Decoder::new();
-        bytes.iter().filter_map(|&byte| decoder.push(byte)).collect()
+        bytes
+            .iter()
+            .filter_map(|&byte| decoder.push(byte))
+            .collect()
     }
 
     fn data(bytes: &[u8]) -> Vec<Output> {
@@ -443,7 +494,9 @@ mod tests {
     #[test]
     fn the_rfc_masked_hello_decodes() {
         // RFC 6455, section 5.7: a single-frame masked text message.
-        let frame = [0x81, 0x85, 0x37, 0xfa, 0x21, 0x3d, 0x7f, 0x9f, 0x4d, 0x51, 0x58];
+        let frame = [
+            0x81, 0x85, 0x37, 0xfa, 0x21, 0x3d, 0x7f, 0x9f, 0x4d, 0x51, 0x58,
+        ];
         assert_eq!(decode(&frame), data(b"Hello"));
     }
 
@@ -494,16 +547,25 @@ mod tests {
         assert_eq!(decode(&[0x89, 0x00]), [Output::Ping]);
         assert_eq!(decode(&[0x88, 0x80, 1, 2, 3, 4]), [Output::Close]);
         // A close with a two-byte status code, masked.
-        assert_eq!(decode(&[0x88, 0x82, 0, 0, 0, 0, 0x03, 0xe8]), [Output::Close]);
+        assert_eq!(
+            decode(&[0x88, 0x82, 0, 0, 0, 0, 0x03, 0xe8]),
+            [Output::Close]
+        );
         // A pong is ignored, and so is its payload.
         assert_eq!(decode(&[0x8a, 0x02, 1, 2]), []);
         // Data after a ping still arrives.
-        assert_eq!(decode(&[0x89, 0x00, 0x82, 0x01, 42]), [Output::Ping, Output::Data(42)]);
+        assert_eq!(
+            decode(&[0x89, 0x00, 0x82, 0x01, 42]),
+            [Output::Ping, Output::Data(42)]
+        );
     }
 
     #[test]
     fn a_sixty_four_bit_length_is_an_error() {
-        assert_eq!(decode(&[0x82, 127, 0, 0, 0, 0, 0, 1, 0, 0]), [Output::Error]);
+        assert_eq!(
+            decode(&[0x82, 127, 0, 0, 0, 0, 0, 1, 0, 0]),
+            [Output::Error]
+        );
     }
 
     #[test]
@@ -514,7 +576,10 @@ mod tests {
         frame.extend(mask);
         frame.extend(payload.iter().enumerate().map(|(i, &b)| b ^ mask[i % 4]));
         let mut decoder = Decoder::new();
-        let outputs: Vec<_> = frame.iter().filter_map(|&byte| decoder.push(byte)).collect();
+        let outputs: Vec<_> = frame
+            .iter()
+            .filter_map(|&byte| decoder.push(byte))
+            .collect();
         assert_eq!(outputs, [Output::Ping]);
         assert_eq!(decoder.ping_payload(), b"abcde");
         let mut out = [0u8; 2 + MAX_CONTROL_PAYLOAD];
@@ -535,7 +600,10 @@ mod tests {
 
     #[test]
     fn a_ping_with_a_payload_is_reported_once_it_is_complete() {
-        assert_eq!(decode(&[0x89, 0x02, 1, 2, 0x82, 0x01, 7]), [Output::Ping, Output::Data(7)]);
+        assert_eq!(
+            decode(&[0x89, 0x02, 1, 2, 0x82, 0x01, 7]),
+            [Output::Ping, Output::Data(7)]
+        );
     }
 
     #[test]

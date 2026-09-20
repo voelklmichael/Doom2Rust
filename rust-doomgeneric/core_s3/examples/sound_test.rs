@@ -54,11 +54,23 @@ struct Step {
 }
 
 const fn note(label: &'static str, hz: u16) -> Step {
-    Step { label, hz, ms: 200, left: true, right: true }
+    Step {
+        label,
+        hz,
+        ms: 200,
+        left: true,
+        right: true,
+    }
 }
 
 const fn pause(label: &'static str, ms: u16) -> Step {
-    Step { label, hz: 0, ms, left: false, right: false }
+    Step {
+        label,
+        hz: 0,
+        ms,
+        left: false,
+        right: false,
+    }
 }
 
 /// C major, C4 to C5, then the stereo check.
@@ -72,9 +84,21 @@ const STEPS: [Step; 13] = [
     note("B4  494 Hz", 494),
     note("C5  523 Hz", 523),
     pause("next: LEFT only, 440 Hz", 500),
-    Step { label: "LEFT only 440 Hz", hz: 440, ms: 400, left: true, right: false },
+    Step {
+        label: "LEFT only 440 Hz",
+        hz: 440,
+        ms: 400,
+        left: true,
+        right: false,
+    },
     pause("next: RIGHT only, 660 Hz", 200),
-    Step { label: "RIGHT only 660 Hz", hz: 660, ms: 400, left: false, right: true },
+    Step {
+        label: "RIGHT only 660 Hz",
+        hz: 660,
+        ms: 400,
+        left: false,
+        right: true,
+    },
     pause("next: the scale again", 1500),
 ];
 
@@ -88,7 +112,12 @@ struct Player {
 
 impl Player {
     fn new() -> Self {
-        let mut player = Self { step: STEPS.len() - 1, tone: Tone::new(0, 0, 1, 0), index: 0, length: 0 };
+        let mut player = Self {
+            step: STEPS.len() - 1,
+            tone: Tone::new(0, 0, 1, 0),
+            index: 0,
+            length: 0,
+        };
         player.next_step();
         player
     }
@@ -113,7 +142,13 @@ impl Player {
         let fade = self.index.min(self.length - self.index).min(FADE) as i32;
         let sample = (sample * fade / FADE as i32) as i16;
         self.index += 1;
-        ((if step.left { sample } else { 0 }, if step.right { sample } else { 0 }), started)
+        (
+            (
+                if step.left { sample } else { 0 },
+                if step.right { sample } else { 0 },
+            ),
+            started,
+        )
     }
 }
 
@@ -122,7 +157,12 @@ fn line<D: DrawTarget<Color = Rgb565>>(display: &mut D, y: i32, color: Rgb565, t
     let _ = Rectangle::new(Point::new(0, y - 12), Size::new(320, 16))
         .into_styled(PrimitiveStyle::with_fill(Rgb565::BLACK))
         .draw(display);
-    let _ = Label { text, top_left: Point::new(10, y), color }.draw(display);
+    let _ = Label {
+        text,
+        top_left: Point::new(10, y),
+        color,
+    }
+    .draw(display);
 }
 
 #[esp_hal::main]
@@ -161,7 +201,11 @@ fn main() -> ! {
     );
     let mut speaker = match opened {
         Ok(speaker) => {
-            println!("[sound_test] I2S1 + DMA_CH1 running at {} Hz, ring {} frames", audio::SAMPLE_RATE, audio::RING_FRAMES);
+            println!(
+                "[sound_test] I2S1 + DMA_CH1 running at {} Hz, ring {} frames",
+                audio::SAMPLE_RATE,
+                audio::RING_FRAMES
+            );
             let mut text = String::<40>::new();
             let _ = write!(text, "I2S: running, {} Hz", audio::SAMPLE_RATE);
             line(display, 50, Rgb565::GREEN, &text);
@@ -187,8 +231,18 @@ fn main() -> ! {
             line(display, 75, Rgb565::RED, "amp: init FAILED (I2C)");
         }
     }
-    line(display, 100, Rgb565::WHITE, "you should hear: 8 rising notes,");
-    line(display, 115, Rgb565::WHITE, "then LEFT beep, then RIGHT beep");
+    line(
+        display,
+        100,
+        Rgb565::WHITE,
+        "you should hear: 8 rising notes,",
+    );
+    line(
+        display,
+        115,
+        Rgb565::WHITE,
+        "then LEFT beep, then RIGHT beep",
+    );
 
     let mut player = Player::new();
     let mut frames_sent: u32 = 0;
@@ -211,7 +265,10 @@ fn main() -> ! {
             }
             if let Some(step) = new_step {
                 let step = &STEPS[step];
-                println!("[sound_test] {}", if step.hz == 0 { "(pause)" } else { step.label });
+                println!(
+                    "[sound_test] {}",
+                    if step.hz == 0 { "(pause)" } else { step.label }
+                );
                 if step.hz == 0 {
                     line(display, 150, Rgb565::YELLOW, step.label);
                 }
@@ -225,7 +282,11 @@ fn main() -> ! {
         if now >= next_report && STEPS[player.step].hz == 0 && STEPS[player.step].ms >= 1000 {
             next_report = now + 2000;
             let mut status = String::<48>::new();
-            let _ = write!(status, "frames sent {frames_sent}, DMA restarts {}", speaker.restarts);
+            let _ = write!(
+                status,
+                "frames sent {frames_sent}, DMA restarts {}",
+                speaker.restarts
+            );
             println!("[sound_test] {status}");
             audio::log_amp(&mut i2c, "running");
             line(display, 190, Rgb565::CYAN, &status);
