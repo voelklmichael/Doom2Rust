@@ -5,5 +5,8 @@ version = "0.0.0"
 publish = false
 edition = "2021"
 
+[lints]
+workspace = true
+
 [dependencies]
 sha1_smol = "1.0.1"

@@ -50,6 +50,43 @@ static_cell = "2.1"
 # game core shares (about 2 fps of the game's 28 otherwise).
 oplon = { version = "1.0.0", default-features = false, features = ["iram"] }
 
+# The same lints as the rest of the repository (`[workspace.lints.clippy]` in ../Cargo.toml). This
+# crate has its own `[workspace]` (its own toolchain and target), so it cannot inherit them: keep the
+# two tables in sync.
+[lints.clippy]
+assigning_clones = "warn"
+cast_lossless = "warn"
+comparison_chain = "warn"
+derive_partial_eq_without_eq = "warn"
+doc_markdown = "warn"
+explicit_into_iter_loop = "warn"
+explicit_iter_loop = "warn"
+if_not_else = "warn"
+items_after_statements = "warn"
+manual_assert = "warn"
+manual_let_else = "warn"
+manual_midpoint = "warn"
+map_unwrap_or = "warn"
+match_same_arms = "warn"
+match_wildcard_for_single_variants = "warn"
+needless_continue = "warn"
+needless_pass_by_ref_mut = "warn"
+needless_pass_by_value = "warn"
+needless_type_cast = "warn"
+nonminimal_bool = "warn"
+range_plus_one = "warn"
+redundant_closure_for_method_calls = "warn"
+redundant_else = "warn"
+redundant_pub_crate = "warn"
+semicolon_if_nothing_returned = "warn"
+trivially_copy_pass_by_ref = "warn"
+uninlined_format_args = "warn"
+unnecessary_semicolon = "warn"
+unnecessary_trailing_comma = "warn"
+unnested_or_patterns = "warn"
+use_self = "warn"
+useless_let_if_seq = "warn"
+
 [features]
 # Input-latency probes (see src/lagprobe.rs): `--features lagprobe` prints scheduling and key-queue
 # latencies every 5 s, `lagprobe-keys` also injects synthetic key events. Off in normal builds.

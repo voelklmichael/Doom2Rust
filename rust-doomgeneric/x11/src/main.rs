@@ -172,8 +172,8 @@ pub type XExtData = _XExtData;
 #[repr(C)]
 pub struct _XExtData {
     pub number: i32,
-    pub next: *mut _XExtData,
-    pub free_private: Option<unsafe extern "C" fn(*mut _XExtData) -> i32>,
+    pub next: *mut Self,
+    pub free_private: Option<unsafe extern "C" fn(*mut Self) -> i32>,
     pub private_data: XPointer,
 }
 pub type XPointer = *mut ::core::ffi::c_char;
@@ -857,7 +857,7 @@ struct X11Platform {
 
 impl X11Platform {
     fn new() -> Self {
-        X11Platform {
+        Self {
             s_Display: ::core::ptr::null::<Display>() as *mut Display,
             s_Window: 0,
             s_Screen: 0,
@@ -872,7 +872,7 @@ impl X11Platform {
 
     unsafe fn addKeyToQueue(&mut self, mut pressed: i32, mut keyCode: u32) {
         let mut key: u8 = convertToDoomKey(keyCode);
-        let mut keyData: u16 = (pressed << 8_i32 | key as i32) as u16;
+        let mut keyData: u16 = (pressed << 8_i32 | i32::from(key)) as u16;
         self.s_KeyQueue[self.s_KeyQueueWriteIndex as usize] = keyData;
         self.s_KeyQueueWriteIndex = self.s_KeyQueueWriteIndex.wrapping_add(1);
         self.s_KeyQueueWriteIndex = self.s_KeyQueueWriteIndex.wrapping_rem(KEYQUEUE_SIZE as u32);
@@ -909,7 +909,7 @@ fn convertToDoomKey(mut key: u32) -> u8 {
             key = KEY_RSHIFT as u32;
         }
         _ => {
-            key = (key as u8).to_ascii_lowercase() as u32;
+            key = u32::from((key as u8).to_ascii_lowercase());
         }
     }
     key as u8
@@ -924,10 +924,10 @@ impl DoomPlatform for X11Platform {
             );
             self.s_Display = XOpenDisplay(::core::ptr::null::<::core::ffi::c_char>());
             self.s_Screen = (*(self.s_Display as _XPrivDisplay)).default_screen;
-            let mut blackColor: i32 = (*(*(self.s_Display as _XPrivDisplay))
+            let mut blackColor: u64 = (*(*(self.s_Display as _XPrivDisplay))
                 .screens
                 .add(self.s_Screen as usize))
-            .black_pixel as i32;
+            .black_pixel as i32 as u64;
             let mut whiteColor: i32 = (*(*(self.s_Display as _XPrivDisplay))
                 .screens
                 .add(self.s_Screen as usize))
@@ -974,8 +974,8 @@ impl DoomPlatform for X11Platform {
                 resx as u32,
                 resy as u32,
                 0_u32,
-                blackColor as u64,
-                blackColor as u64,
+                blackColor,
+                blackColor,
             );
             XSelectInput(
                 self.s_Display,
@@ -1102,11 +1102,11 @@ impl DoomPlatform for X11Platform {
         if self.s_KeyQueueReadIndex == self.s_KeyQueueWriteIndex {
             None
         } else {
-            let keyData: u16 = self.s_KeyQueue[self.s_KeyQueueReadIndex as usize];
+            let keyData: i32 = i32::from(self.s_KeyQueue[self.s_KeyQueueReadIndex as usize]);
             self.s_KeyQueueReadIndex = self.s_KeyQueueReadIndex.wrapping_add(1);
             self.s_KeyQueueReadIndex = self.s_KeyQueueReadIndex.wrapping_rem(KEYQUEUE_SIZE as u32);
-            let pressed = keyData as i32 >> 8_i32 != 0;
-            let key = (keyData as i32 & 0xff_i32) as u8;
+            let pressed = keyData >> 8_i32 != 0;
+            let key = (keyData & 0xff_i32) as u8;
             Some((pressed, key))
         }
     }
@@ -1129,10 +1129,10 @@ impl DoomPlatform for X11Platform {
         }
     }
     fn print(&mut self, message: &str) {
-        print!("{}", message);
+        print!("{message}");
     }
     fn eprint(&mut self, message: &str) {
-        eprint!("{}", message);
+        eprint!("{message}");
     }
     fn quit(&mut self) -> ! {
         // Let the player finish what it has queued (the quit sound).

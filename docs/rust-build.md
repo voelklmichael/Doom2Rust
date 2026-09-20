@@ -6,16 +6,12 @@ not yet run correctly against a WAD file — see the follow-up doc for that.
 
 ## Toolchain
 
-`rust-doomgeneric/rust-toolchain.toml` pins `nightly-2023-04-15`, which the
-translated code requires for the unstable `c_variadic`, `extern_types`, and
-`raw_ref_op` features. If that toolchain isn't installed yet:
-
-```bash
-rustup toolchain install nightly-2023-04-15
-```
-
-`rustup` will pick it up automatically via the `rust-toolchain.toml`
-override whenever `cargo`/`rustc` run inside `rust-doomgeneric/`.
+The crate builds on **stable** Rust. The transpiled code originally pinned
+`nightly-2023-04-15` for the unstable `c_variadic`, `extern_types` and
+`raw_ref_op` features; commit `995bbdb` ("Build on stable Rust") dropped that pin
+and the feature gates, so there is no `rust-toolchain.toml` in `rust-doomgeneric/`
+any more and no nightly is needed. (`core_s3/`, the ESP32 firmware, has its own
+`rust-toolchain.toml` for the `esp` toolchain; see `core_s3/PLAN.md`.)
 
 ## Build
 

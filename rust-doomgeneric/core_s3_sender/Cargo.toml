@@ -5,6 +5,9 @@ version = "0.0.0"
 publish = false
 edition = "2021"
 
+[lints]
+workspace = true
+
 [dependencies]
 core_s3_protocol = { path = "../core_s3_protocol" }
 crossterm = "0.29"

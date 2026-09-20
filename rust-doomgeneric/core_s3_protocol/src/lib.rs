@@ -1,4 +1,4 @@
-//! Wire format between the controller (`core_s3_sender`) and the CoreS3 firmware (`core_s3`).
+//! Wire format between the controller (`core_s3_sender`) and the `CoreS3` firmware (`core_s3`).
 //!
 //! The link is a plain TCP stream and **every byte is one command**:
 //!
@@ -22,7 +22,7 @@
 //! ignores it.
 #![no_std]
 
-/// TCP port the CoreS3 listens on.
+/// TCP port the `CoreS3` listens on.
 pub const DEFAULT_PORT: u16 = 7878;
 
 const RELEASE_BIT: u8 = 0x80;

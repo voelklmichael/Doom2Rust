@@ -70,6 +70,9 @@ fn send(message: Message) {
 /// the game core. Returns whether the platform plays the music (false leaves the engine without
 /// music, which is right when there is no speaker).
 pub fn open(genmidi: &[u8]) -> bool {
+    // In internal RAM (a static): it is touched every 20 microseconds, and in PSRAM its cache
+    // lines would compete with the game's.
+    static PLAYER: StaticCell<MusicPlayer> = StaticCell::new();
     if !sound::ready() {
         return false;
     }
@@ -77,9 +80,6 @@ pub fn open(genmidi: &[u8]) -> bool {
         println!("[music] GENMIDI lump not understood; no music");
         return false;
     };
-    // In internal RAM (a static): it is touched every 20 microseconds, and in PSRAM its cache
-    // lines would compete with the game's.
-    static PLAYER: StaticCell<MusicPlayer> = StaticCell::new();
     let player = PLAYER.init(MusicPlayer::new(bank, audio::SAMPLE_RATE));
     ATTACHED.store(true, Ordering::Relaxed);
     send(Message::Attach(player));

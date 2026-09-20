@@ -1,4 +1,4 @@
-//! DOOM on the M5Stack CoreS3 Lite, controlled over Wi-Fi.
+//! DOOM on the `M5Stack` `CoreS3` Lite, controlled over Wi-Fi.
 //!
 //! Core 0 runs the esp-rtos scheduler, Wi-Fi, the TCP command server (`net`) and the LCD (`lcd`).
 //! Core 1 builds and runs the game. Before the game starts, core 0 shows the board's IP address on
@@ -294,5 +294,5 @@ async fn main(spawner: Spawner) {
         let _ = write!(text, "{:>2}.{} fps", tenths / 10, tenths % 10);
         let _ = Text::new(&text, Point::new(fps_x, 15), fps_style).draw(&mut display);
     })
-    .await
+    .await;
 }

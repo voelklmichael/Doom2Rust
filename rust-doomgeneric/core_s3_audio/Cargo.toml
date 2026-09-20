@@ -4,3 +4,6 @@ authors = ["michaelvoelkl@zoho.com"]
 version = "0.0.0"
 publish = false
 edition = "2021"
+
+[lints]
+workspace = true

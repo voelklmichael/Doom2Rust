@@ -9,6 +9,9 @@ edition = "2021"
 name = "doomgeneric_xlib"
 path = "src/main.rs"
 
+[lints]
+workspace = true
+
 [dependencies]
 libc = "0.2"
 doomgeneric_fs = { path = "../fs" }

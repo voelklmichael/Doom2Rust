@@ -50,7 +50,7 @@ const QUEUE_TARGET: usize = 4 * SFX_CHUNK_FRAMES;
 const PUMP_PERIOD: Duration = Duration::from_millis(2);
 
 /// Master volume in 256ths of what the engine mixes (256 would be the engine's own level; the
-/// effects have the two channels averaged first). The CoreS3's speaker is very loud: 128 (-6 dB)
+/// effects have the two channels averaged first). The `CoreS3`'s speaker is very loud: 128 (-6 dB)
 /// was "very distracting", 32 (-18 dB) was still too much, so the default is 8 (-30 dB), meant to
 /// be just audible. Build with `SOUND_LEVEL=<0..=256>` for another level. The in-game volume
 /// sliders work on top of it. The amp's own volume register is left at full on purpose. (A
@@ -163,7 +163,7 @@ pub fn frames_wanted() -> usize {
     core_s3_audio::frames_wanted(QUEUE.len(), QUEUE_TARGET).min(QUEUE.free())
 }
 
-/// Queues interleaved stereo effect `samples` (at [`SFX_RATE`]) from the engine. The CoreS3 has a single speaker, so this
+/// Queues interleaved stereo effect `samples` (at [`SFX_RATE`]) from the engine. The `CoreS3` has a single speaker, so this
 /// mixes both channels into one (the engine's panning becomes a level difference) and applies the
 /// master volume.
 pub fn write(samples: &[i16]) {
