@@ -265,6 +265,12 @@ fn convert_frame_rgb32(i_video: &mut IVideoState) {
     }
     let x_offset = line_offset_bytes(i_video) / 4;
     let lines = i_video.dg_screen_buffer.len() / width;
+    // Pack the palette once per frame, so the per-pixel work is one table load.
+    let palette: [u32; 256] = i_video.colors.map(|c| {
+        ((c.r() as i32) << fb.red.offset
+            | (c.g() as i32) << fb.green.offset
+            | (c.b() as i32) << fb.blue.offset) as u32
+    });
     for row in 0..SCREENHEIGHT as usize {
         let source = &i_video.i_video_buffer[row * SCREENWIDTH as usize..][..SCREENWIDTH as usize];
         let first_line = row * scaling;
@@ -274,12 +280,7 @@ fn convert_frame_rgb32(i_video: &mut IVideoState) {
         let first = first_line * width;
         let out = &mut i_video.dg_screen_buffer[first..first + width][x_offset..];
         for (&index, pixels) in source.iter().zip(out.chunks_exact_mut(scaling)) {
-            let c = i_video.colors[index as usize];
-            pixels.fill(
-                ((c.r() as i32) << fb.red.offset
-                    | (c.g() as i32) << fb.green.offset
-                    | (c.b() as i32) << fb.blue.offset) as u32,
-            );
+            pixels.fill(palette[usize::from(index)]);
         }
         for copy in 1..scaling.min(lines - first_line) {
             i_video
