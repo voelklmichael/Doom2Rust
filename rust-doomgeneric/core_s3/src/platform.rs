@@ -57,7 +57,7 @@ fn publish_fps(tenths: u64) {
 }
 
 fn now_us() -> u64 {
-    Instant::now().duration_since_epoch().as_micros() as u64
+    Instant::now().duration_since_epoch().as_micros()
 }
 
 /// Frames counted towards the next published frame rate.

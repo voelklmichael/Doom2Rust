@@ -1,4 +1,4 @@
-//! Input-latency probes (`--features lagprobe`; compiled out otherwise, `Stamp` is then `()`).
+//! Input-latency probes (`--features lagprobe`; compiled out otherwise, `Stamp` is then an empty struct).
 //!
 //! There is no way to measure a real browser round trip from the development machine (it has one
 //! Wi-Fi adapter and must not join the board's network), so this measures, on the device and
@@ -174,8 +174,12 @@ mod imp {
 
 #[cfg(not(feature = "lagprobe"))]
 mod imp {
-    pub type Stamp = ();
-    pub fn stamp() -> Stamp {}
+    /// Nothing to record; a struct rather than `()` so passing it around does not trip clippy's unit lints.
+    #[derive(Clone, Copy)]
+    pub struct Stamp;
+    pub fn stamp() -> Stamp {
+        Stamp
+    }
     pub fn key_taken(_stamp: Stamp) {}
     pub fn slice(_us: u32) {}
     pub fn polled_empty() {}
