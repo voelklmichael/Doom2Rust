@@ -22,21 +22,21 @@ use crate::game_state::GameState;
 use crate::m_menu::m_ticker;
 use crate::tables::ANG270;
 use crate::tables::ANG90;
-fn player_quit_game(state: &mut GameState, player_num: u32) {
-    state.game.g_game.playeringame[player_num as usize] = false;
+fn player_quit_game(state: &mut GameState, player: PlayerId) {
+    state.game.g_game.playeringame[player] = false;
     state.game.g_game.players[state.game.g_game.consoleplayer].message =
-        Some(format!("Player {} left the game", player_num + 1));
+        Some(format!("Player {} left the game", player.slot() + 1));
     if state.game.g_game.demorecording {
         check_demo_status(state);
     }
 }
 fn run_tic(state: &mut GameState, cmds: &[TicCmd], ingame: &[bool]) {
-    for i in 0..MAXPLAYERS as u32 {
+    for player in PlayerId::all() {
         if !state.game.g_game.demoplayback
-            && state.game.g_game.playeringame[i as usize]
-            && !ingame[i as usize]
+            && state.game.g_game.playeringame[player]
+            && !ingame[player.slot()]
         {
-            player_quit_game(state, i);
+            player_quit_game(state, player);
         }
     }
     if state.game.d_main.advancedemo {
@@ -72,8 +72,8 @@ fn load_game_settings(
             "NOTE: Turning resolution is reduced; this is probably because there is a client recording a Vanilla demo."
         );
     }
-    for i in 0..MAXPLAYERS as u32 {
-        g_game.playeringame[i as usize] = i < settings.num_players as u32;
+    for i in 0..MAXPLAYERS {
+        g_game.playeringame[i] = i < settings.num_players as usize;
     }
 }
 fn save_game_settings(game: &Game, settings: &mut NetGameSettings) {

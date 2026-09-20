@@ -1,4 +1,5 @@
 use crate::d_ticcmd::TicCmd;
+use crate::doomdef::MAXPLAYERS;
 use crate::enum_array::{ArrayIndex, EnumArray};
 use crate::m_fixed::Fixed;
 use crate::p_inter::CardType;
@@ -119,7 +120,7 @@ pub struct PlayerId(pub u8);
 impl PlayerId {
     /// Every player slot, in order.
     pub fn all() -> impl Iterator<Item = Self> {
-        (0..4).map(Self)
+        (0..MAXPLAYERS as u8).map(Self)
     }
 
     /// The slot number as an array index.
@@ -134,13 +135,18 @@ impl PlayerId {
 
     /// The next slot, wrapping from the last player back to the first.
     pub const fn next_wrapping(self) -> Self {
-        Self((self.0 + 1) % 4)
+        Self((self.0 + 1) % MAXPLAYERS as u8)
+    }
+
+    /// The previous slot, wrapping from the first player back to the last.
+    pub const fn previous_wrapping(self) -> Self {
+        Self((self.0 + MAXPLAYERS as u8 - 1) % MAXPLAYERS as u8)
     }
 }
 
 /// One `T` per player slot, indexed by [`PlayerId`] (or by a plain slot number in the loops
 /// that walk every slot).
-pub type PerPlayer<T> = EnumArray<PlayerId, T, 4>;
+pub type PerPlayer<T> = EnumArray<PlayerId, T, MAXPLAYERS>;
 
 impl ArrayIndex for PlayerId {
     #[inline(always)]
@@ -171,7 +177,7 @@ pub struct Player {
     pub powers: EnumArray<PowerType, i32, 6>,
     pub cards: EnumArray<CardType, bool, 6>,
     pub backpack: bool,
-    pub frags: [i32; 4],
+    pub frags: [i32; MAXPLAYERS],
     pub readyweapon: WeaponType,
     pub pendingweapon: WeaponType,
     pub weaponowned: EnumArray<WeaponType, bool, 9>,

@@ -90,7 +90,7 @@ pub struct NetConnectData {
     pub gamemission: i32,
     pub lowres_turn: i32,
     pub drone: bool,
-    pub max_players: i32,
+    pub max_players: usize,
     pub is_freedoom: bool,
     pub wad_sha1sum: Sha1Digest,
     pub player_class: i32,

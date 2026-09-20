@@ -446,16 +446,16 @@ pub fn new_chase_dir(state: &mut GameState, actor: MobjId) {
 }
 pub fn look_for_players(state: &mut GameState, actor: MobjId, allaround: bool) -> bool {
     let mut c: i32 = 0;
-    let stop = (state.world.p_mobj.mo(actor).lastlook - 1) & 3;
+    let stop = state.world.p_mobj.mo(actor).lastlook.previous_wrapping();
     loop {
         let lastlook = state.world.p_mobj.mo(actor).lastlook;
-        if state.game.g_game.playeringame[lastlook as usize] {
+        if state.game.g_game.playeringame[lastlook] {
             if c == 2 || lastlook == stop {
                 return false;
             }
             c += 1;
             let (health, player_mo) = {
-                let player = &state.game.g_game.players[lastlook as usize];
+                let player = &state.game.g_game.players[lastlook];
                 (player.health, player.mo)
             };
             if health > 0 {
@@ -487,7 +487,7 @@ pub fn look_for_players(state: &mut GameState, actor: MobjId, allaround: bool) -
                 }
             }
         }
-        state.world.p_mobj.mo_mut(actor).lastlook = (lastlook + 1) & 3;
+        state.world.p_mobj.mo_mut(actor).lastlook = lastlook.next_wrapping();
     }
 }
 pub fn keen_die(state: &mut GameState, id: MobjId) {

@@ -135,7 +135,7 @@ pub struct GGameState {
     pub netgame: bool,
     pub playeringame: PerPlayer<bool>,
     pub players: PerPlayer<Player>,
-    pub turbodetected: [bool; 4],
+    pub turbodetected: [bool; MAXPLAYERS],
     pub consoleplayer: PlayerId,
     pub displayplayer: PlayerId,
     pub levelstarttic: i32,
@@ -156,7 +156,7 @@ pub struct GGameState {
     pub testcontrols: bool,
     pub testcontrols_mousespeed: i32,
     pub wminfo: WbStartStruct,
-    pub consistancy: [[u8; 128]; 4],
+    pub consistancy: [[u8; 128]; MAXPLAYERS],
     pub forwardmove: [Fixed; 2],
     pub sidemove: [Fixed; 2],
     pub next_weapon: Option<WeaponCycle>,
@@ -215,7 +215,7 @@ const NEW_PLAYER: Player = Player {
     powers: EnumArray::new([0; 6]),
     cards: EnumArray::new([false; 6]),
     backpack: false,
-    frags: [0; 4],
+    frags: [0; MAXPLAYERS],
     readyweapon: WeaponType::Fist,
     pendingweapon: WeaponType::Fist,
     weaponowned: EnumArray::new([false; 9]),
@@ -271,9 +271,9 @@ impl GGameState {
             viewactive: false,
             deathmatch: 0,
             netgame: false,
-            playeringame: PerPlayer::new([false; 4]),
+            playeringame: PerPlayer::new([false; MAXPLAYERS]),
             players: PerPlayer::new([NEW_PLAYER, NEW_PLAYER, NEW_PLAYER, NEW_PLAYER]),
-            turbodetected: [false; 4],
+            turbodetected: [false; MAXPLAYERS],
             consoleplayer: PlayerId(0),
             displayplayer: PlayerId(0),
             levelstarttic: 0,
@@ -310,11 +310,11 @@ impl GGameState {
                     sitems: 0,
                     ssecret: 0,
                     stime: 0,
-                    frags: [0; 4],
+                    frags: [0; MAXPLAYERS],
                     score: 0,
-                }; 4],
+                }; MAXPLAYERS],
             },
-            consistancy: [[0; 128]; 4],
+            consistancy: [[0; 128]; MAXPLAYERS],
             forwardmove: [0x19, 0x32],
             sidemove: [0x18, 0x28],
             next_weapon: None,
@@ -716,14 +716,14 @@ pub fn do_load_level(state: &mut GameState) {
         state.game.d_main.wipegamestate = GameScreenState::Wipped;
     }
     state.game.g_game.gamestate = GameScreenState::Level;
-    for i in 0..(MAXPLAYERS as usize) {
+    for i in 0..MAXPLAYERS {
         state.game.g_game.turbodetected[i] = false;
         if state.game.g_game.playeringame[i]
             && state.game.g_game.players[i].playerstate == PlayerState::Dead
         {
             state.game.g_game.players[i].playerstate = PlayerState::Reborn;
         }
-        state.game.g_game.players[i].frags = [0; 4];
+        state.game.g_game.players[i].frags = [0; MAXPLAYERS];
     }
     setup_level(
         state,
@@ -872,11 +872,11 @@ pub fn g_responder(state: &mut GameState, ev: Event) -> bool {
     false
 }
 pub fn g_ticker(state: &mut GameState, netcmds: &[TicCmd]) {
-    for i in 0..MAXPLAYERS {
-        if state.game.g_game.playeringame[i as usize]
-            && state.game.g_game.players[i as usize].playerstate == PlayerState::Reborn
+    for player in PlayerId::all() {
+        if state.game.g_game.playeringame[player]
+            && state.game.g_game.players[player].playerstate == PlayerState::Reborn
         {
-            do_reborn(state, i);
+            do_reborn(state, player);
         }
     }
     while state.game.g_game.gameaction != GameAction::Nothing {
@@ -920,50 +920,49 @@ pub fn g_ticker(state: &mut GameState, netcmds: &[TicCmd]) {
     }
     let buf: usize = (state.game.d_loop.gametic / state.game.d_loop.ticdup % BACKUPTICS) as usize;
     for i in 0..MAXPLAYERS {
-        if state.game.g_game.playeringame[i as usize] {
-            state.game.g_game.players[i as usize].cmd = netcmds[i as usize];
+        if state.game.g_game.playeringame[i] {
+            state.game.g_game.players[i].cmd = netcmds[i];
             if state.game.g_game.demoplayback {
-                read_demo_ticcmd(state, i as usize);
+                read_demo_ticcmd(state, i);
             }
             if state.game.g_game.demorecording {
-                write_demo_ticcmd(state, i as usize);
+                write_demo_ticcmd(state, i);
             }
-            if i32::from(state.game.g_game.players[i as usize].cmd.forwardmove) > TURBOTHRESHOLD {
-                state.game.g_game.turbodetected[i as usize] = true;
+            if i32::from(state.game.g_game.players[i].cmd.forwardmove) > TURBOTHRESHOLD {
+                state.game.g_game.turbodetected[i] = true;
             }
             if state.game.d_loop.gametic & 31 == 0
-                && (state.game.d_loop.gametic >> 5) % MAXPLAYERS == i
-                && state.game.g_game.turbodetected[i as usize]
+                && (state.game.d_loop.gametic >> 5) as usize % MAXPLAYERS == i
+                && state.game.g_game.turbodetected[i]
             {
-                let player_name = PLAYER_NAMES[i as usize];
+                let player_name = PLAYER_NAMES[i];
                 state.game.g_game.players[state.game.g_game.consoleplayer].message =
                     Some(format!("{player_name} is turbo!"));
-                state.game.g_game.turbodetected[i as usize] = false;
+                state.game.g_game.turbodetected[i] = false;
             }
             if state.game.g_game.netgame
                 && !state.game.g_game.netdemo
                 && state.game.d_loop.gametic % state.game.d_loop.ticdup == 0
             {
                 if state.game.d_loop.gametic > BACKUPTICS
-                    && i32::from(state.game.g_game.consistancy[i as usize][buf])
-                        != i32::from(state.game.g_game.players[i as usize].cmd.consistancy)
+                    && i32::from(state.game.g_game.consistancy[i][buf])
+                        != i32::from(state.game.g_game.players[i].cmd.consistancy)
                 {
                     error(&format!(
                         "consistency failure ({} should be {})",
-                        i32::from(state.game.g_game.players[i as usize].cmd.consistancy),
-                        i32::from(state.game.g_game.consistancy[i as usize][buf]),
+                        i32::from(state.game.g_game.players[i].cmd.consistancy),
+                        i32::from(state.game.g_game.consistancy[i][buf]),
                     ));
                 }
-                if let Some(mo_id) = state.game.g_game.players[i as usize].mo {
-                    state.game.g_game.consistancy[i as usize][buf] =
-                        state.world.p_mobj.mo(mo_id).x as u8;
+                if let Some(mo_id) = state.game.g_game.players[i].mo {
+                    state.game.g_game.consistancy[i][buf] = state.world.p_mobj.mo(mo_id).x as u8;
                 } else {
-                    state.game.g_game.consistancy[i as usize][buf] = state.world.m_random.rndindex;
+                    state.game.g_game.consistancy[i][buf] = state.world.m_random.rndindex;
                 }
             }
         }
     }
-    for i in 0..(MAXPLAYERS as usize) {
+    for i in 0..MAXPLAYERS {
         if state.game.g_game.playeringame[i]
             && state.game.g_game.players[i].cmd.buttons & BT_SPECIAL != 0
         {
@@ -1026,8 +1025,8 @@ pub fn g_ticker(state: &mut GameState, netcmds: &[TicCmd]) {
         GameScreenState::Wipped => {}
     }
 }
-pub fn player_finish_level(g_game: &mut GGameState, p_mobj: &mut PMobjState, player: i32) {
-    let p = &mut g_game.players[player as usize];
+pub fn player_finish_level(g_game: &mut GGameState, p_mobj: &mut PMobjState, player: PlayerId) {
+    let p = &mut g_game.players[player];
     p.powers = EnumArray::new([0; 6]);
     p.cards = EnumArray::new([false; 6]);
     let mo_id = p.mo.unwrap();
@@ -1037,11 +1036,11 @@ pub fn player_finish_level(g_game: &mut GGameState, p_mobj: &mut PMobjState, pla
     p.bonuscount = 0;
     p_mobj.mo_mut(mo_id).flags &= !MobjFlags::SHADOW;
 }
-pub fn player_reborn(state: &mut GGameState, player: i32) {
-    let old = &state.players[player as usize];
+pub fn player_reborn(state: &mut GGameState, player: PlayerId) {
+    let old = &state.players[player];
     let (frags, killcount, itemcount, secretcount) =
         (old.frags, old.killcount, old.itemcount, old.secretcount);
-    let p = &mut state.players[player as usize];
+    let p = &mut state.players[player];
     *p = NEW_PLAYER;
     p.frags = frags;
     p.killcount = killcount;
@@ -1058,9 +1057,9 @@ pub fn player_reborn(state: &mut GGameState, player: i32) {
     p.ammo[AmmoType::Clip] = DEH_INITIAL_BULLETS;
     p.maxammo.as_mut_slice().copy_from_slice(MAXAMMO.as_slice());
 }
-pub fn check_spot(state: &mut GameState, playernum: i32, mthing: &MapThing) -> bool {
-    if state.game.g_game.players[playernum as usize].mo.is_none() {
-        for i in 0..playernum as usize {
+pub fn check_spot(state: &mut GameState, playernum: PlayerId, mthing: &MapThing) -> bool {
+    if state.game.g_game.players[playernum].mo.is_none() {
+        for i in 0..playernum.slot() {
             let other_mo = state
                 .world
                 .p_mobj
@@ -1075,7 +1074,7 @@ pub fn check_spot(state: &mut GameState, playernum: i32, mthing: &MapThing) -> b
     }
     let x: Fixed = (i32::from(mthing.x) << FRACBITS) as Fixed;
     let y: Fixed = (i32::from(mthing.y) << FRACBITS) as Fixed;
-    let player_mo_id = state.game.g_game.players[playernum as usize].mo.unwrap();
+    let player_mo_id = state.game.g_game.players[playernum].mo.unwrap();
     if !check_position(state, player_mo_id, x, y) {
         return false;
     }
@@ -1128,7 +1127,7 @@ pub fn check_spot(state: &mut GameState, playernum: i32, mthing: &MapThing) -> b
     }
     true
 }
-pub fn death_match_spawn_player(state: &mut GameState, playernum: i32) {
+pub fn death_match_spawn_player(state: &mut GameState, playernum: PlayerId) {
     let selections = state.world.p_setup.deathmatch_p as i32;
     if selections < 4 {
         error(&format!("Only {selections} deathmatch spots, 4 required"));
@@ -1137,40 +1136,40 @@ pub fn death_match_spawn_player(state: &mut GameState, playernum: i32) {
         let i = (p_random(&mut state.world.m_random) % selections) as usize;
         let dm_spot = state.world.p_setup.deathmatchstarts[i];
         if check_spot(state, playernum, &dm_spot) {
-            state.world.p_setup.deathmatchstarts[i].kind = (playernum + 1) as i16;
+            state.world.p_setup.deathmatchstarts[i].kind = (playernum.as_i32() + 1) as i16;
             let dm_spot = state.world.p_setup.deathmatchstarts[i];
             spawn_player(state, dm_spot);
             return;
         }
     }
-    let spot = state.world.p_setup.playerstarts[playernum as usize];
+    let spot = state.world.p_setup.playerstarts[playernum.slot()];
     spawn_player(state, spot);
 }
-pub fn do_reborn(state: &mut GameState, playernum: i32) {
+pub fn do_reborn(state: &mut GameState, playernum: PlayerId) {
     if state.game.g_game.netgame {
-        let player_mo_id = state.game.g_game.players[playernum as usize].mo.unwrap();
+        let player_mo_id = state.game.g_game.players[playernum].mo.unwrap();
         state.world.p_mobj.mo_mut(player_mo_id).player = None;
         if state.game.g_game.deathmatch != 0 {
             death_match_spawn_player(state, playernum);
             return;
         }
-        let spot = state.world.p_setup.playerstarts[playernum as usize];
+        let spot = state.world.p_setup.playerstarts[playernum.slot()];
         if check_spot(state, playernum, &spot) {
-            let spot = state.world.p_setup.playerstarts[playernum as usize];
+            let spot = state.world.p_setup.playerstarts[playernum.slot()];
             spawn_player(state, spot);
             return;
         }
-        for i in 0..MAXPLAYERS as usize {
+        for i in 0..MAXPLAYERS {
             let spot = state.world.p_setup.playerstarts[i];
             if check_spot(state, playernum, &spot) {
-                state.world.p_setup.playerstarts[i].kind = (playernum + 1) as i16;
+                state.world.p_setup.playerstarts[i].kind = (playernum.as_i32() + 1) as i16;
                 let spot = state.world.p_setup.playerstarts[i];
                 spawn_player(state, spot);
                 state.world.p_setup.playerstarts[i].kind = (i as i32 + 1) as i16;
                 return;
             }
         }
-        let spot = state.world.p_setup.playerstarts[playernum as usize];
+        let spot = state.world.p_setup.playerstarts[playernum.slot()];
         spawn_player(state, spot);
     } else {
         state.game.g_game.gameaction = GameAction::LoadLevel;
@@ -1200,9 +1199,9 @@ pub fn secret_exit_level(doomstat: &DoomstatState, g_game: &mut GGameState, w_wa
 }
 pub fn do_completed(state: &mut GameState) {
     state.game.g_game.gameaction = GameAction::Nothing;
-    for i in 0..MAXPLAYERS {
-        if state.game.g_game.playeringame[i as usize] {
-            player_finish_level(&mut state.game.g_game, &mut state.world.p_mobj, i);
+    for player in PlayerId::all() {
+        if state.game.g_game.playeringame[player] {
+            player_finish_level(&mut state.game.g_game, &mut state.world.p_mobj, player);
         }
     }
     if state.ui.am_map.automapactive {
@@ -1221,7 +1220,7 @@ pub fn do_completed(state: &mut GameState) {
                     return;
                 }
                 9 => {
-                    for i in 0..(MAXPLAYERS as usize) {
+                    for i in 0..MAXPLAYERS {
                         state.game.g_game.players[i].didsecret = true;
                     }
                 }
@@ -1234,7 +1233,7 @@ pub fn do_completed(state: &mut GameState) {
         return;
     }
     if state.game.g_game.gamemap == 9 && state.game.doomstat.gamemode != GameMode::Commercial {
-        for i in 0..(MAXPLAYERS as usize) {
+        for i in 0..MAXPLAYERS {
             state.game.g_game.players[i].didsecret = true;
         }
     }
@@ -1297,8 +1296,8 @@ pub fn do_completed(state: &mut GameState) {
     } else {
         state.game.g_game.wminfo.partime = TICRATE * CPARS[state.game.g_game.gamemap as usize];
     }
-    state.game.g_game.wminfo.pnum = state.game.g_game.consoleplayer.as_i32();
-    for i in 0..(MAXPLAYERS as usize) {
+    state.game.g_game.wminfo.pnum = state.game.g_game.consoleplayer.slot();
+    for i in 0..MAXPLAYERS {
         state.game.g_game.wminfo.plyr[i].intercept = state.game.g_game.playeringame[i];
         state.game.g_game.wminfo.plyr[i].skills = state.game.g_game.players[i].killcount;
         state.game.g_game.wminfo.plyr[i].sitems = state.game.g_game.players[i].itemcount;
@@ -1497,7 +1496,7 @@ pub fn init_new(state: &mut GameState, mut skill: SkillType, mut episode: i32, m
         state.assets.info.mobjinfo[MobjType::Headshot as usize].speed = 10 * FRACUNIT;
         state.assets.info.mobjinfo[MobjType::Troopshot as usize].speed = 10 * FRACUNIT;
     }
-    for i in 0..(MAXPLAYERS as usize) {
+    for i in 0..MAXPLAYERS {
         state.game.g_game.players[i].playerstate = PlayerState::Reborn;
     }
     state.game.g_game.usergame = true;
@@ -1642,7 +1641,7 @@ pub fn begin_recording(game: &mut Game) {
     game.g_game
         .demo_write_byte(u8::from(game.d_main.nomonsters));
     game.g_game.demo_write_byte(game.g_game.consoleplayer.0);
-    for i in 0..(MAXPLAYERS as usize) {
+    for i in 0..MAXPLAYERS {
         let b = u8::from(game.g_game.playeringame[i]);
         game.g_game.demo_write_byte(b);
     }
@@ -1697,7 +1696,7 @@ pub fn do_play_demo(state: &mut GameState) {
     state.game.d_main.fastparm = state.game.g_game.demo_read_byte() != 0;
     state.game.d_main.nomonsters = state.game.g_game.demo_read_byte() != 0;
     state.game.g_game.consoleplayer = PlayerId(state.game.g_game.demo_read_byte());
-    for i in 0..(MAXPLAYERS as usize) {
+    for i in 0..MAXPLAYERS {
         state.game.g_game.playeringame[i] = state.game.g_game.demo_read_byte() != 0;
     }
     if state.game.g_game.playeringame[1]
