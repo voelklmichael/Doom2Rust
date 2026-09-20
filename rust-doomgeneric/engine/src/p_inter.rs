@@ -544,13 +544,18 @@ pub fn touch_special_thing(state: &mut GameState, special: MobjId, toucher: Mobj
         }
         86 => {
             if !state.game.g_game.players[player].backpack {
-                for i in 0..(NUMAMMO as usize) {
+                for i in 0..NUMAMMO {
                     state.game.g_game.players[player].maxammo[i] *= 2;
                 }
                 state.game.g_game.players[player].backpack = true;
             }
             for i in 0..NUMAMMO {
-                give_ammo(&mut state.game.g_game, player, ammotype_from_raw(i), 1);
+                give_ammo(
+                    &mut state.game.g_game,
+                    player,
+                    ammotype_from_raw(i as i32),
+                    1,
+                );
             }
             state.game.g_game.players[player].message =
                 Some("Picked up a backpack full of ammo!".to_string());

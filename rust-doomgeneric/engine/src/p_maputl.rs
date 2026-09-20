@@ -196,8 +196,8 @@ pub struct InterceptsOverrun {
 }
 pub const MAPBLOCKUNITS: i32 = 128;
 pub const MAPBLOCKSIZE: i32 = MAPBLOCKUNITS * FRACUNIT;
-pub const MAPBLOCKSHIFT: i32 = FRACBITS + 7;
-pub const MAPBTOFRAC: i32 = MAPBLOCKSHIFT - FRACBITS;
+pub const MAPBLOCKSHIFT: u32 = FRACBITS + 7;
+pub const MAPBTOFRAC: u32 = MAPBLOCKSHIFT - FRACBITS;
 pub const MAXINTERCEPTS_ORIGINAL: i32 = 128;
 pub const PT_ADDLINES: i32 = 1;
 pub const PT_ADDTHINGS: i32 = 2;

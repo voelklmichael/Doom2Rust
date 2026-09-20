@@ -4,7 +4,7 @@ use crate::m_fixed::Fixed;
 use crate::p_inter::CardType;
 use crate::p_mobj::{MobjId, PspDef};
 use alloc::string::String;
-pub const NUMAMMO: i32 = 4;
+pub const NUMAMMO: usize = 4;
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum AmmoType {
     Clip,
@@ -29,7 +29,7 @@ pub fn ammotype_from_raw(v: i32) -> AmmoType {
         n => panic!("invalid ammotype {n}"),
     }
 }
-pub const NUMPSPRITES: i32 = 2;
+pub const NUMPSPRITES: usize = 2;
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum PSpriteNum {
     Weapon,

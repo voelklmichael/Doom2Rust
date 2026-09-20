@@ -1573,7 +1573,7 @@ pub fn check_for_accelerate(g_game: &mut GGameState, wi_stuff: &mut WiStuffState
     for i in 0..(MAXPLAYERS as usize) {
         if g_game.playeringame[i] {
             let player = &g_game.players[i];
-            if i32::from(player.cmd.buttons) & BT_ATTACK != 0 {
+            if player.cmd.buttons & BT_ATTACK != 0 {
                 if !player.attackdown {
                     wi_stuff.acceleratestage = true;
                 }
@@ -1582,7 +1582,7 @@ pub fn check_for_accelerate(g_game: &mut GGameState, wi_stuff: &mut WiStuffState
                 g_game.players[i].attackdown = false;
             }
             let player = &g_game.players[i];
-            if i32::from(player.cmd.buttons) & BT_USE != 0 {
+            if player.cmd.buttons & BT_USE != 0 {
                 if !player.usedown {
                     wi_stuff.acceleratestage = true;
                 }

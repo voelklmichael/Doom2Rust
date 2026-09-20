@@ -308,7 +308,7 @@ fn ticdup_squash(set: &mut TicCmdSet) {
     for i in 0..NET_MAXPLAYERS {
         let cmd = &mut set.cmds[i as usize];
         cmd.chatchar = 0_u8;
-        if i32::from(cmd.buttons) & BT_SPECIAL != 0 {
+        if cmd.buttons & BT_SPECIAL != 0 {
             cmd.buttons = 0_u8;
         }
     }

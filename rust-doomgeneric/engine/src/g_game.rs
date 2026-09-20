@@ -178,7 +178,7 @@ pub struct GGameState {
     pub savegameslot: i32,
     pub savedescription: String,
     pub bodyque: [Option<MobjId>; 32],
-    pub bodyqueslot: i32,
+    pub bodyqueslot: usize,
     pub vanilla_savegame_limit: i32,
     pub vanilla_demo_limit: i32,
     pub secretexit: bool,
@@ -374,7 +374,7 @@ pub const DEH_DEFAULT_INITIAL_HEALTH: i32 = 100;
 pub const DEH_DEFAULT_INITIAL_BULLETS: i32 = 50;
 pub const DEH_INITIAL_HEALTH: i32 = DEH_DEFAULT_INITIAL_HEALTH;
 pub const DEH_INITIAL_BULLETS: i32 = DEH_DEFAULT_INITIAL_BULLETS;
-pub const DOOM_191_VERSION: i32 = 111;
+pub const DOOM_191_VERSION: u8 = 111;
 pub const SAVEGAMESIZE: usize = 0x2c000;
 pub const TURBOTHRESHOLD: i32 = 0x32;
 pub static ANGLETURN: [Fixed; 3] = [640, 1280, 320];
@@ -419,7 +419,7 @@ static WEAPON_ORDER_TABLE: [WeaponOrder; 9] = [
 pub const SLOWTURNTICS: i32 = 6;
 pub const NUMKEYS: i32 = 256;
 pub const MAX_JOY_BUTTONS: i32 = 20;
-pub const BODYQUESIZE: i32 = 32;
+pub const BODYQUESIZE: usize = 32;
 fn weapon_selectable(doomstat: &DoomstatState, g_game: &GGameState, weapon: WeaponType) -> bool {
     if weapon == WeaponType::Supershotgun && doomstat.gamemission.base() == GameMission::Doom {
         return false;
@@ -573,13 +573,13 @@ pub fn g_build_ticcmd(state: &mut GameState, cmd: &mut TicCmd, maketic: i32) {
         || state.game.g_game.mousearray[(state.game.m_controls.mousebfire + 1) as usize]
         || state.game.g_game.joyarray[(state.game.m_controls.joybfire + 1) as usize]
     {
-        cmd.buttons = (i32::from(cmd.buttons) | BT_ATTACK) as u8;
+        cmd.buttons |= BT_ATTACK;
     }
     if state.game.g_game.gamekeydown[state.game.m_controls.key_use as usize]
         || state.game.g_game.joyarray[(state.game.m_controls.joybuse + 1) as usize]
         || state.game.g_game.mousearray[(state.game.m_controls.mousebuse + 1) as usize]
     {
-        cmd.buttons = (i32::from(cmd.buttons) | BT_USE) as u8;
+        cmd.buttons |= BT_USE;
         state.game.g_game.dclicks = 0;
     }
     if let Some(next_weapon) = state
@@ -589,16 +589,16 @@ pub fn g_build_ticcmd(state: &mut GameState, cmd: &mut TicCmd, maketic: i32) {
         .filter(|_| state.game.g_game.gamestate == GameScreenState::Level)
     {
         let i: i32 = g_next_weapon(&state.game.doomstat, &state.game.g_game, next_weapon);
-        cmd.buttons = (i32::from(cmd.buttons) | BT_CHANGE) as u8;
-        cmd.buttons = (i32::from(cmd.buttons) | i << BT_WEAPONSHIFT) as u8;
+        cmd.buttons |= BT_CHANGE;
+        cmd.buttons |= (i << BT_WEAPONSHIFT) as u8;
     } else {
         let weapon_keys = state.game.m_controls.weapon_keys();
         let mut i: i32 = 0;
         while (i as usize) < weapon_keys.len() {
             let key: i32 = weapon_keys[i as usize];
             if state.game.g_game.gamekeydown[key as usize] {
-                cmd.buttons = (i32::from(cmd.buttons) | BT_CHANGE) as u8;
-                cmd.buttons = (i32::from(cmd.buttons) | i << BT_WEAPONSHIFT) as u8;
+                cmd.buttons |= BT_CHANGE;
+                cmd.buttons |= (i << BT_WEAPONSHIFT) as u8;
                 break;
             }
             i += 1;
@@ -622,7 +622,7 @@ pub fn g_build_ticcmd(state: &mut GameState, cmd: &mut TicCmd, maketic: i32) {
                 state.game.g_game.dclicks += 1;
             }
             if state.game.g_game.dclicks == 2 {
-                cmd.buttons = (i32::from(cmd.buttons) | BT_USE) as u8;
+                cmd.buttons |= BT_USE;
                 state.game.g_game.dclicks = 0;
             } else {
                 state.game.g_game.dclicktime = 0;
@@ -643,7 +643,7 @@ pub fn g_build_ticcmd(state: &mut GameState, cmd: &mut TicCmd, maketic: i32) {
                 state.game.g_game.dclicks2 += 1;
             }
             if state.game.g_game.dclicks2 == 2 {
-                cmd.buttons = (i32::from(cmd.buttons) | BT_USE) as u8;
+                cmd.buttons |= BT_USE;
                 state.game.g_game.dclicks2 = 0;
             } else {
                 state.game.g_game.dclicktime2 = 0;
@@ -681,12 +681,12 @@ pub fn g_build_ticcmd(state: &mut GameState, cmd: &mut TicCmd, maketic: i32) {
     cmd.sidemove = (i32::from(cmd.sidemove) + side) as i8;
     if state.game.g_game.sendpause {
         state.game.g_game.sendpause = false;
-        cmd.buttons = (BT_SPECIAL | BTS_PAUSE) as u8;
+        cmd.buttons = BT_SPECIAL | BTS_PAUSE;
     }
     if state.game.g_game.sendsave {
         state.game.g_game.sendsave = false;
         cmd.buttons =
-            (BT_SPECIAL | BTS_SAVEGAME | state.game.g_game.savegameslot << BTS_SAVESHIFT) as u8;
+            BT_SPECIAL | BTS_SAVEGAME | (state.game.g_game.savegameslot << BTS_SAVESHIFT) as u8;
     }
     if state.game.g_game.lowres_turn {
         let desired_angleturn: i16 =
@@ -965,9 +965,9 @@ pub fn g_ticker(state: &mut GameState, netcmds: &[TicCmd]) {
     }
     for i in 0..(MAXPLAYERS as usize) {
         if state.game.g_game.playeringame[i]
-            && i32::from(state.game.g_game.players[i].cmd.buttons) & BT_SPECIAL != 0
+            && state.game.g_game.players[i].cmd.buttons & BT_SPECIAL != 0
         {
-            match i32::from(state.game.g_game.players[i].cmd.buttons) & BT_SPECIALMASK {
+            match state.game.g_game.players[i].cmd.buttons & BT_SPECIALMASK {
                 1 => {
                     state.game.g_game.paused = !state.game.g_game.paused;
                     if state.game.g_game.paused {
@@ -988,9 +988,9 @@ pub fn g_ticker(state: &mut GameState, netcmds: &[TicCmd]) {
                     if state.game.g_game.savedescription.is_empty() {
                         state.game.g_game.savedescription = "NET GAME".to_string();
                     }
-                    state.game.g_game.savegameslot =
-                        (i32::from(state.game.g_game.players[i].cmd.buttons) & BTS_SAVEMASK)
-                            >> BTS_SAVESHIFT;
+                    state.game.g_game.savegameslot = i32::from(
+                        (state.game.g_game.players[i].cmd.buttons & BTS_SAVEMASK) >> BTS_SAVESHIFT,
+                    );
                     state.game.g_game.gameaction = GameAction::SaveGame;
                 }
                 _ => {}
@@ -1080,15 +1080,13 @@ pub fn check_spot(state: &mut GameState, playernum: i32, mthing: &MapThing) -> b
         return false;
     }
     if state.game.g_game.bodyqueslot >= BODYQUESIZE {
-        let old_id = state.game.g_game.bodyque
-            [(state.game.g_game.bodyqueslot % BODYQUESIZE) as usize]
-            .unwrap();
+        let old_id =
+            state.game.g_game.bodyque[state.game.g_game.bodyqueslot % BODYQUESIZE].unwrap();
         if state.world.p_mobj.is_live(old_id) {
             remove_mobj(state, old_id);
         }
     }
-    state.game.g_game.bodyque[(state.game.g_game.bodyqueslot % BODYQUESIZE) as usize] =
-        Some(player_mo_id);
+    state.game.g_game.bodyque[state.game.g_game.bodyqueslot % BODYQUESIZE] = Some(player_mo_id);
     state.game.g_game.bodyqueslot += 1;
     let ss = point_in_subsector(&state.world.p_setup, x, y);
     let xa: Fixed;
@@ -1538,9 +1536,9 @@ pub fn init_new(state: &mut GameState, mut skill: SkillType, mut episode: i32, m
     state.render.r_sky.skytexture = texture_num_for_name(&state.render.r_data, skytexturename);
     do_load_level(state);
 }
-pub const DEMOMARKER: i32 = 0x80;
+pub const DEMOMARKER: u8 = 0x80;
 pub fn read_demo_ticcmd(state: &mut GameState, player_num: usize) {
-    if i32::from(state.game.g_game.demobuffer[state.game.g_game.demo_p]) == DEMOMARKER {
+    if state.game.g_game.demobuffer[state.game.g_game.demo_p] == DEMOMARKER {
         check_demo_status(state);
         return;
     }
@@ -1612,7 +1610,7 @@ pub fn record_demo(g_game: &mut GGameState, options: &Options, name: &str) {
     g_game.demoend = maxsize as usize;
     g_game.demorecording = true;
 }
-pub fn vanilla_version_code(state: &DoomstatState) -> i32 {
+pub fn vanilla_version_code(state: &DoomstatState) -> u8 {
     match state.gameversion as u32 {
         0 => {
             error("Doom 1.2 does not have a version code!");
@@ -1629,10 +1627,10 @@ pub fn begin_recording(game: &mut Game) {
     game.g_game.lowres_turn = !game.g_game.longtics;
     game.g_game.demo_p = 0;
     if game.g_game.longtics {
-        game.g_game.demo_write_byte(DOOM_191_VERSION as u8);
+        game.g_game.demo_write_byte(DOOM_191_VERSION);
     } else {
-        let version = vanilla_version_code(&game.doomstat) as u8;
-        game.g_game.demo_write_byte(version);
+        game.g_game
+            .demo_write_byte(vanilla_version_code(&game.doomstat));
     }
     game.g_game.demo_write_byte(game.g_game.gameskill as u8);
     game.g_game.demo_write_byte(game.g_game.gameepisode as u8);
@@ -1653,7 +1651,7 @@ pub fn defered_play_demo(g_game: &mut GGameState, name: FixedCStr<8>) {
     g_game.defdemoname = name;
     g_game.gameaction = GameAction::PlayDemo;
 }
-fn demo_version_description(_state: &mut GameState, version: i32) -> String {
+fn demo_version_description(_state: &mut GameState, version: u8) -> String {
     match version {
         104 => return "v1.4".to_string(),
         105 => return "v1.5".to_string(),
@@ -1678,7 +1676,7 @@ pub fn do_play_demo(state: &mut GameState) {
         lump_bytes(&*state.assets.fs, &mut state.assets.w_wad, demo_lumpnum)[..demo_lumplen]
             .to_vec();
     state.game.g_game.demo_p = 0;
-    let demoversion: i32 = i32::from(state.game.g_game.demo_read_byte());
+    let demoversion = state.game.g_game.demo_read_byte();
     if demoversion == vanilla_version_code(&state.game.doomstat) {
         state.game.g_game.longtics = false;
     } else if demoversion == DOOM_191_VERSION {
@@ -1763,7 +1761,7 @@ pub fn check_demo_status(state: &mut GameState) -> bool {
         return true;
     }
     if state.game.g_game.demorecording {
-        state.game.g_game.demo_write_byte(DEMOMARKER as u8);
+        state.game.g_game.demo_write_byte(DEMOMARKER);
         let demo_len = state.game.g_game.demo_p;
         state.assets.fs.write_file(
             &state.game.g_game.demoname,
