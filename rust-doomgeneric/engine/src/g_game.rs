@@ -1637,7 +1637,7 @@ pub fn do_play_demo(state: &mut GameState) {
     state.game.g_game.gameaction = GameAction::Nothing;
     let demo_lumpname = state.game.g_game.defdemoname.as_str().into_owned();
     let demo_lumpnum = get_num_for_name(&state.assets.w_wad, &demo_lumpname);
-    let demo_lumplen = lump_length(&state.assets.w_wad, demo_lumpnum as u32) as usize;
+    let demo_lumplen = lump_length(&state.assets.w_wad, demo_lumpnum) as usize;
     state.game.g_game.demobuffer =
         lump_bytes(&*state.assets.fs, &mut state.assets.w_wad, demo_lumpnum)[..demo_lumplen]
             .to_vec();

@@ -30,7 +30,6 @@ use crate::p_plats::PlatE;
 use crate::p_plats::PlattypeE;
 use crate::p_setup::PSetupState;
 use crate::p_setup::SectorId;
-use crate::p_setup::SideId;
 use crate::p_setup::SubsectorId;
 use crate::p_spec::Direction;
 use crate::p_spec::{Ceiling, FloorMove, Plat};
@@ -798,8 +797,8 @@ pub fn archive_world(p_saveg: &mut PSavegState, p_setup: &mut PSetupState) {
         saveg_write16(p_saveg, special);
         saveg_write16(p_saveg, tag);
         for &side in &sidenum {
-            if i32::from(side) != -1 {
-                let si = p_setup.side_mut(SideId(side as u32));
+            if let Some(side) = side {
+                let si = p_setup.side_mut(side);
                 let (textureoffset, rowoffset, toptexture, bottomtexture, midtexture) = (
                     si.textureoffset,
                     si.rowoffset,
@@ -846,13 +845,13 @@ pub fn un_archive_world(p_saveg: &mut PSavegState, p_setup: &mut PSetupState) {
         li.tag = tag;
         let sidenum = li.sidenum;
         for &side in &sidenum {
-            if i32::from(side) != -1 {
+            if let Some(side) = side {
                 let textureoffset = i32::from(saveg_read16(p_saveg)) << FRACBITS;
                 let rowoffset = i32::from(saveg_read16(p_saveg)) << FRACBITS;
                 let toptexture = saveg_read16(p_saveg);
                 let bottomtexture = saveg_read16(p_saveg);
                 let midtexture = saveg_read16(p_saveg);
-                let si = p_setup.side_mut(SideId(side as u32));
+                let si = p_setup.side_mut(side);
                 si.textureoffset = Fixed(textureoffset);
                 si.rowoffset = Fixed(rowoffset);
                 si.toptexture = toptexture;

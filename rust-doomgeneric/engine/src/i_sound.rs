@@ -14,6 +14,7 @@ use crate::sounds::SoundsState;
 use crate::w_wad::check_num_for_name;
 use crate::w_wad::lump_bytes;
 use crate::w_wad::lump_length;
+use crate::w_wad::LumpNum;
 use crate::w_wad::WWadState;
 use alloc::format;
 use alloc::string::String;
@@ -149,18 +150,16 @@ fn sfx_lump_name(sounds: &SoundsState, sfx: SfxId, use_sfx_prefix: bool) -> Stri
         String::from(name)
     }
 }
-/// Lump number of `sfx`'s samples, or -1 if the WAD has none (that sound is
+/// Lump number of `sfx`'s samples, or `None` if the WAD has none (that sound is
 /// then silent). Without an audio device nothing is looked up.
 pub fn get_sfx_lump_num(
     state: &ISoundState,
     w_wad: &WWadState,
     sounds: &SoundsState,
     sfx: SfxId,
-) -> i32 {
-    if state.mixer.is_none() {
-        return 0;
-    }
-    check_num_for_name(w_wad, &sfx_lump_name(sounds, sfx, state.use_sfx_prefix)).unwrap_or(-1)
+) -> Option<LumpNum> {
+    state.mixer.as_ref()?;
+    check_num_for_name(w_wad, &sfx_lump_name(sounds, sfx, state.use_sfx_prefix))
 }
 /// Renders as much audio as the platform currently wants and hands it over.
 pub fn update_sound(state: &mut ISoundState, platform: &mut dyn DoomPlatform) {
@@ -208,10 +207,10 @@ pub fn i_start_sound(
     }
     check_volume_separation(&mut vol, &mut sep);
     let lumpnum = state.audio.sounds.s_sfx[sfx.0 as usize].lumpnum;
-    if lumpnum < 0 {
+    let Some(lumpnum) = lumpnum else {
         return -1;
-    }
-    let lump_len = lump_length(&state.assets.w_wad, lumpnum as u32) as usize;
+    };
+    let lump_len = lump_length(&state.assets.w_wad, lumpnum) as usize;
     let Some(sample) = Sample::from_lump(
         lump_bytes(&*state.assets.fs, &mut state.assets.w_wad, lumpnum),
         lump_len,
@@ -253,7 +252,7 @@ pub fn init_music(state: &mut GameState) {
     let Some(lumpnum) = check_num_for_name(&state.assets.w_wad, "GENMIDI") else {
         return;
     };
-    let lump_len = lump_length(&state.assets.w_wad, lumpnum as u32) as usize;
+    let lump_len = lump_length(&state.assets.w_wad, lumpnum) as usize;
     let lump = lump_bytes(&*state.assets.fs, &mut state.assets.w_wad, lumpnum);
     if state.io.platform.music_open(&lump[..lump_len]) {
         state.audio.i_sound.platform_music = true;

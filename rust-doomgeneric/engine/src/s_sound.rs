@@ -125,7 +125,7 @@ pub fn s_init(state: &mut GameState, sfx_volume_0: i32, music_volume_0: i32) {
     state.audio.s_sound.mus_paused = false;
     for i in 1..NUMSFX {
         state.audio.sounds.s_sfx[i].usefulness = -1;
-        state.audio.sounds.s_sfx[i].lumpnum = -1;
+        state.audio.sounds.s_sfx[i].lumpnum = None;
     }
     at_exit(
         &mut state.io.i_system,
@@ -349,7 +349,7 @@ pub fn s_start_sound(state: &mut GameState, origin: SoundOrigin, sfx_id: SfxName
         sfx.usefulness += 1;
     }
     let sfx_id = SfxId(sfx_id as u32);
-    if state.audio.sounds.s_sfx[sfx_index].lumpnum < 0 {
+    if state.audio.sounds.s_sfx[sfx_index].lumpnum.is_none() {
         let lumpnum = get_sfx_lump_num(
             &state.audio.i_sound,
             &state.assets.w_wad,
@@ -460,16 +460,18 @@ pub fn change_music(state: &mut GameState, mut musicnum: i32, looping: bool) {
     }
     stop_music(state);
     let music_index = musicnum as usize;
-    if state.audio.sounds.s_music[music_index].lumpnum == 0 {
+    if state.audio.sounds.s_music[music_index].lumpnum.is_none() {
         let namebuf = format!(
             "d_{}",
             state.audio.sounds.s_music[music_index].name.as_str()
         );
         state.audio.sounds.s_music[music_index].lumpnum =
-            get_num_for_name(&state.assets.w_wad, &namebuf);
+            Some(get_num_for_name(&state.assets.w_wad, &namebuf));
     }
-    let lumpnum = state.audio.sounds.s_music[music_index].lumpnum;
-    let lumplen = lump_length(&state.assets.w_wad, lumpnum as u32) as usize;
+    let lumpnum = state.audio.sounds.s_music[music_index]
+        .lumpnum
+        .expect("music lump resolved above");
+    let lumplen = lump_length(&state.assets.w_wad, lumpnum) as usize;
     let data = lump_bytes(&*state.assets.fs, &mut state.assets.w_wad, lumpnum);
     let handle = register_song(
         &mut state.audio.i_sound,
@@ -493,7 +495,9 @@ pub fn stop_music(state: &mut GameState) {
         stop_song(&mut state.audio.i_sound, &mut *state.io.platform);
         let music = &state.audio.sounds.s_music[musicnum as usize];
         un_register_song(&mut state.audio.i_sound, music.handle);
-        release_lump_num(&state.assets.w_wad, music.lumpnum);
+        if let Some(lumpnum) = music.lumpnum {
+            release_lump_num(&state.assets.w_wad, lumpnum);
+        }
         state.audio.s_sound.mus_playing = None;
     }
 }

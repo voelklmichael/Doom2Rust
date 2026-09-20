@@ -342,7 +342,7 @@ pub fn change_switch_texture(state: &mut GameState, line: LineId, use_again: boo
     if !use_again {
         state.world.p_setup.line_mut(line).special = 0;
     }
-    let sidenum0 = state.world.p_setup.line(line).sidenum[0];
+    let sidenum0 = state.world.p_setup.line(line).front_side().0;
     let tex_top: i32 = i32::from(state.world.p_setup.sides[sidenum0 as usize].toptexture);
     let tex_mid: i32 = i32::from(state.world.p_setup.sides[sidenum0 as usize].midtexture);
     let tex_bot: i32 = i32::from(state.world.p_setup.sides[sidenum0 as usize].bottomtexture);

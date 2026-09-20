@@ -48,7 +48,7 @@ use crate::sounds::SfxName;
 use crate::v_video::cache_patch_name;
 use crate::v_video::Screen;
 
-use crate::v_video::cache_patch_num;
+use crate::v_video::cache_loaded_patch;
 use crate::v_video::draw_patch_direct;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -416,6 +416,16 @@ impl MMenuDefsHolder {
     }
 }
 
+/// The slot F6 saves to.
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum QuickSaveSlot {
+    /// No quicksave slot has been picked yet.
+    Unset,
+    /// The save menu is open so the player can pick one.
+    Choosing,
+    Slot(i32),
+}
+
 pub struct MMenuState {
     pub defs: MMenuDefsHolder,
     pub mouse_sensitivity: i32,
@@ -423,7 +433,7 @@ pub struct MMenuState {
     pub detail_level: i32,
     pub screenblocks: i32,
     pub screen_size: i32,
-    pub quick_save_slot: i32,
+    pub quick_save_slot: QuickSaveSlot,
     pub message_to_print: bool,
     pub message_string: String,
     pub messx: i32,
@@ -470,7 +480,7 @@ impl MMenuState {
             detail_level: 0,
             screenblocks: 10,
             screen_size: 0,
-            quick_save_slot: 0,
+            quick_save_slot: QuickSaveSlot::Unset,
             message_to_print: false,
             message_string: String::new(),
             messx: 0,
@@ -730,8 +740,8 @@ pub fn do_save(g_game: &mut GGameState, m_menu: &mut MMenuState, slot: i32) {
     let savegame_name = m_menu.savegamestrings[slot as usize].clone();
     g_save_game(g_game, slot, &savegame_name);
     clear_menus(m_menu);
-    if m_menu.quick_save_slot == -2 {
-        m_menu.quick_save_slot = slot;
+    if m_menu.quick_save_slot == QuickSaveSlot::Choosing {
+        m_menu.quick_save_slot = QuickSaveSlot::Slot(slot);
     }
 }
 pub fn save_select(state: &mut GameState, choice: i32) {
@@ -766,7 +776,9 @@ pub fn m_save_game(state: &mut GameState, _choice: i32) {
 }
 pub fn quick_save_response(state: &mut GameState, key: i32) {
     if key == state.game.m_controls.key_menu_confirm {
-        let quick_save_slot = state.ui.m_menu.quick_save_slot;
+        let QuickSaveSlot::Slot(quick_save_slot) = state.ui.m_menu.quick_save_slot else {
+            return;
+        };
         do_save(
             &mut state.game.g_game,
             &mut state.ui.m_menu,
@@ -783,7 +795,7 @@ pub fn quick_save(state: &mut GameState) {
     if state.game.g_game.gamestate != GameScreenState::Level {
         return;
     }
-    if state.ui.m_menu.quick_save_slot < 0 {
+    let QuickSaveSlot::Slot(quick_save_slot) = state.ui.m_menu.quick_save_slot else {
         start_control_panel(&mut state.ui.m_menu);
         read_save_strings(
             &state.game.d_main,
@@ -792,19 +804,21 @@ pub fn quick_save(state: &mut GameState) {
         );
         let menudef = MenuId::Save;
         setup_next_menu(&mut state.ui.m_menu, menudef);
-        state.ui.m_menu.quick_save_slot = -2;
+        state.ui.m_menu.quick_save_slot = QuickSaveSlot::Choosing;
         return;
-    }
+    };
     let msg = format!(
         "quicksave over your game named\n\n'{}'?\n\npress y or n.",
-        state.ui.m_menu.savegamestrings[state.ui.m_menu.quick_save_slot as usize],
+        state.ui.m_menu.savegamestrings[quick_save_slot as usize],
     );
     let routine = Some(quick_save_response as fn(&mut GameState, i32));
     start_message(&mut state.ui.m_menu, &msg, routine, true);
 }
 pub fn quick_load_response(state: &mut GameState, key: i32) {
     if key == state.game.m_controls.key_menu_confirm {
-        let quick_save_slot = state.ui.m_menu.quick_save_slot;
+        let QuickSaveSlot::Slot(quick_save_slot) = state.ui.m_menu.quick_save_slot else {
+            return;
+        };
         load_select(state, quick_save_slot);
         s_start_sound(state, SoundOrigin::None, SfxName::Swtchx);
     }
@@ -819,7 +833,7 @@ pub fn quick_load(g_game: &GGameState, m_menu: &mut MMenuState) {
         );
         return;
     }
-    if m_menu.quick_save_slot < 0 {
+    let QuickSaveSlot::Slot(quick_save_slot) = m_menu.quick_save_slot else {
         start_message(
             m_menu,
             "you haven't picked a quicksave slot yet!\n\npress a key.",
@@ -827,10 +841,10 @@ pub fn quick_load(g_game: &GGameState, m_menu: &mut MMenuState) {
             false,
         );
         return;
-    }
+    };
     let msg = format!(
         "do you want to quickload the game named\n\n'{}'?\n\npress y or n.",
-        m_menu.savegamestrings[m_menu.quick_save_slot as usize],
+        m_menu.savegamestrings[quick_save_slot as usize],
     );
     let routine = Some(quick_load_response as fn(&mut GameState, i32));
     start_message(m_menu, &msg, routine, true);
@@ -1270,7 +1284,7 @@ pub fn string_width(
     for b in string.bytes() {
         let c: i32 = i32::from(b.to_ascii_uppercase()) - HU_FONTSTART;
         if (0..HU_FONTSIZE).contains(&c) {
-            let font_patch = cache_patch_num(fs, w_wad, hu_stuff.hu_font[c as usize]);
+            let font_patch = cache_loaded_patch(fs, w_wad, hu_stuff.hu_font[c as usize]);
             w += font_patch.width();
         } else {
             w += 4;
@@ -1284,7 +1298,7 @@ pub fn string_height(
     w_wad: &mut WWadState,
     string: &str,
 ) -> i32 {
-    let height: i32 = cache_patch_num(fs, w_wad, hu_stuff.hu_font[0]).height();
+    let height: i32 = cache_loaded_patch(fs, w_wad, hu_stuff.hu_font[0]).height();
     let mut h: i32 = height;
     for b in string.bytes() {
         if b == b'\n' {
@@ -1304,7 +1318,7 @@ pub fn write_text(state: &mut GameState, x: i32, y: i32, string: &str) {
         } else {
             let c: i32 = i32::from((c as u8).to_ascii_uppercase()) - HU_FONTSTART;
             if (0..HU_FONTSIZE).contains(&c) {
-                let font_patch = cache_patch_num(
+                let font_patch = cache_loaded_patch(
                     &*state.assets.fs,
                     &mut state.assets.w_wad,
                     state.ui.hu_stuff.hu_font[c as usize],
@@ -1731,7 +1745,7 @@ pub fn m_drawer(state: &mut GameState) {
                 line,
             );
             state.ui.m_menu.drawer_y = (i32::from(state.ui.m_menu.drawer_y)
-                + cache_patch_num(
+                + cache_loaded_patch(
                     &*state.assets.fs,
                     &mut state.assets.w_wad,
                     state.ui.hu_stuff.hu_font[0],
@@ -1807,7 +1821,7 @@ pub fn m_init(doomstat: &DoomstatState, m_menu: &mut MMenuState) {
     m_menu.message_to_print = false;
     m_menu.message_string = String::new();
     m_menu.message_last_menu_active = i32::from(m_menu.menuactive);
-    m_menu.quick_save_slot = -1;
+    m_menu.quick_save_slot = QuickSaveSlot::Unset;
     if doomstat.gamemode == GameMode::Commercial {
         // Commercial has no "read this": Quit Doom moves up into its slot.
         m_menu

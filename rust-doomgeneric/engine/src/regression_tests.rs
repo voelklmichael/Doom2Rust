@@ -520,7 +520,7 @@ fn special_line_trace(walk: bool) -> Option<String> {
                 for _ in 0..8 {
                     crate::p_tick::run_thinkers(state);
                 }
-                let sidenum = state.world.p_setup.line(line).sidenum[0] as usize;
+                let sidenum = state.world.p_setup.line(line).front_side().0 as usize;
                 let side_textures = {
                     let s = &state.world.p_setup.sides[sidenum];
                     [s.toptexture, s.midtexture, s.bottomtexture].map(i32::from)

@@ -7,6 +7,7 @@ use crate::p_mobj::LineFlags;
 use crate::p_mobj::PMobjState;
 use crate::p_setup::PSetupState;
 use crate::platform::DoomPlatform;
+use crate::w_wad::LumpNum;
 use crate::w_wad::WWadState;
 use alloc::string::ToString;
 
@@ -25,7 +26,7 @@ use crate::m_fixed::FRACBITS;
 use crate::m_fixed::FRACUNIT;
 use crate::m_fixed::INT_MAX;
 use crate::p_maputl::MAPBLOCKUNITS;
-use crate::v_video::cache_patch_num;
+use crate::v_video::cache_loaded_patch;
 use crate::v_video::Screen;
 
 use crate::st_stuff::st_responder;
@@ -75,14 +76,14 @@ pub struct AmMapState {
     pub scale_mtof: Fixed,
     pub scale_ftom: Fixed,
     pub plr: PlayerId,
-    pub marknums: [i32; 10],
+    pub marknums: [Option<LumpNum>; 10],
     pub markpoints: [MPoint; 10],
     pub markpointnum: usize,
     pub followplayer: bool,
     pub cheat_amap: CheatSeq,
     pub stopped: bool,
-    pub am_start_lastlevel: i32,
-    pub am_start_lastepisode: i32,
+    /// The `(map, episode)` the automap was last set up for.
+    pub am_start_last: Option<(i32, i32)>,
     pub am_responder_bigstate: bool,
     pub am_drawfline_fuck: i32,
     pub am_updatelightlev_nexttic: i32,
@@ -141,7 +142,7 @@ impl AmMapState {
             scale_mtof: Fixed((INITSCALEMTOF) as i32),
             scale_ftom: Fixed::ZERO,
             plr: PlayerId(0),
-            marknums: [-1; 10],
+            marknums: [None; 10],
             markpoints: [MPoint {
                 x: Fixed::ZERO,
                 y: Fixed::ZERO,
@@ -150,8 +151,7 @@ impl AmMapState {
             followplayer: true,
             cheat_amap: CheatSeq::new("iddt", 0),
             stopped: true,
-            am_start_lastlevel: -1,
-            am_start_lastepisode: -1,
+            am_start_last: None,
             am_responder_bigstate: false,
             am_drawfline_fuck: 0,
             am_updatelightlev_nexttic: 0,
@@ -652,12 +652,14 @@ pub fn load_pics(am_map: &mut AmMapState, fs: &dyn DoomFileSystem, w_wad: &mut W
         let namebuf = format!("AMMNUM{i}");
         let lumpnum = get_num_for_name(w_wad, &namebuf);
         lump_bytes(fs, w_wad, lumpnum);
-        am_map.marknums[i] = lumpnum;
+        am_map.marknums[i] = Some(lumpnum);
     }
 }
 pub fn unload_pics(am_map: &AmMapState, w_wad: &WWadState) {
     for i in 0..10 {
-        release_lump_num(w_wad, am_map.marknums[i]);
+        if let Some(lumpnum) = am_map.marknums[i] {
+            release_lump_num(w_wad, lumpnum);
+        }
     }
 }
 pub fn clear_marks(am_map: &mut AmMapState) {
@@ -701,12 +703,10 @@ pub fn am_start(state: &mut GameState) {
         am_stop(state);
     }
     state.ui.am_map.stopped = false;
-    if state.ui.am_map.am_start_lastlevel != state.game.g_game.gamemap
-        || state.ui.am_map.am_start_lastepisode != state.game.g_game.gameepisode
-    {
+    let this_level = Some((state.game.g_game.gamemap, state.game.g_game.gameepisode));
+    if state.ui.am_map.am_start_last != this_level {
         level_init(&mut state.ui.am_map, &state.world.p_setup);
-        state.ui.am_map.am_start_lastlevel = state.game.g_game.gamemap;
-        state.ui.am_map.am_start_lastepisode = state.game.g_game.gameepisode;
+        state.ui.am_map.am_start_last = this_level;
     }
     am_init_variables(state);
     load_pics(
@@ -1278,7 +1278,6 @@ pub fn draw_line_character(
 }
 pub fn draw_players(state: &mut GameState) {
     const THEIR_COLORS: [i32; 4] = [GREENS, GRAYS, BROWNS, REDS];
-    let mut their_color: i32 = -1;
     if !state.game.g_game.netgame {
         let plr_mo_id = state
             .game
@@ -1311,8 +1310,7 @@ pub fn draw_players(state: &mut GameState) {
         }
         return;
     }
-    for i in 0..MAXPLAYERS {
-        their_color += 1;
+    for (i, &their_color) in THEIR_COLORS.iter().enumerate() {
         let p = &state.game.g_game.players[i];
         let (p_invisibility, p_mo_id) = (p.powers[PowerType::Invisibility], p.mo);
         if !(state.game.g_game.deathmatch != 0
@@ -1323,7 +1321,7 @@ pub fn draw_players(state: &mut GameState) {
             let color: i32 = if p_invisibility != 0 {
                 246
             } else {
-                THEIR_COLORS[their_color as usize]
+                their_color
             };
             let p_mo = state.world.p_mobj.mo(p_mo_id.unwrap());
             let (p_angle, p_x, p_y) = (p_mo.angle, p_mo.x, p_mo.y);
@@ -1375,7 +1373,7 @@ pub fn draw_marks(state: &mut GameState) {
                 && fy <= state.ui.am_map.f_h - h
             {
                 let lumpnum = state.ui.am_map.marknums[i];
-                let patch = cache_patch_num(&*state.assets.fs, &mut state.assets.w_wad, lumpnum);
+                let patch = cache_loaded_patch(&*state.assets.fs, &mut state.assets.w_wad, lumpnum);
                 let dest_screen = Screen::Video;
                 draw_patch(state, dest_screen, fx, fy, &patch);
             }

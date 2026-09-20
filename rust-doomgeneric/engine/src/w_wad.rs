@@ -10,6 +10,50 @@ use alloc::vec::Vec;
 
 use crate::filesystem::{DoomFileSystem, FileId};
 
+/// The number of a lump in the loaded WADs (an index into `WWadState::lumpinfo`).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct LumpNum(pub u32);
+
+impl LumpNum {
+    #[inline]
+    pub const fn index(self) -> usize {
+        self.0 as usize
+    }
+}
+
+/// The lump `n` places after this one (flats and sprites are stored as consecutive lumps).
+impl core::ops::Add<i32> for LumpNum {
+    type Output = Self;
+    #[inline]
+    fn add(self, n: i32) -> Self {
+        Self(self.0.wrapping_add_signed(n))
+    }
+}
+
+/// The lump `n` places before this one.
+impl core::ops::Sub<i32> for LumpNum {
+    type Output = Self;
+    #[inline]
+    fn sub(self, n: i32) -> Self {
+        Self(self.0.wrapping_add_signed(-n))
+    }
+}
+
+/// How many lumps apart two lump numbers are.
+impl core::ops::Sub for LumpNum {
+    type Output = i32;
+    #[inline]
+    fn sub(self, other: Self) -> i32 {
+        self.0.wrapping_sub(other.0) as i32
+    }
+}
+
+impl core::fmt::Display for LumpNum {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        self.0.fmt(f)
+    }
+}
+
 pub struct WWadState {
     pub lumpinfo: Vec<LumpInfo>,
     pub numlumps: u32,
@@ -141,13 +185,13 @@ pub fn w_add_file(
     Some(wad_file)
 }
 /// The number of the last lump called `name`, if there is one.
-pub fn check_num_for_name(state: &WWadState, name: &str) -> Option<i32> {
+pub fn check_num_for_name(state: &WWadState, name: &str) -> Option<LumpNum> {
     if state.lumphash.is_empty() {
         // The last lump with the name wins, as in vanilla.
         return (0..state.numlumps as usize)
             .rev()
             .find(|&i| state.lumpinfo[i].name.eq_str_ignore_ascii_case(name))
-            .map(|i| i as i32);
+            .map(|i| LumpNum(i as u32));
     }
     let hash: u32 = lump_name_hash(name.as_bytes()).wrapping_rem(state.numlumps);
     let mut cur = state.lumphash[hash as usize];
@@ -156,27 +200,27 @@ pub fn check_num_for_name(state: &WWadState, name: &str) -> Option<i32> {
             .name
             .eq_str_ignore_ascii_case(name)
         {
-            return Some(idx as i32);
+            return Some(LumpNum(idx));
         }
         cur = state.lumpinfo[idx as usize].next;
     }
     None
 }
-pub fn get_num_for_name(state: &WWadState, name: &str) -> i32 {
+pub fn get_num_for_name(state: &WWadState, name: &str) -> LumpNum {
     check_num_for_name(state, name)
         .unwrap_or_else(|| error(&format!("W_GetNumForName: {name} not found!")))
 }
-pub fn lump_length(state: &WWadState, lump: u32) -> i32 {
-    if lump >= state.numlumps {
+pub fn lump_length(state: &WWadState, lump: LumpNum) -> i32 {
+    if lump.0 >= state.numlumps {
         error(&format!("W_LumpLength: {lump} >= numlumps"));
     }
-    state.lumpinfo[lump as usize].size
+    state.lumpinfo[lump.index()].size
 }
-pub fn read_lump(state: &WWadState, fs: &dyn DoomFileSystem, lump: u32, dest: &mut [u8]) {
-    if lump >= state.numlumps {
+pub fn read_lump(state: &WWadState, fs: &dyn DoomFileSystem, lump: LumpNum, dest: &mut [u8]) {
+    if lump.0 >= state.numlumps {
         error(&format!("W_ReadLump: {lump} >= numlumps"));
     }
-    let l = &state.lumpinfo[lump as usize];
+    let l = &state.lumpinfo[lump.index()];
     let c = fs.read_at(l.wad_file, u64::from(l.position as u32), dest) as i32;
     if c < l.size {
         error(&format!(
@@ -188,16 +232,16 @@ pub fn read_lump(state: &WWadState, fs: &dyn DoomFileSystem, lump: u32, dest: &m
 pub fn lump_bytes(
     fs: &dyn DoomFileSystem,
     w_wad: &mut WWadState,
-    lumpnum: i32,
+    lumpnum: LumpNum,
 ) -> alloc::rc::Rc<[u8]> {
     const CACHE_PAD: usize = 128;
-    if lumpnum as u32 >= w_wad.numlumps {
+    if lumpnum.0 >= w_wad.numlumps {
         error(&format!("W_CacheLumpNum: {lumpnum} >= numlumps"));
     }
-    if let Some(cache) = w_wad.lumpinfo[lumpnum as usize].cache.as_ref() {
+    if let Some(cache) = w_wad.lumpinfo[lumpnum.index()].cache.as_ref() {
         return alloc::rc::Rc::clone(cache);
     }
-    let lumplen = lump_length(w_wad, lumpnum as u32);
+    let lumplen = lump_length(w_wad, lumpnum);
     // r_draw.rs's draw_column (and friends) reproduce vanilla's
     // `dc_source[(frac>>FRACBITS) & 127]` column read verbatim, which
     // vanilla itself only gets away with because its zone allocator
@@ -209,9 +253,9 @@ pub fn lump_bytes(
     // -- pad every cached lump by the mask's full range to give it the
     // same harmless slack vanilla relied on.
     let mut buf = vec![0u8; lumplen as usize + CACHE_PAD].into_boxed_slice();
-    read_lump(w_wad, fs, lumpnum as u32, &mut buf[..lumplen as usize]);
+    read_lump(w_wad, fs, lumpnum, &mut buf[..lumplen as usize]);
     let rc: alloc::rc::Rc<[u8]> = alloc::rc::Rc::from(buf);
-    w_wad.lumpinfo[lumpnum as usize].cache = Some(alloc::rc::Rc::clone(&rc));
+    w_wad.lumpinfo[lumpnum.index()].cache = Some(alloc::rc::Rc::clone(&rc));
     rc
 }
 pub fn lump_bytes_name(
@@ -222,13 +266,13 @@ pub fn lump_bytes_name(
     let lumpnum = get_num_for_name(w_wad, name);
     lump_bytes(fs, w_wad, lumpnum)
 }
-pub fn release_lump_num(state: &WWadState, lumpnum: i32) {
+pub fn release_lump_num(state: &WWadState, lumpnum: LumpNum) {
     // Releasing a cached lump is a no-op now -- nothing purges cached blocks
     // under memory pressure since the zone allocator was removed entirely;
     // the owned cache buffer just stays cached until process exit either
     // way. Kept as a bounds-checked no-op rather than deleted, matching this
     // function's original validation behavior.
-    if lumpnum as u32 >= state.numlumps {
+    if lumpnum.0 >= state.numlumps {
         error(&format!("W_ReleaseLumpNum: {lumpnum} >= numlumps"));
     }
 }
@@ -279,5 +323,48 @@ pub fn check_correct_iwad(state: &WWadState, mission: GameMission) {
                     game_mission_string(unique.mission),
                 ));
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn lump_numbers_offset_and_subtract() {
+        let first = LumpNum(100);
+        assert_eq!(first + 3, LumpNum(103));
+        assert_eq!(first - 1, LumpNum(99));
+        assert_eq!(LumpNum(110) - first, 10);
+        assert_eq!(first - LumpNum(110), -10);
+        assert_eq!(first.index(), 100);
+    }
+
+    fn wad_with(names: &[&str]) -> WWadState {
+        let mut w_wad = WWadState::new();
+        for name in names {
+            w_wad.lumpinfo.push(LumpInfo {
+                name: FixedCStr::from_bytes(name.as_bytes()),
+                wad_file: FileId(0),
+                position: 0,
+                size: 0,
+                cache: None,
+                next: None,
+            });
+        }
+        w_wad.numlumps = names.len() as u32;
+        w_wad
+    }
+
+    #[test]
+    fn name_lookup_finds_the_last_lump_with_that_name() {
+        let w_wad = wad_with(&["PLAYPAL", "S_START", "TROOA1", "S_END", "PLAYPAL"]);
+        assert_eq!(check_num_for_name(&w_wad, "playpal"), Some(LumpNum(4)));
+        assert_eq!(check_num_for_name(&w_wad, "S_START"), Some(LumpNum(1)));
+        assert_eq!(check_num_for_name(&w_wad, "NOSUCH"), None);
+        assert_eq!(
+            get_num_for_name(&w_wad, "S_END") - get_num_for_name(&w_wad, "S_START"),
+            2
+        );
     }
 }

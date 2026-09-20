@@ -530,7 +530,7 @@ pub fn get_side(
 ) -> SideId {
     let line_id = p_setup.sector_mut(current_sector).lines[line as usize];
     let sidenum = p_setup.line(line_id).sidenum[side as usize];
-    SideId(sidenum as u32)
+    sidenum.expect("line without that side")
 }
 pub fn get_sector(
     p_setup: &mut PSetupState,
@@ -540,7 +540,7 @@ pub fn get_sector(
 ) -> SectorId {
     let line_id = p_setup.sector_mut(current_sector).lines[line as usize];
     let sidenum = p_setup.line(line_id).sidenum[side as usize];
-    p_setup.sides[sidenum as usize].sector
+    p_setup.sides[sidenum.expect("line without that side").0 as usize].sector
 }
 pub fn two_sided(p_setup: &mut PSetupState, sector: SectorId, line: i32) -> bool {
     let sec = p_setup.sector_mut(sector);
@@ -1150,7 +1150,7 @@ pub fn update_specials(state: &mut GameState) {
         let line: LineId = state.world.p_spec.linespeciallist[i];
         let linev = state.world.p_setup.line(line);
         if i32::from(linev.special) == 48 {
-            state.world.p_setup.sides[linev.sidenum[0] as usize].textureoffset += FRACUNIT;
+            state.world.p_setup.sides[linev.front_side().0 as usize].textureoffset += FRACUNIT;
         }
     }
     for i in 0..MAXBUTTONS {
@@ -1162,22 +1162,22 @@ pub fn update_specials(state: &mut GameState) {
                     BWhere::Top => {
                         state.world.p_setup.sides[state.world.p_setup.lines
                             [button_line_id.0 as usize]
-                            .sidenum[0]
-                            as usize]
+                            .front_side()
+                            .0 as usize]
                             .toptexture = state.world.p_switch.buttonlist[i].btexture as i16;
                     }
                     BWhere::Middle => {
                         state.world.p_setup.sides[state.world.p_setup.lines
                             [button_line_id.0 as usize]
-                            .sidenum[0]
-                            as usize]
+                            .front_side()
+                            .0 as usize]
                             .midtexture = state.world.p_switch.buttonlist[i].btexture as i16;
                     }
                     BWhere::Bottom => {
                         state.world.p_setup.sides[state.world.p_setup.lines
                             [button_line_id.0 as usize]
-                            .sidenum[0]
-                            as usize]
+                            .front_side()
+                            .0 as usize]
                             .bottomtexture = state.world.p_switch.buttonlist[i].btexture as i16;
                     }
                 }

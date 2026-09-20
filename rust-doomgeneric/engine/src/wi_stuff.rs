@@ -14,9 +14,10 @@ use crate::s_sound::SoundOrigin;
 use crate::sounds::MusicName;
 use crate::sounds::SfxName;
 use crate::st_stuff::LoadCallback;
-use crate::v_video::cache_patch_num;
+use crate::v_video::cache_loaded_patch;
 use crate::v_video::draw_patch;
 use crate::v_video::Screen;
+use crate::w_wad::LumpNum;
 use crate::w_wad::{check_num_for_name, get_num_for_name, lump_bytes, release_lump_name};
 use alloc::string::ToString;
 use alloc::vec::Vec;
@@ -39,31 +40,31 @@ pub struct WiStuffState {
     pub cnt_par: i32,
     pub cnt_pause: i32,
     pub numcmaps: i32,
-    pub yah: [i32; 3],
-    pub splat: [i32; 2],
-    pub percent: i32,
-    pub colon: i32,
-    pub num: [i32; 10],
-    pub wiminus: i32,
-    pub finished: i32,
-    pub entering: i32,
-    pub sp_secret: i32,
-    pub kills: i32,
-    pub secret: i32,
-    pub items: i32,
-    pub frags: i32,
-    pub timepatch: i32,
-    pub par: i32,
-    pub sucks: i32,
-    pub killers: i32,
-    pub victims: i32,
-    pub total: i32,
-    pub star: i32,
-    pub bstar: i32,
-    pub p: [i32; MAXPLAYERS],
-    pub bp: [i32; MAXPLAYERS],
-    pub lnames: Vec<i32>,
-    pub background: i32,
+    pub yah: [Option<LumpNum>; 3],
+    pub splat: [Option<LumpNum>; 2],
+    pub percent: Option<LumpNum>,
+    pub colon: Option<LumpNum>,
+    pub num: [Option<LumpNum>; 10],
+    pub wiminus: Option<LumpNum>,
+    pub finished: Option<LumpNum>,
+    pub entering: Option<LumpNum>,
+    pub sp_secret: Option<LumpNum>,
+    pub kills: Option<LumpNum>,
+    pub secret: Option<LumpNum>,
+    pub items: Option<LumpNum>,
+    pub frags: Option<LumpNum>,
+    pub timepatch: Option<LumpNum>,
+    pub par: Option<LumpNum>,
+    pub sucks: Option<LumpNum>,
+    pub killers: Option<LumpNum>,
+    pub victims: Option<LumpNum>,
+    pub total: Option<LumpNum>,
+    pub star: Option<LumpNum>,
+    pub bstar: Option<LumpNum>,
+    pub p: [Option<LumpNum>; MAXPLAYERS],
+    pub bp: [Option<LumpNum>; MAXPLAYERS],
+    pub lnames: Vec<Option<LumpNum>>,
+    pub background: Option<LumpNum>,
     pub snl_pointeron: bool,
     pub dm_state: i32,
     pub dm_frags: [[i32; MAXPLAYERS]; MAXPLAYERS],
@@ -95,7 +96,7 @@ impl WiStuffState {
                     loc: Point { x: 224, y: 104 },
                     data1: 0,
                     data2: 0,
-                    p: [-1, -1, -1],
+                    p: [None; 3],
                     nexttic: 0,
                     lastdrawn: 0,
                     ctr: 0,
@@ -108,7 +109,7 @@ impl WiStuffState {
                     loc: Point { x: 184, y: 160 },
                     data1: 0,
                     data2: 0,
-                    p: [-1, -1, -1],
+                    p: [None; 3],
                     nexttic: 0,
                     lastdrawn: 0,
                     ctr: 0,
@@ -121,7 +122,7 @@ impl WiStuffState {
                     loc: Point { x: 112, y: 136 },
                     data1: 0,
                     data2: 0,
-                    p: [-1, -1, -1],
+                    p: [None; 3],
                     nexttic: 0,
                     lastdrawn: 0,
                     ctr: 0,
@@ -134,7 +135,7 @@ impl WiStuffState {
                     loc: Point { x: 72, y: 112 },
                     data1: 0,
                     data2: 0,
-                    p: [-1, -1, -1],
+                    p: [None; 3],
                     nexttic: 0,
                     lastdrawn: 0,
                     ctr: 0,
@@ -147,7 +148,7 @@ impl WiStuffState {
                     loc: Point { x: 88, y: 96 },
                     data1: 0,
                     data2: 0,
-                    p: [-1, -1, -1],
+                    p: [None; 3],
                     nexttic: 0,
                     lastdrawn: 0,
                     ctr: 0,
@@ -160,7 +161,7 @@ impl WiStuffState {
                     loc: Point { x: 64, y: 48 },
                     data1: 0,
                     data2: 0,
-                    p: [-1, -1, -1],
+                    p: [None; 3],
                     nexttic: 0,
                     lastdrawn: 0,
                     ctr: 0,
@@ -173,7 +174,7 @@ impl WiStuffState {
                     loc: Point { x: 192, y: 40 },
                     data1: 0,
                     data2: 0,
-                    p: [-1, -1, -1],
+                    p: [None; 3],
                     nexttic: 0,
                     lastdrawn: 0,
                     ctr: 0,
@@ -186,7 +187,7 @@ impl WiStuffState {
                     loc: Point { x: 136, y: 16 },
                     data1: 0,
                     data2: 0,
-                    p: [-1, -1, -1],
+                    p: [None; 3],
                     nexttic: 0,
                     lastdrawn: 0,
                     ctr: 0,
@@ -199,7 +200,7 @@ impl WiStuffState {
                     loc: Point { x: 80, y: 16 },
                     data1: 0,
                     data2: 0,
-                    p: [-1, -1, -1],
+                    p: [None; 3],
                     nexttic: 0,
                     lastdrawn: 0,
                     ctr: 0,
@@ -212,7 +213,7 @@ impl WiStuffState {
                     loc: Point { x: 64, y: 24 },
                     data1: 0,
                     data2: 0,
-                    p: [-1, -1, -1],
+                    p: [None; 3],
                     nexttic: 0,
                     lastdrawn: 0,
                     ctr: 0,
@@ -227,7 +228,7 @@ impl WiStuffState {
                     loc: Point { x: 128, y: 136 },
                     data1: 1,
                     data2: 0,
-                    p: [-1, -1, -1],
+                    p: [None; 3],
                     nexttic: 0,
                     lastdrawn: 0,
                     ctr: 0,
@@ -240,7 +241,7 @@ impl WiStuffState {
                     loc: Point { x: 128, y: 136 },
                     data1: 2,
                     data2: 0,
-                    p: [-1, -1, -1],
+                    p: [None; 3],
                     nexttic: 0,
                     lastdrawn: 0,
                     ctr: 0,
@@ -253,7 +254,7 @@ impl WiStuffState {
                     loc: Point { x: 128, y: 136 },
                     data1: 3,
                     data2: 0,
-                    p: [-1, -1, -1],
+                    p: [None; 3],
                     nexttic: 0,
                     lastdrawn: 0,
                     ctr: 0,
@@ -266,7 +267,7 @@ impl WiStuffState {
                     loc: Point { x: 128, y: 136 },
                     data1: 4,
                     data2: 0,
-                    p: [-1, -1, -1],
+                    p: [None; 3],
                     nexttic: 0,
                     lastdrawn: 0,
                     ctr: 0,
@@ -279,7 +280,7 @@ impl WiStuffState {
                     loc: Point { x: 128, y: 136 },
                     data1: 5,
                     data2: 0,
-                    p: [-1, -1, -1],
+                    p: [None; 3],
                     nexttic: 0,
                     lastdrawn: 0,
                     ctr: 0,
@@ -292,7 +293,7 @@ impl WiStuffState {
                     loc: Point { x: 128, y: 136 },
                     data1: 6,
                     data2: 0,
-                    p: [-1, -1, -1],
+                    p: [None; 3],
                     nexttic: 0,
                     lastdrawn: 0,
                     ctr: 0,
@@ -305,7 +306,7 @@ impl WiStuffState {
                     loc: Point { x: 128, y: 136 },
                     data1: 7,
                     data2: 0,
-                    p: [-1, -1, -1],
+                    p: [None; 3],
                     nexttic: 0,
                     lastdrawn: 0,
                     ctr: 0,
@@ -318,7 +319,7 @@ impl WiStuffState {
                     loc: Point { x: 192, y: 144 },
                     data1: 8,
                     data2: 0,
-                    p: [-1, -1, -1],
+                    p: [None; 3],
                     nexttic: 0,
                     lastdrawn: 0,
                     ctr: 0,
@@ -331,7 +332,7 @@ impl WiStuffState {
                     loc: Point { x: 128, y: 136 },
                     data1: 8,
                     data2: 0,
-                    p: [-1, -1, -1],
+                    p: [None; 3],
                     nexttic: 0,
                     lastdrawn: 0,
                     ctr: 0,
@@ -346,7 +347,7 @@ impl WiStuffState {
                     loc: Point { x: 104, y: 168 },
                     data1: 0,
                     data2: 0,
-                    p: [-1, -1, -1],
+                    p: [None; 3],
                     nexttic: 0,
                     lastdrawn: 0,
                     ctr: 0,
@@ -359,7 +360,7 @@ impl WiStuffState {
                     loc: Point { x: 40, y: 136 },
                     data1: 0,
                     data2: 0,
-                    p: [-1, -1, -1],
+                    p: [None; 3],
                     nexttic: 0,
                     lastdrawn: 0,
                     ctr: 0,
@@ -372,7 +373,7 @@ impl WiStuffState {
                     loc: Point { x: 160, y: 96 },
                     data1: 0,
                     data2: 0,
-                    p: [-1, -1, -1],
+                    p: [None; 3],
                     nexttic: 0,
                     lastdrawn: 0,
                     ctr: 0,
@@ -385,7 +386,7 @@ impl WiStuffState {
                     loc: Point { x: 104, y: 80 },
                     data1: 0,
                     data2: 0,
-                    p: [-1, -1, -1],
+                    p: [None; 3],
                     nexttic: 0,
                     lastdrawn: 0,
                     ctr: 0,
@@ -398,7 +399,7 @@ impl WiStuffState {
                     loc: Point { x: 120, y: 32 },
                     data1: 0,
                     data2: 0,
-                    p: [-1, -1, -1],
+                    p: [None; 3],
                     nexttic: 0,
                     lastdrawn: 0,
                     ctr: 0,
@@ -411,7 +412,7 @@ impl WiStuffState {
                     loc: Point { x: 40, y: 0 },
                     data1: 0,
                     data2: 0,
-                    p: [-1, -1, -1],
+                    p: [None; 3],
                     nexttic: 0,
                     lastdrawn: 0,
                     ctr: 0,
@@ -432,31 +433,31 @@ impl WiStuffState {
             cnt_par: 0,
             cnt_pause: 0,
             numcmaps: 0,
-            yah: [-1, -1, -1],
-            splat: [-1, -1],
-            percent: -1,
-            colon: -1,
-            num: [-1; 10],
-            wiminus: -1,
-            finished: -1,
-            entering: -1,
-            sp_secret: -1,
-            kills: -1,
-            secret: -1,
-            items: -1,
-            frags: -1,
-            timepatch: -1,
-            par: -1,
-            sucks: -1,
-            killers: -1,
-            victims: -1,
-            total: -1,
-            star: -1,
-            bstar: -1,
-            p: [-1; MAXPLAYERS],
-            bp: [-1; MAXPLAYERS],
+            yah: [None; 3],
+            splat: [None; 2],
+            percent: None,
+            colon: None,
+            num: [None; 10],
+            wiminus: None,
+            finished: None,
+            entering: None,
+            sp_secret: None,
+            kills: None,
+            secret: None,
+            items: None,
+            frags: None,
+            timepatch: None,
+            par: None,
+            sucks: None,
+            killers: None,
+            victims: None,
+            total: None,
+            star: None,
+            bstar: None,
+            p: [None; MAXPLAYERS],
+            bp: [None; MAXPLAYERS],
             lnames: Vec::new(),
-            background: -1,
+            background: None,
             snl_pointeron: false,
             dm_state: 0,
             dm_frags: [[0; MAXPLAYERS]; MAXPLAYERS],
@@ -516,7 +517,7 @@ pub struct Anim {
     pub loc: Point,
     pub data1: i32,
     pub data2: i32,
-    pub p: [i32; 3],
+    pub p: [Option<LumpNum>; 3],
     pub nexttic: i32,
     pub lastdrawn: i32,
     pub ctr: i32,
@@ -588,7 +589,7 @@ static LNODES: [[Point; 9]; 4] = [
 ];
 pub const SHOWNEXTLOCDELAY: i32 = 4;
 pub fn slam_background(state: &mut GameState) {
-    let patch = cache_patch_num(
+    let patch = cache_loaded_patch(
         &*state.assets.fs,
         &mut state.assets.w_wad,
         state.ui.wi_stuff.background,
@@ -603,7 +604,7 @@ pub fn draw_lf(state: &mut GameState) {
     {
         let index = state.wbs().last as usize;
         let last_lump = state.ui.wi_stuff.lnames[index];
-        let last_patch = cache_patch_num(&*state.assets.fs, &mut state.assets.w_wad, last_lump);
+        let last_patch = cache_loaded_patch(&*state.assets.fs, &mut state.assets.w_wad, last_lump);
         let dest_screen = Screen::Video;
         draw_patch(
             state,
@@ -613,7 +614,7 @@ pub fn draw_lf(state: &mut GameState) {
             &last_patch,
         );
         y += 5 * last_patch.height() / 4;
-        let finished_patch = cache_patch_num(
+        let finished_patch = cache_loaded_patch(
             &*state.assets.fs,
             &mut state.assets.w_wad,
             state.ui.wi_stuff.finished,
@@ -630,7 +631,7 @@ pub fn draw_lf(state: &mut GameState) {
 }
 pub fn draw_el(state: &mut GameState) {
     let mut y: i32 = WI_TITLEY;
-    let entering_patch = cache_patch_num(
+    let entering_patch = cache_loaded_patch(
         &*state.assets.fs,
         &mut state.assets.w_wad,
         state.ui.wi_stuff.entering,
@@ -645,7 +646,7 @@ pub fn draw_el(state: &mut GameState) {
     );
     let index = state.wbs().next as usize;
     let next_lump = state.ui.wi_stuff.lnames[index];
-    let next_patch = cache_patch_num(&*state.assets.fs, &mut state.assets.w_wad, next_lump);
+    let next_patch = cache_loaded_patch(&*state.assets.fs, &mut state.assets.w_wad, next_lump);
     y += 5 * next_patch.height() / 4;
     let dest_screen = Screen::Video;
     draw_patch(
@@ -656,11 +657,11 @@ pub fn draw_el(state: &mut GameState) {
         &next_patch,
     );
 }
-pub fn draw_on_lnode(state: &mut GameState, n: i32, c: &[i32]) {
+pub fn draw_on_lnode(state: &mut GameState, n: i32, c: &[Option<LumpNum>]) {
     let mut fits: bool = false;
     let mut i: i32 = 0;
     loop {
-        let patch = cache_patch_num(&*state.assets.fs, &mut state.assets.w_wad, c[i as usize]);
+        let patch = cache_loaded_patch(&*state.assets.fs, &mut state.assets.w_wad, c[i as usize]);
         let left: i32 = LNODES[state.wbs().epsd as usize][n as usize].x - patch.leftoffset();
         let top: i32 = LNODES[state.wbs().epsd as usize][n as usize].y - patch.topoffset();
         let right: i32 = left + patch.width();
@@ -670,12 +671,12 @@ pub fn draw_on_lnode(state: &mut GameState, n: i32, c: &[i32]) {
         } else {
             i += 1;
         }
-        if !(!fits && i != 2 && c[i as usize] != -1) {
+        if !(!fits && i != 2 && c[i as usize].is_some()) {
             break;
         }
     }
     if fits && i < 2 {
-        let patch = cache_patch_num(&*state.assets.fs, &mut state.assets.w_wad, c[i as usize]);
+        let patch = cache_loaded_patch(&*state.assets.fs, &mut state.assets.w_wad, c[i as usize]);
         let index = state.wbs().epsd as usize;
         let dest_screen = Screen::Video;
         draw_patch(
@@ -773,7 +774,7 @@ pub fn draw_animated_back(state: &mut GameState) {
         let index = state.wbs().epsd as usize;
         let a = state.ui.wi_stuff.anims()[index][i as usize];
         if a.ctr >= 0 {
-            let patch = cache_patch_num(
+            let patch = cache_loaded_patch(
                 &*state.assets.fs,
                 &mut state.assets.w_wad,
                 a.p[a.ctr as usize],
@@ -784,7 +785,7 @@ pub fn draw_animated_back(state: &mut GameState) {
     }
 }
 pub fn draw_num(state: &mut GameState, mut x: i32, y: i32, mut n: i32, mut digits: i32) -> i32 {
-    let zero_patch = cache_patch_num(
+    let zero_patch = cache_loaded_patch(
         &*state.assets.fs,
         &mut state.assets.w_wad,
         state.ui.wi_stuff.num[0],
@@ -812,7 +813,7 @@ pub fn draw_num(state: &mut GameState, mut x: i32, y: i32, mut n: i32, mut digit
     }
     for _ in 0..digits {
         x -= fontwidth;
-        let digit_patch = cache_patch_num(
+        let digit_patch = cache_loaded_patch(
             &*state.assets.fs,
             &mut state.assets.w_wad,
             state.ui.wi_stuff.num[(n % 10) as usize],
@@ -823,7 +824,7 @@ pub fn draw_num(state: &mut GameState, mut x: i32, y: i32, mut n: i32, mut digit
     }
     if neg != 0 {
         x -= 8;
-        let minus_patch = cache_patch_num(
+        let minus_patch = cache_loaded_patch(
             &*state.assets.fs,
             &mut state.assets.w_wad,
             state.ui.wi_stuff.wiminus,
@@ -837,7 +838,7 @@ pub fn draw_percent(state: &mut GameState, x: i32, y: i32, percent: i32) {
     if percent < 0 {
         return;
     }
-    let percent_patch = cache_patch_num(
+    let percent_patch = cache_loaded_patch(
         &*state.assets.fs,
         &mut state.assets.w_wad,
         state.ui.wi_stuff.percent,
@@ -854,7 +855,7 @@ pub fn draw_time(state: &mut GameState, mut x: i32, y: i32, t: i32) {
         let mut div: i32 = 1;
         loop {
             let n: i32 = t / div % 60;
-            let colon_patch = cache_patch_num(
+            let colon_patch = cache_loaded_patch(
                 &*state.assets.fs,
                 &mut state.assets.w_wad,
                 state.ui.wi_stuff.colon,
@@ -870,7 +871,7 @@ pub fn draw_time(state: &mut GameState, mut x: i32, y: i32, t: i32) {
             }
         }
     } else {
-        let sucks_patch = cache_patch_num(
+        let sucks_patch = cache_loaded_patch(
             &*state.assets.fs,
             &mut state.assets.w_wad,
             state.ui.wi_stuff.sucks,
@@ -1039,7 +1040,7 @@ pub fn draw_deathmatch_stats(state: &mut GameState) {
     slam_background(state);
     draw_animated_back(state);
     draw_lf(state);
-    let total_patch = cache_patch_num(
+    let total_patch = cache_loaded_patch(
         &*state.assets.fs,
         &mut state.assets.w_wad,
         state.ui.wi_stuff.total,
@@ -1052,14 +1053,14 @@ pub fn draw_deathmatch_stats(state: &mut GameState) {
         DM_MATRIXY - WI_SPACINGY + 10,
         &total_patch,
     );
-    let killers_patch = cache_patch_num(
+    let killers_patch = cache_loaded_patch(
         &*state.assets.fs,
         &mut state.assets.w_wad,
         state.ui.wi_stuff.killers,
     );
     let dest_screen = Screen::Video;
     draw_patch(state, dest_screen, DM_KILLERSX, DM_KILLERSY, &killers_patch);
-    let victims_patch = cache_patch_num(
+    let victims_patch = cache_loaded_patch(
         &*state.assets.fs,
         &mut state.assets.w_wad,
         state.ui.wi_stuff.victims,
@@ -1070,7 +1071,7 @@ pub fn draw_deathmatch_stats(state: &mut GameState) {
     let mut y: i32 = DM_MATRIXY;
     for i in 0..MAXPLAYERS {
         if state.game.g_game.playeringame[i] {
-            let p_patch = cache_patch_num(
+            let p_patch = cache_loaded_patch(
                 &*state.assets.fs,
                 &mut state.assets.w_wad,
                 state.ui.wi_stuff.p[i],
@@ -1092,7 +1093,7 @@ pub fn draw_deathmatch_stats(state: &mut GameState) {
                 &p_patch,
             );
             if i == state.ui.wi_stuff.me {
-                let bstar_patch = cache_patch_num(
+                let bstar_patch = cache_loaded_patch(
                     &*state.assets.fs,
                     &mut state.assets.w_wad,
                     state.ui.wi_stuff.bstar,
@@ -1105,7 +1106,7 @@ pub fn draw_deathmatch_stats(state: &mut GameState) {
                     DM_MATRIXY - WI_SPACINGY,
                     &bstar_patch,
                 );
-                let star_patch = cache_patch_num(
+                let star_patch = cache_loaded_patch(
                     &*state.assets.fs,
                     &mut state.assets.w_wad,
                     state.ui.wi_stuff.star,
@@ -1124,7 +1125,7 @@ pub fn draw_deathmatch_stats(state: &mut GameState) {
         y += WI_SPACINGY;
     }
     y = DM_MATRIXY + 10;
-    let zero_patch = cache_patch_num(
+    let zero_patch = cache_loaded_patch(
         &*state.assets.fs,
         &mut state.assets.w_wad,
         state.ui.wi_stuff.num[0],
@@ -1288,7 +1289,7 @@ pub fn update_netgame_stats(state: &mut GameState) {
     }
 }
 pub fn draw_netgame_stats(state: &mut GameState) {
-    let percent_patch = cache_patch_num(
+    let percent_patch = cache_loaded_patch(
         &*state.assets.fs,
         &mut state.assets.w_wad,
         state.ui.wi_stuff.percent,
@@ -1297,13 +1298,13 @@ pub fn draw_netgame_stats(state: &mut GameState) {
     slam_background(state);
     draw_animated_back(state);
     draw_lf(state);
-    let star_patch = cache_patch_num(
+    let star_patch = cache_loaded_patch(
         &*state.assets.fs,
         &mut state.assets.w_wad,
         state.ui.wi_stuff.star,
     );
     let star_width = star_patch.width();
-    let kills_patch = cache_patch_num(
+    let kills_patch = cache_loaded_patch(
         &*state.assets.fs,
         &mut state.assets.w_wad,
         state.ui.wi_stuff.kills,
@@ -1317,7 +1318,7 @@ pub fn draw_netgame_stats(state: &mut GameState) {
         NG_STATSY,
         &kills_patch,
     );
-    let items_patch = cache_patch_num(
+    let items_patch = cache_loaded_patch(
         &*state.assets.fs,
         &mut state.assets.w_wad,
         state.ui.wi_stuff.items,
@@ -1331,7 +1332,7 @@ pub fn draw_netgame_stats(state: &mut GameState) {
         NG_STATSY,
         &items_patch,
     );
-    let secret_patch = cache_patch_num(
+    let secret_patch = cache_loaded_patch(
         &*state.assets.fs,
         &mut state.assets.w_wad,
         state.ui.wi_stuff.secret,
@@ -1346,7 +1347,7 @@ pub fn draw_netgame_stats(state: &mut GameState) {
         &secret_patch,
     );
     if state.ui.wi_stuff.dofrags {
-        let frags_patch = cache_patch_num(
+        let frags_patch = cache_loaded_patch(
             &*state.assets.fs,
             &mut state.assets.w_wad,
             state.ui.wi_stuff.frags,
@@ -1365,7 +1366,7 @@ pub fn draw_netgame_stats(state: &mut GameState) {
     for i in 0..MAXPLAYERS {
         if state.game.g_game.playeringame[i] {
             let mut x: i32 = 32 + star_width / 2 + 32 * i32::from(!state.ui.wi_stuff.dofrags);
-            let p_patch = cache_patch_num(
+            let p_patch = cache_loaded_patch(
                 &*state.assets.fs,
                 &mut state.assets.w_wad,
                 state.ui.wi_stuff.p[i],
@@ -1495,7 +1496,7 @@ pub fn update_stats(state: &mut GameState) {
     }
 }
 pub fn draw_stats(state: &mut GameState) {
-    let zero_patch = cache_patch_num(
+    let zero_patch = cache_loaded_patch(
         &*state.assets.fs,
         &mut state.assets.w_wad,
         state.ui.wi_stuff.num[0],
@@ -1504,7 +1505,7 @@ pub fn draw_stats(state: &mut GameState) {
     slam_background(state);
     draw_animated_back(state);
     draw_lf(state);
-    let kills_patch = cache_patch_num(
+    let kills_patch = cache_loaded_patch(
         &*state.assets.fs,
         &mut state.assets.w_wad,
         state.ui.wi_stuff.kills,
@@ -1513,7 +1514,7 @@ pub fn draw_stats(state: &mut GameState) {
     draw_patch(state, dest_screen, SP_STATSX, SP_STATSY, &kills_patch);
     let cnt_kills = state.ui.wi_stuff.cnt_kills[0];
     draw_percent(state, SCREENWIDTH - SP_STATSX, SP_STATSY, cnt_kills);
-    let items_patch = cache_patch_num(
+    let items_patch = cache_loaded_patch(
         &*state.assets.fs,
         &mut state.assets.w_wad,
         state.ui.wi_stuff.items,
@@ -1522,7 +1523,7 @@ pub fn draw_stats(state: &mut GameState) {
     draw_patch(state, dest_screen, SP_STATSX, SP_STATSY + lh, &items_patch);
     let cnt_items = state.ui.wi_stuff.cnt_items[0];
     draw_percent(state, SCREENWIDTH - SP_STATSX, SP_STATSY + lh, cnt_items);
-    let sp_secret_patch = cache_patch_num(
+    let sp_secret_patch = cache_loaded_patch(
         &*state.assets.fs,
         &mut state.assets.w_wad,
         state.ui.wi_stuff.sp_secret,
@@ -1542,7 +1543,7 @@ pub fn draw_stats(state: &mut GameState) {
         SP_STATSY + 2 * lh,
         cnt_secret,
     );
-    let timepatch_patch = cache_patch_num(
+    let timepatch_patch = cache_loaded_patch(
         &*state.assets.fs,
         &mut state.assets.w_wad,
         state.ui.wi_stuff.timepatch,
@@ -1552,7 +1553,7 @@ pub fn draw_stats(state: &mut GameState) {
     let cnt_time = state.ui.wi_stuff.cnt_time;
     draw_time(state, SCREENWIDTH / 2 - SP_TIMEX, SP_TIMEY, cnt_time);
     if state.wbs().epsd < 3 {
-        let par_patch = cache_patch_num(
+        let par_patch = cache_loaded_patch(
             &*state.assets.fs,
             &mut state.assets.w_wad,
             state.ui.wi_stuff.par,
@@ -1690,29 +1691,29 @@ fn load_unload_data(state: &mut GameState, callback: LoadCallback) {
     };
     state.ui.wi_stuff.background = callback(state, &name);
 }
-fn wi_load_callback(state: &mut GameState, name: &str) -> i32 {
+fn wi_load_callback(state: &mut GameState, name: &str) -> Option<LumpNum> {
     let lumpnum = get_num_for_name(&state.assets.w_wad, name);
     lump_bytes(&*state.assets.fs, &mut state.assets.w_wad, lumpnum);
-    lumpnum
+    Some(lumpnum)
 }
 pub fn wi_load_data(state: &mut GameState) {
     if state.game.doomstat.gamemode == GameMode::Commercial {
         state.ui.wi_stuff.numcmaps = 32;
-        state.ui.wi_stuff.lnames = vec![-1; state.ui.wi_stuff.numcmaps as usize];
+        state.ui.wi_stuff.lnames = vec![None; state.ui.wi_stuff.numcmaps as usize];
     } else {
-        state.ui.wi_stuff.lnames = vec![-1; NUMMAPS];
+        state.ui.wi_stuff.lnames = vec![None; NUMMAPS];
     }
     load_unload_data(state, wi_load_callback);
     let star_lump = get_num_for_name(&state.assets.w_wad, "STFST01");
     lump_bytes(&*state.assets.fs, &mut state.assets.w_wad, star_lump);
-    state.ui.wi_stuff.star = star_lump;
+    state.ui.wi_stuff.star = Some(star_lump);
     let bstar_lump = get_num_for_name(&state.assets.w_wad, "STFDEAD0");
     lump_bytes(&*state.assets.fs, &mut state.assets.w_wad, bstar_lump);
-    state.ui.wi_stuff.bstar = bstar_lump;
+    state.ui.wi_stuff.bstar = Some(bstar_lump);
 }
-fn unload_callback(state: &mut GameState, name: &str) -> i32 {
+fn unload_callback(state: &mut GameState, name: &str) -> Option<LumpNum> {
     release_lump_name(&state.assets.w_wad, name);
-    -1
+    None
 }
 pub fn wi_drawer(state: &mut GameState) {
     match state.ui.wi_stuff.state {

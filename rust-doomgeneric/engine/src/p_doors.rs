@@ -379,8 +379,10 @@ pub fn ev_vertical_door(state: &mut GameState, line: LineId, thing: MobjId) {
     } else if matches!(i32::from(linev.special), 26 | 32 | 27 | 34 | 28 | 33) {
         return;
     }
-    let door_sector_id =
-        state.world.p_setup.sides[linev.sidenum[(side ^ 1) as usize] as usize].sector;
+    let door_sector_id = state.world.p_setup.sides[linev.sidenum[(side ^ 1) as usize]
+        .expect("two-sided line without a back side")
+        .0 as usize]
+        .sector;
     if let Some(special) = state.world.p_setup.sector_mut(door_sector_id).specialdata {
         match i32::from(linev.special) {
             1 | 26 | 27 | 28 | 117 => {
