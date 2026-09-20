@@ -39,7 +39,7 @@ use crate::tables::ANGLETOFINESHIFT;
 use crate::tables::FINECOSINE;
 use crate::tables::FINESINE;
 
-pub const NUMCARDS: i32 = 6;
+pub const NUMCARDS: usize = 6;
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum CardType {
     Bluecard,

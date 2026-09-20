@@ -81,8 +81,8 @@ impl RPlaneState {
     }
 }
 
-pub const ANGLETOSKYSHIFT: i32 = 22;
-pub const MAXVISPLANES: i32 = 128;
+pub const ANGLETOSKYSHIFT: u32 = 22;
+pub const MAXVISPLANES: usize = 128;
 pub fn map_plane(state: &mut GameState, y: i32, x1: i32, x2: i32) {
     let distance: Fixed;
 
@@ -123,12 +123,12 @@ pub fn map_plane(state: &mut GameState, y: i32, x1: i32, x2: i32) {
     if let Some(colormap) = state.render.r_main.fixedcolormap {
         state.render.r_draw.ds_colormap = colormap;
     } else {
-        let mut index: u32 = (distance >> LIGHTZSHIFT) as u32;
-        if index >= MAXLIGHTZ as u32 {
-            index = (MAXLIGHTZ - 1) as u32;
+        let mut index = (distance >> LIGHTZSHIFT) as usize;
+        if index >= MAXLIGHTZ {
+            index = MAXLIGHTZ - 1;
         }
         state.render.r_draw.ds_colormap =
-            state.render.r_main.zlight[state.render.r_plane.planezlight][index as usize];
+            state.render.r_main.zlight[state.render.r_plane.planezlight][index];
     }
     state.render.r_draw.ds_y = y;
     state.render.r_draw.ds_x1 = x1;
@@ -173,7 +173,7 @@ pub fn find_plane(
     if check < r_plane.lastvisplane {
         return check;
     }
-    if r_plane.lastvisplane == MAXVISPLANES as usize {
+    if r_plane.lastvisplane == MAXVISPLANES {
         error("R_FindPlane: no more visplanes");
     }
     r_plane.lastvisplane += 1;
@@ -250,13 +250,13 @@ pub fn make_spans(
     }
 }
 pub fn draw_planes(state: &mut GameState) {
-    if state.render.r_bsp.ds_p as i64 > i64::from(MAXDRAWSEGS) {
+    if state.render.r_bsp.ds_p > MAXDRAWSEGS {
         error(&format!(
             "R_DrawPlanes: drawsegs overflow ({})",
             state.render.r_bsp.ds_p as i64,
         ));
     }
-    if state.render.r_plane.lastvisplane as i64 > i64::from(MAXVISPLANES) {
+    if state.render.r_plane.lastvisplane > MAXVISPLANES {
         error(&format!(
             "R_DrawPlanes: visplane overflow ({})",
             state.render.r_plane.lastvisplane as i64,

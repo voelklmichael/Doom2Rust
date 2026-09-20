@@ -533,7 +533,7 @@ pub enum AnimEnum {
     Random,
     Level,
 }
-pub const NUMMAPS: i32 = 9;
+pub const NUMMAPS: usize = 9;
 pub const WI_TITLEY: i32 = 2;
 pub const WI_SPACINGY: i32 = 33;
 pub const SP_STATSX: i32 = 50;
@@ -1627,7 +1627,7 @@ fn load_unload_data(state: &mut GameState, callback: LoadCallback) {
             state.ui.wi_stuff.lnames[i] = callback(state, &format!("CWILV{i:02}"));
         }
     } else {
-        for i in 0..NUMMAPS as usize {
+        for i in 0..NUMMAPS {
             let name = format!("WILV{}{}", state.wbs().epsd, i);
             state.ui.wi_stuff.lnames[i] = callback(state, &name);
         }
@@ -1700,7 +1700,7 @@ pub fn wi_load_data(state: &mut GameState) {
         state.ui.wi_stuff.numcmaps = 32;
         state.ui.wi_stuff.lnames = vec![-1; state.ui.wi_stuff.numcmaps as usize];
     } else {
-        state.ui.wi_stuff.lnames = vec![-1; NUMMAPS as usize];
+        state.ui.wi_stuff.lnames = vec![-1; NUMMAPS];
     }
     load_unload_data(state, wi_load_callback);
     let star_lump = get_num_for_name(&state.assets.w_wad, "STFST01");

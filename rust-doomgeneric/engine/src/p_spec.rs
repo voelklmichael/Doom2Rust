@@ -1153,7 +1153,7 @@ pub fn update_specials(state: &mut GameState) {
             state.world.p_setup.sides[linev.sidenum[0] as usize].textureoffset += FRACUNIT;
         }
     }
-    for i in 0..(MAXBUTTONS as usize) {
+    for i in 0..MAXBUTTONS {
         if state.world.p_switch.buttonlist[i].btimer != 0 {
             state.world.p_switch.buttonlist[i].btimer -= 1;
             if state.world.p_switch.buttonlist[i].btimer == 0 {
@@ -1371,13 +1371,13 @@ pub fn spawn_specials(state: &mut GameState) {
             state.world.p_spec.numlinespecials += 1;
         }
     }
-    for i in 0..(MAXCEILINGS as usize) {
+    for i in 0..MAXCEILINGS {
         state.world.p_ceilng.activeceilings[i] = None;
     }
-    for i in 0..(MAXPLATS as usize) {
+    for i in 0..MAXPLATS {
         state.world.p_plats.activeplats[i] = None;
     }
-    for i in 0..(MAXBUTTONS as usize) {
+    for i in 0..MAXBUTTONS {
         state.world.p_switch.buttonlist[i] = EMPTY_BUTTON;
     }
 }

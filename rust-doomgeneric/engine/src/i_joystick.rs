@@ -1,7 +1,7 @@
 use crate::m_config::bind_variable_int;
 use crate::m_config::MConfigState;
 
-pub const NUM_VIRTUAL_BUTTONS: i32 = 10;
+pub const NUM_VIRTUAL_BUTTONS: usize = 10;
 
 pub struct IJoystickState {
     usejoystick: i32,
@@ -62,7 +62,7 @@ pub fn bind_joystick_variables(m_config: &mut MConfigState) {
     bind_variable_int(m_config, "joystick_strafe_invert", |s| {
         &mut s.io.i_joystick.joystick_strafe_invert
     });
-    for i in 0..NUM_VIRTUAL_BUTTONS as usize {
+    for i in 0..NUM_VIRTUAL_BUTTONS {
         let name = format!("joystick_physical_button{i}");
         bind_variable_int(m_config, &name, move |s| {
             &mut s.io.i_joystick.joystick_physical_buttons[i]

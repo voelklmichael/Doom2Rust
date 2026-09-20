@@ -375,7 +375,7 @@ pub const DEH_DEFAULT_INITIAL_BULLETS: i32 = 50;
 pub const DEH_INITIAL_HEALTH: i32 = DEH_DEFAULT_INITIAL_HEALTH;
 pub const DEH_INITIAL_BULLETS: i32 = DEH_DEFAULT_INITIAL_BULLETS;
 pub const DOOM_191_VERSION: i32 = 111;
-pub const SAVEGAMESIZE: i32 = 0x2c000;
+pub const SAVEGAMESIZE: usize = 0x2c000;
 pub const TURBOTHRESHOLD: i32 = 0x32;
 pub static ANGLETURN: [Fixed; 3] = [640, 1280, 320];
 static WEAPON_ORDER_TABLE: [WeaponOrder; 9] = [
@@ -1400,7 +1400,7 @@ pub fn do_save_game(state: &mut GameState) {
     archive_specials(&mut state.world);
     write_save_game_eof(&mut state.world.p_saveg);
     if state.game.g_game.vanilla_savegame_limit != 0
-        && state.world.p_saveg.save_buffer.len() > SAVEGAMESIZE as usize
+        && state.world.p_saveg.save_buffer.len() > SAVEGAMESIZE
     {
         error("Savegame buffer overrun");
     }

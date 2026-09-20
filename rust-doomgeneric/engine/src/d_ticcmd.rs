@@ -1,8 +1,8 @@
-pub const BTS_SAVESHIFT: i32 = 2;
+pub const BTS_SAVESHIFT: u32 = 2;
 pub const BTS_SAVEMASK: i32 = 28;
 pub const BTS_SAVEGAME: i32 = 2;
 pub const BTS_PAUSE: i32 = 1;
-pub const BT_WEAPONSHIFT: i32 = 3;
+pub const BT_WEAPONSHIFT: u32 = 3;
 pub const BT_WEAPONMASK: i32 = 56;
 pub const BT_CHANGE: i32 = 4;
 pub const BT_SPECIALMASK: i32 = 3;
