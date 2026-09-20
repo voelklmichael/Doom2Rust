@@ -12,7 +12,7 @@ microcontroller and in WebAssembly. Where its behaviour differs from the C origi
 [docs/known-deviations.md](docs/known-deviations.md).
 
 You need a DOOM IWAD (game data). It is not included; the freely available shareware
-`doom1.wad` works. On Linux you pass its path, in the browser you drop the file onto the page, and on
+`doom1.wad` works (get it from [archive.org](https://archive.org/details/DoomsharewareEpisode): unzip `DOOM1.WAD` from the v1.9 zip). On Linux you pass its path, in the browser you drop the file onto the page, and on
 the CoreS3 it is built into the firmware.
 
 ## Layout

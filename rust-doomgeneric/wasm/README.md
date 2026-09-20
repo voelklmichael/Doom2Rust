@@ -3,7 +3,8 @@
 DOOM in the browser: the engine compiled to WebAssembly. The page is a static site of about 700 KB
 with **no game data in it**: you drop a DOOM IWAD (`doom1.wad`, `doom.wad`, `doom2.wad`, ...) onto
 the game window, or pick one with the button. The shareware `doom1.wad` works, and so does the WAD
-of a game you own. The game starts as soon as the file is chosen. The file is not uploaded
+of a game you own. The shareware is a free download from
+[archive.org](https://archive.org/details/DoomsharewareEpisode): unzip `DOOM1.WAD` from the v1.9 zip. The game starts as soon as the file is chosen. The file is not uploaded
 anywhere; it is read by your browser and remembered in its storage, so it only has to be dropped
 once (on later visits the page says "Click to play").
 
