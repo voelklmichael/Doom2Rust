@@ -49,12 +49,6 @@ pub struct RDataState {
 
 impl Default for RDataState {
     fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl RDataState {
-    pub const fn new() -> Self {
         Self {
             firstflat: LumpNum(0),
             lastflat: LumpNum(0),

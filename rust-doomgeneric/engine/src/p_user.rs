@@ -31,20 +31,9 @@ use crate::tables::FINEMASK;
 pub const VIEWHEIGHT: Fixed = Fixed::from_int(41);
 pub const INVERSECOLORMAP: i32 = 32;
 pub const MAXBOB: i32 = 0x100000;
+#[derive(Default)]
 pub struct PUserState {
     onground: bool,
-}
-
-impl Default for PUserState {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl PUserState {
-    pub const fn new() -> Self {
-        Self { onground: false }
-    }
 }
 
 pub fn p_thrust(p_mobj: &mut PMobjState, mo: MobjId, angle: Angle, amount: Fixed) {

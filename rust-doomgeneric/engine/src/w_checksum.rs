@@ -3,22 +3,9 @@ use crate::w_wad::WWadState;
 use alloc::vec::Vec;
 use sha1_smol::Sha1;
 pub type Sha1Digest = [u8; 20];
+#[derive(Default)]
 pub struct WChecksumState {
     open_wadfiles: Vec<FileId>,
-}
-
-impl Default for WChecksumState {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl WChecksumState {
-    pub const fn new() -> Self {
-        Self {
-            open_wadfiles: Vec::new(),
-        }
-    }
 }
 
 fn get_file_number(state: &mut WChecksumState, handle: FileId) -> i32 {

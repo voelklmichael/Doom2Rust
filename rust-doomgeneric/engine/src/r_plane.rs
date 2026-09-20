@@ -48,12 +48,6 @@ pub struct RPlaneState {
 
 impl Default for RPlaneState {
     fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl RPlaneState {
-    pub const fn new() -> Self {
         Self {
             visplanes: [VisPlane::EMPTY; 128],
             lastvisplane: 0,

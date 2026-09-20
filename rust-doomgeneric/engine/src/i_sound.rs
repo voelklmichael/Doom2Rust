@@ -63,12 +63,6 @@ pub struct ISoundState {
 
 impl Default for ISoundState {
     fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl ISoundState {
-    pub const fn new() -> Self {
         Self {
             snd_samplerate: 44100,
             snd_cachesize: 64 * 1024 * 1024,
@@ -89,6 +83,7 @@ impl ISoundState {
         }
     }
 }
+
 /// Opens the platform's audio device (unless `-nosound` / `-nosfx`) and starts
 /// the mixer at whatever rate the platform settles on.
 pub fn init_sound(

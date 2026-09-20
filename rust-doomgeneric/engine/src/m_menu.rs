@@ -77,17 +77,11 @@ pub struct MMenuDefsHolder {
 }
 
 impl Default for MMenuDefsHolder {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl MMenuDefsHolder {
     // Kept out of line: `GameState::new` inlines every state constructor, and once
     // `init_game_state` passes 256 KB the Xtensa linker fails ("dangerous relocation:
     // l32r: literal target out of range") building the firmware. These are the biggest.
     #[inline(never)]
-    pub fn new() -> Self {
+    fn default() -> Self {
         Self {
             main_def: Menu {
                 prev_menu: None,
@@ -467,14 +461,8 @@ pub struct MMenuState {
 
 impl Default for MMenuState {
     fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl MMenuState {
-    pub fn new() -> Self {
         Self {
-            defs: MMenuDefsHolder::new(),
+            defs: MMenuDefsHolder::default(),
             mouse_sensitivity: 5,
             show_messages: 1,
             detail_level: 0,
@@ -522,7 +510,9 @@ impl MMenuState {
             drawer_y: 0,
         }
     }
+}
 
+impl MMenuState {
     pub fn def(&self, id: MenuId) -> &Menu {
         match id {
             MenuId::Main => &self.defs.main_def,

@@ -244,12 +244,6 @@ const NEW_PLAYER: Player = Player {
 
 impl Default for GGameState {
     fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl GGameState {
-    pub const fn new() -> Self {
         Self {
             oldgamestate: GameScreenState::Level,
             gameaction: GameAction::Nothing,
@@ -346,7 +340,9 @@ impl GGameState {
             g_build_ticcmd_carry: 0,
         }
     }
+}
 
+impl GGameState {
     pub fn player_mut(&mut self, id: PlayerId) -> &mut Player {
         &mut self.players[id]
     }

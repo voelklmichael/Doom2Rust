@@ -271,12 +271,6 @@ pub struct PSwitchState {
 
 impl Default for PSwitchState {
     fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl PSwitchState {
-    pub const fn new() -> Self {
         Self {
             switchlist: [0; 100],
             numswitches: 0,

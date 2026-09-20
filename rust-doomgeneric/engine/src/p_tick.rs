@@ -77,6 +77,7 @@ struct ThinkerNode {
     kind: ThinkerKind,
 }
 
+#[derive(Default)]
 pub struct PTickState {
     pub leveltime: i32,
     nodes: Vec<ThinkerNode>,
@@ -85,23 +86,7 @@ pub struct PTickState {
     tail: Option<ThinkerId>,
 }
 
-impl Default for PTickState {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 impl PTickState {
-    pub const fn new() -> Self {
-        Self {
-            leveltime: 0,
-            nodes: Vec::new(),
-            free_list: Vec::new(),
-            head: None,
-            tail: None,
-        }
-    }
-
     pub fn head(&self) -> Option<ThinkerId> {
         self.head
     }

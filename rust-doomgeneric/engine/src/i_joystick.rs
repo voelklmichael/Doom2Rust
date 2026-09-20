@@ -17,12 +17,6 @@ pub struct IJoystickState {
 
 impl Default for IJoystickState {
     fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl IJoystickState {
-    pub const fn new() -> Self {
         Self {
             usejoystick: 0,
             joystick_index: -1,

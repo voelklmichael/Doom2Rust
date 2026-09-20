@@ -63,12 +63,6 @@ pub struct RThingsState {
 
 impl Default for RThingsState {
     fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl RThingsState {
-    pub const fn new() -> Self {
         Self {
             pspritescale: Fixed::ZERO,
             pspriteiscale: Fixed::ZERO,

@@ -61,27 +61,14 @@ struct PlatSlot {
     plat: Option<Box<Plat>>,
 }
 
+#[derive(Default)]
 pub struct PPlatsState {
     pub activeplats: [Option<ThinkerId>; 30],
     plats: Vec<PlatSlot>,
     free_list: Vec<u32>,
 }
 
-impl Default for PPlatsState {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 impl PPlatsState {
-    pub const fn new() -> Self {
-        Self {
-            activeplats: [None; 30],
-            plats: Vec::new(),
-            free_list: Vec::new(),
-        }
-    }
-
     // Moves a fully-defaulted (then caller-filled) Plat onto the heap and
     // hands back both a stable generation-checked handle (stored in
     // ThinkerNode's payload by p_tick.rs, replacing what used to be a bare

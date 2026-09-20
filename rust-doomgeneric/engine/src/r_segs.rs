@@ -66,12 +66,6 @@ pub struct RSegsState {
 
 impl Default for RSegsState {
     fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl RSegsState {
-    pub const fn new() -> Self {
         Self {
             segtextured: false,
             markfloor: false,

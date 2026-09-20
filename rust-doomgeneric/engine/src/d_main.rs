@@ -136,12 +136,6 @@ pub struct DMainState {
 
 impl Default for DMainState {
     fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl DMainState {
-    pub const fn new() -> Self {
         Self {
             savegamedir: String::new(),
             iwadfile: String::new(),

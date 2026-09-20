@@ -103,12 +103,6 @@ pub struct PSpecState {
 
 impl Default for PSpecState {
     fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl PSpecState {
-    pub const fn new() -> Self {
         Self {
             anims: [Anim {
                 istexture: false,
@@ -129,7 +123,9 @@ impl PSpecState {
             floor_free_list: Vec::new(),
         }
     }
+}
 
+impl PSpecState {
     // Moves a fully-defaulted (then caller-filled) FloorMove onto the
     // heap and hands back both a stable generation-checked handle (stored
     // in ThinkerNode's payload by p_tick.rs, replacing what used to be a

@@ -109,12 +109,6 @@ pub struct RDrawState {
 
 impl Default for RDrawState {
     fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl RDrawState {
-    pub const fn new() -> Self {
         Self {
             viewwidth: 0,
             scaledviewwidth: 0,

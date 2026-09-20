@@ -1050,25 +1050,11 @@ pub struct InfoState {
 }
 
 impl Default for InfoState {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl InfoState {
-    pub fn state_mut(&mut self, id: StateId) -> &mut State {
-        &mut self.states[id.0 as usize]
-    }
-
-    pub fn mobjinfo_mut(&mut self, t: MobjType) -> &mut MobjInfo {
-        &mut self.mobjinfo[t as usize]
-    }
-
     // Kept out of line: `GameState::new` inlines every state constructor, and once
     // `init_game_state` passes 256 KB the Xtensa linker fails ("dangerous relocation:
     // l32r: literal target out of range") building the firmware. These are the biggest.
     #[inline(never)]
-    pub fn new() -> Self {
+    fn default() -> Self {
         Self {
             sprnames: [
                 "TROO", "SHTG", "PUNG", "PISG", "PISF", "SHTF", "SHT2", "CHGG", "CHGF", "MISG",
@@ -2360,5 +2346,15 @@ impl InfoState {
                 },
             ],
         }
+    }
+}
+
+impl InfoState {
+    pub fn state_mut(&mut self, id: StateId) -> &mut State {
+        &mut self.states[id.0 as usize]
+    }
+
+    pub fn mobjinfo_mut(&mut self, t: MobjType) -> &mut MobjInfo {
+        &mut self.mobjinfo[t as usize]
     }
 }

@@ -97,12 +97,6 @@ pub struct PMapState {
 
 impl Default for PMapState {
     fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl PMapState {
-    pub const fn new() -> Self {
         Self {
             tmbbox: BBox::new([Fixed::ZERO; 4]),
             tmthing: None,

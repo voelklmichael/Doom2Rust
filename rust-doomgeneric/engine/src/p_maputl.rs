@@ -31,12 +31,6 @@ pub struct PMaputlState {
 
 impl Default for PMaputlState {
     fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl PMaputlState {
-    pub fn new() -> Self {
         Self {
             opentop: Fixed::ZERO,
             openbottom: Fixed::ZERO,

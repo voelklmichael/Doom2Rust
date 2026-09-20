@@ -115,12 +115,6 @@ pub struct MControlsState {
 
 impl Default for MControlsState {
     fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl MControlsState {
-    pub const fn new() -> Self {
         Self {
             key_right: KEY_RIGHTARROW,
             key_left: KEY_LEFTARROW,
@@ -233,7 +227,9 @@ impl MControlsState {
             dclick_use: 1,
         }
     }
+}
 
+impl MControlsState {
     pub const fn weapon_keys(&self) -> [i32; 8] {
         [
             self.key_weapon1,

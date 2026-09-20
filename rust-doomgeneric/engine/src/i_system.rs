@@ -21,12 +21,6 @@ pub struct ISystemState {
 
 impl Default for ISystemState {
     fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl ISystemState {
-    pub fn new() -> Self {
         Self {
             exit_funcs: Vec::new(),
             mem_dump_custom: [0; 10],
@@ -34,7 +28,9 @@ impl ISystemState {
             get_memory_value_firsttime: true,
         }
     }
+}
 
+impl ISystemState {
     fn dos_mem_dump_bytes(&self) -> &[u8; 10] {
         match self.dos_mem_dump {
             DosMemDump::Dos622 => &MEM_DUMP_DOS622,

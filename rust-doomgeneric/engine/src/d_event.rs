@@ -45,12 +45,6 @@ pub struct DEventState {
 
 impl Default for DEventState {
     fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl DEventState {
-    pub const fn new() -> Self {
         Self {
             events: [Event {
                 kind: EvType::Keydown,

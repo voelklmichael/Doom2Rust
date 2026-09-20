@@ -96,12 +96,6 @@ pub struct RMainState {
 
 impl Default for RMainState {
     fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl RMainState {
-    pub fn new() -> Self {
         Self {
             viewangleoffset: Angle::ZERO,
             fixedcolormap: None,
@@ -139,7 +133,9 @@ impl RMainState {
             setdetail: 0,
         }
     }
+}
 
+impl RMainState {
     pub fn light_row48(&self, row: LightRow48) -> &[ColormapId; 48] {
         match row {
             LightRow48::Normal(i) => &self.scalelight[i],

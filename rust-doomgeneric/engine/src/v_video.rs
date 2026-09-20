@@ -60,17 +60,12 @@ pub struct VVideoState {
 }
 impl Default for VVideoState {
     fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl VVideoState {
-    pub const fn new() -> Self {
         Self {
             dirtybox: BBox::new([Fixed::ZERO; 4]),
         }
     }
 }
+
 pub fn mark_rect(v_video: &mut VVideoState, dest: Screen, x: i32, y: i32, width: i32, height: i32) {
     if dest == Screen::Video {
         add_to_box(&mut v_video.dirtybox, Fixed(x), Fixed(y));
