@@ -269,7 +269,7 @@ pub fn render_masked_seg_range(state: &mut GameState, ds: &DrawSeg, x1: i32, x2:
                     texnum,
                     column,
                 ),
-                (-3_isize).idx(),
+                (-3_isize).cast_unsigned(),
             );
             draw_masked_column(state, col);
             maskedtexturecol.set(state, state.render.r_draw.dc_x as isize, SHRT_MAX as i16);
