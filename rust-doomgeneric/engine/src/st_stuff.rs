@@ -116,6 +116,8 @@ pub struct StStuffState {
 }
 
 impl Default for StStuffState {
+    // Data, not logic: one initial value per status bar field.
+    #[allow(clippy::too_many_lines)]
     fn default() -> Self {
         Self {
             st_backing_screen: Vec::new(),

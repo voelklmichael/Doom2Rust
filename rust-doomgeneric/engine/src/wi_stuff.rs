@@ -81,6 +81,8 @@ impl Default for WiStuffState {
     // `init_game_state` passes 256 KB the Xtensa linker fails ("dangerous relocation:
     // l32r: literal target out of range") building the firmware. These are the biggest.
     #[inline(never)]
+    // Data, not logic: the intermission animation tables (one literal per animation).
+    #[allow(clippy::too_many_lines)]
     fn default() -> Self {
         Self {
             epsd0animinfo: [

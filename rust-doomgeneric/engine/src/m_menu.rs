@@ -82,6 +82,8 @@ impl Default for MMenuDefsHolder {
     // `init_game_state` passes 256 KB the Xtensa linker fails ("dangerous relocation:
     // l32r: literal target out of range") building the firmware. These are the biggest.
     #[inline(never)]
+    // Data, not logic: the menu definitions (one literal per menu item).
+    #[allow(clippy::too_many_lines)]
     fn default() -> Self {
         Self {
             main_def: Menu {
