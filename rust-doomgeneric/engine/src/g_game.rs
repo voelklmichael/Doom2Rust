@@ -467,46 +467,16 @@ fn g_next_weapon(doomstat: &DoomstatState, g_game: &GGameState, direction: Weapo
     }
     WEAPON_ORDER_TABLE[i.idx()].weapon_num as i32
 }
-pub fn g_build_ticcmd(state: &mut GameState, cmd: &mut TicCmd, maketic: i32) {
-    *cmd = TicCmd {
-        forwardmove: 0,
-        sidemove: 0,
-        angleturn: 0,
-        chatchar: 0,
-        buttons: 0,
-        consistancy: 0,
-        buttons2: 0,
-        inventory: 0,
-        lookfly: 0,
-        arti: 0,
-    };
-    cmd.consistancy = state.game.g_game.consistancy[state.game.g_game.consoleplayer.slot()]
-        [(maketic % BACKUPTICS).idx()];
-    let strafe: bool = state.game.g_game.gamekeydown[state.game.m_controls.key_strafe.idx()]
-        || state.game.g_game.mousearray[(state.game.m_controls.mousebstrafe + 1).idx()]
-        || state.game.g_game.joyarray[(state.game.m_controls.joybstrafe + 1).idx()];
-    let speed: i32 = i32::from(
-        state.game.m_controls.key_speed >= NUMKEYS
-            || state.game.m_controls.joybspeed >= MAX_JOY_BUTTONS
-            || state.game.g_game.gamekeydown[state.game.m_controls.key_speed.idx()]
-            || state.game.g_game.joyarray[(state.game.m_controls.joybspeed + 1).idx()],
-    );
+/// Turning, walking and strafing from the keyboard and joystick. Returns the (forward, side) move.
+fn read_movement_keys(
+    state: &GameState,
+    cmd: &mut TicCmd,
+    strafe: bool,
+    speed: i32,
+    tspeed: usize,
+) -> (i32, i32) {
     let mut side: i32 = 0;
-    let mut forward: i32 = side;
-    if state.game.g_game.joyxmove != 0
-        || state.game.g_game.gamekeydown[state.game.m_controls.key_right.idx()]
-        || state.game.g_game.gamekeydown[state.game.m_controls.key_left.idx()]
-    {
-        state.game.g_game.turnheld += state.game.d_loop.ticdup;
-    } else {
-        state.game.g_game.turnheld = 0;
-    }
-    let tspeed: usize = (if state.game.g_game.turnheld < SLOWTURNTICS {
-        2
-    } else {
-        speed
-    })
-    .idx();
+    let mut forward: i32 = 0;
     if strafe {
         if state.game.g_game.gamekeydown[state.game.m_controls.key_right.idx()] {
             side += state.game.g_game.sidemove[speed.idx()];
@@ -560,20 +530,11 @@ pub fn g_build_ticcmd(state: &mut GameState, cmd: &mut TicCmd, maketic: i32) {
     {
         side += state.game.g_game.sidemove[speed.idx()];
     }
-    cmd.chatchar = dequeue_chat_char(&mut state.ui.hu_stuff);
-    if state.game.g_game.gamekeydown[state.game.m_controls.key_fire.idx()]
-        || state.game.g_game.mousearray[(state.game.m_controls.mousebfire + 1).idx()]
-        || state.game.g_game.joyarray[(state.game.m_controls.joybfire + 1).idx()]
-    {
-        cmd.buttons |= BT_ATTACK;
-    }
-    if state.game.g_game.gamekeydown[state.game.m_controls.key_use.idx()]
-        || state.game.g_game.joyarray[(state.game.m_controls.joybuse + 1).idx()]
-        || state.game.g_game.mousearray[(state.game.m_controls.mousebuse + 1).idx()]
-    {
-        cmd.buttons |= BT_USE;
-        state.game.g_game.dclicks = 0;
-    }
+    (forward, side)
+}
+
+/// The weapon asked for by a key, or by the next/previous weapon request.
+fn select_weapon(state: &mut GameState, cmd: &mut TicCmd) {
     if let Some(next_weapon) = state
         .game
         .g_game
@@ -594,12 +555,10 @@ pub fn g_build_ticcmd(state: &mut GameState, cmd: &mut TicCmd, maketic: i32) {
         }
     }
     state.game.g_game.next_weapon = None;
-    if state.game.g_game.mousearray[(state.game.m_controls.mousebforward + 1).idx()] {
-        forward += state.game.g_game.forwardmove[speed.idx()];
-    }
-    if state.game.g_game.mousearray[(state.game.m_controls.mousebbackward + 1).idx()] {
-        forward -= state.game.g_game.forwardmove[speed.idx()];
-    }
+}
+
+/// Double-clicking the forward or strafe mouse button counts as a use.
+fn double_click_use(state: &mut GameState, cmd: &mut TicCmd) {
     if state.game.m_controls.dclick_use != 0 {
         if state.game.g_game.mousearray[(state.game.m_controls.mousebforward + 1).idx()]
             != state.game.g_game.dclickstate
@@ -645,6 +604,90 @@ pub fn g_build_ticcmd(state: &mut GameState, cmd: &mut TicCmd, maketic: i32) {
             }
         }
     }
+}
+
+/// A pause or save request replaces the tic's buttons; low-resolution turning rounds the turn.
+fn add_pending_requests(state: &mut GameState, cmd: &mut TicCmd) {
+    if state.game.g_game.sendpause {
+        state.game.g_game.sendpause = false;
+        cmd.buttons = BT_SPECIAL | BTS_PAUSE;
+    }
+    if state.game.g_game.sendsave {
+        state.game.g_game.sendsave = false;
+        cmd.buttons = BT_SPECIAL
+            | BTS_SAVEGAME
+            | (state.game.g_game.savegameslot << BTS_SAVESHIFT).cast_unsigned() as u8;
+    }
+    if state.game.g_game.lowres_turn {
+        let desired_angleturn: i16 =
+            (i32::from(cmd.angleturn) + i32::from(state.game.g_game.g_build_ticcmd_carry)) as i16;
+        cmd.angleturn = ((i32::from(desired_angleturn) + 128) & 0xff00) as i16;
+        state.game.g_game.g_build_ticcmd_carry =
+            (i32::from(desired_angleturn) - i32::from(cmd.angleturn)) as i16;
+    }
+}
+
+pub fn g_build_ticcmd(state: &mut GameState, cmd: &mut TicCmd, maketic: i32) {
+    *cmd = TicCmd {
+        forwardmove: 0,
+        sidemove: 0,
+        angleturn: 0,
+        chatchar: 0,
+        buttons: 0,
+        consistancy: 0,
+        buttons2: 0,
+        inventory: 0,
+        lookfly: 0,
+        arti: 0,
+    };
+    cmd.consistancy = state.game.g_game.consistancy[state.game.g_game.consoleplayer.slot()]
+        [(maketic % BACKUPTICS).idx()];
+    let strafe: bool = state.game.g_game.gamekeydown[state.game.m_controls.key_strafe.idx()]
+        || state.game.g_game.mousearray[(state.game.m_controls.mousebstrafe + 1).idx()]
+        || state.game.g_game.joyarray[(state.game.m_controls.joybstrafe + 1).idx()];
+    let speed: i32 = i32::from(
+        state.game.m_controls.key_speed >= NUMKEYS
+            || state.game.m_controls.joybspeed >= MAX_JOY_BUTTONS
+            || state.game.g_game.gamekeydown[state.game.m_controls.key_speed.idx()]
+            || state.game.g_game.joyarray[(state.game.m_controls.joybspeed + 1).idx()],
+    );
+    if state.game.g_game.joyxmove != 0
+        || state.game.g_game.gamekeydown[state.game.m_controls.key_right.idx()]
+        || state.game.g_game.gamekeydown[state.game.m_controls.key_left.idx()]
+    {
+        state.game.g_game.turnheld += state.game.d_loop.ticdup;
+    } else {
+        state.game.g_game.turnheld = 0;
+    }
+    let tspeed: usize = (if state.game.g_game.turnheld < SLOWTURNTICS {
+        2
+    } else {
+        speed
+    })
+    .idx();
+    let (mut forward, mut side) = read_movement_keys(state, cmd, strafe, speed, tspeed);
+    cmd.chatchar = dequeue_chat_char(&mut state.ui.hu_stuff);
+    if state.game.g_game.gamekeydown[state.game.m_controls.key_fire.idx()]
+        || state.game.g_game.mousearray[(state.game.m_controls.mousebfire + 1).idx()]
+        || state.game.g_game.joyarray[(state.game.m_controls.joybfire + 1).idx()]
+    {
+        cmd.buttons |= BT_ATTACK;
+    }
+    if state.game.g_game.gamekeydown[state.game.m_controls.key_use.idx()]
+        || state.game.g_game.joyarray[(state.game.m_controls.joybuse + 1).idx()]
+        || state.game.g_game.mousearray[(state.game.m_controls.mousebuse + 1).idx()]
+    {
+        cmd.buttons |= BT_USE;
+        state.game.g_game.dclicks = 0;
+    }
+    select_weapon(state, cmd);
+    if state.game.g_game.mousearray[(state.game.m_controls.mousebforward + 1).idx()] {
+        forward += state.game.g_game.forwardmove[speed.idx()];
+    }
+    if state.game.g_game.mousearray[(state.game.m_controls.mousebbackward + 1).idx()] {
+        forward -= state.game.g_game.forwardmove[speed.idx()];
+    }
+    double_click_use(state, cmd);
     forward += state.game.g_game.mousey;
     if strafe {
         side += state.game.g_game.mousex * 2;
@@ -668,23 +711,7 @@ pub fn g_build_ticcmd(state: &mut GameState, cmd: &mut TicCmd, maketic: i32) {
     }
     cmd.forwardmove = (i32::from(cmd.forwardmove) + forward) as i8;
     cmd.sidemove = (i32::from(cmd.sidemove) + side) as i8;
-    if state.game.g_game.sendpause {
-        state.game.g_game.sendpause = false;
-        cmd.buttons = BT_SPECIAL | BTS_PAUSE;
-    }
-    if state.game.g_game.sendsave {
-        state.game.g_game.sendsave = false;
-        cmd.buttons = BT_SPECIAL
-            | BTS_SAVEGAME
-            | (state.game.g_game.savegameslot << BTS_SAVESHIFT).cast_unsigned() as u8;
-    }
-    if state.game.g_game.lowres_turn {
-        let desired_angleturn: i16 =
-            (i32::from(cmd.angleturn) + i32::from(state.game.g_game.g_build_ticcmd_carry)) as i16;
-        cmd.angleturn = ((i32::from(desired_angleturn) + 128) & 0xff00) as i16;
-        state.game.g_game.g_build_ticcmd_carry =
-            (i32::from(desired_angleturn) - i32::from(cmd.angleturn)) as i16;
-    }
+    add_pending_requests(state, cmd);
 }
 pub fn do_load_level(state: &mut GameState) {
     state.render.r_sky.skyflatnum =
@@ -861,14 +888,8 @@ pub fn g_responder(state: &mut GameState, ev: Event) -> bool {
     }
     false
 }
-pub fn g_ticker(state: &mut GameState, netcmds: &[TicCmd]) {
-    for player in PlayerId::all() {
-        if state.game.g_game.playeringame[player]
-            && state.game.g_game.players[player].playerstate == PlayerState::Reborn
-        {
-            do_reborn(state, player);
-        }
-    }
+/// Carries out the pending game actions (load, save, level change, ...) until none is left.
+fn run_game_actions(state: &mut GameState) {
     while state.game.g_game.gameaction != GameAction::Nothing {
         match state.game.g_game.gameaction {
             GameAction::LoadLevel => {
@@ -908,6 +929,11 @@ pub fn g_ticker(state: &mut GameState, netcmds: &[TicCmd]) {
             GameAction::Nothing => {}
         }
     }
+}
+
+/// Takes this tic's commands for every player (from the network, a demo being played back, or
+/// recorded), and does the turbo and netgame consistency checks.
+fn take_tic_commands(state: &mut GameState, netcmds: &[TicCmd]) {
     let buf: usize = (state.game.d_loop.gametic / state.game.d_loop.ticdup % BACKUPTICS).idx();
     for i in 0..MAXPLAYERS {
         if state.game.g_game.playeringame[i] {
@@ -953,6 +979,10 @@ pub fn g_ticker(state: &mut GameState, netcmds: &[TicCmd]) {
             }
         }
     }
+}
+
+/// Pause and save requests that came in a player's ticcmd (`BT_SPECIAL`).
+fn run_special_commands(state: &mut GameState) {
     for i in 0..MAXPLAYERS {
         if state.game.g_game.playeringame[i]
             && state.game.g_game.players[i].cmd.buttons & BT_SPECIAL != 0
@@ -987,6 +1017,19 @@ pub fn g_ticker(state: &mut GameState, netcmds: &[TicCmd]) {
             }
         }
     }
+}
+
+pub fn g_ticker(state: &mut GameState, netcmds: &[TicCmd]) {
+    for player in PlayerId::all() {
+        if state.game.g_game.playeringame[player]
+            && state.game.g_game.players[player].playerstate == PlayerState::Reborn
+        {
+            do_reborn(state, player);
+        }
+    }
+    run_game_actions(state);
+    take_tic_commands(state, netcmds);
+    run_special_commands(state);
     if state.game.g_game.oldgamestate == GameScreenState::Intermission
         && state.game.g_game.gamestate != GameScreenState::Intermission
     {
@@ -1166,6 +1209,77 @@ pub fn secret_exit_level(doomstat: &DoomstatState, g_game: &mut GGameState, w_wa
         && check_num_for_name(w_wad, "map31").is_none());
     g_game.gameaction = GameAction::Completed;
 }
+/// The map the intermission announces next: the secret level, or the map after this one.
+fn choose_next_map(state: &mut GameState) {
+    if state.game.doomstat.gamemode == GameMode::Commercial {
+        if state.game.g_game.secretexit {
+            match state.game.g_game.gamemap {
+                15 => {
+                    state.game.g_game.wminfo.next = 30;
+                }
+                31 => {
+                    state.game.g_game.wminfo.next = 31;
+                }
+                _ => {}
+            }
+        } else {
+            match state.game.g_game.gamemap {
+                31 | 32 => {
+                    state.game.g_game.wminfo.next = 15;
+                }
+                _ => {
+                    state.game.g_game.wminfo.next = state.game.g_game.gamemap;
+                }
+            }
+        }
+    } else if state.game.g_game.secretexit {
+        state.game.g_game.wminfo.next = 8;
+    } else if state.game.g_game.gamemap == 9 {
+        match state.game.g_game.gameepisode {
+            1 => {
+                state.game.g_game.wminfo.next = 3;
+            }
+            2 => {
+                state.game.g_game.wminfo.next = 5;
+            }
+            3 => {
+                state.game.g_game.wminfo.next = 6;
+            }
+            4 => {
+                state.game.g_game.wminfo.next = 2;
+            }
+            _ => {}
+        }
+    } else {
+        state.game.g_game.wminfo.next = state.game.g_game.gamemap;
+    }
+}
+
+/// The level totals, the par time and every player's score for the intermission screen.
+fn fill_intermission_totals(state: &mut GameState) {
+    state.game.g_game.wminfo.maxkills = state.game.g_game.totalkills;
+    state.game.g_game.wminfo.maxitems = state.game.g_game.totalitems;
+    state.game.g_game.wminfo.maxsecret = state.game.g_game.totalsecret;
+    state.game.g_game.wminfo.maxfrags = 0;
+    if state.game.doomstat.gamemode == GameMode::Commercial {
+        state.game.g_game.wminfo.partime = TICRATE * CPARS[(state.game.g_game.gamemap - 1).idx()];
+    } else if state.game.g_game.gameepisode < 4 {
+        state.game.g_game.wminfo.partime =
+            TICRATE * PARS[state.game.g_game.gameepisode.idx()][state.game.g_game.gamemap.idx()];
+    } else {
+        state.game.g_game.wminfo.partime = TICRATE * CPARS[state.game.g_game.gamemap.idx()];
+    }
+    state.game.g_game.wminfo.pnum = state.game.g_game.consoleplayer.slot();
+    for i in 0..MAXPLAYERS {
+        state.game.g_game.wminfo.plyr[i].intercept = state.game.g_game.playeringame[i];
+        state.game.g_game.wminfo.plyr[i].skills = state.game.g_game.players[i].killcount;
+        state.game.g_game.wminfo.plyr[i].sitems = state.game.g_game.players[i].itemcount;
+        state.game.g_game.wminfo.plyr[i].ssecret = state.game.g_game.players[i].secretcount;
+        state.game.g_game.wminfo.plyr[i].stime = state.world.p_tick.leveltime;
+        state.game.g_game.wminfo.plyr[i].frags = state.game.g_game.players[i].frags;
+    }
+}
+
 pub fn do_completed(state: &mut GameState) {
     state.game.g_game.gameaction = GameAction::Nothing;
     for player in PlayerId::all() {
@@ -1210,69 +1324,8 @@ pub fn do_completed(state: &mut GameState) {
         state.game.g_game.players[state.game.g_game.consoleplayer].didsecret;
     state.game.g_game.wminfo.epsd = state.game.g_game.gameepisode - 1;
     state.game.g_game.wminfo.last = state.game.g_game.gamemap - 1;
-    if state.game.doomstat.gamemode == GameMode::Commercial {
-        if state.game.g_game.secretexit {
-            match state.game.g_game.gamemap {
-                15 => {
-                    state.game.g_game.wminfo.next = 30;
-                }
-                31 => {
-                    state.game.g_game.wminfo.next = 31;
-                }
-                _ => {}
-            }
-        } else {
-            match state.game.g_game.gamemap {
-                31 | 32 => {
-                    state.game.g_game.wminfo.next = 15;
-                }
-                _ => {
-                    state.game.g_game.wminfo.next = state.game.g_game.gamemap;
-                }
-            }
-        }
-    } else if state.game.g_game.secretexit {
-        state.game.g_game.wminfo.next = 8;
-    } else if state.game.g_game.gamemap == 9 {
-        match state.game.g_game.gameepisode {
-            1 => {
-                state.game.g_game.wminfo.next = 3;
-            }
-            2 => {
-                state.game.g_game.wminfo.next = 5;
-            }
-            3 => {
-                state.game.g_game.wminfo.next = 6;
-            }
-            4 => {
-                state.game.g_game.wminfo.next = 2;
-            }
-            _ => {}
-        }
-    } else {
-        state.game.g_game.wminfo.next = state.game.g_game.gamemap;
-    }
-    state.game.g_game.wminfo.maxkills = state.game.g_game.totalkills;
-    state.game.g_game.wminfo.maxitems = state.game.g_game.totalitems;
-    state.game.g_game.wminfo.maxsecret = state.game.g_game.totalsecret;
-    state.game.g_game.wminfo.maxfrags = 0;
-    if state.game.doomstat.gamemode == GameMode::Commercial {
-        state.game.g_game.wminfo.partime = TICRATE * CPARS[(state.game.g_game.gamemap - 1).idx()];
-    } else if state.game.g_game.gameepisode < 4 {
-        state.game.g_game.wminfo.partime =
-            TICRATE * PARS[state.game.g_game.gameepisode.idx()][state.game.g_game.gamemap.idx()];
-    } else {
-        state.game.g_game.wminfo.partime = TICRATE * CPARS[state.game.g_game.gamemap.idx()];
-    }
-    state.game.g_game.wminfo.pnum = state.game.g_game.consoleplayer.slot();
-    for i in 0..MAXPLAYERS {
-        state.game.g_game.wminfo.plyr[i].intercept = state.game.g_game.playeringame[i];
-        state.game.g_game.wminfo.plyr[i].skills = state.game.g_game.players[i].killcount;
-        state.game.g_game.wminfo.plyr[i].sitems = state.game.g_game.players[i].itemcount;
-        state.game.g_game.wminfo.plyr[i].ssecret = state.game.g_game.players[i].secretcount;
-        state.game.g_game.wminfo.plyr[i].stime = state.world.p_tick.leveltime;
-        state.game.g_game.wminfo.plyr[i].frags = state.game.g_game.players[i].frags;
-    }
+    choose_next_map(state);
+    fill_intermission_totals(state);
     state.game.g_game.gamestate = GameScreenState::Intermission;
     state.game.g_game.viewactive = false;
     state.ui.am_map.automapactive = false;

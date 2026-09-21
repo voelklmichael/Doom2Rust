@@ -401,6 +401,225 @@ pub fn refresh_background(state: &mut GameState) {
         );
     }
 }
+/// `IDDQD`: toggles god mode.
+fn cheat_god_mode(state: &mut GameState) {
+    state.game.g_game.player_mut(state.ui.st_stuff.plyr).cheats ^= CheatFlags::GODMODE;
+    if state
+        .game
+        .g_game
+        .player_mut(state.ui.st_stuff.plyr)
+        .cheats
+        .contains(CheatFlags::GODMODE)
+    {
+        if let Some(mo_id) = state.game.g_game.player_mut(state.ui.st_stuff.plyr).mo {
+            state.world.p_mobj.mo_mut(mo_id).health = 100;
+        }
+        state.game.g_game.player_mut(state.ui.st_stuff.plyr).health = DEH_GOD_MODE_HEALTH;
+        state.game.g_game.player_mut(state.ui.st_stuff.plyr).message =
+            Some("Degreelessness Mode On".to_string());
+    } else {
+        state.game.g_game.player_mut(state.ui.st_stuff.plyr).message =
+            Some("Degreelessness Mode Off".to_string());
+    }
+}
+
+/// `IDFA`: all weapons, full ammo and armour.
+fn cheat_ammo_without_keys(state: &mut GameState) {
+    state
+        .game
+        .g_game
+        .player_mut(state.ui.st_stuff.plyr)
+        .armorpoints = DEH_IDFA_ARMOR;
+    state
+        .game
+        .g_game
+        .player_mut(state.ui.st_stuff.plyr)
+        .armortype = DEH_IDFA_ARMOR_CLASS;
+    for i in 0..NUMWEAPONS {
+        state
+            .game
+            .g_game
+            .player_mut(state.ui.st_stuff.plyr)
+            .weaponowned[i] = true;
+    }
+    for i in 0..NUMAMMO {
+        state.game.g_game.player_mut(state.ui.st_stuff.plyr).ammo[i] =
+            state.game.g_game.player_mut(state.ui.st_stuff.plyr).maxammo[i];
+    }
+    state.game.g_game.player_mut(state.ui.st_stuff.plyr).message =
+        Some("Ammo (no keys) Added".to_string());
+}
+
+/// `IDKFA`: IDFA and every key.
+fn cheat_ammo_with_keys(state: &mut GameState) {
+    state
+        .game
+        .g_game
+        .player_mut(state.ui.st_stuff.plyr)
+        .armorpoints = DEH_IDKFA_ARMOR;
+    state
+        .game
+        .g_game
+        .player_mut(state.ui.st_stuff.plyr)
+        .armortype = DEH_IDKFA_ARMOR_CLASS;
+    for i in 0..NUMWEAPONS {
+        state
+            .game
+            .g_game
+            .player_mut(state.ui.st_stuff.plyr)
+            .weaponowned[i] = true;
+    }
+    for i in 0..NUMAMMO {
+        state.game.g_game.player_mut(state.ui.st_stuff.plyr).ammo[i] =
+            state.game.g_game.player_mut(state.ui.st_stuff.plyr).maxammo[i];
+    }
+    for i in 0..NUMCARDS {
+        state.game.g_game.player_mut(state.ui.st_stuff.plyr).cards[i] = true;
+    }
+    state.game.g_game.player_mut(state.ui.st_stuff.plyr).message =
+        Some("Very Happy Ammo Added".to_string());
+}
+
+/// `IDMUSxy`: plays another music track.
+fn cheat_change_music(state: &mut GameState) {
+    state.game.g_game.player_mut(state.ui.st_stuff.plyr).message = Some("Music Change".to_string());
+    let buf: [u8; 2] = [
+        state.ui.st_stuff.cheat_mus.param()[0],
+        state.ui.st_stuff.cheat_mus.param()[1],
+    ];
+    if state.game.doomstat.gamemode == GameMode::Commercial
+        || !state.game.doomstat.gameversion.is_ultimate_or_higher()
+    {
+        let musnum: i32 =
+            MusicName::Runnin as i32 + (i32::from(buf[0]) - '0' as i32) * 10 + i32::from(buf[1])
+                - '0' as i32
+                - 1;
+        if (i32::from(buf[0]) - '0' as i32) * 10 + i32::from(buf[1]) - '0' as i32 > 35 {
+            state.game.g_game.player_mut(state.ui.st_stuff.plyr).message =
+                Some("IMPOSSIBLE SELECTION".to_string());
+        } else {
+            change_music(state, musnum, true);
+        }
+    } else {
+        let musnum: i32 = MusicName::E1m1 as i32
+            + (i32::from(buf[0]) - '1' as i32) * 9
+            + (i32::from(buf[1]) - '1' as i32);
+        if (i32::from(buf[0]) - '1' as i32) * 9 + i32::from(buf[1]) - '1' as i32 > 31 {
+            state.game.g_game.player_mut(state.ui.st_stuff.plyr).message =
+                Some("IMPOSSIBLE SELECTION".to_string());
+        } else {
+            change_music(state, musnum, true);
+        }
+    }
+}
+
+/// IDCLIP / IDSPISPOPD: toggles walking through walls.
+fn cheat_noclip(state: &mut GameState) {
+    state.game.g_game.player_mut(state.ui.st_stuff.plyr).cheats ^= CheatFlags::NOCLIP;
+    if state
+        .game
+        .g_game
+        .player_mut(state.ui.st_stuff.plyr)
+        .cheats
+        .contains(CheatFlags::NOCLIP)
+    {
+        state.game.g_game.player_mut(state.ui.st_stuff.plyr).message =
+            Some("No Clipping Mode ON".to_string());
+    } else {
+        state.game.g_game.player_mut(state.ui.st_stuff.plyr).message =
+            Some("No Clipping Mode OFF".to_string());
+    }
+}
+
+/// `IDBEHOLDx`: gives a power-up, or takes it away again.
+fn cheat_toggle_power(state: &mut GameState, power: PowerType) {
+    if state.game.g_game.player_mut(state.ui.st_stuff.plyr).powers[power] == 0 {
+        give_power(
+            &mut state.game.g_game,
+            &mut state.world.p_mobj,
+            state.ui.st_stuff.plyr,
+            power,
+        );
+    } else if power != PowerType::Strength {
+        state.game.g_game.player_mut(state.ui.st_stuff.plyr).powers[power] = 1;
+    } else {
+        state.game.g_game.player_mut(state.ui.st_stuff.plyr).powers[power] = 0;
+    }
+    state.game.g_game.player_mut(state.ui.st_stuff.plyr).message =
+        Some("Power-up Toggled".to_string());
+}
+
+/// `IDCHOPPERS`: a chainsaw and a moment of invulnerability.
+fn cheat_choppers(state: &mut GameState) {
+    state
+        .game
+        .g_game
+        .player_mut(state.ui.st_stuff.plyr)
+        .weaponowned[WeaponType::Chainsaw] = true;
+    state.game.g_game.player_mut(state.ui.st_stuff.plyr).powers
+        [PowerType::Invulnerability as usize] = 1;
+    state.game.g_game.player_mut(state.ui.st_stuff.plyr).message =
+        Some("... doesn't suck - GM".to_string());
+}
+
+/// `IDMYPOS`: shows where the player is.
+fn cheat_show_position(state: &mut GameState) {
+    let cp_mo_id = state.game.g_game.players[state.game.g_game.consoleplayer].mobj();
+    let cp_mo = state.world.p_mobj.mo(cp_mo_id);
+    state.game.g_game.player_mut(state.ui.st_stuff.plyr).message = Some(format!(
+        "ang=0x{:x};x,y=(0x{:x},0x{:x})",
+        cp_mo.angle.to_bits(),
+        cp_mo.x.to_bits(),
+        cp_mo.y.to_bits(),
+    ));
+}
+
+/// `IDCLEVxy`: starts another level, if it exists in this game.
+fn cheat_change_level(state: &mut GameState) {
+    let digits: [u8; 2] = [
+        state.ui.st_stuff.cheat_clev.param()[0],
+        state.ui.st_stuff.cheat_clev.param()[1],
+    ];
+    let (episode, map): (i32, i32) = if state.game.doomstat.gamemode == GameMode::Commercial {
+        (
+            1,
+            (i32::from(digits[0]) - '0' as i32) * 10 + i32::from(digits[1]) - '0' as i32,
+        )
+    } else {
+        (
+            i32::from(digits[0]) - '0' as i32,
+            i32::from(digits[1]) - '0' as i32,
+        )
+    };
+    let epsd: i32 = if state.game.doomstat.gameversion == GameVersion::Chex {
+        1
+    } else {
+        episode
+    };
+    if epsd < 1 {
+        return;
+    }
+    if map < 1 {
+        return;
+    }
+    if state.game.doomstat.gamemode == GameMode::Retail && (epsd > 4 || map > 9) {
+        return;
+    }
+    if state.game.doomstat.gamemode == GameMode::Registered && (epsd > 3 || map > 9) {
+        return;
+    }
+    if state.game.doomstat.gamemode == GameMode::Shareware && (epsd > 1 || map > 9) {
+        return;
+    }
+    if state.game.doomstat.gamemode == GameMode::Commercial && (epsd > 1 || map > 40) {
+        return;
+    }
+    state.game.g_game.player_mut(state.ui.st_stuff.plyr).message =
+        Some("Changing Level...".to_string());
+    let gameskill = state.game.g_game.gameskill;
+    defered_init_new(&mut state.game.g_game, gameskill, epsd, map);
+}
+
 pub fn st_responder(state: &mut GameState, ev: &Event) -> bool {
     if ev.kind == EvType::Keyup && ev.data1.cast_unsigned() & 0xffff0000 == AM_MSGHEADER as u32 {
         match ev.data1 {
@@ -419,117 +638,22 @@ pub fn st_responder(state: &mut GameState, ev: &Event) -> bool {
                 &mut state.ui.st_stuff.cheat_god,
                 ev.data2.cast_unsigned() as u8,
             ) {
-                state.game.g_game.player_mut(state.ui.st_stuff.plyr).cheats ^= CheatFlags::GODMODE;
-                if state
-                    .game
-                    .g_game
-                    .player_mut(state.ui.st_stuff.plyr)
-                    .cheats
-                    .contains(CheatFlags::GODMODE)
-                {
-                    if let Some(mo_id) = state.game.g_game.player_mut(state.ui.st_stuff.plyr).mo {
-                        state.world.p_mobj.mo_mut(mo_id).health = 100;
-                    }
-                    state.game.g_game.player_mut(state.ui.st_stuff.plyr).health =
-                        DEH_GOD_MODE_HEALTH;
-                    state.game.g_game.player_mut(state.ui.st_stuff.plyr).message =
-                        Some("Degreelessness Mode On".to_string());
-                } else {
-                    state.game.g_game.player_mut(state.ui.st_stuff.plyr).message =
-                        Some("Degreelessness Mode Off".to_string());
-                }
+                cheat_god_mode(state);
             } else if cht_check_cheat(
                 &mut state.ui.st_stuff.cheat_ammonokey,
                 ev.data2.cast_unsigned() as u8,
             ) {
-                state
-                    .game
-                    .g_game
-                    .player_mut(state.ui.st_stuff.plyr)
-                    .armorpoints = DEH_IDFA_ARMOR;
-                state
-                    .game
-                    .g_game
-                    .player_mut(state.ui.st_stuff.plyr)
-                    .armortype = DEH_IDFA_ARMOR_CLASS;
-                for i in 0..NUMWEAPONS {
-                    state
-                        .game
-                        .g_game
-                        .player_mut(state.ui.st_stuff.plyr)
-                        .weaponowned[i] = true;
-                }
-                for i in 0..NUMAMMO {
-                    state.game.g_game.player_mut(state.ui.st_stuff.plyr).ammo[i] =
-                        state.game.g_game.player_mut(state.ui.st_stuff.plyr).maxammo[i];
-                }
-                state.game.g_game.player_mut(state.ui.st_stuff.plyr).message =
-                    Some("Ammo (no keys) Added".to_string());
+                cheat_ammo_without_keys(state);
             } else if cht_check_cheat(
                 &mut state.ui.st_stuff.cheat_ammo,
                 ev.data2.cast_unsigned() as u8,
             ) {
-                state
-                    .game
-                    .g_game
-                    .player_mut(state.ui.st_stuff.plyr)
-                    .armorpoints = DEH_IDKFA_ARMOR;
-                state
-                    .game
-                    .g_game
-                    .player_mut(state.ui.st_stuff.plyr)
-                    .armortype = DEH_IDKFA_ARMOR_CLASS;
-                for i in 0..NUMWEAPONS {
-                    state
-                        .game
-                        .g_game
-                        .player_mut(state.ui.st_stuff.plyr)
-                        .weaponowned[i] = true;
-                }
-                for i in 0..NUMAMMO {
-                    state.game.g_game.player_mut(state.ui.st_stuff.plyr).ammo[i] =
-                        state.game.g_game.player_mut(state.ui.st_stuff.plyr).maxammo[i];
-                }
-                for i in 0..NUMCARDS {
-                    state.game.g_game.player_mut(state.ui.st_stuff.plyr).cards[i] = true;
-                }
-                state.game.g_game.player_mut(state.ui.st_stuff.plyr).message =
-                    Some("Very Happy Ammo Added".to_string());
+                cheat_ammo_with_keys(state);
             } else if cht_check_cheat(
                 &mut state.ui.st_stuff.cheat_mus,
                 ev.data2.cast_unsigned() as u8,
             ) {
-                state.game.g_game.player_mut(state.ui.st_stuff.plyr).message =
-                    Some("Music Change".to_string());
-                let buf: [u8; 2] = [
-                    state.ui.st_stuff.cheat_mus.param()[0],
-                    state.ui.st_stuff.cheat_mus.param()[1],
-                ];
-                if state.game.doomstat.gamemode == GameMode::Commercial
-                    || !state.game.doomstat.gameversion.is_ultimate_or_higher()
-                {
-                    let musnum: i32 = MusicName::Runnin as i32
-                        + (i32::from(buf[0]) - '0' as i32) * 10
-                        + i32::from(buf[1])
-                        - '0' as i32
-                        - 1;
-                    if (i32::from(buf[0]) - '0' as i32) * 10 + i32::from(buf[1]) - '0' as i32 > 35 {
-                        state.game.g_game.player_mut(state.ui.st_stuff.plyr).message =
-                            Some("IMPOSSIBLE SELECTION".to_string());
-                    } else {
-                        change_music(state, musnum, true);
-                    }
-                } else {
-                    let musnum: i32 = MusicName::E1m1 as i32
-                        + (i32::from(buf[0]) - '1' as i32) * 9
-                        + (i32::from(buf[1]) - '1' as i32);
-                    if (i32::from(buf[0]) - '1' as i32) * 9 + i32::from(buf[1]) - '1' as i32 > 31 {
-                        state.game.g_game.player_mut(state.ui.st_stuff.plyr).message =
-                            Some("IMPOSSIBLE SELECTION".to_string());
-                    } else {
-                        change_music(state, musnum, true);
-                    }
-                }
+                cheat_change_music(state);
             } else if state.game.doomstat.gamemission.base() == GameMission::Doom
                 && cht_check_cheat(
                     &mut state.ui.st_stuff.cheat_noclip,
@@ -541,40 +665,14 @@ pub fn st_responder(state: &mut GameState, ev: &Event) -> bool {
                         ev.data2.cast_unsigned() as u8,
                     )
             {
-                state.game.g_game.player_mut(state.ui.st_stuff.plyr).cheats ^= CheatFlags::NOCLIP;
-                if state
-                    .game
-                    .g_game
-                    .player_mut(state.ui.st_stuff.plyr)
-                    .cheats
-                    .contains(CheatFlags::NOCLIP)
-                {
-                    state.game.g_game.player_mut(state.ui.st_stuff.plyr).message =
-                        Some("No Clipping Mode ON".to_string());
-                } else {
-                    state.game.g_game.player_mut(state.ui.st_stuff.plyr).message =
-                        Some("No Clipping Mode OFF".to_string());
-                }
+                cheat_noclip(state);
             }
             for (i, power) in PowerType::ALL.into_iter().enumerate() {
                 if cht_check_cheat(
                     &mut state.ui.st_stuff.cheat_powerup[i],
                     ev.data2.cast_unsigned() as u8,
                 ) {
-                    if state.game.g_game.player_mut(state.ui.st_stuff.plyr).powers[power] == 0 {
-                        give_power(
-                            &mut state.game.g_game,
-                            &mut state.world.p_mobj,
-                            state.ui.st_stuff.plyr,
-                            power,
-                        );
-                    } else if power != PowerType::Strength {
-                        state.game.g_game.player_mut(state.ui.st_stuff.plyr).powers[power] = 1;
-                    } else {
-                        state.game.g_game.player_mut(state.ui.st_stuff.plyr).powers[power] = 0;
-                    }
-                    state.game.g_game.player_mut(state.ui.st_stuff.plyr).message =
-                        Some("Power-up Toggled".to_string());
+                    cheat_toggle_power(state, power);
                 }
             }
             if cht_check_cheat(
@@ -587,27 +685,12 @@ pub fn st_responder(state: &mut GameState, ev: &Event) -> bool {
                 &mut state.ui.st_stuff.cheat_choppers,
                 ev.data2.cast_unsigned() as u8,
             ) {
-                state
-                    .game
-                    .g_game
-                    .player_mut(state.ui.st_stuff.plyr)
-                    .weaponowned[WeaponType::Chainsaw] = true;
-                state.game.g_game.player_mut(state.ui.st_stuff.plyr).powers
-                    [PowerType::Invulnerability as usize] = 1;
-                state.game.g_game.player_mut(state.ui.st_stuff.plyr).message =
-                    Some("... doesn't suck - GM".to_string());
+                cheat_choppers(state);
             } else if cht_check_cheat(
                 &mut state.ui.st_stuff.cheat_mypos,
                 ev.data2.cast_unsigned() as u8,
             ) {
-                let cp_mo_id = state.game.g_game.players[state.game.g_game.consoleplayer].mobj();
-                let cp_mo = state.world.p_mobj.mo(cp_mo_id);
-                state.game.g_game.player_mut(state.ui.st_stuff.plyr).message = Some(format!(
-                    "ang=0x{:x};x,y=(0x{:x},0x{:x})",
-                    cp_mo.angle.to_bits(),
-                    cp_mo.x.to_bits(),
-                    cp_mo.y.to_bits(),
-                ));
+                cheat_show_position(state);
             }
         }
         if !state.game.g_game.netgame
@@ -616,49 +699,7 @@ pub fn st_responder(state: &mut GameState, ev: &Event) -> bool {
                 ev.data2.cast_unsigned() as u8,
             )
         {
-            let digits: [u8; 2] = [
-                state.ui.st_stuff.cheat_clev.param()[0],
-                state.ui.st_stuff.cheat_clev.param()[1],
-            ];
-            let (episode, map): (i32, i32) = if state.game.doomstat.gamemode == GameMode::Commercial
-            {
-                (
-                    1,
-                    (i32::from(digits[0]) - '0' as i32) * 10 + i32::from(digits[1]) - '0' as i32,
-                )
-            } else {
-                (
-                    i32::from(digits[0]) - '0' as i32,
-                    i32::from(digits[1]) - '0' as i32,
-                )
-            };
-            let epsd: i32 = if state.game.doomstat.gameversion == GameVersion::Chex {
-                1
-            } else {
-                episode
-            };
-            if epsd < 1 {
-                return false;
-            }
-            if map < 1 {
-                return false;
-            }
-            if state.game.doomstat.gamemode == GameMode::Retail && (epsd > 4 || map > 9) {
-                return false;
-            }
-            if state.game.doomstat.gamemode == GameMode::Registered && (epsd > 3 || map > 9) {
-                return false;
-            }
-            if state.game.doomstat.gamemode == GameMode::Shareware && (epsd > 1 || map > 9) {
-                return false;
-            }
-            if state.game.doomstat.gamemode == GameMode::Commercial && (epsd > 1 || map > 40) {
-                return false;
-            }
-            state.game.g_game.player_mut(state.ui.st_stuff.plyr).message =
-                Some("Changing Level...".to_string());
-            let gameskill = state.game.g_game.gameskill;
-            defered_init_new(&mut state.game.g_game, gameskill, epsd, map);
+            cheat_change_level(state);
         }
     }
     false
