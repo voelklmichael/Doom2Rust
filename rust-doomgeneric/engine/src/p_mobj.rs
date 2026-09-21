@@ -1536,6 +1536,10 @@ impl Line {
     pub fn front_side(&self) -> SideId {
         self.sidenum[0].expect("line without a front side")
     }
+    /// The sector in front of the line, which every line of a valid map has.
+    pub fn front_sector(&self) -> SectorId {
+        self.frontsector.expect("line without a front sector")
+    }
 }
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum SlopeType {
@@ -1749,7 +1753,7 @@ pub fn xymovement(state: &mut GameState, mo: MobjId) {
                 .p_mobj
                 .mo(mo)
                 .state
-                .unwrap()
+                .expect("a thinking mobj has a state")
                 .0
                 .wrapping_sub(StateNum::PlayRun1 as u32))
                 < 4
@@ -1769,10 +1773,14 @@ pub fn zmovement(state: &mut GameState, mo: MobjId) {
     if state.world.p_mobj.mo(mo).player.is_some()
         && state.world.p_mobj.mo(mo).z < state.world.p_mobj.mo(mo).floorz
     {
-        let mo_player = state
-            .game
-            .g_game
-            .player_mut(state.world.p_mobj.mo(mo).player.unwrap());
+        let mo_player = state.game.g_game.player_mut(
+            state
+                .world
+                .p_mobj
+                .mo(mo)
+                .player
+                .expect("a mobj that lands hard is a player"),
+        );
         mo_player.viewheight -= state.world.p_mobj.mo(mo).floorz - state.world.p_mobj.mo(mo).z;
         mo_player.deltaviewheight = (VIEWHEIGHT - mo_player.viewheight) >> 3;
     }
@@ -1823,7 +1831,14 @@ pub fn zmovement(state: &mut GameState, mo: MobjId) {
                 state
                     .game
                     .g_game
-                    .player_mut(state.world.p_mobj.mo(mo).player.unwrap())
+                    .player_mut(
+                        state
+                            .world
+                            .p_mobj
+                            .mo(mo)
+                            .player
+                            .expect("a mobj that lands hard is a player"),
+                    )
                     .deltaviewheight = state.world.p_mobj.mo(mo).momz >> 3;
                 s_start_sound(state, SoundOrigin::Mobj(mo), SfxName::Oof);
             }
@@ -1984,7 +1999,12 @@ pub fn mobj_thinker(state: &mut GameState, id: MobjId) {
     } else {
         state.world.p_mobj.mo_mut(id).tics -= 1;
         if state.world.p_mobj.mo(id).tics == 0 {
-            let current = state.world.p_mobj.mo(id).state.unwrap();
+            let current = state
+                .world
+                .p_mobj
+                .mo(id)
+                .state
+                .expect("a thinking mobj has a state");
             let nextstate = state.assets.info.state_mut(current).nextstate;
             set_mobj_state(state, id, nextstate);
         }

@@ -1114,7 +1114,8 @@ impl DoomPlatform for X11Platform {
     fn set_window_title(&mut self, title: &str) {
         unsafe {
             if self.s_Window != 0 {
-                let title_cstring = ::std::ffi::CString::new(title).unwrap();
+                let title_cstring =
+                    ::std::ffi::CString::new(title).expect("a window title contains no NUL byte");
                 XChangeProperty(
                     self.s_Display,
                     self.s_Window,

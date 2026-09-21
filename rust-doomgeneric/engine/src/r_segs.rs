@@ -64,6 +64,14 @@ pub struct RSegsState {
     pub maskedtexturecol: Option<ClipArray>,
 }
 
+impl RSegsState {
+    /// The column table of the masked texture being drawn (set by `store_wall_range`).
+    pub fn maskedtexturecol(&self) -> ClipArray {
+        self.maskedtexturecol
+            .expect("no masked texture column table")
+    }
+}
+
 impl Default for RSegsState {
     fn default() -> Self {
         Self {
@@ -222,7 +230,7 @@ pub fn render_masked_seg_range(state: &mut GameState, ds: &DrawSeg, x1: i32, x2:
     if state.render.r_main.fixedcolormap.is_some() {
         state.render.r_draw.dc_colormap = state.render.r_main.fixedcolormap;
     }
-    let maskedtexturecol = state.render.r_segs.maskedtexturecol.unwrap();
+    let maskedtexturecol = state.render.r_segs.maskedtexturecol();
     state.render.r_draw.dc_x = x1;
     while state.render.r_draw.dc_x <= x2 {
         if i32::from(maskedtexturecol.get(state, state.render.r_draw.dc_x as isize)) != SHRT_MAX {
@@ -287,7 +295,7 @@ pub fn render_seg_loop(state: &mut GameState) {
                         - 1;
             }
             if top <= bottom {
-                let ceilingplane = state.render.r_plane.ceilingplane.unwrap();
+                let ceilingplane = state.render.r_plane.ceilingplane();
                 state.render.r_plane.visplanes[ceilingplane]
                     .set_top(state.render.r_segs.rw_x, top as u8);
                 state.render.r_plane.visplanes[ceilingplane]
@@ -309,7 +317,7 @@ pub fn render_seg_loop(state: &mut GameState) {
                         + 1;
             }
             if top <= bottom {
-                let floorplane = state.render.r_plane.floorplane.unwrap();
+                let floorplane = state.render.r_plane.floorplane();
                 state.render.r_plane.visplanes[floorplane]
                     .set_top(state.render.r_segs.rw_x, top as u8);
                 state.render.r_plane.visplanes[floorplane]
@@ -440,7 +448,7 @@ pub fn render_seg_loop(state: &mut GameState) {
                 state.render.r_plane.floorclip[state.render.r_segs.rw_x as usize] = (yh + 1) as i16;
             }
             if state.render.r_segs.maskedtexture {
-                let maskedtexturecol = state.render.r_segs.maskedtexturecol.unwrap();
+                let maskedtexturecol = state.render.r_segs.maskedtexturecol();
                 maskedtexturecol.set(
                     state,
                     state.render.r_segs.rw_x as isize,
@@ -897,7 +905,7 @@ pub fn store_wall_range(state: &mut GameState, start: i32, stop: i32) {
     }
     if state.render.r_segs.markceiling {
         let (ceilingplane, rw_x, rw_stopx_1) = (
-            state.render.r_plane.ceilingplane.unwrap(),
+            state.render.r_plane.ceilingplane(),
             state.render.r_segs.rw_x,
             state.render.r_segs.rw_stopx - 1,
         );
@@ -910,7 +918,7 @@ pub fn store_wall_range(state: &mut GameState, start: i32, stop: i32) {
     }
     if state.render.r_segs.markfloor {
         let (floorplane, rw_x2, rw_stopx_2) = (
-            state.render.r_plane.floorplane.unwrap(),
+            state.render.r_plane.floorplane(),
             state.render.r_segs.rw_x,
             state.render.r_segs.rw_stopx - 1,
         );

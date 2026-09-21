@@ -95,6 +95,29 @@ pub struct PMapState {
     pub baseaddr: u32,
 }
 
+impl PMapState {
+    /// The thing being moved by the position check in progress.
+    pub fn tmthing(&self) -> MobjId {
+        self.tmthing.expect("no position check in progress")
+    }
+    /// The thing being slid along walls.
+    pub fn slidemo(&self) -> MobjId {
+        self.slidemo.expect("no wall slide in progress")
+    }
+    /// The thing firing the hitscan or aim in progress.
+    pub fn shootthing(&self) -> MobjId {
+        self.shootthing.expect("no shot in progress")
+    }
+    /// The thing pressing the use key.
+    pub fn usething(&self) -> MobjId {
+        self.usething.expect("no use in progress")
+    }
+    /// The centre of the explosion in progress.
+    pub fn bombspot(&self) -> MobjId {
+        self.bombspot.expect("no explosion in progress")
+    }
+}
+
 impl Default for PMapState {
     fn default() -> Self {
         Self {
@@ -141,7 +164,7 @@ pub const MAXSPECIALCROSS_ORIGINAL: i32 = 8;
 pub const DEFAULT_SPECHIT_MAGIC: u32 = 0x1c09c98;
 pub fn stomp_thing(state: &mut GameState, thing_id: MobjId) -> bool {
     let thing = thing_id;
-    let tmthing = state.world.p_map.tmthing.unwrap();
+    let tmthing = state.world.p_map.tmthing();
 
     if !state
         .world
@@ -235,7 +258,7 @@ pub fn check_line(state: &mut GameState, ld: LineId) -> bool {
     if ldv.backsector.is_none() {
         return false;
     }
-    let tmthing = state.world.p_map.tmthing.unwrap();
+    let tmthing = state.world.p_map.tmthing();
     if !state
         .world
         .p_mobj
@@ -279,7 +302,7 @@ pub fn check_line(state: &mut GameState, ld: LineId) -> bool {
 }
 pub fn check_thing(state: &mut GameState, thing_id: MobjId) -> bool {
     let thing = thing_id;
-    let tmthing = state.world.p_map.tmthing.unwrap();
+    let tmthing = state.world.p_map.tmthing();
 
     if !state
         .world
@@ -349,16 +372,15 @@ pub fn check_thing(state: &mut GameState, thing_id: MobjId) -> bool {
             .mo(tmthing)
             .target
             .filter(|&id| state.world.p_mobj.is_live(id));
-        if tm_target.is_some()
-            && (state.world.p_mobj.mo(tm_target.unwrap()).kind as u32
-                == state.world.p_mobj.mo(thing).kind as u32
-                || state.world.p_mobj.mo(tm_target.unwrap()).kind as u32
-                    == MobjType::Knight as i32 as u32
-                    && state.world.p_mobj.mo(thing).kind as u32 == MobjType::Bruiser as i32 as u32
-                || state.world.p_mobj.mo(tm_target.unwrap()).kind as u32
-                    == MobjType::Bruiser as i32 as u32
-                    && state.world.p_mobj.mo(thing).kind as u32 == MobjType::Knight as i32 as u32)
-        {
+        if tm_target.is_some_and(|tm_target| {
+            let target_kind = state.world.p_mobj.mo(tm_target).kind as u32;
+            let thing_kind = state.world.p_mobj.mo(thing).kind as u32;
+            target_kind == thing_kind
+                || target_kind == MobjType::Knight as i32 as u32
+                    && thing_kind == MobjType::Bruiser as i32 as u32
+                || target_kind == MobjType::Bruiser as i32 as u32
+                    && thing_kind == MobjType::Knight as i32 as u32
+        }) {
             if Some(thing) == tm_target {
                 return true;
             }
@@ -593,7 +615,7 @@ pub fn hit_slide_line(
         p_map.tmxmove = Fixed::ZERO;
         return;
     }
-    let slidemo = p_map.slidemo.unwrap();
+    let slidemo = p_map.slidemo();
     let side: i32 = point_on_line_side(p_setup, p_mobj.mo(slidemo).x, p_mobj.mo(slidemo).y, ld);
     let mut lineangle: Angle = point_to_angle2(Fixed::ZERO, Fixed::ZERO, ldv.dx, ldv.dy);
     if side == 1 {
@@ -616,7 +638,7 @@ pub fn slide_traverse(state: &mut GameState, intercept: Intercept) -> bool {
         InterceptTarget::Line(id) => id,
         InterceptTarget::Thing(_) => error("PTR_SlideTraverse: not a line?"),
     };
-    let slidemo = state.world.p_map.slidemo.unwrap();
+    let slidemo = state.world.p_map.slidemo();
     if state
         .world
         .p_setup
@@ -765,18 +787,11 @@ pub fn aim_traverse(state: &mut GameState, intercept: Intercept) -> bool {
             return false;
         }
         let dist: Fixed = fixed_mul(state.world.p_map.attackrange, intercept.frac);
-        if liv.backsector.is_none()
-            || state
-                .world
-                .p_setup
-                .sector(liv.frontsector.unwrap())
-                .floorheight
-                != state
-                    .world
-                    .p_setup
-                    .sector(liv.backsector.unwrap())
-                    .floorheight
-        {
+        let front = liv.front_sector();
+        if liv.backsector.is_none_or(|back| {
+            state.world.p_setup.sector(front).floorheight
+                != state.world.p_setup.sector(back).floorheight
+        }) {
             let slope = fixed_div(
                 state.world.p_maputl.openbottom - state.world.p_map.shootz,
                 dist,
@@ -785,18 +800,10 @@ pub fn aim_traverse(state: &mut GameState, intercept: Intercept) -> bool {
                 state.world.p_sight.bottomslope = slope;
             }
         }
-        if liv.backsector.is_none()
-            || state
-                .world
-                .p_setup
-                .sector(liv.frontsector.unwrap())
-                .ceilingheight
-                != state
-                    .world
-                    .p_setup
-                    .sector(liv.backsector.unwrap())
-                    .ceilingheight
-        {
+        if liv.backsector.is_none_or(|back| {
+            state.world.p_setup.sector(front).ceilingheight
+                != state.world.p_setup.sector(back).ceilingheight
+        }) {
             let slope = fixed_div(
                 state.world.p_maputl.opentop - state.world.p_map.shootz,
                 dist,
@@ -850,7 +857,7 @@ pub fn aim_traverse(state: &mut GameState, intercept: Intercept) -> bool {
     false
 }
 pub fn shoot_traverse(state: &mut GameState, intercept: Intercept) -> bool {
-    let shootthing = state.world.p_map.shootthing.unwrap();
+    let shootthing = state.world.p_map.shootthing();
     if let InterceptTarget::Line(li) = intercept.target {
         if state.world.p_setup.line(li).special != 0 {
             shoot_special_line(state, shootthing, li);
@@ -868,7 +875,7 @@ pub fn shoot_traverse(state: &mut GameState, intercept: Intercept) -> bool {
             let (check_floor, check_ceiling) = match state.world.p_setup.line(li).backsector {
                 None => (true, true),
                 Some(back) => {
-                    let front = state.world.p_setup.line(li).frontsector.unwrap();
+                    let front = state.world.p_setup.line(li).front_sector();
                     let (front_floor, front_ceiling) = {
                         let s = state.world.p_setup.sector_mut(front);
                         (s.floorheight, s.ceilingheight)
@@ -909,27 +916,22 @@ pub fn shoot_traverse(state: &mut GameState, intercept: Intercept) -> bool {
             state
                 .world
                 .p_setup
-                .sector_mut(state.world.p_setup.line(li).frontsector.unwrap())
+                .sector_mut(state.world.p_setup.line(li).front_sector())
                 .ceilingpic,
         ) == state.render.r_sky.skyflatnum
         {
             if z > state
                 .world
                 .p_setup
-                .sector_mut(state.world.p_setup.line(li).frontsector.unwrap())
+                .sector_mut(state.world.p_setup.line(li).front_sector())
                 .ceilingheight
             {
                 return false;
             }
-            if state.world.p_setup.line(li).backsector.is_some()
-                && i32::from(
-                    state
-                        .world
-                        .p_setup
-                        .sector_mut(state.world.p_setup.line(li).backsector.unwrap())
-                        .ceilingpic,
-                ) == state.render.r_sky.skyflatnum
-            {
+            if state.world.p_setup.line(li).backsector.is_some_and(|back| {
+                i32::from(state.world.p_setup.sector(back).ceilingpic)
+                    == state.render.r_sky.skyflatnum
+            }) {
                 return false;
             }
         }
@@ -1062,7 +1064,7 @@ pub fn use_traverse(state: &mut GameState, intercept: Intercept) -> bool {
         InterceptTarget::Line(id) => id,
         InterceptTarget::Thing(_) => unreachable!(),
     };
-    let usething = state.world.p_map.usething.unwrap();
+    let usething = state.world.p_map.usething();
     if state.world.p_setup.line(li).special == 0 {
         line_opening(&mut state.world.p_maputl, &mut state.world.p_setup, li);
         if state.world.p_maputl.openrange <= Fixed::ZERO {
@@ -1085,7 +1087,7 @@ pub fn use_traverse(state: &mut GameState, intercept: Intercept) -> bool {
 pub fn use_lines(state: &mut GameState, player: PlayerId) {
     let player_mo = state.game.g_game.player_mut(player).mo;
     state.world.p_map.usething = player_mo;
-    let player_mo = player_mo.unwrap();
+    let player_mo = player_mo.expect("the player using a line has a body");
     let (angle, x1, y1) = {
         let m = state.world.p_mobj.mo(player_mo);
         (m.angle.fine() as i32, m.x, m.y)
@@ -1111,7 +1113,7 @@ pub fn pit_radius_attack(state: &mut GameState, thing_id: MobjId) -> bool {
     {
         return true;
     }
-    let bombspot = state.world.p_map.bombspot.unwrap();
+    let bombspot = state.world.p_map.bombspot();
     let bombsource = state
         .world
         .p_map

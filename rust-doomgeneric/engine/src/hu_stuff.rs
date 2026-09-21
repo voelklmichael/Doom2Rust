@@ -435,7 +435,7 @@ pub fn hu_ticker(state: &mut GameState) {
                 .player_mut(state.ui.hu_stuff.plr)
                 .message
                 .as_deref()
-                .unwrap(),
+                .expect("the condition above checked that a message is pending"),
         );
         state.game.g_game.player_mut(state.ui.hu_stuff.plr).message = None;
         state.ui.hu_stuff.message_on = true;

@@ -358,7 +358,9 @@ pub fn init_textures(state: &mut GameState) {
             doom_print!(state.io.platform, ".");
         }
         if i == numtextures1 {
-            current_maptex = maptex2.as_ref().unwrap();
+            current_maptex = maptex2
+                .as_ref()
+                .expect("the second texture lump exists once the first is used up");
             maxoff = maxoff2;
             dir_index = 0;
         }

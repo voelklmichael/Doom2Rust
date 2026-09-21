@@ -320,11 +320,15 @@ pub fn line_opening(p_maputl: &mut PMaputlState, p_setup: &mut PSetupState, line
         return;
     }
     let (front_floor, front_ceiling) = {
-        let front = p_setup.sector_mut(linedefv.frontsector.unwrap());
+        let front = p_setup.sector_mut(linedefv.front_sector());
         (front.floorheight, front.ceilingheight)
     };
     let (back_floor, back_ceiling) = {
-        let back = p_setup.sector_mut(linedefv.backsector.unwrap());
+        let back = p_setup.sector_mut(
+            linedefv
+                .backsector
+                .expect("a two-sided line has a back sector"),
+        );
         (back.floorheight, back.ceilingheight)
     };
     p_maputl.opentop = front_ceiling.min(back_ceiling);
@@ -543,7 +547,11 @@ pub fn add_line_intercepts(state: &mut GameState, ld: LineId) -> bool {
 }
 pub fn add_thing_intercepts(state: &mut GameState, thing_id: MobjId) -> bool {
     let (thing_x, thing_y, thing_radius) = {
-        let thing = state.world.p_mobj.mobj_ref(thing_id).unwrap();
+        let thing = state
+            .world
+            .p_mobj
+            .mobj_ref(thing_id)
+            .expect("a thing on the blockmap is alive");
         (thing.x, thing.y, thing.radius)
     };
     let trace = state.world.p_maputl.trace;

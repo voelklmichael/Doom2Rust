@@ -467,7 +467,12 @@ pub fn touch_special_thing(state: &mut GameState, special: MobjId, toucher: Mobj
     if delta > state.world.p_mobj.mo(toucher).height || delta < -8 * FRACUNIT {
         return;
     }
-    let player = state.world.p_mobj.mo(toucher).player.unwrap();
+    let player = state
+        .world
+        .p_mobj
+        .mo(toucher)
+        .player
+        .expect("only players touch specials");
     if state.world.p_mobj.mo(toucher).health <= 0 {
         return;
     }

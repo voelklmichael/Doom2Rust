@@ -1065,8 +1065,8 @@ pub fn check_spot(state: &mut GameState, playernum: PlayerId, mthing: &MapThing)
         return false;
     }
     if state.game.g_game.bodyqueslot >= BODYQUESIZE {
-        let old_id =
-            state.game.g_game.bodyque[state.game.g_game.bodyqueslot % BODYQUESIZE].unwrap();
+        let old_id = state.game.g_game.bodyque[state.game.g_game.bodyqueslot % BODYQUESIZE]
+            .expect("every slot of a full body queue is filled");
         if state.world.p_mobj.is_live(old_id) {
             remove_mobj(state, old_id);
         }

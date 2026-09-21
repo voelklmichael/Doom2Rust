@@ -49,11 +49,16 @@ fn source_bytes<'a>(
 ) -> (&'a [u8], isize) {
     match src {
         ColumnSource::Lump { lump, offset } => (
-            &w_wad.lumpinfo[lump.index()].cache.as_ref().unwrap()[..],
+            &w_wad.lumpinfo[lump.index()]
+                .cache
+                .as_ref()
+                .expect("a lump is cached while it is drawn")[..],
             offset as isize,
         ),
         ColumnSource::Composite { tex, offset } => (
-            r_data.texturecomposite[tex as usize].as_ref().unwrap(),
+            r_data.texturecomposite[tex as usize]
+                .as_ref()
+                .expect("a texture is composited while it is drawn"),
             offset as isize,
         ),
     }
@@ -62,12 +67,16 @@ fn source_bytes<'a>(
 /// One light level of the colormap table: what a source pixel becomes at that brightness.
 fn colormap_row(colormaps: &[u8], index: ColormapId) -> &[u8; 256] {
     let start = (index * 256) as usize;
-    (&colormaps[start..start + 256]).try_into().unwrap()
+    (&colormaps[start..start + 256])
+        .try_into()
+        .expect("the slice is 256 bytes")
 }
 
 /// One of the player colour translation tables, `dc_translation` bytes into `translationtables`.
 fn translation_row(tables: &[u8], offset: usize) -> &[u8; 256] {
-    (&tables[offset..offset + 256]).try_into().unwrap()
+    (&tables[offset..offset + 256])
+        .try_into()
+        .expect("the slice is 256 bytes")
 }
 
 pub fn read_source(r_data: &RDataState, w_wad: &WWadState, src: ColumnSource, idx: i32) -> u8 {
@@ -105,6 +114,21 @@ pub struct RDrawState {
     pub ds_ystep: Fixed,
     pub ds_source: Option<ColumnSource>,
     pub dscount: i32,
+}
+
+impl RDrawState {
+    /// Where the column being drawn reads its texels (set by every caller before drawing).
+    fn column_source(&self) -> ColumnSource {
+        self.dc_source.expect("no column source set")
+    }
+    /// The light level of the column being drawn (set by every caller before drawing).
+    fn column_colormap(&self) -> ColormapId {
+        self.dc_colormap.expect("no column colormap set")
+    }
+    /// Where the span being drawn reads its texels (set by every caller before drawing).
+    fn span_source(&self) -> ColumnSource {
+        self.ds_source.expect("no span source set")
+    }
 }
 
 impl Default for RDrawState {
@@ -166,11 +190,11 @@ pub fn draw_column(state: &mut GameState) {
     let (source, base) = source_bytes(
         &state.render.r_data,
         &state.assets.w_wad,
-        state.render.r_draw.dc_source.unwrap(),
+        state.render.r_draw.column_source(),
     );
     let colormap = colormap_row(
         &state.render.r_data.colormaps,
-        state.render.r_draw.dc_colormap.unwrap(),
+        state.render.r_draw.column_colormap(),
     );
     let screen = &mut state.io.i_video.i_video_buffer[..];
     for _ in 0..=count {
@@ -205,11 +229,11 @@ pub fn draw_column_low(state: &mut GameState) {
     let (source, base) = source_bytes(
         &state.render.r_data,
         &state.assets.w_wad,
-        state.render.r_draw.dc_source.unwrap(),
+        state.render.r_draw.column_source(),
     );
     let colormap = colormap_row(
         &state.render.r_data.colormaps,
-        state.render.r_draw.dc_colormap.unwrap(),
+        state.render.r_draw.column_colormap(),
     );
     let screen = &mut state.io.i_video.i_video_buffer[..];
     for _ in 0..=count {
@@ -333,7 +357,7 @@ pub fn draw_translated_column(state: &mut GameState) {
     let (source, base) = source_bytes(
         &state.render.r_data,
         &state.assets.w_wad,
-        state.render.r_draw.dc_source.unwrap(),
+        state.render.r_draw.column_source(),
     );
     let translation = translation_row(
         &state.render.r_draw.translationtables,
@@ -341,7 +365,7 @@ pub fn draw_translated_column(state: &mut GameState) {
     );
     let colormap = colormap_row(
         &state.render.r_data.colormaps,
-        state.render.r_draw.dc_colormap.unwrap(),
+        state.render.r_draw.column_colormap(),
     );
     let screen = &mut state.io.i_video.i_video_buffer[..];
     for _ in 0..=count {
@@ -377,7 +401,7 @@ pub fn draw_translated_column_low(state: &mut GameState) {
     let (source, base) = source_bytes(
         &state.render.r_data,
         &state.assets.w_wad,
-        state.render.r_draw.dc_source.unwrap(),
+        state.render.r_draw.column_source(),
     );
     let translation = translation_row(
         &state.render.r_draw.translationtables,
@@ -385,7 +409,7 @@ pub fn draw_translated_column_low(state: &mut GameState) {
     );
     let colormap = colormap_row(
         &state.render.r_data.colormaps,
-        state.render.r_draw.dc_colormap.unwrap(),
+        state.render.r_draw.column_colormap(),
     );
     let screen = &mut state.io.i_video.i_video_buffer[..];
     for _ in 0..=count {
@@ -435,7 +459,7 @@ pub fn draw_span(state: &mut GameState) {
     let (source, base) = source_bytes(
         &state.render.r_data,
         &state.assets.w_wad,
-        state.render.r_draw.ds_source.unwrap(),
+        state.render.r_draw.span_source(),
     );
     let colormap = colormap_row(
         &state.render.r_data.colormaps,
@@ -475,7 +499,7 @@ pub fn draw_span_low(state: &mut GameState) {
     let (source, base) = source_bytes(
         &state.render.r_data,
         &state.assets.w_wad,
-        state.render.r_draw.ds_source.unwrap(),
+        state.render.r_draw.span_source(),
     );
     let colormap = colormap_row(
         &state.render.r_data.colormaps,
@@ -526,7 +550,12 @@ pub fn fill_back_screen(state: &mut GameState) {
         name1
     };
     let flat = lump_bytes_name(&*state.assets.fs, &mut state.assets.w_wad, name);
-    let background = state.render.r_draw.background_buffer.as_mut().unwrap();
+    let background = state
+        .render
+        .r_draw
+        .background_buffer
+        .as_mut()
+        .expect("the background buffer is allocated at start-up");
     for y in 0..(SCREENHEIGHT - SBARHEIGHT) as usize {
         let row = &flat[(y & 63) << 6..][..64];
         let line = &mut background[y * SCREENWIDTH as usize..][..SCREENWIDTH as usize];

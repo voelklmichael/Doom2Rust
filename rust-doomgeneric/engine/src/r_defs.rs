@@ -95,6 +95,18 @@ pub struct DrawSeg {
     pub maskedtexturecol: Option<ClipArray>,
 }
 
+impl DrawSeg {
+    /// The clip row below the sprites, present whenever the seg has a bottom silhouette.
+    pub fn sprbottomclip(&self) -> ClipArray {
+        self.sprbottomclip
+            .expect("a bottom silhouette has a clip row")
+    }
+    /// The clip row above the sprites, present whenever the seg has a top silhouette.
+    pub fn sprtopclip(&self) -> ClipArray {
+        self.sprtopclip.expect("a top silhouette has a clip row")
+    }
+}
+
 /// A visplane's per-column top/bottom rows. The arrays carry one extra
 /// element at each end (index `x + 1` holds column `x`), because the span
 /// builder deliberately reads/writes columns -1 and 320 (the sentinels around

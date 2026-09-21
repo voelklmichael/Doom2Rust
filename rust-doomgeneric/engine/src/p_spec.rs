@@ -540,7 +540,7 @@ pub fn get_next_sector(p_setup: &PSetupState, line: LineId, sec: SectorId) -> Op
     if !linev.flags.contains(LineFlags::TWOSIDED) {
         return None;
     }
-    let front = linev.frontsector.unwrap();
+    let front = linev.front_sector();
     if front == sec {
         return linev.backsector;
     }
