@@ -550,40 +550,8 @@ pub fn init_buffer(r_draw: &mut RDrawState, width: i32, height: i32) {
         r_draw.ylookup[i.idx()] = ((i + r_draw.viewwindowy) * SCREENWIDTH).idx();
     }
 }
-pub fn fill_back_screen(state: &mut GameState) {
-    let name1: &str = "FLOOR7_2";
-    let name2: &str = "GRNROCK";
-
-    if state.render.r_draw.scaledviewwidth == SCREENWIDTH {
-        state.render.r_draw.background_buffer = None;
-        return;
-    }
-    if state.render.r_draw.background_buffer.is_none() {
-        state.render.r_draw.background_buffer = Some(vec![
-            0u8;
-            (SCREENWIDTH * (SCREENHEIGHT - SBARHEIGHT))
-                as usize
-        ]);
-    }
-    let name: &str = if state.game.doomstat.gamemode == GameMode::Commercial {
-        name2
-    } else {
-        name1
-    };
-    let flat = lump_bytes_name(&*state.assets.fs, &mut state.assets.w_wad, name);
-    let background = state
-        .render
-        .r_draw
-        .background_buffer
-        .as_mut()
-        .expect("the background buffer is allocated at start-up");
-    for y in 0..(SCREENHEIGHT - SBARHEIGHT) as usize {
-        let row = &flat[(y & 63) << 6..][..64];
-        let line = &mut background[y * SCREENWIDTH as usize..][..SCREENWIDTH as usize];
-        for chunk in line.chunks_mut(64) {
-            chunk.copy_from_slice(&row[..chunk.len()]);
-        }
-    }
+/// Draws the frame of patches around a reduced view window into the background.
+fn draw_background_border(state: &mut GameState) {
     let backdrop = Screen::Background;
     let mut patch: Patch = cache_patch_name(&*state.assets.fs, &mut state.assets.w_wad, "brdr_t");
     for x in (0..state.render.r_draw.scaledviewwidth).step_by(8) {
@@ -657,6 +625,43 @@ pub fn fill_back_screen(state: &mut GameState) {
         state.render.r_draw.viewwindowy + state.render.r_draw.viewheight,
         &__wcache672_1,
     );
+}
+
+pub fn fill_back_screen(state: &mut GameState) {
+    let name1: &str = "FLOOR7_2";
+    let name2: &str = "GRNROCK";
+
+    if state.render.r_draw.scaledviewwidth == SCREENWIDTH {
+        state.render.r_draw.background_buffer = None;
+        return;
+    }
+    if state.render.r_draw.background_buffer.is_none() {
+        state.render.r_draw.background_buffer = Some(vec![
+            0u8;
+            (SCREENWIDTH * (SCREENHEIGHT - SBARHEIGHT))
+                as usize
+        ]);
+    }
+    let name: &str = if state.game.doomstat.gamemode == GameMode::Commercial {
+        name2
+    } else {
+        name1
+    };
+    let flat = lump_bytes_name(&*state.assets.fs, &mut state.assets.w_wad, name);
+    let background = state
+        .render
+        .r_draw
+        .background_buffer
+        .as_mut()
+        .expect("the background buffer is allocated at start-up");
+    for y in 0..(SCREENHEIGHT - SBARHEIGHT) as usize {
+        let row = &flat[(y & 63) << 6..][..64];
+        let line = &mut background[y * SCREENWIDTH as usize..][..SCREENWIDTH as usize];
+        for chunk in line.chunks_mut(64) {
+            chunk.copy_from_slice(&row[..chunk.len()]);
+        }
+    }
+    draw_background_border(state);
 }
 pub fn video_erase(i_video: &mut IVideoState, r_draw: &RDrawState, ofs: u32, count: i32) {
     if let Some(background_buffer) = &r_draw.background_buffer {

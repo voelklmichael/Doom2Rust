@@ -279,15 +279,8 @@ fn generate_texture_hash_table(r_data: &mut RDataState) {
         }
     }
 }
-pub fn init_textures(state: &mut GameState) {
-    // PNAMES/TEXTURE1/TEXTURE2 are on-disk WAD lumps (raw bytes, not typed
-    // Rust structs), so each is captured as a plain byte buffer once here
-    // and decoded field-by-field with explicit little-endian reads below --
-    // strictly more correct than the old pointer-cast version, which only
-    // produced right answers on a little-endian host, and confines the two
-    // unavoidable raw-pointer operations (the cache lookup and the
-    // raw-parts slice construction) to one place per lump instead of
-    // scattering pointer arithmetic through the whole parse.
+/// The lump of every patch named in PNAMES (`None` for a name the WAD lacks).
+fn read_patch_lookup(state: &mut GameState) -> Vec<Option<LumpNum>> {
     let pnames_lump = get_num_for_name(&state.assets.w_wad, "PNAMES");
     let pnames_len = lump_length(&state.assets.w_wad, pnames_lump).idx();
     let pnames = lump_bytes_name(&*state.assets.fs, &mut state.assets.w_wad, "PNAMES")
@@ -303,6 +296,92 @@ pub fn init_textures(state: &mut GameState) {
         patchlookup[i.idx()] = check_num_for_name(&state.assets.w_wad, &patch_name);
     }
     release_lump_name(&state.assets.w_wad, "PNAMES");
+    patchlookup
+}
+
+/// The empty progress bar on the console that the loading dots then fill.
+fn print_texture_progress_frame(state: &mut GameState, temp3: i32) {
+    if console_stdout() {
+        doom_print!(state.io.platform, "[");
+        for _ in 0..temp3 + 9 {
+            doom_print!(state.io.platform, " ");
+        }
+        doom_print!(state.io.platform, "]");
+        for _ in 0..temp3 + 10 {
+            doom_print!(state.io.platform, "\x08");
+        }
+    }
+}
+
+/// Reads the `maptexture_t` at `offset` of a TEXTURE lump and appends it to the texture list.
+fn push_texture(
+    state: &mut GameState,
+    current_maptex: &[u8],
+    offset: i32,
+    patchlookup: &[Option<LumpNum>],
+) {
+    let mt = &current_maptex[offset.idx()..];
+    let mt_name = FixedCStr::<8>::from_bytes(&mt[0..8]);
+    let mt_width = le_i16(mt, 12);
+    let mt_height = le_i16(mt, 14);
+    let mt_patchcount = le_i16(mt, 20);
+    // patches is built directly as a Vec (pushed patchcount times below)
+    // instead of over-allocating size_of::<Texture>() +
+    // size_of::<TexPatch>()*(patchcount-1) raw bytes for a C flexible
+    // array member tail.
+    let mut patches: Vec<TexPatch> = Vec::with_capacity(mt_patchcount.max(0).idx());
+    for j in 0..i32::from(mt_patchcount) {
+        let p_off = 22 + (j * 10).idx();
+        let p = &mt[p_off..p_off + 10];
+        let p_originx = le_i16(p, 0);
+        let p_originy = le_i16(p, 2);
+        let p_patch = le_i16(p, 4);
+        let Some(patch) = patchlookup[p_patch.idx()] else {
+            error(&format!(
+                "R_InitTextures: Missing patch in texture {}",
+                mt_name.as_str(),
+            ));
+        };
+        patches.push(TexPatch {
+            originx: p_originx,
+            originy: p_originy,
+            patch,
+        });
+    }
+    state.render.r_data.textures.push(Texture {
+        name: mt_name,
+        width: mt_width,
+        height: mt_height,
+        index: 0,
+        next: None,
+        patchcount: mt_patchcount,
+        patches,
+    });
+}
+
+/// Sizes the per-texture tables for `numtextures`; `push_texture` fills them in order.
+fn allocate_texture_tables(state: &mut GameState) {
+    state.render.r_data.textures = Vec::with_capacity(state.render.r_data.numtextures.idx());
+    state.render.r_data.texturecolumnlump =
+        Vec::with_capacity(state.render.r_data.numtextures.idx());
+    state.render.r_data.texturecolumnofs =
+        Vec::with_capacity(state.render.r_data.numtextures.idx());
+    state.render.r_data.texturecomposite = vec![None; state.render.r_data.numtextures.idx()];
+    state.render.r_data.texturecompositesize = vec![0; state.render.r_data.numtextures.idx()];
+    state.render.r_data.texturewidthmask = vec![0; state.render.r_data.numtextures.idx()];
+    state.render.r_data.textureheight = vec![Fixed::ZERO; state.render.r_data.numtextures.idx()];
+}
+
+pub fn init_textures(state: &mut GameState) {
+    // PNAMES/TEXTURE1/TEXTURE2 are on-disk WAD lumps (raw bytes, not typed
+    // Rust structs), so each is captured as a plain byte buffer once here
+    // and decoded field-by-field with explicit little-endian reads below --
+    // strictly more correct than the old pointer-cast version, which only
+    // produced right answers on a little-endian host, and confines the two
+    // unavoidable raw-pointer operations (the cache lookup and the
+    // raw-parts slice construction) to one place per lump instead of
+    // scattering pointer arithmetic through the whole parse.
+    let patchlookup = read_patch_lookup(state);
     let texture1_lump = get_num_for_name(&state.assets.w_wad, "TEXTURE1");
     let mut maxoff: i32 = lump_length(&state.assets.w_wad, texture1_lump);
     let maptex1 = lump_bytes_name(&*state.assets.fs, &mut state.assets.w_wad, "TEXTURE1")
@@ -328,28 +407,11 @@ pub fn init_textures(state: &mut GameState) {
     // for a placeholder value (unlike a raw Z_Malloc'd null pointer, an
     // owned Vec<Texture>/Vec<Vec<_>> has no cheap "empty" placeholder
     // worth inventing just to pre-size).
-    state.render.r_data.textures = Vec::with_capacity(state.render.r_data.numtextures.idx());
-    state.render.r_data.texturecolumnlump =
-        Vec::with_capacity(state.render.r_data.numtextures.idx());
-    state.render.r_data.texturecolumnofs =
-        Vec::with_capacity(state.render.r_data.numtextures.idx());
-    state.render.r_data.texturecomposite = vec![None; state.render.r_data.numtextures.idx()];
-    state.render.r_data.texturecompositesize = vec![0; state.render.r_data.numtextures.idx()];
-    state.render.r_data.texturewidthmask = vec![0; state.render.r_data.numtextures.idx()];
-    state.render.r_data.textureheight = vec![Fixed::ZERO; state.render.r_data.numtextures.idx()];
+    allocate_texture_tables(state);
     let temp1 = get_num_for_name(&state.assets.w_wad, "S_START");
     let temp2 = get_num_for_name(&state.assets.w_wad, "S_END") - 1;
     let temp3: i32 = (temp2 - temp1 + 63) / 64 + (state.render.r_data.numtextures + 63) / 64;
-    if console_stdout() {
-        doom_print!(state.io.platform, "[");
-        for _ in 0..temp3 + 9 {
-            doom_print!(state.io.platform, " ");
-        }
-        doom_print!(state.io.platform, "]");
-        for _ in 0..temp3 + 10 {
-            doom_print!(state.io.platform, "\x08");
-        }
-    }
+    print_texture_progress_frame(state, temp3);
     let mut current_maptex: &Vec<u8> = &maptex1;
     let mut dir_index: i32 = 0;
     for i in 0..state.render.r_data.numtextures {
@@ -373,43 +435,7 @@ pub fn init_textures(state: &mut GameState) {
         // patchcount:i16 -- a fixed 22-byte header, followed immediately by
         // `patchcount` 10-byte mappatch_t entries (the C flexible-array-
         // member tail the old code reached via `&raw mut (*mtexture).patches`).
-        let mt = &current_maptex[offset.idx()..];
-        let mt_name = FixedCStr::<8>::from_bytes(&mt[0..8]);
-        let mt_width = le_i16(mt, 12);
-        let mt_height = le_i16(mt, 14);
-        let mt_patchcount = le_i16(mt, 20);
-        // patches is built directly as a Vec (pushed patchcount times below)
-        // instead of over-allocating size_of::<Texture>() +
-        // size_of::<TexPatch>()*(patchcount-1) raw bytes for a C flexible
-        // array member tail.
-        let mut patches: Vec<TexPatch> = Vec::with_capacity(mt_patchcount.max(0).idx());
-        for j in 0..i32::from(mt_patchcount) {
-            let p_off = 22 + (j * 10).idx();
-            let p = &mt[p_off..p_off + 10];
-            let p_originx = le_i16(p, 0);
-            let p_originy = le_i16(p, 2);
-            let p_patch = le_i16(p, 4);
-            let Some(patch) = patchlookup[p_patch.idx()] else {
-                error(&format!(
-                    "R_InitTextures: Missing patch in texture {}",
-                    mt_name.as_str(),
-                ));
-            };
-            patches.push(TexPatch {
-                originx: p_originx,
-                originy: p_originy,
-                patch,
-            });
-        }
-        state.render.r_data.textures.push(Texture {
-            name: mt_name,
-            width: mt_width,
-            height: mt_height,
-            index: 0,
-            next: None,
-            patchcount: mt_patchcount,
-            patches,
-        });
+        push_texture(state, current_maptex, offset, &patchlookup);
         let texture_width = state.render.r_data.textures[i.idx()].width;
         let texture_height = state.render.r_data.textures[i.idx()].height;
         state
