@@ -6,7 +6,9 @@ use crate::m_fixed::FRACUNIT;
 use crate::p_floor::move_plane;
 use crate::p_floor::ResultE;
 use crate::p_inter::CardType;
+use crate::p_mobj::Line;
 use crate::p_mobj::MobjId;
+use crate::p_mobj::PlayerId;
 use crate::p_mobj::SectorSpecial;
 use crate::p_mobj::Thinker;
 use crate::p_mobj::ThinkerFn;
@@ -145,110 +147,127 @@ impl PDoorsState {
 }
 
 pub const VDOORWAIT: i32 = 150;
+/// The live door `id` of `state`, mutably.
+macro_rules! door_mut {
+    ($state:expr, $id:expr) => {
+        $state.world.p_doors.get_mut($id).expect("live door")
+    };
+}
+
+/// The door waits at the top; when the wait runs out it starts closing.
+fn door_waiting_open(state: &mut GameState, id: DoorId, door: VlDoor) {
+    door_mut!(state, id).topcountdown -= 1;
+    if door.topcountdown - 1 == 0 {
+        match door.kind {
+            VldoorE::BlazeRaise => {
+                door_mut!(state, id).direction = Direction::Down;
+                s_start_sound(state, SoundOrigin::Sector(door.sector), SfxName::Bdcls);
+            }
+            VldoorE::Normal => {
+                door_mut!(state, id).direction = Direction::Down;
+                s_start_sound(state, SoundOrigin::Sector(door.sector), SfxName::Dorcls);
+            }
+            VldoorE::Close30ThenOpen => {
+                door_mut!(state, id).direction = Direction::Up;
+                s_start_sound(state, SoundOrigin::Sector(door.sector), SfxName::Doropn);
+            }
+            _ => {}
+        }
+    }
+}
+
+/// The door is going down: it closes, gets removed, or opens again where it crushes something.
+fn door_closing(state: &mut GameState, id: DoorId, door: VlDoor) {
+    let floorheight = state.world.p_setup.sector_mut(door.sector).floorheight;
+    let res = move_plane(
+        state,
+        door.sector,
+        door.speed,
+        floorheight,
+        false,
+        Plane::Ceiling,
+        door.direction,
+    );
+    if res == ResultE::Pastdest {
+        match door.kind {
+            VldoorE::BlazeRaise | VldoorE::BlazeClose => {
+                state.world.p_setup.sector_mut(door.sector).specialdata = None;
+                remove_thinker(&mut door_mut!(state, id).thinker);
+                s_start_sound(state, SoundOrigin::Sector(door.sector), SfxName::Bdcls);
+            }
+            VldoorE::Normal | VldoorE::Close => {
+                state.world.p_setup.sector_mut(door.sector).specialdata = None;
+                remove_thinker(&mut door_mut!(state, id).thinker);
+            }
+            VldoorE::Close30ThenOpen => {
+                let d = door_mut!(state, id);
+                d.direction = Direction::Still;
+                d.topcountdown = TICRATE * 30;
+            }
+            _ => {}
+        }
+    } else if res == ResultE::Crushed {
+        match door.kind {
+            VldoorE::BlazeClose | VldoorE::Close => {}
+            _ => {
+                door_mut!(state, id).direction = Direction::Up;
+                s_start_sound(state, SoundOrigin::Sector(door.sector), SfxName::Doropn);
+            }
+        }
+    }
+}
+
+/// The door is going up: it stops at the top and waits, or is done.
+fn door_opening(state: &mut GameState, id: DoorId, door: VlDoor) {
+    let res = move_plane(
+        state,
+        door.sector,
+        door.speed,
+        door.topheight,
+        false,
+        Plane::Ceiling,
+        door.direction,
+    );
+    if res == ResultE::Pastdest {
+        match door.kind {
+            VldoorE::BlazeRaise | VldoorE::Normal => {
+                let d = door_mut!(state, id);
+                d.direction = Direction::Still;
+                d.topcountdown = d.topwait;
+            }
+            VldoorE::Close30ThenOpen | VldoorE::BlazeOpen | VldoorE::Open => {
+                state.world.p_setup.sector_mut(door.sector).specialdata = None;
+                remove_thinker(&mut door_mut!(state, id).thinker);
+            }
+            _ => {}
+        }
+    }
+}
+
 pub fn t_vertical_door(state: &mut GameState, id: DoorId) {
     let door = *state
         .world
         .p_doors
         .get_ref(id)
         .expect("ThinkerFn::Door id must reference a live door");
-    macro_rules! door_mut {
-        () => {
-            state.world.p_doors.get_mut(id).expect("live door")
-        };
-    }
     match door.direction {
         Direction::Still => {
-            door_mut!().topcountdown -= 1;
-            if door.topcountdown - 1 == 0 {
-                match door.kind {
-                    VldoorE::BlazeRaise => {
-                        door_mut!().direction = Direction::Down;
-                        s_start_sound(state, SoundOrigin::Sector(door.sector), SfxName::Bdcls);
-                    }
-                    VldoorE::Normal => {
-                        door_mut!().direction = Direction::Down;
-                        s_start_sound(state, SoundOrigin::Sector(door.sector), SfxName::Dorcls);
-                    }
-                    VldoorE::Close30ThenOpen => {
-                        door_mut!().direction = Direction::Up;
-                        s_start_sound(state, SoundOrigin::Sector(door.sector), SfxName::Doropn);
-                    }
-                    _ => {}
-                }
-            }
+            door_waiting_open(state, id, door);
         }
         Direction::InitialWait => {
-            door_mut!().topcountdown -= 1;
+            door_mut!(state, id).topcountdown -= 1;
             if door.topcountdown - 1 == 0 && door.kind == VldoorE::RaiseIn5Mins {
-                let d = door_mut!();
+                let d = door_mut!(state, id);
                 d.direction = Direction::Up;
                 d.kind = VldoorE::Normal;
                 s_start_sound(state, SoundOrigin::Sector(door.sector), SfxName::Doropn);
             }
         }
         Direction::Down => {
-            let floorheight = state.world.p_setup.sector_mut(door.sector).floorheight;
-            let res = move_plane(
-                state,
-                door.sector,
-                door.speed,
-                floorheight,
-                false,
-                Plane::Ceiling,
-                door.direction,
-            );
-            if res == ResultE::Pastdest {
-                match door.kind {
-                    VldoorE::BlazeRaise | VldoorE::BlazeClose => {
-                        state.world.p_setup.sector_mut(door.sector).specialdata = None;
-                        remove_thinker(&mut door_mut!().thinker);
-                        s_start_sound(state, SoundOrigin::Sector(door.sector), SfxName::Bdcls);
-                    }
-                    VldoorE::Normal | VldoorE::Close => {
-                        state.world.p_setup.sector_mut(door.sector).specialdata = None;
-                        remove_thinker(&mut door_mut!().thinker);
-                    }
-                    VldoorE::Close30ThenOpen => {
-                        let d = door_mut!();
-                        d.direction = Direction::Still;
-                        d.topcountdown = TICRATE * 30;
-                    }
-                    _ => {}
-                }
-            } else if res == ResultE::Crushed {
-                match door.kind {
-                    VldoorE::BlazeClose | VldoorE::Close => {}
-                    _ => {
-                        door_mut!().direction = Direction::Up;
-                        s_start_sound(state, SoundOrigin::Sector(door.sector), SfxName::Doropn);
-                    }
-                }
-            }
+            door_closing(state, id, door);
         }
         Direction::Up => {
-            let res = move_plane(
-                state,
-                door.sector,
-                door.speed,
-                door.topheight,
-                false,
-                Plane::Ceiling,
-                door.direction,
-            );
-            if res == ResultE::Pastdest {
-                match door.kind {
-                    VldoorE::BlazeRaise | VldoorE::Normal => {
-                        let d = door_mut!();
-                        d.direction = Direction::Still;
-                        d.topcountdown = d.topwait;
-                    }
-                    VldoorE::Close30ThenOpen | VldoorE::BlazeOpen | VldoorE::Open => {
-                        state.world.p_setup.sector_mut(door.sector).specialdata = None;
-                        remove_thinker(&mut door_mut!().thinker);
-                    }
-                    _ => {}
-                }
-            }
+            door_opening(state, id, door);
         }
     }
 }
@@ -340,10 +359,9 @@ pub fn do_door(state: &mut GameState, line: LineId, kind: VldoorE) -> bool {
     }
     rtn
 }
-pub fn ev_vertical_door(state: &mut GameState, line: LineId, thing: MobjId) {
-    let side: i32 = 0;
-    let thing_player = state.world.p_mobj.mo(thing).player;
-    let linev = state.world.p_setup.line(line);
+/// Whether the user may open the door: a locked door needs its key (the player is told when it is
+/// missing) and monsters cannot open locked doors.
+fn has_the_key(state: &mut GameState, linev: Line, thing_player: Option<PlayerId>) -> bool {
     let key_message = |has: bool, message: &'static str| if has { None } else { Some(message) };
     if let Some(player_id) = thing_player {
         let (blue, red, yellow) = {
@@ -363,15 +381,22 @@ pub fn ev_vertical_door(state: &mut GameState, line: LineId, thing: MobjId) {
         if let Some(message) = missing {
             state.game.g_game.player_mut(player_id).message = Some(message.to_string());
             s_start_sound(state, SoundOrigin::None, SfxName::Oof);
-            return;
+            return false;
         }
     } else if matches!(i32::from(linev.special), 26 | 32 | 27 | 34 | 28 | 33) {
-        return;
+        return false;
     }
-    let door_sector_id = state.world.p_setup.sides[linev.sidenum[(side ^ 1).idx()]
-        .expect("two-sided line without a back side")
-        .0 as usize]
-        .sector;
+    true
+}
+
+/// A mover is already at work on the sector: pressing the door again reverses it. Returns true when
+/// the use is dealt with (whether or not anything changed).
+fn reuse_moving_door(
+    state: &mut GameState,
+    linev: Line,
+    door_sector_id: SectorId,
+    thing_player: Option<PlayerId>,
+) -> bool {
     if let Some(special) = state.world.p_setup.sector_mut(door_sector_id).specialdata {
         match i32::from(linev.special) {
             1 | 26 | 27 | 28 | 117 => {
@@ -383,14 +408,14 @@ pub fn ev_vertical_door(state: &mut GameState, line: LineId, thing: MobjId) {
                             door.direction = Direction::Up;
                         } else {
                             if thing_player.is_none() {
-                                return;
+                                return true;
                             }
                             door.direction = Direction::Down;
                         }
                     }
                     SectorSpecial::Plat(id) => {
                         if thing_player.is_none() {
-                            return;
+                            return true;
                         }
                         let plat_id = state.world.p_tick.plat_payload(id);
                         state
@@ -402,7 +427,7 @@ pub fn ev_vertical_door(state: &mut GameState, line: LineId, thing: MobjId) {
                     }
                     SectorSpecial::Ceiling(id) => {
                         if thing_player.is_none() {
-                            return;
+                            return true;
                         }
                         doom_eprintln!(
                             state.io.platform,
@@ -418,7 +443,7 @@ pub fn ev_vertical_door(state: &mut GameState, line: LineId, thing: MobjId) {
                     }
                     SectorSpecial::Floor(id) => {
                         if thing_player.is_none() {
-                            return;
+                            return true;
                         }
                         doom_eprintln!(
                             state.io.platform,
@@ -433,11 +458,16 @@ pub fn ev_vertical_door(state: &mut GameState, line: LineId, thing: MobjId) {
                             .direction = Direction::Down;
                     }
                 }
-                return;
+                return true;
             }
             _ => {}
         }
     }
+    false
+}
+
+/// Starts a new door mover on the sector, with the sound and speed its line special calls for.
+fn open_new_door(state: &mut GameState, line: LineId, linev: Line, door_sector_id: SectorId) {
     match i32::from(linev.special) {
         117 | 118 => {
             s_start_sound(state, SoundOrigin::Sector(door_sector_id), SfxName::Bdopn);
@@ -480,6 +510,23 @@ pub fn ev_vertical_door(state: &mut GameState, line: LineId, thing: MobjId) {
         ThinkerKind::Door,
     );
     state.world.p_setup.sector_mut(door_sector_id).specialdata = Some(SectorSpecial::Door(door_id));
+}
+
+pub fn ev_vertical_door(state: &mut GameState, line: LineId, thing: MobjId) {
+    let side: i32 = 0;
+    let thing_player = state.world.p_mobj.mo(thing).player;
+    let linev = state.world.p_setup.line(line);
+    if !has_the_key(state, linev, thing_player) {
+        return;
+    }
+    let door_sector_id = state.world.p_setup.sides[linev.sidenum[(side ^ 1).idx()]
+        .expect("two-sided line without a back side")
+        .0 as usize]
+        .sector;
+    if reuse_moving_door(state, linev, door_sector_id, thing_player) {
+        return;
+    }
+    open_new_door(state, line, linev, door_sector_id);
 }
 pub fn spawn_door_close_in30(
     p_doors: &mut PDoorsState,
