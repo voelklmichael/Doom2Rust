@@ -6,7 +6,6 @@ use crate::m_fixed::FRACBITS;
 use crate::m_fixed::INT_MAX;
 use crate::m_fixed::INT_MIN;
 use crate::p_mobj::LineFlags;
-
 use crate::r_data::get_column;
 use crate::r_defs::ClipArray;
 use crate::r_defs::DrawSeg;
@@ -27,6 +26,7 @@ use crate::tables::Angle;
 use crate::tables::ANG180;
 use crate::tables::ANG90;
 use crate::tables::FINETANGENT_LEN;
+use core::ops::{Add, AddAssign, Neg, Sub};
 
 pub struct RSegsState {
     pub segtextured: bool,
@@ -52,14 +52,14 @@ pub struct RSegsState {
     pub worldbottom: Fixed,
     pub worldhigh: Fixed,
     pub worldlow: Fixed,
-    pub pixhigh: Fixed,
-    pub pixlow: Fixed,
-    pub pixhighstep: Fixed,
-    pub pixlowstep: Fixed,
-    pub topfrac: Fixed,
-    pub topstep: Fixed,
-    pub bottomfrac: Fixed,
-    pub bottomstep: Fixed,
+    pub pixhigh: HeightFrac,
+    pub pixlow: HeightFrac,
+    pub pixhighstep: HeightFrac,
+    pub pixlowstep: HeightFrac,
+    pub topfrac: HeightFrac,
+    pub topstep: HeightFrac,
+    pub bottomfrac: HeightFrac,
+    pub bottomstep: HeightFrac,
     pub walllights: LightRow48,
     pub maskedtexturecol: Option<ClipArray>,
 }
@@ -98,14 +98,14 @@ impl Default for RSegsState {
             worldbottom: Fixed::ZERO,
             worldhigh: Fixed::ZERO,
             worldlow: Fixed::ZERO,
-            pixhigh: Fixed::ZERO,
-            pixlow: Fixed::ZERO,
-            pixhighstep: Fixed::ZERO,
-            pixlowstep: Fixed::ZERO,
-            topfrac: Fixed::ZERO,
-            topstep: Fixed::ZERO,
-            bottomfrac: Fixed::ZERO,
-            bottomstep: Fixed::ZERO,
+            pixhigh: HeightFrac::ZERO,
+            pixlow: HeightFrac::ZERO,
+            pixhighstep: HeightFrac::ZERO,
+            pixlowstep: HeightFrac::ZERO,
+            topfrac: HeightFrac::ZERO,
+            topstep: HeightFrac::ZERO,
+            bottomfrac: HeightFrac::ZERO,
+            bottomstep: HeightFrac::ZERO,
             walllights: LightRow48::Normal(0),
             maskedtexturecol: None,
         }
@@ -276,10 +276,67 @@ pub fn render_masked_seg_range(state: &mut GameState, ds: &DrawSeg, x1: i32, x2:
 }
 pub const HEIGHTBITS: u32 = 12;
 pub const HEIGHTUNIT: i32 = 1 << HEIGHTBITS;
+
+/// A screen row with 12 fractional bits (20.12), the format `R_RenderSegLoop` steps walls in
+/// (`topfrac`, `pixhigh`, ...). It is a different scale from [`Fixed`] (16 fractional bits), so
+/// it is its own type: a height converts in with [`HeightFrac::from_height`] and a row comes out
+/// with [`HeightFrac::floor`] or [`HeightFrac::ceil`].
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord)]
+pub struct HeightFrac(i32);
+
+impl HeightFrac {
+    pub const ZERO: Self = Self(0);
+
+    /// A 16.16 height or row, at 12 fractional bits (the original's `>> 4`).
+    pub fn from_height(height: Fixed) -> Self {
+        Self(height.to_bits() >> (FRACBITS - HEIGHTBITS))
+    }
+
+    /// This height projected at a 16.16 `scale`: the result keeps the 12 fractional bits.
+    pub fn scaled(self, scale: Fixed) -> Self {
+        Self(fixed_mul(Fixed(self.0), scale).to_bits())
+    }
+
+    /// The row this value falls in, rounded down.
+    pub fn floor(self) -> i32 {
+        self.0 >> HEIGHTBITS
+    }
+
+    /// The row this value falls in, rounded up.
+    pub fn ceil(self) -> i32 {
+        (self.0 + HEIGHTUNIT - 1) >> HEIGHTBITS
+    }
+}
+
+impl Add for HeightFrac {
+    type Output = Self;
+    fn add(self, rhs: Self) -> Self {
+        Self(self.0 + rhs.0)
+    }
+}
+
+impl AddAssign for HeightFrac {
+    fn add_assign(&mut self, rhs: Self) {
+        self.0 += rhs.0;
+    }
+}
+
+impl Sub for HeightFrac {
+    type Output = Self;
+    fn sub(self, rhs: Self) -> Self {
+        Self(self.0 - rhs.0)
+    }
+}
+
+impl Neg for HeightFrac {
+    type Output = Self;
+    fn neg(self) -> Self {
+        Self(-self.0)
+    }
+}
 pub fn render_seg_loop(state: &mut GameState) {
     while state.render.r_segs.rw_x < state.render.r_segs.rw_stopx {
-        let mut yl: i32 =
-            ((state.render.r_segs.topfrac + Fixed(HEIGHTUNIT) - Fixed(1)) >> HEIGHTBITS).to_bits();
+        let mut yl: i32 = state.render.r_segs.topfrac.ceil();
         if yl < i32::from(state.render.r_plane.ceilingclip[state.render.r_segs.rw_x as usize]) + 1 {
             yl = i32::from(state.render.r_plane.ceilingclip[state.render.r_segs.rw_x as usize]) + 1;
         }
@@ -302,7 +359,7 @@ pub fn render_seg_loop(state: &mut GameState) {
                     .set_bottom(state.render.r_segs.rw_x, bottom as u8);
             }
         }
-        let mut yh: i32 = state.render.r_segs.bottomfrac.to_bits() >> HEIGHTBITS;
+        let mut yh: i32 = state.render.r_segs.bottomfrac.floor();
         if yh >= i32::from(state.render.r_plane.floorclip[state.render.r_segs.rw_x as usize]) {
             yh = i32::from(state.render.r_plane.floorclip[state.render.r_segs.rw_x as usize]) - 1;
         }
@@ -374,7 +431,7 @@ pub fn render_seg_loop(state: &mut GameState) {
             state.render.r_plane.floorclip[state.render.r_segs.rw_x as usize] = -1_i16;
         } else {
             if state.render.r_segs.toptexture != 0 {
-                let mut mid = (state.render.r_segs.pixhigh >> HEIGHTBITS).to_bits();
+                let mut mid = state.render.r_segs.pixhigh.floor();
                 state.render.r_segs.pixhigh += state.render.r_segs.pixhighstep;
                 if mid
                     >= i32::from(state.render.r_plane.floorclip[state.render.r_segs.rw_x as usize])
@@ -410,9 +467,7 @@ pub fn render_seg_loop(state: &mut GameState) {
                     (yl - 1) as i16;
             }
             if state.render.r_segs.bottomtexture != 0 {
-                let mut mid = ((state.render.r_segs.pixlow + Fixed(HEIGHTUNIT) - Fixed(1))
-                    >> HEIGHTBITS)
-                    .to_bits();
+                let mut mid = state.render.r_segs.pixlow.ceil();
                 state.render.r_segs.pixlow += state.render.r_segs.pixlowstep;
                 if mid
                     <= i32::from(
@@ -866,41 +921,25 @@ pub fn store_wall_range(state: &mut GameState, start: i32, stop: i32) {
     {
         state.render.r_segs.markceiling = false;
     }
-    state.render.r_segs.worldtop >>= 4;
-    state.render.r_segs.worldbottom >>= 4;
-    state.render.r_segs.topstep = -fixed_mul(
-        state.render.r_segs.rw_scalestep,
-        state.render.r_segs.worldtop,
-    );
-    state.render.r_segs.topfrac = (state.render.r_main.centeryfrac >> 4)
-        - fixed_mul(state.render.r_segs.worldtop, state.render.r_segs.rw_scale);
-    state.render.r_segs.bottomstep = -fixed_mul(
-        state.render.r_segs.rw_scalestep,
-        state.render.r_segs.worldbottom,
-    );
-    state.render.r_segs.bottomfrac = (state.render.r_main.centeryfrac >> 4)
-        - fixed_mul(
-            state.render.r_segs.worldbottom,
-            state.render.r_segs.rw_scale,
-        );
+    let centery = HeightFrac::from_height(state.render.r_main.centeryfrac);
+    let rw_scale = state.render.r_segs.rw_scale;
+    let rw_scalestep = state.render.r_segs.rw_scalestep;
+    let worldtop = HeightFrac::from_height(state.render.r_segs.worldtop);
+    let worldbottom = HeightFrac::from_height(state.render.r_segs.worldbottom);
+    state.render.r_segs.topstep = -worldtop.scaled(rw_scalestep);
+    state.render.r_segs.topfrac = centery - worldtop.scaled(rw_scale);
+    state.render.r_segs.bottomstep = -worldbottom.scaled(rw_scalestep);
+    state.render.r_segs.bottomfrac = centery - worldbottom.scaled(rw_scale);
     if state.render.r_bsp.backsector.is_some() {
-        state.render.r_segs.worldhigh >>= 4;
-        state.render.r_segs.worldlow >>= 4;
-        if state.render.r_segs.worldhigh < state.render.r_segs.worldtop {
-            state.render.r_segs.pixhigh = (state.render.r_main.centeryfrac >> 4)
-                - fixed_mul(state.render.r_segs.worldhigh, state.render.r_segs.rw_scale);
-            state.render.r_segs.pixhighstep = -fixed_mul(
-                state.render.r_segs.rw_scalestep,
-                state.render.r_segs.worldhigh,
-            );
+        let worldhigh = HeightFrac::from_height(state.render.r_segs.worldhigh);
+        let worldlow = HeightFrac::from_height(state.render.r_segs.worldlow);
+        if worldhigh < worldtop {
+            state.render.r_segs.pixhigh = centery - worldhigh.scaled(rw_scale);
+            state.render.r_segs.pixhighstep = -worldhigh.scaled(rw_scalestep);
         }
-        if state.render.r_segs.worldlow > state.render.r_segs.worldbottom {
-            state.render.r_segs.pixlow = (state.render.r_main.centeryfrac >> 4)
-                - fixed_mul(state.render.r_segs.worldlow, state.render.r_segs.rw_scale);
-            state.render.r_segs.pixlowstep = -fixed_mul(
-                state.render.r_segs.rw_scalestep,
-                state.render.r_segs.worldlow,
-            );
+        if worldlow > worldbottom {
+            state.render.r_segs.pixlow = centery - worldlow.scaled(rw_scale);
+            state.render.r_segs.pixlowstep = -worldlow.scaled(rw_scalestep);
         }
     }
     if state.render.r_segs.markceiling {
