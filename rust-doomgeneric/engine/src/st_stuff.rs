@@ -717,16 +717,8 @@ pub fn calc_pain_offset(g_game: &mut GGameState, st_stuff: &mut StStuffState) ->
     }
     st_stuff.st_calcpainoffset_lastcalc
 }
-pub fn update_face_widget(
-    g_game: &mut GGameState,
-    p_mobj: &PMobjState,
-    st_stuff: &mut StStuffState,
-) {
-    if st_stuff.st_updatefacewidget_priority < 10 && g_game.player_mut(st_stuff.plyr).health == 0 {
-        st_stuff.st_updatefacewidget_priority = 9;
-        st_stuff.st_faceindex = ST_DEADFACE;
-        st_stuff.st_facecount = 1;
-    }
+/// The face grins when the player picks up a weapon.
+fn face_evil_grin(g_game: &mut GGameState, st_stuff: &mut StStuffState) {
     if st_stuff.st_updatefacewidget_priority < 9 && g_game.player_mut(st_stuff.plyr).bonuscount != 0
     {
         let mut doevilgrin: bool = false;
@@ -742,6 +734,14 @@ pub fn update_face_widget(
             st_stuff.st_faceindex = calc_pain_offset(g_game, st_stuff) + ST_EVILGRINOFFSET;
         }
     }
+}
+
+/// The face looks at whoever just hurt the player, or winces when the hit was heavy.
+fn face_reacts_to_attacker(
+    g_game: &mut GGameState,
+    p_mobj: &PMobjState,
+    st_stuff: &mut StStuffState,
+) {
     if st_stuff.st_updatefacewidget_priority < 8 {
         let plyr_attacker_id = g_game.player_mut(st_stuff.plyr).attacker;
         if let Some(attacker_id) = plyr_attacker_id.filter(|&a| {
@@ -778,6 +778,20 @@ pub fn update_face_widget(
             }
         }
     }
+}
+
+pub fn update_face_widget(
+    g_game: &mut GGameState,
+    p_mobj: &PMobjState,
+    st_stuff: &mut StStuffState,
+) {
+    if st_stuff.st_updatefacewidget_priority < 10 && g_game.player_mut(st_stuff.plyr).health == 0 {
+        st_stuff.st_updatefacewidget_priority = 9;
+        st_stuff.st_faceindex = ST_DEADFACE;
+        st_stuff.st_facecount = 1;
+    }
+    face_evil_grin(g_game, st_stuff);
+    face_reacts_to_attacker(g_game, p_mobj, st_stuff);
     if st_stuff.st_updatefacewidget_priority < 7
         && g_game.player_mut(st_stuff.plyr).damagecount != 0
     {
@@ -1106,6 +1120,27 @@ pub fn st_init_data(state: &mut GameState) {
         &mut state.assets.w_wad,
     );
 }
+/// Where the three key boxes go on the status bar.
+const KEYBOX_POSITIONS: [(i32, i32); 3] = [
+    (ST_KEY0X, ST_KEY0Y),
+    (ST_KEY1X, ST_KEY1Y),
+    (ST_KEY2X, ST_KEY2Y),
+];
+/// Position and width of the current-ammo number of each ammo type.
+const AMMO_WIDGETS: [(i32, i32, i32); 4] = [
+    (ST_AMMO0X, ST_AMMO0Y, ST_AMMO0WIDTH),
+    (ST_AMMO1X, ST_AMMO1Y, ST_AMMO1WIDTH),
+    (ST_AMMO2X, ST_AMMO2Y, ST_AMMO2WIDTH),
+    (ST_AMMO3X, ST_AMMO3Y, ST_AMMO3WIDTH),
+];
+/// Position and width of the maximum-ammo number of each ammo type.
+const MAXAMMO_WIDGETS: [(i32, i32, i32); 4] = [
+    (ST_MAXAMMO0X, ST_MAXAMMO0Y, ST_MAXAMMO0WIDTH),
+    (ST_MAXAMMO1X, ST_MAXAMMO1Y, ST_MAXAMMO1WIDTH),
+    (ST_MAXAMMO2X, ST_MAXAMMO2Y, ST_MAXAMMO2WIDTH),
+    (ST_MAXAMMO3X, ST_MAXAMMO3Y, ST_MAXAMMO3WIDTH),
+];
+
 pub fn create_widgets(g_game: &mut GGameState, st_stuff: &mut StStuffState) {
     stlib_init_num(
         &mut st_stuff.w_ready,
@@ -1156,80 +1191,15 @@ pub fn create_widgets(g_game: &mut GGameState, st_stuff: &mut StStuffState) {
         StDigitSet::TallNum,
         st_stuff.tallpercent,
     );
-    stlib_init_mult_icon(
-        &mut st_stuff.w_keyboxes[0],
-        ST_KEY0X,
-        ST_KEY0Y,
-        StDigitSet::Keys,
-    );
-    stlib_init_mult_icon(
-        &mut st_stuff.w_keyboxes[1],
-        ST_KEY1X,
-        ST_KEY1Y,
-        StDigitSet::Keys,
-    );
-    stlib_init_mult_icon(
-        &mut st_stuff.w_keyboxes[2],
-        ST_KEY2X,
-        ST_KEY2Y,
-        StDigitSet::Keys,
-    );
-    stlib_init_num(
-        &mut st_stuff.w_ammo[0],
-        ST_AMMO0X,
-        ST_AMMO0Y,
-        StDigitSet::ShortNum,
-        ST_AMMO0WIDTH,
-    );
-    stlib_init_num(
-        &mut st_stuff.w_ammo[1],
-        ST_AMMO1X,
-        ST_AMMO1Y,
-        StDigitSet::ShortNum,
-        ST_AMMO1WIDTH,
-    );
-    stlib_init_num(
-        &mut st_stuff.w_ammo[2],
-        ST_AMMO2X,
-        ST_AMMO2Y,
-        StDigitSet::ShortNum,
-        ST_AMMO2WIDTH,
-    );
-    stlib_init_num(
-        &mut st_stuff.w_ammo[3],
-        ST_AMMO3X,
-        ST_AMMO3Y,
-        StDigitSet::ShortNum,
-        ST_AMMO3WIDTH,
-    );
-    stlib_init_num(
-        &mut st_stuff.w_maxammo[0],
-        ST_MAXAMMO0X,
-        ST_MAXAMMO0Y,
-        StDigitSet::ShortNum,
-        ST_MAXAMMO0WIDTH,
-    );
-    stlib_init_num(
-        &mut st_stuff.w_maxammo[1],
-        ST_MAXAMMO1X,
-        ST_MAXAMMO1Y,
-        StDigitSet::ShortNum,
-        ST_MAXAMMO1WIDTH,
-    );
-    stlib_init_num(
-        &mut st_stuff.w_maxammo[2],
-        ST_MAXAMMO2X,
-        ST_MAXAMMO2Y,
-        StDigitSet::ShortNum,
-        ST_MAXAMMO2WIDTH,
-    );
-    stlib_init_num(
-        &mut st_stuff.w_maxammo[3],
-        ST_MAXAMMO3X,
-        ST_MAXAMMO3Y,
-        StDigitSet::ShortNum,
-        ST_MAXAMMO3WIDTH,
-    );
+    for (keybox, (x, y)) in st_stuff.w_keyboxes.iter_mut().zip(KEYBOX_POSITIONS) {
+        stlib_init_mult_icon(keybox, x, y, StDigitSet::Keys);
+    }
+    for (widget, (x, y, width)) in st_stuff.w_ammo.iter_mut().zip(AMMO_WIDGETS) {
+        stlib_init_num(widget, x, y, StDigitSet::ShortNum, width);
+    }
+    for (widget, (x, y, width)) in st_stuff.w_maxammo.iter_mut().zip(MAXAMMO_WIDGETS) {
+        stlib_init_num(widget, x, y, StDigitSet::ShortNum, width);
+    }
 }
 pub fn st_start(state: &mut GameState) {
     if !state.ui.st_stuff.st_stopped {
