@@ -12,6 +12,9 @@
 //! Set `UPDATE_GOLDEN=1` to rewrite the golden file from the current output.
 //! Only do that when a behaviour change is intended and understood.
 
+// The trace functions are long lists of situations (one per menu, one per sprite), not logic.
+#![allow(clippy::too_many_lines)]
+
 use crate::d_event::{post_event, EvType, Event};
 use crate::d_main::doomgeneric_tick;
 use crate::d_mode::GameMode;

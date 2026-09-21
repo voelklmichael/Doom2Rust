@@ -114,6 +114,8 @@ pub struct MControlsState {
 }
 
 impl Default for MControlsState {
+    // Data, not logic: one default binding per control.
+    #[allow(clippy::too_many_lines)]
     fn default() -> Self {
         Self {
             key_right: KEY_RIGHTARROW,

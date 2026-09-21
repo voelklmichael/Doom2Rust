@@ -244,23 +244,10 @@ pub fn d_process_events(state: &mut GameState) {
         g_responder(state, ev);
     }
 }
-pub fn display(state: &mut GameState) {
-    if state.game.g_game.nodrawers {
-        return;
-    }
+/// Draws what the current game state shows: the level with the automap or status bar, the intermission,
+/// the finale or the demo page.
+fn draw_game_screen(state: &mut GameState, wipe: bool) {
     let mut redrawsbar: bool = false;
-    if state.render.r_main.setsizeneeded {
-        execute_set_view_size(&mut state.render);
-        state.game.d_main.d_display_oldgamestate = GameScreenState::Wipped;
-        state.game.d_main.d_display_borderdrawcount = 3;
-    }
-    let wipe: bool = state.game.g_game.gamestate != state.game.d_main.wipegamestate;
-    if wipe {
-        wipe_start_screen(&mut state.ui.f_wipe, &state.io.i_video);
-    }
-    if state.game.g_game.gamestate == GameScreenState::Level && state.game.d_loop.gametic != 0 {
-        erase(state);
-    }
     match state.game.g_game.gamestate {
         GameScreenState::Level => {
             if state.game.d_loop.gametic != 0 {
@@ -293,6 +280,91 @@ pub fn display(state: &mut GameState) {
         }
         GameScreenState::Wipped => {}
     }
+}
+
+/// Redraws the border of a reduced view window for a few frames after anything disturbed it.
+fn redraw_view_border_if_needed(state: &mut GameState) {
+    if state.game.g_game.gamestate == GameScreenState::Level
+        && !state.ui.am_map.automapactive
+        && state.render.r_draw.scaledviewwidth != 320
+    {
+        if state.ui.m_menu.menuactive
+            || state.game.d_main.d_display_menuactivestate
+            || !state.game.d_main.d_display_viewactivestate
+        {
+            state.game.d_main.d_display_borderdrawcount = 3;
+        }
+        if state.game.d_main.d_display_borderdrawcount != 0 {
+            draw_view_border(
+                &mut state.io.i_video,
+                &state.render.r_draw,
+                &mut state.io.v_video,
+            );
+            state.game.d_main.d_display_borderdrawcount -= 1;
+        }
+    }
+}
+
+/// The PAUSE patch over the view while the game is paused.
+fn draw_pause_patch(state: &mut GameState) {
+    if state.game.g_game.paused {
+        let y: i32 = if state.ui.am_map.automapactive {
+            4
+        } else {
+            state.render.r_draw.viewwindowy + 4
+        };
+        let __wcache429_2 = cache_patch_name(&*state.assets.fs, &mut state.assets.w_wad, "M_PAUSE");
+        let dest_screen = Screen::Video;
+        draw_patch_direct(
+            state,
+            dest_screen,
+            state.render.r_draw.viewwindowx + (state.render.r_draw.scaledviewwidth - 68) / 2,
+            y,
+            &__wcache429_2,
+        );
+    }
+}
+
+/// Melts the old screen into the new one (a blocking loop of wipe steps).
+fn run_screen_wipe(state: &mut GameState) {
+    wipe_end_screen(state, 0, 0, SCREENWIDTH, SCREENHEIGHT);
+    let mut wipestart: i32 = get_time(&mut state.io.i_timer, &mut *state.io.platform) - 1;
+    loop {
+        let (nowtime, tics): (i32, i32) = loop {
+            let nowtime = get_time(&mut state.io.i_timer, &mut *state.io.platform);
+            let tics = nowtime - wipestart;
+            sleep(&mut *state.io.platform, 1);
+            if tics > 0 {
+                break (nowtime, tics);
+            }
+        };
+        wipestart = nowtime;
+        let done: bool = wipe_screen_wipe(state, SCREENWIDTH, SCREENHEIGHT, tics);
+        m_drawer(state);
+        finish_update(&mut state.io.i_video, &mut *state.io.platform);
+        if done {
+            break;
+        }
+    }
+}
+
+pub fn display(state: &mut GameState) {
+    if state.game.g_game.nodrawers {
+        return;
+    }
+    if state.render.r_main.setsizeneeded {
+        execute_set_view_size(&mut state.render);
+        state.game.d_main.d_display_oldgamestate = GameScreenState::Wipped;
+        state.game.d_main.d_display_borderdrawcount = 3;
+    }
+    let wipe: bool = state.game.g_game.gamestate != state.game.d_main.wipegamestate;
+    if wipe {
+        wipe_start_screen(&mut state.ui.f_wipe, &state.io.i_video);
+    }
+    if state.game.g_game.gamestate == GameScreenState::Level && state.game.d_loop.gametic != 0 {
+        erase(state);
+    }
+    draw_game_screen(state, wipe);
     if state.game.g_game.gamestate == GameScreenState::Level
         && !state.ui.am_map.automapactive
         && state.game.d_loop.gametic != 0
@@ -314,25 +386,7 @@ pub fn display(state: &mut GameState) {
         state.game.d_main.d_display_viewactivestate = false;
         fill_back_screen(state);
     }
-    if state.game.g_game.gamestate == GameScreenState::Level
-        && !state.ui.am_map.automapactive
-        && state.render.r_draw.scaledviewwidth != 320
-    {
-        if state.ui.m_menu.menuactive
-            || state.game.d_main.d_display_menuactivestate
-            || !state.game.d_main.d_display_viewactivestate
-        {
-            state.game.d_main.d_display_borderdrawcount = 3;
-        }
-        if state.game.d_main.d_display_borderdrawcount != 0 {
-            draw_view_border(
-                &mut state.io.i_video,
-                &state.render.r_draw,
-                &mut state.io.v_video,
-            );
-            state.game.d_main.d_display_borderdrawcount -= 1;
-        }
-    }
+    redraw_view_border_if_needed(state);
     if state.game.g_game.testcontrols {
         draw_mouse_speed_box(
             &mut state.io.i_video,
@@ -345,47 +399,14 @@ pub fn display(state: &mut GameState) {
     state.game.d_main.d_display_inhelpscreensstate = state.ui.m_menu.inhelpscreens;
     state.game.d_main.wipegamestate = state.game.g_game.gamestate;
     state.game.d_main.d_display_oldgamestate = state.game.d_main.wipegamestate;
-    if state.game.g_game.paused {
-        let y: i32 = if state.ui.am_map.automapactive {
-            4
-        } else {
-            state.render.r_draw.viewwindowy + 4
-        };
-        let __wcache429_2 = cache_patch_name(&*state.assets.fs, &mut state.assets.w_wad, "M_PAUSE");
-        let dest_screen = Screen::Video;
-        draw_patch_direct(
-            state,
-            dest_screen,
-            state.render.r_draw.viewwindowx + (state.render.r_draw.scaledviewwidth - 68) / 2,
-            y,
-            &__wcache429_2,
-        );
-    }
+    draw_pause_patch(state);
     m_drawer(state);
     net_update(state);
     if !wipe {
         finish_update(&mut state.io.i_video, &mut *state.io.platform);
         return;
     }
-    wipe_end_screen(state, 0, 0, SCREENWIDTH, SCREENHEIGHT);
-    let mut wipestart: i32 = get_time(&mut state.io.i_timer, &mut *state.io.platform) - 1;
-    loop {
-        let (nowtime, tics): (i32, i32) = loop {
-            let nowtime = get_time(&mut state.io.i_timer, &mut *state.io.platform);
-            let tics = nowtime - wipestart;
-            sleep(&mut *state.io.platform, 1);
-            if tics > 0 {
-                break (nowtime, tics);
-            }
-        };
-        wipestart = nowtime;
-        let done: bool = wipe_screen_wipe(state, SCREENWIDTH, SCREENHEIGHT, tics);
-        m_drawer(state);
-        finish_update(&mut state.io.i_video, &mut *state.io.platform);
-        if done {
-            break;
-        }
-    }
+    run_screen_wipe(state);
 }
 pub fn bind_variables(m_config: &mut MConfigState, m_controls: &mut MControlsState) {
     bind_joystick_variables(m_config);
@@ -743,33 +764,8 @@ fn endoom(state: &mut GameState) {
 fn quit_check_demo_status(state: &mut GameState) {
     check_demo_status(state);
 }
-pub fn doom_main(state: &mut GameState) {
-    let mut demolumpname: FixedCStr<8> = FixedCStr::from_array([0; 8]);
-    at_exit(
-        &mut state.io.i_system,
-        Some(endoom as fn(&mut GameState) -> ()),
-        false,
-    );
-    print_banner(&mut *state.io.platform, &PACKAGE_STRING.as_str());
-    state.game.d_main.nomonsters = state.game.options.nomonsters;
-    state.game.d_main.respawnparm = state.game.options.respawn;
-    state.game.d_main.fastparm = state.game.options.fast;
-    state.game.d_main.devparm = state.game.options.devparm;
-    if state.game.options.deathmatch {
-        state.game.g_game.deathmatch = 1;
-    }
-    if state.game.options.altdeath {
-        state.game.g_game.deathmatch = 2;
-    }
-    if state.game.d_main.devparm {
-        doom_print!(state.io.platform, "{}", D_DEVSTR.as_str());
-    }
-    set_config_dir(
-        &mut state.game.m_config,
-        &mut *state.assets.fs,
-        &mut *state.io.platform,
-        None,
-    );
+/// -turbo scales the walking and strafing speeds.
+fn apply_turbo(state: &mut GameState) {
     if let Some(percent) = state.game.options.turbo {
         let scale: i32 = percent.unwrap_or(200).clamp(10, 400);
         doom_println!(state.io.platform, "turbo scale: {}%", scale);
@@ -778,62 +774,12 @@ pub fn doom_main(state: &mut GameState) {
         state.game.g_game.sidemove[0] = state.game.g_game.sidemove[0] * scale / 100;
         state.game.g_game.sidemove[1] = state.game.g_game.sidemove[1] * scale / 100;
     }
-    doom_println!(state.io.platform, "V_Init: allocate screens.");
-    doom_println!(state.io.platform, "M_LoadDefaults: Load system defaults.");
-    set_config_filenames(
-        &mut state.game.m_config,
-        "default.cfg",
-        "doomgenericdoom.cfg",
-    );
-    bind_variables(&mut state.game.m_config, &mut state.game.m_controls);
-    load_defaults(
-        &state.game.options,
-        &mut state.game.m_config,
-        &mut *state.io.platform,
-    );
-    at_exit(
-        &mut state.io.i_system,
-        Some(save_defaults as fn(&mut GameState) -> ()),
-        false,
-    );
-    let mut gamemission_out = state.game.doomstat.gamemission;
-    state.game.d_main.iwadfile = find_iwad(
-        state,
-        1 << GameMission::Doom as i32
-            | 1 << GameMission::Doom2 as i32
-            | 1 << GameMission::PackTnt as i32
-            | 1 << GameMission::PackPlut as i32
-            | 1 << GameMission::PackChex as i32
-            | 1 << GameMission::PackHacx as i32,
-        &mut gamemission_out,
-    );
-    state.game.doomstat.gamemission = gamemission_out;
-    if state.game.d_main.iwadfile.is_empty() {
-        error(
-            "Game mode indeterminate.  No IWAD file was found.  Try\nspecifying one with the '-iwad' command line parameter.\n",
-        );
-    }
-    state.game.doomstat.modifiedgame = false;
-    doom_println!(state.io.platform, "W_Init: Init WADfiles.");
-    let iwadfile = state.game.d_main.iwadfile.clone();
-    d_add_file(
-        &mut *state.assets.fs,
-        &mut *state.io.platform,
-        &mut state.assets.w_wad,
-        &iwadfile,
-    );
-    check_correct_iwad(&state.assets.w_wad, GameMission::Doom);
-    identify_version(state);
-    init_game_version(state);
-    if check_num_for_name(&state.assets.w_wad, "dmenupic").is_some() {
-        doom_println!(
-            state.io.platform,
-            "BFG Edition: Using workarounds as needed."
-        );
-        state.game.d_main.bfgedition = true;
-    }
-    let modifiedgame = parse_command_line(state);
-    state.game.doomstat.modifiedgame = modifiedgame;
+}
+
+/// The demo named by -playdemo or -timedemo: added from a .lmp file when there is one. Returns the
+/// lump name to play.
+fn add_demo_file(state: &mut GameState) -> FixedCStr<8> {
+    let mut demolumpname: FixedCStr<8> = FixedCStr::from_array([0; 8]);
     let demo_arg = state
         .game
         .options
@@ -860,19 +806,12 @@ pub fn doom_main(state: &mut GameState) {
         }
         doom_println!(state.io.platform, "Playing demo {}.", file);
     }
-    at_exit(
-        &mut state.io.i_system,
-        Some(quit_check_demo_status as fn(&mut GameState) -> ()),
-        true,
-    );
-    generate_hash_table(&mut state.assets.w_wad);
-    set_game_description(&mut state.game.doomstat, &state.assets.w_wad);
-    state.game.d_main.savegamedir = get_save_game_dir(
-        &state.game.m_config,
-        &mut *state.assets.fs,
-        &mut *state.io.platform,
-        save_game_iwadname(state.game.doomstat.gamemission),
-    );
+    demolumpname
+}
+
+/// A modified game (`-file`) cannot be the shareware version, and must have all of the registered
+/// version's levels and sprites when it says it is that.
+fn check_registered_files(state: &GameState) {
     if state.game.doomstat.modifiedgame {
         let name: [FixedCStr<8>; 23] = [
             FixedCStr(*b"e2m1\0\0\0\0"),
@@ -910,6 +849,10 @@ pub fn doom_main(state: &mut GameState) {
             }
         }
     }
+}
+
+/// Warns about WADs with modified sprites or flats, and about Freedoom.
+fn print_wad_warnings(state: &mut GameState) {
     if check_num_for_name(&state.assets.w_wad, "SS_START").is_some()
         || check_num_for_name(&state.assets.w_wad, "FF_END").is_some()
     {
@@ -927,16 +870,10 @@ pub fn doom_main(state: &mut GameState) {
         );
         print_divider(&mut *state.io.platform);
     }
-    doom_println!(state.io.platform, "I_Init: Setting up machine state.");
-    init_sound(
-        &mut state.audio.i_sound,
-        &state.io.i_video,
-        &state.game.options,
-        &mut *state.io.platform,
-        true,
-    );
-    init_music(state);
-    connect_net_game(state);
+}
+
+/// The skill, episode, map, time limit and test-controls options that decide how the game starts.
+fn read_start_options(state: &mut GameState) {
     state.game.d_main.startskill = SkillType::Medium;
     state.game.d_main.startepisode = 1;
     state.game.d_main.startmap = 1;
@@ -978,6 +915,10 @@ pub fn doom_main(state: &mut GameState) {
         state.game.g_game.testcontrols = true;
     }
     state.game.d_main.startloadgame = state.game.options.loadgame.unwrap_or(-1);
+}
+
+/// Starts the menu, renderer, play loop, sound, network, heads-up display and status bar.
+fn init_game_subsystems(state: &mut GameState) {
     doom_println!(state.io.platform, "M_Init: Init miscellaneous info.");
     m_init(&state.game.doomstat, &mut state.ui.m_menu);
     doom_print!(state.io.platform, "R_Init: Init DOOM refresh daemon - ");
@@ -1009,6 +950,134 @@ pub fn doom_main(state: &mut GameState) {
     );
     doom_println!(state.io.platform, "ST_Init: Init status bar.");
     st_init(state);
+}
+
+/// The monster, respawn, speed, developer and deathmatch options.
+fn read_game_options(state: &mut GameState) {
+    state.game.d_main.nomonsters = state.game.options.nomonsters;
+    state.game.d_main.respawnparm = state.game.options.respawn;
+    state.game.d_main.fastparm = state.game.options.fast;
+    state.game.d_main.devparm = state.game.options.devparm;
+    if state.game.options.deathmatch {
+        state.game.g_game.deathmatch = 1;
+    }
+    if state.game.options.altdeath {
+        state.game.g_game.deathmatch = 2;
+    }
+    if state.game.d_main.devparm {
+        doom_print!(state.io.platform, "{}", D_DEVSTR.as_str());
+    }
+}
+
+/// Loads the configuration file and registers saving it on exit.
+fn load_config(state: &mut GameState) {
+    doom_println!(state.io.platform, "V_Init: allocate screens.");
+    doom_println!(state.io.platform, "M_LoadDefaults: Load system defaults.");
+    set_config_filenames(
+        &mut state.game.m_config,
+        "default.cfg",
+        "doomgenericdoom.cfg",
+    );
+    bind_variables(&mut state.game.m_config, &mut state.game.m_controls);
+    load_defaults(
+        &state.game.options,
+        &mut state.game.m_config,
+        &mut *state.io.platform,
+    );
+    at_exit(
+        &mut state.io.i_system,
+        Some(save_defaults as fn(&mut GameState) -> ()),
+        false,
+    );
+}
+
+/// Finds the IWAD, adds it and works out which game and version it is.
+fn load_iwad(state: &mut GameState) {
+    let mut gamemission_out = state.game.doomstat.gamemission;
+    state.game.d_main.iwadfile = find_iwad(
+        state,
+        1 << GameMission::Doom as i32
+            | 1 << GameMission::Doom2 as i32
+            | 1 << GameMission::PackTnt as i32
+            | 1 << GameMission::PackPlut as i32
+            | 1 << GameMission::PackChex as i32
+            | 1 << GameMission::PackHacx as i32,
+        &mut gamemission_out,
+    );
+    state.game.doomstat.gamemission = gamemission_out;
+    if state.game.d_main.iwadfile.is_empty() {
+        error(
+            "Game mode indeterminate.  No IWAD file was found.  Try\nspecifying one with the '-iwad' command line parameter.\n",
+        );
+    }
+    state.game.doomstat.modifiedgame = false;
+    doom_println!(state.io.platform, "W_Init: Init WADfiles.");
+    let iwadfile = state.game.d_main.iwadfile.clone();
+    d_add_file(
+        &mut *state.assets.fs,
+        &mut *state.io.platform,
+        &mut state.assets.w_wad,
+        &iwadfile,
+    );
+    check_correct_iwad(&state.assets.w_wad, GameMission::Doom);
+    identify_version(state);
+    init_game_version(state);
+    if check_num_for_name(&state.assets.w_wad, "dmenupic").is_some() {
+        doom_println!(
+            state.io.platform,
+            "BFG Edition: Using workarounds as needed."
+        );
+        state.game.d_main.bfgedition = true;
+    }
+}
+
+pub fn doom_main(state: &mut GameState) {
+    at_exit(
+        &mut state.io.i_system,
+        Some(endoom as fn(&mut GameState) -> ()),
+        false,
+    );
+    print_banner(&mut *state.io.platform, &PACKAGE_STRING.as_str());
+    read_game_options(state);
+    set_config_dir(
+        &mut state.game.m_config,
+        &mut *state.assets.fs,
+        &mut *state.io.platform,
+        None,
+    );
+    apply_turbo(state);
+    load_config(state);
+    load_iwad(state);
+    let modifiedgame = parse_command_line(state);
+    state.game.doomstat.modifiedgame = modifiedgame;
+    let demolumpname = add_demo_file(state);
+    at_exit(
+        &mut state.io.i_system,
+        Some(quit_check_demo_status as fn(&mut GameState) -> ()),
+        true,
+    );
+    generate_hash_table(&mut state.assets.w_wad);
+    set_game_description(&mut state.game.doomstat, &state.assets.w_wad);
+    state.game.d_main.savegamedir = get_save_game_dir(
+        &state.game.m_config,
+        &mut *state.assets.fs,
+        &mut *state.io.platform,
+        save_game_iwadname(state.game.doomstat.gamemission),
+    );
+    check_registered_files(state);
+    print_wad_warnings(state);
+    doom_println!(state.io.platform, "I_Init: Setting up machine state.");
+    init_sound(
+        &mut state.audio.i_sound,
+        &state.io.i_video,
+        &state.game.options,
+        &mut *state.io.platform,
+        true,
+    );
+    init_music(state);
+    connect_net_game(state);
+    read_start_options(state);
+    init_game_subsystems(state);
     if state.game.doomstat.gamemode == GameMode::Commercial
         && check_num_for_name(&state.assets.w_wad, "map01").is_none()
     {

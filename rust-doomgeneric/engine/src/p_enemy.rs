@@ -576,18 +576,8 @@ pub fn look(state: &mut GameState, actor: MobjId) {
         .seestate;
     set_mobj_state(state, actor, seestate);
 }
-pub fn chase(state: &mut GameState, actor: MobjId) {
-    if state.world.p_mobj.mo(actor).reactiontime != 0 {
-        state.world.p_mobj.mo_mut(actor).reactiontime -= 1;
-    }
-    let target = live_target(&state.world.p_mobj, actor);
-    if state.world.p_mobj.mo(actor).threshold != 0 {
-        if target.is_none_or(|target| state.world.p_mobj.mo(target).health <= 0) {
-            state.world.p_mobj.mo_mut(actor).threshold = 0;
-        } else {
-            state.world.p_mobj.mo_mut(actor).threshold -= 1;
-        }
-    }
+/// Turns the monster a step towards the direction it walks in.
+fn turn_to_movedir(state: &mut GameState, actor: MobjId) {
     if state.world.p_mobj.mo(actor).movedir < 8 {
         state.world.p_mobj.mo_mut(actor).angle =
             Angle(state.world.p_mobj.mo(actor).angle.to_bits() & (7 << 29));
@@ -602,25 +592,10 @@ pub fn chase(state: &mut GameState, actor: MobjId) {
                 state.world.p_mobj.mo(actor).angle + (ANG90 / 2);
         }
     }
-    let Some(target) = target.filter(|&target| {
-        state
-            .world
-            .p_mobj
-            .mo(target)
-            .flags
-            .contains(MobjFlags::SHOOTABLE)
-    }) else {
-        if look_for_players(state, actor, true) {
-            return;
-        }
-        let spawnstate = state
-            .assets
-            .info
-            .mobjinfo_mut(state.world.p_mobj.mo(actor).kind)
-            .spawnstate;
-        set_mobj_state(state, actor, spawnstate);
-        return;
-    };
+}
+
+/// Whether the chasing monster spends this tick on a melee or missile attack (or on the pause after one).
+fn chase_attack(state: &mut GameState, actor: MobjId) -> bool {
     if state
         .world
         .p_mobj
@@ -632,7 +607,7 @@ pub fn chase(state: &mut GameState, actor: MobjId) {
         if state.game.g_game.gameskill != SkillType::Nightmare && !state.game.d_main.fastparm {
             new_chase_dir(state, actor);
         }
-        return;
+        return true;
     }
     let actor_info = state
         .assets
@@ -653,7 +628,7 @@ pub fn chase(state: &mut GameState, actor: MobjId) {
             .mobjinfo_mut(state.world.p_mobj.mo(actor).kind)
             .meleestate;
         set_mobj_state(state, actor, meleestate);
-        return;
+        return true;
     }
     if state
         .assets
@@ -673,6 +648,44 @@ pub fn chase(state: &mut GameState, actor: MobjId) {
             .missilestate;
         set_mobj_state(state, actor, missilestate);
         state.world.p_mobj.mo_mut(actor).flags |= MobjFlags::JUSTATTACKED;
+        return true;
+    }
+    false
+}
+
+pub fn chase(state: &mut GameState, actor: MobjId) {
+    if state.world.p_mobj.mo(actor).reactiontime != 0 {
+        state.world.p_mobj.mo_mut(actor).reactiontime -= 1;
+    }
+    let target = live_target(&state.world.p_mobj, actor);
+    if state.world.p_mobj.mo(actor).threshold != 0 {
+        if target.is_none_or(|target| state.world.p_mobj.mo(target).health <= 0) {
+            state.world.p_mobj.mo_mut(actor).threshold = 0;
+        } else {
+            state.world.p_mobj.mo_mut(actor).threshold -= 1;
+        }
+    }
+    turn_to_movedir(state, actor);
+    let Some(target) = target.filter(|&target| {
+        state
+            .world
+            .p_mobj
+            .mo(target)
+            .flags
+            .contains(MobjFlags::SHOOTABLE)
+    }) else {
+        if look_for_players(state, actor, true) {
+            return;
+        }
+        let spawnstate = state
+            .assets
+            .info
+            .mobjinfo_mut(state.world.p_mobj.mo(actor).kind)
+            .spawnstate;
+        set_mobj_state(state, actor, spawnstate);
+        return;
+    };
+    if chase_attack(state, actor) {
         return;
     }
     if state.game.g_game.netgame

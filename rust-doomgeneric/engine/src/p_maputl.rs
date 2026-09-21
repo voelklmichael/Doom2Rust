@@ -32,6 +32,8 @@ pub struct PMaputlState {
 }
 
 impl Default for PMaputlState {
+    // Data, not logic: the intercept overrun table, one row per range.
+    #[allow(clippy::too_many_lines)]
     fn default() -> Self {
         Self {
             opentop: Fixed::ZERO,

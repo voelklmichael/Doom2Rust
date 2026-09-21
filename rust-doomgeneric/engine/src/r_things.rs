@@ -12,6 +12,7 @@ use crate::m_fixed::FRACUNIT;
 use crate::p_mobj::MobjFlags;
 use crate::p_mobj::MobjId;
 use crate::p_mobj::PspDef;
+use crate::p_mobj::SpriteNum;
 use crate::p_setup::SectorId;
 use crate::patch::Patch;
 use crate::r_data::RDataState;
@@ -373,6 +374,62 @@ pub fn draw_vis_sprite(state: &mut GameState, vis: &VisSprite) {
     }
     state.render.r_main.colfunc = state.render.r_main.basecolfunc;
 }
+/// The picture of frame `thing_frame` of the sprite, seen from where the viewer is.
+fn sprite_image(
+    state: &GameState,
+    thing_sprite: SpriteNum,
+    thing_frame: i32,
+    (thing_x, thing_y): (Fixed, Fixed),
+    thing_angle: Angle,
+) -> SpriteImage {
+    let sprdef = &state.render.r_things.sprites[thing_sprite as usize];
+    if thing_frame & FF_FRAMEMASK >= sprdef.numframes {
+        error(&format!(
+            "R_ProjectSprite: invalid sprite frame {} : {} ",
+            thing_sprite as u32, thing_frame,
+        ));
+    }
+    let sprframe = sprdef.spriteframes[(thing_frame & FF_FRAMEMASK).idx()];
+    if sprframe.is_rotating() {
+        let ang: Angle = point_to_angle(&state.render.r_main, thing_x, thing_y);
+        let rot: usize = ((ang - thing_angle + ANG45 / 2 * 9).to_bits() >> 29) as usize;
+        sprframe.image(rot)
+    } else {
+        sprframe.image(0)
+    }
+}
+
+/// The light a sprite is drawn with: fuzz for a shadow, the fixed map, full bright, or the light
+/// table of its sector at its distance.
+fn set_sprite_colormap(
+    state: &GameState,
+    vis: &mut VisSprite,
+    thing_flags: MobjFlags,
+    thing_frame: i32,
+    xscale: Fixed,
+) {
+    if thing_flags.contains(MobjFlags::SHADOW) {
+        vis.colormap = None;
+    } else if let Some(colormap) = state.render.r_main.fixedcolormap {
+        vis.colormap = Some(colormap);
+    } else if thing_frame & FF_FULLBRIGHT != 0 {
+        vis.colormap = Some(0);
+    } else {
+        let mut index = (xscale >> (LIGHTSCALESHIFT - state.render.r_main.detailshift))
+            .to_bits()
+            .idx();
+        if index >= MAXLIGHTSCALE {
+            index = MAXLIGHTSCALE - 1;
+        }
+        vis.colormap = Some(
+            state
+                .render
+                .r_main
+                .light_row48(state.render.r_things.spritelights)[index],
+        );
+    }
+}
+
 pub fn project_sprite(state: &mut GameState, thing_id: MobjId) {
     let thing = state.world.p_mobj.mo(thing_id);
     let (thing_x, thing_y, thing_z, thing_sprite, thing_frame, thing_angle, thing_flags) = (
@@ -406,21 +463,13 @@ pub fn project_sprite(state: &mut GameState, thing_id: MobjId) {
             thing_sprite as u32,
         ));
     }
-    let sprdef = &state.render.r_things.sprites[thing_sprite as usize];
-    if thing_frame & FF_FRAMEMASK >= sprdef.numframes {
-        error(&format!(
-            "R_ProjectSprite: invalid sprite frame {} : {} ",
-            thing_sprite as u32, thing_frame,
-        ));
-    }
-    let sprframe = sprdef.spriteframes[(thing_frame & FF_FRAMEMASK).idx()];
-    let SpriteImage { lump, flip } = if sprframe.is_rotating() {
-        let ang: Angle = point_to_angle(&state.render.r_main, thing_x, thing_y);
-        let rot: usize = ((ang - thing_angle + ANG45 / 2 * 9).to_bits() >> 29) as usize;
-        sprframe.image(rot)
-    } else {
-        sprframe.image(0)
-    };
+    let SpriteImage { lump, flip } = sprite_image(
+        state,
+        thing_sprite,
+        thing_frame,
+        (thing_x, thing_y),
+        thing_angle,
+    );
     tx -= state.render.r_data.spriteoffset[lump.index()];
     let x1: i32 = (state.render.r_main.centerxfrac + fixed_mul(tx, xscale)).to_int();
     if x1 > state.render.r_draw.viewwidth {
@@ -459,26 +508,7 @@ pub fn project_sprite(state: &mut GameState, thing_id: MobjId) {
         vis.startfrac += vis.xiscale * (vis.x1 - x1);
     }
     vis.patch = lump;
-    if thing_flags.contains(MobjFlags::SHADOW) {
-        vis.colormap = None;
-    } else if let Some(colormap) = state.render.r_main.fixedcolormap {
-        vis.colormap = Some(colormap);
-    } else if thing_frame & FF_FULLBRIGHT != 0 {
-        vis.colormap = Some(0);
-    } else {
-        let mut index = (xscale >> (LIGHTSCALESHIFT - state.render.r_main.detailshift))
-            .to_bits()
-            .idx();
-        if index >= MAXLIGHTSCALE {
-            index = MAXLIGHTSCALE - 1;
-        }
-        vis.colormap = Some(
-            state
-                .render
-                .r_main
-                .light_row48(state.render.r_things.spritelights)[index],
-        );
-    }
+    set_sprite_colormap(state, &mut vis, thing_flags, thing_frame, xscale);
     store_vis_sprite(&mut state.render.r_things, vis);
 }
 pub fn add_sprites(state: &mut GameState, sec: SectorId) {

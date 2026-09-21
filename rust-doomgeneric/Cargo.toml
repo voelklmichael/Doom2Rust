@@ -10,7 +10,8 @@ resolver = "2"
 # wrapping are the point there). `cast_sign_loss` is on: use `.idx()` for an index and
 # `cast_unsigned()` to reinterpret bits. `unwrap_used` keeps
 # `unwrap()` out of everything but tests (clippy.toml): use `let ... else`, `is_some_and` and the
-# like, or `expect` with the reason the value must be there.
+# like, or `expect` with the reason the value must be there. `too_many_lines` (100) keeps
+# functions short: split into named steps, or `#[allow]` it on a table with the reason.
 [workspace.lints.clippy]
 assigning_clones = "warn"
 cast_lossless = "warn"
@@ -38,6 +39,7 @@ redundant_closure_for_method_calls = "warn"
 redundant_else = "warn"
 redundant_pub_crate = "warn"
 semicolon_if_nothing_returned = "warn"
+too_many_lines = "warn"
 trivially_copy_pass_by_ref = "warn"
 uninlined_format_args = "warn"
 unnecessary_semicolon = "warn"

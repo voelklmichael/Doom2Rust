@@ -1622,41 +1622,15 @@ pub fn explode_missile(state: &mut GameState, mo: MobjId) {
 }
 pub const STOPSPEED: i32 = 0x1000;
 pub const FRICTION: i32 = 0xe800;
-pub fn xymovement(state: &mut GameState, mo: MobjId) {
-    let (momx, momy, flags) = {
-        let m = state.world.p_mobj.mo(mo);
-        (m.momx, m.momy, m.flags)
-    };
-    if momx == Fixed::ZERO && momy == Fixed::ZERO {
-        if flags.contains(MobjFlags::SKULLFLY) {
-            let mo_type = {
-                let m = state.world.p_mobj.mo_mut(mo);
-                m.flags &= !MobjFlags::SKULLFLY;
-                m.momz = Fixed::ZERO;
-                m.momy = m.momz;
-                m.momx = m.momy;
-                m.kind
-            };
-            let spawnstate = state.assets.info.mobjinfo_mut(mo_type).spawnstate;
-            set_mobj_state(state, mo, spawnstate);
-        }
-        return;
-    }
-    let player = state.world.p_mobj.mo(mo).player;
-    let (mut xmove, mut ymove) = {
-        let m = state.world.p_mobj.mo_mut(mo);
-        if m.momx > MAXMOVE {
-            m.momx = MAXMOVE;
-        } else if m.momx < (-MAXMOVE) {
-            m.momx = -MAXMOVE;
-        }
-        if m.momy > MAXMOVE {
-            m.momy = MAXMOVE;
-        } else if m.momy < (-MAXMOVE) {
-            m.momy = -MAXMOVE;
-        }
-        (m.momx, m.momy)
-    };
+/// Moves the mobj by `(xmove, ymove)` in steps of at most half of `MAXMOVE`, sliding, exploding or
+/// stopping where something blocks it. Returns false when the mobj was removed on the way.
+fn move_in_steps(
+    state: &mut GameState,
+    mo: MobjId,
+    player: Option<PlayerId>,
+    mut xmove: Fixed,
+    mut ymove: Fixed,
+) -> bool {
     loop {
         let (mx, my) = {
             let m = state.world.p_mobj.mo(mo);
@@ -1689,7 +1663,7 @@ pub fn xymovement(state: &mut GameState, mo: MobjId) {
                         })
                 }) {
                     remove_mobj(state, mo);
-                    return;
+                    return false;
                 }
                 explode_missile(state, mo);
             } else {
@@ -1702,6 +1676,11 @@ pub fn xymovement(state: &mut GameState, mo: MobjId) {
             break;
         }
     }
+    true
+}
+
+/// Momentum lost to friction; a player who stops pushing stops running.
+fn apply_friction(state: &mut GameState, mo: MobjId, player: Option<PlayerId>) {
     if let Some(player_id) = player {
         if state.game.g_game.players[player_id]
             .cheats
@@ -1770,23 +1749,49 @@ pub fn xymovement(state: &mut GameState, mo: MobjId) {
         m.momy = fixed_mul(m.momy, Fixed(FRICTION));
     }
 }
-pub fn zmovement(state: &mut GameState, mo: MobjId) {
-    if state.world.p_mobj.mo(mo).player.is_some()
-        && state.world.p_mobj.mo(mo).z < state.world.p_mobj.mo(mo).floorz
-    {
-        let mo_player = state.game.g_game.player_mut(
-            state
-                .world
-                .p_mobj
-                .mo(mo)
-                .player
-                .expect("a mobj that lands hard is a player"),
-        );
-        mo_player.viewheight -= state.world.p_mobj.mo(mo).floorz - state.world.p_mobj.mo(mo).z;
-        mo_player.deltaviewheight = (VIEWHEIGHT - mo_player.viewheight) >> 3;
+
+pub fn xymovement(state: &mut GameState, mo: MobjId) {
+    let (momx, momy, flags) = {
+        let m = state.world.p_mobj.mo(mo);
+        (m.momx, m.momy, m.flags)
+    };
+    if momx == Fixed::ZERO && momy == Fixed::ZERO {
+        if flags.contains(MobjFlags::SKULLFLY) {
+            let mo_type = {
+                let m = state.world.p_mobj.mo_mut(mo);
+                m.flags &= !MobjFlags::SKULLFLY;
+                m.momz = Fixed::ZERO;
+                m.momy = m.momz;
+                m.momx = m.momy;
+                m.kind
+            };
+            let spawnstate = state.assets.info.mobjinfo_mut(mo_type).spawnstate;
+            set_mobj_state(state, mo, spawnstate);
+        }
+        return;
     }
-    let momz = state.world.p_mobj.mo(mo).momz;
-    state.world.p_mobj.mo_mut(mo).z += momz;
+    let player = state.world.p_mobj.mo(mo).player;
+    let (xmove, ymove) = {
+        let m = state.world.p_mobj.mo_mut(mo);
+        if m.momx > MAXMOVE {
+            m.momx = MAXMOVE;
+        } else if m.momx < (-MAXMOVE) {
+            m.momx = -MAXMOVE;
+        }
+        if m.momy > MAXMOVE {
+            m.momy = MAXMOVE;
+        } else if m.momy < (-MAXMOVE) {
+            m.momy = -MAXMOVE;
+        }
+        (m.momx, m.momy)
+    };
+    if !move_in_steps(state, mo, player, xmove, ymove) {
+        return;
+    }
+    apply_friction(state, mo, player);
+}
+/// A floating monster drifts up or down towards its target's height.
+fn float_towards_target(state: &mut GameState, mo: MobjId) {
     let mo_target = state
         .world
         .p_mobj
@@ -1812,6 +1817,11 @@ pub fn zmovement(state: &mut GameState, mo: MobjId) {
             state.world.p_mobj.mo_mut(mo).z += FLOATSPEED;
         }
     }
+}
+
+/// Lands the mobj on its floor (bouncing, exploding a missile) or lets it fall. Returns false when a
+/// missile exploded and the tick is over.
+fn fall_or_land(state: &mut GameState, mo: MobjId) -> bool {
     if state.world.p_mobj.mo(mo).z <= state.world.p_mobj.mo(mo).floorz {
         let correct_lost_soul_bounce: i32 =
             i32::from(state.game.doomstat.gameversion.is_ultimate_or_higher());
@@ -1860,7 +1870,7 @@ pub fn zmovement(state: &mut GameState, mo: MobjId) {
             && !state.world.p_mobj.mo(mo).flags.contains(MobjFlags::NOCLIP)
         {
             explode_missile(state, mo);
-            return;
+            return false;
         }
     } else if !state
         .world
@@ -1875,6 +1885,11 @@ pub fn zmovement(state: &mut GameState, mo: MobjId) {
             state.world.p_mobj.mo_mut(mo).momz -= GRAVITY;
         }
     }
+    true
+}
+
+/// Stops the mobj at the ceiling, bouncing a skull and exploding a missile.
+fn hit_ceiling(state: &mut GameState, mo: MobjId) {
     if state.world.p_mobj.mo(mo).z + state.world.p_mobj.mo(mo).height
         > state.world.p_mobj.mo(mo).ceilingz
     {
@@ -1898,6 +1913,30 @@ pub fn zmovement(state: &mut GameState, mo: MobjId) {
             explode_missile(state, mo);
         }
     }
+}
+
+pub fn zmovement(state: &mut GameState, mo: MobjId) {
+    if state.world.p_mobj.mo(mo).player.is_some()
+        && state.world.p_mobj.mo(mo).z < state.world.p_mobj.mo(mo).floorz
+    {
+        let mo_player = state.game.g_game.player_mut(
+            state
+                .world
+                .p_mobj
+                .mo(mo)
+                .player
+                .expect("a mobj that lands hard is a player"),
+        );
+        mo_player.viewheight -= state.world.p_mobj.mo(mo).floorz - state.world.p_mobj.mo(mo).z;
+        mo_player.deltaviewheight = (VIEWHEIGHT - mo_player.viewheight) >> 3;
+    }
+    let momz = state.world.p_mobj.mo(mo).momz;
+    state.world.p_mobj.mo_mut(mo).z += momz;
+    float_towards_target(state, mo);
+    if !fall_or_land(state, mo) {
+        return;
+    }
+    hit_ceiling(state, mo);
 }
 pub fn nightmare_respawn(state: &mut GameState, mobj: MobjId) {
     let spawnpoint = state.world.p_mobj.mo(mobj).spawnpoint;
