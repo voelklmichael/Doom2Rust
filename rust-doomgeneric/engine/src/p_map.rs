@@ -301,6 +301,87 @@ pub fn check_line(state: &mut GameState, ld: LineId) -> bool {
     }
     true
 }
+/// A charging skull hurts what it hit and stops.
+fn skull_slams_thing(state: &mut GameState, thing: MobjId, tmthing: MobjId) {
+    let damage: i32 = (p_random(&mut state.world.m_random) % 8 + 1)
+        * state
+            .assets
+            .info
+            .mobjinfo_mut(state.world.p_mobj.mo(tmthing).kind)
+            .damage;
+    damage_mobj(state, thing, Some(tmthing), Some(tmthing), damage);
+    state.world.p_mobj.mo_mut(tmthing).flags &= !MobjFlags::SKULLFLY;
+    state.world.p_mobj.mo_mut(tmthing).momz = Fixed::ZERO;
+    state.world.p_mobj.mo_mut(tmthing).momy = state.world.p_mobj.mo(tmthing).momz;
+    state.world.p_mobj.mo_mut(tmthing).momx = state.world.p_mobj.mo(tmthing).momy;
+    let spawnstate = state
+        .assets
+        .info
+        .mobjinfo_mut(state.world.p_mobj.mo(tmthing).kind)
+        .spawnstate;
+    set_mobj_state(state, tmthing, spawnstate);
+}
+
+/// Whether the missile `tmthing` passes `thing` (true) or stops at it, damaging it when it can.
+fn missile_hits_thing(state: &mut GameState, thing: MobjId, tmthing: MobjId) -> bool {
+    if state.world.p_mobj.mo(tmthing).z
+        > state.world.p_mobj.mo(thing).z + state.world.p_mobj.mo(thing).height
+    {
+        return true;
+    }
+    if state.world.p_mobj.mo(tmthing).z + state.world.p_mobj.mo(tmthing).height
+        < state.world.p_mobj.mo(thing).z
+    {
+        return true;
+    }
+    let tm_target = state
+        .world
+        .p_mobj
+        .mo(tmthing)
+        .target
+        .filter(|&id| state.world.p_mobj.is_live(id));
+    if tm_target.is_some_and(|tm_target| {
+        let target_kind = state.world.p_mobj.mo(tm_target).kind as u32;
+        let thing_kind = state.world.p_mobj.mo(thing).kind as u32;
+        target_kind == thing_kind
+            || target_kind == (MobjType::Knight as i32).cast_unsigned()
+                && thing_kind == (MobjType::Bruiser as i32).cast_unsigned()
+            || target_kind == (MobjType::Bruiser as i32).cast_unsigned()
+                && thing_kind == (MobjType::Knight as i32).cast_unsigned()
+    }) {
+        if Some(thing) == tm_target {
+            return true;
+        }
+        if state.world.p_mobj.mo(thing).kind as u32 != (MobjType::Player as i32).cast_unsigned()
+            && DEH_SPECIES_INFIGHTING == 0
+        {
+            return false;
+        }
+    }
+    if !state
+        .world
+        .p_mobj
+        .mo(thing)
+        .flags
+        .contains(MobjFlags::SHOOTABLE)
+    {
+        return !state
+            .world
+            .p_mobj
+            .mo(thing)
+            .flags
+            .contains(MobjFlags::SOLID);
+    }
+    let damage: i32 = (p_random(&mut state.world.m_random) % 8 + 1)
+        * state
+            .assets
+            .info
+            .mobjinfo_mut(state.world.p_mobj.mo(tmthing).kind)
+            .damage;
+    damage_mobj(state, thing, Some(tmthing), tm_target, damage);
+    false
+}
+
 pub fn check_thing(state: &mut GameState, thing_id: MobjId) -> bool {
     let thing = thing_id;
     let tmthing = state.world.p_map.tmthing();
@@ -331,23 +412,7 @@ pub fn check_thing(state: &mut GameState, thing_id: MobjId) -> bool {
         .flags
         .contains(MobjFlags::SKULLFLY)
     {
-        let damage: i32 = (p_random(&mut state.world.m_random) % 8 + 1)
-            * state
-                .assets
-                .info
-                .mobjinfo_mut(state.world.p_mobj.mo(tmthing).kind)
-                .damage;
-        damage_mobj(state, thing, Some(tmthing), Some(tmthing), damage);
-        state.world.p_mobj.mo_mut(tmthing).flags &= !MobjFlags::SKULLFLY;
-        state.world.p_mobj.mo_mut(tmthing).momz = Fixed::ZERO;
-        state.world.p_mobj.mo_mut(tmthing).momy = state.world.p_mobj.mo(tmthing).momz;
-        state.world.p_mobj.mo_mut(tmthing).momx = state.world.p_mobj.mo(tmthing).momy;
-        let spawnstate = state
-            .assets
-            .info
-            .mobjinfo_mut(state.world.p_mobj.mo(tmthing).kind)
-            .spawnstate;
-        set_mobj_state(state, tmthing, spawnstate);
+        skull_slams_thing(state, thing, tmthing);
         return false;
     }
     if state
@@ -357,62 +422,7 @@ pub fn check_thing(state: &mut GameState, thing_id: MobjId) -> bool {
         .flags
         .contains(MobjFlags::MISSILE)
     {
-        if state.world.p_mobj.mo(tmthing).z
-            > state.world.p_mobj.mo(thing).z + state.world.p_mobj.mo(thing).height
-        {
-            return true;
-        }
-        if state.world.p_mobj.mo(tmthing).z + state.world.p_mobj.mo(tmthing).height
-            < state.world.p_mobj.mo(thing).z
-        {
-            return true;
-        }
-        let tm_target = state
-            .world
-            .p_mobj
-            .mo(tmthing)
-            .target
-            .filter(|&id| state.world.p_mobj.is_live(id));
-        if tm_target.is_some_and(|tm_target| {
-            let target_kind = state.world.p_mobj.mo(tm_target).kind as u32;
-            let thing_kind = state.world.p_mobj.mo(thing).kind as u32;
-            target_kind == thing_kind
-                || target_kind == (MobjType::Knight as i32).cast_unsigned()
-                    && thing_kind == (MobjType::Bruiser as i32).cast_unsigned()
-                || target_kind == (MobjType::Bruiser as i32).cast_unsigned()
-                    && thing_kind == (MobjType::Knight as i32).cast_unsigned()
-        }) {
-            if Some(thing) == tm_target {
-                return true;
-            }
-            if state.world.p_mobj.mo(thing).kind as u32 != (MobjType::Player as i32).cast_unsigned()
-                && DEH_SPECIES_INFIGHTING == 0
-            {
-                return false;
-            }
-        }
-        if !state
-            .world
-            .p_mobj
-            .mo(thing)
-            .flags
-            .contains(MobjFlags::SHOOTABLE)
-        {
-            return !state
-                .world
-                .p_mobj
-                .mo(thing)
-                .flags
-                .contains(MobjFlags::SOLID);
-        }
-        let damage: i32 = (p_random(&mut state.world.m_random) % 8 + 1)
-            * state
-                .assets
-                .info
-                .mobjinfo_mut(state.world.p_mobj.mo(tmthing).kind)
-                .damage;
-        damage_mobj(state, thing, Some(tmthing), tm_target, damage);
-        return false;
+        return missile_hits_thing(state, thing, tmthing);
     }
     if state
         .world
@@ -672,6 +682,54 @@ pub fn slide_traverse(state: &mut GameState, intercept: Intercept) -> bool {
     }
     false
 }
+/// Traces the mobj's leading and trailing corners along its momentum to find the nearest line it
+/// would hit (`bestslidefrac`, `bestslideline`).
+fn probe_slide_lines(
+    state: &mut GameState,
+    (mx, my): (Fixed, Fixed),
+    (momx, momy): (Fixed, Fixed),
+    radius: Fixed,
+) {
+    let (leadx, trailx) = if momx > Fixed::ZERO {
+        (mx + radius, mx - radius)
+    } else {
+        (mx - radius, mx + radius)
+    };
+    let (leady, traily) = if momy > Fixed::ZERO {
+        (my + radius, my - radius)
+    } else {
+        (my - radius, my + radius)
+    };
+    state.world.p_map.bestslidefrac = FRACUNIT + Fixed(1);
+    path_traverse(
+        state,
+        leadx,
+        leady,
+        leadx + momx,
+        leady + momy,
+        PT_ADDLINES,
+        slide_traverse,
+    );
+    path_traverse(
+        state,
+        trailx,
+        leady,
+        trailx + momx,
+        leady + momy,
+        PT_ADDLINES,
+        slide_traverse,
+    );
+    path_traverse(
+        state,
+        leadx,
+        traily,
+        leadx + momx,
+        traily + momy,
+        PT_ADDLINES,
+        slide_traverse,
+    );
+}
+
 pub fn slide_move(state: &mut GameState, mo: MobjId) {
     state.world.p_map.slidemo = Some(mo);
     let mut hitcount: i32 = 0;
@@ -684,44 +742,7 @@ pub fn slide_move(state: &mut GameState, mo: MobjId) {
             let m = state.world.p_mobj.mo(mo);
             (m.x, m.y, m.momx, m.momy, m.radius)
         };
-        let (leadx, trailx) = if momx > Fixed::ZERO {
-            (mx + radius, mx - radius)
-        } else {
-            (mx - radius, mx + radius)
-        };
-        let (leady, traily) = if momy > Fixed::ZERO {
-            (my + radius, my - radius)
-        } else {
-            (my - radius, my + radius)
-        };
-        state.world.p_map.bestslidefrac = FRACUNIT + Fixed(1);
-        path_traverse(
-            state,
-            leadx,
-            leady,
-            leadx + momx,
-            leady + momy,
-            PT_ADDLINES,
-            slide_traverse,
-        );
-        path_traverse(
-            state,
-            trailx,
-            leady,
-            trailx + momx,
-            leady + momy,
-            PT_ADDLINES,
-            slide_traverse,
-        );
-        path_traverse(
-            state,
-            leadx,
-            traily,
-            leadx + momx,
-            traily + momy,
-            PT_ADDLINES,
-            slide_traverse,
-        );
+        probe_slide_lines(state, (mx, my), (momx, momy), radius);
         if state.world.p_map.bestslidefrac == FRACUNIT + Fixed(1) {
             break;
         }
@@ -857,143 +878,149 @@ pub fn aim_traverse(state: &mut GameState, intercept: Intercept) -> bool {
     state.world.p_map.linetarget = Some(th);
     false
 }
+/// Where a shot that reached `intercept` ends, `back_off` short of it along the shot: (x, y, z).
+fn shot_point(state: &GameState, intercept: Intercept, back_off: Fixed) -> (Fixed, Fixed, Fixed) {
+    let frac: Fixed = intercept.frac - fixed_div(back_off, state.world.p_map.attackrange);
+    let trace = &state.world.p_maputl.trace;
+    let x = trace.x + fixed_mul(trace.dx, frac);
+    let y = trace.y + fixed_mul(trace.dy, frac);
+    let z = state.world.p_map.shootz
+        + fixed_mul(
+            state.world.p_map.aimslope,
+            fixed_mul(frac, state.world.p_map.attackrange),
+        );
+    (x, y, z)
+}
+
+/// A shot reaches a line: triggers its special, passes through an opening it fits, or stops in a
+/// puff of smoke (nothing at all against the sky). Returns true to go on to the next intercept.
+fn shoot_line(state: &mut GameState, shootthing: MobjId, li: LineId, intercept: Intercept) -> bool {
+    if state.world.p_setup.line(li).special != 0 {
+        shoot_special_line(state, shootthing, li);
+    }
+    if state
+        .world
+        .p_setup
+        .line(li)
+        .flags
+        .contains(LineFlags::TWOSIDED)
+    {
+        line_opening(&mut state.world.p_maputl, &mut state.world.p_setup, li);
+        let dist = fixed_mul(state.world.p_map.attackrange, intercept.frac);
+        // A missing back side (emulated) leaves both openings to check.
+        let (check_floor, check_ceiling) = match state.world.p_setup.line(li).backsector {
+            None => (true, true),
+            Some(back) => {
+                let front = state.world.p_setup.line(li).front_sector();
+                let (front_floor, front_ceiling) = {
+                    let s = state.world.p_setup.sector_mut(front);
+                    (s.floorheight, s.ceilingheight)
+                };
+                let (back_floor, back_ceiling) = {
+                    let s = state.world.p_setup.sector_mut(back);
+                    (s.floorheight, s.ceilingheight)
+                };
+                (front_floor != back_floor, front_ceiling != back_ceiling)
+            }
+        };
+        let hits_line = (check_floor
+            && fixed_div(
+                state.world.p_maputl.openbottom - state.world.p_map.shootz,
+                dist,
+            ) > state.world.p_map.aimslope)
+            || (check_ceiling
+                && fixed_div(
+                    state.world.p_maputl.opentop - state.world.p_map.shootz,
+                    dist,
+                ) < state.world.p_map.aimslope);
+        if !hits_line {
+            // The shot passes through.
+            return true;
+        }
+    }
+    let (x, y, z) = shot_point(state, intercept, 4 * FRACUNIT);
+    if i32::from(
+        state
+            .world
+            .p_setup
+            .sector_mut(state.world.p_setup.line(li).front_sector())
+            .ceilingpic,
+    ) == state.render.r_sky.skyflatnum
+    {
+        if z > state
+            .world
+            .p_setup
+            .sector_mut(state.world.p_setup.line(li).front_sector())
+            .ceilingheight
+        {
+            return false;
+        }
+        if state.world.p_setup.line(li).backsector.is_some_and(|back| {
+            i32::from(state.world.p_setup.sector(back).ceilingpic) == state.render.r_sky.skyflatnum
+        }) {
+            return false;
+        }
+    }
+    spawn_puff(state, x, y, z);
+    false
+}
+
+/// A shot reaches a thing: hits it unless it flies over or under it. Returns true to go on to the
+/// next intercept.
+fn shoot_thing(state: &mut GameState, shootthing: MobjId, intercept: Intercept) -> bool {
+    let th = match intercept.target {
+        InterceptTarget::Thing(id) => id,
+        InterceptTarget::Line(_) => unreachable!(),
+    };
+    if th == shootthing {
+        return true;
+    }
+    if !state
+        .world
+        .p_mobj
+        .mo(th)
+        .flags
+        .contains(MobjFlags::SHOOTABLE)
+    {
+        return true;
+    }
+    let dist: Fixed = fixed_mul(state.world.p_map.attackrange, intercept.frac);
+    let thingtopslope: Fixed = fixed_div(
+        state.world.p_mobj.mo(th).z + state.world.p_mobj.mo(th).height - state.world.p_map.shootz,
+        dist,
+    );
+    if thingtopslope < state.world.p_map.aimslope {
+        return true;
+    }
+    let thingbottomslope: Fixed =
+        fixed_div(state.world.p_mobj.mo(th).z - state.world.p_map.shootz, dist);
+    if thingbottomslope > state.world.p_map.aimslope {
+        return true;
+    }
+    let (x, y, z) = shot_point(state, intercept, 10 * FRACUNIT);
+    if state.world.p_mobj.mo(th).flags.contains(MobjFlags::NOBLOOD) {
+        spawn_puff(state, x, y, z);
+    } else {
+        spawn_blood(state, x, y, z, state.world.p_map.la_damage);
+    }
+    if state.world.p_map.la_damage != 0 {
+        damage_mobj(
+            state,
+            th,
+            Some(shootthing),
+            Some(shootthing),
+            state.world.p_map.la_damage,
+        );
+    }
+    false
+}
+
 pub fn shoot_traverse(state: &mut GameState, intercept: Intercept) -> bool {
     let shootthing = state.world.p_map.shootthing();
     if let InterceptTarget::Line(li) = intercept.target {
-        if state.world.p_setup.line(li).special != 0 {
-            shoot_special_line(state, shootthing, li);
-        }
-        if state
-            .world
-            .p_setup
-            .line(li)
-            .flags
-            .contains(LineFlags::TWOSIDED)
-        {
-            line_opening(&mut state.world.p_maputl, &mut state.world.p_setup, li);
-            let dist = fixed_mul(state.world.p_map.attackrange, intercept.frac);
-            // A missing back side (emulated) leaves both openings to check.
-            let (check_floor, check_ceiling) = match state.world.p_setup.line(li).backsector {
-                None => (true, true),
-                Some(back) => {
-                    let front = state.world.p_setup.line(li).front_sector();
-                    let (front_floor, front_ceiling) = {
-                        let s = state.world.p_setup.sector_mut(front);
-                        (s.floorheight, s.ceilingheight)
-                    };
-                    let (back_floor, back_ceiling) = {
-                        let s = state.world.p_setup.sector_mut(back);
-                        (s.floorheight, s.ceilingheight)
-                    };
-                    (front_floor != back_floor, front_ceiling != back_ceiling)
-                }
-            };
-            let hits_line = (check_floor
-                && fixed_div(
-                    state.world.p_maputl.openbottom - state.world.p_map.shootz,
-                    dist,
-                ) > state.world.p_map.aimslope)
-                || (check_ceiling
-                    && fixed_div(
-                        state.world.p_maputl.opentop - state.world.p_map.shootz,
-                        dist,
-                    ) < state.world.p_map.aimslope);
-            if !hits_line {
-                // The shot passes through.
-                return true;
-            }
-        }
-        let frac: Fixed = intercept.frac - fixed_div(4 * FRACUNIT, state.world.p_map.attackrange);
-        let x: Fixed =
-            state.world.p_maputl.trace.x + fixed_mul(state.world.p_maputl.trace.dx, frac);
-        let y: Fixed =
-            state.world.p_maputl.trace.y + fixed_mul(state.world.p_maputl.trace.dy, frac);
-        let z: Fixed = state.world.p_map.shootz
-            + fixed_mul(
-                state.world.p_map.aimslope,
-                fixed_mul(frac, state.world.p_map.attackrange),
-            );
-        if i32::from(
-            state
-                .world
-                .p_setup
-                .sector_mut(state.world.p_setup.line(li).front_sector())
-                .ceilingpic,
-        ) == state.render.r_sky.skyflatnum
-        {
-            if z > state
-                .world
-                .p_setup
-                .sector_mut(state.world.p_setup.line(li).front_sector())
-                .ceilingheight
-            {
-                return false;
-            }
-            if state.world.p_setup.line(li).backsector.is_some_and(|back| {
-                i32::from(state.world.p_setup.sector(back).ceilingpic)
-                    == state.render.r_sky.skyflatnum
-            }) {
-                return false;
-            }
-        }
-        spawn_puff(state, x, y, z);
-        false
+        shoot_line(state, shootthing, li, intercept)
     } else {
-        let th = match intercept.target {
-            InterceptTarget::Thing(id) => id,
-            InterceptTarget::Line(_) => unreachable!(),
-        };
-        if th == shootthing {
-            return true;
-        }
-        if !state
-            .world
-            .p_mobj
-            .mo(th)
-            .flags
-            .contains(MobjFlags::SHOOTABLE)
-        {
-            return true;
-        }
-        let dist: Fixed = fixed_mul(state.world.p_map.attackrange, intercept.frac);
-        let thingtopslope: Fixed = fixed_div(
-            state.world.p_mobj.mo(th).z + state.world.p_mobj.mo(th).height
-                - state.world.p_map.shootz,
-            dist,
-        );
-        if thingtopslope < state.world.p_map.aimslope {
-            return true;
-        }
-        let thingbottomslope: Fixed =
-            fixed_div(state.world.p_mobj.mo(th).z - state.world.p_map.shootz, dist);
-        if thingbottomslope > state.world.p_map.aimslope {
-            return true;
-        }
-        let frac: Fixed = intercept.frac - fixed_div(10 * FRACUNIT, state.world.p_map.attackrange);
-        let x: Fixed =
-            state.world.p_maputl.trace.x + fixed_mul(state.world.p_maputl.trace.dx, frac);
-        let y: Fixed =
-            state.world.p_maputl.trace.y + fixed_mul(state.world.p_maputl.trace.dy, frac);
-        let z: Fixed = state.world.p_map.shootz
-            + fixed_mul(
-                state.world.p_map.aimslope,
-                fixed_mul(frac, state.world.p_map.attackrange),
-            );
-        if state.world.p_mobj.mo(th).flags.contains(MobjFlags::NOBLOOD) {
-            spawn_puff(state, x, y, z);
-        } else {
-            spawn_blood(state, x, y, z, state.world.p_map.la_damage);
-        }
-        if state.world.p_map.la_damage != 0 {
-            damage_mobj(
-                state,
-                th,
-                Some(shootthing),
-                Some(shootthing),
-                state.world.p_map.la_damage,
-            );
-        }
-        false
+        shoot_thing(state, shootthing, intercept)
     }
 }
 pub fn aim_line_attack(
