@@ -758,8 +758,9 @@ pub fn spos_attack(state: &mut GameState, actor: MobjId) {
         MISSILERANGE,
     );
     for _ in 0..3 {
-        let angle: i32 = bangle
-            + ((p_random(&mut state.world.m_random) - p_random(&mut state.world.m_random)) << 20);
+        let angle: i32 = bangle.wrapping_add(
+            (p_random(&mut state.world.m_random) - p_random(&mut state.world.m_random)) << 20,
+        );
         let damage: i32 = (p_random(&mut state.world.m_random) % 5 + 1) * 3;
         line_attack(
             state,
@@ -784,8 +785,9 @@ pub fn cpos_attack(state: &mut GameState, actor: MobjId) {
         Angle(bangle.cast_unsigned()),
         MISSILERANGE,
     );
-    let angle: i32 = bangle
-        + ((p_random(&mut state.world.m_random) - p_random(&mut state.world.m_random)) << 20);
+    let angle: i32 = bangle.wrapping_add(
+        (p_random(&mut state.world.m_random) - p_random(&mut state.world.m_random)) << 20,
+    );
     let damage: i32 = (p_random(&mut state.world.m_random) % 5 + 1) * 3;
     line_attack(
         state,
