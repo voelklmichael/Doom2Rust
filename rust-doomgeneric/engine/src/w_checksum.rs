@@ -22,10 +22,10 @@ pub fn checksum(w_checksum: &mut WChecksumState, w_wad: &WWadState) -> Sha1Diges
         // Name is hashed with its NUL terminator, as the C SHA1_UpdateString did.
         sha1.update(lump.name.as_bytes());
         sha1.update(&[0]);
-        let file_number = get_file_number(w_checksum, lump.wad_file) as u32;
+        let file_number = get_file_number(w_checksum, lump.wad_file).cast_unsigned();
         sha1.update(&file_number.to_be_bytes());
-        sha1.update(&(lump.position as u32).to_be_bytes());
-        sha1.update(&(lump.size as u32).to_be_bytes());
+        sha1.update(&lump.position.cast_unsigned().to_be_bytes());
+        sha1.update(&lump.size.cast_unsigned().to_be_bytes());
     }
     sha1.digest().bytes()
 }

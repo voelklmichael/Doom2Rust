@@ -10,6 +10,7 @@ use crate::g_game::vanilla_version_code;
 use crate::g_game::GGameState;
 use crate::game_state::World;
 use crate::i_system::error;
+use crate::index::ToIndex;
 use crate::info::StateId;
 use crate::m_fixed::Fixed;
 use crate::p_ceilng::add_active_ceiling;
@@ -124,8 +125,8 @@ fn saveg_read16(state: &mut PSavegState) -> i16 {
     result as i16
 }
 fn saveg_write16(state: &mut PSavegState, value: i16) {
-    saveg_write8(state, (i32::from(value) & 0xff) as u8);
-    saveg_write8(state, (i32::from(value) >> 8 & 0xff) as u8);
+    saveg_write8(state, (i32::from(value) & 0xff).cast_unsigned() as u8);
+    saveg_write8(state, (i32::from(value) >> 8 & 0xff).cast_unsigned() as u8);
 }
 fn saveg_read32(state: &mut PSavegState) -> i32 {
     let mut result: i32 = i32::from(saveg_read8(state));
@@ -135,10 +136,10 @@ fn saveg_read32(state: &mut PSavegState) -> i32 {
     result
 }
 fn saveg_write32(state: &mut PSavegState, value: i32) {
-    saveg_write8(state, (value & 0xff) as u8);
-    saveg_write8(state, (value >> 8 & 0xff) as u8);
-    saveg_write8(state, (value >> 16 & 0xff) as u8);
-    saveg_write8(state, (value >> 24 & 0xff) as u8);
+    saveg_write8(state, (value & 0xff).cast_unsigned() as u8);
+    saveg_write8(state, (value >> 8 & 0xff).cast_unsigned() as u8);
+    saveg_write8(state, (value >> 16 & 0xff).cast_unsigned() as u8);
+    saveg_write8(state, (value >> 24 & 0xff).cast_unsigned() as u8);
 }
 fn saveg_read_pad(state: &mut PSavegState) {
     let padding: i32 = (4_usize.wrapping_sub(state.save_pos & 3) & 3) as i32;
@@ -213,7 +214,7 @@ fn saveg_read_mobj_t(state: &mut PSavegState, str: &mut Mobj) {
     str.snext = None;
     saveg_read32(state);
     str.sprev = None;
-    str.angle = Angle((saveg_read32(state)) as u32);
+    str.angle = Angle(saveg_read32(state).cast_unsigned());
     str.sprite = spritenum_from_raw(saveg_read32(state));
     str.frame = saveg_read32(state);
     // set_thing_position also fully rebuilds bnext/bprev from scratch --
@@ -235,7 +236,7 @@ fn saveg_read_mobj_t(state: &mut PSavegState, str: &mut Mobj) {
     str.kind = mobjtype_from_raw(saveg_read32(state));
     saveg_read32(state);
     str.tics = saveg_read32(state);
-    str.state = Some(StateId(saveg_read32(state) as u32));
+    str.state = Some(StateId(saveg_read32(state).cast_unsigned()));
     str.flags = MobjFlags::from_bits_retain(saveg_read32(state));
     str.health = saveg_read32(state);
     str.movedir = saveg_read32(state);
@@ -246,12 +247,12 @@ fn saveg_read_mobj_t(state: &mut PSavegState, str: &mut Mobj) {
     str.threshold = saveg_read32(state);
     let pl: i32 = saveg_read32(state);
     if pl > 0 {
-        let player_id = PlayerId((pl - 1) as u8);
+        let player_id = PlayerId((pl - 1).cast_unsigned() as u8);
         str.player = Some(player_id);
     } else {
         str.player = None;
     }
-    str.lastlook = PlayerId(saveg_read32(state) as u8 % MAXPLAYERS as u8);
+    str.lastlook = PlayerId(saveg_read32(state).cast_unsigned() as u8 % MAXPLAYERS as u8);
     saveg_read_mapthing_t(state, &mut str.spawnpoint);
     saveg_read32(state);
     str.tracer = None;
@@ -301,13 +302,13 @@ fn saveg_read_ticcmd_t(state: &mut PSavegState, str: &mut TicCmd) {
     str.forwardmove = saveg_read8(state) as i8;
     str.sidemove = saveg_read8(state) as i8;
     str.angleturn = saveg_read16(state);
-    str.consistancy = saveg_read16(state) as u8;
+    str.consistancy = saveg_read16(state).cast_unsigned() as u8;
     str.chatchar = saveg_read8(state);
     str.buttons = saveg_read8(state);
 }
 fn saveg_write_ticcmd_t(state: &mut PSavegState, str: &TicCmd) {
-    saveg_write8(state, str.forwardmove as u8);
-    saveg_write8(state, str.sidemove as u8);
+    saveg_write8(state, str.forwardmove.cast_unsigned());
+    saveg_write8(state, str.sidemove.cast_unsigned());
     saveg_write16(state, str.angleturn);
     saveg_write16(state, i16::from(str.consistancy));
     saveg_write8(state, str.chatchar);
@@ -316,7 +317,7 @@ fn saveg_write_ticcmd_t(state: &mut PSavegState, str: &TicCmd) {
 fn saveg_read_pspdef_t(state: &mut PSavegState, str: &mut PspDef) {
     let state_num: i32 = saveg_read32(state);
     if state_num > 0 {
-        str.state = Some(StateId(state_num as u32));
+        str.state = Some(StateId(state_num.cast_unsigned()));
     } else {
         str.state = None;
     }
@@ -462,7 +463,7 @@ fn saveg_read_ceiling_t(state: &mut PSavegState, str: &mut Ceiling) {
     saveg_read_thinker_t(state, &mut str.thinker);
     str.kind = saveg_read_ceiling_e(state);
     let sector: i32 = saveg_read32(state);
-    str.sector = SectorId(sector as u32);
+    str.sector = SectorId(sector.cast_unsigned());
     str.bottomheight = Fixed(saveg_read32(state));
     str.topheight = Fixed(saveg_read32(state));
     str.speed = Fixed(saveg_read32(state));
@@ -500,7 +501,7 @@ fn saveg_read_vldoor_t(state: &mut PSavegState, str: &mut VlDoor) {
     saveg_read_thinker_t(state, &mut str.thinker);
     str.kind = saveg_read_vldoor_e(state);
     let sector: i32 = saveg_read32(state);
-    str.sector = SectorId(sector as u32);
+    str.sector = SectorId(sector.cast_unsigned());
     str.topheight = Fixed(saveg_read32(state));
     str.speed = Fixed(saveg_read32(state));
     str.direction = Direction::from_save(saveg_read32(state));
@@ -540,7 +541,7 @@ fn saveg_read_floormove_t(state: &mut PSavegState, str: &mut FloorMove) {
     str.kind = saveg_read_floor_e(state);
     str.crush = saveg_read32(state) != 0;
     let sector: i32 = saveg_read32(state);
-    str.sector = SectorId(sector as u32);
+    str.sector = SectorId(sector.cast_unsigned());
     str.direction = Direction::from_save(saveg_read32(state));
     str.newspecial = saveg_read32(state);
     str.texture = saveg_read16(state);
@@ -580,7 +581,7 @@ fn saveg_read_plattype_e(state: &mut PSavegState) -> PlattypeE {
 fn saveg_read_plat_t(state: &mut PSavegState, str: &mut Plat) {
     saveg_read_thinker_t(state, &mut str.thinker);
     let sector: i32 = saveg_read32(state);
-    str.sector = SectorId(sector as u32);
+    str.sector = SectorId(sector.cast_unsigned());
     str.speed = Fixed(saveg_read32(state));
     str.low = Fixed(saveg_read32(state));
     str.high = Fixed(saveg_read32(state));
@@ -609,7 +610,7 @@ fn saveg_write_plat_t(state: &mut PSavegState, str: &Plat) {
 fn saveg_read_lightflash_t(state: &mut PSavegState, str: &mut LightFlash) {
     saveg_read_thinker_t(state, &mut str.thinker);
     let sector: i32 = saveg_read32(state);
-    str.sector = SectorId(sector as u32);
+    str.sector = SectorId(sector.cast_unsigned());
     str.count = saveg_read32(state);
     str.maxlight = saveg_read32(state);
     str.minlight = saveg_read32(state);
@@ -628,7 +629,7 @@ fn saveg_write_lightflash_t(state: &mut PSavegState, str: &LightFlash) {
 fn saveg_read_strobe_t(state: &mut PSavegState, str: &mut Strobe) {
     saveg_read_thinker_t(state, &mut str.thinker);
     let sector: i32 = saveg_read32(state);
-    str.sector = SectorId(sector as u32);
+    str.sector = SectorId(sector.cast_unsigned());
     str.count = saveg_read32(state);
     str.minlight = saveg_read32(state);
     str.maxlight = saveg_read32(state);
@@ -647,7 +648,7 @@ fn saveg_write_strobe_t(state: &mut PSavegState, str: &Strobe) {
 fn saveg_read_glow_t(state: &mut PSavegState, str: &mut Glow) {
     saveg_read_thinker_t(state, &mut str.thinker);
     let sector: i32 = saveg_read32(state);
-    str.sector = SectorId(sector as u32);
+    str.sector = SectorId(sector.cast_unsigned());
     str.minlight = saveg_read32(state);
     str.maxlight = saveg_read32(state);
     str.direction = Direction::from_save(saveg_read32(state));
@@ -676,9 +677,12 @@ pub fn write_save_game_header(state: &mut GameState, description: &str) {
     saveg_write8(&mut state.world.p_saveg, state.game.g_game.gameskill as u8);
     saveg_write8(
         &mut state.world.p_saveg,
-        state.game.g_game.gameepisode as u8,
+        state.game.g_game.gameepisode.cast_unsigned() as u8,
     );
-    saveg_write8(&mut state.world.p_saveg, state.game.g_game.gamemap as u8);
+    saveg_write8(
+        &mut state.world.p_saveg,
+        state.game.g_game.gamemap.cast_unsigned() as u8,
+    );
     for i in 0..MAXPLAYERS {
         saveg_write8(
             &mut state.world.p_saveg,
@@ -687,15 +691,15 @@ pub fn write_save_game_header(state: &mut GameState, description: &str) {
     }
     saveg_write8(
         &mut state.world.p_saveg,
-        (state.world.p_tick.leveltime >> 16 & 0xff) as u8,
+        (state.world.p_tick.leveltime >> 16 & 0xff).cast_unsigned() as u8,
     );
     saveg_write8(
         &mut state.world.p_saveg,
-        (state.world.p_tick.leveltime >> 8 & 0xff) as u8,
+        (state.world.p_tick.leveltime >> 8 & 0xff).cast_unsigned() as u8,
     );
     saveg_write8(
         &mut state.world.p_saveg,
-        (state.world.p_tick.leveltime & 0xff) as u8,
+        (state.world.p_tick.leveltime & 0xff).cast_unsigned() as u8,
     );
 }
 pub fn read_save_game_header(state: &mut GameState) -> bool {
@@ -756,7 +760,7 @@ pub fn un_archive_players(g_game: &mut GGameState, p_saveg: &mut PSavegState) {
 }
 pub fn archive_world(p_saveg: &mut PSavegState, p_setup: &mut PSetupState) {
     for i in 0..p_setup.numsectors {
-        let sec = p_setup.sector_mut(SectorId(i as u32));
+        let sec = p_setup.sector_mut(SectorId(i.cast_unsigned()));
         let (floorheight, ceilingheight, floorpic, ceilingpic, lightlevel, special, tag) = (
             sec.floorheight,
             sec.ceilingheight,
@@ -774,7 +778,7 @@ pub fn archive_world(p_saveg: &mut PSavegState, p_setup: &mut PSetupState) {
         saveg_write16(p_saveg, special);
         saveg_write16(p_saveg, tag);
     }
-    for i in 0..(p_setup.numlines as usize) {
+    for i in 0..p_setup.numlines.idx() {
         let li = &p_setup.lines[i];
         let (flags, special, tag, sidenum) = (li.flags, li.special, li.tag, li.sidenum);
         saveg_write16(p_saveg, flags.bits());
@@ -808,7 +812,7 @@ pub fn un_archive_world(p_saveg: &mut PSavegState, p_setup: &mut PSetupState) {
         let lightlevel = saveg_read16(p_saveg);
         let special = saveg_read16(p_saveg);
         let tag = saveg_read16(p_saveg);
-        let sec = p_setup.sector_mut(SectorId(i as u32));
+        let sec = p_setup.sector_mut(SectorId(i.cast_unsigned()));
         sec.floorheight = Fixed(floorheight);
         sec.ceilingheight = Fixed(ceilingheight);
         sec.floorpic = floorpic;
@@ -819,7 +823,7 @@ pub fn un_archive_world(p_saveg: &mut PSavegState, p_setup: &mut PSetupState) {
         sec.specialdata = None;
         sec.soundtarget = None;
     }
-    for i in 0..(p_setup.numlines as usize) {
+    for i in 0..p_setup.numlines.idx() {
         let flags = saveg_read16(p_saveg);
         let special = saveg_read16(p_saveg);
         let tag = saveg_read16(p_saveg);
@@ -850,7 +854,10 @@ pub fn archive_thinkers(world: &mut World) {
     while let Some(id) = cursor {
         if let ThinkerPayload::Mobj(mobj_id) = world.p_tick.payload(id) {
             if matches!(thinker_function(world, id), ThinkerFn::Mobj(_)) {
-                saveg_write8(&mut world.p_saveg, ThinkerClass::Mobj as i32 as u8);
+                saveg_write8(
+                    &mut world.p_saveg,
+                    (ThinkerClass::Mobj as i32).cast_unsigned() as u8,
+                );
                 saveg_write_pad(&mut world.p_saveg);
                 let mobj = world.p_mobj.mobj_mut(mobj_id).expect("live mobj");
                 saveg_write_mobj_t(&mut world.p_saveg, mobj);
@@ -858,7 +865,10 @@ pub fn archive_thinkers(world: &mut World) {
         }
         cursor = world.p_tick.next(id);
     }
-    saveg_write8(&mut world.p_saveg, ThinkerClass::End as i32 as u8);
+    saveg_write8(
+        &mut world.p_saveg,
+        (ThinkerClass::End as i32).cast_unsigned() as u8,
+    );
 }
 pub fn un_archive_thinkers(state: &mut GameState) {
     let mut cursor = state.world.p_tick.head();
@@ -1005,7 +1015,7 @@ pub fn archive_specials(world: &mut World) {
                     let ceiling_id = world.p_tick.ceiling_payload(id);
                     saveg_write8(
                         &mut world.p_saveg,
-                        SpecialThinkerClass::Ceiling as i32 as u8,
+                        (SpecialThinkerClass::Ceiling as i32).cast_unsigned() as u8,
                     );
                     saveg_write_pad(&mut world.p_saveg);
                     let c = world.p_ceilng.get_mut(ceiling_id).expect("live ceiling");
@@ -1016,7 +1026,7 @@ pub fn archive_specials(world: &mut World) {
                 let ceiling_id = world.p_tick.ceiling_payload(id);
                 saveg_write8(
                     &mut world.p_saveg,
-                    SpecialThinkerClass::Ceiling as i32 as u8,
+                    (SpecialThinkerClass::Ceiling as i32).cast_unsigned() as u8,
                 );
                 saveg_write_pad(&mut world.p_saveg);
                 let c = world.p_ceilng.get_mut(ceiling_id).expect("live ceiling");
@@ -1024,21 +1034,30 @@ pub fn archive_specials(world: &mut World) {
             }
             ThinkerFn::Door(_) => {
                 let door_id = world.p_tick.door_payload(id);
-                saveg_write8(&mut world.p_saveg, SpecialThinkerClass::Door as i32 as u8);
+                saveg_write8(
+                    &mut world.p_saveg,
+                    (SpecialThinkerClass::Door as i32).cast_unsigned() as u8,
+                );
                 saveg_write_pad(&mut world.p_saveg);
                 let d = world.p_doors.get_mut(door_id).expect("live door");
                 saveg_write_vldoor_t(&mut world.p_saveg, d);
             }
             ThinkerFn::Floor(_) => {
                 let floor_id = world.p_tick.floor_payload(id);
-                saveg_write8(&mut world.p_saveg, SpecialThinkerClass::Floor as i32 as u8);
+                saveg_write8(
+                    &mut world.p_saveg,
+                    (SpecialThinkerClass::Floor as i32).cast_unsigned() as u8,
+                );
                 saveg_write_pad(&mut world.p_saveg);
                 let f = world.p_spec.get_floor_mut(floor_id).expect("live floor");
                 saveg_write_floormove_t(&mut world.p_saveg, f);
             }
             ThinkerFn::Plat(_) => {
                 let plat_id = world.p_tick.plat_payload(id);
-                saveg_write8(&mut world.p_saveg, SpecialThinkerClass::Plat as i32 as u8);
+                saveg_write8(
+                    &mut world.p_saveg,
+                    (SpecialThinkerClass::Plat as i32).cast_unsigned() as u8,
+                );
                 saveg_write_pad(&mut world.p_saveg);
                 let p = world.p_plats.get_mut(plat_id).expect("live plat");
                 saveg_write_plat_t(&mut world.p_saveg, p);
@@ -1047,7 +1066,10 @@ pub fn archive_specials(world: &mut World) {
                 let ThinkerPayload::LightFlash(flash_id) = world.p_tick.payload(id) else {
                     unreachable!()
                 };
-                saveg_write8(&mut world.p_saveg, SpecialThinkerClass::Flash as i32 as u8);
+                saveg_write8(
+                    &mut world.p_saveg,
+                    (SpecialThinkerClass::Flash as i32).cast_unsigned() as u8,
+                );
                 saveg_write_pad(&mut world.p_saveg);
                 let f = world
                     .p_lights
@@ -1059,7 +1081,10 @@ pub fn archive_specials(world: &mut World) {
                 let ThinkerPayload::Strobe(strobe_id) = world.p_tick.payload(id) else {
                     unreachable!()
                 };
-                saveg_write8(&mut world.p_saveg, SpecialThinkerClass::Strobe as i32 as u8);
+                saveg_write8(
+                    &mut world.p_saveg,
+                    (SpecialThinkerClass::Strobe as i32).cast_unsigned() as u8,
+                );
                 saveg_write_pad(&mut world.p_saveg);
                 let s = world
                     .p_lights
@@ -1071,7 +1096,10 @@ pub fn archive_specials(world: &mut World) {
                 let ThinkerPayload::Glow(glow_id) = world.p_tick.payload(id) else {
                     unreachable!()
                 };
-                saveg_write8(&mut world.p_saveg, SpecialThinkerClass::Glow as i32 as u8);
+                saveg_write8(
+                    &mut world.p_saveg,
+                    (SpecialThinkerClass::Glow as i32).cast_unsigned() as u8,
+                );
                 saveg_write_pad(&mut world.p_saveg);
                 let g = world.p_lights.get_glow_mut(glow_id).expect("live glow");
                 saveg_write_glow_t(&mut world.p_saveg, g);
@@ -1082,7 +1110,7 @@ pub fn archive_specials(world: &mut World) {
     }
     saveg_write8(
         &mut world.p_saveg,
-        SpecialThinkerClass::Endspecials as i32 as u8,
+        (SpecialThinkerClass::Endspecials as i32).cast_unsigned() as u8,
     );
 }
 pub fn un_archive_specials(world: &mut World) {

@@ -1,5 +1,6 @@
 use crate::doomdef::SCREENWIDTH;
 use crate::game_state::GameState;
+use crate::index::ToIndex;
 use crate::m_controls::KEY_BACKSPACE;
 use crate::m_controls::KEY_ENTER;
 use crate::r_draw::video_erase;
@@ -62,7 +63,7 @@ pub fn hulib_draw_text_line(state: &mut GameState, l: &HuTextLine, drawcursor: b
     for i in 0..l.l.len() {
         let c = l.l.as_bytes()[i].to_ascii_uppercase();
         if i32::from(c) != ' ' as i32 && i32::from(c) >= l.sc && i32::from(c) <= '_' as i32 {
-            let glyph = state.ui.hu_stuff.hu_font[(i32::from(c) - l.sc) as usize];
+            let glyph = state.ui.hu_stuff.hu_font[(i32::from(c) - l.sc).idx()];
             let patch = cache_loaded_patch(&*state.assets.fs, &mut state.assets.w_wad, glyph);
             let w = patch.width();
             if x + w > SCREENWIDTH {
@@ -78,7 +79,7 @@ pub fn hulib_draw_text_line(state: &mut GameState, l: &HuTextLine, drawcursor: b
         }
     }
     if drawcursor {
-        let cursor_glyph = state.ui.hu_stuff.hu_font[('_' as i32 - l.sc) as usize];
+        let cursor_glyph = state.ui.hu_stuff.hu_font[('_' as i32 - l.sc).idx()];
         let cursor_patch =
             cache_loaded_patch(&*state.assets.fs, &mut state.assets.w_wad, cursor_glyph);
         if x + cursor_patch.width() <= SCREENWIDTH {
@@ -100,18 +101,18 @@ pub fn hulib_erase_text_line(state: &mut GameState, l: &mut HuTextLine) {
                 video_erase(
                     &mut state.io.i_video,
                     &state.render.r_draw,
-                    yoffset as u32,
+                    yoffset.cast_unsigned(),
                     SCREENWIDTH,
                 );
             } else {
                 let viewwindowx = state.render.r_draw.viewwindowx;
-                let second_ofs = (yoffset
-                    + state.render.r_draw.viewwindowx
-                    + state.render.r_draw.viewwidth) as u32;
+                let second_ofs =
+                    (yoffset + state.render.r_draw.viewwindowx + state.render.r_draw.viewwidth)
+                        .cast_unsigned();
                 video_erase(
                     &mut state.io.i_video,
                     &state.render.r_draw,
-                    yoffset as u32,
+                    yoffset.cast_unsigned(),
                     viewwindowx,
                 );
                 video_erase(
@@ -139,12 +140,7 @@ pub fn hulib_init_stext(
     s.laston = true;
     s.cl = 0;
     for i in 0..h {
-        hulib_init_text_line(
-            &mut s.l[i as usize],
-            x,
-            y - i * (font0_height + 1),
-            startchar,
-        );
+        hulib_init_text_line(&mut s.l[i.idx()], x, y - i * (font0_height + 1), startchar);
     }
 }
 pub fn hulib_add_line_to_stext(s: &mut HuSText) {
@@ -152,14 +148,14 @@ pub fn hulib_add_line_to_stext(s: &mut HuSText) {
     if s.cl == s.h {
         s.cl = 0;
     }
-    hulib_clear_text_line(&mut s.l[s.cl as usize]);
-    for i in 0..s.h as usize {
+    hulib_clear_text_line(&mut s.l[s.cl.idx()]);
+    for i in 0..s.h.idx() {
         s.l[i].needsupdate = 4;
     }
 }
 pub fn hulib_add_message_to_stext(s: &mut HuSText, prefix: Option<&str>, msg: &str) {
     hulib_add_line_to_stext(s);
-    let cl = s.cl as usize;
+    let cl = s.cl.idx();
     if let Some(prefix) = prefix {
         for b in prefix.bytes() {
             hulib_add_char_to_text_line(&mut s.l[cl], b);
@@ -178,11 +174,11 @@ pub fn hulib_draw_stext(state: &mut GameState, s: &HuSText, on: bool) {
         if idx < 0 {
             idx += s.h;
         }
-        hulib_draw_text_line(state, &s.l[idx as usize], false);
+        hulib_draw_text_line(state, &s.l[idx.idx()], false);
     }
 }
 pub fn hulib_erase_stext(state: &mut GameState, s: &mut HuSText, on: bool) {
-    for i in 0..s.h as usize {
+    for i in 0..s.h.idx() {
         if s.laston && !on {
             s.l[i].needsupdate = 4;
         }

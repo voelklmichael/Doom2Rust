@@ -6,6 +6,7 @@
 //! volumes into register writes.
 
 use crate::genmidi::{self, GenMidi, Instrument};
+use crate::index::ToIndex;
 use crate::mus::{Event, Sequencer, Song, PERCUSSION_CHANNEL, TICKS_PER_SECOND};
 use oplon::Opl2;
 
@@ -54,13 +55,13 @@ const PITCH_TABLE: [u64; STEPS_PER_OCTAVE] = {
 /// F-number and block (octave) for a pitch given in 1/64 semitones from MIDI
 /// note 0.
 fn f_number_and_block(position: i32) -> (u16, u8) {
-    let position = position.clamp(0, MAX_POSITION) as usize;
+    let position = position.clamp(0, MAX_POSITION).idx();
     let at_block_0 = PITCH_TABLE[position % STEPS_PER_OCTAVE] << (position / STEPS_PER_OCTAVE);
-    let block = (0..7)
+    let block = (0..7_i32)
         .find(|&block| (at_block_0 >> (40 + block)) <= 1023)
         .unwrap_or(7);
     let f_number = (at_block_0 >> (40 + block)).min(1023) as u16;
-    (f_number, block as u8)
+    (f_number, block.cast_unsigned() as u8)
 }
 
 /// Attenuation in 0.75 dB steps (the chip's total level unit) of a MIDI volume
@@ -168,7 +169,7 @@ impl OplDriver {
     }
 
     pub fn set_music_volume(&mut self, volume: i32) {
-        self.music_volume = volume.clamp(0, 127) as u8;
+        self.music_volume = volume.clamp(0, 127).cast_unsigned() as u8;
         for v in 0..NUM_VOICES {
             if self.voices[v].playing.is_some() {
                 self.write_volume(v);

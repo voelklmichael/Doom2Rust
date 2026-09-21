@@ -872,7 +872,7 @@ impl X11Platform {
 
     unsafe fn addKeyToQueue(&mut self, mut pressed: i32, mut keyCode: u32) {
         let mut key: u8 = convertToDoomKey(keyCode);
-        let mut keyData: u16 = (pressed << 8_i32 | i32::from(key)) as u16;
+        let mut keyData: u16 = (pressed << 8_i32 | i32::from(key)).cast_unsigned() as u16;
         self.s_KeyQueue[self.s_KeyQueueWriteIndex as usize] = keyData;
         self.s_KeyQueueWriteIndex = self.s_KeyQueueWriteIndex.wrapping_add(1);
         self.s_KeyQueueWriteIndex = self.s_KeyQueueWriteIndex.wrapping_rem(KEYQUEUE_SIZE as u32);
@@ -924,14 +924,13 @@ impl DoomPlatform for X11Platform {
             );
             self.s_Display = XOpenDisplay(::core::ptr::null::<::core::ffi::c_char>());
             self.s_Screen = (*(self.s_Display as _XPrivDisplay)).default_screen;
-            let mut blackColor: u64 = (*(*(self.s_Display as _XPrivDisplay))
-                .screens
-                .add(self.s_Screen as usize))
-            .black_pixel as i32 as u64;
-            let mut whiteColor: i32 = (*(*(self.s_Display as _XPrivDisplay))
-                .screens
-                .add(self.s_Screen as usize))
-            .white_pixel as i32;
+            let screen = usize::try_from(self.s_Screen).expect("X screen numbers are not negative");
+            let mut blackColor: u64 = i64::from(
+                (*(*(self.s_Display as _XPrivDisplay)).screens.add(screen)).black_pixel as i32,
+            )
+            .cast_unsigned();
+            let mut whiteColor: i32 =
+                (*(*(self.s_Display as _XPrivDisplay)).screens.add(screen)).white_pixel as i32;
             let mut attr: XSetWindowAttributes = XSetWindowAttributes {
                 background_pixmap: 0,
                 background_pixel: 0,
@@ -955,24 +954,17 @@ impl DoomPlatform for X11Platform {
                 ::core::mem::size_of::<XSetWindowAttributes>() as size_t,
             );
             attr.event_mask = ExposureMask | KeyPressMask;
-            attr.background_pixel = (*(*(self.s_Display as _XPrivDisplay))
-                .screens
-                .add(self.s_Screen as usize))
-            .black_pixel;
-            let mut depth: i32 = (*(*(self.s_Display as _XPrivDisplay))
-                .screens
-                .add(self.s_Screen as usize))
-            .root_depth;
+            attr.background_pixel =
+                (*(*(self.s_Display as _XPrivDisplay)).screens.add(screen)).black_pixel;
+            let mut depth: i32 =
+                (*(*(self.s_Display as _XPrivDisplay)).screens.add(screen)).root_depth;
             self.s_Window = XCreateSimpleWindow(
                 self.s_Display,
-                (*(*(self.s_Display as _XPrivDisplay))
-                    .screens
-                    .add((*(self.s_Display as _XPrivDisplay)).default_screen as usize))
-                .root,
+                (*(*(self.s_Display as _XPrivDisplay)).screens.add(screen)).root,
                 0_i32,
                 0_i32,
-                resx as u32,
-                resy as u32,
+                resx.cast_unsigned(),
+                resy.cast_unsigned(),
                 0_u32,
                 blackColor,
                 blackColor,
@@ -989,7 +981,11 @@ impl DoomPlatform for X11Platform {
                 0_u64,
                 ::core::ptr::null_mut::<XGCValues>(),
             );
-            XSetForeground(self.s_Display, self.s_Gc, whiteColor as u64);
+            XSetForeground(
+                self.s_Display,
+                self.s_Gc,
+                i64::from(whiteColor).cast_unsigned(),
+            );
             XkbSetDetectableAutoRepeat(self.s_Display, 1_i32, ::core::ptr::null_mut::<i32>());
             loop {
                 let mut e: XEvent = _XEvent { type_0: 0 };
@@ -1000,16 +996,13 @@ impl DoomPlatform for X11Platform {
             }
             self.s_Image = XCreateImage(
                 self.s_Display,
-                (*(*(self.s_Display as _XPrivDisplay))
-                    .screens
-                    .add(self.s_Screen as usize))
-                .root_visual,
-                depth as u32,
+                (*(*(self.s_Display as _XPrivDisplay)).screens.add(screen)).root_visual,
+                depth.cast_unsigned(),
                 ZPixmap,
                 0_i32,
                 ::core::ptr::null_mut::<::core::ffi::c_char>(),
-                resx as u32,
-                resy as u32,
+                resx.cast_unsigned(),
+                resy.cast_unsigned(),
                 32_i32,
                 0_i32,
             );
@@ -1094,7 +1087,8 @@ impl DoomPlatform for X11Platform {
             };
             gettimeofday(&raw mut tp, &raw mut tzp as *mut ::core::ffi::c_void);
             (tp.tv_sec as __suseconds_t * 1000 as __suseconds_t
-                + tp.tv_usec / 1000 as __suseconds_t) as uint32_t
+                + tp.tv_usec / 1000 as __suseconds_t)
+                .cast_unsigned() as uint32_t
         }
     }
 
@@ -1106,7 +1100,7 @@ impl DoomPlatform for X11Platform {
             self.s_KeyQueueReadIndex = self.s_KeyQueueReadIndex.wrapping_add(1);
             self.s_KeyQueueReadIndex = self.s_KeyQueueReadIndex.wrapping_rem(KEYQUEUE_SIZE as u32);
             let pressed = keyData >> 8_i32 != 0;
-            let key = (keyData & 0xff_i32) as u8;
+            let key = (keyData & 0xff_i32).cast_unsigned() as u8;
             Some((pressed, key))
         }
     }

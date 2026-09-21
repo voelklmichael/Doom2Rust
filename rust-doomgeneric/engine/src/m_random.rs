@@ -20,11 +20,11 @@ pub struct MRandomState {
 }
 
 pub fn p_random(state: &mut MRandomState) -> i32 {
-    state.prndindex += 1;
+    state.prndindex = state.prndindex.wrapping_add(1);
     i32::from(RNDTABLE[state.prndindex as usize])
 }
 pub fn m_random(state: &mut MRandomState) -> i32 {
-    state.rndindex += 1;
+    state.rndindex = state.rndindex.wrapping_add(1);
     i32::from(RNDTABLE[state.rndindex as usize])
 }
 pub fn clear_random(state: &mut MRandomState) {

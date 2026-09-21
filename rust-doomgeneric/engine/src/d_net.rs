@@ -11,6 +11,7 @@ use crate::g_game::check_demo_status;
 use crate::g_game::g_ticker;
 use crate::g_game::GGameState;
 use crate::game_state::Game;
+use crate::index::ToIndex;
 use crate::platform::DoomPlatform;
 use crate::w_checksum::checksum;
 use crate::w_wad::check_num_for_name;
@@ -66,14 +67,14 @@ fn load_game_settings(
     d_main.fastparm = settings.fast_monsters != 0;
     d_main.respawnparm = settings.respawn_monsters != 0;
     g_game.timelimit = settings.timelimit;
-    g_game.consoleplayer = PlayerId(settings.consoleplayer as u8);
+    g_game.consoleplayer = PlayerId(settings.consoleplayer.cast_unsigned() as u8);
     if g_game.lowres_turn {
         doom_println!(platform,
             "NOTE: Turning resolution is reduced; this is probably because there is a client recording a Vanilla demo."
         );
     }
     for i in 0..MAXPLAYERS {
-        g_game.playeringame[i] = i < settings.num_players as usize;
+        g_game.playeringame[i] = i < settings.num_players.idx();
     }
 }
 fn save_game_settings(game: &Game, settings: &mut NetGameSettings) {

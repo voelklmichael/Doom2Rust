@@ -3,6 +3,7 @@ use crate::doomstat::DoomstatState;
 use crate::fixed_cstr::FixedCStr;
 use crate::game_state::GameState;
 use crate::i_system::error;
+use crate::index::ToIndex;
 use crate::p_mobj::LineFlags;
 use crate::p_mobj::MobjId;
 use crate::p_setup::PSetupState;
@@ -279,15 +280,13 @@ pub fn init_switch_list(
     for entry in ALPH_SWITCH_LIST.iter().take(MAXSWITCHES) {
         if entry.episode == 0 {
             p_switch.numswitches = index / 2;
-            p_switch.switchlist[index as usize] = -1;
+            p_switch.switchlist[index.idx()] = -1;
             break;
         }
         if i32::from(entry.episode) <= episode {
-            p_switch.switchlist[index as usize] =
-                texture_num_for_name(r_data, &entry.name1.as_str());
+            p_switch.switchlist[index.idx()] = texture_num_for_name(r_data, &entry.name1.as_str());
             index += 1;
-            p_switch.switchlist[index as usize] =
-                texture_num_for_name(r_data, &entry.name2.as_str());
+            p_switch.switchlist[index.idx()] = texture_num_for_name(r_data, &entry.name2.as_str());
             index += 1;
         }
     }
@@ -331,16 +330,16 @@ pub fn change_switch_texture(state: &mut GameState, line: LineId, use_again: boo
         SfxName::Swtchn
     };
     for i in 0..state.world.p_switch.numswitches * 2 {
-        if state.world.p_switch.switchlist[i as usize] == tex_top {
+        if state.world.p_switch.switchlist[i.idx()] == tex_top {
             s_start_sound(
                 state,
                 SoundOrigin::Sector(state.world.p_switch.buttonlist[0].soundorg),
                 sound,
             );
             state.world.p_setup.sides[sidenum0 as usize].toptexture =
-                state.world.p_switch.switchlist[(i ^ 1) as usize] as i16;
+                state.world.p_switch.switchlist[(i ^ 1).idx()] as i16;
             if use_again {
-                let texture = state.world.p_switch.switchlist[i as usize];
+                let texture = state.world.p_switch.switchlist[i.idx()];
                 start_button(
                     &state.world.p_setup,
                     &mut state.world.p_switch,
@@ -351,16 +350,16 @@ pub fn change_switch_texture(state: &mut GameState, line: LineId, use_again: boo
                 );
             }
             return;
-        } else if state.world.p_switch.switchlist[i as usize] == tex_mid {
+        } else if state.world.p_switch.switchlist[i.idx()] == tex_mid {
             s_start_sound(
                 state,
                 SoundOrigin::Sector(state.world.p_switch.buttonlist[0].soundorg),
                 sound,
             );
             state.world.p_setup.sides[sidenum0 as usize].midtexture =
-                state.world.p_switch.switchlist[(i ^ 1) as usize] as i16;
+                state.world.p_switch.switchlist[(i ^ 1).idx()] as i16;
             if use_again {
-                let texture = state.world.p_switch.switchlist[i as usize];
+                let texture = state.world.p_switch.switchlist[i.idx()];
                 start_button(
                     &state.world.p_setup,
                     &mut state.world.p_switch,
@@ -371,16 +370,16 @@ pub fn change_switch_texture(state: &mut GameState, line: LineId, use_again: boo
                 );
             }
             return;
-        } else if state.world.p_switch.switchlist[i as usize] == tex_bot {
+        } else if state.world.p_switch.switchlist[i.idx()] == tex_bot {
             s_start_sound(
                 state,
                 SoundOrigin::Sector(state.world.p_switch.buttonlist[0].soundorg),
                 sound,
             );
             state.world.p_setup.sides[sidenum0 as usize].bottomtexture =
-                state.world.p_switch.switchlist[(i ^ 1) as usize] as i16;
+                state.world.p_switch.switchlist[(i ^ 1).idx()] as i16;
             if use_again {
-                let texture = state.world.p_switch.switchlist[i as usize];
+                let texture = state.world.p_switch.switchlist[i.idx()];
                 start_button(
                     &state.world.p_setup,
                     &mut state.world.p_switch,

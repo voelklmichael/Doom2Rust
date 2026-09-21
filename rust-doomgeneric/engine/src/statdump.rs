@@ -1,6 +1,7 @@
 use crate::doomdef::MAXPLAYERS;
 use crate::g_game::GGameState;
 use crate::game_state::GameState;
+use crate::index::ToIndex;
 use crate::options::Options;
 
 use crate::wi_stuff::{WbPlayerStruct, WbStartStruct};
@@ -42,7 +43,7 @@ impl Default for StatDumpState {
 
 pub fn stat_copy(g_game: &GGameState, options: &Options, statdump: &mut StatDumpState) {
     if options.statdump && statdump.num_captured_stats < MAX_CAPTURES {
-        statdump.captured_stats[statdump.num_captured_stats as usize] = g_game.wminfo;
+        statdump.captured_stats[statdump.num_captured_stats.idx()] = g_game.wminfo;
         statdump.num_captured_stats += 1;
     }
 }

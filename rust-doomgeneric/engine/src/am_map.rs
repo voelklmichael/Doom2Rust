@@ -3,6 +3,7 @@ use crate::d_event::Event;
 use crate::filesystem::DoomFileSystem;
 use crate::g_game::GGameState;
 use crate::i_video::IVideoState;
+use crate::index::ToIndex;
 use crate::p_mobj::LineFlags;
 use crate::p_mobj::PMobjState;
 use crate::p_setup::PSetupState;
@@ -548,7 +549,7 @@ pub fn find_min_max_boundaries(am_map: &mut AmMapState, p_setup: &PSetupState) {
     am_map.min_x = am_map.min_y;
     am_map.max_y = Fixed(-INT_MAX);
     am_map.max_x = am_map.max_y;
-    for i in 0..(p_setup.numvertexes as usize) {
+    for i in 0..p_setup.numvertexes.idx() {
         let v = p_setup.vertexes[i];
         if v.x < am_map.min_x {
             am_map.min_x = v.x;
@@ -806,7 +807,10 @@ pub fn am_responder(state: &mut GameState, ev: &Event) -> bool {
             rc = false;
         }
         if state.game.g_game.deathmatch == 0
-            && cht_check_cheat(&mut state.ui.am_map.cheat_amap, ev.data2 as u8)
+            && cht_check_cheat(
+                &mut state.ui.am_map.cheat_amap,
+                ev.data2.cast_unsigned() as u8,
+            )
         {
             rc = false;
             state.ui.am_map.cheating = (state.ui.am_map.cheating + 1) % 3;
@@ -879,8 +883,8 @@ pub fn am_ticker(am_map: &mut AmMapState, g_game: &mut GGameState, p_mobj: &PMob
     }
 }
 pub fn clear_fb(am_map: &AmMapState, i_video: &mut IVideoState, color: i32) {
-    let len = (am_map.f_w * am_map.f_h) as usize;
-    i_video.i_video_buffer[..len].fill(color as u8);
+    let len = (am_map.f_w * am_map.f_h).idx();
+    i_video.i_video_buffer[..len].fill(color.cast_unsigned() as u8);
 }
 pub fn clip_mline(am_map: &AmMapState, ml: &MLine, fl: &mut FLine) -> bool {
     let mut outcode1 = Outcode::empty();
@@ -995,7 +999,7 @@ pub fn draw_fline(
     if ax > ay {
         let mut d: i32 = ay - ax / 2;
         loop {
-            i_video.i_video_buffer[(y * am_map.f_w + x) as usize] = color as u8;
+            i_video.i_video_buffer[(y * am_map.f_w + x).idx()] = color.cast_unsigned() as u8;
             if x == fl.b.x {
                 return;
             }
@@ -1009,7 +1013,7 @@ pub fn draw_fline(
     } else {
         let mut d: i32 = ax - ay / 2;
         loop {
-            i_video.i_video_buffer[(y * am_map.f_w + x) as usize] = color as u8;
+            i_video.i_video_buffer[(y * am_map.f_w + x).idx()] = color.cast_unsigned() as u8;
             if y == fl.b.y {
                 return;
             }
@@ -1104,7 +1108,7 @@ pub fn draw_walls(state: &mut GameState) {
             y: Fixed::ZERO,
         },
     };
-    for i in 0..(state.world.p_setup.numlines as usize) {
+    for i in 0..state.world.p_setup.numlines.idx() {
         let li = &state.world.p_setup.lines[i];
         let (li_flags, li_special) = (li.flags, i32::from(li.special));
         let (li_backsector, li_frontsector) = (li.backsector, li.front_sector());
@@ -1309,7 +1313,7 @@ pub fn draw_players(state: &mut GameState) {
     }
 }
 pub fn draw_things(state: &mut GameState, colors: i32) {
-    for i in 0..(state.world.p_setup.numsectors as usize) {
+    for i in 0..state.world.p_setup.numsectors.idx() {
         let mut cursor = state.world.p_setup.sectors[i].thinglist;
         while let Some(id) = cursor {
             let t = state.world.p_mobj.mo(id);
@@ -1360,8 +1364,8 @@ pub fn draw_marks(state: &mut GameState) {
     }
 }
 pub fn draw_crosshair(am_map: &AmMapState, i_video: &mut IVideoState, color: i32) {
-    let idx = (am_map.f_w * (am_map.f_h + 1) / 2) as usize;
-    i_video.i_video_buffer[idx] = color as u8;
+    let idx = (am_map.f_w * (am_map.f_h + 1) / 2).idx();
+    i_video.i_video_buffer[idx] = color.cast_unsigned() as u8;
 }
 pub fn am_drawer(state: &mut GameState) {
     if !state.ui.am_map.automapactive {

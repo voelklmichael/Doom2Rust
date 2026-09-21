@@ -4,6 +4,7 @@ use crate::doomdef::SCREENHEIGHT;
 use crate::doomdef::SCREENWIDTH;
 use crate::game_state::GameState;
 use crate::game_state::Render;
+use crate::index::ToIndex;
 use crate::m_fixed::fixed_div;
 use crate::m_fixed::fixed_mul;
 use crate::m_fixed::Fixed;
@@ -162,8 +163,8 @@ pub fn point_on_side(x: Fixed, y: Fixed, node: &Node) -> i32 {
     }
     let dx = x - node.x;
     let dy = y - node.y;
-    if (node.dy ^ node.dx ^ dx ^ dy).to_bits() as u32 & 0x80000000 != 0 {
-        if (node.dy ^ dx).to_bits() as u32 & 0x80000000 != 0 {
+    if (node.dy ^ node.dx ^ dx ^ dy).to_bits().cast_unsigned() & 0x80000000 != 0 {
+        if (node.dy ^ dx).to_bits().cast_unsigned() & 0x80000000 != 0 {
             return 1;
         }
         return 0;
@@ -196,8 +197,8 @@ pub fn point_on_seg_side(p_setup: &PSetupState, x: Fixed, y: Fixed, line: SegId)
     }
     let dx: Fixed = x - lx;
     let dy: Fixed = y - ly;
-    if (ldy ^ ldx ^ dx ^ dy).to_bits() as u32 & 0x80000000 != 0 {
-        if (ldy ^ dx).to_bits() as u32 & 0x80000000 != 0 {
+    if (ldy ^ ldx ^ dx ^ dy).to_bits().cast_unsigned() & 0x80000000 != 0 {
+        if (ldy ^ dx).to_bits().cast_unsigned() & 0x80000000 != 0 {
             return 1;
         }
         return 0;
@@ -217,18 +218,26 @@ fn vector_to_angle(mut x: Fixed, mut y: Fixed) -> Angle {
     if x >= Fixed::ZERO {
         if y >= Fixed::ZERO {
             if x > y {
-                tan_to_angle(slope_div((y).to_bits() as u32, (x).to_bits() as u32) as usize)
+                tan_to_angle(
+                    slope_div(y.to_bits().cast_unsigned(), x.to_bits().cast_unsigned()).idx(),
+                )
             } else {
                 (ANG90 - Angle(1))
-                    - tan_to_angle(slope_div((x).to_bits() as u32, (y).to_bits() as u32) as usize)
+                    - tan_to_angle(
+                        slope_div(x.to_bits().cast_unsigned(), y.to_bits().cast_unsigned()).idx(),
+                    )
             }
         } else {
             y = -y;
             if x > y {
-                -tan_to_angle(slope_div((y).to_bits() as u32, (x).to_bits() as u32) as usize)
+                -tan_to_angle(
+                    slope_div(y.to_bits().cast_unsigned(), x.to_bits().cast_unsigned()).idx(),
+                )
             } else {
                 ANG270
-                    + tan_to_angle(slope_div((x).to_bits() as u32, (y).to_bits() as u32) as usize)
+                    + tan_to_angle(
+                        slope_div(x.to_bits().cast_unsigned(), y.to_bits().cast_unsigned()).idx(),
+                    )
             }
         }
     } else {
@@ -236,18 +245,27 @@ fn vector_to_angle(mut x: Fixed, mut y: Fixed) -> Angle {
         if y >= Fixed::ZERO {
             if x > y {
                 (ANG180 - Angle(1))
-                    - tan_to_angle(slope_div((y).to_bits() as u32, (x).to_bits() as u32) as usize)
+                    - tan_to_angle(
+                        slope_div(y.to_bits().cast_unsigned(), x.to_bits().cast_unsigned()).idx(),
+                    )
             } else {
-                ANG90 + tan_to_angle(slope_div((x).to_bits() as u32, (y).to_bits() as u32) as usize)
+                ANG90
+                    + tan_to_angle(
+                        slope_div(x.to_bits().cast_unsigned(), y.to_bits().cast_unsigned()).idx(),
+                    )
             }
         } else {
             y = -y;
             if x > y {
                 ANG180
-                    + tan_to_angle(slope_div((y).to_bits() as u32, (x).to_bits() as u32) as usize)
+                    + tan_to_angle(
+                        slope_div(y.to_bits().cast_unsigned(), x.to_bits().cast_unsigned()).idx(),
+                    )
             } else {
                 (ANG270 - Angle(1))
-                    - tan_to_angle(slope_div((x).to_bits() as u32, (y).to_bits() as u32) as usize)
+                    - tan_to_angle(
+                        slope_div(x.to_bits().cast_unsigned(), y.to_bits().cast_unsigned()).idx(),
+                    )
             }
         }
     }
@@ -275,8 +293,8 @@ pub fn point_to_dist(r_main: &RMainState, x: Fixed, y: Fixed) -> Fixed {
     } else {
         fixed_div(dy, dx)
     };
-    let angle: i32 = (tan_to_angle((frac >> DBITS).to_bits() as usize) + ANG90).fine() as i32;
-    let dist: Fixed = fixed_div(dx, fine_sine(angle as usize));
+    let angle: i32 = (tan_to_angle((frac >> DBITS).to_bits().idx()) + ANG90).fine() as i32;
+    let dist: Fixed = fixed_div(dx, fine_sine(angle.idx()));
     dist
 }
 pub fn scale_from_global_angle(r_main: &RMainState, r_segs: &RSegsState, visangle: Angle) -> Fixed {
@@ -313,10 +331,10 @@ pub fn init_texture_mapping(r_draw: &RDrawState, r_main: &mut RMainState) {
     }
     for x in 0..=r_draw.viewwidth {
         let mut i: i32 = 0;
-        while r_main.viewangletox[i as usize] > x {
+        while r_main.viewangletox[i.idx()] > x {
             i += 1;
         }
-        r_main.xtoviewangle[x as usize] = Angle((i << ANGLETOFINESHIFT) as u32) - ANG90;
+        r_main.xtoviewangle[x.idx()] = Angle((i << ANGLETOFINESHIFT).cast_unsigned()) - ANG90;
     }
     for i in 0..(FINEANGLES / 2) as usize {
         if r_main.viewangletox[i] == -1 {
@@ -344,7 +362,7 @@ pub fn init_light_tables(r_main: &mut RMainState) {
             if level >= NUMCOLORMAPS {
                 level = NUMCOLORMAPS - 1;
             }
-            r_main.zlight[i as usize][j] = level;
+            r_main.zlight[i.idx()][j] = level;
         }
     }
 }
@@ -362,7 +380,7 @@ pub fn execute_set_view_size(render: &mut Render) {
         render.r_draw.scaledviewwidth = render.r_main.setblocks * 32;
         render.r_draw.viewheight = (render.r_main.setblocks * 168 / 10) & !7;
     }
-    render.r_main.detailshift = render.r_main.setdetail as u32;
+    render.r_main.detailshift = render.r_main.setdetail.cast_unsigned();
     render.r_draw.viewwidth = render.r_draw.scaledviewwidth >> render.r_main.detailshift;
     render.r_main.centery = render.r_draw.viewheight / 2;
     render.r_main.centerx = render.r_draw.viewwidth / 2;
@@ -388,18 +406,18 @@ pub fn execute_set_view_size(render: &mut Render) {
     init_texture_mapping(&render.r_draw, &mut render.r_main);
     render.r_things.pspritescale = FRACUNIT * render.r_draw.viewwidth / SCREENWIDTH;
     render.r_things.pspriteiscale = FRACUNIT * SCREENWIDTH / render.r_draw.viewwidth;
-    for i in 0..render.r_draw.viewwidth as usize {
+    for i in 0..render.r_draw.viewwidth.idx() {
         render.r_things.screenheightarray[i] = render.r_draw.viewheight as i16;
     }
     for i in 0..render.r_draw.viewheight {
         let mut dy: Fixed = Fixed::from_int(i - render.r_draw.viewheight / 2) + FRACUNIT / 2;
         dy = dy.abs();
-        render.r_plane.yslope[i as usize] = fixed_div(
+        render.r_plane.yslope[i.idx()] = fixed_div(
             (render.r_draw.viewwidth << render.r_main.detailshift) / 2 * FRACUNIT,
             dy,
         );
     }
-    for i in 0..render.r_draw.viewwidth as usize {
+    for i in 0..render.r_draw.viewwidth.idx() {
         let cosadj: Fixed = fine_cosine(render.r_main.xtoviewangle[i].fine()).abs();
         render.r_plane.distscale[i] = fixed_div(FRACUNIT, cosadj);
     }
@@ -416,7 +434,7 @@ pub fn execute_set_view_size(render: &mut Render) {
             if level >= NUMCOLORMAPS {
                 level = NUMCOLORMAPS - 1;
             }
-            render.r_main.scalelight[i as usize][j as usize] = level;
+            render.r_main.scalelight[i.idx()][j.idx()] = level;
         }
     }
 }
@@ -440,11 +458,11 @@ pub fn point_in_subsector(p_setup: &PSetupState, x: Fixed, y: Fixed) -> Subsecto
     }
     let mut nodenum = p_setup.numnodes - 1;
     while nodenum & NF_SUBSECTOR == 0 {
-        let node = &p_setup.nodes[nodenum as usize];
+        let node = &p_setup.nodes[nodenum.idx()];
         let side = point_on_side(x, y, node);
-        nodenum = i32::from(node.children[side as usize]);
+        nodenum = i32::from(node.children[side.idx()]);
     }
-    SubsectorId((nodenum & !NF_SUBSECTOR) as u32)
+    SubsectorId((nodenum & !NF_SUBSECTOR).cast_unsigned())
 }
 pub fn setup_frame(state: &mut GameState, player_id: PlayerId) {
     let player = state.game.g_game.player_mut(player_id);

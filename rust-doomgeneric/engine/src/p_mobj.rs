@@ -1,6 +1,7 @@
 use crate::d_mode::SkillType;
 use crate::d_player::CheatFlags;
 use crate::enum_array::EnumArray;
+use crate::index::ToIndex;
 use crate::m_bbox::BBox;
 use crate::m_bbox::BoxIndex;
 
@@ -1939,7 +1940,7 @@ pub fn nightmare_respawn(state: &mut GameState, mobj: MobjId) {
     {
         let m = state.world.p_mobj.mo_mut(mo);
         m.spawnpoint = spawnpoint;
-        m.angle = ANG45 * (i32::from(spawnpoint.angle) / 45) as u32;
+        m.angle = ANG45 * (i32::from(spawnpoint.angle) / 45).cast_unsigned();
         if i32::from(spawnpoint.options) & MTF_AMBUSH != 0 {
             m.flags |= MobjFlags::AMBUSH;
         }
@@ -2036,7 +2037,8 @@ pub fn spawn_mobj(state: &mut GameState, x: Fixed, y: Fixed, z: Fixed, kind: Mob
     if state.game.g_game.gameskill != SkillType::Nightmare {
         value.reactiontime = reactiontime;
     }
-    value.lastlook = PlayerId((p_random(&mut state.world.m_random) % MAXPLAYERS as i32) as u8);
+    value.lastlook =
+        PlayerId((p_random(&mut state.world.m_random) % MAXPLAYERS as i32).cast_unsigned() as u8);
     let spawnstate_id = StateId(spawnstate as u32);
     let (tics, sprite, frame) = {
         let st = state.assets.info.state_mut(spawnstate_id);
@@ -2294,11 +2296,11 @@ pub fn remove_mobj(state: &mut GameState, mobj: MobjId) {
     };
     if flags.contains(MobjFlags::SPECIAL)
         && !flags.contains(MobjFlags::DROPPED)
-        && kind as u32 != MobjType::Inv as i32 as u32
-        && kind as u32 != MobjType::Ins as i32 as u32
+        && kind as u32 != (MobjType::Inv as i32).cast_unsigned()
+        && kind as u32 != (MobjType::Ins as i32).cast_unsigned()
     {
-        state.world.p_mobj.itemrespawnque[state.world.p_mobj.iquehead as usize] = spawnpoint;
-        state.world.p_mobj.itemrespawntime[state.world.p_mobj.iquehead as usize] =
+        state.world.p_mobj.itemrespawnque[state.world.p_mobj.iquehead.idx()] = spawnpoint;
+        state.world.p_mobj.itemrespawntime[state.world.p_mobj.iquehead.idx()] =
             state.world.p_tick.leveltime;
         state.world.p_mobj.iquehead = (state.world.p_mobj.iquehead + 1) & (ITEMQUESIZE - 1);
         if state.world.p_mobj.iquehead == state.world.p_mobj.iquetail {
@@ -2322,12 +2324,12 @@ pub fn respawn_specials(state: &mut GameState) {
         return;
     }
     if state.world.p_tick.leveltime
-        - state.world.p_mobj.itemrespawntime[state.world.p_mobj.iquetail as usize]
+        - state.world.p_mobj.itemrespawntime[state.world.p_mobj.iquetail.idx()]
         < 30 * TICRATE
     {
         return;
     }
-    let mthing = state.world.p_mobj.itemrespawnque[state.world.p_mobj.iquetail as usize];
+    let mthing = state.world.p_mobj.itemrespawnque[state.world.p_mobj.iquetail.idx()];
     let x = Fixed::from_int(i32::from(mthing.x));
     let y = Fixed::from_int(i32::from(mthing.y));
     let ss = point_in_subsector(&state.world.p_setup, x, y);
@@ -2357,7 +2359,7 @@ pub fn respawn_specials(state: &mut GameState) {
     {
         let m = state.world.p_mobj.mo_mut(mo);
         m.spawnpoint = mthing;
-        m.angle = ANG45 * (i32::from(mthing.angle) / 45) as u32;
+        m.angle = ANG45 * (i32::from(mthing.angle) / 45).cast_unsigned();
     }
     state.world.p_mobj.iquetail = (state.world.p_mobj.iquetail + 1) & (ITEMQUESIZE - 1);
 }
@@ -2365,7 +2367,7 @@ pub fn spawn_player(state: &mut GameState, mthing: MapThing) {
     if i32::from(mthing.kind) == 0 {
         return;
     }
-    let player_index = (i32::from(mthing.kind) - 1) as usize;
+    let player_index = (i32::from(mthing.kind) - 1).idx();
     if !state.game.g_game.playeringame[player_index] {
         return;
     }
@@ -2384,7 +2386,7 @@ pub fn spawn_player(state: &mut GameState, mthing: MapThing) {
                 (i32::from(mthing.kind) - 1) << MobjFlags::TRANSLATION_SHIFT,
             );
         }
-        m.angle = ANG45 * (i32::from(mthing.angle) / 45) as u32;
+        m.angle = ANG45 * (i32::from(mthing.angle) / 45).cast_unsigned();
         m.player = Some(PlayerId(player_index as u8));
         m.health = player_health;
     }
@@ -2426,7 +2428,7 @@ pub fn spawn_map_thing(state: &mut GameState, mthing: MapThing) {
         return;
     }
     if i32::from(mthing.kind) <= 4 {
-        state.world.p_setup.playerstarts[(i32::from(mthing.kind) - 1) as usize] = mthing;
+        state.world.p_setup.playerstarts[(i32::from(mthing.kind) - 1).idx()] = mthing;
         if state.game.g_game.deathmatch == 0 {
             spawn_player(state, mthing);
         }
@@ -2498,7 +2500,7 @@ pub fn spawn_map_thing(state: &mut GameState, mthing: MapThing) {
         state.game.g_game.totalitems += 1;
     }
     let m = state.world.p_mobj.mo_mut(mobj);
-    m.angle = ANG45 * (i32::from(mthing.angle) / 45) as u32;
+    m.angle = ANG45 * (i32::from(mthing.angle) / 45).cast_unsigned();
     if i32::from(mthing.options) & MTF_AMBUSH != 0 {
         m.flags |= MobjFlags::AMBUSH;
     }
@@ -2592,7 +2594,7 @@ pub fn spawn_missile(
     if dflags.contains(MobjFlags::SHADOW) {
         an += Angle(
             ((p_random(&mut state.world.m_random) - p_random(&mut state.world.m_random)) << 20)
-                as u32,
+                .cast_unsigned(),
         );
     }
     state.world.p_mobj.mo_mut(th).angle = an;

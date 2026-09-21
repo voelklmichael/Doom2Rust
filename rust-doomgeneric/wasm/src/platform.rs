@@ -131,7 +131,10 @@ impl DoomPlatform for BrowserPlatform {
 
     fn get_ticks_ms(&mut self) -> u32 {
         // The engine only looks at differences, so the clock may wrap.
-        self.host.now() as u64 as u32
+        // The clock is milliseconds since the page loaded: not negative.
+        #[allow(clippy::cast_sign_loss)]
+        let ms = self.host.now() as u64;
+        ms as u32
     }
 
     fn get_key(&mut self) -> Option<(bool, u8)> {

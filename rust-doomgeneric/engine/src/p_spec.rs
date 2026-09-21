@@ -1,5 +1,6 @@
 use crate::d_player::CheatFlags;
 use crate::d_player::PowerType;
+use crate::index::ToIndex;
 use crate::p_mobj::LineFlags;
 use crate::p_mobj::MobjType;
 use crate::p_setup::PSetupState;
@@ -516,8 +517,8 @@ pub fn get_side(
     line: i32,
     side: i32,
 ) -> SideId {
-    let line_id = p_setup.sector_mut(current_sector).lines[line as usize];
-    let sidenum = p_setup.line(line_id).sidenum[side as usize];
+    let line_id = p_setup.sector_mut(current_sector).lines[line.idx()];
+    let sidenum = p_setup.line(line_id).sidenum[side.idx()];
     sidenum.expect("line without that side")
 }
 pub fn get_sector(
@@ -526,13 +527,13 @@ pub fn get_sector(
     line: i32,
     side: i32,
 ) -> SectorId {
-    let line_id = p_setup.sector_mut(current_sector).lines[line as usize];
-    let sidenum = p_setup.line(line_id).sidenum[side as usize];
+    let line_id = p_setup.sector_mut(current_sector).lines[line.idx()];
+    let sidenum = p_setup.line(line_id).sidenum[side.idx()];
     p_setup.sides[sidenum.expect("line without that side").0 as usize].sector
 }
 pub fn two_sided(p_setup: &mut PSetupState, sector: SectorId, line: i32) -> bool {
     let sec = p_setup.sector_mut(sector);
-    let line_id = sec.lines[line as usize];
+    let line_id = sec.lines[line.idx()];
     p_setup.line(line_id).flags.contains(LineFlags::TWOSIDED)
 }
 pub fn get_next_sector(p_setup: &PSetupState, line: LineId, sec: SectorId) -> Option<SectorId> {
@@ -549,7 +550,7 @@ pub fn get_next_sector(p_setup: &PSetupState, line: LineId, sec: SectorId) -> Op
 pub fn find_lowest_floor_surrounding(p_setup: &mut PSetupState, sec: SectorId) -> Fixed {
     let mut floor: Fixed = p_setup.sector_mut(sec).floorheight;
     let linecount = p_setup.sector_mut(sec).linecount;
-    for i in 0..linecount as usize {
+    for i in 0..linecount.idx() {
         let check = p_setup.sector_mut(sec).lines[i];
         if let Some(other) = get_next_sector(p_setup, check, sec) {
             let other_floor = p_setup.sector_mut(other).floorheight;
@@ -563,7 +564,7 @@ pub fn find_lowest_floor_surrounding(p_setup: &mut PSetupState, sec: SectorId) -
 pub fn find_highest_floor_surrounding(p_setup: &mut PSetupState, sec: SectorId) -> Fixed {
     let mut floor: Fixed = -(500) * FRACUNIT;
     let linecount = p_setup.sector_mut(sec).linecount;
-    for i in 0..linecount as usize {
+    for i in 0..linecount.idx() {
         let check = p_setup.sector_mut(sec).lines[i];
         if let Some(other) = get_next_sector(p_setup, check, sec) {
             let other_floor = p_setup.sector_mut(other).floorheight;
@@ -584,7 +585,7 @@ pub fn find_next_highest_floor(
     let mut heightlist: [Fixed; 22] = [Fixed::ZERO; 22];
     let mut h: i32 = 0;
     let linecount = p_setup.sector_mut(sec).linecount;
-    for i in 0..linecount as usize {
+    for i in 0..linecount.idx() {
         let check = p_setup.sector_mut(sec).lines[i];
         if let Some(other) = get_next_sector(p_setup, check, sec) {
             let other_floor = p_setup.sector_mut(other).floorheight;
@@ -594,7 +595,7 @@ pub fn find_next_highest_floor(
                 } else if h == MAX_ADJOINING_SECTORS + 2 {
                     error("Sector with more than 22 adjoining sectors. Vanilla will crash here");
                 }
-                heightlist[h as usize] = other_floor;
+                heightlist[h.idx()] = other_floor;
                 h += 1;
             }
         }
@@ -604,8 +605,8 @@ pub fn find_next_highest_floor(
     }
     let mut min = heightlist[0];
     for i in 1..h {
-        if heightlist[i as usize] < min {
-            min = heightlist[i as usize];
+        if heightlist[i.idx()] < min {
+            min = heightlist[i.idx()];
         }
     }
     min
@@ -613,7 +614,7 @@ pub fn find_next_highest_floor(
 pub fn find_lowest_ceiling_surrounding(p_setup: &mut PSetupState, sec: SectorId) -> Fixed {
     let mut height: Fixed = Fixed(INT_MAX);
     let linecount = p_setup.sector_mut(sec).linecount;
-    for i in 0..linecount as usize {
+    for i in 0..linecount.idx() {
         let check = p_setup.sector_mut(sec).lines[i];
         if let Some(other) = get_next_sector(p_setup, check, sec) {
             let other_ceiling = p_setup.sector_mut(other).ceilingheight;
@@ -627,7 +628,7 @@ pub fn find_lowest_ceiling_surrounding(p_setup: &mut PSetupState, sec: SectorId)
 pub fn find_highest_ceiling_surrounding(p_setup: &mut PSetupState, sec: SectorId) -> Fixed {
     let mut height: Fixed = Fixed::ZERO;
     let linecount = p_setup.sector_mut(sec).linecount;
-    for i in 0..linecount as usize {
+    for i in 0..linecount.idx() {
         let check = p_setup.sector_mut(sec).lines[i];
         if let Some(other) = get_next_sector(p_setup, check, sec) {
             let other_ceiling = p_setup.sector_mut(other).ceilingheight;
@@ -642,14 +643,14 @@ pub fn find_highest_ceiling_surrounding(p_setup: &mut PSetupState, sec: SectorId
 /// `line`.
 pub fn find_sector_from_line_tag(p_setup: &PSetupState, line: LineId, start: i32) -> Option<i32> {
     let line_tag = p_setup.line(line).tag;
-    (start + 1..p_setup.numsectors).find(|&i| p_setup.sectors[i as usize].tag == line_tag)
+    (start + 1..p_setup.numsectors).find(|&i| p_setup.sectors[i.idx()].tag == line_tag)
 }
 /// The sectors that carry the same tag as `line`, in map order.
 pub fn sectors_with_line_tag(p_setup: &PSetupState, line: LineId) -> Vec<SectorId> {
     let mut found = Vec::new();
     let mut next = -1;
     while let Some(i) = find_sector_from_line_tag(p_setup, line, next) {
-        found.push(SectorId(i as u32));
+        found.push(SectorId(i.cast_unsigned()));
         next = i;
     }
     found
@@ -657,7 +658,7 @@ pub fn sectors_with_line_tag(p_setup: &PSetupState, line: LineId) -> Vec<SectorI
 pub fn find_min_surrounding_light(p_setup: &mut PSetupState, sector: SectorId, max: i32) -> i32 {
     let mut min = max;
     let linecount = p_setup.sector_mut(sector).linecount;
-    for i in 0..linecount as usize {
+    for i in 0..linecount.idx() {
         let line = p_setup.sector_mut(sector).lines[i];
         if let Some(check) = get_next_sector(p_setup, line, sector) {
             let light = i32::from(p_setup.sector_mut(check).lightlevel);
@@ -669,7 +670,7 @@ pub fn find_min_surrounding_light(p_setup: &mut PSetupState, sector: SectorId, m
     min
 }
 pub fn cross_special_line(state: &mut GameState, linenum: i32, side: i32, thing: MobjId) {
-    let line = LineId(linenum as u32);
+    let line = LineId(linenum.cast_unsigned());
     let special = state.world.p_setup.line(line).special;
     let by_player = state.world.p_mobj.mo(thing).player.is_some();
     if !by_player {
@@ -794,13 +795,13 @@ pub fn update_specials(state: &mut GameState) {
             let pic: i32 =
                 anim.basepic + (state.world.p_tick.leveltime / anim.speed + i) % anim.numpics;
             if anim.istexture {
-                state.render.r_data.texturetranslation[i as usize] = pic;
+                state.render.r_data.texturetranslation[i.idx()] = pic;
             } else {
-                state.render.r_data.flattranslation[i as usize] = pic;
+                state.render.r_data.flattranslation[i.idx()] = pic;
             }
         }
     }
-    for i in 0..(state.world.p_spec.numlinespecials as usize) {
+    for i in 0..state.world.p_spec.numlinespecials.idx() {
         let line: LineId = state.world.p_spec.linespeciallist[i];
         let linev = state.world.p_setup.line(line);
         if i32::from(linev.special) == 48 {
@@ -895,7 +896,7 @@ pub fn do_donut(state: &mut GameState, line: LineId) -> bool {
             break;
         };
         let linecount = state.world.p_setup.sector_mut(s2).linecount;
-        for i in 0..linecount as usize {
+        for i in 0..linecount.idx() {
             let s2_line_id = state.world.p_setup.sector_mut(s2).lines[i];
             let s3 = state.world.p_setup.line(s2_line_id).backsector;
             if s3 == Some(s1) {
@@ -955,7 +956,7 @@ pub fn spawn_specials(state: &mut GameState) {
         state.world.p_spec.level_timer = false;
     }
     for i in 0..state.world.p_setup.numsectors {
-        let secid = SectorId(i as u32);
+        let secid = SectorId(i.cast_unsigned());
         let special = state.world.p_setup.sector_mut(secid).special;
         if special != 0 {
             match i32::from(special) {
@@ -1019,12 +1020,12 @@ pub fn spawn_specials(state: &mut GameState) {
     }
     state.world.p_spec.numlinespecials = 0;
     for i in 0..state.world.p_setup.numlines {
-        if i32::from(state.world.p_setup.lines[i as usize].special) == 48 {
+        if i32::from(state.world.p_setup.lines[i.idx()].special) == 48 {
             if i32::from(state.world.p_spec.numlinespecials) >= MAXLINEANIMS {
                 error("Too many scrolling wall linedefs! (Vanilla limit is 64)");
             }
-            state.world.p_spec.linespeciallist[state.world.p_spec.numlinespecials as usize] =
-                LineId(i as u32);
+            state.world.p_spec.linespeciallist[state.world.p_spec.numlinespecials.idx()] =
+                LineId(i.cast_unsigned());
             state.world.p_spec.numlinespecials += 1;
         }
     }

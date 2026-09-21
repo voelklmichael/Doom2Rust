@@ -1,5 +1,6 @@
 use crate::d_mode::GameVersion;
 use crate::game_state::GameState;
+use crate::index::ToIndex;
 use crate::m_fixed::Fixed;
 use crate::p_map::teleport_move;
 use crate::p_mobj::MobjFlags;
@@ -32,7 +33,7 @@ pub fn teleport(state: &mut GameState, line: LineId, side: i32, thing: MobjId) -
     }
     let tag = i32::from(state.world.p_setup.line(line).tag);
     for i in 0..state.world.p_setup.numsectors {
-        if i32::from(state.world.p_setup.sectors[i as usize].tag) != tag {
+        if i32::from(state.world.p_setup.sectors[i.idx()].tag) != tag {
             continue;
         }
         let mut cursor = state.world.p_tick.head();
@@ -49,9 +50,9 @@ pub fn teleport(state: &mut GameState, line: LineId, side: i32, thing: MobjId) -
                         mo.angle,
                     )
                 };
-                if is_live_mobj && m_type as u32 == MobjType::Teleportman as i32 as u32 {
+                if is_live_mobj && m_type as u32 == (MobjType::Teleportman as i32).cast_unsigned() {
                     let sector = state.world.p_setup.subsectors[m_subsector.0 as usize].sector;
-                    if sector.0 == i as u32 {
+                    if sector.0 == i.cast_unsigned() {
                         let (oldx, oldy, oldz) = {
                             let t = state.world.p_mobj.mo(thing);
                             (t.x, t.y, t.z)

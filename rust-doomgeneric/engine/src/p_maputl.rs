@@ -1,4 +1,5 @@
 use crate::game_state::GameState;
+use crate::index::ToIndex;
 use crate::m_bbox::BBox;
 use crate::m_bbox::BoxIndex;
 use crate::m_fixed::fixed_div;
@@ -282,8 +283,8 @@ pub fn point_on_divline_side(x: Fixed, y: Fixed, line: &DivLine) -> i32 {
     }
     let dx = x - line.x;
     let dy = y - line.y;
-    if (line.dy ^ line.dx ^ dx ^ dy).to_bits() as u32 & 0x80000000 != 0 {
-        if (line.dy ^ dx).to_bits() as u32 & 0x80000000 != 0 {
+    if (line.dy ^ line.dx ^ dx ^ dy).to_bits().cast_unsigned() & 0x80000000 != 0 {
+        if (line.dy ^ dx).to_bits().cast_unsigned() & 0x80000000 != 0 {
             return 1;
         }
         return 0;
@@ -392,7 +393,7 @@ pub fn unset_thing_position(p_mobj: &mut PMobjState, p_setup: &mut PSetupState, 
                 && blocky >= 0
                 && blocky < (Fixed(p_setup.bmapheight)).to_bits()
             {
-                p_setup.blocklinks[(blocky * p_setup.bmapwidth + blockx) as usize] = bnext;
+                p_setup.blocklinks[(blocky * p_setup.bmapwidth + blockx).idx()] = bnext;
             }
         }
     }
@@ -428,7 +429,7 @@ pub fn set_thing_position(p_mobj: &mut PMobjState, p_setup: &mut PSetupState, th
             && blocky >= 0
             && blocky < (Fixed(p_setup.bmapheight)).to_bits()
         {
-            let idx = (blocky * p_setup.bmapwidth + blockx) as usize;
+            let idx = (blocky * p_setup.bmapwidth + blockx).idx();
             let old_head = p_setup.blocklinks[idx];
             {
                 let t = p_mobj.mo_mut(thing);
@@ -459,9 +460,9 @@ pub fn block_lines_iterator<F: FnMut(&mut GameState, LineId) -> bool>(
         return true;
     }
     let offset = y * state.world.p_setup.bmapwidth + x;
-    let mut list = i32::from(state.world.p_setup.blockmaplump[(4 + offset) as usize]) as usize;
+    let mut list = i32::from(state.world.p_setup.blockmaplump[(4 + offset).idx()]).idx();
     while i32::from(state.world.p_setup.blockmaplump[list]) != -1 {
-        let ld = LineId(state.world.p_setup.blockmaplump[list] as u32);
+        let ld = LineId(i32::from(state.world.p_setup.blockmaplump[list]).cast_unsigned());
         if state.world.p_setup.line(ld).validcount != state.world.p_setup.validcount {
             state.world.p_setup.line_mut(ld).validcount = state.world.p_setup.validcount;
             if !func(state, ld) {
@@ -481,8 +482,7 @@ pub fn block_things_iterator<F: FnMut(&mut GameState, MobjId) -> bool>(
     if x < 0 || y < 0 || x >= state.world.p_setup.bmapwidth || y >= state.world.p_setup.bmapheight {
         return true;
     }
-    let mut cursor =
-        state.world.p_setup.blocklinks[(y * state.world.p_setup.bmapwidth + x) as usize];
+    let mut cursor = state.world.p_setup.blocklinks[(y * state.world.p_setup.bmapwidth + x).idx()];
     while let Some(id) = cursor {
         state
             .world
@@ -622,11 +622,11 @@ fn intercepts_memory_overrun(
 ) {
     let mut i = 0;
     let mut offset = 0;
-    while p_maputl.intercepts_overrun[i as usize].len != 0 {
-        let entry_len = p_maputl.intercepts_overrun[i as usize].len;
+    while p_maputl.intercepts_overrun[i.idx()].len != 0 {
+        let entry_len = p_maputl.intercepts_overrun[i.idx()].len;
         if offset + entry_len > location {
             let index = location - offset;
-            match p_maputl.intercepts_overrun[i as usize].target {
+            match p_maputl.intercepts_overrun[i.idx()].target {
                 OverrunTarget::None => {}
                 OverrunTarget::LowFloor => p_maputl.lowfloor = value,
                 OverrunTarget::OpenBottom => p_maputl.openbottom = value,
@@ -641,7 +641,7 @@ fn intercepts_memory_overrun(
                     // `MapThing` is 5 i16 fields (10 bytes); `index` here is
                     // a 16-bit-word offset into the flattened [MapThing; 4].
                     let word = index / 2;
-                    let mt_idx = (word / 5) as usize;
+                    let mt_idx = (word / 5).idx();
                     let field_idx = word % 5;
                     let lo = (value & 0xffff).to_bits() as i16;
                     let hi = (value >> 16 & 0xffff).to_bits() as i16;
@@ -659,7 +659,7 @@ fn intercepts_memory_overrun(
                         // field with the high half, when there is one.
                         let next_mt_idx = (word + 1) / 5;
                         let next_field_idx = (word + 1) % 5;
-                        if let Some(next_mt) = p_setup.playerstarts.get_mut(next_mt_idx as usize) {
+                        if let Some(next_mt) = p_setup.playerstarts.get_mut(next_mt_idx.idx()) {
                             match next_field_idx {
                                 0 => next_mt.x = hi,
                                 1 => next_mt.y = hi,

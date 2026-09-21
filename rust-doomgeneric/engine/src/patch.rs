@@ -2,6 +2,7 @@
 //! left/top offset, all little-endian i16), `width` little-endian i32 column
 //! offsets, then the columns themselves as runs of "posts"
 //! (`topdelta, length, pad, pixels[length], pad`) terminated by `topdelta == 0xff`.
+use crate::index::ToIndex;
 use alloc::rc::Rc;
 
 #[derive(Clone)]
@@ -48,13 +49,14 @@ impl Patch {
     }
 
     pub fn columnofs(&self, column: i32) -> usize {
-        let o = 8 + 4 * column as usize;
+        let o = 8 + 4 * column.idx();
         i32::from_le_bytes([
             self.data[o],
             self.data[o + 1],
             self.data[o + 2],
             self.data[o + 3],
-        ]) as usize
+        ])
+        .idx()
     }
 
     pub fn posts(&self, column: i32) -> Posts<'_> {

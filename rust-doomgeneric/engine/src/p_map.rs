@@ -1,6 +1,7 @@
 use crate::d_player::PlayerId;
 use crate::game_state::GameState;
 use crate::i_system::error;
+use crate::index::ToIndex;
 use crate::m_bbox::BBox;
 use crate::m_bbox::BoxIndex;
 use crate::m_fixed::fixed_div;
@@ -287,7 +288,7 @@ pub fn check_line(state: &mut GameState, ld: LineId) -> bool {
         state.world.p_map.tmdropoffz = state.world.p_maputl.lowfloor;
     }
     if ldv.special != 0 {
-        state.world.p_map.spechit[state.world.p_map.numspechit as usize] = ld;
+        state.world.p_map.spechit[state.world.p_map.numspechit.idx()] = ld;
         state.world.p_map.numspechit += 1;
         if state.world.p_map.numspechit > MAXSPECIALCROSS_ORIGINAL {
             spechit_overrun(
@@ -376,15 +377,15 @@ pub fn check_thing(state: &mut GameState, thing_id: MobjId) -> bool {
             let target_kind = state.world.p_mobj.mo(tm_target).kind as u32;
             let thing_kind = state.world.p_mobj.mo(thing).kind as u32;
             target_kind == thing_kind
-                || target_kind == MobjType::Knight as i32 as u32
-                    && thing_kind == MobjType::Bruiser as i32 as u32
-                || target_kind == MobjType::Bruiser as i32 as u32
-                    && thing_kind == MobjType::Knight as i32 as u32
+                || target_kind == (MobjType::Knight as i32).cast_unsigned()
+                    && thing_kind == (MobjType::Bruiser as i32).cast_unsigned()
+                || target_kind == (MobjType::Bruiser as i32).cast_unsigned()
+                    && thing_kind == (MobjType::Knight as i32).cast_unsigned()
         }) {
             if Some(thing) == tm_target {
                 return true;
             }
-            if state.world.p_mobj.mo(thing).kind as u32 != MobjType::Player as i32 as u32
+            if state.world.p_mobj.mo(thing).kind as u32 != (MobjType::Player as i32).cast_unsigned()
                 && DEH_SPECIES_INFIGHTING == 0
             {
                 return false;
@@ -564,7 +565,7 @@ pub fn try_move(state: &mut GameState, thing: MobjId, x: Fixed, y: Fixed) -> boo
     {
         while state.world.p_map.numspechit > 0 {
             state.world.p_map.numspechit -= 1;
-            let ld: LineId = state.world.p_map.spechit[state.world.p_map.numspechit as usize];
+            let ld: LineId = state.world.p_map.spechit[state.world.p_map.numspechit.idx()];
             let side: i32 = point_on_line_side(
                 &state.world.p_setup,
                 state.world.p_mobj.mo(thing).x,
@@ -1092,8 +1093,8 @@ pub fn use_lines(state: &mut GameState, player: PlayerId) {
         let m = state.world.p_mobj.mo(player_mo);
         (m.angle.fine() as i32, m.x, m.y)
     };
-    let x2 = x1 + (USERANGE >> FRACBITS) * (fine_cosine(angle as usize)).to_bits();
-    let y2 = y1 + (USERANGE >> FRACBITS) * (fine_sine(angle as usize)).to_bits();
+    let x2 = x1 + (USERANGE >> FRACBITS) * fine_cosine(angle.idx()).to_bits();
+    let y2 = y1 + (USERANGE >> FRACBITS) * fine_sine(angle.idx()).to_bits();
     path_traverse(state, x1, y1, x2, y2, PT_ADDLINES, use_traverse);
 }
 pub fn pit_radius_attack(state: &mut GameState, thing_id: MobjId) -> bool {
@@ -1108,8 +1109,8 @@ pub fn pit_radius_attack(state: &mut GameState, thing_id: MobjId) -> bool {
     {
         return true;
     }
-    if state.world.p_mobj.mo(thing).kind as u32 == MobjType::Cyborg as i32 as u32
-        || state.world.p_mobj.mo(thing).kind as u32 == MobjType::Spider as i32 as u32
+    if state.world.p_mobj.mo(thing).kind as u32 == (MobjType::Cyborg as i32).cast_unsigned()
+        || state.world.p_mobj.mo(thing).kind as u32 == (MobjType::Spider as i32).cast_unsigned()
     {
         return true;
     }
@@ -1221,15 +1222,15 @@ fn spechit_overrun(
         if let Some(address) = &options.spechit {
             let mut baseaddr: i32 = 0;
             str_to_int(address, &mut baseaddr);
-            p_map.baseaddr = baseaddr as u32;
+            p_map.baseaddr = baseaddr.cast_unsigned();
         } else {
             p_map.baseaddr = DEFAULT_SPECHIT_MAGIC;
         }
     }
-    let addr: u32 = (i64::from(p_map.baseaddr) + i64::from(ld.0) * 0x3e) as u32;
+    let addr: u32 = (i64::from(p_map.baseaddr) + i64::from(ld.0) * 0x3e).cast_unsigned() as u32;
     match p_map.numspechit {
         9..=12 => {
-            p_map.tmbbox[(p_map.numspechit - 9) as usize] = Fixed((addr) as i32);
+            p_map.tmbbox[(p_map.numspechit - 9).idx()] = Fixed((addr) as i32);
         }
         13 => {
             p_map.crushchange = addr != 0;

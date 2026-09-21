@@ -1,5 +1,6 @@
 use crate::game_state::GameState;
 use crate::i_system::error;
+use crate::index::ToIndex;
 use crate::m_fixed::fixed_div;
 use crate::m_fixed::fixed_mul;
 use crate::m_fixed::Fixed;
@@ -87,12 +88,12 @@ pub fn cross_subsector(p_setup: &mut PSetupState, p_sight: &mut PSightState, num
             num, p_setup.numsubsectors
         ));
     }
-    let sub = p_setup.subsector(SubsectorId(num as u32));
+    let sub = p_setup.subsector(SubsectorId(num.cast_unsigned()));
     let strace = p_sight.strace;
     let (t2x, t2y) = (p_sight.t2x, p_sight.t2y);
-    let first = sub.firstline as usize;
+    let first = sub.firstline.idx();
     let validcount = p_setup.validcount;
-    for seg_index in first..first + sub.numlines as usize {
+    for seg_index in first..first + sub.numlines.idx() {
         let seg = p_setup.segs[seg_index];
         let line = p_setup.line_mut(seg.linedef);
         if line.validcount == validcount {
@@ -169,7 +170,7 @@ pub fn cross_bspnode(state: &mut GameState, bspnum: i32) -> bool {
             bspnum & !NF_SUBSECTOR,
         );
     }
-    let bsp = &state.world.p_setup.nodes[bspnum as usize];
+    let bsp = &state.world.p_setup.nodes[bspnum.idx()];
     let divl = DivLine {
         x: bsp.x,
         y: bsp.y,
@@ -185,13 +186,13 @@ pub fn cross_bspnode(state: &mut GameState, bspnum: i32) -> bool {
     if side == 2 {
         side = 0;
     }
-    if !cross_bspnode(state, i32::from(children[side as usize])) {
+    if !cross_bspnode(state, i32::from(children[side.idx()])) {
         return false;
     }
     if side == divline_side(state.world.p_sight.t2x, state.world.p_sight.t2y, &divl) {
         return true;
     }
-    cross_bspnode(state, i32::from(children[(side ^ 1) as usize]))
+    cross_bspnode(state, i32::from(children[(side ^ 1).idx()]))
 }
 pub fn check_sight(state: &mut GameState, t1: MobjId, t2: MobjId) -> bool {
     let (t1_subsector, t1_x, t1_y, t1_z, t1_height) = {
@@ -211,7 +212,7 @@ pub fn check_sight(state: &mut GameState, t1: MobjId, t2: MobjId) -> bool {
     let pnum = s1 * state.world.p_setup.numsectors + s2;
     let bytenum = pnum >> 3;
     let bitnum = 1 << (pnum & 7);
-    if i32::from(state.world.p_setup.rejectmatrix[bytenum as usize]) & bitnum != 0 {
+    if i32::from(state.world.p_setup.rejectmatrix[bytenum.idx()]) & bitnum != 0 {
         state.world.p_sight.sightcounts[0] += 1;
         return false;
     }

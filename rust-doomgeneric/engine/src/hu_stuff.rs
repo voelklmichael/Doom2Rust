@@ -15,6 +15,7 @@ use crate::hu_lib::{
     hulib_init_itext, hulib_init_stext, hulib_init_text_line, hulib_key_in_itext,
     hulib_reset_itext, HuIText, HuSText, HuTextLine,
 };
+use crate::index::ToIndex;
 use crate::m_controls::MControlsState;
 use crate::m_controls::KEY_ENTER;
 use crate::m_controls::KEY_ESCAPE;
@@ -346,20 +347,18 @@ pub fn hu_start(state: &mut GameState) {
         HU_FONTSTART,
     );
     let s: &str = if state.game.doomstat.gameversion == GameVersion::Chex {
-        MAPNAMES[(state.game.g_game.gamemap - 1) as usize]
+        MAPNAMES[(state.game.g_game.gamemap - 1).idx()]
     } else {
         match state.game.doomstat.gamemission.base() {
             GameMission::Doom => {
                 MAPNAMES[((state.game.g_game.gameepisode - 1) * 9 + state.game.g_game.gamemap - 1)
-                    as usize]
+                    .idx()]
             }
-            GameMission::Doom2 => MAPNAMES_COMMERCIAL[(state.game.g_game.gamemap - 1) as usize],
+            GameMission::Doom2 => MAPNAMES_COMMERCIAL[(state.game.g_game.gamemap - 1).idx()],
             GameMission::PackPlut => {
-                MAPNAMES_COMMERCIAL[(state.game.g_game.gamemap - 1 + 32) as usize]
+                MAPNAMES_COMMERCIAL[(state.game.g_game.gamemap - 1 + 32).idx()]
             }
-            GameMission::PackTnt => {
-                MAPNAMES_COMMERCIAL[(state.game.g_game.gamemap - 1 + 64) as usize]
-            }
+            GameMission::PackTnt => MAPNAMES_COMMERCIAL[(state.game.g_game.gamemap - 1 + 64).idx()],
             _ => "Unknown level",
         }
     };
@@ -490,7 +489,7 @@ pub fn queue_chat_char(g_game: &mut GGameState, hu_stuff: &mut HuStuffState, c: 
     if (hu_stuff.head + 1) & (QUEUESIZE - 1) == hu_stuff.tail {
         g_game.player_mut(hu_stuff.plr).message = Some("[Message unsent]".to_string());
     } else {
-        hu_stuff.chatchars[hu_stuff.head as usize] = c;
+        hu_stuff.chatchars[hu_stuff.head.idx()] = c;
         hu_stuff.head = (hu_stuff.head + 1) & (QUEUESIZE - 1);
     }
 }
@@ -498,7 +497,7 @@ pub fn dequeue_chat_char(state: &mut HuStuffState) -> u8 {
     if state.head == state.tail {
         0
     } else {
-        let c = state.chatchars[state.tail as usize];
+        let c = state.chatchars[state.tail.idx()];
         state.tail = (state.tail + 1) & (QUEUESIZE - 1);
         c
     }
@@ -565,7 +564,7 @@ pub fn hu_responder(
             }
         }
     } else if hu_stuff.hu_responder_altdown {
-        let c: u8 = (ev.data1 - '0' as i32) as u8;
+        let c: u8 = (ev.data1 - '0' as i32).cast_unsigned() as u8;
         if i32::from(c) > 9 {
             return false;
         }
@@ -579,7 +578,7 @@ pub fn hu_responder(
         g_game.player_mut(hu_stuff.plr).message = Some(macromessage.to_string());
         eatkey = true;
     } else {
-        let c: u8 = ev.data2 as u8;
+        let c: u8 = ev.data2.cast_unsigned() as u8;
         eatkey = hulib_key_in_itext(&mut hu_stuff.w_chat, c);
         if eatkey {
             queue_chat_char(g_game, hu_stuff, c);

@@ -63,7 +63,8 @@ impl<const N: usize> FrameQueue<N> {
         let free = N - head.wrapping_sub(self.tail.load(Ordering::Acquire));
         let mut pushed = 0;
         for (frame, pair) in samples.chunks_exact(2).take(free).enumerate() {
-            let packed = u32::from(pair[0] as u16) | u32::from(pair[1] as u16) << 16;
+            let packed =
+                u32::from(pair[0].cast_unsigned()) | u32::from(pair[1].cast_unsigned()) << 16;
             self.frames[head.wrapping_add(frame) % N].store(packed, Ordering::Relaxed);
             pushed += 1;
         }

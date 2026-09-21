@@ -1,6 +1,7 @@
 use crate::doomdef::SCREENWIDTH;
 use crate::game_state::GameState;
 use crate::i_system::error;
+use crate::index::ToIndex;
 use crate::m_fixed::fixed_div;
 use crate::m_fixed::fixed_mul;
 use crate::m_fixed::Fixed;
@@ -95,35 +96,35 @@ pub fn map_plane(state: &mut GameState, y: i32, x1: i32, x2: i32) {
         error(&format!("R_MapPlane: {x1}, {x2} at {y}"));
     }
     let distance: Fixed =
-        if state.render.r_plane.planeheight == state.render.r_plane.cachedheight[y as usize] {
-            state.render.r_draw.ds_xstep = state.render.r_plane.cachedxstep[y as usize];
-            state.render.r_draw.ds_ystep = state.render.r_plane.cachedystep[y as usize];
-            state.render.r_plane.cacheddistance[y as usize]
+        if state.render.r_plane.planeheight == state.render.r_plane.cachedheight[y.idx()] {
+            state.render.r_draw.ds_xstep = state.render.r_plane.cachedxstep[y.idx()];
+            state.render.r_draw.ds_ystep = state.render.r_plane.cachedystep[y.idx()];
+            state.render.r_plane.cacheddistance[y.idx()]
         } else {
-            state.render.r_plane.cachedheight[y as usize] = state.render.r_plane.planeheight;
-            state.render.r_plane.cacheddistance[y as usize] = fixed_mul(
+            state.render.r_plane.cachedheight[y.idx()] = state.render.r_plane.planeheight;
+            state.render.r_plane.cacheddistance[y.idx()] = fixed_mul(
                 state.render.r_plane.planeheight,
-                state.render.r_plane.yslope[y as usize],
+                state.render.r_plane.yslope[y.idx()],
             );
-            let distance = state.render.r_plane.cacheddistance[y as usize];
-            state.render.r_plane.cachedxstep[y as usize] =
+            let distance = state.render.r_plane.cacheddistance[y.idx()];
+            state.render.r_plane.cachedxstep[y.idx()] =
                 fixed_mul(distance, state.render.r_plane.basexscale);
-            state.render.r_draw.ds_xstep = state.render.r_plane.cachedxstep[y as usize];
-            state.render.r_plane.cachedystep[y as usize] =
+            state.render.r_draw.ds_xstep = state.render.r_plane.cachedxstep[y.idx()];
+            state.render.r_plane.cachedystep[y.idx()] =
                 fixed_mul(distance, state.render.r_plane.baseyscale);
-            state.render.r_draw.ds_ystep = state.render.r_plane.cachedystep[y as usize];
+            state.render.r_draw.ds_ystep = state.render.r_plane.cachedystep[y.idx()];
             distance
         };
-    let length: Fixed = fixed_mul(distance, state.render.r_plane.distscale[x1 as usize]);
+    let length: Fixed = fixed_mul(distance, state.render.r_plane.distscale[x1.idx()]);
     let angle: usize =
-        (state.render.r_main.viewangle + state.render.r_main.xtoviewangle[x1 as usize]).fine();
+        (state.render.r_main.viewangle + state.render.r_main.xtoviewangle[x1.idx()]).fine();
     state.render.r_draw.ds_xfrac =
         state.render.r_main.viewx + fixed_mul(fine_cosine(angle), length);
     state.render.r_draw.ds_yfrac = -state.render.r_main.viewy - fixed_mul(fine_sine(angle), length);
     if let Some(colormap) = state.render.r_main.fixedcolormap {
         state.render.r_draw.ds_colormap = colormap;
     } else {
-        let mut index = (distance >> LIGHTZSHIFT).to_bits() as usize;
+        let mut index = (distance >> LIGHTZSHIFT).to_bits().idx();
         if index >= MAXLIGHTZ {
             index = MAXLIGHTZ - 1;
         }
@@ -140,7 +141,7 @@ pub fn map_plane(state: &mut GameState, y: i32, x1: i32, x2: i32) {
         .expect("non-null function pointer")(state);
 }
 pub fn clear_planes(r_draw: &RDrawState, r_main: &RMainState, r_plane: &mut RPlaneState) {
-    for i in 0..r_draw.viewwidth as usize {
+    for i in 0..r_draw.viewwidth.idx() {
         r_plane.floorclip[i] = r_draw.viewheight as i16;
         r_plane.ceilingclip[i] = -1_i16;
     }
@@ -220,21 +221,21 @@ pub fn make_spans(
     mut b2: i32,
 ) {
     while t1 < t2 && t1 <= b1 {
-        let spanstart_t1 = state.render.r_plane.spanstart[t1 as usize];
+        let spanstart_t1 = state.render.r_plane.spanstart[t1.idx()];
         map_plane(state, t1, spanstart_t1, x - 1);
         t1 += 1;
     }
     while b1 > b2 && b1 >= t1 {
-        let spanstart_b1 = state.render.r_plane.spanstart[b1 as usize];
+        let spanstart_b1 = state.render.r_plane.spanstart[b1.idx()];
         map_plane(state, b1, spanstart_b1, x - 1);
         b1 -= 1;
     }
     while t2 < t1 && t2 <= b2 {
-        state.render.r_plane.spanstart[t2 as usize] = x;
+        state.render.r_plane.spanstart[t2.idx()] = x;
         t2 += 1;
     }
     while b2 > b1 && b2 >= t2 {
-        state.render.r_plane.spanstart[b2 as usize] = x;
+        state.render.r_plane.spanstart[b2.idx()] = x;
         b2 -= 1;
     }
 }
@@ -270,8 +271,8 @@ pub fn draw_planes(state: &mut GameState) {
                     state.render.r_draw.dc_yh = i32::from(plv.bottom(x));
                     if state.render.r_draw.dc_yl <= state.render.r_draw.dc_yh {
                         let angle: i32 = ((state.render.r_main.viewangle
-                            + state.render.r_main.xtoviewangle[x as usize])
-                            .to_bits()
+                            + state.render.r_main.xtoviewangle[x.idx()])
+                        .to_bits()
                             >> ANGLETOSKYSHIFT) as i32;
                         state.render.r_draw.dc_x = x;
                         state.render.r_draw.dc_source = Some(get_column(
@@ -290,7 +291,7 @@ pub fn draw_planes(state: &mut GameState) {
                 }
             } else {
                 let lumpnum = state.render.r_data.firstflat
-                    + state.render.r_data.flattranslation[plv.picnum as usize];
+                    + state.render.r_data.flattranslation[plv.picnum.idx()];
                 lump_bytes(&*state.assets.fs, &mut state.assets.w_wad, lumpnum);
                 state.render.r_draw.ds_source = Some(ColumnSource::Lump {
                     lump: lumpnum,
@@ -305,7 +306,7 @@ pub fn draw_planes(state: &mut GameState) {
                 if light < 0 {
                     light = 0;
                 }
-                state.render.r_plane.planezlight = light as usize;
+                state.render.r_plane.planezlight = light.idx();
                 plv.set_top(plv.maxx + 1, 0xff_u8);
                 plv.set_top(plv.minx - 1, 0xff_u8);
                 state.render.r_plane.visplanes[pl] = plv;

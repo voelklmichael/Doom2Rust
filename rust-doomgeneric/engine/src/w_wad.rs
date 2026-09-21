@@ -4,6 +4,7 @@ use crate::d_mode::GameMission;
 use crate::d_mode::GameMode;
 use crate::fixed_cstr::FixedCStr;
 use crate::i_system::error;
+use crate::index::ToIndex;
 use crate::le::le_i32;
 use crate::m_misc::extract_file_base;
 use crate::platform::DoomPlatform;
@@ -130,11 +131,10 @@ pub fn w_add_file(
                 "Wad file {filename} doesn't have IWAD or PWAD id\n",
             ));
         }
-        let mut dir_buf =
-            vec![0u8; (header.numlumps as usize) * ::core::mem::size_of::<filelump_t>()];
+        let mut dir_buf = vec![0u8; header.numlumps.idx() * ::core::mem::size_of::<filelump_t>()];
         fs.read_at(
             wad_file,
-            u64::from(header.infotableofs as u32),
+            u64::from(header.infotableofs.cast_unsigned()),
             &mut dir_buf,
         );
         dir_buf
@@ -207,7 +207,7 @@ pub fn read_lump(state: &WWadState, fs: &dyn DoomFileSystem, lump: LumpNum, dest
         error(&format!("W_ReadLump: {lump} >= numlumps"));
     }
     let l = &state.lumpinfo[lump.index()];
-    let c = fs.read_at(l.wad_file, u64::from(l.position as u32), dest) as i32;
+    let c = fs.read_at(l.wad_file, u64::from(l.position.cast_unsigned()), dest) as i32;
     if c < l.size {
         error(&format!(
             "W_ReadLump: only read {} of {} on lump {}",
@@ -238,8 +238,8 @@ pub fn lump_bytes(
     // end of its lump) makes that same read run past the end and panic
     // -- pad every cached lump by the mask's full range to give it the
     // same harmless slack vanilla relied on.
-    let mut buf = vec![0u8; lumplen as usize + CACHE_PAD].into_boxed_slice();
-    read_lump(w_wad, fs, lumpnum, &mut buf[..lumplen as usize]);
+    let mut buf = vec![0u8; lumplen.idx() + CACHE_PAD].into_boxed_slice();
+    read_lump(w_wad, fs, lumpnum, &mut buf[..lumplen.idx()]);
     let rc: alloc::rc::Rc<[u8]> = alloc::rc::Rc::from(buf);
     w_wad.lumpinfo[lumpnum.index()].cache = Some(alloc::rc::Rc::clone(&rc));
     rc

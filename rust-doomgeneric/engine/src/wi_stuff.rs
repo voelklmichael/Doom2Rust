@@ -7,6 +7,7 @@ use crate::doomdef::TICRATE;
 use crate::g_game::world_done;
 use crate::g_game::GGameState;
 use crate::game_state::GameState;
+use crate::index::ToIndex;
 use crate::m_random::m_random;
 use crate::s_sound::change_music;
 use crate::s_sound::s_start_sound;
@@ -598,7 +599,7 @@ pub fn draw_lf(state: &mut GameState) {
     if state.game.doomstat.gamemode != GameMode::Commercial
         || state.wbs().last < state.ui.wi_stuff.numcmaps
     {
-        let index = state.wbs().last as usize;
+        let index = state.wbs().last.idx();
         let last_lump = state.ui.wi_stuff.lnames[index];
         let last_patch = cache_loaded_patch(&*state.assets.fs, &mut state.assets.w_wad, last_lump);
         let dest_screen = Screen::Video;
@@ -640,7 +641,7 @@ pub fn draw_el(state: &mut GameState) {
         y,
         &entering_patch,
     );
-    let index = state.wbs().next as usize;
+    let index = state.wbs().next.idx();
     let next_lump = state.ui.wi_stuff.lnames[index];
     let next_patch = cache_loaded_patch(&*state.assets.fs, &mut state.assets.w_wad, next_lump);
     y += 5 * next_patch.height() / 4;
@@ -657,9 +658,9 @@ pub fn draw_on_lnode(state: &mut GameState, n: i32, c: &[Option<LumpNum>]) {
     let mut fits: bool = false;
     let mut i: i32 = 0;
     loop {
-        let patch = cache_loaded_patch(&*state.assets.fs, &mut state.assets.w_wad, c[i as usize]);
-        let left: i32 = LNODES[state.wbs().epsd as usize][n as usize].x - patch.leftoffset();
-        let top: i32 = LNODES[state.wbs().epsd as usize][n as usize].y - patch.topoffset();
+        let patch = cache_loaded_patch(&*state.assets.fs, &mut state.assets.w_wad, c[i.idx()]);
+        let left: i32 = LNODES[state.wbs().epsd.idx()][n.idx()].x - patch.leftoffset();
+        let top: i32 = LNODES[state.wbs().epsd.idx()][n.idx()].y - patch.topoffset();
         let right: i32 = left + patch.width();
         let bottom: i32 = top + patch.height();
         if left >= 0 && right < SCREENWIDTH && top >= 0 && bottom < SCREENHEIGHT {
@@ -667,19 +668,19 @@ pub fn draw_on_lnode(state: &mut GameState, n: i32, c: &[Option<LumpNum>]) {
         } else {
             i += 1;
         }
-        if !(!fits && i != 2 && c[i as usize].is_some()) {
+        if !(!fits && i != 2 && c[i.idx()].is_some()) {
             break;
         }
     }
     if fits && i < 2 {
-        let patch = cache_loaded_patch(&*state.assets.fs, &mut state.assets.w_wad, c[i as usize]);
-        let index = state.wbs().epsd as usize;
+        let patch = cache_loaded_patch(&*state.assets.fs, &mut state.assets.w_wad, c[i.idx()]);
+        let index = state.wbs().epsd.idx();
         let dest_screen = Screen::Video;
         draw_patch(
             state,
             dest_screen,
-            LNODES[index][n as usize].x,
-            LNODES[index][n as usize].y,
+            LNODES[index][n.idx()].x,
+            LNODES[index][n.idx()].y,
             &patch,
         );
     } else {
@@ -697,9 +698,9 @@ pub fn init_animated_back(state: &mut GameState) {
     if state.wbs().epsd > 2 {
         return;
     }
-    for i in 0..state.ui.wi_stuff.numanims[state.wbs().epsd as usize] {
-        let index = state.wbs().epsd as usize;
-        let mut a = state.ui.wi_stuff.anims()[index][i as usize];
+    for i in 0..state.ui.wi_stuff.numanims[state.wbs().epsd.idx()] {
+        let index = state.wbs().epsd.idx();
+        let mut a = state.ui.wi_stuff.anims()[index][i.idx()];
         a.ctr = -1;
         if a.kind == AnimEnum::Always {
             a.nexttic = state.ui.wi_stuff.bcnt + 1 + m_random(&mut state.world.m_random) % a.period;
@@ -711,7 +712,7 @@ pub fn init_animated_back(state: &mut GameState) {
         } else if a.kind == AnimEnum::Level {
             a.nexttic = state.ui.wi_stuff.bcnt + 1;
         }
-        state.ui.wi_stuff.anims()[index][i as usize] = a;
+        state.ui.wi_stuff.anims()[index][i.idx()] = a;
     }
 }
 pub fn update_animated_back(state: &mut GameState) {
@@ -721,9 +722,9 @@ pub fn update_animated_back(state: &mut GameState) {
     if state.wbs().epsd > 2 {
         return;
     }
-    for i in 0..state.ui.wi_stuff.numanims[state.wbs().epsd as usize] {
-        let index = state.wbs().epsd as usize;
-        let mut a = state.ui.wi_stuff.anims()[index][i as usize];
+    for i in 0..state.ui.wi_stuff.numanims[state.wbs().epsd.idx()] {
+        let index = state.wbs().epsd.idx();
+        let mut a = state.ui.wi_stuff.anims()[index][i.idx()];
         if state.ui.wi_stuff.bcnt == a.nexttic {
             match a.kind as u32 {
                 0 => {
@@ -756,7 +757,7 @@ pub fn update_animated_back(state: &mut GameState) {
                 _ => {}
             }
         }
-        state.ui.wi_stuff.anims()[index][i as usize] = a;
+        state.ui.wi_stuff.anims()[index][i.idx()] = a;
     }
 }
 pub fn draw_animated_back(state: &mut GameState) {
@@ -766,15 +767,12 @@ pub fn draw_animated_back(state: &mut GameState) {
     if state.wbs().epsd > 2 {
         return;
     }
-    for i in 0..state.ui.wi_stuff.numanims[state.wbs().epsd as usize] {
-        let index = state.wbs().epsd as usize;
-        let a = state.ui.wi_stuff.anims()[index][i as usize];
+    for i in 0..state.ui.wi_stuff.numanims[state.wbs().epsd.idx()] {
+        let index = state.wbs().epsd.idx();
+        let a = state.ui.wi_stuff.anims()[index][i.idx()];
         if a.ctr >= 0 {
-            let patch = cache_loaded_patch(
-                &*state.assets.fs,
-                &mut state.assets.w_wad,
-                a.p[a.ctr as usize],
-            );
+            let patch =
+                cache_loaded_patch(&*state.assets.fs, &mut state.assets.w_wad, a.p[a.ctr.idx()]);
             let dest_screen = Screen::Video;
             draw_patch(state, dest_screen, a.loc.x, a.loc.y, &patch);
         }
@@ -812,7 +810,7 @@ pub fn draw_num(state: &mut GameState, mut x: i32, y: i32, mut n: i32, mut digit
         let digit_patch = cache_loaded_patch(
             &*state.assets.fs,
             &mut state.assets.w_wad,
-            state.ui.wi_stuff.num[(n % 10) as usize],
+            state.ui.wi_stuff.num[(n % 10).idx()],
         );
         let dest_screen = Screen::Video;
         draw_patch(state, dest_screen, x, y, &digit_patch);
@@ -1620,7 +1618,7 @@ pub fn wi_ticker(state: &mut GameState) {
 }
 fn load_unload_data(state: &mut GameState, callback: LoadCallback) {
     if state.game.doomstat.gamemode == GameMode::Commercial {
-        for i in 0..state.ui.wi_stuff.numcmaps as usize {
+        for i in 0..state.ui.wi_stuff.numcmaps.idx() {
             state.ui.wi_stuff.lnames[i] = callback(state, &format!("CWILV{i:02}"));
         }
     } else {
@@ -1632,9 +1630,9 @@ fn load_unload_data(state: &mut GameState, callback: LoadCallback) {
         state.ui.wi_stuff.yah[1] = callback(state, "WIURH1");
         state.ui.wi_stuff.splat[0] = callback(state, "WISPLAT");
         if state.wbs().epsd < 3 {
-            let epsd = state.wbs().epsd as usize;
-            for j in 0..state.ui.wi_stuff.numanims[epsd] as usize {
-                let nanims = state.ui.wi_stuff.anims()[epsd][j].nanims as usize;
+            let epsd = state.wbs().epsd.idx();
+            for j in 0..state.ui.wi_stuff.numanims[epsd].idx() {
+                let nanims = state.ui.wi_stuff.anims()[epsd][j].nanims.idx();
                 for i in 0..nanims {
                     let lump = if epsd != 1 || j != 8 {
                         let name = format!("WIA{epsd}{j:02}{i:02}");
@@ -1695,7 +1693,7 @@ fn wi_load_callback(state: &mut GameState, name: &str) -> Option<LumpNum> {
 pub fn wi_load_data(state: &mut GameState) {
     if state.game.doomstat.gamemode == GameMode::Commercial {
         state.ui.wi_stuff.numcmaps = 32;
-        state.ui.wi_stuff.lnames = vec![None; state.ui.wi_stuff.numcmaps as usize];
+        state.ui.wi_stuff.lnames = vec![None; state.ui.wi_stuff.numcmaps.idx()];
     } else {
         state.ui.wi_stuff.lnames = vec![None; NUMMAPS];
     }

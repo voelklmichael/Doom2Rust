@@ -6,12 +6,15 @@ resolver = "2"
 # true`). They keep the code from drifting back to C habits (needless `&mut`, repeated type names,
 # `let x; if ... { x = ... }`, `_ =>` hiding the last variant, ...). Deliberately not enabled:
 # `option_if_let_else`, `verbose_bit_mask` (`x & 31 == 0` reads better than `trailing_zeros()`)
-# and the cast lints, which the fixed-point and pixel code cannot satisfy. `unwrap_used` keeps
+# and the other cast lints, which the fixed-point and pixel code cannot satisfy (truncation and
+# wrapping are the point there). `cast_sign_loss` is on: use `.idx()` for an index and
+# `cast_unsigned()` to reinterpret bits. `unwrap_used` keeps
 # `unwrap()` out of everything but tests (clippy.toml): use `let ... else`, `is_some_and` and the
 # like, or `expect` with the reason the value must be there.
 [workspace.lints.clippy]
 assigning_clones = "warn"
 cast_lossless = "warn"
+cast_sign_loss = "warn"
 comparison_chain = "warn"
 derive_partial_eq_without_eq = "warn"
 doc_markdown = "warn"

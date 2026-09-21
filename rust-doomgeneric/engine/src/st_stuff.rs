@@ -18,6 +18,7 @@ use crate::g_game::defered_init_new;
 use crate::g_game::GGameState;
 use crate::game_state::GameState;
 use crate::i_video::set_palette;
+use crate::index::ToIndex;
 use crate::m_cheat::cht_check_cheat;
 use crate::m_cheat::CheatSeq;
 use crate::m_random::m_random;
@@ -401,7 +402,7 @@ pub fn refresh_background(state: &mut GameState) {
     }
 }
 pub fn st_responder(state: &mut GameState, ev: &Event) -> bool {
-    if ev.kind == EvType::Keyup && ev.data1 as u32 & 0xffff0000 == AM_MSGHEADER as u32 {
+    if ev.kind == EvType::Keyup && ev.data1.cast_unsigned() & 0xffff0000 == AM_MSGHEADER as u32 {
         match ev.data1 {
             AM_MSGENTERED => {
                 state.ui.st_stuff.st_gamestate = StStateEnum::AutomapState;
@@ -414,7 +415,10 @@ pub fn st_responder(state: &mut GameState, ev: &Event) -> bool {
         }
     } else if ev.kind == EvType::Keydown {
         if !state.game.g_game.netgame && state.game.g_game.gameskill != SkillType::Nightmare {
-            if cht_check_cheat(&mut state.ui.st_stuff.cheat_god, ev.data2 as u8) {
+            if cht_check_cheat(
+                &mut state.ui.st_stuff.cheat_god,
+                ev.data2.cast_unsigned() as u8,
+            ) {
                 state.game.g_game.player_mut(state.ui.st_stuff.plyr).cheats ^= CheatFlags::GODMODE;
                 if state
                     .game
@@ -434,7 +438,10 @@ pub fn st_responder(state: &mut GameState, ev: &Event) -> bool {
                     state.game.g_game.player_mut(state.ui.st_stuff.plyr).message =
                         Some("Degreelessness Mode Off".to_string());
                 }
-            } else if cht_check_cheat(&mut state.ui.st_stuff.cheat_ammonokey, ev.data2 as u8) {
+            } else if cht_check_cheat(
+                &mut state.ui.st_stuff.cheat_ammonokey,
+                ev.data2.cast_unsigned() as u8,
+            ) {
                 state
                     .game
                     .g_game
@@ -458,7 +465,10 @@ pub fn st_responder(state: &mut GameState, ev: &Event) -> bool {
                 }
                 state.game.g_game.player_mut(state.ui.st_stuff.plyr).message =
                     Some("Ammo (no keys) Added".to_string());
-            } else if cht_check_cheat(&mut state.ui.st_stuff.cheat_ammo, ev.data2 as u8) {
+            } else if cht_check_cheat(
+                &mut state.ui.st_stuff.cheat_ammo,
+                ev.data2.cast_unsigned() as u8,
+            ) {
                 state
                     .game
                     .g_game
@@ -485,7 +495,10 @@ pub fn st_responder(state: &mut GameState, ev: &Event) -> bool {
                 }
                 state.game.g_game.player_mut(state.ui.st_stuff.plyr).message =
                     Some("Very Happy Ammo Added".to_string());
-            } else if cht_check_cheat(&mut state.ui.st_stuff.cheat_mus, ev.data2 as u8) {
+            } else if cht_check_cheat(
+                &mut state.ui.st_stuff.cheat_mus,
+                ev.data2.cast_unsigned() as u8,
+            ) {
                 state.game.g_game.player_mut(state.ui.st_stuff.plyr).message =
                     Some("Music Change".to_string());
                 let buf: [u8; 2] = [
@@ -518,11 +531,14 @@ pub fn st_responder(state: &mut GameState, ev: &Event) -> bool {
                     }
                 }
             } else if state.game.doomstat.gamemission.base() == GameMission::Doom
-                && cht_check_cheat(&mut state.ui.st_stuff.cheat_noclip, ev.data2 as u8)
+                && cht_check_cheat(
+                    &mut state.ui.st_stuff.cheat_noclip,
+                    ev.data2.cast_unsigned() as u8,
+                )
                 || state.game.doomstat.gamemission.base() != GameMission::Doom
                     && cht_check_cheat(
                         &mut state.ui.st_stuff.cheat_commercial_noclip,
-                        ev.data2 as u8,
+                        ev.data2.cast_unsigned() as u8,
                     )
             {
                 state.game.g_game.player_mut(state.ui.st_stuff.plyr).cheats ^= CheatFlags::NOCLIP;
@@ -541,7 +557,10 @@ pub fn st_responder(state: &mut GameState, ev: &Event) -> bool {
                 }
             }
             for (i, power) in PowerType::ALL.into_iter().enumerate() {
-                if cht_check_cheat(&mut state.ui.st_stuff.cheat_powerup[i], ev.data2 as u8) {
+                if cht_check_cheat(
+                    &mut state.ui.st_stuff.cheat_powerup[i],
+                    ev.data2.cast_unsigned() as u8,
+                ) {
                     if state.game.g_game.player_mut(state.ui.st_stuff.plyr).powers[power] == 0 {
                         give_power(
                             &mut state.game.g_game,
@@ -558,10 +577,16 @@ pub fn st_responder(state: &mut GameState, ev: &Event) -> bool {
                         Some("Power-up Toggled".to_string());
                 }
             }
-            if cht_check_cheat(&mut state.ui.st_stuff.cheat_powerup[6], ev.data2 as u8) {
+            if cht_check_cheat(
+                &mut state.ui.st_stuff.cheat_powerup[6],
+                ev.data2.cast_unsigned() as u8,
+            ) {
                 state.game.g_game.player_mut(state.ui.st_stuff.plyr).message =
                     Some("inVuln, Str, Inviso, Rad, Allmap, or Lite-amp".to_string());
-            } else if cht_check_cheat(&mut state.ui.st_stuff.cheat_choppers, ev.data2 as u8) {
+            } else if cht_check_cheat(
+                &mut state.ui.st_stuff.cheat_choppers,
+                ev.data2.cast_unsigned() as u8,
+            ) {
                 state
                     .game
                     .g_game
@@ -571,7 +596,10 @@ pub fn st_responder(state: &mut GameState, ev: &Event) -> bool {
                     [PowerType::Invulnerability as usize] = 1;
                 state.game.g_game.player_mut(state.ui.st_stuff.plyr).message =
                     Some("... doesn't suck - GM".to_string());
-            } else if cht_check_cheat(&mut state.ui.st_stuff.cheat_mypos, ev.data2 as u8) {
+            } else if cht_check_cheat(
+                &mut state.ui.st_stuff.cheat_mypos,
+                ev.data2.cast_unsigned() as u8,
+            ) {
                 let cp_mo_id = state.game.g_game.players[state.game.g_game.consoleplayer].mobj();
                 let cp_mo = state.world.p_mobj.mo(cp_mo_id);
                 state.game.g_game.player_mut(state.ui.st_stuff.plyr).message = Some(format!(
@@ -583,7 +611,10 @@ pub fn st_responder(state: &mut GameState, ev: &Event) -> bool {
             }
         }
         if !state.game.g_game.netgame
-            && cht_check_cheat(&mut state.ui.st_stuff.cheat_clev, ev.data2 as u8)
+            && cht_check_cheat(
+                &mut state.ui.st_stuff.cheat_clev,
+                ev.data2.cast_unsigned() as u8,
+            )
         {
             let digits: [u8; 2] = [
                 state.ui.st_stuff.cheat_clev.param()[0],
@@ -759,17 +790,17 @@ pub fn update_face_widget(
 pub fn update_widgets(g_game: &mut GGameState, p_mobj: &PMobjState, st_stuff: &mut StStuffState) {
     st_stuff.w_ready.data = g_game.player_mut(st_stuff.plyr).readyweapon as i32;
     for i in 0..6 {
-        st_stuff.w_arms_owned[i as usize] =
-            i32::from(g_game.player_mut(st_stuff.plyr).weaponowned[(i + 1) as usize]);
+        st_stuff.w_arms_owned[i.idx()] =
+            i32::from(g_game.player_mut(st_stuff.plyr).weaponowned[(i + 1).idx()]);
     }
     for i in 0..3 {
-        st_stuff.keyboxes[i as usize] = if g_game.player_mut(st_stuff.plyr).cards[i as usize] {
+        st_stuff.keyboxes[i.idx()] = if g_game.player_mut(st_stuff.plyr).cards[i.idx()] {
             i
         } else {
             -1
         };
-        if g_game.player_mut(st_stuff.plyr).cards[(i + 3) as usize] {
-            st_stuff.keyboxes[i as usize] = i + 3;
+        if g_game.player_mut(st_stuff.plyr).cards[(i + 3).idx()] {
+            st_stuff.keyboxes[i.idx()] = i + 3;
         }
     }
     update_face_widget(g_game, p_mobj, st_stuff);
@@ -852,7 +883,7 @@ pub fn do_palette_stuff(state: &mut GameState) {
             &mut state.assets.w_wad,
             state.ui.st_stuff.lu_palette,
         );
-        let offset = (palette * 768) as usize;
+        let offset = (palette * 768).idx();
         set_palette(&mut state.io.i_video, &pal[offset..offset + 768]);
     }
 }
@@ -1058,10 +1089,10 @@ pub fn create_widgets(g_game: &mut GGameState, st_stuff: &mut StStuffState) {
     );
     for i in 0..6 {
         stlib_init_mult_icon(
-            &mut st_stuff.w_arms[i as usize],
+            &mut st_stuff.w_arms[i.idx()],
             ST_ARMSX + i % 3 * ST_ARMSXSPACE,
             ST_ARMSY + i / 3 * ST_ARMSYSPACE,
-            StDigitSet::Arms(i as usize),
+            StDigitSet::Arms(i.idx()),
         );
     }
     stlib_init_num(

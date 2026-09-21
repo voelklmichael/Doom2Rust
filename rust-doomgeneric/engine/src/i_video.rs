@@ -7,6 +7,7 @@ use crate::doomgeneric::DOOMGENERIC_RESY;
 use crate::i_input::get_event;
 use crate::i_input::IInputState;
 use crate::i_system::error;
+use crate::index::ToIndex;
 use crate::m_fixed::INT_MAX;
 use crate::options::Options;
 use crate::platform::DoomPlatform;
@@ -196,7 +197,8 @@ pub fn init_graphics(
         );
     } else {
         i_video.fb_scaling = i_video.s_fb.xres.wrapping_div(SCREENWIDTH as u32) as i32;
-        if i_video.s_fb.yres.wrapping_div(SCREENHEIGHT as u32) < i_video.fb_scaling as u32 {
+        if i_video.s_fb.yres.wrapping_div(SCREENHEIGHT as u32) < i_video.fb_scaling.cast_unsigned()
+        {
             i_video.fb_scaling = i_video.s_fb.yres.wrapping_div(SCREENHEIGHT as u32) as i32;
         }
         doom_println!(
@@ -236,7 +238,7 @@ fn line_offset_bytes(i_video: &IVideoState) -> usize {
     i_video
         .s_fb
         .xres
-        .wrapping_sub((SCREENWIDTH * i_video.fb_scaling) as u32)
+        .wrapping_sub((SCREENWIDTH * i_video.fb_scaling).cast_unsigned())
         .wrapping_mul(i_video.s_fb.bits_per_pixel)
         .wrapping_div(8_u32)
         .wrapping_div(2_u32) as usize
@@ -246,7 +248,7 @@ fn line_offset_bytes(i_video: &IVideoState) -> usize {
 /// other `fb_scaling - 1` output lines.
 fn convert_frame_rgb32(i_video: &mut IVideoState) {
     let fb = i_video.s_fb;
-    let scaling = i_video.fb_scaling as usize;
+    let scaling = i_video.fb_scaling.idx();
     let width = fb.xres as usize;
     if scaling == 0 || width == 0 {
         return;
@@ -257,7 +259,8 @@ fn convert_frame_rgb32(i_video: &mut IVideoState) {
     let palette: [u32; 256] = i_video.colors.map(|c| {
         (i32::from(c.r()) << fb.red.offset
             | i32::from(c.g()) << fb.green.offset
-            | i32::from(c.b()) << fb.blue.offset) as u32
+            | i32::from(c.b()) << fb.blue.offset)
+            .cast_unsigned()
     });
     for row in 0..SCREENHEIGHT as usize {
         let source = &i_video.i_video_buffer[row * SCREENWIDTH as usize..][..SCREENWIDTH as usize];
@@ -280,7 +283,7 @@ fn convert_frame_rgb32(i_video: &mut IVideoState) {
 /// Converts the palette-indexed screen to RGB565, two pixels packed per `u32`
 /// of `dg_screen_buffer`.
 fn convert_frame_rgb565(i_video: &mut IVideoState) {
-    let scaling = i_video.fb_scaling as usize;
+    let scaling = i_video.fb_scaling.idx();
     let line_bytes = i_video.s_fb.xres as usize * 2;
     let x_offset = line_offset_bytes(i_video);
     let mut frame = vec![0u8; line_bytes * SCREENHEIGHT as usize * scaling];
@@ -293,7 +296,8 @@ fn convert_frame_rgb565(i_video: &mut IVideoState) {
             let c = i_video.colors[index as usize];
             let p: u16 = ((i32::from(c.r()) & 0xf8) << 8
                 | (i32::from(c.g()) & 0xfc) << 3
-                | i32::from(c.b()) >> 3) as u16;
+                | i32::from(c.b()) >> 3)
+                .cast_unsigned() as u16;
             for _ in 0..scaling {
                 first_line[out..out + 2].copy_from_slice(&p.to_ne_bytes());
                 out += 2;
@@ -319,7 +323,7 @@ pub fn read_screen(i_video: &IVideoState) -> Vec<u8> {
     i_video.i_video_buffer[..(SCREENWIDTH * SCREENHEIGHT) as usize].to_vec()
 }
 pub fn set_palette(i_video: &mut IVideoState, palette: &[u8]) {
-    let gamma = &GAMMATABLE[i_video.usegamma as usize];
+    let gamma = &GAMMATABLE[i_video.usegamma.idx()];
     for (color, rgb) in i_video
         .colors
         .iter_mut()
@@ -337,9 +341,9 @@ pub fn get_palette_index(platform: &mut dyn DoomPlatform, r: i32, g: i32, b: i32
     let mut best: i32 = 0;
     let mut best_diff: i32 = INT_MAX;
     for i in 0..256 {
-        color.r = ((0xf800 & i32::from(RGB565_PALETTE[i as usize])) >> 11) as u8;
-        color.g = ((0x7e0 & i32::from(RGB565_PALETTE[i as usize])) >> 5) as u8;
-        color.b = (0x1f & i32::from(RGB565_PALETTE[i as usize])) as u8;
+        color.r = ((0xf800 & i32::from(RGB565_PALETTE[i.idx()])) >> 11).cast_unsigned() as u8;
+        color.g = ((0x7e0 & i32::from(RGB565_PALETTE[i.idx()])) >> 5).cast_unsigned() as u8;
+        color.b = (0x1f & i32::from(RGB565_PALETTE[i.idx()])).cast_unsigned() as u8;
         let diff: i32 = (r - i32::from(color.r)) * (r - i32::from(color.r))
             + (g - i32::from(color.g)) * (g - i32::from(color.g))
             + (b - i32::from(color.b)) * (b - i32::from(color.b));

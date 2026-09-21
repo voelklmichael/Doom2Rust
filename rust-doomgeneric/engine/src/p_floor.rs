@@ -1,4 +1,5 @@
 use crate::game_state::GameState;
+use crate::index::ToIndex;
 use crate::m_fixed::Fixed;
 use crate::m_fixed::FRACUNIT;
 use crate::m_fixed::INT_MAX;
@@ -303,10 +304,9 @@ pub fn do_floor(state: &mut GameState, line: LineId, floortype: FloorE) -> bool 
                             let side = get_side(&mut state.world.p_setup, sector, i, side_index);
                             let bottomtexture = state.world.p_setup.side_mut(side).bottomtexture;
                             if i32::from(bottomtexture) >= 0
-                                && state.render.r_data.textureheight[bottomtexture as usize]
-                                    < minsize
+                                && state.render.r_data.textureheight[bottomtexture.idx()] < minsize
                             {
-                                minsize = state.render.r_data.textureheight[bottomtexture as usize];
+                                minsize = state.render.r_data.textureheight[bottomtexture.idx()];
                             }
                         }
                     }
@@ -398,7 +398,7 @@ pub fn build_stairs(
     // staircase just built (as vanilla does); a plain for loop would not.
     while let Some(next) = find_sector_from_line_tag(p_setup, line, secnum) {
         secnum = next;
-        let mut sec = SectorId(secnum as u32);
+        let mut sec = SectorId(secnum.cast_unsigned());
         if p_setup.sector_mut(sec).specialdata.is_some() {
             continue;
         }
@@ -413,7 +413,7 @@ pub fn build_stairs(
         loop {
             let mut found = false;
             let linecount = p_setup.sector_mut(sec).linecount;
-            for i in 0..linecount as usize {
+            for i in 0..linecount.idx() {
                 let line_id = p_setup.sector_mut(sec).lines[i];
                 let iline = p_setup.line(line_id);
                 if iline.flags.contains(LineFlags::TWOSIDED) {

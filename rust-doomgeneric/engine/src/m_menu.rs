@@ -8,6 +8,7 @@ use crate::filesystem::DoomFileSystem;
 use crate::g_game::GGameState;
 use crate::hu_stuff::HuStuffState;
 use crate::i_system::error;
+use crate::index::ToIndex;
 use crate::w_wad::WWadState;
 use alloc::string::String;
 use alloc::string::ToString;
@@ -713,7 +714,7 @@ pub fn draw_save(state: &mut GameState) {
         write_text(state, loaddef_x, loaddef_y, &savestr);
     }
     if state.ui.m_menu.save_string_enter {
-        let savestr = state.ui.m_menu.savegamestrings[state.ui.m_menu.save_slot as usize].clone();
+        let savestr = state.ui.m_menu.savegamestrings[state.ui.m_menu.save_slot.idx()].clone();
         let width: i32 = string_width(
             &*state.assets.fs,
             &state.ui.hu_stuff,
@@ -727,7 +728,7 @@ pub fn draw_save(state: &mut GameState) {
     }
 }
 pub fn do_save(g_game: &mut GGameState, m_menu: &mut MMenuState, slot: i32) {
-    let savegame_name = m_menu.savegamestrings[slot as usize].clone();
+    let savegame_name = m_menu.savegamestrings[slot.idx()].clone();
     g_save_game(g_game, slot, &savegame_name);
     clear_menus(m_menu);
     if m_menu.quick_save_slot == QuickSaveSlot::Choosing {
@@ -737,11 +738,11 @@ pub fn do_save(g_game: &mut GGameState, m_menu: &mut MMenuState, slot: i32) {
 pub fn save_select(state: &mut GameState, choice: i32) {
     state.ui.m_menu.save_string_enter = true;
     state.ui.m_menu.save_slot = choice;
-    state.ui.m_menu.save_old_string = state.ui.m_menu.savegamestrings[choice as usize].clone();
-    if state.ui.m_menu.savegamestrings[choice as usize] == EMPTYSTRING.trim_end_matches('\0') {
-        state.ui.m_menu.savegamestrings[choice as usize].clear();
+    state.ui.m_menu.save_old_string = state.ui.m_menu.savegamestrings[choice.idx()].clone();
+    if state.ui.m_menu.savegamestrings[choice.idx()] == EMPTYSTRING.trim_end_matches('\0') {
+        state.ui.m_menu.savegamestrings[choice.idx()].clear();
     }
-    state.ui.m_menu.save_char_index = state.ui.m_menu.savegamestrings[choice as usize].len();
+    state.ui.m_menu.save_char_index = state.ui.m_menu.savegamestrings[choice.idx()].len();
 }
 pub fn m_save_game(state: &mut GameState, _choice: i32) {
     if !state.game.g_game.usergame {
@@ -799,7 +800,7 @@ pub fn quick_save(state: &mut GameState) {
     };
     let msg = format!(
         "quicksave over your game named\n\n'{}'?\n\npress y or n.",
-        state.ui.m_menu.savegamestrings[quick_save_slot as usize],
+        state.ui.m_menu.savegamestrings[quick_save_slot.idx()],
     );
     let routine = Some(quick_save_response as fn(&mut GameState, i32));
     start_message(&mut state.ui.m_menu, &msg, routine, true);
@@ -834,7 +835,7 @@ pub fn quick_load(g_game: &GGameState, m_menu: &mut MMenuState) {
     };
     let msg = format!(
         "do you want to quickload the game named\n\n'{}'?\n\npress y or n.",
-        m_menu.savegamestrings[quick_save_slot as usize],
+        m_menu.savegamestrings[quick_save_slot.idx()],
     );
     let routine = Some(quick_load_response as fn(&mut GameState, i32));
     start_message(m_menu, &msg, routine, true);
@@ -1023,7 +1024,7 @@ pub fn draw_options(state: &mut GameState) {
     let __wcache1364_11 = cache_patch_name(
         &*state.assets.fs,
         &mut state.assets.w_wad,
-        DETAIL_NAMES[state.ui.m_menu.detail_level as usize],
+        DETAIL_NAMES[state.ui.m_menu.detail_level.idx()],
     );
     let dest_screen = Screen::Video;
     draw_patch_direct(
@@ -1036,7 +1037,7 @@ pub fn draw_options(state: &mut GameState) {
     let __wcache1373_10 = cache_patch_name(
         &*state.assets.fs,
         &mut state.assets.w_wad,
-        MSG_NAMES[state.ui.m_menu.show_messages as usize],
+        MSG_NAMES[state.ui.m_menu.show_messages.idx()],
     );
     let dest_screen = Screen::Video;
     draw_patch_direct(
@@ -1153,13 +1154,13 @@ pub fn quit_response(state: &mut GameState, key: i32) {
             s_start_sound(
                 state,
                 SoundOrigin::None,
-                QUITSOUNDS2[(state.game.d_loop.gametic >> 2 & 7) as usize],
+                QUITSOUNDS2[(state.game.d_loop.gametic >> 2 & 7).idx()],
             );
         } else {
             s_start_sound(
                 state,
                 SoundOrigin::None,
-                QUITSOUNDS[(state.game.d_loop.gametic >> 2 & 7) as usize],
+                QUITSOUNDS[(state.game.d_loop.gametic >> 2 & 7).idx()],
             );
         }
     }
@@ -1171,7 +1172,7 @@ fn select_end_message(d_loop: &DLoopState, doomstat: &DoomstatState) -> &'static
     } else {
         &DOOM2_ENDMSG
     };
-    endmsg[(d_loop.gametic % NUM_QUITMESSAGES) as usize]
+    endmsg[(d_loop.gametic % NUM_QUITMESSAGES).idx()]
 }
 pub fn quit_doom(state: &mut GameState, _choice: i32) {
     let msg = format!(
@@ -1274,7 +1275,7 @@ pub fn string_width(
     for b in string.bytes() {
         let c: i32 = i32::from(b.to_ascii_uppercase()) - HU_FONTSTART;
         if (0..HU_FONTSIZE).contains(&c) {
-            let font_patch = cache_loaded_patch(fs, w_wad, hu_stuff.hu_font[c as usize]);
+            let font_patch = cache_loaded_patch(fs, w_wad, hu_stuff.hu_font[c.idx()]);
             w += font_patch.width();
         } else {
             w += 4;
@@ -1306,12 +1307,12 @@ pub fn write_text(state: &mut GameState, x: i32, y: i32, string: &str) {
             cx = x;
             cy += 12;
         } else {
-            let c: i32 = i32::from((c as u8).to_ascii_uppercase()) - HU_FONTSTART;
+            let c: i32 = i32::from((c.cast_unsigned() as u8).to_ascii_uppercase()) - HU_FONTSTART;
             if (0..HU_FONTSIZE).contains(&c) {
                 let font_patch = cache_loaded_patch(
                     &*state.assets.fs,
                     &mut state.assets.w_wad,
-                    state.ui.hu_stuff.hu_font[c as usize],
+                    state.ui.hu_stuff.hu_font[c.idx()],
                 );
                 let w: i32 = font_patch.width();
                 if cx + w > SCREENWIDTH {
@@ -1419,19 +1420,19 @@ fn edit_save_name(state: &mut GameState, key: i32, mut ch: i32) -> bool {
         KEY_BACKSPACE => {
             if state.ui.m_menu.save_char_index > 0 {
                 state.ui.m_menu.save_char_index -= 1;
-                state.ui.m_menu.savegamestrings[state.ui.m_menu.save_slot as usize]
+                state.ui.m_menu.savegamestrings[state.ui.m_menu.save_slot.idx()]
                     .truncate(state.ui.m_menu.save_char_index);
             }
         }
         KEY_ESCAPE => {
             state.ui.m_menu.save_string_enter = false;
             let old_string = state.ui.m_menu.save_old_string.clone();
-            state.ui.m_menu.savegamestrings[state.ui.m_menu.save_slot as usize]
+            state.ui.m_menu.savegamestrings[state.ui.m_menu.save_slot.idx()]
                 .clone_from(&old_string);
         }
         KEY_ENTER => {
             state.ui.m_menu.save_string_enter = false;
-            if !state.ui.m_menu.savegamestrings[state.ui.m_menu.save_slot as usize].is_empty() {
+            if !state.ui.m_menu.savegamestrings[state.ui.m_menu.save_slot.idx()].is_empty() {
                 let save_slot = state.ui.m_menu.save_slot;
                 do_save(&mut state.game.g_game, &mut state.ui.m_menu, save_slot);
             }
@@ -1440,10 +1441,10 @@ fn edit_save_name(state: &mut GameState, key: i32, mut ch: i32) -> bool {
             if state.io.i_input.vanilla_keyboard_mapping != 0 {
                 ch = key;
             }
-            ch = i32::from((ch as u8).to_ascii_uppercase());
+            ch = i32::from((ch.cast_unsigned() as u8).to_ascii_uppercase());
             if !(ch != ' ' as i32 && (ch - HU_FONTSTART < 0 || ch - HU_FONTSTART >= HU_FONTSIZE)) {
                 let savestr =
-                    state.ui.m_menu.savegamestrings[state.ui.m_menu.save_slot as usize].clone();
+                    state.ui.m_menu.savegamestrings[state.ui.m_menu.save_slot.idx()].clone();
                 if (32..=127).contains(&ch)
                     && state.ui.m_menu.save_char_index < SAVESTRINGSIZE - 1
                     && string_width(
@@ -1454,8 +1455,8 @@ fn edit_save_name(state: &mut GameState, key: i32, mut ch: i32) -> bool {
                     ) < (SAVESTRINGSIZE as i32 - 2) * 8
                 {
                     state.ui.m_menu.save_char_index += 1;
-                    state.ui.m_menu.savegamestrings[state.ui.m_menu.save_slot as usize]
-                        .push(ch as u8 as char);
+                    state.ui.m_menu.savegamestrings[state.ui.m_menu.save_slot.idx()]
+                        .push(ch.cast_unsigned() as u8 as char);
                 }
             }
         }
@@ -1560,7 +1561,7 @@ fn inactive_menu_key(state: &mut GameState, key: i32) -> bool {
             state.io.i_video.usegamma = 0;
         }
         state.game.g_game.players[state.game.g_game.consoleplayer].message =
-            Some(GAMMAMSG[state.io.i_video.usegamma as usize].to_string());
+            Some(GAMMAMSG[state.io.i_video.usegamma.idx()].to_string());
         let pal = lump_bytes_name(&*state.assets.fs, &mut state.assets.w_wad, "PLAYPAL");
         set_palette(&mut state.io.i_video, &pal[..768]);
         return true;
@@ -1578,13 +1579,13 @@ fn inactive_menu_key(state: &mut GameState, key: i32) -> bool {
 fn menu_navigate(state: &mut GameState, key: i32, ch: i32) -> bool {
     if key == state.game.m_controls.key_menu_down {
         loop {
-            if state.ui.m_menu.item_on as usize + 1 >= state.ui.m_menu.current().items.len() {
+            if state.ui.m_menu.item_on.idx() + 1 >= state.ui.m_menu.current().items.len() {
                 state.ui.m_menu.item_on = 0;
             } else {
                 state.ui.m_menu.item_on += 1;
             }
             s_start_sound(state, SoundOrigin::None, SfxName::Pstop);
-            if i32::from(state.ui.m_menu.current().items[state.ui.m_menu.item_on as usize].status)
+            if i32::from(state.ui.m_menu.current().items[state.ui.m_menu.item_on.idx()].status)
                 != -1
             {
                 break;
@@ -1599,7 +1600,7 @@ fn menu_navigate(state: &mut GameState, key: i32, ch: i32) -> bool {
                 state.ui.m_menu.item_on -= 1;
             }
             s_start_sound(state, SoundOrigin::None, SfxName::Pstop);
-            if i32::from(state.ui.m_menu.current().items[state.ui.m_menu.item_on as usize].status)
+            if i32::from(state.ui.m_menu.current().items[state.ui.m_menu.item_on.idx()].status)
                 != -1
             {
                 break;
@@ -1607,21 +1608,21 @@ fn menu_navigate(state: &mut GameState, key: i32, ch: i32) -> bool {
         }
         return true;
     } else if key == state.game.m_controls.key_menu_left {
-        let item = state.ui.m_menu.current().items[state.ui.m_menu.item_on as usize];
+        let item = state.ui.m_menu.current().items[state.ui.m_menu.item_on.idx()];
         if let Some(routine) = item.routine.filter(|_| i32::from(item.status) == 2) {
             s_start_sound(state, SoundOrigin::None, SfxName::Stnmov);
             routine(state, 0);
         }
         return true;
     } else if key == state.game.m_controls.key_menu_right {
-        let item = state.ui.m_menu.current().items[state.ui.m_menu.item_on as usize];
+        let item = state.ui.m_menu.current().items[state.ui.m_menu.item_on.idx()];
         if let Some(routine) = item.routine.filter(|_| i32::from(item.status) == 2) {
             s_start_sound(state, SoundOrigin::None, SfxName::Stnmov);
             routine(state, 1);
         }
         return true;
     } else if key == state.game.m_controls.key_menu_forward {
-        let item = state.ui.m_menu.current().items[state.ui.m_menu.item_on as usize];
+        let item = state.ui.m_menu.current().items[state.ui.m_menu.item_on.idx()];
         if let Some(routine) = item.routine.filter(|_| i32::from(item.status) != 0) {
             let item_on = state.ui.m_menu.item_on;
             state.ui.m_menu.current_mut().last_on = item_on;
@@ -1654,14 +1655,14 @@ fn menu_navigate(state: &mut GameState, key: i32, ch: i32) -> bool {
         for i in
             i32::from(state.ui.m_menu.item_on) + 1..state.ui.m_menu.current().items.len() as i32
         {
-            if i32::from(state.ui.m_menu.current().items[i as usize].alpha_key) == ch {
+            if i32::from(state.ui.m_menu.current().items[i.idx()].alpha_key) == ch {
                 state.ui.m_menu.item_on = i as i16;
                 s_start_sound(state, SoundOrigin::None, SfxName::Pstop);
                 return true;
             }
         }
         for i in 0..=i32::from(state.ui.m_menu.item_on) {
-            if i32::from(state.ui.m_menu.current().items[i as usize].alpha_key) == ch {
+            if i32::from(state.ui.m_menu.current().items[i.idx()].alpha_key) == ch {
                 state.ui.m_menu.item_on = i as i16;
                 s_start_sound(state, SoundOrigin::None, SfxName::Pstop);
                 return true;
@@ -1816,7 +1817,7 @@ pub fn m_drawer(state: &mut GameState) {
     let __wcache2231_1 = cache_patch_name(
         &*state.assets.fs,
         &mut state.assets.w_wad,
-        SKULL_NAME[state.ui.m_menu.which_skull as usize],
+        SKULL_NAME[state.ui.m_menu.which_skull.idx()],
     );
     let dest_screen = Screen::Video;
     draw_patch_direct(

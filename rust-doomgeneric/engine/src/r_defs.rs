@@ -1,4 +1,5 @@
 use crate::game_state::GameState;
+use crate::index::ToIndex;
 use crate::m_bbox::BBox;
 use crate::m_fixed::Fixed;
 use crate::p_setup::LineId;
@@ -29,21 +30,21 @@ pub enum ClipArray {
 impl ClipArray {
     pub fn get(self, state: &GameState, x: isize) -> i16 {
         match self {
-            Self::Openings(offset) => state.render.r_plane.openings[(offset + x) as usize],
-            Self::ScreenHeightArray => state.render.r_things.screenheightarray[x as usize],
-            Self::NegOneArray => state.render.r_things.negonearray[x as usize],
-            Self::ClipBot => state.render.r_things.clipbot[x as usize],
-            Self::ClipTop => state.render.r_things.cliptop[x as usize],
+            Self::Openings(offset) => state.render.r_plane.openings[(offset + x).idx()],
+            Self::ScreenHeightArray => state.render.r_things.screenheightarray[x.idx()],
+            Self::NegOneArray => state.render.r_things.negonearray[x.idx()],
+            Self::ClipBot => state.render.r_things.clipbot[x.idx()],
+            Self::ClipTop => state.render.r_things.cliptop[x.idx()],
         }
     }
 
     pub fn set(self, state: &mut GameState, x: isize, value: i16) {
         match self {
-            Self::Openings(offset) => state.render.r_plane.openings[(offset + x) as usize] = value,
-            Self::ScreenHeightArray => state.render.r_things.screenheightarray[x as usize] = value,
-            Self::NegOneArray => state.render.r_things.negonearray[x as usize] = value,
-            Self::ClipBot => state.render.r_things.clipbot[x as usize] = value,
-            Self::ClipTop => state.render.r_things.cliptop[x as usize] = value,
+            Self::Openings(offset) => state.render.r_plane.openings[(offset + x).idx()] = value,
+            Self::ScreenHeightArray => state.render.r_things.screenheightarray[x.idx()] = value,
+            Self::NegOneArray => state.render.r_things.negonearray[x.idx()] = value,
+            Self::ClipBot => state.render.r_things.clipbot[x.idx()] = value,
+            Self::ClipTop => state.render.r_things.cliptop[x.idx()] = value,
         }
     }
 }
@@ -135,19 +136,19 @@ impl VisPlane {
     };
 
     pub fn top(&self, x: i32) -> u8 {
-        self.top[(x + 1) as usize]
+        self.top[(x + 1).idx()]
     }
 
     pub fn set_top(&mut self, x: i32, value: u8) {
-        self.top[(x + 1) as usize] = value;
+        self.top[(x + 1).idx()] = value;
     }
 
     pub fn bottom(&self, x: i32) -> u8 {
-        self.bottom[(x + 1) as usize]
+        self.bottom[(x + 1).idx()]
     }
 
     pub fn set_bottom(&mut self, x: i32, value: u8) {
-        self.bottom[(x + 1) as usize] = value;
+        self.bottom[(x + 1).idx()] = value;
     }
 
     /// Marks all 320 real columns as untouched (top == 0xff).

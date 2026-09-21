@@ -27,6 +27,9 @@ impl AudioClock {
         self.rate
     }
 
+    // Both `as u64` casts are of values that are not negative (a clamped time, a product of
+    // positive numbers).
+    #[allow(clippy::cast_sign_loss)]
     pub fn frames_wanted(&mut self, now_ms: f64) -> usize {
         let started = *self.started_ms.get_or_insert(now_ms);
         let per_ms = f64::from(self.rate) / 1000.0;
