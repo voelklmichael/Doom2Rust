@@ -35,6 +35,7 @@ use crate::p_setup::SubsectorId;
 use crate::p_spec::Direction;
 use crate::p_spec::{Ceiling, FloorMove, Plat};
 use crate::p_tick::add_thinker;
+use crate::p_tick::free_thinker_payload;
 use crate::p_tick::init_thinkers;
 use crate::p_tick::thinker_function;
 use crate::p_tick::ThinkerKind;
@@ -878,72 +879,14 @@ pub fn un_archive_thinkers(state: &mut GameState) {
         // below may free -- capturing it first just mirrors the original
         // ordering, not a use-after-free workaround.
         let next = state.world.p_tick.next(id);
-        // Dispatch on the node's recorded kind, not `.function` -- every
-        // payload type's memory is now owned by its own arena (Mobj and
-        // all 8 thinker specials), not the zone allocator, so each needs
-        // its own dealloc/deallocate call, mirroring run_thinkers' reaper
-        // dispatch exactly. (`.function` is still live/intact at this point
-        // for the Mobj case specifically, which is why the original code
-        // could match on it directly -- but `kind` works uniformly for all
-        // 9 and doesn't depend on that.)
-        match state.world.p_tick.kind(id) {
-            ThinkerKind::Mobj => {
-                if let ThinkerPayload::Mobj(mobj_id) = state.world.p_tick.payload(id) {
-                    remove_mobj(state, mobj_id);
-                    // remove_mobj only retires (see PMobjState::retire) --
-                    // it never itself frees the mobj's memory, and
-                    // init_thinkers just below wipes PTickState before
-                    // run_thinkers' reaper ever gets a chance to run on
-                    // this now-Removed node, so nothing else was ever going
-                    // to deallocate it. This call closes that gap (a
-                    // pre-existing leak: every live mobj at the moment a
-                    // savegame is loaded used to leak its Z_Malloc'd
-                    // block).
-                    state.world.p_mobj.deallocate(mobj_id);
-                }
-            }
-            ThinkerKind::Door => {
-                if let ThinkerPayload::Door(door_id) = state.world.p_tick.payload(id) {
-                    state.world.p_doors.dealloc(door_id);
-                }
-            }
-            ThinkerKind::Ceiling => {
-                if let ThinkerPayload::Ceiling(ceiling_id) = state.world.p_tick.payload(id) {
-                    state.world.p_ceilng.dealloc(ceiling_id);
-                }
-            }
-            ThinkerKind::Plat => {
-                if let ThinkerPayload::Plat(plat_id) = state.world.p_tick.payload(id) {
-                    state.world.p_plats.dealloc(plat_id);
-                }
-            }
-            ThinkerKind::Floor => {
-                if let ThinkerPayload::Floor(floor_id) = state.world.p_tick.payload(id) {
-                    state.world.p_spec.dealloc_floor(floor_id);
-                }
-            }
-            ThinkerKind::FireFlicker => {
-                if let ThinkerPayload::FireFlicker(fireflicker_id) = state.world.p_tick.payload(id)
-                {
-                    state.world.p_lights.dealloc_fireflicker(fireflicker_id);
-                }
-            }
-            ThinkerKind::LightFlash => {
-                if let ThinkerPayload::LightFlash(lightflash_id) = state.world.p_tick.payload(id) {
-                    state.world.p_lights.dealloc_lightflash(lightflash_id);
-                }
-            }
-            ThinkerKind::Strobe => {
-                if let ThinkerPayload::Strobe(strobe_id) = state.world.p_tick.payload(id) {
-                    state.world.p_lights.dealloc_strobe(strobe_id);
-                }
-            }
-            ThinkerKind::Glow => {
-                if let ThinkerPayload::Glow(glow_id) = state.world.p_tick.payload(id) {
-                    state.world.p_lights.dealloc_glow(glow_id);
-                }
-            }
+        // Dispatch on the node's recorded kind, as run_thinkers' reaper does. A live mobj is
+        // retired first (unlinked from its sector and the blockmap); retiring never frees it, and
+        // init_thinkers below wipes the thinker list before the reaper could, so it is freed here.
+        let kind = state.world.p_tick.kind(id);
+        if let ThinkerPayload::Mobj(mobj_id) = state.world.p_tick.payload(id) {
+            remove_mobj(state, mobj_id);
         }
+        free_thinker_payload(state, id, kind);
         cursor = next;
     }
     init_thinkers(&mut state.world.p_tick);
@@ -1000,6 +943,12 @@ pub fn un_archive_thinkers(state: &mut GameState) {
         }
     }
 }
+/// The tag byte and padding that start a special thinker's record.
+fn write_special_class(p_saveg: &mut PSavegState, class: SpecialThinkerClass) {
+    saveg_write8(p_saveg, (class as i32).cast_unsigned() as u8);
+    saveg_write_pad(p_saveg);
+}
+
 pub fn archive_specials(world: &mut World) {
     let mut cursor = world.p_tick.head();
     while let Some(id) = cursor {
@@ -1013,52 +962,32 @@ pub fn archive_specials(world: &mut World) {
                     .any(|&entry| entry == Some(id));
                 if in_stasis {
                     let ceiling_id = world.p_tick.ceiling_payload(id);
-                    saveg_write8(
-                        &mut world.p_saveg,
-                        (SpecialThinkerClass::Ceiling as i32).cast_unsigned() as u8,
-                    );
-                    saveg_write_pad(&mut world.p_saveg);
+                    write_special_class(&mut world.p_saveg, SpecialThinkerClass::Ceiling);
                     let c = world.p_ceilng.get_mut(ceiling_id).expect("live ceiling");
                     saveg_write_ceiling_t(&mut world.p_saveg, c);
                 }
             }
             ThinkerFn::Ceiling(_) => {
                 let ceiling_id = world.p_tick.ceiling_payload(id);
-                saveg_write8(
-                    &mut world.p_saveg,
-                    (SpecialThinkerClass::Ceiling as i32).cast_unsigned() as u8,
-                );
-                saveg_write_pad(&mut world.p_saveg);
+                write_special_class(&mut world.p_saveg, SpecialThinkerClass::Ceiling);
                 let c = world.p_ceilng.get_mut(ceiling_id).expect("live ceiling");
                 saveg_write_ceiling_t(&mut world.p_saveg, c);
             }
             ThinkerFn::Door(_) => {
                 let door_id = world.p_tick.door_payload(id);
-                saveg_write8(
-                    &mut world.p_saveg,
-                    (SpecialThinkerClass::Door as i32).cast_unsigned() as u8,
-                );
-                saveg_write_pad(&mut world.p_saveg);
+                write_special_class(&mut world.p_saveg, SpecialThinkerClass::Door);
                 let d = world.p_doors.get_mut(door_id).expect("live door");
                 saveg_write_vldoor_t(&mut world.p_saveg, d);
             }
             ThinkerFn::Floor(_) => {
                 let floor_id = world.p_tick.floor_payload(id);
-                saveg_write8(
-                    &mut world.p_saveg,
-                    (SpecialThinkerClass::Floor as i32).cast_unsigned() as u8,
-                );
-                saveg_write_pad(&mut world.p_saveg);
+                write_special_class(&mut world.p_saveg, SpecialThinkerClass::Floor);
                 let f = world.p_spec.get_floor_mut(floor_id).expect("live floor");
                 saveg_write_floormove_t(&mut world.p_saveg, f);
             }
             ThinkerFn::Plat(_) => {
                 let plat_id = world.p_tick.plat_payload(id);
-                saveg_write8(
-                    &mut world.p_saveg,
-                    (SpecialThinkerClass::Plat as i32).cast_unsigned() as u8,
-                );
-                saveg_write_pad(&mut world.p_saveg);
+                write_special_class(&mut world.p_saveg, SpecialThinkerClass::Plat);
                 let p = world.p_plats.get_mut(plat_id).expect("live plat");
                 saveg_write_plat_t(&mut world.p_saveg, p);
             }
@@ -1066,11 +995,7 @@ pub fn archive_specials(world: &mut World) {
                 let ThinkerPayload::LightFlash(flash_id) = world.p_tick.payload(id) else {
                     unreachable!()
                 };
-                saveg_write8(
-                    &mut world.p_saveg,
-                    (SpecialThinkerClass::Flash as i32).cast_unsigned() as u8,
-                );
-                saveg_write_pad(&mut world.p_saveg);
+                write_special_class(&mut world.p_saveg, SpecialThinkerClass::Flash);
                 let f = world
                     .p_lights
                     .get_lightflash_mut(flash_id)
@@ -1081,11 +1006,7 @@ pub fn archive_specials(world: &mut World) {
                 let ThinkerPayload::Strobe(strobe_id) = world.p_tick.payload(id) else {
                     unreachable!()
                 };
-                saveg_write8(
-                    &mut world.p_saveg,
-                    (SpecialThinkerClass::Strobe as i32).cast_unsigned() as u8,
-                );
-                saveg_write_pad(&mut world.p_saveg);
+                write_special_class(&mut world.p_saveg, SpecialThinkerClass::Strobe);
                 let s = world
                     .p_lights
                     .get_strobe_mut(strobe_id)
@@ -1096,11 +1017,7 @@ pub fn archive_specials(world: &mut World) {
                 let ThinkerPayload::Glow(glow_id) = world.p_tick.payload(id) else {
                     unreachable!()
                 };
-                saveg_write8(
-                    &mut world.p_saveg,
-                    (SpecialThinkerClass::Glow as i32).cast_unsigned() as u8,
-                );
-                saveg_write_pad(&mut world.p_saveg);
+                write_special_class(&mut world.p_saveg, SpecialThinkerClass::Glow);
                 let g = world.p_lights.get_glow_mut(glow_id).expect("live glow");
                 saveg_write_glow_t(&mut world.p_saveg, g);
             }
@@ -1113,138 +1030,172 @@ pub fn archive_specials(world: &mut World) {
         (SpecialThinkerClass::Endspecials as i32).cast_unsigned() as u8,
     );
 }
+/// Reads one saved `ceiling` thinker and puts it back on the level.
+fn read_ceiling(world: &mut World) {
+    saveg_read_pad(&mut world.p_saveg);
+    let ceiling_arena_id = world.p_ceilng.spawn(Ceiling::default());
+    let sector = {
+        let c = world
+            .p_ceilng
+            .get_mut(ceiling_arena_id)
+            .expect("live ceiling");
+        saveg_read_ceiling_t(&mut world.p_saveg, c);
+        if matches!(c.thinker.function, ThinkerFn::Unresolved) {
+            c.thinker.function = ThinkerFn::Ceiling(move_ceiling);
+        }
+        c.sector
+    };
+    let ceiling_id = add_thinker(
+        &mut world.p_tick,
+        ThinkerPayload::Ceiling(ceiling_arena_id),
+        ThinkerKind::Ceiling,
+    );
+    world.p_setup.sector_mut(sector).specialdata = Some(SectorSpecial::Ceiling(ceiling_id));
+    add_active_ceiling(&mut world.p_ceilng, ceiling_id);
+}
+
+/// Reads one saved `door` thinker and puts it back on the level.
+fn read_door(world: &mut World) {
+    saveg_read_pad(&mut world.p_saveg);
+    let door_arena_id = world.p_doors.spawn(VlDoor::default());
+    let sector = {
+        let d = world.p_doors.get_mut(door_arena_id).expect("live door");
+        saveg_read_vldoor_t(&mut world.p_saveg, d);
+        d.thinker.function = ThinkerFn::Door(t_vertical_door);
+        d.sector
+    };
+    let door_id = add_thinker(
+        &mut world.p_tick,
+        ThinkerPayload::Door(door_arena_id),
+        ThinkerKind::Door,
+    );
+    world.p_setup.sector_mut(sector).specialdata = Some(SectorSpecial::Door(door_id));
+}
+
+/// Reads one saved `floor` thinker and puts it back on the level.
+fn read_floor(world: &mut World) {
+    saveg_read_pad(&mut world.p_saveg);
+    let floor_arena_id = world.p_spec.spawn_floor(FloorMove::default());
+    let sector = {
+        let f = world
+            .p_spec
+            .get_floor_mut(floor_arena_id)
+            .expect("live floor");
+        saveg_read_floormove_t(&mut world.p_saveg, f);
+        f.thinker.function = ThinkerFn::Floor(move_floor);
+        f.sector
+    };
+    let floor_id = add_thinker(
+        &mut world.p_tick,
+        ThinkerPayload::Floor(floor_arena_id),
+        ThinkerKind::Floor,
+    );
+    world.p_setup.sector_mut(sector).specialdata = Some(SectorSpecial::Floor(floor_id));
+}
+
+/// Reads one saved `plat` thinker and puts it back on the level.
+fn read_plat(world: &mut World) {
+    saveg_read_pad(&mut world.p_saveg);
+    let plat_arena_id = world.p_plats.spawn(Plat::default());
+    let sector = {
+        let p = world.p_plats.get_mut(plat_arena_id).expect("live plat");
+        saveg_read_plat_t(&mut world.p_saveg, p);
+        if matches!(p.thinker.function, ThinkerFn::Unresolved) {
+            p.thinker.function = ThinkerFn::Plat(plat_raise);
+        }
+        p.sector
+    };
+    let plat_id = add_thinker(
+        &mut world.p_tick,
+        ThinkerPayload::Plat(plat_arena_id),
+        ThinkerKind::Plat,
+    );
+    world.p_setup.sector_mut(sector).specialdata = Some(SectorSpecial::Plat(plat_id));
+    add_active_plat(&mut world.p_plats, plat_id);
+}
+
+/// Reads one saved `lightflash` thinker and puts it back on the level.
+fn read_lightflash(world: &mut World) {
+    saveg_read_pad(&mut world.p_saveg);
+    let flash_arena_id = world.p_lights.spawn_lightflash(LightFlash::default());
+    {
+        let f = world
+            .p_lights
+            .get_lightflash_mut(flash_arena_id)
+            .expect("live lightflash");
+        saveg_read_lightflash_t(&mut world.p_saveg, f);
+        f.thinker.function = ThinkerFn::LightFlash(light_flash);
+    }
+    add_thinker(
+        &mut world.p_tick,
+        ThinkerPayload::LightFlash(flash_arena_id),
+        ThinkerKind::LightFlash,
+    );
+}
+
+/// Reads one saved `strobe` thinker and puts it back on the level.
+fn read_strobe(world: &mut World) {
+    saveg_read_pad(&mut world.p_saveg);
+    let strobe_arena_id = world.p_lights.spawn_strobe(Strobe::default());
+    {
+        let s = world
+            .p_lights
+            .get_strobe_mut(strobe_arena_id)
+            .expect("live strobe");
+        saveg_read_strobe_t(&mut world.p_saveg, s);
+        s.thinker.function = ThinkerFn::Strobe(strobe_flash);
+    }
+    add_thinker(
+        &mut world.p_tick,
+        ThinkerPayload::Strobe(strobe_arena_id),
+        ThinkerKind::Strobe,
+    );
+}
+
+/// Reads one saved `glow` thinker and puts it back on the level.
+fn read_glow(world: &mut World) {
+    saveg_read_pad(&mut world.p_saveg);
+    let glow_arena_id = world.p_lights.spawn_glow(Glow::default());
+    {
+        let g = world
+            .p_lights
+            .get_glow_mut(glow_arena_id)
+            .expect("live glow");
+        saveg_read_glow_t(&mut world.p_saveg, g);
+        g.thinker.function = ThinkerFn::Glow(glow);
+    }
+    add_thinker(
+        &mut world.p_tick,
+        ThinkerPayload::Glow(glow_arena_id),
+        ThinkerKind::Glow,
+    );
+}
+
 pub fn un_archive_specials(world: &mut World) {
     loop {
         let tclass: u8 = saveg_read8(&mut world.p_saveg);
         match i32::from(tclass) {
             7 => return,
             0 => {
-                saveg_read_pad(&mut world.p_saveg);
-                let ceiling_arena_id = world.p_ceilng.spawn(Ceiling::default());
-                let sector = {
-                    let c = world
-                        .p_ceilng
-                        .get_mut(ceiling_arena_id)
-                        .expect("live ceiling");
-                    saveg_read_ceiling_t(&mut world.p_saveg, c);
-                    if matches!(c.thinker.function, ThinkerFn::Unresolved) {
-                        c.thinker.function = ThinkerFn::Ceiling(move_ceiling);
-                    }
-                    c.sector
-                };
-                let ceiling_id = add_thinker(
-                    &mut world.p_tick,
-                    ThinkerPayload::Ceiling(ceiling_arena_id),
-                    ThinkerKind::Ceiling,
-                );
-                world.p_setup.sector_mut(sector).specialdata =
-                    Some(SectorSpecial::Ceiling(ceiling_id));
-                add_active_ceiling(&mut world.p_ceilng, ceiling_id);
+                read_ceiling(world);
             }
             1 => {
-                saveg_read_pad(&mut world.p_saveg);
-                let door_arena_id = world.p_doors.spawn(VlDoor::default());
-                let sector = {
-                    let d = world.p_doors.get_mut(door_arena_id).expect("live door");
-                    saveg_read_vldoor_t(&mut world.p_saveg, d);
-                    d.thinker.function = ThinkerFn::Door(t_vertical_door);
-                    d.sector
-                };
-                let door_id = add_thinker(
-                    &mut world.p_tick,
-                    ThinkerPayload::Door(door_arena_id),
-                    ThinkerKind::Door,
-                );
-                world.p_setup.sector_mut(sector).specialdata = Some(SectorSpecial::Door(door_id));
+                read_door(world);
             }
             2 => {
-                saveg_read_pad(&mut world.p_saveg);
-                let floor_arena_id = world.p_spec.spawn_floor(FloorMove::default());
-                let sector = {
-                    let f = world
-                        .p_spec
-                        .get_floor_mut(floor_arena_id)
-                        .expect("live floor");
-                    saveg_read_floormove_t(&mut world.p_saveg, f);
-                    f.thinker.function = ThinkerFn::Floor(move_floor);
-                    f.sector
-                };
-                let floor_id = add_thinker(
-                    &mut world.p_tick,
-                    ThinkerPayload::Floor(floor_arena_id),
-                    ThinkerKind::Floor,
-                );
-                world.p_setup.sector_mut(sector).specialdata = Some(SectorSpecial::Floor(floor_id));
+                read_floor(world);
             }
             3 => {
-                saveg_read_pad(&mut world.p_saveg);
-                let plat_arena_id = world.p_plats.spawn(Plat::default());
-                let sector = {
-                    let p = world.p_plats.get_mut(plat_arena_id).expect("live plat");
-                    saveg_read_plat_t(&mut world.p_saveg, p);
-                    if matches!(p.thinker.function, ThinkerFn::Unresolved) {
-                        p.thinker.function = ThinkerFn::Plat(plat_raise);
-                    }
-                    p.sector
-                };
-                let plat_id = add_thinker(
-                    &mut world.p_tick,
-                    ThinkerPayload::Plat(plat_arena_id),
-                    ThinkerKind::Plat,
-                );
-                world.p_setup.sector_mut(sector).specialdata = Some(SectorSpecial::Plat(plat_id));
-                add_active_plat(&mut world.p_plats, plat_id);
+                read_plat(world);
             }
             4 => {
-                saveg_read_pad(&mut world.p_saveg);
-                let flash_arena_id = world.p_lights.spawn_lightflash(LightFlash::default());
-                {
-                    let f = world
-                        .p_lights
-                        .get_lightflash_mut(flash_arena_id)
-                        .expect("live lightflash");
-                    saveg_read_lightflash_t(&mut world.p_saveg, f);
-                    f.thinker.function = ThinkerFn::LightFlash(light_flash);
-                }
-                add_thinker(
-                    &mut world.p_tick,
-                    ThinkerPayload::LightFlash(flash_arena_id),
-                    ThinkerKind::LightFlash,
-                );
+                read_lightflash(world);
             }
             5 => {
-                saveg_read_pad(&mut world.p_saveg);
-                let strobe_arena_id = world.p_lights.spawn_strobe(Strobe::default());
-                {
-                    let s = world
-                        .p_lights
-                        .get_strobe_mut(strobe_arena_id)
-                        .expect("live strobe");
-                    saveg_read_strobe_t(&mut world.p_saveg, s);
-                    s.thinker.function = ThinkerFn::Strobe(strobe_flash);
-                }
-                add_thinker(
-                    &mut world.p_tick,
-                    ThinkerPayload::Strobe(strobe_arena_id),
-                    ThinkerKind::Strobe,
-                );
+                read_strobe(world);
             }
             6 => {
-                saveg_read_pad(&mut world.p_saveg);
-                let glow_arena_id = world.p_lights.spawn_glow(Glow::default());
-                {
-                    let g = world
-                        .p_lights
-                        .get_glow_mut(glow_arena_id)
-                        .expect("live glow");
-                    saveg_read_glow_t(&mut world.p_saveg, g);
-                    g.thinker.function = ThinkerFn::Glow(glow);
-                }
-                add_thinker(
-                    &mut world.p_tick,
-                    ThinkerPayload::Glow(glow_arena_id),
-                    ThinkerKind::Glow,
-                );
+                read_glow(world);
             }
             _ => {
                 error(&format!(

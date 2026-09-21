@@ -287,7 +287,7 @@ fn unlink_thinker_node(p_tick: &mut PTickState, id: ThinkerId) {
 }
 
 /// Frees what a removed thinker's payload points at, in the arena of its kind.
-fn free_thinker_payload(state: &mut GameState, id: ThinkerId, kind: ThinkerKind) {
+pub fn free_thinker_payload(state: &mut GameState, id: ThinkerId, kind: ThinkerKind) {
     match kind {
         ThinkerKind::Mobj => {
             if let ThinkerPayload::Mobj(mobj_id) = state.world.p_tick.payload(id) {
