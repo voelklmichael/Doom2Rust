@@ -1,0 +1,10 @@
+# x86-64 only (the firmware, wasm and any ARM host keep their own settings).
+#
+# Intel Skylake-family CPUs (2015-2019, e.g. the i7-8850H) have the "JCC erratum": a jump that
+# crosses or ends on a 32-byte boundary is not cached in the micro-op cache and runs from the slow
+# legacy decoder. This makes LLVM pad such jumps so they do not straddle a boundary. Measured on
+# that CPU: timedemo about 3.5% faster (median of 25 runs, powersave governor; the padding costs
+# about 2% more instructions, so other CPUs see at most a small loss). A `RUSTFLAGS` environment
+# variable replaces this setting, it does not add to it.
+[target.'cfg(target_arch = "x86_64")']
+rustflags = ["-C", "llvm-args=-x86-branches-within-32B-boundaries"]
