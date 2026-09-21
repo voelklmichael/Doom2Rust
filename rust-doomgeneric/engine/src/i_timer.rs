@@ -21,5 +21,5 @@ pub fn get_time_ms(i_timer: &mut ITimerState, platform: &mut dyn DoomPlatform) -
     ticks.wrapping_sub(i_timer.basetime) as i32
 }
 pub fn sleep(platform: &mut dyn DoomPlatform, ms: i32) {
-    platform.sleep_ms(ms as u32);
+    platform.sleep_ms(ms.cast_unsigned());
 }

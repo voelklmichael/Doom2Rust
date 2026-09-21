@@ -2,6 +2,7 @@ use crate::d_mode::GameMode;
 use crate::d_mode::SkillType;
 use crate::doomstat::DoomstatState;
 use crate::g_game::GGameState;
+use crate::index::ToIndex;
 use crate::p_mobj::LineFlags;
 use crate::p_mobj::MobjFlags;
 use crate::p_mobj::PMobjState;
@@ -141,7 +142,7 @@ pub fn recursive_sound(state: &mut GameState, sec: SectorId, soundblocks: i32) {
         s.soundtarget = state.world.p_enemy.soundtarget;
     }
     let linecount = state.world.p_setup.sector_mut(sec).linecount;
-    for i in 0..linecount as usize {
+    for i in 0..linecount.idx() {
         let check = state.world.p_setup.sector_mut(sec).lines[i];
         let checkv = state.world.p_setup.line(check);
         if checkv.flags.contains(LineFlags::TWOSIDED) {
@@ -240,25 +241,25 @@ pub fn check_missile_range(state: &mut GameState, actor: MobjId) -> bool {
         dist -= 128 * FRACUNIT;
     }
     dist >>= 16;
-    if actor_type as u32 == MobjType::Vile as i32 as u32 && dist > Fixed(14 * 64) {
+    if actor_type as u32 == (MobjType::Vile as i32).cast_unsigned() && dist > Fixed(14 * 64) {
         return false;
     }
-    if actor_type as u32 == MobjType::Undead as i32 as u32 {
+    if actor_type as u32 == (MobjType::Undead as i32).cast_unsigned() {
         if dist < Fixed(196) {
             return false;
         }
         dist >>= 1;
     }
-    if actor_type as u32 == MobjType::Cyborg as i32 as u32
-        || actor_type as u32 == MobjType::Spider as i32 as u32
-        || actor_type as u32 == MobjType::Skull as i32 as u32
+    if actor_type as u32 == (MobjType::Cyborg as i32).cast_unsigned()
+        || actor_type as u32 == (MobjType::Spider as i32).cast_unsigned()
+        || actor_type as u32 == (MobjType::Skull as i32).cast_unsigned()
     {
         dist >>= 1;
     }
     if dist > Fixed(200) {
         dist = Fixed(200);
     }
-    if actor_type as u32 == MobjType::Cyborg as i32 as u32 && dist > Fixed(160) {
+    if actor_type as u32 == (MobjType::Cyborg as i32).cast_unsigned() && dist > Fixed(160) {
         dist = Fixed(160);
     }
     if p_random(&mut state.world.m_random) < dist.to_bits() {
@@ -290,7 +291,7 @@ pub fn p_move(state: &mut GameState, actor: MobjId) -> bool {
     if state.world.p_mobj.mo(actor).movedir == DirType::Nodir as i32 {
         return false;
     }
-    if state.world.p_mobj.mo(actor).movedir as u32 >= 8 {
+    if state.world.p_mobj.mo(actor).movedir.cast_unsigned() >= 8 {
         error("Weird actor->movedir!");
     }
     let tryx: Fixed = state.world.p_mobj.mo(actor).x
@@ -299,14 +300,14 @@ pub fn p_move(state: &mut GameState, actor: MobjId) -> bool {
             .info
             .mobjinfo_mut(state.world.p_mobj.mo(actor).kind)
             .speed)
-            * XSPEED[state.world.p_mobj.mo(actor).movedir as usize];
+            * XSPEED[state.world.p_mobj.mo(actor).movedir.idx()];
     let tryy: Fixed = state.world.p_mobj.mo(actor).y
         + (state
             .assets
             .info
             .mobjinfo_mut(state.world.p_mobj.mo(actor).kind)
             .speed)
-            * YSPEED[state.world.p_mobj.mo(actor).movedir as usize];
+            * YSPEED[state.world.p_mobj.mo(actor).movedir.idx()];
     let try_ok: bool = try_move(state, actor, tryx, tryy);
     if try_ok {
         state.world.p_mobj.mo_mut(actor).flags &= !MobjFlags::INFLOAT;
@@ -334,7 +335,7 @@ pub fn p_move(state: &mut GameState, actor: MobjId) -> bool {
         let mut good: bool = false;
         while state.world.p_map.numspechit > 0 {
             state.world.p_map.numspechit -= 1;
-            let ld: LineId = state.world.p_map.spechit[state.world.p_map.numspechit as usize];
+            let ld: LineId = state.world.p_map.spechit[state.world.p_map.numspechit.idx()];
             if use_special_line(state, actor, ld, 0) {
                 good = true;
             }
@@ -385,7 +386,7 @@ pub fn new_chase_dir(state: &mut GameState, actor: MobjId) {
     }
     if d[1] != DirType::Nodir && d[2] != DirType::Nodir {
         state.world.p_mobj.mo_mut(actor).movedir = DIAGS
-            [((i32::from(deltay < Fixed::ZERO) << 1) + i32::from(deltax > Fixed::ZERO)) as usize]
+            [((i32::from(deltay < Fixed::ZERO) << 1) + i32::from(deltax > Fixed::ZERO)).idx()]
             as i32;
         if state.world.p_mobj.mo(actor).movedir != turnaround as i32 && try_walk(state, actor) {
             return;
@@ -553,14 +554,15 @@ pub fn look(state: &mut GameState, actor: MobjId) {
         let sound = match seesound {
             SfxName::Posit1 | SfxName::Posit2 | SfxName::Posit3 => {
                 [SfxName::Posit1, SfxName::Posit2, SfxName::Posit3]
-                    [(p_random(&mut state.world.m_random) % 3) as usize]
+                    [(p_random(&mut state.world.m_random) % 3).idx()]
             }
-            SfxName::Bgsit1 | SfxName::Bgsit2 => [SfxName::Bgsit1, SfxName::Bgsit2]
-                [(p_random(&mut state.world.m_random) % 2) as usize],
+            SfxName::Bgsit1 | SfxName::Bgsit2 => {
+                [SfxName::Bgsit1, SfxName::Bgsit2][(p_random(&mut state.world.m_random) % 2).idx()]
+            }
             other => other,
         };
-        if state.world.p_mobj.mo(actor).kind as u32 == MobjType::Spider as i32 as u32
-            || state.world.p_mobj.mo(actor).kind as u32 == MobjType::Cyborg as i32 as u32
+        if state.world.p_mobj.mo(actor).kind as u32 == (MobjType::Spider as i32).cast_unsigned()
+            || state.world.p_mobj.mo(actor).kind as u32 == (MobjType::Cyborg as i32).cast_unsigned()
         {
             s_start_sound(state, SoundOrigin::None, sound);
         } else {
@@ -590,7 +592,7 @@ pub fn chase(state: &mut GameState, actor: MobjId) {
         state.world.p_mobj.mo_mut(actor).angle =
             Angle(state.world.p_mobj.mo(actor).angle.to_bits() & (7 << 29));
         let delta: i32 = (state.world.p_mobj.mo(actor).angle
-            - Angle((state.world.p_mobj.mo(actor).movedir << 29) as u32))
+            - Angle((state.world.p_mobj.mo(actor).movedir << 29).cast_unsigned()))
         .to_signed();
         if delta > 0 {
             state.world.p_mobj.mo_mut(actor).angle =
@@ -714,7 +716,7 @@ pub fn face_target(state: &mut GameState, actor: MobjId) {
         state.world.p_mobj.mo_mut(actor).angle = state.world.p_mobj.mo(actor).angle
             + Angle(
                 ((p_random(&mut state.world.m_random) - p_random(&mut state.world.m_random)) << 21)
-                    as u32,
+                    .cast_unsigned(),
             );
     }
 }
@@ -724,14 +726,19 @@ pub fn pos_attack(state: &mut GameState, actor: MobjId) {
     }
     face_target(state, actor);
     let mut angle: i32 = (state.world.p_mobj.mo(actor).angle).to_signed();
-    let slope: Fixed = aim_line_attack(state, Some(actor), Angle(angle as u32), MISSILERANGE);
+    let slope: Fixed = aim_line_attack(
+        state,
+        Some(actor),
+        Angle(angle.cast_unsigned()),
+        MISSILERANGE,
+    );
     s_start_sound(state, SoundOrigin::Mobj(actor), SfxName::Pistol);
     angle += (p_random(&mut state.world.m_random) - p_random(&mut state.world.m_random)) << 20;
     let damage: i32 = (p_random(&mut state.world.m_random) % 5 + 1) * 3;
     line_attack(
         state,
         actor,
-        Angle(angle as u32),
+        Angle(angle.cast_unsigned()),
         MISSILERANGE,
         slope,
         damage,
@@ -744,15 +751,21 @@ pub fn spos_attack(state: &mut GameState, actor: MobjId) {
     s_start_sound(state, SoundOrigin::Mobj(actor), SfxName::Shotgn);
     face_target(state, actor);
     let bangle: i32 = (state.world.p_mobj.mo(actor).angle).to_signed();
-    let slope: Fixed = aim_line_attack(state, Some(actor), Angle(bangle as u32), MISSILERANGE);
+    let slope: Fixed = aim_line_attack(
+        state,
+        Some(actor),
+        Angle(bangle.cast_unsigned()),
+        MISSILERANGE,
+    );
     for _ in 0..3 {
-        let angle: i32 = bangle
-            + ((p_random(&mut state.world.m_random) - p_random(&mut state.world.m_random)) << 20);
+        let angle: i32 = bangle.wrapping_add(
+            (p_random(&mut state.world.m_random) - p_random(&mut state.world.m_random)) << 20,
+        );
         let damage: i32 = (p_random(&mut state.world.m_random) % 5 + 1) * 3;
         line_attack(
             state,
             actor,
-            Angle(angle as u32),
+            Angle(angle.cast_unsigned()),
             MISSILERANGE,
             slope,
             damage,
@@ -766,14 +779,20 @@ pub fn cpos_attack(state: &mut GameState, actor: MobjId) {
     s_start_sound(state, SoundOrigin::Mobj(actor), SfxName::Shotgn);
     face_target(state, actor);
     let bangle: i32 = (state.world.p_mobj.mo(actor).angle).to_signed();
-    let slope: Fixed = aim_line_attack(state, Some(actor), Angle(bangle as u32), MISSILERANGE);
-    let angle: i32 = bangle
-        + ((p_random(&mut state.world.m_random) - p_random(&mut state.world.m_random)) << 20);
+    let slope: Fixed = aim_line_attack(
+        state,
+        Some(actor),
+        Angle(bangle.cast_unsigned()),
+        MISSILERANGE,
+    );
+    let angle: i32 = bangle.wrapping_add(
+        (p_random(&mut state.world.m_random) - p_random(&mut state.world.m_random)) << 20,
+    );
     let damage: i32 = (p_random(&mut state.world.m_random) % 5 + 1) * 3;
     line_attack(
         state,
         actor,
-        Angle(angle as u32),
+        Angle(angle.cast_unsigned()),
         MISSILERANGE,
         slope,
         damage,
@@ -1059,14 +1078,14 @@ pub fn vile_chase(state: &mut GameState, id: MobjId) {
                 .info
                 .mobjinfo_mut(state.world.p_mobj.mo(actor).kind)
                 .speed)
-                * XSPEED[state.world.p_mobj.mo(actor).movedir as usize];
+                * XSPEED[state.world.p_mobj.mo(actor).movedir.idx()];
         state.world.p_enemy.viletryy = state.world.p_mobj.mo(actor).y
             + (state
                 .assets
                 .info
                 .mobjinfo_mut(state.world.p_mobj.mo(actor).kind)
                 .speed)
-                * YSPEED[state.world.p_mobj.mo(actor).movedir as usize];
+                * YSPEED[state.world.p_mobj.mo(actor).movedir.idx()];
         let xl: i32 =
             (state.world.p_enemy.viletryx - state.world.p_setup.bmaporgx - 32 * FRACUNIT * 2)
                 .to_block();
@@ -1289,7 +1308,7 @@ pub fn fat_attack3(state: &mut GameState, actor: MobjId) {
                 .mobjinfo_mut(state.world.p_mobj.mo(mo).kind)
                 .speed,
         ),
-        fine_cosine(an as usize),
+        fine_cosine(an.idx()),
     );
     state.world.p_mobj.mo_mut(mo).momy = fixed_mul(
         Fixed(
@@ -1299,7 +1318,7 @@ pub fn fat_attack3(state: &mut GameState, actor: MobjId) {
                 .mobjinfo_mut(state.world.p_mobj.mo(mo).kind)
                 .speed,
         ),
-        fine_sine(an as usize),
+        fine_sine(an.idx()),
     );
     mo = spawn_missile(state, actor, target, MobjType::Fatshot);
     state.world.p_mobj.mo_mut(mo).angle = state.world.p_mobj.mo(mo).angle + FATSPREAD / 2;
@@ -1312,7 +1331,7 @@ pub fn fat_attack3(state: &mut GameState, actor: MobjId) {
                 .mobjinfo_mut(state.world.p_mobj.mo(mo).kind)
                 .speed,
         ),
-        fine_cosine(an as usize),
+        fine_cosine(an.idx()),
     );
     state.world.p_mobj.mo_mut(mo).momy = fixed_mul(
         Fixed(
@@ -1322,7 +1341,7 @@ pub fn fat_attack3(state: &mut GameState, actor: MobjId) {
                 .mobjinfo_mut(state.world.p_mobj.mo(mo).kind)
                 .speed,
         ),
-        fine_sine(an as usize),
+        fine_sine(an.idx()),
     );
 }
 pub const SKULLSPEED: Fixed = Fixed::from_int(20);
@@ -1366,7 +1385,9 @@ pub fn pain_shoot_skull(state: &mut GameState, actor: MobjId, angle: Angle) {
     let mut count: i32 = 0;
     count += mobj_thinker_ids(&state.world.p_mobj, &state.world.p_tick)
         .into_iter()
-        .filter(|&m| state.world.p_mobj.mo(m).kind as u32 == MobjType::Skull as i32 as u32)
+        .filter(|&m| {
+            state.world.p_mobj.mo(m).kind as u32 == (MobjType::Skull as i32).cast_unsigned()
+        })
         .count() as i32;
     if count > 20 {
         return;
@@ -1421,15 +1442,15 @@ pub fn scream(state: &mut GameState, actor: MobjId) {
         SfxName::SfxNone => return,
         SfxName::Podth1 | SfxName::Podth2 | SfxName::Podth3 => {
             [SfxName::Podth1, SfxName::Podth2, SfxName::Podth3]
-                [(p_random(&mut state.world.m_random) % 3) as usize]
+                [(p_random(&mut state.world.m_random) % 3).idx()]
         }
         SfxName::Bgdth1 | SfxName::Bgdth2 => {
-            [SfxName::Bgdth1, SfxName::Bgdth2][(p_random(&mut state.world.m_random) % 2) as usize]
+            [SfxName::Bgdth1, SfxName::Bgdth2][(p_random(&mut state.world.m_random) % 2).idx()]
         }
         other => other,
     };
-    if state.world.p_mobj.mo(actor).kind as u32 == MobjType::Spider as i32 as u32
-        || state.world.p_mobj.mo(actor).kind as u32 == MobjType::Cyborg as i32 as u32
+    if state.world.p_mobj.mo(actor).kind as u32 == (MobjType::Spider as i32).cast_unsigned()
+        || state.world.p_mobj.mo(actor).kind as u32 == (MobjType::Cyborg as i32).cast_unsigned()
     {
         s_start_sound(state, SoundOrigin::None, sound);
     } else {
@@ -1465,12 +1486,13 @@ pub fn explode(state: &mut GameState, id: MobjId) {
 fn check_boss_end(doomstat: &DoomstatState, g_game: &GGameState, motype: MobjType) -> bool {
     if doomstat.gameversion.is_ultimate_or_higher() {
         match g_game.gameepisode {
-            1 => g_game.gamemap == 8 && motype as u32 == MobjType::Bruiser as i32 as u32,
-            2 => g_game.gamemap == 8 && motype as u32 == MobjType::Cyborg as i32 as u32,
-            3 => g_game.gamemap == 8 && motype as u32 == MobjType::Spider as i32 as u32,
+            1 => g_game.gamemap == 8 && motype as u32 == (MobjType::Bruiser as i32).cast_unsigned(),
+            2 => g_game.gamemap == 8 && motype as u32 == (MobjType::Cyborg as i32).cast_unsigned(),
+            3 => g_game.gamemap == 8 && motype as u32 == (MobjType::Spider as i32).cast_unsigned(),
             4 => {
-                g_game.gamemap == 6 && motype as u32 == MobjType::Cyborg as i32 as u32
-                    || g_game.gamemap == 8 && motype as u32 == MobjType::Spider as i32 as u32
+                g_game.gamemap == 6 && motype as u32 == (MobjType::Cyborg as i32).cast_unsigned()
+                    || g_game.gamemap == 8
+                        && motype as u32 == (MobjType::Spider as i32).cast_unsigned()
             }
             _ => g_game.gamemap == 8,
         }
@@ -1478,7 +1500,7 @@ fn check_boss_end(doomstat: &DoomstatState, g_game: &GGameState, motype: MobjTyp
         if g_game.gamemap != 8 {
             return false;
         }
-        if motype as u32 == MobjType::Bruiser as i32 as u32 && g_game.gameepisode != 1 {
+        if motype as u32 == (MobjType::Bruiser as i32).cast_unsigned() && g_game.gameepisode != 1 {
             return false;
         }
         true
@@ -1489,8 +1511,8 @@ pub fn boss_death(state: &mut GameState, mo: MobjId) {
         if state.game.g_game.gamemap != 7 {
             return;
         }
-        if state.world.p_mobj.mo(mo).kind as u32 != MobjType::Fatso as i32 as u32
-            && state.world.p_mobj.mo(mo).kind as u32 != MobjType::Baby as i32 as u32
+        if state.world.p_mobj.mo(mo).kind as u32 != (MobjType::Fatso as i32).cast_unsigned()
+            && state.world.p_mobj.mo(mo).kind as u32 != (MobjType::Baby as i32).cast_unsigned()
         {
             return;
         }
@@ -1517,12 +1539,12 @@ pub fn boss_death(state: &mut GameState, mo: MobjId) {
     }
     if state.game.doomstat.gamemode == GameMode::Commercial {
         if state.game.g_game.gamemap == 7 {
-            if state.world.p_mobj.mo(mo).kind as u32 == MobjType::Fatso as i32 as u32 {
+            if state.world.p_mobj.mo(mo).kind as u32 == (MobjType::Fatso as i32).cast_unsigned() {
                 let junk = state.world.p_setup.junk_line(666_i16);
                 do_floor(state, junk, FloorE::LowerFloorToLowest);
                 return;
             }
-            if state.world.p_mobj.mo(mo).kind as u32 == MobjType::Baby as i32 as u32 {
+            if state.world.p_mobj.mo(mo).kind as u32 == (MobjType::Baby as i32).cast_unsigned() {
                 let junk = state.world.p_setup.junk_line(667_i16);
                 do_floor(state, junk, FloorE::RaiseToTexture);
                 return;
@@ -1591,8 +1613,8 @@ pub fn brain_awake(state: &mut GameState, _id: MobjId) {
     state.world.p_enemy.numbraintargets = 0;
     state.world.p_enemy.braintargeton = 0;
     for m in mobj_thinker_ids(&state.world.p_mobj, &state.world.p_tick) {
-        if state.world.p_mobj.mo(m).kind as u32 == MobjType::Bosstarget as i32 as u32 {
-            let n = state.world.p_enemy.numbraintargets as usize;
+        if state.world.p_mobj.mo(m).kind as u32 == (MobjType::Bosstarget as i32).cast_unsigned() {
+            let n = state.world.p_enemy.numbraintargets.idx();
             state.world.p_enemy.braintargets[n] = Some(m);
             state.world.p_enemy.numbraintargets += 1;
         }
@@ -1608,7 +1630,7 @@ pub fn brain_scream(state: &mut GameState, mo: MobjId) {
         (brain_x - 196 * FRACUNIT).to_bits(),
         (brain_x + 320 * FRACUNIT).to_bits(),
     );
-    for x in (first_x..last_x).step_by(8 * FRACUNIT.to_bits() as usize) {
+    for x in (first_x..last_x).step_by(8 * FRACUNIT.to_bits().idx()) {
         let x = Fixed(x);
         let y: Fixed = state.world.p_mobj.mo(mo).y - 320 * FRACUNIT;
         let z = Fixed(128) + p_random(&mut state.world.m_random) * 2 * FRACUNIT;
@@ -1643,7 +1665,7 @@ pub fn brain_spit(state: &mut GameState, mo: MobjId) {
     if state.game.g_game.gameskill <= SkillType::Easy && state.world.p_enemy.easy == 0 {
         return;
     }
-    let targ_id = state.world.p_enemy.braintargets[state.world.p_enemy.braintargeton as usize]
+    let targ_id = state.world.p_enemy.braintargets[state.world.p_enemy.braintargeton.idx()]
         .expect("the first numbraintargets slots are filled");
     let targ: MobjId = targ_id;
     state.world.p_enemy.braintargeton =

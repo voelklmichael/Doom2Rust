@@ -1,6 +1,7 @@
 use crate::game_state::GameState;
 use crate::genmidi::GenMidi;
 use crate::i_video::IVideoState;
+use crate::index::ToIndex;
 use crate::m_config::bind_variable_int;
 use crate::m_config::bind_variable_string;
 use crate::m_config::MConfigState;
@@ -205,7 +206,7 @@ pub fn i_start_sound(
     let Some(lumpnum) = lumpnum else {
         return -1;
     };
-    let lump_len = lump_length(&state.assets.w_wad, lumpnum) as usize;
+    let lump_len = lump_length(&state.assets.w_wad, lumpnum).idx();
     let Some(sample) = Sample::from_lump(
         lump_bytes(&*state.assets.fs, &mut state.assets.w_wad, lumpnum),
         lump_len,
@@ -247,7 +248,7 @@ pub fn init_music(state: &mut GameState) {
     let Some(lumpnum) = check_num_for_name(&state.assets.w_wad, "GENMIDI") else {
         return;
     };
-    let lump_len = lump_length(&state.assets.w_wad, lumpnum) as usize;
+    let lump_len = lump_length(&state.assets.w_wad, lumpnum).idx();
     let lump = lump_bytes(&*state.assets.fs, &mut state.assets.w_wad, lumpnum);
     if state.io.platform.music_open(&lump[..lump_len]) {
         state.audio.i_sound.platform_music = true;

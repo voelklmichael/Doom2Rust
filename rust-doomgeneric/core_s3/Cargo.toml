@@ -56,6 +56,7 @@ oplon = { version = "1.0.0", default-features = false, features = ["iram"] }
 [lints.clippy]
 assigning_clones = "warn"
 cast_lossless = "warn"
+cast_sign_loss = "warn"
 comparison_chain = "warn"
 derive_partial_eq_without_eq = "warn"
 doc_markdown = "warn"

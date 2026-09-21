@@ -5,6 +5,7 @@ use crate::game_state::GameState;
 use crate::i_system::error;
 use crate::i_video::get_palette_index;
 use crate::i_video::IVideoState;
+use crate::index::ToIndex;
 use crate::m_bbox::add_to_box;
 use crate::m_bbox::BBox;
 use crate::m_fixed::Fixed;
@@ -100,19 +101,19 @@ pub fn copy_rect(
         error("Bad V_CopyRect");
     }
     mark_rect(&mut state.io.v_video, dest, destx, desty, width, height);
-    let width = width as usize;
-    let mut rows: Vec<u8> = Vec::with_capacity(width * height as usize);
+    let width = width.idx();
+    let mut rows: Vec<u8> = Vec::with_capacity(width * height.idx());
     {
         let src = state.screen(source);
         for row in 0..height {
-            let start = ((srcy + row) * SCREENWIDTH + srcx) as usize;
+            let start = ((srcy + row) * SCREENWIDTH + srcx).idx();
             rows.extend_from_slice(&src[start..start + width]);
         }
     }
     let dst = state.screen_mut(dest);
     for row in 0..height {
-        let start = ((desty + row) * SCREENWIDTH + destx) as usize;
-        dst[start..start + width].copy_from_slice(&rows[row as usize * width..][..width]);
+        let start = ((desty + row) * SCREENWIDTH + destx).idx();
+        dst[start..start + width].copy_from_slice(&rows[row.idx() * width..][..width]);
     }
 }
 /// Resolves a WAD lump number to its cached patch data. Cheap and
@@ -141,7 +142,7 @@ fn blit_patch(screen: &mut [u8], patch: &Patch, x: i32, y: i32, flipped: bool) {
     for col in 0..w {
         let source_column = if flipped { w - 1 - col } else { col };
         for post in patch.posts(source_column) {
-            let mut index = ((y + post.topdelta as i32) * SCREENWIDTH + x + col) as usize;
+            let mut index = ((y + post.topdelta as i32) * SCREENWIDTH + x + col).idx();
             for &pixel in post.pixels {
                 screen[index] = pixel;
                 index += SCREENWIDTH as usize;
@@ -205,26 +206,26 @@ pub fn draw_block(
         error("Bad V_DrawBlock");
     }
     mark_rect(&mut state.io.v_video, dest, x, y, width, height);
-    let width = width as usize;
+    let width = width.idx();
     let dst = state.screen_mut(dest);
-    for row in 0..height as usize {
-        let start = (y as usize + row) * SCREENWIDTH as usize + x as usize;
+    for row in 0..height.idx() {
+        let start = (y.idx() + row) * SCREENWIDTH as usize + x.idx();
         dst[start..start + width].copy_from_slice(&src[row * width..][..width]);
     }
 }
 pub fn draw_filled_box(state: &mut IVideoState, x: i32, y: i32, w: i32, h: i32, c: i32) {
     for row in 0..h {
-        let start = (SCREENWIDTH * (y + row) + x) as usize;
-        state.i_video_buffer[start..start + w as usize].fill(c as u8);
+        let start = (SCREENWIDTH * (y + row) + x).idx();
+        state.i_video_buffer[start..start + w.idx()].fill(c.cast_unsigned() as u8);
     }
 }
 pub fn draw_horiz_line(state: &mut IVideoState, x: i32, y: i32, w: i32, c: i32) {
-    let start = (SCREENWIDTH * y + x) as usize;
-    state.i_video_buffer[start..start + w as usize].fill(c as u8);
+    let start = (SCREENWIDTH * y + x).idx();
+    state.i_video_buffer[start..start + w.idx()].fill(c.cast_unsigned() as u8);
 }
 pub fn draw_vert_line(state: &mut IVideoState, x: i32, y: i32, h: i32, c: i32) {
     for row in 0..h {
-        state.i_video_buffer[(SCREENWIDTH * (y + row) + x) as usize] = c as u8;
+        state.i_video_buffer[(SCREENWIDTH * (y + row) + x).idx()] = c.cast_unsigned() as u8;
     }
 }
 pub fn draw_box(state: &mut IVideoState, x: i32, y: i32, w: i32, h: i32, c: i32) {
@@ -242,22 +243,22 @@ pub fn write_pcxfile(
     palette: &[u8],
 ) {
     // 128-byte on-disk PCX header.
-    let mut pack: Vec<u8> = Vec::with_capacity((128 + width * height * 2 + 768 + 1) as usize);
+    let mut pack: Vec<u8> = Vec::with_capacity((128 + width * height * 2 + 768 + 1).idx());
     pack.extend_from_slice(&[0xa, 5, 1, 8]);
     pack.extend_from_slice(&0_u16.to_le_bytes());
     pack.extend_from_slice(&0_u16.to_le_bytes());
-    pack.extend_from_slice(&((width - 1) as i16 as u16).to_le_bytes());
-    pack.extend_from_slice(&((height - 1) as i16 as u16).to_le_bytes());
-    pack.extend_from_slice(&(width as i16 as u16).to_le_bytes());
-    pack.extend_from_slice(&(height as i16 as u16).to_le_bytes());
+    pack.extend_from_slice(&((width - 1) as i16).cast_unsigned().to_le_bytes());
+    pack.extend_from_slice(&((height - 1) as i16).cast_unsigned().to_le_bytes());
+    pack.extend_from_slice(&(width as i16).cast_unsigned().to_le_bytes());
+    pack.extend_from_slice(&(height as i16).cast_unsigned().to_le_bytes());
     pack.extend_from_slice(&[0u8; 48]);
     pack.push(0);
     pack.push(1);
-    pack.extend_from_slice(&(width as i16 as u16).to_le_bytes());
+    pack.extend_from_slice(&(width as i16).cast_unsigned().to_le_bytes());
     pack.extend_from_slice(&(2_i16 as u16).to_le_bytes());
     pack.extend_from_slice(&[0u8; 58]);
     debug_assert_eq!(pack.len(), 128);
-    for &pixel in &data[..(width * height) as usize] {
+    for &pixel in &data[..(width * height).idx()] {
         if i32::from(pixel) & 0xc0 == 0xc0 {
             pack.push(0xc1_u8);
         }

@@ -1,5 +1,6 @@
 use crate::doomdef::TICRATE;
 use crate::game_state::GameState;
+use crate::index::ToIndex;
 use crate::m_fixed::Fixed;
 use crate::m_fixed::FRACUNIT;
 use crate::p_floor::move_plane;
@@ -367,7 +368,7 @@ pub fn ev_vertical_door(state: &mut GameState, line: LineId, thing: MobjId) {
     } else if matches!(i32::from(linev.special), 26 | 32 | 27 | 34 | 28 | 33) {
         return;
     }
-    let door_sector_id = state.world.p_setup.sides[linev.sidenum[(side ^ 1) as usize]
+    let door_sector_id = state.world.p_setup.sides[linev.sidenum[(side ^ 1).idx()]
         .expect("two-sided line without a back side")
         .0 as usize]
         .sector;

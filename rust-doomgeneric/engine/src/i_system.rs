@@ -1,4 +1,5 @@
 use crate::game_state::GameState;
+use crate::index::ToIndex;
 use crate::m_misc::str_to_int;
 use crate::options::Options;
 use crate::platform::DoomPlatform;
@@ -112,7 +113,7 @@ pub fn get_memory_value(
                         break;
                     }
                     str_to_int(arg, &mut val);
-                    i_system.mem_dump_custom[slot as usize] = val as u8;
+                    i_system.mem_dump_custom[slot.idx()] = val.cast_unsigned() as u8;
                     slot += 2;
                 }
                 i_system.dos_mem_dump = DosMemDump::Custom;

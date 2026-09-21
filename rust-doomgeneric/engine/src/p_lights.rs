@@ -1,5 +1,6 @@
 use crate::game_state::GameState;
 use crate::game_state::World;
+use crate::index::ToIndex;
 use crate::m_random::p_random;
 use crate::p_mobj::Thinker;
 use crate::p_mobj::ThinkerFn;
@@ -475,11 +476,11 @@ pub fn start_light_strobing(world: &mut World, line: LineId) {
 pub fn turn_tag_lights_off(p_setup: &mut PSetupState, line: LineId) {
     let line_tag = p_setup.line(line).tag;
     for j in 0..p_setup.numsectors {
-        let sector = SectorId(j as u32);
+        let sector = SectorId(j.cast_unsigned());
         if i32::from(p_setup.sector_mut(sector).tag) == i32::from(line_tag) {
             let mut min = i32::from(p_setup.sector_mut(sector).lightlevel);
             let linecount = p_setup.sector_mut(sector).linecount;
-            for i in 0..linecount as usize {
+            for i in 0..linecount.idx() {
                 let templine = p_setup.sector_mut(sector).lines[i];
                 if let Some(tsec) = get_next_sector(p_setup, templine, sector) {
                     let light = i32::from(p_setup.sector_mut(tsec).lightlevel);
@@ -495,11 +496,11 @@ pub fn turn_tag_lights_off(p_setup: &mut PSetupState, line: LineId) {
 pub fn light_turn_on(p_setup: &mut PSetupState, line: LineId, mut bright: i32) {
     let line_tag = p_setup.line(line).tag;
     for i in 0..p_setup.numsectors {
-        let sector = SectorId(i as u32);
+        let sector = SectorId(i.cast_unsigned());
         if i32::from(p_setup.sector_mut(sector).tag) == i32::from(line_tag) {
             if bright == 0 {
                 let linecount = p_setup.sector_mut(sector).linecount;
-                for j in 0..linecount as usize {
+                for j in 0..linecount.idx() {
                     let templine = p_setup.sector_mut(sector).lines[j];
                     if let Some(temp) = get_next_sector(p_setup, templine, sector) {
                         let light = i32::from(p_setup.sector_mut(temp).lightlevel);

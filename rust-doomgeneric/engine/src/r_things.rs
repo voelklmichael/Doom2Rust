@@ -3,6 +3,7 @@ use crate::d_player::NUMPSPRITES;
 use crate::doomdef::SCREENWIDTH;
 use crate::game_state::GameState;
 use crate::i_system::error;
+use crate::index::ToIndex;
 use crate::m_fixed::fixed_div;
 use crate::m_fixed::fixed_mul;
 use crate::m_fixed::Fixed;
@@ -142,10 +143,10 @@ pub fn install_sprite_lump(
         r_things.maxframe = frame as i32;
     }
     let image = SpriteImage {
-        lump: SpriteLump((lump - r_data.firstspritelump) as u16),
+        lump: SpriteLump((lump - r_data.firstspritelump).cast_unsigned() as u16),
         flip: flipped,
     };
-    let frame_name = ('A' as i32 as u32).wrapping_add(frame) as u8 as char;
+    let frame_name = ('A' as i32).cast_unsigned().wrapping_add(frame) as u8 as char;
     let slot = &mut r_things.sprtemp[frame as usize];
     if rotation == 0 {
         match slot {
@@ -176,7 +177,7 @@ pub fn install_sprite_lump(
             "R_InitSprites: Sprite {} : {} : {} has two lumps mapped to it",
             r_things.spritename,
             frame_name,
-            ('1' as i32 as u32).wrapping_add(rotation) as u8 as char,
+            ('1' as i32).cast_unsigned().wrapping_add(rotation) as u8 as char,
         ));
     }
     images[rotation as usize] = Some(image);
@@ -186,7 +187,7 @@ pub fn init_sprite_defs(state: &mut GameState, namelist: &[&'static str]) {
     if state.render.r_things.numsprites == 0 {
         return;
     }
-    state.render.r_things.sprites = Vec::with_capacity(state.render.r_things.numsprites as usize);
+    state.render.r_things.sprites = Vec::with_capacity(state.render.r_things.numsprites.idx());
     let (first, last) = (
         state.render.r_data.firstspritelump.0,
         state.render.r_data.lastspritelump.0,
@@ -213,8 +214,8 @@ pub fn init_sprite_defs(state: &mut GameState, namelist: &[&'static str]) {
                     &state.render.r_data,
                     &mut state.render.r_things,
                     patched,
-                    frame as u32,
-                    rotation as u32,
+                    frame.cast_unsigned(),
+                    rotation.cast_unsigned(),
                     false,
                 );
                 if state.assets.w_wad.lumpinfo[l as usize].name[6] != 0 {
@@ -226,8 +227,8 @@ pub fn init_sprite_defs(state: &mut GameState, namelist: &[&'static str]) {
                         &state.render.r_data,
                         &mut state.render.r_things,
                         LumpNum(l),
-                        frame as u32,
-                        rotation as u32,
+                        frame.cast_unsigned(),
+                        rotation.cast_unsigned(),
                         true,
                     );
                 }
@@ -241,12 +242,12 @@ pub fn init_sprite_defs(state: &mut GameState, namelist: &[&'static str]) {
         } else {
             state.render.r_things.maxframe += 1;
             for frame in 0..state.render.r_things.maxframe {
-                match state.render.r_things.sprtemp[frame as usize] {
+                match state.render.r_things.sprtemp[frame.idx()] {
                     SpriteFrame::Unset => {
                         error(&format!(
                             "R_InitSprites: No patches found for {} frame {}",
                             state.render.r_things.spritename,
-                            (frame + 'A' as i32) as u8 as char,
+                            (frame + 'A' as i32).cast_unsigned() as u8 as char,
                         ));
                     }
                     SpriteFrame::Rotating(images) => {
@@ -254,7 +255,7 @@ pub fn init_sprite_defs(state: &mut GameState, namelist: &[&'static str]) {
                             error(&format!(
                                 "R_InitSprites: Sprite {} frame {} is missing rotations",
                                 state.render.r_things.spritename,
-                                (frame + 'A' as i32) as u8 as char,
+                                (frame + 'A' as i32).cast_unsigned() as u8 as char,
                             ));
                         }
                     }
@@ -263,8 +264,7 @@ pub fn init_sprite_defs(state: &mut GameState, namelist: &[&'static str]) {
             }
             state.render.r_things.sprites.push(SpriteDef {
                 numframes: state.render.r_things.maxframe,
-                spriteframes: state.render.r_things.sprtemp
-                    [..state.render.r_things.maxframe as usize]
+                spriteframes: state.render.r_things.sprtemp[..state.render.r_things.maxframe.idx()]
                     .to_vec(),
             });
         }
@@ -342,7 +342,7 @@ pub fn draw_vis_sprite(state: &mut GameState, vis: &VisSprite) {
         state.render.r_main.colfunc = state.render.r_main.transcolfunc;
         state.render.r_draw.dc_translation = ((vis.mobjflags & MobjFlags::TRANSLATION).bits()
             >> (MobjFlags::TRANSLATION_SHIFT - 8))
-            as usize
+            .idx()
             - 256;
     }
     state.render.r_draw.dc_iscale = vis.xiscale.abs() >> state.render.r_main.detailshift;
@@ -400,7 +400,7 @@ pub fn project_sprite(state: &mut GameState, thing_id: MobjId) {
     if tx.abs() > tz << 2 {
         return;
     }
-    if thing_sprite as u32 >= state.render.r_things.numsprites as u32 {
+    if thing_sprite as u32 >= state.render.r_things.numsprites.cast_unsigned() {
         error(&format!(
             "R_ProjectSprite: invalid sprite number {} ",
             thing_sprite as u32,
@@ -413,7 +413,7 @@ pub fn project_sprite(state: &mut GameState, thing_id: MobjId) {
             thing_sprite as u32, thing_frame,
         ));
     }
-    let sprframe = sprdef.spriteframes[(thing_frame & FF_FRAMEMASK) as usize];
+    let sprframe = sprdef.spriteframes[(thing_frame & FF_FRAMEMASK).idx()];
     let SpriteImage { lump, flip } = if sprframe.is_rotating() {
         let ang: Angle = point_to_angle(&state.render.r_main, thing_x, thing_y);
         let rot: usize = ((ang - thing_angle + ANG45 / 2 * 9).to_bits() >> 29) as usize;
@@ -466,8 +466,9 @@ pub fn project_sprite(state: &mut GameState, thing_id: MobjId) {
     } else if thing_frame & FF_FULLBRIGHT != 0 {
         vis.colormap = Some(0);
     } else {
-        let mut index =
-            (xscale >> (LIGHTSCALESHIFT - state.render.r_main.detailshift)).to_bits() as usize;
+        let mut index = (xscale >> (LIGHTSCALESHIFT - state.render.r_main.detailshift))
+            .to_bits()
+            .idx();
         if index >= MAXLIGHTSCALE {
             index = MAXLIGHTSCALE - 1;
         }
@@ -494,7 +495,7 @@ pub fn add_sprites(state: &mut GameState, sec: SectorId) {
     } else if lightnum >= LIGHTLEVELS {
         state.render.r_things.spritelights = LightRow48::Normal((LIGHTLEVELS - 1) as usize);
     } else {
-        state.render.r_things.spritelights = LightRow48::Normal(lightnum as usize);
+        state.render.r_things.spritelights = LightRow48::Normal(lightnum.idx());
     }
     let mut cursor = thinglist;
     while let Some(id) = cursor {
@@ -510,7 +511,7 @@ pub fn draw_psprite(state: &mut GameState, psp: &PspDef) {
         .info
         .state_mut(psp.state.expect("a drawn weapon sprite has a state"));
     let (psp_state_sprite, psp_state_frame) = (psp_state.sprite, psp_state.frame);
-    if psp_state_sprite as u32 >= state.render.r_things.numsprites as u32 {
+    if psp_state_sprite as u32 >= state.render.r_things.numsprites.cast_unsigned() {
         error(&format!(
             "R_ProjectSprite: invalid sprite number {} ",
             psp_state_sprite as u32,
@@ -523,7 +524,7 @@ pub fn draw_psprite(state: &mut GameState, psp: &PspDef) {
             psp_state_sprite as u32, psp_state_frame,
         ));
     }
-    let sprframe = &sprdef.spriteframes[(psp_state_frame & FF_FRAMEMASK) as usize];
+    let sprframe = &sprdef.spriteframes[(psp_state_frame & FF_FRAMEMASK).idx()];
     let SpriteImage { lump, flip } = sprframe.image(0);
     let mut tx: Fixed = psp.sx - 160 * FRACUNIT;
     tx -= state.render.r_data.spriteoffset[lump.index()];
@@ -602,7 +603,7 @@ pub fn draw_player_sprites(state: &mut GameState) {
     } else if lightnum >= LIGHTLEVELS {
         state.render.r_things.spritelights = LightRow48::Normal((LIGHTLEVELS - 1) as usize);
     } else {
-        state.render.r_things.spritelights = LightRow48::Normal(lightnum as usize);
+        state.render.r_things.spritelights = LightRow48::Normal(lightnum.idx());
     }
     state.render.r_things.mfloorclip = Some(ClipArray::ScreenHeightArray);
     state.render.r_things.mceilingclip = Some(ClipArray::NegOneArray);
@@ -617,7 +618,7 @@ pub fn sort_vis_sprites(r_things: &mut RThingsState) {
     let mut order = core::mem::take(&mut r_things.vissprite_order);
     order.clear();
     if count > 0 {
-        order.extend(0..count as usize);
+        order.extend(0..count.idx());
         // Stable sort: preserves the original selection-sort's leftmost-first
         // tie-break among vissprites sharing the same scale.
         order.sort_by_key(|&i| r_things.vissprites[i].scale);
@@ -626,8 +627,8 @@ pub fn sort_vis_sprites(r_things: &mut RThingsState) {
 }
 pub fn draw_sprite(state: &mut GameState, spr: &VisSprite) {
     for x in spr.x1..=spr.x2 {
-        state.render.r_things.cliptop[x as usize] = -2_i16;
-        state.render.r_things.clipbot[x as usize] = state.render.r_things.cliptop[x as usize];
+        state.render.r_things.cliptop[x.idx()] = -2_i16;
+        state.render.r_things.clipbot[x.idx()] = state.render.r_things.cliptop[x.idx()];
     }
     for ds_idx in (0..state.render.r_bsp.ds_p).rev() {
         let ds = state.render.r_bsp.drawsegs[ds_idx];
@@ -660,16 +661,16 @@ pub fn draw_sprite(state: &mut GameState, spr: &VisSprite) {
                 if silhouette == 1 {
                     let sprbottomclip = ds.sprbottomclip();
                     for x in r1..=r2 {
-                        if i32::from(state.render.r_things.clipbot[x as usize]) == -2 {
-                            state.render.r_things.clipbot[x as usize] =
+                        if i32::from(state.render.r_things.clipbot[x.idx()]) == -2 {
+                            state.render.r_things.clipbot[x.idx()] =
                                 sprbottomclip.get(state, x as isize);
                         }
                     }
                 } else if silhouette == 2 {
                     let sprtopclip = ds.sprtopclip();
                     for x in r1..=r2 {
-                        if i32::from(state.render.r_things.cliptop[x as usize]) == -2 {
-                            state.render.r_things.cliptop[x as usize] =
+                        if i32::from(state.render.r_things.cliptop[x.idx()]) == -2 {
+                            state.render.r_things.cliptop[x.idx()] =
                                 sprtopclip.get(state, x as isize);
                         }
                     }
@@ -677,12 +678,12 @@ pub fn draw_sprite(state: &mut GameState, spr: &VisSprite) {
                     let sprbottomclip = ds.sprbottomclip();
                     let sprtopclip = ds.sprtopclip();
                     for x in r1..=r2 {
-                        if i32::from(state.render.r_things.clipbot[x as usize]) == -2 {
-                            state.render.r_things.clipbot[x as usize] =
+                        if i32::from(state.render.r_things.clipbot[x.idx()]) == -2 {
+                            state.render.r_things.clipbot[x.idx()] =
                                 sprbottomclip.get(state, x as isize);
                         }
-                        if i32::from(state.render.r_things.cliptop[x as usize]) == -2 {
-                            state.render.r_things.cliptop[x as usize] =
+                        if i32::from(state.render.r_things.cliptop[x.idx()]) == -2 {
+                            state.render.r_things.cliptop[x.idx()] =
                                 sprtopclip.get(state, x as isize);
                         }
                     }
@@ -691,11 +692,11 @@ pub fn draw_sprite(state: &mut GameState, spr: &VisSprite) {
         }
     }
     for x in spr.x1..=spr.x2 {
-        if i32::from(state.render.r_things.clipbot[x as usize]) == -2 {
-            state.render.r_things.clipbot[x as usize] = state.render.r_draw.viewheight as i16;
+        if i32::from(state.render.r_things.clipbot[x.idx()]) == -2 {
+            state.render.r_things.clipbot[x.idx()] = state.render.r_draw.viewheight as i16;
         }
-        if i32::from(state.render.r_things.cliptop[x as usize]) == -2 {
-            state.render.r_things.cliptop[x as usize] = -1_i16;
+        if i32::from(state.render.r_things.cliptop[x.idx()]) == -2 {
+            state.render.r_things.cliptop[x.idx()] = -1_i16;
         }
     }
     state.render.r_things.mfloorclip = Some(ClipArray::ClipBot);

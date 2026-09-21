@@ -42,6 +42,7 @@ use crate::hu_stuff::PLAYER_NAMES;
 use crate::i_system::error;
 use crate::i_system::i_quit;
 use crate::i_timer::get_time;
+use crate::index::ToIndex;
 use crate::m_controls::MControlsState;
 use crate::m_fixed::Fixed;
 use crate::m_fixed::FRACUNIT;
@@ -456,16 +457,15 @@ fn g_next_weapon(doomstat: &DoomstatState, g_game: &GGameState, direction: Weapo
     let start_i: i32 = i;
     loop {
         i += direction as i32;
-        i = (i as usize)
+        i = i
+            .idx()
             .wrapping_add(WEAPON_ORDER_TABLE.len())
             .wrapping_rem(WEAPON_ORDER_TABLE.len()) as i32;
-        if i == start_i
-            || weapon_selectable(doomstat, g_game, WEAPON_ORDER_TABLE[i as usize].weapon)
-        {
+        if i == start_i || weapon_selectable(doomstat, g_game, WEAPON_ORDER_TABLE[i.idx()].weapon) {
             break;
         }
     }
-    WEAPON_ORDER_TABLE[i as usize].weapon_num as i32
+    WEAPON_ORDER_TABLE[i.idx()].weapon_num as i32
 }
 pub fn g_build_ticcmd(state: &mut GameState, cmd: &mut TicCmd, maketic: i32) {
     *cmd = TicCmd {
@@ -481,49 +481,50 @@ pub fn g_build_ticcmd(state: &mut GameState, cmd: &mut TicCmd, maketic: i32) {
         arti: 0,
     };
     cmd.consistancy = state.game.g_game.consistancy[state.game.g_game.consoleplayer.slot()]
-        [(maketic % BACKUPTICS) as usize];
-    let strafe: bool = state.game.g_game.gamekeydown[state.game.m_controls.key_strafe as usize]
-        || state.game.g_game.mousearray[(state.game.m_controls.mousebstrafe + 1) as usize]
-        || state.game.g_game.joyarray[(state.game.m_controls.joybstrafe + 1) as usize];
+        [(maketic % BACKUPTICS).idx()];
+    let strafe: bool = state.game.g_game.gamekeydown[state.game.m_controls.key_strafe.idx()]
+        || state.game.g_game.mousearray[(state.game.m_controls.mousebstrafe + 1).idx()]
+        || state.game.g_game.joyarray[(state.game.m_controls.joybstrafe + 1).idx()];
     let speed: i32 = i32::from(
         state.game.m_controls.key_speed >= NUMKEYS
             || state.game.m_controls.joybspeed >= MAX_JOY_BUTTONS
-            || state.game.g_game.gamekeydown[state.game.m_controls.key_speed as usize]
-            || state.game.g_game.joyarray[(state.game.m_controls.joybspeed + 1) as usize],
+            || state.game.g_game.gamekeydown[state.game.m_controls.key_speed.idx()]
+            || state.game.g_game.joyarray[(state.game.m_controls.joybspeed + 1).idx()],
     );
     let mut side: i32 = 0;
     let mut forward: i32 = side;
     if state.game.g_game.joyxmove != 0
-        || state.game.g_game.gamekeydown[state.game.m_controls.key_right as usize]
-        || state.game.g_game.gamekeydown[state.game.m_controls.key_left as usize]
+        || state.game.g_game.gamekeydown[state.game.m_controls.key_right.idx()]
+        || state.game.g_game.gamekeydown[state.game.m_controls.key_left.idx()]
     {
         state.game.g_game.turnheld += state.game.d_loop.ticdup;
     } else {
         state.game.g_game.turnheld = 0;
     }
-    let tspeed: usize = if state.game.g_game.turnheld < SLOWTURNTICS {
+    let tspeed: usize = (if state.game.g_game.turnheld < SLOWTURNTICS {
         2
     } else {
         speed
-    } as usize;
+    })
+    .idx();
     if strafe {
-        if state.game.g_game.gamekeydown[state.game.m_controls.key_right as usize] {
-            side += state.game.g_game.sidemove[speed as usize];
+        if state.game.g_game.gamekeydown[state.game.m_controls.key_right.idx()] {
+            side += state.game.g_game.sidemove[speed.idx()];
         }
-        if state.game.g_game.gamekeydown[state.game.m_controls.key_left as usize] {
-            side -= state.game.g_game.sidemove[speed as usize];
+        if state.game.g_game.gamekeydown[state.game.m_controls.key_left.idx()] {
+            side -= state.game.g_game.sidemove[speed.idx()];
         }
         if state.game.g_game.joyxmove > 0 {
-            side += state.game.g_game.sidemove[speed as usize];
+            side += state.game.g_game.sidemove[speed.idx()];
         }
         if state.game.g_game.joyxmove < 0 {
-            side -= state.game.g_game.sidemove[speed as usize];
+            side -= state.game.g_game.sidemove[speed.idx()];
         }
     } else {
-        if state.game.g_game.gamekeydown[state.game.m_controls.key_right as usize] {
+        if state.game.g_game.gamekeydown[state.game.m_controls.key_right.idx()] {
             cmd.angleturn = (i32::from(cmd.angleturn) - ANGLETURN[tspeed]) as i16;
         }
-        if state.game.g_game.gamekeydown[state.game.m_controls.key_left as usize] {
+        if state.game.g_game.gamekeydown[state.game.m_controls.key_left.idx()] {
             cmd.angleturn = (i32::from(cmd.angleturn) + ANGLETURN[tspeed]) as i16;
         }
         if state.game.g_game.joyxmove > 0 {
@@ -533,42 +534,42 @@ pub fn g_build_ticcmd(state: &mut GameState, cmd: &mut TicCmd, maketic: i32) {
             cmd.angleturn = (i32::from(cmd.angleturn) + ANGLETURN[tspeed]) as i16;
         }
     }
-    if state.game.g_game.gamekeydown[state.game.m_controls.key_up as usize] {
-        forward += state.game.g_game.forwardmove[speed as usize];
+    if state.game.g_game.gamekeydown[state.game.m_controls.key_up.idx()] {
+        forward += state.game.g_game.forwardmove[speed.idx()];
     }
-    if state.game.g_game.gamekeydown[state.game.m_controls.key_down as usize] {
-        forward -= state.game.g_game.forwardmove[speed as usize];
+    if state.game.g_game.gamekeydown[state.game.m_controls.key_down.idx()] {
+        forward -= state.game.g_game.forwardmove[speed.idx()];
     }
     if state.game.g_game.joyymove < 0 {
-        forward += state.game.g_game.forwardmove[speed as usize];
+        forward += state.game.g_game.forwardmove[speed.idx()];
     }
     if state.game.g_game.joyymove > 0 {
-        forward -= state.game.g_game.forwardmove[speed as usize];
+        forward -= state.game.g_game.forwardmove[speed.idx()];
     }
-    if state.game.g_game.gamekeydown[state.game.m_controls.key_strafeleft as usize]
-        || state.game.g_game.joyarray[(state.game.m_controls.joybstrafeleft + 1) as usize]
-        || state.game.g_game.mousearray[(state.game.m_controls.mousebstrafeleft + 1) as usize]
+    if state.game.g_game.gamekeydown[state.game.m_controls.key_strafeleft.idx()]
+        || state.game.g_game.joyarray[(state.game.m_controls.joybstrafeleft + 1).idx()]
+        || state.game.g_game.mousearray[(state.game.m_controls.mousebstrafeleft + 1).idx()]
         || state.game.g_game.joystrafemove < 0
     {
-        side -= state.game.g_game.sidemove[speed as usize];
+        side -= state.game.g_game.sidemove[speed.idx()];
     }
-    if state.game.g_game.gamekeydown[state.game.m_controls.key_straferight as usize]
-        || state.game.g_game.joyarray[(state.game.m_controls.joybstraferight + 1) as usize]
-        || state.game.g_game.mousearray[(state.game.m_controls.mousebstraferight + 1) as usize]
+    if state.game.g_game.gamekeydown[state.game.m_controls.key_straferight.idx()]
+        || state.game.g_game.joyarray[(state.game.m_controls.joybstraferight + 1).idx()]
+        || state.game.g_game.mousearray[(state.game.m_controls.mousebstraferight + 1).idx()]
         || state.game.g_game.joystrafemove > 0
     {
-        side += state.game.g_game.sidemove[speed as usize];
+        side += state.game.g_game.sidemove[speed.idx()];
     }
     cmd.chatchar = dequeue_chat_char(&mut state.ui.hu_stuff);
-    if state.game.g_game.gamekeydown[state.game.m_controls.key_fire as usize]
-        || state.game.g_game.mousearray[(state.game.m_controls.mousebfire + 1) as usize]
-        || state.game.g_game.joyarray[(state.game.m_controls.joybfire + 1) as usize]
+    if state.game.g_game.gamekeydown[state.game.m_controls.key_fire.idx()]
+        || state.game.g_game.mousearray[(state.game.m_controls.mousebfire + 1).idx()]
+        || state.game.g_game.joyarray[(state.game.m_controls.joybfire + 1).idx()]
     {
         cmd.buttons |= BT_ATTACK;
     }
-    if state.game.g_game.gamekeydown[state.game.m_controls.key_use as usize]
-        || state.game.g_game.joyarray[(state.game.m_controls.joybuse + 1) as usize]
-        || state.game.g_game.mousearray[(state.game.m_controls.mousebuse + 1) as usize]
+    if state.game.g_game.gamekeydown[state.game.m_controls.key_use.idx()]
+        || state.game.g_game.joyarray[(state.game.m_controls.joybuse + 1).idx()]
+        || state.game.g_game.mousearray[(state.game.m_controls.mousebuse + 1).idx()]
     {
         cmd.buttons |= BT_USE;
         state.game.g_game.dclicks = 0;
@@ -581,31 +582,31 @@ pub fn g_build_ticcmd(state: &mut GameState, cmd: &mut TicCmd, maketic: i32) {
     {
         let i: i32 = g_next_weapon(&state.game.doomstat, &state.game.g_game, next_weapon);
         cmd.buttons |= BT_CHANGE;
-        cmd.buttons |= (i << BT_WEAPONSHIFT) as u8;
+        cmd.buttons |= (i << BT_WEAPONSHIFT).cast_unsigned() as u8;
     } else {
         let weapon_keys = state.game.m_controls.weapon_keys();
         for (i, &key) in weapon_keys.iter().enumerate() {
-            if state.game.g_game.gamekeydown[key as usize] {
+            if state.game.g_game.gamekeydown[key.idx()] {
                 cmd.buttons |= BT_CHANGE;
-                cmd.buttons |= ((i as i32) << BT_WEAPONSHIFT) as u8;
+                cmd.buttons |= ((i as i32) << BT_WEAPONSHIFT).cast_unsigned() as u8;
                 break;
             }
         }
     }
     state.game.g_game.next_weapon = None;
-    if state.game.g_game.mousearray[(state.game.m_controls.mousebforward + 1) as usize] {
-        forward += state.game.g_game.forwardmove[speed as usize];
+    if state.game.g_game.mousearray[(state.game.m_controls.mousebforward + 1).idx()] {
+        forward += state.game.g_game.forwardmove[speed.idx()];
     }
-    if state.game.g_game.mousearray[(state.game.m_controls.mousebbackward + 1) as usize] {
-        forward -= state.game.g_game.forwardmove[speed as usize];
+    if state.game.g_game.mousearray[(state.game.m_controls.mousebbackward + 1).idx()] {
+        forward -= state.game.g_game.forwardmove[speed.idx()];
     }
     if state.game.m_controls.dclick_use != 0 {
-        if state.game.g_game.mousearray[(state.game.m_controls.mousebforward + 1) as usize]
+        if state.game.g_game.mousearray[(state.game.m_controls.mousebforward + 1).idx()]
             != state.game.g_game.dclickstate
             && state.game.g_game.dclicktime > 1
         {
             state.game.g_game.dclickstate =
-                state.game.g_game.mousearray[(state.game.m_controls.mousebforward + 1) as usize];
+                state.game.g_game.mousearray[(state.game.m_controls.mousebforward + 1).idx()];
             if state.game.g_game.dclickstate {
                 state.game.g_game.dclicks += 1;
             }
@@ -623,8 +624,8 @@ pub fn g_build_ticcmd(state: &mut GameState, cmd: &mut TicCmd, maketic: i32) {
             }
         }
         let bstrafe: bool = state.game.g_game.mousearray
-            [(state.game.m_controls.mousebstrafe + 1) as usize]
-            || state.game.g_game.joyarray[(state.game.m_controls.joybstrafe + 1) as usize];
+            [(state.game.m_controls.mousebstrafe + 1).idx()]
+            || state.game.g_game.joyarray[(state.game.m_controls.joybstrafe + 1).idx()];
         if bstrafe != state.game.g_game.dclickstate2 && state.game.g_game.dclicktime2 > 1 {
             state.game.g_game.dclickstate2 = bstrafe;
             if state.game.g_game.dclickstate2 {
@@ -673,8 +674,9 @@ pub fn g_build_ticcmd(state: &mut GameState, cmd: &mut TicCmd, maketic: i32) {
     }
     if state.game.g_game.sendsave {
         state.game.g_game.sendsave = false;
-        cmd.buttons =
-            BT_SPECIAL | BTS_SAVEGAME | (state.game.g_game.savegameslot << BTS_SAVESHIFT) as u8;
+        cmd.buttons = BT_SPECIAL
+            | BTS_SAVEGAME
+            | (state.game.g_game.savegameslot << BTS_SAVESHIFT).cast_unsigned() as u8;
     }
     if state.game.g_game.lowres_turn {
         let desired_angleturn: i16 =
@@ -738,28 +740,28 @@ pub fn do_load_level(state: &mut GameState) {
 }
 fn set_joy_buttons(g_game: &mut GGameState, m_controls: &MControlsState, buttons_mask: u32) {
     for i in 0..MAX_JOY_BUTTONS {
-        let button_on: i32 = i32::from(buttons_mask & (1 << i) as u32 != 0);
-        if !g_game.joyarray[(i + 1) as usize] && button_on != 0 {
+        let button_on: i32 = i32::from(buttons_mask & (1_u32 << i) != 0);
+        if !g_game.joyarray[(i + 1).idx()] && button_on != 0 {
             if i == m_controls.joybprevweapon {
                 g_game.next_weapon = Some(WeaponCycle::Previous);
             } else if i == m_controls.joybnextweapon {
                 g_game.next_weapon = Some(WeaponCycle::Next);
             }
         }
-        g_game.joyarray[(i + 1) as usize] = button_on != 0;
+        g_game.joyarray[(i + 1).idx()] = button_on != 0;
     }
 }
 fn set_mouse_buttons(g_game: &mut GGameState, m_controls: &MControlsState, buttons_mask: u32) {
     for i in 0..MAX_MOUSE_BUTTONS {
-        let button_on: u32 = u32::from(buttons_mask & (1 << i) as u32 != 0);
-        if !g_game.mousearray[(i + 1) as usize] && button_on != 0 {
+        let button_on: u32 = u32::from(buttons_mask & (1_u32 << i) != 0);
+        if !g_game.mousearray[(i + 1).idx()] && button_on != 0 {
             if i == m_controls.mousebprevweapon {
                 g_game.next_weapon = Some(WeaponCycle::Previous);
             } else if i == m_controls.mousebnextweapon {
                 g_game.next_weapon = Some(WeaponCycle::Next);
             }
         }
-        g_game.mousearray[(i + 1) as usize] = button_on != 0;
+        g_game.mousearray[(i + 1).idx()] = button_on != 0;
     }
 }
 pub fn g_responder(state: &mut GameState, ev: Event) -> bool {
@@ -824,13 +826,13 @@ pub fn g_responder(state: &mut GameState, ev: Event) -> bool {
             if ev.data1 == state.game.m_controls.key_pause {
                 state.game.g_game.sendpause = true;
             } else if ev.data1 < NUMKEYS {
-                state.game.g_game.gamekeydown[ev.data1 as usize] = true;
+                state.game.g_game.gamekeydown[ev.data1.idx()] = true;
             }
             return true;
         }
         1 => {
             if ev.data1 < NUMKEYS {
-                state.game.g_game.gamekeydown[ev.data1 as usize] = false;
+                state.game.g_game.gamekeydown[ev.data1.idx()] = false;
             }
             return false;
         }
@@ -838,7 +840,7 @@ pub fn g_responder(state: &mut GameState, ev: Event) -> bool {
             set_mouse_buttons(
                 &mut state.game.g_game,
                 &state.game.m_controls,
-                ev.data1 as u32,
+                ev.data1.cast_unsigned(),
             );
             state.game.g_game.mousex = ev.data2 * (state.ui.m_menu.mouse_sensitivity + 5) / 10;
             state.game.g_game.mousey = ev.data3 * (state.ui.m_menu.mouse_sensitivity + 5) / 10;
@@ -848,7 +850,7 @@ pub fn g_responder(state: &mut GameState, ev: Event) -> bool {
             set_joy_buttons(
                 &mut state.game.g_game,
                 &state.game.m_controls,
-                ev.data1 as u32,
+                ev.data1.cast_unsigned(),
             );
             state.game.g_game.joyxmove = ev.data2;
             state.game.g_game.joyymove = ev.data3;
@@ -906,7 +908,7 @@ pub fn g_ticker(state: &mut GameState, netcmds: &[TicCmd]) {
             GameAction::Nothing => {}
         }
     }
-    let buf: usize = (state.game.d_loop.gametic / state.game.d_loop.ticdup % BACKUPTICS) as usize;
+    let buf: usize = (state.game.d_loop.gametic / state.game.d_loop.ticdup % BACKUPTICS).idx();
     for i in 0..MAXPLAYERS {
         if state.game.g_game.playeringame[i] {
             state.game.g_game.players[i].cmd = netcmds[i];
@@ -920,7 +922,7 @@ pub fn g_ticker(state: &mut GameState, netcmds: &[TicCmd]) {
                 state.game.g_game.turbodetected[i] = true;
             }
             if state.game.d_loop.gametic & 31 == 0
-                && (state.game.d_loop.gametic >> 5) as usize % MAXPLAYERS == i
+                && (state.game.d_loop.gametic >> 5).idx() % MAXPLAYERS == i
                 && state.game.g_game.turbodetected[i]
             {
                 let player_name = PLAYER_NAMES[i];
@@ -944,7 +946,7 @@ pub fn g_ticker(state: &mut GameState, netcmds: &[TicCmd]) {
                 }
                 if let Some(mo_id) = state.game.g_game.players[i].mo {
                     state.game.g_game.consistancy[i][buf] =
-                        (state.world.p_mobj.mo(mo_id).x).to_bits() as u8;
+                        state.world.p_mobj.mo(mo_id).x.to_bits().cast_unsigned() as u8;
                 } else {
                     state.game.g_game.consistancy[i][buf] = state.world.m_random.rndindex;
                 }
@@ -1080,7 +1082,7 @@ pub fn check_spot(state: &mut GameState, playernum: PlayerId, mthing: &MapThing)
         5120 => (fine_tangent(3072), fine_tangent(1024)),
         6144 => (fine_sine(0), fine_tangent(2048)),
         7168 => (fine_sine(1024), fine_tangent(3072)),
-        0 | 1024 | 2048 | 3072 => (fine_cosine(an as usize), fine_sine(an as usize)),
+        0 | 1024 | 2048 | 3072 => (fine_cosine(an.idx()), fine_sine(an.idx())),
         _ => error(&format!("G_CheckSpot: unexpected angle {an}\n")),
     };
     let floorheight = state
@@ -1100,7 +1102,7 @@ pub fn death_match_spawn_player(state: &mut GameState, playernum: PlayerId) {
         error(&format!("Only {selections} deathmatch spots, 4 required"));
     }
     for _ in 0..20 {
-        let i = (p_random(&mut state.world.m_random) % selections) as usize;
+        let i = (p_random(&mut state.world.m_random) % selections).idx();
         let dm_spot = state.world.p_setup.deathmatchstarts[i];
         if check_spot(state, playernum, &dm_spot) {
             state.world.p_setup.deathmatchstarts[i].kind = (playernum.as_i32() + 1) as i16;
@@ -1255,13 +1257,12 @@ pub fn do_completed(state: &mut GameState) {
     state.game.g_game.wminfo.maxsecret = state.game.g_game.totalsecret;
     state.game.g_game.wminfo.maxfrags = 0;
     if state.game.doomstat.gamemode == GameMode::Commercial {
-        state.game.g_game.wminfo.partime =
-            TICRATE * CPARS[(state.game.g_game.gamemap - 1) as usize];
+        state.game.g_game.wminfo.partime = TICRATE * CPARS[(state.game.g_game.gamemap - 1).idx()];
     } else if state.game.g_game.gameepisode < 4 {
-        state.game.g_game.wminfo.partime = TICRATE
-            * PARS[state.game.g_game.gameepisode as usize][state.game.g_game.gamemap as usize];
+        state.game.g_game.wminfo.partime =
+            TICRATE * PARS[state.game.g_game.gameepisode.idx()][state.game.g_game.gamemap.idx()];
     } else {
-        state.game.g_game.wminfo.partime = TICRATE * CPARS[state.game.g_game.gamemap as usize];
+        state.game.g_game.wminfo.partime = TICRATE * CPARS[state.game.g_game.gamemap.idx()];
     }
     state.game.g_game.wminfo.pnum = state.game.g_game.consoleplayer.slot();
     for i in 0..MAXPLAYERS {
@@ -1449,7 +1450,7 @@ pub fn init_new(state: &mut GameState, mut skill: SkillType, mut episode: i32, m
         || skill == SkillType::Nightmare && state.game.g_game.gameskill != SkillType::Nightmare
     {
         for i in StateNum::SargRun1 as i32..=StateNum::SargPain2 as i32 {
-            state.assets.info.states[i as usize].tics >>= 1;
+            state.assets.info.states[i.idx()].tics >>= 1;
         }
         state.assets.info.mobjinfo[MobjType::Bruisershot as usize].speed =
             (20 * FRACUNIT).to_bits();
@@ -1457,7 +1458,7 @@ pub fn init_new(state: &mut GameState, mut skill: SkillType, mut episode: i32, m
         state.assets.info.mobjinfo[MobjType::Troopshot as usize].speed = (20 * FRACUNIT).to_bits();
     } else if skill != SkillType::Nightmare && state.game.g_game.gameskill == SkillType::Nightmare {
         for i in StateNum::SargRun1 as i32..=StateNum::SargPain2 as i32 {
-            state.assets.info.states[i as usize].tics <<= 1;
+            state.assets.info.states[i.idx()].tics <<= 1;
         }
         state.assets.info.mobjinfo[MobjType::Bruisershot as usize].speed =
             (15 * FRACUNIT).to_bits();
@@ -1525,27 +1526,33 @@ fn increase_demo_buffer(g_game: &mut GGameState) {
     g_game.demoend = new_length;
 }
 pub fn write_demo_ticcmd(state: &mut GameState, player_num: usize) {
-    if state.game.g_game.gamekeydown[state.game.m_controls.key_demo_quit as usize] {
+    if state.game.g_game.gamekeydown[state.game.m_controls.key_demo_quit.idx()] {
         check_demo_status(state);
     }
     let demo_start = state.game.g_game.demo_p;
     let cmd = state.game.g_game.players[player_num].cmd;
-    state.game.g_game.demo_write_byte(cmd.forwardmove as u8);
-    state.game.g_game.demo_write_byte(cmd.sidemove as u8);
+    state
+        .game
+        .g_game
+        .demo_write_byte(cmd.forwardmove.cast_unsigned());
+    state
+        .game
+        .g_game
+        .demo_write_byte(cmd.sidemove.cast_unsigned());
     if state.game.g_game.longtics {
         state
             .game
             .g_game
-            .demo_write_byte((i32::from(cmd.angleturn) & 0xff) as u8);
+            .demo_write_byte((i32::from(cmd.angleturn) & 0xff).cast_unsigned() as u8);
         state
             .game
             .g_game
-            .demo_write_byte((i32::from(cmd.angleturn) >> 8 & 0xff) as u8);
+            .demo_write_byte((i32::from(cmd.angleturn) >> 8 & 0xff).cast_unsigned() as u8);
     } else {
         state
             .game
             .g_game
-            .demo_write_byte((i32::from(cmd.angleturn) >> 8) as u8);
+            .demo_write_byte((i32::from(cmd.angleturn) >> 8).cast_unsigned() as u8);
     }
     state.game.g_game.demo_write_byte(cmd.buttons);
     state.game.g_game.demo_p = demo_start;
@@ -1564,8 +1571,8 @@ pub fn record_demo(g_game: &mut GGameState, options: &Options, name: &str) {
     let maxsize: i32 = options
         .maxdemo
         .map_or(0x20000, |kilobytes| kilobytes * 1024);
-    g_game.demobuffer = vec![0u8; maxsize as usize];
-    g_game.demoend = maxsize as usize;
+    g_game.demobuffer = vec![0u8; maxsize.idx()];
+    g_game.demoend = maxsize.idx();
     g_game.demorecording = true;
 }
 pub fn vanilla_version_code(state: &DoomstatState) -> u8 {
@@ -1591,9 +1598,12 @@ pub fn begin_recording(game: &mut Game) {
             .demo_write_byte(vanilla_version_code(&game.doomstat));
     }
     game.g_game.demo_write_byte(game.g_game.gameskill as u8);
-    game.g_game.demo_write_byte(game.g_game.gameepisode as u8);
-    game.g_game.demo_write_byte(game.g_game.gamemap as u8);
-    game.g_game.demo_write_byte(game.g_game.deathmatch as u8);
+    game.g_game
+        .demo_write_byte(game.g_game.gameepisode.cast_unsigned() as u8);
+    game.g_game
+        .demo_write_byte(game.g_game.gamemap.cast_unsigned() as u8);
+    game.g_game
+        .demo_write_byte(game.g_game.deathmatch.cast_unsigned() as u8);
     game.g_game
         .demo_write_byte(u8::from(game.d_main.respawnparm));
     game.g_game.demo_write_byte(u8::from(game.d_main.fastparm));
@@ -1629,7 +1639,7 @@ pub fn do_play_demo(state: &mut GameState) {
     state.game.g_game.gameaction = GameAction::Nothing;
     let demo_lumpname = state.game.g_game.defdemoname.as_str().into_owned();
     let demo_lumpnum = get_num_for_name(&state.assets.w_wad, &demo_lumpname);
-    let demo_lumplen = lump_length(&state.assets.w_wad, demo_lumpnum) as usize;
+    let demo_lumplen = lump_length(&state.assets.w_wad, demo_lumpnum).idx();
     state.game.g_game.demobuffer =
         lump_bytes(&*state.assets.fs, &mut state.assets.w_wad, demo_lumpnum)[..demo_lumplen]
             .to_vec();

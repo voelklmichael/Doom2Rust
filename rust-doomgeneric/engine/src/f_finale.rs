@@ -12,6 +12,7 @@ use crate::game_state::GameState;
 use crate::hu_stuff::HU_FONTSIZE;
 use crate::hu_stuff::HU_FONTSTART;
 use crate::i_video::IVideoState;
+use crate::index::ToIndex;
 use crate::info::StateId;
 use crate::patch::Patch;
 use crate::v_video::cache_patch_name;
@@ -412,12 +413,12 @@ pub fn text_write(state: &mut GameState) {
             cx = 10;
             cy += 11;
         } else {
-            c = i32::from((c as u8).to_ascii_uppercase()) - HU_FONTSTART;
+            c = i32::from((c.cast_unsigned() as u8).to_ascii_uppercase()) - HU_FONTSTART;
             if (0..=HU_FONTSIZE).contains(&c) {
                 let font_patch = cache_loaded_patch(
                     &*state.assets.fs,
                     &mut state.assets.w_wad,
-                    state.ui.hu_stuff.hu_font[c as usize],
+                    state.ui.hu_stuff.hu_font[c.idx()],
                 );
                 let w: i32 = font_patch.width();
                 if cx + w > SCREENWIDTH {
@@ -509,7 +510,7 @@ const INITIAL_CASTORDER: [CastInfo; 18] = [
 pub fn start_cast(state: &mut GameState) {
     state.game.d_main.wipegamestate = GameScreenState::Wipped;
     state.ui.f_finale.castnum = 0;
-    let cast_type = state.ui.f_finale.castorder[state.ui.f_finale.castnum as usize].kind;
+    let cast_type = state.ui.f_finale.castorder[state.ui.f_finale.castnum.idx()].kind;
     state.ui.f_finale.caststate = Some(StateId(
         state.assets.info.mobjinfo[cast_type as usize].seestate as u32,
     ));
@@ -562,17 +563,19 @@ pub fn cast_ticker(state: &mut GameState) {
     }
     let mut stop_attack = false;
     let cur_caststate = state.assets.info.state_mut(state.ui.f_finale.caststate());
-    if cur_caststate.tics == -1 || cur_caststate.nextstate as u32 == StateNum::Null as i32 as u32 {
+    if cur_caststate.tics == -1
+        || cur_caststate.nextstate as u32 == (StateNum::Null as i32).cast_unsigned()
+    {
         state.ui.f_finale.castnum += 1;
         state.ui.f_finale.castdeath = false;
-        if state.ui.f_finale.castorder[state.ui.f_finale.castnum as usize]
+        if state.ui.f_finale.castorder[state.ui.f_finale.castnum.idx()]
             .name
             .is_none()
         {
             state.ui.f_finale.castnum = 0;
         }
         if state.assets.info.mobjinfo
-            [state.ui.f_finale.castorder[state.ui.f_finale.castnum as usize].kind as usize]
+            [state.ui.f_finale.castorder[state.ui.f_finale.castnum.idx()].kind as usize]
             .seesound
             != SfxName::SfxNone
         {
@@ -580,11 +583,11 @@ pub fn cast_ticker(state: &mut GameState) {
                 state,
                 SoundOrigin::None,
                 state.assets.info.mobjinfo
-                    [state.ui.f_finale.castorder[state.ui.f_finale.castnum as usize].kind as usize]
+                    [state.ui.f_finale.castorder[state.ui.f_finale.castnum.idx()].kind as usize]
                     .seesound,
             );
         }
-        let cast_type = state.ui.f_finale.castorder[state.ui.f_finale.castnum as usize].kind;
+        let cast_type = state.ui.f_finale.castorder[state.ui.f_finale.castnum.idx()].kind;
         state.ui.f_finale.caststate = Some(StateId(
             state.assets.info.mobjinfo[cast_type as usize].seestate as u32,
         ));
@@ -594,7 +597,7 @@ pub fn cast_ticker(state: &mut GameState) {
         stop_attack = true;
     } else {
         let st = cur_caststate.nextstate as i32;
-        state.ui.f_finale.caststate = Some(StateId(st as u32));
+        state.ui.f_finale.caststate = Some(StateId(st.cast_unsigned()));
         state.ui.f_finale.castframes += 1;
         let sfx = cast_attack_sound(cur_caststate.nextstate);
         if sfx != SfxName::SfxNone {
@@ -602,7 +605,7 @@ pub fn cast_ticker(state: &mut GameState) {
         }
     }
     if !stop_attack {
-        let cast_type = state.ui.f_finale.castorder[state.ui.f_finale.castnum as usize].kind;
+        let cast_type = state.ui.f_finale.castorder[state.ui.f_finale.castnum.idx()].kind;
         let cast_info = state.assets.info.mobjinfo[cast_type as usize];
         if state.ui.f_finale.castframes == 12 {
             state.ui.f_finale.castattacking = true;
@@ -627,7 +630,7 @@ pub fn cast_ticker(state: &mut GameState) {
     if stop_attack {
         state.ui.f_finale.castattacking = false;
         state.ui.f_finale.castframes = 0;
-        let cast_type = state.ui.f_finale.castorder[state.ui.f_finale.castnum as usize].kind;
+        let cast_type = state.ui.f_finale.castorder[state.ui.f_finale.castnum.idx()].kind;
         state.ui.f_finale.caststate = Some(StateId(
             state.assets.info.mobjinfo[cast_type as usize].seestate as u32,
         ));
@@ -649,7 +652,7 @@ pub fn cast_responder(state: &mut GameState, ev: &Event) -> bool {
         return true;
     }
     state.ui.f_finale.castdeath = true;
-    let cast_type = state.ui.f_finale.castorder[state.ui.f_finale.castnum as usize].kind;
+    let cast_type = state.ui.f_finale.castorder[state.ui.f_finale.castnum.idx()].kind;
     state.ui.f_finale.caststate = Some(StateId(
         state.assets.info.mobjinfo[cast_type as usize].deathstate as u32,
     ));
@@ -661,7 +664,7 @@ pub fn cast_responder(state: &mut GameState, ev: &Event) -> bool {
     state.ui.f_finale.castframes = 0;
     state.ui.f_finale.castattacking = false;
     if state.assets.info.mobjinfo
-        [state.ui.f_finale.castorder[state.ui.f_finale.castnum as usize].kind as usize]
+        [state.ui.f_finale.castorder[state.ui.f_finale.castnum.idx()].kind as usize]
         .deathsound
         != SfxName::SfxNone
     {
@@ -669,7 +672,7 @@ pub fn cast_responder(state: &mut GameState, ev: &Event) -> bool {
             state,
             SoundOrigin::None,
             state.assets.info.mobjinfo
-                [state.ui.f_finale.castorder[state.ui.f_finale.castnum as usize].kind as usize]
+                [state.ui.f_finale.castorder[state.ui.f_finale.castnum.idx()].kind as usize]
                 .deathsound,
         );
     }
@@ -683,7 +686,7 @@ pub fn cast_print(state: &mut GameState, text: &str) {
             let w: i32 = cache_loaded_patch(
                 &*state.assets.fs,
                 &mut state.assets.w_wad,
-                state.ui.hu_stuff.hu_font[c as usize],
+                state.ui.hu_stuff.hu_font[c.idx()],
             )
             .width();
             width += w;
@@ -698,7 +701,7 @@ pub fn cast_print(state: &mut GameState, text: &str) {
             let font_patch = cache_loaded_patch(
                 &*state.assets.fs,
                 &mut state.assets.w_wad,
-                state.ui.hu_stuff.hu_font[c as usize],
+                state.ui.hu_stuff.hu_font[c.idx()],
             );
             let w: i32 = font_patch.width();
             let dest_screen = Screen::Video;
@@ -713,13 +716,13 @@ pub fn cast_drawer(state: &mut GameState) {
     let __wcache865_4 = cache_patch_name(&*state.assets.fs, &mut state.assets.w_wad, "BOSSBACK");
     let dest_screen = Screen::Video;
     draw_patch(state, dest_screen, 0, 0, &__wcache865_4);
-    let cast_name = state.ui.f_finale.castorder[state.ui.f_finale.castnum as usize]
+    let cast_name = state.ui.f_finale.castorder[state.ui.f_finale.castnum.idx()]
         .name
         .expect("the cast list is terminated only after its last entry");
     cast_print(state, cast_name);
     let cur_caststate = state.assets.info.state_mut(state.ui.f_finale.caststate());
     let sprframe = &state.render.r_things.sprites[cur_caststate.sprite as usize].spriteframes
-        [(cur_caststate.frame & FF_FRAMEMASK) as usize];
+        [(cur_caststate.frame & FF_FRAMEMASK).idx()];
     let SpriteImage { lump, flip } = sprframe.image(0);
     let patch: Patch = cache_patch_num(
         &*state.assets.fs,
@@ -735,7 +738,7 @@ pub fn cast_drawer(state: &mut GameState) {
 }
 fn draw_patch_col(state: &mut IVideoState, x: i32, patch: &Patch, col: i32) {
     for post in patch.posts(col) {
-        let mut dest = post.topdelta * SCREENWIDTH as usize + x as usize;
+        let mut dest = post.topdelta * SCREENWIDTH as usize + x.idx();
         for &pixel in post.pixels {
             state.i_video_buffer[dest] = pixel;
             dest += SCREENWIDTH as usize;

@@ -21,6 +21,7 @@ use crate::f_finale::cast_ticker;
 use crate::filesystem::{read_file, MemFileSystem};
 use crate::g_game::{do_load_game, do_save_game, exit_level, g_load_game, g_save_game};
 use crate::game_state::{init_game_state, GameState};
+use crate::index::ToIndex;
 use crate::info::StateId;
 use crate::options::{Options, Warp};
 use crate::p_inter::touch_special_thing;
@@ -246,13 +247,13 @@ fn world_summary(state: &mut GameState) -> String {
                 m.tics,
                 m.movecount,
             ]
-            .map(|v| v as u32),
+            .map(i32::cast_unsigned),
         );
         count += 1;
     }
     let mut sector_hash = FNV_OFFSET;
     for i in 0..state.world.p_setup.numsectors {
-        let s = state.world.p_setup.sector_mut(SectorId(i as u32));
+        let s = state.world.p_setup.sector_mut(SectorId(i.cast_unsigned()));
         sector_hash = fnv(
             sector_hash,
             [
@@ -260,7 +261,7 @@ fn world_summary(state: &mut GameState) -> String {
                 s.ceilingheight.to_bits(),
                 i32::from(s.lightlevel),
             ]
-            .map(|v| v as u32),
+            .map(i32::cast_unsigned),
         );
     }
     let p = &state.game.g_game.players[state.game.g_game.consoleplayer];
@@ -272,7 +273,7 @@ fn world_summary(state: &mut GameState) -> String {
             p.viewz.to_bits(),
             p.readyweapon as i32,
         ]
-        .map(|v| v as u32),
+        .map(i32::cast_unsigned),
     );
     format!("mobjs={count} mobjhash={mobj_hash:016x} sechash={sector_hash:016x} playerhash={player_hash:016x}")
 }
@@ -463,7 +464,7 @@ fn cast_trace() -> Option<String> {
                 f.castonmelee,
                 i32::from(f.castattacking),
             ]
-            .map(|v| v as u32),
+            .map(i32::cast_unsigned),
         );
     }
     Some(format!("{hash:016x} castnum={}", state.ui.f_finale.castnum))
@@ -486,12 +487,18 @@ fn special_line_trace(walk: bool) -> Option<String> {
     let state = start_e1m1()?;
     let (save_path, _) = save_slot(state, 0);
     let line = (0..state.world.p_setup.numlines)
-        .map(|i| LineId(i as u32))
+        .map(|i| LineId(i.cast_unsigned()))
         .find(|&l| state.world.p_setup.line(l).backsector.is_some())?;
     // A tag carried by only a few sectors, as real maps use, so that one
     // activation does not affect every untagged sector.
     let tag = (0..state.world.p_setup.numsectors)
-        .map(|i| state.world.p_setup.sector_mut(SectorId(i as u32)).tag)
+        .map(|i| {
+            state
+                .world
+                .p_setup
+                .sector_mut(SectorId(i.cast_unsigned()))
+                .tag
+        })
         .find(|&t| t != 0)?;
     let mut hash = FNV_OFFSET;
     for special in 0..=145i16 {
@@ -541,10 +548,10 @@ fn special_line_trace(walk: bool) -> Option<String> {
                     hash,
                     [
                         u32::from(used),
-                        i32::from(line_special) as u32,
-                        side_textures[0] as u32,
-                        side_textures[1] as u32,
-                        side_textures[2] as u32,
+                        i32::from(line_special).cast_unsigned(),
+                        side_textures[0].cast_unsigned(),
+                        side_textures[1].cast_unsigned(),
+                        side_textures[2].cast_unsigned(),
                         fnv_bytes(world.as_bytes()) as u32,
                         fnv_bytes(settled.as_bytes()) as u32,
                     ],
@@ -562,10 +569,16 @@ fn crusher_stasis_trace() -> Option<String> {
     let state = start_e1m1()?;
     let (save_path, _) = save_slot(state, 0);
     let line = (0..state.world.p_setup.numlines)
-        .map(|i| LineId(i as u32))
+        .map(|i| LineId(i.cast_unsigned()))
         .find(|&l| state.world.p_setup.line(l).backsector.is_some())?;
     let tag = (0..state.world.p_setup.numsectors)
-        .map(|i| state.world.p_setup.sector_mut(SectorId(i as u32)).tag)
+        .map(|i| {
+            state
+                .world
+                .p_setup
+                .sector_mut(SectorId(i.cast_unsigned()))
+                .tag
+        })
         .find(|&t| t != 0)?;
     let mut hash = FNV_OFFSET;
     for start in [6i16, 25, 73, 77, 141] {
@@ -674,7 +687,7 @@ fn pickup_trace() -> Option<String> {
                     m.flags |= MobjFlags::DROPPED;
                 }
             }
-            for c in 0..state.audio.s_sound.snd_channels as usize {
+            for c in 0..state.audio.s_sound.snd_channels.idx() {
                 state.audio.s_sound.channels[c].sfxinfo = None;
             }
             touch_special_thing(state, special, toucher);
@@ -689,7 +702,7 @@ fn pickup_trace() -> Option<String> {
             values.extend((0..6).map(|i| i32::from(p.cards[i])));
             values.push(state.world.p_mobj.mo(toucher).health);
             values.push(i32::from(state.world.p_mobj.is_live(special)));
-            for c in 0..state.audio.s_sound.snd_channels as usize {
+            for c in 0..state.audio.s_sound.snd_channels.idx() {
                 values.push(
                     state.audio.s_sound.channels[c]
                         .sfxinfo
@@ -697,7 +710,7 @@ fn pickup_trace() -> Option<String> {
                 );
             }
             let message = p.message.clone().unwrap_or_default();
-            hash = fnv(hash, values.iter().map(|&v| v as u32));
+            hash = fnv(hash, values.iter().map(|&v| v.cast_unsigned()));
             hash = fnv(hash, [fnv_bytes(message.as_bytes()) as u32]);
         }
     }
@@ -795,23 +808,23 @@ fn menu_trace() -> Option<String> {
         m.responder_lastx = 0;
         state.game.g_game.players[0].message = None;
         state.game.g_game.gameaction = crate::d_event::GameAction::Nothing;
-        for c in 0..state.audio.s_sound.snd_channels as usize {
+        for c in 0..state.audio.s_sound.snd_channels.idx() {
             state.audio.s_sound.channels[c].sfxinfo = None;
         }
         let m = &mut state.ui.m_menu;
         match situation {
             0 => {}
-            n if (n as usize) <= items.len() => {
+            n if n.idx() <= items.len() => {
                 m.menuactive = true;
-                (m.current_menu, m.item_on) = items[n as usize - 1];
+                (m.current_menu, m.item_on) = items[n.idx() - 1];
             }
-            n if n as usize == items.len() + 1 || n as usize == items.len() + 2 => {
+            n if n.idx() == items.len() + 1 || n.idx() == items.len() + 2 => {
                 m.menuactive = true;
                 start_message(
                     m,
                     "prompt",
                     Some(menu_test_message_routine),
-                    n as usize == items.len() + 1,
+                    n.idx() == items.len() + 1,
                 );
             }
             _ => {
@@ -860,14 +873,14 @@ fn menu_trace() -> Option<String> {
             m.responder_mousex,
             m.responder_lastx,
         ];
-        for c in 0..state.audio.s_sound.snd_channels as usize {
+        for c in 0..state.audio.s_sound.snd_channels.idx() {
             values.push(
                 state.audio.s_sound.channels[c]
                     .sfxinfo
                     .map_or(-1, |id| id.0 as i32),
             );
         }
-        *hash = fnv(*hash, values.iter().map(|&v| v as u32));
+        *hash = fnv(*hash, values.iter().map(|&v| v.cast_unsigned()));
         let text = format!(
             "{}|{}|{}|{}",
             m.savegamestrings[0],
@@ -876,7 +889,7 @@ fn menu_trace() -> Option<String> {
                 .message
                 .clone()
                 .unwrap_or_default(),
-            m.savegamestrings[m.save_slot.clamp(0, 9) as usize],
+            m.savegamestrings[m.save_slot.clamp(0, 9).idx()],
         );
         *hash = fnv(*hash, [fnv_bytes(text.as_bytes()) as u32]);
     };

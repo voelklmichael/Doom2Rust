@@ -4,6 +4,7 @@ use crate::d_player::PlayerId;
 use crate::d_player::PlayerState;
 use crate::d_player::PowerType;
 use crate::d_player::{weapontype_from_raw, WeaponType};
+use crate::index::ToIndex;
 use crate::p_mobj::MobjFlags;
 use crate::p_mobj::PMobjState;
 
@@ -66,7 +67,7 @@ pub fn calc_height(state: &mut GameState, player_id: PlayerId) {
         return;
     }
     let angle: i32 = (FINEANGLES / 20 * state.world.p_tick.leveltime) & FINEMASK;
-    let bob: Fixed = fixed_mul(player.bob / 2, fine_sine(angle as usize));
+    let bob: Fixed = fixed_mul(player.bob / 2, fine_sine(angle.idx()));
     if player.playerstate == PlayerState::Live {
         player.viewheight += player.deltaviewheight;
         if player.viewheight > VIEWHEIGHT {
@@ -96,7 +97,7 @@ pub fn move_player(state: &mut GameState, player_id: PlayerId) {
     let player_mo = state.game.g_game.players[player_id].mobj();
     {
         let mo = state.world.p_mobj.mo_mut(player_mo);
-        mo.angle += Angle((i32::from(cmd.angleturn) << 16) as u32);
+        mo.angle += Angle((i32::from(cmd.angleturn) << 16).cast_unsigned());
     }
     let (z, floorz, angle) = {
         let mo = state.world.p_mobj.mo(player_mo);

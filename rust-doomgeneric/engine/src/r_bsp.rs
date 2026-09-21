@@ -1,5 +1,6 @@
 use crate::game_state::GameState;
 use crate::i_system::error;
+use crate::index::ToIndex;
 use crate::m_bbox::BBox;
 use crate::m_bbox::BoxIndex;
 use crate::m_fixed::Fixed;
@@ -330,10 +331,10 @@ pub fn check_bbox(r_bsp: &RBspState, r_main: &RMainState, bspcoord: BBox) -> boo
     if boxpos == 5 {
         return true;
     }
-    let x1: Fixed = bspcoord[CHECKCOORD[boxpos as usize][0] as usize];
-    let y1: Fixed = bspcoord[CHECKCOORD[boxpos as usize][1] as usize];
-    let x2: Fixed = bspcoord[CHECKCOORD[boxpos as usize][2] as usize];
-    let y2: Fixed = bspcoord[CHECKCOORD[boxpos as usize][3] as usize];
+    let x1: Fixed = bspcoord[CHECKCOORD[boxpos.idx()][0].idx()];
+    let y1: Fixed = bspcoord[CHECKCOORD[boxpos.idx()][1].idx()];
+    let x2: Fixed = bspcoord[CHECKCOORD[boxpos.idx()][2].idx()];
+    let y2: Fixed = bspcoord[CHECKCOORD[boxpos.idx()][3].idx()];
     let mut angle1: Angle = point_to_angle(r_main, x1, y1) - r_main.viewangle;
     let mut angle2: Angle = point_to_angle(r_main, x2, y2) - r_main.viewangle;
     let span: Angle = angle1 - angle2;
@@ -381,10 +382,13 @@ pub fn r_subsector(state: &mut GameState, num: i32) {
         ));
     }
     state.render.r_main.sscount += 1;
-    let sub = state.world.p_setup.subsector(SubsectorId(num as u32));
+    let sub = state
+        .world
+        .p_setup
+        .subsector(SubsectorId(num.cast_unsigned()));
     state.render.r_bsp.frontsector = Some(sub.sector);
     let count: i32 = i32::from(sub.numlines);
-    let mut line: SegId = SegId(sub.firstline as u32);
+    let mut line: SegId = SegId(i32::from(sub.firstline).cast_unsigned());
     let frontsector_id = state.render.r_bsp.front();
     let frontsector = state.world.p_setup.sector(frontsector_id);
     let (floorheight, floorpic, ceilingheight, ceilingpic, lightlevel) = (
@@ -431,15 +435,15 @@ pub fn render_bspnode(state: &mut GameState, bspnum: i32) {
         }
         return;
     }
-    let bsp = state.world.p_setup.nodes[bspnum as usize];
+    let bsp = state.world.p_setup.nodes[bspnum.idx()];
     let side: i32 = point_on_side(state.render.r_main.viewx, state.render.r_main.viewy, &bsp);
-    render_bspnode(state, i32::from(bsp.children[side as usize]));
+    render_bspnode(state, i32::from(bsp.children[side.idx()]));
     if check_bbox(
         &state.render.r_bsp,
         &state.render.r_main,
-        bsp.bbox[(side ^ 1) as usize],
+        bsp.bbox[(side ^ 1).idx()],
     ) {
-        render_bspnode(state, i32::from(bsp.children[(side ^ 1) as usize]));
+        render_bspnode(state, i32::from(bsp.children[(side ^ 1).idx()]));
     }
 }
 

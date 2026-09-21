@@ -42,6 +42,7 @@ pub(crate) mod i_sound;
 pub(crate) mod i_system;
 pub(crate) mod i_timer;
 pub(crate) mod i_video;
+pub(crate) mod index;
 pub(crate) mod info;
 pub(crate) mod le;
 pub(crate) mod line_effects;

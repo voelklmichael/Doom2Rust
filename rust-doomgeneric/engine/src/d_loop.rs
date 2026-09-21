@@ -11,6 +11,7 @@ use crate::i_timer::get_time_ms;
 use crate::i_timer::sleep;
 use crate::i_timer::ITimerState;
 use crate::i_video::start_tic;
+use crate::index::ToIndex;
 use crate::m_fixed::Fixed;
 use crate::m_fixed::FRACUNIT;
 use crate::platform::DoomPlatform;
@@ -191,10 +192,10 @@ fn build_new_tic(state: &mut GameState) -> bool {
         .expect("non-null function pointer");
     let maketic = state.game.d_loop.maketic;
     build_ticcmd(state, &mut cmd, maketic);
-    state.game.d_loop.ticdata[(state.game.d_loop.maketic % BACKUPTICS) as usize].cmds
-        [LOCALPLAYER as usize] = cmd;
-    state.game.d_loop.ticdata[(state.game.d_loop.maketic % BACKUPTICS) as usize].ingame
-        [LOCALPLAYER as usize] = true;
+    state.game.d_loop.ticdata[(state.game.d_loop.maketic % BACKUPTICS).idx()].cmds
+        [LOCALPLAYER.idx()] = cmd;
+    state.game.d_loop.ticdata[(state.game.d_loop.maketic % BACKUPTICS).idx()].ingame
+        [LOCALPLAYER.idx()] = true;
     state.game.d_loop.maketic += 1;
     true
 }
@@ -274,7 +275,7 @@ fn old_net_sync(d_loop: &mut DLoopState) {
         if d_loop.maketic <= d_loop.recvtic {
             d_loop.lasttime -= 1;
         }
-        d_loop.frameskip[(d_loop.frameon & 3) as usize] =
+        d_loop.frameskip[(d_loop.frameon & 3).idx()] =
             i32::from(d_loop.oldnettics > d_loop.recvtic);
         d_loop.oldnettics = d_loop.maketic;
         if d_loop.frameskip[0] != 0
@@ -309,7 +310,7 @@ fn ticdup_squash(set: &mut TicCmdSet) {
 }
 fn single_player_clear(set: &mut TicCmdSet) {
     for i in 0..NET_MAXPLAYERS {
-        if i != LOCALPLAYER as u32 {
+        if i != LOCALPLAYER.cast_unsigned() {
             set.ingame[i as usize] = false;
         }
     }
@@ -361,8 +362,7 @@ pub fn try_run_tics(state: &mut GameState) {
         if !players_in_game(&state.game.d_loop) {
             return;
         }
-        let set_index =
-            (state.game.d_loop.gametic / state.game.d_loop.ticdup % BACKUPTICS) as usize;
+        let set_index = (state.game.d_loop.gametic / state.game.d_loop.ticdup % BACKUPTICS).idx();
         let mut set = state.game.d_loop.ticdata[set_index];
         if !NET_CLIENT_CONNECTED {
             single_player_clear(&mut set);

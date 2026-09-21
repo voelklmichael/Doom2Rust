@@ -1,6 +1,7 @@
 use crate::filesystem::DoomFileSystem;
 use crate::game_state::GameState;
 use crate::i_system::error;
+use crate::index::ToIndex;
 use crate::st_stuff::ST_Y;
 use crate::v_video::cache_loaded_patch;
 use crate::v_video::copy_rect;
@@ -114,7 +115,7 @@ pub fn stlib_draw_num(state: &mut GameState, n: &mut StNumber, mut num: i32) {
     while num != 0 && numdigits != 0 {
         numdigits -= 1;
         x -= w;
-        let digit_lump = state.ui.st_stuff.digit_set(n.p)[(num % 10) as usize];
+        let digit_lump = state.ui.st_stuff.digit_set(n.p)[(num % 10).idx()];
         let digit_patch =
             cache_loaded_patch(&*state.assets.fs, &mut state.assets.w_wad, digit_lump);
         let dest_screen = Screen::Video;
@@ -175,7 +176,7 @@ pub fn stlib_update_mult_icon(
 ) {
     if on && (mi.oldinum != inum || refresh) && inum != -1 {
         if mi.oldinum != -1 {
-            let old_lump = state.ui.st_stuff.digit_set(mi.p)[mi.oldinum as usize];
+            let old_lump = state.ui.st_stuff.digit_set(mi.p)[mi.oldinum.idx()];
             let old_patch =
                 cache_loaded_patch(&*state.assets.fs, &mut state.assets.w_wad, old_lump);
             let x: i32 = mi.x - old_patch.leftoffset();
@@ -199,7 +200,7 @@ pub fn stlib_update_mult_icon(
                 y,
             );
         }
-        let new_lump = state.ui.st_stuff.digit_set(mi.p)[inum as usize];
+        let new_lump = state.ui.st_stuff.digit_set(mi.p)[inum.idx()];
         let new_patch = cache_loaded_patch(&*state.assets.fs, &mut state.assets.w_wad, new_lump);
         let dest_screen = Screen::Video;
         draw_patch(state, dest_screen, mi.x, mi.y, &new_patch);

@@ -18,6 +18,7 @@ use crate::i_sound::ISoundState;
 use crate::i_sound::SndDevice;
 use crate::i_system::at_exit;
 use crate::i_system::error;
+use crate::index::ToIndex;
 use crate::m_fixed::fixed_mul;
 use crate::m_fixed::Fixed;
 use crate::p_mobj::MobjId;
@@ -114,7 +115,7 @@ pub fn s_init(state: &mut GameState, sfx_volume_0: i32, music_volume_0: i32) {
             origin: SoundOrigin::None,
             handle: 0,
         };
-        state.audio.s_sound.snd_channels as usize
+        state.audio.s_sound.snd_channels.idx()
     ];
     state.audio.s_sound.mus_paused = false;
     for i in 1..NUMSFX {
@@ -136,21 +137,18 @@ fn stop_channel(
     sounds: &mut SoundsState,
     cnum: i32,
 ) {
-    let c = s_sound.channels[cnum as usize];
+    let c = s_sound.channels[cnum.idx()];
     if let Some(sfxinfo) = c.sfxinfo {
         if sound_is_playing(i_sound, c.handle) {
             i_stop_sound(i_sound, c.handle);
         }
         sounds.sfx_mut(sfxinfo).usefulness -= 1;
-        s_sound.channels[cnum as usize].sfxinfo = None;
+        s_sound.channels[cnum.idx()].sfxinfo = None;
     }
 }
 pub fn s_start(state: &mut GameState) {
     for cnum in 0..state.audio.s_sound.snd_channels {
-        if state.audio.s_sound.channels[cnum as usize]
-            .sfxinfo
-            .is_some()
-        {
+        if state.audio.s_sound.channels[cnum.idx()].sfxinfo.is_some() {
             stop_channel(
                 &mut state.audio.i_sound,
                 &mut state.audio.s_sound,
@@ -180,7 +178,7 @@ pub fn s_start(state: &mut GameState) {
                 + state.game.g_game.gamemap
                 - 1
         } else {
-            spmus[(state.game.g_game.gamemap - 1) as usize]
+            spmus[(state.game.g_game.gamemap - 1).idx()]
         }
     };
     change_music(state, mnum, true);
@@ -192,7 +190,7 @@ pub fn s_stop_sound(
     origin: SoundOrigin,
 ) {
     for cnum in 0..s_sound.snd_channels {
-        let c = s_sound.channels[cnum as usize];
+        let c = s_sound.channels[cnum.idx()];
         if c.sfxinfo.is_some() && c.origin == origin {
             stop_channel(i_sound, s_sound, sounds, cnum);
             break;
@@ -208,7 +206,7 @@ fn get_channel(
 ) -> i32 {
     let mut cnum: i32 = 0;
     while cnum < s_sound.snd_channels {
-        let c = s_sound.channels[cnum as usize];
+        let c = s_sound.channels[cnum.idx()];
         if c.sfxinfo.is_none() {
             break;
         }
@@ -221,7 +219,7 @@ fn get_channel(
     if cnum == s_sound.snd_channels {
         cnum = 0;
         while cnum < s_sound.snd_channels {
-            let channel_sfx = s_sound.channels[cnum as usize]
+            let channel_sfx = s_sound.channels[cnum.idx()]
                 .sfxinfo
                 .expect("every channel is in use when none is free");
             if sounds.sfx_mut(channel_sfx).priority >= sounds.s_sfx[sfxinfo.0 as usize].priority {
@@ -234,7 +232,7 @@ fn get_channel(
         }
         stop_channel(i_sound, s_sound, sounds, cnum);
     }
-    let c = &mut s_sound.channels[cnum as usize];
+    let c = &mut s_sound.channels[cnum.idx()];
     c.sfxinfo = Some(sfxinfo);
     c.origin = origin;
     cnum
@@ -356,7 +354,7 @@ pub fn s_start_sound(state: &mut GameState, origin: SoundOrigin, sfx_id: SfxName
         );
         state.audio.sounds.s_sfx[sfx_index].lumpnum = lumpnum;
     }
-    state.audio.s_sound.channels[cnum as usize].handle =
+    state.audio.s_sound.channels[cnum.idx()].handle =
         i_start_sound(state, sfx_id, cnum, volume, sep);
 }
 pub fn pause_sound(
@@ -382,7 +380,7 @@ pub fn resume_sound(
 pub fn update_sounds(state: &mut GameState, listener: Option<MobjId>) {
     update_sound(&mut state.audio.i_sound, &mut *state.io.platform);
     for cnum in 0..state.audio.s_sound.snd_channels {
-        let c = state.audio.s_sound.channels[cnum as usize];
+        let c = state.audio.s_sound.channels[cnum.idx()];
         let Some(sfxinfo) = c.sfxinfo else {
             continue;
         };
@@ -458,7 +456,7 @@ pub fn change_music(state: &mut GameState, mut musicnum: i32, looping: bool) {
         return;
     }
     stop_music(state);
-    let music_index = musicnum as usize;
+    let music_index = musicnum.idx();
     if state.audio.sounds.s_music[music_index].lumpnum.is_none() {
         let namebuf = format!(
             "d_{}",
@@ -470,7 +468,7 @@ pub fn change_music(state: &mut GameState, mut musicnum: i32, looping: bool) {
     let lumpnum = state.audio.sounds.s_music[music_index]
         .lumpnum
         .expect("music lump resolved above");
-    let lumplen = lump_length(&state.assets.w_wad, lumpnum) as usize;
+    let lumplen = lump_length(&state.assets.w_wad, lumpnum).idx();
     let data = lump_bytes(&*state.assets.fs, &mut state.assets.w_wad, lumpnum);
     let handle = register_song(
         &mut state.audio.i_sound,
@@ -492,7 +490,7 @@ pub fn stop_music(state: &mut GameState) {
             resume_song(&mut state.audio.i_sound, &mut *state.io.platform);
         }
         stop_song(&mut state.audio.i_sound, &mut *state.io.platform);
-        let music = &state.audio.sounds.s_music[musicnum as usize];
+        let music = &state.audio.sounds.s_music[musicnum.idx()];
         un_register_song(&mut state.audio.i_sound, music.handle);
         if let Some(lumpnum) = music.lumpnum {
             release_lump_num(&state.assets.w_wad, lumpnum);

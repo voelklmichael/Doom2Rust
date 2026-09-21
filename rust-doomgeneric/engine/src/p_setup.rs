@@ -8,6 +8,7 @@ use crate::g_game::death_match_spawn_player;
 use crate::game_state::GameState;
 use crate::i_system::get_memory_value;
 use crate::i_system::ISystemState;
+use crate::index::ToIndex;
 use crate::le::le_i16;
 use crate::m_bbox::add_to_box;
 use crate::m_bbox::clear_box;
@@ -262,7 +263,7 @@ impl LumpReader {
     }
 
     fn u16(&mut self) -> u16 {
-        self.i16() as u16
+        self.i16().cast_unsigned()
     }
 
     fn name8(&mut self) -> FixedCStr<8> {
@@ -280,9 +281,9 @@ const MAPSEG_SIZE: usize = 12;
 const MAPNODE_SIZE: usize = 28;
 const MAPTHING_SIZE: usize = 10;
 pub fn load_vertexes(state: &mut GameState, lump: LumpNum) {
-    let numvertexes = (lump_length(&state.assets.w_wad, lump) as usize / MAPVERTEX_SIZE) as i32;
+    let numvertexes = (lump_length(&state.assets.w_wad, lump).idx() / MAPVERTEX_SIZE) as i32;
     state.world.p_setup.numvertexes = numvertexes;
-    state.world.p_setup.vertexes = Vec::with_capacity(numvertexes as usize);
+    state.world.p_setup.vertexes = Vec::with_capacity(numvertexes.idx());
     let mut reader = LumpReader::new(state, lump);
     for _ in 0..numvertexes {
         let x = i32::from(reader.i16());
@@ -315,26 +316,26 @@ pub fn get_sector_at_null_address(
     id
 }
 pub fn load_segs(state: &mut GameState, lump: LumpNum) {
-    let numsegs = (lump_length(&state.assets.w_wad, lump) as usize / MAPSEG_SIZE) as i32;
+    let numsegs = (lump_length(&state.assets.w_wad, lump).idx() / MAPSEG_SIZE) as i32;
     state.world.p_setup.numsegs = numsegs;
-    state.world.p_setup.segs = Vec::with_capacity(numsegs as usize);
+    state.world.p_setup.segs = Vec::with_capacity(numsegs.idx());
     let mut reader = LumpReader::new(state, lump);
     for _ in 0..numsegs {
-        let v1 = VertexId(reader.i16() as u32);
-        let v2 = VertexId(reader.i16() as u32);
-        let seg_angle = Angle((i32::from(reader.i16()) << 16) as u32);
+        let v1 = VertexId(i32::from(reader.i16()).cast_unsigned());
+        let v2 = VertexId(i32::from(reader.i16()).cast_unsigned());
+        let seg_angle = Angle((i32::from(reader.i16()) << 16).cast_unsigned());
         let linedef = i32::from(reader.i16());
         let side = i32::from(reader.i16());
         let seg_offset = i32::from(reader.i16()) << 16;
-        let seg_linedef = LineId(linedef as u32);
+        let seg_linedef = LineId(linedef.cast_unsigned());
         let ldef = state.world.p_setup.line(seg_linedef);
-        let seg_sidenum = ldef.sidenum[side as usize]
+        let seg_sidenum = ldef.sidenum[side.idx()]
             .expect("seg on a line without that side")
             .0;
         let frontsector = Some(state.world.p_setup.sides[seg_sidenum as usize].sector);
         let backsector = if ldef.flags.contains(LineFlags::TWOSIDED) {
-            let other = ldef.sidenum[(side ^ 1) as usize]
-                .filter(|other| other.0 < state.world.p_setup.numsides as u32);
+            let other = ldef.sidenum[(side ^ 1).idx()]
+                .filter(|other| other.0 < state.world.p_setup.numsides.cast_unsigned());
             Some(match other {
                 Some(other) => state.world.p_setup.sides[other.0 as usize].sector,
                 None => get_sector_at_null_address(
@@ -360,10 +361,9 @@ pub fn load_segs(state: &mut GameState, lump: LumpNum) {
     release_lump_num(&state.assets.w_wad, lump);
 }
 pub fn load_subsectors(state: &mut GameState, lump: LumpNum) {
-    let numsubsectors =
-        (lump_length(&state.assets.w_wad, lump) as usize / MAPSUBSECTOR_SIZE) as i32;
+    let numsubsectors = (lump_length(&state.assets.w_wad, lump).idx() / MAPSUBSECTOR_SIZE) as i32;
     state.world.p_setup.numsubsectors = numsubsectors;
-    state.world.p_setup.subsectors = Vec::with_capacity(numsubsectors as usize);
+    state.world.p_setup.subsectors = Vec::with_capacity(numsubsectors.idx());
     let mut reader = LumpReader::new(state, lump);
     for _ in 0..numsubsectors {
         let numsegs = reader.i16();
@@ -377,11 +377,11 @@ pub fn load_subsectors(state: &mut GameState, lump: LumpNum) {
     release_lump_num(&state.assets.w_wad, lump);
 }
 pub fn load_sectors(state: &mut GameState, lump: LumpNum) {
-    let numsectors = (lump_length(&state.assets.w_wad, lump) as usize / MAPSECTOR_SIZE) as i32;
+    let numsectors = (lump_length(&state.assets.w_wad, lump).idx() / MAPSECTOR_SIZE) as i32;
     state.world.p_setup.numsectors = numsectors;
-    state.world.p_setup.sectors = vec![ZERO_SECTOR; numsectors as usize];
+    state.world.p_setup.sectors = vec![ZERO_SECTOR; numsectors.idx()];
     let mut reader = LumpReader::new(state, lump);
-    for i in 0..numsectors as usize {
+    for i in 0..numsectors.idx() {
         let floorheight = reader.i16();
         let ceilingheight = reader.i16();
         let floorpic_name = reader.name8();
@@ -413,8 +413,8 @@ pub fn load_sectors(state: &mut GameState, lump: LumpNum) {
 }
 pub fn load_nodes(state: &mut GameState, lump: LumpNum) {
     state.world.p_setup.numnodes =
-        (lump_length(&state.assets.w_wad, lump) as usize / MAPNODE_SIZE) as i32;
-    state.world.p_setup.nodes = Vec::with_capacity(state.world.p_setup.numnodes as usize);
+        (lump_length(&state.assets.w_wad, lump).idx() / MAPNODE_SIZE) as i32;
+    state.world.p_setup.nodes = Vec::with_capacity(state.world.p_setup.numnodes.idx());
     let mut reader = LumpReader::new(state, lump);
     for _ in 0..state.world.p_setup.numnodes {
         let mut no = Node {
@@ -438,7 +438,7 @@ pub fn load_nodes(state: &mut GameState, lump: LumpNum) {
     release_lump_num(&state.assets.w_wad, lump);
 }
 pub fn load_things(state: &mut GameState, lump: LumpNum) {
-    let numthings = (lump_length(&state.assets.w_wad, lump) as usize / MAPTHING_SIZE) as i32;
+    let numthings = (lump_length(&state.assets.w_wad, lump).idx() / MAPTHING_SIZE) as i32;
     let mut reader = LumpReader::new(state, lump);
     for _ in 0..numthings {
         let spawnthing = MapThing {
@@ -462,13 +462,13 @@ pub fn load_things(state: &mut GameState, lump: LumpNum) {
 }
 pub fn load_line_defs(state: &mut GameState, lump: LumpNum) {
     state.world.p_setup.numlines =
-        (lump_length(&state.assets.w_wad, lump) as usize / MAPLINEDEF_SIZE) as i32;
-    state.world.p_setup.lines = vec![ZERO_LINE; state.world.p_setup.numlines as usize];
+        (lump_length(&state.assets.w_wad, lump).idx() / MAPLINEDEF_SIZE) as i32;
+    state.world.p_setup.lines = vec![ZERO_LINE; state.world.p_setup.numlines.idx()];
     let mut reader = LumpReader::new(state, lump);
-    for i in 0..state.world.p_setup.numlines as usize {
+    for i in 0..state.world.p_setup.numlines.idx() {
         let mut ld = state.world.p_setup.lines[i];
-        ld.v1 = VertexId(reader.i16() as u32);
-        ld.v2 = VertexId(reader.i16() as u32);
+        ld.v1 = VertexId(i32::from(reader.i16()).cast_unsigned());
+        ld.v2 = VertexId(i32::from(reader.i16()).cast_unsigned());
         ld.flags = LineFlags::from_bits_retain(reader.i16());
         ld.special = reader.i16();
         ld.tag = reader.i16();
@@ -501,7 +501,7 @@ pub fn load_line_defs(state: &mut GameState, lump: LumpNum) {
         }
         for n in 0..2 {
             let raw = reader.i16();
-            ld.sidenum[n] = (raw != -1).then_some(SideId(raw as u32));
+            ld.sidenum[n] = (raw != -1).then_some(SideId(i32::from(raw).cast_unsigned()));
         }
         ld.frontsector =
             ld.sidenum[0].map(|side| state.world.p_setup.sides[side.0 as usize].sector);
@@ -511,9 +511,9 @@ pub fn load_line_defs(state: &mut GameState, lump: LumpNum) {
     release_lump_num(&state.assets.w_wad, lump);
 }
 pub fn load_side_defs(state: &mut GameState, lump: LumpNum) {
-    let numsides = (lump_length(&state.assets.w_wad, lump) as usize / MAPSIDEDEF_SIZE) as i32;
+    let numsides = (lump_length(&state.assets.w_wad, lump).idx() / MAPSIDEDEF_SIZE) as i32;
     state.world.p_setup.numsides = numsides;
-    state.world.p_setup.sides = Vec::with_capacity(numsides as usize);
+    state.world.p_setup.sides = Vec::with_capacity(numsides.idx());
     let mut reader = LumpReader::new(state, lump);
     for _ in 0..numsides {
         let textureoffset = reader.i16();
@@ -529,7 +529,7 @@ pub fn load_side_defs(state: &mut GameState, lump: LumpNum) {
             bottomtexture: texture_num_for_name(&state.render.r_data, &bottomtexture.as_str())
                 as i16,
             midtexture: texture_num_for_name(&state.render.r_data, &midtexture.as_str()) as i16,
-            sector: SectorId(sector as u32),
+            sector: SectorId(i32::from(sector).cast_unsigned()),
         };
         state.world.p_setup.sides.push(sd);
     }
@@ -542,7 +542,7 @@ pub fn load_block_map(
     lump: LumpNum,
 ) {
     let lumplen: i32 = lump_length(w_wad, lump);
-    let mut raw = vec![0u8; lumplen as usize];
+    let mut raw = vec![0u8; lumplen.idx()];
     read_lump(w_wad, fs, lump, &mut raw);
     p_setup.blockmaplump = raw
         .as_chunks::<2>()
@@ -554,17 +554,17 @@ pub fn load_block_map(
     p_setup.bmaporgy = Fixed::from_int(i32::from(p_setup.blockmaplump[1]));
     p_setup.bmapwidth = i32::from(p_setup.blockmaplump[2]);
     p_setup.bmapheight = i32::from(p_setup.blockmaplump[3]);
-    p_setup.blocklinks = vec![None; (p_setup.bmapwidth as usize) * (p_setup.bmapheight as usize)];
+    p_setup.blocklinks = vec![None; p_setup.bmapwidth.idx() * p_setup.bmapheight.idx()];
 }
 pub fn group_lines(p_setup: &mut PSetupState) {
     let mut bbox = BBox::new([Fixed::ZERO; 4]);
-    for i in 0..(p_setup.numsubsectors as usize) {
+    for i in 0..p_setup.numsubsectors.idx() {
         let firstline = p_setup.subsectors[i].firstline;
-        let seg_sidedef = p_setup.segs[firstline as usize].sidedef;
+        let seg_sidedef = p_setup.segs[firstline.idx()].sidedef;
         p_setup.subsectors[i].sector = p_setup.sides[seg_sidedef.0 as usize].sector;
     }
     p_setup.totallines = 0;
-    for i in 0..(p_setup.numlines as usize) {
+    for i in 0..p_setup.numlines.idx() {
         p_setup.totallines += 1;
         let li = p_setup.lines[i];
         let front_id = li.front_sector();
@@ -574,14 +574,14 @@ pub fn group_lines(p_setup: &mut PSetupState) {
             p_setup.totallines += 1;
         }
     }
-    for i in 0..(p_setup.numsectors as usize) {
+    for i in 0..p_setup.numsectors.idx() {
         let sec = &mut p_setup.sectors[i];
-        sec.lines = Vec::with_capacity(sec.linecount as usize);
+        sec.lines = Vec::with_capacity(sec.linecount.idx());
         sec.linecount = 0;
     }
     for i in 0..p_setup.numlines {
-        let li_id = LineId(i as u32);
-        let li = p_setup.lines[i as usize];
+        let li_id = LineId(i.cast_unsigned());
+        let li = p_setup.lines[i.idx()];
         if let Some(front_id) = li.frontsector {
             let sector = p_setup.sector_mut(front_id);
             sector.lines.push(li_id);
@@ -595,9 +595,9 @@ pub fn group_lines(p_setup: &mut PSetupState) {
             }
         }
     }
-    for i in 0..(p_setup.numsectors as usize) {
+    for i in 0..p_setup.numsectors.idx() {
         clear_box(&mut bbox);
-        for j in 0..(p_setup.sectors[i].linecount) as usize {
+        for j in 0..p_setup.sectors[i].linecount.idx() {
             let li_id = p_setup.sectors[i].lines[j];
             let li = p_setup.line(li_id);
             let li_v1 = p_setup.vertexes[li.v1.0 as usize];
@@ -638,7 +638,7 @@ fn pad_reject_array(
     len: u32,
 ) {
     let rejectpad: [u32; 4] = [
-        (((p_setup.totallines * 4 + 3) & !3) + 24) as u32,
+        (((p_setup.totallines * 4 + 3) & !3) + 24).cast_unsigned(),
         0,
         50,
         0x1d4a11,
@@ -673,10 +673,10 @@ fn load_reject(state: &mut GameState, lumpnum: LumpNum) {
     let lumplen = lump_length(&state.assets.w_wad, lumpnum);
     if lumplen >= minlength {
         state.world.p_setup.rejectmatrix =
-            lump_bytes(&*state.assets.fs, &mut state.assets.w_wad, lumpnum)[..minlength as usize]
+            lump_bytes(&*state.assets.fs, &mut state.assets.w_wad, lumpnum)[..minlength.idx()]
                 .to_vec();
     } else {
-        state.world.p_setup.rejectmatrix = vec![0u8; minlength as usize];
+        state.world.p_setup.rejectmatrix = vec![0u8; minlength.idx()];
         read_lump(
             &state.assets.w_wad,
             &*state.assets.fs,
@@ -687,8 +687,8 @@ fn load_reject(state: &mut GameState, lumpnum: LumpNum) {
             &state.game.options,
             &mut state.world.p_setup,
             &mut *state.io.platform,
-            lumplen as usize,
-            (minlength - lumplen) as u32,
+            lumplen.idx(),
+            (minlength - lumplen).cast_unsigned(),
         );
     }
 }
@@ -715,8 +715,8 @@ pub fn setup_level(state: &mut GameState, episode: i32, map: i32) {
     } else {
         format!(
             "E{}M{}",
-            char::from((('0' as i32) + episode) as u8),
-            char::from((('0' as i32) + map) as u8)
+            char::from((('0' as i32) + episode).cast_unsigned() as u8),
+            char::from((('0' as i32) + map).cast_unsigned() as u8)
         )
     };
     let lumpnum = get_num_for_name(&state.assets.w_wad, &lumpname);

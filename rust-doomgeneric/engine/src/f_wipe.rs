@@ -1,6 +1,7 @@
 use crate::game_state::GameState;
 use crate::i_video::read_screen;
 use crate::i_video::IVideoState;
+use crate::index::ToIndex;
 use crate::m_random::m_random;
 use crate::m_random::MRandomState;
 use crate::v_video::draw_block;
@@ -17,7 +18,7 @@ pub struct FWipeState {
 }
 
 fn wipe_shitty_col_major_xform(array: &mut [u8], width: i32, height: i32) {
-    let (width, height) = (width as usize, height as usize);
+    let (width, height) = (width.idx(), height.idx());
     let mut dest = vec![0u8; width * height * 2];
     for y in 0..height {
         for x in 0..width {
@@ -35,13 +36,13 @@ fn wipe_init_melt(
     width: i32,
     height: i32,
 ) {
-    let n = (width * height) as usize;
+    let n = (width * height).idx();
     i_video.i_video_buffer[..n].copy_from_slice(&f_wipe.wipe_scr_start[..n]);
     wipe_shitty_col_major_xform(&mut f_wipe.wipe_scr_start, width / 2, height);
     wipe_shitty_col_major_xform(&mut f_wipe.wipe_scr_end, width / 2, height);
-    f_wipe.y = vec![0i32; width as usize];
+    f_wipe.y = vec![0i32; width.idx()];
     f_wipe.y[0] = -(m_random(rng) % 16);
-    for i in 1..width as usize {
+    for i in 1..width.idx() {
         let r = m_random(rng) % 3 - 1;
         f_wipe.y[i] = f_wipe.y[i - 1] + r;
         if f_wipe.y[i] > 0 {
@@ -60,8 +61,8 @@ fn wipe_do_melt(
     ticks: i32,
 ) -> bool {
     let mut done = true;
-    let width = (width / 2) as usize;
-    let height_words = height as usize;
+    let width = (width / 2).idx();
+    let height_words = height.idx();
     let video = &mut i_video.i_video_buffer;
     let scr_start = &f_wipe.wipe_scr_start;
     let scr_end = &f_wipe.wipe_scr_end;
@@ -76,9 +77,9 @@ fn wipe_do_melt(
                 if *y + dy >= height {
                     dy = height - *y;
                 }
-                let src = i * height_words + *y as usize;
-                let mut dst = *y as usize * width + i;
-                for k in 0..dy as usize {
+                let src = i * height_words + (*y).idx();
+                let mut dst = (*y).idx() * width + i;
+                for k in 0..dy.idx() {
                     let so = 2 * (src + k);
                     let d = 2 * dst;
                     video[d..d + 2].copy_from_slice(&scr_end[so..so + 2]);
@@ -86,8 +87,8 @@ fn wipe_do_melt(
                 }
                 *y += dy;
                 let src = i * height_words;
-                let mut dst = *y as usize * width + i;
-                for k in 0..(height - *y) as usize {
+                let mut dst = (*y).idx() * width + i;
+                for k in 0..(height - *y).idx() {
                     let so = 2 * (src + k);
                     let d = 2 * dst;
                     video[d..d + 2].copy_from_slice(&scr_start[so..so + 2]);

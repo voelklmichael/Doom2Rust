@@ -498,7 +498,7 @@ pub fn kill_mobj(state: &mut GameState, source: Option<MobjId>, target: MobjId) 
     {
         let t = state.world.p_mobj.mo_mut(target);
         t.flags &= !(MobjFlags::SHOOTABLE | MobjFlags::FLOAT | MobjFlags::SKULLFLY);
-        if t.kind as u32 != MobjType::Skull as i32 as u32 {
+        if t.kind as u32 != (MobjType::Skull as i32).cast_unsigned() {
             t.flags &= !MobjFlags::NOGRAVITY;
         }
         t.flags |= MobjFlags::CORPSE | MobjFlags::DROPOFF;
@@ -684,10 +684,11 @@ pub fn damage_mobj(
     }
     state.world.p_mobj.mo_mut(target).reactiontime = 0;
     if (state.world.p_mobj.mo(target).threshold == 0
-        || target_type as u32 == MobjType::Vile as i32 as u32)
+        || target_type as u32 == (MobjType::Vile as i32).cast_unsigned())
         && source.is_some_and(|source| {
             source != target
-                && state.world.p_mobj.mo(source).kind as u32 != MobjType::Vile as i32 as u32
+                && state.world.p_mobj.mo(source).kind as u32
+                    != (MobjType::Vile as i32).cast_unsigned()
         })
     {
         {
