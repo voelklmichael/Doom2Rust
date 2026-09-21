@@ -143,6 +143,7 @@ pub fn death_think(state: &mut GameState, player_id: PlayerId) {
     if let Some(attacker) = state.game.g_game.players[player]
         .attacker
         .filter(|&attacker| Some(attacker) != state.game.g_game.players[player].mo)
+        .filter(|&attacker| state.world.p_mobj.is_live(attacker))
     {
         let angle: Angle = point_to_angle2(
             state.world.p_mobj.mo(player_mo).x,
