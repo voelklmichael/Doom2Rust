@@ -11,6 +11,7 @@ use crate::p_setup::SectorId;
 use crate::r_data::get_column;
 use crate::r_defs::ClipArray;
 use crate::r_defs::DrawSeg;
+use crate::r_defs::VisPlane;
 use crate::r_draw::advance_source;
 use crate::r_main::point_to_dist;
 use crate::r_main::scale_from_global_angle;
@@ -339,173 +340,176 @@ impl Neg for HeightFrac {
         Self(-self.0)
     }
 }
+/// Draws the wall column `dc_yl..=dc_yh` of `texture` at `texturecolumn` with the current column
+/// function.
+fn draw_wall_column(
+    state: &mut GameState,
+    yl: i32,
+    yh: i32,
+    texturemid: Fixed,
+    texture: i32,
+    texturecolumn: Fixed,
+) {
+    state.render.r_draw.dc_yl = yl;
+    state.render.r_draw.dc_yh = yh;
+    state.render.r_draw.dc_texturemid = texturemid;
+    state.render.r_draw.dc_source = Some(get_column(
+        &*state.assets.fs,
+        &mut state.render.r_data,
+        &mut state.assets.w_wad,
+        texture,
+        texturecolumn.to_bits(),
+    ));
+    state
+        .render
+        .r_main
+        .colfunc
+        .expect("non-null function pointer")(state);
+}
+
+/// Records rows `top..=bottom` of column `x` as belonging to a visplane (when there are any).
+fn mark_visplane_column(plane: &mut VisPlane, x: i32, top: i32, bottom: i32) {
+    if top <= bottom {
+        plane.set_top(x, top.cast_unsigned() as u8);
+        plane.set_bottom(x, bottom.cast_unsigned() as u8);
+    }
+}
+
+/// The texture column at `rw_x`, and the light and scale the column function will draw it with.
+/// Zero for a wall without textures.
+fn wall_texture_column(state: &mut GameState) -> Fixed {
+    if !state.render.r_segs.segtextured {
+        return Fixed::ZERO;
+    }
+    let mut angle: usize = (state.render.r_segs.rw_centerangle
+        + state.render.r_main.xtoviewangle[state.render.r_segs.rw_x.idx()])
+    .fine();
+    // A column at a seg's clipped edge can land just outside the
+    // front half-plane; vanilla reads past finetangent[] there.
+    angle = angle.min(FINETANGENT_LEN - 1);
+    let column = (state.render.r_segs.rw_offset
+        - fixed_mul(fine_tangent(angle), state.render.r_segs.rw_distance))
+        >> FRACBITS;
+    let mut index: u32 = (state.render.r_segs.rw_scale >> LIGHTSCALESHIFT)
+        .to_bits()
+        .cast_unsigned();
+    if index >= MAXLIGHTSCALE as u32 {
+        index = (MAXLIGHTSCALE - 1) as u32;
+    }
+    state.render.r_draw.dc_colormap = Some(
+        state
+            .render
+            .r_main
+            .light_row48(state.render.r_segs.walllights)[index as usize],
+    );
+    state.render.r_draw.dc_x = state.render.r_segs.rw_x;
+    state.render.r_draw.dc_iscale = Fixed(
+        (0xffffffff_u32.wrapping_div(state.render.r_segs.rw_scale.to_bits().cast_unsigned()))
+            as i32,
+    );
+    column
+}
+
+/// The upper texture of a two-sided wall in column `rw_x`, from row `yl` down, and the ceiling
+/// clip that follows from it.
+fn draw_upper_wall_column(state: &mut GameState, yl: i32, texturecolumn: Fixed) {
+    let x = state.render.r_segs.rw_x.idx();
+    if state.render.r_segs.toptexture != 0 {
+        let mut mid = state.render.r_segs.pixhigh.floor();
+        state.render.r_segs.pixhigh += state.render.r_segs.pixhighstep;
+        if mid >= i32::from(state.render.r_plane.floorclip[x]) {
+            mid = i32::from(state.render.r_plane.floorclip[x]) - 1;
+        }
+        if mid >= yl {
+            draw_wall_column(
+                state,
+                yl,
+                mid,
+                state.render.r_segs.rw_toptexturemid,
+                state.render.r_segs.toptexture,
+                texturecolumn,
+            );
+            state.render.r_plane.ceilingclip[x] = mid as i16;
+        } else {
+            state.render.r_plane.ceilingclip[x] = (yl - 1) as i16;
+        }
+    } else if state.render.r_segs.markceiling {
+        state.render.r_plane.ceilingclip[x] = (yl - 1) as i16;
+    }
+}
+
+/// The lower texture of a two-sided wall in column `rw_x`, down to row `yh`, and the floor clip
+/// that follows from it.
+fn draw_lower_wall_column(state: &mut GameState, yh: i32, texturecolumn: Fixed) {
+    let x = state.render.r_segs.rw_x.idx();
+    if state.render.r_segs.bottomtexture != 0 {
+        let mut mid = state.render.r_segs.pixlow.ceil();
+        state.render.r_segs.pixlow += state.render.r_segs.pixlowstep;
+        if mid <= i32::from(state.render.r_plane.ceilingclip[x]) {
+            mid = i32::from(state.render.r_plane.ceilingclip[x]) + 1;
+        }
+        if mid <= yh {
+            draw_wall_column(
+                state,
+                mid,
+                yh,
+                state.render.r_segs.rw_bottomtexturemid,
+                state.render.r_segs.bottomtexture,
+                texturecolumn,
+            );
+            state.render.r_plane.floorclip[x] = mid as i16;
+        } else {
+            state.render.r_plane.floorclip[x] = (yh + 1) as i16;
+        }
+    } else if state.render.r_segs.markfloor {
+        state.render.r_plane.floorclip[x] = (yh + 1) as i16;
+    }
+}
+
 pub fn render_seg_loop(state: &mut GameState) {
     while state.render.r_segs.rw_x < state.render.r_segs.rw_stopx {
-        let mut yl: i32 = state.render.r_segs.topfrac.ceil();
-        if yl < i32::from(state.render.r_plane.ceilingclip[state.render.r_segs.rw_x.idx()]) + 1 {
-            yl = i32::from(state.render.r_plane.ceilingclip[state.render.r_segs.rw_x.idx()]) + 1;
-        }
+        let x = state.render.r_segs.rw_x;
+        let ceilingclip = i32::from(state.render.r_plane.ceilingclip[x.idx()]);
+        let floorclip = i32::from(state.render.r_plane.floorclip[x.idx()]);
+        // The rows of the wall that are visible: below the ceiling clip, above the floor clip.
+        let yl = state.render.r_segs.topfrac.ceil().max(ceilingclip + 1);
+        let yh = state.render.r_segs.bottomfrac.floor().min(floorclip - 1);
         if state.render.r_segs.markceiling {
-            let top =
-                i32::from(state.render.r_plane.ceilingclip[state.render.r_segs.rw_x.idx()]) + 1;
-            let mut bottom = yl - 1;
-            if bottom >= i32::from(state.render.r_plane.floorclip[state.render.r_segs.rw_x.idx()]) {
-                bottom =
-                    i32::from(state.render.r_plane.floorclip[state.render.r_segs.rw_x.idx()]) - 1;
-            }
-            if top <= bottom {
-                let ceilingplane = state.render.r_plane.ceilingplane();
-                state.render.r_plane.visplanes[ceilingplane]
-                    .set_top(state.render.r_segs.rw_x, top.cast_unsigned() as u8);
-                state.render.r_plane.visplanes[ceilingplane]
-                    .set_bottom(state.render.r_segs.rw_x, bottom.cast_unsigned() as u8);
-            }
-        }
-        let mut yh: i32 = state.render.r_segs.bottomfrac.floor();
-        if yh >= i32::from(state.render.r_plane.floorclip[state.render.r_segs.rw_x.idx()]) {
-            yh = i32::from(state.render.r_plane.floorclip[state.render.r_segs.rw_x.idx()]) - 1;
+            let plane = state.render.r_plane.ceilingplane();
+            mark_visplane_column(
+                &mut state.render.r_plane.visplanes[plane],
+                x,
+                ceilingclip + 1,
+                (yl - 1).min(floorclip - 1),
+            );
         }
         if state.render.r_segs.markfloor {
-            let mut top = yh + 1;
-            let bottom =
-                i32::from(state.render.r_plane.floorclip[state.render.r_segs.rw_x.idx()]) - 1;
-            if top <= i32::from(state.render.r_plane.ceilingclip[state.render.r_segs.rw_x.idx()]) {
-                top =
-                    i32::from(state.render.r_plane.ceilingclip[state.render.r_segs.rw_x.idx()]) + 1;
-            }
-            if top <= bottom {
-                let floorplane = state.render.r_plane.floorplane();
-                state.render.r_plane.visplanes[floorplane]
-                    .set_top(state.render.r_segs.rw_x, top.cast_unsigned() as u8);
-                state.render.r_plane.visplanes[floorplane]
-                    .set_bottom(state.render.r_segs.rw_x, bottom.cast_unsigned() as u8);
-            }
+            let plane = state.render.r_plane.floorplane();
+            mark_visplane_column(
+                &mut state.render.r_plane.visplanes[plane],
+                x,
+                (yh + 1).max(ceilingclip + 1),
+                floorclip - 1,
+            );
         }
-        let texturecolumn: Fixed = if state.render.r_segs.segtextured {
-            let mut angle: usize = (state.render.r_segs.rw_centerangle
-                + state.render.r_main.xtoviewangle[state.render.r_segs.rw_x.idx()])
-            .fine();
-            // A column at a seg's clipped edge can land just outside the
-            // front half-plane; vanilla reads past finetangent[] there.
-            angle = angle.min(FINETANGENT_LEN - 1);
-            let column = (state.render.r_segs.rw_offset
-                - fixed_mul(fine_tangent(angle), state.render.r_segs.rw_distance))
-                >> FRACBITS;
-            let mut index: u32 = (state.render.r_segs.rw_scale >> LIGHTSCALESHIFT)
-                .to_bits()
-                .cast_unsigned();
-            if index >= MAXLIGHTSCALE as u32 {
-                index = (MAXLIGHTSCALE - 1) as u32;
-            }
-            state.render.r_draw.dc_colormap = Some(
-                state
-                    .render
-                    .r_main
-                    .light_row48(state.render.r_segs.walllights)[index as usize],
-            );
-            state.render.r_draw.dc_x = state.render.r_segs.rw_x;
-            state.render.r_draw.dc_iscale = Fixed(
-                (0xffffffff_u32
-                    .wrapping_div(state.render.r_segs.rw_scale.to_bits().cast_unsigned()))
-                    as i32,
-            );
-            column
-        } else {
-            Fixed::ZERO
-        };
+        let texturecolumn = wall_texture_column(state);
         if state.render.r_segs.midtexture != 0 {
-            state.render.r_draw.dc_yl = yl;
-            state.render.r_draw.dc_yh = yh;
-            state.render.r_draw.dc_texturemid = state.render.r_segs.rw_midtexturemid;
-            state.render.r_draw.dc_source = Some(get_column(
-                &*state.assets.fs,
-                &mut state.render.r_data,
-                &mut state.assets.w_wad,
+            draw_wall_column(
+                state,
+                yl,
+                yh,
+                state.render.r_segs.rw_midtexturemid,
                 state.render.r_segs.midtexture,
-                texturecolumn.to_bits(),
-            ));
-            state
-                .render
-                .r_main
-                .colfunc
-                .expect("non-null function pointer")(state);
-            state.render.r_plane.ceilingclip[state.render.r_segs.rw_x.idx()] =
-                state.render.r_draw.viewheight as i16;
-            state.render.r_plane.floorclip[state.render.r_segs.rw_x.idx()] = -1_i16;
+                texturecolumn,
+            );
+            state.render.r_plane.ceilingclip[x.idx()] = state.render.r_draw.viewheight as i16;
+            state.render.r_plane.floorclip[x.idx()] = -1_i16;
         } else {
-            if state.render.r_segs.toptexture != 0 {
-                let mut mid = state.render.r_segs.pixhigh.floor();
-                state.render.r_segs.pixhigh += state.render.r_segs.pixhighstep;
-                if mid >= i32::from(state.render.r_plane.floorclip[state.render.r_segs.rw_x.idx()])
-                {
-                    mid = i32::from(state.render.r_plane.floorclip[state.render.r_segs.rw_x.idx()])
-                        - 1;
-                }
-                if mid >= yl {
-                    state.render.r_draw.dc_yl = yl;
-                    state.render.r_draw.dc_yh = mid;
-                    state.render.r_draw.dc_texturemid = state.render.r_segs.rw_toptexturemid;
-                    state.render.r_draw.dc_source = Some(get_column(
-                        &*state.assets.fs,
-                        &mut state.render.r_data,
-                        &mut state.assets.w_wad,
-                        state.render.r_segs.toptexture,
-                        texturecolumn.to_bits(),
-                    ));
-                    state
-                        .render
-                        .r_main
-                        .colfunc
-                        .expect("non-null function pointer")(state);
-                    state.render.r_plane.ceilingclip[state.render.r_segs.rw_x.idx()] = mid as i16;
-                } else {
-                    state.render.r_plane.ceilingclip[state.render.r_segs.rw_x.idx()] =
-                        (yl - 1) as i16;
-                }
-            } else if state.render.r_segs.markceiling {
-                state.render.r_plane.ceilingclip[state.render.r_segs.rw_x.idx()] = (yl - 1) as i16;
-            }
-            if state.render.r_segs.bottomtexture != 0 {
-                let mut mid = state.render.r_segs.pixlow.ceil();
-                state.render.r_segs.pixlow += state.render.r_segs.pixlowstep;
-                if mid
-                    <= i32::from(state.render.r_plane.ceilingclip[state.render.r_segs.rw_x.idx()])
-                {
-                    mid =
-                        i32::from(state.render.r_plane.ceilingclip[state.render.r_segs.rw_x.idx()])
-                            + 1;
-                }
-                if mid <= yh {
-                    state.render.r_draw.dc_yl = mid;
-                    state.render.r_draw.dc_yh = yh;
-                    state.render.r_draw.dc_texturemid = state.render.r_segs.rw_bottomtexturemid;
-                    state.render.r_draw.dc_source = Some(get_column(
-                        &*state.assets.fs,
-                        &mut state.render.r_data,
-                        &mut state.assets.w_wad,
-                        state.render.r_segs.bottomtexture,
-                        texturecolumn.to_bits(),
-                    ));
-                    state
-                        .render
-                        .r_main
-                        .colfunc
-                        .expect("non-null function pointer")(state);
-                    state.render.r_plane.floorclip[state.render.r_segs.rw_x.idx()] = mid as i16;
-                } else {
-                    state.render.r_plane.floorclip[state.render.r_segs.rw_x.idx()] =
-                        (yh + 1) as i16;
-                }
-            } else if state.render.r_segs.markfloor {
-                state.render.r_plane.floorclip[state.render.r_segs.rw_x.idx()] = (yh + 1) as i16;
-            }
+            draw_upper_wall_column(state, yl, texturecolumn);
+            draw_lower_wall_column(state, yh, texturecolumn);
             if state.render.r_segs.maskedtexture {
                 let maskedtexturecol = state.render.r_segs.maskedtexturecol();
-                maskedtexturecol.set(
-                    state,
-                    state.render.r_segs.rw_x as isize,
-                    (texturecolumn).to_bits() as i16,
-                );
+                maskedtexturecol.set(state, x as isize, texturecolumn.to_bits() as i16);
             }
         }
         state.render.r_segs.rw_scale += state.render.r_segs.rw_scalestep;
