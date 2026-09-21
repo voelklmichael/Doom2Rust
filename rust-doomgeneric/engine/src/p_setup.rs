@@ -187,6 +187,9 @@ impl PSetupState {
     pub fn sector_mut(&mut self, id: SectorId) -> &mut Sector {
         &mut self.sectors[id.0 as usize]
     }
+    pub fn side(&self, id: SideId) -> &Side {
+        &self.sides[id.0 as usize]
+    }
     pub fn side_mut(&mut self, id: SideId) -> &mut Side {
         &mut self.sides[id.0 as usize]
     }

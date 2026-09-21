@@ -120,24 +120,9 @@ pub const SIL_BOTTOM: i32 = 1;
 pub const SIL_TOP: i32 = 2;
 pub const SIL_BOTH: i32 = 3;
 pub const MAXDRAWSEGS: usize = 256;
-pub fn render_masked_seg_range(state: &mut GameState, ds: &DrawSeg, x1: i32, x2: i32) {
-    state.render.r_bsp.curline = ds.curline;
-    state.render.r_bsp.frontsector = state
-        .world
-        .p_setup
-        .seg(state.render.r_bsp.curline)
-        .frontsector;
-    state.render.r_bsp.backsector = state
-        .world
-        .p_setup
-        .seg(state.render.r_bsp.curline)
-        .backsector;
-    let texnum: i32 = state.render.r_data.texturetranslation[state
-        .world
-        .p_setup
-        .side_mut(state.world.p_setup.seg(state.render.r_bsp.curline).sidedef)
-        .midtexture
-        .idx()];
+/// The light table of the current seg: its front sector's light level, a step darker for a
+/// horizontal wall and lighter for a vertical one.
+fn wall_lights(state: &GameState) -> LightRow48 {
     let mut lightnum: i32 = (i32::from(
         state
             .world
@@ -146,136 +131,103 @@ pub fn render_masked_seg_range(state: &mut GameState, ds: &DrawSeg, x1: i32, x2:
             .lightlevel,
     ) >> LIGHTSEGSHIFT)
         + state.render.r_main.extralight;
-    let curline_v1 = state.world.p_setup.vertexes
-        [state.world.p_setup.seg(state.render.r_bsp.curline).v1.0 as usize];
-    let curline_v2 = state.world.p_setup.vertexes
-        [state.world.p_setup.seg(state.render.r_bsp.curline).v2.0 as usize];
-    if curline_v1.y == curline_v2.y {
+    let seg = state.world.p_setup.seg(state.render.r_bsp.curline);
+    let v1 = state.world.p_setup.vertexes[seg.v1.0 as usize];
+    let v2 = state.world.p_setup.vertexes[seg.v2.0 as usize];
+    if v1.y == v2.y {
         lightnum -= 1;
-    } else if curline_v1.x == curline_v2.x {
+    } else if v1.x == v2.x {
         lightnum += 1;
     }
-    if lightnum < 0 {
-        state.render.r_segs.walllights = LightRow48::Normal(0);
-    } else if lightnum >= LIGHTLEVELS {
-        state.render.r_segs.walllights = LightRow48::Normal((LIGHTLEVELS - 1) as usize);
+    LightRow48::Normal(lightnum.clamp(0, LIGHTLEVELS - 1).idx())
+}
+
+/// `dc_texturemid` for the masked middle texture `texnum` of the current two-sided seg: the
+/// bottom of the texture at the higher floor, or its top at the lower ceiling, relative to the eye
+/// and shifted by the side's row offset.
+fn masked_texturemid(state: &GameState, texnum: i32) -> Fixed {
+    let p_setup = &state.world.p_setup;
+    let seg = p_setup.seg(state.render.r_bsp.curline);
+    let front = p_setup.sector(state.render.r_bsp.front());
+    let back = p_setup.sector(state.render.r_bsp.back());
+    let texturemid = if p_setup
+        .line(seg.linedef)
+        .flags
+        .contains(LineFlags::DONTPEGBOTTOM)
+    {
+        front.floorheight.max(back.floorheight) + state.render.r_data.textureheight[texnum.idx()]
+            - state.render.r_main.viewz
     } else {
-        state.render.r_segs.walllights = LightRow48::Normal(lightnum.idx());
+        front.ceilingheight.min(back.ceilingheight) - state.render.r_main.viewz
+    };
+    texturemid + p_setup.side(seg.sidedef).rowoffset
+}
+
+/// Draws the masked texture column `dc_x` of a drawseg, if it has not been drawn yet.
+fn render_masked_seg_column(state: &mut GameState, maskedtexturecol: ClipArray, texnum: i32) {
+    let dc_x = state.render.r_draw.dc_x as isize;
+    let column = i32::from(maskedtexturecol.get(state, dc_x));
+    if column == SHRT_MAX {
+        return;
     }
+    if state.render.r_main.fixedcolormap.is_none() {
+        let mut index: u32 = (state.render.r_things.spryscale >> LIGHTSCALESHIFT)
+            .to_bits()
+            .cast_unsigned();
+        if index >= MAXLIGHTSCALE as u32 {
+            index = (MAXLIGHTSCALE - 1) as u32;
+        }
+        state.render.r_draw.dc_colormap = Some(
+            state
+                .render
+                .r_main
+                .light_row48(state.render.r_segs.walllights)[index as usize],
+        );
+    }
+    state.render.r_things.sprtopscreen = state.render.r_main.centeryfrac
+        - fixed_mul(
+            state.render.r_draw.dc_texturemid,
+            state.render.r_things.spryscale,
+        );
+    state.render.r_draw.dc_iscale = Fixed(
+        (0xffffffff_u32.wrapping_div(state.render.r_things.spryscale.to_bits().cast_unsigned()))
+            as i32,
+    );
+    let col = advance_source(
+        get_column(
+            &*state.assets.fs,
+            &mut state.render.r_data,
+            &mut state.assets.w_wad,
+            texnum,
+            column,
+        ),
+        (-3_isize).cast_unsigned(),
+    );
+    draw_masked_column(state, col);
+    maskedtexturecol.set(state, dc_x, SHRT_MAX as i16);
+}
+
+pub fn render_masked_seg_range(state: &mut GameState, ds: &DrawSeg, x1: i32, x2: i32) {
+    state.render.r_bsp.curline = ds.curline;
+    let seg = state.world.p_setup.seg(state.render.r_bsp.curline);
+    state.render.r_bsp.frontsector = seg.frontsector;
+    state.render.r_bsp.backsector = seg.backsector;
+    let texnum: i32 = state.render.r_data.texturetranslation
+        [state.world.p_setup.side(seg.sidedef).midtexture.idx()];
+    state.render.r_segs.walllights = wall_lights(state);
     state.render.r_segs.maskedtexturecol = ds.maskedtexturecol;
     state.render.r_segs.rw_scalestep = ds.scalestep;
     state.render.r_things.spryscale = ds.scale1 + (x1 - ds.x1) * state.render.r_segs.rw_scalestep;
     state.render.r_things.mfloorclip = ds.sprbottomclip;
     state.render.r_things.mceilingclip = ds.sprtopclip;
-    if state
-        .world
-        .p_setup
-        .line_mut(state.world.p_setup.seg(state.render.r_bsp.curline).linedef)
-        .flags
-        .contains(LineFlags::DONTPEGBOTTOM)
-    {
-        state.render.r_draw.dc_texturemid = if state
-            .world
-            .p_setup
-            .sector(state.render.r_bsp.front())
-            .floorheight
-            > state
-                .world
-                .p_setup
-                .sector(state.render.r_bsp.back())
-                .floorheight
-        {
-            state
-                .world
-                .p_setup
-                .sector(state.render.r_bsp.front())
-                .floorheight
-        } else {
-            state
-                .world
-                .p_setup
-                .sector(state.render.r_bsp.back())
-                .floorheight
-        };
-        state.render.r_draw.dc_texturemid = state.render.r_draw.dc_texturemid
-            + state.render.r_data.textureheight[texnum.idx()]
-            - state.render.r_main.viewz;
-    } else {
-        state.render.r_draw.dc_texturemid = if state
-            .world
-            .p_setup
-            .sector(state.render.r_bsp.front())
-            .ceilingheight
-            < state
-                .world
-                .p_setup
-                .sector(state.render.r_bsp.back())
-                .ceilingheight
-        {
-            state
-                .world
-                .p_setup
-                .sector(state.render.r_bsp.front())
-                .ceilingheight
-        } else {
-            state
-                .world
-                .p_setup
-                .sector(state.render.r_bsp.back())
-                .ceilingheight
-        };
-        state.render.r_draw.dc_texturemid -= state.render.r_main.viewz;
-    }
-    state.render.r_draw.dc_texturemid += state
-        .world
-        .p_setup
-        .side_mut(state.world.p_setup.seg(state.render.r_bsp.curline).sidedef)
-        .rowoffset;
+    state.render.r_draw.dc_texturemid = masked_texturemid(state, texnum);
     if state.render.r_main.fixedcolormap.is_some() {
         state.render.r_draw.dc_colormap = state.render.r_main.fixedcolormap;
     }
     let maskedtexturecol = state.render.r_segs.maskedtexturecol();
     state.render.r_draw.dc_x = x1;
     while state.render.r_draw.dc_x <= x2 {
-        if i32::from(maskedtexturecol.get(state, state.render.r_draw.dc_x as isize)) != SHRT_MAX {
-            if state.render.r_main.fixedcolormap.is_none() {
-                let mut index: u32 = (state.render.r_things.spryscale >> LIGHTSCALESHIFT)
-                    .to_bits()
-                    .cast_unsigned();
-                if index >= MAXLIGHTSCALE as u32 {
-                    index = (MAXLIGHTSCALE - 1) as u32;
-                }
-                state.render.r_draw.dc_colormap = Some(
-                    state
-                        .render
-                        .r_main
-                        .light_row48(state.render.r_segs.walllights)[index as usize],
-                );
-            }
-            state.render.r_things.sprtopscreen = state.render.r_main.centeryfrac
-                - fixed_mul(
-                    state.render.r_draw.dc_texturemid,
-                    state.render.r_things.spryscale,
-                );
-            state.render.r_draw.dc_iscale = Fixed(
-                (0xffffffff_u32
-                    .wrapping_div(state.render.r_things.spryscale.to_bits().cast_unsigned()))
-                    as i32,
-            );
-            let column = i32::from(maskedtexturecol.get(state, state.render.r_draw.dc_x as isize));
-            let col = advance_source(
-                get_column(
-                    &*state.assets.fs,
-                    &mut state.render.r_data,
-                    &mut state.assets.w_wad,
-                    texnum,
-                    column,
-                ),
-                (-3_isize).cast_unsigned(),
-            );
-            draw_masked_column(state, col);
-            maskedtexturecol.set(state, state.render.r_draw.dc_x as isize, SHRT_MAX as i16);
-        }
+        render_masked_seg_column(state, maskedtexturecol, texnum);
         state.render.r_things.spryscale += state.render.r_segs.rw_scalestep;
         state.render.r_draw.dc_x += 1;
     }
@@ -908,30 +860,7 @@ fn set_up_wall_texturing(state: &mut GameState, hyp: Fixed) {
         state.render.r_segs.rw_centerangle =
             (ANG90 + state.render.r_main.viewangle) - state.render.r_segs.rw_normalangle;
         if state.render.r_main.fixedcolormap.is_none() {
-            let mut lightnum: i32 = (i32::from(
-                state
-                    .world
-                    .p_setup
-                    .sector(state.render.r_bsp.front())
-                    .lightlevel,
-            ) >> LIGHTSEGSHIFT)
-                + state.render.r_main.extralight;
-            let curline_v1 = state.world.p_setup.vertexes
-                [state.world.p_setup.seg(state.render.r_bsp.curline).v1.0 as usize];
-            let curline_v2 = state.world.p_setup.vertexes
-                [state.world.p_setup.seg(state.render.r_bsp.curline).v2.0 as usize];
-            if curline_v1.y == curline_v2.y {
-                lightnum -= 1;
-            } else if curline_v1.x == curline_v2.x {
-                lightnum += 1;
-            }
-            if lightnum < 0 {
-                state.render.r_segs.walllights = LightRow48::Normal(0);
-            } else if lightnum >= LIGHTLEVELS {
-                state.render.r_segs.walllights = LightRow48::Normal((LIGHTLEVELS - 1) as usize);
-            } else {
-                state.render.r_segs.walllights = LightRow48::Normal(lightnum.idx());
-            }
+            state.render.r_segs.walllights = wall_lights(state);
         }
     }
 }
