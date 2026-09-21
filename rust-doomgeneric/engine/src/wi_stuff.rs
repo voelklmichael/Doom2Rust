@@ -1030,10 +1030,8 @@ pub fn update_deathmatch_stats(state: &mut GameState) {
         }
     }
 }
-pub fn draw_deathmatch_stats(state: &mut GameState) {
-    slam_background(state);
-    draw_animated_back(state);
-    draw_lf(state);
+/// The TOTAL, KILLERS and VICTIMS headings of the deathmatch matrix.
+fn draw_dm_headings(state: &mut GameState) {
     let total_patch = cache_loaded_patch(
         &*state.assets.fs,
         &mut state.assets.w_wad,
@@ -1061,6 +1059,11 @@ pub fn draw_deathmatch_stats(state: &mut GameState) {
     );
     let dest_screen = Screen::Video;
     draw_patch(state, dest_screen, DM_VICTIMSX, DM_VICTIMSY, &victims_patch);
+}
+
+/// The players' faces along the top and down the left of the deathmatch matrix, the viewer's marked
+/// with a star.
+fn draw_dm_player_labels(state: &mut GameState) {
     let mut x: i32 = DM_MATRIXX + DM_SPACINGX;
     let mut y: i32 = DM_MATRIXY;
     for i in 0..MAXPLAYERS {
@@ -1118,7 +1121,15 @@ pub fn draw_deathmatch_stats(state: &mut GameState) {
         x += DM_SPACINGX;
         y += WI_SPACINGY;
     }
-    y = DM_MATRIXY + 10;
+}
+
+pub fn draw_deathmatch_stats(state: &mut GameState) {
+    slam_background(state);
+    draw_animated_back(state);
+    draw_lf(state);
+    draw_dm_headings(state);
+    draw_dm_player_labels(state);
+    let mut y: i32 = DM_MATRIXY + 10;
     let zero_patch = cache_loaded_patch(
         &*state.assets.fs,
         &mut state.assets.w_wad,
@@ -1126,7 +1137,7 @@ pub fn draw_deathmatch_stats(state: &mut GameState) {
     );
     let w: i32 = zero_patch.width();
     for i in 0..MAXPLAYERS {
-        x = DM_MATRIXX + DM_SPACINGX;
+        let mut x = DM_MATRIXX + DM_SPACINGX;
         if state.game.g_game.playeringame[i] {
             for j in 0..MAXPLAYERS {
                 if state.game.g_game.playeringame[j] {
@@ -1159,18 +1170,56 @@ pub fn init_netgame_stats(state: &mut GameState) {
     state.ui.wi_stuff.dofrags = total_frags != 0;
     init_animated_back(state);
 }
+/// One of the three percentages the netgame intermission counts up.
+#[derive(Clone, Copy)]
+enum NetStat {
+    Kills,
+    Items,
+    Secret,
+}
+
+/// Player `i`'s final percentage of `stat`.
+fn stat_percent(state: &mut GameState, i: usize, stat: NetStat) -> i32 {
+    let (found, total) = match stat {
+        NetStat::Kills => (state.plyr_index(i).skills, state.wbs().maxkills),
+        NetStat::Items => (state.plyr_index(i).sitems, state.wbs().maxitems),
+        NetStat::Secret => (state.plyr_index(i).ssecret, state.wbs().maxsecret),
+    };
+    found * 100 / total
+}
+
+/// Counts every player's `stat` up by two towards its final value. Returns whether any player is
+/// still counting.
+fn count_up_stat(state: &mut GameState, stat: NetStat) -> bool {
+    let mut stillticking = false;
+    for i in 0..MAXPLAYERS {
+        if state.game.g_game.playeringame[i] {
+            let target = stat_percent(state, i, stat);
+            let count = match stat {
+                NetStat::Kills => &mut state.ui.wi_stuff.cnt_kills[i],
+                NetStat::Items => &mut state.ui.wi_stuff.cnt_items[i],
+                NetStat::Secret => &mut state.ui.wi_stuff.cnt_secret[i],
+            };
+            *count += 2;
+            if *count >= target {
+                *count = target;
+            } else {
+                stillticking = true;
+            }
+        }
+    }
+    stillticking
+}
+
 pub fn update_netgame_stats(state: &mut GameState) {
     update_animated_back(state);
     if state.ui.wi_stuff.acceleratestage && state.ui.wi_stuff.ng_state != 10 {
         state.ui.wi_stuff.acceleratestage = false;
         for i in 0..MAXPLAYERS {
             if state.game.g_game.playeringame[i] {
-                state.ui.wi_stuff.cnt_kills[i] =
-                    state.plyr_index(i).skills * 100 / state.wbs().maxkills;
-                state.ui.wi_stuff.cnt_items[i] =
-                    state.plyr_index(i).sitems * 100 / state.wbs().maxitems;
-                state.ui.wi_stuff.cnt_secret[i] =
-                    state.plyr_index(i).ssecret * 100 / state.wbs().maxsecret;
+                state.ui.wi_stuff.cnt_kills[i] = stat_percent(state, i, NetStat::Kills);
+                state.ui.wi_stuff.cnt_items[i] = stat_percent(state, i, NetStat::Items);
+                state.ui.wi_stuff.cnt_secret[i] = stat_percent(state, i, NetStat::Secret);
                 if state.ui.wi_stuff.dofrags {
                     state.ui.wi_stuff.cnt_frags[i] = frag_sum(state, i);
                 }
@@ -1183,20 +1232,7 @@ pub fn update_netgame_stats(state: &mut GameState) {
         if state.ui.wi_stuff.bcnt & 3 == 0 {
             s_start_sound(state, SoundOrigin::None, SfxName::Pistol);
         }
-        let mut stillticking: bool = false;
-        for i in 0..MAXPLAYERS {
-            if state.game.g_game.playeringame[i] {
-                state.ui.wi_stuff.cnt_kills[i] += 2;
-                if state.ui.wi_stuff.cnt_kills[i]
-                    >= state.plyr_index(i).skills * 100 / state.wbs().maxkills
-                {
-                    state.ui.wi_stuff.cnt_kills[i] =
-                        state.plyr_index(i).skills * 100 / state.wbs().maxkills;
-                } else {
-                    stillticking = true;
-                }
-            }
-        }
+        let stillticking = count_up_stat(state, NetStat::Kills);
         if !stillticking {
             s_start_sound(state, SoundOrigin::None, SfxName::Barexp);
             state.ui.wi_stuff.ng_state += 1;
@@ -1205,20 +1241,7 @@ pub fn update_netgame_stats(state: &mut GameState) {
         if state.ui.wi_stuff.bcnt & 3 == 0 {
             s_start_sound(state, SoundOrigin::None, SfxName::Pistol);
         }
-        let mut stillticking: bool = false;
-        for i in 0..MAXPLAYERS {
-            if state.game.g_game.playeringame[i] {
-                state.ui.wi_stuff.cnt_items[i] += 2;
-                if state.ui.wi_stuff.cnt_items[i]
-                    >= state.plyr_index(i).sitems * 100 / state.wbs().maxitems
-                {
-                    state.ui.wi_stuff.cnt_items[i] =
-                        state.plyr_index(i).sitems * 100 / state.wbs().maxitems;
-                } else {
-                    stillticking = true;
-                }
-            }
-        }
+        let stillticking = count_up_stat(state, NetStat::Items);
         if !stillticking {
             s_start_sound(state, SoundOrigin::None, SfxName::Barexp);
             state.ui.wi_stuff.ng_state += 1;
@@ -1227,20 +1250,7 @@ pub fn update_netgame_stats(state: &mut GameState) {
         if state.ui.wi_stuff.bcnt & 3 == 0 {
             s_start_sound(state, SoundOrigin::None, SfxName::Pistol);
         }
-        let mut stillticking: bool = false;
-        for i in 0..MAXPLAYERS {
-            if state.game.g_game.playeringame[i] {
-                state.ui.wi_stuff.cnt_secret[i] += 2;
-                if state.ui.wi_stuff.cnt_secret[i]
-                    >= state.plyr_index(i).ssecret * 100 / state.wbs().maxsecret
-                {
-                    state.ui.wi_stuff.cnt_secret[i] =
-                        state.plyr_index(i).ssecret * 100 / state.wbs().maxsecret;
-                } else {
-                    stillticking = true;
-                }
-            }
-        }
+        let stillticking = count_up_stat(state, NetStat::Secret);
         if !stillticking {
             s_start_sound(state, SoundOrigin::None, SfxName::Barexp);
             state.ui.wi_stuff.ng_state += 1 + 2 * i32::from(!state.ui.wi_stuff.dofrags);
@@ -1282,6 +1292,21 @@ pub fn update_netgame_stats(state: &mut GameState) {
         }
     }
 }
+/// Draws a column heading (KILLS, ITEMS, SECRET, FRAGS) of the netgame statistics, right-aligned
+/// on column `column`. Returns the heading's height.
+fn draw_ng_heading(
+    state: &mut GameState,
+    lump: Option<LumpNum>,
+    column: i32,
+    star_width: i32,
+) -> i32 {
+    let patch = cache_loaded_patch(&*state.assets.fs, &mut state.assets.w_wad, lump);
+    let x = 32 + star_width / 2 + 32 * i32::from(!state.ui.wi_stuff.dofrags) + column * NG_SPACINGX
+        - patch.width();
+    draw_patch(state, Screen::Video, x, NG_STATSY, &patch);
+    patch.height()
+}
+
 pub fn draw_netgame_stats(state: &mut GameState) {
     let percent_patch = cache_loaded_patch(
         &*state.assets.fs,
@@ -1298,65 +1323,13 @@ pub fn draw_netgame_stats(state: &mut GameState) {
         state.ui.wi_stuff.star,
     );
     let star_width = star_patch.width();
-    let kills_patch = cache_loaded_patch(
-        &*state.assets.fs,
-        &mut state.assets.w_wad,
-        state.ui.wi_stuff.kills,
-    );
-    let dest_screen = Screen::Video;
-    draw_patch(
-        state,
-        dest_screen,
-        32 + star_width / 2 + 32 * i32::from(!state.ui.wi_stuff.dofrags) + NG_SPACINGX
-            - kills_patch.width(),
-        NG_STATSY,
-        &kills_patch,
-    );
-    let items_patch = cache_loaded_patch(
-        &*state.assets.fs,
-        &mut state.assets.w_wad,
-        state.ui.wi_stuff.items,
-    );
-    let dest_screen = Screen::Video;
-    draw_patch(
-        state,
-        dest_screen,
-        32 + star_width / 2 + 32 * i32::from(!state.ui.wi_stuff.dofrags) + 2 * NG_SPACINGX
-            - items_patch.width(),
-        NG_STATSY,
-        &items_patch,
-    );
-    let secret_patch = cache_loaded_patch(
-        &*state.assets.fs,
-        &mut state.assets.w_wad,
-        state.ui.wi_stuff.secret,
-    );
-    let dest_screen = Screen::Video;
-    draw_patch(
-        state,
-        dest_screen,
-        32 + star_width / 2 + 32 * i32::from(!state.ui.wi_stuff.dofrags) + 3 * NG_SPACINGX
-            - secret_patch.width(),
-        NG_STATSY,
-        &secret_patch,
-    );
+    let kills_height = draw_ng_heading(state, state.ui.wi_stuff.kills, 1, star_width);
+    draw_ng_heading(state, state.ui.wi_stuff.items, 2, star_width);
+    draw_ng_heading(state, state.ui.wi_stuff.secret, 3, star_width);
     if state.ui.wi_stuff.dofrags {
-        let frags_patch = cache_loaded_patch(
-            &*state.assets.fs,
-            &mut state.assets.w_wad,
-            state.ui.wi_stuff.frags,
-        );
-        let dest_screen = Screen::Video;
-        draw_patch(
-            state,
-            dest_screen,
-            32 + star_width / 2 + 32 * i32::from(!state.ui.wi_stuff.dofrags) + 4 * NG_SPACINGX
-                - frags_patch.width(),
-            NG_STATSY,
-            &frags_patch,
-        );
+        draw_ng_heading(state, state.ui.wi_stuff.frags, 4, star_width);
     }
-    let mut y: i32 = NG_STATSY + kills_patch.height();
+    let mut y: i32 = NG_STATSY + kills_height;
     for i in 0..MAXPLAYERS {
         if state.game.g_game.playeringame[i] {
             let mut x: i32 = 32 + star_width / 2 + 32 * i32::from(!state.ui.wi_stuff.dofrags);
