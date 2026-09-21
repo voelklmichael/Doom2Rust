@@ -314,58 +314,14 @@ fn set_message(state: &mut GameState, player: PlayerId, message: &str) {
     state.game.g_game.players[player].message = Some(message.to_string());
 }
 
-/// Applies a pickup to the player. `None` means the thing is left where it lies (the player could
-/// not use it, or is in a netgame where keys stay); `Some(sound)` means it was taken.
-fn pick_up(
+/// The pickups that have their own effect (armour, bonuses, spheres, medikits, the backpack).
+/// Returns the sound to play, or `None` when the player could not use the item.
+fn pick_up_unique_item(
     state: &mut GameState,
-    special: MobjId,
+    sprite: SpriteNum,
     toucher: MobjId,
     player: PlayerId,
 ) -> Option<SfxName> {
-    let sprite = state.world.p_mobj.mo(special).sprite;
-    let dropped = state
-        .world
-        .p_mobj
-        .mo(special)
-        .flags
-        .contains(MobjFlags::DROPPED);
-    if let Some((card, message)) = key_pickup(sprite) {
-        if !state.game.g_game.players[player].cards[card] {
-            set_message(state, player, message);
-        }
-        give_card(&mut state.game.g_game.players[player], card);
-        return (!state.game.g_game.netgame).then_some(SfxName::Itemup);
-    }
-    if let Some((ammo, amount, message)) = ammo_pickup(sprite, dropped) {
-        if !give_ammo(&mut state.game.g_game, player, ammo, amount) {
-            return None;
-        }
-        set_message(state, player, message);
-        return Some(SfxName::Itemup);
-    }
-    if let Some((power, message)) = power_pickup(sprite) {
-        if !give_power(
-            &mut state.game.g_game,
-            &mut state.world.p_mobj,
-            player,
-            power,
-        ) {
-            return None;
-        }
-        set_message(state, player, message);
-        let p = &mut state.game.g_game.players[player];
-        if power == PowerType::Strength && p.readyweapon != WeaponType::Fist {
-            p.pendingweapon = WeaponType::Fist;
-        }
-        return Some(SfxName::Getpow);
-    }
-    if let Some((weapon, dropped_matters, message)) = weapon_pickup(sprite) {
-        if !give_weapon(state, player, weapon, dropped_matters && dropped) {
-            return None;
-        }
-        set_message(state, player, message);
-        return Some(SfxName::Wpnup);
-    }
     match sprite {
         SpriteNum::Arm1 | SpriteNum::Arm2 => {
             let class = if sprite == SpriteNum::Arm1 {
@@ -460,6 +416,61 @@ fn pick_up(
         }
         _ => error("P_SpecialThing: Unknown gettable thing"),
     }
+}
+
+/// Applies a pickup to the player. `None` means the thing is left where it lies (the player could
+/// not use it, or is in a netgame where keys stay); `Some(sound)` means it was taken.
+fn pick_up(
+    state: &mut GameState,
+    special: MobjId,
+    toucher: MobjId,
+    player: PlayerId,
+) -> Option<SfxName> {
+    let sprite = state.world.p_mobj.mo(special).sprite;
+    let dropped = state
+        .world
+        .p_mobj
+        .mo(special)
+        .flags
+        .contains(MobjFlags::DROPPED);
+    if let Some((card, message)) = key_pickup(sprite) {
+        if !state.game.g_game.players[player].cards[card] {
+            set_message(state, player, message);
+        }
+        give_card(&mut state.game.g_game.players[player], card);
+        return (!state.game.g_game.netgame).then_some(SfxName::Itemup);
+    }
+    if let Some((ammo, amount, message)) = ammo_pickup(sprite, dropped) {
+        if !give_ammo(&mut state.game.g_game, player, ammo, amount) {
+            return None;
+        }
+        set_message(state, player, message);
+        return Some(SfxName::Itemup);
+    }
+    if let Some((power, message)) = power_pickup(sprite) {
+        if !give_power(
+            &mut state.game.g_game,
+            &mut state.world.p_mobj,
+            player,
+            power,
+        ) {
+            return None;
+        }
+        set_message(state, player, message);
+        let p = &mut state.game.g_game.players[player];
+        if power == PowerType::Strength && p.readyweapon != WeaponType::Fist {
+            p.pendingweapon = WeaponType::Fist;
+        }
+        return Some(SfxName::Getpow);
+    }
+    if let Some((weapon, dropped_matters, message)) = weapon_pickup(sprite) {
+        if !give_weapon(state, player, weapon, dropped_matters && dropped) {
+            return None;
+        }
+        set_message(state, player, message);
+        return Some(SfxName::Wpnup);
+    }
+    pick_up_unique_item(state, sprite, toucher, player)
 }
 
 pub fn touch_special_thing(state: &mut GameState, special: MobjId, toucher: MobjId) {
@@ -563,6 +574,132 @@ pub fn kill_mobj(state: &mut GameState, source: Option<MobjId>, target: MobjId) 
     let mo = spawn_mobj(state, target_x, target_y, Fixed(ONFLOORZ), item);
     state.world.p_mobj.mo_mut(mo).flags |= MobjFlags::DROPPED;
 }
+/// The blast of a hit throws the target away from the inflictor.
+fn knock_back(
+    state: &mut GameState,
+    target: MobjId,
+    inflictor: Option<MobjId>,
+    pushable: bool,
+    target_health: i32,
+    damage: i32,
+) {
+    if let Some(inflictor) = inflictor {
+        if pushable {
+            let (inflictor_x, inflictor_y, inflictor_z) = {
+                let i = state.world.p_mobj.mo(inflictor);
+                (i.x, i.y, i.z)
+            };
+            let (target_x, target_y, target_z, target_type) = {
+                let t = state.world.p_mobj.mo(target);
+                (t.x, t.y, t.z, t.kind)
+            };
+            let mut ang: Angle = point_to_angle2(inflictor_x, inflictor_y, target_x, target_y);
+            let mut thrust: Fixed =
+                damage * (FRACUNIT >> 3) * 100 / state.assets.info.mobjinfo_mut(target_type).mass;
+            if damage < 40
+                && damage > target_health
+                && target_z - inflictor_z > 64 * FRACUNIT
+                && p_random(&mut state.world.m_random) & 1 != 0
+            {
+                ang += ANG180;
+                thrust *= 4;
+            }
+            let ang = ang.fine();
+            let t = state.world.p_mobj.mo_mut(target);
+            t.momx += fixed_mul(thrust, fine_cosine(ang));
+            t.momy += fixed_mul(thrust, fine_sine(ang));
+        }
+    }
+}
+
+/// Armour, god mode and the flash of the screen for a player taking `damage`. Returns the damage
+/// that gets through, or `None` when the player is invulnerable.
+fn hurt_player(
+    state: &mut GameState,
+    target: MobjId,
+    target_health: i32,
+    source: Option<MobjId>,
+    mut damage: i32,
+) -> Option<i32> {
+    let target_player_id = state.world.p_mobj.mo(target).player;
+    if let Some(player_id) = target_player_id {
+        let target_subsector = state.world.p_mobj.mo(target).subsector;
+        let sector_special = state
+            .world
+            .p_setup
+            .sector_mut(state.world.p_setup.subsectors[target_subsector.0 as usize].sector)
+            .special;
+        if i32::from(sector_special) == 11 && damage >= target_health {
+            damage = target_health - 1;
+        }
+        let player = state.game.g_game.player_mut(player_id);
+        if damage < 1000
+            && (player.cheats.contains(CheatFlags::GODMODE)
+                || player.powers[PowerType::Invulnerability] != 0)
+        {
+            return None;
+        }
+        if player.armortype != 0 {
+            let mut saved: i32 = if player.armortype == 1 {
+                damage / 3
+            } else {
+                damage / 2
+            };
+            if player.armorpoints <= saved {
+                saved = player.armorpoints;
+                player.armortype = 0;
+            }
+            player.armorpoints -= saved;
+            damage -= saved;
+        }
+        player.health -= damage;
+        if player.health < 0 {
+            player.health = 0;
+        }
+        player.attacker = source;
+        player.damagecount += damage;
+        if player.damagecount > 100 {
+            player.damagecount = 100;
+        }
+        if target_player_id == Some(state.game.g_game.consoleplayer) {
+            tactile();
+        }
+    }
+    Some(damage)
+}
+
+/// A monster that was hurt turns on whoever hurt it (except its own kind of infighter) and wakes up.
+fn provoke_target(
+    state: &mut GameState,
+    target: MobjId,
+    target_type: MobjType,
+    source: Option<MobjId>,
+) {
+    if (state.world.p_mobj.mo(target).threshold == 0
+        || target_type as u32 == (MobjType::Vile as i32).cast_unsigned())
+        && source.is_some_and(|source| {
+            source != target
+                && state.world.p_mobj.mo(source).kind as u32
+                    != (MobjType::Vile as i32).cast_unsigned()
+        })
+    {
+        {
+            let t = state.world.p_mobj.mo_mut(target);
+            t.target = source;
+            t.threshold = BASETHRESHOLD;
+        }
+        let (spawnstate, seestate) = {
+            let info = state.assets.info.mobjinfo_mut(target_type);
+            (info.spawnstate, info.seestate)
+        };
+        if state.world.p_mobj.mo(target).state == Some(StateId(spawnstate as u32))
+            && seestate != StateNum::Null
+        {
+            set_mobj_state(state, target, seestate);
+        }
+    }
+}
+
 pub fn damage_mobj(
     state: &mut GameState,
     target: MobjId,
@@ -594,76 +731,17 @@ pub fn damage_mobj(
     let source_uses_chainsaw = source_player.is_some_and(|source_player_id| {
         state.game.g_game.players[source_player_id].readyweapon == WeaponType::Chainsaw
     });
-    if let Some(inflictor) = inflictor {
-        if !target_flags.contains(MobjFlags::NOCLIP) && !source_uses_chainsaw {
-            let (inflictor_x, inflictor_y, inflictor_z) = {
-                let i = state.world.p_mobj.mo(inflictor);
-                (i.x, i.y, i.z)
-            };
-            let (target_x, target_y, target_z, target_type) = {
-                let t = state.world.p_mobj.mo(target);
-                (t.x, t.y, t.z, t.kind)
-            };
-            let mut ang: Angle = point_to_angle2(inflictor_x, inflictor_y, target_x, target_y);
-            let mut thrust: Fixed =
-                damage * (FRACUNIT >> 3) * 100 / state.assets.info.mobjinfo_mut(target_type).mass;
-            if damage < 40
-                && damage > target_health
-                && target_z - inflictor_z > 64 * FRACUNIT
-                && p_random(&mut state.world.m_random) & 1 != 0
-            {
-                ang += ANG180;
-                thrust *= 4;
-            }
-            let ang = ang.fine();
-            let t = state.world.p_mobj.mo_mut(target);
-            t.momx += fixed_mul(thrust, fine_cosine(ang));
-            t.momy += fixed_mul(thrust, fine_sine(ang));
-        }
-    }
-    if let Some(player_id) = target_player_id {
-        let target_subsector = state.world.p_mobj.mo(target).subsector;
-        let sector_special = state
-            .world
-            .p_setup
-            .sector_mut(state.world.p_setup.subsectors[target_subsector.0 as usize].sector)
-            .special;
-        if i32::from(sector_special) == 11 && damage >= target_health {
-            damage = target_health - 1;
-        }
-        let player = state.game.g_game.player_mut(player_id);
-        if damage < 1000
-            && (player.cheats.contains(CheatFlags::GODMODE)
-                || player.powers[PowerType::Invulnerability] != 0)
-        {
-            return;
-        }
-        if player.armortype != 0 {
-            let mut saved: i32 = if player.armortype == 1 {
-                damage / 3
-            } else {
-                damage / 2
-            };
-            if player.armorpoints <= saved {
-                saved = player.armorpoints;
-                player.armortype = 0;
-            }
-            player.armorpoints -= saved;
-            damage -= saved;
-        }
-        player.health -= damage;
-        if player.health < 0 {
-            player.health = 0;
-        }
-        player.attacker = source;
-        player.damagecount += damage;
-        if player.damagecount > 100 {
-            player.damagecount = 100;
-        }
-        if target_player_id == Some(state.game.g_game.consoleplayer) {
-            tactile();
-        }
-    }
+    knock_back(
+        state,
+        target,
+        inflictor,
+        !target_flags.contains(MobjFlags::NOCLIP) && !source_uses_chainsaw,
+        target_health,
+        damage,
+    );
+    let Some(damage) = hurt_player(state, target, target_health, source, damage) else {
+        return;
+    };
     state.world.p_mobj.mo_mut(target).health -= damage;
     if state.world.p_mobj.mo(target).health <= 0 {
         kill_mobj(state, source, target);
@@ -683,27 +761,5 @@ pub fn damage_mobj(
         set_mobj_state(state, target, painstate);
     }
     state.world.p_mobj.mo_mut(target).reactiontime = 0;
-    if (state.world.p_mobj.mo(target).threshold == 0
-        || target_type as u32 == (MobjType::Vile as i32).cast_unsigned())
-        && source.is_some_and(|source| {
-            source != target
-                && state.world.p_mobj.mo(source).kind as u32
-                    != (MobjType::Vile as i32).cast_unsigned()
-        })
-    {
-        {
-            let t = state.world.p_mobj.mo_mut(target);
-            t.target = source;
-            t.threshold = BASETHRESHOLD;
-        }
-        let (spawnstate, seestate) = {
-            let info = state.assets.info.mobjinfo_mut(target_type);
-            (info.spawnstate, info.seestate)
-        };
-        if state.world.p_mobj.mo(target).state == Some(StateId(spawnstate as u32))
-            && seestate != StateNum::Null
-        {
-            set_mobj_state(state, target, seestate);
-        }
-    }
+    provoke_target(state, target, target_type, source);
 }

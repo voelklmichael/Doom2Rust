@@ -286,6 +286,57 @@ fn unlink_thinker_node(p_tick: &mut PTickState, id: ThinkerId) {
     p_tick.free_list.push(id.0);
 }
 
+/// Frees what a removed thinker's payload points at, in the arena of its kind.
+fn free_thinker_payload(state: &mut GameState, id: ThinkerId, kind: ThinkerKind) {
+    match kind {
+        ThinkerKind::Mobj => {
+            if let ThinkerPayload::Mobj(mobj_id) = state.world.p_tick.payload(id) {
+                state.world.p_mobj.deallocate(mobj_id);
+            }
+        }
+        ThinkerKind::Door => {
+            if let ThinkerPayload::Door(door_id) = state.world.p_tick.payload(id) {
+                state.world.p_doors.dealloc(door_id);
+            }
+        }
+        ThinkerKind::Ceiling => {
+            if let ThinkerPayload::Ceiling(ceiling_id) = state.world.p_tick.payload(id) {
+                state.world.p_ceilng.dealloc(ceiling_id);
+            }
+        }
+        ThinkerKind::Plat => {
+            if let ThinkerPayload::Plat(plat_id) = state.world.p_tick.payload(id) {
+                state.world.p_plats.dealloc(plat_id);
+            }
+        }
+        ThinkerKind::Floor => {
+            if let ThinkerPayload::Floor(floor_id) = state.world.p_tick.payload(id) {
+                state.world.p_spec.dealloc_floor(floor_id);
+            }
+        }
+        ThinkerKind::FireFlicker => {
+            if let ThinkerPayload::FireFlicker(fireflicker_id) = state.world.p_tick.payload(id) {
+                state.world.p_lights.dealloc_fireflicker(fireflicker_id);
+            }
+        }
+        ThinkerKind::LightFlash => {
+            if let ThinkerPayload::LightFlash(lightflash_id) = state.world.p_tick.payload(id) {
+                state.world.p_lights.dealloc_lightflash(lightflash_id);
+            }
+        }
+        ThinkerKind::Strobe => {
+            if let ThinkerPayload::Strobe(strobe_id) = state.world.p_tick.payload(id) {
+                state.world.p_lights.dealloc_strobe(strobe_id);
+            }
+        }
+        ThinkerKind::Glow => {
+            if let ThinkerPayload::Glow(glow_id) = state.world.p_tick.payload(id) {
+                state.world.p_lights.dealloc_glow(glow_id);
+            }
+        }
+    }
+}
+
 pub fn run_thinkers(state: &mut GameState) {
     let mut cursor = state.world.p_tick.head();
     while let Some(id) = cursor {
@@ -307,58 +358,7 @@ pub fn run_thinkers(state: &mut GameState) {
                 // owning Box instead of Z_Free. Each arm reads its id out of
                 // the node's payload (not out of currentthinker) since Raw
                 // no longer exists -- every kind is id-based now.
-                match kind {
-                    ThinkerKind::Mobj => {
-                        if let ThinkerPayload::Mobj(mobj_id) = state.world.p_tick.payload(id) {
-                            state.world.p_mobj.deallocate(mobj_id);
-                        }
-                    }
-                    ThinkerKind::Door => {
-                        if let ThinkerPayload::Door(door_id) = state.world.p_tick.payload(id) {
-                            state.world.p_doors.dealloc(door_id);
-                        }
-                    }
-                    ThinkerKind::Ceiling => {
-                        if let ThinkerPayload::Ceiling(ceiling_id) = state.world.p_tick.payload(id)
-                        {
-                            state.world.p_ceilng.dealloc(ceiling_id);
-                        }
-                    }
-                    ThinkerKind::Plat => {
-                        if let ThinkerPayload::Plat(plat_id) = state.world.p_tick.payload(id) {
-                            state.world.p_plats.dealloc(plat_id);
-                        }
-                    }
-                    ThinkerKind::Floor => {
-                        if let ThinkerPayload::Floor(floor_id) = state.world.p_tick.payload(id) {
-                            state.world.p_spec.dealloc_floor(floor_id);
-                        }
-                    }
-                    ThinkerKind::FireFlicker => {
-                        if let ThinkerPayload::FireFlicker(fireflicker_id) =
-                            state.world.p_tick.payload(id)
-                        {
-                            state.world.p_lights.dealloc_fireflicker(fireflicker_id);
-                        }
-                    }
-                    ThinkerKind::LightFlash => {
-                        if let ThinkerPayload::LightFlash(lightflash_id) =
-                            state.world.p_tick.payload(id)
-                        {
-                            state.world.p_lights.dealloc_lightflash(lightflash_id);
-                        }
-                    }
-                    ThinkerKind::Strobe => {
-                        if let ThinkerPayload::Strobe(strobe_id) = state.world.p_tick.payload(id) {
-                            state.world.p_lights.dealloc_strobe(strobe_id);
-                        }
-                    }
-                    ThinkerKind::Glow => {
-                        if let ThinkerPayload::Glow(glow_id) = state.world.p_tick.payload(id) {
-                            state.world.p_lights.dealloc_glow(glow_id);
-                        }
-                    }
-                }
+                free_thinker_payload(state, id, kind);
                 next
             }
             ThinkerFn::Paused | ThinkerFn::Unresolved => state.world.p_tick.next(id),
