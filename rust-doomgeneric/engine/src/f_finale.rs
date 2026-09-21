@@ -20,6 +20,7 @@ use crate::v_video::Screen;
 use crate::p_mobj::MobjType;
 use crate::p_mobj::StateNum;
 
+use crate::r_defs::SpriteImage;
 use crate::r_things::FF_FRAMEMASK;
 use crate::s_sound::change_music;
 use crate::s_sound::s_start_sound;
@@ -719,12 +720,11 @@ pub fn cast_drawer(state: &mut GameState) {
     let cur_caststate = state.assets.info.state_mut(state.ui.f_finale.caststate());
     let sprframe = &state.render.r_things.sprites[cur_caststate.sprite as usize].spriteframes
         [(cur_caststate.frame & FF_FRAMEMASK) as usize];
-    let lump: i32 = i32::from(sprframe.lump[0]);
-    let flip: bool = sprframe.flip[0] != 0;
+    let SpriteImage { lump, flip } = sprframe.image(0);
     let patch: Patch = cache_patch_num(
         &*state.assets.fs,
         &mut state.assets.w_wad,
-        state.render.r_data.firstspritelump + lump,
+        lump.lump_num(state.render.r_data.firstspritelump),
     );
     let dest_screen = Screen::Video;
     if flip {

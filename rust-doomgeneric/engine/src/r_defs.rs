@@ -7,6 +7,7 @@ use crate::p_setup::SegId;
 use crate::p_setup::SideId;
 use crate::p_setup::VertexId;
 use crate::tables::Angle;
+use crate::w_wad::LumpNum;
 use alloc::vec::Vec;
 pub type LightTable = u8;
 
@@ -155,18 +156,57 @@ impl VisPlane {
     }
 }
 
-#[derive(Copy, Clone, PartialEq, Eq)]
-pub enum SpriteRotate {
-    Unset,
-    NonRotating,
-    Rotating,
+/// A sprite lump's position among the sprite lumps: its lump number minus `firstspritelump`.
+/// It indexes `spritewidth`, `spriteoffset` and `spritetopoffset`.
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+pub struct SpriteLump(pub u16);
+
+impl SpriteLump {
+    pub fn index(self) -> usize {
+        usize::from(self.0)
+    }
+
+    /// The lump number, given the number of the first sprite lump.
+    pub fn lump_num(self, firstspritelump: LumpNum) -> LumpNum {
+        firstspritelump + i32::from(self.0)
+    }
 }
 
+/// One picture of a sprite frame: a sprite lump, drawn mirrored or not.
 #[derive(Copy, Clone)]
-pub struct SpriteFrame {
-    pub rotate: SpriteRotate,
-    pub lump: [i16; 8],
-    pub flip: [u8; 8],
+pub struct SpriteImage {
+    pub lump: SpriteLump,
+    pub flip: bool,
+}
+
+/// The pictures of one animation frame of a sprite, as `R_InitSprites` collects them from the
+/// lump names (`TROOA1`, `TROOA2A8`, ...).
+#[derive(Copy, Clone)]
+pub enum SpriteFrame {
+    /// No lump names this frame yet.
+    Unset,
+    /// One picture, whatever the viewing angle (rotation 0).
+    NonRotating(SpriteImage),
+    /// One picture per viewing angle (rotations 1-8); `None` until its lump has been seen.
+    Rotating([Option<SpriteImage>; 8]),
+}
+
+impl SpriteFrame {
+    pub fn is_rotating(&self) -> bool {
+        matches!(self, Self::Rotating(_))
+    }
+
+    /// The picture seen from `rotation` (0-7, counted from the front; ignored by a frame
+    /// without rotations).
+    pub fn image(&self, rotation: usize) -> SpriteImage {
+        match self {
+            Self::NonRotating(image) => *image,
+            Self::Rotating(images) => {
+                images[rotation].expect("a sprite frame with rotations has all eight")
+            }
+            Self::Unset => panic!("sprite frame without pictures"),
+        }
+    }
 }
 
 #[derive(Clone)]

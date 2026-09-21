@@ -577,8 +577,10 @@ pub fn precache_level(state: &mut GameState) {
         if present != 0 {
             for j in 0..(state.render.r_things.sprites[i].numframes) as usize {
                 for k in 0..8 {
-                    let lump = state.render.r_data.firstspritelump
-                        + i32::from(state.render.r_things.sprites[i].spriteframes[j].lump[k]);
+                    let lump = state.render.r_things.sprites[i].spriteframes[j]
+                        .image(k)
+                        .lump
+                        .lump_num(state.render.r_data.firstspritelump);
                     state.render.r_data.spritememory +=
                         state.assets.w_wad.lumpinfo[lump.index()].size;
                     lump_bytes(&*state.assets.fs, &mut state.assets.w_wad, lump);

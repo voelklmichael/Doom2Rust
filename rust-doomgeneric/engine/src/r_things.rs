@@ -15,8 +15,7 @@ use crate::p_setup::SectorId;
 use crate::patch::Patch;
 use crate::r_data::RDataState;
 use crate::r_defs::ClipArray;
-use crate::r_defs::SpriteRotate;
-use crate::r_defs::{SpriteDef, SpriteFrame};
+use crate::r_defs::{SpriteDef, SpriteFrame, SpriteImage, SpriteLump};
 use crate::r_draw::{advance_source, read_source, ColumnSource};
 use crate::r_main::point_on_seg_side;
 use crate::r_main::point_to_angle;
@@ -71,44 +70,12 @@ impl Default for RThingsState {
             screenheightarray: [0; 320],
             sprites: Vec::new(),
             numsprites: 0,
-            sprtemp: [SpriteFrame {
-                rotate: SpriteRotate::Unset,
-                lump: [0; 8],
-                flip: [0; 8],
-            }; 29],
+            sprtemp: [SpriteFrame::Unset; 29],
             maxframe: 0,
             spritename: "",
-            vissprites: [VisSprite {
-                x1: 0,
-                x2: 0,
-                gx: Fixed::ZERO,
-                gy: Fixed::ZERO,
-                gz: Fixed::ZERO,
-                gzt: Fixed::ZERO,
-                startfrac: Fixed::ZERO,
-                scale: Fixed::ZERO,
-                xiscale: Fixed::ZERO,
-                texturemid: Fixed::ZERO,
-                patch: 0,
-                colormap: None,
-                mobjflags: MobjFlags::empty(),
-            }; 128],
+            vissprites: [VisSprite::EMPTY; 128],
             vissprite_p: 0,
-            overflowsprite: VisSprite {
-                x1: 0,
-                x2: 0,
-                gx: Fixed::ZERO,
-                gy: Fixed::ZERO,
-                gz: Fixed::ZERO,
-                gzt: Fixed::ZERO,
-                startfrac: Fixed::ZERO,
-                scale: Fixed::ZERO,
-                xiscale: Fixed::ZERO,
-                texturemid: Fixed::ZERO,
-                patch: 0,
-                colormap: None,
-                mobjflags: MobjFlags::empty(),
-            },
+            overflowsprite: VisSprite::EMPTY,
             mfloorclip: None,
             mceilingclip: None,
             spryscale: Fixed::ZERO,
@@ -132,9 +99,26 @@ pub struct VisSprite {
     pub scale: Fixed,
     pub xiscale: Fixed,
     pub texturemid: Fixed,
-    pub patch: i32,
+    pub patch: SpriteLump,
     pub colormap: Option<ColormapId>,
     pub mobjflags: MobjFlags,
+}
+impl VisSprite {
+    pub const EMPTY: Self = Self {
+        x1: 0,
+        x2: 0,
+        gx: Fixed::ZERO,
+        gy: Fixed::ZERO,
+        gz: Fixed::ZERO,
+        gzt: Fixed::ZERO,
+        startfrac: Fixed::ZERO,
+        scale: Fixed::ZERO,
+        xiscale: Fixed::ZERO,
+        texturemid: Fixed::ZERO,
+        patch: SpriteLump(0),
+        colormap: None,
+        mobjflags: MobjFlags::empty(),
+    };
 }
 pub const FF_FULLBRIGHT: i32 = 0x8000;
 pub const FF_FRAMEMASK: i32 = 0x7fff;
@@ -157,48 +141,45 @@ pub fn install_sprite_lump(
     if frame as i32 > r_things.maxframe {
         r_things.maxframe = frame as i32;
     }
+    let image = SpriteImage {
+        lump: SpriteLump((lump - r_data.firstspritelump) as u16),
+        flip: flipped,
+    };
+    let frame_name = ('A' as i32 as u32).wrapping_add(frame) as u8 as char;
+    let slot = &mut r_things.sprtemp[frame as usize];
     if rotation == 0 {
-        if r_things.sprtemp[frame as usize].rotate == SpriteRotate::NonRotating {
-            error(&format!(
+        match slot {
+            SpriteFrame::NonRotating(_) => error(&format!(
                 "R_InitSprites: Sprite {} frame {} has multip rot=0 lump",
-                r_things.spritename,
-                ('A' as i32 as u32).wrapping_add(frame) as u8 as char,
-            ));
-        }
-        if r_things.sprtemp[frame as usize].rotate == SpriteRotate::Rotating {
-            error(&format!(
+                r_things.spritename, frame_name,
+            )),
+            SpriteFrame::Rotating(_) => error(&format!(
                 "R_InitSprites: Sprite {} frame {} has rotations and a rot=0 lump",
-                r_things.spritename,
-                ('A' as i32 as u32).wrapping_add(frame) as u8 as char,
-            ));
-        }
-        r_things.sprtemp[frame as usize].rotate = SpriteRotate::NonRotating;
-        for r in 0..8 {
-            r_things.sprtemp[frame as usize].lump[r] = (lump - r_data.firstspritelump) as i16;
-            r_things.sprtemp[frame as usize].flip[r] = u8::from(flipped);
+                r_things.spritename, frame_name,
+            )),
+            SpriteFrame::Unset => *slot = SpriteFrame::NonRotating(image),
         }
         return;
     }
-    if r_things.sprtemp[frame as usize].rotate == SpriteRotate::NonRotating {
+    if matches!(slot, SpriteFrame::Unset) {
+        *slot = SpriteFrame::Rotating([None; 8]);
+    }
+    let SpriteFrame::Rotating(images) = slot else {
         error(&format!(
             "R_InitSprites: Sprite {} frame {} has rotations and a rot=0 lump",
-            r_things.spritename,
-            ('A' as i32 as u32).wrapping_add(frame) as u8 as char,
-        ));
-    }
-    r_things.sprtemp[frame as usize].rotate = SpriteRotate::Rotating;
+            r_things.spritename, frame_name,
+        ))
+    };
     rotation = rotation.wrapping_sub(1);
-    if i32::from(r_things.sprtemp[frame as usize].lump[rotation as usize]) != -1 {
+    if images[rotation as usize].is_some() {
         error(&format!(
             "R_InitSprites: Sprite {} : {} : {} has two lumps mapped to it",
             r_things.spritename,
-            ('A' as i32 as u32).wrapping_add(frame) as u8 as char,
+            frame_name,
             ('1' as i32 as u32).wrapping_add(rotation) as u8 as char,
         ));
     }
-    r_things.sprtemp[frame as usize].lump[rotation as usize] =
-        (lump - r_data.firstspritelump) as i16;
-    r_things.sprtemp[frame as usize].flip[rotation as usize] = u8::from(flipped);
+    images[rotation as usize] = Some(image);
 }
 pub fn init_sprite_defs(state: &mut GameState, namelist: &[&'static str]) {
     state.render.r_things.numsprites = namelist.len() as i32;
@@ -212,11 +193,7 @@ pub fn init_sprite_defs(state: &mut GameState, namelist: &[&'static str]) {
     );
     for &name in namelist {
         state.render.r_things.spritename = name;
-        state.render.r_things.sprtemp = [SpriteFrame {
-            rotate: SpriteRotate::Unset,
-            lump: [-1; 8],
-            flip: [0xff; 8],
-        }; 29];
+        state.render.r_things.sprtemp = [SpriteFrame::Unset; 29];
         state.render.r_things.maxframe = -1;
         for l in first..=last {
             if state.assets.w_wad.lumpinfo[l as usize]
@@ -264,29 +241,24 @@ pub fn init_sprite_defs(state: &mut GameState, namelist: &[&'static str]) {
         } else {
             state.render.r_things.maxframe += 1;
             for frame in 0..state.render.r_things.maxframe {
-                match state.render.r_things.sprtemp[frame as usize].rotate {
-                    SpriteRotate::Unset => {
+                match state.render.r_things.sprtemp[frame as usize] {
+                    SpriteFrame::Unset => {
                         error(&format!(
                             "R_InitSprites: No patches found for {} frame {}",
                             state.render.r_things.spritename,
                             (frame + 'A' as i32) as u8 as char,
                         ));
                     }
-                    SpriteRotate::Rotating => {
-                        for rotation in 0..8 {
-                            if i32::from(
-                                state.render.r_things.sprtemp[frame as usize].lump[rotation],
-                            ) == -1
-                            {
-                                error(&format!(
-                                    "R_InitSprites: Sprite {} frame {} is missing rotations",
-                                    state.render.r_things.spritename,
-                                    (frame + 'A' as i32) as u8 as char,
-                                ));
-                            }
+                    SpriteFrame::Rotating(images) => {
+                        if images.iter().any(Option::is_none) {
+                            error(&format!(
+                                "R_InitSprites: Sprite {} frame {} is missing rotations",
+                                state.render.r_things.spritename,
+                                (frame + 'A' as i32) as u8 as char,
+                            ));
                         }
                     }
-                    SpriteRotate::NonRotating => {}
+                    SpriteFrame::NonRotating(_) => {}
                 }
             }
             state.render.r_things.sprites.push(SpriteDef {
@@ -361,7 +333,7 @@ pub fn draw_masked_column(state: &mut GameState, mut post: ColumnSource) {
     state.render.r_draw.dc_texturemid = basetexturemid;
 }
 pub fn draw_vis_sprite(state: &mut GameState, vis: &VisSprite) {
-    let sprite_lump = state.render.r_data.firstspritelump + vis.patch;
+    let sprite_lump = vis.patch.lump_num(state.render.r_data.firstspritelump);
     let patch: Patch = cache_patch_num(&*state.assets.fs, &mut state.assets.w_wad, sprite_lump);
     state.render.r_draw.dc_colormap = vis.colormap;
     if state.render.r_draw.dc_colormap.is_none() {
@@ -442,46 +414,32 @@ pub fn project_sprite(state: &mut GameState, thing_id: MobjId) {
         ));
     }
     let sprframe = sprdef.spriteframes[(thing_frame & FF_FRAMEMASK) as usize];
-    let (lump, flip): (i32, bool) = if sprframe.rotate == SpriteRotate::NonRotating {
-        (i32::from(sprframe.lump[0]), sprframe.flip[0] != 0)
-    } else {
+    let SpriteImage { lump, flip } = if sprframe.is_rotating() {
         let ang: Angle = point_to_angle(&state.render.r_main, thing_x, thing_y);
         let rot: usize = ((ang - thing_angle + ANG45 / 2 * 9).to_bits() >> 29) as usize;
-        (i32::from(sprframe.lump[rot]), sprframe.flip[rot] != 0)
+        sprframe.image(rot)
+    } else {
+        sprframe.image(0)
     };
-    tx -= state.render.r_data.spriteoffset[lump as usize];
+    tx -= state.render.r_data.spriteoffset[lump.index()];
     let x1: i32 = (state.render.r_main.centerxfrac + fixed_mul(tx, xscale)).to_int();
     if x1 > state.render.r_draw.viewwidth {
         return;
     }
-    tx += state.render.r_data.spritewidth[lump as usize];
+    tx += state.render.r_data.spritewidth[lump.index()];
     let x2: i32 = (((state.render.r_main.centerxfrac + fixed_mul(tx, xscale)) >> FRACBITS)
         - Fixed(1))
     .to_bits();
     if x2 < 0 {
         return;
     }
-    let mut vis = VisSprite {
-        x1: 0,
-        x2: 0,
-        gx: Fixed::ZERO,
-        gy: Fixed::ZERO,
-        gz: Fixed::ZERO,
-        gzt: Fixed::ZERO,
-        startfrac: Fixed::ZERO,
-        scale: Fixed::ZERO,
-        xiscale: Fixed::ZERO,
-        texturemid: Fixed::ZERO,
-        patch: 0,
-        colormap: None,
-        mobjflags: MobjFlags::empty(),
-    };
+    let mut vis = VisSprite::EMPTY;
     vis.mobjflags = thing_flags;
     vis.scale = xscale << state.render.r_main.detailshift;
     vis.gx = thing_x;
     vis.gy = thing_y;
     vis.gz = thing_z;
-    vis.gzt = thing_z + state.render.r_data.spritetopoffset[lump as usize];
+    vis.gzt = thing_z + state.render.r_data.spritetopoffset[lump.index()];
     vis.texturemid = vis.gzt - state.render.r_main.viewz;
     vis.x1 = if x1 < 0 { 0 } else { x1 };
     vis.x2 = if x2 >= state.render.r_draw.viewwidth {
@@ -491,7 +449,7 @@ pub fn project_sprite(state: &mut GameState, thing_id: MobjId) {
     };
     let iscale: Fixed = fixed_div(FRACUNIT, xscale);
     if flip {
-        vis.startfrac = state.render.r_data.spritewidth[lump as usize] - Fixed(1);
+        vis.startfrac = state.render.r_data.spritewidth[lump.index()] - Fixed(1);
         vis.xiscale = -iscale;
     } else {
         vis.startfrac = Fixed::ZERO;
@@ -546,21 +504,7 @@ pub fn add_sprites(state: &mut GameState, sec: SectorId) {
     }
 }
 pub fn draw_psprite(state: &mut GameState, psp: &PspDef) {
-    let mut avis: VisSprite = VisSprite {
-        x1: 0,
-        x2: 0,
-        gx: Fixed::ZERO,
-        gy: Fixed::ZERO,
-        gz: Fixed::ZERO,
-        gzt: Fixed::ZERO,
-        startfrac: Fixed::ZERO,
-        scale: Fixed::ZERO,
-        xiscale: Fixed::ZERO,
-        texturemid: Fixed::ZERO,
-        patch: 0,
-        colormap: None,
-        mobjflags: MobjFlags::empty(),
-    };
+    let mut avis: VisSprite = VisSprite::EMPTY;
     let psp_state = state
         .assets
         .info
@@ -580,17 +524,16 @@ pub fn draw_psprite(state: &mut GameState, psp: &PspDef) {
         ));
     }
     let sprframe = &sprdef.spriteframes[(psp_state_frame & FF_FRAMEMASK) as usize];
-    let lump: i32 = i32::from(sprframe.lump[0]);
-    let flip: bool = sprframe.flip[0] != 0;
+    let SpriteImage { lump, flip } = sprframe.image(0);
     let mut tx: Fixed = psp.sx - 160 * FRACUNIT;
-    tx -= state.render.r_data.spriteoffset[lump as usize];
+    tx -= state.render.r_data.spriteoffset[lump.index()];
     let x1: i32 = (state.render.r_main.centerxfrac
         + fixed_mul(tx, state.render.r_things.pspritescale))
     .to_int();
     if x1 > state.render.r_draw.viewwidth {
         return;
     }
-    tx += state.render.r_data.spritewidth[lump as usize];
+    tx += state.render.r_data.spritewidth[lump.index()];
     let x2: i32 = (((state.render.r_main.centerxfrac
         + fixed_mul(tx, state.render.r_things.pspritescale))
         >> FRACBITS)
@@ -601,7 +544,7 @@ pub fn draw_psprite(state: &mut GameState, psp: &PspDef) {
     }
     avis.mobjflags = MobjFlags::empty();
     avis.texturemid = Fixed::from_int(BASEYCENTER) + FRACUNIT / 2
-        - (psp.sy - state.render.r_data.spritetopoffset[lump as usize]);
+        - (psp.sy - state.render.r_data.spritetopoffset[lump.index()]);
     avis.x1 = if x1 < 0 { 0 } else { x1 };
     avis.x2 = if x2 >= state.render.r_draw.viewwidth {
         state.render.r_draw.viewwidth - 1
@@ -611,7 +554,7 @@ pub fn draw_psprite(state: &mut GameState, psp: &PspDef) {
     avis.scale = state.render.r_things.pspritescale << state.render.r_main.detailshift;
     if flip {
         avis.xiscale = -state.render.r_things.pspriteiscale;
-        avis.startfrac = state.render.r_data.spritewidth[lump as usize] - Fixed(1);
+        avis.startfrac = state.render.r_data.spritewidth[lump.index()] - Fixed(1);
     } else {
         avis.xiscale = state.render.r_things.pspriteiscale;
         avis.startfrac = Fixed::ZERO;
