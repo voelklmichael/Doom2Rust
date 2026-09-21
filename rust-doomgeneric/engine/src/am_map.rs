@@ -1107,7 +1107,7 @@ pub fn draw_walls(state: &mut GameState) {
     for i in 0..(state.world.p_setup.numlines as usize) {
         let li = &state.world.p_setup.lines[i];
         let (li_flags, li_special) = (li.flags, i32::from(li.special));
-        let (li_backsector, li_frontsector) = (li.backsector, li.frontsector);
+        let (li_backsector, li_frontsector) = (li.backsector, li.front_sector());
         let li_v1 = state.world.p_setup.vertexes[li.v1.0 as usize];
         let li_v2 = state.world.p_setup.vertexes[li.v2.0 as usize];
         l.a.x = li_v1.x;
@@ -1155,11 +1155,7 @@ pub fn draw_walls(state: &mut GameState) {
                                 );
                             }
                         } else if state.world.p_setup.sector(li_backsector).floorheight
-                            != state
-                                .world
-                                .p_setup
-                                .sector(li_frontsector.unwrap())
-                                .floorheight
+                            != state.world.p_setup.sector(li_frontsector).floorheight
                         {
                             draw_mline(
                                 &mut state.ui.am_map,
@@ -1169,11 +1165,7 @@ pub fn draw_walls(state: &mut GameState) {
                                 FDWALLCOLORS + lightlev,
                             );
                         } else if state.world.p_setup.sector(li_backsector).ceilingheight
-                            != state
-                                .world
-                                .p_setup
-                                .sector(li_frontsector.unwrap())
-                                .ceilingheight
+                            != state.world.p_setup.sector(li_frontsector).ceilingheight
                         {
                             draw_mline(
                                 &mut state.ui.am_map,
@@ -1307,7 +1299,10 @@ pub fn draw_players(state: &mut GameState) {
             } else {
                 their_color
             };
-            let p_mo = state.world.p_mobj.mo(p_mo_id.unwrap());
+            let p_mo = state
+                .world
+                .p_mobj
+                .mo(p_mo_id.expect("a player in the game has a body"));
             let (p_angle, p_x, p_y) = (p_mo.angle, p_mo.x, p_mo.y);
             draw_line_character(state, &PLAYER_ARROW, Fixed::ZERO, p_angle, color, p_x, p_y);
         }

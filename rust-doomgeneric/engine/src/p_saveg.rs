@@ -87,10 +87,10 @@ pub enum SpecialThinkerClass {
 pub const SAVEGAME_EOF: u8 = 0x1d;
 pub const VERSIONSIZE: usize = 16;
 pub fn temp_save_game_file(d_main: &DMainState, p_saveg: &mut PSavegState) -> String {
-    if p_saveg.temp_savegame_filename.is_none() {
-        p_saveg.temp_savegame_filename = Some(format!("{}temp.dsg", d_main.savegamedir));
-    }
-    p_saveg.temp_savegame_filename.clone().unwrap()
+    p_saveg
+        .temp_savegame_filename
+        .get_or_insert_with(|| format!("{}temp.dsg", d_main.savegamedir))
+        .clone()
 }
 pub fn save_game_file(d_main: &DMainState, slot: i32) -> String {
     format!("{}doomsav{}.dsg", d_main.savegamedir, slot)
@@ -280,7 +280,7 @@ fn saveg_write_mobj_t(state: &mut PSavegState, str: &Mobj) {
     saveg_write32(state, str.kind as i32);
     saveg_write32(state, 0);
     saveg_write32(state, str.tics);
-    saveg_write32(state, str.state.unwrap().0 as i32);
+    saveg_write32(state, str.state.expect("a saved mobj has a state").0 as i32);
     saveg_write32(state, str.flags.bits());
     saveg_write32(state, str.health);
     saveg_write32(state, str.movedir);

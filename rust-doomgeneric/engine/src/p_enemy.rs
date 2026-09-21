@@ -125,6 +125,10 @@ pub static DIAGS: [DirType; 4] = [
 fn live_target(p_mobj: &PMobjState, mobj: MobjId) -> Option<MobjId> {
     p_mobj.mo(mobj).target.filter(|&id| p_mobj.is_live(id))
 }
+/// The mobj's tracer (the thing it follows), unless that has since been removed.
+fn live_tracer(p_mobj: &PMobjState, mobj: MobjId) -> Option<MobjId> {
+    p_mobj.mo(mobj).tracer.filter(|&id| p_mobj.is_live(id))
+}
 pub fn recursive_sound(state: &mut GameState, sec: SectorId, soundblocks: i32) {
     let validcount = state.world.p_setup.validcount;
     {
@@ -455,8 +459,7 @@ pub fn look_for_players(state: &mut GameState, actor: MobjId, allaround: bool) -
                 let player = &state.game.g_game.players[lastlook];
                 (player.health, player.mo)
             };
-            if health > 0 {
-                let player_mo = player_mo.unwrap();
+            if let Some(player_mo) = player_mo.filter(|_| health > 0) {
                 if check_sight(state, actor, player_mo) {
                     let mut skip = false;
                     if !allaround {
@@ -575,14 +578,9 @@ pub fn chase(state: &mut GameState, actor: MobjId) {
     if state.world.p_mobj.mo(actor).reactiontime != 0 {
         state.world.p_mobj.mo_mut(actor).reactiontime -= 1;
     }
-    let target = state
-        .world
-        .p_mobj
-        .mo(actor)
-        .target
-        .filter(|&target| state.world.p_mobj.is_live(target));
+    let target = live_target(&state.world.p_mobj, actor);
     if state.world.p_mobj.mo(actor).threshold != 0 {
-        if target.is_none() || state.world.p_mobj.mo(target.unwrap()).health <= 0 {
+        if target.is_none_or(|target| state.world.p_mobj.mo(target).health <= 0) {
             state.world.p_mobj.mo_mut(actor).threshold = 0;
         } else {
             state.world.p_mobj.mo_mut(actor).threshold -= 1;
@@ -602,14 +600,14 @@ pub fn chase(state: &mut GameState, actor: MobjId) {
                 state.world.p_mobj.mo(actor).angle + (ANG90 / 2);
         }
     }
-    if target.is_none()
-        || !state
+    let Some(target) = target.filter(|&target| {
+        state
             .world
             .p_mobj
-            .mo(target.unwrap())
+            .mo(target)
             .flags
             .contains(MobjFlags::SHOOTABLE)
-    {
+    }) else {
         if look_for_players(state, actor, true) {
             return;
         }
@@ -620,7 +618,7 @@ pub fn chase(state: &mut GameState, actor: MobjId) {
             .spawnstate;
         set_mobj_state(state, actor, spawnstate);
         return;
-    }
+    };
     if state
         .world
         .p_mobj
@@ -677,7 +675,7 @@ pub fn chase(state: &mut GameState, actor: MobjId) {
     }
     if state.game.g_game.netgame
         && state.world.p_mobj.mo(actor).threshold == 0
-        && !check_sight(state, actor, state.world.p_mobj.mo(target.unwrap()).id)
+        && !check_sight(state, actor, target)
         && look_for_players(state, actor, true)
     {
         return;
@@ -786,16 +784,10 @@ pub fn cpos_refire(state: &mut GameState, actor: MobjId) {
     if p_random(&mut state.world.m_random) < 40 {
         return;
     }
-    let target = state
-        .world
-        .p_mobj
-        .mo(actor)
-        .target
-        .filter(|&target| state.world.p_mobj.is_live(target));
-    if target.is_none()
-        || state.world.p_mobj.mo(target.unwrap()).health <= 0
-        || !check_sight(state, actor, state.world.p_mobj.mo(target.unwrap()).id)
-    {
+    let sees_target = live_target(&state.world.p_mobj, actor)
+        .filter(|&target| state.world.p_mobj.mo(target).health > 0)
+        .is_some_and(|target| check_sight(state, actor, target));
+    if !sees_target {
         let seestate = state
             .assets
             .info
@@ -809,16 +801,10 @@ pub fn spid_refire(state: &mut GameState, actor: MobjId) {
     if p_random(&mut state.world.m_random) < 10 {
         return;
     }
-    let target = state
-        .world
-        .p_mobj
-        .mo(actor)
-        .target
-        .filter(|&target| state.world.p_mobj.is_live(target));
-    if target.is_none()
-        || state.world.p_mobj.mo(target.unwrap()).health <= 0
-        || !check_sight(state, actor, state.world.p_mobj.mo(target.unwrap()).id)
-    {
+    let sees_target = live_target(&state.world.p_mobj, actor)
+        .filter(|&target| state.world.p_mobj.mo(target).health > 0)
+        .is_some_and(|target| check_sight(state, actor, target));
+    if !sees_target {
         let seestate = state
             .assets
             .info
@@ -927,20 +913,16 @@ pub fn a_tracer(state: &mut GameState, actor: MobjId) {
     if state.world.p_mobj.mo(th).tics < 1 {
         state.world.p_mobj.mo_mut(th).tics = 1;
     }
-    let dest: Option<MobjId> = state
-        .world
-        .p_mobj
-        .mo(actor)
-        .tracer
-        .filter(|&target| state.world.p_mobj.is_live(target));
-    if dest.is_none() || state.world.p_mobj.mo(dest.unwrap()).health <= 0 {
+    let Some(dest) = live_tracer(&state.world.p_mobj, actor)
+        .filter(|&dest| state.world.p_mobj.mo(dest).health > 0)
+    else {
         return;
-    }
+    };
     let exact: Angle = point_to_angle2(
         state.world.p_mobj.mo(actor).x,
         state.world.p_mobj.mo(actor).y,
-        state.world.p_mobj.mo(dest.unwrap()).x,
-        state.world.p_mobj.mo(dest.unwrap()).y,
+        state.world.p_mobj.mo(dest).x,
+        state.world.p_mobj.mo(dest).y,
     );
     if exact != state.world.p_mobj.mo(actor).angle {
         if (exact - state.world.p_mobj.mo(actor).angle) > ANG180 {
@@ -979,8 +961,8 @@ pub fn a_tracer(state: &mut GameState, actor: MobjId) {
         fine_sine(exact),
     );
     let mut dist: Fixed = aprox_distance(
-        state.world.p_mobj.mo(dest.unwrap()).x - state.world.p_mobj.mo(actor).x,
-        state.world.p_mobj.mo(dest.unwrap()).y - state.world.p_mobj.mo(actor).y,
+        state.world.p_mobj.mo(dest).x - state.world.p_mobj.mo(actor).x,
+        state.world.p_mobj.mo(dest).y - state.world.p_mobj.mo(actor).y,
     );
     dist /= state
         .assets
@@ -991,8 +973,7 @@ pub fn a_tracer(state: &mut GameState, actor: MobjId) {
         dist = Fixed(1);
     }
     let slope: Fixed = Fixed(
-        (state.world.p_mobj.mo(dest.unwrap()).z + 40 * FRACUNIT - state.world.p_mobj.mo(actor).z)
-            / dist,
+        (state.world.p_mobj.mo(dest).z + 40 * FRACUNIT - state.world.p_mobj.mo(actor).z) / dist,
     );
     if slope < state.world.p_mobj.mo(actor).momz {
         state.world.p_mobj.mo_mut(actor).momz -= FRACUNIT / 8;
@@ -1102,7 +1083,11 @@ pub fn vile_chase(state: &mut GameState, id: MobjId) {
         for bx in xl..=xh {
             for by in yl..=yh {
                 if !block_things_iterator(state, bx, by, vile_check) {
-                    let corpsehit_id = state.world.p_enemy.corpsehit.unwrap();
+                    let corpsehit_id = state
+                        .world
+                        .p_enemy
+                        .corpsehit
+                        .expect("vile_check stops the scan only after choosing a corpse");
                     let corpsehit = corpsehit_id;
                     let temp: Option<MobjId> = state.world.p_mobj.mo(actor).target;
                     state.world.p_mobj.mo_mut(actor).target = Some(corpsehit_id);
@@ -1140,15 +1125,9 @@ pub fn fire_crackle(state: &mut GameState, actor: MobjId) {
     a_fire(state, actor);
 }
 pub fn a_fire(state: &mut GameState, actor: MobjId) {
-    let dest: Option<MobjId> = state
-        .world
-        .p_mobj
-        .mo(actor)
-        .tracer
-        .filter(|&target| state.world.p_mobj.is_live(target));
-    if dest.is_none() {
+    let Some(dest) = live_tracer(&state.world.p_mobj, actor) else {
         return;
-    }
+    };
     let target_subst = state
         .world
         .p_mobj
@@ -1157,16 +1136,16 @@ pub fn a_fire(state: &mut GameState, actor: MobjId) {
         .filter(|&target| state.world.p_mobj.is_live(target));
     let target_id = subst_null_mobj(&mut state.world.p_mobj, target_subst);
     let target: MobjId = target_id;
-    if !check_sight(state, target, dest.unwrap()) {
+    if !check_sight(state, target, dest) {
         return;
     }
-    let an: usize = state.world.p_mobj.mo(dest.unwrap()).angle.fine();
+    let an: usize = state.world.p_mobj.mo(dest).angle.fine();
     unset_thing_position(&mut state.world.p_mobj, &mut state.world.p_setup, actor);
     state.world.p_mobj.mo_mut(actor).x =
-        state.world.p_mobj.mo(dest.unwrap()).x + fixed_mul(24 * FRACUNIT, fine_cosine(an));
+        state.world.p_mobj.mo(dest).x + fixed_mul(24 * FRACUNIT, fine_cosine(an));
     state.world.p_mobj.mo_mut(actor).y =
-        state.world.p_mobj.mo(dest.unwrap()).y + fixed_mul(24 * FRACUNIT, fine_sine(an));
-    state.world.p_mobj.mo_mut(actor).z = state.world.p_mobj.mo(dest.unwrap()).z;
+        state.world.p_mobj.mo(dest).y + fixed_mul(24 * FRACUNIT, fine_sine(an));
+    state.world.p_mobj.mo_mut(actor).z = state.world.p_mobj.mo(dest).z;
     set_thing_position(&mut state.world.p_mobj, &mut state.world.p_setup, actor);
 }
 pub fn vile_target(state: &mut GameState, actor: MobjId) {
@@ -1203,20 +1182,14 @@ pub fn vile_attack(state: &mut GameState, actor: MobjId) {
             .mobjinfo_mut(state.world.p_mobj.mo(target).kind)
             .mass;
     let an: usize = state.world.p_mobj.mo(actor).angle.fine();
-    let fire: Option<MobjId> = state
-        .world
-        .p_mobj
-        .mo(actor)
-        .tracer
-        .filter(|&target| state.world.p_mobj.is_live(target));
-    if fire.is_none() {
+    let Some(fire) = live_tracer(&state.world.p_mobj, actor) else {
         return;
-    }
-    state.world.p_mobj.mo_mut(fire.unwrap()).x =
+    };
+    state.world.p_mobj.mo_mut(fire).x =
         state.world.p_mobj.mo(target).x - fixed_mul(24 * FRACUNIT, fine_cosine(an));
-    state.world.p_mobj.mo_mut(fire.unwrap()).y =
+    state.world.p_mobj.mo_mut(fire).y =
         state.world.p_mobj.mo(target).y - fixed_mul(24 * FRACUNIT, fine_sine(an));
-    p_radius_attack(state, fire.unwrap(), Some(actor), 70);
+    p_radius_attack(state, fire, Some(actor), 70);
 }
 pub const FATSPREAD: Angle = Angle(ANG90.to_bits() / 8);
 pub fn fat_raise(state: &mut GameState, actor: MobjId) {
@@ -1670,8 +1643,8 @@ pub fn brain_spit(state: &mut GameState, mo: MobjId) {
     if state.game.g_game.gameskill <= SkillType::Easy && state.world.p_enemy.easy == 0 {
         return;
     }
-    let targ_id =
-        state.world.p_enemy.braintargets[state.world.p_enemy.braintargeton as usize].unwrap();
+    let targ_id = state.world.p_enemy.braintargets[state.world.p_enemy.braintargeton as usize]
+        .expect("the first numbraintargets slots are filled");
     let targ: MobjId = targ_id;
     state.world.p_enemy.braintargeton =
         (state.world.p_enemy.braintargeton + 1) % state.world.p_enemy.numbraintargets;
@@ -1683,7 +1656,14 @@ pub fn brain_spit(state: &mut GameState, mo: MobjId) {
         / state
             .assets
             .info
-            .state_mut(state.world.p_mobj.mo(newmobj).state.unwrap())
+            .state_mut(
+                state
+                    .world
+                    .p_mobj
+                    .mo(newmobj)
+                    .state
+                    .expect("a spawned mobj has a state"),
+            )
             .tics;
     s_start_sound(state, SoundOrigin::None, SfxName::Bospit);
 }

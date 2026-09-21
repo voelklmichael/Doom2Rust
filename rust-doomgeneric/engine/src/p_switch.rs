@@ -311,7 +311,7 @@ pub fn start_button(
             p_switch.buttonlist[i].position = w;
             p_switch.buttonlist[i].btexture = texture;
             p_switch.buttonlist[i].btimer = time;
-            p_switch.buttonlist[i].soundorg = p_setup.line(line).frontsector.unwrap();
+            p_switch.buttonlist[i].soundorg = p_setup.line(line).front_sector();
             return;
         }
     }

@@ -269,6 +269,13 @@ pub struct FFinaleState {
     laststage: i32,
 }
 
+impl FFinaleState {
+    /// The state the cast member on stage is in (set when the cast call starts).
+    fn caststate(&self) -> StateId {
+        self.caststate.expect("no cast member on stage")
+    }
+}
+
 impl Default for FFinaleState {
     fn default() -> Self {
         Self {
@@ -508,7 +515,7 @@ pub fn start_cast(state: &mut GameState) {
     state.ui.f_finale.casttics = state
         .assets
         .info
-        .state_mut(state.ui.f_finale.caststate.unwrap())
+        .state_mut(state.ui.f_finale.caststate())
         .tics;
     state.ui.f_finale.castdeath = false;
     state.ui.f_finale.finalestage = FinaleStage::Cast;
@@ -553,10 +560,7 @@ pub fn cast_ticker(state: &mut GameState) {
         return;
     }
     let mut stop_attack = false;
-    let cur_caststate = state
-        .assets
-        .info
-        .state_mut(state.ui.f_finale.caststate.unwrap());
+    let cur_caststate = state.assets.info.state_mut(state.ui.f_finale.caststate());
     if cur_caststate.tics == -1 || cur_caststate.nextstate as u32 == StateNum::Null as i32 as u32 {
         state.ui.f_finale.castnum += 1;
         state.ui.f_finale.castdeath = false;
@@ -630,7 +634,7 @@ pub fn cast_ticker(state: &mut GameState) {
     state.ui.f_finale.casttics = state
         .assets
         .info
-        .state_mut(state.ui.f_finale.caststate.unwrap())
+        .state_mut(state.ui.f_finale.caststate())
         .tics;
     if state.ui.f_finale.casttics == -1 {
         state.ui.f_finale.casttics = 15;
@@ -651,7 +655,7 @@ pub fn cast_responder(state: &mut GameState, ev: &Event) -> bool {
     state.ui.f_finale.casttics = state
         .assets
         .info
-        .state_mut(state.ui.f_finale.caststate.unwrap())
+        .state_mut(state.ui.f_finale.caststate())
         .tics;
     state.ui.f_finale.castframes = 0;
     state.ui.f_finale.castattacking = false;
@@ -710,12 +714,9 @@ pub fn cast_drawer(state: &mut GameState) {
     draw_patch(state, dest_screen, 0, 0, &__wcache865_4);
     let cast_name = state.ui.f_finale.castorder[state.ui.f_finale.castnum as usize]
         .name
-        .unwrap();
+        .expect("the cast list is terminated only after its last entry");
     cast_print(state, cast_name);
-    let cur_caststate = state
-        .assets
-        .info
-        .state_mut(state.ui.f_finale.caststate.unwrap());
+    let cur_caststate = state.assets.info.state_mut(state.ui.f_finale.caststate());
     let sprframe = &state.render.r_things.sprites[cur_caststate.sprite as usize].spriteframes
         [(cur_caststate.frame & FF_FRAMEMASK) as usize];
     let lump: i32 = i32::from(sprframe.lump[0]);

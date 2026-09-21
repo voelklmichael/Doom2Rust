@@ -46,6 +46,17 @@ pub struct RPlaneState {
     pub cachedystep: [Fixed; 200],
 }
 
+impl RPlaneState {
+    /// The visplane being built for the ceiling of the wall in progress.
+    pub fn ceilingplane(&self) -> usize {
+        self.ceilingplane.expect("no ceiling plane is being built")
+    }
+    /// The visplane being built for the floor of the wall in progress.
+    pub fn floorplane(&self) -> usize {
+        self.floorplane.expect("no floor plane is being built")
+    }
+}
+
 impl Default for RPlaneState {
     fn default() -> Self {
         Self {

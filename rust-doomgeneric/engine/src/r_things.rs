@@ -317,8 +317,16 @@ pub fn store_vis_sprite(r_things: &mut RThingsState, vis: VisSprite) {
 }
 pub fn draw_masked_column(state: &mut GameState, mut post: ColumnSource) {
     let basetexturemid: Fixed = state.render.r_draw.dc_texturemid;
-    let mfloorclip = state.render.r_things.mfloorclip.unwrap();
-    let mceilingclip = state.render.r_things.mceilingclip.unwrap();
+    let mfloorclip = state
+        .render
+        .r_things
+        .mfloorclip
+        .expect("draw_masked_column runs inside a sprite");
+    let mceilingclip = state
+        .render
+        .r_things
+        .mceilingclip
+        .expect("draw_masked_column runs inside a sprite");
     loop {
         let topdelta = read_source(&state.render.r_data, &state.assets.w_wad, post, 0);
         if i32::from(topdelta) == 0xff {
@@ -553,7 +561,10 @@ pub fn draw_psprite(state: &mut GameState, psp: &PspDef) {
         colormap: None,
         mobjflags: MobjFlags::empty(),
     };
-    let psp_state = state.assets.info.state_mut(psp.state.unwrap());
+    let psp_state = state
+        .assets
+        .info
+        .state_mut(psp.state.expect("a drawn weapon sprite has a state"));
     let (psp_state_sprite, psp_state_frame) = (psp_state.sprite, psp_state.frame);
     if psp_state_sprite as u32 >= state.render.r_things.numsprites as u32 {
         error(&format!(
@@ -704,7 +715,7 @@ pub fn draw_sprite(state: &mut GameState, spr: &VisSprite) {
                     silhouette &= !SIL_TOP;
                 }
                 if silhouette == 1 {
-                    let sprbottomclip = ds.sprbottomclip.unwrap();
+                    let sprbottomclip = ds.sprbottomclip();
                     for x in r1..=r2 {
                         if i32::from(state.render.r_things.clipbot[x as usize]) == -2 {
                             state.render.r_things.clipbot[x as usize] =
@@ -712,7 +723,7 @@ pub fn draw_sprite(state: &mut GameState, spr: &VisSprite) {
                         }
                     }
                 } else if silhouette == 2 {
-                    let sprtopclip = ds.sprtopclip.unwrap();
+                    let sprtopclip = ds.sprtopclip();
                     for x in r1..=r2 {
                         if i32::from(state.render.r_things.cliptop[x as usize]) == -2 {
                             state.render.r_things.cliptop[x as usize] =
@@ -720,8 +731,8 @@ pub fn draw_sprite(state: &mut GameState, spr: &VisSprite) {
                         }
                     }
                 } else if silhouette == 3 {
-                    let sprbottomclip = ds.sprbottomclip.unwrap();
-                    let sprtopclip = ds.sprtopclip.unwrap();
+                    let sprbottomclip = ds.sprbottomclip();
+                    let sprtopclip = ds.sprtopclip();
                     for x in r1..=r2 {
                         if i32::from(state.render.r_things.clipbot[x as usize]) == -2 {
                             state.render.r_things.clipbot[x as usize] =

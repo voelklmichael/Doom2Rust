@@ -84,6 +84,7 @@ uninlined_format_args = "warn"
 unnecessary_semicolon = "warn"
 unnecessary_trailing_comma = "warn"
 unnested_or_patterns = "warn"
+unwrap_used = "warn"
 use_self = "warn"
 useless_let_if_seq = "warn"
 

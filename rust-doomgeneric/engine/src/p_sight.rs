@@ -122,11 +122,13 @@ pub fn cross_subsector(p_setup: &mut PSetupState, p_sight: &mut PSightState, num
             return false;
         }
         let (front_floor, front_ceiling) = {
-            let front = p_setup.sector_mut(seg.frontsector.unwrap());
+            let front =
+                p_setup.sector_mut(seg.frontsector.expect("a two-sided seg has a front sector"));
             (front.floorheight, front.ceilingheight)
         };
         let (back_floor, back_ceiling) = {
-            let back = p_setup.sector_mut(seg.backsector.unwrap());
+            let back =
+                p_setup.sector_mut(seg.backsector.expect("a two-sided seg has a back sector"));
             (back.floorheight, back.ceilingheight)
         };
         if front_floor == back_floor && front_ceiling == back_ceiling {

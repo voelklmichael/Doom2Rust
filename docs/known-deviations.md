@@ -365,3 +365,13 @@ debug build and a wrapped shift, so almost nothing spawned, in a release build).
 longer has that variant; `SkillType::from_raw` returns `None` for it and `-skill 0` (or any other
 level outside 1..=5) stops with "there is no such skill level". A demo, savegame or net setting
 carrying an invalid skill was already fatal and still is.
+
+## A dead player no longer turns towards an attacker that has since been removed
+
+`P_DeathThink` turns the dead player's view towards `player->attacker`. Vanilla reads that
+mobj's `x`/`y` even after it was removed (a killed imp, an exploded barrel): the memory was freed
+but not yet overwritten, so the view kept turning towards where the attacker had been. Here a
+removed mobj's id is stale and reading it is a panic, which is how `DOOM2.WAD -timedemo demo3`
+ended (on `main` too, before this). A stale attacker is now treated like no attacker: the view
+does not turn and the damage flash counts down. Everywhere else the engine treats a removed
+`target` / `tracer` / `soundtarget` the same way (`live_target`, `live_tracer`).

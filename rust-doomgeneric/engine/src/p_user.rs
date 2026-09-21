@@ -140,10 +140,11 @@ pub fn death_think(state: &mut GameState, player_id: PlayerId) {
     state.world.p_user.onground =
         state.world.p_mobj.mo(player_mo).z <= state.world.p_mobj.mo(player_mo).floorz;
     calc_height(state, player);
-    if state.game.g_game.players[player].attacker.is_some()
-        && state.game.g_game.players[player].attacker != state.game.g_game.players[player].mo
+    if let Some(attacker) = state.game.g_game.players[player]
+        .attacker
+        .filter(|&attacker| Some(attacker) != state.game.g_game.players[player].mo)
+        .filter(|&attacker| state.world.p_mobj.is_live(attacker))
     {
-        let attacker = state.game.g_game.players[player].attacker.unwrap();
         let angle: Angle = point_to_angle2(
             state.world.p_mobj.mo(player_mo).x,
             state.world.p_mobj.mo(player_mo).y,

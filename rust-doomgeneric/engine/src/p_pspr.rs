@@ -75,7 +75,7 @@ pub fn set_psprite(state: &mut GameState, player_id: PlayerId, position: i32, mu
         }
         let current = state.game.g_game.player_mut(player_id).psprites[pos]
             .state
-            .unwrap();
+            .expect("the loop stops when the action clears the state");
         stnum = state.assets.info.state_mut(current).nextstate;
         if state.game.g_game.player_mut(player_id).psprites[pos].tics != 0 {
             break;
@@ -330,7 +330,11 @@ pub fn saw(state: &mut GameState, player_id: PlayerId, _position: i32) {
         return;
     }
     s_start_sound(state, SoundOrigin::Mobj(player_mo), SfxName::Sawhit);
-    let linetarget = state.world.p_mobj.mo(state.world.p_map.linetarget.unwrap());
+    let linetarget = state.world.p_mobj.mo(state
+        .world
+        .p_map
+        .linetarget
+        .expect("the saw only swings at a target"));
     let (linetarget_x, linetarget_y) = (linetarget.x, linetarget.y);
     angle = point_to_angle2(
         state.world.p_mobj.mo(player_mo).x,
@@ -500,7 +504,7 @@ pub fn fire_cgun(state: &mut GameState, player: PlayerId, position: i32) {
                 + i64::from(
                     state.game.g_game.players[player].psprites[position as usize]
                         .state
-                        .unwrap()
+                        .expect("the flash is set from a state in progress")
                         .0,
                 )
                 - StateNum::Chain1 as i64) as i32,

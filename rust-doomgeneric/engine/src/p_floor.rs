@@ -283,7 +283,7 @@ pub fn do_floor(state: &mut GameState, line: LineId, floortype: FloorE) -> bool 
                 floor.sector = sec;
                 floor.speed = FLOORSPEED;
                 floor.floordestheight = floorheight + 24 * FRACUNIT;
-                let front = state.world.p_setup.line(line).frontsector.unwrap();
+                let front = state.world.p_setup.line(line).front_sector();
                 let (front_pic, front_special) = {
                     let fsec = state.world.p_setup.sector_mut(front);
                     (fsec.floorpic, fsec.special)
@@ -417,9 +417,11 @@ pub fn build_stairs(
                 let line_id = p_setup.sector_mut(sec).lines[i];
                 let iline = p_setup.line(line_id);
                 if iline.flags.contains(LineFlags::TWOSIDED) {
-                    let front_id = iline.frontsector.unwrap();
+                    let front_id = iline.front_sector();
                     if secnum == front_id.0 as i32 {
-                        let back_id = iline.backsector.unwrap();
+                        let back_id = iline
+                            .backsector
+                            .expect("a two-sided line has a back sector");
                         let (back_pic, back_free) = {
                             let tsec = p_setup.sector_mut(back_id);
                             (i32::from(tsec.floorpic), tsec.specialdata.is_none())

@@ -299,19 +299,20 @@ pub fn get_sector_at_null_address(
     options: &Options,
     p_setup: &mut PSetupState,
 ) -> SectorId {
-    if p_setup.null_sector_id.is_none() {
-        let mut sentinel = ZERO_SECTOR;
-        if let Some(value) = get_memory_value(i_system, options, 0, 4) {
-            sentinel.floorheight = Fixed(value as i32);
-        }
-        if let Some(value) = get_memory_value(i_system, options, 4, 4) {
-            sentinel.ceilingheight = Fixed(value as i32);
-        }
-        let id = SectorId(p_setup.sectors.len() as u32);
-        p_setup.sectors.push(sentinel);
-        p_setup.null_sector_id = Some(id);
+    if let Some(id) = p_setup.null_sector_id {
+        return id;
     }
-    p_setup.null_sector_id.unwrap()
+    let mut sentinel = ZERO_SECTOR;
+    if let Some(value) = get_memory_value(i_system, options, 0, 4) {
+        sentinel.floorheight = Fixed(value as i32);
+    }
+    if let Some(value) = get_memory_value(i_system, options, 4, 4) {
+        sentinel.ceilingheight = Fixed(value as i32);
+    }
+    let id = SectorId(p_setup.sectors.len() as u32);
+    p_setup.sectors.push(sentinel);
+    p_setup.null_sector_id = Some(id);
+    id
 }
 pub fn load_segs(state: &mut GameState, lump: LumpNum) {
     let numsegs = (lump_length(&state.assets.w_wad, lump) as usize / MAPSEG_SIZE) as i32;
@@ -566,7 +567,7 @@ pub fn group_lines(p_setup: &mut PSetupState) {
     for i in 0..(p_setup.numlines as usize) {
         p_setup.totallines += 1;
         let li = p_setup.lines[i];
-        let front_id = li.frontsector.unwrap();
+        let front_id = li.front_sector();
         p_setup.sector_mut(front_id).linecount += 1;
         if let Some(back_id) = li.backsector.filter(|&b| Some(b) != li.frontsector) {
             p_setup.sector_mut(back_id).linecount += 1;

@@ -221,7 +221,9 @@ fn get_channel(
     if cnum == s_sound.snd_channels {
         cnum = 0;
         while cnum < s_sound.snd_channels {
-            let channel_sfx = s_sound.channels[cnum as usize].sfxinfo.unwrap();
+            let channel_sfx = s_sound.channels[cnum as usize]
+                .sfxinfo
+                .expect("every channel is in use when none is free");
             if sounds.sfx_mut(channel_sfx).priority >= sounds.s_sfx[sfxinfo.0 as usize].priority {
                 break;
             }
@@ -294,20 +296,22 @@ pub fn s_start_sound(state: &mut GameState, origin: SoundOrigin, sfx_id: SfxName
             volume = state.audio.s_sound.snd_sfx_volume;
         }
     }
-    // listener_mo_id is only unwrapped when origin != None (short-circuit),
-    // matching the vanilla invariant that a non-null sound origin implies
-    // the console player's mobj already exists.
+    // The listener is only required when origin != None, matching the vanilla invariant that
+    // a non-null sound origin implies the console player's mobj already exists.
     let listener_mo_id = state.game.g_game.players[state.game.g_game.consoleplayer].mo;
-    let sep: i32 = if origin != SoundOrigin::None
-        && origin != SoundOrigin::Mobj(listener_mo_id.unwrap())
+    let positional_listener = (origin != SoundOrigin::None)
+        .then(|| listener_mo_id.expect("a positional sound needs the console player's mobj"));
+    let sep: i32 = if let Some(listener) =
+        positional_listener.filter(|&listener| origin != SoundOrigin::Mobj(listener))
     {
-        let listener = listener_mo_id.unwrap();
         let Some((adjusted_volume, adjusted_sep)) = adjust_sound_params(state, listener, origin)
         else {
             return;
         };
         volume = adjusted_volume;
-        let (origin_x, origin_y) = origin.xy(state).unwrap();
+        let (origin_x, origin_y) = origin
+            .xy(state)
+            .expect("sound parameters are only adjusted for a located origin");
         let (listener_x, listener_y) = {
             let l = state.world.p_mobj.mo(listener);
             (l.x, l.y)
@@ -406,10 +410,11 @@ pub fn update_sounds(state: &mut GameState, listener: Option<MobjId>) {
             );
             continue;
         }
-        if c.origin != SoundOrigin::None
-            && SoundOrigin::Mobj(listener.expect("positional sound needs a listener")) != c.origin
+        let positional_listener = (c.origin != SoundOrigin::None)
+            .then(|| listener.expect("positional sound needs a listener"));
+        if let Some(listener) =
+            positional_listener.filter(|&listener| SoundOrigin::Mobj(listener) != c.origin)
         {
-            let listener = listener.unwrap();
             match adjust_sound_params(state, listener, c.origin) {
                 None => stop_channel(
                     &mut state.audio.i_sound,
