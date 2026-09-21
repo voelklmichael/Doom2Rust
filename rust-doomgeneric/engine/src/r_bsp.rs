@@ -165,15 +165,16 @@ pub fn clear_clip_segs(r_bsp: &mut RBspState, r_draw: &RDrawState) {
     r_bsp.solidsegs[1].last = 0x7fffffff;
     r_bsp.newend = 2;
 }
-pub fn add_line(state: &mut GameState, line: SegId) {
-    state.render.r_bsp.curline = line;
+/// The screen columns `x1..x2` that the seg covers, or `None` when it faces away, lies outside the
+/// view or is too thin to show. Sets `rw_angle1` (the angle to the seg's first vertex).
+fn seg_screen_columns(state: &mut GameState, line: SegId) -> Option<(i32, i32)> {
     let line_v1 = state.world.p_setup.vertexes[state.world.p_setup.seg(line).v1.0 as usize];
     let line_v2 = state.world.p_setup.vertexes[state.world.p_setup.seg(line).v2.0 as usize];
     let mut angle1: Angle = point_to_angle(&state.render.r_main, line_v1.x, line_v1.y);
     let mut angle2: Angle = point_to_angle(&state.render.r_main, line_v2.x, line_v2.y);
     let span: Angle = angle1 - angle2;
     if span >= ANG180 {
-        return;
+        return None;
     }
     state.render.r_segs.rw_angle1 = angle1;
     angle1 -= state.render.r_main.viewangle;
@@ -182,7 +183,7 @@ pub fn add_line(state: &mut GameState, line: SegId) {
     if tspan > state.render.r_main.clipangle * 2 {
         tspan -= state.render.r_main.clipangle * 2;
         if tspan >= span {
-            return;
+            return None;
         }
         angle1 = state.render.r_main.clipangle;
     }
@@ -190,7 +191,7 @@ pub fn add_line(state: &mut GameState, line: SegId) {
     if tspan > state.render.r_main.clipangle * 2 {
         tspan -= state.render.r_main.clipangle * 2;
         if tspan >= span {
-            return;
+            return None;
         }
         angle2 = -state.render.r_main.clipangle;
     }
@@ -199,104 +200,49 @@ pub fn add_line(state: &mut GameState, line: SegId) {
     let x1: i32 = state.render.r_main.viewangletox[angle1];
     let x2: i32 = state.render.r_main.viewangletox[angle2];
     if x1 == x2 {
-        return;
+        return None;
     }
+    Some((x1, x2))
+}
+
+/// Whether the two sectors around a two-sided seg look the same from the front, so that
+/// (with no middle texture on the side) the seg draws nothing.
+fn seg_is_invisible(state: &GameState, line: SegId) -> bool {
+    let p_setup = &state.world.p_setup;
+    let (front, back) = (
+        p_setup.sector(state.render.r_bsp.front()),
+        p_setup.sector(state.render.r_bsp.back()),
+    );
+    back.ceilingheight == front.ceilingheight
+        && back.floorheight == front.floorheight
+        && back.ceilingpic == front.ceilingpic
+        && back.floorpic == front.floorpic
+        && back.lightlevel == front.lightlevel
+        && p_setup.side(p_setup.seg(line).sidedef).midtexture == 0
+}
+
+/// Whether the back sector's opening is closed: its ceiling at or below the front floor, or its
+/// floor at or above the front ceiling.
+fn seg_opening_is_closed(state: &GameState) -> bool {
+    let p_setup = &state.world.p_setup;
+    let (front, back) = (
+        p_setup.sector(state.render.r_bsp.front()),
+        p_setup.sector(state.render.r_bsp.back()),
+    );
+    back.ceilingheight <= front.floorheight || back.floorheight >= front.ceilingheight
+}
+
+pub fn add_line(state: &mut GameState, line: SegId) {
+    state.render.r_bsp.curline = line;
+    let Some((x1, x2)) = seg_screen_columns(state, line) else {
+        return;
+    };
     state.render.r_bsp.backsector = state.world.p_setup.seg(line).backsector;
-    if state.render.r_bsp.backsector.is_some()
-        && !(state
-            .world
-            .p_setup
-            .sector(state.render.r_bsp.back())
-            .ceilingheight
-            <= state
-                .world
-                .p_setup
-                .sector(state.render.r_bsp.front())
-                .floorheight
-            || state
-                .world
-                .p_setup
-                .sector(state.render.r_bsp.back())
-                .floorheight
-                >= state
-                    .world
-                    .p_setup
-                    .sector(state.render.r_bsp.front())
-                    .ceilingheight)
-    {
-        if !(state
-            .world
-            .p_setup
-            .sector(state.render.r_bsp.back())
-            .ceilingheight
-            != state
-                .world
-                .p_setup
-                .sector(state.render.r_bsp.front())
-                .ceilingheight
-            || state
-                .world
-                .p_setup
-                .sector(state.render.r_bsp.back())
-                .floorheight
-                != state
-                    .world
-                    .p_setup
-                    .sector(state.render.r_bsp.front())
-                    .floorheight)
-            && i32::from(
-                state
-                    .world
-                    .p_setup
-                    .sector(state.render.r_bsp.back())
-                    .ceilingpic,
-            ) == i32::from(
-                state
-                    .world
-                    .p_setup
-                    .sector(state.render.r_bsp.front())
-                    .ceilingpic,
-            )
-            && i32::from(
-                state
-                    .world
-                    .p_setup
-                    .sector(state.render.r_bsp.back())
-                    .floorpic,
-            ) == i32::from(
-                state
-                    .world
-                    .p_setup
-                    .sector(state.render.r_bsp.front())
-                    .floorpic,
-            )
-            && i32::from(
-                state
-                    .world
-                    .p_setup
-                    .sector(state.render.r_bsp.back())
-                    .lightlevel,
-            ) == i32::from(
-                state
-                    .world
-                    .p_setup
-                    .sector(state.render.r_bsp.front())
-                    .lightlevel,
-            )
-            && i32::from(
-                state
-                    .world
-                    .p_setup
-                    .side_mut(state.world.p_setup.seg(state.render.r_bsp.curline).sidedef)
-                    .midtexture,
-            ) == 0
-        {
-            return;
-        }
+    if state.render.r_bsp.backsector.is_none() || seg_opening_is_closed(state) {
+        clip_solid_wall_segment(state, x1, x2 - 1);
+    } else if !seg_is_invisible(state, state.render.r_bsp.curline) {
         clip_pass_wall_segment(state, x1, x2 - 1);
-        return;
     }
-    clip_solid_wall_segment(state, x1, x2 - 1);
 }
 pub static CHECKCOORD: [[i32; 4]; 12] = [
     [3, 0, 2, 1],

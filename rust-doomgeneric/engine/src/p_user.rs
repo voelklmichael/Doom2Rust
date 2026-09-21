@@ -172,6 +172,86 @@ pub fn death_think(state: &mut GameState, player_id: PlayerId) {
         state.game.g_game.players[player].playerstate = PlayerState::Reborn;
     }
 }
+/// A weapon key in the ticcmd asks to change weapons (the chainsaw and super shotgun share keys).
+fn change_weapon(state: &mut GameState, player_id: PlayerId) {
+    let player = player_id;
+    if state.game.g_game.players[player_id].cmd.buttons & BT_CHANGE != 0 {
+        let mut newweapon: WeaponType = weapontype_from_raw(i32::from(
+            (state.game.g_game.players[player_id].cmd.buttons & BT_WEAPONMASK) >> BT_WEAPONSHIFT,
+        ));
+        if newweapon == WeaponType::Fist
+            && state.game.g_game.players[player].weaponowned[WeaponType::Chainsaw]
+            && !(state.game.g_game.players[player].readyweapon == WeaponType::Chainsaw
+                && state.game.g_game.players[player].powers[PowerType::Strength] != 0)
+        {
+            newweapon = WeaponType::Chainsaw;
+        }
+        if state.game.doomstat.gamemode == GameMode::Commercial
+            && newweapon == WeaponType::Shotgun
+            && state.game.g_game.players[player].weaponowned[WeaponType::Supershotgun]
+            && state.game.g_game.players[player].readyweapon != WeaponType::Supershotgun
+        {
+            newweapon = WeaponType::Supershotgun;
+        }
+        if state.game.g_game.players[player].weaponowned[newweapon]
+            && newweapon != state.game.g_game.players[player].readyweapon
+            && (newweapon != WeaponType::Plasma && newweapon != WeaponType::Bfg
+                || state.game.doomstat.gamemode != GameMode::Shareware)
+        {
+            state.game.g_game.players[player].pendingweapon = newweapon;
+        }
+    }
+}
+
+/// Runs down the power-up timers and the damage and pickup flashes, and picks the player's
+/// screen tint (inverse map for invulnerability, light amplification for the visor).
+fn tick_down_powers(state: &mut GameState, player_id: PlayerId, player_mo: MobjId) {
+    let player = player_id;
+    if state.game.g_game.players[player].powers[PowerType::Strength] != 0 {
+        state.game.g_game.players[player].powers[PowerType::Strength] += 1;
+    }
+    if state.game.g_game.players[player].powers[PowerType::Invulnerability] != 0 {
+        state.game.g_game.players[player].powers[PowerType::Invulnerability] -= 1;
+    }
+    if state.game.g_game.players[player].powers[PowerType::Invisibility] != 0 {
+        state.game.g_game.players[player].powers[PowerType::Invisibility] -= 1;
+        if state.game.g_game.players[player].powers[PowerType::Invisibility] == 0 {
+            state.world.p_mobj.mo_mut(player_mo).flags &= !MobjFlags::SHADOW;
+        }
+    }
+    if state.game.g_game.players[player].powers[PowerType::Infrared] != 0 {
+        state.game.g_game.players[player].powers[PowerType::Infrared] -= 1;
+    }
+    if state.game.g_game.players[player].powers[PowerType::Ironfeet] != 0 {
+        state.game.g_game.players[player].powers[PowerType::Ironfeet] -= 1;
+    }
+    if state.game.g_game.players[player].damagecount != 0 {
+        state.game.g_game.players[player].damagecount -= 1;
+    }
+    if state.game.g_game.players[player].bonuscount != 0 {
+        state.game.g_game.players[player].bonuscount -= 1;
+    }
+    if state.game.g_game.players[player].powers[PowerType::Invulnerability] != 0 {
+        if state.game.g_game.players[player].powers[PowerType::Invulnerability] > 4 * 32
+            || state.game.g_game.players[player].powers[PowerType::Invulnerability] & 8 != 0
+        {
+            state.game.g_game.players[player].fixedcolormap = INVERSECOLORMAP;
+        } else {
+            state.game.g_game.players[player].fixedcolormap = 0;
+        }
+    } else if state.game.g_game.players[player].powers[PowerType::Infrared] != 0 {
+        if state.game.g_game.players[player].powers[PowerType::Infrared] > 4 * 32
+            || state.game.g_game.players[player].powers[PowerType::Infrared] & 8 != 0
+        {
+            state.game.g_game.players[player].fixedcolormap = 1;
+        } else {
+            state.game.g_game.players[player].fixedcolormap = 0;
+        }
+    } else {
+        state.game.g_game.players[player].fixedcolormap = 0;
+    }
+}
+
 pub fn player_think(state: &mut GameState, player_id: PlayerId) {
     let player = player_id;
     let player_mo = state.game.g_game.players[player].mobj();
@@ -220,32 +300,7 @@ pub fn player_think(state: &mut GameState, player_id: PlayerId) {
     if state.game.g_game.players[player_id].cmd.buttons & BT_SPECIAL != 0 {
         state.game.g_game.players[player_id].cmd.buttons = 0_u8;
     }
-    if state.game.g_game.players[player_id].cmd.buttons & BT_CHANGE != 0 {
-        let mut newweapon: WeaponType = weapontype_from_raw(i32::from(
-            (state.game.g_game.players[player_id].cmd.buttons & BT_WEAPONMASK) >> BT_WEAPONSHIFT,
-        ));
-        if newweapon == WeaponType::Fist
-            && state.game.g_game.players[player].weaponowned[WeaponType::Chainsaw]
-            && !(state.game.g_game.players[player].readyweapon == WeaponType::Chainsaw
-                && state.game.g_game.players[player].powers[PowerType::Strength] != 0)
-        {
-            newweapon = WeaponType::Chainsaw;
-        }
-        if state.game.doomstat.gamemode == GameMode::Commercial
-            && newweapon == WeaponType::Shotgun
-            && state.game.g_game.players[player].weaponowned[WeaponType::Supershotgun]
-            && state.game.g_game.players[player].readyweapon != WeaponType::Supershotgun
-        {
-            newweapon = WeaponType::Supershotgun;
-        }
-        if state.game.g_game.players[player].weaponowned[newweapon]
-            && newweapon != state.game.g_game.players[player].readyweapon
-            && (newweapon != WeaponType::Plasma && newweapon != WeaponType::Bfg
-                || state.game.doomstat.gamemode != GameMode::Shareware)
-        {
-            state.game.g_game.players[player].pendingweapon = newweapon;
-        }
-    }
+    change_weapon(state, player_id);
     if state.game.g_game.players[player_id].cmd.buttons & BT_USE != 0 {
         if !state.game.g_game.players[player].usedown {
             use_lines(state, player_id);
@@ -255,47 +310,5 @@ pub fn player_think(state: &mut GameState, player_id: PlayerId) {
         state.game.g_game.players[player].usedown = false;
     }
     move_psprites(state, player_id);
-    if state.game.g_game.players[player].powers[PowerType::Strength] != 0 {
-        state.game.g_game.players[player].powers[PowerType::Strength] += 1;
-    }
-    if state.game.g_game.players[player].powers[PowerType::Invulnerability] != 0 {
-        state.game.g_game.players[player].powers[PowerType::Invulnerability] -= 1;
-    }
-    if state.game.g_game.players[player].powers[PowerType::Invisibility] != 0 {
-        state.game.g_game.players[player].powers[PowerType::Invisibility] -= 1;
-        if state.game.g_game.players[player].powers[PowerType::Invisibility] == 0 {
-            state.world.p_mobj.mo_mut(player_mo).flags &= !MobjFlags::SHADOW;
-        }
-    }
-    if state.game.g_game.players[player].powers[PowerType::Infrared] != 0 {
-        state.game.g_game.players[player].powers[PowerType::Infrared] -= 1;
-    }
-    if state.game.g_game.players[player].powers[PowerType::Ironfeet] != 0 {
-        state.game.g_game.players[player].powers[PowerType::Ironfeet] -= 1;
-    }
-    if state.game.g_game.players[player].damagecount != 0 {
-        state.game.g_game.players[player].damagecount -= 1;
-    }
-    if state.game.g_game.players[player].bonuscount != 0 {
-        state.game.g_game.players[player].bonuscount -= 1;
-    }
-    if state.game.g_game.players[player].powers[PowerType::Invulnerability] != 0 {
-        if state.game.g_game.players[player].powers[PowerType::Invulnerability] > 4 * 32
-            || state.game.g_game.players[player].powers[PowerType::Invulnerability] & 8 != 0
-        {
-            state.game.g_game.players[player].fixedcolormap = INVERSECOLORMAP;
-        } else {
-            state.game.g_game.players[player].fixedcolormap = 0;
-        }
-    } else if state.game.g_game.players[player].powers[PowerType::Infrared] != 0 {
-        if state.game.g_game.players[player].powers[PowerType::Infrared] > 4 * 32
-            || state.game.g_game.players[player].powers[PowerType::Infrared] & 8 != 0
-        {
-            state.game.g_game.players[player].fixedcolormap = 1;
-        } else {
-            state.game.g_game.players[player].fixedcolormap = 0;
-        }
-    } else {
-        state.game.g_game.players[player].fixedcolormap = 0;
-    }
+    tick_down_powers(state, player_id, player_mo);
 }
